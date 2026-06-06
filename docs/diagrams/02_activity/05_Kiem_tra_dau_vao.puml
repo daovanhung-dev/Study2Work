@@ -1,0 +1,45 @@
+@startuml
+title STUDY2WORK - Activity - Kiem tra dau vao
+
+start
+
+partition "Hoc vien" {
+  :Mo bai test dau vao;
+  :Doc huong dan lam bai;
+  :Bat dau bai test;
+}
+
+partition "He thong" {
+  :Tai cau hoi theo cap do;
+  :Khoi tao bo dem thoi gian;
+  :Hien thi cau hoi tung phan;
+}
+
+repeat
+partition "Hoc vien" {
+  :Chon dap an / nhap tra loi;
+  :Luu tam thoi tra loi;
+  :Nhan cau hoi tiep theo hoac nop bai;
+}
+partition "He thong" {
+  :Kiem tra thoi gian con lai;
+  if (Het gio?) then (Co)
+    :Tu dong nop bai;
+    break
+  else (Khong)
+    :Ghi nhan cau tra loi;
+  endif
+}
+repeat while (Con cau hoi?) is (Co)
+
+partition "He thong" {
+  :Cham diem bai test;
+  :Phan tich muc do dau vao;
+  :Xep hang theo nang luc;
+  :De xuat lo trinh hoc phu hop;
+  :Luu ket qua test vao ho so hoc vien;
+  :Thong bao ket qua;
+}
+
+stop
+@enduml

@@ -1,0 +1,71 @@
+@startuml
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam nodesep 60
+skinparam ranksep 70
+skinparam dpi 160
+left to right direction
+title STUDY2WORK - PAYMENT Module
+
+package "PAYMENT" {
+  together {
+    entity "coupons" as coupons {
+      * id : BIGINT
+      --
+      code : VARCHAR
+      discount_type : VARCHAR
+      discount_value : DECIMAL
+      start_at : DATETIME
+      end_at : DATETIME
+      status : VARCHAR
+    }
+
+    entity "orders" as orders {
+      * id : BIGINT
+      --
+      order_no : VARCHAR
+      user_id : BIGINT
+      coupon_id : BIGINT
+      subtotal_amount : DECIMAL
+      discount_amount : DECIMAL
+      total_amount : DECIMAL
+      currency : VARCHAR
+      status : VARCHAR
+      paid_at : DATETIME
+    }
+
+    entity "order_items" as order_items {
+      * id : BIGINT
+      --
+      order_id : BIGINT
+      item_type : VARCHAR
+      item_id : BIGINT
+      item_name : VARCHAR
+      quantity : INT
+      unit_price : DECIMAL
+      total_price : DECIMAL
+    }
+
+    entity "payments" as payments {
+      * id : BIGINT
+      --
+      order_id : BIGINT
+      gateway : VARCHAR
+      gateway_transaction_id : VARCHAR
+      payment_method : VARCHAR
+      amount : DECIMAL
+      currency : VARCHAR
+      status : VARCHAR
+      paid_at : DATETIME
+    }
+  }
+}
+
+coupons ||--o{ orders
+orders ||--o{ order_items
+orders ||--o{ payments
+
+@enduml

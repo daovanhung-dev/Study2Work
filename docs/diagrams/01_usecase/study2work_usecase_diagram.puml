@@ -1,0 +1,262 @@
+@startuml Study2Work_UseCase_Optimized
+!theme plain
+left to right direction
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam backgroundColor #F8FAFC
+skinparam nodesep 35
+skinparam ranksep 40
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #2563EB
+  BorderThickness 1.5
+}
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #1D4ED8
+  BorderThickness 1.2
+}
+skinparam actor {
+  BackgroundColor #FFF7ED
+  BorderColor #F97316
+  BorderThickness 1.5
+}
+skinparam arrow {
+  Color #374151
+  Thickness 1
+}
+
+title Study2Work - Biểu đồ Use Case
+
+' ================= ACTORS =================
+actor "Khách" as Guest
+actor "Người học" as Learner
+actor "Người hướng dẫn" as Mentor
+actor "Nhà tuyển dụng" as Recruiter
+actor "Quản trị viên" as Admin
+
+actor "Dịch vụ AI" as AI
+actor "Cổng thanh toán" as Payment
+actor "Dịch vụ thông báo" as Notify
+
+' giữ thứ tự actor để layout ổn định
+Guest -[hidden]-> Learner
+Learner -[hidden]-> Mentor
+Mentor -[hidden]-> Recruiter
+Recruiter -[hidden]-> Admin
+Admin -[hidden]-> AI
+AI -[hidden]-> Payment
+Payment -[hidden]-> Notify
+
+' ================= PACKAGES =================
+package "XÁC THỰC & TRUY CẬP" as PAUTH {
+  usecase "Đăng ký tài khoản" as UC_Register
+  usecase "Đăng nhập" as UC_Login
+  usecase "Quên mật khẩu" as UC_Forgot
+  usecase "Quản lý hồ sơ" as UC_Profile
+  usecase "Quản lý vai trò & quyền hạn" as UC_Roles
+}
+
+package "LỘ TRÌNH HỌC TẬP" as PLEARN {
+  usecase "Làm bài test đầu vào" as UC_Placement
+  usecase "Nhận lộ trình AI" as UC_Roadmap
+  usecase "Đăng ký lộ trình học" as UC_Enroll
+  usecase "Xem nội dung khóa học" as UC_ViewCourse
+  usecase "Xem bài giảng video" as UC_Video
+  usecase "Tham gia buổi học trực tuyến" as UC_Live
+  usecase "Tải tài liệu" as UC_Materials
+  usecase "Theo dõi tiến độ" as UC_Progress
+}
+
+package "THỰC HÀNH & ĐÁNH GIÁ" as PPRACTICE {
+  usecase "Nộp bài tập" as UC_Submit
+  usecase "Làm bài quiz" as UC_Quiz
+  usecase "Thực hiện lab lập trình" as UC_Lab
+  usecase "Xem phản hồi" as UC_Feedback
+
+  usecase "Tạo bài tập" as UC_CreateAssignment
+  usecase "Chấm bài nộp" as UC_Grade
+  usecase "Review code" as UC_CodeReview
+}
+
+package "HỆ THỐNG DỰ ÁN NHÓM" as PTEAM {
+  usecase "Tạo dự án nhóm" as UC_CreateProject
+  usecase "Tham gia dự án nhóm" as UC_JoinProject
+  usecase "Quản lý nhiệm vụ sprint" as UC_Sprint
+  usecase "Gửi pull request" as UC_PR
+  usecase "Xem tiến độ nhóm" as UC_TeamProgress
+}
+
+package "ĐÁNH GIÁ KỸ NĂNG" as PSKILL {
+  usecase "Đánh giá ma trận kỹ năng" as UC_SkillMatrix
+  usecase "Đánh giá kỹ năng kỹ thuật" as UC_TechSkill
+  usecase "Đánh giá kỹ năng mềm" as UC_SoftSkill
+  usecase "Tạo báo cáo" as UC_Performance
+  usecase "Xem phân tích" as UC_Analytics
+}
+
+package "HỒ SƠ CÁ NHÂN & NGHỀ NGHIỆP" as PPORT {
+  usecase "Xây dựng portfolio" as UC_Portfolio
+  usecase "Xây dựng CV" as UC_CV
+  usecase "Luyện phỏng vấn" as UC_Interview
+  usecase "Nhận gợi ý CV" as UC_CVAI
+  usecase "Nhận gợi ý portfolio" as UC_PortfolioAI
+}
+
+package "NHÀ TUYỂN DỤNG & TUYỂN DỤNG" as PEMP {
+  usecase "Tạo tài khoản công ty" as UC_Company
+  usecase "Đăng yêu cầu tuyển dụng" as UC_PostJob
+  usecase "Tìm kiếm ứng viên" as UC_SearchCandidate
+  usecase "Lọc theo kỹ năng" as UC_FilterSkill
+  usecase "Xem portfolio" as UC_ViewPortfolio
+  usecase "Lọt danh sách ứng viên" as UC_Shortlist
+  usecase "Liên hệ ứng viên" as UC_Contact
+  usecase "Ứng tuyển công việc" as UC_Apply
+}
+
+package "CỘNG ĐỒNG & SỰ KIỆN" as PCOMM {
+  usecase "Tham gia cộng đồng" as UC_Community
+  usecase "Tham gia workshop" as UC_Workshop
+  usecase "Tham gia thử thách lập trình" as UC_Challenge
+  usecase "Tham gia mock interview" as UC_MockInterview
+  usecase "Thảo luận & Hỏi đáp" as UC_QA
+}
+
+package "THANH TOÁN & GÓI DỊCH VỤ" as PPAY {
+  usecase "Mua khóa học" as UC_Purchase
+  usecase "Mua mentoring" as UC_Mentoring
+  usecase "Xử lý thanh toán" as UC_ProcessPayment
+  usecase "Xem lịch sử thanh toán" as UC_History
+}
+
+package "HỆ THỐNG THÔNG BÁO" as PNOTI {
+  usecase "Gửi nhắc nhở học tập" as UC_Reminder
+  usecase "Gửi hạn nộp bài" as UC_Deadline
+  usecase "Gửi thông báo phỏng vấn" as UC_InterviewNotify
+  usecase "Gửi thông báo hệ thống" as UC_SystemNotify
+}
+
+package "QUẢN TRỊ HỆ THỐNG" as PADMIN {
+  usecase "Quản lý người dùng" as UC_ManageUser
+  usecase "Quản lý khóa học" as UC_ManageCourse
+  usecase "Quản lý mentor" as UC_ManageMentor
+  usecase "Quản lý công ty" as UC_ManageCompany
+  usecase "Quản lý nội dung" as UC_ManageContent
+  usecase "Quản lý báo cáo" as UC_ManageReports
+  usecase "Cài đặt hệ thống" as UC_Settings
+}
+
+' ép thứ tự package để sơ đồ đi theo hàng ngang ổn định
+PAUTH -[hidden]-> PLEARN
+PLEARN -[hidden]-> PPRACTICE
+PPRACTICE -[hidden]-> PTEAM
+PTEAM -[hidden]-> PSKILL
+PSKILL -[hidden]-> PPORT
+PPORT -[hidden]-> PEMP
+PEMP -[hidden]-> PCOMM
+PCOMM -[hidden]-> PPAY
+PPAY -[hidden]-> PNOTI
+PNOTI -[hidden]-> PADMIN
+
+' ================= RELATIONSHIPS =================
+Guest --> UC_Register
+Guest --> UC_Login
+Guest --> UC_Forgot
+
+Learner --> UC_Profile
+Mentor --> UC_Profile
+Recruiter --> UC_Profile
+
+Admin --> UC_Roles
+
+Learner --> UC_Placement
+Learner --> UC_Roadmap
+Learner --> UC_Enroll
+Learner --> UC_ViewCourse
+Learner --> UC_Video
+Learner --> UC_Live
+Learner --> UC_Materials
+Learner --> UC_Progress
+
+UC_Placement ..> UC_Roadmap : <<bao gồm>>
+UC_Roadmap ..> AI : <<AI tạo>>
+
+Learner --> UC_Submit
+Learner --> UC_Quiz
+Learner --> UC_Lab
+Learner --> UC_Feedback
+
+Mentor --> UC_CreateAssignment
+Mentor --> UC_Grade
+Mentor --> UC_CodeReview
+
+UC_CodeReview ..> AI : <<AI hỗ trợ>>
+
+Learner --> UC_JoinProject
+Learner --> UC_Sprint
+Learner --> UC_PR
+
+Mentor --> UC_CreateProject
+Mentor --> UC_TeamProgress
+
+Mentor --> UC_SkillMatrix
+Mentor --> UC_TechSkill
+Mentor --> UC_SoftSkill
+Mentor --> UC_Performance
+
+Learner --> UC_Analytics
+
+Learner --> UC_Portfolio
+Learner --> UC_CV
+Learner --> UC_Interview
+Learner --> UC_CVAI
+Learner --> UC_PortfolioAI
+
+UC_CVAI ..> AI : <<bao gồm>>
+UC_PortfolioAI ..> AI : <<bao gồm>>
+
+Recruiter --> UC_Company
+Recruiter --> UC_PostJob
+Recruiter --> UC_SearchCandidate
+Recruiter --> UC_FilterSkill
+Recruiter --> UC_ViewPortfolio
+Recruiter --> UC_Shortlist
+Recruiter --> UC_Contact
+
+Learner --> UC_Apply
+
+Learner --> UC_Community
+Learner --> UC_Workshop
+Learner --> UC_Challenge
+Learner --> UC_MockInterview
+Learner --> UC_QA
+
+Mentor --> UC_Workshop
+Mentor --> UC_MockInterview
+
+Learner --> UC_Purchase
+Learner --> UC_Mentoring
+Learner --> UC_History
+
+UC_Purchase ..> UC_ProcessPayment : <<bao gồm>>
+UC_Mentoring ..> UC_ProcessPayment : <<bao gồm>>
+Payment --> UC_ProcessPayment
+
+Notify --> UC_Reminder
+Notify --> UC_Deadline
+Notify --> UC_InterviewNotify
+Notify --> UC_SystemNotify
+
+Admin --> UC_ManageUser
+Admin --> UC_ManageCourse
+Admin --> UC_ManageMentor
+Admin --> UC_ManageCompany
+Admin --> UC_ManageContent
+Admin --> UC_ManageReports
+Admin --> UC_Settings
+
+@enduml

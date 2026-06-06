@@ -1,0 +1,38 @@
+@startuml
+title STUDY2WORK - Activity - Xem khoa hoc
+
+start
+
+partition "Hoc vien" {
+  :Mo danh sach khoa hoc;
+  :Loc theo chu de / cap do / trang thai;
+  :Chon mot khoa hoc;
+}
+
+partition "He thong" {
+  :Tai thong tin khoa hoc;
+  :Hien thi mo ta, muc tieu, giang vien, bai hoc;
+  :Kiem tra trang thai quyen truy cap;
+}
+
+if (Khoa hoc mien phi?) then (Co)
+  partition "Hoc vien" {
+    :Nhan dang ky hoc ngay;
+  }
+  partition "He thong" {
+    :Them khoa hoc vao danh sach cua toi;
+    :Mo quyen truy cap noi dung;
+    :Cap nhat tien do mac dinh;
+  }
+else (Khong)
+  partition "Hoc vien" {
+    :Xem gia khoa hoc;
+    :Chon mua khoa hoc;
+  }
+  partition "He thong" {
+    :Chuyen sang luong thanh toan;
+  }
+endif
+
+stop
+@enduml

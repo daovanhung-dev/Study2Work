@@ -1,0 +1,131 @@
+@startuml
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam nodesep 60
+skinparam ranksep 70
+skinparam dpi 160
+left to right direction
+title STUDY2WORK - RECRUITMENT Module
+
+package "RECRUITMENT" {
+  together {
+    entity "companies" as companies {
+      * id : BIGINT
+      --
+      owner_user_id : BIGINT
+      name : VARCHAR
+      tax_code : VARCHAR
+      website_url : VARCHAR
+      industry : VARCHAR
+      company_size : VARCHAR
+      status : VARCHAR
+    }
+
+    entity "company_members" as company_members {
+      * company_id : BIGINT
+      * user_id : BIGINT
+      --
+      member_role : VARCHAR
+      joined_at : DATETIME
+    }
+
+    entity "jobs" as jobs {
+      * id : BIGINT
+      --
+      company_id : BIGINT
+      posted_by_user_id : BIGINT
+      code : VARCHAR
+      title : VARCHAR
+      slug : VARCHAR
+      job_type : VARCHAR
+      work_mode : VARCHAR
+      location : VARCHAR
+      salary_min : DECIMAL
+      salary_max : DECIMAL
+      currency : VARCHAR
+      application_deadline : DATETIME
+      status : VARCHAR
+    }
+
+    entity "job_skills" as job_skills {
+      * id : BIGINT
+      --
+      job_id : BIGINT
+      skill_name : VARCHAR
+      is_must_have : BOOLEAN
+      sort_order : INT
+    }
+
+    entity "resumes" as resumes {
+      * id : BIGINT
+      --
+      user_id : BIGINT
+      title : VARCHAR
+      summary : LONGTEXT
+      file_url : VARCHAR
+      is_default : BOOLEAN
+      status : VARCHAR
+    }
+
+    entity "resume_educations" as resume_educations {
+      * id : BIGINT
+      --
+      resume_id : BIGINT
+      institution : VARCHAR
+      major : VARCHAR
+      degree : VARCHAR
+      start_date : DATE
+      end_date : DATE
+      description : TEXT
+      sort_order : INT
+    }
+
+    entity "resume_experiences" as resume_experiences {
+      * id : BIGINT
+      --
+      resume_id : BIGINT
+      company_name : VARCHAR
+      position_title : VARCHAR
+      start_date : DATE
+      end_date : DATE
+      description : TEXT
+      sort_order : INT
+    }
+
+    entity "resume_skills" as resume_skills {
+      * id : BIGINT
+      --
+      resume_id : BIGINT
+      skill_name : VARCHAR
+      proficiency_level : VARCHAR
+      sort_order : INT
+    }
+
+    entity "job_applications" as job_applications {
+      * id : BIGINT
+      --
+      job_id : BIGINT
+      user_id : BIGINT
+      resume_id : BIGINT
+      cover_letter : LONGTEXT
+      status : VARCHAR
+      applied_at : DATETIME
+      reviewed_at : DATETIME
+      reviewed_by : BIGINT
+    }
+  }
+}
+
+companies ||--o{ company_members
+companies ||--o{ jobs
+jobs ||--o{ job_skills
+resumes ||--o{ resume_educations
+resumes ||--o{ resume_experiences
+resumes ||--o{ resume_skills
+jobs ||--o{ job_applications
+resumes ||--o{ job_applications
+
+@enduml

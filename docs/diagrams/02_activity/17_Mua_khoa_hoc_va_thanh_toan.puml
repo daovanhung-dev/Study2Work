@@ -1,0 +1,50 @@
+@startuml
+title STUDY2WORK - Activity - Mua khoa hoc va thanh toan
+
+start
+
+partition "Hoc vien" {
+  :Chon khoa hoc can mua;
+  :Nhan mua ngay;
+  :Kiem tra gio hang / don hang;
+}
+
+partition "He thong" {
+  :Tinh tong tien;
+  :Ap ma giam gia neu co;
+  :Hien thi phuong thuc thanh toan;
+}
+
+partition "Hoc vien" {
+  :Chon phuong thuc thanh toan;
+  :Xac nhan thanh toan;
+}
+
+partition "He thong" {
+  :Tao giao dich;
+  :Chuyen sang Payment Gateway;
+}
+
+partition "Payment Gateway" {
+  :Xu ly giao dich;
+  if (Thanh toan thanh cong?) then (Co)
+    :Tra ket qua thanh cong;
+  else (Khong)
+    :Tra ket qua that bai;
+  endif
+}
+
+partition "He thong" {
+  if (Nhan thanh cong?) then (Co)
+    :Cap nhat don hang da thanh toan;
+    :Mo quyen truy cap khoa hoc;
+    :Gui hoa don / thong bao thanh cong;
+  else (Khong)
+    :Cap nhat don hang that bai / huy;
+    :Thong bao thanh toan that bai;
+    :Cho phep thanh toan lai;
+  endif
+}
+
+stop
+@enduml

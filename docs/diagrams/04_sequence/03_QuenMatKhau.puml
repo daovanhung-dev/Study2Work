@@ -1,0 +1,259 @@
+@startuml
+title STUDY2WORK - Sequence - Quên mật khẩu
+autonumber
+hide footbox
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  LifeLineBorderColor #666666
+  LifeLineBackgroundColor #F8F8F8
+  ParticipantBorderColor #666666
+  ParticipantBackgroundColor #FFFFFF
+  ActorBorderColor #666666
+  ActorBackgroundColor #FFFFFF
+  BoxBorderColor #999999
+  BoxBackgroundColor #FCFCFC
+  NoteBackgroundColor #FFF9D9
+  NoteBorderColor #B8A24A
+  DatabaseBorderColor #6D6D6D
+  DatabaseBackgroundColor #F8FBFF
+  ControlBorderColor #4F6B8A
+  ControlBackgroundColor #EEF5FC
+}
+
+actor "Người dùng" as USER
+boundary "Web/App UI" as UI
+box "API Layer" #F9FBFD
+control "AuthController" as AUTH_CONTROLLER
+end box
+
+box "Application Layer" #EEF6FF
+control "Validation Layer" as VALIDATOR
+control "AuthService" as AUTH_SERVICE
+control "PasswordResetService" as RESET_SERVICE
+end box
+
+box "Repository Layer" #F4FBF4
+entity "UserRepository" as USER_REPO
+entity "TokenRepository" as TOKEN_REPO
+end box
+
+box "External & Infrastructure" #FFFDF7
+control "Notification Service" as NOTIFY_SERVICE
+database "MySQL DB" as DB
+end box
+
+== Yêu cầu quên mật khẩu ==
+
+USER -> UI : Nhập email / số điện thoại
+activate UI
+
+note right of UI
+Request DTO:
+- identifier: string
+
+Validation UI:
+- required
+- email hoặc phone format
+end note
+
+UI -> AUTH_CONTROLLER : POST /api/v1/auth/forgot-password
+activate AUTH_CONTROLLER
+
+note right of AUTH_CONTROLLER
+Expected Response:
+200 OK
+404 NOT_FOUND
+422 VALIDATION_ERROR
+500 INTERNAL_SERVER_ERROR
+end note
+
+== VALIDATION FLOW ==
+
+AUTH_CONTROLLER -> VALIDATOR : validateForgotPasswordRequest(dto)
+activate VALIDATOR
+
+note right of VALIDATOR
+Validation Flow:
+- required field
+- format email/phone
+- duplicate detection disabled
+- rate limit check
+end note
+
+alt Dữ liệu không hợp lệ
+    VALIDATOR --> AUTH_CONTROLLER : ValidationException
+    AUTH_CONTROLLER --> UI : 422 VALIDATION_ERROR
+    UI --> USER : Hiển thị lỗi validate
+    deactivate VALIDATOR
+else Dữ liệu hợp lệ
+    VALIDATOR --> AUTH_CONTROLLER : validatedDto
+    deactivate VALIDATOR
+
+    == BUSINESS FLOW ==
+
+    AUTH_CONTROLLER -> AUTH_SERVICE : requestPasswordReset(validatedDto)
+    activate AUTH_SERVICE
+
+    AUTH_SERVICE -> USER_REPO : findByIdentifier(identifier)
+    activate USER_REPO
+
+    note right of USER_REPO
+    Repository Method:
+    findByIdentifier(identifier)
+
+    Input:
+    - identifier:string
+
+    Output:
+    - UserEntity? 
+    end note
+
+    USER_REPO -> DB : SELECT * FROM users WHERE email = ? OR phone = ?
+    activate DB
+
+    note right of DB
+    DATABASE ACTION:
+    READ users
+
+    Purpose:
+    - tìm tài khoản theo email hoặc số điện thoại
+
+    Input:
+    - identifier
+
+    Returned Fields:
+    - user_id
+    - email
+    - phone
+    - status
+    - is_verified
+    end note
+
+    DB --> USER_REPO : user / null
+    deactivate DB
+    USER_REPO --> AUTH_SERVICE : user
+    deactivate USER_REPO
+
+    alt Không tìm thấy tài khoản
+        AUTH_SERVICE --> AUTH_CONTROLLER : NotFoundException(USER_NOT_FOUND)
+        AUTH_CONTROLLER --> UI : 404 NOT_FOUND
+        UI --> USER : Hiển thị "Không tìm thấy tài khoản"
+    else Tìm thấy tài khoản
+
+        == Business Rule ==
+
+        alt user.status != ACTIVE
+            AUTH_SERVICE --> AUTH_CONTROLLER : ForbiddenException(ACCOUNT_INACTIVE)
+            AUTH_CONTROLLER --> UI : 403 FORBIDDEN
+            UI --> USER : Hiển thị "Tài khoản đang bị khóa"
+        else user.status == ACTIVE
+
+            AUTH_SERVICE -> RESET_SERVICE : generateResetToken(user)
+            activate RESET_SERVICE
+
+            group BEGIN TRANSACTION
+
+                RESET_SERVICE -> TOKEN_REPO : createPasswordResetToken(user_id)
+                activate TOKEN_REPO
+
+                note right of TOKEN_REPO
+                Repository Method:
+                createPasswordResetToken(userId)
+
+                Input:
+                - user_id
+                - expire_at
+                - token_type
+
+                Output:
+                - token_entity
+                end note
+
+                TOKEN_REPO -> DB : INSERT INTO user_verification_tokens
+                activate DB
+
+                note right of DB
+                DATABASE ACTION:
+                WRITE user_verification_tokens
+
+                Purpose:
+                - lưu token xác thực quên mật khẩu
+
+                Insert Fields:
+                - token_id
+                - user_id
+                - token
+                - type = PASSWORD_RESET
+                - expires_at
+                - created_at
+                end note
+
+                DB --> TOKEN_REPO : token_entity
+                deactivate DB
+                TOKEN_REPO --> RESET_SERVICE : token_entity
+                deactivate TOKEN_REPO
+
+                RESET_SERVICE -> NOTIFY_SERVICE : sendPasswordResetNotification(user, token)
+                activate NOTIFY_SERVICE
+
+                note right of NOTIFY_SERVICE
+                External Service:
+                - email / SMS notification
+
+                Payload:
+                - recipient
+                - reset link or OTP
+                - expire time
+                end note
+
+                NOTIFY_SERVICE --> RESET_SERVICE : notificationResult
+                deactivate NOTIFY_SERVICE
+
+            end
+
+            deactivate RESET_SERVICE
+
+            alt Thông báo gửi thành công
+                AUTH_SERVICE --> AUTH_CONTROLLER : PasswordResetSentResponseDTO
+                note right of AUTH_CONTROLLER
+                Response DTO:
+                {
+                  status: "RESET_EMAIL_SENT",
+                  message: "Vui lòng kiểm tra hộp thư hoặc SMS"
+                }
+                end note
+                AUTH_CONTROLLER --> UI : 200 OK
+                UI --> USER : Hiển thị thông báo thành công
+            else Gửi thông báo lỗi
+                AUTH_SERVICE --> AUTH_CONTROLLER : SystemException(NOTIFICATION_FAILED)
+                AUTH_CONTROLLER --> UI : 500 INTERNAL_SERVER_ERROR
+                UI --> USER : Hiển thị lỗi hệ thống
+            end
+        end
+    end
+end
+
+== ERROR FLOW ==
+
+group SYSTEM EXCEPTION FLOW
+    AUTH_SERVICE -> AUTH_SERVICE : catch(SystemException)
+
+    note right of AUTH_SERVICE
+    Rollback Conditions:
+    - DB insert thất bại
+    - notification thất bại
+    - token tạo lỗi
+
+    Action:
+    - rollback transaction
+    - ghi log audit
+    - cảnh báo monitoring
+    end note
+end
+
+@enduml

@@ -1,0 +1,39 @@
+@startuml
+title STUDY2WORK - Activity - Nop bai tap
+
+start
+
+partition "Hoc vien" {
+  :Mo bai tap;
+  :Xem han nop;
+  :Chuan bi bai nop;
+  :Tai file / nhap noi dung / dan link;
+  :Nhan nop bai;
+}
+
+partition "He thong" {
+  :Kiem tra dinh dang de bai;
+  :Kiem tra han nop;
+  if (Con han?) then (Co)
+    :Kiem tra du lieu nop;
+    if (Hop le?) then (Co)
+      :Luu bai nop;
+      :Tao ma lan nop;
+      :Danh dau trang thai Da nop;
+      :Gui thong bao xac nhan;
+    else (Khong)
+      :Thong bao file / du lieu khong hop le;
+    endif
+  else (Khong)
+    :Thong bao qua han nop;
+    :Kiem tra co cho phep nop muon khong;
+    if (Duoc phep nop muon?) then (Co)
+      :Luu trang thai nop muon;
+    else (Khong)
+      :Tu choi nhan bai;
+    endif
+  endif
+}
+
+stop
+@enduml

@@ -1,0 +1,282 @@
+@startuml
+title STUDY2WORK - Sequence - Đăng tin tuyển dụng
+autonumber
+hide footbox
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  LifeLineBorderColor #666666
+  LifeLineBackgroundColor #F8F8F8
+  ParticipantBorderColor #666666
+  ParticipantBackgroundColor #FFFFFF
+  ActorBorderColor #666666
+  ActorBackgroundColor #FFFFFF
+  BoxBorderColor #999999
+  BoxBackgroundColor #FCFCFC
+  NoteBackgroundColor #FFF9D9
+  NoteBorderColor #B8A24A
+  DatabaseBorderColor #6D6D6D
+  DatabaseBackgroundColor #F8FBFF
+  ControlBorderColor #4F6B8A
+  ControlBackgroundColor #EEF5FC
+}
+
+actor "Doanh nghiệp" as RECRUITER
+boundary "Web/App UI" as UI
+
+box "API Layer" #F9FBFD
+control "JobController" as JOB_CONTROLLER
+end box
+
+box "Application Layer" #EEF6FF
+control "Validation Layer" as VALIDATOR
+control "JobService" as JOB_SERVICE
+control "NotificationService" as NOTIFY_SERVICE
+end box
+
+box "Repository Layer" #F4FBF4
+entity "CompanyRepository" as COMPANY_REPO
+entity "JobRepository" as JOB_REPO
+entity "JobSkillRepository" as SKILL_REPO
+entity "NotificationRepository" as NOTIFICATION_REPO
+end box
+
+database "MySQL DB" as DB
+
+== Tạo tin tuyển dụng ==
+
+RECRUITER -> UI : Nhập thông tin tuyển dụng
+activate UI
+
+UI -> JOB_CONTROLLER : POST /api/v1/jobs
+activate JOB_CONTROLLER
+
+note right of JOB_CONTROLLER
+Request DTO:
+{
+  job_title,
+  description,
+  salary_range,
+  skills[],
+  requirements
+}
+
+Expected Response:
+201 CREATED
+401 UNAUTHORIZED
+403 FORBIDDEN
+422 VALIDATION_ERROR
+500 INTERNAL_SERVER_ERROR
+end note
+
+== VALIDATION FLOW ==
+
+JOB_CONTROLLER -> VALIDATOR : validateJobCreationRequest(dto)
+activate VALIDATOR
+
+note right of VALIDATOR
+Validation Flow:
+- required fields
+- company membership
+- job title format
+- skill validation
+- business rule
+end note
+
+alt Dữ liệu không hợp lệ
+    VALIDATOR --> JOB_CONTROLLER : ValidationException
+    JOB_CONTROLLER --> UI : 422 VALIDATION_ERROR
+    UI --> RECRUITER : Hiển thị lỗi validate
+    deactivate VALIDATOR
+else Dữ liệu hợp lệ
+    VALIDATOR --> JOB_CONTROLLER : validatedDto
+    deactivate VALIDATOR
+
+    == BUSINESS FLOW ==
+
+    JOB_CONTROLLER -> JOB_SERVICE : createJob(dto, recruiter_id)
+    activate JOB_SERVICE
+
+    JOB_SERVICE -> COMPANY_REPO : verifyCompanyAndMembership(recruiter_id)
+    activate COMPANY_REPO
+
+    note right of COMPANY_REPO
+    Repository Method:
+    verifyCompanyAndMembership(recruiterId)
+
+    Input:
+    - recruiter_id
+
+    Output:
+    - company_entity + membership
+    end note
+
+    COMPANY_REPO -> DB : SELECT companies, company_members WHERE recruiter_id = ?
+    activate DB
+
+    note right of DB
+    DATABASE ACTION:
+    READ companies, company_members
+
+    Purpose:
+    - kiểm tra doanh nghiệp hợp lệ
+
+    Returned Fields:
+    - company_id
+    - member_status
+    - role
+    end note
+
+    DB --> COMPANY_REPO : company + membership
+    deactivate DB
+    COMPANY_REPO --> JOB_SERVICE : company + membership
+    deactivate COMPANY_REPO
+
+    alt Doanh nghiệp không hợp lệ
+        JOB_SERVICE --> JOB_CONTROLLER : ForbiddenException(INVALID_COMPANY)
+        JOB_CONTROLLER --> UI : 403 FORBIDDEN
+        UI --> RECRUITER : Hiển thị "Không có quyền"
+    else Doanh nghiệp hợp lệ
+
+        group BEGIN TRANSACTION
+
+            JOB_SERVICE -> JOB_REPO : insertJob(dto, recruiter_id)
+            activate JOB_REPO
+
+            note right of JOB_REPO
+            Repository Method:
+            insertJob(dto, recruiterId)
+
+            Input:
+            - recruiter_id
+            - company_id
+            - job_title
+            - description
+            - salary_range
+
+            Output:
+            - job_entity
+            end note
+
+            JOB_REPO -> DB : INSERT INTO jobs (recruiter_id, company_id, job_title, description, salary_range, status, created_at)
+            activate DB
+
+            note right of DB
+            DATABASE ACTION:
+            WRITE jobs
+
+            Purpose:
+            - tạo tin tuyển dụng
+
+            Insert Fields:
+            - job_id
+            - recruiter_id
+            - company_id
+            - job_title
+            - description
+            - salary_range
+            - status = ACTIVE
+            - created_at
+            end note
+
+            DB --> JOB_REPO : job_id
+            deactivate DB
+            JOB_REPO --> JOB_SERVICE : job entity
+            deactivate JOB_REPO
+
+            loop Mỗi kỹ năng yêu cầu
+                JOB_SERVICE -> SKILL_REPO : insertSkill(job_id, skill)
+                activate SKILL_REPO
+
+                SKILL_REPO -> DB : INSERT INTO job_skills (job_id, skill_name, level)
+                activate DB
+
+                note right of DB
+                DATABASE ACTION:
+                WRITE job_skills
+
+                Insert Fields:
+                - job_skill_id
+                - job_id
+                - skill_name
+                - level
+                end note
+
+                DB --> SKILL_REPO : success
+                deactivate DB
+                SKILL_REPO --> JOB_SERVICE : success
+                deactivate SKILL_REPO
+            end
+
+        end
+
+        JOB_SERVICE -> NOTIFY_SERVICE : notifyFollowersOrAdmin(job_id)
+        activate NOTIFY_SERVICE
+
+        NOTIFY_SERVICE -> NOTIFICATION_REPO : createNotifications(...)
+        activate NOTIFICATION_REPO
+
+        NOTIFICATION_REPO -> DB : INSERT INTO notifications
+        activate DB
+
+        note right of DB
+        DATABASE ACTION:
+        WRITE notifications
+
+        Insert Fields:
+        - notification_id
+        - recipient_id
+        - job_id
+        - type = NEW_JOB_POSTED
+        end note
+
+        DB --> NOTIFICATION_REPO : success
+        deactivate DB
+        NOTIFICATION_REPO --> NOTIFY_SERVICE : success
+        deactivate NOTIFY_SERVICE
+
+        JOB_SERVICE --> JOB_CONTROLLER : JobResponseDTO
+        deactivate JOB_SERVICE
+
+        note right of JOB_CONTROLLER
+        Response DTO:
+        {
+          job_id,
+          job_title,
+          company_id,
+          status,
+          skills[],
+          created_at
+        }
+        end note
+
+        JOB_CONTROLLER --> UI : 201 CREATED
+        deactivate JOB_CONTROLLER
+        UI --> RECRUITER : Hiển thị tin tuyển dụng đã đăng
+        deactivate UI
+    end
+end
+
+== ERROR FLOW ==
+
+group SYSTEM EXCEPTION FLOW
+    JOB_SERVICE -> JOB_SERVICE : catch(SystemException)
+
+    note right of JOB_SERVICE
+    Rollback Conditions:
+    - DB insert thất bại
+    - company validation lỗi
+    - skill insertion lỗi
+
+    Action:
+    - rollback transaction
+    - ghi log audit
+    - cảnh báo monitoring
+    end note
+end
+
+@enduml

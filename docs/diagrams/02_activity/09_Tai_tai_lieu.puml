@@ -1,0 +1,34 @@
+@startuml
+title STUDY2WORK - Activity - Tai tai lieu
+
+start
+
+partition "Hoc vien" {
+  :Mo muc tai lieu;
+  :Chon tai lieu can tai;
+}
+
+partition "He thong" {
+  :Kiem tra quyen truy cap;
+  if (Co quyen?) then (Co)
+    :Kiem tra trang thai file;
+    if (File ton tai?) then (Co)
+      :Sinh link tai xuong an toan;
+      :Ghi log tai lieu da tai;
+    else (Khong)
+      :Thong bao tai lieu khong ton tai;
+      stop
+    endif
+  else (Khong)
+    :Thong bao chua duoc phep tai;
+    stop
+  endif
+}
+
+partition "Hoc vien" {
+  :Bat dau tai file;
+  :Luu file vao may;
+}
+
+stop
+@enduml

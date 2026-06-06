@@ -1,0 +1,310 @@
+@startuml
+title STUDY2WORK - Sequence - Coding lab
+autonumber
+hide footbox
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  LifeLineBorderColor #666666
+  LifeLineBackgroundColor #F8F8F8
+  ParticipantBorderColor #666666
+  ParticipantBackgroundColor #FFFFFF
+  ActorBorderColor #666666
+  ActorBackgroundColor #FFFFFF
+  BoxBorderColor #999999
+  BoxBackgroundColor #FCFCFC
+  NoteBackgroundColor #FFF9D9
+  NoteBorderColor #B8A24A
+  DatabaseBorderColor #6D6D6D
+  DatabaseBackgroundColor #F8FBFF
+  ControlBorderColor #4F6B8A
+  ControlBackgroundColor #EEF5FC
+}
+
+actor "Học viên" as LEARNER
+boundary "Web/App UI" as UI
+
+box "API Layer" #F9FBFD
+control "LabController" as LAB_CONTROLLER
+end box
+
+box "Application Layer" #EEF6FF
+control "LabService" as LAB_SERVICE
+control "CodeCompilerService" as COMPILER_SERVICE
+control "TestRunnerService" as TEST_SERVICE
+end box
+
+box "Repository Layer" #F4FBF4
+entity "LabRepository" as LAB_REPO
+entity "LabAttemptRepository" as ATTEMPT_REPO
+end box
+
+box "External Services" #FFFDF7
+control "Code Compiler" as COMPILER
+control "Test Engine" as TEST_ENGINE
+end box
+
+database "MySQL DB" as DB
+
+== Mở Coding Lab ==
+
+LEARNER -> UI : Mở coding lab
+activate UI
+
+UI -> LAB_CONTROLLER : GET /api/v1/labs/{id}
+activate LAB_CONTROLLER
+
+LAB_CONTROLLER -> LAB_SERVICE : openLab(user_id, lab_id)
+activate LAB_SERVICE
+
+LAB_SERVICE -> LAB_REPO : getLab(lab_id)
+activate LAB_REPO
+
+LAB_REPO -> DB : SELECT coding_labs WHERE lab_id = ?
+activate DB
+
+note right of DB
+DATABASE ACTION:
+READ coding_labs
+
+Returned Fields:
+- lab_id
+- lab_name
+- description
+- starter_code
+- test_cases
+- difficulty
+end note
+
+DB --> LAB_REPO : lab
+deactivate DB
+LAB_REPO --> LAB_SERVICE : lab entity
+deactivate LAB_REPO
+
+group BEGIN TRANSACTION
+
+    LAB_SERVICE -> ATTEMPT_REPO : createAttempt(user_id, lab_id)
+    activate ATTEMPT_REPO
+
+    ATTEMPT_REPO -> DB : INSERT INTO coding_lab_attempts (user_id, lab_id, started_at, status)
+    activate DB
+
+    note right of DB
+    DATABASE ACTION:
+    WRITE coding_lab_attempts
+
+    Insert Fields:
+    - attempt_id
+    - user_id
+    - lab_id
+    - started_at
+    - status = IN_PROGRESS
+    end note
+
+    DB --> ATTEMPT_REPO : attempt_id
+    deactivate DB
+    ATTEMPT_REPO --> LAB_SERVICE : attempt entity
+    deactivate ATTEMPT_REPO
+
+end
+
+LAB_SERVICE --> LAB_CONTROLLER : LabWorkspaceDTO
+deactivate LAB_SERVICE
+
+LAB_CONTROLLER --> UI : 200 OK
+deactivate LAB_CONTROLLER
+UI --> LEARNER : Hiển thị editor + starter code
+deactivate UI
+
+== Viết code và Submit ==
+
+LEARNER -> UI : Viết code + submit
+activate UI
+
+UI -> LAB_CONTROLLER : POST /api/v1/labs/{id}/submit
+activate LAB_CONTROLLER
+
+note right of LAB_CONTROLLER
+Request DTO:
+{
+  lab_id,
+  source_code
+}
+
+Expected Response:
+200 OK
+401 UNAUTHORIZED
+403 FORBIDDEN
+404 NOT_FOUND
+422 VALIDATION_ERROR
+500 INTERNAL_SERVER_ERROR
+end note
+
+LAB_CONTROLLER -> LAB_SERVICE : submitCode(attempt_id, source_code)
+activate LAB_SERVICE
+
+group BEGIN TRANSACTION
+
+    LAB_SERVICE -> ATTEMPT_REPO : saveSourceCode(attempt_id, source_code)
+    activate ATTEMPT_REPO
+
+    ATTEMPT_REPO -> DB : UPDATE coding_lab_attempts SET source_code = ?, submitted_at = NOW()
+    activate DB
+
+    note right of DB
+    DATABASE ACTION:
+    WRITE coding_lab_attempts
+
+    Updated Fields:
+    - source_code
+    - submitted_at
+    - status = SUBMITTED
+    end note
+
+    DB --> ATTEMPT_REPO : success
+    deactivate DB
+    ATTEMPT_REPO --> LAB_SERVICE : success
+    deactivate ATTEMPT_REPO
+
+    LAB_SERVICE -> COMPILER_SERVICE : compile(source_code)
+    activate COMPILER_SERVICE
+
+    COMPILER_SERVICE -> COMPILER : sendCompileRequest(source_code)
+    activate COMPILER
+
+    note right of COMPILER
+    Code Compiler:
+    - parse syntax
+    - compile code
+    - check error
+    end note
+
+    COMPILER --> COMPILER_SERVICE : compile_result
+    deactivate COMPILER
+
+    COMPILER_SERVICE --> LAB_SERVICE : compile_result
+    deactivate COMPILER_SERVICE
+
+    alt Compile error
+        LAB_SERVICE -> ATTEMPT_REPO : markCompileFailed(attempt_id, error_message)
+        activate ATTEMPT_REPO
+        ATTEMPT_REPO -> DB : UPDATE coding_lab_attempts SET status = COMPILE_ERROR, feedback = ?
+        activate DB
+        DB --> ATTEMPT_REPO : success
+        deactivate DB
+        ATTEMPT_REPO --> LAB_SERVICE : success
+        deactivate ATTEMPT_REPO
+
+        LAB_SERVICE --> LAB_CONTROLLER : CompileErrorResponseDTO
+        deactivate LAB_SERVICE
+        LAB_CONTROLLER --> UI : 422 VALIDATION_ERROR
+        deactivate LAB_CONTROLLER
+        UI --> LEARNER : Hiển thị lỗi compile
+        deactivate UI
+
+    else Compile success
+
+        LAB_SERVICE -> TEST_SERVICE : runTests(source_code)
+        activate TEST_SERVICE
+
+        TEST_SERVICE -> TEST_ENGINE : executeTests(source_code, test_cases)
+        activate TEST_ENGINE
+
+        note right of TEST_ENGINE
+        Test Engine:
+        - run test cases
+        - check output
+        - measure performance
+        end note
+
+        TEST_ENGINE --> TEST_SERVICE : test_results
+        deactivate TEST_ENGINE
+
+        TEST_SERVICE --> LAB_SERVICE : test_results
+        deactivate TEST_SERVICE
+
+        alt Tất cả test pass
+            LAB_SERVICE -> ATTEMPT_REPO : markPassed(attempt_id, score)
+            activate ATTEMPT_REPO
+
+            ATTEMPT_REPO -> DB : UPDATE coding_lab_attempts SET status = PASSED, score = ?, completed_at = NOW()
+            activate DB
+
+            note right of DB
+            DATABASE ACTION:
+            WRITE coding_lab_attempts
+
+            Updated Fields:
+            - status = PASSED
+            - score
+            - completed_at
+            end note
+
+            DB --> ATTEMPT_REPO : success
+            deactivate DB
+            ATTEMPT_REPO --> LAB_SERVICE : success
+            deactivate ATTEMPT_REPO
+
+            LAB_SERVICE --> LAB_CONTROLLER : SuccessResponseDTO
+            deactivate LAB_SERVICE
+            LAB_CONTROLLER --> UI : 200 OK
+            deactivate LAB_CONTROLLER
+            UI --> LEARNER : Hiển thị "Hoàn thành!"
+            deactivate UI
+
+        else Một số test fail
+            LAB_SERVICE -> ATTEMPT_REPO : markFailed(attempt_id, feedback)
+            activate ATTEMPT_REPO
+
+            ATTEMPT_REPO -> DB : UPDATE coding_lab_attempts SET status = FAILED, feedback = ?, updated_at = NOW()
+            activate DB
+
+            note right of DB
+            DATABASE ACTION:
+            WRITE coding_lab_attempts
+
+            Updated Fields:
+            - status = FAILED
+            - feedback
+            - updated_at
+            end note
+
+            DB --> ATTEMPT_REPO : success
+            deactivate DB
+            ATTEMPT_REPO --> LAB_SERVICE : success
+            deactivate ATTEMPT_REPO
+
+            LAB_SERVICE --> LAB_CONTROLLER : FailureResponseDTO
+            deactivate LAB_SERVICE
+            LAB_CONTROLLER --> UI : 200 OK
+            deactivate LAB_CONTROLLER
+            UI --> LEARNER : Hiển thị feedback + failed tests
+            deactivate UI
+        end
+    end
+
+end
+
+== ERROR FLOW ==
+
+group SYSTEM EXCEPTION FLOW
+    LAB_SERVICE -> LAB_SERVICE : catch(SystemException)
+
+    note right of LAB_SERVICE
+    Rollback Conditions:
+    - DB update thất bại
+    - compiler service lỗi
+    - test runner lỗi
+
+    Action:
+    - rollback transaction
+    - ghi log audit
+    - cảnh báo monitoring
+    end note
+end
+
+@enduml

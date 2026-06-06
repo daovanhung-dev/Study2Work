@@ -1,0 +1,373 @@
+@startuml
+title STUDY2WORK - Sequence - Quản trị khóa học
+autonumber
+hide footbox
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  LifeLineBorderColor #666666
+  LifeLineBackgroundColor #F8F8F8
+  ParticipantBorderColor #666666
+  ParticipantBackgroundColor #FFFFFF
+  ActorBorderColor #666666
+  ActorBackgroundColor #FFFFFF
+  BoxBorderColor #999999
+  BoxBackgroundColor #FCFCFC
+  NoteBackgroundColor #FFF9D9
+  NoteBorderColor #B8A24A
+  DatabaseBorderColor #6D6D6D
+  DatabaseBackgroundColor #F8FBFF
+  ControlBorderColor #4F6B8A
+  ControlBackgroundColor #EEF5FC
+}
+
+actor "Quản trị viên" as ADMIN
+boundary "Admin UI" as UI
+
+box "API Layer" #F9FBFD
+control "CourseAdminController" as COURSE_ADMIN_CONTROLLER
+end box
+
+box "Application Layer" #EEF6FF
+control "Validation Layer" as VALIDATOR
+control "CourseAdminService" as COURSE_ADMIN_SERVICE
+control "AuditService" as AUDIT_SERVICE
+end box
+
+box "Repository Layer" #F4FBF4
+entity "CourseRepository" as COURSE_REPO
+entity "ModuleRepository" as MODULE_REPO
+entity "LessonRepository" as LESSON_REPO
+entity "ResourceRepository" as RESOURCE_REPO
+entity "QuizRepository" as QUIZ_REPO
+entity "AssignmentRepository" as ASSIGNMENT_REPO
+entity "LabRepository" as LAB_REPO
+entity "AuditLogRepository" as AUDIT_REPO
+end box
+
+database "MySQL DB" as DB
+
+== Tạo / sửa khóa học ==
+
+ADMIN -> UI : Tạo hoặc sửa khóa học
+activate UI
+
+UI -> COURSE_ADMIN_CONTROLLER : POST /api/v1/admin/courses
+activate COURSE_ADMIN_CONTROLLER
+
+note right of COURSE_ADMIN_CONTROLLER
+Request DTO:
+{
+  course_name,
+  description,
+  price,
+  modules[],
+  lessons[],
+  resources[],
+  quizzes[],
+  assignments[],
+  labs[]
+}
+
+Expected Response:
+201 CREATED / 200 OK
+401 UNAUTHORIZED
+403 FORBIDDEN
+422 VALIDATION_ERROR
+500 INTERNAL_SERVER_ERROR
+end note
+
+== VALIDATION FLOW ==
+
+COURSE_ADMIN_CONTROLLER -> VALIDATOR : validateCourseRequest(dto)
+activate VALIDATOR
+
+note right of VALIDATOR
+Validation Flow:
+- required fields
+- name length
+- price validation
+- module/lesson structure
+- business rule
+end note
+
+alt Dữ liệu không hợp lệ
+    VALIDATOR --> COURSE_ADMIN_CONTROLLER : ValidationException
+    COURSE_ADMIN_CONTROLLER --> UI : 422 VALIDATION_ERROR
+    UI --> ADMIN : Hiển thị lỗi validate
+    deactivate VALIDATOR
+else Dữ liệu hợp lệ
+    VALIDATOR --> COURSE_ADMIN_CONTROLLER : validatedDto
+    deactivate VALIDATOR
+
+    == BUSINESS FLOW ==
+
+    COURSE_ADMIN_CONTROLLER -> COURSE_ADMIN_SERVICE : saveCourse(dto)
+    activate COURSE_ADMIN_SERVICE
+
+    group BEGIN TRANSACTION
+
+        COURSE_ADMIN_SERVICE -> COURSE_REPO : upsertCourse(dto)
+        activate COURSE_REPO
+
+        note right of COURSE_REPO
+        Repository Method:
+        upsertCourse(dto)
+
+        Input:
+        - course_name
+        - description
+        - price
+        - status
+
+        Output:
+        - course_entity
+        end note
+
+        COURSE_REPO -> DB : INSERT INTO courses OR UPDATE
+        activate DB
+
+        note right of DB
+        DATABASE ACTION:
+        WRITE courses
+
+        Insert/Update Fields:
+        - course_id
+        - course_name
+        - description
+        - price
+        - status
+        - updated_at
+        end note
+
+        DB --> COURSE_REPO : course_id
+        deactivate DB
+        COURSE_REPO --> COURSE_ADMIN_SERVICE : course entity
+        deactivate COURSE_REPO
+
+        opt Có module
+            COURSE_ADMIN_SERVICE -> MODULE_REPO : upsertModules(course_id, modules)
+            activate MODULE_REPO
+
+            MODULE_REPO -> DB : INSERT INTO course_modules OR UPDATE
+            activate DB
+
+            note right of DB
+            DATABASE ACTION:
+            WRITE course_modules
+
+            Insert/Update Fields:
+            - module_id
+            - course_id
+            - module_name
+            - description
+            end note
+
+            DB --> MODULE_REPO : success
+            deactivate DB
+            MODULE_REPO --> COURSE_ADMIN_SERVICE : success
+            deactivate MODULE_REPO
+        end
+
+        opt Có lesson
+            COURSE_ADMIN_SERVICE -> LESSON_REPO : upsertLessons(course_id, lessons)
+            activate LESSON_REPO
+
+            LESSON_REPO -> DB : INSERT INTO course_lessons OR UPDATE
+            activate DB
+
+            note right of DB
+            DATABASE ACTION:
+            WRITE course_lessons
+
+            Insert/Update Fields:
+            - lesson_id
+            - course_id
+            - module_id
+            - lesson_name
+            - description
+            - duration
+            end note
+
+            DB --> LESSON_REPO : success
+            deactivate DB
+            LESSON_REPO --> COURSE_ADMIN_SERVICE : success
+            deactivate LESSON_REPO
+        end
+
+        opt Có tài nguyên
+            COURSE_ADMIN_SERVICE -> RESOURCE_REPO : upsertResources(lesson_id, resources)
+            activate RESOURCE_REPO
+
+            RESOURCE_REPO -> DB : INSERT INTO lesson_resources OR UPDATE
+            activate DB
+
+            note right of DB
+            DATABASE ACTION:
+            WRITE lesson_resources
+
+            Insert/Update Fields:
+            - resource_id
+            - lesson_id
+            - resource_name
+            - file_url
+            - resource_type
+            end note
+
+            DB --> RESOURCE_REPO : success
+            deactivate DB
+            RESOURCE_REPO --> COURSE_ADMIN_SERVICE : success
+            deactivate RESOURCE_REPO
+        end
+
+        opt Có quiz
+            COURSE_ADMIN_SERVICE -> QUIZ_REPO : upsertQuiz(course_id, quiz)
+            activate QUIZ_REPO
+
+            QUIZ_REPO -> DB : INSERT INTO quizzes OR UPDATE
+            activate DB
+
+            note right of DB
+            DATABASE ACTION:
+            WRITE quizzes, quiz_questions, quiz_options
+
+            Insert/Update Fields:
+            - quiz_id
+            - course_id
+            - quiz_name
+            - questions
+            - options
+            end note
+
+            DB --> QUIZ_REPO : success
+            deactivate DB
+            QUIZ_REPO --> COURSE_ADMIN_SERVICE : success
+            deactivate QUIZ_REPO
+        end
+
+        opt Có assignment
+            COURSE_ADMIN_SERVICE -> ASSIGNMENT_REPO : upsertAssignments(course_id, assignments)
+            activate ASSIGNMENT_REPO
+
+            ASSIGNMENT_REPO -> DB : INSERT INTO assignments OR UPDATE
+            activate DB
+
+            note right of DB
+            DATABASE ACTION:
+            WRITE assignments
+
+            Insert/Update Fields:
+            - assignment_id
+            - course_id
+            - title
+            - description
+            - deadline
+            end note
+
+            DB --> ASSIGNMENT_REPO : success
+            deactivate DB
+            ASSIGNMENT_REPO --> COURSE_ADMIN_SERVICE : success
+            deactivate ASSIGNMENT_REPO
+        end
+
+        opt Có coding lab
+            COURSE_ADMIN_SERVICE -> LAB_REPO : upsertLabs(course_id, labs)
+            activate LAB_REPO
+
+            LAB_REPO -> DB : INSERT INTO coding_labs OR UPDATE
+            activate DB
+
+            note right of DB
+            DATABASE ACTION:
+            WRITE coding_labs
+
+            Insert/Update Fields:
+            - lab_id
+            - course_id
+            - lab_name
+            - description
+            - starter_code
+            - test_cases
+            end note
+
+            DB --> LAB_REPO : success
+            deactivate DB
+            LAB_REPO --> COURSE_ADMIN_SERVICE : success
+            deactivate LAB_REPO
+        end
+
+        COURSE_ADMIN_SERVICE -> AUDIT_SERVICE : writeAudit(admin_id, action, course_id)
+        activate AUDIT_SERVICE
+
+        AUDIT_SERVICE -> AUDIT_REPO : createAuditLog(...)
+        activate AUDIT_REPO
+
+        AUDIT_REPO -> DB : INSERT INTO admin_audit_logs (admin_id, action, target_course_id, changes, timestamp)
+        activate DB
+
+        note right of DB
+        DATABASE ACTION:
+        WRITE admin_audit_logs
+
+        Insert Fields:
+        - audit_id
+        - admin_id
+        - action = COURSE_SAVED
+        - target_course_id
+        - changes
+        - timestamp
+        end note
+
+        DB --> AUDIT_REPO : success
+        deactivate DB
+        AUDIT_REPO --> AUDIT_SERVICE : success
+        deactivate AUDIT_REPO
+
+        AUDIT_SERVICE --> COURSE_ADMIN_SERVICE : success
+        deactivate AUDIT_SERVICE
+
+    end
+
+    COURSE_ADMIN_SERVICE --> COURSE_ADMIN_CONTROLLER : CourseResponseDTO
+    deactivate COURSE_ADMIN_SERVICE
+
+    note right of COURSE_ADMIN_CONTROLLER
+    Response DTO:
+    {
+      course_id,
+      course_name,
+      status,
+      modules_count,
+      lessons_count
+    }
+    end note
+
+    COURSE_ADMIN_CONTROLLER --> UI : 201 CREATED / 200 OK
+    deactivate COURSE_ADMIN_CONTROLLER
+    UI --> ADMIN : Thông báo lưu khóa học thành công
+    deactivate UI
+end
+
+== ERROR FLOW ==
+
+group SYSTEM EXCEPTION FLOW
+    COURSE_ADMIN_SERVICE -> COURSE_ADMIN_SERVICE : catch(SystemException)
+
+    note right of COURSE_ADMIN_SERVICE
+    Rollback Conditions:
+    - DB insert/update thất bại
+    - nested entity save lỗi
+    - audit log thất bại
+
+    Action:
+    - rollback transaction
+    - ghi log audit
+    - cảnh báo monitoring
+    end note
+end
+
+@enduml

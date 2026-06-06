@@ -1,0 +1,112 @@
+@startuml
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam nodesep 60
+skinparam ranksep 70
+skinparam dpi 160
+left to right direction
+title STUDY2WORK - LEARNING Module
+
+package "LEARNING" {
+  together {
+    entity "course_categories" as course_categories {
+      * id : BIGINT
+      --
+      parent_id : BIGINT
+      code : VARCHAR
+      name : VARCHAR
+      is_active : BOOLEAN
+    }
+
+    entity "courses" as courses {
+      * id : BIGINT
+      --
+      category_id : BIGINT
+      instructor_user_id : BIGINT
+      code : VARCHAR
+      slug : VARCHAR
+      title : VARCHAR
+      level : VARCHAR
+      price : DECIMAL
+      is_free : BOOLEAN
+      status : VARCHAR
+    }
+
+    entity "course_modules" as course_modules {
+      * id : BIGINT
+      --
+      course_id : BIGINT
+      title : VARCHAR
+      sort_order : INT
+    }
+
+    entity "course_lessons" as course_lessons {
+      * id : BIGINT
+      --
+      course_id : BIGINT
+      module_id : BIGINT
+      lesson_type : VARCHAR
+      title : VARCHAR
+      duration_seconds : INT
+      is_preview : BOOLEAN
+      status : VARCHAR
+    }
+
+    entity "lesson_resources" as lesson_resources {
+      * id : BIGINT
+      --
+      lesson_id : BIGINT
+      resource_type : VARCHAR
+      file_name : VARCHAR
+      file_url : VARCHAR
+      file_size_bytes : BIGINT
+      mime_type : VARCHAR
+    }
+
+    entity "course_enrollments" as course_enrollments {
+      * id : BIGINT
+      --
+      user_id : BIGINT
+      course_id : BIGINT
+      order_id : BIGINT
+      status : VARCHAR
+      progress_percent : DECIMAL
+      completed_at : DATETIME
+    }
+
+    entity "lesson_progress" as lesson_progress {
+      * id : BIGINT
+      --
+      enrollment_id : BIGINT
+      lesson_id : BIGINT
+      status : VARCHAR
+      last_position_seconds : INT
+      completed_at : DATETIME
+    }
+
+    entity "video_watch_logs" as video_watch_logs {
+      * id : BIGINT
+      --
+      user_id : BIGINT
+      lesson_id : BIGINT
+      watched_seconds : INT
+      last_position_seconds : INT
+      completed_flag : BOOLEAN
+      watched_at : DATETIME
+    }
+  }
+}
+
+course_categories ||--o{ course_categories : parent
+course_categories ||--o{ courses
+courses ||--o{ course_modules
+course_modules ||--o{ course_lessons
+course_lessons ||--o{ lesson_resources
+course_lessons ||--o{ lesson_progress
+course_enrollments ||--o{ lesson_progress
+course_lessons ||--o{ video_watch_logs
+
+@enduml

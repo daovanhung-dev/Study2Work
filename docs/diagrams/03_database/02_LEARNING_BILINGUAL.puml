@@ -1,0 +1,113 @@
+@startuml
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam nodesep 60
+skinparam ranksep 70
+skinparam dpi 160
+left to right direction
+title STUDY2WORK - Mô-đun HỌC-TẬP (LEARNING Module)
+
+package "HỌC-TẬP / LEARNING" {
+  together {
+    entity "danh_mục_khóa\n(course_categories)" as course_categories {
+      * id : BIGINT
+      --
+      parent_id : BIGINT [danh mục cha]
+      code : VARCHAR [mã code]
+      name : VARCHAR [tên danh mục]
+      is_active : BOOLEAN [kích hoạt]
+    }
+
+    entity "khóa_học\n(courses)" as courses {
+      * id : BIGINT
+      --
+      category_id : BIGINT [danh mục]
+      instructor_user_id : BIGINT [giảng viên]
+      code : VARCHAR [mã khóa]
+      slug : VARCHAR [URL slug]
+      title : VARCHAR [tên khóa học]
+      level : VARCHAR [cấp độ]
+      price : DECIMAL [giá]
+      is_free : BOOLEAN [miễn phí]
+      status : VARCHAR [trạng thái]
+    }
+
+    entity "chương_học\n(course_modules)" as course_modules {
+      * id : BIGINT
+      --
+      course_id : BIGINT [khóa học]
+      title : VARCHAR [tên chương]
+      sort_order : INT [thứ tự]
+    }
+
+    entity "bài_học\n(course_lessons)" as course_lessons {
+      * id : BIGINT
+      --
+      course_id : BIGINT [khóa học]
+      module_id : BIGINT [chương]
+      lesson_type : VARCHAR [loại bài]
+      title : VARCHAR [tên bài]
+      duration_seconds : INT [thời lượng (giây)]
+      is_preview : BOOLEAN [xem trước]
+      status : VARCHAR [trạng thái]
+    }
+
+    entity "tài_liệu_bài_học\n(lesson_resources)" as lesson_resources {
+      * id : BIGINT
+      --
+      lesson_id : BIGINT [bài học]
+      resource_type : VARCHAR [loại tài liệu]
+      file_name : VARCHAR [tên file]
+      file_url : VARCHAR [URL file]
+      file_size_bytes : BIGINT [dung lượng]
+      mime_type : VARCHAR [loại file]
+    }
+
+    entity "đăng_ký_khóa\n(course_enrollments)" as course_enrollments {
+      * id : BIGINT
+      --
+      user_id : BIGINT [người dùng]
+      course_id : BIGINT [khóa học]
+      order_id : BIGINT [đơn hàng]
+      status : VARCHAR [trạng thái]
+      progress_percent : DECIMAL [tiến độ %]
+      completed_at : DATETIME [hoàn thành lúc]
+    }
+
+    entity "tiến_độ_bài_học\n(lesson_progress)" as lesson_progress {
+      * id : BIGINT
+      --
+      enrollment_id : BIGINT [đăng ký]
+      lesson_id : BIGINT [bài học]
+      status : VARCHAR [trạng thái]
+      last_position_seconds : INT [vị trí cuối (giây)]
+      completed_at : DATETIME [hoàn thành lúc]
+    }
+
+    entity "lịch_xem_video\n(video_watch_logs)" as video_watch_logs {
+      * id : BIGINT
+      --
+      user_id : BIGINT [người dùng]
+      lesson_id : BIGINT [bài học]
+      watched_seconds : INT [đã xem (giây)]
+      last_position_seconds : INT [vị trí cuối (giây)]
+      completed_flag : BOOLEAN [đã hoàn thành]
+      watched_at : DATETIME [xem lúc]
+    }
+  }
+}
+
+course_categories ||--o{ courses : "chứa"
+courses ||--o{ course_modules : "có"
+courses ||--o{ course_lessons : "chứa"
+course_modules ||--o{ course_lessons : "có"
+course_lessons ||--o{ lesson_resources : "có"
+courses ||--o{ course_enrollments : "được đăng ký"
+course_enrollments ||--o{ lesson_progress : "theo dõi"
+course_lessons ||--o{ lesson_progress : "liên quan"
+course_lessons ||--o{ video_watch_logs : "được xem"
+
+@enduml

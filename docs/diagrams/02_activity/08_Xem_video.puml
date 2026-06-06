@@ -1,0 +1,41 @@
+@startuml
+title STUDY2WORK - Activity - Xem video
+
+start
+
+partition "Hoc vien" {
+  :Mo bai hoc video;
+  :Nhan play;
+}
+
+partition "He thong" {
+  :Kiem tra quyen truy cap video;
+  if (Du quyen?) then (Co)
+    :Tai video streaming;
+    :Bat dau phat video;
+  else (Khong)
+    :Thong bao chua duoc phep xem;
+    stop
+  endif
+}
+
+partition "Hoc vien" {
+  :Xem video;
+  :Tam dung / tua / phat tiep;
+  :Thay doi toc do / chat luong neu can;
+}
+
+partition "He thong" {
+  :Ghi nhan thoi luong da xem;
+  :Luu vi tri dang xem;
+  if (Video xem xong?) then (Co)
+    :Danh dau hoan thanh;
+    :Cap nhat tien do khoa hoc;
+    :Mo khoa hoc / bai hoc tiep theo;
+  else (Khong)
+    :Luu tien do de xem lai;
+  endif
+}
+
+stop
+@enduml

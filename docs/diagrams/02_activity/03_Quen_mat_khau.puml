@@ -1,0 +1,48 @@
+@startuml
+title STUDY2WORK - Activity - Quen mat khau
+
+start
+
+partition "Khach truy cap" {
+  :Mo chuc nang quen mat khau;
+  :Nhap email / so dien thoai;
+  :Nhan gui yeu cau khoi phuc;
+}
+
+partition "He thong" {
+  :Kiem tra thong tin tai khoan;
+  if (Ton tai tai khoan?) then (Co)
+    :Sinh OTP / link dat lai mat khau;
+    :Luu thoi gian het han;
+    :Gui OTP / email khoi phuc;
+  else (Khong)
+    :Thong bao khong tim thay tai khoan;
+    stop
+  endif
+}
+
+partition "Khach truy cap" {
+  :Nhap OTP / mo link dat lai;
+  :Nhap mat khau moi;
+  :Nhap xac nhan mat khau moi;
+}
+
+partition "He thong" {
+  :Kiem tra OTP / link;
+  if (Hop le?) then (Co)
+    :Kiem tra mat khau moi;
+    if (Mat khau hop le va khop?) then (Co)
+      :Cap nhat mat khau moi;
+      :Huy token dat lai mat khau cu;
+      :Thong bao doi mat khau thanh cong;
+    else (Khong)
+      :Thong bao mat khau khong hop le / khong khop;
+    endif
+  else (Khong)
+    :Thong bao OTP / link het han;
+    :Cho phep gui lai yeu cau;
+  endif
+}
+
+stop
+@enduml

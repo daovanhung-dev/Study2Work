@@ -1,0 +1,300 @@
+@startuml
+title STUDY2WORK - Sequence - Review code
+autonumber
+hide footbox
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  LifeLineBorderColor #666666
+  LifeLineBackgroundColor #F8F8F8
+  ParticipantBorderColor #666666
+  ParticipantBackgroundColor #FFFFFF
+  ActorBorderColor #666666
+  ActorBackgroundColor #FFFFFF
+  BoxBorderColor #999999
+  BoxBackgroundColor #FCFCFC
+  NoteBackgroundColor #FFF9D9
+  NoteBorderColor #B8A24A
+  DatabaseBorderColor #6D6D6D
+  DatabaseBackgroundColor #F8FBFF
+  ControlBorderColor #4F6B8A
+  ControlBackgroundColor #EEF5FC
+}
+
+actor "Mentor" as MENTOR
+boundary "Web/App UI" as UI
+
+box "API Layer" #F9FBFD
+control "ReviewController" as REVIEW_CONTROLLER
+end box
+
+box "Application Layer" #EEF6FF
+control "ReviewService" as REVIEW_SERVICE
+control "NotificationService" as NOTIFY_SERVICE
+end box
+
+box "Repository Layer" #F4FBF4
+entity "SubmissionRepository" as SUBMISSION_REPO
+entity "LabAttemptRepository" as ATTEMPT_REPO
+entity "CodeReviewRepository" as REVIEW_REPO
+entity "NotificationRepository" as NOTIFICATION_REPO
+end box
+
+database "MySQL DB" as DB
+
+== Xem danh sách cần review ==
+
+MENTOR -> UI : Mở danh sách cần review
+activate UI
+
+UI -> REVIEW_CONTROLLER : GET /api/v1/reviews/pending
+activate REVIEW_CONTROLLER
+
+REVIEW_CONTROLLER -> REVIEW_SERVICE : listPendingReviews(mentor_id)
+activate REVIEW_SERVICE
+
+REVIEW_SERVICE --> REVIEW_CONTROLLER : PendingReviewsResponseDTO
+deactivate REVIEW_SERVICE
+
+REVIEW_CONTROLLER --> UI : 200 OK
+deactivate REVIEW_CONTROLLER
+UI --> MENTOR : Hiển thị danh sách
+deactivate UI
+
+== Review bài nộp hoặc coding lab ==
+
+MENTOR -> UI : Mở bài cần review
+activate UI
+
+UI -> REVIEW_CONTROLLER : POST /api/v1/reviews/submit
+activate REVIEW_CONTROLLER
+
+note right of REVIEW_CONTROLLER
+Request DTO:
+{
+  submission_id OR lab_attempt_id,
+  review_comments,
+  score,
+  status
+}
+
+Expected Response:
+200 OK / 201 CREATED
+401 UNAUTHORIZED
+403 FORBIDDEN
+404 NOT_FOUND
+422 VALIDATION_ERROR
+500 INTERNAL_SERVER_ERROR
+end note
+
+== VALIDATION FLOW ==
+
+alt Review assignment submission
+
+    REVIEW_CONTROLLER -> REVIEW_SERVICE : reviewSubmission(submission_id, review_payload)
+    activate REVIEW_SERVICE
+
+    REVIEW_SERVICE -> SUBMISSION_REPO : getSubmission(submission_id)
+    activate SUBMISSION_REPO
+
+    SUBMISSION_REPO -> DB : SELECT assignment_submissions WHERE submission_id = ?
+    activate DB
+
+    note right of DB
+    DATABASE ACTION:
+    READ assignment_submissions
+
+    Returned Fields:
+    - submission_id
+    - user_id
+    - assignment_id
+    - submission_content
+    end note
+
+    DB --> SUBMISSION_REPO : submission
+    deactivate DB
+    SUBMISSION_REPO --> REVIEW_SERVICE : submission entity
+    deactivate SUBMISSION_REPO
+
+    group BEGIN TRANSACTION
+
+        REVIEW_SERVICE -> REVIEW_REPO : saveReview(submission_id, review_payload)
+        activate REVIEW_REPO
+
+        REVIEW_REPO -> DB : INSERT INTO code_reviews (submission_id, mentor_id, comments, score, reviewed_at)
+        activate DB
+
+        note right of DB
+        DATABASE ACTION:
+        WRITE code_reviews
+
+        Insert Fields:
+        - review_id
+        - submission_id
+        - mentor_id
+        - comments
+        - score
+        - reviewed_at
+        end note
+
+        DB --> REVIEW_REPO : review_id
+        deactivate DB
+        REVIEW_REPO --> REVIEW_SERVICE : review entity
+        deactivate REVIEW_REPO
+
+        REVIEW_SERVICE -> SUBMISSION_REPO : updateSubmissionStatus(submission_id, status)
+        activate SUBMISSION_REPO
+
+        SUBMISSION_REPO -> DB : UPDATE assignment_submissions SET status = REVIEWED, updated_at = NOW()
+        activate DB
+
+        note right of DB
+        DATABASE ACTION:
+        WRITE assignment_submissions
+
+        Updated Fields:
+        - status = REVIEWED
+        - updated_at
+        end note
+
+        DB --> SUBMISSION_REPO : success
+        deactivate DB
+        SUBMISSION_REPO --> REVIEW_SERVICE : success
+        deactivate SUBMISSION_REPO
+
+    end
+
+else Review coding lab attempt
+
+    REVIEW_CONTROLLER -> REVIEW_SERVICE : reviewLabAttempt(lab_attempt_id, review_payload)
+    activate REVIEW_SERVICE
+
+    REVIEW_SERVICE -> ATTEMPT_REPO : getAttempt(lab_attempt_id)
+    activate ATTEMPT_REPO
+
+    ATTEMPT_REPO -> DB : SELECT coding_lab_attempts WHERE attempt_id = ?
+    activate DB
+
+    note right of DB
+    DATABASE ACTION:
+    READ coding_lab_attempts
+
+    Returned Fields:
+    - attempt_id
+    - user_id
+    - lab_id
+    - source_code
+    - score
+    end note
+
+    DB --> ATTEMPT_REPO : attempt
+    deactivate DB
+    ATTEMPT_REPO --> REVIEW_SERVICE : attempt entity
+    deactivate ATTEMPT_REPO
+
+    group BEGIN TRANSACTION
+
+        REVIEW_SERVICE -> REVIEW_REPO : saveReview(lab_attempt_id, review_payload)
+        activate REVIEW_REPO
+
+        REVIEW_REPO -> DB : INSERT INTO code_reviews (lab_attempt_id, mentor_id, comments, score, reviewed_at)
+        activate DB
+
+        note right of DB
+        DATABASE ACTION:
+        WRITE code_reviews
+
+        Insert Fields:
+        - review_id
+        - lab_attempt_id
+        - mentor_id
+        - comments
+        - score
+        - reviewed_at
+        end note
+
+        DB --> REVIEW_REPO : review_id
+        deactivate DB
+        REVIEW_REPO --> REVIEW_SERVICE : review entity
+        deactivate REVIEW_REPO
+
+        REVIEW_SERVICE -> ATTEMPT_REPO : updateAttemptStatus(lab_attempt_id, status)
+        activate ATTEMPT_REPO
+
+        ATTEMPT_REPO -> DB : UPDATE coding_lab_attempts SET status = REVIEWED, updated_at = NOW()
+        activate DB
+
+        note right of DB
+        DATABASE ACTION:
+        WRITE coding_lab_attempts
+
+        Updated Fields:
+        - status = REVIEWED
+        - updated_at
+        end note
+
+        DB --> ATTEMPT_REPO : success
+        deactivate DB
+        ATTEMPT_REPO --> REVIEW_SERVICE : success
+        deactivate ATTEMPT_REPO
+
+    end
+
+end
+
+REVIEW_SERVICE -> NOTIFY_SERVICE : notifyLearner(user_id, review_id)
+activate NOTIFY_SERVICE
+
+NOTIFY_SERVICE -> NOTIFICATION_REPO : createNotification(...)
+activate NOTIFICATION_REPO
+
+NOTIFICATION_REPO -> DB : INSERT INTO notifications
+activate DB
+
+note right of DB
+DATABASE ACTION:
+WRITE notifications
+
+Insert Fields:
+- notification_id
+- recipient_id
+- review_id
+- type = CODE_REVIEWED
+end note
+
+DB --> NOTIFICATION_REPO : success
+deactivate DB
+NOTIFICATION_REPO --> NOTIFY_SERVICE : success
+deactivate NOTIFY_SERVICE
+
+REVIEW_SERVICE --> REVIEW_CONTROLLER : ReviewResponseDTO
+deactivate REVIEW_SERVICE
+
+REVIEW_CONTROLLER --> UI : 201 CREATED
+deactivate REVIEW_CONTROLLER
+UI --> MENTOR : Hiển thị "Review thành công"
+deactivate UI
+
+== ERROR FLOW ==
+
+group SYSTEM EXCEPTION FLOW
+    REVIEW_SERVICE -> REVIEW_SERVICE : catch(SystemException)
+
+    note right of REVIEW_SERVICE
+    Rollback Conditions:
+    - DB insert/update thất bại
+    - submission/attempt không tồn tại
+    - notification service lỗi
+
+    Action:
+    - rollback transaction
+    - ghi log audit
+    - cảnh báo monitoring
+    end note
+end
+
+@enduml

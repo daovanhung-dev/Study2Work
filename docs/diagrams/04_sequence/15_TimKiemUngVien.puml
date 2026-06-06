@@ -1,0 +1,290 @@
+@startuml
+title STUDY2WORK - Sequence - Tìm kiếm ứng viên
+autonumber
+hide footbox
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  LifeLineBorderColor #666666
+  LifeLineBackgroundColor #F8F8F8
+  ParticipantBorderColor #666666
+  ParticipantBackgroundColor #FFFFFF
+  ActorBorderColor #666666
+  ActorBackgroundColor #FFFFFF
+  BoxBorderColor #999999
+  BoxBackgroundColor #FCFCFC
+  NoteBackgroundColor #FFF9D9
+  NoteBorderColor #B8A24A
+  DatabaseBorderColor #6D6D6D
+  DatabaseBackgroundColor #F8FBFF
+  ControlBorderColor #4F6B8A
+  ControlBackgroundColor #EEF5FC
+}
+
+actor "Doanh nghiệp" as RECRUITER
+boundary "Web/App UI" as UI
+
+box "API Layer" #F9FBFD
+control "CandidateSearchController" as SEARCH_CONTROLLER
+end box
+
+box "Application Layer" #EEF6FF
+control "CandidateSearchService" as SEARCH_SERVICE
+control "CandidateMatchingService" as MATCHING_SERVICE
+end box
+
+box "Repository Layer" #F4FBF4
+entity "ResumeRepository" as RESUME_REPO
+entity "ResumeSkillRepository" as SKILL_REPO
+entity "ResumeExperienceRepository" as EXPERIENCE_REPO
+entity "ResumeEducationRepository" as EDUCATION_REPO
+entity "ApplicationRepository" as APPLICATION_REPO
+end box
+
+database "MySQL DB" as DB
+
+== Tìm kiếm ứng viên ==
+
+RECRUITER -> UI : Nhập từ khóa / bộ lọc
+activate UI
+
+UI -> SEARCH_CONTROLLER : GET /api/v1/candidates/search
+activate SEARCH_CONTROLLER
+
+note right of SEARCH_CONTROLLER
+Query Parameters:
+- keywords
+- skills[]
+- experience_level
+- location
+- page
+- limit
+
+Expected Response:
+200 OK
+401 UNAUTHORIZED
+422 VALIDATION_ERROR
+500 INTERNAL_SERVER_ERROR
+end note
+
+SEARCH_CONTROLLER -> SEARCH_SERVICE : searchCandidates(filters)
+activate SEARCH_SERVICE
+
+SEARCH_SERVICE -> RESUME_REPO : findResumes(filters)
+activate RESUME_REPO
+
+note right of RESUME_REPO
+Repository Method:
+findResumes(filters)
+
+Input:
+- keywords
+- filters object
+
+Output:
+- ResumeEntity[]
+end note
+
+RESUME_REPO -> DB : SELECT resumes WHERE status = PUBLISHED AND (name MATCH ? OR skills MATCH ?) LIMIT ?
+activate DB
+
+note right of DB
+DATABASE ACTION:
+READ resumes
+
+Purpose:
+- tìm hồ sơ phù hợp
+
+Returned Fields:
+- resume_id
+- user_id
+- title
+- summary
+- created_at
+end note
+
+DB --> RESUME_REPO : resumes[]
+deactivate DB
+RESUME_REPO --> SEARCH_SERVICE : resumes[]
+deactivate RESUME_REPO
+
+SEARCH_SERVICE -> SKILL_REPO : matchSkills(resume_ids)
+activate SKILL_REPO
+
+note right of SKILL_REPO
+Repository Method:
+matchSkills(resumeIds)
+
+Input:
+- resume_ids[]
+
+Output:
+- ResumeSkillEntity[]
+end note
+
+SKILL_REPO -> DB : SELECT resume_skills WHERE resume_id IN (?)
+activate DB
+
+note right of DB
+DATABASE ACTION:
+READ resume_skills
+
+Purpose:
+- lấy kỹ năng của ứng viên
+
+Returned Fields:
+- skill_id
+- resume_id
+- skill_name
+- proficiency_level
+end note
+
+DB --> SKILL_REPO : skills[]
+deactivate DB
+SKILL_REPO --> SEARCH_SERVICE : skills[]
+deactivate SKILL_REPO
+
+SEARCH_SERVICE -> EXPERIENCE_REPO : loadExperience(resume_ids)
+activate EXPERIENCE_REPO
+
+EXPERIENCE_REPO -> DB : SELECT resume_experiences WHERE resume_id IN (?)
+activate DB
+
+note right of DB
+DATABASE ACTION:
+READ resume_experiences
+
+Purpose:
+- lấy kinh nghiệm làm việc
+
+Returned Fields:
+- experience_id
+- resume_id
+- company
+- position
+- years_exp
+end note
+
+DB --> EXPERIENCE_REPO : experience[]
+deactivate DB
+EXPERIENCE_REPO --> SEARCH_SERVICE : experience[]
+deactivate EXPERIENCE_REPO
+
+SEARCH_SERVICE -> EDUCATION_REPO : loadEducation(resume_ids)
+activate EDUCATION_REPO
+
+EDUCATION_REPO -> DB : SELECT resume_educations WHERE resume_id IN (?)
+activate DB
+
+note right of DB
+DATABASE ACTION:
+READ resume_educations
+
+Purpose:
+- lấy học vấn
+
+Returned Fields:
+- education_id
+- resume_id
+- school
+- degree
+- field
+end note
+
+DB --> EDUCATION_REPO : education[]
+deactivate DB
+EDUCATION_REPO --> SEARCH_SERVICE : education[]
+deactivate EDUCATION_REPO
+
+SEARCH_SERVICE -> APPLICATION_REPO : loadApplicationHistory(resume_owner_ids)
+activate APPLICATION_REPO
+
+APPLICATION_REPO -> DB : SELECT job_applications WHERE user_id IN (?)
+activate DB
+
+note right of DB
+DATABASE ACTION:
+READ job_applications
+
+Purpose:
+- lấy lịch ứng tuyển
+
+Returned Fields:
+- application_id
+- user_id
+- job_id
+- status
+- applied_at
+end note
+
+DB --> APPLICATION_REPO : history[]
+deactivate DB
+APPLICATION_REPO --> SEARCH_SERVICE : history[]
+deactivate APPLICATION_REPO
+
+SEARCH_SERVICE -> MATCHING_SERVICE : rankCandidates(resumes, filter_criteria)
+activate MATCHING_SERVICE
+
+note right of MATCHING_SERVICE
+Matching Algorithm:
+- skill matching score
+- experience relevance
+- education fit
+- location match
+- weighted ranking
+end note
+
+MATCHING_SERVICE --> SEARCH_SERVICE : ranked_list
+deactivate MATCHING_SERVICE
+
+SEARCH_SERVICE --> SEARCH_CONTROLLER : CandidateSearchResponseDTO
+deactivate SEARCH_SERVICE
+
+note right of SEARCH_CONTROLLER
+Response DTO:
+{
+  total_count,
+  candidates[],
+  filters_applied
+}
+
+Candidate Object:
+{
+  resume_id,
+  user_id,
+  name,
+  title,
+  skills[],
+  experience,
+  match_score
+}
+end note
+
+SEARCH_CONTROLLER --> UI : 200 OK
+deactivate SEARCH_CONTROLLER
+UI --> RECRUITER : Hiển thị ứng viên phù hợp
+deactivate UI
+
+== ERROR FLOW ==
+
+group SYSTEM EXCEPTION FLOW
+    SEARCH_SERVICE -> SEARCH_SERVICE : catch(SystemException)
+
+    note right of SEARCH_SERVICE
+    Rollback Conditions:
+    - DB query thất bại
+    - resume data incomplete
+    - matching algorithm lỗi
+
+    Action:
+    - ghi log audit
+    - cảnh báo monitoring
+    - return empty result gracefully
+    end note
+end
+
+@enduml

@@ -1,0 +1,301 @@
+@startuml
+title STUDY2WORK - Sequence - Ứng tuyển công việc
+autonumber
+hide footbox
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  LifeLineBorderColor #666666
+  LifeLineBackgroundColor #F8F8F8
+  ParticipantBorderColor #666666
+  ParticipantBackgroundColor #FFFFFF
+  ActorBorderColor #666666
+  ActorBackgroundColor #FFFFFF
+  BoxBorderColor #999999
+  BoxBackgroundColor #FCFCFC
+  NoteBackgroundColor #FFF9D9
+  NoteBorderColor #B8A24A
+  DatabaseBorderColor #6D6D6D
+  DatabaseBackgroundColor #F8FBFF
+  ControlBorderColor #4F6B8A
+  ControlBackgroundColor #EEF5FC
+}
+
+actor "Học viên" as LEARNER
+boundary "Web/App UI" as UI
+
+box "API Layer" #F9FBFD
+control "ApplicationController" as APPLICATION_CONTROLLER
+end box
+
+box "Application Layer" #EEF6FF
+control "Validation Layer" as VALIDATOR
+control "ApplicationService" as APPLICATION_SERVICE
+control "NotificationService" as NOTIFY_SERVICE
+end box
+
+box "Repository Layer" #F4FBF4
+entity "JobRepository" as JOB_REPO
+entity "ResumeRepository" as RESUME_REPO
+entity "ApplicationRepository" as APPLICATION_REPO
+entity "NotificationRepository" as NOTIFICATION_REPO
+end box
+
+database "MySQL DB" as DB
+
+== Ứng tuyển công việc ==
+
+LEARNER -> UI : Nhấn ứng tuyển
+activate UI
+
+UI -> APPLICATION_CONTROLLER : POST /api/v1/jobs/{id}/apply
+activate APPLICATION_CONTROLLER
+
+note right of APPLICATION_CONTROLLER
+Request DTO:
+{
+  job_id,
+  resume_id,
+  cover_letter
+}
+
+Expected Response:
+201 CREATED
+401 UNAUTHORIZED
+403 FORBIDDEN
+404 NOT_FOUND
+409 CONFLICT
+422 VALIDATION_ERROR
+500 INTERNAL_SERVER_ERROR
+end note
+
+== VALIDATION FLOW ==
+
+APPLICATION_CONTROLLER -> VALIDATOR : validateApplicationRequest(dto)
+activate VALIDATOR
+
+note right of VALIDATOR
+Validation Flow:
+- required fields
+- job exists and open
+- resume exists
+- user hasn't already applied
+end note
+
+alt Dữ liệu không hợp lệ
+    VALIDATOR --> APPLICATION_CONTROLLER : ValidationException
+    APPLICATION_CONTROLLER --> UI : 422 VALIDATION_ERROR
+    UI --> LEARNER : Hiển thị lỗi validate
+    deactivate VALIDATOR
+else Dữ liệu hợp lệ
+    VALIDATOR --> APPLICATION_CONTROLLER : validatedDto
+    deactivate VALIDATOR
+
+    == BUSINESS FLOW ==
+
+    APPLICATION_CONTROLLER -> APPLICATION_SERVICE : applyJob(user_id, job_id, resume_id, cover_letter)
+    activate APPLICATION_SERVICE
+
+    APPLICATION_SERVICE -> JOB_REPO : checkJobIsOpen(job_id)
+    activate JOB_REPO
+
+    note right of JOB_REPO
+    Repository Method:
+    checkJobIsOpen(jobId)
+
+    Input:
+    - job_id
+
+    Output:
+    - job_entity + is_open
+    end note
+
+    JOB_REPO -> DB : SELECT jobs WHERE job_id = ? AND status = ACTIVE
+    activate DB
+
+    note right of DB
+    DATABASE ACTION:
+    READ jobs
+
+    Purpose:
+    - kiểm tra công việc còn mở
+
+    Returned Fields:
+    - job_id
+    - company_id
+    - job_title
+    - status
+    end note
+
+    DB --> JOB_REPO : job
+    deactivate DB
+    JOB_REPO --> APPLICATION_SERVICE : job entity
+    deactivate JOB_REPO
+
+    alt Công việc không mở
+        APPLICATION_SERVICE --> APPLICATION_CONTROLLER : ConflictException(JOB_CLOSED)
+        APPLICATION_CONTROLLER --> UI : 409 CONFLICT
+        UI --> LEARNER : Hiển thị "Công việc này đã đóng"
+    else Công việc còn mở
+
+        APPLICATION_SERVICE -> RESUME_REPO : getResume(resume_id, user_id)
+        activate RESUME_REPO
+
+        note right of RESUME_REPO
+        Repository Method:
+        getResume(resumeId, userId)
+
+        Input:
+        - resume_id
+        - user_id
+
+        Output:
+        - resume_entity
+        end note
+
+        RESUME_REPO -> DB : SELECT resumes WHERE resume_id = ? AND user_id = ?
+        activate DB
+
+        note right of DB
+        DATABASE ACTION:
+        READ resumes
+
+        Purpose:
+        - lấy hồ sơ ứng viên
+
+        Returned Fields:
+        - resume_id
+        - user_id
+        - title
+        - summary
+        end note
+
+        DB --> RESUME_REPO : resume
+        deactivate DB
+        RESUME_REPO --> APPLICATION_SERVICE : resume entity
+        deactivate RESUME_REPO
+
+        alt Hồ sơ không tồn tại
+            APPLICATION_SERVICE --> APPLICATION_CONTROLLER : NotFoundException(RESUME_NOT_FOUND)
+            APPLICATION_CONTROLLER --> UI : 404 NOT_FOUND
+            UI --> LEARNER : Hiển thị "Hồ sơ không tồn tại"
+        else Hồ sơ tồn tại
+
+            group BEGIN TRANSACTION
+
+                APPLICATION_SERVICE -> APPLICATION_REPO : createApplication(user_id, job_id, resume_id, cover_letter)
+                activate APPLICATION_REPO
+
+                note right of APPLICATION_REPO
+                Repository Method:
+                createApplication(...)
+
+                Input:
+                - user_id
+                - job_id
+                - resume_id
+                - cover_letter
+                - applied_at
+
+                Output:
+                - application_entity
+                end note
+
+                APPLICATION_REPO -> DB : INSERT INTO job_applications (user_id, job_id, resume_id, cover_letter, status, applied_at)
+                activate DB
+
+                note right of DB
+                DATABASE ACTION:
+                WRITE job_applications
+
+                Purpose:
+                - lưu đơn ứng tuyển
+
+                Insert Fields:
+                - application_id
+                - user_id
+                - job_id
+                - resume_id
+                - cover_letter
+                - status = SUBMITTED
+                - applied_at
+                end note
+
+                DB --> APPLICATION_REPO : application_id
+                deactivate DB
+                APPLICATION_REPO --> APPLICATION_SERVICE : application entity
+                deactivate APPLICATION_REPO
+
+            end
+
+            APPLICATION_SERVICE -> NOTIFY_SERVICE : notifyRecruiter(job_id, application_id)
+            activate NOTIFY_SERVICE
+
+            NOTIFY_SERVICE -> NOTIFICATION_REPO : createNotification(...)
+            activate NOTIFICATION_REPO
+
+            NOTIFICATION_REPO -> DB : INSERT INTO notifications
+            activate DB
+
+            note right of DB
+            DATABASE ACTION:
+            WRITE notifications
+
+            Insert Fields:
+            - notification_id
+            - recipient_id (recruiter)
+            - job_id
+            - application_id
+            - type = NEW_APPLICATION
+            end note
+
+            DB --> NOTIFICATION_REPO : success
+            deactivate DB
+            NOTIFICATION_REPO --> NOTIFY_SERVICE : success
+            deactivate NOTIFY_SERVICE
+
+            APPLICATION_SERVICE --> APPLICATION_CONTROLLER : ApplicationResponseDTO
+            deactivate APPLICATION_SERVICE
+
+            note right of APPLICATION_CONTROLLER
+            Response DTO:
+            {
+              application_id,
+              job_id,
+              status,
+              applied_at
+            }
+            end note
+
+            APPLICATION_CONTROLLER --> UI : 201 CREATED
+            deactivate APPLICATION_CONTROLLER
+            UI --> LEARNER : Hiển thị "Nộp hồ sơ thành công"
+            deactivate UI
+
+        end
+    end
+end
+
+== ERROR FLOW ==
+
+group SYSTEM EXCEPTION FLOW
+    APPLICATION_SERVICE -> APPLICATION_SERVICE : catch(SystemException)
+
+    note right of APPLICATION_SERVICE
+    Rollback Conditions:
+    - DB insert thất bại
+    - job validation lỗi
+    - notification service lỗi
+
+    Action:
+    - rollback transaction
+    - ghi log audit
+    - cảnh báo monitoring
+    end note
+end
+
+@enduml

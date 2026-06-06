@@ -1,0 +1,289 @@
+@startuml
+title STUDY2WORK - Sequence - Quản lý hồ sơ
+autonumber
+hide footbox
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  LifeLineBorderColor #666666
+  LifeLineBackgroundColor #F8F8F8
+  ParticipantBorderColor #666666
+  ParticipantBackgroundColor #FFFFFF
+  ActorBorderColor #666666
+  ActorBackgroundColor #FFFFFF
+  BoxBorderColor #999999
+  BoxBackgroundColor #FCFCFC
+  NoteBackgroundColor #FFF9D9
+  NoteBorderColor #B8A24A
+  DatabaseBorderColor #6D6D6D
+  DatabaseBackgroundColor #F8FBFF
+  ControlBorderColor #4F6B8A
+  ControlBackgroundColor #EEF5FC
+}
+
+actor "Người dùng" as USER
+boundary "Web/App UI" as UI
+
+box "API Layer" #F9FBFD
+control "ProfileController" as PROFILE_CONTROLLER
+end box
+
+box "Application Layer" #EEF6FF
+control "Validation Layer" as VALIDATOR
+control "ProfileService" as PROFILE_SERVICE
+end box
+
+box "Repository Layer" #F4FBF4
+entity "UserRepository" as USER_REPO
+entity "ProfileRepository" as PROFILE_REPO
+end box
+
+database "MySQL DB" as DB
+
+== Lấy thông tin hồ sơ ==
+
+USER -> UI : Mở hồ sơ cá nhân
+activate UI
+
+UI -> PROFILE_CONTROLLER : GET /api/v1/profile
+activate PROFILE_CONTROLLER
+
+note right of PROFILE_CONTROLLER
+Expected Response:
+200 OK
+401 UNAUTHORIZED
+403 FORBIDDEN
+404 NOT_FOUND
+500 INTERNAL_SERVER_ERROR
+end note
+
+PROFILE_CONTROLLER -> PROFILE_SERVICE : getProfile(user_id)
+activate PROFILE_SERVICE
+
+PROFILE_SERVICE -> USER_REPO : findById(user_id)
+activate USER_REPO
+
+note right of USER_REPO
+Repository Method:
+findById(userId)
+
+Input:
+- user_id
+
+Output:
+- UserEntity?
+end note
+
+USER_REPO -> DB : SELECT * FROM users WHERE user_id = ?
+activate DB
+
+note right of DB
+DATABASE ACTION:
+READ users
+
+Purpose:
+- lấy dữ liệu cơ bản người dùng
+
+Returned Fields:
+- user_id
+- email
+- phone
+- status
+- created_at
+- updated_at
+end note
+
+DB --> USER_REPO : user record
+deactivate DB
+USER_REPO --> PROFILE_SERVICE : user entity
+deactivate USER_REPO
+
+PROFILE_SERVICE -> PROFILE_REPO : findByUserId(user_id)
+activate PROFILE_REPO
+
+note right of PROFILE_REPO
+Repository Method:
+findByUserId(userId)
+
+Input:
+- user_id
+
+Output:
+- ProfileEntity?
+end note
+
+PROFILE_REPO -> DB : SELECT * FROM user_profiles WHERE user_id = ?
+activate DB
+
+note right of DB
+DATABASE ACTION:
+READ user_profiles
+
+Purpose:
+- lấy hồ sơ chi tiết
+
+Returned Fields:
+- profile_id
+- user_id
+- full_name
+- avatar_url
+- bio
+- location
+- phone_verified
+- updated_at
+end note
+
+DB --> PROFILE_REPO : profile record
+deactivate DB
+PROFILE_REPO --> PROFILE_SERVICE : profile entity
+deactivate PROFILE_REPO
+
+PROFILE_SERVICE --> PROFILE_CONTROLLER : ProfileResponseDTO
+deactivate PROFILE_SERVICE
+
+note right of PROFILE_CONTROLLER
+Response DTO:
+{
+  user_id,
+  email,
+  phone,
+  full_name,
+  avatar_url,
+  bio,
+  location
+}
+end note
+
+PROFILE_CONTROLLER --> UI : 200 OK
+deactivate PROFILE_CONTROLLER
+UI --> USER : Hiển thị hồ sơ
+deactivate UI
+
+== Cập nhật thông tin hồ sơ ==
+
+USER -> UI : Nhập dữ liệu cập nhật
+activate UI
+
+UI -> PROFILE_CONTROLLER : PUT /api/v1/profile
+activate PROFILE_CONTROLLER
+
+note right of PROFILE_CONTROLLER
+Request DTO:
+{
+  full_name,
+  avatar_url,
+  bio,
+  location
+}
+end note
+
+== VALIDATION FLOW ==
+
+PROFILE_CONTROLLER -> VALIDATOR : validateUpdateProfileRequest(dto)
+activate VALIDATOR
+
+note right of VALIDATOR
+Validation Flow:
+- required fields
+- string length
+- format validation
+- business rule
+end note
+
+alt Dữ liệu không hợp lệ
+    VALIDATOR --> PROFILE_CONTROLLER : ValidationException
+    PROFILE_CONTROLLER --> UI : 422 VALIDATION_ERROR
+    UI --> USER : Hiển thị lỗi validate
+    deactivate VALIDATOR
+else Dữ liệu hợp lệ
+    VALIDATOR --> PROFILE_CONTROLLER : validatedDto
+    deactivate VALIDATOR
+
+    == BUSINESS FLOW ==
+
+    PROFILE_CONTROLLER -> PROFILE_SERVICE : updateProfile(user_id, dto)
+    activate PROFILE_SERVICE
+
+    group BEGIN TRANSACTION
+
+        PROFILE_SERVICE -> USER_REPO : updateBasicInfo(user_id, dto)
+        activate USER_REPO
+
+        USER_REPO -> DB : UPDATE users SET updated_at = NOW() WHERE user_id = ?
+        activate DB
+
+        note right of DB
+        DATABASE ACTION:
+        WRITE users
+
+        Purpose:
+        - cập nhật thời gian sửa
+
+        Updated Fields:
+        - updated_at
+        end note
+
+        DB --> USER_REPO : rows affected
+        deactivate DB
+        USER_REPO --> PROFILE_SERVICE : success
+        deactivate USER_REPO
+
+        PROFILE_SERVICE -> PROFILE_REPO : updateProfileDetail(user_id, dto)
+        activate PROFILE_REPO
+
+        PROFILE_REPO -> DB : UPDATE user_profiles SET full_name = ?, avatar_url = ?, bio = ?, location = ?, updated_at = NOW() WHERE user_id = ?
+        activate DB
+
+        note right of DB
+        DATABASE ACTION:
+        WRITE user_profiles
+
+        Purpose:
+        - lưu thông tin hồ sơ
+
+        Updated Fields:
+        - full_name
+        - avatar_url
+        - bio
+        - location
+        - updated_at
+        end note
+
+        DB --> PROFILE_REPO : rows affected
+        deactivate DB
+        PROFILE_REPO --> PROFILE_SERVICE : success
+        deactivate PROFILE_REPO
+
+    end
+
+    PROFILE_SERVICE --> PROFILE_CONTROLLER : UpdateProfileResponseDTO
+    deactivate PROFILE_SERVICE
+
+    PROFILE_CONTROLLER --> UI : 200 OK
+    deactivate PROFILE_CONTROLLER
+    UI --> USER : Thông báo cập nhật thành công
+    deactivate UI
+end
+
+== ERROR FLOW ==
+
+group SYSTEM EXCEPTION FLOW
+    PROFILE_SERVICE -> PROFILE_SERVICE : catch(SystemException)
+
+    note right of PROFILE_SERVICE
+    Rollback Conditions:
+    - DB update thất bại
+    - field validation lỗi
+
+    Action:
+    - rollback transaction
+    - ghi log audit
+    - cảnh báo monitoring
+    end note
+end
+
+@enduml

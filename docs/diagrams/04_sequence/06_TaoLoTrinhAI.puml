@@ -1,0 +1,342 @@
+@startuml
+title STUDY2WORK - Sequence - Tạo lộ trình học bằng AI
+autonumber
+hide footbox
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  LifeLineBorderColor #666666
+  LifeLineBackgroundColor #F8F8F8
+  ParticipantBorderColor #666666
+  ParticipantBackgroundColor #FFFFFF
+  ActorBorderColor #666666
+  ActorBackgroundColor #FFFFFF
+  BoxBorderColor #999999
+  BoxBackgroundColor #FCFCFC
+  NoteBackgroundColor #FFF9D9
+  NoteBorderColor #B8A24A
+  DatabaseBorderColor #6D6D6D
+  DatabaseBackgroundColor #F8FBFF
+  ControlBorderColor #4F6B8A
+  ControlBackgroundColor #EEF5FC
+}
+
+actor "Học viên" as LEARNER
+boundary "Web/App UI" as UI
+
+box "API Layer" #F9FBFD
+control "RoadmapController" as ROADMAP_CONTROLLER
+end box
+
+box "Application Layer" #EEF6FF
+control "Validation Layer" as VALIDATOR
+control "RoadmapService" as ROADMAP_SERVICE
+control "AIRoadmapService" as AI_SERVICE
+end box
+
+box "Repository Layer" #F4FBF4
+entity "PlacementRepository" as PLACEMENT_REPO
+entity "CourseRepository" as COURSE_REPO
+entity "LessonRepository" as LESSON_REPO
+entity "RoadmapRepository" as ROADMAP_REPO
+entity "RoadmapStepRepository" as ROADMAP_STEP_REPO
+end box
+
+box "External Services" #FFFDF7
+control "AI Engine" as AI_ENGINE
+end box
+
+database "MySQL DB" as DB
+
+== Yêu cầu tạo lộ trình ==
+
+LEARNER -> UI : Yêu cầu tạo lộ trình
+activate UI
+
+UI -> ROADMAP_CONTROLLER : POST /api/v1/roadmaps/generate
+activate ROADMAP_CONTROLLER
+
+note right of ROADMAP_CONTROLLER
+Request DTO:
+{
+  goal,
+  target_role,
+  duration
+}
+
+Expected Response:
+200 OK
+401 UNAUTHORIZED
+422 VALIDATION_ERROR
+500 INTERNAL_SERVER_ERROR
+end note
+
+== VALIDATION FLOW ==
+
+ROADMAP_CONTROLLER -> VALIDATOR : validateRoadmapRequest(dto)
+activate VALIDATOR
+
+note right of VALIDATOR
+Validation Flow:
+- required fields
+- goal format
+- duration validation
+- business rule
+end note
+
+alt Dữ liệu không hợp lệ
+    VALIDATOR --> ROADMAP_CONTROLLER : ValidationException
+    ROADMAP_CONTROLLER --> UI : 422 VALIDATION_ERROR
+    UI --> LEARNER : Hiển thị lỗi validate
+    deactivate VALIDATOR
+else Dữ liệu hợp lệ
+    VALIDATOR --> ROADMAP_CONTROLLER : validatedDto
+    deactivate VALIDATOR
+
+    == BUSINESS FLOW ==
+
+    ROADMAP_CONTROLLER -> ROADMAP_SERVICE : generateRoadmap(user_id, dto)
+    activate ROADMAP_SERVICE
+
+    ROADMAP_SERVICE -> PLACEMENT_REPO : getLatestPlacementAttempt(user_id)
+    activate PLACEMENT_REPO
+
+    note right of PLACEMENT_REPO
+    Repository Method:
+    getLatestPlacementAttempt(userId)
+
+    Input:
+    - user_id
+
+    Output:
+    - PlacementEntity?
+    end note
+
+    PLACEMENT_REPO -> DB : SELECT placement_attempts, placement_attempt_answers WHERE user_id = ? ORDER BY created_at DESC LIMIT 1
+    activate DB
+
+    note right of DB
+    DATABASE ACTION:
+    READ placement_attempts, placement_attempt_answers
+
+    Purpose:
+    - lấy kết quả test đầu vào
+
+    Returned Fields:
+    - attempt_id
+    - score
+    - level
+    end note
+
+    DB --> PLACEMENT_REPO : attempt record
+    deactivate DB
+    PLACEMENT_REPO --> ROADMAP_SERVICE : placement data
+    deactivate PLACEMENT_REPO
+
+    ROADMAP_SERVICE -> COURSE_REPO : getRelevantCourses(goal, level)
+    activate COURSE_REPO
+
+    note right of COURSE_REPO
+    Repository Method:
+    getRelevantCourses(goal, level)
+
+    Input:
+    - goal
+    - level
+
+    Output:
+    - CourseEntity[]
+    end note
+
+    COURSE_REPO -> DB : SELECT courses WHERE category MATCH ? AND min_level <= ? ORDER BY rating DESC
+    activate DB
+
+    note right of DB
+    DATABASE ACTION:
+    READ courses
+
+    Purpose:
+    - tìm khóa học phù hợp
+
+    Returned Fields:
+    - course_id
+    - course_name
+    - description
+    - duration
+    - rating
+    end note
+
+    DB --> COURSE_REPO : courses[]
+    deactivate DB
+    COURSE_REPO --> ROADMAP_SERVICE : courses[]
+    deactivate COURSE_REPO
+
+    ROADMAP_SERVICE -> LESSON_REPO : getLessonCatalog(course_ids)
+    activate LESSON_REPO
+
+    LESSON_REPO -> DB : SELECT course_lessons WHERE course_id IN (?)
+    activate DB
+
+    note right of DB
+    DATABASE ACTION:
+    READ course_lessons
+
+    Purpose:
+    - lấy danh sách bài học
+
+    Returned Fields:
+    - lesson_id
+    - course_id
+    - lesson_name
+    - duration
+    - order
+    end note
+
+    DB --> LESSON_REPO : lessons[]
+    deactivate DB
+    LESSON_REPO --> ROADMAP_SERVICE : lessons[]
+    deactivate LESSON_REPO
+
+    group BEGIN TRANSACTION
+
+        ROADMAP_SERVICE -> AI_SERVICE : buildAIRoadmap(placement_data, courses, lessons, goal)
+        activate AI_SERVICE
+
+        note right of AI_SERVICE
+        AI Service:
+        - xây dựng lộ trình tối ưu
+        - tính toán timeline
+        - gợi ý phương pháp học
+        end note
+
+        AI_SERVICE -> AI_ENGINE : generateRoadmap(payload)
+        activate AI_ENGINE
+
+        note right of AI_ENGINE
+        AI Engine:
+        - ML model
+        - optimization algorithm
+        - personalization
+        end note
+
+        AI_ENGINE --> AI_SERVICE : roadmap_draft
+        deactivate AI_ENGINE
+
+        AI_SERVICE --> ROADMAP_SERVICE : roadmap_draft
+        deactivate AI_SERVICE
+
+        ROADMAP_SERVICE -> ROADMAP_REPO : createRoadmap(user_id, dto, roadmap_draft)
+        activate ROADMAP_REPO
+
+        note right of ROADMAP_REPO
+        Repository Method:
+        createRoadmap(...)
+
+        Input:
+        - user_id
+        - goal
+        - target_role
+        - estimated_duration
+
+        Output:
+        - roadmap_entity
+        end note
+
+        ROADMAP_REPO -> DB : INSERT INTO roadmaps (user_id, goal, target_role, status, created_at)
+        activate DB
+
+        note right of DB
+        DATABASE ACTION:
+        WRITE roadmaps
+
+        Purpose:
+        - tạo bản ghi lộ trình
+
+        Insert Fields:
+        - roadmap_id
+        - user_id
+        - goal
+        - target_role
+        - estimated_duration
+        - status = ACTIVE
+        end note
+
+        DB --> ROADMAP_REPO : roadmap_id
+        deactivate DB
+        ROADMAP_REPO --> ROADMAP_SERVICE : roadmap entity
+        deactivate ROADMAP_REPO
+
+        loop Mỗi bước roadmap
+            ROADMAP_SERVICE -> ROADMAP_STEP_REPO : insertStep(roadmap_id, step)
+            activate ROADMAP_STEP_REPO
+
+            ROADMAP_STEP_REPO -> DB : INSERT INTO roadmap_steps (roadmap_id, step_order, course_id, duration, description)
+            activate DB
+
+            note right of DB
+            DATABASE ACTION:
+            WRITE roadmap_steps
+
+            Purpose:
+            - lưu các bước học
+
+            Insert Fields:
+            - step_id
+            - roadmap_id
+            - step_order
+            - course_id
+            - duration
+            - description
+            end note
+
+            DB --> ROADMAP_STEP_REPO : success
+            deactivate DB
+            ROADMAP_STEP_REPO --> ROADMAP_SERVICE : success
+            deactivate ROADMAP_STEP_REPO
+        end
+
+    end
+
+    ROADMAP_SERVICE --> ROADMAP_CONTROLLER : RoadmapResponseDTO
+    deactivate ROADMAP_SERVICE
+
+    note right of ROADMAP_CONTROLLER
+    Response DTO:
+    {
+      roadmap_id,
+      goal,
+      target_role,
+      total_duration,
+      steps[]
+    }
+    end note
+
+    ROADMAP_CONTROLLER --> UI : 200 OK
+    deactivate ROADMAP_CONTROLLER
+    UI --> LEARNER : Hiển thị lộ trình
+    deactivate UI
+end
+
+== ERROR FLOW ==
+
+group SYSTEM EXCEPTION FLOW
+    ROADMAP_SERVICE -> ROADMAP_SERVICE : catch(SystemException)
+
+    note right of ROADMAP_SERVICE
+    Rollback Conditions:
+    - AI engine lỗi
+    - DB insert thất bại
+    - course/lesson không tồn tại
+
+    Action:
+    - rollback transaction
+    - ghi log audit
+    - cảnh báo monitoring
+    end note
+end
+
+@enduml
