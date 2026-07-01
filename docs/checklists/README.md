@@ -1,14 +1,14 @@
-# Module Checklists
+﻿# Module Checklists
 
-Checklist module lưu trạng thái biến động của DD, coding, test, bug, worklog và evidence. Không lặp lại toàn bộ BD/DD tại đây.
+Module checklists track changing DD, coding, test, bug, worklog, and evidence status. Do not duplicate the full BD/DD here.
 
 ## Rules
 
-- Mỗi module chỉ có một checklist: `docs/checklists/<MODULE_CODE>.md`.
-- Mọi hạng mục phải có ID, status, ngày cập nhật và link tới BD/DD/worklog/issue/evidence khi có.
-- Trạng thái dùng `docs/agent/STATUS_MODEL.md`.
-- Chỉ cập nhật trạng thái kiểm tra khi có bằng chứng cụ thể trong worklog hoặc test output.
-- Không tạo checklist cho `CAREER`, `EMPLOYER`, recruitment, CV/job/interview trong Study scope nếu chưa có BD/DD phê duyệt riêng.
+- Each module has exactly one checklist: `docs/checklists/<MODULE_CODE>.md`.
+- Every item must have an ID, status, updated date, and link to BD/DD/worklog/issue/evidence when available.
+- Use status values from `.agent/context/STATUS_MODEL.md`.
+- Update test status only when concrete evidence exists in a worklog or test output.
+- Do not create checklists for `CAREER`, `EMPLOYER`, recruitment, CV/job/interview in Study scope unless a separate approved BD/DD expands scope.
 
 ## Study Module Checklists
 

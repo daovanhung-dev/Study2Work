@@ -1,13 +1,13 @@
-# Retrospectives
+﻿# Retrospectives
 
-Retrospective giúp giảm lặp lại, giảm token và cải thiện context. Không đọc lại toàn bộ 30 worklog nếu index/checklist đã đủ để tổng hợp.
+Retrospectives reduce repetition, context cost, and recurring mistakes. Do not reread all 30 worklogs when the index and checklists are enough.
 
 ## Cadence
 
 | Field | Value |
 |---|---|
-| Frequency | Sau mỗi 30 session mới kể từ retrospective gần nhất |
-| Source of session truth | `docs/worklog/INDEX.md` |
+| Frequency | After every 30 new sessions since the latest retrospective |
+| Source of session truth | `.agent/worklog/INDEX.md` |
 | Path format | `docs/retrospectives/RETRO_<START_SESSION>_<END_SESSION>.md` |
 | Last updated | `2026-07-01` |
 
@@ -28,41 +28,41 @@ Retrospective giúp giảm lặp lại, giảm token và cải thiện context. 
 |---|---|
 | Sessions | `<START_SESSION>-<END_SESSION>` |
 | Created | `YYYY-MM-DD` |
-| Sources | `docs/worklog/INDEX.md`, related checklists, risk worklogs |
+| Sources | `.agent/worklog/INDEX.md`, related checklists, risk worklogs |
 
-## Việc Lặp Lại
+## Repeated Work
 
 - <Repeated workflow>
 
-## Lỗi Lặp Lại
+## Repeated Bugs
 
 - <Repeated bug/fix>
 
-## Module Tốn Token
+## Token-Heavy Modules
 
 - <Module and reason>
 
-## Tài Liệu Thiếu Hoặc Mâu Thuẫn
+## Missing Or Conflicting Documents
 
 - <OPEN_QUESTION or CONFLICT>
 
-## Skill Cần Tạo/Cập Nhật
+## Skills To Create Or Update
 
 - <Skill action>
 
-## Quy Trình Có Thể Rút Gọn
+## Workflow Simplification
 
 - <Improvement>
 
-## Context Quá Dài Hoặc Trùng Lặp
+## Long Or Duplicated Context
 
 - <Context action>
 
-## Lệnh Test/Build Cần Ghi Rõ Hơn
+## Test Or Build Command Gaps
 
 - <Command gap>
 
-## Action Cải Tiến
+## Improvement Actions
 
 | ID | Owner | Status | Action | Link |
 |---|---|---|---|---|
@@ -71,4 +71,4 @@ Retrospective giúp giảm lặp lại, giảm token và cải thiện context. 
 
 ## Update Rule
 
-Chỉ cập nhật `AGENTS.md` hoặc `docs/agent/` nếu insight ổn định, tái sử dụng và giúp agent tránh lỗi thật.
+Update `AGENTS.md` or `.agent/context/` only when an insight is stable, reusable, and prevents real agent mistakes.

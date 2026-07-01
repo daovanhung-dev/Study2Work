@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: study2work
+      POSTGRES_USER: study2work
+      POSTGRES_PASSWORD: study2work
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U study2work -d study2work"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./services/api
+    environment:
+      S2W_APP_ENV: development
+      S2W_DATABASE_URL: postgresql+asyncpg://study2work:study2work@postgres:5432/study2work
+      S2W_REDIS_URL: redis://redis:6379/0
+      S2W_CELERY_BROKER_URL: redis://redis:6379/1
+      S2W_CELERY_RESULT_BACKEND: redis://redis:6379/2
+      S2W_LOG_LEVEL: INFO
+      S2W_CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:

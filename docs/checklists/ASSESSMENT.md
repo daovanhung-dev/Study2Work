@@ -1,4 +1,4 @@
-# Checklist — ASSESSMENT
+﻿# Checklist — ASSESSMENT
 
 | Field | Value |
 |---|---|
@@ -6,21 +6,21 @@
 | Module name | Practice, Assessment, Mentor Review, Skill Matrix |
 | Last updated | `2026-07-01` |
 | Source BD | `docs/BD/Study2Work_Study_BD_Codex_Ready.md` |
-| Status model | `docs/agent/STATUS_MODEL.md` |
+| Status model | `.agent/context/STATUS_MODEL.md` |
 
-## Link BD Nguồn
+## Source BD Links
 
 | ID | Status | Updated | Link | Note |
 |---|---|---|---|---|
 | `ASSESSMENT-BD-001` | `NOT_STARTED` | `2026-07-01` | `docs/BD/Study2Work_Study_BD_Codex_Ready.md` | Sections 5.3, 5.5, BR-ASSESS, BR-MENTOR, ASSESS/MENTOR/SKILL APIs. |
 
-## Danh Sách DD Liên Quan
+## Related DD List
 
 | ID | Status | Updated | Link | Note |
 |---|---|---|---|---|
 | `ASSESSMENT-DD-001` | `NOT_STARTED` | `2026-07-01` | `docs/DD/ASSESSMENT/` | Planned module DD; folder not created yet. |
 
-## Danh Sách Feature / Function / View
+## Feature / Function / View List
 
 | ID | Type | Status | Updated | Link | Note |
 |---|---|---|---|---|---|
@@ -30,19 +30,19 @@
 | `ASSESSMENT-F04` | Feature | `NOT_STARTED` | `2026-07-01` | `docs/DD/ASSESSMENT/` | Mentor rubric review and feedback. |
 | `ASSESSMENT-F05` | Feature | `NOT_STARTED` | `2026-07-01` | `docs/DD/ASSESSMENT/` | Skill evidence and skill matrix projection. |
 
-## Trạng Thái DD
+## DD Status
 
 | ID | Status | Updated | Link | Evidence |
 |---|---|---|---|---|
 | `ASSESSMENT-DD-STATUS` | `NOT_STARTED` | `2026-07-01` | `docs/DD/ASSESSMENT/` | No ASSESSMENT DD found. |
 
-## Trạng Thái Coding
+## Coding Status
 
 | ID | Status | Updated | Link | Evidence |
 |---|---|---|---|---|
-| `ASSESSMENT-CODE-STATUS` | `NOT_STARTED` | `2026-07-01` | `backend/src/modules/assessment/` | Skeleton exists; no implementation evidence. |
+| `ASSESSMENT-CODE-STATUS` | `NOT_STARTED` | `2026-07-01` | `services/api/app/modules/assessment/` | Canonical FastAPI foundation exists; no business API implementation evidence yet. |
 
-## Trạng Thái Test
+## Test Status
 
 | ID | Status | Updated | Link | Evidence |
 |---|---|---|---|---|
@@ -52,31 +52,31 @@
 
 | ID | Status | Updated | Link | Description |
 |---|---|---|---|---|
-| `ASSESSMENT-BUG-001` | `NONE` | `2026-07-01` | `docs/worklog/INDEX.md` | No ASSESSMENT bug recorded. |
+| `ASSESSMENT-BUG-001` | `NONE` | `2026-07-01` | `.agent/worklog/INDEX.md` | No ASSESSMENT bug recorded. |
 | `ASSESSMENT-OQ-001` | `OPEN` | `2026-07-01` | `docs/BD/Study2Work_Study_BD_Codex_Ready.md` | Skill scoring formula and grading sandbox are ADR backlog items. |
 
-## File Code Dự Kiến Ảnh Hưởng
+## Expected Affected Code Files
 
 | ID | Status | Updated | Path | Note |
 |---|---|---|---|---|
-| `ASSESSMENT-FILE-001` | `NOT_STARTED` | `2026-07-01` | `backend/src/modules/assessment/` | Existing skeleton reference. |
+| `ASSESSMENT-FILE-001` | `NOT_STARTED` | `2026-07-01` | `services/api/app/modules/assessment/` | Canonical FastAPI module reference. |
 | `ASSESSMENT-FILE-002` | `NOT_STARTED` | `2026-07-01` | `backend/src/modules/practice/` | Existing practice skeleton reference. |
 | `ASSESSMENT-FILE-003` | `NOT_STARTED` | `2026-07-01` | `apps/web-student/src/modules/assessment/` | Student assessment UI skeleton reference. |
 | `ASSESSMENT-FILE-004` | `NOT_STARTED` | `2026-07-01` | `apps/web-mentor/src/modules/assessments/` | Mentor review UI skeleton reference. |
 
-## Worklog Liên Quan
+## Related Worklogs
 
 | ID | Status | Updated | Link | Note |
 |---|---|---|---|---|
-| `ASSESSMENT-WL-001` | `NOT_STARTED` | `2026-07-01` | `docs/worklog/INDEX.md` | No ASSESSMENT worklog yet. |
+| `ASSESSMENT-WL-001` | `NOT_STARTED` | `2026-07-01` | `.agent/worklog/INDEX.md` | No ASSESSMENT worklog yet. |
 
-## Bằng Chứng Xác Nhận
+## Verification Evidence
 
 | ID | Status | Updated | Link | Evidence |
 |---|---|---|---|---|
-| `ASSESSMENT-EV-001` | `NOT_STARTED` | `2026-07-01` | `docs/worklog/INDEX.md` | No evidence yet. |
+| `ASSESSMENT-EV-001` | `NOT_STARTED` | `2026-07-01` | `.agent/worklog/INDEX.md` | No evidence yet. |
 
-## Việc Tiếp Theo
+## Next Work
 
 | ID | Status | Updated | Link | Task |
 |---|---|---|---|---|

@@ -39,12 +39,12 @@ The platform must convert real learning behavior, submissions, mentor reviews an
 
 | Area | Included capability | Source module |
 | --- | --- | --- |
-| Authentication & Profile | Đăng ký; xác thực email; OAuth Google/GitHub; đăng nhập; quên mật khẩu; refresh token; logout; profile; RBAC | Authentication & User |
-| Learning System | Lộ trình học; video/tài liệu; quiz; assignment; learning progress; live session; lesson comment; bookmark | Learning System |
+| Authentication & Profile | Register; verify email; OAuth Google/GitHub; login; forgot password; refresh token; logout; profile; RBAC | Authentication & User |
+| Learning System | Learning path; video/document; quiz; assignment; learning progress; live session; lesson comment; bookmark | Learning System |
 | Practice & Assessment | Lab coding; code submission; auto grading; rubric; skill matrix; mentor review; leaderboard; practice history | Practice & Assessment |
 | Project & Teamwork | Team project; task board; Git integration; PR review; project submission; sprint; team chat; file sharing | Project & Teamwork |
-| AI learning only | AI roadmap; AI code explanation; AI debugging hints / learning insight | AI Features (lọc theo Study) |
-| Admin & Platform | User/mentor/content management; analytics; settings; notification; audit; moderation | Admin System (lọc theo Study) |
+| AI learning only | AI roadmap; AI code explanation; AI debugging hints / learning insight | AI Features filtered for Study scope |
+| Admin & Platform | User/mentor/content management; analytics; settings; notification; audit; moderation | Admin System filtered for Study scope |
 
 ### 1.3 Explicitly out of scope
 
@@ -113,12 +113,12 @@ This decision removes ambiguity for Codex. If the team intentionally selects Nes
 
 | Role | Primary responsibilities | Scope constraint |
 | --- | --- | --- |
-| Guest | Xem nội dung công khai; bắt đầu đăng ký; xác thực email | Không truy cập dữ liệu riêng tư hoặc nội dung học chưa được cấp |
-| Student | Học, làm test đầu vào, enroll lộ trình, làm quiz/assignment/lab, nộp code, tham gia project, xem skill matrix, yêu cầu AI | Chỉ sở hữu/đọc ghi dữ liệu cá nhân và dữ liệu team được cấp quyền |
-| Mentor | Quản lý học viên/team được phân công; tạo/giao nội dung được cấp; review, rubric, feedback; tổ chức live session | Chỉ review hoặc xem dữ liệu thuộc scope được phân công |
-| Admin | Quản lý user/mentor/content, taxonomy skill, setting, analytics, moderation, audit | Quyền cao nhất; thao tác nhạy cảm phải có audit log |
-| System / Worker | Auto grading, gửi notification, xử lý event, tạo analytics | Không có giao diện người dùng; quyền service account tối thiểu |
-| AI Service | Tạo gợi ý roadmap, giải thích code, insight học tập | Chỉ đọc context đã được authorization; không được tự ghi đè source-of-truth |
+| Guest | View public content; start registration; verify email | Cannot access private data or unassigned learning content |
+| Student | Learn, take placement tests, enroll in paths, complete quizzes/assignments/labs, submit code, join projects, view skill matrix, request AI help | Can only own/read/write personal data and authorized team data |
+| Mentor | Manage assigned learners/teams; create or assign authorized content; review, use rubrics, provide feedback; host live sessions | Can only review or view data within assigned scope |
+| Admin | Manage users/mentors/content, skill taxonomy, settings, analytics, moderation and audit | Highest privilege; sensitive actions must create audit logs |
+| System / Worker | Auto grading, send notifications, process events, create analytics | No user interface; minimum service-account permissions |
+| AI Service | Generate roadmap suggestions, explain code and produce learning insights | Can only read authorized context; cannot overwrite source of truth |
 
 ### 3.2 Permission matrix
 
@@ -139,7 +139,7 @@ This decision removes ambiguity for Codex. If the team intentionally selects Nes
 
 | Module | Study capability | Bounded context | Primary actors |
 | --- | --- | --- | --- |
-| AUTH & PROFILE | Đăng ký, xác thực email, OAuth, đăng nhập, refresh token, logout, profile, RBAC | Identity & Access; Profile | Guest, Student, Mentor, Admin |
+| AUTH & PROFILE | Register, verify email, OAuth, login, refresh token, logout, profile, RBAC | Identity & Access; Profile | Guest, Student, Mentor, Admin |
 | LEARNING JOURNEY | Placement test, learning path, stage, module, lesson, content, live session, progress, bookmark, lesson comment | Learning Journey | Student, Mentor, Admin |
 | PRACTICE & ASSESSMENT | Quiz, assignment, lab coding, code submission, auto grading, rubric, mentor review, skill matrix, practice history, leaderboard | Practice & Assessment | Student, Mentor, Admin, Worker |
 | PROJECT & TEAMWORK | Project, team, task board, sprint, Git link, PR review, project submission, chat, file sharing, work log | Project & Teamwork | Student, Mentor, Admin |
@@ -194,24 +194,24 @@ flowchart LR
 
 | Step | Business stage | Main behavior | Primary data |
 | --- | --- | --- | --- |
-| 1 | Khởi tạo danh tính | Guest đăng ký/OAuth → xác thực email → role Student/Mentor được kích hoạt | user, role, user_role, verification_token, session, refresh_token |
-| 2 | Onboarding học viên | Student hoàn thiện profile/skills → làm placement test hoặc nhận lộ trình mặc định | profile, student_profile, skill, user_skill, learning_path_enrollment |
-| 3 | Học theo lộ trình | Student xem stage/module/lesson, video/tài liệu/live session; hệ thống cập nhật progress | learning_path, module, lesson, lesson_content, live_session, learning_progress |
-| 4 | Thực hành & đánh giá | Student làm quiz/assignment/lab → submit → auto grade và/hoặc mentor review | quiz_attempt, assignment_submission, rubric, review, feedback |
-| 5 | Tích lũy năng lực | Kết quả được tổng hợp từ bằng chứng học tập, bài nộp, review, task/project | skill_assessment, user_skill, analytics_snapshot |
-| 6 | Làm project nhóm | Student vào team → tạo task/sprint → làm việc Git/PR → mentor theo dõi → project submission | project, team, team_member, sprint, task, pull_request_review, project_submission |
-| 7 | Cải thiện liên tục | Student xem dashboard/feedback/skill gap → nhận roadmap hoặc code explanation từ AI → học tiếp | ai_request, ai_insight, roadmap_suggestion, code_explanation_request, notification |
+| 1 | Identity initialization | Guest registers/OAuths → verifies email → Student/Mentor role is activated | user, role, user_role, verification_token, session, refresh_token |
+| 2 | Learner onboarding | Student completes profile/skills → takes placement test or receives default path | profile, student_profile, skill, user_skill, learning_path_enrollment |
+| 3 | Path-based learning | Student views stage/module/lesson, video/document/live session; system updates progress | learning_path, module, lesson, lesson_content, live_session, learning_progress |
+| 4 | Practice and assessment | Student completes quiz/assignment/lab → submits → auto grade and/or mentor review | quiz_attempt, assignment_submission, rubric, review, feedback |
+| 5 | Capability accumulation | Results are aggregated from learning evidence, submissions, reviews, tasks and projects | skill_assessment, user_skill, analytics_snapshot |
+| 6 | Team project work | Student joins team → creates task/sprint → works with Git/PR → mentor monitors → project submission | project, team, team_member, sprint, task, pull_request_review, project_submission |
+| 7 | Continuous improvement | Student views dashboard/feedback/skill gap → receives AI roadmap or code explanation → continues learning | ai_request, ai_insight, roadmap_suggestion, code_explanation_request, notification |
 
 ### 4.3 Main business flows
 
 | Flow ID | Flow | Happy path | Key exceptions/decisions | Events |
 | --- | --- | --- | --- | --- |
-| F-AUTH-01 | Đăng ký & kích hoạt | Guest nhập thông tin → validate → check unique → hash password → tạo user PENDING → gửi verification → verify → ACTIVE | Email trùng; token hết hạn; user bị suspended | UserRegistered, EmailVerified |
-| F-LEARN-01 | Cấp lộ trình | Placement test/skill input → xác định level → map learning path → create enrollment → seed progress → hiển thị dashboard | Thiếu dữ liệu; path chưa publish; enrollment đã tồn tại | LearningPathAssigned |
-| F-LEARN-02 | Học lesson | Authorize enrollment → mở content → log view/start → lưu progress → check completion rule → unlock next lesson | Nội dung draft; lesson locked; user không thuộc path | LessonCompleted |
-| F-ASSESS-01 | Quiz | Start attempt → load versioned questions → save answers → submit → auto score → persist result → update progress | Hết thời gian; vượt attempt limit; câu hỏi không còn publish | QuizSubmitted |
-| F-ASSESS-02 | Assignment / code submission | Create draft → validate ownership/deadline/file → freeze version → queue grading → save result → review if needed | Quá hạn; file lỗi; job timeout; plagiarism rule | AssignmentSubmitted, AutoGradingCompleted |
-| F-MENTOR-01 | Mentor review | Check mentor assignment → open submission/project → apply rubric version → create feedback → mark review status → update skill assessment | Không đúng scope; rubric thiếu criterion; needs revision | SubmissionReviewed, SkillLevelUpdated |
+| F-AUTH-01 | Registration and activation | Guest enters information → validate → check uniqueness → hash password → create PENDING user → send verification → verify → ACTIVE | Duplicate email; expired token; suspended user | UserRegistered, EmailVerified |
+| F-LEARN-01 | Path assignment | Placement test/skill input → determine level → map learning path → create enrollment → seed progress → show dashboard | Missing data; path not published; enrollment already exists | LearningPathAssigned |
+| F-LEARN-02 | Lesson learning | Authorize enrollment → open content → log view/start → save progress → check completion rule → unlock next lesson | Draft content; lesson locked; user not in path | LessonCompleted |
+| F-ASSESS-01 | Quiz | Start attempt → load versioned questions → save answers → submit → auto score → persist result → update progress | Time expired; attempt limit exceeded; question no longer published | QuizSubmitted |
+| F-ASSESS-02 | Assignment / code submission | Create draft → validate ownership/deadline/file → freeze version → queue grading → save result → review if needed | Late submission; invalid file; job timeout; plagiarism rule | AssignmentSubmitted, AutoGradingCompleted |
+| F-MENTOR-01 | Mentor review | Check mentor assignment → open submission/project → apply rubric version → create feedback → mark review status → update skill assessment | Out of scope; missing rubric criterion; needs revision | SubmissionReviewed, SkillLevelUpdated |
 | F-PROJECT-01 | Team project | Create/join team → assign role → initialize task board/sprint → task/PR/work log → mentor oversight → submit project | Team full; duplicate membership; sprint closed; invalid task transition | TeamCreated, TaskAssigned, ProjectSubmitted |
 | F-AI-01 | AI learning support | Validate consent/context/rate limit → create AI request snapshot → send scoped prompt → save response → display suggestion | Rate limited; provider timeout; unsafe/error response | AIReviewCompleted |
 
@@ -373,26 +373,26 @@ Every Activity/Sequence/API DD MUST make these items explicit:
 
 | Rule ID | Rule |
 | --- | --- |
-| BR-AUTH-001 | Email/phone của user phải unique; không tiết lộ tài khoản tồn tại trong luồng login/reset password. |
-| BR-AUTH-002 | Password chỉ lưu password hash; access token, refresh token và password không được ghi plaintext trong log. |
-| BR-AUTH-003 | User status chỉ được chuyển qua state machine; SUSPENDED/DELETED không có quyền xác thực sử dụng API. |
-| BR-LEARN-001 | Student chỉ mở lesson khi thuộc enrollment hợp lệ và lesson thỏa điều kiện unlock. |
-| BR-LEARN-002 | Progress phải phản ánh interaction thật; không cho phép client tự gán completed không có rule server-side. |
-| BR-LEARN-003 | Một bookmark là duy nhất theo (user_id, lesson_id); comment phải có owner và trạng thái moderation. |
-| BR-ASSESS-001 | Quiz attempt dùng snapshot/version câu hỏi; kết quả lịch sử không bị thay đổi khi nội dung quiz được sửa. |
-| BR-ASSESS-002 | Assignment submission đã SUBMITTED là immutable; lần sửa sau phải tạo version mới hoặc trả về DRAFT theo workflow. |
-| BR-ASSESS-003 | Submission quá hạn phải dùng LATE_SUBMITTED hoặc bị từ chối theo cấu hình assignment; không ghi đè timestamp nộp. |
-| BR-ASSESS-004 | Rubric phải versioned; review luôn tham chiếu rubric/version đã dùng để chấm. |
-| BR-ASSESS-005 | Skill matrix chỉ cập nhật từ evidence hợp lệ: quiz/assignment/project/review; không cập nhật trực tiếp trên UI. |
-| BR-MENTOR-001 | Mentor chỉ review student, submission hoặc project nằm trong assignment/scope được phân công. |
-| BR-MENTOR-002 | Review DONE phải có đủ criterion bắt buộc hoặc reason hợp lệ khi bỏ qua criterion. |
-| BR-PROJECT-001 | Team member là duy nhất theo (team_id, user_id) và phải có team role hợp lệ. |
-| BR-PROJECT-002 | Task transition chỉ được phép theo workflow TODO → IN_PROGRESS → IN_REVIEW → DONE; BLOCKED là nhánh ngoại lệ. |
-| BR-PROJECT-003 | Task phải thuộc đúng project/sprint; không thay đổi project_id của task sau khi có work log/PR review. |
-| BR-AI-001 | AI là trợ lý; output chỉ là recommendation/draft, không tự thay đổi score, progress, skill level hoặc review. |
-| BR-AI-002 | AI request cần traceId, userId, moduleCode và input snapshot đã redaction khi có dữ liệu nhạy cảm. |
-| BR-ADMIN-001 | Create/update/delete nội dung học, rubric, permission, setting và action moderation phải có audit log. |
-| BR-PLATFORM-001 | Mọi API phải kiểm tra authentication, authorization, validation, ownership/scope và trả businessCode ổn định. |
+| BR-AUTH-001 | User email/phone must be unique; login/reset-password flows must not reveal whether an account exists. |
+| BR-AUTH-002 | Store only password hashes; access tokens, refresh tokens and passwords must not be logged in plaintext. |
+| BR-AUTH-003 | User status may only transition through the state machine; SUSPENDED/DELETED users cannot authenticate to use APIs. |
+| BR-LEARN-001 | A student may open a lesson only when they have a valid enrollment and the lesson satisfies the unlock condition. |
+| BR-LEARN-002 | Progress must reflect real interaction; clients cannot set completed status without a server-side rule. |
+| BR-LEARN-003 | A bookmark is unique by `(user_id, lesson_id)`; comments must have an owner and moderation status. |
+| BR-ASSESS-001 | Quiz attempts use question snapshots/versions; historical results must not change when quiz content is edited. |
+| BR-ASSESS-002 | A SUBMITTED assignment submission is immutable; later changes must create a new version or return to DRAFT through workflow. |
+| BR-ASSESS-003 | Late submissions must use LATE_SUBMITTED or be rejected according to assignment configuration; submitted timestamp must not be overwritten. |
+| BR-ASSESS-004 | Rubrics must be versioned; reviews always reference the rubric/version used for grading. |
+| BR-ASSESS-005 | Skill matrix may only update from valid evidence: quiz/assignment/project/review; UI cannot update it directly. |
+| BR-MENTOR-001 | Mentors may only review students, submissions or projects within their assigned scope. |
+| BR-MENTOR-002 | DONE reviews must include every required criterion or a valid reason for skipped criteria. |
+| BR-PROJECT-001 | Team member is unique by `(team_id, user_id)` and must have a valid team role. |
+| BR-PROJECT-002 | Task transitions are allowed only through TODO → IN_PROGRESS → IN_REVIEW → DONE; BLOCKED is an exception branch. |
+| BR-PROJECT-003 | Tasks must belong to the correct project/sprint; `project_id` cannot change after work log or PR review exists. |
+| BR-AI-001 | AI is an assistant; output is only a recommendation/draft and cannot directly change score, progress, skill level or review. |
+| BR-AI-002 | AI requests require `traceId`, `userId`, `moduleCode` and a redacted input snapshot when sensitive data is present. |
+| BR-ADMIN-001 | Create/update/delete of learning content, rubric, permission, setting and moderation actions must create audit logs. |
+| BR-PLATFORM-001 | Every API must check authentication, authorization, validation and ownership/scope, and return a stable `businessCode`. |
 
 ---
 
@@ -1003,7 +1003,7 @@ Product requirement
 | Sheet | Required content | Rule |
 | --- | --- | --- |
 | Cover | API name, version, creator/reviewer/approver, date | Replace only placeholders; preserve layout and merged cells |
-| Lịch sử | Version/change history | Append a row; never delete old history |
+| History | Version/change history | Append a row; never delete old history |
 | Overview | Project, module/domain, API purpose, caller, trigger, pre/postconditions, scope notes | Explain business value and key constraints |
 | 1.Request | Method, URI, charset, content type, auth, field list, validation, JSON example, FE/BE notes | Name logical/physical fields consistently; examples must be valid JSON |
 | 2.Response | Envelope, response fields, success/error cases, DB source mapping, JSON examples | Use stable businessCode and no internal exception/message leak |
