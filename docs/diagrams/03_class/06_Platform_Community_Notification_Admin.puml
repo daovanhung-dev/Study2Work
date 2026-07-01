@@ -1,0 +1,106 @@
+@startuml Study2Work_Platform_Class
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #F8FAFC
+skinparam packageStyle rectangle
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #2563EB
+}
+skinparam note {
+  BackgroundColor #FFF7ED
+  BorderColor #F97316
+}
+
+title Study2Work - Class - Community, Notification & Admin Platform
+class NotificationTemplate {
+  +id: UUID
+  +templateCode: String
+  +channel: Channel
+  +body: String
+  +render(data: Json): String
+}
+class Notification {
+  +id: UUID
+  +userId: UUID
+  +templateId: UUID
+  +data: Json
+  +status: DeliveryStatus
+  +readAt: DateTime
+  +markSent(): void
+  +markRead(): void
+}
+class AuditLog {
+  +id: UUID
+  +actorId: UUID
+  +action: String
+  +resourceType: String
+  +resourceId: UUID
+  +traceId: UUID
+  +appendOnly(): void
+}
+class SystemSetting {
+  +id: UUID
+  +settingKey: String
+  +scope: String
+  +valueJson: Json
+  +validateType(): Boolean
+}
+class FeatureFlag {
+  +id: UUID
+  +flagKey: String
+  +environment: String
+  +enabled: Boolean
+  +toggle(enabled: Boolean): void
+}
+class ModerationCase {
+  +id: UUID
+  +resourceType: String
+  +resourceId: UUID
+  +status: ModerationStatus
+  +resolve(reason: String): void
+}
+class CommunityEvent {
+  +id: UUID
+  +creatorId: UUID
+  +title: String
+  +startsAt: DateTime
+  +status: EventStatus
+  +publish(): void
+}
+class EventRegistration {
+  +id: UUID
+  +eventId: UUID
+  +userId: UUID
+  +status: RegistrationStatus
+  +cancel(): void
+}
+class AnalyticsSnapshot {
+  +id: UUID
+  +metricKey: String
+  +dimension: Json
+  +value: Decimal
+  +capturedAt: DateTime
+  +capture(): void
+}
+class FileAsset {
+  +id: UUID
+  +ownerId: UUID
+  +storageKey: String
+  +mimeType: String
+  +sizeBytes: Integer
+  +checksum: String
+  +scanStatus: ScanStatus
+  +markClean(): void
+}
+NotificationTemplate "1" -- "0..*" Notification
+CommunityEvent "1" -- "0..*" EventRegistration
+ModerationCase "0..*" -- "0..*" AuditLog
+SystemSetting "0..*" -- "0..*" AuditLog
+FeatureFlag "0..*" -- "0..*" AuditLog
+FileAsset "1" -- "0..*" Notification
+@enduml

@@ -1,0 +1,75 @@
+@startuml 16_Admin_content_rubric_publish
+title Study2Work - Activity - Admin content và rubric publish
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #F8FAFC
+skinparam packageStyle rectangle
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #2563EB
+}
+skinparam note {
+  BackgroundColor #FFF7ED
+  BorderColor #F97316
+}
+
+start
+partition "Admin" {
+  :Tạo/sửa/publish path, lesson, quiz, assignment hoặc rubric;
+  :Gửi yêu cầu tới API Study;
+}
+partition "FastAPI boundary" {
+  :Tạo hoặc validate traceId;
+  :Nhận API ADMIN-CONTENT-001 + ADMIN-RUBRIC-001;
+  :Validate content tree, version, rubric weights;
+}
+if (Request hợp lệ?) then (Có)
+  partition "Security / Scope" {
+    :JWT admin role; audit all publish actions;
+    :Kiểm tra businessCode, moduleCode, traceId;
+  }
+  if (Được phép?) then (Có)
+    partition "Domain policy" {
+      :Áp dụng BR-ADMIN-001, BR-ASSESS-004;
+      :Kiểm tra state transition server-side;
+      :content DRAFT -> PUBLISHED; rubric version immutable after publish;
+    }
+    if (Rule và trạng thái hợp lệ?) then (Có)
+      partition "Data transaction" {
+        :BEGIN TRANSACTION;
+        :READ / WRITE learning_path, module, lesson, quiz, assignment, rubric, rubric_criterion, audit_log;
+        :Ghi audit_log khi flow nhạy cảm;
+        :COMMIT;
+      }
+      partition "Events / Worker" {
+        :Publish LearningContentPublished, NotificationRequested sau commit nếu có;
+        :Worker xử lý retry-safe khi flow async;
+      }
+      partition "Response" {
+        :Trả content/rubric version đã lưu;
+        :Return standard envelope with businessCode, timestamp, traceId, data;
+      }
+    else (Không)
+      partition "Business error" {
+        :ROLLBACK nếu transaction đã mở;
+        :E409 duplicate code/version, E422 invalid weight/order;
+        :Return safe error envelope;
+      }
+    endif
+  else (Không)
+    partition "Security error" {
+      :Return E401/E403 envelope;
+      :Không tiết lộ dữ liệu ngoài scope;
+    }
+  endif
+else (Không)
+  partition "Validation error" {
+    :Return E422 envelope với field error an toàn;
+  }
+endif
+stop
+@enduml

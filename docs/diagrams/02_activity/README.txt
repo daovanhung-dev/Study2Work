@@ -1,4 +1,4 @@
-STUDY2WORK Activity Diagrams Pack
-==================================
+Study2Work Activity Diagrams - Study scope canonical
 
-Contains 19 PlantUML `.puml` files, each one diagram per function.
+Each file maps one canonical Study flow from the BD/API catalogue.
+Every flow includes trigger, validation, security/scope, business rule, state transition, data transaction, event/audit and success/error envelope.

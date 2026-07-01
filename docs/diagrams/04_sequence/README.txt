@@ -1,11 +1,8 @@
-STUDY2WORK Sequence Diagrams Pack
+Study2Work Sequence Diagrams - Study scope canonical
 
 Included:
-- 19 PlantUML sequence diagrams
-- Each diagram shows the DB tables touched in the flow
-- Designed for DD documentation and implementation handoff
+- 20 PlantUML sequence diagrams by canonical API group.
+- sequence.md catalog with API trace.
+- rule.md rendering and modeling rules.
 
-Suggested usage:
-- Use one file per use case
-- Copy the DB table notes into your DD if needed
-- Render the .puml files with PlantUML
+Each diagram is DD-ready and includes validation, security/scope, domain rule, transaction, audit, outbox/worker and envelope behavior.

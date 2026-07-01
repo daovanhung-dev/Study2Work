@@ -1,0 +1,75 @@
+@startuml 09_Mentor_review_skill_evidence
+title Study2Work - Activity - Mentor review và skill evidence
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #F8FAFC
+skinparam packageStyle rectangle
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #2563EB
+}
+skinparam note {
+  BackgroundColor #FFF7ED
+  BorderColor #F97316
+}
+
+start
+partition "Mentor" {
+  :Mở queue, chấm rubric, gửi feedback hoặc yêu cầu sửa;
+  :Gửi yêu cầu tới API Study;
+}
+partition "FastAPI boundary" {
+  :Tạo hoặc validate traceId;
+  :Nhận API MENTOR-REVIEW-001 + MENTOR-REVIEW-002;
+  :Validate rubric version, required criteria, score range;
+}
+if (Request hợp lệ?) then (Có)
+  partition "Security / Scope" {
+    :JWT mentor + assigned scope;
+    :Kiểm tra businessCode, moduleCode, traceId;
+  }
+  if (Được phép?) then (Có)
+    partition "Domain policy" {
+      :Áp dụng BR-MENTOR-001, BR-MENTOR-002, BR-ASSESS-004, BR-ASSESS-005;
+      :Kiểm tra state transition server-side;
+      :review PENDING -> DONE or NEEDS_REVISION; submission may RETURNED;
+    }
+    if (Rule và trạng thái hợp lệ?) then (Có)
+      partition "Data transaction" {
+        :BEGIN TRANSACTION;
+        :READ / WRITE assignment_submission, rubric, rubric_criterion, review, feedback, skill_assessment, audit_log;
+        :Ghi audit_log khi flow nhạy cảm;
+        :COMMIT;
+      }
+      partition "Events / Worker" {
+        :Publish SubmissionReviewed, SkillLevelUpdated, NotificationRequested sau commit nếu có;
+        :Worker xử lý retry-safe khi flow async;
+      }
+      partition "Response" {
+        :Trả review snapshot và feedback visibility;
+        :Return standard envelope with businessCode, timestamp, traceId, data;
+      }
+    else (Không)
+      partition "Business error" {
+        :ROLLBACK nếu transaction đã mở;
+        :E403 scope denied, E409 finalized review, E422 missing criterion;
+        :Return safe error envelope;
+      }
+    endif
+  else (Không)
+    partition "Security error" {
+      :Return E401/E403 envelope;
+      :Không tiết lộ dữ liệu ngoài scope;
+    }
+  endif
+else (Không)
+  partition "Validation error" {
+    :Return E422 envelope với field error an toàn;
+  }
+endif
+stop
+@enduml

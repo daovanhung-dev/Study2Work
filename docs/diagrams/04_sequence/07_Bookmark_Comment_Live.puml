@@ -1,0 +1,101 @@
+@startuml 07_Bookmark_Comment_Live
+title Study2Work - Sequence - Bookmark, comment and live session
+autonumber
+hide footbox
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #F8FAFC
+skinparam packageStyle rectangle
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #2563EB
+}
+skinparam note {
+  BackgroundColor #FFF7ED
+  BorderColor #F97316
+}
+
+actor "Student / Mentor" as ACTOR
+boundary "Web / Mobile UI" as UI
+control "FastAPI Route" as API
+control "TraceId Middleware" as TRACE
+control "Auth RBAC Scope Guard" as GUARD
+control "DTO Validator" as VAL
+control "Use Case Service" as UC
+control "Domain Policy" as DOMAIN
+entity "Study Repository" as REPO
+database "PostgreSQL" as DB
+entity "AuditLogRepository" as AUDIT
+queue "Outbox / Queue" as OUTBOX
+control "Worker" as WORKER
+control "Notification Service" as EXT
+
+== API DETAIL ==
+ACTOR -> UI : Thực hiện flow Bookmark, comment and live session
+UI -> API : PUT /api/v1/lessons/{lessonId}/bookmark; POST /api/v1/lessons/{lessonId}/comments; GET /api/v1/live-sessions\napiCode=LEARN-BOOKMARK-001 / LEARN-COMMENT-001 / LEARN-LIVE-001
+note right of API
+Request DTO: BookmarkRequest, LessonCommentRequest, LiveSessionQuery
+Response DTO: BookmarkResponse, CommentResponse, LiveSessionListResponse
+Envelope: businessCode, message, timestamp, traceId, data/errors
+Errors: E401, E403, E404, E409, E422, E500, E502, E504
+end note
+
+== VALIDATION ==
+API -> TRACE : createOrValidateTraceId()
+TRACE --> API : traceId
+API -> VAL : validateDto(BookmarkRequest, LessonCommentRequest, LiveSessionQuery)
+alt DTO invalid
+  VAL --> API : E422 validation details
+  API --> UI : 422 error envelope with traceId
+  UI --> ACTOR : Hiển thị lỗi nhập liệu an toàn
+else DTO valid
+  VAL --> API : validated request
+  API -> GUARD : authenticateAuthorizeAndScope()
+  alt Unauthorized or forbidden
+    GUARD --> API : E401/E403
+    API --> UI : safe error envelope
+    UI --> ACTOR : Yêu cầu đăng nhập hoặc báo không đủ quyền
+  else Allowed
+    GUARD --> API : actor context and scope
+
+    == BUSINESS FLOW ==
+    API -> UC : execute(validated request, actor context, traceId)
+    UC -> DOMAIN : enforce(enrollment or mentor scope, moderation status)
+    alt Business rule or state invalid
+      DOMAIN --> UC : E409/E422 stable business error
+      UC --> API : safe error result
+      API --> UI : error envelope with businessCode and traceId
+      UI --> ACTOR : Hiển thị lỗi nghiệp vụ
+    else Business rule valid
+      DOMAIN --> UC : transition allowed: comment PENDING moderation when needed
+
+      == DATABASE FLOW ==
+      UC -> REPO : loadAndPersist(bookmark, lesson_comment, live_session, notification, audit_log)
+      REPO -> DB : BEGIN TRANSACTION\nREAD/WRITE bookmark, lesson_comment, live_session, notification, audit_log\nCOMMIT
+      DB --> REPO : committed rows and versions
+      REPO --> UC : domain result
+      UC -> AUDIT : append audit with traceId, apiCode, resource id
+      AUDIT -> DB : WRITE audit_log
+      DB --> AUDIT : audit id
+
+      == SIDE EFFECTS ==
+      opt after commit event
+        UC -> OUTBOX : publish NotificationRequested
+        OUTBOX -> WORKER : process retry-safe task
+        WORKER -> EXT : call scoped external adapter when needed
+        EXT --> WORKER : safe provider result
+      end
+
+      == SUCCESS FLOW ==
+      UC --> API : BookmarkResponse, CommentResponse, LiveSessionListResponse
+      API --> UI : 200/201 standard envelope
+      UI --> ACTOR : Hiển thị kết quả thành công
+    end
+  end
+end
+
+@enduml

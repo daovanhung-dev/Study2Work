@@ -1,0 +1,75 @@
+@startuml 10_Skill_matrix_dashboard
+title Study2Work - Activity - Skill matrix dashboard
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #F8FAFC
+skinparam packageStyle rectangle
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #2563EB
+}
+skinparam note {
+  BackgroundColor #FFF7ED
+  BorderColor #F97316
+}
+
+start
+partition "Student / Mentor" {
+  :Xem năng lực hiện tại và bằng chứng liên quan;
+  :Gửi yêu cầu tới API Study;
+}
+partition "FastAPI boundary" {
+  :Tạo hoặc validate traceId;
+  :Nhận API SKILL-MATRIX-001;
+  :Validate viewer, pagination, filter;
+}
+if (Request hợp lệ?) then (Có)
+  partition "Security / Scope" {
+    :JWT owner or mentor assigned scope;
+    :Kiểm tra businessCode, moduleCode, traceId;
+  }
+  if (Được phép?) then (Có)
+    partition "Domain policy" {
+      :Áp dụng BR-ASSESS-005, BR-MENTOR-001;
+      :Kiểm tra state transition server-side;
+      :Read model only; no direct skill mutation;
+    }
+    if (Rule và trạng thái hợp lệ?) then (Có)
+      partition "Data transaction" {
+        :BEGIN TRANSACTION;
+        :READ / WRITE user_skill, skill_assessment, review, quiz_attempt, assignment_submission;
+        :Ghi audit_log khi flow nhạy cảm;
+        :COMMIT;
+      }
+      partition "Events / Worker" {
+        :Publish SkillMatrixViewed sau commit nếu có;
+        :Worker xử lý retry-safe khi flow async;
+      }
+      partition "Response" {
+        :Trả skill projection cùng evidence trail;
+        :Return standard envelope with businessCode, timestamp, traceId, data;
+      }
+    else (Không)
+      partition "Business error" {
+        :ROLLBACK nếu transaction đã mở;
+        :E403 scope denied, E404 no profile, E422 filter invalid;
+        :Return safe error envelope;
+      }
+    endif
+  else (Không)
+    partition "Security error" {
+      :Return E401/E403 envelope;
+      :Không tiết lộ dữ liệu ngoài scope;
+    }
+  endif
+else (Không)
+  partition "Validation error" {
+    :Return E422 envelope với field error an toàn;
+  }
+endif
+stop
+@enduml

@@ -1,262 +1,218 @@
-@startuml Study2Work_UseCase_Optimized
-!theme plain
+@startuml Study2Work_Study_UseCase_Canonical
 left to right direction
-skinparam linetype ortho
-skinparam packageStyle rectangle
 skinparam shadowing false
-skinparam backgroundColor #F8FAFC
-skinparam nodesep 35
-skinparam ranksep 40
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
-
+skinparam defaultFontSize 12
+skinparam backgroundColor #F8FAFC
+skinparam packageStyle rectangle
 skinparam package {
   BackgroundColor #FFFFFF
   BorderColor #2563EB
-  BorderThickness 1.5
 }
+skinparam note {
+  BackgroundColor #FFF7ED
+  BorderColor #F97316
+}
+
 skinparam usecase {
   BackgroundColor #FFFFFF
   BorderColor #1D4ED8
-  BorderThickness 1.2
 }
 skinparam actor {
-  BackgroundColor #FFF7ED
-  BorderColor #F97316
-  BorderThickness 1.5
+  BackgroundColor #ECFEFF
+  BorderColor #0891B2
 }
-skinparam arrow {
-  Color #374151
-  Thickness 1
-}
+title Study2Work - Use Case Canonical - Study Scope
 
-title Study2Work - Biểu đồ Use Case
-
-' ================= ACTORS =================
 actor "Khách" as Guest
-actor "Người học" as Learner
-actor "Người hướng dẫn" as Mentor
-actor "Nhà tuyển dụng" as Recruiter
+actor "Học viên" as Student
+actor "Mentor" as Mentor
 actor "Quản trị viên" as Admin
+actor "System Worker" as Worker
+actor "AI Service" as AI
+actor "Notification Service" as Noti
+actor "Git Provider" as Git
+actor "Object Storage" as Storage
+actor "Grader Runner" as Runner
 
-actor "Dịch vụ AI" as AI
-actor "Cổng thanh toán" as Payment
-actor "Dịch vụ thông báo" as Notify
+rectangle "Study2Work Study Platform" {
+  package "Identity & Profile" as P_AUTH {
+    usecase "Đăng ký tài khoản" as UC_Register
+    usecase "Xác thực email" as UC_Verify
+    usecase "Đăng nhập / OAuth" as UC_Login
+    usecase "Refresh token" as UC_Refresh
+    usecase "Đăng xuất" as UC_Logout
+    usecase "Quên mật khẩu" as UC_Reset
+    usecase "Xem hồ sơ của tôi" as UC_Me
+    usecase "Cập nhật hồ sơ" as UC_Profile
+    usecase "Khai báo kỹ năng nền" as UC_Skills
+    usecase "Quản lý vai trò và phạm vi mentor" as UC_RBAC
+  }
 
-' giữ thứ tự actor để layout ổn định
-Guest -[hidden]-> Learner
-Learner -[hidden]-> Mentor
-Mentor -[hidden]-> Recruiter
-Recruiter -[hidden]-> Admin
-Admin -[hidden]-> AI
-AI -[hidden]-> Payment
-Payment -[hidden]-> Notify
+  package "Learning Journey" as P_LEARN {
+    usecase "Làm placement test" as UC_Placement
+    usecase "Nhận gợi ý lộ trình" as UC_PathSuggest
+    usecase "Enroll learning path" as UC_Enroll
+    usecase "Xem lộ trình và dashboard" as UC_Dashboard
+    usecase "Mở lesson đã unlock" as UC_Lesson
+    usecase "Ghi nhận tiến độ lesson" as UC_Progress
+    usecase "Bookmark lesson" as UC_Bookmark
+    usecase "Thảo luận lesson" as UC_Comment
+    usecase "Xem live session" as UC_Live
+  }
 
-' ================= PACKAGES =================
-package "XÁC THỰC & TRUY CẬP" as PAUTH {
-  usecase "Đăng ký tài khoản" as UC_Register
-  usecase "Đăng nhập" as UC_Login
-  usecase "Quên mật khẩu" as UC_Forgot
-  usecase "Quản lý hồ sơ" as UC_Profile
-  usecase "Quản lý vai trò & quyền hạn" as UC_Roles
+  package "Practice & Assessment" as P_ASSESS {
+    usecase "Làm quiz attempt" as UC_Quiz
+    usecase "Nộp assignment / code" as UC_Submission
+    usecase "Chấm tự động async" as UC_AutoGrade
+    usecase "Mentor review theo rubric" as UC_Review
+    usecase "Yêu cầu sửa bài" as UC_Revision
+    usecase "Xem practice history" as UC_History
+    usecase "Xem skill matrix" as UC_Matrix
+  }
+
+  package "Project & Teamwork" as P_PROJECT {
+    usecase "Tạo team project" as UC_CreateTeam
+    usecase "Tham gia team" as UC_JoinTeam
+    usecase "Tạo sprint" as UC_Sprint
+    usecase "Tạo task" as UC_Task
+    usecase "Chuyển trạng thái task" as UC_TaskStatus
+    usecase "Ghi work log" as UC_WorkLog
+    usecase "Ghi PR review" as UC_PR
+    usecase "Nộp project artifact" as UC_ProjectSubmit
+    usecase "Team chat và file sharing" as UC_TeamCollab
+  }
+
+  package "AI Learning Support" as P_AI {
+    usecase "AI roadmap suggestion" as UC_AIRoadmap
+    usecase "AI code explanation" as UC_AICode
+    usecase "AI debugging hints" as UC_AIDebug
+    usecase "Learning insight" as UC_AIInsight
+  }
+
+  package "Community, Notification & Platform" as P_PLATFORM {
+    usecase "Đăng ký workshop" as UC_EventReg
+    usecase "Xem notification feed" as UC_NotiFeed
+    usecase "Gửi notification async" as UC_SendNoti
+    usecase "Quản lý user / mentor" as UC_AdminUser
+    usecase "Quản lý content học" as UC_AdminContent
+    usecase "Quản lý rubric" as UC_AdminRubric
+    usecase "Quản lý skill taxonomy" as UC_AdminSkill
+    usecase "Quản lý setting / feature flag" as UC_AdminSetting
+    usecase "Moderation và audit" as UC_Audit
+    usecase "Xem Study analytics" as UC_Analytics
+  }
 }
 
-package "LỘ TRÌNH HỌC TẬP" as PLEARN {
-  usecase "Làm bài test đầu vào" as UC_Placement
-  usecase "Nhận lộ trình AI" as UC_Roadmap
-  usecase "Đăng ký lộ trình học" as UC_Enroll
-  usecase "Xem nội dung khóa học" as UC_ViewCourse
-  usecase "Xem bài giảng video" as UC_Video
-  usecase "Tham gia buổi học trực tuyến" as UC_Live
-  usecase "Tải tài liệu" as UC_Materials
-  usecase "Theo dõi tiến độ" as UC_Progress
-}
-
-package "THỰC HÀNH & ĐÁNH GIÁ" as PPRACTICE {
-  usecase "Nộp bài tập" as UC_Submit
-  usecase "Làm bài quiz" as UC_Quiz
-  usecase "Thực hiện lab lập trình" as UC_Lab
-  usecase "Xem phản hồi" as UC_Feedback
-
-  usecase "Tạo bài tập" as UC_CreateAssignment
-  usecase "Chấm bài nộp" as UC_Grade
-  usecase "Review code" as UC_CodeReview
-}
-
-package "HỆ THỐNG DỰ ÁN NHÓM" as PTEAM {
-  usecase "Tạo dự án nhóm" as UC_CreateProject
-  usecase "Tham gia dự án nhóm" as UC_JoinProject
-  usecase "Quản lý nhiệm vụ sprint" as UC_Sprint
-  usecase "Gửi pull request" as UC_PR
-  usecase "Xem tiến độ nhóm" as UC_TeamProgress
-}
-
-package "ĐÁNH GIÁ KỸ NĂNG" as PSKILL {
-  usecase "Đánh giá ma trận kỹ năng" as UC_SkillMatrix
-  usecase "Đánh giá kỹ năng kỹ thuật" as UC_TechSkill
-  usecase "Đánh giá kỹ năng mềm" as UC_SoftSkill
-  usecase "Tạo báo cáo" as UC_Performance
-  usecase "Xem phân tích" as UC_Analytics
-}
-
-package "HỒ SƠ CÁ NHÂN & NGHỀ NGHIỆP" as PPORT {
-  usecase "Xây dựng portfolio" as UC_Portfolio
-  usecase "Xây dựng CV" as UC_CV
-  usecase "Luyện phỏng vấn" as UC_Interview
-  usecase "Nhận gợi ý CV" as UC_CVAI
-  usecase "Nhận gợi ý portfolio" as UC_PortfolioAI
-}
-
-package "NHÀ TUYỂN DỤNG & TUYỂN DỤNG" as PEMP {
-  usecase "Tạo tài khoản công ty" as UC_Company
-  usecase "Đăng yêu cầu tuyển dụng" as UC_PostJob
-  usecase "Tìm kiếm ứng viên" as UC_SearchCandidate
-  usecase "Lọc theo kỹ năng" as UC_FilterSkill
-  usecase "Xem portfolio" as UC_ViewPortfolio
-  usecase "Lọt danh sách ứng viên" as UC_Shortlist
-  usecase "Liên hệ ứng viên" as UC_Contact
-  usecase "Ứng tuyển công việc" as UC_Apply
-}
-
-package "CỘNG ĐỒNG & SỰ KIỆN" as PCOMM {
-  usecase "Tham gia cộng đồng" as UC_Community
-  usecase "Tham gia workshop" as UC_Workshop
-  usecase "Tham gia thử thách lập trình" as UC_Challenge
-  usecase "Tham gia mock interview" as UC_MockInterview
-  usecase "Thảo luận & Hỏi đáp" as UC_QA
-}
-
-package "THANH TOÁN & GÓI DỊCH VỤ" as PPAY {
-  usecase "Mua khóa học" as UC_Purchase
-  usecase "Mua mentoring" as UC_Mentoring
-  usecase "Xử lý thanh toán" as UC_ProcessPayment
-  usecase "Xem lịch sử thanh toán" as UC_History
-}
-
-package "HỆ THỐNG THÔNG BÁO" as PNOTI {
-  usecase "Gửi nhắc nhở học tập" as UC_Reminder
-  usecase "Gửi hạn nộp bài" as UC_Deadline
-  usecase "Gửi thông báo phỏng vấn" as UC_InterviewNotify
-  usecase "Gửi thông báo hệ thống" as UC_SystemNotify
-}
-
-package "QUẢN TRỊ HỆ THỐNG" as PADMIN {
-  usecase "Quản lý người dùng" as UC_ManageUser
-  usecase "Quản lý khóa học" as UC_ManageCourse
-  usecase "Quản lý mentor" as UC_ManageMentor
-  usecase "Quản lý công ty" as UC_ManageCompany
-  usecase "Quản lý nội dung" as UC_ManageContent
-  usecase "Quản lý báo cáo" as UC_ManageReports
-  usecase "Cài đặt hệ thống" as UC_Settings
-}
-
-' ép thứ tự package để sơ đồ đi theo hàng ngang ổn định
-PAUTH -[hidden]-> PLEARN
-PLEARN -[hidden]-> PPRACTICE
-PPRACTICE -[hidden]-> PTEAM
-PTEAM -[hidden]-> PSKILL
-PSKILL -[hidden]-> PPORT
-PPORT -[hidden]-> PEMP
-PEMP -[hidden]-> PCOMM
-PCOMM -[hidden]-> PPAY
-PPAY -[hidden]-> PNOTI
-PNOTI -[hidden]-> PADMIN
-
-' ================= RELATIONSHIPS =================
 Guest --> UC_Register
+Guest --> UC_Verify
 Guest --> UC_Login
-Guest --> UC_Forgot
+Guest --> UC_Reset
 
-Learner --> UC_Profile
+Student --> UC_Me
+Student --> UC_Profile
+Student --> UC_Skills
+Student --> UC_Placement
+Student --> UC_Enroll
+Student --> UC_Dashboard
+Student --> UC_Lesson
+Student --> UC_Progress
+Student --> UC_Bookmark
+Student --> UC_Comment
+Student --> UC_Live
+Student --> UC_Quiz
+Student --> UC_Submission
+Student --> UC_History
+Student --> UC_Matrix
+Student --> UC_CreateTeam
+Student --> UC_JoinTeam
+Student --> UC_Task
+Student --> UC_TaskStatus
+Student --> UC_WorkLog
+Student --> UC_PR
+Student --> UC_ProjectSubmit
+Student --> UC_TeamCollab
+Student --> UC_AIRoadmap
+Student --> UC_AICode
+Student --> UC_AIDebug
+Student --> UC_AIInsight
+Student --> UC_EventReg
+Student --> UC_NotiFeed
+
+Mentor --> UC_Me
 Mentor --> UC_Profile
-Recruiter --> UC_Profile
+Mentor --> UC_Live
+Mentor --> UC_Review
+Mentor --> UC_Revision
+Mentor --> UC_Matrix
+Mentor --> UC_CreateTeam
+Mentor --> UC_Sprint
+Mentor --> UC_Task
+Mentor --> UC_TaskStatus
+Mentor --> UC_PR
+Mentor --> UC_TeamCollab
+Mentor --> UC_AICode
+Mentor --> UC_AIInsight
+Mentor --> UC_NotiFeed
 
-Admin --> UC_Roles
+Admin --> UC_RBAC
+Admin --> UC_AdminUser
+Admin --> UC_AdminContent
+Admin --> UC_AdminRubric
+Admin --> UC_AdminSkill
+Admin --> UC_AdminSetting
+Admin --> UC_Audit
+Admin --> UC_Analytics
+Admin --> UC_SendNoti
 
-Learner --> UC_Placement
-Learner --> UC_Roadmap
-Learner --> UC_Enroll
-Learner --> UC_ViewCourse
-Learner --> UC_Video
-Learner --> UC_Live
-Learner --> UC_Materials
-Learner --> UC_Progress
+Worker --> UC_AutoGrade
+Worker --> UC_SendNoti
+AI --> UC_AIRoadmap
+AI --> UC_AICode
+AI --> UC_AIDebug
+AI --> UC_AIInsight
+Noti --> UC_SendNoti
+Git --> UC_PR
+Storage --> UC_Submission
+Storage --> UC_ProjectSubmit
+Runner --> UC_AutoGrade
 
-UC_Placement ..> UC_Roadmap : <<bao gồm>>
-UC_Roadmap ..> AI : <<AI tạo>>
+UC_Register ..> UC_Verify : <<include>>
+UC_Login ..> UC_Refresh : <<extend>>
+UC_Placement ..> UC_PathSuggest : <<include>>
+UC_Enroll ..> UC_Dashboard : <<include>>
+UC_Lesson ..> UC_Progress : <<include>>
+UC_Submission ..> UC_AutoGrade : <<include>>
+UC_AutoGrade ..> UC_Matrix : <<include>>
+UC_Review ..> UC_Matrix : <<include>>
+UC_TaskStatus ..> UC_WorkLog : <<extend>>
+UC_PR ..> UC_TaskStatus : <<extend>>
+UC_AIRoadmap ..> UC_AIInsight : <<include>>
+UC_AICode ..> UC_AIInsight : <<include>>
+UC_AdminContent ..> UC_Audit : <<include>>
+UC_AdminRubric ..> UC_Audit : <<include>>
+UC_RBAC ..> UC_Audit : <<include>>
+UC_SendNoti ..> UC_NotiFeed : <<include>>
 
-Learner --> UC_Submit
-Learner --> UC_Quiz
-Learner --> UC_Lab
-Learner --> UC_Feedback
+note right of UC_Submission
+Pre: Student owns enrollment and assignment is available.
+Post: versioned evidence is stored and grading is queued.
+Rules: BR-ASSESS-002, BR-ASSESS-003.
+end note
 
-Mentor --> UC_CreateAssignment
-Mentor --> UC_Grade
-Mentor --> UC_CodeReview
+note right of UC_Review
+Pre: Mentor has assigned scope.
+Post: review snapshot and skill evidence are recorded.
+Rules: BR-MENTOR-001, BR-MENTOR-002.
+end note
 
-UC_CodeReview ..> AI : <<AI hỗ trợ>>
-
-Learner --> UC_JoinProject
-Learner --> UC_Sprint
-Learner --> UC_PR
-
-Mentor --> UC_CreateProject
-Mentor --> UC_TeamProgress
-
-Mentor --> UC_SkillMatrix
-Mentor --> UC_TechSkill
-Mentor --> UC_SoftSkill
-Mentor --> UC_Performance
-
-Learner --> UC_Analytics
-
-Learner --> UC_Portfolio
-Learner --> UC_CV
-Learner --> UC_Interview
-Learner --> UC_CVAI
-Learner --> UC_PortfolioAI
-
-UC_CVAI ..> AI : <<bao gồm>>
-UC_PortfolioAI ..> AI : <<bao gồm>>
-
-Recruiter --> UC_Company
-Recruiter --> UC_PostJob
-Recruiter --> UC_SearchCandidate
-Recruiter --> UC_FilterSkill
-Recruiter --> UC_ViewPortfolio
-Recruiter --> UC_Shortlist
-Recruiter --> UC_Contact
-
-Learner --> UC_Apply
-
-Learner --> UC_Community
-Learner --> UC_Workshop
-Learner --> UC_Challenge
-Learner --> UC_MockInterview
-Learner --> UC_QA
-
-Mentor --> UC_Workshop
-Mentor --> UC_MockInterview
-
-Learner --> UC_Purchase
-Learner --> UC_Mentoring
-Learner --> UC_History
-
-UC_Purchase ..> UC_ProcessPayment : <<bao gồm>>
-UC_Mentoring ..> UC_ProcessPayment : <<bao gồm>>
-Payment --> UC_ProcessPayment
-
-Notify --> UC_Reminder
-Notify --> UC_Deadline
-Notify --> UC_InterviewNotify
-Notify --> UC_SystemNotify
-
-Admin --> UC_ManageUser
-Admin --> UC_ManageCourse
-Admin --> UC_ManageMentor
-Admin --> UC_ManageCompany
-Admin --> UC_ManageContent
-Admin --> UC_ManageReports
-Admin --> UC_Settings
+note bottom of P_PLATFORM
+Every protected use case checks authentication, RBAC,
+ownership or scope, validation, traceId and audit when required.
+Rule: BR-PLATFORM-001.
+end note
 
 @enduml

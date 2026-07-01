@@ -6,7 +6,7 @@ Worklog ghi lại trace từ BD/DD/checklist/skill đến code, test, bug và fo
 
 | Field | Value |
 |---|---|
-| Next session | `0001` |
+| Next session | `0002` |
 | Path format | `docs/worklog/YYYY-MM/<SESSION_NO>_<TASK_SLUG>.md` |
 | Example | `docs/worklog/2026-07/0001_auth_register_dd.md` |
 | Last updated | `2026-07-01` |
@@ -21,7 +21,7 @@ Worklog ghi lại trace từ BD/DD/checklist/skill đến code, test, bug và fo
 
 | Session | Date | Module | Task slug | Status | Risk | Worklog | Summary |
 |---|---|---|---|---|---|---|---|
-| _none_ | 2026-07-01 | _none_ | _none_ | `NOT_STARTED` | _none_ | _none_ | No worklog sessions have been created yet. |
+| `0001` | 2026-07-01 | `GLOBAL_DOCS/DIAGRAMS` | `study_diagrams_refresh` | `DONE` | Docker daemon unavailable; Java PlantUML fallback passed | `docs/worklog/2026-07/0001_study_diagrams_refresh.md` | Refreshed Study-only Use Case, Activity, Class and Sequence diagram pack from canonical BD. |
 
 ## Required Worklog Template
 

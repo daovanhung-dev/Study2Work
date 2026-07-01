@@ -1,0 +1,75 @@
+@startuml 17_Notification_audit_moderation_analytics
+title Study2Work - Activity - Notification, audit, moderation và analytics
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #F8FAFC
+skinparam packageStyle rectangle
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #2563EB
+}
+skinparam note {
+  BackgroundColor #FFF7ED
+  BorderColor #F97316
+}
+
+start
+partition "Admin / System Worker" {
+  :Gửi notification, moderate comment, ghi snapshot analytics;
+  :Gửi yêu cầu tới API Study;
+}
+partition "FastAPI boundary" {
+  :Tạo hoặc validate traceId;
+  :Nhận API Internal platform flow;
+  :Validate template, channel, moderation reason, metric key;
+}
+if (Request hợp lệ?) then (Có)
+  partition "Security / Scope" {
+    :Admin or service identity; append-only audit;
+    :Kiểm tra businessCode, moduleCode, traceId;
+  }
+  if (Được phép?) then (Có)
+    partition "Domain policy" {
+      :Áp dụng BR-ADMIN-001, BR-PLATFORM-001;
+      :Kiểm tra state transition server-side;
+      :notification PENDING -> SENT/FAILED; comment PENDING -> APPROVED/REJECTED;
+    }
+    if (Rule và trạng thái hợp lệ?) then (Có)
+      partition "Data transaction" {
+        :BEGIN TRANSACTION;
+        :READ / WRITE notification_template, notification, lesson_comment, moderation_case, analytics_snapshot, audit_log;
+        :Ghi audit_log khi flow nhạy cảm;
+        :COMMIT;
+      }
+      partition "Events / Worker" {
+        :Publish NotificationRequested, ModerationCompleted, AnalyticsSnapshotCaptured sau commit nếu có;
+        :Worker xử lý retry-safe khi flow async;
+      }
+      partition "Response" {
+        :Trả trạng thái delivery/moderation/snapshot;
+        :Return standard envelope with businessCode, timestamp, traceId, data;
+      }
+    else (Không)
+      partition "Business error" {
+        :ROLLBACK nếu transaction đã mở;
+        :E403 scope denied, E404 template missing, E502 delivery unavailable;
+        :Return safe error envelope;
+      }
+    endif
+  else (Không)
+    partition "Security error" {
+      :Return E401/E403 envelope;
+      :Không tiết lộ dữ liệu ngoài scope;
+    }
+  endif
+else (Không)
+  partition "Validation error" {
+    :Return E422 envelope với field error an toàn;
+  }
+endif
+stop
+@enduml

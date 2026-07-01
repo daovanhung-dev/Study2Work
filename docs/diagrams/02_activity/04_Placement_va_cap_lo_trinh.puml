@@ -1,0 +1,75 @@
+@startuml 04_Placement_va_cap_lo_trinh
+title Study2Work - Activity - Placement và cấp lộ trình
+skinparam shadowing false
+skinparam dpi 180
+skinparam roundcorner 12
+skinparam ArrowThickness 1.2
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam backgroundColor #F8FAFC
+skinparam packageStyle rectangle
+skinparam package {
+  BackgroundColor #FFFFFF
+  BorderColor #2563EB
+}
+skinparam note {
+  BackgroundColor #FFF7ED
+  BorderColor #F97316
+}
+
+start
+partition "Student" {
+  :Nộp placement test hoặc baseline skill intake;
+  :Gửi yêu cầu tới API Study;
+}
+partition "FastAPI boundary" {
+  :Tạo hoặc validate traceId;
+  :Nhận API LEARN-PLACEMENT-001;
+  :Validate test id, answers, attempt limit;
+}
+if (Request hợp lệ?) then (Có)
+  partition "Security / Scope" {
+    :JWT + owner scope;
+    :Kiểm tra businessCode, moduleCode, traceId;
+  }
+  if (Được phép?) then (Có)
+    partition "Domain policy" {
+      :Áp dụng BR-ASSESS-001, BR-LEARN-001;
+      :Kiểm tra state transition server-side;
+      :quiz_attempt IN_PROGRESS -> SUBMITTED -> SCORED; enrollment ENROLLED;
+    }
+    if (Rule và trạng thái hợp lệ?) then (Có)
+      partition "Data transaction" {
+        :BEGIN TRANSACTION;
+        :READ / WRITE quiz_attempt, quiz_answer, skill_assessment, learning_path_enrollment, learning_progress, audit_log;
+        :Ghi audit_log khi flow nhạy cảm;
+        :COMMIT;
+      }
+      partition "Events / Worker" {
+        :Publish LearningPathAssigned, SkillLevelUpdated sau commit nếu có;
+        :Worker xử lý retry-safe khi flow async;
+      }
+      partition "Response" {
+        :Trả level, path đề xuất và dashboard seed;
+        :Return standard envelope with businessCode, timestamp, traceId, data;
+      }
+    else (Không)
+      partition "Business error" {
+        :ROLLBACK nếu transaction đã mở;
+        :E404 test/path missing, E409 attempt conflict, E422;
+        :Return safe error envelope;
+      }
+    endif
+  else (Không)
+    partition "Security error" {
+      :Return E401/E403 envelope;
+      :Không tiết lộ dữ liệu ngoài scope;
+    }
+  endif
+else (Không)
+  partition "Validation error" {
+    :Return E422 envelope với field error an toàn;
+  }
+endif
+stop
+@enduml
