@@ -17,7 +17,7 @@ Do not create a skill for small one-off work.
 
 | Skill ID | Status | Created | Updated | Related modules | Trigger | Worklog evidence | File |
 |---|---|---|---|---|---|---|---|
-| _none_ | `NOT_STARTED` | 2026-07-01 | 2026-07-01 | _none_ | No repeated worklog evidence yet. | _none_ | _none_ |
+| `API_DD_AUTHORING` | `ACTIVE` | 2026-07-02 | 2026-07-02 | API DD / documentation | Canonical API DD creation is complex and reusable across modules. | `.agent/worklog/2026-07/0004_api_dd_canonical_drafts.md` | `.agent/skills/API_DD_AUTHORING.md` |
 
 ## Required Skill Template
 
@@ -64,4 +64,3 @@ Do not create a skill for small one-off work.
 ## Update Rule
 
 After creating or editing a skill, update the `Skill Table` and link the skill in relevant module checklists.
-

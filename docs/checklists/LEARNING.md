@@ -4,7 +4,7 @@
 |---|---|
 | Module code | `LEARNING` |
 | Module name | Learning Journey |
-| Last updated | `2026-07-01` |
+| Last updated | `2026-07-02` |
 | Source BD | `docs/BD/Study2Work_Study_BD_Codex_Ready.md` |
 | Status model | `.agent/context/STATUS_MODEL.md` |
 
@@ -18,7 +18,7 @@
 
 | ID | Status | Updated | Link | Note |
 |---|---|---|---|---|
-| `LEARNING-DD-001` | `NOT_STARTED` | `2026-07-01` | `docs/DD/LEARNING/` | Planned module DD; folder not created yet. |
+| `LEARNING-DD-001` | `DRAFT` | `2026-07-02` | `docs/api-dd/learn/` | Canonical LEARNING API DD drafts created; coding still waits for approval. |
 
 ## Feature / Function / View List
 
@@ -33,7 +33,7 @@
 
 | ID | Status | Updated | Link | Evidence |
 |---|---|---|---|---|
-| `LEARNING-DD-STATUS` | `NOT_STARTED` | `2026-07-01` | `docs/DD/LEARNING/` | No LEARNING DD found. |
+| `LEARNING-DD-STATUS` | `DRAFT` | `2026-07-02` | `docs/api-dd/learn/` | API DD drafts generated; see `.agent/worklog/2026-07/0004_api_dd_canonical_drafts.md`. |
 
 ## Coding Status
 
@@ -66,16 +66,16 @@
 
 | ID | Status | Updated | Link | Note |
 |---|---|---|---|---|
-| `LEARNING-WL-001` | `NOT_STARTED` | `2026-07-01` | `.agent/worklog/INDEX.md` | No LEARNING worklog yet. |
+| `LEARNING-WL-001` | `DONE` | `2026-07-02` | `.agent/worklog/2026-07/0004_api_dd_canonical_drafts.md` | Created canonical API DD draft package for this module group. |
 
 ## Verification Evidence
 
 | ID | Status | Updated | Link | Evidence |
 |---|---|---|---|---|
-| `LEARNING-EV-001` | `NOT_STARTED` | `2026-07-01` | `.agent/worklog/INDEX.md` | No evidence yet. |
+| `LEARNING-EV-001` | `VERIFIED` | `2026-07-02` | `.agent/worklog/2026-07/0004_api_dd_canonical_drafts.md` | Documentation generation checks completed for canonical API DD drafts. |
 
 ## Next Work
 
 | ID | Status | Updated | Link | Task |
 |---|---|---|---|---|
-| `LEARNING-NEXT-001` | `NOT_STARTED` | `2026-07-01` | `docs/DD/DD_Module_Template/` | Create LEARNING DD from BD before coding. |
+| `LEARNING-NEXT-001` | `NOT_STARTED` | `2026-07-02` | `docs/api-dd/learn/` | Review DD drafts and resolve OPEN_QUESTION items before coding. |

@@ -2,7 +2,7 @@
 
 Study2Work in this repository is standardized for the Study scope only: learning, practice, assessment, mentor workflow, teamwork, AI learning support, notifications, community, and platform governance.
 
-`docs/BD/Study2Work_Study_BD_Codex_Ready.md` is the canonical Study business source. Do not expand into recruitment, employer, job, CV, interview, matching, shortlist, offer, or hiring workflows unless a separate approved BD/DD exists.
+`docs/BD/Study2Work_Study_BD_Codex_Ready.md` is the canonical Study business source. Do not expand into removed non-Study workflows unless a separate approved BD/DD exists.
 
 ## Source Of Truth
 
@@ -15,9 +15,10 @@ Study2Work in this repository is standardized for the Study scope only: learning
 
 - Backend: Python 3.12+ with FastAPI, Pydantic v2, SQLAlchemy 2.0, Alembic, PostgreSQL, Redis, Celery.
 - Backend location: `services/api`.
-- Web dashboards: Vue 3 + TypeScript + Vite.
-- Mobile: Flutter.
-- Legacy `backend/` NestJS-like skeleton is not canonical for Study backend implementation.
+- Runtime split: Server is `services/api`; Client is `apps/*`.
+- Web clients: Vue 3 + TypeScript + Vite when implemented.
+- Mobile client: Flutter when implemented.
+- Superseded legacy server skeletons are not canonical for Study backend implementation.
 - Worker/grading/AI/email/analytics are asynchronous; untrusted code never runs in the main API process.
 
 ## Commands
@@ -56,7 +57,6 @@ Study2Work in this repository is standardized for the Study scope only: learning
 ## Required Workflow
 
 - Start with `AGENTS.md`, `.agent/AGENT_GUIDE.md`, `.agent/context/CONTEXT_INDEX.md`, and `.agent/worklog/INDEX.md`.
-- Before coding, read the relevant checklist, BD sections, approved API DD, diagrams, `.codex` context, and affected code.
+- Before coding, read `docs/architecture/PROJECT_ARCHITECTURE.md`, the relevant checklist, BD sections, approved API DD, diagrams, `.codex` context, and affected code.
 - After coding, run relevant checks, create a new worklog, update `.agent/worklog/INDEX.md`, update checklists, and update DD/ADR docs if design changed.
 - Full workflow: `.agent/context/WORKFLOW.md`.
-

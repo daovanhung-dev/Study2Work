@@ -4,6 +4,8 @@
 
 The Study2Work backend is a FastAPI modular monolith shaped by Clean Architecture, Ports and Adapters, and DDD bounded contexts.
 
+The full canonical server documentation lives in `docs/architecture/SERVER_ARCHITECTURE.md`. This file is a compact coding reference for agents.
+
 Dependencies point inward:
 
 ```text

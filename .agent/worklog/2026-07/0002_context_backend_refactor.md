@@ -37,7 +37,7 @@ Move agent context into `.agent`, make agent-facing context English, replace the
 | `docs/DD/Study2Work_API_DD_Template/` | modified | Template translated to English and guarded for Study-only API DD use. |
 | `docs/checklists/API.md` | modified | Added `SYSTEM-HEALTH-001` foundation endpoint evidence. |
 | `docs/architecture/BACKEND_ARCHITECTURE_USAGE_VI.md` | created | Vietnamese backend architecture usage guide. |
-| `backend/` and out-of-scope placeholders | deleted | Removed empty legacy NestJS/backend, employer, CV, interview and portfolio placeholders. |
+| Legacy backend and out-of-scope placeholders | deleted | Removed empty legacy backend and removed-scope placeholders. |
 
 ## Logic Changed
 
@@ -59,7 +59,7 @@ Move agent context into `.agent`, make agent-facing context English, replace the
 | `docker compose config` | PASS | Compose file resolved for API, PostgreSQL and Redis services. |
 | `git diff --check` | PASS | No whitespace errors; Git reported line-ending conversion warnings only. |
 | Old context reference search | PASS | No active references to legacy context paths remain. |
-| Buildable banned-scope search | PASS | No employer/recruitment/CV/interview/job placeholder code remains under buildable app/service paths. |
+| Buildable banned-scope search | PASS | No removed-scope placeholder code remains under buildable app/service paths. |
 | Project context language scan | PASS | No Vietnamese diacritics or mojibake found in `.agent`, `.codex`, canonical BD, DD template, checklists or backend files. |
 
 ## Bugs Found

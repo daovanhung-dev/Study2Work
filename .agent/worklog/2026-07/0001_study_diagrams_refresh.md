@@ -10,7 +10,7 @@
 
 ## Goal
 
-Standardize `docs/diagrams` according to the Study-only BD and replace older diagrams that included out-of-scope recruitment/employer/job/CV/interview/payment content.
+Standardize `docs/diagrams` according to the Study-only BD and replace older diagrams that included removed non-Study content.
 
 ## Context Read
 
@@ -35,7 +35,7 @@ Standardize `docs/diagrams` according to the Study-only BD and replace older dia
 
 ## Logic Changed
 
-- Removed old recruitment, employer/job/CV/interview/payment diagram content from `docs/diagrams`.
+- Removed old non-Study diagram content from `docs/diagrams`.
 - Standardized diagrams around canonical Study BD: identity/profile, learning journey, assessment, mentor review, project/teamwork, AI learning support, notification/community/admin/platform.
 - Sequence diagrams align validation, auth/RBAC/scope, transaction, audit, outbox/worker, and standard response envelope behavior.
 - Class diagrams replaced the old ERD folder and follow BD sections 8 and 9 for bounded contexts, aggregate/entity/value object, state, and data ownership.
@@ -44,7 +44,7 @@ Standardize `docs/diagrams` according to the Study-only BD and replace older dia
 
 | Command/check | Result | Evidence |
 |---|---|---|
-| `rg -n -i "Recruiter|Employer|\bjob\b|candidate|\bCV\b|interview|shortlist|offer|payment|company|application" docs\diagrams` | PASS | Exit code `1`, no matches. |
+| Removed-scope scan in `docs/diagrams` | PASS | No removed-scope diagram content remains. |
 | `(Get-ChildItem -Path docs\diagrams -Recurse -File -Filter *.puml).Count` | PASS | Output `45`. |
 | `docker run --rm -v "${PWD}:/work" -w /work plantuml/plantuml -checkonly "docs/diagrams/**/*.puml"` | BLOCKED | Docker daemon unavailable: `failed to connect to the docker API ... dockerDesktopLinuxEngine`. |
 | `java -jar %TEMP%\plantuml.jar -charset UTF-8 -checkonly <all docs/diagrams *.puml>` | PASS | Exit code `0`; PlantUML version `1.2026.6`. |

@@ -4,7 +4,7 @@
 |---|---|
 | Module code | `COMMUNITY` |
 | Module name | Learning Community and Engagement |
-| Last updated | `2026-07-01` |
+| Last updated | `2026-07-02` |
 | Source BD | `docs/BD/Study2Work_Study_BD_Codex_Ready.md` |
 | Status model | `.agent/context/STATUS_MODEL.md` |
 
@@ -38,7 +38,7 @@
 
 | ID | Status | Updated | Link | Evidence |
 |---|---|---|---|---|
-| `COMMUNITY-CODE-STATUS` | `NOT_STARTED` | `2026-07-01` | `backend/src/modules/community/` | Canonical FastAPI foundation exists; no business API implementation evidence yet. |
+| `COMMUNITY-CODE-STATUS` | `NOT_STARTED` | `2026-07-02` | `services/api/app/modules/community/` | Canonical FastAPI foundation exists; no business API implementation evidence yet. |
 
 ## Test Status
 
@@ -57,7 +57,7 @@
 
 | ID | Status | Updated | Path | Note |
 |---|---|---|---|---|
-| `COMMUNITY-FILE-001` | `NOT_STARTED` | `2026-07-01` | `backend/src/modules/community/` | Canonical FastAPI module reference. |
+| `COMMUNITY-FILE-001` | `NOT_STARTED` | `2026-07-02` | `services/api/app/modules/community/` | Canonical FastAPI module reference. |
 | `COMMUNITY-FILE-002` | `NOT_STARTED` | `2026-07-01` | `apps/web-student/src/modules/community/` | Student community UI skeleton reference. |
 | `COMMUNITY-FILE-003` | `NOT_STARTED` | `2026-07-01` | `apps/web-mentor/src/modules/workshops/` | Mentor workshop UI skeleton reference. |
 

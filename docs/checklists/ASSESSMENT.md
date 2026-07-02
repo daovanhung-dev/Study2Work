@@ -4,7 +4,7 @@
 |---|---|
 | Module code | `ASSESSMENT` |
 | Module name | Practice, Assessment, Mentor Review, Skill Matrix |
-| Last updated | `2026-07-01` |
+| Last updated | `2026-07-02` |
 | Source BD | `docs/BD/Study2Work_Study_BD_Codex_Ready.md` |
 | Status model | `.agent/context/STATUS_MODEL.md` |
 
@@ -18,7 +18,7 @@
 
 | ID | Status | Updated | Link | Note |
 |---|---|---|---|---|
-| `ASSESSMENT-DD-001` | `NOT_STARTED` | `2026-07-01` | `docs/DD/ASSESSMENT/` | Planned module DD; folder not created yet. |
+| `ASSESSMENT-DD-001` | `DRAFT` | `2026-07-02` | `docs/api-dd/assess/; docs/api-dd/mentor/` | Canonical ASSESSMENT, SKILL and MENTOR API DD drafts created; coding still waits for approval. |
 
 ## Feature / Function / View List
 
@@ -34,7 +34,7 @@
 
 | ID | Status | Updated | Link | Evidence |
 |---|---|---|---|---|
-| `ASSESSMENT-DD-STATUS` | `NOT_STARTED` | `2026-07-01` | `docs/DD/ASSESSMENT/` | No ASSESSMENT DD found. |
+| `ASSESSMENT-DD-STATUS` | `DRAFT` | `2026-07-02` | `docs/api-dd/assess/; docs/api-dd/mentor/` | API DD drafts generated; see `.agent/worklog/2026-07/0004_api_dd_canonical_drafts.md`. |
 
 ## Coding Status
 
@@ -60,7 +60,7 @@
 | ID | Status | Updated | Path | Note |
 |---|---|---|---|---|
 | `ASSESSMENT-FILE-001` | `NOT_STARTED` | `2026-07-01` | `services/api/app/modules/assessment/` | Canonical FastAPI module reference. |
-| `ASSESSMENT-FILE-002` | `NOT_STARTED` | `2026-07-01` | `backend/src/modules/practice/` | Existing practice skeleton reference. |
+| `ASSESSMENT-FILE-002` | `NOT_STARTED` | `2026-07-02` | `services/api/app/modules/assessment/` | Practice and assessment are represented by the canonical assessment module until a future approved split exists. |
 | `ASSESSMENT-FILE-003` | `NOT_STARTED` | `2026-07-01` | `apps/web-student/src/modules/assessment/` | Student assessment UI skeleton reference. |
 | `ASSESSMENT-FILE-004` | `NOT_STARTED` | `2026-07-01` | `apps/web-mentor/src/modules/assessments/` | Mentor review UI skeleton reference. |
 
@@ -68,16 +68,16 @@
 
 | ID | Status | Updated | Link | Note |
 |---|---|---|---|---|
-| `ASSESSMENT-WL-001` | `NOT_STARTED` | `2026-07-01` | `.agent/worklog/INDEX.md` | No ASSESSMENT worklog yet. |
+| `ASSESSMENT-WL-001` | `DONE` | `2026-07-02` | `.agent/worklog/2026-07/0004_api_dd_canonical_drafts.md` | Created canonical API DD draft package for this module group. |
 
 ## Verification Evidence
 
 | ID | Status | Updated | Link | Evidence |
 |---|---|---|---|---|
-| `ASSESSMENT-EV-001` | `NOT_STARTED` | `2026-07-01` | `.agent/worklog/INDEX.md` | No evidence yet. |
+| `ASSESSMENT-EV-001` | `VERIFIED` | `2026-07-02` | `.agent/worklog/2026-07/0004_api_dd_canonical_drafts.md` | Documentation generation checks completed for canonical API DD drafts. |
 
 ## Next Work
 
 | ID | Status | Updated | Link | Task |
 |---|---|---|---|---|
-| `ASSESSMENT-NEXT-001` | `NOT_STARTED` | `2026-07-01` | `docs/DD/DD_Module_Template/` | Create ASSESSMENT DD from BD before coding. |
+| `ASSESSMENT-NEXT-001` | `NOT_STARTED` | `2026-07-02` | `docs/api-dd/assess/; docs/api-dd/mentor/` | Review DD drafts and resolve OPEN_QUESTION items before coding. |

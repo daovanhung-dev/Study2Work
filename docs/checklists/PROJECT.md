@@ -4,7 +4,7 @@
 |---|---|
 | Module code | `PROJECT` |
 | Module name | Project and Teamwork |
-| Last updated | `2026-07-01` |
+| Last updated | `2026-07-02` |
 | Source BD | `docs/BD/Study2Work_Study_BD_Codex_Ready.md` |
 | Status model | `.agent/context/STATUS_MODEL.md` |
 
@@ -18,7 +18,7 @@
 
 | ID | Status | Updated | Link | Note |
 |---|---|---|---|---|
-| `PROJECT-DD-001` | `NOT_STARTED` | `2026-07-01` | `docs/DD/PROJECT/` | Planned module DD; folder not created yet. |
+| `PROJECT-DD-001` | `DRAFT` | `2026-07-02` | `docs/api-dd/project/` | Canonical PROJECT API DD drafts created; coding still waits for approval. |
 
 ## Feature / Function / View List
 
@@ -33,7 +33,7 @@
 
 | ID | Status | Updated | Link | Evidence |
 |---|---|---|---|---|
-| `PROJECT-DD-STATUS` | `NOT_STARTED` | `2026-07-01` | `docs/DD/PROJECT/` | No PROJECT DD found. |
+| `PROJECT-DD-STATUS` | `DRAFT` | `2026-07-02` | `docs/api-dd/project/` | API DD drafts generated; see `.agent/worklog/2026-07/0004_api_dd_canonical_drafts.md`. |
 
 ## Coding Status
 
@@ -66,16 +66,16 @@
 
 | ID | Status | Updated | Link | Note |
 |---|---|---|---|---|
-| `PROJECT-WL-001` | `NOT_STARTED` | `2026-07-01` | `.agent/worklog/INDEX.md` | No PROJECT worklog yet. |
+| `PROJECT-WL-001` | `DONE` | `2026-07-02` | `.agent/worklog/2026-07/0004_api_dd_canonical_drafts.md` | Created canonical API DD draft package for this module group. |
 
 ## Verification Evidence
 
 | ID | Status | Updated | Link | Evidence |
 |---|---|---|---|---|
-| `PROJECT-EV-001` | `NOT_STARTED` | `2026-07-01` | `.agent/worklog/INDEX.md` | No evidence yet. |
+| `PROJECT-EV-001` | `VERIFIED` | `2026-07-02` | `.agent/worklog/2026-07/0004_api_dd_canonical_drafts.md` | Documentation generation checks completed for canonical API DD drafts. |
 
 ## Next Work
 
 | ID | Status | Updated | Link | Task |
 |---|---|---|---|---|
-| `PROJECT-NEXT-001` | `NOT_STARTED` | `2026-07-01` | `docs/DD/DD_Module_Template/` | Create PROJECT DD from BD before coding. |
+| `PROJECT-NEXT-001` | `NOT_STARTED` | `2026-07-02` | `docs/api-dd/project/` | Review DD drafts and resolve OPEN_QUESTION items before coding. |

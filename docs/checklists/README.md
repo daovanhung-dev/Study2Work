@@ -2,13 +2,15 @@
 
 Module checklists track changing DD, coding, test, bug, worklog, and evidence status. Do not duplicate the full BD/DD here.
 
+Canonical architecture starts at `docs/architecture/PROJECT_ARCHITECTURE.md`.
+
 ## Rules
 
 - Each module has exactly one checklist: `docs/checklists/<MODULE_CODE>.md`.
 - Every item must have an ID, status, updated date, and link to BD/DD/worklog/issue/evidence when available.
 - Use status values from `.agent/context/STATUS_MODEL.md`.
 - Update test status only when concrete evidence exists in a worklog or test output.
-- Do not create checklists for `CAREER`, `EMPLOYER`, recruitment, CV/job/interview in Study scope unless a separate approved BD/DD expands scope.
+- Do not create checklists for removed non-Study modules unless a separate approved BD/DD expands scope.
 
 ## Study Module Checklists
 

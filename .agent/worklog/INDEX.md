@@ -6,10 +6,10 @@ Worklogs trace work from BD, DD, checklist, and skill context to code, tests, bu
 
 | Field | Value |
 |---|---|
-| Next session | `0003` |
+| Next session | `0005` |
 | Path format | `.agent/worklog/YYYY-MM/<SESSION_NO>_<TASK_SLUG>.md` |
-| Example | `.agent/worklog/2026-07/0003_<task_slug>.md` |
-| Last updated | `2026-07-01` |
+| Example | `.agent/worklog/2026-07/0005_<task_slug>.md` |
+| Last updated | `2026-07-02` |
 
 ## Read Rule At Session Start
 
@@ -21,6 +21,8 @@ Worklogs trace work from BD, DD, checklist, and skill context to code, tests, bu
 
 | Session | Date | Module | Task slug | Status | Risk | Worklog | Summary |
 |---|---|---|---|---|---|---|---|
+| `0004` | 2026-07-02 | `GLOBAL_API_DD` | `api_dd_canonical_drafts` | `DONE` | DDs are DRAFT only; schemas require review before approval | `.agent/worklog/2026-07/0004_api_dd_canonical_drafts.md` | Created 35 Vietnamese DRAFT API DD packages for canonical Study APIs, updated checklist evidence, and added API DD authoring skill. |
+| `0003` | 2026-07-02 | `GLOBAL_ARCHITECTURE` | `server_client_architecture_docs` | `DONE` | Client apps remain skeletons; backend test warning remains | `.agent/worklog/2026-07/0003_server_client_architecture_docs.md` | Defined canonical Study-only Server/Client split, replaced stale architecture docs, and updated agent/codex/checklist references. |
 | `0002` | 2026-07-01 | `GLOBAL_CONTEXT/BACKEND` | `context_backend_refactor` | `DONE` | Docker Compose not started; pytest has dependency deprecation warning | `.agent/worklog/2026-07/0002_context_backend_refactor.md` | Migrated agent context to `.agent`, created `.codex` backend context, replaced empty NestJS skeleton with FastAPI foundation and removed empty out-of-scope placeholders. |
 | `0001` | 2026-07-01 | `GLOBAL_DOCS/DIAGRAMS` | `study_diagrams_refresh` | `DONE` | Docker daemon unavailable; Java PlantUML fallback passed | `.agent/worklog/2026-07/0001_study_diagrams_refresh.md` | Refreshed Study-only use case, activity, class, and sequence diagram pack from canonical BD. |
 

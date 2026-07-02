@@ -16,11 +16,15 @@ This index tells agents which project documents to read for each task. Use progr
 | Source | Use |
 |---|---|
 | `docs/BD/Study2Work_Study_BD_Codex_Ready.md` | Canonical Study-scope business source of truth. |
+| `docs/architecture/PROJECT_ARCHITECTURE.md` | Canonical server/client split, top-level ownership, module map and dependency boundaries. |
+| `docs/architecture/SERVER_ARCHITECTURE.md` | Canonical server architecture, API flow, persistence, migrations and worker rules. |
+| `docs/architecture/CLIENT_ARCHITECTURE.md` | Canonical web/mobile client architecture, app responsibilities and API consumption rules. |
+| `docs/architecture/RUNTIME_FLOWS.md` | Canonical synchronous, mutation, async, migration and error/trace flows. |
 | `docs/checklists/API.md` | Study API checklist, API DD status, API readiness, blockers, and open questions. |
 | `docs/DD/Study2Work_API_DD_Template/` | Template for one API Detail Design package per API operation. |
 | `.agent/context/STATUS_MODEL.md` | Shared status values for DD, coding, bugs, tests, worklogs, and retrospectives. |
-| `docs/architecture/Study2Work_Domain_Model_Coding_Practice.md` | Historical domain model input; BD overrides it when scope conflicts exist. |
-| `docs/architecture/Study2Work_BusinessCode_Debug.md` | Historical business code and trace input; BD and API checklist override it when conflicts exist. |
+| `docs/architecture/Study2Work_Domain_Model_Coding_Practice.md` | Study-only domain architecture summary; BD overrides it if conflict exists. |
+| `docs/architecture/Study2Work_BusinessCode_Debug.md` | Study-only business code and trace summary; API checklist overrides it if conflict exists. |
 | `docs/diagrams/` | Study-only use case, activity, class, and sequence diagrams. |
 | `.codex/BACKEND_ARCHITECTURE.md` | Canonical backend architecture for future coding agents. |
 | `.codex/PROJECT_CONTEXT.md` | Compact project context for future coding agents. |
@@ -29,8 +33,9 @@ This index tells agents which project documents to read for each task. Use progr
 
 | ID | Status | Description |
 |---|---|---|
+| `DECISION-ARCH-001` | ACCEPTED | Runtime split is Server (`services/api`) and Client (`apps/*`). |
 | `DECISION-TECH-001` | ACCEPTED | Canonical Study backend is Python 3.12+ with FastAPI, Pydantic v2, SQLAlchemy 2.0, Alembic, PostgreSQL, Redis, and Celery. |
-| `DECISION-SCOPE-001` | ACCEPTED | Study implementation excludes employer, recruitment, job, application, matching, shortlist, offer, CV builder, AI CV review, and AI interview assistant. |
+| `DECISION-SCOPE-001` | ACCEPTED | Study implementation excludes removed non-Study workflows unless a future approved BD, ADR and API DD expand scope. |
 | `OPEN-QUESTION-DD-001` | OPEN | No per-API DD is approved yet. Business API implementation must wait for an approved API DD unless the user explicitly asks for a prototype. |
 
 ## Module Map
@@ -51,8 +56,8 @@ This index tells agents which project documents to read for each task. Use progr
 | Task type | Minimum docs to read |
 |---|---|
 | Create or update API DD | BD module/API section, related diagrams, `docs/checklists/API.md`, `docs/DD/Study2Work_API_DD_Template/`. |
-| Implement backend/API | BD + approved API DD + `docs/checklists/API.md` + `.codex/BACKEND_ARCHITECTURE.md` + affected code. |
-| Implement UI/mobile | BD + approved API DD request/response/error contract + Study-only UI refs. |
+| Implement server API | BD + approved API DD + `docs/checklists/API.md` + `docs/architecture/SERVER_ARCHITECTURE.md` + affected code. |
+| Implement UI/mobile | BD + approved API DD request/response/error contract + `docs/architecture/CLIENT_ARCHITECTURE.md` + Study-only UI refs. |
 | Fix bug | Checklist module + latest related worklogs + API DD/BD for the affected rule + failing evidence. |
 | Add tests | BD acceptance conditions + API DD test checklist + current test structure. |
 | Update status | `.agent/context/STATUS_MODEL.md`, relevant checklist, `.agent/worklog/INDEX.md`. |
@@ -60,9 +65,9 @@ This index tells agents which project documents to read for each task. Use progr
 ## Current State Snapshot
 
 - Canonical backend foundation is `services/api`.
-- Legacy `backend/` is not the canonical Study backend.
+- Canonical client side is `apps/*`.
+- Superseded legacy server skeletons are not canonical for Study backend implementation.
 - API DD template exists at `docs/DD/Study2Work_API_DD_Template/`.
 - No per-API DD is approved yet.
 - Worklog sessions are stored under `.agent/worklog/`.
 - Reusable skills are stored under `.agent/skills/`.
-
