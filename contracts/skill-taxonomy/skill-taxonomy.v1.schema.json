@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.study2work.local/skill-taxonomy/skill-taxonomy.v1.schema.json",
+  "title": "Skill taxonomy v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "skills"],
+  "properties": {
+    "version": { "const": 1 },
+    "skills": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["skillCode", "label", "category"],
+        "properties": {
+          "skillCode": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "label": { "type": "string", "minLength": 1 },
+          "category": {
+            "type": "string",
+            "enum": ["LANGUAGE", "FRAMEWORK", "DATABASE", "DEVOPS", "TOOL", "CONCEPT"]
+          }
+        }
+      }
+    }
+  }
+}

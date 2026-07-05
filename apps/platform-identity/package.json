@@ -1,0 +1,12 @@
+{
+  "name": "platform-identity",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node --check validate.mjs",
+    "lint": "node --check validate.mjs",
+    "test": "node validate.mjs",
+    "typecheck": "node --check validate.mjs"
+  }
+}

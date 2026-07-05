@@ -1,33 +1,45 @@
 # Study2Work
 
-Study2Work is organized as a Study-only monorepo with two runtime sides:
+Study2Work is a rebuilt polyglot monorepo for two independent product subsystems:
 
-- **Server**: `services/api`
-- **Client**: `apps/*`
+- **Study**: learning, courses, lessons, assessment, progress, and evidence issuance.
+- **Work**: career profile, CV, portfolio, jobs, applications, and recruiter workflow.
 
-The canonical architecture entry point is `docs/architecture/PROJECT_ARCHITECTURE.md`.
+The repository intentionally no longer uses the old BD/DD/checklist governance. Architecture docs and versioned contracts are the source of truth for this foundation pass.
 
-## Current Runtime
+## Runtime Map
 
-| Area | Path | Status |
+| Area | Path | Stack |
 |---|---|---|
-| API server | `services/api` | FastAPI foundation with health endpoint. |
-| Web clients | `apps/web-public`, `apps/web-student`, `apps/web-mentor`, `apps/web-admin` | Study-scope skeletons; not runnable yet. |
-| Mobile client | `apps/mobile-app` | Flutter skeleton; not runnable yet. |
-| Shared client packages | `packages/*` | Reserved skeletons. |
+| Study web | `apps/study-web` | Vue 3, TypeScript, Vite |
+| Study API | `apps/study-api` | FastAPI, Python, SQLAlchemy, Alembic |
+| Work web | `apps/work-web` | React, TypeScript, Vite |
+| Work API | `apps/work-api` | NestJS, Fastify, Prisma |
+| Platform identity | `apps/platform-identity` | Local JWKS and identity notes |
+| Contracts | `contracts` | OpenAPI placeholders, event JSON Schema, skill taxonomy |
+| Infra | `infra`, `docker-compose.yml` | Local PostgreSQL, Redis, MinIO, Mailhog |
 
-## Architecture Docs
+## Commands
 
-- `docs/architecture/PROJECT_ARCHITECTURE.md`
-- `docs/architecture/SERVER_ARCHITECTURE.md`
-- `docs/architecture/CLIENT_ARCHITECTURE.md`
-- `docs/architecture/RUNTIME_FLOWS.md`
-
-## Backend Commands
-
-Run from `services/api`:
+Install JavaScript dependencies:
 
 ```powershell
+corepack pnpm install
+```
+
+Validate contracts and JavaScript apps:
+
+```powershell
+corepack pnpm lint
+corepack pnpm typecheck
+corepack pnpm test
+corepack pnpm build
+```
+
+Run Study API checks:
+
+```powershell
+cd apps/study-api
 uv sync
 uv run ruff check .
 uv run ruff format --check .
@@ -35,8 +47,32 @@ uv run mypy app
 uv run pytest
 ```
 
-Run from the repository root:
+Validate local compose:
 
 ```powershell
 docker compose config
 ```
+
+## API Baseline
+
+Both APIs expose:
+
+- `GET /health/live`
+- `GET /health/ready`
+
+All new API responses use the standard envelope:
+
+```json
+{
+  "success": true,
+  "businessCode": "CODE",
+  "message": "Safe message",
+  "data": {},
+  "meta": {},
+  "traceId": "uuid"
+}
+```
+
+## Scope Guard
+
+`../L2E` is legacy reference only. Root-level `../docs` is external planning input only. This repo owns the new runnable foundation.

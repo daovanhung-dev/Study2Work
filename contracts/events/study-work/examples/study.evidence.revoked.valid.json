@@ -1,0 +1,17 @@
+{
+  "eventId": "c9bdc9f0-6ef7-4490-9d2c-231241f62221",
+  "eventType": "study.evidence.revoked.v1",
+  "eventVersion": 1,
+  "occurredAt": "2026-07-05T12:00:00Z",
+  "producer": "study-api",
+  "correlationId": "37d387fb-8972-4e82-94dd-b2fc17a4b9a2",
+  "subject": {
+    "platformUserId": "a7bf4a34-0b05-4d4f-afd2-8bffb2de1f11"
+  },
+  "data": {
+    "sourceEvidenceId": "3eb1a3f0-45d9-49f1-8c55-0d3e7cf1d2a6",
+    "sourceVersion": 4,
+    "revokedAt": "2026-07-05T11:59:00Z",
+    "reasonCode": "SOURCE_CORRECTED"
+  }
+}

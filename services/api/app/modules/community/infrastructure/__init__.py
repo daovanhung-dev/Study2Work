@@ -1,1 +1,0 @@
-"""Community infrastructure adapters."""

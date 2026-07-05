@@ -1,0 +1,22 @@
+{
+  "eventId": "f7c9d11a-6b97-4d4b-ae45-1e2e7d5a8d11",
+  "eventType": "study.evidence.upserted.v1",
+  "eventVersion": 1,
+  "occurredAt": "2026-07-05T10:00:00Z",
+  "producer": "study-api",
+  "correlationId": "9d203bce-2b73-49d0-8eb8-6d62e2e37d44",
+  "subject": {
+    "platformUserId": "a7bf4a34-0b05-4d4f-afd2-8bffb2de1f11"
+  },
+  "data": {
+    "sourceEvidenceId": "3eb1a3f0-45d9-49f1-8c55-0d3e7cf1d2a6",
+    "sourceVersion": 0,
+    "type": "COURSE_COMPLETION",
+    "title": "Invalid missing skill codes",
+    "skillCodes": [],
+    "level": "FOUNDATION",
+    "verified": true,
+    "issuedAt": "2026-07-04T08:00:00Z",
+    "verificationRef": "study:evidence:3eb1a3f0-45d9-49f1-8c55-0d3e7cf1d2a6"
+  }
+}

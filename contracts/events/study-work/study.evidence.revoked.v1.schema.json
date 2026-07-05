@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.study2work.local/events/study-work/study.evidence.revoked.v1.schema.json",
+  "title": "study.evidence.revoked.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId",
+    "eventType",
+    "eventVersion",
+    "occurredAt",
+    "producer",
+    "correlationId",
+    "subject",
+    "data"
+  ],
+  "properties": {
+    "eventId": { "$ref": "#/$defs/uuid" },
+    "eventType": { "const": "study.evidence.revoked.v1" },
+    "eventVersion": { "const": 1 },
+    "occurredAt": { "$ref": "#/$defs/isoDateTime" },
+    "producer": { "const": "study-api" },
+    "correlationId": { "$ref": "#/$defs/uuid" },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platformUserId"],
+      "properties": {
+        "platformUserId": { "$ref": "#/$defs/uuid" }
+      }
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceEvidenceId", "sourceVersion", "revokedAt", "reasonCode"],
+      "properties": {
+        "sourceEvidenceId": { "$ref": "#/$defs/uuid" },
+        "sourceVersion": { "type": "integer", "minimum": 1 },
+        "revokedAt": { "$ref": "#/$defs/isoDateTime" },
+        "reasonCode": {
+          "type": "string",
+          "enum": ["SOURCE_CORRECTED", "POLICY_VIOLATION", "ADMIN_REVOKED", "DATA_RETENTION"]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    },
+    "isoDateTime": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{3})?Z$"
+    }
+  }
+}

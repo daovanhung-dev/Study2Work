@@ -1,51 +1,114 @@
 services:
-  postgres:
+  study-postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: study2work
+      POSTGRES_DB: study2work_study
       POSTGRES_USER: study2work
       POSTGRES_PASSWORD: study2work
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - study_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U study2work -d study2work"]
+      test: ["CMD-SHELL", "pg_isready -U study2work -d study2work_study"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  redis:
+  study-redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
-      - redis_data:/data
+      - study_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  api:
-    build:
-      context: ./services/api
+  work-postgres:
+    image: postgres:16-alpine
     environment:
-      S2W_APP_ENV: development
-      S2W_DATABASE_URL: postgresql+asyncpg://study2work:study2work@postgres:5432/study2work
-      S2W_REDIS_URL: redis://redis:6379/0
-      S2W_CELERY_BROKER_URL: redis://redis:6379/1
-      S2W_CELERY_RESULT_BACKEND: redis://redis:6379/2
-      S2W_LOG_LEVEL: INFO
-      S2W_CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+      POSTGRES_DB: study2work_work
+      POSTGRES_USER: study2work
+      POSTGRES_PASSWORD: study2work
+    ports:
+      - "5434:5432"
+    volumes:
+      - work_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U study2work -d study2work_work"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  work-redis:
+    image: redis:7-alpine
+    ports:
+      - "6381:6379"
+    volumes:
+      - work_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  study-api:
+    build:
+      context: ./apps/study-api
+    environment:
+      S2W_STUDY_APP_ENV: local
+      S2W_STUDY_DATABASE_URL: postgresql+asyncpg://study2work:study2work@study-postgres:5432/study2work_study
+      S2W_STUDY_REDIS_URL: redis://study-redis:6379/0
+      S2W_STUDY_CORS_ORIGINS: http://localhost:5173,http://localhost:5174
     ports:
       - "8000:8000"
     depends_on:
-      postgres:
+      study-postgres:
         condition: service_healthy
-      redis:
+      study-redis:
+        condition: service_healthy
+
+  work-api:
+    build:
+      context: .
+      dockerfile: apps/work-api/Dockerfile
+    environment:
+      WORK_APP_ENV: local
+      WORK_DATABASE_URL: postgresql://study2work:study2work@work-postgres:5432/study2work_work
+      WORK_REDIS_URL: redis://work-redis:6379/0
+      WORK_CORS_ORIGINS: http://localhost:5173,http://localhost:5174
+    ports:
+      - "8001:8001"
+    depends_on:
+      work-postgres:
+        condition: service_healthy
+      work-redis:
         condition: service_healthy
 
 volumes:
-  postgres_data:
-  redis_data:
+  study_postgres_data:
+  study_redis_data:
+  work_postgres_data:
+  work_redis_data:
+  minio_data:

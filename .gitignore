@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Build output
+dist/
+build/
+.vite/
+.turbo/
+*.tsbuildinfo
+.coverage/
+coverage/
+htmlcov/
+
+# Runtime and local files
+.env
+.env.*
+!.env.example
+*.log
+.dev-logs/
+uploads/
+storage/
+
+# Database and tooling
+*.sqlite3
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

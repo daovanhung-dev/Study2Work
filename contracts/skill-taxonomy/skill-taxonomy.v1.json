@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "skillCode": "typescript",
+      "label": "TypeScript",
+      "category": "LANGUAGE"
+    },
+    {
+      "skillCode": "nodejs",
+      "label": "Node.js",
+      "category": "FRAMEWORK"
+    },
+    {
+      "skillCode": "fastapi",
+      "label": "FastAPI",
+      "category": "FRAMEWORK"
+    },
+    {
+      "skillCode": "postgresql",
+      "label": "PostgreSQL",
+      "category": "DATABASE"
+    },
+    {
+      "skillCode": "docker",
+      "label": "Docker",
+      "category": "DEVOPS"
+    },
+    {
+      "skillCode": "git",
+      "label": "Git",
+      "category": "TOOL"
+    },
+    {
+      "skillCode": "rest-api",
+      "label": "REST API",
+      "category": "CONCEPT"
+    }
+  ]
+}
