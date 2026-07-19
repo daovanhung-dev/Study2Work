@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng tin tuyển dụng</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container my-5">
+    <div class="card shadow-sm">
+      <div class="card-header bg-primary text-white">
+        <h3>Đăng tin tuyển dụng</h3>
+      </div>
+      <div class="card-body">
+        <form action="/business/PostJob" method="POST" enctype="multipart/form-data">
+          
+          <div class="mb-3">
+            <label for="ten_vi_tri" class="form-label">Tên vị trí</label>
+            <input type="text" class="form-control" id="ten_vi_tri" name="ten_vi_tri" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="phong_ban" class="form-label">Phòng ban</label>
+            <input type="text" class="form-control" id="phong_ban" name="phong_ban">
+          </div>
+
+          <div class="mb-3">
+            <label for="cap_bac" class="form-label">Cấp bậc</label>
+            <input type="text" class="form-control" id="cap_bac" name="cap_bac">
+          </div>
+
+          <div class="mb-3">
+            <label for="bao_cao_cho" class="form-label">Báo cáo cho</label>
+            <input type="text" class="form-control" id="bao_cao_cho" name="bao_cao_cho">
+          </div>
+
+          <div class="mb-3">
+            <label for="nhiem_vu" class="form-label">Nhiệm vụ</label>
+            <textarea class="form-control" id="nhiem_vu" name="nhiem_vu" rows="3"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label for="trinh_do" class="form-label">Trình độ</label>
+            <input type="text" class="form-control" id="trinh_do" name="trinh_do">
+          </div>
+
+          <div class="mb-3">
+            <label for="kinh_nghiem" class="form-label">Kinh nghiệm</label>
+            <input type="text" class="form-control" id="kinh_nghiem" name="kinh_nghiem">
+          </div>
+
+          <div class="mb-3">
+            <label for="ky_nang" class="form-label">Kỹ năng chuyên môn</label>
+            <input type="text" class="form-control" id="ky_nang" name="ky_nang">
+          </div>
+
+          <div class="mb-3">
+            <label for="ky_nang_mem" class="form-label">Kỹ năng mềm</label>
+            <input type="text" class="form-control" id="ky_nang_mem" name="ky_nang_mem">
+          </div>
+
+          <div class="mb-3">
+            <label for="uu_tien" class="form-label">Ưu tiên</label>
+            <input type="text" class="form-control" id="uu_tien" name="uu_tien">
+          </div>
+
+          <div class="mb-3">
+            <label for="muc_luong" class="form-label">Mức lương</label>
+            <input type="text" class="form-control" id="muc_luong" name="muc_luong">
+          </div>
+
+          <div class="mb-3">
+            <label for="phuc_loi" class="form-label">Phúc lợi</label>
+            <textarea class="form-control" id="phuc_loi" name="phuc_loi" rows="2"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label for="moi_truong" class="form-label">Môi trường làm việc</label>
+            <input type="text" class="form-control" id="moi_truong" name="moi_truong">
+          </div>
+
+          <div class="mb-3">
+            <label for="dia_diem" class="form-label">Địa điểm</label>
+            <input type="text" class="form-control" id="dia_diem" name="dia_diem">
+          </div>
+
+          <div class="mb-3">
+            <label for="thoi_gian" class="form-label">Thời gian làm việc</label>
+            <input type="text" class="form-control" id="thoi_gian" name="thoi_gian">
+          </div>
+
+          <div class="mb-3">
+            <label for="han_nop" class="form-label">Hạn nộp hồ sơ</label>
+            <input type="date" class="form-control" id="han_nop" name="han_nop">
+          </div>
+
+          <div class="mb-3">
+            <label for="cach_ung_tuyen" class="form-label">Cách ứng tuyển</label>
+            <input type="text" class="form-control" id="cach_ung_tuyen" name="cach_ung_tuyen">
+          </div>
+
+          <div class="mb-3">
+            <label for="mo_ta" class="form-label">Mô tả chi tiết</label>
+            <textarea class="form-control" id="mo_ta" name="mo_ta" rows="4"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label for="avt" class="form-label">Ảnh đại diện / logo công ty</label>
+            <input type="file" class="form-control" id="avt" name="avt">
+          </div>
+
+          <button type="submit" class="btn btn-success">Đăng tin</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learn2Earn — Tính năng đang hoàn thiện</title>
+  <meta name="description" content="Tính năng Learn2Earn đang được hoàn thiện. Sẵn sàng ra mắt: trải nghiệm xịn sò, giao diện hiện đại." />
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg-1: #061320; /* deep navy */
+      --bg-2: #042f4a; /* teal navy */
+      --accent-1: #00d4ff; /* cyan */
+      --accent-2: #2bd4a7; /* mint */
+      --glass: rgba(255,255,255,0.06);
+      --glass-2: rgba(255,255,255,0.03);
+      --card-shadow: 0 10px 40px rgba(2,6,23,0.6);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(12,95,140,0.09), transparent),
+                  radial-gradient(900px 500px at 90% 90%, rgba(2,197,190,0.06), transparent),
+                  linear-gradient(180deg,var(--bg-1),var(--bg-2));
+      color: #e7f7fb;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding:40px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .wrap{
+      width:100%;
+      max-width:1100px;
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      gap:32px;
+      align-items:center;
+    }
+
+    /* left hero */
+    .hero{
+      padding:48px;
+      border-radius:20px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      box-shadow: var(--card-shadow);
+      backdrop-filter: blur(10px) saturate(120%);
+      border: 1px solid rgba(255,255,255,0.04);
+      position:relative;
+      overflow:hidden;
+    }
+
+    /* animated corner accent */
+    .hero::before{
+      content:'';
+      position:absolute;
+      right:-120px; top:-80px;
+      width:420px; height:420px;
+      background: conic-gradient(from 120deg at 50% 50%, rgba(0,212,255,0.08), rgba(43,212,167,0.07), rgba(255,255,255,0));
+      transform: rotate(15deg);
+      filter: blur(40px);
+      pointer-events:none;
+    }
+
+    .brand{
+      display:flex;gap:16px;align-items:center;margin-bottom:18px
+    }
+
+    .logo{
+      width:64px;height:64px;border-radius:14px;display:grid;place-items:center;
+      background: linear-gradient(135deg,var(--accent-1),var(--accent-2));
+      box-shadow: 0 6px 20px rgba(44,220,190,0.18), inset 0 -6px 20px rgba(255,255,255,0.06);
+      font-weight:800;font-family:'Playfair Display', serif;color:#01121a;font-size:20px
+    }
+
+    h1{font-size:2.4rem;line-height:1.05;margin:0 0 10px 0;color:#f8ffff}
+    p.lead{margin:0 0 22px 0;color:rgba(235,255,255,0.85);font-size:1.05rem}
+
+    .tags{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+    .tag{padding:8px 14px;border-radius:999px;background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));font-size:.9rem;border:1px solid rgba(255,255,255,0.03)}
+
+    .buttons{display:flex;gap:12px;align-items:center}
+    .btn{
+      padding:12px 18px;border-radius:12px;font-weight:600;border:0;cursor:pointer;display:inline-flex;gap:10px;align-items:center;justify-content:center
+    }
+
+    .btn-primary{
+      background:linear-gradient(90deg,var(--accent-1),var(--accent-2));color:#021017;box-shadow:0 8px 30px rgba(43,212,167,0.18);transform:translateY(0);transition:transform .18s ease, box-shadow .18s ease
+    }
+    .btn-primary:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(43,212,167,0.24)}
+
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:rgba(235,255,255,0.9);padding:11px 16px;border-radius:12px}
+
+    /* progress / visual */
+    .progress-wrap{margin-top:28px;display:flex;gap:18px;align-items:center}
+    .progress{
+      position:relative;width:220px;height:12px;border-radius:999px;background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));padding:3px
+    }
+    .progress > i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent-1),var(--accent-2));width:64%;box-shadow:0 6px 18px rgba(0,212,255,0.12);transition:width .9s cubic-bezier(.2,.9,.2,1)}
+    .status{font-size:0.95rem;color:rgba(235,255,255,0.9)}
+
+    /* right card */
+    .card{
+      padding:26px;border-radius:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03);box-shadow:0 8px 30px rgba(0,10,20,0.6);backdrop-filter: blur(8px);
+    }
+
+    .feature{display:flex;gap:12px;align-items:flex-start;margin:12px 0}
+    .feature .icon{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.03)}
+    .feature h4{margin:0;font-size:1rem}
+    .feature p{margin:6px 0 0 0;color:rgba(235,255,255,0.8);font-size:.92rem}
+
+    /* footer small */
+    .meta{margin-top:20px;font-size:0.85rem;color:rgba(235,255,255,0.65);display:flex;justify-content:space-between;align-items:center}
+
+    /* subtle particle animation */
+    .particles{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+    .particle{position:absolute;width:8px;height:8px;border-radius:999px;opacity:.12;background:rgba(255,255,255,0.9);animation:float 8s linear infinite;filter:blur(4px)}
+    @keyframes float{0%{transform:translateY(0) translateX(0) scale(1)}50%{transform:translateY(-40px) translateX(30px) scale(.9)}100%{transform:translateY(0) translateX(0) scale(1)}}
+
+    /* responsiveness */
+    @media(max-width:980px){
+      .wrap{grid-template-columns:1fr;max-width:900px}
+      .hero{order:2}
+      .card{order:1}
+    }
+
+    @media(max-width:480px){
+      h1{font-size:1.6rem}
+      .logo{width:52px;height:52px;font-size:18px}
+      .wrap{padding:12px}
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrap">
+
+    <section class="hero">
+      <div class="particles" aria-hidden>
+        <span class="particle" style="left:8%; top:12%; animation-duration:10s; width:10px;height:10px; opacity:0.06"></span>
+        <span class="particle" style="left:30%; top:78%; animation-duration:12s; width:6px;height:6px; opacity:0.08"></span>
+        <span class="particle" style="left:80%; top:38%; animation-duration:9s; width:12px;height:12px; opacity:0.05"></span>
+      </div>
+
+      <div class="brand">
+        <div class="logo">L2E</div>
+        <div>
+          <div style="font-size:.85rem;color:rgba(235,255,255,0.7)">Learn2Earn — <strong style="color:var(--accent-1)">!l2e</strong> preview</div>
+          <div style="font-size:.75rem;color:rgba(235,255,255,0.45)">Phiên bản thử nghiệm</div>
+        </div>
+      </div>
+
+      <h1>Chức năng đang được hoàn thiện — <span style="color:var(--accent-2)">sắp có trải nghiệm xịn</span></h1>
+      <p class="lead">Chúng tôi đang tối ưu mọi chi tiết: hiệu năng, UX, và tính năng học — kiếm tiền. Hãy quay lại sau hoặc đăng ký thông báo để nhận cập nhật khi ra mắt.</p>
+
+      <div class="tags">
+        <div class="tag">UI/UX - Chuẩn thương mại</div>
+        <div class="tag">Bảo mật &amp; hiệu năng</div>
+        <div class="tag">Tích hợp CV &amp; Jobflow</div>
+      </div>
+
+      <div class="buttons">
+        <button class="btn btn-primary" onclick="notify()">🔔 Thông báo cho tôi</button>
+        <button class="btn btn-ghost" onclick="goHome()">🏠 Về trang chủ</button>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress" aria-hidden><i style="width:78%"></i></div>
+        <div class="status">Tiến độ: <strong>78%</strong></div>
+      </div>
+
+      <div class="meta" style="margin-top:28px">
+        <div>Phiên bản nội bộ: <strong>v0.9-beta</strong></div>
+        <div style="font-size:.9rem;color:rgba(235,255,255,0.5)">Cập nhật gần nhất: 02 Dec 2025</div>
+      </div>
+
+    </section>
+
+    <aside class="card">
+
+      <h3 style="margin:0 0 10px 0;font-family:'Playfair Display', serif;color:#eafffb">Tính năng nổi bật sắp có</h3>
+      <p style="margin:0 0 18px 0;color:rgba(235,255,255,0.78)">Những phần mà đội L2E đang hoàn thiện để đảm bảo trải nghiệm chuyên nghiệp khi ra mắt.</p>
+
+      <div class="feature">
+        <div class="icon">⚡</div>
+        <div>
+          <h4>Quy trình tuyển dụng thông minh</h4>
+          <p>Matching CV — JD thông minh, đề xuất việc làm phù hợp theo kỹ năng thực tế.</p>
+        </div>
+      </div>
+
+      <div class="feature">
+        <div class="icon">🛡️</div>
+        <div>
+          <h4>Bảo mật &amp; riêng tư</h4>
+          <p>Mã hóa dữ liệu, xác thực an toàn — đảm bảo dữ liệu ứng viên và công ty được bảo vệ.</p>
+        </div>
+      </div>
+
+      <div class="feature">
+        <div class="icon">📈</div>
+        <div>
+          <h4>Dashboard &amp; Analytics</h4>
+          <p>Thống kê tương tác, hiệu suất hồ sơ, và chuyển đổi từ ứng tuyển đến nhận việc.</p>
+        </div>
+      </div>
+
+      <div style="height:10px"></div>
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:14px 0" />
+
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div style="display:flex;gap:10px;align-items:center">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+            <rect width="24" height="24" rx="6" fill="url(#g)" />
+            <defs>
+              <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#00D4FF" />
+                <stop offset="1" stop-color="#2BD4A7" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div>
+            <div style="font-weight:700">Đăng ký sớm</div>
+            <div style="font-size:.85rem;color:rgba(235,255,255,0.6)">Nhận email khi ra mắt</div>
+          </div>
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="notify()">Đăng ký</button>
+        </div>
+      </div>
+
+      <div class="meta">
+        <div>Được xây dựng bởi đội L2E</div>
+        <div>© Learn2Earn</div>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <script>
+    function notify(){
+      const email = prompt('Nhập email để nhận thông báo khi tính năng ra mắt:');
+      if(!email) return;
+      // Giả lập API: ở thực tế bạn sẽ gọi endpoint để lưu email
+      alert('Cảm ơn! ' + email + ' đã được ghi nhận. Chúng tôi sẽ thông báo khi ra mắt.');
+    }
+    function goHome(){
+      // Thay đổi theo đường dẫn site của bạn
+      window.location.href = '/';
+    }
+  </script>
+
+</body>
+</html>

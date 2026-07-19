@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin – Thống kê hệ thống</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Fonts & Libs -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --primary:#0f766e;
+      --primary-soft:#ecfdf5;
+      --bg:#020617;
+      --bg-soft:#02081f;
+      --border:#1e293b;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --danger:#ef4444;
+      --info:#38bdf8;
+      --warning:#facc15;
+      --success:#22c55e;
+    }
+
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:radial-gradient(circle at top,#0f172a 0,#020617 50%,#000 100%);
+      color:var(--text);
+    }
+    a{text-decoration:none;color:inherit;}
+
+    .layout{
+      display:flex;
+      min-height:100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar{
+      width:260px;
+      background:linear-gradient(180deg,#020617,#02081f);
+      border-right:1px solid var(--border);
+      padding:1.2rem 1rem;
+      display:flex;
+      flex-direction:column;
+      position:sticky;
+      top:0;
+      height:100vh;
+    }
+    .brand-box{
+      display:flex;
+      align-items:center;
+      gap:.7rem;
+      margin-bottom:1.5rem;
+      padding:.45rem .5rem .6rem;
+      border-radius:1rem;
+      background:linear-gradient(135deg,#0f766e33,#38bdf833);
+      border:1px solid rgba(148,163,184,.4);
+    }
+    .brand-logo{
+      width:44px;
+      height:44px;
+      border-radius:.9rem;
+      background:#fff;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .brand-logo img{
+      width:100%;
+      height:auto;
+      object-fit:contain;
+    }
+    .brand-title{
+      font-weight:700;
+      font-size:.95rem;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .brand-sub{
+      font-size:.75rem;
+      color:var(--muted);
+    }
+
+    .sidebar-section-title{
+      font-size:.72rem;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      color:var(--muted);
+      margin:.5rem 0 .3rem;
+      padding:0 .2rem;
+    }
+    .nav-main{
+      list-style:none;
+      padding:0;
+      margin:0;
+      flex:1;
+    }
+    .nav-item + .nav-item{margin-top:.15rem;}
+    .nav-link{
+      display:flex;
+      align-items:center;
+      gap:.6rem;
+      padding:.55rem .65rem;
+      border-radius:.9rem;
+      font-size:.88rem;
+      color:#e5e7eb;
+      border:1px solid透明;
+      border:1px solid transparent;
+      cursor:pointer;
+      transition:all .18s ease;
+    }
+    .nav-link i{
+      width:22px;
+      text-align:center;
+      font-size:1.1rem;
+    }
+    .nav-link small{
+      display:block;
+      font-size:.7rem;
+      color:var(--muted);
+    }
+    .nav-link.active{
+      background:linear-gradient(135deg,#0f766e,#0d9488);
+      border-color:rgba(34,197,94,.5);
+      box-shadow:0 14px 30px rgba(15,118,110,.45);
+    }
+    .nav-link:hover:not(.active){
+      background:#0b1120;
+      border-color:rgba(148,163,184,.6);
+    }
+
+    .sidebar-bottom{
+      margin-top:1rem;
+      padding-top:1rem;
+      border-top:1px dashed var(--border);
+      font-size:.8rem;
+      color:var(--muted);
+    }
+    .sidebar-status{
+      display:inline-flex;
+      align-items:center;
+      gap:.25rem;
+      border-radius:999px;
+      background:rgba(34,197,94,.12);
+      color:#4ade80;
+      padding:.15rem .6rem;
+      font-size:.7rem;
+      margin-bottom:.4rem;
+    }
+    .sidebar-status i{font-size:.8rem;}
+
+    /* ===== MAIN AREA ===== */
+    .main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+
+    /* TOPBAR */
+    .topbar{
+      padding:.75rem 1.5rem;
+      display:flex;
+      align-items:center;
+      gap:1rem;
+      border-bottom:1px solid var(--border);
+      background:rgba(15,23,42,.96);
+      backdrop-filter:blur(24px);
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+    .topbar-title{
+      font-size:1.05rem;
+      font-weight:600;
+    }
+    .topbar-sub{
+      font-size:.8rem;
+      color:var(--muted);
+    }
+    .topbar-search{
+      margin-left:auto;
+      display:flex;
+      align-items:center;
+      gap:.75rem;
+    }
+    .topbar-btn{
+      font-size:.8rem;
+      border-radius:999px;
+      padding:.35rem .9rem;
+      display:inline-flex;
+      align-items:center;
+      gap:.3rem;
+    }
+    .topbar-btn i{font-size:1rem;}
+
+    /* PAGE CONTENT */
+    .page{
+      padding:1.5rem 1.5rem 0;
+    }
+
+    .section-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      margin-bottom:1rem;
+    }
+    .section-title{
+      font-size:1rem;
+      font-weight:600;
+    }
+    .section-sub{
+      font-size:.8rem;
+      color:var(--muted);
+    }
+    .section-actions{
+      font-size:.8rem;
+      color:var(--muted);
+    }
+
+    .card-glass{
+      background:linear-gradient(160deg,#020617dd,#02081fe6);
+      border-radius:1rem;
+      border:1px solid var(--border);
+      padding:1rem 1.1rem;
+      box-shadow:0 18px 40px rgba(15,23,42,.7);
+    }
+
+    /* KPI */
+    .kpi-value{
+      font-size:1.4rem;
+      font-weight:600;
+    }
+    .kpi-label{
+      font-size:.8rem;
+      color:var(--muted);
+    }
+    .kpi-trend{
+      font-size:.75rem;
+      margin-top:.25rem;
+    }
+    .kpi-badge{
+      padding:.15rem .5rem;
+      border-radius:999px;
+      font-size:.7rem;
+      display:inline-flex;
+      align-items:center;
+      gap:.25rem;
+    }
+    .kpi-badge.up{
+      background:rgba(34,197,94,.12);
+      color:#4ade80;
+    }
+    .kpi-badge.down{
+      background:rgba(248,113,113,.12);
+      color:#fca5a5;
+    }
+
+    /* SIMPLE CHART BARS */
+    .chart-bar-wrapper{
+      margin-top:.75rem;
+    }
+    .chart-bar-row{
+      display:flex;
+      align-items:center;
+      gap:.5rem;
+      margin-bottom:.45rem;
+      font-size:.78rem;
+    }
+    .chart-bar-label{
+      width:120px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .chart-bar-track{
+      flex:1;
+      height:8px;
+      border-radius:999px;
+      background:#020617;
+      overflow:hidden;
+    }
+    .chart-bar-fill{
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg,#22c55e,#38bdf8);
+    }
+    .chart-bar-value{
+      width:46px;
+      text-align:right;
+      font-size:.78rem;
+      color:#e5e7eb;
+    }
+
+    /* TABLES */
+    .table-dashboard{
+      width:100%;
+      border-collapse:collapse;
+      font-size:.8rem;
+      color:#e5e7eb;
+    }
+    .table-dashboard thead{
+      background:#020617;
+    }
+    .table-dashboard th,
+    .table-dashboard td{
+      padding:.5rem .6rem;
+      border-bottom:1px solid #1e293b;
+      white-space:nowrap;
+    }
+    .table-dashboard tbody tr:hover{
+      background:#020617;
+    }
+
+    .badge-tag{
+      padding:.15rem .5rem;
+      border-radius:999px;
+      font-size:.7rem;
+      background:rgba(56,189,248,.16);
+      color:#7dd3fc;
+    }
+
+    /* FOOTER */
+    .main-footer{
+      background:#02081f;
+      margin-top:2rem;
+      padding:3rem 2rem 1.5rem;
+      border-top:1px solid #020617;
+    }
+    .footer-logo{
+      font-size:1.25rem;
+      font-weight:700;
+      margin-bottom:.75rem;
+      color:#fff;
+    }
+    .footer-text{
+      font-size:.9rem;
+      max-width:360px;
+      color:#cbd5f5;
+    }
+    .footer-title{
+      font-weight:600;
+      font-size:.95rem;
+      margin-bottom:1rem;
+      color:#e5e7eb;
+    }
+    .footer-link{
+      display:block;
+      font-size:.9rem;
+      color:#cbd5f5;
+      text-decoration:none;
+      margin-bottom:.4rem;
+    }
+    .footer-link:hover{
+      color:#fff;
+      text-decoration:underline;
+    }
+    .footer-contact-item{
+      font-size:.9rem;
+      color:#cbd5f5;
+      margin-bottom:.4rem;
+      display:flex;
+      align-items:flex-start;
+      gap:.45rem;
+    }
+    .footer-contact-item i{
+      font-size:1rem;
+      margin-top:.1rem;
+    }
+    .footer-bottom{
+      border-top:1px solid rgba(148,163,184,.4);
+      margin-top:2rem;
+      padding-top:1rem;
+      font-size:.8rem;
+      color:#9ca3af;
+      text-align:center;
+    }
+
+    @media (max-width:992px){
+      .sidebar{display:none;}
+      .layout{flex-direction:column;}
+      .topbar{position:static;}
+    }
+    /* === Làm sáng chữ mô tả dưới các % === */
+.kpi-trend,
+.kpi-trend.text-muted {
+  color: #cbd5f5 !important;   /* xanh nhạt sáng hơn */
+}
+
+  </style>
+</head>
+
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand-box">
+      <div class="brand-logo">
+        <img src="learn2earn-logo.png" alt="Learn2Earn">
+      </div>
+      <div>
+        <div class="brand-title">Learn2Earn</div>
+        <div class="brand-sub">Admin Control Center</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section-title">Dashboard</div>
+    <ul class="nav-main">
+      <li class="nav-item">
+        <a href="admin-home.html" class="nav-link">
+          <i class="ri-dashboard-line"></i>
+          <div>
+            Tổng quan
+            <small>Thống kê hệ thống</small>
+          </div>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="admin-users.html" class="nav-link">
+          <i class="ri-user-3-line"></i>
+          <div>
+            Người dùng
+            <small>SV – Trường – DN – Admin</small>
+          </div>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="admin-majors.html" class="nav-link">
+          <i class="ri-book-2-line"></i>
+          <div>
+            Ngành học
+            <small>Khoa / chuyên ngành</small>
+          </div>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="admin-jobs.html" class="nav-link">
+          <i class="ri-briefcase-line"></i>
+          <div>
+            Tin tuyển dụng
+            <small>Thực tập &amp; việc làm</small>
+          </div>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="admin-stats.html" class="nav-link active">
+          <i class="ri-bar-chart-grouped-line"></i>
+          <div>
+            Thống kê
+            <small>SV &amp; doanh nghiệp</small>
+          </div>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="admin-settings.html" class="nav-link">
+          <i class="ri-settings-3-line"></i>
+          <div>
+            Cài đặt hệ thống
+            <small>Phân quyền, cấu hình</small>
+          </div>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-bottom">
+      <div class="sidebar-status">
+        <i class="ri-shield-check-line"></i> Phiên bản ổn định
+      </div>
+      <div>Learn2Earn v1.0.0</div>
+      <div>Last sync: 1 phút trước</div>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div>
+        <div class="topbar-title">Thống kê & báo cáo</div>
+        <div class="topbar-sub">Tổng quan dữ liệu sinh viên – nhà trường – doanh nghiệp trên nền tảng</div>
+      </div>
+
+      <div class="topbar-search">
+        <button class="btn btn-outline-light topbar-btn">
+          <i class="ri-download-2-line"></i> Xuất báo cáo
+        </button>
+      
+        <button class="btn btn-outline-danger topbar-btn">
+          <i class="ri-logout-box-r-line"></i> Đăng xuất
+        </button>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <main class="page">
+
+      <!-- HEADER + FILTER -->
+      <div class="section-header">
+        <div>
+          <div class="section-title">Bảng điều khiển thống kê</div>
+          <div class="section-sub">Chọn khoảng thời gian để xem số liệu</div>
+        </div>
+        <div class="section-actions">
+          Khoảng thời gian: <b>30 ngày gần nhất</b>
+        </div>
+      </div>
+
+      <div class="card-glass mb-3">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <div class="section-sub mb-1">Từ ngày</div>
+            <input type="date" class="form-control form-control-sm"
+                   style="background:#020617;border-color:var(--border);color:var(--text);">
+          </div>
+          <div class="col-md-3">
+            <div class="section-sub mb-1">Đến ngày</div>
+            <input type="date" class="form-control form-control-sm"
+                   style="background:#020617;border-color:var(--border);color:var(--text);">
+          </div>
+          <div class="col-md-3">
+            <div class="section-sub mb-1">Đối tượng</div>
+            <select class="form-select form-select-sm"
+                    style="background:#020617;border-color:var(--border);color:var(--text);">
+              <option>Tất cả</option>
+              <option>Sinh viên</option>
+              <option>Nhà trường</option>
+              <option>Doanh nghiệp</option>
+            </select>
+          </div>
+          <div class="col-md-3 d-flex align-items-end gap-2">
+            <button class="btn btn-primary btn-sm w-50">
+              <i class="ri-bar-chart-line me-1"></i> Áp dụng
+            </button>
+            <button class="btn btn-outline-light btn-sm w-50">
+              <i class="ri-refresh-line me-1"></i> Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI ROW -->
+      <div class="row g-3 mb-3">
+        <div class="col-md-3">
+          <div class="card-glass">
+            <div class="kpi-label mb-1">Sinh viên tham gia thực tập</div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="kpi-value">932</div>
+              <span class="kpi-badge up">
+                <i class="ri-arrow-up-s-line"></i> +5.6%
+              </span>
+            </div>
+            <div class="kpi-trend text-muted">So với kỳ trước</div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card-glass">
+            <div class="kpi-label mb-1">Tỷ lệ hoàn thành báo cáo</div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="kpi-value">84%</div>
+              <span class="kpi-badge up">
+                <i class="ri-arrow-up-s-line"></i> +3.2%
+              </span>
+            </div>
+            <div class="kpi-trend text-muted">Sinh viên nộp đủ & đúng hạn</div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card-glass">
+            <div class="kpi-label mb-1">Doanh nghiệp đang hoạt động</div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="kpi-value">135</div>
+              <span class="kpi-badge up">
+                <i class="ri-arrow-up-s-line"></i> +8 DN
+              </span>
+            </div>
+            <div class="kpi-trend text-muted">Trong 30 ngày gần đây</div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card-glass">
+            <div class="kpi-label mb-1">Tổng số vị trí tuyển</div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="kpi-value">412</div>
+              <span class="kpi-badge down">
+                <i class="ri-arrow-down-s-line"></i> -4.1%
+              </span>
+            </div>
+            <div class="kpi-trend text-muted">So với cùng kỳ năm trước</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHARTS -->
+      <div class="row g-3 mb-3">
+        <!-- Chart 1: Top ngành được tuyển nhiều -->
+        <div class="col-lg-6">
+          <div class="card-glass h-100">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div class="section-title" style="font-size:.95rem;">Top ngành được tuyển nhiều</div>
+              <div class="section-sub">Theo số tin tuyển dụng đang mở</div>
+            </div>
+
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar-row">
+                <div class="chart-bar-label">Công nghệ thông tin</div>
+                <div class="chart-bar-track">
+                  <div class="chart-bar-fill" style="width:90%;"></div>
+                </div>
+                <div class="chart-bar-value">56 tin</div>
+              </div>
+
+              <div class="chart-bar-row">
+                <div class="chart-bar-label">Kế toán</div>
+                <div class="chart-bar-track">
+                  <div class="chart-bar-fill" style="width:68%;"></div>
+                </div>
+                <div class="chart-bar-value">42 tin</div>
+              </div>
+
+              <div class="chart-bar-row">
+                <div class="chart-bar-label">Nông nghiệp</div>
+                <div class="chart-bar-track">
+                  <div class="chart-bar-fill" style="width:54%;"></div>
+                </div>
+                <div class="chart-bar-value">33 tin</div>
+              </div>
+
+              <div class="chart-bar-row">
+                <div class="chart-bar-label">Marketing</div>
+                <div class="chart-bar-track">
+                  <div class="chart-bar-fill" style="width:40%;"></div>
+                </div>
+                <div class="chart-bar-value">24 tin</div>
+              </div>
+
+              <div class="chart-bar-row">
+                <div class="chart-bar-label">Thú y</div>
+                <div class="chart-bar-track">
+                  <div class="chart-bar-fill" style="width:32%;"></div>
+                </div>
+                <div class="chart-bar-value">19 tin</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart 2: Tỷ lệ trạng thái thực tập -->
+        <div class="col-lg-6">
+          <div class="card-glass h-100">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div class="section-title" style="font-size:.95rem;">Trạng thái thực tập của sinh viên</div>
+              <div class="section-sub">Phân bổ theo trạng thái</div>
+            </div>
+
+            <div class="row g-3 mt-1">
+              <div class="col-6">
+                <div class="kpi-label mb-1">Đang thực tập</div>
+                <div class="kpi-value">62%</div>
+                <div class="kpi-trend text-muted">Đã được doanh nghiệp tiếp nhận</div>
+              </div>
+              <div class="col-6">
+                <div class="kpi-label mb-1">Đã hoàn thành</div>
+                <div class="kpi-value">25%</div>
+                <div class="kpi-trend text-muted">Đủ điều kiện báo cáo</div>
+              </div>
+              <div class="col-6 mt-2">
+                <div class="kpi-label mb-1">Chưa bắt đầu</div>
+                <div class="kpi-value">9%</div>
+                <div class="kpi-trend text-muted">Đã phân công nhưng chưa check-in</div>
+              </div>
+              <div class="col-6 mt-2">
+                <div class="kpi-label mb-1">Gặp vấn đề</div>
+                <div class="kpi-value">4%</div>
+                <div class="kpi-trend text-muted">Cần nhà trường hỗ trợ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE: THỐNG KÊ THEO TRƯỜNG / DOANH NGHIỆP -->
+      <div class="row g-3 mb-4">
+        <div class="col-lg-7">
+          <div class="card-glass h-100">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div class="section-title" style="font-size:.95rem;">Thống kê theo trường</div>
+              <div class="section-sub">Top trường có nhiều sinh viên tham gia</div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table-dashboard">
+                <thead>
+                <tr>
+                  <th>Trường</th>
+                  <th>Số SV tham gia</th>
+                  <th>Tỷ lệ hoàn thành</th>
+                  <th>Ngành nổi bật</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td>Học viện Nông nghiệp VN</td>
+                  <td>420</td>
+                  <td>86%</td>
+                  <td><span class="badge-tag">CNTT</span> <span class="badge-tag">Nông nghiệp</span></td>
+                </tr>
+                <tr>
+                  <td>ĐH Bách Khoa HN</td>
+                  <td>210</td>
+                  <td>88%</td>
+                  <td><span class="badge-tag">Cơ điện</span> <span class="badge-tag">CNTT</span></td>
+                </tr>
+                <tr>
+                  <td>ĐH Kinh tế Quốc dân</td>
+                  <td>190</td>
+                  <td>82%</td>
+                  <td><span class="badge-tag">Kế toán</span> <span class="badge-tag">Quản trị</span></td>
+                </tr>
+                <tr>
+                  <td>ĐH Thương mại</td>
+                  <td>135</td>
+                  <td>80%</td>
+                  <td><span class="badge-tag">Marketing</span></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="card-glass h-100">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div class="section-title" style="font-size:.95rem;">Doanh nghiệp đánh giá tốt</div>
+              <div class="section-sub">Theo điểm đánh giá trung bình của sinh viên</div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table-dashboard">
+                <thead>
+                <tr>
+                  <th>Doanh nghiệp</th>
+                  <th>Điểm TB</th>
+                  <th>Số SV</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td>FPT Software</td>
+                  <td>4.7 / 5</td>
+                  <td>120</td>
+                </tr>
+                <tr>
+                  <td>Viettel Telecom</td>
+                  <td>4.5 / 5</td>
+                  <td>96</td>
+                </tr>
+                <tr>
+                  <td>GreenFarm</td>
+                  <td>4.4 / 5</td>
+                  <td>58</td>
+                </tr>
+                <tr>
+                  <td>ABC Tech</td>
+                  <td>4.3 / 5</td>
+                  <td>41</td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="section-sub mt-2" style="font-size:.78rem;">
+              Gợi ý: Admin có thể <b>ghim</b> những doanh nghiệp này vào danh sách đối tác ưu tiên,
+              hoặc giới thiệu cho sinh viên ở các ngành liên quan.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="main-footer">
+      <div class="container-fluid px-0">
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="footer-logo">Learn2Earn</div>
+            <p class="footer-text">
+              Nền tảng tuyển dụng và tìm việc làm tại Việt Nam, kết nối sinh viên – người đi làm
+              với doanh nghiệp một cách nhanh chóng và hiệu quả.
+            </p>
+          </div>
+
+          <div class="col-md-2">
+            <div class="footer-title">Về chúng tôi</div>
+            <a href="#" class="footer-link">Giới thiệu</a>
+            <a href="#" class="footer-link">Tin tức</a>
+            <a href="#" class="footer-link">Tuyển dụng</a>
+            <a href="#" class="footer-link">Liên hệ</a>
+          </div>
+
+          <div class="col-md-2">
+            <div class="footer-title">Dành cho ứng viên</div>
+            <a href="#" class="footer-link">Tìm việc làm</a>
+            <a href="#" class="footer-link">Tạo CV</a>
+            <a href="#" class="footer-link">Tài liệu hướng dẫn</a>
+            <a href="#" class="footer-link">Blog</a>
+          </div>
+
+          <div class="col-md-2">
+            <div class="footer-title">Dành cho nhà tuyển dụng</div>
+            <a href="#" class="footer-link">Đăng tuyển dụng</a>
+            <a href="#" class="footer-link">Tìm ứng viên</a>
+            <a href="#" class="footer-link">Gói dịch vụ</a>
+            <a href="#" class="footer-link">Hỗ trợ</a>
+          </div>
+
+          <div class="col-md-2">
+            <div class="footer-title">Liên hệ</div>
+            <div class="footer-contact-item">
+              <i class="ri-phone-line"></i> <span>+84 123 456 789</span>
+            </div>
+            <div class="footer-contact-item">
+              <i class="ri-mail-line"></i> <span>info@learn2earn.vn</span>
+            </div>
+            <div class="footer-contact-item">
+              <i class="ri-map-pin-line"></i> <span>Hà Nội, Việt Nam</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          © 2025 Learn2Earn. Tất cả các quyền được bảo lưu.
+        </div>
+      </div>
+    </footer>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

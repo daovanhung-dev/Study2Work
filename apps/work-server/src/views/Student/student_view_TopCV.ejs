@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Top CV sinh viên - Learn2Earn</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+     /* Cho phép TẤT CẢ thẻ <a> trong header hiển thị con trỏ dạng chọn */
+    .header a {
+      cursor: pointer;
+    }
+    /* Thêm cho dropdown item */
+    .header .dropdown-item {
+      cursor: pointer;
+    }
+    body {
+      background: #f3f6fb;
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+    }
+
+    .card-soft {
+      border-radius: 16px;
+      border: 0;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+      background: #ffffff;
+    }
+
+    .badge-rank {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .badge-rank-1 { background: #facc15; color: #78350f; }
+    .badge-rank-2 { background: #e5e7eb; color: #111827; }
+    .badge-rank-3 { background: #fed7aa; color: #7c2d12; }
+
+    .avatar-circle {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #4b5563;
+      overflow: hidden;
+    }
+    .avatar-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #e5efff;
+      color: #1e40af;
+      font-size: 0.8rem;
+      margin: 2px;
+    }
+    .table-topcv tbody tr {
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .table-topcv tbody tr:hover {
+      background: #eef2ff;
+    }
+    .small-muted {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    /* ================= HEADER ================= */
+    .header {
+      background: #ffffff;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .brand-logo {
+        height: 60px;       
+        width: auto;
+        display: block;
+        object-fit: contain;
+
+        transform: scale(2.3);
+        transform-origin: left center;
+    }
+
+    .navbar {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .navbar-brand img {
+      height: 55px;
+      object-fit: contain;
+    }
+
+    .navbar-nav .nav-link {
+      font-weight: 500;
+      color: #475569;
+      padding: 8px 14px;
+      border-radius: 999px;
+      transition: 0.25s;
+    }
+
+    .navbar-nav .nav-link:hover {
+      background: #EFF6FF !important;
+      color: #2563EB !important;
+    }
+
+    .navbar-nav .nav-link.active {
+      background: #DBEAFE !important;
+      color: #1D4ED8 !important;
+    }
+
+    /* ICON THÔNG BÁO + CHAT */
+    .nav-icon {
+      width: 38px;
+      height: 38px;
+      margin-left: 8px;
+      margin-right: 8px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+      font-size: 18px;
+      transition: 0.25s;
+    }
+
+    .nav-icon:hover {
+      background: #e2e8f0;
+      color: #2563EB;
+    }
+
+    /* ===== DROPDOWN CV (chỉ hover mới xanh, không đậm sẵn) ===== */
+    .l2e-dropdown:hover .dropdown-menu {
+      display: block;
+    }
+
+    .dropdown-menu {
+      display: none;
+      background: #f8fbff;
+      border-radius: 14px;
+      border: 0;
+      padding: 8px 0;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .dropdown-item {
+      padding: 10px 18px;
+      font-weight: 500;
+      border-radius: 10px;
+      color: #1e293b;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .dropdown-item:hover {
+      background: #e6edff !important;
+      color: #1e6ee9 !important;
+    }
+
+    /* Không giữ màu xanh cho mục active – chỉ hover mới đổi màu */
+    .dropdown-item.active,
+    .dropdown-item:active {
+      background: transparent !important;
+      color: #1e293b !important;
+    }
+
+    /* Nút CV không bị đậm màu sẵn */
+    .nav-link.dropdown-toggle {
+      background: transparent !important;
+      color: inherit !important;
+    }
+
+    /* ================= FOOTER ================= */
+    .footer {
+      background: #0F172A;
+      color: white;
+      padding: 56px 0 26px;
+      margin-top: 70px;
+    }
+    .footer-title { font-size: 17px; font-weight: 600; margin-bottom: 18px; }
+    .footer-links { list-style: none; padding: 0; }
+    .footer-links a { color: #94A3B8; text-decoration: none; }
+    .footer-links a:hover { color: white; }
+    .footer-bottom {
+      border-top: 1px solid #1E293B;
+      padding-top: 18px;
+      margin-top: 32px;
+      text-align: center;
+      color: #94A3B8;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+<header class="header">
+    <nav class="navbar navbar-expand-lg navbar-light">
+      <div class="container">
+
+        <!-- Logo -->
+        <a class="navbar-brand" role="button" data-route="/Student/Home" onclick="navigateTo('/Student/Home')">
+          <img src="/img/logo-nobr.png" alt="Logo Learn2Earn" class="brand-logo">
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+          <!-- MENU CHÍNH -->
+          <ul class="navbar-nav mx-auto d-flex align-items-center">
+            <li class="nav-item">
+              <a class="nav-link" data-route="/Student/Home" onclick="navigateTo('/Student/Home')">Trang chủ</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" data-route="/Student/Profile" onclick="navigateTo('/Student/Profile')">Hồ sơ</a>
+            </li>
+
+            <!-- DROPDOWN CV -->
+            <li class="nav-item dropdown l2e-dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="cvMenu">CV</a>
+              <ul class="dropdown-menu" aria-labelledby="cvMenu">
+                <li><a class="dropdown-item" data-route="/Student/CreateCV"
+                    onclick="navigateTo('/Student/CreateCV')">Tạo CV</a></li>
+                <li><a class="dropdown-item" data-route="/Student/UpdateCV"
+                    onclick="navigateTo('/Student/UpdateCV')">Cập nhật CV</a></li>
+                <li><a class="dropdown-item" data-route="/Student/TopCV"
+                    onclick="navigateTo('/Student/TopCV')">TopCV</a></li>
+              </ul>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" data-route="/Student/Interview" onclick="navigateTo('/Student/Interview')">Lịch phỏng
+                vấn</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" data-route="/Student/PostJobs" onclick="navigateTo('/Student/PostJobs')">Tin tuyển
+                dụng</a>
+            </li>
+          </ul>
+
+          <!-- ICON PHẢI -->
+          <ul class="navbar-nav ms-auto d-flex align-items-center">
+            <li class="nav-item">
+              <a class="nav-icon" role="button" data-route="/Student/Noti" onclick="navigateTo('/Student/Noti')">
+                <i class="bi bi-bell"></i>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-icon" role="button" data-route="/Student/Chat" onclick="navigateTo('/Student/Chat')">
+                <i class="bi bi-chat-dots"></i>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" data-route="/Student/Setting" onclick="navigateTo('/Student/Setting')">Cài đặt</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <script>
+      // chuyển trang với fade-out
+      function navigateTo(url) {
+        // nếu đang ở cùng trang thì không reload
+        if (location.pathname === url || location.pathname.endsWith(url)) {
+          return;
+        }
+        document.body.style.transition = 'opacity 0.25s';
+        document.body.style.opacity = '0';
+        setTimeout(() => { window.location.href = url; }, 220);
+      }
+
+      // tự động highlight menu theo current path (dùng data-route)
+      function setActiveNavByPath() {
+        const links = document.querySelectorAll('[data-route]');
+        const path = location.pathname || '/';
+        // mapping: nếu path là '/' thì treat as '/Student/Home'
+        links.forEach(a => a.classList.remove('active'));
+        // Try exact then contains
+        let found = false;
+        links.forEach(a => {
+          const r = a.getAttribute('data-route');
+          if (!r) return;
+          if (path === r || path.endsWith(r) || path.includes(r)) {
+            a.classList.add('active');
+            found = true;
+          }
+        });
+        if (!found) {
+          // fallback: highlight Trang chủ if on base / or not matched
+          const home = document.querySelector('[data-route="/Student/Home"]');
+          if (home) home.classList.add('active');
+        }
+      }
+
+      // close dropdown on small screens when collapsed by bootstrap automatically,
+      // but ensure hover dropdown doesn't permanently display after window resize
+      function resetDropdownsOnResize() {
+        document.querySelectorAll('.dropdown-menu').forEach(dm => {
+          if (window.innerWidth <= 992) {
+            dm.style.display = '';
+          }
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        setActiveNavByPath();
+        window.addEventListener('popstate', setActiveNavByPath);
+        window.addEventListener('resize', resetDropdownsOnResize);
+      });
+    </script>
+  </header>
+
+
+<!-- ================= CONTENT ================= -->
+<div class="container py-4">
+  <!-- TIÊU ĐỀ + BỘ LỌC -->
+  <div class="card card-soft mb-4">
+    <div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <div>
+          <h4 class="mb-0 fw-bold text-primary">Top CV sinh viên</h4>
+          <div class="text-muted small">
+            Xếp hạng CV theo mức độ hoàn thiện, kỹ năng và độ phù hợp với vị trí thực tập.
+          </div>
+        </div>
+        <div class="text-end small-muted mt-2 mt-md-0">
+          Tổng số CV trong hệ thống: <span class="fw-semibold">120+</span>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+        <input id="filterKeyword" type="text" class="form-control form-control-sm"
+               placeholder="Tìm theo tên sinh viên, vị trí..." style="min-width:220px;">
+        <select id="filterMajor" class="form-select form-select-sm" style="min-width:160px;">
+          <option value="">Tất cả ngành</option>
+          <option value="CNTT">Công nghệ thông tin</option>
+          <option value="Kế toán">Kế toán</option>
+          <option value="Nông học">Nông học</option>
+        </select>
+        <select id="sortOption" class="form-select form-select-sm" style="min-width:180px;">
+          <option value="score_desc">Sắp xếp: Điểm CV cao → thấp</option>
+          <option value="views_desc">Sắp xếp: Lượt xem nhiều</option>
+          <option value="rank_asc">Sắp xếp: Thứ hạng</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- BẢNG TOP CV -->
+    <div class="col-lg-8">
+      <div class="card card-soft">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="fw-semibold">Danh sách Top CV</div>
+            <span class="small text-muted">Dữ liệu mẫu (tĩnh)</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle mb-0 table-topcv">
+              <thead class="table-light">
+                <tr>
+                  <th>Hạng</th>
+                  <th>Sinh viên</th>
+                  <th>Ngành</th>
+                  <th>Vị trí mục tiêu</th>
+                  <th>Điểm CV</th>
+                  <th>Lượt xem</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="topCvBody">
+                <!-- TOP 1 -->
+                <tr
+                  data-rank="1"
+                  data-name="Nguyễn Văn A"
+                  data-major="CNTT"
+                  data-major-full="Công nghệ thông tin · K68 · VNUA"
+                  data-position="Thực tập sinh Java"
+                  data-score="94"
+                  data-views="128"
+                  data-tags="Java, Spring Boot, SQL, Git"
+                  data-note="CV được đánh giá cao về bố cục, nội dung rõ ràng, có dự án thực tế và kinh nghiệm thực tập."
+                  data-cvfile="CV_NguyenVanA.pdf"
+                >
+                  <td><div class="badge-rank badge-rank-1">1</div></td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-circle me-2"><span>NA</span></div>
+                      <div>
+                        <div class="fw-semibold">Nguyễn Văn A</div>
+                        <div class="small-muted">VNUA</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>CNTT</td>
+                  <td>Thực tập sinh Java</td>
+                  <td><span class="fw-semibold text-success">94</span></td>
+                  <td>128</td>
+                  <td>
+                    <button class="btn btn-sm btn-primary btn-view-cv" type="button">
+                      Xem
+                    </button>
+                  </td>
+                </tr>
+
+                <!-- TOP 2 -->
+                <tr
+                  data-rank="2"
+                  data-name="Trần Thị B"
+                  data-major="CNTT"
+                  data-major-full="Công nghệ thông tin · K67 · VNUA"
+                  data-position="Frontend Fresher"
+                  data-score="91"
+                  data-views="96"
+                  data-tags="HTML, CSS, JavaScript, React"
+                  data-note="CV nổi bật về kỹ năng frontend, nhiều demo giao diện web, mô tả chi tiết dự án."
+                  data-cvfile="CV_TranThiB_Frontend.pdf"
+                >
+                  <td><div class="badge-rank badge-rank-2">2</div></td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-circle me-2"><span>TB</span></div>
+                      <div>
+                        <div class="fw-semibold">Trần Thị B</div>
+                        <div class="small-muted">VNUA</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>CNTT</td>
+                  <td>Frontend Fresher</td>
+                  <td><span class="fw-semibold text-success">91</span></td>
+                  <td>96</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary btn-view-cv" type="button">
+                      Xem
+                    </button>
+                  </td>
+                </tr>
+
+                <!-- TOP 3 -->
+                <tr
+                  data-rank="3"
+                  data-name="Lê Văn C"
+                  data-major="CNTT"
+                  data-major-full="Công nghệ thông tin · K68 · VNUA"
+                  data-position="Mobile Flutter Intern"
+                  data-score="89"
+                  data-views="73"
+                  data-tags="Flutter, Dart, Firebase"
+                  data-note="Có một số ứng dụng di động cá nhân, mô tả rõ vai trò và công nghệ sử dụng."
+                  data-cvfile="CV_LeVanC_Flutter.pdf"
+                >
+                  <td><div class="badge-rank badge-rank-3">3</div></td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-circle me-2"><span>LC</span></div>
+                      <div>
+                        <div class="fw-semibold">Lê Văn C</div>
+                        <div class="small-muted">VNUA</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>CNTT</td>
+                  <td>Mobile Flutter Intern</td>
+                  <td><span class="fw-semibold text-success">89</span></td>
+                  <td>73</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary btn-view-cv" type="button">
+                      Xem
+                    </button>
+                  </td>
+                </tr>
+
+                <!-- CV 4 -->
+                <tr
+                  data-rank="4"
+                  data-name="Phạm Thùy D"
+                  data-major="CNTT"
+                  data-major-full="Công nghệ thông tin · K69 · VNUA"
+                  data-position="Backend Intern"
+                  data-score="86"
+                  data-views="54"
+                  data-tags="Java, Spring Boot, PostgreSQL"
+                  data-note="Dù chưa có thực tập chính thức nhưng có nhiều bài tập lớn backend và hiểu CSDL."
+                  data-cvfile="CV_PhamThuyD_Backend.pdf"
+                >
+                  <td>4</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-circle me-2"><span>TD</span></div>
+                      <div>
+                        <div class="fw-semibold">Phạm Thùy D</div>
+                        <div class="small-muted">VNUA</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>CNTT</td>
+                  <td>Backend Intern</td>
+                  <td><span class="fw-semibold text-success">86</span></td>
+                  <td>54</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary btn-view-cv" type="button">
+                      Xem
+                    </button>
+                  </td>
+                </tr>
+
+                <!-- CV 5 -->
+                <tr
+                  data-rank="5"
+                  data-name="Đỗ Minh E"
+                  data-major="CNTT"
+                  data-major-full="Công nghệ thông tin · K67 · VNUA"
+                  data-position="Fullstack Fresher"
+                  data-score="84"
+                  data-views="42"
+                  data-tags="Node.js, React, MongoDB"
+                  data-note="Có dự án fullstack cá nhân, mô tả rõ kiến trúc, biết dùng Git và deploy."
+                  data-cvfile="CV_DoMinhE_Fullstack.pdf"
+                >
+                  <td>5</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-circle me-2"><span>ME</span></div>
+                      <div>
+                        <div class="fw-semibold">Đỗ Minh E</div>
+                        <div class="small-muted">VNUA</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>CNTT</td>
+                  <td>Fullstack Fresher</td>
+                  <td><span class="fw-semibold text-success">84</span></td>
+                  <td>42</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary btn-view-cv" type="button">
+                      Xem
+                    </button>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL CHI TIẾT CV ĐƯỢC CHỌN -->
+    <div class="col-lg-4">
+      <div class="card card-soft mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="fw-semibold">Chi tiết CV</div>
+            <span class="small text-muted">Top CV được chọn</span>
+          </div>
+
+          <div class="d-flex align-items-center mb-3">
+            <div class="avatar-circle me-2">
+              <span id="detailInitials">NA</span>
+            </div>
+            <div>
+              <div class="fw-semibold" id="detailName">Nguyễn Văn A</div>
+              <div class="small-muted" id="detailMajor">Công nghệ thông tin · K68 · VNUA</div>
+            </div>
+          </div>
+
+          <div class="mb-2 small">
+            <span class="text-muted">Vị trí mục tiêu:</span>
+            <span class="fw-semibold" id="detailPosition">Thực tập sinh Java</span>
+          </div>
+          <div class="mb-2 small">
+            <span class="text-muted">Điểm CV:</span>
+            <span class="fw-semibold text-success" id="detailScore">94/100</span>
+          </div>
+          <div class="mb-2 small">
+            <span class="text-muted">Tên file CV:</span>
+            <span class="fw-semibold" id="detailFile">CV_NguyenVanA.pdf</span>
+          </div>
+
+          <div class="mb-2">
+            <span class="small text-muted">Kỹ năng nổi bật:</span>
+            <div id="detailTags" class="mt-1">
+              <!-- chips sẽ được js sinh ra -->
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="small text-muted">Nhận xét:</div>
+            <div class="small" id="detailNote">
+              CV được đánh giá cao về bố cục, nội dung rõ ràng, có dự án thực tế và kinh nghiệm thực tập.
+            </div>
+          </div>
+
+          <button id="btnViewPdf" class="btn btn-primary w-100 mb-2" type="button">
+            <i class="bi bi-eye"></i> Xem CV PDF
+          </button>
+          <button id="btnDownloadPdf" class="btn btn-outline-secondary w-100" type="button">
+            <i class="bi bi-download"></i> Tải CV về máy
+          </button>
+        </div>
+      </div>
+
+      <div class="card card-soft">
+        <div class="card-body">
+          <div class="fw-semibold mb-2">Gợi ý sử dụng Top CV</div>
+          <ul class="small-muted mb-0">
+            <li>Tham khảo bố cục và cách trình bày của các CV top.</li>
+            <li>So sánh với CV của bạn để cập nhật phần còn thiếu.</li>
+            <li>Giảng viên/nhà trường có thể dùng để minh hoạ CV chuẩn cho sinh viên.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+  <div class="container position-relative">
+    <div class="row">
+      <div class="col-lg-4 mb-4">
+        <h4 class="footer-title">Learn2Earn</h4>
+        <p>Nền tảng tuyển dụng và tìm việc làm tại Việt Nam.</p>
+      </div>
+
+      <div class="col-lg-2 col-md-4 mb-4">
+        <h4 class="footer-title">Về chúng tôi</h4>
+        <ul class="footer-links">
+          <li><a href="#">Giới thiệu</a></li>
+          <li><a href="#">Tin tức</a></li>
+          <li><a href="#">Tuyển dụng</a></li>
+          <li><a href="#">Liên hệ</a></li>
+        </ul>
+      </div>
+
+      <div class="col-lg-2 col-md-4 mb-4">
+        <h4 class="footer-title">Ứng viên</h4>
+        <ul class="footer-links">
+          <li><a href="#">Tìm việc</a></li>
+          <li><a href="#">Tạo CV</a></li>
+          <li><a href="#">Hướng dẫn</a></li>
+          <li><a href="#">Blog</a></li>
+        </ul>
+      </div>
+
+      <div class="col-lg-2 col-md-4 mb-4">
+        <h4 class="footer-title">Nhà tuyển dụng</h4>
+        <ul class="footer-links">
+          <li><a href="#">Đăng tin</a></li>
+          <li><a href="#">Tìm ứng viên</a></li>
+          <li><a href="#">Gói dịch vụ</a></li>
+          <li><a href="#">Hỗ trợ</a></li>
+        </ul>
+      </div>
+
+      <div class="col-lg-2 col-md-4 mb-4">
+        <h4 class="footer-title">Liên hệ</h4>
+        <ul class="footer-links">
+          <li><a><i class="fas fa-phone me-2"></i>+84 123 456 789</a></li>
+          <li><a><i class="fas fa-envelope me-2"></i>info@learn2earn.vn</a></li>
+          <li><a><i class="fas fa-map-marker-alt me-2"></i>Hà Nội, Việt Nam</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      © 2023 Learn2Earn. Tất cả quyền được bảo lưu.
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function getInitials(name) {
+    if (!name) return "";
+    const parts = name.trim().split(" ");
+    if (parts.length === 1) return parts[0][0]?.toUpperCase() || "";
+    const last = parts[parts.length - 1][0] || "";
+    const first = parts[0][0] || "";
+    return (last + first).toUpperCase();
+  }
+
+  function updateDetailFromRow(tr) {
+    const name     = tr.dataset.name;
+    const major    = tr.dataset.majorFull;
+    const position = tr.dataset.position;
+    const score    = tr.dataset.score;
+    const views    = tr.dataset.views;
+    const tags     = tr.dataset.tags;
+    const note     = tr.dataset.note;
+    const cvfile   = tr.dataset.cvfile;
+
+    document.getElementById("detailName").textContent     = name || "";
+    document.getElementById("detailMajor").textContent    = major || "";
+    document.getElementById("detailPosition").textContent = position || "";
+    document.getElementById("detailScore").textContent    = score ? (score + "/100") : "";
+    document.getElementById("detailNote").textContent     = note || "";
+    document.getElementById("detailInitials").textContent = getInitials(name);
+    document.getElementById("detailFile").textContent     = cvfile || "";
+
+    const tagContainer = document.getElementById("detailTags");
+    tagContainer.innerHTML = "";
+    if (tags) {
+      tags.split(",").forEach(t => {
+        const span = document.createElement("span");
+        span.className = "chip";
+        span.textContent = t.trim();
+        tagContainer.appendChild(span);
+      });
+    }
+
+    document.getElementById("btnViewPdf").dataset.cvfile     = cvfile || "";
+    document.getElementById("btnDownloadPdf").dataset.cvfile = cvfile || "";
+  }
+
+  function applyFiltersAndSort() {
+    const keyword     = document.getElementById("filterKeyword").value.toLowerCase();
+    const majorFilter = document.getElementById("filterMajor").value;
+    const sortOption  = document.getElementById("sortOption").value;
+    const tbody       = document.getElementById("topCvBody");
+    const rows        = Array.from(tbody.querySelectorAll("tr"));
+
+    // Lọc
+    rows.forEach(tr => {
+      const name     = tr.dataset.name.toLowerCase();
+      const position = tr.dataset.position.toLowerCase();
+      const major    = tr.dataset.major;
+
+      const matchKeyword =
+        !keyword ||
+        name.includes(keyword) ||
+        position.includes(keyword);
+
+      const matchMajor =
+        !majorFilter || major === majorFilter;
+
+      if (matchKeyword && matchMajor) {
+        tr.style.display = "";
+      } else {
+        tr.style.display = "none";
+      }
+    });
+
+    // Sắp xếp
+    const visibleRows = rows.filter(tr => tr.style.display !== "none");
+
+    visibleRows.sort((a, b) => {
+      const scoreA = parseInt(a.dataset.score || "0", 10);
+      const scoreB = parseInt(b.dataset.score || "0", 10);
+      const viewA  = parseInt(a.dataset.views || "0", 10);
+      const viewB  = parseInt(b.dataset.views || "0", 10);
+      const rankA  = parseInt(a.dataset.rank || "0", 10);
+      const rankB  = parseInt(b.dataset.rank || "0", 10);
+
+      if (sortOption === "views_desc") {
+        return viewB - viewA;
+      } else if (sortOption === "rank_asc") {
+        return rankA - rankB;
+      } else {
+        return scoreB - scoreA;
+      }
+    });
+
+    visibleRows.forEach(tr => tbody.appendChild(tr));
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const tbody = document.getElementById("topCvBody");
+    const rows  = Array.from(tbody.querySelectorAll("tr"));
+
+    // Hover: chỉ cần rê chuột là đổi chi tiết (không cần click)
+    rows.forEach(tr => {
+      tr.addEventListener("mouseenter", function () {
+        updateDetailFromRow(tr);
+      });
+
+      const btn = tr.querySelector(".btn-view-cv");
+      if (btn) {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          updateDetailFromRow(tr);
+        });
+      }
+    });
+
+    document.getElementById("filterKeyword").addEventListener("input", applyFiltersAndSort);
+    document.getElementById("filterMajor").addEventListener("change", applyFiltersAndSort);
+    document.getElementById("sortOption").addEventListener("change", applyFiltersAndSort);
+
+    document.getElementById("btnViewPdf").addEventListener("click", function () {
+      const file = this.dataset.cvfile || "CV_khong_ro_ten.pdf";
+      alert("Giả lập mở file CV: " + file + " (demo, chưa gắn link PDF thật).");
+    });
+
+    document.getElementById("btnDownloadPdf").addEventListener("click", function () {
+      const file = this.dataset.cvfile || "CV_khong_ro_ten.pdf";
+      alert("Giả lập tải file CV: " + file + " (demo).");
+    });
+
+    // Hiển thị mặc định dòng đầu tiên
+    if (rows.length > 0) {
+      updateDetailFromRow(rows[0]);
+    }
+  });
+</script>
+
+</body>
+</html>

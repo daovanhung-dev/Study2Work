@@ -1,0 +1,40 @@
+{
+  "name": "learn2earn",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/main.ts",
+  "scripts": {
+    "l2e": "node --loader ts-node/esm src/main.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.3.0",
+    "@supabase/supabase-js": "^2.84.0",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.3",
+    "ejs": "3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "mysql2": "^3.15.3",
+    "passport": "0.7.0",
+    "passport-local": "1.0.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/ejs": "3.1.5",
+    "@types/express": "5.0.0",
+    "@types/express-session": "^1.18.2",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "@types/node": "22.10.7",
+    "@types/passport": "1.0.17",
+    "@types/passport-local": "1.0.38",
+    "prisma": "^6.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "5.7.3"
+  }
+}
