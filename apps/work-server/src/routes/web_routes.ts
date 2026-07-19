@@ -3,6 +3,7 @@ import * as web_ctrl from "../controllers/web_ctrl.js";
 import multer from "multer"; // import multer
 import passport from "passport";
 import * as student_ctrl from "../controllers/student_ctrl.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 const web_router = Router();
 
 // cấu hình multer
@@ -13,7 +14,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage }); // tạo upload middleware
 
 // Route cho trang home
-web_router.get("/", web_ctrl.homePage);
+web_router.get("/", asyncHandler(web_ctrl.homePage));
 
 // Route đăng nhập
 web_router.get("/SignInStudent", student_ctrl.student_signIn);
@@ -41,7 +42,7 @@ web_router.post(
 web_router.get("/signUpStudent", web_ctrl.signUpStudentCtrl);
 web_router.get("/signUpBusiness", web_ctrl.signUpBusinessCtrl);
 web_router.get("/signUpRole", web_ctrl.signUpRole);
-web_router.post("/signUpStudent", upload.single("avt"), web_ctrl.createStudent);
+web_router.post("/signUpStudent", upload.single("avt"), asyncHandler(web_ctrl.createStudent));
 
 // Route coming-soon
 web_router.get("/coming-soon", web_ctrl.comingSoon);

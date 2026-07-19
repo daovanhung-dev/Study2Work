@@ -87,7 +87,7 @@ class JDController {
       const jds = await JDService.getJDByCompany(doanhnghiep_id);
 
       // ⭐ FIX BIGINT → NUMBER để không lỗi JSON.stringify trong EJS
-      const safeJDs = jds.map((jd) => ({
+      const safeJDs = jds.map((jd: any) => ({
         ...jd,
         id: Number(jd.id),
         doanhnghiep_id: jd.doanhnghiep_id ? Number(jd.doanhnghiep_id) : null,

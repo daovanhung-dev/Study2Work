@@ -4,10 +4,13 @@
   "type": "module",
   "main": "src/main.ts",
   "scripts": {
-    "l2e": "node --loader ts-node/esm src/main.ts"
+    "l2e": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy"
   },
   "dependencies": {
-    "@prisma/client": "^6.3.0",
+    "@prisma/client": "6.3.0",
     "@supabase/supabase-js": "^2.84.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
@@ -33,7 +36,8 @@
     "@types/node": "22.10.7",
     "@types/passport": "1.0.17",
     "@types/passport-local": "1.0.38",
-    "prisma": "^6.3.0",
+    "prisma": "6.3.0",
+    "tsx": "^4.23.0",
     "ts-node": "^10.9.2",
     "typescript": "5.7.3"
   }

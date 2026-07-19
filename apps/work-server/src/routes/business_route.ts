@@ -6,6 +6,7 @@ import JDController from "../controllers/jd_ctrl.js";
 import {upload} from "../config/multer.js";
 import UngVienController from "../controllers/candidate_ctrl.js";
 import CVCtrl from "../controllers/cv_ctrl.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 
 const business_router = Router();
@@ -31,7 +32,7 @@ business_router
   .get(businessCtrl.business_post_job);
 
 // Danh sách ứng viên apply
-business_router.get("/ApplyList", UngVienController.showCandidate);
+business_router.get("/ApplyList", asyncHandler(UngVienController.showCandidate));
 
 // Chỉnh sửa thông tin ứng viên
 business_router
@@ -50,13 +51,13 @@ business_router.get("/Notification", businessCtrl.business_notification);
 // Tin nhắn
 business_router.get("/Chat", businessCtrl.business_chat);
 
-business_router.get("/ManganerJD", JDController.manageJD);
+business_router.get("/ManganerJD", asyncHandler(JDController.manageJD));
 
 //xoa jd
-business_router.get("/DeleteJD/:id", JDController.deleteJD);
+business_router.get("/DeleteJD/:id", asyncHandler(JDController.deleteJD));
 
 //update jd
-business_router.get("/UpdateJD/:id", JDController.showUpdatePage);
+business_router.get("/UpdateJD/:id", asyncHandler(JDController.showUpdatePage));
 
 business_router.get("/Logout", businessCtrl.business_logOut);
 
@@ -64,8 +65,8 @@ business_router.get("/Logout", businessCtrl.business_logOut);
 /* ------------------------------------------------------------------------ */
 
 //post
-business_router.post("/PostJob", upload.single('avt'),JDController.PostJOB);
-business_router.post("/UpdateJD/:id", JDController.updateJD);
-business_router.get("/CVDetail/:id", CVCtrl.detail);
+business_router.post("/PostJob", upload.single('avt'), asyncHandler(JDController.PostJOB));
+business_router.post("/UpdateJD/:id", asyncHandler(JDController.updateJD));
+business_router.get("/CVDetail/:id", asyncHandler(CVCtrl.detail));
 
 export default business_router;

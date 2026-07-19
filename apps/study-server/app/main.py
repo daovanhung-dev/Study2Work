@@ -1,5 +1,5 @@
-from fastapi import FastAPI, HTTPException, status
-from pydantic import BaseModel, Field
+from fastapi import FastAPI
+
 from app.api.v1 import router
 
 app = FastAPI()

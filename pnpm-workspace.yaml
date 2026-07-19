@@ -1,2 +1,3 @@
 packages:
   - "apps/*"
+  - "apps/work-client/web"
