@@ -48,3 +48,4 @@ def error_payload(
         "errors": [error.model_dump() for error in errors],
         "traceId": trace_id,
     }
+
