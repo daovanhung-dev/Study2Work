@@ -1,0 +1,158 @@
+api_id,plan,basis,source_refs,business_rules,tables,status,review_flag
+001,PLAN_01_Public_Catalog.md,SUY DẪN,BD-01|CLASS-01|UC-01,PC-01,learning_paths|courses,Draft — Needs Confirmation,Confirm endpoint/contract
+002,PLAN_01_Public_Catalog.md,TRỰC TIẾP,SEQ-02|BD-01|AC-02|CLASS-01|UC-01,"PC-01, PC-05, PC-06",learning_paths|learning_path_courses|learning_path_enrollments,Draft,Reconcile missing architecture/schema
+003,PLAN_01_Public_Catalog.md,SUY DẪN,BD-01|CLASS-01|UC-01,"PC-01, PC-05, PC-06",learning_paths|learning_path_courses|learning_path_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+004,PLAN_01_Public_Catalog.md,SUY DẪN,BD-01|CLASS-01|UC-01,PC-01,courses|course_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+005,PLAN_01_Public_Catalog.md,TRỰC TIẾP,SEQ-02|BD-01|AC-02|CLASS-01|UC-01,"PC-01, CRS-02",courses|course_enrollments,Draft,Reconcile missing architecture/schema
+006,PLAN_01_Public_Catalog.md,TRỰC TIẾP,SEQ-02|BD-01|AC-02|CLASS-01|UC-01,"PC-02, PC-03, CRS-02",lessons|lesson_progress,Draft,Reconcile missing architecture/schema
+007,PLAN_02_Authentication_Core.md,TRỰC TIẾP,SEQ-03|BD-02|AC-03|CLASS-01|UC-01,"ACC-01, ACC-02",users|sessions|user_profiles|user_consents|verification_requests|outbox_events,Draft,Reconcile missing architecture/schema
+008,PLAN_02_Authentication_Core.md,TRỰC TIẾP,SEQ-03|BD-02|AC-03|CLASS-01|UC-01,"ACC-02, ACC-06",users|sessions,Draft,Reconcile missing architecture/schema
+009,PLAN_02_Authentication_Core.md,SUY DẪN,BD-02|CLASS-01|UC-01,Luồng 3.3,users|sessions,Draft — Needs Confirmation,Confirm endpoint/contract
+010,PLAN_02_Authentication_Core.md,SUY DẪN,BD-02|CLASS-01|UC-01,ACC-02; chống spam,users|sessions|verification_requests|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+011,PLAN_02_Authentication_Core.md,TRỰC TIẾP,SEQ-03|BD-02|AC-03|CLASS-01|UC-01,ACC-02,users|sessions|verification_requests,Draft,Reconcile missing architecture/schema
+012,PLAN_02_Authentication_Core.md,SUY DẪN,BD-02|CLASS-01|UC-01,"ACC-02, ACC-06",users|sessions,Draft — Needs Confirmation,Confirm endpoint/contract
+013,PLAN_02_Authentication_Core.md,SUY DẪN,BD-02|CLASS-01|UC-01,Không lộ dữ liệu nhạy cảm,users|sessions|password_reset_tokens|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+014,PLAN_02_Authentication_Core.md,SUY DẪN,BD-02|CLASS-01|UC-01,Luồng 3.4,users|sessions|password_reset_tokens|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+015,PLAN_02_Authentication_Core.md,SUY DẪN,BD-02|CLASS-01|UC-01,Luồng 3.4,users|sessions|password_reset_tokens,Draft — Needs Confirmation,Confirm endpoint/contract
+016,PLAN_03_Profile_Contact_Navigation.md,SUY DẪN,BD-02|CLASS-01|UC-01,ACC-07,user_profiles,Draft — Needs Confirmation,Confirm endpoint/contract
+017,PLAN_03_Profile_Contact_Navigation.md,SUY DẪN,BD-02|CLASS-01|UC-01,"ACC-05, ACC-07",user_profiles,Draft — Needs Confirmation,Confirm endpoint/contract
+018,PLAN_03_Profile_Contact_Navigation.md,SUY DẪN,BD-02|CLASS-01|UC-01,ACC-03,user_profiles|verification_requests|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+019,PLAN_03_Profile_Contact_Navigation.md,SUY DẪN,BD-02|CLASS-01|UC-01,ACC-03,user_profiles|verification_requests|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+020,PLAN_03_Profile_Contact_Navigation.md,SUY DẪN,BD-02|CLASS-01|UC-01,"PC-05, ACC luồng 4.2",users|onboarding_records|learning_path_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+021,PLAN_04_Onboarding.md,SUY DẪN,BD-03|CLASS-01|UC-01,ONB-06,onboarding_records|user_profiles,Draft — Needs Confirmation,Confirm endpoint/contract
+022,PLAN_04_Onboarding.md,TRỰC TIẾP,SEQ-04|BD-03|AC-04|CLASS-01|UC-01,ONB-05,onboarding_records|user_profiles,Draft,Reconcile missing architecture/schema
+023,PLAN_04_Onboarding.md,TRỰC TIẾP,SEQ-04|BD-03|AC-04|CLASS-01|UC-01,ONB-05,onboarding_records|user_profiles,Draft,Reconcile missing architecture/schema
+024,PLAN_04_Onboarding.md,TRỰC TIẾP,SEQ-04|BD-03|AC-04|CLASS-01|UC-01,ONB-04,onboarding_records|user_profiles,Draft,Reconcile missing architecture/schema
+025,PLAN_04_Onboarding.md,SUY DẪN,BD-03|CLASS-01|UC-01,"ONB-03, ONB-04",onboarding_records|user_profiles,Draft — Needs Confirmation,Confirm endpoint/contract
+026,PLAN_04_Onboarding.md,SUY DẪN,BD-03|CLASS-01|UC-01,ONB-01,onboarding_records|user_profiles,Draft — Needs Confirmation,Confirm endpoint/contract
+027,PLAN_04_Onboarding.md,TRỰC TIẾP,SEQ-04|BD-03|AC-04|CLASS-01|UC-01,"ONB-01, ONB-02, ONB-08",onboarding_records|user_profiles|learning_path_enrollments|course_enrollments|audit_logs,Draft,Reconcile missing architecture/schema
+028,PLAN_05_Learning_Paths_and_Support_Requests.md,SUY DẪN,BD-04|CLASS-01|UC-01,"LP-01, LP-07",learning_paths|learning_path_courses|learning_path_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+029,PLAN_05_Learning_Paths_and_Support_Requests.md,SUY DẪN,BD-04|CLASS-01|UC-01,"LP-02, LP-05",learning_paths|learning_path_courses|learning_path_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+030,PLAN_05_Learning_Paths_and_Support_Requests.md,SUY DẪN,BD-04|CLASS-01|UC-01,"LP-02, LP-03, LP-07",learning_paths|learning_path_courses|learning_path_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+031,PLAN_05_Learning_Paths_and_Support_Requests.md,TRỰC TIẾP,SEQ-05|BD-04|AC-05|CLASS-01|UC-01,"LP-02, LP-03",learning_paths|learning_path_courses|learning_path_enrollments|course_enrollments|audit_logs,Draft,Reconcile missing architecture/schema
+032,PLAN_05_Learning_Paths_and_Support_Requests.md,SUY DẪN,BD-04|CLASS-01|UC-01,LP-02,learning_paths|learning_path_courses|learning_path_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+033,PLAN_05_Learning_Paths_and_Support_Requests.md,SUY DẪN,BD-04|CLASS-01|UC-01,LP-04,learning_paths|learning_path_courses|learning_path_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+034,PLAN_05_Learning_Paths_and_Support_Requests.md,SUY DẪN,BD-04|CLASS-01|UC-01,"LP-03, mục 4.5-4.6",learning_paths|learning_path_courses|learning_path_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+035,PLAN_05_Learning_Paths_and_Support_Requests.md,SUY DẪN,BD-04|CLASS-01|UC-01,LP-03,learning_paths|learning_path_courses|learning_path_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+036,PLAN_05_Learning_Paths_and_Support_Requests.md,TRỰC TIẾP,SEQ-12|BD-04|AC-12|CLASS-01|UC-01,"LP-04, ONB-08",support_requests,Draft,Reconcile missing architecture/schema
+037,PLAN_05_Learning_Paths_and_Support_Requests.md,SUY DẪN,BD-04|CLASS-01|UC-01,LP-04,support_requests,Draft — Needs Confirmation,Confirm endpoint/contract
+038,PLAN_05_Learning_Paths_and_Support_Requests.md,SUY DẪN,BD-04|CLASS-01|UC-01,ADM-LRN-07,support_requests,Draft — Needs Confirmation,Confirm endpoint/contract
+039,PLAN_06_Courses_Chapters_Lessons_Resources.md,SUY DẪN,BD-05|CLASS-01|UC-01,"CRS-01, CRS-02",courses|course_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+040,PLAN_06_Courses_Chapters_Lessons_Resources.md,SUY DẪN,BD-05|CLASS-01|UC-01,"CRS-01, CRS-03",courses|course_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+041,PLAN_06_Courses_Chapters_Lessons_Resources.md,SUY DẪN,BD-05|CLASS-01|UC-01,CRS-01,chapters,Draft — Needs Confirmation,Confirm endpoint/contract
+042,PLAN_06_Courses_Chapters_Lessons_Resources.md,TRỰC TIẾP,SEQ-06|BD-05|AC-06|CLASS-01|UC-01,"CRS-01, CRS-03, CRS-07",lessons|lesson_progress,Draft,Reconcile missing architecture/schema
+043,PLAN_06_Courses_Chapters_Lessons_Resources.md,SUY DẪN,BD-05|CLASS-01|UC-01,CRS-07,courses|course_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+044,PLAN_06_Courses_Chapters_Lessons_Resources.md,SUY DẪN,BD-05|CLASS-01|UC-01,CRS-05,lessons|lesson_progress|course_materials,Draft — Needs Confirmation,Confirm endpoint/contract
+045,PLAN_06_Courses_Chapters_Lessons_Resources.md,SUY DẪN,BD-05|CLASS-01|UC-01,"CRS-01, CRS-05",course_materials,Draft — Needs Confirmation,Confirm endpoint/contract
+046,PLAN_06_Courses_Chapters_Lessons_Resources.md,SUY DẪN,BD-05|CLASS-01|UC-01,CRS mục 4.6,content_issues,Draft — Needs Confirmation,Confirm endpoint/contract
+047,PLAN_06_Courses_Chapters_Lessons_Resources.md,SUY DẪN,BD-05|CLASS-01|UC-01,CRS mục 4.6,content_issues,Draft — Needs Confirmation,Confirm endpoint/contract
+048,PLAN_07_Learner_Exercises_Submissions.md,SUY DẪN,BD-06|CLASS-01|UC-01,"EX-01, EX-02",exercises|exercise_submissions,Draft — Needs Confirmation,Confirm endpoint/contract
+049,PLAN_07_Learner_Exercises_Submissions.md,TRỰC TIẾP,SEQ-07|BD-06|AC-07|CLASS-01|UC-01,EX-01,exercises|exercise_submissions,Draft,Reconcile missing architecture/schema
+050,PLAN_07_Learner_Exercises_Submissions.md,SUY DẪN,BD-06|CLASS-01|UC-01,EX-03,exercises|exercise_submissions,Draft — Needs Confirmation,Confirm endpoint/contract
+051,PLAN_07_Learner_Exercises_Submissions.md,SUY DẪN,BD-06|CLASS-01|UC-01,EX-03,exercises|exercise_submissions|exercise_submission_drafts,Draft — Needs Confirmation,Confirm endpoint/contract
+052,PLAN_07_Learner_Exercises_Submissions.md,TRỰC TIẾP,SEQ-07|BD-06|AC-07|CLASS-01|UC-01,"EX-01, EX-04, EX-06",exercises|exercise_submissions|exercise_reviews,Draft,Reconcile missing architecture/schema
+053,PLAN_07_Learner_Exercises_Submissions.md,SUY DẪN,BD-06|CLASS-01|UC-01,"EX-06, EX-08",exercises|exercise_submissions|exercise_reviews,Draft — Needs Confirmation,Confirm endpoint/contract
+054,PLAN_07_Learner_Exercises_Submissions.md,SUY DẪN,BD-06|CLASS-01|UC-01,EX-07,exercises|exercise_submissions|exercise_reviews,Draft — Needs Confirmation,Confirm endpoint/contract
+055,PLAN_07_Learner_Exercises_Submissions.md,SUY DẪN,BD-06|CLASS-01|UC-01,EX-08,exercise_submissions|exercise_reviews,Draft — Needs Confirmation,Confirm endpoint/contract
+056,PLAN_07_Learner_Exercises_Submissions.md,SUY DẪN,BD-06|CLASS-01|UC-01,EX-07,exercises|exercise_submissions,Draft — Needs Confirmation,Confirm endpoint/contract
+057,PLAN_08_Admin_Exercise_Review.md,SUY DẪN,BD-06|CLASS-01|UC-01,Module 5.5,users,Draft — Needs Confirmation,Confirm endpoint/contract
+058,PLAN_08_Admin_Exercise_Review.md,SUY DẪN,BD-06|CLASS-01|UC-01,Module 5.5,exercise_submissions|exercise_reviews,Draft — Needs Confirmation,Confirm endpoint/contract
+059,PLAN_08_Admin_Exercise_Review.md,TRỰC TIẾP,SEQ-07|BD-06|AC-07|CLASS-01|UC-01,"EX-06, EX-08",exercise_submissions|exercise_reviews|lesson_progress|outbox_events,Draft,Reconcile missing architecture/schema
+060,PLAN_08_Admin_Exercise_Review.md,SUY DẪN,BD-06|CLASS-01|UC-01,"EX-07, RBAC-05",exercise_submissions|exercise_reviews|audit_logs|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+061,PLAN_09_Progress_Completion.md,SUY DẪN,BD-07|CLASS-01|UC-01,PRG-01,lesson_progress|course_enrollments|learning_path_enrollments|completion_rules,Draft — Needs Confirmation,Confirm endpoint/contract
+062,PLAN_09_Progress_Completion.md,SUY DẪN,BD-07|CLASS-01|UC-01,PRG mục 4.2,lesson_progress|course_enrollments|learning_path_enrollments|completion_rules,Draft — Needs Confirmation,Confirm endpoint/contract
+063,PLAN_09_Progress_Completion.md,SUY DẪN,BD-07|CLASS-01|UC-01,"PRG-01, PRG-05",learning_paths|learning_path_courses|learning_path_enrollments|lesson_progress|course_enrollments|completion_rules,Draft — Needs Confirmation,Confirm endpoint/contract
+064,PLAN_09_Progress_Completion.md,SUY DẪN,BD-07|CLASS-01|UC-01,"PRG-01, PRG-05",courses|course_enrollments|lesson_progress|learning_path_enrollments|completion_rules,Draft — Needs Confirmation,Confirm endpoint/contract
+065,PLAN_09_Progress_Completion.md,SUY DẪN,BD-07|CLASS-01|UC-01,PRG-01,chapters|lesson_progress|course_enrollments|learning_path_enrollments|completion_rules,Draft — Needs Confirmation,Confirm endpoint/contract
+066,PLAN_09_Progress_Completion.md,SUY DẪN,BD-07|CLASS-01|UC-01,PRG mục 4.3,lessons|lesson_progress|course_enrollments|learning_path_enrollments|completion_rules,Draft — Needs Confirmation,Confirm endpoint/contract
+067,PLAN_09_Progress_Completion.md,TRỰC TIẾP,SEQ-06|BD-07|AC-06|CLASS-01|UC-01,"SEQ-06, CRS-04, PRG-04, PRG-05",lessons|lesson_progress|course_enrollments|learning_path_enrollments|completion_rules,Draft,Reconcile missing architecture/schema
+068,PLAN_09_Progress_Completion.md,SUY DẪN,BD-07|CLASS-01|UC-01,PRG mục 4.7,lesson_progress|course_enrollments|learning_path_enrollments|completion_rules,Draft — Needs Confirmation,Confirm endpoint/contract
+069,PLAN_09_Progress_Completion.md,SUY DẪN,BD-07|CLASS-01|UC-01,PRG mục 4.5-4.6,lesson_progress|course_enrollments|learning_path_enrollments|completion_rules,Draft — Needs Confirmation,Confirm endpoint/contract
+070,PLAN_10_Learner_Community.md,TRỰC TIẾP,SEQ-09|BD-08|AC-09|CLASS-01|UC-01,COM-06,community_groups|community_group_scopes|community_join_events,Draft,Reconcile missing architecture/schema
+071,PLAN_10_Learner_Community.md,SUY DẪN,BD-08|CLASS-01|UC-01,COM-06,community_groups|community_group_scopes|community_join_events,Draft — Needs Confirmation,Confirm endpoint/contract
+072,PLAN_10_Learner_Community.md,TRỰC TIẾP,SEQ-09|BD-08|AC-09|CLASS-01|UC-01,"COM-04, COM-05",community_groups|community_group_scopes|community_join_events|audit_logs,Draft,Reconcile missing architecture/schema
+073,PLAN_10_Learner_Community.md,TRỰC TIẾP,SEQ-09|BD-08|AC-09|CLASS-01|UC-01,COM-07,community_groups|community_group_scopes|community_join_events|community_reports|audit_logs,Draft,Reconcile missing architecture/schema
+074,PLAN_10_Learner_Community.md,SUY DẪN,BD-08|CLASS-01|UC-01,Module 4.5,community_reports,Draft — Needs Confirmation,Confirm endpoint/contract
+075,PLAN_11_Admin_Community.md,SUY DẪN,BD-08|CLASS-01|UC-01,COM-07,community_groups|community_group_scopes|community_join_events,Draft — Needs Confirmation,Confirm endpoint/contract
+076,PLAN_11_Admin_Community.md,SUY DẪN,BD-08|CLASS-01|UC-01,Module 4.6,community_groups|community_group_scopes|community_join_events|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+077,PLAN_11_Admin_Community.md,SUY DẪN,BD-08|CLASS-01|UC-01,Module 4.6,community_groups|community_group_scopes|community_join_events,Draft — Needs Confirmation,Confirm endpoint/contract
+078,PLAN_11_Admin_Community.md,TRỰC TIẾP,SEQ-09|BD-08|AC-09|CLASS-01|UC-01,RBAC audit nhóm cộng đồng,community_groups|community_group_scopes|community_join_events|audit_logs,Draft,Reconcile missing architecture/schema
+079,PLAN_11_Admin_Community.md,SUY DẪN,BD-08|CLASS-01|UC-01,COM-07,community_groups|community_group_scopes|community_join_events|audit_logs|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+080,PLAN_11_Admin_Community.md,SUY DẪN,BD-08|CLASS-01|UC-01,RBAC audit,community_groups|community_group_scopes|community_join_events|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+081,PLAN_11_Admin_Community.md,SUY DẪN,BD-08|CLASS-01|UC-01,Module 4.5,community_reports,Draft — Needs Confirmation,Confirm endpoint/contract
+082,PLAN_11_Admin_Community.md,SUY DẪN,BD-08|CLASS-01|UC-01,COM-07,community_reports|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+083,PLAN_12_Notifications.md,TRỰC TIẾP,SEQ-10|BD-09|AC-10|CLASS-01|UC-01,"NOTI-01, NOTI-04",notifications,Draft,Reconcile missing architecture/schema
+084,PLAN_12_Notifications.md,SUY DẪN,BD-09|CLASS-01|UC-01,NOTI-01,notifications,Draft — Needs Confirmation,Confirm endpoint/contract
+085,PLAN_12_Notifications.md,TRỰC TIẾP,SEQ-10|BD-09|AC-10|CLASS-01|UC-01,NOTI-01,notifications,Draft,Reconcile missing architecture/schema
+086,PLAN_12_Notifications.md,SUY DẪN,BD-09|CLASS-01|UC-01,NOTI-01,notifications,Draft — Needs Confirmation,Confirm endpoint/contract
+087,PLAN_12_Notifications.md,SUY DẪN,BD-09|CLASS-01|UC-01,Module 4.1,notifications,Draft — Needs Confirmation,Confirm endpoint/contract
+088,PLAN_12_Notifications.md,SUY DẪN,BD-09|CLASS-01|UC-01,"NOTI-05, NOTI-06",notification_settings,Draft — Needs Confirmation,Confirm endpoint/contract
+089,PLAN_12_Notifications.md,TRỰC TIẾP,SEQ-10|BD-09|AC-10|CLASS-01|UC-01,"NOTI-05, NOTI-06",notification_settings,Draft,Reconcile missing architecture/schema
+090,PLAN_12_Notifications.md,SUY DẪN,BD-09|CLASS-01|UC-01,NOTI-07,notifications|notification_batches|notification_recipients,Draft — Needs Confirmation,Confirm endpoint/contract
+091,PLAN_12_Notifications.md,TRỰC TIẾP,SEQ-10|BD-09|AC-10|CLASS-01|UC-01,"NOTI-07, RBAC audit",notifications|notification_batches|notification_recipients|audit_logs|outbox_events,Draft,Reconcile missing architecture/schema
+092,PLAN_12_Notifications.md,SUY DẪN,BD-09|CLASS-01|UC-01,RBAC audit,notifications|notification_batches|notification_recipients,Draft — Needs Confirmation,Confirm endpoint/contract
+093,PLAN_12_Notifications.md,SUY DẪN,BD-09|CLASS-01|UC-01,RBAC-05,notifications|notification_batches|notification_recipients|audit_logs|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+094,PLAN_13_Admin_Learning_Paths.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT,learning_paths|learning_path_courses|learning_path_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+095,PLAN_13_Admin_Learning_Paths.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT-01,learning_paths|learning_path_courses|learning_path_enrollments|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+096,PLAN_13_Admin_Learning_Paths.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT,learning_paths|learning_path_courses|learning_path_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+097,PLAN_13_Admin_Learning_Paths.md,SUY DẪN,BD-10|CLASS-01|UC-01,"ADM-CONT-03, ADM-CONT-08",learning_paths|learning_path_courses|learning_path_enrollments|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+098,PLAN_13_Admin_Learning_Paths.md,SUY DẪN,BD-10|CLASS-01|UC-01,"LP-06, ADM-CONT-06",learning_paths|learning_path_courses|learning_path_enrollments|courses|course_enrollments|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+099,PLAN_13_Admin_Learning_Paths.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT-03,learning_paths|learning_path_courses|learning_path_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+100,PLAN_13_Admin_Learning_Paths.md,SUY DẪN,BD-10|CLASS-01|UC-01,"ADM-CONT-01, 02, 08",learning_paths|learning_path_courses|learning_path_enrollments|audit_logs|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+101,PLAN_14_Admin_Courses.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT,courses|course_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+102,PLAN_14_Admin_Courses.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT-01,courses|course_enrollments|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+103,PLAN_14_Admin_Courses.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT-06,courses|course_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+104,PLAN_14_Admin_Courses.md,SUY DẪN,BD-10|CLASS-01|UC-01,"ADM-CONT-03, ADM-CONT-08",courses|course_enrollments|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+105,PLAN_14_Admin_Courses.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT-06,courses|course_enrollments|learning_path_courses|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+106,PLAN_14_Admin_Courses.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT mục 4.7,courses|course_enrollments|chapters|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+107,PLAN_14_Admin_Courses.md,SUY DẪN,BD-10|CLASS-01|UC-01,"ADM-CONT-03, 06",courses|course_enrollments,Draft — Needs Confirmation,Confirm endpoint/contract
+108,PLAN_14_Admin_Courses.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT-08,courses|course_enrollments|audit_logs|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+109,PLAN_15_Admin_Chapters_Lessons.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT mục 4.3,courses|course_enrollments|chapters|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+110,PLAN_15_Admin_Chapters_Lessons.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT-03,chapters|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+111,PLAN_15_Admin_Chapters_Lessons.md,SUY DẪN,BD-10|CLASS-01|UC-01,"ADM-CONT-03, 07",chapters|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+112,PLAN_15_Admin_Chapters_Lessons.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT mục 4.7,chapters|content_items|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+113,PLAN_15_Admin_Chapters_Lessons.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT mục 4.4,chapters|lessons|lesson_progress|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+114,PLAN_15_Admin_Chapters_Lessons.md,SUY DẪN,BD-10|CLASS-01|UC-01,"ADM-CONT-03, 04",lessons|lesson_progress|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+115,PLAN_15_Admin_Chapters_Lessons.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT-07,lessons|lesson_progress|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+116,PLAN_15_Admin_Chapters_Lessons.md,SUY DẪN,BD-10|CLASS-01|UC-01,"PC-03, ADM-CONT-05",lessons|lesson_progress|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+117,PLAN_15_Admin_Chapters_Lessons.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT-08,lessons|lesson_progress|audit_logs|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+118,PLAN_16_Admin_Resources_Exercises_Publishing.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT-02,course_materials|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+119,PLAN_16_Admin_Resources_Exercises_Publishing.md,SUY DẪN,BD-10|CLASS-01|UC-01,"ADM-CONT-02, 03",course_materials|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+120,PLAN_16_Admin_Resources_Exercises_Publishing.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT-07,course_materials|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+121,PLAN_16_Admin_Resources_Exercises_Publishing.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT mục 4.6,exercises|exercise_submissions,Draft — Needs Confirmation,Confirm endpoint/contract
+122,PLAN_16_Admin_Resources_Exercises_Publishing.md,SUY DẪN,BD-10|CLASS-01|UC-01,"EX-04, ADM-CONT",exercises|exercise_submissions|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+123,PLAN_16_Admin_Resources_Exercises_Publishing.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT,exercises|exercise_submissions,Draft — Needs Confirmation,Confirm endpoint/contract
+124,PLAN_16_Admin_Resources_Exercises_Publishing.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT-03,exercises|exercise_submissions|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+125,PLAN_16_Admin_Resources_Exercises_Publishing.md,SUY DẪN,BD-10|CLASS-01|UC-01,ADM-CONT-07,exercises|exercise_submissions|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+126,PLAN_16_Admin_Resources_Exercises_Publishing.md,TRỰC TIẾP,SEQ-11|BD-10|AC-11|CLASS-01|UC-01,ADM-CONT mục 4.8,content_publications,Draft,Reconcile missing architecture/schema
+127,PLAN_16_Admin_Resources_Exercises_Publishing.md,TRỰC TIẾP,SEQ-11|BD-10|AC-11|CLASS-01|UC-01,ADM-CONT mục 4.9,content_publications|audit_logs|outbox_events,Draft,Reconcile missing architecture/schema
+128,PLAN_17_Admin_Learner_Lookup_Support.md,SUY DẪN,BD-11|CLASS-01|UC-01,ADM-LRN,users|user_profiles,Draft — Needs Confirmation,Confirm endpoint/contract
+129,PLAN_17_Admin_Learner_Lookup_Support.md,TRỰC TIẾP,SEQ-12|BD-11|AC-12|CLASS-01|UC-01,ADM-LRN-01,users|user_profiles,Draft,Reconcile missing architecture/schema
+130,PLAN_17_Admin_Learner_Lookup_Support.md,SUY DẪN,BD-11|CLASS-01|UC-01,ADM-LRN-02,lesson_progress|course_enrollments|learning_path_enrollments|completion_rules|users|user_profiles,Draft — Needs Confirmation,Confirm endpoint/contract
+131,PLAN_17_Admin_Learner_Lookup_Support.md,SUY DẪN,BD-11|CLASS-01|UC-01,ADM-LRN-03,support_requests,Draft — Needs Confirmation,Confirm endpoint/contract
+132,PLAN_17_Admin_Learner_Lookup_Support.md,SUY DẪN,BD-11|CLASS-01|UC-01,ADM-LRN-03,support_requests,Draft — Needs Confirmation,Confirm endpoint/contract
+133,PLAN_17_Admin_Learner_Lookup_Support.md,TRỰC TIẾP,SEQ-12|BD-11|AC-12|CLASS-01|UC-01,"ADM-LRN-03, 04, 07",support_requests|audit_logs|outbox_events,Draft,Reconcile missing architecture/schema
+134,PLAN_18_Admin_Learner_Exceptional_Actions.md,SUY DẪN,BD-11|CLASS-01|UC-01,"ADM-LRN-03, 06",lesson_progress|course_enrollments|learning_path_enrollments|completion_rules|users|user_profiles|audit_logs|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+135,PLAN_18_Admin_Learner_Exceptional_Actions.md,SUY DẪN,BD-11|CLASS-01|UC-01,"ADM-LRN-03, LP-04",users|user_profiles|learning_path_enrollments|audit_logs|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+136,PLAN_18_Admin_Learner_Exceptional_Actions.md,SUY DẪN,BD-11|CLASS-01|UC-01,ADM-LRN-04,users|user_profiles|learning_path_enrollments|audit_logs|course_enrollments|lesson_progress|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+137,PLAN_18_Admin_Learner_Exceptional_Actions.md,SUY DẪN,BD-11|CLASS-01|UC-01,"ACC-06, ADM-LRN-05",users|user_profiles|audit_logs|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+138,PLAN_18_Admin_Learner_Exceptional_Actions.md,SUY DẪN,BD-11|CLASS-01|UC-01,ADM-LRN-05,users|user_profiles|audit_logs|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+139,PLAN_18_Admin_Learner_Exceptional_Actions.md,SUY DẪN,BD-11|CLASS-01|UC-01,ADM-LRN-08,users|user_profiles|support_notes,Draft — Needs Confirmation,Confirm endpoint/contract
+140,PLAN_18_Admin_Learner_Exceptional_Actions.md,SUY DẪN,BD-11|CLASS-01|UC-01,ADM-LRN-08,users|user_profiles|support_notes|audit_logs|outbox_events,Draft — Needs Confirmation,Confirm endpoint/contract
+141,PLAN_18_Admin_Learner_Exceptional_Actions.md,SUY DẪN,BD-11|CLASS-01|UC-01,RBAC audit,users|user_profiles|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+142,PLAN_19_Operational_Reports.md,TRỰC TIẾP,SEQ-13|BD-12|AC-13|CLASS-01|UC-01,"RPT-01, RPT-02",users|onboarding_records|learning_path_enrollments|course_enrollments|exercise_submissions,Draft,Reconcile missing architecture/schema
+143,PLAN_19_Operational_Reports.md,SUY DẪN,BD-12|CLASS-01|UC-01,RPT-01,users|verification_requests,Draft — Needs Confirmation,Confirm endpoint/contract
+144,PLAN_19_Operational_Reports.md,SUY DẪN,BD-12|CLASS-01|UC-01,RPT-01,onboarding_records|users|user_profiles,Draft — Needs Confirmation,Confirm endpoint/contract
+145,PLAN_19_Operational_Reports.md,SUY DẪN,BD-12|CLASS-01|UC-01,"RPT-01, RPT-06",learning_path_enrollments|learning_paths|learning_path_courses,Draft — Needs Confirmation,Confirm endpoint/contract
+146,PLAN_19_Operational_Reports.md,SUY DẪN,BD-12|CLASS-01|UC-01,"RPT-04, RPT-06",course_enrollments|courses|lesson_progress,Draft — Needs Confirmation,Confirm endpoint/contract
+147,PLAN_19_Operational_Reports.md,SUY DẪN,BD-12|CLASS-01|UC-01,RPT-04,exercise_submissions|exercises,Draft — Needs Confirmation,Confirm endpoint/contract
+148,PLAN_19_Operational_Reports.md,SUY DẪN,BD-12|CLASS-01|UC-01,RPT-03,community_join_events|community_reports|community_groups,Draft — Needs Confirmation,Confirm endpoint/contract
+149,PLAN_19_Operational_Reports.md,TRỰC TIẾP,SEQ-13|BD-12|AC-13|CLASS-01|UC-01,RPT mục 5.7,operational_alerts|metric_snapshots,Draft,Reconcile missing architecture/schema
+150,PLAN_20_RBAC_Audit.md,SUY DẪN,BD-13|CLASS-01|UC-01,RBAC-01,roles|role_permissions|user_roles,Draft — Needs Confirmation,Confirm endpoint/contract
+151,PLAN_20_RBAC_Audit.md,SUY DẪN,BD-13|CLASS-01|UC-01,RBAC-01,permissions,Draft — Needs Confirmation,Confirm endpoint/contract
+152,PLAN_20_RBAC_Audit.md,SUY DẪN,BD-13|CLASS-01|UC-01,RBAC-01,roles|permissions|role_permissions,Draft — Needs Confirmation,Confirm endpoint/contract
+153,PLAN_20_RBAC_Audit.md,SUY DẪN,BD-13|CLASS-01|UC-01,RBAC-01,user_roles|roles,Draft — Needs Confirmation,Confirm endpoint/contract
+154,PLAN_20_RBAC_Audit.md,SUY DẪN,BD-13|CLASS-01|UC-01,RBAC-06,user_roles|roles|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+155,PLAN_20_RBAC_Audit.md,SUY DẪN,BD-13|CLASS-01|UC-01,RBAC-06,user_roles|roles|audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
+156,PLAN_20_RBAC_Audit.md,TRỰC TIẾP,SEQ-14|BD-13|AC-14|CLASS-01|UC-01,"RBAC-05, RBAC-07",audit_logs,Draft,Reconcile missing architecture/schema
+157,PLAN_20_RBAC_Audit.md,SUY DẪN,BD-13|CLASS-01|UC-01,"RBAC-05, RBAC-07",audit_logs,Draft — Needs Confirmation,Confirm endpoint/contract
