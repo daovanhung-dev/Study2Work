@@ -1,0 +1,913 @@
+-- ============================================================================
+-- Study2Work fake data - chạy toàn bộ bằng VS Code Database Client
+-- Schema đích: study_dev0
+-- Không dùng BEGIN/COMMIT để tránh extension giữ transaction lỗi.
+-- Các INSERT có ON CONFLICT DO NOTHING nên có thể chạy lại.
+-- ============================================================================
+
+-- >>> BEGIN 01_users.sql
+-- ============================================================================
+-- Fake data: study_dev0.users
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.users (
+    id,
+    display_name,
+    email,
+    phone,
+    account_status,
+    contact_verified,
+    created_at,
+    updated_at
+) VALUES
+    ('10000000-0000-0000-0000-000000000001', 'Đào Văn Hùng', 'hung.dao@s2w.dev', '0901000001', 'READY_TO_LEARN', TRUE, '2026-06-01 08:00:00+07', '2026-07-20 09:00:00+07'),
+    ('10000000-0000-0000-0000-000000000002', 'Nguyễn Minh Anh', 'minhanh.nguyen@s2w.dev', '0901000002', 'ACTIVE', TRUE, '2026-06-02 08:15:00+07', '2026-07-20 09:10:00+07'),
+    ('10000000-0000-0000-0000-000000000003', 'Trần Quang Nam', 'quangnam.tran@s2w.dev', '0901000003', 'ACTIVE', TRUE, '2026-06-03 09:00:00+07', '2026-07-19 18:30:00+07'),
+    ('10000000-0000-0000-0000-000000000004', 'Lê Thu Trang', 'thutrang.le@s2w.dev', '0901000004', 'ONBOARDING_IN_PROGRESS', TRUE, '2026-06-04 10:00:00+07', '2026-07-18 11:00:00+07'),
+    ('10000000-0000-0000-0000-000000000005', 'Phạm Gia Bảo', 'giabao.pham@s2w.dev', '0901000005', 'VERIFIED', TRUE, '2026-06-05 11:00:00+07', '2026-07-17 13:20:00+07'),
+    ('10000000-0000-0000-0000-000000000006', 'Đỗ Hoàng Long', 'hoanglong.do@s2w.dev', '0901000006', 'SUSPENDED', TRUE, '2026-06-06 13:00:00+07', '2026-07-16 15:00:00+07'),
+    ('10000000-0000-0000-0000-000000000007', 'Vũ Ngọc Mai', 'ngocmai.vu@s2w.dev', '0901000007', 'ACTIVE', TRUE, '2026-06-07 14:00:00+07', '2026-07-20 19:00:00+07'),
+    ('10000000-0000-0000-0000-000000000008', 'Bùi Đức Huy', 'duchuy.bui@s2w.dev', '0901000008', 'READY_TO_LEARN', TRUE, '2026-06-08 15:00:00+07', '2026-07-18 08:00:00+07'),
+    ('10000000-0000-0000-0000-000000000009', 'Hoàng Khánh Linh', 'khanhlinh.hoang@s2w.dev', '0901000009', 'REGISTERED_PENDING_VERIFICATION', FALSE, '2026-07-10 08:30:00+07', '2026-07-10 08:30:00+07'),
+    ('10000000-0000-0000-0000-000000000010', 'Nguyễn Hải Yến', 'haiyen.nguyen@s2w.dev', '0901000010', 'ACTIVE', TRUE, '2026-06-10 16:00:00+07', '2026-07-21 07:45:00+07'),
+    ('10000000-0000-0000-0000-000000000011', 'Admin Study2Work', 'admin@s2w.dev', '0901000011', 'ACTIVE', TRUE, '2026-05-01 08:00:00+07', '2026-07-21 08:00:00+07'),
+    ('10000000-0000-0000-0000-000000000012', 'Mentor Study2Work', 'mentor@s2w.dev', '0901000012', 'ACTIVE', TRUE, '2026-05-02 08:00:00+07', '2026-07-21 08:10:00+07')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS users_row_count
+FROM study_dev0.users;
+
+-- <<< END 01_users.sql
+
+-- >>> BEGIN 02_user_profiles.sql
+-- ============================================================================
+-- Fake data: study_dev0.user_profiles
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.user_profiles (
+    id,
+    user_id,
+    avatar_url,
+    city,
+    school_or_company,
+    current_major_or_job,
+    learning_goal,
+    known_technologies,
+    weekly_study_hours,
+    updated_at
+) VALUES
+    ('11000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'https://cdn.s2w.dev/avatars/u01.png', 'Hà Nội', 'VNUA', 'Sinh viên CNTT', 'Trở thành Full-stack Developer', ARRAY['Python', 'FastAPI', 'Vue.js', 'PostgreSQL']::TEXT[], 20, '2026-07-20 09:00:00+07'),
+    ('11000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', 'https://cdn.s2w.dev/avatars/u02.png', 'Hà Nội', 'Đại học Công nghiệp Hà Nội', 'Sinh viên năm 3', 'Backend Python', ARRAY['Python', 'Git']::TEXT[], 14, '2026-07-20 09:10:00+07'),
+    ('11000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000003', 'https://cdn.s2w.dev/avatars/u03.png', 'Hải Phòng', 'Đại học Hàng Hải', 'Frontend Intern', 'Frontend Vue/React', ARRAY['JavaScript', 'HTML', 'CSS']::TEXT[], 12, '2026-07-19 18:30:00+07'),
+    ('11000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000004', NULL, 'Đà Nẵng', 'Đại học Bách khoa Đà Nẵng', 'Sinh viên năm 2', 'Học lập trình web từ cơ bản', ARRAY['HTML', 'CSS']::TEXT[], 10, '2026-07-18 11:00:00+07'),
+    ('11000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000005', NULL, 'Hồ Chí Minh', 'Cao đẳng FPT Polytechnic', 'Sinh viên', 'Xây dựng REST API', ARRAY['Python']::TEXT[], 8, '2026-07-17 13:20:00+07'),
+    ('11000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000006', NULL, 'Bắc Ninh', 'Công ty DemoTech', 'Junior Developer', 'Củng cố PostgreSQL', ARRAY['Node.js', 'SQL']::TEXT[], 6, '2026-07-16 15:00:00+07'),
+    ('11000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000007', 'https://cdn.s2w.dev/avatars/u07.png', 'Hà Nội', 'Đại học Thủy Lợi', 'Sinh viên năm 4', 'Hoàn thành lộ trình Backend', ARRAY['Python', 'SQL', 'Docker']::TEXT[], 18, '2026-07-20 19:00:00+07'),
+    ('11000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000008', NULL, 'Thái Nguyên', 'Đại học CNTT&TT', 'Sinh viên', 'Full-stack Developer', ARRAY['JavaScript', 'React']::TEXT[], 15, '2026-07-18 08:00:00+07'),
+    ('11000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000009', NULL, 'Nghệ An', 'THPT Demo', 'Học sinh', 'Tìm hiểu lập trình', ARRAY[]::TEXT[], 5, '2026-07-10 08:30:00+07'),
+    ('11000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000010', 'https://cdn.s2w.dev/avatars/u10.png', 'Hà Nội', 'VNUA', 'Sinh viên CNTT', 'Hoàn thành dự án Full-stack', ARRAY['Python', 'Vue.js', 'PostgreSQL']::TEXT[], 16, '2026-07-21 07:45:00+07'),
+    ('11000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000011', NULL, 'Hà Nội', 'Study2Work', 'System Administrator', 'Quản trị nền tảng', ARRAY['PostgreSQL', 'Docker', 'Python']::TEXT[], 10, '2026-07-21 08:00:00+07'),
+    ('11000000-0000-0000-0000-000000000012', '10000000-0000-0000-0000-000000000012', NULL, 'Hà Nội', 'Study2Work', 'Learning Mentor', 'Hỗ trợ học viên', ARRAY['Python', 'FastAPI', 'Git']::TEXT[], 12, '2026-07-21 08:10:00+07')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS user_profiles_row_count
+FROM study_dev0.user_profiles;
+
+-- <<< END 02_user_profiles.sql
+
+-- >>> BEGIN 03_roles.sql
+-- ============================================================================
+-- Fake data: study_dev0.roles
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.roles (
+    id,
+    code,
+    name,
+    scope,
+    active
+) VALUES
+    ('12000000-0000-0000-0000-000000000001', 'LEARNER', 'Học viên', 'STUDY', TRUE),
+    ('12000000-0000-0000-0000-000000000002', 'CONTENT_ADMIN', 'Quản trị nội dung', 'CONTENT', TRUE),
+    ('12000000-0000-0000-0000-000000000003', 'LEARNER_SUPPORT', 'Hỗ trợ học viên', 'LEARNER_SUPPORT', TRUE),
+    ('12000000-0000-0000-0000-000000000004', 'COMMUNITY_MODERATOR', 'Điều phối cộng đồng', 'COMMUNITY', TRUE),
+    ('12000000-0000-0000-0000-000000000005', 'REPORT_VIEWER', 'Người xem báo cáo', 'REPORTING', TRUE),
+    ('12000000-0000-0000-0000-000000000006', 'SUPER_ADMIN', 'Quản trị hệ thống', 'SYSTEM', TRUE)
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS roles_row_count
+FROM study_dev0.roles;
+
+-- <<< END 03_roles.sql
+
+-- >>> BEGIN 04_user_roles.sql
+-- ============================================================================
+-- Fake data: study_dev0.user_roles
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.user_roles (
+    id,
+    user_id,
+    role_id,
+    assigned_at
+) VALUES
+    ('13000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', '12000000-0000-0000-0000-000000000001', '2026-06-15 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', '12000000-0000-0000-0000-000000000001', '2026-06-15 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000003', '12000000-0000-0000-0000-000000000001', '2026-06-15 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000004', '12000000-0000-0000-0000-000000000001', '2026-06-15 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000005', '12000000-0000-0000-0000-000000000001', '2026-06-15 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000006', '12000000-0000-0000-0000-000000000001', '2026-06-15 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000007', '12000000-0000-0000-0000-000000000001', '2026-06-15 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000008', '12000000-0000-0000-0000-000000000001', '2026-06-15 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000009', '12000000-0000-0000-0000-000000000001', '2026-06-15 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000010', '12000000-0000-0000-0000-000000000001', '2026-06-15 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000011', '12000000-0000-0000-0000-000000000006', '2026-05-01 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000012', '10000000-0000-0000-0000-000000000011', '12000000-0000-0000-0000-000000000002', '2026-05-01 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000013', '10000000-0000-0000-0000-000000000011', '12000000-0000-0000-0000-000000000005', '2026-05-01 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000014', '10000000-0000-0000-0000-000000000012', '12000000-0000-0000-0000-000000000001', '2026-05-02 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000015', '10000000-0000-0000-0000-000000000012', '12000000-0000-0000-0000-000000000003', '2026-05-02 08:00:00+07'),
+    ('13000000-0000-0000-0000-000000000016', '10000000-0000-0000-0000-000000000012', '12000000-0000-0000-0000-000000000004', '2026-05-02 08:00:00+07')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS user_roles_row_count
+FROM study_dev0.user_roles;
+
+-- <<< END 04_user_roles.sql
+
+-- >>> BEGIN 05_learning_paths.sql
+-- ============================================================================
+-- Fake data: study_dev0.learning_paths
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.learning_paths (
+    id,
+    slug,
+    title,
+    summary,
+    description,
+    level,
+    estimated_hours,
+    publish_status,
+    unlock_mode,
+    published_at
+) VALUES
+    ('20000000-0000-0000-0000-000000000001', 'backend-python-fastapi', 'Backend Python & FastAPI', 'Lộ trình xây dựng API production-ready.', 'Python, FastAPI, PostgreSQL, Docker và quy trình triển khai.', 'INTERMEDIATE', 180, 'PUBLISHED', 'SEQUENTIAL', '2026-06-15 09:00:00+07'),
+    ('20000000-0000-0000-0000-000000000002', 'frontend-vue-typescript', 'Frontend Vue 3 & TypeScript', 'Lộ trình phát triển frontend hiện đại.', 'Vue 3, TypeScript, Router, state management và tích hợp REST API.', 'BEGINNER', 150, 'PUBLISHED', 'SEQUENTIAL', '2026-06-16 09:00:00+07'),
+    ('20000000-0000-0000-0000-000000000003', 'fullstack-study2work', 'Full-stack Study2Work', 'Lộ trình triển khai sản phẩm web hoàn chỉnh.', 'Kết hợp Backend Python, PostgreSQL, Vue và Docker CI/CD.', 'INTERMEDIATE', 320, 'UPDATED', 'SEQUENTIAL', '2026-06-20 09:00:00+07'),
+    ('20000000-0000-0000-0000-000000000004', 'cybersecurity-foundation', 'Nền tảng An ninh mạng', 'Kiến thức nền tảng cho người mới.', 'Mạng máy tính, Linux, OWASP và thực hành bảo mật ứng dụng.', 'BEGINNER', 120, 'DRAFT', 'SEQUENTIAL', NULL)
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS learning_paths_row_count
+FROM study_dev0.learning_paths;
+
+-- <<< END 05_learning_paths.sql
+
+-- >>> BEGIN 06_onboarding_records.sql
+-- ============================================================================
+-- Fake data: study_dev0.onboarding_records
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.onboarding_records (
+    id,
+    user_id,
+    programming_level,
+    known_technologies,
+    main_goal,
+    sub_goals,
+    weekly_study_hours,
+    selected_learning_path_id,
+    status,
+    current_step,
+    confirmed_at
+) VALUES
+    ('21000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'INTERMEDIATE', ARRAY['Python', 'FastAPI', 'Vue.js']::TEXT[], 'Full-stack Developer', ARRAY['Hoàn thành dự án S2W', 'Nắm vững PostgreSQL']::TEXT[], 20, '20000000-0000-0000-0000-000000000003', 'COMPLETED', 5, '2026-06-10 20:00:00+07'),
+    ('21000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', 'BASIC', ARRAY['Python', 'Git']::TEXT[], 'Backend Developer', ARRAY['Viết REST API', 'Học Docker']::TEXT[], 14, '20000000-0000-0000-0000-000000000001', 'COMPLETED', 5, '2026-06-11 20:00:00+07'),
+    ('21000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000003', 'BASIC', ARRAY['JavaScript', 'HTML', 'CSS']::TEXT[], 'Frontend Developer', ARRAY['Vue 3', 'TypeScript']::TEXT[], 12, '20000000-0000-0000-0000-000000000002', 'COMPLETED', 5, '2026-06-12 20:00:00+07'),
+    ('21000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000004', 'BEGINNER', ARRAY['HTML', 'CSS']::TEXT[], 'Web Developer', ARRAY['JavaScript cơ bản', 'Vue cơ bản']::TEXT[], 10, '20000000-0000-0000-0000-000000000002', 'IN_PROGRESS', 3, NULL),
+    ('21000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000005', 'BEGINNER', ARRAY['Python']::TEXT[], 'Backend Developer', ARRAY['FastAPI']::TEXT[], 8, NULL, 'NOT_STARTED', 0, NULL),
+    ('21000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000006', 'INTERMEDIATE', ARRAY['Node.js', 'SQL']::TEXT[], 'Database Developer', ARRAY['PostgreSQL', 'Tối ưu truy vấn']::TEXT[], 6, '20000000-0000-0000-0000-000000000001', 'COMPLETED', 5, '2026-06-15 20:00:00+07'),
+    ('21000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000007', 'INTERMEDIATE', ARRAY['Python', 'SQL', 'Docker']::TEXT[], 'Backend Developer', ARRAY['Hoàn thành lộ trình Backend']::TEXT[], 18, '20000000-0000-0000-0000-000000000001', 'COMPLETED', 5, '2026-06-16 20:00:00+07'),
+    ('21000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000008', 'BASIC', ARRAY['JavaScript', 'React']::TEXT[], 'Full-stack Developer', ARRAY['FastAPI', 'PostgreSQL']::TEXT[], 15, '20000000-0000-0000-0000-000000000003', 'COMPLETED', 5, '2026-06-17 20:00:00+07'),
+    ('21000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000009', 'BEGINNER', ARRAY[]::TEXT[], 'Khám phá lập trình', ARRAY['Python cơ bản']::TEXT[], 5, NULL, 'NOT_STARTED', 0, NULL),
+    ('21000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000010', 'INTERMEDIATE', ARRAY['Python', 'Vue.js', 'PostgreSQL']::TEXT[], 'Full-stack Developer', ARRAY['Hoàn thành capstone']::TEXT[], 16, '20000000-0000-0000-0000-000000000003', 'COMPLETED', 5, '2026-06-18 20:00:00+07')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS onboarding_records_row_count
+FROM study_dev0.onboarding_records;
+
+-- <<< END 06_onboarding_records.sql
+
+-- >>> BEGIN 07_courses.sql
+-- ============================================================================
+-- Fake data: study_dev0.courses
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.courses (
+    id,
+    slug,
+    title,
+    summary,
+    level,
+    estimated_minutes,
+    publish_status,
+    published_at
+) VALUES
+    ('30000000-0000-0000-0000-000000000001', 'python-fundamentals', 'Python Fundamentals', 'Nền tảng Python cho lập trình backend.', 'BEGINNER', 1200, 'PUBLISHED', '2026-06-01 09:00:00+07'),
+    ('30000000-0000-0000-0000-000000000002', 'fastapi-rest-api', 'FastAPI REST API', 'Thiết kế và xây dựng REST API với FastAPI.', 'INTERMEDIATE', 1500, 'PUBLISHED', '2026-06-02 09:00:00+07'),
+    ('30000000-0000-0000-0000-000000000003', 'postgresql-for-developers', 'PostgreSQL for Developers', 'SQL, thiết kế schema, index và transaction.', 'INTERMEDIATE', 1200, 'UPDATED', '2026-06-03 09:00:00+07'),
+    ('30000000-0000-0000-0000-000000000004', 'vue3-typescript', 'Vue 3 & TypeScript', 'Xây dựng frontend với Vue Composition API.', 'BEGINNER', 1400, 'PUBLISHED', '2026-06-04 09:00:00+07'),
+    ('30000000-0000-0000-0000-000000000005', 'react-typescript', 'React & TypeScript', 'React Hooks, state và kiến trúc component.', 'INTERMEDIATE', 1300, 'PUBLISHED', '2026-06-05 09:00:00+07'),
+    ('30000000-0000-0000-0000-000000000006', 'docker-cicd', 'Docker & CI/CD', 'Container hóa và tự động hóa triển khai.', 'INTERMEDIATE', 900, 'PUBLISHED', '2026-06-06 09:00:00+07'),
+    ('30000000-0000-0000-0000-000000000007', 'cybersecurity-fundamentals', 'Cybersecurity Fundamentals', 'Mạng, Linux, OWASP và bảo mật ứng dụng.', 'BEGINNER', 1100, 'DRAFT', NULL),
+    ('30000000-0000-0000-0000-000000000008', 'git-github-workflow', 'Git & GitHub Workflow', 'Quản lý mã nguồn và quy trình cộng tác.', 'BEGINNER', 600, 'PUBLISHED', '2026-06-08 09:00:00+07')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS courses_row_count
+FROM study_dev0.courses;
+
+-- <<< END 07_courses.sql
+
+-- >>> BEGIN 08_learning_path_courses.sql
+-- ============================================================================
+-- Fake data: study_dev0.learning_path_courses
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.learning_path_courses (
+    id,
+    learning_path_id,
+    course_id,
+    order_index,
+    required
+) VALUES
+    ('31000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', 1, TRUE),
+    ('31000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000002', 2, TRUE),
+    ('31000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000003', 3, TRUE),
+    ('31000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000006', 4, TRUE),
+    ('31000000-0000-0000-0000-000000000005', '20000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000008', 5, FALSE),
+    ('31000000-0000-0000-0000-000000000006', '20000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000004', 1, TRUE),
+    ('31000000-0000-0000-0000-000000000007', '20000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000005', 2, TRUE),
+    ('31000000-0000-0000-0000-000000000008', '20000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000008', 3, TRUE),
+    ('31000000-0000-0000-0000-000000000009', '20000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000001', 1, TRUE),
+    ('31000000-0000-0000-0000-000000000010', '20000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000002', 2, TRUE),
+    ('31000000-0000-0000-0000-000000000011', '20000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000003', 3, TRUE),
+    ('31000000-0000-0000-0000-000000000012', '20000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000004', 4, TRUE),
+    ('31000000-0000-0000-0000-000000000013', '20000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000006', 5, TRUE),
+    ('31000000-0000-0000-0000-000000000014', '20000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000008', 6, FALSE),
+    ('31000000-0000-0000-0000-000000000015', '20000000-0000-0000-0000-000000000004', '30000000-0000-0000-0000-000000000007', 1, TRUE),
+    ('31000000-0000-0000-0000-000000000016', '20000000-0000-0000-0000-000000000004', '30000000-0000-0000-0000-000000000008', 2, TRUE)
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS learning_path_courses_row_count
+FROM study_dev0.learning_path_courses;
+
+-- <<< END 08_learning_path_courses.sql
+
+-- >>> BEGIN 09_learning_path_enrollments.sql
+-- ============================================================================
+-- Fake data: study_dev0.learning_path_enrollments
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.learning_path_enrollments (
+    id,
+    user_id,
+    learning_path_id,
+    status,
+    progress_percent,
+    started_at,
+    completed_at,
+    admin_reason
+) VALUES
+    ('32000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000003', 'NOT_STARTED', 0, NULL, NULL, NULL),
+    ('32000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000001', 'ACTIVE', 32.5, '2026-06-12 08:00:00+07', NULL, NULL),
+    ('32000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000002', 'ACTIVE', 28.0, '2026-06-13 08:00:00+07', NULL, NULL),
+    ('32000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000004', '20000000-0000-0000-0000-000000000002', 'NOT_STARTED', 0, NULL, NULL, NULL),
+    ('32000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000006', '20000000-0000-0000-0000-000000000001', 'CANCELLED_BY_ADMIN', 18.0, '2026-06-14 08:00:00+07', NULL, 'Tạm ngừng tài khoản để xác minh.'),
+    ('32000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000007', '20000000-0000-0000-0000-000000000001', 'COMPLETED', 100, '2026-05-20 08:00:00+07', '2026-07-10 17:00:00+07', NULL),
+    ('32000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000008', '20000000-0000-0000-0000-000000000003', 'NOT_STARTED', 0, NULL, NULL, NULL),
+    ('32000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000010', '20000000-0000-0000-0000-000000000003', 'ACTIVE', 24.0, '2026-06-18 08:00:00+07', NULL, NULL),
+    ('32000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000011', '20000000-0000-0000-0000-000000000003', 'COMPLETED', 100, '2026-04-01 08:00:00+07', '2026-06-01 17:00:00+07', NULL),
+    ('32000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000012', '20000000-0000-0000-0000-000000000001', 'ACTIVE', 20.0, '2026-06-20 08:00:00+07', NULL, NULL)
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS learning_path_enrollments_row_count
+FROM study_dev0.learning_path_enrollments;
+
+-- <<< END 09_learning_path_enrollments.sql
+
+-- >>> BEGIN 10_course_enrollments.sql
+-- ============================================================================
+-- Fake data: study_dev0.course_enrollments
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.course_enrollments (
+    id,
+    user_id,
+    course_id,
+    learning_path_enrollment_id,
+    status,
+    progress_percent,
+    started_at,
+    completed_at
+) VALUES
+    ('33000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000001', '32000000-0000-0000-0000-000000000002', 'COMPLETED', 100, '2026-06-12 08:00:00+07', '2026-06-25 18:00:00+07'),
+    ('33000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000002', '32000000-0000-0000-0000-000000000002', 'ACTIVE', 45, '2026-06-26 08:00:00+07', NULL),
+    ('33000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000003', '32000000-0000-0000-0000-000000000002', 'NOT_STARTED', 0, NULL, NULL),
+    ('33000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000004', '32000000-0000-0000-0000-000000000003', 'ACTIVE', 60, '2026-06-13 08:00:00+07', NULL),
+    ('33000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000005', '32000000-0000-0000-0000-000000000003', 'NOT_STARTED', 0, NULL, NULL),
+    ('33000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000007', '30000000-0000-0000-0000-000000000001', '32000000-0000-0000-0000-000000000006', 'COMPLETED', 100, '2026-05-20 08:00:00+07', '2026-05-30 18:00:00+07'),
+    ('33000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000007', '30000000-0000-0000-0000-000000000002', '32000000-0000-0000-0000-000000000006', 'COMPLETED', 100, '2026-05-31 08:00:00+07', '2026-06-15 18:00:00+07'),
+    ('33000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000007', '30000000-0000-0000-0000-000000000003', '32000000-0000-0000-0000-000000000006', 'COMPLETED', 100, '2026-06-16 08:00:00+07', '2026-06-25 18:00:00+07'),
+    ('33000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000007', '30000000-0000-0000-0000-000000000006', '32000000-0000-0000-0000-000000000006', 'COMPLETED', 100, '2026-06-26 08:00:00+07', '2026-07-10 17:00:00+07'),
+    ('33000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000001', '32000000-0000-0000-0000-000000000008', 'COMPLETED', 100, '2026-06-18 08:00:00+07', '2026-06-30 18:00:00+07'),
+    ('33000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000002', '32000000-0000-0000-0000-000000000008', 'ACTIVE', 30, '2026-07-01 08:00:00+07', NULL),
+    ('33000000-0000-0000-0000-000000000012', '10000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000003', '32000000-0000-0000-0000-000000000008', 'NOT_STARTED', 0, NULL, NULL),
+    ('33000000-0000-0000-0000-000000000013', '10000000-0000-0000-0000-000000000011', '30000000-0000-0000-0000-000000000001', '32000000-0000-0000-0000-000000000009', 'COMPLETED', 100, '2026-04-01 08:00:00+07', '2026-04-10 18:00:00+07'),
+    ('33000000-0000-0000-0000-000000000014', '10000000-0000-0000-0000-000000000011', '30000000-0000-0000-0000-000000000002', '32000000-0000-0000-0000-000000000009', 'COMPLETED', 100, '2026-04-11 08:00:00+07', '2026-04-25 18:00:00+07'),
+    ('33000000-0000-0000-0000-000000000015', '10000000-0000-0000-0000-000000000011', '30000000-0000-0000-0000-000000000003', '32000000-0000-0000-0000-000000000009', 'COMPLETED', 100, '2026-04-26 08:00:00+07', '2026-05-10 18:00:00+07'),
+    ('33000000-0000-0000-0000-000000000016', '10000000-0000-0000-0000-000000000012', '30000000-0000-0000-0000-000000000001', '32000000-0000-0000-0000-000000000010', 'ACTIVE', 70, '2026-06-20 08:00:00+07', NULL)
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS course_enrollments_row_count
+FROM study_dev0.course_enrollments;
+
+-- <<< END 10_course_enrollments.sql
+
+-- >>> BEGIN 11_chapters.sql
+-- ============================================================================
+-- Fake data: study_dev0.chapters
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.chapters (
+    id,
+    course_id,
+    title,
+    objective,
+    order_index,
+    required,
+    unlock_condition
+) VALUES
+    ('40000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', 'Cú pháp và kiểu dữ liệu', 'Nắm cú pháp Python, biến và kiểu dữ liệu.', 1, TRUE, 'ALWAYS'),
+    ('40000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000001', 'Hàm và lập trình hướng đối tượng', 'Xây dựng hàm, class và module.', 2, TRUE, 'PREVIOUS_CHAPTER_COMPLETED'),
+    ('40000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000002', 'FastAPI cơ bản', 'Khởi tạo ứng dụng và định nghĩa endpoint.', 1, TRUE, 'ALWAYS'),
+    ('40000000-0000-0000-0000-000000000004', '30000000-0000-0000-0000-000000000002', 'Xây dựng REST API', 'CRUD, validation và xử lý lỗi.', 2, TRUE, 'PREVIOUS_CHAPTER_COMPLETED'),
+    ('40000000-0000-0000-0000-000000000005', '30000000-0000-0000-0000-000000000003', 'SQL nền tảng', 'SELECT, JOIN, GROUP BY và transaction.', 1, TRUE, 'ALWAYS'),
+    ('40000000-0000-0000-0000-000000000006', '30000000-0000-0000-0000-000000000003', 'Thiết kế và tối ưu PostgreSQL', 'Schema, index và execution plan.', 2, TRUE, 'PREVIOUS_CHAPTER_COMPLETED'),
+    ('40000000-0000-0000-0000-000000000007', '30000000-0000-0000-0000-000000000004', 'Vue Composition API', 'Component và reactive state.', 1, TRUE, 'ALWAYS'),
+    ('40000000-0000-0000-0000-000000000008', '30000000-0000-0000-0000-000000000004', 'State và Router', 'Pinia, Vue Router và gọi API.', 2, TRUE, 'PREVIOUS_CHAPTER_COMPLETED'),
+    ('40000000-0000-0000-0000-000000000009', '30000000-0000-0000-0000-000000000005', 'React Fundamentals', 'JSX, component và props.', 1, TRUE, 'ALWAYS'),
+    ('40000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000005', 'Hooks và State Management', 'Hooks và quản lý state.', 2, TRUE, 'PREVIOUS_CHAPTER_COMPLETED'),
+    ('40000000-0000-0000-0000-000000000011', '30000000-0000-0000-0000-000000000006', 'Docker cơ bản', 'Image, container và volume.', 1, TRUE, 'ALWAYS'),
+    ('40000000-0000-0000-0000-000000000012', '30000000-0000-0000-0000-000000000006', 'CI/CD', 'Pipeline kiểm thử và triển khai.', 2, TRUE, 'PREVIOUS_CHAPTER_COMPLETED'),
+    ('40000000-0000-0000-0000-000000000013', '30000000-0000-0000-0000-000000000007', 'Nền tảng an ninh mạng', 'CIA triad, network và Linux.', 1, TRUE, 'ALWAYS'),
+    ('40000000-0000-0000-0000-000000000014', '30000000-0000-0000-0000-000000000007', 'Web Security', 'OWASP Top 10 và secure coding.', 2, TRUE, 'PREVIOUS_CHAPTER_COMPLETED'),
+    ('40000000-0000-0000-0000-000000000015', '30000000-0000-0000-0000-000000000008', 'Git cơ bản', 'Commit, branch và merge.', 1, TRUE, 'ALWAYS'),
+    ('40000000-0000-0000-0000-000000000016', '30000000-0000-0000-0000-000000000008', 'Quy trình GitHub', 'Pull request, review và release.', 2, TRUE, 'PREVIOUS_CHAPTER_COMPLETED')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS chapters_row_count
+FROM study_dev0.chapters;
+
+-- <<< END 11_chapters.sql
+
+-- >>> BEGIN 12_lessons.sql
+-- ============================================================================
+-- Fake data: study_dev0.lessons
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.lessons (
+    id,
+    chapter_id,
+    title,
+    objective,
+    order_index,
+    sample_public,
+    required,
+    completion_condition,
+    publish_status
+) VALUES
+    ('41000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', 'Cài đặt Python và môi trường phát triển', 'Thiết lập Python, venv và IDE.', 1, TRUE, TRUE, 'VIEW_CONTENT', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000002', '40000000-0000-0000-0000-000000000001', 'Biến, kiểu dữ liệu và toán tử', 'Thực hành dữ liệu cơ bản trong Python.', 2, FALSE, TRUE, 'VIDEO_PERCENT', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000003', '40000000-0000-0000-0000-000000000002', 'Hàm, tham số và phạm vi biến', 'Viết hàm dễ kiểm thử và tái sử dụng.', 1, FALSE, TRUE, 'SELF_MARKED_DONE', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000004', '40000000-0000-0000-0000-000000000002', 'Class, object và module', 'Tổ chức mã nguồn hướng đối tượng.', 2, FALSE, TRUE, 'REQUIRED_EXERCISE_PASSED', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000005', '40000000-0000-0000-0000-000000000003', 'Khởi tạo dự án FastAPI', 'Tạo ứng dụng, router và cấu hình dev server.', 1, TRUE, TRUE, 'VIEW_CONTENT', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000006', '40000000-0000-0000-0000-000000000003', 'Pydantic model và validation', 'Kiểm tra request/response bằng schema.', 2, FALSE, TRUE, 'VIDEO_PERCENT', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000007', '40000000-0000-0000-0000-000000000004', 'Thiết kế CRUD endpoint', 'Xây dựng API CRUD theo REST.', 1, FALSE, TRUE, 'SELF_MARKED_DONE', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000008', '40000000-0000-0000-0000-000000000004', 'Exception, dependency và middleware', 'Chuẩn hóa lỗi và dependency injection.', 2, FALSE, TRUE, 'REQUIRED_EXERCISE_PASSED', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000009', '40000000-0000-0000-0000-000000000005', 'SELECT, WHERE và ORDER BY', 'Truy vấn và sắp xếp dữ liệu.', 1, FALSE, TRUE, 'VIEW_CONTENT', 'UPDATED'),
+    ('41000000-0000-0000-0000-000000000010', '40000000-0000-0000-0000-000000000005', 'JOIN và GROUP BY', 'Kết hợp bảng và tổng hợp dữ liệu.', 2, FALSE, TRUE, 'VIDEO_PERCENT', 'UPDATED'),
+    ('41000000-0000-0000-0000-000000000011', '40000000-0000-0000-0000-000000000006', 'Thiết kế schema và constraint', 'Chuẩn hóa bảng, khóa và ràng buộc.', 1, FALSE, TRUE, 'SELF_MARKED_DONE', 'UPDATED'),
+    ('41000000-0000-0000-0000-000000000012', '40000000-0000-0000-0000-000000000006', 'Index, transaction và EXPLAIN', 'Tối ưu truy vấn và xử lý transaction.', 2, FALSE, TRUE, 'REQUIRED_EXERCISE_PASSED', 'UPDATED'),
+    ('41000000-0000-0000-0000-000000000013', '40000000-0000-0000-0000-000000000007', 'Component và template Vue', 'Xây dựng component tái sử dụng.', 1, TRUE, TRUE, 'VIEW_CONTENT', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000014', '40000000-0000-0000-0000-000000000007', 'ref, reactive và computed', 'Quản lý reactive state.', 2, FALSE, TRUE, 'VIDEO_PERCENT', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000015', '40000000-0000-0000-0000-000000000008', 'Pinia store', 'Tổ chức state dùng chung.', 1, FALSE, TRUE, 'SELF_MARKED_DONE', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000016', '40000000-0000-0000-0000-000000000008', 'Vue Router và gọi REST API', 'Điều hướng và tích hợp backend.', 2, FALSE, TRUE, 'REQUIRED_EXERCISE_PASSED', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000017', '40000000-0000-0000-0000-000000000009', 'JSX và functional component', 'Cấu trúc component React.', 1, FALSE, TRUE, 'VIEW_CONTENT', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000018', '40000000-0000-0000-0000-000000000009', 'Props, event và form', 'Trao đổi dữ liệu giữa component.', 2, FALSE, TRUE, 'VIDEO_PERCENT', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000019', '40000000-0000-0000-0000-000000000010', 'useState và useEffect', 'Quản lý state và side effect.', 1, FALSE, TRUE, 'SELF_MARKED_DONE', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000020', '40000000-0000-0000-0000-000000000010', 'Context và custom hooks', 'Tái sử dụng logic trong React.', 2, FALSE, TRUE, 'REQUIRED_EXERCISE_PASSED', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000021', '40000000-0000-0000-0000-000000000011', 'Docker image và container', 'Đóng gói ứng dụng thành container.', 1, FALSE, TRUE, 'VIEW_CONTENT', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000022', '40000000-0000-0000-0000-000000000011', 'Volume, network và compose', 'Kết nối dịch vụ bằng Docker Compose.', 2, FALSE, TRUE, 'VIDEO_PERCENT', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000023', '40000000-0000-0000-0000-000000000012', 'Thiết kế pipeline CI', 'Chạy lint, test và build tự động.', 1, FALSE, TRUE, 'SELF_MARKED_DONE', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000024', '40000000-0000-0000-0000-000000000012', 'Triển khai CD', 'Tự động phát hành qua môi trường.', 2, FALSE, TRUE, 'REQUIRED_EXERCISE_PASSED', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000025', '40000000-0000-0000-0000-000000000013', 'CIA triad và threat model', 'Nhận diện tài sản, mối đe dọa và rủi ro.', 1, FALSE, TRUE, 'VIEW_CONTENT', 'DRAFT'),
+    ('41000000-0000-0000-0000-000000000026', '40000000-0000-0000-0000-000000000013', 'Linux và network căn bản', 'Quyền file, process và giao thức mạng.', 2, FALSE, TRUE, 'VIDEO_PERCENT', 'DRAFT'),
+    ('41000000-0000-0000-0000-000000000027', '40000000-0000-0000-0000-000000000014', 'OWASP Top 10', 'Các nhóm lỗ hổng web phổ biến.', 1, FALSE, TRUE, 'SELF_MARKED_DONE', 'DRAFT'),
+    ('41000000-0000-0000-0000-000000000028', '40000000-0000-0000-0000-000000000014', 'Secure coding', 'Validation, authentication và secret management.', 2, FALSE, TRUE, 'REQUIRED_EXERCISE_PASSED', 'DRAFT'),
+    ('41000000-0000-0000-0000-000000000029', '40000000-0000-0000-0000-000000000015', 'Commit, branch và merge', 'Thao tác Git trong dự án thực tế.', 1, TRUE, TRUE, 'VIEW_CONTENT', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000030', '40000000-0000-0000-0000-000000000015', 'Resolve conflict', 'Phân tích và xử lý xung đột.', 2, FALSE, TRUE, 'VIDEO_PERCENT', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000031', '40000000-0000-0000-0000-000000000016', 'Pull request và code review', 'Quy trình hợp nhất mã nguồn.', 1, FALSE, TRUE, 'SELF_MARKED_DONE', 'PUBLISHED'),
+    ('41000000-0000-0000-0000-000000000032', '40000000-0000-0000-0000-000000000016', 'Tag, release và GitHub Actions', 'Quản lý phiên bản và tự động hóa.', 2, FALSE, TRUE, 'REQUIRED_EXERCISE_PASSED', 'PUBLISHED')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS lessons_row_count
+FROM study_dev0.lessons;
+
+-- <<< END 12_lessons.sql
+
+-- >>> BEGIN 13_course_materials.sql
+-- ============================================================================
+-- Fake data: study_dev0.course_materials
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.course_materials (
+    id,
+    lesson_id,
+    title,
+    type,
+    resource_url,
+    required,
+    source,
+    usage_right_status
+) VALUES
+    ('42000000-0000-0000-0000-000000000001', '41000000-0000-0000-0000-000000000001', 'Tài liệu bài 01', 'VIDEO', 'https://cdn.s2w.dev/materials/lesson-01.mp4', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000002', '41000000-0000-0000-0000-000000000002', 'Tài liệu bài 02', 'PDF', 'https://cdn.s2w.dev/materials/lesson-02.pdf', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000003', '41000000-0000-0000-0000-000000000003', 'Tài liệu bài 03', 'MARKDOWN', 'https://cdn.s2w.dev/materials/lesson-03.md', FALSE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000004', '41000000-0000-0000-0000-000000000004', 'Tài liệu bài 04', 'CODE', 'https://cdn.s2w.dev/materials/lesson-04.zip', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000005', '41000000-0000-0000-0000-000000000005', 'Tài liệu bài 05', 'VIDEO', 'https://cdn.s2w.dev/materials/lesson-05.mp4', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000006', '41000000-0000-0000-0000-000000000006', 'Tài liệu bài 06', 'PDF', 'https://cdn.s2w.dev/materials/lesson-06.pdf', FALSE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000007', '41000000-0000-0000-0000-000000000007', 'Tài liệu bài 07', 'MARKDOWN', 'https://cdn.s2w.dev/materials/lesson-07.md', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000008', '41000000-0000-0000-0000-000000000008', 'Tài liệu bài 08', 'CODE', 'https://cdn.s2w.dev/materials/lesson-08.zip', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000009', '41000000-0000-0000-0000-000000000009', 'Tài liệu bài 09', 'VIDEO', 'https://cdn.s2w.dev/materials/lesson-09.mp4', FALSE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000010', '41000000-0000-0000-0000-000000000010', 'Tài liệu bài 10', 'PDF', 'https://cdn.s2w.dev/materials/lesson-10.pdf', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000011', '41000000-0000-0000-0000-000000000011', 'Tài liệu bài 11', 'MARKDOWN', 'https://cdn.s2w.dev/materials/lesson-11.md', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000012', '41000000-0000-0000-0000-000000000012', 'Tài liệu bài 12', 'CODE', 'https://cdn.s2w.dev/materials/lesson-12.zip', FALSE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000013', '41000000-0000-0000-0000-000000000013', 'Tài liệu bài 13', 'VIDEO', 'https://cdn.s2w.dev/materials/lesson-13.mp4', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000014', '41000000-0000-0000-0000-000000000014', 'Tài liệu bài 14', 'PDF', 'https://cdn.s2w.dev/materials/lesson-14.pdf', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000015', '41000000-0000-0000-0000-000000000015', 'Tài liệu bài 15', 'MARKDOWN', 'https://cdn.s2w.dev/materials/lesson-15.md', FALSE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000016', '41000000-0000-0000-0000-000000000016', 'Tài liệu bài 16', 'CODE', 'https://cdn.s2w.dev/materials/lesson-16.zip', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000017', '41000000-0000-0000-0000-000000000017', 'Tài liệu bài 17', 'VIDEO', 'https://cdn.s2w.dev/materials/lesson-17.mp4', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000018', '41000000-0000-0000-0000-000000000018', 'Tài liệu bài 18', 'PDF', 'https://cdn.s2w.dev/materials/lesson-18.pdf', FALSE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000019', '41000000-0000-0000-0000-000000000019', 'Tài liệu bài 19', 'MARKDOWN', 'https://cdn.s2w.dev/materials/lesson-19.md', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000020', '41000000-0000-0000-0000-000000000020', 'Tài liệu bài 20', 'CODE', 'https://cdn.s2w.dev/materials/lesson-20.zip', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000021', '41000000-0000-0000-0000-000000000021', 'Tài liệu bài 21', 'VIDEO', 'https://cdn.s2w.dev/materials/lesson-21.mp4', FALSE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000022', '41000000-0000-0000-0000-000000000022', 'Tài liệu bài 22', 'PDF', 'https://cdn.s2w.dev/materials/lesson-22.pdf', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000023', '41000000-0000-0000-0000-000000000023', 'Tài liệu bài 23', 'MARKDOWN', 'https://cdn.s2w.dev/materials/lesson-23.md', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000024', '41000000-0000-0000-0000-000000000024', 'Tài liệu bài 24', 'CODE', 'https://cdn.s2w.dev/materials/lesson-24.zip', FALSE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000025', '41000000-0000-0000-0000-000000000025', 'Tài liệu bài 25', 'VIDEO', 'https://cdn.s2w.dev/materials/lesson-25.mp4', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000026', '41000000-0000-0000-0000-000000000026', 'Tài liệu bài 26', 'PDF', 'https://cdn.s2w.dev/materials/lesson-26.pdf', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000027', '41000000-0000-0000-0000-000000000027', 'Tài liệu bài 27', 'MARKDOWN', 'https://cdn.s2w.dev/materials/lesson-27.md', FALSE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000028', '41000000-0000-0000-0000-000000000028', 'Tài liệu bài 28', 'CODE', 'https://cdn.s2w.dev/materials/lesson-28.zip', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000029', '41000000-0000-0000-0000-000000000029', 'Tài liệu bài 29', 'VIDEO', 'https://cdn.s2w.dev/materials/lesson-29.mp4', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000030', '41000000-0000-0000-0000-000000000030', 'Tài liệu bài 30', 'PDF', 'https://cdn.s2w.dev/materials/lesson-30.pdf', FALSE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000031', '41000000-0000-0000-0000-000000000031', 'Tài liệu bài 31', 'MARKDOWN', 'https://cdn.s2w.dev/materials/lesson-31.md', TRUE, 'Study2Work Learning Team', 'OWNED'),
+    ('42000000-0000-0000-0000-000000000032', '41000000-0000-0000-0000-000000000032', 'Tài liệu bài 32', 'CODE', 'https://cdn.s2w.dev/materials/lesson-32.zip', TRUE, 'Study2Work Learning Team', 'OWNED')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS course_materials_row_count
+FROM study_dev0.course_materials;
+
+-- <<< END 13_course_materials.sql
+
+-- >>> BEGIN 14_exercises.sql
+-- ============================================================================
+-- Fake data: study_dev0.exercises
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.exercises (
+    id,
+    course_id,
+    chapter_id,
+    lesson_id,
+    title,
+    type,
+    required,
+    due_at,
+    allow_resubmit,
+    max_score,
+    rubric,
+    publish_status
+) VALUES
+    ('43000000-0000-0000-0000-000000000001', '30000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', '41000000-0000-0000-0000-000000000001', 'Quiz cú pháp Python', 'QUIZ', TRUE, '2026-08-01 23:59:00+07', TRUE, 100, '10 câu trắc nghiệm; mỗi câu 10 điểm.', 'PUBLISHED'),
+    ('43000000-0000-0000-0000-000000000002', '30000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', '41000000-0000-0000-0000-000000000002', 'Bài tập biến và kiểu dữ liệu', 'CODING', TRUE, '2026-08-03 23:59:00+07', TRUE, 100, 'Đúng output 70%; chất lượng mã 30%.', 'PUBLISHED'),
+    ('43000000-0000-0000-0000-000000000003', '30000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000002', '41000000-0000-0000-0000-000000000003', 'Xây dựng thư viện hàm tiện ích', 'CODING', TRUE, '2026-08-06 23:59:00+07', TRUE, 100, 'Unit test 60%; cấu trúc hàm 40%.', 'PUBLISHED'),
+    ('43000000-0000-0000-0000-000000000004', '30000000-0000-0000-0000-000000000002', '40000000-0000-0000-0000-000000000003', '41000000-0000-0000-0000-000000000005', 'Quiz FastAPI cơ bản', 'QUIZ', TRUE, '2026-08-08 23:59:00+07', TRUE, 100, 'Kiến thức app, router và HTTP.', 'PUBLISHED'),
+    ('43000000-0000-0000-0000-000000000005', '30000000-0000-0000-0000-000000000002', '40000000-0000-0000-0000-000000000004', '41000000-0000-0000-0000-000000000008', 'Dự án API CRUD', 'PROJECT', TRUE, '2026-08-15 23:59:00+07', TRUE, 100, 'CRUD 40%; validation 20%; lỗi 20%; tài liệu 20%.', 'PUBLISHED'),
+    ('43000000-0000-0000-0000-000000000006', '30000000-0000-0000-0000-000000000003', '40000000-0000-0000-0000-000000000005', '41000000-0000-0000-0000-000000000009', 'Bài tập SQL SELECT', 'CODING', TRUE, '2026-08-10 23:59:00+07', TRUE, 100, 'Đúng truy vấn và kết quả.', 'UPDATED'),
+    ('43000000-0000-0000-0000-000000000007', '30000000-0000-0000-0000-000000000003', '40000000-0000-0000-0000-000000000006', '41000000-0000-0000-0000-000000000012', 'Thiết kế database mini LMS', 'PROJECT', TRUE, '2026-08-18 23:59:00+07', TRUE, 100, 'Schema 40%; constraint 30%; index 30%.', 'UPDATED'),
+    ('43000000-0000-0000-0000-000000000008', '30000000-0000-0000-0000-000000000004', '40000000-0000-0000-0000-000000000007', '41000000-0000-0000-0000-000000000013', 'Vue component hồ sơ', 'CODING', TRUE, '2026-08-05 23:59:00+07', TRUE, 100, 'Component 50%; reactive state 30%; style 20%.', 'PUBLISHED'),
+    ('43000000-0000-0000-0000-000000000009', '30000000-0000-0000-0000-000000000004', '40000000-0000-0000-0000-000000000008', '41000000-0000-0000-0000-000000000016', 'Ứng dụng Vue Router', 'PROJECT', TRUE, '2026-08-12 23:59:00+07', TRUE, 100, 'Routing 40%; API 40%; UX 20%.', 'PUBLISHED'),
+    ('43000000-0000-0000-0000-000000000010', '30000000-0000-0000-0000-000000000005', '40000000-0000-0000-0000-000000000010', '41000000-0000-0000-0000-000000000020', 'Ứng dụng React Hooks', 'PROJECT', TRUE, '2026-08-16 23:59:00+07', TRUE, 100, 'Hooks 50%; component 30%; test 20%.', 'PUBLISHED'),
+    ('43000000-0000-0000-0000-000000000011', '30000000-0000-0000-0000-000000000006', '40000000-0000-0000-0000-000000000011', '41000000-0000-0000-0000-000000000021', 'Nộp Dockerfile', 'FILE_UPLOAD', TRUE, '2026-08-09 23:59:00+07', TRUE, 100, 'Build được 60%; tối ưu image 40%.', 'PUBLISHED'),
+    ('43000000-0000-0000-0000-000000000012', '30000000-0000-0000-0000-000000000006', '40000000-0000-0000-0000-000000000012', '41000000-0000-0000-0000-000000000024', 'Pipeline CI/CD', 'PROJECT', TRUE, '2026-08-20 23:59:00+07', TRUE, 100, 'CI 50%; CD 30%; tài liệu 20%.', 'PUBLISHED'),
+    ('43000000-0000-0000-0000-000000000013', '30000000-0000-0000-0000-000000000007', '40000000-0000-0000-0000-000000000013', '41000000-0000-0000-0000-000000000025', 'Quiz nền tảng bảo mật', 'QUIZ', TRUE, NULL, FALSE, 100, 'CIA triad và threat model.', 'DRAFT'),
+    ('43000000-0000-0000-0000-000000000014', '30000000-0000-0000-0000-000000000008', '40000000-0000-0000-0000-000000000015', '41000000-0000-0000-0000-000000000029', 'Quiz Git cơ bản', 'QUIZ', TRUE, '2026-08-02 23:59:00+07', TRUE, 100, 'Commit, branch và merge.', 'PUBLISHED')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS exercises_row_count
+FROM study_dev0.exercises;
+
+-- <<< END 14_exercises.sql
+
+-- >>> BEGIN 15_exercise_submissions.sql
+-- ============================================================================
+-- Fake data: study_dev0.exercise_submissions
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.exercise_submissions (
+    id,
+    exercise_id,
+    user_id,
+    status,
+    attempt_no,
+    text_answer,
+    file_url,
+    link_url,
+    score,
+    feedback,
+    submitted_at,
+    reviewed_at
+) VALUES
+    ('44000000-0000-0000-0000-000000000001', '43000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000002', 'PASSED', 1, 'Đáp án quiz lần 1', NULL, NULL, 90, 'Nắm chắc cú pháp cơ bản.', '2026-06-14 20:00:00+07', '2026-06-14 20:01:00+07'),
+    ('44000000-0000-0000-0000-000000000002', '43000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', 'PASSED', 1, 'Chương trình tính tổng và phân loại dữ liệu.', 'https://cdn.s2w.dev/submissions/u02-x02.zip', NULL, 85, 'Đúng yêu cầu; cần cải thiện đặt tên biến.', '2026-06-16 20:00:00+07', '2026-06-17 09:00:00+07'),
+    ('44000000-0000-0000-0000-000000000003', '43000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002', 'UNDER_REVIEW', 1, 'Thư viện utility_functions.py', 'https://cdn.s2w.dev/submissions/u02-x03.zip', NULL, NULL, NULL, '2026-07-20 21:00:00+07', NULL),
+    ('44000000-0000-0000-0000-000000000004', '43000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000003', 'PASSED', 1, 'Vue profile component', NULL, 'https://github.com/s2w-demo/vue-profile', 92, 'Component rõ ràng, state hợp lý.', '2026-06-18 21:00:00+07', '2026-06-19 09:00:00+07'),
+    ('44000000-0000-0000-0000-000000000005', '43000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000003', 'DRAFT', 1, 'Đã hoàn thành router, đang tích hợp API.', NULL, 'https://github.com/s2w-demo/vue-router-app', NULL, NULL, NULL, NULL),
+    ('44000000-0000-0000-0000-000000000006', '43000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000007', 'PASSED', 1, 'Đáp án quiz Python.', NULL, NULL, 100, 'Hoàn thành xuất sắc.', '2026-05-22 20:00:00+07', '2026-05-22 20:01:00+07'),
+    ('44000000-0000-0000-0000-000000000007', '43000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000007', 'PASSED', 1, 'Bài coding Python.', 'https://cdn.s2w.dev/submissions/u07-x02.zip', NULL, 95, 'Mã sạch và có test.', '2026-05-24 20:00:00+07', '2026-05-25 09:00:00+07'),
+    ('44000000-0000-0000-0000-000000000008', '43000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000007', 'PASSED', 1, 'Quiz FastAPI.', NULL, NULL, 90, 'Hiểu đúng router và status code.', '2026-06-02 20:00:00+07', '2026-06-02 20:01:00+07'),
+    ('44000000-0000-0000-0000-000000000009', '43000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000007', 'PASSED', 1, 'API CRUD hoàn chỉnh.', NULL, 'https://github.com/s2w-demo/u07-fastapi-crud', 94, 'Đầy đủ validation và exception handler.', '2026-06-10 20:00:00+07', '2026-06-11 09:00:00+07'),
+    ('44000000-0000-0000-0000-000000000010', '43000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000007', 'PASSED', 1, 'Các truy vấn SQL.', 'https://cdn.s2w.dev/submissions/u07-x06.sql', NULL, 96, 'Truy vấn đúng và dễ đọc.', '2026-06-20 20:00:00+07', '2026-06-21 09:00:00+07'),
+    ('44000000-0000-0000-0000-000000000011', '43000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000007', 'PASSED', 1, 'Database mini LMS.', 'https://cdn.s2w.dev/submissions/u07-x07.sql', NULL, 91, 'Schema hợp lý; cần thêm index cho audit.', '2026-06-24 20:00:00+07', '2026-06-25 09:00:00+07'),
+    ('44000000-0000-0000-0000-000000000012', '43000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000010', 'PASSED', 1, 'Quiz Python.', NULL, NULL, 88, 'Đạt yêu cầu.', '2026-06-20 20:00:00+07', '2026-06-20 20:01:00+07'),
+    ('44000000-0000-0000-0000-000000000013', '43000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000010', 'NEEDS_REVISION', 1, 'Quiz FastAPI lần 1.', NULL, NULL, 55, 'Ôn lại dependency injection và middleware.', '2026-07-10 20:00:00+07', '2026-07-10 20:01:00+07'),
+    ('44000000-0000-0000-0000-000000000014', '43000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000012', 'SUBMITTED', 1, 'Quiz Python mentor test.', NULL, NULL, NULL, NULL, '2026-07-21 08:30:00+07', NULL)
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS exercise_submissions_row_count
+FROM study_dev0.exercise_submissions;
+
+-- <<< END 15_exercise_submissions.sql
+
+-- >>> BEGIN 16_lesson_progress.sql
+-- ============================================================================
+-- Fake data: study_dev0.lesson_progress
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.lesson_progress (
+    id,
+    user_id,
+    lesson_id,
+    status,
+    video_watch_percent,
+    required_materials_read,
+    self_marked_done,
+    required_exercise_passed,
+    last_accessed_at,
+    completed_at
+) VALUES
+    ('45000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000002', '41000000-0000-0000-0000-000000000001', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-06-14 20:00:00+07', '2026-06-14 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', '41000000-0000-0000-0000-000000000002', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-06-16 20:00:00+07', '2026-06-16 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002', '41000000-0000-0000-0000-000000000003', 'IN_PROGRESS', 65, TRUE, FALSE, FALSE, '2026-07-20 21:00:00+07', NULL),
+    ('45000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000002', '41000000-0000-0000-0000-000000000005', 'IN_PROGRESS', 40, FALSE, FALSE, FALSE, '2026-07-21 07:00:00+07', NULL),
+    ('45000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000003', '41000000-0000-0000-0000-000000000013', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-06-18 21:00:00+07', '2026-06-18 21:00:00+07'),
+    ('45000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000003', '41000000-0000-0000-0000-000000000014', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-06-20 21:00:00+07', '2026-06-20 21:00:00+07'),
+    ('45000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000003', '41000000-0000-0000-0000-000000000015', 'IN_PROGRESS', 75, TRUE, FALSE, FALSE, '2026-07-19 20:00:00+07', NULL),
+    ('45000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000003', '41000000-0000-0000-0000-000000000016', 'IN_PROGRESS', 50, FALSE, FALSE, FALSE, '2026-07-20 20:00:00+07', NULL),
+    ('45000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000007', '41000000-0000-0000-0000-000000000001', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-05-22 20:00:00+07', '2026-05-22 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000007', '41000000-0000-0000-0000-000000000002', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-05-24 20:00:00+07', '2026-05-24 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000007', '41000000-0000-0000-0000-000000000005', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-06-02 20:00:00+07', '2026-06-02 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000012', '10000000-0000-0000-0000-000000000007', '41000000-0000-0000-0000-000000000008', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-06-10 20:00:00+07', '2026-06-10 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000013', '10000000-0000-0000-0000-000000000007', '41000000-0000-0000-0000-000000000009', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-06-20 20:00:00+07', '2026-06-20 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000014', '10000000-0000-0000-0000-000000000007', '41000000-0000-0000-0000-000000000012', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-06-24 20:00:00+07', '2026-06-24 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000015', '10000000-0000-0000-0000-000000000007', '41000000-0000-0000-0000-000000000021', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-07-01 20:00:00+07', '2026-07-01 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000016', '10000000-0000-0000-0000-000000000007', '41000000-0000-0000-0000-000000000024', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-07-09 20:00:00+07', '2026-07-09 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000017', '10000000-0000-0000-0000-000000000010', '41000000-0000-0000-0000-000000000001', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-06-20 20:00:00+07', '2026-06-20 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000018', '10000000-0000-0000-0000-000000000010', '41000000-0000-0000-0000-000000000002', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-06-23 20:00:00+07', '2026-06-23 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000019', '10000000-0000-0000-0000-000000000010', '41000000-0000-0000-0000-000000000005', 'IN_PROGRESS', 60, TRUE, FALSE, FALSE, '2026-07-20 21:00:00+07', NULL),
+    ('45000000-0000-0000-0000-000000000020', '10000000-0000-0000-0000-000000000010', '41000000-0000-0000-0000-000000000006', 'IN_PROGRESS', 30, FALSE, FALSE, FALSE, '2026-07-21 07:30:00+07', NULL),
+    ('45000000-0000-0000-0000-000000000021', '10000000-0000-0000-0000-000000000012', '41000000-0000-0000-0000-000000000001', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-06-22 20:00:00+07', '2026-06-22 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000022', '10000000-0000-0000-0000-000000000012', '41000000-0000-0000-0000-000000000002', 'COMPLETED', 100, TRUE, TRUE, TRUE, '2026-06-25 20:00:00+07', '2026-06-25 20:00:00+07'),
+    ('45000000-0000-0000-0000-000000000023', '10000000-0000-0000-0000-000000000012', '41000000-0000-0000-0000-000000000003', 'IN_PROGRESS', 80, TRUE, FALSE, FALSE, '2026-07-20 19:00:00+07', NULL),
+    ('45000000-0000-0000-0000-000000000024', '10000000-0000-0000-0000-000000000012', '41000000-0000-0000-0000-000000000004', 'NOT_STARTED', 0, FALSE, FALSE, FALSE, NULL, NULL)
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS lesson_progress_row_count
+FROM study_dev0.lesson_progress;
+
+-- <<< END 16_lesson_progress.sql
+
+-- >>> BEGIN 17_completion_rules.sql
+-- ============================================================================
+-- Fake data: study_dev0.completion_rules
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.completion_rules (
+    id,
+    target_type,
+    target_id,
+    required_items_only,
+    minimum_score,
+    minimum_video_percent,
+    description
+) VALUES
+    ('46000000-0000-0000-0000-000000000001', 'LEARNING_PATH', '20000000-0000-0000-0000-000000000001', TRUE, 70, 80, 'Hoàn thành các khóa bắt buộc và đạt tối thiểu 70 điểm.'),
+    ('46000000-0000-0000-0000-000000000002', 'LEARNING_PATH', '20000000-0000-0000-0000-000000000002', TRUE, 70, 80, 'Hoàn thành khóa Vue, React và Git.'),
+    ('46000000-0000-0000-0000-000000000003', 'LEARNING_PATH', '20000000-0000-0000-0000-000000000003', TRUE, 75, 80, 'Hoàn thành toàn bộ nội dung bắt buộc của lộ trình Full-stack.'),
+    ('46000000-0000-0000-0000-000000000004', 'LEARNING_PATH', '20000000-0000-0000-0000-000000000004', TRUE, 70, 80, 'Hoàn thành các nội dung bảo mật bắt buộc.'),
+    ('46000000-0000-0000-0000-000000000005', 'COURSE', '30000000-0000-0000-0000-000000000001', TRUE, 70, 80, 'Hoàn thành bài học và bài tập Python.'),
+    ('46000000-0000-0000-0000-000000000006', 'COURSE', '30000000-0000-0000-0000-000000000002', TRUE, 70, 80, 'Hoàn thành dự án API CRUD.'),
+    ('46000000-0000-0000-0000-000000000007', 'COURSE', '30000000-0000-0000-0000-000000000003', TRUE, 70, 80, 'Hoàn thành bài tập SQL và thiết kế database.'),
+    ('46000000-0000-0000-0000-000000000008', 'COURSE', '30000000-0000-0000-0000-000000000004', TRUE, 70, 80, 'Hoàn thành Vue component và ứng dụng Router.'),
+    ('46000000-0000-0000-0000-000000000009', 'COURSE', '30000000-0000-0000-0000-000000000005', TRUE, 70, 80, 'Hoàn thành dự án React Hooks.'),
+    ('46000000-0000-0000-0000-000000000010', 'COURSE', '30000000-0000-0000-0000-000000000006', TRUE, 70, 80, 'Hoàn thành Dockerfile và pipeline CI/CD.'),
+    ('46000000-0000-0000-0000-000000000011', 'COURSE', '30000000-0000-0000-0000-000000000007', TRUE, 70, 80, 'Hoàn thành quiz và bài thực hành bảo mật.'),
+    ('46000000-0000-0000-0000-000000000012', 'COURSE', '30000000-0000-0000-0000-000000000008', TRUE, 70, 80, 'Hoàn thành quiz Git và quy trình GitHub.')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS completion_rules_row_count
+FROM study_dev0.completion_rules;
+
+-- <<< END 17_completion_rules.sql
+
+-- >>> BEGIN 18_notification_settings.sql
+-- ============================================================================
+-- Fake data: study_dev0.notification_settings
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.notification_settings (
+    id,
+    user_id,
+    optional_reminder_enabled,
+    email_learning_reminder_enabled,
+    mandatory_notice_enabled,
+    updated_at
+) VALUES
+    ('50000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', TRUE, TRUE, TRUE, '2026-07-11 08:00:00+07'),
+    ('50000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', TRUE, TRUE, TRUE, '2026-07-12 08:00:00+07'),
+    ('50000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000003', TRUE, TRUE, TRUE, '2026-07-13 08:00:00+07'),
+    ('50000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000004', TRUE, FALSE, TRUE, '2026-07-14 08:00:00+07'),
+    ('50000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000005', TRUE, TRUE, TRUE, '2026-07-15 08:00:00+07'),
+    ('50000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000006', FALSE, FALSE, TRUE, '2026-07-16 08:00:00+07'),
+    ('50000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000007', TRUE, TRUE, TRUE, '2026-07-17 08:00:00+07'),
+    ('50000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000008', TRUE, TRUE, TRUE, '2026-07-18 08:00:00+07'),
+    ('50000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000009', FALSE, FALSE, TRUE, '2026-07-19 08:00:00+07'),
+    ('50000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000010', TRUE, TRUE, TRUE, '2026-07-20 08:00:00+07'),
+    ('50000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000011', TRUE, TRUE, TRUE, '2026-07-21 08:00:00+07'),
+    ('50000000-0000-0000-0000-000000000012', '10000000-0000-0000-0000-000000000012', TRUE, TRUE, TRUE, '2026-07-21 08:00:00+07')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS notification_settings_row_count
+FROM study_dev0.notification_settings;
+
+-- <<< END 18_notification_settings.sql
+
+-- >>> BEGIN 19_notifications.sql
+-- ============================================================================
+-- Fake data: study_dev0.notifications
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.notifications (
+    id,
+    user_id,
+    type,
+    title,
+    body,
+    priority,
+    read_status,
+    action_url,
+    created_at,
+    read_at
+) VALUES
+    ('51000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'SYSTEM', 'Chào mừng đến Study2Work', 'Hồ sơ của bạn đã sẵn sàng để bắt đầu học.', 'NORMAL', 'READ', '/dashboard', '2026-07-01 08:00:00+07', '2026-07-01 08:05:00+07'),
+    ('51000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', 'LEARNING_REMINDER', 'Tiếp tục khóa FastAPI', 'Bạn đang hoàn thành 45% khóa FastAPI REST API.', 'NORMAL', 'UNREAD', '/courses/fastapi-rest-api', '2026-07-21 07:00:00+07', NULL),
+    ('51000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002', 'REVIEW_RESULT', 'Bài Python đã được chấm', 'Bài tập biến và kiểu dữ liệu đạt 85 điểm.', 'HIGH', 'READ', '/submissions/44000000-0000-0000-0000-000000000002', '2026-06-17 09:05:00+07', '2026-06-17 09:10:00+07'),
+    ('51000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000002', 'ASSIGNMENT', 'Bài nộp đang được đánh giá', 'Thư viện hàm tiện ích đang chờ mentor phản hồi.', 'NORMAL', 'UNREAD', '/submissions/44000000-0000-0000-0000-000000000003', '2026-07-20 21:05:00+07', NULL),
+    ('51000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000003', 'LEARNING_REMINDER', 'Hoàn thành Vue Router', 'Bạn còn một bài tập để hoàn thành chương State và Router.', 'NORMAL', 'UNREAD', '/exercises/43000000-0000-0000-0000-000000000009', '2026-07-21 07:10:00+07', NULL),
+    ('51000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000004', 'SYSTEM', 'Tiếp tục onboarding', 'Bạn đang ở bước 3 trong quy trình onboarding.', 'NORMAL', 'UNREAD', '/onboarding', '2026-07-20 08:00:00+07', NULL),
+    ('51000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000005', 'SYSTEM', 'Hãy hoàn tất onboarding', 'Chọn mục tiêu và lộ trình phù hợp để bắt đầu học.', 'NORMAL', 'UNREAD', '/onboarding', '2026-07-19 08:00:00+07', NULL),
+    ('51000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000006', 'SECURITY', 'Tài khoản đang tạm ngừng', 'Liên hệ bộ phận hỗ trợ để xác minh tài khoản.', 'URGENT', 'READ', '/support', '2026-07-16 15:00:00+07', '2026-07-16 15:10:00+07'),
+    ('51000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000007', 'CONTENT_UPDATE', 'Khóa PostgreSQL có nội dung mới', 'Bài Index, transaction và EXPLAIN đã được cập nhật.', 'HIGH', 'READ', '/lessons/41000000-0000-0000-0000-000000000012', '2026-07-12 10:00:00+07', '2026-07-12 10:15:00+07'),
+    ('51000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000007', 'SYSTEM', 'Hoàn thành lộ trình Backend', 'Chúc mừng bạn đã hoàn thành lộ trình Backend Python & FastAPI.', 'HIGH', 'READ', '/learning-paths/20000000-0000-0000-0000-000000000001', '2026-07-10 17:05:00+07', '2026-07-10 17:10:00+07'),
+    ('51000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000008', 'LEARNING_REMINDER', 'Lộ trình Full-stack đã sẵn sàng', 'Bạn có thể kích hoạt lộ trình và bắt đầu khóa Python.', 'NORMAL', 'UNREAD', '/learning-paths/20000000-0000-0000-0000-000000000003', '2026-07-20 09:00:00+07', NULL),
+    ('51000000-0000-0000-0000-000000000012', '10000000-0000-0000-0000-000000000009', 'SECURITY', 'Xác thực tài khoản', 'Vui lòng xác thực email hoặc số điện thoại để tiếp tục.', 'HIGH', 'UNREAD', '/verify-contact', '2026-07-10 08:31:00+07', NULL),
+    ('51000000-0000-0000-0000-000000000013', '10000000-0000-0000-0000-000000000010', 'REVIEW_RESULT', 'Bài FastAPI cần chỉnh sửa', 'Bạn cần ôn lại dependency injection và middleware.', 'HIGH', 'UNREAD', '/submissions/44000000-0000-0000-0000-000000000013', '2026-07-10 20:02:00+07', NULL),
+    ('51000000-0000-0000-0000-000000000014', '10000000-0000-0000-0000-000000000010', 'LEARNING_REMINDER', 'Tiếp tục FastAPI', 'Hoàn thành bài Pydantic model và validation.', 'NORMAL', 'UNREAD', '/lessons/41000000-0000-0000-0000-000000000006', '2026-07-21 07:35:00+07', NULL),
+    ('51000000-0000-0000-0000-000000000015', '10000000-0000-0000-0000-000000000011', 'ADMIN_MANUAL', 'Báo cáo vận hành tháng 7', 'Dashboard báo cáo đã được cập nhật dữ liệu mới.', 'NORMAL', 'READ', '/admin/reports', '2026-07-21 08:00:00+07', '2026-07-21 08:02:00+07'),
+    ('51000000-0000-0000-0000-000000000016', '10000000-0000-0000-0000-000000000012', 'ASSIGNMENT', 'Có bài nộp mới cần kiểm tra', 'Học viên Nguyễn Minh Anh vừa nộp bài thư viện hàm.', 'HIGH', 'UNREAD', '/admin/submissions/44000000-0000-0000-0000-000000000003', '2026-07-20 21:01:00+07', NULL),
+    ('51000000-0000-0000-0000-000000000017', '10000000-0000-0000-0000-000000000012', 'COMMUNITY', 'Nhóm Backend có thành viên mới', 'Lượt mở liên kết nhóm Backend tăng trong tuần này.', 'LOW', 'UNREAD', '/admin/community/60000000-0000-0000-0000-000000000002', '2026-07-21 08:10:00+07', NULL),
+    ('51000000-0000-0000-0000-000000000018', '10000000-0000-0000-0000-000000000001', 'MANDATORY_NOTICE', 'Bảo trì hệ thống', 'Hệ thống bảo trì từ 23:00 đến 23:30 ngày 25/07/2026.', 'URGENT', 'UNREAD', '/announcements/maintenance', '2026-07-21 09:00:00+07', NULL),
+    ('51000000-0000-0000-0000-000000000019', '10000000-0000-0000-0000-000000000002', 'COMMUNITY', 'Tham gia cộng đồng Backend', 'Nhóm Zalo Backend Python đang hoạt động.', 'NORMAL', 'UNREAD', '/community/60000000-0000-0000-0000-000000000002', '2026-07-20 12:00:00+07', NULL),
+    ('51000000-0000-0000-0000-000000000020', '10000000-0000-0000-0000-000000000003', 'CONTENT_UPDATE', 'Cập nhật khóa Vue 3', 'Bài Pinia store đã bổ sung ví dụ mới.', 'NORMAL', 'HIDDEN', '/lessons/41000000-0000-0000-0000-000000000015', '2026-07-18 10:00:00+07', NULL)
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS notifications_row_count
+FROM study_dev0.notifications;
+
+-- <<< END 19_notifications.sql
+
+-- >>> BEGIN 20_community_groups.sql
+-- ============================================================================
+-- Fake data: study_dev0.community_groups
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.community_groups (
+    id,
+    name,
+    scope_type,
+    scope_id,
+    join_link,
+    status,
+    rules,
+    moderator_id
+) VALUES
+    ('60000000-0000-0000-0000-000000000001', 'Cộng đồng Study2Work', 'GLOBAL', NULL, 'https://zalo.me/g/s2w-global-demo', 'ACTIVE', 'Tôn trọng thành viên; không spam; không chia sẻ nội dung vi phạm.', '10000000-0000-0000-0000-000000000012'),
+    ('60000000-0000-0000-0000-000000000002', 'Backend Python & FastAPI', 'LEARNING_PATH', '20000000-0000-0000-0000-000000000001', 'https://zalo.me/g/s2w-backend-demo', 'ACTIVE', 'Trao đổi đúng chủ đề Backend; che thông tin nhạy cảm khi đăng lỗi.', '10000000-0000-0000-0000-000000000012'),
+    ('60000000-0000-0000-0000-000000000003', 'Frontend Vue & TypeScript', 'LEARNING_PATH', '20000000-0000-0000-0000-000000000002', 'https://zalo.me/g/s2w-frontend-demo', 'ACTIVE', 'Trao đổi Vue, React và frontend engineering.', '10000000-0000-0000-0000-000000000012'),
+    ('60000000-0000-0000-0000-000000000004', 'Full-stack Study2Work', 'LEARNING_PATH', '20000000-0000-0000-0000-000000000003', 'https://zalo.me/g/s2w-fullstack-demo', 'ACTIVE', 'Thảo luận tích hợp Backend, Frontend và DevOps.', '10000000-0000-0000-0000-000000000011'),
+    ('60000000-0000-0000-0000-000000000005', 'FastAPI REST API Support', 'COURSE', '30000000-0000-0000-0000-000000000002', 'https://zalo.me/g/s2w-fastapi-demo', 'PAUSED', 'Nhóm hỗ trợ riêng cho khóa FastAPI.', '10000000-0000-0000-0000-000000000012'),
+    ('60000000-0000-0000-0000-000000000006', 'Chủ đề Git và DevOps', 'TOPIC', '60000000-0000-0000-0000-000000001001', 'https://zalo.me/g/s2w-devops-demo', 'ACTIVE', 'Trao đổi Git, Docker, CI/CD và release.', '10000000-0000-0000-0000-000000000011')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS community_groups_row_count
+FROM study_dev0.community_groups;
+
+-- <<< END 20_community_groups.sql
+
+-- >>> BEGIN 21_community_join_events.sql
+-- ============================================================================
+-- Fake data: study_dev0.community_join_events
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.community_join_events (
+    id,
+    user_id,
+    community_group_id,
+    confirmed_rules,
+    source_screen,
+    opened_at
+) VALUES
+    ('61000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', '60000000-0000-0000-0000-000000000001', TRUE, 'dashboard', '2026-07-01 09:00:00+07'),
+    ('61000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000002', '60000000-0000-0000-0000-000000000002', TRUE, 'learning_path_detail', '2026-06-12 09:00:00+07'),
+    ('61000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000002', '60000000-0000-0000-0000-000000000005', TRUE, 'course_detail', '2026-06-26 09:00:00+07'),
+    ('61000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000003', '60000000-0000-0000-0000-000000000003', TRUE, 'learning_path_detail', '2026-06-13 09:00:00+07'),
+    ('61000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000004', '60000000-0000-0000-0000-000000000001', TRUE, 'onboarding_review', '2026-07-18 11:10:00+07'),
+    ('61000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000007', '60000000-0000-0000-0000-000000000002', TRUE, 'learning_path_detail', '2026-05-20 09:00:00+07'),
+    ('61000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000007', '60000000-0000-0000-0000-000000000006', TRUE, 'course_detail', '2026-06-26 09:00:00+07'),
+    ('61000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000008', '60000000-0000-0000-0000-000000000004', TRUE, 'learning_path_detail', '2026-07-18 08:10:00+07'),
+    ('61000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000010', '60000000-0000-0000-0000-000000000004', TRUE, 'dashboard', '2026-06-18 09:00:00+07'),
+    ('61000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000011', '60000000-0000-0000-0000-000000000001', TRUE, 'admin_preview', '2026-05-01 09:00:00+07'),
+    ('61000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000012', '60000000-0000-0000-0000-000000000002', TRUE, 'moderator_panel', '2026-05-02 09:00:00+07'),
+    ('61000000-0000-0000-0000-000000000012', '10000000-0000-0000-0000-000000000012', '60000000-0000-0000-0000-000000000003', TRUE, 'moderator_panel', '2026-05-02 09:05:00+07')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS community_join_events_row_count
+FROM study_dev0.community_join_events;
+
+-- <<< END 21_community_join_events.sql
+
+-- >>> BEGIN 22_support_requests.sql
+-- ============================================================================
+-- Fake data: study_dev0.support_requests
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.support_requests (
+    id,
+    user_id,
+    type,
+    reason,
+    current_learning_path_id,
+    target_learning_path_id,
+    current_learning_path_enrollment_id,
+    status,
+    admin_decision,
+    resolved_at
+) VALUES
+    ('70000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000002', 'CHANGE_PATH', 'Muốn chuyển sang lộ trình Full-stack sau khi hoàn thành FastAPI.', '20000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000003', '32000000-0000-0000-0000-000000000002', 'OPEN', NULL, NULL),
+    ('70000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000004', 'RESET_PATH', 'Muốn làm lại onboarding và chọn lại mục tiêu.', '20000000-0000-0000-0000-000000000002', NULL, '32000000-0000-0000-0000-000000000004', 'IN_REVIEW', NULL, NULL),
+    ('70000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000006', 'CANCEL_PATH', 'Tạm dừng học trong thời gian xác minh tài khoản.', '20000000-0000-0000-0000-000000000001', NULL, '32000000-0000-0000-0000-000000000005', 'RESOLVED', 'Đã hủy lộ trình theo yêu cầu và bảo toàn lịch sử.', '2026-07-16 15:00:00+07'),
+    ('70000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000007', 'PROGRESS_RESET', 'Yêu cầu mở lại bài SQL để luyện tập.', '20000000-0000-0000-0000-000000000001', NULL, '32000000-0000-0000-0000-000000000006', 'APPROVED', 'Đã mở lại quyền luyện tập, không thay đổi trạng thái hoàn thành.', '2026-07-15 10:00:00+07'),
+    ('70000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000008', 'OTHER', 'Cần tư vấn thứ tự học phù hợp với React hiện có.', '20000000-0000-0000-0000-000000000003', NULL, '32000000-0000-0000-0000-000000000007', 'OPEN', NULL, NULL),
+    ('70000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000010', 'CHANGE_PATH', 'Muốn chuyển từ Full-stack sang Backend.', '20000000-0000-0000-0000-000000000003', '20000000-0000-0000-0000-000000000001', '32000000-0000-0000-0000-000000000008', 'REJECTED', 'Từ chối tạm thời vì đang có bài FastAPI cần hoàn thiện.', '2026-07-20 10:00:00+07')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS support_requests_row_count
+FROM study_dev0.support_requests;
+
+-- <<< END 22_support_requests.sql
+
+-- >>> BEGIN 23_audit_logs.sql
+-- ============================================================================
+-- Fake data: study_dev0.audit_logs
+-- Có thể chạy lại nhiều lần nhờ ON CONFLICT DO NOTHING.
+-- ============================================================================
+
+SET search_path TO study_dev0, public;
+
+INSERT INTO study_dev0.audit_logs (
+    id,
+    actor_id,
+    actor_role,
+    action,
+    target_type,
+    target_id,
+    support_request_id,
+    before_value,
+    after_value,
+    reason,
+    channel,
+    created_at
+) VALUES
+    ('80000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000011', 'SUPER_ADMIN', 'CREATE', 'LEARNING_PATH', '20000000-0000-0000-0000-000000000001', NULL, NULL, '{"exists": false}'::JSONB, '{"slug": "backend-python-fastapi", "status": "DRAFT"}'::JSONB, 'Khởi tạo lộ trình Backend.', 'ADMIN_UI', '2026-06-01 08:00:00+07'),
+    ('80000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000011', 'CONTENT_ADMIN', 'PUBLISH', 'LEARNING_PATH', '20000000-0000-0000-0000-000000000001', NULL, '{"publish_status": "DRAFT"}'::JSONB, '{"publish_status": "PUBLISHED"}'::JSONB, 'Nội dung đã vượt qua pre-publish check.', 'ADMIN_UI', '2026-06-15 09:00:00+07'),
+    ('80000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000011', 'CONTENT_ADMIN', 'UPDATE', 'COURSE', '30000000-0000-0000-0000-000000000003', NULL, '{"publish_status": "PUBLISHED"}'::JSONB, '{"publish_status": "UPDATED"}'::JSONB, 'Bổ sung nội dung index và EXPLAIN.', 'ADMIN_UI', '2026-07-12 09:30:00+07'),
+    ('80000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000011', 'SUPER_ADMIN', 'ASSIGN_ROLE', 'USER', '10000000-0000-0000-0000-000000000012', NULL, NULL, '{"role": "COMMUNITY_MODERATOR"}'::JSONB, 'Phân công mentor điều phối cộng đồng.', 'ADMIN_UI', '2026-05-02 08:00:00+07'),
+    ('80000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000011', 'SUPER_ADMIN', 'ACTIVATE_PATH', 'LEARNING_PATH_ENROLLMENT', '32000000-0000-0000-0000-000000000002', NULL, '{"status": "NOT_STARTED"}'::JSONB, '{"status": "ACTIVE"}'::JSONB, 'Học viên xác nhận kích hoạt lộ trình.', 'API', '2026-06-12 08:00:00+07'),
+    ('80000000-0000-0000-0000-000000000006', '10000000-0000-0000-0000-000000000011', 'LEARNER_SUPPORT', 'CANCEL_PATH', 'LEARNING_PATH_ENROLLMENT', '32000000-0000-0000-0000-000000000005', '70000000-0000-0000-0000-000000000003', '{"status": "ACTIVE"}'::JSONB, '{"status": "CANCELLED_BY_ADMIN"}'::JSONB, 'Xử lý yêu cầu hủy lộ trình.', 'ADMIN_UI', '2026-07-16 15:00:00+07'),
+    ('80000000-0000-0000-0000-000000000007', '10000000-0000-0000-0000-000000000011', 'LEARNER_SUPPORT', 'RESET_PROGRESS', 'LESSON_PROGRESS', '45000000-0000-0000-0000-000000000013', '70000000-0000-0000-0000-000000000004', '{"review_access": false}'::JSONB, '{"review_access": true}'::JSONB, 'Mở lại quyền luyện tập bài SQL.', 'ADMIN_UI', '2026-07-15 10:00:00+07'),
+    ('80000000-0000-0000-0000-000000000008', '10000000-0000-0000-0000-000000000012', 'LEARNER_SUPPORT', 'REVIEW_SUBMISSION', 'EXERCISE_SUBMISSION', '44000000-0000-0000-0000-000000000013', NULL, '{"status": "SUBMITTED"}'::JSONB, '{"status": "NEEDS_REVISION", "score": 55}'::JSONB, 'Bài chưa đạt yêu cầu về dependency injection.', 'ADMIN_UI', '2026-07-10 20:01:00+07'),
+    ('80000000-0000-0000-0000-000000000009', '10000000-0000-0000-0000-000000000011', 'SUPER_ADMIN', 'SEND_NOTIFICATION', 'NOTIFICATION', '51000000-0000-0000-0000-000000000018', NULL, NULL, '{"type": "MANDATORY_NOTICE", "priority": "URGENT"}'::JSONB, 'Thông báo lịch bảo trì hệ thống.', 'ADMIN_UI', '2026-07-21 09:00:00+07'),
+    ('80000000-0000-0000-0000-000000000010', '10000000-0000-0000-0000-000000000011', 'SUPER_ADMIN', 'SUSPEND_ACCOUNT', 'USER', '10000000-0000-0000-0000-000000000006', '70000000-0000-0000-0000-000000000003', '{"account_status": "ACTIVE"}'::JSONB, '{"account_status": "SUSPENDED"}'::JSONB, 'Tạm ngừng để xác minh bất thường.', 'ADMIN_UI', '2026-07-16 14:50:00+07'),
+    ('80000000-0000-0000-0000-000000000011', '10000000-0000-0000-0000-000000000011', 'SUPER_ADMIN', 'UNSUSPEND_ACCOUNT', 'USER', '10000000-0000-0000-0000-000000000006', NULL, '{"account_status": "SUSPENDED"}'::JSONB, '{"account_status": "VERIFIED"}'::JSONB, 'Bản ghi mô phỏng thao tác mở lại tài khoản.', 'ADMIN_UI', '2026-07-18 09:00:00+07'),
+    ('80000000-0000-0000-0000-000000000012', '10000000-0000-0000-0000-000000000011', 'SUPER_ADMIN', 'OTHER', 'SUPPORT_REQUEST', '70000000-0000-0000-0000-000000000006', '70000000-0000-0000-0000-000000000006', '{"status": "IN_REVIEW"}'::JSONB, '{"status": "REJECTED"}'::JSONB, 'Từ chối chuyển lộ trình trong khi còn bài cần sửa.', 'ADMIN_UI', '2026-07-20 10:00:00+07')
+ON CONFLICT DO NOTHING;
+
+SELECT COUNT(*) AS audit_logs_row_count
+FROM study_dev0.audit_logs;
+
+-- <<< END 23_audit_logs.sql
