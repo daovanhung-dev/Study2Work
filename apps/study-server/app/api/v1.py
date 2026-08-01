@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from app.core.database import engine, get_db
 from app.module.auth.model import RegisterRequest
 from app.module.auth.view import create_user
-
+from app.module.ai.log.view import chat_log_ai
 
 router = APIRouter(
     prefix="/api/v1",
@@ -35,3 +35,8 @@ def register(
         user_data=user_data,
         db=db,
     )
+
+
+@router.post("/chat_log_ai")
+def chat_log_ai_router(prompt: str):
+    return chat_log_ai(prompt=prompt)
