@@ -34,7 +34,7 @@ class OllamaService:
             base_url
             or os.getenv(
                 "OLLAMA_BASE_URL",
-                "http://192.168.11.200:11434",
+                "http://127.0.0.1:11434",
             )
         ).rstrip("/")
 
@@ -103,7 +103,7 @@ class OllamaService:
         }
 
         if options:
-            payload["options"] = options
+            payload["options"] = optionsclear
 
         data = await self._request(
             method="POST",

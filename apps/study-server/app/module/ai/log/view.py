@@ -1,4 +1,4 @@
-from service.ai import ai_service
+from app.service.ai import ai_service
 
 
 async def chat_log_ai(prompt: str) -> dict[str, str]:

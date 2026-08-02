@@ -38,5 +38,5 @@ def register(
 
 
 @router.post("/chat_log_ai")
-def chat_log_ai_router(prompt: str):
-    return chat_log_ai(prompt=prompt)
+async def chat_log_ai_router(prompt: str):
+    return await chat_log_ai(prompt=prompt)
