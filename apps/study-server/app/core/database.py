@@ -18,6 +18,9 @@ DATABASE_URL = (
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
+    connect_args={
+        "options": f"-csearch_path={settings.DB_SCHEMA},public",
+    },
 )
 
 SessionLocal = sessionmaker(
@@ -29,53 +32,29 @@ SessionLocal = sessionmaker(
 
 def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
-
     try:
         yield db
     finally:
         db.close()
 
 
-# Khởi tạo Session trước
-db = SessionLocal()
-
-
 def query_one(
+    db: Session,
     query: str,
     params: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
-    """
-    Thực thi truy vấn và trả về một bản ghi.
-    """
-    result = db.execute(
-        text(query),
-        params or {},
-    )
-
+    """Execute a query using the request-scoped session and return one row."""
+    result = db.execute(text(query), params or {})
     row = result.mappings().first()
-
     return dict(row) if row is not None else None
 
 
 def query_many(
+    db: Session,
     query: str,
     params: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    """
-    Thực thi truy vấn và trả về nhiều bản ghi.
-    """
-    result = db.execute(
-        text(query),
-        params or {},
-    )
-
+    """Execute a query using the request-scoped session and return all rows."""
+    result = db.execute(text(query), params or {})
     rows = result.mappings().all()
-
     return [dict(row) for row in rows]
-
-
-def close_db() -> None:
-    """
-    Đóng Session khi ứng dụng kết thúc.
-    """
-    db.close()
