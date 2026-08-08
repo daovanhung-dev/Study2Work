@@ -47,6 +47,9 @@ Không import module vào core.
 
 Không sử dụng global SQLAlchemy Session trong HTTP business flow.
 
+Engine/session factory mặc định phải lazy; test/runtime riêng có thể inject
+factory qua `app.state`.
+
 ### Rule 09 — Transaction atomic
 
 Use case nhiều mutation phụ thuộc phải rollback nếu một mutation thất bại.
@@ -54,6 +57,9 @@ Use case nhiều mutation phụ thuộc phải rollback nếu một mutation th�
 ### Rule 10 — Security tập trung
 
 Hash/JWT/security helper ở core, không copy theo module.
+
+Password mới dùng Argon2id; bcrypt chỉ verify dữ liệu cũ. Không tự triển khai
+refresh-session persistence trong Study server khi chưa có Identity schema.
 
 ### Rule 11 — Trace nhất quán
 

@@ -61,6 +61,20 @@ module
 
 `service/` chịu trách nhiệm kết nối external systems.
 
+### Application composition boundary
+
+`main.py` cung cấp `create_app(settings)` để lắp middleware, exception
+handlers, CORS, router và request-scoped database factory. Import `app.main`
+không được tự mở kết nối database hoặc bắt buộc production settings ngay lập
+tức.
+
+`core/database.py` dùng SQLAlchemy `Session` đồng bộ. Engine và factory mặc
+định được tạo lazy; app instance có thể giữ factory riêng trong `app.state`.
+
+`core/security.py` là nơi duy nhất cho password/token primitives: Argon2id là
+thuật toán ghi mới, bcrypt chỉ verify legacy; JWT key provider được inject khi
+cần JWKS.
+
 ## Quy tắc dependency
 
 ### Được phép

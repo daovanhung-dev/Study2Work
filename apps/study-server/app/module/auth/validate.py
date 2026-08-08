@@ -1,13 +1,18 @@
 import re
+from typing import Any
 
 from app.core.responses import ErrorDetail, error_payload
+from app.core.trace import create_trace_id
 from app.module.auth.model import RegisterRequest
-
 
 EMAIL_REGEX = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
 
 
-def validate_user_create(user_data: RegisterRequest):
+def validate_user_create(
+    user_data: RegisterRequest,
+    trace_id: str = "",
+) -> dict[str, Any] | None:
+    trace_id = trace_id or create_trace_id()
     display_name = user_data.display_name.strip()
     email = user_data.email.strip()
     phone = user_data.phone.strip()
@@ -16,7 +21,7 @@ def validate_user_create(user_data: RegisterRequest):
         return error_payload(
             business_code="AUTH_001",
             message="Display name không hợp lệ",
-            trace_id="trace-123",
+            trace_id=trace_id,
             errors=[
                 ErrorDetail(
                     field="display_name",
@@ -30,7 +35,7 @@ def validate_user_create(user_data: RegisterRequest):
         return error_payload(
             business_code="AUTH_002",
             message="Email không hợp lệ",
-            trace_id="trace-123",
+            trace_id=trace_id,
             errors=[
                 ErrorDetail(
                     field="email",
@@ -44,7 +49,7 @@ def validate_user_create(user_data: RegisterRequest):
         return error_payload(
             business_code="AUTH_003",
             message="Số điện thoại không hợp lệ",
-            trace_id="trace-123",
+            trace_id=trace_id,
             errors=[
                 ErrorDetail(
                     field="phone",
@@ -58,7 +63,7 @@ def validate_user_create(user_data: RegisterRequest):
         return error_payload(
             business_code="AUTH_004",
             message="Mật khẩu không hợp lệ",
-            trace_id="trace-123",
+            trace_id=trace_id,
             errors=[
                 ErrorDetail(
                     field="password",

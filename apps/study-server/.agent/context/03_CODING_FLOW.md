@@ -16,6 +16,10 @@
 11. View tạo response chuẩn
 12. Middleware/exception layer hoàn tất response
 13. Client nhận response có traceId
+
+`create_app(Settings(...))` được dùng cho test hoặc runtime cần cấu hình riêng.
+App instance lưu settings/session factory trong `app.state`; không dùng một
+global SQLAlchemy Session cho nhiều request.
 ```
 
 ## Luồng source tương ứng

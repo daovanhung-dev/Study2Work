@@ -5,7 +5,6 @@ from typing import Any, Literal
 
 import httpx
 
-
 MessageRole = Literal["system", "user", "assistant"]
 
 
@@ -30,27 +29,22 @@ class OllamaService:
         model: str | None = None,
         timeout: float | None = None,
     ) -> None:
-        self.base_url = (
+        configured_base_url = (
             base_url
             or os.getenv(
                 "OLLAMA_BASE_URL",
                 "http://127.0.0.1:11434",
             )
-        ).rstrip("/")
+            or "http://127.0.0.1:11434"
+        )
+        self.base_url = configured_base_url.rstrip("/")
 
-        self.model = (
-            model
-            or os.getenv(
-                "OLLAMA_MODEL",
-                "qwen2.5-coder:1.5b",
-            )
+        self.model = model or os.getenv(
+            "OLLAMA_MODEL",
+            "qwen2.5-coder:1.5b",
         )
 
-        self.timeout = (
-            timeout
-            if timeout is not None
-            else float(os.getenv("OLLAMA_TIMEOUT", "180"))
-        )
+        self.timeout = timeout if timeout is not None else float(os.getenv("OLLAMA_TIMEOUT", "180"))
 
     async def generate(
         self,
@@ -103,7 +97,7 @@ class OllamaService:
         }
 
         if options:
-            payload["options"] = optionsclear
+            payload["options"] = options
 
         data = await self._request(
             method="POST",
@@ -187,8 +181,7 @@ class OllamaService:
 
         except httpx.HTTPStatusError as exc:
             raise AIResponseError(
-                f"Ollama trả về HTTP {exc.response.status_code}: "
-                f"{exc.response.text}"
+                f"Ollama trả về HTTP {exc.response.status_code}: {exc.response.text}"
             ) from exc
 
         except ValueError as exc:

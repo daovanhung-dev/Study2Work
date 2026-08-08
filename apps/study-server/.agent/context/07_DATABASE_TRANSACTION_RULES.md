@@ -2,21 +2,9 @@
 
 ## Hiện trạng source
 
-`core/database.py` hiện có cả:
-
-```text
-get_db() -> request-scoped Session
-```
-
-và:
-
-```text
-db = SessionLocal() -> global Session
-query_one()
-query_many()
-```
-
-Đây là hai lifecycle khác nhau.
+`core/database.py` dùng lazy engine/session factory và một `get_db()`
+request-scoped. `SessionLocal()` chỉ còn là compatibility wrapper tạo một
+Session mới; không có global mutable Session dùng chung.
 
 ## Quy ước develop chuẩn
 
@@ -45,6 +33,8 @@ close
 Không sử dụng một global `Session` mutable dùng chung giữa concurrent requests.
 
 Không tạo `SessionLocal()` mới rải rác trong từng view nếu router đã inject `db`.
+Test/runtime riêng có thể dùng `build_session_factory()` và inject factory qua
+app state.
 
 ## Query primitive
 

@@ -1,23 +1,20 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any, NoReturn
 from uuid import uuid4
 
-from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy import text
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
-
 from app.core.database import get_db, query_many, query_one
-from app.core.responses import ErrorDetail, error_payload, success_payload
+from app.core.responses import success_payload
 from app.core.security import (
+    PASSWORD_ALGORITHM,
     TokenError,
     create_access_token,
     create_refresh_token,
     decode_access_token,
     decode_refresh_token,
     hash_password,
+    password_algorithm_for_hash,
     verify_password,
 )
 from app.core.trace import get_trace_id
@@ -31,9 +28,15 @@ from app.module.auth.query import (
     MARK_LOGIN_SUCCESS,
 )
 from app.module.auth.validate import validate_user_create
-
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 bearer_scheme = HTTPBearer(auto_error=False)
+db_dependency = Depends(get_db)
+credentials_dependency = Depends(bearer_scheme)
 
 
 def _roles_for_user(db: Session, user_id: str) -> list[str]:
@@ -58,7 +61,7 @@ def _raise_auth_error(
     business_code: str,
     message: str,
     trace_id: str,
-) -> None:
+) -> NoReturn:
     raise HTTPException(
         status_code=status_code,
         detail={
@@ -77,8 +80,8 @@ def create_user(
     user_data: RegisterRequest,
     db: Session,
     trace_id: str = "",
-):
-    validation_error = validate_user_create(user_data)
+) -> dict[str, Any]:
+    validation_error = validate_user_create(user_data, trace_id=trace_id)
     if validation_error:
         if trace_id:
             validation_error["traceId"] = trace_id
@@ -100,12 +103,15 @@ def create_user(
             },
         )
 
+        password_hash = hash_password(user_data.password)
+        password_algorithm = password_algorithm_for_hash(password_hash) or PASSWORD_ALGORITHM
+
         db.execute(
             text(CREATE_AUTH_CREDENTIAL),
             {
                 "user_id": user_id,
-                "password_hash": hash_password(user_data.password),
-                "password_algorithm": "BCRYPT",
+                "password_hash": password_hash,
+                "password_algorithm": password_algorithm,
                 "password_login_enabled": True,
                 "must_change_password": False,
                 "failed_login_attempts": 0,
@@ -117,7 +123,7 @@ def create_user(
             },
         )
         db.commit()
-    except IntegrityError:
+    except IntegrityError as exc:
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -127,7 +133,7 @@ def create_user(
                 "message": "Email hoặc số điện thoại đã được sử dụng",
                 "traceId": trace_id,
             },
-        )
+        ) from exc
     except Exception:
         db.rollback()
         raise
@@ -148,7 +154,7 @@ def login_user(
     login_data: LoginRequest,
     db: Session,
     trace_id: str,
-):
+) -> dict[str, Any]:
     identifier = login_data.identifier.strip()
     user = query_one(db, GET_LOGIN_USER, {"identifier": identifier})
 
@@ -204,9 +210,7 @@ def login_user(
     refresh_token = create_refresh_token(user_id=user_id)
 
     next_action = (
-        "CHANGE_PASSWORD"
-        if bool(user["must_change_password"])
-        else _next_action(account_status)
+        "CHANGE_PASSWORD" if bool(user["must_change_password"]) else _next_action(account_status)
     )
 
     return success_payload(
@@ -232,7 +236,7 @@ def refresh_access_token(
     refresh_data: RefreshTokenRequest,
     db: Session,
     trace_id: str,
-):
+) -> dict[str, Any]:
     try:
         claims = decode_refresh_token(refresh_data.refresh_token)
     except TokenError:
@@ -277,9 +281,9 @@ def refresh_access_token(
 
 def get_current_user(
     request: Request,
-    db: Session = Depends(get_db),
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-) -> dict:
+    db: Session = db_dependency,
+    credentials: HTTPAuthorizationCredentials | None = credentials_dependency,
+) -> dict[str, Any]:
     trace_id = get_trace_id(request)
 
     if credentials is None or credentials.scheme.lower() != "bearer":

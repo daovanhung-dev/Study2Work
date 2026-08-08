@@ -2,7 +2,7 @@
 
 ## Password
 
-Source hiện tại dùng bcrypt.
+Source hiện tại dùng Argon2id cho hash mới và chỉ verify bcrypt legacy.
 
 Flow đăng ký:
 
@@ -16,43 +16,33 @@ password_hash
 auth_credentials
 ```
 
-Không lưu plaintext password.
+Không lưu plaintext password hoặc password hash trong response/log.
 
 ## JWT
 
-Source `app(5).zip` chưa có JWT implementation hoàn chỉnh.
-
-Khi triển khai JWT sau này, giữ các phần dùng chung trong `core/security.py` hoặc file security core chuyên biệt.
-
-Không đặt encode/decode JWT riêng trong từng module.
+`core/security.py` tập trung JWT signing/verification, issuer/audience/type
+validation và interface key provider cho static key hoặc JWKS adapter.
 
 Phân biệt:
 
 ```text
 Access token -> xác thực API ngắn hạn
-Refresh token -> cấp access token mới theo contract hệ thống
+Refresh token -> opaque token, chỉ lưu hash ở Identity
 ```
 
-Không tự chọn TTL/claim/rotation policy nếu task/tài liệu chưa quy định.
+Persistence, rotation và reuse detection của refresh token thuộc Identity;
+Study server chỉ cung cấp primitive và legacy adapter, không tự tạo schema.
 
 ## Trace ID
-
-Hiện `validate.py` đang dùng literal:
-
-```text
-trace-123
-```
-
-Đây chỉ là placeholder hiện trạng, không phải design chuẩn.
 
 Design chuẩn:
 
 ```text
 incoming request
  ↓
-read X-Trace-ID nếu policy cho phép hoặc generate UUID
+validate X-Trace-Id hoặc generate UUID
  ↓
-stored request context
+request state + context
  ↓
 all logs/errors/responses reuse same traceId
 ```
@@ -70,27 +60,24 @@ Success target:
   "message": "...",
   "data": {},
   "meta": {},
-  "traceId": "..."
+  "traceId": "uuid"
 }
 ```
 
-Error target:
+Canonical error target:
 
 ```json
 {
   "success": false,
   "businessCode": "...",
   "message": "...",
-  "errors": [
-    {
-      "field": "...",
-      "code": "...",
-      "message": "..."
-    }
-  ],
-  "traceId": "..."
+  "data": null,
+  "meta": {"fieldErrors": []},
+  "traceId": "uuid"
 }
 ```
+
+`error_payload()` vẫn có adapter `errors` ở top-level cho caller cũ.
 
 ## HTTP status vs business code
 
@@ -108,4 +95,5 @@ Không expose:
 - password/token.
 - stack trace.
 
-Log nội bộ có thể giữ exception context nhưng phải gắn trace ID và tránh secret.
+Log nội bộ có thể giữ exception context nhưng phải gắn trace ID và tránh
+secret.

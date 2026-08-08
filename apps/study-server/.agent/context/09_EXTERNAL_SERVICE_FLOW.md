@@ -57,12 +57,5 @@ Nếu service method là async, call chain phải await đúng cách.
 
 Router hiện có async cho `/chat_log_ai`, đây là phù hợp với `ai_service.generate()` async.
 
-## Known source defect
-
-Trong `OllamaService.chat()` hiện có:
-
-```python
-payload["options"] = optionsclear
-```
-
-`optionsclear` không được định nghĩa. Đây là bug source hiện tại; giá trị có chủ đích nhiều khả năng là `options`, nhưng agent chỉ sửa khi task liên quan hoặc người dùng yêu cầu sửa source.
+`OllamaService.chat()` hiện truyền đúng biến `options`; module vẫn phải gọi
+service adapter thay vì tự biết chi tiết transport Ollama.

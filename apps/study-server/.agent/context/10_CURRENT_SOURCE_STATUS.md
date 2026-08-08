@@ -2,7 +2,8 @@
 
 ## Snapshot
 
-Nguồn dùng để xây context: `app(5).zip`, đọc ngày 2026-08-08.
+Source đã được tối ưu theo core plan ngày 2026-08-08. Source hiện tại là
+baseline ưu tiên khi context cũ khác với code.
 
 ## File có implementation đáng kể
 
@@ -18,13 +19,9 @@ Nguồn dùng để xây context: `app(5).zip`, đọc ngày 2026-08-08.
 - `app/module/ai/log/view.py`
 - `app/service/ai/ollama_service.py`
 
-## File hiện rỗng
+## File còn để dành cho module sau
 
 ```text
-app/core/exceptions.py
-app/core/middleware.py
-app/core/trace.py
-app/module/auth/view.py
 app/module/public/model.py
 app/module/public/query.py
 app/module/public/validate.py
@@ -32,6 +29,9 @@ app/module/public/view.py
 app/module/ai/log/model.py
 app/module/ai/log/validate.py
 ```
+
+Các file `core/exceptions.py`, `core/middleware.py`, `core/trace.py` và
+`module/auth/view.py` hiện đã có implementation.
 
 ## Endpoint hiện khai báo
 
@@ -43,46 +43,43 @@ POST /api/v1/chat_log_ai
 GET  /
 ```
 
-## Blocking runtime issue hiện có
+## Runtime baseline
 
-`api/v1.py` import:
-
-```python
-from app.module.auth.view import create_user
-```
-
-nhưng `app/module/auth/view.py` đang rỗng.
-
-Do đó source snapshot này không phải implementation hoàn chỉnh cho `/register`.
+`app.main` export cả `app` và `create_app(settings)`. Health routes, trace
+middleware, validation error handler và database factory có thể chạy mà không
+cần mở kết nối PostgreSQL trong lúc import.
 
 ## DB lifecycle issue
 
-`database.py` đồng thời có request-scoped `get_db()` và global `db = SessionLocal()`.
-
-Develop target của context này: giữ request-scoped Session, không dùng global shared Session cho HTTP concurrency.
+`database.py` giữ request-scoped `get_db()` và các lazy default factory. Không
+dùng global shared Session cho HTTP concurrency.
 
 ## Trace status
 
-`trace.py` rỗng và auth validation đang hard-code `trace_id="trace-123"`.
-
-Đây là gap implementation.
+Trace middleware đọc/validate `X-Trace-Id`, tạo UUID khi thiếu/sai và gắn
+cùng giá trị vào request state, response header và response body.
 
 ## JWT status
 
-`security.py` hiện chỉ có bcrypt hash/verify. Chưa có JWT code trong snapshot.
+`security.py` dùng Argon2id cho hash mới, verify bcrypt legacy, JWT ES256 với
+issuer/audience validation, interface key provider và opaque refresh-token
+helpers. Persistence/rotation refresh vẫn thuộc Identity và chưa nằm trong
+Study server.
 
 ## Response status
 
-`responses.py` hiện có hai hướng song song:
+`responses.py` có canonical factories:
 
-1. function `success_payload()` / `error_payload()`.
-2. class `ApiResponse` có `success_payload()` / `raise_error()`.
+1. `success_response()` / `error_response()`.
+2. Compatibility adapters `success_payload()` / `error_payload()` và `ApiResponse`.
 
-Agent không nên tạo thêm hướng thứ ba. Khi task refactor response, nên thống nhất một canonical API.
+Code mới không tạo thêm response shape thứ ba.
 
-## AI defect
+## Quality baseline
 
-`OllamaService.chat()` tham chiếu identifier không tồn tại `optionsclear`.
+Ruff, mypy và pytest hiện chạy pass trong `.venv`. Test suite bao phủ config,
+trace, health, response, DB URL/query helpers, Argon2id/bcrypt legacy, JWT và
+opaque refresh token.
 
 ## Nguyên tắc khi dùng file này
 
