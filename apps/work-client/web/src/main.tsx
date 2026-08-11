@@ -4,7 +4,13 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import "./styles/main.css";
 
-createRoot(document.getElementById("root") as HTMLElement).render(
+const root = document.getElementById("root");
+
+if (!root) {
+  throw new Error("Unable to find the Work application root element.");
+}
+
+createRoot(root).render(
   <StrictMode>
     <App />
   </StrictMode>,

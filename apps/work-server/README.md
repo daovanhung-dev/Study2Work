@@ -1,73 +1,49 @@
-# Learn2Earn Web
+# Work API
 
-This module is the server-rendered web application for Learn2Earn. It contains the Express server, EJS views, Prisma schema, MySQL integration, session authentication, and upload handling for student, business, and admin workflows.
+`apps/work-server` is the independently deployed backend for the Work
+subsystem. It is a NestJS application using Fastify, Prisma, PostgreSQL, and
+Redis. Its public API is rooted at `/api/v1`; unauthenticated health checks are
+available at `/health/live` and `/health/ready`.
 
-## Features
+The Work browser application lives separately in
+[`apps/work-client/web`](../work-client/web). This API does not serve that
+application's HTML, static assets, or client-side routes.
 
-- Student and business sign-in/sign-up flows.
-- Role-based protected routes for students and businesses.
-- Student job browsing, CV creation/update, applications, notifications, chat, interview schedule, and settings pages.
-- Business job posting, job management, applicant list, CV detail, notifications, chat, and settings pages.
-- Admin pages for users, jobs, majors, statistics, and settings.
-- Prisma data models and migrations for MySQL persistence.
+## Commands
 
-## Stack
-
-- Node.js, TypeScript, Express
-- EJS templates and static assets
-- Passport.js and Express Session
-- Prisma ORM and MySQL
-- Multer for runtime uploads
-- Supabase client configuration for existing integrations
-
-## Structure
-
-```text
-.
-+-- prisma/       # Prisma schema and migrations
-+-- public/       # Static assets
-+-- src/
-|   +-- config/       # Database, Prisma, Supabase, upload config
-|   +-- controllers/  # Request handlers
-|   +-- middleware/   # Auth and Passport setup
-|   +-- routes/       # Express route definitions
-|   +-- services/     # Data access and domain services
-|   +-- views/        # EJS templates
-+-- uploads/      # Runtime uploads, ignored except .gitkeep
-```
-
-## Setup
+From the repository root:
 
 ```bash
-npm install
-cp .env.example .env
-npm exec prisma generate
-npm exec prisma migrate dev
-npm run l2e
+corepack pnpm --filter work-api prisma:generate
+corepack pnpm --filter work-api db:migrate
+corepack pnpm --filter work-api start:dev
 ```
 
-PowerShell:
+Use `corepack pnpm --filter work-api build` and
+`corepack pnpm --filter work-api start` for a production build. The root aliases
+`corepack pnpm dev:work-server` and `corepack pnpm dev:work-web` start the two
+separate local processes.
 
-```powershell
-npm install
-Copy-Item .env.example .env
-npm exec prisma generate
-npm exec prisma migrate dev
-npm run l2e
-```
+## Environment
 
-The server reads `PORT` from `.env`.
-
-## Environment Variables
+Copy `.env.example` to `.env` and configure these variables:
 
 | Variable | Purpose |
 | --- | --- |
-| `PORT` | HTTP port for the Express server. |
-| `DATABASE_URL` | MySQL connection string used by Prisma and the MySQL client. |
-| `JWT_SECRET` | Secret for JWT helpers. |
-| `JWT_EXPIRES` | JWT expiration value. |
-| `SESSION_SECRET` | Express Session secret. Falls back to `JWT_SECRET` if not set. |
-| `SUPABASE_URL` | Supabase project URL. |
-| `SUPABASE_ANON_KEY` | Supabase anonymous key. |
+| `WORK_APP_ENV` | `local`, `test`, `staging`, or `production`. |
+| `WORK_HOST`, `WORK_PORT` | Bind address and HTTP port (default `8001`). |
+| `WORK_DATABASE_URL` | PostgreSQL datasource used by Prisma and the API. |
+| `WORK_REDIS_URL` | Optional Redis adapter URL. |
+| `WORK_CORS_ORIGINS` | Comma-separated browser origins; local Work web uses `http://localhost:5174`. |
+| `WORK_JWKS_URL`, `WORK_JWT_ISSUER`, `WORK_JWT_AUDIENCE` | Identity token-verification configuration. |
 
-Do not commit `.env` or runtime upload files.
+## Persistence and legacy cutover
+
+Prisma starts a clean PostgreSQL migration history. It does not connect to,
+migrate, or depend on the retired Learn2Earn MySQL schema. Work domain tables
+are introduced through canonical-BD-aligned migrations as their modules are
+implemented.
+
+The legacy Express/EJS runtime, templates, and static assets were removed from
+this backend. Do not reintroduce a web-serving path here; all browser work
+belongs in `apps/work-client/web`.

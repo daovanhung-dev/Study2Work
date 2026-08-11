@@ -14,12 +14,11 @@ Study2Work is rebuilt as a monorepo with independent Study and Work runtimes. St
 
 | Path | Owner | Responsibility |
 |---|---|---|
-| `apps/study-web` | Study frontend | Vue learning experience. |
-| `apps/study-api` | Study backend | FastAPI learning API, Study evidence issuance, Study persistence. |
-| `apps/work-web` | Work frontend | React career, CV, job, and recruiter experience. |
-| `apps/work-api` | Work backend | NestJS Work API, enterprise/job/application domain, Study evidence snapshot consumer. |
-| `apps/platform-identity` | Platform | Local identity/JWKS scaffold and future identity deployment notes. |
-| `contracts` | Platform contracts | OpenAPI placeholders, Study-to-Work event schemas, skill taxonomy, API conventions. |
+| `apps/study-client` | Study frontend | Vue learning experience. |
+| `apps/study-server` | Study backend | FastAPI learning API, Study evidence issuance, Study persistence. |
+| `apps/work-client/web` | Work frontend | React career, CV, job, and recruiter experience. |
+| `apps/work-server` | Work backend | NestJS/Fastify Work API, enterprise/job/application domain, Study evidence snapshot consumer. |
+| `contracts` | Platform contracts | Versioned OpenAPI baselines, Study-to-Work event schemas, skill taxonomy, API conventions. |
 | `infra` | Platform/DevOps | Local and deployment infrastructure scaffolding. |
 
 ## Dependency Rules
@@ -28,6 +27,10 @@ Study2Work is rebuilt as a monorepo with independent Study and Work runtimes. St
 Web apps -> their own API -> application/domain -> infrastructure adapters
 Study API -> signed event contract -> Work API integration module
 ```
+
+For Work, this boundary is also a deployment boundary: `apps/work-client/web`
+builds a static SPA and never runs inside the API process; `apps/work-server`
+exposes the Work API and never serves the SPA, EJS templates, or browser assets.
 
 Invalid dependencies:
 
@@ -42,7 +45,8 @@ Study emits minimal verified evidence events through `contracts/events/study-wor
 
 ## Foundation Goals
 
-- Runnable Study API, Work API, Study web, and Work web skeletons.
+- Runnable Study API, Work API, Study web, and Work web foundations at their
+  declared workspace paths.
 - Standard API envelope and trace propagation.
 - Local Docker services for separate Study and Work databases/caches.
 - Versioned contracts that can grow into generated clients and contract tests.

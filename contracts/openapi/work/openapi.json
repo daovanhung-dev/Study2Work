@@ -1,0 +1,378 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Study2Work Work API",
+    "version": "0.1.0",
+    "description": "Baseline contract for the independently deployed Work API. Product endpoints are introduced here as their implementation is reconciled with docs/BD/04_DAC_TA_API.md."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8001",
+      "description": "Local development"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Unauthenticated process and dependency configuration checks."
+    },
+    {
+      "name": "System",
+      "description": "Unauthenticated API service metadata."
+    }
+  ],
+  "paths": {
+    "/api/v1": {
+      "get": {
+        "tags": ["System"],
+        "operationId": "getWorkApiRoot",
+        "summary": "Get Work API service metadata",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IncomingTraceId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Work API service metadata.",
+            "headers": {
+              "X-Trace-Id": {
+                "$ref": "#/components/headers/TraceId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RootEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/live": {
+      "get": {
+        "tags": ["Health"],
+        "operationId": "getWorkHealthLive",
+        "summary": "Check whether the Work API process is live",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IncomingTraceId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Work API is live.",
+            "headers": {
+              "X-Trace-Id": {
+                "$ref": "#/components/headers/TraceId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveHealthEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": ["Health"],
+        "operationId": "getWorkHealthReady",
+        "summary": "Check whether the Work API is configured to serve requests",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IncomingTraceId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Work API is ready.",
+            "headers": {
+              "X-Trace-Id": {
+                "$ref": "#/components/headers/TraceId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyHealthEnvelope"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Work database is temporarily unavailable.",
+            "headers": {
+              "X-Trace-Id": {
+                "$ref": "#/components/headers/TraceId"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyUnavailableEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "IncomingTraceId": {
+        "name": "X-Trace-Id",
+        "in": "header",
+        "required": false,
+        "description": "Caller-provided trace identifier. The API generates one when it is absent or invalid.",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "headers": {
+      "TraceId": {
+        "description": "The request trace identifier. It matches the response body's traceId.",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "schemas": {
+      "ApiMeta": {
+        "type": "object",
+        "properties": {
+          "fieldErrors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiErrorDetail"
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "ApiSuccessEnvelope": {
+        "type": "object",
+        "required": ["success", "businessCode", "message", "data", "meta", "traceId"],
+        "properties": {
+          "success": {
+            "const": true
+          },
+          "businessCode": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {},
+          "meta": {
+            "$ref": "#/components/schemas/ApiMeta"
+          },
+          "traceId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApiErrorDetail": {
+        "type": "object",
+        "required": ["code", "message"],
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApiErrorEnvelope": {
+        "type": "object",
+        "required": ["success", "businessCode", "message", "data", "meta", "traceId"],
+        "properties": {
+          "success": {
+            "const": false
+          },
+          "businessCode": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "null"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ApiErrorMeta"
+          },
+          "traceId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ApiErrorMeta": {
+        "type": "object",
+        "required": ["fieldErrors"],
+        "properties": {
+          "fieldErrors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiErrorDetail"
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "RootData": {
+        "type": "object",
+        "required": ["service"],
+        "properties": {
+          "service": {
+            "const": "work-api"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LiveHealthData": {
+        "type": "object",
+        "required": ["service", "environment"],
+        "properties": {
+          "service": {
+            "const": "work-api"
+          },
+          "environment": {
+            "type": "string",
+            "enum": ["local", "test", "staging", "production"]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReadyHealthData": {
+        "type": "object",
+        "required": ["service", "environment", "dependencies"],
+        "properties": {
+          "service": {
+            "const": "work-api"
+          },
+          "environment": {
+            "type": "string",
+            "enum": ["local", "test", "staging", "production"]
+          },
+          "dependencies": {
+            "type": "object",
+            "required": ["database", "redis"],
+            "properties": {
+              "database": {
+                "const": "configured"
+              },
+              "redis": {
+                "type": "string",
+                "enum": ["configured", "not_configured"]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "LiveHealthEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiSuccessEnvelope"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "businessCode": {
+                "const": "SYSTEM_HEALTH_LIVE"
+              },
+              "message": {
+                "const": "Work API is live."
+              },
+              "data": {
+                "$ref": "#/components/schemas/LiveHealthData"
+              }
+            }
+          }
+        ]
+      },
+      "RootEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiSuccessEnvelope"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "businessCode": {
+                "const": "SYSTEM_ROOT_LOADED"
+              },
+              "message": {
+                "const": "Welcome to Study2Work."
+              },
+              "data": {
+                "$ref": "#/components/schemas/RootData"
+              }
+            }
+          }
+        ]
+      },
+      "ReadyHealthEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiSuccessEnvelope"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "businessCode": {
+                "const": "SYSTEM_HEALTH_READY"
+              },
+              "message": {
+                "const": "Work API is ready."
+              },
+              "data": {
+                "$ref": "#/components/schemas/ReadyHealthData"
+              }
+            }
+          }
+        ]
+      },
+      "ReadyUnavailableEnvelope": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ApiErrorEnvelope"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "businessCode": {
+                "const": "DEPENDENCY_UNAVAILABLE"
+              },
+              "message": {
+                "const": "Work API is not ready."
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

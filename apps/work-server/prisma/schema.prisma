@@ -1,189 +1,22 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Work persistence is a clean PostgreSQL foundation. Domain models are added
+// incrementally from the canonical Basic Design; legacy Learn2Earn MySQL models
+// are intentionally not part of this datasource.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("WORK_DATABASE_URL")
 }
 
-// ====================== SinhVien ======================
-model SinhVien {
-  id          BigInt  @id @default(autoincrement())
-  hoten       String? @db.VarChar(50)
-  email       String? @unique @db.VarChar(50)
-  matkhau     String? @db.VarChar(20)
-  chuyennganh String? @db.VarChar(50)
-  avt         String?
+model SystemRecord {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique @db.VarChar(120)
+  value     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  Chat        Chat[]       @relation("SinhVienChat")
-  DoanChat    DoanChat[]
-  UngVien     UngVien[]
-  Cv          Cv[]
-  ThongBaoSVs ThongBaoSV[]
-}
-
-// ====================== DoanhNghiep ======================
-model DoanhNghiep {
-  id          BigInt  @id @default(autoincrement())
-  hoten       String? @db.VarChar(50)
-  email       String? @unique @db.VarChar(50)
-  matkhau     String? @db.VarChar(50)
-  diachi      String? @db.VarChar(100)
-  sodienthoai String? @db.VarChar(20)
-  avt         String?
-
-  Chat        Chat[]       @relation("DoanhNghiepChat")
-  DoanChat    DoanChat[]
-  UngVien     UngVien[]
-  JD          JD[]
-  ThongBaoDNs ThongBaoDN[]
-}
-
-// ====================== Chat ======================
-model Chat {
-  id             BigInt    @id @default(autoincrement())
-  sinhvien_id    BigInt?
-  doanhnghiep_id BigInt?
-  nguoigui       String?
-  nguoinhan      String?
-  noidung        String?
-  ngaygui        DateTime? @default(now())
-  trangthai      Boolean?
-
-  SinhVien    SinhVien?    @relation("SinhVienChat", fields: [sinhvien_id], references: [id])
-  DoanhNghiep DoanhNghiep? @relation("DoanhNghiepChat", fields: [doanhnghiep_id], references: [id])
-}
-
-// ====================== Cv ======================
-model Cv {
-  id            BigInt    @id @default(autoincrement())
-  avt           String?
-  hoten         String
-  ngaysinh      DateTime?
-  gioitinh      String?
-  email         String
-  sdt           String?
-  diachi        String?
-  vitri         String?
-  nganh         String?
-  muctieunghiep String?
-  hocvan        String?
-  kinhnghiem    String?
-  kynang        String?
-  ngoaingu      String?
-  chungchi      String?
-  duan          String?
-  giaithuong    String?
-  hoatdong      String?
-  social        Json?
-  portfolio     String?
-  luongmongmuon String?
-  created_at    DateTime? @default(now())
-  sinhvien_id   BigInt? @unique 
-  SinhVien      SinhVien? @relation(fields: [sinhvien_id], references: [id])
-}
-
-// ====================== DoanChat ======================
-model DoanChat {
-  id             BigInt    @id @default(autoincrement())
-  sinhvien_id    BigInt
-  doanhnghiep_id BigInt
-  created_at     DateTime? @default(now())
-
-  SinhVien    SinhVien    @relation(fields: [sinhvien_id], references: [id])
-  DoanhNghiep DoanhNghiep @relation(fields: [doanhnghiep_id], references: [id])
-}
-
-// ====================== JD ======================
-model JD {
-  id             BigInt    @id @default(autoincrement())
-  ten_vi_tri     String
-  phong_ban      String?
-  cap_bac        String?
-  bao_cao_cho    String?
-  nhiem_vu       String?
-  trinh_do       String?
-  kinh_nghiem    String?
-  ky_nang        String?
-  ky_nang_mem    String?
-  uu_tien        String?
-  muc_luong      String?
-  phuc_loi       String?
-  moi_truong     String?
-  dia_diem       String?
-  thoi_gian      String?
-  han_nop        String?
-  cach_ung_tuyen String?
-  ngay_tao       DateTime? @default(now())
-  mo_ta          String?
-  doanhnghiep_id BigInt?
-  ten_cong_ty    String?
-  nganh          String?
-  avt            String?
-
-  DoanhNghiep DoanhNghiep? @relation(fields: [doanhnghiep_id], references: [id])
-  TopJD       TopJD[]
-  UngViens    UngVien[]
-}
-
-// ====================== ThongBaoDN ======================
-model ThongBaoDN {
-  id_dn          BigInt       @id @default(autoincrement())
-  ten_dn         String?
-  email          String?
-  mat_khau       String?
-  sdt            String?
-  logo           String?
-  trang_thai     String?
-  ngay_tao       String?
-  doanhnghiep_id BigInt?
-  DoanhNghiep    DoanhNghiep? @relation(fields: [doanhnghiep_id], references: [id])
-}
-
-// ====================== ThongBaoSV ======================
-model ThongBaoSV {
-  id_sv       BigInt    @id @default(autoincrement())
-  ho_ten      String?
-  email       String?
-  mat_khau    String?
-  sdt         String?
-  avt_sv      String?
-  trang_thai  String?
-  ngay_tao    String?
-  sinhvien_id BigInt?
-  SinhVien    SinhVien? @relation(fields: [sinhvien_id], references: [id])
-}
-
-// ====================== TopJD ======================
-model TopJD {
-  id         BigInt   @id @default(autoincrement())
-  created_at DateTime @default(now())
-  jd_id      BigInt?
-  JD         JD?      @relation(fields: [jd_id], references: [id])
-}
-
-// ====================== TopCV ======================
-model TopCV {
-  id BigInt @id @default(autoincrement())
-}
-
-// ====================== UngVien ======================
-model UngVien {
-  id             BigInt   @id @default(autoincrement())
-  created_at     DateTime @default(now())
-  sinhvien_id    BigInt?
-  doanhnghiep_id BigInt?
-  trangthai      String?  @default("chưa ứng tuyển")
-  jd_id          BigInt?
-
-  SinhVien    SinhVien?    @relation(fields: [sinhvien_id], references: [id])
-  DoanhNghiep DoanhNghiep? @relation(fields: [doanhnghiep_id], references: [id])
-  JD          JD?          @relation(fields: [jd_id], references: [id])
+  @@map("system_records")
 }

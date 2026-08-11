@@ -9,6 +9,8 @@
     "contracts:validate": "node scripts/validate-contracts.mjs",
     "docs:validate": "node scripts/validate-bd.mjs",
     "dev:study-web": "corepack pnpm --filter study-web dev",
+    "dev:work-server": "corepack pnpm --filter work-api start:dev",
+    "dev:work-api": "corepack pnpm run dev:work-server",
     "dev:work-web": "corepack pnpm --filter work-web dev",
     "lint": "corepack pnpm -r --if-present lint && corepack pnpm contracts:validate && corepack pnpm docs:validate",
     "test": "corepack pnpm -r --if-present test && corepack pnpm contracts:validate",

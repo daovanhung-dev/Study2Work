@@ -44,7 +44,7 @@ Quy ước động từ:
 | Vị trí | Mục đích | Ví dụ |
 |---|---|---|
 | `response.businessCode` | Kết quả tổng thể của request. | `VALIDATION_ERROR` |
-| `response.errors[].code` | Lỗi cụ thể theo trường hoặc chi tiết. | `FIELD_REQUIRED` |
+| `response.meta.fieldErrors[].code` | Lỗi cụ thể theo trường hoặc chi tiết. | `FIELD_REQUIRED` |
 
 Ví dụ:
 
@@ -53,13 +53,16 @@ Ví dụ:
   "success": false,
   "businessCode": "VALIDATION_ERROR",
   "message": "Dữ liệu đầu vào không hợp lệ.",
-  "errors": [
-    {
-      "code": "FIELD_REQUIRED",
-      "field": "email",
-      "message": "email là bắt buộc."
-    }
-  ],
+  "data": null,
+  "meta": {
+    "fieldErrors": [
+      {
+        "code": "FIELD_REQUIRED",
+        "field": "email",
+        "message": "email là bắt buộc."
+      }
+    ]
+  },
   "traceId": "uuid"
 }
 ```
@@ -700,7 +703,7 @@ Ví dụ:
 3. Frontend dùng `businessCode`; `message` chỉ để hiển thị.
 4. `404` có thể được dùng thay `403` khi cần che sự tồn tại của resource.
 5. `204 No Content` không có response body, vì vậy không có `businessCode`.
-6. Không đưa SQL, stack trace, token hoặc PII vào `message` hay `errors`.
+6. Không đưa SQL, stack trace, token hoặc PII vào `message` hay `meta.fieldErrors`.
 7. Mọi mã mới phải cập nhật đồng thời Markdown, JSON, Python/TypeScript và contract test.
 
 ## 12. Ví dụ sử dụng

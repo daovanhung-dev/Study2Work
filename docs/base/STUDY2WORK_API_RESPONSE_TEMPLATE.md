@@ -8,7 +8,7 @@ Template này chuẩn hóa response JSON cho **Study API** và **Work API đích
 - Dễ theo dõi lỗi bằng `traceId`.
 - Không trả stack trace, SQL, token hoặc dữ liệu nhạy cảm.
 
-> Không áp dụng cho các route HTML/EJS của Work prototype.
+> Áp dụng cho các public JSON API hiện hành của Study2Work.
 
 ---
 
@@ -61,13 +61,16 @@ Template này chuẩn hóa response JSON cho **Study API** và **Work API đích
   "success": false,
   "businessCode": "VALIDATION_ERROR",
   "message": "Dữ liệu đầu vào không hợp lệ.",
-  "errors": [
-    {
-      "code": "FIELD_REQUIRED",
-      "field": "displayName",
-      "message": "displayName là bắt buộc."
-    }
-  ],
+  "data": null,
+  "meta": {
+    "fieldErrors": [
+      {
+        "code": "FIELD_REQUIRED",
+        "field": "displayName",
+        "message": "displayName là bắt buộc."
+      }
+    ]
+  },
   "traceId": "7d61fc96-5cac-4e4d-9154-7b6a5f844878"
 }
 ```
@@ -81,9 +84,9 @@ Template này chuẩn hóa response JSON cho **Study API** và **Work API đích
 | `success` | `boolean` | Request thành công hay thất bại. |
 | `businessCode` | `string` | Mã nghiệp vụ ổn định để frontend xử lý logic. |
 | `message` | `string` | Thông báo an toàn, có thể hiển thị cho người dùng. |
-| `data` | `object`, `array`, `null` | Dữ liệu trả về khi thành công. |
-| `meta` | `object` | Metadata bổ sung, thường chứa phân trang. |
-| `errors` | `array` | Danh sách lỗi chi tiết khi thất bại. |
+| `data` | `object`, `array`, `null` | Dữ liệu trả về khi thành công; bắt buộc là `null` khi lỗi. |
+| `meta` | `object` | Metadata bổ sung, gồm phân trang hoặc `fieldErrors` an toàn. |
+| `meta.fieldErrors` | `array` | Danh sách lỗi chi tiết khi thất bại, nếu có thể công khai an toàn. |
 | `traceId` | `string` | UUID dùng để truy vết request trong log. |
 
 ---
@@ -111,7 +114,7 @@ Frontend phải xử lý theo `businessCode`, không phụ thuộc vào nội du
 - Một chuỗi xử lý dùng cùng một `traceId`.
 - Trả lại trong response header và response body.
 
-### `errors`
+### `meta.fieldErrors`
 
 Mỗi phần tử lỗi nên có cấu trúc:
 
@@ -167,7 +170,10 @@ Mỗi phần tử lỗi nên có cấu trúc:
   "success": false,
   "businessCode": "STABLE_CODE",
   "message": "Safe message",
-  "errors": [],
+  "data": null,
+  "meta": {
+    "fieldErrors": []
+  },
   "traceId": "uuid"
 }
 ```

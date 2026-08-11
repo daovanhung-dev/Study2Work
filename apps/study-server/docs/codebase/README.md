@@ -145,6 +145,76 @@ private helper hiện có trong app/core.
 | exceptions | request_validation_exception_handler | Render lỗi validation |
 | exceptions | unhandled_exception_handler | Log lỗi nội bộ và trả 500 an toàn |
 
+### Bảng mục đích và thời điểm sử dụng cho từng callable
+
+| Callable | Dùng để làm gì? | Dùng khi nào? |
+|---|---|---|
+| Settings | Gom toàn bộ cấu hình có type của API và infrastructure. | Tạo app/runtime hoặc test cần cấu hình riêng. Không tự tạo dict config thay thế nếu đã có Settings. |
+| Settings.parse_cors_origins | Chuyển CORS_ORIGINS dạng chuỗi hoặc list thành list đã trim. | Được Pydantic tự gọi khi khởi tạo Settings; không cần gọi trực tiếp trong router. |
+| Settings.validate_db_schema | Kiểm tra schema chỉ gồm ký tự an toàn cho search_path. | Được Pydantic tự gọi khi tạo Settings; dùng để phát hiện cấu hình DB sai sớm. |
+| Settings.validate_jwt_key_configuration | Đảm bảo HS256 có secret hoặc ES256 có public key. | Được Pydantic tự gọi sau khi parse Settings; dùng để fail-fast khi cấu hình JWT thiếu. |
+| Settings.DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_SCHEMA | Đọc cấu hình DB bằng tên uppercase cũ. | Chỉ khi code legacy còn dùng API uppercase; code mới dùng db_host, db_port... |
+| Settings.JWT_SECRET_KEY, JWT_ALGORITHM, JWT_ACCESS_TOKEN_EXPIRE_MINUTES, JWT_REFRESH_TOKEN_EXPIRE_DAYS, JWT_ISSUER | Đọc một số cấu hình JWT bằng tên uppercase cũ. | Chỉ khi tương thích code cũ; code mới dùng field snake_case tương ứng. |
+| get_settings | Tạo và cache Settings mặc định của process. | Khi code cần cấu hình mặc định, ví dụ security hoặc default database factory. Không dùng để thay đổi config giữa các request. |
+| _LazySettings.__getattr__ | Chuyển attribute của proxy settings sang get_settings(). | Chỉ được gọi gián tiếp khi đọc biến module settings; không gọi trực tiếp trong business code. |
+| _LazySettings.__repr__ | Hiển thị proxy là settings (lazy). | Chỉ phục vụ debug/repr; không dùng để lấy giá trị cấu hình. |
+| build_database_url | Tạo SQLAlchemy PostgreSQL URL và escape credential đúng cách. | Khi xây engine từ một Settings cụ thể, nhất là test/runtime riêng. |
+| build_engine | Tạo engine với pool, pre-ping và search_path. | Khi app/test cần engine từ config tường minh. Không tạo engine mới trong từng request. |
+| build_session_factory | Tạo factory sinh Session gắn với một engine. | Khi lắp app instance hoặc test cần session factory riêng. |
+| get_engine | Lấy engine mặc định đã lazy-cache. | Khi code dùng cấu hình mặc định và cần connect DB. |
+| get_session_factory | Lấy session factory mặc định đã lazy-cache. | Khi viết dependency/default DB flow; test có config riêng nên dùng factory inject. |
+| SessionLocal | Sinh một Session mới qua factory mặc định. | Chỉ cho caller legacy hoặc script có tự đóng Session. HTTP view nên dùng Depends(get_db). |
+| get_db_from_factory | Yield một Session theo factory và luôn close sau cùng. | Khi FastAPI app/test cần inject factory riêng trong app.state. |
+| get_db | FastAPI dependency cung cấp request-scoped Session mặc định. | Dùng trong router với Depends(get_db) cho mọi API cần DB. |
+| execute_query | Chạy SQL text với named parameters và trả Result. | Khi cần primitive query/read/write cấp thấp. Caller phải tự commit hoặc rollback. |
+| query_one | Chạy SELECT và lấy row đầu tiên thành dict hoặc None. | Khi cần đọc tối đa một bản ghi và view tự xử lý not-found. |
+| query_many | Chạy SELECT và lấy toàn bộ row thành list dict. | Khi cần đọc danh sách; không có row trả []. |
+| utc_now_iso | Tạo timestamp UTC ISO-8601 hậu tố Z, không microsecond. | Khi cần timestamp theo đúng format API; không dùng để lấy local time. |
+| ErrorDetail | Biểu diễn một lỗi có field, code và message. | Khi tạo field error/business error đưa vào error_response hoặc ApiError. |
+| ApiError.__init__ | Gắn HTTP status, business code, message, trace, errors và headers vào exception. | Khi cần ném controlled error để global handler render response chuẩn. |
+| success_response | Tạo success envelope gồm success, businessCode, message, data, meta, traceId. | Khi endpoint/view trả kết quả thành công. |
+| error_response | Tạo canonical error envelope; đưa ErrorDetail vào meta.fieldErrors. | Khi handler hoặc view cần tạo body lỗi chuẩn mà không raise exception. |
+| raise_api_error | Tạo rồi raise ApiError trong một lệnh. | Khi business rule thất bại và cần dừng flow ngay trong view/dependency. |
+| success_payload | Alias tương thích của success_response. | Chỉ khi caller cũ đang gọi tên này; code mới dùng success_response. |
+| error_payload | Tạo error shape cũ với errors ở top-level. | Chỉ khi giữ contract legacy; không dùng cho API mới. |
+| ApiResponse.success_payload | Chuyển model response cũ thành canonical success envelope. | Khi module cũ đang giữ dữ liệu trong ApiResponse và cần trả HTTP response. |
+| ApiResponse.raise_error | Chuyển ApiResponse cũ thành ApiError rồi raise. | Khi code legacy biểu diễn lỗi bằng ApiResponse. |
+| TokenKeyProvider.get_verification_key | Định nghĩa interface lấy verification key theo kid. | Khi tích hợp static key store/JWKS provider vào decode_token; không phải implementation fetch JWKS. |
+| PasswordHasher.hash | Hash password bằng Argon2id hoặc Bcrypt theo algorithm chỉ định. | Dùng nội bộ hoặc khi cần hỗ trợ algorithm explicit; password mới nên gọi hash_password. |
+| PasswordHasher.verify | Verify password với hash Argon2id/Bcrypt và trả bool an toàn. | Khi cần login/kiểm tra credential; không tự ném lỗi cho password sai. |
+| password_algorithm_for_hash | Nhận diện loại hash qua prefix mà không verify. | Khi cần chọn verifier hoặc quyết định migration; không dùng làm bằng chứng password đúng. |
+| needs_password_rehash | Kiểm tra hash đã verify có cần nâng cấp Argon2id không. | Sau khi verify password thành công, trước khi lưu hash mới. |
+| hash_password | Wrapper luôn hash password mới bằng policy Argon2id chuẩn. | Dùng trong register, đổi password và migration legacy. |
+| verify_password | Wrapper verify password, hỗ trợ cả Argon2id và Bcrypt legacy. | Dùng trong login hoặc kiểm tra password hiện tại. |
+| _settings_secret | Unwrap SecretStr thành giá trị string hoặc trả None. | Chỉ dùng bên trong security khi thư viện cần secret thật; không gọi từ module nghiệp vụ. |
+| _signing_key | Chọn private key ES256 hoặc secret HS256 để ký JWT. | Chỉ được _create_token gọi; không expose hoặc log key. |
+| _verification_key | Chọn public/secret key để verify JWT, có thể qua key provider. | Chỉ được decode_token gọi; dùng key_provider khi cần key theo kid. |
+| _create_token | Tạo JWT với claim chuẩn, expiration và claim bổ sung. | Chỉ dùng qua create_access_token hoặc legacy create_refresh_token. |
+| create_access_token | Tạo JWT access ngắn hạn có type, issuer, audience, roles. | Sau login hoặc khi cấp credential truy cập API. |
+| create_refresh_token | Tạo legacy JWT refresh có user subject và không có audience. | Chỉ để tương thích auth hiện tại; flow mới không nên dùng. |
+| decode_token | Verify chữ ký và toàn bộ claim/type/subject của JWT. | Khi xây auth dependency cần decoder tổng quát; thường dùng wrapper theo token type. |
+| decode_access_token | Decode JWT và bắt buộc type access cùng audience. | Khi xác thực Bearer access token cho API. |
+| decode_refresh_token | Decode legacy refresh JWT, bỏ yêu cầu audience nhưng vẫn kiểm tra type refresh. | Chỉ khi xử lý legacy refresh JWT. |
+| generate_refresh_token | Tạo raw opaque refresh token ngẫu nhiên không chứa user info. | Khi cấp refresh token mới cho client trước khi hash để lưu. |
+| hash_refresh_token | Tạo HMAC-SHA256 digest từ raw refresh token bằng pepper. | Khi lưu token mới hoặc kiểm tra token client gửi; chỉ lưu digest. |
+| compare_token_hash | So sánh hai digest bằng constant-time comparison. | Khi đối chiếu digest đã lưu với digest vừa tạo từ token client. |
+| create_trace_id | Tạo UUID v4 trace ID mới. | Khi request thiếu hoặc có trace ID không hợp lệ; middleware thường gọi. |
+| normalize_trace_id | Kiểm tra và đưa UUID về chuỗi canonical hoặc trả None. | Khi nhận X-Trace-Id từ header/state trước khi tin dùng. |
+| set_current_trace_id | Đặt trace ID vào ContextVar và trả token reset. | Khi bắt đầu request context hoặc code async không truyền Request trực tiếp. |
+| reset_current_trace_id | Khôi phục ContextVar trước request hiện tại. | Luôn gọi trong finally sau set_current_trace_id. |
+| get_current_trace_id | Đọc trace ID từ ContextVar hiện tại. | Khi code/log không có Request trực tiếp nhưng đang ở request context. |
+| get_trace_id | Lấy trace ID từ Request state, tạo mới nếu thiếu/sai. | Trong endpoint, response builder hoặc exception handler cần trace ID. |
+| TraceIdMiddleware.dispatch | Bao downstream request bằng trace state/context và gắn response header. | Tự động chạy cho mọi request sau khi add_middleware(TraceIdMiddleware). |
+| _validation_field | Chuyển Pydantic loc thành tên field như items.0.name. | Chỉ được validation exception handler dùng để map lỗi input. |
+| api_error_handler | Chuyển ApiError thành JSONResponse theo status/body/headers của exception. | Đăng ký global cho ApiError trong create_app; không gọi từ view. |
+| http_exception_handler | Che detail HTTP arbitrary bằng error envelope an toàn. | Đăng ký global cho HTTPException, đặc biệt 404/405/protocol error. |
+| request_validation_exception_handler | Map RequestValidationError thành HTTP 422 và meta.fieldErrors. | Đăng ký global để lỗi body/query/path có cùng response contract. |
+| unhandled_exception_handler | Log exception nội bộ có trace ID và trả lỗi generic HTTP 500. | Dùng làm global fallback hoặc khi TraceIdMiddleware bắt lỗi downstream. Không trả raw exception. |
+
+Phần chi tiết bên dưới giải thích thêm chữ ký, dữ liệu vào/ra, side effect,
+exception và ví dụ cho từng nhóm callable.
+
+
 ---
 
 ## config.py — cấu hình

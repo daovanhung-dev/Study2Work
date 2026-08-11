@@ -1,3 +1,4 @@
 packages:
-  - "apps/*"
+  - "apps/study-client"
+  - "apps/work-server"
   - "apps/work-client/web"

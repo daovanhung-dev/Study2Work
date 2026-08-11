@@ -55,24 +55,6 @@ services:
       timeout: 5s
       retries: 5
 
-  work-mysql:
-    image: mysql:8.4
-    environment:
-      MYSQL_DATABASE: learn2earn
-      MYSQL_USER: study2work
-      MYSQL_PASSWORD: study2work
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "127.0.0.1:3307:3306"
-    volumes:
-      - work_mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -ustudy2work -pstudy2work --silent"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-
   minio:
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z
     command: server /data --console-address ":9001"
@@ -93,12 +75,21 @@ services:
 
   study-api:
     build:
-      context: ./apps/study-api
+      context: ./apps/study-server
     environment:
-      S2W_STUDY_APP_ENV: local
-      S2W_STUDY_DATABASE_URL: postgresql+asyncpg://study2work:study2work@study-postgres:5432/study2work_study
-      S2W_STUDY_REDIS_URL: redis://study-redis:6379/0
-      S2W_STUDY_CORS_ORIGINS: http://localhost:5173,http://localhost:5174
+      APP_ENV: local
+      CORS_ORIGINS: http://localhost:5173,http://localhost:5174
+      DB_HOST: study-postgres
+      DB_PORT: 5432
+      DB_NAME: study2work_study
+      DB_USER: study2work
+      DB_PASSWORD: study2work
+      REDIS_URL: redis://study-redis:6379/0
+      JWT_ALGORITHM: HS256
+      JWT_SECRET_KEY: local-development-secret-must-have-at-least-32-characters
+      JWT_ISSUER: study2work
+      JWT_AUDIENCE: study-api
+      REFRESH_TOKEN_PEPPER: local-development-refresh-pepper-must-have-at-least-32-chars
     ports:
       - "8000:8000"
     depends_on:
@@ -110,24 +101,44 @@ services:
   work-api:
     build:
       context: .
-      dockerfile: apps/work-api/Dockerfile
+      dockerfile: apps/work-server/Dockerfile
     environment:
       WORK_APP_ENV: local
+      WORK_HOST: 0.0.0.0
+      WORK_PORT: 8001
       WORK_DATABASE_URL: postgresql://study2work:study2work@work-postgres:5432/study2work_work
       WORK_REDIS_URL: redis://work-redis:6379/0
-      WORK_CORS_ORIGINS: http://localhost:5173,http://localhost:5174
+      WORK_CORS_ORIGINS: http://localhost:5174
+      WORK_JWT_ISSUER: study2work
+      WORK_JWT_AUDIENCE: work-api
+      WORK_JWKS_URL: http://host.docker.internal:8080/.well-known/jwks.json
     ports:
       - "8001:8001"
+    # Lets a locally running Identity/JWKS service be reached from Linux
+    # Docker engines as well as Docker Desktop.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       work-postgres:
         condition: service_healthy
       work-redis:
         condition: service_healthy
 
+  work-web:
+    build:
+      context: .
+      dockerfile: apps/work-client/web/Dockerfile
+      args:
+        VITE_WORK_API_URL: http://localhost:8001/api/v1
+    ports:
+      - "5174:80"
+    depends_on:
+      work-api:
+        condition: service_started
+
 volumes:
   study_postgres_data:
   study_redis_data:
   work_postgres_data:
   work_redis_data:
-  work_mysql_data:
   minio_data:

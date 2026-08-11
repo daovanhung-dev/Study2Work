@@ -22,7 +22,10 @@ Error:
   "success": false,
   "businessCode": "SYSTEM_INTERNAL_ERROR",
   "message": "Internal server error.",
-  "errors": [],
+  "data": null,
+  "meta": {
+    "fieldErrors": []
+  },
   "traceId": "uuid"
 }
 ```
@@ -33,6 +36,8 @@ Rules:
 - `message` is safe for clients.
 - `traceId` is camelCase and mirrors `X-Trace-Id`.
 - `meta.pagination` appears only for list responses.
+- Error responses set `data` to `null`; field-level details, when safe to
+  disclose, are stored in `meta.fieldErrors`.
 - Production errors must not expose stack traces.
 
 ## Endpoints

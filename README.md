@@ -23,13 +23,17 @@ Run `corepack pnpm docs:validate` after changing any canonical BD file. The root
 
 | Area | Path | Stack |
 |---|---|---|
-| Study web | `apps/study-web` | Vue 3, TypeScript, Vite |
-| Study API | `apps/study-api` | FastAPI, Python, SQLAlchemy, Alembic |
-| Work web | `apps/work-web` | React, TypeScript, Vite |
-| Work API | `apps/work-api` | NestJS, Fastify, Prisma |
-| Platform identity | `apps/platform-identity` | Local JWKS and identity notes |
-| Contracts | `contracts` | OpenAPI placeholders, event JSON Schema, skill taxonomy |
+| Study web | `apps/study-client` | Vue 3, TypeScript, Vite |
+| Study API | `apps/study-server` | FastAPI, Python, SQLAlchemy, Alembic |
+| Work web | `apps/work-client/web` | React, TypeScript, Vite |
+| Work API | `apps/work-server` | NestJS, Fastify, TypeScript, PostgreSQL, Redis |
+| Contracts | `contracts` | OpenAPI baselines, event JSON Schema, skill taxonomy |
 | Infra | `infra`, `docker-compose.yml` | Local PostgreSQL, Redis, MinIO, Mailhog |
+
+The Work applications are intentionally independent deployables. `apps/work-server`
+owns HTTP APIs, persistence, and Work integrations; `apps/work-client/web` owns the
+browser UI and calls the API through `VITE_WORK_API_URL`. The API does not serve the
+web application's static files, templates, or routes.
 
 ## Commands
 
@@ -52,7 +56,7 @@ corepack pnpm build
 Run Study API checks:
 
 ```powershell
-cd apps/study-api
+cd apps/study-server
 uv sync
 uv run ruff check .
 uv run ruff format --check .
@@ -60,10 +64,23 @@ uv run mypy app
 uv run pytest
 ```
 
+Run the Work applications locally:
+
+```powershell
+corepack pnpm dev:work-server
+corepack pnpm dev:work-web
+```
+
 Validate local compose:
 
 ```powershell
 docker compose config
+```
+
+Run the separated Work stack in containers:
+
+```powershell
+docker compose up --build work-api work-web
 ```
 
 ## API Baseline
