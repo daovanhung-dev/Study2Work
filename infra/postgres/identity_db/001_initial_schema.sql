@@ -3,6 +3,9 @@
 -- The executing principal must be allowed to create NOLOGIN roles, transfer
 -- schema ownership, and create objects in this database. This file creates no
 -- LOGIN role, credential, secret, or seed data.
+-- Source gaps intentionally not modeled: authVersion on identity/JWT/event
+-- projections and MFA pending-enrollment state. Both require an approved BD
+-- update before an additive migration can introduce storage for them.
 
 BEGIN;
 

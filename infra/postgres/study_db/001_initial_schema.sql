@@ -1775,3 +1775,942 @@ BEGIN
   RETURN NEW;
 END
 $$;
+
+CREATE FUNCTION app_private.require_draft_course_version()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  version_id uuid;
+  version_status content_version_status;
+BEGIN
+  version_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.course_version_id ELSE NEW.course_version_id END;
+  SELECT status INTO version_status FROM course_versions WHERE id = version_id;
+  IF version_status IS DISTINCT FROM 'DRAFT' THEN
+    RAISE EXCEPTION '% can only change while its course version is DRAFT', TG_TABLE_NAME
+      USING ERRCODE = '55000';
+  END IF;
+  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.require_draft_path_version()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  version_id uuid;
+  version_status content_version_status;
+BEGIN
+  version_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.path_version_id ELSE NEW.path_version_id END;
+  SELECT status INTO version_status FROM learning_path_versions WHERE id = version_id;
+  IF version_status IS DISTINCT FROM 'DRAFT' THEN
+    RAISE EXCEPTION '% can only change while its path version is DRAFT', TG_TABLE_NAME
+      USING ERRCODE = '55000';
+  END IF;
+  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.require_draft_lesson_course_version()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  target_lesson_id uuid;
+  version_status content_version_status;
+BEGIN
+  target_lesson_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.lesson_id ELSE NEW.lesson_id END;
+  SELECT version.status INTO version_status
+    FROM lessons lesson
+    JOIN course_versions version ON version.id = lesson.course_version_id
+   WHERE lesson.id = target_lesson_id;
+  IF version_status IS DISTINCT FROM 'DRAFT' THEN
+    RAISE EXCEPTION '% can only change while its course version is DRAFT', TG_TABLE_NAME
+      USING ERRCODE = '55000';
+  END IF;
+  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.require_draft_assessment_course_version()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  target_assessment_id uuid;
+  version_status content_version_status;
+BEGIN
+  target_assessment_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.assessment_id ELSE NEW.assessment_id END;
+  SELECT version.status INTO version_status
+    FROM assessments assessment
+    JOIN course_versions version ON version.id = assessment.course_version_id
+   WHERE assessment.id = target_assessment_id;
+  IF version_status IS DISTINCT FROM 'DRAFT' THEN
+    RAISE EXCEPTION '% can only change while its assessment course version is DRAFT', TG_TABLE_NAME
+      USING ERRCODE = '55000';
+  END IF;
+  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.require_draft_question_course_version()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  target_question_id uuid;
+  version_status content_version_status;
+BEGIN
+  target_question_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.question_id ELSE NEW.question_id END;
+  SELECT version.status INTO version_status
+    FROM quiz_questions question
+    JOIN assessments assessment ON assessment.id = question.assessment_id
+    JOIN course_versions version ON version.id = assessment.course_version_id
+   WHERE question.id = target_question_id;
+  IF version_status IS DISTINCT FROM 'DRAFT' THEN
+    RAISE EXCEPTION '% can only change while its course version is DRAFT', TG_TABLE_NAME
+      USING ERRCODE = '55000';
+  END IF;
+  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.require_draft_rubric_course_version()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  target_rubric_id uuid;
+  version_status content_version_status;
+BEGIN
+  target_rubric_id := CASE WHEN TG_OP = 'DELETE' THEN OLD.rubric_id ELSE NEW.rubric_id END;
+  SELECT version.status INTO version_status
+    FROM rubrics rubric
+    JOIN assessments assessment ON assessment.id = rubric.assessment_id
+    JOIN course_versions version ON version.id = assessment.course_version_id
+   WHERE rubric.id = target_rubric_id;
+  IF version_status IS DISTINCT FROM 'DRAFT' THEN
+    RAISE EXCEPTION '% can only change while its course version is DRAFT', TG_TABLE_NAME
+      USING ERRCODE = '55000';
+  END IF;
+  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.assert_active_study_skill()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  skill_status varchar(16);
+BEGIN
+  SELECT status INTO skill_status FROM study_skills WHERE id = NEW.skill_id;
+  IF skill_status IS DISTINCT FROM 'ACTIVE' THEN
+    RAISE EXCEPTION 'ARCHIVED skill cannot be added to a course draft' USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.assert_no_course_prerequisite_cycle()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF EXISTS (
+    WITH RECURSIVE prerequisites(course_version_id) AS (
+      SELECT NEW.required_course_version_id
+      UNION
+      SELECT dependency.required_course_version_id
+        FROM course_prerequisites dependency
+        JOIN prerequisites current_node
+          ON dependency.course_version_id = current_node.course_version_id
+    )
+    SELECT 1 FROM prerequisites WHERE course_version_id = NEW.course_version_id
+  ) THEN
+    RAISE EXCEPTION 'course prerequisite graph cannot contain a cycle' USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.assert_course_version_publishable()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.status = 'PUBLISHED' AND OLD.status <> 'PUBLISHED' THEN
+    IF EXISTS (
+      SELECT 1
+        FROM assessments assessment
+        JOIN quiz_questions question ON question.assessment_id = assessment.id
+       WHERE assessment.course_version_id = NEW.id
+         AND assessment.type = 'QUIZ'
+         AND NOT EXISTS (
+           SELECT 1 FROM quiz_options option
+            WHERE option.question_id = question.id AND option.is_correct
+         )
+    ) THEN
+      RAISE EXCEPTION 'cannot publish course version with quiz questions that have no correct option'
+        USING ERRCODE = '23514';
+    END IF;
+    IF EXISTS (
+      SELECT 1
+        FROM rubrics rubric
+       WHERE rubric.assessment_id IN (
+               SELECT id FROM assessments WHERE course_version_id = NEW.id
+             )
+         AND rubric.total_points IS DISTINCT FROM (
+           SELECT coalesce(sum(criterion.max_points), 0)
+             FROM rubric_criteria criterion
+            WHERE criterion.rubric_id = rubric.id
+         )
+    ) THEN
+      RAISE EXCEPTION 'cannot publish course version with rubric criteria total different from rubric total'
+        USING ERRCODE = '23514';
+    END IF;
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.assert_path_version_publishable()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.status = 'PUBLISHED' AND OLD.status <> 'PUBLISHED'
+     AND EXISTS (
+       SELECT 1
+         FROM path_course_items item
+         JOIN course_versions version ON version.id = item.course_version_id
+        WHERE item.path_version_id = NEW.id
+          AND version.status <> 'PUBLISHED'
+     ) THEN
+    RAISE EXCEPTION 'published learning path requires every included course version to be PUBLISHED'
+      USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.guard_assessment_attempt_payload()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.learner_id IS DISTINCT FROM OLD.learner_id
+     OR NEW.enrollment_id IS DISTINCT FROM OLD.enrollment_id
+     OR NEW.assessment_id IS DISTINCT FROM OLD.assessment_id
+     OR NEW.attempt_no IS DISTINCT FROM OLD.attempt_no
+     OR NEW.submitted_payload_snapshot IS DISTINCT FROM OLD.submitted_payload_snapshot
+     OR NEW.submitted_at IS DISTINCT FROM OLD.submitted_at
+     OR NEW.content_hash IS DISTINCT FROM OLD.content_hash THEN
+    RAISE EXCEPTION 'assessment attempt submission payload and identity are immutable'
+      USING ERRCODE = '55000';
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.guard_attempt_status_transition()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  assessment_kind assessment_type;
+BEGIN
+  IF NEW.status = OLD.status THEN
+    RETURN NEW;
+  END IF;
+  SELECT type INTO assessment_kind FROM assessments WHERE id = NEW.assessment_id;
+  IF assessment_kind = 'QUIZ' THEN
+    IF OLD.status <> 'SUBMITTED' OR NEW.status NOT IN ('PASSED', 'FAILED') THEN
+      RAISE EXCEPTION 'QUIZ attempt transition is invalid' USING ERRCODE = '23514';
+    END IF;
+  ELSIF NOT (
+    (OLD.status = 'SUBMITTED' AND NEW.status = 'UNDER_REVIEW')
+    OR (OLD.status = 'UNDER_REVIEW' AND NEW.status IN ('PASSED', 'NEEDS_REVISION', 'FAILED'))
+  ) THEN
+    RAISE EXCEPTION 'assessment attempt transition is invalid' USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.guard_progress_status_transition()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.status < OLD.status THEN
+    RAISE EXCEPTION 'progress status cannot move backwards without an audited administrative adjustment'
+      USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.guard_consumer_inbox_payload()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.consumer IS DISTINCT FROM OLD.consumer
+     OR NEW.event_id IS DISTINCT FROM OLD.event_id
+     OR NEW.event_type IS DISTINCT FROM OLD.event_type
+     OR NEW.payload_hash IS DISTINCT FROM OLD.payload_hash
+     OR NEW.received_at IS DISTINCT FROM OLD.received_at
+     OR NEW.trace_id IS DISTINCT FROM OLD.trace_id THEN
+    RAISE EXCEPTION 'consumer inbox event identity and payload hash are immutable'
+      USING ERRCODE = '55000';
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE FUNCTION app_private.prevent_immutable_update()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RAISE EXCEPTION '% is immutable and cannot be updated', TG_TABLE_NAME USING ERRCODE = '55000';
+END
+$$;
+
+-- IMMUTABLE records may only make the one-way state transition expressly
+-- represented by their BD columns. The original payload is never mutable.
+CREATE FUNCTION app_private.guard_immutable_state_transition()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  old_row jsonb := to_jsonb(OLD);
+  new_row jsonb := to_jsonb(NEW);
+BEGIN
+  CASE TG_TABLE_NAME
+    WHEN 'onboarding_submissions' THEN
+      IF (new_row - 'is_current') IS DISTINCT FROM (old_row - 'is_current')
+         OR old_row->>'is_current' <> 'true'
+         OR new_row->>'is_current' <> 'false' THEN
+        RAISE EXCEPTION 'onboarding submission payload is immutable; is_current can only change true to false'
+          USING ERRCODE = '55000';
+      END IF;
+
+    WHEN 'service_role_permissions' THEN
+      IF (new_row - ARRAY['revoked_at', 'revoked_by_subject_id'])
+           IS DISTINCT FROM (old_row - ARRAY['revoked_at', 'revoked_by_subject_id'])
+         OR old_row->>'revoked_at' IS NOT NULL
+         OR old_row->>'revoked_by_subject_id' IS NOT NULL
+         OR new_row->>'revoked_at' IS NULL
+         OR new_row->>'revoked_by_subject_id' IS NULL THEN
+        RAISE EXCEPTION 'service role permission payload is immutable; revocation is one-way'
+          USING ERRCODE = '55000';
+      END IF;
+
+    WHEN 'service_role_assignments' THEN
+      IF (new_row - ARRAY['revoked_at', 'revoked_by_subject_id'])
+           IS DISTINCT FROM (old_row - ARRAY['revoked_at', 'revoked_by_subject_id'])
+         OR old_row->>'revoked_at' IS NOT NULL
+         OR old_row->>'revoked_by_subject_id' IS NOT NULL
+         OR new_row->>'revoked_at' IS NULL
+         OR new_row->>'revoked_by_subject_id' IS NULL THEN
+        RAISE EXCEPTION 'service role assignment payload is immutable; revocation is one-way'
+          USING ERRCODE = '55000';
+      END IF;
+
+    WHEN 'content_rights_attestations' THEN
+      IF (new_row - 'revoked_at') IS DISTINCT FROM (old_row - 'revoked_at')
+         OR old_row->>'revoked_at' IS NOT NULL
+         OR new_row->>'revoked_at' IS NULL THEN
+        RAISE EXCEPTION 'content rights attestation payload is immutable; revocation is one-way'
+          USING ERRCODE = '55000';
+      END IF;
+
+    WHEN 'trusted_publisher_grants' THEN
+      IF (new_row - ARRAY['revoked_at', 'revoked_by_subject_id', 'revoke_reason'])
+           IS DISTINCT FROM (old_row - ARRAY['revoked_at', 'revoked_by_subject_id', 'revoke_reason'])
+         OR old_row->>'revoked_at' IS NOT NULL
+         OR old_row->>'revoked_by_subject_id' IS NOT NULL
+         OR old_row->>'revoke_reason' IS NOT NULL
+         OR new_row->>'revoked_at' IS NULL
+         OR new_row->>'revoked_by_subject_id' IS NULL
+         OR new_row->>'revoke_reason' IS NULL THEN
+        RAISE EXCEPTION 'trusted publisher grant payload is immutable; revocation is one-way'
+          USING ERRCODE = '55000';
+      END IF;
+
+    WHEN 'primary_path_periods' THEN
+      IF (new_row - ARRAY['status', 'ended_at', 'end_reason'])
+           IS DISTINCT FROM (old_row - ARRAY['status', 'ended_at', 'end_reason'])
+         OR old_row->>'status' <> 'ACTIVE'
+         OR old_row->>'ended_at' IS NOT NULL
+         OR new_row->>'status' NOT IN ('SWITCHED_OUT', 'COMPLETED', 'CANCELLED_BY_ADMIN')
+         OR new_row->>'ended_at' IS NULL THEN
+        RAISE EXCEPTION 'primary path period is immutable except for closing an ACTIVE period once'
+          USING ERRCODE = '55000';
+      END IF;
+
+    WHEN 'course_completions', 'path_completions' THEN
+      IF (new_row - ARRAY['revoked_at', 'revocation_reason'])
+           IS DISTINCT FROM (old_row - ARRAY['revoked_at', 'revocation_reason'])
+         OR old_row->>'revoked_at' IS NOT NULL
+         OR old_row->>'revocation_reason' IS NOT NULL
+         OR new_row->>'revoked_at' IS NULL
+         OR new_row->>'revocation_reason' IS NULL THEN
+        RAISE EXCEPTION '% payload is immutable; revocation is one-way', TG_TABLE_NAME
+          USING ERRCODE = '55000';
+      END IF;
+
+    WHEN 'evidence_records' THEN
+      IF (new_row - ARRAY['status', 'revoked_at', 'revocation_reason'])
+           IS DISTINCT FROM (old_row - ARRAY['status', 'revoked_at', 'revocation_reason'])
+         OR old_row->>'status' <> 'ISSUED'
+         OR old_row->>'revoked_at' IS NOT NULL
+         OR old_row->>'revocation_reason' IS NOT NULL
+         OR new_row->>'status' <> 'REVOKED'
+         OR new_row->>'revoked_at' IS NULL
+         OR new_row->>'revocation_reason' IS NULL THEN
+        RAISE EXCEPTION 'evidence payload is immutable; ISSUED to REVOKED is one-way'
+          USING ERRCODE = '55000';
+      END IF;
+
+    WHEN 'evidence_export_requests' THEN
+      IF (new_row - ARRAY['processed_at', 'result_code', 'response_hash'])
+           IS DISTINCT FROM (old_row - ARRAY['processed_at', 'result_code', 'response_hash'])
+         OR old_row->>'processed_at' IS NOT NULL
+         OR new_row->>'processed_at' IS NULL THEN
+        RAISE EXCEPTION 'evidence export request payload is immutable; processing can be recorded once'
+          USING ERRCODE = '55000';
+      END IF;
+
+    WHEN 'community_acceptances' THEN
+      IF (new_row - 'revoked_at') IS DISTINCT FROM (old_row - 'revoked_at')
+         OR old_row->>'revoked_at' IS NOT NULL
+         OR new_row->>'revoked_at' IS NULL THEN
+        RAISE EXCEPTION 'community acceptance payload is immutable; revocation is one-way'
+          USING ERRCODE = '55000';
+      END IF;
+
+    WHEN 'consumer_inbox' THEN
+      IF (new_row - ARRAY['processed_at', 'result_code'])
+           IS DISTINCT FROM (old_row - ARRAY['processed_at', 'result_code'])
+         OR old_row->>'processed_at' IS NOT NULL
+         OR new_row->>'processed_at' IS NULL THEN
+        RAISE EXCEPTION 'consumer inbox payload is immutable; processing result can be recorded once'
+          USING ERRCODE = '55000';
+      END IF;
+
+    ELSE
+      RAISE EXCEPTION 'unexpected immutable-state guard target: %', TG_TABLE_NAME
+        USING ERRCODE = '55000';
+  END CASE;
+  RETURN NEW;
+END
+$$;
+
+-- ENTITY convention: updates always advance row_version and updated_at.
+DO $$
+DECLARE
+  table_name text;
+BEGIN
+  FOREACH table_name IN ARRAY ARRAY[
+    'identity_projections', 'learner_profiles', 'service_roles', 'service_permissions',
+    'learning_paths', 'learning_path_versions', 'courses', 'course_versions',
+    'path_course_items', 'chapters', 'lessons', 'content_blocks', 'assessments',
+    'assessment_placements', 'quiz_questions', 'quiz_options', 'rubrics',
+    'rubric_criteria', 'course_enrollments', 'block_progress_facts',
+    'lesson_progress_facts', 'progress_snapshots', 'assessment_attempts',
+    'file_objects', 'notification_preferences', 'notifications', 'community_channels',
+    'support_tickets', 'idempotency_keys', 'study_skills', 'course_skill_outcomes',
+    'course_prerequisites', 'file_upload_sessions', 'assessment_drafts'
+  ]
+  LOOP
+    EXECUTE format(
+      'CREATE TRIGGER trg_touch_entity BEFORE UPDATE ON public.%I '
+      || 'FOR EACH ROW EXECUTE FUNCTION app_private.touch_entity()',
+      table_name
+    );
+  END LOOP;
+END
+$$;
+
+-- Append-only tables cannot be updated or deleted.
+DO $$
+DECLARE
+  table_name text;
+BEGIN
+  FOREACH table_name IN ARRAY ARRAY[
+    'content_review_decisions', 'malware_scan_results', 'assessment_reviews',
+    'notification_deliveries', 'admin_adjustments', 'audit_events', 'outbox_delivery_attempts'
+  ]
+  LOOP
+    EXECUTE format(
+      'CREATE TRIGGER trg_prevent_append_mutation BEFORE UPDATE OR DELETE ON public.%I '
+      || 'FOR EACH ROW EXECUTE FUNCTION app_private.prevent_append_mutation()',
+      table_name
+    );
+  END LOOP;
+END
+$$;
+
+-- Immutable records are never deleted; the listed audit/snapshot payloads also
+-- reject updates entirely. Tables with explicit revocation/processing fields
+-- retain those state changes while keeping their original payload columns.
+DO $$
+DECLARE
+  table_name text;
+BEGIN
+  FOREACH table_name IN ARRAY ARRAY[
+    'service_role_permissions', 'service_role_assignments', 'onboarding_submissions',
+    'path_recommendation_runs', 'content_rights_attestations', 'trusted_publisher_grants',
+    'primary_path_periods', 'course_completions', 'path_completions', 'assessment_answers',
+    'attempt_files', 'assessment_review_scores', 'evidence_records',
+    'evidence_export_requests', 'community_acceptances', 'support_messages',
+    'outbox_events', 'consumer_inbox', 'report_snapshots'
+  ]
+  LOOP
+    EXECUTE format(
+      'CREATE TRIGGER trg_prevent_immutable_delete BEFORE DELETE ON public.%I '
+      || 'FOR EACH ROW EXECUTE FUNCTION app_private.prevent_delete()',
+      table_name
+    );
+  END LOOP;
+  FOREACH table_name IN ARRAY ARRAY[
+    'path_recommendation_runs', 'assessment_answers', 'attempt_files',
+    'assessment_review_scores', 'support_messages', 'outbox_events', 'report_snapshots'
+  ]
+  LOOP
+    EXECUTE format(
+      'CREATE TRIGGER trg_prevent_immutable_update BEFORE UPDATE ON public.%I '
+      || 'FOR EACH ROW EXECUTE FUNCTION app_private.prevent_immutable_update()',
+      table_name
+    );
+  END LOOP;
+END
+$$;
+
+DO $$
+DECLARE
+  table_name text;
+BEGIN
+  FOREACH table_name IN ARRAY ARRAY[
+    'onboarding_submissions', 'service_role_permissions',
+    'service_role_assignments', 'content_rights_attestations',
+    'trusted_publisher_grants', 'primary_path_periods', 'course_completions',
+    'path_completions', 'evidence_records', 'evidence_export_requests',
+    'community_acceptances', 'consumer_inbox'
+  ]
+  LOOP
+    EXECUTE format(
+      'CREATE TRIGGER trg_guard_immutable_state BEFORE UPDATE ON public.%I '
+      || 'FOR EACH ROW EXECUTE FUNCTION app_private.guard_immutable_state_transition()',
+      table_name
+    );
+  END LOOP;
+END
+$$;
+
+CREATE TRIGGER trg_guard_learning_path_version
+  BEFORE UPDATE ON learning_path_versions
+  FOR EACH ROW EXECUTE FUNCTION app_private.guard_content_version();
+CREATE TRIGGER trg_guard_course_version
+  BEFORE UPDATE ON course_versions
+  FOR EACH ROW EXECUTE FUNCTION app_private.guard_content_version();
+CREATE TRIGGER trg_publishable_learning_path_version
+  BEFORE UPDATE ON learning_path_versions
+  FOR EACH ROW EXECUTE FUNCTION app_private.assert_path_version_publishable();
+CREATE TRIGGER trg_publishable_course_version
+  BEFORE UPDATE ON course_versions
+  FOR EACH ROW EXECUTE FUNCTION app_private.assert_course_version_publishable();
+CREATE TRIGGER trg_published_path_file_clean
+  BEFORE INSERT OR UPDATE ON learning_path_versions
+  FOR EACH ROW EXECUTE FUNCTION app_private.assert_entity_file_clean();
+CREATE TRIGGER trg_published_course_file_clean
+  BEFORE INSERT OR UPDATE ON course_versions
+  FOR EACH ROW EXECUTE FUNCTION app_private.assert_entity_file_clean();
+CREATE TRIGGER trg_assessment_draft_sealed
+  BEFORE UPDATE ON assessment_drafts
+  FOR EACH ROW EXECUTE FUNCTION app_private.guard_sealed_assessment_draft();
+CREATE TRIGGER trg_assessment_attempt_payload
+  BEFORE UPDATE ON assessment_attempts
+  FOR EACH ROW EXECUTE FUNCTION app_private.guard_assessment_attempt_payload();
+CREATE TRIGGER trg_assessment_attempt_status
+  BEFORE UPDATE OF status ON assessment_attempts
+  FOR EACH ROW EXECUTE FUNCTION app_private.guard_attempt_status_transition();
+CREATE TRIGGER trg_block_progress_status
+  BEFORE UPDATE OF status ON block_progress_facts
+  FOR EACH ROW EXECUTE FUNCTION app_private.guard_progress_status_transition();
+CREATE TRIGGER trg_lesson_progress_status
+  BEFORE UPDATE OF status ON lesson_progress_facts
+  FOR EACH ROW EXECUTE FUNCTION app_private.guard_progress_status_transition();
+CREATE TRIGGER trg_consumer_inbox_payload
+  BEFORE UPDATE ON consumer_inbox
+  FOR EACH ROW EXECUTE FUNCTION app_private.guard_consumer_inbox_payload();
+
+CREATE TRIGGER trg_path_course_items_draft_parent
+  BEFORE INSERT OR UPDATE OR DELETE ON path_course_items
+  FOR EACH ROW EXECUTE FUNCTION app_private.require_draft_path_version();
+CREATE TRIGGER trg_chapters_draft_parent
+  BEFORE INSERT OR UPDATE OR DELETE ON chapters
+  FOR EACH ROW EXECUTE FUNCTION app_private.require_draft_course_version();
+CREATE TRIGGER trg_lessons_draft_parent
+  BEFORE INSERT OR UPDATE OR DELETE ON lessons
+  FOR EACH ROW EXECUTE FUNCTION app_private.require_draft_course_version();
+CREATE TRIGGER trg_content_blocks_draft_parent
+  BEFORE INSERT OR UPDATE OR DELETE ON content_blocks
+  FOR EACH ROW EXECUTE FUNCTION app_private.require_draft_lesson_course_version();
+CREATE TRIGGER trg_assessments_draft_parent
+  BEFORE INSERT OR UPDATE OR DELETE ON assessments
+  FOR EACH ROW EXECUTE FUNCTION app_private.require_draft_course_version();
+CREATE TRIGGER trg_assessment_placements_draft_parent
+  BEFORE INSERT OR UPDATE OR DELETE ON assessment_placements
+  FOR EACH ROW EXECUTE FUNCTION app_private.require_draft_assessment_course_version();
+CREATE TRIGGER trg_quiz_questions_draft_parent
+  BEFORE INSERT OR UPDATE OR DELETE ON quiz_questions
+  FOR EACH ROW EXECUTE FUNCTION app_private.require_draft_assessment_course_version();
+CREATE TRIGGER trg_quiz_options_draft_parent
+  BEFORE INSERT OR UPDATE OR DELETE ON quiz_options
+  FOR EACH ROW EXECUTE FUNCTION app_private.require_draft_question_course_version();
+CREATE TRIGGER trg_rubrics_draft_parent
+  BEFORE INSERT OR UPDATE OR DELETE ON rubrics
+  FOR EACH ROW EXECUTE FUNCTION app_private.require_draft_assessment_course_version();
+CREATE TRIGGER trg_rubric_criteria_draft_parent
+  BEFORE INSERT OR UPDATE OR DELETE ON rubric_criteria
+  FOR EACH ROW EXECUTE FUNCTION app_private.require_draft_rubric_course_version();
+CREATE TRIGGER trg_course_skill_outcomes_draft_parent
+  BEFORE INSERT OR UPDATE OR DELETE ON course_skill_outcomes
+  FOR EACH ROW EXECUTE FUNCTION app_private.require_draft_course_version();
+CREATE TRIGGER trg_course_prerequisites_draft_parent
+  BEFORE INSERT OR UPDATE OR DELETE ON course_prerequisites
+  FOR EACH ROW EXECUTE FUNCTION app_private.require_draft_course_version();
+CREATE TRIGGER trg_course_skill_outcomes_active_skill
+  BEFORE INSERT OR UPDATE OF skill_id ON course_skill_outcomes
+  FOR EACH ROW EXECUTE FUNCTION app_private.assert_active_study_skill();
+CREATE TRIGGER trg_course_prerequisites_no_cycle
+  BEFORE INSERT OR UPDATE OF course_version_id, required_course_version_id ON course_prerequisites
+  FOR EACH ROW EXECUTE FUNCTION app_private.assert_no_course_prerequisite_cycle();
+
+CREATE CONSTRAINT TRIGGER ctr_learner_profiles_avatar_clean
+  AFTER INSERT OR UPDATE OF avatar_file_id ON learner_profiles
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_clean_avatar_file();
+CREATE CONSTRAINT TRIGGER ctr_learning_paths_pointers
+  AFTER INSERT OR UPDATE OF current_draft_version_id, latest_published_version_id ON learning_paths
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_path_or_course_pointers();
+CREATE CONSTRAINT TRIGGER ctr_courses_pointers
+  AFTER INSERT OR UPDATE OF current_draft_version_id, latest_published_version_id ON courses
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_path_or_course_pointers();
+CREATE CONSTRAINT TRIGGER ctr_assessment_placements_scope
+  AFTER INSERT OR UPDATE ON assessment_placements
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_assessment_placement_scope();
+CREATE CONSTRAINT TRIGGER ctr_primary_path_periods_published
+  AFTER INSERT OR UPDATE OF path_version_id ON primary_path_periods
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.require_published_path_version();
+CREATE CONSTRAINT TRIGGER ctr_course_enrollments_published
+  AFTER INSERT OR UPDATE OF course_version_id ON course_enrollments
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.require_published_course_version();
+CREATE CONSTRAINT TRIGGER ctr_block_progress_integrity
+  AFTER INSERT OR UPDATE OF enrollment_id, block_id ON block_progress_facts
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_progress_block_integrity();
+CREATE CONSTRAINT TRIGGER ctr_lesson_progress_integrity
+  AFTER INSERT OR UPDATE OF enrollment_id, lesson_id ON lesson_progress_facts
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_progress_lesson_integrity();
+CREATE CONSTRAINT TRIGGER ctr_course_completions_integrity
+  AFTER INSERT OR UPDATE OF learner_id, course_version_id, enrollment_id ON course_completions
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_course_completion_integrity();
+CREATE CONSTRAINT TRIGGER ctr_path_completions_integrity
+  AFTER INSERT OR UPDATE OF learner_id, path_version_id, primary_path_period_id ON path_completions
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_path_completion_integrity();
+CREATE CONSTRAINT TRIGGER ctr_assessment_attempt_integrity
+  AFTER INSERT OR UPDATE OF learner_id, enrollment_id, assessment_id ON assessment_attempts
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_assessment_attempt_integrity();
+CREATE CONSTRAINT TRIGGER ctr_assessment_draft_integrity
+  AFTER INSERT OR UPDATE OF learner_id, enrollment_id, assessment_id, file_id ON assessment_drafts
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_assessment_draft_integrity();
+CREATE CONSTRAINT TRIGGER ctr_attempt_files_integrity
+  AFTER INSERT OR UPDATE ON attempt_files
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_attempt_file_integrity();
+CREATE CONSTRAINT TRIGGER ctr_assessment_review_scores_limit
+  AFTER INSERT OR UPDATE OF criterion_id, points ON assessment_review_scores
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_review_score_limit();
+CREATE CONSTRAINT TRIGGER ctr_rubrics_assessment_type
+  AFTER INSERT OR UPDATE OF assessment_id ON rubrics
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_rubric_assessment_type();
+CREATE CONSTRAINT TRIGGER ctr_file_upload_sessions_integrity
+  AFTER INSERT OR UPDATE ON file_upload_sessions
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+  EXECUTE FUNCTION app_private.assert_file_upload_session_integrity();
+
+-- RLS subject context. study_db contains no TENANT_ENTITY tables in BD03;
+-- app.tenant_id remains required context for shared service infrastructure but
+-- intentionally has no fabricated tenant_id column or policy in this database.
+CREATE FUNCTION app_private.owns_learner(target_learner_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+      FROM learner_profiles
+     WHERE id = target_learner_id
+       AND identity_subject_id = app_private.current_subject_id()
+  )
+$$;
+
+CREATE FUNCTION app_private.owns_enrollment(target_enrollment_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM course_enrollments WHERE id = target_enrollment_id
+      AND app_private.owns_learner(learner_id)
+  )
+$$;
+
+CREATE FUNCTION app_private.owns_attempt(target_attempt_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM assessment_attempts WHERE id = target_attempt_id
+      AND app_private.owns_learner(learner_id)
+  )
+$$;
+
+CREATE FUNCTION app_private.owns_notification(target_notification_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM notifications WHERE id = target_notification_id
+      AND app_private.owns_learner(learner_id)
+  )
+$$;
+
+CREATE FUNCTION app_private.owns_support_ticket(target_ticket_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM support_tickets WHERE id = target_ticket_id
+      AND app_private.owns_learner(learner_id)
+  )
+$$;
+
+DO $$
+DECLARE
+  table_name text;
+BEGIN
+  FOREACH table_name IN ARRAY ARRAY[
+    'identity_projections', 'learner_profiles', 'onboarding_submissions',
+    'path_recommendation_runs', 'primary_path_periods', 'course_enrollments',
+    'block_progress_facts', 'lesson_progress_facts', 'progress_snapshots',
+    'course_completions', 'path_completions', 'assessment_attempts',
+    'assessment_answers', 'attempt_files', 'assessment_reviews',
+    'assessment_review_scores', 'evidence_records', 'evidence_export_requests',
+    'notification_preferences', 'notifications', 'notification_deliveries',
+    'community_acceptances', 'support_tickets', 'support_messages',
+    'file_objects', 'file_upload_sessions', 'assessment_drafts'
+  ]
+  LOOP
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', table_name);
+    EXECUTE format('ALTER TABLE public.%I FORCE ROW LEVEL SECURITY', table_name);
+  END LOOP;
+END
+$$;
+
+CREATE POLICY rls_identity_projections_subject
+  ON identity_projections FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (identity_subject_id = app_private.current_subject_id())
+  WITH CHECK (identity_subject_id = app_private.current_subject_id());
+CREATE POLICY rls_learner_profiles_subject
+  ON learner_profiles FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (identity_subject_id = app_private.current_subject_id())
+  WITH CHECK (identity_subject_id = app_private.current_subject_id());
+CREATE POLICY rls_onboarding_submissions_subject
+  ON onboarding_submissions FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+CREATE POLICY rls_path_recommendation_runs_subject
+  ON path_recommendation_runs FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+CREATE POLICY rls_primary_path_periods_subject
+  ON primary_path_periods FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+CREATE POLICY rls_course_enrollments_subject
+  ON course_enrollments FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+CREATE POLICY rls_block_progress_facts_subject
+  ON block_progress_facts FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_enrollment(enrollment_id))
+  WITH CHECK (app_private.owns_enrollment(enrollment_id));
+CREATE POLICY rls_lesson_progress_facts_subject
+  ON lesson_progress_facts FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_enrollment(enrollment_id))
+  WITH CHECK (app_private.owns_enrollment(enrollment_id));
+CREATE POLICY rls_progress_snapshots_subject
+  ON progress_snapshots FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+CREATE POLICY rls_course_completions_subject
+  ON course_completions FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+CREATE POLICY rls_path_completions_subject
+  ON path_completions FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+CREATE POLICY rls_assessment_attempts_subject
+  ON assessment_attempts FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+CREATE POLICY rls_assessment_answers_subject
+  ON assessment_answers FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_attempt(attempt_id))
+  WITH CHECK (app_private.owns_attempt(attempt_id));
+CREATE POLICY rls_attempt_files_subject
+  ON attempt_files FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_attempt(attempt_id))
+  WITH CHECK (app_private.owns_attempt(attempt_id));
+CREATE POLICY rls_assessment_reviews_subject_read
+  ON assessment_reviews FOR SELECT TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_attempt(attempt_id));
+CREATE POLICY rls_assessment_review_scores_subject_read
+  ON assessment_review_scores FOR SELECT TO s2w_study_app, s2w_study_worker
+  USING (EXISTS (
+    SELECT 1 FROM assessment_reviews
+     WHERE assessment_reviews.id = review_id
+       AND app_private.owns_attempt(assessment_reviews.attempt_id)
+  ));
+CREATE POLICY rls_evidence_records_subject
+  ON evidence_records FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+CREATE POLICY rls_evidence_export_requests_subject
+  ON evidence_export_requests FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (learner_identity_subject_id = app_private.current_subject_id())
+  WITH CHECK (learner_identity_subject_id = app_private.current_subject_id());
+CREATE POLICY rls_notification_preferences_subject
+  ON notification_preferences FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+CREATE POLICY rls_notifications_subject
+  ON notifications FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+CREATE POLICY rls_notification_deliveries_subject
+  ON notification_deliveries FOR SELECT TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_notification(notification_id));
+CREATE POLICY rls_community_acceptances_subject
+  ON community_acceptances FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+CREATE POLICY rls_support_tickets_subject
+  ON support_tickets FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+CREATE POLICY rls_support_messages_subject
+  ON support_messages FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_support_ticket(ticket_id))
+  WITH CHECK (app_private.owns_support_ticket(ticket_id));
+CREATE POLICY rls_file_objects_subject
+  ON file_objects FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (owner_subject_id = app_private.current_subject_id())
+  WITH CHECK (owner_subject_id = app_private.current_subject_id());
+CREATE POLICY rls_file_upload_sessions_subject
+  ON file_upload_sessions FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (owner_subject_id = app_private.current_subject_id())
+  WITH CHECK (owner_subject_id = app_private.current_subject_id());
+CREATE POLICY rls_assessment_drafts_subject
+  ON assessment_drafts FOR ALL TO s2w_study_app, s2w_study_worker
+  USING (app_private.owns_learner(learner_id))
+  WITH CHECK (app_private.owns_learner(learner_id));
+
+COMMENT ON SCHEMA app_private IS
+  'Study internal helper functions. app.subject_id and app.tenant_id must be SET LOCAL from verified service context.';
+
+DO $$
+DECLARE
+  table_names text[] := ARRAY[
+    'identity_projections', 'learner_profiles', 'service_roles', 'service_permissions',
+    'service_role_permissions', 'service_role_assignments', 'onboarding_submissions',
+    'path_recommendation_runs', 'learning_paths', 'learning_path_versions', 'courses',
+    'course_versions', 'path_course_items', 'chapters', 'lessons', 'content_blocks',
+    'content_rights_attestations', 'content_review_decisions', 'trusted_publisher_grants',
+    'assessments', 'assessment_placements', 'quiz_questions', 'quiz_options', 'rubrics',
+    'rubric_criteria', 'primary_path_periods', 'course_enrollments',
+    'block_progress_facts', 'lesson_progress_facts', 'progress_snapshots',
+    'course_completions', 'path_completions', 'assessment_attempts', 'assessment_answers',
+    'file_objects', 'malware_scan_results', 'attempt_files', 'assessment_reviews',
+    'assessment_review_scores', 'evidence_records', 'evidence_export_requests',
+    'notification_preferences', 'notifications', 'notification_deliveries',
+    'community_channels', 'community_acceptances', 'support_tickets', 'support_messages',
+    'admin_adjustments', 'audit_events', 'idempotency_keys', 'outbox_events',
+    'consumer_inbox', 'report_snapshots', 'outbox_delivery_attempts', 'study_skills',
+    'course_skill_outcomes', 'course_prerequisites', 'file_upload_sessions',
+    'assessment_drafts'
+  ];
+  table_name text;
+  table_number integer := 0;
+BEGIN
+  FOREACH table_name IN ARRAY table_names LOOP
+    table_number := table_number + 1;
+    EXECUTE format(
+      'COMMENT ON TABLE public.%I IS %L',
+      table_name,
+      'TBL-STU-' || lpad(table_number::text, 3, '0') || ' — Study service V1-PILOT'
+    );
+  END LOOP;
+END
+$$;
+
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM PUBLIC;
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM PUBLIC;
+REVOKE ALL ON ALL FUNCTIONS IN SCHEMA app_private FROM PUBLIC;
+GRANT USAGE ON SCHEMA public, app_private TO s2w_study_app, s2w_study_worker, s2w_study_readonly;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO s2w_study_app, s2w_study_worker;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO s2w_study_readonly;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO s2w_study_app, s2w_study_worker, s2w_study_readonly;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA app_private TO s2w_study_app, s2w_study_worker, s2w_study_readonly;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE s2w_study_owner IN SCHEMA public
+  REVOKE ALL ON TABLES FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES FOR ROLE s2w_study_owner IN SCHEMA public
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO s2w_study_app, s2w_study_worker;
+ALTER DEFAULT PRIVILEGES FOR ROLE s2w_study_owner IN SCHEMA public
+  GRANT SELECT ON TABLES TO s2w_study_readonly;
+ALTER DEFAULT PRIVILEGES FOR ROLE s2w_study_owner IN SCHEMA app_private
+  REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES FOR ROLE s2w_study_owner IN SCHEMA app_private
+  GRANT EXECUTE ON FUNCTIONS TO s2w_study_app, s2w_study_worker, s2w_study_readonly;
+
+COMMIT;
