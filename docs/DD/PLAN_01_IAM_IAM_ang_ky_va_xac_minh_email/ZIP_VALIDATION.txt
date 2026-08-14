@@ -1,3 +1,0 @@
-ZIP: PLAN_01_IAM_DD_MARKDOWN.zip
-Entries: 45
-Test result: PASS

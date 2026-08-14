@@ -2,91 +2,91 @@
 
 > Phiên bản thiết kế: `V1-PILOT`
 >
-> Phạm vi: Platform Identity, Study, Work và các tích hợp VNPAY, MoMo, object storage, ClamAV, email, WebSocket và AI provider.
+> Phạm vi: Danh tính Nền tảng, Study, Work và các tích hợp VNPAY, MoMo, kho lưu trữ đối tượng, ClamAV, email, WebSocket và nhà cung cấp AI.
 >
-> Quy ước: tài liệu này sở hữu các ID `UC-*`, `AC-*`, `CLS-*`, `SEQ-*`; đặc tả API, bảng và màn hình chỉ được tham chiếu bằng ID, không được định nghĩa lặp lại tại đây.
+> Quy ước: `01_TONG_QUAN_DU_AN.md` sở hữu các ID `UC-*`; tài liệu này chỉ diễn giải chúng bằng sơ đồ và sở hữu các ID `AC-*`, `CLS-*`, `SEQ-*`. Đặc tả API, bảng và màn hình chỉ được tham chiếu bằng ID, không được định nghĩa lặp lại tại đây.
 
 ## 1. Cách đọc và quy ước chung
 
-- Mermaid không có cú pháp use-case UML chính thức. Các sơ đồ `UC-*` vì vậy dùng `flowchart LR`: tác nhân nằm ngoài subgraph hệ thống; các capability nằm trong đúng bounded context.
-- Mũi tên liền biểu diễn lời gọi đồng bộ hoặc chuyển trạng thái trong cùng transaction. Mũi tên nét đứt biểu diễn event, hàng đợi, projection hoặc quan hệ logic không có khóa ngoại vật lý.
-- Identity DB, Study DB và Work DB tách vật lý. Không sơ đồ nào được hiểu là cho phép join hoặc foreign key xuyên database.
-- `Idempotency-Key` được kiểm tra trước mutation; `If-Match` được kiểm tra trước sửa draft hoặc review. Nhánh duplicate trả lại kết quả đã chốt; nhánh stale trả `VERSION_CONFLICT` hoặc mã nghiệp vụ chuyên biệt.
-- REST là nguồn sự thật cho lịch sử chat và trạng thái nghiệp vụ. WebSocket chỉ phân phối sự kiện nhanh; client luôn reconcile bằng REST sau reconnect.
-- Nhãn “AI đề xuất” không đồng nghĩa quyết định. AI không được tự publish, đổi trạng thái ATS, reject, offer hoặc hire.
+- Mermaid không có cú pháp biểu đồ ca sử dụng UML chính thức. Vì vậy, các sơ đồ `UC-*` dùng `flowchart LR`: tác nhân nằm ngoài nhóm hệ thống; chức năng nằm trong đúng ngữ cảnh giới hạn.
+- Mũi tên liền biểu diễn lời gọi đồng bộ hoặc chuyển trạng thái trong cùng giao dịch. Mũi tên nét đứt biểu diễn sự kiện, hàng đợi, hình chiếu dữ liệu hoặc quan hệ logic không có khóa ngoại vật lý.
+- CSDL Danh tính nền tảng, CSDL Study và CSDL Work tách vật lý. Không sơ đồ nào được hiểu là cho phép nối dữ liệu hoặc khóa ngoại xuyên cơ sở dữ liệu.
+- `Idempotency-Key` được kiểm tra trước thao tác thay đổi dữ liệu để bảo đảm thao tác lặp không tạo tác động mới; `If-Match` được kiểm tra trước khi sửa bản nháp hoặc duyệt. Nhánh trùng lặp trả lại kết quả đã chốt; nhánh dùng phiên bản cũ trả `VERSION_CONFLICT` hoặc mã nghiệp vụ chuyên biệt.
+- REST là nguồn sự thật cho lịch sử trò chuyện và trạng thái nghiệp vụ. WebSocket chỉ phân phối sự kiện nhanh; máy khách luôn đối soát bằng REST sau khi kết nối lại.
+- Nhãn “AI đề xuất” không đồng nghĩa với quyết định. AI không được tự xuất bản, đổi trạng thái ATS, từ chối, đề nghị hoặc tuyển dụng.
 
 ### 1.1. Ranh giới hệ thống
 
-| Khối | Sở hữu | Không sở hữu |
+| Khối | Dữ liệu/chức năng sở hữu | Không sở hữu |
 |---|---|---|
-| Platform Identity | Email, credential, verification, session, refresh-token family, global role, account security | Hồ sơ học tập, tenant membership, ATS, payment ledger |
-| Study | Hồ sơ học, content version, enrollment, progress, assessment, evidence, community, hỗ trợ | Credential, Work application, payment entitlement |
-| Work | Candidate/CV, enterprise, university, job, application, ATS, interview, chat, AI job, billing và promotion | Password, Study progress nguồn, dữ liệu thẻ |
-| Nhà cung cấp ngoài | Thanh toán, email, object storage, malware scan, AI inference | Quyết định nghiệp vụ cuối cùng và dữ liệu nguồn của ba dịch vụ |
+| Danh tính Nền tảng | Email, thông tin xác thực, xác minh, phiên làm việc, họ mã làm mới, vai trò toàn cục, bảo mật tài khoản | Hồ sơ học tập, tư cách thành viên trong phạm vi tổ chức, ATS, sổ cái thanh toán |
+| Study | Hồ sơ học, phiên bản nội dung, ghi danh, tiến độ, bài đánh giá, minh chứng, cộng đồng, hỗ trợ | Thông tin xác thực, đơn ứng tuyển Work, quyền lợi thanh toán |
+| Work | Hồ sơ ứng viên/CV, doanh nghiệp, trường, việc làm, đơn ứng tuyển, ATS, phỏng vấn, trò chuyện, tác vụ AI, thanh toán và quảng bá | Mật khẩu, tiến độ gốc của Study, dữ liệu thẻ |
+| Nhà cung cấp ngoài | Thanh toán, email, kho lưu trữ đối tượng, quét mã độc, suy luận AI | Quyết định nghiệp vụ cuối cùng và dữ liệu nguồn của ba dịch vụ |
 
-### 1.2. Danh mục use case canonical
+### 1.2. Danh mục ca sử dụng chuẩn
 
-| ID | Use case | Kết quả nghiệp vụ |
+| ID | Ca sử dụng | Kết quả nghiệp vụ |
 |---|---|---|
 | `UC-IAM-001` | Đăng ký và xác minh email | Tài khoản từ `PENDING_EMAIL_VERIFICATION` thành `ACTIVE` |
-| `UC-IAM-002` | Đăng nhập, MFA và quản lý session | Cấp access/refresh token hợp lệ hoặc chặn an toàn |
-| `UC-IAM-003` | RBAC và quản trị vòng đời account | Role/status thay đổi, session bị thu hồi và event được phát |
-| `UC-STU-001` | Xem catalog và học course standalone | Learner enroll đúng published course version, không cần onboarding |
-| `UC-STU-002` | Onboarding, gợi ý và primary path | Chỉ một primary path `ACTIVE`, cooldown đổi path đúng 168 giờ |
-| `UC-STU-003` | Học lesson và ghi nhận progress | Fact tiến độ monotonic; snapshot course/path có thể rebuild |
-| `UC-STU-004` | Làm và chấm assessment | Quiz auto-grade; text/link/file được review thủ công |
-| `UC-STU-005` | Phát hành và thu hồi evidence | Evidence immutable, versioned, có trạng thái và audit |
-| `UC-STU-006` | Soạn, kiểm tra và publish nội dung | Published revision bất biến; revision cũ tiếp tục phục vụ enrollment |
-| `UC-STU-007` | Notification, community và support | Người học nhận thông tin, chấp thuận rule và được hỗ trợ có lịch sử |
-| `UC-STU-008` | Báo cáo và vận hành Study | Operator xem aggregate, sửa sai qua adjustment có audit |
-| `UC-WRK-001` | Quản lý candidate profile, CV và portfolio | Snapshot có version; profile mặc định private |
-| `UC-WRK-002` | Candidate search và invitation | Chỉ index profile opt-in; không lộ contact/CV/evidence |
-| `UC-WRK-003` | Quản trị enterprise tenant | Membership và quyền luôn được ràng buộc server-side theo tenant |
-| `UC-WRK-004` | Soạn, duyệt và publish job | Job revision published bất biến, state transition hợp lệ |
-| `UC-WRK-005` | Apply và quản lý ATS | Một application mỗi candidate/job; mọi chuyển trạng thái có history |
-| `UC-WRK-006` | Chọn Study evidence khi apply | Work lưu consent/request/snapshot theo application, không lập kho toàn cục |
-| `UC-WRK-007` | Lập và quản lý interview | Schedule version chống ghi đè; có confirm/reschedule/no-show/cancel |
-| `UC-WRK-008` | Chat theo application | Một conversation 1–1, recruiter phải assigned, terminal thì read-only |
-| `UC-WRK-009` | TopCV, TopJD và sponsored placement | Entitlement được tiêu thụ; kết quả tài trợ luôn gắn nhãn |
-| `UC-WRK-010` | Moderation và báo cáo Work | Nội dung vi phạm được xử lý; báo cáo có tenant và privacy guard |
-| `UC-UNI-001` | Tenant trường, affiliation và cohort | Membership/affiliation có kỳ hiệu lực và audit |
-| `UC-UNI-002` | Internship, campus job và referral | Chương trình và referral được theo dõi end-to-end |
-| `UC-UNI-003` | Consent và báo cáo trường | Chỉ xem PII khi consent còn hiệu lực; aggregate có nhóm tối thiểu 10 |
-| `UC-PAY-001` | Tạo checkout VND | Payment intent immutable được gửi đến đúng provider adapter |
-| `UC-PAY-002` | Webhook/IPN và entitlement | Chỉ callback xác thực, settled mới cấp entitlement đúng một lần |
-| `UC-PAY-003` | Refund, chargeback và reconciliation | Ledger append-only, entitlement điều chỉnh có lịch sử |
-| `UC-AIX-001` | Trợ lý soạn CV/JD | AI tạo draft có provenance; người dùng chọn áp dụng hoặc bỏ |
-| `UC-AIX-002` | Match explanation và shortlist suggestion | AI chỉ đề xuất, không thay ATS status |
-| `UC-AIX-003` | Governance và human approval | Prompt/model/version/input policy được audit; quyết định do người chịu trách nhiệm |
-| `UC-OPS-001` | Moderation đa miền | Báo cáo được triage, quyết định và kháng nghị có audit |
-| `UC-OPS-002` | Xóa/anonymize và legal hold | Grace 30 ngày, dữ liệu được xử lý theo ownership và retention |
-| `UC-OPS-003` | Quan sát, retry và khôi phục | DLQ/reconciliation/backup bảo đảm RPO và RTO pilot |
+| `UC-IAM-002` | Đăng nhập, MFA và quản lý phiên làm việc | Cấp mã truy cập/mã làm mới hợp lệ hoặc chặn an toàn |
+| `UC-IAM-003` | RBAC và quản trị vòng đời tài khoản | Vai trò/trạng thái thay đổi, phiên làm việc bị thu hồi và sự kiện được phát |
+| `UC-STU-001` | Xem danh mục và học khóa học độc lập | Người học ghi danh đúng phiên bản khóa học đã xuất bản, không cần khởi tạo hồ sơ |
+| `UC-STU-002` | Khởi tạo hồ sơ, gợi ý và lộ trình chính | Chỉ một lộ trình chính `ACTIVE`, thời gian chờ đổi lộ trình đúng 168 giờ |
+| `UC-STU-003` | Học bài học và ghi nhận tiến độ | Dữ kiện tiến độ chỉ tăng; bản chụp khóa học/lộ trình có thể dựng lại |
+| `UC-STU-004` | Làm và chấm bài đánh giá | Bài trắc nghiệm được chấm tự động; văn bản/liên kết/tệp được duyệt thủ công |
+| `UC-STU-005` | Phát hành và thu hồi minh chứng | Minh chứng bất biến, có phiên bản, trạng thái và kiểm toán |
+| `UC-STU-006` | Soạn, kiểm tra và xuất bản nội dung | Bản hiệu đính đã xuất bản là bất biến; bản cũ tiếp tục phục vụ lượt ghi danh |
+| `UC-STU-007` | Thông báo, cộng đồng và hỗ trợ | Người học nhận thông tin, chấp thuận quy tắc và được hỗ trợ có lịch sử |
+| `UC-STU-008` | Báo cáo và vận hành Study | Nhân sự vận hành xem dữ liệu tổng hợp, sửa sai qua điều chỉnh có kiểm toán |
+| `UC-WRK-001` | Quản lý hồ sơ ứng viên, CV và danh mục năng lực | Bản chụp có phiên bản; hồ sơ mặc định riêng tư |
+| `UC-WRK-002` | Tìm kiếm ứng viên và lời mời | Chỉ lập chỉ mục hồ sơ đã tự nguyện tham gia; không lộ thông tin liên hệ/CV/minh chứng |
+| `UC-WRK-003` | Quản trị phạm vi tổ chức doanh nghiệp | Tư cách thành viên và quyền luôn được ràng buộc phía máy chủ theo không gian dữ liệu |
+| `UC-WRK-004` | Soạn, duyệt và xuất bản việc làm | Bản hiệu đính việc làm đã xuất bản là bất biến, chuyển trạng thái hợp lệ |
+| `UC-WRK-005` | Ứng tuyển và quản lý ATS | Một đơn ứng tuyển cho mỗi ứng viên/việc làm; mọi chuyển trạng thái có lịch sử |
+| `UC-WRK-006` | Chọn minh chứng Study khi ứng tuyển | Work lưu sự đồng ý/yêu cầu/bản chụp theo đơn ứng tuyển, không lập kho toàn cục |
+| `UC-WRK-007` | Lập và quản lý phỏng vấn | Phiên bản lịch chống ghi đè; có xác nhận/yêu cầu đổi lịch/vắng mặt/hủy |
+| `UC-WRK-008` | Trò chuyện theo đơn ứng tuyển | Một cuộc trò chuyện 1–1, người tuyển dụng phải được phân công, trạng thái kết thúc chỉ đọc |
+| `UC-WRK-009` | TopCV, TopJD và vị trí tài trợ | Quyền lợi được tiêu thụ; kết quả tài trợ luôn gắn nhãn |
+| `UC-WRK-010` | Kiểm duyệt và báo cáo Work | Nội dung vi phạm được xử lý; báo cáo có lớp bảo vệ không gian dữ liệu và riêng tư |
+| `UC-UNI-001` | Phạm vi tổ chức trường, liên kết sinh viên và nhóm học | Tư cách thành viên/liên kết sinh viên có kỳ hiệu lực và kiểm toán |
+| `UC-UNI-002` | Thực tập, việc làm trong trường và giới thiệu ứng viên | Chương trình và lượt giới thiệu được theo dõi xuyên suốt |
+| `UC-UNI-003` | Sự đồng ý và báo cáo trường | Chỉ xem PII khi sự đồng ý còn hiệu lực; dữ liệu tổng hợp có nhóm tối thiểu 10 |
+| `UC-PAY-001` | Tạo phiên thanh toán VND | Ý định thanh toán bất biến được gửi đến đúng bộ điều hợp nhà cung cấp |
+| `UC-PAY-002` | Webhook/IPN và quyền lợi | Chỉ phản hồi gọi lại đã xác thực và `SETTLED` mới cấp quyền lợi đúng một lần |
+| `UC-PAY-003` | Hoàn tiền, tranh chấp thanh toán ngược và đối soát | Sổ cái chỉ ghi thêm, điều chỉnh quyền lợi có lịch sử |
+| `UC-AIX-001` | Trợ lý soạn CV/JD | AI tạo bản nháp có nguồn gốc; người dùng chọn áp dụng hoặc bỏ |
+| `UC-AIX-002` | Giải thích độ phù hợp và đề xuất danh sách rút gọn | AI chỉ đề xuất, không thay đổi trạng thái ATS |
+| `UC-AIX-003` | Quản trị và phê duyệt bởi con người | Chính sách prompt/mô hình/phiên bản/đầu vào được kiểm toán; quyết định do người chịu trách nhiệm |
+| `UC-OPS-001` | Kiểm duyệt đa miền | Báo cáo được phân loại, quyết định và kháng nghị có kiểm toán |
+| `UC-OPS-002` | Xóa/ẩn danh và lưu giữ pháp lý | Ân hạn 30 ngày, dữ liệu được xử lý theo quyền sở hữu và thời hạn lưu giữ |
+| `UC-OPS-003` | Quan sát, thử lại và khôi phục | DLQ/đối soát/sao lưu bảo đảm RPO và RTO của bản thử nghiệm |
 
-## 2. Use-case maps
+## 2. Bản đồ ca sử dụng
 
-### Biểu đồ UC-IAM-001 — Bản đồ Platform Identity
+### Biểu đồ UC-IAM-001 — Bản đồ Danh tính Nền tảng
 
-- **Mục đích:** gom duy nhất mọi luồng credential, xác minh, session, MFA, role và account lifecycle.
-- **Tác nhân:** Guest, User, Privileged User, Platform Admin, Study, Work, Email Provider.
-- **Tiền điều kiện:** client dùng HTTPS; issuer/audience và JWKS đã cấu hình; email normalized trước khi tra cứu.
-- **Kết thúc:** account/session được cập nhật nhất quán; security event được ghi audit và phát qua outbox nếu có thay đổi liên dịch vụ.
-- **Liên kết:** đăng ký/xác minh/đăng nhập/refresh/admin `API-IAM-001`, `API-IAM-002`, `API-IAM-004`, `API-IAM-006`, `API-IAM-022`; user/credential/session/audit/outbox `TBL-IAM-001`, `TBL-IAM-003`, `TBL-IAM-009`, `TBL-IAM-010`, `TBL-IAM-017`, `TBL-IAM-018`; `SCR-IAM-001`, `SCR-IAM-002`, `SCR-IAM-003`, `SCR-IAM-005`, `SCR-IAM-006`, `SCR-OPS-001`; `SEQ-IAM-001`, `SEQ-IAM-002`.
+- **Mục đích:** tập hợp mọi luồng thông tin xác thực, xác minh, phiên làm việc, MFA, vai trò và vòng đời tài khoản.
+- **Tác nhân:** Khách, người dùng, người dùng đặc quyền, quản trị viên nền tảng, Study, Work, nhà cung cấp email.
+- **Tiền điều kiện:** máy khách dùng HTTPS; nguồn phát hành, đối tượng nhận và JWKS đã cấu hình; email được chuẩn hóa trước khi tra cứu.
+- **Kết thúc:** tài khoản/phiên làm việc được cập nhật nhất quán; sự kiện bảo mật được kiểm toán và phát qua hộp thư đi (`outbox`) nếu có thay đổi liên dịch vụ.
+- **Liên kết:** đăng ký/xác minh/đăng nhập/làm mới/quản trị `API-IAM-001`, `API-IAM-002`, `API-IAM-004`, `API-IAM-006`, `API-IAM-022`; người dùng/thông tin xác thực/phiên làm việc/kiểm toán/hộp thư đi `TBL-IAM-001`, `TBL-IAM-003`, `TBL-IAM-009`, `TBL-IAM-010`, `TBL-IAM-017`, `TBL-IAM-018`; `SCR-IAM-001`, `SCR-IAM-002`, `SCR-IAM-003`, `SCR-IAM-005`, `SCR-IAM-006`, `SCR-OPS-001`; `SEQ-IAM-001`, `SEQ-IAM-002`.
 
 ```mermaid
 flowchart LR
-    Guest[Guest]
-    User[User]
-    Priv[Privileged User]
-    Admin[Platform Admin]
-    Study[Study Service]
-    Work[Work Service]
-    Mail[Email Provider]
+    Guest[Khách]
+    User[Người dùng]
+    Priv[Người dùng đặc quyền]
+    Admin[Quản trị viên nền tảng]
+    Study[Dịch vụ Study]
+    Work[Dịch vụ Work]
+    Mail[Nhà cung cấp email]
 
-    subgraph IAM[Platform Identity]
+    subgraph IAM[Danh tính Nền tảng]
         Reg["UC-IAM-001<br/>Đăng ký và xác minh email"]
-        Login["UC-IAM-002<br/>Đăng nhập, MFA, session và refresh"]
-        Life["UC-IAM-003<br/>RBAC, suspend, deletion và audit"]
-        JWKS["Phát JWKS và signed identity events"]
+        Login["UC-IAM-002<br/>Đăng nhập, MFA, phiên làm việc và làm mới"]
+        Life["UC-IAM-003<br/>RBAC, tạm ngưng, xóa và kiểm toán"]
+        JWKS["Phát JWKS và sự kiện danh tính có chữ ký"]
     end
 
     Guest --> Reg
@@ -95,40 +95,40 @@ flowchart LR
     Admin --> Life
     Reg --> Mail
     Login --> Mail
-    Life -. account và role events .-> Study
-    Life -. account và role events .-> Work
+    Life -. sự kiện tài khoản và vai trò .-> Study
+    Life -. sự kiện tài khoản và vai trò .-> Work
     Study --> JWKS
     Work --> JWKS
 ```
 
 ### Biểu đồ UC-STU-001 — Bản đồ Study
 
-- **Mục đích:** thể hiện toàn bộ vòng đời học tập từ catalog đến completion/evidence và vận hành nội dung.
-- **Tác nhân:** Guest, Learner, Content Author, Trusted Publisher, Reviewer, Support, Moderator, Study Admin, Work Service.
-- **Tiền điều kiện:** nội dung public phải có published version; thao tác learner yêu cầu Identity account `ACTIVE`; chọn primary path yêu cầu onboarding hoàn tất.
-- **Kết thúc:** learning fact và lịch sử bất biến được lưu; side effect chạy qua outbox; published content không bị sửa tại chỗ.
-- **Liên kết:** catalog/enroll/path/progress/attempt/publish/evidence `API-STU-001`, `API-STU-016`, `API-STU-014`, `API-STU-020`, `API-STU-027`, `API-STU-056`, `API-STU-061`; `TBL-STU-001`, `TBL-STU-012`, `TBL-STU-027`, `TBL-STU-033`, `TBL-STU-040`; `SCR-STU-002`, `SCR-STU-005`, `SCR-STU-013`, `SCR-STU-016`, `SCR-STU-017`, `SCR-OPS-007`, `SCR-WRK-017`; `AC-STU-001..003`, `SEQ-STU-001..004`.
+- **Mục đích:** thể hiện toàn bộ vòng đời học tập từ danh mục đến hoàn thành/minh chứng và vận hành nội dung.
+- **Tác nhân:** Khách, người học, tác giả nội dung, người xuất bản được tin cậy, người duyệt, bộ phận hỗ trợ, kiểm duyệt viên, quản trị viên Study, dịch vụ Work.
+- **Tiền điều kiện:** nội dung công khai phải có phiên bản đã xuất bản; thao tác của người học yêu cầu tài khoản Danh tính `ACTIVE`; chọn lộ trình chính yêu cầu hoàn tất khởi tạo hồ sơ.
+- **Kết thúc:** dữ kiện học tập và lịch sử bất biến được lưu; tác động phụ chạy qua hộp thư đi; nội dung đã xuất bản không bị sửa tại chỗ.
+- **Liên kết:** danh mục/ghi danh/lộ trình/tiến độ/lần làm/xuất bản/minh chứng `API-STU-001`, `API-STU-016`, `API-STU-014`, `API-STU-020`, `API-STU-027`, `API-STU-056`, `API-STU-061`; `TBL-STU-001`, `TBL-STU-012`, `TBL-STU-027`, `TBL-STU-033`, `TBL-STU-040`; `SCR-STU-002`, `SCR-STU-005`, `SCR-STU-013`, `SCR-STU-016`, `SCR-STU-017`, `SCR-OPS-007`, `SCR-WRK-017`; `AC-STU-001..003`, `SEQ-STU-001..004`.
 
 ```mermaid
 flowchart LR
-    Guest[Guest]
-    Learner[Learner]
-    Author[Content Author]
-    Publisher[Trusted Publisher]
-    Reviewer[Assessment Reviewer]
-    Support[Support và Moderator]
-    Admin[Study Admin]
-    Work[Work Service]
+    Guest[Khách]
+    Learner[Người học]
+    Author[Tác giả nội dung]
+    Publisher[Người xuất bản được tin cậy]
+    Reviewer[Người duyệt bài đánh giá]
+    Support[Hỗ trợ và kiểm duyệt]
+    Admin[Quản trị viên Study]
+    Work[Dịch vụ Work]
 
     subgraph STUDY[Study]
-        Catalog["UC-STU-001<br/>Catalog và standalone course"]
-        Path["UC-STU-002<br/>Onboarding và primary path"]
-        Learn["UC-STU-003<br/>Lesson, progress, completion"]
-        Assess["UC-STU-004<br/>Assessment và review"]
-        Evidence["UC-STU-005<br/>Evidence lifecycle"]
-        Publish["UC-STU-006<br/>Versioned publishing"]
-        Engage["UC-STU-007<br/>Notification, community, support"]
-        Operate["UC-STU-008<br/>Report, adjustment, audit"]
+        Catalog["UC-STU-001<br/>Danh mục và khóa học độc lập"]
+        Path["UC-STU-002<br/>Khởi tạo hồ sơ và lộ trình chính"]
+        Learn["UC-STU-003<br/>Bài học, tiến độ, hoàn thành"]
+        Assess["UC-STU-004<br/>Bài đánh giá và duyệt"]
+        Evidence["UC-STU-005<br/>Vòng đời minh chứng"]
+        Publish["UC-STU-006<br/>Xuất bản theo phiên bản"]
+        Engage["UC-STU-007<br/>Thông báo, cộng đồng, hỗ trợ"]
+        Operate["UC-STU-008<br/>Báo cáo, điều chỉnh, kiểm toán"]
     end
 
     Guest --> Catalog
@@ -144,39 +144,39 @@ flowchart LR
     Admin --> Operate
     Learn --> Evidence
     Assess --> Evidence
-    Evidence -. signed export và revocation .-> Work
+    Evidence -. xuất dữ liệu có chữ ký và thu hồi .-> Work
 ```
 
 ### Biểu đồ UC-WRK-001 — Bản đồ Work
 
-- **Mục đích:** mô tả chuỗi tuyển dụng từ hồ sơ ứng viên, job, sourcing, application đến interview/chat và sản phẩm premium.
-- **Tác nhân:** Candidate, Recruiter, Enterprise Admin, Hiring Manager, Moderator, Study Service, Payment Service, AI Provider.
-- **Tiền điều kiện:** candidate và enterprise member đã xác thực; tenant context được resolve từ membership server-side; job/application phải thuộc tenant hiện hành.
-- **Kết thúc:** snapshot tuyển dụng và history được giữ bất biến; chỉ con người có quyền mới chuyển trạng thái ATS; contact/evidence không đi vào candidate-search index.
-- **Liên kết:** profile/search/job/apply/ATS/interview/chat `API-WRK-005`, `API-WRK-051`, `API-WRK-043`, `API-WRK-023`, `API-WRK-058`, `API-WRK-060`, `API-WRK-032`; `TBL-WRK-004`, `TBL-WRK-016`, `TBL-WRK-033`, `TBL-WRK-041`, `TBL-WRK-049`, `TBL-WRK-053`, `TBL-WRK-054`; `SCR-WRK-011`, `SCR-WRK-036`, `SCR-WRK-034`, `SCR-WRK-017`, `SCR-WRK-040`, `SCR-WRK-041`, `SCR-WRK-021`; `AC-WRK-001..003`, `AC-INT-001`, `SEQ-WRK-001..005`, `SEQ-INT-001`.
+- **Mục đích:** mô tả chuỗi tuyển dụng từ hồ sơ ứng viên, việc làm, tìm nguồn ứng viên, đơn ứng tuyển đến phỏng vấn/trò chuyện và sản phẩm cao cấp.
+- **Tác nhân:** Ứng viên, người tuyển dụng, quản trị viên doanh nghiệp, quản lý tuyển dụng, kiểm duyệt viên, dịch vụ Study, dịch vụ thanh toán, nhà cung cấp AI.
+- **Tiền điều kiện:** ứng viên và thành viên doanh nghiệp đã xác thực; phạm vi tổ chức được xác định từ tư cách thành viên ở phía máy chủ; việc làm/đơn ứng tuyển phải thuộc phạm vi tổ chức hiện hành.
+- **Kết thúc:** bản chụp tuyển dụng và lịch sử được giữ bất biến; chỉ con người có quyền mới chuyển trạng thái ATS; thông tin liên hệ/minh chứng không đi vào chỉ mục tìm kiếm ứng viên.
+- **Liên kết:** hồ sơ/tìm kiếm/việc làm/ứng tuyển/ATS/phỏng vấn/trò chuyện `API-WRK-005`, `API-WRK-051`, `API-WRK-043`, `API-WRK-023`, `API-WRK-058`, `API-WRK-060`, `API-WRK-032`; `TBL-WRK-004`, `TBL-WRK-016`, `TBL-WRK-033`, `TBL-WRK-041`, `TBL-WRK-049`, `TBL-WRK-053`, `TBL-WRK-054`; `SCR-WRK-011`, `SCR-WRK-036`, `SCR-WRK-034`, `SCR-WRK-017`, `SCR-WRK-040`, `SCR-WRK-041`, `SCR-WRK-021`; `AC-WRK-001..003`, `AC-INT-001`, `SEQ-WRK-001..005`, `SEQ-INT-001`.
 
 ```mermaid
 flowchart LR
-    Candidate[Candidate]
-    Recruiter[Assigned Recruiter]
-    EntAdmin[Enterprise Admin]
-    Hiring[Hiring Manager]
-    Moderator[Work Moderator]
-    Study[Study Service]
-    Pay[Payment Module]
-    AI[AI Provider]
+    Candidate[Ứng viên]
+    Recruiter[Người tuyển dụng được phân công]
+    EntAdmin[Quản trị viên doanh nghiệp]
+    Hiring[Quản lý tuyển dụng]
+    Moderator[Kiểm duyệt viên Work]
+    Study[Dịch vụ Study]
+    Pay[Mô-đun thanh toán]
+    AI[Nhà cung cấp AI]
 
     subgraph WORK[Work]
-        Profile["UC-WRK-001<br/>Profile, CV, portfolio"]
-        Search["UC-WRK-002<br/>Search và invitation"]
-        Tenant["UC-WRK-003<br/>Enterprise membership"]
-        Job["UC-WRK-004<br/>Job revision và publish"]
-        ATS["UC-WRK-005<br/>Apply và ATS"]
-        Ev["UC-WRK-006<br/>Evidence-at-apply"]
-        Interview["UC-WRK-007<br/>Interview"]
-        Chat["UC-WRK-008<br/>Application chat"]
-        Premium["UC-WRK-009<br/>TopCV, TopJD, sponsored"]
-        Ops["UC-WRK-010<br/>Moderation và report"]
+        Profile["UC-WRK-001<br/>Hồ sơ, CV, danh mục năng lực"]
+        Search["UC-WRK-002<br/>Tìm kiếm và lời mời"]
+        Tenant["UC-WRK-003<br/>Thành viên doanh nghiệp"]
+        Job["UC-WRK-004<br/>Bản hiệu đính việc làm và xuất bản"]
+        ATS["UC-WRK-005<br/>Ứng tuyển và ATS"]
+        Ev["UC-WRK-006<br/>Minh chứng khi ứng tuyển"]
+        Interview["UC-WRK-007<br/>Phỏng vấn"]
+        Chat["UC-WRK-008<br/>Trò chuyện theo đơn ứng tuyển"]
+        Premium["UC-WRK-009<br/>TopCV, TopJD, nội dung tài trợ"]
+        Ops["UC-WRK-010<br/>Kiểm duyệt và báo cáo"]
     end
 
     Candidate --> Profile
@@ -192,32 +192,32 @@ flowchart LR
     Hiring --> ATS
     Moderator --> Ops
     ATS --> Ev
-    Ev -. export request .-> Study
+    Ev -. yêu cầu xuất dữ liệu .-> Study
     Premium --> Pay
-    Profile -. draft request .-> AI
-    Job -. draft request .-> AI
+    Profile -. yêu cầu tạo bản nháp .-> AI
+    Job -. yêu cầu tạo bản nháp .-> AI
 ```
 
-### Biểu đồ UC-UNI-001 — Bản đồ University
+### Biểu đồ UC-UNI-001 — Bản đồ trường
 
 - **Mục đích:** xác định đúng quyền và luồng phối hợp giữa trường, sinh viên và doanh nghiệp mà không biến trường thành người xem mặc định mọi PII.
-- **Tác nhân:** University Admin, Career Officer, Student/Candidate, Enterprise Recruiter, Platform Operator.
-- **Tiền điều kiện:** university tenant đã được xác minh; membership, affiliation và consent còn hiệu lực.
-- **Kết thúc:** program/referral được ghi nhận; báo cáo cá nhân bị chặn nếu thiếu consent; aggregate dưới 10 người không được hiển thị.
-- **Liên kết:** affiliation/program/referral/report `API-UNI-005`, `API-UNI-010`, `API-UNI-014`, `API-UNI-015`; `TBL-WRK-019`, `TBL-WRK-023`, `TBL-WRK-026`, `TBL-WRK-029`, `TBL-WRK-030`, `TBL-WRK-031`; `SCR-UNI-004`, `SCR-UNI-007`, `SCR-UNI-010`, `SCR-UNI-011`; `AC-UNI-001`, `SEQ-UNI-001`.
+- **Tác nhân:** Quản trị viên trường, cán bộ hướng nghiệp, sinh viên/ứng viên, người tuyển dụng doanh nghiệp, nhân sự vận hành nền tảng.
+- **Tiền điều kiện:** phạm vi tổ chức của trường đã được xác minh; tư cách thành viên, liên kết sinh viên và sự đồng ý còn hiệu lực.
+- **Kết thúc:** chương trình/lượt giới thiệu được ghi nhận; báo cáo cá nhân bị chặn nếu thiếu sự đồng ý; dữ liệu tổng hợp dưới 10 người không được hiển thị.
+- **Liên kết:** liên kết sinh viên/chương trình/giới thiệu/báo cáo `API-UNI-005`, `API-UNI-010`, `API-UNI-014`, `API-UNI-015`; `TBL-WRK-019`, `TBL-WRK-023`, `TBL-WRK-026`, `TBL-WRK-029`, `TBL-WRK-030`, `TBL-WRK-031`; `SCR-UNI-004`, `SCR-UNI-007`, `SCR-UNI-010`, `SCR-UNI-011`; `AC-UNI-001`, `SEQ-UNI-001`.
 
 ```mermaid
 flowchart LR
-    UA[University Admin]
-    CO[Career Officer]
-    Student[Student và Candidate]
-    Recruiter[Enterprise Recruiter]
-    PO[Platform Operator]
+    UA[Quản trị viên trường]
+    CO[Cán bộ hướng nghiệp]
+    Student[Sinh viên và ứng viên]
+    Recruiter[Người tuyển dụng doanh nghiệp]
+    PO[Nhân sự vận hành nền tảng]
 
-    subgraph UNI[University context trong Work]
-        Tenant["UC-UNI-001<br/>Tenant, affiliation, cohort"]
-        Program["UC-UNI-002<br/>Internship, campus job, referral"]
-        Consent["UC-UNI-003<br/>Consent và privacy-safe report"]
+    subgraph UNI[Ngữ cảnh trường trong Work]
+        Tenant["UC-UNI-001<br/>Phạm vi tổ chức, liên kết sinh viên, nhóm học"]
+        Program["UC-UNI-002<br/>Thực tập, việc làm trong trường, giới thiệu"]
+        Consent["UC-UNI-003<br/>Sự đồng ý và báo cáo an toàn riêng tư"]
     end
 
     UA --> Tenant
@@ -230,60 +230,60 @@ flowchart LR
     Program --> Consent
 ```
 
-### Biểu đồ UC-PAY-001 — Bản đồ Payment và entitlement
+### Biểu đồ UC-PAY-001 — Bản đồ thanh toán và quyền lợi
 
-- **Mục đích:** tách payment intent, provider callback, ledger và entitlement; return URL không được cấp quyền sử dụng.
-- **Tác nhân:** Student, Enterprise Buyer, Finance Operator, VNPAY, MoMo.
-- **Tiền điều kiện:** order hợp lệ bằng VND; product/price version còn hiệu lực; idempotency key và provider credential đã có.
-- **Kết thúc:** payment được đối soát; chỉ trạng thái `SETTLED` cấp entitlement đúng một lần; refund/chargeback không xóa lịch sử.
-- **Liên kết:** checkout/VNPAY/MoMo/refund/reconcile `API-PAY-002`, `API-PAY-014`, `API-PAY-015`, `API-PAY-006`, `API-PAY-009`; `TBL-PAY-003`, `TBL-PAY-005`, `TBL-PAY-006`, `TBL-PAY-007`, `TBL-PAY-008`, `TBL-PAY-010`; `SCR-WRK-022`, `SCR-WRK-023`, `SCR-WRK-043`, `SCR-WRK-044`, `SCR-OPS-019`, `SCR-OPS-020`; `AC-PAY-001`, `SEQ-PAY-001`, `SEQ-PAY-002`.
+- **Mục đích:** tách ý định thanh toán, phản hồi gọi lại của nhà cung cấp, sổ cái và quyền lợi; URL trả về không được cấp quyền sử dụng.
+- **Tác nhân:** Học viên, bên mua doanh nghiệp, nhân sự tài chính, VNPAY, MoMo.
+- **Tiền điều kiện:** đơn hàng hợp lệ bằng VND; phiên bản sản phẩm/giá còn hiệu lực; khóa chống lặp yêu cầu và thông tin xác thực nhà cung cấp đã có.
+- **Kết thúc:** thanh toán được đối soát; chỉ trạng thái `SETTLED` cấp quyền lợi đúng một lần; hoàn tiền/tranh chấp thanh toán ngược không xóa lịch sử và không ghi đè `SETTLED`.
+- **Liên kết:** phiên thanh toán/VNPAY/MoMo/hoàn tiền/đối soát `API-PAY-002`, `API-PAY-014`, `API-PAY-015`, `API-PAY-006`, `API-PAY-009`; `TBL-PAY-003`, `TBL-PAY-005`, `TBL-PAY-006`, `TBL-PAY-007`, `TBL-PAY-008`, `TBL-PAY-010`; `SCR-WRK-022`, `SCR-WRK-023`, `SCR-WRK-043`, `SCR-WRK-044`, `SCR-OPS-019`, `SCR-OPS-020`; `AC-PAY-001`, `SEQ-PAY-001`, `SEQ-PAY-002`.
 
 ```mermaid
 flowchart LR
-    Student[Student]
-    Buyer[Enterprise Buyer]
-    Finance[Finance Operator]
+    Student[Học viên]
+    Buyer[Bên mua doanh nghiệp]
+    Finance[Nhân sự tài chính]
     VNPAY[VNPAY]
     MoMo[MoMo]
 
-    subgraph PAY[Billing trong Work]
-        Checkout["UC-PAY-001<br/>Checkout VND"]
-        Settle["UC-PAY-002<br/>Webhook, ledger, entitlement"]
-        Reverse["UC-PAY-003<br/>Refund, chargeback, reconcile"]
+    subgraph PAY[Thanh toán trong Work]
+        Checkout["UC-PAY-001<br/>Phiên thanh toán VND"]
+        Settle["UC-PAY-002<br/>Webhook, sổ cái, quyền lợi"]
+        Reverse["UC-PAY-003<br/>Hoàn tiền, tranh chấp thanh toán ngược, đối soát"]
     end
 
     Student --> Checkout
     Buyer --> Checkout
     Checkout --> VNPAY
     Checkout --> MoMo
-    VNPAY -. IPN và query .-> Settle
-    MoMo -. IPN và query .-> Settle
+    VNPAY -. IPN và truy vấn .-> Settle
+    MoMo -. IPN và truy vấn .-> Settle
     Finance --> Reverse
     Reverse --> VNPAY
     Reverse --> MoMo
     Settle --> Reverse
 ```
 
-### Biểu đồ UC-AIX-001 — Bản đồ AI có human-in-the-loop
+### Biểu đồ UC-AIX-001 — Bản đồ AI có con người trong vòng kiểm soát
 
-- **Mục đích:** khoanh AI vào vai trò trợ lý tạo draft/giải thích/đề xuất, không trao quyền quyết định tuyển dụng.
-- **Tác nhân:** Candidate, Recruiter, Hiring Manager, AI Operator, Ollama hoặc provider thay thế.
-- **Tiền điều kiện:** người dùng đã đồng ý gửi dữ liệu được phép; excluded field đã được loại; prompt policy và model version đang active.
-- **Kết thúc:** output, provenance và review được lưu; chỉ bản do người dùng áp dụng mới ảnh hưởng draft; ATS không tự đổi trạng thái.
-- **Liên kết:** CV/JD/match/shortlist job, output và human review `API-AIX-001`, `API-AIX-002`, `API-AIX-003`, `API-AIX-004`, `API-AIX-005`, `API-AIX-006`; `TBL-AIX-001`, `TBL-AIX-002`, `TBL-AIX-003`, `TBL-AIX-004`, `TBL-AIX-005`, `TBL-AIX-006`; `SCR-WRK-013`, `SCR-WRK-034`, `SCR-WRK-039`, `SCR-WRK-040`; `AC-AIX-001`, `SEQ-AIX-001`.
+- **Mục đích:** giới hạn AI ở vai trò trợ lý tạo bản nháp/giải thích/đề xuất, không trao quyền quyết định tuyển dụng.
+- **Tác nhân:** Ứng viên, người tuyển dụng, quản lý tuyển dụng, nhân sự vận hành AI, Ollama hoặc nhà cung cấp thay thế.
+- **Tiền điều kiện:** người dùng đã đồng ý gửi dữ liệu được phép; trường bị loại đã được bỏ; chính sách prompt và phiên bản mô hình đang hoạt động.
+- **Kết thúc:** đầu ra, nguồn gốc và việc duyệt được lưu; chỉ bản do người dùng áp dụng mới ảnh hưởng bản nháp; ATS không tự đổi trạng thái.
+- **Liên kết:** CV/JD/độ phù hợp/danh sách rút gọn việc làm, đầu ra và duyệt bởi con người `API-AIX-001`, `API-AIX-002`, `API-AIX-003`, `API-AIX-004`, `API-AIX-005`, `API-AIX-006`; `TBL-AIX-001`, `TBL-AIX-002`, `TBL-AIX-003`, `TBL-AIX-004`, `TBL-AIX-005`, `TBL-AIX-006`; `SCR-WRK-013`, `SCR-WRK-034`, `SCR-WRK-039`, `SCR-WRK-040`; `AC-AIX-001`, `SEQ-AIX-001`.
 
 ```mermaid
 flowchart LR
-    Candidate[Candidate]
-    Recruiter[Recruiter]
-    Hiring[Hiring Manager]
-    AIOps[AI Operator]
-    Provider[Ollama hoặc provider adapter]
+    Candidate[Ứng viên]
+    Recruiter[Người tuyển dụng]
+    Hiring[Quản lý tuyển dụng]
+    AIOps[Nhân sự vận hành AI]
+    Provider[Ollama hoặc bộ điều hợp nhà cung cấp]
 
-    subgraph AIX[AI assistance trong Work]
-        Draft["UC-AIX-001<br/>CV và JD draft"]
-        Match["UC-AIX-002<br/>Match explanation và shortlist suggestion"]
-        Govern["UC-AIX-003<br/>Governance, review, audit"]
+    subgraph AIX[Trợ lý AI trong Work]
+        Draft["UC-AIX-001<br/>Bản nháp CV và JD"]
+        Match["UC-AIX-002<br/>Giải thích độ phù hợp và đề xuất danh sách rút gọn"]
+        Govern["UC-AIX-003<br/>Quản trị, duyệt, kiểm toán"]
     end
 
     Candidate --> Draft
@@ -293,29 +293,29 @@ flowchart LR
     AIOps --> Govern
     Draft --> Govern
     Match --> Govern
-    Govern -. approved inference request .-> Provider
+    Govern -. yêu cầu suy luận đã được duyệt .-> Provider
 ```
 
-### Biểu đồ UC-OPS-001 — Bản đồ vận hành, moderation và dữ liệu cá nhân
+### Biểu đồ UC-OPS-001 — Bản đồ vận hành, kiểm duyệt và dữ liệu cá nhân
 
-- **Mục đích:** mô tả các luồng xuyên miền cần kiểm soát đặc biệt: report/appeal, xóa dữ liệu, legal hold, retry, backup và khôi phục.
-- **Tác nhân:** Reporter, Moderator, Privacy Operator, Security Operator, System Worker.
-- **Tiền điều kiện:** operator có permission phù hợp và MFA; mọi break-glass access có reason, expiry và audit.
-- **Kết thúc:** quyết định có thể truy vết; deletion fan-out idempotent; legal hold thắng retention; DLQ không bị bỏ quên.
-- **Liên kết:** job moderation/report/deletion/event replay `API-OPS-003`, `API-OPS-004`, `API-OPS-010`, `API-IAM-019`, `API-INT-006`, `API-INT-007`; `TBL-WRK-060`, `TBL-WRK-061`, `TBL-IAM-017`, `TBL-IAM-018`, `TBL-STU-053`, `TBL-WRK-064`; `SCR-OPS-009`, `SCR-OPS-010`, `SCR-OPS-021`, `SCR-IAM-006`; `AC-OPS-001`, `SEQ-OPS-001`.
+- **Mục đích:** mô tả các luồng xuyên miền cần kiểm soát đặc biệt: báo cáo/kháng nghị, xóa dữ liệu, lưu giữ pháp lý, thử lại, sao lưu và khôi phục.
+- **Tác nhân:** Người báo cáo, kiểm duyệt viên, nhân sự riêng tư, nhân sự bảo mật, tiến trình hệ thống.
+- **Tiền điều kiện:** nhân sự vận hành có quyền phù hợp và MFA; mọi truy cập khẩn cấp có lý do, thời hạn và kiểm toán.
+- **Kết thúc:** quyết định có thể truy vết; việc xóa lan truyền không lặp tác động; lưu giữ pháp lý được ưu tiên hơn lưu trữ thông thường; DLQ không bị bỏ quên.
+- **Liên kết:** kiểm duyệt việc làm/báo cáo/xóa/phát lại sự kiện `API-OPS-003`, `API-OPS-004`, `API-OPS-010`, `API-IAM-019`, `API-INT-006`, `API-INT-007`; `TBL-WRK-060`, `TBL-WRK-061`, `TBL-IAM-017`, `TBL-IAM-018`, `TBL-STU-053`, `TBL-WRK-064`; `SCR-OPS-009`, `SCR-OPS-010`, `SCR-OPS-021`, `SCR-IAM-006`; `AC-OPS-001`, `SEQ-OPS-001`.
 
 ```mermaid
 flowchart LR
-    Reporter[Reporter]
-    Moderator[Moderator]
-    Privacy[Privacy Operator]
-    Security[Security Operator]
-    Worker[System Worker]
+    Reporter[Người báo cáo]
+    Moderator[Kiểm duyệt viên]
+    Privacy[Nhân sự riêng tư]
+    Security[Nhân sự bảo mật]
+    Worker[Tiến trình hệ thống]
 
-    subgraph OPS[Cross-domain operations]
-        Mod["UC-OPS-001<br/>Moderation và appeal"]
-        Delete["UC-OPS-002<br/>Deletion, anonymization, legal hold"]
-        Recover["UC-OPS-003<br/>Observability, retry, recovery"]
+    subgraph OPS[Vận hành xuyên miền]
+        Mod["UC-OPS-001<br/>Kiểm duyệt và kháng nghị"]
+        Delete["UC-OPS-002<br/>Xóa, ẩn danh, lưu giữ pháp lý"]
+        Recover["UC-OPS-003<br/>Quan sát, thử lại, khôi phục"]
     end
 
     Reporter --> Mod
@@ -324,50 +324,50 @@ flowchart LR
     Security --> Recover
     Worker --> Delete
     Worker --> Recover
-    Mod -. account hoặc content action .-> Delete
+    Mod -. hành động với tài khoản hoặc nội dung .-> Delete
 ```
 
-## 3. Activity diagrams
+## 3. Biểu đồ hoạt động
 
-### AC-IAM-001 — Đăng ký, xác minh, đăng nhập, MFA và refresh
+### AC-IAM-001 — Đăng ký, xác minh, đăng nhập, MFA và làm mới phiên
 
-- **Mục đích:** bao phủ happy path cùng duplicate email, token hết hạn, resend, credential lock, suspension, MFA và refresh-token reuse.
-- **Tác nhân:** Guest/User, Platform Identity, Email Provider.
-- **Tiền điều kiện:** request qua HTTPS; email/password qua validation; privileged role bắt buộc đã enroll MFA.
-- **Kết thúc:** session hợp lệ được cấp hoặc yêu cầu bị từ chối mà không lộ account enumeration; reuse thu hồi toàn session family.
+- **Mục đích:** bao phủ luồng thành công cùng email trùng, mã thông báo hết hạn, gửi lại, khóa thông tin xác thực, tạm ngưng, MFA và tái sử dụng mã làm mới.
+- **Tác nhân:** Khách/người dùng, Danh tính Nền tảng, nhà cung cấp email.
+- **Tiền điều kiện:** yêu cầu qua HTTPS; email/mật khẩu qua kiểm tra hợp lệ; vai trò đặc quyền bắt buộc đã đăng ký MFA.
+- **Kết thúc:** phiên làm việc hợp lệ được cấp hoặc yêu cầu bị từ chối mà không làm lộ sự tồn tại của tài khoản; tái sử dụng thu hồi cả họ phiên.
 - **Liên kết:** `UC-IAM-001..003`; `API-IAM-001`, `API-IAM-002`, `API-IAM-004`, `API-IAM-005`, `API-IAM-006`; `TBL-IAM-001`, `TBL-IAM-003`, `TBL-IAM-004`, `TBL-IAM-009`, `TBL-IAM-010`; `SCR-IAM-001`, `SCR-IAM-002`, `SCR-IAM-003`, `SCR-IAM-005`, `SCR-IAM-006`; `SEQ-IAM-001..002`.
 
 ```mermaid
 flowchart TD
-    A([Bắt đầu]) --> B{Đã có account?}
-    B -- Chưa --> C[Normalize email và validate password]
+    A([Bắt đầu]) --> B{Đã có tài khoản?}
+    B -- Chưa --> C[Chuẩn hóa email và kiểm tra mật khẩu]
     C --> D{Email đã tồn tại?}
-    D -- Có --> E[Trả response generic và audit duplicate attempt]
-    D -- Không --> F[Transaction tạo pending user, credential, agreement, token và outbox]
+    D -- Có --> E[Trả phản hồi chung và kiểm toán lần thử trùng]
+    D -- Không --> F[Giao dịch tạo người dùng chờ xác minh, thông tin xác thực, chấp thuận, mã thông báo và hộp thư đi]
     F --> G[Gửi email xác minh]
-    G --> H{Token hợp lệ và chưa dùng?}
-    H -- Hết hạn hoặc đã dùng --> I[Trả token invalid; cho phép resend có rate limit]
+    G --> H{Mã thông báo hợp lệ và chưa dùng?}
+    H -- Hết hạn hoặc đã dùng --> I[Trả mã thông báo không hợp lệ; cho phép gửi lại có giới hạn tần suất]
     I --> G
-    H -- Có --> J[Consume token; kích hoạt account; phát event]
-    B -- Có --> K[Nhập credential]
+    H -- Có --> J[Dùng mã thông báo; kích hoạt tài khoản; phát sự kiện]
+    B -- Có --> K[Nhập thông tin xác thực]
     J --> K
-    K --> L{Account active?}
-    L -- Suspended hoặc deletion pending --> M[Chặn đăng nhập; audit]
-    L -- Có --> N{Credential đang lock?}
-    N -- Có --> O[Trả response generic kèm thời điểm thử lại phù hợp policy]
-    N -- Không --> P{Password đúng?}
-    P -- Không --> Q[Tăng failure count; có thể đặt lockedUntil]
-    P -- Có --> R{Role đặc quyền?}
+    K --> L{Tài khoản đang hoạt động?}
+    L -- `SUSPENDED` hoặc chờ xóa --> M[Chặn đăng nhập; kiểm toán]
+    L -- Có --> N{Thông tin xác thực đang bị khóa?}
+    N -- Có --> O[Trả phản hồi chung kèm thời điểm thử lại theo chính sách]
+    N -- Không --> P{Mật khẩu đúng?}
+    P -- Không --> Q[Tăng số lần thất bại; có thể đặt `lockedUntil`]
+    P -- Có --> R{Vai trò đặc quyền?}
     R -- Có --> S{MFA hợp lệ?}
-    S -- Không --> T[Challenge lại hoặc chặn sau giới hạn]
-    S -- Có --> U[Tạo session family; cấp access 15 phút và refresh 30 ngày]
+    S -- Không --> T[Yêu cầu thử lại hoặc chặn sau giới hạn]
+    S -- Có --> U[Tạo họ phiên; cấp mã truy cập 15 phút và mã làm mới 30 ngày]
     R -- Không --> U
-    U --> V{Refresh request?}
-    V -- Không --> Z([Kết thúc với session hợp lệ])
-    V -- Có --> W{Refresh token còn active và chưa dùng?}
-    W -- Có --> X[Row lock; consume; rotate; trả token mới]
+    U --> V{Có yêu cầu làm mới?}
+    V -- Không --> Z([Kết thúc với phiên hợp lệ])
+    V -- Có --> W{Mã làm mới còn hoạt động và chưa dùng?}
+    W -- Có --> X[Khóa bản ghi; dùng mã thông báo; xoay vòng; trả mã mới]
     X --> Z
-    W -- Đã dùng --> Y[Reuse detection; revoke toàn family; phát security event]
+    W -- Đã dùng --> Y[Phát hiện tái sử dụng; thu hồi cả họ; phát sự kiện bảo mật]
     E --> ZZ([Kết thúc an toàn])
     M --> ZZ
     O --> ZZ
@@ -376,84 +376,84 @@ flowchart TD
     Y --> ZZ
 ```
 
-### AC-STU-001 — Standalone course, onboarding và primary-path switch
+### AC-STU-001 — Khóa học độc lập, khởi tạo hồ sơ và đổi lộ trình chính
 
-- **Mục đích:** phân biệt rõ standalone enrollment không cần onboarding với primary path có onboarding và cooldown.
-- **Tác nhân:** Learner, Study API, Study Worker.
-- **Tiền điều kiện:** Identity account `ACTIVE`; course/path có current published version.
-- **Kết thúc:** enrollment pin đúng version; tối đa một primary path `ACTIVE`; switch giữ toàn bộ progress/attempt và tạo audit/outbox.
-- **Liên kết:** `UC-STU-001..003`; catalog/enroll/path `API-STU-001`, `API-STU-016`, `API-STU-014`; `TBL-STU-001`, `TBL-STU-012`, `TBL-STU-026`, `TBL-STU-027`; `SCR-STU-002`, `SCR-STU-005`, `SCR-STU-011`, `SCR-STU-013`, `SCR-STU-014`; `SEQ-STU-001`.
+- **Mục đích:** phân biệt rõ ghi danh khóa học độc lập không cần khởi tạo hồ sơ với lộ trình chính có khởi tạo hồ sơ và thời gian chờ.
+- **Tác nhân:** Người học, API Study, tiến trình Study.
+- **Tiền điều kiện:** tài khoản Danh tính `ACTIVE`; khóa học/lộ trình có phiên bản hiện hành đã xuất bản.
+- **Kết thúc:** lượt ghi danh ghim đúng phiên bản; tối đa một lộ trình chính `ACTIVE`; việc đổi lộ trình giữ toàn bộ tiến độ/lần làm và tạo kiểm toán/hộp thư đi.
+- **Liên kết:** `UC-STU-001..003`; danh mục/ghi danh/lộ trình `API-STU-001`, `API-STU-016`, `API-STU-014`; `TBL-STU-001`, `TBL-STU-012`, `TBL-STU-026`, `TBL-STU-027`; `SCR-STU-002`, `SCR-STU-005`, `SCR-STU-011`, `SCR-STU-013`, `SCR-STU-014`; `SEQ-STU-001`.
 
 ```mermaid
 flowchart TD
-    A([Learner mở Study]) --> B{Mục tiêu?}
-    B -- Học course standalone --> C[Chọn current published course version]
-    C --> D[Idempotency check và lock enrollment key]
-    D --> E{Đã enroll đúng version?}
-    E -- Có --> F[Trả enrollment hiện có]
-    E -- Không --> G[Tạo enrollment ENROLLED]
-    F --> H[Vào lesson theo version đã pin]
+    A([Người học mở Study]) --> B{Mục tiêu?}
+    B -- Học khóa học độc lập --> C[Chọn phiên bản khóa học hiện hành đã xuất bản]
+    C --> D[Kiểm tra chống lặp yêu cầu và khóa ghi danh]
+    D --> E{Đã ghi danh đúng phiên bản?}
+    E -- Có --> F[Trả lượt ghi danh hiện có]
+    E -- Không --> G[Tạo lượt ghi danh `ENROLLED`]
+    F --> H[Vào bài học theo phiên bản đã ghim]
     G --> H
-    B -- Chọn primary path --> I{Onboarding COMPLETED?}
-    I -- Không --> J[Đi onboarding và nhận top 3 recommendation có lý do]
-    J --> K[Chọn current published path version]
+    B -- Chọn lộ trình chính --> I{Khởi tạo hồ sơ `COMPLETED`?}
+    I -- Không --> J[Thực hiện khởi tạo hồ sơ và nhận 3 gợi ý có lý do]
+    J --> K[Chọn phiên bản lộ trình hiện hành đã xuất bản]
     I -- Có --> K
-    K --> L[Lock theo learner và kiểm idempotency]
-    L --> M{Đang có primary path ACTIVE?}
-    M -- Không --> N[Tạo period ACTIVE]
-    M -- Có --> O{Đã đủ 168 giờ hoặc Admin override có reason?}
-    O -- Không --> P[Conflict PRIMARY_PATH_SWITCH_COOLDOWN và nextAllowedAt]
-    O -- Có --> Q[Đóng period cũ thành SWITCHED_OUT]
-    Q --> R[Tạo period mới ACTIVE và cooldown mới]
-    N --> S[Reuse progress chỉ khi cùng courseVersionId]
+    K --> L[Khóa theo người học và kiểm chống lặp yêu cầu]
+    L --> M{Đang có lộ trình chính `ACTIVE`?}
+    M -- Không --> N[Tạo giai đoạn `ACTIVE`]
+    M -- Có --> O{Đã đủ 168 giờ hoặc quản trị viên ghi đè có lý do?}
+    O -- Không --> P[Xung đột `PRIMARY_PATH_SWITCH_COOLDOWN` và `nextAllowedAt`]
+    O -- Có --> Q[Đóng giai đoạn cũ thành `SWITCHED_OUT`]
+    Q --> R[Tạo giai đoạn mới `ACTIVE` và thời gian chờ mới]
+    N --> S[Chỉ dùng lại tiến độ khi cùng `courseVersionId`]
     R --> S
-    S --> T[Phát outbox; rebuild snapshot async]
+    S --> T[Phát qua hộp thư đi; dựng lại bản chụp bất đồng bộ]
     H --> U([Sẵn sàng học])
     T --> U
-    P --> V([Giữ nguyên primary path cũ])
+    P --> V([Giữ nguyên lộ trình chính cũ])
 ```
 
-### AC-STU-002 — Học bài, assessment, file scan và completion
+### AC-STU-002 — Học bài, bài đánh giá, quét tệp và hoàn thành
 
-- **Mục đích:** nối source-of-truth progress với bốn loại assessment, scan file và evidence.
-- **Tác nhân:** Learner, Study API, ClamAV Worker, Reviewer.
-- **Tiền điều kiện:** learner có enrollment đúng course version; assessment placement có đúng một scope; attempt limit chưa hết.
-- **Kết thúc:** fact completion monotonic; attempt submitted bất biến; course completion/evidence chỉ phát khi rule thỏa.
-- **Liên kết:** `UC-STU-003..005`; progress/upload/attempt/review `API-STU-020`, `API-STU-030`, `API-STU-031`, `API-STU-032`, `API-STU-027`, `API-STU-048`; `TBL-STU-029`, `TBL-STU-033`, `TBL-STU-035`, `TBL-STU-036`, `TBL-STU-038`, `TBL-STU-040`; `SCR-STU-016`, `SCR-STU-017`, `SCR-STU-018`, `SCR-OPS-013`; `SEQ-STU-002`, `SEQ-STU-003`.
+- **Mục đích:** nối tiến độ nguồn sự thật với bốn loại bài đánh giá, quét tệp và minh chứng.
+- **Tác nhân:** Người học, API Study, tiến trình ClamAV, người duyệt.
+- **Tiền điều kiện:** người học có lượt ghi danh đúng phiên bản khóa học; vị trí bài đánh giá có đúng một phạm vi; chưa hết giới hạn lần làm.
+- **Kết thúc:** dữ kiện hoàn thành chỉ tăng; lần làm đã nộp là bất biến; hoàn thành khóa học/minh chứng chỉ phát khi thỏa quy tắc.
+- **Liên kết:** `UC-STU-003..005`; tiến độ/tải tệp/lần làm/duyệt `API-STU-020`, `API-STU-030`, `API-STU-031`, `API-STU-032`, `API-STU-027`, `API-STU-048`; `TBL-STU-029`, `TBL-STU-033`, `TBL-STU-035`, `TBL-STU-036`, `TBL-STU-038`, `TBL-STU-040`; `SCR-STU-016`, `SCR-STU-017`, `SCR-STU-018`, `SCR-OPS-013`; `SEQ-STU-002`, `SEQ-STU-003`.
 
 ```mermaid
 flowchart TD
-    A([Mở lesson]) --> B[Đọc block và resource đã sanitize]
-    B --> C[PATCH progress với If-Match]
-    C --> D{Version hiện hành?}
-    D -- Không --> E[VERSION_CONFLICT; reload trạng thái server]
-    D -- Có --> F[Upsert fact monotonic và kiểm completion rule]
-    F --> G{Có assessment bắt buộc?}
-    G -- Không --> H[Hoàn tất lesson nếu đủ fact]
-    G -- Có --> I{Loại assessment?}
-    I -- QUIZ --> J[Seal draft; cấp attemptNo dưới lock; auto-grade]
+    A([Mở bài học]) --> B[Đọc khối nội dung và tài nguyên đã làm sạch]
+    B --> C[PATCH tiến độ với `If-Match`]
+    C --> D{Phiên bản hiện hành?}
+    D -- Không --> E[`VERSION_CONFLICT`; tải lại trạng thái máy chủ]
+    D -- Có --> F[Chèn/cập nhật dữ kiện chỉ tăng và kiểm quy tắc hoàn thành]
+    F --> G{Có bài đánh giá bắt buộc?}
+    G -- Không --> H[Hoàn tất bài học nếu đủ dữ kiện]
+    G -- Có --> I{Loại bài đánh giá?}
+    I -- QUIZ --> J[Chốt bản nháp; cấp `attemptNo` dưới khóa; chấm tự động]
     J --> K{Đạt ngưỡng?}
     K -- Có --> H
-    K -- Không --> L[FAILED; cho attempt mới nếu còn lượt]
-    I -- TEXT hoặc LINK --> M[Validate; LINK chỉ HTTPS và không server fetch]
-    M --> N[Seal attempt; đưa UNDER_REVIEW]
-    I -- FILE --> O[Tạo upload session vào quarantine]
-    O --> P[Finalize checksum, MIME và size]
-    P --> Q[Worker scan bằng ClamAV]
-    Q --> R{Scan result}
-    R -- CLEAN --> S[Chuyển private clean prefix; cho phép submit]
-    R -- INFECTED --> T[Chặn attach/download; cho upload file mới]
-    R -- SCAN_FAILED --> U{Đã retry 3 lần?}
+    K -- Không --> L[`FAILED`; cho lần làm mới nếu còn lượt]
+    I -- TEXT hoặc LINK --> M[Kiểm tra hợp lệ; `LINK` chỉ HTTPS và máy chủ không tải nội dung]
+    M --> N[Chốt lần làm; chuyển `UNDER_REVIEW`]
+    I -- FILE --> O[Tạo phiên tải tệp vào vùng cách ly]
+    O --> P[Hoàn tất kiểm tra checksum, MIME và kích thước]
+    P --> Q[Tiến trình quét bằng ClamAV]
+    Q --> R{Kết quả quét}
+    R -- CLEAN --> S[Chuyển vào vùng riêng đã sạch; cho phép nộp]
+    R -- INFECTED --> T[Chặn đính kèm/tải xuống; cho tải tệp mới]
+    R -- SCAN_FAILED --> U{Đã thử lại 3 lần?}
     U -- Chưa --> Q
-    U -- Rồi --> V[Giữ blocked; báo lỗi vận hành]
+    U -- Rồi --> V[Giữ trạng thái bị chặn; báo lỗi vận hành]
     S --> N
-    N --> W[Reviewer ghi append-only review với optimistic version]
-    W --> X{Decision}
+    N --> W[Người duyệt ghi lần duyệt chỉ thêm với phiên bản lạc quan]
+    W --> X{Quyết định}
     X -- PASSED --> H
     X -- NEEDS_REVISION hoặc FAILED --> L
-    H --> Y[Recalculate course/path snapshot từ fact]
-    Y --> Z{Course completion mới?}
-    Z -- Có --> AA[Tạo completion, evidence và outbox]
+    H --> Y[Tính lại bản chụp khóa học/lộ trình từ dữ kiện]
+    Y --> Z{Có hoàn thành khóa học mới?}
+    Z -- Có --> AA[Tạo hoàn thành, minh chứng và hộp thư đi]
     Z -- Không --> AB([Kết thúc])
     AA --> AB
     E --> AB
@@ -462,79 +462,79 @@ flowchart TD
     V --> AB
 ```
 
-### AC-STU-003 — Soạn và publish content version
+### AC-STU-003 — Soạn và xuất bản phiên bản nội dung
 
-- **Mục đích:** bảo đảm author không sửa published revision và publisher không bypass rights, sanitization, file scan hoặc validation.
-- **Tác nhân:** Content Author, Trusted Publisher, Study API, Scan Worker.
-- **Tiền điều kiện:** stable content entity tồn tại; author/publisher có local permission tương ứng.
-- **Kết thúc:** draft được publish atomically hoặc giữ nguyên để sửa; version cũ chuyển `SUPERSEDED` nhưng vẫn truy cập bởi enrollment đã pin.
-- **Liên kết:** `UC-STU-006`; draft/check/publish `API-STU-054`, `API-STU-055`, `API-STU-056`; `TBL-STU-010`, `TBL-STU-012`, `TBL-STU-017`, `TBL-STU-018`; `SCR-OPS-004`, `SCR-OPS-005`, `SCR-OPS-007`; `SEQ-STU-004`.
+- **Mục đích:** bảo đảm tác giả không sửa bản hiệu đính đã xuất bản và người xuất bản không bỏ qua quyền, làm sạch, quét tệp hoặc kiểm tra hợp lệ.
+- **Tác nhân:** Tác giả nội dung, người xuất bản được tin cậy, API Study, tiến trình quét.
+- **Tiền điều kiện:** thực thể nội dung ổn định tồn tại; tác giả/người xuất bản có quyền cục bộ tương ứng.
+- **Kết thúc:** bản nháp được xuất bản nguyên tử hoặc giữ nguyên để sửa; phiên bản cũ chuyển `SUPERSEDED` nhưng vẫn truy cập được bởi lượt ghi danh đã ghim.
+- **Liên kết:** `UC-STU-006`; bản nháp/kiểm tra/xuất bản `API-STU-054`, `API-STU-055`, `API-STU-056`; `TBL-STU-010`, `TBL-STU-012`, `TBL-STU-017`, `TBL-STU-018`; `SCR-OPS-004`, `SCR-OPS-005`, `SCR-OPS-007`; `SEQ-STU-004`.
 
 ```mermaid
 flowchart TD
-    A([Tạo draft revision]) --> B[Soạn chapter, lesson, block, resource và assessment]
-    B --> C[Mutation dùng If-Match]
+    A([Tạo bản hiệu đính nháp]) --> B[Soạn chương, bài học, khối nội dung, tài nguyên và bài đánh giá]
+    B --> C[Thay đổi dữ liệu dùng `If-Match`]
     C --> D{ETag khớp?}
-    D -- Không --> E[VERSION_CONFLICT; hiển thị diff và reload]
-    D -- Có --> F[Upload asset vào quarantine nếu có]
-    F --> G[Scan, sanitize và kiểm MIME]
-    G --> H[Chạy pre-publish checks]
-    H --> I{Đủ cấu trúc, rights, clean assets và rule hợp lệ?}
-    I -- Không --> J[Trả danh sách lỗi theo vị trí; draft vẫn editable]
-    I -- Có --> K[Trusted Publisher xác nhận publish]
-    K --> L{Còn permission và draft version hiện hành?}
-    L -- Không --> M[Chặn; audit denied publish]
-    L -- Có --> N[Transaction khóa stable entity và draft]
-    N --> O[Đặt revision cũ SUPERSEDED]
-    O --> P[Đặt draft PUBLISHED và đổi currentPublishedVersionId]
-    P --> Q[Outbox cache invalidation và search refresh]
-    Q --> R([Published revision bất biến])
-    E --> S([Kết thúc không đổi dữ liệu đã publish])
+    D -- Không --> E[`VERSION_CONFLICT`; hiển thị khác biệt và tải lại]
+    D -- Có --> F[Tải tài sản vào vùng cách ly nếu có]
+    F --> G[Quét, làm sạch và kiểm MIME]
+    G --> H[Chạy các kiểm tra trước khi xuất bản]
+    H --> I{Đủ cấu trúc, quyền, tài sản sạch và quy tắc hợp lệ?}
+    I -- Không --> J[Trả danh sách lỗi theo vị trí; bản nháp vẫn sửa được]
+    I -- Có --> K[Người xuất bản được tin cậy xác nhận xuất bản]
+    K --> L{Còn quyền và phiên bản nháp hiện hành?}
+    L -- Không --> M[Chặn; kiểm toán việc từ chối xuất bản]
+    L -- Có --> N[Giao dịch khóa thực thể ổn định và bản nháp]
+    N --> O[Đặt bản hiệu đính cũ `SUPERSEDED`]
+    O --> P[Đặt bản nháp `PUBLISHED` và đổi `currentPublishedVersionId`]
+    P --> Q[Hộp thư đi xóa bộ nhớ đệm và làm mới tìm kiếm]
+    Q --> R([Bản hiệu đính đã xuất bản là bất biến])
+    E --> S([Kết thúc mà không đổi dữ liệu đã xuất bản])
     J --> S
     M --> S
 ```
 
-### AC-STU-004 — Notification, community, support và Study operations
+### AC-STU-004 — Thông báo, cộng đồng, hỗ trợ và vận hành Study
 
-- **Mục đích:** bao phủ các luồng engagement còn lại mà không cho notification/community/support sửa trực tiếp learning fact.
-- **Tác nhân:** Learner, Study Worker, Community Moderator, Support Agent, Study Admin.
-- **Tiền điều kiện:** learner active; community eligibility được tính từ enrollment/path; operator có local permission và MFA khi điều chỉnh dữ liệu.
-- **Kết thúc:** notification deduplicated có delivery history; link cộng đồng chỉ mở sau khi chấp thuận rule hiện hành; support/adjustment có event/audit; report dùng snapshot aggregate.
+- **Mục đích:** bao phủ các luồng tương tác còn lại mà không cho thông báo/cộng đồng/hỗ trợ sửa trực tiếp dữ kiện học tập.
+- **Tác nhân:** Người học, tiến trình Study, kiểm duyệt viên cộng đồng, nhân viên hỗ trợ, quản trị viên Study.
+- **Tiền điều kiện:** người học đang hoạt động; điều kiện vào cộng đồng được tính từ ghi danh/lộ trình; nhân sự vận hành có quyền cục bộ và MFA khi điều chỉnh dữ liệu.
+- **Kết thúc:** thông báo đã khử trùng lặp có lịch sử gửi; liên kết cộng đồng chỉ mở sau khi chấp thuận quy tắc hiện hành; hỗ trợ/điều chỉnh có sự kiện/kiểm toán; báo cáo dùng bản chụp tổng hợp.
 - **Liên kết:** `UC-STU-007..008`; `API-STU-034`, `API-STU-039`, `API-STU-040`, `API-STU-041`, `API-STU-043`, `API-STU-045`, `API-STU-050`, `API-OPS-010`; `TBL-STU-042`, `TBL-STU-043`, `TBL-STU-044`, `TBL-STU-045`, `TBL-STU-046`, `TBL-STU-047`, `TBL-STU-048`, `TBL-STU-049`, `TBL-STU-050`, `TBL-STU-054`; `SCR-STU-020`, `SCR-STU-021`, `SCR-STU-022`, `SCR-OPS-014`, `SCR-OPS-015`, `SCR-OPS-021`; `SEQ-STU-005`.
 
 ```mermaid
 flowchart TD
-    A([Domain event hoặc learner action]) --> B{Loại luồng}
-    B -- Notification --> C[Worker claim outbox và dedupe business key]
-    C --> D[Đọc preference; transactional category không tắt]
-    D --> E[Tạo in-app notification]
+    A([Sự kiện miền hoặc hành động người học]) --> B{Loại luồng}
+    B -- Thông báo --> C[Tiến trình nhận hộp thư đi và khử trùng lặp khóa nghiệp vụ]
+    C --> D[Đọc tùy chọn; danh mục giao dịch không được tắt]
+    D --> E[Tạo thông báo trong ứng dụng]
     E --> F{Có gửi email?}
-    F -- Có --> G[Delivery attempt và retry backoff]
-    F -- Không --> H[Hoàn tất in-app]
-    G --> I{Vượt retry budget?}
-    I -- Có --> J[DLQ và alert]
+    F -- Có --> G[Lần gửi và thời gian chờ thử lại tăng dần]
+    F -- Không --> H[Hoàn tất trong ứng dụng]
+    G --> I{Vượt ngân sách thử lại?}
+    I -- Có --> J[DLQ và cảnh báo]
     I -- Không --> H
-    B -- Community --> K[Liệt kê group theo eligibility]
-    K --> L{Đã accept current rulesVersion?}
-    L -- Không --> M[Yêu cầu đọc và chấp thuận rule]
-    M --> N[Ghi acceptance bất biến]
-    N --> O[Audit open-link và trả redirect ngoài]
+    B -- Cộng đồng --> K[Liệt kê nhóm theo điều kiện tham gia]
+    K --> L{Đã chấp thuận `rulesVersion` hiện hành?}
+    L -- Không --> M[Yêu cầu đọc và chấp thuận quy tắc]
+    M --> N[Ghi chấp thuận bất biến]
+    N --> O[Kiểm toán mở liên kết và trả chuyển hướng ra ngoài]
     L -- Có --> O
-    O --> P{Learner report vi phạm?}
-    P -- Có --> Q[Tạo moderation report]
-    P -- Không --> R[Không phát sinh action]
-    B -- Support --> S[Tạo support ticket và event CREATED]
-    S --> T{Learner cancel trước xử lý?}
-    T -- Có --> U[Append CANCELLED]
-    T -- Không --> V[Agent append response/status; không sửa fact trực tiếp]
-    V --> W{Cần progress adjustment?}
-    W -- Có --> X[Admin API riêng: reason, before/after, If-Match và audit]
-    W -- Không --> Y[Giải quyết ticket]
+    O --> P{Người học báo cáo vi phạm?}
+    P -- Có --> Q[Tạo báo cáo kiểm duyệt]
+    P -- Không --> R[Không phát sinh hành động]
+    B -- Hỗ trợ --> S[Tạo yêu cầu hỗ trợ và sự kiện `CREATED`]
+    S --> T{Người học hủy trước khi xử lý?}
+    T -- Có --> U[Chỉ thêm `CANCELLED`]
+    T -- Không --> V[Nhân viên chỉ thêm phản hồi/trạng thái; không sửa trực tiếp dữ kiện]
+    V --> W{Cần điều chỉnh tiến độ?}
+    W -- Có --> X[API quản trị riêng: lý do, trước/sau, `If-Match` và kiểm toán]
+    W -- Không --> Y[Giải quyết yêu cầu]
     X --> Y
-    B -- Report operations --> Z[Đọc report snapshot aggregate]
-    Z --> AA{Snapshot stale hoặc worker backlog?}
-    AA -- Có --> AB[Hiển thị asOfAt và cảnh báo; không query chéo database]
-    AA -- Không --> AC[Hiển thị metric đã định nghĩa]
+    B -- Báo cáo vận hành --> Z[Đọc bản chụp báo cáo tổng hợp]
+    Z --> AA{Bản chụp cũ hoặc tiến trình tồn đọng?}
+    AA -- Có --> AB[Hiển thị `asOfAt` và cảnh báo; không truy vấn chéo cơ sở dữ liệu]
+    AA -- Không --> AC[Hiển thị chỉ số đã định nghĩa]
     H --> AD([Kết thúc có lịch sử])
     J --> AD
     Q --> AD
@@ -545,216 +545,217 @@ flowchart TD
     AC --> AD
 ```
 
-### AC-WRK-001 — Candidate privacy, search, invitation và opt-out
+### AC-WRK-001 — Riêng tư ứng viên, tìm kiếm, lời mời và rút tham gia
 
-- **Mục đích:** giữ profile private theo mặc định và bảo đảm candidate search không rò contact, CV hay evidence.
-- **Tác nhân:** Candidate, Recruiter, Search Index Worker.
-- **Tiền điều kiện:** candidate profile có version; recruiter thuộc enterprise tenant hợp lệ và có sourcing permission.
-- **Kết thúc:** chỉ profile opt-in xuất hiện; opt-out bị loại khỏi index trong tối đa 5 phút; invitation không tự mở chat.
-- **Liên kết:** `UC-WRK-001..003`; profile/consent/search/invitation `API-WRK-006`, `API-WRK-007`, `API-WRK-051`, `API-WRK-053`; `TBL-WRK-004`, `TBL-WRK-005`, `TBL-WRK-037`, `TBL-WRK-038`; `SCR-WRK-011`, `SCR-WRK-012`, `SCR-WRK-036`, `SCR-WRK-037`; `SEQ-WRK-001`.
+- **Mục đích:** giữ hồ sơ riêng tư theo mặc định và bảo đảm tìm kiếm ứng viên không rò thông tin liên hệ, CV hay minh chứng.
+- **Tác nhân:** Ứng viên, người tuyển dụng, tiến trình lập chỉ mục tìm kiếm.
+- **Tiền điều kiện:** hồ sơ ứng viên có phiên bản; người tuyển dụng thuộc phạm vi tổ chức doanh nghiệp hợp lệ và có quyền tìm nguồn ứng viên.
+- **Kết thúc:** chỉ hồ sơ tự nguyện tham gia xuất hiện; rút tham gia bị loại khỏi chỉ mục trong tối đa 5 phút; lời mời không tự mở trò chuyện.
+- **Liên kết:** `UC-WRK-001..003`; hồ sơ/sự đồng ý/tìm kiếm/lời mời `API-WRK-006`, `API-WRK-007`, `API-WRK-051`, `API-WRK-053`; `TBL-WRK-004`, `TBL-WRK-005`, `TBL-WRK-037`, `TBL-WRK-038`; `SCR-WRK-011`, `SCR-WRK-012`, `SCR-WRK-036`, `SCR-WRK-037`; `SEQ-WRK-001`.
 
 ```mermaid
 flowchart TD
-    A([Candidate lưu profile]) --> B[Validate field và If-Match]
-    B --> C{Cho phép candidate search?}
-    C -- Không --> D[Giữ PRIVATE; phát deindex event]
-    C -- Có --> E[Tạo projection đã loại contact, CV và evidence]
-    E --> F[Outbox index event]
-    D --> G[Worker idempotent xóa document]
-    F --> H[Worker upsert document theo profileVersion]
-    H --> I[Recruiter search trong tenant context]
-    I --> J{Permission hợp lệ và profile vẫn opt-in?}
-    J -- Không --> K[Ẩn result và enqueue deindex repair]
-    J -- Có --> L[Trả public sourcing card có sponsored label nếu áp dụng]
-    L --> M[Recruiter gửi invitation]
-    M --> N[Candidate chấp nhận hoặc bỏ qua]
-    N --> O{Candidate apply?}
-    O -- Không --> P[Không tạo application và không mở chat]
-    O -- Có --> Q[Chuyển sang application wizard]
-    G --> R{Quá 5 phút còn trong index?}
-    R -- Có --> S[Alert và synchronous deny tại query guard]
-    R -- Không --> T([Đã opt-out an toàn])
+    A([Ứng viên lưu hồ sơ]) --> B[Kiểm tra trường và `If-Match`]
+    B --> C{Cho phép tìm kiếm ứng viên?}
+    C -- Không --> D[Giữ `PRIVATE`; phát sự kiện gỡ chỉ mục]
+    C -- Có --> E[Tạo hình chiếu đã loại thông tin liên hệ, CV và minh chứng]
+    E --> F[Sự kiện hộp thư đi lập chỉ mục]
+    D --> G[Tiến trình xóa tài liệu không lặp tác động]
+    F --> H[Tiến trình chèn/cập nhật tài liệu theo `profileVersion`]
+    H --> I[Người tuyển dụng tìm trong ngữ cảnh phạm vi tổ chức]
+    I --> J{Quyền hợp lệ và hồ sơ vẫn tự nguyện tham gia?}
+    J -- Không --> K[Ẩn kết quả và xếp hàng sửa gỡ chỉ mục]
+    J -- Có --> L[Trả thẻ tìm nguồn công khai có nhãn tài trợ nếu áp dụng]
+    L --> M[Người tuyển dụng gửi lời mời]
+    M --> N[Ứng viên chấp nhận hoặc bỏ qua]
+    N --> O{Ứng viên có ứng tuyển?}
+    O -- Không --> P[Không tạo đơn ứng tuyển và không mở trò chuyện]
+    O -- Có --> Q[Chuyển sang trình hướng dẫn ứng tuyển]
+    G --> R{Quá 5 phút vẫn còn trong chỉ mục?}
+    R -- Có --> S[Cảnh báo và từ chối đồng bộ tại lớp bảo vệ truy vấn]
+    R -- Không --> T([Đã rút tham gia an toàn])
     K --> T
     P --> T
     Q --> T
 ```
 
-### AC-WRK-002 — Job revision, apply và ATS
+### AC-WRK-002 — Bản hiệu đính việc làm, ứng tuyển và ATS
 
-- **Mục đích:** mô tả lifecycle job/application, immutable snapshot, tenant authorization và chuyển ATS có human decision.
-- **Tác nhân:** Candidate, Recruiter, Hiring Manager, Enterprise Admin, Moderator.
-- **Tiền điều kiện:** enterprise active; job revision `PUBLISHED`; candidate chưa có application cho job; actor ATS được assign hoặc có quyền quản trị.
-- **Kết thúc:** application duy nhất được tạo với snapshots; transition hợp lệ được append history; terminal state khóa chat và mutation không phù hợp.
-- **Liên kết:** `UC-WRK-003..005`; job/publish/apply/ATS `API-WRK-043`, `API-WRK-047`, `API-WRK-023`, `API-WRK-058`; `TBL-WRK-033`, `TBL-WRK-035`, `TBL-WRK-041`, `TBL-WRK-042`, `TBL-WRK-046`; `SCR-WRK-034`, `SCR-WRK-035`, `SCR-WRK-017`, `SCR-WRK-040`; `SEQ-WRK-002`, `SEQ-WRK-003`.
+- **Mục đích:** mô tả vòng đời việc làm/đơn ứng tuyển, bản chụp bất biến, phân quyền theo phạm vi tổ chức và chuyển ATS có quyết định của con người.
+- **Tác nhân:** Ứng viên, người tuyển dụng, quản lý tuyển dụng, quản trị viên doanh nghiệp, kiểm duyệt viên.
+- **Tiền điều kiện:** doanh nghiệp đang hoạt động; bản hiệu đính việc làm `PUBLISHED`; ứng viên chưa có đơn ứng tuyển cho việc làm; tác nhân ATS được phân công hoặc có quyền quản trị.
+- **Kết thúc:** một đơn ứng tuyển được tạo cùng các bản chụp; chuyển tiếp hợp lệ được thêm vào lịch sử; trạng thái kết thúc khóa trò chuyện và thao tác thay đổi không phù hợp.
+- **Liên kết:** `UC-WRK-003..005`; việc làm/xuất bản/ứng tuyển/ATS `API-WRK-043`, `API-WRK-047`, `API-WRK-023`, `API-WRK-058`; `TBL-WRK-033`, `TBL-WRK-035`, `TBL-WRK-041`, `TBL-WRK-042`, `TBL-WRK-046`; `SCR-WRK-034`, `SCR-WRK-035`, `SCR-WRK-017`, `SCR-WRK-040`; `SEQ-WRK-002`, `SEQ-WRK-003`.
 
 ```mermaid
 flowchart TD
-    A([Enterprise tạo job draft]) --> B[Soạn immutable revision candidate]
-    B --> C[Pre-publish validation và If-Match]
-    C --> D{Đủ field, policy và entitlement?}
-    D -- Không --> E[Giữ DRAFT và trả lỗi theo field]
+    A([Doanh nghiệp tạo việc làm nháp]) --> B[Soạn bản hiệu đính bất biến dự kiến]
+    B --> C[Kiểm tra trước xuất bản và `If-Match`]
+    C --> D{Đủ trường, chính sách và quyền lợi?}
+    D -- Không --> E[Giữ `DRAFT` và trả lỗi theo trường]
     D -- Có --> F[Chuyển REVIEW_PENDING]
-    F --> G{Reviewer approve?}
-    G -- Không --> H[Trả về DRAFT với reason]
-    G -- Có --> I[Publish revision; job PUBLISHED]
-    I --> J[Candidate mở apply wizard]
-    J --> K[Chọn CV/profile snapshot và evidence tùy chọn]
-    K --> L[Idempotency check và unique candidate-job]
-    L --> M{Đã có application?}
-    M -- Có --> N[Trả application hiện có; không tạo duplicate]
-    M -- Không --> O[Transaction tạo SUBMITTED, snapshots, consent request và outbox]
-    O --> P[Recruiter assigned chuyển UNDER_REVIEW]
-    P --> Q{Transition hợp lệ và If-Match khớp?}
+    F --> G{Người duyệt chấp thuận?}
+    G -- Không --> H[Trả về `DRAFT` kèm lý do]
+    G -- Có --> I[Xuất bản bản hiệu đính; việc làm `PUBLISHED`]
+    I --> J[Ứng viên mở trình hướng dẫn ứng tuyển]
+    J --> K[Chọn bản chụp CV/hồ sơ và minh chứng tùy chọn]
+    K --> L[Kiểm tra chống lặp yêu cầu và tính duy nhất của cặp ứng viên-việc làm]
+    L --> M{Đã có đơn ứng tuyển?}
+    M -- Có --> N[Trả đơn ứng tuyển hiện có; không tạo trùng]
+    M -- Không --> O[Giao dịch tạo `SUBMITTED`, bản chụp, yêu cầu đồng ý và hộp thư đi]
+    O --> P[Người tuyển dụng được phân công chuyển `UNDER_REVIEW`]
+    P --> Q{Chuyển tiếp hợp lệ và `If-Match` khớp?}
     Q -- Không --> R[VERSION_CONFLICT hoặc INVALID_APPLICATION_TRANSITION]
-    Q -- Có --> S[Append status history và audit]
-    S --> T{Trạng thái mới terminal?}
+    Q -- Có --> S[Thêm lịch sử trạng thái và kiểm toán]
+    S --> T{Trạng thái mới là kết thúc?}
     T -- Không --> U[SHORTLISTED, INTERVIEWING hoặc OFFERED]
     T -- Có --> V[HIRED, REJECTED, WITHDRAWN hoặc OFFER_DECLINED]
-    V --> W[Đặt conversation read-only; giữ snapshots và history]
+    V --> W[Đặt cuộc trò chuyện chỉ đọc; giữ bản chụp và lịch sử]
     U --> X([Tiếp tục quy trình])
     W --> X
-    E --> Y([Không publish])
+    E --> Y([Không xuất bản])
     H --> Y
     N --> X
     R --> X
 ```
 
-### AC-WRK-003 — Interview và chat theo application
+### AC-WRK-003 — Phỏng vấn và trò chuyện theo đơn ứng tuyển
 
-- **Mục đích:** phối hợp lịch nội bộ/ICS với chat realtime nhưng giữ REST và versioned state làm nguồn sự thật.
-- **Tác nhân:** Candidate, Assigned Recruiter, Hiring Manager, Notification Worker, WebSocket Gateway.
-- **Tiền điều kiện:** application chưa terminal; recruiter được assigned; một conversation đã hoặc sẽ được tạo đúng một lần.
-- **Kết thúc:** schedule/message có idempotency và audit; reconnect không mất lịch sử; terminal application làm chat read-only.
-- **Liên kết:** `UC-WRK-007..008`; interview/chat/history `API-WRK-028`, `API-WRK-029`, `API-WRK-060`, `API-WRK-061`, `API-WRK-062`, `API-WRK-031`, `API-WRK-032`; `TBL-WRK-049`, `TBL-WRK-050`, `TBL-WRK-053`, `TBL-WRK-054`, `TBL-WRK-055`; `SCR-WRK-020`, `SCR-WRK-021`, `SCR-WRK-041`, `SCR-WRK-042`; `SEQ-WRK-004`, `SEQ-WRK-005`.
+- **Mục đích:** phối hợp lịch nội bộ/ICS với trò chuyện thời gian thực nhưng giữ REST và trạng thái có phiên bản làm nguồn sự thật.
+- **Tác nhân:** Ứng viên, người tuyển dụng được phân công, quản lý tuyển dụng, tiến trình thông báo, cổng WebSocket.
+- **Tiền điều kiện:** đơn ứng tuyển chưa kết thúc; người tuyển dụng được phân công; một cuộc trò chuyện đã hoặc sẽ được tạo đúng một lần.
+- **Kết thúc:** lịch/tin nhắn không lặp tác động và có kiểm toán; kết nối lại không mất lịch sử; đơn ứng tuyển kết thúc làm trò chuyện chỉ đọc.
+- **Liên kết:** `UC-WRK-007..008`; phỏng vấn/trò chuyện/lịch sử `API-WRK-028`, `API-WRK-029`, `API-WRK-060`, `API-WRK-061`, `API-WRK-062`, `API-WRK-031`, `API-WRK-032`; `TBL-WRK-049`, `TBL-WRK-050`, `TBL-WRK-053`, `TBL-WRK-054`, `TBL-WRK-055`; `SCR-WRK-020`, `SCR-WRK-021`, `SCR-WRK-041`, `SCR-WRK-042`; `SEQ-WRK-004`, `SEQ-WRK-005`.
 
 ```mermaid
 flowchart TD
-    A([Application đủ điều kiện]) --> B[Recruiter đề xuất interview schedule version 1]
-    B --> C[Candidate nhận notification và ICS]
-    C --> D{Candidate phản hồi?}
-    D -- Confirm --> E[Interview CONFIRMED]
-    D -- Reschedule --> F[If-Match scheduleVersion]
-    F --> G{Version khớp?}
-    G -- Không --> H[VERSION_CONFLICT; tải lịch mới]
-    G -- Có --> I[Tạo schedule version mới và gửi ICS cập nhật]
-    I --> D
-    D -- Cancel --> J[Interview CANCELLED với reason]
-    E --> K{Kết quả buổi phỏng vấn}
-    K -- Hoàn thành --> L[COMPLETED và append feedback]
-    K -- Không tham dự --> M[NO_SHOW kèm actor/reason]
-    A --> N[Tạo hoặc lấy conversation duy nhất]
-    N --> O[REST tải history theo cursor]
-    O --> P[Gửi message với Idempotency-Key]
-    P --> Q{Application terminal hoặc recruiter chưa assigned?}
-    Q -- Có --> R[Chặn write; conversation READ_ONLY]
-    Q -- Không --> S[Commit message rồi phát WebSocket event]
-    S --> T{Client nhận event liên tục?}
-    T -- Không --> U[Reconnect; dùng cursor reconcile REST]
-    T -- Có --> V[Update read receipt idempotent]
-    U --> V
-    H --> W([Giữ schedule server])
-    J --> W
-    L --> W
-    M --> W
-    R --> W
+    A([Đơn ứng tuyển đủ điều kiện]) --> B[Người tuyển dụng tạo lịch phỏng vấn phiên bản 1]
+    B --> C[Ứng viên nhận thông báo và ICS]
+    C --> D{Ứng viên phản hồi?}
+    D -- Xác nhận --> E[Đặt phản hồi ứng viên `ACCEPTED`; phỏng vấn `CONFIRMED`]
+    D -- Từ chối --> F[Ghi phản hồi `DECLINED`; thông báo người tuyển dụng; không tự hủy]
+    D -- Yêu cầu đổi lịch --> G[Ghi `RESCHEDULE_REQUESTED` cùng khung giờ/lý do; không sửa lịch]
+    F --> H[Người tuyển dụng quyết định xử lý]
+    G --> H
+    H --> I{Chấp nhận đổi lịch?}
+    I -- Có --> J[Người tuyển dụng dùng `If-Match` tạo phiên bản lịch mới `PROPOSED`; gửi ICS cập nhật]
+    J --> C
+    I -- Không --> K[Giữ lịch hiện hành hoặc người tuyển dụng hủy theo quyền]
+    E --> L{Kết quả buổi phỏng vấn}
+    L -- Hoàn thành --> M[`COMPLETED` và thêm phản hồi]
+    L -- Không tham dự --> N[`NO_SHOW` kèm tác nhân/lý do]
+    A --> O[Tạo hoặc lấy cuộc trò chuyện duy nhất]
+    O --> P[REST tải lịch sử theo con trỏ]
+    P --> Q[Gửi tin nhắn với `Idempotency-Key`]
+    Q --> R{Đơn ứng tuyển kết thúc hoặc người tuyển dụng chưa được phân công?}
+    R -- Có --> S[Chặn ghi; cuộc trò chuyện `READ_ONLY`]
+    R -- Không --> T[Cam kết tin nhắn rồi phát sự kiện WebSocket]
+    T --> U{Máy khách nhận sự kiện liên tục?}
+    U -- Không --> V[Kết nối lại; dùng con trỏ đối soát REST]
+    U -- Có --> W[Cập nhật biên nhận đã đọc không lặp tác động]
     V --> W
+    K --> X([Giữ lịch máy chủ])
+    M --> X
+    N --> X
+    S --> X
+    W --> X
 ```
 
-### AC-INT-001 — Chọn evidence khi apply và đồng bộ bất đồng bộ
+### AC-INT-001 — Chọn minh chứng khi ứng tuyển và đồng bộ bất đồng bộ
 
-- **Mục đích:** cho candidate chọn evidence của chính mình mà Work không đọc Study DB và không tạo kho evidence toàn cục.
-- **Tác nhân:** Candidate, Work API/Worker, Study API/Worker, Recruiter.
-- **Tiền điều kiện:** candidate có access token audience Study; evidence selection rõ ràng; application transaction chưa được commit cùng idempotency key.
-- **Kết thúc:** application không phụ thuộc Study availability; snapshot tối thiểu có trạng thái `PENDING`, `READY`, `UNAVAILABLE`, `WITHDRAWN` hoặc `REVOKED`.
-- **Liên kết:** `UC-STU-005`, `UC-WRK-005..006`; signed evidence export/result/revocation `API-INT-002`, `API-INT-004`, `API-INT-005`; `TBL-STU-040`, `TBL-STU-041`, `TBL-WRK-043`, `TBL-WRK-044`, `TBL-WRK-045`, `TBL-WRK-069`; `SCR-WRK-017`, `SCR-WRK-019`, `SCR-WRK-040`; `SEQ-INT-001`.
+- **Mục đích:** cho ứng viên chọn minh chứng của chính mình mà Work không đọc cơ sở dữ liệu Study và không tạo kho minh chứng toàn cục.
+- **Tác nhân:** Ứng viên, API/tiến trình Work, API/tiến trình Study, người tuyển dụng.
+- **Tiền điều kiện:** ứng viên có mã truy cập với đối tượng nhận là Study; lựa chọn minh chứng rõ ràng; giao dịch đơn ứng tuyển chưa được cam kết bằng cùng khóa bất biến theo yêu cầu.
+- **Kết thúc:** đơn ứng tuyển không phụ thuộc tính sẵn sàng của Study; bản chụp tối thiểu có trạng thái `PENDING`, `READY`, `UNAVAILABLE`, `HIDDEN` hoặc `REVOKED`.
+- **Liên kết:** `UC-STU-005`, `UC-WRK-005..006`; xuất minh chứng/kết quả/thu hồi có chữ ký `API-INT-002`, `API-INT-004`, `API-INT-005`; `TBL-STU-040`, `TBL-STU-041`, `TBL-WRK-043`, `TBL-WRK-044`, `TBL-WRK-045`, `TBL-WRK-069`; `SCR-WRK-017`, `SCR-WRK-019`, `SCR-WRK-040`; `SEQ-INT-001`.
 
 ```mermaid
 flowchart TD
-    A([Candidate ở apply wizard]) --> B[Gọi Study bằng token audience Study]
+    A([Ứng viên ở trình hướng dẫn ứng tuyển]) --> B[Gọi Study bằng mã truy cập có đối tượng nhận là Study]
     B --> C{Study sẵn sàng?}
-    C -- Không --> D[Cho apply không evidence hoặc thử lại; không chặn application]
-    C -- Có --> E[Study trả evidence ISSUED của chính learner]
-    E --> F[Candidate chọn từng evidence và xác nhận consent]
-    F --> G[Work transaction tạo application, selected IDs, PENDING request và outbox]
-    D --> H[Work transaction tạo application không evidence]
-    G --> I[Worker ký export request gồm application và selected IDs]
-    I --> J{Study verify chữ ký, ownership, status, version và revocation?}
-    J -- Không --> K[Work đánh dấu UNAVAILABLE; không tạo tín hiệu loại]
-    J -- Có --> L[Study trả minimal immutable snapshots]
-    L --> M[Work upsert snapshots scoped applicationId; READY]
-    M --> N[Recruiter xem evidence snapshot]
-    N --> O{Candidate rút consent?}
-    O -- Có --> P[Ẩn snapshots; WITHDRAWN; giữ audit]
-    O -- Không --> Q{Study phát revocation event?}
-    Q -- Có --> R[Consumer idempotent đánh dấu REVOKED]
-    Q -- Không --> S([Giữ READY])
-    K --> T([Application vẫn tiếp tục])
-    P --> T
+    C -- Không --> D[Cho ứng tuyển không kèm minh chứng hoặc thử lại; không chặn đơn ứng tuyển]
+    C -- Có --> E[Study trả minh chứng `ISSUED` của chính người học]
+    E --> F[Ứng viên chọn từng minh chứng và xác nhận sự đồng ý]
+    F --> G[Giao dịch Work tạo đơn ứng tuyển, ID đã chọn, yêu cầu `PENDING` và hộp thư đi]
+    D --> H[Giao dịch Work tạo đơn ứng tuyển không kèm minh chứng]
+    G --> I[Tiến trình ký yêu cầu xuất dữ liệu gồm đơn ứng tuyển và ID đã chọn]
+    I --> J{Study kiểm chữ ký, quyền sở hữu, trạng thái, phiên bản và thu hồi?}
+    J -- Không --> K[Work đánh dấu `UNAVAILABLE`; không tạo tín hiệu loại]
+    J -- Có --> L[Study trả các bản chụp tối thiểu, bất biến]
+    L --> M[Work chèn/cập nhật bản chụp theo `applicationId`; `READY`]
+    M --> N[Người tuyển dụng xem bản chụp minh chứng]
+    N --> O{Ứng viên rút sự đồng ý?}
+    O -- Có --> P[Ẩn bản chụp; `HIDDEN`; giữ kiểm toán]
+    O -- Không --> Q{Study phát sự kiện thu hồi?}
+    P --> Q
+    Q -- Có --> R[Tiến trình đánh dấu `REVOKED` mà không lặp tác động]
+    Q -- Không --> S([Giữ trạng thái hiện hành])
+    K --> T([Đơn ứng tuyển vẫn tiếp tục])
     R --> T
     S --> T
     H --> T
 ```
 
-### AC-UNI-001 — University affiliation, program, referral và privacy-safe report
+### AC-UNI-001 — Liên kết trường, chương trình, giới thiệu và báo cáo an toàn riêng tư
 
-- **Mục đích:** bảo đảm tenant trường chỉ thao tác trên membership của mình và không dùng báo cáo để suy ra cá nhân thiếu consent.
-- **Tác nhân:** Student, University Admin, Career Officer, Enterprise Recruiter.
-- **Tiền điều kiện:** university tenant verified; operator membership active; program và enterprise partnership còn hiệu lực.
-- **Kết thúc:** affiliation/referral có history; PII chỉ hiện khi consent active; report aggregate dưới ngưỡng bị suppression.
+- **Mục đích:** bảo đảm phạm vi tổ chức của trường chỉ thao tác trên tư cách thành viên của mình và không dùng báo cáo để suy ra cá nhân thiếu sự đồng ý.
+- **Tác nhân:** Sinh viên, quản trị viên trường, cán bộ hướng nghiệp, người tuyển dụng doanh nghiệp.
+- **Tiền điều kiện:** phạm vi tổ chức của trường đã xác minh; tư cách thành viên nhân sự vận hành đang hoạt động; chương trình và hợp tác doanh nghiệp còn hiệu lực.
+- **Kết thúc:** liên kết sinh viên/lượt giới thiệu có lịch sử; PII chỉ hiện khi sự đồng ý đang hoạt động; báo cáo tổng hợp dưới ngưỡng bị ẩn.
 - **Liên kết:** `UC-UNI-001..003`; `API-UNI-005`, `API-UNI-010`, `API-UNI-014`, `API-UNI-015`; `TBL-WRK-019`, `TBL-WRK-023`, `TBL-WRK-026`, `TBL-WRK-029`, `TBL-WRK-030`, `TBL-WRK-031`; `SCR-UNI-004`, `SCR-UNI-007`, `SCR-UNI-010`, `SCR-UNI-011`; `SEQ-UNI-001`.
 
 ```mermaid
 flowchart TD
-    A([Student yêu cầu affiliation]) --> B[University xác minh mã sinh viên và kỳ hiệu lực]
+    A([Sinh viên yêu cầu liên kết]) --> B[Trường xác minh mã sinh viên và kỳ hiệu lực]
     B --> C{Thông tin hợp lệ?}
-    C -- Không --> D[Từ chối với reason; không tạo membership]
-    C -- Có --> E[Tạo affiliation ACTIVE và cohort membership]
-    E --> F[Career Officer tạo internship program hoặc campus distribution]
-    F --> G[Enterprise gửi job vào partnership scope]
-    G --> H[Student nhận referral link có attribution]
-    H --> I{Student đồng ý chia sẻ PII với trường?}
-    I -- Có --> J[Tạo consent có purpose, scope và expiresAt]
-    I -- Không --> K[Chỉ ghi aggregate anonymous event]
-    J --> L[Career Officer xem allowed individual fields]
-    K --> M[Tạo báo cáo theo cohort]
+    C -- Không --> D[Từ chối kèm lý do; không tạo tư cách thành viên]
+    C -- Có --> E[Tạo liên kết `ACTIVE` và tư cách thành viên nhóm học]
+    E --> F[Cán bộ hướng nghiệp tạo chương trình thực tập hoặc phân phối việc làm trong trường]
+    F --> G[Doanh nghiệp gửi việc làm vào phạm vi hợp tác]
+    G --> H[Sinh viên nhận liên kết giới thiệu có nguồn]
+    H --> I{Sinh viên đồng ý chia sẻ PII với trường?}
+    I -- Có --> J[Tạo sự đồng ý có mục đích, phạm vi và `expiresAt`]
+    I -- Không --> K[Chỉ ghi sự kiện tổng hợp ẩn danh]
+    J --> L[Cán bộ hướng nghiệp xem các trường cá nhân được phép]
+    K --> M[Tạo báo cáo theo nhóm học]
     L --> M
     M --> N{Nhóm kết quả ít nhất 10 người?}
-    N -- Không --> O[Suppress ô và export chi tiết]
-    N -- Có --> P[Hiển thị aggregate]
+    N -- Không --> O[Ẩn ô và xuất dữ liệu chi tiết]
+    N -- Có --> P[Hiển thị dữ liệu tổng hợp]
     D --> Q([Kết thúc])
     O --> Q
     P --> Q
 ```
 
-### AC-PAY-001 — Checkout, callback, entitlement và reversal
+### AC-PAY-001 — Phiên thanh toán, phản hồi gọi lại, quyền lợi và bút toán đảo
 
-- **Mục đích:** xử lý VNPAY/MoMo an toàn trước duplicate/out-of-order callback và tách return URL khỏi nguồn xác nhận.
-- **Tác nhân:** Buyer, Work Billing, VNPAY/MoMo, Finance Operator, Reconciliation Worker.
-- **Tiền điều kiện:** product/price hợp lệ, VND amount nguyên dương, buyer có tenant hoặc student context phù hợp.
-- **Kết thúc:** ledger cân bằng; entitlement chỉ cấp sau settled callback đã xác thực; refund/chargeback được điều chỉnh append-only.
+- **Mục đích:** xử lý VNPAY/MoMo an toàn trước phản hồi gọi lại trùng/sai thứ tự và tách URL trả về khỏi nguồn xác nhận.
+- **Tác nhân:** Bên mua, thanh toán Work, VNPAY/MoMo, nhân sự tài chính, tiến trình đối soát.
+- **Tiền điều kiện:** sản phẩm/giá hợp lệ, số tiền VND nguyên dương, bên mua có ngữ cảnh phạm vi tổ chức hoặc học viên phù hợp.
+- **Kết thúc:** sổ cái cân bằng; quyền lợi chỉ cấp sau phản hồi gọi lại đã xác thực ở trạng thái `SETTLED`; hoàn tiền/tranh chấp thanh toán ngược được điều chỉnh bằng bản ghi chỉ thêm và không ghi đè `SETTLED`.
 - **Liên kết:** `UC-PAY-001..003`; `API-PAY-002`, `API-PAY-014`, `API-PAY-015`, `API-PAY-006`, `API-PAY-007`, `API-PAY-008`, `API-PAY-009`; `TBL-PAY-003`, `TBL-PAY-005`, `TBL-PAY-006`, `TBL-PAY-007`, `TBL-PAY-008`, `TBL-PAY-009`, `TBL-PAY-010`; `SCR-WRK-022`, `SCR-WRK-023`, `SCR-WRK-043`, `SCR-WRK-044`, `SCR-OPS-019`, `SCR-OPS-020`; `SEQ-PAY-001..002`.
 
 ```mermaid
 flowchart TD
-    A([Buyer chọn package hoặc credit]) --> B[Validate product, price version, VND amount và tenant]
-    B --> C[Idempotency check; tạo order và payment intent PENDING]
-    C --> D[Adapter ký request VNPAY hoặc MoMo]
-    D --> E[Buyer thanh toán trên provider]
-    E --> F[Return URL chỉ hiển thị PROCESSING hoặc trạng thái đã biết]
-    E --> G[Provider gửi webhook hoặc IPN]
-    G --> H{Chữ ký, merchant, amount và currency hợp lệ?}
-    H -- Không --> I[Reject callback; security audit]
-    H -- Có --> J[Deduplicate providerEventId; lock intent]
-    J --> K{Event có mới hơn trạng thái hiện tại?}
-    K -- Không --> L[Acknowledge duplicate hoặc out-of-order; không đổi ledger]
-    K -- Có --> M{Provider result}
-    M -- Settled --> N[Append ledger; mark SETTLED; grant entitlement once]
-    M -- Failed hoặc Expired --> O[Mark terminal không cấp entitlement]
-    M -- Refund hoặc Chargeback --> P[Append reversal; adjust entitlement theo policy]
-    C --> Q[Reconciliation worker query intent quá hạn]
-    Q --> R{Provider và local lệch?}
-    R -- Có --> S[Apply cùng verified state machine; alert finance nếu không giải được]
-    R -- Không --> T[Đóng reconciliation run]
+    A([Bên mua chọn gói hoặc tín dụng]) --> B[Kiểm tra sản phẩm, phiên bản giá, số tiền VND và phạm vi tổ chức]
+    B --> C[Kiểm tra chống lặp yêu cầu; tạo đơn hàng và ý định thanh toán `PENDING`]
+    C --> D[Bộ điều hợp ký yêu cầu VNPAY hoặc MoMo]
+    D --> E[Bên mua thanh toán trên nhà cung cấp]
+    E --> F[URL trả về chỉ hiển thị `PROCESSING` hoặc trạng thái đã biết]
+    E --> G[Nhà cung cấp gửi webhook hoặc IPN]
+    G --> H{Chữ ký, đơn vị nhận tiền (`merchant`), số tiền và loại tiền hợp lệ?}
+    H -- Không --> I[Từ chối phản hồi gọi lại; kiểm toán bảo mật]
+    H -- Có --> J[Khử trùng lặp `providerEventId`; khóa ý định]
+    J --> K{Sự kiện có hợp lệ theo trạng thái hiện tại?}
+    K -- Không --> L[Xác nhận phản hồi gọi lại trùng/sai thứ tự; không đổi sổ cái]
+    K -- Có --> M{Kết quả nhà cung cấp}
+    M -- Thành công đã xác minh --> N[Thêm sổ cái; đặt `SETTLED`; cấp quyền lợi một lần]
+    M -- Thất bại hoặc hết hạn --> O[Đặt trạng thái kết thúc; không cấp quyền lợi]
+    M -- Hoàn tiền hoặc tranh chấp thanh toán ngược --> P[Ghi hồ sơ xử lý và bút toán đảo; điều chỉnh quyền lợi theo chính sách; vẫn giữ `SETTLED`]
+    C --> Q[Tiến trình đối soát truy vấn ý định quá hạn]
+    Q --> R{Nhà cung cấp và dữ liệu cục bộ lệch?}
+    R -- Có --> S[Áp dụng cùng máy trạng thái đã xác minh; cảnh báo tài chính nếu không giải được]
+    R -- Không --> T[Đóng lượt đối soát]
     I --> U([Kết thúc an toàn])
     L --> U
     N --> U
@@ -764,71 +765,71 @@ flowchart TD
     T --> U
 ```
 
-### AC-AIX-001 — AI request, policy guard và human approval
+### AC-AIX-001 — Yêu cầu AI, chốt chính sách và phê duyệt bởi con người
 
-- **Mục đích:** thể hiện rõ provenance, dữ liệu loại trừ, xử lý prompt injection, timeout và thao tác áp dụng của con người.
-- **Tác nhân:** Candidate/Recruiter, Work AI Worker, AI Provider, Human Reviewer.
-- **Tiền điều kiện:** use case được allowlist; consent phù hợp; prompt policy/model version active; không gửi protected/excluded fields.
-- **Kết thúc:** output là draft hoặc suggestion có nhãn; apply/reject do người dùng; ATS status không bị worker sửa.
+- **Mục đích:** thể hiện rõ nguồn gốc, dữ liệu loại trừ, xử lý chèn lệnh trong prompt, hết thời gian chờ và thao tác áp dụng của con người.
+- **Tác nhân:** Ứng viên/người tuyển dụng, tiến trình AI của Work, nhà cung cấp AI, người duyệt.
+- **Tiền điều kiện:** ca sử dụng nằm trong danh sách cho phép; sự đồng ý phù hợp; chính sách prompt/phiên bản mô hình đang hoạt động; không gửi trường được bảo vệ/bị loại.
+- **Kết thúc:** đầu ra là bản nháp hoặc đề xuất có nhãn; áp dụng/từ chối do người dùng; trạng thái ATS không bị tiến trình sửa.
 - **Liên kết:** `UC-AIX-001..003`; `API-AIX-001`, `API-AIX-002`, `API-AIX-003`, `API-AIX-004`, `API-AIX-005`, `API-AIX-006`; `TBL-AIX-001`, `TBL-AIX-002`, `TBL-AIX-003`, `TBL-AIX-004`, `TBL-AIX-005`, `TBL-AIX-006`; `SCR-WRK-013`, `SCR-WRK-034`, `SCR-WRK-039`, `SCR-WRK-040`; `SEQ-AIX-001`.
 
 ```mermaid
 flowchart TD
-    A([User yêu cầu AI assistance]) --> B[Validate entitlement, consent và rate limit]
-    B --> C[Snapshot input tối thiểu; loại protected fields và secret]
-    C --> D[Phân loại untrusted content; đóng khung prompt injection]
-    D --> E[Persist AI job, promptPolicyVersion và modelVersion]
-    E --> F[Worker gọi provider adapter async]
-    F --> G{Provider thành công trước timeout?}
-    G -- Không --> H[Retry giới hạn; sau đó FAILED và cho user retry]
-    G -- Có --> I[Validate schema, safety policy và output provenance]
-    I --> J{Output hợp lệ?}
-    J -- Không --> K[Quarantine output; operator review]
-    J -- Có --> L[Hiển thị draft, explanation hoặc suggestion có nhãn]
-    L --> M{Human action}
-    M -- Apply --> N[Lưu user-approved revision; audit actor]
-    M -- Edit then apply --> O[Lưu bản người dùng chỉnh; không ghi đè output gốc]
-    M -- Reject --> P[Giữ feedback; không tác động dữ liệu nghiệp vụ]
+    A([Người dùng yêu cầu trợ lý AI]) --> B[Kiểm tra quyền lợi, sự đồng ý và giới hạn tần suất]
+    B --> C[Chụp đầu vào tối thiểu; loại trường được bảo vệ và bí mật]
+    C --> D[Phân loại nội dung không tin cậy; đóng khung chèn lệnh trong prompt]
+    D --> E[Lưu tác vụ AI `QUEUED`, `promptPolicyVersion` và `modelVersion`]
+    E --> F[Tiến trình gọi bộ điều hợp nhà cung cấp bất đồng bộ]
+    F --> G{Nhà cung cấp thành công trước khi hết thời gian chờ?}
+    G -- Không --> H[Thử lại có giới hạn; sau đó `FAILED` và cho người dùng thử lại]
+    G -- Có --> I[Kiểm tra lược đồ, chính sách an toàn và nguồn gốc đầu ra]
+    I --> J{Đầu ra hợp lệ?}
+    J -- Không --> K[Lưu đầu ra cách ly; tác vụ `SUCCEEDED`; tạo bản duyệt `DRAFT` cho người duyệt]
+    J -- Có --> L[Lưu đầu ra bất biến; tác vụ `SUCCEEDED`; tạo bản duyệt `DRAFT`]
+    L --> M{Hành động duyệt của con người}
+    M -- ACCEPTED --> N[Lưu bản hiệu đính được chấp thuận; kiểm toán tác nhân]
+    M -- EDITED_ACCEPT --> O[Lưu bản do người dùng chỉnh; không ghi đè đầu ra gốc]
+    M -- REJECTED --> P[Giữ phản hồi; không tác động dữ liệu nghiệp vụ]
     N --> Q{Có yêu cầu chuyển ATS?}
-    Q -- Có --> R[Chuyển sang API ATS riêng; kiểm permission và human reason]
+    Q -- Có --> R[Chuyển sang API ATS riêng; kiểm quyền và lý do của con người]
     Q -- Không --> S([Kết thúc])
     O --> S
     P --> S
     H --> S
-    K --> S
+    K --> M
     R --> S
 ```
 
-### AC-OPS-001 — Moderation, deletion, legal hold và recovery
+### AC-OPS-001 — Kiểm duyệt, xóa, lưu giữ pháp lý và khôi phục
 
-- **Mục đích:** bao phủ quyết định moderation, appeal, account deletion fan-out, retention/legal hold và retry vận hành.
-- **Tác nhân:** Reporter, Moderator, Privacy Operator, Identity/Study/Work Worker, Security Operator.
-- **Tiền điều kiện:** operator có MFA và permission; resource/subject được định danh; reason code bắt buộc.
-- **Kết thúc:** action có audit; dữ liệu thuộc đúng service được anonymize sau grace period nếu không có legal hold; lỗi vào retry/DLQ có cảnh báo.
+- **Mục đích:** bao phủ quyết định kiểm duyệt, kháng nghị, xóa tài khoản lan truyền, lưu trữ/lưu giữ pháp lý và thử lại vận hành.
+- **Tác nhân:** Người báo cáo, kiểm duyệt viên, nhân sự riêng tư, tiến trình Danh tính/Study/Work, nhân sự bảo mật.
+- **Tiền điều kiện:** nhân sự vận hành có MFA và quyền; tài nguyên/chủ thể được định danh; mã lý do bắt buộc.
+- **Kết thúc:** hành động có kiểm toán; dữ liệu thuộc đúng dịch vụ được ẩn danh sau thời gian ân hạn nếu không có lưu giữ pháp lý; lỗi vào hàng đợi thử lại/DLQ có cảnh báo.
 - **Liên kết:** `UC-OPS-001..003`; `API-OPS-003`, `API-OPS-004`, `API-OPS-010`, `API-IAM-019`, `API-INT-006`, `API-INT-007`; `TBL-WRK-060`, `TBL-WRK-061`, `TBL-IAM-017`, `TBL-IAM-018`, `TBL-STU-053`, `TBL-WRK-064`; `SCR-OPS-009`, `SCR-OPS-010`, `SCR-OPS-021`, `SCR-IAM-006`; `SEQ-OPS-001`.
 
 ```mermaid
 flowchart TD
-    A([Report hoặc deletion request]) --> B{Loại yêu cầu}
-    B -- Moderation --> C[Triage severity, tenant, resource và evidence]
-    C --> D{Cần action?}
-    D -- Không --> E[Close NO_ACTION với reason]
-    D -- Có --> F[Moderator áp action có thời hạn hoặc takedown]
-    F --> G[Thông báo subject và mở cửa sổ appeal]
-    G --> H{Appeal hợp lệ?}
-    H -- Có --> I[Reviewer khác xem lại; append decision]
-    H -- Không --> J[Giữ quyết định đến expiry]
-    B -- Deletion --> K[Identity đặt DELETION_PENDING; revoke sessions; grace 30 ngày]
-    K --> L{Yêu cầu bị hủy trong grace?}
-    L -- Có --> M[Khôi phục trạng thái được phép; audit]
-    L -- Không --> N{Có legal hold còn hiệu lực?}
-    N -- Có --> O[Hoãn xóa phần bị hold; giới hạn access]
-    N -- Không --> P[Phát signed deletion event đến Study và Work]
-    P --> Q[Mỗi service idempotent xóa PII/file và anonymize fact theo policy]
-    Q --> R{Consumer thành công?}
-    R -- Không --> S[Retry backoff; quá ngưỡng vào DLQ và alert]
-    R -- Có --> T[Identity finalize ANONYMIZED]
-    S --> U[Operator repair rồi replay cùng eventId]
+    A([Báo cáo hoặc yêu cầu xóa]) --> B{Loại yêu cầu}
+    B -- Kiểm duyệt --> C[Phân loại mức độ, phạm vi tổ chức, tài nguyên và minh chứng]
+    C --> D{Cần hành động?}
+    D -- Không --> E[Đóng `NO_ACTION` kèm lý do]
+    D -- Có --> F[Kiểm duyệt viên áp dụng hành động có thời hạn hoặc gỡ nội dung]
+    F --> G[Thông báo chủ thể và mở thời hạn kháng nghị]
+    G --> H{Kháng nghị hợp lệ?}
+    H -- Có --> I[Người duyệt khác xem lại; thêm quyết định]
+    H -- Không --> J[Giữ quyết định đến khi hết hạn]
+    B -- Xóa --> K[Dịch vụ Danh tính đặt `DELETION_PENDING`; thu hồi phiên; ân hạn 30 ngày]
+    K --> L{Yêu cầu bị hủy trong thời gian ân hạn?}
+    L -- Có --> M[Khôi phục trạng thái được phép; kiểm toán]
+    L -- Không --> N{Có lưu giữ pháp lý còn hiệu lực?}
+    N -- Có --> O[Hoãn xóa phần bị lưu giữ; giới hạn truy cập]
+    N -- Không --> P[Phát sự kiện xóa có chữ ký đến Study và Work]
+    P --> Q[Mỗi dịch vụ xóa PII/tệp và ẩn danh dữ kiện theo chính sách, không lặp tác động]
+    Q --> R{Bộ tiêu thụ thành công?}
+    R -- Không --> S[Thử lại theo thời gian chờ tăng dần; quá ngưỡng vào DLQ và cảnh báo]
+    R -- Có --> T[Dịch vụ Danh tính hoàn tất `ANONYMIZED`]
+    S --> U[Nhân sự vận hành khắc phục rồi phát lại cùng `eventId`]
     U --> Q
     E --> V([Kết thúc có audit])
     I --> V
@@ -838,16 +839,16 @@ flowchart TD
     T --> V
 ```
 
-## 4. Class diagrams
+## 4. Biểu đồ lớp
 
-Các class dưới đây biểu diễn entity và aggregate ở mức thiết kế. Tên class dùng PascalCase, tương ứng với bảng snake_case trong `03_THIET_KE_CO_SO_DU_LIEU.md`. Thuộc tính chỉ nêu khóa, version, status và dữ liệu quyết định quan hệ; danh mục cột đầy đủ nằm trong tài liệu cơ sở dữ liệu.
+Các lớp dưới đây biểu diễn thực thể và đối tượng tổng hợp ở mức thiết kế. Tên lớp dùng PascalCase, tương ứng với bảng snake_case trong `03_THIET_KE_CO_SO_DU_LIEU.md`. Thuộc tính chỉ nêu khóa, phiên bản, trạng thái và dữ liệu quyết định quan hệ; danh mục cột đầy đủ nằm trong tài liệu cơ sở dữ liệu.
 
-### CLS-IAM-001 — Identity, credential, session và security event
+### CLS-IAM-001 — Danh tính, thông tin xác thực, phiên làm việc và sự kiện bảo mật
 
-- **Mục đích:** xác định aggregate Platform User và các bản ghi bảo mật append-only/token một lần.
-- **Tác nhân:** Identity API, Platform Admin, Identity Worker.
-- **Tiền điều kiện:** email được normalize; raw password/token không bao giờ được persist.
-- **Kết thúc:** credential/session thuộc duy nhất Identity DB; outbox/audit giữ đầy đủ nguyên nhân và actor.
+- **Mục đích:** xác định đối tượng tổng hợp Người dùng Nền tảng và các bản ghi bảo mật chỉ thêm/mã thông báo một lần.
+- **Tác nhân:** API Danh tính, quản trị viên nền tảng, tiến trình Danh tính.
+- **Tiền điều kiện:** email được chuẩn hóa; mật khẩu/mã thông báo thô không bao giờ được lưu.
+- **Kết thúc:** thông tin xác thực/phiên làm việc chỉ thuộc CSDL Danh tính; hộp thư đi/kiểm toán giữ đầy đủ nguyên nhân và tác nhân.
 - **Liên kết:** `UC-IAM-001..003`; `API-IAM-001`, `API-IAM-002`, `API-IAM-004`, `API-IAM-006`, `API-IAM-022`; `TBL-IAM-001`, `TBL-IAM-003`, `TBL-IAM-004`, `TBL-IAM-009`, `TBL-IAM-010`, `TBL-IAM-012`, `TBL-IAM-015`, `TBL-IAM-017`, `TBL-IAM-018`; `SCR-IAM-001`, `SCR-IAM-002`, `SCR-IAM-003`, `SCR-IAM-005`, `SCR-IAM-006`, `SCR-OPS-001`; `SEQ-IAM-001..002`.
 
 ```mermaid
@@ -920,20 +921,20 @@ classDiagram
     PlatformUser "1" *-- "0..*" OneTimeToken
     PlatformUser "1" *-- "0..*" AuthSession
     AuthSession "1" *-- "1..*" RefreshToken
-    RefreshToken "0..1" --> "0..1" RefreshToken : rotates to
+    RefreshToken "0..1" --> "0..1" RefreshToken : xoay vòng tới
     PlatformUser "1" --> "0..*" PlatformUserRole
     GlobalRole "1" --> "0..*" PlatformUserRole
     PlatformUser "1" --> "0..*" AgreementAcceptance
-    PlatformUser "1" --> "0..*" IdentityAuditLog : subject
-    PlatformUser "1" --> "0..*" IdentityOutboxEvent : aggregate
+    PlatformUser "1" --> "0..*" IdentityAuditLog : chủ thể
+    PlatformUser "1" --> "0..*" IdentityOutboxEvent : đối tượng tổng hợp
 ```
 
-### CLS-STU-001 — Study profile, RBAC và curriculum versioning
+### CLS-STU-001 — Hồ sơ Study, RBAC và phiên bản chương trình học
 
-- **Mục đích:** mô tả projection danh tính logic, local RBAC và content tree bất biến sau publish.
-- **Tác nhân:** Study API, Content Author, Trusted Publisher, Identity Event Consumer.
-- **Tiền điều kiện:** StudyUser được reconcile theo platformUserId; path version pin trực tiếp course version.
-- **Kết thúc:** không có credential trong Study; published revision không đổi; mỗi assessment placement có đúng một scope.
+- **Mục đích:** mô tả hình chiếu danh tính logic, RBAC cục bộ và cây nội dung bất biến sau khi xuất bản.
+- **Tác nhân:** API Study, tác giả nội dung, người xuất bản được tin cậy, bộ tiêu thụ sự kiện Danh tính.
+- **Tiền điều kiện:** `StudyUser` được đối soát theo `platformUserId`; phiên bản lộ trình ghim trực tiếp phiên bản khóa học.
+- **Kết thúc:** không có thông tin xác thực trong Study; bản hiệu đính đã xuất bản không đổi; mỗi vị trí bài đánh giá có đúng một phạm vi.
 - **Liên kết:** `UC-STU-001..002`, `UC-STU-006`; `API-STU-001`, `API-STU-016`, `API-STU-014`, `API-STU-054`, `API-STU-056`; `TBL-STU-001`, `TBL-STU-009`, `TBL-STU-010`, `TBL-STU-011`, `TBL-STU-012`, `TBL-STU-017`, `TBL-STU-020`; `SCR-STU-002`, `SCR-STU-005`, `SCR-STU-013`, `SCR-OPS-004`, `SCR-OPS-005`, `SCR-OPS-007`; `SEQ-STU-001`, `SEQ-STU-004`.
 
 ```mermaid
@@ -1037,7 +1038,7 @@ classDiagram
         +PublishCheckStatus status
     }
 
-    PlatformUserReference ..> StudyUser : logical mapping only, no FK
+    PlatformUserReference ..> StudyUser : ánh xạ logic, không có FK
     StudyUser "1" *-- "1" LearnerProfile
     StudyUser "1" *-- "1" OnboardingRecord
     StudyUser "1" --> "0..*" StudyUserRoleAssignment
@@ -1056,12 +1057,12 @@ classDiagram
     LearningPathVersion "1" --> "0..*" ContentPublishCheck
 ```
 
-### CLS-STU-002 — Enrollment, progress, assessment, file và evidence
+### CLS-STU-002 — Ghi danh, tiến độ, bài đánh giá, tệp và minh chứng
 
-- **Mục đích:** tách learning facts khỏi snapshot có thể rebuild, đồng thời giữ attempt/review/evidence bất biến.
-- **Tác nhân:** Learner, Study API/Worker, Reviewer, Work Integration Worker.
-- **Tiền điều kiện:** mọi enrollment và primary path period pin published version; file nằm trong private storage.
-- **Kết thúc:** completion chỉ reuse cùng version; attempt/review không bị ghi đè; evidence export không làm phát sinh FK sang Work.
+- **Mục đích:** tách dữ kiện học tập khỏi bản chụp có thể dựng lại, đồng thời giữ lần làm/duyệt/minh chứng bất biến.
+- **Tác nhân:** Người học, API/tiến trình Study, người duyệt, tiến trình tích hợp Work.
+- **Tiền điều kiện:** mọi lượt ghi danh và giai đoạn lộ trình chính ghim phiên bản đã xuất bản; tệp nằm trong kho lưu trữ riêng.
+- **Kết thúc:** hoàn thành chỉ dùng lại cùng phiên bản; lần làm/lần duyệt không bị ghi đè; xuất minh chứng không tạo FK sang Work.
 - **Liên kết:** `UC-STU-002..005`; `API-STU-014`, `API-STU-020`, `API-STU-027`, `API-STU-030`, `API-INT-002`; `TBL-STU-026`, `TBL-STU-027`, `TBL-STU-029`, `TBL-STU-033`, `TBL-STU-035`, `TBL-STU-036`, `TBL-STU-038`, `TBL-STU-040`, `TBL-STU-041`; `SCR-STU-013`, `SCR-STU-016`, `SCR-STU-017`, `SCR-STU-018`, `SCR-WRK-017`; `SEQ-STU-001..003`, `SEQ-INT-001`.
 
 ```mermaid
@@ -1173,17 +1174,17 @@ classDiagram
     AssessmentAttempt "1" --> "0..*" AssessmentReview
     UploadSession "1" --> "0..1" FileAsset
     FileAsset "1" --> "1..*" FileScanResult
-    AssessmentAttempt "0..1" --> "0..1" FileAsset : file answer
+    AssessmentAttempt "0..1" --> "0..1" FileAsset : câu trả lời bằng tệp
     CompletionRecord "1" --> "0..1" StudyEvidence
     StudyEvidence "1" --> "0..*" IntegrationDeliveryLog
 ```
 
-### CLS-STU-003 — Engagement, support, adjustment, audit và report snapshot
+### CLS-STU-003 — Tương tác, hỗ trợ, điều chỉnh, kiểm toán và bản chụp báo cáo
 
-- **Mục đích:** mô tả delivery/engagement/operations mà không biến phần trăm snapshot thành learning source-of-truth.
-- **Tác nhân:** Learner, Notification Worker, Moderator, Support Agent, Study Admin.
-- **Tiền điều kiện:** mọi resource dùng StudyUser local ID; adjustment bắt buộc before/after, actor và reason.
-- **Kết thúc:** delivery/support/audit append history; report snapshot ghi `asOfAt`; community mapping dùng FK/join hợp lệ.
+- **Mục đích:** mô tả gửi thông báo/tương tác/vận hành mà không biến tỷ lệ trong bản chụp thành nguồn sự thật học tập.
+- **Tác nhân:** Người học, tiến trình thông báo, kiểm duyệt viên, nhân viên hỗ trợ, quản trị viên Study.
+- **Tiền điều kiện:** mọi tài nguyên dùng ID cục bộ `StudyUser`; điều chỉnh bắt buộc có trước/sau, tác nhân và lý do.
+- **Kết thúc:** gửi thông báo/hỗ trợ/kiểm toán chỉ thêm lịch sử; bản chụp báo cáo ghi `asOfAt`; ánh xạ cộng đồng dùng FK/join hợp lệ.
 - **Liên kết:** `UC-STU-007..008`; `API-STU-034`, `API-STU-039`, `API-STU-040`, `API-STU-041`, `API-STU-043`, `API-STU-050`, `API-OPS-010`; `TBL-STU-042`, `TBL-STU-043`, `TBL-STU-044`, `TBL-STU-045`, `TBL-STU-046`, `TBL-STU-047`, `TBL-STU-048`, `TBL-STU-049`, `TBL-STU-050`, `TBL-STU-054`; `SCR-STU-020`, `SCR-STU-021`, `SCR-STU-022`, `SCR-OPS-014`, `SCR-OPS-015`, `SCR-OPS-021`; `AC-STU-004`, `SEQ-STU-005`.
 
 ```mermaid
@@ -1260,15 +1261,15 @@ classDiagram
     SupportTicket "1" *-- "0..*" SupportMessage
     StudyUser "1" --> "0..*" AdminAdjustment
     AdminAdjustment "1" --> "1..*" StudyAuditEvent
-    ReportSnapshot ..> StudyAuditEvent : aggregate from authorized facts
+    ReportSnapshot ..> StudyAuditEvent : tổng hợp từ dữ kiện đã được cấp quyền
 ```
 
-### CLS-WRK-001 — Candidate, tenant, job, application và ATS snapshots
+### CLS-WRK-001 — Ứng viên, phạm vi tổ chức, việc làm, đơn ứng tuyển và bản chụp ATS
 
-- **Mục đích:** thể hiện composite tenant ownership, immutable job/profile/application snapshots và sourcing privacy.
-- **Tác nhân:** Candidate, Enterprise Member, Recruiter, Hiring Manager, Search Worker.
-- **Tiền điều kiện:** membership resolve từ access context; không nhận tenantId do client cung cấp làm nguồn authorization.
-- **Kết thúc:** một application mỗi candidate/job; job revision và apply snapshots bất biến; search projection không chứa dữ liệu nhạy cảm.
+- **Mục đích:** thể hiện quyền sở hữu đối tượng tổng hợp theo phạm vi tổ chức, các bản chụp việc làm/hồ sơ/đơn ứng tuyển bất biến và riêng tư khi tìm nguồn ứng viên.
+- **Tác nhân:** Ứng viên, thành viên doanh nghiệp, người tuyển dụng, quản lý tuyển dụng, tiến trình tìm kiếm.
+- **Tiền điều kiện:** tư cách thành viên được xác định từ ngữ cảnh truy cập; không nhận `tenantId` do máy khách cung cấp làm nguồn phân quyền.
+- **Kết thúc:** một đơn ứng tuyển cho mỗi ứng viên/việc làm; bản hiệu đính việc làm và bản chụp ứng tuyển bất biến; hình chiếu tìm kiếm không chứa dữ liệu nhạy cảm.
 - **Liên kết:** `UC-WRK-001..006`; `API-WRK-005`, `API-WRK-051`, `API-WRK-053`, `API-WRK-043`, `API-WRK-047`, `API-WRK-023`, `API-WRK-058`, `API-INT-002`; `TBL-WRK-004`, `TBL-WRK-016`, `TBL-WRK-033`, `TBL-WRK-037`, `TBL-WRK-038`, `TBL-WRK-041`, `TBL-WRK-042`, `TBL-WRK-044`, `TBL-WRK-045`; `SCR-WRK-011`, `SCR-WRK-036`, `SCR-WRK-034`, `SCR-WRK-017`, `SCR-WRK-040`; `SEQ-WRK-001..003`, `SEQ-INT-001`.
 
 ```mermaid
@@ -1381,12 +1382,12 @@ classDiagram
     Application "1" *-- "0..*" ApplicationEvidenceSnapshot
 ```
 
-### CLS-WRK-002 — Interview, chat, university và moderation
+### CLS-WRK-002 — Phỏng vấn, trò chuyện, trường và kiểm duyệt
 
-- **Mục đích:** nối các aggregate cộng tác quanh application nhưng giữ tenant/privacy guard ở mọi quan hệ.
-- **Tác nhân:** Candidate, Assigned Recruiter, University Officer, Moderator, Notification/WebSocket Worker.
-- **Tiền điều kiện:** application và tenant còn truy cập được; conversation chỉ tạo sau application; university PII cần consent.
-- **Kết thúc:** schedule/message/referral/moderation history không bị xóa cascade; report trường tuân ngưỡng 10.
+- **Mục đích:** nối các đối tượng tổng hợp cộng tác quanh đơn ứng tuyển nhưng giữ lớp bảo vệ phạm vi tổ chức/riêng tư ở mọi quan hệ.
+- **Tác nhân:** Ứng viên, người tuyển dụng được phân công, cán bộ trường, kiểm duyệt viên, tiến trình thông báo/WebSocket.
+- **Tiền điều kiện:** đơn ứng tuyển và phạm vi tổ chức còn truy cập được; cuộc trò chuyện chỉ tạo sau đơn ứng tuyển; PII của trường cần sự đồng ý.
+- **Kết thúc:** lịch/tin nhắn/lượt giới thiệu/lịch sử kiểm duyệt không bị xóa dây chuyền; báo cáo trường tuân ngưỡng 10.
 - **Liên kết:** `UC-WRK-007..010`, `UC-UNI-001..003`; `API-WRK-060`, `API-WRK-031`, `API-OPS-003`, `API-UNI-005`, `API-UNI-010`, `API-UNI-014`, `API-UNI-015`; `TBL-WRK-049`, `TBL-WRK-050`, `TBL-WRK-053`, `TBL-WRK-054`, `TBL-WRK-019`, `TBL-WRK-023`, `TBL-WRK-026`, `TBL-WRK-029`, `TBL-WRK-030`, `TBL-WRK-060`; `SCR-WRK-020`, `SCR-WRK-021`, `SCR-WRK-041`, `SCR-UNI-004`, `SCR-UNI-007`, `SCR-UNI-010`, `SCR-UNI-011`, `SCR-OPS-009`; `SEQ-WRK-004..005`, `SEQ-UNI-001`, `SEQ-OPS-001`.
 
 ```mermaid
@@ -1460,7 +1461,11 @@ classDiagram
     class CandidateReferral {
         +UUID id
         +UUID programId
-        +UUID applicationId
+        +UUID candidateId
+        +UUID jobId
+        +UUID affiliationId
+        +UUID consentGrantId
+        +ReferralStatus status
     }
     class DataSharingConsent {
         +UUID id
@@ -1493,17 +1498,16 @@ classDiagram
     University "1" --> "0..*" StudentAffiliation
     University "1" --> "0..*" InternshipProgram
     InternshipProgram "1" --> "0..*" CandidateReferral
-    Application "0..1" --> "0..1" CandidateReferral
     University "1" --> "0..*" DataSharingConsent
     ModerationCase "1" *-- "0..*" ModerationDecision
 ```
 
-### CLS-PAY-001 — Order, provider event, ledger, entitlement và promotion
+### CLS-PAY-001 — Đơn hàng, sự kiện nhà cung cấp, sổ cái, quyền lợi và quảng bá
 
-- **Mục đích:** tách ý định mua, xác nhận provider, kế toán append-only và quyền sử dụng TopCV/TopJD/sponsored.
-- **Tác nhân:** Buyer, Billing API/Worker, Finance Operator, VNPAY/MoMo.
-- **Tiền điều kiện:** product và price version tồn tại; một order dùng đúng một buyer scope; provider event có natural key duy nhất.
-- **Kết thúc:** tổng ledger có thể reconcile; entitlement grant/consume/adjust có lịch sử; sponsored placement không sửa organic/match score.
+- **Mục đích:** tách ý định mua, xác nhận nhà cung cấp, kế toán chỉ thêm và quyền sử dụng TopCV/TopJD/nội dung tài trợ.
+- **Tác nhân:** Bên mua, API/tiến trình thanh toán, nhân sự tài chính, VNPAY/MoMo.
+- **Tiền điều kiện:** sản phẩm và phiên bản giá tồn tại; một đơn hàng dùng đúng một phạm vi bên mua; sự kiện nhà cung cấp có khóa tự nhiên duy nhất.
+- **Kết thúc:** tổng sổ cái có thể đối soát; cấp/tiêu/điều chỉnh quyền lợi có lịch sử; vị trí tài trợ không sửa điểm tự nhiên/độ phù hợp.
 - **Liên kết:** `UC-WRK-009`, `UC-PAY-001..003`; `API-PAY-002`, `API-PAY-014`, `API-PAY-015`, `API-PAY-006`, `API-PAY-009`, `API-PAY-010`, `API-PAY-011`; `TBL-PAY-001`, `TBL-PAY-002`, `TBL-PAY-003`, `TBL-PAY-005`, `TBL-PAY-006`, `TBL-PAY-007`, `TBL-PAY-008`, `TBL-PAY-009`, `TBL-PAY-010`, `TBL-PAY-011`, `TBL-PAY-012`, `TBL-PAY-013`; `SCR-WRK-022`, `SCR-WRK-023`, `SCR-WRK-043`, `SCR-WRK-044`, `SCR-OPS-019`, `SCR-OPS-020`; `SEQ-PAY-001..002`.
 
 ```mermaid
@@ -1578,15 +1582,15 @@ classDiagram
     Order "1" --> "0..*" EntitlementGrant
     EntitlementGrant "1" --> "0..*" EntitlementUsage
     EntitlementUsage "1" --> "0..1" SponsoredPlacement
-    ReconciliationRun "1" --> "0..*" PaymentProviderEvent : resolves
+    ReconciliationRun "1" --> "0..*" PaymentProviderEvent : đối soát
 ```
 
-### CLS-AIX-001 — AI job, provenance, review và human-applied revision
+### CLS-AIX-001 — Tác vụ AI, nguồn gốc, duyệt và bản hiệu đính do con người áp dụng
 
-- **Mục đích:** chứng minh output AI không phải nguồn dữ liệu nghiệp vụ cho tới khi human action được ghi nhận.
-- **Tác nhân:** Candidate/Recruiter, AI Worker, AI Operator, Provider Adapter.
-- **Tiền điều kiện:** AI policy allowlist, consent và entitlement đã qua guard.
-- **Kết thúc:** mọi inference truy được prompt/model/input policy; output gốc bất biến; human-applied revision là bản ghi riêng.
+- **Mục đích:** chứng minh đầu ra AI không phải nguồn dữ liệu nghiệp vụ cho tới khi hành động của con người được ghi nhận.
+- **Tác nhân:** Ứng viên/người tuyển dụng, tiến trình AI, nhân sự vận hành AI, bộ điều hợp nhà cung cấp.
+- **Tiền điều kiện:** danh sách cho phép của chính sách AI, sự đồng ý và quyền lợi đã qua lớp bảo vệ.
+- **Kết thúc:** mọi suy luận truy được chính sách prompt/mô hình/đầu vào; đầu ra gốc bất biến; bản hiệu đính do con người áp dụng là bản ghi riêng.
 - **Liên kết:** `UC-AIX-001..003`; `API-AIX-001`, `API-AIX-002`, `API-AIX-003`, `API-AIX-004`, `API-AIX-005`, `API-AIX-006`; `TBL-AIX-001`, `TBL-AIX-002`, `TBL-AIX-003`, `TBL-AIX-004`, `TBL-AIX-005`, `TBL-AIX-006`; `SCR-WRK-013`, `SCR-WRK-034`, `SCR-WRK-039`, `SCR-WRK-040`; `SEQ-AIX-001`.
 
 ```mermaid
@@ -1622,10 +1626,11 @@ classDiagram
         +string outputSchemaVersion
         +string checksum
     }
-    class AiSafetyReview {
+    class AiHumanReview {
         +UUID id
+        +UUID jobId
         +UUID outputId
-        +SafetyDecision decision
+        +AiReviewDecision decision
         +string reasonCode
     }
     class HumanAiDecision {
@@ -1646,18 +1651,18 @@ classDiagram
     PromptPolicyVersion "1" --> "0..*" AiJob
     AiJob "1" *-- "1" AiInputSnapshot
     AiJob "1" *-- "0..1" AiOutput
-    AiOutput "1" --> "0..*" AiSafetyReview
-    AiOutput "1" --> "0..1" HumanAiDecision
-    HumanAiDecision "1" --> "0..1" HumanAppliedRevision
+    AiOutput "1" --> "0..*" AiHumanReview
+    AiHumanReview "1" --> "0..1" HumanAppliedRevision
 ```
 
-### CLS-INT-001 — Liên kết logic giữa ba database
+### CLS-INT-001 — Liên kết logic giữa ba cơ sở dữ liệu
 
-- **Mục đích:** làm rõ mọi cross-service link đều qua immutable identifier, signed event/request và local projection; không có FK xuyên database.
-- **Tác nhân:** Identity/Study/Work Outbox Publisher và idempotent Consumer.
-- **Tiền điều kiện:** contract version được hỗ trợ; chữ ký, issuer, audience, timestamp và eventId hợp lệ.
-- **Kết thúc:** projection đạt eventual consistency; duplicate/stale event không ghi đè version mới; lỗi vào retry/DLQ.
-- **Liên kết:** `UC-IAM-003`, `UC-STU-005`, `UC-WRK-006`, `UC-OPS-002..003`; identity/evidence signed contracts `API-INT-001`, `API-INT-002`, `API-INT-004`, `API-INT-005`, `API-INT-006`, `API-INT-007`; `TBL-IAM-018`, `TBL-IAM-019`, `TBL-STU-040`, `TBL-STU-041`, `TBL-STU-053`, `TBL-WRK-044`, `TBL-WRK-045`, `TBL-WRK-064`, `TBL-WRK-069`; `SEQ-INT-001`, `SEQ-OPS-001`.
+- **Mục đích:** làm rõ mọi liên kết liên dịch vụ đều qua định danh bất biến, sự kiện/yêu cầu có chữ ký và hình chiếu cục bộ; không có FK xuyên cơ sở dữ liệu.
+- **Tác nhân:** bên phát hộp thư đi Danh tính/Study/Work và bộ tiêu thụ không lặp tác động.
+- **Tiền điều kiện:** phiên bản hợp đồng được hỗ trợ; chữ ký, nguồn phát hành, đối tượng nhận, dấu thời gian và `eventId` hợp lệ.
+- **Kết thúc:** hình chiếu đạt tính nhất quán cuối cùng; sự kiện trùng/cũ không ghi đè phiên bản mới; lỗi vào hàng đợi thử lại/DLQ.
+- **Khóa liên hệ:** `platformUserId` là khóa liên hệ toàn cục bất biến trong luồng thông thường. Riêng thông điệp xóa có thể dùng khóa chủ thể giả danh theo hợp đồng hai bên; dịch vụ nhận chỉ phân giải bằng ánh xạ cục bộ, không dùng email hay ID cục bộ của dịch vụ khác.
+- **Liên kết:** `UC-IAM-003`, `UC-STU-005`, `UC-WRK-006`, `UC-OPS-002..003`; hợp đồng danh tính/minh chứng có chữ ký `API-INT-001`, `API-INT-002`, `API-INT-004`, `API-INT-005`, `API-INT-006`, `API-INT-007`; `TBL-IAM-018`, `TBL-IAM-019`, `TBL-STU-040`, `TBL-STU-041`, `TBL-STU-053`, `TBL-WRK-044`, `TBL-WRK-045`, `TBL-WRK-064`, `TBL-WRK-069`; `SEQ-INT-001`, `SEQ-OPS-001`.
 
 ```mermaid
 classDiagram
@@ -1706,995 +1711,999 @@ classDiagram
     }
 
     IdentityPlatformUser "1" --> "0..*" IdentityOutboxEvent
-    IdentityOutboxEvent ..> StudyUserProjection : signed event, no FK
-    IdentityOutboxEvent ..> WorkUserProjection : signed event, no FK
-    StudyEvidence ..> SignedEvidenceExportRequest : validated source
-    SignedEvidenceExportRequest ..> ApplicationEvidenceSnapshot : minimal snapshot, no FK
-    IdentityOutboxEvent ..> ConsumerReceipt : deduplication
-    SignedEvidenceExportRequest ..> ConsumerReceipt : deduplication
+    IdentityOutboxEvent ..> StudyUserProjection : sự kiện có chữ ký, không có FK
+    IdentityOutboxEvent ..> WorkUserProjection : sự kiện có chữ ký, không có FK
+    StudyEvidence ..> SignedEvidenceExportRequest : nguồn đã kiểm tra hợp lệ
+    SignedEvidenceExportRequest ..> ApplicationEvidenceSnapshot : bản chụp tối thiểu, không có FK
+    IdentityOutboxEvent ..> ConsumerReceipt : khử trùng lặp
+    SignedEvidenceExportRequest ..> ConsumerReceipt : khử trùng lặp
 ```
 
-## 5. Sequence diagrams
+## 5. Biểu đồ tuần tự
 
-### SEQ-IAM-001 — Register, verify, login/MFA và tạo projection
+### SEQ-IAM-001 — Đăng ký, xác minh, đăng nhập/MFA và tạo hình chiếu
 
-- **Mục đích:** mô tả transaction đăng ký, one-time verification, đăng nhập privileged có MFA và propagation sang hai domain.
-- **Tác nhân:** Guest/User, Identity API/DB/Worker, Email Provider, Study/Work Consumer.
-- **Tiền điều kiện:** `Idempotency-Key` có ở register; raw token chỉ tồn tại trong response nội bộ gửi mail; signing key lấy từ secret manager/KMS.
-- **Kết thúc:** user active có session hoặc bị chặn an toàn; Study/Work projection áp đúng aggregate version.
+- **Mục đích:** mô tả giao dịch đăng ký, xác minh một lần, đăng nhập đặc quyền có MFA và lan truyền sang hai miền.
+- **Tác nhân:** Khách/người dùng, API/CSDL/tiến trình Danh tính, nhà cung cấp email, bộ tiêu thụ Study/Work.
+- **Tiền điều kiện:** `Idempotency-Key` có ở đăng ký; mã thô chỉ tồn tại trong phản hồi nội bộ gửi email; khóa ký lấy từ trình quản lý bí mật/KMS.
+- **Kết thúc:** người dùng `ACTIVE` có phiên làm việc hoặc bị chặn an toàn; hình chiếu Study/Work áp dụng đúng phiên bản đối tượng tổng hợp.
 - **Liên kết:** `UC-IAM-001..003`; `API-IAM-001`, `API-IAM-002`, `API-IAM-004`, `API-IAM-005`; `TBL-IAM-001`, `TBL-IAM-003`, `TBL-IAM-004`, `TBL-IAM-009`, `TBL-IAM-018`; `SCR-IAM-001`, `SCR-IAM-002`, `SCR-IAM-003`, `SCR-IAM-005`; `AC-IAM-001`, `CLS-IAM-001`, `CLS-INT-001`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Guest hoặc User
-    participant I as Identity API
-    participant IDB as Identity DB
-    participant M as Email Provider
-    participant OW as Identity Outbox Worker
-    participant S as Study Consumer
-    participant W as Work Consumer
+    actor U as Khách hoặc người dùng
+    participant I as API Danh tính
+    participant IDB as CSDL Danh tính
+    participant M as Nhà cung cấp email
+    participant OW as Tiến trình hộp thư đi Danh tính
+    participant S as Bộ tiêu thụ Study
+    participant W as Bộ tiêu thụ Work
 
-    U->>I: POST register với Idempotency-Key
-    I->>IDB: BEGIN; check idempotency và normalized email
+    U->>I: POST đăng ký với `Idempotency-Key`
+    I->>IDB: BEGIN; kiểm chống lặp yêu cầu và email đã chuẩn hóa
     alt Email mới
-        I->>IDB: Insert pending user, Argon2id credential, agreement, hashed verify token, outbox
-        I->>IDB: COMMIT và lưu response idempotent
-        I-->>U: Generic registration accepted
-        OW->>IDB: Claim email delivery event
-        OW->>M: Send verification link chứa raw token
-        M-->>OW: Delivery result
-    else Duplicate email hoặc duplicate request
-        I-->>U: Cùng generic response hoặc replay response đã lưu
+        I->>IDB: Chèn người dùng chờ xác minh, thông tin xác thực Argon2id, chấp thuận, mã xác minh băm, hộp thư đi
+        I->>IDB: COMMIT và lưu phản hồi chống lặp yêu cầu
+        I-->>U: Chấp nhận đăng ký bằng phản hồi chung
+        OW->>IDB: Nhận sự kiện gửi email
+        OW->>M: Gửi liên kết xác minh chứa mã thô
+        M-->>OW: Kết quả gửi
+    else Email trùng hoặc yêu cầu trùng
+        I-->>U: Cùng phản hồi chung hoặc phát lại phản hồi đã lưu
     end
 
-    U->>I: POST verify-email với raw token
-    I->>IDB: Lock hashed one-time token
-    alt Token active và chưa dùng
-        I->>IDB: Consume token; activate user; increment version; append outbox
-        I-->>U: Email verified
-        OW-->>S: Signed identity.verified event
-        OW-->>W: Signed identity.verified event
-        S->>S: Deduplicate và upsert projection nếu version mới hơn
-        W->>W: Deduplicate và upsert projection nếu version mới hơn
-    else Token sai, hết hạn hoặc đã dùng
+    U->>I: POST xác minh email với mã thô
+    I->>IDB: Khóa mã dùng một lần đã băm
+    alt Mã đang hoạt động và chưa dùng
+        I->>IDB: Dùng mã; kích hoạt người dùng; tăng phiên bản; thêm hộp thư đi
+        I-->>U: Đã xác minh email
+        OW-->>S: Sự kiện `identity.verified` có chữ ký
+        OW-->>W: Sự kiện `identity.verified` có chữ ký
+        S->>S: Khử trùng lặp và chèn/cập nhật hình chiếu nếu phiên bản mới hơn
+        W->>W: Khử trùng lặp và chèn/cập nhật hình chiếu nếu phiên bản mới hơn
+    else Mã sai, hết hạn hoặc đã dùng
         I-->>U: VERIFY_TOKEN_INVALID
     end
 
-    U->>I: POST login
-    I->>IDB: Read account và credential; verify password
-    alt Suspended, locked hoặc credential sai
-        I->>IDB: Append security audit; update failure policy nếu cần
-        I-->>U: Generic authentication failure
-    else Privileged role
-        I-->>U: MFA challenge
-        U->>I: Submit TOTP hoặc recovery code
-        I->>IDB: Verify MFA; create session family và refresh token hash
-        I-->>U: Access token 15 phút và rotating refresh token
-    else Regular role
-        I->>IDB: Create session family và refresh token hash
-        I-->>U: Access token 15 phút và rotating refresh token
+    U->>I: POST đăng nhập
+    I->>IDB: Đọc tài khoản và thông tin xác thực; kiểm mật khẩu
+    alt Bị tạm ngưng, bị khóa hoặc thông tin xác thực sai
+        I->>IDB: Thêm kiểm toán bảo mật; cập nhật chính sách thất bại nếu cần
+        I-->>U: Lỗi xác thực chung
+    else Vai trò đặc quyền
+        I-->>U: Thử thách MFA
+        U->>I: Gửi TOTP hoặc mã khôi phục
+        I->>IDB: Kiểm MFA; tạo họ phiên và mã làm mới đã băm
+        I-->>U: Mã truy cập 15 phút và mã làm mới xoay vòng
+    else Vai trò thông thường
+        I->>IDB: Tạo họ phiên và mã làm mới đã băm
+        I-->>U: Mã truy cập 15 phút và mã làm mới xoay vòng
     end
 ```
 
-### SEQ-IAM-002 — Refresh rotation, reuse detection và suspension propagation
+### SEQ-IAM-002 — Xoay vòng mã làm mới, phát hiện tái sử dụng và lan truyền tạm ngưng
 
-- **Mục đích:** chứng minh refresh token one-use được khóa khi rotate và mọi session bị thu hồi khi reuse/suspend.
-- **Tác nhân:** Client, Identity API/Admin/DB/Worker, Study và Work.
-- **Tiền điều kiện:** refresh token thuộc session family chưa hết hạn; Admin có MFA và permission suspend.
-- **Kết thúc:** chỉ một concurrent refresh thành công; reuse revoke family; suspension tăng authVersion và chặn cả local projection.
+- **Mục đích:** chứng minh mã làm mới một lần được khóa khi xoay vòng và mọi phiên bị thu hồi khi tái sử dụng/tạm ngưng.
+- **Tác nhân:** Máy khách, API/quản trị/CSDL/tiến trình Danh tính, Study và Work.
+- **Tiền điều kiện:** mã làm mới thuộc họ phiên chưa hết hạn; quản trị viên có MFA và quyền tạm ngưng.
+- **Kết thúc:** chỉ một yêu cầu làm mới đồng thời thành công; tái sử dụng thu hồi cả họ; tạm ngưng tăng `authVersion` và chặn cả hình chiếu cục bộ.
 - **Liên kết:** `UC-IAM-002..003`; `API-IAM-006`, `API-IAM-022`; `TBL-IAM-001`, `TBL-IAM-009`, `TBL-IAM-010`, `TBL-IAM-017`, `TBL-IAM-018`; `SCR-IAM-006`, `SCR-OPS-001`; `AC-IAM-001`, `CLS-IAM-001`, `CLS-INT-001`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor C as Client
-    actor A as Platform Admin
-    participant I as Identity API
-    participant IDB as Identity DB
-    participant OW as Outbox Worker
+    actor C as Máy khách
+    actor A as Quản trị viên nền tảng
+    participant I as API Danh tính
+    participant IDB as CSDL Danh tính
+    participant OW as Tiến trình hộp thư đi
     participant S as Study
     participant W as Work
 
-    par Hai refresh đồng thời cùng token
-        C->>I: POST refresh token R1
+    par Hai yêu cầu làm mới đồng thời cùng mã
+        C->>I: POST mã làm mới R1
     and
-        C->>I: POST refresh token R1
+        C->>I: POST mã làm mới R1
     end
     I->>IDB: SELECT R1 FOR UPDATE
-    alt Request giữ lock đầu tiên
-        I->>IDB: Mark R1 used; insert child R2; COMMIT
-        I-->>C: Access mới và R2
-    else Request sau thấy R1 đã used
-        I->>IDB: Revoke toàn session family; append reuse event; COMMIT
-        I-->>C: REFRESH_TOKEN_REUSED và buộc login lại
+    alt Yêu cầu giữ khóa đầu tiên
+        I->>IDB: Đặt R1 đã dùng; chèn mã con R2; COMMIT
+        I-->>C: Mã truy cập mới và R2
+    else Yêu cầu sau thấy R1 đã dùng
+        I->>IDB: Thu hồi cả họ phiên; thêm sự kiện tái sử dụng; COMMIT
+        I-->>C: `REFRESH_TOKEN_REUSED` và buộc đăng nhập lại
     end
 
-    A->>I: Suspend user với reason và If-Match
-    I->>IDB: Lock user; set SUSPENDED; increment authVersion; revoke all sessions; append audit/outbox
-    I-->>A: Suspended
-    OW-->>S: Signed identity.status-changed version N
-    OW-->>W: Signed identity.status-changed version N
-    par Consumers nhận duplicate hoặc sai thứ tự
-        S->>S: Deduplicate eventId; chỉ apply version lớn hơn
+    A->>I: Tạm ngưng người dùng với lý do và `If-Match`
+    I->>IDB: Khóa người dùng; đặt `SUSPENDED`; tăng `authVersion`; thu hồi mọi phiên; thêm kiểm toán/hộp thư đi
+    I-->>A: Đã tạm ngưng
+    OW-->>S: Sự kiện `identity.status-changed` có chữ ký, phiên bản N
+    OW-->>W: Sự kiện `identity.status-changed` có chữ ký, phiên bản N
+    par Bộ tiêu thụ nhận sự kiện trùng hoặc sai thứ tự
+        S->>S: Khử trùng lặp `eventId`; chỉ áp dụng phiên bản lớn hơn
     and
-        W->>W: Deduplicate eventId; chỉ apply version lớn hơn
+        W->>W: Khử trùng lặp `eventId`; chỉ áp dụng phiên bản lớn hơn
     end
-    C->>S: Request bằng access token cũ
-    S->>S: Check projected status và authVersion
+    C->>S: Yêu cầu bằng mã truy cập cũ
+    S->>S: Kiểm trạng thái hình chiếu và `authVersion`
     S-->>C: 403 ACCOUNT_SUSPENDED
 ```
 
-### SEQ-STU-001 — Standalone enrollment và primary-path switch cạnh tranh
+### SEQ-STU-001 — Ghi danh khóa học độc lập và đổi lộ trình chính cạnh tranh
 
-- **Mục đích:** phân biệt hai luồng enrollment, xử lý hai switch đồng thời và giữ progress theo version.
-- **Tác nhân:** Learner, Study API/DB/Worker.
-- **Tiền điều kiện:** learner active; target course/path revision published; `Idempotency-Key` có ở enroll/switch.
-- **Kết thúc:** enrollment duy nhất theo learner/courseVersion; tối đa một active path period; switch loser nhận replay/conflict.
+- **Mục đích:** phân biệt hai luồng ghi danh, xử lý hai lần đổi đồng thời và giữ tiến độ theo phiên bản.
+- **Tác nhân:** Người học, API/CSDL/tiến trình Study.
+- **Tiền điều kiện:** người học đang hoạt động; bản hiệu đính khóa học/lộ trình đích đã xuất bản; `Idempotency-Key` có ở ghi danh/đổi lộ trình.
+- **Kết thúc:** một lượt ghi danh duy nhất theo người học/phiên bản khóa học; tối đa một giai đoạn lộ trình hoạt động; yêu cầu đổi lộ trình thua nhận phát lại/xung đột.
 - **Liên kết:** `UC-STU-001..003`; `API-STU-016`, `API-STU-014`; `TBL-STU-012`, `TBL-STU-026`, `TBL-STU-027`, `TBL-STU-029`; `SCR-STU-005`, `SCR-STU-011`, `SCR-STU-013`, `SCR-STU-014`; `AC-STU-001`, `CLS-STU-001..002`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor L as Learner
-    participant S as Study API
-    participant DB as Study DB
-    participant Q as Study Worker
+    actor L as Người học
+    participant S as API Study
+    participant DB as CSDL Study
+    participant Q as Tiến trình Study
 
-    L->>S: POST enroll standalone course với Idempotency-Key
-    S->>DB: Resolve current published courseVersionId
-    S->>DB: Insert enrollment on unique learner-courseVersion
-    alt Enrollment đã có hoặc request duplicate
-        DB-->>S: Existing enrollment
-    else Enrollment mới
+    L->>S: POST ghi danh khóa học độc lập với `Idempotency-Key`
+    S->>DB: Xác định `courseVersionId` hiện hành đã xuất bản
+    S->>DB: Chèn lượt ghi danh theo khóa duy nhất người học-phiên bản khóa học
+    alt Lượt ghi danh đã có hoặc yêu cầu trùng
+        DB-->>S: Lượt ghi danh hiện có
+    else Lượt ghi danh mới
         DB-->>S: ENROLLED
     end
-    S-->>L: Enrollment pin courseVersionId
+    S-->>L: Lượt ghi danh ghim `courseVersionId`
 
-    L->>S: PUT primary-path targetPath với Idempotency-Key
-    S->>DB: BEGIN; lock learner coordination row
-    S->>DB: Validate onboarding, published target và current ACTIVE period
-    alt Chưa onboarding
+    L->>S: PUT lộ trình chính đích với `Idempotency-Key`
+    S->>DB: BEGIN; khóa bản ghi điều phối người học
+    S->>DB: Kiểm khởi tạo hồ sơ, đích đã xuất bản và giai đoạn `ACTIVE` hiện hành
+    alt Chưa hoàn tất khởi tạo hồ sơ
         S->>DB: ROLLBACK
         S-->>L: ONBOARDING_REQUIRED
-    else Cooldown chưa đủ 168 giờ
+    else Chưa đủ thời gian chờ 168 giờ
         S->>DB: ROLLBACK
-        S-->>L: PRIMARY_PATH_SWITCH_COOLDOWN và nextAllowedAt
+        S-->>L: `PRIMARY_PATH_SWITCH_COOLDOWN` và `nextAllowedAt`
     else Hợp lệ
-        S->>DB: Close old period; insert new ACTIVE period; change event; outbox
+        S->>DB: Đóng giai đoạn cũ; chèn giai đoạn `ACTIVE` mới; sự kiện thay đổi; hộp thư đi
         S->>DB: COMMIT
-        S-->>L: Primary path mới và retained progress summary
-        S-->>Q: Snapshot rebuild event
-        Q->>DB: Reuse completion chỉ khi courseVersionId trùng
+        S-->>L: Lộ trình chính mới và tóm tắt tiến độ giữ lại
+        S-->>Q: Sự kiện dựng lại bản chụp
+        Q->>DB: Chỉ dùng lại hoàn thành khi `courseVersionId` trùng
     end
 
-    par Hai switch khác target cùng lúc
-        L->>S: PUT path B với key K1
+    par Hai yêu cầu đổi sang đích khác cùng lúc
+        L->>S: PUT lộ trình B với khóa K1
     and
-        L->>S: PUT path C với key K2
+        L->>S: PUT lộ trình C với khóa K2
     end
-    S->>DB: Serialize bằng learner lock và partial unique ACTIVE index
-    DB-->>S: Một commit; request sau thấy cooldown hoặc version mới
-    S-->>L: Một success, một conflict; không có hai ACTIVE period
+    S->>DB: Tuần tự hóa bằng khóa người học và chỉ mục duy nhất từng phần `ACTIVE`
+    DB-->>S: Một lần cam kết; yêu cầu sau thấy thời gian chờ hoặc phiên bản mới
+    S-->>L: Một thành công, một xung đột; không có hai giai đoạn `ACTIVE`
 ```
 
-### SEQ-STU-002 — Lesson progress và quiz auto-grade
+### SEQ-STU-002 — Tiến độ bài học và chấm tự động trắc nghiệm
 
-- **Mục đích:** minh họa optimistic concurrency, progress monotonic, attempt number dưới lock và completion synchronous.
-- **Tác nhân:** Learner, Study API/DB, Notification/Evidence Worker.
-- **Tiền điều kiện:** enrollment pin course version; learner được phép mở lesson; quiz question version thuộc assessment đang pin.
-- **Kết thúc:** client stale không ghi đè; answer seal bất biến; pass cập nhật completion một lần và side effect async.
+- **Mục đích:** minh họa đồng thời lạc quan, tiến độ chỉ tăng, số lần làm dưới khóa và hoàn thành đồng bộ.
+- **Tác nhân:** Người học, API/CSDL Study, tiến trình thông báo/minh chứng.
+- **Tiền điều kiện:** lượt ghi danh ghim phiên bản khóa học; người học được phép mở bài học; phiên bản câu hỏi trắc nghiệm thuộc bài đánh giá đang ghim.
+- **Kết thúc:** máy khách dùng phiên bản cũ không ghi đè; câu trả lời đã chốt là bất biến; đạt yêu cầu cập nhật hoàn thành một lần và tác động phụ bất đồng bộ.
 - **Liên kết:** `UC-STU-003..005`; `API-STU-020`, `API-STU-027`; `TBL-STU-027`, `TBL-STU-029`, `TBL-STU-033`, `TBL-STU-040`; `SCR-STU-016`, `SCR-STU-017`, `SCR-STU-019`; `AC-STU-002`, `CLS-STU-002`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor L as Learner
-    participant S as Study API
-    participant DB as Study DB
-    participant W as Study Worker
+    actor L as Người học
+    participant S as API Study
+    participant DB as CSDL Study
+    participant W as Tiến trình Study
 
-    L->>S: PATCH lesson progress với If-Match V5
-    S->>DB: Lock progress fact; compare version
-    alt Server đã V6
-        S-->>L: VERSION_CONFLICT với current representation
+    L->>S: PATCH tiến độ bài học với `If-Match` V5
+    S->>DB: Khóa dữ kiện tiến độ; so sánh phiên bản
+    alt Máy chủ đã ở V6
+        S-->>L: `VERSION_CONFLICT` với biểu diễn hiện hành
     else Khớp V5
-        S->>DB: Upsert monotonic block/lesson fact; recalculate snapshot
-        S-->>L: Progress V6
+        S->>DB: Chèn/cập nhật dữ kiện khối/bài học chỉ tăng; tính lại bản chụp
+        S-->>L: Tiến độ V6
     end
 
-    L->>S: POST quiz attempt với Idempotency-Key
-    S->>DB: BEGIN; lock learner-assessment attempt counter
-    S->>DB: Validate limit; assign attemptNo; seal answers
-    S->>DB: Grade server-side theo pinned question/options
-    alt Passed
-        S->>DB: Mark PASSED; update lesson/course completion; append outbox; COMMIT
-        S-->>L: Result, score và permitted feedback
-        W->>DB: Claim notification/evidence/report events
-    else Failed còn lượt
-        S->>DB: Mark FAILED; COMMIT
-        S-->>L: Result và remainingAttempts
-    else Attempt limit reached
+    L->>S: POST lần làm trắc nghiệm với `Idempotency-Key`
+    S->>DB: BEGIN; khóa bộ đếm lần làm của người học-bài đánh giá
+    S->>DB: Kiểm giới hạn; gán `attemptNo`; chốt câu trả lời
+    S->>DB: Chấm phía máy chủ theo câu hỏi/lựa chọn đã ghim
+    alt Đạt yêu cầu
+        S->>DB: Đặt `PASSED`; cập nhật hoàn thành bài học/khóa học; thêm hộp thư đi; COMMIT
+        S-->>L: Kết quả, điểm và phản hồi được phép
+        W->>DB: Nhận sự kiện thông báo/minh chứng/báo cáo
+    else Thất bại nhưng còn lượt
+        S->>DB: Đặt `FAILED`; COMMIT
+        S-->>L: Kết quả và số lượt còn lại
+    else Đã đạt giới hạn lần làm
         S->>DB: ROLLBACK
         S-->>L: ATTEMPT_LIMIT_REACHED
     end
 ```
 
-### SEQ-STU-003 — Upload quarantine, scan, submit và hai reviewer cạnh tranh
+### SEQ-STU-003 — Tải tệp lên vùng cách ly, quét, nộp và hai người duyệt cạnh tranh
 
-- **Mục đích:** bảo đảm file chưa `CLEAN` không thể attach/download/review và chỉ một optimistic review version thắng.
-- **Tác nhân:** Learner, Study API/DB, Object Storage, ClamAV Worker, Reviewer.
-- **Tiền điều kiện:** file thuộc allowlist, tối đa 25 MiB, upload session còn hạn; assessment là FILE.
-- **Kết thúc:** infected/scan-failed bị giữ blocked; clean file có immutable attempt; review history append-only.
+- **Mục đích:** bảo đảm tệp chưa ở trạng thái `CLEAN` không thể đính kèm/tải xuống/duyệt và chỉ một phiên bản duyệt lạc quan được chấp nhận.
+- **Tác nhân:** Người học, API/CSDL Study, kho đối tượng, tiến trình ClamAV, người duyệt.
+- **Tiền điều kiện:** tệp thuộc danh sách cho phép, tối đa 25 MiB, phiên tải lên còn hạn; bài đánh giá có loại FILE.
+- **Kết thúc:** tệp nhiễm hoặc quét lỗi bị chặn; tệp sạch có lần nộp bất biến; lịch sử duyệt chỉ thêm.
 - **Liên kết:** `UC-STU-004..005`; `API-STU-030`, `API-STU-031`, `API-STU-032`, `API-STU-027`, `API-STU-048`; `TBL-STU-033`, `TBL-STU-035`, `TBL-STU-036`, `TBL-STU-038`; `SCR-STU-017`, `SCR-STU-018`, `SCR-OPS-013`; `AC-STU-002`, `CLS-STU-002`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor L as Learner
-    actor R1 as Reviewer 1
-    actor R2 as Reviewer 2
-    participant S as Study API
-    participant DB as Study DB
-    participant O as Private Object Storage
-    participant C as ClamAV Worker
+    actor L as Người học
+    actor R1 as Người duyệt 1
+    actor R2 as Người duyệt 2
+    participant S as API Study
+    participant DB as CSDL Study
+    participant O as Kho đối tượng riêng tư
+    participant C as Tiến trình ClamAV
 
-    L->>S: POST upload session với name, size, MIME, checksum
-    S->>DB: Insert expiring upload session
-    S-->>L: Signed upload URL vào quarantine
-    L->>O: PUT bytes
-    L->>S: POST finalize
-    S->>O: HEAD object và verify size/checksum
-    S->>DB: Create file asset SCANNING
-    S-->>C: Scan job
-    C->>O: Read quarantine object
-    C->>C: Detect MIME và malware
+    L->>S: POST phiên tải lên với name, size, MIME, checksum
+    S->>DB: Tạo phiên tải lên có hạn
+    S-->>L: URL tải lên có chữ ký tới vùng cách ly
+    L->>O: PUT dữ liệu tệp
+    L->>S: POST hoàn tất
+    S->>O: HEAD đối tượng và xác minh size/checksum
+    S->>DB: Tạo tài sản tệp `SCANNING`
+    S-->>C: Tác vụ quét
+    C->>O: Đọc đối tượng trong vùng cách ly
+    C->>C: Nhận diện MIME và mã độc
     alt CLEAN
-        C->>O: Move to private clean prefix
-        C->>DB: Append scan result; file CLEAN
-        L->>S: POST file attempt với Idempotency-Key
-        S->>DB: Verify ownership và CLEAN; seal attempt UNDER_REVIEW
-        S-->>L: Attempt accepted
+        C->>O: Di chuyển vào tiền tố tệp sạch riêng tư
+        C->>DB: Thêm kết quả quét; tệp `CLEAN`
+        L->>S: POST lần nộp tệp với `Idempotency-Key`
+        S->>DB: Kiểm quyền sở hữu và `CLEAN`; niêm phong lần nộp `UNDER_REVIEW`
+        S-->>L: Đã chấp nhận lần nộp
     else INFECTED
-        C->>DB: Append result; file INFECTED
-        L->>S: POST file attempt
-        S-->>L: FILE_NOT_CLEAN; upload lại không mất attempt
+        C->>DB: Thêm kết quả; tệp `INFECTED`
+        L->>S: POST lần nộp tệp
+        S-->>L: FILE_NOT_CLEAN; tải lại không làm mất lượt nộp
     else SCAN_FAILED ba lần
-        C->>DB: Append attempts; file SCAN_FAILED
-        S-->>L: FILE_SCAN_UNAVAILABLE; chưa thể submit
+        C->>DB: Thêm các lần quét; tệp `SCAN_FAILED`
+        S-->>L: FILE_SCAN_UNAVAILABLE; chưa thể nộp
     end
 
-    par Review cùng If-Match R0
-        R1->>S: POST review PASSED, If-Match R0
+    par Duyệt đồng thời với If-Match R0
+        R1->>S: POST duyệt `PASSED`, If-Match R0
     and
-        R2->>S: POST review NEEDS_REVISION, If-Match R0
+        R2->>S: POST duyệt `NEEDS_REVISION`, If-Match R0
     end
-    S->>DB: Serialize optimistic review version
-    DB-->>S: Một append success; request còn lại stale
-    S-->>R1: Success hoặc REVIEW_CONFLICT
-    S-->>R2: Success hoặc REVIEW_CONFLICT
+    S->>DB: Tuần tự hóa phiên bản duyệt lạc quan
+    DB-->>S: Một lần ghi thêm thành công; yêu cầu còn lại dùng phiên bản cũ
+    S-->>R1: Thành công hoặc REVIEW_CONFLICT
+    S-->>R2: Thành công hoặc REVIEW_CONFLICT
 ```
 
-### SEQ-STU-004 — Pre-publish, atomic version swap và cache invalidation
+### SEQ-STU-004 — Kiểm tra trước khi xuất bản, hoán đổi phiên bản nguyên tử và làm mất hiệu lực bộ nhớ đệm
 
-- **Mục đích:** mô tả concurrent author/publisher, validation đầy đủ và việc enrollment cũ tiếp tục dùng superseded revision.
-- **Tác nhân:** Author, Trusted Publisher, Study API/DB, Cache/Search Worker.
-- **Tiền điều kiện:** draft revision editable; publisher permission active; rights/sanitization/asset/assessment checks có thể chạy lại.
-- **Kết thúc:** chỉ một publish thắng; current pointer đổi atomically; cache/search eventual consistency nhưng catalog query luôn guard published state.
+- **Mục đích:** mô tả tác giả/người xuất bản thao tác đồng thời, kiểm tra hợp lệ đầy đủ và việc lượt ghi danh cũ tiếp tục dùng bản hiệu đính đã được thay thế.
+- **Tác nhân:** Tác giả nội dung, người xuất bản tin cậy, API/CSDL Study, tiến trình bộ nhớ đệm/tìm kiếm.
+- **Tiền điều kiện:** bản hiệu đính nháp có thể sửa; quyền xuất bản đang hoạt động; có thể chạy lại các kiểm tra quyền, làm sạch nội dung, tài sản và bài đánh giá.
+- **Kết thúc:** chỉ một lần xuất bản được chấp nhận; con trỏ hiện hành đổi nguyên tử; bộ nhớ đệm/chỉ mục tìm kiếm nhất quán sau cùng nhưng truy vấn danh mục luôn bảo vệ trạng thái đã xuất bản.
 - **Liên kết:** `UC-STU-006`; `API-STU-054`, `API-STU-055`, `API-STU-056`; `TBL-STU-009`, `TBL-STU-010`, `TBL-STU-012`, `TBL-STU-017`, `TBL-STU-018`; `SCR-OPS-004`, `SCR-OPS-005`, `SCR-OPS-007`; `AC-STU-003`, `CLS-STU-001`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor A as Content Author
-    actor P as Trusted Publisher
-    participant S as Study API
-    participant DB as Study DB
-    participant W as Cache và Search Worker
+    actor A as Tác giả nội dung
+    actor P as Người xuất bản tin cậy
+    participant S as API Study
+    participant DB as CSDL Study
+    participant W as Tiến trình bộ nhớ đệm và tìm kiếm
 
-    A->>S: PATCH draft với If-Match V7
-    S->>DB: Compare draft version
-    alt Draft stale hoặc đã publish
+    A->>S: PATCH bản nháp với If-Match V7
+    S->>DB: So sánh phiên bản bản nháp
+    alt Bản nháp dùng phiên bản cũ hoặc đã xuất bản
         S-->>A: VERSION_CONFLICT hoặc CONTENT_VERSION_NOT_EDITABLE
-    else Editable
-        S->>DB: Save draft V8 và append audit
-        S-->>A: Draft V8
+    else Có thể chỉnh sửa
+        S->>DB: Lưu bản nháp V8 và thêm kiểm toán
+        S-->>A: Bản nháp V8
     end
     P->>S: POST pre-publish-check
-    S->>DB: Evaluate structure, rights, CLEAN assets, placement và rule
+    S->>DB: Đánh giá cấu trúc, quyền, tài sản `CLEAN`, vị trí và quy tắc
     alt Có lỗi
-        S-->>P: Validation report theo resource
-    else Pass
-        P->>S: POST publish với Idempotency-Key và If-Match V8
-        S->>DB: BEGIN; lock stable entity và draft
-        alt Pointer hoặc draft đã đổi bởi publisher khác
+        S-->>P: Báo cáo kiểm tra hợp lệ theo tài nguyên
+    else Đạt kiểm tra
+        P->>S: POST xuất bản với Idempotency-Key và If-Match V8
+        S->>DB: BEGIN; khóa thực thể ổn định và bản nháp
+        alt Con trỏ hoặc bản nháp đã đổi bởi người xuất bản khác
             S->>DB: ROLLBACK
-            S-->>P: VERSION_CONFLICT hoặc replay publish response
+            S-->>P: VERSION_CONFLICT hoặc phát lại phản hồi xuất bản
         else Hợp lệ
-            S->>DB: Supersede old revision; publish V8; swap current pointer; outbox
+            S->>DB: Thay thế bản hiệu đính cũ; xuất bản V8; hoán đổi con trỏ hiện hành; hộp thư đi
             S->>DB: COMMIT
-            S-->>P: Published V8
-            S-->>W: Cache invalidate và search refresh event
-            W->>DB: Read current published pointer và version
+            S-->>P: Đã xuất bản V8
+            S-->>W: Sự kiện làm mới bộ nhớ đệm và chỉ mục tìm kiếm
+            W->>DB: Đọc con trỏ và phiên bản đã xuất bản hiện hành
         end
     end
-    Note over DB: Enrollment cũ vẫn pin revision cũ; enrollment mới dùng current revision
+    Note over DB: Lượt ghi danh cũ vẫn ghim bản hiệu đính cũ; lượt ghi danh mới dùng bản hiệu đính hiện hành
 ```
 
-### SEQ-STU-005 — Notification dedupe, community rule và support adjustment
+### SEQ-STU-005 — Khử trùng lặp thông báo, quy tắc cộng đồng và điều chỉnh hỗ trợ
 
-- **Mục đích:** minh họa ba invariant vận hành: delivery không nhân đôi, link ngoài cần current rule acceptance và hỗ trợ không sửa progress ngoài adjustment API.
-- **Tác nhân:** Learner, Study API/DB/Worker, Email Provider, Support Agent, Study Admin.
-- **Tiền điều kiện:** domain event đã commit qua outbox; learner eligible với community; support actor có permission.
-- **Kết thúc:** notification có một business occurrence dù worker retry; acceptance pin rule version; adjustment giữ before/after và audit.
+- **Mục đích:** minh họa ba bất biến vận hành: việc gửi không trùng, liên kết ngoài cần chấp thuận phiên bản quy tắc hiện hành và hỗ trợ không sửa tiến độ ngoài API điều chỉnh.
+- **Tác nhân:** Người học, API/CSDL/tiến trình Study, nhà cung cấp email, nhân viên hỗ trợ, quản trị viên Study.
+- **Tiền điều kiện:** sự kiện miền đã được cam kết qua hộp thư đi; người học đủ điều kiện vào cộng đồng; tác nhân hỗ trợ có quyền.
+- **Kết thúc:** thông báo chỉ có một lần phát sinh nghiệp vụ dù tiến trình thử lại; chấp thuận ghim phiên bản quy tắc; điều chỉnh giữ giá trị trước/sau và kiểm toán.
 - **Liên kết:** `UC-STU-007..008`; `API-STU-034`, `API-STU-040`, `API-STU-041`, `API-STU-043`, `API-STU-045`, `API-STU-050`; `TBL-STU-042`, `TBL-STU-043`, `TBL-STU-044`, `TBL-STU-045`, `TBL-STU-046`, `TBL-STU-047`, `TBL-STU-048`, `TBL-STU-049`, `TBL-STU-050`; `SCR-STU-020`, `SCR-STU-021`, `SCR-STU-022`, `SCR-OPS-014`, `SCR-OPS-015`; `AC-STU-004`, `CLS-STU-003`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor L as Learner
-    actor A as Support Agent hoặc Study Admin
-    participant S as Study API
-    participant DB as Study DB
-    participant Q as Study Worker
-    participant M as Email Provider
+    actor L as Người học
+    actor A as Nhân viên hỗ trợ hoặc quản trị viên Study
+    participant S as API Study
+    participant DB as CSDL Study
+    participant Q as Tiến trình Study
+    participant M as Nhà cung cấp email
 
-    Q->>DB: Claim domain outbox event E
-    Q->>DB: Insert notification on unique learner-businessDedupeKey
-    alt Worker retry hoặc duplicate E
-        DB-->>Q: Existing notification; no duplicate
-    else Notification mới và email enabled
-        Q->>DB: Append delivery attempt
-        Q->>M: Send email
-        M-->>Q: Accepted hoặc transient failure
-        Q->>DB: Append delivery result; retry bounded nếu cần
-    else In-app only
-        Q->>DB: Notification ready
+    Q->>DB: Nhận quyền xử lý sự kiện hộp thư đi miền E
+    Q->>DB: Tạo thông báo theo khóa duy nhất learner-businessDedupeKey
+    alt Tiến trình thử lại hoặc E trùng
+        DB-->>Q: Thông báo đã tồn tại; không trùng
+    else Thông báo mới và email đang bật
+        Q->>DB: Thêm lần gửi
+        Q->>M: Gửi email
+        M-->>Q: Đã nhận hoặc lỗi tạm thời
+        Q->>DB: Thêm kết quả gửi; thử lại có giới hạn nếu cần
+    else Chỉ hiển thị trong ứng dụng
+        Q->>DB: Thông báo sẵn sàng
     end
 
-    L->>S: POST community open-link
-    S->>DB: Check eligibility và acceptance for current rulesVersion
-    alt Chưa accept version hiện hành
+    L->>S: POST mở liên kết cộng đồng
+    S->>DB: Kiểm điều kiện và chấp thuận `rulesVersion` hiện hành
+    alt Chưa chấp thuận phiên bản hiện hành
         S-->>L: COMMUNITY_RULE_ACCEPTANCE_REQUIRED
-        L->>S: POST rule acceptance current version
-        S->>DB: Insert immutable acceptance
-        S-->>L: Accepted
+        L->>S: POST chấp thuận quy tắc phiên bản hiện hành
+        S->>DB: Thêm chấp thuận bất biến
+        S-->>L: Đã chấp thuận
     end
-    L->>S: POST community open-link lần nữa
-    S->>DB: Append link audit
-    S-->>L: Short-lived redirect tới external community
+    L->>S: POST mở lại liên kết cộng đồng
+    S->>DB: Thêm kiểm toán liên kết
+    S-->>L: Chuyển hướng ngắn hạn đến cộng đồng bên ngoài
 
-    L->>S: POST support request
-    S->>DB: Insert ticket và CREATED event
-    S-->>L: Ticket opened
-    A->>S: Review ticket và learner facts
+    L->>S: POST yêu cầu hỗ trợ
+    S->>DB: Tạo phiếu hỗ trợ và sự kiện `CREATED`
+    S-->>L: Đã mở phiếu hỗ trợ
+    A->>S: Xem xét phiếu hỗ trợ và dữ kiện người học
     alt Chỉ cần trả lời
-        S->>DB: Append support message/status
-    else Cần sửa sai progress
-        A->>S: POST progress adjustment với reason và If-Match
-        S->>DB: Verify permission; append before/after adjustment, fact correction, audit và outbox trong transaction
-        S-->>A: Adjustment committed
+        S->>DB: Thêm tin nhắn/trạng thái hỗ trợ
+    else Cần sửa sai tiến độ
+        A->>S: POST điều chỉnh tiến độ với lý do và If-Match
+        S->>DB: Kiểm quyền; thêm điều chỉnh trước/sau, hiệu chỉnh dữ kiện, kiểm toán và hộp thư đi trong giao dịch
+        S-->>A: Đã ghi nhận điều chỉnh
     end
 ```
 
-### SEQ-WRK-001 — Candidate opt-in/search, sponsored label và opt-out SLA
+### SEQ-WRK-001 — Ứng viên cho phép tìm kiếm, nhãn tài trợ và SLA rút khỏi tìm kiếm
 
-- **Mục đích:** chỉ rõ eventual index không phải authorization source và sponsored placement không can thiệp organic score.
-- **Tác nhân:** Candidate, Recruiter, Work API/DB, Search Worker.
-- **Tiền điều kiện:** candidate profile version hợp lệ; recruiter membership/permission active trong tenant.
-- **Kết thúc:** search card không có PII nhạy cảm; opt-out bị deny ngay ở query guard và deindex trong 5 phút.
+- **Mục đích:** chỉ rõ chỉ mục nhất quán sau cùng không phải nguồn phân quyền và vị trí tài trợ không can thiệp điểm xếp hạng tự nhiên.
+- **Tác nhân:** Ứng viên, người tuyển dụng, API/CSDL Work, tiến trình tìm kiếm.
+- **Tiền điều kiện:** phiên bản hồ sơ ứng viên hợp lệ; tư cách thành viên/quyền của người tuyển dụng đang hoạt động trong phạm vi tổ chức.
+- **Kết thúc:** thẻ kết quả tìm kiếm không có PII nhạy cảm; yêu cầu rút khỏi tìm kiếm bị từ chối ngay tại lớp bảo vệ truy vấn và được gỡ chỉ mục trong 5 phút.
 - **Liên kết:** `UC-WRK-001..003`, `UC-WRK-009`; `API-WRK-006`, `API-WRK-007`, `API-WRK-051`, `API-WRK-053`, `API-PAY-010`, `API-PAY-011`; `TBL-WRK-004`, `TBL-WRK-005`, `TBL-WRK-037`, `TBL-WRK-038`, `TBL-PAY-012`, `TBL-PAY-013`; `SCR-WRK-011`, `SCR-WRK-012`, `SCR-WRK-036`, `SCR-WRK-037`; `AC-WRK-001`, `CLS-WRK-001`, `CLS-PAY-001`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor C as Candidate
-    actor R as Recruiter
-    participant W as Work API
-    participant DB as Work DB
-    participant X as Search Worker và PostgreSQL FTS
+    actor C as Ứng viên
+    actor R as Người tuyển dụng
+    participant W as API Work
+    participant DB as CSDL Work
+    participant X as Tiến trình tìm kiếm và PostgreSQL FTS
 
-    C->>W: PATCH profile searchOptIn true với If-Match
-    W->>DB: Save version N; build safe projection event
-    W-->>X: Index candidate version N
-    X->>DB: Read allowed skills/title/location và active sponsorship
-    X->>X: Upsert document; organicScore tách sponsored flag
+    C->>W: PATCH hồ sơ `searchOptIn` true với If-Match
+    W->>DB: Lưu phiên bản N; dựng sự kiện hình chiếu an toàn
+    W-->>X: Lập chỉ mục phiên bản ứng viên N
+    X->>DB: Đọc kỹ năng/chức danh/địa điểm được phép và gói tài trợ đang hoạt động
+    X->>X: Chèn/cập nhật tài liệu; `organicScore` tách khỏi cờ tài trợ
 
-    R->>W: GET candidate-search trong enterprise context
-    W->>DB: Resolve membership và permission server-side
-    W->>X: Search safe projection
-    X-->>W: Candidate IDs, organic score, sponsored flag
-    W->>DB: Recheck current opt-in/status cho returned IDs
-    W-->>R: Cards không contact/CV/evidence; tài trợ có nhãn
+    R->>W: GET tìm kiếm ứng viên trong ngữ cảnh doanh nghiệp
+    W->>DB: Xác định tư cách thành viên và quyền ở phía máy chủ
+    W->>X: Tìm kiếm hình chiếu an toàn
+    X-->>W: ID ứng viên, điểm tự nhiên, cờ tài trợ
+    W->>DB: Kiểm tra lại `opt-in`/trạng thái hiện hành của các ID trả về
+    W-->>R: Thẻ không có liên hệ/CV/minh chứng; mục tài trợ có nhãn
 
-    C->>W: PATCH profile searchOptIn false
-    W->>DB: Commit opt-out và deindex event tại T0
-    W-->>X: Deindex version N+1
-    R->>W: Search trước khi worker xong
-    W->>DB: Recheck opt-in false
-    W-->>R: Không trả candidate dù index còn stale
-    X->>X: Delete document trước T0 cộng 5 phút
+    C->>W: PATCH hồ sơ `searchOptIn` false
+    W->>DB: Ghi nhận rút khỏi tìm kiếm và sự kiện gỡ chỉ mục tại T0
+    W-->>X: Gỡ chỉ mục phiên bản N+1
+    R->>W: Tìm kiếm trước khi tiến trình hoàn tất
+    W->>DB: Kiểm tra lại `opt-in` false
+    W-->>R: Không trả ứng viên dù chỉ mục còn cũ
+    X->>X: Xóa tài liệu trước T0 cộng 5 phút
 ```
 
-### SEQ-WRK-002 — Job revision, review và publish cạnh tranh
+### SEQ-WRK-002 — Bản hiệu đính việc làm, duyệt và xuất bản cạnh tranh
 
-- **Mục đích:** bảo đảm job published immutable, tenant permission đầy đủ và hai publisher không ghi đè.
-- **Tác nhân:** Recruiter, Enterprise Reviewer, Work API/DB, Search Worker.
-- **Tiền điều kiện:** enterprise active; actor thuộc cùng tenant; draft revision dùng `If-Match`; entitlement TopJD nếu feature premium được chọn.
-- **Kết thúc:** state hợp lệ `DRAFT → REVIEW_PENDING → PUBLISHED`; old revision giữ nguyên; search chỉ index current published revision.
+- **Mục đích:** bảo đảm bản hiệu đính việc làm đã xuất bản là bất biến, quyền theo phạm vi tổ chức đầy đủ và hai người xuất bản không ghi đè nhau.
+- **Tác nhân:** Người tuyển dụng, người duyệt doanh nghiệp, API/CSDL Work, tiến trình tìm kiếm.
+- **Tiền điều kiện:** doanh nghiệp đang hoạt động; tác nhân thuộc cùng phạm vi tổ chức; bản hiệu đính nháp dùng `If-Match`; có quyền lợi TopJD nếu chọn tính năng cao cấp.
+- **Kết thúc:** chuyển trạng thái hợp lệ là `DRAFT → REVIEW_PENDING → PUBLISHED`; bản hiệu đính cũ giữ nguyên; tìm kiếm chỉ lập chỉ mục bản hiệu đính đã xuất bản hiện hành.
 - **Liên kết:** `UC-WRK-003..004`, `UC-WRK-009`; `API-WRK-043`, `API-WRK-044`, `API-WRK-045`, `API-WRK-047`; `TBL-WRK-014`, `TBL-WRK-016`, `TBL-WRK-032`, `TBL-WRK-033`, `TBL-WRK-035`; `SCR-WRK-034`, `SCR-WRK-035`; `AC-WRK-002`, `CLS-WRK-001`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor R as Recruiter
-    actor V as Enterprise Reviewer
-    participant W as Work API
-    participant DB as Work DB
-    participant X as Job Search Worker
+    actor R as Người tuyển dụng
+    actor V as Người duyệt doanh nghiệp
+    participant W as API Work
+    participant DB as CSDL Work
+    participant X as Tiến trình tìm kiếm việc làm
 
-    R->>W: PATCH job draft với If-Match J4
-    W->>DB: Authorize membership in job.enterpriseId; save J5
-    W-->>R: Draft revision J5
-    R->>W: POST submit-review với Idempotency-Key
-    W->>DB: Validate required fields, policy và entitlement; set REVIEW_PENDING
-    V->>W: POST approve-publish với If-Match J5
-    W->>DB: BEGIN; lock job và revision; recheck tenant permission
-    alt Revision stale hoặc job no longer publishable
+    R->>W: PATCH bản nháp việc làm với If-Match J4
+    W->>DB: Xác thực tư cách thành viên trong `job.enterpriseId`; lưu J5
+    W-->>R: Bản hiệu đính nháp J5
+    R->>W: POST gửi duyệt với Idempotency-Key
+    W->>DB: Kiểm trường bắt buộc, chính sách và quyền lợi; đặt `REVIEW_PENDING`
+    V->>W: POST duyệt xuất bản với If-Match J5
+    W->>DB: BEGIN; khóa việc làm và bản hiệu đính; kiểm tra lại quyền theo phạm vi tổ chức
+    alt Bản hiệu đính dùng phiên bản cũ hoặc việc làm không còn có thể xuất bản
         W->>DB: ROLLBACK
         W-->>V: VERSION_CONFLICT hoặc INVALID_JOB_TRANSITION
     else Hợp lệ
-        W->>DB: Supersede old revision; publish J5; update job state; append history/outbox
+        W->>DB: Thay thế bản hiệu đính cũ; xuất bản J5; cập nhật trạng thái việc làm; thêm lịch sử/hộp thư đi
         W->>DB: COMMIT
         W-->>V: PUBLISHED
-        W-->>X: Refresh job current revision
-        X->>DB: Read published revision và sponsored entitlement separately
+        W-->>X: Làm mới bản hiệu đính việc làm hiện hành
+        X->>DB: Đọc riêng bản hiệu đính đã xuất bản và quyền lợi tài trợ
     end
-    Note over W,DB: PAUSED có thể trở lại PUBLISHED; CLOSED, EXPIRED, TAKEN_DOWN là terminal
+    Note over W,DB: PAUSED có thể trở lại PUBLISHED; CLOSED, EXPIRED, TAKEN_DOWN là trạng thái kết thúc
 ```
 
-### SEQ-WRK-003 — Apply, immutable snapshots và ATS transition
+### SEQ-WRK-003 — Nộp đơn, bản chụp bất biến và chuyển tiếp ATS
 
-- **Mục đích:** giữ application transaction độc lập với Study/AI, chống apply trùng và kiểm mọi ATS transition bằng human permission.
-- **Tác nhân:** Candidate, Assigned Recruiter/Hiring Manager, Work API/DB, Work Worker.
-- **Tiền điều kiện:** job current state `PUBLISHED`; candidate account active; unique candidate-job chưa bị vi phạm.
-- **Kết thúc:** application `SUBMITTED` có job/profile/CV snapshot; history append-only; terminal state làm conversation read-only.
+- **Mục đích:** giữ giao dịch đơn ứng tuyển độc lập với Study/AI, chống nộp trùng và kiểm mọi chuyển tiếp ATS bằng quyền của con người.
+- **Tác nhân:** Ứng viên, người tuyển dụng/quản lý tuyển dụng được phân công, API/CSDL Work, tiến trình Work.
+- **Tiền điều kiện:** trạng thái việc làm hiện hành là `PUBLISHED`; tài khoản ứng viên đang hoạt động; khóa duy nhất ứng viên-việc làm chưa bị vi phạm.
+- **Kết thúc:** đơn ứng tuyển `SUBMITTED` có bản chụp việc làm/hồ sơ/CV; lịch sử chỉ thêm; trạng thái kết thúc làm cuộc trò chuyện chỉ đọc.
 - **Liên kết:** `UC-WRK-004..006`; `API-WRK-023`, `API-WRK-058`; `TBL-WRK-033`, `TBL-WRK-041`, `TBL-WRK-042`, `TBL-WRK-043`, `TBL-WRK-044`, `TBL-WRK-046`; `SCR-WRK-017`, `SCR-WRK-019`, `SCR-WRK-040`; `AC-WRK-002`, `CLS-WRK-001`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor C as Candidate
-    actor R as Assigned Recruiter
-    participant W as Work API
-    participant DB as Work DB
-    participant Q as Work Worker
+    actor C as Ứng viên
+    actor R as Người tuyển dụng được phân công
+    participant W as API Work
+    participant DB as CSDL Work
+    participant Q as Tiến trình Work
 
-    C->>W: POST application với Idempotency-Key
-    W->>DB: BEGIN; resolve published job revision và active candidate versions
-    W->>DB: Lock unique candidate-job key
-    alt Application đã tồn tại hoặc key đã dùng
-        W->>DB: ROLLBACK hoặc replay stored response
-        W-->>C: Existing application representation
-    else Job đóng hoặc account không hợp lệ
+    C->>W: POST đơn ứng tuyển với Idempotency-Key
+    W->>DB: BEGIN; xác định bản hiệu đính việc làm đã xuất bản và phiên bản ứng viên hiện hành
+    W->>DB: Khóa khóa duy nhất ứng viên-việc làm
+    alt Đơn ứng tuyển đã tồn tại hoặc khóa đã dùng
+        W->>DB: ROLLBACK hoặc phát lại phản hồi đã lưu
+        W-->>C: Biểu diễn đơn ứng tuyển hiện có
+    else Việc làm đã đóng hoặc tài khoản không hợp lệ
         W->>DB: ROLLBACK
         W-->>C: JOB_NOT_APPLYABLE hoặc ACCOUNT_RESTRICTED
     else Hợp lệ
-        W->>DB: Insert SUBMITTED application, job/profile/CV snapshots, optional evidence request, outbox
+        W->>DB: Thêm đơn `SUBMITTED`, bản chụp việc làm/hồ sơ/CV, yêu cầu minh chứng tùy chọn, hộp thư đi
         W->>DB: COMMIT
-        W-->>C: Application submitted; evidence có thể PENDING
-        W-->>Q: Notification và evidence-export jobs
+        W-->>C: Đã nộp đơn; minh chứng có thể `PENDING`
+        W-->>Q: Tác vụ thông báo và xuất minh chứng
     end
 
-    R->>W: PATCH application status với If-Match A3 và reason
-    W->>DB: Resolve recruiter assignment, tenant membership và current A3
-    alt Không assigned hoặc sai tenant
+    R->>W: PATCH trạng thái đơn ứng tuyển với If-Match A3 và lý do
+    W->>DB: Xác định phân công người tuyển dụng, tư cách trong phạm vi tổ chức và A3 hiện hành
+    alt Không được phân công hoặc sai phạm vi tổ chức
         W-->>R: 403 PERMISSION_DENIED
-    else Stale version
+    else Phiên bản cũ
         W-->>R: VERSION_CONFLICT với trạng thái hiện tại
-    else Transition không nằm trong state machine
+    else Chuyển tiếp không thuộc máy trạng thái
         W-->>R: INVALID_APPLICATION_TRANSITION
-    else Human transition hợp lệ
-        W->>DB: Append status history, update A4, audit và outbox
-        alt New status terminal
-            W->>DB: Mark conversation READ_ONLY; cancel pending interview actions theo policy
+    else Chuyển tiếp do con người thực hiện hợp lệ
+        W->>DB: Thêm lịch sử trạng thái, cập nhật A4, kiểm toán và hộp thư đi
+        alt Trạng thái mới là kết thúc
+            W->>DB: Đánh dấu cuộc trò chuyện `READ_ONLY`; hủy thao tác phỏng vấn đang chờ theo chính sách
         end
-        W-->>R: Application A4
+        W-->>R: Đơn ứng tuyển A4
     end
 ```
 
-### SEQ-INT-001 — Evidence selected-at-apply khi Study sẵn sàng hoặc gián đoạn
+### SEQ-INT-001 — Minh chứng được chọn khi ứng tuyển khi Study sẵn sàng hoặc gián đoạn
 
-- **Mục đích:** chỉ rõ application commit trước export, service contract có chữ ký và snapshot chỉ thuộc application.
-- **Tác nhân:** Candidate, Work API/DB/Worker, Study API/DB, Recruiter.
-- **Tiền điều kiện:** candidate chọn rõ evidence và consent; service credential hỗ trợ ký request; selected IDs không do recruiter cung cấp.
-- **Kết thúc:** Study outage không làm mất application; result duplicate/stale được deduplicate; withdrawal/revocation ẩn dữ liệu nhưng giữ audit.
+- **Mục đích:** chỉ rõ đơn ứng tuyển được cam kết trước khi xuất dữ liệu, hợp đồng dịch vụ có chữ ký và bản chụp chỉ thuộc đơn ứng tuyển.
+- **Tác nhân:** Ứng viên, API/CSDL/tiến trình Work, API/CSDL Study, người tuyển dụng.
+- **Tiền điều kiện:** ứng viên chọn rõ minh chứng và sự đồng ý; thông tin xác thực dịch vụ hỗ trợ ký yêu cầu; ID được chọn không do người tuyển dụng cung cấp.
+- **Kết thúc:** Study gián đoạn không làm mất đơn ứng tuyển; kết quả trùng/cũ được khử trùng lặp; rút sự đồng ý/thu hồi ẩn dữ liệu nhưng giữ kiểm toán.
 - **Liên kết:** `UC-STU-005`, `UC-WRK-005..006`; `API-INT-002`, `API-INT-004`, `API-INT-005`; `TBL-STU-040`, `TBL-STU-041`, `TBL-WRK-043`, `TBL-WRK-044`, `TBL-WRK-045`, `TBL-WRK-069`; `SCR-WRK-017`, `SCR-WRK-019`, `SCR-WRK-040`; `AC-INT-001`, `CLS-STU-002`, `CLS-WRK-001`, `CLS-INT-001`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor C as Candidate
-    actor R as Recruiter
-    participant W as Work API
-    participant WDB as Work DB
-    participant Q as Work Evidence Worker
-    participant S as Study API
-    participant SDB as Study DB
+    actor C as Ứng viên
+    actor R as Người tuyển dụng
+    participant W as API Work
+    participant WDB as CSDL Work
+    participant Q as Tiến trình minh chứng Work
+    participant S as API Study
+    participant SDB as CSDL Study
 
-    C->>S: GET my issued evidence bằng token audience Study
-    alt Study unavailable
+    C->>S: GET minh chứng đã cấp của tôi bằng mã truy cập có đối tượng nhận là Study
+    alt Study không sẵn sàng
         S--xC: Timeout hoặc 5xx
-        C->>W: Apply không evidence hoặc lưu lựa chọn retry phía client
-    else Study available
-        S->>SDB: Query own ISSUED evidence only
-        S-->>C: Allowed evidence summaries
-        C->>W: Apply với selectedEvidenceIds và explicit consent
+        C->>W: Ứng tuyển không kèm minh chứng hoặc lưu lựa chọn để máy khách thử lại
+    else Study sẵn sàng
+        S->>SDB: Chỉ truy vấn minh chứng `ISSUED` của chính chủ thể
+        S-->>C: Tóm tắt minh chứng được phép
+        C->>W: Ứng tuyển với `selectedEvidenceIds` và sự đồng ý rõ ràng
     end
-    W->>WDB: Transaction application plus PENDING export request plus outbox
-    W-->>C: Application accepted ngay
-    Q->>WDB: Claim export request
-    Q->>S: POST signed export request gồm applicationId, subject, IDs, nonce, timestamp
-    alt Signature, audience hoặc replay không hợp lệ
+    W->>WDB: Giao dịch đơn ứng tuyển cùng yêu cầu xuất `PENDING` và hộp thư đi
+    W-->>C: Chấp nhận đơn ứng tuyển ngay
+    Q->>WDB: Nhận yêu cầu xuất dữ liệu
+    Q->>S: POST yêu cầu xuất có chữ ký gồm `applicationId`, chủ thể, ID, nonce, dấu thời gian
+    alt Chữ ký, đối tượng nhận hoặc phát lại không hợp lệ
         S-->>Q: INTEGRATION_REQUEST_INVALID
-        Q->>WDB: Mark UNAVAILABLE; schedule bounded retry nếu retryable
-    else Ownership/status/version/revocation không hợp lệ
-        S->>SDB: Append denied integration audit
+        Q->>WDB: Đặt `UNAVAILABLE`; lên lịch thử lại có giới hạn nếu có thể
+    else Quyền sở hữu/trạng thái/phiên bản/thu hồi không hợp lệ
+        S->>SDB: Thêm kiểm toán từ chối tích hợp
         S-->>Q: EVIDENCE_NOT_EXPORTABLE theo từng item
-        Q->>WDB: Mark item UNAVAILABLE; không đổi ATS
+        Q->>WDB: Đặt từng mục `UNAVAILABLE`; không đổi ATS
     else Hợp lệ
-        S->>SDB: Record export delivery receipt
-        S-->>Q: Minimal signed immutable snapshots
-        Q->>WDB: Upsert by application-sourceEvidence-version; READY; consumer receipt
+        S->>SDB: Ghi biên nhận xuất dữ liệu
+        S-->>Q: Bản chụp tối thiểu, bất biến, có chữ ký
+        Q->>WDB: Chèn/cập nhật theo đơn ứng tuyển-minh chứng-phiên bản; `READY`; biên nhận bộ tiêu thụ
     end
-    R->>W: GET application evidence
-    W->>WDB: Authorize assigned recruiter và current visibility
-    W-->>R: PENDING, READY hoặc UNAVAILABLE; lỗi không tạo rejection signal
+    R->>W: GET minh chứng của đơn ứng tuyển
+    W->>WDB: Phân quyền người tuyển dụng được phân công và khả năng hiển thị hiện hành
+    W-->>R: `PENDING`, `READY` hoặc `UNAVAILABLE`; lỗi không tạo tín hiệu từ chối
 
-    opt Candidate rút consent
-        C->>W: DELETE application evidence consent
-        W->>WDB: Mark WITHDRAWN và hide snapshots; append audit
+    opt Ứng viên rút sự đồng ý
+        C->>W: DELETE sự đồng ý về minh chứng của đơn ứng tuyển
+        W->>WDB: Đặt `HIDDEN` và ẩn bản chụp; thêm kiểm toán
     end
-    opt Study phát evidence.revoked event
-        S-->>Q: Signed revocation event
-        Q->>WDB: Deduplicate; mark matching application snapshots REVOKED
+    opt Study phát sự kiện `evidence.revoked`
+        S-->>Q: Sự kiện thu hồi có chữ ký
+        Q->>WDB: Khử trùng lặp; đặt các bản chụp đơn ứng tuyển khớp là `REVOKED`
     end
 ```
 
-### SEQ-WRK-004 — Interview scheduling với version, ICS và no-show
+### SEQ-WRK-004 — Lập lịch phỏng vấn theo phiên bản, ICS và vắng mặt
 
-- **Mục đích:** chống lost update khi reschedule và giữ lịch nội bộ là nguồn sự thật, ICS chỉ là bản phân phối.
-- **Tác nhân:** Assigned Recruiter, Candidate, Work API/DB, Notification Worker.
-- **Tiền điều kiện:** application chưa terminal và transition cho phép interview; actor thuộc application.
-- **Kết thúc:** mỗi thay đổi tạo schedule history/version; email/ICS retry không tạo lịch nghiệp vụ trùng.
+- **Mục đích:** chống mất cập nhật khi đổi lịch và giữ lịch nội bộ là nguồn sự thật, ICS chỉ là bản phân phối.
+- **Tác nhân:** Người tuyển dụng được phân công, ứng viên, API/CSDL Work, tiến trình thông báo.
+- **Tiền điều kiện:** đơn ứng tuyển chưa kết thúc và chuyển tiếp cho phép phỏng vấn; tác nhân thuộc đơn ứng tuyển.
+- **Kết thúc:** mỗi thay đổi do người tuyển dụng thực hiện tạo lịch sử/phiên bản lịch; thử lại email/ICS không tạo lịch nghiệp vụ trùng.
 - **Liên kết:** `UC-WRK-005`, `UC-WRK-007`; `API-WRK-028`, `API-WRK-029`, `API-WRK-030`, `API-WRK-060`, `API-WRK-061`, `API-WRK-062`; `TBL-WRK-049`, `TBL-WRK-050`, `TBL-WRK-051`, `TBL-WRK-052`; `SCR-WRK-020`, `SCR-WRK-041`; `AC-WRK-003`, `CLS-WRK-002`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor R as Assigned Recruiter
-    actor C as Candidate
-    participant W as Work API
-    participant DB as Work DB
-    participant N as Notification Worker
+    actor R as Người tuyển dụng được phân công
+    actor C as Ứng viên
+    participant W as API Work
+    participant DB as CSDL Work
+    participant N as Tiến trình thông báo
 
-    R->>W: POST interview với Idempotency-Key
-    W->>DB: Check assignment, application state và time constraints
-    W->>DB: Insert interview PROPOSED, schedule history V1, outbox
-    W-->>R: Interview V1
-    N->>DB: Claim notification event
-    N-->>C: Proposal notification và ICS V1
-    C->>W: POST confirm với If-Match V1
-    W->>DB: Update CONFIRMED và append history V2
-    W-->>C: Confirmed V2
-
-    par Recruiter và Candidate cùng reschedule từ V2
-        R->>W: POST reschedule A, If-Match V2
-    and
-        C->>W: POST reschedule B, If-Match V2
+    R->>W: POST phỏng vấn với `Idempotency-Key`
+    W->>DB: Kiểm phân công, trạng thái đơn ứng tuyển và ràng buộc thời gian
+    W->>DB: Chèn phỏng vấn `PROPOSED`, lịch sử lịch V1, hộp thư đi
+    W-->>R: Phỏng vấn V1
+    N->>DB: Nhận sự kiện thông báo
+    N-->>C: Thông báo đề xuất và ICS V1
+    C->>W: POST phản hồi `CONFIRMED`, `DECLINED` hoặc `RESCHEDULE_REQUESTED` với V1
+    W->>DB: Kiểm đúng `scheduleVersion`; thêm phản hồi ứng viên, không sửa lịch khi yêu cầu đổi lịch
+    alt Ứng viên xác nhận
+        W->>DB: Đặt phỏng vấn `CONFIRMED`; thêm lịch sử
+        W-->>C: Đã xác nhận V1
+    else Ứng viên yêu cầu đổi lịch hoặc từ chối
+        W-->>R: Thông báo phản hồi; lịch hiện hành không đổi
+        R->>W: POST đổi lịch với `If-Match` V1 nếu chấp nhận
+        W->>DB: Khóa phỏng vấn; thay thế lịch V1; tạo phiên bản lịch V2 `PROPOSED`; thêm hộp thư đi
+        W-->>R: V2 hoặc `INTERVIEW_VERSION_CONFLICT`
+        N-->>C: ICS V2 thay thế V1 khi đã đổi lịch
     end
-    W->>DB: Serialize interview row/version
-    DB-->>W: Một V3 được commit; request kia stale
-    W-->>R: Success V3 hoặc VERSION_CONFLICT
-    W-->>C: Success V3 hoặc VERSION_CONFLICT
-    N-->>R: ICS V3 thay thế V2
-    N-->>C: ICS V3 thay thế V2
 
     alt Buổi phỏng vấn diễn ra
-        R->>W: POST complete và feedback
-        W->>DB: Set COMPLETED; append feedback/audit
-    else Candidate hoặc recruiter không tham dự
-        R->>W: POST no-show với actor và reason
-        W->>DB: Set NO_SHOW; append audit
-    else Một bên hủy hợp lệ
-        C->>W: POST cancel với reason
-        W->>DB: Set CANCELLED; outbox ICS cancellation
+        R->>W: POST hoàn tất và phản hồi
+        W->>DB: Đặt `COMPLETED`; thêm phản hồi/kiểm toán
+    else Ứng viên hoặc người tuyển dụng không tham dự
+        R->>W: POST ghi nhận vắng mặt với tác nhân và lý do
+        W->>DB: Đặt `NO_SHOW`; thêm kiểm toán
+    else Người tuyển dụng hủy hợp lệ
+        R->>W: POST hủy với lý do
+        W->>DB: Đặt `CANCELLED`; hộp thư đi hủy ICS
     end
 ```
 
-### SEQ-WRK-005 — Chat commit-before-publish, duplicate send và reconnect
+### SEQ-WRK-005 — Trò chuyện: ghi trước khi phát, gửi trùng và kết nối lại
 
-- **Mục đích:** giữ một conversation/application, message idempotent và REST history nhất quán khi WebSocket rớt mạng.
-- **Tác nhân:** Candidate, Assigned Recruiter, Work Chat API/DB, WebSocket Gateway.
-- **Tiền điều kiện:** application tồn tại và chưa terminal; recruiter assigned; sender có access tới conversation.
-- **Kết thúc:** duplicate send chỉ có một message; event chỉ phát sau commit; terminal application từ chối write.
+- **Mục đích:** giữ một cuộc trò chuyện cho mỗi đơn ứng tuyển, tin nhắn không lặp tác động và lịch sử REST nhất quán khi WebSocket mất kết nối.
+- **Tác nhân:** Ứng viên, người tuyển dụng được phân công, API/DB trò chuyện Work, cổng WebSocket.
+- **Tiền điều kiện:** đơn ứng tuyển tồn tại và chưa ở trạng thái kết thúc; người tuyển dụng được phân công; người gửi có quyền truy cập cuộc trò chuyện.
+- **Kết thúc:** gửi trùng chỉ tạo một tin nhắn; sự kiện chỉ phát sau khi cam kết; đơn ứng tuyển kết thúc từ chối ghi thêm.
 - **Liên kết:** `UC-WRK-005`, `UC-WRK-008`; `API-WRK-031`, `API-WRK-032`, `API-WRK-033`, `API-INT-011`; `TBL-WRK-053`, `TBL-WRK-054`, `TBL-WRK-055`, `TBL-WRK-056`; `SCR-WRK-021`, `SCR-WRK-042`; `AC-WRK-003`, `CLS-WRK-002`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor C as Candidate
-    actor R as Assigned Recruiter
-    participant A as Chat REST API
-    participant DB as Work DB
-    participant G as WebSocket Gateway
+    actor C as Ứng viên
+    actor R as Người tuyển dụng được phân công
+    participant A as API REST trò chuyện
+    participant DB as CSDL Work
+    participant G as Cổng WebSocket
 
-    C->>A: GET conversation history cursor P0
-    A->>DB: Authorize application participant; query ordered page
-    A-->>C: Messages và nextCursor P1
-    R->>G: Connect JWT, conversation subscription
-    G->>DB: Verify current assignment và conversation access
-    G-->>R: Subscribed
+    C->>A: GET lịch sử trò chuyện từ con trỏ P0
+    A->>DB: Phân quyền người tham gia đơn ứng tuyển; truy vấn trang theo thứ tự
+    A-->>C: Tin nhắn và `nextCursor` P1
+    R->>G: Kết nối JWT, đăng ký theo dõi cuộc trò chuyện
+    G->>DB: Kiểm phân công hiện hành và quyền truy cập cuộc trò chuyện
+    G-->>R: Đã đăng ký nhận
 
-    par Client retry cùng idempotency key K
-        C->>A: POST message K
+    par Máy khách thử lại cùng khóa chống lặp K
+        C->>A: POST tin nhắn K
     and
-        C->>A: POST message K
+        C->>A: POST tin nhắn K
     end
-    A->>DB: BEGIN; check application non-terminal, sender, K
-    alt First request
-        A->>DB: Insert message; store idempotent response; COMMIT
-        A-->>G: Publish message-created after commit
-        G-->>R: WebSocket event
-        A-->>C: Message accepted
-    else Duplicate K
-        A-->>C: Replay cùng messageId
+    A->>DB: BEGIN; kiểm đơn ứng tuyển chưa kết thúc, người gửi, K
+    alt Yêu cầu đầu tiên
+        A->>DB: Thêm tin nhắn; lưu phản hồi chống lặp yêu cầu; COMMIT
+        A-->>G: Phát sự kiện `message-created` sau khi cam kết
+        G-->>R: Sự kiện WebSocket
+        A-->>C: Đã chấp nhận tin nhắn
+    else K trùng
+        A-->>C: Phát lại cùng `messageId`
     end
 
-    G--xR: Network disconnected
-    C->>A: POST message mới trong lúc recruiter offline
-    A->>DB: Commit message
-    R->>G: Reconnect
-    R->>A: GET history after lastCursor
-    A->>DB: Query missing messages
-    A-->>R: Canonical missed history
+    G--xR: Mất kết nối mạng
+    C->>A: POST tin nhắn mới khi người tuyển dụng ngoại tuyến
+    A->>DB: Cam kết tin nhắn
+    R->>G: Kết nối lại
+    R->>A: GET lịch sử sau `lastCursor`
+    A->>DB: Truy vấn các tin nhắn còn thiếu
+    A-->>R: Lịch sử chuẩn bị bỏ lỡ
 
-    R->>A: POST message sau khi application terminal
-    A->>DB: Read terminal status và READ_ONLY conversation
+    R->>A: POST tin nhắn sau khi đơn ứng tuyển kết thúc
+    A->>DB: Đọc trạng thái kết thúc và cuộc trò chuyện `READ_ONLY`
     A-->>R: CONVERSATION_READ_ONLY
 ```
 
-### SEQ-UNI-001 — Affiliation, referral consent và báo cáo ngưỡng 10
+### SEQ-UNI-001 — Liên kết sinh viên, sự đồng ý giới thiệu và báo cáo ngưỡng 10
 
-- **Mục đích:** minh họa tenant guard, consent purpose/expiry và suppression trước khi trả/export báo cáo.
-- **Tác nhân:** Student, University Officer, Enterprise Recruiter, Work API/DB.
-- **Tiền điều kiện:** university verified; officer membership active; partnership/program còn hiệu lực.
-- **Kết thúc:** affiliation/referral có attribution; PII chỉ trả trong consent scope; nhóm nhỏ không thể drill-down/export.
+- **Mục đích:** minh họa lớp bảo vệ theo phạm vi tổ chức, mục đích/hạn sự đồng ý và ẩn dữ liệu trước khi trả/xuất báo cáo.
+- **Tác nhân:** Sinh viên, cán bộ trường, người tuyển dụng doanh nghiệp, API/CSDL Work.
+- **Tiền điều kiện:** trường đã xác minh; tư cách thành viên của cán bộ đang hoạt động; hợp tác/chương trình còn hiệu lực.
+- **Kết thúc:** liên kết sinh viên/lượt giới thiệu có nguồn; PII chỉ trả trong phạm vi đồng ý; nhóm nhỏ không thể xem chi tiết/xuất dữ liệu.
 - **Liên kết:** `UC-UNI-001..003`; `API-UNI-005`, `API-UNI-006`, `API-UNI-007`, `API-UNI-010`, `API-UNI-014`, `API-UNI-015`; `TBL-WRK-019`, `TBL-WRK-023`, `TBL-WRK-026`, `TBL-WRK-029`, `TBL-WRK-030`, `TBL-WRK-031`; `SCR-UNI-004`, `SCR-UNI-005`, `SCR-UNI-007`, `SCR-UNI-010`, `SCR-UNI-011`; `AC-UNI-001`, `CLS-WRK-002`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor S as Student
-    actor O as University Officer
-    actor R as Enterprise Recruiter
-    participant W as Work API
-    participant DB as Work DB
+    actor S as Sinh viên
+    actor O as Cán bộ trường
+    actor R as Người tuyển dụng doanh nghiệp
+    participant W as API Work
+    participant DB as CSDL Work
 
-    S->>W: Request affiliation với university và student proof
-    W->>DB: Create PENDING affiliation scoped university
-    O->>W: Verify affiliation
-    W->>DB: Resolve officer membership in same university
-    alt Sai tenant hoặc membership inactive
+    S->>W: Yêu cầu liên kết với trường và bằng chứng sinh viên
+    W->>DB: Tạo liên kết `PENDING` trong phạm vi trường
+    O->>W: Xác minh liên kết
+    W->>DB: Xác định tư cách thành viên cán bộ trong cùng trường
+    alt Sai phạm vi tổ chức hoặc tư cách thành viên không hoạt động
         W-->>O: 403 TENANT_ACCESS_DENIED
-    else Proof hợp lệ
-        W->>DB: Activate affiliation và cohort membership; append history
-        W-->>S: Affiliation ACTIVE
+    else Bằng chứng hợp lệ
+        W->>DB: Kích hoạt liên kết và tư cách thành viên nhóm học; thêm lịch sử
+        W-->>S: Liên kết `ACTIVE`
     end
 
-    O->>W: Create internship program và campus distribution
-    W->>DB: Persist under university tenant
-    R->>W: Attach eligible job qua active partnership
-    W->>DB: Validate enterprise-university partnership
-    S->>W: Open referral và apply
-    W->>DB: Store referral attribution to application
-    S->>W: Grant data-sharing consent với purpose, fields, expiry
-    W->>DB: Store consent version
+    O->>W: Tạo chương trình thực tập và phân phối việc làm trong trường
+    W->>DB: Lưu trong phạm vi tổ chức của trường
+    R->>W: Gắn việc làm đủ điều kiện qua hợp tác đang hoạt động
+    W->>DB: Kiểm hợp tác doanh nghiệp-trường
+    O->>W: Gửi lượt giới thiệu cho sinh viên có sự đồng ý phù hợp
+    W->>DB: Tạo `candidate_referrals`; không tạo đơn ứng tuyển hoặc trò chuyện
+    S->>W: Mở lượt giới thiệu
+    W->>DB: Đánh dấu lượt giới thiệu `VIEWED`; trả đường dẫn đến luồng ứng tuyển
+    opt Sinh viên tự chọn ứng tuyển
+        S->>W: Mở và hoàn tất luồng ứng tuyển thông thường
+        W->>DB: Tạo đơn ứng tuyển theo quy tắc `UC-WRK-005`, độc lập với lượt giới thiệu
+    end
+    S->>W: Cấp sự đồng ý chia sẻ dữ liệu với mục đích, trường và thời hạn
+    W->>DB: Lưu phiên bản sự đồng ý
 
-    O->>W: Request cohort report hoặc individual detail
-    W->>DB: Resolve tenant, permission, purpose và current consent
-    alt Individual view thiếu hoặc hết consent
+    O->>W: Yêu cầu báo cáo nhóm học hoặc chi tiết cá nhân
+    W->>DB: Xác định phạm vi tổ chức, quyền, mục đích và sự đồng ý hiện hành
+    alt Xem cá nhân thiếu hoặc hết hạn đồng ý
         W-->>O: 403 CONSENT_REQUIRED
-    else Aggregate group nhỏ hơn 10
-        W-->>O: Suppressed metrics; no drill-down/export
-    else Allowed individual hoặc aggregate đủ ngưỡng
-        W-->>O: Chỉ fields/metrics trong scope
+    else Nhóm tổng hợp nhỏ hơn 10
+        W-->>O: Chỉ số bị ẩn; không xem chi tiết/xuất dữ liệu
+    else Cá nhân được phép hoặc tổng hợp đủ ngưỡng
+        W-->>O: Chỉ các trường/chỉ số trong phạm vi
     end
 ```
 
-### SEQ-PAY-001 — Checkout VNPAY/MoMo, IPN/webhook và entitlement once
+### SEQ-PAY-001 — Phiên thanh toán VNPAY/MoMo, IPN/webhook và cấp quyền lợi một lần
 
-- **Mục đích:** khẳng định return URL chỉ hiển thị, còn verified server callback mới cập nhật settled state và cấp quyền.
-- **Tác nhân:** Buyer, Work Billing API/DB/Worker, VNPAY hoặc MoMo.
-- **Tiền điều kiện:** price version active, amount VND khớp server, provider adapter credential active, `Idempotency-Key` có ở checkout.
-- **Kết thúc:** duplicate/out-of-order callback được acknowledge không nhân đôi ledger/entitlement; intent pending được reconcile.
+- **Mục đích:** khẳng định URL trả về chỉ hiển thị, còn phản hồi gọi lại của máy chủ đã xác minh mới cập nhật trạng thái `SETTLED` và cấp quyền.
+- **Tác nhân:** Bên mua, API/DB/tiến trình thanh toán Work, VNPAY hoặc MoMo.
+- **Tiền điều kiện:** phiên bản giá đang hoạt động, số tiền VND khớp máy chủ, thông tin xác thực bộ điều hợp nhà cung cấp đang hoạt động, `Idempotency-Key` có ở phiên thanh toán.
+- **Kết thúc:** phản hồi gọi lại trùng/sai thứ tự được xác nhận mà không nhân đôi sổ cái/quyền lợi; ý định `PENDING` được đối soát.
 - **Liên kết:** `UC-PAY-001..002`, `UC-WRK-009`; `API-PAY-002`, `API-PAY-014`, `API-PAY-015`, `API-PAY-016`; `TBL-PAY-001`, `TBL-PAY-002`, `TBL-PAY-003`, `TBL-PAY-005`, `TBL-PAY-006`, `TBL-PAY-010`; `SCR-WRK-022`, `SCR-WRK-023`, `SCR-WRK-043`, `SCR-WRK-044`; `AC-PAY-001`, `CLS-PAY-001`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor B as Buyer
-    participant A as Billing API
-    participant DB as Work DB
-    participant P as VNPAY hoặc MoMo Adapter
-    participant Q as Billing Worker
+    actor B as Bên mua
+    participant A as API thanh toán
+    participant DB as CSDL Work
+    participant P as Bộ điều hợp VNPAY hoặc MoMo
+    participant Q as Tiến trình thanh toán
 
-    B->>A: POST checkout productId, provider, Idempotency-Key
-    A->>DB: Resolve server price VND; create order và PENDING intent
-    A->>P: Create signed provider payment request
-    P-->>A: Redirect/pay URL và provider reference
-    A->>DB: Store provider reference
-    A-->>B: Redirect/pay URL
-    B->>P: Complete provider payment
-    P-->>B: Redirect về return URL
-    B->>A: GET payment result page
-    A->>DB: Read local status only
-    A-->>B: PROCESSING hoặc current known state; không grant
+    B->>A: POST phiên thanh toán `productId`, nhà cung cấp, `Idempotency-Key`
+    A->>DB: Xác định giá VND phía máy chủ; tạo đơn hàng và ý định `PENDING`
+    A->>P: Tạo yêu cầu thanh toán nhà cung cấp có chữ ký
+    P-->>A: URL chuyển hướng/thanh toán và mã tham chiếu nhà cung cấp
+    A->>DB: Lưu mã tham chiếu nhà cung cấp
+    A-->>B: URL chuyển hướng/thanh toán
+    B->>P: Hoàn tất thanh toán tại nhà cung cấp
+    P-->>B: Chuyển hướng về URL trả về
+    B->>A: GET trang kết quả thanh toán
+    A->>DB: Chỉ đọc trạng thái cục bộ
+    A-->>B: `PROCESSING` hoặc trạng thái hiện biết; không cấp quyền lợi
 
-    P->>A: Server IPN/webhook
-    A->>A: Verify signature, merchant, reference, amount và VND
-    A->>DB: BEGIN; dedupe providerEventId; lock intent
-    alt Invalid callback
-        A->>DB: Append security log; ROLLBACK
-        A-->>P: Provider-specific failure acknowledgement
-    else Duplicate hoặc state đã terminal mới hơn
-        A->>DB: Store receipt if absent; no state regression; COMMIT
-        A-->>P: Success acknowledgement
-    else Settled hợp lệ
-        A->>DB: Append provider event và ledger; set SETTLED; insert entitlement grant on unique source; outbox; COMMIT
-        A-->>P: Success acknowledgement
-        A-->>Q: Entitlement notification/index refresh event
-    else Failed hoặc expired hợp lệ
-        A->>DB: Append event; set terminal; COMMIT
-        A-->>P: Success acknowledgement
+    P->>A: IPN/webhook từ máy chủ
+    A->>A: Kiểm chữ ký, đơn vị nhận tiền, mã tham chiếu, số tiền và VND
+    A->>DB: BEGIN; khử trùng lặp `providerEventId`; khóa ý định
+    alt Phản hồi gọi lại không hợp lệ
+        A->>DB: Thêm nhật ký bảo mật; ROLLBACK
+        A-->>P: Phản hồi thất bại theo nhà cung cấp
+    else Trùng hoặc trạng thái kết thúc có độ ưu tiên cao hơn
+        A->>DB: Lưu biên nhận nếu chưa có; không hạ trạng thái; COMMIT
+        A-->>P: Xác nhận thành công
+    else Thành công đã xác minh
+        A->>DB: Thêm sự kiện nhà cung cấp và sổ cái; đặt `SETTLED`; cấp quyền lợi theo nguồn duy nhất; hộp thư đi; COMMIT
+        A-->>P: Xác nhận thành công
+        A-->>Q: Sự kiện thông báo quyền lợi/làm mới chỉ mục
+    else Thất bại hoặc hết hạn hợp lệ
+        A->>DB: Thêm sự kiện; đặt trạng thái kết thúc; COMMIT
+        A-->>P: Xác nhận thành công
     end
 ```
 
-### SEQ-PAY-002 — Refund, chargeback và reconciliation
+### SEQ-PAY-002 — Hoàn tiền, tranh chấp thanh toán ngược và đối soát
 
-- **Mục đích:** không sửa/xóa ledger cũ; provider discrepancy và reversal đều đi qua cùng verified state machine.
-- **Tác nhân:** Finance Operator, Billing API/DB/Worker, VNPAY/MoMo.
-- **Tiền điều kiện:** order từng settled; operator có MFA/permission; amount reversal không vượt số có thể hoàn.
-- **Kết thúc:** refund/chargeback append reversal, entitlement adjustment có reason; unresolved discrepancy phát alert.
+- **Mục đích:** không sửa/xóa sổ cái cũ; chênh lệch nhà cung cấp và bút toán đảo đều đi qua cùng máy trạng thái đã xác minh.
+- **Tác nhân:** Nhân sự tài chính, API/DB/tiến trình thanh toán, VNPAY/MoMo.
+- **Tiền điều kiện:** đơn hàng từng `SETTLED`; nhân sự vận hành có MFA/quyền; số tiền đảo không vượt số có thể hoàn.
+- **Kết thúc:** hoàn tiền/tranh chấp thanh toán ngược thêm bút toán đảo, điều chỉnh quyền lợi có lý do; chênh lệch chưa giải quyết phát cảnh báo; trạng thái thanh toán đã `SETTLED` không bị ghi đè.
 - **Liên kết:** `UC-PAY-003`; `API-PAY-006`, `API-PAY-007`, `API-PAY-008`, `API-PAY-009`; `TBL-PAY-005`, `TBL-PAY-006`, `TBL-PAY-007`, `TBL-PAY-008`, `TBL-PAY-009`, `TBL-PAY-010`, `TBL-PAY-011`; `SCR-OPS-019`, `SCR-OPS-020`; `AC-PAY-001`, `CLS-PAY-001`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor F as Finance Operator
-    participant A as Billing API
-    participant DB as Work DB
-    participant P as VNPAY hoặc MoMo Adapter
-    participant Q as Reconciliation Worker
+    actor F as Nhân sự tài chính
+    participant A as API thanh toán
+    participant DB as CSDL Work
+    participant P as Bộ điều hợp VNPAY hoặc MoMo
+    participant Q as Tiến trình đối soát
 
-    F->>A: POST refund với Idempotency-Key, amount và reason
-    A->>DB: Lock order; validate settled balance và permission
-    A->>P: Signed refund request
-    alt Provider rejects hoặc timeout
-        P-->>A: Error hoặc unknown
-        A->>DB: Keep REFUND_PENDING; schedule query; audit
-        A-->>F: Processing, không giả định thất bại
-    else Provider accepts
-        P-->>A: Provider refund reference
-        A->>DB: Store pending provider operation
-        A-->>F: Refund requested
+    F->>A: POST hoàn tiền với `Idempotency-Key`, số tiền và lý do
+    A->>DB: Khóa đơn hàng; kiểm số dư đã thanh toán và quyền
+    A->>P: Yêu cầu hoàn tiền có chữ ký
+    alt Nhà cung cấp từ chối hoặc hết thời gian chờ
+        P-->>A: Lỗi hoặc chưa rõ kết quả
+        A->>DB: Giữ yêu cầu hoàn tiền `PROCESSING`; lên lịch truy vấn; kiểm toán
+        A-->>F: Đang xử lý, không giả định thất bại
+    else Nhà cung cấp chấp nhận
+        P-->>A: Mã tham chiếu hoàn tiền của nhà cung cấp
+        A->>DB: Lưu thao tác nhà cung cấp đang chờ
+        A-->>F: Đã yêu cầu hoàn tiền
     end
-    P->>A: Verified refund hoặc chargeback callback
-    A->>DB: Deduplicate event; append reversal ledger; update payment state
-    A->>DB: Append entitlement adjustment, không xóa usage/history
+    P->>A: Phản hồi gọi lại hoàn tiền hoặc tranh chấp thanh toán ngược đã xác minh
+    A->>DB: Khử trùng lặp sự kiện; thêm bút toán đảo vào sổ cái; cập nhật hồ sơ xử lý hoàn tiền/tranh chấp thanh toán ngược riêng
+    A->>DB: Thêm điều chỉnh quyền lợi, không xóa lịch sử sử dụng; giữ trạng thái thanh toán `SETTLED`
 
-    Q->>DB: Select stale pending intents và operations
-    Q->>P: Query provider status by merchant reference
-    P-->>Q: Authoritative provider result
-    Q->>DB: Apply verified transition idempotently
-    alt Local và provider vẫn không reconcile được
-        Q->>DB: Mark manual-review discrepancy
-        Q-->>F: Alert với references và last known states
-    else Reconciled
-        Q->>DB: Close reconciliation item
+    Q->>DB: Chọn ý định và thao tác chờ đã cũ
+    Q->>P: Truy vấn trạng thái nhà cung cấp theo tham chiếu đơn vị nhận tiền
+    P-->>Q: Kết quả có thẩm quyền của nhà cung cấp
+    Q->>DB: Áp dụng chuyển tiếp đã xác minh không lặp tác động
+    alt Dữ liệu cục bộ và nhà cung cấp vẫn không đối soát được
+        Q->>DB: Đánh dấu chênh lệch cần duyệt thủ công
+        Q-->>F: Cảnh báo kèm tham chiếu và trạng thái biết gần nhất
+    else Đã đối soát
+        Q->>DB: Đóng mục đối soát
     end
 ```
 
-### SEQ-AIX-001 — AI async inference, safety gate và human-applied revision
+### SEQ-AIX-001 — Suy luận AI bất đồng bộ, chốt an toàn và bản hiệu đính do con người áp dụng
 
-- **Mục đích:** tách enqueue/inference/output khỏi dữ liệu CV/JD/ATS và ghi đầy đủ provenance.
-- **Tác nhân:** Candidate/Recruiter, Work API/DB, AI Worker/Provider, Human Reviewer.
-- **Tiền điều kiện:** use case, entitlement, consent, model/prompt policy đều active; input minimization chạy trước enqueue.
-- **Kết thúc:** output invalid bị quarantine; output hợp lệ vẫn chỉ là suggestion; apply tạo human-authored revision riêng.
+- **Mục đích:** tách xếp hàng/suy luận/đầu ra khỏi dữ liệu CV/JD/ATS và ghi đầy đủ nguồn gốc.
+- **Tác nhân:** Ứng viên/người tuyển dụng, API/CSDL Work, tiến trình/nhà cung cấp AI, người duyệt.
+- **Tiền điều kiện:** ca sử dụng, quyền lợi, sự đồng ý, chính sách mô hình/prompt đều hoạt động; giảm tối thiểu đầu vào chạy trước khi xếp hàng.
+- **Kết thúc:** đầu ra không hợp lệ bị cách ly; đầu ra hợp lệ vẫn chỉ là đề xuất; áp dụng tạo bản hiệu đính riêng do con người tạo.
 - **Liên kết:** `UC-AIX-001..003`; `API-AIX-001`, `API-AIX-002`, `API-AIX-003`, `API-AIX-004`, `API-AIX-005`, `API-AIX-006`; `TBL-AIX-001`, `TBL-AIX-002`, `TBL-AIX-003`, `TBL-AIX-004`, `TBL-AIX-005`, `TBL-AIX-006`; `SCR-WRK-013`, `SCR-WRK-034`, `SCR-WRK-039`, `SCR-WRK-040`; `AC-AIX-001`, `CLS-AIX-001`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor H as Candidate hoặc Recruiter
-    participant W as Work API
-    participant DB as Work DB
-    participant Q as AI Worker
-    participant P as Ollama hoặc Provider Adapter
+    actor H as Ứng viên hoặc người tuyển dụng
+    participant W as API Work
+    participant DB as CSDL Work
+    participant Q as Tiến trình AI
+    participant P as Ollama hoặc bộ điều hợp nhà cung cấp
 
-    H->>W: POST AI assistance request với Idempotency-Key
-    W->>DB: Check entitlement, consent, rate limit và use-case allowlist
-    W->>W: Remove protected/excluded fields; frame untrusted content
-    W->>DB: Insert AI job, input checksum, promptPolicyVersion, modelVersion
-    W-->>H: 202 job queued
-    Q->>DB: Claim job
-    Q->>P: Inference request với bounded prompt và timeout
-    alt Timeout hoặc retryable provider error
-        P--xQ: Error
-        Q->>DB: Retry bounded; then mark FAILED
-        H->>W: GET job
-        W-->>H: FAILED và retry option
-    else Output returned
-        P-->>Q: Structured output
-        Q->>Q: Validate schema, provenance và safety policy
-        alt Invalid hoặc unsafe
-            Q->>DB: Quarantine output; mark REVIEW_REQUIRED
-            W-->>H: Không hiển thị output chưa duyệt
-        else Valid
-            Q->>DB: Persist immutable output; mark READY
-            H->>W: GET job output
-            W-->>H: Labeled draft/explanation/suggestion
-            H->>W: POST human decision APPLY, EDIT_APPLY hoặc REJECT
-            W->>DB: Append decision và optional human-applied target revision
-            W-->>H: Updated user-owned draft; ATS state unchanged
+    H->>W: POST yêu cầu trợ lý AI với `Idempotency-Key`
+    W->>DB: Kiểm quyền lợi, sự đồng ý, giới hạn tần suất và danh sách cho phép ca sử dụng
+    W->>W: Loại trường được bảo vệ/bị loại; đóng khung nội dung không tin cậy
+    W->>DB: Chèn tác vụ AI `QUEUED`, checksum đầu vào, `promptPolicyVersion`, `modelVersion`
+    W-->>H: 202 tác vụ đã xếp hàng
+    Q->>DB: Nhận tác vụ và chuyển `RUNNING`
+    Q->>P: Yêu cầu suy luận với prompt có giới hạn và thời gian chờ
+    alt Hết thời gian chờ hoặc lỗi nhà cung cấp có thể thử lại
+        P--xQ: Lỗi
+        Q->>DB: Thử lại có giới hạn; sau đó đặt `FAILED`
+        H->>W: GET tác vụ
+        W-->>H: `FAILED` và tùy chọn thử lại
+    else Nhận đầu ra
+        P-->>Q: Đầu ra có cấu trúc
+        Q->>Q: Kiểm lược đồ, nguồn gốc và chính sách an toàn
+        alt Không hợp lệ hoặc không an toàn
+            Q->>DB: Lưu đầu ra cách ly; đặt tác vụ `SUCCEEDED`; suy ra duyệt đầu ra `DRAFT`
+            W-->>H: Không hiển thị đầu ra chưa duyệt
+        else Hợp lệ
+            Q->>DB: Lưu đầu ra bất biến; đặt tác vụ `SUCCEEDED`; suy ra duyệt đầu ra `DRAFT`
+            H->>W: GET đầu ra tác vụ
+            W-->>H: Bản nháp/giải thích/đề xuất có nhãn
+            H->>W: POST duyệt bởi con người `ACCEPTED`, `EDITED_ACCEPT` hoặc `REJECTED`
+            W->>DB: Thêm quyết định và bản hiệu đính đích do con người áp dụng khi phù hợp
+            W-->>H: Cập nhật bản nháp thuộc người dùng; trạng thái ATS không đổi
         end
     end
 ```
 
-### SEQ-OPS-001 — Moderation action, deletion fan-out và DLQ replay
+### SEQ-OPS-001 — Hành động kiểm duyệt, phát tán sự kiện xóa và phát lại DLQ
 
-- **Mục đích:** thể hiện separation-of-duty cho moderation/appeal, Identity điều phối deletion và retry không lặp side effect.
-- **Tác nhân:** Reporter, Moderator/Appeal Reviewer, User, Identity/Study/Work Worker, Privacy Operator.
-- **Tiền điều kiện:** operator có MFA và scoped permission; deletion grace 30 ngày; legal hold query được kiểm tra trước anonymization.
-- **Kết thúc:** moderation decision/appeal append-only; deletion receipt đầy đủ theo service hoặc hold; replay cùng eventId idempotent.
+- **Mục đích:** thể hiện phân tách nhiệm vụ cho kiểm duyệt/khiếu nại, Danh tính điều phối xóa và thử lại không lặp tác động phụ.
+- **Tác nhân:** Người báo cáo, người kiểm duyệt/người duyệt khiếu nại, người dùng, tiến trình Danh tính/Study/Work, nhân sự vận hành quyền riêng tư.
+- **Tiền điều kiện:** nhân sự vận hành có MFA và quyền theo phạm vi; thời gian ân hạn xóa là 30 ngày; kiểm tra lưu giữ pháp lý chạy trước khi giả danh hóa.
+- **Kết thúc:** quyết định kiểm duyệt/khiếu nại chỉ thêm; có đủ biên nhận xóa theo dịch vụ hoặc có lưu giữ pháp lý; phát lại cùng `eventId` không lặp tác động.
 - **Liên kết:** `UC-OPS-001..003`; `API-OPS-003`, `API-OPS-004`, `API-OPS-010`, `API-IAM-019`, `API-INT-006`, `API-INT-007`; `TBL-WRK-060`, `TBL-WRK-061`, `TBL-IAM-017`, `TBL-IAM-018`, `TBL-STU-053`, `TBL-WRK-064`; `SCR-OPS-009`, `SCR-OPS-010`, `SCR-OPS-021`, `SCR-IAM-006`; `AC-OPS-001`, `CLS-INT-001`.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as User hoặc Reporter
-    actor M as Moderator
-    actor A as Appeal Reviewer
-    actor P as Privacy Operator
-    participant I as Identity
-    participant S as Study Consumer
-    participant W as Work Consumer
+    actor U as Người dùng hoặc người báo cáo
+    actor M as Người kiểm duyệt
+    actor A as Người duyệt khiếu nại
+    actor P as Nhân sự vận hành quyền riêng tư
+    participant I as Danh tính
+    participant S as Bộ tiêu thụ Study
+    participant W as Bộ tiêu thụ Work
 
-    U->>M: Submit content/profile report
-    M->>M: Triage resource, severity và evidence
-    alt Action required
-        M-->>U: Decision, reason, duration và appeal deadline
-        U->>A: Submit appeal
-        A->>A: Independent review; append uphold/modify/reverse decision
-        A-->>U: Appeal result
-    else No action
-        M-->>U: Case closed với reason
+    U->>M: Gửi báo cáo nội dung/hồ sơ
+    M->>M: Phân loại tài nguyên, mức độ nghiêm trọng và minh chứng
+    alt Cần hành động
+        M-->>U: Quyết định, lý do, thời hạn và hạn khiếu nại
+        U->>A: Gửi khiếu nại
+        A->>A: Duyệt độc lập; thêm quyết định giữ nguyên/điều chỉnh/đảo ngược
+        A-->>U: Kết quả khiếu nại
+    else Không cần hành động
+        M-->>U: Đóng hồ sơ xử lý với lý do
     end
 
-    U->>I: Request account deletion
-    I->>I: Set DELETION_PENDING; revoke sessions; start 30-day grace; audit
-    alt User cancels within grace và policy allows
-        U->>I: Cancel deletion
-        I-->>U: Restored allowed status
-    else Grace elapsed
-        P->>I: Run deletion coordinator
-        I->>I: Check legal holds
-        alt Active legal hold
-            I-->>P: Hold scoped data; restrict access; defer finalization
-        else No hold
-            I-->>S: Signed deletion event E, subject pseudonymous key
-            I-->>W: Signed deletion event E, subject pseudonymous key
-            par Study processing
-                S->>S: Deduplicate E; delete PII/private files; revoke evidence; anonymize retained facts
-                S-->>I: Signed receipt
-            and Work processing
-                W->>W: Deduplicate E; delete PII/private files; anonymize retained hiring facts
-                W-->>I: Signed receipt
+    U->>I: Yêu cầu xóa tài khoản
+    I->>I: Đặt `DELETION_PENDING`; thu hồi phiên; bắt đầu ân hạn 30 ngày; kiểm toán
+    alt Người dùng hủy trong thời gian ân hạn và chính sách cho phép
+        U->>I: Hủy xóa
+        I-->>U: Khôi phục trạng thái được phép
+    else Đã hết thời gian ân hạn
+        P->>I: Chạy điều phối xóa
+        I->>I: Kiểm tra lưu giữ pháp lý
+        alt Có lưu giữ pháp lý hiệu lực
+            I-->>P: Giữ dữ liệu trong phạm vi; hạn chế truy cập; hoãn hoàn tất
+        else Không có lưu giữ pháp lý
+            I-->>S: Sự kiện xóa có chữ ký E, khóa chủ thể giả danh
+            I-->>W: Sự kiện xóa có chữ ký E, khóa chủ thể giả danh
+            par Xử lý tại Study
+                S->>S: Khử trùng lặp E; xóa PII/tệp riêng tư; thu hồi minh chứng; giả danh dữ kiện giữ lại
+                S-->>I: Biên nhận có chữ ký
+            and Xử lý tại Work
+                W->>W: Khử trùng lặp E; xóa PII/tệp riêng tư; giả danh dữ kiện tuyển dụng giữ lại
+                W-->>I: Biên nhận có chữ ký
             end
-            alt Một consumer lỗi quá retry budget
-                I->>I: Put E in DLQ; alert; do not finalize
-                P->>I: Repair cause và replay E
-                I-->>S: Replay same E if Study missing receipt
-                I-->>W: Replay same E if Work missing receipt
-            else Đủ receipts
-                I->>I: Finalize ANONYMIZED; retain lawful audit/payment records
+            alt Một bộ tiêu thụ lỗi vượt ngân sách thử lại
+                I->>I: Đưa E vào DLQ; cảnh báo; không hoàn tất
+                P->>I: Sửa nguyên nhân và phát lại E
+                I-->>S: Phát lại cùng E nếu Study thiếu biên nhận
+                I-->>W: Phát lại cùng E nếu Work thiếu biên nhận
+            else Đủ biên nhận
+                I->>I: Hoàn tất `ANONYMIZED`; giữ bản ghi kiểm toán/thanh toán hợp pháp
             end
         end
     end
 ```
 
 
-## 6. Ma trận coverage end-to-end
+## 6. Ma trận bao phủ xuyên suốt
 
-Ma trận này là index điều hướng, không thay thế master traceability matrix ở `01_TONG_QUAN_DU_AN.md`. “Contract anchors” chỉ liệt kê điểm neo tối thiểu có ý nghĩa; endpoint/bảng/màn hình liên quan còn lại nằm trong tài liệu sở hữu tương ứng.
+Ma trận này là chỉ mục điều hướng, không thay thế ma trận truy vết chính ở `01_TONG_QUAN_DU_AN.md`. “Điểm neo hợp đồng” chỉ liệt kê các điểm neo tối thiểu có ý nghĩa; điểm cuối API/bảng/màn hình liên quan còn lại nằm trong tài liệu sở hữu tương ứng.
 
-| Capability | Use case | Activity | Class | Sequence | Contract anchors | Kịch bản nghiệm thu chính |
+| Năng lực | Ca sử dụng | Hoạt động | Lớp | Tuần tự | Điểm neo hợp đồng | Kịch bản nghiệm thu chính |
 |---|---|---|---|---|---|---|
-| Đăng ký, xác minh, session, MFA | `UC-IAM-001`, `UC-IAM-002` | `AC-IAM-001` | `CLS-IAM-001` | `SEQ-IAM-001`, `SEQ-IAM-002` | `API-IAM-001`, `API-IAM-002`, `API-IAM-004`, `API-IAM-006`; `TBL-IAM-001`, `TBL-IAM-009`, `TBL-IAM-010`; `SCR-IAM-001`, `SCR-IAM-003`, `SCR-IAM-005` | Duplicate register an toàn; token hết hạn; credential lock; privileged MFA; hai refresh chỉ một token sống |
-| Account status, role và projection | `UC-IAM-003`, `UC-OPS-003` | `AC-IAM-001`, `AC-OPS-001` | `CLS-IAM-001`, `CLS-INT-001` | `SEQ-IAM-002`, `SEQ-OPS-001` | `API-IAM-022`, `API-INT-006`, `API-INT-007`; `TBL-IAM-017`, `TBL-IAM-018`; `SCR-OPS-001` | Suspend revoke session; duplicate/stale event no-op; projection chặn token cũ |
-| Catalog và standalone course | `UC-STU-001`, `UC-STU-003` | `AC-STU-001`, `AC-STU-002` | `CLS-STU-001`, `CLS-STU-002` | `SEQ-STU-001`, `SEQ-STU-002` | `API-STU-001`, `API-STU-016`, `API-STU-020`; `TBL-STU-012`, `TBL-STU-027`, `TBL-STU-029`; `SCR-STU-005`, `SCR-STU-016` | Learner chưa onboarding vẫn enroll standalone; duplicate enroll trả cùng enrollment; progress monotonic |
-| Onboarding và primary path | `UC-STU-002` | `AC-STU-001` | `CLS-STU-001`, `CLS-STU-002` | `SEQ-STU-001` | `API-STU-014`; `TBL-STU-026`; `SCR-STU-011`, `SCR-STU-013` | Chưa onboarding bị chặn; cooldown đủ 168 giờ; hai switch chỉ một `ACTIVE`; progress không mất |
-| Assessment và file security | `UC-STU-004` | `AC-STU-002` | `CLS-STU-002` | `SEQ-STU-002`, `SEQ-STU-003` | `API-STU-027`, `API-STU-030`, `API-STU-032`, `API-STU-048`; `TBL-STU-033`, `TBL-STU-035`, `TBL-STU-036`, `TBL-STU-038`; `SCR-STU-017`, `SCR-OPS-013` | Quiz auto-grade; link không fetch; pending/infected file không submit; hai reviewer chỉ một decision thắng |
-| Completion và Study evidence | `UC-STU-003`, `UC-STU-005` | `AC-STU-002`, `AC-INT-001` | `CLS-STU-002`, `CLS-INT-001` | `SEQ-STU-002`, `SEQ-INT-001` | `API-STU-061`, `API-INT-002`, `API-INT-004`, `API-INT-005`; `TBL-STU-040`, `TBL-STU-041`, `TBL-WRK-045`; `SCR-WRK-017`, `SCR-WRK-040` | Completion reuse đúng cùng version; export đúng owner/status; consent withdrawal/revocation ẩn snapshot |
-| Trusted versioned publishing | `UC-STU-006` | `AC-STU-003` | `CLS-STU-001` | `SEQ-STU-004` | `API-STU-054`, `API-STU-055`, `API-STU-056`; `TBL-STU-010`, `TBL-STU-012`, `TBL-STU-017`; `SCR-OPS-004`, `SCR-OPS-007` | Thiếu rights/clean asset bị chặn; hai publisher chỉ một swap; enrollment cũ giữ revision cũ |
-| Notification, community, support, report | `UC-STU-007`, `UC-STU-008` | `AC-STU-004` | `CLS-STU-003` | `SEQ-STU-005` | `API-STU-034`, `API-STU-041`, `API-STU-043`, `API-STU-050`, `API-OPS-010`; `TBL-STU-043`, `TBL-STU-045`, `TBL-STU-047`, `TBL-STU-049`, `TBL-STU-054`; `SCR-STU-020`, `SCR-STU-021`, `SCR-STU-022`, `SCR-OPS-021` | Notification dedupe; current rule acceptance; support history; progress sửa qua adjustment; report có `asOfAt` |
-| Candidate profile và sourcing privacy | `UC-WRK-001`, `UC-WRK-002`, `UC-WRK-003` | `AC-WRK-001` | `CLS-WRK-001` | `SEQ-WRK-001` | `API-WRK-006`, `API-WRK-007`, `API-WRK-051`, `API-WRK-053`; `TBL-WRK-004`, `TBL-WRK-005`, `TBL-WRK-037`; `SCR-WRK-011`, `SCR-WRK-012`, `SCR-WRK-036` | Default private; card không contact/CV/evidence; opt-out deny ngay và deindex dưới 5 phút; invitation không mở chat |
-| Enterprise job revision và publish | `UC-WRK-003`, `UC-WRK-004` | `AC-WRK-002` | `CLS-WRK-001` | `SEQ-WRK-002` | `API-WRK-043`, `API-WRK-045`, `API-WRK-047`; `TBL-WRK-016`, `TBL-WRK-033`, `TBL-WRK-035`; `SCR-WRK-034`, `SCR-WRK-035` | Cross-tenant trả 404/403 theo policy; stale revision conflict; published revision immutable |
-| Apply, immutable snapshot và ATS | `UC-WRK-005`, `UC-WRK-006` | `AC-WRK-002`, `AC-INT-001` | `CLS-WRK-001`, `CLS-INT-001` | `SEQ-WRK-003`, `SEQ-INT-001` | `API-WRK-023`, `API-WRK-058`, `API-INT-002`, `API-INT-004`; `TBL-WRK-041`, `TBL-WRK-042`, `TBL-WRK-046`; `SCR-WRK-017`, `SCR-WRK-040` | Một application/candidate/job; Study down vẫn apply; invalid/stale transition bị chặn; AI không đổi ATS |
-| Interview | `UC-WRK-007` | `AC-WRK-003` | `CLS-WRK-002` | `SEQ-WRK-004` | `API-WRK-028`, `API-WRK-029`, `API-WRK-060`, `API-WRK-061`, `API-WRK-062`; `TBL-WRK-049`, `TBL-WRK-050`; `SCR-WRK-020`, `SCR-WRK-041` | Hai reschedule chỉ một version thắng; ICS retry không tạo lịch trùng; complete/no-show/cancel có history |
-| Application chat | `UC-WRK-008` | `AC-WRK-003` | `CLS-WRK-002` | `SEQ-WRK-005` | `API-WRK-031`, `API-WRK-032`, `API-INT-011`; `TBL-WRK-053`, `TBL-WRK-054`, `TBL-WRK-055`; `SCR-WRK-021`, `SCR-WRK-042` | Một conversation/application; duplicate send một message; reconnect reconcile REST; terminal read-only |
-| University tenant và reporting | `UC-UNI-001`, `UC-UNI-002`, `UC-UNI-003` | `AC-UNI-001` | `CLS-WRK-002` | `SEQ-UNI-001` | `API-UNI-005`, `API-UNI-010`, `API-UNI-014`, `API-UNI-015`; `TBL-WRK-019`, `TBL-WRK-023`, `TBL-WRK-026`, `TBL-WRK-030`, `TBL-WRK-031`; `SCR-UNI-004`, `SCR-UNI-007`, `SCR-UNI-011` | Affiliation/partnership đúng tenant; PII cần consent còn hạn; nhóm dưới 10 bị suppression |
-| TopCV/TopJD, payment và promotion | `UC-WRK-009`, `UC-PAY-001`, `UC-PAY-002`, `UC-PAY-003` | `AC-PAY-001` | `CLS-PAY-001` | `SEQ-PAY-001`, `SEQ-PAY-002` | `API-PAY-002`, `API-PAY-014`, `API-PAY-015`, `API-PAY-006`, `API-PAY-009`, `API-PAY-010`, `API-PAY-011`; `TBL-PAY-003`, `TBL-PAY-006`, `TBL-PAY-010`, `TBL-PAY-013`; `SCR-WRK-022`, `SCR-WRK-043`, `SCR-OPS-019` | Return URL không cấp quyền; callback trùng/out-of-order không nhân ledger; settled mới grant; sponsored luôn gắn nhãn |
-| AI assistance và human approval | `UC-AIX-001`, `UC-AIX-002`, `UC-AIX-003` | `AC-AIX-001` | `CLS-AIX-001` | `SEQ-AIX-001` | `API-AIX-001`, `API-AIX-002`, `API-AIX-003`, `API-AIX-004`, `API-AIX-005`, `API-AIX-006`; `TBL-AIX-004`, `TBL-AIX-005`, `TBL-AIX-006`; `SCR-WRK-013`, `SCR-WRK-034`, `SCR-WRK-040` | Excluded field không gửi; prompt injection bị đóng khung; timeout/retry bounded; output chỉ áp dụng sau human action |
-| Moderation, deletion và recovery | `UC-WRK-010`, `UC-OPS-001`, `UC-OPS-002`, `UC-OPS-003` | `AC-OPS-001` | `CLS-WRK-002`, `CLS-INT-001` | `SEQ-OPS-001` | `API-OPS-003`, `API-OPS-004`, `API-OPS-010`, `API-IAM-019`, `API-INT-006`, `API-INT-007`; `TBL-WRK-060`, `TBL-WRK-061`, `TBL-IAM-017`, `TBL-IAM-018`; `SCR-OPS-009`, `SCR-OPS-010`, `SCR-OPS-021`, `SCR-IAM-006` | Appeal có reviewer độc lập; grace 30 ngày; legal hold thắng retention; thiếu receipt vào DLQ và replay idempotent |
+| Đăng ký, xác minh, phiên làm việc, MFA | `UC-IAM-001`, `UC-IAM-002` | `AC-IAM-001` | `CLS-IAM-001` | `SEQ-IAM-001`, `SEQ-IAM-002` | `API-IAM-001`, `API-IAM-002`, `API-IAM-004`, `API-IAM-006`; `TBL-IAM-001`, `TBL-IAM-009`, `TBL-IAM-010`; `SCR-IAM-001`, `SCR-IAM-003`, `SCR-IAM-005` | Đăng ký trùng an toàn; mã hết hạn; khóa thông tin xác thực; MFA đặc quyền; hai lần làm mới chỉ còn một mã hiệu lực |
+| Trạng thái tài khoản, vai trò và hình chiếu | `UC-IAM-003`, `UC-OPS-003` | `AC-IAM-001`, `AC-OPS-001` | `CLS-IAM-001`, `CLS-INT-001` | `SEQ-IAM-002`, `SEQ-OPS-001` | `API-IAM-022`, `API-INT-006`, `API-INT-007`; `TBL-IAM-017`, `TBL-IAM-018`; `SCR-OPS-001` | Tạm ngưng thu hồi phiên; sự kiện trùng/phiên bản cũ không làm thay đổi; hình chiếu chặn mã cũ |
+| Danh mục và khóa học độc lập | `UC-STU-001`, `UC-STU-003` | `AC-STU-001`, `AC-STU-002` | `CLS-STU-001`, `CLS-STU-002` | `SEQ-STU-001`, `SEQ-STU-002` | `API-STU-001`, `API-STU-016`, `API-STU-020`; `TBL-STU-012`, `TBL-STU-027`, `TBL-STU-029`; `SCR-STU-005`, `SCR-STU-016` | Người học chưa hoàn tất khởi tạo hồ sơ vẫn ghi danh khóa học độc lập; ghi danh trùng trả cùng lượt ghi danh; tiến độ chỉ tăng |
+| Khởi tạo hồ sơ và lộ trình chính | `UC-STU-002` | `AC-STU-001` | `CLS-STU-001`, `CLS-STU-002` | `SEQ-STU-001` | `API-STU-014`; `TBL-STU-026`; `SCR-STU-011`, `SCR-STU-013` | Chưa hoàn tất khởi tạo hồ sơ thì bị chặn; thời gian chờ đủ 168 giờ; hai lần đổi chỉ có một `ACTIVE`; tiến độ không mất |
+| Bài đánh giá và bảo mật tệp | `UC-STU-004` | `AC-STU-002` | `CLS-STU-002` | `SEQ-STU-002`, `SEQ-STU-003` | `API-STU-027`, `API-STU-030`, `API-STU-032`, `API-STU-048`; `TBL-STU-033`, `TBL-STU-035`, `TBL-STU-036`, `TBL-STU-038`; `SCR-STU-017`, `SCR-OPS-013` | Trắc nghiệm được chấm tự động; liên kết không bị máy chủ tự tải; tệp đang chờ/nhiễm không thể nộp; hai người duyệt chỉ có một quyết định được chấp nhận |
+| Hoàn thành và minh chứng Study | `UC-STU-003`, `UC-STU-005` | `AC-STU-002`, `AC-INT-001` | `CLS-STU-002`, `CLS-INT-001` | `SEQ-STU-002`, `SEQ-INT-001` | `API-STU-061`, `API-INT-002`, `API-INT-004`, `API-INT-005`; `TBL-STU-040`, `TBL-STU-041`, `TBL-WRK-045`; `SCR-WRK-017`, `SCR-WRK-040` | Tái sử dụng hoàn thành đúng cùng phiên bản; xuất đúng chủ thể/trạng thái; rút đồng ý ẩn bản chụp, còn thu hồi từ Study chuyển bản chụp khớp thành `REVOKED` |
+| Xuất bản phiên bản tin cậy | `UC-STU-006` | `AC-STU-003` | `CLS-STU-001` | `SEQ-STU-004` | `API-STU-054`, `API-STU-055`, `API-STU-056`; `TBL-STU-010`, `TBL-STU-012`, `TBL-STU-017`; `SCR-OPS-004`, `SCR-OPS-007` | Thiếu quyền/tài sản sạch thì bị chặn; hai người xuất bản chỉ có một lần hoán đổi; lượt ghi danh cũ giữ bản hiệu đính cũ |
+| Thông báo, cộng đồng, hỗ trợ, báo cáo | `UC-STU-007`, `UC-STU-008` | `AC-STU-004` | `CLS-STU-003` | `SEQ-STU-005` | `API-STU-034`, `API-STU-041`, `API-STU-043`, `API-STU-050`, `API-OPS-010`; `TBL-STU-043`, `TBL-STU-045`, `TBL-STU-047`, `TBL-STU-049`, `TBL-STU-054`; `SCR-STU-020`, `SCR-STU-021`, `SCR-STU-022`, `SCR-OPS-021` | Thông báo được khử trùng lặp; chấp thuận quy tắc hiện hành; có lịch sử hỗ trợ; sửa tiến độ qua điều chỉnh; báo cáo có `asOfAt` |
+| Hồ sơ ứng viên và quyền riêng tư khi tìm nguồn ứng viên | `UC-WRK-001`, `UC-WRK-002`, `UC-WRK-003` | `AC-WRK-001` | `CLS-WRK-001` | `SEQ-WRK-001` | `API-WRK-006`, `API-WRK-007`, `API-WRK-051`, `API-WRK-053`; `TBL-WRK-004`, `TBL-WRK-005`, `TBL-WRK-037`; `SCR-WRK-011`, `SCR-WRK-012`, `SCR-WRK-036` | Mặc định riêng tư; thẻ không có liên hệ/CV/minh chứng; rút khỏi tìm kiếm bị chặn ngay và gỡ chỉ mục dưới 5 phút; lời mời không mở trò chuyện |
+| Bản hiệu đính việc làm doanh nghiệp và xuất bản | `UC-WRK-003`, `UC-WRK-004` | `AC-WRK-002` | `CLS-WRK-001` | `SEQ-WRK-002` | `API-WRK-043`, `API-WRK-045`, `API-WRK-047`; `TBL-WRK-016`, `TBL-WRK-033`, `TBL-WRK-035`; `SCR-WRK-034`, `SCR-WRK-035` | Khác phạm vi tổ chức trả 404/403 theo chính sách; xung đột bản hiệu đính cũ; bản hiệu đính đã xuất bản là bất biến |
+| Nộp đơn, bản chụp bất biến và ATS | `UC-WRK-005`, `UC-WRK-006` | `AC-WRK-002`, `AC-INT-001` | `CLS-WRK-001`, `CLS-INT-001` | `SEQ-WRK-003`, `SEQ-INT-001` | `API-WRK-023`, `API-WRK-058`, `API-INT-002`, `API-INT-004`; `TBL-WRK-041`, `TBL-WRK-042`, `TBL-WRK-046`; `SCR-WRK-017`, `SCR-WRK-040` | Một đơn ứng tuyển cho mỗi ứng viên/việc làm; Study gián đoạn vẫn nộp đơn; chuyển tiếp không hợp lệ/phiên bản cũ bị chặn; AI không đổi ATS |
+| Phỏng vấn | `UC-WRK-007` | `AC-WRK-003` | `CLS-WRK-002` | `SEQ-WRK-004` | `API-WRK-028`, `API-WRK-029`, `API-WRK-060`, `API-WRK-061`, `API-WRK-062`; `TBL-WRK-049`, `TBL-WRK-050`; `SCR-WRK-020`, `SCR-WRK-041` | Ứng viên chỉ phản hồi/yêu cầu đổi lịch; người tuyển dụng tạo phiên bản lịch mới; ICS thử lại không tạo lịch trùng; hoàn thành/vắng mặt/hủy có lịch sử |
+| Trò chuyện về đơn ứng tuyển | `UC-WRK-008` | `AC-WRK-003` | `CLS-WRK-002` | `SEQ-WRK-005` | `API-WRK-031`, `API-WRK-032`, `API-INT-011`; `TBL-WRK-053`, `TBL-WRK-054`, `TBL-WRK-055`; `SCR-WRK-021`, `SCR-WRK-042` | Một cuộc trò chuyện cho mỗi đơn ứng tuyển; gửi trùng chỉ có một tin nhắn; kết nối lại đối soát qua REST; trạng thái kết thúc chỉ đọc |
+| Phạm vi tổ chức trường và báo cáo | `UC-UNI-001`, `UC-UNI-002`, `UC-UNI-003` | `AC-UNI-001` | `CLS-WRK-002` | `SEQ-UNI-001` | `API-UNI-005`, `API-UNI-010`, `API-UNI-014`, `API-UNI-015`; `TBL-WRK-019`, `TBL-WRK-023`, `TBL-WRK-026`, `TBL-WRK-030`, `TBL-WRK-031`; `SCR-UNI-004`, `SCR-UNI-007`, `SCR-UNI-011` | Liên kết/hợp tác đúng phạm vi tổ chức; PII cần sự đồng ý còn hạn; nhóm dưới 10 bị ẩn |
+| TopCV/TopJD, thanh toán và quảng bá | `UC-WRK-009`, `UC-PAY-001`, `UC-PAY-002`, `UC-PAY-003` | `AC-PAY-001` | `CLS-PAY-001` | `SEQ-PAY-001`, `SEQ-PAY-002` | `API-PAY-002`, `API-PAY-014`, `API-PAY-015`, `API-PAY-006`, `API-PAY-009`, `API-PAY-010`, `API-PAY-011`; `TBL-PAY-003`, `TBL-PAY-006`, `TBL-PAY-010`, `TBL-PAY-013`; `SCR-WRK-022`, `SCR-WRK-043`, `SCR-OPS-019` | URL trả về không cấp quyền; phản hồi gọi lại trùng/sai thứ tự không nhân sổ cái; chỉ `SETTLED` mới cấp quyền; mục tài trợ luôn có nhãn |
+| Trợ lý AI và phê duyệt của con người | `UC-AIX-001`, `UC-AIX-002`, `UC-AIX-003` | `AC-AIX-001` | `CLS-AIX-001` | `SEQ-AIX-001` | `API-AIX-001`, `API-AIX-002`, `API-AIX-003`, `API-AIX-004`, `API-AIX-005`, `API-AIX-006`; `TBL-AIX-004`, `TBL-AIX-005`, `TBL-AIX-006`; `SCR-WRK-013`, `SCR-WRK-034`, `SCR-WRK-040` | Trường bị loại không được gửi; chèn lệnh trong prompt bị đóng khung; hết thời gian chờ/thử lại có giới hạn; đầu ra chỉ áp dụng sau hành động của con người |
+| Kiểm duyệt, xóa và khôi phục | `UC-WRK-010`, `UC-OPS-001`, `UC-OPS-002`, `UC-OPS-003` | `AC-OPS-001` | `CLS-WRK-002`, `CLS-INT-001` | `SEQ-OPS-001` | `API-OPS-003`, `API-OPS-004`, `API-OPS-010`, `API-IAM-019`, `API-INT-006`, `API-INT-007`; `TBL-WRK-060`, `TBL-WRK-061`, `TBL-IAM-017`, `TBL-IAM-018`; `SCR-OPS-009`, `SCR-OPS-010`, `SCR-OPS-021`, `SCR-IAM-006` | Khiếu nại có người duyệt độc lập; ân hạn 30 ngày; lưu giữ pháp lý ưu tiên hơn thời hạn lưu giữ; thiếu biên nhận vào DLQ và phát lại không lặp tác động |
 
 ## 7. Ma trận nhánh lỗi và cạnh tranh bắt buộc
 
-| Tình huống | Guard/transaction | Kết quả bắt buộc | Sơ đồ chứng minh |
+| Tình huống | Điều kiện bảo vệ/giao dịch | Kết quả bắt buộc | Sơ đồ chứng minh |
 |---|---|---|---|
-| Register cùng email/key | Unique normalized email + idempotency response | Không tạo hai user, không lộ email tồn tại | `AC-IAM-001`, `SEQ-IAM-001` |
-| Hai refresh cùng token | `SELECT ... FOR UPDATE` trên refresh token | Một rotation thành công; request thấy token đã dùng thu hồi cả family | `SEQ-IAM-002` |
-| Token cũ sau suspension | `authVersion` + projected account status | Study/Work từ chối ngay cả khi JWT chưa hết hạn | `SEQ-IAM-002` |
-| Hai primary-path switch | Learner coordination lock + partial unique `ACTIVE` | Một active period; request sau nhận cooldown/version conflict | `AC-STU-001`, `SEQ-STU-001` |
-| Progress stale/out-of-order | `If-Match` + monotonic fact | Không giảm completion; client reload representation server | `AC-STU-002`, `SEQ-STU-002` |
-| File MIME giả hoặc malware | HEAD/checksum, MIME detection, quarantine + scan state | Không submit/download/review cho đến `CLEAN`; infected không tốn attempt | `AC-STU-002`, `SEQ-STU-003` |
-| Hai reviewer | Optimistic review version + append-only decision | Một success, một `REVIEW_CONFLICT` | `SEQ-STU-003` |
-| Hai publisher | Lock stable entity/draft + `If-Match` | Một current pointer; published revision không sửa | `AC-STU-003`, `SEQ-STU-004` |
-| Worker notification retry | Unique learner/business dedupe key | Một notification nghiệp vụ, nhiều delivery attempt có lịch sử | `AC-STU-004`, `SEQ-STU-005` |
-| Search index stale sau opt-out | Query-time DB guard + deindex outbox SLA | Candidate biến mất ngay ở response và khỏi index tối đa 5 phút | `AC-WRK-001`, `SEQ-WRK-001` |
-| Cross-tenant resource ID | Membership resolve server-side + composite tenant predicate | Không rò resource hay existence ngoài tenant | `AC-WRK-002`, `SEQ-WRK-002`, `SEQ-UNI-001` |
-| Apply trùng | Unique candidate/job + idempotency record | Một application, cùng immutable snapshot | `AC-WRK-002`, `SEQ-WRK-003` |
-| Study down lúc apply/export | Commit local application trước HTTP integration; async retry | Application thành công; evidence `PENDING/UNAVAILABLE`; không auto-reject | `AC-INT-001`, `SEQ-INT-001` |
-| Export result duplicate/stale | Application/sourceEvidence/version key + consumer receipt | Không tạo snapshot trùng, version cũ không ghi đè | `CLS-INT-001`, `SEQ-INT-001` |
-| Hai reschedule | Interview `scheduleVersion` + `If-Match` | Một V mới; request kia conflict và reload | `AC-WRK-003`, `SEQ-WRK-004` |
-| Chat retry/reconnect | Message idempotency key; commit-before-publish; REST cursor | Một message; không mất lịch sử; event duplicate được dedupe | `AC-WRK-003`, `SEQ-WRK-005` |
-| Application terminal trong lúc gửi chat | Status check trong message transaction | Không commit message mới; conversation `READ_ONLY` | `SEQ-WRK-005` |
-| University consent hết hạn | Purpose/scope/expiry check trước query | Không trả PII; aggregate vẫn theo ngưỡng tối thiểu 10 | `AC-UNI-001`, `SEQ-UNI-001` |
-| Callback thanh toán trùng/sai thứ tự | Verify signature/merchant/amount; providerEvent unique; state rank guard | Acknowledge no-op, không lùi trạng thái, không grant hai lần | `AC-PAY-001`, `SEQ-PAY-001` |
-| Refund timeout | Pending provider operation + reconciliation query | Không đoán thất bại/thành công; ledger chỉ append khi có kết quả xác minh | `SEQ-PAY-002` |
-| AI timeout hoặc output sai schema | Bounded retry + schema/safety gate | Job `FAILED` hoặc `REVIEW_REQUIRED`; không ảnh hưởng CV/JD/ATS | `AC-AIX-001`, `SEQ-AIX-001` |
-| Prompt injection trong CV/JD | Input minimization + untrusted-content delimiter + allowlisted tool-free inference | Instruction trong nội dung không được thực thi; provenance vẫn lưu | `AC-AIX-001`, `SEQ-AIX-001` |
-| Deletion consumer lỗi | Signed event, receipt per service, retry/DLQ/replay eventId | Identity chưa finalize; replay không lặp side effect | `AC-OPS-001`, `SEQ-OPS-001` |
-| Legal hold gặp retention job | Hold check trước anonymization/hard-delete | Dữ liệu trong scope hold bị hạn chế access nhưng chưa xóa | `AC-OPS-001`, `SEQ-OPS-001` |
+| Đăng ký cùng email/khóa | Email chuẩn hóa duy nhất + phản hồi chống lặp yêu cầu | Không tạo hai người dùng, không lộ email đã tồn tại | `AC-IAM-001`, `SEQ-IAM-001` |
+| Hai lần làm mới cùng mã | `SELECT ... FOR UPDATE` trên mã làm mới | Một lần luân chuyển thành công; yêu cầu thấy mã đã dùng sẽ thu hồi cả họ mã | `SEQ-IAM-002` |
+| Mã cũ sau khi tạm ngưng | `authVersion` + hình chiếu trạng thái tài khoản | Study/Work từ chối ngay cả khi JWT chưa hết hạn | `SEQ-IAM-002` |
+| Hai lần đổi lộ trình chính | Khóa điều phối người học + chỉ mục duy nhất từng phần `ACTIVE` | Một giai đoạn hoạt động; yêu cầu sau nhận xung đột thời gian chờ/phiên bản | `AC-STU-001`, `SEQ-STU-001` |
+| Tiến độ dùng phiên bản cũ/không theo thứ tự | `If-Match` + dữ kiện chỉ tăng | Không giảm mức hoàn thành; máy khách tải lại biểu diễn của máy chủ | `AC-STU-002`, `SEQ-STU-002` |
+| Tệp có MIME giả hoặc mã độc | HEAD/checksum, nhận diện MIME, vùng cách ly + trạng thái quét | Không thể nộp/tải xuống/duyệt trước `CLEAN`; tệp nhiễm không tốn lượt nộp | `AC-STU-002`, `SEQ-STU-003` |
+| Hai người duyệt | Phiên bản duyệt lạc quan + quyết định chỉ thêm | Một thành công, một `REVIEW_CONFLICT` | `SEQ-STU-003` |
+| Hai người xuất bản | Khóa thực thể ổn định/bản nháp + `If-Match` | Một con trỏ hiện hành; bản hiệu đính đã xuất bản không sửa | `AC-STU-003`, `SEQ-STU-004` |
+| Tiến trình thông báo thử lại | Khóa khử trùng lặp người học/nghiệp vụ duy nhất | Một thông báo nghiệp vụ, nhiều lần gửi có lịch sử | `AC-STU-004`, `SEQ-STU-005` |
+| Chỉ mục tìm kiếm cũ sau khi rút khỏi tìm kiếm | Lớp bảo vệ DB khi truy vấn + SLA hộp thư đi gỡ chỉ mục | Ứng viên biến mất ngay khỏi phản hồi và khỏi chỉ mục tối đa 5 phút | `AC-WRK-001`, `SEQ-WRK-001` |
+| Mã tài nguyên khác phạm vi tổ chức | Xác định tư cách thành viên ở máy chủ + điều kiện phạm vi tổ chức tổ hợp | Không rò tài nguyên hay sự tồn tại ngoài phạm vi tổ chức | `AC-WRK-002`, `SEQ-WRK-002`, `SEQ-UNI-001` |
+| Nộp đơn trùng | Khóa duy nhất ứng viên/việc làm + bản ghi chống lặp yêu cầu | Một đơn ứng tuyển, cùng bản chụp bất biến | `AC-WRK-002`, `SEQ-WRK-003` |
+| Study gián đoạn khi nộp/xuất đơn | Cam kết đơn ứng tuyển cục bộ trước tích hợp HTTP; thử lại bất đồng bộ | Đơn ứng tuyển thành công; minh chứng `PENDING/UNAVAILABLE`; không tự động từ chối | `AC-INT-001`, `SEQ-INT-001` |
+| Kết quả xuất trùng/dùng phiên bản cũ | Khóa đơn ứng tuyển/minh chứng nguồn/phiên bản + biên nhận bộ tiêu thụ | Không tạo bản chụp trùng, phiên bản cũ không ghi đè | `CLS-INT-001`, `SEQ-INT-001` |
+| Ứng viên yêu cầu đổi lịch đồng thời | `scheduleVersion` phỏng vấn + `If-Match` của người tuyển dụng | Chỉ người tuyển dụng chấp nhận mới tạo phiên bản lịch mới; yêu cầu dùng phiên bản cũ nhận xung đột và tải lại | `AC-WRK-003`, `SEQ-WRK-004` |
+| Thử lại/kết nối lại trò chuyện | Khóa chống lặp yêu cầu của tin nhắn; cam kết trước khi phát; con trỏ REST | Một tin nhắn; không mất lịch sử; sự kiện trùng được khử trùng lặp | `AC-WRK-003`, `SEQ-WRK-005` |
+| Đơn ứng tuyển kết thúc trong lúc gửi trò chuyện | Kiểm trạng thái trong giao dịch tin nhắn | Không cam kết tin nhắn mới; cuộc trò chuyện `READ_ONLY` | `SEQ-WRK-005` |
+| Sự đồng ý của trường hết hạn | Kiểm mục đích/phạm vi/thời hạn trước truy vấn | Không trả PII; dữ liệu tổng hợp vẫn theo ngưỡng tối thiểu 10 | `AC-UNI-001`, `SEQ-UNI-001` |
+| Phản hồi gọi lại thanh toán trùng/sai thứ tự | Xác minh chữ ký/đơn vị nhận tiền/số tiền; `providerEvent` duy nhất; điều kiện thứ hạng trạng thái | Xác nhận không làm gì, không lùi trạng thái, không cấp quyền hai lần | `AC-PAY-001`, `SEQ-PAY-001` |
+| Hết thời gian chờ hoàn tiền | Thao tác nhà cung cấp `PENDING` + truy vấn đối soát | Không suy đoán thất bại/thành công; sổ cái chỉ thêm khi có kết quả xác minh | `SEQ-PAY-002` |
+| AI hết thời gian chờ hoặc đầu ra sai lược đồ | Thử lại có giới hạn + chốt lược đồ/an toàn | Tác vụ `FAILED` hoặc `SUCCEEDED` với đầu ra cách ly và duyệt `DRAFT`; không ảnh hưởng CV/JD/ATS | `AC-AIX-001`, `SEQ-AIX-001` |
+| Chèn lệnh trong CV/JD | Giảm tối thiểu đầu vào + dấu phân cách nội dung không tin cậy + suy luận không công cụ theo danh sách cho phép | Chỉ dẫn trong nội dung không được thực thi; vẫn lưu nguồn gốc | `AC-AIX-001`, `SEQ-AIX-001` |
+| Bộ tiêu thụ xóa lỗi | Sự kiện có chữ ký, biên nhận theo dịch vụ, thử lại/DLQ/phát lại `eventId` | Danh tính chưa hoàn tất; phát lại không lặp tác động phụ | `AC-OPS-001`, `SEQ-OPS-001` |
+| Lưu giữ pháp lý gặp tác vụ hết hạn lưu giữ | Kiểm lưu giữ trước khi giả danh hóa/xóa cứng | Dữ liệu trong phạm vi lưu giữ bị hạn chế truy cập nhưng chưa xóa | `AC-OPS-001`, `SEQ-OPS-001` |
 
-## 8. State và terminal outcome cần giữ nhất quán
+## 8. Trạng thái và kết quả kết thúc cần giữ nhất quán
 
-| Aggregate | State chính | Terminal hoặc read-only | Ghi chú bất biến |
+| Đối tượng tổng hợp | Trạng thái chính | Kết thúc hoặc chỉ đọc | Ghi chú bất biến |
 |---|---|---|---|
-| Identity account | `PENDING_EMAIL_VERIFICATION → ACTIVE ↔ SUSPENDED → DELETION_PENDING → ANONYMIZED` | `ANONYMIZED` | Credential lock là trạng thái credential, không phải account state |
-| Content revision | `DRAFT → PUBLISHED → SUPERSEDED`; `DRAFT → DISCARDED` | `PUBLISHED`, `SUPERSEDED`, `DISCARDED` không editable | Version mới không migrate enrollment cũ |
-| Primary path period | `ACTIVE → SWITCHED_OUT \| COMPLETED \| CANCELLED_BY_ADMIN` | Mọi trạng thái ngoài `ACTIVE` | Partial unique bảo đảm tối đa một `ACTIVE` |
-| Course enrollment | `ENROLLED → IN_PROGRESS → COMPLETED` | `COMPLETED` không lùi khi ôn tập | Unique learner/courseVersion |
-| Manual assessment attempt | `SUBMITTED → UNDER_REVIEW → PASSED \| NEEDS_REVISION \| FAILED` | Attempt đã submit luôn immutable | Revision/failure tạo attempt mới nếu còn lượt |
-| File asset | `CREATED → UPLOADING → UPLOADED → SCANNING → CLEAN \| INFECTED \| SCAN_FAILED` | `INFECTED`, `DELETED`, `EXPIRED`; `SCAN_FAILED` blocked | Chỉ `CLEAN` được attach/download |
-| Job | `DRAFT → REVIEW_PENDING → PUBLISHED ↔ PAUSED → CLOSED \| EXPIRED \| TAKEN_DOWN` | `CLOSED`, `EXPIRED`, `TAKEN_DOWN` | Published revision immutable |
-| Application | `SUBMITTED → UNDER_REVIEW → SHORTLISTED → INTERVIEWING → OFFERED → HIRED` cùng nhánh `REJECTED`, `WITHDRAWN`, `OFFER_DECLINED` | `HIRED`, `REJECTED`, `WITHDRAWN`, `OFFER_DECLINED` | Terminal làm conversation read-only |
-| Evidence snapshot tại Work | `PENDING → READY \| UNAVAILABLE`; `READY → WITHDRAWN \| REVOKED` | `UNAVAILABLE`, `WITHDRAWN`, `REVOKED` | Chỉ thuộc một application; không dùng làm search index |
-| Payment | `PENDING → SETTLED \| FAILED \| EXPIRED`; `SETTLED → PARTIALLY_REFUNDED \| REFUNDED \| CHARGEBACK` | Mọi trạng thái sau settled giữ ledger history | Return URL không chuyển state |
-| AI job | `QUEUED → RUNNING → READY \| FAILED \| REVIEW_REQUIRED` | `READY`, `FAILED`; review có record riêng | `READY` vẫn chỉ là suggestion |
+| Tài khoản Danh tính | `PENDING_EMAIL_VERIFICATION → ACTIVE ↔ SUSPENDED → DELETION_PENDING → ANONYMIZED` | `ANONYMIZED` | Khóa thông tin xác thực là trạng thái của thông tin xác thực, không phải trạng thái tài khoản |
+| Bản hiệu đính nội dung | `DRAFT → PUBLISHED → SUPERSEDED`; `DRAFT → DISCARDED` | `PUBLISHED`, `SUPERSEDED`, `DISCARDED` không thể sửa | Phiên bản mới không di chuyển lượt ghi danh cũ |
+| Giai đoạn lộ trình chính | `ACTIVE → SWITCHED_OUT \| COMPLETED \| CANCELLED_BY_ADMIN` | Mọi trạng thái ngoài `ACTIVE` | Chỉ mục duy nhất từng phần bảo đảm tối đa một `ACTIVE` |
+| Lượt ghi danh khóa học | `ENROLLED → IN_PROGRESS → COMPLETED` | `COMPLETED` không lùi khi ôn tập | Duy nhất theo người học/phiên bản khóa học |
+| Lần làm bài đánh giá thủ công | `SUBMITTED → UNDER_REVIEW → PASSED \| NEEDS_REVISION \| FAILED` | Lần làm đã nộp luôn bất biến | Cần sửa/thất bại tạo lần làm mới nếu còn lượt |
+| Tài sản tệp | `CREATED → UPLOADING → UPLOADED → SCANNING → CLEAN \| INFECTED \| SCAN_FAILED` | `INFECTED`, `DELETED`, `EXPIRED`; `SCAN_FAILED` bị chặn | Chỉ `CLEAN` được đính kèm/tải xuống |
+| Việc làm | `DRAFT → REVIEW_PENDING → PUBLISHED ↔ PAUSED → CLOSED \| EXPIRED \| TAKEN_DOWN` | `CLOSED`, `EXPIRED`, `TAKEN_DOWN` | Bản hiệu đính đã xuất bản là bất biến |
+| Đơn ứng tuyển | `SUBMITTED → UNDER_REVIEW → SHORTLISTED → INTERVIEWING → OFFERED → HIRED` cùng nhánh `REJECTED`, `WITHDRAWN`, `OFFER_DECLINED` | `HIRED`, `REJECTED`, `WITHDRAWN`, `OFFER_DECLINED` | Trạng thái kết thúc làm cuộc trò chuyện chỉ đọc |
+| Bản chụp minh chứng tại Work | `PENDING → READY \| UNAVAILABLE`; `READY → HIDDEN \| REVOKED`; `UNAVAILABLE → PENDING \| HIDDEN` (khi rút sự đồng ý); `HIDDEN → REVOKED` (khi Study thu hồi) | `REVOKED`; `HIDDEN` chỉ là trạng thái ẩn, không phải trạng thái kết thúc | Chỉ thuộc một đơn ứng tuyển; không dùng làm chỉ mục tìm kiếm; rút sự đồng ý đặt `HIDDEN`, còn thu hồi từ Study chuyển bản chụp khớp thành `REVOKED` |
+| Điều phối đơn hàng/thanh toán | `CREATED → PENDING → SETTLED \| FAILED \| EXPIRED \| CANCELLED` | `SETTLED`, `FAILED`, `EXPIRED`, `CANCELLED` | `SETTLED` không bị ghi đè bởi hoàn tiền/tranh chấp thanh toán ngược; chúng là hồ sơ xử lý và sổ cái chỉ thêm riêng |
+| Tác vụ AI | `QUEUED → RUNNING → SUCCEEDED \| FAILED \| CANCELLED` | `SUCCEEDED`, `FAILED`, `CANCELLED` | Trạng thái thực thi, không diễn đạt việc duyệt đầu ra |
+| Duyệt đầu ra AI | `DRAFT → ACCEPTED \| EDITED_ACCEPT \| REJECTED \| EXPIRED` | `ACCEPTED`, `EDITED_ACCEPT`, `REJECTED`, `EXPIRED` | Là trạng thái duyệt độc lập; chỉ hành động của con người mới áp dụng nội dung |
 
-## 9. Ghi chú tích hợp thanh toán và realtime
+## 9. Ghi chú tích hợp thanh toán và thời gian thực
 
-- VNPAY tách rõ redirect `vnp_ReturnUrl` để hiển thị cho khách và IPN URL để merchant cập nhật kết quả. Sơ đồ vì vậy chỉ cho `API-PAY-014` thay đổi payment state sau xác minh; tham khảo [tài liệu PAY chính thức của VNPAY](https://sandbox.vnpayment.vn/apis/docs/thanh-toan-pay/pay.html).
-- MoMo one-time payment đi qua provider adapter riêng, callback phải được kiểm chữ ký và đối chiếu merchant/order/amount trước khi ghi provider event; tham khảo [tài liệu One-Time Payments chính thức của MoMo](https://developers.momo.vn/v3/docs/payment/api/credit/onetime/).
-- WebSocket `API-INT-011` dùng at-least-once delivery. Mọi event có `eventId` và sequence; client dedupe, phát hiện gap và gọi REST history. Socket không nhận ATS transition hoặc quyết định nghiệp vụ.
+- VNPAY tách rõ chuyển hướng `vnp_ReturnUrl` để hiển thị cho khách và IPN URL để đơn vị nhận tiền (`merchant`) cập nhật kết quả. Vì vậy, sơ đồ chỉ cho `API-PAY-014` thay đổi trạng thái thanh toán sau xác minh; tham khảo [tài liệu PAY chính thức của VNPAY](https://sandbox.vnpayment.vn/apis/docs/thanh-toan-pay/pay.html).
+- Thanh toán một lần qua MoMo đi qua bộ điều hợp nhà cung cấp riêng; phản hồi gọi lại phải được kiểm chữ ký và đối chiếu đơn vị nhận tiền/đơn hàng/số tiền trước khi ghi sự kiện nhà cung cấp; tham khảo [tài liệu thanh toán một lần chính thức của MoMo](https://developers.momo.vn/v3/docs/payment/api/credit/onetime/).
+- WebSocket `API-INT-011` dùng cơ chế giao ít nhất một lần. Mọi sự kiện có `eventId` và số thứ tự; máy khách khử trùng lặp, phát hiện khoảng thiếu và gọi lịch sử REST. Kết nối WebSocket không nhận chuyển tiếp ATS hoặc quyết định nghiệp vụ.
 
-## 10. Checklist kiểm tra tài liệu biểu đồ
+## 10. Danh sách kiểm tra tài liệu biểu đồ
 
-- Mỗi Mermaid block có đúng một heading ID ổn định và đủ mục đích, tác nhân, tiền điều kiện, kết thúc, liên kết.
-- Toàn bộ UC trong danh mục xuất hiện trong ít nhất một activity, class và sequence ở ma trận coverage.
-- Không có use-case UML syntax ngoài khả năng Mermaid; các use-case map đều là `flowchart`.
-- Không có quan hệ FK/query xuyên Identity DB, Study DB và Work DB; cross-service chỉ là nét đứt, signed request/event và local projection/snapshot.
-- Happy path, permission failure, validation failure, service outage, retry, duplicate, stale version và concurrent mutation đều có điểm neo trong phần 7.
-- API/table/screen ID được đối chiếu với tài liệu sở hữu; sơ đồ không lặp JSON schema, column catalog hoặc screen field catalog.
-- Payment, AI, sponsored placement, candidate search, university report, moderation và deletion đều thể hiện privacy/human/tenant guard trước side effect.
+- Mỗi khối Mermaid có đúng một ID tiêu đề ổn định và đủ mục đích, tác nhân, tiền điều kiện, kết thúc, liên kết.
+- Mỗi UC trong danh mục xuất hiện trong ít nhất một sơ đồ hoạt động, lớp và tuần tự ở ma trận bao phủ.
+- Không có cú pháp UML cho ca sử dụng vượt ngoài khả năng Mermaid; mọi bản đồ ca sử dụng đều là `flowchart`.
+- Không có quan hệ khóa ngoại/truy vấn xuyên CSDL Danh tính nền tảng, CSDL Study và CSDL Work; liên dịch vụ chỉ dùng nét đứt, yêu cầu/sự kiện có chữ ký và hình chiếu/bản chụp cục bộ.
+- Nhánh thành công, lỗi phân quyền, lỗi kiểm tra hợp lệ, gián đoạn dịch vụ, thử lại, trùng lặp, phiên bản cũ và thay đổi đồng thời đều có điểm neo trong phần 7.
+- ID API/bảng/màn hình được đối chiếu với tài liệu sở hữu; sơ đồ không lặp lược đồ JSON, danh mục cột hoặc danh mục trường màn hình.
+- Thanh toán, AI, vị trí tài trợ, tìm kiếm ứng viên, báo cáo trường, kiểm duyệt và xóa đều thể hiện lớp bảo vệ riêng tư/con người/không gian dữ liệu trước tác động phụ.
