@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:learn2earn/controllers/tim_kiem_job/tim_kiem_ctrl.dart';
+import 'package:learn2earn/controllers/tim_kiem_job/tim_kiem_Ctrl.dart';
 import 'package:learn2earn/models/sinh_vien/JD.dart';
 import 'package:learn2earn/views/trang_chu/main/xem_chi_tiet_view.dart';
 import 'package:learn2earn/controllers/UngTuyenCtrl.dart';
