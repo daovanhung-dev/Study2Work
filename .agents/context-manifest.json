@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "5a5c2c826ddcc2931a9398115fdb61448dcb4c57",
+  "generatedAt": "2026-08-26",
+  "rootRouter": "AGENTS.md",
+  "registry": ".agents/AGENTS.md",
+  "legacyPathsMustNotExist": [
+    "apps/study-server/AGENTS.md",
+    "apps/study-server/.agent/context"
+  ],
+  "scopes": {
+    "server-study": {
+      "mode": "DEEP",
+      "status": "DECLARED_NOT_RUNNABLE",
+      "entry": ".agents/server-study/AGENTS.md",
+      "sourceRoots": [
+        "apps/study-server"
+      ],
+      "trackedRoots": [
+        "apps/study-server/app",
+        "apps/study-server/tests",
+        "apps/study-server/pyproject.toml",
+        "apps/study-server/.env.example",
+        "apps/study-server/alembic.ini",
+        "apps/study-server/Dockerfile"
+      ],
+      "requiredPages": [
+        ".agents/server-study/architecture.md",
+        ".agents/server-study/core/runtime.md",
+        ".agents/server-study/core/database-security.md",
+        ".agents/server-study/services/ai.md",
+        ".agents/server-study/modules/README.md",
+        ".agents/server-study/apis/declared-routes.md",
+        ".agents/server-study/database.md",
+        ".agents/server-study/tests.md",
+        ".agents/server-study/workflows/README.md"
+      ],
+      "requiredSourcePaths": [
+        "apps/study-server/app/main.py",
+        "apps/study-server/app/api/v1.py",
+        "apps/study-server/app/core/database.py",
+        "apps/study-server/app/core/responses.py"
+      ]
+    },
+    "server-work": {
+      "mode": "DEEP",
+      "status": "VERIFIED",
+      "entry": ".agents/server-work/AGENTS.md",
+      "sourceRoots": [
+        "apps/work-server"
+      ],
+      "trackedRoots": [
+        "apps/work-server/src",
+        "apps/work-server/test",
+        "apps/work-server/prisma",
+        "apps/work-server/package.json",
+        "contracts/openapi/work/openapi.json"
+      ],
+      "requiredPages": [
+        ".agents/server-work/architecture.md",
+        ".agents/server-work/core/runtime-http.md",
+        ".agents/server-work/core/auth-config-db.md",
+        ".agents/server-work/modules/foundation.md",
+        ".agents/server-work/apis/foundation.md",
+        ".agents/server-work/database.md",
+        ".agents/server-work/tests.md",
+        ".agents/server-work/workflows/README.md"
+      ],
+      "requiredSourcePaths": [
+        "apps/work-server/src/bootstrap.ts",
+        "apps/work-server/src/app.module.ts",
+        "apps/work-server/prisma/schema.prisma",
+        "contracts/openapi/work/openapi.json"
+      ]
+    },
+    "server-ai": {
+      "mode": "DEEP",
+      "status": "VERIFIED_WITH_UNWIRED_COMPONENTS",
+      "entry": ".agents/server-ai/AGENTS.md",
+      "sourceRoots": [
+        "apps/ai-server"
+      ],
+      "trackedRoots": [
+        "apps/ai-server/app",
+        "apps/ai-server/pyproject.toml",
+        "apps/ai-server/.env.example"
+      ],
+      "requiredPages": [
+        ".agents/server-ai/architecture.md",
+        ".agents/server-ai/core/copied-core.md",
+        ".agents/server-ai/modules/chat.md",
+        ".agents/server-ai/services/ollama.md",
+        ".agents/server-ai/apis/chat.md",
+        ".agents/server-ai/database.md",
+        ".agents/server-ai/tests.md",
+        ".agents/server-ai/workflows/README.md"
+      ],
+      "requiredSourcePaths": [
+        "apps/ai-server/app/main.py",
+        "apps/ai-server/app/api/v1.py",
+        "apps/ai-server/app/module/chat/view.py",
+        "apps/ai-server/app/service/ai/ollama_service.py"
+      ]
+    },
+    "web-work": {
+      "mode": "SKELETON_ONLY",
+      "status": "SKELETON_ONLY",
+      "entry": ".agents/web-work/AGENTS.md",
+      "sourceRoots": [
+        "apps/study-client",
+        "apps/work-client/web"
+      ],
+      "trackedRoots": [],
+      "requiredPages": [],
+      "requiredSourcePaths": []
+    },
+    "mobile-work": {
+      "mode": "SKELETON_ONLY",
+      "status": "SKELETON_ONLY",
+      "entry": ".agents/mobile-work/AGENTS.md",
+      "sourceRoots": [
+        "apps/work-client/mobile"
+      ],
+      "trackedRoots": [],
+      "requiredPages": [],
+      "requiredSourcePaths": []
+    }
+  }
+}

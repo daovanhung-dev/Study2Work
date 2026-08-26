@@ -1,6 +1,6 @@
 # Source status và discrepancy
 
-Trạng thái được kiểm tra trên working tree ngày 2026-08-26.
+Deep-context được đối chiếu tại source commit `5a5c2c826ddcc2931a9398115fdb61448dcb4c57` ngày 2026-08-26.
 
 ## Tài liệu thiết kế
 
@@ -10,66 +10,77 @@ CANONICAL_BD_STATUS: NOT_FOUND
 BUSINESS_CODE_STATUS: CREATED_FROM_CURRENT_RUNTIME
 ```
 
-- Root `README.md` và một số contract README vẫn trỏ tới `docs/BD/`, nhưng
-  directory đó không tồn tại.
-- `.agent/docs/dd/` chỉ có template/example không thuộc Study2Work runtime.
-- Không dùng template, diagram hoặc Git history để tự hoàn thiện request,
-  response, business rule hay database mapping còn thiếu.
-- Work có contract hiện hành giới hạn tại `contracts/openapi/work/openapi.json`
-  và hai event schema trong `contracts/events/study-work/`.
-- Study chỉ có placeholder `contracts/openapi/study/README.md`, chưa có OpenAPI.
+- Root README/contract README có chỗ trỏ `docs/BD/`, nhưng directory đó không có trong source snapshot.
+- Không dùng template, diagram hoặc Git history để tự hoàn thiện request/response/business rule/database mapping thiếu.
+- Work có executable contract tại `contracts/openapi/work/openapi.json` và Study->Work event schemas.
+- Study OpenAPI chỉ có placeholder README; AI không có OpenAPI hiện hành.
+
+## Context system
+
+```text
+ROOT_ROUTER: AGENTS.md
+CONTEXT_REGISTRY: .agents/AGENTS.md
+MANIFEST: .agents/context-manifest.json
+VALIDATOR: scripts/validate-agent-context.mjs
+STUDY_LEGACY_AGENT_CONTEXT: REMOVED
+```
+
+Deep scopes:
+
+- `server-study`: `.agents/server-study/AGENTS.md`
+- `server-work`: `.agents/server-work/AGENTS.md`
+- `server-ai`: `.agents/server-ai/AGENTS.md`
+
+Mobile/Web giữ `SKELETON_ONLY` theo scope đã duyệt.
 
 ## Study server
 
 ```text
-SOURCE_CHANGED
-CONTEXT_STALE
-BUSINESS_MODULE_STATUS: NONE
-DECLARED_ROUTES: 10
-RUNNABLE_ROUTES: 0
+RUNTIME_STATUS: DECLARED_NOT_RUNNABLE
+BUSINESS_MODULE_STATUS: NOT_FOUND
 DATABASE_SCHEMA_STATUS: NOT_FOUND
 ```
 
-Các blocker đã xác minh:
+Blocker tại snapshot:
 
-- `app/api/v1.py` import package `app.module.*` không tồn tại.
-- `app/core/responses.py` không định nghĩa `success_response`/`error_response`
-  nhưng `main.py` và `exceptions.py` import chúng.
-- `app/core/middleware.py` import ba tên trace không tồn tại trong
-  `app/core/trace.py`.
-- `alembic.ini` và Dockerfile trỏ/copy directory `alembic/` không tồn tại.
-- Test collection import `app.main`, nên bị chặn trước khi chạy; nhiều test còn
-  dùng API response/security đã bị đổi tên hoặc xóa.
-- `apps/study-server/.agent/context/` và
-  `apps/study-server/docs/codebase/README.md` mô tả snapshot cũ. Chúng là bằng
-  chứng lịch sử về intent, không phải contract/source hiện tại.
-
-Đọc `.agents/server-study/AGENTS.md` trước mọi task Study.
-
-## AI server
-
-- Runtime route chat hoạt động theo flow tối giản khi dependency được cài, nhưng
-  không đăng ký copied core middleware/response/security/database.
-- Copied core cần nhiều package không được khai báo trong
-  `apps/ai-server/pyproject.toml`; không coi nó là runtime-active.
-- Không có DD, schema/migration, business-code catalog, test, Docker/Compose hay
-  standard response contract cho AI server.
+- `app/api/v1.py` import `app.module.auth.*` và `app.module.ai.log.*`, nhưng `app/module/` không tồn tại.
+- `app/main.py` import `success_response`, nhưng `app/core/responses.py` chỉ còn `ApiResponse.success_payload()`/`raise_error()`.
+- `app/core/exceptions.py` import `error_response`, cũng không tồn tại trong responses hiện hành.
+- `app/core/middleware.py` import `normalize_trace_id`, `set_current_trace_id`, `reset_current_trace_id`, trong khi `trace.py` expose `validate_trace_id`, `set_trace_id`, `reset_trace_id`.
+- `alembic.ini`/Dockerfile tham chiếu directory migration không tồn tại.
+- Test collection đi qua `app.main`, nên blocker import xảy ra trước khi các health/security assertion có thể được tin là runnable.
+- `apps/study-server/docs/codebase/README.md` là historical/non-authoritative nếu khác current source.
 
 ## Work server
 
-- Source, tests và Work OpenAPI cùng mô tả ba foundation endpoint.
-- Prisma hiện chỉ có `system_records`; không có Work domain model.
-- Redis mới chỉ là config/status label, chưa có client/probe.
-- Study event contract tồn tại nhưng consumer/HMAC/idempotency/snapshot chưa
-  được implement.
-- DD public-domain được README nhắc tới nhưng nguồn `docs/BD` đang thiếu.
+```text
+RUNTIME_STATUS: VERIFIED_FOUNDATION
+OPENAPI_STATUS: VERIFIED_FOUNDATION
+DATABASE_SCHEMA_STATUS: VERIFIED_FOUNDATION
+```
 
-## Root-level drift
+- Ba endpoint hiện hành: `/api/v1`, `/health/live`, `/health/ready`.
+- Global Nest auth guard tồn tại nhưng cả ba foundation controller đều public.
+- Readiness probe PostgreSQL bằng Prisma `SELECT 1`.
+- Redis chỉ được parse/configure và report label; chưa có Redis client/probe.
+- Prisma chỉ có `system_records`; chưa có Work domain models/callers.
+- Study event consumer/HMAC/idempotency/local snapshot chưa được implement.
 
-- `tests/smoke_test.py` import top-level `app`, gọi auth routes và schema tạm
-  không thuộc một package runnable ở repository root; không dùng nó như verified
-  contract.
-- Root runtime map không liệt kê AI server dù root Python workspace có member
-  `apps/ai-server`.
-- Các deletion đang có trong working tree là user-owned; không restore trong
-  task khác nếu chưa được yêu cầu rõ.
+## AI server
+
+```text
+RUNTIME_STATUS: VERIFIED_MINIMAL_CHAT
+COPIED_CORE_STATUS: UNWIRED
+DATABASE_RUNTIME_USAGE: NONE
+TEST_STATUS: NOT_FOUND
+```
+
+- Runtime flow: FastAPI -> `/api/v1/chat_log_ai` -> `chat_log_ai()` -> `OllamaService.generate()`.
+- `app/core/*` phần lớn là copied infrastructure và không được đăng ký từ `app/main.py`.
+- `pyproject.toml` chỉ khai báo FastAPI/httpx/uvicorn; copied DB/security/config code cần package ngoài dependency set hiện tại.
+- `query.py` và `validate.py` của chat là empty placeholders.
+- Không có schema/migration/business-code catalog/OpenAPI/test cho AI server.
+
+## Drift rule
+
+Nếu tracked source của deep scope thay đổi sau `sourceCommit`, validator báo `CONTEXT_STALE`. Khi đó phải đọc source mới và cập nhật context; không chỉ đổi commit trong manifest để làm validator xanh.
