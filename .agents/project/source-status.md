@@ -8,10 +8,12 @@ Deep-context được đối chiếu tại source commit `5a5c2c826ddcc2931a9398
 DD_STATUS: NOT_FOUND
 CANONICAL_BD_STATUS: NOT_FOUND
 BUSINESS_CODE_STATUS: CREATED_FROM_CURRENT_RUNTIME
+DIAGRAM_API_CONTRACT_STATUS: APPROVED_DESIGN_CONTRACT
 ```
 
 - Root README/contract README có chỗ trỏ `docs/BD/`, nhưng directory đó không có trong source snapshot.
 - Không dùng template, diagram hoặc Git history để tự hoàn thiện request/response/business rule/database mapping thiếu.
+- `docs/lists/list_api.md` và `docs/diagrams/AC_UNICA/` là approved V1 design contract theo yêu cầu được phê duyệt; các schema và `DESIGN_*` code ở đó vẫn là `DESIGN_PROPOSAL`, không phải runtime/OpenAPI evidence.
 - Work có executable contract tại `contracts/openapi/work/openapi.json` và Study->Work event schemas.
 - Study OpenAPI chỉ có placeholder README; AI không có OpenAPI hiện hành.
 

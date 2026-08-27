@@ -1,43 +1,211 @@
-# Study2Work — Study API List từ `docs/BD/diagram`
+# Study2Work — Contract API V1 từ sơ đồ AC_UNICA
 
-> Phạm vi: Chỉ lấy API xuất hiện trực tiếp trong `docs/BD/diagram/`.
-> Không lấy API từ API Catalog, DD cũ, BD suy dẫn hoặc endpoint tự bổ sung.
+> **Trạng thái:** `APPROVED_DESIGN_CONTRACT` — nguồn chuẩn V1 để tạo OpenAPI/implementation sau này; chưa runtime-verified.
+>
+> **Phạm vi:** Giữ nguyên 102 endpoint AC_UNICA và thêm `GET /api/v1/operations/{operation_id}` cho job tracking. Không thay đổi runtime, OpenAPI, UC hoặc ERD.
+>
+> **DISCREPANCY:** Schema thiếu trong sơ đồ được đặc tả mới ở đây với trạng thái design-only; không khẳng định persistence mapping cho Orders, Categories, Reviews, Content, Support, Achievements và Uploads.
 
-| # | Method | Endpoint | Diagram |
-|---:|---|---|---|
-| 1 | GET | `/api/v1/catalog/learning-paths` | SEQ-02 |
-| 2 | GET | `/api/v1/catalog/courses/{slug}` | SEQ-02 |
-| 3 | GET | `/api/v1/catalog/sample-lessons/{lesson_id}` | SEQ-02 |
-| 4 | POST | `/api/v1/auth/register` | SEQ-03 |
-| 5 | POST | `/api/v1/auth/login` | SEQ-03 |
-| 6 | POST | `/api/v1/auth/verify-contact` | SEQ-03 |
-| 7 | GET | `/api/v1/onboarding/current` | SEQ-04 |
-| 8 | PATCH | `/api/v1/onboarding/draft` | SEQ-04 |
-| 9 | GET | `/api/v1/onboarding/recommended-paths` | SEQ-04 |
-| 10 | POST | `/api/v1/onboarding/confirm` | SEQ-04 |
-| 11 | POST | `/api/v1/learning-paths/{path_id}/activate` | SEQ-05 |
-| 12 | GET | `/api/v1/lessons/{lesson_id}/study` | SEQ-06 |
-| 13 | PATCH | `/api/v1/lessons/{lesson_id}/progress` | SEQ-06 |
-| 14 | GET | `/api/v1/exercises/{assignment_id}` | SEQ-07 |
-| 15 | POST | `/api/v1/exercises/{assignment_id}/submissions` | SEQ-07 |
-| 16 | PATCH | `/api/v1/admin/exercise-submissions/{submission_id}/review` | SEQ-07 |
-| 17 | GET | `/api/v1/community-groups` | SEQ-09 |
-| 18 | POST | `/api/v1/community-groups/{group_id}/open-link` | SEQ-09 |
-| 19 | POST | `/api/v1/community-groups/{group_id}/reports` | SEQ-09 |
-| 20 | PATCH | `/api/v1/admin/community-groups/{group_id}` | SEQ-09 |
-| 21 | GET | `/api/v1/notifications` | SEQ-10 |
-| 22 | PATCH | `/api/v1/notifications/{notification_id}/read` | SEQ-10 |
-| 23 | PUT | `/api/v1/notification-settings/me` | SEQ-10 |
-| 24 | POST | `/api/v1/admin/notifications` | SEQ-10 |
-| 25 | POST | `/api/v1/admin/content/{content_type}/{content_id}/pre-publish-check` | SEQ-11 |
-| 26 | POST | `/api/v1/admin/content/{content_type}/{content_id}/publish` | SEQ-11 |
-| 27 | POST | `/api/v1/support-requests` | SEQ-12 |
-| 28 | GET | `/api/v1/admin/learners/{learner_id}/support-profile` | SEQ-12 |
-| 29 | POST | `/api/v1/admin/support-requests/{request_id}/resolve` | SEQ-12 |
-| 30 | GET | `/api/v1/admin/reports/overview` | SEQ-13 |
-| 31 | GET | `/api/v1/admin/reports/alerts` | SEQ-13 |
-| 32 | GET | `/api/v1/admin/audit-logs` | SEQ-14 |
+## Quy ước contract
+
+- Success response dùng `ApiEnvelope<T>`; `data` mang schema nghiệp vụ, `meta` mang pagination/operation khi cần.
+- ID domain là `int64`; `operation_id`/`traceId` là `uuid`; thời gian ISO-8601; tiền là `decimal-string`; `!` bắt buộc, `?` optional.
+- Success: read/sync action `200`, create `201`, queue/job `202`; DELETE trả `200` để giữ envelope.
+- Error dùng `DESIGN_*`; `reason` phân biệt điều kiện nghiệp vụ đặc thù, không tạo code riêng cho từng endpoint.
+- `GET /api/v1/admin/reports/community-impact/export` giữ GET theo diagram và trả `202` operation.
+
+## Business code design-only
+
+| HTTP | Business code | Ý nghĩa |
+|---:|---|---|
+| 200 | `DESIGN_RESOURCE_RETRIEVED`, `DESIGN_RESOURCE_UPDATED`, `DESIGN_RESOURCE_DELETED`, `DESIGN_OPERATION_RETRIEVED` | Đọc, thay đổi đồng bộ hoặc tra cứu job. |
+| 201 | `DESIGN_RESOURCE_CREATED` | Tạo resource đồng bộ. |
+| 202 | `DESIGN_OPERATION_ACCEPTED` | Job queued; poll `/api/v1/operations/{operation_id}`. |
+| 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Bearer JWT thiếu/không hợp lệ. |
+| 403 | `DESIGN_ACCESS_DENIED` | Sai role, ownership hoặc access. |
+| 404 | `DESIGN_RESOURCE_NOT_FOUND` | Resource/operation không tồn tại. |
+| 409 | `DESIGN_STATE_CONFLICT` | Trạng thái không hợp lệ/trùng. |
+| 422 | `DESIGN_VALIDATION_ERROR` | Schema hoặc business validation lỗi. |
+| 503 | `DESIGN_DEPENDENCY_UNAVAILABLE` | Payment/storage/delivery/export lỗi. |
+| 500 | `DESIGN_INTERNAL_ERROR` | Lỗi không xác định. |
+
+## Reusable API schemas
+
+| Schema | Fields |
+|---|---|
+| `ApiEnvelope<T>` | success:boolean, businessCode:string, message:string, data:T, meta:object, traceId:uuid |
+| `PageMeta` | page:int32, size:int32, total:int64, total_pages:int32 |
+| `Page<T>` | items:T[], pagination:PageMeta |
+| `UserProfile` | id:int64, full_name:string, email:email, role:UserRole, avatar_url?:uri, bio?:string, phone?:string, status:UserStatus, created_at:date-time, updated_at:date-time |
+| `Course` | id:int64, title:string, description?:string, thumbnail_url?:uri, price:decimal-string, status:CourseStatus, mentor:UserSummary, category?:Category |
+| `Category` | id:int64, name:string, slug:string, description?:string |
+| `Lesson` | id:int64, course_id:int64, title:string, content?:string, video_url?:uri, order:int32, status:LessonStatus |
+| `Resource` | id:int64, name:string, type:ResourceType, url?:uri, visibility:ResourceVisibility, lesson_id?:int64 |
+| `Enrollment` | id:int64, course_id:int64, user_id:int64, status:EnrollmentStatus, enrolled_at:date-time, completed_at?:date-time |
+| `Order` | id:int64, course_id:int64, user_id:int64, amount:decimal-string, currency:string, status:OrderStatus, created_at:date-time |
+| `Payment` | id:int64, order_id:int64, provider:PaymentProvider, amount:decimal-string, status:PaymentStatus, transaction_code?:string, paid_at?:date-time |
+| `Quiz` | id:int64, course_id:int64, title:string, duration_minutes?:int32, passing_score:decimal-string, questions:QuizQuestion[] |
+| `QuizAttempt` | id:int64, quiz_id:int64, status:AttemptStatus, started_at:date-time, submitted_at?:date-time, score?:decimal-string, answers:QuizAnswer[] |
+| `Assignment` | id:int64, course_id:int64, title:string, description?:string, due_at?:date-time, max_score:decimal-string |
+| `Submission` | id:int64, assignment_id:int64, user_id:int64, content?:string, files:UploadAsset[], status:SubmissionStatus, submitted_at:date-time, score?:decimal-string, feedback?:string |
+| `Discussion` | id:int64, course_id:int64, title:string, content:string, author:UserSummary, status:DiscussionStatus, comments:DiscussionComment[] |
+| `Notification` | id:int64, title:string, content:string, channels:NotificationChannel[], status:NotificationStatus, read_at?:date-time, scheduled_at?:date-time, created_at:date-time |
+| `Content` | id:int64, course_id:int64, content_type:ContentType, title:string, payload:object, status:ContentStatus, parent_id?:int64, order:int32 |
+| `SupportRequest` | id:int64, course_id:int64, student:UserSummary, status:SupportStatus, messages:SupportMessage[], created_at:date-time, resolved_at?:date-time |
+| `Lecture` | id:int64, course_id:int64, title:string, content?:string, assets:UploadAsset[], order:int32, status:LessonStatus |
+| `Achievement` | id:int64, code:string, title:string, awarded_at:date-time, course_id?:int64 |
+| `Report` | period:DateRange, metrics:ImpactMetric[], generated_at:date-time |
+| `UploadAsset` | id:int64, name:string, url:uri, content_type:string, size_bytes:int64, status:UploadStatus |
+| `Operation` | id:uuid, kind:OperationKind, status:OperationStatus, owner_id:int64, submitted_at:date-time, updated_at:date-time, completed_at?:date-time, result?:Payment|NotificationDelivery|ExportAsset, error?:OperationError |
+| `DeleteResult` | id:int64, status:"deleted", deleted_at:date-time |
+| `ActionResult` | status:string, reason?:string |
+| `UserSummary` | {id:int64, full_name:string, avatar_url?:uri} |
+| `QuizQuestion` | {id:int64, text:string, type:QuestionType, choices:QuizChoice[]} |
+| `QuizAnswer` | {question_id:int64, choice_ids?:int64[], text_answer?:string, correct?:boolean, score?:decimal-string} |
+| `DiscussionComment` | {id:int64, discussion_id:int64, content:string, author:UserSummary, created_at:date-time} |
+| `SupportMessage` | {id:int64, author:UserSummary, content:string, attachments:UploadAsset[], created_at:date-time} |
+| `NotificationDelivery` | {notification_id:int64, status:OperationStatus, queued:int32, sent:int32, failed:int32} |
+| `DateRange` | {from:date, to:date} |
+| `ImpactMetric` | {key:string, value:decimal-string, label:string} |
+| `OperationError` | {reason:string, message:string} |
+| `ExportAsset` | {download_url:uri, format:ExportFormat, expires_at:date-time} |
+
+## Tổng quan
+
+| Nhóm sơ đồ | Actor | AC / UC | API unique đặt tại nhóm |
+|---|---|---|---:|
+| GUEST / ACCOUNT & DISCOVERY | Guest | AC-01–AC-06 | 12 |
+| STUDENT / LEARNING & INTERACTION | Student | AC-11–AC-20 | 33 |
+| MENTOR / TEACHING & SUPPORT | Mentor | AC-21–AC-26 | 22 |
+| ADMIN / SYSTEM MANAGEMENT | Admin | AC-31–AC-38 | 36 |
+
+## GUEST / ACCOUNT & DISCOVERY
+
+| # | Tên API | Endpoint | Actor / RBAC | Input schema | Success response | Status / lỗi | AC / UC nguồn |
+|---:|---|---|---|---|---|---|---|
+| 1 | Tạo tài khoản mới | `POST /api/v1/auth/register` | Public; no Bearer token | `body{email:email!, password:string!, full_name:string!}` | `ApiEnvelope&lt;UserProfile&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>422 `DESIGN_VALIDATION_ERROR`<br>409 `DESIGN_STATE_CONFLICT`<br>500 `DESIGN_INTERNAL_ERROR` | AC-01 Đăng ký tài khoản |
+| 2 | Gửi mã/link xác thực nếu bật verification | `POST /api/v1/auth/verify-email/send` | Public; no Bearer token | `body{user_id:int64!, email:email!}` | `ApiEnvelope&lt;ActionResult&gt;` | 202 `DESIGN_OPERATION_ACCEPTED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-01 Đăng ký tài khoản |
+| 3 | Xác thực thông tin đăng nhập | `POST /api/v1/auth/login` | Public; no Bearer token | `body{email:email!, password:string!}` | `ApiEnvelope&lt;UserProfile&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-02 Đăng nhập |
+| 4 | Nạp profile hiện tại<br>Lấy hồ sơ hiện tại | `GET /api/v1/users/me` | Bearer JWT; role=Student | `auth{bearer_jwt!}; auth{bearer_jwt!}` | `ApiEnvelope&lt;UserProfile&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>500 `DESIGN_INTERNAL_ERROR` | AC-02 Đăng nhập<br>AC-11 Quản lý hồ sơ cá nhân |
+| 5 | Nạp danh mục cho bộ lọc<br>Nạp bộ lọc danh mục nếu chưa có Conditional cache-first. | `GET /api/v1/categories` | Public; no Bearer token | `query{locale?:string}` | `ApiEnvelope&lt;Page<Category>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-03 Xem danh sách khóa học<br>AC-04 Tìm kiếm khóa học |
+| 6 | Lấy danh sách khóa học public | `GET /api/v1/courses` | Public; no Bearer token | `query{category?:int64, page?:int32, size?:int32, sort?:string}` | `ApiEnvelope&lt;Page<Course>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-03 Xem danh sách khóa học |
+| 7 | Tìm khóa học | `GET /api/v1/courses/search` | Public; no Bearer token | `query{q?:string, category?:int64, page?:int32, sort?:string}` | `ApiEnvelope&lt;Page<Course>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-04 Tìm kiếm khóa học |
+| 8 | Lấy thông tin khóa học<br>Nạp giá/trạng thái khóa học | `GET /api/v1/courses/{course_id}` | Public; no Bearer token | `path{course_id:int64!}` | `ApiEnvelope&lt;Page<Course>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-05 Xem chi tiết khóa học<br>AC-12 Đăng ký khóa học |
+| 9 | Lấy chương/bài học public | `GET /api/v1/courses/{course_id}/curriculum` | Public; no Bearer token | `path{course_id:int64!}` | `ApiEnvelope&lt;Page<Lesson>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-05 Xem chi tiết khóa học |
+| 10 | Lấy đánh giá | `GET /api/v1/courses/{course_id}/reviews` | Public; no Bearer token | `path{course_id:int64!}; query{page?:int32, rating filter?:string}` | `ApiEnvelope&lt;Page<Discussion>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-05 Xem chi tiết khóa học |
+| 11 | Lấy danh sách tài nguyên | `GET /api/v1/courses/{course_id}/resources` | Public; no Bearer token | `path{course_id:int64!}` | `ApiEnvelope&lt;Resource&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-06 Xem tài nguyên |
+| 12 | Lấy metadata / signed URL | `GET /api/v1/resources/{resource_id}` | Public; no Bearer token | `path{resource_id:int64!}` | `ApiEnvelope&lt;Resource&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-06 Xem tài nguyên |
+
+## STUDENT / LEARNING & INTERACTION
+
+| # | Tên API | Endpoint | Actor / RBAC | Input schema | Success response | Status / lỗi | AC / UC nguồn |
+|---:|---|---|---|---|---|---|---|
+| 13 | Upload avatar nếu có | `POST /api/v1/users/me/avatar` | Bearer JWT; role=Student | `body{image:string!}` | `ApiEnvelope&lt;UserProfile&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-11 Quản lý hồ sơ cá nhân |
+| 14 | Cập nhật hồ sơ | `PUT /api/v1/users/me/profile` | Bearer JWT; role=Student | `body{full_name:string!, bio:string!, phone:string!, avatar_url...:uri!}` | `ApiEnvelope&lt;UserProfile&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-11 Quản lý hồ sơ cá nhân |
+| 15 | Kiểm tra trạng thái enrollment | `GET /api/v1/courses/{course_id}/enrollment-status` | Public; no Bearer token | `path{course_id:int64!}` | `ApiEnvelope&lt;Enrollment&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-12 Đăng ký khóa học |
+| 16 | Tạo đơn hàng cho paid course Conditional | `POST /api/v1/orders` | Bearer JWT; role=Student | `body{course_id:int64!, payment_provider:PaymentProvider!}` | `ApiEnvelope&lt;Order&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-12 Đăng ký khóa học |
+| 17 | Khởi tạo/xác nhận thanh toán Conditional | `POST /api/v1/payments` | Bearer JWT; role=Student | `body{order_id:int64!, provider:string!}` | `ApiEnvelope&lt;Operation&gt;` | 202 `DESIGN_OPERATION_ACCEPTED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>503 `DESIGN_DEPENDENCY_UNAVAILABLE`<br>500 `DESIGN_INTERNAL_ERROR` | AC-12 Đăng ký khóa học |
+| 18 | Theo dõi tác vụ bất đồng bộ | `GET /api/v1/operations/{operation_id}` | Bearer JWT; operation owner | `path{operation_id:int64!}` | `ApiEnvelope&lt;Operation&gt;` | 200 `DESIGN_OPERATION_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-12 Đăng ký khóa học<br>AC-25 Gửi thông báo<br>AC-36 Quản lý thông báo<br>AC-38 Báo cáo tác động cộng đồng |
+| 19 | Tạo quyền học | `POST /api/v1/courses/{course_id}/enrollments` | Bearer JWT; role=Student | `path{course_id:int64!}; body{course_id:int64!, user từ JWT:string!}` | `ApiEnvelope&lt;Enrollment&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>409 `DESIGN_STATE_CONFLICT`<br>500 `DESIGN_INTERNAL_ERROR` | AC-12 Đăng ký khóa học |
+| 20 | Reload khóa học đã đăng ký<br>Lấy enrollment/course list | `GET /api/v1/users/me/courses` | Bearer JWT; role=Student | `query{status?:string, page?:int32}` | `ApiEnvelope&lt;UserProfile&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-12 Đăng ký khóa học<br>AC-13 Xem khóa học đã đăng ký |
+| 21 | Lấy tiến độ tổng hợp<br>Lấy tiến độ tổng quan | `GET /api/v1/users/me/progress` | Bearer JWT; role=Student | `query{course_id list hoặc aggregate?:string}` | `ApiEnvelope&lt;UserProfile&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>500 `DESIGN_INTERNAL_ERROR` | AC-13 Xem khóa học đã đăng ký<br>AC-18 Theo dõi tiến độ học tập |
+| 22 | Kiểm tra quyền truy cập lesson | `GET /api/v1/lessons/{lesson_id}/access` | Bearer JWT; role=Student | `path{lesson_id:int64!}` | `ApiEnvelope&lt;Lesson&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-14 Học bài học |
+| 23 | Khởi tạo/lưu lần bắt đầu học | `POST /api/v1/lessons/{lesson_id}/start` | Bearer JWT; role=Student | `path{lesson_id:int64!}` | `ApiEnvelope&lt;Lesson&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-14 Học bài học |
+| 24 | Nạp nội dung bài học<br>Lấy nội dung chính | `GET /api/v1/lessons/{lesson_id}` | Bearer JWT; role=Student | `path{lesson_id:int64!}` | `ApiEnvelope&lt;Lesson&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-14 Học bài học<br>AC-15 Xem nội dung bài học |
+| 25 | Lưu vị trí và trạng thái | `PATCH /api/v1/lessons/{lesson_id}/progress` | Bearer JWT; role=Student | `path{lesson_id:int64!}; body{position:int32!, percent:int32!, completed:boolean!}` | `ApiEnvelope&lt;Lesson&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-14 Học bài học |
+| 26 | Lấy tài nguyên đính kèm | `GET /api/v1/lessons/{lesson_id}/resources` | Bearer JWT; role=Student | `path{lesson_id:int64!}` | `ApiEnvelope&lt;Lesson&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-15 Xem nội dung bài học |
+| 27 | Tìm bài tiếp theo theo curriculum | `GET /api/v1/lessons/{lesson_id}/next` | Bearer JWT; role=Student | `path{lesson_id:int64!}` | `ApiEnvelope&lt;Lesson&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-15 Xem nội dung bài học |
+| 28 | Lấy metadata/câu hỏi được phép hiển thị | `GET /api/v1/quizzes/{quiz_id}` | Bearer JWT; role=Student | `path{quiz_id:int64!}` | `ApiEnvelope&lt;Quiz&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-16 Làm bài kiểm tra |
+| 29 | Tạo attempt | `POST /api/v1/quizzes/{quiz_id}/attempts` | Bearer JWT; role=Student | `path{quiz_id:int64!}` | `ApiEnvelope&lt;QuizAttempt&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>409 `DESIGN_STATE_CONFLICT`<br>500 `DESIGN_INTERNAL_ERROR` | AC-16 Làm bài kiểm tra |
+| 30 | Autosave/lưu câu trả lời | `PUT /api/v1/attempts/{attempt_id}/answers` | Bearer JWT; role=Student | `path{attempt_id:int64!}; body{question_id:int64!, answer(s):string!}` | `ApiEnvelope&lt;QuizAttempt&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-16 Làm bài kiểm tra |
+| 31 | Khóa attempt và bắt đầu chấm | `POST /api/v1/attempts/{attempt_id}/submit` | Bearer JWT; role=Student | `path{attempt_id:int64!}` | `ApiEnvelope&lt;QuizAttempt&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>409 `DESIGN_STATE_CONFLICT`<br>500 `DESIGN_INTERNAL_ERROR` | AC-16 Làm bài kiểm tra |
+| 32 | Lấy điểm/kết quả được phép xem | `GET /api/v1/attempts/{attempt_id}/result` | Bearer JWT; role=Student | `path{attempt_id:int64!}` | `ApiEnvelope&lt;QuizAttempt&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-16 Làm bài kiểm tra |
+| 33 | Lấy đề bài/rule/deadline | `GET /api/v1/assignments/{assignment_id}` | Bearer JWT; role=Student | `path{assignment_id:int64!}` | `ApiEnvelope&lt;Assignment&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-17 Nộp bài tập |
+| 34 | Upload file nếu có Conditional<br>Upload video/tài liệu nếu có | `POST /api/v1/uploads` | Bearer JWT; role∈{Student,Mentor} | `multipart{file:binary!, purpose:UploadPurpose!, course_id?:int64}` | `ApiEnvelope&lt;UploadAsset&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>503 `DESIGN_DEPENDENCY_UNAVAILABLE`<br>500 `DESIGN_INTERNAL_ERROR` | AC-17 Nộp bài tập<br>AC-21 Đăng bài giảng |
+| 35 | Tạo/nộp submission | `POST /api/v1/assignments/{assignment_id}/submissions` | Bearer JWT; role=Student | `path{assignment_id:int64!}; body{text:string!, file refs:string!}` | `ApiEnvelope&lt;Submission&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>409 `DESIGN_STATE_CONFLICT`<br>500 `DESIGN_INTERNAL_ERROR` | AC-17 Nộp bài tập |
+| 36 | Xác nhận dữ liệu đã nộp | `GET /api/v1/submissions/{submission_id}` | Bearer JWT; role=Student | `path{submission_id:int64!}` | `ApiEnvelope&lt;Submission&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-17 Nộp bài tập |
+| 37 | Lấy tiến độ chi tiết course | `GET /api/v1/users/me/progress/{course_id}` | Bearer JWT; role=Student | `path{course_id:int64!}` | `ApiEnvelope&lt;UserProfile&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-18 Theo dõi tiến độ học tập |
+| 38 | Lấy achievement/badge nếu có | `GET /api/v1/users/me/achievements` | Bearer JWT; role=Student | `query{course_id?:int64}` | `ApiEnvelope&lt;Page<Achievement>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>500 `DESIGN_INTERNAL_ERROR` | AC-18 Theo dõi tiến độ học tập |
+| 39 | Lấy danh sách thread | `GET /api/v1/discussions` | Bearer JWT; role=Student | `query{course_id?:int64, page?:int32, sort?:string}` | `ApiEnvelope&lt;Page<Discussion>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>500 `DESIGN_INTERNAL_ERROR` | AC-19 Đặt câu hỏi / Thảo luận |
+| 40 | Tạo topic/câu hỏi mới Conditional | `POST /api/v1/discussions` | Bearer JWT; role=Student | `body{course_id:int64!, title:string!, content:int64!}` | `ApiEnvelope&lt;Page<Discussion>&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-19 Đặt câu hỏi / Thảo luận |
+| 41 | Thêm bình luận/trả lời Conditional | `POST /api/v1/discussions/{discussion_id}/comments` | Bearer JWT; role=Student | `path{discussion_id:int64!}; body{content:int64!}` | `ApiEnvelope&lt;Page<Discussion>&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-19 Đặt câu hỏi / Thảo luận |
+| 42 | Reload thread sau thao tác | `GET /api/v1/discussions/{discussion_id}` | Bearer JWT; role=Student | `path{discussion_id:int64!}` | `ApiEnvelope&lt;Page<Discussion>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-19 Đặt câu hỏi / Thảo luận |
+| 43 | Lấy notification list | `GET /api/v1/users/me/notifications` | Bearer JWT; role=Student | `query{unread_only?:boolean, page?:int32}` | `ApiEnvelope&lt;Page<Notification>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>500 `DESIGN_INTERNAL_ERROR` | AC-20 Nhận thông báo |
+| 44 | Đánh dấu một thông báo đã đọc Conditional | `PATCH /api/v1/notifications/{notification_id}/read` | Bearer JWT; role=Student | `path{notification_id:int64!}` | `ApiEnvelope&lt;Page<Notification>&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-20 Nhận thông báo |
+| 45 | Đánh dấu tất cả đã đọc Conditional | `PATCH /api/v1/notifications/read-all` | Bearer JWT; role=Student | `body{}` | `ApiEnvelope&lt;Page<Notification>&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-20 Nhận thông báo |
+
+## MENTOR / TEACHING & SUPPORT
+
+| # | Tên API | Endpoint | Actor / RBAC | Input schema | Success response | Status / lỗi | AC / UC nguồn |
+|---:|---|---|---|---|---|---|---|
+| 46 | Lấy course Mentor được quản lý | `GET /api/v1/mentor/courses` | Bearer JWT; role=Mentor | `query{status?:CourseStatus, page?:int32=1, size?:int32=20}` | `ApiEnvelope&lt;Page<Course>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-21 Đăng bài giảng |
+| 47 | Tạo lecture | `POST /api/v1/mentor/courses/{course_id}/lectures` | Bearer JWT; role=Mentor | `path{course_id:int64!}; body{title:string!, content:int64!, asset refs:string!, order:int32!}` | `ApiEnvelope&lt;Lecture&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-21 Đăng bài giảng |
+| 48 | Reload lecture vừa tạo | `GET /api/v1/mentor/lectures/{lecture_id}` | Bearer JWT; role=Mentor | `path{lecture_id:int64!}` | `ApiEnvelope&lt;Lecture&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-21 Đăng bài giảng |
+| 49 | Lấy cây nội dung course | `GET /api/v1/mentor/courses/{course_id}/content` | Bearer JWT; role=Mentor | `path{course_id:int64!}` | `ApiEnvelope&lt;Content&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-22 Quản lý nội dung |
+| 50 | Tạo nội dung mới Conditional | `POST /api/v1/mentor/content` | Bearer JWT; role=Mentor | `body{course_id:int64!, content_type:ContentType!, title:string!, payload:object!}` | `ApiEnvelope&lt;Content&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-22 Quản lý nội dung |
+| 51 | Cập nhật nội dung Conditional | `PUT /api/v1/mentor/content/{content_id}` | Bearer JWT; role=Mentor | `path{content_id:int64!}` | `ApiEnvelope&lt;Content&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-22 Quản lý nội dung |
+| 52 | Publish/unpublish Conditional; validate readiness | `PATCH /api/v1/mentor/content/{content_id}/publish` | Bearer JWT; role=Mentor | `path{content_id:int64!}` | `ApiEnvelope&lt;Content&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-22 Quản lý nội dung |
+| 53 | Xóa nội dung nếu được phép Conditional; kiểm tra dependency | `DELETE /api/v1/mentor/content/{content_id}` | Bearer JWT; role=Mentor | `path{content_id:int64!}` | `ApiEnvelope&lt;DeleteResult&gt;` | 200 `DESIGN_RESOURCE_DELETED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-22 Quản lý nội dung |
+| 54 | Lấy submissions | `GET /api/v1/mentor/submissions` | Bearer JWT; role=Mentor | `query{course_id?:int64, status?:string, page?:int32}` | `ApiEnvelope&lt;Submission&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>409 `DESIGN_STATE_CONFLICT`<br>500 `DESIGN_INTERNAL_ERROR` | AC-23 Chấm bài |
+| 55 | Lấy bài làm + rubric | `GET /api/v1/mentor/submissions/{submission_id}` | Bearer JWT; role=Mentor | `path{submission_id:int64!}` | `ApiEnvelope&lt;Submission&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-23 Chấm bài |
+| 56 | Lưu điểm | `POST /api/v1/mentor/submissions/{submission_id}/grade` | Bearer JWT; role=Mentor | `path{submission_id:int64!}; body{score:int32!, rubric items:string!}` | `ApiEnvelope&lt;Submission&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-23 Chấm bài |
+| 57 | Lưu feedback | `POST /api/v1/mentor/submissions/{submission_id}/feedback` | Bearer JWT; role=Mentor | `path{submission_id:int64!}; body{feedback text:string!, attachments:string!}` | `ApiEnvelope&lt;Submission&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-23 Chấm bài |
+| 58 | Lấy support requests | `GET /api/v1/mentor/support/requests` | Bearer JWT; role=Mentor | `query{course_id?:int64, status?:string}` | `ApiEnvelope&lt;SupportRequest&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>500 `DESIGN_INTERNAL_ERROR` | AC-24 Hỗ trợ học viên |
+| 59 | Lấy nội dung request/thread | `GET /api/v1/mentor/support/{request_id}` | Bearer JWT; role=Mentor | `path{request_id:int64!}` | `ApiEnvelope&lt;SupportRequest&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-24 Hỗ trợ học viên |
+| 60 | Gửi phản hồi | `POST /api/v1/mentor/support/{request_id}/reply` | Bearer JWT; role=Mentor | `path{request_id:int64!}; body{message:string!, attachment refs:string!}` | `ApiEnvelope&lt;SupportRequest&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-24 Hỗ trợ học viên |
+| 61 | Đóng yêu cầu Conditional | `PATCH /api/v1/mentor/support/{request_id}/resolve` | Bearer JWT; role=Mentor | `path{request_id:int64!}` | `ApiEnvelope&lt;SupportRequest&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-24 Hỗ trợ học viên |
+| 62 | Lấy tập người nhận | `GET /api/v1/mentor/courses/{course_id}/students` | Bearer JWT; role=Mentor | `path{course_id:int64!}` | `ApiEnvelope&lt;Page<Course>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-25 Gửi thông báo |
+| 63 | Tạo và phát thông báo | `POST /api/v1/mentor/notifications` | Bearer JWT; role=Mentor | `body{recipients:string!, title:string!, content:int64!, channels:string!}` | `ApiEnvelope&lt;Operation&gt;` | 202 `DESIGN_OPERATION_ACCEPTED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>503 `DESIGN_DEPENDENCY_UNAVAILABLE`<br>500 `DESIGN_INTERNAL_ERROR` | AC-25 Gửi thông báo |
+| 64 | Theo dõi trạng thái gửi | `GET /api/v1/mentor/notifications/{notification_id}/status` | Bearer JWT; role=Mentor | `path{notification_id:int64!}` | `ApiEnvelope&lt;Operation&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-25 Gửi thông báo |
+| 65 | Lấy tiến độ toàn lớp | `GET /api/v1/mentor/courses/{course_id}/progress` | Bearer JWT; role=Mentor | `path{course_id:int64!}` | `ApiEnvelope&lt;Page<Course>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-26 Theo dõi tiến độ |
+| 66 | Lấy analytics tổng hợp | `GET /api/v1/mentor/courses/{course_id}/analytics` | Bearer JWT; role=Mentor | `path{course_id:int64!}` | `ApiEnvelope&lt;Page<Course>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-26 Theo dõi tiến độ |
+| 67 | Lấy tiến độ Student | `GET /api/v1/mentor/courses/{course_id}/students/{student_id}/progress` | Bearer JWT; role=Mentor | `path{course_id:int64!, student_id:int64!}` | `ApiEnvelope&lt;Page<Course>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-26 Theo dõi tiến độ |
+
+## ADMIN / SYSTEM MANAGEMENT
+
+| # | Tên API | Endpoint | Actor / RBAC | Input schema | Success response | Status / lỗi | AC / UC nguồn |
+|---:|---|---|---|---|---|---|---|
+| 68 | Lấy danh sách user | `GET /api/v1/admin/users` | Bearer JWT; role=Admin | `query{role?:string, status?:string, keyword?:string, page?:int32}` | `ApiEnvelope&lt;UserProfile&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>500 `DESIGN_INTERNAL_ERROR` | AC-31 Quản lý người dùng |
+| 69 | Lấy chi tiết user | `GET /api/v1/admin/users/{user_id}` | Bearer JWT; role=Admin | `path{user_id:int64!}` | `ApiEnvelope&lt;UserProfile&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-31 Quản lý người dùng |
+| 70 | Cập nhật thông tin/role Conditional | `PUT /api/v1/admin/users/{user_id}` | Bearer JWT; role=Admin | `path{user_id:int64!}` | `ApiEnvelope&lt;UserProfile&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-31 Quản lý người dùng |
+| 71 | Khóa/mở khóa user Conditional | `PATCH /api/v1/admin/users/{user_id}/status` | Bearer JWT; role=Admin | `path{user_id:int64!}` | `ApiEnvelope&lt;UserProfile&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-31 Quản lý người dùng |
+| 72 | Xóa/soft delete user Conditional; kiểm tra ràng buộc | `DELETE /api/v1/admin/users/{user_id}` | Bearer JWT; role=Admin | `path{user_id:int64!}` | `ApiEnvelope&lt;DeleteResult&gt;` | 200 `DESIGN_RESOURCE_DELETED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-31 Quản lý người dùng |
+| 73 | Lấy danh sách course | `GET /api/v1/admin/courses` | Bearer JWT; role=Admin | `query{status?:string, mentor?:int64, category?:int64, page?:int32}` | `ApiEnvelope&lt;Page<Course>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-32 Quản lý khóa học |
+| 74 | Lấy chi tiết course quản trị | `GET /api/v1/admin/courses/{course_id}` | Bearer JWT; role=Admin | `path{course_id:int64!}` | `ApiEnvelope&lt;Page<Course>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-32 Quản lý khóa học |
+| 75 | Cập nhật course Conditional | `PUT /api/v1/admin/courses/{course_id}` | Bearer JWT; role=Admin | `path{course_id:int64!}` | `ApiEnvelope&lt;Page<Course>&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-32 Quản lý khóa học |
+| 76 | Thay đổi trạng thái Conditional: draft/published/suspended | `PATCH /api/v1/admin/courses/{course_id}/status` | Bearer JWT; role=Admin | `path{course_id:int64!}` | `ApiEnvelope&lt;Page<Course>&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-32 Quản lý khóa học |
+| 77 | Xóa/soft delete Conditional; kiểm tra enrollment/content | `DELETE /api/v1/admin/courses/{course_id}` | Bearer JWT; role=Admin | `path{course_id:int64!}` | `ApiEnvelope&lt;DeleteResult&gt;` | 200 `DESIGN_RESOURCE_DELETED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-32 Quản lý khóa học |
+| 78 | Lấy pending content | `GET /api/v1/admin/content/pending` | Bearer JWT; role=Admin | `query{type?:string, course?:int64, page?:int32}` | `ApiEnvelope&lt;Content&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>500 `DESIGN_INTERNAL_ERROR` | AC-33 Duyệt nội dung |
+| 79 | Lấy chi tiết + metadata review | `GET /api/v1/admin/content/{content_id}` | Bearer JWT; role=Admin | `path{content_id:int64!}` | `ApiEnvelope&lt;Content&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-33 Duyệt nội dung |
+| 80 | Phê duyệt nội dung Conditional | `PATCH /api/v1/admin/content/{content_id}/approve` | Bearer JWT; role=Admin | `path{content_id:int64!}` | `ApiEnvelope&lt;Content&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-33 Duyệt nội dung |
+| 81 | Từ chối nội dung Conditional | `PATCH /api/v1/admin/content/{content_id}/reject` | Bearer JWT; role=Admin | `path{content_id:int64!}; body{reason:string!}` | `ApiEnvelope&lt;Content&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-33 Duyệt nội dung |
+| 82 | Lấy danh sách lesson | `GET /api/v1/admin/lessons` | Bearer JWT; role=Admin | `query{course?:int64, status?:string, type?:string}` | `ApiEnvelope&lt;Lesson&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>500 `DESIGN_INTERNAL_ERROR` | AC-34 Quản lý bài học |
+| 83 | Lấy lesson detail | `GET /api/v1/admin/lessons/{lesson_id}` | Bearer JWT; role=Admin | `path{lesson_id:int64!}` | `ApiEnvelope&lt;Lesson&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-34 Quản lý bài học |
+| 84 | Cập nhật lesson Conditional | `PUT /api/v1/admin/lessons/{lesson_id}` | Bearer JWT; role=Admin | `path{lesson_id:int64!}` | `ApiEnvelope&lt;Lesson&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-34 Quản lý bài học |
+| 85 | Đổi trạng thái Conditional | `PATCH /api/v1/admin/lessons/{lesson_id}/status` | Bearer JWT; role=Admin | `path{lesson_id:int64!}` | `ApiEnvelope&lt;Lesson&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-34 Quản lý bài học |
+| 86 | Xóa lesson Conditional; kiểm tra progress/reference | `DELETE /api/v1/admin/lessons/{lesson_id}` | Bearer JWT; role=Admin | `path{lesson_id:int64!}` | `ApiEnvelope&lt;DeleteResult&gt;` | 200 `DESIGN_RESOURCE_DELETED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-34 Quản lý bài học |
+| 87 | Lấy danh sách quiz | `GET /api/v1/admin/quizzes` | Bearer JWT; role=Admin | `query{course?:int64, status?:string, page?:int32}` | `ApiEnvelope&lt;Quiz&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>500 `DESIGN_INTERNAL_ERROR` | AC-35 Quản lý kiểm tra |
+| 88 | Tạo quiz mới Conditional | `POST /api/v1/admin/quizzes` | Bearer JWT; role=Admin | `body{config:string!, questions:string!}` | `ApiEnvelope&lt;Quiz&gt;` | 201 `DESIGN_RESOURCE_CREATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-35 Quản lý kiểm tra |
+| 89 | Cập nhật quiz Conditional | `PUT /api/v1/admin/quizzes/{quiz_id}` | Bearer JWT; role=Admin | `path{quiz_id:int64!}` | `ApiEnvelope&lt;Quiz&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-35 Quản lý kiểm tra |
+| 90 | Xóa quiz Conditional; kiểm tra attempts | `DELETE /api/v1/admin/quizzes/{quiz_id}` | Bearer JWT; role=Admin | `path{quiz_id:int64!}` | `ApiEnvelope&lt;DeleteResult&gt;` | 200 `DESIGN_RESOURCE_DELETED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-35 Quản lý kiểm tra |
+| 91 | Xem thống kê quiz Conditional | `GET /api/v1/admin/quizzes/{quiz_id}/statistics` | Bearer JWT; role=Admin | `path{quiz_id:int64!}` | `ApiEnvelope&lt;Quiz&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-35 Quản lý kiểm tra |
+| 92 | Lấy notification list | `GET /api/v1/admin/notifications` | Bearer JWT; role=Admin | `query{status?:string, channel?:string, page?:int32}` | `ApiEnvelope&lt;Notification&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>503 `DESIGN_DEPENDENCY_UNAVAILABLE`<br>500 `DESIGN_INTERNAL_ERROR` | AC-36 Quản lý thông báo |
+| 93 | Tạo/phát notification Conditional | `POST /api/v1/admin/notifications` | Bearer JWT; role=Admin | `body{recipients?:int64[], segment?:AudienceSegment, title:string!, content:string!, channels:NotificationChannel[]!}` | `ApiEnvelope&lt;Notification&gt;` | 202 `DESIGN_OPERATION_ACCEPTED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>422 `DESIGN_VALIDATION_ERROR`<br>503 `DESIGN_DEPENDENCY_UNAVAILABLE`<br>500 `DESIGN_INTERNAL_ERROR` | AC-36 Quản lý thông báo |
+| 94 | Cập nhật draft/scheduled Conditional | `PUT /api/v1/admin/notifications/{notification_id}` | Bearer JWT; role=Admin | `path{notification_id:int64!}` | `ApiEnvelope&lt;Notification&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-36 Quản lý thông báo |
+| 95 | Xóa draft/cancel nếu policy cho phép Conditional | `DELETE /api/v1/admin/notifications/{notification_id}` | Bearer JWT; role=Admin | `path{notification_id:int64!}` | `ApiEnvelope&lt;DeleteResult&gt;` | 200 `DESIGN_RESOURCE_DELETED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-36 Quản lý thông báo |
+| 96 | Xem delivery status Conditional | `GET /api/v1/admin/notifications/{notification_id}/status` | Bearer JWT; role=Admin | `path{notification_id:int64!}` | `ApiEnvelope&lt;Notification&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-36 Quản lý thông báo |
+| 97 | Lấy reported discussions | `GET /api/v1/admin/discussions/reported` | Bearer JWT; role=Admin | `query{reason?:string, severity?:string, page?:int32}` | `ApiEnvelope&lt;Page<Discussion>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>500 `DESIGN_INTERNAL_ERROR` | AC-37 Kiểm duyệt ý kiến |
+| 98 | Lấy đầy đủ thread + report detail | `GET /api/v1/admin/discussions/{discussion_id}` | Bearer JWT; role=Admin | `path{discussion_id:int64!}` | `ApiEnvelope&lt;Page<Discussion>&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>500 `DESIGN_INTERNAL_ERROR` | AC-37 Kiểm duyệt ý kiến |
+| 99 | Ẩn/khóa/cảnh báo | `PATCH /api/v1/admin/discussions/{discussion_id}/moderate` | Bearer JWT; role=Admin | `path{discussion_id:int64!}; body{action:string!, reason:string!}` | `ApiEnvelope&lt;Page<Discussion>&gt;` | 200 `DESIGN_RESOURCE_UPDATED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-37 Kiểm duyệt ý kiến |
+| 100 | Xóa/soft delete discussion Conditional | `DELETE /api/v1/admin/discussions/{discussion_id}` | Bearer JWT; role=Admin | `path{discussion_id:int64!}` | `ApiEnvelope&lt;DeleteResult&gt;` | 200 `DESIGN_RESOURCE_DELETED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>404 `DESIGN_RESOURCE_NOT_FOUND`<br>422 `DESIGN_VALIDATION_ERROR`<br>500 `DESIGN_INTERNAL_ERROR` | AC-37 Kiểm duyệt ý kiến |
+| 101 | Lấy KPI tổng quan | `GET /api/v1/admin/reports/summary` | Bearer JWT; role=Admin | `query{from?:date, to?:date}` | `ApiEnvelope&lt;Report&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>500 `DESIGN_INTERNAL_ERROR` | AC-38 Báo cáo tác động cộng đồng |
+| 102 | Lấy dữ liệu tác động cộng đồng | `GET /api/v1/admin/reports/community-impact` | Bearer JWT; role=Admin | `query{from?:string, to?:string, segment?:string}` | `ApiEnvelope&lt;Report&gt;` | 200 `DESIGN_RESOURCE_RETRIEVED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>500 `DESIGN_INTERNAL_ERROR` | AC-38 Báo cáo tác động cộng đồng |
+| 103 | Xuất báo cáo | `GET /api/v1/admin/reports/community-impact/export` | Bearer JWT; role=Admin | `query{filters?:string, format?:string}` | `ApiEnvelope&lt;Report&gt;` | 202 `DESIGN_OPERATION_ACCEPTED`<br>401 `DESIGN_AUTHENTICATION_REQUIRED`<br>403 `DESIGN_ACCESS_DENIED`<br>503 `DESIGN_DEPENDENCY_UNAVAILABLE`<br>500 `DESIGN_INTERNAL_ERROR` | AC-38 Báo cáo tác động cộng đồng |
+
+## Operation tracking
+
+`POST /api/v1/payments`, `POST /api/v1/mentor/notifications`, `POST /api/v1/admin/notifications` và `GET /api/v1/admin/reports/community-impact/export` trả `202` với `data: Operation`. Client poll `GET /api/v1/operations/{operation_id}`; chỉ owner hoặc Admin được xem operation.
 
 ## Tổng số
 
-**32 API**
+**103 API thiết kế duy nhất / 113 API-card occurrences**

@@ -13,5 +13,6 @@ Bộ Activity Diagram được tạo theo quy ước **1 UC = 1 AC; 1 AC chứa 
 ## QA
 
 - AC count: 30/30
-- Unique APIs: 102
+- Unique APIs: 103
+- API-card occurrences: 113
 - XML parse validation: required before delivery.

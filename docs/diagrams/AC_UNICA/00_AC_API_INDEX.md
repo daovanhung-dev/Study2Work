@@ -9,7 +9,7 @@
 ## Tổng quan
 
 - Tổng UC/AC: **30**
-- Tổng API unique: **102**
+- Tổng API unique: **103**
 - GUEST / ACCOUNT & DISCOVERY: **6 AC**
 - STUDENT / LEARNING & INTERACTION: **10 AC**
 - MENTOR / TEACHING & SUPPORT: **6 AC**
@@ -96,6 +96,7 @@
   - `GET /api/v1/courses/{course_id}/enrollment-status`
   - `POST /api/v1/orders`
   - `POST /api/v1/payments`
+  - `GET /api/v1/operations/{operation_id}`
   - `POST /api/v1/courses/{course_id}/enrollments`
   - `GET /api/v1/users/me/courses`
 
@@ -238,6 +239,7 @@
 - APIs:
   - `GET /api/v1/mentor/courses/{course_id}/students`
   - `POST /api/v1/mentor/notifications`
+  - `GET /api/v1/operations/{operation_id}`
   - `GET /api/v1/mentor/notifications/{notification_id}/status`
 
 #### AC-26 — Theo dõi tiến độ
@@ -319,6 +321,7 @@
 - APIs:
   - `GET /api/v1/admin/notifications`
   - `POST /api/v1/admin/notifications`
+  - `GET /api/v1/operations/{operation_id}`
   - `PUT /api/v1/admin/notifications/{notification_id}`
   - `DELETE /api/v1/admin/notifications/{notification_id}`
   - `GET /api/v1/admin/notifications/{notification_id}/status`
@@ -343,6 +346,7 @@
   - `GET /api/v1/admin/reports/summary`
   - `GET /api/v1/admin/reports/community-impact`
   - `GET /api/v1/admin/reports/community-impact/export`
+  - `GET /api/v1/operations/{operation_id}`
 
 ## API → AC / UC
 
@@ -435,6 +439,7 @@
 | `PATCH` | `/api/v1/mentor/support/{request_id}/resolve` | **AC-24** — Hỗ trợ học viên |
 | `PATCH` | `/api/v1/notifications/read-all` | **AC-20** — Nhận thông báo |
 | `PATCH` | `/api/v1/notifications/{notification_id}/read` | **AC-20** — Nhận thông báo |
+| `GET` | `/api/v1/operations/{operation_id}` | **AC-12** — Đăng ký khóa học<br>**AC-25** — Gửi thông báo<br>**AC-36** — Quản lý thông báo<br>**AC-38** — Báo cáo tác động cộng đồng |
 | `POST` | `/api/v1/orders` | **AC-12** — Đăng ký khóa học |
 | `POST` | `/api/v1/payments` | **AC-12** — Đăng ký khóa học |
 | `GET` | `/api/v1/quizzes/{quiz_id}` | **AC-16** — Làm bài kiểm tra |

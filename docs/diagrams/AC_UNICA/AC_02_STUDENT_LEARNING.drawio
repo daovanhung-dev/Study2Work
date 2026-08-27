@@ -53,8 +53,8 @@
         <mxCell id="n1" value="&lt;b&gt;Mở Hồ sơ cá nhân&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=16;" parent="1" vertex="1">
           <mxGeometry x="131.5" y="370" width="245" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/users/me&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lấy hồ sơ hiện tại&lt;br&gt;Auth: JWT | Output: profile&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="790.0" y="496" width="320" height="82" as="geometry" />
+        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/users/me&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: auth{bearer_jwt!}&lt;br&gt;In: auth{bearer_jwt!}&lt;br&gt;Out: ApiEnvelope&amp;lt;UserProfile&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790.0" y="496" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n3" value="&lt;b&gt;Đọc user + profile&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1155.0" y="622" width="286" height="66" as="geometry" />
@@ -65,14 +65,14 @@
         <mxCell id="n5" value="&lt;b&gt;Cập nhật thông tin / chọn avatar&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=16;" parent="1" vertex="1">
           <mxGeometry x="131.5" y="874" width="245" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="n6" value="&lt;b&gt;POST /api/v1/users/me/avatar&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Upload avatar nếu có&lt;br&gt;Input: image | Output: avatar_url&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="790.0" y="1000" width="320" height="82" as="geometry" />
+        <mxCell id="n6" value="&lt;b&gt;POST /api/v1/users/me/avatar&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: body{image:string!}&lt;br&gt;Out: ApiEnvelope&amp;lt;UserProfile&amp;gt;&lt;br&gt;Status: 201 DESIGN_RESOURCE_CREATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790.0" y="1000" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n7" value="&lt;b&gt;Object Storage lưu avatar&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Validate mime/size trước khi lưu.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDF4FF;strokeColor=#C026D3;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=14;" parent="1" vertex="1">
           <mxGeometry x="1503.0" y="1126" width="286" height="68" as="geometry" />
         </mxCell>
-        <mxCell id="n8" value="&lt;b&gt;PUT /api/v1/users/me/profile&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Cập nhật hồ sơ&lt;br&gt;Input: full_name, bio, phone, avatar_url...&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#EA580C;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="790.0" y="1252" width="320" height="82" as="geometry" />
+        <mxCell id="n8" value="&lt;b&gt;PUT /api/v1/users/me/profile&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: body{full_name:string!, bio:string!, phone:string!, avatar_url...:uri!}&lt;br&gt;Out: ApiEnvelope&amp;lt;UserProfile&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_UPDATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#EA580C;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790.0" y="1252" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n9" value="&lt;b&gt;Validate ownership + dữ liệu profile&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=12;" parent="1" vertex="1">
           <mxGeometry x="812.5" y="1378" width="275" height="64" as="geometry" />
@@ -184,14 +184,14 @@
         <mxCell id="n1" value="&lt;b&gt;Chọn “Đăng ký khóa học”&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=16;" parent="1" vertex="1">
           <mxGeometry x="131.5" y="370" width="245" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/courses/{course_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Nạp giá/trạng thái khóa học&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="790.0" y="496" width="320" height="82" as="geometry" />
+        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/courses/{course_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Public&lt;br&gt;In: path{course_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Page&lt;Course&gt;&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790.0" y="496" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n3" value="&lt;b&gt;Đọc Course PUBLISHED&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1155.0" y="622" width="286" height="66" as="geometry" />
         </mxCell>
-        <mxCell id="n4" value="&lt;b&gt;GET /api/v1/courses/{course_id}/enrollment-status&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Kiểm tra trạng thái enrollment&lt;br&gt;Output: enrolled / not_enrolled&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="790.0" y="748" width="320" height="82" as="geometry" />
+        <mxCell id="n4" value="&lt;b&gt;GET /api/v1/courses/{course_id}/enrollment-status&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Public&lt;br&gt;In: path{course_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Enrollment&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790.0" y="748" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n5" value="&lt;b&gt;Kiểm tra Enrollment hiện có&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1155.0" y="874" width="286" height="66" as="geometry" />
@@ -205,14 +205,14 @@
         <mxCell id="n7" value="&lt;b&gt;Khóa học miễn phí?&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#92400E;&quot;&gt;YES → bỏ qua Order/Payment; NO → thanh toán.&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=11;align=center;verticalAlign=middle;spacing=4;" parent="1" vertex="1">
           <mxGeometry x="904.0" y="1126" width="92" height="92" as="geometry" />
         </mxCell>
-        <mxCell id="n8" value="&lt;b&gt;POST /api/v1/orders&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Tạo đơn hàng cho paid course&lt;br&gt;Conditional | Output: order_id, amount&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="790.0" y="1252" width="320" height="82" as="geometry" />
+        <mxCell id="n8" value="&lt;b&gt;POST /api/v1/orders&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: body{course_id:int64!, payment_provider:PaymentProvider!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Order&amp;gt;&lt;br&gt;Status: 201 DESIGN_RESOURCE_CREATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790.0" y="1252" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n9" value="&lt;b&gt;INSERT Order = PENDING&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1155.0" y="1378" width="286" height="66" as="geometry" />
         </mxCell>
-        <mxCell id="n10" value="&lt;b&gt;POST /api/v1/payments&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Khởi tạo/xác nhận thanh toán&lt;br&gt;Conditional | Input: order_id, provider&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="790.0" y="1504" width="320" height="82" as="geometry" />
+        <mxCell id="n10" value="&lt;b&gt;POST /api/v1/payments&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: body{order_id:int64!, provider:string!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Operation&amp;gt;&lt;br&gt;Status: 202 DESIGN_OPERATION_ACCEPTED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 422 DESIGN_VALIDATION_ERROR, 503 DESIGN_DEPENDENCY_UNAVAILABLE, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790.0" y="1504" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n11" value="&lt;b&gt;Payment Gateway xử lý giao dịch&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Success → paid; failure/cancel → dừng flow.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDF4FF;strokeColor=#C026D3;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=14;" parent="1" vertex="1">
           <mxGeometry x="1503.0" y="1630" width="286" height="68" as="geometry" />
@@ -223,14 +223,14 @@
         <mxCell id="err12" value="&lt;b&gt;Nhánh NO / ERROR&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;NO → Payment Failed; YES → tạo enrollment.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;strokeWidth=1.3;fontSize=10;align=center;verticalAlign=middle;spacing=5;arcSize=12;" parent="1" vertex="1">
           <mxGeometry x="1885" y="1756" width="220" height="72" as="geometry" />
         </mxCell>
-        <mxCell id="n13" value="&lt;b&gt;POST /api/v1/courses/{course_id}/enrollments&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Tạo quyền học&lt;br&gt;Input: course_id + user từ JWT&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="790.0" y="1882" width="320" height="82" as="geometry" />
+        <mxCell id="n13" value="&lt;b&gt;POST /api/v1/courses/{course_id}/enrollments&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{course_id:int64!}&lt;br&gt;In: body{course_id:int64!, user từ JWT:string!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Enrollment&amp;gt;&lt;br&gt;Status: 201 DESIGN_RESOURCE_CREATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 422 DESIGN_VALIDATION_ERROR, 409 DESIGN_STATE_CONFLICT, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790.0" y="1882" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n14" value="&lt;b&gt;INSERT Enrollment + INIT Progress&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Transaction; chống đăng ký trùng.&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1155.0" y="2008" width="286" height="66" as="geometry" />
         </mxCell>
-        <mxCell id="n15" value="&lt;b&gt;GET /api/v1/users/me/courses&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Reload khóa học đã đăng ký&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="790.0" y="2134" width="320" height="82" as="geometry" />
+        <mxCell id="n15" value="&lt;b&gt;GET /api/v1/users/me/courses&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: query{status?:string, page?:int32}&lt;br&gt;Out: ApiEnvelope&amp;lt;UserProfile&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790.0" y="2134" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n16" value="&lt;b&gt;Hiển thị “Đã đăng ký” và mở khóa học&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#10B981;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=15;" parent="1" vertex="1">
           <mxGeometry x="467.0" y="2260" width="270" height="64" as="geometry" />
@@ -316,6 +316,9 @@
         <mxCell id="legend" value="&lt;b&gt;Legend:&lt;/b&gt; &lt;span style=&quot;color:#2563EB;&quot;&gt;GET&lt;/span&gt; · &lt;span style=&quot;color:#16A34A;&quot;&gt;POST&lt;/span&gt; · &lt;span style=&quot;color:#EA580C;&quot;&gt;PUT&lt;/span&gt; · &lt;span style=&quot;color:#D97706;&quot;&gt;PATCH&lt;/span&gt; · &lt;span style=&quot;color:#DC2626;&quot;&gt;DELETE&lt;/span&gt; · Decision: vàng · DB: cylinder · Error branch: đỏ" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#CBD5E1;fontSize=10;align=center;" parent="1" vertex="1">
           <mxGeometry x="80" y="2515" width="2040" height="38" as="geometry" />
         </mxCell>
+        <mxCell id="operation_status" value="&lt;b&gt;GET /api/v1/operations/{operation_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student|Mentor|Admin; owner only&lt;br&gt;In: path{operation_id:uuid!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Operation&amp;gt;&lt;br&gt;Status: 200 DESIGN_OPERATION_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#059669;strokeWidth=1.8;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790" y="2386" width="320" height="122" as="geometry"/>
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
@@ -366,14 +369,14 @@
         <mxCell id="n1" value="&lt;b&gt;Mở “Khóa học của tôi”&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=16;" parent="1" vertex="1">
           <mxGeometry x="175.0" y="370" width="245" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/users/me/courses&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lấy enrollment/course list&lt;br&gt;Query: status, page&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="496" width="320" height="82" as="geometry" />
+        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/users/me/courses&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: query{status?:string, page?:int32}&lt;br&gt;Out: ApiEnvelope&amp;lt;UserProfile&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="496" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n3" value="&lt;b&gt;JOIN Enrollment + Course&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="622" width="286" height="66" as="geometry" />
         </mxCell>
-        <mxCell id="n4" value="&lt;b&gt;GET /api/v1/users/me/progress&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lấy tiến độ tổng hợp&lt;br&gt;Query: course_id list hoặc aggregate&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="748" width="320" height="82" as="geometry" />
+        <mxCell id="n4" value="&lt;b&gt;GET /api/v1/users/me/progress&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: query{course_id list hoặc aggregate?:string}&lt;br&gt;Out: ApiEnvelope&amp;lt;UserProfile&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="748" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n5" value="&lt;b&gt;Đọc lesson progress / completion&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="874" width="286" height="66" as="geometry" />
@@ -476,8 +479,8 @@
         <mxCell id="n1" value="&lt;b&gt;Chọn một bài học&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=16;" parent="1" vertex="1">
           <mxGeometry x="175.0" y="370" width="245" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/lessons/{lesson_id}/access&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Kiểm tra quyền truy cập lesson&lt;br&gt;Output: allowed, reason&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="496" width="320" height="82" as="geometry" />
+        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/lessons/{lesson_id}/access&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{lesson_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Lesson&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="496" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n3" value="&lt;b&gt;Kiểm tra enrollment/prerequisite&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="622" width="286" height="66" as="geometry" />
@@ -488,14 +491,14 @@
         <mxCell id="err4" value="&lt;b&gt;Nhánh NO / ERROR&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;NO → 403 + lý do; YES → tiếp tục.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;strokeWidth=1.3;fontSize=10;align=center;verticalAlign=middle;spacing=5;arcSize=12;" parent="1" vertex="1">
           <mxGeometry x="1885" y="748" width="220" height="72" as="geometry" />
         </mxCell>
-        <mxCell id="n5" value="&lt;b&gt;POST /api/v1/lessons/{lesson_id}/start&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Khởi tạo/lưu lần bắt đầu học&lt;br&gt;Output: progress_id&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="874" width="320" height="82" as="geometry" />
+        <mxCell id="n5" value="&lt;b&gt;POST /api/v1/lessons/{lesson_id}/start&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{lesson_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Lesson&amp;gt;&lt;br&gt;Status: 201 DESIGN_RESOURCE_CREATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="874" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n6" value="&lt;b&gt;UPSERT lesson progress = IN_PROGRESS&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1000" width="286" height="66" as="geometry" />
         </mxCell>
-        <mxCell id="n7" value="&lt;b&gt;GET /api/v1/lessons/{lesson_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Nạp nội dung bài học&lt;br&gt;Output: content/video/resource refs&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="1126" width="320" height="82" as="geometry" />
+        <mxCell id="n7" value="&lt;b&gt;GET /api/v1/lessons/{lesson_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{lesson_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Lesson&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="1126" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n8" value="&lt;b&gt;Đọc Lesson + content metadata&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1252" width="286" height="66" as="geometry" />
@@ -503,8 +506,8 @@
         <mxCell id="n9" value="&lt;b&gt;Phát nội dung / Student học bài&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=12;" parent="1" vertex="1">
           <mxGeometry x="595.0" y="1378" width="275" height="64" as="geometry" />
         </mxCell>
-        <mxCell id="n10" value="&lt;b&gt;PATCH /api/v1/lessons/{lesson_id}/progress&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lưu vị trí và trạng thái&lt;br&gt;Input: position, percent, completed&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="1504" width="320" height="82" as="geometry" />
+        <mxCell id="n10" value="&lt;b&gt;PATCH /api/v1/lessons/{lesson_id}/progress&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{lesson_id:int64!}&lt;br&gt;In: body{position:int32!, percent:int32!, completed:boolean!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Lesson&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_UPDATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="1504" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n11" value="&lt;b&gt;UPDATE lesson progress + course aggregate&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1630" width="286" height="66" as="geometry" />
@@ -628,8 +631,8 @@
         <mxCell id="n1" value="&lt;b&gt;Mở nội dung lesson&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=16;" parent="1" vertex="1">
           <mxGeometry x="175.0" y="370" width="245" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/lessons/{lesson_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lấy nội dung chính&lt;br&gt;Output: text/video/content&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="496" width="320" height="82" as="geometry" />
+        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/lessons/{lesson_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{lesson_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Lesson&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="496" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n3" value="&lt;b&gt;Kiểm tra access + trạng thái publish&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=12;" parent="1" vertex="1">
           <mxGeometry x="1030.0" y="622" width="275" height="64" as="geometry" />
@@ -637,14 +640,14 @@
         <mxCell id="n4" value="&lt;b&gt;Đọc lesson/content&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="748" width="286" height="66" as="geometry" />
         </mxCell>
-        <mxCell id="n5" value="&lt;b&gt;GET /api/v1/lessons/{lesson_id}/resources&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lấy tài nguyên đính kèm&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="874" width="320" height="82" as="geometry" />
+        <mxCell id="n5" value="&lt;b&gt;GET /api/v1/lessons/{lesson_id}/resources&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{lesson_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Lesson&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="874" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n6" value="&lt;b&gt;Đọc lesson resources&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1000" width="286" height="66" as="geometry" />
         </mxCell>
-        <mxCell id="n7" value="&lt;b&gt;GET /api/v1/lessons/{lesson_id}/next&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Tìm bài tiếp theo theo curriculum&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="1126" width="320" height="82" as="geometry" />
+        <mxCell id="n7" value="&lt;b&gt;GET /api/v1/lessons/{lesson_id}/next&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{lesson_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Lesson&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="1126" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n8" value="&lt;b&gt;Đọc thứ tự curriculum&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1252" width="286" height="66" as="geometry" />
@@ -741,8 +744,8 @@
         <mxCell id="n1" value="&lt;b&gt;Mở bài kiểm tra&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=16;" parent="1" vertex="1">
           <mxGeometry x="175.0" y="370" width="245" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/quizzes/{quiz_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lấy metadata/câu hỏi được phép hiển thị&lt;br&gt;Output: duration, questions, attempts_left&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="496" width="320" height="82" as="geometry" />
+        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/quizzes/{quiz_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{quiz_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Quiz&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="496" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n3" value="&lt;b&gt;Đọc Quiz + rule + question set&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="622" width="286" height="66" as="geometry" />
@@ -753,8 +756,8 @@
         <mxCell id="err4" value="&lt;b&gt;Nhánh NO / ERROR&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;&quot;&gt;Hết lượt/hết hạn → 403/409.&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;strokeWidth=1.3;fontSize=10;align=center;verticalAlign=middle;spacing=5;arcSize=12;" parent="1" vertex="1">
           <mxGeometry x="1885" y="748" width="220" height="72" as="geometry" />
         </mxCell>
-        <mxCell id="n5" value="&lt;b&gt;POST /api/v1/quizzes/{quiz_id}/attempts&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Tạo attempt&lt;br&gt;Output: attempt_id, started_at&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="874" width="320" height="82" as="geometry" />
+        <mxCell id="n5" value="&lt;b&gt;POST /api/v1/quizzes/{quiz_id}/attempts&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{quiz_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;QuizAttempt&amp;gt;&lt;br&gt;Status: 201 DESIGN_RESOURCE_CREATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 422 DESIGN_VALIDATION_ERROR, 409 DESIGN_STATE_CONFLICT, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="874" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n6" value="&lt;b&gt;INSERT Attempt = IN_PROGRESS&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1000" width="286" height="66" as="geometry" />
@@ -762,8 +765,8 @@
         <mxCell id="n7" value="&lt;b&gt;Student trả lời câu hỏi&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=12;" parent="1" vertex="1">
           <mxGeometry x="595.0" y="1126" width="275" height="64" as="geometry" />
         </mxCell>
-        <mxCell id="n8" value="&lt;b&gt;PUT /api/v1/attempts/{attempt_id}/answers&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Autosave/lưu câu trả lời&lt;br&gt;Input: question_id, answer(s)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#EA580C;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="1252" width="320" height="82" as="geometry" />
+        <mxCell id="n8" value="&lt;b&gt;PUT /api/v1/attempts/{attempt_id}/answers&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{attempt_id:int64!}&lt;br&gt;In: body{question_id:int64!, answer(s):string!}&lt;br&gt;Out: ApiEnvelope&amp;lt;QuizAttempt&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_UPDATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#EA580C;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="1252" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n9" value="&lt;b&gt;UPSERT AttemptAnswer&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1378" width="286" height="66" as="geometry" />
@@ -771,8 +774,8 @@
         <mxCell id="n10" value="&lt;b&gt;Chọn “Nộp bài”&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=16;" parent="1" vertex="1">
           <mxGeometry x="175.0" y="1504" width="245" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="n11" value="&lt;b&gt;POST /api/v1/attempts/{attempt_id}/submit&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Khóa attempt và bắt đầu chấm&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="1630" width="320" height="82" as="geometry" />
+        <mxCell id="n11" value="&lt;b&gt;POST /api/v1/attempts/{attempt_id}/submit&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{attempt_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;QuizAttempt&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_UPDATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 422 DESIGN_VALIDATION_ERROR, 409 DESIGN_STATE_CONFLICT, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="1630" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n12" value="&lt;b&gt;UPDATE Attempt = SUBMITTED; tính điểm auto&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1756" width="286" height="66" as="geometry" />
@@ -780,8 +783,8 @@
         <mxCell id="n13" value="&lt;b&gt;Có câu cần chấm tay?&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#92400E;&quot;&gt;YES → trạng thái PENDING_GRADE; NO → GRADED.&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=11;align=center;verticalAlign=middle;spacing=4;" parent="1" vertex="1">
           <mxGeometry x="1121.5" y="1882" width="92" height="92" as="geometry" />
         </mxCell>
-        <mxCell id="n14" value="&lt;b&gt;GET /api/v1/attempts/{attempt_id}/result&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lấy điểm/kết quả được phép xem&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="2008" width="320" height="82" as="geometry" />
+        <mxCell id="n14" value="&lt;b&gt;GET /api/v1/attempts/{attempt_id}/result&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{attempt_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;QuizAttempt&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="2008" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n15" value="&lt;b&gt;Đọc score + feedback/status&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="2134" width="286" height="66" as="geometry" />
@@ -917,8 +920,8 @@
         <mxCell id="n1" value="&lt;b&gt;Mở bài tập&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=16;" parent="1" vertex="1">
           <mxGeometry x="131.5" y="370" width="245" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/assignments/{assignment_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lấy đề bài/rule/deadline&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="790.0" y="496" width="320" height="82" as="geometry" />
+        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/assignments/{assignment_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{assignment_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Assignment&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790.0" y="496" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n3" value="&lt;b&gt;Đọc Assignment + submission rule&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1155.0" y="622" width="286" height="66" as="geometry" />
@@ -932,20 +935,20 @@
         <mxCell id="n5" value="&lt;b&gt;Nhập nội dung / chọn file đính kèm&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=12;" parent="1" vertex="1">
           <mxGeometry x="464.5" y="874" width="275" height="64" as="geometry" />
         </mxCell>
-        <mxCell id="n6" value="&lt;b&gt;POST /api/v1/uploads&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Upload file nếu có&lt;br&gt;Conditional | Output: file_id/url&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="790.0" y="1000" width="320" height="82" as="geometry" />
+        <mxCell id="n6" value="&lt;b&gt;POST /api/v1/uploads&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student|Mentor&lt;br&gt;In: multipart{file:binary!, purpose:UploadPurpose!, course_id?:int64}&lt;br&gt;Out: ApiEnvelope&amp;lt;UploadAsset&amp;gt;&lt;br&gt;Status: 201 DESIGN_RESOURCE_CREATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 422 DESIGN_VALIDATION_ERROR, 503 DESIGN_DEPENDENCY_UNAVAILABLE, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790.0" y="1000" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n7" value="&lt;b&gt;Object Storage lưu file submission&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FDF4FF;strokeColor=#C026D3;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=14;" parent="1" vertex="1">
           <mxGeometry x="1503.0" y="1126" width="286" height="68" as="geometry" />
         </mxCell>
-        <mxCell id="n8" value="&lt;b&gt;POST /api/v1/assignments/{assignment_id}/submissions&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Tạo/nộp submission&lt;br&gt;Input: text, file refs&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="790.0" y="1252" width="320" height="82" as="geometry" />
+        <mxCell id="n8" value="&lt;b&gt;POST /api/v1/assignments/{assignment_id}/submissions&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{assignment_id:int64!}&lt;br&gt;In: body{text:string!, file refs:string!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Submission&amp;gt;&lt;br&gt;Status: 201 DESIGN_RESOURCE_CREATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 422 DESIGN_VALIDATION_ERROR, 409 DESIGN_STATE_CONFLICT, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790.0" y="1252" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n9" value="&lt;b&gt;INSERT/UPDATE Submission = SUBMITTED&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1155.0" y="1378" width="286" height="66" as="geometry" />
         </mxCell>
-        <mxCell id="n10" value="&lt;b&gt;GET /api/v1/submissions/{submission_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Xác nhận dữ liệu đã nộp&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="790.0" y="1504" width="320" height="82" as="geometry" />
+        <mxCell id="n10" value="&lt;b&gt;GET /api/v1/submissions/{submission_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{submission_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Submission&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="790.0" y="1504" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n11" value="&lt;b&gt;Đọc submission summary&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1155.0" y="1630" width="286" height="66" as="geometry" />
@@ -1060,8 +1063,8 @@
         <mxCell id="n1" value="&lt;b&gt;Mở mục Tiến độ&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=16;" parent="1" vertex="1">
           <mxGeometry x="175.0" y="370" width="245" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/users/me/progress&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lấy tiến độ tổng quan&lt;br&gt;Output: completion, time_spent, active_courses&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="496" width="320" height="82" as="geometry" />
+        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/users/me/progress&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: query{course_id list hoặc aggregate?:string}&lt;br&gt;Out: ApiEnvelope&amp;lt;UserProfile&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="496" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n3" value="&lt;b&gt;Aggregate progress theo user&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="622" width="286" height="66" as="geometry" />
@@ -1069,14 +1072,14 @@
         <mxCell id="n4" value="&lt;b&gt;Chọn một khóa học để xem chi tiết&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;strokeWidth=1.3;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=12;" parent="1" vertex="1">
           <mxGeometry x="595.0" y="748" width="275" height="64" as="geometry" />
         </mxCell>
-        <mxCell id="n5" value="&lt;b&gt;GET /api/v1/users/me/progress/{course_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lấy tiến độ chi tiết course&lt;br&gt;Output: lesson/quiz/assignment status&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="874" width="320" height="82" as="geometry" />
+        <mxCell id="n5" value="&lt;b&gt;GET /api/v1/users/me/progress/{course_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{course_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;UserProfile&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="874" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n6" value="&lt;b&gt;Aggregate lesson + quiz + assignment progress&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1000" width="286" height="66" as="geometry" />
         </mxCell>
-        <mxCell id="n7" value="&lt;b&gt;GET /api/v1/users/me/achievements&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lấy achievement/badge nếu có&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="1126" width="320" height="82" as="geometry" />
+        <mxCell id="n7" value="&lt;b&gt;GET /api/v1/users/me/achievements&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: query{course_id?:int64}&lt;br&gt;Out: ApiEnvelope&amp;lt;Page&lt;Achievement&gt;&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="1126" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n8" value="&lt;b&gt;Đọc achievement unlocked&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1252" width="286" height="66" as="geometry" />
@@ -1173,8 +1176,8 @@
         <mxCell id="n1" value="&lt;b&gt;Mở khu Thảo luận&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=16;" parent="1" vertex="1">
           <mxGeometry x="175.0" y="370" width="245" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/discussions&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lấy danh sách thread&lt;br&gt;Query: course_id, page, sort&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="496" width="320" height="82" as="geometry" />
+        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/discussions&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: query{course_id?:int64, page?:int32, sort?:string}&lt;br&gt;Out: ApiEnvelope&amp;lt;Page&lt;Discussion&gt;&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="496" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n3" value="&lt;b&gt;Đọc discussion public trong course&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="622" width="286" height="66" as="geometry" />
@@ -1182,20 +1185,20 @@
         <mxCell id="n4" value="&lt;b&gt;Tạo câu hỏi mới hay trả lời?&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#92400E;&quot;&gt;New → POST discussion; Reply → POST comment.&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=11;align=center;verticalAlign=middle;spacing=4;" parent="1" vertex="1">
           <mxGeometry x="1121.5" y="748" width="92" height="92" as="geometry" />
         </mxCell>
-        <mxCell id="n5" value="&lt;b&gt;POST /api/v1/discussions&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Tạo topic/câu hỏi mới&lt;br&gt;Conditional | Input: course_id, title, content&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="874" width="320" height="82" as="geometry" />
+        <mxCell id="n5" value="&lt;b&gt;POST /api/v1/discussions&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: body{course_id:int64!, title:string!, content:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Page&lt;Discussion&gt;&amp;gt;&lt;br&gt;Status: 201 DESIGN_RESOURCE_CREATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="874" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n6" value="&lt;b&gt;INSERT Discussion&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1000" width="286" height="66" as="geometry" />
         </mxCell>
-        <mxCell id="n7" value="&lt;b&gt;POST /api/v1/discussions/{discussion_id}/comments&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Thêm bình luận/trả lời&lt;br&gt;Conditional | Input: content&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="1126" width="320" height="82" as="geometry" />
+        <mxCell id="n7" value="&lt;b&gt;POST /api/v1/discussions/{discussion_id}/comments&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{discussion_id:int64!}&lt;br&gt;In: body{content:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Page&lt;Discussion&gt;&amp;gt;&lt;br&gt;Status: 201 DESIGN_RESOURCE_CREATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0FDF4;strokeColor=#16A34A;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="1126" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n8" value="&lt;b&gt;INSERT Comment + update counters&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1252" width="286" height="66" as="geometry" />
         </mxCell>
-        <mxCell id="n9" value="&lt;b&gt;GET /api/v1/discussions/{discussion_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Reload thread sau thao tác&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="1378" width="320" height="82" as="geometry" />
+        <mxCell id="n9" value="&lt;b&gt;GET /api/v1/discussions/{discussion_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{discussion_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Page&lt;Discussion&gt;&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="1378" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n10" value="&lt;b&gt;Đọc topic + comments&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1504" width="286" height="66" as="geometry" />
@@ -1301,8 +1304,8 @@
         <mxCell id="n1" value="&lt;b&gt;Mở Trung tâm thông báo&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#16A34A;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;arcSize=16;" parent="1" vertex="1">
           <mxGeometry x="175.0" y="370" width="245" height="58" as="geometry" />
         </mxCell>
-        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/users/me/notifications&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Lấy notification list&lt;br&gt;Query: unread_only, page&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="496" width="320" height="82" as="geometry" />
+        <mxCell id="n2" value="&lt;b&gt;GET /api/v1/users/me/notifications&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: query{unread_only?:boolean, page?:int32}&lt;br&gt;Out: ApiEnvelope&amp;lt;Page&lt;Notification&gt;&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_RETRIEVED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#2563EB;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="496" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n3" value="&lt;b&gt;Đọc NotificationRecipient theo user&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="622" width="286" height="66" as="geometry" />
@@ -1313,14 +1316,14 @@
         <mxCell id="n5" value="&lt;b&gt;Đánh dấu một hay tất cả?&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#92400E;&quot;&gt;One → PATCH /{id}/read; All → PATCH /read-all.&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=1.5;fontSize=11;align=center;verticalAlign=middle;spacing=4;" parent="1" vertex="1">
           <mxGeometry x="1121.5" y="874" width="92" height="92" as="geometry" />
         </mxCell>
-        <mxCell id="n6" value="&lt;b&gt;PATCH /api/v1/notifications/{notification_id}/read&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Đánh dấu một thông báo đã đọc&lt;br&gt;Conditional&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="1000" width="320" height="82" as="geometry" />
+        <mxCell id="n6" value="&lt;b&gt;PATCH /api/v1/notifications/{notification_id}/read&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: path{notification_id:int64!}&lt;br&gt;Out: ApiEnvelope&amp;lt;Page&lt;Notification&gt;&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_UPDATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="1000" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n7" value="&lt;b&gt;UPDATE read_at cho notification recipient&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1126" width="286" height="66" as="geometry" />
         </mxCell>
-        <mxCell id="n8" value="&lt;b&gt;PATCH /api/v1/notifications/read-all&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#475569;&quot;&gt;Đánh dấu tất cả đã đọc&lt;br&gt;Conditional&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=1.6;fontSize=11;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
-          <mxGeometry x="1007.5" y="1252" width="320" height="82" as="geometry" />
+        <mxCell id="n8" value="&lt;b&gt;PATCH /api/v1/notifications/read-all&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px;color:#475569;&quot;&gt;RBAC: Student&lt;br&gt;In: body{}&lt;br&gt;Out: ApiEnvelope&amp;lt;Page&lt;Notification&gt;&amp;gt;&lt;br&gt;Status: 200 DESIGN_RESOURCE_UPDATED&lt;br&gt;Errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFBEB;strokeColor=#D97706;strokeWidth=1.6;fontSize=8;align=center;verticalAlign=middle;spacing=6;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="1007.5" y="1252" width="320" height="122" as="geometry" />
         </mxCell>
         <mxCell id="n9" value="&lt;b&gt;BULK UPDATE unread notifications&lt;/b&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#F8FAFC;strokeColor=#64748B;strokeWidth=1.4;fontSize=11;align=center;verticalAlign=middle;spacing=5;" parent="1" vertex="1">
           <mxGeometry x="1459.5" y="1378" width="286" height="66" as="geometry" />
