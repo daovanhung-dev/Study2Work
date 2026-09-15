@@ -79,7 +79,11 @@ async def request_validation_exception_handler(
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         content=error_response(
-            business_code="VALIDATION_ERROR",
+            business_code=(
+                "DESIGN_VALIDATION_ERROR"
+                if request.url.path == "/api/v1/auth/register"
+                else "VALIDATION_ERROR"
+            ),
             message="Dữ liệu đầu vào không hợp lệ.",
             trace_id=get_trace_id(request),
             errors=errors,
@@ -92,10 +96,15 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
     trace_id = get_trace_id(request)
     logger.exception("Unhandled API error; trace_id=%s", trace_id, exc_info=exc)
+    business_code = (
+        "DESIGN_INTERNAL_ERROR"
+        if request.url.path == "/api/v1/auth/register"
+        else "INTERNAL_SERVER_ERROR"
+    )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=error_response(
-            business_code="INTERNAL_SERVER_ERROR",
+            business_code=business_code,
             message="Đã xảy ra lỗi nội bộ hệ thống.",
             trace_id=trace_id,
         ),

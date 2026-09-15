@@ -2,19 +2,21 @@
 
 ```text
 TEST_SUITE_PRESENT: YES
-COLLECTION_STATUS_AT_SOURCE_SNAPSHOT: BLOCKED_BY_IMPORT_CHAIN
+COLLECTION_STATUS_AT_SOURCE_SNAPSHOT: VERIFIED
 ```
 
-Tests under `apps/study-server/tests/` cover config, DB helpers, responses, security tokens and intended health/security behavior. However `tests/conftest.py` imports `app.main`; current app import reaches missing `app.module.*` and mismatched response/trace symbols.
+Tests under `apps/study-server/tests/` cover config, DB helpers, responses,
+security tokens, health/security behavior and API #1 register. The current suite
+collects and runs successfully.
 
-Important stale/blocked expectations include:
+Important remaining scope boundaries include:
 - health tests expect standard envelope and trace header;
 - health readiness expects labels, not a real DB probe;
-- validation test posts to `/api/v1/register`, whose request model/module is missing;
+- API #1 validation tests post to `/api/v1/auth/register`;
+- login/refresh/current-user routes are not exposed;
 - response/security unit tests may exercise helpers independently, but do not prove the full API starts.
 
 For a fix task:
-1. reproduce collection/import failure first;
-2. distinguish unit-testable core helper from app-level route test;
-3. after an approved runtime repair, run the smallest unit set then full Study tests;
-4. do not weaken assertions merely to match broken source.
+1. distinguish unit-testable core helper from app-level route test;
+2. run the smallest unit set then full Study tests;
+3. do not weaken assertions merely to match broken source.

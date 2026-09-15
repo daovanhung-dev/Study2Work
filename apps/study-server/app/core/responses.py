@@ -86,3 +86,67 @@ class ApiResponse(BaseModel):
             errors=errors,
             headers=headers,
         )
+
+
+def success_response(
+    *,
+    business_code: str,
+    message: str,
+    trace_id: str,
+    data: Any = None,
+    meta: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build the canonical success response envelope."""
+
+    return ApiResponse(
+        business_code=business_code,
+        message=message,
+        trace_id=trace_id,
+        result=data,
+        meta=dict(meta or {}),
+    ).success_payload()
+
+
+def error_response(
+    *,
+    business_code: str,
+    message: str,
+    trace_id: str,
+    data: Any = None,
+    meta: Mapping[str, Any] | None = None,
+    errors: Sequence[ErrorDetail] = (),
+) -> dict[str, Any]:
+    """Build the canonical error response envelope."""
+
+    response_meta = dict(meta or {})
+    if errors:
+        response_meta["fieldErrors"] = [error.model_dump() for error in errors]
+
+    return {
+        "success": False,
+        "businessCode": business_code,
+        "message": message,
+        "data": data if data is not None else {},
+        "meta": response_meta,
+        "traceId": trace_id,
+    }
+
+
+def error_payload(
+    *,
+    business_code: str,
+    message: str,
+    trace_id: str,
+    data: Any = None,
+    errors: Sequence[ErrorDetail] = (),
+) -> dict[str, Any]:
+    """Build the legacy error shape with top-level error details."""
+
+    return {
+        "success": False,
+        "businessCode": business_code,
+        "message": message,
+        "data": data if data is not None else {},
+        "errors": [error.model_dump() for error in errors],
+        "traceId": trace_id,
+    }

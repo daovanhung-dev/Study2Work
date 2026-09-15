@@ -4,9 +4,9 @@ Source root: `apps/study-server/`
 
 ```text
 CONTEXT_MODE: DEEP
-RUNTIME_STATUS: DECLARED_NOT_RUNNABLE
-BUSINESS_MODULE_STATUS: NOT_FOUND
-DATABASE_SCHEMA_STATUS: NOT_FOUND
+RUNTIME_STATUS: VERIFIED (current routes)
+BUSINESS_MODULE_STATUS: VERIFIED (API #1 register only)
+DATABASE_SCHEMA_STATUS: VERIFIED (DB.sql applied to 5 non-public schemas; public unchanged)
 ```
 
 ## Load theo task
@@ -23,11 +23,11 @@ DATABASE_SCHEMA_STATUS: NOT_FOUND
 
 ## Critical rules
 
-1. Không coi route trong `app/api/v1.py` là runnable chỉ vì decorator tồn tại.
+1. Chỉ coi route hiện có là runnable khi import chain và HTTP test đã pass.
 2. Không dựng lại `app.module.auth` hoặc AI log module từ legacy docs/Git history nếu requirement chưa xác nhận.
-3. `app/core/security/*` là reusable helper hiện hữu; nó không chứng minh register/login/refresh business flow hiện hữu.
+3. `app/core/security/*` là reusable helper; API #1 là business flow duy nhất đã được triển khai/xác minh.
 4. Study DB helper không commit; caller/use-case phải sở hữu transaction khi business module tồn tại.
-5. Không invent table/column: current schema/migration source là `NOT_FOUND`.
+5. Không invent table/column: `infra/postgres/study-server/DB.sql` và live metadata là schema evidence; migration directory vẫn chưa tồn tại.
 6. Trước mọi runtime fix, kiểm tra toàn bộ import chain `main -> api/core` vì hiện có nhiều blocker độc lập.
 
 Exact status/boundary: `architecture.md`, `tests.md`, project `source-status.md`.

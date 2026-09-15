@@ -10,9 +10,9 @@ from app.core.exceptions import unhandled_exception_handler
 from app.core.trace import (
     TRACE_HEADER,
     create_trace_id,
-    normalize_trace_id,
-    reset_current_trace_id,
-    set_current_trace_id,
+    reset_trace_id,
+    set_trace_id,
+    validate_trace_id,
 )
 
 
@@ -24,9 +24,9 @@ class TraceIdMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next: RequestResponseEndpoint,
     ) -> Response:
-        trace_id = normalize_trace_id(request.headers.get(TRACE_HEADER)) or create_trace_id()
+        trace_id = validate_trace_id(request.headers.get(TRACE_HEADER)) or create_trace_id()
         request.state.trace_id = trace_id
-        context_token = set_current_trace_id(trace_id)
+        context_token = set_trace_id(trace_id)
 
         try:
             response = await call_next(request)
@@ -37,4 +37,4 @@ class TraceIdMiddleware(BaseHTTPMiddleware):
             response.headers[TRACE_HEADER] = trace_id
             return response
         finally:
-            reset_current_trace_id(context_token)
+            reset_trace_id(context_token)

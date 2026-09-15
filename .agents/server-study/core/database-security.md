@@ -50,6 +50,8 @@ Important validators:
 
 - `hash_password`: Argon2id (`time_cost=3`, 64 MiB, parallelism 1).
 - `verify_password`: Argon2 hashes or legacy bcrypt `$2a/$2b/$2y`; unknown formats false.
+- An optional legacy algorithm argument remains accepted for older callers; new
+  password creation always uses Argon2id.
 - `needs_password_rehash`: true for non-Argon2 or invalid/outdated Argon2 params.
 
 ## Access token — `security/access_token.py`
@@ -72,4 +74,9 @@ Signing/verification key selection:
 
 ## Critical absence
 
-These helpers do not establish user/session table schemas or register/login/refresh orchestration. Current `app/module/auth` is `NOT_FOUND`; do not infer its queries/commit behavior from helper names.
+The runtime Neon database has a verified `public.users` table used by API #1
+register. `DB.sql` has also been applied to the five named non-public
+application schemas, with 16 tables in each; `public` and system schemas were
+left unchanged. The register flow owns duplicate lookup, password hashing,
+insert and commit/rollback behavior. Login, refresh and other session
+orchestration remain unwired; do not infer them from helper names.

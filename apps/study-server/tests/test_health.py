@@ -50,12 +50,12 @@ def test_health_replaces_invalid_trace_id(client: TestClient) -> None:
 
 
 def test_validation_errors_use_canonical_field_error_location(client: TestClient) -> None:
-    response = client.post("/api/v1/register", json={})
+    response = client.post("/api/v1/auth/register", json={})
 
     assert response.status_code == 422
     payload = response.json()
     assert payload["success"] is False
-    assert payload["businessCode"] == "VALIDATION_ERROR"
+    assert payload["businessCode"] == "DESIGN_VALIDATION_ERROR"
     assert payload["meta"]["fieldErrors"]
     assert response.headers["X-Trace-Id"] == payload["traceId"]
 

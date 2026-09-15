@@ -13,32 +13,33 @@ app/main.py:create_app
   -> app/core/trace.py
 ```
 
-Current composition cannot complete imports, nên sơ đồ trên là **declaration map**, không phải runnable runtime proof.
+Current composition and API #1 register flow are runnable and covered by HTTP
+tests. Routes without a current implementation remain unwired.
 
 ## Verified ownership
 
 - `app/main.py`: FastAPI composition root, CORS, middleware, exception handlers, root/health routes.
-- `app/api/v1.py`: declared `/api/v1` routes; imports missing business modules.
+- `app/api/v1.py`: declared `/api/v1` routes; currently exposes health-adjacent
+  utility routes and API #1 register.
 - `app/core/config.py`: typed settings backed by `app/core/constants.py`.
 - `app/core/database.py`: sync SQLAlchemy engine/session/query primitives.
 - `app/core/security/*`: password, access token, refresh token primitives.
+- `app/modules/auth/*`: API #1 register request model, query and use-case flow.
 - `app/service/ai/ollama_service.py`: Ollama adapter copied/shared with Study codebase; no live Study caller after business modules disappeared.
 
-## Missing ownership
+## Unwired ownership
 
-`app/module/` is absent. Therefore no current source establishes:
+No current source establishes:
 
-- auth request models/use cases/query layer;
-- user table mapping;
 - chat log business flow;
-- transaction owner for register/login/refresh;
-- Study domain modules.
+- login/refresh/current-user orchestration;
+- Study domain modules beyond API #1 register.
 
-## Startup blockers
+## Runtime compatibility repairs
 
-1. `app.api.v1` imports missing `app.module.*`.
-2. `main.py` expects `success_response` absent from current responses module.
-3. exception handlers expect `error_response` absent from current responses module.
-4. trace middleware expects differently named helpers than current trace module.
+1. `app.api.v1` imports the existing `app.modules.auth` package.
+2. `responses.py` exposes canonical `success_response`/`error_response` and the legacy `error_payload` adapter.
+3. `TraceIdMiddleware` uses the current trace helper names.
 
-Any one of these is enough to prevent the intended app from working correctly; fix tasks must re-evaluate all four rather than stop at the first import error.
+Together these repairs restore the current composition; future fix tasks must
+re-evaluate the complete import chain rather than stop at the first error.
