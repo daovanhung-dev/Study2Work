@@ -3,7 +3,9 @@
 ## Database — `app/core/database.py`
 
 ### `build_database_url(config)`
-Builds SQLAlchemy `URL` for `postgresql+psycopg`; password stays a `SecretStr` until URL construction.
+Parses `Settings.database_url` from `constants.URL_DATABASE`, converts the
+driver to `postgresql+psycopg`, and preserves Neon query options such as SSL
+and channel binding. The URL stays a `SecretStr` until URL construction.
 
 ### `build_engine(config)`
 - `pool_pre_ping=True`.
@@ -30,7 +32,12 @@ Return mapping rows as plain dict(s). Transaction ownership remains with caller.
 
 ## Config — `app/core/config.py`
 
-`Settings` validates app env, docs, CORS, DB host/port/name/user/password/schema/pool, optional Redis, JWT keys/algorithm/expiry/issuer/audience and refresh pepper.
+`Settings` lấy default từ `app/core/constants.py`, dùng `URL_DATABASE` làm DB
+connection chính và validates app env, docs, CORS, schema/pool, optional Redis,
+JWT keys/algorithm/expiry/issuer/audience and refresh pepper. Các field DB rời
+được giữ optional để tương thích constructor cũ nhưng không được engine dùng.
+Model không tự đọc `.env` hoặc process environment; caller vẫn có thể truyền
+override tường minh khi khởi tạo `Settings(...)`.
 
 Important validators:
 - CORS accepts list or comma-separated string.

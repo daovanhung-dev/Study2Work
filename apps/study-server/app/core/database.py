@@ -7,23 +7,19 @@ from functools import lru_cache
 from typing import Any
 
 from sqlalchemy import URL, Engine, create_engine, text
-from sqlalchemy.engine import Result
+from sqlalchemy.engine import Result, make_url
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import Settings, get_settings
 
 
 def build_database_url(config: Settings) -> URL:
-    """Build a PostgreSQL URL without exposing or mis-escaping credentials."""
+    """Parse the configured Neon URL and use the installed psycopg driver."""
 
-    return URL.create(
-        drivername="postgresql+psycopg",
-        username=config.db_user,
-        password=config.db_password.get_secret_value(),
-        host=config.db_host,
-        port=config.db_port,
-        database=config.db_name,
-    )
+    database_url = make_url(config.database_url.get_secret_value())
+    if database_url.drivername == "postgresql":
+        database_url = database_url.set(drivername="postgresql+psycopg")
+    return database_url
 
 
 def build_engine(config: Settings) -> Engine:

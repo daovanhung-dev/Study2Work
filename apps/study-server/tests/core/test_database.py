@@ -12,10 +12,7 @@ from sqlalchemy.orm import Session
 
 def make_settings() -> Settings:
     return Settings(
-        db_host="localhost",
-        db_name="study",
-        db_user="user",
-        db_password="p@ss:word",
+        database_url="postgresql://user:p%40ss%3Aword@localhost:5432/study",
         db_schema="study_dev0",
         jwt_algorithm="HS256",
         jwt_secret_key="test-secret-key-that-is-at-least-32-characters",
@@ -28,6 +25,25 @@ def test_database_url_escapes_credentials() -> None:
     assert url.render_as_string(hide_password=False) == (
         "postgresql+psycopg://user:p%40ss%3Aword@localhost:5432/study"
     )
+
+
+def test_database_url_preserves_neon_connection_options() -> None:
+    url = build_database_url(
+        Settings(
+            db_host="localhost",
+            db_name="local_database",
+            db_user="local_user",
+            db_password="local_password",
+        )
+    )
+
+    assert url.drivername == "postgresql+psycopg"
+    assert url.host == "ep-red-frog-b3yp4d4v-pooler.c-4.ap-southeast-1.aws.neon.tech"
+    assert url.database == "neondb"
+    assert url.query == {
+        "sslmode": "require",
+        "channel_binding": "require",
+    }
 
 
 def test_query_helpers_return_plain_dictionaries() -> None:

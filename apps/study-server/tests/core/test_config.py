@@ -1,9 +1,45 @@
 import pytest
+from app.core import constants
 from app.core.config import Settings
 from pydantic import ValidationError
 
 
-def test_settings_accept_legacy_environment_aliases() -> None:
+def test_settings_defaults_come_from_constants() -> None:
+    settings = Settings()
+
+    assert settings.app_env == constants.APP_ENV
+    assert settings.enable_docs == constants.ENABLE_DOCS
+    assert settings.cors_origins == list(constants.CORS_ORIGINS)
+    assert settings.URL_DATABASE == constants.URL_DATABASE
+    assert settings.db_host is None
+    assert settings.db_port is None
+    assert settings.db_name is None
+    assert settings.db_user is None
+    assert settings.DB_PASSWORD is None
+    assert settings.db_schema == constants.DB_SCHEMA
+    assert settings.redis_url == constants.REDIS_URL
+    assert settings.jwt_algorithm == constants.JWT_ALGORITHM
+    assert settings.jwt_access_token_expire_minutes == constants.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+    assert settings.jwt_refresh_token_expire_days == constants.JWT_REFRESH_TOKEN_EXPIRE_DAYS
+    assert settings.jwt_issuer == constants.JWT_ISSUER
+    assert settings.jwt_audience == constants.JWT_AUDIENCE
+
+
+def test_settings_ignore_environment_variables(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("DB_HOST", "environment-host")
+    monkeypatch.setenv("URL_DATABASE", "postgresql://environment-host/environment-db")
+    monkeypatch.setenv("JWT_ALGORITHM", "HS256")
+
+    settings = Settings()
+
+    assert settings.app_env == constants.APP_ENV
+    assert settings.URL_DATABASE == constants.URL_DATABASE
+    assert settings.db_host is None
+    assert settings.jwt_algorithm == constants.JWT_ALGORITHM
+
+
+def test_settings_accept_legacy_constructor_aliases() -> None:
     settings = Settings(
         APP_ENV="test",
         ENABLE_DOCS=False,
@@ -22,6 +58,7 @@ def test_settings_accept_legacy_environment_aliases() -> None:
     assert settings.enable_docs is False
     assert settings.cors_origins == ["http://localhost:5173", "http://localhost:5174"]
     assert settings.DB_PASSWORD == "p@ssword"
+    assert settings.URL_DATABASE == constants.URL_DATABASE
 
 
 def test_settings_reject_unsafe_database_schema() -> None:

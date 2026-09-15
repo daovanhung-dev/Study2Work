@@ -1,3 +1,5 @@
+							
+
 ---
 title: "Data Mapping"
 order: 5
@@ -5,46 +7,45 @@ source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
 format: markdown
 ---
-
 # Data Mapping
 
 ## Flow xử lý data
 
 ## Request Usage Matrix
 
-| Request field | Source | Validate | SQL/mutation usage | Response usage | Gap |
-|---|---|---|---|---|---|
-| `email` | `request["email"]` | Required; email format | Duplicate lookup; insert `users.email` | `data.email` | N/A |
-| `password` | `request["password"]` | Required; approved password policy (threshold TBD) | Hash into `users.password_hash` | Không map vào response | N/A |
-| `full_name` | `request["full_name"]` | Required | Insert `users.full_name` | `data.full_name` | N/A |
+| Request field | Source                   | Validate                                           | SQL/mutation usage                      | Response usage           | Gap |
+| ------------- | ------------------------ | -------------------------------------------------- | --------------------------------------- | ------------------------ | --- |
+| `email`     | `request["email"]`     | Required; email format                             | Duplicate lookup; insert`users.email` | `data.email`           | N/A |
+| `password`  | `request["password"]`  | Required; approved password policy (threshold TBD) | Hash into`users.password_hash`        | Không map vào response | N/A |
+| `full_name` | `request["full_name"]` | Required                                           | Insert`users.full_name`               | `data.full_name`       | N/A |
 
 ## Query Matrix
 
-| Query ID | Mục đích | Type | Base table | Column get | WHERE | Result variable | Branch |
-|---|---|---|---|---|---|---|---|
-| `Q1` | Kiểm tra email đã tồn tại | `SELECT` | `users AS u` | `u.id` | `u.email = email` | `existing_user` | `count > 0` → conflict; `count = 0` → continue |
+| Query ID | Mục đích                    | Type       | Base table     | Column get | WHERE               | Result variable   | Branch                                               |
+| -------- | ------------------------------ | ---------- | -------------- | ---------- | ------------------- | ----------------- | ---------------------------------------------------- |
+| `Q1`   | Kiểm tra email đã tồn tại | `SELECT` | `users AS u` | `u.id`   | `u.email = email` | `existing_user` | `count > 0` → conflict; `count = 0` → continue |
 
 ## Mutation Matrix
 
-| Mutation ID | Operation | Target table | Record condition | Fields | Value sources | Mapping file | Transaction | Failure behavior |
-|---|---|---|---|---|---|---|---|---|
-| `M1` | `INSERT` | `users` | N/A — generated primary key | Mỗi column theo mapping | Request, hash, default/generated values | [07_users_insert.md](./07_users_insert.md) | Users insert boundary | `ROLLBACK` và trả 500 khi insert thất bại |
+| Mutation ID | Operation  | Target table | Record condition             | Fields                   | Value sources                           | Mapping file                              | Transaction           | Failure behavior                                |
+| ----------- | ---------- | ------------ | ---------------------------- | ------------------------ | --------------------------------------- | ----------------------------------------- | --------------------- | ----------------------------------------------- |
+| `M1`      | `INSERT` | `users`    | N/A — generated primary key | Mỗi column theo mapping | Request, hash, default/generated values | [07_users_insert.md](./07_users_insert.md) | Users insert boundary | `ROLLBACK` và trả 500 khi insert thất bại |
 
 ## Response Source Matrix
 
-| Response field | Type | Source type | Table/column hoặc generator | Data Mapping step | Transform | Null/empty rule | Gap |
-|---|---|---|---|---|---|---|---|
-| `data.id` | `int64` | Generated DB | `users.id` | `8.1` | Serialize BIGSERIAL as int64 | N/A | N/A |
-| `data.full_name` | `string` | Direct DB | `users.full_name` | `8.1` | None | N/A | N/A |
-| `data.email` | `email` | Direct DB | `users.email` | `8.1` | None | N/A | N/A |
-| `data.role` | `string` | Fixed/input policy | `STUDENT` | `4.1`/`8.1` | Default role | N/A | N/A |
-| `data.avatar_url` | `uri` | Direct DB | `users.avatar_url` | `8.1` | None | TBD — null/omit | N/A |
-| `data.bio` | `string` | Unsupported source | `N/A — no ERD column` | `8.1` | DISCREPANCY | TBD — null/omit | `DISCREPANCY` |
-| `data.phone` | `string` | Direct DB | `users.phone` | `8.1` | None | TBD — null/omit | N/A |
-| `data.status` | `string` | DB default | `users.status` | `8.1` | Default `ACTIVE` | N/A | N/A |
-| `data.created_at` | `date-time` | DB/application timestamp | `users.created_at` | `8.1` | None | N/A | Generator TBD |
-| `data.updated_at` | `date-time` | DB/application timestamp | `users.updated_at` | `8.1` | None | N/A | Generator TBD |
-| `traceId` | `uuid` | Request correlation/generator | `N/A` | `8.1/8.2` | None | N/A | Generator TBD |
+| Response field      | Type          | Source type                   | Table/column hoặc generator | Data Mapping step | Transform                    | Null/empty rule  | Gap             |
+| ------------------- | ------------- | ----------------------------- | ---------------------------- | ----------------- | ---------------------------- | ---------------- | --------------- |
+| `data.id`         | `int64`     | Generated DB                  | `users.id`                 | `8.1`           | Serialize BIGSERIAL as int64 | N/A              | N/A             |
+| `data.full_name`  | `string`    | Direct DB                     | `users.full_name`          | `8.1`           | None                         | N/A              | N/A             |
+| `data.email`      | `email`     | Direct DB                     | `users.email`              | `8.1`           | None                         | N/A              | N/A             |
+| `data.role`       | `string`    | Fixed/input policy            | `STUDENT`                  | `4.1`/`8.1`   | Default role                 | N/A              | N/A             |
+| `data.avatar_url` | `uri`       | Direct DB                     | `users.avatar_url`         | `8.1`           | None                         | TBD — null/omit | N/A             |
+| `data.bio`        | `string`    | Unsupported source            | `N/A — no ERD column`     | `8.1`           | DISCREPANCY                  | TBD — null/omit | `DISCREPANCY` |
+| `data.phone`      | `string`    | Direct DB                     | `users.phone`              | `8.1`           | None                         | TBD — null/omit | N/A             |
+| `data.status`     | `string`    | DB default                    | `users.status`             | `8.1`           | Default`ACTIVE`            | N/A              | N/A             |
+| `data.created_at` | `date-time` | DB/application timestamp      | `users.created_at`         | `8.1`           | None                         | N/A              | Generator TBD   |
+| `data.updated_at` | `date-time` | DB/application timestamp      | `users.updated_at`         | `8.1`           | None                         | N/A              | Generator TBD   |
+| `traceId`         | `uuid`      | Request correlation/generator | `N/A`                      | `8.1/8.2`       | None                         | N/A              | Generator TBD   |
 
 ## 1. Get request data
 
@@ -86,9 +87,9 @@ format: markdown
 
 **Column get**
 
-| Target table | Column get | Chú thích | Remarks |
-|---|---|---|---|
-| `users AS u` | `u.id` | Existing user ID | `Q1` |
+| Target table   | Column get | Chú thích      | Remarks |
+| -------------- | ---------- | ---------------- | ------- |
+| `users AS u` | `u.id`   | Existing user ID | `Q1`  |
 
 **WHERE**
 
@@ -149,11 +150,11 @@ format: markdown
 
 #### 7.2.1. Dispatch parameters
 
-| No | Parameter | Value | Remarks |
-|---:|---|---|---|
-| 1 | `Content-Type` | `application/json` | Header |
-| 2 | `user_id` | `generated_id` từ xử lý `6.1` | Request body |
-| 3 | `email` | `email` từ xử lý `1.2` | Request body |
+| No | Parameter        | Value                                | Remarks      |
+| -: | ---------------- | ------------------------------------ | ------------ |
+|  1 | `Content-Type` | `application/json`                 | Header       |
+|  2 | `user_id`      | `generated_id` từ xử lý `6.1` | Request body |
+|  3 | `email`        | `email` từ xử lý `1.2`        | Request body |
 
 ## 8. Map response
 
@@ -207,7 +208,9 @@ format: markdown
 - Chi tiết: [06_Error.md — row 7](./06_Error.md).
 
 ---
+
 ## Phụ lục đối chiếu nguồn Excel
+
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `3. Data mapping`
 - Dimension: `B1:BB61`
@@ -218,70 +221,70 @@ format: markdown
 <details>
 <summary>Bản ghi từng ô có dữ liệu hoặc công thức</summary>
 
-| Hàng | Ô | Giá trị nguồn | Công thức nguồn |
-|---:|---|---|---|
-| 2 | `B2` | Flow xử lý data |  |
-| 4 | `D4` | 0. |  |
-| 4 | `E4` | Check quyền |  |
-| 5 | `E5` | ・ |  |
-| 5 | `F5` | Thực hiện check quyền |  |
-| 6 | `E6` | ・ |  |
-| 6 | `F6` | Get count khi get data từ … |  |
-| 7 | `G7` | Table get |  |
-| 7 | `K7` | : |  |
-| 8 | `G8` | Conditions |  |
-| 8 | `K8` | : |  |
-| 10 | `E10` | ・ |  |
-| 10 | `F10` | Trường hợp giá trị get được lớn hơn 0, thực hiện các xử lý tiếp theo |  |
-| 11 | `E11` | ・ |  |
-| 11 | `F11` | Trường hợp giá trị get được bằng 0, trả về status 2 |  |
-| 13 | `D13` | 1. |  |
-| 13 | `E13` | validate data input |  |
-| 14 | `F14` | refer sheet [４．Error] |  |
-| 16 | `D16` | 2. |  |
-| 16 | `E16` | Get thông tin… |  |
-| 18 | `F18` | Table get |  |
-| 18 | `K18` | Column get |  |
-| 18 | `P18` | Chú thích |  |
-| 18 | `U18` | Remarks |  |
-| 29 | `F29` | Target table / join condition |  |
-| 30 | `F30` | Target table |  |
-| 30 | `N30` | Join condition |  |
-| 30 | `AL30` | 結合種類 |  |
-| 31 | `F31` | txn_ams_t0320 AS a |  |
-| 32 | `F32` | txn_amm_v0002 AS b |  |
-| 32 | `N32` | ON a . chy_typ = b . kbn_typ AND b . dmin_cd = A AND b . kbnknr_cd = 001 |  |
-| 32 | `AL32` | LEFT JOIN |  |
-| 33 | `F33` | txn_amm_v0002 AS c |  |
-| 33 | `N33` | ON a . chy_typ = c . kbn_typ AND c . dmin_cd = A AND c . kbnknr_cd = Z02 |  |
-| 33 | `AL33` | LEFT JOIN |  |
-| 35 | `F35` | ・ |  |
-| 35 | `G35` | Điều kiện get data |  |
-| 37 | `F37` | ・ |  |
-| 37 | `G37` | Điều kiện sort |  |
-| 41 | `D41` | 3. |  |
-| 41 | `E41` | Insert/Update thông tin … |  |
-| 42 | `E42` | Update table…. |  |
-| 43 | `E43` | ・ |  |
-| 43 | `F43` | Items update |  |
-| 44 | `F44` | ・ |  |
-| 44 | `G44` | Refer sheet [xxxx] |  |
-| 45 | `E45` | ・ |  |
-| 45 | `F45` | Điều kiện get data |  |
-| 46 | `F46` | ・ |  |
-| 46 | `G46` | auth_user. id = user hiện tại theo token |  |
-| 48 | `D48` | 4. |  |
-| 48 | `E48` | check kết quả execute query  |  |
-| 49 | `E49` | 1. Thành công |  |
-| 50 | `F50` | HTTPStatus = 200 |  |
-| 51 | `F51` | Trả về kết quả status = 1 |  |
-| 52 | `E52` | 2. Lỗi hệ thống phát sinh |  |
-| 53 | `F53` | HTTPStatus = 500 |  |
-| 54 | `F54` | Trả về kết quả status = 2 |  |
-| 55 | `E55` | 3. Validate lỗi |  |
-| 56 | `F56` | HTTPStatus = 400 |  |
-| 57 | `F57` | Trả về kết quả status = 2 |  |
-| 58 | `E58` | 4. Ngoài trường hợp trên |  |
-| 59 | `F59` | Trả về kết quả status = 2 |  |
+| Hàng | Ô       | Giá trị nguồn                                                                     | Công thức nguồn |
+| ----: | -------- | ------------------------------------------------------------------------------------ | ------------------ |
+|     2 | `B2`   | Flow xử lý data                                                                    |                    |
+|     4 | `D4`   | 0.                                                                                   |                    |
+|     4 | `E4`   | Check quyền                                                                         |                    |
+|     5 | `E5`   | ・                                                                                   |                    |
+|     5 | `F5`   | Thực hiện check quyền                                                             |                    |
+|     6 | `E6`   | ・                                                                                   |                    |
+|     6 | `F6`   | Get count khi get data từ …                                                        |                    |
+|     7 | `G7`   | Table get                                                                            |                    |
+|     7 | `K7`   | :                                                                                    |                    |
+|     8 | `G8`   | Conditions                                                                           |                    |
+|     8 | `K8`   | :                                                                                    |                    |
+|    10 | `E10`  | ・                                                                                   |                    |
+|    10 | `F10`  | Trường hợp giá trị get được lớn hơn 0, thực hiện các xử lý tiếp theo |                    |
+|    11 | `E11`  | ・                                                                                   |                    |
+|    11 | `F11`  | Trường hợp giá trị get được bằng 0, trả về status 2                       |                    |
+|    13 | `D13`  | 1.                                                                                   |                    |
+|    13 | `E13`  | validate data input                                                                  |                    |
+|    14 | `F14`  | refer sheet [４．Error]                                                              |                    |
+|    16 | `D16`  | 2.                                                                                   |                    |
+|    16 | `E16`  | Get thông tin…                                                                     |                    |
+|    18 | `F18`  | Table get                                                                            |                    |
+|    18 | `K18`  | Column get                                                                           |                    |
+|    18 | `P18`  | Chú thích                                                                          |                    |
+|    18 | `U18`  | Remarks                                                                              |                    |
+|    29 | `F29`  | Target table / join condition                                                        |                    |
+|    30 | `F30`  | Target table                                                                         |                    |
+|    30 | `N30`  | Join condition                                                                       |                    |
+|    30 | `AL30` | 結合種類                                                                             |                    |
+|    31 | `F31`  | txn_ams_t0320 AS a                                                                   |                    |
+|    32 | `F32`  | txn_amm_v0002 AS b                                                                   |                    |
+|    32 | `N32`  | ON a . chy_typ = b . kbn_typ AND b . dmin_cd = A AND b . kbnknr_cd = 001             |                    |
+|    32 | `AL32` | LEFT JOIN                                                                            |                    |
+|    33 | `F33`  | txn_amm_v0002 AS c                                                                   |                    |
+|    33 | `N33`  | ON a . chy_typ = c . kbn_typ AND c . dmin_cd = A AND c . kbnknr_cd = Z02             |                    |
+|    33 | `AL33` | LEFT JOIN                                                                            |                    |
+|    35 | `F35`  | ・                                                                                   |                    |
+|    35 | `G35`  | Điều kiện get data                                                                |                    |
+|    37 | `F37`  | ・                                                                                   |                    |
+|    37 | `G37`  | Điều kiện sort                                                                    |                    |
+|    41 | `D41`  | 3.                                                                                   |                    |
+|    41 | `E41`  | Insert/Update thông tin …                                                          |                    |
+|    42 | `E42`  | Update table….                                                                      |                    |
+|    43 | `E43`  | ・                                                                                   |                    |
+|    43 | `F43`  | Items update                                                                         |                    |
+|    44 | `F44`  | ・                                                                                   |                    |
+|    44 | `G44`  | Refer sheet [xxxx]                                                                   |                    |
+|    45 | `E45`  | ・                                                                                   |                    |
+|    45 | `F45`  | Điều kiện get data                                                                |                    |
+|    46 | `F46`  | ・                                                                                   |                    |
+|    46 | `G46`  | auth_user. id = user hiện tại theo token                                           |                    |
+|    48 | `D48`  | 4.                                                                                   |                    |
+|    48 | `E48`  | check kết quả execute query                                                        |                    |
+|    49 | `E49`  | 1. Thành công                                                                      |                    |
+|    50 | `F50`  | HTTPStatus = 200                                                                     |                    |
+|    51 | `F51`  | Trả về kết quả status = 1                                                        |                    |
+|    52 | `E52`  | 2. Lỗi hệ thống phát sinh                                                        |                    |
+|    53 | `F53`  | HTTPStatus = 500                                                                     |                    |
+|    54 | `F54`  | Trả về kết quả status = 2                                                        |                    |
+|    55 | `E55`  | 3. Validate lỗi                                                                     |                    |
+|    56 | `F56`  | HTTPStatus = 400                                                                     |                    |
+|    57 | `F57`  | Trả về kết quả status = 2                                                        |                    |
+|    58 | `E58`  | 4. Ngoài trường hợp trên                                                        |                    |
+|    59 | `F59`  | Trả về kết quả status = 2                                                        |                    |
 
 </details>

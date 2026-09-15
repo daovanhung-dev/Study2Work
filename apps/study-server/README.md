@@ -31,8 +31,12 @@ uv run uvicorn app.main:app --reload
 - Refresh token mới phải là opaque token; chỉ lưu hash bằng
   `hash_refresh_token()`, không lưu raw token.
 
-## Environment
+## Configuration
 
-Copy `.env.example` thành `.env` rồi cấu hình database, Redis và key JWT.
+Runtime defaults được khai báo trực tiếp trong
+`app/core/constants.py`; ứng dụng không tự đọc `.env` hoặc biến môi trường.
+Database runtime dùng `URL_DATABASE` của Neon; các field DB local cũ chỉ còn
+để tương thích khi truyền `Settings(...)`. Test/runtime vẫn có thể truyền
+override tường minh qua `Settings(...)`.
 ES256 là cấu hình mặc định; HS256 chỉ dùng cho compatibility ở môi trường
 chuyển tiếp.

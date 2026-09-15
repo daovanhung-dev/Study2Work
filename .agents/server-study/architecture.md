@@ -19,7 +19,7 @@ Current composition cannot complete imports, nên sơ đồ trên là **declarat
 
 - `app/main.py`: FastAPI composition root, CORS, middleware, exception handlers, root/health routes.
 - `app/api/v1.py`: declared `/api/v1` routes; imports missing business modules.
-- `app/core/config.py`: typed env/settings.
+- `app/core/config.py`: typed settings backed by `app/core/constants.py`.
 - `app/core/database.py`: sync SQLAlchemy engine/session/query primitives.
 - `app/core/security/*`: password, access token, refresh token primitives.
 - `app/service/ai/ollama_service.py`: Ollama adapter copied/shared with Study codebase; no live Study caller after business modules disappeared.

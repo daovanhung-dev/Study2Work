@@ -29,7 +29,7 @@ exception.
 
 | Module | Trách nhiệm | Điểm vào thường dùng |
 |---|---|---|
-| app/core/config.py | Đọc, parse và validate environment settings | Settings, get_settings() |
+| app/core/config.py | Đọc, parse và validate static settings | Settings, get_settings() |
 | app/core/database.py | Tạo PostgreSQL engine, session factory và query primitive | get_db, query_one, query_many |
 | app/core/responses.py | Tạo success/error envelope thống nhất | success_response, error_response |
 | app/core/security.py | Hash password, JWT và opaque refresh token | hash_password, create_access_token |
@@ -81,8 +81,8 @@ lazy qua get_engine() khi code thật sự cần database.
 
 ## Quy ước sử dụng chung
 
-- Code mới dùng field Python dạng snake_case; environment alias hiện tại dùng
-  được cả chữ hoa (DB_HOST) và tên field (db_host).
+- Code mới dùng field Python dạng snake_case; constructor alias vẫn nhận được
+  cả chữ hoa (DB_HOST) và tên field (db_host).
 - HTTP API nhận database bằng db: Session = Depends(get_db). View sở hữu
   commit() và rollback(); helper query không commit.
 - Response mới dùng success_response() và error_response(). Các helper
@@ -153,7 +153,8 @@ private helper hiện có trong app/core.
 | Settings.parse_cors_origins | Chuyển CORS_ORIGINS dạng chuỗi hoặc list thành list đã trim. | Được Pydantic tự gọi khi khởi tạo Settings; không cần gọi trực tiếp trong router. |
 | Settings.validate_db_schema | Kiểm tra schema chỉ gồm ký tự an toàn cho search_path. | Được Pydantic tự gọi khi tạo Settings; dùng để phát hiện cấu hình DB sai sớm. |
 | Settings.validate_jwt_key_configuration | Đảm bảo HS256 có secret hoặc ES256 có public key. | Được Pydantic tự gọi sau khi parse Settings; dùng để fail-fast khi cấu hình JWT thiếu. |
-| Settings.DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_SCHEMA | Đọc cấu hình DB bằng tên uppercase cũ. | Chỉ khi code legacy còn dùng API uppercase; code mới dùng db_host, db_port... |
+| Settings.URL_DATABASE | Đọc connection URL Neon bằng tên uppercase cũ. | Dùng ở compatibility boundary; code mới dùng database_url. |
+| Settings.DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_SCHEMA | Đọc các field DB legacy bằng tên uppercase cũ. | Chỉ để tương thích constructor; engine không dùng các field DB rời. |
 | Settings.JWT_SECRET_KEY, JWT_ALGORITHM, JWT_ACCESS_TOKEN_EXPIRE_MINUTES, JWT_REFRESH_TOKEN_EXPIRE_DAYS, JWT_ISSUER | Đọc một số cấu hình JWT bằng tên uppercase cũ. | Chỉ khi tương thích code cũ; code mới dùng field snake_case tương ứng. |
 | get_settings | Tạo và cache Settings mặc định của process. | Khi code cần cấu hình mặc định, ví dụ security hoặc default database factory. Không dùng để thay đổi config giữa các request. |
 | _LazySettings.__getattr__ | Chuyển attribute của proxy settings sang get_settings(). | Chỉ được gọi gián tiếp khi đọc biến module settings; không gọi trực tiếp trong business code. |
@@ -232,27 +233,28 @@ jwt_algorithm. ES256 là mặc định; HS256 chỉ là compatibility mode.
 ### Settings
 
 ~~~python
-class Settings(BaseSettings):
+class Settings(BaseModel):
     ...
 ~~~
 
-Settings là Pydantic Settings model dùng chung cho API và infrastructure.
-Model đọc file .env ở working directory, không phân biệt hoa thường, bỏ qua
-environment key không biết (extra="ignore") và cho phép truyền field bằng cả
-tên Python lẫn alias environment.
+Settings là Pydantic model dùng chung cho API và infrastructure. Giá trị mặc
+định được lấy từ `app.core.constants`; model không đọc file `.env` hoặc biến
+môi trường. Model bỏ qua key không biết (`extra="ignore"`) và cho phép truyền
+field bằng cả tên Python lẫn alias constructor.
 
 #### Các field
 
-| Field | Kiểu | Mặc định/điều kiện | Environment alias |
+| Field | Kiểu | Mặc định/điều kiện | Constructor alias |
 |---|---|---|---|
 | app_env | Environment | "local" | APP_ENV, app_env |
 | enable_docs | bool | True | ENABLE_DOCS, enable_docs |
 | cors_origins | list[str] | [] | CORS_ORIGINS, cors_origins |
-| db_host | str | bắt buộc | DB_HOST, db_host |
-| db_port | int | 5432, từ 1 đến 65535 | DB_PORT, db_port |
-| db_name | str | bắt buộc | DB_NAME, db_name |
-| db_user | str | bắt buộc | DB_USER, db_user |
-| db_password | SecretStr | bắt buộc | DB_PASSWORD, db_password |
+| database_url | SecretStr | `constants.URL_DATABASE` | URL_DATABASE, database_url |
+| db_host | str hoặc None | Legacy compatibility, không dùng cho engine | DB_HOST, db_host |
+| db_port | int hoặc None | Legacy compatibility, không dùng cho engine | DB_PORT, db_port |
+| db_name | str hoặc None | Legacy compatibility, không dùng cho engine | DB_NAME, db_name |
+| db_user | str hoặc None | Legacy compatibility, không dùng cho engine | DB_USER, db_user |
+| db_password | SecretStr hoặc None | Legacy compatibility, không dùng cho engine | DB_PASSWORD, db_password |
 | db_schema | str | "public", dài tối thiểu 1 | DB_SCHEMA, db_schema |
 | database_pool_size | int | 5, tối thiểu 1 | DATABASE_POOL_SIZE, database_pool_size |
 | database_max_overflow | int | 10, tối thiểu 0 | DATABASE_MAX_OVERFLOW, database_max_overflow |
@@ -279,11 +281,7 @@ from app.core.config import Settings
 test_settings = Settings(
     app_env="test",
     enable_docs=False,
-    db_host="127.0.0.1",
-    db_port=5432,
-    db_name="study2work_test",
-    db_user="study2work",
-    db_password="test-password",
+    database_url="postgresql://user:password@localhost:5432/study2work_test",
     db_schema="public",
     jwt_algorithm="HS256",
     jwt_secret_key="test-secret-key-that-is-at-least-32-characters",
@@ -364,22 +362,25 @@ snake_case:
 
 ~~~python
 @property
-def DB_HOST(self) -> str: ...
+def DB_HOST(self) -> str | None: ...
 
 @property
-def DB_PORT(self) -> int: ...
+def DB_PORT(self) -> int | None: ...
 
 @property
-def DB_NAME(self) -> str: ...
+def DB_NAME(self) -> str | None: ...
 
 @property
-def DB_USER(self) -> str: ...
+def DB_USER(self) -> str | None: ...
 
 @property
-def DB_PASSWORD(self) -> str: ...
+def DB_PASSWORD(self) -> str | None: ...
 
 @property
 def DB_SCHEMA(self) -> str: ...
+
+@property
+def URL_DATABASE(self) -> str: ...
 
 @property
 def JWT_SECRET_KEY(self) -> SecretStr | None: ...
@@ -400,10 +401,11 @@ def JWT_ISSUER(self) -> str: ...
 Đây là các property read-only; assignment trực tiếp vào tên uppercase không
 phải API cập nhật settings. Muốn tạo cấu hình mới, tạo instance Settings mới.
 
-DB_PASSWORD trả về plain string qua SecretStr.get_secret_value() vì đây là
-compatibility API. Code mới nên dùng settings.db_password và chỉ unwrap tại
-boundary cần thiết. Source hiện không khai báo uppercase property cho mọi field
-JWT mới, ví dụ JWT_PUBLIC_KEY, JWT_PRIVATE_KEY và JWT_AUDIENCE.
+DB_PASSWORD trả về plain string nếu caller legacy đã truyền giá trị; nếu không
+có thì trả None. `URL_DATABASE` trả về plain string qua SecretStr chỉ ở
+compatibility boundary. Code mới nên dùng `settings.database_url` và chỉ unwrap
+tại boundary cần thiết. Source hiện không khai báo uppercase property cho mọi
+field JWT mới, ví dụ JWT_PUBLIC_KEY, JWT_PRIVATE_KEY và JWT_AUDIENCE.
 
 #### get_settings
 
@@ -413,9 +415,9 @@ def get_settings() -> Settings:
     """Load and cache settings for the current process."""
 ~~~
 
-Mỗi process chỉ tạo một Settings cho tới khi cache bị clear. Hàm đọc .env và
-environment tại thời điểm gọi đầu tiên; nếu thiếu DB field hoặc JWT key phù hợp,
-lỗi validation xuất hiện tại thời điểm đó.
+Mỗi process chỉ tạo một Settings cho tới khi cache bị clear. Hàm lấy các giá trị
+mặc định từ `app.core.constants`; nếu cấu hình JWT không phù hợp, lỗi validation
+xuất hiện tại thời điểm đó.
 
 ~~~python
 from app.core.config import get_settings
@@ -424,7 +426,7 @@ settings = get_settings()
 print(settings.app_env)
 ~~~
 
-Trong test đổi environment giữa các case, có thể dùng API cache của
+Trong test đổi cấu hình giữa các case, có thể dùng API cache của
 functools.lru_cache là get_settings.cache_clear() trước khi gọi lại. Không clear
 cache tùy tiện trong request đang chạy.
 
@@ -446,7 +448,7 @@ repr(settings)          # "settings (lazy)"
 ~~~
 
 __getattr__ chỉ gọi get_settings() khi attribute chưa có trên proxy, nhờ đó
-import module không buộc production .env phải hợp lệ ngay lập tức.
+import module vẫn không khởi tạo resource hạ tầng sớm.
 
 ---
 
@@ -456,11 +458,13 @@ import module không buộc production .env phải hợp lệ ngay lập tức.
 
 ~~~python
 def build_database_url(config: Settings) -> URL:
+    database_url = make_url(config.database_url.get_secret_value())
+    ...
 ~~~
 
-Tạo SQLAlchemy URL với driver postgresql+psycopg, lấy host/port/database và
-credential từ Settings. Dùng URL.create() thay vì nối chuỗi nên password có ký
-tự đặc biệt được escape đúng:
+Parse `Settings.database_url`, chuyển driver sang `postgresql+psycopg` và giữ
+các query option của Neon như SSL/channel binding. URL được parse bằng SQLAlchemy
+nên credential có ký tự đặc biệt vẫn được xử lý đúng:
 
 ~~~python
 from app.core.database import build_database_url
@@ -1576,10 +1580,7 @@ from app.main import create_app
 settings = Settings(
     app_env="test",
     enable_docs=False,
-    db_host="localhost",
-    db_name="study2work_test",
-    db_user="study2work",
-    db_password="test-password",
+    database_url="postgresql://user:password@localhost:5432/study2work_test",
     db_schema="public",
     jwt_algorithm="HS256",
     jwt_secret_key="test-secret-key-that-is-at-least-32-characters",
@@ -1828,8 +1829,8 @@ body traceId lẫn response header X-Trace-Id.
 
 Các behavior cốt lõi hiện được kiểm tra trong apps/study-server/tests:
 
-- tests/core/test_config.py: alias environment và schema validation;
-- tests/core/test_database.py: URL escaping, query helpers, session close;
+- tests/core/test_config.py: constants defaults, environment isolation, constructor alias và schema validation;
+- tests/core/test_database.py: Neon URL/driver/query preservation, credential escaping, query helpers, session close;
 - tests/core/test_responses.py: canonical/legacy envelope và ApiError;
 - tests/core/test_security_tokens.py: JWT validation và opaque refresh hash;
 - tests/test_security.py: Argon2id và bcrypt legacy;
