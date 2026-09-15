@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import os
 from typing import Any, Literal
 
 import httpx
+
+from app.core import constants
 
 MessageRole = Literal["system", "user", "assistant"]
 
@@ -29,22 +30,12 @@ class OllamaService:
         model: str | None = None,
         timeout: float | None = None,
     ) -> None:
-        configured_base_url = (
-            base_url
-            or os.getenv(
-                "OLLAMA_BASE_URL",
-                "http://127.0.0.1:11434",
-            )
-            or "http://127.0.0.1:11434"
-        )
+        configured_base_url = base_url or constants.OLLAMA_BASE_URL
         self.base_url = configured_base_url.rstrip("/")
 
-        self.model = model or os.getenv(
-            "OLLAMA_MODEL",
-            "qwen2.5-coder:1.5b",
-        )
+        self.model = model or constants.OLLAMA_MODEL
 
-        self.timeout = timeout if timeout is not None else float(os.getenv("OLLAMA_TIMEOUT", "180"))
+        self.timeout = timeout if timeout is not None else constants.OLLAMA_TIMEOUT
 
     async def generate(
         self,

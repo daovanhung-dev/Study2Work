@@ -43,7 +43,7 @@ override tường minh khi khởi tạo `Settings(...)`.
 Important validators:
 - CORS accepts list or comma-separated string.
 - DB schema only alphanumeric/underscore.
-- HS256 requires secret; ES256 requires public key at settings validation time.
+- HS256 requires secret; ES256 requires private and public key at settings validation time.
 - `get_settings()` is cached/lazy; `_LazySettings` preserves legacy uppercase-style access.
 
 ## Password — `app/core/security/password.py`

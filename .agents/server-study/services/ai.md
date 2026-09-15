@@ -6,9 +6,10 @@ Status: implementation exists; **no verified Study runtime caller** at current s
 
 `OllamaService` is an async HTTP adapter using `httpx`.
 
-- Base URL: arg -> `OLLAMA_BASE_URL` -> `http://127.0.0.1:11434`.
-- Model: arg -> `OLLAMA_MODEL` -> `qwen2.5-coder:1.5b`.
-- Timeout: arg -> `OLLAMA_TIMEOUT` -> 180 seconds.
+- Base URL: arg -> `constants.OLLAMA_BASE_URL`.
+- Model: arg -> `constants.OLLAMA_MODEL`.
+- Timeout: arg -> `constants.OLLAMA_TIMEOUT`.
+- Không đọc `.env` hoặc process environment; override chỉ qua constructor.
 - `generate`: POST `/api/generate`, `stream=false`.
 - `chat`: POST `/api/chat`, `stream=false`.
 - `list_models`: GET `/api/tags`.

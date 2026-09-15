@@ -171,8 +171,11 @@ class Settings(BaseModel):
 
         if self.jwt_algorithm == "HS256" and self.jwt_secret_key is None:
             raise ValueError("JWT_SECRET_KEY is required when JWT_ALGORITHM is HS256")
-        if self.jwt_algorithm == "ES256" and self.jwt_public_key is None:
-            raise ValueError("JWT_PUBLIC_KEY is required when JWT_ALGORITHM is ES256")
+        if self.jwt_algorithm == "ES256":
+            if self.jwt_private_key is None:
+                raise ValueError("JWT_PRIVATE_KEY is required when JWT_ALGORITHM is ES256")
+            if self.jwt_public_key is None:
+                raise ValueError("JWT_PUBLIC_KEY is required when JWT_ALGORITHM is ES256")
         return self
 
     # Compatibility aliases for the original uppercase settings API.

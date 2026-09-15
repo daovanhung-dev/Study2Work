@@ -1,8 +1,8 @@
 """Static Study API configuration.
 
 These values are the runtime defaults for :mod:`app.core.config`.  They are
-kept as Python values rather than dotenv-style text so configuration does not
-depend on a ``.env`` file or process environment variables.
+kept as Python values rather than configuration-file text so configuration does
+not depend on a ``.env`` file or process environment variables.
 """
 
 from typing import Literal
@@ -29,11 +29,26 @@ URL_DATABASE = "postgresql://neondb_owner:npg_lujRC0XdsoI5@ep-red-frog-b3yp4d4v-
 
 REDIS_URL = "redis://localhost:6380/0"
 
-# Canonical JWT setup uses ES256. Store real PEM values in a secret manager in
-# production; these are the existing local placeholder values.
+OLLAMA_BASE_URL = "http://127.0.0.1:11434"
+OLLAMA_MODEL = "qwen2.5-coder:1.5b"
+OLLAMA_TIMEOUT = 180.0
+
+# Canonical JWT setup uses ES256. These development values must be replaced by
+# a secret-manager-backed key pair before production deployment.
 JWT_ALGORITHM: Literal["ES256", "HS256"] = "ES256"
-JWT_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nreplace-with-public-key\n-----END PUBLIC KEY-----"
-JWT_PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----\nreplace-with-private-key\n-----END PRIVATE KEY-----"
+JWT_PUBLIC_KEY = (
+    "-----BEGIN PUBLIC KEY-----\n"
+    "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAERsfgq153AjoyCSGPE2NlIeaYE/d+\n"
+    "+fW0KiuS6l9v8g3XvILBKmCwFEuz0ITuPRfL7D+32KaWXGDC/5Bqf3WwtA==\n"
+    "-----END PUBLIC KEY-----"
+)
+JWT_PRIVATE_KEY = (
+    "-----BEGIN PRIVATE KEY-----\n"
+    "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg84/4zY0lqbQ579hC\n"
+    "NqjIl2E5U5lsXlJSdBxHQJSWOqihRANCAARGx+CrXncCOjIJIY8TY2Uh5pgT9375\n"
+    "9bQqK5LqX2/yDde8gsEqYLAUS7PQhO49F8vsP7fYppZcYML/kGp/dbC0\n"
+    "-----END PRIVATE KEY-----"
+)
 JWT_SECRET_KEY: str | None = None
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 15
 JWT_REFRESH_TOKEN_EXPIRE_DAYS = 30

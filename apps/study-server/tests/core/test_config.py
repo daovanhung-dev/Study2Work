@@ -72,3 +72,8 @@ def test_settings_reject_unsafe_database_schema() -> None:
             jwt_algorithm="HS256",
             jwt_secret_key="test-secret-key-that-is-at-least-32-characters",
         )
+
+
+def test_es256_requires_private_key() -> None:
+    with pytest.raises(ValidationError, match="JWT_PRIVATE_KEY"):
+        Settings(jwt_algorithm="ES256", jwt_private_key=None)

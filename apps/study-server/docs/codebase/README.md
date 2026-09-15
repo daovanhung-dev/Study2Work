@@ -134,7 +134,7 @@ private helper hiện có trong app/core.
 | security | create_access_token, create_refresh_token | Tạo access/legacy refresh JWT |
 | security | decode_token, decode_access_token, decode_refresh_token | Verify và decode JWT |
 | security | generate_refresh_token | Tạo opaque refresh token |
-| security | hash_refresh_token, compare_token_hash | Hash và so sánh digest |
+| security | hash_refresh_token, compare_refresh_token | Hash và so sánh digest |
 | trace | create_trace_id, normalize_trace_id | Tạo/chuẩn hóa UUID trace |
 | trace | set_current_trace_id, reset_current_trace_id | Quản lý ContextVar |
 | trace | get_current_trace_id, get_trace_id | Đọc trace từ context/request |
@@ -152,7 +152,7 @@ private helper hiện có trong app/core.
 | Settings | Gom toàn bộ cấu hình có type của API và infrastructure. | Tạo app/runtime hoặc test cần cấu hình riêng. Không tự tạo dict config thay thế nếu đã có Settings. |
 | Settings.parse_cors_origins | Chuyển CORS_ORIGINS dạng chuỗi hoặc list thành list đã trim. | Được Pydantic tự gọi khi khởi tạo Settings; không cần gọi trực tiếp trong router. |
 | Settings.validate_db_schema | Kiểm tra schema chỉ gồm ký tự an toàn cho search_path. | Được Pydantic tự gọi khi tạo Settings; dùng để phát hiện cấu hình DB sai sớm. |
-| Settings.validate_jwt_key_configuration | Đảm bảo HS256 có secret hoặc ES256 có public key. | Được Pydantic tự gọi sau khi parse Settings; dùng để fail-fast khi cấu hình JWT thiếu. |
+| Settings.validate_jwt_key_configuration | Đảm bảo HS256 có secret hoặc ES256 có private/public key. | Được Pydantic tự gọi sau khi parse Settings; dùng để fail-fast khi cấu hình JWT thiếu. |
 | Settings.URL_DATABASE | Đọc connection URL Neon bằng tên uppercase cũ. | Dùng ở compatibility boundary; code mới dùng database_url. |
 | Settings.DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_SCHEMA | Đọc các field DB legacy bằng tên uppercase cũ. | Chỉ để tương thích constructor; engine không dùng các field DB rời. |
 | Settings.JWT_SECRET_KEY, JWT_ALGORITHM, JWT_ACCESS_TOKEN_EXPIRE_MINUTES, JWT_REFRESH_TOKEN_EXPIRE_DAYS, JWT_ISSUER | Đọc một số cấu hình JWT bằng tên uppercase cũ. | Chỉ khi tương thích code cũ; code mới dùng field snake_case tương ứng. |
@@ -350,7 +350,7 @@ def validate_jwt_key_configuration(self) -> Settings:
 Kiểm tra key sau khi toàn bộ field đã được parse:
 
 - jwt_algorithm == "HS256" bắt buộc có jwt_secret_key.
-- jwt_algorithm == "ES256" bắt buộc có jwt_public_key.
+- jwt_algorithm == "ES256" bắt buộc có jwt_private_key và jwt_public_key.
 
 Validator này không kiểm tra private PEM có hợp lệ hay không; private key sẽ
 được kiểm tra thực tế khi create_access_token() cần signing key.

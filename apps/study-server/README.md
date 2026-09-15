@@ -40,3 +40,6 @@ Database runtime dùng `URL_DATABASE` của Neon; các field DB local cũ chỉ 
 override tường minh qua `Settings(...)`.
 ES256 là cấu hình mặc định; HS256 chỉ dùng cho compatibility ở môi trường
 chuyển tiếp.
+Ollama cũng lấy URL, model và timeout từ `app/core/constants.py`; chỉ
+override trực tiếp qua `OllamaService(...)` được hỗ trợ. File `.env.example`
+chỉ là tài liệu tham khảo và không được runtime đọc.
