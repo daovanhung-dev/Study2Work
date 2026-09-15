@@ -1,3 +1,4 @@
+import app.core.database as database_module
 import pytest
 from app.core.config import Settings
 from app.core.database import (
@@ -43,6 +44,26 @@ def test_database_url_preserves_neon_connection_options() -> None:
     assert url.query == {
         "sslmode": "require",
         "channel_binding": "require",
+    }
+
+
+def test_build_engine_does_not_send_search_path_startup_option(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured_kwargs: dict[str, object] = {}
+
+    def fake_create_engine(*args: object, **kwargs: object) -> object:
+        captured_kwargs.update(kwargs)
+        return object()
+
+    monkeypatch.setattr(database_module, "create_engine", fake_create_engine)
+
+    database_module.build_engine(Settings())
+
+    assert captured_kwargs == {
+        "pool_pre_ping": True,
+        "pool_size": 5,
+        "max_overflow": 10,
     }
 
 

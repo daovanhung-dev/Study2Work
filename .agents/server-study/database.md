@@ -10,7 +10,7 @@ Current evidence establishes a Neon PostgreSQL connection URL in
 `app/core/constants.py` and sync SQLAlchemy helpers only. It does **not** establish any business table.
 
 Known discrepancy:
-- runtime core parses `constants.URL_DATABASE`, uses `postgresql+psycopg`, preserves Neon SSL/channel-binding query options and configurable `search_path`;
+- runtime core parses `constants.URL_DATABASE`, uses `postgresql+psycopg`, preserves Neon SSL/channel-binding query options and does not send `search_path` in the pooled startup package;
 - `alembic.ini` references migration setup/directory that is absent and is not sufficient schema evidence.
 
 `/api/v1/test/db` only declares `SELECT NOW()`; health readiness only reports configuration label and does not probe the DB.

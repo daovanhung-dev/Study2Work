@@ -10,7 +10,8 @@ and channel binding. The URL stays a `SecretStr` until URL construction.
 ### `build_engine(config)`
 - `pool_pre_ping=True`.
 - pool size/max overflow from settings.
-- PostgreSQL `search_path=<db_schema>,public` via connect options.
+- Does not send `search_path` through startup options because Neon pooler rejects it.
+- Neon currently uses the default `public` schema.
 
 ### `build_session_factory(engine)`
 Sync `Session`, `autoflush=False`, `expire_on_commit=False`.

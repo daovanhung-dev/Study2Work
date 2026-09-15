@@ -30,9 +30,6 @@ def build_engine(config: Settings) -> Engine:
         pool_pre_ping=True,
         pool_size=config.database_pool_size,
         max_overflow=config.database_max_overflow,
-        connect_args={
-            "options": f"-csearch_path={config.db_schema},public",
-        },
     )
 
 

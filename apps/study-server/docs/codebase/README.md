@@ -487,7 +487,8 @@ Tạo engine synchronous với các option:
 - pool_pre_ping=True: kiểm tra connection trước khi dùng;
 - pool_size=config.database_pool_size;
 - max_overflow=config.database_max_overflow;
-- PostgreSQL search_path={config.db_schema},public.
+- Không truyền PostgreSQL search_path qua startup options vì Neon pooler từ chối parameter này;
+- Neon hiện dùng schema mặc định public.
 
 ~~~python
 from app.core.database import build_engine
