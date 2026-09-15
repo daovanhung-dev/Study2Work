@@ -124,6 +124,25 @@
       "trackedRoots": [],
       "requiredPages": [],
       "requiredSourcePaths": []
+    },
+    "db-admin": {
+      "mode": "DEEP",
+      "status": "VERIFIED",
+      "entry": ".agents/db-admin/AGENTS.md",
+      "sourceRoots": [
+        "apps/db-admin-web",
+        "apps/db-admin-server"
+      ],
+      "trackedRoots": [
+        "apps/db-admin-web",
+        "apps/db-admin-server"
+      ],
+      "requiredPages": [],
+      "requiredSourcePaths": [
+        "apps/db-admin-web/src/main.ts",
+        "apps/db-admin-server/app/main.py",
+        "apps/db-admin-server/app/api/routes.py"
+      ]
     }
   }
 }

@@ -23,6 +23,17 @@ apps/work-server/src/bootstrap.ts
   -> Prisma -> Work PostgreSQL
   -> remote Identity JWKS (protected routes only; current routes public)
   -> Redis URL only (no client)
+
+apps/db-admin-web/src/main.ts
+  -> Angular standalone routes/material UI/CodeMirror
+  -> same-origin `/api/v1/admin/*` through Angular dev proxy
+  -> local launcher starts apps/db-admin-server before serving the UI
+  -> in-memory access token only
+
+apps/db-admin-server/app/main.py
+  -> FastAPI routes and canonical response envelope
+  -> `app/core/constants.py` -> SQLAlchemy + psycopg3 -> one Neon database
+  -> OIDC/JWKS identity provider for server-side permissions
 ```
 
 ## Client/server boundaries
@@ -40,6 +51,7 @@ apps/work-server/src/bootstrap.ts
 | Study | `study.evidence.upserted.v1.schema.json` | Work | Consumer missing |
 | Study | `study.evidence.revoked.v1.schema.json` | Work | Consumer missing |
 | Shared | `skill-taxonomy.v1*.json` | Future domain modules | No current server caller |
+| DB Admin | `/api/v1/admin/*` | `apps/db-admin-web/` | Implemented locally; no shared contract file yet |
 
 Event contract yêu cầu signature-first validation, JSON Schema, idempotency và
 local snapshot. Không có nghĩa các helper/table tương ứng đã tồn tại.

@@ -81,6 +81,7 @@ def get_db() -> Generator[Session, None, None]:
 
     yield from get_db_from_factory(get_session_factory())
 
+# when use develop api
 
 def execute_query(
     db: Session,
@@ -90,7 +91,6 @@ def execute_query(
     """Execute parameterized SQL inside the caller-owned transaction."""
 
     return db.execute(text(query), dict(params or {}))
-
 
 def query_one(
     db: Session,

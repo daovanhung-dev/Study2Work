@@ -10,6 +10,7 @@ tree hiện tại. Không lấy table/column từ Git history hoặc diagram đ�
 | Study | sync SQLAlchemy `postgresql+psycopg`; Postgres/Redis compose | `NOT_FOUND`; không có `alembic/` |
 | AI | copied SQLAlchemy core, runtime không dùng | `NOT_FOUND`; không migration/model |
 | Work | Prisma + PostgreSQL | `apps/work-server/prisma/schema.prisma` + một migration |
+| DB Admin | SQLAlchemy + psycopg3 | one externally configured Neon target; runtime catalog only, no migrations |
 
 ## Work `system_records`
 
@@ -43,3 +44,12 @@ Trước khi thêm query/migration phải có schema/requirement xác nhận tab
 column, PK/FK, unique/check/index, enum/status, delete/timestamp policy và tenant/
 transaction boundary. Query module không sở hữu commit; use case sở hữu atomic
 transaction theo architecture thực tế của scope.
+
+## DB Admin target
+
+`apps/db-admin-server/` deliberately does not infer or copy the Study/Work
+schema. The local `URL_DATABASE` constant is backend-only and is never exposed
+to Angular. Catalog queries use `information_schema` and `pg_catalog`; DDL, row
+CRUD and SQL execution use request-isolated transactions. DDL and row mutation
+confirmation state is bounded to the backend process, while audit entries are
+bounded in memory and structured logs only.

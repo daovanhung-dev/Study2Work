@@ -11,6 +11,7 @@ Source snapshot gốc cho deep-context: `5a5c2c826ddcc2931a9398115fdb61448dcb4c5
 | Work server | `DEEP` | `VERIFIED` foundation | `server-work/AGENTS.md` |
 | Study server | `DEEP` | `DECLARED_NOT_RUNNABLE` | `server-study/AGENTS.md` |
 | AI server | `DEEP` | runtime chat `VERIFIED`, copied core `UNWIRED` | `server-ai/AGENTS.md` |
+| DB Admin | `DEEP` | local Angular + FastAPI deployables `VERIFIED` | `db-admin/AGENTS.md` |
 
 Machine-readable registry: `.agents/context-manifest.json`.
 
@@ -22,6 +23,7 @@ Machine-readable registry: `.agents/context-manifest.json`.
 - `project/dependencies.md`: dependency map qua app/contract/external system.
 - `project/database.md`: database source hiện còn trong working tree.
 - `project/business-code.md`: cách tra business code/HTTP mapping.
+- `db-admin/AGENTS.md`: ownership, API safety boundary và verified commands của Neon DB Admin.
 
 ## Nhãn trạng thái
 

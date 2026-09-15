@@ -10,6 +10,8 @@
 | Work web | `apps/work-client/web/` | React + TypeScript + Vite |
 | Work API | `apps/work-server/` | NestJS + Fastify + TypeScript + Prisma |
 | AI API | `apps/ai-server/` | FastAPI + Ollama adapter; copied core phần lớn unwired |
+| DB Admin web | `apps/db-admin-web/` | Angular standalone + Angular Material + CodeMirror; local admin UI |
+| DB Admin API | `apps/db-admin-server/` | FastAPI + SQLAlchemy/psycopg; dedicated Neon database control plane |
 | Shared contracts | `contracts/` | Work OpenAPI, Study->Work events, skill taxonomy |
 | Local infra | `docker-compose.yml`, `infra/README.md` | PostgreSQL/Redis/MinIO/Mailhog và Study/Work containers |
 
@@ -28,6 +30,8 @@ Study producer -> contracts/events/study-work/*.schema.json -> Work consumer
 AI API -> Ollama HTTP API
 Work API -> PostgreSQL/Prisma + Identity JWKS
 Study API -> PostgreSQL config + optional Redis config; app chưa start được
+DB Admin web (one-command local launcher + same-origin proxy)
+  -> internal DB Admin API -> one backend-owned Neon PostgreSQL connection + Identity JWKS
 ```
 
 ## Contract boundary
@@ -37,6 +41,13 @@ Study API -> PostgreSQL config + optional Redis config; app chưa start được
 - Study OpenAPI chưa tồn tại.
 - Study event JSON Schema xác nhận payload/headers, không xác nhận implementation
   consumer hay database table.
+- DB Admin API is a new local-only deployable; its envelope and routes are defined
+  in `apps/db-admin-server/app/core/contracts.py` and `app/api/routes.py`.
+
+DB Admin is intentionally not mounted into Study, Work or AI. Its local Angular
+launcher starts the separate FastAPI runtime and proxies `/api` to loopback;
+the frontend only knows a relative API base URL, while the backend-only
+`URL_DATABASE` constant remains outside Angular.
 
 ## Context loading
 

@@ -32,6 +32,7 @@ Deep scopes:
 - `server-study`: `.agents/server-study/AGENTS.md`
 - `server-work`: `.agents/server-work/AGENTS.md`
 - `server-ai`: `.agents/server-ai/AGENTS.md`
+- `db-admin`: `.agents/db-admin/AGENTS.md`
 
 Mobile/Web giữ `SKELETON_ONLY` theo scope đã duyệt.
 
@@ -82,6 +83,28 @@ TEST_STATUS: NOT_FOUND
 - `pyproject.toml` chỉ khai báo FastAPI/httpx/uvicorn; copied DB/security/config code cần package ngoài dependency set hiện tại.
 - `query.py` và `validate.py` của chat là empty placeholders.
 - Không có schema/migration/business-code catalog/OpenAPI/test cho AI server.
+
+## DB Admin
+
+```text
+WEB_STATUS: VERIFIED_LOCAL_ANGULAR_APP_WITH_ONE_COMMAND_LAUNCHER
+API_STATUS: VERIFIED_LOCAL_FASTAPI_APP_WITH_INTERNAL_DEV_LAUNCHER
+DATABASE_STATUS: CONFIGURED_BY_LOCAL_CORE_CONSTANTS_ONLY
+AUTH_STATUS: JWKS_IMPLEMENTED; LOCAL_DEV_AUTH_TEST_ONLY
+AUDIT_STATUS: BOUNDED_IN_MEMORY_AND_STRUCTURED_LOG
+```
+
+- `apps/db-admin-web/` is an Angular app in the pnpm workspace. Its local
+  `dev`/`start` launcher starts FastAPI and proxies same-origin `/api` calls.
+- `apps/db-admin-server/` remains a separate FastAPI runtime/security boundary
+  and is not mounted by Study/Work/AI. Its routes, response envelope,
+  permission dependencies and transaction safety are verified by its local test
+  suite.
+- No live Neon schema or migration was added. Catalog metadata is read from the
+  configured database at runtime; no audit table is created.
+- `docs/business_code/code_http.md` is `NOT_FOUND` in the current working tree;
+  DB Admin business codes are currently owned/documented by its API source and
+  README until the repository catalog is restored.
 
 ## Drift rule
 

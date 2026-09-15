@@ -9,6 +9,7 @@
     "contracts:validate": "node scripts/validate-contracts.mjs",
     "docs:validate": "node scripts/validate-bd.mjs",
     "dev:study-web": "corepack pnpm --filter study-web dev",
+    "dev:db-admin-web": "corepack pnpm --filter db-admin-web dev",
     "dev:work-server": "corepack pnpm --filter work-api start:dev",
     "dev:work-api": "corepack pnpm run dev:work-server",
     "dev:work-web": "corepack pnpm --filter work-web dev",

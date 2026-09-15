@@ -11,7 +11,7 @@ primary_task_type: coding | fix | docs | test
 secondary_task_types:
   - <loại khác, nếu có>
 project_scopes:
-  - mobile-work | web-work | server-work | server-study | server-ai
+  - mobile-work | web-work | server-work | server-study | server-ai | db-admin
 cross_scope_dependencies:
   - <contract/path nối các scope, nếu có>
 ```
@@ -32,6 +32,7 @@ Một task có thể có nhiều `project_scopes`. Không ép task cross-scope v
 | `server-work` | `apps/work-server/` | `.agents/server-work/AGENTS.md` |
 | `server-study` | `apps/study-server/` | `.agents/server-study/AGENTS.md` |
 | `server-ai` | `apps/ai-server/` | `.agents/server-ai/AGENTS.md` |
+| `db-admin` | `apps/db-admin-web/`, `apps/db-admin-server/` | `.agents/db-admin/AGENTS.md` |
 
 Không nạp scope khác nếu chưa có dependency thật. Task qua nhiều scope phải ghi contract nối giữa chúng; ví dụ Study -> Work event dùng `contracts/events/study-work/`.
 

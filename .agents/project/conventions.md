@@ -31,6 +31,20 @@
 - camelCase value/function, PascalCase class/type, decorator metadata.
 - Không áp bốn-file Python hoặc raw-SQL convention của Study lên Work.
 
+## DB Admin runtime boundary
+
+- Keep Angular and FastAPI as separate runtime/security boundaries. Local web
+  development may start both through the Angular launcher and proxy same-origin
+  `/api` requests; the client must not import database configuration or write
+  credentials/tokens to browser storage.
+- Backend permission checks are server-side (`db_admin:read`,
+  `db_admin:write`, `db_admin:sql`). UI visibility is only a UX optimization.
+- Destructive DDL, row mutations and mutating SQL need a backend-issued,
+  single-use confirmation token. Use quoted/validated identifiers and bound
+  values; raw SQL definitions remain explicit previewed admin input.
+- Maintain the `success`, `businessCode`, `message`, `data`, `meta`, `traceId`
+  envelope and `X-Trace-Id` response propagation.
+
 ## Workflow theo task type
 
 ### coding
