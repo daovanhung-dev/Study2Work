@@ -5,8 +5,8 @@ from typing import Any
 
 from app.core.responses import ApiError, success_response
 from app.core.security.password import hash_password
-from app.modules.auth.models import RegisterRequest
-from app.modules.auth.query import find_user_by_email, insert_user
+from app.modules.auth.register_account.models import RegisterRequest
+from app.modules.auth.register_account.query import find_user_by_email, insert_user
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
