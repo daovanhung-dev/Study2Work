@@ -14,7 +14,7 @@ export const PORT = 3000;
 
 export const JWT_SECRET = "replace-with-a-local-jwt-secret";
 export const JWT_EXPIRES = "1d";
-export const SESSION_SECRET = "replace-with-a-local-session-secret";
+export const JWT_STORAGE_KEY = "access_token";
 
 export const SUPABASE_URL = "https://example.supabase.co";
 export const SUPABASE_ANON_KEY = "replace-with-a-local-supabase-anon-key";

@@ -1,36 +1,14 @@
 # Work database
 
-Canonical schema: `apps/work-server/prisma/schema.prisma`; migration history:
-`prisma/migrations/20260811000000_init_work_postgres/` and
-`prisma/migrations/20260916100000_work_domain/`. The portable design artifact is
-`infra/postgres/work-server/schema.sql`; `infra/mysql/work-server/schema.sql` is
-legacy/design-only and is not a runtime source.
+Canonical schema: `apps/work-server/prisma/schema.prisma`.
 
-## `SystemRecord` / `system_records`
+The Work server uses PostgreSQL on Neon through a shared Prisma client. Runtime
+requests use the pooled URL; Prisma CLI migration/generate commands use the
+direct URL supplied by `scripts/prisma-with-constants.ts`.
 
-| Field | Database |
-|---|---|
-| `id` | UUID PK, default uuid |
-| `key` | varchar(120), required, unique |
-| `value` | nullable text |
-| `createdAt` | `created_at`, timestamptz(6), default now |
-| `updatedAt` | `updated_at`, timestamptz(6), Prisma `@updatedAt` |
+The current database is the legacy Work schema with the existing Prisma model,
+table and column names. No authentication session table, token denylist or
+cookie-backed auth state is stored in PostgreSQL.
 
-No FK/relation/enum/soft-delete/domain ownership is present. Current services do not use the model.
-
-The Neon deployment was verified with `prisma migrate deploy`: two migration
-rows, 55 application tables, 99 foreign keys, 31 unique constraints, 30 checks
-and 151 indexes were observed in `public`. Readiness uses raw `SELECT 1`; it
-does not query `system_records`.
-
-The domain models use PostgreSQL identity `BIGINT` IDs, UUID operation/event
-IDs, `timestamptz(6)` UTC timestamps and `jsonb` snapshots/metadata. Applications
-retain job/CV revision IDs and submission snapshots. Payment rows retain
-provider references and money/status metadata only.
-
-Database URLs are selected from the local-only Work constants profile. The
-Prisma wrapper renders that URL into a temporary schema for `generate`,
-`validate`, and `migrate deploy`; the checked-in schema contains only a valid
-placeholder URL and never reads `.env`.
-
-Before a domain schema change, require current canonical design/approved requirement. Do not port old Flutter/Supabase/MySQL models into this clean PostgreSQL datasource by inference.
+Do not drop or seed the Neon database during auth changes. Schema changes must
+be made through the checked-in Prisma schema and migration chain.

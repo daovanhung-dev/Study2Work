@@ -4,36 +4,33 @@
 
 ```text
 src/main.ts
-  -> bootstrap()
-     -> loadWorkEnvironment()
-     -> createWorkApplication()
-        -> AppModule.forRoot(environment)
-           -> WorkConfigModule
-           -> DatabaseModule
-           -> HttpModule
-           -> AuthModule
-           -> HealthModule
-           -> SystemModule
-        -> Fastify trace hook + CORS
-        -> global prefix /api/v1 (health excluded)
-        -> global ValidationPipe
+  -> shared Prisma $connect()
+  -> Express app.listen(PORT)
+
+src/app.ts
+  -> urlencoded/json parsers
+  -> static public assets
+  -> optional JWT Bearer parser
+  -> web, student and business routers
 ```
 
-Cross-cutting runtime:
+The runtime is Express 4 with EJS views. `src/utils/constants.ts` is the
+runtime configuration source; `.env` is not loaded.
 
-- `AuthModule`: global `APP_GUARD` (`JwksAuthGuard`).
-- `HttpModule`: global `APP_INTERCEPTOR` (`ApiEnvelopeInterceptor`) and `APP_FILTER` (`ApiExceptionFilter`).
-- Fastify hook creates/normalizes `X-Trace-Id` before Nest handler execution.
+## Authentication
 
-Configuration is sourced exclusively from the local-only
-`apps/work-server/src/constants.ts`. `config/env.ts` validates the selected
-`local`, `docker`, or `neon` profile; Prisma commands use
-`scripts/prisma-with-constants.ts` with a temporary schema, so Work runtime and
-Prisma do not read `.env`, `dotenv`, or `process.env`.
+`authenticateToken` parses exactly one `Authorization: Bearer <JWT>` header and
+places the validated `{ id, email, role }` principal on `request.user`.
+Protected student/business routers apply `ensureAuthenticated` and
+`checkRole`. Cookies, Passport and server-side sessions are not authentication
+mechanisms.
 
-Work product surface is provided by `src/modules/work/WorkModule` and the shared
-runtime. It exposes public jobs/companies/products plus protected identity,
-candidate, tenant/enterprise, university, applications, conversations,
-interviews, billing and operations routes. Prisma is injected through the
-existing `DatabaseModule`; external Identity/JWKS, payment and storage
-providers remain dependency boundaries.
+The EJS client uses `public/js/jwt-client.js` to store the access token locally,
+attach Bearer headers to same-origin requests, and navigate protected HTML
+pages through authenticated fetches.
+
+## Persistence
+
+All services use the shared Prisma client and the PostgreSQL schema in
+`prisma/schema.prisma`, deployed to Neon. The current schema preserves the
+legacy Work models and table names.

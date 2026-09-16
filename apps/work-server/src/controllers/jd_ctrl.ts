@@ -34,9 +34,7 @@ class JDController {
 
       // Validate trường bắt buộc
       if (!data.ten_vi_tri || !data.dia_diem) {
-        return res.send(
-          `<script>alert("Tên vị trí và Địa điểm không được để trống!"); window.history.back();</script>`
-        );
+        return res.status(400).json({ message: "Tên vị trí và Địa điểm không được để trống!" });
       }
 
       // Nếu có file, lưu đường dẫn string
@@ -53,19 +51,13 @@ class JDController {
 
       const result = await JDService.insertJD(data);
 
-      if (result.success)
-        return res.send(
-          `<script>alert("Tạo Job thành công!"); window.location.href="/";</script>`
-        );
-      else
-        return res.send(
-          `<script>alert("Tạo Job thất bại!"); window.history.back();</script>`
-        );
+      if (result.success) {
+        return res.json({ message: "Tạo Job thành công!", redirect: "/" });
+      }
+      return res.status(400).json({ message: "Tạo Job thất bại!" });
     } catch (err) {
       console.error(err);
-      return res.send(
-        `<script>alert("Lỗi hệ thống!"); window.location.href="/";</script>`
-      );
+      return res.status(500).json({ message: "Lỗi hệ thống!" });
     }
   }
   async manageJD(req: Request, res: Response): Promise<void> {

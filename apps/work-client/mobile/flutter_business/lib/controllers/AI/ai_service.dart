@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AIService {
-  final String apiKey = 'AIzaSyDg8hutk_kLylLwDG2skoAeQmmxi_xXxlE'; // Thay bằng key của bạn
+  final String apiKey = 'AIzaSyDg8hutk_kLylLwDG2skoAeQmmxi_xXxlE'; //
 
   Future<String> sendMessage(String message) async {
     final url = Uri.parse(

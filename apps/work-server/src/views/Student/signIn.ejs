@@ -89,6 +89,7 @@
       .logo-img img{width:100px;height:100px}
     }
   </style>
+    <script src="/js/jwt-client.js" defer></script>
 </head>
 
 <body>
@@ -137,7 +138,7 @@
         </div>
       <% } %>
 
-      <form id="login-form" action="/signInStudent" method="POST" novalidate>
+      <form id="login-form" data-jwt-login data-redirect="/student/Home" action="/signInStudent" method="POST" novalidate>
         <div class="mb-3">
           <label class="form-label" for="email">Tài khoản</label>
           <div class="input-group">

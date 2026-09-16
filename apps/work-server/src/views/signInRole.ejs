@@ -368,6 +368,7 @@
       }
     }
   </style>
+    <script src="/js/jwt-client.js" defer></script>
 </head>
 
 <body>
@@ -386,7 +387,7 @@
       </div>
       <div class="role-header-right">
         <span>Chưa có tài khoản? </span>
-        <a onclick="window.location.href='/signInRole'">Đăng ký ngay</a>
+        <a onclick="s2wNavigate('/signInRole')">Đăng ký ngay</a>
       </div>
     </div>
 
@@ -418,11 +419,11 @@
           </div>
           <div class="role-actions">
             <!-- Sửa href cho đúng route login sinh viên -->
-            <a onclick="window.location.href='/signInStudent'" class="btn-role-primary">
+            <a onclick="s2wNavigate('/signInStudent')" class="btn-role-primary">
               Tôi là sinh viên
               <i class="fas fa-arrow-right"></i>
             </a>
-            <a onclick="window.location.href='/coming-soon'" class="btn-role-ghost">
+            <a onclick="s2wNavigate('/coming-soon')" class="btn-role-ghost">
               Xem tính năng dành cho sinh viên
             </a>
           </div>
@@ -445,11 +446,11 @@
           </div>
           <div class="role-actions">
             <!-- Sửa href cho đúng route login doanh nghiệp -->
-            <a onclick="window.location.href='/signInBusiness'" class="btn-role-primary">
+            <a onclick="s2wNavigate('/signInBusiness')" class="btn-role-primary">
               Tôi là doanh nghiệp
               <i class="fas fa-arrow-right"></i>
             </a>
-            <a onclick="window.location.href='/coming-soon'" class="btn-role-ghost">
+            <a onclick="s2wNavigate('/coming-soon')" class="btn-role-ghost">
               Xem tính năng cho doanh nghiệp
             </a>
           </div>
@@ -472,11 +473,11 @@
           </div>
           <div class="role-actions">
             <!-- Sửa href cho đúng route login nhà trường -->
-            <a onclick="window.location.href='/coming-soon'" class="btn-role-primary">
+            <a onclick="s2wNavigate('/coming-soon')" class="btn-role-primary">
               Tôi đại diện nhà trường
               <i class="fas fa-arrow-right"></i>
             </a>
-            <a onclick="window.location.href='/coming-soon'" class="btn-role-ghost">
+            <a onclick="s2wNavigate('/coming-soon')" class="btn-role-ghost">
               Xem tính năng cho nhà trường
             </a>
           </div>

@@ -52,12 +52,7 @@
     // chuyển trang với fade-out
     function navigateTo(url) {
       if (!url) return;
-      if (location.pathname === url || location.pathname.endsWith(url)) {
-        return;
-      }
-      document.body.style.transition = 'opacity 0.25s';
-      document.body.style.opacity = '0';
-      setTimeout(() => { window.location.href = url; }, 220);
+      window.s2wNavigate(url);
     }
 
     // tự động highlight menu theo current path (dùng data-route)
@@ -95,5 +90,4 @@
     });
   </script>
 </header>
-
 

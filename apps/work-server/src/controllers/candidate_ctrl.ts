@@ -11,42 +11,32 @@ async CandidateJD(req: Request, res: Response) {
       // Lấy jdId từ params
       const jdID = Number(req.params.jdId); // convert sang number
       if (isNaN(jdID)) {
-        return res.send(
-          `<script>alert("Vị trí ứng tuyển không hợp lệ!"); window.location.href="/student/home";</script>`
-        );
+        return res.status(400).json({ message: "Vị trí ứng tuyển không hợp lệ!" });
       }
 
-      // Lấy studentID từ session/user
+      // Lấy studentID từ JWT principal
       const studentID = Number((req.user as any).id);
 
       // Lấy JD để lấy doanhnghiep_id
       const jd = await prisma.jD.findUnique({ where: { id: BigInt(jdID) } });
       if (!jd) {
-        return res.send(
-          `<script>alert("Vị trí ứng tuyển không tồn tại!"); window.location.href="/student/home";</script>`
-        );
+        return res.status(404).json({ message: "Vị trí ứng tuyển không tồn tại!" });
       }
 
       const businessID = jd.doanhnghiep_id ? Number(jd.doanhnghiep_id) : null;
       if (!businessID) {
-        return res.send(
-          `<script>alert("Vị trí này chưa gán doanh nghiệp!"); window.location.href="/student/home";</script>`
-        );
+        return res.status(400).json({ message: "Vị trí này chưa gán doanh nghiệp!" });
       }
 
       // Kiểm tra đã ứng tuyển chưa
       const count = await CandidateService.count(studentID, businessID);
       if (count != 0) {
-        return res.send(
-          `<script>alert("Bạn đã ứng tuyển vị trí này rồi!"); window.location.href="/student/home";</script>`
-        );
+        return res.status(409).json({ message: "Bạn đã ứng tuyển vị trí này rồi!" });
       }
 
       // Tạo ứng viên
       await CandidateService.create(studentID, businessID, jdID);
-      return res.send(
-        `<script>alert("Ứng tuyển thành công!"); window.location.href="/student/home";</script>`
-      );
+      return res.status(201).json({ message: "Ứng tuyển thành công!" });
     } catch (error) {
       console.error("Lỗi tạo ứng viên:", error);
       res.status(500).json({ error: "Lỗi server" });
@@ -79,7 +69,7 @@ async CandidateJD(req: Request, res: Response) {
 
   async ketQuaUngTuyen(req: Request, res: Response) {
     try {
-      const users = req.user as any; // giả sử session lưu id sinh viên
+      const users = req.user as any; // JWT principal chứa id sinh viên
       const ketqua = await CandidateService.getKetQuaUngTuyen(users.id);
       
       res.render('student/Result', { ketqua });

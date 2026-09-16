@@ -4,7 +4,7 @@ import prisma from "../config/prisma.config.js";
 class CandidateService {
   /**
    * Tạo mới một ứng viên
-   * @param sinhvien_id ID sinh viên (lấy từ session)
+   * @param sinhvien_id ID sinh viên from the authenticated JWT principal
    * @param doanhnghiep_id ID doanh nghiệp
    */
   async create(sinhvien_id: number, doanhnghiep_id: number, jd_id?: number) {

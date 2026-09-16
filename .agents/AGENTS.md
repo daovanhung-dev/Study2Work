@@ -8,7 +8,7 @@ Source snapshot gốc cho deep-context: `5a5c2c826ddcc2931a9398115fdb61448dcb4c5
 |---|---|---|---|
 | Mobile Work | `SKELETON_ONLY` | source phải inventory khi nhận task | `mobile-work/AGENTS.md` |
 | Web Work | `SKELETON_ONLY` | source phải inventory khi nhận task | `web-work/AGENTS.md` |
-| Work server | `DEEP` | `VERIFIED` foundation | `server-work/AGENTS.md` |
+| Work server | `DEEP` | `VERIFIED` Express/JWT web server | `server-work/AGENTS.md` |
 | Study server | `DEEP` | `DECLARED_NOT_RUNNABLE` | `server-study/AGENTS.md` |
 | AI server | `DEEP` | runtime chat `VERIFIED`, copied core `UNWIRED` | `server-ai/AGENTS.md` |
 | DB Admin | `DEEP` | local Angular + FastAPI deployables `VERIFIED` | `db-admin/AGENTS.md` |

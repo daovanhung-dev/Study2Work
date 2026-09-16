@@ -248,6 +248,7 @@
       border-color: #1e6ee9;
     }
   </style>
+    <script src="/js/jwt-client.js" defer></script>
 </head>
 
 <body>
@@ -333,7 +334,7 @@
         }
         document.body.style.transition = 'opacity 0.25s';
         document.body.style.opacity = '0';
-        setTimeout(() => { window.location.href = url; }, 220);
+        setTimeout(() => { s2wNavigate(url); }, 220);
       }
 
       // tự động highlight menu theo current path (dùng data-route)

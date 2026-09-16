@@ -44,35 +44,31 @@
     },
     "server-work": {
       "mode": "DEEP",
-      "status": "VERIFIED_DOMAIN_API",
+      "status": "VERIFIED_EXPRESS_WEB",
       "entry": ".agents/server-work/AGENTS.md",
       "sourceRoots": [
         "apps/work-server"
       ],
       "trackedRoots": [
         "apps/work-server/src",
-        "apps/work-server/test",
         "apps/work-server/scripts",
+        "apps/work-server/public",
         "apps/work-server/prisma",
-        "apps/work-server/src/constants.example.ts",
         "apps/work-server/package.json",
-        "contracts/openapi/work/openapi.json"
+        "apps/work-server/tsconfig.json"
       ],
       "requiredPages": [
         ".agents/server-work/architecture.md",
-        ".agents/server-work/core/runtime-http.md",
-        ".agents/server-work/core/auth-config-db.md",
-        ".agents/server-work/modules/foundation.md",
-        ".agents/server-work/apis/foundation.md",
         ".agents/server-work/database.md",
-        ".agents/server-work/tests.md",
-        ".agents/server-work/workflows/README.md"
+        ".agents/server-work/tests.md"
       ],
       "requiredSourcePaths": [
-        "apps/work-server/src/bootstrap.ts",
-        "apps/work-server/src/app.module.ts",
+        "apps/work-server/src/app.ts",
+        "apps/work-server/src/main.ts",
+        "apps/work-server/src/utils/constants.ts",
+        "apps/work-server/src/utils/jwt.ts",
         "apps/work-server/prisma/schema.prisma",
-        "contracts/openapi/work/openapi.json"
+        "apps/work-server/package.json"
       ]
     },
     "server-ai": {

@@ -46,15 +46,7 @@ export const student_view_topcv = (req: Request, res: Response) =>
 export const student_interview_schedule = (req: Request, res: Response) =>
   res.render("Student/student_interview_schedule");
 export const student_signIn = (req: Request, res: Response) => {
-  const { session } = req as any;
-
-  // Passport lưu lỗi vào session.messages (mảng)
-  const errors: string[] = session?.messages ?? [];
-
-  // xóa sau khi lấy để không hiển thị lại lần sau
-  if (session?.messages) session.messages = [];
-
-  res.render("Student/signIn", { errors });
+  res.render("Student/signIn", { errors: [] });
 };
 
 
@@ -69,15 +61,7 @@ export const student_createCV_post = (req: Request, res: Response) => {
   res.redirect("/student/create-cv");
 };
 
-// Logout
-//logout
-export const student_logOut = (req: Request, res: Response) => {
-  req.logout({ keepSessionInfo: false }, (err) => {
-    if (err) {
-      console.error("Logout error:", err);
-      return res.status(500).send("Lỗi khi logout");
-    }
-    // Redirect về trang chính
-    res.redirect("/");
-  });
+// JWT is stateless; the client removes its Bearer token.
+export const student_logOut = (_req: Request, res: Response) => {
+  res.json({ success: true });
 };

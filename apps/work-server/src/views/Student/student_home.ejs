@@ -266,7 +266,7 @@
       <%- include('../ComponentStudent/footer') %>
 
         <script>
-          function xemChiTiet(id) { window.location.href = `/student/JobDescription/${id}`; }
+          function xemChiTiet(id) { s2wNavigate(`/student/JobDescription/${id}`); }
           async function ungTuyen(id) {
             try {
               const response = await fetch(`/student/CandidateJD/${id}`, {

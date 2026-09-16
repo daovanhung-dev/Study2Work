@@ -1,7 +1,6 @@
 import { Router } from "express";
 import * as web_ctrl from "../controllers/web_ctrl.js";
 import multer from "multer"; // import multer
-import passport from "passport";
 import * as student_ctrl from "../controllers/student_ctrl.js";
 const web_router = Router();
 
@@ -19,23 +18,8 @@ web_router.get("/", web_ctrl.homePage);
 web_router.get("/SignInStudent", student_ctrl.student_signIn);
 web_router.get("/signInBusiness", web_ctrl.signInBusinessCtrl);
 web_router.get("/signInRole", web_ctrl.signInRole);
-web_router.post(
-  "/signInStudent",
-  passport.authenticate("student-local", {
-    successRedirect: "/student/home",
-    failureRedirect: "/signInStudent",
-    failureMessage: true,
-  })
-);
-
-web_router.post(
-  "/signInBusiness",
-  passport.authenticate("business-local", {
-    successRedirect: "/business/home",
-    failureRedirect: "/signInBusiness",
-    failureMessage: true,
-  })
-);
+web_router.post("/signInStudent", web_ctrl.loginStudentCtrl);
+web_router.post("/signInBusiness", web_ctrl.loginBusinessCtrl);
 
 // Route đăng ký
 web_router.get("/signUpStudent", web_ctrl.signUpStudentCtrl);

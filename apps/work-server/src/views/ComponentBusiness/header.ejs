@@ -194,13 +194,13 @@
 
         <ul class="navbar-nav mx-auto">
           <li class="nav-item">
-            <a class="nav-link <%= activeTab === 'home' ? 'active' : '' %>" onclick="window.location.href='/Business/Home'">Trang chủ</a>
+            <a class="nav-link <%= activeTab === 'home' ? 'active' : '' %>" onclick="s2wNavigate('/Business/Home')">Trang chủ</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link <%= activeTab === 'jobs' ? 'active' : '' %>" onclick="window.location.href='/Business/ManganerJD'">Quản lý tin tuyển dụng</a>
+            <a class="nav-link <%= activeTab === 'jobs' ? 'active' : '' %>" onclick="s2wNavigate('/Business/ManganerJD')">Quản lý tin tuyển dụng</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link <%= activeTab === 'candidates' ? 'active' : '' %>" onclick="window.location.href='/Business/ApplyList'">Ứng viên</a>
+            <a class="nav-link <%= activeTab === 'candidates' ? 'active' : '' %>" onclick="s2wNavigate('/Business/ApplyList')">Ứng viên</a>
           </li>
           <li class="nav-item"><a class="nav-link" href="#">Chat</a></li>
           <li class="nav-item"><a class="nav-link" href="#">Thống kê</a></li>

@@ -143,6 +143,7 @@
     .logout-btn{ background:transparent; border:1px solid rgba(14,165,164,0.18); color:var(--brand); }
     .small-note{ font-size:0.85rem; color:#6b7280; }
   </style>
+    <script src="/js/jwt-client.js" defer></script>
 </head>
 <body>
 
@@ -252,7 +253,7 @@
   function confirmLogout(){
     if(confirm("Bạn có chắc muốn đăng xuất?")){
       alert("Đã đăng xuất!");
-      window.location.href='Logout';
+      s2wLogout();
     }
   }
 
