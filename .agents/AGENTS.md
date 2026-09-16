@@ -17,6 +17,7 @@ Machine-readable registry: `.agents/context-manifest.json`.
 
 ## Global context
 
+- `project/design.md`: nguồn chuẩn design system và UX cho Work Web/Mobile.
 - `project/source-status.md`: source/DD/schema/context status và blocker.
 - `project/architecture.md`: ownership/deployable boundaries.
 - `project/conventions.md`: convention/workflow dùng chung.

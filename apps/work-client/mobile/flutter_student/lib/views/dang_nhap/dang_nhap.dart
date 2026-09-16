@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/app_components.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'quen_mat_khau.dart';
 import 'menu.dart';
 import 'package:work_server/controllers/dang_nhap/dangnhap_ctrl.dart';
@@ -30,8 +32,8 @@ class _DangNhapState extends State<DangNhap>
       duration: const Duration(seconds: 6),
     )..repeat(reverse: true);
     _bgAnimation = ColorTween(
-      begin: Colors.blue.shade50,
-      end: Colors.blue.shade200,
+      begin: AppColors.primarySoft,
+      end: AppColors.background,
     ).animate(CurvedAnimation(parent: _bgController, curve: Curves.easeInOut));
 
     _checkAutoLogin();
@@ -63,7 +65,7 @@ class _DangNhapState extends State<DangNhap>
             ? const Duration(milliseconds: 800)
             : const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.control)),
       ),
     );
   }
@@ -142,7 +144,7 @@ class _DangNhapState extends State<DangNhap>
       builder: (context, child) => Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [_bgAnimation.value!, Colors.white],
+            colors: [_bgAnimation.value!, AppColors.surface],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -152,19 +154,8 @@ class _DangNhapState extends State<DangNhap>
   }
 
   Widget _buildLoginCard() {
-    return Container(
+    return AppSurface(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
       child: Column(
         children: [
           TextField(
@@ -173,18 +164,18 @@ class _DangNhapState extends State<DangNhap>
             decoration: InputDecoration(
               labelText: "Email",
               labelStyle: TextStyle(
-                color: Colors.grey.shade800,
+                color: AppColors.navy,
                 fontWeight: FontWeight.w500,
               ),
               prefixIcon: Icon(
                 Icons.email_outlined,
-                color: Colors.blue.shade400,
+                color: AppColors.action,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
               ),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: AppColors.surface,
             ),
           ),
           const SizedBox(height: 20),
@@ -194,15 +185,15 @@ class _DangNhapState extends State<DangNhap>
             decoration: InputDecoration(
               labelText: "Mật khẩu",
               labelStyle: TextStyle(
-                color: Colors.grey.shade800,
+                color: AppColors.navy,
                 fontWeight: FontWeight.w500,
               ),
-              prefixIcon: Icon(Icons.lock_outline, color: Colors.blue.shade400),
+              prefixIcon: const Icon(Icons.lock_outline, color: AppColors.action),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(15),
               ),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: AppColors.surface,
             ),
           ),
           const SizedBox(height: 10),
@@ -218,7 +209,7 @@ class _DangNhapState extends State<DangNhap>
               child: Text(
                 "Quên mật khẩu?",
                 style: TextStyle(
-                  color: Colors.blue.shade400,
+                  color: AppColors.action,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -231,8 +222,8 @@ class _DangNhapState extends State<DangNhap>
             child: ElevatedButton(
               onPressed: _isLoading ? null : _onLoginPressed,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade400,
-                foregroundColor: Colors.white,
+                backgroundColor: AppColors.action,
+                foregroundColor: AppColors.surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
@@ -242,7 +233,7 @@ class _DangNhapState extends State<DangNhap>
                       width: 25,
                       height: 25,
                       child: CircularProgressIndicator(
-                        color: Colors.white,
+                        color: AppColors.surface,
                         strokeWidth: 3,
                       ),
                     )
@@ -267,7 +258,7 @@ class _DangNhapState extends State<DangNhap>
         body: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [_bgAnimation.value!, Colors.white],
+            colors: [_bgAnimation.value!, AppColors.surface],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -326,7 +317,7 @@ class _AnimatedLoaderState extends State<_AnimatedLoader>
         height: 50,
         child: CircularProgressIndicator(
           strokeWidth: 4,
-          color: Colors.blueAccent,
+          color: AppColors.action,
         ),
       ),
     );
@@ -339,8 +330,8 @@ class _ShimmerText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: Colors.blue.shade300,
-      highlightColor: Colors.white,
+      baseColor: AppColors.action,
+      highlightColor: AppColors.surface,
       period: Duration(seconds: 2),
       child: const Text(
         "Đang kiểm tra đăng nhập...",
@@ -411,7 +402,7 @@ class _BouncingDotsState extends State<_BouncingDots>
         width: 10,
         height: 10,
         decoration: BoxDecoration(
-          color: Colors.blue.shade300,
+          color: AppColors.action,
           shape: BoxShape.circle,
         ),
       ),

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_components.dart';
+import '../theme/design_tokens.dart';
+
 Widget buildRich(String label, String? value) {
   return Column(
     children: [
@@ -11,17 +14,17 @@ Widget buildRich(String label, String? value) {
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: AppColors.navy,
               ),
             ),
             TextSpan(
               text: value ?? "",
-              style: const TextStyle(fontSize: 12, color: Colors.black),
+              style: const TextStyle(fontSize: 12, color: AppColors.navy),
             ),
           ],
         ),
       ),
-      SizedBox(height: 5),
+      const SizedBox(height: 5),
     ],
   );
 }
@@ -32,28 +35,7 @@ Widget btnCommon(
   double widthBtn,
   double heightBtn,
 ) {
-  return SizedBox(
-    width: widthBtn,
-    height: heightBtn,
-    child: ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
-        // 🌊 màu nền xanh
-        foregroundColor: Colors.white,
-        // chữ trắng
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12), // bo góc mềm mại
-        ),
-        elevation: 4, // bóng đổ nhẹ
-      ),
-      onPressed: onPressed,
-      child: Text(
-        name,
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-    ),
-  );
+  return AppPrimaryButton(label: name, onPressed: onPressed, width: widthBtn, height: heightBtn);
 }
 
 Widget helperTextField({
@@ -67,12 +49,7 @@ Widget helperTextField({
     controller: controller,
     obscureText: isPassword,
     keyboardType: keyboardType,
-    decoration: InputDecoration(
-      labelText: label,
-      prefixIcon: icon != null ? Icon(icon) : null,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    ),
+    decoration: InputDecoration(labelText: label, prefixIcon: icon != null ? Icon(icon) : null),
   );
 }
 
@@ -85,11 +62,7 @@ Widget helperDropdown({
   return DropdownButtonFormField<String>(
     initialValue: value,
     hint: Text(label),
-    decoration: InputDecoration(
-      labelText: label,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    ),
+    decoration: InputDecoration(labelText: label),
     items: items.map((String item) {
       return DropdownMenuItem<String>(value: item, child: Text(item));
     }).toList(),

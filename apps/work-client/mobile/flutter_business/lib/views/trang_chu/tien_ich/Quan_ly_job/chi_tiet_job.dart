@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/helper_db/helper_supabase.dart';
 import 'package:work_server/models/jd.dart';
 
@@ -27,7 +28,7 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF7ecbff),
+        backgroundColor: AppColors.action,
         title: const Text("Chi tiết JD"),
       ),
       body: Stack(
@@ -49,11 +50,11 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                 width: screenWidth * 0.95,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95),
+                  color: AppColors.surface.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
+                      color: AppColors.navy.withValues(alpha: 0.15),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -86,11 +87,11 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                         ),
                         margin: const EdgeInsets.symmetric(vertical: 4),
                         decoration: BoxDecoration(
-                          color: bgColor ?? Colors.blueGrey.shade50,
+                          color: bgColor ?? AppColors.background,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              color: AppColors.navy.withValues(alpha: 0.05),
                               blurRadius: 5,
                               offset: const Offset(0, 2),
                             ),
@@ -105,7 +106,7 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                                 child: Icon(
                                   icon,
                                   size: 20,
-                                  color: Colors.blueGrey[700],
+                                  color: AppColors.muted,
                                 ),
                               ),
                             SizedBox(
@@ -114,7 +115,7 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                                 "$title:",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.blueGrey[800],
+                                  color: AppColors.navy,
                                 ),
                               ),
                             ),
@@ -125,7 +126,7 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                                     : "Không có dữ liệu",
                                 style: const TextStyle(
                                   fontSize: 15,
-                                  color: Colors.black87,
+                                  color: AppColors.navy,
                                 ),
                               ),
                             ),
@@ -140,7 +141,7 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                         child: ShaderMask(
                           shaderCallback: (bounds) =>
                               const LinearGradient(
-                                colors: [Colors.blue, Colors.cyan],
+                                colors: [AppColors.action, AppColors.info],
                               ).createShader(
                                 Rect.fromLTWH(
                                   0,
@@ -154,7 +155,7 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppColors.surface,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -171,7 +172,7 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: AppColors.navy,
                           ),
                         ),
                       );
@@ -189,34 +190,34 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                           "Cấp bậc",
                           data.capBac,
                           icon: Icons.star,
-                          bgColor: Colors.blue.shade50,
+                          bgColor: AppColors.primarySoft,
                         ),
                         infoRow(
                           "Báo cáo cho",
                           data.baoCaoCho,
                           icon: Icons.group,
-                          bgColor: Colors.green.shade50,
+                          bgColor: AppColors.success.withValues(alpha: 0.08),
                         ),
                         infoRow(
                           "Địa điểm",
                           data.diaDiem,
                           icon: Icons.location_on,
-                          bgColor: Colors.orange.shade50,
+                          bgColor: AppColors.warning.withValues(alpha: 0.08),
                         ),
                         infoRow(
                           "Thời gian",
                           data.thoiGian,
                           icon: Icons.calendar_today,
-                          bgColor: Colors.purple.shade50,
+                          bgColor: AppColors.primarySoft,
                         ),
                         infoRow(
                           "Hạn nộp",
                           data.hanNop,
                           icon: Icons.schedule,
-                          bgColor: Colors.pink.shade50,
+                          bgColor: AppColors.primarySoft,
                         ),
                         const SizedBox(height: 12),
-                        Divider(color: Colors.grey[300]),
+                        Divider(color: AppColors.border),
 
                         // Chi tiết công việc
                         sectionTitle("Chi tiết công việc"),
@@ -255,7 +256,7 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                           icon: Icons.send,
                         ),
                         const SizedBox(height: 12),
-                        Divider(color: Colors.grey[300]),
+                        Divider(color: AppColors.border),
 
                         // Mô tả công việc
                         sectionTitle("Mô tả công việc"),
@@ -263,7 +264,7 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                           data.moTa.isNotEmpty ? data.moTa : "Không có mô tả",
                           style: const TextStyle(
                             fontSize: 15,
-                            color: Colors.black87,
+                            color: AppColors.navy,
                             height: 1.4,
                           ),
                         ),

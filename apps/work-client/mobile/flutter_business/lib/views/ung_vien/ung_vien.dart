@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import '../trang_chu/main/thong_bao.dart';
 import 'package:work_server/helper_db/helper_supabase.dart';
 import 'package:work_server/controllers/ung_vien/ung_vien_controller.dart';
@@ -33,17 +34,17 @@ class _UngVienState extends State<UngVien> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F9),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFF7ecbff),
+        backgroundColor: AppColors.action,
         surfaceTintColor: Colors.transparent,
         title: const Text(
           "Danh sách Ứng viên",
           style: TextStyle(
             fontSize: 19,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1C2834),
+            color: AppColors.navy,
           ),
         ),
         centerTitle: true,
@@ -51,14 +52,14 @@ class _UngVienState extends State<UngVien> {
           padding: const EdgeInsets.all(6),
           child: CircleAvatar(
             backgroundImage: const AssetImage("assets/logo.jpg"),
-            backgroundColor: Colors.grey.shade200,
+            backgroundColor: AppColors.background,
           ),
         ),
         actions: [
           IconButton(
             icon: const Icon(
               Icons.notifications_none_rounded,
-              color: Colors.white,
+              color: AppColors.surface,
             ),
             onPressed: () => Navigator.push(
               context,
@@ -78,7 +79,7 @@ class _UngVienState extends State<UngVien> {
             return const Center(
               child: Text(
                 'Chưa có ứng viên nào.',
-                style: TextStyle(fontSize: 16, color: Colors.black54),
+                style: TextStyle(fontSize: 16, color: AppColors.muted),
               ),
             );
           }
@@ -105,11 +106,11 @@ class _UngVienState extends State<UngVien> {
                 duration: const Duration(milliseconds: 300),
                 margin: const EdgeInsets.only(bottom: 14),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surface,
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: AppColors.navy.withValues(alpha: 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -141,7 +142,7 @@ class _UngVienState extends State<UngVien> {
                                   style: const TextStyle(
                                     fontSize: 16.5,
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF1B2734),
+                                    color: AppColors.navy,
                                   ),
                                 ),
                                 const SizedBox(height: 3),
@@ -149,7 +150,7 @@ class _UngVienState extends State<UngVien> {
                                   uv.vitri ?? 'Chưa có vị trí',
                                   style: const TextStyle(
                                     fontSize: 14,
-                                    color: Color(0xFF3A8DFF),
+                                    color: AppColors.action,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -174,7 +175,7 @@ class _UngVienState extends State<UngVien> {
                         'Trạng thái: $trangThai',
                       ),
                       const SizedBox(height: 16),
-                      const Divider(height: 1, color: Color(0xFFE9EEF3)),
+                      const Divider(height: 1, color: AppColors.border),
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -186,7 +187,7 @@ class _UngVienState extends State<UngVien> {
                               child: buildChipButton(
                                 icon: Icons.check_circle_outline_rounded,
                                 label: "Tuyển",
-                                color: const Color(0xFF3A8DFF),
+                                color: AppColors.action,
                                 onTap: () async {
                                   await ctrl.ungTuyen(uv.sinhvienId!);
                                   if (!context.mounted) return;
@@ -195,7 +196,7 @@ class _UngVienState extends State<UngVien> {
                                       content: Text(
                                         'Đã Tuyển Dụng Thành Công!',
                                       ),
-                                      backgroundColor: Colors.blue,
+                                      backgroundColor: AppColors.action,
                                     ),
                                   );
                                   final response = await ctrl.getTrangThai();
@@ -211,7 +212,7 @@ class _UngVienState extends State<UngVien> {
                               child: buildChipButton(
                                 icon: Icons.close_rounded,
                                 label: "Loại",
-                                color: Colors.redAccent.shade200,
+                                color: AppColors.danger,
                                 onTap: () async {
                                   final confirm = await showDialog<bool>(
                                     context: context,
@@ -244,7 +245,7 @@ class _UngVienState extends State<UngVien> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text('Đã Loại Thành Công!'),
-                                      backgroundColor: Colors.blue,
+                                      backgroundColor: AppColors.action,
                                       behavior: SnackBarBehavior.floating,
                                     ),
                                   );
@@ -273,7 +274,7 @@ class _UngVienState extends State<UngVien> {
                                 );
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF3A8DFF),
+                                backgroundColor: AppColors.action,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -284,13 +285,13 @@ class _UngVienState extends State<UngVien> {
                               ),
                               icon: const Icon(
                                 Icons.info_outline_rounded,
-                                color: Colors.white,
+                                color: AppColors.surface,
                                 size: 18,
                               ),
                               label: const Text(
                                 "Chi tiết",
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: AppColors.surface,
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -315,14 +316,14 @@ class _UngVienState extends State<UngVien> {
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          Icon(icon, size: 17, color: const Color(0xFF3A8DFF)),
+          Icon(icon, size: 17, color: AppColors.action),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
               style: const TextStyle(
                 fontSize: 13.5,
-                color: Color(0xFF2C3E50),
+                color: AppColors.navy,
                 overflow: TextOverflow.ellipsis,
               ),
             ),

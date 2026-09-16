@@ -13,7 +13,8 @@ Study web dùng Vue; Work web dùng React. Work router giữ route catalog hiệ
 
 Task cụ thể chỉ đọc đúng web app:
 
-1. `architecture.md`, `conventions.md`, `dependencies.md`.
+1. `../project/design.md`, `architecture.md`, `conventions.md`,
+   `dependencies.md`.
 2. `package.json`, router/entrypoint và feature files liên quan.
 3. Shared API/auth/UI dependency và tests trực tiếp.
 

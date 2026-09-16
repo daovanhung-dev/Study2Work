@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class HoTroSinhVienView extends StatelessWidget {
   const HoTroSinhVienView({super.key});
@@ -37,7 +38,7 @@ class HoTroSinhVienView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Hỗ trợ sinh viên'),
-        backgroundColor: Colors.blue.shade400,
+        backgroundColor: AppColors.action,
         elevation: 0,
       ),
       body: Padding(
@@ -61,7 +62,7 @@ class HoTroSinhVienView extends StatelessWidget {
 
   Widget _buildSupportCard(BuildContext context, Map<String, dynamic> item) {
     return Material(
-      color: Colors.white,
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(14),
       elevation: 3,
       child: InkWell(
@@ -77,7 +78,7 @@ class HoTroSinhVienView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(item['icon'], size: 38, color: Colors.blue.shade400),
+              Icon(item['icon'], size: 38, color: AppColors.action),
               const SizedBox(height: 12),
               Text(
                 item['title'],
@@ -90,7 +91,7 @@ class HoTroSinhVienView extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 item['description'],
-                style: const TextStyle(fontSize: 13, color: Colors.black54),
+                style: const TextStyle(fontSize: 13, color: AppColors.muted),
                 textAlign: TextAlign.center,
               ),
             ],

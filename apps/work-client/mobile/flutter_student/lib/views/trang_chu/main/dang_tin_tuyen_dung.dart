@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/helper_db/out_meta/helper_supabase_error.dart';
 import 'package:work_server/helper_db/out_meta/helper_db_error.dart';
 
@@ -53,14 +54,14 @@ class _DangTinTuyenDungState extends State<DangTinTuyenDung> {
     padding: const EdgeInsets.symmetric(vertical: 12),
     child: Row(
       children: [
-        Icon(Icons.folder_open, color: Colors.blueAccent),
+        Icon(Icons.folder_open, color: AppColors.action),
         SizedBox(width: 6),
         Text(
           title,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: Colors.blueAccent,
+            color: AppColors.action,
           ),
         ),
       ],
@@ -79,20 +80,20 @@ class _DangTinTuyenDungState extends State<DangTinTuyenDung> {
         maxLines: maxLines,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: Colors.grey[500]),
+          hintStyle: TextStyle(color: AppColors.muted),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: AppColors.surface,
           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide(
-              color: Colors.blueAccent.shade100,
+              color: AppColors.primarySoft,
               width: 1.5,
             ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: Colors.blueAccent, width: 2),
+              borderSide: BorderSide(color: AppColors.action, width: 2),
           ),
         ),
       ),
@@ -120,10 +121,10 @@ class _DangTinTuyenDungState extends State<DangTinTuyenDung> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text("Đăng Tin Tuyển Dụng"),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: AppColors.action,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -184,12 +185,12 @@ class _DangTinTuyenDungState extends State<DangTinTuyenDung> {
               children: [
                 _buildButton(
                   "Hủy",
-                  Colors.grey[300]!,
-                  Colors.black,
+                  AppColors.border,
+                  AppColors.navy,
                   () => Navigator.pop(context),
                 ),
                 SizedBox(width: 15),
-                _buildButton("Lưu", Colors.blueAccent, Colors.white, () async {
+                _buildButton("Lưu", AppColors.action, AppColors.surface, () async {
                   // 1. Kiểm tra các trường bắt buộc
                   final requiredFields = {
                     "Tên vị trí": _tenViTriController.text,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class ThongTinChiTiet extends StatefulWidget {
   const ThongTinChiTiet({super.key});
@@ -12,7 +13,7 @@ class _ThongTinChiTietState extends State<ThongTinChiTiet> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF7ecbff),
+        backgroundColor: AppColors.action,
         title: Text("Thông tin chi tiết"),
       ),
       body: SizedBox.expand(

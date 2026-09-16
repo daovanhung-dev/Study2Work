@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class LichPhongVanScreen extends StatefulWidget {
   const LichPhongVanScreen({super.key});
@@ -12,7 +13,7 @@ class _LichPhongVanScreenState extends State<LichPhongVanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF7ecbff),
+        backgroundColor: AppColors.action,
         title: Text("Lịch phỏng vấn"),
       ),
       body: SizedBox.expand(

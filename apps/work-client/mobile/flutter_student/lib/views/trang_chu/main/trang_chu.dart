@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/controllers/trang_chu/trang_chu_ctrl.dart';
 import 'package:work_server/helper_db/out_meta/helper_db_error.dart';
 import 'package:work_server/helper_db/out_meta/helper_supabase_error.dart';
@@ -80,7 +81,7 @@ class _TrangChuState extends State<TrangChu>
     final double horizontalMargin = isWide ? 28 : 16;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F9FC),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -129,7 +130,7 @@ class _TrangChuState extends State<TrangChu>
           return Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF7ecbff), Color(0xFF0984e3)],
+                colors: [AppColors.action, AppColors.primary],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -153,7 +154,7 @@ class _TrangChuState extends State<TrangChu>
                             ? NetworkImage(img!)
                             : const AssetImage('assets/avatar_default.png')
                                   as ImageProvider,
-                        backgroundColor: Colors.white.withValues(alpha: 0.9),
+                        backgroundColor: AppColors.surface.withValues(alpha: 0.9),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -168,7 +169,7 @@ class _TrangChuState extends State<TrangChu>
                             child: Text(
                               'Xin chào, ${name ?? 'Bạn'}',
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: AppColors.surface,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -182,8 +183,8 @@ class _TrangChuState extends State<TrangChu>
                             Flexible(
                               child: Text(
                                 'Tìm việc, quản lý CV, chuẩn bị phỏng vấn',
-                                style: const TextStyle(
-                                  color: Colors.white70,
+                                style: TextStyle(
+                                  color: AppColors.surface.withValues(alpha: 0.7),
                                   fontSize: 13,
                                 ),
                                 overflow: TextOverflow.ellipsis,
@@ -202,7 +203,7 @@ class _TrangChuState extends State<TrangChu>
                       ),
                       icon: const Icon(
                         Icons.notifications_none_rounded,
-                        color: Colors.white,
+                        color: AppColors.surface,
                       ),
                       constraints: const BoxConstraints(
                         minWidth: 40,
@@ -238,7 +239,7 @@ class _TrangChuState extends State<TrangChu>
             SizedBox(height: 8),
             Text(
               'Xem các vị trí nổi bật hoặc cập nhật CV để tăng cơ hội phỏng vấn.',
-              style: TextStyle(fontSize: 13, color: Colors.black54),
+              style: TextStyle(fontSize: 13, color: AppColors.muted),
             ),
           ],
         ),
@@ -371,7 +372,7 @@ class _TrangChuState extends State<TrangChu>
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: AppColors.navy,
             ),
           ),
         ),
@@ -404,11 +405,11 @@ class _TrangChuState extends State<TrangChu>
                       horizontal: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black12.withValues(alpha: 0.05),
+                          color: AppColors.navy.withValues(alpha: 0.05),
                           // bóng nhẹ, hướng xuống
                           blurRadius: 12,
                           offset: const Offset(0, 6),
@@ -416,7 +417,7 @@ class _TrangChuState extends State<TrangChu>
                       ],
                       border: const Border(
                         bottom: BorderSide(
-                          color: Colors.grey, // viền dưới mảnh
+                          color: AppColors.muted, // viền dưới mảnh
                           width: 0.5,
                         ),
                       ),
@@ -431,15 +432,15 @@ class _TrangChuState extends State<TrangChu>
                             shape: BoxShape.circle,
                             gradient: LinearGradient(
                               colors: [
-                                Colors.blue.shade200,
-                                Colors.blue.shade400,
+                                AppColors.primarySoft,
+                                AppColors.action,
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black12.withValues(alpha: 0.1),
+                                color: AppColors.navy.withValues(alpha: 0.1),
                                 // bóng icon nhẹ
                                 blurRadius: 6,
                                 offset: const Offset(0, 3),
@@ -456,7 +457,7 @@ class _TrangChuState extends State<TrangChu>
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                            color: AppColors.navy,
                           ),
                         ),
                       ],
@@ -472,11 +473,11 @@ class _TrangChuState extends State<TrangChu>
   }
 
   BoxDecoration _cardStyle() => BoxDecoration(
-    color: Colors.white,
+    color: AppColors.surface,
     borderRadius: BorderRadius.circular(16),
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withValues(alpha: 0.06),
+        color: AppColors.navy.withValues(alpha: 0.06),
         blurRadius: 10,
         offset: const Offset(0, 4),
       ),
@@ -515,12 +516,12 @@ class _JobCardScrollable extends StatelessWidget {
           height: cardHeight,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.grey.shade200, width: 0.6),
+            border: Border.all(color: AppColors.border, width: 0.6),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
+                color: AppColors.navy.withValues(alpha: 0.03),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -551,7 +552,7 @@ class _JobCardScrollable extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black87,
+                              color: AppColors.navy,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -563,7 +564,7 @@ class _JobCardScrollable extends StatelessWidget {
                                 : 'Công ty chưa xác định',
                             style: const TextStyle(
                               fontSize: 13,
-                              color: Colors.blueGrey,
+                              color: AppColors.muted,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -603,7 +604,7 @@ class _JobCardScrollable extends StatelessWidget {
                           const Icon(
                             Icons.attach_money,
                             size: 16,
-                            color: Colors.green,
+                            color: AppColors.success,
                           ),
                           const SizedBox(width: 6),
                           Expanded(
@@ -612,7 +613,7 @@ class _JobCardScrollable extends StatelessWidget {
                                   ? jd.mucLuong
                                   : 'Thoả thuận',
                               style: const TextStyle(
-                                color: Colors.green,
+                                color: AppColors.success,
                                 fontWeight: FontWeight.w600,
                               ),
                               maxLines: 1,
@@ -627,7 +628,7 @@ class _JobCardScrollable extends StatelessWidget {
                           const Icon(
                             Icons.location_on,
                             size: 16,
-                            color: Colors.redAccent,
+                            color: AppColors.danger,
                           ),
                           const SizedBox(width: 6),
                           Expanded(
@@ -635,7 +636,7 @@ class _JobCardScrollable extends StatelessWidget {
                               jd.diaDiem.isNotEmpty
                                   ? jd.diaDiem
                                   : 'Không rõ địa điểm',
-                              style: const TextStyle(color: Colors.black54),
+                              style: const TextStyle(color: AppColors.muted),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -648,7 +649,7 @@ class _JobCardScrollable extends StatelessWidget {
                           const Icon(
                             Icons.access_time,
                             size: 16,
-                            color: Colors.blue,
+                            color: AppColors.action,
                           ),
                           const SizedBox(width: 6),
                           Expanded(
@@ -656,7 +657,7 @@ class _JobCardScrollable extends StatelessWidget {
                               jd.thoiGian.isNotEmpty
                                   ? jd.thoiGian
                                   : 'Toàn thời gian / Bán thời gian',
-                              style: const TextStyle(color: Colors.black54),
+                              style: const TextStyle(color: AppColors.muted),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -669,7 +670,7 @@ class _JobCardScrollable extends StatelessWidget {
                           const Icon(
                             Icons.event,
                             size: 16,
-                            color: Colors.orange,
+                            color: AppColors.warning,
                           ),
                           const SizedBox(width: 6),
                           Expanded(
@@ -677,7 +678,7 @@ class _JobCardScrollable extends StatelessWidget {
                               jd.hanNop.isNotEmpty
                                   ? 'Hạn nộp: ${jd.hanNop}'
                                   : 'Không rõ hạn nộp',
-                              style: const TextStyle(color: Colors.black54),
+                              style: const TextStyle(color: AppColors.muted),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -696,7 +697,7 @@ class _JobCardScrollable extends StatelessWidget {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.blue.shade50.withValues(alpha: 0.12),
+                            color: AppColors.primarySoft.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Column(
@@ -736,13 +737,13 @@ class _JobCardScrollable extends StatelessWidget {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: AppColors.background,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.grey.shade200),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Text(
                   _shorten(jd.phucLoi.isNotEmpty ? jd.phucLoi : jd.moTa, 180),
-                  style: const TextStyle(fontSize: 13, color: Colors.black87),
+                  style: const TextStyle(fontSize: 13, color: AppColors.navy),
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -789,18 +790,18 @@ class _JobCardScrollable extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: AppColors.primarySoft,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.blue, size: 14),
+          Icon(icon, color: AppColors.action, size: 14),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 12, color: Colors.blue),
+              style: const TextStyle(fontSize: 12, color: AppColors.action),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -816,12 +817,12 @@ class _JobCardScrollable extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.blueAccent, size: 14),
+          Icon(icon, color: AppColors.action, size: 14),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 13, color: Colors.black87),
+              style: const TextStyle(fontSize: 13, color: AppColors.navy),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -834,8 +835,8 @@ class _JobCardScrollable extends StatelessWidget {
   Widget _defaultLogo() => Container(
     width: 52,
     height: 52,
-    color: Colors.grey.shade200,
-    child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 28),
+    color: AppColors.border,
+    child: const Icon(Icons.image_not_supported, color: AppColors.muted, size: 28),
   );
 
   String _shorten(String input, int max) =>

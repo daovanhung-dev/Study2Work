@@ -86,7 +86,8 @@ HEALTH_ROUTE_STATUS: NOT_FOUND
 ```text
 RUNTIME_STATUS: VERIFIED_REACT_VITE_SOURCE
 API_STATUS: VERIFIED_RELATIVE_API_CLIENT
-TEST_STATUS: SOURCE_TESTS_PRESENT; TOOLCHAIN_NOT_RUN_IN_CURRENT_SHELL
+TEST_STATUS: SOURCE_TESTS_PRESENT; TYPECHECK_TEST_BUILD_PASS_VIA_DENO_FALLBACK
+DESIGN_STATUS: SOURCE_BACKED_COBALT_BASELINE_IMPLEMENTED
 ```
 
 - `src/app/router.tsx` owns public, student and business routes with role guards;
@@ -96,13 +97,18 @@ TEST_STATUS: SOURCE_TESTS_PRESENT; TOOLCHAIN_NOT_RUN_IN_CURRENT_SHELL
   cookies and send a single optional Bearer header.
 - Vite development proxies `/api`, `/uploads` and `/img` to Work server port
   3000. Current tests cover role access and the Bearer/401 token boundary.
+- The presentation layer now has Cobalt semantic tokens, shared UI primitives,
+  responsive public/workspace menus and reduced-motion/focus rules. This is a
+  presentation-only change; route, API, auth and page-local data flow remain
+  unchanged.
 
 ## Work mobile
 
 ```text
 RUNTIME_STATUS: SOURCE_BACKED_DIRECT_NEON
 CLIENT_SERVER_STATUS: NOT_HTTP_WIRED_TO_WORK_SERVER
-TEST_STATUS: UNIT_TESTS_PRESENT; NETWORK_SMOKE_OPT_IN
+TEST_STATUS: UNIT_TESTS_PRESENT; FLUTTER_TOOLCHAIN_UNAVAILABLE; NETWORK_SMOKE_OPT_IN
+DESIGN_STATUS: SOURCE_BACKED_COBALT_BASELINE_IMPLEMENTED
 ```
 
 - Student and business are separate Flutter apps with package name `work_server`.
@@ -113,6 +119,9 @@ TEST_STATUS: UNIT_TESTS_PRESENT; NETWORK_SMOKE_OPT_IN
 - Both apps call Gemini directly from `AIService`; this is independent of the
   Work server and `apps/ai-server`. URL/row/model normalization and polling
   tests exist; connection smoke tests require an explicit Dart define.
+- Each standalone app now owns a local Material 3 Cobalt theme and UI
+  primitives under `lib/theme/`. The refresh changes presentation only; direct
+  Neon/SQLite/Gemini boundaries and chat polling semantics are preserved.
 
 ## AI server
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class ThucTapScreen extends StatefulWidget {
   const ThucTapScreen({super.key});
@@ -12,7 +13,7 @@ class _ThucTapScreenState extends State<ThucTapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF7ecbff),
+        backgroundColor: AppColors.action,
         title: Text("Chương trình thực tập"),
       ),
       body: SizedBox.expand(

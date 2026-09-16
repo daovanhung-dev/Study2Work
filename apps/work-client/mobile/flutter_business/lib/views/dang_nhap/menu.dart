@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/views/cai_dat/setting.dart';
 import 'package:work_server/views/ung_vien/ung_vien.dart';
 import '../tro_chuyen/tro_chuyen.dart';
@@ -32,6 +33,13 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
     Icons.person_outline,
     Icons.chat_bubble_outline,
     Icons.settings_outlined,
+  ];
+
+  final List<String> _labels = const [
+    'Trang chủ',
+    'Ứng viên',
+    'Tin nhắn',
+    'Cài đặt',
   ];
 
   IconData _activeIcon(int i) {
@@ -133,17 +141,19 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
   }
 
   Widget _buildBottomBar(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(40),
+        color: colors.surface.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(AppRadii.hero),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
+            color: colors.shadow.withValues(alpha: 0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -151,32 +161,40 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: List.generate(_icons.length, (i) {
           final bool active = i == _selectedIndex;
-          return GestureDetector(
-            onTap: () => _onTap(i),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: active ? Colors.blueAccent : Colors.transparent,
-                shape: BoxShape.circle,
-                boxShadow: active
-                    ? [
-                        BoxShadow(
-                          color: Colors.blueAccent.withValues(alpha: 0.4),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : [],
-              ),
-              child: AnimatedScale(
-                duration: const Duration(milliseconds: 300),
-                scale: active ? 1.25 : 1.0,
-                child: Icon(
-                  active ? _activeIcon(i) : _icons[i],
-                  color: active ? Colors.white : Colors.grey[700],
-                  size: active ? 26 : 22,
+          return Semantics(
+            button: true,
+            selected: active,
+            label: _labels[i],
+            child: Tooltip(
+              message: _labels[i],
+              child: GestureDetector(
+                onTap: () => _onTap(i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: active ? colors.primary : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
+                    boxShadow: active
+                        ? [
+                            BoxShadow(
+                              color: colors.primary.withValues(alpha: 0.2),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: AnimatedScale(
+                    duration: const Duration(milliseconds: 300),
+                    scale: active ? 1.25 : 1.0,
+                    child: Icon(
+                      active ? _activeIcon(i) : _icons[i],
+                      color: active ? colors.onPrimary : colors.onSurfaceVariant,
+                      size: active ? 26 : 22,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -197,8 +215,8 @@ class WavePainter extends CustomPainter {
     final paint = Paint()
       ..shader = LinearGradient(
         colors: [
-          const Color(0xFF4facfe).withValues(alpha: 0.25),
-          const Color(0xFF00f2fe).withValues(alpha: 0.15),
+          AppColors.action.withValues(alpha: 0.16),
+          AppColors.action.withValues(alpha: 0.08),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,

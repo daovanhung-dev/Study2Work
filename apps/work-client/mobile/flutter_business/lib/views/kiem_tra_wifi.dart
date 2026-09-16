@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/services.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/views/dang_nhap/dang_nhap.dart';
 
 class KiemTraWifiView extends StatefulWidget {
@@ -101,7 +102,7 @@ class _KiemTraWifiViewState extends State<KiemTraWifiView>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: Colors.redAccent,
+          backgroundColor: AppColors.danger,
           duration: const Duration(seconds: 3),
         ),
       );
@@ -115,7 +116,7 @@ class _KiemTraWifiViewState extends State<KiemTraWifiView>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Colors.blue.shade50,
+      backgroundColor: AppColors.primarySoft,
       body: Stack(
         alignment: Alignment.center,
         children: [
@@ -137,7 +138,7 @@ class _KiemTraWifiViewState extends State<KiemTraWifiView>
               Icon(
                 Icons.waves_rounded,
                 size: 100,
-                color: Colors.blueAccent.withValues(alpha: 0.8),
+                color: AppColors.action.withValues(alpha: 0.8),
               ),
               const SizedBox(height: 20),
               const Text(
@@ -145,13 +146,13 @@ class _KiemTraWifiViewState extends State<KiemTraWifiView>
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: AppColors.navy,
                 ),
               ),
               const SizedBox(height: 25),
               const CircularProgressIndicator(
                 strokeWidth: 3,
-                color: Colors.blueAccent,
+                color: AppColors.action,
               ),
             ],
           ),
@@ -169,7 +170,7 @@ class _WaterRipplePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blueAccent.withValues(alpha: 0.05)
+      ..color = AppColors.action.withValues(alpha: 0.05)
       ..style = PaintingStyle.fill;
 
     final center = Offset(size.width / 2, size.height / 2);
@@ -177,7 +178,7 @@ class _WaterRipplePainter extends CustomPainter {
 
     for (int i = 0; i < 3; i++) {
       final radius = maxRadius * (animationValue + i * 0.3);
-      paint.color = Colors.blueAccent.withValues(alpha: 0.15 - i * 0.05);
+      paint.color = AppColors.action.withValues(alpha: 0.15 - i * 0.05);
       canvas.drawCircle(center, radius, paint);
     }
   }

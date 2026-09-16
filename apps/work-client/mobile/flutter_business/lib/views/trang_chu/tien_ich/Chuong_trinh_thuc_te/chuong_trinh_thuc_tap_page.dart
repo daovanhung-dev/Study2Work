@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 // [MODEL TỪ PHẦN TRÊN]
 class ThucTapProgram {
@@ -47,7 +48,7 @@ class _ChuongTrinhThucTapPageState extends State<ChuongTrinhThucTapPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Đã xóa chương trình thực tập thành công!"),
-        backgroundColor: Colors.redAccent,
+        backgroundColor: AppColors.danger,
       ),
     );
   }
@@ -58,10 +59,10 @@ class _ChuongTrinhThucTapPageState extends State<ChuongTrinhThucTapPage> {
       appBar: AppBar(
         title: const Text(
           "CHƯƠNG TRÌNH THỰC TẬP",
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.surface),
         ),
         centerTitle: true,
-        backgroundColor: Colors.green,
+        backgroundColor: AppColors.success,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -74,10 +75,10 @@ class _ChuongTrinhThucTapPageState extends State<ChuongTrinhThucTapPage> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.green,
+                color: AppColors.success,
               ),
             ),
-            const Divider(color: Colors.green),
+            const Divider(color: AppColors.success),
 
             // Truyền hàm _addProgram vào Form để nó gọi lại khi lưu thành công
             ChuongTrinhThucTapForm(onSave: _addProgram),
@@ -90,10 +91,10 @@ class _ChuongTrinhThucTapPageState extends State<ChuongTrinhThucTapPage> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.green,
+                color: AppColors.success,
               ),
             ),
-            const Divider(color: Colors.green),
+            const Divider(color: AppColors.success),
 
             _programList.isEmpty
                 ? const Center(
@@ -103,7 +104,7 @@ class _ChuongTrinhThucTapPageState extends State<ChuongTrinhThucTapPage> {
                         'Chưa có chương trình thực tập nào được lưu.',
                         style: TextStyle(
                           fontStyle: FontStyle.italic,
-                          color: Colors.grey,
+                          color: AppColors.muted,
                         ),
                       ),
                     ),
@@ -131,13 +132,13 @@ class _ChuongTrinhThucTapPageState extends State<ChuongTrinhThucTapPage> {
       margin: const EdgeInsets.only(bottom: 15),
       child: ListTile(
         contentPadding: const EdgeInsets.all(15),
-        leading: const Icon(Icons.badge, size: 40, color: Colors.green),
+        leading: const Icon(Icons.badge, size: 40, color: AppColors.success),
         title: Text(
           program.hoTen,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: Colors.indigo,
+            color: AppColors.primary,
           ),
         ),
         subtitle: Column(
@@ -154,7 +155,7 @@ class _ChuongTrinhThucTapPageState extends State<ChuongTrinhThucTapPage> {
           ],
         ),
         trailing: IconButton(
-          icon: const Icon(Icons.delete_forever, color: Colors.redAccent),
+          icon: const Icon(Icons.delete_forever, color: AppColors.danger),
           onPressed: () => _deleteProgram(index),
         ),
       ),
@@ -226,7 +227,7 @@ class _ChuongTrinhThucTapFormState extends State<ChuongTrinhThucTapForm> {
           content: Text(
             "Lưu thành công chương trình thực tập của: ${program.hoTen}!",
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
         ),
       );
 
@@ -283,8 +284,8 @@ class _ChuongTrinhThucTapFormState extends State<ChuongTrinhThucTapForm> {
               style: TextStyle(fontSize: 16),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.success,
+              foregroundColor: AppColors.surface,
               minimumSize: const Size(double.infinity, 55),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -310,10 +311,10 @@ class _ChuongTrinhThucTapFormState extends State<ChuongTrinhThucTapForm> {
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: Colors.green.shade600),
+          prefixIcon: Icon(icon, color: AppColors.success),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
-          fillColor: Colors.green.shade50.withValues(alpha: 0.5),
+          fillColor: AppColors.success.withValues(alpha: 0.12),
         ),
         validator: (value) =>
             (value == null || value.isEmpty) ? "Vui lòng nhập $label" : null,
@@ -334,10 +335,10 @@ class _ChuongTrinhThucTapFormState extends State<ChuongTrinhThucTapForm> {
         initialValue: value,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: Colors.green.shade600),
+          prefixIcon: Icon(icon, color: AppColors.success),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
-          fillColor: Colors.green.shade50.withValues(alpha: 0.5),
+          fillColor: AppColors.success.withValues(alpha: 0.12),
         ),
         hint: Text("Chọn $label"),
         items: items.map((String item) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/controllers/trang_chu/xem_chi_tiet.dart';
 import 'package:work_server/controllers/ung_tuyen_ctrl.dart';
 import 'package:work_server/models/sinh_vien/jd.dart';
@@ -20,10 +21,10 @@ class _XemChiTietViewState extends State<XemChiTietView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFF0052CC),
+        backgroundColor: AppColors.primary,
         title: const Text(
           "Chi tiết công việc",
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -58,11 +59,11 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
+                          color: AppColors.navy.withValues(alpha: 0.06),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -85,10 +86,10 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                                 errorBuilder: (_, __, ___) => Container(
                                   width: 80,
                                   height: 80,
-                                  color: Colors.grey[300],
+                                  color: AppColors.border,
                                   child: const Icon(
                                     Icons.business,
-                                    color: Colors.grey,
+                                    color: AppColors.muted,
                                   ),
                                 ),
                               ),
@@ -103,7 +104,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                                     style: const TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF0052CC),
+                                      color: AppColors.primary,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -119,7 +120,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                                     jd.diaDiem,
                                     style: const TextStyle(
                                       fontSize: 13,
-                                      color: Colors.black54,
+                                      color: AppColors.muted,
                                     ),
                                   ),
                                 ],
@@ -136,18 +137,18 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                           spacing: 10,
                           runSpacing: 10,
                           children: [
-                            _infoTag(Icons.school, jd.trinhDo, Colors.orange),
-                            _infoTag(Icons.star, jd.capBac, Colors.purple),
-                            _infoTag(Icons.timer, jd.thoiGian, Colors.green),
+                            _infoTag(Icons.school, jd.trinhDo, AppColors.warning),
+                            _infoTag(Icons.star, jd.capBac, AppColors.info),
+                            _infoTag(Icons.timer, jd.thoiGian, AppColors.success),
                             _infoTag(
                               Icons.monetization_on,
                               jd.mucLuong,
-                              Colors.blue,
+                              AppColors.action,
                             ),
                             _infoTag(
                               Icons.calendar_today,
                               _formatDate(jd.hanNop),
-                              Colors.red,
+                              AppColors.danger,
                             ),
                           ],
                         ),
@@ -193,18 +194,18 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                                 _showSnack(
                                   context,
                                   'Ứng tuyển thành công!',
-                                  Colors.blue,
+                                  AppColors.action,
                                 );
                               } else {
                                 _showSnack(
                                   context,
                                   'Bạn đã ứng tuyển vị trí này rồi!',
-                                  Colors.redAccent,
+                                  AppColors.danger,
                                 );
                               }
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0052CC),
+                              backgroundColor: AppColors.primary,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 30,
                                 vertical: 12,
@@ -212,16 +213,16 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
-                              shadowColor: Colors.blueAccent.withValues(
+                              shadowColor: AppColors.action.withValues(
                                 alpha: 0.35,
                               ),
                               elevation: 6,
                             ),
-                            icon: const Icon(Icons.send, color: Colors.white),
+                            icon: const Icon(Icons.send, color: AppColors.surface),
                             label: const Text(
                               "Ứng tuyển ngay",
                               style: TextStyle(
-                                color: Colors.white,
+                                color: AppColors.surface,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
                               ),
@@ -245,7 +246,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
   void _showSnack(BuildContext context, String msg, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg, style: const TextStyle(color: Colors.white)),
+        content: Text(msg, style: const TextStyle(color: AppColors.surface)),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
@@ -272,7 +273,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
         style: const TextStyle(
           fontSize: 17,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF0052CC),
+          color: AppColors.primary,
         ),
       ),
     );
@@ -289,13 +290,13 @@ class _XemChiTietViewState extends State<XemChiTietView> {
               text: "$label: ",
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: AppColors.navy,
               ),
             ),
             TextSpan(text: text),
           ],
         ),
-        style: const TextStyle(fontSize: 14, color: Colors.black87),
+        style: const TextStyle(fontSize: 14, color: AppColors.navy),
       ),
     );
   }
@@ -319,7 +320,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                color: AppColors.navy,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

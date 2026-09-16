@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/controllers/chat/chat_controller.dart';
 import 'package:work_server/helper_db/sinh_vien/helper_db.dart';
 import 'dart:async';
@@ -196,10 +197,10 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                 decoration: BoxDecoration(
                   gradient: isSender
                       ? LinearGradient(
-                          colors: [Colors.blue[400]!, Colors.blue[300]!],
+                          colors: [AppColors.action, AppColors.action],
                         )
                       : LinearGradient(
-                          colors: [Colors.grey[300]!, Colors.grey[200]!],
+                          colors: [AppColors.border, AppColors.border],
                         ),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(isSender ? 16 : 4),
@@ -209,7 +210,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
+                      color: AppColors.navy.withValues(alpha: 0.08),
                       blurRadius: 5,
                       offset: const Offset(0, 3),
                     ),
@@ -222,7 +223,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                       chat["noidung"] ?? "",
                       style: const TextStyle(
                         fontSize: 14,
-                        color: Colors.black87,
+                        color: AppColors.navy,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -230,7 +231,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                       _formatTime(chat["ngaygui"]?.toString()),
                       style: const TextStyle(
                         fontSize: 10,
-                        color: Colors.black54,
+                        color: AppColors.muted,
                       ),
                     ),
                   ],
@@ -254,12 +255,12 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF7ecbff),
+        backgroundColor: AppColors.action,
         title: const Text("Trò chuyện"),
         elevation: 2,
-        shadowColor: Colors.blue.withValues(alpha: 0.2),
+        shadowColor: AppColors.action.withValues(alpha: 0.2),
       ),
       body: Column(
         children: [
@@ -274,18 +275,18 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            color: Colors.white.withValues(alpha: 0.95),
+            color: AppColors.surface.withValues(alpha: 0.95),
             child: Row(
               children: [
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
+                      color: AppColors.border,
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: AppColors.navy.withValues(alpha: 0.05),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -308,18 +309,18 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Colors.blue[400]!, Colors.blue[300]!],
+                        colors: [AppColors.action, AppColors.action],
                       ),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.blue.withValues(alpha: 0.4),
+                          color: AppColors.action.withValues(alpha: 0.4),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.send, color: Colors.white),
+                    child: const Icon(Icons.send, color: AppColors.surface),
                   ),
                 ),
               ],

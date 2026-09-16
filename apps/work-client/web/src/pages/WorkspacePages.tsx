@@ -20,6 +20,7 @@ import {
   type Job,
 } from "../shared/api/work";
 import { useAuth } from "../shared/auth/AuthProvider";
+import { PageHeader } from "../shared/ui/Primitives";
 import { EmptyState, ErrorState, LoadingState } from "../shared/ui/States";
 
 function text(record: Record<string, unknown> | null | undefined, key: string, fallback = "") {
@@ -37,7 +38,7 @@ function imageOf(record: Record<string, unknown>) {
 }
 
 function SectionHeading({ eyebrow, title, action }: { eyebrow: string; title: string; action?: React.ReactNode }) {
-  return <div className="section-heading"><div><span className="eyebrow">{eyebrow}</span><h1>{title}</h1></div>{action}</div>;
+  return <PageHeader eyebrow={eyebrow} title={title} action={action} />;
 }
 
 function JobRow({ job, detail = true }: { job: Job; detail?: boolean }) {

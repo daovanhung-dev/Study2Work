@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class LichPhongVanView extends StatefulWidget {
   const LichPhongVanView({super.key});
@@ -54,7 +55,7 @@ class _LichPhongVanViewState extends State<LichPhongVanView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lịch Phỏng Vấn'),
-        backgroundColor: Colors.blue.shade400,
+        backgroundColor: AppColors.action,
         elevation: 0,
       ),
       body: Column(
@@ -65,7 +66,7 @@ class _LichPhongVanViewState extends State<LichPhongVanView> {
                 ? const Center(
                     child: Text(
                       'Không có lịch phỏng vấn nào',
-                      style: TextStyle(color: Colors.black54),
+                      style: TextStyle(color: AppColors.muted),
                     ),
                   )
                 : ListView.separated(
@@ -100,10 +101,10 @@ class _LichPhongVanViewState extends State<LichPhongVanView> {
                   _selectedFilter = filter;
                 });
               },
-              selectedColor: Colors.blue.shade400,
-              backgroundColor: Colors.grey.shade200,
+              selectedColor: AppColors.action,
+              backgroundColor: AppColors.border,
               labelStyle: TextStyle(
-                color: isSelected ? Colors.white : Colors.black87,
+                color: isSelected ? AppColors.surface : AppColors.navy,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -121,20 +122,20 @@ class _LichPhongVanViewState extends State<LichPhongVanView> {
     Color statusColor;
     switch (status) {
       case 'Sắp tới':
-        statusColor = Colors.green;
+        statusColor = AppColors.success;
         break;
       case 'Đã hoàn thành':
-        statusColor = Colors.blueGrey;
+        statusColor = AppColors.muted;
         break;
       case 'Đã hủy':
-        statusColor = Colors.redAccent;
+        statusColor = AppColors.danger;
         break;
       default:
-        statusColor = Colors.grey;
+        statusColor = AppColors.muted;
     }
 
     return Material(
-      color: Colors.white,
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(14),
       elevation: 2,
       child: InkWell(
@@ -182,7 +183,7 @@ class _LichPhongVanViewState extends State<LichPhongVanView> {
               const SizedBox(height: 6),
               Text(
                 item['company'] ?? 'Công ty chưa xác định',
-                style: const TextStyle(color: Colors.black54),
+                style: const TextStyle(color: AppColors.muted),
               ),
               const SizedBox(height: 6),
               Row(
@@ -190,12 +191,12 @@ class _LichPhongVanViewState extends State<LichPhongVanView> {
                   const Icon(
                     Icons.calendar_today,
                     size: 16,
-                    color: Colors.blueAccent,
+                    color: AppColors.action,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     formattedDate,
-                    style: const TextStyle(color: Colors.black87, fontSize: 13),
+                    style: const TextStyle(color: AppColors.navy, fontSize: 13),
                   ),
                 ],
               ),

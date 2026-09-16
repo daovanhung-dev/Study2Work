@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class TinTucView extends StatelessWidget {
   const TinTucView({super.key});
@@ -30,7 +31,7 @@ class TinTucView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tin tức & Thông báo'),
-        backgroundColor: Colors.blue.shade400,
+        backgroundColor: AppColors.action,
         elevation: 0,
       ),
       body: ListView.separated(
@@ -47,7 +48,7 @@ class TinTucView extends StatelessWidget {
 
   Widget _buildNewsCard(BuildContext context, Map<String, String> item) {
     return Material(
-      color: Colors.white,
+      color: AppColors.surface,
       borderRadius: BorderRadius.circular(14),
       elevation: 3,
       child: InkWell(
@@ -90,7 +91,7 @@ class TinTucView extends StatelessWidget {
                       item['summary']!,
                       style: const TextStyle(
                         fontSize: 13,
-                        color: Colors.black54,
+                        color: AppColors.muted,
                       ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
@@ -98,7 +99,7 @@ class TinTucView extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       item['date']!,
-                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                      style: const TextStyle(fontSize: 11, color: AppColors.muted),
                     ),
                   ],
                 ),

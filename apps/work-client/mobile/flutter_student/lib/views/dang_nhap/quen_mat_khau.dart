@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class QuenMatKhauView extends StatefulWidget {
   const QuenMatKhauView({super.key});
@@ -14,7 +15,7 @@ class _QuenMatKhauViewState extends State<QuenMatKhauView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE6F3FF),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -24,7 +25,7 @@ class _QuenMatKhauViewState extends State<QuenMatKhauView> {
               children: [
                 const Icon(
                   Icons.lock_reset_rounded,
-                  color: Color(0xFF2196F3),
+                  color: AppColors.action,
                   size: 90,
                 ),
                 const SizedBox(height: 20),
@@ -33,23 +34,23 @@ class _QuenMatKhauViewState extends State<QuenMatKhauView> {
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1565C0),
+                    color: AppColors.primary,
                   ),
                 ),
                 const SizedBox(height: 10),
                 const Text(
                   "Nhập email để nhận liên kết khôi phục mật khẩu",
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.black54),
+                  style: TextStyle(fontSize: 16, color: AppColors.muted),
                 ),
                 const SizedBox(height: 30),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.blue.withValues(alpha: 0.1),
+                        color: AppColors.action.withValues(alpha: 0.1),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -61,7 +62,7 @@ class _QuenMatKhauViewState extends State<QuenMatKhauView> {
                       hintText: "Nhập email của bạn",
                       prefixIcon: Icon(
                         Icons.email_outlined,
-                        color: Colors.blue,
+                        color: AppColors.action,
                       ),
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(
@@ -77,8 +78,8 @@ class _QuenMatKhauViewState extends State<QuenMatKhauView> {
                     setState(() => _isSent = true);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF64B5F6),
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.action,
+                    foregroundColor: AppColors.surface,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -94,20 +95,20 @@ class _QuenMatKhauViewState extends State<QuenMatKhauView> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.lightBlue.shade50,
+                      color: AppColors.primarySoft,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.check_circle, color: Colors.green),
+                        Icon(Icons.check_circle, color: AppColors.success),
                         SizedBox(width: 8),
                         Flexible(
                           child: Text(
                             "Liên kết khôi phục đã được gửi tới email của bạn!",
                             style: TextStyle(
                               fontSize: 15,
-                              color: Colors.black87,
+                              color: AppColors.navy,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -123,7 +124,7 @@ class _QuenMatKhauViewState extends State<QuenMatKhauView> {
                   child: const Text(
                     "← Quay lại đăng nhập",
                     style: TextStyle(
-                      color: Color(0xFF1565C0),
+                      color: AppColors.primary,
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                     ),

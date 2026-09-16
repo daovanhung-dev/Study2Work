@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class KhoaHocView extends StatefulWidget {
   const KhoaHocView({super.key});
@@ -41,7 +42,7 @@ class _KhoaHocViewState extends State<KhoaHocView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Khóa học'),
-        backgroundColor: Colors.blue.shade400,
+        backgroundColor: AppColors.action,
         elevation: 0,
       ),
       body: Padding(
@@ -64,7 +65,7 @@ class _KhoaHocViewState extends State<KhoaHocView> {
     return Material(
       elevation: 2,
       borderRadius: BorderRadius.circular(14),
-      color: Colors.white,
+      color: AppColors.surface,
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () {
@@ -100,7 +101,7 @@ class _KhoaHocViewState extends State<KhoaHocView> {
                       course['description'] ?? '',
                       style: const TextStyle(
                         fontSize: 13,
-                        color: Colors.black54,
+                        color: AppColors.muted,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -112,9 +113,9 @@ class _KhoaHocViewState extends State<KhoaHocView> {
                       child: LinearProgressIndicator(
                         value: progress,
                         minHeight: 6,
-                        backgroundColor: Colors.grey.shade200,
+                        backgroundColor: AppColors.border,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.blue.shade400,
+                          AppColors.action,
                         ),
                       ),
                     ),
@@ -123,7 +124,7 @@ class _KhoaHocViewState extends State<KhoaHocView> {
                       'Tiến độ: ${(progress * 100).toInt()}%',
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Colors.black54,
+                        color: AppColors.muted,
                       ),
                     ),
                   ],

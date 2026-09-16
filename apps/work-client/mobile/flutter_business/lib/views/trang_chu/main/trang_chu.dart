@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/views/trang_chu/main/thong_tin_chi_tiet.dart';
 import 'package:work_server/views/trang_chu/main/xem_chi_tiet_view.dart';
 import 'thong_bao.dart';
@@ -56,7 +57,7 @@ class _TrangChuState extends State<TrangChu> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF7ecbff),
+        backgroundColor: AppColors.action,
         leading: Padding(
           padding: EdgeInsets.all(8), // chỉnh khoảng cách nếu muốn
           child: GestureDetector(
@@ -70,7 +71,7 @@ class _TrangChuState extends State<TrangChu> {
             },
             child: CircleAvatar(
               radius: 22, // Độ lớn ảnh tròn
-              backgroundColor: Colors.grey[200],
+              backgroundColor: AppColors.border,
               backgroundImage: NetworkImage('$img'),
               onBackgroundImageError: (_, __) {
                 debugPrint('❌ Lỗi tải ảnh avatar');
@@ -123,11 +124,11 @@ class _TrangChuState extends State<TrangChu> {
                           horizontal: 14,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              color: AppColors.navy.withValues(alpha: 0.05),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -154,7 +155,7 @@ class _TrangChuState extends State<TrangChu> {
                                     "Tạo tin mới ngay hôm nay",
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.black54,
+                                      color: AppColors.muted,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -178,8 +179,8 @@ class _TrangChuState extends State<TrangChu> {
                               icon: const Icon(Icons.add, size: 16),
                               label: const Text("Tạo"),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blueAccent,
-                                foregroundColor: Colors.white,
+                                backgroundColor: AppColors.action,
+                                foregroundColor: AppColors.surface,
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 10,
                                   vertical: 8,
@@ -208,11 +209,11 @@ class _TrangChuState extends State<TrangChu> {
                         ),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              color: AppColors.navy.withValues(alpha: 0.05),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -271,12 +272,12 @@ class _TrangChuState extends State<TrangChu> {
                                           ),
                                           padding: const EdgeInsets.all(10),
                                           decoration: BoxDecoration(
-                                            color: Colors.grey[50],
+                                            color: AppColors.primarySoft,
                                             borderRadius: BorderRadius.circular(
                                               12,
                                             ),
                                             border: Border.all(
-                                              color: Colors.grey[300]!,
+                                              color: AppColors.border,
                                             ),
                                           ),
                                           child: Row(
@@ -295,10 +296,10 @@ class _TrangChuState extends State<TrangChu> {
                                                       Container(
                                                         width: 55,
                                                         height: 55,
-                                                        color: Colors.grey[300],
+                                                        color: AppColors.border,
                                                         child: const Icon(
                                                           Icons.person,
-                                                          color: Colors.grey,
+                                                          color: AppColors.muted,
                                                         ),
                                                       ),
                                                 ),
@@ -325,14 +326,14 @@ class _TrangChuState extends State<TrangChu> {
                                                       cv['hoten'] ?? '',
                                                       style: const TextStyle(
                                                         fontSize: 13,
-                                                        color: Colors.black87,
+                                                        color: AppColors.navy,
                                                       ),
                                                     ),
                                                     Text(
                                                       cv['nganh'] ?? '',
                                                       style: const TextStyle(
                                                         fontSize: 12,
-                                                        color: Colors.black54,
+                                                        color: AppColors.muted,
                                                       ),
                                                     ),
                                                     const SizedBox(height: 6),
@@ -351,7 +352,7 @@ class _TrangChuState extends State<TrangChu> {
                                                                 maxWidth: 180,
                                                               ),
                                                           decoration: BoxDecoration(
-                                                            color: Colors.white,
+                                                            color: AppColors.surface,
                                                             borderRadius:
                                                                 BorderRadius.circular(
                                                                   12,
@@ -425,7 +426,7 @@ class _TrangChuState extends State<TrangChu> {
                                                                 maxWidth: 180,
                                                               ),
                                                           decoration: BoxDecoration(
-                                                            color: Colors.white,
+                                                            color: AppColors.surface,
                                                             borderRadius:
                                                                 BorderRadius.circular(
                                                                   12,
@@ -499,7 +500,7 @@ class _TrangChuState extends State<TrangChu> {
                                                                 maxWidth: 180,
                                                               ),
                                                           decoration: BoxDecoration(
-                                                            color: Colors.white,
+                                                            color: AppColors.surface,
                                                             borderRadius:
                                                                 BorderRadius.circular(
                                                                   12,
@@ -574,7 +575,7 @@ class _TrangChuState extends State<TrangChu> {
                                                                 maxWidth: 180,
                                                               ),
                                                           decoration: BoxDecoration(
-                                                            color: Colors.white,
+                                                            color: AppColors.surface,
                                                             borderRadius:
                                                                 BorderRadius.circular(
                                                                   12,
@@ -664,11 +665,11 @@ class _TrangChuState extends State<TrangChu> {
                           horizontal: 20,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
+                              color: AppColors.navy.withValues(alpha: 0.05),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -764,11 +765,11 @@ Widget _buildTienIchItem(
       width: 80,
       margin: const EdgeInsets.only(right: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFdbf0fc),
+        color: AppColors.primarySoft,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: AppColors.navy.withValues(alpha: 0.08),
             blurRadius: 5,
             offset: const Offset(0, 3),
           ),

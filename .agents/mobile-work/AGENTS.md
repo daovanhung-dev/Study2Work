@@ -12,7 +12,8 @@ tra exact source khi task thay đổi module cụ thể.
 
 Progressive load:
 
-1. `architecture.md`, `conventions.md`, `dependencies.md`.
+1. `../project/design.md`, `architecture.md`, `conventions.md`,
+   `dependencies.md`.
 2. `modules/README.md` và `workflows/README.md` để xác định feature, side effect
    và test liên quan.
 3. Exact `pubspec.yaml`, entrypoint, feature/controller/model/view và tests của

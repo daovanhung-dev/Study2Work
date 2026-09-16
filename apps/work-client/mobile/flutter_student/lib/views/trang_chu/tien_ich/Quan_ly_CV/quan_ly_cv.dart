@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/controllers/trang_chu/quan_ly_CV/quan_ly_job_cv.dart';
 import 'package:work_server/models/sinh_vien/cv.dart';
 
@@ -114,14 +115,14 @@ class _QuanLyCVViewState extends State<QuanLyCVView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('✅ Cập nhật CV thành công!'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.success,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('❌ Lỗi khi cập nhật: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.danger,
         ),
       );
     }
@@ -142,7 +143,7 @@ class _QuanLyCVViewState extends State<QuanLyCVView> {
           labelText: label,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
-          fillColor: enabled ? Colors.white : Colors.blue.shade50,
+          fillColor: enabled ? AppColors.surface : AppColors.primarySoft,
         ),
       ),
     );
@@ -151,13 +152,13 @@ class _QuanLyCVViewState extends State<QuanLyCVView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue.shade50,
+      backgroundColor: AppColors.primarySoft,
       appBar: AppBar(
         title: const Text(
           'Quản lý CV',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.blue.shade400,
+      backgroundColor: AppColors.action,
         centerTitle: true,
       ),
       body: _loading
@@ -167,12 +168,12 @@ class _QuanLyCVViewState extends State<QuanLyCVView> {
           : _buildCVDetailView(),
       floatingActionButton: _cv == null
           ? FloatingActionButton(
-              backgroundColor: Colors.blue,
+              backgroundColor: AppColors.action,
               onPressed: () {},
               child: const Icon(Icons.add),
             )
           : FloatingActionButton(
-              backgroundColor: _editing ? Colors.green : Colors.blue,
+              backgroundColor: _editing ? AppColors.success : AppColors.action,
               onPressed: _toggleEdit,
               child: Icon(_editing ? Icons.save : Icons.edit),
             ),

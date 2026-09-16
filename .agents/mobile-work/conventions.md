@@ -15,3 +15,7 @@
   `dispose()`, and callbacks deduplicate messages by database `id`.
 - The direct Neon mobile connection is a development/prototype convention only
   and must be replaced with a least-privilege backend boundary before release.
+- UI code consumes the local `lib/theme/` Cobalt tokens and Material 3
+  `ColorScheme`; new screen-specific primary colors, shadows or control styles
+  should not be introduced. Keep white/transparent colors only where they are
+  required for foreground, overlay or compositing semantics.

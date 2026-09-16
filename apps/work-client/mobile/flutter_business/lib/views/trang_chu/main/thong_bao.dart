@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class ThongBao extends StatefulWidget {
   const ThongBao({super.key});
@@ -81,17 +82,17 @@ class _ThongBaoState extends State<ThongBao>
   Color _getColorByType(String loai) {
     switch (loai) {
       case "phongvan":
-        return Colors.blueAccent;
+        return AppColors.action;
       case "hoso":
-        return Colors.green;
+        return AppColors.success;
       case "tuyendung":
-        return Colors.orange;
+        return AppColors.warning;
       case "nhacnho":
-        return Colors.redAccent;
+        return AppColors.danger;
       case "hethong":
-        return Colors.deepPurple;
+        return AppColors.primary;
       default:
-        return Colors.grey;
+        return AppColors.muted;
     }
   }
 
@@ -148,7 +149,7 @@ class _ThongBaoState extends State<ThongBao>
             const SizedBox(height: 10),
             Text(
               "Thời gian: ${_formatTime(notification['thoi_gian'])}",
-              style: const TextStyle(color: Colors.grey, fontSize: 12),
+              style: const TextStyle(color: AppColors.muted, fontSize: 12),
             ),
           ],
         ),
@@ -157,7 +158,7 @@ class _ThongBaoState extends State<ThongBao>
             onPressed: () => Navigator.pop(context),
             child: const Text(
               "Đóng",
-              style: TextStyle(color: Color(0xFF7ecbff)),
+              style: TextStyle(color: AppColors.action),
             ),
           ),
         ],
@@ -168,11 +169,11 @@ class _ThongBaoState extends State<ThongBao>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFF7ecbff),
-        title: const Text("Thông báo", style: TextStyle(color: Colors.white)),
+        backgroundColor: AppColors.action,
+        title: const Text("Thông báo", style: TextStyle(color: AppColors.surface)),
         centerTitle: true,
       ),
       body: Stack(
@@ -197,8 +198,8 @@ class _ThongBaoState extends State<ThongBao>
                   margin: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
                     color: daDoc
-                        ? Colors.white.withValues(alpha: 0.9)
-                        : Colors.blue.shade50,
+                        ? AppColors.surface.withValues(alpha: 0.9)
+                        : AppColors.primarySoft,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
@@ -239,7 +240,7 @@ class _ThongBaoState extends State<ThongBao>
                           _formatTime(tb['thoi_gian']),
                           style: const TextStyle(
                             fontSize: 11,
-                            color: Colors.grey,
+                            color: AppColors.muted,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -250,14 +251,14 @@ class _ThongBaoState extends State<ThongBao>
                           ),
                           decoration: BoxDecoration(
                             color: daDoc
-                                ? Colors.green.withValues(alpha: 0.2)
-                                : Colors.redAccent.withValues(alpha: 0.2),
+                                ? AppColors.success.withValues(alpha: 0.2)
+                                : AppColors.danger.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
                             daDoc ? "Đã đọc" : "Chưa đọc",
                             style: TextStyle(
-                              color: daDoc ? Colors.green : Colors.redAccent,
+                              color: daDoc ? AppColors.success : AppColors.danger,
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -277,7 +278,7 @@ class _ThongBaoState extends State<ThongBao>
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: color.withValues(alpha: 0.8),
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppColors.surface,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),

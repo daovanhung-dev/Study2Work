@@ -120,6 +120,7 @@
         "apps/work-client/web/vite.config.ts"
       ],
       "requiredPages": [
+        ".agents/project/design.md",
         ".agents/web-work/architecture.md",
         ".agents/web-work/conventions.md",
         ".agents/web-work/dependencies.md",
@@ -136,6 +137,11 @@
         "apps/work-client/web/src/shared/auth/store.ts",
         "apps/work-client/web/src/app/router.test.ts",
         "apps/work-client/web/src/shared/api/work.test.ts",
+        "apps/work-client/web/src/layouts.tsx",
+        "apps/work-client/web/src/shared/ui/Primitives.tsx",
+        "apps/work-client/web/src/shared/ui/States.tsx",
+        "apps/work-client/web/src/styles/main.css",
+        "apps/work-client/web/index.html",
         "apps/work-client/web/vite.config.ts"
       ]
     },
@@ -151,6 +157,7 @@
         "apps/work-client/mobile/flutter_business"
       ],
       "requiredPages": [
+        ".agents/project/design.md",
         ".agents/mobile-work/architecture.md",
         ".agents/mobile-work/dependencies.md",
         ".agents/mobile-work/conventions.md",
@@ -163,6 +170,9 @@
         "apps/work-client/mobile/flutter_student/lib/constants.dart",
         "apps/work-client/mobile/flutter_student/lib/helper_db/neon_db.dart",
         "apps/work-client/mobile/flutter_student/lib/controllers/chat/chat_controller.dart",
+        "apps/work-client/mobile/flutter_student/lib/theme/design_tokens.dart",
+        "apps/work-client/mobile/flutter_student/lib/theme/app_theme.dart",
+        "apps/work-client/mobile/flutter_student/lib/theme/app_components.dart",
         "apps/work-client/mobile/flutter_student/test/neon_test.dart",
         "apps/work-client/mobile/flutter_student/test/neon_connection_test.dart",
         "apps/work-client/mobile/flutter_business/pubspec.yaml",
@@ -170,6 +180,9 @@
         "apps/work-client/mobile/flutter_business/lib/constants.dart",
         "apps/work-client/mobile/flutter_business/lib/helper_db/neon_db.dart",
         "apps/work-client/mobile/flutter_business/lib/controllers/chat/chat_controller.dart",
+        "apps/work-client/mobile/flutter_business/lib/theme/design_tokens.dart",
+        "apps/work-client/mobile/flutter_business/lib/theme/app_theme.dart",
+        "apps/work-client/mobile/flutter_business/lib/theme/app_components.dart",
         "apps/work-client/mobile/flutter_business/test/neon_test.dart",
         "apps/work-client/mobile/flutter_business/test/neon_connection_test.dart"
       ]

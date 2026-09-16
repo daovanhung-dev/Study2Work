@@ -49,6 +49,16 @@ every three seconds, deduplicates by message `id`, and cancels it in
 Both apps also contain `AIService`, which sends prompt text directly to the
 Gemini HTTP API; it is independent of `apps/ai-server` and `apps/work-server`.
 
+## Presentation foundation
+
+Mỗi app có bộ theme độc lập tại `lib/theme/` gồm `design_tokens.dart`,
+`app_theme.dart` và `app_components.dart`. Hai bộ dùng cùng giá trị Cobalt
+trong design context nhưng không tạo Dart package dùng chung. `main.dart`
+khởi tạo Material 3 theme; menu/login/helper UI tiêu thụ `ColorScheme`, token
+và primitive nội bộ thay cho palette mặc định `deepPurple`. Thay đổi này chỉ
+ở presentation; không chạm vào MaterialPageRoute, session/cache, Neon,
+Gemini hoặc chat polling.
+
 ## Security boundary
 
 This direct connection and the embedded Gemini/Neon configuration are

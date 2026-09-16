@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class XemChiTiet extends StatefulWidget {
   const XemChiTiet({super.key});
@@ -11,7 +12,7 @@ class _XemChiTietState extends State<XemChiTiet> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: Color(0xFF7ecbff)),
+      appBar: AppBar(backgroundColor: AppColors.action),
       body: SizedBox.expand(
         child: Stack(
           children: [
@@ -41,11 +42,11 @@ class _XemChiTietState extends State<XemChiTiet> {
                         ),
                         margin: EdgeInsets.symmetric(vertical: 20),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
+                              color: AppColors.navy.withValues(alpha: 0.1),
                               spreadRadius: 5,
                               blurRadius: 7,
                               offset: Offset(0, 3),

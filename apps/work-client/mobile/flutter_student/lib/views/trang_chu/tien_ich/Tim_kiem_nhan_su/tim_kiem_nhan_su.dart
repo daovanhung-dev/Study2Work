@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/controllers/trang_chu/timkiemctrl.dart';
 import 'package:work_server/helper_db/out_meta/helper_cv.dart';
 import 'package:work_server/helper_db/out_meta/helper_widget.dart';
@@ -22,7 +23,7 @@ class _EmployeeSearchUIState extends State<EmployeeSearchUI> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('🔍 Tìm kiếm nhân sự'),
-        backgroundColor: Colors.indigo,
+        backgroundColor: AppColors.primary,
       ),
       body: Stack(
         children: [
@@ -37,11 +38,11 @@ class _EmployeeSearchUIState extends State<EmployeeSearchUI> {
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
               margin: const EdgeInsets.symmetric(vertical: 20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: AppColors.navy.withValues(alpha: 0.1),
                     spreadRadius: 5,
                     blurRadius: 7,
                     offset: const Offset(0, 3),

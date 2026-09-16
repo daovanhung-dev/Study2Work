@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import '../trang_chu/main/thong_bao.dart';
 import 'package:work_server/controllers/cai_dat/cai_dat.dart';
 import 'package:work_server/views/dang_nhap/dang_nhap.dart';
@@ -21,7 +22,7 @@ class _SettingState extends State<Setting> {
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.surface,
             backgroundImage: const AssetImage("assets/logo.jpg"),
           ),
         ),
@@ -29,13 +30,13 @@ class _SettingState extends State<Setting> {
           "Cài đặt",
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: AppColors.surface,
             fontSize: 22,
             shadows: [
               Shadow(
                 offset: Offset(0, 1),
                 blurRadius: 2,
-                color: Colors.black45,
+                color: AppColors.muted,
               ),
             ],
           ),
@@ -48,7 +49,7 @@ class _SettingState extends State<Setting> {
                 MaterialPageRoute(builder: (context) => const ThongBao()),
               );
             },
-            icon: const Icon(Icons.notifications, color: Colors.white),
+            icon: const Icon(Icons.notifications, color: AppColors.surface),
           ),
         ],
       ),
@@ -58,7 +59,7 @@ class _SettingState extends State<Setting> {
           Positioned.fill(
             child: Image.asset("assets/bg_trangchu.jpg", fit: BoxFit.cover),
           ),
-          Container(color: Colors.black.withValues(alpha: 0.2)), // overlay nền
+          Container(color: AppColors.navy.withValues(alpha: 0.2)), // overlay nền
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -66,14 +67,14 @@ class _SettingState extends State<Setting> {
                   width: 360,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.85),
+                    color: AppColors.surface.withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(25),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
+                      color: AppColors.surface.withValues(alpha: 0.3),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: AppColors.navy.withValues(alpha: 0.1),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -86,12 +87,12 @@ class _SettingState extends State<Setting> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: AppColors.navy,
                           shadows: [
                             Shadow(
                               offset: Offset(0, 1),
                               blurRadius: 2,
-                              color: Colors.black26,
+                              color: AppColors.border,
                             ),
                           ],
                         ),
@@ -109,13 +110,13 @@ class _SettingState extends State<Setting> {
                       _buildButton(
                         Icons.logout,
                         "Đăng xuất",
-                        color: Colors.redAccent,
+                        color: AppColors.danger,
                         onTap: () async {
                           dangXuat();
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Bạn đã đăng xuất thành công!'),
-                              backgroundColor: Colors.lightBlueAccent,
+                              backgroundColor: AppColors.action,
                               duration: Duration(seconds: 2),
                             ),
                           );
@@ -152,16 +153,16 @@ class _SettingState extends State<Setting> {
         decoration: BoxDecoration(
           color: color != null
               ? color.withValues(alpha: 0.12)
-              : Colors.blueAccent.withValues(alpha: 0.15),
+              : AppColors.action.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: color != null
                 ? color.withValues(alpha: 0.3)
-                : Colors.blueAccent.withValues(alpha: 0.3),
+                : AppColors.action.withValues(alpha: 0.3),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
+              color: AppColors.navy.withValues(alpha: 0.03),
               blurRadius: 5,
               offset: const Offset(0, 3),
             ),
@@ -169,21 +170,21 @@ class _SettingState extends State<Setting> {
         ),
         child: Row(
           children: [
-            Icon(icon, color: color ?? Colors.blueAccent, size: 22),
+            Icon(icon, color: color ?? AppColors.action, size: 22),
             const SizedBox(width: 16),
             Text(
               label,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: AppColors.navy,
               ),
             ),
             const Spacer(),
             const Icon(
               Icons.arrow_forward_ios,
               size: 16,
-              color: Colors.black45,
+              color: AppColors.muted,
             ),
           ],
         ),

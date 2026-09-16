@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class Project {
   final String id;
@@ -204,8 +205,8 @@ class _LocCVState extends State<LocCV> {
         Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            backgroundColor: const Color(0xFF3F51B5),
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.surface,
             title: const Text('Lọc CV'),
             elevation: 0,
           ),
@@ -234,8 +235,8 @@ class _LocCVState extends State<LocCV> {
                       children: [
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3F51B5),
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: AppColors.surface,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 18,
                               vertical: 12,
@@ -265,12 +266,12 @@ class _LocCVState extends State<LocCV> {
                     if (!_filtered)
                       const Text(
                         'Chọn điều kiện rồi bấm Lọc CV nha.',
-                        style: TextStyle(color: Colors.black54),
+                        style: TextStyle(color: AppColors.muted),
                       )
                     else if (_results.isEmpty)
                       const Text(
                         'Không tìm thấy CV phù hợp.',
-                        style: TextStyle(color: Colors.black45),
+                        style: TextStyle(color: AppColors.muted),
                       )
                     else
                       ListView.separated(
@@ -444,7 +445,7 @@ class _LocCVState extends State<LocCV> {
           child: _selectedSkills.isEmpty
               ? const Text(
                   '— chưa chọn —',
-                  style: TextStyle(color: Colors.black45),
+                  style: TextStyle(color: AppColors.muted),
                 )
               : Wrap(
                   spacing: 6,

@@ -15,3 +15,5 @@
   standalone Flutter apps both expose the package name `work_server`.
 - No `.env` dependency is used. `NEON_POOLER_URL` and `GEMINI_API_KEY` live in
   each app's `lib/constants.dart` for the current prototype requirement.
+- The Cobalt theme uses only Flutter Material 3 and existing widgets; no
+  package, font, icon library or asset was added for the UI refresh.

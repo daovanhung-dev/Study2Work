@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/controllers/tim_kiem_job/tim_kiem_ctrl.dart';
 import 'package:work_server/models/sinh_vien/jd.dart';
 import 'package:work_server/views/trang_chu/main/xem_chi_tiet_view.dart';
@@ -112,13 +113,13 @@ class _TimKiemViecViewState extends State<TimKiemViecView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FB),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
           "Tìm kiếm việc làm",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF1976D2),
+        backgroundColor: AppColors.action,
         centerTitle: true,
       ),
       body: isLoading
@@ -147,7 +148,7 @@ class _TimKiemViecViewState extends State<TimKiemViecView> {
       hintText: "Nhập tên công việc hoặc công ty...",
       prefixIcon: const Icon(Icons.search),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppColors.surface,
       contentPadding: const EdgeInsets.symmetric(vertical: 10),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
@@ -191,7 +192,7 @@ class _TimKiemViecViewState extends State<TimKiemViecView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
       ),
       child: DropdownButtonHideUnderline(
@@ -220,7 +221,7 @@ class _TimKiemViecViewState extends State<TimKiemViecView> {
       return const Center(
         child: Text(
           "Không tìm thấy công việc phù hợp",
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: AppColors.muted),
         ),
       );
     }
@@ -264,12 +265,12 @@ class JobCardScrollable extends StatelessWidget {
         height: cardHeight,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(color: AppColors.border),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: AppColors.navy.withValues(alpha: 0.04),
               blurRadius: 6,
               offset: const Offset(0, 3),
             ),
@@ -296,7 +297,7 @@ class JobCardScrollable extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                          color: AppColors.navy,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -309,7 +310,7 @@ class JobCardScrollable extends StatelessWidget {
                             : "Công ty chưa xác định",
                         style: const TextStyle(
                           fontSize: 13,
-                          color: Colors.blueGrey,
+                          color: AppColors.muted,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -349,26 +350,26 @@ class JobCardScrollable extends StatelessWidget {
                     _row(
                       Icons.attach_money,
                       jd.mucLuong.isNotEmpty ? jd.mucLuong : "Thỏa thuận",
-                      Colors.green,
+                      AppColors.success,
                     ),
                     _row(
                       Icons.location_on,
                       jd.diaDiem.isNotEmpty ? jd.diaDiem : "Không rõ địa điểm",
-                      Colors.redAccent,
+                      AppColors.danger,
                     ),
                     _row(
                       Icons.access_time,
                       jd.thoiGian.isNotEmpty
                           ? jd.thoiGian
                           : "Toàn thời gian / Bán thời gian",
-                      Colors.blue,
+                      AppColors.action,
                     ),
                     _row(
                       Icons.event,
                       jd.hanNop.isNotEmpty
                           ? "Hạn nộp: ${jd.hanNop}"
                           : "Không rõ hạn nộp",
-                      Colors.orange,
+                      AppColors.warning,
                     ),
 
                     if ((jd.kyNang.isNotEmpty) || (jd.uuTien.isNotEmpty))
@@ -378,7 +379,7 @@ class JobCardScrollable extends StatelessWidget {
                           width: double.infinity,
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.blue.shade50.withValues(alpha: 0.3),
+                            color: AppColors.primarySoft.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Column(
@@ -409,12 +410,12 @@ class JobCardScrollable extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.grey.shade50,
+                color: AppColors.background,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 _short(jd.phucLoi.isNotEmpty ? jd.phucLoi : jd.moTa, 220),
-                style: const TextStyle(fontSize: 13, color: Colors.black87),
+                style: const TextStyle(fontSize: 13, color: AppColors.navy),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -429,7 +430,7 @@ class JobCardScrollable extends StatelessWidget {
                 constraints: const BoxConstraints(maxWidth: 140),
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
+                    backgroundColor: AppColors.action,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 6,
@@ -494,8 +495,8 @@ class JobCardScrollable extends StatelessWidget {
   Widget _defaultLogo() => Container(
     width: 52,
     height: 52,
-    color: Colors.grey.shade200,
-    child: const Icon(Icons.image_not_supported, color: Colors.grey, size: 26),
+    color: AppColors.border,
+    child: const Icon(Icons.image_not_supported, color: AppColors.muted, size: 26),
   );
 
   // Chip with constrained width and ellipsis
@@ -508,18 +509,18 @@ class JobCardScrollable extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.blue.shade50,
+          color: AppColors.primarySoft,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: Colors.blue),
+          Icon(icon, size: 14, color: AppColors.action),
             const SizedBox(width: 5),
             Flexible(
               child: Text(
                 text,
-                style: const TextStyle(fontSize: 12, color: Colors.blue),
+                style: const TextStyle(fontSize: 12, color: AppColors.action),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -557,12 +558,12 @@ class JobCardScrollable extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 14, color: Colors.blueAccent),
+          Icon(icon, size: 14, color: AppColors.action),
           const SizedBox(width: 5),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(fontSize: 13, color: Colors.black87),
+              style: const TextStyle(fontSize: 13, color: AppColors.navy),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),

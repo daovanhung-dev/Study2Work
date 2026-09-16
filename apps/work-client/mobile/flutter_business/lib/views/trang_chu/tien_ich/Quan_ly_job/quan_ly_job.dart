@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/controllers/trang_chu/quan_ly_job/quan_ly_job_ctrl.dart';
 import 'package:work_server/views/trang_chu/tien_ich/Quan_ly_job/chi_tiet_job.dart';
 import 'package:work_server/views/trang_chu/main/dang_tin_tuyen_dung.dart';
@@ -14,9 +15,9 @@ class _QuanLyJobState extends State<QuanLyJob> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF7ecbff),
+        backgroundColor: AppColors.action,
         title: const Text(
           "Quản lý Job",
           style: TextStyle(fontWeight: FontWeight.w600),
@@ -69,7 +70,7 @@ class _QuanLyJobState extends State<QuanLyJob> {
                           _actionButton(
                             Icons.visibility,
                             "Chi tiết",
-                            Colors.blueAccent,
+                            AppColors.action,
                             () {
                               Navigator.push(
                                 context,
@@ -82,13 +83,13 @@ class _QuanLyJobState extends State<QuanLyJob> {
                           _actionButton(
                             Icons.edit,
                             "Sửa",
-                            Colors.orange,
+                            AppColors.warning,
                             () {},
                           ),
                           _actionButton(
                             Icons.delete,
                             "Xóa",
-                            Colors.redAccent,
+                            AppColors.danger,
                             () {},
                           ),
                         ],
@@ -108,7 +109,7 @@ class _QuanLyJobState extends State<QuanLyJob> {
             MaterialPageRoute(builder: (context) => DangTinTuyenDung()),
           );
         },
-        backgroundColor: const Color(0xFF7ecbff),
+        backgroundColor: AppColors.action,
         child: const Icon(Icons.add),
       ),
     );
@@ -117,7 +118,7 @@ class _QuanLyJobState extends State<QuanLyJob> {
   Widget _titleLine(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, color: Colors.blueAccent),
+        Icon(icon, color: AppColors.action),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -125,7 +126,7 @@ class _QuanLyJobState extends State<QuanLyJob> {
             style: const TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 16,
-              color: Colors.black87,
+              color: AppColors.navy,
             ),
           ),
         ),
@@ -141,7 +142,7 @@ class _QuanLyJobState extends State<QuanLyJob> {
         text: TextSpan(
           text: "$label: ",
           style: const TextStyle(
-            color: Colors.black87,
+            color: AppColors.navy,
             fontWeight: FontWeight.w500,
             fontSize: 13,
           ),
@@ -149,7 +150,7 @@ class _QuanLyJobState extends State<QuanLyJob> {
             TextSpan(
               text: value,
               style: const TextStyle(
-                color: Colors.black54,
+                color: AppColors.muted,
                 fontWeight: FontWeight.normal,
               ),
             ),

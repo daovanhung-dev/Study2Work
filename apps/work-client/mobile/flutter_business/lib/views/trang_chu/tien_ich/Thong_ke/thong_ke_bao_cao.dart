@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class EmployeeReportUI extends StatelessWidget {
   const EmployeeReportUI({super.key});
@@ -29,7 +30,7 @@ class EmployeeReportUI extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('📊 Thống kê & Báo cáo nhân sự'),
-        backgroundColor: Colors.indigo,
+        backgroundColor: AppColors.primary,
       ),
       body: Stack(
         children: [
@@ -52,7 +53,7 @@ class EmployeeReportUI extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black, // chữ sáng hơn để nổi trên nền
+                    color: AppColors.navy, // chữ sáng hơn để nổi trên nền
                   ),
                 ),
                 const SizedBox(height: 25),
@@ -60,7 +61,7 @@ class EmployeeReportUI extends StatelessWidget {
                 // ====== BIỂU ĐỒ CỘT ======
                 Expanded(
                   child: Card(
-                    color: Colors.white.withValues(
+                    color: AppColors.surface.withValues(
                       alpha: 0.9,
                     ), // hơi trong suốt
                     elevation: 4,
@@ -117,7 +118,7 @@ class EmployeeReportUI extends StatelessWidget {
                               barRods: [
                                 BarChartRodData(
                                   toY: values[index],
-                                  color: Colors.indigo,
+                                  color: AppColors.primary,
                                   width: 25,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -134,7 +135,7 @@ class EmployeeReportUI extends StatelessWidget {
 
                 // ====== THỐNG KÊ TỔNG ======
                 Card(
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: AppColors.surface.withValues(alpha: 0.9),
                   elevation: 3,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -173,7 +174,7 @@ class EmployeeReportUI extends StatelessWidget {
                 Center(
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.indigo,
+                      backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 40,
                         vertical: 14,
@@ -186,27 +187,27 @@ class EmployeeReportUI extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('🔄 Dữ liệu báo cáo được làm mới!'),
-                          backgroundColor: Colors.green,
+                          backgroundColor: AppColors.success,
                         ),
                       );
                     },
-                    icon: const Icon(Icons.refresh, color: Colors.white),
+                    icon: const Icon(Icons.refresh, color: AppColors.surface),
                     label: const Text(
                       'Làm mới báo cáo',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: AppColors.surface,
                       ),
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 10),
-                const Center(
+                Center(
                   child: Text(
                     'Nguồn dữ liệu: Demo nội bộ (có thể thay bằng API)',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                    style: TextStyle(color: AppColors.surface.withValues(alpha: 0.7), fontSize: 13),
                   ),
                 ),
               ],

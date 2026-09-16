@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:intl/intl.dart';
 import 'thong_bao.dart';
 import 'package:work_server/controllers/trang_chu/xem_chi_tiet.dart';
@@ -16,7 +17,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF7ecbff),
+        backgroundColor: AppColors.action,
         title: const Text("Xem chi tiết"),
         actions: [
           IconButton(
@@ -54,7 +55,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                     image: const AssetImage("assets/bg_trangchu.jpg"),
                     fit: BoxFit.cover,
                     colorFilter: ColorFilter.mode(
-                      Colors.black.withValues(alpha: 0.2),
+                      AppColors.navy.withValues(alpha: 0.2),
                       BlendMode.darken,
                     ),
                   ),
@@ -69,15 +70,15 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                       borderRadius: BorderRadius.circular(20),
                       gradient: LinearGradient(
                         colors: [
-                          Colors.white.withValues(alpha: 0.95),
-                          Colors.white,
+                          AppColors.surface.withValues(alpha: 0.95),
+                          AppColors.surface,
                         ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.25),
+                          color: AppColors.navy.withValues(alpha: 0.25),
                           spreadRadius: 3,
                           blurRadius: 10,
                           offset: const Offset(0, 5),
@@ -95,7 +96,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.blueAccent,
+                              color: AppColors.action,
                             ),
                           ),
                         ),
@@ -115,10 +116,10 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                                     Container(
                                       width: 60,
                                       height: 60,
-                                      color: Colors.grey[300],
+                                      color: AppColors.border,
                                       child: const Icon(
                                         Icons.person,
-                                        color: Colors.grey,
+                                        color: AppColors.muted,
                                       ),
                                     ),
                               ),
@@ -153,25 +154,25 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                               _infoTagFull(
                                 Icons.email,
                                 dsCv['email'],
-                                Colors.blue.shade100,
+                                AppColors.primarySoft,
                               ),
                               const SizedBox(width: 8),
                               _infoTagFull(
                                 Icons.phone,
                                 dsCv['sdt'],
-                                Colors.green.shade100,
+                                AppColors.success.withValues(alpha: 0.12),
                               ),
                               const SizedBox(width: 8),
                               _infoTagFull(
                                 Icons.location_on,
                                 dsCv['diachi'],
-                                Colors.red.shade100,
+                                AppColors.danger.withValues(alpha: 0.12),
                               ),
                               const SizedBox(width: 8),
                               _infoTagFull(
                                 Icons.work,
                                 dsCv['kinhnghiem'],
-                                Colors.orange.shade100,
+                                AppColors.warning.withValues(alpha: 0.12),
                               ),
                             ],
                           ),
@@ -215,12 +216,12 @@ class _XemChiTietViewState extends State<XemChiTietView> {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                color: AppColors.navy,
               ),
             ),
             TextSpan(
               text: value ?? "",
-              style: const TextStyle(fontSize: 13, color: Colors.black87),
+              style: const TextStyle(fontSize: 13, color: AppColors.navy),
             ),
           ],
         ),
@@ -238,7 +239,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
+            color: AppColors.navy.withValues(alpha: 0.15),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -247,7 +248,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 20, color: Colors.black87),
+          Icon(icon, size: 20, color: AppColors.navy),
           const SizedBox(width: 8),
           Flexible(
             child: Text(
@@ -255,7 +256,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Colors.black87,
+                color: AppColors.navy,
               ),
             ),
           ),

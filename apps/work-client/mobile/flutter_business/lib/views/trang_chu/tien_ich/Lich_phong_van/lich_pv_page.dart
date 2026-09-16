@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class LichPV extends StatefulWidget {
   const LichPV({super.key});
@@ -153,7 +154,7 @@ class _LichPVState extends State<LichPV> {
                     : 'Chỉnh sửa lịch phỏng vấn',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.indigo,
+                  color: AppColors.primary,
                 ),
               ),
               content: SingleChildScrollView(
@@ -193,7 +194,7 @@ class _LichPVState extends State<LichPV> {
                         IconButton(
                           icon: const Icon(
                             Icons.schedule,
-                            color: Colors.indigo,
+                            color: AppColors.primary,
                             size: 30,
                           ),
                           onPressed: pickDateTime,
@@ -249,15 +250,15 @@ class _LichPVState extends State<LichPV> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Hủy', style: TextStyle(color: Colors.red)),
+                  child: const Text('Hủy', style: TextStyle(color: AppColors.danger)),
                 ),
                 ElevatedButton.icon(
                   onPressed: onSave,
                   icon: const Icon(Icons.save),
                   label: Text(index == null ? 'Thêm' : 'Cập nhật'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo,
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.surface,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -289,7 +290,7 @@ class _LichPVState extends State<LichPV> {
         maxLines: maxLines,
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: Colors.indigo.shade400),
+          prefixIcon: Icon(icon, color: AppColors.action),
           border: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
@@ -323,8 +324,8 @@ class _LichPVState extends State<LichPV> {
               Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.danger,
+              foregroundColor: AppColors.surface,
             ),
             child: const Text('Xóa'),
           ),
@@ -355,12 +356,12 @@ class _LichPVState extends State<LichPV> {
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.green,
+                color: AppColors.success,
               ),
             ),
             Text(
               thoiGianPV != null ? DateFormat('dd/MM').format(thoiGianPV) : '',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: const TextStyle(fontSize: 12, color: AppColors.muted),
             ),
           ],
         ),
@@ -370,7 +371,7 @@ class _LichPVState extends State<LichPV> {
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.indigo,
+            color: AppColors.primary,
           ),
         ),
         // Subtitle là Thông tin cơ bản và Người PV
@@ -395,8 +396,8 @@ class _LichPVState extends State<LichPV> {
                 hinhThuc == 'Online' ? Icons.laptop : Icons.business,
               ),
               backgroundColor: hinhThuc == 'Online'
-                  ? Colors.lightBlue.shade100
-                  : Colors.orange.shade100,
+                  ? AppColors.primarySoft
+                  : AppColors.warning.withValues(alpha: 0.12),
             ),
             if ((item['ghiChu']?.toString() ?? '').isNotEmpty)
               Padding(
@@ -413,11 +414,11 @@ class _LichPVState extends State<LichPV> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.edit, color: Colors.green),
+              icon: const Icon(Icons.edit, color: AppColors.success),
               onPressed: () => _openForm(data: item, index: index),
             ),
             IconButton(
-              icon: const Icon(Icons.delete, color: Colors.redAccent),
+              icon: const Icon(Icons.delete, color: AppColors.danger),
               onPressed: () => _confirmDelete(index),
             ),
           ],
@@ -432,10 +433,10 @@ class _LichPVState extends State<LichPV> {
       appBar: AppBar(
         title: const Text(
           '🗓 LỊCH PHỎNG VẤN',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.surface),
         ),
         centerTitle: true,
-        backgroundColor: Colors.indigo,
+        backgroundColor: AppColors.primary,
         elevation: 0,
       ),
       body: Padding(
@@ -445,12 +446,12 @@ class _LichPVState extends State<LichPV> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.event_busy, size: 80, color: Colors.grey),
+                    Icon(Icons.event_busy, size: 80, color: AppColors.muted),
                     SizedBox(height: 16),
                     Text(
                       'Chưa có lịch phỏng vấn nào.\nHãy nhấn "+" để bắt đầu thêm mới.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                      style: TextStyle(fontSize: 16, color: AppColors.muted),
                     ),
                   ],
                 ),
@@ -467,8 +468,8 @@ class _LichPVState extends State<LichPV> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         icon: const Icon(Icons.add),
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.surface,
       ),
     );
   }

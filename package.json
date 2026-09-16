@@ -20,5 +20,6 @@
   "devDependencies": {
     "ajv": "^8.17.1",
     "mermaid": "11.16.0"
-  }
+  },
+  "workspaces": ["apps/study-client", "apps/db-admin-web", "apps/work-server", "apps/work-client/web"]
 }

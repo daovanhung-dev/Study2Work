@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class QuenMatKhau extends StatefulWidget {
   const QuenMatKhau({super.key});
@@ -27,8 +28,8 @@ class _QuenMatKhauState extends State<QuenMatKhau> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.white.withValues(alpha: 0.4),
-                    Colors.white.withValues(alpha: 0.8),
+                    AppColors.surface.withValues(alpha: 0.4),
+                    AppColors.surface.withValues(alpha: 0.8),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -51,11 +52,11 @@ class _QuenMatKhauState extends State<QuenMatKhau> {
                     vertical: 30,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: AppColors.surface.withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
+                        color: AppColors.navy.withValues(alpha: 0.15),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -69,7 +70,7 @@ class _QuenMatKhauState extends State<QuenMatKhau> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: Colors.blueAccent,
+                          color: AppColors.action,
                         ),
                       ),
                       const SizedBox(height: 25),
@@ -120,8 +121,8 @@ class _QuenMatKhauState extends State<QuenMatKhau> {
                             style: TextStyle(fontSize: 16),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.action,
+                            foregroundColor: AppColors.surface,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -140,7 +141,7 @@ class _QuenMatKhauState extends State<QuenMatKhau> {
                         ),
                         label: const Text("Quay lại đăng nhập"),
                         style: TextButton.styleFrom(
-                          foregroundColor: Colors.blueAccent,
+                          foregroundColor: AppColors.primary,
                         ),
                       ),
                     ],

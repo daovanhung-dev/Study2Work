@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'ai_service.dart';
 
 class AITestScreen extends StatefulWidget {
@@ -31,7 +32,7 @@ class _AITestScreenState extends State<AITestScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Trợ lý AI (Gemini)'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: AppColors.primary,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -52,7 +53,7 @@ class _AITestScreenState extends State<AITestScreen> {
               icon: const Icon(Icons.send),
               label: const Text('Gửi đến AI'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
+                backgroundColor: AppColors.action,
                 minimumSize: const Size(double.infinity, 48),
               ),
             ),

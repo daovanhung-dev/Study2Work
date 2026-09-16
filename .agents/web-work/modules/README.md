@@ -11,6 +11,9 @@
 - Workspace pages: `src/pages/WorkspacePages.tsx` — student jobs/CV/applications
   and business jobs/applications/CV detail; unsupported workspace features remain
   static/placeholder screens.
+- UI foundation: `src/styles/main.css`, `src/shared/ui/Primitives.tsx` and
+  `src/shared/ui/States.tsx` — Cobalt tokens, responsive layout, shared
+  controls and loading/error/empty states.
 
 When editing a feature, trace route -> page -> query/mutation -> API endpoint,
 then verify loading/error/empty states and the direct Work API contract.

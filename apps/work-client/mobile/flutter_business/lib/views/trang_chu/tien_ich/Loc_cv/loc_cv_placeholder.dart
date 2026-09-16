@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class LocCvPlaceholderScreen extends StatefulWidget {
   const LocCvPlaceholderScreen({super.key});
@@ -11,7 +12,7 @@ class _LocCvPlaceholderScreenState extends State<LocCvPlaceholderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: Color(0xFF7ecbff), title: Text("Lọc CV")),
+      appBar: AppBar(backgroundColor: AppColors.action, title: Text("Lọc CV")),
       body: SizedBox.expand(
         child: Stack(
           children: [

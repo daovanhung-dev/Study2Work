@@ -1,6 +1,6 @@
 import 'dart:math';
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/views/cai_dat/setting.dart';
 import 'package:work_server/views/tim_kiem_cong_viec/tim_kiem_job.dart';
 import '../tro_chuyen/tro_chuyen.dart';
@@ -30,6 +30,13 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
     Icons.search_outlined,
     Icons.chat_bubble_outline,
     Icons.settings_outlined,
+  ];
+
+  final List<String> _labels = const [
+    'Trang chủ',
+    'Tìm việc',
+    'Tin nhắn',
+    'Cài đặt',
   ];
 
   IconData _activeIcon(int i) {
@@ -122,44 +129,46 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
   }
 
   Widget _buildBottomBar(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(40),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 24),
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.25),
-            borderRadius: BorderRadius.circular(40),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+      decoration: BoxDecoration(
+        color: colors.surface.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(AppRadii.hero),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(alpha: 0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(_icons.length, (i) {
-              final bool active = i == _selectedIndex;
-              return GestureDetector(
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(_icons.length, (i) {
+          final bool active = i == _selectedIndex;
+          return Semantics(
+            button: true,
+            selected: active,
+            label: _labels[i],
+            child: Tooltip(
+              message: _labels[i],
+              child: GestureDetector(
                 onTap: () => _onTap(i),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: active
-                        ? Colors.blueAccent.withValues(alpha: 0.8)
-                        : Colors.transparent,
-                    shape: BoxShape.circle,
+                    color: active ? colors.primary : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppRadii.pill),
                     boxShadow: active
                         ? [
                             BoxShadow(
-                              color: Colors.blueAccent.withValues(alpha: 0.4),
-                              blurRadius: 10,
+                              color: colors.primary.withValues(alpha: 0.2),
+                              blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
                           ]
@@ -171,15 +180,15 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
                     curve: Curves.easeInOutBack,
                     child: Icon(
                       active ? _activeIcon(i) : _icons[i],
-                      color: active ? Colors.white : Colors.grey[700],
+                      color: active ? colors.onPrimary : colors.onSurfaceVariant,
                       size: active ? 28 : 24,
                     ),
                   ),
                 ),
-              );
-            }),
-          ),
-        ),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -195,8 +204,8 @@ class WavePainter extends CustomPainter {
     final paint = Paint()
       ..shader = LinearGradient(
         colors: [
-          const Color(0xFF4facfe).withValues(alpha: 0.3),
-          const Color(0xFF00f2fe).withValues(alpha: 0.15),
+          AppColors.action.withValues(alpha: 0.16),
+          AppColors.action.withValues(alpha: 0.08),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,

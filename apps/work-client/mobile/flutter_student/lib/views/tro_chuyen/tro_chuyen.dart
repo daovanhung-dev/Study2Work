@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 import 'package:work_server/views/tro_chuyen/chat.dart';
 import 'package:work_server/controllers/chat/nhung_doan_chat_controller.dart';
 import '../trang_chu/main/thong_bao.dart';
@@ -32,10 +33,10 @@ class _TroChuyenState extends State<TroChuyen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFe9f6ff),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFF7ecbff),
+        backgroundColor: AppColors.action,
         leadingWidth: 60,
         leading: Padding(
           padding: const EdgeInsets.all(8),
@@ -51,12 +52,12 @@ class _TroChuyenState extends State<TroChuyen> {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
-            color: Colors.white,
+            color: AppColors.surface,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.white),
+            icon: const Icon(Icons.notifications, color: AppColors.surface),
             onPressed: () {
               Navigator.push(
                 context,
@@ -69,7 +70,7 @@ class _TroChuyenState extends State<TroChuyen> {
       body: SafeArea(
         child: Stack(
           children: [
-            Container(color: Colors.black.withValues(alpha: 0.05)),
+            Container(color: AppColors.navy.withValues(alpha: 0.05)),
             SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
@@ -80,11 +81,11 @@ class _TroChuyenState extends State<TroChuyen> {
                       margin: const EdgeInsets.symmetric(horizontal: 12),
                       padding: const EdgeInsets.symmetric(horizontal: 15),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.95),
+                        color: AppColors.surface.withValues(alpha: 0.95),
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
+                            color: AppColors.navy.withValues(alpha: 0.05),
                             blurRadius: 5,
                             offset: const Offset(0, 2),
                           ),
@@ -92,7 +93,7 @@ class _TroChuyenState extends State<TroChuyen> {
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.search, color: Colors.grey),
+                          Icon(Icons.search, color: AppColors.muted),
                           SizedBox(width: 10),
                           Expanded(
                             child: TextField(
@@ -128,7 +129,7 @@ class _TroChuyenState extends State<TroChuyen> {
                                 "Chưa có cuộc trò chuyện nào",
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.black54,
+                                  color: AppColors.muted,
                                   fontStyle: FontStyle.italic,
                                 ),
                               ),
@@ -173,11 +174,11 @@ class _TroChuyenState extends State<TroChuyen> {
                                 ),
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: AppColors.surface,
                                   borderRadius: BorderRadius.circular(15),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(
+                                      color: AppColors.navy.withValues(
                                         alpha: 0.06,
                                       ),
                                       blurRadius: 6,
@@ -189,13 +190,13 @@ class _TroChuyenState extends State<TroChuyen> {
                                   children: [
                                     CircleAvatar(
                                       radius: 28,
-                                      backgroundColor: const Color(0xFF7ecbff),
+                                      backgroundColor: AppColors.action,
                                       child: Text(
                                         hoten.isNotEmpty
                                             ? hoten[0].toUpperCase()
                                             : "?",
                                         style: const TextStyle(
-                                          color: Colors.white,
+                                          color: AppColors.surface,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 20,
                                         ),
@@ -212,7 +213,7 @@ class _TroChuyenState extends State<TroChuyen> {
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16,
-                                              color: Colors.black87,
+                                              color: AppColors.navy,
                                             ),
                                           ),
                                           const SizedBox(height: 4),
@@ -222,7 +223,7 @@ class _TroChuyenState extends State<TroChuyen> {
                                             overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
                                               fontSize: 13,
-                                              color: Colors.black54,
+                                              color: AppColors.muted,
                                             ),
                                           ),
                                         ],
@@ -236,7 +237,7 @@ class _TroChuyenState extends State<TroChuyen> {
                                           time,
                                           style: const TextStyle(
                                             fontSize: 11,
-                                            color: Colors.grey,
+                                            color: AppColors.muted,
                                           ),
                                         ),
                                       ],
@@ -257,9 +258,9 @@ class _TroChuyenState extends State<TroChuyen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF7ecbff),
+        backgroundColor: AppColors.action,
         onPressed: () {},
-        child: const Icon(Icons.add_comment_rounded, color: Colors.white),
+        child: const Icon(Icons.add_comment_rounded, color: AppColors.surface),
       ),
     );
   }

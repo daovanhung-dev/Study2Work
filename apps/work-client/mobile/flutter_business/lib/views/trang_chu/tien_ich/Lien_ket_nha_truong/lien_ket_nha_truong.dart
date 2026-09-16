@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_server/theme/design_tokens.dart';
 
 class LienKetScreen extends StatefulWidget {
   const LienKetScreen({super.key});
@@ -12,7 +13,7 @@ class _LienKetScreenState extends State<LienKetScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Color(0xFF7ecbff),
+        backgroundColor: AppColors.action,
         title: Text("Liên kết nhà trường"),
       ),
       body: SizedBox.expand(
