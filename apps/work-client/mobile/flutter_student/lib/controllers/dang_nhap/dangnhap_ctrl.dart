@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:learn2earn/helper_db/sinh_vien/helper_db.dart';
-import 'package:learn2earn/helper_db/sinh_vien/helper_supabase.dart';
-import 'package:learn2earn/models/sinh_vien/sinh_vien.dart';
-import 'package:learn2earn/models/outmeta/NganhNghe.dart';
+import 'package:work_server/helper_db/sinh_vien/helper_db.dart';
+import 'package:work_server/helper_db/sinh_vien/helper_supabase.dart';
+import 'package:work_server/models/sinh_vien/sinh_vien.dart';
+import 'package:work_server/models/outmeta/NganhNghe.dart';
 
 final Sqlite = SinhVienSQLiteHelper.instance;
 final Supabase = SinhVienSupabaseHelper();

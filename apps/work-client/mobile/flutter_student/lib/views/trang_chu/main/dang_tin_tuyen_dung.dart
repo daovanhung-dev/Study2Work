@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:learn2earn/models/outmeta/JD.dart';
-import 'package:learn2earn/helper_db/out_meta/helper_supabase_error.dart';
-import 'package:learn2earn/helper_db/out_meta/helper_db_error.dart';
+import 'package:work_server/models/outmeta/JD.dart';
+import 'package:work_server/helper_db/out_meta/helper_supabase_error.dart';
+import 'package:work_server/helper_db/out_meta/helper_db_error.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final SupabaseClient client = Supabase.instance.client;

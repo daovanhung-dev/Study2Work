@@ -1,9 +1,9 @@
-import 'package:learn2earn/helper_db/helper_supabase.dart';
-import 'package:learn2earn/helper_db/helper_db.dart';
-import 'package:learn2earn/models/doanh_nghiep.dart';
-import 'package:learn2earn/models/DNSupabase.dart';
+import 'package:work_server/helper_db/helper_supabase.dart';
+import 'package:work_server/helper_db/helper_db.dart';
+import 'package:work_server/models/doanh_nghiep.dart';
+import 'package:work_server/models/DNSupabase.dart';
 import 'package:flutter/foundation.dart';
-import 'package:learn2earn/models/NganhNghe.dart';
+import 'package:work_server/models/NganhNghe.dart';
 
 final Sqlite = HelperDB.instance;
 final Supabase = DNSupabase.instance;

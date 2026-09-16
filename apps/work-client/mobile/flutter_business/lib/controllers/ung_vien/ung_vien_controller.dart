@@ -1,9 +1,9 @@
-import 'package:learn2earn/helper_db/helper_db.dart';
+import 'package:work_server/helper_db/helper_db.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:learn2earn/helper_db/helper_supabase.dart';
-import 'package:learn2earn/models/ung_vien.dart';
-import 'package:learn2earn/models/CV.dart';
-import 'package:learn2earn/models/chat.dart';
+import 'package:work_server/helper_db/helper_supabase.dart';
+import 'package:work_server/models/ung_vien.dart';
+import 'package:work_server/models/CV.dart';
+import 'package:work_server/models/chat.dart';
 
 final dbHelper = HelperDB.instance;
 final supabase = DNSupabase.instance;

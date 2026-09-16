@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:learn2earn/models/sinh_vien/JD.dart';
+import 'package:work_server/models/sinh_vien/JD.dart';
 
 /// ✅ Controller dành cho chức năng xem chi tiết JD
 /// Tách riêng để dễ bảo trì và test

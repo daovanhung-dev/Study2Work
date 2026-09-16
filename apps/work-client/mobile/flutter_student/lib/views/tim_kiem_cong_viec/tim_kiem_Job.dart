@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:learn2earn/controllers/tim_kiem_job/tim_kiem_Ctrl.dart';
-import 'package:learn2earn/models/sinh_vien/JD.dart';
-import 'package:learn2earn/views/trang_chu/main/xem_chi_tiet_view.dart';
-import 'package:learn2earn/controllers/UngTuyenCtrl.dart';
+import 'package:work_server/controllers/tim_kiem_job/tim_kiem_Ctrl.dart';
+import 'package:work_server/models/sinh_vien/JD.dart';
+import 'package:work_server/views/trang_chu/main/xem_chi_tiet_view.dart';
+import 'package:work_server/controllers/UngTuyenCtrl.dart';
 class TimKiemViecView extends StatefulWidget {
   const TimKiemViecView({super.key});
 

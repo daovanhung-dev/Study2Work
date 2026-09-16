@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'thong_bao.dart';
-import 'package:learn2earn/controllers/trang_chu/xem_chi_tiet.dart';
+import 'package:work_server/controllers/trang_chu/xem_chi_tiet.dart';
 
 class XemChiTietView extends StatefulWidget {
   final int id;

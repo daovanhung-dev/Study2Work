@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/services.dart';
-import 'package:learn2earn/views/dang_nhap/dang_nhap.dart';
+import 'package:work_server/views/dang_nhap/dang_nhap.dart';
 
 class KiemTraWifiView extends StatefulWidget {
   const KiemTraWifiView({super.key});

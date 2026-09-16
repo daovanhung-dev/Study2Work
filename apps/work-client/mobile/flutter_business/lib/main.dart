@@ -7,10 +7,10 @@ import 'views/trang_chu/main/trang_chu.dart';
 import 'views/dang_nhap/quen_mat_khau.dart';
 import 'views/dang_nhap/menu.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:learn2earn/views/ung_vien/ung_vien.dart';
-import 'package:learn2earn/controllers/AI/view_test.dart';
-import 'package:learn2earn/views/trang_chu/tien_ich/Tim_kiem_nhan_su/timKiemNhanSu.dart';
-import 'package:learn2earn/views/kiem_tra_wifi.dart';
+import 'package:work_server/views/ung_vien/ung_vien.dart';
+import 'package:work_server/controllers/AI/view_test.dart';
+import 'package:work_server/views/trang_chu/tien_ich/Tim_kiem_nhan_su/timKiemNhanSu.dart';
+import 'package:work_server/views/kiem_tra_wifi.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'L2E',
+      title: 'S2W',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),

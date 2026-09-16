@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'views/dang_nhap/quen_mat_khau.dart';
 import 'views/dang_nhap/menu.dart';
-import 'package:learn2earn/views/dang_nhap/dang_nhap.dart';
+import 'package:work_server/views/dang_nhap/dang_nhap.dart';
 Future<void> main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'L2E',
+      title: 'S2W',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),

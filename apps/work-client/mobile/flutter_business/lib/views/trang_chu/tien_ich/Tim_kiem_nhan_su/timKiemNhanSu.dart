@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:learn2earn/controllers/trang_chu/timkiemctrl.dart';
-import 'package:learn2earn/helper_db/helper_CV.dart';
-import 'package:learn2earn/helper_db/helper_widget.dart';
+import 'package:work_server/controllers/trang_chu/timkiemctrl.dart';
+import 'package:work_server/helper_db/helper_CV.dart';
+import 'package:work_server/helper_db/helper_widget.dart';
 
 
 final CVHelperDB cvHelper = CVHelperDB();

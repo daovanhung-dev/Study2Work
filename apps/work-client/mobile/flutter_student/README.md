@@ -1,6 +1,6 @@
-# Learn2Earn Flutter Student
+# Study2Work Flutter Student
 
-This module is the Flutter client for student-facing Learn2Earn workflows. It keeps the existing `learn2earn` package name and current navigation logic so the app behavior remains unchanged after the repository restructure.
+This module is the Flutter client for student-facing Study2Work workflows. It keeps the existing `work_server` package name and current navigation logic so the app behavior remains unchanged after the repository restructure.
 
 ## Features
 
@@ -47,6 +47,6 @@ flutter test
 
 ## Notes
 
-- Keep the package name as `learn2earn` unless imports are migrated deliberately.
+- Keep the package name as `work_server` unless imports are migrated deliberately.
 - Supabase configuration is currently initialized in `lib/main.dart`.
 - Android local configuration such as `android/local.properties` is ignored by Git.

@@ -1,6 +1,6 @@
-import 'package:learn2earn/models/sinh_vien/JD.dart';
-import 'package:learn2earn/helper_db/sinh_vien/helper_supabase.dart';
-import 'package:learn2earn/helper_db/sinh_vien/helper_db.dart';
+import 'package:work_server/models/sinh_vien/JD.dart';
+import 'package:work_server/helper_db/sinh_vien/helper_supabase.dart';
+import 'package:work_server/helper_db/sinh_vien/helper_db.dart';
 
 class TrangChuCtrl {
   final _supbase = SinhVienSupabaseHelper();

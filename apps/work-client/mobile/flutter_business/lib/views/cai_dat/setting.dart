@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../trang_chu/main/thong_bao.dart';
-import 'package:learn2earn/controllers/cai_dat/cai_dat.dart';
-import 'package:learn2earn/views/dang_nhap/dang_nhap.dart';
+import 'package:work_server/controllers/cai_dat/cai_dat.dart';
+import 'package:work_server/views/dang_nhap/dang_nhap.dart';
 
 class Setting extends StatefulWidget {
   const Setting({super.key});

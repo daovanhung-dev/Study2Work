@@ -1,4 +1,4 @@
-package com.example.learn2earn
+package com.example.work_server
 
 import io.flutter.embedding.android.FlutterActivity
 

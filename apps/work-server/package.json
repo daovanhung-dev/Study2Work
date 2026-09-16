@@ -1,10 +1,10 @@
 {
-  "name": "learn2earn",
+  "name": "work_server",
   "version": "1.0.0",
   "type": "module",
   "main": "src/main.ts",
   "scripts": {
-    "l2e": "node --loader ts-node/esm src/main.ts"
+    "s2w": "node --loader ts-node/esm src/main.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.3.0",

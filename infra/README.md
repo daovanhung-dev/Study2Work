@@ -27,7 +27,7 @@ Start the separated Work API and web application with:
 ```bash
 cp apps/work-server/src/constants.example.ts apps/work-server/src/constants.ts
 # edit ACTIVE_PROFILE = "docker"
-corepack pnpm --filter work-api work:compose -- up --build work-api work-web
+corepack pnpm --filter work_server work:compose -- up --build work-api work-web
 ```
 
 The API is published at `http://localhost:8001`; the static Work web application

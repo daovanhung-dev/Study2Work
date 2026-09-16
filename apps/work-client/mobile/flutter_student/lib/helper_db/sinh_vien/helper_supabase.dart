@@ -1,10 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:learn2earn/models/sinh_vien/sinh_vien.dart';
-import 'package:learn2earn/models/sinh_vien/NganhNghe.dart';
-import 'package:learn2earn/models/sinh_vien/doan_chat.dart';
-import 'package:learn2earn/models/sinh_vien/JD.dart';
-import 'package:learn2earn/models/sinh_vien/ung_vien.dart';
-import 'package:learn2earn/models/sinh_vien/CV.dart';
+import 'package:work_server/models/sinh_vien/sinh_vien.dart';
+import 'package:work_server/models/sinh_vien/NganhNghe.dart';
+import 'package:work_server/models/sinh_vien/doan_chat.dart';
+import 'package:work_server/models/sinh_vien/JD.dart';
+import 'package:work_server/models/sinh_vien/ung_vien.dart';
+import 'package:work_server/models/sinh_vien/CV.dart';
 
 class SinhVienSupabaseHelper {
   final SupabaseClient client = Supabase.instance.client;

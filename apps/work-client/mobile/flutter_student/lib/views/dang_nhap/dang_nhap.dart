@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'quen_mat_khau.dart';
 import 'menu.dart';
-import 'package:learn2earn/controllers/dang_nhap/dangnhap_ctrl.dart';
+import 'package:work_server/controllers/dang_nhap/dangnhap_ctrl.dart';
 import 'package:shimmer/shimmer.dart';
 
 class DangNhap extends StatefulWidget {

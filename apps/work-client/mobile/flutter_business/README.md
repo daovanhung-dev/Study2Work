@@ -1,6 +1,6 @@
-# Learn2Earn Flutter Business
+# Study2Work Flutter Business
 
-This module is the Flutter client for business-facing Learn2Earn workflows. It keeps the existing `learn2earn` package name and current runtime logic so the app behavior remains unchanged after the repository restructure.
+This module is the Flutter client for business-facing Study2Work workflows. It keeps the existing `work_server` package name and current runtime logic so the app behavior remains unchanged after the repository restructure.
 
 ## Features
 
@@ -49,6 +49,6 @@ flutter test
 
 ## Notes
 
-- Keep the package name as `learn2earn` unless imports are migrated deliberately.
+- Keep the package name as `work_server` unless imports are migrated deliberately.
 - Supabase configuration and desktop SQLite initialization are currently in `lib/main.dart`.
 - Android local configuration such as `android/local.properties` is ignored by Git.

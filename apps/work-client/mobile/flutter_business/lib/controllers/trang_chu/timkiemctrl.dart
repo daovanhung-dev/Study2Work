@@ -1,6 +1,6 @@
-import 'package:learn2earn/helper_db/helper_CV.dart';
-import 'package:learn2earn/controllers/AI/ai_service.dart';
-import 'package:learn2earn/models/CV.dart';
+import 'package:work_server/helper_db/helper_CV.dart';
+import 'package:work_server/controllers/AI/ai_service.dart';
+import 'package:work_server/models/CV.dart';
 Future<void> TimKiem(String message) async {
   final AIService ai = AIService();
   String ChuyenNganh = 'Công nghệ thông tin, Kế Toán, ';

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:learn2earn/controllers/trang_chu/xem_chi_tiet.dart';
-import 'package:learn2earn/controllers/UngTuyenCtrl.dart';
-import 'package:learn2earn/models/sinh_vien/JD.dart';
+import 'package:work_server/controllers/trang_chu/xem_chi_tiet.dart';
+import 'package:work_server/controllers/UngTuyenCtrl.dart';
+import 'package:work_server/models/sinh_vien/JD.dart';
 
 final xemChiTietCtrl = XemChiTietController();
 final ungTuyenCtrl = UngTuyenCtrl();

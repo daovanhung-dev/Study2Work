@@ -70,8 +70,8 @@ Run the Work applications locally:
 ```powershell
 Copy-Item apps/work-server/src/constants.example.ts apps/work-server/src/constants.ts
 # edit ACTIVE_PROFILE and local-only values in constants.ts
-corepack pnpm --filter work-api prisma:validate
-corepack pnpm --filter work-api prisma:generate
+corepack pnpm --filter work_server prisma:validate
+corepack pnpm --filter work_server prisma:generate
 corepack pnpm dev:work-server
 corepack pnpm dev:work-web
 ```
@@ -79,13 +79,13 @@ corepack pnpm dev:work-web
 Validate local compose:
 
 ```powershell
-corepack pnpm --filter work-api work:compose -- config
+corepack pnpm --filter work_server work:compose -- config
 ```
 
 Run the separated Work stack in containers:
 
 ```powershell
-corepack pnpm --filter work-api work:compose -- up --build work-api work-web
+corepack pnpm --filter work_server work:compose -- up --build work-api work-web
 ```
 
 ## API Baseline

@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:learn2earn/models/sinh_vien/sinh_vien.dart';
-import 'package:learn2earn/models/sinh_vien/NganhNghe.dart';
+import 'package:work_server/models/sinh_vien/sinh_vien.dart';
+import 'package:work_server/models/sinh_vien/NganhNghe.dart';
 
 class SinhVienSQLiteHelper {
   static final SinhVienSQLiteHelper instance = SinhVienSQLiteHelper._init();

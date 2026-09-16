@@ -1,6 +1,6 @@
 // lib/services/cv_helper.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:learn2earn/models/CV.dart';
+import 'package:work_server/models/CV.dart';
 
 class CVHelperDB {
   final SupabaseClient _client = Supabase.instance.client;

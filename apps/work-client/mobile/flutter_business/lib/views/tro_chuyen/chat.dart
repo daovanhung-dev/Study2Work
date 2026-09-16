@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:learn2earn/controllers/chat/chat_controller.dart';
+import 'package:work_server/controllers/chat/chat_controller.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:supabase/supabase.dart' hide RealtimeClient;
-import 'package:learn2earn/helper_db/helper_db.dart';
+import 'package:work_server/helper_db/helper_db.dart';
 import 'dart:async';
 
 final sqlite = HelperDB.instance;

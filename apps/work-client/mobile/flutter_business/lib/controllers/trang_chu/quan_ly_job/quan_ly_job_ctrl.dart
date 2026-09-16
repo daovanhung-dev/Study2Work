@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:learn2earn/models/JD.dart';
-import 'package:learn2earn/helper_db/helper_db.dart';
+import 'package:work_server/models/JD.dart';
+import 'package:work_server/helper_db/helper_db.dart';
 final supabase = Supabase.instance.client;
 final HelperDB dbHelper = HelperDB.instance;
 

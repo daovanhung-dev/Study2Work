@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:learn2earn/views/tro_chuyen/chat.dart';
-import 'package:learn2earn/controllers/chat/nhung_doan_chat_controller.dart';
+import 'package:work_server/views/tro_chuyen/chat.dart';
+import 'package:work_server/controllers/chat/nhung_doan_chat_controller.dart';
 import '../trang_chu/main/thong_bao.dart';
-import 'package:learn2earn/helper_db/sinh_vien/helper_db.dart';
+import 'package:work_server/helper_db/sinh_vien/helper_db.dart';
 
 final sqlite = SinhVienSQLiteHelper.instance;
 

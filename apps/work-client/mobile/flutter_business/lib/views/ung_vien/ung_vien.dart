@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../trang_chu/main/xem_chi_tiet.dart';
 import '../trang_chu/main/thong_bao.dart';
-import 'package:learn2earn/helper_db/helper_supabase.dart';
-import 'package:learn2earn/controllers/ung_vien/ung_vien_controller.dart';
-import 'package:learn2earn/models/ung_vien.dart';
-import 'package:learn2earn/models/CV.dart';
-import 'package:learn2earn/views/trang_chu/main/xem_chi_tiet_view.dart';
+import 'package:work_server/helper_db/helper_supabase.dart';
+import 'package:work_server/controllers/ung_vien/ung_vien_controller.dart';
+import 'package:work_server/models/ung_vien.dart';
+import 'package:work_server/models/CV.dart';
+import 'package:work_server/views/trang_chu/main/xem_chi_tiet_view.dart';
 
 final UngTuyenCtrl ctrl = UngTuyenCtrl();
 DNSupabase DN = DNSupabase.instance;

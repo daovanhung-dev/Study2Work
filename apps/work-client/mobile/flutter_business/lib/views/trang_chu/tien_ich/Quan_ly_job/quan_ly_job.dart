@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:learn2earn/helper_db/helper_widget.dart';
-import 'package:learn2earn/controllers/trang_chu/quan_ly_job/quan_ly_job_ctrl.dart';
-import 'package:learn2earn/views/trang_chu/tien_ich/Quan_ly_job/chi_tiet_Job.dart';
-import 'package:learn2earn/views/trang_chu/main/dang_tin_tuyen_dung.dart';
+import 'package:work_server/helper_db/helper_widget.dart';
+import 'package:work_server/controllers/trang_chu/quan_ly_job/quan_ly_job_ctrl.dart';
+import 'package:work_server/views/trang_chu/tien_ich/Quan_ly_job/chi_tiet_Job.dart';
+import 'package:work_server/views/trang_chu/main/dang_tin_tuyen_dung.dart';
 class QuanLyJob extends StatefulWidget {
   const QuanLyJob({super.key});
 

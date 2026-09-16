@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:learn2earn/views/cai_dat/setting.dart';
-import 'package:learn2earn/views/trang_chu/main/thong_tin_chi_tiet.dart';
-import 'package:learn2earn/views/trang_chu/main/xem_chi_tiet_view.dart';
-import 'package:learn2earn/views/ung_vien/ung_vien.dart';
+import 'package:work_server/views/cai_dat/setting.dart';
+import 'package:work_server/views/trang_chu/main/thong_tin_chi_tiet.dart';
+import 'package:work_server/views/trang_chu/main/xem_chi_tiet_view.dart';
+import 'package:work_server/views/ung_vien/ung_vien.dart';
 import '../../tro_chuyen/tro_chuyen.dart';
 import 'thong_bao.dart';
 import 'dang_tin_tuyen_dung.dart';
@@ -17,10 +17,10 @@ import 'dang_tin_tuyen_dung.dart';
 import '/controllers/trang_chu/hien_thi_danh_sach_top_cv.dart';
 import 'xem_chi_tiet.dart';
 import 'package:intl/intl.dart';
-import 'package:learn2earn/helper_db/helper_db.dart';
-import 'package:learn2earn/helper_db/helper_supabase.dart';
-import 'package:learn2earn/views/trang_chu/tien_ich/Tim_kiem_nhan_su/timKiemNhanSu.dart';
-import 'package:learn2earn/views/trang_chu/tien_ich/Thong_ke/thongKeBaoCao.dart';
+import 'package:work_server/helper_db/helper_db.dart';
+import 'package:work_server/helper_db/helper_supabase.dart';
+import 'package:work_server/views/trang_chu/tien_ich/Tim_kiem_nhan_su/timKiemNhanSu.dart';
+import 'package:work_server/views/trang_chu/tien_ich/Thong_ke/thongKeBaoCao.dart';
 
 final sqlite = HelperDB.instance;
 final supabase = DNSupabase.instance;

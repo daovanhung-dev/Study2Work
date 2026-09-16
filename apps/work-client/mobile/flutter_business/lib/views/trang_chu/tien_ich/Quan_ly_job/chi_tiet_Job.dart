@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:learn2earn/helper_db/helper_supabase.dart';
-import 'package:learn2earn/models/JD.dart';
+import 'package:work_server/helper_db/helper_supabase.dart';
+import 'package:work_server/models/JD.dart';
 
 final DNSupabase DN = DNSupabase.instance;
 

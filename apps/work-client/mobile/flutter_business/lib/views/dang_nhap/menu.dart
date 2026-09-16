@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:learn2earn/views/cai_dat/setting.dart';
-import 'package:learn2earn/views/ung_vien/ung_vien.dart';
+import 'package:work_server/views/cai_dat/setting.dart';
+import 'package:work_server/views/ung_vien/ung_vien.dart';
 import '../tro_chuyen/tro_chuyen.dart';
 import '../trang_chu/main/trang_chu.dart';
 

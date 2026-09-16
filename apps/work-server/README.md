@@ -1,6 +1,6 @@
-# Learn2Earn Web
+# Study2Work Web
 
-This module is the server-rendered web application for Learn2Earn. It contains the Express server, EJS views, Prisma schema, MySQL integration, session authentication, and upload handling for student, business, and admin workflows.
+This module is the server-rendered web application for Study2Work. It contains the Express server, EJS views, Prisma schema, MySQL integration, session authentication, and upload handling for student, business, and admin workflows.
 
 ## Features
 
@@ -43,7 +43,7 @@ npm install
 cp .env.example .env
 npm exec prisma generate
 npm exec prisma migrate dev
-npm run l2e
+npm run s2w
 ```
 
 PowerShell:
@@ -53,7 +53,7 @@ npm install
 Copy-Item .env.example .env
 npm exec prisma generate
 npm exec prisma migrate dev
-npm run l2e
+npm run s2w
 ```
 
 The server reads `PORT` from `.env`.

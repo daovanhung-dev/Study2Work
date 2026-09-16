@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:learn2earn/views/cai_dat/setting.dart';
-import 'package:learn2earn/views/tim_kiem_cong_viec/tim_kiem_Job.dart';
+import 'package:work_server/views/cai_dat/setting.dart';
+import 'package:work_server/views/tim_kiem_cong_viec/tim_kiem_Job.dart';
 import '../tro_chuyen/tro_chuyen.dart';
 import '../trang_chu/main/trang_chu.dart';
 

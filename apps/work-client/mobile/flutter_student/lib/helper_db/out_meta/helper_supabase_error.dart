@@ -1,8 +1,8 @@
-import 'package:learn2earn/models/outmeta/DNSupabase.dart';
+import 'package:work_server/models/outmeta/DNSupabase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:learn2earn/helper_db/out_meta/helper_db_error.dart';
-import 'package:learn2earn/models/outmeta/JD.dart';
-import 'package:learn2earn/models/outmeta/NganhNghe.dart';
+import 'package:work_server/helper_db/out_meta/helper_db_error.dart';
+import 'package:work_server/models/outmeta/JD.dart';
+import 'package:work_server/models/outmeta/NganhNghe.dart';
 
 final HelperDB dbHelper = HelperDB.instance;
 

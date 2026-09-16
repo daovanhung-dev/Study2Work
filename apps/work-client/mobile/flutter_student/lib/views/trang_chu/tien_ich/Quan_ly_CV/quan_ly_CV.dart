@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:learn2earn/controllers/trang_chu/quan_ly_CV/quan_ly_job_CV.dart';
-import 'package:learn2earn/models/sinh_vien/CV.dart';
+import 'package:work_server/controllers/trang_chu/quan_ly_CV/quan_ly_job_CV.dart';
+import 'package:work_server/models/sinh_vien/CV.dart';
 
 class QuanLyCVView extends StatefulWidget {
   const QuanLyCVView({super.key});
