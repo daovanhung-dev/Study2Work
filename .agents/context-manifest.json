@@ -44,7 +44,7 @@
     },
     "server-work": {
       "mode": "DEEP",
-      "status": "VERIFIED",
+      "status": "VERIFIED_DOMAIN_API",
       "entry": ".agents/server-work/AGENTS.md",
       "sourceRoots": [
         "apps/work-server"
@@ -52,7 +52,9 @@
       "trackedRoots": [
         "apps/work-server/src",
         "apps/work-server/test",
+        "apps/work-server/scripts",
         "apps/work-server/prisma",
+        "apps/work-server/src/constants.example.ts",
         "apps/work-server/package.json",
         "contracts/openapi/work/openapi.json"
       ],
@@ -103,16 +105,31 @@
       ]
     },
     "web-work": {
-      "mode": "SKELETON_ONLY",
-      "status": "SKELETON_ONLY",
+      "mode": "DEEP",
+      "status": "VERIFIED_LIVE_DATA_SHELL",
       "entry": ".agents/web-work/AGENTS.md",
       "sourceRoots": [
         "apps/study-client",
         "apps/work-client/web"
       ],
-      "trackedRoots": [],
-      "requiredPages": [],
-      "requiredSourcePaths": []
+      "trackedRoots": [
+        "apps/work-client/web/src",
+        "apps/work-client/web/package.json",
+        "apps/work-client/web/tsconfig.json",
+        "apps/work-client/web/vite.config.ts",
+        "apps/work-client/web/Dockerfile"
+      ],
+      "requiredPages": [
+        ".agents/web-work/architecture.md",
+        ".agents/web-work/conventions.md",
+        ".agents/web-work/dependencies.md"
+      ],
+      "requiredSourcePaths": [
+        "apps/work-client/web/src/app/router/index.tsx",
+        "apps/work-client/web/src/pages/DomainPage.tsx",
+        "apps/work-client/web/src/pages/WorkFeaturePage.tsx",
+        "apps/work-client/web/src/shared/api/work.ts"
+      ]
     },
     "mobile-work": {
       "mode": "SKELETON_ONLY",

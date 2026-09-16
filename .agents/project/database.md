@@ -9,8 +9,23 @@ tree hiện tại. Không lấy table/column từ Git history hoặc diagram đ�
 |---|---|---|
 | Study | sync SQLAlchemy `postgresql+psycopg`; Postgres/Redis compose | `NOT_FOUND`; không có `alembic/` |
 | AI | copied SQLAlchemy core, runtime không dùng | `NOT_FOUND`; không migration/model |
-| Work | Prisma + PostgreSQL | `apps/work-server/prisma/schema.prisma` + một migration |
+| Work | Prisma + PostgreSQL/Neon | `apps/work-server/prisma/schema.prisma` + migration history |
 | DB Admin | SQLAlchemy + psycopg3 | one externally configured Neon target; runtime catalog only, no migrations |
+
+## Work PostgreSQL/Neon
+
+The clean Work domain is defined by `apps/work-server/prisma/schema.prisma` and
+the migration history under `apps/work-server/prisma/migrations/`. The portable
+SQL artifact is `infra/postgres/work-server/schema.sql`; the retained
+`infra/mysql/work-server/schema.sql` is legacy/design-only and is not used by
+the server.
+
+The domain migration contains 55 application tables plus the pre-existing
+`system_records` table. IDs are PostgreSQL identity `BIGINT` (domain) or UUID
+(operation/event), timestamps are `timestamptz(6)`, and snapshots/metadata use
+`jsonb`. Neon deploy was verified with two `_prisma_migrations` rows, 55
+application tables, 99 foreign keys, 31 unique constraints, 30 checks and 151
+indexes.
 
 ## Work `system_records`
 
@@ -26,7 +41,9 @@ Source: `apps/work-server/prisma/schema.prisma` và
 | `updated_at` | timestamptz(6), Prisma `@updatedAt` |
 
 Không FK, relation, enum, soft delete hoặc domain caller hiện tại. Readiness chỉ
-chạy `SELECT 1`; `SystemRecord` chưa được service nào dùng.
+chạy `SELECT 1`; `SystemRecord` chưa được service nào dùng. Work domain services
+enforce tenant membership/permission checks at the API boundary; payment and
+file providers remain external dependencies.
 
 ## Study DB helper contract
 

@@ -57,17 +57,40 @@ Blocker tại snapshot:
 ## Work server
 
 ```text
-RUNTIME_STATUS: VERIFIED_FOUNDATION
-OPENAPI_STATUS: VERIFIED_FOUNDATION
-DATABASE_SCHEMA_STATUS: VERIFIED_FOUNDATION
+RUNTIME_STATUS: VERIFIED_DOMAIN_API
+OPENAPI_STATUS: VERIFIED_DOMAIN_CONTRACT
+DATABASE_SCHEMA_STATUS: VERIFIED_DOMAIN_MIGRATED
 ```
 
-- Ba endpoint hiện hành: `/api/v1`, `/health/live`, `/health/ready`.
+- Foundation endpoints remain `/api/v1`, `/health/live` and `/health/ready`; the
+  Work domain route surface is additionally registered by `WorkModule`.
 - Global Nest auth guard tồn tại nhưng cả ba foundation controller đều public.
 - Readiness probe PostgreSQL bằng Prisma `SELECT 1`.
 - Redis chỉ được parse/configure và report label; chưa có Redis client/probe.
-- Prisma chỉ có `system_records`; chưa có Work domain models/callers.
-- Study event consumer/HMAC/idempotency/local snapshot chưa được implement.
+- Work configuration is sourced from local-only `apps/work-server/src/constants.ts`
+  with `local`, `docker`, and `neon` profiles; Prisma uses its constants wrapper.
+- Prisma maps the clean Work domain: 55 application tables plus `system_records`.
+- `WorkModule` implements the current public/protected HTTP surface for jobs,
+  candidates, tenants, applications, chat, interviews, university, billing and
+  operations. Provider-dependent payment/storage settlement remains safely
+  unconfigured rather than simulated.
+- Neon `prisma migrate deploy` and authenticated HTTP smoke have been verified;
+  smoke fixtures were removed afterward. Study event consumer/HMAC remains an
+  external integration boundary and is not claimed as implemented.
+
+## Work web
+
+```text
+RUNTIME_STATUS: VERIFIED_LIVE_DATA_SHELL
+BUILD_STATUS: VERIFIED
+BROWSER_SMOKE_STATUS: UNWIRED_NO_BROWSER_SESSION
+```
+
+- Existing Work routes now render through a live-data `WorkFeaturePage` using
+  the typed Zod/React Query Work API client; public, candidate, enterprise,
+  university and operations route families have route-aware screens.
+- Production build/typecheck passed. Browser automation could not run because
+  the in-app browser returned no available session; Vite HTTP smoke was used.
 
 ## AI server
 

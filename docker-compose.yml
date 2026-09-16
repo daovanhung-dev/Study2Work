@@ -102,16 +102,6 @@ services:
     build:
       context: .
       dockerfile: apps/work-server/Dockerfile
-    environment:
-      WORK_APP_ENV: local
-      WORK_HOST: 0.0.0.0
-      WORK_PORT: 8001
-      WORK_DATABASE_URL: postgresql://study2work:study2work@work-postgres:5432/study2work_work
-      WORK_REDIS_URL: redis://work-redis:6379/0
-      WORK_CORS_ORIGINS: http://localhost:5174
-      WORK_JWT_ISSUER: study2work
-      WORK_JWT_AUDIENCE: work-api
-      WORK_JWKS_URL: http://host.docker.internal:8080/.well-known/jwks.json
     ports:
       - "8001:8001"
     # Lets a locally running Identity/JWKS service be reached from Linux
@@ -128,8 +118,6 @@ services:
     build:
       context: .
       dockerfile: apps/work-client/web/Dockerfile
-      args:
-        VITE_WORK_API_URL: http://localhost:8001/api/v1
     ports:
       - "5174:80"
     depends_on:

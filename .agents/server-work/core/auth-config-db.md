@@ -23,11 +23,13 @@ Constructor creates remote JWKS only when `jwksUrl` configured, with cache 300s,
 - JWKS transport/timeout/invalid dependency family -> 503 `DEPENDENCY_UNAVAILABLE`;
 - other JWT failures -> 401 `INVALID_ACCESS_TOKEN`.
 
-## Environment — `config/env.ts`
+## Configuration — `constants.ts` and `config/env.ts`
 
-Required: `WORK_DATABASE_URL` PostgreSQL URL.
-Defaults: env local, host `0.0.0.0`, port 8001, issuer `study2work`, audience `work-api`, docs true.
-Optional: Redis URL, CORS origins, JWKS URL.
+`apps/work-server/src/constants.ts` is the local-only source of truth. It
+provides `local`, `docker`, and `neon` profiles containing the PostgreSQL URL,
+host/port, Redis URL, CORS origins, JWKS URL, issuer/audience, docs flag, and
+public web projection. `config/env.ts` validates the selected profile before
+Nest starts. No Work runtime code reads `.env`, `dotenv`, or `process.env`.
 
 Security constraints:
 - CORS `*` forbidden; only http/https origins.
@@ -38,6 +40,9 @@ Security constraints:
 
 ## Prisma — `database/prisma.service.ts`
 
-`PrismaService` extends one shared `PrismaClient`, injecting Work DB URL and logging warnings outside production. `onModuleDestroy()` disconnects client.
+`PrismaService` extends one shared `PrismaClient`, injecting the validated Work
+DB URL and logging warnings outside production. `onModuleDestroy()` disconnects
+client. CLI commands go through `scripts/prisma-with-constants.ts`, which
+renders the selected URL into a temporary schema and removes it afterward.
 
 Domain modules should inject this service, not construct PrismaClient themselves.

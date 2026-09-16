@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Cập nhật JD</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    textarea::placeholder,
+    input::placeholder {
+      color: #888;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+
+<body class="bg-light">
+<%- include('../ComponentBusiness/header') %>
+<div class="container my-5">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Cập nhật thông tin Tuyển dụng</h4>
+    </div>
+
+    <form action="/Business/UpdateJD/<%= jd.id %>" method="POST" class="p-4">
+
+      <!-- TÊN VỊ TRÍ -->
+      <div class="mb-3">
+        <label class="form-label">Tên vị trí</label>
+        <input type="text" class="form-control"
+               name="ten_vi_tri"
+               value=""
+               placeholder="<%= jd.ten_vi_tri || 'Nhập tên vị trí' %>">
+      </div>
+
+      <!-- PHÒNG BAN -->
+      <div class="mb-3">
+        <label class="form-label">Phòng ban</label>
+        <input type="text" class="form-control"
+               name="phong_ban"
+               value=""
+               placeholder="<%= jd.phong_ban || 'Nhập phòng ban' %>">
+      </div>
+
+      <!-- CẤP BẬC -->
+      <div class="mb-3">
+        <label class="form-label">Cấp bậc</label>
+        <input type="text" class="form-control"
+               name="cap_bac"
+               value=""
+               placeholder="<%= jd.cap_bac || 'Nhập cấp bậc' %>">
+      </div>
+
+      <!-- BÁO CÁO CHO -->
+      <div class="mb-3">
+        <label class="form-label">Báo cáo cho</label>
+        <input type="text" class="form-control"
+               name="bao_cao_cho"
+               value=""
+               placeholder="<%= jd.bao_cao_cho || 'Báo cáo trực tiếp cho...' %>">
+      </div>
+
+      <!-- NHIỆM VỤ -->
+      <div class="mb-3">
+        <label class="form-label">Nhiệm vụ</label>
+        <textarea class="form-control" rows="3"
+                  name="nhiem_vu"
+                  placeholder="<%= jd.nhiem_vu || 'Nhập nhiệm vụ...' %>"></textarea>
+      </div>
+
+      <!-- TRÌNH ĐỘ -->
+      <div class="mb-3">
+        <label class="form-label">Trình độ</label>
+        <input type="text" class="form-control"
+               name="trinh_do"
+               value=""
+               placeholder="<%= jd.trinh_do || 'Trình độ yêu cầu' %>">
+      </div>
+
+      <!-- KINH NGHIỆM -->
+      <div class="mb-3">
+        <label class="form-label">Kinh nghiệm</label>
+        <input type="text" class="form-control"
+               name="kinh_nghiem"
+               value=""
+               placeholder="<%= jd.kinh_nghiem || 'Số năm kinh nghiệm' %>">
+      </div>
+
+      <!-- KỸ NĂNG -->
+      <div class="mb-3">
+        <label class="form-label">Kỹ năng</label>
+        <textarea class="form-control" rows="3"
+                  name="ky_nang"
+                  placeholder="<%= jd.ky_nang || 'Nhập kỹ năng...' %>"></textarea>
+      </div>
+
+      <!-- KỸ NĂNG MỀM -->
+      <div class="mb-3">
+        <label class="form-label">Kỹ năng mềm</label>
+        <textarea class="form-control" rows="3"
+                  name="ky_nang_mem"
+                  placeholder="<%= jd.ky_nang_mem || 'Nhập kỹ năng mềm...' %>"></textarea>
+      </div>
+
+      <!-- ƯU TIÊN -->
+      <div class="mb-3">
+        <label class="form-label">Ưu tiên</label>
+        <textarea class="form-control" rows="2"
+                  name="uu_tien"
+                  placeholder="<%= jd.uu_tien || 'Ưu tiên...' %>"></textarea>
+      </div>
+
+      <!-- MỨC LƯƠNG -->
+      <div class="mb-3">
+        <label class="form-label">Mức lương</label>
+        <input type="text" class="form-control"
+               name="muc_luong"
+               placeholder="<%= jd.muc_luong || 'Ví dụ: 10-15 triệu' %>"
+               value="">
+      </div>
+
+      <!-- PHÚC LỢI -->
+      <div class="mb-3">
+        <label class="form-label">Phúc lợi</label>
+        <textarea class="form-control" rows="3"
+                  name="phuc_loi"
+                  placeholder="<%= jd.phuc_loi || 'Phúc lợi...' %>"></textarea>
+      </div>
+
+      <!-- MÔI TRƯỜNG -->
+      <div class="mb-3">
+        <label class="form-label">Môi trường làm việc</label>
+        <textarea class="form-control" rows="2"
+                  name="moi_truong"
+                  placeholder="<%= jd.moi_truong || 'Môi trường làm việc...' %>"></textarea>
+      </div>
+
+      <!-- ĐỊA ĐIỂM -->
+      <div class="mb-3">
+        <label class="form-label">Địa điểm</label>
+        <input type="text" class="form-control"
+               name="dia_diem"
+               placeholder="<%= jd.dia_diem || 'Nhập địa điểm...' %>"
+               value="">
+      </div>
+
+      <!-- THỜI GIAN -->
+      <div class="mb-3">
+        <label class="form-label">Thời gian làm việc</label>
+        <input type="text" class="form-control"
+               name="thoi_gian"
+               placeholder="<%= jd.thoi_gian || 'Ví dụ: Full-time' %>"
+               value="">
+      </div>
+
+      <!-- HẠN NỘP -->
+      <div class="mb-3">
+        <label class="form-label">Hạn nộp hồ sơ</label>
+        <input type="date" class="form-control"
+               name="han_nop"
+               value="<%= jd.han_nop ? new Date(jd.han_nop).toISOString().split('T')[0] : '' %>">
+      </div>
+
+      <!-- CÁCH ỨNG TUYỂN -->
+      <div class="mb-3">
+        <label class="form-label">Cách ứng tuyển</label>
+        <textarea class="form-control" rows="2"
+                  name="cach_ung_tuyen"
+                  placeholder="<%= jd.cach_ung_tuyen || 'Hướng dẫn ứng tuyển...' %>"></textarea>
+      </div>
+
+      <!-- MÔ TẢ -->
+      <div class="mb-3">
+        <label class="form-label">Mô tả công việc</label>
+        <textarea class="form-control" rows="4"
+                  name="mo_ta"
+                  placeholder="<%= jd.mo_ta || 'Mô tả công việc...' %>"></textarea>
+      </div>
+
+      <!-- NGÀNH -->
+      <div class="mb-3">
+        <label class="form-label">Ngành nghề</label>
+        <input type="text" class="form-control"
+               name="nganh"
+               placeholder="<%= jd.nganh || 'Nhập ngành nghề' %>"
+               value="">
+      </div>
+
+      <!-- TÊN CÔNG TY -->
+      <div class="mb-3">
+        <label class="form-label">Tên công ty</label>
+        <input type="text" class="form-control"
+               name="ten_cong_ty"
+               placeholder="<%= jd.ten_cong_ty || 'Tên công ty' %>"
+               value="">
+      </div>
+
+      <!-- BUTTON -->
+      <div class="text-end mt-4">
+        <a href="/Business/ManageJD" class="btn btn-secondary">Quay lại</a>
+        <button type="submit" class="btn btn-primary">Lưu cập nhật</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+        <%- include('../ComponentBusiness/footer') %>
+</body>
+</html>

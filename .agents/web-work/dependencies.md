@@ -1,7 +1,12 @@
-# Web dependencies placeholder
+# Work Web dependencies
 
-`CONTEXT_STATUS: SKELETON_ONLY`
+`CONTEXT_STATUS: VERIFIED_WORK_WEB`
 
-Verified boundary duy nhất cần biết trước: Work web lấy API base từ
-`VITE_WORK_API_URL` và Work API không serve static web. Dependency map chi tiết
-phải được tạo từ exact feature source khi task đến.
+Work web receives its API base from the public projection of
+`apps/work-server/src/constants.ts`, injected by `vite.config.ts`; it does not
+read `VITE_*` runtime environment variables. The browser never receives Neon
+credentials and Work API does not serve the web bundle. The current client uses
+React Query, Zod and the existing `apiRequest` session boundary. Identity refresh
+remains owned by the Identity service; the Work API receives access Bearer
+tokens only. Vite uses a public-only virtual module for both development and
+production and disables automatic `.env` file loading.

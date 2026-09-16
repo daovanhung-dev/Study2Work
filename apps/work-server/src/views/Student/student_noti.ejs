@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Thông báo - Learn2Earn</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- ICONS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <style>
+     /* Cho phép TẤT CẢ thẻ <a> trong header hiển thị con trỏ dạng chọn */
+    .header a {
+      cursor: pointer;
+    }
+    /* Thêm cho dropdown item */
+    .header .dropdown-item {
+      cursor: pointer;
+    }
+    body {
+      background: #f3f6fb;
+      font-size: 0.95rem;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+    }
+
+    .card-soft {
+      border-radius: 16px;
+      border: 0;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      background: #ffffff;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title i {
+      color: #1e6ee9;
+    }
+
+    /* ================= HEADER ================= */
+    .header {
+      background: #ffffff;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .brand-logo {
+      height: 60px;
+      width: auto;
+      display: block;
+      object-fit: contain;
+
+      transform: scale(2.3);
+      transform-origin: left center;
+    }
+
+    .navbar {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .navbar-brand img {
+      height: 55px;
+      /* LOGO TO HƠN */
+      object-fit: contain;
+    }
+
+    /* ====== HOVER BO TRÒN ====== */
+    .navbar-nav .nav-link {
+      font-weight: 500;
+      color: #475569;
+      padding: 8px 14px;
+      border-radius: 999px;
+      transition: 0.25s;
+    }
+
+    .navbar-nav .nav-link:hover {
+      background: #EFF6FF !important;
+      color: #2563EB !important;
+    }
+
+    .navbar-nav .nav-link.active {
+      background: #DBEAFE !important;
+      color: #1D4ED8 !important;
+    }
+
+    /* ================= ICON THÔNG BÁO + CHAT ================= */
+    .nav-icon {
+      width: 38px;
+      height: 38px;
+      margin-left: 8px;
+      margin-right: 8px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #475569;
+      font-size: 18px;
+      transition: 0.25s;
+    }
+
+    .nav-icon:hover {
+      background: #e2e8f0;
+      color: #2563EB;
+    }
+
+    /* ================= DROPDOWN CV ================= */
+    .l2e-dropdown:hover .dropdown-menu {
+      display: block;
+    }
+
+    .dropdown-menu {
+      display: none;
+      border-radius: 12px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e5e7eb;
+      padding: 6px 0;
+    }
+
+    .dropdown-item {
+      padding: 10px 18px;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: 0.25s;
+    }
+
+    .dropdown-item:hover {
+      background: #EFF6FF;
+      color: #2563EB;
+    }
+
+    /* ================= FOOTER ================= */
+    .footer {
+      background: #0F172A;
+      color: white;
+      padding: 56px 0 26px;
+      margin-top: 70px;
+    }
+
+    .footer-title {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 18px;
+    }
+
+    .footer-links {
+      list-style: none;
+      padding: 0;
+    }
+
+    .footer-links a {
+      color: #94A3B8;
+      text-decoration: none;
+    }
+
+    .footer-links a:hover {
+      color: white;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid #1E293B;
+      padding-top: 18px;
+      margin-top: 32px;
+      text-align: center;
+      color: #94A3B8;
+      font-size: 0.85rem;
+    }
+
+    /* ================= THÔNG BÁO ================= */
+    .notif-item {
+      cursor: pointer;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+    }
+
+    .notif-item.unread {
+      background: #eef2ff;
+    }
+
+    .notif-item:hover {
+      background: #e0ecff;
+    }
+
+    .notif-title {
+      font-weight: 600;
+    }
+
+    .notif-item.unread .notif-title {
+      font-weight: 700;
+    }
+
+    .badge-type {
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 0.75rem;
+    }
+
+    .badge-type-recruit {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-type-system {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .badge-type-school {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .filter-pill {
+      border-radius: 999px;
+      padding: 4px 12px;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .filter-pill.active {
+      background: #1e6ee9;
+      color: #fff;
+      border-color: #1e6ee9;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ================= HEADER ================= -->
+<header class="header">
+    <nav class="navbar navbar-expand-lg navbar-light">
+      <div class="container">
+
+        <!-- Logo -->
+        <a class="navbar-brand" role="button" data-route="/Student/Home" onclick="navigateTo('/Student/Home')">
+          <img src="/img/logo-nobr.png" alt="Logo Learn2Earn" class="brand-logo">
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+          <!-- MENU CHÍNH -->
+          <ul class="navbar-nav mx-auto d-flex align-items-center">
+            <li class="nav-item">
+              <a class="nav-link" data-route="/Student/Home" onclick="navigateTo('/Student/Home')">Trang chủ</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" data-route="/Student/Profile" onclick="navigateTo('/Student/Profile')">Hồ sơ</a>
+            </li>
+
+            <!-- DROPDOWN CV -->
+            <li class="nav-item dropdown l2e-dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="cvMenu">CV</a>
+              <ul class="dropdown-menu" aria-labelledby="cvMenu">
+                <li><a class="dropdown-item" data-route="/Student/CreateCV"
+                    onclick="navigateTo('/Student/CreateCV')">Tạo CV</a></li>
+                <li><a class="dropdown-item" data-route="/Student/UpdateCV"
+                    onclick="navigateTo('/Student/UpdateCV')">Cập nhật CV</a></li>
+                <li><a class="dropdown-item" data-route="/Student/TopCV"
+                    onclick="navigateTo('/Student/TopCV')">TopCV</a></li>
+              </ul>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" data-route="/Student/Interview" onclick="navigateTo('/Student/Interview')">Lịch phỏng
+                vấn</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" data-route="/Student/PostJobs" onclick="navigateTo('/Student/PostJobs')">Tin tuyển
+                dụng</a>
+            </li>
+          </ul>
+
+          <!-- ICON PHẢI -->
+          <ul class="navbar-nav ms-auto d-flex align-items-center">
+            <li class="nav-item">
+              <a class="nav-icon" role="button" data-route="/Student/Noti" onclick="navigateTo('/Student/Noti')">
+                <i class="bi bi-bell"></i>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-icon" role="button" data-route="/Student/Chat" onclick="navigateTo('/Student/Chat')">
+                <i class="bi bi-chat-dots"></i>
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" data-route="/Student/Setting" onclick="navigateTo('/Student/Setting')">Cài đặt</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <script>
+      // chuyển trang với fade-out
+      function navigateTo(url) {
+        // nếu đang ở cùng trang thì không reload
+        if (location.pathname === url || location.pathname.endsWith(url)) {
+          return;
+        }
+        document.body.style.transition = 'opacity 0.25s';
+        document.body.style.opacity = '0';
+        setTimeout(() => { window.location.href = url; }, 220);
+      }
+
+      // tự động highlight menu theo current path (dùng data-route)
+      function setActiveNavByPath() {
+        const links = document.querySelectorAll('[data-route]');
+        const path = location.pathname || '/';
+        // mapping: nếu path là '/' thì treat as '/Student/Home'
+        links.forEach(a => a.classList.remove('active'));
+        // Try exact then contains
+        let found = false;
+        links.forEach(a => {
+          const r = a.getAttribute('data-route');
+          if (!r) return;
+          if (path === r || path.endsWith(r) || path.includes(r)) {
+            a.classList.add('active');
+            found = true;
+          }
+        });
+        if (!found) {
+          // fallback: highlight Trang chủ if on base / or not matched
+          const home = document.querySelector('[data-route="/Student/Home"]');
+          if (home) home.classList.add('active');
+        }
+      }
+
+      // close dropdown on small screens when collapsed by bootstrap automatically,
+      // but ensure hover dropdown doesn't permanently display after window resize
+      function resetDropdownsOnResize() {
+        document.querySelectorAll('.dropdown-menu').forEach(dm => {
+          if (window.innerWidth <= 992) {
+            dm.style.display = '';
+          }
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        setActiveNavByPath();
+        window.addEventListener('popstate', setActiveNavByPath);
+        window.addEventListener('resize', resetDropdownsOnResize);
+      });
+    </script>
+  </header>
+
+
+  <!-- ================= CONTENT ================= -->
+  <div class="container py-4">
+
+    <!-- TIÊU ĐỀ + FILTER -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+      <div>
+        <h4 class="mb-0 fw-bold text-primary">Thông báo</h4>
+        <div class="text-muted small">
+          Theo dõi các thông báo từ hệ thống, nhà trường và doanh nghiệp
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-2 mt-2 mt-md-0">
+        <button class="filter-pill active" data-filter="all">Tất cả</button>
+        <button class="filter-pill" data-filter="unread">Chưa đọc</button>
+        <button class="filter-pill" data-filter="recruit">Tuyển dụng</button>
+        <button class="filter-pill" data-filter="school">Nhà trường</button>
+        <button class="filter-pill" data-filter="system">Hệ thống</button>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- DANH SÁCH THÔNG BÁO -->
+      <div class="col-lg-5">
+        <div class="card card-soft">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="fw-semibold">Danh sách thông báo</div>
+              <button class="btn btn-sm btn-outline-secondary" id="btnMarkAllRead">
+                <i class="bi bi-check2-all"></i> Đánh dấu đã đọc
+              </button>
+            </div>
+
+            <div id="notifList">
+              <!-- Thông báo 1 -->
+              <div class="notif-item unread" data-id="1" data-type="recruit"
+                data-title="Mời phỏng vấn vị trí Thực tập sinh Java" data-source="ABC Software"
+                data-time="12/11/2025 · 09:00"
+                data-content="Công ty ABC Software mời bạn tham gia phỏng vấn vị trí Thực tập sinh Java tại VNUA. Vui lòng xác nhận tham gia trước ngày 13/11/2025.">
+                <div class="d-flex justify-content-between">
+                  <div class="notif-title">Mời phỏng vấn vị trí Thực tập sinh Java</div>
+                  <span class="badge-type badge-type-recruit small">Tuyển dụng</span>
+                </div>
+                <div class="small text-muted">ABC Software · 12/11/2025</div>
+              </div>
+
+              <!-- Thông báo 2 -->
+              <div class="notif-item unread" data-id="2" data-type="school" data-title="Thông báo lịch bảo vệ thực tập"
+                data-source="Khoa CNTT" data-time="20/12/2025"
+                data-content="Khoa CNTT thông báo lịch bảo vệ thực tập dự kiến tổ chức ngày 20/12/2025. Sinh viên chuẩn bị slide và báo cáo đầy đủ.">
+                <div class="d-flex justify-content-between">
+                  <div class="notif-title">Thông báo lịch bảo vệ thực tập</div>
+                  <span class="badge-type badge-type-school small">Nhà trường</span>
+                </div>
+                <div class="small text-muted">Khoa CNTT · 10/11/2025</div>
+              </div>
+
+              <!-- Thông báo 3 -->
+              <div class="notif-item" data-id="3" data-type="system" data-title="Nhắc nhở cập nhật hồ sơ cá nhân"
+                data-source="Hệ thống Learn2Earn" data-time="09/11/2025"
+                data-content="Hồ sơ của bạn hiện hoàn thiện 70%. Vui lòng cập nhật thêm thông tin kỹ năng và dự án để tăng cơ hội phù hợp với doanh nghiệp.">
+                <div class="d-flex justify-content-between">
+                  <div class="notif-title">Nhắc nhở cập nhật hồ sơ cá nhân</div>
+                  <span class="badge-type badge-type-system small">Hệ thống</span>
+                </div>
+                <div class="small text-muted">Learn2Earn · 09/11/2025</div>
+              </div>
+
+              <!-- Thông báo 4 -->
+              <div class="notif-item" data-id="4" data-type="recruit" data-title="CV đã được xem bởi XYZ Tech"
+                data-source="XYZ Tech" data-time="08/11/2025"
+                data-content="Nhà tuyển dụng XYZ Tech vừa xem CV của bạn cho vị trí Frontend Fresher. Nếu phù hợp, họ sẽ liên hệ phỏng vấn trong vài ngày tới.">
+                <div class="d-flex justify-content-between">
+                  <div class="notif-title">CV đã được xem bởi XYZ Tech</div>
+                  <span class="badge-type badge-type-recruit small">Tuyển dụng</span>
+                </div>
+                <div class="small text-muted">XYZ Tech · 08/11/2025</div>
+              </div>
+
+              <!-- Thông báo 5 -->
+              <div class="notif-item" data-id="5" data-type="system" data-title="Thay đổi chính sách bảo mật dữ liệu"
+                data-source="Hệ thống Learn2Earn" data-time="05/11/2025"
+                data-content="Learn2Earn cập nhật chính sách bảo mật dữ liệu sinh viên. Vui lòng đọc chi tiết trong phần Cài đặt tài khoản.">
+                <div class="d-flex justify-content-between">
+                  <div class="notif-title">Thay đổi chính sách bảo mật dữ liệu</div>
+                  <span class="badge-type badge-type-system small">Hệ thống</span>
+                </div>
+                <div class="small text-muted">Learn2Earn · 05/11/2025</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHI TIẾT THÔNG BÁO -->
+      <div class="col-lg-7">
+        <div class="card card-soft mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <div class="fw-semibold" id="detailTitle">
+                  Mời phỏng vấn vị trí Thực tập sinh Java
+                </div>
+                <div class="small text-muted" id="detailSource">ABC Software</div>
+              </div>
+              <span class="badge bg-success-subtle text-success rounded-pill small" id="detailTypeText">
+                Tuyển dụng
+              </span>
+            </div>
+
+            <div class="mb-2 small text-muted">
+              <i class="bi bi-clock me-1"></i>
+              <span id="detailTime">12/11/2025 · 09:00</span>
+            </div>
+
+            <hr>
+
+            <p class="small mb-0" id="detailContent">
+              Công ty ABC Software mời bạn tham gia phỏng vấn vị trí Thực tập sinh Java tại VNUA.
+              Vui lòng xác nhận tham gia trước ngày 13/11/2025.
+            </p>
+          </div>
+        </div>
+
+        <div class="card card-soft">
+          <div class="card-body">
+            <div class="fw-semibold mb-2">Hành động</div>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-primary btn-sm" id="btnMarkDetailRead">
+                <i class="bi bi-check2-circle"></i> Đánh dấu đã đọc
+              </button>
+              <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-send"></i> Trả lời doanh nghiệp
+              </button>
+              <button class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-bookmark"></i> Lưu thông báo
+              </button>
+            </div>
+            <hr>
+            <div class="small text-muted mb-0">
+              Gợi ý: Kiểm tra thông báo tuyển dụng thường xuyên để không bỏ lỡ lịch phỏng vấn hoặc các chương trình dành
+              cho sinh viên.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="container position-relative">
+      <div class="row">
+        <div class="col-lg-4 mb-4">
+          <h4 class="footer-title">Learn2Earn</h4>
+          <p>Nền tảng tuyển dụng và tìm việc làm tại Việt Nam.</p>
+        </div>
+
+        <div class="col-lg-2 col-md-4 mb-4">
+          <h4 class="footer-title">Về chúng tôi</h4>
+          <ul class="footer-links">
+            <li><a href="#">Giới thiệu</a></li>
+            <li><a href="#">Tin tức</a></li>
+            <li><a href="#">Tuyển dụng</a></li>
+            <li><a href="#">Liên hệ</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-2 col-md-4 mb-4">
+          <h4 class="footer-title">Ứng viên</h4>
+          <ul class="footer-links">
+            <li><a href="#">Tìm việc</a></li>
+            <li><a href="#">Tạo CV</a></li>
+            <li><a href="#">Hướng dẫn</a></li>
+            <li><a href="#">Blog</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-2 col-md-4 mb-4">
+          <h4 class="footer-title">Nhà tuyển dụng</h4>
+          <ul class="footer-links">
+            <li><a href="#">Đăng tin</a></li>
+            <li><a href="#">Tìm ứng viên</a></li>
+            <li><a href="#">Gói dịch vụ</a></li>
+            <li><a href="#">Hỗ trợ</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-2 col-md-4 mb-4">
+          <h4 class="footer-title">Liên hệ</h4>
+          <ul class="footer-links">
+            <li><a><i class="fas fa-phone me-2"></i>+84 123 456 789</a></li>
+            <li><a><i class="fas fa-envelope me-2"></i>info@learn2earn.vn</a></li>
+            <li><a><i class="fas fa-map-marker-alt me-2"></i>Hà Nội, Việt Nam</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        © 2023 Learn2Earn. Tất cả quyền được bảo lưu.
+      </div>
+    </div>
+  </footer>
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Cập nhật panel chi tiết từ 1 notif-item
+    function setDetailFromItem(item) {
+      const title = item.getAttribute("data-title");
+      const source = item.getAttribute("data-source");
+      const time = item.getAttribute("data-time");
+      const content = item.getAttribute("data-content");
+      const type = item.getAttribute("data-type");
+
+      document.getElementById("detailTitle").textContent = title;
+      document.getElementById("detailSource").textContent = source;
+      document.getElementById("detailTime").textContent = time;
+      document.getElementById("detailContent").textContent = content;
+
+      const typeText = document.getElementById("detailTypeText");
+      if (type === "recruit") {
+        typeText.textContent = "Tuyển dụng";
+        typeText.className = "badge bg-success-subtle text-success rounded-pill small";
+      } else if (type === "school") {
+        typeText.textContent = "Nhà trường";
+        typeText.className = "badge bg-danger-subtle text-danger rounded-pill small";
+      } else if (type === "system") {
+        typeText.textContent = "Hệ thống";
+        typeText.className = "badge bg-secondary-subtle text-secondary rounded-pill small";
+      } else {
+        typeText.textContent = "Khác";
+        typeText.className = "badge bg-primary-subtle text-primary rounded-pill small";
+      }
+
+      // bỏ trạng thái chưa đọc ở item đang chọn
+      item.classList.remove("unread");
+    }
+
+    // Áp dụng filter
+    function applyFilter(filter) {
+      const items = document.querySelectorAll(".notif-item");
+      items.forEach(item => {
+        const type = item.getAttribute("data-type");
+        const isUnread = item.classList.contains("unread");
+
+        let show = true;
+        if (filter === "unread" && !isUnread) show = false;
+        if (filter === "recruit" && type !== "recruit") show = false;
+        if (filter === "school" && type !== "school") show = false;
+        if (filter === "system" && type !== "system") show = false;
+
+        item.style.display = show ? "" : "none";
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const items = document.querySelectorAll(".notif-item");
+
+      // Gắn click cho từng thông báo
+      items.forEach(item => {
+        item.addEventListener("click", function () {
+          setDetailFromItem(item);
+        });
+      });
+
+      // Set mặc định là thông báo đầu tiên (nếu có)
+      if (items[0]) {
+        setDetailFromItem(items[0]);
+      }
+
+      // Filter pills
+      const filterButtons = document.querySelectorAll(".filter-pill");
+      filterButtons.forEach(btn => {
+        btn.addEventListener("click", function () {
+          filterButtons.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          const f = btn.getAttribute("data-filter");
+          applyFilter(f === "all" ? "" : f);
+        });
+      });
+
+      // Đánh dấu tất cả đã đọc
+      document.getElementById("btnMarkAllRead").addEventListener("click", function () {
+        document.querySelectorAll(".notif-item").forEach(item => {
+          item.classList.remove("unread");
+        });
+      });
+
+      // Đánh dấu thông báo đang hiển thị chi tiết là đã đọc
+      document.getElementById("btnMarkDetailRead").addEventListener("click", function () {
+        const currentTitle = document.getElementById("detailTitle").textContent.trim();
+        document.querySelectorAll(".notif-item").forEach(item => {
+          if (item.getAttribute("data-title") === currentTitle) {
+            item.classList.remove("unread");
+          }
+        });
+      });
+    });
+  </script>
+
+</body>
+
+</html>

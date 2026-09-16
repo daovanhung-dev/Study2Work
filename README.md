@@ -32,8 +32,9 @@ Run `corepack pnpm docs:validate` after changing any canonical BD file. The root
 
 The Work applications are intentionally independent deployables. `apps/work-server`
 owns HTTP APIs, persistence, and Work integrations; `apps/work-client/web` owns the
-browser UI and calls the API through `VITE_WORK_API_URL`. The API does not serve the
-web application's static files, templates, or routes.
+browser UI and receives only the public API projection from
+`apps/work-server/src/constants.ts`. The API does not serve the web application's
+static files, templates, or routes.
 
 ## Commands
 
@@ -67,6 +68,10 @@ uv run pytest
 Run the Work applications locally:
 
 ```powershell
+Copy-Item apps/work-server/src/constants.example.ts apps/work-server/src/constants.ts
+# edit ACTIVE_PROFILE and local-only values in constants.ts
+corepack pnpm --filter work-api prisma:validate
+corepack pnpm --filter work-api prisma:generate
 corepack pnpm dev:work-server
 corepack pnpm dev:work-web
 ```
@@ -74,13 +79,13 @@ corepack pnpm dev:work-web
 Validate local compose:
 
 ```powershell
-docker compose config
+corepack pnpm --filter work-api work:compose -- config
 ```
 
 Run the separated Work stack in containers:
 
 ```powershell
-docker compose up --build work-api work-web
+corepack pnpm --filter work-api work:compose -- up --build work-api work-web
 ```
 
 ## API Baseline

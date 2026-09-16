@@ -29,4 +29,7 @@ Success keys: `success`, `businessCode`, `message`, `data`, `meta`, `traceId`.
 Safe errors: same shape with `success:false`, `data:null`, `meta.fieldErrors`.
 `X-Trace-Id` response header must match body `traceId`.
 
-Do not add product endpoints to context or OpenAPI until source/approved requirement introduces them.
+The product endpoint catalog is now backed by `src/modules/work/` and is
+included in the same OpenAPI document. For the current route-to-handler map,
+read `apps/work-server/src/modules/work/work.controller.ts` and
+`work.service.ts`; do not infer endpoints from legacy mobile clients.

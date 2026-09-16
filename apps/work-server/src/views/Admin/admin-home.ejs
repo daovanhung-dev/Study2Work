@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin – Learn2Earn Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Fonts & Libs -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --primary:#0f766e;
+      --primary-soft:#ecfdf5;
+      --bg:#020617;
+      --bg-soft:#02081f;
+      --border:#1e293b;
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --danger:#ef4444;
+      --info:#38bdf8;
+      --warning:#facc15;
+      --success:#22c55e;
+    }
+
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:radial-gradient(circle at top,#0f172a 0,#020617 50%,#000 100%);
+      color:var(--text);
+    }
+    a{text-decoration:none;color:inherit;}
+
+    .layout{
+      display:flex;
+      min-height:100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar{
+      width:260px;
+      background:linear-gradient(180deg,#020617,#02081f);
+      border-right:1px solid var(--border);
+      padding:1.2rem 1rem;
+      display:flex;
+      flex-direction:column;
+      position:sticky;
+      top:0;
+      height:100vh;
+    }
+    .brand-box{
+      display:flex;
+      align-items:center;
+      gap:.7rem;
+      margin-bottom:1.5rem;
+      padding:.45rem .5rem .6rem;
+      border-radius:1rem;
+      background:linear-gradient(135deg,#0f766e33,#38bdf833);
+      border:1px solid rgba(148,163,184,.4);
+    }
+    .brand-logo{
+      width:44px;
+      height:44px;
+      border-radius:.9rem;
+      background:#fff;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .brand-logo img{
+      width:100%;
+      height:auto;
+      object-fit:contain;
+    }
+    .brand-title{
+      font-weight:700;
+      font-size:.95rem;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .brand-sub{
+      font-size:.75rem;
+      color:var(--muted);
+    }
+
+    .sidebar-section-title{
+      font-size:.72rem;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      color:var(--muted);
+      margin:.5rem 0 .3rem;
+      padding:0 .2rem;
+    }
+    .nav-main{
+      list-style:none;
+      padding:0;
+      margin:0;
+      flex:1;
+    }
+    .nav-item + .nav-item{margin-top:.15rem;}
+    .nav-link{
+      display:flex;
+      align-items:center;
+      gap:.6rem;
+      padding:.55rem .65rem;
+      border-radius:.9rem;
+      font-size:.88rem;
+      color:#e5e7eb;
+      border:1px solid transparent;
+      cursor:pointer;
+      transition:all .18s ease;
+    }
+    .nav-link i{
+      width:22px;
+      text-align:center;
+      font-size:1.1rem;
+    }
+    .nav-link small{
+      display:block;
+      font-size:.7rem;
+      color:var(--muted);
+    }
+    .nav-link.active{
+      background:linear-gradient(135deg,#0f766e,#0d9488);
+      border-color:rgba(34,197,94,.5);
+      box-shadow:0 14px 30px rgba(15,118,110,.45);
+    }
+    .nav-link:hover:not(.active){
+      background:#0b1120;
+      border-color:rgba(148,163,184,.6);
+    }
+
+    .sidebar-bottom{
+      margin-top:1rem;
+      padding-top:1rem;
+      border-top:1px dashed var(--border);
+      font-size:.8rem;
+      color:var(--muted);
+    }
+    .sidebar-status{
+      display:inline-flex;
+      align-items:center;
+      gap:.25rem;
+      border-radius:999px;
+      background:rgba(34,197,94,.12);
+      color:#4ade80;
+      padding:.15rem .6rem;
+      font-size:.7rem;
+      margin-bottom:.4rem;
+    }
+    .sidebar-status i{font-size:.8rem;}
+
+    /* ===== MAIN AREA ===== */
+    .main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+
+    /* TOPBAR */
+    .topbar{
+      padding:.75rem 1.5rem;
+      display:flex;
+      align-items:center;
+      gap:1rem;
+      border-bottom:1px solid var(--border);
+      background:rgba(15,23,42,.96);
+      backdrop-filter:blur(24px);
+      position:sticky;
+      top:0;
+      z-index:10;
+    }
+    .topbar-title{
+      font-size:1.05rem;
+      font-weight:600;
+    }
+    .topbar-sub{
+      font-size:.8rem;
+      color:var(--muted);
+    }
+    .topbar-search{
+      margin-left:auto;
+      display:flex;
+      align-items:center;
+      gap:.75rem;
+    }
+    .search-box{
+      position:relative;
+      min-width:220px;
+    }
+    .search-box input{
+      background:#020617;
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:.35rem 2.1rem .35rem .9rem;
+      font-size:.8rem;
+      color:var(--text);
+    }
+    .search-box input::placeholder{color:#64748b;}
+    .search-box i{
+      position:absolute;
+      right:.7rem;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:1rem;
+      color:#64748b;
+    }
+    .topbar-btn{
+      font-size:.8rem;
+      border-radius:999px;
+      padding:.35rem .9rem;
+      display:inline-flex;
+      align-items:center;
+      gap:.3rem;
+    }
+    .topbar-btn i{font-size:1rem;}
+
+    /* PAGE CONTENT */
+    .page{
+      padding:1.5rem 1.5rem 0;
+    }
+
+    .section-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      margin-bottom:1rem;
+    }
+    .section-title{
+      font-size:1rem;
+      font-weight:600;
+    }
+    .section-sub{
+      font-size:.8rem;
+      color:var(--muted);
+    }
+    .section-actions{
+      font-size:.8rem;
+      color:var(--muted);
+    }
+
+    .card-glass{
+      background:linear-gradient(160deg,#020617dd,#02081fe6);
+      border-radius:1rem;
+      border:1px solid var(--border);
+      padding:1rem 1.1rem;
+      box-shadow:0 18px 40px rgba(15,23,42,.7);
+    }
+
+    /* KPI */
+    .kpi-value{
+      font-size:1.4rem;
+      font-weight:600;
+    }
+    .kpi-label{
+      font-size:.8rem;
+      color:var(--muted);
+    }
+    .kpi-trend{
+      font-size:.75rem;
+      margin-top:.25rem;
+    }
+
+    .kpi-badge{
+      padding:.15rem .5rem;
+      border-radius:999px;
+      font-size:.7rem;
+      display:inline-flex;
+      align-items:center;
+      gap:.25rem;
+    }
+    .kpi-badge.up{
+      background:rgba(34,197,94,.12);
+      color:#4ade80;
+    }
+    .kpi-badge.down{
+      background:rgba(248,113,113,.12);
+      color:#fca5a5;
+    }
+
+    /* TABLES */
+    .table-dashboard{
+      width:100%;
+      border-collapse:collapse;
+      font-size:.8rem;
+      color:#e5e7eb;
+    }
+    .table-dashboard thead{
+      background:#020617;
+    }
+    .table-dashboard th,
+    .table-dashboard td{
+      padding:.5rem .6rem;
+      border-bottom:1px solid #1e293b;
+      white-space:nowrap;
+    }
+    .table-dashboard tbody tr:hover{
+      background:#020617;
+    }
+    .badge-status{
+      padding:.15rem .55rem;
+      border-radius:999px;
+      font-size:.7rem;
+    }
+    .badge-status.pending{
+      background:rgba(250,204,21,.15);
+      color:#facc15;
+    }
+    .badge-status.approved{
+      background:rgba(34,197,94,.16);
+      color:#4ade80;
+    }
+    .badge-status.rejected{
+      background:rgba(248,113,113,.18);
+      color:#fca5a5;
+    }
+
+    .activity-list{
+      list-style:none;
+      padding:0;
+      margin:0;
+      font-size:.8rem;
+    }
+    .activity-item{
+      display:flex;
+      gap:.6rem;
+      padding:.45rem 0;
+      border-bottom:1px dashed #1f2937;
+    }
+    .activity-icon{
+      width:26px;
+      height:26px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:1rem;
+      background:#020617;
+    }
+    .activity-meta{
+      font-size:.72rem;
+      color:var(--muted);
+    }
+
+    /* FOOTER */
+    .main-footer{
+      background:#02081f;
+      margin-top:2rem;
+      padding:3rem 2rem 1.5rem;
+      border-top:1px solid #020617;
+    }
+    .footer-logo{
+      font-size:1.25rem;
+      font-weight:700;
+      margin-bottom:.75rem;
+      color:#fff;
+    }
+    .footer-text{
+      font-size:.9rem;
+      max-width:360px;
+      color:#cbd5f5;
+    }
+    .footer-title{
+      font-weight:600;
+      font-size:.95rem;
+      margin-bottom:1rem;
+      color:#e5e7eb;
+    }
+    .footer-link{
+      display:block;
+      font-size:.9rem;
+      color:#cbd5f5;
+      text-decoration:none;
+      margin-bottom:.4rem;
+    }
+    .footer-link:hover{
+      color:#fff;
+      text-decoration:underline;
+    }
+    .footer-contact-item{
+      font-size:.9rem;
+      color:#cbd5f5;
+      margin-bottom:.4rem;
+      display:flex;
+      align-items:flex-start;
+      gap:.45rem;
+    }
+    .footer-contact-item i{
+      font-size:1rem;
+      margin-top:.1rem;
+    }
+    .footer-bottom{
+      border-top:1px solid rgba(148,163,184,.4);
+      margin-top:2rem;
+      padding-top:1rem;
+      font-size:.8rem;
+      color:#9ca3af;
+      text-align:center;
+    }
+
+    @media (max-width:992px){
+      .sidebar{display:none;}
+      .layout{flex-direction:column;}
+      .topbar{position:static;}
+    }
+    /* === Làm sáng chữ mô tả dưới các % === */
+.kpi-trend,
+.kpi-trend.text-muted {
+  color: #cbd5f5 !important;   /* xanh nhạt sáng hơn */
+}
+
+  </style>
+</head>
+
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand-box">
+      <div class="brand-logo">
+        <!-- Logo Learn2Earn -->
+        <img src="learn2earn-logo.png" alt="Learn2Earn">
+      </div>
+      <div>
+        <div class="brand-title">Learn2Earn</div>
+        <div class="brand-sub">Admin Control Center</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section-title">Dashboard</div>
+    <ul class="nav-main">
+      <li class="nav-item">
+        <a href="admin-home.html" class="nav-link active">
+          <i class="ri-dashboard-line"></i>
+          <div>
+            Tổng quan
+            <small>Thống kê hệ thống</small>
+          </div>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="admin-users.html" class="nav-link">
+          <i class="ri-user-3-line"></i>
+          <div>
+            Người dùng
+            <small>SV – Trường – DN – Admin</small>
+          </div>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="admin-majors.html" class="nav-link">
+          <i class="ri-book-2-line"></i>
+          <div>
+            Ngành học
+            <small>Khoa / chuyên ngành</small>
+          </div>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="admin-jobs.html" class="nav-link">
+          <i class="ri-briefcase-line"></i>
+          <div>
+            Tin tuyển dụng
+            <small>Thực tập &amp; việc làm</small>
+          </div>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="admin-stats.html" class="nav-link">
+          <i class="ri-bar-chart-grouped-line"></i>
+          <div>
+            Thống kê
+            <small>SV &amp; doanh nghiệp</small>
+          </div>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="admin-settings.html" class="nav-link">
+          <i class="ri-settings-3-line"></i>
+          <div>
+            Cài đặt hệ thống
+            <small>Phân quyền, cấu hình</small>
+          </div>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-bottom">
+      <div class="sidebar-status">
+        <i class="ri-shield-check-line"></i> Phiên bản ổn định
+      </div>
+      <div>Learn2Earn v1.0.0</div>
+      <div>Last sync: 5 phút trước</div>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div>
+        <div class="topbar-title">Trang chủ Admin</div>
+        <div class="topbar-sub">Quản trị toàn bộ nền tảng Learn2Earn</div>
+      </div>
+
+      <div class="topbar-search">
+        <div class="search-box">
+          <input type="text" placeholder="Tìm người dùng, tin tuyển dụng...">
+          <i class="ri-search-line"></i>
+        </div>
+
+        <button class="btn btn-outline-danger topbar-btn">
+          <i class="ri-logout-box-r-line"></i> Đăng xuất
+        </button>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <main class="page">
+
+      <!-- KPI ROW -->
+      <div class="section-header">
+        <div>
+          <div class="section-title">Tổng quan hệ thống</div>
+          <div class="section-sub">Thống kê nhanh trong 30 ngày gần nhất</div>
+        </div>
+        <div class="section-actions">
+          Cập nhật lúc: 10:30 hôm nay
+        </div>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="card-glass">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <div class="kpi-label">Tổng người dùng</div>
+                <div class="kpi-value">5.481</div>
+              </div>
+              <i class="ri-user-3-line text-info fs-5"></i>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="kpi-badge up">
+                <i class="ri-arrow-up-s-line"></i> +12.4%
+              </span>
+              <span class="kpi-trend text-muted">so với tháng trước</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card-glass">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <div class="kpi-label">Tin tuyển dụng đang mở</div>
+                <div class="kpi-value">126</div>
+              </div>
+              <i class="ri-briefcase-line text-warning fs-5"></i>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="kpi-badge up">
+                <i class="ri-arrow-up-s-line"></i> +8.1%
+              </span>
+              <span class="kpi-trend text-muted">DN hoạt động tích cực</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card-glass">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <div class="kpi-label">Sinh viên đang thực tập</div>
+                <div class="kpi-value">932</div>
+              </div>
+              <i class="ri-team-line text-success fs-5"></i>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="kpi-badge up">
+                <i class="ri-arrow-up-s-line"></i> +5.6%
+              </span>
+              <span class="kpi-trend text-muted">tỷ lệ tham gia</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card-glass">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <div class="kpi-label">Yêu cầu chờ xử lý</div>
+                <div class="kpi-value">23</div>
+              </div>
+              <i class="ri-error-warning-line text-danger fs-5"></i>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="kpi-badge down">
+                <i class="ri-time-line"></i> Ưu tiên cao
+              </span>
+              <span class="kpi-trend text-muted">cần duyệt trong hôm nay</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE + ACTIVITY -->
+      <div class="row g-3 mb-3">
+        <div class="col-lg-7">
+          <div class="card-glass h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="section-title" style="font-size:.95rem;">Tin tuyển dụng chờ duyệt</div>
+              <!-- link sang trang quản lý tin -->
+              <a href="admin-jobs.html" style="font-size:.78rem;color:var(--info);">Xem tất cả</a>
+            </div>
+            <div class="table-responsive">
+              <table class="table-dashboard">
+                <thead>
+                  <tr>
+                    <th>Tin</th>
+                    <th>Doanh nghiệp</th>
+                    <th>Ngành</th>
+                    <th>Ngày tạo</th>
+                    <th>Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Thực tập Backend NodeJS</td>
+                    <td>FPT Software</td>
+                    <td>CNTT</td>
+                    <td>21/11/2025</td>
+                    <td><span class="badge-status pending">Chờ duyệt</span></td>
+                  </tr>
+                  <tr>
+                    <td>Thực tập Kế toán tổng hợp</td>
+                    <td>Viettel Telecom</td>
+                    <td>Kế toán</td>
+                    <td>20/11/2025</td>
+                    <td><span class="badge-status pending">Chờ duyệt</span></td>
+                  </tr>
+                  <tr>
+                    <td>Nhân viên part-time Marketing</td>
+                    <td>VNUA Startup Hub</td>
+                    <td>Marketing</td>
+                    <td>19/11/2025</td>
+                    <td><span class="badge-status pending">Chờ duyệt</span></td>
+                  </tr>
+                  <tr>
+                    <td>Thực tập Chăn nuôi thú y</td>
+                    <td>Trang trại GreenFarm</td>
+                    <td>Nông nghiệp</td>
+                    <td>19/11/2025</td>
+                    <td><span class="badge-status pending">Chờ duyệt</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="card-glass h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="section-title" style="font-size:.95rem;">Hoạt động gần đây</div>
+              <a href="admin-users.html" style="font-size:.78rem;color:var(--info);">Nhật ký hệ thống</a>
+            </div>
+
+            <ul class="activity-list">
+              <li class="activity-item">
+                <div class="activity-icon" style="color:#4ade80;">
+                  <i class="ri-user-add-line"></i>
+                </div>
+                <div>
+                  <div>Admin <b>tuank68</b> đã tạo tài khoản cho doanh nghiệp <b>ABC Tech</b>.</div>
+                  <div class="activity-meta">10:12 • Hôm nay</div>
+                </div>
+              </li>
+              <li class="activity-item">
+                <div class="activity-icon" style="color:#38bdf8;">
+                  <i class="ri-checkbox-circle-line"></i>
+                </div>
+                <div>
+                  <div>Đã duyệt 12 tin tuyển dụng mới cho đợt thực tập kỳ II/2025.</div>
+                  <div class="activity-meta">09:40 • Hôm nay</div>
+                </div>
+              </li>
+              <li class="activity-item">
+                <div class="activity-icon" style="color:#facc15;">
+                  <i class="ri-notification-3-line"></i>
+                </div>
+                <div>
+                  <div>Gửi thông báo “Cập nhật quy định báo cáo thực tập” tới tất cả sinh viên.</div>
+                  <div class="activity-meta">Hôm qua • 16:20</div>
+                </div>
+              </li>
+              <li class="activity-item">
+                <div class="activity-icon" style="color:#f97316;">
+                  <i class="ri-edit-2-line"></i>
+                </div>
+                <div>
+                  <div>Nhà trường VNUA cập nhật thông tin ngành học <b>CNTT – K68</b>.</div>
+                  <div class="activity-meta">Hôm qua • 14:05</div>
+                </div>
+              </li>
+              <li class="activity-item">
+                <div class="activity-icon" style="color:#f87171;">
+                  <i class="ri-shield-keyhole-line"></i>
+                </div>
+                <div>
+                  <div>Khóa tạm thời 3 tài khoản do đăng tin tuyển dụng vi phạm.</div>
+                  <div class="activity-meta">2 ngày trước • 19:30</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- FOOTER (có logo Learn2Earn) -->
+    <footer class="main-footer">
+      <div class="container-fluid px-0">
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="footer-logo">Learn2Earn</div>
+            <p class="footer-text">
+              Nền tảng tuyển dụng và tìm việc làm tại Việt Nam, kết nối sinh viên – người đi làm
+              với doanh nghiệp một cách nhanh chóng và hiệu quả.
+            </p>
+          </div>
+
+          <div class="col-md-2">
+            <div class="footer-title">Về chúng tôi</div>
+            <a href="#" class="footer-link">Giới thiệu</a>
+            <a href="#" class="footer-link">Tin tức</a>
+            <a href="#" class="footer-link">Tuyển dụng</a>
+            <a href="#" class="footer-link">Liên hệ</a>
+          </div>
+
+          <div class="col-md-2">
+            <div class="footer-title">Dành cho ứng viên</div>
+            <a href="#" class="footer-link">Tìm việc làm</a>
+            <a href="#" class="footer-link">Tạo CV</a>
+            <a href="#" class="footer-link">Tài liệu hướng dẫn</a>
+            <a href="#" class="footer-link">Blog</a>
+          </div>
+
+          <div class="col-md-2">
+            <div class="footer-title">Dành cho nhà tuyển dụng</div>
+            <a href="#" class="footer-link">Đăng tuyển dụng</a>
+            <a href="#" class="footer-link">Tìm ứng viên</a>
+            <a href="#" class="footer-link">Gói dịch vụ</a>
+            <a href="#" class="footer-link">Hỗ trợ</a>
+          </div>
+
+          <div class="col-md-2">
+            <div class="footer-title">Liên hệ</div>
+            <div class="footer-contact-item">
+              <i class="ri-phone-line"></i> <span>+84 123 456 789</span>
+            </div>
+            <div class="footer-contact-item">
+              <i class="ri-mail-line"></i> <span>info@learn2earn.vn</span>
+            </div>
+            <div class="footer-contact-item">
+              <i class="ri-map-pin-line"></i> <span>Hà Nội, Việt Nam</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          © 2025 Learn2Earn. Tất cả các quyền được bảo lưu.
+        </div>
+      </div>
+    </footer>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

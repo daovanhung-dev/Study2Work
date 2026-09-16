@@ -4,7 +4,7 @@ Source root: `apps/work-server/`
 
 ```text
 CONTEXT_MODE: DEEP
-RUNTIME_STATUS: VERIFIED_FOUNDATION
+RUNTIME_STATUS: VERIFIED_DOMAIN_API
 STACK: NestJS 11 + Fastify 5 + TypeScript + Prisma/PostgreSQL
 ```
 
@@ -27,4 +27,7 @@ STACK: NestJS 11 + Fastify 5 + TypeScript + Prisma/PostgreSQL
 - All normal controller outputs pass through global envelope interceptor unless they already are an envelope.
 - Global exception filter owns safe error envelope.
 - `/health/ready` probes PostgreSQL only. Redis `configured` means URL exists, not that Redis is healthy.
-- Current Prisma domain is only `SystemRecord`; do not invent Work domain models from old Flutter/Supabase code.
+- Prisma now owns the clean Work PostgreSQL domain (55 application tables plus `system_records`); the MySQL SQL file is legacy/design-only.
+- `WorkModule` owns the implemented candidate, jobs, applications, communication, interviews, tenant/university, payment and operations HTTP surface.
+- Protected routes resolve `identity_subject_id`, tenant membership and server-side permissions; public job/company/product routes are explicit `@Public()` exceptions.
+- Mutation routes use `If-Match` where revisions/history are versioned and `Idempotency-Key` for retry-sensitive writes. Provider-dependent payment/storage operations remain safe pending/unconfigured and never fake settlement or file-clean status.

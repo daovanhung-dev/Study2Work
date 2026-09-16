@@ -3,7 +3,7 @@
   "info": {
     "title": "Study2Work Work API",
     "version": "0.1.0",
-    "description": "Baseline contract for the independently deployed Work API. Product endpoints are introduced here as their implementation is reconciled with docs/BD/04_DAC_TA_API.md."
+    "description": "Executable contract for the independently deployed Work API. All responses use the canonical envelope and all authenticated mutations require server-side authorization; payment and storage integrations remain dependency-authoritative."
   },
   "servers": [
     {
@@ -19,6 +19,10 @@
     {
       "name": "System",
       "description": "Unauthenticated API service metadata."
+    },
+    {
+      "name": "Work",
+      "description": "Public jobs, candidate workflows, tenant ATS, university projections, communication, interviews, billing and operations."
     }
   ],
   "paths": {
@@ -123,6 +127,208 @@
           }
         }
       }
+    },
+    "/api/v1/jobs": {
+      "get": { "tags": ["Work"], "operationId": "listPublicJobs", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/jobs/{slug}": {
+      "parameters": [{ "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "operationId": "getPublicJob", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" }, "404": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/companies/{slug}": {
+      "parameters": [{ "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "operationId": "getPublicCompany", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/me": {
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getWorkUser", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" }, "401": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/candidate/profile": {
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getCandidateProfile", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } },
+      "patch": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "updateCandidateProfile", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" }, "409": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/candidate/privacy": {
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getCandidatePrivacy", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } },
+      "patch": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "updateCandidatePrivacy", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/candidate/cvs": {
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "listCandidateCvs", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } },
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "createCandidateCv", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/candidate/cvs/{cvId}": {
+      "parameters": [{ "name": "cvId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getCandidateCv", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/candidate/cvs/{cvId}/revisions": {
+      "parameters": [{ "name": "cvId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "createCandidateCvRevision", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "201": { "$ref": "#/components/responses/WorkSuccess" }, "404": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/candidate/cvs/{cvId}/revisions/{revisionId}/publish": {
+      "parameters": [
+        { "name": "cvId", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "revisionId", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "publishCandidateCvRevision", "parameters": [{ "$ref": "#/components/parameters/IfMatch" }, { "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" }, "412": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/candidate/portfolio": {
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "listCandidatePortfolio", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } },
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "createCandidatePortfolioItem", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "201": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/candidate/applications": {
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "listCandidateApplications", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/candidate/interviews": {
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "listCandidateInterviews", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/jobs/{jobId}/applications": {
+      "parameters": [{ "name": "jobId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "applyToJob", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" }, "409": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/jobs/{jobId}/saved": {
+      "parameters": [{ "name": "jobId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "saveJob", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/applications/{applicationId}": {
+      "parameters": [{ "name": "applicationId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getApplication", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" }, "404": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/applications/{applicationId}/withdraw": {
+      "parameters": [{ "name": "applicationId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "withdrawApplication", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" }, "409": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/applications/{applicationId}/status": {
+      "parameters": [{ "name": "applicationId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "patch": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "updateApplicationStatus", "parameters": [{ "$ref": "#/components/parameters/IfMatch" }, { "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" }, "412": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/applications/{applicationId}/conversation": {
+      "parameters": [{ "name": "applicationId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getApplicationConversation", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/applications/{applicationId}/conversation/messages": {
+      "parameters": [{ "name": "applicationId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "sendApplicationMessage", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/interviews": {
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "createInterview", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/interviews/{interviewId}": {
+      "parameters": [{ "name": "interviewId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getInterview", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/interviews/{interviewId}/respond": {
+      "parameters": [{ "name": "interviewId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "respondToInterview", "parameters": [{ "$ref": "#/components/parameters/IfMatch" }, { "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" }, "412": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/tenants": {
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "createTenant", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/tenants/{tenantId}": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getTenant", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/tenants/{tenantId}/members": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "listTenantMembers", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/tenants/{tenantId}/enterprise-profile": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "patch": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "updateEnterpriseProfile", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/tenants/{tenantId}/jobs": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "listTenantJobs", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } },
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "createTenantJob", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/tenants/{tenantId}/jobs/{jobId}": {
+      "parameters": [
+        { "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "jobId", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getTenantJob", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/tenants/{tenantId}/jobs/{jobId}/revisions/{revisionId}": {
+      "parameters": [
+        { "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "jobId", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "revisionId", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "patch": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "updateJobRevision", "parameters": [{ "$ref": "#/components/parameters/IfMatch" }, { "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" }, "412": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/tenants/{tenantId}/jobs/{jobId}/revisions/{revisionId}/publish": {
+      "parameters": [
+        { "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "jobId", "in": "path", "required": true, "schema": { "type": "string" } },
+        { "name": "revisionId", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "publishJobRevision", "parameters": [{ "$ref": "#/components/parameters/IfMatch" }, { "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" }, "412": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/tenants/{tenantId}/jobs/{jobId}/pause": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }, { "name": "jobId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "pauseJob", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/tenants/{tenantId}/jobs/{jobId}/close": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }, { "name": "jobId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "closeJob", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/tenants/{tenantId}/talent": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "searchTalent", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/tenants/{tenantId}/applications": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "listTenantApplications", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/tenants/{tenantId}/interviews": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "listTenantInterviews", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/university/{tenantId}/affiliations": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "listUniversityAffiliations", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/university/{tenantId}": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getUniversity", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/university/{tenantId}/members": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "listUniversityMembers", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/university/{tenantId}/partnerships": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "listUniversityPartnerships", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/university/{tenantId}/reports/summary": {
+      "parameters": [{ "name": "tenantId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getUniversityReport", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/billing/products": {
+      "get": { "tags": ["Work"], "operationId": "listProducts", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/billing/orders": {
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "createOrder", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/billing/orders/{orderId}": {
+      "parameters": [{ "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getOrder", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/billing/orders/{orderId}/checkout": {
+      "parameters": [{ "name": "orderId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "checkoutOrder", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "202": { "$ref": "#/components/responses/WorkSuccess" }, "503": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/operations/{operationId}": {
+      "parameters": [{ "name": "operationId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getOperation", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/operations/files": {
+      "post": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "createFileMetadata", "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }], "responses": { "201": { "$ref": "#/components/responses/WorkSuccess" }, "503": { "$ref": "#/components/responses/WorkError" } } }
+    },
+    "/api/v1/ops/{resource}": {
+      "parameters": [{ "name": "resource", "in": "path", "required": true, "schema": { "type": "string", "enum": ["users", "jobs", "tenants", "audit"] } }],
+      "get": { "tags": ["Work"], "security": [{ "BearerAuth": [] }], "operationId": "getOpsCollection", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
+    },
+    "/api/v1/webhooks/{provider}": {
+      "parameters": [{ "name": "provider", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": { "tags": ["Work"], "operationId": "acceptWebhook", "responses": { "200": { "$ref": "#/components/responses/WorkSuccess" } } }
     }
   },
   "components": {
@@ -136,6 +342,20 @@
           "type": "string",
           "format": "uuid"
         }
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Stable client key for retry-safe mutations.",
+        "schema": { "type": "string", "minLength": 8, "maxLength": 191 }
+      },
+      "IfMatch": {
+        "name": "If-Match",
+        "in": "header",
+        "required": false,
+        "description": "Revision version used for optimistic concurrency.",
+        "schema": { "type": "string" }
       }
     },
     "headers": {
@@ -146,6 +366,25 @@
           "type": "string",
           "format": "uuid"
         }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "responses": {
+      "WorkSuccess": {
+        "description": "Successful Work response.",
+        "headers": { "X-Trace-Id": { "$ref": "#/components/headers/TraceId" } },
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiSuccessEnvelope" } } }
+      },
+      "WorkError": {
+        "description": "Safe Work error response.",
+        "headers": { "X-Trace-Id": { "$ref": "#/components/headers/TraceId" } },
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiErrorEnvelope" } } }
       }
     },
     "schemas": {

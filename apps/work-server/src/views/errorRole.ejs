@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title || "Không có quyền truy cập" %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Poppins', sans-serif;
+      background: #e0f7fa;
+      color: #01579b;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      text-align: center;
+      background: #b3e5fc;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+    .icon {
+      font-size: 60px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 28px;
+      margin: 10px 0;
+      font-weight: 700;
+    }
+    p {
+      font-size: 16px;
+      margin: 10px 0 20px;
+      line-height: 1.5;
+    }
+    a.btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: #4fc3f7;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    a.btn:hover {
+      background-color: #0288d1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">🚫</div>
+    <h1>403 — Không có quyền truy cập</h1>
+    <p><%= message || 'Bạn không có quyền truy cập trang này. Vui lòng quay lại trang chủ hoặc đăng nhập bằng tài khoản phù hợp.' %></p>
+    <a class="btn" href="<%= backUrl || '/' %>">Quay về trang chủ</a>
+  </div>
+</body>
+</html>
