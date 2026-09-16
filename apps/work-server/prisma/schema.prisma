@@ -1,4 +1,4 @@
-// This is your Prisma schema file,
+// This is your Prisma schema file for Neon PostgreSQL,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
@@ -9,8 +9,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 // ====================== SinhVien ======================
@@ -20,7 +21,7 @@ model SinhVien {
   email       String? @unique @db.VarChar(50)
   matkhau     String? @db.VarChar(20)
   chuyennganh String? @db.VarChar(50)
-  avt         String?
+  avt         String? @db.VarChar(191)
 
   Chat        Chat[]       @relation("SinhVienChat")
   DoanChat    DoanChat[]
@@ -37,7 +38,7 @@ model DoanhNghiep {
   matkhau     String? @db.VarChar(50)
   diachi      String? @db.VarChar(100)
   sodienthoai String? @db.VarChar(20)
-  avt         String?
+  avt         String? @db.VarChar(191)
 
   Chat        Chat[]       @relation("DoanhNghiepChat")
   DoanChat    DoanChat[]
@@ -51,10 +52,10 @@ model Chat {
   id             BigInt    @id @default(autoincrement())
   sinhvien_id    BigInt?
   doanhnghiep_id BigInt?
-  nguoigui       String?
-  nguoinhan      String?
-  noidung        String?
-  ngaygui        DateTime? @default(now())
+  nguoigui       String?   @db.VarChar(191)
+  nguoinhan      String?   @db.VarChar(191)
+  noidung        String?   @db.VarChar(191)
+  ngaygui        DateTime? @db.Timestamptz(3) @default(now())
   trangthai      Boolean?
 
   SinhVien    SinhVien?    @relation("SinhVienChat", fields: [sinhvien_id], references: [id])
@@ -64,29 +65,29 @@ model Chat {
 // ====================== Cv ======================
 model Cv {
   id            BigInt    @id @default(autoincrement())
-  avt           String?
-  hoten         String
-  ngaysinh      DateTime?
-  gioitinh      String?
-  email         String
-  sdt           String?
-  diachi        String?
-  vitri         String?
-  nganh         String?
-  muctieunghiep String?
-  hocvan        String?
-  kinhnghiem    String?
-  kynang        String?
-  ngoaingu      String?
-  chungchi      String?
-  duan          String?
-  giaithuong    String?
-  hoatdong      String?
-  social        Json?
-  portfolio     String?
-  luongmongmuon String?
-  created_at    DateTime? @default(now())
-  sinhvien_id   BigInt? @unique 
+  avt           String?   @db.VarChar(191)
+  hoten         String    @db.VarChar(191)
+  ngaysinh      DateTime? @db.Timestamptz(3)
+  gioitinh      String?   @db.VarChar(191)
+  email         String    @db.VarChar(191)
+  sdt           String?   @db.VarChar(191)
+  diachi        String?   @db.VarChar(191)
+  vitri         String?   @db.VarChar(191)
+  nganh         String?   @db.VarChar(191)
+  muctieunghiep String?   @db.VarChar(191)
+  hocvan        String?   @db.VarChar(191)
+  kinhnghiem    String?   @db.VarChar(191)
+  kynang        String?   @db.VarChar(191)
+  ngoaingu      String?   @db.VarChar(191)
+  chungchi      String?   @db.VarChar(191)
+  duan          String?   @db.VarChar(191)
+  giaithuong    String?   @db.VarChar(191)
+  hoatdong      String?   @db.VarChar(191)
+  social        Json?     @db.JsonB
+  portfolio     String?   @db.VarChar(191)
+  luongmongmuon String?   @db.VarChar(191)
+  created_at    DateTime? @db.Timestamptz(3) @default(now())
+  sinhvien_id   BigInt?   @unique
   SinhVien      SinhVien? @relation(fields: [sinhvien_id], references: [id])
 }
 
@@ -95,7 +96,7 @@ model DoanChat {
   id             BigInt    @id @default(autoincrement())
   sinhvien_id    BigInt
   doanhnghiep_id BigInt
-  created_at     DateTime? @default(now())
+  created_at     DateTime? @db.Timestamptz(3) @default(now())
 
   SinhVien    SinhVien    @relation(fields: [sinhvien_id], references: [id])
   DoanhNghiep DoanhNghiep @relation(fields: [doanhnghiep_id], references: [id])
@@ -104,29 +105,29 @@ model DoanChat {
 // ====================== JD ======================
 model JD {
   id             BigInt    @id @default(autoincrement())
-  ten_vi_tri     String
-  phong_ban      String?
-  cap_bac        String?
-  bao_cao_cho    String?
-  nhiem_vu       String?
-  trinh_do       String?
-  kinh_nghiem    String?
-  ky_nang        String?
-  ky_nang_mem    String?
-  uu_tien        String?
-  muc_luong      String?
-  phuc_loi       String?
-  moi_truong     String?
-  dia_diem       String?
-  thoi_gian      String?
-  han_nop        String?
-  cach_ung_tuyen String?
-  ngay_tao       DateTime? @default(now())
-  mo_ta          String?
+  ten_vi_tri     String    @db.VarChar(191)
+  phong_ban      String?   @db.VarChar(191)
+  cap_bac        String?   @db.VarChar(191)
+  bao_cao_cho    String?   @db.VarChar(191)
+  nhiem_vu       String?   @db.VarChar(191)
+  trinh_do       String?   @db.VarChar(191)
+  kinh_nghiem    String?   @db.VarChar(191)
+  ky_nang        String?   @db.VarChar(191)
+  ky_nang_mem    String?   @db.VarChar(191)
+  uu_tien        String?   @db.VarChar(191)
+  muc_luong      String?   @db.VarChar(191)
+  phuc_loi       String?   @db.VarChar(191)
+  moi_truong     String?   @db.VarChar(191)
+  dia_diem       String?   @db.VarChar(191)
+  thoi_gian      String?   @db.VarChar(191)
+  han_nop        String?   @db.VarChar(191)
+  cach_ung_tuyen String?   @db.VarChar(191)
+  ngay_tao       DateTime? @db.Timestamptz(3) @default(now())
+  mo_ta          String?   @db.VarChar(191)
   doanhnghiep_id BigInt?
-  ten_cong_ty    String?
-  nganh          String?
-  avt            String?
+  ten_cong_ty    String?   @db.VarChar(191)
+  nganh          String?   @db.VarChar(191)
+  avt            String?   @db.VarChar(191)
 
   DoanhNghiep DoanhNghiep? @relation(fields: [doanhnghiep_id], references: [id])
   TopJD       TopJD[]
@@ -136,13 +137,13 @@ model JD {
 // ====================== ThongBaoDN ======================
 model ThongBaoDN {
   id_dn          BigInt       @id @default(autoincrement())
-  ten_dn         String?
-  email          String?
-  mat_khau       String?
-  sdt            String?
-  logo           String?
-  trang_thai     String?
-  ngay_tao       String?
+  ten_dn         String? @db.VarChar(191)
+  email          String? @db.VarChar(191)
+  mat_khau       String? @db.VarChar(191)
+  sdt            String? @db.VarChar(191)
+  logo           String? @db.VarChar(191)
+  trang_thai     String? @db.VarChar(191)
+  ngay_tao       String? @db.VarChar(191)
   doanhnghiep_id BigInt?
   DoanhNghiep    DoanhNghiep? @relation(fields: [doanhnghiep_id], references: [id])
 }
@@ -150,13 +151,13 @@ model ThongBaoDN {
 // ====================== ThongBaoSV ======================
 model ThongBaoSV {
   id_sv       BigInt    @id @default(autoincrement())
-  ho_ten      String?
-  email       String?
-  mat_khau    String?
-  sdt         String?
-  avt_sv      String?
-  trang_thai  String?
-  ngay_tao    String?
+  ho_ten      String? @db.VarChar(191)
+  email       String? @db.VarChar(191)
+  mat_khau    String? @db.VarChar(191)
+  sdt         String? @db.VarChar(191)
+  avt_sv      String? @db.VarChar(191)
+  trang_thai  String? @db.VarChar(191)
+  ngay_tao    String? @db.VarChar(191)
   sinhvien_id BigInt?
   SinhVien    SinhVien? @relation(fields: [sinhvien_id], references: [id])
 }
@@ -164,7 +165,7 @@ model ThongBaoSV {
 // ====================== TopJD ======================
 model TopJD {
   id         BigInt   @id @default(autoincrement())
-  created_at DateTime @default(now())
+  created_at DateTime @db.Timestamptz(3) @default(now())
   jd_id      BigInt?
   JD         JD?      @relation(fields: [jd_id], references: [id])
 }
@@ -177,10 +178,10 @@ model TopCV {
 // ====================== UngVien ======================
 model UngVien {
   id             BigInt   @id @default(autoincrement())
-  created_at     DateTime @default(now())
+  created_at     DateTime @db.Timestamptz(3) @default(now())
   sinhvien_id    BigInt?
   doanhnghiep_id BigInt?
-  trangthai      String?  @default("chưa ứng tuyển")
+  trangthai      String?  @db.VarChar(191) @default("chưa ứng tuyển")
   jd_id          BigInt?
 
   SinhVien    SinhVien?    @relation(fields: [sinhvien_id], references: [id])

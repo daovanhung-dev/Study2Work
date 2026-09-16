@@ -1,13 +1,15 @@
-// main.ts
-import dotenv from "dotenv";
-dotenv.config();
-
 import app from "./app.js"; // vẫn giữ .js
-import prisma  from "./config/prisma.config.js"; // nếu cần DB
+import prisma from "./config/prisma.config.js";
+import { PORT } from "./utils/constants.js";
 
+const bootstrap = async () => {
+  await prisma.$connect();
+  app.listen(PORT, () => {
+    console.log(`Server chạy http://localhost:${PORT}`);
+  });
+};
 
-
-const port = process.env.PORT!;
-app.listen(port, () => {
-  console.log(`Server chạy http://localhost:${port}`);
+bootstrap().catch((error) => {
+  console.error("Không thể kết nối Neon PostgreSQL:", error);
+  process.exit(1);
 });

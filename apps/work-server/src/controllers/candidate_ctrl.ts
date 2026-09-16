@@ -3,9 +3,7 @@ import { Request, Response } from "express";
 import CandidateService from "../services/candidate_services.js";
 import CVService from "../services/cv_services.js";
 import JDService from "../services/jobs_services.js";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "../config/prisma.config.js";
 
 class UngVienController {
 async CandidateJD(req: Request, res: Response) {
