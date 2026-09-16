@@ -10,7 +10,12 @@ Both intentionally retain the package name `work_server`, so imports must be
 resolved relative to the individual app rather than treated as a shared Dart
 package.
 
-## Dependency direction
+## Startup and dependency direction
+
+Student `lib/main.dart` khởi động `MaterialApp` với `DangNhap` làm `home`.
+Business `lib/main.dart` cũng khởi động từ `DangNhap` và khởi tạo
+`sqflite_common_ffi` trên desktop non-Android/iOS. Navigation hiện dùng các
+`MaterialPageRoute` từ view; không có shared router package.
 
 ```text
 views -> controllers -> helper_db -> NeonDatabase -> Neon PostgreSQL
@@ -19,24 +24,34 @@ views -> models
 ```
 
 `lib/helper_db/neon_db.dart` is the remote data boundary in each app. It owns
-lazy pool creation, connection URL normalization, parameterized execution,
-row normalization, and pool shutdown. Existing helper class names containing
-`Supabase` remain as compatibility interfaces for current UI callers; their
-implementation is now Neon SQL.
+lazy singleton pool creation, SSL URL validation/normalization, parameterized
+execution, `BIGINT` row normalization, and pool shutdown. Existing helper class
+names containing `Supabase` remain as compatibility interfaces for current UI
+callers; their implementation is now Neon SQL.
+
+Login reads credentials from Neon, stores the current student/business record
+and major lookup in SQLite, and logout clears the local account row. This is a
+local cache/session flow, not a JWT or Work HTTP API flow.
 
 ## Remote data contract
 
 The mobile clients query the quoted PostgreSQL tables currently present in the
 work-server schema: `"SinhVien"`, `"DoanhNghiep"`, `"Chat"`, `"Cv"`,
 `"DoanChat"`, `"JD"`, `"TopCV"`, `"TopJD"`, and `"UngVien"`. The lowercase
-`bannganh` lookup is maintained by the work-server migration.
+`bannganh` lookup is maintained by the work-server migration. Student and
+business helpers also expose CV, job, candidate/application and conversation
+operations directly against those tables.
 
 Chat does not use realtime channels. Each chat screen owns a `Timer` polling
 every three seconds, deduplicates by message `id`, and cancels it in
 `dispose()`.
 
+Both apps also contain `AIService`, which sends prompt text directly to the
+Gemini HTTP API; it is independent of `apps/ai-server` and `apps/work-server`.
+
 ## Security boundary
 
-This direct connection is prototype/development-only. The Neon credential is
-compiled into each APK. Production architecture must move database access to a
-backend API and use a least-privilege, rotated database credential.
+This direct connection and the embedded Gemini/Neon configuration are
+prototype/development-only. Credentials are compiled into each APK. Production
+architecture must move database/AI access behind backend boundaries and use
+least-privilege, rotated credentials.

@@ -2,9 +2,12 @@
 
 `CONTEXT_STATUS: VERIFIED_REACT_EXPRESS_SPLIT`
 
-Work web uses the relative `/api/v1` API base and does not read `.env` or
-`VITE_*` runtime variables. Vite proxies `/api`, `/uploads`, and `/img` to the
-Express Work server during development; production uses a same-origin reverse
-proxy. The browser never receives Neon credentials. The current client uses
-React Query, Zod, Zustand and the typed `apiRequest` JWT boundary. React is the
-only Work presentation layer; the Express API remains the data owner.
+Work web uses the relative `/api/v1` API base and Vite's `envDir` points to an
+empty directory, so the client does not read repository `.env` or `VITE_*`
+runtime variables. Vite proxies `/api`, `/uploads`, and `/img` to the Express
+Work server at port `3000` during development; production uses a same-origin
+reverse proxy. The browser never receives Neon credentials. The package declares
+React, React Router, React Query, Zod, Zustand, Lucide and Vitest; runtime API
+requests use native `fetch` in `apiRequest` (Axios is declared but is not the
+current request path). React is the only Work presentation layer; Express owns
+the API/data boundary.

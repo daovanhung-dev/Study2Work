@@ -26,9 +26,12 @@
 ## Work TypeScript server
 
 - Strict TypeScript, NodeNext ESM, import nội bộ dùng suffix `.js`.
-- Nest DI modules/controllers/services, Fastify adapter, global guard/pipe/
-  interceptor/filter, Prisma client.
-- camelCase value/function, PascalCase class/type, decorator metadata.
+- Express router/middleware/service composition, shared Prisma client, and
+  response envelope helpers in `src/routes/api_routes.ts`.
+- camelCase value/function, PascalCase class/type where existing source uses
+  named types; preserve existing legacy snake_case Prisma model/column names.
+- Runtime config is imported from `src/utils/constants.ts`; `.env` is only a
+  legacy template and is not loaded by the server.
 - Không áp bốn-file Python hoặc raw-SQL convention của Study lên Work.
 
 ## DB Admin runtime boundary

@@ -14,10 +14,13 @@ The Express server does not call `dotenv.config()` or read runtime values from
 `src/utils/jwt.ts`. A valid payload must contain numeric `id`, string `email`
 and string `role`. The principal is assigned to `request.user`.
 
-`ensureAuthenticated` rejects missing/invalid credentials. HTML requests are
-redirected to `/signInRole`; API-style requests receive JSON `401`. Role
-failures return/redirect as `403`. Cookies, Passport and server-side sessions
-are not read or created.
+`ensureAuthenticated` rejects missing/invalid credentials with a JSON `401`.
+Role failures return JSON `403`; there is no content-aware HTML redirect.
+Cookies, Passport and server-side sessions are not read or created.
+
+The login services compare the submitted password with the stored value as
+currently implemented. The presence of `bcrypt`/`bcryptjs` dependencies is not
+evidence that password hashing is wired.
 
 ## Prisma
 

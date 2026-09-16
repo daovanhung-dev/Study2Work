@@ -6,29 +6,32 @@
 |---|---|---|
 | Study web | `apps/study-client/` | Vue 3 + TypeScript + Vite |
 | Study API | `apps/study-server/` | FastAPI + Python + sync SQLAlchemy core; hiện import-broken |
-| Work mobile | `apps/work-client/mobile/` | Hai Flutter app; context chỉ là skeleton |
+| Work mobile | `apps/work-client/mobile/` | Hai Flutter app độc lập; direct Neon SQL + SQLite cache |
 | Work web | `apps/work-client/web/` | React + TypeScript + Vite |
-| Work API | `apps/work-server/` | NestJS + Fastify + TypeScript + Prisma |
+| Work API | `apps/work-server/` | Express 4 + TypeScript + Prisma/PostgreSQL/Neon; JSON API-only |
 | AI API | `apps/ai-server/` | FastAPI + Ollama adapter; copied core phần lớn unwired |
 | DB Admin web | `apps/db-admin-web/` | Angular standalone + Angular Material + CodeMirror; local admin UI |
 | DB Admin API | `apps/db-admin-server/` | FastAPI + SQLAlchemy/psycopg; dedicated Neon database control plane |
 | Shared contracts | `contracts/` | Work OpenAPI, Study->Work events, skill taxonomy |
 | Local infra | `docker-compose.yml`, `infra/README.md` | PostgreSQL/Redis/MinIO/Mailhog và Study/Work containers |
 
-Study, Work và AI là deployable/boundary khác nhau. Không import business module
-chéo app; giao tiếp qua HTTP/event contract được xác nhận.
+Study, Work và AI là deployable/boundary khác nhau. Work Web gọi Work API qua HTTP;
+Work mobile hiện kết nối trực tiếp Neon và không gọi Work API. Không import
+business module chéo app.
 
 ## Boundary chính
 
 ```text
 Study web  -> Study API (contract chưa có OpenAPI hiện hành)
-Work web   -> Work API qua VITE_WORK_API_URL
+Work web   -> relative `/api/v1` -> Work Express JSON API
+Work mobile -> Neon PostgreSQL qua `postgres` + local SQLite cache
+Work mobile -> Gemini HTTP API cho `AIService`
 
 Study producer -> contracts/events/study-work/*.schema.json -> Work consumer
                  (consumer chưa implement)
 
 AI API -> Ollama HTTP API
-Work API -> PostgreSQL/Prisma + Identity JWKS
+Work API -> Express -> Prisma -> PostgreSQL/Neon
 Study API -> PostgreSQL config + optional Redis config; app chưa start được
 DB Admin web (one-command local launcher + same-origin proxy)
   -> internal DB Admin API -> one backend-owned Neon PostgreSQL connection + Identity JWKS
@@ -37,7 +40,9 @@ DB Admin web (one-command local launcher + same-origin proxy)
 ## Contract boundary
 
 - API envelope chung được mô tả tại `contracts/api-guidelines/README.md`.
-- Work runtime surface hiện hành: `contracts/openapi/work/openapi.json`.
+- Work source-aligned surface: `contracts/openapi/work/legacy-web.openapi.json`.
+  `contracts/openapi/work/openapi.json` và README contract mô tả target/health
+  surface không được route Express hiện tại phục vụ; đây là discrepancy.
 - Study OpenAPI chưa tồn tại.
 - Study event JSON Schema xác nhận payload/headers, không xác nhận implementation
   consumer hay database table.

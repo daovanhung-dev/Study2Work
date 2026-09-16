@@ -17,12 +17,21 @@ apps/ai-server/app/main.py
   -> Ollama /api/generate
   x copied app/core/* is UNWIRED
 
-apps/work-server/src/bootstrap.ts
-  -> AppModule
-     -> config + database + http + auth + health + system
-  -> Prisma -> Work PostgreSQL
-  -> remote Identity JWKS (protected routes only; current routes public)
-  -> Redis URL only (no client)
+apps/work-client/web/src/main.tsx
+  -> React App -> AuthProvider/Zustand + React Query
+  -> relative `/api/v1` fetch boundary
+  -> apps/work-server/src/app.ts
+
+apps/work-client/mobile/flutter_{student,business}/lib/main.dart
+  -> login/home views and controllers
+  -> helper_db -> NeonDatabase -> Neon PostgreSQL
+  -> SQLite session/cache helpers
+  -> AIService -> Gemini HTTP API
+
+apps/work-server/src/main.ts
+  -> shared Prisma `$connect()`
+  -> Express app -> `/api/v1` JSON router
+  -> Prisma -> Work PostgreSQL/Neon
 
 apps/db-admin-web/src/main.ts
   -> Angular standalone routes/material UI/CodeMirror
@@ -38,16 +47,19 @@ apps/db-admin-server/app/main.py
 
 ## Client/server boundaries
 
-- Work web reads `VITE_WORK_API_URL`; Work API does not serve client assets.
+- Work web uses a relative `/api/v1` base; Vite proxies `/api`, `/uploads`, and
+  `/img` to the Express server in development. Work API does not render browser
+  views.
 - Study client and Study API are separate packages, nhưng current Study OpenAPI
   không đủ để suy diễn client/server contract.
-- Mobile apps không được deep-load ở context hiện tại.
+- Work mobile apps use direct Neon SQL and are not HTTP consumers of Work server.
 
 ## Contract dependencies
 
 | Producer/owner | Contract | Consumer | Implementation status |
 |---|---|---|---|
-| Work API | `contracts/openapi/work/openapi.json` | Work web/clients | Foundation endpoints implemented |
+| Work API | `contracts/openapi/work/legacy-web.openapi.json` | Work Web | Matches current Express route source |
+| Work target contract | `contracts/openapi/work/openapi.json` | Future Work API | DISCREPANCY / not wired to current source |
 | Study | `study.evidence.upserted.v1.schema.json` | Work | Consumer missing |
 | Study | `study.evidence.revoked.v1.schema.json` | Work | Consumer missing |
 | Shared | `skill-taxonomy.v1*.json` | Future domain modules | No current server caller |
@@ -60,6 +72,7 @@ local snapshot. Không có nghĩa các helper/table tương ứng đã tồn t�
 
 - Study `tests/conftest.py` phụ thuộc `app.main`, hiện chặn collection.
 - AI không có tests.
-- Work Vitest injects Nest app và mocks readiness Prisma probe.
+- Work Web has Vitest tests for role guards and Bearer API boundary. Work server
+  has no checked-in test runner; TypeScript/Prisma commands are validation checks.
 - Root `tests/smoke_test.py` là stale standalone artifact, không phải test router
   cho package hiện hành.
