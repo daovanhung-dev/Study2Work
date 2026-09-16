@@ -48,7 +48,9 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
     });
 
     setState(() {
-      messages = data;
+      // Neon driver có thể trả về list fixed-length; chat cần list growable
+      // để polling thêm tin nhắn mới mà không phát sinh exception.
+      messages = List<Map<String, dynamic>>.from(data);
     });
 
     for (int i = 0; i < messages.length; i++) {

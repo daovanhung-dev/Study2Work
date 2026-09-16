@@ -81,16 +81,16 @@ direct Neon endpoint through the local CLI wrapper.
 
 ## Configuration and authentication
 
-| Constant | Purpose |
-| --- | --- |
-| `PORT` | HTTP port for the Express server. |
-| `DATABASE_URL` | Pooled Neon PostgreSQL connection string used by Prisma runtime. |
-| `DIRECT_DATABASE_URL` | Direct Neon PostgreSQL connection string used by Prisma CLI. |
-| `JWT_SECRET` | Secret for JWT helpers. |
-| `JWT_EXPIRES` | JWT expiration value. |
-| `JWT_STORAGE_KEY` | Browser local-storage key for the access token. |
-| `SUPABASE_URL` | Supabase project URL. |
-| `SUPABASE_ANON_KEY` | Supabase anonymous key. |
+| Constant                | Purpose                                                          |
+| ----------------------- | ---------------------------------------------------------------- |
+| `PORT`                | HTTP port for the Express server.                                |
+| `DATABASE_URL`        | Pooled Neon PostgreSQL connection string used by Prisma runtime. |
+| `DIRECT_DATABASE_URL` | Direct Neon PostgreSQL connection string used by Prisma CLI.     |
+| `JWT_SECRET`          | Secret for JWT helpers.                                          |
+| `JWT_EXPIRES`         | JWT expiration value.                                            |
+| `JWT_STORAGE_KEY`     | Browser local-storage key for the access token.                  |
+| `SUPABASE_URL`        | Supabase project URL.                                            |
+| `SUPABASE_ANON_KEY`   | Supabase anonymous key.                                          |
 
 The project does not load `.env` files. Runtime configuration is defined in
 `src/utils/constants.ts`; keep the Neon credential out of logs. Protected

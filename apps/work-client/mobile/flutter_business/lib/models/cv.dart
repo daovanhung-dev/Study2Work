@@ -25,6 +25,7 @@ class CV {
   final String? portfolio;
   final String? luongmongmuon;
   final DateTime? createdAt;
+  final int? sinhvienId;
 
   const CV({
     this.id,
@@ -50,6 +51,7 @@ class CV {
     this.portfolio,
     this.luongmongmuon,
     this.createdAt,
+    this.sinhvienId,
   });
 
   CV copyWith({
@@ -76,6 +78,7 @@ class CV {
     String? portfolio,
     String? luongmongmuon,
     DateTime? createdAt,
+    int? sinhvienId,
   }) {
     return CV(
       id: id ?? this.id,
@@ -101,6 +104,7 @@ class CV {
       portfolio: portfolio ?? this.portfolio,
       luongmongmuon: luongmongmuon ?? this.luongmongmuon,
       createdAt: createdAt ?? this.createdAt,
+      sinhvienId: sinhvienId ?? this.sinhvienId,
     );
   }
 
@@ -158,6 +162,9 @@ class CV {
       portfolio: map['portfolio'] as String?,
       luongmongmuon: map['luongmongmuon'] as String?,
       createdAt: parseDate(map['created_at'] ?? map['createdAt']),
+      sinhvienId: map['sinhvien_id'] == null
+          ? null
+          : int.tryParse(map['sinhvien_id'].toString()),
     );
   }
 
@@ -189,6 +196,7 @@ class CV {
       'portfolio': portfolio,
       'luongmongmuon': luongmongmuon,
       'created_at': createdAt?.toIso8601String(),
+      'sinhvien_id': sinhvienId,
     };
   }
 

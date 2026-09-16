@@ -188,7 +188,7 @@ class _UngVienState extends State<UngVien> {
                                 label: "Tuyển",
                                 color: const Color(0xFF3A8DFF),
                                 onTap: () async {
-                                  await ctrl.ungTuyen(uv.id!);
+                                  await ctrl.ungTuyen(uv.sinhvienId!);
                                   if (!context.mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
@@ -238,7 +238,7 @@ class _UngVienState extends State<UngVien> {
                                   if (confirm != true) return;
 
                                   // Xử lý xóa
-                                  await ctrl.delCV(uv.id!);
+                                  await ctrl.delCV(uv.sinhvienId!);
                                   if (!context.mounted) return;
 
                                   ScaffoldMessenger.of(context).showSnackBar(
