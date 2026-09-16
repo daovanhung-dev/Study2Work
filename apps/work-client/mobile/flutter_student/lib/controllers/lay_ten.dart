@@ -1,38 +1,19 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:work_server/helper_db/neon_db.dart';
 
-final supabase = Supabase.instance.client;
+final NeonDatabase database = NeonDatabase.instance;
 
 Future<Map<String, dynamic>?> getNameSV(int id) async {
-  final response = await supabase
-      .from('sinhvien')
-      .select('hoten')
-      .eq('id', id);
-
-  // Kiểm tra có dữ liệu hay không
-  if (response.isNotEmpty) {
-    return {
-      "ten": response[0]['hoten'],
-    };
-  } else {
-    return null; // hoặc {"ten": ""} nếu bạn muốn trả về mặc định
-  }
+  final rows = await database.query(
+    'SELECT "hoten" FROM "SinhVien" WHERE "id" = \$1 LIMIT 1',
+    parameters: [id],
+  );
+  return rows.isEmpty ? null : {'ten': rows.first['hoten']};
 }
-
 
 Future<Map<String, dynamic>?> getNameDN(int id) async {
-  final response = await supabase
-      .from('doanhnghiep')
-      .select('hoten')
-      .eq('id', id);
-
-  // Kiểm tra có dữ liệu hay không
-  if (response.isNotEmpty) {
-    return {
-      "hoten": response[0]['hoten'],
-    };
-  } else {
-    return null; // hoặc {"ten": ""} nếu bạn muốn trả về mặc định
-  }
+  final rows = await database.query(
+    'SELECT "hoten" FROM "DoanhNghiep" WHERE "id" = \$1 LIMIT 1',
+    parameters: [id],
+  );
+  return rows.isEmpty ? null : {'hoten': rows.first['hoten']};
 }
-
-

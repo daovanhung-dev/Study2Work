@@ -133,7 +133,9 @@ class CV {
     }
 
     return CV(
-      id: map['id'] is int ? map['id'] as int : (map['id'] is String ? int.tryParse(map['id']) : null),
+      id: map['id'] is int
+          ? map['id'] as int
+          : (map['id'] is String ? int.tryParse(map['id']) : null),
       avt: map['avt'] as String?,
       hoten: (map['hoten'] ?? '') as String,
       ngaysinh: parseDate(map['ngaysinh']),
@@ -181,7 +183,9 @@ class CV {
       'duan': duan,
       'giaithuong': giaithuong,
       'hoatdong': hoatdong,
-      'social': social == null ? null : json.encode(social), // encode để DB jsonb chấp nhận string nếu cần
+      'social': social == null
+          ? null
+          : json.encode(social), // encode để DB jsonb chấp nhận string nếu cần
       'portfolio': portfolio,
       'luongmongmuon': luongmongmuon,
       'created_at': createdAt?.toIso8601String(),

@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-class locCV extends StatefulWidget {
-  const locCV({super.key});
+
+class LocCvPlaceholderScreen extends StatefulWidget {
+  const LocCvPlaceholderScreen({super.key});
 
   @override
-  State<locCV> createState() => _locCVState();
+  State<LocCvPlaceholderScreen> createState() => _LocCvPlaceholderScreenState();
 }
 
-class _locCVState extends State<locCV> {
+class _LocCvPlaceholderScreenState extends State<LocCvPlaceholderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: Color(0xFF7ecbff),title: Text("Lọc CV"),),
+      appBar: AppBar(backgroundColor: Color(0xFF7ecbff), title: Text("Lọc CV")),
       body: SizedBox.expand(
         child: Stack(
           children: [
@@ -24,19 +25,11 @@ class _locCVState extends State<locCV> {
               ),
             ),
             SingleChildScrollView(
-              child: Center(
-                child: Column(
-                  children: [
-                  ],
-                ),
-              ),
+              child: Center(child: Column(children: [])),
             ),
           ],
         ),
       ),
-
     );
   }
 }
-
-

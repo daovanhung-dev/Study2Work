@@ -108,7 +108,7 @@ ORDER BY ns.nspname, cls.relname, con.conname
 """
 
 GRANTS_SQL = """
-SELECT table_schema AS schema_name, table_name, grantee, privilege_type,
+SELECT table_schema AS schema_name, table_name AS name, table_name, grantee, privilege_type,
        is_grantable
 FROM information_schema.role_table_grants
 WHERE table_schema NOT LIKE 'pg_%' AND table_schema <> 'information_schema'
@@ -183,9 +183,7 @@ LIMIT 500
 def _rows(
     connection: Connection, statement: str, params: dict[str, Any] | None = None
 ) -> list[dict[str, Any]]:
-    return [
-        dict(row) for row in connection.execute(text(statement), params or {}).mappings()
-    ]
+    return [dict(row) for row in connection.execute(text(statement), params or {}).mappings()]
 
 
 def get_catalog(connection: Connection) -> dict[str, list[dict[str, Any]]]:

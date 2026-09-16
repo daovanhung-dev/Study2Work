@@ -18,11 +18,10 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
   late final AnimationController _transitionController;
   late final AnimationController _waveController;
 
-  late final Animation<double> _transitionAnim;
   late final Animation<double> _waveAnim;
 
   final List<Widget> _pages = const [
-    trangChu(),
+    TrangChu(),
     UngVien(),
     TroChuyen(),
     Setting(),
@@ -53,14 +52,19 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _transitionController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
-    _waveController =
-    AnimationController(vsync: this, duration: const Duration(seconds: 8))
-      ..repeat(reverse: true);
+    _transitionController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _waveController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat(reverse: true);
 
-    _transitionAnim = CurvedAnimation(parent: _transitionController, curve: Curves.easeInOut);
-    _waveAnim = CurvedAnimation(parent: _waveController, curve: Curves.easeInOut);
+    _waveAnim = CurvedAnimation(
+      parent: _waveController,
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -106,7 +110,9 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
               );
             },
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 90), // tạo khoảng trống cho menu
+              padding: const EdgeInsets.only(
+                bottom: 90,
+              ), // tạo khoảng trống cho menu
               child: _pages[_selectedIndex],
             ),
           ),
@@ -131,14 +137,14 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(40),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 3),
-          )
+          ),
         ],
       ),
       child: Row(
@@ -156,12 +162,12 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
                 shape: BoxShape.circle,
                 boxShadow: active
                     ? [
-                  BoxShadow(
-                    color: Colors.blueAccent.withOpacity(0.4),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  )
-                ]
+                        BoxShadow(
+                          color: Colors.blueAccent.withValues(alpha: 0.4),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
                     : [],
               ),
               child: AnimatedScale(
@@ -191,8 +197,8 @@ class WavePainter extends CustomPainter {
     final paint = Paint()
       ..shader = LinearGradient(
         colors: [
-          const Color(0xFF4facfe).withOpacity(0.25),
-          const Color(0xFF00f2fe).withOpacity(0.15),
+          const Color(0xFF4facfe).withValues(alpha: 0.25),
+          const Color(0xFF00f2fe).withValues(alpha: 0.15),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,

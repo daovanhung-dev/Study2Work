@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:work_server/constants.dart';
 
 class AIService {
-  final String apiKey = 'AIzaSyDg8hutk_kLylLwDG2skoAeQmmxi_xXxlE'; // Thay bằng key của bạn
+  final String apiKey = GEMINI_API_KEY;
 
   Future<String> sendMessage(String message) async {
     final url = Uri.parse(
@@ -17,10 +18,10 @@ class AIService {
         "contents": [
           {
             "parts": [
-              {"text": message}
-            ]
-          }
-        ]
+              {"text": message},
+            ],
+          },
+        ],
       }),
     );
 
@@ -32,7 +33,6 @@ class AIService {
         return "Không có nội dung trả về từ AI.";
       }
     } else {
-      print("❌ Lỗi: ${response.statusCode} - ${response.body}");
       return "Đã xảy ra lỗi khi gọi Gemini API.";
     }
   }

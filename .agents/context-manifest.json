@@ -44,7 +44,7 @@
     },
     "server-work": {
       "mode": "DEEP",
-      "status": "VERIFIED_EXPRESS_WEB",
+      "status": "VERIFIED_EXPRESS_REACT_API",
       "entry": ".agents/server-work/AGENTS.md",
       "sourceRoots": [
         "apps/work-server"
@@ -65,6 +65,7 @@
       "requiredSourcePaths": [
         "apps/work-server/src/app.ts",
         "apps/work-server/src/main.ts",
+        "apps/work-server/src/routes/api_routes.ts",
         "apps/work-server/src/utils/constants.ts",
         "apps/work-server/src/utils/jwt.ts",
         "apps/work-server/prisma/schema.prisma",
@@ -102,7 +103,7 @@
     },
     "web-work": {
       "mode": "DEEP",
-      "status": "VERIFIED_LIVE_DATA_SHELL",
+      "status": "VERIFIED_REACT_EXPRESS_SPLIT",
       "entry": ".agents/web-work/AGENTS.md",
       "sourceRoots": [
         "apps/study-client",
@@ -121,22 +122,39 @@
         ".agents/web-work/dependencies.md"
       ],
       "requiredSourcePaths": [
-        "apps/work-client/web/src/app/router/index.tsx",
-        "apps/work-client/web/src/pages/DomainPage.tsx",
-        "apps/work-client/web/src/pages/WorkFeaturePage.tsx",
-        "apps/work-client/web/src/shared/api/work.ts"
+        "apps/work-client/web/src/app/router.tsx",
+        "apps/work-client/web/src/pages/PublicPages.tsx",
+        "apps/work-client/web/src/pages/WorkspacePages.tsx",
+        "apps/work-client/web/src/shared/api/work.ts",
+        "apps/work-client/web/vite.config.ts"
       ]
     },
     "mobile-work": {
-      "mode": "SKELETON_ONLY",
-      "status": "SKELETON_ONLY",
+      "mode": "DEEP",
+      "status": "VERIFIED",
       "entry": ".agents/mobile-work/AGENTS.md",
       "sourceRoots": [
         "apps/work-client/mobile"
       ],
-      "trackedRoots": [],
-      "requiredPages": [],
-      "requiredSourcePaths": []
+      "trackedRoots": [
+        "apps/work-client/mobile/flutter_student",
+        "apps/work-client/mobile/flutter_business"
+      ],
+      "requiredPages": [
+        ".agents/mobile-work/architecture.md",
+        ".agents/mobile-work/dependencies.md",
+        ".agents/mobile-work/conventions.md"
+      ],
+      "requiredSourcePaths": [
+        "apps/work-client/mobile/flutter_student/pubspec.yaml",
+        "apps/work-client/mobile/flutter_student/lib/main.dart",
+        "apps/work-client/mobile/flutter_student/lib/constants.dart",
+        "apps/work-client/mobile/flutter_student/lib/helper_db/neon_db.dart",
+        "apps/work-client/mobile/flutter_business/pubspec.yaml",
+        "apps/work-client/mobile/flutter_business/lib/main.dart",
+        "apps/work-client/mobile/flutter_business/lib/constants.dart",
+        "apps/work-client/mobile/flutter_business/lib/helper_db/neon_db.dart"
+      ]
     },
     "db-admin": {
       "mode": "DEEP",

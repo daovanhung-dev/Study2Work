@@ -1,7 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:work_server/models/doanh_nghiep.dart';
-import 'package:work_server/models/NganhNghe.dart';
+import 'package:work_server/models/nganh_nghe.dart';
+
 class HelperDB {
   // 🔹 Singleton pattern (chỉ có 1 instance duy nhất)
   static final HelperDB instance = HelperDB._init();
@@ -45,8 +46,6 @@ class HelperDB {
   ''');
   }
 
-
-
   // ============================================================
   // 🧠 Dưới đây là các hàm CRUD được tối ưu cho bảng 1 hàng duy nhất
   // ============================================================
@@ -59,23 +58,22 @@ class HelperDB {
       dn.toMap(),
       conflictAlgorithm: ConflictAlgorithm.replace, // ghi đè dữ liệu cũ
     );
-    print("Đã lưu doanh nghiệp");
-    print(dn.toMap());
   }
 
   //save nganh
-  Future<void> saveNganh(List<Nganh> Nganh_nghe ) async {
+  Future<void> saveNganh(List<Nganh> nganhNghe) async {
     final db = await instance.database;
-    for (var nganh in Nganh_nghe) {
+    for (var nganh in nganhNghe) {
       await db.insert(
         'bannganh',
         nganh.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace,);
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
     }
   }
 
   //lay chuyen nganh
-  Future<List<String>> getNganh() async{
+  Future<List<String>> getNganh() async {
     final db = await instance.database;
     final result = await db.query('bannganh');
     return result.map((e) => e['nganh'] as String).toList();

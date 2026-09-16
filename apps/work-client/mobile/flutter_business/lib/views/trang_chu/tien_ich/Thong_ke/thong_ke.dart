@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-class thongKe extends StatefulWidget {
-  const thongKe({super.key});
+
+class ThongKeScreen extends StatefulWidget {
+  const ThongKeScreen({super.key});
 
   @override
-  State<thongKe> createState() => _thongKeState();
+  State<ThongKeScreen> createState() => _ThongKeScreenState();
 }
 
-class _thongKeState extends State<thongKe> {
+class _ThongKeScreenState extends State<ThongKeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: Color(0xFF7ecbff),title: Text("Thống kê"),),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF7ecbff),
+        title: Text("Thống kê"),
+      ),
       body: SizedBox.expand(
         child: Stack(
           children: [
@@ -24,18 +28,11 @@ class _thongKeState extends State<thongKe> {
               ),
             ),
             SingleChildScrollView(
-              child: Center(
-                child: Column(
-                  children: [
-                  ],
-                ),
-              ),
+              child: Center(child: Column(children: [])),
             ),
           ],
         ),
       ),
-
     );
   }
 }
-

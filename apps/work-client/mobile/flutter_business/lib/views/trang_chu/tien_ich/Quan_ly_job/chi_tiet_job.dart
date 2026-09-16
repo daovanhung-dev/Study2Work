@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:work_server/helper_db/helper_supabase.dart';
-import 'package:work_server/models/JD.dart';
+import 'package:work_server/models/jd.dart';
 
-final DNSupabase DN = DNSupabase.instance;
+final DNSupabase dn = DNSupabase.instance;
 
 class XemChiTietJD extends StatefulWidget {
   const XemChiTietJD({super.key, required this.id});
@@ -13,12 +13,12 @@ class XemChiTietJD extends StatefulWidget {
 }
 
 class _XemChiTietJDState extends State<XemChiTietJD> {
-  late int id_JD;
+  late int idJd;
 
   @override
   void initState() {
     super.initState();
-    id_JD = widget.id;
+    idJd = widget.id;
   }
 
   @override
@@ -49,18 +49,18 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                 width: screenWidth * 0.95,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.95),
+                  color: Colors.white.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
+                      color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
                   ],
                 ),
                 child: FutureBuilder<JD>(
-                  future: DN.getJD(id_JD),
+                  future: dn.getJD(idJd),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
@@ -73,17 +73,24 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                     final data = snapshot.data!;
 
                     // Hàm tạo hàng thông tin dạng thẻ có icon + màu pastel
-                    Widget infoRow(String title, String content,
-                        {IconData? icon, Color? bgColor}) {
+                    Widget infoRow(
+                      String title,
+                      String content, {
+                      IconData? icon,
+                      Color? bgColor,
+                    }) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         margin: const EdgeInsets.symmetric(vertical: 4),
                         decoration: BoxDecoration(
                           color: bgColor ?? Colors.blueGrey.shade50,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 5,
                               offset: const Offset(0, 2),
                             ),
@@ -95,7 +102,11 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                             if (icon != null)
                               Padding(
                                 padding: const EdgeInsets.only(right: 6),
-                                child: Icon(icon, size: 20, color: Colors.blueGrey[700]),
+                                child: Icon(
+                                  icon,
+                                  size: 20,
+                                  color: Colors.blueGrey[700],
+                                ),
                               ),
                             SizedBox(
                               width: 100,
@@ -109,7 +120,9 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                             ),
                             Expanded(
                               child: Text(
-                                content.isNotEmpty ? content : "Không có dữ liệu",
+                                content.isNotEmpty
+                                    ? content
+                                    : "Không có dữ liệu",
                                 style: const TextStyle(
                                   fontSize: 15,
                                   color: Colors.black87,
@@ -125,9 +138,17 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                     Widget gradientTitle(String text) {
                       return Center(
                         child: ShaderMask(
-                          shaderCallback: (bounds) => const LinearGradient(
-                            colors: [Colors.blue, Colors.cyan],
-                          ).createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
+                          shaderCallback: (bounds) =>
+                              const LinearGradient(
+                                colors: [Colors.blue, Colors.cyan],
+                              ).createShader(
+                                Rect.fromLTWH(
+                                  0,
+                                  0,
+                                  bounds.width,
+                                  bounds.height,
+                                ),
+                              ),
                           child: Text(
                             text,
                             style: const TextStyle(
@@ -164,11 +185,36 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                         const SizedBox(height: 16),
 
                         // Thông tin cơ bản
-                        infoRow("Cấp bậc", data.capBac, icon: Icons.star, bgColor: Colors.blue.shade50),
-                        infoRow("Báo cáo cho", data.baoCaoCho, icon: Icons.group, bgColor: Colors.green.shade50),
-                        infoRow("Địa điểm", data.diaDiem, icon: Icons.location_on, bgColor: Colors.orange.shade50),
-                        infoRow("Thời gian", data.thoiGian, icon: Icons.calendar_today, bgColor: Colors.purple.shade50),
-                        infoRow("Hạn nộp", data.hanNop, icon: Icons.schedule, bgColor: Colors.pink.shade50),
+                        infoRow(
+                          "Cấp bậc",
+                          data.capBac,
+                          icon: Icons.star,
+                          bgColor: Colors.blue.shade50,
+                        ),
+                        infoRow(
+                          "Báo cáo cho",
+                          data.baoCaoCho,
+                          icon: Icons.group,
+                          bgColor: Colors.green.shade50,
+                        ),
+                        infoRow(
+                          "Địa điểm",
+                          data.diaDiem,
+                          icon: Icons.location_on,
+                          bgColor: Colors.orange.shade50,
+                        ),
+                        infoRow(
+                          "Thời gian",
+                          data.thoiGian,
+                          icon: Icons.calendar_today,
+                          bgColor: Colors.purple.shade50,
+                        ),
+                        infoRow(
+                          "Hạn nộp",
+                          data.hanNop,
+                          icon: Icons.schedule,
+                          bgColor: Colors.pink.shade50,
+                        ),
                         const SizedBox(height: 12),
                         Divider(color: Colors.grey[300]),
 
@@ -176,14 +222,38 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                         sectionTitle("Chi tiết công việc"),
                         infoRow("Nhiệm vụ", data.nhiemVu, icon: Icons.task),
                         infoRow("Trình độ", data.trinhDo, icon: Icons.school),
-                        infoRow("Kinh nghiệm", data.kinhNghiem, icon: Icons.work),
+                        infoRow(
+                          "Kinh nghiệm",
+                          data.kinhNghiem,
+                          icon: Icons.work,
+                        ),
                         infoRow("Kỹ năng", data.kyNang, icon: Icons.build),
-                        infoRow("Kỹ năng mềm", data.kyNangMem, icon: Icons.handshake),
+                        infoRow(
+                          "Kỹ năng mềm",
+                          data.kyNangMem,
+                          icon: Icons.handshake,
+                        ),
                         infoRow("Ưu tiên", data.uuTien, icon: Icons.thumb_up),
-                        infoRow("Mức lương", data.mucLuong, icon: Icons.monetization_on),
-                        infoRow("Phúc lợi", data.phucLoi, icon: Icons.health_and_safety),
-                        infoRow("Môi trường", data.moiTruong, icon: Icons.nature),
-                        infoRow("Cách ứng tuyển", data.cachUngTuyen, icon: Icons.send),
+                        infoRow(
+                          "Mức lương",
+                          data.mucLuong,
+                          icon: Icons.monetization_on,
+                        ),
+                        infoRow(
+                          "Phúc lợi",
+                          data.phucLoi,
+                          icon: Icons.health_and_safety,
+                        ),
+                        infoRow(
+                          "Môi trường",
+                          data.moiTruong,
+                          icon: Icons.nature,
+                        ),
+                        infoRow(
+                          "Cách ứng tuyển",
+                          data.cachUngTuyen,
+                          icon: Icons.send,
+                        ),
                         const SizedBox(height: 12),
                         Divider(color: Colors.grey[300]),
 
@@ -192,7 +262,10 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
                         Text(
                           data.moTa.isNotEmpty ? data.moTa : "Không có mô tả",
                           style: const TextStyle(
-                              fontSize: 15, color: Colors.black87, height: 1.4),
+                            fontSize: 15,
+                            color: Colors.black87,
+                            height: 1.4,
+                          ),
                         ),
                       ],
                     );

@@ -31,9 +31,12 @@ class _KiemTraWifiViewState extends State<KiemTraWifiView>
       _kiemTraWifi();
 
       _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
-        final status = results.isNotEmpty ? results.first : ConnectivityResult.none;
+        final status = results.isNotEmpty
+            ? results.first
+            : ConnectivityResult.none;
 
-        if ((status == ConnectivityResult.wifi || status == ConnectivityResult.ethernet) &&
+        if ((status == ConnectivityResult.wifi ||
+                status == ConnectivityResult.ethernet) &&
             !_alreadyRetried) {
           _alreadyRetried = true;
           Future.delayed(const Duration(seconds: 1), () => _kiemTraWifi());
@@ -80,8 +83,11 @@ class _KiemTraWifiViewState extends State<KiemTraWifiView>
 
   Future<bool> _checkSocketConnection({int timeoutSeconds = 3}) async {
     try {
-      final socket = await Socket.connect('8.8.8.8', 53,
-          timeout: Duration(seconds: timeoutSeconds));
+      final socket = await Socket.connect(
+        '8.8.8.8',
+        53,
+        timeout: Duration(seconds: timeoutSeconds),
+      );
       socket.destroy();
       return true;
     } catch (_) {
@@ -131,7 +137,7 @@ class _KiemTraWifiViewState extends State<KiemTraWifiView>
               Icon(
                 Icons.waves_rounded,
                 size: 100,
-                color: Colors.blueAccent.withOpacity(0.8),
+                color: Colors.blueAccent.withValues(alpha: 0.8),
               ),
               const SizedBox(height: 20),
               const Text(
@@ -163,7 +169,7 @@ class _WaterRipplePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.blueAccent.withOpacity(0.05)
+      ..color = Colors.blueAccent.withValues(alpha: 0.05)
       ..style = PaintingStyle.fill;
 
     final center = Offset(size.width / 2, size.height / 2);
@@ -171,7 +177,7 @@ class _WaterRipplePainter extends CustomPainter {
 
     for (int i = 0; i < 3; i++) {
       final radius = maxRadius * (animationValue + i * 0.3);
-      paint.color = Colors.blueAccent.withOpacity(0.15 - i * 0.05);
+      paint.color = Colors.blueAccent.withValues(alpha: 0.15 - i * 0.05);
       canvas.drawCircle(center, radius, paint);
     }
   }

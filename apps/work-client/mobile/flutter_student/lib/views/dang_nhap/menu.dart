@@ -2,7 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:work_server/views/cai_dat/setting.dart';
-import 'package:work_server/views/tim_kiem_cong_viec/tim_kiem_Job.dart';
+import 'package:work_server/views/tim_kiem_cong_viec/tim_kiem_job.dart';
 import '../tro_chuyen/tro_chuyen.dart';
 import '../trang_chu/main/trang_chu.dart';
 
@@ -50,9 +50,10 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _waveController =
-    AnimationController(vsync: this, duration: const Duration(seconds: 6))
-      ..repeat(reverse: true);
+    _waveController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    )..repeat(reverse: true);
   }
 
   @override
@@ -129,14 +130,14 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
           margin: const EdgeInsets.symmetric(horizontal: 24),
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.25),
+            color: Colors.white.withValues(alpha: 0.25),
             borderRadius: BorderRadius.circular(40),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
-              )
+              ),
             ],
           ),
           child: Row(
@@ -150,16 +151,18 @@ class _MenuState extends State<Menu> with TickerProviderStateMixin {
                   curve: Curves.easeInOut,
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: active ? Colors.blueAccent.withOpacity(0.8) : Colors.transparent,
+                    color: active
+                        ? Colors.blueAccent.withValues(alpha: 0.8)
+                        : Colors.transparent,
                     shape: BoxShape.circle,
                     boxShadow: active
                         ? [
-                      BoxShadow(
-                        color: Colors.blueAccent.withOpacity(0.4),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      )
-                    ]
+                            BoxShadow(
+                              color: Colors.blueAccent.withValues(alpha: 0.4),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
                         : [],
                   ),
                   child: AnimatedScale(
@@ -192,8 +195,8 @@ class WavePainter extends CustomPainter {
     final paint = Paint()
       ..shader = LinearGradient(
         colors: [
-          const Color(0xFF4facfe).withOpacity(0.3),
-          const Color(0xFF00f2fe).withOpacity(0.15),
+          const Color(0xFF4facfe).withValues(alpha: 0.3),
+          const Color(0xFF00f2fe).withValues(alpha: 0.15),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -206,7 +209,8 @@ class WavePainter extends CustomPainter {
     for (double i = 0; i <= size.width; i++) {
       path.lineTo(
         i,
-        size.height - (sin((i / waveL * 2 * pi) + (progress * 2 * pi)) * waveH + 40),
+        size.height -
+            (sin((i / waveL * 2 * pi) + (progress * 2 * pi)) * waveH + 40),
       );
     }
     path.lineTo(size.width, size.height);

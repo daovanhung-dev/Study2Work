@@ -1,12 +1,10 @@
 # Work Web dependencies
 
-`CONTEXT_STATUS: VERIFIED_WORK_WEB`
+`CONTEXT_STATUS: VERIFIED_REACT_EXPRESS_SPLIT`
 
-Work web receives its API base from the public projection of
-`apps/work-server/src/constants.ts`, injected by `vite.config.ts`; it does not
-read `VITE_*` runtime environment variables. The browser never receives Neon
-credentials and Work API does not serve the web bundle. The current client uses
-React Query, Zod and the existing `apiRequest` session boundary. Identity refresh
-remains owned by the Identity service; the Work API receives access Bearer
-tokens only. Vite uses a public-only virtual module for both development and
-production and disables automatic `.env` file loading.
+Work web uses the relative `/api/v1` API base and does not read `.env` or
+`VITE_*` runtime variables. Vite proxies `/api`, `/uploads`, and `/img` to the
+Express Work server during development; production uses a same-origin reverse
+proxy. The browser never receives Neon credentials. The current client uses
+React Query, Zod, Zustand and the typed `apiRequest` JWT boundary. React is the
+only Work presentation layer; the Express API remains the data owner.

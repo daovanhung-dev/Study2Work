@@ -49,7 +49,10 @@ class _TroChuyenState extends State<TroChuyen> {
         title: const Text(
           "Trò chuyện",
           style: TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: Colors.white,
+          ),
         ),
         actions: [
           IconButton(
@@ -57,7 +60,7 @@ class _TroChuyenState extends State<TroChuyen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const thongBao()),
+                MaterialPageRoute(builder: (context) => const ThongBao()),
               );
             },
           ),
@@ -66,7 +69,7 @@ class _TroChuyenState extends State<TroChuyen> {
       body: SafeArea(
         child: Stack(
           children: [
-            Container(color: Colors.black.withOpacity(0.05)),
+            Container(color: Colors.black.withValues(alpha: 0.05)),
             SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
@@ -77,11 +80,11 @@ class _TroChuyenState extends State<TroChuyen> {
                       margin: const EdgeInsets.symmetric(horizontal: 12),
                       padding: const EdgeInsets.symmetric(horizontal: 15),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
+                        color: Colors.white.withValues(alpha: 0.95),
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 5,
                             offset: const Offset(0, 2),
                           ),
@@ -108,23 +111,26 @@ class _TroChuyenState extends State<TroChuyen> {
                     FutureBuilder<List<Map<String, dynamic>>>(
                       future: getChats(sinhvienId),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return const Padding(
                             padding: EdgeInsets.only(top: 100),
                             child: Center(child: CircularProgressIndicator()),
                           );
                         } else if (snapshot.hasError) {
                           return Center(child: Text("Lỗi: ${snapshot.error}"));
-                        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        } else if (!snapshot.hasData ||
+                            snapshot.data!.isEmpty) {
                           return const Padding(
                             padding: EdgeInsets.only(top: 100),
                             child: Center(
                               child: Text(
                                 "Chưa có cuộc trò chuyện nào",
                                 style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.black54,
-                                    fontStyle: FontStyle.italic),
+                                  fontSize: 16,
+                                  color: Colors.black54,
+                                  fontStyle: FontStyle.italic,
+                                ),
                               ),
                             ),
                           );
@@ -132,8 +138,12 @@ class _TroChuyenState extends State<TroChuyen> {
 
                         final dsChat = snapshot.data!;
                         dsChat.sort((a, b) {
-                          final timeA = DateTime.tryParse(a["thoigian"] ?? "") ?? DateTime.now();
-                          final timeB = DateTime.tryParse(b["thoigian"] ?? "") ?? DateTime.now();
+                          final timeA =
+                              DateTime.tryParse(a["thoigian"] ?? "") ??
+                              DateTime.now();
+                          final timeB =
+                              DateTime.tryParse(b["thoigian"] ?? "") ??
+                              DateTime.now();
                           return timeB.compareTo(timeA);
                         });
 
@@ -141,7 +151,9 @@ class _TroChuyenState extends State<TroChuyen> {
                           children: dsChat.map((chatItem) {
                             final doanhnghiepId = chatItem["id"];
                             final hoten = chatItem["hoten"] ?? "Không rõ tên";
-                            final lastMsg = chatItem["last_message"] ?? "Nhấn để xem chi tiết";
+                            final lastMsg =
+                                chatItem["last_message"] ??
+                                "Nhấn để xem chi tiết";
                             final time = _formatTime(chatItem["thoigian"]);
 
                             return GestureDetector(
@@ -149,21 +161,25 @@ class _TroChuyenState extends State<TroChuyen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ChatView(
-                                      doanhnghiepId: doanhnghiepId,
-                                    ),
+                                    builder: (context) =>
+                                        ChatView(doanhnghiepId: doanhnghiepId),
                                   ),
                                 );
                               },
                               child: Container(
-                                margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 6,
+                                  horizontal: 12,
+                                ),
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(15),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.06),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.06,
+                                      ),
                                       blurRadius: 6,
                                       offset: const Offset(0, 3),
                                     ),
@@ -175,24 +191,29 @@ class _TroChuyenState extends State<TroChuyen> {
                                       radius: 28,
                                       backgroundColor: const Color(0xFF7ecbff),
                                       child: Text(
-                                        hoten.isNotEmpty ? hoten[0].toUpperCase() : "?",
+                                        hoten.isNotEmpty
+                                            ? hoten[0].toUpperCase()
+                                            : "?",
                                         style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 20),
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(width: 15),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             hoten,
                                             style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                                color: Colors.black87),
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                              color: Colors.black87,
+                                            ),
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
@@ -200,18 +221,23 @@ class _TroChuyenState extends State<TroChuyen> {
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
-                                                fontSize: 13,
-                                                color: Colors.black54),
+                                              fontSize: 13,
+                                              color: Colors.black54,
+                                            ),
                                           ),
                                         ],
                                       ),
                                     ),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
                                       children: [
                                         Text(
                                           time,
-                                          style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey,
+                                          ),
                                         ),
                                       ],
                                     ),

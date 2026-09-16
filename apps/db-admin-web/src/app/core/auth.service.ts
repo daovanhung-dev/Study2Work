@@ -1,13 +1,21 @@
-import { Injectable, signal } from "@angular/core";
+import { Injectable, Injector, inject, signal } from "@angular/core";
+import { Observable, tap } from "rxjs";
 
 import { environment } from "./environment";
-import { Permission } from "./models";
+import { AdminAuthSession, AdminUserProfile, Permission, SchemaBinding } from "./models";
+import { ApiService } from "./api.service";
 
 interface JwtPayload {
   sub?: string;
   permissions?: string[] | string;
   scope?: string;
   roles?: string[] | string;
+  userId?: string;
+  username?: string;
+  isRoot?: boolean;
+  mustChangePassword?: boolean;
+  targets?: string[];
+  schemaBindings?: SchemaBinding[];
 }
 
 function asSet(value: string[] | string | undefined): Set<string> {
@@ -19,6 +27,13 @@ function asSet(value: string[] | string | undefined): Set<string> {
 export class AuthService {
   readonly token = signal<string | null>(null);
   readonly permissions = signal<Set<string>>(new Set());
+  readonly profile = signal<AdminUserProfile | null>(null);
+  readonly targets = signal<string[]>([]);
+  readonly schemaBindings = signal<SchemaBinding[]>([]);
+  readonly mustChangePassword = signal(false);
+  readonly isRoot = signal(false);
+
+  private readonly injector = inject(Injector);
 
   constructor() {
     this.restoreTokenFromRedirect();
@@ -28,8 +43,23 @@ export class AuthService {
     return environment.localDevAccess;
   }
 
+  get localAuthEnabled(): boolean {
+    return environment.localAuthEnabled;
+  }
+
   can(permission: Permission): boolean {
     return environment.localDevAccess || this.permissions().has(permission);
+  }
+
+  loginLocal(username: string, password: string): Observable<AdminAuthSession> {
+    return this.injector.get(ApiService).login(username, password).pipe(tap((session) => this.setSession(session)));
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<AdminAuthSession> {
+    return this.injector
+      .get(ApiService)
+      .changePassword({ current_password: currentPassword, new_password: newPassword })
+      .pipe(tap((session) => this.setSession(session)));
   }
 
   login(): void {
@@ -39,6 +69,21 @@ export class AuthService {
   logout(): void {
     this.token.set(null);
     this.permissions.set(new Set());
+    this.profile.set(null);
+    this.targets.set([]);
+    this.schemaBindings.set([]);
+    this.mustChangePassword.set(false);
+    this.isRoot.set(false);
+  }
+
+  setSession(session: AdminAuthSession): void {
+    this.setToken(session.accessToken);
+    this.permissions.set(new Set(session.permissions));
+    this.profile.set(session.user);
+    this.targets.set(session.targets);
+    this.schemaBindings.set(session.schemaBindings);
+    this.mustChangePassword.set(session.mustChangePassword);
+    this.isRoot.set(session.user.isRoot);
   }
 
   setToken(token: string): void {
@@ -50,6 +95,15 @@ export class AuthService {
       ["db_admin:read", "db_admin:write", "db_admin:sql"].forEach((value) => values.add(value));
     }
     this.permissions.set(values);
+    this.profile.set({
+      id: payload?.userId ?? payload?.sub ?? "unknown",
+      username: payload?.username,
+      isRoot: Boolean(payload?.isRoot),
+    });
+    this.targets.set(payload?.targets ?? []);
+    this.schemaBindings.set(payload?.schemaBindings ?? []);
+    this.mustChangePassword.set(Boolean(payload?.mustChangePassword));
+    this.isRoot.set(Boolean(payload?.isRoot));
   }
 
   private restoreTokenFromRedirect(): void {

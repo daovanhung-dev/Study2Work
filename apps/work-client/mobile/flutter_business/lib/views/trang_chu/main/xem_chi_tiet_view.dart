@@ -21,8 +21,10 @@ class _XemChiTietViewState extends State<XemChiTietView> {
         actions: [
           IconButton(
             onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const thongBao()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ThongBao()),
+              );
             },
             icon: const Icon(Icons.notifications),
           ),
@@ -52,7 +54,9 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                     image: const AssetImage("assets/bg_trangchu.jpg"),
                     fit: BoxFit.cover,
                     colorFilter: ColorFilter.mode(
-                        Colors.black.withOpacity(0.2), BlendMode.darken),
+                      Colors.black.withValues(alpha: 0.2),
+                      BlendMode.darken,
+                    ),
                   ),
                 ),
               ),
@@ -64,13 +68,16 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       gradient: LinearGradient(
-                        colors: [Colors.white.withOpacity(0.95), Colors.white],
+                        colors: [
+                          Colors.white.withValues(alpha: 0.95),
+                          Colors.white,
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
+                          color: Colors.black.withValues(alpha: 0.25),
                           spreadRadius: 3,
                           blurRadius: 10,
                           offset: const Offset(0, 5),
@@ -109,8 +116,10 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                                       width: 60,
                                       height: 60,
                                       color: Colors.grey[300],
-                                      child: const Icon(Icons.person,
-                                          color: Colors.grey),
+                                      child: const Icon(
+                                        Icons.person,
+                                        color: Colors.grey,
+                                      ),
                                     ),
                               ),
                             ),
@@ -121,12 +130,14 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                                 children: [
                                   _buildRich("Họ tên", dsCv['hoten']),
                                   _buildRich(
-                                      "Ngày sinh",
-                                      dsCv['ngaysinh'] != null &&
-                                          dsCv['ngaysinh'] != ""
-                                          ? DateFormat('dd/MM/yyyy').format(
-                                          DateTime.parse(dsCv['ngaysinh']))
-                                          : "Chưa có"),
+                                    "Ngày sinh",
+                                    dsCv['ngaysinh'] != null &&
+                                            dsCv['ngaysinh'] != ""
+                                        ? DateFormat('dd/MM/yyyy').format(
+                                            DateTime.parse(dsCv['ngaysinh']),
+                                          )
+                                        : "Chưa có",
+                                  ),
                                   _buildRich("Giới tính", dsCv['gioitinh']),
                                 ],
                               ),
@@ -139,13 +150,29 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             children: [
-                              _infoTagFull(Icons.email, dsCv['email'], Colors.blue.shade100),
+                              _infoTagFull(
+                                Icons.email,
+                                dsCv['email'],
+                                Colors.blue.shade100,
+                              ),
                               const SizedBox(width: 8),
-                              _infoTagFull(Icons.phone, dsCv['sdt'], Colors.green.shade100),
+                              _infoTagFull(
+                                Icons.phone,
+                                dsCv['sdt'],
+                                Colors.green.shade100,
+                              ),
                               const SizedBox(width: 8),
-                              _infoTagFull(Icons.location_on, dsCv['diachi'], Colors.red.shade100),
+                              _infoTagFull(
+                                Icons.location_on,
+                                dsCv['diachi'],
+                                Colors.red.shade100,
+                              ),
                               const SizedBox(width: 8),
-                              _infoTagFull(Icons.work, dsCv['kinhnghiem'], Colors.orange.shade100),
+                              _infoTagFull(
+                                Icons.work,
+                                dsCv['kinhnghiem'],
+                                Colors.orange.shade100,
+                              ),
                             ],
                           ),
                         ),
@@ -153,7 +180,9 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                         // Thông tin chi tiết khác
                         _buildRich("Chuyên ngành", dsCv['nganh']),
                         _buildRich(
-                            "Mục tiêu nghề nghiệp", dsCv['muctieunghiep']),
+                          "Mục tiêu nghề nghiệp",
+                          dsCv['muctieunghiep'],
+                        ),
                         _buildRich("Học vấn", dsCv['hocvan']),
                         _buildRich("Kinh nghiệm", dsCv['kinhnghiem']),
                         _buildRich("Kỹ năng", dsCv['kynang']),
@@ -191,10 +220,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
             ),
             TextSpan(
               text: value ?? "",
-              style: const TextStyle(
-                fontSize: 13,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 13, color: Colors.black87),
             ),
           ],
         ),
@@ -212,7 +238,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.15),
+            color: Colors.black.withValues(alpha: 0.15),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),

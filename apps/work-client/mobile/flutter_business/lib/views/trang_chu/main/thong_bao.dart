@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class thongBao extends StatefulWidget {
-  const thongBao({super.key});
+class ThongBao extends StatefulWidget {
+  const ThongBao({super.key});
 
   @override
-  State<thongBao> createState() => _thongBaoState();
+  State<ThongBao> createState() => _ThongBaoState();
 }
 
-class _thongBaoState extends State<thongBao> with SingleTickerProviderStateMixin {
-  final List<Map<String, dynamic>> ds_thongbao = [
+class _ThongBaoState extends State<ThongBao>
+    with SingleTickerProviderStateMixin {
+  final List<Map<String, dynamic>> dsThongBao = [
     {
       "id_tb": "001",
       "tieu_de": "Lịch phỏng vấn",
@@ -63,8 +64,10 @@ class _thongBaoState extends State<thongBao> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
     _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
     _controller.forward();
   }
@@ -114,22 +117,25 @@ class _thongBaoState extends State<thongBao> with SingleTickerProviderStateMixin
     return DateFormat('dd/MM/yyyy • HH:mm').format(date);
   }
 
-  void _xemChiTiet(Map<String, dynamic> thongBao) {
+  void _xemChiTiet(Map<String, dynamic> notification) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape:
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(_getIconByType(thongBao['loai']),
-                color: _getColorByType(thongBao['loai'])),
+            Icon(
+              _getIconByType(notification['loai']),
+              color: _getColorByType(notification['loai']),
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                thongBao['tieu_de'],
-                style:
-                const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                notification['tieu_de'],
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
               ),
             ),
           ],
@@ -138,10 +144,10 @@ class _thongBaoState extends State<thongBao> with SingleTickerProviderStateMixin
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(thongBao['noi_dung']),
+            Text(notification['noi_dung']),
             const SizedBox(height: 10),
             Text(
-              "Thời gian: ${_formatTime(thongBao['thoi_gian'])}",
+              "Thời gian: ${_formatTime(notification['thoi_gian'])}",
               style: const TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ],
@@ -149,8 +155,10 @@ class _thongBaoState extends State<thongBao> with SingleTickerProviderStateMixin
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Đóng",
-                style: TextStyle(color: Color(0xFF7ecbff))),
+            child: const Text(
+              "Đóng",
+              style: TextStyle(color: Color(0xFF7ecbff)),
+            ),
           ),
         ],
       ),
@@ -164,27 +172,21 @@ class _thongBaoState extends State<thongBao> with SingleTickerProviderStateMixin
       appBar: AppBar(
         elevation: 0,
         backgroundColor: const Color(0xFF7ecbff),
-        title: const Text(
-          "Thông báo",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text("Thông báo", style: TextStyle(color: Colors.white)),
         centerTitle: true,
       ),
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              "assets/bg_trangchu.jpg",
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset("assets/bg_trangchu.jpg", fit: BoxFit.cover),
           ),
           FadeTransition(
             opacity: _fadeAnimation,
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: ds_thongbao.length,
+              itemCount: dsThongBao.length,
               itemBuilder: (context, index) {
-                final tb = ds_thongbao[index];
+                final tb = dsThongBao[index];
                 final color = _getColorByType(tb['loai']);
                 final icon = _getIconByType(tb['loai']);
                 final daDoc = tb['trang_thai'] == true;
@@ -194,22 +196,27 @@ class _thongBaoState extends State<thongBao> with SingleTickerProviderStateMixin
                   curve: Curves.easeInOut,
                   margin: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
-                    color: daDoc ? Colors.white.withOpacity(0.9) : Colors.blue.shade50,
+                    color: daDoc
+                        ? Colors.white.withValues(alpha: 0.9)
+                        : Colors.blue.shade50,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: color.withOpacity(0.3),
+                        color: color.withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
                     ],
-                    border: Border.all(color: color.withOpacity(0.4), width: 1),
+                    border: Border.all(
+                      color: color.withValues(alpha: 0.4),
+                      width: 1,
+                    ),
                   ),
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(12),
                     leading: CircleAvatar(
                       radius: 25,
-                      backgroundColor: color.withOpacity(0.2),
+                      backgroundColor: color.withValues(alpha: 0.2),
                       child: Icon(icon, color: color),
                     ),
                     title: Text(
@@ -223,22 +230,28 @@ class _thongBaoState extends State<thongBao> with SingleTickerProviderStateMixin
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(tb['noi_dung'],
-                            style: const TextStyle(fontSize: 13)),
+                        Text(
+                          tb['noi_dung'],
+                          style: const TextStyle(fontSize: 13),
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           _formatTime(tb['thoi_gian']),
-                          style:
-                          const TextStyle(fontSize: 11, color: Colors.grey),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey,
+                          ),
                         ),
                         const SizedBox(height: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: daDoc
-                                ? Colors.green.withOpacity(0.2)
-                                : Colors.redAccent.withOpacity(0.2),
+                                ? Colors.green.withValues(alpha: 0.2)
+                                : Colors.redAccent.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
@@ -254,16 +267,24 @@ class _thongBaoState extends State<thongBao> with SingleTickerProviderStateMixin
                     ),
                     trailing: ElevatedButton.icon(
                       onPressed: () => _xemChiTiet(tb),
-                      icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-                      label: const Text("Chi tiết", style: TextStyle(fontSize: 12)),
+                      icon: const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                      ),
+                      label: const Text(
+                        "Chi tiết",
+                        style: TextStyle(fontSize: 12),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: color.withOpacity(0.8),
+                        backgroundColor: color.withValues(alpha: 0.8),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
                         elevation: 3,
                       ),
                     ),

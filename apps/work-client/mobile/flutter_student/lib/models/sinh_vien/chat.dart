@@ -19,22 +19,33 @@ class Chat {
     this.trangThai,
   });
 
-  /// Chuyển từ Map (dữ liệu lấy từ Supabase) sang Object
+  /// Chuyển từ Map (dữ liệu lấy từ PostgreSQL) sang Object.
   factory Chat.fromMap(Map<String, dynamic> map) {
     return Chat(
-      id: map['id'] as int?,
-      sinhvienId: map['sinhvien_id'] as int?,
-      doanhnghiepId: map['doanhnghiep_id'] as int?,
+      id: _toInt(map['id']),
+      sinhvienId: _toInt(map['sinhvien_id']),
+      doanhnghiepId: _toInt(map['doanhnghiep_id']),
       nguoiGui: map['nguoigui'] as String?,
       nguoiNhan: map['nguoinhan'] as String?,
       noiDung: map['noidung'] as String?,
-      ngayGui: map['ngaygui'] != null ? DateTime.parse(map['ngaygui']) : null,
+      ngayGui: _toDateTime(map['ngaygui']),
       trangThai: map['trangthai'] as bool?,
     );
-
   }
 
-  /// Chuyển từ Object sang Map (để insert/update vào Supabase)
+  static int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
+  }
+
+  static DateTime? _toDateTime(dynamic value) {
+    if (value is DateTime) return value;
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString());
+  }
+
+  /// Chuyển từ Object sang Map (để lưu vào PostgreSQL).
   Map<String, dynamic> toMap() {
     return {
       'id': id,

@@ -18,10 +18,7 @@ class _QuenMatKhauState extends State<QuenMatKhau> {
         children: [
           // Nền hình
           Positioned.fill(
-            child: Image.asset(
-              "assets/bg_login.png",
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset("assets/bg_login.png", fit: BoxFit.cover),
           ),
 
           // Lớp phủ mờ gradient nhẹ
@@ -30,8 +27,8 @@ class _QuenMatKhauState extends State<QuenMatKhau> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.white.withOpacity(0.4),
-                    Colors.white.withOpacity(0.8)
+                    Colors.white.withValues(alpha: 0.4),
+                    Colors.white.withValues(alpha: 0.8),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -44,16 +41,21 @@ class _QuenMatKhauState extends State<QuenMatKhau> {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 40,
+                ),
                 child: Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 30,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -102,11 +104,12 @@ class _QuenMatKhauState extends State<QuenMatKhau> {
                         height: 48,
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            // TODO: thêm logic gửi mail reset
+                            // Future enhancement: thêm logic gửi mail reset
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content:
-                                Text("Yêu cầu đặt lại mật khẩu đã được gửi!"),
+                                content: Text(
+                                  "Yêu cầu đặt lại mật khẩu đã được gửi!",
+                                ),
                                 duration: Duration(seconds: 2),
                               ),
                             );
@@ -131,8 +134,10 @@ class _QuenMatKhauState extends State<QuenMatKhau> {
                       // Nút quay lại
                       TextButton.icon(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                            size: 18),
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 18,
+                        ),
                         label: const Text("Quay lại đăng nhập"),
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.blueAccent,

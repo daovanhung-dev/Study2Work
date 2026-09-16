@@ -38,7 +38,12 @@ class _LichPhongVanViewState extends State<LichPhongVanView> {
   ];
 
   String _selectedFilter = 'Tất cả';
-  final List<String> _filters = ['Tất cả', 'Sắp tới', 'Đã hoàn thành', 'Đã hủy'];
+  final List<String> _filters = [
+    'Tất cả',
+    'Sắp tới',
+    'Đã hoàn thành',
+    'Đã hủy',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -57,16 +62,21 @@ class _LichPhongVanViewState extends State<LichPhongVanView> {
           _buildFilterChips(),
           Expanded(
             child: filtered.isEmpty
-                ? const Center(child: Text('Không có lịch phỏng vấn nào', style: TextStyle(color: Colors.black54)))
+                ? const Center(
+                    child: Text(
+                      'Không có lịch phỏng vấn nào',
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                  )
                 : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: filtered.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final item = filtered[index];
-                return _buildInterviewCard(item);
-              },
-            ),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final item = filtered[index];
+                      return _buildInterviewCard(item);
+                    },
+                  ),
           ),
         ],
       ),
@@ -92,7 +102,10 @@ class _LichPhongVanViewState extends State<LichPhongVanView> {
               },
               selectedColor: Colors.blue.shade400,
               backgroundColor: Colors.grey.shade200,
-              labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontWeight: FontWeight.w600),
+              labelStyle: TextStyle(
+                color: isSelected ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           );
         }).toList(),
@@ -127,7 +140,7 @@ class _LichPhongVanViewState extends State<LichPhongVanView> {
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () {
-          // TODO: Xem chi tiết phỏng vấn
+          // Future enhancement: Xem chi tiết phỏng vấn
         },
         child: Container(
           padding: const EdgeInsets.all(14),
@@ -139,28 +152,51 @@ class _LichPhongVanViewState extends State<LichPhongVanView> {
                   Expanded(
                     child: Text(
                       item['position'] ?? 'Vị trí chưa xác định',
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: statusColor.withOpacity(0.15), borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Text(
                       status,
-                      style: TextStyle(color: statusColor, fontWeight: FontWeight.w600, fontSize: 12),
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
                     ),
-                  )
+                  ),
                 ],
               ),
               const SizedBox(height: 6),
-              Text(item['company'] ?? 'Công ty chưa xác định', style: const TextStyle(color: Colors.black54)),
+              Text(
+                item['company'] ?? 'Công ty chưa xác định',
+                style: const TextStyle(color: Colors.black54),
+              ),
               const SizedBox(height: 6),
               Row(
                 children: [
-                  const Icon(Icons.calendar_today, size: 16, color: Colors.blueAccent),
+                  const Icon(
+                    Icons.calendar_today,
+                    size: 16,
+                    color: Colors.blueAccent,
+                  ),
                   const SizedBox(width: 6),
-                  Text(formattedDate, style: const TextStyle(color: Colors.black87, fontSize: 13)),
+                  Text(
+                    formattedDate,
+                    style: const TextStyle(color: Colors.black87, fontSize: 13),
+                  ),
                 ],
               ),
             ],

@@ -1,27 +1,18 @@
 import { NextFunction, Request, Response } from "express";
+import { randomUUID } from "node:crypto";
 import { TokenPayload, verifyToken } from "../utils/jwt.js";
 
-function wantsJson(req: Request): boolean {
-  const accept = req.get("accept") ?? "";
-  return req.path.startsWith("/api") ||
-    req.xhr ||
-    (accept.includes("application/json") && !accept.includes("text/html"));
-}
-
 function rejectAuthentication(req: Request, res: Response, status: 401 | 403): void {
-  if (wantsJson(req)) {
-    res.status(status).json({
-      error: status === 401 ? "UNAUTHORIZED" : "FORBIDDEN",
-    });
-    return;
-  }
-
-  if (status === 401) {
-    res.redirect("/signInRole");
-    return;
-  }
-
-  res.redirect("/errorRole");
+  const trace = req.get("X-Trace-Id") || randomUUID();
+  res.setHeader("X-Trace-Id", trace);
+  res.status(status).json({
+    success: false,
+    businessCode: status === 401 ? "UNAUTHORIZED" : "FORBIDDEN",
+    message: status === 401 ? "Yêu cầu Bearer token hợp lệ." : "Bạn không có quyền truy cập.",
+    data: null,
+    meta: {},
+    traceId: trace,
+  });
 }
 
 function extractBearerToken(req: Request): string | null {

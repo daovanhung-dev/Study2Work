@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/helper_db/helper_widget.dart';
 import 'package:work_server/controllers/trang_chu/quan_ly_job/quan_ly_job_ctrl.dart';
-import 'package:work_server/views/trang_chu/tien_ich/Quan_ly_job/chi_tiet_Job.dart';
+import 'package:work_server/views/trang_chu/tien_ich/Quan_ly_job/chi_tiet_job.dart';
 import 'package:work_server/views/trang_chu/main/dang_tin_tuyen_dung.dart';
+
 class QuanLyJob extends StatefulWidget {
   const QuanLyJob({super.key});
 
@@ -11,14 +11,16 @@ class QuanLyJob extends StatefulWidget {
 }
 
 class _QuanLyJobState extends State<QuanLyJob> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         backgroundColor: const Color(0xFF7ecbff),
-        title: const Text("Quản lý Job", style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text(
+          "Quản lý Job",
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         centerTitle: true,
       ),
       body: FutureBuilder(
@@ -38,7 +40,7 @@ class _QuanLyJobState extends State<QuanLyJob> {
             itemCount: dsJobs.length,
             itemBuilder: (context, i) {
               final job = dsJobs[i];
-              int id_JD = job.id;
+              int idJd = job.id;
               return Card(
                 margin: const EdgeInsets.only(bottom: 16),
                 elevation: 4,
@@ -50,7 +52,7 @@ class _QuanLyJobState extends State<QuanLyJob> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _titleLine(Icons.work_outline, job.tenViTri ?? "Không có tên"),
+                      _titleLine(Icons.work_outline, job.tenViTri),
                       const SizedBox(height: 6),
                       _infoLine("Mã công việc", "${job.id}"),
                       _infoLine("Cấp bậc", job.capBac),
@@ -64,11 +66,31 @@ class _QuanLyJobState extends State<QuanLyJob> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _actionButton(Icons.visibility, "Chi tiết", Colors.blueAccent, () {
-                            Navigator.push(context,MaterialPageRoute(builder: (context) => XemChiTietJD(id: id_JD),),);
-                          }),
-                          _actionButton(Icons.edit, "Sửa", Colors.orange, () {}),
-                          _actionButton(Icons.delete, "Xóa", Colors.redAccent, () {}),
+                          _actionButton(
+                            Icons.visibility,
+                            "Chi tiết",
+                            Colors.blueAccent,
+                            () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => XemChiTietJD(id: idJd),
+                                ),
+                              );
+                            },
+                          ),
+                          _actionButton(
+                            Icons.edit,
+                            "Sửa",
+                            Colors.orange,
+                            () {},
+                          ),
+                          _actionButton(
+                            Icons.delete,
+                            "Xóa",
+                            Colors.redAccent,
+                            () {},
+                          ),
                         ],
                       ),
                     ],
@@ -81,7 +103,10 @@ class _QuanLyJobState extends State<QuanLyJob> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(context,MaterialPageRoute(builder: (context) => DangTinTuyenDung(),),);
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => DangTinTuyenDung()),
+          );
         },
         backgroundColor: const Color(0xFF7ecbff),
         child: const Icon(Icons.add),
@@ -115,11 +140,18 @@ class _QuanLyJobState extends State<QuanLyJob> {
       child: RichText(
         text: TextSpan(
           text: "$label: ",
-          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w500, fontSize: 13),
+          style: const TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+            fontSize: 13,
+          ),
           children: [
             TextSpan(
               text: value,
-              style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.normal),
+              style: const TextStyle(
+                color: Colors.black54,
+                fontWeight: FontWeight.normal,
+              ),
             ),
           ],
         ),
@@ -127,7 +159,12 @@ class _QuanLyJobState extends State<QuanLyJob> {
     );
   }
 
-  Widget _actionButton(IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _actionButton(
+    IconData icon,
+    String label,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
@@ -135,16 +172,23 @@ class _QuanLyJobState extends State<QuanLyJob> {
         width: 90,
         height: 36,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 18, color: color),
             const SizedBox(width: 5),
-            Text(label, style: TextStyle(fontSize: 13, color: color, fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),

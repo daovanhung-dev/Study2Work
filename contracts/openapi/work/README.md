@@ -10,13 +10,13 @@ by `apps/work-server`, plus the public API root:
 
 Both responses use the standard success envelope and return the same trace ID in
 the `X-Trace-Id` response header and `traceId` body field. The Work browser app
-in `apps/work-client/web` calls the API through `VITE_WORK_API_URL`; it is not
-part of this API contract.
+in `apps/work-client/web` calls the API through the relative `/api/v1` base; it
+does not read `.env` or expose database credentials.
 
 When the database check cannot complete, `/health/ready` returns a `503`
 `DEPENDENCY_UNAVAILABLE` error envelope with the same trace propagation.
 
 The public Work domain surface remains governed by
 [`docs/BD/04_DAC_TA_API.md`](../../../docs/BD/04_DAC_TA_API.md). Add each
-implemented endpoint to this document rather than deriving a contract from the
-legacy server-rendered application.
+implemented endpoint to this document rather than deriving a contract from a
+legacy browser implementation.

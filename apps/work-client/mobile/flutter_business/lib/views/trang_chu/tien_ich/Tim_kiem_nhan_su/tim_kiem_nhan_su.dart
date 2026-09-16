@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:work_server/controllers/trang_chu/timkiemctrl.dart';
-import 'package:work_server/helper_db/helper_CV.dart';
+import 'package:work_server/helper_db/helper_cv.dart';
 import 'package:work_server/helper_db/helper_widget.dart';
-
 
 final CVHelperDB cvHelper = CVHelperDB();
 
@@ -15,7 +14,7 @@ class EmployeeSearchUI extends StatefulWidget {
 
 class _EmployeeSearchUIState extends State<EmployeeSearchUI> {
   TextEditingController chuyenNganh = TextEditingController();
-  List<String> Nganh = ['IT', 'Kế Toán'];
+  List<String> nganhOptions = ['IT', 'Kế Toán'];
   String? selected;
 
   @override
@@ -42,7 +41,7 @@ class _EmployeeSearchUIState extends State<EmployeeSearchUI> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     spreadRadius: 5,
                     blurRadius: 7,
                     offset: const Offset(0, 3),
@@ -52,12 +51,14 @@ class _EmployeeSearchUIState extends State<EmployeeSearchUI> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  helperTextField(controller: chuyenNganh, label: 'Tìm kiếm nhanh'),
-                  SizedBox(height: 10,),
+                  helperTextField(
+                    controller: chuyenNganh,
+                    label: 'Tìm kiếm nhanh',
+                  ),
+                  SizedBox(height: 10),
                   helperDropdown(
                     value: selected,
-                    items: Nganh,
+                    items: nganhOptions,
                     label: "Chuyên Ngành",
                     onChanged: (value) {
                       setState(() {
@@ -65,10 +66,13 @@ class _EmployeeSearchUIState extends State<EmployeeSearchUI> {
                       });
                     },
                   ),
-                  SizedBox(height: 10,),
-                  ElevatedButton(onPressed: () {
-                    TimKiem(chuyenNganh.text);
-                  }, child: Text('Tìm kiếm')),
+                  SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      timKiem(chuyenNganh.text);
+                    },
+                    child: Text('Tìm kiếm'),
+                  ),
 
                   const SizedBox(height: 20),
                   Text(

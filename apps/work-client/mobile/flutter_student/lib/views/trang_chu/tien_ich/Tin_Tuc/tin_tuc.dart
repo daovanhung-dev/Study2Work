@@ -53,10 +53,10 @@ class TinTucView extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () {
-          // TODO: Chuyển sang trang chi tiết tin tức
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Mở tin: ${item['title']}')),
-          );
+          // Future enhancement: Chuyển sang trang chi tiết tin tức
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Mở tin: ${item['title']}')));
         },
         child: Container(
           padding: const EdgeInsets.all(12),
@@ -78,14 +78,20 @@ class TinTucView extends StatelessWidget {
                   children: [
                     Text(
                       item['title']!,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 6),
                     Text(
                       item['summary']!,
-                      style: const TextStyle(fontSize: 13, color: Colors.black54),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),

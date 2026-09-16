@@ -14,12 +14,23 @@ class DoanChat {
   // 🧩 Tạo instance từ Map (JSON -> Object)
   factory DoanChat.fromMap(Map<String, dynamic> map) {
     return DoanChat(
-      id: map['id'] as int,
-      sinhVienId: map['sinhvien_id'] as int,
-      doanhNghiepId: map['doanhnghiep_id'] as int,
-      createdAt:
-      map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      id: _toInt(map['id']) ?? 0,
+      sinhVienId: _toInt(map['sinhvien_id']) ?? 0,
+      doanhNghiepId: _toInt(map['doanhnghiep_id']) ?? 0,
+      createdAt: _toDateTime(map['created_at']),
     );
+  }
+
+  static int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
+  }
+
+  static DateTime? _toDateTime(dynamic value) {
+    if (value is DateTime) return value;
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString());
   }
 
   // 🔁 Chuyển Object -> Map (để insert/update)

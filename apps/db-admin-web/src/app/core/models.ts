@@ -1,4 +1,19 @@
-export type Permission = "db_admin:read" | "db_admin:write" | "db_admin:sql";
+export type Permission = "db_admin:read" | "db_admin:write" | "db_admin:sql" | "db_admin:manage";
+
+export interface DatabaseTarget {
+  id: string;
+  label: string;
+}
+
+export interface DatabaseTargetResult {
+  databases: DatabaseTarget[];
+}
+
+export interface ApiErrorInfo {
+  message: string;
+  businessCode?: string;
+  traceId?: string;
+}
 
 export interface ApiEnvelope<T> {
   success: boolean;
@@ -22,6 +37,8 @@ export interface CatalogItem {
   schemaName?: string;
   kind?: string;
   table_name?: string;
+  grantee?: string;
+  privilege_type?: string;
   definition?: string;
   [key: string]: unknown;
 }
@@ -68,11 +85,19 @@ export interface RowPreview {
 }
 
 export interface SqlValidation {
+  database?: string;
+  schemaName?: string;
   classification: "read_only" | "mutation" | "blocked" | "unknown";
   statementCount: number;
   requiresConfirmation: boolean;
   warnings: string[];
   confirmationToken: string | null;
+}
+
+export interface SqlRequest {
+  database: string;
+  schema_name: string;
+  sql: string;
 }
 
 export interface SqlResult {
@@ -81,6 +106,16 @@ export interface SqlResult {
   rows: Array<Record<string, unknown>>;
   rowCount: number;
   truncated: boolean;
+}
+
+export interface QueryHistoryItem {
+  id: string;
+  sql: string;
+  database: string;
+  schemaName: string;
+  executedAt: string;
+  status: "success" | "error";
+  rowCount?: number;
 }
 
 export interface AuditEntry {
@@ -95,5 +130,51 @@ export interface AuditEntry {
 }
 
 export interface AuditResult {
+  entries: AuditEntry[];
+}
+
+export interface SchemaBinding {
+  database: string;
+  schema: string;
+  postgresRole?: string;
+  accessLevel?: string;
+  active?: boolean;
+}
+
+export interface AdminUserProfile {
+  id: string;
+  username?: string | null;
+  displayName?: string;
+  isRoot: boolean;
+  status?: string;
+}
+
+export interface AdminAuthSession {
+  accessToken: string;
+  user: AdminUserProfile;
+  permissions: string[];
+  roles: string[];
+  targets: string[];
+  schemaBindings: SchemaBinding[];
+  mustChangePassword: boolean;
+  traceId?: string;
+}
+
+export interface AccessAccount extends AdminUserProfile {
+  status: "active" | "disabled";
+  mustChangePassword: boolean;
+  failedLoginAttempts?: number;
+  lockedUntil?: string | null;
+  lastLoginAt?: string | null;
+  createdAt?: string | null;
+  bindings: SchemaBinding[];
+  secret?: string;
+}
+
+export interface AccessAccountsResult {
+  accounts: AccessAccount[];
+}
+
+export interface AccessAuditResult {
   entries: AuditEntry[];
 }

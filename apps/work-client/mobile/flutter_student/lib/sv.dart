@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/helper_db/out_meta/helper_widget.dart';
-class temp extends StatefulWidget {
-  const temp({super.key});
+
+class TempScreen extends StatefulWidget {
+  const TempScreen({super.key});
 
   @override
-  State<temp> createState() => _tempState();
+  State<TempScreen> createState() => _TempScreenState();
 }
 
-class _tempState extends State<temp> {
+class _TempScreenState extends State<TempScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("temp"),
-      ),
-      body: Center(
-
-      ),
+      appBar: AppBar(title: Text("temp")),
+      body: Center(),
     );
   }
 }

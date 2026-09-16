@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:work_server/controllers/chat/chat_controller.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:supabase/supabase.dart' hide RealtimeClient;
 import 'package:work_server/helper_db/sinh_vien/helper_db.dart';
 import 'dart:async';
 
@@ -22,7 +20,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
   List<Map<String, dynamic>> messages = [];
-  late RealtimeChannel _channel;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
@@ -36,8 +34,9 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
     setState(() {
       sinhvienId = id;
     });
-    _loadMessages();
-    _listenRealtime();
+    _loadMessages().then((_) {
+      if (mounted) _listenPolling();
+    });
   }
 
   // 🔹 Load tin nhắn cũ
@@ -48,8 +47,8 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
 
     // Sắp xếp từ cũ → mới
     data.sort((a, b) {
-      final timeA = DateTime.tryParse(a['ngaygui'] ?? '') ?? DateTime.now();
-      final timeB = DateTime.tryParse(b['ngaygui'] ?? '') ?? DateTime.now();
+      final timeA = _parseMessageTime(a['ngaygui']);
+      final timeB = _parseMessageTime(b['ngaygui']);
       return timeA.compareTo(timeB);
     });
 
@@ -59,7 +58,10 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
 
     // AnimatedList insert
     for (int i = 0; i < messages.length; i++) {
-      _listKey.currentState?.insertItem(i, duration: const Duration(milliseconds: 0));
+      _listKey.currentState?.insertItem(
+        i,
+        duration: const Duration(milliseconds: 0),
+      );
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -69,22 +71,25 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
     });
   }
 
-  // 🔹 Lắng nghe Realtime
-  void _listenRealtime() {
+  DateTime _parseMessageTime(dynamic value) {
+    if (value is DateTime) return value;
+    return DateTime.tryParse(value?.toString() ?? '') ?? DateTime.now();
+  }
+
+  // 🔹 Polling tin nhắn mới mỗi 3 giây
+  void _listenPolling() {
     if (sinhvienId == null) return;
 
-    _channel = subscribeMessages((newMsg) {
-      if (newMsg['sinhvien_id'] == sinhvienId &&
-          newMsg['doanhnghiep_id'] == widget.doanhnghiepId) {
-        final exists = messages.any((m) =>
-        m['noidung'] == newMsg['noidung'] &&
-            m['ngaygui'] == newMsg['ngaygui'] &&
-            m['nguoigui'] == newMsg['nguoigui']);
-        if (!exists) {
+    _pollingTimer = startMessagePolling(
+      sinhvienId: sinhvienId!,
+      doanhnghiepId: widget.doanhnghiepId,
+      onMessage: (newMsg) {
+        if (newMsg['sinhvien_id'] == sinhvienId &&
+            newMsg['doanhnghiep_id'] == widget.doanhnghiepId) {
           _addMessage(newMsg);
         }
-      }
-    });
+      },
+    );
   }
 
   // 🔹 Thêm tin nhắn mới vào AnimatedList
@@ -151,33 +156,49 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
   }
 
   // 🔹 Xây dựng widget tin nhắn
-  Widget _buildMessage(BuildContext context, int index, Animation<double> animation) {
+  Widget _buildMessage(
+    BuildContext context,
+    int index,
+    Animation<double> animation,
+  ) {
     final chat = messages[index];
     final isSender = chat["nguoigui"]?.toString() == "$sinhvienId";
 
     return SizeTransition(
       sizeFactor: animation,
-      axisAlignment: 0.0,
+      alignment: AlignmentDirectional.centerStart,
       child: Align(
         alignment: isSender ? Alignment.centerRight : Alignment.centerLeft,
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.7,
+          ),
           child: SlideTransition(
-            position: Tween<Offset>(
-              begin: Offset(isSender ? 1 : -1, 0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+            position:
+                Tween<Offset>(
+                  begin: Offset(isSender ? 1 : -1, 0),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(parent: animation, curve: Curves.easeOut),
+                ),
             child: ScaleTransition(
               scale: Tween<double>(begin: 0.9, end: 1.0).animate(
                 CurvedAnimation(parent: animation, curve: Curves.elasticOut),
               ),
               child: Container(
                 margin: const EdgeInsets.symmetric(vertical: 5),
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
                 decoration: BoxDecoration(
                   gradient: isSender
-                      ? LinearGradient(colors: [Colors.blue[400]!, Colors.blue[300]!])
-                      : LinearGradient(colors: [Colors.grey[300]!, Colors.grey[200]!]),
+                      ? LinearGradient(
+                          colors: [Colors.blue[400]!, Colors.blue[300]!],
+                        )
+                      : LinearGradient(
+                          colors: [Colors.grey[300]!, Colors.grey[200]!],
+                        ),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(isSender ? 16 : 4),
                     topRight: Radius.circular(isSender ? 4 : 16),
@@ -186,7 +207,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 5,
                       offset: const Offset(0, 3),
                     ),
@@ -197,12 +218,18 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                   children: [
                     Text(
                       chat["noidung"] ?? "",
-                      style: const TextStyle(fontSize: 14, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _formatTime(chat["ngaygui"]?.toString()),
-                      style: const TextStyle(fontSize: 10, color: Colors.black54),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.black54,
+                      ),
                     ),
                   ],
                 ),
@@ -216,7 +243,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _channel.unsubscribe();
+    _pollingTimer?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -230,7 +257,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
         backgroundColor: const Color(0xFF7ecbff),
         title: const Text("Trò chuyện"),
         elevation: 2,
-        shadowColor: Colors.blue.withOpacity(0.2),
+        shadowColor: Colors.blue.withValues(alpha: 0.2),
       ),
       body: Column(
         children: [
@@ -245,7 +272,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            color: Colors.white.withOpacity(0.95),
+            color: Colors.white.withValues(alpha: 0.95),
             child: Row(
               children: [
                 Expanded(
@@ -256,10 +283,10 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
-                        )
+                        ),
                       ],
                     ),
                     child: TextField(
@@ -284,7 +311,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.blue.withOpacity(0.4),
+                          color: Colors.blue.withValues(alpha: 0.4),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
                         ),

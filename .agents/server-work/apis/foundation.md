@@ -1,35 +1,15 @@
-# Work foundation API
+# Work JSON API
 
-Canonical executable contract: `contracts/openapi/work/openapi.json`.
+The current React Work API contract is
+`contracts/openapi/work/legacy-web.openapi.json`. The older target catalog in
+`contracts/openapi/work/openapi.json` is not the current Express route source.
 
-## `GET /api/v1`
-- Auth: public.
-- Input: optional `X-Trace-Id` UUID header.
-- Flow: Fastify trace hook -> global public guard bypass -> `SystemController.root` -> `ApiEnvelopeInterceptor`.
-- 200 business code: `SYSTEM_ROOT_LOADED`.
-- Data: `{service:"work-api"}`.
+`apps/work-server/src/routes/api_routes.ts` mounts the current API at
+`/api/v1`. Public operations are student/business login, student registration,
+and job listing/detail. Student and business operations use
+`ensureAuthenticated` plus `checkRole` and consume the 11-table Prisma schema.
 
-## `GET /health/live`
-- Auth: public.
-- Prefix exception: path is not `/api/v1/health/live`.
-- Flow: trace hook -> controller -> `HealthService.live` -> envelope.
-- No dependency IO.
-- 200 business code: `SYSTEM_HEALTH_LIVE`.
-
-## `GET /health/ready`
-- Auth: public.
-- Flow: trace hook -> controller -> `HealthService.ready` -> Prisma `SELECT 1` -> envelope/filter.
-- 200: `SYSTEM_HEALTH_READY`.
-- 503 on DB probe failure: `DEPENDENCY_UNAVAILABLE`, `Work API is not ready.`.
-- Redis status in successful response is config label only.
-
-## Shared response behavior
-
-Success keys: `success`, `businessCode`, `message`, `data`, `meta`, `traceId`.
-Safe errors: same shape with `success:false`, `data:null`, `meta.fieldErrors`.
-`X-Trace-Id` response header must match body `traceId`.
-
-The product endpoint catalog is now backed by `src/modules/work/` and is
-included in the same OpenAPI document. For the current route-to-handler map,
-read `apps/work-server/src/modules/work/work.controller.ts` and
-`work.service.ts`; do not infer endpoints from legacy mobile clients.
+Successful and handled error responses use the envelope keys
+`success`, `businessCode`, `message`, `data`, `meta`, and `traceId`. BigInt and
+Date values are normalized before JSON serialization. Bearer authentication is
+stateless and cookie/session authentication is not supported.

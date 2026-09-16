@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
-import '../trang_chu/main/xem_chi_tiet.dart';
 import '../trang_chu/main/thong_bao.dart';
 import 'package:work_server/helper_db/helper_supabase.dart';
 import 'package:work_server/controllers/ung_vien/ung_vien_controller.dart';
-import 'package:work_server/models/ung_vien.dart';
-import 'package:work_server/models/CV.dart';
+import 'package:work_server/models/cv.dart';
 import 'package:work_server/views/trang_chu/main/xem_chi_tiet_view.dart';
 
 final UngTuyenCtrl ctrl = UngTuyenCtrl();
-DNSupabase DN = DNSupabase.instance;
+DNSupabase dn = DNSupabase.instance;
 List<String> trangThaiTemp = [];
 
 class UngVien extends StatefulWidget {
@@ -64,7 +62,7 @@ class _UngVienState extends State<UngVien> {
             ),
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const thongBao()),
+              MaterialPageRoute(builder: (_) => const ThongBao()),
             ),
           ),
         ],
@@ -111,7 +109,7 @@ class _UngVienState extends State<UngVien> {
                   borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -139,7 +137,7 @@ class _UngVienState extends State<UngVien> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  uv.hoten ?? 'Chưa có họ tên',
+                                  uv.hoten,
                                   style: const TextStyle(
                                     fontSize: 16.5,
                                     fontWeight: FontWeight.w700,
@@ -182,7 +180,8 @@ class _UngVienState extends State<UngVien> {
                         children: [
                           // 🔹 Nếu trạng thái chưa ứng tuyển thì hiển thị nút Tuyển + Loại
                           if (trangThai.toLowerCase() != 'đã ứng tuyển' &&
-                              trangThai.toLowerCase() != 'từ chối ứng tuyển') ...[
+                              trangThai.toLowerCase() !=
+                                  'từ chối ứng tuyển') ...[
                             Expanded(
                               child: buildChipButton(
                                 icon: Icons.check_circle_outline_rounded,
@@ -190,13 +189,17 @@ class _UngVienState extends State<UngVien> {
                                 color: const Color(0xFF3A8DFF),
                                 onTap: () async {
                                   await ctrl.ungTuyen(uv.id!);
+                                  if (!context.mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Đã Tuyển Dụng Thành Công!'),
+                                      content: Text(
+                                        'Đã Tuyển Dụng Thành Công!',
+                                      ),
                                       backgroundColor: Colors.blue,
                                     ),
                                   );
                                   final response = await ctrl.getTrangThai();
+                                  if (!mounted || i >= response.length) return;
                                   setState(() {
                                     trangThaiTemp[i] = response[i];
                                   });
@@ -214,14 +217,18 @@ class _UngVienState extends State<UngVien> {
                                     context: context,
                                     builder: (context) => AlertDialog(
                                       title: const Text('Xác nhận'),
-                                      content: const Text('Bạn có chắc muốn loại ứng viên này không?'),
+                                      content: const Text(
+                                        'Bạn có chắc muốn loại ứng viên này không?',
+                                      ),
                                       actions: [
                                         TextButton(
-                                          onPressed: () => Navigator.pop(context, false),
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
                                           child: const Text('Hủy'),
                                         ),
                                         TextButton(
-                                          onPressed: () => Navigator.pop(context, true),
+                                          onPressed: () =>
+                                              Navigator.pop(context, true),
                                           child: const Text('Đồng ý'),
                                         ),
                                       ],
@@ -232,6 +239,7 @@ class _UngVienState extends State<UngVien> {
 
                                   // Xử lý xóa
                                   await ctrl.delCV(uv.id!);
+                                  if (!context.mounted) return;
 
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
@@ -249,7 +257,7 @@ class _UngVienState extends State<UngVien> {
                                 },
                               ),
                             ),
-                            
+
                             const SizedBox(width: 8),
                           ],
 
@@ -270,7 +278,9 @@ class _UngVienState extends State<UngVien> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
                               ),
                               icon: const Icon(
                                 Icons.info_outline_rounded,
@@ -334,9 +344,9 @@ class _UngVienState extends State<UngVien> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(50),
-          border: Border.all(color: color.withOpacity(0.4)),
+          border: Border.all(color: color.withValues(alpha: 0.4)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

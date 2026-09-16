@@ -1,23 +1,21 @@
-import 'package:work_server/models/sinh_vien/JD.dart';
+import 'package:work_server/models/sinh_vien/jd.dart';
 import 'package:work_server/helper_db/sinh_vien/helper_supabase.dart';
 import 'package:work_server/helper_db/sinh_vien/helper_db.dart';
 
 class TrangChuCtrl {
-  final _supbase = SinhVienSupabaseHelper();
+  final _neon = SinhVienSupabaseHelper();
   final _sqlite = SinhVienSQLiteHelper.instance;
 
-  List<JD> _jobs = [];
-
   //phuong thuc
-  Future<List<JD>> get_Top_JD() async {
-    final jd = await _supbase.getTopJD();
+  Future<List<JD>> getTopJd() async {
+    final jd = await _neon.getTopJD();
     return jd;
   }
 
-  Future<String> getNameSV() async{
+  Future<String> getNameSV() async {
     final sv = await _sqlite.getSinhVien();
-    String name =  sv.hoten ?? 'Lỗi hiển thị tên';
-    return name ;
+    String name = sv.hoten ?? 'Lỗi hiển thị tên';
+    return name;
   }
 
   Future<String> getImgSV() async {

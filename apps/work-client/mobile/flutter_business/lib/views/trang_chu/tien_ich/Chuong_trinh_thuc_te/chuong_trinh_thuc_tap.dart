@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-class thucTap extends StatefulWidget {
-  const thucTap({super.key});
+
+class ThucTapScreen extends StatefulWidget {
+  const ThucTapScreen({super.key});
 
   @override
-  State<thucTap> createState() => _thucTapState();
+  State<ThucTapScreen> createState() => _ThucTapScreenState();
 }
 
-class _thucTapState extends State<thucTap> {
+class _ThucTapScreenState extends State<ThucTapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: Color(0xFF7ecbff),title: Text("Chương trình thực tập"),),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF7ecbff),
+        title: Text("Chương trình thực tập"),
+      ),
       body: SizedBox.expand(
         child: Stack(
           children: [
@@ -24,18 +28,11 @@ class _thucTapState extends State<thucTap> {
               ),
             ),
             SingleChildScrollView(
-              child: Center(
-                child: Column(
-                  children: [
-                  ],
-                ),
-              ),
+              child: Center(child: Column(children: [])),
             ),
           ],
         ),
       ),
-
     );
   }
 }
-

@@ -1,26 +1,18 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:work_server/helper_db/neon_db.dart';
 
-final supabase = Supabase.instance.client;
+final NeonDatabase database = NeonDatabase.instance;
 
 Future<List<Map<String, dynamic>>> getChats(int svId) async {
-  final response = await supabase
-      .from('doanchat')
-      .select('doanhnghiep_id')
-      .eq('sinhvien_id', svId);
+  final rows = await database.query(
+    '''
+    SELECT DISTINCT d."id", d."hoten"
+    FROM "DoanChat" dc
+    INNER JOIN "DoanhNghiep" d ON d."id" = dc."doanhnghiep_id"
+    WHERE dc."sinhvien_id" = \$1
+    ORDER BY d."hoten"
+  ''',
+    parameters: [svId],
+  );
 
-  List<int> doanhnghiepIds = response.map((row) => row['doanhnghiep_id'] as int).toList();
-
-  if (doanhnghiepIds.isEmpty) return [];
-
-  final responseSv = await supabase
-      .from('doanhnghiep')
-      .select('id, hoten')
-      .inFilter('id', doanhnghiepIds);
-
-  List<Map<String, dynamic>> chats = responseSv.map((row) => {
-    "id": row['id'],
-    "hoten": row['hoten'],
-  }).toList();
-
-  return chats;
+  return rows.map((row) => {'id': row['id'], 'hoten': row['hoten']}).toList();
 }

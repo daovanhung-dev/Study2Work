@@ -19,10 +19,12 @@ class EmployeeReportUI extends StatelessWidget {
 
     final total = values.reduce((a, b) => a + b);
 
-    final maxDept = data.reduce((a, b) =>
-    a.values.first > b.values.first ? a : b);
-    final minDept = data.reduce((a, b) =>
-    a.values.first < b.values.first ? a : b);
+    final maxDept = data.reduce(
+      (a, b) => a.values.first > b.values.first ? a : b,
+    );
+    final minDept = data.reduce(
+      (a, b) => a.values.first < b.values.first ? a : b,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -58,17 +60,25 @@ class EmployeeReportUI extends StatelessWidget {
                 // ====== BIỂU ĐỒ CỘT ======
                 Expanded(
                   child: Card(
-                    color: Colors.white.withOpacity(0.9), // hơi trong suốt
+                    color: Colors.white.withValues(
+                      alpha: 0.9,
+                    ), // hơi trong suốt
                     elevation: 4,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 20),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 20,
+                      ),
                       child: BarChart(
                         BarChartData(
                           maxY: 30,
-                          gridData: FlGridData(show: true, drawVerticalLine: false),
+                          gridData: FlGridData(
+                            show: true,
+                            drawVerticalLine: false,
+                          ),
                           borderData: FlBorderData(show: false),
                           alignment: BarChartAlignment.spaceAround,
                           titlesData: FlTitlesData(
@@ -88,14 +98,18 @@ class EmployeeReportUI extends StatelessWidget {
                                 getTitlesWidget: (x, _) => Text(
                                   labels[x.toInt()],
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 13),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
                                 ),
                               ),
                             ),
                             rightTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false)),
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                             topTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false)),
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                           ),
                           barGroups: List.generate(labels.length, (index) {
                             return BarChartGroupData(
@@ -120,22 +134,34 @@ class EmployeeReportUI extends StatelessWidget {
 
                 // ====== THỐNG KÊ TỔNG ======
                 Card(
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                   elevation: 3,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 18,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Tổng kết nhân sự:',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 16)),
+                        const Text(
+                          'Tổng kết nhân sự:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         Text('• Tổng số nhân viên: ${total.toInt()}'),
-                        Text('• Phòng ban có nhiều nhân viên nhất: ${maxDept.keys.first}'),
-                        Text('• Phòng ban ít nhân viên nhất: ${minDept.keys.first}'),
+                        Text(
+                          '• Phòng ban có nhiều nhân viên nhất: ${maxDept.keys.first}',
+                        ),
+                        Text(
+                          '• Phòng ban ít nhân viên nhất: ${minDept.keys.first}',
+                        ),
                       ],
                     ),
                   ),
@@ -148,9 +174,13 @@ class EmployeeReportUI extends StatelessWidget {
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.indigo,
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 40,
+                        vertical: 14,
+                      ),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(

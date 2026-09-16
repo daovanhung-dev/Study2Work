@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/controllers/tim_kiem_job/tim_kiem_Ctrl.dart';
-import 'package:work_server/models/sinh_vien/JD.dart';
+import 'package:work_server/controllers/tim_kiem_job/tim_kiem_ctrl.dart';
+import 'package:work_server/models/sinh_vien/jd.dart';
 import 'package:work_server/views/trang_chu/main/xem_chi_tiet_view.dart';
-import 'package:work_server/controllers/UngTuyenCtrl.dart';
+import 'package:work_server/controllers/ung_tuyen_ctrl.dart';
+
 class TimKiemViecView extends StatefulWidget {
   const TimKiemViecView({super.key});
 
@@ -12,21 +13,74 @@ class TimKiemViecView extends StatefulWidget {
 
 class _TimKiemViecViewState extends State<TimKiemViecView> {
   final ctrl = TimKiemCtrl();
-  final ung_tuyen_ctrl = UngTuyenCtrl();
+  final ungTuyenCtrl = UngTuyenCtrl();
   final _searchController = TextEditingController();
 
   final List<String> diaDiems = [
-    "Tất cả", "Hà Nội", "TP.HCM", "Đà Nẵng", "Hải Phòng", "Cần Thơ",
-    "An Giang", "Bà Rịa - Vũng Tàu", "Bắc Giang", "Bắc Kạn", "Bạc Liêu",
-    "Bắc Ninh", "Bến Tre", "Bình Định", "Bình Dương", "Bình Phước", "Bình Thuận",
-    "Cà Mau", "Cao Bằng", "Đắk Lắk", "Đắk Nông", "Điện Biên", "Đồng Nai", "Đồng Tháp",
-    "Gia Lai", "Hà Giang", "Hà Nam", "Hà Tĩnh", "Hải Dương", "Hậu Giang", "Hòa Bình",
-    "Hưng Yên", "Khánh Hòa", "Kiên Giang", "Kon Tum", "Lai Châu", "Lâm Đồng",
-    "Lạng Sơn", "Lào Cai", "Long An", "Nam Định", "Nghệ An", "Ninh Bình",
-    "Ninh Thuận", "Phú Thọ", "Phú Yên", "Quảng Bình", "Quảng Nam", "Quảng Ngãi",
-    "Quảng Ninh", "Quảng Trị", "Sóc Trăng", "Sơn La", "Tây Ninh", "Thái Bình",
-    "Thái Nguyên", "Thanh Hóa", "Thừa Thiên Huế", "Tiền Giang", "Trà Vinh",
-    "Tuyên Quang", "Vĩnh Long", "Vĩnh Phúc", "Yên Bái",
+    "Tất cả",
+    "Hà Nội",
+    "TP.HCM",
+    "Đà Nẵng",
+    "Hải Phòng",
+    "Cần Thơ",
+    "An Giang",
+    "Bà Rịa - Vũng Tàu",
+    "Bắc Giang",
+    "Bắc Kạn",
+    "Bạc Liêu",
+    "Bắc Ninh",
+    "Bến Tre",
+    "Bình Định",
+    "Bình Dương",
+    "Bình Phước",
+    "Bình Thuận",
+    "Cà Mau",
+    "Cao Bằng",
+    "Đắk Lắk",
+    "Đắk Nông",
+    "Điện Biên",
+    "Đồng Nai",
+    "Đồng Tháp",
+    "Gia Lai",
+    "Hà Giang",
+    "Hà Nam",
+    "Hà Tĩnh",
+    "Hải Dương",
+    "Hậu Giang",
+    "Hòa Bình",
+    "Hưng Yên",
+    "Khánh Hòa",
+    "Kiên Giang",
+    "Kon Tum",
+    "Lai Châu",
+    "Lâm Đồng",
+    "Lạng Sơn",
+    "Lào Cai",
+    "Long An",
+    "Nam Định",
+    "Nghệ An",
+    "Ninh Bình",
+    "Ninh Thuận",
+    "Phú Thọ",
+    "Phú Yên",
+    "Quảng Bình",
+    "Quảng Nam",
+    "Quảng Ngãi",
+    "Quảng Ninh",
+    "Quảng Trị",
+    "Sóc Trăng",
+    "Sơn La",
+    "Tây Ninh",
+    "Thái Bình",
+    "Thái Nguyên",
+    "Thanh Hóa",
+    "Thừa Thiên Huế",
+    "Tiền Giang",
+    "Trà Vinh",
+    "Tuyên Quang",
+    "Vĩnh Long",
+    "Vĩnh Phúc",
+    "Yên Bái",
   ];
 
   final loais = ["Tất cả", "Thực tập", "Part-time", "Full-time"];
@@ -60,28 +114,30 @@ class _TimKiemViecViewState extends State<TimKiemViecView> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7FB),
       appBar: AppBar(
-        title: const Text("Tìm kiếm việc làm",
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Tìm kiếm việc làm",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: const Color(0xFF1976D2),
         centerTitle: true,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-        onRefresh: _loadData,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            children: [
-              _buildSearchBar(),
-              const SizedBox(height: 8),
-              _buildFilters(),
-              const SizedBox(height: 12),
-              Expanded(child: _buildJobList()),
-            ],
-          ),
-        ),
-      ),
+              onRefresh: _loadData,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    _buildSearchBar(),
+                    const SizedBox(height: 8),
+                    _buildFilters(),
+                    const SizedBox(height: 12),
+                    Expanded(child: _buildJobList()),
+                  ],
+                ),
+              ),
+            ),
     );
   }
 
@@ -143,13 +199,15 @@ class _TimKiemViecViewState extends State<TimKiemViecView> {
           value: value,
           isExpanded: true,
           items: items
-              .map((e) => DropdownMenuItem(
-            value: e,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 240),
-              child: Text(e, overflow: TextOverflow.ellipsis),
-            ),
-          ))
+              .map(
+                (e) => DropdownMenuItem(
+                  value: e,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 240),
+                    child: Text(e, overflow: TextOverflow.ellipsis),
+                  ),
+                ),
+              )
               .toList(),
           onChanged: onChanged,
         ),
@@ -172,12 +230,7 @@ class _TimKiemViecViewState extends State<TimKiemViecView> {
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (_, i) {
         final JD job = ctrl.filtered[i];
-        return JobCardScrollable(
-          jd: job,
-          onTap: () {
-
-          },
-        );
+        return JobCardScrollable(jd: job, onTap: () {});
       },
     );
   }
@@ -216,10 +269,10 @@ class JobCardScrollable extends StatelessWidget {
           border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 6,
               offset: const Offset(0, 3),
-            )
+            ),
           ],
         ),
         child: Column(
@@ -237,11 +290,14 @@ class JobCardScrollable extends StatelessWidget {
                     children: [
                       // title: maxLines 2 + ellipsis
                       Text(
-                        jd.tenViTri.isNotEmpty ? jd.tenViTri : "Vị trí tuyển dụng",
+                        jd.tenViTri.isNotEmpty
+                            ? jd.tenViTri
+                            : "Vị trí tuyển dụng",
                         style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87),
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -251,13 +307,16 @@ class JobCardScrollable extends StatelessWidget {
                         jd.tenCongTy.isNotEmpty
                             ? jd.tenCongTy
                             : "Công ty chưa xác định",
-                        style: const TextStyle(fontSize: 13, color: Colors.blueGrey),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.blueGrey,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-                )
+                ),
               ],
             ),
 
@@ -287,10 +346,30 @@ class JobCardScrollable extends StatelessWidget {
                     const SizedBox(height: 8),
 
                     // rows: each uses Flexible to prevent overflow
-                    _row(Icons.attach_money, jd.mucLuong.isNotEmpty ? jd.mucLuong : "Thỏa thuận", Colors.green),
-                    _row(Icons.location_on, jd.diaDiem.isNotEmpty ? jd.diaDiem : "Không rõ địa điểm", Colors.redAccent),
-                    _row(Icons.access_time, jd.thoiGian.isNotEmpty ? jd.thoiGian : "Toàn thời gian / Bán thời gian", Colors.blue),
-                    _row(Icons.event, jd.hanNop.isNotEmpty ? "Hạn nộp: ${jd.hanNop}" : "Không rõ hạn nộp", Colors.orange),
+                    _row(
+                      Icons.attach_money,
+                      jd.mucLuong.isNotEmpty ? jd.mucLuong : "Thỏa thuận",
+                      Colors.green,
+                    ),
+                    _row(
+                      Icons.location_on,
+                      jd.diaDiem.isNotEmpty ? jd.diaDiem : "Không rõ địa điểm",
+                      Colors.redAccent,
+                    ),
+                    _row(
+                      Icons.access_time,
+                      jd.thoiGian.isNotEmpty
+                          ? jd.thoiGian
+                          : "Toàn thời gian / Bán thời gian",
+                      Colors.blue,
+                    ),
+                    _row(
+                      Icons.event,
+                      jd.hanNop.isNotEmpty
+                          ? "Hạn nộp: ${jd.hanNop}"
+                          : "Không rõ hạn nộp",
+                      Colors.orange,
+                    ),
 
                     if ((jd.kyNang.isNotEmpty) || (jd.uuTien.isNotEmpty))
                       Padding(
@@ -299,14 +378,22 @@ class JobCardScrollable extends StatelessWidget {
                           width: double.infinity,
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.blue.shade50.withOpacity(0.3),
+                            color: Colors.blue.shade50.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (jd.kyNang.isNotEmpty) _smallInfo(Icons.build, "Kỹ năng: ${_short(jd.kyNang, 120)}"),
-                              if (jd.uuTien.isNotEmpty) _smallInfo(Icons.thumb_up, "Ưu tiên: ${_short(jd.uuTien, 120)}"),
+                              if (jd.kyNang.isNotEmpty)
+                                _smallInfo(
+                                  Icons.build,
+                                  "Kỹ năng: ${_short(jd.kyNang, 120)}",
+                                ),
+                              if (jd.uuTien.isNotEmpty)
+                                _smallInfo(
+                                  Icons.thumb_up,
+                                  "Ưu tiên: ${_short(jd.uuTien, 120)}",
+                                ),
                             ],
                           ),
                         ),
@@ -343,11 +430,19 @@ class JobCardScrollable extends StatelessWidget {
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     textStyle: const TextStyle(fontSize: 13),
                   ),
                   onPressed: () {
-                    Navigator.push(context,MaterialPageRoute(builder: (context) => XemChiTietView(id: jd.id),),);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => XemChiTietView(id: jd.id),
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.arrow_forward_ios, size: 14),
                   label: const Text("Xem chi tiết"),
@@ -369,27 +464,28 @@ class JobCardScrollable extends StatelessWidget {
         height: 52,
         child: avt.isNotEmpty
             ? Image.network(
-          avt,
-          width: 52,
-          height: 52,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _defaultLogo(),
-          loadingBuilder: (context, child, progress) {
-            if (progress == null) return child;
-            return Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  value: progress.expectedTotalBytes != null
-                      ? progress.cumulativeBytesLoaded / (progress.expectedTotalBytes ?? 1)
-                      : null,
-                ),
-              ),
-            );
-          },
-        )
+                avt,
+                width: 52,
+                height: 52,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _defaultLogo(),
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        value: progress.expectedTotalBytes != null
+                            ? progress.cumulativeBytesLoaded /
+                                  (progress.expectedTotalBytes ?? 1)
+                            : null,
+                      ),
+                    ),
+                  );
+                },
+              )
             : _defaultLogo(),
       ),
     );
@@ -415,18 +511,21 @@ class JobCardScrollable extends StatelessWidget {
           color: Colors.blue.shade50,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, size: 14, color: Colors.blue),
-          const SizedBox(width: 5),
-          Flexible(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 12, color: Colors.blue),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: Colors.blue),
+            const SizedBox(width: 5),
+            Flexible(
+              child: Text(
+                text,
+                style: const TextStyle(fontSize: 12, color: Colors.blue),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
       ),
     );
   }
@@ -473,5 +572,6 @@ class JobCardScrollable extends StatelessWidget {
     );
   }
 
-  String _short(String s, int max) => s.length <= max ? s : "${s.substring(0, max - 3)}...";
+  String _short(String s, int max) =>
+      s.length <= max ? s : "${s.substring(0, max - 3)}...";
 }

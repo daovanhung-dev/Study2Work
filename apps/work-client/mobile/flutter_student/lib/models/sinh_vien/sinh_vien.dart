@@ -6,7 +6,6 @@ class SinhVien {
   final String? chuyennganh;
   final String? avt;
 
-
   SinhVien({
     this.id,
     this.hoten,
@@ -19,13 +18,19 @@ class SinhVien {
   // ✅ Chuyển từ Map (Supabase / JSON) sang đối tượng SinhVien
   factory SinhVien.fromMap(Map<String, dynamic> map) {
     return SinhVien(
-      id: map['id'],
+      id: _toInt(map['id']),
       hoten: map['hoten'],
       email: map['email'],
       matkhau: map['matkhau'],
       chuyennganh: map['chuyennganh'],
       avt: map['avt'],
     );
+  }
+
+  static int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
   }
 
   // ✅ Chuyển từ đối tượng SinhVien sang Map để insert/update

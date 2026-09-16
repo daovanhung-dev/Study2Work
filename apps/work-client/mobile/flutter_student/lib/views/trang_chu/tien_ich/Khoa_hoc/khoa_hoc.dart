@@ -14,25 +14,25 @@ class _KhoaHocViewState extends State<KhoaHocView> {
       'title': 'Flutter Cơ Bản',
       'description': 'Học cách tạo ứng dụng di động với Flutter từ đầu.',
       'progress': 0.5, // 50% hoàn thành
-      'image': 'assets/flutter_course.png'
+      'image': 'assets/flutter_course.png',
     },
     {
       'title': 'Python cho Sinh Viên',
       'description': 'Ngôn ngữ lập trình Python cơ bản cho sinh viên IT.',
       'progress': 0.2,
-      'image': 'assets/python_course.png'
+      'image': 'assets/python_course.png',
     },
     {
       'title': 'Thiết Kế UI/UX',
       'description': 'Thiết kế giao diện đẹp và trải nghiệm người dùng tốt.',
       'progress': 0.8,
-      'image': 'assets/uiux_course.png'
+      'image': 'assets/uiux_course.png',
     },
     {
       'title': 'Cơ Sở Dữ Liệu SQL',
       'description': 'Quản lý và truy vấn dữ liệu với SQL.',
       'progress': 0.0,
-      'image': 'assets/sql_course.png'
+      'image': 'assets/sql_course.png',
     },
   ];
 
@@ -68,7 +68,7 @@ class _KhoaHocViewState extends State<KhoaHocView> {
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () {
-          // TODO: Xem chi tiết khóa học
+          // Future enhancement: Xem chi tiết khóa học
         },
         child: Container(
           padding: const EdgeInsets.all(12),
@@ -90,12 +90,18 @@ class _KhoaHocViewState extends State<KhoaHocView> {
                   children: [
                     Text(
                       course['title'] ?? 'Khóa học chưa xác định',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       course['description'] ?? '',
-                      style: const TextStyle(fontSize: 13, color: Colors.black54),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -107,13 +113,18 @@ class _KhoaHocViewState extends State<KhoaHocView> {
                         value: progress,
                         minHeight: 6,
                         backgroundColor: Colors.grey.shade200,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade400),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.blue.shade400,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Tiến độ: ${(progress * 100).toInt()}%',
-                      style: const TextStyle(fontSize: 12, color: Colors.black54),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
                     ),
                   ],
                 ),

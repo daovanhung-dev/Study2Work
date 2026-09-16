@@ -37,6 +37,7 @@ DATA_TYPE_PATTERN = re.compile(
     rf"^(?:{_BUILTIN_TYPE}|{_CUSTOM_TYPE})(?:\s*\(\s*\d+(?:\s*,\s*\d+)?\s*\))?(?:\s*\[\s*\])?$",
     re.IGNORECASE,
 )
+USERNAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_.-]{0,63}$")
 
 
 class StrictModel(BaseModel):
@@ -108,7 +109,19 @@ class DdlApplyRequest(DdlRequest):
     confirmation_token: str = Field(min_length=16, max_length=256)
 
 
-class SqlValidateRequest(StrictModel):
+class SqlTargetRequest(StrictModel):
+    database: str = Field(min_length=1, max_length=64)
+    schema_name: str = Field(min_length=1, max_length=63)
+
+    @field_validator("schema_name")
+    @classmethod
+    def validate_schema_name(cls, value: str) -> str:
+        if not IDENTIFIER_PATTERN.fullmatch(value):
+            raise ValueError("Invalid PostgreSQL schema identifier")
+        return value
+
+
+class SqlValidateRequest(SqlTargetRequest):
     sql: str = Field(min_length=1, max_length=262_144)
 
 
@@ -120,7 +133,7 @@ class SqlValidateResponse(StrictModel):
     confirmation_token: str | None = None
 
 
-class SqlExecuteRequest(StrictModel):
+class SqlExecuteRequest(SqlTargetRequest):
     sql: str = Field(min_length=1, max_length=262_144)
     confirmation_token: str | None = Field(default=None, max_length=256)
     max_rows: int | None = Field(default=None, ge=1, le=100_000)
@@ -165,4 +178,88 @@ class RowPreviewResponse(StrictModel):
 
 
 class AuditQuery(StrictModel):
+    limit: int = Field(default=100, ge=1, le=500)
+
+
+class LoginRequest(StrictModel):
+    username: str = Field(min_length=1, max_length=64)
+    password: str = Field(min_length=12, max_length=256)
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if not USERNAME_PATTERN.fullmatch(normalized):
+            raise ValueError("Invalid username")
+        return normalized
+
+
+class ChangePasswordRequest(StrictModel):
+    current_password: str = Field(min_length=1, max_length=256)
+    new_password: str = Field(min_length=12, max_length=256)
+
+
+class CreateAccessAccountRequest(StrictModel):
+    database: str = Field(min_length=1, max_length=64)
+    username: str = Field(min_length=1, max_length=64)
+    display_name: str = Field(min_length=1, max_length=150)
+    schema_name: str = Field(min_length=1, max_length=63)
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if not USERNAME_PATTERN.fullmatch(normalized):
+            raise ValueError("Invalid username")
+        return normalized
+
+    @field_validator("display_name")
+    @classmethod
+    def validate_display_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Display name cannot be blank")
+        return normalized
+
+    @field_validator("schema_name")
+    @classmethod
+    def validate_schema_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not IDENTIFIER_PATTERN.fullmatch(normalized):
+            raise ValueError("Invalid PostgreSQL schema identifier")
+        return normalized
+
+
+class UpdateAccessAccountRequest(StrictModel):
+    display_name: str | None = Field(default=None, min_length=1, max_length=150)
+    status: Literal["active", "disabled"] | None = None
+
+    @field_validator("display_name")
+    @classmethod
+    def validate_display_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Display name cannot be blank")
+        return normalized
+
+
+class ChangeSchemaRequest(StrictModel):
+    database: str = Field(min_length=1, max_length=64)
+    schema_name: str = Field(min_length=1, max_length=63)
+
+    @field_validator("schema_name")
+    @classmethod
+    def validate_schema_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not IDENTIFIER_PATTERN.fullmatch(normalized):
+            raise ValueError("Invalid PostgreSQL schema identifier")
+        return normalized
+
+
+class AccessAuditQuery(StrictModel):
+    database: str | None = Field(default=None, max_length=64)
+    actor: str | None = Field(default=None, max_length=64)
+    action: str | None = Field(default=None, max_length=100)
     limit: int = Field(default=100, ge=1, le=500)

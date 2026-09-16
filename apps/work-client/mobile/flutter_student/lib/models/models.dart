@@ -1,4 +1,3 @@
-
 class DoanhNghiep {
   final String maDN;
   final String tenDN;
@@ -62,5 +61,3 @@ class DoanhNghiep {
     };
   }
 }
-
-

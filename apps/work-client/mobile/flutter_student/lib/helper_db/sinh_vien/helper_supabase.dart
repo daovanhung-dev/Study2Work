@@ -1,185 +1,195 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:work_server/models/sinh_vien/sinh_vien.dart';
-import 'package:work_server/models/sinh_vien/NganhNghe.dart';
+import 'dart:convert';
+
+import 'package:work_server/helper_db/neon_db.dart';
+import 'package:work_server/models/sinh_vien/cv.dart';
+import 'package:work_server/models/sinh_vien/jd.dart';
+import 'package:work_server/models/sinh_vien/nganh_nghe.dart';
 import 'package:work_server/models/sinh_vien/doan_chat.dart';
-import 'package:work_server/models/sinh_vien/JD.dart';
+import 'package:work_server/models/sinh_vien/sinh_vien.dart';
 import 'package:work_server/models/sinh_vien/ung_vien.dart';
-import 'package:work_server/models/sinh_vien/CV.dart';
 
 class SinhVienSupabaseHelper {
-  final SupabaseClient client = Supabase.instance.client;
-  final String tableName = 'sinhvien';
+  final NeonDatabase database = NeonDatabase.instance;
 
-  // 🟢 Lấy toàn bộ danh sách sinh viên
   Future<List<SinhVien>> getAll() async {
-    final response = await client.from(tableName).select();
-
-    // Nếu response là List, map sang List<SinhVien>
-    final data = response as List<dynamic>;
-    return data.map((e) => SinhVien.fromMap(e)).toList();
+    final rows = await database.query('SELECT * FROM "SinhVien"');
+    return rows.map(SinhVien.fromMap).toList();
   }
 
-  // 🟢 Thêm sinh viên mới
   Future<void> insert(SinhVien sv) async {
-    await client.from(tableName).insert(sv.toMap());
+    await database.execute(
+      'INSERT INTO "SinhVien" ("hoten", "email", "matkhau", "chuyennganh", "avt") VALUES (\$1, \$2, \$3, \$4, \$5)',
+      parameters: [sv.hoten, sv.email, sv.matkhau, sv.chuyennganh, sv.avt],
+    );
   }
 
-  // 🟡 Cập nhật thông tin sinh viên
   Future<void> update(SinhVien sv) async {
     if (sv.id == null) return;
-    await client.from(tableName).update(sv.toMap()).eq('id', sv.id!);
+    await database.execute(
+      'UPDATE "SinhVien" SET "hoten" = \$1, "email" = \$2, "matkhau" = \$3, "chuyennganh" = \$4, "avt" = \$5 WHERE "id" = \$6',
+      parameters: [
+        sv.hoten,
+        sv.email,
+        sv.matkhau,
+        sv.chuyennganh,
+        sv.avt,
+        sv.id,
+      ],
+    );
   }
 
-  // 🔴 Xóa sinh viên theo id
   Future<void> delete(int id) async {
-    await client.from(tableName).delete().eq('id', id);
+    await database.execute(
+      'DELETE FROM "SinhVien" WHERE "id" = \$1',
+      parameters: [id],
+    );
   }
 
-  // 🔍 Tìm sinh viên theo email
   Future<SinhVien?> getByEmail(String email) async {
-    final response = await client
-        .from(tableName)
-        .select()
-        .eq('email', email)
-        .maybeSingle();
-
-    if (response == null) return null;
-    return SinhVien.fromMap(response);
+    final rows = await database.query(
+      'SELECT * FROM "SinhVien" WHERE "email" = \$1 LIMIT 1',
+      parameters: [email],
+    );
+    return rows.isEmpty ? null : SinhVien.fromMap(rows.first);
   }
 
-  // 🔐 Kiểm tra đăng nhập (email + mật khẩu)
   Future<bool> login(String email, String matkhau) async {
-    final response = await client
-        .from(tableName)
-        .select()
-        .eq('email', email)
-        .eq('matkhau', matkhau)
-        .maybeSingle();
-
-    if (response == null) return false;
-    return true;
+    final rows = await database.query(
+      'SELECT "id" FROM "SinhVien" WHERE "email" = \$1 AND "matkhau" = \$2 LIMIT 1',
+      parameters: [email, matkhau],
+    );
+    return rows.isNotEmpty;
   }
 
-  //lay cach nganh( phuc vu chuc nang tim kiem)
   Future<List<Nganh>> getNganh() async {
-    final response = await client.from('bannganh').select('nganh');
-    return response.map((e) => Nganh.fromMap(e)).toList();
+    final rows = await database.query(
+      'SELECT "nganh" FROM bannganh ORDER BY "nganh"',
+    );
+    return rows.map(Nganh.fromMap).toList();
   }
 
-  //lay doan chat
   Future<List<DoanChat>> getDoanChat(int id) async {
-    final response = await client
-        .from('doanchat')
-        .select()
-        .eq('sinhvien_id', id);
-    return response.map((e) => DoanChat.fromMap(e)).toList();
+    final rows = await database.query(
+      'SELECT * FROM "DoanChat" WHERE "sinhvien_id" = \$1 ORDER BY "created_at" DESC',
+      parameters: [id],
+    );
+    return rows.map(DoanChat.fromMap).toList();
   }
 
-  //lay doanh nghiep
-  Future<String> getNameDN(int DN_id) async {
-    final response = await client
-        .from('doanhnghiep')
-        .select('hoten')
-        .eq('id', DN_id)
-        .single();
-    return response['hoten'];
+  Future<String> getNameDN(int dnId) async {
+    final rows = await database.query(
+      'SELECT "hoten" FROM "DoanhNghiep" WHERE "id" = \$1 LIMIT 1',
+      parameters: [dnId],
+    );
+    if (rows.isEmpty) throw StateError('Không tìm thấy doanh nghiệp.');
+    return rows.first['hoten']?.toString() ?? '';
   }
 
-  //==============================================================================
-  //Job
-  //lay JD
   Future<List<JD>> getTopJD() async {
-    // Lấy toàn bộ danh sách jd_id trong bảng topJD
-    final topJDResponse = await client.from('topJD').select('jd_id');
-
-    // Nếu không có dữ liệu thì trả về danh sách rỗng
-    if (topJDResponse.isEmpty) return [];
-
-    // Lấy danh sách các id
-    final List<int> jdIds = topJDResponse
-        .map<int>((row) => row['jd_id'] as int)
-        .toList();
-
-    // Truy vấn toàn bộ JD có id trong danh sách jdIds
-    final jdResponse = await client.from('jd').select().inFilter('id', jdIds);
-
-    // Chuyển sang danh sách model JD
-    final jobs = jdResponse.map<JD>((e) => JD.fromMap(e)).toList();
-
-    return jobs;
+    final rows = await database.query('''
+      SELECT j.*
+      FROM "TopJD" t
+      INNER JOIN "JD" j ON j."id" = t."jd_id"
+      ORDER BY t."created_at" DESC
+    ''');
+    return rows.map(JD.fromMap).toList();
   }
 
   Future<JD> getJD(int id) async {
-    final response = await client.from('jd').select().eq('id', id).single();
-    return JD.fromMap(response);
+    final rows = await database.query(
+      'SELECT * FROM "JD" WHERE "id" = \$1 LIMIT 1',
+      parameters: [id],
+    );
+    if (rows.isEmpty) throw StateError('Không tìm thấy JD với id: $id');
+    return JD.fromMap(rows.first);
   }
 
   Future<List<JD>> getAllJD() async {
-    final data = await client.from('jd').select();
-    return (data as List).map((e) => JD.fromMap(e)).toList();
+    final rows = await database.query(
+      'SELECT * FROM "JD" ORDER BY "ngay_tao" DESC NULLS LAST, "id" DESC',
+    );
+    return rows.map(JD.fromMap).toList();
   }
 
-  //lay jd bang
   Future<int> getIdDnByIdJd(int idJD) async {
-    final response = await client
-        .from('jd')
-        .select('doanhnghiep_id')
-        .eq('id', idJD)
-        .single();
-    return response['doanhnghiep_id'] as int;
+    final rows = await database.query(
+      'SELECT "doanhnghiep_id" FROM "JD" WHERE "id" = \$1 LIMIT 1',
+      parameters: [idJD],
+    );
+    if (rows.isEmpty || rows.first['doanhnghiep_id'] == null) {
+      throw StateError('JD chưa gán doanh nghiệp.');
+    }
+    return int.parse(rows.first['doanhnghiep_id'].toString());
   }
 
-  //================================================================================
-  //ung vien
-  /// 🟢 Thêm một bản ghi ứng viên mới
   Future<bool> insertUngVien(UngVien uv) async {
-    try {
-      // 1️⃣ Kiểm tra xem sinh viên đã ứng tuyển vào JD này chưa
-      final kt = await client
-          .from('ungvien')
-          .select('id')
-          .eq('jd_id', uv.jdId!)
-          .eq('sinhvien_id', uv.sinhvienId!)
-          .maybeSingle(); // Trả về null nếu không có dòng nào khớp
+    if (uv.jdId == null || uv.sinhvienId == null) return false;
 
-      // 2️⃣ Nếu đã có, trả về false (đã ứng tuyển rồi)
-      if (kt != null) {
-        return false;
-      }
+    final existing = await database.query(
+      'SELECT "id" FROM "UngVien" WHERE "jd_id" = \$1 AND "sinhvien_id" = \$2 LIMIT 1',
+      parameters: [uv.jdId, uv.sinhvienId],
+    );
+    if (existing.isNotEmpty) return false;
 
-      // 3️⃣ Nếu chưa có, thêm mới vào bảng
-      await client.from('ungvien').insert({
-        'sinhvien_id': uv.sinhvienId,
-        'doanhnghiep_id': uv.doanhnghiepId,
-        'trangthai': uv.trangthai ?? 'chưa ứng tuyển',
-        'jd_id': uv.jdId,
-      });
-
-      return true; // thành công
-    } catch (e) {
-      throw Exception('Lỗi khi thêm ứng viên: $e');
-    }
+    await database.execute(
+      'INSERT INTO "UngVien" ("sinhvien_id", "doanhnghiep_id", "trangthai", "jd_id") VALUES (\$1, \$2, \$3, \$4)',
+      parameters: [
+        uv.sinhvienId,
+        uv.doanhnghiepId,
+        uv.trangthai ?? 'chưa ứng tuyển',
+        uv.jdId,
+      ],
+    );
+    return true;
   }
 
-  //================================================================================
-  //cv
   Future<CV?> getCVById(int id) async {
-    try {
-      final response = await client
-          .from('cv')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle();
-
-      if (response == null) return null;
-      return CV.fromMap(response);
-    } catch (e) {
-      throw Exception('Lỗi khi lấy CV theo ID: $e');
-    }
+    final rows = await database.query(
+      'SELECT * FROM "Cv" WHERE "id" = \$1 LIMIT 1',
+      parameters: [id],
+    );
+    return rows.isEmpty ? null : CV.fromMap(rows.first);
   }
 
-  Future<void> updateCV(CV cv) async
-  {
-    await client.from('cv').update(cv.toMap()).eq('id', cv.id!);
+  Future<void> updateCV(CV cv) async {
+    if (cv.id == null) return;
+    final data = cv.toMap();
+    await database.execute('''
+      UPDATE "Cv" SET
+        "avt" = \$1, "hoten" = \$2, "ngaysinh" = \$3, "gioitinh" = \$4,
+        "email" = \$5, "sdt" = \$6, "diachi" = \$7, "vitri" = \$8,
+        "nganh" = \$9, "muctieunghiep" = \$10, "hocvan" = \$11,
+        "kinhnghiem" = \$12, "kynang" = \$13, "ngoaingu" = \$14,
+        "chungchi" = \$15, "duan" = \$16, "giaithuong" = \$17,
+        "hoatdong" = \$18, "social" = \$19, "portfolio" = \$20,
+        "luongmongmuon" = \$21
+      WHERE "id" = \$22
+    ''', parameters: _cvParameters(data)..add(cv.id));
+  }
+
+  List<Object?> _cvParameters(Map<String, dynamic> data) {
+    return [
+      data['avt'],
+      data['hoten'],
+      data['ngaysinh'],
+      data['gioitinh'],
+      data['email'],
+      data['sdt'],
+      data['diachi'],
+      data['vitri'],
+      data['nganh'],
+      data['muctieunghiep'],
+      data['hocvan'],
+      data['kinhnghiem'],
+      data['kynang'],
+      data['ngoaingu'],
+      data['chungchi'],
+      data['duan'],
+      data['giaithuong'],
+      data['hoatdong'],
+      data['social'] is Map ? jsonEncode(data['social']) : data['social'],
+      data['portfolio'],
+      data['luongmongmuon'],
+    ];
   }
 }

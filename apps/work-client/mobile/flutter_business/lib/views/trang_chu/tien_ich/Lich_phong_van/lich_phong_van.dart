@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-class lichPhongVan extends StatefulWidget {
-  const lichPhongVan({super.key});
+
+class LichPhongVanScreen extends StatefulWidget {
+  const LichPhongVanScreen({super.key});
 
   @override
-  State<lichPhongVan> createState() => _lichPhongVanState();
+  State<LichPhongVanScreen> createState() => _LichPhongVanScreenState();
 }
 
-class _lichPhongVanState extends State<lichPhongVan> {
+class _LichPhongVanScreenState extends State<LichPhongVanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: Color(0xFF7ecbff),title: Text("Lịch phỏng vấn"),),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF7ecbff),
+        title: Text("Lịch phỏng vấn"),
+      ),
       body: SizedBox.expand(
         child: Stack(
           children: [
@@ -24,19 +28,11 @@ class _lichPhongVanState extends State<lichPhongVan> {
               ),
             ),
             SingleChildScrollView(
-              child: Center(
-                child: Column(
-                  children: [
-                  ],
-                ),
-              ),
+              child: Center(child: Column(children: [])),
             ),
           ],
         ),
       ),
-
     );
   }
 }
-
-

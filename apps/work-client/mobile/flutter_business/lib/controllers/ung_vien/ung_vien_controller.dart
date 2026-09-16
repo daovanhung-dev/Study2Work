@@ -1,9 +1,6 @@
 import 'package:work_server/helper_db/helper_db.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:work_server/helper_db/helper_supabase.dart';
-import 'package:work_server/models/ung_vien.dart';
-import 'package:work_server/models/CV.dart';
-import 'package:work_server/models/chat.dart';
+import 'package:work_server/models/cv.dart';
 
 final dbHelper = HelperDB.instance;
 final supabase = DNSupabase.instance;
@@ -14,35 +11,32 @@ class UngTuyenCtrl {
     return response;
   }
 
-  Future<void> ungTuyen(int sinhvien_id) async {
-    await supabase.ungTuyen(sinhvien_id);
+  Future<void> ungTuyen(int sinhvienId) async {
+    await supabase.ungTuyen(sinhvienId);
 
     //tao doan chat
     await supabase.insertDoanChat({
-      'sinhvien_id': sinhvien_id,
+      'sinhvien_id': sinhvienId,
       'doanhnghiep_id': await dbHelper.getID(),
     });
     final idDN = await dbHelper.getID();
-    await supabase.guiTinNhan(sinhvien_id, idDN, "Bạn đã được công ty ứng tuyển!");
-
+    await supabase.guiTinNhan(
+      sinhvienId,
+      idDN,
+      "Bạn đã được công ty ứng tuyển!",
+    );
   }
 
-  Future<void> delCV(int sinhvien_id) async{
-    await supabase.delCV(sinhvien_id);
+  Future<void> delCV(int sinhvienId) async {
+    await supabase.delCV(sinhvienId);
   }
 
   Future<List<String>> getTrangThai() async {
     final response = await supabase.getUngVien();
-
-    // Nếu response là null, trả về danh sách rỗng
-    if (response == null) return [];
 
     // Lấy danh sách trạng thái
     return response
         .map((e) => e.trangthai ?? 'chưa xác định') // đảm bảo không null
         .toList();
   }
-
-
-
 }

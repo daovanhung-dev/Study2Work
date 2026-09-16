@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:work_server/models/sinh_vien/sinh_vien.dart';
-import 'package:work_server/models/sinh_vien/NganhNghe.dart';
+import 'package:work_server/models/sinh_vien/nganh_nghe.dart';
 
 class SinhVienSQLiteHelper {
   static final SinhVienSQLiteHelper instance = SinhVienSQLiteHelper._init();
@@ -52,14 +52,9 @@ class SinhVienSQLiteHelper {
     // Xóa hết dữ liệu cũ
     await db.delete('sinhvien');
 
-    print('🟢 Đã xóa dữ liệu cũ, thêm sinh viên mới');
     // Thêm sinh viên mới
-    return await db.insert(
-      'sinhvien',
-      sv.toMap(),
-    );
+    return await db.insert('sinhvien', sv.toMap());
   }
-
 
   // 🟡 Cập nhật sinh viên
   Future<int> updateSinhVien(SinhVien sv) async {
@@ -155,11 +150,7 @@ class SinhVienSQLiteHelper {
   //get id
   Future<int> getID() async {
     final db = await instance.database;
-    final result = await db.query(
-      'sinhvien',
-      columns: ['id'],
-      limit: 1,
-    );
+    final result = await db.query('sinhvien', columns: ['id'], limit: 1);
 
     if (result.isNotEmpty) {
       return result.first['id'] as int;
@@ -167,6 +158,7 @@ class SinhVienSQLiteHelper {
       return 0; // hoặc 0 nếu bạn muốn mặc định
     }
   }
+
   /// 🔑 Kiểm tra xem đã đăng nhập chưa
   /// Nếu bảng 'sinhvien' có dữ liệu, trả về true
   Future<bool> isLoggedIn() async {
@@ -179,6 +171,7 @@ class SinhVienSQLiteHelper {
 
     return result.isNotEmpty;
   }
+
   /// Lưu email + mật khẩu vào SQLite (overwrite sinh viên hiện tại)
   Future<void> saveDangNhap(String email, String matkhau) async {
     final sv = SinhVien(

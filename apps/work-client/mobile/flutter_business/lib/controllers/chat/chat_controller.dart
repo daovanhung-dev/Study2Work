@@ -1,66 +1,90 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../lay_ten.dart';
-import 'package:supabase/supabase.dart' hide RealtimeClient;
+import 'dart:async';
 
-final supabase = Supabase.instance.client;
+import 'package:work_server/helper_db/neon_db.dart';
 
-/// Lấy lịch sử chat giữa SV và DN
+final NeonDatabase database = NeonDatabase.instance;
+
 Future<List<Map<String, dynamic>>> getChat(
   int sinhvienId,
   int doanhnghiepId,
 ) async {
-  final response = await supabase
-      .from('chat')
-      .select('id, nguoigui, nguoinhan, noidung, ngaygui, trangthai')
-      .eq('sinhvien_id', sinhvienId)
-      .eq('doanhnghiep_id', doanhnghiepId)
-      .order('ngaygui', ascending: true);
-
-  final data = response as List;
-  return data
-      .map(
-        (row) => {
-          "id": row['id'],
-          "nguoigui": row['nguoigui'],
-          "nguoinhan": row['nguoinhan'],
-          "noidung": row['noidung'],
-          "ngaygui": row['ngaygui'],
-          "trangthai": row['trangthai'],
-        },
-      )
-      .toList();
+  return database.query(
+    '''
+    SELECT "id", "nguoigui", "nguoinhan", "noidung", "ngaygui", "trangthai",
+           "sinhvien_id", "doanhnghiep_id"
+    FROM "Chat"
+    WHERE "sinhvien_id" = \$1 AND "doanhnghiep_id" = \$2
+    ORDER BY "ngaygui" ASC NULLS LAST, "id" ASC
+  ''',
+    parameters: [sinhvienId, doanhnghiepId],
+  );
 }
 
-/// Gửi tin nhắn mới
 Future<void> guiTinNhan(
   int sinhvienId,
   int doanhnghiepId,
   String noidung,
 ) async {
-  await supabase.from('chat').insert({
-    'sinhvien_id': sinhvienId,
-    'doanhnghiep_id': doanhnghiepId,
-    'nguoigui': doanhnghiepId,
-    'nguoinhan': sinhvienId,
-    'noidung': noidung,
-    'ngaygui': DateTime.now().toIso8601String(), // nên thêm timestamp
-  });
+  await database.execute(
+    '''
+    INSERT INTO "Chat" (
+      "sinhvien_id", "doanhnghiep_id", "nguoigui", "nguoinhan", "noidung", "ngaygui"
+    ) VALUES (\$1, \$2, \$3, \$4, \$5, \$6)
+  ''',
+    parameters: [
+      sinhvienId,
+      doanhnghiepId,
+      doanhnghiepId.toString(),
+      sinhvienId.toString(),
+      noidung,
+      DateTime.now().toUtc(),
+    ],
+  );
 }
 
-/// Đăng ký lắng nghe tin nhắn realtime
-RealtimeChannel subscribeMessages(Function(Map<String, dynamic>) onMessage) {
-  final channel = supabase
-      .channel('public:chat')
-      .onPostgresChanges(
-        event: PostgresChangeEvent.insert,
-        schema: 'public',
-        table: 'chat',
-        callback: (payload) {
-          // debug
-          print('Realtime payload: ${payload.newRecord}');
-          onMessage(payload.newRecord);
-        },
-      )
-      .subscribe();
-  return channel;
+Timer startMessagePolling({
+  required int sinhvienId,
+  required int doanhnghiepId,
+  required void Function(Map<String, dynamic>) onMessage,
+  Duration interval = const Duration(seconds: 3),
+}) {
+  return startMessagePollingWithLoader(
+    fetch: () => getChat(sinhvienId, doanhnghiepId),
+    onMessage: onMessage,
+    interval: interval,
+  );
+}
+
+Timer startMessagePollingWithLoader({
+  required Future<List<Map<String, dynamic>>> Function() fetch,
+  required void Function(Map<String, dynamic>) onMessage,
+  Duration interval = const Duration(seconds: 3),
+}) {
+  final seenIds = <int>{};
+  var initialized = false;
+  var running = false;
+
+  Future<void> poll() async {
+    if (running) return;
+    running = true;
+    try {
+      final rows = await fetch();
+      for (final row in rows) {
+        final id = int.tryParse(row['id']?.toString() ?? '');
+        if (id == null) continue;
+        if (!initialized) {
+          seenIds.add(id);
+        } else if (seenIds.add(id)) {
+          onMessage(row);
+        }
+      }
+      initialized = true;
+    } finally {
+      running = false;
+    }
+  }
+
+  final timer = Timer.periodic(interval, (_) => poll());
+  unawaited(poll());
+  return timer;
 }

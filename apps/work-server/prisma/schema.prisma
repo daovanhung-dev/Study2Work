@@ -187,4 +187,13 @@ model UngVien {
   SinhVien    SinhVien?    @relation(fields: [sinhvien_id], references: [id])
   DoanhNghiep DoanhNghiep? @relation(fields: [doanhnghiep_id], references: [id])
   JD          JD?          @relation(fields: [jd_id], references: [id])
+
+  @@unique([jd_id, sinhvien_id], map: "UngVien_jd_sinhvien_key")
+}
+
+// ====================== bannganh lookup ======================
+model BanNganh {
+  nganh String @id @db.VarChar(191)
+
+  @@map("bannganh")
 }

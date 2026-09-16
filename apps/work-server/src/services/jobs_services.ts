@@ -103,13 +103,8 @@ class JDService {
   }
 
   async updateJD(id: number, data: any) {
-    // Chuyển hạn nộp sang Date nếu có
-    if (data.han_nop) {
-      data.han_nop = new Date(data.han_nop);
-    }
-
     const updated = await prisma.jD.update({
-      where: { id },
+      where: { id: BigInt(id) },
       data
     });
 

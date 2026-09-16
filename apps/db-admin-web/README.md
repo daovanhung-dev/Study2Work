@@ -12,7 +12,8 @@ Create the local backend constants once:
 ```bash
 cp apps/db-admin-server/app/core/constants.example.py \
    apps/db-admin-server/app/core/constants.py
-# Edit apps/db-admin-server/app/core/constants.py and set URL_DATABASE.
+# Edit apps/db-admin-server/app/core/constants.py and set DATABASE_TARGETS for
+# work_server and study_server.
 ```
 
 Then run Angular (the FastAPI API starts automatically):
@@ -32,11 +33,14 @@ Press `Ctrl+C` once to stop both processes. The backend can still be started
 directly from `apps/db-admin-server/` for backend-only testing, but a second
 terminal is not needed for the web flow.
 
-The app keeps access tokens in memory only. Production login is expected to be
-provided by the configured OIDC/Identity redirect and the DB Admin API verifies
-the resulting token through JWKS.
+The app keeps access tokens in memory only. Local DB Admin login uses the
+username/password form and a short-lived local JWT; the first temporary login
+must be followed by a password change. OIDC/Identity redirect remains an auth
+fallback and the DB Admin API verifies that token through JWKS.
 
-The catalog page exposes schema/table builders plus an advanced definition
-editor for common PostgreSQL objects. The table browser supports pagination,
-contains filters, header sorting and primary-key-gated row CRUD; every row
-mutation first requests a backend preview token.
+The workspace keeps database selection, schema selection, the PostgreSQL
+catalog tree and the SQL editor in one view. SQL runs only after a database and
+schema are selected; read-only queries run immediately after validation, while
+mutations require explicit confirmation. The root account can open Manage
+access in the same view to provision scoped developer accounts, rotate their
+secrets, reassign schemas and inspect control-plane audit events.

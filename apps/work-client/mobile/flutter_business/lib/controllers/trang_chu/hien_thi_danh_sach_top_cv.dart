@@ -1,59 +1,31 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:work_server/helper_db/neon_db.dart';
 
-final supabase = Supabase.instance.client;
+final NeonDatabase database = NeonDatabase.instance;
+
 Future<List<Map<String, dynamic>>> getTopCV() async {
-  List<Map<String,dynamic>> ds = [];
   try {
-    // Lấy danh sách id từ topcv
-    final idsResponse = await supabase.from('topcv').select('id');
+    final topRows = await database.query(
+      'SELECT "id" FROM "TopCV" ORDER BY "id"',
+    );
+    final ids = topRows
+        .map((row) => int.tryParse(row['id']?.toString() ?? ''))
+        .whereType<int>()
+        .toList();
+    if (ids.isEmpty) return [];
 
-    final List<int> idList = idsResponse.map<int>((row) => row['id'] as int).toList();
-
-    if (idList.isEmpty) return ds; // trả về danh sách rỗng
-
-    // Query tất cả CV theo idList
-    final response = await supabase
-        .from('cv')
-        .select('''
-          id,
-          avt,
-          hoten,
-          ngaysinh,
-          gioitinh,
-          email,
-          sdt,
-          diachi,
-          vitri,
-          nganh,
-          muctieunghiep,
-          hocvan,
-          kinhnghiem,
-          kynang
-        ''')
-        .inFilter('id', idList);
-
-    // Thêm dữ liệu vào ds
-    for (var row in response) {
-      ds.add({
-        'id': row['id'],
-        'avt': row['avt'],
-        'vitri': row['vitri'],
-        'hoten': row['hoten'],
-        'ngaysinh': row['ngaysinh'],
-        'gioitinh': row['gioitinh'],
-        'email': row['email'],
-        'sdt': row['sdt'],
-        'diachi': row['diachi'],
-        'nganh': row['nganh'],
-        'muctieunghiep': row['muctieunghiep'],
-        'hocvan': row['hocvan'],
-        'kinhnghiem': row['kinhnghiem'],
-        'kynang': row['kynang'],
-      });
-    }
-  } catch (e) {
-    print("Lỗi khi lấy dữ liệu CV: $e");
+    final placeholders = List.generate(
+      ids.length,
+      (index) => '\$${index + 1}',
+    ).join(', ');
+    return await database.query('''
+      SELECT "id", "avt", "hoten", "ngaysinh", "gioitinh", "email", "sdt",
+             "diachi", "vitri", "nganh", "muctieunghiep", "hocvan",
+             "kinhnghiem", "kynang"
+      FROM "Cv"
+      WHERE "id" IN ($placeholders)
+      ORDER BY "id"
+    ''', parameters: ids);
+  } catch (_) {
+    return [];
   }
-
-  return ds; // ✅ trả về danh sách CV
 }

@@ -2,37 +2,36 @@ import 'package:flutter/foundation.dart';
 import 'package:work_server/helper_db/sinh_vien/helper_db.dart';
 import 'package:work_server/helper_db/sinh_vien/helper_supabase.dart';
 import 'package:work_server/models/sinh_vien/sinh_vien.dart';
-import 'package:work_server/models/outmeta/NganhNghe.dart';
 
-final Sqlite = SinhVienSQLiteHelper.instance;
-final Supabase = SinhVienSupabaseHelper();
-SinhVien? SV;
+final sqlite = SinhVienSQLiteHelper.instance;
+final neon = SinhVienSupabaseHelper();
+SinhVien? student;
 
 /// Hàm đăng nhập
 /// Trả về true nếu thành công, false nếu thất bại
 Future<bool> dangNhapDN(String email, String matKhau) async {
   try {
-    // 1️⃣ Kiểm tra đăng nhập với Supabase
-    final loginSuccess = await Supabase.login(email, matKhau);
+    // 1️⃣ Kiểm tra đăng nhập với Neon
+    final loginSuccess = await neon.login(email, matKhau);
     if (!loginSuccess) return false;
 
-    // 2️⃣ Lấy dữ liệu sinh viên từ Supabase
-    final svData = await Supabase.getByEmail(email);
+    // 2️⃣ Lấy dữ liệu sinh viên từ Neon
+    final svData = await neon.getByEmail(email);
     if (svData == null) return false;
 
-    SV = svData;
+    student = svData;
 
     // 3️⃣ Lưu SQLite (xóa cũ, insert mới)
-    await Sqlite.insertSinhVien(SV!);
+    await sqlite.insertSinhVien(student!);
 
     // 4️⃣ Lấy lại từ SQLite để đảm bảo dữ liệu đồng bộ
-    SV = await Sqlite.getSinhVien();
-    debugPrint("Sinh viên lưu SQLite: ${SV!.email}");
+    student = await sqlite.getSinhVien();
+    debugPrint("Sinh viên lưu SQLite: ${student!.email}");
 
-    // 5️⃣ Lấy danh sách ngành từ Supabase và lưu SQLite
-    final dsNganh = await Supabase.getNganh();
+    // 5️⃣ Lấy danh sách ngành từ Neon và lưu SQLite
+    final dsNganh = await neon.getNganh();
     if (dsNganh.isNotEmpty) {
-      await Sqlite.saveNganh(dsNganh);
+      await sqlite.saveNganh(dsNganh);
       debugPrint("Danh sách ngành đã lưu SQLite: ${dsNganh.length} ngành");
     }
 
@@ -47,12 +46,12 @@ Future<bool> dangNhapDN(String email, String matKhau) async {
 /// Hàm kiểm tra đăng nhập tự động (nếu đã lưu SQLite)
 Future<bool> autoLogin() async {
   try {
-    final savedUser = await Sqlite.getSinhVien();
+    final savedUser = await sqlite.getSinhVien();
     if (savedUser.email != null && savedUser.matkhau != null) {
-      final ok = await Supabase.login(savedUser.email!, savedUser.matkhau!);
+      final ok = await neon.login(savedUser.email!, savedUser.matkhau!);
       if (ok) {
-        SV = savedUser;
-        debugPrint("Tự động đăng nhập thành công: ${SV!.email}");
+        student = savedUser;
+        debugPrint("Tự động đăng nhập thành công: ${student!.email}");
         return true;
       }
     }

@@ -26,15 +26,15 @@ Widget buildRich(String label, String? value) {
   );
 }
 
-Widget btn_common(
+Widget btnCommon(
   String name,
   VoidCallback onPressed,
-  double width_btn,
-  double height_btn,
+  double widthBtn,
+  double heightBtn,
 ) {
   return SizedBox(
-    width: width_btn,
-    height: height_btn,
+    width: widthBtn,
+    height: heightBtn,
     child: ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.blue,
@@ -49,12 +49,13 @@ Widget btn_common(
       ),
       onPressed: onPressed,
       child: Text(
-        "$name",
+        name,
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
     ),
   );
 }
+
 Widget helperTextField({
   required TextEditingController controller,
   required String label,
@@ -69,9 +70,7 @@ Widget helperTextField({
     decoration: InputDecoration(
       labelText: label,
       prefixIcon: icon != null ? Icon(icon) : null,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     ),
   );
@@ -84,20 +83,15 @@ Widget helperDropdown({
   required String label,
 }) {
   return DropdownButtonFormField<String>(
-    value: value,
+    initialValue: value,
     hint: Text(label),
     decoration: InputDecoration(
       labelText: label,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     ),
     items: items.map((String item) {
-      return DropdownMenuItem<String>(
-        value: item,
-        child: Text(item),
-      );
+      return DropdownMenuItem<String>(value: item, child: Text(item));
     }).toList(),
     onChanged: onChanged,
   );

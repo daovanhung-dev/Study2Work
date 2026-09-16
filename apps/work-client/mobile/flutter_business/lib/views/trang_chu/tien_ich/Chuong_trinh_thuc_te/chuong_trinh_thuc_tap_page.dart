@@ -45,7 +45,10 @@ class _ChuongTrinhThucTapPageState extends State<ChuongTrinhThucTapPage> {
       _programList.removeAt(index);
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Đã xóa chương trình thực tập thành công!"), backgroundColor: Colors.redAccent),
+      const SnackBar(
+        content: Text("Đã xóa chương trình thực tập thành công!"),
+        backgroundColor: Colors.redAccent,
+      ),
     );
   }
 
@@ -53,7 +56,10 @@ class _ChuongTrinhThucTapPageState extends State<ChuongTrinhThucTapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("CHƯƠNG TRÌNH THỰC TẬP", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text(
+          "CHƯƠNG TRÌNH THỰC TẬP",
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         centerTitle: true,
         backgroundColor: Colors.green,
       ),
@@ -64,8 +70,12 @@ class _ChuongTrinhThucTapPageState extends State<ChuongTrinhThucTapPage> {
           children: [
             // FORM NHẬP LIỆU
             const Text(
-                '📝 THÊM CHƯƠNG TRÌNH MỚI',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)
+              '📝 THÊM CHƯƠNG TRÌNH MỚI',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
             ),
             const Divider(color: Colors.green),
 
@@ -76,29 +86,38 @@ class _ChuongTrinhThucTapPageState extends State<ChuongTrinhThucTapPage> {
 
             // HIỂN THỊ DANH SÁCH ĐÃ LƯU
             const Text(
-                '📋 DANH SÁCH CHƯƠNG TRÌNH ĐÃ LƯU',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)
+              '📋 DANH SÁCH CHƯƠNG TRÌNH ĐÃ LƯU',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
             ),
             const Divider(color: Colors.green),
 
             _programList.isEmpty
                 ? const Center(
-              child: Padding(
-                padding: EdgeInsets.only(top: 20),
-                child: Text(
-                  'Chưa có chương trình thực tập nào được lưu.',
-                  style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey),
-                ),
-              ),
-            )
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 20),
+                      child: Text(
+                        'Chưa có chương trình thực tập nào được lưu.',
+                        style: TextStyle(
+                          fontStyle: FontStyle.italic,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                  )
                 : ListView.builder(
-              shrinkWrap: true, // Quan trọng khi nằm trong SingleChildScrollView
-              physics: const NeverScrollableScrollPhysics(), // Vô hiệu hóa cuộn của ListView
-              itemCount: _programList.length,
-              itemBuilder: (context, index) {
-                return _buildProgramCard(_programList[index], index);
-              },
-            ),
+                    shrinkWrap:
+                        true, // Quan trọng khi nằm trong SingleChildScrollView
+                    physics:
+                        const NeverScrollableScrollPhysics(), // Vô hiệu hóa cuộn của ListView
+                    itemCount: _programList.length,
+                    itemBuilder: (context, index) {
+                      return _buildProgramCard(_programList[index], index);
+                    },
+                  ),
           ],
         ),
       ),
@@ -114,8 +133,12 @@ class _ChuongTrinhThucTapPageState extends State<ChuongTrinhThucTapPage> {
         contentPadding: const EdgeInsets.all(15),
         leading: const Icon(Icons.badge, size: 40, color: Colors.green),
         title: Text(
-            program.hoTen,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.indigo)
+          program.hoTen,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: Colors.indigo,
+          ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,7 +146,10 @@ class _ChuongTrinhThucTapPageState extends State<ChuongTrinhThucTapPage> {
             const SizedBox(height: 4),
             Text('🎓 ${program.truong} - ${program.nganhHoc}'),
             Text('💼 Vị trí: ${program.viTri}'),
-            Text('🕒 Thời gian: ${program.thoiGian}', style: const TextStyle(fontWeight: FontWeight.w500)),
+            Text(
+              '🕒 Thời gian: ${program.thoiGian}',
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
             Text('👨‍🏫 HD: ${program.nguoiHuongDan}'),
           ],
         ),
@@ -152,13 +178,24 @@ class _ChuongTrinhThucTapFormState extends State<ChuongTrinhThucTapForm> {
   final TextEditingController _hoTenController = TextEditingController();
   final TextEditingController _nganhHocController = TextEditingController();
   final TextEditingController _truongController = TextEditingController();
-  final TextEditingController _nguoiHuongDanController = TextEditingController();
+  final TextEditingController _nguoiHuongDanController =
+      TextEditingController();
 
   String? _viTriThucTap;
   String? _thoiGianThucTap;
 
-  final List<String> _viTriOptions = ['Mobile App (Flutter/React Native)', 'Backend (NodeJS/Java)', 'Frontend (React/Vue)', 'Tester/QA', 'Designer/UX'];
-  final List<String> _thoiGianOptions = ['3 tháng (Bán thời gian)', '6 tháng (Toàn thời gian)', 'Theo yêu cầu của trường'];
+  final List<String> _viTriOptions = [
+    'Mobile App (Flutter/React Native)',
+    'Backend (NodeJS/Java)',
+    'Frontend (React/Vue)',
+    'Tester/QA',
+    'Designer/UX',
+  ];
+  final List<String> _thoiGianOptions = [
+    '3 tháng (Bán thời gian)',
+    '6 tháng (Toàn thời gian)',
+    'Theo yêu cầu của trường',
+  ];
 
   @override
   void dispose() {
@@ -186,7 +223,9 @@ class _ChuongTrinhThucTapFormState extends State<ChuongTrinhThucTapForm> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Lưu thành công chương trình thực tập của: ${program.hoTen}!"),
+          content: Text(
+            "Lưu thành công chương trình thực tập của: ${program.hoTen}!",
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -219,7 +258,7 @@ class _ChuongTrinhThucTapFormState extends State<ChuongTrinhThucTapForm> {
             Icons.work,
             _viTriThucTap,
             _viTriOptions,
-                (v) => setState(() => _viTriThucTap = v),
+            (v) => setState(() => _viTriThucTap = v),
           ),
 
           _buildDropdownField(
@@ -227,20 +266,29 @@ class _ChuongTrinhThucTapFormState extends State<ChuongTrinhThucTapForm> {
             Icons.schedule,
             _thoiGianThucTap,
             _thoiGianOptions,
-                (v) => setState(() => _thoiGianThucTap = v),
+            (v) => setState(() => _thoiGianThucTap = v),
           ),
 
-          _buildTextField("Người hướng dẫn", _nguoiHuongDanController, Icons.person_pin),
+          _buildTextField(
+            "Người hướng dẫn",
+            _nguoiHuongDanController,
+            Icons.person_pin,
+          ),
 
           const SizedBox(height: 20),
           ElevatedButton.icon(
             icon: const Icon(Icons.save),
-            label: const Text("LƯU CHƯƠNG TRÌNH", style: TextStyle(fontSize: 16)),
+            label: const Text(
+              "LƯU CHƯƠNG TRÌNH",
+              style: TextStyle(fontSize: 16),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
               minimumSize: const Size(double.infinity, 55),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               elevation: 5,
             ),
             onPressed: _luuChuongTrinh,
@@ -251,7 +299,11 @@ class _ChuongTrinhThucTapFormState extends State<ChuongTrinhThucTapForm> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, IconData icon) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    IconData icon,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
@@ -261,31 +313,35 @@ class _ChuongTrinhThucTapFormState extends State<ChuongTrinhThucTapForm> {
           prefixIcon: Icon(icon, color: Colors.green.shade600),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
-          fillColor: Colors.green.shade50.withOpacity(0.5),
+          fillColor: Colors.green.shade50.withValues(alpha: 0.5),
         ),
-        validator: (value) => (value == null || value.isEmpty) ? "Vui lòng nhập $label" : null,
+        validator: (value) =>
+            (value == null || value.isEmpty) ? "Vui lòng nhập $label" : null,
       ),
     );
   }
 
-  Widget _buildDropdownField(String label, IconData icon, String? value, List<String> items, Function(String?) onChanged) {
+  Widget _buildDropdownField(
+    String label,
+    IconData icon,
+    String? value,
+    List<String> items,
+    Function(String?) onChanged,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: Colors.green.shade600),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
-          fillColor: Colors.green.shade50.withOpacity(0.5),
+          fillColor: Colors.green.shade50.withValues(alpha: 0.5),
         ),
         hint: Text("Chọn $label"),
         items: items.map((String item) {
-          return DropdownMenuItem(
-            value: item,
-            child: Text(item),
-          );
+          return DropdownMenuItem(value: item, child: Text(item));
         }).toList(),
         onChanged: onChanged,
         validator: (v) => v == null ? "Vui lòng chọn $label" : null,

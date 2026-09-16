@@ -26,15 +26,15 @@ Run `corepack pnpm docs:validate` after changing any canonical BD file. The root
 | Study web | `apps/study-client` | Vue 3, TypeScript, Vite |
 | Study API | `apps/study-server` | FastAPI, Python, SQLAlchemy, Alembic |
 | Work web | `apps/work-client/web` | React, TypeScript, Vite |
-| Work API | `apps/work-server` | NestJS, Fastify, TypeScript, PostgreSQL, Redis |
+| Work API | `apps/work-server` | Express, TypeScript, Prisma, Neon PostgreSQL, JWT |
 | Contracts | `contracts` | OpenAPI baselines, event JSON Schema, skill taxonomy |
 | Infra | `infra`, `docker-compose.yml` | Local PostgreSQL, Redis, MinIO, Mailhog |
 
 The Work applications are intentionally independent deployables. `apps/work-server`
-owns HTTP APIs, persistence, and Work integrations; `apps/work-client/web` owns the
-browser UI and receives only the public API projection from
-`apps/work-server/src/constants.ts`. The API does not serve the web application's
-static files, templates, or routes.
+owns the Express JSON API, persistence, and upload/static-file endpoints;
+`apps/work-client/web` owns the React browser UI. The browser uses relative
+`/api/v1`, `/uploads`, and `/img` paths, with Vite proxying those paths to the API
+in development and a same-origin reverse proxy expected in production.
 
 ## Commands
 
@@ -68,34 +68,28 @@ uv run pytest
 Run the Work applications locally:
 
 ```powershell
-Copy-Item apps/work-server/src/constants.example.ts apps/work-server/src/constants.ts
-# edit ACTIVE_PROFILE and local-only values in constants.ts
 corepack pnpm --filter work_server prisma:validate
 corepack pnpm --filter work_server prisma:generate
 corepack pnpm dev:work-server
 corepack pnpm dev:work-web
 ```
 
-Validate local compose:
+Work API listens on port `3000`; Work Web listens on Vite port `5174`. Work
+authentication is JWT Bearer-only with the browser token stored under
+`access_token`. No Work runtime reads `.env`, cookies, or server-side sessions.
 
-```powershell
-corepack pnpm --filter work_server work:compose -- config
-```
+For local Work development, run the API and React dev server as two processes;
+the repository does not require a Work container or a browser-side database
+connection for this flow.
 
-Run the separated Work stack in containers:
+## Work API boundary
 
-```powershell
-corepack pnpm --filter work_server work:compose -- up --build work-api work-web
-```
-
-## API Baseline
-
-Both APIs expose:
-
-- `GET /health/live`
-- `GET /health/ready`
-
-All new API responses use the standard envelope:
+The target Work OpenAPI catalog remains in
+[`contracts/openapi/work/openapi.json`](contracts/openapi/work/openapi.json), but
+its target-only routes are not mounted by the current Express backend. React
+uses the current route contract in
+[`contracts/openapi/work/legacy-web.openapi.json`](contracts/openapi/work/legacy-web.openapi.json).
+Those JSON responses use the standard envelope:
 
 ```json
 {

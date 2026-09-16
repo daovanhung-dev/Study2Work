@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'quen_mat_khau.dart';
 import 'menu.dart';
 import 'package:work_server/controllers/dang_nhap/dangnhap_ctrl.dart';
-import 'package:work_server/helper_db/helper_supabase.dart';
 import 'package:shimmer/shimmer.dart';
 
 class DangNhap extends StatefulWidget {
@@ -12,7 +11,8 @@ class DangNhap extends StatefulWidget {
   State<DangNhap> createState() => _DangNhapState();
 }
 
-class _DangNhapState extends State<DangNhap> with SingleTickerProviderStateMixin {
+class _DangNhapState extends State<DangNhap>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _emailCtrl = TextEditingController();
   final TextEditingController _passCtrl = TextEditingController();
 
@@ -46,9 +46,9 @@ class _DangNhapState extends State<DangNhap> with SingleTickerProviderStateMixin
 
   Future<void> _autoLogin() async {
     try {
-      final user = await Sqlite.getDangNhap();
+      final user = await sqlite.getDangNhap();
       if (user != null &&
-          await Supabase.ktDangNhap(user['email'], user['matkhau'])) {
+          await neon.ktDangNhap(user['email'], user['matkhau'])) {
         await Future.delayed(const Duration(milliseconds: 600));
         if (mounted) _navigateToMenu();
         return;
@@ -157,7 +157,7 @@ class _DangNhapState extends State<DangNhap> with SingleTickerProviderStateMixin
               ),
             ),
           ),
-          Container(color: Colors.white.withOpacity(0.15)), // overlay nhẹ
+          Container(color: Colors.white.withValues(alpha: 0.15)), // overlay nhẹ
           SafeArea(
             child: SingleChildScrollView(
               padding: EdgeInsets.only(
@@ -175,11 +175,11 @@ class _DangNhapState extends State<DangNhap> with SingleTickerProviderStateMixin
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.95),
+                      color: Colors.white.withValues(alpha: 0.95),
                       borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
+                          color: Colors.black.withValues(alpha: 0.08),
                           blurRadius: 15,
                           offset: const Offset(0, 6),
                         ),
@@ -193,10 +193,13 @@ class _DangNhapState extends State<DangNhap> with SingleTickerProviderStateMixin
                           decoration: InputDecoration(
                             labelText: "Email",
                             labelStyle: TextStyle(
-                                color: Colors.grey.shade800,
-                                fontWeight: FontWeight.w500),
-                            prefixIcon: Icon(Icons.email_outlined,
-                                color: Colors.blue.shade400),
+                              color: Colors.grey.shade800,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            prefixIcon: Icon(
+                              Icons.email_outlined,
+                              color: Colors.blue.shade400,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                             ),
@@ -211,10 +214,13 @@ class _DangNhapState extends State<DangNhap> with SingleTickerProviderStateMixin
                           decoration: InputDecoration(
                             labelText: "Mật khẩu",
                             labelStyle: TextStyle(
-                                color: Colors.grey.shade800,
-                                fontWeight: FontWeight.w500),
-                            prefixIcon:
-                            Icon(Icons.lock_outline, color: Colors.blue.shade400),
+                              color: Colors.grey.shade800,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            prefixIcon: Icon(
+                              Icons.lock_outline,
+                              color: Colors.blue.shade400,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(15),
                             ),
@@ -234,10 +240,13 @@ class _DangNhapState extends State<DangNhap> with SingleTickerProviderStateMixin
                                 ),
                               );
                             },
-                            child: Text("Quên mật khẩu?",
-                                style: TextStyle(
-                                    color: Colors.blue.shade400,
-                                    fontWeight: FontWeight.w600)),
+                            child: Text(
+                              "Quên mật khẩu?",
+                              style: TextStyle(
+                                color: Colors.blue.shade400,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -255,16 +264,20 @@ class _DangNhapState extends State<DangNhap> with SingleTickerProviderStateMixin
                             ),
                             child: _isLoading
                                 ? const SizedBox(
-                              width: 25,
-                              height: 25,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 3,
-                              ),
-                            )
-                                : const Text("Đăng Nhập",
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold)),
+                                    width: 25,
+                                    height: 25,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 3,
+                                    ),
+                                  )
+                                : const Text(
+                                    "Đăng Nhập",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
                       ],
@@ -283,7 +296,7 @@ class _DangNhapState extends State<DangNhap> with SingleTickerProviderStateMixin
 
 // Loader/shimmer/dots nhẹ nhàng hơn, màu Facebook-like
 class _AnimatedLoader extends StatefulWidget {
-  const _AnimatedLoader({super.key});
+  const _AnimatedLoader();
 
   @override
   State<_AnimatedLoader> createState() => _AnimatedLoaderState();
@@ -296,9 +309,10 @@ class _AnimatedLoaderState extends State<_AnimatedLoader>
   @override
   void initState() {
     super.initState();
-    _controller =
-    AnimationController(vsync: this, duration: const Duration(seconds: 2))
-      ..repeat();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
   }
 
   @override
@@ -324,7 +338,7 @@ class _AnimatedLoaderState extends State<_AnimatedLoader>
 }
 
 class _ShimmerText extends StatelessWidget {
-  const _ShimmerText({super.key});
+  const _ShimmerText();
 
   @override
   Widget build(BuildContext context) {
@@ -335,14 +349,17 @@ class _ShimmerText extends StatelessWidget {
       child: const Text(
         "Đang kiểm tra đăng nhập...",
         style: TextStyle(
-            fontSize: 16, fontWeight: FontWeight.w500, letterSpacing: 1.0),
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 1.0,
+        ),
       ),
     );
   }
 }
 
 class _BouncingDots extends StatefulWidget {
-  const _BouncingDots({super.key});
+  const _BouncingDots();
 
   @override
   State<_BouncingDots> createState() => _BouncingDotsState();
@@ -358,24 +375,28 @@ class _BouncingDotsState extends State<_BouncingDots>
   @override
   void initState() {
     super.initState();
-    _controller =
-    AnimationController(vsync: this, duration: const Duration(seconds: 1))
-      ..repeat();
-    _animation1 =
-        Tween<double>(begin: 0, end: -8).animate(CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.0, 0.33, curve: Curves.easeInOut),
-        ));
-    _animation2 =
-        Tween<double>(begin: 0, end: -8).animate(CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.33, 0.66, curve: Curves.easeInOut),
-        ));
-    _animation3 =
-        Tween<double>(begin: 0, end: -8).animate(CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.66, 1.0, curve: Curves.easeInOut),
-        ));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat();
+    _animation1 = Tween<double>(begin: 0, end: -8).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.33, curve: Curves.easeInOut),
+      ),
+    );
+    _animation2 = Tween<double>(begin: 0, end: -8).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.33, 0.66, curve: Curves.easeInOut),
+      ),
+    );
+    _animation3 = Tween<double>(begin: 0, end: -8).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.66, 1.0, curve: Curves.easeInOut),
+      ),
+    );
   }
 
   @override
@@ -387,16 +408,16 @@ class _BouncingDotsState extends State<_BouncingDots>
   Widget _dot(Animation<double> animation) {
     return AnimatedBuilder(
       animation: animation,
-      builder: (_, child) => Transform.translate(
-        offset: Offset(0, animation.value),
-        child: child,
-      ),
+      builder: (_, child) =>
+          Transform.translate(offset: Offset(0, animation.value), child: child),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 3),
         width: 10,
         height: 10,
         decoration: BoxDecoration(
-            color: Colors.blue.shade300, shape: BoxShape.circle),
+          color: Colors.blue.shade300,
+          shape: BoxShape.circle,
+        ),
       ),
     );
   }
@@ -405,11 +426,7 @@ class _BouncingDotsState extends State<_BouncingDots>
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [
-        _dot(_animation1),
-        _dot(_animation2),
-        _dot(_animation3),
-      ],
+      children: [_dot(_animation1), _dot(_animation2), _dot(_animation3)],
     );
   }
 }

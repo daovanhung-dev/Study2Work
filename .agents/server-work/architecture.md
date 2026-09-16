@@ -8,26 +8,23 @@ src/main.ts
   -> Express app.listen(PORT)
 
 src/app.ts
-  -> urlencoded/json parsers
+  -> JSON parser
   -> static public assets
   -> optional JWT Bearer parser
-  -> web, student and business routers
+  -> versioned JSON API router
 ```
 
-The runtime is Express 4 with EJS views. `src/utils/constants.ts` is the
-runtime configuration source; `.env` is not loaded.
+The runtime is an API-only Express 4 server. `src/utils/constants.ts` is the
+runtime configuration source; `.env` is not loaded. React owns all browser
+views in the separate Work Web package.
 
 ## Authentication
 
 `authenticateToken` parses exactly one `Authorization: Bearer <JWT>` header and
 places the validated `{ id, email, role }` principal on `request.user`.
-Protected student/business routers apply `ensureAuthenticated` and
+Protected student/business API routes apply `ensureAuthenticated` and
 `checkRole`. Cookies, Passport and server-side sessions are not authentication
 mechanisms.
-
-The EJS client uses `public/js/jwt-client.js` to store the access token locally,
-attach Bearer headers to same-origin requests, and navigate protected HTML
-pages through authenticated fetches.
 
 ## Persistence
 

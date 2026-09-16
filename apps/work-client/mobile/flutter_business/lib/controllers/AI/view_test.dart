@@ -41,7 +41,9 @@ class _AITestScreenState extends State<AITestScreen> {
               controller: _controller,
               decoration: InputDecoration(
                 labelText: 'Nhập câu hỏi...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -60,10 +62,7 @@ class _AITestScreenState extends State<AITestScreen> {
             else
               Expanded(
                 child: SingleChildScrollView(
-                  child: Text(
-                    _response,
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  child: Text(_response, style: const TextStyle(fontSize: 16)),
                 ),
               ),
           ],

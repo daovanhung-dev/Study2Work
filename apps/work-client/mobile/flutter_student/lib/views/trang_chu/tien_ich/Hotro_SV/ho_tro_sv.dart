@@ -5,11 +5,31 @@ class HoTroSinhVienView extends StatelessWidget {
 
   // Danh sách tiện ích hỗ trợ
   final List<Map<String, dynamic>> _supportItems = const [
-    {'icon': Icons.question_answer_rounded, 'title': 'FAQ', 'description': 'Câu hỏi thường gặp'},
-    {'icon': Icons.chat_bubble_outline, 'title': 'Chat Hỗ Trợ', 'description': 'Trao đổi trực tiếp với trợ lý'},
-    {'icon': Icons.book_outlined, 'title': 'Tài Liệu Học Tập', 'description': 'Sách, bài giảng, slides'},
-    {'icon': Icons.contact_phone_outlined, 'title': 'Liên Hệ', 'description': 'Thông tin liên hệ hỗ trợ'},
-    {'icon': Icons.info_outline, 'title': 'Hướng Dẫn Sử Dụng', 'description': 'Cách sử dụng ứng dụng'},
+    {
+      'icon': Icons.question_answer_rounded,
+      'title': 'FAQ',
+      'description': 'Câu hỏi thường gặp',
+    },
+    {
+      'icon': Icons.chat_bubble_outline,
+      'title': 'Chat Hỗ Trợ',
+      'description': 'Trao đổi trực tiếp với trợ lý',
+    },
+    {
+      'icon': Icons.book_outlined,
+      'title': 'Tài Liệu Học Tập',
+      'description': 'Sách, bài giảng, slides',
+    },
+    {
+      'icon': Icons.contact_phone_outlined,
+      'title': 'Liên Hệ',
+      'description': 'Thông tin liên hệ hỗ trợ',
+    },
+    {
+      'icon': Icons.info_outline,
+      'title': 'Hướng Dẫn Sử Dụng',
+      'description': 'Cách sử dụng ứng dụng',
+    },
   ];
 
   @override
@@ -47,7 +67,7 @@ class HoTroSinhVienView extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () {
-          // TODO: Xử lý chuyển sang chức năng chi tiết
+          // Future enhancement: Xử lý chuyển sang chức năng chi tiết
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Mở chức năng: ${item['title']}')),
           );
@@ -61,7 +81,10 @@ class HoTroSinhVienView extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 item['title'],
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),

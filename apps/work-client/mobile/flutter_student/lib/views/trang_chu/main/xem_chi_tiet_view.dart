@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:work_server/controllers/trang_chu/xem_chi_tiet.dart';
-import 'package:work_server/controllers/UngTuyenCtrl.dart';
-import 'package:work_server/models/sinh_vien/JD.dart';
+import 'package:work_server/controllers/ung_tuyen_ctrl.dart';
+import 'package:work_server/models/sinh_vien/jd.dart';
 
 final xemChiTietCtrl = XemChiTietController();
 final ungTuyenCtrl = UngTuyenCtrl();
@@ -62,7 +62,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -86,8 +86,10 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                                   width: 80,
                                   height: 80,
                                   color: Colors.grey[300],
-                                  child: const Icon(Icons.business,
-                                      color: Colors.grey),
+                                  child: const Icon(
+                                    Icons.business,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               ),
                             ),
@@ -105,15 +107,21 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(jd.tenCongTy,
-                                      style: const TextStyle(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w500)),
+                                  Text(
+                                    jd.tenCongTy,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                   const SizedBox(height: 4),
-                                  Text(jd.diaDiem,
-                                      style: const TextStyle(
-                                          fontSize: 13,
-                                          color: Colors.black54)),
+                                  Text(
+                                    jd.diaDiem,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -131,10 +139,16 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                             _infoTag(Icons.school, jd.trinhDo, Colors.orange),
                             _infoTag(Icons.star, jd.capBac, Colors.purple),
                             _infoTag(Icons.timer, jd.thoiGian, Colors.green),
-                            _infoTag(Icons.monetization_on, jd.mucLuong,
-                                Colors.blue),
-                            _infoTag(Icons.calendar_today,
-                                _formatDate(jd.hanNop), Colors.red),
+                            _infoTag(
+                              Icons.monetization_on,
+                              jd.mucLuong,
+                              Colors.blue,
+                            ),
+                            _infoTag(
+                              Icons.calendar_today,
+                              _formatDate(jd.hanNop),
+                              Colors.red,
+                            ),
                           ],
                         ),
 
@@ -144,8 +158,10 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                         // ===================== FULL DETAILS =====================
                         _sectionTitle("THÔNG TIN CHI TIẾT"),
                         _buildRich("ID công việc", jd.id.toString()),
-                        _buildRich("ID doanh nghiệp",
-                            jd.doanhNghiepID?.toString() ?? "Chưa có"),
+                        _buildRich(
+                          "ID doanh nghiệp",
+                          jd.doanhNghiepID?.toString() ?? "Chưa có",
+                        ),
                         _buildRich("Tên công ty", jd.tenCongTy),
                         _buildRich("Ngành nghề", jd.nganh),
                         _buildRich("Tên vị trí", jd.tenViTri),
@@ -171,24 +187,34 @@ class _XemChiTietViewState extends State<XemChiTietView> {
                         Center(
                           child: ElevatedButton.icon(
                             onPressed: () async {
-                              bool kt = await ungTuyenCtrl.ungTuyen(jd.id);
+                              final kt = await ungTuyenCtrl.ungTuyen(jd.id);
+                              if (!context.mounted) return;
                               if (kt) {
-                                _showSnack(context, 'Ứng tuyển thành công!',
-                                    Colors.blue);
+                                _showSnack(
+                                  context,
+                                  'Ứng tuyển thành công!',
+                                  Colors.blue,
+                                );
                               } else {
-                                _showSnack(context,
-                                    'Bạn đã ứng tuyển vị trí này rồi!',
-                                    Colors.redAccent);
+                                _showSnack(
+                                  context,
+                                  'Bạn đã ứng tuyển vị trí này rồi!',
+                                  Colors.redAccent,
+                                );
                               }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF0052CC),
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 30, vertical: 12),
+                                horizontal: 30,
+                                vertical: 12,
+                              ),
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30)),
-                              shadowColor:
-                              Colors.blueAccent.withOpacity(0.35),
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              shadowColor: Colors.blueAccent.withValues(
+                                alpha: 0.35,
+                              ),
                               elevation: 6,
                             ),
                             icon: const Icon(Icons.send, color: Colors.white),
@@ -219,10 +245,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
   void _showSnack(BuildContext context, String msg, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          msg,
-          style: const TextStyle(color: Colors.white),
-        ),
+        content: Text(msg, style: const TextStyle(color: Colors.white)),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
@@ -265,7 +288,9 @@ class _XemChiTietViewState extends State<XemChiTietView> {
             TextSpan(
               text: "$label: ",
               style: const TextStyle(
-                  fontWeight: FontWeight.bold, color: Colors.black),
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
             ),
             TextSpan(text: text),
           ],
@@ -279,9 +304,9 @@ class _XemChiTietViewState extends State<XemChiTietView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.25)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

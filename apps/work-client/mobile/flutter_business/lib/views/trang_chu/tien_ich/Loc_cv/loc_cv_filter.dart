@@ -12,7 +12,13 @@ class Job {
   final String title;
   final List<String> requiredSkills;
   final int minExp;
-  Job({required this.id, required this.projectId, required this.title, required this.requiredSkills, required this.minExp});
+  Job({
+    required this.id,
+    required this.projectId,
+    required this.title,
+    required this.requiredSkills,
+    required this.minExp,
+  });
 }
 
 class CV {
@@ -21,7 +27,13 @@ class CV {
   final int exp;
   final String status;
   final String jobId;
-  CV({required this.name, required this.skills, required this.exp, required this.status, required this.jobId});
+  CV({
+    required this.name,
+    required this.skills,
+    required this.exp,
+    required this.status,
+    required this.jobId,
+  });
 }
 
 class LocCV extends StatefulWidget {
@@ -39,26 +51,107 @@ class _LocCVState extends State<LocCV> {
   ];
 
   late final List<Job> _jobs = [
-    Job(id: 'j1', projectId: 'p1', title: 'Backend Engineer', requiredSkills: ['Java', 'Spring', 'SQL'], minExp: 2),
-    Job(id: 'j2', projectId: 'p1', title: 'QA Engineer', requiredSkills: ['Testing', 'Selenium'], minExp: 1),
-    Job(id: 'j3', projectId: 'p2', title: 'Flutter Developer', requiredSkills: ['Flutter', 'Dart', 'REST'], minExp: 1),
-    Job(id: 'j4', projectId: 'p2', title: 'UI/UX Designer', requiredSkills: ['Figma', 'UI', 'UX'], minExp: 2),
-    Job(id: 'j5', projectId: 'p3', title: 'ML Engineer', requiredSkills: ['Python', 'NLP', 'TensorFlow'], minExp: 2),
+    Job(
+      id: 'j1',
+      projectId: 'p1',
+      title: 'Backend Engineer',
+      requiredSkills: ['Java', 'Spring', 'SQL'],
+      minExp: 2,
+    ),
+    Job(
+      id: 'j2',
+      projectId: 'p1',
+      title: 'QA Engineer',
+      requiredSkills: ['Testing', 'Selenium'],
+      minExp: 1,
+    ),
+    Job(
+      id: 'j3',
+      projectId: 'p2',
+      title: 'Flutter Developer',
+      requiredSkills: ['Flutter', 'Dart', 'REST'],
+      minExp: 1,
+    ),
+    Job(
+      id: 'j4',
+      projectId: 'p2',
+      title: 'UI/UX Designer',
+      requiredSkills: ['Figma', 'UI', 'UX'],
+      minExp: 2,
+    ),
+    Job(
+      id: 'j5',
+      projectId: 'p3',
+      title: 'ML Engineer',
+      requiredSkills: ['Python', 'NLP', 'TensorFlow'],
+      minExp: 2,
+    ),
   ];
 
   late final List<CV> _cvs = [
-    CV(name: 'Nguyễn Văn A', skills: ['Java', 'Spring', 'SQL'], exp: 3, status: 'Applied', jobId: 'j1'),
-    CV(name: 'Trần Thị B', skills: ['Flutter', 'Dart', 'REST'], exp: 2, status: 'Interview', jobId: 'j3'),
-    CV(name: 'Lê Văn C', skills: ['Python', 'NLP', 'TensorFlow'], exp: 2, status: 'Screened', jobId: 'j5'),
-    CV(name: 'Phạm Thị D', skills: ['Testing', 'Selenium'], exp: 1, status: 'Offered', jobId: 'j2'),
-    CV(name: 'Đỗ Quốc E', skills: ['Figma', 'UI', 'UX'], exp: 3, status: 'Hired', jobId: 'j4'),
-    CV(name: 'Vũ Minh F', skills: ['Flutter', 'REST'], exp: 1, status: 'Rejected', jobId: 'j3'),
+    CV(
+      name: 'Nguyễn Văn A',
+      skills: ['Java', 'Spring', 'SQL'],
+      exp: 3,
+      status: 'Applied',
+      jobId: 'j1',
+    ),
+    CV(
+      name: 'Trần Thị B',
+      skills: ['Flutter', 'Dart', 'REST'],
+      exp: 2,
+      status: 'Interview',
+      jobId: 'j3',
+    ),
+    CV(
+      name: 'Lê Văn C',
+      skills: ['Python', 'NLP', 'TensorFlow'],
+      exp: 2,
+      status: 'Screened',
+      jobId: 'j5',
+    ),
+    CV(
+      name: 'Phạm Thị D',
+      skills: ['Testing', 'Selenium'],
+      exp: 1,
+      status: 'Offered',
+      jobId: 'j2',
+    ),
+    CV(
+      name: 'Đỗ Quốc E',
+      skills: ['Figma', 'UI', 'UX'],
+      exp: 3,
+      status: 'Hired',
+      jobId: 'j4',
+    ),
+    CV(
+      name: 'Vũ Minh F',
+      skills: ['Flutter', 'REST'],
+      exp: 1,
+      status: 'Rejected',
+      jobId: 'j3',
+    ),
   ];
 
   String? _selectedProjectId;
   String? _selectedJobId;
   String _selectedStatus = 'Tất cả';
-  final List<String> _allSkills = ['Java','Spring','SQL','Testing','Selenium','Flutter','Dart','REST','Figma','UI','UX','Python','NLP','TensorFlow'];
+  final List<String> _allSkills = [
+    'Java',
+    'Spring',
+    'SQL',
+    'Testing',
+    'Selenium',
+    'Flutter',
+    'Dart',
+    'REST',
+    'Figma',
+    'UI',
+    'UX',
+    'Python',
+    'NLP',
+    'TensorFlow',
+  ];
   final Set<String> _selectedSkills = {};
   int? _minExp;
 
@@ -75,11 +168,15 @@ class _LocCVState extends State<LocCV> {
       _filtered = true;
       _results = _cvs.where((cv) {
         final job = _jobs.firstWhere((j) => j.id == cv.jobId);
-        final projectOk = _selectedProjectId == null || job.projectId == _selectedProjectId;
+        final projectOk =
+            _selectedProjectId == null || job.projectId == _selectedProjectId;
         final jobOk = _selectedJobId == null || cv.jobId == _selectedJobId;
-        final statusOk = _selectedStatus == 'Tất cả' || cv.status == _selectedStatus;
+        final statusOk =
+            _selectedStatus == 'Tất cả' || cv.status == _selectedStatus;
         final expOk = _minExp == null || cv.exp >= _minExp!;
-        final skillsOk = _selectedSkills.isEmpty || _selectedSkills.every((s) => cv.skills.contains(s));
+        final skillsOk =
+            _selectedSkills.isEmpty ||
+            _selectedSkills.every((s) => cv.skills.contains(s));
         return projectOk && jobOk && statusOk && expOk && skillsOk;
       }).toList();
     });
@@ -101,7 +198,9 @@ class _LocCVState extends State<LocCV> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        Positioned.fill(child: Image.asset('assets/bg_trangchu.jpg', fit: BoxFit.cover)),
+        Positioned.fill(
+          child: Image.asset('assets/bg_trangchu.jpg', fit: BoxFit.cover),
+        ),
         Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
@@ -137,8 +236,13 @@ class _LocCVState extends State<LocCV> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF3F51B5),
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
                           onPressed: _applyFilter,
                           icon: const Icon(Icons.filter_alt),
@@ -153,12 +257,21 @@ class _LocCVState extends State<LocCV> {
                       ],
                     ),
                     const SizedBox(height: 18),
-                    const Text('Kết quả:', style: TextStyle(fontWeight: FontWeight.w600)),
+                    const Text(
+                      'Kết quả:',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     const SizedBox(height: 8),
                     if (!_filtered)
-                      const Text('Chọn điều kiện rồi bấm Lọc CV nha.', style: TextStyle(color: Colors.black54))
+                      const Text(
+                        'Chọn điều kiện rồi bấm Lọc CV nha.',
+                        style: TextStyle(color: Colors.black54),
+                      )
                     else if (_results.isEmpty)
-                      const Text('Không tìm thấy CV phù hợp.', style: TextStyle(color: Colors.black45))
+                      const Text(
+                        'Không tìm thấy CV phù hợp.',
+                        style: TextStyle(color: Colors.black45),
+                      )
                     else
                       ListView.separated(
                         shrinkWrap: true,
@@ -168,21 +281,31 @@ class _LocCVState extends State<LocCV> {
                         itemBuilder: (context, i) {
                           final cv = _results[i];
                           final job = _jobs.firstWhere((j) => j.id == cv.jobId);
-                          final project = _projects.firstWhere((p) => p.id == job.projectId);
+                          final project = _projects.firstWhere(
+                            (p) => p.id == job.projectId,
+                          );
                           return Card(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             child: ListTile(
-                              leading: const CircleAvatar(child: Icon(Icons.person)),
+                              leading: const CircleAvatar(
+                                child: Icon(Icons.person),
+                              ),
                               title: Text(cv.name),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Dự án: ${project.name} • Job: ${job.title} • Trạng thái: ${cv.status}'),
+                                  Text(
+                                    'Dự án: ${project.name} • Job: ${job.title} • Trạng thái: ${cv.status}',
+                                  ),
                                   const SizedBox(height: 4),
                                   Wrap(
                                     spacing: 6,
                                     runSpacing: -8,
-                                    children: cv.skills.map((s) => Chip(label: Text(s))).toList(),
+                                    children: cv.skills
+                                        .map((s) => Chip(label: Text(s)))
+                                        .toList(),
                                   ),
                                   const SizedBox(height: 4),
                                   Text('Kinh nghiệm: ${cv.exp} năm'),
@@ -208,13 +331,24 @@ class _LocCVState extends State<LocCV> {
     return SizedBox(
       width: 260,
       child: DropdownButtonFormField<String?>(
-        value: _selectedProjectId,
+        initialValue: _selectedProjectId,
         items: [
-          const DropdownMenuItem<String?>(value: null, child: Text('Tất cả dự án')),
-          ..._projects.map((p) => DropdownMenuItem<String?>(value: p.id, child: Text(p.name)))
+          const DropdownMenuItem<String?>(
+            value: null,
+            child: Text('Tất cả dự án'),
+          ),
+          ..._projects.map(
+            (p) => DropdownMenuItem<String?>(value: p.id, child: Text(p.name)),
+          ),
         ],
-        onChanged: (v) => setState(() { _selectedProjectId = v; _selectedJobId = null; }),
-        decoration: const InputDecoration(prefixIcon: Icon(Icons.folder_open), labelText: 'Dự án'),
+        onChanged: (v) => setState(() {
+          _selectedProjectId = v;
+          _selectedJobId = null;
+        }),
+        decoration: const InputDecoration(
+          prefixIcon: Icon(Icons.folder_open),
+          labelText: 'Dự án',
+        ),
       ),
     );
   }
@@ -224,26 +358,47 @@ class _LocCVState extends State<LocCV> {
     return SizedBox(
       width: 260,
       child: DropdownButtonFormField<String?>(
-        value: _selectedJobId,
+        initialValue: _selectedJobId,
         items: [
-          const DropdownMenuItem<String?>(value: null, child: Text('Tất cả job')),
-          ...jobs.map((j) => DropdownMenuItem<String?>(value: j.id, child: Text(j.title)))
+          const DropdownMenuItem<String?>(
+            value: null,
+            child: Text('Tất cả job'),
+          ),
+          ...jobs.map(
+            (j) => DropdownMenuItem<String?>(value: j.id, child: Text(j.title)),
+          ),
         ],
         onChanged: (v) => setState(() => _selectedJobId = v),
-        decoration: const InputDecoration(prefixIcon: Icon(Icons.work_outline), labelText: 'Job'),
+        decoration: const InputDecoration(
+          prefixIcon: Icon(Icons.work_outline),
+          labelText: 'Job',
+        ),
       ),
     );
   }
 
   Widget _buildStatusDropdown() {
-    const statuses = ['Tất cả','Applied','Screened','Interview','Offered','Hired','Rejected'];
+    const statuses = [
+      'Tất cả',
+      'Applied',
+      'Screened',
+      'Interview',
+      'Offered',
+      'Hired',
+      'Rejected',
+    ];
     return SizedBox(
       width: 220,
       child: DropdownButtonFormField<String>(
-        value: _selectedStatus,
-        items: statuses.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+        initialValue: _selectedStatus,
+        items: statuses
+            .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+            .toList(),
         onChanged: (v) => setState(() => _selectedStatus = v ?? 'Tất cả'),
-        decoration: const InputDecoration(prefixIcon: Icon(Icons.flag_circle_outlined), labelText: 'Trạng thái CV'),
+        decoration: const InputDecoration(
+          prefixIcon: Icon(Icons.flag_circle_outlined),
+          labelText: 'Trạng thái CV',
+        ),
       ),
     );
   }
@@ -269,7 +424,8 @@ class _LocCVState extends State<LocCV> {
         onTap: () async {
           final selected = await showDialog<Set<String>>(
             context: context,
-            builder: (_) => _SkillDialog(all: _allSkills, chosen: _selectedSkills),
+            builder: (_) =>
+                _SkillDialog(all: _allSkills, chosen: _selectedSkills),
           );
           if (selected != null) {
             setState(() {
@@ -286,8 +442,16 @@ class _LocCVState extends State<LocCV> {
             border: OutlineInputBorder(),
           ),
           child: _selectedSkills.isEmpty
-              ? const Text('— chưa chọn —', style: TextStyle(color: Colors.black45))
-              : Wrap(spacing: 6, children: _selectedSkills.map((s) => Chip(label: Text(s))).toList()),
+              ? const Text(
+                  '— chưa chọn —',
+                  style: TextStyle(color: Colors.black45),
+                )
+              : Wrap(
+                  spacing: 6,
+                  children: _selectedSkills
+                      .map((s) => Chip(label: Text(s)))
+                      .toList(),
+                ),
         ),
       ),
     );
@@ -318,7 +482,13 @@ class _SkillDialogState extends State<_SkillDialog> {
               final checked = _temp.contains(s);
               return CheckboxListTile(
                 value: checked,
-                onChanged: (v) => setState(() { if (v == true) _temp.add(s); else _temp.remove(s); }),
+                onChanged: (v) => setState(() {
+                  if (v == true) {
+                    _temp.add(s);
+                  } else {
+                    _temp.remove(s);
+                  }
+                }),
                 title: Text(s),
                 dense: true,
                 controlAffinity: ListTileControlAffinity.leading,
@@ -328,8 +498,14 @@ class _SkillDialogState extends State<_SkillDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Huỷ')),
-        ElevatedButton(onPressed: () => Navigator.pop(context, _temp), child: const Text('Xong')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Huỷ'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, _temp),
+          child: const Text('Xong'),
+        ),
       ],
     );
   }

@@ -1,64 +1,34 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/views/cai_dat/setting.dart';
 import 'package:work_server/views/trang_chu/main/thong_tin_chi_tiet.dart';
 import 'package:work_server/views/trang_chu/main/xem_chi_tiet_view.dart';
-import 'package:work_server/views/ung_vien/ung_vien.dart';
-import '../../tro_chuyen/tro_chuyen.dart';
 import 'thong_bao.dart';
 import 'dang_tin_tuyen_dung.dart';
-import 'xem_chi_tiet.dart';
 import '../tien_ich/Quan_ly_job/quan_ly_job.dart';
-import '../tien_ich/Chuong_trinh_thuc_te/chuongTrinhThucTap.dart';
-import '../tien_ich/Lich_phong_van/lichPV.dart';
+import '../tien_ich/Chuong_trinh_thuc_te/chuong_trinh_thuc_tap_page.dart';
+import '../tien_ich/Lich_phong_van/lich_pv_page.dart';
 import '../tien_ich/Lien_ket_nha_truong/lien_ket_nha_truong.dart';
-import '../tien_ich/Loc_cv/LocCV.dart';
-import '../tien_ich/Thong_ke/thong_ke.dart';
-import 'dang_tin_tuyen_dung.dart';
+import '../tien_ich/Loc_cv/loc_cv_filter.dart';
 import '/controllers/trang_chu/hien_thi_danh_sach_top_cv.dart';
-import 'xem_chi_tiet.dart';
-import 'package:intl/intl.dart';
 import 'package:work_server/helper_db/helper_db.dart';
 import 'package:work_server/helper_db/helper_supabase.dart';
-import 'package:work_server/views/trang_chu/tien_ich/Tim_kiem_nhan_su/timKiemNhanSu.dart';
-import 'package:work_server/views/trang_chu/tien_ich/Thong_ke/thongKeBaoCao.dart';
+import 'package:work_server/views/trang_chu/tien_ich/Tim_kiem_nhan_su/tim_kiem_nhan_su.dart';
+import 'package:work_server/views/trang_chu/tien_ich/Thong_ke/thong_ke_bao_cao.dart';
 
 final sqlite = HelperDB.instance;
 final supabase = DNSupabase.instance;
 
-class trangChu extends StatefulWidget {
-  const trangChu({super.key});
+class TrangChu extends StatefulWidget {
+  const TrangChu({super.key});
 
   @override
-  State<trangChu> createState() => _trangChuState();
+  State<TrangChu> createState() => _TrangChuState();
 }
 
-class _trangChuState extends State<trangChu> {
+class _TrangChuState extends State<TrangChu> {
   String? name = '';
   String? img = '';
 
-  Widget _infoTag(IconData icon, String? text) {
-    if (text == null || text.isEmpty) return const SizedBox.shrink();
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.blueAccent.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: Colors.blueAccent),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: const TextStyle(fontSize: 11, color: Colors.black87),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Map<String, dynamic>> ds_cv = [];
+  List<Map<String, dynamic>> dsCv = [];
 
   @override
   void initState() {
@@ -78,7 +48,7 @@ class _trangChuState extends State<trangChu> {
   Future<void> loadTopCV() async {
     List<Map<String, dynamic>> result = await getTopCV();
     setState(() {
-      ds_cv = result; // cập nhật biến
+      dsCv = result; // cập nhật biến
     });
   }
 
@@ -94,7 +64,7 @@ class _trangChuState extends State<trangChu> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const thongTinChiTiet(),
+                  builder: (context) => const ThongTinChiTiet(),
                 ),
               );
             },
@@ -114,7 +84,7 @@ class _trangChuState extends State<trangChu> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const thongBao()),
+                MaterialPageRoute(builder: (context) => const ThongBao()),
               );
             },
             icon: Icon(Icons.notifications),
@@ -157,7 +127,7 @@ class _trangChuState extends State<trangChu> {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -200,7 +170,8 @@ class _trangChuState extends State<trangChu> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const DangTinTuyenDung(),
+                                    builder: (context) =>
+                                        const DangTinTuyenDung(),
                                   ),
                                 );
                               },
@@ -241,7 +212,7 @@ class _trangChuState extends State<trangChu> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -370,35 +341,73 @@ class _trangChuState extends State<trangChu> {
                                                       runSpacing: 6,
                                                       children: [
                                                         Container(
-                                                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                          constraints: BoxConstraints(maxWidth: 180),
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                horizontal: 12,
+                                                                vertical: 6,
+                                                              ),
+                                                          constraints:
+                                                              BoxConstraints(
+                                                                maxWidth: 180,
+                                                              ),
                                                           decoration: BoxDecoration(
                                                             color: Colors.white,
-                                                            borderRadius: BorderRadius.circular(12),
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  12,
+                                                                ),
                                                             boxShadow: [
                                                               BoxShadow(
-                                                                color: Colors.grey.withOpacity(0.3),
+                                                                color: Colors
+                                                                    .grey
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          0.3,
+                                                                    ),
                                                                 spreadRadius: 1,
                                                                 blurRadius: 6,
-                                                                offset: Offset(0, 3),
+                                                                offset: Offset(
+                                                                  0,
+                                                                  3,
+                                                                ),
                                                               ),
                                                             ],
-                                                            border: Border.all(color: Colors.grey.shade300),
+                                                            border: Border.all(
+                                                              color: Colors
+                                                                  .grey
+                                                                  .shade300,
+                                                            ),
                                                           ),
                                                           child: Row(
-                                                            mainAxisSize: MainAxisSize.min,
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
                                                             children: [
-                                                              Icon(Icons.mail, size: 18, color: Colors.blueAccent),
-                                                              SizedBox(width: 6),
+                                                              Icon(
+                                                                Icons.mail,
+                                                                size: 18,
+                                                                color: Colors
+                                                                    .blueAccent,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 6,
+                                                              ),
                                                               Flexible(
                                                                 child: Text(
                                                                   cv['email'],
-                                                                  overflow: TextOverflow.ellipsis,
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
                                                                   maxLines: 1,
                                                                   style: TextStyle(
-                                                                    fontSize: 14,
-                                                                    color: Colors.grey.shade800,
-                                                                    fontWeight: FontWeight.w500,
+                                                                    fontSize:
+                                                                        14,
+                                                                    color: Colors
+                                                                        .grey
+                                                                        .shade800,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500,
                                                                   ),
                                                                 ),
                                                               ),
@@ -406,35 +415,73 @@ class _trangChuState extends State<trangChu> {
                                                           ),
                                                         ),
                                                         Container(
-                                                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                          constraints: BoxConstraints(maxWidth: 180),
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                horizontal: 12,
+                                                                vertical: 6,
+                                                              ),
+                                                          constraints:
+                                                              BoxConstraints(
+                                                                maxWidth: 180,
+                                                              ),
                                                           decoration: BoxDecoration(
                                                             color: Colors.white,
-                                                            borderRadius: BorderRadius.circular(12),
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  12,
+                                                                ),
                                                             boxShadow: [
                                                               BoxShadow(
-                                                                color: Colors.grey.withOpacity(0.3),
+                                                                color: Colors
+                                                                    .grey
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          0.3,
+                                                                    ),
                                                                 spreadRadius: 1,
                                                                 blurRadius: 6,
-                                                                offset: Offset(0, 3),
+                                                                offset: Offset(
+                                                                  0,
+                                                                  3,
+                                                                ),
                                                               ),
                                                             ],
-                                                            border: Border.all(color: Colors.grey.shade300),
+                                                            border: Border.all(
+                                                              color: Colors
+                                                                  .grey
+                                                                  .shade300,
+                                                            ),
                                                           ),
                                                           child: Row(
-                                                            mainAxisSize: MainAxisSize.min,
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
                                                             children: [
-                                                              Icon(Icons.phone, size: 18, color: Colors.green),
-                                                              SizedBox(width: 6),
+                                                              Icon(
+                                                                Icons.phone,
+                                                                size: 18,
+                                                                color: Colors
+                                                                    .green,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 6,
+                                                              ),
                                                               Flexible(
                                                                 child: Text(
                                                                   cv['sdt'],
-                                                                  overflow: TextOverflow.ellipsis,
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
                                                                   maxLines: 1,
                                                                   style: TextStyle(
-                                                                    fontSize: 14,
-                                                                    color: Colors.grey.shade800,
-                                                                    fontWeight: FontWeight.w500,
+                                                                    fontSize:
+                                                                        14,
+                                                                    color: Colors
+                                                                        .grey
+                                                                        .shade800,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500,
                                                                   ),
                                                                 ),
                                                               ),
@@ -442,35 +489,74 @@ class _trangChuState extends State<trangChu> {
                                                           ),
                                                         ),
                                                         Container(
-                                                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                          constraints: BoxConstraints(maxWidth: 180),
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                horizontal: 12,
+                                                                vertical: 6,
+                                                              ),
+                                                          constraints:
+                                                              BoxConstraints(
+                                                                maxWidth: 180,
+                                                              ),
                                                           decoration: BoxDecoration(
                                                             color: Colors.white,
-                                                            borderRadius: BorderRadius.circular(12),
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  12,
+                                                                ),
                                                             boxShadow: [
                                                               BoxShadow(
-                                                                color: Colors.grey.withOpacity(0.3),
+                                                                color: Colors
+                                                                    .grey
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          0.3,
+                                                                    ),
                                                                 spreadRadius: 1,
                                                                 blurRadius: 6,
-                                                                offset: Offset(0, 3),
+                                                                offset: Offset(
+                                                                  0,
+                                                                  3,
+                                                                ),
                                                               ),
                                                             ],
-                                                            border: Border.all(color: Colors.grey.shade300),
+                                                            border: Border.all(
+                                                              color: Colors
+                                                                  .grey
+                                                                  .shade300,
+                                                            ),
                                                           ),
                                                           child: Row(
-                                                            mainAxisSize: MainAxisSize.min,
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
                                                             children: [
-                                                              Icon(Icons.location_on, size: 18, color: Colors.redAccent),
-                                                              SizedBox(width: 6),
+                                                              Icon(
+                                                                Icons
+                                                                    .location_on,
+                                                                size: 18,
+                                                                color: Colors
+                                                                    .redAccent,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 6,
+                                                              ),
                                                               Flexible(
                                                                 child: Text(
                                                                   cv['diachi'],
-                                                                  overflow: TextOverflow.ellipsis,
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
                                                                   maxLines: 1,
                                                                   style: TextStyle(
-                                                                    fontSize: 14,
-                                                                    color: Colors.grey.shade800,
-                                                                    fontWeight: FontWeight.w500,
+                                                                    fontSize:
+                                                                        14,
+                                                                    color: Colors
+                                                                        .grey
+                                                                        .shade800,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500,
                                                                   ),
                                                                 ),
                                                               ),
@@ -478,35 +564,73 @@ class _trangChuState extends State<trangChu> {
                                                           ),
                                                         ),
                                                         Container(
-                                                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                                          constraints: BoxConstraints(maxWidth: 180),
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                horizontal: 12,
+                                                                vertical: 6,
+                                                              ),
+                                                          constraints:
+                                                              BoxConstraints(
+                                                                maxWidth: 180,
+                                                              ),
                                                           decoration: BoxDecoration(
                                                             color: Colors.white,
-                                                            borderRadius: BorderRadius.circular(12),
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  12,
+                                                                ),
                                                             boxShadow: [
                                                               BoxShadow(
-                                                                color: Colors.grey.withOpacity(0.3),
+                                                                color: Colors
+                                                                    .grey
+                                                                    .withValues(
+                                                                      alpha:
+                                                                          0.3,
+                                                                    ),
                                                                 spreadRadius: 1,
                                                                 blurRadius: 6,
-                                                                offset: Offset(0, 3),
+                                                                offset: Offset(
+                                                                  0,
+                                                                  3,
+                                                                ),
                                                               ),
                                                             ],
-                                                            border: Border.all(color: Colors.grey.shade300),
+                                                            border: Border.all(
+                                                              color: Colors
+                                                                  .grey
+                                                                  .shade300,
+                                                            ),
                                                           ),
                                                           child: Row(
-                                                            mainAxisSize: MainAxisSize.min,
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
                                                             children: [
-                                                              Icon(Icons.work, size: 18, color: Colors.orange),
-                                                              SizedBox(width: 6),
+                                                              Icon(
+                                                                Icons.work,
+                                                                size: 18,
+                                                                color: Colors
+                                                                    .orange,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 6,
+                                                              ),
                                                               Flexible(
                                                                 child: Text(
                                                                   cv['kinhnghiem'],
-                                                                  overflow: TextOverflow.ellipsis,
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
                                                                   maxLines: 1,
                                                                   style: TextStyle(
-                                                                    fontSize: 14,
-                                                                    color: Colors.grey.shade800,
-                                                                    fontWeight: FontWeight.w500,
+                                                                    fontSize:
+                                                                        14,
+                                                                    color: Colors
+                                                                        .grey
+                                                                        .shade800,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w500,
                                                                   ),
                                                                 ),
                                                               ),
@@ -514,8 +638,7 @@ class _trangChuState extends State<trangChu> {
                                                           ),
                                                         ),
                                                       ],
-                                                    )
-
+                                                    ),
                                                   ],
                                                 ),
                                               ),
@@ -533,7 +656,6 @@ class _trangChuState extends State<trangChu> {
                       ),
 
                       //Tien ich
-
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -546,7 +668,7 @@ class _trangChuState extends State<trangChu> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -602,7 +724,7 @@ class _trangChuState extends State<trangChu> {
                                     context,
                                     iconPath: "assets/school_tien_ich.png",
                                     title: "Liên kết với nhà trường",
-                                    page: const lienKet(),
+                                    page: const LienKetScreen(),
                                   ),
                                   _buildTienIchItem(
                                     context,
@@ -628,7 +750,6 @@ class _trangChuState extends State<trangChu> {
   }
 }
 
-
 Widget _buildTienIchItem(
   BuildContext context, {
   required String iconPath,
@@ -647,7 +768,7 @@ Widget _buildTienIchItem(
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 5,
             offset: const Offset(0, 3),
           ),

@@ -1,28 +1,11 @@
-# Work foundation modules
+# Work route modules
 
-## System
+The current foundation is Express, not Nest/Fastify. `src/app.ts` mounts only
+`src/routes/api_routes.ts` under `/api/v1`; browser pages are owned by the
+separate React Work Web package.
 
-`SystemController` is `@Public()` and controller root path.
-
-### `root()`
-Route after global prefix: `GET /api/v1`.
-Returns `{service:"work-api"}`; global interceptor supplies `SYSTEM_ROOT_LOADED`, message `Welcome to Study2Work.` and trace envelope through `@ApiSuccess`.
-
-## Health
-
-`HealthController` is `@Public()` with controller path `health`. Health paths are excluded from global `/api/v1` prefix.
-
-### `live()`
-`GET /health/live` -> `HealthService.live()` -> `{service:"work-api", environment}`. No DB/Redis call.
-
-### `ready()`
-`GET /health/ready` -> `HealthService.ready()`.
-
-`HealthService.ready()`:
-1. executes Prisma `$queryRaw` `SELECT 1`;
-2. DB failure -> `ApiException` 503 `DEPENDENCY_UNAVAILABLE`, `Work API is not ready.`;
-3. success -> service/environment + dependency labels;
-4. database label is `configured` after successful probe;
-5. Redis label only reflects `environment.redisUrl`, with **no Redis probe**.
-
-No current service reads/writes `SystemRecord`.
+`api_routes.ts` owns the JSON adapter around the existing student, business, CV,
+JD, and application services. It centralizes the response envelope, safe
+BigInt/Date serialization, numeric path validation, and owner/role checks. Chat,
+notification, interview, and Admin remain unwired because no current service
+provides those API operations.

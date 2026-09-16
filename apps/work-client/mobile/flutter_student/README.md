@@ -8,12 +8,12 @@ This module is the Flutter client for student-facing Study2Work workflows. It ke
 - Home, job search, job detail, and application flows.
 - CV management and Top CV views.
 - Chat, interview schedule, support, courses, news, notifications, and settings screens.
-- Supabase-backed synchronization and local SQLite helpers.
+- Direct Neon PostgreSQL synchronization and local SQLite helpers.
 
 ## Stack
 
-- Flutter SDK `>=3.8.1 <4.0.0`
-- `supabase_flutter`
+- Flutter SDK `>=3.9.0 <4.0.0`
+- `postgres` (Neon pooler connection)
 - `sqflite`, `path`
 - `intl`, `shimmer`
 
@@ -23,7 +23,7 @@ This module is the Flutter client for student-facing Study2Work workflows. It ke
 .
 +-- lib/
 |   +-- controllers/  # Student app controllers
-|   +-- helper_db/    # Local and Supabase helper code
+|   +-- helper_db/    # Local SQLite and direct Neon helper code
 |   +-- models/       # Student and external metadata models
 |   +-- views/        # Screens and UI flows
 +-- assets/           # Images and icons
@@ -48,5 +48,8 @@ flutter test
 ## Notes
 
 - Keep the package name as `work_server` unless imports are migrated deliberately.
-- Supabase configuration is currently initialized in `lib/main.dart`.
+- Neon configuration is intentionally stored in `lib/constants.dart`; this is a prototype/development setup and does not use `.env`.
+- Chat uses a 3-second polling timer because the Neon pooler runs in transaction mode and is not used for `LISTEN/NOTIFY`.
+- The Neon credential is embedded in the APK and can be extracted. The current account has high database privileges and could read, modify, or delete all data.
+- Before production release, move database access behind a backend API, use a least-privilege database credential, and rotate the current Neon credential.
 - Android local configuration such as `android/local.properties` is ignored by Git.

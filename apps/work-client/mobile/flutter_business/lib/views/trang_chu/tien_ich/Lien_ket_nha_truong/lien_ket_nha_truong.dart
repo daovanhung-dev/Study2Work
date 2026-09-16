@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-class lienKet extends StatefulWidget {
-  const lienKet({super.key});
+
+class LienKetScreen extends StatefulWidget {
+  const LienKetScreen({super.key});
 
   @override
-  State<lienKet> createState() => _lienKetState();
+  State<LienKetScreen> createState() => _LienKetScreenState();
 }
 
-class _lienKetState extends State<lienKet> {
+class _LienKetScreenState extends State<LienKetScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: Color(0xFF7ecbff),title: Text("Liên kết nhà trường"),),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF7ecbff),
+        title: Text("Liên kết nhà trường"),
+      ),
       body: SizedBox.expand(
         child: Stack(
           children: [
@@ -24,19 +28,11 @@ class _lienKetState extends State<lienKet> {
               ),
             ),
             SingleChildScrollView(
-              child: Center(
-                child: Column(
-                  children: [
-                  ],
-                ),
-              ),
+              child: Center(child: Column(children: [])),
             ),
           ],
         ),
       ),
-
     );
   }
 }
-
-

@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-class thongTinChiTiet extends StatefulWidget {
-  const thongTinChiTiet({super.key});
+
+class ThongTinChiTiet extends StatefulWidget {
+  const ThongTinChiTiet({super.key});
 
   @override
-  State<thongTinChiTiet> createState() => _thongTinChiTietState();
+  State<ThongTinChiTiet> createState() => _ThongTinChiTietState();
 }
 
-class _thongTinChiTietState extends State<thongTinChiTiet> {
+class _ThongTinChiTietState extends State<ThongTinChiTiet> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: Color(0xFF7ecbff),title: Text("Thông tin chi tiết"),),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF7ecbff),
+        title: Text("Thông tin chi tiết"),
+      ),
       body: SizedBox.expand(
         child: Stack(
           children: [
@@ -24,17 +28,11 @@ class _thongTinChiTietState extends State<thongTinChiTiet> {
               ),
             ),
             SingleChildScrollView(
-              child: Center(
-                child: Column(
-                  children: [
-                  ],
-                ),
-              ),
+              child: Center(child: Column(children: [])),
             ),
           ],
         ),
       ),
-
     );
   }
 }

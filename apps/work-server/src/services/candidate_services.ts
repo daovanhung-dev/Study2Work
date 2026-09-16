@@ -26,12 +26,13 @@ class CandidateService {
 
 
   //kiem tra ton tai
-  async count(studentID: number, businessID: number) {
+  async count(studentID: number, businessID: number, jdID?: number) {
     try {
       const total = await prisma.ungVien.count({
         where: {
           sinhvien_id: studentID,
           doanhnghiep_id: businessID,
+          ...(jdID === undefined ? {} : { jd_id: jdID }),
         },
       });
       return total;

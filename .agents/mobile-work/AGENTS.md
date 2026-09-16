@@ -1,13 +1,13 @@
 # Mobile Work context router
 
 ```text
-CONTEXT_STATUS: SKELETON_ONLY
+CONTEXT_STATUS: SOURCE_BACKED
 scope: apps/work-client/mobile/
 ```
 
-Theo yêu cầu hiện tại, không deep-load hoặc mô tả kiến trúc/module mobile. Hai
-source root nhìn thấy là `flutter_business/` và `flutter_student/`; mọi thông tin
-chi tiết phải được kiểm tra trong task mobile cụ thể.
+Hai source root là `flutter_business/` và `flutter_student/`. Kiến trúc, dependency
+và convention đã được ghi nhận trong các page cùng thư mục; vẫn phải kiểm tra
+exact source khi task thay đổi module cụ thể.
 
 Progressive load:
 

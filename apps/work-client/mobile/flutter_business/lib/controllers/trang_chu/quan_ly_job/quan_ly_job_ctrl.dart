@@ -1,23 +1,21 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:work_server/models/JD.dart';
 import 'package:work_server/helper_db/helper_db.dart';
-final supabase = Supabase.instance.client;
+import 'package:work_server/helper_db/neon_db.dart';
+import 'package:work_server/models/jd.dart';
+
 final HelperDB dbHelper = HelperDB.instance;
+final NeonDatabase database = NeonDatabase.instance;
 
 Future<List<JD>> getJob() async {
-  final int doanhnghiep_id = await dbHelper.getID();
-  final response = await supabase
-      .from('jd')
-      .select('id, ten_vi_tri, cap_bac, nhiem_vu, trinh_do, kinh_nghiem, muc_luong, dia_diem, thoi_gian')
-  .eq('doanhnghiep_id', '$doanhnghiep_id');
-
-  // Ép kiểu response sang List<dynamic>
-  final List<dynamic> data = response;
-
-  // Chuyển List<Map> → List<JD>
-  List<JD> jobs = data.map((e) => JD.fromMap(e)).toList();
-
-  return jobs;
+  final doanhnghiepId = await dbHelper.getID();
+  final rows = await database.query(
+    '''
+    SELECT "id", "ten_vi_tri", "cap_bac", "nhiem_vu", "trinh_do",
+           "kinh_nghiem", "muc_luong", "dia_diem", "thoi_gian"
+    FROM "JD"
+    WHERE "doanhnghiep_id" = \$1
+    ORDER BY "ngay_tao" DESC NULLS LAST, "id" DESC
+  ''',
+    parameters: [doanhnghiepId],
+  );
+  return rows.map(JD.fromMap).toList();
 }
-
-

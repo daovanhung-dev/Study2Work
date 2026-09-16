@@ -1,29 +1,23 @@
 import 'package:work_server/helper_db/helper_supabase.dart';
 import 'package:work_server/helper_db/helper_db.dart';
 import 'package:work_server/models/doanh_nghiep.dart';
-import 'package:work_server/models/DNSupabase.dart';
-import 'package:flutter/foundation.dart';
-import 'package:work_server/models/NganhNghe.dart';
+import 'package:work_server/models/dn_supabase.dart';
 
-final Sqlite = HelperDB.instance;
-final Supabase = DNSupabase.instance;
-DoanhNghiep? DN ;
-DoanhNghiepSB? DN_SB;
-
+final sqlite = HelperDB.instance;
+final neon = DNSupabase.instance;
+DoanhNghiep? dn;
+DoanhNghiepSB? dnSb;
 
 Future<bool> dangNhapDN(String gmail, String matKhau) async {
-
-  if (await Supabase.ktDangNhap(gmail, matKhau)==true) {
-    final response = await Supabase.getDN(gmail);
-    print("Dữ liệu nhận từ Supabase: $response");
-    DN = DoanhNghiep.fromMap(response);
-    await Sqlite.saveDoanhNghiep(DN!);
+  if (await neon.ktDangNhap(gmail, matKhau) == true) {
+    final response = await neon.getDN(gmail);
+    dn = DoanhNghiep.fromMap(response);
+    await sqlite.saveDoanhNghiep(dn!);
     //lay du lieu cac nganh
-    final response2 = await Supabase.getNganh();
+    final response2 = await neon.getNganh();
 
-    await Sqlite.saveNganh(response2);
+    await sqlite.saveNganh(response2);
 
-    
     return true;
   }
   return false;

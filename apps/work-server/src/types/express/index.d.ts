@@ -1,17 +1,17 @@
-// src/types/index.d.ts
-import "express";
-import { Express } from "express";
+// Express request fields used by the JWT middleware.
+// Multer owns `file`/`files`; redeclaring those fields here creates a
+// different Express Request shape and breaks middleware overloads.
+export {};
 
-declare module "express-serve-static-core" {
-  interface Request {
-    file?: Express.Multer.File;
-    files?: Express.Multer.File[];
-
-    user?: {
-      id: number;
-      email: string;
-      role: "student" | "business" | string;
-    } | null;
-    authenticated?: boolean;
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: number;
+        email: string;
+        role: "student" | "business" | string;
+      } | null;
+      authenticated?: boolean;
+    }
   }
 }

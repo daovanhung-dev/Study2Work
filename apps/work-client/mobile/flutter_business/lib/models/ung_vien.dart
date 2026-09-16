@@ -16,14 +16,24 @@ class UngVien {
   // Chuyển từ Map (dữ liệu lấy từ DB hoặc API) sang Object
   factory UngVien.fromMap(Map<String, dynamic> map) {
     return UngVien(
-      id: map['id'],
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'])
-          : null,
-      sinhvienId: map['sinhvien_id'],
-      doanhnghiepId: map['doanhnghiep_id'],
-      trangthai: map['trangthai'],
+      id: _toInt(map['id']),
+      createdAt: _toDateTime(map['created_at']),
+      sinhvienId: _toInt(map['sinhvien_id']),
+      doanhnghiepId: _toInt(map['doanhnghiep_id']),
+      trangthai: map['trangthai']?.toString(),
     );
+  }
+
+  static int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
+  }
+
+  static DateTime? _toDateTime(dynamic value) {
+    if (value is DateTime) return value;
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString());
   }
 
   // Chuyển từ Object sang Map (để insert/update)

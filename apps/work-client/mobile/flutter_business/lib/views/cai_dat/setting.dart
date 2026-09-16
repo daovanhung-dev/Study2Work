@@ -45,7 +45,7 @@ class _SettingState extends State<Setting> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const thongBao()),
+                MaterialPageRoute(builder: (context) => const ThongBao()),
               );
             },
             icon: const Icon(Icons.notifications, color: Colors.white),
@@ -58,7 +58,7 @@ class _SettingState extends State<Setting> {
           Positioned.fill(
             child: Image.asset("assets/bg_trangchu.jpg", fit: BoxFit.cover),
           ),
-          Container(color: Colors.black.withOpacity(0.2)), // overlay nền
+          Container(color: Colors.black.withValues(alpha: 0.2)), // overlay nền
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -66,14 +66,14 @@ class _SettingState extends State<Setting> {
                   width: 360,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     borderRadius: BorderRadius.circular(25),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -139,29 +139,29 @@ class _SettingState extends State<Setting> {
   }
 
   Widget _buildButton(
-      IconData icon,
-      String label, {
-        Color? color,
-        VoidCallback? onTap,
-      }) {
+    IconData icon,
+    String label, {
+    Color? color,
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
-      onTap: onTap ?? () => print("Nhấn vào $label"),
+      onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 10),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
         decoration: BoxDecoration(
           color: color != null
-              ? color.withOpacity(0.12)
-              : Colors.blueAccent.withOpacity(0.15),
+              ? color.withValues(alpha: 0.12)
+              : Colors.blueAccent.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: color != null
-                ? color.withOpacity(0.3)
-                : Colors.blueAccent.withOpacity(0.3),
+                ? color.withValues(alpha: 0.3)
+                : Colors.blueAccent.withValues(alpha: 0.3),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 5,
               offset: const Offset(0, 3),
             ),

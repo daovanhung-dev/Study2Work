@@ -86,7 +86,9 @@ class JD {
 
     return JD(
       id: parseIntSafe(map['id']),
-      doanhNghiepID: parseIntSafe(map['doanh_nghiep_id']),
+      doanhNghiepID: parseIntSafe(
+        map['doanhnghiep_id'] ?? map['doanh_nghiep_id'],
+      ),
       tenCongTy: map['ten_cong_ty']?.toString() ?? '',
       nganh: map['nganh']?.toString() ?? '',
       tenViTri: map['ten_vi_tri']?.toString() ?? '',
@@ -109,5 +111,4 @@ class JD {
       avt: map['avt']?.toString() ?? '',
     );
   }
-
 }

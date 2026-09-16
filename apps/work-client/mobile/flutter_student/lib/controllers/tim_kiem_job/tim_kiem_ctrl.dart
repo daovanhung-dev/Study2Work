@@ -1,5 +1,5 @@
 import 'package:work_server/helper_db/sinh_vien/helper_supabase.dart';
-import 'package:work_server/models/sinh_vien/JD.dart';
+import 'package:work_server/models/sinh_vien/jd.dart';
 
 class TimKiemCtrl {
   final helper = SinhVienSupabaseHelper();
@@ -20,7 +20,8 @@ class TimKiemCtrl {
   // Hàm lọc dữ liệu
   void filterJobs() {
     filtered = jobs.where((job) {
-      final matchText = job.tenViTri.toLowerCase().contains(tuKhoa.toLowerCase()) ||
+      final matchText =
+          job.tenViTri.toLowerCase().contains(tuKhoa.toLowerCase()) ||
           job.tenCongTy.toLowerCase().contains(tuKhoa.toLowerCase());
       final matchDiaDiem = diaDiem == "Tất cả" || job.diaDiem == diaDiem;
       final matchLoai = loai == "Tất cả" || job.thoiGian == loai;

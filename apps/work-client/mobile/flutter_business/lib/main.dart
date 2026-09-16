@@ -1,26 +1,13 @@
 import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'views/dang_nhap/dang_nhap.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'views/trang_chu/main/trang_chu.dart';
-import 'views/dang_nhap/quen_mat_khau.dart';
-import 'views/dang_nhap/menu.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:work_server/views/ung_vien/ung_vien.dart';
-import 'package:work_server/controllers/AI/view_test.dart';
-import 'package:work_server/views/trang_chu/tien_ich/Tim_kiem_nhan_su/timKiemNhanSu.dart';
-import 'package:work_server/views/kiem_tra_wifi.dart';
+
+import 'views/dang_nhap/menu.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-
-  await Supabase.initialize(
-    url: 'https://uoefzrjzuytobwuqzkdj.supabase.co',
-    anonKey:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvZWZ6cmp6dXl0b2J3dXF6a2RqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgyNzM1NDYsImV4cCI6MjA3Mzg0OTU0Nn0.pQv5LwZUPPKwfxuiOLwbrz8VmlDwLFuBxclzixk8XHE',
-  );
-
 
   if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
     sqfliteFfiInit();

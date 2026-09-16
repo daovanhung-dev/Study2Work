@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -10,7 +11,11 @@ from sqlalchemy import Engine, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import Settings
-from app.core.database import configure_transaction_limits
+from app.core.database import (
+    configure_search_path,
+    configure_transaction_limits,
+    ensure_schema_exists,
+)
 from app.core.responses import ApiError
 from app.services.ddl import ConfirmationStore
 
@@ -167,13 +172,22 @@ def _json_value(value: Any) -> Any:
 
 class SqlExecutor:
     def __init__(
-        self, engine: Engine, settings: Settings, confirmations: ConfirmationStore
+        self,
+        engine: Engine | Mapping[str, Engine],
+        settings: Settings,
+        confirmations: ConfirmationStore,
     ) -> None:
-        self.engine = engine
+        self.engines = dict(engine) if isinstance(engine, Mapping) else {"default": engine}
         self.settings = settings
         self.confirmations = confirmations
 
-    def validate(self, sql: str, subject: str, trace_id: str) -> tuple[SqlAnalysis, str | None]:
+    def validate(
+        self,
+        sql: str,
+        subject: str,
+        trace_id: str,
+        confirmation_target: str = "sql",
+    ) -> tuple[SqlAnalysis, str | None]:
         if len(sql.encode()) > self.settings.max_sql_bytes:
             raise ApiError(
                 status_code=413,
@@ -190,7 +204,7 @@ class SqlExecutor:
                 trace_id=trace_id,
             )
         token = (
-            self.confirmations.issue(subject, sql, "sql")
+            self.confirmations.issue(subject, sql, confirmation_target)
             if analysis.requires_confirmation
             else None
         )
@@ -204,6 +218,9 @@ class SqlExecutor:
         confirmation_token: str | None,
         max_rows: int | None,
         trace_id: str,
+        database: str = "default",
+        schema_name: str = "public",
+        confirmation_target: str = "sql",
     ) -> dict[str, Any]:
         analysis = analyze_sql(sql)
         if analysis.classification == "blocked":
@@ -221,7 +238,7 @@ class SqlExecutor:
                 trace_id=trace_id,
             )
         if analysis.requires_confirmation and not self.confirmations.consume(
-            confirmation_token or "", subject, sql, "sql"
+            confirmation_token or "", subject, sql, confirmation_target
         ):
             raise ApiError(
                 status_code=409,
@@ -230,11 +247,21 @@ class SqlExecutor:
                 trace_id=trace_id,
             )
         row_limit = max_rows or self.settings.max_rows
+        engine = self.engines.get(database)
+        if engine is None:
+            raise ApiError(
+                status_code=422,
+                business_code="DB_ADMIN_DATABASE_NOT_FOUND",
+                message="The selected database is not configured.",
+                trace_id=trace_id,
+            )
         try:
-            with self.engine.connect() as connection:
+            with engine.connect() as connection:
                 transaction = connection.begin()
                 try:
                     configure_transaction_limits(connection, self.settings)
+                    ensure_schema_exists(connection, schema_name, trace_id)
+                    configure_search_path(connection, schema_name, trace_id)
                     if analysis.classification == "read_only":
                         connection.execute(text("SET TRANSACTION READ ONLY"))
                     result = connection.exec_driver_sql(sql)

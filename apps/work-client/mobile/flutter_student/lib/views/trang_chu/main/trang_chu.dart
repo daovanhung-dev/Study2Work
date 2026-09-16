@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:work_server/controllers/trang_chu/trang_chu_ctrl.dart';
 import 'package:work_server/helper_db/out_meta/helper_db_error.dart';
 import 'package:work_server/helper_db/out_meta/helper_supabase_error.dart';
-import 'package:work_server/models/sinh_vien/JD.dart';
+import 'package:work_server/models/sinh_vien/jd.dart';
 import 'package:work_server/views/trang_chu/main/thong_tin_chi_tiet.dart';
 import 'package:work_server/views/trang_chu/main/xem_chi_tiet_view.dart';
-import 'package:work_server/views/trang_chu/tien_ich/Quan_ly_CV/quan_ly_CV.dart';
-import 'package:work_server/views/tim_kiem_cong_viec/tim_kiem_Job.dart';
+import 'package:work_server/views/trang_chu/tien_ich/Quan_ly_CV/quan_ly_cv.dart';
+import 'package:work_server/views/tim_kiem_cong_viec/tim_kiem_job.dart';
 import 'thong_bao.dart';
 import 'package:work_server/views/trang_chu/tien_ich/Lich_PV/lich_pv.dart';
 import 'package:work_server/views/trang_chu/tien_ich/Hotro_SV/ho_tro_sv.dart';
@@ -45,7 +45,7 @@ class _TrangChuState extends State<TrangChu>
 
   Future<List<JD>> _safeGetTopJDs() async {
     try {
-      return await _ctrl.get_Top_JD();
+      return await _ctrl.getTopJd();
     } catch (e) {
       debugPrint('Lỗi khi lấy top jobs: $e');
       return <JD>[];
@@ -144,7 +144,7 @@ class _TrangChuState extends State<TrangChu>
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const thongTinChiTiet(),
+                          builder: (_) => const ThongTinChiTiet(),
                         ),
                       ),
                       child: CircleAvatar(
@@ -153,7 +153,7 @@ class _TrangChuState extends State<TrangChu>
                             ? NetworkImage(img!)
                             : const AssetImage('assets/avatar_default.png')
                                   as ImageProvider,
-                        backgroundColor: Colors.white.withOpacity(0.9),
+                        backgroundColor: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -198,7 +198,7 @@ class _TrangChuState extends State<TrangChu>
                     IconButton(
                       onPressed: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const thongBao()),
+                        MaterialPageRoute(builder: (_) => const ThongBao()),
                       ),
                       icon: const Icon(
                         Icons.notifications_none_rounded,
@@ -408,7 +408,7 @@ class _TrangChuState extends State<TrangChu>
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black12.withOpacity(0.05),
+                          color: Colors.black12.withValues(alpha: 0.05),
                           // bóng nhẹ, hướng xuống
                           blurRadius: 12,
                           offset: const Offset(0, 6),
@@ -439,7 +439,7 @@ class _TrangChuState extends State<TrangChu>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black12.withOpacity(0.1),
+                                color: Colors.black12.withValues(alpha: 0.1),
                                 // bóng icon nhẹ
                                 blurRadius: 6,
                                 offset: const Offset(0, 3),
@@ -476,7 +476,7 @@ class _TrangChuState extends State<TrangChu>
     borderRadius: BorderRadius.circular(16),
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withOpacity(0.06),
+        color: Colors.black.withValues(alpha: 0.06),
         blurRadius: 10,
         offset: const Offset(0, 4),
       ),
@@ -491,11 +491,10 @@ class _JobCardScrollable extends StatelessWidget {
   final VoidCallback? onTap;
 
   const _JobCardScrollable({
-    Key? key,
     required this.jd,
     this.cardHeight = 300,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -521,7 +520,7 @@ class _JobCardScrollable extends StatelessWidget {
             border: Border.all(color: Colors.grey.shade200, width: 0.6),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -686,9 +685,9 @@ class _JobCardScrollable extends StatelessWidget {
                         ],
                       ),
 
-                      if ((jd.baoCaoCho?.isNotEmpty ?? false) ||
-                          (jd.kyNang?.isNotEmpty ?? false) ||
-                          (jd.uuTien?.isNotEmpty ?? false)) ...[
+                      if (jd.baoCaoCho.isNotEmpty ||
+                          jd.kyNang.isNotEmpty ||
+                          jd.uuTien.isNotEmpty) ...[
                         const SizedBox(height: 8),
                         Container(
                           width: double.infinity,
@@ -697,7 +696,7 @@ class _JobCardScrollable extends StatelessWidget {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.blue.shade50.withOpacity(0.12),
+                            color: Colors.blue.shade50.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Column(
@@ -841,60 +840,4 @@ class _JobCardScrollable extends StatelessWidget {
 
   String _shorten(String input, int max) =>
       input.length <= max ? input : '${input.substring(0, max - 3)}...';
-}
-
-// ================= Tiện ích nhỏ =================
-class _TienIchItem extends StatelessWidget {
-  final String iconPath;
-  final String title;
-  final Widget page;
-
-  const _TienIchItem({
-    required this.iconPath,
-    required this.title,
-    required this.page,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: const Color(0xFFdbf0fc),
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: () =>
-            Navigator.push(context, MaterialPageRoute(builder: (_) => page)),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: 86,
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Flexible(
-                child: Image.asset(
-                  iconPath,
-                  width: 34,
-                  height: 34,
-                  fit: BoxFit.contain,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Flexible(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

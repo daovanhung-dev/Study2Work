@@ -1,81 +1,94 @@
-import { Component, inject } from "@angular/core";
+import { Component, OnInit, inject, signal } from "@angular/core";
 import { MatButtonModule } from "@angular/material/button";
+import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatIconModule } from "@angular/material/icon";
-import { MatListModule } from "@angular/material/list";
-import { MatSidenavModule } from "@angular/material/sidenav";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+import { MatSelectModule } from "@angular/material/select";
 import { MatToolbarModule } from "@angular/material/toolbar";
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from "@angular/router";
+import { Router, RouterOutlet } from "@angular/router";
 
+import { AdminStateService } from "./admin-state.service";
 import { AuthService } from "./auth.service";
-import { Permission } from "./models";
-
-interface NavItem {
-  label: string;
-  icon: string;
-  route: string;
-  permission: Permission;
-}
+import { AccessDrawerComponent } from "../features/access/access-drawer.component";
 
 @Component({
   selector: "db-shell",
   standalone: true,
   imports: [
     MatButtonModule,
+    MatFormFieldModule,
     MatIconModule,
-    MatListModule,
-    MatSidenavModule,
+    MatProgressSpinnerModule,
+    MatSelectModule,
     MatToolbarModule,
-    RouterLink,
-    RouterLinkActive,
     RouterOutlet,
+    AccessDrawerComponent,
   ],
   template: `
-    <mat-sidenav-container class="shell-container">
-      <mat-sidenav #drawer class="shell-sidenav" mode="side" opened>
-        <div class="brand-lockup">
-          <div class="brand-mark"><mat-icon>data_object</mat-icon></div>
-          <div>
-            <strong>Neon Admin</strong>
-            <span>Database control plane</span>
-          </div>
-        </div>
-        <div class="nav-section-label">Workspace</div>
-        <mat-nav-list>
-          @for (item of visibleNavItems; track item.route) {
-            <a mat-list-item [routerLink]="item.route" routerLinkActive="nav-active" #active="routerLinkActive" [activated]="active.isActive">
-              <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-              <span matListItemTitle>{{ item.label }}</span>
-            </a>
-          }
-        </mat-nav-list>
-        <div class="sidenav-bottom">
-          <div class="connection-mini"><span class="status-dot"></span><span>Neon target</span><small>configured server-side</small></div>
-          <button mat-stroked-button class="logout-button" (click)="logout()"><mat-icon>logout</mat-icon> Sign out</button>
-        </div>
-      </mat-sidenav>
-      <mat-sidenav-content>
-        <mat-toolbar class="topbar">
-          <button mat-icon-button class="mobile-menu" (click)="drawer.toggle()" aria-label="Open navigation"><mat-icon>menu</mat-icon></button>
-          <div class="breadcrumb"><span>Control plane</span><mat-icon>chevron_right</mat-icon><strong>Database</strong></div>
-          <span class="toolbar-spacer"></span>
-          <span class="role-pill"><mat-icon>shield</mat-icon>{{ auth.isLocalDevAccess ? 'LOCAL ADMIN' : 'DB ADMIN' }}</span>
-          <button mat-icon-button aria-label="Refresh workspace" (click)="refresh()"><mat-icon>refresh</mat-icon></button>
-        </mat-toolbar>
-        <main class="page-canvas"><router-outlet /></main>
-      </mat-sidenav-content>
-    </mat-sidenav-container>
+    <mat-toolbar class="topbar">
+      <div class="shell-brand">
+        <span class="brand-mark"><mat-icon>data_object</mat-icon></span>
+        <div><strong>DB Admin</strong><span>test · debug · coding</span></div>
+      </div>
+      <div class="topbar-context" aria-label="Database context">
+        <mat-form-field class="topbar-select" appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Database</mat-label>
+          <mat-select [value]="state.selectedDatabase() ?? ''" (valueChange)="chooseDatabase($event)">
+            <mat-option value="">Choose database</mat-option>
+            @for (database of state.databases(); track database.id) {
+              <mat-option [value]="database.id">{{ database.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field class="topbar-select" appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Schema</mat-label>
+          <mat-select [value]="state.selectedSchema() ?? ''" [disabled]="!state.catalog()" (valueChange)="chooseSchema($event)">
+            <mat-option value="">Choose schema</mat-option>
+            @for (schema of schemaNames(); track schema) {
+              <mat-option [value]="schema">{{ schema }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <span class="toolbar-spacer"></span>
+      <span class="topbar-status" [class.ready]="state.selectedSchema()" [class.loading]="state.loading()">
+        @if (state.loading()) { <mat-spinner diameter="14"></mat-spinner> }
+        @else { <span class="status-dot"></span> }
+        {{ statusLabel() }}
+      </span>
+      @if (auth.isRoot()) { <button mat-stroked-button class="manage-button" (click)="accessOpen.set(true)"><mat-icon>admin_panel_settings</mat-icon> Manage access</button> }
+      <span class="role-pill"><mat-icon>shield</mat-icon>{{ auth.isRoot() ? 'ROOT' : 'DEVELOPER' }}</span>
+      <button mat-icon-button aria-label="Refresh catalog" [disabled]="state.loading()" (click)="refresh()"><mat-icon>refresh</mat-icon></button>
+      <button mat-stroked-button class="logout-button" (click)="logout()"><mat-icon>logout</mat-icon> Sign out</button>
+    </mat-toolbar>
+    <main class="page-canvas"><router-outlet /></main>
+    <db-access-drawer [open]="accessOpen()" (closed)="accessOpen.set(false)" />
   `,
 })
-export class ShellComponent {
+export class ShellComponent implements OnInit {
   readonly auth = inject(AuthService);
+  readonly state = inject(AdminStateService);
   private readonly router = inject(Router);
-  readonly navItems: NavItem[] = [
-    { label: "Overview", icon: "dashboard", route: "/dashboard", permission: "db_admin:read" },
-    { label: "Schema explorer", icon: "account_tree", route: "/catalog", permission: "db_admin:read" },
-    { label: "SQL editor", icon: "terminal", route: "/sql", permission: "db_admin:sql" },
-    { label: "Audit trail", icon: "history", route: "/audit", permission: "db_admin:read" },
-  ];
-  get visibleNavItems(): NavItem[] { return this.navItems.filter((item) => this.auth.can(item.permission)); }
+  readonly accessOpen = signal(false);
+
+  ngOnInit(): void { this.state.loadDatabases(); }
+
+  schemaNames(): string[] {
+    return (this.state.catalog()?.schemas ?? [])
+      .map((schema) => schema.name)
+      .filter((name): name is string => typeof name === "string");
+  }
+
+  chooseDatabase(database: string): void { this.state.selectDatabase(database || null); }
+  chooseSchema(schema: string): void { this.state.selectSchema(schema || null); }
+
+  statusLabel(): string {
+    if (this.state.databasesLoading()) return "Loading targets";
+    if (this.state.catalogLoading()) return "Loading catalog";
+    if (this.state.selectedSchema()) return "Ready";
+    if (this.state.selectedDatabase()) return "Choose schema";
+    return "No target selected";
+  }
 
   logout(): void {
     this.auth.logout();
@@ -83,6 +96,7 @@ export class ShellComponent {
   }
 
   refresh(): void {
-    window.location.reload();
+    if (this.state.selectedDatabase()) this.state.load();
+    else this.state.loadDatabases();
   }
 }

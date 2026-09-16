@@ -1,7 +1,7 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:work_server/models/sinh_vien/CV.dart';
+import 'package:work_server/models/sinh_vien/cv.dart';
 import 'package:work_server/helper_db/sinh_vien/helper_db.dart';
 import 'package:work_server/helper_db/sinh_vien/helper_supabase.dart';
+
 final supabase = SinhVienSupabaseHelper();
 final dbHelper = SinhVienSQLiteHelper.instance;
 
@@ -13,9 +13,7 @@ class CVCtrl {
     return cv;
   }
 
-  Future<void> Update(CV cv) async{
+  Future<void> update(CV cv) async {
     supabase.updateCV(cv);
   }
 }
-
-

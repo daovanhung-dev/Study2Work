@@ -1,8 +1,8 @@
 # Neon DB Admin API
 
-Local-only FastAPI service for administering one configured Neon PostgreSQL
-database. The API owns the database credential; the Angular client never sees
-`URL_DATABASE`. During local web development, Angular's launcher starts this
+Local-only FastAPI service for administering the configured Work and Study Neon
+PostgreSQL targets. The API owns both database credentials; the Angular client
+never sees them. During local web development, Angular's launcher starts this
 service automatically. Runtime configuration is read from
 `app/core/constants.py`; `.env` is not used.
 
@@ -27,15 +27,43 @@ npm install
 npm run dev
 ```
 
-Local UI work uses `DEV_AUTH=True` from `app/core/constants.py`. A production
-configuration must set `APP_ENV` and configure JWKS, issuer, audience and a
-permission-bearing access token in that constants module.
+Local UI work uses the DB Admin local account flow. Configure the
+`DATABASE_TARGETS` mapping with the `work_server` and `study_server` connection
+URLs, set `LOCAL_AUTH_ENABLED=True`, and replace `LOCAL_JWT_SECRET` with a
+private random value. `DEV_AUTH` is reserved for isolated tests.
 
-The service uses a request-scoped SQLAlchemy connection with the psycopg3
-driver. Catalog reads come from PostgreSQL system catalogs. Mutations require a
-short-lived confirmation token, use a dedicated transaction and write a
-bounded local audit record plus a structured log entry. DDL drop previews
-include a bounded dependent-object impact list where PostgreSQL catalog
-metadata can resolve one. Row CRUD uses
-`/tables/{schema}/{table}/rows/preview` before the corresponding insert, update
-or delete request.
+Before the first sign-in, bootstrap the control plane independently from the
+Study/Work business migrations:
+
+```bash
+uv run python scripts/bootstrap_access.py --dry-run
+uv run python scripts/bootstrap_access.py --apply
+```
+
+The apply command reads the temporary root password interactively, creates the
+`db_admin` schema and app identities, and writes newly generated developer
+secrets once to the ignored local file `.local/bootstrap-credentials.json`
+with mode `0600`. It never prints a password or accepts one on the command
+line. Rotate any database credentials that have previously been exposed before
+applying to a live target.
+
+If the default developer accounts already exist and need a shared temporary
+password, set it interactively without placing it in shell history:
+
+```bash
+uv run python scripts/bootstrap_access.py --set-developer-password
+```
+
+This updates `study_dev` on `study_server` and `work_dev` on `work_server`,
+resets their first-login flag, and preserves their role/schema ownership and
+bindings.
+
+The service uses target-specific SQLAlchemy connections with the psycopg3
+driver. Catalog reads come from PostgreSQL system catalogs. SQL requests must
+include a configured database target and an existing schema; the backend sets a
+transaction-local `search_path` before execution. Read queries rollback and
+mutations require a short-lived confirmation token before commit. Legacy DDL,
+row CRUD and audit endpoints remain available for compatibility but are not
+used by the simplified web workspace. Local JWTs are short-lived and the web
+client keeps them in memory only; root-only account management is exposed as a
+drawer inside the single workspace.

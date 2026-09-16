@@ -23,6 +23,7 @@ htmlcov/
 apps/work-server/src/constants.ts
 apps/work-server/prisma/.work-prisma-*
 apps/db-admin-server/app/core/constants.py
+apps/db-admin-server/.local/
 *.log
 .dev-logs/
 uploads/

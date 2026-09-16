@@ -93,5 +93,4 @@ class JD {
       moTa: map['mo_ta']?.toString() ?? '',
     );
   }
-
 }

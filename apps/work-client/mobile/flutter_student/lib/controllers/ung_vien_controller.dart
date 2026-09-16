@@ -1,27 +1,44 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:work_server/helper_db/neon_db.dart';
 
-final supabase = Supabase.instance.client;
+final NeonDatabase database = NeonDatabase.instance;
 
 Future<Map<String, dynamic>> xemChiTiet(int id) async {
-  final response = await supabase
-      .from('ungvien')
-      .select('id, avt, vitri, ten, cn, kn, skill, hv, luong')
-      .eq('id', id)
-      .maybeSingle();
+  final rows = await database.query(
+    '''
+    SELECT
+      "id",
+      "avt",
+      "vitri",
+      "hoten" AS "ten",
+      "nganh" AS "cn",
+      "kinhnghiem" AS "kn",
+      "kynang" AS "skill",
+      "hocvan" AS "hv",
+      "luongmongmuon" AS "luong"
+    FROM "Cv"
+    WHERE "id" = \$1
+    LIMIT 1
+  ''',
+    parameters: [id],
+  );
 
-  if (response == null) {
-    return {}; // không tìm thấy dữ liệu
-  }
+  if (rows.isEmpty) return {};
+  final row = rows.first;
+  final skill = row['skill']?.toString() ?? '';
 
   return {
-    'macv_ds': response['id'],
-    'avt_ds': response['avt'],
-    'vitri_ds': response['vitri'],
-    'ten_ds': response['ten'],
-    'cn_ds': response['cn'],
-    'kn_ds': response['kn'],
-    'skill_ds': List<String>.from(response['skill'] ?? []),
-    'hv_ds': response['hv'],
-    'luong_ds': response['luong'],
+    'macv_ds': row['id'],
+    'avt_ds': row['avt'],
+    'vitri_ds': row['vitri'],
+    'ten_ds': row['ten'],
+    'cn_ds': row['cn'],
+    'kn_ds': row['kn'],
+    'skill_ds': skill
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList(),
+    'hv_ds': row['hv'],
+    'luong_ds': row['luong'],
   };
 }

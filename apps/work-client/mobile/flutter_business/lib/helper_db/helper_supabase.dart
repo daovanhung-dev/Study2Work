@@ -1,179 +1,193 @@
-import 'package:work_server/models/DNSupabase.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:work_server/helper_db/helper_db.dart';
-import 'package:work_server/models/JD.dart';
-import 'package:work_server/models/NganhNghe.dart';
+import 'package:work_server/helper_db/neon_db.dart';
+import 'package:work_server/models/cv.dart';
+import 'package:work_server/models/jd.dart';
+import 'package:work_server/models/nganh_nghe.dart';
 import 'package:work_server/models/ung_vien.dart';
-import 'package:work_server/models/CV.dart';
 
 final HelperDB dbHelper = HelperDB.instance;
 
 class DNSupabase {
   static final DNSupabase instance = DNSupabase._internal();
 
-  factory DNSupabase() {
-    return instance;
-  }
+  factory DNSupabase() => instance;
 
   DNSupabase._internal();
 
-  final SupabaseClient client = Supabase.instance.client;
+  final NeonDatabase database = NeonDatabase.instance;
 
   Future<bool> ktDangNhap(String gmail, String matKhau) async {
-    final response = await client
-        .from('doanhnghiep')
-        .select()
-        .eq('email', '$gmail')
-        .eq('matkhau', '$matKhau')
-        .single();
-
-    if (response.isNotEmpty)
-      return true;
-    else
-      return false;
+    final rows = await database.query(
+      'SELECT "id" FROM "DoanhNghiep" WHERE "email" = \$1 AND "matkhau" = \$2 LIMIT 1',
+      parameters: [gmail, matKhau],
+    );
+    return rows.isNotEmpty;
   }
 
   Future<Map<String, dynamic>> getDN(String email) async {
-    final response = await client
-        .from('doanhnghiep')
-        .select()
-        .eq('email', '$email')
-        .single();
-    print("hello3");
-    return response;
+    final rows = await database.query(
+      'SELECT * FROM "DoanhNghiep" WHERE "email" = \$1 LIMIT 1',
+      parameters: [email],
+    );
+    if (rows.isEmpty) throw StateError('Không tìm thấy doanh nghiệp.');
+    return rows.first;
   }
 
-  //lay
   Future<List<Nganh>> getNganh() async {
-    final response = await client.from('bannganh').select('nganh');
-    List<Nganh> Nganh_nghe = response.map((e) => Nganh.fromMap(e)).toList();
-
-    return Nganh_nghe;
+    final rows = await database.query(
+      'SELECT "nganh" FROM bannganh ORDER BY "nganh"',
+    );
+    return rows.map(Nganh.fromMap).toList();
   }
 
-  //lay anh
   Future<String> getAVT(int id) async {
-    final response = await client
-        .from('doanhnghiep')
-        .select('avt')
-        .eq('id', '$id')
-        .single();
-    return response['avt'] as String;
+    final rows = await database.query(
+      'SELECT "avt" FROM "DoanhNghiep" WHERE "id" = \$1 LIMIT 1',
+      parameters: [id],
+    );
+    if (rows.isEmpty) throw StateError('Không tìm thấy ảnh doanh nghiệp.');
+    return rows.first['avt']?.toString() ?? '';
   }
 
   Future<List<Map<String, dynamic>>> layUngVien() async {
-    final response = await client
-        .from('ungvien')
-        .select('sinhvien_id')
-        .eq('doanhnghiep_id', await dbHelper.getID());
-
-    if (response.isEmpty) return [];
-
-    // Lấy danh sách id sinh viên
-    final List<int> sinhvienIds = response
-        .map<int>((row) => row['sinhvien_id'] as int)
-        .toList();
-
-    // Truy vấn toàn bộ CV có id trong danh sách
-    final response2 = await client
-        .from('cv')
-        .select()
-        .inFilter('id', sinhvienIds);
-
-    return List<Map<String, dynamic>>.from(response2);
+    final companyId = await dbHelper.getID();
+    return database.query(
+      '''
+      SELECT c.*
+      FROM "UngVien" u
+      INNER JOIN "Cv" c ON c."sinhvien_id" = u."sinhvien_id"
+      WHERE u."doanhnghiep_id" = \$1
+      ORDER BY u."created_at" DESC
+    ''',
+      parameters: [companyId],
+    );
   }
 
   Future<List<String>> layTrangThai() async {
-    final response = await client
-        .from('ungvien')
-        .select('trangthai')
-        .eq('doanhnghiep_id', await dbHelper.getID());
-
-    List<String> trangThai = [];
-    for (var i = 0; i < response.length; i++) {
-      trangThai.add(response[i]['trangthai']);
-    }
-    return trangThai;
+    final companyId = await dbHelper.getID();
+    final rows = await database.query(
+      'SELECT "trangthai" FROM "UngVien" WHERE "doanhnghiep_id" = \$1 ORDER BY "created_at" DESC',
+      parameters: [companyId],
+    );
+    return rows.map((row) => row['trangthai']?.toString() ?? '').toList();
   }
 
-  //========================================JD============================================================
-  //Nhap dữ liệu cho JD
   Future<void> insertJD(Map<String, dynamic> data) async {
-    final response = await client.from('jd').insert(data);
-    print(response);
+    final columns = <String>[
+      'doanhnghiep_id',
+      'ten_vi_tri',
+      'phong_ban',
+      'cap_bac',
+      'bao_cao_cho',
+      'nhiem_vu',
+      'trinh_do',
+      'kinh_nghiem',
+      'ky_nang',
+      'ky_nang_mem',
+      'uu_tien',
+      'muc_luong',
+      'phuc_loi',
+      'moi_truong',
+      'dia_diem',
+      'thoi_gian',
+      'han_nop',
+      'cach_ung_tuyen',
+      'mo_ta',
+      'ten_cong_ty',
+      'nganh',
+      'avt',
+    ];
+    final values = columns.map((column) => _jdValue(data[column])).toList();
+    final placeholders = List.generate(
+      values.length,
+      (index) => '\$${index + 1}',
+    ).join(', ');
+    final quotedColumns = columns.map((column) => '"$column"').join(', ');
+    await database.execute(
+      'INSERT INTO "JD" ($quotedColumns) VALUES ($placeholders)',
+      parameters: values,
+    );
   }
 
-  //Lấy dữ liệu từ JD
+  dynamic _jdValue(dynamic value) {
+    if (value is Iterable) return value.join(', ');
+    return value;
+  }
+
   Future<JD> getJD(int maJD) async {
-    final response = await client
-        .from('jd')
-        .select()
-        .eq('id', '$maJD')
-        .single();
-    return JD.fromMap(response);
+    final rows = await database.query(
+      'SELECT * FROM "JD" WHERE "id" = \$1 LIMIT 1',
+      parameters: [maJD],
+    );
+    if (rows.isEmpty) throw StateError('Không tìm thấy JD.');
+    return JD.fromMap(rows.first);
   }
-
-  //============ung tuyen===================
 
   Future<List<CV>> getCV() async {
-    final response = await client
-        .from('ungvien')
-        .select()
-        .eq('doanhnghiep_id', await dbHelper.getID());
-
-    List<CV> ungVien = [];
-    for (var i = 0; i < response.length; i++) {
-      final response2 = await client
-          .from('cv')
-          .select()
-          .eq('id', response[i]['sinhvien_id'])
-          .single();
-      CV cv = CV.fromMap(response2);
-      ungVien.add(cv);
-    }
-    return ungVien;
+    final companyId = await dbHelper.getID();
+    final rows = await database.query(
+      '''
+      SELECT c.*
+      FROM "UngVien" u
+      INNER JOIN "Cv" c ON c."sinhvien_id" = u."sinhvien_id"
+      WHERE u."doanhnghiep_id" = \$1
+      ORDER BY u."created_at" DESC
+    ''',
+      parameters: [companyId],
+    );
+    return rows.map(CV.fromMap).toList();
   }
 
   Future<List<UngVien>> getUngVien() async {
-    final response = await client
-        .from('ungvien')
-        .select()
-        .eq('doanhnghiep_id', await dbHelper.getID());
-    List<UngVien> ungVien = [];
-    for (var i = 0; i < response.length; i++) {
-      ungVien.add(UngVien.fromMap(response[i]));
-    }
-    return ungVien;
+    final companyId = await dbHelper.getID();
+    final rows = await database.query(
+      'SELECT * FROM "UngVien" WHERE "doanhnghiep_id" = \$1 ORDER BY "created_at" DESC',
+      parameters: [companyId],
+    );
+    return rows.map(UngVien.fromMap).toList();
   }
 
-  Future<void> ungTuyen(int sinhvien_id) async {
-    await client
-        .from('ungvien')
-        .update({'trangthai': 'Đã ứng tuyển'})
-        .eq('sinhvien_id', sinhvien_id);
+  Future<void> ungTuyen(int sinhvienId) async {
+    final companyId = await dbHelper.getID();
+    await database.execute(
+      'UPDATE "UngVien" SET "trangthai" = \$1 WHERE "sinhvien_id" = \$2 AND "doanhnghiep_id" = \$3',
+      parameters: ['Đã ứng tuyển', sinhvienId, companyId],
+    );
   }
 
-  Future<void> delCV(int sinhvien_id) async{
-    await client.from('ungvien').delete().eq('sinhvien_id', sinhvien_id);
+  Future<void> delCV(int sinhvienId) async {
+    final companyId = await dbHelper.getID();
+    await database.execute(
+      'DELETE FROM "UngVien" WHERE "sinhvien_id" = \$1 AND "doanhnghiep_id" = \$2',
+      parameters: [sinhvienId, companyId],
+    );
   }
-  //doan chat
+
   Future<void> insertDoanChat(Map<String, dynamic> data) async {
-    await client.from('doanchat').insert(data);
+    await database.execute(
+      'INSERT INTO "DoanChat" ("sinhvien_id", "doanhnghiep_id") VALUES (\$1, \$2)',
+      parameters: [data['sinhvien_id'], data['doanhnghiep_id']],
+    );
   }
 
-  //chat
   Future<void> guiTinNhan(
     int sinhvienId,
     int doanhnghiepId,
     String noidung,
   ) async {
-    await client.from('chat').insert({
-      'sinhvien_id': sinhvienId,
-      'doanhnghiep_id': doanhnghiepId,
-      'nguoigui': doanhnghiepId,
-      'nguoinhan': sinhvienId,
-      'noidung': noidung,
-      'ngaygui': DateTime.now().toIso8601String(), // nên thêm timestamp
-    });
+    await database.execute(
+      '''
+      INSERT INTO "Chat" ("sinhvien_id", "doanhnghiep_id", "nguoigui", "nguoinhan", "noidung", "ngaygui")
+      VALUES (\$1, \$2, \$3, \$4, \$5, \$6)
+    ''',
+      parameters: [
+        sinhvienId,
+        doanhnghiepId,
+        doanhnghiepId,
+        sinhvienId,
+        noidung,
+        DateTime.now().toUtc(),
+      ],
+    );
   }
 }

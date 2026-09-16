@@ -9,7 +9,8 @@ const bootstrap = async () => {
   });
 };
 
-bootstrap().catch((error) => {
-  console.error("Không thể kết nối Neon PostgreSQL:", error);
+bootstrap().catch(() => {
+  // Do not print the Prisma error object: it may include connection details.
+  console.error("Không thể kết nối Neon PostgreSQL.");
   process.exit(1);
 });

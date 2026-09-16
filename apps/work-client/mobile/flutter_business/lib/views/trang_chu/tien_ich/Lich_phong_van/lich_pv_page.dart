@@ -11,7 +11,9 @@ class LichPV extends StatefulWidget {
 class _LichPVState extends State<LichPV> {
   // Thay đổi: Lưu trữ DateTime để có cả Ngày và Giờ
   final List<Map<String, dynamic>> _lichPVList = [];
-  final DateFormat _dateFormat = DateFormat('EEEE, dd/MM/yyyy'); // VD: Thứ Hai, 10/06/2025
+  final DateFormat _dateFormat = DateFormat(
+    'EEEE, dd/MM/yyyy',
+  ); // VD: Thứ Hai, 10/06/2025
   final DateFormat _timeFormat = DateFormat('HH:mm'); // VD: 09:30
 
   // Hàm format TimeOfDay cũ được thay thế bằng format DateTime
@@ -41,178 +43,243 @@ class _LichPVState extends State<LichPV> {
 
     // Controller chỉ để hiển thị Ngày/Giờ đã chọn
     final ngayGioPVCtrl = TextEditingController(
-        text: data?['thoiGianPV'] != null ?
-        '${_dateFormat.format(thoiGianPV!)} - ${_formatDateTime(thoiGianPV!)}' : ''
+      text: data?['thoiGianPV'] != null
+          ? '${_dateFormat.format(thoiGianPV)} - ${_formatDateTime(thoiGianPV)}'
+          : '',
     );
 
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(builder: (context, setStateDialog) {
-
-          Future<void> _pickDateTime() async {
-            // 1. Chọn ngày
-            final pickedDate = await showDatePicker(
-              context: context,
-              initialDate: thoiGianPV ?? DateTime.now(),
-              firstDate: DateTime.now().subtract(const Duration(days: 365)),
-              lastDate: DateTime.now().add(const Duration(days: 365)),
-            );
-
-            if (pickedDate != null) {
-              // 2. Chọn giờ (sau khi đã chọn ngày)
-              final pickedTime = await showTimePicker(
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            Future<void> pickDateTime() async {
+              // 1. Chọn ngày
+              final pickedDate = await showDatePicker(
                 context: context,
-                initialTime: TimeOfDay.fromDateTime(thoiGianPV ?? DateTime.now()),
+                initialDate: thoiGianPV ?? DateTime.now(),
+                firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                lastDate: DateTime.now().add(const Duration(days: 365)),
               );
 
-              if (pickedTime != null) {
-                // Kết hợp Ngày và Giờ
-                thoiGianPV = DateTime(
-                  pickedDate.year,
-                  pickedDate.month,
-                  pickedDate.day,
-                  pickedTime.hour,
-                  pickedTime.minute,
+              if (pickedDate != null) {
+                // 2. Chọn giờ (sau khi đã chọn ngày)
+                if (!context.mounted) return;
+                final pickedTime = await showTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay.fromDateTime(
+                    thoiGianPV ?? DateTime.now(),
+                  ),
                 );
 
-                ngayGioPVCtrl.text = '${_dateFormat.format(thoiGianPV!)} - ${_formatDateTime(thoiGianPV!)}';
-                setStateDialog(() {});
+                if (pickedTime != null) {
+                  // Kết hợp Ngày và Giờ
+                  thoiGianPV = DateTime(
+                    pickedDate.year,
+                    pickedDate.month,
+                    pickedDate.day,
+                    pickedTime.hour,
+                    pickedTime.minute,
+                  );
+
+                  ngayGioPVCtrl.text =
+                      '${_dateFormat.format(thoiGianPV!)} - ${_formatDateTime(thoiGianPV!)}';
+                  setStateDialog(() {});
+                }
               }
             }
-          }
 
-          void _onSave() {
-            final hoTen = hoTenCtrl.text.trim();
-            final sdt = sdtCtrl.text.trim();
-            final email = emailCtrl.text.trim();
-            final nguoiPV = nguoiPVCtrl.text.trim();
-            final ghiChu = ghiChuCtrl.text.trim();
+            void onSave() {
+              final hoTen = hoTenCtrl.text.trim();
+              final sdt = sdtCtrl.text.trim();
+              final email = emailCtrl.text.trim();
+              final nguoiPV = nguoiPVCtrl.text.trim();
+              final ghiChu = ghiChuCtrl.text.trim();
 
-            if (hoTen.isEmpty || sdt.isEmpty || thoiGianPV == null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Vui lòng nhập Họ tên, SĐT và chọn Ngày/Giờ PV.')));
-              return;
-            }
-
-            if (email.isNotEmpty && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Địa chỉ Email không hợp lệ.')));
-              return;
-            }
-
-            final newData = <String, dynamic>{
-              'hoTen': hoTen,
-              'sdt': sdt,
-              'email': email,
-              'thoiGianPV': thoiGianPV, // Đã thay thế gioPV
-              'nguoiPV': nguoiPV,
-              'hinhThuc': hinhThuc,
-              'ghiChu': ghiChu,
-            };
-
-            setState(() {
-              if (index == null) {
-                _lichPVList.add(newData);
-              } else {
-                _lichPVList[index] = newData;
-              }
-              // Sắp xếp lại danh sách theo thời gian phỏng vấn
-              _lichPVList.sort((a, b) => (a['thoiGianPV'] as DateTime).compareTo(b['thoiGianPV'] as DateTime));
-            });
-            Navigator.of(context).pop();
-          }
-
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: Text(
-              index == null ? 'Thêm lịch phỏng vấn' : 'Chỉnh sửa lịch phỏng vấn',
-              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Các trường TextField cũ
-                  _buildTextField(hoTenCtrl, 'Họ và tên', Icons.person),
-                  _buildTextField(sdtCtrl, 'Số điện thoại', Icons.phone, keyboardType: TextInputType.phone),
-                  _buildTextField(emailCtrl, 'Email (Gmail)', Icons.email, keyboardType: TextInputType.emailAddress),
-
-                  const SizedBox(height: 12),
-                  // Chọn Ngày/Giờ Phỏng vấn
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTextField(
-                          ngayGioPVCtrl,
-                          'Ngày & Giờ phỏng vấn',
-                          Icons.date_range,
-                          readOnly: true, // Chỉ hiển thị, không cho gõ tay
-                          validator: (v) => v!.isEmpty ? 'Vui lòng chọn Ngày và Giờ' : null,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.schedule, color: Colors.indigo, size: 30),
-                        onPressed: _pickDateTime,
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-                  _buildTextField(nguoiPVCtrl, 'Người phỏng vấn', Icons.person_pin),
-
-                  const SizedBox(height: 12),
-                  // Dropdown cho Hình thức
-                  DropdownButtonFormField<String>(
-                    value: hinhThuc,
-                    decoration: const InputDecoration(
-                      labelText: 'Hình thức',
-                      prefixIcon: Icon(Icons.videocam),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
-                      contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              if (hoTen.isEmpty || sdt.isEmpty || thoiGianPV == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Vui lòng nhập Họ tên, SĐT và chọn Ngày/Giờ PV.',
                     ),
-                    items: ['Online', 'Offline'].map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setStateDialog(() {
-                        hinhThuc = newValue!;
-                      });
-                    },
                   ),
+                );
+                return;
+              }
 
-                  const SizedBox(height: 12),
-                  _buildTextField(ghiChuCtrl, 'Ghi chú (tùy chọn)', Icons.note, maxLines: 2),
-                ],
+              if (email.isNotEmpty &&
+                  !RegExp(
+                    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                  ).hasMatch(email)) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Địa chỉ Email không hợp lệ.')),
+                );
+                return;
+              }
+
+              final newData = <String, dynamic>{
+                'hoTen': hoTen,
+                'sdt': sdt,
+                'email': email,
+                'thoiGianPV': thoiGianPV, // Đã thay thế gioPV
+                'nguoiPV': nguoiPV,
+                'hinhThuc': hinhThuc,
+                'ghiChu': ghiChu,
+              };
+
+              setState(() {
+                if (index == null) {
+                  _lichPVList.add(newData);
+                } else {
+                  _lichPVList[index] = newData;
+                }
+                // Sắp xếp lại danh sách theo thời gian phỏng vấn
+                _lichPVList.sort(
+                  (a, b) => (a['thoiGianPV'] as DateTime).compareTo(
+                    b['thoiGianPV'] as DateTime,
+                  ),
+                );
+              });
+              Navigator.of(context).pop();
+            }
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-            ),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Hủy', style: TextStyle(color: Colors.red))),
-              ElevatedButton.icon(
-                onPressed: _onSave,
-                icon: const Icon(Icons.save),
-                label: Text(index == null ? 'Thêm' : 'Cập nhật'),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))
+              title: Text(
+                index == null
+                    ? 'Thêm lịch phỏng vấn'
+                    : 'Chỉnh sửa lịch phỏng vấn',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.indigo,
                 ),
               ),
-            ],
-          );
-        });
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Các trường TextField cũ
+                    _buildTextField(hoTenCtrl, 'Họ và tên', Icons.person),
+                    _buildTextField(
+                      sdtCtrl,
+                      'Số điện thoại',
+                      Icons.phone,
+                      keyboardType: TextInputType.phone,
+                    ),
+                    _buildTextField(
+                      emailCtrl,
+                      'Email (Gmail)',
+                      Icons.email,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+
+                    const SizedBox(height: 12),
+                    // Chọn Ngày/Giờ Phỏng vấn
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildTextField(
+                            ngayGioPVCtrl,
+                            'Ngày & Giờ phỏng vấn',
+                            Icons.date_range,
+                            readOnly: true, // Chỉ hiển thị, không cho gõ tay
+                            validator: (v) =>
+                                v!.isEmpty ? 'Vui lòng chọn Ngày và Giờ' : null,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.schedule,
+                            color: Colors.indigo,
+                            size: 30,
+                          ),
+                          onPressed: pickDateTime,
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      nguoiPVCtrl,
+                      'Người phỏng vấn',
+                      Icons.person_pin,
+                    ),
+
+                    const SizedBox(height: 12),
+                    // Dropdown cho Hình thức
+                    DropdownButtonFormField<String>(
+                      initialValue: hinhThuc,
+                      decoration: const InputDecoration(
+                        labelText: 'Hình thức',
+                        prefixIcon: Icon(Icons.videocam),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 12,
+                        ),
+                      ),
+                      items: ['Online', 'Offline'].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setStateDialog(() {
+                          hinhThuc = newValue!;
+                        });
+                      },
+                    ),
+
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      ghiChuCtrl,
+                      'Ghi chú (tùy chọn)',
+                      Icons.note,
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Hủy', style: TextStyle(color: Colors.red)),
+                ),
+                ElevatedButton.icon(
+                  onPressed: onSave,
+                  icon: const Icon(Icons.save),
+                  label: Text(index == null ? 'Thêm' : 'Cập nhật'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
       },
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon,
-      {TextInputType keyboardType = TextInputType.text, bool readOnly = false, int maxLines = 1, String? Function(String?)? validator}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    TextInputType keyboardType = TextInputType.text,
+    bool readOnly = false,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: TextFormField(
@@ -223,8 +290,13 @@ class _LichPVState extends State<LichPV> {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: Colors.indigo.shade400),
-          border: const OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
-          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          border: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 12,
+            horizontal: 12,
+          ),
         ),
         validator: validator,
       ),
@@ -237,15 +309,23 @@ class _LichPVState extends State<LichPV> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc muốn xóa lịch phỏng vấn của ${_lichPVList[index]['hoTen']}?'),
+        content: Text(
+          'Bạn có chắc muốn xóa lịch phỏng vấn của ${_lichPVList[index]['hoTen']}?',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Hủy')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Hủy'),
+          ),
           ElevatedButton(
             onPressed: () {
               setState(() => _lichPVList.removeAt(index));
               Navigator.of(context).pop();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             child: const Text('Xóa'),
           ),
         ],
@@ -255,8 +335,9 @@ class _LichPVState extends State<LichPV> {
 
   Widget _buildPVCard(Map<String, dynamic> item, int index) {
     final DateTime? thoiGianPV = item['thoiGianPV'];
-    final ngayText = thoiGianPV != null ? _dateFormat.format(thoiGianPV) : 'Chưa chọn ngày';
-    final gioText = thoiGianPV != null ? _formatDateTime(thoiGianPV) : 'Chưa chọn giờ';
+    final ngayText = thoiGianPV != null
+        ? _dateFormat.format(thoiGianPV)
+        : 'Chưa chọn ngày';
     final hinhThuc = item['hinhThuc'] ?? 'Online';
 
     return Card(
@@ -269,16 +350,28 @@ class _LichPVState extends State<LichPV> {
         leading: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(thoiGianPV != null ? _timeFormat.format(thoiGianPV) : '??:??',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
-            Text(thoiGianPV != null ? DateFormat('dd/MM').format(thoiGianPV) : '',
-                style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(
+              thoiGianPV != null ? _timeFormat.format(thoiGianPV) : '??:??',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
+            Text(
+              thoiGianPV != null ? DateFormat('dd/MM').format(thoiGianPV) : '',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
           ],
         ),
         // Title là Họ tên
         title: Text(
           item['hoTen'] ?? 'Ứng viên không tên',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.indigo),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.indigo,
+          ),
         ),
         // Subtitle là Thông tin cơ bản và Người PV
         subtitle: Column(
@@ -287,19 +380,31 @@ class _LichPVState extends State<LichPV> {
             const SizedBox(height: 4),
             Text('📅 $ngayText'),
             Text('👤 Người PV: ${item['nguoiPV'] ?? 'Chưa xác định'}'),
-            if ((item['email']?.toString() ?? '').isNotEmpty) Text('📧 ${item['email']}'),
-            if ((item['sdt']?.toString() ?? '').isNotEmpty) Text('📞 ${item['sdt']}'),
+            if ((item['email']?.toString() ?? '').isNotEmpty)
+              Text('📧 ${item['email']}'),
+            if ((item['sdt']?.toString() ?? '').isNotEmpty)
+              Text('📞 ${item['sdt']}'),
             const SizedBox(height: 8),
             // Chip nổi bật Hình thức
             Chip(
-              label: Text(hinhThuc, style: const TextStyle(fontWeight: FontWeight.bold)),
-              avatar: Icon(hinhThuc == 'Online' ? Icons.laptop : Icons.business),
-              backgroundColor: hinhThuc == 'Online' ? Colors.lightBlue.shade100 : Colors.orange.shade100,
+              label: Text(
+                hinhThuc,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              avatar: Icon(
+                hinhThuc == 'Online' ? Icons.laptop : Icons.business,
+              ),
+              backgroundColor: hinhThuc == 'Online'
+                  ? Colors.lightBlue.shade100
+                  : Colors.orange.shade100,
             ),
             if ((item['ghiChu']?.toString() ?? '').isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
-                child: Text('🗒 Ghi chú: ${item['ghiChu']}', style: const TextStyle(fontStyle: FontStyle.italic)),
+                child: Text(
+                  '🗒 Ghi chú: ${item['ghiChu']}',
+                  style: const TextStyle(fontStyle: FontStyle.italic),
+                ),
               ),
           ],
         ),
@@ -325,7 +430,10 @@ class _LichPVState extends State<LichPV> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🗓 LỊCH PHỎNG VẤN', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text(
+          '🗓 LỊCH PHỎNG VẤN',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         centerTitle: true,
         backgroundColor: Colors.indigo,
         elevation: 0,
@@ -334,27 +442,30 @@ class _LichPVState extends State<LichPV> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: _lichPVList.isEmpty
             ? const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.event_busy, size: 80, color: Colors.grey),
-              SizedBox(height: 16),
-              Text(
-                'Chưa có lịch phỏng vấn nào.\nHãy nhấn "+" để bắt đầu thêm mới.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            ],
-          ),
-        )
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.event_busy, size: 80, color: Colors.grey),
+                    SizedBox(height: 16),
+                    Text(
+                      'Chưa có lịch phỏng vấn nào.\nHãy nhấn "+" để bắt đầu thêm mới.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              )
             : ListView.builder(
-          itemCount: _lichPVList.length,
-          itemBuilder: (context, i) => _buildPVCard(_lichPVList[i], i),
-        ),
+                itemCount: _lichPVList.length,
+                itemBuilder: (context, i) => _buildPVCard(_lichPVList[i], i),
+              ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openForm(),
-        label: const Text('Thêm lịch PV', style: TextStyle(fontWeight: FontWeight.bold)),
+        label: const Text(
+          'Thêm lịch PV',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         icon: const Icon(Icons.add),
         backgroundColor: Colors.indigo,
         foregroundColor: Colors.white,
