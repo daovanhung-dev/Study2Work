@@ -2,13 +2,14 @@
 
 ## Configuration
 
-`apps/work-server/src/core/config.ts` is the runtime configuration source.
-The Express server does not call `dotenv.config()` or read runtime values from
-`.env`. The process launcher must provide `DATABASE_URL`,
-`DIRECT_DATABASE_URL`, and a `JWT_SECRET` with at least 32 characters; the
-optional `JWT_EXPIRES` defaults to `1d`. Missing required values fail fast.
-Prisma CLI commands receive the constants through
-`scripts/prisma-with-constants.ts`.
+`apps/work-server/src/utils/constants.ts` is the tracked static runtime
+configuration source. `apps/work-server/src/core/config.ts` validates and
+normalizes those values for the application. The Express server does not call
+`dotenv.config()` and does not read configuration from `.env` or `process.env`.
+The required `DATABASE_URL`, `DIRECT_DATABASE_URL`, and `JWT_SECRET` constants
+fail fast if missing or invalid; `JWT_SECRET` must contain at least 32
+characters and `JWT_EXPIRES` defaults to `1d`. Prisma CLI commands receive the
+database constants through `scripts/prisma-with-constants.ts`.
 
 ## JWT authentication
 

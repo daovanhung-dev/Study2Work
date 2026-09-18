@@ -1,3 +1,15 @@
+import {
+  APP_ENV,
+  DATABASE_URL,
+  DIRECT_DATABASE_URL,
+  JWT_EXPIRES,
+  JWT_SECRET,
+  PORT,
+  REDIS_URL,
+  SUPABASE_ANON_KEY,
+  SUPABASE_URL,
+} from "../utils/constants.js";
+
 export type WorkEnvironment = "local" | "test" | "staging" | "production";
 
 export interface WorkConfig {
@@ -12,47 +24,64 @@ export interface WorkConfig {
   supabaseAnonKey: string;
 }
 
-type EnvironmentLike = Record<string, string | undefined>;
+export type WorkConfigOverrides = Partial<WorkConfig>;
 
-function required(environment: EnvironmentLike, name: string): string {
-  const value = environment[name]?.trim();
-  if (!value) throw new Error(`Missing required environment variable: ${name}`);
-  return value;
+function required(value: string | undefined, name: string): string {
+  const normalized = value?.trim();
+  if (!normalized) throw new Error(`Missing required Work constant: ${name}`);
+  if (normalized.includes("USER:PASSWORD@HOST") || normalized.startsWith("replace-with-")) {
+    throw new Error(`Work constant ${name} still contains a placeholder value`);
+  }
+  return normalized;
 }
 
-function optional(environment: EnvironmentLike, name: string, fallback: string): string {
-  return environment[name]?.trim() || fallback;
+function optional(value: string | undefined, fallback: string): string {
+  const normalized = value?.trim();
+  return normalized || fallback;
 }
 
-function parsePort(environment: EnvironmentLike): number {
-  const value = Number(optional(environment, "PORT", "3000"));
-  if (!Number.isInteger(value) || value < 1 || value > 65535) {
+function parsePort(value: number | undefined): number {
+  const normalized = value ?? 3000;
+  if (!Number.isInteger(normalized) || normalized < 1 || normalized > 65535) {
     throw new Error("PORT must be an integer between 1 and 65535");
   }
-  return value;
+  return normalized;
 }
 
-function parseEnvironment(environment: EnvironmentLike): WorkEnvironment {
-  const value = optional(environment, "APP_ENV", "local");
-  if (!["local", "test", "staging", "production"].includes(value)) {
+function parseEnvironment(value: string | undefined): WorkEnvironment {
+  const normalized = value?.trim() || "local";
+  if (!["local", "test", "staging", "production"].includes(normalized)) {
     throw new Error("APP_ENV must be local, test, staging or production");
   }
-  return value as WorkEnvironment;
+  return normalized as WorkEnvironment;
 }
 
-export function loadConfig(environment: EnvironmentLike = process.env): WorkConfig {
-  const jwtSecret = required(environment, "JWT_SECRET");
+const STATIC_CONFIG: WorkConfig = {
+  appEnv: APP_ENV,
+  port: PORT,
+  databaseUrl: DATABASE_URL,
+  directDatabaseUrl: DIRECT_DATABASE_URL,
+  jwtSecret: JWT_SECRET,
+  jwtExpires: JWT_EXPIRES,
+  redisUrl: REDIS_URL || undefined,
+  supabaseUrl: SUPABASE_URL,
+  supabaseAnonKey: SUPABASE_ANON_KEY,
+};
+
+export function loadConfig(overrides: WorkConfigOverrides = {}): WorkConfig {
+  const configured = { ...STATIC_CONFIG, ...overrides };
+  const jwtSecret = required(configured.jwtSecret, "JWT_SECRET");
   if (jwtSecret.length < 32) throw new Error("JWT_SECRET must contain at least 32 characters");
 
   return {
-    appEnv: parseEnvironment(environment),
-    port: parsePort(environment),
-    databaseUrl: required(environment, "DATABASE_URL"),
-    directDatabaseUrl: required(environment, "DIRECT_DATABASE_URL"),
+    appEnv: parseEnvironment(configured.appEnv),
+    port: parsePort(configured.port),
+    databaseUrl: required(configured.databaseUrl, "DATABASE_URL"),
+    directDatabaseUrl: required(configured.directDatabaseUrl, "DIRECT_DATABASE_URL"),
     jwtSecret,
-    jwtExpires: optional(environment, "JWT_EXPIRES", "1d"),
-    redisUrl: environment.REDIS_URL?.trim() || undefined,
-    supabaseUrl: optional(environment, "SUPABASE_URL", ""),
-    supabaseAnonKey: optional(environment, "SUPABASE_ANON_KEY", ""),
+    jwtExpires: optional(configured.jwtExpires, "1d"),
+    redisUrl: configured.redisUrl?.trim() || undefined,
+    supabaseUrl: configured.supabaseUrl.trim(),
+    supabaseAnonKey: configured.supabaseAnonKey.trim(),
   };
 }

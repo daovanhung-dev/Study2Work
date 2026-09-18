@@ -1,14 +1,22 @@
-import { loadConfig } from "../core/config.js";
+/**
+ * Static Work runtime configuration.
+ *
+ * Work intentionally keeps runtime configuration in this module. Keep
+ * credentials in this source boundary and never duplicate them in logs, tests,
+ * documentation or context.
+ */
+export const APP_ENV = "local" as const;
+export const PORT = 3000;
 
-const config = loadConfig();
+export const DATABASE_URL =
+  "postgresql://neondb_owner:npg_KbI87qFogAHp@ep-noisy-fog-b3rlle00.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require";
+export const DIRECT_DATABASE_URL = DATABASE_URL;
 
-export const DATABASE_URL = config.databaseUrl;
-export const DIRECT_DATABASE_URL = config.directDatabaseUrl;
-export const PORT = config.port;
-export const JWT_SECRET = config.jwtSecret;
-export const JWT_EXPIRES = config.jwtExpires;
+export const JWT_SECRET = "ACqK8O81zcS2Mwblkd4HzeGnEs8zLDfrKmMM9lpZVPH61WZ4nR4_Qo0lPNwRHumN";
+export const JWT_EXPIRES = "1d";
+export const REDIS_URL = "";
+
+// These legacy modules are not wired into the current API route graph.
+export const SUPABASE_URL = "";
+export const SUPABASE_ANON_KEY = "";
 export const JWT_STORAGE_KEY = "access_token";
-
-// Supabase is retained only for legacy, currently unwired modules.
-export const SUPABASE_URL = config.supabaseUrl;
-export const SUPABASE_ANON_KEY = config.supabaseAnonKey;

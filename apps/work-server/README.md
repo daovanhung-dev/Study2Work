@@ -89,11 +89,15 @@ npm run prisma:migrate:deploy
 npm run s2w
 ```
 
-The server reads typed runtime configuration from `src/core/config.ts` and
-connects to Neon through the pooled URL. Prisma migration commands use the
-direct Neon endpoint through the local CLI wrapper. `APP_ENV` and `REDIS_URL`
-are optional; Redis is reported as configured/not_configured by readiness and
-does not add a runtime Redis dependency.
+The server reads typed runtime configuration from the static
+`src/utils/constants.ts` through `src/core/config.ts`; it does not load
+`.env` or read configuration from `process.env`. Required constants are
+validated during bootstrap.
+
+Prisma migration commands use the direct Neon endpoint through the local CLI
+wrapper. `APP_ENV` and `REDIS_URL` are optional; Redis is reported as
+configured/not_configured by readiness and does not add a runtime Redis
+dependency.
 
 System routes are now wired:
 
@@ -116,13 +120,13 @@ storage and webhook operations).
 | `JWT_EXPIRES`         | JWT expiration value.                                            |
 | `JWT_STORAGE_KEY`     | Browser local-storage key for the access token.                  |
 | `SUPABASE_URL`        | Supabase project URL.                                            |
-| `SUPABASE_ANON_KEY`   | Supabase anonymous key.                                          |
+| `SUPABASE_ANON_KEY`   | Supabase anonymous key for legacy, unwired modules.              |
 
-The process launcher must provide environment variables before starting the
-server; the application does not parse `.env` files. `DATABASE_URL`,
-`DIRECT_DATABASE_URL` and `JWT_SECRET` are required. `JWT_SECRET` must contain
-at least 32 characters. `PORT` defaults to `3000` and `JWT_EXPIRES` defaults to
-`1d`. Keep all credentials out of logs and documentation.
+`DATABASE_URL`, `DIRECT_DATABASE_URL` and `JWT_SECRET` are required static
+constants.
+`JWT_SECRET` must contain at least 32 characters. `PORT` defaults to `3000` and
+`JWT_EXPIRES` defaults to `1d`. Keep all credentials out of logs,
+documentation, tests and tracked source files.
 
 Passwords are stored as bcrypt hashes. Existing legacy plaintext rows remain
 login-compatible and are opportunistically rehashed after a successful login.

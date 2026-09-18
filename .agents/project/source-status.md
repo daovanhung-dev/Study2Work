@@ -80,9 +80,12 @@ DATABASE_SCHEMA_STATUS: VERIFIED_PRISMA_12_MODELS
 HEALTH_ROUTE_STATUS: VERIFIED_INJECTED_PROBE
 ```
 
-- `src/main.ts` loads environment config, creates injected dependencies, connects
-  Prisma before listening and gracefully disconnects on shutdown; `src/app.ts`
-  exposes `createApp(options)` for fake-dependency HTTP tests.
+- `src/main.ts` loads typed config from the tracked static
+  `src/utils/constants.ts`,
+  creates injected dependencies, connects Prisma before listening and gracefully
+  disconnects on shutdown; `src/app.ts` exposes `createApp(options)` for
+  fake-dependency HTTP tests. `.env` and `process.env` are not runtime config
+  sources.
 - `src/core/` owns typed config, Prisma factory, trace context, response/error
   envelopes, centralized exception mapping and HS256 security helpers.
 - `src/api/v1.ts` only composes route modules. Auth, students, businesses, jobs,

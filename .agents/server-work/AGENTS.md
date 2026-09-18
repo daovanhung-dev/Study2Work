@@ -23,9 +23,12 @@ Canonical page graph: `INDEX.md`.
 ## Critical rules
 
 - Internal imports use NodeNext ESM `.js` suffix.
-- Runtime configuration comes from `src/core/config.ts`; runtime code does not load `.env`.
-  `DATABASE_URL`, `DIRECT_DATABASE_URL`, and `JWT_SECRET` are required; the JWT
-  secret must be at least 32 characters. `JWT_EXPIRES` is optional.
+- Runtime configuration is loaded by `src/core/config.ts` from tracked static
+  `src/utils/constants.ts`; runtime code does not load `.env` or use
+  `process.env` for configuration. The required `DATABASE_URL`,
+  `DIRECT_DATABASE_URL`, and `JWT_SECRET` constants fail fast when missing or
+  invalid; the JWT secret must be at least 32 characters. `JWT_EXPIRES` is
+  optional.
 - Prisma is created through `src/core/database.ts` and injected through `createApp`; the
   compatibility export in `src/config/prisma.config.ts` remains for legacy callers.
 - `src/app.ts` is `createApp(options)` and mounts trace/config/auth middleware plus

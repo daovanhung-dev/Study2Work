@@ -224,6 +224,7 @@
         "apps/work-server/src/utils/constants.ts",
         "apps/work-server/src/utils/jwt.ts",
         "apps/work-server/test/app.test.ts",
+        "apps/work-server/test/config.test.ts",
         "apps/work-server/prisma/schema.prisma",
         "apps/work-server/package.json"
       ]

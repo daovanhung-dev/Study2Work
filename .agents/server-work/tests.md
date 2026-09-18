@@ -26,7 +26,10 @@ automated.
 
 When Node/npm is unavailable, the equivalent Deno fallback can execute the
 workspace-installed TypeScript/Vitest CLIs for static and focused checks; the
-normal npm/pnpm scripts remain the canonical CI commands.
+normal npm/pnpm scripts remain the canonical CI commands. Configuration tests
+cover the tracked static constants and explicit injected `WorkConfig` values;
+they must not require a live Neon connection. Never print constants, tokens,
+passwords, API keys or connection strings.
 
 The Work Web tests live under `apps/work-client/web/src/` and cover role access,
 Bearer header/credential behavior and local token clearing. The mobile tests

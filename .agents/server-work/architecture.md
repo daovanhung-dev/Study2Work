@@ -26,7 +26,8 @@ src/api/v1.ts
 ```
 
 The runtime is an API-only Express 4 server. `src/core/config.ts` is the typed
-environment configuration source; `.env` is not loaded. `multer` handles image
+configuration adapter over tracked static `src/utils/constants.ts`; `.env` and
+`process.env` are not runtime configuration sources. `multer` handles image
 uploads into the process `uploads/` directory. React owns all browser views in
 the separate Work Web package; unknown server paths return JSON, not HTML.
 
