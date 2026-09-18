@@ -56,7 +56,7 @@ status: "Draft — Needs Confirmation"
 
 ## Security note
 
-- Không ghi literal credential, JWT secret hoặc token. Sensitive response fields nếu source hiện trả ra được đánh dấu ngay tại response mapping.
+- Không ghi literal credential, JWT secret hoặc token. Public projection loại password/hash khỏi mọi response.
 
 ## Performance note
 

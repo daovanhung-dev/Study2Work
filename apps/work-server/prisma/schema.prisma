@@ -19,7 +19,7 @@ model SinhVien {
   id          BigInt  @id @default(autoincrement())
   hoten       String? @db.VarChar(50)
   email       String? @unique @db.VarChar(50)
-  matkhau     String? @db.VarChar(20)
+  matkhau     String? @db.VarChar(255)
   chuyennganh String? @db.VarChar(50)
   avt         String? @db.VarChar(191)
 
@@ -35,7 +35,7 @@ model DoanhNghiep {
   id          BigInt  @id @default(autoincrement())
   hoten       String? @db.VarChar(50)
   email       String? @unique @db.VarChar(50)
-  matkhau     String? @db.VarChar(50)
+  matkhau     String? @db.VarChar(255)
   diachi      String? @db.VarChar(100)
   sodienthoai String? @db.VarChar(20)
   avt         String? @db.VarChar(191)

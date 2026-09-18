@@ -47,16 +47,15 @@ status: "Draft — Needs Confirmation"
 ### 5.1. INSERT `SinhVien`
 
 - Gọi `StudentService.insertStudent`.
-- Prisma tạo record `SinhVien` với `hoten`, `email`, `matkhau`, `chuyennganh`, `avt`.
+- Service hash `matkhau` bằng bcrypt rồi Prisma tạo record `SinhVien` với password hash và các field profile; response dùng public projection.
 - Không có transaction explicit trong source.
 - Nếu create thất bại, trả `409 STUDENT_CREATE_FAILED`.
-- Nếu thành công, trả record Prisma đầy đủ theo current source.
+- Nếu thành công, trả public projection của `SinhVien`; password hash không được chọn hoặc trả về.
 
 ## 6. Map response và error
 
 - `data` là record Prisma `SinhVien` được trả nguyên từ `insertStudent`.
 - `reply` chuyển BigInt thành number và Date thành ISO string nếu có.
-- Current source có thể chứa `data.matkhau`; đây là security discrepancy cần xử lý riêng.
 - Thành công: `reply` trả HTTP `201`, `businessCode = STUDENT_CREATED`, `data` theo [04_Response.md](./04_Response.md).
 - Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
 - Chi tiết lỗi: [06_Error.md](./06_Error.md).

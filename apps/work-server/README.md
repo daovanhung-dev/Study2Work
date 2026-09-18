@@ -7,7 +7,7 @@ handling for student and business flows. The React frontend lives in
 
 ## Features
 
-- Student and business sign-in/sign-up flows.
+- Student registration plus student/business sign-in flows; business registration remains unwired.
 - Role-based protected routes for students and businesses.
 - Student job browsing, CV creation/update, and applications through `/api/v1`.
 - Business job posting, job management, applicant list, and CV detail through `/api/v1`.
@@ -92,9 +92,15 @@ direct Neon endpoint through the local CLI wrapper.
 | `SUPABASE_URL`        | Supabase project URL.                                            |
 | `SUPABASE_ANON_KEY`   | Supabase anonymous key.                                          |
 
-The project does not load `.env` files. Runtime configuration is defined in
-`src/utils/constants.ts`; keep the Neon credential out of logs. Protected
-requests must send exactly one `Authorization: Bearer <JWT>` header. The server
-does not authenticate from cookies or maintain server-side sessions. Logout
-removes the token from the browser, while already-issued JWTs remain valid until
-they expire.
+The process launcher must provide environment variables before starting the
+server; the application does not parse `.env` files. `DATABASE_URL`,
+`DIRECT_DATABASE_URL` and `JWT_SECRET` are required. `JWT_SECRET` must contain
+at least 32 characters. `PORT` defaults to `3000` and `JWT_EXPIRES` defaults to
+`1d`. Keep all credentials out of logs and documentation.
+
+Passwords are stored as bcrypt hashes. Existing legacy plaintext rows remain
+login-compatible and are opportunistically rehashed after a successful login.
+Protected requests must send exactly one `Authorization: Bearer <JWT>` header.
+The server does not authenticate from cookies or maintain server-side sessions.
+Logout removes the token from the browser, while already-issued JWTs remain
+valid until they expire.

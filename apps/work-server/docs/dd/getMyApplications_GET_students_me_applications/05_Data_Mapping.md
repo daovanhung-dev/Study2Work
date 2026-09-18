@@ -51,7 +51,6 @@ status: "Draft — Needs Confirmation"
 
 - `data` là array `UngVien`.
 - Mỗi item có nested `JD` và `DoanhNghiep` theo Prisma include.
-- Full `DoanhNghiep` có thể chứa `matkhau`; ghi nhận security discrepancy.
 - Thành công: `reply` trả HTTP `200`, `businessCode = APPLICATIONS_LOADED`, `data` theo [04_Response.md](./04_Response.md).
 - Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
 - Chi tiết lỗi: [06_Error.md](./06_Error.md).

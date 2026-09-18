@@ -1,6 +1,5 @@
-import { request } from "http";
 import prisma from "../config/prisma.config.js";
-import { Request, Response } from "express";
+import { isUniqueConstraintError } from "../utils/prisma-errors.js";
 
 class CVService {
   // Tạo CV mới
@@ -29,11 +28,16 @@ class CVService {
     sinhvien_id?: number | bigint;
   }) {
     try {
-      const cv = await prisma.cv.create({ data });
-      console.log("Tạo CV thành công:", cv.id);
+      const cv = await prisma.cv.create({
+        data: {
+          ...data,
+          ...(data.sinhvien_id === undefined ? {} : { sinhvien_id: BigInt(data.sinhvien_id) }),
+        },
+      });
       return { success: true, data: cv };
     } catch (err) {
-      console.error("Lỗi tạo CV:", err);
+      if (isUniqueConstraintError(err)) return { success: false, error: "CV_ALREADY_EXISTS" };
+      console.error("Lỗi tạo CV.");
       return { success: false, error: "Không thể tạo CV" };
     }
   }
@@ -44,7 +48,7 @@ class CVService {
       const list = await prisma.cv.findMany();
       return { success: true, data: list };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi lấy danh sách CV.");
       return { success: false, error: "Lỗi server" };
     }
   }
@@ -57,7 +61,7 @@ class CVService {
       if (!cv) return { success: false, error: "Không tìm thấy CV" };
       return { success: true, data: cv };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi lấy CV.");
       return { success: false, error: "Lỗi server" };
     }
   }
@@ -91,7 +95,6 @@ class CVService {
     }>
   ) {
     try {
-      console.log("cap nhat cv")
       const updated = await prisma.cv.update({
         where: { id: BigInt(id) },
         data,
@@ -99,7 +102,7 @@ class CVService {
 
       return { success: true, data: updated };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi cập nhật CV.");
       return { success: false, error: "Không thể cập nhật CV" };
     }
   }
@@ -110,7 +113,7 @@ class CVService {
       await prisma.cv.delete({ where: { id: BigInt(id) } });
       return { success: true };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi xóa CV.");
       return { success: false, error: "Không thể xóa CV" };
     }
   }
@@ -121,14 +124,14 @@ class CVService {
       const total = await prisma.cv.count(
         {
           where:{
-            sinhvien_id: student_id
+            sinhvien_id: BigInt(student_id)
           }
         }
       );
       return total;
     }
     catch(err){
-      return {success: false, error:"Lỗi server"};
+      return { success: false, error: "Lỗi server" };
     }
   }
 }

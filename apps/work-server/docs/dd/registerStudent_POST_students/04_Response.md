@@ -29,7 +29,6 @@ status: "Draft — Needs Confirmation"
 | 9 | data.email | email | `email` | string\|null | Yes | SinhVien | email | query/mutation result | Direct | null nếu DB null | Public selected field |
 | 10 | data.chuyennganh | chuyennganh | `chuyennganh` | string\|null | Yes | SinhVien | chuyennganh | query/mutation result | Direct | null nếu DB null | Public selected field |
 | 11 | data.avt | avt | `avt` | string\|null | Yes | SinhVien | avt | query/mutation result | Direct | null nếu DB null | Public selected field |
-| 12 | data.matkhau | matkhau | `matkhau` | string\|null | Yes | SinhVien | matkhau | query/mutation result | Direct | null nếu DB null | Sensitive field exposed by current full Prisma result; source discrepancy |
 
 > HTTP status là transport status; không được thêm `HTTPStatus` vào JSON body vì current `reply` không trả field này.
 

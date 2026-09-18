@@ -1,5 +1,6 @@
 // services/ungvien_service.ts
 import prisma from "../config/prisma.config.js";
+import { businessPublicSelect, jobPublicSelect, studentPublicSelect } from "./public-selectors.js";
 
 class CandidateService {
   /**
@@ -8,31 +9,28 @@ class CandidateService {
    * @param doanhnghiep_id ID doanh nghiệp
    */
   async create(sinhvien_id: number, doanhnghiep_id: number, jd_id?: number) {
-  try {
     const newUngVien = await prisma.ungVien.create({
       data: {
-        sinhvien_id,
-        doanhnghiep_id,
-        jd_id,  // liên kết với JD nếu có
+        sinhvien_id: BigInt(sinhvien_id),
+        doanhnghiep_id: BigInt(doanhnghiep_id),
+        ...(jd_id === undefined ? {} : { jd_id: BigInt(jd_id) }),
         // trangthai và created_at dùng default value trong model
+      },
+      include: {
+        JD: { select: jobPublicSelect },
       },
     });
     return newUngVien;
-  } catch (error) {
-    console.error("Lỗi khi tạo ứng viên:", error);
-    throw error;
   }
-}
-
 
   //kiem tra ton tai
   async count(studentID: number, businessID: number, jdID?: number) {
     try {
       const total = await prisma.ungVien.count({
         where: {
-          sinhvien_id: studentID,
-          doanhnghiep_id: businessID,
-          ...(jdID === undefined ? {} : { jd_id: jdID }),
+          sinhvien_id: BigInt(studentID),
+          doanhnghiep_id: BigInt(businessID),
+          ...(jdID === undefined ? {} : { jd_id: BigInt(jdID) }),
         },
       });
       return total;
@@ -45,21 +43,21 @@ class CandidateService {
   async getStudentIdByBusinessId(businessID: number) {
     return prisma.ungVien.findMany({
       where: {
-        doanhnghiep_id: businessID,
+        doanhnghiep_id: BigInt(businessID),
       },
       include: {
-        SinhVien: true, // lấy full thông tin sinh viên
-        JD: true, // lấy full thông tin Job
+        SinhVien: { select: studentPublicSelect },
+        JD: { select: jobPublicSelect },
       },
     });
   }
 
   async getKetQuaUngTuyen(sinhvien_id: number) {
     return prisma.ungVien.findMany({
-      where: { sinhvien_id },
+      where: { sinhvien_id: BigInt(sinhvien_id) },
       include: {
-        JD: true, // Lấy tất cả thông tin vị trí
-        DoanhNghiep: true, // Lấy thông tin doanh nghiệp
+        JD: { select: jobPublicSelect },
+        DoanhNghiep: { select: businessPublicSelect },
       },
       orderBy: { created_at: "desc" },
     });

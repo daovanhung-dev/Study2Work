@@ -4,7 +4,10 @@
 
 `apps/work-server/src/utils/constants.ts` is the runtime configuration source.
 The Express server does not call `dotenv.config()` or read runtime values from
-`.env`. Prisma CLI commands receive the constants through
+`.env`. The process launcher must provide `DATABASE_URL`,
+`DIRECT_DATABASE_URL`, and a `JWT_SECRET` with at least 32 characters; the
+optional `JWT_EXPIRES` defaults to `1d`. Missing required values fail fast.
+Prisma CLI commands receive the constants through
 `scripts/prisma-with-constants.ts`.
 
 ## JWT authentication
@@ -18,12 +21,14 @@ and string `role`. The principal is assigned to `request.user`.
 Role failures return JSON `403`; there is no content-aware HTML redirect.
 Cookies, Passport and server-side sessions are not read or created.
 
-The login services compare the submitted password with the stored value as
-currently implemented. The presence of `bcrypt`/`bcryptjs` dependencies is not
-evidence that password hashing is wired.
+New and changed passwords use bcrypt cost 12. Login verifies bcrypt hashes and
+supports a legacy plaintext row only for compatibility; a successful legacy
+login best-effort rehashes that row. The canonical request key is `password`;
+`matkhau` remains a deprecated compatibility alias.
 
 ## Prisma
 
 Services use the shared Prisma client in `src/config/prisma.config.ts` with
-Neon PostgreSQL. Do not construct an additional Prisma client in a domain
-module.
+Neon PostgreSQL. `SinhVien.matkhau` and `DoanhNghiep.matkhau` are
+`VARCHAR(255)`. Do not construct an additional Prisma client in a domain
+module. API selects exclude both password columns.

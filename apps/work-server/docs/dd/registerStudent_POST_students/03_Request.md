@@ -37,7 +37,7 @@ N/A — API không nhận Query parameter.
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | body | hoten | `hoten` | string | Yes | N/A | N/A | UTF-8/text | N/A | N/A | Họ tên sinh viên | `05_Data_Mapping.md` |
 | 2 | body | email | `email` | string | Yes | N/A | N/A | UTF-8/text | N/A | N/A | Email sinh viên; source không enforce format | `05_Data_Mapping.md` |
-| 3 | body | matkhau | `matkhau` | string | Yes | N/A | N/A | UTF-8/text | N/A | N/A | Mật khẩu được lưu vào `SinhVien.matkhau` theo source | `05_Data_Mapping.md` |
+| 3 | body | matkhau | `matkhau` | string | Yes | N/A | N/A | UTF-8/text | N/A | N/A | Password input; service hash bcrypt trước khi ghi vào `SinhVien.matkhau` | `05_Data_Mapping.md` |
 | 4 | body | chuyennganh | `chuyennganh` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Chuyên ngành; mặc định chuỗi rỗng ở handler | `05_Data_Mapping.md` |
 | 5 | file | avt | `avt` | binary file | No | N/A | N/A | UTF-8/text | jpeg\|jpg\|png\|gif; tối đa 10 MB | N/A | Ảnh đại diện; Multer lưu filename | `05_Data_Mapping.md` |
 > Mỗi field nằm trên một row riêng. `Conditional` nghĩa là source kiểm tra điều kiện kết hợp chứ không yêu cầu field đó độc lập.

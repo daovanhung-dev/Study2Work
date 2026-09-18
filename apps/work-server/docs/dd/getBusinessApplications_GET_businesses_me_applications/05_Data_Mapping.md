@@ -50,7 +50,6 @@ status: "Draft — Needs Confirmation"
 ## 6. Map response và error
 
 - `data` là array `UngVien` có nested `SinhVien` và `JD`.
-- Full `SinhVien` có thể chứa `matkhau`; ghi nhận security discrepancy.
 - Thành công: `reply` trả HTTP `200`, `businessCode = BUSINESS_APPLICATIONS_LOADED`, `data` theo [04_Response.md](./04_Response.md).
 - Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
 - Chi tiết lỗi: [06_Error.md](./06_Error.md).

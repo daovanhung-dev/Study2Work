@@ -17,10 +17,12 @@ Các trường hợp lỗi của API theo current Work Server source.
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Required | - | `hoten/email/matkhau` | Một trong các field bắt buộc bị thiếu/rỗng | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
-| 2 | Upload | - | `avt` | Extension không được phép hoặc file vượt 10 MB | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `multer middleware` | N/A | Multer error đi qua app error handler |
-| 3 | Conflict | - | `SinhVien` | Prisma create thất bại, thường gồm unique email | 409 | `STUDENT_CREATE_FAILED` | N/A — source không có message ID | `mutation` | N/A | Source gộp mọi lỗi create thành code này |
-| 4 | System | - | `server` | Unhandled exception | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `exception handler` | N/A |  |
-
+| 2 | Validation | - | `email` | Email không đúng định dạng | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
+| 3 | Validation | - | `matkhau` | Mật khẩu ngắn hơn 6 ký tự | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
+| 4 | Upload | - | `avt` | Extension hoặc MIME type không được phép | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `multer middleware` | N/A |  |
+| 5 | Upload | - | `avt` | File vượt quá 10 MiB | 413 | `PAYLOAD_TOO_LARGE` | N/A — source không có message ID | `multer middleware` | N/A |  |
+| 6 | Conflict | - | `SinhVien.email` | Email đã tồn tại theo Prisma unique constraint | 409 | `STUDENT_CREATE_FAILED` | N/A — source không có message ID | `mutation` | N/A |  |
+| 7 | System | - | `server` | Unhandled exception hoặc lỗi database không phải duplicate | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `exception handler` | N/A |  |
 > Mỗi error case nằm trên một row riêng. Error code là businessCode source-confirmed; message ID không được tự tạo khi source không có field này.
 
 ---

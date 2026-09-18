@@ -35,31 +35,30 @@ status: "Draft — Needs Confirmation"
 | 15 | data[].SinhVien.email | email | `email` | string\|null | Yes | SinhVien | email | query/mutation result | Direct | null nếu DB null | Public selected field |
 | 16 | data[].SinhVien.chuyennganh | chuyennganh | `chuyennganh` | string\|null | Yes | SinhVien | chuyennganh | query/mutation result | Direct | null nếu DB null | Public selected field |
 | 17 | data[].SinhVien.avt | avt | `avt` | string\|null | Yes | SinhVien | avt | query/mutation result | Direct | null nếu DB null | Public selected field |
-| 18 | data[].SinhVien.matkhau | matkhau | `matkhau` | string\|null | Yes | SinhVien | matkhau | query/mutation result | Direct | null nếu DB null | Sensitive field exposed by current full Prisma result; source discrepancy |
-| 19 | data[].JD.id | id | `id` | number | Yes | JD | id | query/mutation result | BigInt → JSON number | N/A |  |
-| 20 | data[].JD.ten_vi_tri | ten_vi_tri | `ten_vi_tri` | string | Yes | JD | ten_vi_tri | query/mutation result | Direct | N/A | Required DB column |
-| 21 | data[].JD.phong_ban | phong_ban | `phong_ban` | string\|null | Yes | JD | phong_ban | query/mutation result | Direct | null nếu DB null |  |
-| 22 | data[].JD.cap_bac | cap_bac | `cap_bac` | string\|null | Yes | JD | cap_bac | query/mutation result | Direct | null nếu DB null |  |
-| 23 | data[].JD.bao_cao_cho | bao_cao_cho | `bao_cao_cho` | string\|null | Yes | JD | bao_cao_cho | query/mutation result | Direct | null nếu DB null |  |
-| 24 | data[].JD.nhiem_vu | nhiem_vu | `nhiem_vu` | string\|null | Yes | JD | nhiem_vu | query/mutation result | Direct | null nếu DB null |  |
-| 25 | data[].JD.trinh_do | trinh_do | `trinh_do` | string\|null | Yes | JD | trinh_do | query/mutation result | Direct | null nếu DB null |  |
-| 26 | data[].JD.kinh_nghiem | kinh_nghiem | `kinh_nghiem` | string\|null | Yes | JD | kinh_nghiem | query/mutation result | Direct | null nếu DB null |  |
-| 27 | data[].JD.ky_nang | ky_nang | `ky_nang` | string\|null | Yes | JD | ky_nang | query/mutation result | Direct | null nếu DB null |  |
-| 28 | data[].JD.ky_nang_mem | ky_nang_mem | `ky_nang_mem` | string\|null | Yes | JD | ky_nang_mem | query/mutation result | Direct | null nếu DB null |  |
-| 29 | data[].JD.uu_tien | uu_tien | `uu_tien` | string\|null | Yes | JD | uu_tien | query/mutation result | Direct | null nếu DB null |  |
-| 30 | data[].JD.muc_luong | muc_luong | `muc_luong` | string\|null | Yes | JD | muc_luong | query/mutation result | Direct | null nếu DB null |  |
-| 31 | data[].JD.phuc_loi | phuc_loi | `phuc_loi` | string\|null | Yes | JD | phuc_loi | query/mutation result | Direct | null nếu DB null |  |
-| 32 | data[].JD.moi_truong | moi_truong | `moi_truong` | string\|null | Yes | JD | moi_truong | query/mutation result | Direct | null nếu DB null |  |
-| 33 | data[].JD.dia_diem | dia_diem | `dia_diem` | string\|null | Yes | JD | dia_diem | query/mutation result | Direct | null nếu DB null |  |
-| 34 | data[].JD.thoi_gian | thoi_gian | `thoi_gian` | string\|null | Yes | JD | thoi_gian | query/mutation result | Direct | null nếu DB null |  |
-| 35 | data[].JD.han_nop | han_nop | `han_nop` | string\|null | Yes | JD | han_nop | query/mutation result | Direct | null nếu DB null |  |
-| 36 | data[].JD.cach_ung_tuyen | cach_ung_tuyen | `cach_ung_tuyen` | string\|null | Yes | JD | cach_ung_tuyen | query/mutation result | Direct | null nếu DB null |  |
-| 37 | data[].JD.ngay_tao | ngay_tao | `ngay_tao` | string\|null | Yes | JD | ngay_tao | query/mutation result | Date → ISO string | null nếu DB null | Timestamptz |
-| 38 | data[].JD.mo_ta | mo_ta | `mo_ta` | string\|null | Yes | JD | mo_ta | query/mutation result | Direct | null nếu DB null |  |
-| 39 | data[].JD.doanhnghiep_id | doanhnghiep_id | `doanhnghiep_id` | number\|null | Yes | JD | doanhnghiep_id | query/mutation result | BigInt → JSON number | null nếu DB null | FK |
-| 40 | data[].JD.ten_cong_ty | ten_cong_ty | `ten_cong_ty` | string\|null | Yes | JD | ten_cong_ty | query/mutation result | Direct | null nếu DB null |  |
-| 41 | data[].JD.nganh | nganh | `nganh` | string\|null | Yes | JD | nganh | query/mutation result | Direct | null nếu DB null |  |
-| 42 | data[].JD.avt | avt | `avt` | string\|null | Yes | JD | avt | query/mutation result | Direct | null nếu DB null | Stored `/uploads/` path for JD |
+| 18 | data[].JD.id | id | `id` | number | Yes | JD | id | query/mutation result | BigInt → JSON number | N/A |  |
+| 19 | data[].JD.ten_vi_tri | ten_vi_tri | `ten_vi_tri` | string | Yes | JD | ten_vi_tri | query/mutation result | Direct | N/A | Required DB column |
+| 20 | data[].JD.phong_ban | phong_ban | `phong_ban` | string\|null | Yes | JD | phong_ban | query/mutation result | Direct | null nếu DB null |  |
+| 21 | data[].JD.cap_bac | cap_bac | `cap_bac` | string\|null | Yes | JD | cap_bac | query/mutation result | Direct | null nếu DB null |  |
+| 22 | data[].JD.bao_cao_cho | bao_cao_cho | `bao_cao_cho` | string\|null | Yes | JD | bao_cao_cho | query/mutation result | Direct | null nếu DB null |  |
+| 23 | data[].JD.nhiem_vu | nhiem_vu | `nhiem_vu` | string\|null | Yes | JD | nhiem_vu | query/mutation result | Direct | null nếu DB null |  |
+| 24 | data[].JD.trinh_do | trinh_do | `trinh_do` | string\|null | Yes | JD | trinh_do | query/mutation result | Direct | null nếu DB null |  |
+| 25 | data[].JD.kinh_nghiem | kinh_nghiem | `kinh_nghiem` | string\|null | Yes | JD | kinh_nghiem | query/mutation result | Direct | null nếu DB null |  |
+| 26 | data[].JD.ky_nang | ky_nang | `ky_nang` | string\|null | Yes | JD | ky_nang | query/mutation result | Direct | null nếu DB null |  |
+| 27 | data[].JD.ky_nang_mem | ky_nang_mem | `ky_nang_mem` | string\|null | Yes | JD | ky_nang_mem | query/mutation result | Direct | null nếu DB null |  |
+| 28 | data[].JD.uu_tien | uu_tien | `uu_tien` | string\|null | Yes | JD | uu_tien | query/mutation result | Direct | null nếu DB null |  |
+| 29 | data[].JD.muc_luong | muc_luong | `muc_luong` | string\|null | Yes | JD | muc_luong | query/mutation result | Direct | null nếu DB null |  |
+| 30 | data[].JD.phuc_loi | phuc_loi | `phuc_loi` | string\|null | Yes | JD | phuc_loi | query/mutation result | Direct | null nếu DB null |  |
+| 31 | data[].JD.moi_truong | moi_truong | `moi_truong` | string\|null | Yes | JD | moi_truong | query/mutation result | Direct | null nếu DB null |  |
+| 32 | data[].JD.dia_diem | dia_diem | `dia_diem` | string\|null | Yes | JD | dia_diem | query/mutation result | Direct | null nếu DB null |  |
+| 33 | data[].JD.thoi_gian | thoi_gian | `thoi_gian` | string\|null | Yes | JD | thoi_gian | query/mutation result | Direct | null nếu DB null |  |
+| 34 | data[].JD.han_nop | han_nop | `han_nop` | string\|null | Yes | JD | han_nop | query/mutation result | Direct | null nếu DB null |  |
+| 35 | data[].JD.cach_ung_tuyen | cach_ung_tuyen | `cach_ung_tuyen` | string\|null | Yes | JD | cach_ung_tuyen | query/mutation result | Direct | null nếu DB null |  |
+| 36 | data[].JD.ngay_tao | ngay_tao | `ngay_tao` | string\|null | Yes | JD | ngay_tao | query/mutation result | Date → ISO string | null nếu DB null | Timestamptz |
+| 37 | data[].JD.mo_ta | mo_ta | `mo_ta` | string\|null | Yes | JD | mo_ta | query/mutation result | Direct | null nếu DB null |  |
+| 38 | data[].JD.doanhnghiep_id | doanhnghiep_id | `doanhnghiep_id` | number\|null | Yes | JD | doanhnghiep_id | query/mutation result | BigInt → JSON number | null nếu DB null | FK |
+| 39 | data[].JD.ten_cong_ty | ten_cong_ty | `ten_cong_ty` | string\|null | Yes | JD | ten_cong_ty | query/mutation result | Direct | null nếu DB null |  |
+| 40 | data[].JD.nganh | nganh | `nganh` | string\|null | Yes | JD | nganh | query/mutation result | Direct | null nếu DB null |  |
+| 41 | data[].JD.avt | avt | `avt` | string\|null | Yes | JD | avt | query/mutation result | Direct | null nếu DB null | Stored `/uploads/` path for JD |
 
 > HTTP status là transport status; không được thêm `HTTPStatus` vào JSON body vì current `reply` không trả field này.
 

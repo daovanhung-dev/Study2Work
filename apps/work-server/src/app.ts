@@ -1,5 +1,6 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import { randomUUID } from "node:crypto";
+import { MulterError } from "multer";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -40,11 +41,21 @@ app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {
   }
 
   const traceId = req.get("X-Trace-Id") || randomUUID();
+  const isMulterError = error instanceof MulterError;
+  const isUploadFilterError = error instanceof Error && error.message === "Chỉ cho phép file ảnh (jpeg, jpg, png, gif)";
+  const isJsonBodyError = error instanceof SyntaxError && "body" in error;
+  const status = isMulterError && error.code === "LIMIT_FILE_SIZE" ? 413 : (isMulterError || isUploadFilterError || isJsonBodyError ? 400 : 500);
+  const businessCode = status === 413 ? "PAYLOAD_TOO_LARGE" : status === 400 ? "INVALID_REQUEST" : "INTERNAL_SERVER_ERROR";
+  const message = status === 413
+    ? "File tải lên vượt quá kích thước cho phép."
+    : status === 400
+      ? "Request không hợp lệ."
+      : "Lỗi máy chủ.";
   res.setHeader("X-Trace-Id", traceId);
-  res.status(500).json({
+  res.status(status).json({
     success: false,
-    businessCode: "INTERNAL_SERVER_ERROR",
-    message: "Lỗi máy chủ.",
+    businessCode,
+    message,
     data: null,
     meta: {},
     traceId,

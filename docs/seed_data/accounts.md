@@ -1,6 +1,6 @@
 # Work seed accounts
 
-> Dữ liệu synthetic dành cho development/QA. Mật khẩu bên dưới là plaintext vì cơ chế đăng nhập hiện tại của Work đang so sánh trực tiếp trường `matkhau`.
+> Dữ liệu synthetic dành cho development/QA. Password được hash bằng bcrypt trước khi ghi vào database; tài liệu không ghi password.
 > Không dùng các tài khoản này cho production. Tài liệu không chứa Neon connection string hoặc credential của database.
 
 ## Thông tin seed
@@ -19,115 +19,112 @@
 | Ngành nghề | 10 |
 | Rerun policy | Additive idempotent; chỉ upsert namespace seed, không xóa dữ liệu khác |
 
-## Mật khẩu dùng cho QA
 
-- Sinh viên: `WorkStudent@123`
-- Doanh nghiệp: `WorkBusiness@123`
 
 ## Tài khoản sinh viên
 
-| STT | ID | Họ tên | Email | Mật khẩu | Chuyên ngành | CV ID |
-| ---: | ---: | --- | --- | --- | --- | ---: |
-| 1 | 9 | Nguyễn Minh An | seed.student.001@study2work.dev | `WorkStudent@123` | Công nghệ thông tin | 4 |
-| 2 | 10 | Nguyễn Ngọc Bình | seed.student.002@study2work.dev | `WorkStudent@123` | Công nghệ thông tin | 5 |
-| 3 | 11 | Nguyễn Gia Chi | seed.student.003@study2work.dev | `WorkStudent@123` | Công nghệ thông tin | 6 |
-| 4 | 12 | Nguyễn Thanh Dũng | seed.student.004@study2work.dev | `WorkStudent@123` | Công nghệ thông tin | 7 |
-| 5 | 13 | Nguyễn Khánh Hà | seed.student.005@study2work.dev | `WorkStudent@123` | Công nghệ thông tin | 8 |
-| 6 | 14 | Nguyễn Thu Khang | seed.student.006@study2work.dev | `WorkStudent@123` | Công nghệ thông tin | 9 |
-| 7 | 15 | Nguyễn Đức Linh | seed.student.007@study2work.dev | `WorkStudent@123` | Công nghệ thông tin | 10 |
-| 8 | 16 | Nguyễn Quỳnh Nam | seed.student.008@study2work.dev | `WorkStudent@123` | Công nghệ thông tin | 11 |
-| 9 | 17 | Nguyễn Hải Phương | seed.student.009@study2work.dev | `WorkStudent@123` | Công nghệ thông tin | 12 |
-| 10 | 18 | Nguyễn Bảo Quân | seed.student.010@study2work.dev | `WorkStudent@123` | Công nghệ thông tin | 13 |
-| 11 | 19 | Trần Minh An | seed.student.011@study2work.dev | `WorkStudent@123` | Tài chính - Ngân hàng | 14 |
-| 12 | 20 | Trần Ngọc Bình | seed.student.012@study2work.dev | `WorkStudent@123` | Tài chính - Ngân hàng | 15 |
-| 13 | 21 | Trần Gia Chi | seed.student.013@study2work.dev | `WorkStudent@123` | Tài chính - Ngân hàng | 16 |
-| 14 | 22 | Trần Thanh Dũng | seed.student.014@study2work.dev | `WorkStudent@123` | Tài chính - Ngân hàng | 17 |
-| 15 | 23 | Trần Khánh Hà | seed.student.015@study2work.dev | `WorkStudent@123` | Tài chính - Ngân hàng | 18 |
-| 16 | 24 | Trần Thu Khang | seed.student.016@study2work.dev | `WorkStudent@123` | Tài chính - Ngân hàng | 19 |
-| 17 | 25 | Trần Đức Linh | seed.student.017@study2work.dev | `WorkStudent@123` | Tài chính - Ngân hàng | 20 |
-| 18 | 26 | Trần Quỳnh Nam | seed.student.018@study2work.dev | `WorkStudent@123` | Tài chính - Ngân hàng | 21 |
-| 19 | 27 | Trần Hải Phương | seed.student.019@study2work.dev | `WorkStudent@123` | Tài chính - Ngân hàng | 22 |
-| 20 | 28 | Trần Bảo Quân | seed.student.020@study2work.dev | `WorkStudent@123` | Tài chính - Ngân hàng | 23 |
-| 21 | 29 | Lê Minh An | seed.student.021@study2work.dev | `WorkStudent@123` | Marketing - Truyền thông | 24 |
-| 22 | 30 | Lê Ngọc Bình | seed.student.022@study2work.dev | `WorkStudent@123` | Marketing - Truyền thông | 25 |
-| 23 | 31 | Lê Gia Chi | seed.student.023@study2work.dev | `WorkStudent@123` | Marketing - Truyền thông | 26 |
-| 24 | 32 | Lê Thanh Dũng | seed.student.024@study2work.dev | `WorkStudent@123` | Marketing - Truyền thông | 27 |
-| 25 | 33 | Lê Khánh Hà | seed.student.025@study2work.dev | `WorkStudent@123` | Marketing - Truyền thông | 28 |
-| 26 | 34 | Lê Thu Khang | seed.student.026@study2work.dev | `WorkStudent@123` | Marketing - Truyền thông | 29 |
-| 27 | 35 | Lê Đức Linh | seed.student.027@study2work.dev | `WorkStudent@123` | Marketing - Truyền thông | 30 |
-| 28 | 36 | Lê Quỳnh Nam | seed.student.028@study2work.dev | `WorkStudent@123` | Marketing - Truyền thông | 31 |
-| 29 | 37 | Lê Hải Phương | seed.student.029@study2work.dev | `WorkStudent@123` | Marketing - Truyền thông | 32 |
-| 30 | 38 | Lê Bảo Quân | seed.student.030@study2work.dev | `WorkStudent@123` | Marketing - Truyền thông | 33 |
-| 31 | 39 | Phạm Minh An | seed.student.031@study2work.dev | `WorkStudent@123` | Thương mại điện tử | 34 |
-| 32 | 40 | Phạm Ngọc Bình | seed.student.032@study2work.dev | `WorkStudent@123` | Thương mại điện tử | 35 |
-| 33 | 41 | Phạm Gia Chi | seed.student.033@study2work.dev | `WorkStudent@123` | Thương mại điện tử | 36 |
-| 34 | 42 | Phạm Thanh Dũng | seed.student.034@study2work.dev | `WorkStudent@123` | Thương mại điện tử | 37 |
-| 35 | 43 | Phạm Khánh Hà | seed.student.035@study2work.dev | `WorkStudent@123` | Thương mại điện tử | 38 |
-| 36 | 44 | Phạm Thu Khang | seed.student.036@study2work.dev | `WorkStudent@123` | Thương mại điện tử | 39 |
-| 37 | 45 | Phạm Đức Linh | seed.student.037@study2work.dev | `WorkStudent@123` | Thương mại điện tử | 40 |
-| 38 | 46 | Phạm Quỳnh Nam | seed.student.038@study2work.dev | `WorkStudent@123` | Thương mại điện tử | 41 |
-| 39 | 47 | Phạm Hải Phương | seed.student.039@study2work.dev | `WorkStudent@123` | Thương mại điện tử | 42 |
-| 40 | 48 | Phạm Bảo Quân | seed.student.040@study2work.dev | `WorkStudent@123` | Thương mại điện tử | 43 |
-| 41 | 49 | Hoàng Minh An | seed.student.041@study2work.dev | `WorkStudent@123` | Giáo dục | 44 |
-| 42 | 50 | Hoàng Ngọc Bình | seed.student.042@study2work.dev | `WorkStudent@123` | Giáo dục | 45 |
-| 43 | 51 | Hoàng Gia Chi | seed.student.043@study2work.dev | `WorkStudent@123` | Giáo dục | 46 |
-| 44 | 52 | Hoàng Thanh Dũng | seed.student.044@study2work.dev | `WorkStudent@123` | Giáo dục | 47 |
-| 45 | 53 | Hoàng Khánh Hà | seed.student.045@study2work.dev | `WorkStudent@123` | Giáo dục | 48 |
-| 46 | 54 | Hoàng Thu Khang | seed.student.046@study2work.dev | `WorkStudent@123` | Giáo dục | 49 |
-| 47 | 55 | Hoàng Đức Linh | seed.student.047@study2work.dev | `WorkStudent@123` | Giáo dục | 50 |
-| 48 | 56 | Hoàng Quỳnh Nam | seed.student.048@study2work.dev | `WorkStudent@123` | Giáo dục | 51 |
-| 49 | 57 | Hoàng Hải Phương | seed.student.049@study2work.dev | `WorkStudent@123` | Giáo dục | 52 |
-| 50 | 58 | Hoàng Bảo Quân | seed.student.050@study2work.dev | `WorkStudent@123` | Giáo dục | 53 |
-| 51 | 59 | Huỳnh Minh An | seed.student.051@study2work.dev | `WorkStudent@123` | Logistics | 54 |
-| 52 | 60 | Huỳnh Ngọc Bình | seed.student.052@study2work.dev | `WorkStudent@123` | Logistics | 55 |
-| 53 | 61 | Huỳnh Gia Chi | seed.student.053@study2work.dev | `WorkStudent@123` | Logistics | 56 |
-| 54 | 62 | Huỳnh Thanh Dũng | seed.student.054@study2work.dev | `WorkStudent@123` | Logistics | 57 |
-| 55 | 63 | Huỳnh Khánh Hà | seed.student.055@study2work.dev | `WorkStudent@123` | Logistics | 58 |
-| 56 | 64 | Huỳnh Thu Khang | seed.student.056@study2work.dev | `WorkStudent@123` | Logistics | 59 |
-| 57 | 65 | Huỳnh Đức Linh | seed.student.057@study2work.dev | `WorkStudent@123` | Logistics | 60 |
-| 58 | 66 | Huỳnh Quỳnh Nam | seed.student.058@study2work.dev | `WorkStudent@123` | Logistics | 61 |
-| 59 | 67 | Huỳnh Hải Phương | seed.student.059@study2work.dev | `WorkStudent@123` | Logistics | 62 |
-| 60 | 68 | Huỳnh Bảo Quân | seed.student.060@study2work.dev | `WorkStudent@123` | Logistics | 63 |
-| 61 | 69 | Phan Minh An | seed.student.061@study2work.dev | `WorkStudent@123` | Sản xuất | 64 |
-| 62 | 70 | Phan Ngọc Bình | seed.student.062@study2work.dev | `WorkStudent@123` | Sản xuất | 65 |
-| 63 | 71 | Phan Gia Chi | seed.student.063@study2work.dev | `WorkStudent@123` | Sản xuất | 66 |
-| 64 | 72 | Phan Thanh Dũng | seed.student.064@study2work.dev | `WorkStudent@123` | Sản xuất | 67 |
-| 65 | 73 | Phan Khánh Hà | seed.student.065@study2work.dev | `WorkStudent@123` | Sản xuất | 68 |
-| 66 | 74 | Phan Thu Khang | seed.student.066@study2work.dev | `WorkStudent@123` | Sản xuất | 69 |
-| 67 | 75 | Phan Đức Linh | seed.student.067@study2work.dev | `WorkStudent@123` | Sản xuất | 70 |
-| 68 | 76 | Phan Quỳnh Nam | seed.student.068@study2work.dev | `WorkStudent@123` | Sản xuất | 71 |
-| 69 | 77 | Phan Hải Phương | seed.student.069@study2work.dev | `WorkStudent@123` | Sản xuất | 72 |
-| 70 | 78 | Phan Bảo Quân | seed.student.070@study2work.dev | `WorkStudent@123` | Sản xuất | 73 |
-| 71 | 79 | Vũ Minh An | seed.student.071@study2work.dev | `WorkStudent@123` | Y tế - Chăm sóc sức khỏe | 74 |
-| 72 | 80 | Vũ Ngọc Bình | seed.student.072@study2work.dev | `WorkStudent@123` | Y tế - Chăm sóc sức khỏe | 75 |
-| 73 | 81 | Vũ Gia Chi | seed.student.073@study2work.dev | `WorkStudent@123` | Y tế - Chăm sóc sức khỏe | 76 |
-| 74 | 82 | Vũ Thanh Dũng | seed.student.074@study2work.dev | `WorkStudent@123` | Y tế - Chăm sóc sức khỏe | 77 |
-| 75 | 83 | Vũ Khánh Hà | seed.student.075@study2work.dev | `WorkStudent@123` | Y tế - Chăm sóc sức khỏe | 78 |
-| 76 | 84 | Vũ Thu Khang | seed.student.076@study2work.dev | `WorkStudent@123` | Y tế - Chăm sóc sức khỏe | 79 |
-| 77 | 85 | Vũ Đức Linh | seed.student.077@study2work.dev | `WorkStudent@123` | Y tế - Chăm sóc sức khỏe | 80 |
-| 78 | 86 | Vũ Quỳnh Nam | seed.student.078@study2work.dev | `WorkStudent@123` | Y tế - Chăm sóc sức khỏe | 81 |
-| 79 | 87 | Vũ Hải Phương | seed.student.079@study2work.dev | `WorkStudent@123` | Y tế - Chăm sóc sức khỏe | 82 |
-| 80 | 88 | Vũ Bảo Quân | seed.student.080@study2work.dev | `WorkStudent@123` | Y tế - Chăm sóc sức khỏe | 83 |
-| 81 | 89 | Võ Minh An | seed.student.081@study2work.dev | `WorkStudent@123` | Du lịch - Khách sạn | 84 |
-| 82 | 90 | Võ Ngọc Bình | seed.student.082@study2work.dev | `WorkStudent@123` | Du lịch - Khách sạn | 85 |
-| 83 | 91 | Võ Gia Chi | seed.student.083@study2work.dev | `WorkStudent@123` | Du lịch - Khách sạn | 86 |
-| 84 | 92 | Võ Thanh Dũng | seed.student.084@study2work.dev | `WorkStudent@123` | Du lịch - Khách sạn | 87 |
-| 85 | 93 | Võ Khánh Hà | seed.student.085@study2work.dev | `WorkStudent@123` | Du lịch - Khách sạn | 88 |
-| 86 | 94 | Võ Thu Khang | seed.student.086@study2work.dev | `WorkStudent@123` | Du lịch - Khách sạn | 89 |
-| 87 | 95 | Võ Đức Linh | seed.student.087@study2work.dev | `WorkStudent@123` | Du lịch - Khách sạn | 90 |
-| 88 | 96 | Võ Quỳnh Nam | seed.student.088@study2work.dev | `WorkStudent@123` | Du lịch - Khách sạn | 91 |
-| 89 | 97 | Võ Hải Phương | seed.student.089@study2work.dev | `WorkStudent@123` | Du lịch - Khách sạn | 92 |
-| 90 | 98 | Võ Bảo Quân | seed.student.090@study2work.dev | `WorkStudent@123` | Du lịch - Khách sạn | 93 |
-| 91 | 99 | Đặng Minh An | seed.student.091@study2work.dev | `WorkStudent@123` | Năng lượng xanh | 94 |
-| 92 | 100 | Đặng Ngọc Bình | seed.student.092@study2work.dev | `WorkStudent@123` | Năng lượng xanh | 95 |
-| 93 | 101 | Đặng Gia Chi | seed.student.093@study2work.dev | `WorkStudent@123` | Năng lượng xanh | 96 |
-| 94 | 102 | Đặng Thanh Dũng | seed.student.094@study2work.dev | `WorkStudent@123` | Năng lượng xanh | 97 |
-| 95 | 103 | Đặng Khánh Hà | seed.student.095@study2work.dev | `WorkStudent@123` | Năng lượng xanh | 98 |
-| 96 | 104 | Đặng Thu Khang | seed.student.096@study2work.dev | `WorkStudent@123` | Năng lượng xanh | 99 |
-| 97 | 105 | Đặng Đức Linh | seed.student.097@study2work.dev | `WorkStudent@123` | Năng lượng xanh | 100 |
-| 98 | 106 | Đặng Quỳnh Nam | seed.student.098@study2work.dev | `WorkStudent@123` | Năng lượng xanh | 101 |
-| 99 | 107 | Đặng Hải Phương | seed.student.099@study2work.dev | `WorkStudent@123` | Năng lượng xanh | 102 |
-| 100 | 108 | Đặng Bảo Quân | seed.student.100@study2work.dev | `WorkStudent@123` | Năng lượng xanh | 103 |
+| STT | ID | Họ tên | Email | Chuyên ngành | CV ID |
+| ---: | ---: | --- | --- | --- | ---: |
+| 1 | 9 | Nguyễn Minh An | seed.student.001@study2work.dev | Công nghệ thông tin | 4 |
+| 2 | 10 | Nguyễn Ngọc Bình | seed.student.002@study2work.dev | Công nghệ thông tin | 5 |
+| 3 | 11 | Nguyễn Gia Chi | seed.student.003@study2work.dev | Công nghệ thông tin | 6 |
+| 4 | 12 | Nguyễn Thanh Dũng | seed.student.004@study2work.dev | Công nghệ thông tin | 7 |
+| 5 | 13 | Nguyễn Khánh Hà | seed.student.005@study2work.dev | Công nghệ thông tin | 8 |
+| 6 | 14 | Nguyễn Thu Khang | seed.student.006@study2work.dev | Công nghệ thông tin | 9 |
+| 7 | 15 | Nguyễn Đức Linh | seed.student.007@study2work.dev | Công nghệ thông tin | 10 |
+| 8 | 16 | Nguyễn Quỳnh Nam | seed.student.008@study2work.dev | Công nghệ thông tin | 11 |
+| 9 | 17 | Nguyễn Hải Phương | seed.student.009@study2work.dev | Công nghệ thông tin | 12 |
+| 10 | 18 | Nguyễn Bảo Quân | seed.student.010@study2work.dev | Công nghệ thông tin | 13 |
+| 11 | 19 | Trần Minh An | seed.student.011@study2work.dev | Tài chính - Ngân hàng | 14 |
+| 12 | 20 | Trần Ngọc Bình | seed.student.012@study2work.dev | Tài chính - Ngân hàng | 15 |
+| 13 | 21 | Trần Gia Chi | seed.student.013@study2work.dev | Tài chính - Ngân hàng | 16 |
+| 14 | 22 | Trần Thanh Dũng | seed.student.014@study2work.dev | Tài chính - Ngân hàng | 17 |
+| 15 | 23 | Trần Khánh Hà | seed.student.015@study2work.dev | Tài chính - Ngân hàng | 18 |
+| 16 | 24 | Trần Thu Khang | seed.student.016@study2work.dev | Tài chính - Ngân hàng | 19 |
+| 17 | 25 | Trần Đức Linh | seed.student.017@study2work.dev | Tài chính - Ngân hàng | 20 |
+| 18 | 26 | Trần Quỳnh Nam | seed.student.018@study2work.dev | Tài chính - Ngân hàng | 21 |
+| 19 | 27 | Trần Hải Phương | seed.student.019@study2work.dev | Tài chính - Ngân hàng | 22 |
+| 20 | 28 | Trần Bảo Quân | seed.student.020@study2work.dev | Tài chính - Ngân hàng | 23 |
+| 21 | 29 | Lê Minh An | seed.student.021@study2work.dev | Marketing - Truyền thông | 24 |
+| 22 | 30 | Lê Ngọc Bình | seed.student.022@study2work.dev | Marketing - Truyền thông | 25 |
+| 23 | 31 | Lê Gia Chi | seed.student.023@study2work.dev | Marketing - Truyền thông | 26 |
+| 24 | 32 | Lê Thanh Dũng | seed.student.024@study2work.dev | Marketing - Truyền thông | 27 |
+| 25 | 33 | Lê Khánh Hà | seed.student.025@study2work.dev | Marketing - Truyền thông | 28 |
+| 26 | 34 | Lê Thu Khang | seed.student.026@study2work.dev | Marketing - Truyền thông | 29 |
+| 27 | 35 | Lê Đức Linh | seed.student.027@study2work.dev | Marketing - Truyền thông | 30 |
+| 28 | 36 | Lê Quỳnh Nam | seed.student.028@study2work.dev | Marketing - Truyền thông | 31 |
+| 29 | 37 | Lê Hải Phương | seed.student.029@study2work.dev | Marketing - Truyền thông | 32 |
+| 30 | 38 | Lê Bảo Quân | seed.student.030@study2work.dev | Marketing - Truyền thông | 33 |
+| 31 | 39 | Phạm Minh An | seed.student.031@study2work.dev | Thương mại điện tử | 34 |
+| 32 | 40 | Phạm Ngọc Bình | seed.student.032@study2work.dev | Thương mại điện tử | 35 |
+| 33 | 41 | Phạm Gia Chi | seed.student.033@study2work.dev | Thương mại điện tử | 36 |
+| 34 | 42 | Phạm Thanh Dũng | seed.student.034@study2work.dev | Thương mại điện tử | 37 |
+| 35 | 43 | Phạm Khánh Hà | seed.student.035@study2work.dev | Thương mại điện tử | 38 |
+| 36 | 44 | Phạm Thu Khang | seed.student.036@study2work.dev | Thương mại điện tử | 39 |
+| 37 | 45 | Phạm Đức Linh | seed.student.037@study2work.dev | Thương mại điện tử | 40 |
+| 38 | 46 | Phạm Quỳnh Nam | seed.student.038@study2work.dev | Thương mại điện tử | 41 |
+| 39 | 47 | Phạm Hải Phương | seed.student.039@study2work.dev | Thương mại điện tử | 42 |
+| 40 | 48 | Phạm Bảo Quân | seed.student.040@study2work.dev | Thương mại điện tử | 43 |
+| 41 | 49 | Hoàng Minh An | seed.student.041@study2work.dev | Giáo dục | 44 |
+| 42 | 50 | Hoàng Ngọc Bình | seed.student.042@study2work.dev | Giáo dục | 45 |
+| 43 | 51 | Hoàng Gia Chi | seed.student.043@study2work.dev | Giáo dục | 46 |
+| 44 | 52 | Hoàng Thanh Dũng | seed.student.044@study2work.dev | Giáo dục | 47 |
+| 45 | 53 | Hoàng Khánh Hà | seed.student.045@study2work.dev | Giáo dục | 48 |
+| 46 | 54 | Hoàng Thu Khang | seed.student.046@study2work.dev | Giáo dục | 49 |
+| 47 | 55 | Hoàng Đức Linh | seed.student.047@study2work.dev | Giáo dục | 50 |
+| 48 | 56 | Hoàng Quỳnh Nam | seed.student.048@study2work.dev | Giáo dục | 51 |
+| 49 | 57 | Hoàng Hải Phương | seed.student.049@study2work.dev | Giáo dục | 52 |
+| 50 | 58 | Hoàng Bảo Quân | seed.student.050@study2work.dev | Giáo dục | 53 |
+| 51 | 59 | Huỳnh Minh An | seed.student.051@study2work.dev | Logistics | 54 |
+| 52 | 60 | Huỳnh Ngọc Bình | seed.student.052@study2work.dev | Logistics | 55 |
+| 53 | 61 | Huỳnh Gia Chi | seed.student.053@study2work.dev | Logistics | 56 |
+| 54 | 62 | Huỳnh Thanh Dũng | seed.student.054@study2work.dev | Logistics | 57 |
+| 55 | 63 | Huỳnh Khánh Hà | seed.student.055@study2work.dev | Logistics | 58 |
+| 56 | 64 | Huỳnh Thu Khang | seed.student.056@study2work.dev | Logistics | 59 |
+| 57 | 65 | Huỳnh Đức Linh | seed.student.057@study2work.dev | Logistics | 60 |
+| 58 | 66 | Huỳnh Quỳnh Nam | seed.student.058@study2work.dev | Logistics | 61 |
+| 59 | 67 | Huỳnh Hải Phương | seed.student.059@study2work.dev | Logistics | 62 |
+| 60 | 68 | Huỳnh Bảo Quân | seed.student.060@study2work.dev | Logistics | 63 |
+| 61 | 69 | Phan Minh An | seed.student.061@study2work.dev | Sản xuất | 64 |
+| 62 | 70 | Phan Ngọc Bình | seed.student.062@study2work.dev | Sản xuất | 65 |
+| 63 | 71 | Phan Gia Chi | seed.student.063@study2work.dev | Sản xuất | 66 |
+| 64 | 72 | Phan Thanh Dũng | seed.student.064@study2work.dev | Sản xuất | 67 |
+| 65 | 73 | Phan Khánh Hà | seed.student.065@study2work.dev | Sản xuất | 68 |
+| 66 | 74 | Phan Thu Khang | seed.student.066@study2work.dev | Sản xuất | 69 |
+| 67 | 75 | Phan Đức Linh | seed.student.067@study2work.dev | Sản xuất | 70 |
+| 68 | 76 | Phan Quỳnh Nam | seed.student.068@study2work.dev | Sản xuất | 71 |
+| 69 | 77 | Phan Hải Phương | seed.student.069@study2work.dev | Sản xuất | 72 |
+| 70 | 78 | Phan Bảo Quân | seed.student.070@study2work.dev | Sản xuất | 73 |
+| 71 | 79 | Vũ Minh An | seed.student.071@study2work.dev | Y tế - Chăm sóc sức khỏe | 74 |
+| 72 | 80 | Vũ Ngọc Bình | seed.student.072@study2work.dev | Y tế - Chăm sóc sức khỏe | 75 |
+| 73 | 81 | Vũ Gia Chi | seed.student.073@study2work.dev | Y tế - Chăm sóc sức khỏe | 76 |
+| 74 | 82 | Vũ Thanh Dũng | seed.student.074@study2work.dev | Y tế - Chăm sóc sức khỏe | 77 |
+| 75 | 83 | Vũ Khánh Hà | seed.student.075@study2work.dev | Y tế - Chăm sóc sức khỏe | 78 |
+| 76 | 84 | Vũ Thu Khang | seed.student.076@study2work.dev | Y tế - Chăm sóc sức khỏe | 79 |
+| 77 | 85 | Vũ Đức Linh | seed.student.077@study2work.dev | Y tế - Chăm sóc sức khỏe | 80 |
+| 78 | 86 | Vũ Quỳnh Nam | seed.student.078@study2work.dev | Y tế - Chăm sóc sức khỏe | 81 |
+| 79 | 87 | Vũ Hải Phương | seed.student.079@study2work.dev | Y tế - Chăm sóc sức khỏe | 82 |
+| 80 | 88 | Vũ Bảo Quân | seed.student.080@study2work.dev | Y tế - Chăm sóc sức khỏe | 83 |
+| 81 | 89 | Võ Minh An | seed.student.081@study2work.dev | Du lịch - Khách sạn | 84 |
+| 82 | 90 | Võ Ngọc Bình | seed.student.082@study2work.dev | Du lịch - Khách sạn | 85 |
+| 83 | 91 | Võ Gia Chi | seed.student.083@study2work.dev | Du lịch - Khách sạn | 86 |
+| 84 | 92 | Võ Thanh Dũng | seed.student.084@study2work.dev | Du lịch - Khách sạn | 87 |
+| 85 | 93 | Võ Khánh Hà | seed.student.085@study2work.dev | Du lịch - Khách sạn | 88 |
+| 86 | 94 | Võ Thu Khang | seed.student.086@study2work.dev | Du lịch - Khách sạn | 89 |
+| 87 | 95 | Võ Đức Linh | seed.student.087@study2work.dev | Du lịch - Khách sạn | 90 |
+| 88 | 96 | Võ Quỳnh Nam | seed.student.088@study2work.dev | Du lịch - Khách sạn | 91 |
+| 89 | 97 | Võ Hải Phương | seed.student.089@study2work.dev | Du lịch - Khách sạn | 92 |
+| 90 | 98 | Võ Bảo Quân | seed.student.090@study2work.dev | Du lịch - Khách sạn | 93 |
+| 91 | 99 | Đặng Minh An | seed.student.091@study2work.dev | Năng lượng xanh | 94 |
+| 92 | 100 | Đặng Ngọc Bình | seed.student.092@study2work.dev | Năng lượng xanh | 95 |
+| 93 | 101 | Đặng Gia Chi | seed.student.093@study2work.dev | Năng lượng xanh | 96 |
+| 94 | 102 | Đặng Thanh Dũng | seed.student.094@study2work.dev | Năng lượng xanh | 97 |
+| 95 | 103 | Đặng Khánh Hà | seed.student.095@study2work.dev | Năng lượng xanh | 98 |
+| 96 | 104 | Đặng Thu Khang | seed.student.096@study2work.dev | Năng lượng xanh | 99 |
+| 97 | 105 | Đặng Đức Linh | seed.student.097@study2work.dev | Năng lượng xanh | 100 |
+| 98 | 106 | Đặng Quỳnh Nam | seed.student.098@study2work.dev | Năng lượng xanh | 101 |
+| 99 | 107 | Đặng Hải Phương | seed.student.099@study2work.dev | Năng lượng xanh | 102 |
+| 100 | 108 | Đặng Bảo Quân | seed.student.100@study2work.dev | Năng lượng xanh | 103 |
 
 ### Sinh viên 001 — Nguyễn Minh An
 
@@ -136,7 +133,6 @@
 | ID tài khoản | 9 |
 | Họ tên | Nguyễn Minh An |
 | Email | seed.student.001@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Công nghệ thông tin |
 | Avatar | — |
 
@@ -175,7 +171,6 @@
 | ID tài khoản | 10 |
 | Họ tên | Nguyễn Ngọc Bình |
 | Email | seed.student.002@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Công nghệ thông tin |
 | Avatar | — |
 
@@ -214,7 +209,6 @@
 | ID tài khoản | 11 |
 | Họ tên | Nguyễn Gia Chi |
 | Email | seed.student.003@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Công nghệ thông tin |
 | Avatar | — |
 
@@ -253,7 +247,6 @@
 | ID tài khoản | 12 |
 | Họ tên | Nguyễn Thanh Dũng |
 | Email | seed.student.004@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Công nghệ thông tin |
 | Avatar | — |
 
@@ -292,7 +285,6 @@
 | ID tài khoản | 13 |
 | Họ tên | Nguyễn Khánh Hà |
 | Email | seed.student.005@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Công nghệ thông tin |
 | Avatar | — |
 
@@ -331,7 +323,6 @@
 | ID tài khoản | 14 |
 | Họ tên | Nguyễn Thu Khang |
 | Email | seed.student.006@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Công nghệ thông tin |
 | Avatar | — |
 
@@ -370,7 +361,6 @@
 | ID tài khoản | 15 |
 | Họ tên | Nguyễn Đức Linh |
 | Email | seed.student.007@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Công nghệ thông tin |
 | Avatar | — |
 
@@ -409,7 +399,6 @@
 | ID tài khoản | 16 |
 | Họ tên | Nguyễn Quỳnh Nam |
 | Email | seed.student.008@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Công nghệ thông tin |
 | Avatar | — |
 
@@ -448,7 +437,6 @@
 | ID tài khoản | 17 |
 | Họ tên | Nguyễn Hải Phương |
 | Email | seed.student.009@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Công nghệ thông tin |
 | Avatar | — |
 
@@ -487,7 +475,6 @@
 | ID tài khoản | 18 |
 | Họ tên | Nguyễn Bảo Quân |
 | Email | seed.student.010@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Công nghệ thông tin |
 | Avatar | — |
 
@@ -526,7 +513,6 @@
 | ID tài khoản | 19 |
 | Họ tên | Trần Minh An |
 | Email | seed.student.011@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Tài chính - Ngân hàng |
 | Avatar | — |
 
@@ -565,7 +551,6 @@
 | ID tài khoản | 20 |
 | Họ tên | Trần Ngọc Bình |
 | Email | seed.student.012@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Tài chính - Ngân hàng |
 | Avatar | — |
 
@@ -604,7 +589,6 @@
 | ID tài khoản | 21 |
 | Họ tên | Trần Gia Chi |
 | Email | seed.student.013@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Tài chính - Ngân hàng |
 | Avatar | — |
 
@@ -643,7 +627,6 @@
 | ID tài khoản | 22 |
 | Họ tên | Trần Thanh Dũng |
 | Email | seed.student.014@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Tài chính - Ngân hàng |
 | Avatar | — |
 
@@ -682,7 +665,6 @@
 | ID tài khoản | 23 |
 | Họ tên | Trần Khánh Hà |
 | Email | seed.student.015@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Tài chính - Ngân hàng |
 | Avatar | — |
 
@@ -721,7 +703,6 @@
 | ID tài khoản | 24 |
 | Họ tên | Trần Thu Khang |
 | Email | seed.student.016@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Tài chính - Ngân hàng |
 | Avatar | — |
 
@@ -760,7 +741,6 @@
 | ID tài khoản | 25 |
 | Họ tên | Trần Đức Linh |
 | Email | seed.student.017@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Tài chính - Ngân hàng |
 | Avatar | — |
 
@@ -799,7 +779,6 @@
 | ID tài khoản | 26 |
 | Họ tên | Trần Quỳnh Nam |
 | Email | seed.student.018@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Tài chính - Ngân hàng |
 | Avatar | — |
 
@@ -838,7 +817,6 @@
 | ID tài khoản | 27 |
 | Họ tên | Trần Hải Phương |
 | Email | seed.student.019@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Tài chính - Ngân hàng |
 | Avatar | — |
 
@@ -877,7 +855,6 @@
 | ID tài khoản | 28 |
 | Họ tên | Trần Bảo Quân |
 | Email | seed.student.020@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Tài chính - Ngân hàng |
 | Avatar | — |
 
@@ -916,7 +893,6 @@
 | ID tài khoản | 29 |
 | Họ tên | Lê Minh An |
 | Email | seed.student.021@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Marketing - Truyền thông |
 | Avatar | — |
 
@@ -955,7 +931,6 @@
 | ID tài khoản | 30 |
 | Họ tên | Lê Ngọc Bình |
 | Email | seed.student.022@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Marketing - Truyền thông |
 | Avatar | — |
 
@@ -994,7 +969,6 @@
 | ID tài khoản | 31 |
 | Họ tên | Lê Gia Chi |
 | Email | seed.student.023@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Marketing - Truyền thông |
 | Avatar | — |
 
@@ -1033,7 +1007,6 @@
 | ID tài khoản | 32 |
 | Họ tên | Lê Thanh Dũng |
 | Email | seed.student.024@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Marketing - Truyền thông |
 | Avatar | — |
 
@@ -1072,7 +1045,6 @@
 | ID tài khoản | 33 |
 | Họ tên | Lê Khánh Hà |
 | Email | seed.student.025@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Marketing - Truyền thông |
 | Avatar | — |
 
@@ -1111,7 +1083,6 @@
 | ID tài khoản | 34 |
 | Họ tên | Lê Thu Khang |
 | Email | seed.student.026@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Marketing - Truyền thông |
 | Avatar | — |
 
@@ -1150,7 +1121,6 @@
 | ID tài khoản | 35 |
 | Họ tên | Lê Đức Linh |
 | Email | seed.student.027@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Marketing - Truyền thông |
 | Avatar | — |
 
@@ -1189,7 +1159,6 @@
 | ID tài khoản | 36 |
 | Họ tên | Lê Quỳnh Nam |
 | Email | seed.student.028@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Marketing - Truyền thông |
 | Avatar | — |
 
@@ -1228,7 +1197,6 @@
 | ID tài khoản | 37 |
 | Họ tên | Lê Hải Phương |
 | Email | seed.student.029@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Marketing - Truyền thông |
 | Avatar | — |
 
@@ -1267,7 +1235,6 @@
 | ID tài khoản | 38 |
 | Họ tên | Lê Bảo Quân |
 | Email | seed.student.030@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Marketing - Truyền thông |
 | Avatar | — |
 
@@ -1306,7 +1273,6 @@
 | ID tài khoản | 39 |
 | Họ tên | Phạm Minh An |
 | Email | seed.student.031@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Thương mại điện tử |
 | Avatar | — |
 
@@ -1345,7 +1311,6 @@
 | ID tài khoản | 40 |
 | Họ tên | Phạm Ngọc Bình |
 | Email | seed.student.032@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Thương mại điện tử |
 | Avatar | — |
 
@@ -1384,7 +1349,6 @@
 | ID tài khoản | 41 |
 | Họ tên | Phạm Gia Chi |
 | Email | seed.student.033@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Thương mại điện tử |
 | Avatar | — |
 
@@ -1423,7 +1387,6 @@
 | ID tài khoản | 42 |
 | Họ tên | Phạm Thanh Dũng |
 | Email | seed.student.034@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Thương mại điện tử |
 | Avatar | — |
 
@@ -1462,7 +1425,6 @@
 | ID tài khoản | 43 |
 | Họ tên | Phạm Khánh Hà |
 | Email | seed.student.035@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Thương mại điện tử |
 | Avatar | — |
 
@@ -1501,7 +1463,6 @@
 | ID tài khoản | 44 |
 | Họ tên | Phạm Thu Khang |
 | Email | seed.student.036@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Thương mại điện tử |
 | Avatar | — |
 
@@ -1540,7 +1501,6 @@
 | ID tài khoản | 45 |
 | Họ tên | Phạm Đức Linh |
 | Email | seed.student.037@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Thương mại điện tử |
 | Avatar | — |
 
@@ -1579,7 +1539,6 @@
 | ID tài khoản | 46 |
 | Họ tên | Phạm Quỳnh Nam |
 | Email | seed.student.038@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Thương mại điện tử |
 | Avatar | — |
 
@@ -1618,7 +1577,6 @@
 | ID tài khoản | 47 |
 | Họ tên | Phạm Hải Phương |
 | Email | seed.student.039@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Thương mại điện tử |
 | Avatar | — |
 
@@ -1657,7 +1615,6 @@
 | ID tài khoản | 48 |
 | Họ tên | Phạm Bảo Quân |
 | Email | seed.student.040@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Thương mại điện tử |
 | Avatar | — |
 
@@ -1696,7 +1653,6 @@
 | ID tài khoản | 49 |
 | Họ tên | Hoàng Minh An |
 | Email | seed.student.041@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Giáo dục |
 | Avatar | — |
 
@@ -1735,7 +1691,6 @@
 | ID tài khoản | 50 |
 | Họ tên | Hoàng Ngọc Bình |
 | Email | seed.student.042@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Giáo dục |
 | Avatar | — |
 
@@ -1774,7 +1729,6 @@
 | ID tài khoản | 51 |
 | Họ tên | Hoàng Gia Chi |
 | Email | seed.student.043@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Giáo dục |
 | Avatar | — |
 
@@ -1813,7 +1767,6 @@
 | ID tài khoản | 52 |
 | Họ tên | Hoàng Thanh Dũng |
 | Email | seed.student.044@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Giáo dục |
 | Avatar | — |
 
@@ -1852,7 +1805,6 @@
 | ID tài khoản | 53 |
 | Họ tên | Hoàng Khánh Hà |
 | Email | seed.student.045@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Giáo dục |
 | Avatar | — |
 
@@ -1891,7 +1843,6 @@
 | ID tài khoản | 54 |
 | Họ tên | Hoàng Thu Khang |
 | Email | seed.student.046@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Giáo dục |
 | Avatar | — |
 
@@ -1930,7 +1881,6 @@
 | ID tài khoản | 55 |
 | Họ tên | Hoàng Đức Linh |
 | Email | seed.student.047@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Giáo dục |
 | Avatar | — |
 
@@ -1969,7 +1919,6 @@
 | ID tài khoản | 56 |
 | Họ tên | Hoàng Quỳnh Nam |
 | Email | seed.student.048@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Giáo dục |
 | Avatar | — |
 
@@ -2008,7 +1957,6 @@
 | ID tài khoản | 57 |
 | Họ tên | Hoàng Hải Phương |
 | Email | seed.student.049@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Giáo dục |
 | Avatar | — |
 
@@ -2047,7 +1995,6 @@
 | ID tài khoản | 58 |
 | Họ tên | Hoàng Bảo Quân |
 | Email | seed.student.050@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Giáo dục |
 | Avatar | — |
 
@@ -2086,7 +2033,6 @@
 | ID tài khoản | 59 |
 | Họ tên | Huỳnh Minh An |
 | Email | seed.student.051@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Logistics |
 | Avatar | — |
 
@@ -2125,7 +2071,6 @@
 | ID tài khoản | 60 |
 | Họ tên | Huỳnh Ngọc Bình |
 | Email | seed.student.052@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Logistics |
 | Avatar | — |
 
@@ -2164,7 +2109,6 @@
 | ID tài khoản | 61 |
 | Họ tên | Huỳnh Gia Chi |
 | Email | seed.student.053@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Logistics |
 | Avatar | — |
 
@@ -2203,7 +2147,6 @@
 | ID tài khoản | 62 |
 | Họ tên | Huỳnh Thanh Dũng |
 | Email | seed.student.054@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Logistics |
 | Avatar | — |
 
@@ -2242,7 +2185,6 @@
 | ID tài khoản | 63 |
 | Họ tên | Huỳnh Khánh Hà |
 | Email | seed.student.055@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Logistics |
 | Avatar | — |
 
@@ -2281,7 +2223,6 @@
 | ID tài khoản | 64 |
 | Họ tên | Huỳnh Thu Khang |
 | Email | seed.student.056@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Logistics |
 | Avatar | — |
 
@@ -2320,7 +2261,6 @@
 | ID tài khoản | 65 |
 | Họ tên | Huỳnh Đức Linh |
 | Email | seed.student.057@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Logistics |
 | Avatar | — |
 
@@ -2359,7 +2299,6 @@
 | ID tài khoản | 66 |
 | Họ tên | Huỳnh Quỳnh Nam |
 | Email | seed.student.058@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Logistics |
 | Avatar | — |
 
@@ -2398,7 +2337,6 @@
 | ID tài khoản | 67 |
 | Họ tên | Huỳnh Hải Phương |
 | Email | seed.student.059@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Logistics |
 | Avatar | — |
 
@@ -2437,7 +2375,6 @@
 | ID tài khoản | 68 |
 | Họ tên | Huỳnh Bảo Quân |
 | Email | seed.student.060@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Logistics |
 | Avatar | — |
 
@@ -2476,7 +2413,6 @@
 | ID tài khoản | 69 |
 | Họ tên | Phan Minh An |
 | Email | seed.student.061@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Sản xuất |
 | Avatar | — |
 
@@ -2515,7 +2451,6 @@
 | ID tài khoản | 70 |
 | Họ tên | Phan Ngọc Bình |
 | Email | seed.student.062@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Sản xuất |
 | Avatar | — |
 
@@ -2554,7 +2489,6 @@
 | ID tài khoản | 71 |
 | Họ tên | Phan Gia Chi |
 | Email | seed.student.063@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Sản xuất |
 | Avatar | — |
 
@@ -2593,7 +2527,6 @@
 | ID tài khoản | 72 |
 | Họ tên | Phan Thanh Dũng |
 | Email | seed.student.064@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Sản xuất |
 | Avatar | — |
 
@@ -2632,7 +2565,6 @@
 | ID tài khoản | 73 |
 | Họ tên | Phan Khánh Hà |
 | Email | seed.student.065@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Sản xuất |
 | Avatar | — |
 
@@ -2671,7 +2603,6 @@
 | ID tài khoản | 74 |
 | Họ tên | Phan Thu Khang |
 | Email | seed.student.066@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Sản xuất |
 | Avatar | — |
 
@@ -2710,7 +2641,6 @@
 | ID tài khoản | 75 |
 | Họ tên | Phan Đức Linh |
 | Email | seed.student.067@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Sản xuất |
 | Avatar | — |
 
@@ -2749,7 +2679,6 @@
 | ID tài khoản | 76 |
 | Họ tên | Phan Quỳnh Nam |
 | Email | seed.student.068@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Sản xuất |
 | Avatar | — |
 
@@ -2788,7 +2717,6 @@
 | ID tài khoản | 77 |
 | Họ tên | Phan Hải Phương |
 | Email | seed.student.069@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Sản xuất |
 | Avatar | — |
 
@@ -2827,7 +2755,6 @@
 | ID tài khoản | 78 |
 | Họ tên | Phan Bảo Quân |
 | Email | seed.student.070@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Sản xuất |
 | Avatar | — |
 
@@ -2866,7 +2793,6 @@
 | ID tài khoản | 79 |
 | Họ tên | Vũ Minh An |
 | Email | seed.student.071@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Y tế - Chăm sóc sức khỏe |
 | Avatar | — |
 
@@ -2905,7 +2831,6 @@
 | ID tài khoản | 80 |
 | Họ tên | Vũ Ngọc Bình |
 | Email | seed.student.072@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Y tế - Chăm sóc sức khỏe |
 | Avatar | — |
 
@@ -2944,7 +2869,6 @@
 | ID tài khoản | 81 |
 | Họ tên | Vũ Gia Chi |
 | Email | seed.student.073@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Y tế - Chăm sóc sức khỏe |
 | Avatar | — |
 
@@ -2983,7 +2907,6 @@
 | ID tài khoản | 82 |
 | Họ tên | Vũ Thanh Dũng |
 | Email | seed.student.074@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Y tế - Chăm sóc sức khỏe |
 | Avatar | — |
 
@@ -3022,7 +2945,6 @@
 | ID tài khoản | 83 |
 | Họ tên | Vũ Khánh Hà |
 | Email | seed.student.075@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Y tế - Chăm sóc sức khỏe |
 | Avatar | — |
 
@@ -3061,7 +2983,6 @@
 | ID tài khoản | 84 |
 | Họ tên | Vũ Thu Khang |
 | Email | seed.student.076@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Y tế - Chăm sóc sức khỏe |
 | Avatar | — |
 
@@ -3100,7 +3021,6 @@
 | ID tài khoản | 85 |
 | Họ tên | Vũ Đức Linh |
 | Email | seed.student.077@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Y tế - Chăm sóc sức khỏe |
 | Avatar | — |
 
@@ -3139,7 +3059,6 @@
 | ID tài khoản | 86 |
 | Họ tên | Vũ Quỳnh Nam |
 | Email | seed.student.078@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Y tế - Chăm sóc sức khỏe |
 | Avatar | — |
 
@@ -3178,7 +3097,6 @@
 | ID tài khoản | 87 |
 | Họ tên | Vũ Hải Phương |
 | Email | seed.student.079@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Y tế - Chăm sóc sức khỏe |
 | Avatar | — |
 
@@ -3217,7 +3135,6 @@
 | ID tài khoản | 88 |
 | Họ tên | Vũ Bảo Quân |
 | Email | seed.student.080@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Y tế - Chăm sóc sức khỏe |
 | Avatar | — |
 
@@ -3256,7 +3173,6 @@
 | ID tài khoản | 89 |
 | Họ tên | Võ Minh An |
 | Email | seed.student.081@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Du lịch - Khách sạn |
 | Avatar | — |
 
@@ -3295,7 +3211,6 @@
 | ID tài khoản | 90 |
 | Họ tên | Võ Ngọc Bình |
 | Email | seed.student.082@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Du lịch - Khách sạn |
 | Avatar | — |
 
@@ -3334,7 +3249,6 @@
 | ID tài khoản | 91 |
 | Họ tên | Võ Gia Chi |
 | Email | seed.student.083@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Du lịch - Khách sạn |
 | Avatar | — |
 
@@ -3373,7 +3287,6 @@
 | ID tài khoản | 92 |
 | Họ tên | Võ Thanh Dũng |
 | Email | seed.student.084@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Du lịch - Khách sạn |
 | Avatar | — |
 
@@ -3412,7 +3325,6 @@
 | ID tài khoản | 93 |
 | Họ tên | Võ Khánh Hà |
 | Email | seed.student.085@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Du lịch - Khách sạn |
 | Avatar | — |
 
@@ -3451,7 +3363,6 @@
 | ID tài khoản | 94 |
 | Họ tên | Võ Thu Khang |
 | Email | seed.student.086@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Du lịch - Khách sạn |
 | Avatar | — |
 
@@ -3490,7 +3401,6 @@
 | ID tài khoản | 95 |
 | Họ tên | Võ Đức Linh |
 | Email | seed.student.087@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Du lịch - Khách sạn |
 | Avatar | — |
 
@@ -3529,7 +3439,6 @@
 | ID tài khoản | 96 |
 | Họ tên | Võ Quỳnh Nam |
 | Email | seed.student.088@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Du lịch - Khách sạn |
 | Avatar | — |
 
@@ -3568,7 +3477,6 @@
 | ID tài khoản | 97 |
 | Họ tên | Võ Hải Phương |
 | Email | seed.student.089@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Du lịch - Khách sạn |
 | Avatar | — |
 
@@ -3607,7 +3515,6 @@
 | ID tài khoản | 98 |
 | Họ tên | Võ Bảo Quân |
 | Email | seed.student.090@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Du lịch - Khách sạn |
 | Avatar | — |
 
@@ -3646,7 +3553,6 @@
 | ID tài khoản | 99 |
 | Họ tên | Đặng Minh An |
 | Email | seed.student.091@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Năng lượng xanh |
 | Avatar | — |
 
@@ -3685,7 +3591,6 @@
 | ID tài khoản | 100 |
 | Họ tên | Đặng Ngọc Bình |
 | Email | seed.student.092@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Năng lượng xanh |
 | Avatar | — |
 
@@ -3724,7 +3629,6 @@
 | ID tài khoản | 101 |
 | Họ tên | Đặng Gia Chi |
 | Email | seed.student.093@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Năng lượng xanh |
 | Avatar | — |
 
@@ -3763,7 +3667,6 @@
 | ID tài khoản | 102 |
 | Họ tên | Đặng Thanh Dũng |
 | Email | seed.student.094@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Năng lượng xanh |
 | Avatar | — |
 
@@ -3802,7 +3705,6 @@
 | ID tài khoản | 103 |
 | Họ tên | Đặng Khánh Hà |
 | Email | seed.student.095@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Năng lượng xanh |
 | Avatar | — |
 
@@ -3841,7 +3743,6 @@
 | ID tài khoản | 104 |
 | Họ tên | Đặng Thu Khang |
 | Email | seed.student.096@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Năng lượng xanh |
 | Avatar | — |
 
@@ -3880,7 +3781,6 @@
 | ID tài khoản | 105 |
 | Họ tên | Đặng Đức Linh |
 | Email | seed.student.097@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Năng lượng xanh |
 | Avatar | — |
 
@@ -3919,7 +3819,6 @@
 | ID tài khoản | 106 |
 | Họ tên | Đặng Quỳnh Nam |
 | Email | seed.student.098@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Năng lượng xanh |
 | Avatar | — |
 
@@ -3958,7 +3857,6 @@
 | ID tài khoản | 107 |
 | Họ tên | Đặng Hải Phương |
 | Email | seed.student.099@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Năng lượng xanh |
 | Avatar | — |
 
@@ -3997,7 +3895,6 @@
 | ID tài khoản | 108 |
 | Họ tên | Đặng Bảo Quân |
 | Email | seed.student.100@study2work.dev |
-| Mật khẩu | WorkStudent@123 |
 | Chuyên ngành | Năng lượng xanh |
 | Avatar | — |
 
@@ -4038,7 +3935,6 @@
 | ID tài khoản | 6 |
 | Tên doanh nghiệp | Công ty TNHH Sao Khuê Digital |
 | Email | seed.business.01@study2work.dev |
-| Mật khẩu | WorkBusiness@123 |
 | Địa chỉ | Đà Nẵng, Việt Nam |
 | Số điện thoại | 02363880001 |
 | Ngành | Công nghệ thông tin |
@@ -4171,7 +4067,6 @@
 | ID tài khoản | 7 |
 | Tên doanh nghiệp | Việt Tín Finance |
 | Email | seed.business.02@study2work.dev |
-| Mật khẩu | WorkBusiness@123 |
 | Địa chỉ | Hà Nội, Việt Nam |
 | Số điện thoại | 02438800002 |
 | Ngành | Tài chính - Ngân hàng |
@@ -4304,7 +4199,6 @@
 | ID tài khoản | 8 |
 | Tên doanh nghiệp | Mộc Miên Media |
 | Email | seed.business.03@study2work.dev |
-| Mật khẩu | WorkBusiness@123 |
 | Địa chỉ | TP. Hồ Chí Minh, Việt Nam |
 | Số điện thoại | 02838800003 |
 | Ngành | Marketing - Truyền thông |
@@ -4437,7 +4331,6 @@
 | ID tài khoản | 9 |
 | Tên doanh nghiệp | Chợ Việt Commerce |
 | Email | seed.business.04@study2work.dev |
-| Mật khẩu | WorkBusiness@123 |
 | Địa chỉ | Hải Phòng, Việt Nam |
 | Số điện thoại | 02253880004 |
 | Ngành | Thương mại điện tử |
@@ -4570,7 +4463,6 @@
 | ID tài khoản | 10 |
 | Tên doanh nghiệp | Học Mở Education |
 | Email | seed.business.05@study2work.dev |
-| Mật khẩu | WorkBusiness@123 |
 | Địa chỉ | Cần Thơ, Việt Nam |
 | Số điện thoại | 02923880005 |
 | Ngành | Giáo dục |
@@ -4703,7 +4595,6 @@
 | ID tài khoản | 11 |
 | Tên doanh nghiệp | Đông Hải Logistics |
 | Email | seed.business.06@study2work.dev |
-| Mật khẩu | WorkBusiness@123 |
 | Địa chỉ | Bình Dương, Việt Nam |
 | Số điện thoại | 02743880006 |
 | Ngành | Logistics |
@@ -4836,7 +4727,6 @@
 | ID tài khoản | 12 |
 | Tên doanh nghiệp | Việt Thành Manufacturing |
 | Email | seed.business.07@study2work.dev |
-| Mật khẩu | WorkBusiness@123 |
 | Địa chỉ | Đồng Nai, Việt Nam |
 | Số điện thoại | 02513880007 |
 | Ngành | Sản xuất |
@@ -4969,7 +4859,6 @@
 | ID tài khoản | 13 |
 | Tên doanh nghiệp | An Tâm HealthTech |
 | Email | seed.business.08@study2work.dev |
-| Mật khẩu | WorkBusiness@123 |
 | Địa chỉ | Huế, Việt Nam |
 | Số điện thoại | 02343880008 |
 | Ngành | Y tế - Chăm sóc sức khỏe |
@@ -5102,7 +4991,6 @@
 | ID tài khoản | 14 |
 | Tên doanh nghiệp | Lữ Hành Việt Hospitality |
 | Email | seed.business.09@study2work.dev |
-| Mật khẩu | WorkBusiness@123 |
 | Địa chỉ | Nha Trang, Việt Nam |
 | Số điện thoại | 02583880009 |
 | Ngành | Du lịch - Khách sạn |
@@ -5235,7 +5123,6 @@
 | ID tài khoản | 15 |
 | Tên doanh nghiệp | Green Horizon Energy |
 | Email | seed.business.10@study2work.dev |
-| Mật khẩu | WorkBusiness@123 |
 | Địa chỉ | Quảng Ninh, Việt Nam |
 | Số điện thoại | 02033880010 |
 | Ngành | Năng lượng xanh |
@@ -5360,4 +5247,3 @@
 | Tên công ty | Green Horizon Energy |
 | Ngành | Năng lượng xanh |
 | Avatar | — |
-

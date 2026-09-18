@@ -27,12 +27,11 @@ status: "Draft — Needs Confirmation"
 | 7 | data.id | id | `id` | number | Yes | SinhVien \| DoanhNghiep | id | query/mutation result | BigInt → JSON number | N/A | Role branch result |
 | 8 | data.hoten | hoten | `hoten` | string\|null | Yes | SinhVien \| DoanhNghiep | hoten | query/mutation result | Direct | null nếu DB null | Role branch result |
 | 9 | data.email | email | `email` | string\|null | Yes | SinhVien \| DoanhNghiep | email | query/mutation result | Direct | null nếu DB null | Role branch result |
-| 10 | data.matkhau | matkhau | `matkhau` | string\|null | Yes | SinhVien \| DoanhNghiep | matkhau | query/mutation result | Direct | null nếu DB null | Sensitive field exposed by current full Prisma result; source discrepancy |
-| 11 | data.chuyennganh | chuyennganh | `chuyennganh` | string\|null | Yes | SinhVien | chuyennganh | query/mutation result | Direct | null nếu DB null | Student branch only |
-| 12 | data.diachi | diachi | `diachi` | string\|null | Yes | DoanhNghiep | diachi | query/mutation result | Direct | null nếu DB null | Business branch only |
-| 13 | data.sodienthoai | sodienthoai | `sodienthoai` | string\|null | Yes | DoanhNghiep | sodienthoai | query/mutation result | Direct | null nếu DB null | Business branch only |
-| 14 | data.avt | avt | `avt` | string\|null | Yes | SinhVien \| DoanhNghiep | avt | query/mutation result | Direct | null nếu DB null | Role branch result |
-| 15 | data.role | role | `role` | string | Yes | JWT | role | query/mutation result | Fixed from JWT role | N/A | Branch marker |
+| 10 | data.chuyennganh | chuyennganh | `chuyennganh` | string\|null | Yes | SinhVien | chuyennganh | query/mutation result | Direct | null nếu DB null | Student branch only |
+| 11 | data.diachi | diachi | `diachi` | string\|null | Yes | DoanhNghiep | diachi | query/mutation result | Direct | null nếu DB null | Business branch only |
+| 12 | data.sodienthoai | sodienthoai | `sodienthoai` | string\|null | Yes | DoanhNghiep | sodienthoai | query/mutation result | Direct | null nếu DB null | Business branch only |
+| 13 | data.avt | avt | `avt` | string\|null | Yes | SinhVien \| DoanhNghiep | avt | query/mutation result | Direct | null nếu DB null | Role branch result |
+| 14 | data.role | role | `role` | string | Yes | JWT | role | query/mutation result | Fixed from JWT role | N/A | Branch marker |
 
 > HTTP status là transport status; không được thêm `HTTPStatus` vào JSON body vì current `reply` không trả field này.
 

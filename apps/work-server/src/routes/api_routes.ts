@@ -10,6 +10,7 @@ import StudentService from "../services/student_service.js";
 import prisma from "../config/prisma.config.js";
 import { ensureAuthenticated, checkRole } from "../middleware/auth.middleware.js";
 import { signToken } from "../utils/jwt.js";
+import { isUniqueConstraintError } from "../utils/prisma-errors.js";
 
 const api_router = Router();
 
@@ -63,9 +64,32 @@ function serverError(req: Request, res: Response) {
 }
 
 function numericParam(value: string | string[] | undefined): number | null {
-  if (typeof value !== "string" || !/^\d+$/.test(value)) return null;
+  if (typeof value !== "string" || !/^\d+$/.test(value) || value === "0") return null;
   const result = Number(value);
-  return Number.isSafeInteger(result) ? result : null;
+  return Number.isSafeInteger(result) && result > 0 ? result : null;
+}
+
+function textValue(value: unknown): string | undefined {
+  return typeof value === "string" ? value.trim() : undefined;
+}
+
+function requestBody(req: Request): Record<string, unknown> {
+  return typeof req.body === "object" && req.body !== null && !Array.isArray(req.body)
+    ? req.body as Record<string, unknown>
+    : {};
+}
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function positiveIntegerQuery(value: unknown, fallback: number, maximum?: number): number | null {
+  if (value === undefined) return fallback;
+  if (typeof value !== "string" || !/^\d+$/.test(value)) return null;
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 1) return null;
+  if (maximum !== undefined && parsed > maximum) return null;
+  return parsed;
 }
 
 function parseSocial(value: unknown): unknown {
@@ -83,16 +107,19 @@ const cvFieldNames = [
   "duan", "giaithuong", "hoatdong", "portfolio", "luongmongmuon",
 ] as const;
 
-function cvData(body: Record<string, unknown>, fileName?: string) {
+function cvData(body: Record<string, unknown>, fileName?: string): { data?: Record<string, unknown>; error?: string } {
   const data: Record<string, unknown> = {};
   for (const field of cvFieldNames) {
     if (body[field] !== undefined) data[field] = body[field];
   }
-  if (body.ngaysinh) data.ngaysinh = new Date(String(body.ngaysinh));
-  else if ("ngaysinh" in body) data.ngaysinh = null;
+  if (body.ngaysinh) {
+    const parsedDate = new Date(String(body.ngaysinh));
+    if (Number.isNaN(parsedDate.getTime())) return { error: "Ngày sinh không hợp lệ." };
+    data.ngaysinh = parsedDate;
+  } else if ("ngaysinh" in body) data.ngaysinh = null;
   if (body.social !== undefined) data.social = parseSocial(body.social);
   if (fileName) data.avt = fileName;
-  return data;
+  return { data };
 }
 
 const jdFieldNames = [
@@ -105,19 +132,39 @@ const jdFieldNames = [
 function jdData(body: Record<string, unknown>, fileName?: string) {
   const data: Record<string, unknown> = {};
   for (const field of jdFieldNames) {
-    if (body[field] !== undefined) data[field] = body[field];
+    if (body[field] !== undefined) {
+      data[field] = typeof body[field] === "string" ? body[field].trim() : body[field];
+    }
   }
   if (fileName) data.avt = `/uploads/${fileName}`;
   return data;
 }
 
+function validateCvData(data: Record<string, unknown>, partial: boolean): string | null {
+  if (!partial || data.hoten !== undefined) {
+    if (!textValue(data.hoten)) return "Họ tên CV bắt buộc.";
+  }
+  if (!partial || data.email !== undefined) {
+    const email = textValue(data.email);
+    if (!email) return "Email CV bắt buộc.";
+    if (!isValidEmail(email)) return "Email CV không hợp lệ.";
+  }
+  if (data.hoten !== undefined) data.hoten = textValue(data.hoten);
+  if (data.email !== undefined) data.email = textValue(data.email);
+  return null;
+}
+
 async function loginStudent(req: Request, res: Response) {
   try {
-    const { email, matkhau, password } = req.body as { email?: string; matkhau?: string; password?: string };
-    const loginPassword = matkhau ?? password;
-    if (!email || !loginPassword) return badRequest(req, res, "Email và mật khẩu bắt buộc.");
+    const body = requestBody(req);
+    const normalizedEmail = textValue(body.email);
+    const loginPassword = typeof body.password === "string"
+      ? body.password
+      : typeof body.matkhau === "string" ? body.matkhau : undefined;
+    if (!normalizedEmail || !loginPassword) return badRequest(req, res, "Email và mật khẩu bắt buộc.");
+    if (!isValidEmail(normalizedEmail)) return badRequest(req, res, "Email không hợp lệ.");
 
-    const result = await StudentService.loginStudent(email, loginPassword);
+    const result = await StudentService.loginStudent(normalizedEmail, loginPassword);
     if (!result.success || !result.data) {
       return reply(req, res, 401, "INVALID_CREDENTIALS", "Email hoặc mật khẩu không đúng.");
     }
@@ -134,11 +181,15 @@ async function loginStudent(req: Request, res: Response) {
 
 async function loginBusiness(req: Request, res: Response) {
   try {
-    const { email, matkhau, password } = req.body as { email?: string; matkhau?: string; password?: string };
-    const loginPassword = matkhau ?? password;
-    if (!email || !loginPassword) return badRequest(req, res, "Email và mật khẩu bắt buộc.");
+    const body = requestBody(req);
+    const normalizedEmail = textValue(body.email);
+    const loginPassword = typeof body.password === "string"
+      ? body.password
+      : typeof body.matkhau === "string" ? body.matkhau : undefined;
+    if (!normalizedEmail || !loginPassword) return badRequest(req, res, "Email và mật khẩu bắt buộc.");
+    if (!isValidEmail(normalizedEmail)) return badRequest(req, res, "Email không hợp lệ.");
 
-    const result = await BusinessService.loginDoanhNghiep(email, loginPassword);
+    const result = await BusinessService.loginDoanhNghiep(normalizedEmail, loginPassword);
     if (!result.success || !result.data) {
       return reply(req, res, 401, "INVALID_CREDENTIALS", "Email hoặc mật khẩu không đúng.");
     }
@@ -155,16 +206,24 @@ async function loginBusiness(req: Request, res: Response) {
 
 async function registerStudent(req: Request, res: Response) {
   try {
-    const { hoten, email, matkhau, chuyennganh } = req.body as Record<string, string | undefined>;
-    if (!hoten || !email || !matkhau) return badRequest(req, res, "Họ tên, email và mật khẩu bắt buộc.");
+    const body = requestBody(req);
+    const normalizedName = textValue(body.hoten);
+    const normalizedEmail = textValue(body.email);
+    const password = typeof body.matkhau === "string" ? body.matkhau : undefined;
+    if (!normalizedName || !normalizedEmail || !password) return badRequest(req, res, "Họ tên, email và mật khẩu bắt buộc.");
+    if (!isValidEmail(normalizedEmail)) return badRequest(req, res, "Email không hợp lệ.");
+    if (password.length < 6) return badRequest(req, res, "Mật khẩu phải có ít nhất 6 ký tự.");
     const result = await StudentService.insertStudent(
-      hoten,
-      email,
-      matkhau,
-      chuyennganh || "",
+      normalizedName,
+      normalizedEmail,
+      password,
+      textValue(body.chuyennganh) || "",
       req.file?.filename || null,
     );
-    if (!result.success) return reply(req, res, 409, "STUDENT_CREATE_FAILED", result.error || "Không thể tạo sinh viên.");
+    if (!result.success) {
+      if (result.error === "DUPLICATE_EMAIL") return reply(req, res, 409, "STUDENT_CREATE_FAILED", "Email đã được đăng ký.");
+      return serverError(req, res);
+    }
     return reply(req, res, 201, "STUDENT_CREATED", "Bạn đã tạo tài khoản thành công.", result.data);
   } catch {
     return serverError(req, res);
@@ -173,10 +232,9 @@ async function registerStudent(req: Request, res: Response) {
 
 async function listJobs(req: Request, res: Response) {
   try {
-    const requestedPage = Number(req.query.page || 1);
-    const requestedLimit = Number(req.query.limit || 6);
-    const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
-    const limit = Number.isInteger(requestedLimit) && requestedLimit > 0 && requestedLimit <= 50 ? requestedLimit : 6;
+    const page = positiveIntegerQuery(req.query.page, 1);
+    const limit = positiveIntegerQuery(req.query.limit, 6, 50);
+    if (page === null || limit === null) return badRequest(req, res, "Page hoặc limit không hợp lệ.");
     const allJobs = await JDService.getAllJD();
     const total = allJobs.length;
     const items = allJobs.slice((page - 1) * limit, page * limit);
@@ -204,12 +262,16 @@ async function getJob(req: Request, res: Response) {
 }
 
 async function getMe(req: Request, res: Response) {
-  const user = (req as ApiRequest).user;
-  const result = user.role === "student"
-    ? await StudentService.getStudentById(user.id)
-    : await BusinessService.getDoanhNghiepById(user.id);
-  if (!result.success || !result.data) return reply(req, res, 404, "USER_NOT_FOUND", "Không tìm thấy tài khoản.");
-  return reply(req, res, 200, "ME_LOADED", "Đã tải thông tin tài khoản.", { ...result.data, role: user.role });
+  try {
+    const user = (req as ApiRequest).user;
+    const result = user.role === "student"
+      ? await StudentService.getStudentById(user.id)
+      : await BusinessService.getDoanhNghiepById(user.id);
+    if (!result.success || !result.data) return reply(req, res, 404, "USER_NOT_FOUND", "Không tìm thấy tài khoản.");
+    return reply(req, res, 200, "ME_LOADED", "Đã tải thông tin tài khoản.", { ...result.data, role: user.role });
+  } catch {
+    return serverError(req, res);
+  }
 }
 
 async function createCv(req: Request, res: Response) {
@@ -218,11 +280,16 @@ async function createCv(req: Request, res: Response) {
     const count = await CVService.countCV(user.id);
     if (typeof count !== "number") return serverError(req, res);
     if (count > 0) return reply(req, res, 409, "CV_ALREADY_EXISTS", "Tài khoản đã có CV.");
-    const data = cvData(req.body as Record<string, unknown>, req.file?.filename);
-    if (!data.hoten || !data.email) return badRequest(req, res, "Họ tên và email CV bắt buộc.");
-    data.sinhvien_id = user.id;
-    const result = await CVService.insertCv(data as never);
-    if (!result.success) return serverError(req, res);
+    const prepared = cvData(requestBody(req), req.file?.filename);
+    if (prepared.error || !prepared.data) return badRequest(req, res, prepared.error || "Dữ liệu CV không hợp lệ.");
+    const validationError = validateCvData(prepared.data, false);
+    if (validationError) return badRequest(req, res, validationError);
+    prepared.data.sinhvien_id = user.id;
+    const result = await CVService.insertCv(prepared.data as never);
+    if (!result.success) {
+      if (result.error === "CV_ALREADY_EXISTS") return reply(req, res, 409, "CV_ALREADY_EXISTS", "Tài khoản đã có CV.");
+      return serverError(req, res);
+    }
     return reply(req, res, 201, "CV_CREATED", "Tạo CV thành công.", result.data);
   } catch {
     return serverError(req, res);
@@ -230,10 +297,14 @@ async function createCv(req: Request, res: Response) {
 }
 
 async function getMyCv(req: Request, res: Response) {
-  const user = (req as ApiRequest).user;
-  const result = await CVService.getCvById(user.id);
-  if (!result.success || !result.data) return reply(req, res, 404, "CV_NOT_FOUND", "Chưa tìm thấy CV.");
-  return reply(req, res, 200, "CV_LOADED", "Đã tải CV.", result.data);
+  try {
+    const user = (req as ApiRequest).user;
+    const result = await CVService.getCvById(user.id);
+    if (!result.success || !result.data) return reply(req, res, 404, "CV_NOT_FOUND", "Chưa tìm thấy CV.");
+    return reply(req, res, 200, "CV_LOADED", "Đã tải CV.", result.data);
+  } catch {
+    return serverError(req, res);
+  }
 }
 
 async function updateCv(req: Request, res: Response) {
@@ -243,8 +314,12 @@ async function updateCv(req: Request, res: Response) {
   try {
     const current = await prisma.cv.findFirst({ where: { id: BigInt(cvId), sinhvien_id: BigInt(user.id) } });
     if (!current) return reply(req, res, 404, "CV_NOT_FOUND", "Không tìm thấy CV của tài khoản.");
-    const data = cvData(req.body as Record<string, unknown>, req.file?.filename);
-    const result = await CVService.updateCv(cvId, data as never);
+    const prepared = cvData(requestBody(req), req.file?.filename);
+    if (prepared.error || !prepared.data) return badRequest(req, res, prepared.error || "Dữ liệu CV không hợp lệ.");
+    const validationError = validateCvData(prepared.data, true);
+    if (validationError) return badRequest(req, res, validationError);
+    if (Object.keys(prepared.data).length === 0) return badRequest(req, res, "Cần ít nhất một trường để cập nhật CV.");
+    const result = await CVService.updateCv(cvId, prepared.data as never);
     if (!result.success) return serverError(req, res);
     return reply(req, res, 200, "CV_UPDATED", "Cập nhật CV thành công.", result.data);
   } catch {
@@ -261,12 +336,14 @@ async function applyToJob(req: Request, res: Response) {
     if (!job) return reply(req, res, 404, "JOB_NOT_FOUND", "Vị trí ứng tuyển không tồn tại.");
     if (!job.doanhnghiep_id) return badRequest(req, res, "Vị trí chưa gán doanh nghiệp.");
     const businessId = Number(job.doanhnghiep_id);
+    if (!Number.isSafeInteger(businessId) || businessId < 1) return serverError(req, res);
     const count = await CandidateService.count(user.id, businessId, jobId);
     if (typeof count !== "number") return serverError(req, res);
     if (count > 0) return reply(req, res, 409, "APPLICATION_ALREADY_EXISTS", "Bạn đã ứng tuyển vị trí này rồi.");
     const application = await CandidateService.create(user.id, businessId, jobId);
     return reply(req, res, 201, "APPLICATION_CREATED", "Ứng tuyển thành công.", application);
-  } catch {
+  } catch (error) {
+    if (isUniqueConstraintError(error)) return reply(req, res, 409, "APPLICATION_ALREADY_EXISTS", "Bạn đã ứng tuyển vị trí này rồi.");
     return serverError(req, res);
   }
 }
@@ -292,11 +369,12 @@ async function listBusinessJobs(req: Request, res: Response) {
 async function createBusinessJob(req: Request, res: Response) {
   try {
     const user = (req as ApiRequest).user;
-    const data = jdData(req.body as Record<string, unknown>, req.file?.filename);
-    if (!data.ten_vi_tri || !data.dia_diem) return badRequest(req, res, "Tên vị trí và địa điểm bắt buộc.");
+    const data = jdData(requestBody(req), req.file?.filename);
+    if (!textValue(data.ten_vi_tri) || !textValue(data.dia_diem)) return badRequest(req, res, "Tên vị trí và địa điểm bắt buộc.");
     const business = await BusinessService.getDoanhNghiepById(user.id);
+    if (!business.success || !business.data) return reply(req, res, 404, "USER_NOT_FOUND", "Không tìm thấy tài khoản doanh nghiệp.");
     data.doanhnghiep_id = user.id;
-    if (!data.ten_cong_ty && business.success && business.data) data.ten_cong_ty = business.data.hoten || undefined;
+    if (!data.ten_cong_ty) data.ten_cong_ty = business.data.hoten || undefined;
     const result = await JDService.insertJD(data as never);
     if (!result.success) return serverError(req, res);
     return reply(req, res, 201, "JOB_CREATED", "Tạo tin tuyển dụng thành công.", result.data);
@@ -311,8 +389,9 @@ async function updateBusinessJob(req: Request, res: Response) {
   try {
     const owner = await prisma.jD.findFirst({ where: { id: BigInt(jobId), doanhnghiep_id: BigInt((req as ApiRequest).user.id) } });
     if (!owner) return reply(req, res, 404, "JOB_NOT_FOUND", "Không tìm thấy tin tuyển dụng của tài khoản.");
-    const data = jdData(req.body as Record<string, unknown>, req.file?.filename);
-    const result = await JDService.updateJD(jobId, data);
+    const data = jdData(requestBody(req), req.file?.filename);
+    if (Object.keys(data).length === 0) return badRequest(req, res, "Cần ít nhất một trường để cập nhật tin tuyển dụng.");
+    const result = await JDService.updateJD(jobId, data as never);
     return reply(req, res, 200, "JOB_UPDATED", "Cập nhật tin tuyển dụng thành công.", result);
   } catch {
     return serverError(req, res);
@@ -342,11 +421,15 @@ async function listBusinessApplications(req: Request, res: Response) {
 }
 
 async function getStudentCv(req: Request, res: Response) {
-  const studentId = numericParam(req.params.studentId);
-  if (studentId === null) return badRequest(req, res, "ID sinh viên không hợp lệ.");
-  const result = await CVService.getCvById(studentId);
-  if (!result.success || !result.data) return reply(req, res, 404, "CV_NOT_FOUND", "Không tìm thấy CV.");
-  return reply(req, res, 200, "CV_LOADED", "Đã tải CV ứng viên.", result.data);
+  try {
+    const studentId = numericParam(req.params.studentId);
+    if (studentId === null) return badRequest(req, res, "ID sinh viên không hợp lệ.");
+    const result = await CVService.getCvById(studentId);
+    if (!result.success || !result.data) return reply(req, res, 404, "CV_NOT_FOUND", "Không tìm thấy CV.");
+    return reply(req, res, 200, "CV_LOADED", "Đã tải CV ứng viên.", result.data);
+  } catch {
+    return serverError(req, res);
+  }
 }
 
 api_router.post("/auth/student/login", loginStudent);

@@ -16,13 +16,18 @@ Các trường hợp lỗi của API theo current Work Server source.
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Authentication | - | `Authorization` | Thiếu hoặc JWT Bearer không hợp lệ | 401 | `UNAUTHORIZED` | N/A — source không có message ID | `middleware` | N/A | JSON error envelope; `data=null` |
-| 2 | Authorization | - | `role` | JWT hợp lệ nhưng role khác `student` | 403 | `FORBIDDEN` | N/A — source không có message ID | `middleware` | N/A | Role middleware |
-| 3 | System | - | `server` | Unhandled exception hoặc service/database error | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `exception handler` | N/A | Không trả raw error/secret |
-| 4 | Validation | - | `cvId` | Path cvId không hợp lệ | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
-| 5 | Not found | - | `Cv.id/sinhvien_id` | CV không thuộc student hoặc không tồn tại | 404 | `CV_NOT_FOUND` | N/A — source không có message ID | `ownership query` | N/A |  |
-| 6 | System | - | `Cv` | Prisma update thất bại | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `mutation` | N/A |  |
-
+| 1 |  Authentication  |  -  |  `Authorization`  |  Thiếu hoặc JWT Bearer không hợp lệ  |  401  |  `UNAUTHORIZED`  |  N/A — source không có message ID  |  `middleware`  |  N/A  |  JSON error envelope; `data=null`  |
+| 2 |  Authorization  |  -  |  `role`  |  JWT hợp lệ nhưng role khác `student`  |  403  |  `FORBIDDEN`  |  N/A — source không có message ID  |  `middleware`  |  N/A  |  Role middleware  |
+| 3 | Upload | - | `avt` | Extension hoặc MIME type không được phép | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `multer middleware` | N/A |  |
+| 4 | Upload | - | `avt` | File vượt quá 10 MiB | 413 | `PAYLOAD_TOO_LARGE` | N/A — source không có message ID | `multer middleware` | N/A |  |
+| 5 |  System  |  -  |  `server`  |  Unhandled exception hoặc service/database error  |  500  |  `INTERNAL_SERVER_ERROR`  |  N/A — source không có message ID  |  `exception handler`  |  N/A  |  Không trả raw error/secret  |
+| 6 |  Validation  |  -  |  `cvId`  |  Path cvId không hợp lệ  |  400  |  `INVALID_REQUEST`  |  N/A — source không có message ID  |  `validation`  |  N/A  |    |
+| 7 |  Not found  |  -  |  `Cv.id/sinhvien_id`  |  CV không thuộc student hoặc không tồn tại  |  404  |  `CV_NOT_FOUND`  |  N/A — source không có message ID  |  `ownership query`  |  N/A  |    |
+| 8 | Validation | - | `hoten` | Nếu gửi hoten thì không được rỗng | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
+| 9 | Validation | - | `email` | Nếu gửi email thì bắt buộc đúng định dạng và không rỗng | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
+| 10 | Validation | - | `ngaysinh` | Ngày sinh không parse được thành Date | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
+| 11 | Validation | - | `body` | Không có field cập nhật | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
+| 12 | System | - | `Cv` | Prisma update thất bại | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `mutation` | N/A |  |
 > Mỗi error case nằm trên một row riêng. Error code là businessCode source-confirmed; message ID không được tự tạo khi source không có field này.
 
 ---

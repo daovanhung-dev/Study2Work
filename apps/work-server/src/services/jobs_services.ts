@@ -1,4 +1,6 @@
 import prisma from "../config/prisma.config.js";
+import { businessPublicSelect, jobPublicSelect } from "./public-selectors.js";
+import type { Prisma } from "@prisma/client";
 
 class JDService {
   // Tạo JD mới
@@ -27,11 +29,16 @@ class JDService {
     avt?: string;
   }) {
     try {
-      const jd = await prisma.jD.create({ data });
-      console.log("Tạo JD thành công:", jd.id);
+      const prismaData = {
+        ...data,
+        ...(data.doanhnghiep_id === undefined
+          ? {}
+          : { doanhnghiep_id: BigInt(data.doanhnghiep_id) }),
+      };
+      const jd = await prisma.jD.create({ data: prismaData, select: jobPublicSelect });
       return { success: true, data: jd };
     } catch (err) {
-      console.error("Lỗi tạo JD:", err);
+      console.error("Lỗi tạo JD.");
       return { success: false, error: "Không thể tạo JD" };
     }
   }
@@ -41,10 +48,11 @@ class JDService {
     try {
       const jds = await prisma.jD.findMany({
         orderBy: { ngay_tao: "desc" }, // sắp xếp theo ngày tạo mới nhất
+        select: jobPublicSelect,
       });
       return jds;
     } catch (error) {
-      console.error("Lỗi khi lấy JD:", error);
+      console.error("Lỗi khi lấy JD.");
       throw error;
     }
   }
@@ -59,18 +67,18 @@ class JDService {
     return await prisma.jD.findMany({
       skip,
       take,
-      include: { DoanhNghiep: true }, // join với doanh nghiệp nếu cần
+      include: { DoanhNghiep: { select: businessPublicSelect } }, // join với doanh nghiệp nếu cần
     });
   };
 
   // Lấy JD theo ID
   async getJDById(id: number | bigint) {
     try {
-      const jd = await prisma.jD.findUnique({ where: { id: BigInt(id) } });
+      const jd = await prisma.jD.findUnique({ where: { id: BigInt(id) }, select: jobPublicSelect });
       if (!jd) return { success: false, error: "Không tìm thấy JD" };
       return { success: true, data: jd };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi lấy JD.");
       return { success: false, error: "Lỗi server" };
     }
   }
@@ -82,30 +90,32 @@ class JDService {
       await prisma.jD.delete({ where: { id: BigInt(id) } });
       return { success: true };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi xóa JD.");
       return { success: false, error: "Không thể xóa JD" };
     }
   }
 
   //tim theo id doanh nghiep
-  async getJDByCompany(doanhnghiep_id: number) {
+  async getJDByCompany(doanhnghiep_id: number | bigint) {
     try {
       const data = await prisma.jD.findMany({
-        where: { doanhnghiep_id: doanhnghiep_id },
-        orderBy: { id: "desc" }   // sắp xếp mới nhất trước
+        where: { doanhnghiep_id: BigInt(doanhnghiep_id) },
+        orderBy: { id: "desc" }, // sắp xếp mới nhất trước
+        select: jobPublicSelect,
       });
 
       return data;
     } catch (error) {
-      console.error("Lỗi lấy JD theo doanh nghiệp:", error);
+      console.error("Lỗi lấy JD theo doanh nghiệp.");
       throw error;
     }
   }
 
-  async updateJD(id: number, data: any) {
+  async updateJD(id: number | bigint, data: Prisma.JDUpdateInput) {
     const updated = await prisma.jD.update({
       where: { id: BigInt(id) },
-      data
+      data,
+      select: jobPublicSelect,
     });
 
     return updated;

@@ -36,8 +36,8 @@ N/A — API không nhận Query parameter.
 | No | Location | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Description | Data Mapping reference |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | body | email | `email` | string | Yes | N/A | N/A | UTF-8/text | source không enforce email format | N/A | Email đăng nhập; source chỉ kiểm tra có giá trị | `05_Data_Mapping.md` |
-| 2 | body | password | `password` | string | Conditional | 1 | N/A | UTF-8/text | N/A | N/A | Mật khẩu theo client/contract; dùng khi `matkhau` không có | `05_Data_Mapping.md` |
-| 3 | body | matkhau | `matkhau` | string | Conditional | 1 | N/A | UTF-8/text | N/A | N/A | Alias được source hỗ trợ; dùng khi có giá trị | `05_Data_Mapping.md` |
+| 2 | body | password | `password` | string | Conditional | 1 | N/A | UTF-8/text | N/A | N/A | Password chuẩn; `matkhau` chỉ là alias legacy khi password không có | `05_Data_Mapping.md` |
+| 3 | body | matkhau | `matkhau` | string | Conditional | 1 | N/A | UTF-8/text | N/A | N/A | Alias legacy được source hỗ trợ khi password không có | `05_Data_Mapping.md` |
 > Mỗi field nằm trên một row riêng. `Conditional` nghĩa là source kiểm tra điều kiện kết hợp chứ không yêu cầu field đó độc lập.
 
 ## Ví dụ Request data

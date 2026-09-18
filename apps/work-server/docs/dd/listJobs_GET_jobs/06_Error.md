@@ -16,7 +16,9 @@ Các trường hợp lỗi của API theo current Work Server source.
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | System | - | `JD` | Lỗi khi đọc danh sách jobs | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `query` | N/A |  |
+| 1 | Validation | - | `page` | Page không phải số nguyên dương | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
+| 2 | Validation | - | `limit` | Limit không phải số nguyên trong `1..50` | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
+| 3 | System | - | `JD` | Lỗi khi đọc danh sách jobs | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `query` | N/A |  |
 
 > Mỗi error case nằm trên một row riêng. Error code là businessCode source-confirmed; message ID không được tự tạo khi source không có field này.
 

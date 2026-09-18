@@ -31,16 +31,24 @@
 - Relative mapping/error links target files that exist.
 - One request/response field, condition, error case and DB column is represented per row.
 - Secrets and literal credentials are excluded.
+- Password fields are excluded from public response mappings and marked as hashed input in mutation mappings.
+- Database schema/migration mappings use `VARCHAR(255)` for bcrypt hashes.
 
 ## Source discrepancies preserved
 
 - Login alias `matkhau` versus contract/client `password`.
-- Source-level validation is weaker than some legacy OpenAPI constraints.
-- Full Prisma response records may include `matkhau`.
+- Source-level validation now enforces email format, registration password minimum, date format, numeric IDs and pagination range.
+- Public Prisma projections exclude `matkhau`; legacy plaintext verification is compatibility-only.
+- Runtime database/JWT secrets are read from environment variables with fail-fast validation.
 - Current mutations have no explicit transaction boundary.
 
 ## Tool status
 
-- Contract validator: `VERIFIED` — `deno run --allow-read --allow-env --allow-run scripts/validate-contracts.mjs` passed.
-- Context validator: `VERIFIED` — Deno-compatible `scripts/validate-agent-context.mjs` passed; Node executable is unavailable in this environment.
+- Route inventory: `PASS` — 18 runtime registrations match 18 legacy-web operations.
+- DD static validator: `PASS` — 18 folders, 148 Markdown files, JSON examples, relative links and table rows checked.
+- Contract validator: `PASS` — `deno run --allow-read --allow-env --allow-run scripts/validate-contracts.mjs`.
+- Context validator: `PASS_WITH_DRIFT_SKIPPED` — `deno run --allow-read --allow-env --allow-run scripts/validate-agent-context.mjs --skip-drift`; source files are intentionally modified in this working tree.
+- TypeScript: `PASS` via the checked-in TypeScript compiler executed by Deno (`tsc --noEmit`, exit 0). The requested `corepack pnpm` command is `DECLARED_NOT_RUNNABLE` because the Node executable is unavailable.
+- Prisma validate/generate: `PASS` via the checked-in Prisma CLI executed by Deno with non-production validation environment values. The requested Node launcher commands are `DECLARED_NOT_RUNNABLE` because the Node executable is unavailable.
+- Secret scan: `PASS` for DD/source-backed documentation markers; no database URL, JWT secret or private key is included.
 - Work Server runtime integration tests: `NOT_FOUND` — no checked-in server test runner.

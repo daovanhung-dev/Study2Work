@@ -1,20 +1,33 @@
-const NEON_POOLER_URL =
-  "postgresql://neondb_owner:npg_KbI87qFogAHp@ep-noisy-fog-b3rlle00-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+function requiredEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) throw new Error(`Missing required environment variable: ${name}`);
+  return value;
+}
 
-/** Runtime connection through Neon's transaction pooler. */
-export const DATABASE_URL = `${NEON_POOLER_URL}&pgbouncer=true&connect_timeout=30`;
+function optionalEnv(name: string, fallback: string): string {
+  return process.env[name]?.trim() || fallback;
+}
 
-/** Direct endpoint used by Prisma CLI migration and schema commands. */
-export const DIRECT_DATABASE_URL = `${NEON_POOLER_URL.replace(
-  "-pooler.",
-  "."
-)}&connect_timeout=30`;
+function portEnv(): number {
+  const value = Number(optionalEnv("PORT", "3000"));
+  if (!Number.isInteger(value) || value < 1 || value > 65535) {
+    throw new Error("PORT must be an integer between 1 and 65535");
+  }
+  return value;
+}
 
-export const PORT = 3000;
+export const DATABASE_URL = requiredEnv("DATABASE_URL");
+export const DIRECT_DATABASE_URL = requiredEnv("DIRECT_DATABASE_URL");
+export const PORT = portEnv();
 
-export const JWT_SECRET = "replace-with-a-local-jwt-secret";
-export const JWT_EXPIRES = "1d";
+export const JWT_SECRET = requiredEnv("JWT_SECRET");
+if (JWT_SECRET.length < 32) {
+  throw new Error("JWT_SECRET must contain at least 32 characters");
+}
+
+export const JWT_EXPIRES = optionalEnv("JWT_EXPIRES", "1d");
 export const JWT_STORAGE_KEY = "access_token";
 
-export const SUPABASE_URL = "https://example.supabase.co";
-export const SUPABASE_ANON_KEY = "replace-with-a-local-supabase-anon-key";
+// Supabase is retained only for legacy, currently unwired modules.
+export const SUPABASE_URL = optionalEnv("SUPABASE_URL", "");
+export const SUPABASE_ANON_KEY = optionalEnv("SUPABASE_ANON_KEY", "");

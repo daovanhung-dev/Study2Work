@@ -33,4 +33,6 @@
 
 - Route/service/schema sources were read for every operation.
 - `apps/work-server` has no checked-in server integration test suite; runtime test status remains source-level only.
-- Sensitive full Prisma response fields are documented as current behavior and security discrepancy, not silently removed.
+- Passwords are hashed with bcrypt for new writes; public Prisma projections exclude password/hash fields.
+- Legacy plaintext rows remain compatibility-readable and are opportunistically rehashed after successful login.
+- Runtime secrets are environment-backed; no literal database/JWT credential is included in source-backed DD.

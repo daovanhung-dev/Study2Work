@@ -17,8 +17,9 @@ Các trường hợp lỗi của API theo current Work Server source.
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | Validation | - | `email/password` | Thiếu email hoặc cả `password` và `matkhau` | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
-| 2 | Authentication | - | `credentials` | Không tồn tại user hoặc mật khẩu không khớp | 401 | `INVALID_CREDENTIALS` | N/A — source không có message ID | `query result` | N/A |  |
-| 3 | System | - | `server` | Lỗi service/database | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `exception handler` | N/A |  |
+| 2 | Validation | - | `email` | Email không đúng định dạng | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
+| 3 | Authentication | - | `credentials` | Không tồn tại user hoặc bcrypt/legacy password không khớp | 401 | `INVALID_CREDENTIALS` | N/A — source không có message ID | `query result` | N/A |  |
+| 4 | System | - | `server` | Lỗi service/database | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `exception handler` | N/A |  |
 
 > Mỗi error case nằm trên một row riêng. Error code là businessCode source-confirmed; message ID không được tự tạo khi source không có field này.
 

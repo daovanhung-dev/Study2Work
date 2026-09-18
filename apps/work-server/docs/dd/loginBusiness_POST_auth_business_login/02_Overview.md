@@ -44,8 +44,8 @@ status: "Draft — Needs Confirmation"
 
 ## Mục chú ý
 
-- Source hỗ trợ alias `matkhau`; client/legacy contract dùng `password`..
-- Source so sánh mật khẩu plaintext; không tự suy diễn hashing trong DD..
+- Source chuẩn hóa `password`; vẫn nhận alias legacy `matkhau` khi `password` không có.
+- Service verify bcrypt và fallback plaintext legacy; login legacy thành công sẽ best-effort rehash.
 
 ## Assumptions
 
@@ -57,7 +57,7 @@ status: "Draft — Needs Confirmation"
 
 ## Security note
 
-- Không ghi literal credential, JWT secret hoặc token. Sensitive response fields nếu source hiện trả ra được đánh dấu ngay tại response mapping.
+- Không ghi literal credential, JWT secret hoặc token. Public projection loại password/hash khỏi mọi response.
 
 ## Performance note
 

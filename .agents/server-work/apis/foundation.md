@@ -29,6 +29,11 @@ student and business operations use `checkRole` and the 12-model Prisma schema.
 Successful and handled error responses use the envelope keys
 `success`, `businessCode`, `message`, `data`, `meta`, and `traceId`. BigInt and
 Date values are normalized before JSON serialization; error data is `null`.
+The response also carries the same trace identifier in `X-Trace-Id`. Invalid
+IDs, email/password input, dates, empty partial updates, pagination and upload
+constraints are rejected as JSON `400`; upload files over 10 MiB are `413`.
+Images must use the configured JPEG/PNG/GIF extension and MIME allowlist.
+Public response projections exclude `matkhau` and password hashes.
 Bearer authentication is stateless and cookie/session authentication is not
 supported. The source-aligned contract is `legacy-web.openapi.json`; the larger
 `openapi.json` health/domain catalog is not wired to this Express source.

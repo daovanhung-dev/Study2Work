@@ -16,13 +16,15 @@ Các trường hợp lỗi của API theo current Work Server source.
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Authentication | - | `Authorization` | Thiếu hoặc JWT Bearer không hợp lệ | 401 | `UNAUTHORIZED` | N/A — source không có message ID | `middleware` | N/A | JSON error envelope; `data=null` |
-| 2 | Authorization | - | `role` | JWT hợp lệ nhưng role khác `business` | 403 | `FORBIDDEN` | N/A — source không có message ID | `middleware` | N/A | Role middleware |
-| 3 | System | - | `server` | Unhandled exception hoặc service/database error | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `exception handler` | N/A | Không trả raw error/secret |
-| 4 | Required | - | `ten_vi_tri/dia_diem` | Thiếu field bắt buộc | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
-| 5 | Upload | - | `avt` | Upload không hợp lệ | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `multer middleware` | N/A |  |
-| 6 | System | - | `JD` | Prisma create thất bại hoặc service trả success=false | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `mutation` | N/A |  |
-
+| 1 |  Authentication  |  -  |  `Authorization`  |  Thiếu hoặc JWT Bearer không hợp lệ  |  401  |  `UNAUTHORIZED`  |  N/A — source không có message ID  |  `middleware`  |  N/A  |  JSON error envelope; `data=null`  |
+| 2 |  Authorization  |  -  |  `role`  |  JWT hợp lệ nhưng role khác `business`  |  403  |  `FORBIDDEN`  |  N/A — source không có message ID  |  `middleware`  |  N/A  |  Role middleware  |
+| 3 |  System  |  -  |  `server`  |  Unhandled exception hoặc service/database error  |  500  |  `INTERNAL_SERVER_ERROR`  |  N/A — source không có message ID  |  `exception handler`  |  N/A  |  Không trả raw error/secret  |
+| 4 | Required | - | `ten_vi_tri` | Tên vị trí thiếu hoặc rỗng | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
+| 5 | Required | - | `dia_diem` | Địa điểm thiếu hoặc rỗng | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
+| 6 | Not found | - | `DoanhNghiep.id` | JWT business không còn record tương ứng | 404 | `USER_NOT_FOUND` | N/A — source không có message ID | `business check` | N/A |  |
+| 7 | Upload | - | `avt` | Extension hoặc MIME type không được phép | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `multer middleware` | N/A |  |
+| 8 | Upload | - | `avt` | File vượt quá 10 MiB | 413 | `PAYLOAD_TOO_LARGE` | N/A — source không có message ID | `multer middleware` | N/A |  |
+| 9 | System | - | `JD` | Prisma create thất bại hoặc service trả success=false | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `mutation` | N/A |  |
 > Mỗi error case nằm trên một row riêng. Error code là businessCode source-confirmed; message ID không được tự tạo khi source không có field này.
 
 ---

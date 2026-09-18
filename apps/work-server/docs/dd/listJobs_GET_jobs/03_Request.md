@@ -31,8 +31,8 @@ N/A — API không nhận Path parameter.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | page | `page` | integer | No | source accepts digits; invalid number falls back | N/A | N/A | N/A | N/A | Trang bắt đầu từ 1; source default 1 và fallback về 1 | `05_Data_Mapping.md` |
-| 2 | limit | `limit` | integer | No | 1 | 50 | N/A | N/A | N/A | Số item mỗi trang; source default 6 và fallback nếu ngoài 1..50 | `05_Data_Mapping.md` |
+| 1 | page | `page` | integer | No | source accepts digits; invalid number returns `400 INVALID_REQUEST` | N/A | N/A | N/A | N/A | Trang bắt đầu từ 1; source default 1; giá trị truyền vào phải là integer dương | `05_Data_Mapping.md` |
+| 2 | limit | `limit` | integer | No | 1 | 50 | N/A | N/A | N/A | Số item mỗi trang; source default 6; giá trị truyền vào phải nằm trong 1..50 | `05_Data_Mapping.md` |
 ## Request body
 
 N/A — API không nhận Path, Query hoặc Request Body.

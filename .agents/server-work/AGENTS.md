@@ -24,11 +24,17 @@ Canonical page graph: `INDEX.md`.
 
 - Internal imports use NodeNext ESM `.js` suffix.
 - Runtime configuration comes from `src/utils/constants.ts`; runtime code does not load `.env`.
+  `DATABASE_URL`, `DIRECT_DATABASE_URL`, and `JWT_SECRET` are required; the JWT
+  secret must be at least 32 characters. `JWT_EXPIRES` is optional.
 - Prisma uses the shared client in `src/config/prisma.config.ts` and Neon PostgreSQL.
 - `src/app.ts` mounts JSON/static middleware and only `src/routes/api_routes.ts` at `/api/v1`.
 - Protected requests must send exactly one `Authorization: Bearer <JWT>` header.
 - The server does not authenticate from cookies and does not maintain server-side sessions.
 - JWT payloads contain numeric `id`, string `email`, and string `role` (`student` or `business`).
+- New account passwords are stored as bcrypt cost 12 hashes. Legacy plaintext
+  rows can authenticate once and are best-effort rehashed after successful login.
+- API projections exclude `matkhau`; password hashes must never be returned in
+  registration, `/me`, application relations, or Prisma response data.
 - Role middleware owns access checks for the versioned API routes.
 - Authentication failures return JSON `401/403` responses; browser navigation and pages are owned by React.
 - React Work Web consumes the versioned API at `/api/v1`; the server does not mount browser views.

@@ -21,9 +21,10 @@ export const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|gif/;
+    const allowed = new Set([".jpeg", ".jpg", ".png", ".gif"]);
     const ext = path.extname(file.originalname).toLowerCase();
-    if (allowed.test(ext)) cb(null, true);
+    const mimeAllowed = new Set(["image/jpeg", "image/png", "image/gif"]);
+    if (allowed.has(ext) && mimeAllowed.has(file.mimetype)) cb(null, true);
     else cb(new Error("Chỉ cho phép file ảnh (jpeg, jpg, png, gif)"));
   },
 });

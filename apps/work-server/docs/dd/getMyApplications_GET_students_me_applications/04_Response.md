@@ -57,10 +57,9 @@ status: "Draft — Needs Confirmation"
 | 37 | data[].DoanhNghiep.id | id | `id` | number | Yes | DoanhNghiep | id | query/mutation result | BigInt → JSON number | N/A | Full Prisma result |
 | 38 | data[].DoanhNghiep.hoten | hoten | `hoten` | string\|null | Yes | DoanhNghiep | hoten | query/mutation result | Direct | null nếu DB null | Full Prisma result |
 | 39 | data[].DoanhNghiep.email | email | `email` | string\|null | Yes | DoanhNghiep | email | query/mutation result | Direct | null nếu DB null | Full Prisma result |
-| 40 | data[].DoanhNghiep.matkhau | matkhau | `matkhau` | string\|null | Yes | DoanhNghiep | matkhau | query/mutation result | Direct | null nếu DB null | Sensitive field exposed by current full Prisma result; source discrepancy |
-| 41 | data[].DoanhNghiep.diachi | diachi | `diachi` | string\|null | Yes | DoanhNghiep | diachi | query/mutation result | Direct | null nếu DB null | Full Prisma result |
-| 42 | data[].DoanhNghiep.sodienthoai | sodienthoai | `sodienthoai` | string\|null | Yes | DoanhNghiep | sodienthoai | query/mutation result | Direct | null nếu DB null | Full Prisma result |
-| 43 | data[].DoanhNghiep.avt | avt | `avt` | string\|null | Yes | DoanhNghiep | avt | query/mutation result | Direct | null nếu DB null | Full Prisma result |
+| 40 | data[].DoanhNghiep.diachi | diachi | `diachi` | string\|null | Yes | DoanhNghiep | diachi | query/mutation result | Direct | null nếu DB null | Full Prisma result |
+| 41 | data[].DoanhNghiep.sodienthoai | sodienthoai | `sodienthoai` | string\|null | Yes | DoanhNghiep | sodienthoai | query/mutation result | Direct | null nếu DB null | Full Prisma result |
+| 42 | data[].DoanhNghiep.avt | avt | `avt` | string\|null | Yes | DoanhNghiep | avt | query/mutation result | Direct | null nếu DB null | Full Prisma result |
 
 > HTTP status là transport status; không được thêm `HTTPStatus` vào JSON body vì current `reply` không trả field này.
 

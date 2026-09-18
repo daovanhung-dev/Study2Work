@@ -12,7 +12,7 @@ CREATE TABLE `SinhVien` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
     `hoten` VARCHAR(50) NULL,
     `email` VARCHAR(50) NULL,
-    `matkhau` VARCHAR(20) NULL,
+    `matkhau` VARCHAR(255) NULL,
     `chuyennganh` VARCHAR(50) NULL,
     `avt` VARCHAR(191) NULL,
 
@@ -23,7 +23,7 @@ CREATE TABLE `DoanhNghiep` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
     `hoten` VARCHAR(50) NULL,
     `email` VARCHAR(50) NULL,
-    `matkhau` VARCHAR(50) NULL,
+    `matkhau` VARCHAR(255) NULL,
     `diachi` VARCHAR(100) NULL,
     `sodienthoai` VARCHAR(20) NULL,
     `avt` VARCHAR(191) NULL,

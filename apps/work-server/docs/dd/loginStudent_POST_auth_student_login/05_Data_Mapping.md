@@ -31,7 +31,7 @@ status: "Draft — Needs Confirmation"
 ## 3. Validate data input
 
 - `email` phải có giá trị.
-- `loginPassword = matkhau ?? password` phải có giá trị.
+- `loginPassword = password ?? matkhau` phải có giá trị.
 
 ## 4. Query và business processing
 
@@ -39,8 +39,8 @@ status: "Draft — Needs Confirmation"
 
 - `StudentService.loginStudent` gọi `SinhVien.findUnique` với điều kiện `email = email`.
 - Query select các cột `id`, `email`, `matkhau`.
-- Nếu không có user hoặc password không khớp plaintext: đi tới lỗi `INVALID_CREDENTIALS`.
-- Khi thành công, loại `matkhau` khỏi object trước khi trả về.
+- Nếu account không tồn tại hoặc bcrypt/legacy password verify thất bại: đi tới lỗi `INVALID_CREDENTIALS`.
+- Chỉ dùng `matkhau` cho verify; public response projection không chứa password/hash.
 
 ## 5. Insert/Update/Delete thông tin
 

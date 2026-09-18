@@ -49,8 +49,7 @@ status: "Draft — Needs Confirmation"
 
 ## 6. Map response và error
 
-- `data` là full Prisma record của `SinhVien` hoặc `DoanhNghiep` cộng `role`.
-- Current source có thể trả `matkhau` từ full Prisma result; ghi nhận là security discrepancy.
+- `data` là public projection của `SinhVien` hoặc `DoanhNghiep` cộng `role`; password/hash không được chọn hoặc trả về.
 - Thành công: `reply` trả HTTP `200`, `businessCode = ME_LOADED`, `data` theo [04_Response.md](./04_Response.md).
 - Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
 - Chi tiết lỗi: [06_Error.md](./06_Error.md).

@@ -9,7 +9,7 @@
 | `UNAUTHORIZED` | `401` | Missing/invalid Bearer token | Source-confirmed |
 | `FORBIDDEN` | `403` | Authenticated user has wrong role | Source-confirmed |
 | `STUDENT_CREATED` | `201` | Student registration success | Source-confirmed |
-| `STUDENT_CREATE_FAILED` | `409` | Student create service failure | Source-confirmed |
+| `STUDENT_CREATE_FAILED` | `409` | Student email already exists | Source-confirmed |
 | `JOBS_LOADED` | `200` | Public job list loaded | Source-confirmed |
 | `JOB_LOADED` | `200` | Job detail loaded | Source-confirmed |
 | `JOB_NOT_FOUND` | `404` | JD not found or not owned | Source-confirmed |
@@ -28,4 +28,5 @@
 | `JOB_UPDATED` | `200` | Business job updated | Source-confirmed |
 | `JOB_DELETED` | `200` | Business job deleted | Source-confirmed |
 | `BUSINESS_APPLICATIONS_LOADED` | `200` | Business applications loaded | Source-confirmed |
+| `PAYLOAD_TOO_LARGE` | `413` | Multipart file exceeds 10 MiB limit | Source-confirmed |
 | `INTERNAL_SERVER_ERROR` | `500` | Safe generic server error envelope | Source-confirmed |

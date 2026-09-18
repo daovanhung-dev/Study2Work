@@ -18,8 +18,8 @@ status: "Draft — Needs Confirmation"
 
 ### 1.2. Get path/query/body data
 
-- `page`: lấy từ `req.query.page`; source áp dụng default/fallback trong handler.
-- `limit`: lấy từ `req.query.limit`; source áp dụng default/fallback trong handler.
+- `page`: lấy từ `req.query.page`; nếu bỏ trống dùng `1`, nếu không phải số nguyên dương trả `400`.
+- `limit`: lấy từ `req.query.limit`; nếu bỏ trống dùng `6`, chỉ nhận số nguyên `1..50`, ngoài phạm vi trả `400`.
 
 ## 2. Check quyền
 
@@ -29,8 +29,8 @@ status: "Draft — Needs Confirmation"
 
 ## 3. Validate data input
 
-- `page = Number(req.query.page || 1)`; giá trị không phải integer dương fallback `1`.
-- `limit = Number(req.query.limit || 6)`; giá trị không phải integer hoặc ngoài `1..50` fallback `6`.
+- `page` dùng default `1`; giá trị không phải integer dương trả `400 INVALID_REQUEST`.
+- `limit` dùng default `6`; giá trị không phải integer hoặc ngoài `1..50` trả `400 INVALID_REQUEST`.
 
 ## 4. Query và business processing
 

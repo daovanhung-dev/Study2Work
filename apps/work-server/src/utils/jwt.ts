@@ -20,13 +20,15 @@ export function signToken(payload: TokenPayload): string {
 }
 
 export function verifyToken(token: string): TokenPayload {
-  const payload = jwt.verify(token, JWT_SECRET);
+  const payload = jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] });
   if (
     typeof payload !== "object" ||
     payload === null ||
     typeof payload.id !== "number" ||
+    !Number.isSafeInteger(payload.id) ||
+    payload.id < 1 ||
     typeof payload.email !== "string" ||
-    typeof payload.role !== "string"
+    !["student", "business"].includes(String(payload.role))
   ) {
     throw new Error("Invalid JWT payload");
   }

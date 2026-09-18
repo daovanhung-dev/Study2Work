@@ -33,6 +33,7 @@ export function authenticateToken(req: Request, _res: Response, next: NextFuncti
 
   try {
     req.user = verifyToken(token);
+    req.authenticated = true;
   } catch {
     req.authenticated = false;
   }
