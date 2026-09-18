@@ -1,7 +1,7 @@
 # Study Web API boundary
 
 - `src/shared/api/http.ts` defines `studyApiBaseUrl` from
-  `VITE_STUDY_API_URL`, falling back to `http://localhost:8000`.
+  `VITE_STUDY_API_URL`, falling back to `http://127.0.0.1:3003`.
 - `src/shared/api/envelope.ts` defines the success/error envelope union and
   `isSuccessEnvelope` type guard.
 - `src/shared/api/envelope.test.ts` verifies the type guard.

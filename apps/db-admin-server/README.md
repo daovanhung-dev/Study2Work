@@ -10,7 +10,7 @@ service automatically. Runtime configuration is read from
 
 ```bash
 uv sync
-uv run --no-env-file --no-dev uvicorn app.main:app --reload --host 127.0.0.1 --port 8010
+uv run --no-env-file --no-dev uvicorn app.main:app --reload --host 127.0.0.1 --port 3001
 ```
 
 Create the local constants before running directly:

@@ -31,6 +31,9 @@ configuration adapter over tracked static `src/utils/constants.ts`; `.env` and
 uploads into the process `uploads/` directory. React owns all browser views in
 the separate Work Web package; unknown server paths return JSON, not HTML.
 
+The local process binds to `127.0.0.1:3002`; Work Web binds to
+`127.0.0.2:3001` and proxies its API/static requests to the server address.
+
 ## Authentication
 
 `authenticateToken(config)` optionally parses one `Authorization: Bearer <JWT>` header

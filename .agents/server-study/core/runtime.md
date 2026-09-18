@@ -3,6 +3,9 @@
 Status: source-backed; `app.main` imports and composes the current routes. The
 register pytest module still blocks full test collection through a stale import.
 
+The local Study API startup address is `127.0.0.1:3003`. Containerized startup
+binds internally to `0.0.0.0:3003` and publishes the host address separately.
+
 ## `app/main.py`
 
 ### `_settings_for_request(request)`

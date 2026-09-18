@@ -6,10 +6,10 @@ import { fileURLToPath } from "node:url";
 const webRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const serverRoot = resolve(webRoot, "../db-admin-server");
 const constantsPath = resolve(serverRoot, "app/core/constants.py");
-const backendHost = "127.0.0.1";
-const backendPort = 8010;
-const frontendHost = "127.0.0.1";
-const frontendPort = 5175;
+export const backendHost = "127.0.0.1";
+export const backendPort = 3001;
+export const frontendHost = "127.0.0.2";
+export const frontendPort = 3000;
 const startupTimeoutMs = 60_000;
 
 function ensureConstantsFile(path = constantsPath) {

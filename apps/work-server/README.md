@@ -70,8 +70,8 @@ corepack pnpm --filter work_server s2w
 corepack pnpm --filter work-web dev
 ```
 
-Vite runs on `http://localhost:5174` and proxies `/api`, `/uploads`, and `/img`
-to the Express server on port `3000`. Production should use a same-origin reverse
+Vite runs on `http://127.0.0.2:3001` and proxies `/api`, `/uploads`, and `/img`
+to the Express server on `127.0.0.1:3002`. Production should use a same-origin reverse
 proxy for these paths. The React client never receives the Neon credential. The
 Express server exposes JSON APIs and does not serve browser HTML.
 
@@ -113,7 +113,7 @@ storage and webhook operations).
 
 | Constant                | Purpose                                                          |
 | ----------------------- | ---------------------------------------------------------------- |
-| `PORT`                | HTTP port for the Express server.                                |
+| `PORT`                | HTTP port for the Express server (`3002` locally).                |
 | `DATABASE_URL`        | Pooled Neon PostgreSQL connection string used by Prisma runtime. |
 | `DIRECT_DATABASE_URL` | Direct Neon PostgreSQL connection string used by Prisma CLI.     |
 | `JWT_SECRET`          | Secret for JWT helpers.                                          |

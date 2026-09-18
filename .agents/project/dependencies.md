@@ -47,9 +47,9 @@ apps/db-admin-server/app/main.py
 
 ## Client/server boundaries
 
-- Work web uses a relative `/api/v1` base; Vite proxies `/api`, `/uploads`, and
-  `/img` to the Express server in development. Work API does not render browser
-  views.
+- Work web uses a relative `/api/v1` base; Vite binds at `127.0.0.2:3001` and
+  proxies `/api`, `/uploads`, and `/img` to the Express server at
+  `127.0.0.1:3002` in development. Work API does not render browser views.
 - Study client and Study API are separate packages, nhưng current Study OpenAPI
   không đủ để suy diễn client/server contract.
 - Work mobile apps use direct Neon SQL and are not HTTP consumers of Work server.

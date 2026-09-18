@@ -8,8 +8,8 @@ const app = createApp({ config, dependencies });
 
 async function bootstrap(): Promise<void> {
   await dependencies.prisma.$connect();
-  const server = app.listen(config.port, () => {
-    console.log(`Server chạy http://localhost:${config.port}`);
+  const server = app.listen(config.port, config.host, () => {
+    console.log(`Server chạy http://${config.host}:${config.port}`);
   });
 
   const shutdown = async () => {

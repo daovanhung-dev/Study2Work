@@ -19,6 +19,21 @@ Study, Work và AI là deployable/boundary khác nhau. Work Web gọi Work API q
 Work mobile hiện kết nối trực tiếp Neon và không gọi Work API. Không import
 business module chéo app.
 
+## Local application addresses
+
+| Role | Address |
+|---|---|
+| AI server | `127.0.0.1:3000` |
+| DB Admin server | `127.0.0.1:3001` |
+| Work server | `127.0.0.1:3002` |
+| Study server | `127.0.0.1:3003` |
+| DB Admin client | `127.0.0.2:3000` |
+| Work client | `127.0.0.2:3001` |
+| Study client | `127.0.0.2:3002` |
+
+These are local application endpoints. PostgreSQL, Redis, Ollama and test
+fixture addresses are separate dependencies and retain their existing values.
+
 ## Boundary chính
 
 ```text

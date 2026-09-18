@@ -10,7 +10,10 @@ def test_runtime_settings_are_loaded_from_constants() -> None:
 
     assert settings.database_url.get_secret_value() == constants.URL_DATABASE
     assert settings.app_env == constants.APP_ENV
+    assert settings.host == "127.0.0.1"
     assert settings.port == constants.PORT
+    assert settings.port == 3001
+    assert settings.cors_origins == ["http://127.0.0.2:3000"]
     assert settings.dev_auth is False
     assert settings.local_auth_enabled is True
 

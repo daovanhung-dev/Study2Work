@@ -30,7 +30,7 @@ corepack pnpm dev:work-server
 corepack pnpm dev:work-web
 ```
 
-The Express API listens at `http://localhost:3000`; Vite serves Work Web at
-`http://localhost:5174` and proxies `/api`, `/uploads`, and `/img` to the API.
+The Express API listens at `http://127.0.0.1:3002`; Vite serves Work Web at
+`http://127.0.0.2:3001` and proxies `/api`, `/uploads`, and `/img` to the API.
 
 Future deployment-specific files should live under this folder.

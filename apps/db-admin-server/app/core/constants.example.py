@@ -6,8 +6,8 @@ from typing import Final
 
 APP_ENV: Final[str] = "local"
 HOST: Final[str] = "127.0.0.1"
-PORT: Final[int] = 8010
-CORS_ORIGINS: Final[list[str]] = ["http://localhost:5175"]
+PORT: Final[int] = 3001
+CORS_ORIGINS: Final[list[str]] = ["http://127.0.0.2:3000"]
 
 # Keep the legacy value for compatibility with older tooling. New DB Admin
 # requests use the explicitly named targets below.

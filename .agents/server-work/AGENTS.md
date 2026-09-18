@@ -7,6 +7,7 @@ CONTEXT_MODE: DEEP
 RUNTIME_STATUS: VERIFIED_EXPRESS_STUDY_STYLE_COMPATIBILITY_API
 STACK: Express 4 + TypeScript + Prisma/PostgreSQL + Neon
 AUTH: JWT Bearer-only
+LOCAL_ADDRESS: 127.0.0.1:3002
 ```
 
 Canonical page graph: `INDEX.md`.

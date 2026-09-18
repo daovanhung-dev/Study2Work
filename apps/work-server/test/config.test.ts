@@ -11,6 +11,7 @@ const originalEnvironment = {
 
 const validOverrides: WorkConfig = {
   appEnv: "test",
+  host: "127.0.0.1",
   port: 3100,
   databaseUrl: "postgresql://test/runtime",
   directDatabaseUrl: "postgresql://test/direct",
@@ -37,7 +38,8 @@ describe("Work static configuration", () => {
     const config = loadConfig();
 
     expect(config.appEnv).toBe("local");
-    expect(config.port).toBe(3000);
+    expect(config.host).toBe("127.0.0.1");
+    expect(config.port).toBe(3002);
     expect(config.databaseUrl).toContain("neon.tech");
     expect(config.directDatabaseUrl).toBe(config.databaseUrl);
     expect(config.jwtSecret).not.toBe(process.env.JWT_SECRET);

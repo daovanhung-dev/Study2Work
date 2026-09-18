@@ -10,8 +10,8 @@ from typing import Literal
 APP_ENV: Literal["local", "test", "staging", "production"] = "local"
 ENABLE_DOCS = True
 CORS_ORIGINS = (
-    "http://localhost:5173",
-    "http://localhost:5174",
+    "http://127.0.0.2:3002",
+    "http://127.0.0.2:3001",
 )
 
 # Local database configuration is disabled; Neon is the runtime database.

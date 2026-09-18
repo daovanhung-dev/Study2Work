@@ -25,8 +25,8 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5175`. Requests to `/api/v1/admin` are proxied to the
-internal FastAPI process at `127.0.0.1:8010`; the browser never receives the
+Open `http://127.0.0.2:3000`. Requests to `/api/v1/admin` are proxied to the
+internal FastAPI process at `127.0.0.1:3001`; the browser never receives the
 Neon connection string.
 
 Press `Ctrl+C` once to stop both processes. The backend can still be started

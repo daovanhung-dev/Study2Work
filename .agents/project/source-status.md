@@ -81,7 +81,7 @@ HEALTH_ROUTE_STATUS: VERIFIED_INJECTED_PROBE
 ```
 
 - `src/main.ts` loads typed config from the tracked static
-  `src/utils/constants.ts`,
+  `src/utils/constants.ts`, binds the local listener to `127.0.0.1:3002`,
   creates injected dependencies, connects Prisma before listening and gracefully
   disconnects on shutdown; `src/app.ts` exposes `createApp(options)` for
   fake-dependency HTTP tests. `.env` and `process.env` are not runtime config
@@ -121,8 +121,9 @@ DESIGN_STATUS: SOURCE_BACKED_COBALT_BASELINE_IMPLEMENTED
 - `src/shared/api/work.ts` uses relative `/api/v1`, Zod envelope parsing,
   React Query consumers and Zustand `access_token` persistence. Requests omit
   cookies and send a single optional Bearer header.
-- Vite development proxies `/api`, `/uploads` and `/img` to Work server port
-  3000. Current tests cover role access and the Bearer/401 token boundary.
+- Vite development binds Work Web to `127.0.0.2:3001` and proxies `/api`,
+  `/uploads` and `/img` to Work server `127.0.0.1:3002`. Current tests cover
+  role access and the Bearer/401 token boundary.
 - The presentation layer now has Cobalt semantic tokens, shared UI primitives,
   responsive public/workspace menus and reduced-motion/focus rules. This is a
   presentation-only change; route, API, auth and page-local data flow remain

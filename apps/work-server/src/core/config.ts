@@ -2,6 +2,7 @@ import {
   APP_ENV,
   DATABASE_URL,
   DIRECT_DATABASE_URL,
+  HOST,
   JWT_EXPIRES,
   JWT_SECRET,
   PORT,
@@ -14,6 +15,7 @@ export type WorkEnvironment = "local" | "test" | "staging" | "production";
 
 export interface WorkConfig {
   appEnv: WorkEnvironment;
+  host: string;
   port: number;
   databaseUrl: string;
   directDatabaseUrl: string;
@@ -58,6 +60,7 @@ function parseEnvironment(value: string | undefined): WorkEnvironment {
 
 const STATIC_CONFIG: WorkConfig = {
   appEnv: APP_ENV,
+  host: HOST,
   port: PORT,
   databaseUrl: DATABASE_URL,
   directDatabaseUrl: DIRECT_DATABASE_URL,
@@ -75,6 +78,7 @@ export function loadConfig(overrides: WorkConfigOverrides = {}): WorkConfig {
 
   return {
     appEnv: parseEnvironment(configured.appEnv),
+    host: required(configured.host, "HOST"),
     port: parsePort(configured.port),
     databaseUrl: required(configured.databaseUrl, "DATABASE_URL"),
     directDatabaseUrl: required(configured.directDatabaseUrl, "DIRECT_DATABASE_URL"),

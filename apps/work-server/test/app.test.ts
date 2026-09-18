@@ -66,6 +66,7 @@ type Store = {
 
 const config: WorkConfig = {
   appEnv: "test",
+  host: "127.0.0.1",
   port: 0,
   databaseUrl: "postgresql://test/test",
   directDatabaseUrl: "postgresql://test/test",

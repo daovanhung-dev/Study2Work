@@ -74,7 +74,7 @@ corepack pnpm dev:work-server
 corepack pnpm dev:work-web
 ```
 
-Work API listens on port `3000`; Work Web listens on Vite port `5174`. Work
+Work API listens on `127.0.0.1:3002`; Work Web listens on `127.0.0.2:3001`. Work
 authentication is JWT Bearer-only with the browser token stored under
 `access_token`. No Work runtime reads `.env`, cookies, or server-side sessions.
 

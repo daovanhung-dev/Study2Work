@@ -6,7 +6,8 @@
  * documentation or context.
  */
 export const APP_ENV = "local" as const;
-export const PORT = 3000;
+export const HOST = "127.0.0.1";
+export const PORT = 3002;
 
 export const DATABASE_URL =
   "postgresql://neondb_owner:npg_KbI87qFogAHp@ep-noisy-fog-b3rlle00.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require";
