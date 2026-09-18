@@ -1,63 +1,62 @@
-import { NextFunction, Request, Response } from "express";
-import { randomUUID } from "node:crypto";
-import { TokenPayload, verifyToken } from "../utils/jwt.js";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 
-function rejectAuthentication(req: Request, res: Response, status: 401 | 403): void {
-  const trace = req.get("X-Trace-Id") || randomUUID();
-  res.setHeader("X-Trace-Id", trace);
-  res.status(status).json({
-    success: false,
-    businessCode: status === 401 ? "UNAUTHORIZED" : "FORBIDDEN",
-    message: status === 401 ? "Yêu cầu Bearer token hợp lệ." : "Bạn không có quyền truy cập.",
-    data: null,
-    meta: {},
-    traceId: trace,
-  });
-}
+import type { WorkConfig } from "../core/config.js";
+import { ApiError } from "../core/responses.js";
+import { decodeAccessToken, type WorkTokenPayload } from "../core/security/access-token.js";
 
-function extractBearerToken(req: Request): string | null {
-  const authorization = req.get("authorization");
-  if (!authorization) return null;
-
-  const match = authorization.match(/^Bearer\s+([^\s]+)$/i);
+function extractBearerToken(request: Request): string | null {
+  const authorization = request.headers.authorization;
+  if (!authorization || Array.isArray(authorization)) return null;
+  const match = /^Bearer\s+([^\s]+)$/i.exec(authorization);
   return match?.[1] ?? null;
 }
 
-/** Parse the optional Bearer token once for every request. */
-export function authenticateToken(req: Request, _res: Response, next: NextFunction): void {
-  const token = extractBearerToken(req);
-  if (!token) {
-    next();
-    return;
-  }
-
-  try {
-    req.user = verifyToken(token);
-    req.authenticated = true;
-  } catch {
-    req.authenticated = false;
-  }
-
-  next();
-}
-
-export function ensureAuthenticated(req: Request, res: Response, next: NextFunction): void {
-  if (req.user && req.authenticated !== false) {
-    next();
-    return;
-  }
-
-  rejectAuthentication(req, res, 401);
-}
-
-export function checkRole(role: string) {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    const user = req.user as TokenPayload | undefined;
-    if (user && req.authenticated !== false && user.role === role) {
+export function authenticateToken(config: WorkConfig): RequestHandler {
+  return (request, _response, next) => {
+    const token = extractBearerToken(request);
+    if (!token) {
       next();
       return;
     }
 
-    rejectAuthentication(req, res, req.user ? 403 : 401);
+    try {
+      request.user = decodeAccessToken(config, token);
+      request.authenticated = true;
+    } catch {
+      request.authenticated = false;
+    }
+    next();
   };
 }
+
+export function ensureAuthenticated(request: Request, _response: Response, next: NextFunction): void {
+  if (request.user && request.authenticated !== false) {
+    next();
+    return;
+  }
+  next(new ApiError({
+    statusCode: 401,
+    businessCode: "UNAUTHORIZED",
+    message: "Yêu cầu Bearer token hợp lệ.",
+  }));
+}
+
+export function checkRole(role: "student" | "business") {
+  return (request: Request, _response: Response, next: NextFunction): void => {
+    const user = request.user as WorkTokenPayload | undefined;
+    if (user && request.authenticated !== false && user.role === role) {
+      next();
+      return;
+    }
+
+    next(new ApiError({
+      statusCode: user ? 403 : 401,
+      businessCode: user ? "FORBIDDEN" : "UNAUTHORIZED",
+      message: user ? "Bạn không có quyền truy cập." : "Yêu cầu Bearer token hợp lệ.",
+    }));
+  };
+}
+
+export type AuthenticatedRequest = Request & {
+  user: WorkTokenPayload;
+};

@@ -31,11 +31,23 @@ handling for student and business flows. The React frontend lives in
 +-- prisma/       # Prisma schema and migrations
 +-- public/       # Static assets
 +-- src/
-|   +-- config/       # Prisma, Supabase, upload config
-|   +-- middleware/   # JWT authentication middleware
-|   +-- routes/       # Express route definitions
-|   +-- services/     # Data access and domain services
+|   +-- api/v1.ts     # Versioned route composition only
+|   +-- core/         # Config, DI, trace, responses, exceptions, security
+|   +-- modules/      # models/validate/view/query per wired domain
+|   +-- config/       # Upload and legacy integration config
+|   +-- middleware/   # JWT authentication boundary
+|   +-- routes/       # Compatibility re-export for old imports
+|   +-- services/     # Legacy/unwired services kept for compatibility
 +-- uploads/      # Runtime uploads, ignored except .gitkeep
+```
+
+The request lifecycle is intentionally Study-style while remaining Express and
+Prisma-native:
+
+```text
+main -> createApp -> config/middleware/trace/auth -> api/v1
+     -> models/validate -> view/use-case -> query/repository -> Prisma
+     -> canonical response or centralized exception handler
 ```
 
 ## Setup
@@ -52,6 +64,8 @@ From the repository root, the equivalent split development commands are:
 ```bash
 corepack pnpm --filter work_server prisma:validate
 corepack pnpm --filter work_server prisma:generate
+corepack pnpm --filter work_server typecheck
+corepack pnpm --filter work_server test
 corepack pnpm --filter work_server s2w
 corepack pnpm --filter work-web dev
 ```
@@ -75,9 +89,21 @@ npm run prisma:migrate:deploy
 npm run s2w
 ```
 
-The server reads its runtime configuration from `src/utils/constants.ts` and
+The server reads typed runtime configuration from `src/core/config.ts` and
 connects to Neon through the pooled URL. Prisma migration commands use the
-direct Neon endpoint through the local CLI wrapper.
+direct Neon endpoint through the local CLI wrapper. `APP_ENV` and `REDIS_URL`
+are optional; Redis is reported as configured/not_configured by readiness and
+does not add a runtime Redis dependency.
+
+System routes are now wired:
+
+- `GET /api/v1` → `SYSTEM_ROOT_LOADED`
+- `GET /health/live` → `SYSTEM_HEALTH_LIVE`
+- `GET /health/ready` → `SYSTEM_HEALTH_READY`, or `503 DEPENDENCY_UNAVAILABLE`
+
+The target Work catalog still contains domains that are deliberately not wired
+in this compatibility refactor (tenant, billing, university, interview,
+storage and webhook operations).
 
 ## Configuration and authentication
 

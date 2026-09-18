@@ -2,7 +2,7 @@
 
 ## Configuration
 
-`apps/work-server/src/utils/constants.ts` is the runtime configuration source.
+`apps/work-server/src/core/config.ts` is the runtime configuration source.
 The Express server does not call `dotenv.config()` or read runtime values from
 `.env`. The process launcher must provide `DATABASE_URL`,
 `DIRECT_DATABASE_URL`, and a `JWT_SECRET` with at least 32 characters; the
@@ -12,6 +12,7 @@ Prisma CLI commands receive the constants through
 
 ## JWT authentication
 
+`src/core/security/access-token.ts` owns HS256 signing/verification and
 `src/middleware/auth.middleware.ts` parses exactly one
 `Authorization: Bearer <JWT>` header and verifies it with
 `src/utils/jwt.ts`. A valid payload must contain numeric `id`, string `email`
@@ -28,7 +29,8 @@ login best-effort rehashes that row. The canonical request key is `password`;
 
 ## Prisma
 
-Services use the shared Prisma client in `src/config/prisma.config.ts` with
-Neon PostgreSQL. `SinhVien.matkhau` and `DoanhNghiep.matkhau` are
+`src/core/database.ts` creates Prisma and `src/core/dependencies.ts` injects it
+into `createApp` and module views. `src/config/prisma.config.ts` is retained as
+a compatibility export. `SinhVien.matkhau` and `DoanhNghiep.matkhau` are
 `VARCHAR(255)`. Do not construct an additional Prisma client in a domain
 module. API selects exclude both password columns.

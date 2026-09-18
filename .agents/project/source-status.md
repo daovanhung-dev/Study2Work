@@ -74,14 +74,22 @@ Current evidence:
 ## Work server
 
 ```text
-RUNTIME_STATUS: VERIFIED_EXPRESS_JSON_API
-OPENAPI_STATUS: SOURCE_ALIGNED_LEGACY_WEB; TARGET_CONTRACT_DISCREPANCY
+RUNTIME_STATUS: SOURCE_CHANGED_STUDY_STYLE_COMPATIBILITY_API
+OPENAPI_STATUS: LEGACY_WEB_ALIGNED; SYSTEM_ROUTES_VERIFIED; TARGET_DOMAIN_DISCREPANCY
 DATABASE_SCHEMA_STATUS: VERIFIED_PRISMA_12_MODELS
-HEALTH_ROUTE_STATUS: NOT_FOUND
+HEALTH_ROUTE_STATUS: VERIFIED_INJECTED_PROBE
 ```
 
-- `src/main.ts` connects the shared Prisma client before listening on port 3000;
-  `src/app.ts` mounts JSON/static/upload middleware and only `/api/v1`.
+- `src/main.ts` loads environment config, creates injected dependencies, connects
+  Prisma before listening and gracefully disconnects on shutdown; `src/app.ts`
+  exposes `createApp(options)` for fake-dependency HTTP tests.
+- `src/core/` owns typed config, Prisma factory, trace context, response/error
+  envelopes, centralized exception mapping and HS256 security helpers.
+- `src/api/v1.ts` only composes route modules. Auth, students, businesses, jobs,
+  CV and applications use `models/validate/view/query`; `src/routes/api_routes.ts`
+  is a compatibility re-export.
+- `GET /api/v1`, `/health/live`, and `/health/ready` are wired. Ready probes the
+  injected Prisma dependency and returns `503 DEPENDENCY_UNAVAILABLE` on failure.
 - Current API routes cover student/business login, student registration, public
   jobs, `/me`, student CV/applications and business jobs/applications/CV detail.
   Chat, notifications, interviews, university, TopCV/TopJD and Admin routes are
@@ -92,6 +100,9 @@ HEALTH_ROUTE_STATUS: NOT_FOUND
 - Prisma source is the 12-model legacy Work schema. Supabase config/dependency,
   callback auth helper and empty chat/notification/top services are declared but
   not used by the current route graph.
+- `test/app.test.ts` provides injected Supertest coverage; normal npm/pnpm
+  scripts are declared, while this shell uses a Deno fallback because Node is
+  unavailable.
 
 ## Work web
 

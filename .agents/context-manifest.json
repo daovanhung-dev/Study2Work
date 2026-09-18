@@ -183,7 +183,7 @@
     },
     "server-work": {
       "mode": "DEEP",
-      "status": "VERIFIED_EXPRESS_JSON_API",
+      "status": "SOURCE_CHANGED",
       "entry": ".agents/server-work/AGENTS.md",
       "index": ".agents/server-work/INDEX.md",
       "pages": [
@@ -201,6 +201,7 @@
       ],
       "trackedRoots": [
         "apps/work-server/src",
+        "apps/work-server/test",
         "apps/work-server/scripts",
         "apps/work-server/public",
         "apps/work-server/prisma",
@@ -210,12 +211,19 @@
       "requiredSourcePaths": [
         "apps/work-server/src/app.ts",
         "apps/work-server/src/main.ts",
+        "apps/work-server/src/api/v1.ts",
+        "apps/work-server/src/core/config.ts",
+        "apps/work-server/src/core/dependencies.ts",
+        "apps/work-server/src/core/database.ts",
+        "apps/work-server/src/core/responses.ts",
+        "apps/work-server/src/core/exceptions.ts",
         "apps/work-server/src/config/multer.ts",
         "apps/work-server/src/config/prisma.config.ts",
         "apps/work-server/src/middleware/auth.middleware.ts",
         "apps/work-server/src/routes/api_routes.ts",
         "apps/work-server/src/utils/constants.ts",
         "apps/work-server/src/utils/jwt.ts",
+        "apps/work-server/test/app.test.ts",
         "apps/work-server/prisma/schema.prisma",
         "apps/work-server/package.json"
       ]

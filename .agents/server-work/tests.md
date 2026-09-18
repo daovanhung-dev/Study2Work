@@ -1,11 +1,16 @@
 # Work server tests
 
-There is no checked-in server test runner or server integration test suite for
-the current Express application. Use these source-level checks when the Node
-toolchain is available:
+The checked-in server integration suite is `test/app.test.ts`. It uses Supertest
+against `createApp({ config, dependencies })` with an injected fake Prisma
+dependency, so it does not connect Neon or require Docker. It covers system
+routes, readiness failure, trace propagation, safe errors, auth/password alias,
+role boundaries, registration, jobs and duplicate applications.
+
+Use these checks when the Node toolchain is available:
 
 ```bash
 ./node_modules/.bin/tsc --noEmit
+npm test
 npm run prisma:validate
 npm run prisma:generate
 ```
@@ -19,9 +24,9 @@ duplicate registration/CV/application, invalid IDs/pagination, and the absence
 of `matkhau` in responses. Do not claim these scenarios are currently
 automated.
 
-When Node/npm is unavailable, record the commands as
-`DECLARED_NOT_RUNNABLE`; source/static checks do not constitute integration
-coverage.
+When Node/npm is unavailable, the equivalent Deno fallback can execute the
+workspace-installed TypeScript/Vitest CLIs for static and focused checks; the
+normal npm/pnpm scripts remain the canonical CI commands.
 
 The Work Web tests live under `apps/work-client/web/src/` and cover role access,
 Bearer header/credential behavior and local token clearing. The mobile tests

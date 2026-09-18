@@ -12,5 +12,6 @@ Source root: `apps/work-server/`
 | Tests/validation | `tests.md` |
 | Coding/fix workflow | `workflows/README.md` |
 
-Always verify `src/app.ts`, `src/main.ts`, `src/routes/`, `src/services/` and
+Always verify `src/app.ts`, `src/main.ts`, `src/api/v1.ts`, `src/core/`,
+`src/modules/`, the compatibility `src/routes/api_routes.ts`, and
 `prisma/schema.prisma` before changing a claim in these pages.

@@ -6,6 +6,7 @@ export {};
 declare global {
   namespace Express {
     interface Request {
+      traceId?: string;
       user?: {
         id: number;
         email: string;
