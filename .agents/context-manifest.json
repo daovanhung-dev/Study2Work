@@ -1,9 +1,10 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "sourceCommit": "9a70eb6764a6587093a92d3bd7e4cc0bea1651c4",
   "generatedAt": "2026-09-18",
   "rootRouter": "AGENTS.md",
   "registry": ".agents/AGENTS.md",
+  "skillsIndex": ".agents/skills/INDEX.md",
   "legacyPathsMustNotExist": [
     "apps/study-server/.agent",
     "apps/study-server/AGENTS.md"
@@ -17,8 +18,128 @@
       ".agents/project/database.md",
       ".agents/project/dependencies.md",
       ".agents/project/design.md",
-      ".agents/project/source-status.md"
+      ".agents/project/source-status.md",
+      ".agents/project/contracts.md",
+      ".agents/project/workflows.md"
     ]
+  },
+  "worklog": {
+    "index": ".agents/worklog/README.md",
+    "template": ".agents/worklog/TEMPLATE.md",
+    "requiredFields": [
+      "task_id",
+      "primary_task_type",
+      "secondary_task_types",
+      "project_scopes",
+      "cross_scope_dependencies",
+      "expected_behavior",
+      "current_behavior",
+      "source_trace",
+      "discrepancies",
+      "verification",
+      "context_updates"
+    ]
+  },
+  "skills": {
+    "createDD-markdown": {
+      "status": "SOURCE_BACKED",
+      "entry": ".agents/skills/create_dd/docs/dd/createDD_MARKDOWN_SKILL.md",
+      "triggers": [
+        "API detail design",
+        "DD Markdown",
+        "API contract conversion",
+        "request/response/data mapping review"
+      ],
+      "scopeRefs": ["server-study", "server-work", "server-ai", "web-work"],
+      "workflowRefs": ["docs-dd", "cross-scope-contract"],
+      "resourcePaths": [
+        ".agents/skills/create_dd/docs/dd/DD_API_Template_MD",
+        ".agents/skills/create_dd/docs/dd/Examples/HOKAN_K00GetLabelInfo",
+        ".agents/skills/create_dd/docs/dd/Examples/VQ2T_PARAM_I01SaveRemovalPart"
+      ]
+    }
+  },
+  "workflows": {
+    "coding": {
+      "status": "VERIFIED",
+      "entry": ".agents/project/workflows.md",
+      "triggers": ["coding"],
+      "scopeRefs": ["all"],
+      "verificationCommands": ["scope-specific focused tests", "context validator"]
+    },
+    "fix": {
+      "status": "VERIFIED",
+      "entry": ".agents/project/workflows.md",
+      "triggers": ["fix", "bug", "regression"],
+      "scopeRefs": ["all"],
+      "verificationCommands": ["reproduction or regression test", "context validator"]
+    },
+    "test": {
+      "status": "VERIFIED",
+      "entry": ".agents/project/workflows.md",
+      "triggers": ["test", "verification", "validation"],
+      "scopeRefs": ["all"],
+      "verificationCommands": ["focused test command", "scope test command"]
+    },
+    "docs-dd": {
+      "status": "VERIFIED_WITH_BLOCKED_GENERATOR",
+      "entry": ".agents/project/workflows.md",
+      "triggers": ["docs", "DD", "API documentation", "contract documentation"],
+      "scopeRefs": ["server-study", "server-work", "server-ai", "web-work"],
+      "verificationCommands": ["contract validator", "DD markup/link validation"]
+    },
+    "cross-scope-contract": {
+      "status": "VERIFIED",
+      "entry": ".agents/project/workflows.md",
+      "triggers": ["shared contract", "Study to Work", "API boundary"],
+      "scopeRefs": ["all"],
+      "verificationCommands": ["contracts:validate", "context validator"]
+    },
+    "worklog": {
+      "status": "VERIFIED",
+      "entry": ".agents/worklog/README.md",
+      "triggers": ["every task", "context update", "handoff"],
+      "scopeRefs": ["all"],
+      "verificationCommands": ["required-field checklist", "context validator"]
+    }
+  },
+  "contracts": {
+    "api-guidelines": {
+      "path": "contracts/api-guidelines/README.md",
+      "producer": "repository API conventions",
+      "consumers": ["server-study", "server-work", "web-work"],
+      "status": "VERIFIED"
+    },
+    "study-work-events": {
+      "path": "contracts/events/study-work",
+      "producer": "Study",
+      "consumers": ["Work"],
+      "status": "DECLARED_NOT_RUNNABLE"
+    },
+    "work-openapi": {
+      "path": "contracts/openapi/work",
+      "producer": "Work API contract files",
+      "consumers": ["server-work", "web-work"],
+      "status": "DISCREPANCY"
+    },
+    "study-openapi": {
+      "path": "contracts/openapi/study",
+      "producer": "Study API",
+      "consumers": ["server-study", "study-web"],
+      "status": "NOT_FOUND"
+    },
+    "skill-taxonomy": {
+      "path": "contracts/skill-taxonomy",
+      "producer": "repository skill taxonomy",
+      "consumers": ["future domain modules"],
+      "status": "VERIFIED"
+    },
+    "db-admin-local": {
+      "path": "apps/db-admin-server/app/core/contracts.py",
+      "producer": "db-admin-server",
+      "consumers": ["db-admin-web"],
+      "status": "VERIFIED"
+    }
   },
   "scopes": {
     "server-study": {
@@ -167,7 +288,57 @@
         "apps/work-client/web/src/styles/main.css",
         "apps/work-client/web/index.html",
         "apps/work-client/web/vite.config.ts"
-      ]
+      ],
+      "subcontexts": {
+        "study-web": {
+          "mode": "DEEP",
+          "status": "SOURCE_BACKED_SKELETON",
+          "entry": ".agents/web-work/study/AGENTS.md",
+          "index": ".agents/web-work/study/INDEX.md",
+          "pages": [
+            ".agents/web-work/study/architecture.md",
+            ".agents/web-work/study/api.md",
+            ".agents/web-work/study/tests.md",
+            ".agents/web-work/study/workflows/README.md"
+          ],
+          "sourceRoots": ["apps/study-client"],
+          "trackedRoots": ["apps/study-client/src", "apps/study-client/package.json", "apps/study-client/vite.config.ts", "apps/study-client/tsconfig.json"],
+          "requiredSourcePaths": [
+            "apps/study-client/src/main.ts",
+            "apps/study-client/src/App.vue",
+            "apps/study-client/src/app/router/index.ts",
+            "apps/study-client/src/pages/HomePage.vue",
+            "apps/study-client/src/shared/api/http.ts",
+            "apps/study-client/src/shared/api/envelope.ts",
+            "apps/study-client/src/shared/api/envelope.test.ts",
+            "apps/study-client/src/styles/main.css",
+            "apps/study-client/package.json",
+            "apps/study-client/vite.config.ts"
+          ]
+        },
+        "work-web": {
+          "mode": "DEEP",
+          "status": "VERIFIED_REACT_EXPRESS_SPLIT",
+          "entry": ".agents/web-work/AGENTS.md",
+          "index": ".agents/web-work/INDEX.md",
+          "pages": [
+            ".agents/web-work/architecture.md",
+            ".agents/web-work/conventions.md",
+            ".agents/web-work/dependencies.md",
+            ".agents/web-work/modules/README.md",
+            ".agents/web-work/workflows/README.md"
+          ],
+          "sourceRoots": ["apps/work-client/web"],
+          "trackedRoots": ["apps/work-client/web/src", "apps/work-client/web/package.json", "apps/work-client/web/tsconfig.json", "apps/work-client/web/vite.config.ts"],
+          "requiredSourcePaths": [
+            "apps/work-client/web/src/app/router.tsx",
+            "apps/work-client/web/src/shared/api/work.ts",
+            "apps/work-client/web/src/shared/auth/store.ts",
+            "apps/work-client/web/src/app/router.test.ts",
+            "apps/work-client/web/src/shared/api/work.test.ts"
+          ]
+        }
+      }
     },
     "mobile-work": {
       "mode": "DEEP",
@@ -216,7 +387,14 @@
       "status": "VERIFIED",
       "entry": ".agents/db-admin/AGENTS.md",
       "index": ".agents/db-admin/INDEX.md",
-      "pages": [],
+      "pages": [
+        ".agents/db-admin/architecture.md",
+        ".agents/db-admin/apis/README.md",
+        ".agents/db-admin/core/security-audit.md",
+        ".agents/db-admin/database.md",
+        ".agents/db-admin/tests.md",
+        ".agents/db-admin/workflows/README.md"
+      ],
       "sourceRoots": [
         "apps/db-admin-web",
         "apps/db-admin-server"
@@ -227,8 +405,19 @@
       ],
       "requiredSourcePaths": [
         "apps/db-admin-web/src/main.ts",
+        "apps/db-admin-web/scripts/dev.mjs",
+        "apps/db-admin-web/package.json",
         "apps/db-admin-server/app/main.py",
-        "apps/db-admin-server/app/api/routes.py"
+        "apps/db-admin-server/app/api/routes.py",
+        "apps/db-admin-server/app/core/contracts.py",
+        "apps/db-admin-server/app/core/runtime.py",
+        "apps/db-admin-server/app/core/database.py",
+        "apps/db-admin-server/app/services/audit.py",
+        "apps/db-admin-server/scripts/bootstrap_access.py",
+        "apps/db-admin-server/sql/db_admin/001_bootstrap.sql",
+        "apps/db-admin-server/pyproject.toml",
+        "apps/db-admin-server/tests/test_security_contracts.py",
+        "apps/db-admin-server/tests/test_bootstrap_access.py"
       ]
     }
   }

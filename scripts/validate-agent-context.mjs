@@ -58,12 +58,34 @@ function collectDirectories(path, output = []) {
   return output;
 }
 
-function contextFiles(manifest) {
-  const roots = [".agents/project"];
-  for (const scope of Object.values(manifest.scopes ?? {})) {
-    roots.push(dirname(scope.entry));
+function contextNodes(manifest) {
+  const nodes = [];
+  const visit = (name, node, parent = null) => {
+    nodes.push({ name, node, parent });
+    for (const [childName, child] of Object.entries(node.subcontexts ?? {})) {
+      visit(`${name}/${childName}`, child, name);
+    }
+  };
+
+  for (const [scopeName, scope] of Object.entries(manifest.scopes ?? {})) {
+    visit(scopeName, scope);
   }
+  return nodes;
+}
+
+function contextFiles(manifest) {
+  const roots = [".agents/project", ".agents/worklog"];
+  for (const { node } of contextNodes(manifest)) roots.push(dirname(node.entry));
   return [...new Set(roots.flatMap((root) => collectFiles(root)))].sort();
+}
+
+function skillFiles() {
+  return collectFiles(".agents/skills").filter((file) => file.endsWith(".md"));
+}
+
+function resourceFiles(path) {
+  if (!existsSync(resolve(repoRoot, path))) return [];
+  return collectFiles(path).length > 0 ? collectFiles(path) : [path];
 }
 
 function registeredContextFiles(manifest) {
@@ -72,12 +94,46 @@ function registeredContextFiles(manifest) {
     registered.add(manifest.project.index);
     for (const page of manifest.project.pages ?? []) registered.add(page);
   }
-  for (const scope of Object.values(manifest.scopes ?? {})) {
-    registered.add(scope.entry);
-    registered.add(scope.index);
-    for (const page of scope.pages ?? scope.requiredPages ?? []) registered.add(page);
+  for (const { node } of contextNodes(manifest)) {
+    registered.add(node.entry);
+    registered.add(node.index);
+    for (const page of node.pages ?? node.requiredPages ?? []) registered.add(page);
+  }
+  if (manifest.worklog) {
+    registered.add(manifest.worklog.index);
+    registered.add(manifest.worklog.template);
+  }
+  if (manifest.skillsIndex) registered.add(manifest.skillsIndex);
+  for (const skill of Object.values(manifest.skills ?? {})) {
+    registered.add(skill.entry);
+    for (const resourcePath of skill.resourcePaths ?? []) {
+      for (const file of resourceFiles(resourcePath)) registered.add(file);
+    }
   }
   return registered;
+}
+
+function checkContextNode(label, node, parentIndexText = "") {
+  mustExist(node.entry, `${label} entry`);
+  mustExist(node.index, `${label} context index`);
+  const entry = existsSync(resolve(repoRoot, node.entry))
+    ? readFileSync(resolve(repoRoot, node.entry), "utf8")
+    : "";
+  if (!entry.includes(basename(node.index))) {
+    fail(`${label} entry does not reference ${node.index}`);
+  }
+
+  const index = existsSync(resolve(repoRoot, node.index))
+    ? readFileSync(resolve(repoRoot, node.index), "utf8")
+    : "";
+  for (const page of node.pages ?? node.requiredPages ?? []) {
+    mustExist(page, `${label} context page`);
+    if (!index.includes(basename(page))) fail(`${label} index does not reference ${page}`);
+  }
+  if (parentIndexText && node.entry !== node.index && !parentIndexText.includes(basename(node.entry))) {
+    fail(`${label} parent index does not reference ${node.entry}`);
+  }
+  return index;
 }
 
 function checkPageGraph(manifest, registry) {
@@ -94,24 +150,14 @@ function checkPageGraph(manifest, registry) {
     }
   }
 
-  for (const [scopeName, scope] of Object.entries(manifest.scopes ?? {})) {
-    mustExist(scope.index, `${scopeName} context index`);
-    const entry = existsSync(resolve(repoRoot, scope.entry))
-      ? readFileSync(resolve(repoRoot, scope.entry), "utf8")
+  for (const { name, node, parent } of contextNodes(manifest)) {
+    const parentIndex = parent
+      ? contextNodes(manifest).find((item) => item.name === parent)?.node.index
       : "";
-    if (!entry.includes(basename(scope.index))) {
-      fail(`${scopeName} entry does not reference ${scope.index}`);
-    }
-
-    const index = existsSync(resolve(repoRoot, scope.index))
-      ? readFileSync(resolve(repoRoot, scope.index), "utf8")
+    const parentText = parentIndex && existsSync(resolve(repoRoot, parentIndex))
+      ? readFileSync(resolve(repoRoot, parentIndex), "utf8")
       : "";
-    for (const page of scope.pages ?? scope.requiredPages ?? []) {
-      mustExist(page, `${scopeName} context page`);
-      if (!index.includes(basename(page))) {
-        fail(`${scopeName} index does not reference ${page}`);
-      }
-    }
+    checkContextNode(name, node, parentText);
   }
 
   if (!registry.includes("project/INDEX.md")) {
@@ -119,8 +165,108 @@ function checkPageGraph(manifest, registry) {
   }
 }
 
+const VALID_STATUSES = new Set([
+  "VERIFIED",
+  "SOURCE_BACKED",
+  "SOURCE_BACKED_WITH_TEST_BLOCKER",
+  "SOURCE_BACKED_SKELETON",
+  "VERIFIED_EXPRESS_JSON_API",
+  "VERIFIED_REACT_EXPRESS_SPLIT",
+  "VERIFIED_WITH_UNWIRED_COMPONENTS",
+  "VERIFIED_WITH_BLOCKED_GENERATOR",
+  "UNWIRED",
+  "EMPTY_PLACEHOLDER",
+  "SKELETON_ONLY",
+  "NOT_FOUND",
+  "SOURCE_REQUIRED",
+  "DECLARED_NOT_RUNNABLE",
+  "DISCREPANCY",
+  "SOURCE_CHANGED",
+  "CONTEXT_STALE",
+]);
+
+function checkStatus(status, label) {
+  if (typeof status !== "string" || !VALID_STATUSES.has(status)) {
+    fail(`${label} has unsupported status: ${status}`);
+  }
+}
+
+function checkRegistries(manifest) {
+  const scopeNames = new Set(Object.keys(manifest.scopes ?? {}));
+  scopeNames.add("all");
+  for (const { name, node } of contextNodes(manifest)) {
+    checkStatus(node.status, `${name} context`);
+    for (const sourceRoot of node.sourceRoots ?? []) mustExist(sourceRoot, `${name} source root`);
+    for (const sourcePath of node.requiredSourcePaths ?? []) mustExist(sourcePath, `${name} verified source`);
+  }
+
+  if (!manifest.worklog) fail("worklog registry is missing");
+  else {
+    mustExist(manifest.worklog.index, "worklog index");
+    mustExist(manifest.worklog.template, "worklog template");
+    const worklogIndex = existsSync(resolve(repoRoot, manifest.worklog.index))
+      ? readFileSync(resolve(repoRoot, manifest.worklog.index), "utf8")
+      : "";
+    if (!worklogIndex.includes(basename(manifest.worklog.template))) {
+      fail("worklog index does not reference its template");
+    }
+    const templateText = existsSync(resolve(repoRoot, manifest.worklog.template))
+      ? readFileSync(resolve(repoRoot, manifest.worklog.template), "utf8")
+      : "";
+    const normalizedTemplate = templateText.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+    for (const field of manifest.worklog.requiredFields ?? []) {
+      if (!field.trim()) fail("worklog requiredFields contains an empty field");
+      else if (!normalizedTemplate.includes(field.toLowerCase())) {
+        fail(`worklog template is missing required field ${field}`);
+      }
+    }
+  }
+
+  if (manifest.skillsIndex) mustExist(manifest.skillsIndex, "skills index");
+  for (const [skillName, skill] of Object.entries(manifest.skills ?? {})) {
+    checkStatus(skill.status, `skill ${skillName}`);
+    mustExist(skill.entry, `skill ${skillName} entry`);
+    if (!Array.isArray(skill.triggers) || skill.triggers.length === 0) {
+      fail(`skill ${skillName} must define triggers`);
+    }
+    for (const scope of skill.scopeRefs ?? []) {
+      if (!scopeNames.has(scope) && ![...contextNodes(manifest).map((item) => item.name)].includes(scope)) {
+        fail(`skill ${skillName} references unknown scope ${scope}`);
+      }
+    }
+    for (const resourcePath of skill.resourcePaths ?? []) mustExist(resourcePath, `skill ${skillName} resource`);
+  }
+
+  for (const [workflowName, workflow] of Object.entries(manifest.workflows ?? {})) {
+    checkStatus(workflow.status, `workflow ${workflowName}`);
+    mustExist(workflow.entry, `workflow ${workflowName} entry`);
+    if (!Array.isArray(workflow.triggers) || workflow.triggers.length === 0) {
+      fail(`workflow ${workflowName} must define triggers`);
+    }
+    if (!Array.isArray(workflow.verificationCommands) || workflow.verificationCommands.length === 0) {
+      fail(`workflow ${workflowName} must define verificationCommands`);
+    }
+    for (const scope of workflow.scopeRefs ?? []) {
+      if (!scopeNames.has(scope)) fail(`workflow ${workflowName} references unknown scope ${scope}`);
+    }
+  }
+
+  for (const [contractName, contract] of Object.entries(manifest.contracts ?? {})) {
+    checkStatus(contract.status, `contract ${contractName}`);
+    mustExist(contract.path, `contract ${contractName} path`);
+    if (!contract.producer || !Array.isArray(contract.consumers)) {
+      fail(`contract ${contractName} must define producer and consumers`);
+    }
+  }
+}
+
 function checkInternalLinks(manifest) {
-  const files = ["AGENTS.md", ".agents/AGENTS.md", ...contextFiles(manifest)];
+  // Skill bodies contain intentional template/example placeholders such as
+  // `./07_<mapping>.md`; validate the skill registry/index links here and
+  // validate resource existence separately, but do not treat those examples
+  // as repository context page links.
+  const registryFiles = [manifest.skillsIndex].filter(Boolean);
+  const files = ["AGENTS.md", ".agents/AGENTS.md", ...contextFiles(manifest), ...registryFiles];
   const markdownLink = /\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 
   for (const file of files) {
@@ -188,7 +334,7 @@ try {
 }
 
 if (manifest) {
-  if (manifest.schemaVersion !== 2) fail(`unsupported schemaVersion: ${manifest.schemaVersion}`);
+  if (manifest.schemaVersion !== 3) fail(`unsupported schemaVersion: ${manifest.schemaVersion}`);
   if (typeof manifest.sourceCommit !== "string" || !/^[0-9a-f]{40}$/.test(manifest.sourceCommit)) {
     fail("manifest.sourceCommit must be a 40-character git SHA");
   }
@@ -204,10 +350,14 @@ if (manifest) {
 
   checkNoAgentContextInApps();
   checkPageGraph(manifest, registry);
+  checkRegistries(manifest);
 
   const registered = registeredContextFiles(manifest);
   for (const file of contextFiles(manifest)) {
     if (!registered.has(file)) fail(`ORPHAN_CONTEXT_PAGE ${file}`);
+  }
+  for (const file of skillFiles()) {
+    if (!registered.has(file)) fail(`ORPHAN_SKILL_RESOURCE ${file}`);
   }
   checkInternalLinks(manifest);
 
@@ -216,19 +366,17 @@ if (manifest) {
     if (!rootRouter.includes(scope.entry)) fail(`root router does not reference ${scope.entry}`);
     const registryRelative = scope.entry.replace(/^\.agents\//, "");
     if (!registry.includes(registryRelative)) fail(`context registry does not reference ${registryRelative}`);
+  }
 
-    for (const sourceRoot of scope.sourceRoots ?? []) mustExist(sourceRoot, `${scopeName} source root`);
-    for (const page of scope.pages ?? scope.requiredPages ?? []) mustExist(page, `${scopeName} context page`);
-    for (const sourcePath of scope.requiredSourcePaths ?? []) mustExist(sourcePath, `${scopeName} verified source`);
-
-    if (scope.mode === "DEEP" && !skipDrift && (scope.trackedRoots?.length ?? 0) > 0) {
+  for (const { name, node } of contextNodes(manifest)) {
+    if (node.mode === "DEEP" && !skipDrift && (node.trackedRoots?.length ?? 0) > 0) {
       try {
         git(["cat-file", "-e", `${manifest.sourceCommit}^{commit}`]);
-        const changed = changedPaths(manifest.sourceCommit, scope.trackedRoots);
-        if (changed.length > 0) stale.push({ scope: scopeName, changed });
+        const changed = changedPaths(manifest.sourceCommit, node.trackedRoots);
+        if (changed.length > 0) stale.push({ scope: name, changed });
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
-        fail(`cannot evaluate source drift for ${scopeName}: ${detail}`);
+        fail(`cannot evaluate source drift for ${name}: ${detail}`);
       }
     }
   }

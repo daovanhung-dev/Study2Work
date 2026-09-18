@@ -14,7 +14,13 @@ DIAGRAM_API_CONTRACT_STATUS: APPROVED_DESIGN_CONTRACT
 
 - Root README/contract README có chỗ trỏ `docs/BD/`, nhưng directory đó không có trong source snapshot.
 - Không dùng template, diagram hoặc Git history để tự hoàn thiện request/response/business rule/database mapping thiếu.
-- `docs/lists/list_api.md` và `docs/diagrams/AC_UNICA/` là approved V1 design contract theo yêu cầu được phê duyệt; các schema và `DESIGN_*` code ở đó vẫn là `DESIGN_PROPOSAL`, không phải runtime/OpenAPI evidence.
+- `docs/lists/list_api.md` và `apps/study-server/docs/diagrams/AC_UNICA/` là
+  approved V1 design contract theo yêu cầu được phê duyệt; các schema và
+  `DESIGN_*` code ở đó vẫn là `DESIGN_PROPOSAL`, không phải runtime/OpenAPI
+  evidence.
+- Study DD và business-code artifacts hiện có dưới
+  `apps/study-server/docs/dd/` và `apps/study-server/docs/business_code/`.
+  Chúng là design/documentation evidence, không tự biến thành runtime wiring.
 - Work có hai contract file nhưng runtime source hiện tại khớp
   `contracts/openapi/work/legacy-web.openapi.json`; `openapi.json`/README mô tả
   target health/domain surface chưa được Express route đăng ký.
@@ -151,7 +157,7 @@ WEB_STATUS: VERIFIED_LOCAL_ANGULAR_APP_WITH_ONE_COMMAND_LAUNCHER
 API_STATUS: VERIFIED_LOCAL_FASTAPI_APP_WITH_INTERNAL_DEV_LAUNCHER
 DATABASE_STATUS: CONFIGURED_BY_LOCAL_CORE_CONSTANTS_ONLY
 AUTH_STATUS: JWKS_IMPLEMENTED; LOCAL_DEV_AUTH_TEST_ONLY
-AUDIT_STATUS: BOUNDED_IN_MEMORY_AND_STRUCTURED_LOG
+AUDIT_STATUS: DURABLE_CONTROL_PLANE_WITH_BOUNDED_FALLBACK
 ```
 
 - `apps/db-admin-web/` is an Angular app in the pnpm workspace. Its local
@@ -160,11 +166,17 @@ AUDIT_STATUS: BOUNDED_IN_MEMORY_AND_STRUCTURED_LOG
   and is not mounted by Study/Work/AI. Its routes, response envelope,
   permission dependencies and transaction safety are verified by its local test
   suite.
-- No live Neon schema or migration was added. Catalog metadata is read from the
-  configured database at runtime; no audit table is created.
-- `docs/business_code/code_http.md` is `NOT_FOUND` in the current working tree;
-  DB Admin business codes are currently owned/documented by its API source and
-  README until the repository catalog is restored.
+- `apps/db-admin-server/sql/db_admin/001_bootstrap.sql` và
+  `scripts/bootstrap_access.py` là control-plane bootstrap độc lập; không phải
+  Study/Work business migration. Catalog vẫn đọc metadata từ target runtime.
+- `app/services/audit.py` có durable `db_admin.admin_audit_events` path khi
+  target đã có control-plane schema, cùng bounded in-memory/structured-log
+  fallback. Việc live bootstrap đã được apply chưa được xác minh ở đây.
+- `apps/study-server/docs/business_code/code_http.md` và
+  `code_event_server.md` tồn tại cho Study; chúng phải được phân biệt với
+  runtime business-code evidence của Work/AI/DB Admin.
+- DB Admin business codes hiện được sở hữu bởi API source/README và local
+  contract; không suy diễn chúng từ Study catalog.
 
 ## Drift rule
 

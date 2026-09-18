@@ -25,6 +25,15 @@ AGENTS.md
 | Repository conventions/workflow | `conventions.md` |
 | Design system | `design.md` |
 | Snapshot/status/discrepancy | `source-status.md` |
+| Shared/local contracts | `contracts.md` |
+| Workflow routing | `workflows.md` |
+
+## Mandatory task artifacts
+
+- Skill registry: `../skills/INDEX.md`.
+- Worklog contract: `../worklog/README.md` and `../worklog/TEMPLATE.md`.
+- Expected/current behavior must remain separate; conflicts are recorded as
+  `DISCREPANCY` rather than silently resolved.
 
 `source-status.md` là nơi ghi discrepancy cấp repository; scope page vẫn phải
 được ưu tiên cho chi tiết runtime của scope đó.

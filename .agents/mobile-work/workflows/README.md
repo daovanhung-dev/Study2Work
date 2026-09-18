@@ -14,3 +14,6 @@ Với UI-only change, kiểm tra Android/iOS portrait, keyboard/IME, scroll,
 loading/empty/error, snackbar/dialog, text overflow, semantic labels và touch
 target tối thiểu 44px. Không biến state cục bộ của static screen thành
 persistence/backend behavior.
+
+Mọi task phải dùng `.agents/worklog/TEMPLATE.md`, ghi source trace và status
+verification trước khi cập nhật context; sau đó chạy context validator.

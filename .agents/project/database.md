@@ -10,7 +10,7 @@ tree hiện tại. Không lấy table/column từ Git history hoặc diagram đ�
 | Study | sync SQLAlchemy `postgresql+psycopg`; Postgres/Redis compose | current register query references `users`; migration directory `NOT_FOUND` |
 | AI | copied SQLAlchemy core, runtime không dùng | `NOT_FOUND`; không migration/model |
 | Work | Prisma + PostgreSQL/Neon | `apps/work-server/prisma/schema.prisma` + migration history |
-| DB Admin | SQLAlchemy + psycopg3 | two named externally configured Neon targets (`work_server`, `study_server`); runtime catalog only, no migrations |
+| DB Admin | SQLAlchemy + psycopg3 | two named backend-owned targets; runtime catalog plus independent `db_admin` control-plane bootstrap |
 
 ## Work PostgreSQL/Neon
 
@@ -59,5 +59,7 @@ schema. The backend-owned `DATABASE_TARGETS` mapping provides the named
 `work_server` and `study_server` connections; credentials are never exposed to
 Angular. Catalog queries use `information_schema` and `pg_catalog`; DDL, row
 CRUD and SQL execution use request-isolated transactions. DDL and row mutation
-confirmation state is bounded to the backend process, while audit entries are
-bounded in memory and structured logs only.
+confirmation state is bounded to the backend process, while audit entries have
+bounded in-memory/structured-log fallback and a durable
+`db_admin.admin_audit_events` path when the control-plane table exists. The SQL
+bootstrap is not evidence that a live target has been applied.

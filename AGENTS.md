@@ -36,6 +36,23 @@ Một task có thể có nhiều `project_scopes`. Không ép task cross-scope v
 
 Không nạp scope khác nếu chưa có dependency thật. Task qua nhiều scope phải ghi contract nối giữa chúng; ví dụ Study -> Work event dùng `contracts/events/study-work/`.
 
+## 2.1. Luồng context chuẩn
+
+```text
+AGENTS.md
+  -> .agents/AGENTS.md
+  -> .agents/project/INDEX.md (chỉ khi có boundary/contract cross-scope)
+  -> scope AGENTS.md
+  -> scope INDEX.md hoặc subcontext INDEX.md
+  -> exact source + contract/config/test
+  -> worklog cập nhật trước và sau verification
+```
+
+Skill, workflow và contract phải được tra trong machine-readable registry của
+`.agents/context-manifest.json`; không coi file tồn tại là bằng chứng đã được
+wire. Task có DD/API documentation phải load `createDD-markdown` trước khi
+authoring hoặc review.
+
 ## 3. Progressive loading
 
 ```text

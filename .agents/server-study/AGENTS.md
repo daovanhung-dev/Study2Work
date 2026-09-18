@@ -41,7 +41,9 @@ latest user requirement
 2. Không dựng lại `app.module.auth`, `app.module.ai.log` hoặc bất kỳ package legacy nào từ docs/Git history nếu requirement chưa xác nhận.
 3. `app/core/security/*` là reusable helper; API #1 là business flow duy nhất đã được triển khai/xác minh.
 4. Study DB helper không commit; caller/use-case phải sở hữu transaction khi business module tồn tại.
-5. Không invent table/column: `infra/postgres/study-server/DB.sql` và live metadata là schema evidence; migration directory vẫn chưa tồn tại.
+5. Không invent table/column: `infra/postgres/study-server/DB.sql` là checked-in
+   schema/design evidence, còn live metadata mới xác nhận runtime availability;
+   migration directory vẫn chưa tồn tại.
 6. Trước mọi runtime fix, kiểm tra toàn bộ import chain `main -> api/core` và test collection trong đúng source hiện tại.
 7. Trong module, `model.py` giữ basic contract validation; `validate.py` chỉ định nghĩa special validation thuần/reusable với field, điều kiện và message lỗi rõ ràng. Không query DB hoặc tạo side effect trong `validate.py`; `view.py` gọi special validation trước business check/query. Không áp dụng rule như `@gmail.com` nếu contract chưa xác nhận.
 8. Không coi `apps/study-server/AGENTS.md` hoặc `apps/study-server/.agent/` là context hợp lệ; canonical context duy nhất nằm dưới `.agents/server-study/`.

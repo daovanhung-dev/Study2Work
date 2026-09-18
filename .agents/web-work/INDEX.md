@@ -1,6 +1,13 @@
 # Web context index
 
-Scopes: `apps/study-client/`, `apps/work-client/web/`
+Top-level scope: `apps/study-client/`, `apps/work-client/web/`
+
+## Subcontexts
+
+| App | Entry | Index |
+|---|---|---|
+| Study Web / Vue | `study/AGENTS.md` | `study/INDEX.md` |
+| Work Web / React | `AGENTS.md` | `INDEX.md` |
 
 | Task | Page |
 |---|---|
@@ -11,4 +18,5 @@ Scopes: `apps/study-client/`, `apps/work-client/web/`
 | Coding/test workflow | `workflows/README.md` |
 
 Keep Vue Study Web and React Work Web patterns separate; inspect the exact app
-entrypoint before editing shared-looking code.
+entrypoint before editing shared-looking code. Study Web details are in the
+`study/` subcontext.

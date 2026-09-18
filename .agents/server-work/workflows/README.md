@@ -16,3 +16,6 @@ Keep NodeNext `.js` import suffixes, Express route composition, the shared Prism
 client and existing legacy table names. Do not apply Nest/Fastify, health-route,
 HTML-rendering or Study Python patterns to this server. Treat empty services and
 contract-only routes as `UNWIRED` until an actual import/registration exists.
+
+Mọi task phải dùng `.agents/worklog/TEMPLATE.md`; khi API contract và route
+source khác nhau, ghi `DISCREPANCY` và chạy contract validator/context validator.

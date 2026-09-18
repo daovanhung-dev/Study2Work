@@ -469,6 +469,20 @@ Chỉ được nói “đã đọc 100%” khi tất cả file in-scope đạt 1
 
 Không tự chọn bên đúng khi nguồn chính thức và implementation khác nhau. Phải báo `document–implementation drift`.
 
+## 7.2a. Repository runtime precedence override
+
+Trong Study2Work, skill này phải tách hai mặt bằng chứng trước khi authoring:
+
+- `EXPECTED_BEHAVIOR`: yêu cầu mới nhất, canonical contract hoặc approved DD.
+- `CURRENT_BEHAVIOR`: source code hiện tại, test thực sự runnable và executable
+  config/wiring.
+
+Khi tài liệu/contract và implementation khác nhau, không dùng thứ tự tài liệu
+ở trên để silently ghi đè runtime fact. Gắn `DISCREPANCY` hoặc
+`document–implementation drift`, ghi riêng expected/current evidence và giữ
+status `UNWIRED`, `DECLARED_NOT_RUNNABLE`, `NOT_FOUND` hoặc `SOURCE_REQUIRED`
+khi phù hợp. Không tạo field/table/route/business rule để lấp khoảng trống.
+
 ## 7.3. Mức độ bằng chứng
 
 | Loại | Ý nghĩa | Cách ghi |

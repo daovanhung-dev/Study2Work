@@ -58,3 +58,7 @@ After edit:
 Do not declare a test or runtime flow verified from source reading alone.
 
 Special rule: because Study has multiple independent import mismatches, a fix for the first exception is not enough evidence that the app is runnable. Re-import the composition root and continue until the approved task boundary is satisfied.
+
+Mọi task phải tạo/cập nhật worklog theo `.agents/worklog/TEMPLATE.md`, tách
+`EXPECTED_BEHAVIOR` khỏi `CURRENT_BEHAVIOR` và ghi blocker collection bằng
+`DECLARED_NOT_RUNNABLE` khi chưa chạy được.

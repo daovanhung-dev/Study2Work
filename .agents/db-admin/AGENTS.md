@@ -83,3 +83,7 @@ PYTHONPATH=. pytest -q
 ```
 
 No live Neon mutation is part of the verified local test suite.
+
+Detailed routing: `INDEX.md`, `architecture.md`, `apis/README.md`,
+`core/security-audit.md`, `database.md`, `tests.md` and
+`workflows/README.md`. Update the global worklog for every DB Admin task.
