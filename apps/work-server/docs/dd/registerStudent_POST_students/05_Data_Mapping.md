@@ -2,64 +2,63 @@
 title: "Data Mapping"
 order: 5
 dd_id: "registerStudent"
-api_name: "Register student"
+api_name: "students.view.registerStudent"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Data Mapping
 
-## Flow xử lý data
+## Execution flow
 
-## 1. Get thông tin
+1. `traceMiddleware` accepts a valid `X-Trace-Id` or generates a UUID.
+2. `express.json`/Multer parses the request according to the route transport.
+3. Auth middleware optionally decodes Bearer JWT; protected route middleware enforces authentication and role.
+4. Route parses model and calls the module view/use-case.
+5. View validates, applies business rule and calls query/repository functions.
+6. Prisma result is mapped through the success envelope; errors go to centralized exception mapping.
 
-### 1.1. Get request header và token
+## Request Usage Matrix
 
-- N/A — route public; `authenticateToken` chỉ parse Bearer nếu client gửi nhưng handler không yêu cầu token.
+| No | Location | Name | Rule | Use | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | header | X-Trace-Id | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 2 | body | hoten | trim(); min length 1 | Student name. | [apps/work-server/src/modules/students/models.ts](../../../src/modules/students/models.ts) |
+| 3 | body | email | trim(); valid email format | Unique student email. | [apps/work-server/src/modules/students/models.ts](../../../src/modules/students/models.ts) |
+| 4 | body | matkhau | minimum 6 characters; stored as bcrypt hash | Plaintext input only; never returned. | [apps/work-server/src/modules/students/models.ts](../../../src/modules/students/models.ts) |
+| 5 | body | chuyennganh | optional string | Student major; defaults to empty string on create. | [apps/work-server/src/modules/students/models.ts](../../../src/modules/students/models.ts) |
+| 6 | file | avt | Multer filter/limit | Filename is passed to normalize function. | [apps/work-server/src/config/multer.ts](../../../src/config/multer.ts) |
 
-### 1.2. Get path/query/body data
+## Query Matrix
 
-- `hoten`: lấy từ `req.body.hoten`.
-- `email`: lấy từ `req.body.email`.
-- `matkhau`: lấy từ `req.body.matkhau`.
-- `chuyennganh`: lấy từ `req.body.chuyennganh`.
-- `avt`: lấy từ `req.file` và dùng `req.file.filename` nếu upload thành công.
+| No | Operation | Table/model | Columns/select | Where | Sort/pagination | Include/relation | Transaction |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | insertStudent | SinhVien | public select: id, hoten, email, chuyennganh, avt | N/A | N/A | N/A | N/A |
 
-## 2. Check quyền
+## Mutation Matrix
 
-### 2.1. Permission
+| No | Operation | Table/model | Condition | Fields | Value source | Transaction | Failure behavior |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | INSERT | SinhVien | N/A | hoten, email, matkhau, chuyennganh, avt | body fields; matkhau=hashPassword; chuyennganh default empty; avt filename/null | No explicit transaction | P2002 -> STUDENT_CREATE_FAILED |
 
-- N/A — public route.
+## Response Source Matrix
 
-## 3. Validate data input
+| No | Field | Kind | Source/transform | Mapping source |
+| ---: | --- | --- | --- | --- |
+| 1 | id | data field | studentPublicSelect field. | student view/query and public selector |
+| 2 | hoten | data field | studentPublicSelect field. | student view/query and public selector |
+| 3 | email | data field | studentPublicSelect field. | student view/query and public selector |
+| 4 | chuyennganh | data field | studentPublicSelect field. | student view/query and public selector |
+| 5 | avt | data field | studentPublicSelect field. | student view/query and public selector |
 
-- `hoten`, `email`, `matkhau` phải có giá trị.
-- Multer chỉ nhận extension jpeg/jpg/png/gif và giới hạn 10 MB.
+## Validation and branch rules
 
-## 4. Query và business processing
+- Multer stores optional avt and passes filename.
+- studentRegistrationSchema parses body.
+- registerStudent validates and hashes matkhau.
+- insertStudent creates SinhVien using studentPublicSelect.
+- Unique conflict is translated to STUDENT_CREATE_FAILED.
 
-### 4.1. Chuẩn bị dữ liệu
-
-- Handler đọc `hoten`, `email`, `matkhau`, `chuyennganh` từ `req.body`.
-- Handler đọc `req.file.filename` nếu có file; nếu không có thì dùng `null`.
-
-## 5. Insert/Update/Delete thông tin
-
-### 5.1. INSERT `SinhVien`
-
-- Gọi `StudentService.insertStudent`.
-- Service hash `matkhau` bằng bcrypt rồi Prisma tạo record `SinhVien` với password hash và các field profile; response dùng public projection.
-- Không có transaction explicit trong source.
-- Nếu create thất bại, trả `409 STUDENT_CREATE_FAILED`.
-- Nếu thành công, trả public projection của `SinhVien`; password hash không được chọn hoặc trả về.
-
-## 6. Map response và error
-
-- `data` là record Prisma `SinhVien` được trả nguyên từ `insertStudent`.
-- `reply` chuyển BigInt thành number và Date thành ISO string nếu có.
-- Thành công: `reply` trả HTTP `201`, `businessCode = STUDENT_CREATED`, `data` theo [04_Response.md](./04_Response.md).
-- Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
-- Chi tiết lỗi: [06_Error.md](./06_Error.md).
-- DB mapping: [07_SinhVien_insert.md](./07_SinhVien_insert.md).
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

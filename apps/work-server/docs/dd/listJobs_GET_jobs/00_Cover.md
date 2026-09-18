@@ -2,25 +2,27 @@
 title: "Cover"
 order: 0
 dd_id: "listJobs"
-api_name: "List jobs"
+api_name: "jobs.view.getJobs"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "Cover"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # `Study2Work Work Server` — API Detail Design
 
 ## Thông tin tài liệu
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | Project/System | Study2Work Work Server |
-| Module | Work API |
+| Module | Jobs |
 | Loại tài liệu | API Detail Design |
 | API ID | `listJobs` |
-| API name | List jobs |
+| API name | jobs.view.getJobs |
+| Source runtime handler/use-case | jobs.view.getJobs; query: jobs.query.listJobs |
 | HTTP method | `GET` |
 | Endpoint | `/api/v1/jobs` |
 | Version | 1.0.0 |
-| Status | Draft — Needs Confirmation |
+| Status | Draft — Ready for Review |
 | Created by | Codex |
 | Reviewed by | N/A — chưa được chỉ định |
 | Approved by | N/A — chưa được chỉ định |
@@ -31,8 +33,9 @@ status: "Draft — Needs Confirmation"
 
 ```text
 Study2Work Work Server API design
-List jobs
+jobs.view.getJobs
 ```
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

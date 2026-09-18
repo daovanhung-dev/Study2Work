@@ -2,54 +2,65 @@
 title: "Request"
 order: 3
 dd_id: "registerStudent"
-api_name: "Register student"
+api_name: "students.view.registerStudent"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "1.Request"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Request
 
 ## API endpoint
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | HTTP method | `POST` |
 | URI | `/api/v1/students` |
-| Character encoding | UTF-8 |
-| Content-Type | multipart/form-data |
+| Character encoding | `UTF-8` |
+| Content-Type | multipart/form-data or application/json |
 
 ## Request header
 
-| No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
-|---|---|---|---|---|---|---|
-| 1 | Contents type | `Content-Type` | Yes | multipart/form-data | Request media type | `05_Data_Mapping.md` |
+| No | Field name | Required | Value/Format | Description | Data Mapping reference |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `X-Trace-Id` | No | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [Request usage](./05_Data_Mapping.md#request-usage-matrix) |
 
 ## Path parameters
 
-N/A — API không nhận Path parameter.
+N/A — endpoint không có path parameter.
 
 ## Query parameters
 
-N/A — API không nhận Query parameter.
+N/A — endpoint không có query parameter.
 
 ## Request body
 
-| No | Location | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Description | Data Mapping reference |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | body | hoten | `hoten` | string | Yes | N/A | N/A | UTF-8/text | N/A | N/A | Họ tên sinh viên | `05_Data_Mapping.md` |
-| 2 | body | email | `email` | string | Yes | N/A | N/A | UTF-8/text | N/A | N/A | Email sinh viên; source không enforce format | `05_Data_Mapping.md` |
-| 3 | body | matkhau | `matkhau` | string | Yes | N/A | N/A | UTF-8/text | N/A | N/A | Password input; service hash bcrypt trước khi ghi vào `SinhVien.matkhau` | `05_Data_Mapping.md` |
-| 4 | body | chuyennganh | `chuyennganh` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Chuyên ngành; mặc định chuỗi rỗng ở handler | `05_Data_Mapping.md` |
-| 5 | file | avt | `avt` | binary file | No | N/A | N/A | UTF-8/text | jpeg\|jpg\|png\|gif; tối đa 10 MB | N/A | Ảnh đại diện; Multer lưu filename | `05_Data_Mapping.md` |
-> Mỗi field nằm trên một row riêng. `Conditional` nghĩa là source kiểm tra điều kiện kết hợp chứ không yêu cầu field đó độc lập.
+| No | Logical name | Field name | Type | Required | Validation/format | Default | Description | Data Mapping reference |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Full name | hoten | string | Yes | trim(); min length 1 | Student name. | [apps/work-server/src/modules/students/models.ts](../../../src/modules/students/models.ts) |
+| 2 | Email | email | string | Yes | trim(); valid email format | Unique student email. | [apps/work-server/src/modules/students/models.ts](../../../src/modules/students/models.ts) |
+| 3 | Password | matkhau | string | Yes | minimum 6 characters; stored as bcrypt hash | Plaintext input only; never returned. | [apps/work-server/src/modules/students/models.ts](../../../src/modules/students/models.ts) |
+| 4 | Major | chuyennganh | string | No | optional string | Student major; defaults to empty string on create. | [apps/work-server/src/modules/students/models.ts](../../../src/modules/students/models.ts) |
+| 5 | Uploaded file | avt | binary | No | jpeg/jpg/png/gif; MIME phải khớp extension; tối đa 10 MiB | Multer field; filename được normalize vào data | [apps/work-server/src/config/multer.ts](../../../src/config/multer.ts) |
 
 ## Ví dụ Request data
 
-```text
-Content-Type: multipart/form-data; boundary=client-generated-boundary
+`multipart/form-data` dùng các key trong bảng body; JSON dưới đây chỉ biểu diễn logical fields khi route cho phép JSON hoặc body rỗng.
 
-field_name = field_value
-avt = example.jpg (optional)
+```json
+{
+  "hoten": "New Student",
+  "email": "new@example.com",
+  "matkhau": "new-password",
+  "chuyennganh": "IT"
+}
 ```
+
+## Source behavior
+
+- Request được parse ở route bằng Zod model nếu route có model tương ứng.
+- Với route dùng Multer, file được xử lý trước use-case; lỗi MIME/extension/size đi vào centralized exception handler.
+- Unknown body fields chỉ được giữ lại ở bước Zod nếu model `.passthrough()`/record cho phép; use-case chỉ normalize whitelist field đã nêu.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

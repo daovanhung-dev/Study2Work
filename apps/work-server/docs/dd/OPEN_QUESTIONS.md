@@ -1,19 +1,22 @@
 # OPEN_QUESTIONS
 
-## Q-001 — Mutation transaction boundary
+## Q-001 — Legacy plaintext account migration
 
-- Source: each current route calls one Prisma mutation without an explicit transaction.
-- Impact: DD marks transaction as source-level `N/A`, not as a stronger atomicity guarantee.
-- Decision needed: define transaction/idempotency policy if multi-step flows are added.
+- Current source still accepts legacy plaintext password rows and best-effort rehashes them after successful login.
+- Operational question: define the rehash/reset window before disabling fallback.
 
-## Q-002 — Legacy plaintext account migration
+## Q-002 — Target OpenAPI catalog
 
-- Source: login keeps a compatibility fallback for pre-existing plaintext rows and rehashes them best-effort after successful login.
-- Impact: rows that never authenticate remain legacy plaintext until seed/reset/migration policy is applied.
-- Decision needed: choose an operational rehash/reset window before disabling the fallback.
+- `contracts/openapi/work/openapi.json` contains target domains not registered by current Work Server routers.
+- Create a separate DD batch only after those endpoints are implemented.
 
-## Q-003 — Target OpenAPI catalog
+## Resolved in this DD rewrite
 
-- Source: `contracts/openapi/work/openapi.json` contains target endpoints not registered by `api_routes.ts`.
-- Impact: those endpoints are not included in this source-backed runtime DD batch.
-- Decision needed: create a separate target-contract DD batch only after route/source implementation exists.
+- Transaction documentation now follows actual `$transaction` boundaries in CV, application and business-job mutations.
+- System routes are included because they are currently wired.
+
+## Resolved — API naming
+
+- Compatibility API IDs and folder names remain unchanged.
+- Source runtime names are now used in `api_name` and documented separately from contract IDs.
+- No API route, OpenAPI operation ID or runtime behavior is changed by this documentation update.

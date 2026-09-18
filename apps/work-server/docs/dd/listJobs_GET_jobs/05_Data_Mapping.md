@@ -2,59 +2,76 @@
 title: "Data Mapping"
 order: 5
 dd_id: "listJobs"
-api_name: "List jobs"
+api_name: "jobs.view.getJobs"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Data Mapping
 
-## Flow xử lý data
+## Execution flow
 
-## 1. Get thông tin
+1. `traceMiddleware` accepts a valid `X-Trace-Id` or generates a UUID.
+2. `express.json`/Multer parses the request according to the route transport.
+3. Auth middleware optionally decodes Bearer JWT; protected route middleware enforces authentication and role.
+4. Route parses model and calls the module view/use-case.
+5. View validates, applies business rule and calls query/repository functions.
+6. Prisma result is mapped through the success envelope; errors go to centralized exception mapping.
 
-### 1.1. Get request header và token
+## Request Usage Matrix
 
-- N/A — route public; `authenticateToken` chỉ parse Bearer nếu client gửi nhưng handler không yêu cầu token.
+| No | Location | Name | Rule | Use | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | header | X-Trace-Id | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 2 | query | page | digits only; >0 | 1-based page. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 3 | query | limit | digits only; 1..50 | Page size. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
 
-### 1.2. Get path/query/body data
+## Query Matrix
 
-- `page`: lấy từ `req.query.page`; nếu bỏ trống dùng `1`, nếu không phải số nguyên dương trả `400`.
-- `limit`: lấy từ `req.query.limit`; nếu bỏ trống dùng `6`, chỉ nhận số nguyên `1..50`, ngoài phạm vi trả `400`.
+| No | Operation | Table/model | Columns/select | Where | Sort/pagination | Include/relation | Transaction |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | listJobs | JD | jobPublicSelect: id, job fields, ngay_tao, doanhnghiep_id, avt | N/A | ngay_tao desc | N/A | N/A |
 
-## 2. Check quyền
+## Mutation Matrix
 
-### 2.1. Permission
+N/A — route has no persistent mutation.
 
-- N/A — public route.
+## Response Source Matrix
 
-## 3. Validate data input
+| No | Field | Kind | Source/transform | Mapping source |
+| ---: | --- | --- | --- | --- |
+| 1 | id | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 2 | ten_vi_tri | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 3 | phong_ban | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 4 | cap_bac | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 5 | bao_cao_cho | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 6 | nhiem_vu | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 7 | trinh_do | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 8 | kinh_nghiem | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 9 | ky_nang | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 10 | ky_nang_mem | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 11 | uu_tien | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 12 | muc_luong | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 13 | phuc_loi | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 14 | moi_truong | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 15 | dia_diem | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 16 | thoi_gian | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 17 | han_nop | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 18 | cach_ung_tuyen | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 19 | mo_ta | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 20 | ten_cong_ty | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 21 | nganh | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 22 | ngay_tao | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 23 | doanhnghiep_id | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
+| 24 | avt | data field | jobPublicSelect field. | jobs view/query and jobPublicSelect |
 
-- `page` dùng default `1`; giá trị không phải integer dương trả `400 INVALID_REQUEST`.
-- `limit` dùng default `6`; giá trị không phải integer hoặc ngoài `1..50` trả `400 INVALID_REQUEST`.
+## Validation and branch rules
 
-## 4. Query và business processing
+- Parse jobsQuerySchema from request.query.page/limit.
+- Query JD ordered by ngay_tao desc with jobPublicSelect.
+- Compute total and totalPages, then slice by page/limit.
+- Return JOBS_LOADED with pagination meta.
 
-### 4.1. Query JD
-
-- Gọi `JDService.getAllJD`.
-- Prisma đọc toàn bộ `JD` và `orderBy: { ngay_tao: "desc" }`.
-- `total = allJobs.length`.
-- `items = allJobs.slice((page - 1) * limit, page * limit)`.
-
-## 5. Insert/Update/Delete thông tin
-
-- N/A — READ-ONLY API hoặc không có DB mutation.
-
-## 6. Map response và error
-
-- `data = items`.
-- `meta.page = page`.
-- `meta.limit = limit`.
-- `meta.total = total`.
-- `meta.totalPages = Math.ceil(total / limit)`.
-- Thành công: `reply` trả HTTP `200`, `businessCode = JOBS_LOADED`, `data` theo [04_Response.md](./04_Response.md).
-- Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
-- Chi tiết lỗi: [06_Error.md](./06_Error.md).
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

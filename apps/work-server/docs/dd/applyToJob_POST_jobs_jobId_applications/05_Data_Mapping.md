@@ -2,65 +2,64 @@
 title: "Data Mapping"
 order: 5
 dd_id: "applyToJob"
-api_name: "Apply to job"
+api_name: "applications.view.applyToJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Data Mapping
 
-## Flow xử lý data
+## Execution flow
 
-## 1. Get thông tin
+1. `traceMiddleware` accepts a valid `X-Trace-Id` or generates a UUID.
+2. `express.json`/Multer parses the request according to the route transport.
+3. Auth middleware optionally decodes Bearer JWT; protected route middleware enforces authentication and role.
+4. Route parses model and calls the module view/use-case.
+5. View validates, applies business rule and calls query/repository functions.
+6. Prisma result is mapped through the success envelope; errors go to centralized exception mapping.
 
-### 1.1. Get request header và token
+## Request Usage Matrix
 
-- `authorization`: middleware đọc từ `header["Authorization"]`.
-- `user_id`: lấy từ verified `req.user.id`.
-- `email`: lấy từ verified `req.user.email`.
-- `role`: lấy từ verified `req.user.role`.
+| No | Location | Name | Rule | Use | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | header | Authorization | Bearer <JWT HS256> | Token được parse bởi authenticateToken; protected route gọi ensureAuthenticated/checkRole. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 2 | header | X-Trace-Id | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 3 | path | jobId | digits only; >0; Number.isSafeInteger | Target JD primary key. | [apps/work-server/src/modules/applications/validate.ts](../../../src/modules/applications/validate.ts) |
 
-### 1.2. Get path/query/body data
+## Query Matrix
 
-- `jobId`: lấy từ `req.params.jobId`.
+| No | Operation | Table/model | Columns/select | Where | Sort/pagination | Include/relation | Transaction |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | findJobForApplication | JD | doanhnghiep_id | id = jobId | N/A | N/A | inside transaction |
+| 2 | countApplications | UngVien | count | sinhvien_id, doanhnghiep_id, jd_id match | N/A | N/A | inside transaction |
+| 3 | insertApplication | UngVien | all UngVien fields plus JD public select | N/A | N/A | JD.jobPublicSelect | inside transaction |
 
-## 2. Check quyền
+## Mutation Matrix
 
-### 2.1. Permission
+| No | Operation | Table/model | Condition | Fields | Value source | Transaction | Failure behavior |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | INSERT | UngVien | JD exists, has business, duplicate count=0 | sinhvien_id, doanhnghiep_id, jd_id | token.id, JD.doanhnghiep_id, jobId | Prisma $transaction | P2002 -> APPLICATION_ALREADY_EXISTS |
 
-- `ensureAuthenticated`: yêu cầu `req.user` tồn tại và `req.authenticated` không phải `false`.
-- `checkRole("student")`: chỉ cho phép JWT có role `student`.
+## Response Source Matrix
 
-## 3. Validate data input
+| No | Field | Kind | Source/transform | Mapping source |
+| ---: | --- | --- | --- | --- |
+| 1 | id | data field | UngVien field or included JD. | applications view/query |
+| 2 | created_at | data field | UngVien field or included JD. | applications view/query |
+| 3 | sinhvien_id | data field | UngVien field or included JD. | applications view/query |
+| 4 | doanhnghiep_id | data field | UngVien field or included JD. | applications view/query |
+| 5 | trangthai | data field | UngVien field or included JD. | applications view/query |
+| 6 | jd_id | data field | UngVien field or included JD. | applications view/query |
+| 7 | JD | data field | UngVien field or included JD. | applications view/query |
 
-- `jobId` phải là chuỗi digits và safe integer.
-- Request body không được đọc; client hiện gửi JSON object rỗng.
+## Validation and branch rules
 
-## 4. Query và business processing
+- checkRole('student') executes.
+- parseApplicationId validates jobId.
+- Transaction finds JD and requires doanhnghiep_id.
+- Transaction counts matching UngVien and inserts if absent.
+- Include JD public projection in response.
 
-### 4.1. Kiểm tra JD
-
-- Prisma `JD.findUnique({ where: { id: BigInt(jobId) } })`.
-- Nếu không có JD, trả `404 JOB_NOT_FOUND`.
-- Nếu `JD.doanhnghiep_id` null, trả `400 INVALID_REQUEST`.
-- Gọi `CandidateService.count(user.id, businessId, jobId)` để kiểm tra duplicate.
-
-## 5. Insert/Update/Delete thông tin
-
-### 5.1. INSERT `UngVien`
-
-- Nếu count lớn hơn `0`, trả `409 APPLICATION_ALREADY_EXISTS`.
-- Gọi `CandidateService.create(user.id, businessId, jobId)`.
-- Prisma tạo `UngVien` với `sinhvien_id`, `doanhnghiep_id`, `jd_id`; `created_at` và `trangthai` dùng default schema.
-- Không có transaction explicit trong source.
-
-## 6. Map response và error
-
-- `data` là record `UngVien` vừa tạo.
-- `reply` trả HTTP `201` và business code `APPLICATION_CREATED`.
-- Thành công: `reply` trả HTTP `201`, `businessCode = APPLICATION_CREATED`, `data` theo [04_Response.md](./04_Response.md).
-- Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
-- Chi tiết lỗi: [06_Error.md](./06_Error.md).
-- DB mapping: [07_UngVien_insert.md](./07_UngVien_insert.md).
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

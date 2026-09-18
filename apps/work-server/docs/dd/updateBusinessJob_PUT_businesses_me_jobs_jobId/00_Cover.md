@@ -2,25 +2,27 @@
 title: "Cover"
 order: 0
 dd_id: "updateBusinessJob"
-api_name: "Update business job"
+api_name: "jobs.view.updateBusinessJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "Cover"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # `Study2Work Work Server` — API Detail Design
 
 ## Thông tin tài liệu
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | Project/System | Study2Work Work Server |
-| Module | Work API |
+| Module | Business Jobs |
 | Loại tài liệu | API Detail Design |
 | API ID | `updateBusinessJob` |
-| API name | Update business job |
+| API name | jobs.view.updateBusinessJob |
+| Source runtime handler/use-case | jobs.view.updateBusinessJob |
 | HTTP method | `PUT` |
 | Endpoint | `/api/v1/businesses/me/jobs/:jobId` |
 | Version | 1.0.0 |
-| Status | Draft — Needs Confirmation |
+| Status | Draft — Ready for Review |
 | Created by | Codex |
 | Reviewed by | N/A — chưa được chỉ định |
 | Approved by | N/A — chưa được chỉ định |
@@ -31,8 +33,9 @@ status: "Draft — Needs Confirmation"
 
 ```text
 Study2Work Work Server API design
-Update business job
+jobs.view.updateBusinessJob
 ```
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

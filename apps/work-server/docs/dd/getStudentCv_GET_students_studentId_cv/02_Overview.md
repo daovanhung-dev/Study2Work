@@ -2,65 +2,74 @@
 title: "Overview"
 order: 2
 dd_id: "getStudentCv"
-api_name: "Get student CV"
+api_name: "cv.view.getStudentCv"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "Overview"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Overview
 
 ## Khái quát
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | API ID | `getStudentCv` |
-| Module | Work API |
+| Source runtime handler/use-case | cv.view.getStudentCv |
+| Module | CV |
 | Method | `GET` |
 | Endpoint | `/api/v1/students/:studentId/cv` |
-| Purpose | Cho business lấy CV của một student theo id. |
-| Consumer/Actor | Work Web client |
-| Authentication | JWT Bearer bắt buộc |
-| Authorization | business |
+| Purpose | Allow a business user to view a student's CV. |
+| Consumer/Actor | Authenticated business |
+| Authentication | Yes |
+| Authorization | Valid Bearer JWT with role=business |
 | Basis | DIRECT — current registered route |
-| Status | Draft — Needs Confirmation |
-| Transaction | N/A — không có DB mutation |
+| Status | Draft — Ready for Review |
+| Transaction | N/A |
 | Side effects | N/A |
 
 ## Sources
 
-- `apps/work-server/src/routes/api_routes.ts`.
-- `apps/work-server/src/services/*.ts` — service được route import.
-- `apps/work-server/src/middleware/auth.middleware.ts` và `src/config/multer.ts` nếu áp dụng.
-- `apps/work-server/prisma/schema.prisma` và checked-in migrations.
-- `contracts/openapi/work/legacy-web.openapi.json` — operationId/consumer cross-check.
-- `apps/work-client/web/src/shared/api/work.ts` — actual consumer call.
+- [apps/work-server/src/modules/cv/routes.ts](../../../src/modules/cv/routes.ts).
+- [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts).
+- [apps/work-server/src/modules/cv/validate.ts](../../../src/modules/cv/validate.ts).
+- [apps/work-server/src/modules/cv/view.ts](../../../src/modules/cv/view.ts).
+- [apps/work-server/src/modules/cv/query.ts](../../../src/modules/cv/query.ts).
+- [apps/work-server/src/core/responses.ts](../../../src/core/responses.ts).
+- [apps/work-server/src/core/exceptions.ts](../../../src/core/exceptions.ts).
+- [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts).
+- [apps/work-server/src/middleware/auth.middleware.ts](../../../src/middleware/auth.middleware.ts).
+- [apps/work-server/src/config/multer.ts](../../../src/config/multer.ts).
+- [apps/work-server/prisma/schema.prisma](../../../prisma/schema.prisma).
 
 ## Tables read
 
-- `Cv`.
+- Cv.
 
 ## Tables write
 
-- N/A — READ-ONLY API.
+- N/A — no persistent table write.
 
 ## Mục chú ý
 
-- N/A.
+- Role check is business-only.
+- The source does not additionally verify a business/application relationship.
 
 ## Assumptions
 
-- Reviewer/approver chưa được cung cấp; đây là metadata tài liệu, không phải API behavior.
+- N/A — documentation records current source behavior; it does not add a target-domain rule.
 
 ## Conflicts
 
-- Contract/source drift được liệt kê tại `../../OPEN_QUESTIONS.md` và không được silently reconcile.
+- Target-only operations in `contracts/openapi/work/openapi.json` are excluded because they are not registered in the current router.
 
 ## Security note
 
-- Không ghi literal credential, JWT secret hoặc token. Public projection loại password/hash khỏi mọi response.
+- Password/hash fields are used only for authentication/storage and are excluded from public projections.
 
 ## Performance note
 
-- Ghi đúng query hiện tại; không suy diễn index, pagination DB hoặc caching ngoài source.
+- Query shape, order and pagination are documented exactly from the current Prisma query functions.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

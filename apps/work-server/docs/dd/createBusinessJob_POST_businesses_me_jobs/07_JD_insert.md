@@ -2,73 +2,55 @@
 title: "Định nghĩa table"
 order: 7
 dd_id: "createBusinessJob"
-api_name: "Create business job"
+api_name: "jobs.view.createBusinessJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "table"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Định nghĩa table
 
 ## Table metadata
 
 | Thuộc tính | Giá trị |
-|---|---|
-| Physical table | `JD` |
-| Logical table | JD |
+| ---: | --- |
+| Prisma model | JD |
 | Operation | INSERT |
-| Data Mapping step | `5.1` |
+| Transaction | Prisma $transaction |
+| Status | Draft — Ready for Review |
 
-## Update mapping
+## Field mapping
 
-**Áp dụng khi**
+| No | DB column | Operation | Value source | Prisma/schema type |
+| ---: | --- | --- | --- | --- |
+| 1 | ten_vi_tri | INSERT | normalized request field when present | VARCHAR(191) |
+| 2 | phong_ban | INSERT | normalized request field when present | VARCHAR(191) |
+| 3 | cap_bac | INSERT | normalized request field when present | VARCHAR(191) |
+| 4 | bao_cao_cho | INSERT | normalized request field when present | VARCHAR(191) |
+| 5 | nhiem_vu | INSERT | normalized request field when present | VARCHAR(191) |
+| 6 | trinh_do | INSERT | normalized request field when present | VARCHAR(191) |
+| 7 | kinh_nghiem | INSERT | normalized request field when present | VARCHAR(191) |
+| 8 | ky_nang | INSERT | normalized request field when present | VARCHAR(191) |
+| 9 | ky_nang_mem | INSERT | normalized request field when present | VARCHAR(191) |
+| 10 | uu_tien | INSERT | normalized request field when present | VARCHAR(191) |
+| 11 | muc_luong | INSERT | normalized request field when present | VARCHAR(191) |
+| 12 | phuc_loi | INSERT | normalized request field when present | VARCHAR(191) |
+| 13 | moi_truong | INSERT | normalized request field when present | VARCHAR(191) |
+| 14 | dia_diem | INSERT | normalized request field when present | VARCHAR(191) |
+| 15 | thoi_gian | INSERT | normalized request field when present | VARCHAR(191) |
+| 16 | han_nop | INSERT | normalized request field when present | VARCHAR(191) |
+| 17 | cach_ung_tuyen | INSERT | normalized request field when present | VARCHAR(191) |
+| 18 | mo_ta | INSERT | normalized request field when present | VARCHAR(191) |
+| 19 | ten_cong_ty | INSERT | normalized request field when present | VARCHAR(191) |
+| 20 | nganh | INSERT | normalized request field when present | VARCHAR(191) |
+| 21 | avt | INSERT | `/uploads/` + file filename | VARCHAR(191) |
+| 22 | doanhnghiep_id | INSERT | BigInt(token.id) | BigInt |
 
-- N/A — operation hiện tại không phải UPDATE.
+## Insert/Update/Delete behavior
 
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A |
+- ten_cong_ty uses input value or business.hoten.
+- Prisma default supplies id and ngay_tao.
 
-## Insert mapping
 
-**Áp dụng khi**
-
-- Validation/duplicate branch đã pass.
-
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | id | ID | BIGINT | N/A | N/A | N | ● | autoincrement/no change | schema default | `5.1` | Generated or existing key |
-| 2 | ten_vi_tri | ten_vi_tri | VARCHAR | 191 | N/A | Y |  | `request["ten_vi_tri"]` if defined | request/form/token | `5.1` |  |
-| 3 | phong_ban | phong_ban | VARCHAR | 191 | N/A | N |  | `request["phong_ban"]` if defined | request/form/token | `5.1` |  |
-| 4 | cap_bac | cap_bac | VARCHAR | 191 | N/A | N |  | `request["cap_bac"]` if defined | request/form/token | `5.1` |  |
-| 5 | bao_cao_cho | bao_cao_cho | VARCHAR | 191 | N/A | N |  | `request["bao_cao_cho"]` if defined | request/form/token | `5.1` |  |
-| 6 | nhiem_vu | nhiem_vu | VARCHAR | 191 | N/A | N |  | `request["nhiem_vu"]` if defined | request/form/token | `5.1` |  |
-| 7 | trinh_do | trinh_do | VARCHAR | 191 | N/A | N |  | `request["trinh_do"]` if defined | request/form/token | `5.1` |  |
-| 8 | kinh_nghiem | kinh_nghiem | VARCHAR | 191 | N/A | N |  | `request["kinh_nghiem"]` if defined | request/form/token | `5.1` |  |
-| 9 | ky_nang | ky_nang | VARCHAR | 191 | N/A | N |  | `request["ky_nang"]` if defined | request/form/token | `5.1` |  |
-| 10 | ky_nang_mem | ky_nang_mem | VARCHAR | 191 | N/A | N |  | `request["ky_nang_mem"]` if defined | request/form/token | `5.1` |  |
-| 11 | uu_tien | uu_tien | VARCHAR | 191 | N/A | N |  | `request["uu_tien"]` if defined | request/form/token | `5.1` |  |
-| 12 | muc_luong | muc_luong | VARCHAR | 191 | N/A | N |  | `request["muc_luong"]` if defined | request/form/token | `5.1` |  |
-| 13 | phuc_loi | phuc_loi | VARCHAR | 191 | N/A | N |  | `request["phuc_loi"]` if defined | request/form/token | `5.1` |  |
-| 14 | moi_truong | moi_truong | VARCHAR | 191 | N/A | N |  | `request["moi_truong"]` if defined | request/form/token | `5.1` |  |
-| 15 | dia_diem | dia_diem | VARCHAR | 191 | N/A | N |  | `request["dia_diem"]` if defined | request/form/token | `5.1` |  |
-| 16 | thoi_gian | thoi_gian | VARCHAR | 191 | N/A | N |  | `request["thoi_gian"]` if defined | request/form/token | `5.1` |  |
-| 17 | han_nop | han_nop | VARCHAR | 191 | N/A | N |  | `request["han_nop"]` if defined | request/form/token | `5.1` |  |
-| 18 | cach_ung_tuyen | cach_ung_tuyen | VARCHAR | 191 | N/A | N |  | `request["cach_ung_tuyen"]` if defined | request/form/token | `5.1` |  |
-| 19 | mo_ta | mo_ta | VARCHAR | 191 | N/A | N |  | `request["mo_ta"]` if defined | request/form/token | `5.1` |  |
-| 20 | ten_cong_ty | ten_cong_ty | VARCHAR | 191 | N/A | N |  | `request["ten_cong_ty"]` if defined | request/form/token | `5.1` |  |
-| 21 | nganh | nganh | VARCHAR | 191 | N/A | N |  | `request["nganh"]` if defined | request/form/token | `5.1` |  |
-| 22 | avt | avt | VARCHAR | 191 | N/A | N |  | `/uploads/${req.file.filename}` | request/form/token | `5.1` | JD stores `/uploads/` prefix |
-| 23 | doanhnghiep_id | Business owner ID | BIGINT | N/A | N/A | N |  | `req.user.id` | JWT claim | `5.1` | FK; request cannot override owner |
-| 24 | ngay_tao | Created at | TIMESTAMPTZ | 3 | N/A | N |  | schema default | schema | `5.1` | Default now() |
-
-## Delete mapping
-
-**Áp dụng khi**
-
-- N/A — operation hiện tại không phải DELETE.
-
-| No | Target column | Operator | Value source | Data Mapping step | Remarks |
-|---|---|---|---|---|---|
-| 1 | N/A | N/A | N/A | N/A | N/A |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

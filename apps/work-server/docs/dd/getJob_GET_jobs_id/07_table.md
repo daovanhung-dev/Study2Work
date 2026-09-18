@@ -2,32 +2,24 @@
 title: "Định nghĩa table"
 order: 7
 dd_id: "getJob"
-api_name: "Get job"
+api_name: "jobs.view.getJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "table"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Định nghĩa table
 
 ## Table metadata
 
-| Thuộc tính | Giá trị |
-|---|---|
-| Physical table | N/A |
-| Logical table | N/A |
-| Operation | N/A — READ-ONLY API |
-| Data Mapping step | N/A |
+`N/A — READ-ONLY API`
 
-## Update mapping
+Endpoint không thực hiện insert/update/delete persistent table trong source hiện tại.
 
-- N/A — READ-ONLY API.
+## Read-only source
 
-## Insert mapping
+- Prisma read/query hoặc system dependency probe đã được mô tả trong `05_Data_Mapping.md`.
+- Không suy diễn DB column mutation từ response field.
 
-- N/A — READ-ONLY API.
-
-## Delete mapping
-
-- N/A — READ-ONLY API.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

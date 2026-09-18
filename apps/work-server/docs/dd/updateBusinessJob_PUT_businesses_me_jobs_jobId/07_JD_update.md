@@ -2,72 +2,54 @@
 title: "Định nghĩa table"
 order: 7
 dd_id: "updateBusinessJob"
-api_name: "Update business job"
+api_name: "jobs.view.updateBusinessJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "table"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Định nghĩa table
 
 ## Table metadata
 
 | Thuộc tính | Giá trị |
-|---|---|
-| Physical table | `JD` |
-| Logical table | JD |
+| ---: | --- |
+| Prisma model | JD |
 | Operation | UPDATE |
-| Data Mapping step | `5.1` |
+| Transaction | Prisma $transaction |
+| Status | Draft — Ready for Review |
 
-## Update mapping
+## Field mapping
 
-**Áp dụng khi**
+| No | DB column | Operation | Value source | Prisma/schema type |
+| ---: | --- | --- | --- | --- |
+| 1 | ten_vi_tri | UPDATE | normalized input when present | VARCHAR(191) |
+| 2 | phong_ban | UPDATE | normalized input when present | VARCHAR(191) |
+| 3 | cap_bac | UPDATE | normalized input when present | VARCHAR(191) |
+| 4 | bao_cao_cho | UPDATE | normalized input when present | VARCHAR(191) |
+| 5 | nhiem_vu | UPDATE | normalized input when present | VARCHAR(191) |
+| 6 | trinh_do | UPDATE | normalized input when present | VARCHAR(191) |
+| 7 | kinh_nghiem | UPDATE | normalized input when present | VARCHAR(191) |
+| 8 | ky_nang | UPDATE | normalized input when present | VARCHAR(191) |
+| 9 | ky_nang_mem | UPDATE | normalized input when present | VARCHAR(191) |
+| 10 | uu_tien | UPDATE | normalized input when present | VARCHAR(191) |
+| 11 | muc_luong | UPDATE | normalized input when present | VARCHAR(191) |
+| 12 | phuc_loi | UPDATE | normalized input when present | VARCHAR(191) |
+| 13 | moi_truong | UPDATE | normalized input when present | VARCHAR(191) |
+| 14 | dia_diem | UPDATE | normalized input when present | VARCHAR(191) |
+| 15 | thoi_gian | UPDATE | normalized input when present | VARCHAR(191) |
+| 16 | han_nop | UPDATE | normalized input when present | VARCHAR(191) |
+| 17 | cach_ung_tuyen | UPDATE | normalized input when present | VARCHAR(191) |
+| 18 | mo_ta | UPDATE | normalized input when present | VARCHAR(191) |
+| 19 | ten_cong_ty | UPDATE | normalized input when present | VARCHAR(191) |
+| 20 | nganh | UPDATE | normalized input when present | VARCHAR(191) |
+| 21 | avt | UPDATE | `/uploads/` + file filename | VARCHAR(191) |
 
-- Owner check thành công và handler gọi service update.
+## Insert/Update/Delete behavior
 
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | id | ID | BIGINT | N/A | N/A | N | ● | autoincrement/no change | schema default | `5.1` | Generated or existing key |
-| 2 | ten_vi_tri | ten_vi_tri | VARCHAR | 191 | N/A | Y |  | `request["ten_vi_tri"]` if defined | request/form/token | `5.1` |  |
-| 3 | phong_ban | phong_ban | VARCHAR | 191 | N/A | N |  | `request["phong_ban"]` if defined | request/form/token | `5.1` |  |
-| 4 | cap_bac | cap_bac | VARCHAR | 191 | N/A | N |  | `request["cap_bac"]` if defined | request/form/token | `5.1` |  |
-| 5 | bao_cao_cho | bao_cao_cho | VARCHAR | 191 | N/A | N |  | `request["bao_cao_cho"]` if defined | request/form/token | `5.1` |  |
-| 6 | nhiem_vu | nhiem_vu | VARCHAR | 191 | N/A | N |  | `request["nhiem_vu"]` if defined | request/form/token | `5.1` |  |
-| 7 | trinh_do | trinh_do | VARCHAR | 191 | N/A | N |  | `request["trinh_do"]` if defined | request/form/token | `5.1` |  |
-| 8 | kinh_nghiem | kinh_nghiem | VARCHAR | 191 | N/A | N |  | `request["kinh_nghiem"]` if defined | request/form/token | `5.1` |  |
-| 9 | ky_nang | ky_nang | VARCHAR | 191 | N/A | N |  | `request["ky_nang"]` if defined | request/form/token | `5.1` |  |
-| 10 | ky_nang_mem | ky_nang_mem | VARCHAR | 191 | N/A | N |  | `request["ky_nang_mem"]` if defined | request/form/token | `5.1` |  |
-| 11 | uu_tien | uu_tien | VARCHAR | 191 | N/A | N |  | `request["uu_tien"]` if defined | request/form/token | `5.1` |  |
-| 12 | muc_luong | muc_luong | VARCHAR | 191 | N/A | N |  | `request["muc_luong"]` if defined | request/form/token | `5.1` |  |
-| 13 | phuc_loi | phuc_loi | VARCHAR | 191 | N/A | N |  | `request["phuc_loi"]` if defined | request/form/token | `5.1` |  |
-| 14 | moi_truong | moi_truong | VARCHAR | 191 | N/A | N |  | `request["moi_truong"]` if defined | request/form/token | `5.1` |  |
-| 15 | dia_diem | dia_diem | VARCHAR | 191 | N/A | N |  | `request["dia_diem"]` if defined | request/form/token | `5.1` |  |
-| 16 | thoi_gian | thoi_gian | VARCHAR | 191 | N/A | N |  | `request["thoi_gian"]` if defined | request/form/token | `5.1` |  |
-| 17 | han_nop | han_nop | VARCHAR | 191 | N/A | N |  | `request["han_nop"]` if defined | request/form/token | `5.1` |  |
-| 18 | cach_ung_tuyen | cach_ung_tuyen | VARCHAR | 191 | N/A | N |  | `request["cach_ung_tuyen"]` if defined | request/form/token | `5.1` |  |
-| 19 | mo_ta | mo_ta | VARCHAR | 191 | N/A | N |  | `request["mo_ta"]` if defined | request/form/token | `5.1` |  |
-| 20 | ten_cong_ty | ten_cong_ty | VARCHAR | 191 | N/A | N |  | `request["ten_cong_ty"]` if defined | request/form/token | `5.1` |  |
-| 21 | nganh | nganh | VARCHAR | 191 | N/A | N |  | `request["nganh"]` if defined | request/form/token | `5.1` |  |
-| 22 | avt | avt | VARCHAR | 191 | N/A | N |  | `/uploads/${req.file.filename}` | request/form/token | `5.1` | JD stores `/uploads/` prefix |
-| 23 | doanhnghiep_id | Business owner ID | BIGINT | N/A | N/A | N |  | <No change> | ownership condition | `5.1` | Not updated by current handler |
+- Only normalized fields present in request are updated.
+- Ownership check and update share the transaction.
 
-## Insert mapping
 
-**Áp dụng khi**
-
-- N/A — operation hiện tại không phải INSERT.
-
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A |
-
-## Delete mapping
-
-**Áp dụng khi**
-
-- N/A — operation hiện tại không phải DELETE.
-
-| No | Target column | Operator | Value source | Data Mapping step | Remarks |
-|---|---|---|---|---|---|
-| 1 | N/A | N/A | N/A | N/A | N/A |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

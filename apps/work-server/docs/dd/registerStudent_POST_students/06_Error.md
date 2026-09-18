@@ -2,28 +2,35 @@
 title: "Error"
 order: 6
 dd_id: "registerStudent"
-api_name: "Register student"
+api_name: "students.view.registerStudent"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "4.Error"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Error
 
 ## Giải thích
 
-Các trường hợp lỗi của API theo current Work Server source.
+Lỗi không inline `res.json`; route/use-case throw typed error hoặc lỗi framework được centralized exception handler map về envelope chuẩn.
 
 ## Error cases
 
-| No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Required | - | `hoten/email/matkhau` | Một trong các field bắt buộc bị thiếu/rỗng | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
-| 2 | Validation | - | `email` | Email không đúng định dạng | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
-| 3 | Validation | - | `matkhau` | Mật khẩu ngắn hơn 6 ký tự | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
-| 4 | Upload | - | `avt` | Extension hoặc MIME type không được phép | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `multer middleware` | N/A |  |
-| 5 | Upload | - | `avt` | File vượt quá 10 MiB | 413 | `PAYLOAD_TOO_LARGE` | N/A — source không có message ID | `multer middleware` | N/A |  |
-| 6 | Conflict | - | `SinhVien.email` | Email đã tồn tại theo Prisma unique constraint | 409 | `STUDENT_CREATE_FAILED` | N/A — source không có message ID | `mutation` | N/A |  |
-| 7 | System | - | `server` | Unhandled exception hoặc lỗi database không phải duplicate | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `exception handler` | N/A |  |
-> Mỗi error case nằm trên một row riêng. Error code là businessCode source-confirmed; message ID không được tự tạo khi source không có field này.
+| No | Business code | HTTP | Message | Condition | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | INVALID_REQUEST | 400 | Request không hợp lệ. | Zod/body validation or registration precondition fails. | apps/work-server/src/modules/students/models.ts |
+| 2 | STUDENT_CREATE_FAILED | 409 | Email đã được đăng ký. | Prisma unique constraint P2002 on student email. | apps/work-server/src/modules/students/view.ts |
+| 3 | INVALID_REQUEST | 400 | Request không hợp lệ. | Invalid MIME/extension or validation/business input. | apps/work-server/src/core/exceptions.ts |
+| 4 | PAYLOAD_TOO_LARGE | 413 | File tải lên vượt quá kích thước cho phép. | Multer LIMIT_FILE_SIZE for a file over 10 MiB. | apps/work-server/src/config/multer.ts |
+| 5 | INTERNAL_SERVER_ERROR | 500 | Lỗi máy chủ. | Unhandled error is mapped safely without exposing secret. | apps/work-server/src/core/exceptions.ts |
+
+## Common envelope rule
+
+- `success=false`.
+- `data=null`.
+- `meta={}` nếu không có field errors.
+- `meta.fieldErrors` chỉ xuất hiện với Zod validation issues.
+- `traceId` và response header `X-Trace-Id` luôn đồng nhất.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

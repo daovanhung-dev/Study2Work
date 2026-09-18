@@ -2,57 +2,74 @@
 title: "Data Mapping"
 order: 5
 dd_id: "listBusinessJobs"
-api_name: "List business jobs"
+api_name: "jobs.view.getBusinessJobs"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Data Mapping
 
-## Flow xử lý data
+## Execution flow
 
-## 1. Get thông tin
+1. `traceMiddleware` accepts a valid `X-Trace-Id` or generates a UUID.
+2. `express.json`/Multer parses the request according to the route transport.
+3. Auth middleware optionally decodes Bearer JWT; protected route middleware enforces authentication and role.
+4. Route parses model and calls the module view/use-case.
+5. View validates, applies business rule and calls query/repository functions.
+6. Prisma result is mapped through the success envelope; errors go to centralized exception mapping.
 
-### 1.1. Get request header và token
+## Request Usage Matrix
 
-- `authorization`: middleware đọc từ `header["Authorization"]`.
-- `user_id`: lấy từ verified `req.user.id`.
-- `email`: lấy từ verified `req.user.email`.
-- `role`: lấy từ verified `req.user.role`.
+| No | Location | Name | Rule | Use | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | header | Authorization | Bearer <JWT HS256> | Token được parse bởi authenticateToken; protected route gọi ensureAuthenticated/checkRole. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 2 | header | X-Trace-Id | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
 
-### 1.2. Get path/query/body data
+## Query Matrix
 
-- N/A — endpoint không nhận path, query hoặc request body.
+| No | Operation | Table/model | Columns/select | Where | Sort/pagination | Include/relation | Transaction |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | findBusinessJobs | JD | jobPublicSelect | doanhnghiep_id = token.id | id desc | N/A | N/A |
 
-## 2. Check quyền
+## Mutation Matrix
 
-### 2.1. Permission
+N/A — route has no persistent mutation.
 
-- `ensureAuthenticated`: yêu cầu `req.user` tồn tại và `req.authenticated` không phải `false`.
-- `checkRole("business")`: chỉ cho phép JWT có role `business`.
+## Response Source Matrix
 
-## 3. Validate data input
+| No | Field | Kind | Source/transform | Mapping source |
+| ---: | --- | --- | --- | --- |
+| 1 | id | data field | jobPublicSelect field. | jobs view/query |
+| 2 | ten_vi_tri | data field | jobPublicSelect field. | jobs view/query |
+| 3 | phong_ban | data field | jobPublicSelect field. | jobs view/query |
+| 4 | cap_bac | data field | jobPublicSelect field. | jobs view/query |
+| 5 | bao_cao_cho | data field | jobPublicSelect field. | jobs view/query |
+| 6 | nhiem_vu | data field | jobPublicSelect field. | jobs view/query |
+| 7 | trinh_do | data field | jobPublicSelect field. | jobs view/query |
+| 8 | kinh_nghiem | data field | jobPublicSelect field. | jobs view/query |
+| 9 | ky_nang | data field | jobPublicSelect field. | jobs view/query |
+| 10 | ky_nang_mem | data field | jobPublicSelect field. | jobs view/query |
+| 11 | uu_tien | data field | jobPublicSelect field. | jobs view/query |
+| 12 | muc_luong | data field | jobPublicSelect field. | jobs view/query |
+| 13 | phuc_loi | data field | jobPublicSelect field. | jobs view/query |
+| 14 | moi_truong | data field | jobPublicSelect field. | jobs view/query |
+| 15 | dia_diem | data field | jobPublicSelect field. | jobs view/query |
+| 16 | thoi_gian | data field | jobPublicSelect field. | jobs view/query |
+| 17 | han_nop | data field | jobPublicSelect field. | jobs view/query |
+| 18 | cach_ung_tuyen | data field | jobPublicSelect field. | jobs view/query |
+| 19 | mo_ta | data field | jobPublicSelect field. | jobs view/query |
+| 20 | ten_cong_ty | data field | jobPublicSelect field. | jobs view/query |
+| 21 | nganh | data field | jobPublicSelect field. | jobs view/query |
+| 22 | ngay_tao | data field | jobPublicSelect field. | jobs view/query |
+| 23 | doanhnghiep_id | data field | jobPublicSelect field. | jobs view/query |
+| 24 | avt | data field | jobPublicSelect field. | jobs view/query |
 
-- N/A — không có validation riêng ngoài middleware/helper được source gọi.
+## Validation and branch rules
 
-## 4. Query và business processing
+- checkRole('business') executes on mounted router.
+- findBusinessJobs filters by token business id.
+- Return BUSINESS_JOBS_LOADED.
 
-### 4.1. Query JD theo owner
-
-- Gọi `JDService.getJDByCompany(user.id)`.
-- Prisma lọc `JD.doanhnghiep_id = user.id`.
-- Sort `JD.id DESC`.
-
-## 5. Insert/Update/Delete thông tin
-
-- N/A — READ-ONLY API hoặc không có DB mutation.
-
-## 6. Map response và error
-
-- `data` là array record `JD`.
-- BigInt/Date được normalize trong `reply`.
-- Thành công: `reply` trả HTTP `200`, `businessCode = BUSINESS_JOBS_LOADED`, `data` theo [04_Response.md](./04_Response.md).
-- Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
-- Chi tiết lỗi: [06_Error.md](./06_Error.md).
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

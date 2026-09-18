@@ -2,26 +2,33 @@
 title: "Error"
 order: 6
 dd_id: "loginStudent"
-api_name: "Student login"
+api_name: "auth.view.loginStudent"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "4.Error"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Error
 
 ## Giải thích
 
-Các trường hợp lỗi của API theo current Work Server source.
+Lỗi không inline `res.json`; route/use-case throw typed error hoặc lỗi framework được centralized exception handler map về envelope chuẩn.
 
 ## Error cases
 
-| No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Validation | - | `email/password` | Thiếu email hoặc cả `password` và `matkhau` | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
-| 2 | Validation | - | `email` | Email không đúng định dạng | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
-| 3 | Authentication | - | `credentials` | Không tồn tại user hoặc bcrypt/legacy password không khớp | 401 | `INVALID_CREDENTIALS` | N/A — source không có message ID | `query result` | N/A |  |
-| 4 | System | - | `server` | Lỗi service/database | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `exception handler` | N/A |  |
+| No | Business code | HTTP | Message | Condition | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | INVALID_REQUEST | 400 | Request không hợp lệ. | Zod body validation or missing both password aliases. | apps/work-server/src/modules/auth/models.ts |
+| 2 | INVALID_CREDENTIALS | 401 | Email hoặc mật khẩu không đúng. | Credential row missing or password verification fails. | apps/work-server/src/modules/auth/view.ts |
+| 3 | INTERNAL_SERVER_ERROR | 500 | Lỗi máy chủ. | Unhandled error is mapped safely without exposing secret. | apps/work-server/src/core/exceptions.ts |
 
-> Mỗi error case nằm trên một row riêng. Error code là businessCode source-confirmed; message ID không được tự tạo khi source không có field này.
+## Common envelope rule
+
+- `success=false`.
+- `data=null`.
+- `meta={}` nếu không có field errors.
+- `meta.fieldErrors` chỉ xuất hiện với Zod validation issues.
+- `traceId` và response header `X-Trace-Id` luôn đồng nhất.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

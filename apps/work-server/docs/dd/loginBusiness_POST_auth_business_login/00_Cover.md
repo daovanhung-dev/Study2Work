@@ -2,25 +2,27 @@
 title: "Cover"
 order: 0
 dd_id: "loginBusiness"
-api_name: "Business login"
+api_name: "auth.view.loginBusiness"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "Cover"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # `Study2Work Work Server` — API Detail Design
 
 ## Thông tin tài liệu
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | Project/System | Study2Work Work Server |
-| Module | Work API |
+| Module | Auth |
 | Loại tài liệu | API Detail Design |
 | API ID | `loginBusiness` |
-| API name | Business login |
+| API name | auth.view.loginBusiness |
+| Source runtime handler/use-case | auth.view.loginBusiness |
 | HTTP method | `POST` |
 | Endpoint | `/api/v1/auth/business/login` |
 | Version | 1.0.0 |
-| Status | Draft — Needs Confirmation |
+| Status | Draft — Ready for Review |
 | Created by | Codex |
 | Reviewed by | N/A — chưa được chỉ định |
 | Approved by | N/A — chưa được chỉ định |
@@ -31,8 +33,9 @@ status: "Draft — Needs Confirmation"
 
 ```text
 Study2Work Work Server API design
-Business login
+auth.view.loginBusiness
 ```
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

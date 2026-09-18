@@ -2,52 +2,61 @@
 title: "Request"
 order: 3
 dd_id: "loginStudent"
-api_name: "Student login"
+api_name: "auth.view.loginStudent"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "1.Request"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Request
 
 ## API endpoint
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | HTTP method | `POST` |
 | URI | `/api/v1/auth/student/login` |
-| Character encoding | UTF-8 |
+| Character encoding | `UTF-8` |
 | Content-Type | application/json |
 
 ## Request header
 
-| No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
-|---|---|---|---|---|---|---|
-| 1 | Contents type | `Content-Type` | Yes | application/json | Request media type | `05_Data_Mapping.md` |
+| No | Field name | Required | Value/Format | Description | Data Mapping reference |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `X-Trace-Id` | No | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [Request usage](./05_Data_Mapping.md#request-usage-matrix) |
 
 ## Path parameters
 
-N/A — API không nhận Path parameter.
+N/A — endpoint không có path parameter.
 
 ## Query parameters
 
-N/A — API không nhận Query parameter.
+N/A — endpoint không có query parameter.
 
 ## Request body
 
-| No | Location | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Description | Data Mapping reference |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | body | email | `email` | string | Yes | N/A | N/A | UTF-8/text | source không enforce email format | N/A | Email đăng nhập; source chỉ kiểm tra có giá trị | `05_Data_Mapping.md` |
-| 2 | body | password | `password` | string | Conditional | 1 | N/A | UTF-8/text | N/A | N/A | Password chuẩn; `matkhau` chỉ là alias legacy khi password không có | `05_Data_Mapping.md` |
-| 3 | body | matkhau | `matkhau` | string | Conditional | 1 | N/A | UTF-8/text | N/A | N/A | Alias legacy được source hỗ trợ khi password không có | `05_Data_Mapping.md` |
-> Mỗi field nằm trên một row riêng. `Conditional` nghĩa là source kiểm tra điều kiện kết hợp chứ không yêu cầu field đó độc lập.
+| No | Logical name | Field name | Type | Required | Validation/format | Default | Description | Data Mapping reference |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Email | email | string | Yes | trim(); valid email format | Email used to find credentials. | [apps/work-server/src/modules/auth/models.ts](../../../src/modules/auth/models.ts) |
+| 2 | Canonical password | password | string | Conditional | min length 1; at least password or matkhau must be present | Canonical login password. | [apps/work-server/src/modules/auth/models.ts](../../../src/modules/auth/models.ts) |
+| 3 | Legacy password alias | matkhau | string | Conditional | min length 1; used when password is omitted | Legacy login compatibility alias. | [apps/work-server/src/modules/auth/models.ts](../../../src/modules/auth/models.ts) |
 
 ## Ví dụ Request data
+
+`multipart/form-data` dùng các key trong bảng body; JSON dưới đây chỉ biểu diễn logical fields khi route cho phép JSON hoặc body rỗng.
 
 ```json
 {
   "email": "student@example.com",
-  "password": "correct horse battery staple"
+  "password": "example-password"
 }
 ```
+
+## Source behavior
+
+- Request được parse ở route bằng Zod model nếu route có model tương ứng.
+- Với route dùng Multer, file được xử lý trước use-case; lỗi MIME/extension/size đi vào centralized exception handler.
+- Unknown body fields chỉ được giữ lại ở bước Zod nếu model `.passthrough()`/record cho phép; use-case chỉ normalize whitelist field đã nêu.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

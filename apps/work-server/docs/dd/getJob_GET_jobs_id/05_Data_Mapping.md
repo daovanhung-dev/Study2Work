@@ -2,54 +2,74 @@
 title: "Data Mapping"
 order: 5
 dd_id: "getJob"
-api_name: "Get job"
+api_name: "jobs.view.getJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Data Mapping
 
-## Flow xử lý data
+## Execution flow
 
-## 1. Get thông tin
+1. `traceMiddleware` accepts a valid `X-Trace-Id` or generates a UUID.
+2. `express.json`/Multer parses the request according to the route transport.
+3. Auth middleware optionally decodes Bearer JWT; protected route middleware enforces authentication and role.
+4. Route parses model and calls the module view/use-case.
+5. View validates, applies business rule and calls query/repository functions.
+6. Prisma result is mapped through the success envelope; errors go to centralized exception mapping.
 
-### 1.1. Get request header và token
+## Request Usage Matrix
 
-- N/A — route public; `authenticateToken` chỉ parse Bearer nếu client gửi nhưng handler không yêu cầu token.
+| No | Location | Name | Rule | Use | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | header | X-Trace-Id | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 2 | path | id | digits only; >0; Number.isSafeInteger | JD primary key. | [apps/work-server/src/modules/jobs/validate.ts](../../../src/modules/jobs/validate.ts) |
 
-### 1.2. Get path/query/body data
+## Query Matrix
 
-- `id`: lấy từ `req.params.id`.
+| No | Operation | Table/model | Columns/select | Where | Sort/pagination | Include/relation | Transaction |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | findJob | JD | jobPublicSelect | id = BigInt(path.id) | N/A | N/A | N/A |
 
-## 2. Check quyền
+## Mutation Matrix
 
-### 2.1. Permission
+N/A — route has no persistent mutation.
 
-- N/A — public route.
+## Response Source Matrix
 
-## 3. Validate data input
+| No | Field | Kind | Source/transform | Mapping source |
+| ---: | --- | --- | --- | --- |
+| 1 | id | data field | jobPublicSelect field. | jobs view/query |
+| 2 | ten_vi_tri | data field | jobPublicSelect field. | jobs view/query |
+| 3 | phong_ban | data field | jobPublicSelect field. | jobs view/query |
+| 4 | cap_bac | data field | jobPublicSelect field. | jobs view/query |
+| 5 | bao_cao_cho | data field | jobPublicSelect field. | jobs view/query |
+| 6 | nhiem_vu | data field | jobPublicSelect field. | jobs view/query |
+| 7 | trinh_do | data field | jobPublicSelect field. | jobs view/query |
+| 8 | kinh_nghiem | data field | jobPublicSelect field. | jobs view/query |
+| 9 | ky_nang | data field | jobPublicSelect field. | jobs view/query |
+| 10 | ky_nang_mem | data field | jobPublicSelect field. | jobs view/query |
+| 11 | uu_tien | data field | jobPublicSelect field. | jobs view/query |
+| 12 | muc_luong | data field | jobPublicSelect field. | jobs view/query |
+| 13 | phuc_loi | data field | jobPublicSelect field. | jobs view/query |
+| 14 | moi_truong | data field | jobPublicSelect field. | jobs view/query |
+| 15 | dia_diem | data field | jobPublicSelect field. | jobs view/query |
+| 16 | thoi_gian | data field | jobPublicSelect field. | jobs view/query |
+| 17 | han_nop | data field | jobPublicSelect field. | jobs view/query |
+| 18 | cach_ung_tuyen | data field | jobPublicSelect field. | jobs view/query |
+| 19 | mo_ta | data field | jobPublicSelect field. | jobs view/query |
+| 20 | ten_cong_ty | data field | jobPublicSelect field. | jobs view/query |
+| 21 | nganh | data field | jobPublicSelect field. | jobs view/query |
+| 22 | ngay_tao | data field | jobPublicSelect field. | jobs view/query |
+| 23 | doanhnghiep_id | data field | jobPublicSelect field. | jobs view/query |
+| 24 | avt | data field | jobPublicSelect field. | jobs view/query |
 
-- `id` phải khớp `^\d+$` và chuyển thành safe integer; source không chặn `0` ở helper.
+## Validation and branch rules
 
-## 4. Query và business processing
+- parseNumericId validates request.params.id.
+- findJob queries JD by BigInt id using jobPublicSelect.
+- Missing row throws JOB_NOT_FOUND.
 
-### 4.1. Query JD
-
-- `numericParam(req.params.id)` chuyển path id thành number.
-- Gọi `JDService.getJDById(id)`.
-- Prisma gọi `JD.findUnique({ where: { id: BigInt(id) } })`.
-- Nếu không có record, trả `404 JOB_NOT_FOUND`.
-
-## 5. Insert/Update/Delete thông tin
-
-- N/A — READ-ONLY API hoặc không có DB mutation.
-
-## 6. Map response và error
-
-- `data` là record `JD`.
-- `reply` chuyển BigInt thành number và Date thành ISO string.
-- Thành công: `reply` trả HTTP `200`, `businessCode = JOB_LOADED`, `data` theo [04_Response.md](./04_Response.md).
-- Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
-- Chi tiết lỗi: [06_Error.md](./06_Error.md).
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

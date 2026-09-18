@@ -2,58 +2,59 @@
 title: "Data Mapping"
 order: 5
 dd_id: "getMyApplications"
-api_name: "Get my applications"
+api_name: "applications.view.getStudentApplications"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Data Mapping
 
-## Flow xử lý data
+## Execution flow
 
-## 1. Get thông tin
+1. `traceMiddleware` accepts a valid `X-Trace-Id` or generates a UUID.
+2. `express.json`/Multer parses the request according to the route transport.
+3. Auth middleware optionally decodes Bearer JWT; protected route middleware enforces authentication and role.
+4. Route parses model and calls the module view/use-case.
+5. View validates, applies business rule and calls query/repository functions.
+6. Prisma result is mapped through the success envelope; errors go to centralized exception mapping.
 
-### 1.1. Get request header và token
+## Request Usage Matrix
 
-- `authorization`: middleware đọc từ `header["Authorization"]`.
-- `user_id`: lấy từ verified `req.user.id`.
-- `email`: lấy từ verified `req.user.email`.
-- `role`: lấy từ verified `req.user.role`.
+| No | Location | Name | Rule | Use | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | header | Authorization | Bearer <JWT HS256> | Token được parse bởi authenticateToken; protected route gọi ensureAuthenticated/checkRole. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 2 | header | X-Trace-Id | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
 
-### 1.2. Get path/query/body data
+## Query Matrix
 
-- N/A — endpoint không nhận path, query hoặc request body.
+| No | Operation | Table/model | Columns/select | Where | Sort/pagination | Include/relation | Transaction |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | listStudentApplications | UngVien | all UngVien fields | sinhvien_id = token.id | created_at desc | JD.jobPublicSelect; DoanhNghiep.businessPublicSelect | N/A |
 
-## 2. Check quyền
+## Mutation Matrix
 
-### 2.1. Permission
+N/A — route has no persistent mutation.
 
-- `ensureAuthenticated`: yêu cầu `req.user` tồn tại và `req.authenticated` không phải `false`.
-- `checkRole("student")`: chỉ cho phép JWT có role `student`.
+## Response Source Matrix
 
-## 3. Validate data input
+| No | Field | Kind | Source/transform | Mapping source |
+| ---: | --- | --- | --- | --- |
+| 1 | id | data field | UngVien field or included relation. | applications query include |
+| 2 | created_at | data field | UngVien field or included relation. | applications query include |
+| 3 | sinhvien_id | data field | UngVien field or included relation. | applications query include |
+| 4 | doanhnghiep_id | data field | UngVien field or included relation. | applications query include |
+| 5 | trangthai | data field | UngVien field or included relation. | applications query include |
+| 6 | jd_id | data field | UngVien field or included relation. | applications query include |
+| 7 | JD | data field | UngVien field or included relation. | applications query include |
+| 8 | DoanhNghiep | data field | UngVien field or included relation. | applications query include |
 
-- N/A — không có validation riêng ngoài middleware/helper được source gọi.
+## Validation and branch rules
 
-## 4. Query và business processing
+- checkRole('student') enforces role.
+- listStudentApplications filters sinhvien_id.
+- Relations are limited by public selectors.
+- Return APPLICATIONS_LOADED.
 
-### 4.1. Query application
-
-- Gọi `CandidateService.getKetQuaUngTuyen(user.id)`.
-- Prisma đọc `UngVien` với `sinhvien_id = user.id`.
-- Include full `JD` và full `DoanhNghiep`.
-- Sort `created_at DESC`.
-
-## 5. Insert/Update/Delete thông tin
-
-- N/A — READ-ONLY API hoặc không có DB mutation.
-
-## 6. Map response và error
-
-- `data` là array `UngVien`.
-- Mỗi item có nested `JD` và `DoanhNghiep` theo Prisma include.
-- Thành công: `reply` trả HTTP `200`, `businessCode = APPLICATIONS_LOADED`, `data` theo [04_Response.md](./04_Response.md).
-- Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
-- Chi tiết lỗi: [06_Error.md](./06_Error.md).
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -2,46 +2,57 @@
 title: "Request"
 order: 3
 dd_id: "applyToJob"
-api_name: "Apply to job"
+api_name: "applications.view.applyToJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "1.Request"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Request
 
 ## API endpoint
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | HTTP method | `POST` |
 | URI | `/api/v1/jobs/:jobId/applications` |
-| Character encoding | UTF-8 |
-| Content-Type | application/json |
+| Character encoding | `UTF-8` |
+| Content-Type | application/json or empty |
 
 ## Request header
 
-| No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
-|---|---|---|---|---|---|---|
-| 1 | Contents type | `Content-Type` | Yes | application/json | Request media type | `05_Data_Mapping.md` |
-| 2 | Bearer auth | `Authorization` | Yes | `Bearer redacted.jwt.token` | Verified by global middleware and route boundary | `05_Data_Mapping.md` |
+| No | Field name | Required | Value/Format | Description | Data Mapping reference |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `Authorization` | Yes | Bearer <JWT HS256> | Token được parse bởi authenticateToken; protected route gọi ensureAuthenticated/checkRole. | [Request usage](./05_Data_Mapping.md#request-usage-matrix) |
+| 2 | `X-Trace-Id` | No | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [Request usage](./05_Data_Mapping.md#request-usage-matrix) |
 
 ## Path parameters
 
-| No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | jobId | `jobId` | integer | Yes | 0 | N/A | N/A | N/A | N/A | ID JD; source numeric helper | `05_Data_Mapping.md` |
+| No | Logical name | Physical name | Type | Required | Validation/format | Default | Description | Data Mapping reference |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Job ID | jobId | string -> positive safe integer | Yes | digits only; >0; Number.isSafeInteger | N/A | Target JD primary key. | apps/work-server/src/modules/applications/validate.ts |
+
 ## Query parameters
 
-N/A — API không nhận Query parameter.
+N/A — endpoint không có query parameter.
 
 ## Request body
 
-N/A — API không nhận Path, Query hoặc Request Body.
+N/A — request không có body.
 
 ## Ví dụ Request data
+
+`multipart/form-data` dùng các key trong bảng body; JSON dưới đây chỉ biểu diễn logical fields khi route cho phép JSON hoặc body rỗng.
 
 ```json
 {}
 ```
+
+## Source behavior
+
+- Request được parse ở route bằng Zod model nếu route có model tương ứng.
+- Với route dùng Multer, file được xử lý trước use-case; lỗi MIME/extension/size đi vào centralized exception handler.
+- Unknown body fields chỉ được giữ lại ở bước Zod nếu model `.passthrough()`/record cho phép; use-case chỉ normalize whitelist field đã nêu.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

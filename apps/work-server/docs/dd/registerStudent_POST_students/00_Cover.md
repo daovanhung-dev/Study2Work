@@ -2,25 +2,27 @@
 title: "Cover"
 order: 0
 dd_id: "registerStudent"
-api_name: "Register student"
+api_name: "students.view.registerStudent"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "Cover"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # `Study2Work Work Server` — API Detail Design
 
 ## Thông tin tài liệu
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | Project/System | Study2Work Work Server |
-| Module | Work API |
+| Module | Student |
 | Loại tài liệu | API Detail Design |
 | API ID | `registerStudent` |
-| API name | Register student |
+| API name | students.view.registerStudent |
+| Source runtime handler/use-case | students.view.registerStudent |
 | HTTP method | `POST` |
 | Endpoint | `/api/v1/students` |
 | Version | 1.0.0 |
-| Status | Draft — Needs Confirmation |
+| Status | Draft — Ready for Review |
 | Created by | Codex |
 | Reviewed by | N/A — chưa được chỉ định |
 | Approved by | N/A — chưa được chỉ định |
@@ -31,8 +33,9 @@ status: "Draft — Needs Confirmation"
 
 ```text
 Study2Work Work Server API design
-Register student
+students.view.registerStudent
 ```
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -2,51 +2,47 @@
 title: "Data Mapping"
 order: 5
 dd_id: "logout"
-api_name: "Logout"
+api_name: "auth.view.logout"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Data Mapping
 
-## Flow xử lý data
+## Execution flow
 
-## 1. Get thông tin
+1. `traceMiddleware` accepts a valid `X-Trace-Id` or generates a UUID.
+2. `express.json`/Multer parses the request according to the route transport.
+3. Auth middleware optionally decodes Bearer JWT; protected route middleware enforces authentication and role.
+4. Route parses model and calls the module view/use-case.
+5. View validates, applies business rule and calls query/repository functions.
+6. Prisma result is mapped through the success envelope; errors go to centralized exception mapping.
 
-### 1.1. Get request header và token
+## Request Usage Matrix
 
-- `authorization`: middleware đọc từ `header["Authorization"]`.
-- `user_id`: lấy từ verified `req.user.id`.
-- `email`: lấy từ verified `req.user.email`.
-- `role`: lấy từ verified `req.user.role`.
+| No | Location | Name | Rule | Use | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | header | Authorization | Bearer <JWT HS256> | Token được parse bởi authenticateToken; protected route gọi ensureAuthenticated/checkRole. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 2 | header | X-Trace-Id | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
 
-### 1.2. Get path/query/body data
+## Query Matrix
 
-- N/A — endpoint không nhận path, query hoặc request body.
+N/A — route has no Prisma query.
 
-## 2. Check quyền
+## Mutation Matrix
 
-### 2.1. Permission
+N/A — route has no persistent mutation.
 
-- `ensureAuthenticated`: yêu cầu `req.user` tồn tại và `req.authenticated` không phải `false`.
-- N/A — endpoint chỉ yêu cầu authentication, không có role restriction riêng.
+## Response Source Matrix
 
-## 3. Validate data input
+N/A — response data is null.
 
-- N/A — không có validation riêng ngoài middleware/helper được source gọi.
+## Validation and branch rules
 
-## 4. Query và business processing
+- ensureAuthenticated checks request.user and authenticated flag.
+- logout returns null data and AUTH_LOGOUT_SUCCESS.
+- sendSuccess serializes the standard envelope.
 
-- N/A — endpoint không thực hiện query riêng.
-
-## 5. Insert/Update/Delete thông tin
-
-- N/A — READ-ONLY API hoặc không có DB mutation.
-
-## 6. Map response và error
-
-- Thành công: `reply` trả HTTP `200`, `businessCode = AUTH_LOGOUT_SUCCESS`, `data` theo [04_Response.md](./04_Response.md).
-- Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
-- Chi tiết lỗi: [06_Error.md](./06_Error.md).
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -2,25 +2,27 @@
 title: "Cover"
 order: 0
 dd_id: "getMyApplications"
-api_name: "Get my applications"
+api_name: "applications.view.getStudentApplications"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "Cover"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # `Study2Work Work Server` — API Detail Design
 
 ## Thông tin tài liệu
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | Project/System | Study2Work Work Server |
-| Module | Work API |
+| Module | Applications |
 | Loại tài liệu | API Detail Design |
 | API ID | `getMyApplications` |
-| API name | Get my applications |
+| API name | applications.view.getStudentApplications |
+| Source runtime handler/use-case | applications.view.getStudentApplications |
 | HTTP method | `GET` |
 | Endpoint | `/api/v1/students/me/applications` |
 | Version | 1.0.0 |
-| Status | Draft — Needs Confirmation |
+| Status | Draft — Ready for Review |
 | Created by | Codex |
 | Reviewed by | N/A — chưa được chỉ định |
 | Approved by | N/A — chưa được chỉ định |
@@ -31,8 +33,9 @@ status: "Draft — Needs Confirmation"
 
 ```text
 Study2Work Work Server API design
-Get my applications
+applications.view.getStudentApplications
 ```
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

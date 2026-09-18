@@ -2,54 +2,49 @@
 title: "Response"
 order: 4
 dd_id: "getMyCv"
-api_name: "Get my CV"
+api_name: "cv.view.getMyCv"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "2.Response"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Response
 
 ## Format
 
-| Format | Character encoding | Content-Type |
-|---|---|---|
-| JSON | UTF-8 | application/json |
+Mọi success response dùng `successResponse`; mọi lỗi đi qua `errorResponse`/centralized exception handler.
 
-## Response fields
-
-| No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | success | Success flag | `success` | boolean | No | N/A | N/A | reply | `status < 400` | Always present | Envelope field |
-| 2 | businessCode | Business code | `businessCode` | string | No | N/A | N/A | reply | Fixed by branch | Always present | Source-confirmed code |
-| 3 | message | Message | `message` | string | No | N/A | N/A | reply | Fixed by branch | Always present | Vietnamese source message |
-| 4 | data | Payload | `data` | object\|array\|null | Yes | Route/service result | N/A | reply | `jsonSafe` on success; null on errors | null on errors | See data-specific rows |
-| 5 | meta | Metadata | `meta` | object | No | N/A | N/A | reply | Pagination metadata where applicable | {} if none |  |
-| 6 | traceId | Trace ID | `traceId` | string | No | N/A | N/A | reply/traceId | Header value or generated UUID | Always present | Also returned as X-Trace-Id header |
-| 7 | data.id | id | `id` | number | Yes | Cv | id | query/mutation result | BigInt → JSON number | N/A | Full Prisma result |
-| 8 | data.avt | avt | `avt` | string\|null | Yes | Cv | avt | query/mutation result | Direct | null nếu DB null | Stored filename |
-| 9 | data.hoten | hoten | `hoten` | string | Yes | Cv | hoten | query/mutation result | Direct | N/A | Required DB column |
-| 10 | data.ngaysinh | ngaysinh | `ngaysinh` | string\|null | Yes | Cv | ngaysinh | query/mutation result | Date → ISO string | null nếu DB null | Timestamptz |
-| 11 | data.gioitinh | gioitinh | `gioitinh` | string\|null | Yes | Cv | gioitinh | query/mutation result | Direct | null nếu DB null |  |
-| 12 | data.email | email | `email` | string | Yes | Cv | email | query/mutation result | Direct | N/A | Required DB column |
-| 13 | data.sdt | sdt | `sdt` | string\|null | Yes | Cv | sdt | query/mutation result | Direct | null nếu DB null |  |
-| 14 | data.diachi | diachi | `diachi` | string\|null | Yes | Cv | diachi | query/mutation result | Direct | null nếu DB null |  |
-| 15 | data.vitri | vitri | `vitri` | string\|null | Yes | Cv | vitri | query/mutation result | Direct | null nếu DB null |  |
-| 16 | data.nganh | nganh | `nganh` | string\|null | Yes | Cv | nganh | query/mutation result | Direct | null nếu DB null |  |
-| 17 | data.muctieunghiep | muctieunghiep | `muctieunghiep` | string\|null | Yes | Cv | muctieunghiep | query/mutation result | Direct | null nếu DB null |  |
-| 18 | data.hocvan | hocvan | `hocvan` | string\|null | Yes | Cv | hocvan | query/mutation result | Direct | null nếu DB null |  |
-| 19 | data.kinhnghiem | kinhnghiem | `kinhnghiem` | string\|null | Yes | Cv | kinhnghiem | query/mutation result | Direct | null nếu DB null |  |
-| 20 | data.kynang | kynang | `kynang` | string\|null | Yes | Cv | kynang | query/mutation result | Direct | null nếu DB null |  |
-| 21 | data.ngoaingu | ngoaingu | `ngoaingu` | string\|null | Yes | Cv | ngoaingu | query/mutation result | Direct | null nếu DB null |  |
-| 22 | data.chungchi | chungchi | `chungchi` | string\|null | Yes | Cv | chungchi | query/mutation result | Direct | null nếu DB null |  |
-| 23 | data.duan | duan | `duan` | string\|null | Yes | Cv | duan | query/mutation result | Direct | null nếu DB null |  |
-| 24 | data.giaithuong | giaithuong | `giaithuong` | string\|null | Yes | Cv | giaithuong | query/mutation result | Direct | null nếu DB null |  |
-| 25 | data.hoatdong | hoatdong | `hoatdong` | string\|null | Yes | Cv | hoatdong | query/mutation result | Direct | null nếu DB null |  |
-| 26 | data.social | social | `social` | object\|string\|null | Yes | Cv | social | query/mutation result | Direct/JSONB | null nếu DB null | String input is parsed when valid |
-| 27 | data.portfolio | portfolio | `portfolio` | string\|null | Yes | Cv | portfolio | query/mutation result | Direct | null nếu DB null |  |
-| 28 | data.luongmongmuon | luongmongmuon | `luongmongmuon` | string\|null | Yes | Cv | luongmongmuon | query/mutation result | Direct | null nếu DB null |  |
-| 29 | data.created_at | created_at | `created_at` | string\|null | Yes | Cv | created_at | query/mutation result | Date → ISO string | null nếu DB null | Timestamptz |
-| 30 | data.sinhvien_id | sinhvien_id | `sinhvien_id` | number\|null | Yes | Cv | sinhvien_id | query/mutation result | BigInt → JSON number | null nếu DB null | Unique FK |
-
-> HTTP status là transport status; không được thêm `HTTPStatus` vào JSON body vì current `reply` không trả field này.
+| Field | Type | Example | Description | Source |
+| ---: | --- | --- | --- | --- |
+| success | boolean | true | Luôn true ở success response. | successResponse |
+| businessCode | string | `CV_LOADED` | Business code do view/system route trả về. | successResponse |
+| message | string | Đã tải CV. | Message source-confirmed. | successResponse |
+| data | object | route-specific | jsonSafe chuyển BigInt/Date trước khi serialize. | view result |
+| meta | object | {} | Pagination hoặc object rỗng. | successResponse |
+| traceId | UUID string | 11111111-1111-4111-8111-111111111111 | Lấy từ AsyncLocalStorage/request trace context. | traceMiddleware |
+| data.id | number sau jsonSafe | source value | Raw Cv Prisma field. | cv view/query |
+| data.avt | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.hoten | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.ngaysinh | string ISO-8601 sau jsonSafe | source value | Raw Cv Prisma field. | cv view/query |
+| data.gioitinh | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.email | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.sdt | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.diachi | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.vitri | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.nganh | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.muctieunghiep | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.hocvan | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.kinhnghiem | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.kynang | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.ngoaingu | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.chungchi | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.duan | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.giaithuong | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.hoatdong | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.social | JSON \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.portfolio | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.luongmongmuon | string \| null | source value | Raw Cv Prisma field. | cv view/query |
+| data.created_at | string ISO-8601 sau jsonSafe | source value | Raw Cv Prisma field. | cv view/query |
+| data.sinhvien_id | number sau jsonSafe | source value | Raw Cv Prisma field. | cv view/query |
 
 ## Ví dụ thành công
 
@@ -57,10 +52,35 @@ status: "Draft — Needs Confirmation"
 {
   "success": true,
   "businessCode": "CV_LOADED",
-  "message": "Source success message",
-  "data": {},
+  "message": "Đã tải CV.",
+  "data": {
+    "id": 1,
+    "avt": null,
+    "hoten": "Test Student",
+    "ngaysinh": null,
+    "gioitinh": null,
+    "email": "student@example.com",
+    "sdt": null,
+    "diachi": null,
+    "vitri": null,
+    "nganh": null,
+    "muctieunghiep": null,
+    "hocvan": null,
+    "kinhnghiem": null,
+    "kynang": null,
+    "ngoaingu": null,
+    "chungchi": null,
+    "duan": null,
+    "giaithuong": null,
+    "hoatdong": null,
+    "social": null,
+    "portfolio": null,
+    "luongmongmuon": null,
+    "created_at": "2026-09-18T00:00:00.000Z",
+    "sinhvien_id": 1
+  },
   "meta": {},
-  "traceId": "00000000-0000-4000-8000-000000000000"
+  "traceId": "11111111-1111-4111-8111-111111111111"
 }
 ```
 
@@ -70,12 +90,20 @@ status: "Draft — Needs Confirmation"
 {
   "success": false,
   "businessCode": "UNAUTHORIZED",
-  "message": "Source error message",
+  "message": "Yêu cầu Bearer token hợp lệ.",
   "data": null,
   "meta": {},
-  "traceId": "00000000-0000-4000-8000-000000000000"
+  "traceId": "11111111-1111-4111-8111-111111111111"
 }
 ```
+
+## Serialization and trace
+
+- `BigInt` được serialize thành number bởi `jsonSafe`.
+- `Date` được serialize thành ISO-8601 string bởi `jsonSafe`.
+- `X-Trace-Id` response header bằng `traceId` trong body.
+- `meta.fieldErrors` chỉ có khi centralized mapper nhận `ZodError` có field issues.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

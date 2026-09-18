@@ -2,32 +2,33 @@
 title: "Định nghĩa table"
 order: 7
 dd_id: "loginBusiness"
-api_name: "Business login"
+api_name: "auth.view.loginBusiness"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "table"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Định nghĩa table
 
 ## Table metadata
 
 | Thuộc tính | Giá trị |
-|---|---|
-| Physical table | N/A |
-| Logical table | N/A |
-| Operation | N/A — READ-ONLY API |
-| Data Mapping step | N/A |
+| ---: | --- |
+| Prisma model | DoanhNghiep |
+| Operation | UPDATE (best-effort rehash) |
+| Transaction | No explicit transaction; swallowed update failure |
+| Status | Draft — Ready for Review |
 
-## Update mapping
+## Field mapping
 
-- N/A — READ-ONLY API.
+| No | DB column | Operation | Value source | Prisma/schema type |
+| ---: | --- | --- | --- | --- |
+| 1 | matkhau | UPDATE (best-effort rehash) | hashPassword(password) after legacy plaintext verification | VARCHAR(255) |
 
-## Insert mapping
+## Insert/Update/Delete behavior
 
-- N/A — READ-ONLY API.
+- Only legacy plaintext rows trigger this update.
+- The public login response does not expose matkhau.
 
-## Delete mapping
-
-- N/A — READ-ONLY API.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

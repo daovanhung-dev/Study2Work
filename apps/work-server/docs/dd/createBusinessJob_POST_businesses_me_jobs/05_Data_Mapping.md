@@ -2,86 +2,100 @@
 title: "Data Mapping"
 order: 5
 dd_id: "createBusinessJob"
-api_name: "Create business job"
+api_name: "jobs.view.createBusinessJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Data Mapping
 
-## Flow xử lý data
+## Execution flow
 
-## 1. Get thông tin
+1. `traceMiddleware` accepts a valid `X-Trace-Id` or generates a UUID.
+2. `express.json`/Multer parses the request according to the route transport.
+3. Auth middleware optionally decodes Bearer JWT; protected route middleware enforces authentication and role.
+4. Route parses model and calls the module view/use-case.
+5. View validates, applies business rule and calls query/repository functions.
+6. Prisma result is mapped through the success envelope; errors go to centralized exception mapping.
 
-### 1.1. Get request header và token
+## Request Usage Matrix
 
-- `authorization`: middleware đọc từ `header["Authorization"]`.
-- `user_id`: lấy từ verified `req.user.id`.
-- `email`: lấy từ verified `req.user.email`.
-- `role`: lấy từ verified `req.user.role`.
+| No | Location | Name | Rule | Use | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | header | Authorization | Bearer <JWT HS256> | Token được parse bởi authenticateToken; protected route gọi ensureAuthenticated/checkRole. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 2 | header | X-Trace-Id | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 3 | body | ten_vi_tri | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 4 | body | phong_ban | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 5 | body | cap_bac | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 6 | body | bao_cao_cho | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 7 | body | nhiem_vu | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 8 | body | trinh_do | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 9 | body | kinh_nghiem | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 10 | body | ky_nang | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 11 | body | ky_nang_mem | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 12 | body | uu_tien | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 13 | body | muc_luong | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 14 | body | phuc_loi | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 15 | body | moi_truong | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 16 | body | dia_diem | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 17 | body | thoi_gian | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 18 | body | han_nop | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 19 | body | cach_ung_tuyen | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 20 | body | mo_ta | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 21 | body | ten_cong_ty | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 22 | body | nganh | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 23 | file | avt | Multer filter/limit | Filename is passed to normalize function. | [apps/work-server/src/config/multer.ts](../../../src/config/multer.ts) |
 
-### 1.2. Get path/query/body data
+## Query Matrix
 
-- `ten_vi_tri`: lấy từ `req.body.ten_vi_tri`.
-- `phong_ban`: lấy từ `req.body.phong_ban`.
-- `cap_bac`: lấy từ `req.body.cap_bac`.
-- `bao_cao_cho`: lấy từ `req.body.bao_cao_cho`.
-- `nhiem_vu`: lấy từ `req.body.nhiem_vu`.
-- `trinh_do`: lấy từ `req.body.trinh_do`.
-- `kinh_nghiem`: lấy từ `req.body.kinh_nghiem`.
-- `ky_nang`: lấy từ `req.body.ky_nang`.
-- `ky_nang_mem`: lấy từ `req.body.ky_nang_mem`.
-- `uu_tien`: lấy từ `req.body.uu_tien`.
-- `muc_luong`: lấy từ `req.body.muc_luong`.
-- `phuc_loi`: lấy từ `req.body.phuc_loi`.
-- `moi_truong`: lấy từ `req.body.moi_truong`.
-- `dia_diem`: lấy từ `req.body.dia_diem`.
-- `thoi_gian`: lấy từ `req.body.thoi_gian`.
-- `han_nop`: lấy từ `req.body.han_nop`.
-- `cach_ung_tuyen`: lấy từ `req.body.cach_ung_tuyen`.
-- `mo_ta`: lấy từ `req.body.mo_ta`.
-- `ten_cong_ty`: lấy từ `req.body.ten_cong_ty`.
-- `nganh`: lấy từ `req.body.nganh`.
-- `avt`: lấy từ `req.file` và dùng `req.file.filename` nếu upload thành công.
+| No | Operation | Table/model | Columns/select | Where | Sort/pagination | Include/relation | Transaction |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | requireBusiness | DoanhNghiep | businessPublicSelect | id = token.id | N/A | N/A | inside transaction |
+| 2 | insertJob | JD | jobPublicSelect | N/A | N/A | N/A | inside transaction |
 
-## 2. Check quyền
+## Mutation Matrix
 
-### 2.1. Permission
+| No | Operation | Table/model | Condition | Fields | Value source | Transaction | Failure behavior |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | INSERT | JD | business exists and required fields present | ten_vi_tri, phong_ban, cap_bac, bao_cao_cho, nhiem_vu, trinh_do, kinh_nghiem, ky_nang, ky_nang_mem, uu_tien, muc_luong, phuc_loi, moi_truong, dia_diem, thoi_gian, han_nop, cach_ung_tuyen, mo_ta, ten_cong_ty, nganh, avt, doanhnghiep_id | normalized body; file path; token business id; business.hoten fallback | Prisma $transaction | missing business -> USER_NOT_FOUND |
 
-- `ensureAuthenticated`: yêu cầu `req.user` tồn tại và `req.authenticated` không phải `false`.
-- `checkRole("business")`: chỉ cho phép JWT có role `business`.
+## Response Source Matrix
 
-## 3. Validate data input
+| No | Field | Kind | Source/transform | Mapping source |
+| ---: | --- | --- | --- | --- |
+| 1 | id | data field | jobPublicSelect field. | jobs view/query |
+| 2 | ten_vi_tri | data field | jobPublicSelect field. | jobs view/query |
+| 3 | phong_ban | data field | jobPublicSelect field. | jobs view/query |
+| 4 | cap_bac | data field | jobPublicSelect field. | jobs view/query |
+| 5 | bao_cao_cho | data field | jobPublicSelect field. | jobs view/query |
+| 6 | nhiem_vu | data field | jobPublicSelect field. | jobs view/query |
+| 7 | trinh_do | data field | jobPublicSelect field. | jobs view/query |
+| 8 | kinh_nghiem | data field | jobPublicSelect field. | jobs view/query |
+| 9 | ky_nang | data field | jobPublicSelect field. | jobs view/query |
+| 10 | ky_nang_mem | data field | jobPublicSelect field. | jobs view/query |
+| 11 | uu_tien | data field | jobPublicSelect field. | jobs view/query |
+| 12 | muc_luong | data field | jobPublicSelect field. | jobs view/query |
+| 13 | phuc_loi | data field | jobPublicSelect field. | jobs view/query |
+| 14 | moi_truong | data field | jobPublicSelect field. | jobs view/query |
+| 15 | dia_diem | data field | jobPublicSelect field. | jobs view/query |
+| 16 | thoi_gian | data field | jobPublicSelect field. | jobs view/query |
+| 17 | han_nop | data field | jobPublicSelect field. | jobs view/query |
+| 18 | cach_ung_tuyen | data field | jobPublicSelect field. | jobs view/query |
+| 19 | mo_ta | data field | jobPublicSelect field. | jobs view/query |
+| 20 | ten_cong_ty | data field | jobPublicSelect field. | jobs view/query |
+| 21 | nganh | data field | jobPublicSelect field. | jobs view/query |
+| 22 | ngay_tao | data field | jobPublicSelect field. | jobs view/query |
+| 23 | doanhnghiep_id | data field | jobPublicSelect field. | jobs view/query |
+| 24 | avt | data field | jobPublicSelect field. | jobs view/query |
 
-- `ten_vi_tri` và `dia_diem` phải có giá trị.
-- `doanhnghiep_id` được lấy từ JWT, không lấy từ request.
-- Ảnh phải qua Multer extension/file-size filter.
+## Validation and branch rules
 
-## 4. Query và business processing
+- Multer parses optional avt.
+- jobMutationSchema parses body and allows passthrough fields.
+- normalizeJobData keeps only JOB mutation whitelist and maps file to `/uploads/` path.
+- assertCreateJob requires ten_vi_tri and dia_diem.
+- Transaction loads business and inserts JD.
 
-### 4.1. Chuẩn bị owner/company
-
-- Tạo data bằng `jdData(req.body, req.file.filename)`.
-- Gán `data.doanhnghiep_id = user.id`.
-- Gọi `BusinessService.getDoanhNghiepById(user.id)` để lấy `hoten`.
-- Nếu request không có `ten_cong_ty` và business tồn tại, dùng `business.data.hoten`.
-
-## 5. Insert/Update/Delete thông tin
-
-### 5.1. INSERT `JD`
-
-- Nếu thiếu `ten_vi_tri` hoặc `dia_diem`, trả `400 INVALID_REQUEST`.
-- Gọi `JDService.insertJD(data)`.
-- Prisma tạo record `JD`.
-- Không có transaction explicit trong source.
-
-## 6. Map response và error
-
-- `data` là record `JD` vừa tạo.
-- Ảnh được lưu ở dạng `/uploads/<filename>` trong `JD.avt`.
-- Thành công: `reply` trả HTTP `201`, `businessCode = JOB_CREATED`, `data` theo [04_Response.md](./04_Response.md).
-- Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
-- Chi tiết lỗi: [06_Error.md](./06_Error.md).
-- DB mapping: [07_JD_insert.md](./07_JD_insert.md).
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

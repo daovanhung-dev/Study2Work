@@ -2,25 +2,27 @@
 title: "Cover"
 order: 0
 dd_id: "deleteBusinessJob"
-api_name: "Delete business job"
+api_name: "jobs.view.deleteBusinessJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "Cover"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # `Study2Work Work Server` — API Detail Design
 
 ## Thông tin tài liệu
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | Project/System | Study2Work Work Server |
-| Module | Work API |
+| Module | Business Jobs |
 | Loại tài liệu | API Detail Design |
 | API ID | `deleteBusinessJob` |
-| API name | Delete business job |
+| API name | jobs.view.deleteBusinessJob |
+| Source runtime handler/use-case | jobs.view.deleteBusinessJob |
 | HTTP method | `DELETE` |
 | Endpoint | `/api/v1/businesses/me/jobs/:jobId` |
 | Version | 1.0.0 |
-| Status | Draft — Needs Confirmation |
+| Status | Draft — Ready for Review |
 | Created by | Codex |
 | Reviewed by | N/A — chưa được chỉ định |
 | Approved by | N/A — chưa được chỉ định |
@@ -31,8 +33,9 @@ status: "Draft — Needs Confirmation"
 
 ```text
 Study2Work Work Server API design
-Delete business job
+jobs.view.deleteBusinessJob
 ```
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

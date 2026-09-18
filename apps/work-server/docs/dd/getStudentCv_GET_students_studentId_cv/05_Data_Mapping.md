@@ -2,58 +2,76 @@
 title: "Data Mapping"
 order: 5
 dd_id: "getStudentCv"
-api_name: "Get student CV"
+api_name: "cv.view.getStudentCv"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Data Mapping
 
-## Flow xử lý data
+## Execution flow
 
-## 1. Get thông tin
+1. `traceMiddleware` accepts a valid `X-Trace-Id` or generates a UUID.
+2. `express.json`/Multer parses the request according to the route transport.
+3. Auth middleware optionally decodes Bearer JWT; protected route middleware enforces authentication and role.
+4. Route parses model and calls the module view/use-case.
+5. View validates, applies business rule and calls query/repository functions.
+6. Prisma result is mapped through the success envelope; errors go to centralized exception mapping.
 
-### 1.1. Get request header và token
+## Request Usage Matrix
 
-- `authorization`: middleware đọc từ `header["Authorization"]`.
-- `user_id`: lấy từ verified `req.user.id`.
-- `email`: lấy từ verified `req.user.email`.
-- `role`: lấy từ verified `req.user.role`.
+| No | Location | Name | Rule | Use | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | header | Authorization | Bearer <JWT HS256> | Token được parse bởi authenticateToken; protected route gọi ensureAuthenticated/checkRole. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 2 | header | X-Trace-Id | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 3 | path | studentId | digits only; >0; Number.isSafeInteger | Student primary key used as Cv.sinhvien_id. | [apps/work-server/src/modules/cv/validate.ts](../../../src/modules/cv/validate.ts) |
 
-### 1.2. Get path/query/body data
+## Query Matrix
 
-- `studentId`: lấy từ `req.params.studentId`.
+| No | Operation | Table/model | Columns/select | Where | Sort/pagination | Include/relation | Transaction |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | findStudentCv | Cv | all Cv columns | sinhvien_id = BigInt(path.studentId) | first row | N/A | N/A |
 
-## 2. Check quyền
+## Mutation Matrix
 
-### 2.1. Permission
+N/A — route has no persistent mutation.
 
-- `ensureAuthenticated`: yêu cầu `req.user` tồn tại và `req.authenticated` không phải `false`.
-- `checkRole("business")`: chỉ cho phép JWT có role `business`.
+## Response Source Matrix
 
-## 3. Validate data input
+| No | Field | Kind | Source/transform | Mapping source |
+| ---: | --- | --- | --- | --- |
+| 1 | id | data field | Raw Cv Prisma field. | cv view/query |
+| 2 | avt | data field | Raw Cv Prisma field. | cv view/query |
+| 3 | hoten | data field | Raw Cv Prisma field. | cv view/query |
+| 4 | ngaysinh | data field | Raw Cv Prisma field. | cv view/query |
+| 5 | gioitinh | data field | Raw Cv Prisma field. | cv view/query |
+| 6 | email | data field | Raw Cv Prisma field. | cv view/query |
+| 7 | sdt | data field | Raw Cv Prisma field. | cv view/query |
+| 8 | diachi | data field | Raw Cv Prisma field. | cv view/query |
+| 9 | vitri | data field | Raw Cv Prisma field. | cv view/query |
+| 10 | nganh | data field | Raw Cv Prisma field. | cv view/query |
+| 11 | muctieunghiep | data field | Raw Cv Prisma field. | cv view/query |
+| 12 | hocvan | data field | Raw Cv Prisma field. | cv view/query |
+| 13 | kinhnghiem | data field | Raw Cv Prisma field. | cv view/query |
+| 14 | kynang | data field | Raw Cv Prisma field. | cv view/query |
+| 15 | ngoaingu | data field | Raw Cv Prisma field. | cv view/query |
+| 16 | chungchi | data field | Raw Cv Prisma field. | cv view/query |
+| 17 | duan | data field | Raw Cv Prisma field. | cv view/query |
+| 18 | giaithuong | data field | Raw Cv Prisma field. | cv view/query |
+| 19 | hoatdong | data field | Raw Cv Prisma field. | cv view/query |
+| 20 | social | data field | Raw Cv Prisma field. | cv view/query |
+| 21 | portfolio | data field | Raw Cv Prisma field. | cv view/query |
+| 22 | luongmongmuon | data field | Raw Cv Prisma field. | cv view/query |
+| 23 | created_at | data field | Raw Cv Prisma field. | cv view/query |
+| 24 | sinhvien_id | data field | Raw Cv Prisma field. | cv view/query |
 
-- `studentId` phải là chuỗi digits và safe integer.
+## Validation and branch rules
 
-## 4. Query và business processing
+- checkRole('business') executes.
+- parseCvId validates studentId using the same positive numeric schema.
+- findStudentCv filters Cv.sinhvien_id.
+- Missing CV throws CV_NOT_FOUND.
 
-### 4.1. Query CV
-
-- `numericParam(req.params.studentId)` chuyển path id.
-- Gọi `CVService.getCvById(studentId)`.
-- Prisma đọc `Cv.findFirst({ where: { sinhvien_id: BigInt(studentId) } })`.
-- Nếu không có CV, trả `404 CV_NOT_FOUND`.
-
-## 5. Insert/Update/Delete thông tin
-
-- N/A — READ-ONLY API hoặc không có DB mutation.
-
-## 6. Map response và error
-
-- `data` là record `Cv` của student.
-- BigInt/Date được normalize trong `reply`.
-- Thành công: `reply` trả HTTP `200`, `businessCode = CV_LOADED`, `data` theo [04_Response.md](./04_Response.md).
-- Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
-- Chi tiết lỗi: [06_Error.md](./06_Error.md).
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -2,35 +2,30 @@
 title: "Response"
 order: 4
 dd_id: "registerStudent"
-api_name: "Register student"
+api_name: "students.view.registerStudent"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "2.Response"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Response
 
 ## Format
 
-| Format | Character encoding | Content-Type |
-|---|---|---|
-| JSON | UTF-8 | application/json |
+Mọi success response dùng `successResponse`; mọi lỗi đi qua `errorResponse`/centralized exception handler.
 
-## Response fields
-
-| No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | success | Success flag | `success` | boolean | No | N/A | N/A | reply | `status < 400` | Always present | Envelope field |
-| 2 | businessCode | Business code | `businessCode` | string | No | N/A | N/A | reply | Fixed by branch | Always present | Source-confirmed code |
-| 3 | message | Message | `message` | string | No | N/A | N/A | reply | Fixed by branch | Always present | Vietnamese source message |
-| 4 | data | Payload | `data` | object\|array\|null | Yes | Route/service result | N/A | reply | `jsonSafe` on success; null on errors | null on errors | See data-specific rows |
-| 5 | meta | Metadata | `meta` | object | No | N/A | N/A | reply | Pagination metadata where applicable | {} if none |  |
-| 6 | traceId | Trace ID | `traceId` | string | No | N/A | N/A | reply/traceId | Header value or generated UUID | Always present | Also returned as X-Trace-Id header |
-| 7 | data.id | id | `id` | number | Yes | SinhVien | id | query/mutation result | BigInt → JSON number | N/A | Public selected field |
-| 8 | data.hoten | hoten | `hoten` | string\|null | Yes | SinhVien | hoten | query/mutation result | Direct | null nếu DB null | Public selected field |
-| 9 | data.email | email | `email` | string\|null | Yes | SinhVien | email | query/mutation result | Direct | null nếu DB null | Public selected field |
-| 10 | data.chuyennganh | chuyennganh | `chuyennganh` | string\|null | Yes | SinhVien | chuyennganh | query/mutation result | Direct | null nếu DB null | Public selected field |
-| 11 | data.avt | avt | `avt` | string\|null | Yes | SinhVien | avt | query/mutation result | Direct | null nếu DB null | Public selected field |
-
-> HTTP status là transport status; không được thêm `HTTPStatus` vào JSON body vì current `reply` không trả field này.
+| Field | Type | Example | Description | Source |
+| ---: | --- | --- | --- | --- |
+| success | boolean | true | Luôn true ở success response. | successResponse |
+| businessCode | string | `STUDENT_CREATED` | Business code do view/system route trả về. | successResponse |
+| message | string | Bạn đã tạo tài khoản thành công. | Message source-confirmed. | successResponse |
+| data | object | route-specific | jsonSafe chuyển BigInt/Date trước khi serialize. | view result |
+| meta | object | {} | Pagination hoặc object rỗng. | successResponse |
+| traceId | UUID string | 11111111-1111-4111-8111-111111111111 | Lấy từ AsyncLocalStorage/request trace context. | traceMiddleware |
+| data.id | number sau jsonSafe | source value | studentPublicSelect field. | student view/query and public selector |
+| data.hoten | string \| null | source value | studentPublicSelect field. | student view/query and public selector |
+| data.email | string \| null | source value | studentPublicSelect field. | student view/query and public selector |
+| data.chuyennganh | string \| null | source value | studentPublicSelect field. | student view/query and public selector |
+| data.avt | string \| null | source value | studentPublicSelect field. | student view/query and public selector |
 
 ## Ví dụ thành công
 
@@ -38,10 +33,16 @@ status: "Draft — Needs Confirmation"
 {
   "success": true,
   "businessCode": "STUDENT_CREATED",
-  "message": "Source success message",
-  "data": {},
+  "message": "Bạn đã tạo tài khoản thành công.",
+  "data": {
+    "id": 3,
+    "hoten": "New Student",
+    "email": "new@example.com",
+    "chuyennganh": "IT",
+    "avt": null
+  },
   "meta": {},
-  "traceId": "00000000-0000-4000-8000-000000000000"
+  "traceId": "11111111-1111-4111-8111-111111111111"
 }
 ```
 
@@ -51,12 +52,28 @@ status: "Draft — Needs Confirmation"
 {
   "success": false,
   "businessCode": "INVALID_REQUEST",
-  "message": "Source error message",
+  "message": "Request không hợp lệ.",
   "data": null,
-  "meta": {},
-  "traceId": "00000000-0000-4000-8000-000000000000"
+  "meta": {
+    "fieldErrors": [
+      {
+        "field": "email",
+        "code": "invalid_string",
+        "message": "Email không hợp lệ."
+      }
+    ]
+  },
+  "traceId": "11111111-1111-4111-8111-111111111111"
 }
 ```
+
+## Serialization and trace
+
+- `BigInt` được serialize thành number bởi `jsonSafe`.
+- `Date` được serialize thành ISO-8601 string bởi `jsonSafe`.
+- `X-Trace-Id` response header bằng `traceId` trong body.
+- `meta.fieldErrors` chỉ có khi centralized mapper nhận `ZodError` có field issues.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

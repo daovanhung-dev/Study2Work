@@ -2,71 +2,81 @@
 title: "Request"
 order: 3
 dd_id: "createCv"
-api_name: "Create CV"
+api_name: "cv.view.createCv"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "1.Request"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Request
 
 ## API endpoint
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | HTTP method | `POST` |
 | URI | `/api/v1/students/me/cv` |
-| Character encoding | UTF-8 |
-| Content-Type | multipart/form-data |
+| Character encoding | `UTF-8` |
+| Content-Type | multipart/form-data or application/json |
 
 ## Request header
 
-| No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
-|---|---|---|---|---|---|---|
-| 1 | Contents type | `Content-Type` | Yes | multipart/form-data | Request media type | `05_Data_Mapping.md` |
-| 2 | Bearer auth | `Authorization` | Yes | `Bearer redacted.jwt.token` | Verified by global middleware and route boundary | `05_Data_Mapping.md` |
+| No | Field name | Required | Value/Format | Description | Data Mapping reference |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `Authorization` | Yes | Bearer <JWT HS256> | Token được parse bởi authenticateToken; protected route gọi ensureAuthenticated/checkRole. | [Request usage](./05_Data_Mapping.md#request-usage-matrix) |
+| 2 | `X-Trace-Id` | No | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [Request usage](./05_Data_Mapping.md#request-usage-matrix) |
 
 ## Path parameters
 
-N/A — API không nhận Path parameter.
+N/A — endpoint không có path parameter.
 
 ## Query parameters
 
-N/A — API không nhận Query parameter.
+N/A — endpoint không có query parameter.
 
 ## Request body
 
-| No | Location | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Description | Data Mapping reference |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | body | hoten | `hoten` | string | Conditional | N/A | N/A | UTF-8/text | N/A | N/A | Họ tên CV | `05_Data_Mapping.md` |
-| 2 | body | ngaysinh | `ngaysinh` | string | No | N/A | N/A | UTF-8/text | Date-compatible string | N/A | Ngày sinh; source truyền vào `new Date(value)` nếu có | `05_Data_Mapping.md` |
-| 3 | body | gioitinh | `gioitinh` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Giới tính | `05_Data_Mapping.md` |
-| 4 | body | email | `email` | string | Conditional | N/A | N/A | UTF-8/text | N/A | N/A | Email CV | `05_Data_Mapping.md` |
-| 5 | body | sdt | `sdt` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Số điện thoại | `05_Data_Mapping.md` |
-| 6 | body | diachi | `diachi` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Địa chỉ | `05_Data_Mapping.md` |
-| 7 | body | vitri | `vitri` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Vị trí | `05_Data_Mapping.md` |
-| 8 | body | nganh | `nganh` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Ngành | `05_Data_Mapping.md` |
-| 9 | body | muctieunghiep | `muctieunghiep` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Mục tiêu nghề nghiệp | `05_Data_Mapping.md` |
-| 10 | body | hocvan | `hocvan` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Học vấn | `05_Data_Mapping.md` |
-| 11 | body | kinhnghiem | `kinhnghiem` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Kinh nghiệm | `05_Data_Mapping.md` |
-| 12 | body | kynang | `kynang` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Kỹ năng | `05_Data_Mapping.md` |
-| 13 | body | ngoaingu | `ngoaingu` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Ngoại ngữ | `05_Data_Mapping.md` |
-| 14 | body | chungchi | `chungchi` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Chứng chỉ | `05_Data_Mapping.md` |
-| 15 | body | duan | `duan` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Dự án | `05_Data_Mapping.md` |
-| 16 | body | giaithuong | `giaithuong` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Giải thưởng | `05_Data_Mapping.md` |
-| 17 | body | hoatdong | `hoatdong` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Hoạt động | `05_Data_Mapping.md` |
-| 18 | body | social | `social` | string\|object | No | N/A | N/A | UTF-8/text | N/A | N/A | Nếu là string, source thử `JSON.parse`; nếu parse lỗi giữ nguyên string | `05_Data_Mapping.md` |
-| 19 | body | portfolio | `portfolio` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Portfolio | `05_Data_Mapping.md` |
-| 20 | body | luongmongmuon | `luongmongmuon` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Lương mong muốn | `05_Data_Mapping.md` |
-| 21 | file | avt | `avt` | binary file | No | N/A | N/A | UTF-8/text | jpeg\|jpg\|png\|gif; tối đa 10 MB | N/A | Ảnh CV; source lưu filename | `05_Data_Mapping.md` |
-> Mỗi field nằm trên một row riêng. `Conditional` nghĩa là source kiểm tra điều kiện kết hợp chứ không yêu cầu field đó độc lập.
+| No | Logical name | Field name | Type | Required | Validation/format | Default | Description | Data Mapping reference |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | hoten | hoten | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 2 | ngaysinh | ngaysinh | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/validate.ts](../../../src/modules/cv/validate.ts) |
+| 3 | gioitinh | gioitinh | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 4 | email | email | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 5 | sdt | sdt | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 6 | diachi | diachi | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 7 | vitri | vitri | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 8 | nganh | nganh | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 9 | muctieunghiep | muctieunghiep | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 10 | hocvan | hocvan | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 11 | kinhnghiem | kinhnghiem | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 12 | kynang | kynang | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 13 | ngoaingu | ngoaingu | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 14 | chungchi | chungchi | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 15 | duan | duan | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 16 | giaithuong | giaithuong | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 17 | hoatdong | hoatdong | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 18 | social | social | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/validate.ts](../../../src/modules/cv/validate.ts) |
+| 19 | portfolio | portfolio | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 20 | luongmongmuon | luongmongmuon | string/JSON/date according to field | Conditional | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 21 | Uploaded file | avt | binary | No | jpeg/jpg/png/gif; MIME phải khớp extension; tối đa 10 MiB | Multer field; filename được normalize vào data | [apps/work-server/src/config/multer.ts](../../../src/config/multer.ts) |
 
 ## Ví dụ Request data
 
-```text
-Content-Type: multipart/form-data; boundary=client-generated-boundary
+`multipart/form-data` dùng các key trong bảng body; JSON dưới đây chỉ biểu diễn logical fields khi route cho phép JSON hoặc body rỗng.
 
-field_name = field_value
-avt = example.jpg (optional)
+```json
+{
+  "hoten": "Test Student",
+  "email": "student@example.com",
+  "ngaysinh": "2000-01-01"
+}
 ```
+
+## Source behavior
+
+- Request được parse ở route bằng Zod model nếu route có model tương ứng.
+- Với route dùng Multer, file được xử lý trước use-case; lỗi MIME/extension/size đi vào centralized exception handler.
+- Unknown body fields chỉ được giữ lại ở bước Zod nếu model `.passthrough()`/record cho phép; use-case chỉ normalize whitelist field đã nêu.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

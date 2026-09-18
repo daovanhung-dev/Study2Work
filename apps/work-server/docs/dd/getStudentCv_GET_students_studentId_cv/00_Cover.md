@@ -2,25 +2,27 @@
 title: "Cover"
 order: 0
 dd_id: "getStudentCv"
-api_name: "Get student CV"
+api_name: "cv.view.getStudentCv"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "Cover"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # `Study2Work Work Server` — API Detail Design
 
 ## Thông tin tài liệu
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | Project/System | Study2Work Work Server |
-| Module | Work API |
+| Module | CV |
 | Loại tài liệu | API Detail Design |
 | API ID | `getStudentCv` |
-| API name | Get student CV |
+| API name | cv.view.getStudentCv |
+| Source runtime handler/use-case | cv.view.getStudentCv |
 | HTTP method | `GET` |
 | Endpoint | `/api/v1/students/:studentId/cv` |
 | Version | 1.0.0 |
-| Status | Draft — Needs Confirmation |
+| Status | Draft — Ready for Review |
 | Created by | Codex |
 | Reviewed by | N/A — chưa được chỉ định |
 | Approved by | N/A — chưa được chỉ định |
@@ -31,8 +33,9 @@ status: "Draft — Needs Confirmation"
 
 ```text
 Study2Work Work Server API design
-Get student CV
+cv.view.getStudentCv
 ```
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

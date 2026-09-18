@@ -2,85 +2,101 @@
 title: "Data Mapping"
 order: 5
 dd_id: "updateCv"
-api_name: "Update CV"
+api_name: "cv.view.updateCv"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Data Mapping
 
-## Flow xử lý data
+## Execution flow
 
-## 1. Get thông tin
+1. `traceMiddleware` accepts a valid `X-Trace-Id` or generates a UUID.
+2. `express.json`/Multer parses the request according to the route transport.
+3. Auth middleware optionally decodes Bearer JWT; protected route middleware enforces authentication and role.
+4. Route parses model and calls the module view/use-case.
+5. View validates, applies business rule and calls query/repository functions.
+6. Prisma result is mapped through the success envelope; errors go to centralized exception mapping.
 
-### 1.1. Get request header và token
+## Request Usage Matrix
 
-- `authorization`: middleware đọc từ `header["Authorization"]`.
-- `user_id`: lấy từ verified `req.user.id`.
-- `email`: lấy từ verified `req.user.email`.
-- `role`: lấy từ verified `req.user.role`.
+| No | Location | Name | Rule | Use | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | header | Authorization | Bearer <JWT HS256> | Token được parse bởi authenticateToken; protected route gọi ensureAuthenticated/checkRole. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 2 | header | X-Trace-Id | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 3 | path | cvId | digits only; >0; Number.isSafeInteger | CV primary key. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 4 | body | hoten | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 5 | body | ngaysinh | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/validate.ts](../../../src/modules/cv/validate.ts) |
+| 6 | body | gioitinh | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 7 | body | email | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 8 | body | sdt | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 9 | body | diachi | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 10 | body | vitri | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 11 | body | nganh | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 12 | body | muctieunghiep | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 13 | body | hocvan | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 14 | body | kinhnghiem | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 15 | body | kynang | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 16 | body | ngoaingu | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 17 | body | chungchi | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 18 | body | duan | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 19 | body | giaithuong | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 20 | body | hoatdong | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 21 | body | social | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/validate.ts](../../../src/modules/cv/validate.ts) |
+| 22 | body | portfolio | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 23 | body | luongmongmuon | Whitelist normalize; hoten/email required on create; email format checked; ngaysinh valid Date or null; social JSON parse with raw-string fallback | CV field. | [apps/work-server/src/modules/cv/models.ts](../../../src/modules/cv/models.ts) |
+| 24 | file | avt | Multer filter/limit | Filename is passed to normalize function. | [apps/work-server/src/config/multer.ts](../../../src/config/multer.ts) |
 
-### 1.2. Get path/query/body data
+## Query Matrix
 
-- `cvId`: lấy từ `req.params.cvId`.
-- `hoten`: lấy từ `req.body.hoten`.
-- `ngaysinh`: lấy từ `req.body.ngaysinh`.
-- `gioitinh`: lấy từ `req.body.gioitinh`.
-- `email`: lấy từ `req.body.email`.
-- `sdt`: lấy từ `req.body.sdt`.
-- `diachi`: lấy từ `req.body.diachi`.
-- `vitri`: lấy từ `req.body.vitri`.
-- `nganh`: lấy từ `req.body.nganh`.
-- `muctieunghiep`: lấy từ `req.body.muctieunghiep`.
-- `hocvan`: lấy từ `req.body.hocvan`.
-- `kinhnghiem`: lấy từ `req.body.kinhnghiem`.
-- `kynang`: lấy từ `req.body.kynang`.
-- `ngoaingu`: lấy từ `req.body.ngoaingu`.
-- `chungchi`: lấy từ `req.body.chungchi`.
-- `duan`: lấy từ `req.body.duan`.
-- `giaithuong`: lấy từ `req.body.giaithuong`.
-- `hoatdong`: lấy từ `req.body.hoatdong`.
-- `social`: lấy từ `req.body.social`.
-- `portfolio`: lấy từ `req.body.portfolio`.
-- `luongmongmuon`: lấy từ `req.body.luongmongmuon`.
-- `avt`: lấy từ `req.file` và dùng `req.file.filename` nếu upload thành công.
+| No | Operation | Table/model | Columns/select | Where | Sort/pagination | Include/relation | Transaction |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | findOwnedCv | Cv | id | id = cvId AND sinhvien_id = token.id | N/A | N/A | inside transaction |
+| 2 | updateCv | Cv | all provided update fields | id = cvId | N/A | N/A | inside transaction |
 
-## 2. Check quyền
+## Mutation Matrix
 
-### 2.1. Permission
+| No | Operation | Table/model | Condition | Fields | Value source | Transaction | Failure behavior |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | UPDATE | Cv | id=cvId and sinhvien_id=token.id | normalized fields present in request | body/file normalized values | Prisma $transaction | missing owner -> CV_NOT_FOUND |
 
-- `ensureAuthenticated`: yêu cầu `req.user` tồn tại và `req.authenticated` không phải `false`.
-- `checkRole("student")`: chỉ cho phép JWT có role `student`.
+## Response Source Matrix
 
-## 3. Validate data input
+| No | Field | Kind | Source/transform | Mapping source |
+| ---: | --- | --- | --- | --- |
+| 1 | id | data field | Raw Cv Prisma field. | cv view/query |
+| 2 | avt | data field | Raw Cv Prisma field. | cv view/query |
+| 3 | hoten | data field | Raw Cv Prisma field. | cv view/query |
+| 4 | ngaysinh | data field | Raw Cv Prisma field. | cv view/query |
+| 5 | gioitinh | data field | Raw Cv Prisma field. | cv view/query |
+| 6 | email | data field | Raw Cv Prisma field. | cv view/query |
+| 7 | sdt | data field | Raw Cv Prisma field. | cv view/query |
+| 8 | diachi | data field | Raw Cv Prisma field. | cv view/query |
+| 9 | vitri | data field | Raw Cv Prisma field. | cv view/query |
+| 10 | nganh | data field | Raw Cv Prisma field. | cv view/query |
+| 11 | muctieunghiep | data field | Raw Cv Prisma field. | cv view/query |
+| 12 | hocvan | data field | Raw Cv Prisma field. | cv view/query |
+| 13 | kinhnghiem | data field | Raw Cv Prisma field. | cv view/query |
+| 14 | kynang | data field | Raw Cv Prisma field. | cv view/query |
+| 15 | ngoaingu | data field | Raw Cv Prisma field. | cv view/query |
+| 16 | chungchi | data field | Raw Cv Prisma field. | cv view/query |
+| 17 | duan | data field | Raw Cv Prisma field. | cv view/query |
+| 18 | giaithuong | data field | Raw Cv Prisma field. | cv view/query |
+| 19 | hoatdong | data field | Raw Cv Prisma field. | cv view/query |
+| 20 | social | data field | Raw Cv Prisma field. | cv view/query |
+| 21 | portfolio | data field | Raw Cv Prisma field. | cv view/query |
+| 22 | luongmongmuon | data field | Raw Cv Prisma field. | cv view/query |
+| 23 | created_at | data field | Raw Cv Prisma field. | cv view/query |
+| 24 | sinhvien_id | data field | Raw Cv Prisma field. | cv view/query |
 
-- `cvId` phải là chuỗi digits và safe integer.
-- Record hiện tại phải có cả `Cv.id = cvId` và `Cv.sinhvien_id = user.id`.
+## Validation and branch rules
 
-## 4. Query và business processing
+- checkRole('student') executes.
+- parseCvId validates cvId.
+- normalize and validate partial CV data.
+- Transaction verifies ownership then updateCv.
+- Return CV_UPDATED with updated raw record.
 
-### 4.1. Kiểm tra ownership
-
-- `numericParam(req.params.cvId)` chuyển path id.
-- Prisma `Cv.findFirst` với `id = cvId` và `sinhvien_id = user.id`.
-- Nếu không có record owner, trả `404 CV_NOT_FOUND`.
-
-## 5. Insert/Update/Delete thông tin
-
-### 5.1. UPDATE `Cv`
-
-- Tạo data bằng `cvData(req.body, req.file.filename)`.
-- Gọi `CVService.updateCv(cvId, data)`.
-- Prisma update theo `Cv.id = cvId`.
-- Không có transaction explicit trong source.
-
-## 6. Map response và error
-
-- `data` là record `Cv` sau update.
-- `reply` trả HTTP `200` và business code `CV_UPDATED`.
-- Thành công: `reply` trả HTTP `200`, `businessCode = CV_UPDATED`, `data` theo [04_Response.md](./04_Response.md).
-- Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
-- Chi tiết lỗi: [06_Error.md](./06_Error.md).
-- DB mapping: [07_Cv_update.md](./07_Cv_update.md).
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -2,36 +2,32 @@
 title: "Response"
 order: 4
 dd_id: "applyToJob"
-api_name: "Apply to job"
+api_name: "applications.view.applyToJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "2.Response"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Response
 
 ## Format
 
-| Format | Character encoding | Content-Type |
-|---|---|---|
-| JSON | UTF-8 | application/json |
+Mọi success response dùng `successResponse`; mọi lỗi đi qua `errorResponse`/centralized exception handler.
 
-## Response fields
-
-| No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | success | Success flag | `success` | boolean | No | N/A | N/A | reply | `status < 400` | Always present | Envelope field |
-| 2 | businessCode | Business code | `businessCode` | string | No | N/A | N/A | reply | Fixed by branch | Always present | Source-confirmed code |
-| 3 | message | Message | `message` | string | No | N/A | N/A | reply | Fixed by branch | Always present | Vietnamese source message |
-| 4 | data | Payload | `data` | object\|array\|null | Yes | Route/service result | N/A | reply | `jsonSafe` on success; null on errors | null on errors | See data-specific rows |
-| 5 | meta | Metadata | `meta` | object | No | N/A | N/A | reply | Pagination metadata where applicable | {} if none |  |
-| 6 | traceId | Trace ID | `traceId` | string | No | N/A | N/A | reply/traceId | Header value or generated UUID | Always present | Also returned as X-Trace-Id header |
-| 7 | data.id | id | `id` | number | Yes | UngVien | id | query/mutation result | BigInt → JSON number | N/A |  |
-| 8 | data.created_at | created_at | `created_at` | string | Yes | UngVien | created_at | query/mutation result | Date → ISO string | N/A |  |
-| 9 | data.sinhvien_id | sinhvien_id | `sinhvien_id` | number\|null | Yes | UngVien | sinhvien_id | query/mutation result | BigInt → JSON number | null nếu DB null | FK |
-| 10 | data.doanhnghiep_id | doanhnghiep_id | `doanhnghiep_id` | number\|null | Yes | UngVien | doanhnghiep_id | query/mutation result | BigInt → JSON number | null nếu DB null | FK |
-| 11 | data.trangthai | trangthai | `trangthai` | string\|null | Yes | UngVien | trangthai | query/mutation result | Direct | null nếu DB null | Default `chưa ứng tuyển` |
-| 12 | data.jd_id | jd_id | `jd_id` | number\|null | Yes | UngVien | jd_id | query/mutation result | BigInt → JSON number | null nếu DB null | FK |
-
-> HTTP status là transport status; không được thêm `HTTPStatus` vào JSON body vì current `reply` không trả field này.
+| Field | Type | Example | Description | Source |
+| ---: | --- | --- | --- | --- |
+| success | boolean | true | Luôn true ở success response. | successResponse |
+| businessCode | string | `APPLICATION_CREATED` | Business code do view/system route trả về. | successResponse |
+| message | string | Ứng tuyển thành công. | Message source-confirmed. | successResponse |
+| data | object | route-specific | jsonSafe chuyển BigInt/Date trước khi serialize. | view result |
+| meta | object | {} | Pagination hoặc object rỗng. | successResponse |
+| traceId | UUID string | 11111111-1111-4111-8111-111111111111 | Lấy từ AsyncLocalStorage/request trace context. | traceMiddleware |
+| data.id | number sau jsonSafe | source value | UngVien field or included JD. | applications view/query |
+| data.created_at | string ISO-8601 sau jsonSafe | source value | UngVien field or included JD. | applications view/query |
+| data.sinhvien_id | number sau jsonSafe | source value | UngVien field or included JD. | applications view/query |
+| data.doanhnghiep_id | number sau jsonSafe | source value | UngVien field or included JD. | applications view/query |
+| data.trangthai | string \| null | source value | UngVien field or included JD. | applications view/query |
+| data.jd_id | number sau jsonSafe | source value | UngVien field or included JD. | applications view/query |
+| data.JD | string \| null | source value | UngVien field or included JD. | applications view/query |
 
 ## Ví dụ thành công
 
@@ -39,10 +35,43 @@ status: "Draft — Needs Confirmation"
 {
   "success": true,
   "businessCode": "APPLICATION_CREATED",
-  "message": "Source success message",
-  "data": {},
+  "message": "Ứng tuyển thành công.",
+  "data": {
+    "id": 1,
+    "created_at": "2026-09-18T00:00:00.000Z",
+    "sinhvien_id": 1,
+    "doanhnghiep_id": 2,
+    "trangthai": "chưa ứng tuyển",
+    "jd_id": 10,
+    "JD": {
+      "id": 10,
+      "ten_vi_tri": "Backend Engineer",
+      "phong_ban": null,
+      "cap_bac": null,
+      "bao_cao_cho": null,
+      "nhiem_vu": null,
+      "trinh_do": null,
+      "kinh_nghiem": null,
+      "ky_nang": null,
+      "ky_nang_mem": null,
+      "uu_tien": null,
+      "muc_luong": null,
+      "phuc_loi": null,
+      "moi_truong": null,
+      "dia_diem": "Hanoi",
+      "thoi_gian": null,
+      "han_nop": null,
+      "cach_ung_tuyen": null,
+      "mo_ta": null,
+      "ten_cong_ty": "Test Business",
+      "nganh": null,
+      "ngay_tao": "2026-09-18T00:00:00.000Z",
+      "doanhnghiep_id": 2,
+      "avt": null
+    }
+  },
   "meta": {},
-  "traceId": "00000000-0000-4000-8000-000000000000"
+  "traceId": "11111111-1111-4111-8111-111111111111"
 }
 ```
 
@@ -51,13 +80,21 @@ status: "Draft — Needs Confirmation"
 ```json
 {
   "success": false,
-  "businessCode": "UNAUTHORIZED",
-  "message": "Source error message",
+  "businessCode": "INVALID_REQUEST",
+  "message": "ID việc làm không hợp lệ.",
   "data": null,
   "meta": {},
-  "traceId": "00000000-0000-4000-8000-000000000000"
+  "traceId": "11111111-1111-4111-8111-111111111111"
 }
 ```
+
+## Serialization and trace
+
+- `BigInt` được serialize thành number bởi `jsonSafe`.
+- `Date` được serialize thành ISO-8601 string bởi `jsonSafe`.
+- `X-Trace-Id` response header bằng `traceId` trong body.
+- `meta.fieldErrors` chỉ có khi centralized mapper nhận `ZodError` có field issues.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

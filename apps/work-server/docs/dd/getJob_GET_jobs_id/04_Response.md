@@ -2,54 +2,49 @@
 title: "Response"
 order: 4
 dd_id: "getJob"
-api_name: "Get job"
+api_name: "jobs.view.getJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "2.Response"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Response
 
 ## Format
 
-| Format | Character encoding | Content-Type |
-|---|---|---|
-| JSON | UTF-8 | application/json |
+Mọi success response dùng `successResponse`; mọi lỗi đi qua `errorResponse`/centralized exception handler.
 
-## Response fields
-
-| No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | success | Success flag | `success` | boolean | No | N/A | N/A | reply | `status < 400` | Always present | Envelope field |
-| 2 | businessCode | Business code | `businessCode` | string | No | N/A | N/A | reply | Fixed by branch | Always present | Source-confirmed code |
-| 3 | message | Message | `message` | string | No | N/A | N/A | reply | Fixed by branch | Always present | Vietnamese source message |
-| 4 | data | Payload | `data` | object\|array\|null | Yes | Route/service result | N/A | reply | `jsonSafe` on success; null on errors | null on errors | See data-specific rows |
-| 5 | meta | Metadata | `meta` | object | No | N/A | N/A | reply | Pagination metadata where applicable | {} if none |  |
-| 6 | traceId | Trace ID | `traceId` | string | No | N/A | N/A | reply/traceId | Header value or generated UUID | Always present | Also returned as X-Trace-Id header |
-| 7 | data.id | id | `id` | number | Yes | JD | id | query/mutation result | BigInt → JSON number | N/A |  |
-| 8 | data.ten_vi_tri | ten_vi_tri | `ten_vi_tri` | string | Yes | JD | ten_vi_tri | query/mutation result | Direct | N/A | Required DB column |
-| 9 | data.phong_ban | phong_ban | `phong_ban` | string\|null | Yes | JD | phong_ban | query/mutation result | Direct | null nếu DB null |  |
-| 10 | data.cap_bac | cap_bac | `cap_bac` | string\|null | Yes | JD | cap_bac | query/mutation result | Direct | null nếu DB null |  |
-| 11 | data.bao_cao_cho | bao_cao_cho | `bao_cao_cho` | string\|null | Yes | JD | bao_cao_cho | query/mutation result | Direct | null nếu DB null |  |
-| 12 | data.nhiem_vu | nhiem_vu | `nhiem_vu` | string\|null | Yes | JD | nhiem_vu | query/mutation result | Direct | null nếu DB null |  |
-| 13 | data.trinh_do | trinh_do | `trinh_do` | string\|null | Yes | JD | trinh_do | query/mutation result | Direct | null nếu DB null |  |
-| 14 | data.kinh_nghiem | kinh_nghiem | `kinh_nghiem` | string\|null | Yes | JD | kinh_nghiem | query/mutation result | Direct | null nếu DB null |  |
-| 15 | data.ky_nang | ky_nang | `ky_nang` | string\|null | Yes | JD | ky_nang | query/mutation result | Direct | null nếu DB null |  |
-| 16 | data.ky_nang_mem | ky_nang_mem | `ky_nang_mem` | string\|null | Yes | JD | ky_nang_mem | query/mutation result | Direct | null nếu DB null |  |
-| 17 | data.uu_tien | uu_tien | `uu_tien` | string\|null | Yes | JD | uu_tien | query/mutation result | Direct | null nếu DB null |  |
-| 18 | data.muc_luong | muc_luong | `muc_luong` | string\|null | Yes | JD | muc_luong | query/mutation result | Direct | null nếu DB null |  |
-| 19 | data.phuc_loi | phuc_loi | `phuc_loi` | string\|null | Yes | JD | phuc_loi | query/mutation result | Direct | null nếu DB null |  |
-| 20 | data.moi_truong | moi_truong | `moi_truong` | string\|null | Yes | JD | moi_truong | query/mutation result | Direct | null nếu DB null |  |
-| 21 | data.dia_diem | dia_diem | `dia_diem` | string\|null | Yes | JD | dia_diem | query/mutation result | Direct | null nếu DB null |  |
-| 22 | data.thoi_gian | thoi_gian | `thoi_gian` | string\|null | Yes | JD | thoi_gian | query/mutation result | Direct | null nếu DB null |  |
-| 23 | data.han_nop | han_nop | `han_nop` | string\|null | Yes | JD | han_nop | query/mutation result | Direct | null nếu DB null |  |
-| 24 | data.cach_ung_tuyen | cach_ung_tuyen | `cach_ung_tuyen` | string\|null | Yes | JD | cach_ung_tuyen | query/mutation result | Direct | null nếu DB null |  |
-| 25 | data.ngay_tao | ngay_tao | `ngay_tao` | string\|null | Yes | JD | ngay_tao | query/mutation result | Date → ISO string | null nếu DB null | Timestamptz |
-| 26 | data.mo_ta | mo_ta | `mo_ta` | string\|null | Yes | JD | mo_ta | query/mutation result | Direct | null nếu DB null |  |
-| 27 | data.doanhnghiep_id | doanhnghiep_id | `doanhnghiep_id` | number\|null | Yes | JD | doanhnghiep_id | query/mutation result | BigInt → JSON number | null nếu DB null | FK |
-| 28 | data.ten_cong_ty | ten_cong_ty | `ten_cong_ty` | string\|null | Yes | JD | ten_cong_ty | query/mutation result | Direct | null nếu DB null |  |
-| 29 | data.nganh | nganh | `nganh` | string\|null | Yes | JD | nganh | query/mutation result | Direct | null nếu DB null |  |
-| 30 | data.avt | avt | `avt` | string\|null | Yes | JD | avt | query/mutation result | Direct | null nếu DB null | Stored `/uploads/` path for JD |
-
-> HTTP status là transport status; không được thêm `HTTPStatus` vào JSON body vì current `reply` không trả field này.
+| Field | Type | Example | Description | Source |
+| ---: | --- | --- | --- | --- |
+| success | boolean | true | Luôn true ở success response. | successResponse |
+| businessCode | string | `JOB_LOADED` | Business code do view/system route trả về. | successResponse |
+| message | string | Đã tải chi tiết việc làm. | Message source-confirmed. | successResponse |
+| data | object | route-specific | jsonSafe chuyển BigInt/Date trước khi serialize. | view result |
+| meta | object | {} | Pagination hoặc object rỗng. | successResponse |
+| traceId | UUID string | 11111111-1111-4111-8111-111111111111 | Lấy từ AsyncLocalStorage/request trace context. | traceMiddleware |
+| data.id | number sau jsonSafe | source value | jobPublicSelect field. | jobs view/query |
+| data.ten_vi_tri | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.phong_ban | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.cap_bac | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.bao_cao_cho | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.nhiem_vu | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.trinh_do | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.kinh_nghiem | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.ky_nang | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.ky_nang_mem | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.uu_tien | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.muc_luong | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.phuc_loi | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.moi_truong | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.dia_diem | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.thoi_gian | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.han_nop | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.cach_ung_tuyen | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.mo_ta | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.ten_cong_ty | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.nganh | string \| null | source value | jobPublicSelect field. | jobs view/query |
+| data.ngay_tao | string ISO-8601 sau jsonSafe | source value | jobPublicSelect field. | jobs view/query |
+| data.doanhnghiep_id | number sau jsonSafe | source value | jobPublicSelect field. | jobs view/query |
+| data.avt | string \| null | source value | jobPublicSelect field. | jobs view/query |
 
 ## Ví dụ thành công
 
@@ -57,10 +52,35 @@ status: "Draft — Needs Confirmation"
 {
   "success": true,
   "businessCode": "JOB_LOADED",
-  "message": "Source success message",
-  "data": {},
+  "message": "Đã tải chi tiết việc làm.",
+  "data": {
+    "id": 10,
+    "ten_vi_tri": "Backend Engineer",
+    "phong_ban": null,
+    "cap_bac": null,
+    "bao_cao_cho": null,
+    "nhiem_vu": null,
+    "trinh_do": null,
+    "kinh_nghiem": null,
+    "ky_nang": null,
+    "ky_nang_mem": null,
+    "uu_tien": null,
+    "muc_luong": null,
+    "phuc_loi": null,
+    "moi_truong": null,
+    "dia_diem": "Hanoi",
+    "thoi_gian": null,
+    "han_nop": null,
+    "cach_ung_tuyen": null,
+    "mo_ta": null,
+    "ten_cong_ty": "Test Business",
+    "nganh": null,
+    "ngay_tao": "2026-09-18T00:00:00.000Z",
+    "doanhnghiep_id": 2,
+    "avt": null
+  },
   "meta": {},
-  "traceId": "00000000-0000-4000-8000-000000000000"
+  "traceId": "11111111-1111-4111-8111-111111111111"
 }
 ```
 
@@ -70,12 +90,20 @@ status: "Draft — Needs Confirmation"
 {
   "success": false,
   "businessCode": "INVALID_REQUEST",
-  "message": "Source error message",
+  "message": "ID việc làm không hợp lệ.",
   "data": null,
   "meta": {},
-  "traceId": "00000000-0000-4000-8000-000000000000"
+  "traceId": "11111111-1111-4111-8111-111111111111"
 }
 ```
+
+## Serialization and trace
+
+- `BigInt` được serialize thành number bởi `jsonSafe`.
+- `Date` được serialize thành ISO-8601 string bởi `jsonSafe`.
+- `X-Trace-Id` response header bằng `traceId` trong body.
+- `meta.fieldErrors` chỉ có khi centralized mapper nhận `ZodError` có field issues.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

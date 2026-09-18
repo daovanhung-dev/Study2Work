@@ -2,25 +2,33 @@
 title: "Error"
 order: 6
 dd_id: "getMe"
-api_name: "Get current user"
+api_name: "api/v1 dispatcher — getStudentMe or getBusinessMe"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "4.Error"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Error
 
 ## Giải thích
 
-Các trường hợp lỗi của API theo current Work Server source.
+Lỗi không inline `res.json`; route/use-case throw typed error hoặc lỗi framework được centralized exception handler map về envelope chuẩn.
 
 ## Error cases
 
-| No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Authentication | - | `Authorization` | Thiếu hoặc JWT Bearer không hợp lệ | 401 | `UNAUTHORIZED` | N/A — source không có message ID | `middleware` | N/A | JSON error envelope; `data=null` |
-| 2 | System | - | `server` | Unhandled exception hoặc service/database error | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `exception handler` | N/A | Không trả raw error/secret |
-| 3 | Not found | - | `user` | Không tìm thấy account theo JWT id | 404 | `USER_NOT_FOUND` | N/A — source không có message ID | `business check` | N/A |  |
+| No | Business code | HTTP | Message | Condition | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | UNAUTHORIZED | 401 | Yêu cầu Bearer token hợp lệ. | Missing/invalid Bearer token. | apps/work-server/src/middleware/auth.middleware.ts |
+| 2 | USER_NOT_FOUND | 404 | Không tìm thấy tài khoản. | Authenticated id has no corresponding public row. | apps/work-server/src/modules/students/view.ts |
+| 3 | INTERNAL_SERVER_ERROR | 500 | Lỗi máy chủ. | Unhandled error is mapped safely without exposing secret. | apps/work-server/src/core/exceptions.ts |
 
-> Mỗi error case nằm trên một row riêng. Error code là businessCode source-confirmed; message ID không được tự tạo khi source không có field này.
+## Common envelope rule
+
+- `success=false`.
+- `data=null`.
+- `meta={}` nếu không có field errors.
+- `meta.fieldErrors` chỉ xuất hiện với Zod validation issues.
+- `traceId` và response header `X-Trace-Id` luôn đồng nhất.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -2,43 +2,56 @@
 title: "Request"
 order: 3
 dd_id: "getJob"
-api_name: "Get job"
+api_name: "jobs.view.getJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "1.Request"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Request
 
 ## API endpoint
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | HTTP method | `GET` |
 | URI | `/api/v1/jobs/:id` |
-| Character encoding | UTF-8 |
-| Content-Type | N/A — no request body |
+| Character encoding | `UTF-8` |
+| Content-Type | N/A |
 
 ## Request header
 
-| No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
-|---|---|---|---|---|---|---|
-| 1 | Contents type | `Content-Type` | No | N/A — no request body | Request media type | `05_Data_Mapping.md` |
+| No | Field name | Required | Value/Format | Description | Data Mapping reference |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `X-Trace-Id` | No | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [Request usage](./05_Data_Mapping.md#request-usage-matrix) |
 
 ## Path parameters
 
-| No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | id | `id` | integer | Yes | 0 | N/A | N/A | N/A | N/A | ID JD; source chỉ nhận chuỗi toàn chữ số và safe integer | `05_Data_Mapping.md` |
+| No | Logical name | Physical name | Type | Required | Validation/format | Default | Description | Data Mapping reference |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Job ID | id | string -> positive safe integer | Yes | digits only; >0; Number.isSafeInteger | N/A | JD primary key. | apps/work-server/src/modules/jobs/validate.ts |
+
 ## Query parameters
 
-N/A — API không nhận Query parameter.
+N/A — endpoint không có query parameter.
 
 ## Request body
 
-N/A — API không nhận Path, Query hoặc Request Body.
+N/A — request không có body.
 
 ## Ví dụ Request data
 
-N/A — Không có Request Body.
+`multipart/form-data` dùng các key trong bảng body; JSON dưới đây chỉ biểu diễn logical fields khi route cho phép JSON hoặc body rỗng.
+
+```json
+{}
+```
+
+## Source behavior
+
+- Request được parse ở route bằng Zod model nếu route có model tương ứng.
+- Với route dùng Multer, file được xử lý trước use-case; lỗi MIME/extension/size đi vào centralized exception handler.
+- Unknown body fields chỉ được giữ lại ở bước Zod nếu model `.passthrough()`/record cho phép; use-case chỉ normalize whitelist field đã nêu.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

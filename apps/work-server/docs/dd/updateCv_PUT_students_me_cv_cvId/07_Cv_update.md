@@ -2,71 +2,54 @@
 title: "Định nghĩa table"
 order: 7
 dd_id: "updateCv"
-api_name: "Update CV"
+api_name: "cv.view.updateCv"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "table"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Định nghĩa table
 
 ## Table metadata
 
 | Thuộc tính | Giá trị |
-|---|---|
-| Physical table | `Cv` |
-| Logical table | Cv |
+| ---: | --- |
+| Prisma model | Cv |
 | Operation | UPDATE |
-| Data Mapping step | `5.1` |
+| Transaction | Prisma $transaction |
+| Status | Draft — Ready for Review |
 
-## Update mapping
+## Field mapping
 
-**Áp dụng khi**
+| No | DB column | Operation | Value source | Prisma/schema type |
+| ---: | --- | --- | --- | --- |
+| 1 | avt | UPDATE | normalized input when present | VARCHAR(191) |
+| 2 | hoten | UPDATE | normalized input when present | VARCHAR(191) |
+| 3 | ngaysinh | UPDATE | normalized input when present | TIMESTAMPTZ(3) |
+| 4 | gioitinh | UPDATE | normalized input when present | VARCHAR(191) |
+| 5 | email | UPDATE | normalized input when present | VARCHAR(191) |
+| 6 | sdt | UPDATE | normalized input when present | VARCHAR(191) |
+| 7 | diachi | UPDATE | normalized input when present | VARCHAR(191) |
+| 8 | vitri | UPDATE | normalized input when present | VARCHAR(191) |
+| 9 | nganh | UPDATE | normalized input when present | VARCHAR(191) |
+| 10 | muctieunghiep | UPDATE | normalized input when present | VARCHAR(191) |
+| 11 | hocvan | UPDATE | normalized input when present | VARCHAR(191) |
+| 12 | kinhnghiem | UPDATE | normalized input when present | VARCHAR(191) |
+| 13 | kynang | UPDATE | normalized input when present | VARCHAR(191) |
+| 14 | ngoaingu | UPDATE | normalized input when present | VARCHAR(191) |
+| 15 | chungchi | UPDATE | normalized input when present | VARCHAR(191) |
+| 16 | duan | UPDATE | normalized input when present | VARCHAR(191) |
+| 17 | giaithuong | UPDATE | normalized input when present | VARCHAR(191) |
+| 18 | hoatdong | UPDATE | normalized input when present | VARCHAR(191) |
+| 19 | social | UPDATE | normalized input when present | JSONB |
+| 20 | portfolio | UPDATE | normalized input when present | VARCHAR(191) |
+| 21 | luongmongmuon | UPDATE | normalized input when present | VARCHAR(191) |
 
-- Owner check thành công và handler gọi service update.
+## Insert/Update/Delete behavior
 
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | id | ID | BIGINT | N/A | N/A | N | ● | autoincrement/no change | schema default | `5.1` | Generated or existing key |
-| 2 | hoten | hoten | VARCHAR | 191 | N/A | Y |  | `request["hoten"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 3 | ngaysinh | ngaysinh | TIMESTAMPTZ | 3 | N/A | N |  | `new Date(request["ngaysinh"])` if truthy; null if key exists but falsy | request/form/token | `5.1` | Source maps only defined fields |
-| 4 | gioitinh | gioitinh | VARCHAR | 191 | N/A | N |  | `request["gioitinh"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 5 | email | email | VARCHAR | 191 | N/A | Y |  | `request["email"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 6 | sdt | sdt | VARCHAR | 191 | N/A | N |  | `request["sdt"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 7 | diachi | diachi | VARCHAR | 191 | N/A | N |  | `request["diachi"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 8 | vitri | vitri | VARCHAR | 191 | N/A | N |  | `request["vitri"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 9 | nganh | nganh | VARCHAR | 191 | N/A | N |  | `request["nganh"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 10 | muctieunghiep | muctieunghiep | VARCHAR | 191 | N/A | N |  | `request["muctieunghiep"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 11 | hocvan | hocvan | VARCHAR | 191 | N/A | N |  | `request["hocvan"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 12 | kinhnghiem | kinhnghiem | VARCHAR | 191 | N/A | N |  | `request["kinhnghiem"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 13 | kynang | kynang | VARCHAR | 191 | N/A | N |  | `request["kynang"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 14 | ngoaingu | ngoaingu | VARCHAR | 191 | N/A | N |  | `request["ngoaingu"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 15 | chungchi | chungchi | VARCHAR | 191 | N/A | N |  | `request["chungchi"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 16 | duan | duan | VARCHAR | 191 | N/A | N |  | `request["duan"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 17 | giaithuong | giaithuong | VARCHAR | 191 | N/A | N |  | `request["giaithuong"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 18 | hoatdong | hoatdong | VARCHAR | 191 | N/A | N |  | `request["hoatdong"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 19 | social | social | JSONB | N/A | N/A | N |  | `JSON.parse(request["social"])` if parse succeeds; otherwise original value | request/form/token | `5.1` | Source maps only defined fields |
-| 20 | portfolio | portfolio | VARCHAR | 191 | N/A | N |  | `request["portfolio"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 21 | luongmongmuon | luongmongmuon | VARCHAR | 191 | N/A | N |  | `request["luongmongmuon"]` if defined | request/form/token | `5.1` | Source maps only defined fields |
-| 22 | avt | avt | VARCHAR | 191 | N/A | N |  | `req.file?.filename` if file exists | request/form/token | `5.1` | Source maps only defined fields |
+- Partial update does not update unspecified fields.
+- Ownership check and update share the transaction.
 
-## Insert mapping
 
-**Áp dụng khi**
-
-- N/A — operation hiện tại không phải INSERT.
-
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A |
-
-## Delete mapping
-
-**Áp dụng khi**
-
-- N/A — operation hiện tại không phải DELETE.
-
-| No | Target column | Operator | Value source | Data Mapping step | Remarks |
-|---|---|---|---|---|---|
-| 1 | N/A | N/A | N/A | N/A | N/A |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

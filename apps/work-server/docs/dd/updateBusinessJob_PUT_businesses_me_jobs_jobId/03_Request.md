@@ -2,72 +2,81 @@
 title: "Request"
 order: 3
 dd_id: "updateBusinessJob"
-api_name: "Update business job"
+api_name: "jobs.view.updateBusinessJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "1.Request"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Request
 
 ## API endpoint
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | HTTP method | `PUT` |
 | URI | `/api/v1/businesses/me/jobs/:jobId` |
-| Character encoding | UTF-8 |
-| Content-Type | multipart/form-data |
+| Character encoding | `UTF-8` |
+| Content-Type | multipart/form-data or application/json |
 
 ## Request header
 
-| No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
-|---|---|---|---|---|---|---|
-| 1 | Contents type | `Content-Type` | Yes | multipart/form-data | Request media type | `05_Data_Mapping.md` |
-| 2 | Bearer auth | `Authorization` | Yes | `Bearer redacted.jwt.token` | Verified by global middleware and route boundary | `05_Data_Mapping.md` |
+| No | Field name | Required | Value/Format | Description | Data Mapping reference |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `Authorization` | Yes | Bearer <JWT HS256> | Token được parse bởi authenticateToken; protected route gọi ensureAuthenticated/checkRole. | [Request usage](./05_Data_Mapping.md#request-usage-matrix) |
+| 2 | `X-Trace-Id` | No | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [Request usage](./05_Data_Mapping.md#request-usage-matrix) |
 
 ## Path parameters
 
-| No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | jobId | `jobId` | integer | Yes | 0 | N/A | N/A | N/A | N/A | ID JD; source numeric helper | `05_Data_Mapping.md` |
+| No | Logical name | Physical name | Type | Required | Validation/format | Default | Description | Data Mapping reference |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Job ID | jobId | string -> positive safe integer | Yes | digits only; >0; Number.isSafeInteger | N/A | JD primary key. | apps/work-server/src/modules/jobs/validate.ts |
+
 ## Query parameters
 
-N/A — API không nhận Query parameter.
+N/A — endpoint không có query parameter.
 
 ## Request body
 
-| No | Location | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Description | Data Mapping reference |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | body | ten_vi_tri | `ten_vi_tri` | string | Conditional | N/A | N/A | UTF-8/text | N/A | N/A | Tên vị trí | `05_Data_Mapping.md` |
-| 2 | body | phong_ban | `phong_ban` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Phòng ban | `05_Data_Mapping.md` |
-| 3 | body | cap_bac | `cap_bac` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Cấp bậc | `05_Data_Mapping.md` |
-| 4 | body | bao_cao_cho | `bao_cao_cho` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Báo cáo cho | `05_Data_Mapping.md` |
-| 5 | body | nhiem_vu | `nhiem_vu` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Nhiệm vụ | `05_Data_Mapping.md` |
-| 6 | body | trinh_do | `trinh_do` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Trình độ | `05_Data_Mapping.md` |
-| 7 | body | kinh_nghiem | `kinh_nghiem` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Kinh nghiệm | `05_Data_Mapping.md` |
-| 8 | body | ky_nang | `ky_nang` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Kỹ năng | `05_Data_Mapping.md` |
-| 9 | body | ky_nang_mem | `ky_nang_mem` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Kỹ năng mềm | `05_Data_Mapping.md` |
-| 10 | body | uu_tien | `uu_tien` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Ưu tiên | `05_Data_Mapping.md` |
-| 11 | body | muc_luong | `muc_luong` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Mức lương | `05_Data_Mapping.md` |
-| 12 | body | phuc_loi | `phuc_loi` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Phúc lợi | `05_Data_Mapping.md` |
-| 13 | body | moi_truong | `moi_truong` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Môi trường | `05_Data_Mapping.md` |
-| 14 | body | dia_diem | `dia_diem` | string | Conditional | N/A | N/A | UTF-8/text | N/A | N/A | Địa điểm | `05_Data_Mapping.md` |
-| 15 | body | thoi_gian | `thoi_gian` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Thời gian | `05_Data_Mapping.md` |
-| 16 | body | han_nop | `han_nop` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Hạn nộp | `05_Data_Mapping.md` |
-| 17 | body | cach_ung_tuyen | `cach_ung_tuyen` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Cách ứng tuyển | `05_Data_Mapping.md` |
-| 18 | body | mo_ta | `mo_ta` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Mô tả | `05_Data_Mapping.md` |
-| 19 | body | ten_cong_ty | `ten_cong_ty` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Tên công ty; create lấy từ doanh nghiệp nếu bỏ trống | `05_Data_Mapping.md` |
-| 20 | body | nganh | `nganh` | string | No | N/A | N/A | UTF-8/text | N/A | N/A | Ngành | `05_Data_Mapping.md` |
-| 21 | file | avt | `avt` | binary file | No | N/A | N/A | UTF-8/text | jpeg\|jpg\|png\|gif; tối đa 10 MB | N/A | Ảnh JD; source lưu `/uploads/<filename>` | `05_Data_Mapping.md` |
-> Mỗi field nằm trên một row riêng. `Conditional` nghĩa là source kiểm tra điều kiện kết hợp chứ không yêu cầu field đó độc lập.
+| No | Logical name | Field name | Type | Required | Validation/format | Default | Description | Data Mapping reference |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | ten_vi_tri | ten_vi_tri | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 2 | phong_ban | phong_ban | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 3 | cap_bac | cap_bac | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 4 | bao_cao_cho | bao_cao_cho | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 5 | nhiem_vu | nhiem_vu | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 6 | trinh_do | trinh_do | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 7 | kinh_nghiem | kinh_nghiem | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 8 | ky_nang | ky_nang | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 9 | ky_nang_mem | ky_nang_mem | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 10 | uu_tien | uu_tien | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 11 | muc_luong | muc_luong | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 12 | phuc_loi | phuc_loi | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 13 | moi_truong | moi_truong | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 14 | dia_diem | dia_diem | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 15 | thoi_gian | thoi_gian | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 16 | han_nop | han_nop | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 17 | cach_ung_tuyen | cach_ung_tuyen | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 18 | mo_ta | mo_ta | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 19 | ten_cong_ty | ten_cong_ty | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 20 | nganh | nganh | string | No | trim() when present; unknown fields pass Zod but are ignored by normalizeJobData | JD mutation field. | [apps/work-server/src/modules/jobs/models.ts](../../../src/modules/jobs/models.ts) |
+| 21 | Uploaded file | avt | binary | No | jpeg/jpg/png/gif; MIME phải khớp extension; tối đa 10 MiB | Multer field; filename được normalize vào data | [apps/work-server/src/config/multer.ts](../../../src/config/multer.ts) |
 
 ## Ví dụ Request data
 
-```text
-Content-Type: multipart/form-data; boundary=client-generated-boundary
+`multipart/form-data` dùng các key trong bảng body; JSON dưới đây chỉ biểu diễn logical fields khi route cho phép JSON hoặc body rỗng.
 
-field_name = field_value
-avt = example.jpg (optional)
+```json
+{
+  "dia_diem": "Ho Chi Minh City"
+}
 ```
+
+## Source behavior
+
+- Request được parse ở route bằng Zod model nếu route có model tương ứng.
+- Với route dùng Multer, file được xử lý trước use-case; lỗi MIME/extension/size đi vào centralized exception handler.
+- Unknown body fields chỉ được giữ lại ở bước Zod nếu model `.passthrough()`/record cho phép; use-case chỉ normalize whitelist field đã nêu.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -2,30 +2,36 @@
 title: "Error"
 order: 6
 dd_id: "applyToJob"
-api_name: "Apply to job"
+api_name: "applications.view.applyToJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "4.Error"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Error
 
 ## Giải thích
 
-Các trường hợp lỗi của API theo current Work Server source.
+Lỗi không inline `res.json`; route/use-case throw typed error hoặc lỗi framework được centralized exception handler map về envelope chuẩn.
 
 ## Error cases
 
-| No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Authentication | - | `Authorization` | Thiếu hoặc JWT Bearer không hợp lệ | 401 | `UNAUTHORIZED` | N/A — source không có message ID | `middleware` | N/A | JSON error envelope; `data=null` |
-| 2 | Authorization | - | `role` | JWT hợp lệ nhưng role khác `student` | 403 | `FORBIDDEN` | N/A — source không có message ID | `middleware` | N/A | Role middleware |
-| 3 | System | - | `server` | Unhandled exception hoặc service/database error | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `exception handler` | N/A | Không trả raw error/secret |
-| 4 | Validation | - | `jobId` | Path jobId không hợp lệ | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
-| 5 | Not found | - | `JD.id` | JD không tồn tại | 404 | `JOB_NOT_FOUND` | N/A — source không có message ID | `query result` | N/A |  |
-| 6 | Business | - | `JD.doanhnghiep_id` | JD chưa gán doanh nghiệp | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `business check` | N/A |  |
-| 7 | Conflict | - | `UngVien` | Student đã ứng tuyển cùng doanh nghiệp và JD | 409 | `APPLICATION_ALREADY_EXISTS` | N/A — source không có message ID | `duplicate query` | N/A |  |
-| 8 | System | - | `UngVien` | Prisma create/query thất bại | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `mutation` | N/A |  |
+| No | Business code | HTTP | Message | Condition | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | INVALID_REQUEST | 400 | ID việc làm không hợp lệ. | jobId parser fails or JD has no business id. | apps/work-server/src/modules/applications/validate.ts |
+| 2 | JOB_NOT_FOUND | 404 | Vị trí ứng tuyển không tồn tại. | findJobForApplication returns null. | apps/work-server/src/modules/applications/view.ts |
+| 3 | APPLICATION_ALREADY_EXISTS | 409 | Bạn đã ứng tuyển vị trí này rồi. | Count duplicate > 0 or P2002. | apps/work-server/src/modules/applications/view.ts |
+| 4 | UNAUTHORIZED | 401 | Yêu cầu Bearer token hợp lệ. | Missing/invalid Bearer token. | apps/work-server/src/middleware/auth.middleware.ts |
+| 5 | FORBIDDEN | 403 | Bạn không có quyền truy cập. | Valid token has non-student role. | apps/work-server/src/middleware/auth.middleware.ts |
+| 6 | INTERNAL_SERVER_ERROR | 500 | Lỗi máy chủ. | Unhandled error is mapped safely without exposing secret. | apps/work-server/src/core/exceptions.ts |
 
-> Mỗi error case nằm trên một row riêng. Error code là businessCode source-confirmed; message ID không được tự tạo khi source không có field này.
+## Common envelope rule
+
+- `success=false`.
+- `data=null`.
+- `meta={}` nếu không có field errors.
+- `meta.fieldErrors` chỉ xuất hiện với Zod validation issues.
+- `traceId` và response header `X-Trace-Id` luôn đồng nhất.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

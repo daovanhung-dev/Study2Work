@@ -2,25 +2,27 @@
 title: "Cover"
 order: 0
 dd_id: "getMe"
-api_name: "Get current user"
+api_name: "api/v1 dispatcher — getStudentMe or getBusinessMe"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "Cover"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # `Study2Work Work Server` — API Detail Design
 
 ## Thông tin tài liệu
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | Project/System | Study2Work Work Server |
-| Module | Work API |
+| Module | Auth/Identity |
 | Loại tài liệu | API Detail Design |
 | API ID | `getMe` |
-| API name | Get current user |
+| API name | api/v1 dispatcher — getStudentMe or getBusinessMe |
+| Source runtime handler/use-case | api/v1 dispatcher → students.view.getStudentMe or businesses.view.getBusinessMe |
 | HTTP method | `GET` |
 | Endpoint | `/api/v1/me` |
 | Version | 1.0.0 |
-| Status | Draft — Needs Confirmation |
+| Status | Draft — Ready for Review |
 | Created by | Codex |
 | Reviewed by | N/A — chưa được chỉ định |
 | Approved by | N/A — chưa được chỉ định |
@@ -31,8 +33,9 @@ status: "Draft — Needs Confirmation"
 
 ```text
 Study2Work Work Server API design
-Get current user
+api/v1 dispatcher — getStudentMe or getBusinessMe
 ```
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -2,66 +2,76 @@
 title: "Overview"
 order: 2
 dd_id: "registerStudent"
-api_name: "Register student"
+api_name: "students.view.registerStudent"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "Overview"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Overview
 
 ## Khái quát
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | API ID | `registerStudent` |
-| Module | Work API |
+| Source runtime handler/use-case | students.view.registerStudent |
+| Module | Student |
 | Method | `POST` |
 | Endpoint | `/api/v1/students` |
-| Purpose | Tạo tài khoản sinh viên mới bằng multipart form và ảnh tùy chọn. |
-| Consumer/Actor | Work Web client |
-| Authentication | Không bắt buộc; middleware chỉ parse token nếu có |
-| Authorization | N/A — public route |
+| Purpose | Create a student account and return the public student projection. |
+| Consumer/Actor | Unauthenticated student client |
+| Authentication | No |
+| Authorization | Public registration endpoint |
 | Basis | DIRECT — current registered route |
-| Status | Draft — Needs Confirmation |
-| Transaction | N/A — source gọi một Prisma mutation, không mở transaction explicit |
-| Side effects | SinhVien |
+| Status | Draft — Ready for Review |
+| Transaction | N/A — one Prisma create operation; password hashing occurs before insert. |
+| Side effects | Creates SinhVien row with hashed matkhau. |
 
 ## Sources
 
-- `apps/work-server/src/routes/api_routes.ts`.
-- `apps/work-server/src/services/*.ts` — service được route import.
-- `apps/work-server/src/middleware/auth.middleware.ts` và `src/config/multer.ts` nếu áp dụng.
-- `apps/work-server/prisma/schema.prisma` và checked-in migrations.
-- `contracts/openapi/work/legacy-web.openapi.json` — operationId/consumer cross-check.
-- `apps/work-client/web/src/shared/api/work.ts` — actual consumer call.
+- [apps/work-server/src/modules/students/routes.ts](../../../src/modules/students/routes.ts).
+- [apps/work-server/src/modules/students/models.ts](../../../src/modules/students/models.ts).
+- [apps/work-server/src/modules/students/validate.ts](../../../src/modules/students/validate.ts).
+- [apps/work-server/src/modules/students/view.ts](../../../src/modules/students/view.ts).
+- [apps/work-server/src/modules/students/query.ts](../../../src/modules/students/query.ts).
+- [apps/work-server/src/core/security/password.ts](../../../src/core/security/password.ts).
+- [apps/work-server/src/services/public-selectors.ts](../../../src/services/public-selectors.ts).
+- [apps/work-server/src/config/multer.ts](../../../src/config/multer.ts).
+- [apps/work-server/src/core/exceptions.ts](../../../src/core/exceptions.ts).
+- [apps/work-server/src/core/responses.ts](../../../src/core/responses.ts).
+- [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts).
+- [apps/work-server/prisma/schema.prisma](../../../prisma/schema.prisma).
 
 ## Tables read
 
-- `SinhVien`.
+- N/A — no Prisma table read.
 
 ## Tables write
 
-- `SinhVien`.
+- SinhVien.
 
 ## Mục chú ý
 
-- Legacy OpenAPI gọi email format email nhưng source route không validate format..
-- Không ghi giá trị mật khẩu thực vào DD..
+- matkhau is hashed with bcrypt cost 12 before insert.
+- Public select excludes matkhau.
+- Unique email P2002 maps to STUDENT_CREATE_FAILED.
 
 ## Assumptions
 
-- Reviewer/approver chưa được cung cấp; đây là metadata tài liệu, không phải API behavior.
+- N/A — documentation records current source behavior; it does not add a target-domain rule.
 
 ## Conflicts
 
-- Contract/source drift được liệt kê tại `../../OPEN_QUESTIONS.md` và không được silently reconcile.
+- Target-only operations in `contracts/openapi/work/openapi.json` are excluded because they are not registered in the current router.
 
 ## Security note
 
-- Không ghi literal credential, JWT secret hoặc token. Public projection loại password/hash khỏi mọi response.
+- Password/hash fields are used only for authentication/storage and are excluded from public projections.
 
 ## Performance note
 
-- Ghi đúng query hiện tại; không suy diễn index, pagination DB hoặc caching ngoài source.
+- Query shape, order and pagination are documented exactly from the current Prisma query functions.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

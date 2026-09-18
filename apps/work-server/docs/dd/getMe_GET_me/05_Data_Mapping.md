@@ -2,57 +2,60 @@
 title: "Data Mapping"
 order: 5
 dd_id: "getMe"
-api_name: "Get current user"
+api_name: "api/v1 dispatcher — getStudentMe or getBusinessMe"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Data Mapping
 
-## Flow xử lý data
+## Execution flow
 
-## 1. Get thông tin
+1. `traceMiddleware` accepts a valid `X-Trace-Id` or generates a UUID.
+2. `express.json`/Multer parses the request according to the route transport.
+3. Auth middleware optionally decodes Bearer JWT; protected route middleware enforces authentication and role.
+4. Route parses model and calls the module view/use-case.
+5. View validates, applies business rule and calls query/repository functions.
+6. Prisma result is mapped through the success envelope; errors go to centralized exception mapping.
 
-### 1.1. Get request header và token
+## Request Usage Matrix
 
-- `authorization`: middleware đọc từ `header["Authorization"]`.
-- `user_id`: lấy từ verified `req.user.id`.
-- `email`: lấy từ verified `req.user.email`.
-- `role`: lấy từ verified `req.user.role`.
+| No | Location | Name | Rule | Use | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | header | Authorization | Bearer <JWT HS256> | Token được parse bởi authenticateToken; protected route gọi ensureAuthenticated/checkRole. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 2 | header | X-Trace-Id | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
 
-### 1.2. Get path/query/body data
+## Query Matrix
 
-- N/A — endpoint không nhận path, query hoặc request body.
+| No | Operation | Table/model | Columns/select | Where | Sort/pagination | Include/relation | Transaction |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | findStudent | SinhVien | id, hoten, email, chuyennganh, avt | id = token.id | N/A | N/A | N/A |
+| 2 | findBusiness | DoanhNghiep | id, hoten, email, diachi, sodienthoai, avt | id = token.id | N/A | N/A | N/A |
 
-## 2. Check quyền
+## Mutation Matrix
 
-### 2.1. Permission
+N/A — route has no persistent mutation.
 
-- `ensureAuthenticated`: yêu cầu `req.user` tồn tại và `req.authenticated` không phải `false`.
-- N/A — endpoint chỉ yêu cầu authentication, không có role restriction riêng.
+## Response Source Matrix
 
-## 3. Validate data input
+| No | Field | Kind | Source/transform | Mapping source |
+| ---: | --- | --- | --- | --- |
+| 1 | id | data field | Student or business public projection id. | api/v1 branch to getStudentMe/getBusinessMe |
+| 2 | hoten | data field | Student or business public projection name. | api/v1 branch to getStudentMe/getBusinessMe |
+| 3 | email | data field | Student or business public projection email. | api/v1 branch to getStudentMe/getBusinessMe |
+| 4 | chuyennganh | data field | Present only for student role. | api/v1 branch to getStudentMe/getBusinessMe |
+| 5 | diachi | data field | Present only for business role. | api/v1 branch to getStudentMe/getBusinessMe |
+| 6 | sodienthoai | data field | Present only for business role. | api/v1 branch to getStudentMe/getBusinessMe |
+| 7 | avt | data field | Student or business public projection avatar. | api/v1 branch to getStudentMe/getBusinessMe |
+| 8 | role | data field | Role from route branch. | api/v1 branch to getStudentMe/getBusinessMe |
 
-- N/A — không có validation riêng ngoài middleware/helper được source gọi.
+## Validation and branch rules
 
-## 4. Query và business processing
+- ensureAuthenticated runs in createV1Router before /me.
+- Student role calls getStudentMe; business role calls getBusinessMe.
+- Public selector excludes password fields.
+- Missing row throws USER_NOT_FOUND.
 
-### 4.1. Branch theo role
-
-- Nếu `req.user.role = "student"`, gọi `StudentService.getStudentById(user.id)`.
-- Nếu role khác student, gọi `BusinessService.getDoanhNghiepById(user.id)`.
-- Nếu service không có record, trả `404 USER_NOT_FOUND`.
-- Thêm `role` vào `data` trước khi trả response.
-
-## 5. Insert/Update/Delete thông tin
-
-- N/A — READ-ONLY API hoặc không có DB mutation.
-
-## 6. Map response và error
-
-- `data` là public projection của `SinhVien` hoặc `DoanhNghiep` cộng `role`; password/hash không được chọn hoặc trả về.
-- Thành công: `reply` trả HTTP `200`, `businessCode = ME_LOADED`, `data` theo [04_Response.md](./04_Response.md).
-- Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
-- Chi tiết lỗi: [06_Error.md](./06_Error.md).
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

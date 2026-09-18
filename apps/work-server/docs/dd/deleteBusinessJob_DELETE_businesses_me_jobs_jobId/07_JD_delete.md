@@ -2,50 +2,34 @@
 title: "Định nghĩa table"
 order: 7
 dd_id: "deleteBusinessJob"
-api_name: "Delete business job"
+api_name: "jobs.view.deleteBusinessJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "table"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Định nghĩa table
 
 ## Table metadata
 
 | Thuộc tính | Giá trị |
-|---|---|
-| Physical table | `JD` |
-| Logical table | JD |
+| ---: | --- |
+| Prisma model | JD |
 | Operation | DELETE |
-| Data Mapping step | `5.1` |
+| Transaction | Prisma $transaction |
+| Status | Draft — Ready for Review |
 
-## Update mapping
+## Field mapping
 
-**Áp dụng khi**
+| No | DB column | Operation | Value source | Prisma/schema type |
+| ---: | --- | --- | --- | --- |
+| 1 | id | DELETE | parsed path jobId | BigInt |
 
-- N/A — operation hiện tại không phải UPDATE.
+## Insert/Update/Delete behavior
 
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A |
+- Only the owned JD is deleted.
+- Response returns the parsed numeric id after delete.
 
-## Insert mapping
 
-**Áp dụng khi**
-
-- N/A — operation hiện tại không phải INSERT.
-
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A |
-
-## Delete mapping
-
-**Áp dụng khi**
-
-- Owner check thành công.
-
-| No | Target column | Operator | Value source | Data Mapping step | Remarks |
-|---|---|---|---|---|---|
-| 1 | id | = | `req.params.jobId` sau `numericParam` | `5.1` | Hard delete `JD` |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

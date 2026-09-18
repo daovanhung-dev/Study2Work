@@ -2,23 +2,29 @@
 title: "Lịch sử update"
 order: 1
 dd_id: "listJobs"
-api_name: "List jobs"
+api_name: "jobs.view.getJobs"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "Lịch sử"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Lịch sử update
 
 ## Metadata
 
-| Ngày tạo | Ngày update cuối cùng |
-|---|---|
-| 2026-09-18 | 2026-09-18 |
+| Thuộc tính | Giá trị |
+| ---: | --- |
+| API ID | `listJobs` |
+| Status | Draft — Ready for Review |
+| Updated date | 2026-09-18 |
+| Basis | Current registered Work Server source |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
-|---|---|---|---|---|
-| 1.0 | 2026-09-18 | Codex | Create source-backed DD from current Work Server runtime | Draft — Needs Confirmation |
+| ---: | --- | --- | --- | --- |
+| 0.2 | 2026-09-18 | Codex | Rewrite DD against current Work Server source and 21 wired runtime routes. | Draft — Ready for Review |
+
+
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

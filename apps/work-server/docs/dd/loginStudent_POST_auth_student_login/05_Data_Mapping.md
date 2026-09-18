@@ -2,59 +2,61 @@
 title: "Data Mapping"
 order: 5
 dd_id: "loginStudent"
-api_name: "Student login"
+api_name: "auth.view.loginStudent"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Data Mapping
 
-## Flow xử lý data
+## Execution flow
 
-## 1. Get thông tin
+1. `traceMiddleware` accepts a valid `X-Trace-Id` or generates a UUID.
+2. `express.json`/Multer parses the request according to the route transport.
+3. Auth middleware optionally decodes Bearer JWT; protected route middleware enforces authentication and role.
+4. Route parses model and calls the module view/use-case.
+5. View validates, applies business rule and calls query/repository functions.
+6. Prisma result is mapped through the success envelope; errors go to centralized exception mapping.
 
-### 1.1. Get request header và token
+## Request Usage Matrix
 
-- N/A — route public; `authenticateToken` chỉ parse Bearer nếu client gửi nhưng handler không yêu cầu token.
+| No | Location | Name | Rule | Use | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | header | X-Trace-Id | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 2 | body | email | trim(); valid email format | Email used to find credentials. | [apps/work-server/src/modules/auth/models.ts](../../../src/modules/auth/models.ts) |
+| 3 | body | password | min length 1; at least password or matkhau must be present | Canonical login password. | [apps/work-server/src/modules/auth/models.ts](../../../src/modules/auth/models.ts) |
+| 4 | body | matkhau | min length 1; used when password is omitted | Legacy login compatibility alias. | [apps/work-server/src/modules/auth/models.ts](../../../src/modules/auth/models.ts) |
 
-### 1.2. Get path/query/body data
+## Query Matrix
 
-- `email`: lấy từ `req.body.email`.
-- `password`: lấy từ `req.body.password`.
-- `matkhau`: lấy từ `req.body.matkhau`.
+| No | Operation | Table/model | Columns/select | Where | Sort/pagination | Include/relation | Transaction |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | findStudentCredentials | SinhVien | id, email, matkhau | email = input.email | N/A | N/A | N/A |
 
-## 2. Check quyền
+## Mutation Matrix
 
-### 2.1. Permission
+| No | Operation | Table/model | Condition | Fields | Value source | Transaction | Failure behavior |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | rehash password | SinhVien | credentials found and verifyPassword.needsRehash | matkhau | hashPassword(password), bcrypt cost 12 | No explicit transaction; failure is swallowed best-effort. | Login still returns success if rehash update fails. |
 
-- N/A — public route.
+## Response Source Matrix
 
-## 3. Validate data input
+| No | Field | Kind | Source/transform | Mapping source |
+| ---: | --- | --- | --- | --- |
+| 1 | token | data field | HS256 JWT signed by signAccessToken; example is synthetic. | auth view authenticate and core security |
+| 2 | user.id | data field | Number(credentials.id). | auth view authenticate and core security |
+| 3 | user.email | data field | credentials.email or empty string. | auth view authenticate and core security |
+| 4 | user.role | data field | Literal `student`. | auth view authenticate and core security |
 
-- `email` phải có giá trị.
-- `loginPassword = password ?? matkhau` phải có giá trị.
+## Validation and branch rules
 
-## 4. Query và business processing
+- Parse loginRequestSchema.
+- Use loginPassword to select password then matkhau alias.
+- Query findStudentCredentials by email selecting id/email/matkhau.
+- verifyPassword supports bcrypt and legacy plaintext fallback.
+- Best-effort rehash stores bcrypt hash when legacy plaintext verification succeeds.
+- signAccessToken returns token and view returns AUTH_LOGIN_SUCCESS.
 
-### 4.1. Query sinh viên
-
-- `StudentService.loginStudent` gọi `SinhVien.findUnique` với điều kiện `email = email`.
-- Query select các cột `id`, `email`, `matkhau`.
-- Nếu account không tồn tại hoặc bcrypt/legacy password verify thất bại: đi tới lỗi `INVALID_CREDENTIALS`.
-- Chỉ dùng `matkhau` cho verify; public response projection không chứa password/hash.
-
-## 5. Insert/Update/Delete thông tin
-
-- N/A — READ-ONLY API hoặc không có DB mutation.
-
-## 6. Map response và error
-
-- `user.id = SinhVien.id`.
-- `user.email = SinhVien.email`.
-- `user.role = "student"`.
-- `token = signToken(user)` với thời hạn từ `JWT_EXPIRES`.
-- Thành công: `reply` trả HTTP `200`, `businessCode = AUTH_LOGIN_SUCCESS`, `data` theo [04_Response.md](./04_Response.md).
-- Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
-- Chi tiết lỗi: [06_Error.md](./06_Error.md).
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -2,62 +2,56 @@
 title: "Data Mapping"
 order: 5
 dd_id: "deleteBusinessJob"
-api_name: "Delete business job"
+api_name: "jobs.view.deleteBusinessJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Data Mapping
 
-## Flow xử lý data
+## Execution flow
 
-## 1. Get thông tin
+1. `traceMiddleware` accepts a valid `X-Trace-Id` or generates a UUID.
+2. `express.json`/Multer parses the request according to the route transport.
+3. Auth middleware optionally decodes Bearer JWT; protected route middleware enforces authentication and role.
+4. Route parses model and calls the module view/use-case.
+5. View validates, applies business rule and calls query/repository functions.
+6. Prisma result is mapped through the success envelope; errors go to centralized exception mapping.
 
-### 1.1. Get request header và token
+## Request Usage Matrix
 
-- `authorization`: middleware đọc từ `header["Authorization"]`.
-- `user_id`: lấy từ verified `req.user.id`.
-- `email`: lấy từ verified `req.user.email`.
-- `role`: lấy từ verified `req.user.role`.
+| No | Location | Name | Rule | Use | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | header | Authorization | Bearer <JWT HS256> | Token được parse bởi authenticateToken; protected route gọi ensureAuthenticated/checkRole. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 2 | header | X-Trace-Id | UUID hợp lệ; invalid/missing sẽ được generate | Trace ID được echo ở header và body. | [apps/work-server/src/core/middleware.ts](../../../src/core/middleware.ts) |
+| 3 | path | jobId | digits only; >0; Number.isSafeInteger | JD primary key. | [apps/work-server/src/modules/jobs/validate.ts](../../../src/modules/jobs/validate.ts) |
 
-### 1.2. Get path/query/body data
+## Query Matrix
 
-- `jobId`: lấy từ `req.params.jobId`.
+| No | Operation | Table/model | Columns/select | Where | Sort/pagination | Include/relation | Transaction |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | findOwnedJob | JD | id | id = jobId AND doanhnghiep_id = token.id | N/A | N/A | inside transaction |
+| 2 | deleteJob | JD | delete target by id | id = jobId | N/A | N/A | inside transaction |
 
-## 2. Check quyền
+## Mutation Matrix
 
-### 2.1. Permission
+| No | Operation | Table/model | Condition | Fields | Value source | Transaction | Failure behavior |
+| ---: | --- | --- | --- | --- | --- | --- | --- |
+| 1 | DELETE | JD | id=jobId and doanhnghiep_id=token.id | id | path jobId | Prisma $transaction | missing owner -> JOB_NOT_FOUND |
 
-- `ensureAuthenticated`: yêu cầu `req.user` tồn tại và `req.authenticated` không phải `false`.
-- `checkRole("business")`: chỉ cho phép JWT có role `business`.
+## Response Source Matrix
 
-## 3. Validate data input
+| No | Field | Kind | Source/transform | Mapping source |
+| ---: | --- | --- | --- | --- |
+| 1 | id | data field | Parsed positive safe integer from path. | jobs view/query |
 
-- `jobId` phải là chuỗi digits và safe integer.
-- Owner query phải tìm thấy record trước khi delete.
+## Validation and branch rules
 
-## 4. Query và business processing
+- checkRole('business') executes.
+- parseNumericId validates jobId.
+- Transaction verifies ownership then deleteJob.
+- Return JOB_DELETED with `{id}`.
 
-### 4.1. Kiểm tra ownership
-
-- Prisma `JD.findFirst` với `id = jobId` và `doanhnghiep_id = user.id`.
-- Nếu không có owner record, trả `404 JOB_NOT_FOUND`.
-
-## 5. Insert/Update/Delete thông tin
-
-### 5.1. DELETE `JD`
-
-- Gọi `prisma.jD.delete({ where: { id: BigInt(jobId) } })`.
-- Đây là hard delete; không có soft-delete flag trong source.
-- Không có transaction explicit trong source.
-
-## 6. Map response và error
-
-- `data.id = jobId`.
-- `reply` trả HTTP `200` và business code `JOB_DELETED`.
-- Thành công: `reply` trả HTTP `200`, `businessCode = JOB_DELETED`, `data` theo [04_Response.md](./04_Response.md).
-- Mọi lỗi route dùng `reply` hoặc app exception handler; `data = null`, `success = false`, `traceId` được trả trong body và `X-Trace-Id` header.
-- Chi tiết lỗi: [06_Error.md](./06_Error.md).
-- DB mapping: [07_JD_delete.md](./07_JD_delete.md).
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

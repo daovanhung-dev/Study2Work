@@ -2,25 +2,27 @@
 title: "Cover"
 order: 0
 dd_id: "updateCv"
-api_name: "Update CV"
+api_name: "cv.view.updateCv"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "Cover"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # `Study2Work Work Server` — API Detail Design
 
 ## Thông tin tài liệu
 
 | Thuộc tính | Giá trị |
-|---|---|
+| ---: | --- |
 | Project/System | Study2Work Work Server |
-| Module | Work API |
+| Module | CV |
 | Loại tài liệu | API Detail Design |
 | API ID | `updateCv` |
-| API name | Update CV |
+| API name | cv.view.updateCv |
+| Source runtime handler/use-case | cv.view.updateCv |
 | HTTP method | `PUT` |
 | Endpoint | `/api/v1/students/me/cv/:cvId` |
 | Version | 1.0.0 |
-| Status | Draft — Needs Confirmation |
+| Status | Draft — Ready for Review |
 | Created by | Codex |
 | Reviewed by | N/A — chưa được chỉ định |
 | Approved by | N/A — chưa được chỉ định |
@@ -31,8 +33,9 @@ status: "Draft — Needs Confirmation"
 
 ```text
 Study2Work Work Server API design
-Update CV
+cv.view.updateCv
 ```
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

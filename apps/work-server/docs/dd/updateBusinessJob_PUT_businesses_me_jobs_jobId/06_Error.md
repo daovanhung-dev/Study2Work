@@ -2,30 +2,37 @@
 title: "Error"
 order: 6
 dd_id: "updateBusinessJob"
-api_name: "Update business job"
+api_name: "jobs.view.updateBusinessJob"
+source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "4.Error"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 # Error
 
 ## Giải thích
 
-Các trường hợp lỗi của API theo current Work Server source.
+Lỗi không inline `res.json`; route/use-case throw typed error hoặc lỗi framework được centralized exception handler map về envelope chuẩn.
 
 ## Error cases
 
-| No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 1 |  Authentication  |  -  |  `Authorization`  |  Thiếu hoặc JWT Bearer không hợp lệ  |  401  |  `UNAUTHORIZED`  |  N/A — source không có message ID  |  `middleware`  |  N/A  |  JSON error envelope; `data=null`  |
-| 2 |  Authorization  |  -  |  `role`  |  JWT hợp lệ nhưng role khác `business`  |  403  |  `FORBIDDEN`  |  N/A — source không có message ID  |  `middleware`  |  N/A  |  Role middleware  |
-| 3 | Upload | - | `avt` | Extension hoặc MIME type không được phép | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `multer middleware` | N/A |  |
-| 4 | Upload | - | `avt` | File vượt quá 10 MiB | 413 | `PAYLOAD_TOO_LARGE` | N/A — source không có message ID | `multer middleware` | N/A |  |
-| 5 |  System  |  -  |  `server`  |  Unhandled exception hoặc service/database error  |  500  |  `INTERNAL_SERVER_ERROR`  |  N/A — source không có message ID  |  `exception handler`  |  N/A  |  Không trả raw error/secret  |
-| 6 |  Validation  |  -  |  `jobId`  |  Path jobId không hợp lệ  |  400  |  `INVALID_REQUEST`  |  N/A — source không có message ID  |  `validation`  |  N/A  |    |
-| 7 |  Not found  |  -  |  `JD.id/doanhnghiep_id`  |  JD không tồn tại hoặc không thuộc business  |  404  |  `JOB_NOT_FOUND`  |  N/A — source không có message ID  |  `ownership query`  |  N/A  |    |
-| 8 | Validation | - | `body` | Không có field cập nhật | 400 | `INVALID_REQUEST` | N/A — source không có message ID | `validation` | N/A |  |
-| 9 | System | - | `JD` | Prisma update thất bại | 500 | `INTERNAL_SERVER_ERROR` | N/A — source không có message ID | `mutation` | N/A |  |
-> Mỗi error case nằm trên một row riêng. Error code là businessCode source-confirmed; message ID không được tự tạo khi source không có field này.
+| No | Business code | HTTP | Message | Condition | Source |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | INVALID_REQUEST | 400 | ID việc làm không hợp lệ. | jobId parser or empty update payload fails. | apps/work-server/src/modules/jobs/validate.ts |
+| 2 | JOB_NOT_FOUND | 404 | Không tìm thấy tin tuyển dụng của tài khoản. | Owned JD lookup returns null. | apps/work-server/src/modules/jobs/view.ts |
+| 3 | UNAUTHORIZED | 401 | Yêu cầu Bearer token hợp lệ. | Missing/invalid Bearer token. | apps/work-server/src/middleware/auth.middleware.ts |
+| 4 | FORBIDDEN | 403 | Bạn không có quyền truy cập. | Valid token has non-business role. | apps/work-server/src/middleware/auth.middleware.ts |
+| 5 | INVALID_REQUEST | 400 | Request không hợp lệ. | Invalid MIME/extension or validation/business input. | apps/work-server/src/core/exceptions.ts |
+| 6 | PAYLOAD_TOO_LARGE | 413 | File tải lên vượt quá kích thước cho phép. | Multer LIMIT_FILE_SIZE for a file over 10 MiB. | apps/work-server/src/config/multer.ts |
+| 7 | INTERNAL_SERVER_ERROR | 500 | Lỗi máy chủ. | Unhandled error is mapped safely without exposing secret. | apps/work-server/src/core/exceptions.ts |
+
+## Common envelope rule
+
+- `success=false`.
+- `data=null`.
+- `meta={}` nếu không có field errors.
+- `meta.fieldErrors` chỉ xuất hiện với Zod validation issues.
+- `traceId` và response header `X-Trace-Id` luôn đồng nhất.
+
 
 ---
 ## Phụ lục đối chiếu nguồn Excel
