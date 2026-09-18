@@ -1,6 +1,6 @@
 # AGENTS context index
 
-Source snapshot gốc cho deep-context: `97ca23fc506653db3c67b91480c476dec52f8b63` (2026-09-16). Context mô tả source Work hiện tại; validator theo dõi drift sau snapshot.
+Source snapshot gốc cho deep-context: `9a70eb6764a6587093a92d3bd7e4cc0bea1651c4` (2026-09-18). Context phải mô tả source hiện tại; validator theo dõi drift sau snapshot.
 
 ## Scope registry
 
@@ -17,6 +17,8 @@ Machine-readable registry: `.agents/context-manifest.json`.
 
 ## Global context
 
+Global index: `project/INDEX.md`.
+
 - `project/design.md`: nguồn chuẩn design system và UX cho Work Web/Mobile.
 - `project/source-status.md`: source/DD/schema/context status và blocker.
 - `project/architecture.md`: ownership/deployable boundaries.
@@ -25,6 +27,9 @@ Machine-readable registry: `.agents/context-manifest.json`.
 - `project/database.md`: database source hiện còn trong working tree.
 - `project/business-code.md`: cách tra business code/HTTP mapping.
 - `db-admin/AGENTS.md`: ownership, API safety boundary và verified commands của Neon DB Admin.
+
+Mỗi scope có `INDEX.md` làm page graph. Không tạo context agent trong `apps/`;
+root router luôn trỏ về các entry dưới `.agents/`.
 
 ## Nhãn trạng thái
 

@@ -7,6 +7,8 @@ scopes:
   - apps/work-client/web/
 ```
 
+Canonical page graph: `INDEX.md`.
+
 Study web dùng Vue; Work web dùng React. Work router giữ route catalog hiện có,
 `src/shared/api/work.ts` là ranh giới fetch/Zod của Work và backend tương ứng là
 `apps/work-server/src/routes/api_routes.ts`.

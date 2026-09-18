@@ -1,6 +1,7 @@
 # Source status và discrepancy
 
-Work deep-context được đối chiếu tại source commit `97ca23fc506653db3c67b91480c476dec52f8b63` ngày 2026-09-16.
+Repository deep-context được đối chiếu tại source commit
+`9a70eb6764a6587093a92d3bd7e4cc0bea1651c4` ngày 2026-09-18.
 
 ## Tài liệu thiết kế
 
@@ -26,7 +27,7 @@ ROOT_ROUTER: AGENTS.md
 CONTEXT_REGISTRY: .agents/AGENTS.md
 MANIFEST: .agents/context-manifest.json
 VALIDATOR: scripts/validate-agent-context.mjs
-STUDY_LEGACY_AGENT_CONTEXT: PRESENT_OUTSIDE_SCOPE; not changed in Work sync
+STUDY_LEGACY_AGENT_CONTEXT: REMOVED; canonical context is under `.agents/server-study/`
 ```
 
 Deep scopes:
@@ -38,26 +39,31 @@ Deep scopes:
 - `web-work`: `.agents/web-work/AGENTS.md`
 - `mobile-work`: `.agents/mobile-work/AGENTS.md`
 
-Work Web và Work Mobile hiện là source-backed; Study legacy agent context không
-được dọn trong task này.
+Mọi project context phải nằm dưới `.agents/`; `apps/` không chứa `.agent/` hoặc
+`AGENTS.md`.
 
 ## Study server
 
 ```text
-RUNTIME_STATUS: DECLARED_NOT_RUNNABLE
-BUSINESS_MODULE_STATUS: NOT_FOUND
-DATABASE_SCHEMA_STATUS: NOT_FOUND
+RUNTIME_STATUS: VERIFIED_IMPORT; CURRENT_ROUTE_SOURCE_BACKED
+TEST_STATUS: COLLECTION_BLOCKED_BY_STALE_REGISTER_IMPORT
+BUSINESS_MODULE_STATUS: SOURCE_BACKED_REGISTER_ONLY
+DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED; LIVE_STATUS_NOT_VERIFIED_HERE
 ```
 
-Blocker tại snapshot:
+Current evidence:
 
-- `app/api/v1.py` import `app.module.auth.*` và `app.module.ai.log.*`, nhưng `app/module/` không tồn tại.
-- `app/main.py` import `success_response`, nhưng `app/core/responses.py` chỉ còn `ApiResponse.success_payload()`/`raise_error()`.
-- `app/core/exceptions.py` import `error_response`, cũng không tồn tại trong responses hiện hành.
-- `app/core/middleware.py` import `normalize_trace_id`, `set_current_trace_id`, `reset_current_trace_id`, trong khi `trace.py` expose `validate_trace_id`, `set_trace_id`, `reset_trace_id`.
-- `alembic.ini`/Dockerfile tham chiếu directory migration không tồn tại.
-- Test collection đi qua `app.main`, nên blocker import xảy ra trước khi các health/security assertion có thể được tin là runnable.
-- `apps/study-server/docs/codebase/README.md` là historical/non-authoritative nếu khác current source.
+- `app.main` imports successfully and composes 8 current routes.
+- `app/api/v1.py` wires `POST /api/v1/auth/register` to
+  `app.modules.auth.register_account.*`.
+- `register_account/validate.py` is empty/unwired; current model validators
+  remain in `models.py`.
+- `tests/modules/auth/test_register.py` imports removed paths
+  `app.modules.auth.models/view`, so pytest collection is blocked.
+- `alembic.ini` references a missing migration directory; this is not schema
+  evidence.
+- `apps/study-server/docs/codebase/README.md` and design DD remain
+  non-authoritative when they conflict with current source.
 
 ## Work server
 

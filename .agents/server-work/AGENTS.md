@@ -9,6 +9,8 @@ STACK: Express 4 + TypeScript + Prisma/PostgreSQL + Neon
 AUTH: JWT Bearer-only
 ```
 
+Canonical page graph: `INDEX.md`.
+
 ## Load theo task
 
 | Task | Context |

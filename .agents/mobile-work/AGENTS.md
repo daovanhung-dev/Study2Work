@@ -10,6 +10,8 @@ app độc lập, không phải một package Dart dùng chung. Kiến trúc, de
 module và workflow đã được ghi nhận trong các page cùng thư mục; vẫn phải kiểm
 tra exact source khi task thay đổi module cụ thể.
 
+Canonical page graph: `INDEX.md`.
+
 Progressive load:
 
 1. `../project/design.md`, `architecture.md`, `conventions.md`,

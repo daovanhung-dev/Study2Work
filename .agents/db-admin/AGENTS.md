@@ -8,6 +8,8 @@ DEPLOYMENT: local-only; one Angular command launches Angular + internal FastAPI
 DATABASE: two backend-owned Neon PostgreSQL targets (`work_server`, `study_server`)
 ```
 
+Canonical page graph: `INDEX.md`.
+
 ## Boundary
 
 The Angular standalone client never connects to Neon and never stores a database

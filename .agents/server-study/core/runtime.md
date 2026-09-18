@@ -1,6 +1,7 @@
 # Study core runtime contracts
 
-Status: source-backed and `VERIFIED` for the current composed routes.
+Status: source-backed; `app.main` imports and composes the current routes. The
+register pytest module still blocks full test collection through a stale import.
 
 ## `app/main.py`
 
@@ -15,13 +16,15 @@ Status: source-backed and `VERIFIED` for the current composed routes.
 - Calls: `build_engine`, `build_session_factory`, CORS middleware, `TraceIdMiddleware`, exception handlers, router.
 - Side effects: creates engine/session factory when explicit settings supplied; installs dependency override for `get_db`.
 - Declared routes: `/`, `/health/live`, `/health/ready` plus `/api/v1/*` router.
-- Runtime status: verified for current routes, including API #1 register.
+- Runtime status: source-backed/import-verified for current routes, including API
+  #1 register.
 
 ### root/health handlers
 - Intended return: standard success envelope via `success_response`.
 - `health_live`: reports service + environment only.
 - `health_ready`: reports database as `configured`; it does **not** execute a DB probe. Redis is only `configured/not_configured` from settings.
-- Runtime status: verified by the full Study test suite.
+- Runtime status: source-backed; full Study test suite is not currently
+  collectable because of the stale register test import.
 
 ## `app/core/responses.py`
 
