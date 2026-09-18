@@ -5,6 +5,11 @@ Neon hoặc SQLite`, kiểm tra external HTTP call và platform impact. Giữ ng
 package name `work_server`, public helper signature, model mapping và
 MaterialPageRoute flow nếu task không yêu cầu đổi contract.
 
+Với authoring/review Mobile module DD, dùng workflow `docs-dd-mobile` và skill
+`create-dd-from-bd-mobile` từ `.agents/context-manifest.json`. Đọc BD/BRD,
+references/INDEX, template và source evidence trước khi viết; không chuyển DD
+Mobile thành API DD hoặc runtime implementation.
+
 Sau edit, kiểm tra feature-specific `flutter analyze`/`flutter test`. Hai bộ
 `neon_test.dart` xác minh URL/row/model normalization và chat polling; hai bộ
 `neon_connection_test.dart` chỉ chạy khi truyền `--dart-define=RUN_NEON_SMOKE=true`.

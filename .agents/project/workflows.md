@@ -23,7 +23,8 @@ classify task
 | Coding | `coding` | requirement/contract → existing pattern → implementation → tests | scope checks + context validator |
 | Fix | `fix`, bug, regression | reproduce → trace → root cause → smallest fix → regression test | reproduction/regression test |
 | Test | test/verification request | inspect requirement, implementation, error paths and test convention | focused test then scope test |
-| Docs/DD | API/DD/documentation | load `createDD-markdown`; preserve template and mark source gaps | contract and DD validation |
+| Docs/DD | Web/API DD/documentation | load `createDD-markdown`; preserve API template and mark source gaps | contract and DD validation |
+| Docs/DD Mobile | Mobile module DD/documentation | load `create-dd-from-bd-mobile`; follow BD evidence, module template and review gates | mobile DD validator + context validation |
 | Cross-scope contract | shared API/event/envelope | identify producer/consumer and status before changing either side | `contracts:validate` + context validator |
 | Worklog | every task | record evidence, decisions, changes and verification | required-field checklist |
 
@@ -36,6 +37,9 @@ classify task
   absent; do not recreate that source from history.
 - `scripts/generate_v1_pilot_dd.py`: `DECLARED_NOT_RUNNABLE` because it needs
   `docs/BD/` and currently references the absent `.agent/` template path.
+- `.agents/skills/create-dd-mobile/scripts/validate_dd_pack.py`:
+  source-backed Mobile module DD validator; use it for Mobile DD packs,
+  templates and examples.
 
 Missing tools or missing source must be reported with an explicit status; a
 file-presence check is not a runtime verification.

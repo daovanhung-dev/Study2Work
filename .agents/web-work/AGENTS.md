@@ -20,6 +20,11 @@ ngược lại:
 - Study Web: `study/AGENTS.md` → `study/INDEX.md`.
 - Work Web: các page trực tiếp trong scope này.
 
+Với task authoring hoặc review DD cho Web/API, load `createDD-markdown` từ skill
+registry. Đây là boundary API Detail Design, không phải Mobile module DD;
+Mobile/Flutter dùng `create-dd-from-bd-mobile`. Web UI-only DD hiện chưa có
+skill canonical trong repository.
+
 Task cụ thể chỉ đọc đúng web app:
 
 1. `../project/design.md`, `architecture.md`, `conventions.md`,

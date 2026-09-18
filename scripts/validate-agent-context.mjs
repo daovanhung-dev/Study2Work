@@ -198,6 +198,13 @@ function checkRegistries(manifest) {
     checkStatus(node.status, `${name} context`);
     for (const sourceRoot of node.sourceRoots ?? []) mustExist(sourceRoot, `${name} source root`);
     for (const sourcePath of node.requiredSourcePaths ?? []) mustExist(sourcePath, `${name} verified source`);
+    for (const skillRef of node.skillRefs ?? []) {
+      if (!manifest.skills?.[skillRef]) {
+        fail(`${name} references unknown skill ${skillRef}`);
+      } else if (!(manifest.skills[skillRef].scopeRefs ?? []).includes(name)) {
+        fail(`${name} skill reference ${skillRef} is missing the scope reference`);
+      }
+    }
   }
 
   if (!manifest.worklog) fail("worklog registry is missing");
@@ -232,6 +239,11 @@ function checkRegistries(manifest) {
     for (const scope of skill.scopeRefs ?? []) {
       if (!scopeNames.has(scope) && ![...contextNodes(manifest).map((item) => item.name)].includes(scope)) {
         fail(`skill ${skillName} references unknown scope ${scope}`);
+      }
+    }
+    for (const workflowRef of skill.workflowRefs ?? []) {
+      if (!manifest.workflows?.[workflowRef]) {
+        fail(`skill ${skillName} references unknown workflow ${workflowRef}`);
       }
     }
     for (const resourcePath of skill.resourcePaths ?? []) mustExist(resourcePath, `skill ${skillName} resource`);

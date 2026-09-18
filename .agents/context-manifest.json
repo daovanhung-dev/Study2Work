@@ -43,7 +43,9 @@
   "skills": {
     "createDD-markdown": {
       "status": "SOURCE_BACKED",
-      "entry": ".agents/skills/create_dd/docs/dd/createDD_MARKDOWN_SKILL.md",
+      "target": "web-api-dd",
+      "excludes": ["mobile-module-dd", "web-ui-only-dd"],
+      "entry": ".agents/skills/create_dd_api/docs/dd/createDD_MARKDOWN_SKILL.md",
       "triggers": [
         "API detail design",
         "DD Markdown",
@@ -53,9 +55,26 @@
       "scopeRefs": ["server-study", "server-work", "server-ai", "web-work"],
       "workflowRefs": ["docs-dd", "cross-scope-contract"],
       "resourcePaths": [
-        ".agents/skills/create_dd/docs/dd/DD_API_Template_MD",
-        ".agents/skills/create_dd/docs/dd/Examples/HOKAN_K00GetLabelInfo",
-        ".agents/skills/create_dd/docs/dd/Examples/VQ2T_PARAM_I01SaveRemovalPart"
+        ".agents/skills/create_dd_api/docs/dd/DD_API_Template_MD",
+        ".agents/skills/create_dd_api/docs/dd/Examples/HOKAN_K00GetLabelInfo",
+        ".agents/skills/create_dd_api/docs/dd/Examples/VQ2T_PARAM_I01SaveRemovalPart"
+      ]
+    },
+    "create-dd-from-bd-mobile": {
+      "status": "SOURCE_BACKED",
+      "target": "mobile-module-dd",
+      "excludes": ["web-api-dd", "web-ui-only-dd", "runtime-implementation"],
+      "entry": ".agents/skills/create-dd-mobile/SKILL.md",
+      "triggers": [
+        "mobile DD",
+        "BD/BRD to mobile module DD",
+        "Flutter module documentation",
+        "create DD mobile"
+      ],
+      "scopeRefs": ["mobile-work"],
+      "workflowRefs": ["docs-dd-mobile"],
+      "resourcePaths": [
+        ".agents/skills/create-dd-mobile"
       ]
     }
   },
@@ -87,6 +106,17 @@
       "triggers": ["docs", "DD", "API documentation", "contract documentation"],
       "scopeRefs": ["server-study", "server-work", "server-ai", "web-work"],
       "verificationCommands": ["contract validator", "DD markup/link validation"]
+    },
+    "docs-dd-mobile": {
+      "status": "VERIFIED",
+      "entry": ".agents/project/workflows.md",
+      "triggers": ["mobile DD", "BD/BRD to mobile module DD", "Flutter module documentation"],
+      "scopeRefs": ["mobile-work"],
+      "verificationCommands": [
+        "python3 .agents/skills/create-dd-mobile/scripts/validate_dd_pack.py",
+        "context validator",
+        "git diff --check"
+      ]
     },
     "cross-scope-contract": {
       "status": "VERIFIED",
@@ -147,6 +177,7 @@
       "status": "SOURCE_BACKED_WITH_TEST_BLOCKER",
       "entry": ".agents/server-study/AGENTS.md",
       "index": ".agents/server-study/INDEX.md",
+      "skillRefs": ["createDD-markdown"],
       "pages": [
         ".agents/server-study/architecture.md",
         ".agents/server-study/apis/declared-routes.md",
@@ -186,6 +217,7 @@
       "status": "SOURCE_CHANGED",
       "entry": ".agents/server-work/AGENTS.md",
       "index": ".agents/server-work/INDEX.md",
+      "skillRefs": ["createDD-markdown"],
       "pages": [
         ".agents/server-work/architecture.md",
         ".agents/server-work/apis/foundation.md",
@@ -234,6 +266,7 @@
       "status": "VERIFIED_WITH_UNWIRED_COMPONENTS",
       "entry": ".agents/server-ai/AGENTS.md",
       "index": ".agents/server-ai/INDEX.md",
+      "skillRefs": ["createDD-markdown"],
       "pages": [
         ".agents/server-ai/architecture.md",
         ".agents/server-ai/apis/chat.md",
@@ -264,6 +297,7 @@
       "status": "VERIFIED_REACT_EXPRESS_SPLIT",
       "entry": ".agents/web-work/AGENTS.md",
       "index": ".agents/web-work/INDEX.md",
+      "skillRefs": ["createDD-markdown"],
       "pages": [
         ".agents/web-work/architecture.md",
         ".agents/web-work/conventions.md",
@@ -354,6 +388,7 @@
       "status": "SOURCE_BACKED",
       "entry": ".agents/mobile-work/AGENTS.md",
       "index": ".agents/mobile-work/INDEX.md",
+      "skillRefs": ["create-dd-from-bd-mobile"],
       "pages": [
         ".agents/mobile-work/architecture.md",
         ".agents/mobile-work/dependencies.md",

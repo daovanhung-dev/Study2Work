@@ -50,8 +50,10 @@ AGENTS.md
 
 Skill, workflow và contract phải được tra trong machine-readable registry của
 `.agents/context-manifest.json`; không coi file tồn tại là bằng chứng đã được
-wire. Task có DD/API documentation phải load `createDD-markdown` trước khi
-authoring hoặc review.
+wire. Task DD phải chọn skill theo boundary: `create-dd-from-bd-mobile` cho
+Mobile/Flutter module DD, `createDD-markdown` cho Web/API DD. Web UI-only DD
+chưa có skill canonical. Chỉ load skill tương ứng trước khi authoring hoặc
+review.
 
 ## 3. Progressive loading
 
