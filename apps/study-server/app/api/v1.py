@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db, get_engine
 from app.core.trace import get_trace_id
-from app.modules.auth.register_account.models import RegisterRequest
-from app.modules.auth.register_account.view import create_user
+from app.modules.guest.register_account.models import RegisterRequest
+from app.modules.guest.register_account.view import create_user
 
 router = APIRouter(
     prefix="/api/v1",

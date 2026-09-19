@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from app.utils.validate import strip_email
+
 
 class RegisterRequest(BaseModel):
     """Public request body for creating a Study account."""
@@ -10,12 +12,7 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=1)
     full_name: str = Field(min_length=1, max_length=150)
 
-    @field_validator("email", mode="before")
-    @classmethod
-    def strip_email(cls, value: object) -> object:
-        if isinstance(value, str):
-            return value.strip()
-        return value
+    _strip_email = field_validator("email", mode="before")(strip_email)
 
     @field_validator("password")
     @classmethod
