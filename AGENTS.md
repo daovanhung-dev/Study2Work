@@ -41,6 +41,7 @@ Không nạp scope khác nếu chưa có dependency thật. Task qua nhiều sco
 ```text
 AGENTS.md
   -> .agents/AGENTS.md
+  -> .agents/context-map.md
   -> classify task và xác định primary_task_type
   -> scripts/select-worklogs.mjs --type <primary_task_type> --limit 3
   -> đọc 3 worklog được chọn; nếu thiếu thì đọc toàn bộ log cùng type và ghi shortage
@@ -51,7 +52,9 @@ AGENTS.md
   -> worklog cập nhật trước và sau verification
 ```
 
-Preflight worklog là bắt buộc trước khi đọc sâu hoặc chỉnh sửa. Selector chỉ
+`context-map.md` là bước load bắt buộc để hiểu page graph, scope boundary,
+skill/workflow/contract wiring trước khi chọn context cụ thể. Preflight worklog
+là bắt buộc trước khi đọc sâu hoặc chỉnh sửa. Selector chỉ
 chọn đường dẫn; agent phải thực sự đọc các file được chọn và ghi lại chúng
 trong phần `PRIOR_WORKLOG_REVIEW` của worklog hiện tại. Quy tắc match dùng
 `primary_task_type` chính xác; khi chưa đủ 3 log thì không bịa thêm log và phải

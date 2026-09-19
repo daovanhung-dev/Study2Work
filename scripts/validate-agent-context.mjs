@@ -427,6 +427,16 @@ if (manifest) {
   const rootRouter = existsSync(resolve(repoRoot, "AGENTS.md")) ? readFileSync(resolve(repoRoot, "AGENTS.md"), "utf8") : "";
   const registry = existsSync(resolve(repoRoot, ".agents/AGENTS.md")) ? readFileSync(resolve(repoRoot, ".agents/AGENTS.md"), "utf8") : "";
 
+  if (manifest.contextMap) {
+    if (!rootRouter.includes(manifest.contextMap)) {
+      fail(`root router does not reference ${manifest.contextMap}`);
+    }
+    const mapRelative = manifest.contextMap.replace(/^\.agents\//, "");
+    if (!registry.includes(mapRelative)) {
+      fail(`context registry does not reference ${mapRelative}`);
+    }
+  }
+
   checkNoAgentContextInApps();
   checkPageGraph(manifest, registry);
   checkRegistries(manifest);

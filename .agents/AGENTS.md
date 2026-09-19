@@ -17,6 +17,8 @@ Machine-readable registry: `.agents/context-manifest.json`.
 
 Human-readable context map: [`context-map.md`](context-map.md). The map explains
 the load tree and registry relationships; it does not replace the manifest.
+After reading this registry, every task must read `context-map.md` before
+choosing a scope or subcontext.
 
 ## Global context
 

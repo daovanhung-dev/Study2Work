@@ -1,14 +1,15 @@
 # Repository workflow registry
 
-All workflows begin with the root router, task classification, and worklog
-preflight. The selected same-type worklogs must be read before deep source
-inspection. The active worklog is updated before source edits, after source
-tracing, and after verification.
+All workflows begin with the root router, global registry, context map, task
+classification, and worklog preflight. The selected same-type worklogs must be
+read before deep source inspection. The active worklog is updated before source
+edits, after source tracing, and after verification.
 
 ## Common flow
 
 ```text
-classify task
+load `.agents/context-map.md`
+-> classify task
 -> select/read up to 3 nearest worklogs with the same primary_task_type
 -> load exact scope/subcontext
 -> load skill/contract registry entries required by the task

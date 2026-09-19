@@ -21,6 +21,7 @@ agent đi từ router tới context page, source, contract, test và worklog.
 ```text
 [AGENTS.md]
   → [.agents/AGENTS.md]
+  → [.agents/context-map.md]
   → classify primary_task_type + project_scopes
   → worklog preflight: select/read up to 3 same-type worklogs
   → [.agents/project/INDEX.md] when cross-scope/boundary context is needed
