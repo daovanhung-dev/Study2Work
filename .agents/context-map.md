@@ -121,7 +121,7 @@ Study2Work/
 ### `server-study`
 
 - Source root: `apps/study-server/`
-- Status: `SOURCE_BACKED_WITH_TEST_BLOCKER`
+- Status: `SOURCE_BACKED`
 - Entry: [`.agents/server-study/AGENTS.md`](server-study/AGENTS.md)
 - Index: [`.agents/server-study/INDEX.md`](server-study/INDEX.md)
 - Skill ⇢ `createDD-markdown`

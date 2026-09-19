@@ -1,7 +1,7 @@
 # Study declared API surface
 
-Global status: current route source is `SOURCE_BACKED`; `app.main` import is
-verified, while the register test module blocks full pytest collection.
+Global status: current route source is `SOURCE_BACKED`; `app.main` import and
+the register test module use the current `guest` internal namespace.
 Unimplemented auth/AI routes remain `UNWIRED`.
 
 ## Composition-root routes
@@ -30,7 +30,7 @@ the separate health readiness endpoint does not probe the database.
 
 ### `POST /api/v1/auth/register`
 Implemented input `RegisterRequest`; dependency `get_db`; calls
-`app.modules.auth.register_account.view.create_user(...)` with trace ID.
+`app.modules.guest.register_account.view.create_user(...)` with trace ID.
 The flow checks duplicate email, hashes the password with Argon2id, inserts into
 the `users` relation referenced by current SQL, commits the transaction and
 returns the safe profile envelope. The active schema is not asserted here

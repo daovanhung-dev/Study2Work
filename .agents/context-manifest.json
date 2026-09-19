@@ -186,7 +186,7 @@
   "scopes": {
     "server-study": {
       "mode": "DEEP",
-      "status": "SOURCE_BACKED_WITH_TEST_BLOCKER",
+      "status": "SOURCE_BACKED",
       "entry": ".agents/server-study/AGENTS.md",
       "index": ".agents/server-study/INDEX.md",
       "skillRefs": ["createDD-markdown"],
@@ -218,10 +218,12 @@
         "apps/study-server/app/api/v1.py",
         "apps/study-server/app/core/database.py",
         "apps/study-server/app/core/responses.py",
-        "apps/study-server/app/modules/auth/register_account/models.py",
-        "apps/study-server/app/modules/auth/register_account/query.py",
-        "apps/study-server/app/modules/auth/register_account/validate.py",
-        "apps/study-server/app/modules/auth/register_account/view.py"
+        "apps/study-server/app/utils/__init__.py",
+        "apps/study-server/app/utils/validate.py",
+        "apps/study-server/app/modules/guest/register_account/models.py",
+        "apps/study-server/app/modules/guest/register_account/query.py",
+        "apps/study-server/app/modules/guest/register_account/validate.py",
+        "apps/study-server/app/modules/guest/register_account/view.py"
       ]
     },
     "server-work": {

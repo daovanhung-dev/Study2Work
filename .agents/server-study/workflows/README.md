@@ -29,17 +29,17 @@ requirement / DD / schema
 -> focused tests
 ```
 
-`validate.py` must state the target field, condition and error message for each
-special rule. Examples include no whitespace, a required prefix/suffix or an
-allowed email domain such as `@gmail.com`; examples are not automatic rules.
-It must not query DB, commit/rollback, return HTTP responses or create side
-effects. DB-backed duplicate/existence/permission checks stay in `view.py` with
-`query.py`.
+`app/utils/validate.py` contains only shared pure normalization helpers such as
+`strip_email(value)`. Module `validate.py` must state the target field,
+condition and error message for each special rule. Examples include a required
+prefix/suffix or an allowed email domain such as `@gmail.com`; examples are not
+automatic rules. Neither utility nor module validators may query DB,
+commit/rollback, return HTTP responses or create side effects. DB-backed
+duplicate/existence/permission checks stay in `view.py` with `query.py`.
 
-The current register source is not fully wired to this target flow:
-`register_account/validate.py` is empty and current model validators remain in
-`models.py`. The register test module currently has a stale import path and
-blocks pytest collection.
+The current register source uses `app/utils/validate.py` for email
+normalization; `register_account/validate.py` remains empty and current
+password/full-name validators remain in `models.py`.
 
 ## Implementation checklist
 

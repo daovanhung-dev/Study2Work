@@ -2,14 +2,13 @@
 
 ```text
 TEST_SUITE_PRESENT: YES
-COLLECTION_STATUS_AT_SOURCE_SNAPSHOT: BLOCKED_BY_STALE_REGISTER_IMPORT
+COLLECTION_STATUS_AT_SOURCE_SNAPSHOT: VERIFIED_AFTER_NAMESPACE_RENAME
 ```
 
 Tests under `apps/study-server/tests/` cover config, DB helpers, responses,
-security tokens, health/security behavior and API #1 register. Current pytest
-collection is blocked because `tests/modules/auth/test_register.py` imports the
-removed paths `app.modules.auth.models/view`; this task records the gap but
-does not repair tests.
+security tokens, health/security behavior and API #1 register. The register
+test now lives under `tests/modules/guest/` and imports the current
+`app.modules.guest.register_account.*` namespace; full collection is available.
 
 Important remaining scope boundaries include:
 - health tests expect standard envelope and trace header;

@@ -4,8 +4,9 @@
 
 ```text
 app/api/v1.py
-→ app/modules/auth/register_account/models.py
-→ app/modules/auth/register_account/view.py
+→ app/utils/validate.py:strip_email
+→ app/modules/guest/register_account/models.py
+→ app/modules/guest/register_account/view.py
    ├─ query.py
    ├─ core/security/password.py
    └─ core/responses.py
@@ -13,8 +14,9 @@ app/api/v1.py
 
 Current endpoint: `POST /api/v1/auth/register`.
 
-`RegisterRequest` contains `email`, `password` and `full_name`. The model strips
-`email`/`full_name`, rejects blank password input and validates the email type.
+`RegisterRequest` contains `email`, `password` and `full_name`. The model reuses
+`app.utils.validate.strip_email` for email normalization, strips `full_name`,
+rejects blank password input and validates the email type.
 `validate.py` currently exists but is empty and is not called.
 
 ## Current runtime flow
@@ -41,9 +43,8 @@ Future special rules go in `validate.py` and are called by `view.py` after model
 parse/normalization and before the duplicate query. Examples are illustrative;
 the module must not add a domain rule without current contract/source evidence.
 
-## Current discrepancy
+## Namespace alignment
 
-`tests/modules/auth/test_register.py` imports removed paths
-`app.modules.auth.models/view`, so pytest collection is currently blocked. This
-context records the mismatch; it does not treat the stale test as runtime
-evidence and does not invent a compatibility package.
+`tests/modules/guest/test_register.py` imports
+`app.modules.guest.register_account.models/view`, matching the runtime module
+namespace. The public endpoint remains `/api/v1/auth/register`.

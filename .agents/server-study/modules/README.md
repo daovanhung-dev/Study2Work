@@ -24,5 +24,5 @@ DB-backed checks such as duplicate, existence, permission or state belong to
 
 | Module | Status | Context |
 |---|---|---|
-| `auth/register_account` | `SOURCE_BACKED` | `register-account.md` |
+| `guest/register_account` | `SOURCE_BACKED` | `register-account.md` |
 | Other Study domain modules | `NOT_FOUND`/`UNWIRED` | Require source/contract before implementation |

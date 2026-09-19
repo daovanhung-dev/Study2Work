@@ -13,9 +13,9 @@ app/main.py:create_app
   -> app/core/trace.py
 ```
 
-Current composition and API #1 register source flow are present. The current
-register test module has a stale import path and blocks pytest collection;
-routes without a current implementation remain unwired.
+Current composition and API #1 register source flow are present. The register
+test module follows the `guest` namespace and the full test collection is
+available; routes without a current implementation remain unwired.
 
 ## Verified ownership
 
@@ -25,13 +25,14 @@ routes without a current implementation remain unwired.
 - `app/core/config.py`: typed settings backed by `app/core/constants.py`.
 - `app/core/database.py`: sync SQLAlchemy engine/session/query primitives.
 - `app/core/security/*`: password, access token, refresh token primitives.
-- `app/modules/auth/register_account/models.py`: API #1 register request model,
+- `app/utils/validate.py`: shared pure normalization helpers used by request models.
+- `app/modules/guest/register_account/models.py`: API #1 register request model,
   type/basic validation and normalization.
-- `app/modules/auth/register_account/validate.py`: special validation boundary;
+- `app/modules/guest/register_account/validate.py`: special validation boundary;
   currently empty and unwired.
-- `app/modules/auth/register_account/query.py`: duplicate lookup and users
+- `app/modules/guest/register_account/query.py`: duplicate lookup and users
   insert SQL/query helpers.
-- `app/modules/auth/register_account/view.py`: register orchestration,
+- `app/modules/guest/register_account/view.py`: register orchestration,
   business check, password hashing, transaction and response mapping.
 - `app/service/ai/ollama_service.py`: Ollama adapter copied/shared with Study codebase; no live Study caller after business modules disappeared.
 
@@ -45,7 +46,7 @@ No current source establishes:
 
 ## Runtime compatibility repairs
 
-1. `app.api.v1` imports the existing `app.modules.auth` package.
+1. `app.api.v1` imports the existing `app.modules.guest` package.
 2. `responses.py` exposes canonical `success_response`/`error_response` and the legacy `error_payload` adapter.
 3. `TraceIdMiddleware` uses the current trace helper names.
 
@@ -55,9 +56,10 @@ re-evaluate the complete import chain rather than stop at the first error.
 ## Validation workflow boundary
 
 ```text
-model.py
+app/utils/validate.py: shared normalization helper
+→ model.py
 → type/required/basic length/format/normalization
-→ validate.py
+→ register_account/validate.py
 → named, pure special validation
 → view.py
 → DB-backed business validation/query/transaction
@@ -65,5 +67,6 @@ model.py
 
 Examples such as no whitespace or an allowed email domain are only applicable
 when the API contract confirms them. The current register source still keeps
-its validators in `models.py`; `register_account/validate.py` is empty and not
-called.
+its password/full-name validators in `models.py`; email whitespace normalization
+is reused from `app/utils/validate.py`; `register_account/validate.py` is empty
+and not called.

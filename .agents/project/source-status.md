@@ -52,7 +52,7 @@ Mọi project context phải nằm dưới `.agents/`; `apps/` không chứa `.a
 
 ```text
 RUNTIME_STATUS: VERIFIED_IMPORT; CURRENT_ROUTE_SOURCE_BACKED
-TEST_STATUS: COLLECTION_BLOCKED_BY_STALE_REGISTER_IMPORT
+TEST_STATUS: COLLECTION_VERIFIED_AFTER_NAMESPACE_RENAME
 BUSINESS_MODULE_STATUS: SOURCE_BACKED_REGISTER_ONLY
 DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED; LIVE_STATUS_NOT_VERIFIED_HERE
 ```
@@ -61,11 +61,13 @@ Current evidence:
 
 - `app.main` imports successfully and composes 8 current routes.
 - `app/api/v1.py` wires `POST /api/v1/auth/register` to
-  `app.modules.auth.register_account.*`.
+  `app.modules.guest.register_account.*`; `/auth` ở đây là public endpoint
+  contract, không phải Python namespace.
 - `register_account/validate.py` is empty/unwired; current model validators
   remain in `models.py`.
-- `tests/modules/auth/test_register.py` imports removed paths
-  `app.modules.auth.models/view`, so pytest collection is blocked.
+- `tests/modules/guest/test_register.py` imports
+  `app.modules.guest.register_account.models/view` to stay aligned with the
+  runtime namespace.
 - `alembic.ini` references a missing migration directory; this is not schema
   evidence.
 - `apps/study-server/docs/codebase/README.md` and design DD remain
