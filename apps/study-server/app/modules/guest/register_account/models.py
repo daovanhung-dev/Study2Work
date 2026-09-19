@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from app.utils.validate import strip_email
+from app.utils.validate import strip_email,reject_blank_password
 
 
 class RegisterRequest(BaseModel):
@@ -13,13 +13,7 @@ class RegisterRequest(BaseModel):
     full_name: str = Field(min_length=1, max_length=150)
 
     _strip_email = field_validator("email", mode="before")(strip_email)
-
-    @field_validator("password")
-    @classmethod
-    def reject_blank_password(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("password không được để trống")
-        return value
+    _reject_blank_password_ = field_validator("password", mode="before")(reject_blank_password)
 
     @field_validator("full_name", mode="before")
     @classmethod
