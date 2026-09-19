@@ -1,4 +1,7 @@
 import prisma from "../config/prisma.config.js";
+import { studentPublicSelect } from "./public-selectors.js";
+import { hashPassword, verifyPassword } from "../utils/password.js";
+import { isUniqueConstraintError } from "../utils/prisma-errors.js";
 
 class StudentService {
   // Tạo sinh viên mới
@@ -10,13 +13,15 @@ class StudentService {
     avt: string | null
   ) {
     try {
+      const passwordHash = await hashPassword(matkhau);
       const student = await prisma.sinhVien.create({
-        data: { hoten, email, matkhau, chuyennganh, avt },
+        data: { hoten, email, matkhau: passwordHash, chuyennganh, avt },
+        select: studentPublicSelect,
       });
-      console.log("Tạo sinh viên thành công:", student.id);
       return { success: true, data: student };
     } catch (err) {
-      console.error("Lỗi tạo sinh viên:", err);
+      if (isUniqueConstraintError(err)) return { success: false, error: "DUPLICATE_EMAIL" };
+      console.error("Lỗi tạo sinh viên.");
       return { success: false, error: "Không thể tạo sinh viên" };
     }
   }
@@ -29,21 +34,22 @@ class StudentService {
         select: { id: true, email: true, matkhau: true },
       });
 
-      if (!user) {
-        console.log("Không tồn tại");
-        return { success: false };
+      if (!user) return { success: false };
+
+      const verification = await verifyPassword(pass, user.matkhau);
+      if (!verification.valid) return { success: false };
+
+      if (verification.needsRehash) {
+        await prisma.sinhVien.update({
+          where: { id: user.id },
+          data: { matkhau: await hashPassword(pass) },
+        }).catch(() => undefined);
       }
 
-      if (user.matkhau !== pass) {
-        console.log("Mật khẩu sai");
-        return { success: false };
-      }
-
-      const { matkhau, ...userData } = user;
-      console.log("Đăng nhập thành công:", userData.id, userData.email);
+      const { matkhau: _matkhau, ...userData } = user;
       return { success: true, data: userData };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi đăng nhập sinh viên.");
       return { success: false, error: "Lỗi server" };
     }
   }
@@ -56,7 +62,7 @@ class StudentService {
       });
       return { success: true, data: list };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi lấy danh sách sinh viên.");
       return { success: false, error: "Lỗi server" };
     }
   }
@@ -71,7 +77,7 @@ class StudentService {
       if (!student) return { success: false, error: "Không tìm thấy" };
       return { success: true, data: student };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi lấy sinh viên.");
       return { success: false, error: "Lỗi server" };
     }
   }
@@ -88,13 +94,18 @@ class StudentService {
     }
   ) {
     try {
+      const nextData = {
+        ...data,
+        ...(data.matkhau ? { matkhau: await hashPassword(data.matkhau) } : {}),
+      };
       const updated = await prisma.sinhVien.update({
         where: { id: BigInt(id) },
-        data,
+        data: nextData,
+        select: studentPublicSelect,
       });
       return { success: true, data: updated };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi cập nhật sinh viên.");
       return { success: false, error: "Không thể cập nhật sinh viên" };
     }
   }
@@ -105,7 +116,7 @@ class StudentService {
       await prisma.sinhVien.delete({ where: { id: BigInt(id) } });
       return { success: true };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi xóa sinh viên.");
       return { success: false, error: "Không thể xóa sinh viên" };
     }
   }

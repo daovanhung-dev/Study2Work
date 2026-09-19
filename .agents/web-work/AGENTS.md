@@ -7,9 +7,23 @@ scopes:
   - apps/work-client/web/
 ```
 
-Study web dùng Vue; Work web dùng React. Work router giữ route catalog hiện có,
+Canonical page graph: `INDEX.md`.
+
+Study web dùng Vue và có subcontext riêng tại `study/`; Work web dùng React.
+Work router giữ route catalog hiện có,
 `src/shared/api/work.ts` là ranh giới fetch/Zod của Work và backend tương ứng là
 `apps/work-server/src/routes/api_routes.ts`.
+
+Task cụ thể phải chọn đúng subcontext, không áp Vue pattern lên React hoặc
+ngược lại:
+
+- Study Web: `study/AGENTS.md` → `study/INDEX.md`.
+- Work Web: các page trực tiếp trong scope này.
+
+Với task authoring hoặc review DD cho Web/API, load `createDD-markdown` từ skill
+registry. Đây là boundary API Detail Design, không phải Mobile module DD;
+Mobile/Flutter dùng `create-dd-from-bd-mobile`. Web UI-only DD hiện chưa có
+skill canonical trong repository.
 
 Task cụ thể chỉ đọc đúng web app:
 

@@ -1,6 +1,8 @@
 # Study declared API surface
 
-Global status: `VERIFIED` for current routes; unimplemented auth/AI routes remain `UNWIRED`.
+Global status: current route source is `SOURCE_BACKED`; `app.main` import is
+verified, while the register test module blocks full pytest collection.
+Unimplemented auth/AI routes remain `UNWIRED`.
 
 ## Composition-root routes
 
@@ -27,9 +29,12 @@ list of first-column values. No standard envelope. The route is composed, while
 the separate health readiness endpoint does not probe the database.
 
 ### `POST /api/v1/auth/register`
-Implemented input `RegisterRequest`; dependency `get_db`; calls `app.modules.auth.view.create_user(...)` with trace ID.
+Implemented input `RegisterRequest`; dependency `get_db`; calls
+`app.modules.auth.register_account.view.create_user(...)` with trace ID.
 The flow checks duplicate email, hashes the password with Argon2id, inserts into
-`public.users`, commits the transaction and returns the safe profile envelope.
+the `users` relation referenced by current SQL, commits the transaction and
+returns the safe profile envelope. The active schema is not asserted here
+without live metadata.
 Verification dispatch is currently deferred and logged because API #2/provider is
 not implemented.
 

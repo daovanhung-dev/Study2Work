@@ -10,7 +10,7 @@ uv run ruff check .
 uv run ruff format --check .
 uv run mypy app
 uv run pytest
-uv run uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 3003
 ```
 
 ## Health

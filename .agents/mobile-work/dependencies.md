@@ -17,3 +17,16 @@
   each app's `lib/constants.dart` for the current prototype requirement.
 - The Cobalt theme uses only Flutter Material 3 and existing widgets; no
   package, font, icon library or asset was added for the UI refresh.
+
+## Per-app package and platform details
+
+| App | Runtime-specific dependencies/config |
+|---|---|
+| `flutter_student` | `postgres`, `http`, `sqflite`, `path`, `intl`, `shimmer`; Android id `com.s2w.work.students`; local DB `sinhvien.db`. |
+| `flutter_business` | Student dependencies plus `sqflite_common_ffi`, `fl_chart`, `connectivity_plus`, `rename_app`; Android id `com.s2w.work.business`; local DB `doanhnghiep.db`. |
+
+Both apps retain namespace/package `com.example.work_server` and Dart package
+name `work_server`. `supabase_flutter` is absent; names containing Supabase are
+compatibility names for Neon-backed helpers. Both `constants.dart` files define
+direct Neon/Gemini configuration, but agent context records only symbol names
+and security implications, never credential literals.

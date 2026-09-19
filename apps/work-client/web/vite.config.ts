@@ -7,18 +7,18 @@ export default defineConfig({
   envDir: "./.vite-empty-env",
   plugins: [react()],
   server: {
-    host: "0.0.0.0",
-    port: 5174,
+    host: "127.0.0.2",
+    port: 3001,
     strictPort: true,
     proxy: {
-      "/api": "http://localhost:3000",
-      "/uploads": "http://localhost:3000",
-      "/img": "http://localhost:3000",
+      "/api": "http://127.0.0.1:3002",
+      "/uploads": "http://127.0.0.1:3002",
+      "/img": "http://127.0.0.1:3002",
     },
   },
   preview: {
-    host: "0.0.0.0",
-    port: 4174,
+    host: "127.0.0.2",
+    port: 3001,
     strictPort: true,
   },
 });

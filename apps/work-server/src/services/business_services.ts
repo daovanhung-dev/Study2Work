@@ -1,4 +1,7 @@
 import prisma from "../config/prisma.config.js";
+import { hashPassword, verifyPassword } from "../utils/password.js";
+import { isUniqueConstraintError } from "../utils/prisma-errors.js";
+import { businessPublicSelect } from "./public-selectors.js";
 
 class DoanhNghiepService {
   // Tạo doanh nghiệp mới
@@ -11,20 +14,22 @@ class DoanhNghiepService {
     avt: string | null
   ) {
     try {
+      const passwordHash = await hashPassword(matkhau);
       const doanhNghiep = await prisma.doanhNghiep.create({
         data: {
           hoten,
           email,
-          matkhau,
+          matkhau: passwordHash,
           diachi,
           sodienthoai,
           avt,
         },
+        select: businessPublicSelect,
       });
-      console.log("Tạo doanh nghiệp thành công:", doanhNghiep.id);
       return { success: true, data: doanhNghiep };
     } catch (err) {
-      console.error("Lỗi tạo doanh nghiệp:", err);
+      if (isUniqueConstraintError(err)) return { success: false, error: "DUPLICATE_EMAIL" };
+      console.error("Lỗi tạo doanh nghiệp.");
       return { success: false, error: "Không thể tạo doanh nghiệp" };
     }
   }
@@ -37,22 +42,22 @@ class DoanhNghiepService {
         select: { id: true, email: true, matkhau: true },
       });
 
-      if (!doanhNghiep) {
-        console.log("Doanh nghiệp không tồn tại");
-        return { success: false };
+      if (!doanhNghiep) return { success: false };
+
+      const verification = await verifyPassword(matkhau, doanhNghiep.matkhau);
+      if (!verification.valid) return { success: false };
+
+      if (verification.needsRehash) {
+        await prisma.doanhNghiep.update({
+          where: { id: doanhNghiep.id },
+          data: { matkhau: await hashPassword(matkhau) },
+        }).catch(() => undefined);
       }
 
-      if (doanhNghiep.matkhau !== matkhau) {
-        console.log("Mật khẩu sai");
-        return { success: false };
-      }
-
-      const { matkhau: _, ...data } = doanhNghiep;
-      console.log("Đăng nhập thành công:", data.id, data.email);
-
+      const { matkhau: _matkhau, ...data } = doanhNghiep;
       return { success: true, data };
     } catch (err) {
-      console.error("Lỗi login doanh nghiệp:", err);
+      console.error("Lỗi đăng nhập doanh nghiệp.");
       return { success: false, error: "Lỗi server" };
     }
   }
@@ -60,10 +65,10 @@ class DoanhNghiepService {
   // Lấy tất cả doanh nghiệp
   async getAllDoanhNghiep() {
     try {
-      const list = await prisma.doanhNghiep.findMany();
+      const list = await prisma.doanhNghiep.findMany({ select: businessPublicSelect });
       return { success: true, data: list };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi lấy danh sách doanh nghiệp.");
       return { success: false, error: "Lỗi server" };
     }
   }
@@ -73,11 +78,12 @@ class DoanhNghiepService {
     try {
       const doanhNghiep = await prisma.doanhNghiep.findUnique({
         where: { id: BigInt(id) },
+        select: businessPublicSelect,
       });
       if (!doanhNghiep) return { success: false, error: "Không tìm thấy" };
       return { success: true, data: doanhNghiep };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi lấy doanh nghiệp.");
       return { success: false, error: "Lỗi server" };
     }
   }
@@ -95,13 +101,18 @@ class DoanhNghiepService {
     }
   ) {
     try {
+      const nextData = {
+        ...data,
+        ...(data.matkhau ? { matkhau: await hashPassword(data.matkhau) } : {}),
+      };
       const updated = await prisma.doanhNghiep.update({
         where: { id: BigInt(id) },
-        data,
+        data: nextData,
+        select: businessPublicSelect,
       });
       return { success: true, data: updated };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi cập nhật doanh nghiệp.");
       return { success: false, error: "Không thể cập nhật" };
     }
   }
@@ -112,7 +123,7 @@ class DoanhNghiepService {
       await prisma.doanhNghiep.delete({ where: { id: BigInt(id) } });
       return { success: true };
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi xóa doanh nghiệp.");
       return { success: false, error: "Không thể xóa" };
     }
   }

@@ -19,8 +19,8 @@ class Settings(BaseModel):
 
     app_env: Environment = "local"
     host: str = "127.0.0.1"
-    port: int = Field(default=8010, ge=1, le=65_535)
-    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5175"])
+    port: int = Field(default=3001, ge=1, le=65_535)
+    cors_origins: list[str] = Field(default_factory=lambda: ["http://127.0.0.2:3000"])
     # ``database_url`` remains as a compatibility fallback for the original
     # single-target configuration. New local configurations should provide
     # ``database_targets`` instead.

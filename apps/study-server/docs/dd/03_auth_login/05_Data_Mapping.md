@@ -5,64 +5,63 @@ source_workbook: "DD_API_Template(1).xlsx"
 source_sheet: "3. Data mapping"
 format: markdown
 ---
-
 # Data Mapping
 
 ## Flow xử lý data
 
 ## Request Usage Matrix
 
-| Request field | Source | Validate | Query usage | Response usage | Gap |
-|---|---|---|---|---|---|
-| `email` | `request["email"]` | Required; `email` format | `users.email` lookup | Không map từ request trực tiếp; map profile từ DB | N/A |
-| `password` | `request["password"]` | Required; `string` | Verify against `users.password_hash` | Không map vào response | Hash algorithm/policy TBD |
+| Request field | Source                  | Validate                  | Query usage                           | Response usage                                         | Gap                       |
+| ------------- | ----------------------- | ------------------------- | ------------------------------------- | ------------------------------------------------------ | ------------------------- |
+| `email`     | `request["email"]`    | Required;`email` format | `users.email` lookup                | Không map từ request trực tiếp; map profile từ DB | N/A                       |
+| `password`  | `request["password"]` | Required;`string`       | Verify against`users.password_hash` | Không map vào response                               | Hash algorithm/policy TBD |
 
 ## Query Matrix
 
-| Query ID | Mục đích | Type | Base table | Column get | WHERE | Result variable | Branch |
-|---|---|---|---|---|---|---|---|
-| `Q1.1` | Lookup account | `SELECT` | `users AS u` | `u.id` | `u.email = email` | `existing_user` | Found → verify |
-| `Q1.2` | Lookup account | `SELECT` | `users AS u` | `u.full_name` | `u.email = email` | `existing_user` | Found → profile source |
-| `Q1.3` | Lookup account | `SELECT` | `users AS u` | `u.email` | `u.email = email` | `existing_user` | Found → profile source |
-| `Q1.4` | Lookup credential | `SELECT` | `users AS u` | `u.password_hash` | `u.email = email` | `existing_user` | Found → password verify |
-| `Q1.5` | Lookup account | `SELECT` | `users AS u` | `u.role` | `u.email = email` | `existing_user` | Found → profile source |
-| `Q1.6` | Lookup account | `SELECT` | `users AS u` | `u.avatar_url` | `u.email = email` | `existing_user` | Found → profile source |
-| `Q1.7` | Lookup account | `SELECT` | `users AS u` | `u.phone` | `u.email = email` | `existing_user` | Found → profile source |
-| `Q1.8` | Lookup status | `SELECT` | `users AS u` | `u.status` | `u.email = email` | `existing_user` | Found → status check |
-| `Q1.9` | Lookup account | `SELECT` | `users AS u` | `u.created_at` | `u.email = email` | `existing_user` | Found → profile source |
-| `Q1.10` | Lookup account | `SELECT` | `users AS u` | `u.updated_at` | `u.email = email` | `existing_user` | Found → profile source |
+| Query ID  | Mục đích       | Type       | Base table     | Column get          | WHERE               | Result variable   | Branch                   |
+| --------- | ----------------- | ---------- | -------------- | ------------------- | ------------------- | ----------------- | ------------------------ |
+| `Q1.1`  | Lookup account    | `SELECT` | `users AS u` | `u.id`            | `u.email = email` | `existing_user` | Found → verify          |
+| `Q1.2`  | Lookup account    | `SELECT` | `users AS u` | `u.full_name`     | `u.email = email` | `existing_user` | Found → profile source  |
+| `Q1.3`  | Lookup account    | `SELECT` | `users AS u` | `u.email`         | `u.email = email` | `existing_user` | Found → profile source  |
+| `Q1.4`  | Lookup credential | `SELECT` | `users AS u` | `u.password_hash` | `u.email = email` | `existing_user` | Found → password verify |
+| `Q1.5`  | Lookup account    | `SELECT` | `users AS u` | `u.role`          | `u.email = email` | `existing_user` | Found → profile source  |
+| `Q1.6`  | Lookup account    | `SELECT` | `users AS u` | `u.avatar_url`    | `u.email = email` | `existing_user` | Found → profile source  |
+| `Q1.7`  | Lookup account    | `SELECT` | `users AS u` | `u.phone`         | `u.email = email` | `existing_user` | Found → profile source  |
+| `Q1.8`  | Lookup status     | `SELECT` | `users AS u` | `u.status`        | `u.email = email` | `existing_user` | Found → status check    |
+| `Q1.9`  | Lookup account    | `SELECT` | `users AS u` | `u.created_at`    | `u.email = email` | `existing_user` | Found → profile source  |
+| `Q1.10` | Lookup account    | `SELECT` | `users AS u` | `u.updated_at`    | `u.email = email` | `existing_user` | Found → profile source  |
 
 ## Mutation Matrix
 
-| Mutation ID | Operation | Target table | Record condition | Fields | Value sources | Mapping file | Transaction | Failure behavior |
-|---|---|---|---|---|---|---|---|---|
-| `M1` | `N/A — READ ONLY` | `N/A` | `N/A` | `N/A` | `N/A` | [07_table.md](./07_table.md) | `N/A` | Không tạo/update/delete DB record |
+| Mutation ID | Operation            | Target table | Record condition | Fields  | Value sources | Mapping file                | Transaction | Failure behavior                    |
+| ----------- | -------------------- | ------------ | ---------------- | ------- | ------------- | --------------------------- | ----------- | ----------------------------------- |
+| `M1`      | `N/A — READ ONLY` | `N/A`      | `N/A`          | `N/A` | `N/A`       | [07_table.md](./07_table.md) | `N/A`     | Không tạo/update/delete DB record |
 
 ## Side Effect Matrix
 
-| Side effect ID | Operation | Target | Inputs | Data Mapping step | Contract gap |
-|---|---|---|---|---|---|
-| `S1` | `ISSUE_TOKEN_OR_SESSION` | `Auth/session subsystem` | Authenticated `users` identity | `5.1` | Token type, field, transport và persistence TBD |
+| Side effect ID | Operation                  | Target                     | Inputs                          | Data Mapping step | Contract gap                                     |
+| -------------- | -------------------------- | -------------------------- | ------------------------------- | ----------------- | ------------------------------------------------ |
+| `S1`         | `ISSUE_TOKEN_OR_SESSION` | `Auth/session subsystem` | Authenticated`users` identity | `5.1`           | Token type, field, transport và persistence TBD |
 
 ## Response Source Matrix
 
-| Response field | Type | Source type | Table/column hoặc generator | Data Mapping step | Transform | Null/empty rule | Gap |
-|---|---|---|---|---|---|---|---|
-| `data.id` | `int64` | Direct DB | `users.id` | `6.1` | BIGSERIAL serialized as int64 | `N/A` | N/A |
-| `data.full_name` | `string` | Direct DB | `users.full_name` | `6.1` | None | `N/A` | N/A |
-| `data.email` | `email` | Direct DB | `users.email` | `6.1` | None | `N/A` | N/A |
-| `data.role` | `string` | Direct DB | `users.role` | `6.1` | None | `N/A` | Role values TBD |
-| `data.avatar_url` | `uri` | Direct DB | `users.avatar_url` | `6.1` | None | `TBD — null/omit` | N/A |
-| `data.bio` | `string` | Unsupported source | `N/A — no ERD column` | `6.1` | `DISCREPANCY/TBD` | `TBD — null/omit` | Contract/ERD gap |
-| `data.phone` | `string` | Direct DB | `users.phone` | `6.1` | None | `TBD — null/omit` | N/A |
-| `data.status` | `string` | Direct DB | `users.status` | `6.1` | None | `N/A` | Status branch discrepancy |
-| `data.created_at` | `date-time` | Direct DB | `users.created_at` | `6.1` | None | `N/A` | N/A |
-| `data.updated_at` | `date-time` | Direct DB | `users.updated_at` | `6.1` | None | `N/A` | N/A |
-| `success` | `boolean` | Branch constant | Processing result | `6.1/6.2/6.3` | `true` only on success | `N/A` | N/A |
-| `businessCode` | `string` | Branch constant | Contract | `6.1/6.2/6.3` | Fixed `DESIGN_*` code | `N/A` | N/A |
-| `message` | `string` | Branch message | Application | `6.1/6.2/6.3` | Fixed by branch | Text TBD | N/A |
-| `meta` | `object` | Envelope default | `N/A` | `6.1/6.2/6.3` | `{}` | `{}` | No operation metadata |
-| `traceId` | `uuid` | Correlation generator | `N/A` | `6.1/6.2/6.3` | None | `TBD` | Generator TBD |
+| Response field      | Type          | Source type           | Table/column hoặc generator | Data Mapping step | Transform                     | Null/empty rule      | Gap                       |
+| ------------------- | ------------- | --------------------- | ---------------------------- | ----------------- | ----------------------------- | -------------------- | ------------------------- |
+| `data.id`         | `int64`     | Direct DB             | `users.id`                 | `6.1`           | BIGSERIAL serialized as int64 | `N/A`              | N/A                       |
+| `data.full_name`  | `string`    | Direct DB             | `users.full_name`          | `6.1`           | None                          | `N/A`              | N/A                       |
+| `data.email`      | `email`     | Direct DB             | `users.email`              | `6.1`           | None                          | `N/A`              | N/A                       |
+| `data.role`       | `string`    | Direct DB             | `users.role`               | `6.1`           | None                          | `N/A`              | Role values TBD           |
+| `data.avatar_url` | `uri`       | Direct DB             | `users.avatar_url`         | `6.1`           | None                          | `TBD — null/omit` | N/A                       |
+| `data.bio`        | `string`    | Unsupported source    | `N/A — no ERD column`     | `6.1`           | `DISCREPANCY/TBD`           | `TBD — null/omit` | Contract/ERD gap          |
+| `data.phone`      | `string`    | Direct DB             | `users.phone`              | `6.1`           | None                          | `TBD — null/omit` | N/A                       |
+| `data.status`     | `string`    | Direct DB             | `users.status`             | `6.1`           | None                          | `N/A`              | Status branch discrepancy |
+| `data.created_at` | `date-time` | Direct DB             | `users.created_at`         | `6.1`           | None                          | `N/A`              | N/A                       |
+| `data.updated_at` | `date-time` | Direct DB             | `users.updated_at`         | `6.1`           | None                          | `N/A`              | N/A                       |
+| `success`         | `boolean`   | Branch constant       | Processing result            | `6.1/6.2/6.3`   | `true` only on success      | `N/A`              | N/A                       |
+| `businessCode`    | `string`    | Branch constant       | Contract                     | `6.1/6.2/6.3`   | Fixed`DESIGN_*` code        | `N/A`              | N/A                       |
+| `message`         | `string`    | Branch message        | Application                  | `6.1/6.2/6.3`   | Fixed by branch               | Text TBD             | N/A                       |
+| `meta`            | `object`    | Envelope default      | `N/A`                      | `6.1/6.2/6.3`   | `{}`                        | `{}`               | No operation metadata     |
+| `traceId`         | `uuid`      | Correlation generator | `N/A`                      | `6.1/6.2/6.3`   | None                          | `TBD`              | Generator TBD             |
 
 ## 0. Check quyền
 
@@ -162,9 +161,10 @@ format: markdown
 - Không trả raw DB/hash/session detail.
 - Chi tiết: [06_Error.md](./06_Error.md#error-cases).
 
-
 ---
+
 ## Phụ lục đối chiếu nguồn Excel
+
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `3. Data mapping`
 - Dimension: `B1:BB61`
@@ -175,71 +175,70 @@ format: markdown
 <details>
 <summary>Bản ghi từng ô có dữ liệu hoặc công thức</summary>
 
-| Hàng | Ô | Giá trị nguồn | Công thức nguồn |
-|---:|---|---|---|
-| 2 | `B2` | Flow xử lý data |  |
-| 4 | `D4` | 0. |  |
-| 4 | `E4` | Check quyền |  |
-| 5 | `E5` | ・ |  |
-| 5 | `F5` | Thực hiện check quyền |  |
-| 6 | `E6` | ・ |  |
-| 6 | `F6` | Get count khi get data từ … |  |
-| 7 | `G7` | Table get |  |
-| 7 | `K7` | : |  |
-| 8 | `G8` | Conditions |  |
-| 8 | `K8` | : |  |
-| 10 | `E10` | ・ |  |
-| 10 | `F10` | Trường hợp giá trị get được lớn hơn 0, thực hiện các xử lý tiếp theo |  |
-| 11 | `E11` | ・ |  |
-| 11 | `F11` | Trường hợp giá trị get được bằng 0, trả về status 2 |  |
-| 13 | `D13` | 1. |  |
-| 13 | `E13` | validate data input |  |
-| 14 | `F14` | refer sheet [４．Error] |  |
-| 16 | `D16` | 2. |  |
-| 16 | `E16` | Get thông tin… |  |
-| 18 | `F18` | Table get |  |
-| 18 | `K18` | Column get |  |
-| 18 | `P18` | Chú thích |  |
-| 18 | `U18` | Remarks |  |
-| 29 | `F29` | Target table / join condition |  |
-| 30 | `F30` | Target table |  |
-| 30 | `N30` | Join condition |  |
-| 30 | `AL30` | 結合種類 |  |
-| 31 | `F31` | txn_ams_t0320 AS a |  |
-| 32 | `F32` | txn_amm_v0002 AS b |  |
-| 32 | `N32` | ON a . chy_typ = b . kbn_typ AND b . dmin_cd = A AND b . kbnknr_cd = 001 |  |
-| 32 | `AL32` | LEFT JOIN |  |
-| 33 | `F33` | txn_amm_v0002 AS c |  |
-| 33 | `N33` | ON a . chy_typ = c . kbn_typ AND c . dmin_cd = A AND c . kbnknr_cd = Z02 |  |
-| 33 | `AL33` | LEFT JOIN |  |
-| 35 | `F35` | ・ |  |
-| 35 | `G35` | Điều kiện get data |  |
-| 37 | `F37` | ・ |  |
-| 37 | `G37` | Điều kiện sort |  |
-| 41 | `D41` | 3. |  |
-| 41 | `E41` | Insert/Update thông tin … |  |
-| 42 | `E42` | Update table…. |  |
-| 43 | `E43` | ・ |  |
-| 43 | `F43` | Items update |  |
-| 44 | `F44` | ・ |  |
-| 44 | `G44` | Refer sheet [xxxx] |  |
-| 45 | `E45` | ・ |  |
-| 45 | `F45` | Điều kiện get data |  |
-| 46 | `F46` | ・ |  |
-| 46 | `G46` | auth_user. id = user hiện tại theo token |  |
-| 48 | `D48` | 4. |  |
-| 48 | `E48` | check kết quả execute query  |  |
-| 49 | `E49` | 1. Thành công |  |
-| 50 | `F50` | HTTPStatus = 200 |  |
-| 51 | `F51` | Trả về kết quả status = 1 |  |
-| 52 | `E52` | 2. Lỗi hệ thống phát sinh |  |
-| 53 | `F53` | HTTPStatus = 500 |  |
-| 54 | `F54` | Trả về kết quả status = 2 |  |
-| 55 | `E55` | 3. Validate lỗi |  |
-| 56 | `F56` | HTTPStatus = 400 |  |
-| 57 | `F57` | Trả về kết quả status = 2 |  |
-| 58 | `E58` | 4. Ngoài trường hợp trên |  |
-| 59 | `F59` | Trả về kết quả status = 2 |  |
+| Hàng | Ô       | Giá trị nguồn                                                                     | Công thức nguồn |
+| ----: | -------- | ------------------------------------------------------------------------------------ | ------------------ |
+|     2 | `B2`   | Flow xử lý data                                                                    |                    |
+|     4 | `D4`   | 0.                                                                                   |                    |
+|     4 | `E4`   | Check quyền                                                                         |                    |
+|     5 | `E5`   | ・                                                                                   |                    |
+|     5 | `F5`   | Thực hiện check quyền                                                             |                    |
+|     6 | `E6`   | ・                                                                                   |                    |
+|     6 | `F6`   | Get count khi get data từ …                                                        |                    |
+|     7 | `G7`   | Table get                                                                            |                    |
+|     7 | `K7`   | :                                                                                    |                    |
+|     8 | `G8`   | Conditions                                                                           |                    |
+|     8 | `K8`   | :                                                                                    |                    |
+|    10 | `E10`  | ・                                                                                   |                    |
+|    10 | `F10`  | Trường hợp giá trị get được lớn hơn 0, thực hiện các xử lý tiếp theo |                    |
+|    11 | `E11`  | ・                                                                                   |                    |
+|    11 | `F11`  | Trường hợp giá trị get được bằng 0, trả về status 2                       |                    |
+|    13 | `D13`  | 1.                                                                                   |                    |
+|    13 | `E13`  | validate data input                                                                  |                    |
+|    14 | `F14`  | refer sheet [４．Error]                                                              |                    |
+|    16 | `D16`  | 2.                                                                                   |                    |
+|    16 | `E16`  | Get thông tin…                                                                     |                    |
+|    18 | `F18`  | Table get                                                                            |                    |
+|    18 | `K18`  | Column get                                                                           |                    |
+|    18 | `P18`  | Chú thích                                                                          |                    |
+|    18 | `U18`  | Remarks                                                                              |                    |
+|    29 | `F29`  | Target table / join condition                                                        |                    |
+|    30 | `F30`  | Target table                                                                         |                    |
+|    30 | `N30`  | Join condition                                                                       |                    |
+|    30 | `AL30` | 結合種類                                                                             |                    |
+|    31 | `F31`  | txn_ams_t0320 AS a                                                                   |                    |
+|    32 | `F32`  | txn_amm_v0002 AS b                                                                   |                    |
+|    32 | `N32`  | ON a . chy_typ = b . kbn_typ AND b . dmin_cd = A AND b . kbnknr_cd = 001             |                    |
+|    32 | `AL32` | LEFT JOIN                                                                            |                    |
+|    33 | `F33`  | txn_amm_v0002 AS c                                                                   |                    |
+|    33 | `N33`  | ON a . chy_typ = c . kbn_typ AND c . dmin_cd = A AND c . kbnknr_cd = Z02             |                    |
+|    33 | `AL33` | LEFT JOIN                                                                            |                    |
+|    35 | `F35`  | ・                                                                                   |                    |
+|    35 | `G35`  | Điều kiện get data                                                                |                    |
+|    37 | `F37`  | ・                                                                                   |                    |
+|    37 | `G37`  | Điều kiện sort                                                                    |                    |
+|    41 | `D41`  | 3.                                                                                   |                    |
+|    41 | `E41`  | Insert/Update thông tin …                                                          |                    |
+|    42 | `E42`  | Update table….                                                                      |                    |
+|    43 | `E43`  | ・                                                                                   |                    |
+|    43 | `F43`  | Items update                                                                         |                    |
+|    44 | `F44`  | ・                                                                                   |                    |
+|    44 | `G44`  | Refer sheet [xxxx]                                                                   |                    |
+|    45 | `E45`  | ・                                                                                   |                    |
+|    45 | `F45`  | Điều kiện get data                                                                |                    |
+|    46 | `F46`  | ・                                                                                   |                    |
+|    46 | `G46`  | auth_user. id = user hiện tại theo token                                           |                    |
+|    48 | `D48`  | 4.                                                                                   |                    |
+|    48 | `E48`  | check kết quả execute query                                                        |                    |
+|    49 | `E49`  | 1. Thành công                                                                      |                    |
+|    50 | `F50`  | HTTPStatus = 200                                                                     |                    |
+|    51 | `F51`  | Trả về kết quả status = 1                                                        |                    |
+|    52 | `E52`  | 2. Lỗi hệ thống phát sinh                                                        |                    |
+|    53 | `F53`  | HTTPStatus = 500                                                                     |                    |
+|    54 | `F54`  | Trả về kết quả status = 2                                                        |                    |
+|    55 | `E55`  | 3. Validate lỗi                                                                     |                    |
+|    56 | `F56`  | HTTPStatus = 400                                                                     |                    |
+|    57 | `F57`  | Trả về kết quả status = 2                                                        |                    |
+|    58 | `E58`  | 4. Ngoài trường hợp trên                                                        |                    |
+|    59 | `F59`  | Trả về kết quả status = 2                                                        |                    |
 
 </details>
-

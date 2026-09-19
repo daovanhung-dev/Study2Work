@@ -10,6 +10,7 @@ def test_settings_defaults_come_from_constants() -> None:
     assert settings.app_env == constants.APP_ENV
     assert settings.enable_docs == constants.ENABLE_DOCS
     assert settings.cors_origins == list(constants.CORS_ORIGINS)
+    assert settings.cors_origins == ["http://127.0.0.2:3002", "http://127.0.0.2:3001"]
     assert settings.URL_DATABASE == constants.URL_DATABASE
     assert settings.db_host is None
     assert settings.db_port is None

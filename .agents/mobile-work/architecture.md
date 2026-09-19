@@ -2,6 +2,13 @@
 
 `CONTEXT_STATUS: SOURCE_BACKED`
 
+Deep context pages:
+
+- [`file-inventory.md`](file-inventory.md): every tracked file and current status.
+- [`flutter-student.md`](flutter-student.md): student runtime graph and modules.
+- [`flutter-business.md`](flutter-business.md): business runtime graph and modules.
+- [`data-flow.md`](data-flow.md): Neon/SQLite/Gemini and feature data flows.
+
 ## Applications
 
 `apps/work-client/mobile/flutter_student/` and
@@ -48,6 +55,12 @@ every three seconds, deduplicates by message `id`, and cancels it in
 
 Both apps also contain `AIService`, which sends prompt text directly to the
 Gemini HTTP API; it is independent of `apps/ai-server` and `apps/work-server`.
+
+The tracked source boundary is 210 files: 110 student files and 100 business
+files. The inventory includes Android host/configuration and bundled assets but
+excludes generated `build/`, `.dart_tool/` and cache directories. Several legacy
+or placeholder screens remain beside active page variants; their wiring status
+is recorded in the per-app pages instead of being inferred from filenames.
 
 ## Presentation foundation
 

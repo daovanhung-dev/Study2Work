@@ -1,23 +1,26 @@
 # Study database status
 
 ```text
-SCHEMA_STATUS: VERIFIED
+SCHEMA_STATUS: SOURCE_BACKED; LIVE_STATUS: NOT_VERIFIED_HERE
 MIGRATION_DIRECTORY_STATUS: NOT_FOUND
 RUNTIME_DB_HELPER: VERIFIED
 ```
 
-Current evidence establishes a Neon PostgreSQL connection URL in
-`app/core/constants.py`, sync SQLAlchemy helpers, and live schema metadata.
+Current source establishes a Neon PostgreSQL connection URL in
+`app/core/constants.py` and sync SQLAlchemy helpers. The register query
+references `users`; do not infer additional schema rules without authoritative
+schema/live metadata.
 
-`infra/postgres/study-server/DB.sql` was applied successfully to these five
-non-public application schemas: `chu_van_viet`, `dao_van_hung`,
-`hoang_xuan_long`, `nguyen_anh_duc`, and `tran_anh_duc`. Each now contains 16
-tables, for 80 tables total. The `public` schema was not modified, and system
-schemas (`information_schema`, `pg_catalog`, `pg_toast`) were intentionally
-excluded.
+`infra/postgres/study-server/DB.sql` is a checked-in schema/design artifact;
+its live application status is not established by source inspection alone.
+Do not treat it as proof that every described table is available to the current
+runtime.
 
 Known discrepancy:
-- runtime core parses `constants.URL_DATABASE`, uses `postgresql+psycopg`, preserves Neon SSL/channel-binding query options and does not send `search_path` in the pooled startup package;
+- current `constants.py` contains a user-specific `DB_SCHEMA` value, while the
+  current engine path does not send `search_path` in the pooled startup package;
+- runtime core parses `constants.URL_DATABASE`, uses `postgresql+psycopg` and
+  preserves Neon SSL/channel-binding query options;
 - `alembic.ini` references migration setup/directory that is absent and is not sufficient schema evidence.
 
 `/api/v1/test/db` only declares `SELECT NOW()`; health readiness only reports configuration label and does not probe the DB.

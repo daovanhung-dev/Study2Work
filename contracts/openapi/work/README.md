@@ -1,5 +1,9 @@
 # Work OpenAPI
 
+System-route status: `VERIFIED` against the injected Work Express app on
+2026-09-18. The broader target domain paths remain `UNWIRED`; the compatibility
+browser surface is documented separately in `legacy-web.openapi.json`.
+
 [`openapi.json`](openapi.json) is the canonical, versioned Work API baseline.
 It currently defines the unauthenticated liveness and readiness endpoints served
 by `apps/work-server`, plus the public API root:

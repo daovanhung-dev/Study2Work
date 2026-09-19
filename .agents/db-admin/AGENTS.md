@@ -8,6 +8,8 @@ DEPLOYMENT: local-only; one Angular command launches Angular + internal FastAPI
 DATABASE: two backend-owned Neon PostgreSQL targets (`work_server`, `study_server`)
 ```
 
+Canonical page graph: `INDEX.md`.
+
 ## Boundary
 
 The Angular standalone client never connects to Neon and never stores a database
@@ -21,8 +23,9 @@ modules or database models.
 - Frontend entry: `apps/db-admin-web/src/main.ts`; the authenticated workspace
   keeps target selection, schema selection, catalog tree and SQL editor in one
   view. Login remains a separate auth fallback route.
-- Local `dev`/`start` commands run `scripts/dev.mjs`, which starts FastAPI and
-  proxies same-origin `/api` requests to loopback.
+- Local `dev`/`start` commands run `scripts/dev.mjs`, which starts FastAPI at
+  `127.0.0.1:3001` and Angular at `127.0.0.2:3000`; same-origin `/api`
+  requests are proxied to the backend.
 - Backend entry: `apps/db-admin-server/app/main.py`; API routes are under
   `/api/v1/admin` and use the repository response envelope. `GET /databases`
   lists configured target IDs without connection details; catalog and SQL
@@ -60,7 +63,7 @@ Backend reads `DATABASE_TARGETS` and all other runtime values from
 private `LOCAL_JWT_SECRET` of at least 32 characters. When local auth is off,
 real auth requires the JWKS, issuer and audience constants. `DEV_AUTH=True` is
 reserved for tests. The launcher checks that `constants.py` exists, starts the
-backend on `127.0.0.1:8010`, and proxies same-origin `/api` requests to it. The
+backend on `127.0.0.1:3001`, and proxies same-origin `/api` requests to it. The
 frontend uses a relative API base URL and in-memory token handling. `.env` is
 not used.
 
@@ -81,3 +84,7 @@ PYTHONPATH=. pytest -q
 ```
 
 No live Neon mutation is part of the verified local test suite.
+
+Detailed routing: `INDEX.md`, `architecture.md`, `apis/README.md`,
+`core/security-audit.md`, `database.md`, `tests.md` and
+`workflows/README.md`. Update the global worklog for every DB Admin task.

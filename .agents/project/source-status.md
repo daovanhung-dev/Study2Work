@@ -1,6 +1,7 @@
 # Source status và discrepancy
 
-Work deep-context được đối chiếu tại source commit `97ca23fc506653db3c67b91480c476dec52f8b63` ngày 2026-09-16.
+Repository deep-context được đối chiếu tại source commit
+`9a70eb6764a6587093a92d3bd7e4cc0bea1651c4` ngày 2026-09-18.
 
 ## Tài liệu thiết kế
 
@@ -13,7 +14,13 @@ DIAGRAM_API_CONTRACT_STATUS: APPROVED_DESIGN_CONTRACT
 
 - Root README/contract README có chỗ trỏ `docs/BD/`, nhưng directory đó không có trong source snapshot.
 - Không dùng template, diagram hoặc Git history để tự hoàn thiện request/response/business rule/database mapping thiếu.
-- `docs/lists/list_api.md` và `docs/diagrams/AC_UNICA/` là approved V1 design contract theo yêu cầu được phê duyệt; các schema và `DESIGN_*` code ở đó vẫn là `DESIGN_PROPOSAL`, không phải runtime/OpenAPI evidence.
+- `docs/lists/list_api.md` và `apps/study-server/docs/diagrams/AC_UNICA/` là
+  approved V1 design contract theo yêu cầu được phê duyệt; các schema và
+  `DESIGN_*` code ở đó vẫn là `DESIGN_PROPOSAL`, không phải runtime/OpenAPI
+  evidence.
+- Study DD và business-code artifacts hiện có dưới
+  `apps/study-server/docs/dd/` và `apps/study-server/docs/business_code/`.
+  Chúng là design/documentation evidence, không tự biến thành runtime wiring.
 - Work có hai contract file nhưng runtime source hiện tại khớp
   `contracts/openapi/work/legacy-web.openapi.json`; `openapi.json`/README mô tả
   target health/domain surface chưa được Express route đăng ký.
@@ -26,7 +33,7 @@ ROOT_ROUTER: AGENTS.md
 CONTEXT_REGISTRY: .agents/AGENTS.md
 MANIFEST: .agents/context-manifest.json
 VALIDATOR: scripts/validate-agent-context.mjs
-STUDY_LEGACY_AGENT_CONTEXT: PRESENT_OUTSIDE_SCOPE; not changed in Work sync
+STUDY_LEGACY_AGENT_CONTEXT: REMOVED; canonical context is under `.agents/server-study/`
 ```
 
 Deep scopes:
@@ -38,38 +45,54 @@ Deep scopes:
 - `web-work`: `.agents/web-work/AGENTS.md`
 - `mobile-work`: `.agents/mobile-work/AGENTS.md`
 
-Work Web và Work Mobile hiện là source-backed; Study legacy agent context không
-được dọn trong task này.
+Mọi project context phải nằm dưới `.agents/`; `apps/` không chứa `.agent/` hoặc
+`AGENTS.md`.
 
 ## Study server
 
 ```text
-RUNTIME_STATUS: DECLARED_NOT_RUNNABLE
-BUSINESS_MODULE_STATUS: NOT_FOUND
-DATABASE_SCHEMA_STATUS: NOT_FOUND
+RUNTIME_STATUS: VERIFIED_IMPORT; CURRENT_ROUTE_SOURCE_BACKED
+TEST_STATUS: COLLECTION_BLOCKED_BY_STALE_REGISTER_IMPORT
+BUSINESS_MODULE_STATUS: SOURCE_BACKED_REGISTER_ONLY
+DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED; LIVE_STATUS_NOT_VERIFIED_HERE
 ```
 
-Blocker tại snapshot:
+Current evidence:
 
-- `app/api/v1.py` import `app.module.auth.*` và `app.module.ai.log.*`, nhưng `app/module/` không tồn tại.
-- `app/main.py` import `success_response`, nhưng `app/core/responses.py` chỉ còn `ApiResponse.success_payload()`/`raise_error()`.
-- `app/core/exceptions.py` import `error_response`, cũng không tồn tại trong responses hiện hành.
-- `app/core/middleware.py` import `normalize_trace_id`, `set_current_trace_id`, `reset_current_trace_id`, trong khi `trace.py` expose `validate_trace_id`, `set_trace_id`, `reset_trace_id`.
-- `alembic.ini`/Dockerfile tham chiếu directory migration không tồn tại.
-- Test collection đi qua `app.main`, nên blocker import xảy ra trước khi các health/security assertion có thể được tin là runnable.
-- `apps/study-server/docs/codebase/README.md` là historical/non-authoritative nếu khác current source.
+- `app.main` imports successfully and composes 8 current routes.
+- `app/api/v1.py` wires `POST /api/v1/auth/register` to
+  `app.modules.auth.register_account.*`.
+- `register_account/validate.py` is empty/unwired; current model validators
+  remain in `models.py`.
+- `tests/modules/auth/test_register.py` imports removed paths
+  `app.modules.auth.models/view`, so pytest collection is blocked.
+- `alembic.ini` references a missing migration directory; this is not schema
+  evidence.
+- `apps/study-server/docs/codebase/README.md` and design DD remain
+  non-authoritative when they conflict with current source.
 
 ## Work server
 
 ```text
-RUNTIME_STATUS: VERIFIED_EXPRESS_JSON_API
-OPENAPI_STATUS: SOURCE_ALIGNED_LEGACY_WEB; TARGET_CONTRACT_DISCREPANCY
+RUNTIME_STATUS: SOURCE_CHANGED_STUDY_STYLE_COMPATIBILITY_API
+OPENAPI_STATUS: LEGACY_WEB_ALIGNED; SYSTEM_ROUTES_VERIFIED; TARGET_DOMAIN_DISCREPANCY
 DATABASE_SCHEMA_STATUS: VERIFIED_PRISMA_12_MODELS
-HEALTH_ROUTE_STATUS: NOT_FOUND
+HEALTH_ROUTE_STATUS: VERIFIED_INJECTED_PROBE
 ```
 
-- `src/main.ts` connects the shared Prisma client before listening on port 3000;
-  `src/app.ts` mounts JSON/static/upload middleware and only `/api/v1`.
+- `src/main.ts` loads typed config from the tracked static
+  `src/utils/constants.ts`, binds the local listener to `127.0.0.1:3002`,
+  creates injected dependencies, connects Prisma before listening and gracefully
+  disconnects on shutdown; `src/app.ts` exposes `createApp(options)` for
+  fake-dependency HTTP tests. `.env` and `process.env` are not runtime config
+  sources.
+- `src/core/` owns typed config, Prisma factory, trace context, response/error
+  envelopes, centralized exception mapping and HS256 security helpers.
+- `src/api/v1.ts` only composes route modules. Auth, students, businesses, jobs,
+  CV and applications use `models/validate/view/query`; `src/routes/api_routes.ts`
+  is a compatibility re-export.
+- `GET /api/v1`, `/health/live`, and `/health/ready` are wired. Ready probes the
+  injected Prisma dependency and returns `503 DEPENDENCY_UNAVAILABLE` on failure.
 - Current API routes cover student/business login, student registration, public
   jobs, `/me`, student CV/applications and business jobs/applications/CV detail.
   Chat, notifications, interviews, university, TopCV/TopJD and Admin routes are
@@ -80,6 +103,9 @@ HEALTH_ROUTE_STATUS: NOT_FOUND
 - Prisma source is the 12-model legacy Work schema. Supabase config/dependency,
   callback auth helper and empty chat/notification/top services are declared but
   not used by the current route graph.
+- `test/app.test.ts` provides injected Supertest coverage; normal npm/pnpm
+  scripts are declared, while this shell uses a Deno fallback because Node is
+  unavailable.
 
 ## Work web
 
@@ -95,8 +121,9 @@ DESIGN_STATUS: SOURCE_BACKED_COBALT_BASELINE_IMPLEMENTED
 - `src/shared/api/work.ts` uses relative `/api/v1`, Zod envelope parsing,
   React Query consumers and Zustand `access_token` persistence. Requests omit
   cookies and send a single optional Bearer header.
-- Vite development proxies `/api`, `/uploads` and `/img` to Work server port
-  3000. Current tests cover role access and the Bearer/401 token boundary.
+- Vite development binds Work Web to `127.0.0.2:3001` and proxies `/api`,
+  `/uploads` and `/img` to Work server `127.0.0.1:3002`. Current tests cover
+  role access and the Bearer/401 token boundary.
 - The presentation layer now has Cobalt semantic tokens, shared UI primitives,
   responsive public/workspace menus and reduced-motion/focus rules. This is a
   presentation-only change; route, API, auth and page-local data flow remain
@@ -145,7 +172,7 @@ WEB_STATUS: VERIFIED_LOCAL_ANGULAR_APP_WITH_ONE_COMMAND_LAUNCHER
 API_STATUS: VERIFIED_LOCAL_FASTAPI_APP_WITH_INTERNAL_DEV_LAUNCHER
 DATABASE_STATUS: CONFIGURED_BY_LOCAL_CORE_CONSTANTS_ONLY
 AUTH_STATUS: JWKS_IMPLEMENTED; LOCAL_DEV_AUTH_TEST_ONLY
-AUDIT_STATUS: BOUNDED_IN_MEMORY_AND_STRUCTURED_LOG
+AUDIT_STATUS: DURABLE_CONTROL_PLANE_WITH_BOUNDED_FALLBACK
 ```
 
 - `apps/db-admin-web/` is an Angular app in the pnpm workspace. Its local
@@ -154,11 +181,17 @@ AUDIT_STATUS: BOUNDED_IN_MEMORY_AND_STRUCTURED_LOG
   and is not mounted by Study/Work/AI. Its routes, response envelope,
   permission dependencies and transaction safety are verified by its local test
   suite.
-- No live Neon schema or migration was added. Catalog metadata is read from the
-  configured database at runtime; no audit table is created.
-- `docs/business_code/code_http.md` is `NOT_FOUND` in the current working tree;
-  DB Admin business codes are currently owned/documented by its API source and
-  README until the repository catalog is restored.
+- `apps/db-admin-server/sql/db_admin/001_bootstrap.sql` và
+  `scripts/bootstrap_access.py` là control-plane bootstrap độc lập; không phải
+  Study/Work business migration. Catalog vẫn đọc metadata từ target runtime.
+- `app/services/audit.py` có durable `db_admin.admin_audit_events` path khi
+  target đã có control-plane schema, cùng bounded in-memory/structured-log
+  fallback. Việc live bootstrap đã được apply chưa được xác minh ở đây.
+- `apps/study-server/docs/business_code/code_http.md` và
+  `code_event_server.md` tồn tại cho Study; chúng phải được phân biệt với
+  runtime business-code evidence của Work/AI/DB Admin.
+- DB Admin business codes hiện được sở hữu bởi API source/README và local
+  contract; không suy diễn chúng từ Study catalog.
 
 ## Drift rule
 

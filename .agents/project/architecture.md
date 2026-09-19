@@ -5,7 +5,7 @@
 | Area | Path | Stack/role |
 |---|---|---|
 | Study web | `apps/study-client/` | Vue 3 + TypeScript + Vite |
-| Study API | `apps/study-server/` | FastAPI + Python + sync SQLAlchemy core; hiện import-broken |
+| Study API | `apps/study-server/` | FastAPI + Python + sync SQLAlchemy core; current composition import được |
 | Work mobile | `apps/work-client/mobile/` | Hai Flutter app độc lập; direct Neon SQL + SQLite cache |
 | Work web | `apps/work-client/web/` | React + TypeScript + Vite |
 | Work API | `apps/work-server/` | Express 4 + TypeScript + Prisma/PostgreSQL/Neon; JSON API-only |
@@ -18,6 +18,21 @@
 Study, Work và AI là deployable/boundary khác nhau. Work Web gọi Work API qua HTTP;
 Work mobile hiện kết nối trực tiếp Neon và không gọi Work API. Không import
 business module chéo app.
+
+## Local application addresses
+
+| Role | Address |
+|---|---|
+| AI server | `127.0.0.1:3000` |
+| DB Admin server | `127.0.0.1:3001` |
+| Work server | `127.0.0.1:3002` |
+| Study server | `127.0.0.1:3003` |
+| DB Admin client | `127.0.0.2:3000` |
+| Work client | `127.0.0.2:3001` |
+| Study client | `127.0.0.2:3002` |
+
+These are local application endpoints. PostgreSQL, Redis, Ollama and test
+fixture addresses are separate dependencies and retain their existing values.
 
 ## Boundary chính
 
@@ -32,7 +47,8 @@ Study producer -> contracts/events/study-work/*.schema.json -> Work consumer
 
 AI API -> Ollama HTTP API
 Work API -> Express -> Prisma -> PostgreSQL/Neon
-Study API -> PostgreSQL config + optional Redis config; app chưa start được
+Study API -> PostgreSQL config + optional Redis config; current app import được,
+register test collection còn stale import blocker
 DB Admin web (one-command local launcher + same-origin proxy)
   -> internal DB Admin API -> one backend-owned Neon PostgreSQL connection + Identity JWKS
 ```

@@ -7,7 +7,7 @@ handling for student and business flows. The React frontend lives in
 
 ## Features
 
-- Student and business sign-in/sign-up flows.
+- Student registration plus student/business sign-in flows; business registration remains unwired.
 - Role-based protected routes for students and businesses.
 - Student job browsing, CV creation/update, and applications through `/api/v1`.
 - Business job posting, job management, applicant list, and CV detail through `/api/v1`.
@@ -31,11 +31,23 @@ handling for student and business flows. The React frontend lives in
 +-- prisma/       # Prisma schema and migrations
 +-- public/       # Static assets
 +-- src/
-|   +-- config/       # Prisma, Supabase, upload config
-|   +-- middleware/   # JWT authentication middleware
-|   +-- routes/       # Express route definitions
-|   +-- services/     # Data access and domain services
+|   +-- api/v1.ts     # Versioned route composition only
+|   +-- core/         # Config, DI, trace, responses, exceptions, security
+|   +-- modules/      # models/validate/view/query per wired domain
+|   +-- config/       # Upload and legacy integration config
+|   +-- middleware/   # JWT authentication boundary
+|   +-- routes/       # Compatibility re-export for old imports
+|   +-- services/     # Legacy/unwired services kept for compatibility
 +-- uploads/      # Runtime uploads, ignored except .gitkeep
+```
+
+The request lifecycle is intentionally Study-style while remaining Express and
+Prisma-native:
+
+```text
+main -> createApp -> config/middleware/trace/auth -> api/v1
+     -> models/validate -> view/use-case -> query/repository -> Prisma
+     -> canonical response or centralized exception handler
 ```
 
 ## Setup
@@ -52,12 +64,14 @@ From the repository root, the equivalent split development commands are:
 ```bash
 corepack pnpm --filter work_server prisma:validate
 corepack pnpm --filter work_server prisma:generate
+corepack pnpm --filter work_server typecheck
+corepack pnpm --filter work_server test
 corepack pnpm --filter work_server s2w
 corepack pnpm --filter work-web dev
 ```
 
-Vite runs on `http://localhost:5174` and proxies `/api`, `/uploads`, and `/img`
-to the Express server on port `3000`. Production should use a same-origin reverse
+Vite runs on `http://127.0.0.2:3001` and proxies `/api`, `/uploads`, and `/img`
+to the Express server on `127.0.0.1:3002`. Production should use a same-origin reverse
 proxy for these paths. The React client never receives the Neon credential. The
 Express server exposes JSON APIs and does not serve browser HTML.
 
@@ -75,26 +89,48 @@ npm run prisma:migrate:deploy
 npm run s2w
 ```
 
-The server reads its runtime configuration from `src/utils/constants.ts` and
-connects to Neon through the pooled URL. Prisma migration commands use the
-direct Neon endpoint through the local CLI wrapper.
+The server reads typed runtime configuration from the static
+`src/utils/constants.ts` through `src/core/config.ts`; it does not load
+`.env` or read configuration from `process.env`. Required constants are
+validated during bootstrap.
+
+Prisma migration commands use the direct Neon endpoint through the local CLI
+wrapper. `APP_ENV` and `REDIS_URL` are optional; Redis is reported as
+configured/not_configured by readiness and does not add a runtime Redis
+dependency.
+
+System routes are now wired:
+
+- `GET /api/v1` → `SYSTEM_ROOT_LOADED`
+- `GET /health/live` → `SYSTEM_HEALTH_LIVE`
+- `GET /health/ready` → `SYSTEM_HEALTH_READY`, or `503 DEPENDENCY_UNAVAILABLE`
+
+The target Work catalog still contains domains that are deliberately not wired
+in this compatibility refactor (tenant, billing, university, interview,
+storage and webhook operations).
 
 ## Configuration and authentication
 
 | Constant                | Purpose                                                          |
 | ----------------------- | ---------------------------------------------------------------- |
-| `PORT`                | HTTP port for the Express server.                                |
+| `PORT`                | HTTP port for the Express server (`3002` locally).                |
 | `DATABASE_URL`        | Pooled Neon PostgreSQL connection string used by Prisma runtime. |
 | `DIRECT_DATABASE_URL` | Direct Neon PostgreSQL connection string used by Prisma CLI.     |
 | `JWT_SECRET`          | Secret for JWT helpers.                                          |
 | `JWT_EXPIRES`         | JWT expiration value.                                            |
 | `JWT_STORAGE_KEY`     | Browser local-storage key for the access token.                  |
 | `SUPABASE_URL`        | Supabase project URL.                                            |
-| `SUPABASE_ANON_KEY`   | Supabase anonymous key.                                          |
+| `SUPABASE_ANON_KEY`   | Supabase anonymous key for legacy, unwired modules.              |
 
-The project does not load `.env` files. Runtime configuration is defined in
-`src/utils/constants.ts`; keep the Neon credential out of logs. Protected
-requests must send exactly one `Authorization: Bearer <JWT>` header. The server
-does not authenticate from cookies or maintain server-side sessions. Logout
-removes the token from the browser, while already-issued JWTs remain valid until
-they expire.
+`DATABASE_URL`, `DIRECT_DATABASE_URL` and `JWT_SECRET` are required static
+constants.
+`JWT_SECRET` must contain at least 32 characters. `PORT` defaults to `3000` and
+`JWT_EXPIRES` defaults to `1d`. Keep all credentials out of logs,
+documentation, tests and tracked source files.
+
+Passwords are stored as bcrypt hashes. Existing legacy plaintext rows remain
+login-compatible and are opportunistically rehashed after a successful login.
+Protected requests must send exactly one `Authorization: Bearer <JWT>` header.
+The server does not authenticate from cookies or maintain server-side sessions.
+Logout removes the token from the browser, while already-issued JWTs remain
+valid until they expire.

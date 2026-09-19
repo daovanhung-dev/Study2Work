@@ -2,6 +2,13 @@
 
 Hai app có cùng nhóm module nhưng source/helper riêng:
 
+Detailed file/module maps:
+
+- [`flutter-student.md`](../flutter-student.md)
+- [`flutter-business.md`](../flutter-business.md)
+- [`data-flow.md`](../data-flow.md)
+- [`file-inventory.md`](../file-inventory.md)
+
 - Authentication/session: `views/dang_nhap/`, `controllers/dang_nhap/`, SQLite
   account helper và direct Neon login.
 - Student workflows: home/job search, CV, applications, top CV, notifications,
@@ -20,3 +27,6 @@ Hai app có cùng nhóm module nhưng source/helper riêng:
 Khi sửa feature, ghi rõ app, entrypoint view/controller, helper/model được gọi,
 DB/external side effect và test liên quan; không giả định hai app dùng chung
 implementation.
+
+Các utility/view có code nhưng không có caller hiện tại phải giữ trạng thái
+`UNWIRED` hoặc `LEGACY`; không tự xoá hoặc tự nối route trong task context-only.

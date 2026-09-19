@@ -5,8 +5,8 @@
 ```text
 apps/study-server/app/main.py
   -> app/api/v1.py
-       -> app.module.* (NOT_FOUND; blocks import)
-  -> app/core/* (response/trace symbol mismatches)
+       -> app.modules.auth.register_account.* (register route)
+  -> app/core/* (current composition)
   -> PostgreSQL settings; Redis is config-only
   -> app/service/ai/OllamaService (no live caller)
 
@@ -47,9 +47,9 @@ apps/db-admin-server/app/main.py
 
 ## Client/server boundaries
 
-- Work web uses a relative `/api/v1` base; Vite proxies `/api`, `/uploads`, and
-  `/img` to the Express server in development. Work API does not render browser
-  views.
+- Work web uses a relative `/api/v1` base; Vite binds at `127.0.0.2:3001` and
+  proxies `/api`, `/uploads`, and `/img` to the Express server at
+  `127.0.0.1:3002` in development. Work API does not render browser views.
 - Study client and Study API are separate packages, nhưng current Study OpenAPI
   không đủ để suy diễn client/server contract.
 - Work mobile apps use direct Neon SQL and are not HTTP consumers of Work server.
@@ -70,7 +70,8 @@ local snapshot. Không có nghĩa các helper/table tương ứng đã tồn t�
 
 ## Test dependencies
 
-- Study `tests/conftest.py` phụ thuộc `app.main`, hiện chặn collection.
+- Study `app.main` hiện import được; `tests/modules/auth/test_register.py` vẫn
+  chặn collection vì import `app.modules.auth.models/view` đã bị thay thế.
 - AI không có tests.
 - Work Web has Vitest tests for role guards and Bearer API boundary. Work server
   has no checked-in test runner; TypeScript/Prisma commands are validation checks.

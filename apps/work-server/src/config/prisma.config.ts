@@ -1,12 +1,6 @@
-import { PrismaClient } from "@prisma/client";
-import { DATABASE_URL } from "../utils/constants.js";
+import { loadConfig } from "../core/config.js";
+import { createPrismaClient } from "../core/database.js";
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: DATABASE_URL,
-    },
-  },
-});
+const prisma = createPrismaClient(loadConfig());
 
 export default prisma;

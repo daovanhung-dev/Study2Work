@@ -15,3 +15,7 @@ Với route/UI change, kiểm tra cả breakpoint 320/375/768/1024/1440px, keybo
 focus, text overflow, contrast, loading/error/empty state và
 `prefers-reduced-motion`. Không đổi route, API, auth, navigation semantics hay
 thêm persistence cho placeholder.
+
+Mọi task phải chọn đúng Study Vue hoặc Work React subcontext, dùng
+`.agents/worklog/TEMPLATE.md` và ghi command không chạy được là
+`DECLARED_NOT_RUNNABLE`.

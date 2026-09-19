@@ -24,7 +24,7 @@ context hiện hành của repository:
 | Scope | Trạng thái | Bằng chứng hiện tại | Kết luận |
 |---|---|---|---|
 | Study | `RUNTIME-VERIFIED` | `apps/study-server/app/core/database.py` có `execute_query`, `query_one`, `query_many` | Đây là helper generic, chưa có method nghiệp vụ truy vấn các bảng ERD. Study business module hiện chưa được xác minh runnable. |
-| Study | `DECLARED_NOT_RUNNABLE` | `apps/study-server/app/api/v1.py` có `SELECT NOW()` trong `/api/v1/test/db` | Chỉ là DB connectivity check; không truy vấn bảng nghiệp vụ. Đường import hiện tại còn blocker. |
+| Study | `VERIFIED_IMPORT; TEST_COLLECTION_BLOCKED` | `apps/study-server/app/api/v1.py` có `SELECT NOW()` trong `/api/v1/test/db` | Chỉ là DB connectivity check; không truy vấn bảng nghiệp vụ. Register test còn stale import. |
 | AI | `UNWIRED` | `apps/ai-server/app/core/database.py` có copied query helpers | Helper không được wiring vào runtime `app/main.py`; không có database runtime usage. |
 | Work | `RUNTIME-VERIFIED` | `apps/work-server/prisma/schema.prisma` chỉ có `SystemRecord`/`system_records` | Không có 16 bảng ERD. `HealthService.ready()` chỉ chạy `SELECT 1`; schema `system_records` không được domain service sử dụng. |
 
@@ -225,9 +225,9 @@ thời điểm ghi danh và thời điểm hoàn thành.
 
 | Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
 |---|---|---|---|---|
-| `DESIGN_ONLY` | API #15 `enrollment-status` | `SELECT` | Kiểm tra trạng thái user/course enrollment. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #19 `POST .../enrollments` | `INSERT` | Tạo quyền học cho user hiện tại trong course; điều kiện ownership/status theo contract. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #20 `GET /users/me/courses` | `SELECT` | Đọc danh sách khóa học đã đăng ký, có filter status/page theo contract. | [`docs/lists/list_api.md`](../lists/list_api.md) |
+| `DESIGN_ONLY` | API #15 `enrollment-status` | `SELECT` | Kiểm tra trạng thái user/course enrollment. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #19 `POST .../enrollments` | `INSERT` | Tạo quyền học cho user hiện tại trong course; điều kiện ownership/status theo contract. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #20 `GET /users/me/courses` | `SELECT` | Đọc danh sách khóa học đã đăng ký, có filter status/page theo contract. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
 
 ### Chi tiết trường
@@ -257,9 +257,9 @@ học và các mốc truy cập/hoàn thành.
 
 | Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
 |---|---|---|---|---|
-| `DESIGN_ONLY` | API #21, #37 `GET /users/me/progress...` | `SELECT` | Đọc tiến độ tổng hợp hoặc chi tiết theo course; query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #25 `PATCH .../progress` | `UPDATE`/upsert | Lưu vị trí/trạng thái tiến độ của user trên lesson; field contract có `percent` và `completed`, còn mapping vật lý chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #65, #67 `GET .../progress` | `SELECT` | Mentor đọc tiến độ toàn lớp hoặc một student trong course; mapping SQL chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
+| `DESIGN_ONLY` | API #21, #37 `GET /users/me/progress...` | `SELECT` | Đọc tiến độ tổng hợp hoặc chi tiết theo course; query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #25 `PATCH .../progress` | `UPDATE`/upsert | Lưu vị trí/trạng thái tiến độ của user trên lesson; field contract có `percent` và `completed`, còn mapping vật lý chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #65, #67 `GET .../progress` | `SELECT` | Mentor đọc tiến độ toàn lớp hoặc một student trong course; mapping SQL chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
 
 ### Chi tiết trường
@@ -290,9 +290,9 @@ và trạng thái.
 
 | Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
 |---|---|---|---|---|
-| `DESIGN_ONLY` | API #28 `GET /quizzes/{quiz_id}` | `SELECT` | Đọc metadata/câu hỏi được phép hiển thị của quiz. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #29–#32 | `SELECT`/liên kết | Tạo attempt, lưu answer, submit và đọc kết quả; quiz là bảng gốc của các flow này. Mapping SQL chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #87–#91 | `SELECT`/`INSERT`/`UPDATE`/`DELETE` | Admin list/create/update/delete và thống kê quiz theo contract. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
+| `DESIGN_ONLY` | API #28 `GET /quizzes/{quiz_id}` | `SELECT` | Đọc metadata/câu hỏi được phép hiển thị của quiz. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #29–#32 | `SELECT`/liên kết | Tạo attempt, lưu answer, submit và đọc kết quả; quiz là bảng gốc của các flow này. Mapping SQL chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #87–#91 | `SELECT`/`INSERT`/`UPDATE`/`DELETE` | Admin list/create/update/delete và thống kê quiz theo contract. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
 
 ### Chi tiết trường
@@ -325,9 +325,9 @@ câu.
 
 | Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
 |---|---|---|---|---|
-| `DESIGN_ONLY` | API #28 `GET /quizzes/{quiz_id}` | `SELECT` | Đọc câu hỏi thuộc quiz để hiển thị đề. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #30 answers | `SELECT`/liên kết | Dùng question id khi autosave/chấm câu trả lời. Chi tiết query chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #87–#91 | `SELECT`/mutation | Quản trị câu hỏi thông qua flow quản lý quiz; mapping SQL chưa được đặc tả. | [`docs/lists/list_api.md`](../lists/list_api.md) |
+| `DESIGN_ONLY` | API #28 `GET /quizzes/{quiz_id}` | `SELECT` | Đọc câu hỏi thuộc quiz để hiển thị đề. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #30 answers | `SELECT`/liên kết | Dùng question id khi autosave/chấm câu trả lời. Chi tiết query chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #87–#91 | `SELECT`/mutation | Quản trị câu hỏi thông qua flow quản lý quiz; mapping SQL chưa được đặc tả. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
 
 ### Chi tiết trường
@@ -355,8 +355,8 @@ Lưu các phương án trả lời của một câu hỏi và đánh dấu phư�
 
 | Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
 |---|---|---|---|---|
-| `DESIGN_ONLY` | API #28 `GET /quizzes/{quiz_id}` | `SELECT` | Đọc choices để dựng câu hỏi/đề kiểm tra. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #30 answers | `SELECT`/liên kết | Đối chiếu choice được chọn với question khi lưu/chấm answer. Chi tiết query chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
+| `DESIGN_ONLY` | API #28 `GET /quizzes/{quiz_id}` | `SELECT` | Đọc choices để dựng câu hỏi/đề kiểm tra. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #30 answers | `SELECT`/liên kết | Đối chiếu choice được chọn với question khi lưu/chấm answer. Chi tiết query chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
 
 ### Chi tiết trường
@@ -385,10 +385,10 @@ Lưu mỗi phiên/lần người dùng làm một quiz, từ lúc bắt đầu �
 
 | Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
 |---|---|---|---|---|
-| `DESIGN_ONLY` | API #29 `POST .../attempts` | `INSERT` | Tạo attempt cho user trên quiz. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #30 `PUT .../answers` | `SELECT`/`UPDATE` | Kiểm tra attempt và autosave answers. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #31 `POST .../submit` | `UPDATE` | Khóa attempt, chấm và chuyển trạng thái submit. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #32 `GET .../result` | `SELECT` | Đọc điểm/kết quả của attempt theo quyền xem. | [`docs/lists/list_api.md`](../lists/list_api.md) |
+| `DESIGN_ONLY` | API #29 `POST .../attempts` | `INSERT` | Tạo attempt cho user trên quiz. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #30 `PUT .../answers` | `SELECT`/`UPDATE` | Kiểm tra attempt và autosave answers. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #31 `POST .../submit` | `UPDATE` | Khóa attempt, chấm và chuyển trạng thái submit. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #32 `GET .../result` | `SELECT` | Đọc điểm/kết quả của attempt theo quyền xem. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
 
 ### Chi tiết trường
@@ -420,9 +420,9 @@ hiện mô hình hóa answer thông qua `choice_id`; chưa có cột text answer
 
 | Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
 |---|---|---|---|---|
-| `DESIGN_ONLY` | API #30 `PUT .../answers` | `INSERT`/`UPDATE` | Lưu hoặc cập nhật câu trả lời trong attempt; question/choice phải thuộc quan hệ tương ứng. SQL cụ thể chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #31 `.../submit` | `SELECT`/update | Đọc answers để chấm và cập nhật điểm/trạng thái attempt. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #32 `.../result` | `SELECT` | Đọc answers/kết quả được phép hiển thị. | [`docs/lists/list_api.md`](../lists/list_api.md) |
+| `DESIGN_ONLY` | API #30 `PUT .../answers` | `INSERT`/`UPDATE` | Lưu hoặc cập nhật câu trả lời trong attempt; question/choice phải thuộc quan hệ tương ứng. SQL cụ thể chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #31 `.../submit` | `SELECT`/update | Đọc answers để chấm và cập nhật điểm/trạng thái attempt. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #32 `.../result` | `SELECT` | Đọc answers/kết quả được phép hiển thị. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
 
 ### Chi tiết trường
@@ -455,9 +455,9 @@ Lưu đề bài thuộc khóa học, mô tả, hạn nộp và điểm tối đa
 
 | Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
 |---|---|---|---|---|
-| `DESIGN_ONLY` | API #33 `GET /assignments/{assignment_id}` | `SELECT` | Đọc đề bài, rule/deadline và điểm tối đa. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #35 `POST .../submissions`, #36 `GET /submissions/{submission_id}` | `SELECT`/`INSERT` | Tạo và đọc bài nộp của student theo assignment. Mapping SQL cụ thể chưa được đặc tả. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #54–#57 | `SELECT`/`UPDATE` | Mentor đọc submissions, lưu điểm và feedback. Mapping SQL cụ thể chưa được đặc tả. | [`docs/lists/list_api.md`](../lists/list_api.md) |
+| `DESIGN_ONLY` | API #33 `GET /assignments/{assignment_id}` | `SELECT` | Đọc đề bài, rule/deadline và điểm tối đa. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #35 `POST .../submissions`, #36 `GET /submissions/{submission_id}` | `SELECT`/`INSERT` | Tạo và đọc bài nộp của student theo assignment. Mapping SQL cụ thể chưa được đặc tả. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #54–#57 | `SELECT`/`UPDATE` | Mentor đọc submissions, lưu điểm và feedback. Mapping SQL cụ thể chưa được đặc tả. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
 
 ### Chi tiết trường
@@ -489,7 +489,7 @@ cùng kết quả chấm và feedback.
 
 | Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
 |---|---|---|---|---|
-| `DESIGN_ONLY` | API #35, #36, #54–#57 | `SELECT`/`INSERT`/`UPDATE` | Tạo, xem hoặc chấm bài nộp theo assignment/user; endpoint/query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
+| `DESIGN_ONLY` | API #35, #36, #54–#57 | `SELECT`/`INSERT`/`UPDATE` | Tạo, xem hoặc chấm bài nộp theo assignment/user; endpoint/query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
 
 ### Chi tiết trường
@@ -528,8 +528,8 @@ parent là comment/reply.
 | `DESIGN_ONLY` | `Q2` của API #10 | `SELECT` + author join | Đọc `d.id`, `d.course_id`, `d.user_id`, `d.content`, `d.status`, `d.created_at` cho review gốc; lọc `course_id`, `parent_id IS NULL`, `status = 'ACTIVE'`, sort/pagination design-only; join `u.id`, `u.full_name`, `u.avatar_url`. | [`docs/dd/10_courses_reviews/05_Data_Mapping.md`](../dd/10_courses_reviews/05_Data_Mapping.md) |
 | `DESIGN_ONLY` | `Q3` của API #10 | `SELECT` + author join | Đọc `r.id`, `r.parent_id`, `r.user_id`, `r.content`, `r.created_at` cho replies với `parent_id IN (:review_ids)` và `status = 'ACTIVE'`; join `cu.id`, `cu.full_name`, `cu.avatar_url`. | [`docs/dd/10_courses_reviews/05_Data_Mapping.md`](../dd/10_courses_reviews/05_Data_Mapping.md) |
 | `DESIGN_ONLY` | `Q4` của API #10 | `COUNT` | Đếm review gốc theo cùng scope/visibility predicate với Q2. | [`docs/dd/10_courses_reviews/05_Data_Mapping.md`](../dd/10_courses_reviews/05_Data_Mapping.md) |
-| `DESIGN_ONLY` | API #39–#42 | `SELECT`/`INSERT` | Student đọc thread, tạo topic/reply và reload thread; mapping SQL chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #97–#100 | `SELECT`/`UPDATE`/`DELETE` | Contract admin cho reported discussions, moderation và delete; query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
+| `DESIGN_ONLY` | API #39–#42 | `SELECT`/`INSERT` | Student đọc thread, tạo topic/reply và reload thread; mapping SQL chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #97–#100 | `SELECT`/`UPDATE`/`DELETE` | Contract admin cho reported discussions, moderation và delete; query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
 
 ### Chi tiết trường
@@ -566,10 +566,10 @@ hệ thống/người dùng.
 
 | Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
 |---|---|---|---|---|
-| `DESIGN_ONLY` | API #43 `GET /users/me/notifications` | `SELECT` | Đọc notification của user, có filter unread/page theo contract. Physical query chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #44–#45 | `UPDATE` | Đánh dấu một hoặc tất cả notification đã đọc. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #63–#64 | `INSERT`/external dispatch/`SELECT` | Mentor tạo/phát notification và theo dõi trạng thái gửi; dispatch có thể trả operation bất đồng bộ. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #92–#96 | `SELECT`/`INSERT`/`UPDATE`/`DELETE` | Admin đọc, tạo/phát, cập nhật, xóa/cancel và xem delivery status. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../lists/list_api.md) |
+| `DESIGN_ONLY` | API #43 `GET /users/me/notifications` | `SELECT` | Đọc notification của user, có filter unread/page theo contract. Physical query chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #44–#45 | `UPDATE` | Đánh dấu một hoặc tất cả notification đã đọc. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #63–#64 | `INSERT`/external dispatch/`SELECT` | Mentor tạo/phát notification và theo dõi trạng thái gửi; dispatch có thể trả operation bất đồng bộ. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #92–#96 | `SELECT`/`INSERT`/`UPDATE`/`DELETE` | Admin đọc, tạo/phát, cập nhật, xóa/cancel và xem delivery status. Query matrix chi tiết chưa có DD riêng. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
 
 ### Chi tiết trường
@@ -601,8 +601,8 @@ mã giao dịch, trạng thái và thời điểm thanh toán thành công.
 
 | Trạng thái | Method/query | Loại | Mục đích và điều kiện | Nguồn |
 |---|---|---|---|---|
-| `DESIGN_ONLY` | API #17 `POST /payments` | `INSERT`/external payment | Khởi tạo hoặc xác nhận payment cho course; provider xử lý external và có thể trả operation. | [`docs/lists/list_api.md`](../lists/list_api.md) |
-| `DESIGN_ONLY` | API #16 `POST /orders` và API #19 enrollment | `SELECT`/liên kết | Payment liên quan tới course/user trong flow tạo order và cấp quyền học; ERD không có bảng `orders`. | [`docs/lists/list_api.md`](../lists/list_api.md) |
+| `DESIGN_ONLY` | API #17 `POST /payments` | `INSERT`/external payment | Khởi tạo hoặc xác nhận payment cho course; provider xử lý external và có thể trả operation. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
+| `DESIGN_ONLY` | API #16 `POST /orders` và API #19 enrollment | `SELECT`/liên kết | Payment liên quan tới course/user trong flow tạo order và cấp quyền học; ERD không có bảng `orders`. | [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md) |
 | `NOT_FOUND` | Table-specific runtime method | — | Chưa có implementation/query runtime được xác minh. | Source status hiện hành |
 
 ### Chi tiết trường
@@ -627,8 +627,8 @@ mã giao dịch, trạng thái và thời điểm thanh toán thành công.
    với ERD UNICA. Readiness query `SELECT 1` không chứng minh bảng nghiệp vụ tồn
    tại.
 3. Study và AI có helper truy vấn generic, nhưng không có table-specific
-   repository/service được xác minh. Study runtime còn có import blocker; AI
-   database core là copied/unwired.
+   repository/service được xác minh. Study register source hiện import được;
+   AI database core là copied/unwired.
 4. Các query trong DD là design contract. Chúng mô tả intended data flow cho
    API, không phải bằng chứng method đã được implement hoặc endpoint đã runnable.
 5. `categories`, `orders`, `content`, `uploads`, `achievements` và các bảng
@@ -638,11 +638,11 @@ mã giao dịch, trạng thái và thời điểm thanh toán thành công.
 ## Nguồn tham chiếu
 
 - [`DB_UNICA_ERD.drawio`](./DB_UNICA_ERD.drawio)
-- [`AGENTS.md`](../../AGENTS.md)
-- [Project database context](../../.agents/project/database.md)
-- [Project source status](../../.agents/project/source-status.md)
-- [Study database context](../../.agents/server-study/database.md)
-- [Work database context](../../.agents/server-work/database.md)
-- [AI database context](../../.agents/server-ai/database.md)
+- [`AGENTS.md`](../../../../AGENTS.md)
+- [Project database context](../../../../.agents/project/database.md)
+- [Project source status](../../../../.agents/project/source-status.md)
+- [Study database context](../../../../.agents/server-study/database.md)
+- [Work database context](../../../../.agents/server-work/database.md)
+- [AI database context](../../../../.agents/server-ai/database.md)
 - [`docs/dd/` API data mappings](../dd/)
-- [`docs/lists/list_api.md`](../lists/list_api.md)
+- [`docs/lists/list_api.md`](../../../../docs/lists/list_api.md)

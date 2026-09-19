@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { Cv, DoanhNghiep, JD, PrismaClient, SinhVien } from "@prisma/client";
+import { hashPassword } from "../src/utils/password.js";
 
 const STUDENT_PASSWORD = "WorkStudent@123";
 const BUSINESS_PASSWORD = "WorkBusiness@123";
@@ -475,7 +476,7 @@ function validateDataset(dataset: ReturnType<typeof buildDataset>): void {
 
     assertMaxLength(`SinhVien[${student.serial}].hoten`, student.account.hoten, 50);
     assertMaxLength(`SinhVien[${student.serial}].email`, student.account.email, 50);
-    assertMaxLength(`SinhVien[${student.serial}].matkhau`, student.account.matkhau, 20);
+    assertMaxLength(`SinhVien[${student.serial}].matkhau`, student.account.matkhau, 255);
     assertMaxLength(`SinhVien[${student.serial}].chuyennganh`, student.account.chuyennganh, 50);
     for (const [field, value] of Object.entries(student.cv)) assertMaxLength(`Cv[${student.serial}].${field}`, value, 191);
   }
@@ -487,7 +488,7 @@ function validateDataset(dataset: ReturnType<typeof buildDataset>): void {
 
     assertMaxLength(`DoanhNghiep[${businessIndex + 1}].hoten`, business.account.hoten, 50);
     assertMaxLength(`DoanhNghiep[${businessIndex + 1}].email`, business.account.email, 50);
-    assertMaxLength(`DoanhNghiep[${businessIndex + 1}].matkhau`, business.account.matkhau, 50);
+    assertMaxLength(`DoanhNghiep[${businessIndex + 1}].matkhau`, business.account.matkhau, 255);
     assertMaxLength(`DoanhNghiep[${businessIndex + 1}].diachi`, business.account.diachi, 100);
     assertMaxLength(`DoanhNghiep[${businessIndex + 1}].sodienthoai`, business.account.sodienthoai, 20);
 
@@ -592,7 +593,7 @@ function renderReport(
   const lines: string[] = [
     "# Work seed accounts",
     "",
-    "> Dữ liệu synthetic dành cho development/QA. Mật khẩu bên dưới là plaintext vì cơ chế đăng nhập hiện tại của Work đang so sánh trực tiếp trường `matkhau`.",
+    "> Dữ liệu synthetic dành cho development/QA. Password được hash bằng bcrypt trước khi ghi vào database; tài liệu không ghi password.",
     "> Không dùng các tài khoản này cho production. Tài liệu không chứa Neon connection string hoặc credential của database.",
     "",
     "## Thông tin seed",
@@ -611,19 +612,14 @@ function renderReport(
       ["Rerun policy", "Additive idempotent; chỉ upsert namespace seed, không xóa dữ liệu khác"],
     ]),
     "",
-    "## Mật khẩu dùng cho QA",
-    "",
-    `- Sinh viên: \`${STUDENT_PASSWORD}\``,
-    `- Doanh nghiệp: \`${BUSINESS_PASSWORD}\``,
-    "",
     "## Tài khoản sinh viên",
     "",
-    "| STT | ID | Họ tên | Email | Mật khẩu | Chuyên ngành | CV ID |",
-    "| ---: | ---: | --- | --- | --- | --- | ---: |",
+    "| STT | ID | Họ tên | Email | Chuyên ngành | CV ID |",
+    "| ---: | ---: | --- | --- | --- | ---: |",
   ];
 
   for (const seeded of seededStudents) {
-    lines.push(`| ${seeded.definition.serial} | ${markdownValue(seeded.account.id)} | ${markdownValue(seeded.account.hoten)} | ${markdownValue(seeded.account.email)} | \`${markdownValue(seeded.account.matkhau)}\` | ${markdownValue(seeded.account.chuyennganh)} | ${markdownValue(seeded.cv.id)} |`);
+    lines.push(`| ${seeded.definition.serial} | ${markdownValue(seeded.account.id)} | ${markdownValue(seeded.account.hoten)} | ${markdownValue(seeded.account.email)} | ${markdownValue(seeded.account.chuyennganh)} | ${markdownValue(seeded.cv.id)} |`);
   }
 
   for (const seeded of seededStudents) {
@@ -635,7 +631,6 @@ function renderReport(
         ["ID tài khoản", seeded.account.id],
         ["Họ tên", seeded.account.hoten],
         ["Email", seeded.account.email],
-        ["Mật khẩu", seeded.account.matkhau],
         ["Chuyên ngành", seeded.account.chuyennganh],
         ["Avatar", seeded.account.avt],
       ]),
@@ -656,7 +651,6 @@ function renderReport(
         ["ID tài khoản", seeded.account.id],
         ["Tên doanh nghiệp", seeded.account.hoten],
         ["Email", seeded.account.email],
-        ["Mật khẩu", seeded.account.matkhau],
         ["Địa chỉ", seeded.account.diachi],
         ["Số điện thoại", seeded.account.sodienthoai],
         ["Ngành", profile.name],
@@ -698,10 +692,12 @@ async function seedDatabase(prisma: PrismaClient, dataset: ReturnType<typeof bui
   const seededBusinesses: SeededBusiness[] = [];
 
   for (const businessDefinition of dataset.businesses) {
+    const passwordHash = await hashPassword(businessDefinition.account.matkhau);
+    const accountData = { ...businessDefinition.account, matkhau: passwordHash };
     const account = await prisma.doanhNghiep.upsert({
       where: { email: businessDefinition.account.email },
-      create: businessDefinition.account,
-      update: businessDefinition.account,
+      create: accountData,
+      update: accountData,
     });
 
     const jobs: JD[] = [];
@@ -736,10 +732,12 @@ async function seedDatabase(prisma: PrismaClient, dataset: ReturnType<typeof bui
 
   const seededStudents: SeededStudent[] = [];
   for (const studentDefinition of dataset.students) {
+    const passwordHash = await hashPassword(studentDefinition.account.matkhau);
+    const accountData = { ...studentDefinition.account, matkhau: passwordHash };
     const account = await prisma.sinhVien.upsert({
       where: { email: studentDefinition.account.email },
-      create: studentDefinition.account,
-      update: studentDefinition.account,
+      create: accountData,
+      update: accountData,
     });
 
     const cv = await prisma.cv.upsert({

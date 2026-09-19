@@ -15,7 +15,7 @@ function installBrowserStubs() {
   });
   Object.defineProperty(globalThis, "window", {
     configurable: true,
-    value: { location: { origin: "http://localhost:5174" } },
+    value: { location: { origin: "http://127.0.0.2:3001" } },
   });
 }
 

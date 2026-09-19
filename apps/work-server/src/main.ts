@@ -1,16 +1,30 @@
-import app from "./app.js"; // vẫn giữ .js
-import prisma from "./config/prisma.config.js";
-import { PORT } from "./utils/constants.js";
+import { createApp } from "./app.js";
+import { loadConfig } from "./core/config.js";
+import { createDependencies } from "./core/dependencies.js";
 
-const bootstrap = async () => {
-  await prisma.$connect();
-  app.listen(PORT, () => {
-    console.log(`Server chạy http://localhost:${PORT}`);
+const config = loadConfig();
+const dependencies = createDependencies(config);
+const app = createApp({ config, dependencies });
+
+async function bootstrap(): Promise<void> {
+  await dependencies.prisma.$connect();
+  const server = app.listen(config.port, config.host, () => {
+    console.log(`Server chạy http://${config.host}:${config.port}`);
   });
-};
 
-bootstrap().catch(() => {
-  // Do not print the Prisma error object: it may include connection details.
-  console.error("Không thể kết nối Neon PostgreSQL.");
+  const shutdown = async () => {
+    server.close(async () => {
+      await dependencies.prisma.$disconnect();
+      process.exit(0);
+    });
+  };
+
+  process.once("SIGINT", shutdown);
+  process.once("SIGTERM", shutdown);
+}
+
+bootstrap().catch(async () => {
+  console.error("Không thể khởi động Work API hoặc kết nối Neon PostgreSQL.");
+  await dependencies.prisma.$disconnect().catch(() => undefined);
   process.exit(1);
 });

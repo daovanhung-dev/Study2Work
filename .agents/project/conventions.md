@@ -27,11 +27,14 @@
 
 - Strict TypeScript, NodeNext ESM, import nội bộ dùng suffix `.js`.
 - Express router/middleware/service composition, shared Prisma client, and
-  response envelope helpers in `src/routes/api_routes.ts`.
+  response envelope helpers in `src/core/responses.ts`; `src/routes/api_routes.ts`
+  is a compatibility re-export only.
 - camelCase value/function, PascalCase class/type where existing source uses
   named types; preserve existing legacy snake_case Prisma model/column names.
-- Runtime config is imported from `src/utils/constants.ts`; `.env` is only a
-  legacy template and is not loaded by the server.
+- Work runtime config is imported from the tracked static
+  `src/utils/constants.ts` through `src/core/config.ts`; `.env` and
+  `process.env` are not loaded for runtime configuration. Do not copy Study
+  credentials or duplicate Work secret values in tests, docs, context or logs.
 - Không áp bốn-file Python hoặc raw-SQL convention của Study lên Work.
 
 ## DB Admin runtime boundary

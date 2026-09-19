@@ -10,6 +10,8 @@ DATABASE_RUNTIME_USAGE: NONE
 TEST_STATUS: NOT_FOUND
 ```
 
+Canonical page graph: `INDEX.md`.
+
 ## Load theo task
 
 | Task | Context |

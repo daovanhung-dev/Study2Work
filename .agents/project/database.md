@@ -7,10 +7,10 @@ tree hiện tại. Không lấy table/column từ Git history hoặc diagram đ�
 
 | Scope | Runtime/config | Schema source hiện có |
 |---|---|---|
-| Study | sync SQLAlchemy `postgresql+psycopg`; Postgres/Redis compose | `NOT_FOUND`; không có `alembic/` |
+| Study | sync SQLAlchemy `postgresql+psycopg`; Postgres/Redis compose | current register query references `users`; migration directory `NOT_FOUND` |
 | AI | copied SQLAlchemy core, runtime không dùng | `NOT_FOUND`; không migration/model |
 | Work | Prisma + PostgreSQL/Neon | `apps/work-server/prisma/schema.prisma` + migration history |
-| DB Admin | SQLAlchemy + psycopg3 | two named externally configured Neon targets (`work_server`, `study_server`); runtime catalog only, no migrations |
+| DB Admin | SQLAlchemy + psycopg3 | two named backend-owned targets; runtime catalog plus independent `db_admin` control-plane bootstrap |
 
 ## Work PostgreSQL/Neon
 
@@ -36,8 +36,10 @@ Prisma schema and migrations remain the runtime source of truth.
 ## Study DB helper contract
 
 `apps/study-server/app/core/database.py` có factory/session và parameterized
-query primitive, nhưng không xác nhận table nào. `/api/v1/test/db` chỉ chứa
-`SELECT NOW()` inline và app không import được. `/health/ready` không probe DB.
+query primitive. Current app import được; `/api/v1/test/db` chỉ chứa `SELECT
+NOW()` inline và `/health/ready` không probe DB. Register query hiện references
+`users`, nhưng context không suy rộng thành schema/table contract ngoài source
+query và live metadata.
 
 `alembic.ini` trỏ tới directory thiếu và dùng URL asyncpg cứng, trong khi runtime
 core dùng psycopg sync. Ghi discrepancy, không tạo migration theo config này nếu
@@ -57,5 +59,7 @@ schema. The backend-owned `DATABASE_TARGETS` mapping provides the named
 `work_server` and `study_server` connections; credentials are never exposed to
 Angular. Catalog queries use `information_schema` and `pg_catalog`; DDL, row
 CRUD and SQL execution use request-isolated transactions. DDL and row mutation
-confirmation state is bounded to the backend process, while audit entries are
-bounded in memory and structured logs only.
+confirmation state is bounded to the backend process, while audit entries have
+bounded in-memory/structured-log fallback and a durable
+`db_admin.admin_audit_events` path when the control-plane table exists. The SQL
+bootstrap is not evidence that a live target has been applied.

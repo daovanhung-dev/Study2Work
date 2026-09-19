@@ -1,54 +1,74 @@
-import express, { type NextFunction, type Request, type Response } from "express";
-import { randomUUID } from "node:crypto";
-import path from "path";
-import { fileURLToPath } from "url";
+import express, { type Express } from "express";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-import api_router from "./routes/api_routes.js";
-
+import { createV1Router } from "./api/v1.js";
+import { loadConfig, type WorkConfig } from "./core/config.js";
+import { createDependencies, type WorkDependencies } from "./core/dependencies.js";
+import { asyncHandler, traceMiddleware } from "./core/middleware.js";
+import { errorHandler, notFoundHandler } from "./core/exceptions.js";
+import { ApiError, sendSuccess } from "./core/responses.js";
+import { probeDatabase } from "./core/database.js";
 import { authenticateToken } from "./middleware/auth.middleware.js";
 
-const app = express();
+export interface CreateAppOptions {
+  config?: WorkConfig;
+  dependencies?: WorkDependencies;
+}
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+export function createApp(options: CreateAppOptions = {}): Express {
+  const config = options.config ?? loadConfig();
+  const dependencies = options.dependencies ?? createDependencies(config);
+  const app = express();
+  const currentFile = fileURLToPath(import.meta.url);
+  const currentDirectory = path.dirname(currentFile);
 
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "../public")));
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
-app.use(authenticateToken);
+  app.use(traceMiddleware);
+  app.use(express.json());
+  app.use(express.static(path.join(currentDirectory, "../public")));
+  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+  app.use(authenticateToken(config));
 
-// The server is API-only. React owns all browser pages and is deployed separately.
-app.use("/api/v1", api_router);
+  app.get("/health/live", (request, response) => sendSuccess(
+    request,
+    response,
+    200,
+    "SYSTEM_HEALTH_LIVE",
+    "Work API is live.",
+    { service: "work-api", environment: config.appEnv },
+  ));
 
-app.use((req: Request, res: Response) => {
-  const traceId = req.get("X-Trace-Id") || randomUUID();
-  res.setHeader("X-Trace-Id", traceId);
-  res.status(404).json({
-    success: false,
-    businessCode: "NOT_FOUND",
-    message: "Không tìm thấy tài nguyên.",
-    data: null,
-    meta: {},
-    traceId,
-  });
-});
+  app.get("/health/ready", asyncHandler(async (request, response) => {
+    try {
+      await probeDatabase(dependencies.prisma);
+    } catch {
+      throw new ApiError({
+        statusCode: 503,
+        businessCode: "DEPENDENCY_UNAVAILABLE",
+        message: "Work API is not ready.",
+      });
+    }
+    return sendSuccess(
+      request,
+      response,
+      200,
+      "SYSTEM_HEALTH_READY",
+      "Work API is ready.",
+      {
+        service: "work-api",
+        environment: config.appEnv,
+        dependencies: {
+          database: "configured",
+          redis: config.redisUrl ? "configured" : "not_configured",
+        },
+      },
+    );
+  }));
 
-app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {
-  if (res.headersSent) {
-    next(error);
-    return;
-  }
+  app.use("/api/v1", createV1Router(dependencies));
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+  return app;
+}
 
-  const traceId = req.get("X-Trace-Id") || randomUUID();
-  res.setHeader("X-Trace-Id", traceId);
-  res.status(500).json({
-    success: false,
-    businessCode: "INTERNAL_SERVER_ERROR",
-    message: "Lỗi máy chủ.",
-    data: null,
-    meta: {},
-    traceId,
-  });
-});
-
-export default app;
+export default createApp;

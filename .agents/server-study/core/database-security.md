@@ -11,7 +11,8 @@ and channel binding. The URL stays a `SecretStr` until URL construction.
 - `pool_pre_ping=True`.
 - pool size/max overflow from settings.
 - Does not send `search_path` through startup options because Neon pooler rejects it.
-- Neon currently uses the default `public` schema.
+- The current engine path does not send `search_path`; do not infer the active
+  schema from a configuration field alone.
 
 ### `build_session_factory(engine)`
 Sync `Session`, `autoflush=False`, `expire_on_commit=False`.
@@ -74,9 +75,9 @@ Signing/verification key selection:
 
 ## Critical absence
 
-The runtime Neon database has a verified `public.users` table used by API #1
-register. `DB.sql` has also been applied to the five named non-public
-application schemas, with 16 tables in each; `public` and system schemas were
-left unchanged. The register flow owns duplicate lookup, password hashing,
-insert and commit/rollback behavior. Login, refresh and other session
-orchestration remain unwired; do not infer them from helper names.
+Current register SQL references `users`, but source inspection alone does not
+verify live schema/table metadata. `DB.sql` and DD pages are not sufficient
+runtime evidence when they conflict with current source. The register flow
+owns duplicate lookup, password hashing, insert and commit/rollback behavior.
+Login, refresh and other session orchestration remain unwired; do not infer them
+from helper names.
