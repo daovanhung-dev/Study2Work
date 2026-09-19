@@ -19,3 +19,10 @@
   `ColorScheme`; new screen-specific primary colors, shadows or control styles
   should not be introduced. Keep white/transparent colors only where they are
   required for foreground, overlay or compositing semantics.
+- Treat [`file-inventory.md`](file-inventory.md) and the two app pages as the
+  source-backed map of file purpose. A file existing is not proof that it is
+  wired: use `WIRED`, `UNWIRED`, `LEGACY`, `PLACEHOLDER` and UI-only labels from
+  route/import evidence.
+- Do not copy Neon URLs, Gemini keys, credentials or database row payloads into
+  agent context. Document only configuration symbols, boundary behavior and
+  prototype security risk.

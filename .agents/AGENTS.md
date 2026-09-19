@@ -6,7 +6,7 @@ Source snapshot gốc cho deep-context: `9a70eb6764a6587093a92d3bd7e4cc0bea1651c
 
 | Scope | Mode | Trạng thái tại snapshot | Entry |
 |---|---|---|---|
-| Mobile Work | `DEEP` | `SOURCE_BACKED` direct Neon/SQLite Flutter apps | `mobile-work/AGENTS.md` |
+| Mobile Work | `DEEP` | `SOURCE_BACKED` direct Neon/SQLite Flutter apps; exhaustive tracked-file inventory | `mobile-work/AGENTS.md` |
 | Web Work | `DEEP` | `VERIFIED_REACT_EXPRESS_SPLIT` relative `/api/v1` client | `web-work/AGENTS.md` |
 | Work server | `DEEP` | `VERIFIED_EXPRESS_JSON_API` | `server-work/AGENTS.md` |
 | Study server | `DEEP` | `SOURCE_BACKED_WITH_TEST_BLOCKER` | `server-study/AGENTS.md` |

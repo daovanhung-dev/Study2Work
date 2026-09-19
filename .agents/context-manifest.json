@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "sourceCommit": "9a70eb6764a6587093a92d3bd7e4cc0bea1651c4",
-  "generatedAt": "2026-09-18",
+  "generatedAt": "2026-09-19",
   "rootRouter": "AGENTS.md",
   "registry": ".agents/AGENTS.md",
   "skillsIndex": ".agents/skills/INDEX.md",
@@ -393,6 +393,10 @@
         ".agents/mobile-work/architecture.md",
         ".agents/mobile-work/dependencies.md",
         ".agents/mobile-work/conventions.md",
+        ".agents/mobile-work/file-inventory.md",
+        ".agents/mobile-work/flutter-student.md",
+        ".agents/mobile-work/flutter-business.md",
+        ".agents/mobile-work/data-flow.md",
         ".agents/mobile-work/modules/README.md",
         ".agents/mobile-work/workflows/README.md"
       ],

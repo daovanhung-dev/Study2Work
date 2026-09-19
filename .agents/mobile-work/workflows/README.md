@@ -22,3 +22,18 @@ persistence/backend behavior.
 
 Mọi task phải dùng `.agents/worklog/TEMPLATE.md`, ghi source trace và status
 verification trước khi cập nhật context; sau đó chạy context validator.
+
+## Context inventory workflow
+
+Khi source mobile thay đổi:
+
+1. Đối chiếu `git ls-files apps/work-client/mobile` với
+   [`file-inventory.md`](../file-inventory.md); không đưa `build/`, `.dart_tool/`
+   hoặc cache vào inventory.
+2. Cập nhật đúng app page và `data-flow.md` nếu route, helper, model, DB table,
+   external call hoặc wiring thay đổi.
+3. Giữ `EXPECTED_BEHAVIOR` tách khỏi `CURRENT_BEHAVIOR`; ghi discrepancy,
+   unwired và placeholder bằng evidence từ source.
+4. Chạy `git diff --check` và `node scripts/validate-agent-context.mjs`.
+   Nếu Flutter/Dart/Node không có trong môi trường, ghi
+   `DECLARED_NOT_RUNNABLE`, không đánh dấu `VERIFIED`.
