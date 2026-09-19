@@ -4,6 +4,7 @@
   "generatedAt": "2026-09-19",
   "rootRouter": "AGENTS.md",
   "registry": ".agents/AGENTS.md",
+  "contextMap": ".agents/context-map.md",
   "skillsIndex": ".agents/skills/INDEX.md",
   "legacyPathsMustNotExist": [
     "apps/study-server/.agent",

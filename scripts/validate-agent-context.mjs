@@ -106,6 +106,7 @@ function registeredContextFiles(manifest) {
     registered.add(manifest.worklog.index);
     registered.add(manifest.worklog.template);
   }
+  if (manifest.contextMap) registered.add(manifest.contextMap);
   if (manifest.skillsIndex) registered.add(manifest.skillsIndex);
   for (const skill of Object.values(manifest.skills ?? {})) {
     registered.add(skill.entry);
@@ -247,6 +248,8 @@ function checkRegistries(manifest) {
   }
 
   if (manifest.skillsIndex) mustExist(manifest.skillsIndex, "skills index");
+  if (!manifest.contextMap) fail("contextMap registry is missing");
+  else mustExist(manifest.contextMap, "context map");
   for (const [skillName, skill] of Object.entries(manifest.skills ?? {})) {
     checkStatus(skill.status, `skill ${skillName}`);
     mustExist(skill.entry, `skill ${skillName} entry`);
@@ -292,12 +295,56 @@ function checkRegistries(manifest) {
   }
 }
 
+function checkContextMap(manifest) {
+  if (!manifest.contextMap || !existsSync(resolve(repoRoot, manifest.contextMap))) return;
+
+  const mapText = readFileSync(resolve(repoRoot, manifest.contextMap), "utf8");
+  const required = new Set([
+    manifest.rootRouter,
+    manifest.registry,
+    manifest.contextMap,
+    manifest.skillsIndex,
+  ]);
+
+  if (manifest.project) {
+    required.add(manifest.project.index);
+    for (const page of manifest.project.pages ?? []) required.add(page);
+  }
+
+  for (const { node } of contextNodes(manifest)) {
+    required.add(node.entry);
+    required.add(node.index);
+    for (const page of node.pages ?? node.requiredPages ?? []) required.add(page);
+  }
+
+  for (const skill of Object.values(manifest.skills ?? {})) {
+    required.add(skill.entry);
+    for (const resourcePath of skill.resourcePaths ?? []) required.add(resourcePath);
+  }
+
+  for (const workflow of Object.values(manifest.workflows ?? {})) required.add(workflow.entry);
+  for (const contract of Object.values(manifest.contracts ?? {})) required.add(contract.path);
+
+  if (manifest.worklog) {
+    required.add(manifest.worklog.root);
+    required.add(manifest.worklog.index);
+    required.add(manifest.worklog.template);
+    if (manifest.worklog.preflight?.script) required.add(manifest.worklog.preflight.script);
+  }
+
+  for (const path of required) {
+    if (typeof path === "string" && !mapText.includes(path)) {
+      fail(`context map does not mention ${path}`);
+    }
+  }
+}
+
 function checkInternalLinks(manifest) {
   // Skill bodies contain intentional template/example placeholders such as
   // `./07_<mapping>.md`; validate the skill registry/index links here and
   // validate resource existence separately, but do not treat those examples
   // as repository context page links.
-  const registryFiles = [manifest.skillsIndex].filter(Boolean);
+  const registryFiles = [manifest.skillsIndex, manifest.contextMap].filter(Boolean);
   const files = ["AGENTS.md", ".agents/AGENTS.md", ...contextFiles(manifest), ...registryFiles];
   const markdownLink = /\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 
@@ -383,6 +430,7 @@ if (manifest) {
   checkNoAgentContextInApps();
   checkPageGraph(manifest, registry);
   checkRegistries(manifest);
+  checkContextMap(manifest);
 
   const registered = registeredContextFiles(manifest);
   for (const file of contextFiles(manifest)) {

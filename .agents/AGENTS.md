@@ -15,6 +15,9 @@ Source snapshot gốc cho deep-context: `9a70eb6764a6587093a92d3bd7e4cc0bea1651c
 
 Machine-readable registry: `.agents/context-manifest.json`.
 
+Human-readable context map: [`context-map.md`](context-map.md). The map explains
+the load tree and registry relationships; it does not replace the manifest.
+
 ## Global context
 
 Global index: `project/INDEX.md`.
@@ -67,4 +70,4 @@ node scripts/validate-agent-context.mjs
 
 Validator kiểm tra registry, legacy conflicts và source drift của các deep scope.
 Validator cũng kiểm tra skill/resource, workflow, contract, subcontext, worklog
-required fields và generated/cache directory exclusions.
+required fields, context-map coverage và generated/cache directory exclusions.
