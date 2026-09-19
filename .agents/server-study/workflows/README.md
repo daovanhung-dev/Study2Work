@@ -3,6 +3,8 @@
 For coding/fix tasks:
 
 ```text
+classify task -> worklog preflight/read same-type logs
+->
 scope AGENTS
 -> affected API/core page
 -> exact source

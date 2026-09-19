@@ -30,7 +30,7 @@ Global index: `project/INDEX.md`.
 - `project/workflows.md`: workflow chung và verification order.
 - `skills/INDEX.md`: skill registry và resource của `create-dd-from-bd-mobile`
   (Mobile module DD) và `createDD-markdown` (Web/API DD).
-- `worklog/README.md`: worklog contract bắt buộc cho mọi task.
+- `worklog/README.md`: worklog contract và preflight đọc các worklog cùng type bắt buộc cho mọi task.
 - `db-admin/AGENTS.md`: ownership, API safety boundary và verified commands của Neon DB Admin.
 
 Mỗi scope có `INDEX.md` làm page graph. Không tạo context agent trong `apps/`;
@@ -52,6 +52,12 @@ root router luôn trỏ về các entry dưới `.agents/`.
 ## Bảo trì
 
 Sau thay đổi làm đổi architecture, endpoint, important function contract, database, external dependency, business code, convention hoặc test flow, cập nhật đúng page scope. Không copy cùng một mô tả sang nhiều page; page API/module link tới core/service dùng chung.
+
+Mọi task phải chạy worklog preflight sau khi xác định `primary_task_type`, đọc
+các log selector trả về trước khi inspect sâu hoặc sửa file, rồi ghi bằng chứng
+vào `PRIOR_WORKLOG_REVIEW`. Worklog canonical nằm dưới
+`.agents/worklog/YYYY-MM-DD/`; `docs/devs/worklogs` là legacy path và không còn
+là nguồn đọc mới.
 
 Chạy:
 

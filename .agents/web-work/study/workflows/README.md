@@ -1,6 +1,8 @@
 # Study Web workflow
 
 ```text
+classify task -> worklog preflight/read same-type logs
+->
 web-work router
 -> study/ subcontext
 -> Vue entry/router/page/shared API source

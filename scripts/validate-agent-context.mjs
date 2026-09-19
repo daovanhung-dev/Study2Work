@@ -74,7 +74,10 @@ function contextNodes(manifest) {
 }
 
 function contextFiles(manifest) {
-  const roots = [".agents/project", ".agents/worklog"];
+  // Worklog entries are audit records, not context pages. They are validated
+  // through the worklog registry and preflight selector instead of the page
+  // graph/orphan-page check.
+  const roots = [".agents/project"];
   for (const { node } of contextNodes(manifest)) roots.push(dirname(node.entry));
   return [...new Set(roots.flatMap((root) => collectFiles(root)))].sort();
 }
@@ -209,8 +212,22 @@ function checkRegistries(manifest) {
 
   if (!manifest.worklog) fail("worklog registry is missing");
   else {
+    mustExist(manifest.worklog.root, "worklog root");
     mustExist(manifest.worklog.index, "worklog index");
     mustExist(manifest.worklog.template, "worklog template");
+    const preflight = manifest.worklog.preflight;
+    if (!preflight || typeof preflight !== "object") {
+      fail("worklog preflight registry is missing");
+    } else {
+      mustExist(preflight.script, "worklog preflight script");
+      if (preflight.typeField !== "primary_task_type") {
+        fail("worklog preflight must match primary_task_type");
+      }
+      if (preflight.limit !== 3) fail("worklog preflight limit must be 3");
+      if (preflight.shortagePolicy !== "read_all_available_and_record_shortage") {
+        fail("worklog preflight shortagePolicy is invalid");
+      }
+    }
     const worklogIndex = existsSync(resolve(repoRoot, manifest.worklog.index))
       ? readFileSync(resolve(repoRoot, manifest.worklog.index), "utf8")
       : "";
@@ -257,6 +274,9 @@ function checkRegistries(manifest) {
     }
     if (!Array.isArray(workflow.verificationCommands) || workflow.verificationCommands.length === 0) {
       fail(`workflow ${workflowName} must define verificationCommands`);
+    }
+    if (workflow.preflight === "worklog.preflight" && !manifest.worklog?.preflight) {
+      fail(`workflow ${workflowName} references missing worklog preflight`);
     }
     for (const scope of workflow.scopeRefs ?? []) {
       if (!scopeNames.has(scope)) fail(`workflow ${workflowName} references unknown scope ${scope}`);

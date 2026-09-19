@@ -7,7 +7,8 @@
   "skillsIndex": ".agents/skills/INDEX.md",
   "legacyPathsMustNotExist": [
     "apps/study-server/.agent",
-    "apps/study-server/AGENTS.md"
+    "apps/study-server/AGENTS.md",
+    "docs/devs/worklogs"
   ],
   "project": {
     "index": ".agents/project/INDEX.md",
@@ -24,8 +25,16 @@
     ]
   },
   "worklog": {
+    "root": ".agents/worklog",
     "index": ".agents/worklog/README.md",
     "template": ".agents/worklog/TEMPLATE.md",
+    "preflight": {
+      "script": "scripts/select-worklogs.mjs",
+      "typeField": "primary_task_type",
+      "limit": 3,
+      "sort": ["date:desc", "path:asc"],
+      "shortagePolicy": "read_all_available_and_record_shortage"
+    },
     "requiredFields": [
       "task_id",
       "primary_task_type",
@@ -34,6 +43,7 @@
       "cross_scope_dependencies",
       "expected_behavior",
       "current_behavior",
+      "prior_worklogs_reviewed",
       "source_trace",
       "discrepancies",
       "verification",
@@ -130,6 +140,7 @@
       "entry": ".agents/worklog/README.md",
       "triggers": ["every task", "context update", "handoff"],
       "scopeRefs": ["all"],
+      "preflight": "worklog.preflight",
       "verificationCommands": ["required-field checklist", "context validator"]
     }
   },

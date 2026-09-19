@@ -1,6 +1,8 @@
 # AI workflow
 
 ```text
+classify task -> worklog preflight/read same-type logs
+->
 scope AGENTS
 -> chat/API or copied-core page
 -> exact runtime import path from app/main.py

@@ -1,12 +1,15 @@
 # Repository workflow registry
 
-All workflows begin with the root router and a task worklog. The worklog is
-updated before source edits, after source tracing, and after verification.
+All workflows begin with the root router, task classification, and worklog
+preflight. The selected same-type worklogs must be read before deep source
+inspection. The active worklog is updated before source edits, after source
+tracing, and after verification.
 
 ## Common flow
 
 ```text
 classify task
+-> select/read up to 3 nearest worklogs with the same primary_task_type
 -> load exact scope/subcontext
 -> load skill/contract registry entries required by the task
 -> separate EXPECTED_BEHAVIOR from CURRENT_BEHAVIOR
@@ -26,7 +29,7 @@ classify task
 | Docs/DD | Web/API DD/documentation | load `createDD-markdown`; preserve API template and mark source gaps | contract and DD validation |
 | Docs/DD Mobile | Mobile module DD/documentation | load `create-dd-from-bd-mobile`; follow BD evidence, module template and review gates | mobile DD validator + context validation |
 | Cross-scope contract | shared API/event/envelope | identify producer/consumer and status before changing either side | `contracts:validate` + context validator |
-| Worklog | every task | record evidence, decisions, changes and verification | required-field checklist |
+| Worklog | every task | run `scripts/select-worklogs.mjs`, read selected same-type logs, record `PRIOR_WORKLOG_REVIEW`, evidence, decisions, changes and verification | required-field checklist + context validator |
 
 ## Tool status in the current repository
 

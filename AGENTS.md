@@ -41,12 +41,21 @@ Không nạp scope khác nếu chưa có dependency thật. Task qua nhiều sco
 ```text
 AGENTS.md
   -> .agents/AGENTS.md
+  -> classify task và xác định primary_task_type
+  -> scripts/select-worklogs.mjs --type <primary_task_type> --limit 3
+  -> đọc 3 worklog được chọn; nếu thiếu thì đọc toàn bộ log cùng type và ghi shortage
   -> .agents/project/INDEX.md (chỉ khi có boundary/contract cross-scope)
   -> scope AGENTS.md
   -> scope INDEX.md hoặc subcontext INDEX.md
   -> exact source + contract/config/test
   -> worklog cập nhật trước và sau verification
 ```
+
+Preflight worklog là bắt buộc trước khi đọc sâu hoặc chỉnh sửa. Selector chỉ
+chọn đường dẫn; agent phải thực sự đọc các file được chọn và ghi lại chúng
+trong phần `PRIOR_WORKLOG_REVIEW` của worklog hiện tại. Quy tắc match dùng
+`primary_task_type` chính xác; khi chưa đủ 3 log thì không bịa thêm log và phải
+ghi rõ số lượng thiếu.
 
 Skill, workflow và contract phải được tra trong machine-readable registry của
 `.agents/context-manifest.json`; không coi file tồn tại là bằng chứng đã được
@@ -92,4 +101,5 @@ Nếu hai phía khác nhau, ghi `DISCREPANCY`; không tự reconcile bằng suy 
 - Không ép architecture của một server lên server khác.
 - `VERIFIED`, `UNWIRED`, `DECLARED_NOT_RUNNABLE`, `NOT_FOUND` là trạng thái có nghĩa; file tồn tại không đồng nghĩa runtime dùng file đó.
 - Nếu code/contract/DB/convention thay đổi theo cách làm context sai, cập nhật đúng page `.agents/` trong cùng task.
+- Mọi task phải có preflight đọc worklog cùng `primary_task_type` trước khi làm việc; dùng `.agents/worklog/README.md` và `scripts/select-worklogs.mjs`.
 - Trước khi kết thúc task có thay đổi context, chạy `node scripts/validate-agent-context.mjs`.
