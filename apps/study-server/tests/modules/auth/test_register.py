@@ -4,12 +4,12 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any
 
-import app.modules.auth.view as auth_view
+import app.modules.guest.register_account.view as auth_view
 import pytest
 from app.core.database import get_db
 from app.core.responses import ApiError
-from app.modules.auth.models import RegisterRequest
-from app.modules.auth.view import create_user
+from app.modules.guest.register_account.models import RegisterRequest
+from app.modules.guest.register_account.view import create_user
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError

@@ -2,17 +2,18 @@
 
 ```text
 SCHEMA_STATUS: SOURCE_BACKED; LIVE_STATUS: NOT_VERIFIED_HERE
-MIGRATION_DIRECTORY_STATUS: NOT_FOUND
+MIGRATION_DIRECTORY_STATUS: SOURCE_BACKED (refresh token migration artifact)
 RUNTIME_DB_HELPER: VERIFIED
 ```
 
 Current source establishes a Neon PostgreSQL connection URL in
-`app/core/constants.py` and sync SQLAlchemy helpers. The register query
-references `users`; do not infer additional schema rules without authoritative
-schema/live metadata.
+`app/core/constants.py` and sync SQLAlchemy helpers. Register references
+`users`; login/refresh references `users` and the source-backed
+`refresh_tokens` table. Live metadata is still not verified here.
 
-`infra/postgres/study-server/DB.sql` is a checked-in schema/design artifact;
-its live application status is not established by source inspection alone.
+`infra/postgres/study-server/DB.sql` is a checked-in schema/design artifact and
+`migrations/002_refresh_tokens.sql` is an idempotent migration artifact; their
+live application status is not established by source inspection alone.
 Do not treat it as proof that every described table is available to the current
 runtime.
 
@@ -24,5 +25,10 @@ Known discrepancy:
 - `alembic.ini` references migration setup/directory that is absent and is not sufficient schema evidence.
 
 `/api/v1/test/db` only declares `SELECT NOW()`; health readiness only reports configuration label and does not probe the DB.
+
+`refresh_tokens` stores `user_id`, an HMAC `token_hash`, `expires_at`,
+`revoked_at` and `created_at`. The raw refresh token is returned only to the
+client during login/rotation and is never persisted. Rotation revokes the old
+row and inserts the new row in the caller-owned transaction.
 
 Before any future migration/query task, require authoritative table/column/PK/FK/unique/index/status/delete/timestamp/tenant rules. Query helpers do not commit; transaction ownership belongs to the future/current business use case that performs the write.

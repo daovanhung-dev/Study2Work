@@ -1,8 +1,7 @@
 from __future__ import annotations
 
+from app.utils.validate import reject_blank_password, strip_email
 from pydantic import BaseModel, EmailStr, Field, field_validator
-
-from app.utils.validate import strip_email,reject_blank_password
 
 
 class RegisterRequest(BaseModel):

@@ -75,9 +75,9 @@ Signing/verification key selection:
 
 ## Critical absence
 
-Current register SQL references `users`, but source inspection alone does not
-verify live schema/table metadata. `DB.sql` and DD pages are not sufficient
-runtime evidence when they conflict with current source. The register flow
-owns duplicate lookup, password hashing, insert and commit/rollback behavior.
-Login, refresh and other session orchestration remain unwired; do not infer them
-from helper names.
+Current register and auth SQL reference `users`; login/refresh also reference
+`refresh_tokens`, but source inspection alone does not verify live schema/table
+metadata. `DB.sql`, migration artifacts and DD pages are not sufficient runtime
+evidence when they conflict with live metadata. Register and auth views own
+their lookup, security, token persistence and commit/rollback behavior. Current
+user orchestration remains unwired; do not infer it from helper names.

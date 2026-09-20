@@ -1,11 +1,17 @@
 from typing import Any
 
+# import framework
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+# import core's file
 from app.core.database import get_db, get_engine
 from app.core.trace import get_trace_id
+
+# import folder's files
+from app.modules.guest.auth_login.models import LoginRequest, RefreshRequest
+from app.modules.guest.auth_login.view import login, refresh
 from app.modules.guest.register_account.models import RegisterRequest
 from app.modules.guest.register_account.view import create_user
 
@@ -35,6 +41,32 @@ def register(
     db: Session = db_dependency,
 ) -> dict[str, Any]:
     return create_user(
+        user_data=user_data,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+@router.post("/auth/login", status_code=status.HTTP_200_OK)
+def authenticate(
+    user_data: LoginRequest,
+    request: Request,
+    db: Session = db_dependency,
+) -> dict[str, Any]:
+    return login(
+        user_data=user_data,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+@router.post("/auth/refresh", status_code=status.HTTP_200_OK)
+def refresh_access_token(
+    user_data: RefreshRequest,
+    request: Request,
+    db: Session = db_dependency,
+) -> dict[str, Any]:
+    return refresh(
         user_data=user_data,
         db=db,
         trace_id=get_trace_id(request),

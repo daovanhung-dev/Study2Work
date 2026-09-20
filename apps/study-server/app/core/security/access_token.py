@@ -13,7 +13,6 @@ from jwt.exceptions import InvalidTokenError
 from app.core.config import get_settings
 from app.core.security.exceptions import TokenError
 
-
 ACCESS_TOKEN_TYPE = "access"
 
 RESERVED_CLAIMS = {
@@ -96,9 +95,7 @@ def decode_access_token(
         TypeError,
         ValueError,
     ) as exc:
-        raise TokenError(
-            "Token không hợp lệ hoặc đã hết hạn"
-        ) from exc
+        raise TokenError("Token không hợp lệ hoặc đã hết hạn") from exc
 
     if payload.get("type") != ACCESS_TOKEN_TYPE:
         raise TokenError("Sai loại token")
@@ -131,18 +128,14 @@ def _get_signing_key() -> str:
         private_key = _secret_value(settings.jwt_private_key)
 
         if not private_key:
-            raise TokenError(
-                "JWT private key chưa được cấu hình"
-            )
+            raise TokenError("JWT private key chưa được cấu hình")
 
         return private_key
 
     secret_key = _secret_value(settings.jwt_secret_key)
 
     if not secret_key:
-        raise TokenError(
-            "JWT secret key chưa được cấu hình"
-        )
+        raise TokenError("JWT secret key chưa được cấu hình")
 
     return secret_key
 
@@ -154,18 +147,14 @@ def _get_verification_key() -> str:
         public_key = _secret_value(settings.jwt_public_key)
 
         if not public_key:
-            raise TokenError(
-                "JWT public key chưa được cấu hình"
-            )
+            raise TokenError("JWT public key chưa được cấu hình")
 
         return public_key
 
     secret_key = _secret_value(settings.jwt_secret_key)
 
     if not secret_key:
-        raise TokenError(
-            "JWT secret key chưa được cấu hình"
-        )
+        raise TokenError("JWT secret key chưa được cấu hình")
 
     return secret_key
 
@@ -175,6 +164,7 @@ def _secret_value(value: Any) -> str | None:
         return None
 
     if hasattr(value, "get_secret_value"):
-        return value.get_secret_value()
+        secret_value = value.get_secret_value()
+        return None if secret_value is None else str(secret_value)
 
     return str(value)

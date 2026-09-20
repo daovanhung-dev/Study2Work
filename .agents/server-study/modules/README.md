@@ -6,7 +6,7 @@
 app/modules/<feature>/
 ├── models.py   # request/response contract and basic model validation
 ├── validate.py # named pure special validation
-├── query.py    # parameterized SQL/query helpers
+├── query.py    # SQL statements/constants; view owns query execution
 └── view.py     # business orchestration and transaction boundary
 ```
 
@@ -25,4 +25,5 @@ DB-backed checks such as duplicate, existence, permission or state belong to
 | Module | Status | Context |
 |---|---|---|
 | `guest/register_account` | `SOURCE_BACKED` | `register-account.md` |
+| `guest/auth_login` | `SOURCE_BACKED` | Login and refresh-token flow in current source |
 | Other Study domain modules | `NOT_FOUND`/`UNWIRED` | Require source/contract before implementation |

@@ -1,8 +1,9 @@
 # Study declared API surface
 
 Global status: current route source is `SOURCE_BACKED`; `app.main` import and
-the register test module use the current `guest` internal namespace.
-Unimplemented auth/AI routes remain `UNWIRED`.
+the register/auth test modules use the current `guest` internal namespace.
+Current auth login/refresh routes are wired; current-user and AI routes remain
+`UNWIRED`.
 
 ## Composition-root routes
 
@@ -39,10 +40,22 @@ Verification dispatch is currently deferred and logged because API #2/provider i
 not implemented.
 
 ### `POST /api/v1/auth/login`
-Not currently exposed; implementation remains `UNWIRED`.
+Implemented through `app.modules.guest.auth_login.view.login(...)`. It looks up
+the user by email, verifies the stored password hash, requires `status=ACTIVE`,
+creates a JWT access token, stores only the HMAC refresh-token hash, commits the
+session and returns the profile plus token fields.
+Success is HTTP `200` with `DESIGN_RESOURCE_RETRIEVED`. Unknown/wrong
+credentials return `401 DESIGN_AUTHENTICATION_REQUIRED`; inactive accounts
+return `403 DESIGN_ACCESS_DENIED`; database/token failures return
+`500 DESIGN_INTERNAL_ERROR`.
 
 ### `POST /api/v1/auth/refresh`
-Not currently exposed; implementation remains `UNWIRED`.
+Implemented through `app.modules.guest.auth_login.view.refresh(...)`. It hashes
+the supplied opaque token, requires an unrevoked and unexpired DB row for an
+active user, revokes that row and inserts a new hashed refresh token in the same
+transaction, then returns a new access-token pair and profile.
+Invalid, expired or already rotated tokens return
+`401 DESIGN_AUTHENTICATION_REQUIRED`.
 
 ### `GET /api/v1/auth/me`
 Not currently exposed; implementation remains `UNWIRED`.
