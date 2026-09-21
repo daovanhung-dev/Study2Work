@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
-import 'package:work_server/controllers/trang_chu/quan_ly_CV/quan_ly_job_cv.dart';
-import 'package:work_server/models/sinh_vien/cv.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/features/student/legacy/controllers/trang_chu/quan_ly_CV/quan_ly_job_cv.dart';
+import 'package:study2work_mobile/features/student/legacy/models/sinh_vien/cv.dart';
 
 class QuanLyCVView extends StatefulWidget {
   const QuanLyCVView({super.key});
@@ -200,7 +200,7 @@ class _QuanLyCVViewState extends State<QuanLyCVView> {
                 radius: 45,
                 backgroundImage: _cv!.avt != null
                     ? NetworkImage(_cv!.avt!)
-                    : const AssetImage('assets/images/default_avatar.png')
+                    : const AssetImage('assets/student/images/default_avatar.png')
                           as ImageProvider,
               ),
               const SizedBox(height: 10),

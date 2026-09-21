@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:work_server/theme/design_tokens.dart';
-import 'package:work_server/controllers/trang_chu/xem_chi_tiet.dart';
-import 'package:work_server/controllers/ung_tuyen_ctrl.dart';
-import 'package:work_server/models/sinh_vien/jd.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/features/student/legacy/controllers/trang_chu/xem_chi_tiet.dart';
+import 'package:study2work_mobile/features/student/legacy/controllers/ung_tuyen_ctrl.dart';
+import 'package:study2work_mobile/features/student/legacy/models/sinh_vien/jd.dart';
 
 final xemChiTietCtrl = XemChiTietController();
 final ungTuyenCtrl = UngTuyenCtrl();

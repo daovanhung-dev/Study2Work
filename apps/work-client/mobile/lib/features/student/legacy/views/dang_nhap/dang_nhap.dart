@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/app_components.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:go_router/go_router.dart';
+import 'package:study2work_mobile/app/theme/app_components.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/router/auth_navigation_state.dart';
+import 'package:study2work_mobile/features/auth/domain/auth_repository.dart';
 import 'quen_mat_khau.dart';
-import 'menu.dart';
-import 'package:work_server/controllers/dang_nhap/dangnhap_ctrl.dart';
+import 'package:study2work_mobile/features/student/legacy/controllers/dang_nhap/dangnhap_ctrl.dart';
 import 'package:shimmer/shimmer.dart';
 
 class DangNhap extends StatefulWidget {
-  const DangNhap({super.key});
+  const DangNhap({this.authRepository, super.key});
+
+  final AuthRepository? authRepository;
 
   @override
   State<DangNhap> createState() => _DangNhapState();
@@ -48,7 +52,7 @@ class _DangNhapState extends State<DangNhap>
   }
 
   Future<void> _checkAutoLogin() async {
-    final ok = await autoLogin();
+    final ok = await (widget.authRepository?.restoreSession() ?? autoLogin());
     if (ok && mounted) {
       await Future.delayed(const Duration(milliseconds: 500));
       _navigateToMenu();
@@ -81,7 +85,8 @@ class _DangNhapState extends State<DangNhap>
 
     setState(() => _isLoading = true);
 
-    final ok = await dangNhapDN(email, pass);
+    final ok = await
+        (widget.authRepository?.login(email, pass) ?? dangNhapDN(email, pass));
     if (ok) {
       _showSnack("Đăng nhập thành công!", short: true);
       await Future.delayed(const Duration(milliseconds: 500));
@@ -94,17 +99,8 @@ class _DangNhapState extends State<DangNhap>
   }
 
   void _navigateToMenu() {
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (_, __, ___) => const Menu(),
-        transitionsBuilder: (_, animation, __, child) => FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-          child: child,
-        ),
-      ),
-    );
+    AuthNavigationState.instance.markAuthenticated();
+    context.go('/student');
   }
 
   @override
@@ -125,7 +121,7 @@ class _DangNhapState extends State<DangNhap>
               ),
               child: Column(
                 children: [
-                  Image.asset('assets/logo-nobr.png', width: 150),
+                  Image.asset('assets/student/logo-nobr.png', width: 150),
                   const SizedBox(height: 40),
                   _buildLoginCard(),
                   const SizedBox(height: 60),

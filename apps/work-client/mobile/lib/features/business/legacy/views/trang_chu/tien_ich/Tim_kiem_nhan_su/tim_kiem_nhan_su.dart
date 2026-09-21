@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
-import 'package:work_server/controllers/trang_chu/timkiemctrl.dart';
-import 'package:work_server/helper_db/helper_cv.dart';
-import 'package:work_server/helper_db/helper_widget.dart';
-
-final CVHelperDB cvHelper = CVHelperDB();
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/features/business/legacy/controllers/trang_chu/timkiemctrl.dart';
+import 'package:study2work_mobile/features/business/legacy/helper_db/helper_widget.dart';
 
 class EmployeeSearchUI extends StatefulWidget {
   const EmployeeSearchUI({super.key});
@@ -28,7 +25,7 @@ class _EmployeeSearchUIState extends State<EmployeeSearchUI> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset('assets/bg_trangchu.jpg', fit: BoxFit.cover),
+            child: Image.asset('assets/business/bg_trangchu.jpg', fit: BoxFit.cover),
           ),
           SingleChildScrollView(
             padding: const EdgeInsets.all(16),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
 
 class ThongBao extends StatefulWidget {
   const ThongBao({super.key});
@@ -19,7 +19,7 @@ class _ThongBaoState extends State<ThongBao>
       "thoi_gian": "2025-09-30 14:30",
       "trang_thai": false,
       "loai": "phongvan",
-      "avt_tb": "assets/avt.jpg",
+      "avt_tb": "assets/student/avt.jpg",
     },
     {
       "id_tb": "002",
@@ -28,7 +28,7 @@ class _ThongBaoState extends State<ThongBao>
       "thoi_gian": "2025-09-29 10:15",
       "trang_thai": true,
       "loai": "hoso",
-      "avt_tb": "assets/avt.jpg",
+      "avt_tb": "assets/student/avt.jpg",
     },
     {
       "id_tb": "003",
@@ -37,7 +37,7 @@ class _ThongBaoState extends State<ThongBao>
       "thoi_gian": "2025-09-28 09:00",
       "trang_thai": false,
       "loai": "tuyendung",
-      "avt_tb": "assets/avt.jpg",
+      "avt_tb": "assets/student/avt.jpg",
     },
     {
       "id_tb": "004",
@@ -46,7 +46,7 @@ class _ThongBaoState extends State<ThongBao>
       "thoi_gian": "2025-09-27 20:45",
       "trang_thai": false,
       "loai": "nhacnho",
-      "avt_tb": "assets/avt.jpg",
+      "avt_tb": "assets/student/avt.jpg",
     },
     {
       "id_tb": "005",
@@ -55,7 +55,7 @@ class _ThongBaoState extends State<ThongBao>
       "thoi_gian": "2025-09-26 18:00",
       "trang_thai": true,
       "loai": "hethong",
-      "avt_tb": "assets/avt.jpg",
+      "avt_tb": "assets/student/avt.jpg",
     },
   ];
 
@@ -179,7 +179,7 @@ class _ThongBaoState extends State<ThongBao>
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset("assets/bg_trangchu.jpg", fit: BoxFit.cover),
+            child: Image.asset("assets/student/bg_trangchu.jpg", fit: BoxFit.cover),
           ),
           FadeTransition(
             opacity: _fadeAnimation,

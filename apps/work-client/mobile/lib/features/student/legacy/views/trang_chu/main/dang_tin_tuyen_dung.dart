@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
-import 'package:work_server/helper_db/out_meta/helper_supabase_error.dart';
-import 'package:work_server/helper_db/out_meta/helper_db_error.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/features/student/application/student_legacy_data.dart';
 
-final DNSupabase dn = DNSupabase.instance;
-final HelperDB dbHelper = HelperDB.instance;
+final dn = StudentLegacyData.neon;
+final dbHelper = StudentLegacyData.sqlite;
 
 class DangTinTuyenDung extends StatefulWidget {
   const DangTinTuyenDung({super.key});

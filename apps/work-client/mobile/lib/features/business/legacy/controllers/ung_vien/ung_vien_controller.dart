@@ -1,6 +1,6 @@
-import 'package:work_server/helper_db/helper_db.dart';
-import 'package:work_server/helper_db/helper_supabase.dart';
-import 'package:work_server/models/cv.dart';
+import 'package:study2work_mobile/features/business/legacy/helper_db/helper_db.dart';
+import 'package:study2work_mobile/features/business/legacy/helper_db/helper_supabase.dart';
+import 'package:study2work_mobile/features/business/legacy/models/cv.dart';
 
 final dbHelper = HelperDB.instance;
 final supabase = DNSupabase.instance;

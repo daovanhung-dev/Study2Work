@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
-import 'package:work_server/controllers/chat/chat_controller.dart';
-import 'package:work_server/helper_db/sinh_vien/helper_db.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/features/student/legacy/controllers/chat/chat_controller.dart';
+import 'package:study2work_mobile/features/student/application/student_legacy_data.dart';
 import 'dart:async';
 
-final sqlite = SinhVienSQLiteHelper.instance;
+final sqlite = StudentLegacyData.sqlite;
 
 class ChatView extends StatefulWidget {
   final int doanhnghiepId; // doanh nghiệp chat cùng

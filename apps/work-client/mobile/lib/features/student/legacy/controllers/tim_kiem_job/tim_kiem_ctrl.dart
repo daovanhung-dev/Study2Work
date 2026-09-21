@@ -1,5 +1,5 @@
-import 'package:work_server/helper_db/sinh_vien/helper_supabase.dart';
-import 'package:work_server/models/sinh_vien/jd.dart';
+import 'package:study2work_mobile/features/student/legacy/helper_db/sinh_vien/helper_supabase.dart';
+import 'package:study2work_mobile/features/student/legacy/models/sinh_vien/jd.dart';
 
 class TimKiemCtrl {
   final helper = SinhVienSupabaseHelper();

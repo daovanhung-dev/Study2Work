@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
 import '../trang_chu/main/thong_bao.dart';
-import 'package:work_server/helper_db/helper_supabase.dart';
-import 'package:work_server/controllers/ung_vien/ung_vien_controller.dart';
-import 'package:work_server/models/cv.dart';
-import 'package:work_server/views/trang_chu/main/xem_chi_tiet_view.dart';
+import 'package:study2work_mobile/features/business/legacy/controllers/ung_vien/ung_vien_controller.dart';
+import 'package:study2work_mobile/features/business/legacy/models/cv.dart';
+import 'package:study2work_mobile/features/business/legacy/views/trang_chu/main/xem_chi_tiet_view.dart';
 
 final UngTuyenCtrl ctrl = UngTuyenCtrl();
-DNSupabase dn = DNSupabase.instance;
 List<String> trangThaiTemp = [];
 
 class UngVien extends StatefulWidget {
@@ -51,7 +49,7 @@ class _UngVienState extends State<UngVien> {
         leading: Padding(
           padding: const EdgeInsets.all(6),
           child: CircleAvatar(
-            backgroundImage: const AssetImage("assets/logo.jpg"),
+            backgroundImage: const AssetImage("assets/business/logo.jpg"),
             backgroundColor: AppColors.background,
           ),
         ),
@@ -128,7 +126,7 @@ class _UngVienState extends State<UngVien> {
                             child: CircleAvatar(
                               radius: 30,
                               backgroundImage: AssetImage(
-                                uv.avt ?? 'assets/default.jpg',
+                                uv.avt ?? 'assets/business/default.jpg',
                               ),
                             ),
                           ),

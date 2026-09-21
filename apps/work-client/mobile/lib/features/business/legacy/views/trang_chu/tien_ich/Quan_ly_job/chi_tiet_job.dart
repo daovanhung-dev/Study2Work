@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
-import 'package:work_server/helper_db/helper_supabase.dart';
-import 'package:work_server/models/jd.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/features/business/application/business_legacy_data.dart';
+import 'package:study2work_mobile/features/business/legacy/models/jd.dart';
 
-final DNSupabase dn = DNSupabase.instance;
+final dn = BusinessLegacyData.neon;
 
 class XemChiTietJD extends StatefulWidget {
   const XemChiTietJD({super.key, required this.id});
@@ -37,7 +37,7 @@ class _XemChiTietJDState extends State<XemChiTietJD> {
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/bg_trangchu.jpg"),
+                image: AssetImage("assets/business/bg_trangchu.jpg"),
                 fit: BoxFit.cover,
               ),
             ),

@@ -2,25 +2,27 @@
 
 `CONTEXT_STATUS: SOURCE_BACKED`
 
-Source root: `apps/work-client/mobile/flutter_student/`
+Source root: `apps/work-client/mobile/lib/features/student/legacy/` during
+the migration to the unified `study2work_mobile` project.
 
-Đây là Flutter app độc lập, package name vẫn là `work_server`. App không import
-code từ `flutter_business`; các helper/model trùng tên phải được resolve trong
-chính source root này.
+Đây là role Student trong Flutter project dùng flavor `student`. Các helper/model
+legacy được giữ dưới boundary Student; shared app/core code nằm ngoài thư mục
+này và không được copy lại vào role source.
 
 ## Bootstrap và route graph
 
-`lib/main.dart` gọi `WidgetsFlutterBinding.ensureInitialized()`, tạo
-`MaterialApp` với `AppTheme.light()` và đặt `DangNhap` làm `home`. App không có
-named router; navigation dùng `MaterialPageRoute` và state/index trong `Menu`.
+Root `lib/main.dart` đọc flavor, khởi tạo `ProviderScope` và
+`MaterialApp.router`. Legacy `Menu` vẫn giữ state/index và một số
+`MaterialPageRoute` nội bộ trong giai đoạn compatibility migration.
 
 ```text
 main.dart
   -> views/dang_nhap/dang_nhap.dart (DangNhap)
-      -> controllers/dang_nhap/dangnhap_ctrl.dart
+      -> Riverpod authRepositoryProvider -> StudentAuthRepository
+          -> controllers/dang_nhap/dangnhap_ctrl.dart
           -> helper_db/sinh_vien/helper_supabase.dart -> NeonDatabase -> Neon
           -> helper_db/sinh_vien/helper_db.dart -> SQLite sinhvien.db
-      -> views/dang_nhap/menu.dart (Menu)
+      -> AuthNavigationState -> `/student` -> views/dang_nhap/menu.dart (Menu)
           -> TrangChu | TimKiemViecView | TroChuyen | Setting
 ```
 
@@ -46,7 +48,7 @@ main.dart
 | `controllers/trang_chu/quan_ly_CV/quan_ly_job_cv.dart` | `CVCtrl.getCVById`, `update` | Reads cached student id, loads CV and delegates CV update. | Wired |
 | `controllers/chat/chat_controller.dart` | `getChat`, `guiTinNhan`, `startMessagePolling*` | Reads/writes `Chat`; polling starts an immediate fetch, polls every 3 seconds, emits unseen integer ids only. | Wired |
 | `controllers/chat/nhung_doan_chat_controller.dart` | `getChats` | Joins `DoanChat` to `DoanhNghiep` and returns partner id/name summaries. | Wired |
-| `controllers/AI/ai_service.dart` | `AIService.sendMessage` | Direct HTTP POST to Gemini; returns first candidate text or a generic error string. | Source-backed; direct external side effect. |
+| `core/data/gemini/gemini_client.dart` | `GeminiClient`, `AIService.sendMessage` | Direct HTTP POST to Gemini; returns first candidate text or a generic error string. | Shared core boundary; direct external side effect. |
 | `controllers/trang_chu/timkiemctrl.dart` | `timKiem` | Builds a fixed-major prompt and invokes `AIService`; currently discards the returned text. | Source-backed/incomplete result contract. |
 | `controllers/trang_chu/hien_thi_danh_sach_top_cv.dart` | `getTopCV` | Reads TopCV ids then projects matching CV rows. | No active caller found. |
 | `controllers/lay_ten.dart` | `getNameSV`, `getNameDN` | Direct name lookup helpers. | No active caller found. |
@@ -57,7 +59,7 @@ main.dart
 
 | File | Purpose | Important contract |
 |---|---|---|
-| `helper_db/neon_db.dart` | Singleton `NeonDatabase`; normalizes SSL URL, removes `channel_binding`, sets pool/timeout defaults, converts `BigInt` ids and exposes `query`, `execute`, `initialize`, `close`. | All remote SQL is parameterized PostgreSQL SQL; direct Neon is prototype-only. |
+| `core/data/neon/neon_client.dart` | Shared `NeonClient`, singleton `NeonDatabase`; normalizes SSL URL, removes `channel_binding`, sets pool/timeout defaults, converts `BigInt` ids and exposes `query`, `execute`, `initialize`, `close`. | All remote SQL is parameterized PostgreSQL SQL; direct Neon is prototype-only. |
 | `helper_db/sinh_vien/helper_db.dart` | SQLite singleton for `sinhvien.db`. | Creates `sinhvien` and `bannganh`; login replaces the cached account and stores majors. |
 | `helper_db/sinh_vien/helper_supabase.dart` | Compatibility-named Neon helper. | Student CRUD/login, majors, DoanChat, top JD, JD lookup, application insert and CV update. No Supabase runtime import. |
 | `helper_db/sinh_vien/helper_cv.dart` | Generic CV CRUD/search helper. | Neon `Cv` CRUD, `ILIKE` search, JSON encode for `social`, empty/false fallback on caught errors. |
@@ -134,7 +136,7 @@ DangNhap
   -> SinhVienSupabaseHelper.login/getByEmail
   -> NeonDatabase.query
   -> SinhVienSQLiteHelper.insertSinhVien + saveNganh
-  -> Menu
+  -> StudentAuthRepository -> AuthNavigationState -> `/student` -> Menu
 ```
 
 Logout only deletes the local `sinhvien` row. There is no JWT/session token and
@@ -165,4 +167,3 @@ not equivalent to the dedicated student CV screen.
 timestamp/id, inserts messages with UTC time and starts a three-second polling
 timer. Existing rows seed `seenIds`; only new ids reach the UI callback, and
 the timer must be cancelled in `dispose()`.
-

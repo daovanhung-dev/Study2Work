@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
-import 'ai_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/shared/providers/app_providers.dart';
 
-class AITestScreen extends StatefulWidget {
+class AITestScreen extends ConsumerStatefulWidget {
   const AITestScreen({super.key});
 
   @override
-  State<AITestScreen> createState() => _AITestScreenState();
+  ConsumerState<AITestScreen> createState() => _AITestScreenState();
 }
 
-class _AITestScreenState extends State<AITestScreen> {
+class _AITestScreenState extends ConsumerState<AITestScreen> {
   final TextEditingController _controller = TextEditingController();
-  final AIService _aiService = AIService();
   String _response = '';
   bool _isLoading = false;
 
@@ -19,7 +19,7 @@ class _AITestScreenState extends State<AITestScreen> {
     if (_controller.text.isEmpty) return;
     setState(() => _isLoading = true);
 
-    final reply = await _aiService.sendMessage(_controller.text);
+    final reply = await ref.read(geminiClientProvider).sendMessage(_controller.text);
 
     setState(() {
       _response = reply;

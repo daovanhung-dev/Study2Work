@@ -2,26 +2,28 @@
 
 `CONTEXT_STATUS: SOURCE_BACKED`
 
-Source root: `apps/work-client/mobile/flutter_business/`
+Source root: `apps/work-client/mobile/lib/features/business/legacy/` during
+the migration to the unified `study2work_mobile` project.
 
-Đây là Flutter app độc lập, package name vẫn là `work_server`. App không import
-code từ `flutter_student`; helper/model cùng tên chỉ có hiệu lực trong source
-root business.
+Đây là role Business trong Flutter project dùng flavor `business`. Các
+helper/model legacy được giữ dưới boundary Business; shared app/core code nằm
+ngoài thư mục này và không được copy lại vào role source.
 
 ## Bootstrap và route graph
 
-`lib/main.dart` khởi tạo Flutter binding. Trên desktop không phải Android/iOS,
-app gọi `sqfliteFfiInit()` và gán `databaseFactoryFfi`, sau đó tạo `MaterialApp`
-với `AppTheme.light()` và `DangNhap` làm `home`. Navigation dùng
-`MaterialPageRoute`, không có named router.
+Root `lib/main.dart` khởi tạo Flutter binding, đọc flavor và giữ hỗ trợ
+`sqfliteFfiInit()` trên desktop non-Android/iOS cho Business. Top-level app dùng
+`MaterialApp.router`/go_router; legacy screens vẫn có một số
+`MaterialPageRoute` nội bộ trong giai đoạn migration.
 
 ```text
 main.dart
   -> views/dang_nhap/dang_nhap.dart (DangNhap)
-      -> controllers/dang_nhap/dangnhap_ctrl.dart
+      -> Riverpod authRepositoryProvider -> BusinessAuthRepository
+          -> controllers/dang_nhap/dangnhap_ctrl.dart
           -> helper_db/helper_supabase.dart -> NeonDatabase -> Neon
           -> helper_db/helper_db.dart -> SQLite doanhnghiep.db
-      -> views/dang_nhap/menu.dart (Menu)
+      -> AuthNavigationState -> `/business` -> views/dang_nhap/menu.dart (Menu)
           -> TrangChu | TroChuyen | UngVien | Setting
 ```
 
@@ -48,14 +50,14 @@ main.dart
 | `controllers/ung_vien/ung_vien_controller.dart` | `getCV`, `ungTuyen`, `delCV`, `getTrangThai` | Reads candidate CVs, changes application status, removes application, creates conversation and sends notification message. | Wired |
 | `controllers/lay_ten.dart` | `getNameSV`, `getNameDN` | Direct participant name lookup helpers. | No active caller found |
 | `controllers/trang_chu/timkiemctrl.dart` | `timKiem` | Builds fixed-major Gemini prompt; discards returned text. | Source-backed/incomplete result contract |
-| `controllers/AI/ai_service.dart` | `AIService.sendMessage` | Direct HTTP Gemini call using `GEMINI_API_KEY`; returns first candidate or generic error. | Source-backed external side effect |
+| `core/data/gemini/gemini_client.dart` | `GeminiClient`, `AIService.sendMessage` | Direct HTTP Gemini call using `GEMINI_API_KEY`; returns first candidate or generic error. | Shared core boundary; direct external side effect |
 | `controllers/AI/view_test.dart` | `AITestScreen` | Manual AI test UI. | Unwired |
 
 ## Database and helpers
 
 | File | Purpose | Important contract |
 |---|---|---|
-| `helper_db/neon_db.dart` | Singleton `NeonDatabase`; SSL URL validation/normalization, parameterized SQL, `BigInt` normalization and pool lifecycle. | Direct Neon PostgreSQL; no Work HTTP API. |
+| `core/data/neon/neon_client.dart` | Shared `NeonClient`, singleton `NeonDatabase`; SSL URL validation/normalization, parameterized SQL, `BigInt` normalization and pool lifecycle. | Direct Neon PostgreSQL; no Work HTTP API. |
 | `helper_db/helper_db.dart` | SQLite singleton for `doanhnghiep.db`. | Creates `doanhnghiep` and `bannganh`; stores one local company/session and majors. |
 | `helper_db/helper_supabase.dart` | Compatibility-named Neon helper. | Company login/profile, JD insert/detail, candidate CV/application/status/delete, DoanChat and Chat operations. No Supabase runtime import. |
 | `helper_db/helper_cv.dart` | Generic CV CRUD/search helper. | Neon `Cv` operations and JSONB/date mapping; some methods are compatibility utilities rather than menu entrypoints. |
@@ -130,7 +132,7 @@ DangNhap
   -> DNSupabase.ktDangNhap + getDN + getNganh
   -> NeonDatabase.query
   -> HelperDB.saveDoanhNghiep + saveNganh
-  -> Menu
+  -> BusinessAuthRepository -> AuthNavigationState -> `/business` -> Menu
 ```
 
 Logout clears the cached company rows. There is no JWT/session token and no
@@ -165,4 +167,3 @@ also available through the CV projection controller used by home/detail views.
 rows ordered by timestamp/id, sends messages with UTC timestamps and polls
 every three seconds. Existing ids are seeded and duplicate ids are ignored;
 the screen must cancel its timer in `dispose()`.
-

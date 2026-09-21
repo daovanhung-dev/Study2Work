@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
 
 class QuenMatKhauView extends StatefulWidget {
   const QuenMatKhauView({super.key});

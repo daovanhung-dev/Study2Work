@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
 
 class Project {
   final String id;
@@ -200,7 +200,7 @@ class _LocCVState extends State<LocCV> {
     return Stack(
       children: [
         Positioned.fill(
-          child: Image.asset('assets/bg_trangchu.jpg', fit: BoxFit.cover),
+          child: Image.asset('assets/business/bg_trangchu.jpg', fit: BoxFit.cover),
         ),
         Scaffold(
           backgroundColor: Colors.transparent,

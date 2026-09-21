@@ -1,5 +1,5 @@
-import 'package:work_server/helper_db/neon_db.dart';
-import 'package:work_server/models/sinh_vien/jd.dart';
+import 'package:study2work_mobile/core/data/neon/neon_client.dart';
+import 'package:study2work_mobile/features/student/legacy/models/sinh_vien/jd.dart';
 
 class XemChiTietController {
   final NeonDatabase database = NeonDatabase.instance;

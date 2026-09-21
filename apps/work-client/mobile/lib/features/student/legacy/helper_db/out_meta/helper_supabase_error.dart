@@ -1,7 +1,7 @@
-import 'package:work_server/helper_db/neon_db.dart';
-import 'package:work_server/helper_db/out_meta/helper_db_error.dart';
-import 'package:work_server/models/outmeta/jd.dart';
-import 'package:work_server/models/outmeta/nganh_nghe.dart';
+import 'package:study2work_mobile/core/data/neon/neon_client.dart';
+import 'package:study2work_mobile/features/student/legacy/helper_db/out_meta/helper_db_error.dart';
+import 'package:study2work_mobile/features/student/legacy/models/outmeta/jd.dart';
+import 'package:study2work_mobile/features/student/legacy/models/outmeta/nganh_nghe.dart';
 
 final HelperDB dbHelper = HelperDB.instance;
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
 
 class ThongTinChiTiet extends StatefulWidget {
   const ThongTinChiTiet({super.key});
@@ -22,7 +22,7 @@ class _ThongTinChiTietState extends State<ThongTinChiTiet> {
             Container(
               decoration: BoxDecoration(),
               child: Image.asset(
-                "assets/bg_trangchu.jpg",
+                "assets/student/bg_trangchu.jpg",
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,

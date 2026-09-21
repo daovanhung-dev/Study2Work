@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
 
 class EmployeeReportUI extends StatelessWidget {
   const EmployeeReportUI({super.key});
@@ -37,7 +37,7 @@ class EmployeeReportUI extends StatelessWidget {
           // 🌄 ẢNH NỀN
           Positioned.fill(
             child: Image.asset(
-              'assets/bg_trangchu.jpg', // đổi đúng tên ảnh bạn lưu
+              'assets/business/bg_trangchu.jpg', // đổi đúng tên ảnh bạn lưu
               fit: BoxFit.cover,
             ),
           ),

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:work_server/controllers/chat/chat_controller.dart';
-import 'package:work_server/helper_db/neon_db.dart';
-import 'package:work_server/models/cv.dart';
+import 'package:study2work_mobile/features/business/legacy/controllers/chat/chat_controller.dart';
+import 'package:study2work_mobile/core/data/neon/neon_client.dart';
+import 'package:study2work_mobile/features/business/legacy/models/cv.dart';
 
 void main() {
   test('normalizes Neon URL and PostgreSQL row values', () {

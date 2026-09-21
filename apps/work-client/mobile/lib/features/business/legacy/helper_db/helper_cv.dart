@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:work_server/helper_db/neon_db.dart';
-import 'package:work_server/models/cv.dart';
+import 'package:study2work_mobile/core/data/neon/neon_client.dart';
+import 'package:study2work_mobile/features/business/legacy/models/cv.dart';
 
 class CVHelperDB {
   final NeonDatabase database = NeonDatabase.instance;

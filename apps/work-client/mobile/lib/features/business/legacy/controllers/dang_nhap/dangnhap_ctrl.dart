@@ -1,7 +1,7 @@
-import 'package:work_server/helper_db/helper_supabase.dart';
-import 'package:work_server/helper_db/helper_db.dart';
-import 'package:work_server/models/doanh_nghiep.dart';
-import 'package:work_server/models/dn_supabase.dart';
+import 'package:study2work_mobile/features/business/legacy/helper_db/helper_supabase.dart';
+import 'package:study2work_mobile/features/business/legacy/helper_db/helper_db.dart';
+import 'package:study2work_mobile/features/business/legacy/models/doanh_nghiep.dart';
+import 'package:study2work_mobile/features/business/legacy/models/dn_supabase.dart';
 
 final sqlite = HelperDB.instance;
 final neon = DNSupabase.instance;
@@ -21,4 +21,21 @@ Future<bool> dangNhapDN(String gmail, String matKhau) async {
     return true;
   }
   return false;
+}
+
+Future<bool> autoLogin() async {
+  try {
+    final savedUser = await sqlite.getDangNhap();
+    final email = savedUser?['email']?.toString();
+    final password = savedUser?['matkhau']?.toString();
+    if (email == null || password == null) return false;
+
+    final ok = await neon.ktDangNhap(email, password);
+    if (!ok) return false;
+
+    dn = await sqlite.getDoanhNghiep();
+    return dn != null;
+  } catch (_) {
+    return false;
+  }
 }

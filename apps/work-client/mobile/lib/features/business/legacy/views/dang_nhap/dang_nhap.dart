@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/app_components.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:go_router/go_router.dart';
+import 'package:study2work_mobile/app/theme/app_components.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/router/auth_navigation_state.dart';
+import 'package:study2work_mobile/features/auth/domain/auth_repository.dart';
 import 'quen_mat_khau.dart';
-import 'menu.dart';
-import 'package:work_server/controllers/dang_nhap/dangnhap_ctrl.dart';
+import 'package:study2work_mobile/features/business/legacy/controllers/dang_nhap/dangnhap_ctrl.dart';
 import 'package:shimmer/shimmer.dart';
 
 class DangNhap extends StatefulWidget {
-  const DangNhap({super.key});
+  const DangNhap({this.authRepository, super.key});
+
+  final AuthRepository? authRepository;
 
   @override
   State<DangNhap> createState() => _DangNhapState();
@@ -48,15 +52,21 @@ class _DangNhapState extends State<DangNhap>
 
   Future<void> _autoLogin() async {
     try {
-      final user = await sqlite.getDangNhap();
-      if (user != null &&
-          await neon.ktDangNhap(user['email'], user['matkhau'])) {
+      final restored = widget.authRepository != null
+          ? await widget.authRepository!.restoreSession()
+          : await _restoreLegacySession();
+      if (restored) {
         await Future.delayed(const Duration(milliseconds: 600));
         if (mounted) _navigateToMenu();
         return;
       }
     } catch (_) {}
     if (mounted) setState(() => _isChecking = false);
+  }
+
+  Future<bool> _restoreLegacySession() async {
+    final user = await sqlite.getDangNhap();
+    return user != null && await neon.ktDangNhap(user['email'], user['matkhau']);
   }
 
   void _showSnack(String message, {bool short = false}) {
@@ -84,7 +94,8 @@ class _DangNhapState extends State<DangNhap>
     setState(() => _isLoading = true);
 
     try {
-      final ok = await dangNhapDN(email, pass);
+      final ok = await
+          (widget.authRepository?.login(email, pass) ?? dangNhapDN(email, pass));
       if (ok) {
         _showSnack("Đăng nhập thành công!", short: true);
         await Future.delayed(const Duration(milliseconds: 500));
@@ -100,17 +111,8 @@ class _DangNhapState extends State<DangNhap>
   }
 
   void _navigateToMenu() {
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 600),
-        pageBuilder: (_, __, ___) => const Menu(),
-        transitionsBuilder: (_, animation, __, child) => FadeTransition(
-          opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-          child: child,
-        ),
-      ),
-    );
+    AuthNavigationState.instance.markAuthenticated();
+    context.go('/business');
   }
 
   @override
@@ -172,7 +174,7 @@ class _DangNhapState extends State<DangNhap>
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 60),
-                  Image.asset('assets/logo-nobr.png', width: 150),
+                  Image.asset('assets/business/logo-nobr.png', width: 150),
                   const SizedBox(height: 40),
                   AppSurface(
                       padding: const EdgeInsets.all(20),

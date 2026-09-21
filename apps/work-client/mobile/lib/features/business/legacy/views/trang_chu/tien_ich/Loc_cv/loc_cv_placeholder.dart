@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
 
 class LocCvPlaceholderScreen extends StatefulWidget {
   const LocCvPlaceholderScreen({super.key});
@@ -19,7 +19,7 @@ class _LocCvPlaceholderScreenState extends State<LocCvPlaceholderScreen> {
             Container(
               decoration: BoxDecoration(),
               child: Image.asset(
-                "assets/bg_trangchu.jpg",
+                "assets/business/bg_trangchu.jpg",
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,

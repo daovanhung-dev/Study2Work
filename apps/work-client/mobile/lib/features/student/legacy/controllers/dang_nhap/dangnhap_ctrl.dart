@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:work_server/helper_db/sinh_vien/helper_db.dart';
-import 'package:work_server/helper_db/sinh_vien/helper_supabase.dart';
-import 'package:work_server/models/sinh_vien/sinh_vien.dart';
+import 'package:study2work_mobile/features/student/legacy/helper_db/sinh_vien/helper_db.dart';
+import 'package:study2work_mobile/features/student/legacy/helper_db/sinh_vien/helper_supabase.dart';
+import 'package:study2work_mobile/features/student/legacy/models/sinh_vien/sinh_vien.dart';
 
 final sqlite = SinhVienSQLiteHelper.instance;
 final neon = SinhVienSupabaseHelper();

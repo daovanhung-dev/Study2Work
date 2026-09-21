@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
-import 'package:work_server/controllers/trang_chu/trang_chu_ctrl.dart';
-import 'package:work_server/helper_db/out_meta/helper_db_error.dart';
-import 'package:work_server/helper_db/out_meta/helper_supabase_error.dart';
-import 'package:work_server/models/sinh_vien/jd.dart';
-import 'package:work_server/views/trang_chu/main/thong_tin_chi_tiet.dart';
-import 'package:work_server/views/trang_chu/main/xem_chi_tiet_view.dart';
-import 'package:work_server/views/trang_chu/tien_ich/Quan_ly_CV/quan_ly_cv.dart';
-import 'package:work_server/views/tim_kiem_cong_viec/tim_kiem_job.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/features/student/legacy/controllers/trang_chu/trang_chu_ctrl.dart';
+import 'package:study2work_mobile/features/student/application/student_legacy_data.dart';
+import 'package:study2work_mobile/features/student/legacy/models/sinh_vien/jd.dart';
+import 'package:study2work_mobile/features/student/legacy/views/trang_chu/main/thong_tin_chi_tiet.dart';
+import 'package:study2work_mobile/features/student/legacy/views/trang_chu/main/xem_chi_tiet_view.dart';
+import 'package:study2work_mobile/features/student/legacy/views/trang_chu/tien_ich/Quan_ly_CV/quan_ly_cv.dart';
+import 'package:study2work_mobile/features/student/legacy/views/tim_kiem_cong_viec/tim_kiem_job.dart';
 import 'thong_bao.dart';
-import 'package:work_server/views/trang_chu/tien_ich/Lich_PV/lich_pv.dart';
-import 'package:work_server/views/trang_chu/tien_ich/Hotro_SV/ho_tro_sv.dart';
-import 'package:work_server/views/trang_chu/tien_ich/Khoa_hoc/khoa_hoc.dart';
-import 'package:work_server/views/trang_chu/tien_ich/Tin_Tuc/tin_tuc.dart';
+import 'package:study2work_mobile/features/student/legacy/views/trang_chu/tien_ich/Lich_PV/lich_pv.dart';
+import 'package:study2work_mobile/features/student/legacy/views/trang_chu/tien_ich/Hotro_SV/ho_tro_sv.dart';
+import 'package:study2work_mobile/features/student/legacy/views/trang_chu/tien_ich/Khoa_hoc/khoa_hoc.dart';
+import 'package:study2work_mobile/features/student/legacy/views/trang_chu/tien_ich/Tin_Tuc/tin_tuc.dart';
 
-final sqlite = HelperDB.instance;
-final supabase = DNSupabase.instance;
+final sqlite = StudentLegacyData.sqlite;
+final supabase = StudentLegacyData.neon;
 
 class TrangChu extends StatefulWidget {
   const TrangChu({super.key});
@@ -152,7 +151,7 @@ class _TrangChuState extends State<TrangChu>
                         radius: avatarRadius,
                         backgroundImage: (img != null && img!.isNotEmpty)
                             ? NetworkImage(img!)
-                            : const AssetImage('assets/avatar_default.png')
+                            : const AssetImage('assets/student/avatar_default.png')
                                   as ImageProvider,
                         backgroundColor: AppColors.surface.withValues(alpha: 0.9),
                       ),
@@ -331,32 +330,32 @@ class _TrangChuState extends State<TrangChu>
   Widget _buildTienIchSection(BuildContext context) {
     final items = [
       {
-        'icon': 'assets/manager.png',
+        'icon': 'assets/student/manager.png',
         'title': 'Hồ sơ',
         'page': const QuanLyCVView(),
       },
       {
-        'icon': 'assets/tien_ich1.png',
+        'icon': 'assets/student/tien_ich1.png',
         'title': 'Tìm việc',
         'page': const TimKiemViecView(),
       },
       {
-        'icon': 'assets/calendar.png',
+        'icon': 'assets/student/calendar.png',
         'title': 'Lịch PV',
         'page': const LichPhongVanView(),
       },
       {
-        'icon': 'assets/online-learning.png',
+        'icon': 'assets/student/online-learning.png',
         'title': 'Khóa học',
         'page': const KhoaHocView(),
       },
       {
-        'icon': 'assets/help-desk.png',
+        'icon': 'assets/student/help-desk.png',
         'title': 'Hỗ trợ',
         'page': const HoTroSinhVienView(),
       },
       {
-        'icon': 'assets/newspaper.png',
+        'icon': 'assets/student/newspaper.png',
         'title': 'Tin tức',
         'page': const TinTucView(),
       },

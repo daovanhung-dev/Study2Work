@@ -1,4 +1,4 @@
-import 'package:work_server/controllers/AI/ai_service.dart';
+import 'package:study2work_mobile/core/data/gemini/gemini_client.dart';
 
 Future<void> timKiem(String message) async {
   final AIService ai = AIService();

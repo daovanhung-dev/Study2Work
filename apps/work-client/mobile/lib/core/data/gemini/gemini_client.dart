@@ -1,10 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:work_server/constants.dart';
+import 'package:study2work_mobile/app/config/app_config.dart';
 
-class AIService {
+abstract interface class GeminiClient {
+  Future<String> sendMessage(String message);
+}
+
+class AIService implements GeminiClient {
   final String apiKey = GEMINI_API_KEY;
 
+  @override
   Future<String> sendMessage(String message) async {
     final url = Uri.parse(
       // Chuyển sang model mới

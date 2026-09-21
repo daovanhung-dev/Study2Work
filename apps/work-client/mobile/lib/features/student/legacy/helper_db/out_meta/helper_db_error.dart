@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:work_server/models/outmeta/doanh_nghiep.dart';
-import 'package:work_server/models/outmeta/nganh_nghe.dart';
+import 'package:study2work_mobile/features/student/legacy/models/outmeta/doanh_nghiep.dart';
+import 'package:study2work_mobile/features/student/legacy/models/outmeta/nganh_nghe.dart';
 
 class HelperDB {
   // 🔹 Singleton pattern (chỉ có 1 instance duy nhất)

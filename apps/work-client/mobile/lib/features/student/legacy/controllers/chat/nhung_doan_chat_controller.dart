@@ -1,4 +1,4 @@
-import 'package:work_server/helper_db/neon_db.dart';
+import 'package:study2work_mobile/core/data/neon/neon_client.dart';
 
 final NeonDatabase database = NeonDatabase.instance;
 

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
-import 'package:work_server/controllers/chat/chat_controller.dart';
-import 'package:work_server/helper_db/helper_db.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/features/business/legacy/controllers/chat/chat_controller.dart';
+import 'package:study2work_mobile/features/business/application/business_legacy_data.dart';
 import 'dart:async';
 
-final sqlite = HelperDB.instance;
+final sqlite = BusinessLegacyData.sqlite;
 
 class ChatView extends StatefulWidget {
   final int sinhvienId;
@@ -259,7 +259,7 @@ class _ChatViewState extends State<ChatView> with TickerProviderStateMixin {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset("assets/bg_trangchu.jpg", fit: BoxFit.cover),
+            child: Image.asset("assets/business/bg_trangchu.jpg", fit: BoxFit.cover),
           ),
           Container(color: AppColors.navy.withValues(alpha: 0.05)),
           Column(

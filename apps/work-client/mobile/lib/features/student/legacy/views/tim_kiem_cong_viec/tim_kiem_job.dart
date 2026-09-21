@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
-import 'package:work_server/controllers/tim_kiem_job/tim_kiem_ctrl.dart';
-import 'package:work_server/models/sinh_vien/jd.dart';
-import 'package:work_server/views/trang_chu/main/xem_chi_tiet_view.dart';
-import 'package:work_server/controllers/ung_tuyen_ctrl.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/features/student/legacy/controllers/tim_kiem_job/tim_kiem_ctrl.dart';
+import 'package:study2work_mobile/features/student/legacy/models/sinh_vien/jd.dart';
+import 'package:study2work_mobile/features/student/legacy/views/trang_chu/main/xem_chi_tiet_view.dart';
+import 'package:study2work_mobile/features/student/legacy/controllers/ung_tuyen_ctrl.dart';
 
 class TimKiemViecView extends StatefulWidget {
   const TimKiemViecView({super.key});

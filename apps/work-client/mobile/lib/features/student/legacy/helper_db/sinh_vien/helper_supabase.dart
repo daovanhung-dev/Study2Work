@@ -1,12 +1,12 @@
 import 'dart:convert';
 
-import 'package:work_server/helper_db/neon_db.dart';
-import 'package:work_server/models/sinh_vien/cv.dart';
-import 'package:work_server/models/sinh_vien/jd.dart';
-import 'package:work_server/models/sinh_vien/nganh_nghe.dart';
-import 'package:work_server/models/sinh_vien/doan_chat.dart';
-import 'package:work_server/models/sinh_vien/sinh_vien.dart';
-import 'package:work_server/models/sinh_vien/ung_vien.dart';
+import 'package:study2work_mobile/core/data/neon/neon_client.dart';
+import 'package:study2work_mobile/features/student/legacy/models/sinh_vien/cv.dart';
+import 'package:study2work_mobile/features/student/legacy/models/sinh_vien/jd.dart';
+import 'package:study2work_mobile/features/student/legacy/models/sinh_vien/nganh_nghe.dart';
+import 'package:study2work_mobile/features/student/legacy/models/sinh_vien/doan_chat.dart';
+import 'package:study2work_mobile/features/student/legacy/models/sinh_vien/sinh_vien.dart';
+import 'package:study2work_mobile/features/student/legacy/models/sinh_vien/ung_vien.dart';
 
 class SinhVienSupabaseHelper {
   final NeonDatabase database = NeonDatabase.instance;

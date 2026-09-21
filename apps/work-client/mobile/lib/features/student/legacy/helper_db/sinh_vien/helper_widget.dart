@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_components.dart';
-import '../../theme/design_tokens.dart';
+import 'package:study2work_mobile/app/theme/app_components.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
 
 Widget buildRich(String label, String? value) {
   return Column(

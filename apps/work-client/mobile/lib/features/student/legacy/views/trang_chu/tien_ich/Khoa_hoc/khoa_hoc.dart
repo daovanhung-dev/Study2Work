@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
 
 class KhoaHocView extends StatefulWidget {
   const KhoaHocView({super.key});
@@ -15,25 +15,25 @@ class _KhoaHocViewState extends State<KhoaHocView> {
       'title': 'Flutter Cơ Bản',
       'description': 'Học cách tạo ứng dụng di động với Flutter từ đầu.',
       'progress': 0.5, // 50% hoàn thành
-      'image': 'assets/flutter_course.png',
+      'image': 'assets/student/flutter_course.png',
     },
     {
       'title': 'Python cho Sinh Viên',
       'description': 'Ngôn ngữ lập trình Python cơ bản cho sinh viên IT.',
       'progress': 0.2,
-      'image': 'assets/python_course.png',
+      'image': 'assets/student/python_course.png',
     },
     {
       'title': 'Thiết Kế UI/UX',
       'description': 'Thiết kế giao diện đẹp và trải nghiệm người dùng tốt.',
       'progress': 0.8,
-      'image': 'assets/uiux_course.png',
+      'image': 'assets/student/uiux_course.png',
     },
     {
       'title': 'Cơ Sở Dữ Liệu SQL',
       'description': 'Quản lý và truy vấn dữ liệu với SQL.',
       'progress': 0.0,
-      'image': 'assets/sql_course.png',
+      'image': 'assets/student/sql_course.png',
     },
   ];
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
 import 'package:intl/intl.dart';
 import 'thong_bao.dart';
-import 'package:work_server/controllers/trang_chu/xem_chi_tiet.dart';
+import 'package:study2work_mobile/features/business/legacy/controllers/trang_chu/xem_chi_tiet.dart';
 
 class XemChiTietView extends StatefulWidget {
   final int id;
@@ -52,7 +52,7 @@ class _XemChiTietViewState extends State<XemChiTietView> {
               Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: const AssetImage("assets/bg_trangchu.jpg"),
+                    image: const AssetImage("assets/business/bg_trangchu.jpg"),
                     fit: BoxFit.cover,
                     colorFilter: ColorFilter.mode(
                       AppColors.navy.withValues(alpha: 0.2),

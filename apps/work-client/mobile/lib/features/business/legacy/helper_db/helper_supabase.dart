@@ -1,9 +1,9 @@
-import 'package:work_server/helper_db/helper_db.dart';
-import 'package:work_server/helper_db/neon_db.dart';
-import 'package:work_server/models/cv.dart';
-import 'package:work_server/models/jd.dart';
-import 'package:work_server/models/nganh_nghe.dart';
-import 'package:work_server/models/ung_vien.dart';
+import 'package:study2work_mobile/features/business/legacy/helper_db/helper_db.dart';
+import 'package:study2work_mobile/core/data/neon/neon_client.dart';
+import 'package:study2work_mobile/features/business/legacy/models/cv.dart';
+import 'package:study2work_mobile/features/business/legacy/models/jd.dart';
+import 'package:study2work_mobile/features/business/legacy/models/nganh_nghe.dart';
+import 'package:study2work_mobile/features/business/legacy/models/ung_vien.dart';
 
 final HelperDB dbHelper = HelperDB.instance;
 

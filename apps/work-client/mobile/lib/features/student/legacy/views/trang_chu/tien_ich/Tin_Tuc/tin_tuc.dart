@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
 
 class TinTucView extends StatelessWidget {
   const TinTucView({super.key});
@@ -9,19 +9,19 @@ class TinTucView extends StatelessWidget {
     {
       'title': 'Học bổng mùa thu 2025',
       'summary': 'Thông tin về các học bổng dành cho sinh viên ưu tú.',
-      'image': 'assets/news1.png',
+      'image': 'assets/student/news1.png',
       'date': '10/11/2025',
     },
     {
       'title': 'Workshop kỹ năng phỏng vấn',
       'summary': 'Tham gia workshop để nâng cao kỹ năng phỏng vấn và CV.',
-      'image': 'assets/news2.png',
+      'image': 'assets/student/news2.png',
       'date': '08/11/2025',
     },
     {
       'title': 'Cập nhật việc làm IT mới nhất',
       'summary': 'Danh sách các vị trí tuyển dụng IT hot nhất hiện nay.',
-      'image': 'assets/news3.png',
+      'image': 'assets/student/news3.png',
       'date': '05/11/2025',
     },
   ];

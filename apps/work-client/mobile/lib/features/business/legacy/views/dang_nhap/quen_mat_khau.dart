@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
 
 class QuenMatKhau extends StatefulWidget {
   const QuenMatKhau({super.key});
@@ -19,7 +19,7 @@ class _QuenMatKhauState extends State<QuenMatKhau> {
         children: [
           // Nền hình
           Positioned.fill(
-            child: Image.asset("assets/bg_login.png", fit: BoxFit.cover),
+            child: Image.asset("assets/business/bg_login.png", fit: BoxFit.cover),
           ),
 
           // Lớp phủ mờ gradient nhẹ

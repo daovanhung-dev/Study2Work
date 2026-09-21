@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
+import 'package:go_router/go_router.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/app/router/auth_navigation_state.dart';
 import '../trang_chu/main/thong_bao.dart';
-import 'package:work_server/controllers/cai_dat/cai_dat.dart';
-import 'package:work_server/views/dang_nhap/dang_nhap.dart';
+import 'package:study2work_mobile/features/student/legacy/controllers/cai_dat/cai_dat.dart';
 
 class Setting extends StatefulWidget {
   const Setting({super.key});
@@ -23,7 +24,7 @@ class _SettingState extends State<Setting> {
           padding: const EdgeInsets.all(8.0),
           child: CircleAvatar(
             backgroundColor: AppColors.surface,
-            backgroundImage: const AssetImage("assets/logo.jpg"),
+            backgroundImage: const AssetImage("assets/student/logo.jpg"),
           ),
         ),
         title: const Text(
@@ -57,7 +58,7 @@ class _SettingState extends State<Setting> {
         children: [
           // Nền mơ màng
           Positioned.fill(
-            child: Image.asset("assets/bg_trangchu.jpg", fit: BoxFit.cover),
+            child: Image.asset("assets/student/bg_trangchu.jpg", fit: BoxFit.cover),
           ),
           Container(color: AppColors.navy.withValues(alpha: 0.2)), // overlay nền
           SafeArea(
@@ -112,7 +113,9 @@ class _SettingState extends State<Setting> {
                         "Đăng xuất",
                         color: AppColors.danger,
                         onTap: () async {
-                          dangXuat();
+                          await dangXuat();
+                          if (!context.mounted) return;
+                          AuthNavigationState.instance.clear();
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Bạn đã đăng xuất thành công!'),
@@ -120,11 +123,7 @@ class _SettingState extends State<Setting> {
                               duration: Duration(seconds: 2),
                             ),
                           );
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(builder: (_) => const DangNhap()),
-                            (route) => false, // xoá toàn bộ stack
-                          );
+                          context.go('/login');
                         },
                       ),
                     ],

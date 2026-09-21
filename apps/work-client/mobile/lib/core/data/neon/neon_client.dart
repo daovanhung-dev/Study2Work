@@ -1,6 +1,6 @@
 import 'package:postgres/postgres.dart';
 
-import 'package:work_server/constants.dart';
+import 'package:study2work_mobile/app/config/app_config.dart';
 
 /// Converts the Neon connection string to the subset understood by the Dart
 /// driver. The source constant intentionally remains the exact value supplied
@@ -26,7 +26,20 @@ Map<String, dynamic> normalizeNeonRow(Map<String, dynamic> row) {
   );
 }
 
-class NeonDatabase {
+abstract interface class NeonClient {
+  Future<void> initialize();
+
+  Future<List<Map<String, dynamic>>> query(
+    String sql, {
+    List<Object?> parameters = const [],
+  });
+
+  Future<int> execute(String sql, {List<Object?> parameters = const []});
+
+  Future<void> close();
+}
+
+class NeonDatabase implements NeonClient {
   NeonDatabase._();
 
   static final NeonDatabase instance = NeonDatabase._();
@@ -35,10 +48,12 @@ class NeonDatabase {
 
   Pool get _client => _pool ??= Pool.withUrl(neonDriverUrl(NEON_POOLER_URL));
 
+  @override
   Future<void> initialize() async {
     await _client.execute('SELECT 1', ignoreRows: true);
   }
 
+  @override
   Future<List<Map<String, dynamic>>> query(
     String sql, {
     List<Object?> parameters = const [],
@@ -49,6 +64,7 @@ class NeonDatabase {
         .toList(growable: false);
   }
 
+  @override
   Future<int> execute(String sql, {List<Object?> parameters = const []}) async {
     final result = await _client.execute(
       sql,
@@ -58,6 +74,7 @@ class NeonDatabase {
     return result.affectedRows;
   }
 
+  @override
   Future<void> close() async {
     final pool = _pool;
     _pool = null;

@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
-import 'package:work_server/views/cai_dat/setting.dart';
-import 'package:work_server/views/tim_kiem_cong_viec/tim_kiem_job.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/features/student/legacy/views/cai_dat/setting.dart';
+import 'package:study2work_mobile/features/student/legacy/views/tim_kiem_cong_viec/tim_kiem_job.dart';
 import '../tro_chuyen/tro_chuyen.dart';
 import '../trang_chu/main/trang_chu.dart';
 

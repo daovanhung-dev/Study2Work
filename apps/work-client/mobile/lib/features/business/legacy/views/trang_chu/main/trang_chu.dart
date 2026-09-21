@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
-import 'package:work_server/views/trang_chu/main/thong_tin_chi_tiet.dart';
-import 'package:work_server/views/trang_chu/main/xem_chi_tiet_view.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/features/business/legacy/views/trang_chu/main/thong_tin_chi_tiet.dart';
+import 'package:study2work_mobile/features/business/legacy/views/trang_chu/main/xem_chi_tiet_view.dart';
 import 'thong_bao.dart';
 import 'dang_tin_tuyen_dung.dart';
 import '../tien_ich/Quan_ly_job/quan_ly_job.dart';
@@ -9,14 +9,13 @@ import '../tien_ich/Chuong_trinh_thuc_te/chuong_trinh_thuc_tap_page.dart';
 import '../tien_ich/Lich_phong_van/lich_pv_page.dart';
 import '../tien_ich/Lien_ket_nha_truong/lien_ket_nha_truong.dart';
 import '../tien_ich/Loc_cv/loc_cv_filter.dart';
-import '/controllers/trang_chu/hien_thi_danh_sach_top_cv.dart';
-import 'package:work_server/helper_db/helper_db.dart';
-import 'package:work_server/helper_db/helper_supabase.dart';
-import 'package:work_server/views/trang_chu/tien_ich/Tim_kiem_nhan_su/tim_kiem_nhan_su.dart';
-import 'package:work_server/views/trang_chu/tien_ich/Thong_ke/thong_ke_bao_cao.dart';
+import 'package:study2work_mobile/features/business/legacy/controllers/trang_chu/hien_thi_danh_sach_top_cv.dart';
+import 'package:study2work_mobile/features/business/application/business_legacy_data.dart';
+import 'package:study2work_mobile/features/business/legacy/views/trang_chu/tien_ich/Tim_kiem_nhan_su/tim_kiem_nhan_su.dart';
+import 'package:study2work_mobile/features/business/legacy/views/trang_chu/tien_ich/Thong_ke/thong_ke_bao_cao.dart';
 
-final sqlite = HelperDB.instance;
-final supabase = DNSupabase.instance;
+final sqlite = BusinessLegacyData.sqlite;
+final supabase = BusinessLegacyData.neon;
 
 class TrangChu extends StatefulWidget {
   const TrangChu({super.key});
@@ -100,7 +99,7 @@ class _TrangChuState extends State<TrangChu> {
             Container(
               decoration: BoxDecoration(),
               child: Image.asset(
-                "assets/bg_trangchu.jpg",
+                "assets/business/bg_trangchu.jpg",
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,
@@ -693,43 +692,43 @@ class _TrangChuState extends State<TrangChu> {
                                 children: [
                                   _buildTienIchItem(
                                     context,
-                                    iconPath: "assets/job_tien_ich.png",
+                                    iconPath: "assets/business/job_tien_ich.png",
                                     title: "Quản lý Job",
                                     page: const QuanLyJob(),
                                   ),
                                   _buildTienIchItem(
                                     context,
-                                    iconPath: "assets/tien_ich1.png",
+                                    iconPath: "assets/business/tien_ich1.png",
                                     title: "Tìm kiếm nhân sự",
                                     page: const EmployeeSearchUI(),
                                   ),
                                   _buildTienIchItem(
                                     context,
-                                    iconPath: "assets/tien_ich2.png",
+                                    iconPath: "assets/business/tien_ich2.png",
                                     title: "Lịch phỏng vấn",
                                     page: const LichPV(),
                                   ),
                                   _buildTienIchItem(
                                     context,
-                                    iconPath: "assets/loc_cv_tien_ich.png",
+                                    iconPath: "assets/business/loc_cv_tien_ich.png",
                                     title: "Quản lý nhân sự",
                                     page: const LocCV(),
                                   ),
                                   _buildTienIchItem(
                                     context,
-                                    iconPath: "assets/internship_tien_ich.png",
+                                    iconPath: "assets/business/internship_tien_ich.png",
                                     title: "Chương trình thực tập",
                                     page: const ChuongTrinhThucTapPage(),
                                   ),
                                   _buildTienIchItem(
                                     context,
-                                    iconPath: "assets/school_tien_ich.png",
+                                    iconPath: "assets/business/school_tien_ich.png",
                                     title: "Liên kết với nhà trường",
                                     page: const LienKetScreen(),
                                   ),
                                   _buildTienIchItem(
                                     context,
-                                    iconPath: "assets/thong_ke_tien_ich.png",
+                                    iconPath: "assets/business/thong_ke_tien_ich.png",
                                     title: "Thống kê & báo cáo",
                                     page: const EmployeeReportUI(),
                                   ),

@@ -140,16 +140,17 @@ TEST_STATUS: UNIT_TESTS_PRESENT; FLUTTER_TOOLCHAIN_UNAVAILABLE; NETWORK_SMOKE_OP
 DESIGN_STATUS: SOURCE_BACKED_COBALT_BASELINE_IMPLEMENTED
 ```
 
-- Student and business are separate Flutter apps with package name `work_server`.
-  Both start at `DangNhap`, use direct Neon PostgreSQL through a singleton
+- Student and business are Android flavors of one Flutter project with package
+  name `study2work_mobile`. Both start at role-specific `DangNhap` through the
+  shared flavor router, use direct Neon PostgreSQL through a singleton
   `NeonDatabase`, and keep account/lookup data in SQLite.
 - Chat reads/writes `Chat` and `DoanChat` directly, polls every three seconds,
   deduplicates by message `id`, and cancels screen timers in `dispose()`.
-- Both apps call Gemini directly from `AIService`; this is independent of the
+- The shared core calls Gemini directly from `AIService`; this is independent of the
   Work server and `apps/ai-server`. URL/row/model normalization and polling
   tests exist; connection smoke tests require an explicit Dart define.
-- Each standalone app now owns a local Material 3 Cobalt theme and UI
-  primitives under `lib/theme/`. The refresh changes presentation only; direct
+- The unified app owns a shared Material 3 Cobalt theme and UI primitives under
+  `lib/app/theme/`. The merge preserves direct
   Neon/SQLite/Gemini boundaries and chat polling semantics are preserved.
 
 ## AI server

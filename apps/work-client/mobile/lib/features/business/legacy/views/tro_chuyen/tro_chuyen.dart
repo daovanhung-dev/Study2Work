@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:work_server/theme/design_tokens.dart';
-import 'package:work_server/views/tro_chuyen/chat.dart';
-import 'package:work_server/controllers/chat/nhung_doan_chat_controller.dart';
+import 'package:study2work_mobile/app/theme/design_tokens.dart';
+import 'package:study2work_mobile/features/business/legacy/views/tro_chuyen/chat.dart';
+import 'package:study2work_mobile/features/business/legacy/controllers/chat/nhung_doan_chat_controller.dart';
 import '../trang_chu/main/thong_bao.dart';
-import 'package:work_server/helper_db/helper_db.dart';
+import 'package:study2work_mobile/features/business/application/business_legacy_data.dart';
 
-final sqlite = HelperDB.instance;
+final sqlite = BusinessLegacyData.sqlite;
 
 class TroChuyen extends StatefulWidget {
   const TroChuyen({super.key});
@@ -43,7 +43,7 @@ class _TroChuyenState extends State<TroChuyen> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(50),
             child: const CircleAvatar(
-              backgroundImage: AssetImage("assets/logo.jpg"),
+              backgroundImage: AssetImage("assets/business/logo.jpg"),
             ),
           ),
         ),
