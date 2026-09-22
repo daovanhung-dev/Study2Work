@@ -17,6 +17,14 @@ from app.modules.guest.categories.view import get_categories
 from app.modules.guest.register_account.models import RegisterRequest
 from app.modules.guest.register_account.view import create_user
 from app.modules.guest.users_me.view import get_current_user
+from app.modules.guest.verify_email_send.models import VerifyEmailSendRequest
+from app.modules.guest.verify_email_send.view import (
+    send_verification_email as dispatch_verification_email,
+)
+from app.service.email.provider import (
+    VerificationEmailProvider,
+    get_verification_email_provider,
+)
 
 router = APIRouter(
     prefix="/api/v1",
@@ -24,6 +32,9 @@ router = APIRouter(
 )
 db_dependency = Depends(get_db)
 category_query_dependency = Depends()
+verification_provider_dependency = Depends(get_verification_email_provider)
+
+
 
 
 @router.get("/hello")
@@ -73,6 +84,19 @@ def refresh_access_token(
     return refresh(
         user_data=user_data,
         db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+@router.post("/auth/verify-email/send", status_code=status.HTTP_202_ACCEPTED)
+def send_verification_email(
+    user_data: VerifyEmailSendRequest,
+    request: Request,
+    provider: VerificationEmailProvider = verification_provider_dependency,
+) -> dict[str, Any]:
+    return dispatch_verification_email(
+        user_data=user_data,
+        provider=provider,
         trace_id=get_trace_id(request),
     )
 
