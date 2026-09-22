@@ -1,7 +1,7 @@
 from typing import Any
 
 # import framework
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Header, Request, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -14,6 +14,7 @@ from app.modules.guest.auth_login.models import LoginRequest, RefreshRequest
 from app.modules.guest.auth_login.view import login, refresh
 from app.modules.guest.register_account.models import RegisterRequest
 from app.modules.guest.register_account.view import create_user
+from app.modules.guest.users_me.view import get_current_user
 
 router = APIRouter(
     prefix="/api/v1",
@@ -68,6 +69,19 @@ def refresh_access_token(
 ) -> dict[str, Any]:
     return refresh(
         user_data=user_data,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+@router.get("/users/me", status_code=status.HTTP_200_OK)
+def current_user(
+    request: Request,
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any]:
+    return get_current_user(
+        authorization=authorization,
         db=db,
         trace_id=get_trace_id(request),
     )

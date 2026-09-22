@@ -13,16 +13,16 @@ app/main.py:create_app
   -> app/core/trace.py
 ```
 
-Current composition, API #1 register flow and API #3 login/refresh flow are
-present. The auth test modules use the `guest` namespace and the full test
-collection is available; routes without a current implementation remain
-unwired.
+Current composition, API #1 register flow, API #3 login/refresh flow and API #4
+current-user flow are present. The auth test modules use the `guest` namespace
+and the full test collection is available; routes without a current
+implementation remain unwired.
 
 ## Verified ownership
 
 - `app/main.py`: FastAPI composition root, CORS, middleware, exception handlers, root/health routes.
-- `app/api/v1.py`: declared `/api/v1` routes; currently exposes health-adjacent
-  utility routes and API #1 register.
+- `app/api/v1.py`: declared `/api/v1` routes; exposes health-adjacent utility
+  routes, API #1 register, API #3 auth and API #4 current-user profile.
 - `app/core/config.py`: typed settings backed by `app/core/constants.py`.
 - `app/core/database.py`: sync SQLAlchemy engine/session/query primitives.
 - `app/core/security/*`: password, access token, refresh token primitives.
@@ -32,6 +32,10 @@ unwired.
 - `app/modules/guest/auth_login/validate.py`: pure auth request validation.
 - `app/modules/guest/auth_login/query.py`: SQL constants for user lookup and refresh-token persistence.
 - `app/modules/guest/auth_login/view.py`: login credential flow, refresh rotation, transaction and response mapping.
+- `app/modules/guest/users_me/models.py`: safe current-user profile response model.
+- `app/modules/guest/users_me/validate.py`: pure Bearer header and JWT claim validation.
+- `app/modules/guest/users_me/query.py`: parameterized public profile lookup by user ID.
+- `app/modules/guest/users_me/view.py`: Student role check, profile lookup and canonical response/error mapping.
 - `app/modules/guest/register_account/models.py`: API #1 register request model,
   type/basic validation and normalization.
 - `app/modules/guest/register_account/validate.py`: special validation boundary;
@@ -47,8 +51,7 @@ unwired.
 No current source establishes:
 
 - chat log business flow;
-- current-user orchestration;
-- Study domain modules beyond API #1 register and API #3 auth.
+- Study domain modules beyond API #1 register, API #3 auth and API #4 current-user profile.
 
 ## Runtime compatibility repairs
 

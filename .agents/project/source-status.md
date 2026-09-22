@@ -59,10 +59,14 @@ DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED; LIVE_STATUS_NOT_VERIFIED_HERE
 
 Current evidence:
 
-- `app.main` imports successfully and composes 8 current routes.
+- `app.main` imports successfully and composes 9 current routes.
 - `app/api/v1.py` wires `POST /api/v1/auth/register` to
   `app.modules.guest.register_account.*`; `/auth` ở đây là public endpoint
   contract, không phải Python namespace.
+- `app/api/v1.py` wires `GET /api/v1/users/me` to
+  `app.modules.guest.users_me.*`; the route verifies the current API#3 JWT
+  `sub`/`roles` shape, requires `STUDENT`, and reads only public profile
+  columns from `users`.
 - `register_account/validate.py` is empty/unwired; current model validators
   remain in `models.py`.
 - `tests/modules/guest/test_register.py` imports

@@ -4,7 +4,7 @@ Source root: `apps/study-server/`
 
 ```text
 CONTEXT_MODE: DEEP
-RUNTIME_STATUS: VERIFIED_IMPORT (10 current routes)
+RUNTIME_STATUS: VERIFIED_IMPORT (9 current routes)
 TEST_STATUS: COLLECTION_VERIFIED
 BUSINESS_MODULE_STATUS: SOURCE_BACKED (register, login, refresh)
 DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED / do not infer from design docs

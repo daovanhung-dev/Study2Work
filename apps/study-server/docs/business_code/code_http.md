@@ -39,3 +39,9 @@ Các mã dưới đây chỉ áp dụng cho approved design contract tại
 | 422 | AC_UNICA V1 | Schema or business validation failed | `DESIGN_VALIDATION_ERROR` | `DESIGN_PROPOSAL` |
 | 503 | AC_UNICA V1 | Payment, storage, delivery or export dependency unavailable | `DESIGN_DEPENDENCY_UNAVAILABLE` | `DESIGN_PROPOSAL` |
 | 500 | AC_UNICA V1 | Unmapped internal failure | `DESIGN_INTERNAL_ERROR` | `DESIGN_PROPOSAL` |
+
+## Current source-backed Study usage
+
+| HTTP | Scope | Condition | Business code | Status |
+|---:|---|---|---|---|
+| 200 | Study API #4 | Authenticated Student profile retrieved by `/api/v1/users/me` | `DESIGN_RESOURCE_RETRIEVED` | `VERIFIED` |

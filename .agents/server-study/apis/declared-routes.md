@@ -2,8 +2,8 @@
 
 Global status: current route source is `SOURCE_BACKED`; `app.main` import and
 the register/auth test modules use the current `guest` internal namespace.
-Current auth login/refresh routes are wired; current-user and AI routes remain
-`UNWIRED`.
+Current auth login/refresh and current-user routes are wired; the AI route
+remains `UNWIRED`.
 
 ## Composition-root routes
 
@@ -57,8 +57,21 @@ transaction, then returns a new access-token pair and profile.
 Invalid, expired or already rotated tokens return
 `401 DESIGN_AUTHENTICATION_REQUIRED`.
 
-### `GET /api/v1/auth/me`
-Not currently exposed; implementation remains `UNWIRED`.
+### `GET /api/v1/users/me`
+Implemented through `app.modules.guest.users_me.view.get_current_user(...)`.
+The route requires one `Authorization: Bearer <jwt>` header and no request body,
+path parameter or query parameter. It decodes the current API#3 JWT shape
+(`sub` + `roles`), requires the normalized `STUDENT` role, then reads the
+public profile columns from `users` by the numeric `sub` value. It returns
+`DESIGN_RESOURCE_RETRIEVED` with `id`, `full_name`, `email`, `role`,
+`avatar_url`, `phone`, `status`, `created_at` and `updated_at`; `bio` is omitted
+because no current `users` column is source-backed.
+
+Missing/malformed/invalid claims and a missing user return
+`401 DESIGN_AUTHENTICATION_REQUIRED`; a non-Student role returns
+`403 DESIGN_ACCESS_DENIED`; query or profile mapping failures return
+`500 DESIGN_INTERNAL_ERROR`. The route never selects `password_hash` and does
+not mutate the database.
 
 ### `POST /api/v1/chat_log_ai`
 Not currently exposed; implementation remains `UNWIRED`. This is **not** the
