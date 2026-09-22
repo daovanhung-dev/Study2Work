@@ -34,10 +34,10 @@ format: markdown
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | Search keyword | `q` | `string` | `No` | `TBD` | `TBD` | Trimmed text | `TBD — keyword length chưa đặc tả` | `N/A — blank means no text predicate` | Contains, không phân biệt hoa thường trên `courses.name` khi có giá trị | [`2.1`](./05_Data_Mapping.md#21-validate-q) |
-| 2 | Category filter | `category` | `int64` | `No` | `TBD` | `TBD` | Integer | `TBD — category relation chưa có source` | `N/A` | Filter category theo contract; predicate physical đang TBD | [`2.2`](./05_Data_Mapping.md#22-validate-category) |
-| 3 | Page number | `page` | `int32` | `No` | `1` | `TBD` | Integer | `>= 1` design-only | `1` | Trang cần lấy | [`2.3`](./05_Data_Mapping.md#23-validate-page) |
-| 4 | Sort expression | `sort` | `string` | `No` | `TBD` | `TBD` | String | `TBD — allow-list chưa đặc tả` | `N/A — default order TBD` | Thứ tự sắp xếp qua mapping allow-list, không nhận raw SQL | [`2.4`](./05_Data_Mapping.md#24-validate-sort) |
+| 1 | Search keyword | `q` | `string` | `No` | `N/A` | `N/A` | Trimmed/lowercase text | `String` | `N/A — blank means no text predicate` | Contains, không phân biệt hoa thường trên `courses.name` khi có giá trị | [`2.1`](./05_Data_Mapping.md#21-validate-q) |
+| 2 | Category filter | `category` | `int64` | `No` | `N/A` | `N/A` | Integer | `Integer; nếu gửi sẽ trả 422` | `N/A` | Chưa có category–course relation source-backed; không query khi được gửi | [`2.2`](./05_Data_Mapping.md#22-validate-category) |
+| 3 | Page number | `page` | `int32` | `No` | `1` | `N/A` | Integer | `>= 1` | `1` | Trang cần lấy | [`2.3`](./05_Data_Mapping.md#23-validate-page) |
+| 4 | Sort expression | `sort` | `string` | `No` | `N/A` | `N/A` | `field:direction` | `id|name|price|created_at` + `asc|desc` | `created_at:desc` + `id:asc` internal default | Thứ tự sắp xếp qua mapping allow-list, không nhận raw SQL | [`2.4`](./05_Data_Mapping.md#24-validate-sort) |
 
 > API #7 không nhận query `size`; backend dùng page size design-only `20`.
 
@@ -52,12 +52,12 @@ format: markdown
 ## Ví dụ Request
 
 ```http
-GET /api/v1/courses/search?q=programming&page=1&sort=name_asc HTTP/1.1
+GET /api/v1/courses/search?q=programming&page=1&sort=name:asc HTTP/1.1
 Host: api.example.test
 Accept: application/json
 ```
 
-> `sort=name_asc` chỉ là giá trị minh họa; allow-list thực tế cần được xác nhận trước implementation.
+> `sort=name:asc` dùng allow-list source-backed; backend không nhận raw SQL.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

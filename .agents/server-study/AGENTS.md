@@ -4,9 +4,9 @@ Source root: `apps/study-server/`
 
 ```text
 CONTEXT_MODE: DEEP
-RUNTIME_STATUS: VERIFIED_IMPORT (12 current routes)
+RUNTIME_STATUS: VERIFIED_IMPORT (13 current routes)
 TEST_STATUS: COLLECTION_VERIFIED
-BUSINESS_MODULE_STATUS: SOURCE_BACKED (register, verify-email dispatch stub, login, refresh, categories, courses)
+BUSINESS_MODULE_STATUS: SOURCE_BACKED (register, verify-email dispatch stub, login, refresh, categories, courses, course search)
 DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED / do not infer from design docs
 ```
 
@@ -37,9 +37,9 @@ latest user requirement
 
 ## Critical rules
 
-1. Chỉ coi route hiện có là runtime-verified khi import chain và HTTP test đã pass; hiện Study import, register, verify-email dispatch, categories, courses và auth login/refresh tests đã pass.
+1. Chỉ coi route hiện có là runtime-verified khi import chain và HTTP test đã pass; hiện Study import, register, verify-email dispatch, categories, courses, course search và auth login/refresh tests đã pass.
 2. Không dựng lại `app.module.auth`, `app.module.ai.log` hoặc bất kỳ package legacy nào từ docs/Git history nếu requirement chưa xác nhận.
-3. `app/core/security/*` là reusable helper; API #1 register, API #2 verify-email dispatch stub, API #3 login/refresh, API #5 categories và API #6 courses là các business flow Study hiện được triển khai/xác minh.
+3. `app/core/security/*` là reusable helper; API #1 register, API #2 verify-email dispatch stub, API #3 login/refresh, API #5 categories, API #6 courses và API #7 course search là các business flow Study hiện được triển khai/xác minh.
 4. Study DB helper không commit; caller/use-case phải sở hữu transaction khi business module tồn tại.
 5. Không invent table/column ngoài requirement/contract: `infra/postgres/study-server/DB.sql`
    và migration artifacts là checked-in schema/design evidence, còn live metadata

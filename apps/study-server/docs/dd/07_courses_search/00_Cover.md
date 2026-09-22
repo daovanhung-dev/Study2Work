@@ -25,7 +25,7 @@ format: markdown
 | Reviewed by | `TBD — chưa được cung cấp` |
 | Approved by | `TBD — chưa được cung cấp` |
 | Created date | `2026-08-29` |
-| Updated date | `2026-08-29` |
+| Updated date | `2026-09-22` |
 
 ## Tên hiển thị
 
@@ -36,11 +36,12 @@ Tìm khóa học
 
 ## Nguồn chuẩn
 
-- [`docs/lists/list_api.md`](../../../docs/lists/list_api.md) — API #7 contract.
+- [`00_AC_API_INDEX.md`](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — API #7 contract.
 - [`AC-04 Tìm kiếm khóa học`](../../../docs/diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio) — Guest search flow.
 - [`DB_UNICA_ERD.drawio`](../../../docs/diagrams/DB_UNICA_ERD.drawio) — `courses` và `users` source fields.
 
-> API là design-only; contract chưa được runtime/OpenAPI verify.
+> DD approval vẫn `Draft — Needs Confirmation`. Runtime implementation và focused tests
+> đã được source-backed; live database metadata và OpenAPI deployment chưa được verify.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

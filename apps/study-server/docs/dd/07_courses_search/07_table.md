@@ -15,7 +15,7 @@ format: markdown
 | Physical table | `N/A — READ-ONLY API` |
 | Logical table | `N/A — course search query only` |
 | Operation | `N/A — no DB mutation` |
-| Data Mapping step | `3/4 — SELECT and count only` |
+| Data Mapping step | `3/4 — SELECT, search and count only` |
 
 ## Update mapping
 

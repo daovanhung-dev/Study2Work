@@ -10,17 +10,18 @@ format: markdown
 
 ## Giải thích
 
-Các trường hợp lỗi của API #7 theo `list_api.md`. Empty result là kết quả thành công `200`; không tạo `404`.
+Các trường hợp lỗi của API #7 theo `00_AC_API_INDEX.md`. Empty result là kết quả thành công `200`; không tạo `404`.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---:|---|
 | 1 | Validation error | `Yes` | `q` | Query `q` không có kiểu string hoặc không thể normalize theo input contract | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`2.1`](./05_Data_Mapping.md#21-validate-q) | `No` | q optional; blank sau trim không phải lỗi |
-| 2 | Validation error | `Yes` | `category` | Query `category` không parse được thành `int64` | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`2.2`](./05_Data_Mapping.md#22-validate-category) | `No` | Category relation vẫn TBD; không tạo JOIN giả |
-| 3 | Validation error | `Yes` | `page` | Query `page` không parse được thành `int32` hoặc nhỏ hơn `1` | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`2.3`](./05_Data_Mapping.md#23-validate-page) | `No` | Default page là `1` design-only |
-| 4 | Validation error | `Yes` | `sort` | Query `sort` không có kiểu string hoặc không khớp allow-list đã được xác nhận | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`2.4`](./05_Data_Mapping.md#24-validate-sort) | `No` | Allow-list/default order chưa được contract đặc tả |
-| 5 | System error | `No` | `courses/users` | Lỗi query page, count, join hoặc map response; hoặc published course thiếu mentor bắt buộc | `500` | `DESIGN_INTERNAL_ERROR` | `N/A — envelope message` | [`5.3`](./05_Data_Mapping.md#53-lỗi-đọc-hoặc-map) | `No` | Không trả raw query, stack trace hoặc storage detail |
+| 2 | Validation error | `Yes` | `category` | Query `category` không parse được thành `int64` | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`2.2`](./05_Data_Mapping.md#22-validate-category) | `No` | Không query khi category không hợp lệ |
+| 3 | Validation error | `Yes` | `category` | Query `category` parse được nhưng relation category–course chưa source-backed | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`2.2`](./05_Data_Mapping.md#22-validate-category) | `No` | Không tạo JOIN/table/cột category giả |
+| 4 | Validation error | `Yes` | `page` | Query `page` không parse được thành `int32` hoặc nhỏ hơn `1` | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`2.3`](./05_Data_Mapping.md#23-validate-page) | `No` | Default page là `1` |
+| 5 | Validation error | `Yes` | `sort` | Query `sort` không có dạng `field:direction` hoặc không khớp allow-list | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`2.4`](./05_Data_Mapping.md#24-validate-sort) | `No` | Không nội suy raw SQL |
+| 6 | System error | `No` | `courses/users` | Lỗi query page, count, join hoặc map response; hoặc published course thiếu mentor bắt buộc | `500` | `DESIGN_INTERNAL_ERROR` | `N/A — envelope message` | [`5.3`](./05_Data_Mapping.md#53-lỗi-đọc-hoặc-map) | `Yes` | Rollback session; không trả raw query, stack trace hoặc storage detail |
 
 > Mỗi error case và mỗi field validation phải nằm trên một row riêng.
 

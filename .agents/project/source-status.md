@@ -53,18 +53,19 @@ Mọi project context phải nằm dưới `.agents/`; `apps/` không chứa `.a
 ```text
 RUNTIME_STATUS: VERIFIED_IMPORT; CURRENT_ROUTE_SOURCE_BACKED
 TEST_STATUS: COLLECTION_VERIFIED_AFTER_NAMESPACE_RENAME
-BUSINESS_MODULE_STATUS: SOURCE_BACKED_REGISTER_VERIFY_LOGIN_REFRESH_CATEGORIES_COURSES
+BUSINESS_MODULE_STATUS: SOURCE_BACKED_REGISTER_VERIFY_LOGIN_REFRESH_CATEGORIES_COURSES_SEARCH
 DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED; LIVE_STATUS_NOT_VERIFIED_HERE
 ```
 
 Current evidence:
 
-- `app.main` imports successfully and composes 12 current routes.
+- `app.main` imports successfully and composes 13 current routes.
 - `app/api/v1.py` wires `POST /api/v1/auth/register` to
   `app.modules.guest.register_account.*`; `/auth` ở đây là public endpoint
   contract, không phải Python namespace.
 - `app/api/v1.py` also wires public API #2 verify-email dispatch through the
-  injectable provider stub, API #5 categories and API #6 courses; these flows
+  injectable provider stub, API #5 categories, API #6 courses and API #7 course
+  search; these flows
   have focused HTTP tests and no live DB verification claim.
 - `app/api/v1.py` wires `GET /api/v1/users/me` to
   `app.modules.guest.users_me.*`; the route verifies the current API#3 JWT

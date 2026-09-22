@@ -3,7 +3,8 @@
 Global status: current route source is `SOURCE_BACKED`; `app.main` import and
 the register/auth/category/course test modules use the current `guest` internal
 namespace. Current auth login/refresh, verify-email dispatch, current-user,
-category and course routes are wired; the AI route remains `UNWIRED`.
+category, course and course-search routes are wired; the AI route remains
+`UNWIRED`.
 
 ## Composition-root routes
 
@@ -120,6 +121,24 @@ course-category relation is source-backed. A published course with a missing
 mentor, query/mapping failure or database failure maps to safe
 `500 DESIGN_INTERNAL_ERROR`. Empty and out-of-range pages return HTTP `200`;
 `total_pages` is zero when `total` is zero. No migration or live schema
+verification is claimed.
+
+### `GET /api/v1/courses/search`
+
+Implemented through `app.modules.guest.courses.view.search_courses(...)`. The
+route is public and accepts optional `q`, `category`, `page` and `sort` query
+parameters. `q` is trimmed/lowercased; blank input removes the text predicate.
+`page` defaults to `1`, page size is fixed at `20`, and `sort` uses the
+allow-listed `field:direction` format over `id`, `name`, `price` and
+`created_at`, with default order `created_at DESC, c.id ASC`.
+
+The query selects only `PUBLISHED` courses, searches `LOWER(c.name)` with a
+bound `q_pattern`, reads mentor summary fields from `users`, and applies the
+same predicates to the count query. A supplied `category` is rejected with
+`422 DESIGN_VALIDATION_ERROR` before DB access because no source-backed
+course-category relation exists. Missing mentor integrity, query failures and
+mapping failures return safe `500 DESIGN_INTERNAL_ERROR`; empty results return
+`200 DESIGN_RESOURCE_RETRIEVED` with fixed-size pagination. No schema or live DB
 verification is claimed.
 
 ### `POST /api/v1/chat_log_ai`

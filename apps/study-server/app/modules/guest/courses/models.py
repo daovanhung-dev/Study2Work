@@ -27,6 +27,15 @@ def normalize_sort(value: str | None) -> str | None:
     return f"{field}:{direction}"
 
 
+def normalize_search_query(value: object) -> object:
+    """Trim and lowercase the optional public course-search keyword."""
+
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        return normalized or None
+    return value
+
+
 class CourseQuery(BaseModel):
     """Public query contract for the course-discovery endpoint."""
 
@@ -35,6 +44,18 @@ class CourseQuery(BaseModel):
     size: int = Field(default=DEFAULT_SIZE, ge=1, le=MAX_SIZE)
     sort: str | None = None
 
+    _normalize_sort = field_validator("sort")(normalize_sort)
+
+
+class CourseSearchQuery(BaseModel):
+    """Public query contract for the course-search endpoint."""
+
+    q: str | None = None
+    category: int | None = None
+    page: int = Field(default=DEFAULT_PAGE, ge=1)
+    sort: str | None = None
+
+    _normalize_q = field_validator("q", mode="before")(normalize_search_query)
     _normalize_sort = field_validator("sort")(normalize_sort)
 
 

@@ -1,8 +1,9 @@
 # Study core runtime contracts
 
 Status: source-backed; `app.main` imports and composes the current routes,
-including public API #2 verify-email dispatch, API #5 categories and API #6
-courses. The current register, verification, category and course pytest modules
+including public API #2 verify-email dispatch, API #5 categories, API #6
+courses and API #7 course search. The current register, verification, category,
+course and course-search pytest modules
 use the `guest` namespace and collection is runnable in the Study virtual environment.
 
 The local Study API startup address is `127.0.0.1:3003`. Containerized startup
@@ -22,7 +23,8 @@ binds internally to `0.0.0.0:3003` and publishes the host address separately.
 - Side effects: creates engine/session factory when explicit settings supplied; installs dependency override for `get_db`.
 - Declared routes: `/`, `/health/live`, `/health/ready` plus `/api/v1/*` router.
 - Runtime status: source-backed/import-verified for current routes, including API
-  #1 register, API #2 verify-email dispatch, API #5 categories and API #6 courses.
+  #1 register, API #2 verify-email dispatch, API #5 categories, API #6 courses
+  and API #7 course search.
 
 ### root/health handlers
 - Intended return: standard success envelope via `success_response`.
@@ -56,12 +58,12 @@ Raises `ApiError` with the model's status/business code/message/trace ID.
 - `http_exception_handler`: preserves already-safe error dicts; otherwise maps to `HTTP_ERROR`.
 - `request_validation_exception_handler`: maps Pydantic errors to `ErrorDetail`, using
   `DESIGN_VALIDATION_ERROR` for API #1 register, API #2 verify-email dispatch,
-  auth login/refresh, API #5 categories and API #6 courses, and
-  `VALIDATION_ERROR` elsewhere.
+  auth login/refresh, API #5 categories, API #6 courses and API #7 course
+  search, and `VALIDATION_ERROR` elsewhere.
 - `unhandled_exception_handler`: logs internal exception with trace ID; returns
   `DESIGN_INTERNAL_ERROR` for API #1 register, API #2 verify-email dispatch,
-  auth login/refresh, API #5 categories and API #6 courses, and
-  `INTERNAL_SERVER_ERROR` elsewhere.
+  auth login/refresh, API #5 categories, API #6 courses and API #7 course
+  search, and `INTERNAL_SERVER_ERROR` elsewhere.
 
 ## API #2 verification dispatch
 
@@ -84,6 +86,19 @@ Raises `ApiError` with the model's status/business code/message/trace ID.
 - `category` is parsed but rejected with `DESIGN_VALIDATION_ERROR` until a
   course-category relation is source-backed. Price is serialized as a decimal
   string; no live DB metadata verification is claimed.
+
+## API #7 course search
+
+- `app.modules.guest.courses` exposes public `GET /api/v1/courses/search`.
+- `q` is trimmed/lowercased and bound into `LOWER(c.name) LIKE :q_pattern`;
+  blank `q` removes the text predicate.
+- `page` defaults to `1`; page size is fixed at `20`; `sort` reuses the
+  allow-listed `field:direction` convention and default order from API #6.
+- `category` is parsed but rejected with `DESIGN_VALIDATION_ERROR` before DB
+  access because the course-category relation is not source-backed.
+- Page and count queries share `PUBLISHED` and search predicates. Mentor
+  integrity, query and mapping failures map to `DESIGN_INTERNAL_ERROR`; price
+  is serialized as a decimal string and no live DB verification is claimed.
 
 ## `app/core/trace.py`
 
