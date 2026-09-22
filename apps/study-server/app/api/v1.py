@@ -12,6 +12,8 @@ from app.core.trace import get_trace_id
 # import folder's files
 from app.modules.guest.auth_login.models import LoginRequest, RefreshRequest
 from app.modules.guest.auth_login.view import login, refresh
+from app.modules.guest.categories.models import CategoryQuery
+from app.modules.guest.categories.view import get_categories
 from app.modules.guest.register_account.models import RegisterRequest
 from app.modules.guest.register_account.view import create_user
 from app.modules.guest.users_me.view import get_current_user
@@ -21,6 +23,7 @@ router = APIRouter(
     tags=["api v1"],
 )
 db_dependency = Depends(get_db)
+category_query_dependency = Depends()
 
 
 @router.get("/hello")
@@ -69,6 +72,19 @@ def refresh_access_token(
 ) -> dict[str, Any]:
     return refresh(
         user_data=user_data,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+@router.get("/categories", status_code=status.HTTP_200_OK)
+def categories(
+    request: Request,
+    category_query: CategoryQuery = category_query_dependency,
+    db: Session = db_dependency,
+) -> dict[str, Any]:
+    return get_categories(
+        locale=category_query.locale,
         db=db,
         trace_id=get_trace_id(request),
     )

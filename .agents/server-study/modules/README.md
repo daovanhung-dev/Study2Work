@@ -27,4 +27,5 @@ DB-backed checks such as duplicate, existence, permission or state belong to
 | `guest/register_account` | `SOURCE_BACKED` | `register-account.md` |
 | `guest/auth_login` | `SOURCE_BACKED` | Login and refresh-token flow in current source |
 | `guest/users_me` | `SOURCE_BACKED` | API #4 current Student profile read flow |
+| `guest/categories` | `SOURCE_BACKED` | API #5 public active-category read flow |
 | Other Study domain modules | `NOT_FOUND`/`UNWIRED` | Require source/contract before implementation |

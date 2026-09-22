@@ -1,7 +1,9 @@
 # Study core runtime contracts
 
-Status: source-backed; `app.main` imports and composes the current routes. The
-register pytest module still blocks full test collection through a stale import.
+Status: source-backed; `app.main` imports and composes the current routes,
+including public API #5 categories. The current register and category pytest
+modules use the `guest` namespace and collection is runnable in the Study
+virtual environment.
 
 The local Study API startup address is `127.0.0.1:3003`. Containerized startup
 binds internally to `0.0.0.0:3003` and publishes the host address separately.
@@ -53,9 +55,11 @@ Raises `ApiError` with the model's status/business code/message/trace ID.
 - `api_error_handler`: renders `ApiError` through `error_response`.
 - `http_exception_handler`: preserves already-safe error dicts; otherwise maps to `HTTP_ERROR`.
 - `request_validation_exception_handler`: maps Pydantic errors to `ErrorDetail`, using
-  `DESIGN_VALIDATION_ERROR` for API #1 register and `VALIDATION_ERROR` elsewhere.
+  `DESIGN_VALIDATION_ERROR` for API #1 register, auth login/refresh and API #5
+  categories, and `VALIDATION_ERROR` elsewhere.
 - `unhandled_exception_handler`: logs internal exception with trace ID; returns
-  `DESIGN_INTERNAL_ERROR` for API #1 register and `INTERNAL_SERVER_ERROR` elsewhere.
+  `DESIGN_INTERNAL_ERROR` for API #1 register, auth login/refresh and API #5
+  categories, and `INTERNAL_SERVER_ERROR` elsewhere.
 
 ## `app/core/trace.py`
 

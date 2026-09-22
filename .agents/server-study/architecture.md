@@ -13,10 +13,10 @@ app/main.py:create_app
   -> app/core/trace.py
 ```
 
-Current composition, API #1 register flow, API #3 login/refresh flow and API #4
-current-user flow are present. The auth test modules use the `guest` namespace
-and the full test collection is available; routes without a current
-implementation remain unwired.
+Current composition, API #1 register flow, API #3 login/refresh flow, API #4
+current-user flow and API #5 category flow are present. The auth and category
+test modules use the `guest` namespace and the full test collection is
+available; routes without a current implementation remain unwired.
 
 ## Verified ownership
 
@@ -36,6 +36,9 @@ implementation remain unwired.
 - `app/modules/guest/users_me/validate.py`: pure Bearer header and JWT claim validation.
 - `app/modules/guest/users_me/query.py`: parameterized public profile lookup by user ID.
 - `app/modules/guest/users_me/view.py`: Student role check, profile lookup and canonical response/error mapping.
+- `app/modules/guest/categories/models.py`: API #5 query and public category page contracts.
+- `app/modules/guest/categories/query.py`: parameterized active-category lookup by exact locale.
+- `app/modules/guest/categories/view.py`: default-locale resolution, category mapping and canonical response/error mapping.
 - `app/modules/guest/register_account/models.py`: API #1 register request model,
   type/basic validation and normalization.
 - `app/modules/guest/register_account/validate.py`: special validation boundary;
@@ -51,7 +54,7 @@ implementation remain unwired.
 No current source establishes:
 
 - chat log business flow;
-- Study domain modules beyond API #1 register, API #3 auth and API #4 current-user profile.
+- Study domain modules beyond API #1 register, API #3 auth, API #4 current-user profile and API #5 categories.
 
 ## Runtime compatibility repairs
 

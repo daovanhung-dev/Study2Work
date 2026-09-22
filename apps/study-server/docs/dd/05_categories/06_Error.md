@@ -16,8 +16,8 @@ Các trường hợp lỗi của API #5 theo `list_api.md`. Danh sách category 
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Validation error | `Yes` | `locale` | Query `locale` được gửi nhưng không có kiểu `string` | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`3.1`](./05_Data_Mapping.md#31-validate-locale) | `No` | Không tự đặt enum/length/canonicalization |
-| 2 | System error | `No` | Category source | Lỗi đọc hoặc map category source | `500` | `DESIGN_INTERNAL_ERROR` | `N/A — envelope message` | [`4.3/5.3`](./05_Data_Mapping.md#43-map-category-records) | `No` | Không trả raw query, stack trace hoặc physical source detail |
+| 1 | Validation error | `Yes` | `locale` | Query `locale` được gửi nhưng không có kiểu `string` | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — canonical envelope message` | [`3.1`](./05_Data_Mapping.md#31-validate-locale) | `No` | Không tự đặt enum/length/canonicalization |
+| 2 | System error | `No` | `categories` source | Lỗi đọc hoặc map category source | `500` | `DESIGN_INTERNAL_ERROR` | `N/A — canonical envelope message` | [`4.3/5.3`](./05_Data_Mapping.md#43-map-category-records) | `No` | Không trả raw query, stack trace hoặc physical source detail |
 
 > Mỗi error case và mỗi field validation phải nằm trên một row riêng.
 >

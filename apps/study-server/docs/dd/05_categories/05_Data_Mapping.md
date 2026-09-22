@@ -14,13 +14,16 @@ format: markdown
 
 | Request field | Source | Validate | Query usage | Response usage | Gap |
 |---|---|---|---|---|---|
-| `locale` | `query["locale"]` khi có | Optional; `string` shape/type | Locale filter/selection nếu category source hỗ trợ | Không map trực tiếp vào response | Enum, fallback và translation semantics TBD |
+| `locale` | `query["locale"]` khi có | Optional; `string` shape/type; không trim/enum/length rule | Exact-match với `categories.locale`; nếu vắng dùng `vi-VN` | Không map trực tiếp vào response | N/A |
 
 ## Query Matrix
 
 | Query ID | Mục đích | Type | Base table/API | Column/field | Condition | Result variable | Branch |
 |---|---|---|---|---|---|---|---|
-| `Q1` | Đọc danh mục đang hoạt động | `READ` | `Category source/store (physical target TBD)` | `id`, `name`, `slug`, `description` | `active = true`; áp dụng `locale` nếu source hỗ trợ | `active_categories` | Result → map page; empty → 200 empty page |
+| `Q1.1` | Đọc category ID | `READ` | `categories AS c` | `c.id` | `c.status = 'ACTIVE'` và `c.locale = :locale` | `active_categories` | Result → map page; empty → 200 empty page |
+| `Q1.2` | Đọc category name | `READ` | `categories AS c` | `c.name` | `c.status = 'ACTIVE'` và `c.locale = :locale` | `active_categories` | Result → map page; empty → 200 empty page |
+| `Q1.3` | Đọc category slug | `READ` | `categories AS c` | `c.slug` | `c.status = 'ACTIVE'` và `c.locale = :locale` | `active_categories` | Result → map page; empty → 200 empty page |
+| `Q1.4` | Đọc category description | `READ` | `categories AS c` | `c.description` | `c.status = 'ACTIVE'` và `c.locale = :locale` | `active_categories` | Result → map page; empty → 200 empty page |
 
 ## Mutation Matrix
 
@@ -34,17 +37,17 @@ format: markdown
 |---|---|---|---|---|---|---|---|
 | `success` | `boolean` | Branch constant | Processing result | `5.1/5.2/5.3` | `true` only on successful read | `N/A` | N/A |
 | `businessCode` | `string` | Branch constant | Contract | `5.1/5.2/5.3` | Fixed `DESIGN_*` code | `N/A` | N/A |
-| `message` | `string` | Branch message | Application | `5.1/5.2/5.3` | Fixed by branch | Text TBD | N/A |
-| `data.items[].id` | `int64` | Category source | Category source `id` | `4.3` | Direct mapping | `N/A` | Physical source TBD |
-| `data.items[].name` | `string` | Category source | Category source `name` | `4.3` | Locale-aware when supported | `N/A` | Locale semantics TBD |
-| `data.items[].slug` | `string` | Category source | Category source `slug` | `4.3` | Direct mapping | `N/A` | Physical source TBD |
-| `data.items[].description` | `string` | Category source optional | Category source `description` | `4.3` | Direct mapping | `TBD — null/omit` | Physical source TBD |
+| `message` | `string` | Branch message | Application | `5.1/5.2/5.3` | Fixed by branch | `N/A` | N/A |
+| `data.items[].id` | `int64` | Category source | `categories.id` | `4.3` | Direct mapping | `N/A` | N/A |
+| `data.items[].name` | `string` | Category source | `categories.name` | `4.3` | Direct mapping for selected locale | `N/A` | N/A |
+| `data.items[].slug` | `string` | Category source | `categories.slug` | `4.3` | Direct mapping | `N/A` | N/A |
+| `data.items[].description` | `string` | Category source optional | `categories.description` | `4.3` | Direct mapping | `null` when source is null | N/A |
 | `data.pagination.page` | `int32` | Derived | Result page | `5.1` | Fixed `1` | `N/A` | Single-page convention |
 | `data.pagination.size` | `int32` | Derived | Result count | `5.1` | `total` | `0` when empty | Single-page convention |
-| `data.pagination.total` | `int64` | Derived | Count of active categories | `4.3` | Count result | `0` when empty | Physical count query TBD |
+| `data.pagination.total` | `int64` | Derived | Count of mapped active categories | `5.1` | `len(items)` | `0` when empty | N/A |
 | `data.pagination.total_pages` | `int32` | Derived | Single-page rule | `5.1` | Fixed `1` | `1` | Single-page convention |
 | `meta` | `object` | Envelope default | `N/A` | `5.1/5.2/5.3` | `{}` | `{}` | No extra metadata contract |
-| `traceId` | `uuid` | Correlation generator | `N/A` | `5.1/5.2/5.3` | None | `TBD — exact generator` | Generator TBD |
+| `traceId` | `uuid` | Correlation generator | `X-Trace-Id` middleware/request state | `5.1/5.2/5.3` | Preserve valid incoming ID or generate UUID | `N/A` | N/A |
 
 ## 0. Check quyền
 
@@ -72,6 +75,7 @@ format: markdown
 ### 2.2. Get query
 
 - `locale`: lấy từ `query["locale"]` nếu được gửi.
+- `resolved_locale`: bằng `locale` khi được gửi; bằng `vi-VN` khi không được gửi.
 - Không nhận `page`, `size`, `sort` hoặc query field khác ngoài contract.
 
 ## 3. Validate data input
@@ -79,7 +83,7 @@ format: markdown
 ### 3.1. Validate locale
 
 - Nếu `locale` không phải `string`: trả [06_Error.md](./06_Error.md#error-cases) với `422 DESIGN_VALIDATION_ERROR`.
-- Nếu `locale` không được gửi: tiếp tục xử lý `4`.
+- Nếu `locale` không được gửi: gán `resolved_locale = "vi-VN"`.
 - Không tự thêm enum, length, canonicalization hoặc fallback locale.
 
 ## 4. Get active categories
@@ -87,18 +91,26 @@ format: markdown
 ### 4.1. Resolve category source
 
 - Đọc từ category store/source chứa danh mục đang hoạt động.
-- Physical table/index/API chưa được ERD hoặc contract xác nhận; không tự đặt tên bảng hoặc column vật lý.
+- Physical source là bảng `categories`; live migration application chưa được xác minh.
 
 ### 4.2. Apply active/locale condition
 
 - Chỉ lấy category đang hoạt động theo flow AC-03.
-- Áp dụng `locale` khi category source hỗ trợ; nếu không có locale-specific source, giữ discrepancy/TBD thay vì tự đặt fallback.
+- Điều kiện `c.status = 'ACTIVE'`.
+- Điều kiện `c.locale = resolved_locale` exact-match.
+- Sắp xếp `c.id ASC` để kết quả ổn định.
 
 ### 4.3. Map category records
 
 - Map từng record sang `Category.id`, `Category.name`, `Category.slug`, `Category.description`.
 - Không có record vẫn là kết quả hợp lệ: `items = []`, `total = 0`.
 - Nếu source read/map lỗi: đi tới `5.3`.
+
+### 4.4. Query transaction boundary
+
+- Query helper không commit.
+- API không tạo mutation.
+- Nếu query phát sinh `SQLAlchemyError`, view rollback session để dọn trạng thái lỗi rồi đi tới `5.3`.
 
 ## 5. Check result and map response
 
@@ -110,6 +122,8 @@ format: markdown
 - `data.items` chứa các category active.
 - `data.pagination = {page: 1, size: total, total, total_pages: 1}`.
 - `meta = {}`; `traceId` là request correlation UUID.
+- Nếu `total = 0`, message là `No active categories.`.
+- Nếu `total > 0`, message là `Categories retrieved.`.
 - Response schema: [04_Response.md](./04_Response.md).
 
 ### 5.2. Validation error

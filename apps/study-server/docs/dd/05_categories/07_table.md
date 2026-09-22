@@ -12,16 +12,27 @@ format: markdown
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table | `N/A — no source-confirmed Categories table` |
-| Logical table | `N/A — read-only category source` |
-| Operation | `N/A — no DB mutation` |
-| Data Mapping step | `4.1 — category source read; no DB mapping` |
+| Physical table | `categories` |
+| Logical table | `Category` |
+| Operation | `READ ONLY` |
+| Data Mapping step | `4.1–4.3 — category source read and mapping` |
+
+## Read-only source mapping
+
+| No | Physical column | Logical field | Type | Required | Default/condition | Data Mapping step | Remarks |
+|---:|---|---|---|---:|---|---|---|
+| 1 | `id` | Category ID | `BIGSERIAL` | Yes | Primary key | `4.3` | Response `data.items[].id` |
+| 2 | `name` | Category name | `VARCHAR(200)` | Yes | N/A | `4.3` | Response `data.items[].name` |
+| 3 | `slug` | Category slug | `VARCHAR(200)` | Yes | N/A | `4.3` | Response `data.items[].slug` |
+| 4 | `description` | Category description | `TEXT` | No | `NULL` allowed | `4.3` | Response `data.items[].description` |
+| 5 | `locale` | Category locale | `VARCHAR(20)` | Yes | Default `vi-VN`; exact-match filter | `2.2/4.2` | Not returned directly |
+| 6 | `status` | Category status | `VARCHAR(20)` | Yes | Default `ACTIVE`; query requires `ACTIVE` | `4.2` | Not returned directly |
 
 ## Update mapping
 
 **Áp dụng khi**
 
-- `N/A — API #5 không có UPDATE được ERD/contract xác nhận.`
+- `N/A — API #5 không có UPDATE.`
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---:|---|---|---|---|
@@ -31,7 +42,7 @@ format: markdown
 
 **Áp dụng khi**
 
-- `N/A — API #5 không có INSERT được ERD/contract xác nhận.`
+- `N/A — API #5 không có INSERT.`
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---:|---|---|---|---|
@@ -41,7 +52,7 @@ format: markdown
 
 **Áp dụng khi**
 
-- `N/A — API #5 không có DELETE được ERD/contract xác nhận.`
+- `N/A — API #5 không có DELETE.`
 
 | No | Target column | Operator | Value source | Data Mapping step | Remarks |
 |---:|---|---|---|---|---|

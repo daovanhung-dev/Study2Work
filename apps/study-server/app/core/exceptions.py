@@ -16,10 +16,11 @@ from app.core.trace import get_trace_id
 
 logger = logging.getLogger(__name__)
 
-DESIGN_AUTH_PATHS = {
+DESIGN_CONTRACT_PATHS = {
     "/api/v1/auth/register",
     "/api/v1/auth/login",
     "/api/v1/auth/refresh",
+    "/api/v1/categories",
 }
 
 
@@ -87,7 +88,7 @@ async def request_validation_exception_handler(
         content=error_response(
             business_code=(
                 "DESIGN_VALIDATION_ERROR"
-                if request.url.path in DESIGN_AUTH_PATHS
+                if request.url.path in DESIGN_CONTRACT_PATHS
                 else "VALIDATION_ERROR"
             ),
             message="Dữ liệu đầu vào không hợp lệ.",
@@ -104,7 +105,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     logger.exception("Unhandled API error; trace_id=%s", trace_id, exc_info=exc)
     business_code = (
         "DESIGN_INTERNAL_ERROR"
-        if request.url.path in DESIGN_AUTH_PATHS
+        if request.url.path in DESIGN_CONTRACT_PATHS
         else "INTERNAL_SERVER_ERROR"
     )
     return JSONResponse(

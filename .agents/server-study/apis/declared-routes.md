@@ -73,6 +73,22 @@ Missing/malformed/invalid claims and a missing user return
 `500 DESIGN_INTERNAL_ERROR`. The route never selects `password_hash` and does
 not mutate the database.
 
+### `GET /api/v1/categories`
+
+Implemented through `app.modules.guest.categories.view.get_categories(...)`.
+The route is public, accepts only optional query `locale` and has no request
+body, path parameter, pagination, sort or authorization requirement. Missing
+locale resolves to `vi-VN`; a provided locale is matched exactly. The query
+selects `id`, `name`, `slug` and nullable `description` from `categories` where
+`status = 'ACTIVE'` and `locale = :locale`, ordered by `id`.
+
+Success is HTTP `200` with `DESIGN_RESOURCE_RETRIEVED` and
+`data.items` plus implicit pagination `{page: 1, size: total, total,
+total_pages: 1}`. An empty result is still a successful empty page. Request
+validation maps to `422 DESIGN_VALIDATION_ERROR`; database or mapping failure
+maps to `500 DESIGN_INTERNAL_ERROR`. No live schema/migration application is
+claimed by source or tests.
+
 ### `POST /api/v1/chat_log_ai`
 Not currently exposed; implementation remains `UNWIRED`. This is **not** the
 same runtime implementation as AI Server's `ChatLogRequest` route.

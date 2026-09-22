@@ -34,7 +34,7 @@ format: markdown
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | Locale | `locale` | `string` | `No` | `N/A — chưa đặc tả` | `N/A — chưa đặc tả` | `string` | `string` | `N/A — chưa đặc tả` | `N/A` | Ngôn ngữ/locale dùng khi nạp category nếu được hỗ trợ | [`3.1`](./05_Data_Mapping.md#31-validate-locale) |
+| 1 | Locale | `locale` | `string` | `No` | `N/A` | `N/A` | `string` | `string` | `Any string` | `vi-VN` when omitted | Locale exact-match dùng khi nạp category | [`3.1`](./05_Data_Mapping.md#31-validate-locale) |
 
 ## Request body
 

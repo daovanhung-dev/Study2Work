@@ -4,9 +4,9 @@ Source root: `apps/study-server/`
 
 ```text
 CONTEXT_MODE: DEEP
-RUNTIME_STATUS: VERIFIED_IMPORT (9 current routes)
+RUNTIME_STATUS: VERIFIED_IMPORT (10 current routes)
 TEST_STATUS: COLLECTION_VERIFIED
-BUSINESS_MODULE_STATUS: SOURCE_BACKED (register, login, refresh)
+BUSINESS_MODULE_STATUS: SOURCE_BACKED (register, login, refresh, categories)
 DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED / do not infer from design docs
 ```
 
@@ -41,9 +41,9 @@ latest user requirement
 2. Không dựng lại `app.module.auth`, `app.module.ai.log` hoặc bất kỳ package legacy nào từ docs/Git history nếu requirement chưa xác nhận.
 3. `app/core/security/*` là reusable helper; API #1 register và API #3 login/refresh là các business flow Study hiện được triển khai/xác minh.
 4. Study DB helper không commit; caller/use-case phải sở hữu transaction khi business module tồn tại.
-5. Không invent table/column: `infra/postgres/study-server/DB.sql` là checked-in
-   schema/design evidence, còn live metadata mới xác nhận runtime availability;
-   migration directory vẫn chưa tồn tại.
+5. Không invent table/column ngoài requirement/contract: `infra/postgres/study-server/DB.sql`
+   và migration artifacts là checked-in schema/design evidence, còn live metadata
+   mới xác nhận runtime availability; migration chưa được apply live.
 6. Trước mọi runtime fix, kiểm tra toàn bộ import chain `main -> api/core` và test collection trong đúng source hiện tại.
 7. Trong module, `model.py` giữ basic contract validation; `app/utils/validate.py` chứa các helper normalization thuần dùng chung như `strip_email`; `register_account/validate.py` chỉ định nghĩa special validation thuần/reusable với field, điều kiện và message lỗi rõ ràng. Không query DB hoặc tạo side effect trong các validator; `view.py` gọi special validation trước business check/query. Không áp dụng rule như `@gmail.com` nếu contract chưa xác nhận.
 8. Không coi `apps/study-server/AGENTS.md` hoặc `apps/study-server/.agent/` là context hợp lệ; canonical context duy nhất nằm dưới `.agents/server-study/`.
