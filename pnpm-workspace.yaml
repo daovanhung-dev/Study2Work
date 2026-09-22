@@ -1,5 +1,0 @@
-packages:
-  - "apps/study-client"
-  - "apps/db-admin-web"
-  - "apps/work-server"
-  - "apps/work-client/web"
