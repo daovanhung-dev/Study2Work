@@ -13,16 +13,19 @@ app/main.py:create_app
   -> app/core/trace.py
 ```
 
-Current composition, API #1 register flow, API #3 login/refresh flow, API #4
-current-user flow and API #5 category flow are present. The auth and category
-test modules use the `guest` namespace and the full test collection is
-available; routes without a current implementation remain unwired.
+Current composition, API #1 register flow, API #2 verify-email dispatch stub,
+API #3 login/refresh flow, API #4 current-user flow, API #5 category flow and
+API #6 public course flow are present. The auth, verification, category and
+course test modules use the `guest`
+namespace and the full test collection is available; routes without a current
+implementation remain unwired.
 
 ## Verified ownership
 
 - `app/main.py`: FastAPI composition root, CORS, middleware, exception handlers, root/health routes.
 - `app/api/v1.py`: declared `/api/v1` routes; exposes health-adjacent utility
-  routes, API #1 register, API #3 auth and API #4 current-user profile.
+  routes, API #1 register, API #2 verification dispatch, API #3 auth, API #4
+  current-user profile, API #5 categories and API #6 courses.
 - `app/core/config.py`: typed settings backed by `app/core/constants.py`.
 - `app/core/database.py`: sync SQLAlchemy engine/session/query primitives.
 - `app/core/security/*`: password, access token, refresh token primitives.
@@ -39,6 +42,12 @@ available; routes without a current implementation remain unwired.
 - `app/modules/guest/categories/models.py`: API #5 query and public category page contracts.
 - `app/modules/guest/categories/query.py`: parameterized active-category lookup by exact locale.
 - `app/modules/guest/categories/view.py`: default-locale resolution, category mapping and canonical response/error mapping.
+- `app/modules/guest/courses/models.py`: API #6 query, course, mentor and pagination contracts.
+- `app/modules/guest/courses/query.py`: parameterized published-course/count queries and static sort mapping.
+- `app/modules/guest/courses/view.py`: public filtering, mentor-integrity check, decimal-price mapping and canonical response/error mapping.
+- `app/modules/guest/verify_email_send/models.py`: strict public `user_id` and `email` request contract.
+- `app/modules/guest/verify_email_send/view.py`: provider dispatch orchestration and canonical response/error mapping without DB access.
+- `app/service/email/provider.py`: injectable verification-email provider Protocol, result type and development stub.
 - `app/modules/guest/register_account/models.py`: API #1 register request model,
   type/basic validation and normalization.
 - `app/modules/guest/register_account/validate.py`: special validation boundary;
@@ -54,7 +63,9 @@ available; routes without a current implementation remain unwired.
 No current source establishes:
 
 - chat log business flow;
-- Study domain modules beyond API #1 register, API #3 auth, API #4 current-user profile and API #5 categories.
+- real Email Provider delivery, verification token/link generation or retry worker;
+- Study domain modules beyond API #1 register, API #2 stub dispatch, API #3 auth,
+  API #4 current-user profile, API #5 categories and API #6 courses.
 
 ## Runtime compatibility repairs
 

@@ -1,0 +1,1 @@
+"""Public course-discovery module."""

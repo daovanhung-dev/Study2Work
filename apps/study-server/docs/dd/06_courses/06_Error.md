@@ -16,10 +16,10 @@ Các trường hợp lỗi của API #6 theo `list_api.md`. Danh sách rỗng l�
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Validation error | `Yes` | `category` | Query `category` không parse được thành `int64` | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`1.1`](./05_Data_Mapping.md#11-validate-category) | `No` | Category relation vẫn TBD; không tạo JOIN giả |
-| 2 | Validation error | `Yes` | `page` | Query `page` không parse được thành `int32` | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`1.2`](./05_Data_Mapping.md#12-validate-page) | `No` | Range/default chưa được contract xác nhận |
-| 3 | Validation error | `Yes` | `size` | Query `size` không parse được thành `int32` | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`1.3`](./05_Data_Mapping.md#13-validate-size) | `No` | Range/default chưa được contract xác nhận |
-| 4 | Validation error | `Yes` | `sort` | Query `sort` không có kiểu `string` hoặc không khớp allow-list sau khi được xác nhận | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`1.4`](./05_Data_Mapping.md#14-validate-sort) | `No` | Allow-list chưa được contract đặc tả |
+| 1 | Validation error | `Yes` | `category` | Query `category` không parse được thành `int64` hoặc được gửi khi relation chưa có | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`1.1`](./05_Data_Mapping.md#11-validate-category) | `No` | Không tạo JOIN giả |
+| 2 | Validation error | `Yes` | `page` | Query `page` không parse được thành `int32` hoặc nhỏ hơn `1` | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`1.2`](./05_Data_Mapping.md#12-validate-page) | `No` | Default `1` |
+| 3 | Validation error | `Yes` | `size` | Query `size` không parse được thành `int32` hoặc ngoài range `1..100` | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`1.3`](./05_Data_Mapping.md#13-validate-size) | `No` | Default `20` |
+| 4 | Validation error | `Yes` | `sort` | Query `sort` không có dạng allow-listed `field:direction` | `422` | `DESIGN_VALIDATION_ERROR` | `N/A — envelope message` | [`1.4`](./05_Data_Mapping.md#14-validate-sort) | `No` | Không nội suy raw SQL |
 | 5 | System error | `No` | `courses/users` | Lỗi đọc query, count hoặc map response; hoặc thiếu mentor cho Course bắt buộc | `500` | `DESIGN_INTERNAL_ERROR` | `N/A — envelope message` | [`4.3/6.3`](./05_Data_Mapping.md#43-lỗi-đọc-hoặc-map) | `No` | Không trả raw query, stack trace hoặc storage detail |
 
 > Mỗi error case và mỗi field validation phải nằm trên một row riêng.

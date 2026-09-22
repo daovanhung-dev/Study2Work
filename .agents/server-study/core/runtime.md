@@ -1,9 +1,9 @@
 # Study core runtime contracts
 
 Status: source-backed; `app.main` imports and composes the current routes,
-including public API #5 categories. The current register and category pytest
-modules use the `guest` namespace and collection is runnable in the Study
-virtual environment.
+including public API #2 verify-email dispatch, API #5 categories and API #6
+courses. The current register, verification, category and course pytest modules
+use the `guest` namespace and collection is runnable in the Study virtual environment.
 
 The local Study API startup address is `127.0.0.1:3003`. Containerized startup
 binds internally to `0.0.0.0:3003` and publishes the host address separately.
@@ -22,14 +22,14 @@ binds internally to `0.0.0.0:3003` and publishes the host address separately.
 - Side effects: creates engine/session factory when explicit settings supplied; installs dependency override for `get_db`.
 - Declared routes: `/`, `/health/live`, `/health/ready` plus `/api/v1/*` router.
 - Runtime status: source-backed/import-verified for current routes, including API
-  #1 register.
+  #1 register, API #2 verify-email dispatch, API #5 categories and API #6 courses.
 
 ### root/health handlers
 - Intended return: standard success envelope via `success_response`.
 - `health_live`: reports service + environment only.
 - `health_ready`: reports database as `configured`; it does **not** execute a DB probe. Redis is only `configured/not_configured` from settings.
-- Runtime status: source-backed; full Study test suite is not currently
-  collectable because of the stale register test import.
+- Runtime status: source-backed; full Study test suite is collectable in the
+  Study virtual environment.
 
 ## `app/core/responses.py`
 
@@ -55,11 +55,35 @@ Raises `ApiError` with the model's status/business code/message/trace ID.
 - `api_error_handler`: renders `ApiError` through `error_response`.
 - `http_exception_handler`: preserves already-safe error dicts; otherwise maps to `HTTP_ERROR`.
 - `request_validation_exception_handler`: maps Pydantic errors to `ErrorDetail`, using
-  `DESIGN_VALIDATION_ERROR` for API #1 register, auth login/refresh and API #5
-  categories, and `VALIDATION_ERROR` elsewhere.
+  `DESIGN_VALIDATION_ERROR` for API #1 register, API #2 verify-email dispatch,
+  auth login/refresh, API #5 categories and API #6 courses, and
+  `VALIDATION_ERROR` elsewhere.
 - `unhandled_exception_handler`: logs internal exception with trace ID; returns
-  `DESIGN_INTERNAL_ERROR` for API #1 register, auth login/refresh and API #5
-  categories, and `INTERNAL_SERVER_ERROR` elsewhere.
+  `DESIGN_INTERNAL_ERROR` for API #1 register, API #2 verify-email dispatch,
+  auth login/refresh, API #5 categories and API #6 courses, and
+  `INTERNAL_SERVER_ERROR` elsewhere.
+
+## API #2 verification dispatch
+
+- `app/service/email/provider.py` defines the injectable provider boundary and the
+  default stub used by the current runtime.
+- `app.modules.guest.verify_email_send.view` calls the provider without resolving
+  a DB session, then maps acceptance to HTTP `202`.
+- The stub does not send real email; token/link generation, provider integration
+  and retry worker remain outside the current runtime boundary.
+
+## API #6 public courses
+
+- `app.modules.guest.courses` exposes public `GET /api/v1/courses` without
+  authorization or mutation.
+- Query defaults are `page=1`, `size=20`; size is limited to `1..100`.
+- Sort is an allow-listed `field:direction` expression over `id`, `name`,
+  `price` and `created_at`; default order is `created_at DESC, id ASC`.
+- Only `PUBLISHED` courses are selected. Mentor data is read through a left
+  join and missing mentor integrity is mapped to `DESIGN_INTERNAL_ERROR`.
+- `category` is parsed but rejected with `DESIGN_VALIDATION_ERROR` until a
+  course-category relation is source-backed. Price is serialized as a decimal
+  string; no live DB metadata verification is claimed.
 
 ## `app/core/trace.py`
 

@@ -28,4 +28,6 @@ DB-backed checks such as duplicate, existence, permission or state belong to
 | `guest/auth_login` | `SOURCE_BACKED` | Login and refresh-token flow in current source |
 | `guest/users_me` | `SOURCE_BACKED` | API #4 current Student profile read flow |
 | `guest/categories` | `SOURCE_BACKED` | API #5 public active-category read flow |
+| `guest/verify_email_send` | `SOURCE_BACKED` | API #2 public verification dispatch through injectable stub provider |
+| `guest/courses` | `SOURCE_BACKED` | API #6 public published-course list with pagination |
 | Other Study domain modules | `NOT_FOUND`/`UNWIRED` | Require source/contract before implementation |

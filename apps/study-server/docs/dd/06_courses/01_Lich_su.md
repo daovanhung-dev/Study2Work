@@ -13,13 +13,14 @@ format: markdown
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | `2026-08-28` |
-| Ngày update cuối cùng | `2026-08-28` |
+| Ngày update cuối cùng | `2026-09-22` |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | `1.0` | `2026-08-28` | `Codex (AI authoring agent)` | `Create new` | `Design-only; Draft — Needs Confirmation; API #6 public courses` |
+| `1.1` | `2026-09-22` | `Codex (implementation agent)` | `Sync implementation contract` | `Default pagination, sort allow-list, category rejection, mentor integrity and empty-page policy; approval remains TBD` |
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

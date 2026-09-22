@@ -1,7 +1,8 @@
 from typing import Any
 
 # import framework
-from fastapi import APIRouter, Depends, Header, Request, status
+from fastapi import APIRouter, Depends, Header, Query, Request, status
+from fastapi.exceptions import RequestValidationError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -14,6 +15,8 @@ from app.modules.guest.auth_login.models import LoginRequest, RefreshRequest
 from app.modules.guest.auth_login.view import login, refresh
 from app.modules.guest.categories.models import CategoryQuery
 from app.modules.guest.categories.view import get_categories
+from app.modules.guest.courses.models import CourseQuery
+from app.modules.guest.courses.view import get_courses
 from app.modules.guest.register_account.models import RegisterRequest
 from app.modules.guest.register_account.view import create_user
 from app.modules.guest.users_me.view import get_current_user
@@ -35,6 +38,23 @@ category_query_dependency = Depends()
 verification_provider_dependency = Depends(get_verification_email_provider)
 
 
+def parse_course_query(
+    category: int | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    size: int = Query(default=20, ge=1, le=100),
+    sort: str | None = Query(default=None),
+) -> CourseQuery:
+    """Parse query primitives and preserve the API validation envelope."""
+
+    try:
+        return CourseQuery(category=category, page=page, size=size, sort=sort)
+    except ValueError as exc:
+        raise RequestValidationError(
+            [{"type": "value_error", "loc": ("query", "sort"), "msg": str(exc)}]
+        ) from exc
+
+
+course_query_dependency = Depends(parse_course_query)
 
 
 @router.get("/hello")
@@ -109,6 +129,19 @@ def categories(
 ) -> dict[str, Any]:
     return get_categories(
         locale=category_query.locale,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+@router.get("/courses", status_code=status.HTTP_200_OK)
+def courses(
+    request: Request,
+    course_query: CourseQuery = course_query_dependency,
+    db: Session = db_dependency,
+) -> dict[str, Any]:
+    return get_courses(
+        course_query=course_query,
         db=db,
         trace_id=get_trace_id(request),
     )

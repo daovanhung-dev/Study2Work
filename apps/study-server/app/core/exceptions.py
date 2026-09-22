@@ -22,6 +22,7 @@ DESIGN_CONTRACT_PATHS = {
     "/api/v1/auth/refresh",
     "/api/v1/auth/verify-email/send",
     "/api/v1/categories",
+    "/api/v1/courses",
 }
 
 

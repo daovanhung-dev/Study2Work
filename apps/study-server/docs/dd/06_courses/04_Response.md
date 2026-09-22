@@ -38,10 +38,10 @@ format: markdown
 | 5.1.7.3 | `data.items[].mentor.avatar_url` | Mentor avatar URL | `avatar_url` | `uri` | `Yes` | `users` | `avatar_url` | `4.2` | Direct mapping | `null` when source is NULL | Optional contract field |
 | 5.1.8 | `data.items[].category` | Course category | `category` | `Category` | `Yes` | `N/A — relation TBD` | `N/A` | `5.1` | Omit until category–course source is confirmed | Omit | Optional contract field; no fabricated object |
 | 5.2 | `data.pagination` | Pagination metadata | `pagination` | `object` | `No` | `N/A` | `N/A` | `5.2` | Map `PageMeta` | `{}` on error | |
-| 5.2.1 | `data.pagination.page` | Page number | `page` | `int32` | `No` | `N/A` | `N/A` | `5.2` | Effective query page | `TBD` when query default absent | Default not contract-confirmed |
-| 5.2.2 | `data.pagination.size` | Page size | `size` | `int32` | `No` | `N/A` | `N/A` | `5.2` | Effective query size | `TBD` when query default absent | Default not contract-confirmed |
+| 5.2.1 | `data.pagination.page` | Page number | `page` | `int32` | `No` | `N/A` | `N/A` | `5.2` | Effective query page | `1` when omitted | Runtime default is `1` |
+| 5.2.2 | `data.pagination.size` | Page size | `size` | `int32` | `No` | `N/A` | `N/A` | `5.2` | Effective query size | `20` when omitted | Runtime default is `20`, max `100` |
 | 5.2.3 | `data.pagination.total` | Total matching courses | `total` | `int64` | `No` | `courses` | `COUNT(*)` | `4.3` | Count with same published/filter conditions | `0` when empty | |
-| 5.2.4 | `data.pagination.total_pages` | Total pages | `total_pages` | `int32` | `No` | `N/A` | `N/A` | `5.2` | Derived from total and effective size | `TBD` for empty/default-size convention | Contract does not define convention |
+| 5.2.4 | `data.pagination.total_pages` | Total pages | `total_pages` | `int32` | `No` | `N/A` | `N/A` | `5.2` | `ceil(total / size)` | `0` when total is `0` | Out-of-range page remains HTTP 200 with empty items |
 | 6 | `meta` | Metadata | `meta` | `object` | `No` | `N/A` | `N/A` | `6.1/6.2/6.3` | Empty object | `{}` | No extra metadata contract |
 | 7 | `traceId` | Trace ID | `traceId` | `uuid` | `No` | `N/A` | `N/A` | `6.1/6.2/6.3` | Request correlation/generator | `TBD — exact generator chưa đặc tả` | `ApiEnvelope` field |
 
@@ -105,7 +105,7 @@ format: markdown
 }
 ```
 
-> `page=1`, `size=20` và `total_pages=0` trong examples là giá trị minh họa; default/range và empty-page convention vẫn cần xác nhận trong contract.
+> Runtime defaults are `page=1`, `size=20`; `total_pages=0` when `total=0`.
 
 ## Ví dụ lỗi validation — HTTP 422
 

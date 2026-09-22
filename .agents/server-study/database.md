@@ -37,4 +37,12 @@ row and inserts the new row in the caller-owned transaction.
 and `locale` exactly matches the requested locale; missing locale resolves to
 `vi-VN`. The migration adds no seed data and has not been applied to live DB.
 
+API #6 reads the source-backed `courses` columns `id`, `mentor_id`, `name`,
+`description`, `thumbnail_url`, `price` and `status`, joined to the public mentor
+projection in `users`. It filters `status = 'PUBLISHED'`, performs a separate
+count/integrity read, and does not add a migration. The checked-in schema permits
+nullable `mentor_id`; runtime treats any published course without a valid mentor
+as an internal integrity failure. Course-category relation is not source-backed,
+so the API rejects the `category` query rather than inventing a join.
+
 Before any future migration/query task, require authoritative table/column/PK/FK/unique/index/status/delete/timestamp/tenant rules. Query helpers do not commit; transaction ownership belongs to the future/current business use case that performs the write.

@@ -1,9 +1,9 @@
 # Study declared API surface
 
 Global status: current route source is `SOURCE_BACKED`; `app.main` import and
-the register/auth test modules use the current `guest` internal namespace.
-Current auth login/refresh and current-user routes are wired; the AI route
-remains `UNWIRED`.
+the register/auth/category/course test modules use the current `guest` internal
+namespace. Current auth login/refresh, verify-email dispatch, current-user,
+category and course routes are wired; the AI route remains `UNWIRED`.
 
 ## Composition-root routes
 
@@ -36,8 +36,9 @@ The flow checks duplicate email, hashes the password with Argon2id, inserts into
 the `users` relation referenced by current SQL, commits the transaction and
 returns the safe profile envelope. The active schema is not asserted here
 without live metadata.
-Verification dispatch is currently deferred and logged because API #2/provider is
-not implemented.
+Verification dispatch is not part of the register transaction. Direct API #2
+invocation uses the current injectable development stub and does not claim real
+email delivery.
 
 ### `POST /api/v1/auth/login`
 Implemented through `app.modules.guest.auth_login.view.login(...)`. It looks up
@@ -56,6 +57,21 @@ active user, revokes that row and inserts a new hashed refresh token in the same
 transaction, then returns a new access-token pair and profile.
 Invalid, expired or already rotated tokens return
 `401 DESIGN_AUTHENTICATION_REQUIRED`.
+
+### `POST /api/v1/auth/verify-email/send`
+
+Implemented through `app.modules.guest.verify_email_send.view.send_verification_email(...)`.
+The route is public, accepts JSON `{user_id, email}`, ignores any Authorization
+header, does not resolve the database dependency and does not verify user
+existence or email ownership because DD #2 does not provide that query contract.
+
+The view calls the injectable `app.service.email.provider.VerificationEmailProvider`.
+The current default is `StubVerificationEmailProvider`, which accepts the
+dispatch without sending a real email. A successful response is HTTP `202` with
+`DESIGN_OPERATION_ACCEPTED` and `data: {status: "accepted"}`. Provider failures
+before acceptance map to `500 DESIGN_INTERNAL_ERROR`; raw provider details are
+not returned or logged. No token/link/expiry/retry field, DB mutation or retry
+worker is currently implemented.
 
 ### `GET /api/v1/users/me`
 Implemented through `app.modules.guest.users_me.view.get_current_user(...)`.
@@ -88,6 +104,23 @@ total_pages: 1}`. An empty result is still a successful empty page. Request
 validation maps to `422 DESIGN_VALIDATION_ERROR`; database or mapping failure
 maps to `500 DESIGN_INTERNAL_ERROR`. No live schema/migration application is
 claimed by source or tests.
+
+### `GET /api/v1/courses`
+
+Implemented through `app.modules.guest.courses.view.get_courses(...)`. The route
+is public and accepts optional `category`, `page`, `size` and `sort` query
+parameters. `page` defaults to `1`; `size` defaults to `20` and is limited to
+`1..100`. `sort` accepts one allow-listed `field:direction` pair over `id`,
+`name`, `price` or `created_at`; the default order is `created_at DESC, id ASC`.
+
+The query reads only `courses.status = 'PUBLISHED'`, joins the public mentor
+projection from `users`, and returns `CoursePage` items with decimal-string
+prices. `category` is parsed but returns `422 DESIGN_VALIDATION_ERROR` until a
+course-category relation is source-backed. A published course with a missing
+mentor, query/mapping failure or database failure maps to safe
+`500 DESIGN_INTERNAL_ERROR`. Empty and out-of-range pages return HTTP `200`;
+`total_pages` is zero when `total` is zero. No migration or live schema
+verification is claimed.
 
 ### `POST /api/v1/chat_log_ai`
 Not currently exposed; implementation remains `UNWIRED`. This is **not** the
