@@ -1,6 +1,8 @@
 # Work workflow
 
 ```text
+classify task -> worklog preflight/read same-type logs
+->
 scope AGENTS
 -> module/API/core page
 -> createApp/api/v1 and exact module source

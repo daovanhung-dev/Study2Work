@@ -1,5 +1,9 @@
 # Work Web workflow
 
+Trước mọi task, xác định `primary_task_type`, chạy
+`scripts/select-worklogs.mjs --type <primary_task_type> --limit 3`, đọc các log
+được chọn và ghi `PRIOR_WORKLOG_REVIEW` trước khi inspect sâu.
+
 Task web phải đọc `.agents/project/design.md`, chọn Vue hoặc React app, rồi trace `route -> page/layout ->
 React Query/local state -> apiRequest -> Express route -> response envelope`.
 Không dùng server layer order cho frontend và không trộn Vue patterns từ Study

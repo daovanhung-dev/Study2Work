@@ -74,7 +74,10 @@ function contextNodes(manifest) {
 }
 
 function contextFiles(manifest) {
-  const roots = [".agents/project", ".agents/worklog"];
+  // Worklog entries are audit records, not context pages. They are validated
+  // through the worklog registry and preflight selector instead of the page
+  // graph/orphan-page check.
+  const roots = [".agents/project"];
   for (const { node } of contextNodes(manifest)) roots.push(dirname(node.entry));
   return [...new Set(roots.flatMap((root) => collectFiles(root)))].sort();
 }
@@ -103,6 +106,7 @@ function registeredContextFiles(manifest) {
     registered.add(manifest.worklog.index);
     registered.add(manifest.worklog.template);
   }
+  if (manifest.contextMap) registered.add(manifest.contextMap);
   if (manifest.skillsIndex) registered.add(manifest.skillsIndex);
   for (const skill of Object.values(manifest.skills ?? {})) {
     registered.add(skill.entry);
@@ -209,8 +213,22 @@ function checkRegistries(manifest) {
 
   if (!manifest.worklog) fail("worklog registry is missing");
   else {
+    mustExist(manifest.worklog.root, "worklog root");
     mustExist(manifest.worklog.index, "worklog index");
     mustExist(manifest.worklog.template, "worklog template");
+    const preflight = manifest.worklog.preflight;
+    if (!preflight || typeof preflight !== "object") {
+      fail("worklog preflight registry is missing");
+    } else {
+      mustExist(preflight.script, "worklog preflight script");
+      if (preflight.typeField !== "primary_task_type") {
+        fail("worklog preflight must match primary_task_type");
+      }
+      if (preflight.limit !== 3) fail("worklog preflight limit must be 3");
+      if (preflight.shortagePolicy !== "read_all_available_and_record_shortage") {
+        fail("worklog preflight shortagePolicy is invalid");
+      }
+    }
     const worklogIndex = existsSync(resolve(repoRoot, manifest.worklog.index))
       ? readFileSync(resolve(repoRoot, manifest.worklog.index), "utf8")
       : "";
@@ -230,6 +248,8 @@ function checkRegistries(manifest) {
   }
 
   if (manifest.skillsIndex) mustExist(manifest.skillsIndex, "skills index");
+  if (!manifest.contextMap) fail("contextMap registry is missing");
+  else mustExist(manifest.contextMap, "context map");
   for (const [skillName, skill] of Object.entries(manifest.skills ?? {})) {
     checkStatus(skill.status, `skill ${skillName}`);
     mustExist(skill.entry, `skill ${skillName} entry`);
@@ -258,6 +278,9 @@ function checkRegistries(manifest) {
     if (!Array.isArray(workflow.verificationCommands) || workflow.verificationCommands.length === 0) {
       fail(`workflow ${workflowName} must define verificationCommands`);
     }
+    if (workflow.preflight === "worklog.preflight" && !manifest.worklog?.preflight) {
+      fail(`workflow ${workflowName} references missing worklog preflight`);
+    }
     for (const scope of workflow.scopeRefs ?? []) {
       if (!scopeNames.has(scope)) fail(`workflow ${workflowName} references unknown scope ${scope}`);
     }
@@ -272,12 +295,56 @@ function checkRegistries(manifest) {
   }
 }
 
+function checkContextMap(manifest) {
+  if (!manifest.contextMap || !existsSync(resolve(repoRoot, manifest.contextMap))) return;
+
+  const mapText = readFileSync(resolve(repoRoot, manifest.contextMap), "utf8");
+  const required = new Set([
+    manifest.rootRouter,
+    manifest.registry,
+    manifest.contextMap,
+    manifest.skillsIndex,
+  ]);
+
+  if (manifest.project) {
+    required.add(manifest.project.index);
+    for (const page of manifest.project.pages ?? []) required.add(page);
+  }
+
+  for (const { node } of contextNodes(manifest)) {
+    required.add(node.entry);
+    required.add(node.index);
+    for (const page of node.pages ?? node.requiredPages ?? []) required.add(page);
+  }
+
+  for (const skill of Object.values(manifest.skills ?? {})) {
+    required.add(skill.entry);
+    for (const resourcePath of skill.resourcePaths ?? []) required.add(resourcePath);
+  }
+
+  for (const workflow of Object.values(manifest.workflows ?? {})) required.add(workflow.entry);
+  for (const contract of Object.values(manifest.contracts ?? {})) required.add(contract.path);
+
+  if (manifest.worklog) {
+    required.add(manifest.worklog.root);
+    required.add(manifest.worklog.index);
+    required.add(manifest.worklog.template);
+    if (manifest.worklog.preflight?.script) required.add(manifest.worklog.preflight.script);
+  }
+
+  for (const path of required) {
+    if (typeof path === "string" && !mapText.includes(path)) {
+      fail(`context map does not mention ${path}`);
+    }
+  }
+}
+
 function checkInternalLinks(manifest) {
   // Skill bodies contain intentional template/example placeholders such as
   // `./07_<mapping>.md`; validate the skill registry/index links here and
   // validate resource existence separately, but do not treat those examples
   // as repository context page links.
-  const registryFiles = [manifest.skillsIndex].filter(Boolean);
+  const registryFiles = [manifest.skillsIndex, manifest.contextMap].filter(Boolean);
   const files = ["AGENTS.md", ".agents/AGENTS.md", ...contextFiles(manifest), ...registryFiles];
   const markdownLink = /\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 
@@ -360,9 +427,20 @@ if (manifest) {
   const rootRouter = existsSync(resolve(repoRoot, "AGENTS.md")) ? readFileSync(resolve(repoRoot, "AGENTS.md"), "utf8") : "";
   const registry = existsSync(resolve(repoRoot, ".agents/AGENTS.md")) ? readFileSync(resolve(repoRoot, ".agents/AGENTS.md"), "utf8") : "";
 
+  if (manifest.contextMap) {
+    if (!rootRouter.includes(manifest.contextMap)) {
+      fail(`root router does not reference ${manifest.contextMap}`);
+    }
+    const mapRelative = manifest.contextMap.replace(/^\.agents\//, "");
+    if (!registry.includes(mapRelative)) {
+      fail(`context registry does not reference ${mapRelative}`);
+    }
+  }
+
   checkNoAgentContextInApps();
   checkPageGraph(manifest, registry);
   checkRegistries(manifest);
+  checkContextMap(manifest);
 
   const registered = registeredContextFiles(manifest);
   for (const file of contextFiles(manifest)) {

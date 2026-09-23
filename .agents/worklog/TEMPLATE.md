@@ -10,6 +10,15 @@ status: "PLANNED | IN_PROGRESS | VERIFIED | PARTIAL | BLOCKED"
 
 # Worklog: <task title>
 
+## PRIOR_WORKLOG_REVIEW
+
+- primary_task_type: <fill>
+- selector_command: <fill>
+- prior_worklogs_reviewed:
+  - path: <fill>
+    - carry_forward: <fill>
+- shortage: `none | <number> missing`
+
 ## EXPECTED_BEHAVIOR
 
 - Requirement:

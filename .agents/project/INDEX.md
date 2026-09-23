@@ -9,6 +9,7 @@ toàn bộ project context nếu không có dependency thật.
 ```text
 AGENTS.md
 → .agents/AGENTS.md
+→ .agents/context-map.md
 → project/INDEX.md
 → đúng scope AGENTS.md
 → exact source/API/module/core/service/test page
@@ -30,6 +31,7 @@ AGENTS.md
 
 ## Mandatory task artifacts
 
+- Context map: `../context-map.md` (human-readable load and relationship graph).
 - Skill registry: `../skills/INDEX.md`.
 - Worklog contract: `../worklog/README.md` and `../worklog/TEMPLATE.md`.
 - Expected/current behavior must remain separate; conflicts are recorded as

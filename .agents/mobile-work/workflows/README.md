@@ -1,5 +1,9 @@
 # Mobile workflow
 
+Trước mọi task, xác định `primary_task_type`, chạy
+`scripts/select-worklogs.mjs --type <primary_task_type> --limit 3`, đọc các log
+được chọn và ghi `PRIOR_WORKLOG_REVIEW` trước khi inspect sâu.
+
 Trước edit: đọc `.agents/project/design.md`, chọn đúng Flutter app, trace `view -> controller -> helper/model ->
 Neon hoặc SQLite`, kiểm tra external HTTP call và platform impact. Giữ nguyên
 package name `work_server`, public helper signature, model mapping và

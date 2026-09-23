@@ -16,6 +16,6 @@ Mỗi thay đổi phải ghi:
 - Test/regression impact.
 - Open question hoặc decision đã đóng.
 
-Với phiên tạo/cập nhật DD, tạo worklog tại `docs/worklog/<yyyy-mm-dd>/`, ghi
+Với phiên tạo/cập nhật DD, tạo worklog tại `.agents/worklog/<yyyy-mm-dd>/`, ghi
 changed files, commands, risks, completion và self-review. Sau worklog phải chạy
 `.codex/tools/update_worklog_learning.ps1` để refresh project memory.

@@ -1,6 +1,8 @@
 # DB Admin workflow
 
 ```text
+classify task -> worklog preflight/read same-type logs
+->
 db-admin/AGENTS.md
 -> architecture/API/security/database page
 -> exact Angular/FastAPI source and local contract
