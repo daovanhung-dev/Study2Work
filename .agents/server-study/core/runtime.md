@@ -69,14 +69,14 @@ Raises `ApiError` with the model's status/business code/message/trace ID.
 
 - `app/service/email/provider.py` defines the injectable provider boundary and the
   default stub used by the current runtime.
-- `app.modules.guest.verify_email_send.view` calls the provider without resolving
+- `app.modules.guest.api_02_auth_verify_email_send.view` calls the provider without resolving
   a DB session, then maps acceptance to HTTP `202`.
 - The stub does not send real email; token/link generation, provider integration
   and retry worker remain outside the current runtime boundary.
 
 ## API #6 public courses
 
-- `app.modules.guest.courses` exposes public `GET /api/v1/courses` without
+- `app.modules.guest.api_06_courses` exposes public `GET /api/v1/courses` without
   authorization or mutation.
 - Query defaults are `page=1`, `size=20`; size is limited to `1..100`.
 - Sort is an allow-listed `field:direction` expression over `id`, `name`,
@@ -89,7 +89,7 @@ Raises `ApiError` with the model's status/business code/message/trace ID.
 
 ## API #7 course search
 
-- `app.modules.guest.courses` exposes public `GET /api/v1/courses/search`.
+- `app.modules.guest.api_07_courses_search` exposes public `GET /api/v1/courses/search`.
 - `q` is trimmed/lowercased and bound into `LOWER(c.name) LIKE :q_pattern`;
   blank `q` removes the text predicate.
 - `page` defaults to `1`; page size is fixed at `20`; `sort` reuses the

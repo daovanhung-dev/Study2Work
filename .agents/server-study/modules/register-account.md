@@ -5,8 +5,8 @@
 ```text
 app/api/v1.py
 → app/utils/validate.py:strip_email
-→ app/modules/guest/register_account/models.py
-→ app/modules/guest/register_account/view.py
+→ app/modules/guest/api_01_auth_register/models.py
+→ app/modules/guest/api_01_auth_register/view.py
    ├─ query.py
    ├─ core/security/password.py
    └─ core/responses.py
@@ -45,6 +45,6 @@ the module must not add a domain rule without current contract/source evidence.
 
 ## Namespace alignment
 
-`tests/modules/guest/test_register.py` imports
-`app.modules.guest.register_account.models/view`, matching the runtime module
-namespace. The public endpoint remains `/api/v1/auth/register`.
+`tests/modules/guest/api_01_auth_register/test_register.py` imports
+`app.modules.guest.api_01_auth_register.models/view`, matching the runtime
+module namespace. The public endpoint remains `/api/v1/auth/register`.

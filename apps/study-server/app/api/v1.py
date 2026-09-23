@@ -11,20 +11,21 @@ from app.core.database import get_db, get_engine
 from app.core.trace import get_trace_id
 
 # import folder's files
-from app.modules.guest.auth_login.models import LoginRequest, RefreshRequest
-from app.modules.guest.auth_login.view import login, refresh
-from app.modules.guest.categories.models import CategoryQuery
-from app.modules.guest.categories.view import get_categories
-from app.modules.guest.courses.models import CourseQuery, CourseSearchQuery
-from app.modules.guest.courses.view import get_courses
-from app.modules.guest.courses.view import search_courses as search_courses_view
-from app.modules.guest.register_account.models import RegisterRequest
-from app.modules.guest.register_account.view import create_user
-from app.modules.guest.users_me.view import get_current_user
-from app.modules.guest.verify_email_send.models import VerifyEmailSendRequest
-from app.modules.guest.verify_email_send.view import (
+from app.modules.guest.api_01_auth_register.models import RegisterRequest
+from app.modules.guest.api_01_auth_register.view import create_user
+from app.modules.guest.api_02_auth_verify_email_send.models import VerifyEmailSendRequest
+from app.modules.guest.api_02_auth_verify_email_send.view import (
     send_verification_email as dispatch_verification_email,
 )
+from app.modules.guest.api_03_auth_login.models import LoginRequest, RefreshRequest
+from app.modules.guest.api_03_auth_login.view import login, refresh
+from app.modules.guest.api_04_users_me.view import get_current_user
+from app.modules.guest.api_05_categories.models import CategoryQuery
+from app.modules.guest.api_05_categories.view import get_categories
+from app.modules.guest.api_06_courses.models import CourseQuery
+from app.modules.guest.api_06_courses.view import get_courses
+from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
+from app.modules.guest.api_07_courses_search.view import search_courses as search_courses_view
 from app.service.email.provider import (
     VerificationEmailProvider,
     get_verification_email_provider,

@@ -24,10 +24,15 @@ DB-backed checks such as duplicate, existence, permission or state belong to
 
 | Module | Status | Context |
 |---|---|---|
-| `guest/register_account` | `SOURCE_BACKED` | `register-account.md` |
-| `guest/auth_login` | `SOURCE_BACKED` | Login and refresh-token flow in current source |
-| `guest/users_me` | `SOURCE_BACKED` | API #4 current Student profile read flow |
-| `guest/categories` | `SOURCE_BACKED` | API #5 public active-category read flow |
-| `guest/verify_email_send` | `SOURCE_BACKED` | API #2 public verification dispatch through injectable stub provider |
-| `guest/courses` | `SOURCE_BACKED` | API #6 public list and API #7 public search with pagination |
+| `guest/api_01_auth_register` | `SOURCE_BACKED` | `register-account.md` |
+| `guest/api_03_auth_login` | `SOURCE_BACKED` | Login and refresh-token flow in current source |
+| `guest/api_04_users_me` | `SOURCE_BACKED` | API #4 current Student profile read flow |
+| `guest/api_05_categories` | `SOURCE_BACKED` | API #5 public active-category read flow |
+| `guest/api_02_auth_verify_email_send` | `SOURCE_BACKED` | API #2 public verification dispatch through injectable stub provider |
+| `guest/api_06_courses` | `SOURCE_BACKED` | API #6 public course list with pagination |
+| `guest/api_07_courses_search` | `SOURCE_BACKED` | API #7 public course search with pagination |
+
+Shared course catalog boundary:
+`guest/_shared/course_catalog` contains only response models and pure helpers
+used by API #6 and API #7.
 | Other Study domain modules | `NOT_FOUND`/`UNWIRED` | Require source/contract before implementation |

@@ -32,7 +32,7 @@ the separate health readiness endpoint does not probe the database.
 
 ### `POST /api/v1/auth/register`
 Implemented input `RegisterRequest`; dependency `get_db`; calls
-`app.modules.guest.register_account.view.create_user(...)` with trace ID.
+`app.modules.guest.api_01_auth_register.view.create_user(...)` with trace ID.
 The flow checks duplicate email, hashes the password with Argon2id, inserts into
 the `users` relation referenced by current SQL, commits the transaction and
 returns the safe profile envelope. The active schema is not asserted here
@@ -42,7 +42,7 @@ invocation uses the current injectable development stub and does not claim real
 email delivery.
 
 ### `POST /api/v1/auth/login`
-Implemented through `app.modules.guest.auth_login.view.login(...)`. It looks up
+Implemented through `app.modules.guest.api_03_auth_login.view.login(...)`. It looks up
 the user by email, verifies the stored password hash, requires `status=ACTIVE`,
 creates a JWT access token, stores only the HMAC refresh-token hash, commits the
 session and returns the profile plus token fields.
@@ -52,7 +52,7 @@ return `403 DESIGN_ACCESS_DENIED`; database/token failures return
 `500 DESIGN_INTERNAL_ERROR`.
 
 ### `POST /api/v1/auth/refresh`
-Implemented through `app.modules.guest.auth_login.view.refresh(...)`. It hashes
+Implemented through `app.modules.guest.api_03_auth_login.view.refresh(...)`. It hashes
 the supplied opaque token, requires an unrevoked and unexpired DB row for an
 active user, revokes that row and inserts a new hashed refresh token in the same
 transaction, then returns a new access-token pair and profile.
@@ -61,7 +61,7 @@ Invalid, expired or already rotated tokens return
 
 ### `POST /api/v1/auth/verify-email/send`
 
-Implemented through `app.modules.guest.verify_email_send.view.send_verification_email(...)`.
+Implemented through `app.modules.guest.api_02_auth_verify_email_send.view.send_verification_email(...)`.
 The route is public, accepts JSON `{user_id, email}`, ignores any Authorization
 header, does not resolve the database dependency and does not verify user
 existence or email ownership because DD #2 does not provide that query contract.
@@ -75,7 +75,7 @@ not returned or logged. No token/link/expiry/retry field, DB mutation or retry
 worker is currently implemented.
 
 ### `GET /api/v1/users/me`
-Implemented through `app.modules.guest.users_me.view.get_current_user(...)`.
+Implemented through `app.modules.guest.api_04_users_me.view.get_current_user(...)`.
 The route requires one `Authorization: Bearer <jwt>` header and no request body,
 path parameter or query parameter. It decodes the current API#3 JWT shape
 (`sub` + `roles`), requires the normalized `STUDENT` role, then reads the
@@ -92,7 +92,7 @@ not mutate the database.
 
 ### `GET /api/v1/categories`
 
-Implemented through `app.modules.guest.categories.view.get_categories(...)`.
+Implemented through `app.modules.guest.api_05_categories.view.get_categories(...)`.
 The route is public, accepts only optional query `locale` and has no request
 body, path parameter, pagination, sort or authorization requirement. Missing
 locale resolves to `vi-VN`; a provided locale is matched exactly. The query
@@ -108,7 +108,7 @@ claimed by source or tests.
 
 ### `GET /api/v1/courses`
 
-Implemented through `app.modules.guest.courses.view.get_courses(...)`. The route
+Implemented through `app.modules.guest.api_06_courses.view.get_courses(...)`. The route
 is public and accepts optional `category`, `page`, `size` and `sort` query
 parameters. `page` defaults to `1`; `size` defaults to `20` and is limited to
 `1..100`. `sort` accepts one allow-listed `field:direction` pair over `id`,
@@ -125,7 +125,7 @@ verification is claimed.
 
 ### `GET /api/v1/courses/search`
 
-Implemented through `app.modules.guest.courses.view.search_courses(...)`. The
+Implemented through `app.modules.guest.api_07_courses_search.view.search_courses(...)`. The
 route is public and accepts optional `q`, `category`, `page` and `sort` query
 parameters. `q` is trimmed/lowercased; blank input removes the text predicate.
 `page` defaults to `1`, page size is fixed at `20`, and `sort` uses the

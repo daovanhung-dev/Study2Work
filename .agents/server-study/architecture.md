@@ -31,30 +31,35 @@ implementation remain unwired.
 - `app/core/security/*`: password, access token, refresh token primitives.
 - `app/utils/auth.py`: access/refresh token issuance, expiry metadata and public auth payload mapping.
 - `app/utils/validate.py`: shared pure normalization helpers used by request models.
-- `app/modules/guest/auth_login/models.py`: login and refresh request contracts.
-- `app/modules/guest/auth_login/validate.py`: pure auth request validation.
-- `app/modules/guest/auth_login/query.py`: SQL constants for user lookup and refresh-token persistence.
-- `app/modules/guest/auth_login/view.py`: login credential flow, refresh rotation, transaction and response mapping.
-- `app/modules/guest/users_me/models.py`: safe current-user profile response model.
-- `app/modules/guest/users_me/validate.py`: pure Bearer header and JWT claim validation.
-- `app/modules/guest/users_me/query.py`: parameterized public profile lookup by user ID.
-- `app/modules/guest/users_me/view.py`: Student role check, profile lookup and canonical response/error mapping.
-- `app/modules/guest/categories/models.py`: API #5 query and public category page contracts.
-- `app/modules/guest/categories/query.py`: parameterized active-category lookup by exact locale.
-- `app/modules/guest/categories/view.py`: default-locale resolution, category mapping and canonical response/error mapping.
-- `app/modules/guest/courses/models.py`: API #6/#7 query, course, mentor and pagination contracts.
-- `app/modules/guest/courses/query.py`: parameterized published-course/count/search queries and static sort mapping.
-- `app/modules/guest/courses/view.py`: public list/search filtering, mentor-integrity checks, decimal-price mapping and canonical response/error mapping.
-- `app/modules/guest/verify_email_send/models.py`: strict public `user_id` and `email` request contract.
-- `app/modules/guest/verify_email_send/view.py`: provider dispatch orchestration and canonical response/error mapping without DB access.
+- `app/modules/guest/api_03_auth_login/models.py`: login and refresh request contracts.
+- `app/modules/guest/api_03_auth_login/validate.py`: pure auth request validation.
+- `app/modules/guest/api_03_auth_login/query.py`: SQL constants for user lookup and refresh-token persistence.
+- `app/modules/guest/api_03_auth_login/view.py`: login credential flow, refresh rotation, transaction and response mapping.
+- `app/modules/guest/api_04_users_me/models.py`: safe current-user profile response model.
+- `app/modules/guest/api_04_users_me/validate.py`: pure Bearer header and JWT claim validation.
+- `app/modules/guest/api_04_users_me/query.py`: parameterized public profile lookup by user ID.
+- `app/modules/guest/api_04_users_me/view.py`: Student role check, profile lookup and canonical response/error mapping.
+- `app/modules/guest/api_05_categories/models.py`: API #5 query and public category page contracts.
+- `app/modules/guest/api_05_categories/query.py`: parameterized active-category lookup by exact locale.
+- `app/modules/guest/api_05_categories/view.py`: default-locale resolution, category mapping and canonical response/error mapping.
+- `app/modules/guest/api_06_courses/models.py`: API #6 list query contract.
+- `app/modules/guest/api_06_courses/query.py`: parameterized published-course/count queries.
+- `app/modules/guest/api_06_courses/view.py`: public course list filtering, mentor-integrity checks and response mapping.
+- `app/modules/guest/api_07_courses_search/models.py`: API #7 search query contract.
+- `app/modules/guest/api_07_courses_search/query.py`: parameterized published-course search/count queries.
+- `app/modules/guest/api_07_courses_search/view.py`: public course search filtering and response mapping.
+- `app/modules/guest/_shared/course_catalog/models.py`: shared course, mentor and pagination response contracts.
+- `app/modules/guest/_shared/course_catalog/helpers.py`: shared sort, course mapping and safe error helpers.
+- `app/modules/guest/api_02_auth_verify_email_send/models.py`: strict public `user_id` and `email` request contract.
+- `app/modules/guest/api_02_auth_verify_email_send/view.py`: provider dispatch orchestration and canonical response/error mapping without DB access.
 - `app/service/email/provider.py`: injectable verification-email provider Protocol, result type and development stub.
-- `app/modules/guest/register_account/models.py`: API #1 register request model,
+- `app/modules/guest/api_01_auth_register/models.py`: API #1 register request model,
   type/basic validation and normalization.
-- `app/modules/guest/register_account/validate.py`: special validation boundary;
+- `app/modules/guest/api_01_auth_register/validate.py`: special validation boundary;
   currently empty and unwired.
-- `app/modules/guest/register_account/query.py`: duplicate lookup and users
+- `app/modules/guest/api_01_auth_register/query.py`: duplicate lookup and users
   insert SQL/query helpers.
-- `app/modules/guest/register_account/view.py`: register orchestration,
+- `app/modules/guest/api_01_auth_register/view.py`: register orchestration,
   business check, password hashing, transaction and response mapping.
 - `app/service/ai/ollama_service.py`: Ollama adapter copied/shared with Study codebase; no live Study caller after business modules disappeared.
 

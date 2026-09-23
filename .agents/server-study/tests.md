@@ -9,8 +9,9 @@ Tests under `apps/study-server/tests/` cover config, DB helpers, responses,
 security tokens, health/security behavior, API #1 register, API #2 verify-email
 dispatch, API #3 login/refresh, API #4 current-user profile access, API #5
 category retrieval, API #6 public course retrieval and API #7 course search.
-The register, verification, category, course and course-search tests use the
-current `app.modules.guest.*` namespace; full collection is available.
+The API-specific tests are grouped under
+`tests/modules/guest/api_01_auth_register` through
+`tests/modules/guest/api_07_courses_search`; full collection is available.
 
 Important remaining scope boundaries include:
 - health tests expect standard envelope and trace header;
