@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-# import folder's files
-from app.modules.guest.api_03_auth_login.validate import (
+# import shared utils
+from app.utils.validate import (
     normalize_login_email,
     validate_login_password,
     validate_refresh_token,

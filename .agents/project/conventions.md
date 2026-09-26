@@ -23,6 +23,17 @@
   không còn module để xác nhận tên `module.py` hay `model.py`. Không invent
   package layout để chữa import nếu requirement chưa chốt ownership.
 
+### API comments và source/contract alignment
+
+- API-facing handler dùng comment header một dòng ngay trước function, ví dụ
+  `# API #03 auth_login` và `# API #03 auth_refresh`; helper nội bộ không gắn
+  API header.
+- Inline comment ngắn, mỗi comment mô tả một event; không lặp docstring hoặc
+  giải thích dài. Khi cần trace DD, dùng label ngắn như `DD 3.1`, `DD 4.1`,
+  `DD 5.1`, `DD 6.1`, `DD 6.3`.
+- Khi DD/contract khác current source, comment mô tả current behavior và giữ
+  `DISCREPANCY`; không dùng comment để tự reconcile hoặc sửa business behavior.
+
 ## Work TypeScript server
 
 - Strict TypeScript, NodeNext ESM, import nội bộ dùng suffix `.js`.

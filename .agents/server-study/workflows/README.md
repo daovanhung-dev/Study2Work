@@ -29,8 +29,8 @@ requirement / DD / schema
 -> focused tests
 ```
 
-`app/utils/validate.py` contains only shared pure normalization helpers such as
-`strip_email(value)`. Module `validate.py` must state the target field,
+`app/utils/validate.py` contains shared pure validation/normalization helpers
+such as `strip_email(value)` and the API #3 auth validators. Module `validate.py` must state the target field,
 condition and error message for each special rule. Examples include a required
 prefix/suffix or an allowed email domain such as `@gmail.com`; examples are not
 automatic rules. Neither utility nor module validators may query DB,
@@ -40,6 +40,13 @@ duplicate/existence/permission checks stay in `view.py` with `query.py`.
 The current register source uses `app/utils/validate.py` for email
 normalization; `register_account/validate.py` remains empty and current
 password/full-name validators remain in `models.py`.
+
+For API source comments, place a short API header immediately before each
+API-facing handler, keep one event per inline comment, and use concise DD step
+labels when useful. A comment-only task must not change executable statements;
+verify this from the diff, then run focused tests, full scope tests and static
+checks as available. Do not use comments to reconcile a DD/current-source
+discrepancy.
 
 ## Implementation checklist
 
