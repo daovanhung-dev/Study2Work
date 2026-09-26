@@ -30,12 +30,11 @@ implementation remain unwired.
 - `app/core/database.py`: sync SQLAlchemy engine/session/query primitives.
 - `app/core/security/*`: password, access token, refresh token primitives.
 - `app/utils/auth.py`: access/refresh token issuance, expiry metadata and public auth payload mapping.
-- `app/utils/validate.py`: shared pure validation/normalization helpers used by request models, including the API #3 auth-login and refresh-token validators.
+- `app/utils/validate.py`: shared pure validation/normalization helpers used by request models and API handlers, including API #3 auth validators and API #4 Bearer/JWT claim validators.
 - `app/modules/guest/api_03_auth_login/models.py`: login and refresh request contracts.
 - `app/modules/guest/api_03_auth_login/query.py`: SQL constants for user lookup and refresh-token persistence.
 - `app/modules/guest/api_03_auth_login/view.py`: login credential flow, refresh rotation, transaction and response mapping.
 - `app/modules/guest/api_04_users_me/models.py`: safe current-user profile response model.
-- `app/modules/guest/api_04_users_me/validate.py`: pure Bearer header and JWT claim validation.
 - `app/modules/guest/api_04_users_me/query.py`: parameterized public profile lookup by user ID.
 - `app/modules/guest/api_04_users_me/view.py`: Student role check, profile lookup and canonical response/error mapping.
 - `app/modules/guest/api_05_categories/models.py`: API #5 query and public category page contracts.
@@ -94,5 +93,6 @@ Examples such as no whitespace or an allowed email domain are only applicable
 when the API contract confirms them. The current register source still keeps
 its password/full-name validators in `models.py`; email whitespace normalization
 is reused from `app/utils/validate.py`. Auth login/refresh binds the shared
-auth validators directly from `app/utils/validate.py` while keeping token
-persistence and transaction ownership in the module view.
+validators directly from `app/utils/validate.py`; API #4 also binds the shared
+Bearer/JWT claim validators there while keeping token persistence and
+transaction ownership in the module view.

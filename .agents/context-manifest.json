@@ -231,7 +231,6 @@
         "apps/study-server/app/modules/guest/api_03_auth_login/view.py",
         "apps/study-server/app/modules/guest/api_04_users_me/models.py",
         "apps/study-server/app/modules/guest/api_04_users_me/query.py",
-        "apps/study-server/app/modules/guest/api_04_users_me/validate.py",
         "apps/study-server/app/modules/guest/api_04_users_me/view.py",
         "apps/study-server/app/modules/guest/api_05_categories/models.py",
         "apps/study-server/app/modules/guest/api_05_categories/query.py",

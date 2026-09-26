@@ -9,7 +9,7 @@ from app.core.responses import ApiError, success_response
 from app.core.security import TokenError, decode_access_token
 from app.modules.guest.api_04_users_me.models import UserProfile
 from app.modules.guest.api_04_users_me.query import find_current_user
-from app.modules.guest.api_04_users_me.validate import extract_bearer_token, validate_access_claims
+from app.utils.validate import extract_bearer_token, validate_access_claims
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session

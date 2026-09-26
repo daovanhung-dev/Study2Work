@@ -19,6 +19,8 @@ such as `@gmail.com` unless the current API contract confirms it.
 
 API #3 login/refresh request models bind the shared auth validators directly
 from `app/utils/validate.py`; its module does not need a local `validate.py`.
+API #4 binds `extract_bearer_token` and `validate_access_claims` directly from
+`app/utils/validate.py`; its module does not need a local `validate.py`.
 
 API-facing functions use a short API header comment immediately before the
 function; internal helpers do not. Keep event comments concise and attach a DD
