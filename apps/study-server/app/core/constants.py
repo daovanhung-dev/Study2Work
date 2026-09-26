@@ -20,7 +20,7 @@ CORS_ORIGINS = (
 # DB_NAME = "study2work_study"
 # DB_USER = "study2work"
 # DB_PASSWORD = "study2work"
-DB_SCHEMA = "dao_van_hung"#doi sang schema của mình
+DB_SCHEMA = "nguyen_anh_duc"#doi sang schema của mình
 DATABASE_POOL_SIZE = 5
 DATABASE_MAX_OVERFLOW = 10
 

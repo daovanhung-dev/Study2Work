@@ -1,3 +1,5 @@
+
+
 # Quy trình Dev
 
 1. **Chuẩn bị môi trường** :
@@ -15,7 +17,6 @@
          ```Python
          cd apps/study-server
          ```
-
          ```Python
          uv sync
          uv run ruff check .
@@ -27,22 +28,22 @@
       2. Vào Thunder Client:
 
          1. Chạy api
+
             ```
             127.0.0.1:8000/api/v1/hello
             ```
-
             test server
          2. Chạy api
+
             ```
             127.0.0.1:8000/api/v1/test/db
             ```
-
             test db
          3. Chạy  api
+
             ```
             127.0.0.1:8000/api/v1/auth/register
             ```
-
             test api #1
    3. **Đọc tài liệu DD:**
       1. Tài liệu DD có nhất là 7 file, thường sẽ là 7 file nếu api không làm thay đổi csdl;
