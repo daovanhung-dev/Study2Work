@@ -1,20 +1,134 @@
-"""HTTP middleware for cross-cutting request concerns."""
+"""HTTP middleware and exception handlers for cross-cutting request concerns."""
 
 from __future__ import annotations
 
-from fastapi import Request
-from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-from starlette.responses import Response
+import logging
+from collections.abc import Sequence
+from typing import Any
 
-from app.core.exceptions import api_error_handler, unhandled_exception_handler
-from app.core.responses import ApiError
+from fastapi import Request, status
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.responses import JSONResponse, Response
+
+from app.core.responses import ApiError, ErrorDetail, error_response
 from app.core.trace import (
     TRACE_HEADER,
     create_trace_id,
+    get_trace_id,
     reset_trace_id,
     set_trace_id,
     validate_trace_id,
 )
+
+logger = logging.getLogger(__name__)
+
+DESIGN_CONTRACT_PATHS = {
+    "/api/v1/auth/register",
+    "/api/v1/auth/login",
+    "/api/v1/auth/refresh",
+    "/api/v1/auth/verify-email/send",
+    "/api/v1/categories",
+    "/api/v1/courses",
+    "/api/v1/courses/search",
+}
+
+
+def _validation_field(location: Sequence[Any]) -> str | None:
+    ignored_locations = {"body", "query", "path", "header", "cookie"}
+    parts = [str(part) for part in location if str(part) not in ignored_locations]
+    return ".".join(parts) or None
+
+
+async def api_error_handler(request: Request, exc: ApiError) -> JSONResponse:
+    """Render an explicitly raised application error."""
+
+    headers = {
+        key: value for key, value in exc.headers.items() if key.lower() != TRACE_HEADER.lower()
+    }
+    headers[TRACE_HEADER] = exc.trace_id
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=error_response(exc),
+        headers=headers,
+    )
+
+
+async def http_exception_handler(
+    request: Request,
+    exc: HTTPException,
+) -> JSONResponse:
+    """Render HTTPException without exposing arbitrary exception details."""
+
+    detail: dict[str, Any] = exc.detail if isinstance(exc.detail, dict) else {}
+    has_error_envelope = detail.get("success") is False
+    meta = detail.get("meta") if has_error_envelope else None
+    error = ApiError(
+        status_code=exc.status_code,
+        business_code=(
+            str(detail["businessCode"])
+            if has_error_envelope and detail.get("businessCode")
+            else "HTTP_ERROR"
+        ),
+        message=(
+            str(detail["message"])
+            if has_error_envelope and detail.get("message")
+            else "Yêu cầu không thể được xử lý."
+        ),
+        trace_id=get_trace_id(request),
+        data=detail.get("data") if has_error_envelope else None,
+        meta=meta if isinstance(meta, dict) else None,
+        headers=exc.headers,
+    )
+    return await api_error_handler(request, error)
+
+
+async def request_validation_exception_handler(
+    request: Request,
+    exc: RequestValidationError,
+) -> JSONResponse:
+    """Map FastAPI/Pydantic validation details into safe field errors."""
+
+    errors = [
+        ErrorDetail(
+            field=_validation_field(error.get("loc", ())),
+            code=str(error.get("type", "INVALID_FIELD")).upper().replace(".", "_"),
+            message=str(error.get("msg", "Giá trị không hợp lệ.")),
+        )
+        for error in exc.errors()
+    ]
+    error = ApiError(
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        business_code=(
+            "DESIGN_VALIDATION_ERROR"
+            if request.url.path in DESIGN_CONTRACT_PATHS
+            else "VALIDATION_ERROR"
+        ),
+        message="Dữ liệu đầu vào không hợp lệ.",
+        trace_id=get_trace_id(request),
+        errors=errors,
+    )
+    return await api_error_handler(request, error)
+
+
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Return a safe generic error while retaining internal diagnostic logging."""
+
+    trace_id = get_trace_id(request)
+    logger.exception("Unhandled API error; trace_id=%s", trace_id, exc_info=exc)
+    business_code = (
+        "DESIGN_INTERNAL_ERROR"
+        if request.url.path in DESIGN_CONTRACT_PATHS
+        else "INTERNAL_SERVER_ERROR"
+    )
+    error = ApiError(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        business_code=business_code,
+        message="Đã xảy ra lỗi nội bộ hệ thống.",
+        trace_id=trace_id,
+    )
+    return await api_error_handler(request, error)
 
 
 class TraceIdMiddleware(BaseHTTPMiddleware):

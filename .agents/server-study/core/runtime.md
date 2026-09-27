@@ -55,7 +55,10 @@ Raises `ApiError` with the model's status/business code/message/trace ID.
 adapters. All HTTP error handlers construct `ApiError` and use the same error
 serializer; validation details are stored in `meta.fieldErrors`.
 
-## `app/core/exceptions.py`
+## `app/core/middleware.py` exception handlers
+
+The shared FastAPI exception handlers live with `TraceIdMiddleware` so both
+`create_app` and the middleware dispatch use one implementation.
 
 - `_validation_field(loc)`: removes protocol location prefixes (`body/query/path/header/cookie`) and joins remaining field path.
 - `api_error_handler`: renders `ApiError` through `error_response`.

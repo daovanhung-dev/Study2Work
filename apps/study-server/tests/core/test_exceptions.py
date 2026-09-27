@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from app.core.exceptions import (
+from app.core.middleware import (
     http_exception_handler,
     request_validation_exception_handler,
     unhandled_exception_handler,

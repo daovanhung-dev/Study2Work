@@ -5,7 +5,7 @@ from typing import Any
 import app.modules.guest.api_05_categories.view as categories_view
 import pytest
 from app.core.database import get_db
-from app.core.exceptions import request_validation_exception_handler
+from app.core.middleware import request_validation_exception_handler
 from app.modules.guest.api_05_categories.models import CategoryQuery
 from fastapi.exceptions import RequestValidationError
 from fastapi.testclient import TestClient

@@ -8,7 +8,6 @@ app/main.py:create_app
   -> app/core/config.py
   -> app/core/database.py
   -> app/core/middleware.py
-  -> app/core/exceptions.py
   -> app/core/responses.py
   -> app/core/trace.py
 ```
@@ -22,12 +21,13 @@ implementation remain unwired.
 
 ## Verified ownership
 
-- `app/main.py`: FastAPI composition root, CORS, middleware, exception handlers, root/health routes.
+- `app/main.py`: FastAPI composition root, CORS, middleware/exception-handler registration, root/health routes.
 - `app/api/v1.py`: declared `/api/v1` routes; exposes health-adjacent utility
   routes, API #1 register, API #2 verification dispatch, API #3 auth, API #4
   current-user profile, API #5 categories, API #6 courses and API #7 course search.
 - `app/core/config.py`: typed settings backed by `app/core/constants.py`.
 - `app/core/database.py`: sync SQLAlchemy engine/session/query primitives.
+- `app/core/middleware.py`: trace middleware and shared FastAPI exception handlers.
 - `app/core/security/*`: password, access token, refresh token primitives.
 - `app/utils/auth.py`: access/refresh token issuance, expiry metadata and public auth payload mapping.
 - `app/utils/validate.py`: shared pure validation/normalization helpers used by request models and API handlers, including API #3 auth validators and API #4 Bearer/JWT claim validators.
