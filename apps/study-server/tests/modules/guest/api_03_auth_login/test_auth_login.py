@@ -186,6 +186,33 @@ def test_login_rolls_back_database_error(monkeypatch: pytest.MonkeyPatch) -> Non
     assert session.rollback_count == 1
 
 
+def test_login_maps_token_issuance_api_error_to_internal_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = FakeSession()
+    monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: make_user())
+    monkeypatch.setattr(
+        auth_view,
+        "issue_tokens",
+        lambda **kwargs: (_ for _ in ()).throw(ApiError.internal()),
+    )
+
+    with pytest.raises(ApiError) as error:
+        auth_view.login(
+            user_data=LoginRequest(
+                email="student@example.com",
+                password="correct horse battery staple",
+            ),
+            db=session,  # type: ignore[arg-type]
+            trace_id="trace-id",
+        )
+
+    assert error.value.status_code == 500
+    assert error.value.business_code == "DESIGN_INTERNAL_ERROR"
+    assert error.value.message == "Không thể hoàn tất đăng nhập."
+    assert session.rollback_count == 1
+
+
 def test_refresh_rotates_old_token_atomically(monkeypatch: pytest.MonkeyPatch) -> None:
     session = FakeSession()
     user = make_user(include_password=False)

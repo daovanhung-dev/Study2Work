@@ -39,7 +39,10 @@ binds internally to `0.0.0.0:3003` and publishes the host address separately.
 Pydantic model `{field?, code, message}`, `extra=forbid`.
 
 ### `ApiError.__init__`
-Controlled exception carrying HTTP status, business code, safe message, trace ID, tuple of field errors and optional headers.
+Controlled application error carrying HTTP status, business code, safe message,
+trace ID, data/meta, tuple of field errors and optional headers. Context-free
+construction defaults to a safe internal 500 and uses the current trace context
+or generates a trace ID.
 
 ### `ApiResponse.success_payload()`
 Returns canonical success keys:
@@ -48,20 +51,21 @@ Returns canonical success keys:
 ### `ApiResponse.raise_error()`
 Raises `ApiError` with the model's status/business code/message/trace ID.
 
-`success_response` and `error_response` are the canonical functional adapters;
-`error_payload` remains only for legacy callers/tests.
+`success_response` and `error_response(ApiError)` are the canonical functional
+adapters. All HTTP error handlers construct `ApiError` and use the same error
+serializer; validation details are stored in `meta.fieldErrors`.
 
 ## `app/core/exceptions.py`
 
 - `_validation_field(loc)`: removes protocol location prefixes (`body/query/path/header/cookie`) and joins remaining field path.
 - `api_error_handler`: renders `ApiError` through `error_response`.
-- `http_exception_handler`: preserves already-safe error dicts; otherwise maps to `HTTP_ERROR`.
-- `request_validation_exception_handler`: maps Pydantic errors to `ErrorDetail`, using
+- `http_exception_handler`: converts HTTP exceptions into `ApiError`, preserving status and safe envelope fields; otherwise maps to `HTTP_ERROR`.
+- `request_validation_exception_handler`: converts Pydantic errors to `ApiError` with `ErrorDetail`, using
   `DESIGN_VALIDATION_ERROR` for API #1 register, API #2 verify-email dispatch,
   auth login/refresh, API #5 categories, API #6 courses and API #7 course
   search, and `VALIDATION_ERROR` elsewhere.
-- `unhandled_exception_handler`: logs internal exception with trace ID; returns
-  `DESIGN_INTERNAL_ERROR` for API #1 register, API #2 verify-email dispatch,
+- `unhandled_exception_handler`: logs internal exception with trace ID and builds
+  a safe `ApiError`; it uses `DESIGN_INTERNAL_ERROR` for API #1 register, API #2 verify-email dispatch,
   auth login/refresh, API #5 categories, API #6 courses and API #7 course
   search, and `INTERNAL_SERVER_ERROR` elsewhere.
 
@@ -110,7 +114,7 @@ Raises `ApiError` with the model's status/business code/message/trace ID.
 - `get_current_trace_id()`: read ContextVar without Request.
 
 ## `app/core/middleware.py:TraceIdMiddleware.dispatch`
-Flow: validate incoming header -> create if invalid -> attach request/context -> call next -> set response header -> safe 500 on exception -> reset context.
+Flow: validate incoming header -> create if invalid -> attach request/context -> call next -> set response header -> route escaped `ApiError` or unexpected exception through the common handlers -> reset context.
 
 Middleware uses `validate_trace_id`, `set_trace_id` and `reset_trace_id` from the
 current trace module.

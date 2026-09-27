@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from app.core.responses import ApiError, success_response
-from app.core.security import TokenError, decode_access_token
+from app.core.security import decode_access_token
 from app.modules.guest.api_04_users_me.models import UserProfile
 from app.modules.guest.api_04_users_me.query import find_current_user
 from app.utils.validate import extract_bearer_token, validate_access_claims
@@ -29,8 +29,11 @@ def get_current_user(
         token = extract_bearer_token(authorization)
         claims = decode_access_token(token)
         user_id, roles = validate_access_claims(claims)
-    except (TokenError, ValueError) as exc:
-        raise _authentication_error(trace_id) from exc
+    except ApiError as exc:
+        if exc.status_code == 401:
+            raise _authentication_error(trace_id) from exc
+        logger.exception("Current-user authentication failed; trace_id=%s", trace_id)
+        raise _internal_error(trace_id) from exc
 
     if "STUDENT" not in roles:
         raise _authorization_error(trace_id)

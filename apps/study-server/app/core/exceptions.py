@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
 from app.core.responses import ApiError, ErrorDetail, error_response
-from app.core.trace import get_trace_id
+from app.core.trace import TRACE_HEADER, get_trace_id
 
 logger = logging.getLogger(__name__)
 
@@ -36,15 +36,14 @@ def _validation_field(location: Sequence[Any]) -> str | None:
 async def api_error_handler(request: Request, exc: ApiError) -> JSONResponse:
     """Render an explicitly raised application error."""
 
+    headers = {
+        key: value for key, value in exc.headers.items() if key.lower() != TRACE_HEADER.lower()
+    }
+    headers[TRACE_HEADER] = exc.trace_id
     return JSONResponse(
         status_code=exc.status_code,
-        content=error_response(
-            business_code=exc.business_code,
-            message=exc.message,
-            trace_id=exc.trace_id or get_trace_id(request),
-            errors=exc.errors,
-        ),
-        headers=exc.headers,
+        content=error_response(exc),
+        headers=headers,
     )
 
 
@@ -54,22 +53,27 @@ async def http_exception_handler(
 ) -> JSONResponse:
     """Render HTTPException without exposing arbitrary exception details."""
 
-    trace_id = get_trace_id(request)
-    if isinstance(exc.detail, dict) and exc.detail.get("success") is False:
-        content = dict(exc.detail)
-        content.setdefault("traceId", trace_id)
-    else:
-        content = error_response(
-            business_code="HTTP_ERROR",
-            message="Yêu cầu không thể được xử lý.",
-            trace_id=trace_id,
-        )
-
-    return JSONResponse(
+    detail: dict[str, Any] = exc.detail if isinstance(exc.detail, dict) else {}
+    has_error_envelope = detail.get("success") is False
+    meta = detail.get("meta") if has_error_envelope else None
+    error = ApiError(
         status_code=exc.status_code,
-        content=content,
+        business_code=(
+            str(detail["businessCode"])
+            if has_error_envelope and detail.get("businessCode")
+            else "HTTP_ERROR"
+        ),
+        message=(
+            str(detail["message"])
+            if has_error_envelope and detail.get("message")
+            else "Yêu cầu không thể được xử lý."
+        ),
+        trace_id=get_trace_id(request),
+        data=detail.get("data") if has_error_envelope else None,
+        meta=meta if isinstance(meta, dict) else None,
         headers=exc.headers,
     )
+    return await api_error_handler(request, error)
 
 
 async def request_validation_exception_handler(
@@ -86,19 +90,18 @@ async def request_validation_exception_handler(
         )
         for error in exc.errors()
     ]
-    return JSONResponse(
+    error = ApiError(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-        content=error_response(
-            business_code=(
-                "DESIGN_VALIDATION_ERROR"
-                if request.url.path in DESIGN_CONTRACT_PATHS
-                else "VALIDATION_ERROR"
-            ),
-            message="Dữ liệu đầu vào không hợp lệ.",
-            trace_id=get_trace_id(request),
-            errors=errors,
+        business_code=(
+            "DESIGN_VALIDATION_ERROR"
+            if request.url.path in DESIGN_CONTRACT_PATHS
+            else "VALIDATION_ERROR"
         ),
+        message="Dữ liệu đầu vào không hợp lệ.",
+        trace_id=get_trace_id(request),
+        errors=errors,
     )
+    return await api_error_handler(request, error)
 
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
@@ -111,11 +114,10 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
         if request.url.path in DESIGN_CONTRACT_PATHS
         else "INTERNAL_SERVER_ERROR"
     )
-    return JSONResponse(
+    error = ApiError(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content=error_response(
-            business_code=business_code,
-            message="Đã xảy ra lỗi nội bộ hệ thống.",
-            trace_id=trace_id,
-        ),
+        business_code=business_code,
+        message="Đã xảy ra lỗi nội bộ hệ thống.",
+        trace_id=trace_id,
     )
+    return await api_error_handler(request, error)

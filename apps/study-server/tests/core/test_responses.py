@@ -1,12 +1,13 @@
 import pytest
 from app.core.responses import (
+    INTERNAL_ERROR_MESSAGE,
     ApiError,
     ApiResponse,
     ErrorDetail,
-    error_payload,
     error_response,
     success_response,
 )
+from app.core.trace import reset_trace_id, set_trace_id
 
 
 def test_success_response_uses_canonical_envelope() -> None:
@@ -28,16 +29,26 @@ def test_success_response_uses_canonical_envelope() -> None:
 
 
 def test_error_response_puts_field_errors_in_canonical_meta() -> None:
-    response = error_response(
+    error = ApiError(
+        status_code=422,
         business_code="VALIDATION_ERROR",
         message="Invalid",
         trace_id="trace-id",
+        data={"source": "query"},
+        meta={"page": 1},
         errors=[
             ErrorDetail(field="email", code="INVALID_EMAIL", message="Invalid email"),
         ],
     )
+    response = error_response(error)
 
+    assert response["success"] is False
+    assert response["businessCode"] == "VALIDATION_ERROR"
+    assert response["message"] == "Invalid"
+    assert response["data"] == {"source": "query"}
+    assert response["traceId"] == "trace-id"
     assert response["meta"] == {
+        "page": 1,
         "fieldErrors": [
             {"field": "email", "code": "INVALID_EMAIL", "message": "Invalid email"},
         ],
@@ -45,17 +56,25 @@ def test_error_response_puts_field_errors_in_canonical_meta() -> None:
     assert "errors" not in response
 
 
-def test_legacy_error_payload_preserves_top_level_errors() -> None:
-    response = error_payload(
-        business_code="VALIDATION_ERROR",
-        message="Invalid",
-        trace_id="trace-id",
-        errors=[ErrorDetail(code="INVALID_EMAIL", message="Invalid email")],
-    )
+def test_internal_api_error_uses_current_trace_and_safe_defaults() -> None:
+    trace_id = "00000000-0000-0000-0000-000000000001"
+    token = set_trace_id(trace_id)
+    try:
+        error = ApiError.internal()
+    finally:
+        reset_trace_id(token)
 
-    assert response["errors"] == [
-        {"field": None, "code": "INVALID_EMAIL", "message": "Invalid email"},
-    ]
+    assert error.status_code == 500
+    assert error.business_code == "INTERNAL_SERVER_ERROR"
+    assert error.message == INTERNAL_ERROR_MESSAGE
+    assert error.trace_id == trace_id
+
+
+def test_internal_api_error_generates_trace_without_request_context() -> None:
+    error = ApiError.internal()
+
+    assert error.trace_id
+    assert len(error.trace_id) == 36
 
 
 def test_api_response_raise_error_uses_controlled_exception() -> None:

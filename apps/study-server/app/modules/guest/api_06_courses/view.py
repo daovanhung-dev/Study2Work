@@ -69,6 +69,9 @@ def get_courses(
                 total_pages=total_pages,
             ),
         )
+    except ApiError as exc:
+        logger.exception("Course mapping failed; trace_id=%s", trace_id)
+        raise course_internal_error(trace_id) from exc
     except (InvalidOperation, TypeError, ValueError, ValidationError) as exc:
         logger.exception("Course mapping failed; trace_id=%s", trace_id)
         raise course_internal_error(trace_id) from exc

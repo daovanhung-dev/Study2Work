@@ -2,11 +2,11 @@
 
 ```text
 TEST_SUITE_PRESENT: YES
-COLLECTION_STATUS: VERIFIED (134 tests)
+TEST_STATUS: VERIFIED (160 tests)
 ```
 
-Tests under `apps/study-server/tests/` cover config, DB helpers, responses,
-security tokens, health/security behavior, API #1 register, API #2 verify-email
+Tests under `apps/study-server/tests/` cover config, DB helpers, responses and
+exception handlers, security tokens, health/security behavior, API #1 register, API #2 verify-email
 dispatch, API #3 login/refresh, API #4 current-user profile access, API #5
 category retrieval, API #6 public course retrieval and API #7 course search.
 The API-specific tests are grouped under
@@ -26,6 +26,12 @@ Important remaining scope boundaries include:
   category until a course-category relation exists;
 - verify-email route is public, uses an injectable stub provider, does not access the database and does not claim real email delivery;
 - response/security unit tests may exercise helpers independently, but do not prove the full API starts.
+
+Current error contract:
+- Application errors are represented by `ApiError` and serialized through
+  `error_response(ApiError)` with the standard envelope and `X-Trace-Id`.
+- Pydantic-native request validation errors are translated to `ApiError` at the
+  FastAPI boundary, with field details under `meta.fieldErrors`.
 
 For a fix task:
 1. distinguish unit-testable core helper from app-level route test;

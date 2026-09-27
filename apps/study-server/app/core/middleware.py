@@ -6,7 +6,8 @@ from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
 
-from app.core.exceptions import unhandled_exception_handler
+from app.core.exceptions import api_error_handler, unhandled_exception_handler
+from app.core.responses import ApiError
 from app.core.trace import (
     TRACE_HEADER,
     create_trace_id,
@@ -31,6 +32,9 @@ class TraceIdMiddleware(BaseHTTPMiddleware):
         try:
             response = await call_next(request)
             response.headers[TRACE_HEADER] = trace_id
+            return response
+        except ApiError as exc:
+            response = await api_error_handler(request, exc)
             return response
         except Exception as exc:
             response = await unhandled_exception_handler(request, exc)

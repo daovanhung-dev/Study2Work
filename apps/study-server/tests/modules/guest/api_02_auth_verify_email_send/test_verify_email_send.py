@@ -7,7 +7,6 @@ from app.core.database import get_db
 from app.modules.guest.api_02_auth_verify_email_send.models import VerifyEmailSendRequest
 from app.service.email.provider import (
     VerificationDispatchResult,
-    VerificationEmailProviderError,
     get_verification_email_provider,
 )
 from fastapi.testclient import TestClient
@@ -45,7 +44,7 @@ class FailingProvider:
         trace_id: str,
     ) -> VerificationDispatchResult:
         del user_id, email, trace_id
-        raise VerificationEmailProviderError("provider response must not leak")
+        raise RuntimeError("provider response must not leak")
 
 
 def override_provider(provider: object):

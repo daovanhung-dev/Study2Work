@@ -73,7 +73,7 @@ No current source establishes:
 ## Runtime compatibility repairs
 
 1. `app.api.v1` imports the existing `app.modules.guest` package.
-2. `responses.py` exposes canonical `success_response`/`error_response` and the legacy `error_payload` adapter.
+2. `responses.py` exposes canonical `success_response`, `ApiError`, and `error_response(ApiError)`.
 3. `TraceIdMiddleware` uses the current trace helper names.
 
 Together these repairs restore the current composition; future fix tasks must

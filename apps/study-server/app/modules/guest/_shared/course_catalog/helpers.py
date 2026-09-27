@@ -38,7 +38,11 @@ def build_order_by(sort: str | None) -> str:
 
     field, direction = sort.split(":")
     if field not in SORT_FIELDS or field not in SORT_COLUMNS:
-        raise ValueError("sort field không được hỗ trợ.")
+        raise ApiError(
+            status_code=422,
+            business_code="DESIGN_VALIDATION_ERROR",
+            message="sort field không được hỗ trợ.",
+        )
 
     column = SORT_COLUMNS[field]
     direction_sql = direction.upper()
@@ -53,7 +57,7 @@ def map_course(row: dict[str, Any]) -> Course:
     mentor_id = row.get("mentor_id")
     mentor_name = row.get("mentor_full_name")
     if mentor_id is None or mentor_name is None:
-        raise ValueError("Published course is missing a mentor.")
+        raise ApiError.internal()
 
     return Course(
         id=row.get("id"),
@@ -74,7 +78,7 @@ def decimal_string(value: Any) -> str:
     """Serialize a numeric course price without floating-point conversion."""
 
     if value is None:
-        raise ValueError("Course price is missing.")
+        raise ApiError.internal()
     return format(Decimal(str(value)), "f")
 
 

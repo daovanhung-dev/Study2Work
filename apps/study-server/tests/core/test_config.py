@@ -1,7 +1,7 @@
 import pytest
 from app.core import constants
 from app.core.config import Settings
-from pydantic import ValidationError
+from app.core.responses import ApiError
 
 
 def test_settings_defaults_come_from_constants() -> None:
@@ -63,7 +63,7 @@ def test_settings_accept_legacy_constructor_aliases() -> None:
 
 
 def test_settings_reject_unsafe_database_schema() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ApiError) as error:
         Settings(
             db_host="localhost",
             db_name="study",
@@ -74,7 +74,11 @@ def test_settings_reject_unsafe_database_schema() -> None:
             jwt_secret_key="test-secret-key-that-is-at-least-32-characters",
         )
 
+    assert error.value.status_code == 500
+    assert error.value.business_code == "INTERNAL_SERVER_ERROR"
+    assert "drop table" not in error.value.message
+
 
 def test_es256_requires_private_key() -> None:
-    with pytest.raises(ValidationError, match="JWT_PRIVATE_KEY"):
+    with pytest.raises(ApiError):
         Settings(jwt_algorithm="ES256", jwt_private_key=None)

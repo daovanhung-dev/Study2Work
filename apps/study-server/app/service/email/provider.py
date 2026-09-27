@@ -12,10 +12,6 @@ class VerificationDispatchResult:
     reason: str | None = None
 
 
-class VerificationEmailProviderError(RuntimeError):
-    """Raised when a provider cannot accept a verification dispatch."""
-
-
 class VerificationEmailProvider(Protocol):
     """Boundary for a provider that accepts verification-email dispatches."""
 

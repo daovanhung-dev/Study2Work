@@ -5,20 +5,9 @@ from typing import Any, Literal
 import httpx
 
 from app.core import constants
+from app.core.responses import ApiError
 
 MessageRole = Literal["system", "user", "assistant"]
-
-
-class AIConnectionError(Exception):
-    """Không thể kết nối tới Ollama AI Server."""
-
-
-class AITimeoutError(Exception):
-    """Ollama xử lý quá thời gian cho phép."""
-
-
-class AIResponseError(Exception):
-    """Ollama trả về HTTP hoặc JSON không hợp lệ."""
 
 
 class OllamaService:
@@ -154,31 +143,27 @@ class OllamaService:
             data = response.json()
 
             if not isinstance(data, dict):
-                raise AIResponseError(
-                    "Ollama trả về JSON không đúng định dạng object.",
-                )
+                raise ApiError.internal()
 
             return data
 
         except httpx.ConnectError as exc:
-            raise AIConnectionError(
-                f"Không kết nối được tới Ollama tại {self.base_url}.",
-            ) from exc
+            raise ApiError.internal() from exc
 
         except httpx.TimeoutException as exc:
-            raise AITimeoutError(
-                f"Ollama không phản hồi trong {self.timeout} giây.",
-            ) from exc
+            raise ApiError.internal() from exc
 
         except httpx.HTTPStatusError as exc:
-            raise AIResponseError(
-                f"Ollama trả về HTTP {exc.response.status_code}: {exc.response.text}"
-            ) from exc
+            raise ApiError.internal() from exc
 
         except ValueError as exc:
-            raise AIResponseError(
-                "Ollama trả về JSON không hợp lệ.",
-            ) from exc
+            raise ApiError.internal() from exc
+
+        except ApiError:
+            raise
+
+        except Exception as exc:
+            raise ApiError.internal() from exc
 
 
 ai_service = OllamaService()
