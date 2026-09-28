@@ -23,8 +23,8 @@ class ErrorDetail(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class ApiError(Exception):
-    """Controlled API error handled by the global exception handler."""
+class _ApiError(Exception):
+    """Private exception instance raised by the ApiError factory."""
 
     def __init__(
         self,
@@ -49,11 +49,29 @@ class ApiError(Exception):
         self.errors = tuple(errors)
         self.headers = dict(headers or {})
 
-    @classmethod
-    def internal(cls, *, trace_id: str | None = None) -> ApiError:
-        """Create a safe internal error when no request-specific mapping exists."""
+def ApiError(
+    *,
+    status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
+    business_code: str = "INTERNAL_SERVER_ERROR",
+    message: str = INTERNAL_ERROR_MESSAGE,
+    trace_id: str | None = None,
+    data: Any = None,
+    meta: Mapping[str, Any] | None = None,
+    errors: Sequence[ErrorDetail] = (),
+    headers: Mapping[str, str] | None = None,
+) -> _ApiError:
+    """Tạo exception nội bộ để caller ném bằng cú pháp `raise ApiError(...)`."""
 
-        return cls(trace_id=trace_id)
+    return _ApiError(
+        status_code=status_code,
+        business_code=business_code,
+        message=message,
+        trace_id=trace_id,
+        data=data,
+        meta=meta,
+        errors=errors,
+        headers=headers,
+    )
 
 
 def success_response(
@@ -77,7 +95,7 @@ def success_response(
 
 
 def error_response(
-    error: ApiError,
+    error: _ApiError,
 ) -> dict[str, Any]:
     """Serialize an ApiError into the canonical error response envelope."""
 

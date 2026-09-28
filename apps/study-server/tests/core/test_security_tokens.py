@@ -4,7 +4,7 @@ import app.core.security.access_token as access_token_module
 import app.core.security.refresh_token as refresh_token_module
 import pytest
 from app.core.config import Settings
-from app.core.responses import ApiError
+from app.core.responses import _ApiError
 from app.core.security import (
     compare_refresh_token,
     create_access_token,
@@ -28,7 +28,7 @@ def test_default_es256_keys_can_sign_and_verify_access_token(
     assert claims["iss"] == settings.jwt_issuer
     assert claims["aud"] == settings.jwt_audience
 
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         decode_access_token(f"{token}tampered")
     assert error.value.status_code == 401
 
@@ -55,7 +55,7 @@ def test_access_token_validates_signature_issuer_audience_and_type(
     assert claims["type"] == "access"
     assert claims["roles"] == ["learner"]
 
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         decode_access_token(f"{token}tampered")
     assert error.value.status_code == 401
 

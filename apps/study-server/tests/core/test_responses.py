@@ -1,7 +1,10 @@
+import inspect
+
 from app.core.responses import (
     INTERNAL_ERROR_MESSAGE,
     ApiError,
     ErrorDetail,
+    _ApiError,
     error_response,
     success_response,
 )
@@ -72,11 +75,27 @@ def test_error_response_puts_field_errors_in_canonical_meta() -> None:
     assert "errors" not in response
 
 
+def test_api_error_is_a_factory_for_private_exception_instances() -> None:
+    error = ApiError(
+        status_code=409,
+        business_code="RESOURCE_CONFLICT",
+        message="Conflict",
+        trace_id="trace-id",
+    )
+
+    assert inspect.isfunction(ApiError)
+    assert isinstance(error, _ApiError)
+    assert error.status_code == 409
+    assert error.business_code == "RESOURCE_CONFLICT"
+    assert error.message == "Conflict"
+    assert error.trace_id == "trace-id"
+
+
 def test_internal_api_error_uses_current_trace_and_safe_defaults() -> None:
     trace_id = "00000000-0000-0000-0000-000000000001"
     token = set_trace_id(trace_id)
     try:
-        error = ApiError.internal()
+        error = ApiError()
     finally:
         reset_trace_id(token)
 
@@ -87,7 +106,7 @@ def test_internal_api_error_uses_current_trace_and_safe_defaults() -> None:
 
 
 def test_internal_api_error_generates_trace_without_request_context() -> None:
-    error = ApiError.internal()
+    error = ApiError()
 
     assert error.trace_id
     assert len(error.trace_id) == 36

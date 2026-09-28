@@ -29,7 +29,7 @@ Important remaining scope boundaries include:
 
 Current error contract:
 - Application errors are represented by `ApiError` and serialized through
-  `error_response(ApiError)` with the standard envelope and `X-Trace-Id`.
+  `error_response(_ApiError)` with the standard envelope and `X-Trace-Id`.
 - Pydantic-native request validation errors are translated to `ApiError` at the
   FastAPI boundary, with field details under `meta.fieldErrors`.
 

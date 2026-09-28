@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-from app.core.responses import ApiError
+from app.core.responses import ApiError, _ApiError
 from app.modules.guest._shared.course_catalog.constants import (
     SORT_COLUMNS,
     SORT_DIRECTIONS,
@@ -57,7 +57,7 @@ def map_course(row: dict[str, Any]) -> Course:
     mentor_id = row.get("mentor_id")
     mentor_name = row.get("mentor_full_name")
     if mentor_id is None or mentor_name is None:
-        raise ApiError.internal()
+        raise ApiError()
 
     return Course(
         id=row.get("id"),
@@ -78,11 +78,11 @@ def decimal_string(value: Any) -> str:
     """Serialize a numeric course price without floating-point conversion."""
 
     if value is None:
-        raise ApiError.internal()
+        raise ApiError()
     return format(Decimal(str(value)), "f")
 
 
-def course_internal_error(trace_id: str) -> ApiError:
+def course_internal_error(trace_id: str) -> _ApiError:
     """Build the shared safe error for course read failures."""
 
     return ApiError(

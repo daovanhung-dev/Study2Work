@@ -1,7 +1,7 @@
 import pytest
 from app.core import constants
 from app.core.config import Settings
-from app.core.responses import ApiError
+from app.core.responses import _ApiError
 
 
 def test_settings_defaults_come_from_constants() -> None:
@@ -63,7 +63,7 @@ def test_settings_accept_legacy_constructor_aliases() -> None:
 
 
 def test_settings_reject_unsafe_database_schema() -> None:
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         Settings(
             db_host="localhost",
             db_name="study",
@@ -80,5 +80,5 @@ def test_settings_reject_unsafe_database_schema() -> None:
 
 
 def test_es256_requires_private_key() -> None:
-    with pytest.raises(ApiError):
+    with pytest.raises(_ApiError):
         Settings(jwt_algorithm="ES256", jwt_private_key=None)

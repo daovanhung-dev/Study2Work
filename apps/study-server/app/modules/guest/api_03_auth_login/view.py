@@ -5,7 +5,7 @@ from typing import Any
 
 # import core's file
 from app.core.database import execute_query, query_one
-from app.core.responses import ApiError, success_response
+from app.core.responses import ApiError, _ApiError, success_response
 from app.core.security import verify_password
 from app.core.security.refresh_token import hash_refresh_token
 
@@ -80,7 +80,7 @@ def login(
         )
         # Commit transaction.
         db.commit()
-    except (SQLAlchemyError, ApiError) as exc:
+    except (SQLAlchemyError, _ApiError) as exc:
         # DD 6.3: Token/session lỗi -> rollback, trả lỗi nội bộ.
         db.rollback()
         logger.exception("Login token issuance failed; trace_id=%s", trace_id)
@@ -107,7 +107,7 @@ def refresh(
         # Nhận, hash và lookup refresh session.
         refresh_hash = hash_refresh_token(user_data.refresh_token)
         session = query_one(db, REFRESH_SESSION, {"token_hash": refresh_hash})
-    except (SQLAlchemyError, ApiError) as exc:
+    except (SQLAlchemyError, _ApiError) as exc:
         # Hash/query lỗi -> rollback, trả lỗi nội bộ.
         db.rollback()
         logger.exception("Refresh-token lookup failed; trace_id=%s", trace_id)
@@ -163,7 +163,7 @@ def refresh(
         )
         # Commit rotation atomically.
         db.commit()
-    except ApiError as exc:
+    except _ApiError as exc:
         # Giữ lỗi 401 nghiệp vụ; ánh xạ lỗi cấu hình thành lỗi nội bộ của API.
         db.rollback()
         if exc.status_code < 500:
@@ -185,7 +185,7 @@ def refresh(
     )
 
 
-def _internal_error(trace_id: str, message: str) -> ApiError:
+def _internal_error(trace_id: str, message: str) -> _ApiError:
     # Tạo lỗi nội bộ an toàn và giữ trace_id.
     return ApiError(
         status_code=500,

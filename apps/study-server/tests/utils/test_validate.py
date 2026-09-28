@@ -1,7 +1,7 @@
 from typing import Any
 
 import pytest
-from app.core.responses import ApiError
+from app.core.responses import _ApiError
 from app.utils.validate import (
     extract_bearer_token,
     normalize_login_email,
@@ -58,7 +58,7 @@ def test_extract_bearer_token_accepts_bearer_scheme(authorization: str) -> None:
     [None, "", "Basic token", "Bearer", "Bearer one two"],
 )
 def test_extract_bearer_token_rejects_malformed_header(authorization: str | None) -> None:
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         extract_bearer_token(authorization)
     assert error.value.status_code == 401
 
@@ -83,6 +83,6 @@ def test_validate_access_claims_normalizes_subject_and_roles() -> None:
     ],
 )
 def test_validate_access_claims_rejects_invalid_claims(claims: dict[str, Any]) -> None:
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         validate_access_claims(claims)
     assert error.value.status_code == 401

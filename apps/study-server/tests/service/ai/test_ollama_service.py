@@ -1,7 +1,7 @@
 import httpx
 import pytest
 from app.core import constants
-from app.core.responses import ApiError
+from app.core.responses import _ApiError
 from app.service.ai import ollama_service
 from app.service.ai.ollama_service import OllamaService
 
@@ -46,7 +46,7 @@ async def test_ollama_connection_failure_uses_safe_api_error(
 
     monkeypatch.setattr(ollama_service.httpx, "AsyncClient", lambda **kwargs: FailingClient())
 
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         await OllamaService()._request(method="GET", endpoint="/api/tags")
 
     assert error.value.status_code == 500

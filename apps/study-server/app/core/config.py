@@ -38,7 +38,7 @@ class Settings(BaseModel):
         try:
             super().__init__(**data)
         except ValidationError as exc:
-            raise ApiError.internal() from exc
+            raise ApiError() from exc
 
     app_env: Environment = Field(
         default=constants.APP_ENV,
@@ -163,7 +163,7 @@ class Settings(BaseModel):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         if isinstance(value, list):
             return [str(origin).strip() for origin in value if str(origin).strip()]
-        raise ApiError.internal()
+        raise ApiError()
 
     @field_validator("db_schema")
     @classmethod
@@ -172,7 +172,7 @@ class Settings(BaseModel):
 
         normalized = value.strip()
         if not normalized.replace("_", "").isalnum():
-            raise ApiError.internal()
+            raise ApiError()
         return normalized
 
     @model_validator(mode="after")
@@ -180,12 +180,12 @@ class Settings(BaseModel):
         """Require the key material needed by the selected JWT algorithm."""
 
         if self.jwt_algorithm == "HS256" and self.jwt_secret_key is None:
-            raise ApiError.internal()
+            raise ApiError()
         if self.jwt_algorithm == "ES256":
             if self.jwt_private_key is None:
-                raise ApiError.internal()
+                raise ApiError()
             if self.jwt_public_key is None:
-                raise ApiError.internal()
+                raise ApiError()
         return self
 
     # Compatibility aliases for the original uppercase settings API.

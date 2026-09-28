@@ -11,7 +11,7 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 
 from app.core.config import get_settings
-from app.core.responses import ApiError
+from app.core.responses import ApiError, _ApiError
 
 ACCESS_TOKEN_TYPE = "access"
 
@@ -128,14 +128,14 @@ def _get_signing_key() -> str:
         private_key = _secret_value(settings.jwt_private_key)
 
         if not private_key:
-            raise ApiError.internal()
+            raise ApiError()
 
         return private_key
 
     secret_key = _secret_value(settings.jwt_secret_key)
 
     if not secret_key:
-        raise ApiError.internal()
+        raise ApiError()
 
     return secret_key
 
@@ -147,14 +147,14 @@ def _get_verification_key() -> str:
         public_key = _secret_value(settings.jwt_public_key)
 
         if not public_key:
-            raise ApiError.internal()
+            raise ApiError()
 
         return public_key
 
     secret_key = _secret_value(settings.jwt_secret_key)
 
     if not secret_key:
-        raise ApiError.internal()
+        raise ApiError()
 
     return secret_key
 
@@ -170,7 +170,7 @@ def _secret_value(value: Any) -> str | None:
     return str(value)
 
 
-def _invalid_access_token() -> ApiError:
+def _invalid_access_token() -> _ApiError:
     return ApiError(
         status_code=401,
         business_code="DESIGN_AUTHENTICATION_REQUIRED",

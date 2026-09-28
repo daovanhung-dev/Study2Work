@@ -7,7 +7,7 @@ from typing import Any
 import app.modules.guest.api_01_auth_register.view as auth_view
 import pytest
 from app.core.database import get_db
-from app.core.responses import ApiError
+from app.core.responses import _ApiError
 from app.modules.guest.api_01_auth_register.models import RegisterRequest
 from app.modules.guest.api_01_auth_register.view import create_user
 from fastapi.testclient import TestClient
@@ -127,7 +127,7 @@ def test_create_user_rejects_duplicate_email(monkeypatch: pytest.MonkeyPatch) ->
     session = FakeSession()
     monkeypatch.setattr(auth_view, "find_user_by_email", lambda db, email: {"id": 1})
 
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         create_user(
             user_data=RegisterRequest(
                 email="student@example.com",
@@ -152,7 +152,7 @@ def test_create_user_rolls_back_database_error(monkeypatch: pytest.MonkeyPatch) 
         lambda db, **kwargs: (_ for _ in ()).throw(SQLAlchemyError("database unavailable")),
     )
 
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         create_user(
             user_data=RegisterRequest(
                 email="student@example.com",
@@ -181,7 +181,7 @@ def test_create_user_maps_email_unique_race_to_conflict(
         lambda db, **kwargs: (_ for _ in ()).throw(unique_error),
     )
 
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         create_user(
             user_data=RegisterRequest(
                 email="student@example.com",

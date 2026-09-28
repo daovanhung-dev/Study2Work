@@ -51,7 +51,7 @@ def _get_refresh_token_pepper() -> str:
     )
 
     if not pepper:
-        raise ApiError.internal()
+        raise ApiError()
 
     return pepper
 

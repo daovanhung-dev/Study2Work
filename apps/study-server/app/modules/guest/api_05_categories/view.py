@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from app.core.responses import ApiError, success_response
+from app.core.responses import ApiError, _ApiError, success_response
 from app.modules.guest.api_05_categories.models import (
     DEFAULT_LOCALE,
     Category,
@@ -59,7 +59,7 @@ def get_categories(
     )
 
 
-def _internal_error(trace_id: str) -> ApiError:
+def _internal_error(trace_id: str) -> _ApiError:
     return ApiError(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",

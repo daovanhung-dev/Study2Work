@@ -4,7 +4,7 @@ import logging
 from decimal import InvalidOperation
 from typing import Any
 
-from app.core.responses import ApiError, success_response
+from app.core.responses import ApiError, _ApiError, success_response
 from app.modules.guest._shared.course_catalog.helpers import (
     course_internal_error,
     map_course,
@@ -48,7 +48,7 @@ def get_courses(
             size=course_query.size,
             sort=course_query.sort,
         )
-    except ApiError:
+    except _ApiError:
         db.rollback()
         raise
     except SQLAlchemyError as exc:
@@ -69,7 +69,7 @@ def get_courses(
                 total_pages=total_pages,
             ),
         )
-    except ApiError as exc:
+    except _ApiError as exc:
         logger.exception("Course mapping failed; trace_id=%s", trace_id)
         raise course_internal_error(trace_id) from exc
     except (InvalidOperation, TypeError, ValueError, ValidationError) as exc:

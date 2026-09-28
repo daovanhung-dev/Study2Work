@@ -12,7 +12,7 @@ from starlette.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import JSONResponse, Response
 
-from app.core.responses import ApiError, ErrorDetail, error_response
+from app.core.responses import ApiError, ErrorDetail, _ApiError, error_response
 from app.core.trace import (
     TRACE_HEADER,
     create_trace_id,
@@ -41,7 +41,7 @@ def _validation_field(location: Sequence[Any]) -> str | None:
     return ".".join(parts) or None
 
 
-async def api_error_handler(request: Request, exc: ApiError) -> JSONResponse:
+async def api_error_handler(request: Request, exc: _ApiError) -> JSONResponse:
     """Render an explicitly raised application error."""
 
     headers = {
@@ -147,7 +147,7 @@ class TraceIdMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
             response.headers[TRACE_HEADER] = trace_id
             return response
-        except ApiError as exc:
+        except _ApiError as exc:
             response = await api_error_handler(request, exc)
             return response
         except Exception as exc:

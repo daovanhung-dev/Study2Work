@@ -38,15 +38,17 @@ binds internally to `0.0.0.0:3003` and publishes the host address separately.
 ### `ErrorDetail`
 Pydantic model `{field?, code, message}`, `extra=forbid`.
 
-### `ApiError.__init__`
-Controlled application error carrying HTTP status, business code, safe message,
-trace ID, data/meta, tuple of field errors and optional headers. Context-free
-construction defaults to a safe internal 500 and uses the current trace context
-or generates a trace ID.
+### `ApiError(...)` factory
+Public function that creates a private `_ApiError` exception instance with
+HTTP status, business code, safe message, trace ID, data/meta, field errors and
+optional headers. Callers keep using `raise ApiError(...)`; Python's exception
+and FastAPI handler APIs use `_ApiError` internally. Calling `ApiError()` with
+no arguments creates a safe internal 500 and uses the current trace context or
+generates a trace ID.
 
 `success_response` directly builds the canonical success envelope with keys
 `success`, `businessCode`, `message`, `data`, `meta`, and `traceId`.
-`error_response(ApiError)` serializes the canonical error envelope. All HTTP
+`error_response(_ApiError)` serializes the canonical error envelope. All HTTP
 error handlers construct `ApiError` and use the same error serializer;
 validation details are stored in `meta.fieldErrors`.
 
@@ -56,7 +58,7 @@ The shared FastAPI exception handlers live with `TraceIdMiddleware` so both
 `create_app` and the middleware dispatch use one implementation.
 
 - `_validation_field(loc)`: removes protocol location prefixes (`body/query/path/header/cookie`) and joins remaining field path.
-- `api_error_handler`: renders `ApiError` through `error_response`.
+- `api_error_handler`: renders `_ApiError` through `error_response`.
 - `http_exception_handler`: converts HTTP exceptions into `ApiError`, preserving status and safe envelope fields; otherwise maps to `HTTP_ERROR`.
 - `request_validation_exception_handler`: converts Pydantic errors to `ApiError` with `ErrorDetail`, using
   `DESIGN_VALIDATION_ERROR` for API #1 register, API #2 verify-email dispatch,
@@ -112,7 +114,7 @@ The shared FastAPI exception handlers live with `TraceIdMiddleware` so both
 - `get_current_trace_id()`: read ContextVar without Request.
 
 ## `app/core/middleware.py:TraceIdMiddleware.dispatch`
-Flow: validate incoming header -> create if invalid -> attach request/context -> call next -> set response header -> route escaped `ApiError` or unexpected exception through the common handlers -> reset context.
+Flow: validate incoming header -> create if invalid -> attach request/context -> call next -> set response header -> route escaped `_ApiError` or unexpected exception through the common handlers -> reset context.
 
 Middleware uses `validate_trace_id`, `set_trace_id` and `reset_trace_id` from the
 current trace module.

@@ -6,7 +6,7 @@ from typing import Any
 import app.modules.guest.api_03_auth_login.view as auth_view
 import pytest
 from app.core.database import get_db
-from app.core.responses import ApiError
+from app.core.responses import ApiError, _ApiError
 from app.core.security.password import hash_password
 from app.modules.guest.api_03_auth_login.models import LoginRequest, RefreshRequest
 from app.utils.auth import IssuedTokens
@@ -129,7 +129,7 @@ def test_login_rejects_inactive_account(
     session = FakeSession()
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: make_user(status=status))
 
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         auth_view.login(
             user_data=LoginRequest(
                 email="student@example.com",
@@ -149,7 +149,7 @@ def test_login_hides_unknown_or_wrong_credentials(
     session = FakeSession()
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: None)
 
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         auth_view.login(
             user_data=LoginRequest(
                 email="student@example.com",
@@ -171,7 +171,7 @@ def test_login_rolls_back_database_error(monkeypatch: pytest.MonkeyPatch) -> Non
 
     monkeypatch.setattr(auth_view, "query_one", fail_query)
 
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         auth_view.login(
             user_data=LoginRequest(
                 email="student@example.com",
@@ -194,10 +194,10 @@ def test_login_maps_token_issuance_api_error_to_internal_error(
     monkeypatch.setattr(
         auth_view,
         "issue_tokens",
-        lambda **kwargs: (_ for _ in ()).throw(ApiError.internal()),
+        lambda **kwargs: (_ for _ in ()).throw(ApiError()),
     )
 
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         auth_view.login(
             user_data=LoginRequest(
                 email="student@example.com",
@@ -248,7 +248,7 @@ def test_refresh_rejects_invalid_token(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(auth_view, "hash_refresh_token", lambda token: "missing-hash")
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: None)
 
-    with pytest.raises(ApiError) as error:
+    with pytest.raises(_ApiError) as error:
         auth_view.refresh(
             user_data=RefreshRequest(refresh_token="missing-token"),
             db=session,  # type: ignore[arg-type]

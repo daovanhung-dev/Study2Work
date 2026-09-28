@@ -5,7 +5,7 @@ from typing import Any, Literal
 import httpx
 
 from app.core import constants
-from app.core.responses import ApiError
+from app.core.responses import ApiError, _ApiError
 
 MessageRole = Literal["system", "user", "assistant"]
 
@@ -143,27 +143,27 @@ class OllamaService:
             data = response.json()
 
             if not isinstance(data, dict):
-                raise ApiError.internal()
+                raise ApiError()
 
             return data
 
         except httpx.ConnectError as exc:
-            raise ApiError.internal() from exc
+            raise ApiError() from exc
 
         except httpx.TimeoutException as exc:
-            raise ApiError.internal() from exc
+            raise ApiError() from exc
 
         except httpx.HTTPStatusError as exc:
-            raise ApiError.internal() from exc
+            raise ApiError() from exc
 
         except ValueError as exc:
-            raise ApiError.internal() from exc
+            raise ApiError() from exc
 
-        except ApiError:
+        except _ApiError:
             raise
 
         except Exception as exc:
-            raise ApiError.internal() from exc
+            raise ApiError() from exc
 
 
 ai_service = OllamaService()

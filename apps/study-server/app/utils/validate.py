@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from app.core.responses import ApiError
+from app.core.responses import ApiError, _ApiError
 
 
 def strip_email(value: object) -> object:
@@ -85,7 +85,7 @@ def validate_access_claims(claims: Mapping[str, Any]) -> tuple[int, list[str]]:
     return user_id, roles
 
 
-def _authentication_error(message: str) -> ApiError:
+def _authentication_error(message: str) -> _ApiError:
     return ApiError(
         status_code=401,
         business_code="DESIGN_AUTHENTICATION_REQUIRED",

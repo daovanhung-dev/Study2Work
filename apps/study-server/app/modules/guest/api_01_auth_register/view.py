@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from app.core.responses import ApiError, success_response
+from app.core.responses import ApiError, _ApiError, success_response
 from app.core.security.password import hash_password
 from app.modules.guest.api_01_auth_register.models import RegisterRequest
 from app.modules.guest.api_01_auth_register.query import find_user_by_email, insert_user
@@ -49,7 +49,7 @@ def create_user(
             )
 
         db.commit()
-    except ApiError:
+    except _ApiError:
         raise
     except IntegrityError as exc:
         db.rollback()

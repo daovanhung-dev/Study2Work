@@ -19,7 +19,7 @@ from app.core.middleware import (
     request_validation_exception_handler,
     unhandled_exception_handler,
 )
-from app.core.responses import ApiError, success_response
+from app.core.responses import _ApiError, success_response
 from app.core.trace import get_trace_id
 
 
@@ -56,7 +56,7 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
         )
 
     app.add_middleware(TraceIdMiddleware)
-    app.add_exception_handler(ApiError, cast(Any, api_error_handler))
+    app.add_exception_handler(_ApiError, cast(Any, api_error_handler))
     app.add_exception_handler(
         RequestValidationError, cast(Any, request_validation_exception_handler)
     )
