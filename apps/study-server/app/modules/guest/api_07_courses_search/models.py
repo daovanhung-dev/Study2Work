@@ -6,7 +6,9 @@ from pydantic import BaseModel, Field, field_validator
 
 
 def normalize_search_query(value: object) -> object:
-    """Trim and lowercase the optional public course-search keyword."""
+    """Loại khoảng trắng hai đầu và chuyển chuỗi tìm kiếm thành chữ thường trước khi kiểm tra
+    model. Chuỗi sau chuẩn hóa rỗng trở thành None để truy vấn bỏ điều kiện từ khóa; giá trị
+    không phải chuỗi được giữ cho Pydantic xác thực."""
 
     if isinstance(value, str):
         normalized = value.strip().lower()
@@ -15,7 +17,8 @@ def normalize_search_query(value: object) -> object:
 
 
 class CourseSearchQuery(BaseModel):
-    """Public query contract for the course-search endpoint."""
+    """Định nghĩa từ khóa, category tùy chọn, trang và sort của API tìm kiếm khóa học; validator
+    chuẩn hóa từ khóa và dùng chung quy tắc sort."""
 
     q: str | None = None
     category: int | None = None

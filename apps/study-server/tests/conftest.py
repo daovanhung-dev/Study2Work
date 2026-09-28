@@ -10,6 +10,8 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def client() -> Iterator[TestClient]:
+    """Cung cấp fixture TestClient đã compose Study API với cấu hình kiểm thử. Fixture mở client
+    trong context manager, yield cho test sử dụng rồi đóng client sau khi test kết thúc."""
     app = create_app(
         Settings(
             app_env="test",

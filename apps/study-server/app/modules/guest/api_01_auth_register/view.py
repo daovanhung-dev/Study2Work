@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 def find_user_by_email(db: Session, email: str) -> dict[str, Any] | None:
-    """Return the existing user ID for an email, if present."""
+    """Truy vấn theo email để tìm tài khoản đã tồn tại và trả về hàng người dùng nếu có. Hàm dùng
+    câu SQL CHECK_DUPLICATE với tham số bind, không commit transaction."""
 
     return query_one(db, CHECK_DUPLICATE, {"email": email})
 
@@ -27,7 +28,9 @@ def insert_user(
     email: str,
     password_hash: str,
 ) -> dict[str, Any] | None:
-    """Insert one account and return its public profile fields."""
+    """Thực thi câu INSERT_USER bằng full name, email và password hash đã chuẩn bị. Trả về các
+    trường profile được truy vấn nếu insert thành công, hoặc None khi không có hàng trả về;
+    transaction thuộc caller."""
 
     return query_one(
         db,
@@ -46,7 +49,9 @@ def create_user(
     db: Session,
     trace_id: str,
 ) -> dict[str, Any]:
-    """Create an account inside the caller-owned database session."""
+    """Điều phối đăng ký: kiểm tra email trùng, băm mật khẩu, chèn tài khoản và commit trong
+    Session do caller sở hữu. Hàm rollback khi lỗi, ánh xạ unique race/DB error thành ApiError
+    an toàn, ghi log nội bộ và trả success envelope chỉ chứa profile công khai."""
 
     email = str(user_data.email)
 
@@ -119,6 +124,8 @@ def create_user(
 
 
 def _is_email_unique_violation(exc: IntegrityError) -> bool:
+    """Đọc constraint name từ IntegrityError.orig.diag và trả True khi lỗi đến từ users_email_key.
+    Kết quả giúp create_user phân biệt race email trùng với lỗi integrity khác."""
     original = getattr(exc, "orig", None)
     diagnostic = getattr(original, "diag", None)
     return getattr(diagnostic, "constraint_name", None) == "users_email_key"

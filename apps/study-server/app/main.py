@@ -1,4 +1,5 @@
-"""FastAPI composition root for the Study API."""
+"""Là composition root của Study API: lắp settings, database dependency, middleware, exception
+handler, router và endpoint hệ thống."""
 
 from __future__ import annotations
 
@@ -24,14 +25,17 @@ from app.core.trace import get_trace_id
 
 
 def _settings_for_request(request: Request) -> Settings:
-    """Lấy settings từ request app state hoặc cấu hình mặc định."""
+    """Lấy Settings đã gắn trên app.state của request nếu có, nếu không thì dùng get_settings() mặc
+    định. Helper này cho phép health endpoint đọc cấu hình được inject trong test hoặc runtime."""
 
     configured_settings = getattr(request.app.state, "settings", None)
     return configured_settings or get_settings()
 
 
 def create_app(app_settings: Settings | None = None) -> FastAPI:
-    """Tạo FastAPI app và lắp cấu hình, middleware, handler cùng router."""
+    """Tạo FastAPI app và lắp tài liệu API, settings, engine/session factory khi được inject, CORS,
+    trace middleware, exception handler và router v1. Trả về app đã compose; engine chỉ được tạo
+    khi caller truyền Settings tường minh."""
 
     docs_enabled = app_settings.enable_docs if app_settings is not None else True
     app = FastAPI(
@@ -66,7 +70,8 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
     # API GET /
     @app.get("/", tags=["system"])
     def root(request: Request) -> dict[str, Any]:
-        """Trả thông tin chào mừng của dịch vụ kèm trace ID."""
+        """Xử lý GET / và trả envelope thành công chứa tên dịch vụ cùng trace ID của request.
+        Endpoint không truy vấn database."""
 
         return success_response(
             business_code="SYSTEM_ROOT_LOADED",
@@ -78,7 +83,8 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
     # API GET /health/live
     @app.get("/health/live", tags=["health"])
     def health_live(request: Request) -> dict[str, Any]:
-        """Báo process đang chạy cùng môi trường hiện tại."""
+        """Xử lý GET /health/live, báo service còn phản hồi và cung cấp environment lấy từ
+        Settings. Endpoint không kiểm tra kết nối dependency."""
 
         settings = _settings_for_request(request)
         return success_response(
@@ -94,7 +100,8 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
     # API GET /health/ready
     @app.get("/health/ready", tags=["health"])
     def health_ready(request: Request) -> dict[str, Any]:
-        """Báo trạng thái cấu hình dependency, không probe kết nối database."""
+        """Xử lý GET /health/ready và trả nhãn cấu hình database/Redis cùng trace ID. Hàm chỉ kiểm
+        tra sự hiện diện cấu hình; không mở kết nối hay chạy probe database."""
 
         settings = _settings_for_request(request)
         return success_response(
@@ -111,8 +118,8 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
             },
         )
 
-    # HTTPException is registered after the generic handler so FastAPI keeps
-    # its standard protocol errors while still using our safe envelope.
+# Đăng ký HTTPException sau bộ xử lý tổng quát để FastAPI giữ nguyên
+# các lỗi giao thức chuẩn nhưng vẫn dùng cấu trúc phản hồi an toàn của ứng dụng.
     app.add_exception_handler(HTTPException, cast(Any, http_exception_handler))
     return app
 

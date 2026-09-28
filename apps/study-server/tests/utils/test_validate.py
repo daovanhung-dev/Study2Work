@@ -15,26 +15,31 @@ from app.utils.validate import (
 
 
 def test_strip_email_trims_only_string_values() -> None:
+    """Kiểm tra strip_email trim chuỗi email và trả nguyên kiểu dữ liệu không phải chuỗi."""
     assert strip_email(" student@example.com ") == "student@example.com"
     assert strip_email(123) == 123
 
 
 @pytest.mark.parametrize("validator", [reject_blank_password, reject_blank_value])
 def test_blank_value_validators_reject_whitespace(validator) -> None:
+    """Kiểm tra các validator từ chối password, token và giá trị chỉ có khoảng trắng."""
     with pytest.raises(ValueError):
         validator("   ")
 
 
 def test_blank_value_validators_preserve_non_blank_values() -> None:
+    """Kiểm tra các validator giữ nguyên password và giá trị không rỗng hợp lệ."""
     assert reject_blank_password("password") == "password"
     assert reject_blank_value("refresh-token") == "refresh-token"
 
 
 def test_login_email_validator_reuses_shared_email_normalization() -> None:
+    """Kiểm tra validator email đăng nhập dùng lại helper chuẩn hóa email chung."""
     assert normalize_login_email(" student@example.com ") == "student@example.com"
 
 
 def test_login_password_validator_rejects_blank_password() -> None:
+    """Kiểm tra validator password đăng nhập trả lại mật khẩu không rỗng hợp lệ."""
     with pytest.raises(ValueError):
         validate_login_password("   ")
 
@@ -42,6 +47,7 @@ def test_login_password_validator_rejects_blank_password() -> None:
 
 
 def test_refresh_token_validator_rejects_blank_token() -> None:
+    """Kiểm tra validator refresh token chấp nhận và giữ nguyên token không rỗng."""
     with pytest.raises(ValueError):
         validate_refresh_token("   ")
 
@@ -50,6 +56,7 @@ def test_refresh_token_validator_rejects_blank_token() -> None:
 
 @pytest.mark.parametrize("authorization", ["Bearer token", "bearer token", "BEARER token"])
 def test_extract_bearer_token_accepts_bearer_scheme(authorization: str) -> None:
+    """Kiểm tra helper tách token đúng với scheme Bearer không phân biệt hoa thường."""
     assert extract_bearer_token(authorization) == "token"
 
 
@@ -58,12 +65,14 @@ def test_extract_bearer_token_accepts_bearer_scheme(authorization: str) -> None:
     [None, "", "Basic token", "Bearer", "Bearer one two"],
 )
 def test_extract_bearer_token_rejects_malformed_header(authorization: str | None) -> None:
+    """Kiểm tra Authorization header sai cú pháp bị chuyển thành lỗi xác thực 401."""
     with pytest.raises(_ApiError) as error:
         extract_bearer_token(authorization)
     assert error.value.status_code == 401
 
 
 def test_validate_access_claims_normalizes_subject_and_roles() -> None:
+    """Kiểm tra claims đổi subject thành ID số và chuẩn hóa role thành chữ hoa."""
     assert validate_access_claims(
         {"sub": "1001", "roles": ["student", " Mentor "]},
     ) == (1001, ["STUDENT", "MENTOR"])
@@ -83,6 +92,7 @@ def test_validate_access_claims_normalizes_subject_and_roles() -> None:
     ],
 )
 def test_validate_access_claims_rejects_invalid_claims(claims: dict[str, Any]) -> None:
+    """Kiểm tra claims thiếu hoặc sai subject/roles bị từ chối bằng lỗi 401."""
     with pytest.raises(_ApiError) as error:
         validate_access_claims(claims)
     assert error.value.status_code == 401

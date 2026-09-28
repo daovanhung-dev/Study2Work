@@ -1,4 +1,5 @@
-"""Business orchestration for the current-user profile endpoint."""
+"""Điều phối xác thực bearer/JWT, kiểm tra quyền Student, đọc hồ sơ và dựng response cho API
+người dùng hiện tại."""
 
 from __future__ import annotations
 
@@ -19,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 def find_current_user(db: Session, *, user_id: int) -> dict[str, Any] | None:
-    """Return only the public profile columns for one authenticated user."""
+    """Đọc các cột profile công khai theo user ID bằng truy vấn CURRENT_USER_PROFILE. Trả hàng dữ
+    liệu hoặc None nếu không tìm thấy và không commit Session."""
 
     return query_one(db, CURRENT_USER_PROFILE, {"user_id": user_id})
 
@@ -30,7 +32,9 @@ def get_current_user(
     db: Session,
     trace_id: str,
 ) -> dict[str, Any]:
-    """Authenticate the request and return the current Student profile."""
+    """Lấy bearer token, giải mã JWT, kiểm tra subject/roles rồi yêu cầu role STUDENT trước khi đọc
+    profile. Hàm ánh xạ lỗi xác thực, quyền, database hoặc model thành _ApiError an toàn; hồ sơ
+    hợp lệ được tuần tự hóa thành success envelope."""
 
     try:
         token = extract_bearer_token(authorization)
@@ -70,6 +74,8 @@ def get_current_user(
 
 
 def _authentication_error(trace_id: str) -> _ApiError:
+    """Tạo _ApiError HTTP 401 với business code xác thực, thông điệp mặc định an toàn và trace ID
+    của request."""
     return ApiError(
         status_code=401,
         business_code="DESIGN_AUTHENTICATION_REQUIRED",
@@ -79,6 +85,8 @@ def _authentication_error(trace_id: str) -> _ApiError:
 
 
 def _authorization_error(trace_id: str) -> _ApiError:
+    """Tạo _ApiError HTTP 403 khi người gọi đã xác thực nhưng không có role được endpoint yêu cầu;
+    giữ trace ID để liên kết log và response."""
     return ApiError(
         status_code=403,
         business_code="DESIGN_ACCESS_DENIED",
@@ -88,6 +96,8 @@ def _authorization_error(trace_id: str) -> _ApiError:
 
 
 def _internal_error(trace_id: str) -> _ApiError:
+    """Tạo _ApiError HTTP 500 với business code nội bộ của API #4, message an toàn và trace ID đã
+    nhận."""
     return ApiError(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",

@@ -1,16 +1,16 @@
 from typing import Any
 
-# import framework
+# Nhập các thành phần cần thiết từ FastAPI.
 from fastapi import APIRouter, Depends, Header, Query, Request, status
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-# import core's file
+# Nhập các thành phần từ core.
 from app.core.database import get_db, get_engine
 from app.core.trace import get_trace_id
 
-# import folder's files
+# Nhập các thành phần từ những package nghiệp vụ của ứng dụng.
 from app.modules.guest.api_01_auth_register.models import RegisterRequest
 from app.modules.guest.api_01_auth_register.view import create_user
 from app.modules.guest.api_02_auth_verify_email_send.models import VerifyEmailSendRequest
@@ -46,7 +46,10 @@ def parse_course_query(
     size: int = Query(default=20, ge=1, le=100),
     sort: str | None = Query(default=None),
 ) -> CourseQuery:
-    """Parse query primitives and preserve the API validation envelope."""
+    """Đổi các tham số query đã được FastAPI phân tích thành CourseQuery để route danh sách khóa
+    học dùng thống nhất. Nếu model từ chối giá trị sort, chuyển ValueError thành
+    RequestValidationError gắn lỗi với trường query.sort để handler API trả envelope validation
+    chuẩn."""
 
     try:
         return CourseQuery(category=category, page=page, size=size, sort=sort)
@@ -65,7 +68,9 @@ def parse_course_search_query(
     page: int = Query(default=1, ge=1),
     sort: str | None = Query(default=None),
 ) -> CourseSearchQuery:
-    """Parse search query primitives and preserve the API error envelope."""
+    """Đổi từ khóa, category, page và sort thành CourseSearchQuery cho route tìm kiếm khóa học. Nếu
+    model từ chối sort, chuyển ValueError thành RequestValidationError tại query.sort để lỗi
+    được xử lý theo envelope validation của API."""
 
     try:
         return CourseSearchQuery(q=q, category=category, page=page, sort=sort)
@@ -80,11 +85,16 @@ course_search_query_dependency = Depends(parse_course_search_query)
 
 @router.get("/hello")
 def hello_world() -> dict[str, str]:
+    """Xử lý GET /hello và trả thông điệp chào cố định để kiểm tra route API v1. Hàm không truy cập
+    database hay tạo tác dụng phụ."""
     return {"message": "hello world!"}
 
 
 @router.get("/test/db")
 def test_db() -> dict[str, list[Any]]:
+    """Mở kết nối engine, chạy câu SQL chỉ đọc SELECT NOW() và trả các giá trị thời gian trong
+    trường result. Kết nối được đóng khi rời khối with; lỗi kết nối hoặc truy vấn được chuyển
+    cho lớp xử lý exception của FastAPI."""
     with get_engine().connect() as connection:
         result = connection.execute(text("SELECT NOW()"))
         return {"result": [row[0] for row in result]}
@@ -96,6 +106,9 @@ def register(
     request: Request,
     db: Session = db_dependency,
 ) -> dict[str, Any]:
+    """Nhận RegisterRequest, Session và trace ID của request rồi chuyển việc tạo tài khoản cho
+    create_user. Route giữ mã HTTP 201; kiểm tra nghiệp vụ, giao dịch và dựng response do lớp
+    view đảm nhiệm."""
     return create_user(
         user_data=user_data,
         db=db,
@@ -109,6 +122,9 @@ def authenticate(
     request: Request,
     db: Session = db_dependency,
 ) -> dict[str, Any]:
+    """Nhận LoginRequest, Session và trace ID rồi chuyển quy trình xác thực cho login. Route giữ mã
+    HTTP 200; việc kiểm tra thông tin đăng nhập, phát hành token và quản lý giao dịch do lớp
+    view đảm nhiệm."""
     return login(
         user_data=user_data,
         db=db,
@@ -122,6 +138,9 @@ def refresh_access_token(
     request: Request,
     db: Session = db_dependency,
 ) -> dict[str, Any]:
+    """Nhận RefreshRequest, Session và trace ID rồi chuyển việc xác thực, xoay vòng refresh token
+    cho refresh. Route trả mã HTTP 200 khi thành công; lớp view sở hữu kiểm tra token và giao
+    dịch."""
     return refresh(
         user_data=user_data,
         db=db,
@@ -135,6 +154,9 @@ def send_verification_email(
     request: Request,
     provider: VerificationEmailProvider = verification_provider_dependency,
 ) -> dict[str, Any]:
+    """Nhận yêu cầu gửi email xác minh và provider được inject, lấy trace ID rồi giao dispatch cho
+    lớp view. Route trả mã HTTP 202 khi provider chấp nhận yêu cầu và không tự mở kết nối
+    database."""
     return dispatch_verification_email(
         user_data=user_data,
         provider=provider,
@@ -148,6 +170,9 @@ def categories(
     category_query: CategoryQuery = category_query_dependency,
     db: Session = db_dependency,
 ) -> dict[str, Any]:
+    """Nhận locale đã được phân tích, Session và trace ID rồi chuyển việc đọc danh mục cho
+    get_categories. Route trả mã HTTP 200; view áp dụng locale mặc định, truy vấn và dựng
+    envelope."""
     return get_categories(
         locale=category_query.locale,
         db=db,
@@ -161,6 +186,9 @@ def courses(
     course_query: CourseQuery = course_query_dependency,
     db: Session = db_dependency,
 ) -> dict[str, Any]:
+    """Nhận bộ lọc danh sách khóa học, Session và trace ID rồi chuyển xử lý cho get_courses. Route
+    trả mã HTTP 200; phân trang, truy vấn, kiểm tra tính toàn vẹn mentor và ánh xạ dữ liệu nằm
+    trong view."""
     return get_courses(
         course_query=course_query,
         db=db,
@@ -174,6 +202,9 @@ def search_courses(
     course_query: CourseSearchQuery = course_search_query_dependency,
     db: Session = db_dependency,
 ) -> dict[str, Any]:
+    """Nhận từ khóa cùng bộ lọc tìm kiếm, Session và trace ID rồi chuyển cho search_courses_view.
+    Route trả mã HTTP 200; chuẩn hóa truy vấn, tìm kiếm, phân trang và dựng response do view đảm
+    nhiệm."""
     return search_courses_view(
         course_query=course_query,
         db=db,
@@ -187,6 +218,9 @@ def current_user(
     authorization: str | None = Header(default=None, alias="Authorization"),
     db: Session = db_dependency,
 ) -> dict[str, Any]:
+    """Nhận header Authorization, Session và trace ID rồi chuyển việc xác thực cùng đọc hồ sơ cho
+    get_current_user. Route trả mã HTTP 200 khi thành công; kiểm tra JWT, quyền Student và truy
+    vấn hồ sơ do view thực hiện."""
     return get_current_user(
         authorization=authorization,
         db=db,

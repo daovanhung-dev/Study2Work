@@ -17,6 +17,8 @@ from app.core.security import (
 def test_default_es256_keys_can_sign_and_verify_access_token(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra cặp khóa ES256 mặc định có thể ký access token và giải mã lại được subject cùng
+    role."""
     settings = Settings()
     monkeypatch.setattr(access_token_module, "get_settings", lambda: settings)
 
@@ -36,6 +38,8 @@ def test_default_es256_keys_can_sign_and_verify_access_token(
 def test_access_token_validates_signature_issuer_audience_and_type(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra access token từ chối chữ ký sai, issuer/audience không khớp hoặc token có type
+    không phải access."""
     settings = Settings(
         db_host="localhost",
         db_name="study",
@@ -63,6 +67,8 @@ def test_access_token_validates_signature_issuer_audience_and_type(
 def test_opaque_refresh_token_is_random_and_hashable(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra refresh token được sinh ngẫu nhiên khác nhau và có thể được băm, so sánh ổn định
+    bằng pepper."""
     settings = Settings(
         db_host="localhost",
         db_name="study",

@@ -1,4 +1,4 @@
-"""JWT access-token creation and verification."""
+"""Tạo và xác minh JWT access token theo thuật toán, issuer và audience trong cấu hình Study."""
 
 from __future__ import annotations
 
@@ -32,7 +32,10 @@ def create_access_token(
     roles: list[str] | None = None,
     claims: Mapping[str, Any] | None = None,
 ) -> str:
-    """Create a signed JWT access token."""
+    """Tạo payload access JWT từ user ID, danh sách role và claim bổ sung, sau đó ký bằng khóa theo
+    thuật toán đang cấu hình. Payload luôn có sub, type, jti, iat, exp, iss và aud; claim tùy
+    chỉnh không được ghi đè các claim dành riêng. Trả về token đã mã hóa; thiếu khóa ký sẽ phát
+    sinh ApiError."""
 
     settings = get_settings()
     now = datetime.now(UTC)
@@ -66,7 +69,9 @@ def create_access_token(
 def decode_access_token(
     token: str,
 ) -> dict[str, Any]:
-    """Decode and validate an access token."""
+    """Giải mã và kiểm tra access JWT bằng khóa, thuật toán, issuer và audience hiện hành. Hàm yêu
+    cầu các claim bắt buộc, kiểm tra type là access và sub là chuỗi không rỗng; token sai hoặc
+    hết hạn được ánh xạ thành lỗi xác thực 401."""
 
     settings = get_settings()
     verification_key = _get_verification_key()
@@ -113,6 +118,9 @@ def _add_custom_claims(
     payload: dict[str, Any],
     claims: Mapping[str, Any] | None,
 ) -> None:
+    """Chép các claim tùy chỉnh vào payload khi caller có cung cấp. Bỏ qua mọi khóa thuộc
+    RESERVED_CLAIMS để dữ liệu bổ sung không thay đổi danh tính, loại token, thời hạn hoặc nguồn
+    phát hành."""
     if not claims:
         return
 
@@ -122,6 +130,8 @@ def _add_custom_claims(
 
 
 def _get_signing_key() -> str:
+    """Chọn khóa ký theo thuật toán JWT: private key cho ES256 hoặc secret key cho HS256. Hàm mở
+    SecretStr nếu cần và phát sinh ApiError mặc định an toàn khi khóa bắt buộc bị thiếu."""
     settings = get_settings()
 
     if settings.jwt_algorithm == "ES256":
@@ -141,6 +151,8 @@ def _get_signing_key() -> str:
 
 
 def _get_verification_key() -> str:
+    """Chọn khóa xác minh theo thuật toán JWT: public key cho ES256 hoặc secret key cho HS256. Hàm
+    mở giá trị secret theo cấu hình và phát sinh ApiError an toàn nếu không có khóa."""
     settings = get_settings()
 
     if settings.jwt_algorithm == "ES256":
@@ -160,6 +172,8 @@ def _get_verification_key() -> str:
 
 
 def _secret_value(value: Any) -> str | None:
+    """Chuẩn hóa giá trị bí mật thành chuỗi có thể dùng bởi thư viện JWT. Trả None nếu đầu vào là
+    None, mở đối tượng có get_secret_value, còn giá trị khác được chuyển bằng str."""
     if value is None:
         return None
 
@@ -171,6 +185,8 @@ def _secret_value(value: Any) -> str | None:
 
 
 def _invalid_access_token() -> _ApiError:
+    """Tạo _ApiError HTTP 401 với business code yêu cầu xác thực và thông điệp token không hợp lệ
+    hoặc hết hạn. Helper này thống nhất phản hồi cho các lỗi giải mã hay kiểm tra claim."""
     return ApiError(
         status_code=401,
         business_code="DESIGN_AUTHENTICATION_REQUIRED",

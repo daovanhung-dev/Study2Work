@@ -24,7 +24,8 @@ def find_active_categories(
     *,
     locale: str,
 ) -> list[dict[str, Any]]:
-    """Return active categories for one exact locale."""
+    """Truy vấn danh sách category có status ACTIVE và locale khớp chính xác với giá trị truyền
+    vào. Trả các hàng dưới dạng dict; transaction vẫn do caller sở hữu."""
 
     return query_many(
         db,
@@ -42,7 +43,9 @@ def get_categories(
     db: Session,
     trace_id: str,
 ) -> dict[str, Any]:
-    """Return active categories for the requested or default locale."""
+    """Chọn locale được yêu cầu hoặc DEFAULT_LOCALE, đọc category đang hoạt động rồi xác thực từng
+    hàng bằng model. Hàm dựng metadata một trang, trả envelope thành công kể cả khi danh sách
+    rỗng, rollback khi truy vấn lỗi và ánh xạ lỗi dữ liệu thành lỗi nội bộ an toàn."""
 
     resolved_locale = locale if locale is not None else DEFAULT_LOCALE
 
@@ -78,6 +81,8 @@ def get_categories(
 
 
 def _internal_error(trace_id: str) -> _ApiError:
+    """Tạo _ApiError HTTP 500 cho lỗi truy vấn hoặc ánh xạ category, kèm business code nội bộ và
+    trace ID của request."""
     return ApiError(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",

@@ -15,6 +15,7 @@ from pydantic import ValidationError
 
 class FakeProvider:
     def __init__(self, result: VerificationDispatchResult | None = None) -> None:
+        """Khởi tạo provider giả với kết quả dispatch và danh sách lời gọi được ghi nhận."""
         self.result = result or VerificationDispatchResult(status="accepted")
         self.calls: list[dict[str, Any]] = []
 
@@ -25,6 +26,7 @@ class FakeProvider:
         email: str,
         trace_id: str,
     ) -> VerificationDispatchResult:
+        """Ghi nhận user ID, email, trace ID rồi trả kết quả đã cấu hình."""
         self.calls.append(
             {
                 "user_id": user_id,
@@ -43,18 +45,23 @@ class FailingProvider:
         email: str,
         trace_id: str,
     ) -> VerificationDispatchResult:
+        """Phát sinh lỗi provider chứa thông tin nhạy cảm để kiểm tra API không làm lộ upstream
+        detail."""
         del user_id, email, trace_id
         raise RuntimeError("provider response must not leak")
 
 
 def override_provider(provider: object):
+    """Tạo dependency thay provider email mặc định bằng provider giả trong test."""
     def dependency() -> object:
+        """Yield FakeSession được giữ trong closure cho request kiểm thử."""
         return provider
 
     return dependency
 
 
 def test_verify_email_request_accepts_contract_fields() -> None:
+    """Kiểm tra request xác minh nhận user_id kiểu số nguyên nghiêm ngặt và email đúng định dạng."""
     request = VerifyEmailSendRequest(user_id=1001, email="student@example.com")
 
     assert request.user_id == 1001
@@ -71,6 +78,7 @@ def test_verify_email_request_accepts_contract_fields() -> None:
     ],
 )
 def test_verify_email_request_rejects_invalid_payload(payload: dict[str, object]) -> None:
+    """Kiểm tra request xác minh từ chối user_id sai kiểu và email không hợp lệ."""
     with pytest.raises(ValidationError):
         VerifyEmailSendRequest(**payload)
 
@@ -83,6 +91,8 @@ def test_verify_email_http_accepts_public_dispatch(
     client: TestClient,
     headers: dict[str, str],
 ) -> None:
+    """Kiểm tra endpoint công khai chuyển yêu cầu tới provider stub và trả HTTP 202 cùng trạng thái
+    accepted."""
     provider = FakeProvider()
     client.app.dependency_overrides[get_verification_email_provider] = override_provider(provider)
 
@@ -107,7 +117,9 @@ def test_verify_email_http_accepts_public_dispatch(
 def test_verify_email_http_does_not_require_database(
     client: TestClient,
 ) -> None:
+    """Kiểm tra endpoint dispatch hoàn tất bằng provider mà không resolve dependency database."""
     def fail_db_dependency():
+        """Phát sinh AssertionError nếu endpoint xác minh cố resolve database dependency."""
         raise AssertionError("API #2 must not resolve the database dependency")
 
     client.app.dependency_overrides[get_db] = fail_db_dependency
@@ -123,6 +135,7 @@ def test_verify_email_http_does_not_require_database(
 def test_verify_email_http_maps_provider_failure_without_leaking_details(
     client: TestClient,
 ) -> None:
+    """Kiểm tra lỗi provider trở thành HTTP 500 an toàn mà không lộ message upstream."""
     client.app.dependency_overrides[get_verification_email_provider] = override_provider(
         FailingProvider()
     )
@@ -138,6 +151,8 @@ def test_verify_email_http_maps_provider_failure_without_leaking_details(
 
 
 def test_verify_email_http_uses_design_validation_code(client: TestClient) -> None:
+    """Kiểm tra payload xác minh sai bị chuyển thành business code validation theo
+    design contract."""
     response = client.post("/api/v1/auth/verify-email/send", json={})
 
     assert response.status_code == 422

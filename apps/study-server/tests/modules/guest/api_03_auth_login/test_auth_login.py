@@ -16,25 +16,32 @@ from sqlalchemy.exc import SQLAlchemyError
 
 class FakeResult:
     def __init__(self, row: Any) -> None:
+        """Khởi tạo kết quả giả và giữ hàng mà first() sẽ trả về."""
         self.row = row
 
     def first(self) -> Any:
+        """Trả hàng giả đã lưu để mô phỏng kết quả đầu tiên của truy vấn."""
         return self.row
 
 
 class FakeSession:
     def __init__(self) -> None:
+        """Khởi tạo phiên database giả với các bộ đếm commit/rollback dùng để xác minh transaction
+        trong test."""
         self.commit_count = 0
         self.rollback_count = 0
 
     def commit(self) -> None:
+        """Tăng bộ đếm commit để test xác nhận transaction được commit đúng lúc."""
         self.commit_count += 1
 
     def rollback(self) -> None:
+        """Tăng bộ đếm rollback để test xác nhận transaction được hoàn tác khi lỗi."""
         self.rollback_count += 1
 
 
 def make_user(*, status: str = "ACTIVE", include_password: bool = True) -> dict[str, Any]:
+    """Tạo user giả cho luồng login với trạng thái và password hash tùy chỉnh."""
     created_at = datetime(2026, 9, 15, 12, 0, tzinfo=UTC)
     user = {
         "id": 1001,
@@ -53,6 +60,7 @@ def make_user(*, status: str = "ACTIVE", include_password: bool = True) -> dict[
 
 
 def make_tokens() -> IssuedTokens:
+    """Tạo IssuedTokens giả với thời hạn cố định cho các kịch bản xác thực."""
     return IssuedTokens(
         access_token="access-token",
         refresh_token="refresh-token",
@@ -64,13 +72,16 @@ def make_tokens() -> IssuedTokens:
 
 
 def override_db(session: FakeSession):
+    """Tạo dependency thay thế database để route dùng FakeSession mà không mở kết nối thật."""
     def dependency():
+        """Yield FakeSession được giữ trong closure cho request kiểm thử."""
         yield session
 
     return dependency
 
 
 def test_login_request_normalizes_email_and_rejects_blank_password() -> None:
+    """Kiểm tra LoginRequest chuẩn hóa email và từ chối password chỉ gồm khoảng trắng."""
     request = LoginRequest(
         email=" student@example.com ",
         password="correct horse battery staple",
@@ -83,6 +94,7 @@ def test_login_request_normalizes_email_and_rejects_blank_password() -> None:
 
 
 def test_refresh_request_rejects_blank_token() -> None:
+    """Kiểm tra RefreshRequest từ chối refresh token rỗng hoặc chỉ có khoảng trắng."""
     with pytest.raises(ValueError):
         RefreshRequest(refresh_token="   ")
 
@@ -90,6 +102,8 @@ def test_refresh_request_rejects_blank_token() -> None:
 def test_login_returns_profile_and_tokens_and_commits(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra login trả profile an toàn cùng access/refresh token và commit session sau khi phát
+    hành token."""
     session = FakeSession()
     user = make_user()
     executed: list[dict[str, Any]] = []
@@ -126,6 +140,7 @@ def test_login_rejects_inactive_account(
     monkeypatch: pytest.MonkeyPatch,
     status: str,
 ) -> None:
+    """Kiểm tra tài khoản không ở trạng thái ACTIVE bị từ chối đăng nhập với HTTP 403."""
     session = FakeSession()
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: make_user(status=status))
 
@@ -146,6 +161,7 @@ def test_login_rejects_inactive_account(
 def test_login_hides_unknown_or_wrong_credentials(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra email không tồn tại và password sai dùng cùng lỗi xác thực HTTP 401."""
     session = FakeSession()
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: None)
 
@@ -164,9 +180,12 @@ def test_login_hides_unknown_or_wrong_credentials(
 
 
 def test_login_rolls_back_database_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Kiểm tra lỗi truy vấn database trong login làm rollback transaction và trả lỗi nội bộ an
+    toàn."""
     session = FakeSession()
 
     def fail_query(db, query, params):
+        """Mô phỏng lỗi SQLAlchemy khi truy vấn để kiểm tra rollback và response an toàn."""
         raise SQLAlchemyError("database unavailable")
 
     monkeypatch.setattr(auth_view, "query_one", fail_query)
@@ -189,6 +208,7 @@ def test_login_rolls_back_database_error(monkeypatch: pytest.MonkeyPatch) -> Non
 def test_login_maps_token_issuance_api_error_to_internal_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra lỗi phát hành token được rollback và chuyển thành lỗi nội bộ, không lộ cấu hình."""
     session = FakeSession()
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: make_user())
     monkeypatch.setattr(
@@ -214,6 +234,8 @@ def test_login_maps_token_issuance_api_error_to_internal_error(
 
 
 def test_refresh_rotates_old_token_atomically(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Kiểm tra refresh thu hồi token cũ, lưu hash token mới và commit cả hai thao tác trong cùng
+    transaction."""
     session = FakeSession()
     user = make_user(include_password=False)
     user["refresh_token_id"] = 9
@@ -224,6 +246,7 @@ def test_refresh_rotates_old_token_atomically(monkeypatch: pytest.MonkeyPatch) -
     monkeypatch.setattr(auth_view, "issue_tokens", lambda user_id, role: make_tokens())
 
     def execute(db, query, params):
+        """Ghi lại SQL cùng tham số rồi trả kết quả giả cho thao tác thu hồi refresh token."""
         executed.append((query, params))
         return FakeResult((9,))
 
@@ -244,6 +267,7 @@ def test_refresh_rotates_old_token_atomically(monkeypatch: pytest.MonkeyPatch) -
 
 
 def test_refresh_rejects_invalid_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Kiểm tra refresh token không hợp lệ hoặc không còn hiệu lực bị từ chối với HTTP 401."""
     session = FakeSession()
     monkeypatch.setattr(auth_view, "hash_refresh_token", lambda token: "missing-hash")
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: None)
@@ -261,6 +285,7 @@ def test_refresh_rejects_invalid_token(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_auth_http_validation_uses_design_error_code(client: TestClient) -> None:
+    """Kiểm tra body login/refresh sai trả HTTP 422 với business code validation theo design."""
     login_response = client.post("/api/v1/auth/login", json={})
     refresh_response = client.post("/api/v1/auth/refresh", json={})
 
@@ -274,6 +299,7 @@ def test_auth_http_login_returns_tokens(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra route login trả HTTP 200, profile công khai và cặp token trong envelope chuẩn."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: make_user())

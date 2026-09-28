@@ -1,4 +1,5 @@
-"""Canonical API response models and controlled API errors."""
+"""Định nghĩa kiểu chi tiết lỗi, factory lỗi API và các hàm dựng envelope phản hồi của Study
+API."""
 
 from __future__ import annotations
 
@@ -14,7 +15,8 @@ INTERNAL_ERROR_MESSAGE = "Đã xảy ra lỗi nội bộ hệ thống."
 
 
 class ErrorDetail(BaseModel):
-    """One safe, client-facing validation or business error detail."""
+    """Mô tả một lỗi kiểm tra hoặc lỗi nghiệp vụ an toàn có thể trả cho client. Trường ngoài schema
+    bị từ chối để tránh vô tình đưa dữ liệu không được hỗ trợ vào response."""
 
     field: str | None = None
     code: str
@@ -24,7 +26,8 @@ class ErrorDetail(BaseModel):
 
 
 class _ApiError(Exception):
-    """Private exception instance raised by the ApiError factory."""
+    """Kiểu exception nội bộ mà factory ApiError tạo ra để mang HTTP status, business code, thông
+    điệp an toàn, trace ID, dữ liệu, metadata, lỗi trường và header tùy chọn."""
 
     def __init__(
         self,
@@ -38,6 +41,10 @@ class _ApiError(Exception):
         errors: Sequence[ErrorDetail] = (),
         headers: Mapping[str, str] | None = None,
     ) -> None:
+        """Khởi tạo exception nội bộ với status, business code, message, data, metadata, field
+        errors và header đã chuẩn hóa. Trace ID ưu tiên giá trị được truyền vào, sau đó lấy từ
+        ContextVar hoặc tạo UUID mới; mapping được sao chép và errors được chuyển thành tuple để
+        tránh caller sửa state nội bộ."""
         super().__init__(message)
 
         self.status_code = status_code
@@ -60,7 +67,9 @@ def ApiError(
     errors: Sequence[ErrorDetail] = (),
     headers: Mapping[str, str] | None = None,
 ) -> _ApiError:
-    """Tạo exception nội bộ để caller ném bằng cú pháp `raise ApiError(...)`."""
+    """Tạo và trả về một _ApiError để caller có thể giữ cú pháp raise ApiError(...). Tham số mặc
+    định tạo lỗi nội bộ HTTP 500 an toàn; factory chuyển nguyên các trường response, lỗi trường
+    và header cho exception nội bộ."""
 
     return _ApiError(
         status_code=status_code,
@@ -82,7 +91,9 @@ def success_response(
     data: Any = None,
     meta: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Build the canonical success response envelope."""
+    """Dựng dictionary envelope thành công với success, businessCode, message, data, meta và
+    traceId. Hàm sao chép meta để không giữ mapping mutable của caller và không tạo response
+    HTTP trực tiếp."""
 
     return {
         "success": True,
@@ -97,7 +108,9 @@ def success_response(
 def error_response(
     error: _ApiError,
 ) -> dict[str, Any]:
-    """Serialize an ApiError into the canonical error response envelope."""
+    """Chuyển _ApiError thành dictionary envelope lỗi chuẩn. Hàm sao chép meta, thêm danh sách
+    fieldErrors khi có lỗi trường, dùng data rỗng nếu exception không có data và giữ trace ID
+    cùng business code đã gắn vào lỗi."""
 
     response_meta = dict(error.meta)
     if error.errors:

@@ -6,6 +6,8 @@ from fastapi.testclient import TestClient
 
 
 def test_live_health_returns_standard_envelope(client: TestClient) -> None:
+    """Kiểm tra GET /health/live trả status thành công, envelope chuẩn, environment và trace
+    header."""
     response = client.get("/health/live")
 
     assert response.status_code == 200
@@ -20,6 +22,7 @@ def test_live_health_returns_standard_envelope(client: TestClient) -> None:
 
 
 def test_ready_health_returns_standard_envelope(client: TestClient) -> None:
+    """Kiểm tra GET /health/ready trả envelope cấu hình dependency mà không probe database thật."""
     response = client.get("/health/ready")
 
     assert response.status_code == 200
@@ -33,6 +36,7 @@ def test_ready_health_returns_standard_envelope(client: TestClient) -> None:
 
 
 def test_health_accepts_valid_trace_id(client: TestClient) -> None:
+    """Kiểm tra health endpoint giữ UUID trace ID hợp lệ trong response và header."""
     trace_id = "7c3a2f1b-31c5-4a21-9b3e-7d1745c4748a"
 
     response = client.get("/health/live", headers={"X-Trace-Id": trace_id})
@@ -42,6 +46,7 @@ def test_health_accepts_valid_trace_id(client: TestClient) -> None:
 
 
 def test_health_replaces_invalid_trace_id(client: TestClient) -> None:
+    """Kiểm tra middleware thay trace ID sai định dạng bằng UUID mới."""
     response = client.get("/health/live", headers={"X-Trace-Id": "invalid"})
 
     payload = response.json()
@@ -50,6 +55,7 @@ def test_health_replaces_invalid_trace_id(client: TestClient) -> None:
 
 
 def test_validation_errors_use_canonical_field_error_location(client: TestClient) -> None:
+    """Kiểm tra lỗi validation trả tên trường không còn tiền tố body trong fieldErrors."""
     response = client.post("/api/v1/auth/register", json={})
 
     assert response.status_code == 422
@@ -61,6 +67,7 @@ def test_validation_errors_use_canonical_field_error_location(client: TestClient
 
 
 def test_unknown_route_uses_safe_error_envelope(client: TestClient) -> None:
+    """Kiểm tra route không tồn tại trả HTTP 404 bằng envelope an toàn có trace ID."""
     response = client.get("/does-not-exist")
 
     assert response.status_code == 404
@@ -71,7 +78,9 @@ def test_unknown_route_uses_safe_error_envelope(client: TestClient) -> None:
 
 
 def test_unhandled_error_keeps_trace_header_and_hides_details(client: TestClient) -> None:
+    """Kiểm tra exception nội bộ giữ trace header nhưng không làm lộ message nhạy cảm."""
     def fail_request() -> None:
+        """Phát sinh lỗi chứa thông tin nhạy cảm để xác nhận handler không trả detail đó."""
         raise RuntimeError("database password should not be exposed")
 
     client.app.add_api_route("/test/unhandled", fail_request)

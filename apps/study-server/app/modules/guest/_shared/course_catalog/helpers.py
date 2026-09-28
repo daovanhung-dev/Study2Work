@@ -13,7 +13,9 @@ from app.modules.guest._shared.course_catalog.models import Course, MentorSummar
 
 
 def normalize_sort(value: str | None) -> str | None:
-    """Validate and normalize one public ``field:direction`` sort expression."""
+    """Kiểm tra biểu thức sort tùy chọn theo dạng field:direction. Trả None nếu không truyền; nếu
+    có, chỉ chấp nhận field và direction trong allowlist, còn định dạng hoặc giá trị không hỗ
+    trợ sẽ phát sinh ValueError."""
 
     if value is None:
         return None
@@ -31,7 +33,9 @@ def normalize_sort(value: str | None) -> str | None:
 
 
 def build_order_by(sort: str | None) -> str:
-    """Map validated sort input to a static SQL ORDER BY expression."""
+    """Chuyển sort đã kiểm tra thành biểu thức ORDER BY lấy cột từ allowlist tĩnh. Khi không truyền
+    sort, dùng thứ tự mặc định; với field khác id, thêm c.id làm khóa phụ ổn định. Dữ liệu sort
+    không hợp lệ phát sinh ApiError 422."""
 
     if sort is None:
         return "c.created_at DESC, c.id ASC"
@@ -52,7 +56,9 @@ def build_order_by(sort: str | None) -> str:
 
 
 def map_course(row: dict[str, Any]) -> Course:
-    """Map one joined course row to the shared public course contract."""
+    """Ánh xạ một hàng SQL đã join thành model Course công khai, bao gồm mentor projection và giá
+    được tuần tự hóa thành chuỗi thập phân. Thiếu mentor ID hoặc tên mentor phát sinh ApiError
+    để caller xử lý lỗi toàn vẹn dữ liệu."""
 
     mentor_id = row.get("mentor_id")
     mentor_name = row.get("mentor_full_name")
@@ -75,7 +81,8 @@ def map_course(row: dict[str, Any]) -> Course:
 
 
 def decimal_string(value: Any) -> str:
-    """Serialize a numeric course price without floating-point conversion."""
+    """Chuyển giá khóa học sang chuỗi decimal mà không đưa qua phép tính floating point. Từ chối
+    giá trị None bằng ApiError và giữ dạng thập phân chính xác theo giá trị nguồn."""
 
     if value is None:
         raise ApiError()
@@ -83,7 +90,8 @@ def decimal_string(value: Any) -> str:
 
 
 def course_internal_error(trace_id: str) -> _ApiError:
-    """Build the shared safe error for course read failures."""
+    """Tạo _ApiError HTTP 500 dùng chung cho lỗi đọc hoặc ánh xạ khóa học. Hàm gắn business code
+    nội bộ, thông điệp an toàn và trace ID do caller cung cấp."""
 
     return ApiError(
         status_code=500,

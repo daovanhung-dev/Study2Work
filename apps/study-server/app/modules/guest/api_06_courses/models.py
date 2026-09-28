@@ -10,7 +10,8 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class CourseQuery(BaseModel):
-    """Public query contract for the course-discovery endpoint."""
+    """Định nghĩa category tùy chọn, trang, kích thước trang và sort của endpoint khóa học công
+    khai; Pydantic kiểm tra giới hạn số trang và helper chung chuẩn hóa sort."""
 
     category: int | None = None
     page: int = Field(default=DEFAULT_PAGE, ge=1)

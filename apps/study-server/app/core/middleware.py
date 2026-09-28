@@ -1,4 +1,5 @@
-"""HTTP middleware and exception handlers for cross-cutting request concerns."""
+"""Cung cấp middleware trace ID và các handler chuyển lỗi của FastAPI thành phản hồi an toàn,
+thống nhất."""
 
 from __future__ import annotations
 
@@ -36,13 +37,18 @@ DESIGN_CONTRACT_PATHS = {
 
 
 def _validation_field(location: Sequence[Any]) -> str | None:
+    """Chuyển vị trí lỗi Pydantic thành tên trường dễ đọc bằng cách bỏ các tiền tố giao thức như
+    body, query, path, header và cookie. Các phần còn lại được nối bằng dấu chấm; nếu không còn
+    phần nào thì trả về None."""
     ignored_locations = {"body", "query", "path", "header", "cookie"}
     parts = [str(part) for part in location if str(part) not in ignored_locations]
     return ".".join(parts) or None
 
 
 async def api_error_handler(request: Request, exc: _ApiError) -> JSONResponse:
-    """Render an explicitly raised application error."""
+    """Chuyển _ApiError thành JSONResponse theo envelope lỗi chuẩn. Handler giữ các header tùy chọn
+    không trùng X-Trace-Id, ghi trace ID của lỗi vào header response và dùng status code do lỗi
+    cung cấp."""
 
     headers = {
         key: value for key, value in exc.headers.items() if key.lower() != TRACE_HEADER.lower()
@@ -59,7 +65,9 @@ async def http_exception_handler(
     request: Request,
     exc: HTTPException,
 ) -> JSONResponse:
-    """Render HTTPException without exposing arbitrary exception details."""
+    """Chuyển HTTPException thành _ApiError an toàn, giữ status code và header gốc. Chỉ dùng
+    business code, message, data và meta từ detail khi detail đã có dạng error envelope; các
+    detail tùy ý khác không được phản chiếu ra client."""
 
     detail: dict[str, Any] = exc.detail if isinstance(exc.detail, dict) else {}
     has_error_envelope = detail.get("success") is False
@@ -88,7 +96,9 @@ async def request_validation_exception_handler(
     request: Request,
     exc: RequestValidationError,
 ) -> JSONResponse:
-    """Map FastAPI/Pydantic validation details into safe field errors."""
+    """Chuyển từng lỗi RequestValidationError thành ErrorDetail, chuẩn hóa vị trí trường rồi dựng
+    ApiError HTTP 422. Endpoint thuộc DESIGN_CONTRACT_PATHS dùng business code thiết kế tương
+    ứng; endpoint khác dùng VALIDATION_ERROR."""
 
     errors = [
         ErrorDetail(
@@ -113,7 +123,9 @@ async def request_validation_exception_handler(
 
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Return a safe generic error while retaining internal diagnostic logging."""
+    """Ghi exception nội bộ cùng trace ID vào log nhưng chỉ trả message an toàn cho client.
+    Business code được chọn theo endpoint; response cuối cùng đi qua api_error_handler để giữ
+    cùng envelope và header trace."""
 
     trace_id = get_trace_id(request)
     logger.exception("Unhandled API error; trace_id=%s", trace_id, exc_info=exc)
@@ -132,13 +144,18 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 
 class TraceIdMiddleware(BaseHTTPMiddleware):
-    """Propagate one valid trace ID through the complete request lifecycle."""
+    """Middleware gắn một trace ID hợp lệ vào request, context hiện tại và response. Middleware
+    chuyển các lỗi thoát khỏi route qua handler dùng chung rồi luôn khôi phục context trước khi
+    kết thúc request."""
 
     async def dispatch(
         self,
         request: Request,
         call_next: RequestResponseEndpoint,
     ) -> Response:
+        """Thiết lập trace ID hợp lệ từ header hoặc tạo UUID mới, lưu vào request và ContextVar rồi
+        gọi middleware kế tiếp. Hàm gắn trace ID vào response; nếu exception thoát ra, chuyển
+        lỗi qua handler dùng chung và luôn khôi phục ContextVar trong finally."""
         trace_id = validate_trace_id(request.headers.get(TRACE_HEADER)) or create_trace_id()
         request.state.trace_id = trace_id
         context_token = set_trace_id(trace_id)

@@ -15,6 +15,8 @@ TRACE_ID = "00000000-0000-0000-0000-000000000001"
 
 
 def make_request(path: str) -> Request:
+    """Tạo đối tượng Request Starlette giả cho đường dẫn được truyền vào và gắn trace ID kiểm thử
+    vào request.state."""
     request = Request(
         {
             "type": "http",
@@ -35,6 +37,8 @@ def make_request(path: str) -> Request:
 
 @pytest.mark.asyncio
 async def test_http_exception_is_serialized_through_api_error() -> None:
+    """Kiểm tra HTTPException được chuyển qua handler ApiError, giữ status và trace header nhưng
+    không làm lộ detail tùy ý."""
     response = await http_exception_handler(
         make_request("/missing"),
         HTTPException(status_code=404, detail="private router detail"),
@@ -56,6 +60,8 @@ async def test_http_exception_is_serialized_through_api_error() -> None:
 
 @pytest.mark.asyncio
 async def test_request_validation_becomes_api_error_with_field_errors() -> None:
+    """Kiểm tra lỗi validation của request thành HTTP 422 với business code chuẩn và tên trường
+    được đặt trong meta.fieldErrors."""
     response = await request_validation_exception_handler(
         make_request("/api/v1/categories"),
         RequestValidationError(
@@ -85,6 +91,8 @@ async def test_request_validation_becomes_api_error_with_field_errors() -> None:
 
 @pytest.mark.asyncio
 async def test_unhandled_exception_becomes_safe_api_error() -> None:
+    """Kiểm tra exception không xử lý được được ghi log nội bộ nhưng client chỉ nhận envelope lỗi
+    an toàn cùng trace ID."""
     response = await unhandled_exception_handler(
         make_request("/internal"),
         RuntimeError("database password must not leak"),

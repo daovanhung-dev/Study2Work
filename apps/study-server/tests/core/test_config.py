@@ -5,6 +5,8 @@ from app.core.responses import _ApiError
 
 
 def test_settings_defaults_come_from_constants() -> None:
+    """Kiểm tra Settings lấy app environment, CORS, database URL, Redis và các giá trị JWT mặc định
+    từ app.core.constants."""
     settings = Settings()
 
     assert settings.app_env == constants.APP_ENV
@@ -27,6 +29,8 @@ def test_settings_defaults_come_from_constants() -> None:
 
 
 def test_settings_ignore_environment_variables(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Kiểm tra khởi tạo Settings không tự đọc biến môi trường của tiến trình và vẫn dùng các hằng
+    số runtime đã khai báo."""
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv("DB_HOST", "environment-host")
     monkeypatch.setenv("URL_DATABASE", "postgresql://environment-host/environment-db")
@@ -41,6 +45,8 @@ def test_settings_ignore_environment_variables(monkeypatch: pytest.MonkeyPatch) 
 
 
 def test_settings_accept_legacy_constructor_aliases() -> None:
+    """Kiểm tra Settings tiếp tục nhận tên trường viết hoa cũ khi caller truyền cấu hình tường minh
+    vào constructor."""
     settings = Settings(
         APP_ENV="test",
         ENABLE_DOCS=False,
@@ -63,6 +69,8 @@ def test_settings_accept_legacy_constructor_aliases() -> None:
 
 
 def test_settings_reject_unsafe_database_schema() -> None:
+    """Kiểm tra schema chứa ký tự không được phép bị từ chối và được chuyển thành lỗi API nội bộ an
+    toàn."""
     with pytest.raises(_ApiError) as error:
         Settings(
             db_host="localhost",
@@ -80,5 +88,7 @@ def test_settings_reject_unsafe_database_schema() -> None:
 
 
 def test_es256_requires_private_key() -> None:
+    """Kiểm tra cấu hình ES256 thiếu private key bị từ chối thay vì tạo Settings không thể ký
+    access token."""
     with pytest.raises(_ApiError):
         Settings(jwt_algorithm="ES256", jwt_private_key=None)

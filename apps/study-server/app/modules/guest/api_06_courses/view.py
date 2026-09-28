@@ -31,7 +31,9 @@ def find_published_courses(
     size: int,
     sort: str | None,
 ) -> list[dict[str, Any]]:
-    """Return one page of published courses with their mentor projection."""
+    """Tính offset từ page và size, dựng ORDER BY bằng helper allowlist rồi truy vấn một trang khóa
+    học PUBLISHED cùng mentor projection. Hàm bind status, limit và offset; không commit
+    transaction."""
 
     offset = (page - 1) * size
     query = LIST_PUBLISHED_COURSES.format(order_by=build_order_by(sort))
@@ -47,7 +49,8 @@ def find_published_courses(
 
 
 def count_published_courses(db: Session) -> dict[str, Any]:
-    """Return the total and mentor-integrity count for published courses."""
+    """Đếm tổng khóa học PUBLISHED và số hàng thiếu mentor bằng truy vấn count. Nếu truy vấn không
+    trả hàng, cung cấp mặc định total=0 và missing_mentor_count=0."""
 
     return query_one(
         db,
@@ -62,7 +65,9 @@ def get_courses(
     db: Session,
     trace_id: str,
 ) -> dict[str, Any]:
-    """Return one public page of published courses."""
+    """Từ chối bộ lọc category chưa có quan hệ dữ liệu được xác nhận, sau đó đếm và lấy trang khóa
+    học PUBLISHED. Hàm kiểm tra tính toàn vẹn mentor, ánh xạ model và phân trang, rollback lỗi
+    truy vấn và trả envelope thành công an toàn."""
 
     if course_query.category is not None:
         raise ApiError(

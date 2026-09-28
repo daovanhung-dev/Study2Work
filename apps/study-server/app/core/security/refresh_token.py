@@ -1,4 +1,5 @@
-"""Opaque refresh-token helpers."""
+"""Tạo refresh token ngẫu nhiên, băm token bằng HMAC và so sánh hash theo cách an toàn trước
+tấn công thời gian."""
 
 from __future__ import annotations
 
@@ -12,13 +13,15 @@ from app.core.responses import ApiError
 
 
 def generate_refresh_token() -> str:
-    """Generate a cryptographically secure refresh token."""
+    """Sinh refresh token opaque bằng secrets.token_urlsafe với 48 byte ngẫu nhiên. Trả về chuỗi
+    URL-safe để cấp cho client; token gốc không được lưu tại database."""
 
     return secrets.token_urlsafe(48)
 
 
 def hash_refresh_token(token: str) -> str:
-    """Hash a refresh token before storing it in the database."""
+    """Băm refresh token bằng HMAC-SHA256 với pepper cấu hình trước khi lưu database. Trả về digest
+    dạng hex; thiếu pepper sẽ phát sinh ApiError an toàn."""
 
     pepper = _get_refresh_token_pepper()
 
@@ -33,7 +36,8 @@ def compare_refresh_token(
     token: str,
     stored_hash: str,
 ) -> bool:
-    """Check whether a refresh token matches its stored hash."""
+    """Băm lại token nhận được rồi so sánh digest với hash đã lưu bằng hmac.compare_digest. Cách so
+    sánh này giảm rò rỉ thông tin qua thời gian xử lý và trả về kết quả đúng/sai."""
 
     token_hash = hash_refresh_token(token)
 
@@ -44,6 +48,8 @@ def compare_refresh_token(
 
 
 def _get_refresh_token_pepper() -> str:
+    """Đọc pepper refresh token từ Settings và mở SecretStr nếu cần. Nếu pepper chưa được cấu hình,
+    phát sinh ApiError mặc định để không băm token bằng khóa rỗng."""
     settings = get_settings()
 
     pepper = _secret_value(
@@ -57,6 +63,8 @@ def _get_refresh_token_pepper() -> str:
 
 
 def _secret_value(value: Any) -> str | None:
+    """Lấy giá trị chuỗi từ cấu hình có thể là SecretStr. Trả None khi đầu vào vắng mặt, mở
+    get_secret_value khi có phương thức đó và chuyển kiểu khác thành str."""
     if value is None:
         return None
 

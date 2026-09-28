@@ -3,13 +3,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-# import core's file
+# Nhập các thành phần từ core.
 from app.core.database import execute_query, query_one
 from app.core.responses import ApiError, _ApiError, success_response
 from app.core.security import verify_password
 from app.core.security.refresh_token import hash_refresh_token
 
-# import folder's files
+# Nhập các thành phần từ những thư mục của ứng dụng.
 from app.modules.guest.api_03_auth_login.models import LoginRequest, RefreshRequest
 from app.modules.guest.api_03_auth_login.query import (
     INSERT_REFRESH_TOKEN,
@@ -19,7 +19,7 @@ from app.modules.guest.api_03_auth_login.query import (
 )
 from app.utils.auth import build_auth_payload, issue_tokens
 
-# import framework
+# Nhập các thành phần cần thiết từ SQLAlchemy.
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -32,22 +32,25 @@ def login(
     db: Session,
     trace_id: str,
 ) -> dict[str, Any]:
-    """Authenticate a user, persist a refresh session and return auth data."""
+    """Xác thực email và mật khẩu, từ chối tài khoản không hoạt động, phát hành access/refresh
+    token rồi lưu hash refresh token trong Session. Hàm commit khi thành công, rollback và ánh
+    xạ lỗi truy vấn/cấp token thành lỗi API an toàn; response chỉ trả payload xác thực công
+    khai."""
 
-    # DD 1.2/2: Nhận request, lấy email để lookup user.
+    # DD 1.2/2: Nhận yêu cầu và lấy email để tra cứu người dùng.
     email = str(user_data.email)
     try:
-        # DD 3.1: Lookup user theo email.
+        # DD 3.1: Tra cứu người dùng theo email.
         user = query_one(db, LOGIN_USER, {"email": email})
     except SQLAlchemyError as exc:
-        # DD 6.3: Query lỗi -> rollback, trả lỗi nội bộ.
+        # DD 6.3: Truy vấn lỗi → hoàn tác giao dịch và trả lỗi nội bộ.
         db.rollback()
         logger.exception("Login lookup failed; trace_id=%s", trace_id)
         raise _internal_error(trace_id, "Không thể xử lý đăng nhập.") from exc
 
-    # DD 4.1: Verify password với password_hash.
+    # DD 4.1: Xác minh mật khẩu với password_hash.
     if user is None or not verify_password(user_data.password, str(user["password_hash"])):
-        # Sai user/password -> 401.
+        # Tài khoản hoặc mật khẩu sai → 401.
         raise ApiError(
             status_code=401,
             business_code="DESIGN_AUTHENTICATION_REQUIRED",
@@ -55,9 +58,9 @@ def login(
             trace_id=trace_id,
         )
 
-    # DD 4.2: Kiểm tra status tài khoản.
+    # DD 4.2: Kiểm tra trạng thái tài khoản.
     if user["status"] != "ACTIVE":
-        # Tài khoản không active -> 403.
+        # Tài khoản chưa hoạt động → 403.
         raise ApiError(
             status_code=403,
             business_code="DESIGN_ACCESS_DENIED",
@@ -66,9 +69,9 @@ def login(
         )
 
     try:
-        # DD 5.1: Issue access/refresh token.
+        # DD 5.1: Phát hành access token và refresh token.
         tokens = issue_tokens(user_id=user["id"], role=str(user["role"]))
-        # Lưu refresh-token hash, không lưu raw token.
+        # Lưu bản băm refresh token, không lưu token gốc.
         execute_query(
             db,
             INSERT_REFRESH_TOKEN,
@@ -78,15 +81,15 @@ def login(
                 "expires_at": tokens.refresh_expires_at,
             },
         )
-        # Commit transaction.
+        # Xác nhận giao dịch.
         db.commit()
     except (SQLAlchemyError, _ApiError) as exc:
-        # DD 6.3: Token/session lỗi -> rollback, trả lỗi nội bộ.
+        # DD 6.3: Lỗi phát hành token hoặc lưu phiên → hoàn tác giao dịch và trả lỗi nội bộ.
         db.rollback()
         logger.exception("Login token issuance failed; trace_id=%s", trace_id)
         raise _internal_error(trace_id, "Không thể hoàn tất đăng nhập.") from exc
 
-    # DD 6.1: Map profile/token vào success envelope.
+    # DD 6.1: Đưa hồ sơ và token vào cấu trúc phản hồi thành công.
     return success_response(
         business_code="DESIGN_RESOURCE_RETRIEVED",
         message="Đăng nhập thành công.",
@@ -101,20 +104,22 @@ def refresh(
     db: Session,
     trace_id: str,
 ) -> dict[str, Any]:
-    """Rotate a valid refresh session and issue a new access token pair."""
+    """Băm và tra cứu refresh token, xác nhận session/user còn hoạt động, thu hồi token cũ rồi lưu
+    hash token mới trong cùng transaction. Hàm rollback nếu token đã bị dùng, lỗi database hoặc
+    cấu hình; lỗi xác thực dưới 500 được giữ nguyên, còn thành công trả cặp token mới."""
 
     try:
-        # Nhận, hash và lookup refresh session.
+        # Nhận token, băm token và tra cứu phiên refresh.
         refresh_hash = hash_refresh_token(user_data.refresh_token)
         session = query_one(db, REFRESH_SESSION, {"token_hash": refresh_hash})
     except (SQLAlchemyError, _ApiError) as exc:
-        # Hash/query lỗi -> rollback, trả lỗi nội bộ.
+        # Lỗi băm hoặc truy vấn → hoàn tác giao dịch và trả lỗi nội bộ.
         db.rollback()
         logger.exception("Refresh-token lookup failed; trace_id=%s", trace_id)
         raise _internal_error(trace_id, "Không thể xử lý refresh token.") from exc
 
     if session is None:
-        # Token không hợp lệ, hết hạn hoặc đã revoke -> 401.
+        # Token không hợp lệ, hết hạn hoặc đã thu hồi → 401.
         raise ApiError(
             status_code=401,
             business_code="DESIGN_AUTHENTICATION_REQUIRED",
@@ -122,9 +127,9 @@ def refresh(
             trace_id=trace_id,
         )
 
-    # Kiểm tra status user.
+    # Kiểm tra trạng thái người dùng.
     if session["status"] != "ACTIVE":
-        # Tài khoản không active -> 403.
+        # Tài khoản chưa hoạt động → 403.
         raise ApiError(
             status_code=403,
             business_code="DESIGN_ACCESS_DENIED",
@@ -133,16 +138,16 @@ def refresh(
         )
 
     try:
-        # Issue token mới.
+        # Phát hành token mới.
         tokens = issue_tokens(user_id=session["id"], role=str(session["role"]))
-        # Revoke token cũ.
+        # Thu hồi token cũ.
         revoked = execute_query(
             db,
             REVOKE_REFRESH_TOKEN,
             {"refresh_token_id": session["refresh_token_id"]},
         ).first()
         if revoked is None:
-            # Token đã được rotate -> rollback, trả 401.
+            # Token đã được xoay vòng → hoàn tác giao dịch và trả 401.
             db.rollback()
             raise ApiError(
                 status_code=401,
@@ -151,7 +156,7 @@ def refresh(
                 trace_id=trace_id,
             )
 
-        # Lưu hash token mới.
+        # Lưu bản băm của token mới.
         execute_query(
             db,
             INSERT_REFRESH_TOKEN,
@@ -161,22 +166,22 @@ def refresh(
                 "expires_at": tokens.refresh_expires_at,
             },
         )
-        # Commit rotation atomically.
+        # Xác nhận việc xoay vòng token trong cùng giao dịch.
         db.commit()
     except _ApiError as exc:
-        # Giữ lỗi 401 nghiệp vụ; ánh xạ lỗi cấu hình thành lỗi nội bộ của API.
+        # Giữ nguyên lỗi nghiệp vụ 401; chuyển lỗi cấu hình thành lỗi nội bộ của API.
         db.rollback()
         if exc.status_code < 500:
             raise
         logger.exception("Refresh-token rotation failed; trace_id=%s", trace_id)
         raise _internal_error(trace_id, "Không thể làm mới phiên đăng nhập.") from exc
     except SQLAlchemyError as exc:
-        # Lỗi DB -> rollback, trả lỗi nội bộ.
+        # Lỗi CSDL → hoàn tác giao dịch và trả lỗi nội bộ.
         db.rollback()
         logger.exception("Refresh-token rotation failed; trace_id=%s", trace_id)
         raise _internal_error(trace_id, "Không thể làm mới phiên đăng nhập.") from exc
 
-    # Map profile/token vào success envelope.
+    # Đưa hồ sơ và token vào cấu trúc phản hồi thành công.
     return success_response(
         business_code="DESIGN_RESOURCE_RETRIEVED",
         message="Làm mới phiên đăng nhập thành công.",
@@ -187,6 +192,8 @@ def refresh(
 
 def _internal_error(trace_id: str, message: str) -> _ApiError:
     # Tạo lỗi nội bộ an toàn và giữ trace_id.
+    """Tạo _ApiError HTTP 500 cho lỗi nội bộ của API #3, giữ business code thiết kế, thông điệp do
+    caller cung cấp và trace ID request."""
     return ApiError(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",

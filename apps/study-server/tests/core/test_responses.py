@@ -12,6 +12,8 @@ from app.core.trace import reset_trace_id, set_trace_id
 
 
 def test_success_response_uses_canonical_envelope() -> None:
+    """Kiểm tra success_response trả đủ sáu khóa chuẩn, giữ data/meta được cung cấp và gắn trace ID
+    tương ứng."""
     response = success_response(
         business_code="COURSE_LOADED",
         message="Loaded",
@@ -31,6 +33,7 @@ def test_success_response_uses_canonical_envelope() -> None:
 
 
 def test_success_response_defaults_data_and_meta() -> None:
+    """Kiểm tra success_response dùng data=None và meta rỗng khi caller bỏ hai tham số tùy chọn."""
     response = success_response(
         business_code="RESOURCE_LOADED",
         message="Loaded",
@@ -48,6 +51,8 @@ def test_success_response_defaults_data_and_meta() -> None:
 
 
 def test_error_response_puts_field_errors_in_canonical_meta() -> None:
+    """Kiểm tra error_response đặt danh sách ErrorDetail đã tuần tự hóa dưới meta.fieldErrors mà
+    vẫn giữ envelope lỗi chuẩn."""
     error = ApiError(
         status_code=422,
         business_code="VALIDATION_ERROR",
@@ -76,6 +81,8 @@ def test_error_response_puts_field_errors_in_canonical_meta() -> None:
 
 
 def test_api_error_is_a_factory_for_private_exception_instances() -> None:
+    """Kiểm tra ApiError là function factory và mỗi lần gọi tạo instance exception nội bộ
+    _ApiError."""
     error = ApiError(
         status_code=409,
         business_code="RESOURCE_CONFLICT",
@@ -92,6 +99,8 @@ def test_api_error_is_a_factory_for_private_exception_instances() -> None:
 
 
 def test_internal_api_error_uses_current_trace_and_safe_defaults() -> None:
+    """Kiểm tra ApiError không tham số dùng HTTP 500, business code/message mặc định an toàn và lấy
+    trace ID từ ContextVar hiện tại."""
     trace_id = "00000000-0000-0000-0000-000000000001"
     token = set_trace_id(trace_id)
     try:
@@ -106,6 +115,8 @@ def test_internal_api_error_uses_current_trace_and_safe_defaults() -> None:
 
 
 def test_internal_api_error_generates_trace_without_request_context() -> None:
+    """Kiểm tra ApiError vẫn tạo trace ID hợp lệ khi không có Request hay ContextVar trace đang
+    hoạt động."""
     error = ApiError()
 
     assert error.trace_id

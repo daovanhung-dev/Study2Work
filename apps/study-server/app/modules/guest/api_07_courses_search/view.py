@@ -32,7 +32,9 @@ def find_published_courses_search(
     page: int,
     sort: str | None,
 ) -> list[dict[str, Any]]:
-    """Return one fixed-size page of published courses matching ``q``."""
+    """Tính offset theo page và kích thước cố định DEFAULT_SIZE, dựng ORDER BY qua allowlist rồi
+    truy vấn các khóa học PUBLISHED khớp từ khóa tùy chọn. Giá trị tìm kiếm được bind thành
+    q_pattern; không commit transaction."""
 
     offset = (page - 1) * DEFAULT_SIZE
     query = LIST_SEARCHED_COURSES.format(order_by=build_order_by(sort))
@@ -53,7 +55,8 @@ def count_published_courses_search(
     *,
     q: str | None,
 ) -> dict[str, Any]:
-    """Return matching-course count and mentor-integrity count."""
+    """Đếm khóa học PUBLISHED khớp cùng điều kiện từ khóa và kiểm tra số hàng thiếu mentor. Trả mặc
+    định tổng bằng 0 nếu truy vấn không có hàng."""
 
     return query_one(
         db,
@@ -71,7 +74,9 @@ def search_courses(
     db: Session,
     trace_id: str,
 ) -> dict[str, Any]:
-    """Return one fixed-size page of published courses matching a keyword."""
+    """Từ chối category chưa được hỗ trợ, đếm kết quả và lấy trang khóa học PUBLISHED theo từ khóa
+    đã chuẩn hóa. Hàm kiểm tra mentor, ánh xạ kết quả, tạo phân trang kích thước cố định,
+    rollback lỗi database/mapping và trả envelope thành công."""
 
     if course_query.category is not None:
         raise ApiError(

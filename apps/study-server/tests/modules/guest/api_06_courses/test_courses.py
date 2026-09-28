@@ -14,20 +14,26 @@ from sqlalchemy.exc import SQLAlchemyError
 
 class FakeSession:
     def __init__(self) -> None:
+        """Khởi tạo phiên database giả với các bộ đếm commit/rollback dùng để xác minh transaction
+        trong test."""
         self.rollback_count = 0
 
     def rollback(self) -> None:
+        """Tăng bộ đếm rollback để test xác nhận transaction được hoàn tác khi lỗi."""
         self.rollback_count += 1
 
 
 def override_db(session: FakeSession):
+    """Tạo dependency thay thế database để route dùng FakeSession mà không mở kết nối thật."""
     def dependency():
+        """Yield FakeSession được giữ trong closure cho request kiểm thử."""
         yield session
 
     return dependency
 
 
 def course_rows() -> list[dict[str, Any]]:
+    """Tạo course PUBLISHED mẫu có mentor và giá decimal để kiểm thử response."""
     return [
         {
             "id": 101,
@@ -44,6 +50,7 @@ def course_rows() -> list[dict[str, Any]]:
 
 
 def test_course_query_uses_contract_defaults_and_normalizes_sort() -> None:
+    """Kiểm tra CourseQuery dùng page/size mặc định và chuẩn hóa sort theo allowlist."""
     query = CourseQuery(sort="price:asc")
 
     assert query.category is None
@@ -65,6 +72,7 @@ def test_course_query_uses_contract_defaults_and_normalizes_sort() -> None:
     ],
 )
 def test_course_query_rejects_invalid_filters(payload: dict[str, object]) -> None:
+    """Kiểm tra CourseQuery từ chối page, size hoặc sort ngoài giới hạn hiện hành."""
     with pytest.raises(ValidationError):
         CourseQuery(**payload)
 
@@ -72,9 +80,11 @@ def test_course_query_rejects_invalid_filters(payload: dict[str, object]) -> Non
 def test_find_published_courses_uses_parameterized_page_and_allowlisted_sort(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra truy vấn danh sách bind status, limit, offset và chỉ dùng cột sort cho phép."""
     captured: dict[str, Any] = {}
 
     def fake_query_many(db, query: str, params: dict[str, Any]):
+        """Ghi SQL cùng tham số rồi trả danh sách rỗng cho kiểm thử truy vấn danh sách."""
         captured.update(query=query, params=params)
         return []
 
@@ -99,6 +109,7 @@ def test_courses_http_success_maps_price_mentor_and_pagination(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra response khóa học ánh xạ giá decimal, mentor và metadata phân trang công khai."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     captured: dict[str, Any] = {}
@@ -110,6 +121,7 @@ def test_courses_http_success_maps_price_mentor_and_pagination(
     )
 
     def fake_find_courses(db, *, page: int, size: int, sort: str | None):
+        """Ghi page, size và sort rồi trả course mẫu cho kiểm thử view danh sách."""
         captured.update(page=page, size=size, sort=sort)
         return course_rows()
 
@@ -155,6 +167,7 @@ def test_courses_empty_result_returns_success_with_zero_total_pages(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra danh sách rỗng trả success với total và total_pages bằng 0."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(
@@ -179,6 +192,7 @@ def test_courses_out_of_range_page_returns_empty_page(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra trang vượt phạm vi trả items rỗng nhưng giữ tổng số và metadata phân trang."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(
@@ -201,6 +215,8 @@ def test_courses_rejects_category_until_relation_exists(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra category bị từ chối trước truy vấn vì chưa có relation khóa học-category được xác
+    nhận."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(
@@ -219,6 +235,7 @@ def test_courses_maps_database_error_to_safe_internal_error(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra lỗi SQL khi đọc khóa học làm rollback và trả lỗi nội bộ an toàn."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(
@@ -239,6 +256,7 @@ def test_courses_rejects_published_orphan_mentor_safely(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra khóa học PUBLISHED thiếu mentor hợp lệ bị xử lý như lỗi toàn vẹn nội bộ."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(
@@ -266,6 +284,7 @@ def test_courses_maps_invalid_row_to_safe_internal_error(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra hàng khóa học thiếu hoặc sai trường bắt buộc được ánh xạ thành lỗi nội bộ."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(
@@ -290,6 +309,7 @@ def test_courses_http_validation_uses_design_error_code(
     client: TestClient,
     query_string: str,
 ) -> None:
+    """Kiểm tra tham số course sai trả HTTP 422 với business code validation theo design."""
     response = client.get(f"/api/v1/courses?{query_string}")
 
     assert response.status_code == 422

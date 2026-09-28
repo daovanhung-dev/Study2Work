@@ -16,7 +16,9 @@ def send_verification_email(
     provider: VerificationEmailProvider,
     trace_id: str,
 ) -> dict[str, Any]:
-    """Accept a verification-email dispatch through the provider boundary."""
+    """Gửi yêu cầu user ID, email và trace ID qua VerificationEmailProvider mà không mở database
+    session. Lỗi provider được log nội bộ rồi chuyển thành ApiError an toàn; kết quả chấp nhận
+    được ánh xạ thành business response, kèm reason nếu provider có trả."""
 
     try:
         dispatch_result = provider.dispatch(

@@ -6,13 +6,15 @@ DEFAULT_LOCALE = "vi-VN"
 
 
 class CategoryQuery(BaseModel):
-    """Optional query contract for the public category endpoint."""
+    """Định nghĩa tham số tùy chọn locale cho endpoint danh mục công khai; nếu thiếu, lớp view sẽ
+    áp dụng locale mặc định."""
 
     locale: str | None = Field(default=None)
 
 
 class Category(BaseModel):
-    """Public category fields returned by API #5."""
+    """Định nghĩa các trường danh mục được phép trả về công khai, trong đó description có thể không
+    có."""
 
     model_config = ConfigDict(extra="ignore")
 
@@ -23,7 +25,7 @@ class Category(BaseModel):
 
 
 class Pagination(BaseModel):
-    """Implicit single-page metadata for API #5."""
+    """Mô tả metadata một trang duy nhất của API #5, gồm page, size, total và total_pages."""
 
     page: int
     size: int
@@ -32,7 +34,7 @@ class Pagination(BaseModel):
 
 
 class CategoryPage(BaseModel):
-    """Category collection and its implicit pagination metadata."""
+    """Gom các danh mục đã ánh xạ cùng metadata trang duy nhất vào response của API #5."""
 
     items: list[Category]
     pagination: Pagination
