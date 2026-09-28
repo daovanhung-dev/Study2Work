@@ -1,8 +1,6 @@
-import pytest
 from app.core.responses import (
     INTERNAL_ERROR_MESSAGE,
     ApiError,
-    ApiResponse,
     ErrorDetail,
     error_response,
     success_response,
@@ -16,6 +14,7 @@ def test_success_response_uses_canonical_envelope() -> None:
         message="Loaded",
         trace_id="trace-id",
         data={"id": "course-1"},
+        meta={"page": 1},
     )
 
     assert response == {
@@ -23,6 +22,23 @@ def test_success_response_uses_canonical_envelope() -> None:
         "businessCode": "COURSE_LOADED",
         "message": "Loaded",
         "data": {"id": "course-1"},
+        "meta": {"page": 1},
+        "traceId": "trace-id",
+    }
+
+
+def test_success_response_defaults_data_and_meta() -> None:
+    response = success_response(
+        business_code="RESOURCE_LOADED",
+        message="Loaded",
+        trace_id="trace-id",
+    )
+
+    assert response == {
+        "success": True,
+        "businessCode": "RESOURCE_LOADED",
+        "message": "Loaded",
+        "data": None,
         "meta": {},
         "traceId": "trace-id",
     }
@@ -75,18 +91,3 @@ def test_internal_api_error_generates_trace_without_request_context() -> None:
 
     assert error.trace_id
     assert len(error.trace_id) == 36
-
-
-def test_api_response_raise_error_uses_controlled_exception() -> None:
-    response = ApiResponse(
-        business_code="RESOURCE_NOT_FOUND",
-        message="Not found",
-        trace_id="trace-id",
-        status_code=404,
-    )
-
-    with pytest.raises(ApiError) as error:
-        response.raise_error()
-
-    assert error.value.status_code == 404
-    assert error.value.business_code == "RESOURCE_NOT_FOUND"

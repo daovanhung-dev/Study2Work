@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any, NoReturn
+from typing import Any
 
 from fastapi import status
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 from app.core.trace import create_trace_id, get_current_trace_id
 
@@ -56,52 +56,6 @@ class ApiError(Exception):
         return cls(trace_id=trace_id)
 
 
-class ApiResponse(BaseModel):
-    """Build the standard success API response."""
-
-    business_code: str
-    message: str
-    trace_id: str
-
-    result: Any = None
-    meta: dict[str, Any] | None = None
-
-    status_code: int = Field(
-        default=status.HTTP_200_OK,
-        ge=100,
-        le=599,
-    )
-
-    def success_payload(self) -> dict[str, Any]:
-        """Return the canonical success response envelope."""
-
-        return {
-            "success": True,
-            "businessCode": self.business_code,
-            "message": self.message,
-            "data": self.result,
-            "meta": self.meta or {},
-            "traceId": self.trace_id,
-        }
-
-    def raise_error(
-        self,
-        *,
-        errors: Sequence[ErrorDetail] = (),
-        headers: Mapping[str, str] | None = None,
-    ) -> NoReturn:
-        """Raise a controlled API error."""
-
-        raise ApiError(
-            status_code=self.status_code,
-            business_code=self.business_code,
-            message=self.message,
-            trace_id=self.trace_id,
-            errors=errors,
-            headers=headers,
-        )
-
-
 def success_response(
     *,
     business_code: str,
@@ -112,13 +66,14 @@ def success_response(
 ) -> dict[str, Any]:
     """Build the canonical success response envelope."""
 
-    return ApiResponse(
-        business_code=business_code,
-        message=message,
-        trace_id=trace_id,
-        result=data,
-        meta=dict(meta or {}),
-    ).success_payload()
+    return {
+        "success": True,
+        "businessCode": business_code,
+        "message": message,
+        "data": data,
+        "meta": dict(meta or {}),
+        "traceId": trace_id,
+    }
 
 
 def error_response(

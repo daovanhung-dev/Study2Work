@@ -84,9 +84,8 @@ lazy qua get_engine() khi code thật sự cần database.
   cả chữ hoa (DB_HOST) và tên field (db_host).
 - HTTP API nhận database bằng db: Session = Depends(get_db). View sở hữu
   commit() và rollback(); helper query không commit.
-- Response mới dùng success_response() và error_response(). Các helper
-  success_payload(), error_payload() và ApiResponse chỉ phục vụ tương thích
-  code cũ.
+- Response HTTP dùng success_response() cho envelope thành công và
+  error_response() cho envelope lỗi.
 - Password mới phải hash bằng Argon2id. Bcrypt chỉ dành cho verify hash legacy.
 - Refresh token mới là opaque token; chỉ lưu digest từ
   hash_refresh_token(), không lưu raw token.
@@ -122,7 +121,6 @@ private helper hiện có trong app/core.
 | responses | success_response, error_response | Tạo canonical envelope |
 | responses | raise_api_error | Raise ApiError |
 | responses | success_payload, error_payload | Compatibility adapters |
-| responses | ApiResponse.success_payload, raise_error | Adapter model cũ |
 | security | TokenKeyProvider.get_verification_key | Contract lấy key verify JWT |
 | security | PasswordHasher.hash, verify | Hash/verify password |
 | security | password_algorithm_for_hash | Nhận diện format hash |
@@ -177,8 +175,6 @@ private helper hiện có trong app/core.
 | raise_api_error | Tạo rồi raise ApiError trong một lệnh. | Khi business rule thất bại và cần dừng flow ngay trong view/dependency. |
 | success_payload | Alias tương thích của success_response. | Chỉ khi caller cũ đang gọi tên này; code mới dùng success_response. |
 | error_payload | Tạo error shape cũ với errors ở top-level. | Chỉ khi giữ contract legacy; không dùng cho API mới. |
-| ApiResponse.success_payload | Chuyển model response cũ thành canonical success envelope. | Khi module cũ đang giữ dữ liệu trong ApiResponse và cần trả HTTP response. |
-| ApiResponse.raise_error | Chuyển ApiResponse cũ thành ApiError rồi raise. | Khi code legacy biểu diễn lỗi bằng ApiResponse. |
 | TokenKeyProvider.get_verification_key | Định nghĩa interface lấy verification key theo kid. | Khi tích hợp static key store/JWKS provider vào decode_token; không phải implementation fetch JWKS. |
 | PasswordHasher.hash | Hash password bằng Argon2id hoặc Bcrypt theo algorithm chỉ định. | Dùng nội bộ hoặc khi cần hỗ trợ algorithm explicit; password mới nên gọi hash_password. |
 | PasswordHasher.verify | Verify password với hash Argon2id/Bcrypt và trả bool an toàn. | Khi cần login/kiểm tra credential; không tự ném lỗi cho password sai. |
@@ -892,40 +888,6 @@ hay meta:
 ~~~
 
 Không dùng cho API mới.
-
-### ApiResponse
-
-~~~python
-class ApiResponse(BaseModel):
-    business_code: str
-    message: str
-    result: Any = None
-    trace_id: str
-    meta: dict[str, Any] | None = None
-    status_code: int = 200  # từ 100 đến 599
-~~~
-
-Model compatibility cho module cũ dùng naming result/trace_id dạng Python.
-status_code có default 200 và bị Pydantic từ chối nếu ngoài khoảng 100–599.
-
-#### ApiResponse.success_payload
-
-~~~python
-def success_payload(self) -> dict[str, Any]:
-~~~
-
-Chuyển model thành canonical success envelope bằng cách map result → data,
-trace_id → traceId và business_code → businessCode. status_code không xuất hiện
-trong body.
-
-#### ApiResponse.raise_error
-
-~~~python
-def raise_error(self) -> NoReturn:
-~~~
-
-Gọi raise_api_error() bằng các field của model, giữ status_code và không truyền
-field errors. Dùng cho code cũ cần raise từ một response model.
 
 ---
 

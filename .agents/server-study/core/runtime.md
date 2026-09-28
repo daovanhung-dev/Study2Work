@@ -44,16 +44,11 @@ trace ID, data/meta, tuple of field errors and optional headers. Context-free
 construction defaults to a safe internal 500 and uses the current trace context
 or generates a trace ID.
 
-### `ApiResponse.success_payload()`
-Returns canonical success keys:
-`success`, `businessCode`, `message`, `data`, `meta`, `traceId`.
-
-### `ApiResponse.raise_error()`
-Raises `ApiError` with the model's status/business code/message/trace ID.
-
-`success_response` and `error_response(ApiError)` are the canonical functional
-adapters. All HTTP error handlers construct `ApiError` and use the same error
-serializer; validation details are stored in `meta.fieldErrors`.
+`success_response` directly builds the canonical success envelope with keys
+`success`, `businessCode`, `message`, `data`, `meta`, and `traceId`.
+`error_response(ApiError)` serializes the canonical error envelope. All HTTP
+error handlers construct `ApiError` and use the same error serializer;
+validation details are stored in `meta.fieldErrors`.
 
 ## `app/core/middleware.py` exception handlers
 

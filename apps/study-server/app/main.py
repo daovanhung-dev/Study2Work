@@ -24,12 +24,14 @@ from app.core.trace import get_trace_id
 
 
 def _settings_for_request(request: Request) -> Settings:
+    """Lấy settings từ request app state hoặc cấu hình mặc định."""
+
     configured_settings = getattr(request.app.state, "settings", None)
     return configured_settings or get_settings()
 
 
 def create_app(app_settings: Settings | None = None) -> FastAPI:
-    """Build an application instance with optional test/runtime settings."""
+    """Tạo FastAPI app và lắp cấu hình, middleware, handler cùng router."""
 
     docs_enabled = app_settings.enable_docs if app_settings is not None else True
     app = FastAPI(
@@ -61,8 +63,11 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
     app.add_exception_handler(Exception, unhandled_exception_handler)
     app.include_router(router)
 
+    # API GET /
     @app.get("/", tags=["system"])
     def root(request: Request) -> dict[str, Any]:
+        """Trả thông tin chào mừng của dịch vụ kèm trace ID."""
+
         return success_response(
             business_code="SYSTEM_ROOT_LOADED",
             message="Welcome to Study2Work.",
@@ -70,8 +75,11 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
             data={"service": "study-api"},
         )
 
+    # API GET /health/live
     @app.get("/health/live", tags=["health"])
     def health_live(request: Request) -> dict[str, Any]:
+        """Báo process đang chạy cùng môi trường hiện tại."""
+
         settings = _settings_for_request(request)
         return success_response(
             business_code="SYSTEM_HEALTH_LIVE",
@@ -83,8 +91,11 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
             },
         )
 
+    # API GET /health/ready
     @app.get("/health/ready", tags=["health"])
     def health_ready(request: Request) -> dict[str, Any]:
+        """Báo trạng thái cấu hình dependency, không probe kết nối database."""
+
         settings = _settings_for_request(request)
         return success_response(
             business_code="SYSTEM_HEALTH_READY",
