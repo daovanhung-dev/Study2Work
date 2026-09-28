@@ -1,17 +1,19 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from typing import Any
 
 import app.modules.guest.api_03_auth_login.view as auth_view
 import pytest
 from app.core.database import get_db
-from app.core.responses import ApiError, _ApiError
+from app.core.responses import ApiError
 from app.core.security.password import hash_password
 from app.modules.guest.api_03_auth_login.models import LoginRequest, RefreshRequest
 from app.utils.auth import IssuedTokens
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import SQLAlchemyError
+from starlette.responses import JSONResponse
 
 
 class FakeResult:
@@ -81,22 +83,32 @@ def override_db(session: FakeSession):
 
 
 def test_login_request_normalizes_email_and_rejects_blank_password() -> None:
-    """Kiểm tra LoginRequest chuẩn hóa email và từ chối password chỉ gồm khoảng trắng."""
+    """Model giữ body thô; API validator chuẩn hóa email và từ chối password trắng."""
     request = LoginRequest(
         email=" student@example.com ",
         password="correct horse battery staple",
     )
 
-    assert str(request.email) == "student@example.com"
+    assert request.email == " student@example.com "
+    validated = auth_view.validate_login_request(request, trace_id="trace-id")
+    assert isinstance(validated, LoginRequest)
+    assert validated.email == "student@example.com"
 
-    with pytest.raises(ValueError):
-        LoginRequest(email="student@example.com", password="   ")
+    invalid = auth_view.validate_login_request(
+        LoginRequest(email="student@example.com", password="   "),
+        trace_id="trace-id",
+    )
+    assert isinstance(invalid, JSONResponse)
+    assert invalid.status_code == 422
 
 
 def test_refresh_request_rejects_blank_token() -> None:
     """Kiểm tra RefreshRequest từ chối refresh token rỗng hoặc chỉ có khoảng trắng."""
-    with pytest.raises(ValueError):
-        RefreshRequest(refresh_token="   ")
+    invalid = auth_view.validate_refresh_request(
+        RefreshRequest(refresh_token="   "), trace_id="trace-id"
+    )
+    assert isinstance(invalid, JSONResponse)
+    assert invalid.status_code == 422
 
 
 def test_login_returns_profile_and_tokens_and_commits(
@@ -144,8 +156,7 @@ def test_login_rejects_inactive_account(
     session = FakeSession()
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: make_user(status=status))
 
-    with pytest.raises(_ApiError) as error:
-        auth_view.login(
+    error = auth_view.login(
             user_data=LoginRequest(
                 email="student@example.com",
                 password="correct horse battery staple",
@@ -154,8 +165,9 @@ def test_login_rejects_inactive_account(
             trace_id="trace-id",
         )
 
-    assert error.value.status_code == 403
-    assert error.value.business_code == "DESIGN_ACCESS_DENIED"
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 403
+    assert json.loads(error.body)["businessCode"] == "DESIGN_ACCESS_DENIED"
 
 
 def test_login_hides_unknown_or_wrong_credentials(
@@ -165,8 +177,7 @@ def test_login_hides_unknown_or_wrong_credentials(
     session = FakeSession()
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: None)
 
-    with pytest.raises(_ApiError) as error:
-        auth_view.login(
+    error = auth_view.login(
             user_data=LoginRequest(
                 email="student@example.com",
                 password="wrong password",
@@ -175,8 +186,9 @@ def test_login_hides_unknown_or_wrong_credentials(
             trace_id="trace-id",
         )
 
-    assert error.value.status_code == 401
-    assert error.value.business_code == "DESIGN_AUTHENTICATION_REQUIRED"
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 401
+    assert json.loads(error.body)["businessCode"] == "DESIGN_AUTHENTICATION_REQUIRED"
 
 
 def test_login_rolls_back_database_error(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -190,8 +202,7 @@ def test_login_rolls_back_database_error(monkeypatch: pytest.MonkeyPatch) -> Non
 
     monkeypatch.setattr(auth_view, "query_one", fail_query)
 
-    with pytest.raises(_ApiError) as error:
-        auth_view.login(
+    error = auth_view.login(
             user_data=LoginRequest(
                 email="student@example.com",
                 password="password",
@@ -200,8 +211,9 @@ def test_login_rolls_back_database_error(monkeypatch: pytest.MonkeyPatch) -> Non
             trace_id="trace-id",
         )
 
-    assert error.value.status_code == 500
-    assert error.value.business_code == "DESIGN_INTERNAL_ERROR"
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 500
+    assert json.loads(error.body)["businessCode"] == "DESIGN_INTERNAL_ERROR"
     assert session.rollback_count == 1
 
 
@@ -214,11 +226,10 @@ def test_login_maps_token_issuance_api_error_to_internal_error(
     monkeypatch.setattr(
         auth_view,
         "issue_tokens",
-        lambda **kwargs: (_ for _ in ()).throw(ApiError()),
+        lambda **kwargs: ApiError(),
     )
 
-    with pytest.raises(_ApiError) as error:
-        auth_view.login(
+    error = auth_view.login(
             user_data=LoginRequest(
                 email="student@example.com",
                 password="correct horse battery staple",
@@ -227,9 +238,11 @@ def test_login_maps_token_issuance_api_error_to_internal_error(
             trace_id="trace-id",
         )
 
-    assert error.value.status_code == 500
-    assert error.value.business_code == "DESIGN_INTERNAL_ERROR"
-    assert error.value.message == "Không thể hoàn tất đăng nhập."
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 500
+    body = json.loads(error.body)
+    assert body["businessCode"] == "DESIGN_INTERNAL_ERROR"
+    assert body["message"] == "Không thể hoàn tất đăng nhập."
     assert session.rollback_count == 1
 
 
@@ -272,15 +285,15 @@ def test_refresh_rejects_invalid_token(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(auth_view, "hash_refresh_token", lambda token: "missing-hash")
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: None)
 
-    with pytest.raises(_ApiError) as error:
-        auth_view.refresh(
+    error = auth_view.refresh(
             user_data=RefreshRequest(refresh_token="missing-token"),
             db=session,  # type: ignore[arg-type]
             trace_id="trace-id",
         )
 
-    assert error.value.status_code == 401
-    assert error.value.business_code == "DESIGN_AUTHENTICATION_REQUIRED"
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 401
+    assert json.loads(error.body)["businessCode"] == "DESIGN_AUTHENTICATION_REQUIRED"
     assert session.commit_count == 0
 
 

@@ -8,6 +8,8 @@ import hmac
 import secrets
 from typing import Any
 
+from starlette.responses import JSONResponse
+
 from app.core.config import get_settings
 from app.core.responses import ApiError
 
@@ -19,11 +21,13 @@ def generate_refresh_token() -> str:
     return secrets.token_urlsafe(48)
 
 
-def hash_refresh_token(token: str) -> str:
+def hash_refresh_token(token: str) -> str | JSONResponse:
     """Băm refresh token bằng HMAC-SHA256 với pepper cấu hình trước khi lưu database. Trả về digest
-    dạng hex; thiếu pepper sẽ phát sinh ApiError an toàn."""
+    dạng hex hoặc trả ApiError an toàn nếu thiếu pepper."""
 
     pepper = _get_refresh_token_pepper()
+    if isinstance(pepper, JSONResponse):
+        return pepper
 
     return hmac.new(
         pepper.encode("utf-8"),
@@ -35,11 +39,13 @@ def hash_refresh_token(token: str) -> str:
 def compare_refresh_token(
     token: str,
     stored_hash: str,
-) -> bool:
+) -> bool | JSONResponse:
     """Băm lại token nhận được rồi so sánh digest với hash đã lưu bằng hmac.compare_digest. Cách so
     sánh này giảm rò rỉ thông tin qua thời gian xử lý và trả về kết quả đúng/sai."""
 
     token_hash = hash_refresh_token(token)
+    if isinstance(token_hash, JSONResponse):
+        return token_hash
 
     return hmac.compare_digest(
         token_hash,
@@ -47,9 +53,9 @@ def compare_refresh_token(
     )
 
 
-def _get_refresh_token_pepper() -> str:
+def _get_refresh_token_pepper() -> str | JSONResponse:
     """Đọc pepper refresh token từ Settings và mở SecretStr nếu cần. Nếu pepper chưa được cấu hình,
-    phát sinh ApiError mặc định để không băm token bằng khóa rỗng."""
+    trả ApiError mặc định để không băm token bằng khóa rỗng."""
     settings = get_settings()
 
     pepper = _secret_value(
@@ -57,7 +63,7 @@ def _get_refresh_token_pepper() -> str:
     )
 
     if not pepper:
-        raise ApiError()
+        return ApiError()
 
     return pepper
 

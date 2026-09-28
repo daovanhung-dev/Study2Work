@@ -1,10 +1,8 @@
-from typing import Any
 
 import app.core.security.access_token as access_token_module
 import app.core.security.refresh_token as refresh_token_module
 import pytest
 from app.core.config import Settings
-from app.core.responses import _ApiError
 from app.core.security import (
     compare_refresh_token,
     create_access_token,
@@ -12,6 +10,7 @@ from app.core.security import (
     generate_refresh_token,
     hash_refresh_token,
 )
+from starlette.responses import JSONResponse
 
 
 def test_default_es256_keys_can_sign_and_verify_access_token(
@@ -23,16 +22,18 @@ def test_default_es256_keys_can_sign_and_verify_access_token(
     monkeypatch.setattr(access_token_module, "get_settings", lambda: settings)
 
     token = create_access_token(user_id="user-1", roles=["learner"])
-    claims: dict[str, Any] = decode_access_token(token)
+    assert isinstance(token, str)
+    claims = decode_access_token(token)
+    assert isinstance(claims, dict)
 
     assert claims["sub"] == "user-1"
     assert claims["type"] == "access"
     assert claims["iss"] == settings.jwt_issuer
     assert claims["aud"] == settings.jwt_audience
 
-    with pytest.raises(_ApiError) as error:
-        decode_access_token(f"{token}tampered")
-    assert error.value.status_code == 401
+    error = decode_access_token(f"{token}tampered")
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 401
 
 
 def test_access_token_validates_signature_issuer_audience_and_type(
@@ -52,16 +53,18 @@ def test_access_token_validates_signature_issuer_audience_and_type(
     monkeypatch.setattr(access_token_module, "get_settings", lambda: settings)
 
     token = create_access_token(user_id="user-1", roles=["learner"])
-    claims: dict[str, Any] = decode_access_token(token)
+    assert isinstance(token, str)
+    claims = decode_access_token(token)
+    assert isinstance(claims, dict)
 
     assert claims["sub"] == "user-1"
     assert claims["aud"] == "study-api"
     assert claims["type"] == "access"
     assert claims["roles"] == ["learner"]
 
-    with pytest.raises(_ApiError) as error:
-        decode_access_token(f"{token}tampered")
-    assert error.value.status_code == 401
+    error = decode_access_token(f"{token}tampered")
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 401
 
 
 def test_opaque_refresh_token_is_random_and_hashable(
@@ -84,6 +87,7 @@ def test_opaque_refresh_token_is_random_and_hashable(
     first = generate_refresh_token()
     second = generate_refresh_token()
     first_hash = hash_refresh_token(first)
+    assert isinstance(first_hash, str)
 
     assert first != second
     assert "user-1" not in first

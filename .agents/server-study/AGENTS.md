@@ -5,7 +5,7 @@ Source root: `apps/study-server/`
 ```text
 CONTEXT_MODE: DEEP
 RUNTIME_STATUS: VERIFIED_IMPORT (13 current routes)
-TEST_STATUS: VERIFIED (160 tests)
+TEST_STATUS: VERIFIED (163 tests)
 BUSINESS_MODULE_STATUS: SOURCE_BACKED (register, verify-email dispatch stub, login, refresh, categories, courses, course search)
 DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED / do not infer from design docs
 ```
@@ -45,7 +45,7 @@ latest user requirement
    và migration artifacts là checked-in schema/design evidence, còn live metadata
    mới xác nhận runtime availability; migration chưa được apply live.
 6. Trước mọi runtime fix, kiểm tra toàn bộ import chain `main -> api/core` và test collection trong đúng source hiện tại.
-7. Trong module, `model.py` giữ basic contract validation; `app/utils/validate.py` chứa các helper validation/normalization thuần dùng chung như `strip_email`, `normalize_login_email`, `validate_login_password`, `validate_refresh_token`, `extract_bearer_token` và `validate_access_claims`; `register_account/validate.py` chỉ định nghĩa special validation thuần/reusable với field, điều kiện và message lỗi rõ ràng. Không query DB hoặc tạo side effect trong các validator; `view.py` gọi special validation trước business check/query. Không áp dụng rule như `@gmail.com` nếu contract chưa xác nhận.
+7. `models.py` chỉ khai báo dữ liệu và kiểu chuyển đổi; helper dùng chung nằm trong `app/utils/validate.py`, còn từng API #1–#7 có `validate.py` để kiểm tra/chuẩn hóa input và trả `ApiError(...)` khi sai. Validator chạy trước nghiệp vụ/DB, không query DB hoặc tạo side effect. Không áp dụng rule như `@gmail.com` nếu contract chưa xác nhận.
 8. Không coi `apps/study-server/AGENTS.md` hoặc `apps/study-server/.agent/` là context hợp lệ; canonical context duy nhất nằm dưới `.agents/server-study/`.
 9. API-facing handler phải có comment header ngắn ngay trước function theo API/endpoint, ví dụ `# API #03 auth_login` và `# API #03 auth_refresh`; helper nội bộ không gắn API header. Inline comment chỉ nêu event chính, có thể dẫn DD step ngắn, và phải mô tả current source khi DD có discrepancy. Mọi hàm và method trong source, tests và scripts phải có docstring tiếng Việt nêu mục đích; khi phù hợp, docstring mô tả thêm tham số, giá trị trả về, lỗi và tác dụng phụ.
 

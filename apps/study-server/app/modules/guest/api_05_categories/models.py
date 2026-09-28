@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 DEFAULT_LOCALE = "vi-VN"
 
@@ -9,7 +9,7 @@ class CategoryQuery(BaseModel):
     """Định nghĩa tham số tùy chọn locale cho endpoint danh mục công khai; nếu thiếu, lớp view sẽ
     áp dụng locale mặc định."""
 
-    locale: str | None = Field(default=None)
+    locale: str | None = None
 
 
 class Category(BaseModel):

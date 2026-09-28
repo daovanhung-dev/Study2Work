@@ -1,9 +1,9 @@
 import httpx
 import pytest
 from app.core import constants
-from app.core.responses import _ApiError
 from app.service.ai import ollama_service
 from app.service.ai.ollama_service import OllamaService
+from starlette.responses import JSONResponse
 
 
 def test_ollama_defaults_ignore_environment(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -52,10 +52,9 @@ async def test_ollama_connection_failure_uses_safe_api_error(
 
     monkeypatch.setattr(ollama_service.httpx, "AsyncClient", lambda **kwargs: FailingClient())
 
-    with pytest.raises(_ApiError) as error:
-        await OllamaService()._request(method="GET", endpoint="/api/tags")
+    error = await OllamaService()._request(method="GET", endpoint="/api/tags")
 
-    assert error.value.status_code == 500
-    assert error.value.business_code == "INTERNAL_SERVER_ERROR"
-    assert error.value.message == "Đã xảy ra lỗi nội bộ hệ thống."
-    assert "private upstream address" not in error.value.message
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 500
+    assert b"INTERNAL_SERVER_ERROR" in error.body
+    assert b"private upstream address" not in error.body

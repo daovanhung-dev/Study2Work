@@ -4,12 +4,14 @@ import logging
 from typing import Any
 
 from app.core.database import query_one
-from app.core.responses import ApiError, _ApiError, success_response
+from app.core.responses import ApiError, success_response
 from app.core.security.password import hash_password
 from app.modules.guest.api_01_auth_register.models import RegisterRequest
 from app.modules.guest.api_01_auth_register.query import CHECK_DUPLICATE, INSERT_USER
+from app.modules.guest.api_01_auth_register.validate import validate_register_request
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
+from starlette.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -43,22 +45,28 @@ def insert_user(
     )
 
 
+# API #01 auth_register
 def create_user(
     *,
     user_data: RegisterRequest,
     db: Session,
     trace_id: str,
-) -> dict[str, Any]:
+) -> dict[str, Any] | JSONResponse:
     """Điều phối đăng ký: kiểm tra email trùng, băm mật khẩu, chèn tài khoản và commit trong
     Session do caller sở hữu. Hàm rollback khi lỗi, ánh xạ unique race/DB error thành ApiError
     an toàn, ghi log nội bộ và trả success envelope chỉ chứa profile công khai."""
 
-    email = str(user_data.email)
+    validated_user_data = validate_register_request(user_data, trace_id=trace_id)
+    if isinstance(validated_user_data, JSONResponse):
+        return validated_user_data
+
+    user_data = validated_user_data
+    email = user_data.email
 
     try:
         if find_user_by_email(db, email) is not None:
             db.rollback()
-            raise ApiError(
+            return ApiError(
                 status_code=409,
                 business_code="DESIGN_STATE_CONFLICT",
                 message="Email đã tồn tại.",
@@ -73,7 +81,7 @@ def create_user(
         )
         if created_user is None:
             db.rollback()
-            raise ApiError(
+            return ApiError(
                 status_code=500,
                 business_code="DESIGN_INTERNAL_ERROR",
                 message="Không thể tạo tài khoản.",
@@ -81,33 +89,31 @@ def create_user(
             )
 
         db.commit()
-    except _ApiError:
-        raise
     except IntegrityError as exc:
         db.rollback()
         if _is_email_unique_violation(exc):
-            raise ApiError(
+            return ApiError(
                 status_code=409,
                 business_code="DESIGN_STATE_CONFLICT",
                 message="Email đã tồn tại.",
                 trace_id=trace_id,
-            ) from exc
+            )
         logger.exception("Account insert integrity error; trace_id=%s", trace_id)
-        raise ApiError(
+        return ApiError(
             status_code=500,
             business_code="DESIGN_INTERNAL_ERROR",
             message="Không thể tạo tài khoản.",
             trace_id=trace_id,
-        ) from exc
-    except SQLAlchemyError as exc:
+        )
+    except SQLAlchemyError:
         db.rollback()
         logger.exception("Account insert database error; trace_id=%s", trace_id)
-        raise ApiError(
+        return ApiError(
             status_code=500,
             business_code="DESIGN_INTERNAL_ERROR",
             message="Không thể tạo tài khoản.",
             trace_id=trace_id,
-        ) from exc
+        )
 
     logger.info(
         "Verification dispatch deferred after account creation; trace_id=%s",

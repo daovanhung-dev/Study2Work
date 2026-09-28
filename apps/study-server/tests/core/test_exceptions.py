@@ -7,11 +7,24 @@ from app.core.middleware import (
     unhandled_exception_handler,
 )
 from app.core.trace import TRACE_HEADER
+from app.main import create_app
 from fastapi.exceptions import RequestValidationError
+from fastapi.testclient import TestClient
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 
 TRACE_ID = "00000000-0000-0000-0000-000000000001"
+
+
+def test_create_app_registers_http_exception_handler() -> None:
+    """Kiểm tra HTTP 404 do router phát sinh được chuẩn hóa bởi handler đã đăng ký trong app."""
+    with TestClient(create_app()) as client:
+        response = client.get("/missing", headers={TRACE_HEADER: TRACE_ID})
+
+    assert response.status_code == 404
+    assert response.headers[TRACE_HEADER] == TRACE_ID
+    assert response.json()["businessCode"] == "HTTP_ERROR"
+    assert response.json()["traceId"] == TRACE_ID
 
 
 def make_request(path: str) -> Request:

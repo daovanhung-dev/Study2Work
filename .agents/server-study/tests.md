@@ -2,7 +2,7 @@
 
 ```text
 TEST_SUITE_PRESENT: YES
-TEST_STATUS: VERIFIED (160 tests)
+TEST_STATUS: VERIFIED (163 tests)
 ```
 
 Tests under `apps/study-server/tests/` cover config, DB helpers, responses and
@@ -28,10 +28,13 @@ Important remaining scope boundaries include:
 - response/security unit tests may exercise helpers independently, but do not prove the full API starts.
 
 Current error contract:
-- Application errors are represented by `ApiError` and serialized through
-  `error_response(_ApiError)` with the standard envelope and `X-Trace-Id`.
-- Pydantic-native request validation errors are translated to `ApiError` at the
-  FastAPI boundary, with field details under `meta.fieldErrors`.
+- `ApiError(...)` returns a `JSONResponse` with the standard envelope, HTTP
+  status and `X-Trace-Id`; no custom API exception class is used.
+- Module validators for APIs #1–#7 return `ApiError(...)` responses for
+  contract rules; framework type/parse failures use the registered request
+  validation handler and `meta.fieldErrors`.
+- Tests cover direct response shape, field errors, validator normalization,
+  status/business mappings, trace headers and rollback on DB failures.
 
 For a fix task:
 1. distinguish unit-testable core helper from app-level route test;

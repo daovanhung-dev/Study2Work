@@ -7,9 +7,11 @@ import app.modules.guest.api_06_courses.view as courses_view
 import pytest
 from app.core.database import get_db
 from app.modules.guest.api_06_courses.models import CourseQuery
+from app.modules.guest.api_06_courses.validate import validate_course_query
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
+from starlette.responses import JSONResponse
 
 
 class FakeSession:
@@ -49,14 +51,16 @@ def course_rows() -> list[dict[str, Any]]:
     ]
 
 
-def test_course_query_uses_contract_defaults_and_normalizes_sort() -> None:
-    """Kiểm tra CourseQuery dùng page/size mặc định và chuẩn hóa sort theo allowlist."""
+def test_course_query_uses_defaults_and_validator_accepts_sort() -> None:
+    """Kiểm tra model giữ sort thô và validator chấp nhận sort trong allowlist."""
     query = CourseQuery(sort="price:asc")
 
     assert query.category is None
     assert query.page == 1
     assert query.size == 20
     assert query.sort == "price:asc"
+    validated = validate_course_query(query, trace_id="trace-id")
+    assert isinstance(validated, CourseQuery)
 
 
 @pytest.mark.parametrize(
@@ -71,10 +75,15 @@ def test_course_query_uses_contract_defaults_and_normalizes_sort() -> None:
         {"category": "not-an-int"},
     ],
 )
-def test_course_query_rejects_invalid_filters(payload: dict[str, object]) -> None:
-    """Kiểm tra CourseQuery từ chối page, size hoặc sort ngoài giới hạn hiện hành."""
-    with pytest.raises(ValidationError):
-        CourseQuery(**payload)
+def test_course_validator_rejects_invalid_filters(payload: dict[str, object]) -> None:
+    """Kiểm tra validator trả 422 cho page, size, category hoặc sort ngoài quy tắc hiện hành."""
+    try:
+        query = CourseQuery(**payload)
+    except ValidationError:
+        return
+    response = validate_course_query(query, trace_id="trace-id")
+    assert isinstance(response, JSONResponse)
+    assert response.status_code == 422
 
 
 def test_find_published_courses_uses_parameterized_page_and_allowlisted_sort(

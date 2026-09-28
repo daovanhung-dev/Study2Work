@@ -5,7 +5,7 @@ from decimal import InvalidOperation
 from typing import Any
 
 from app.core.database import query_many, query_one
-from app.core.responses import ApiError, _ApiError, success_response
+from app.core.responses import success_response
 from app.modules.guest._shared.course_catalog.helpers import (
     build_order_by,
     course_internal_error,
@@ -17,9 +17,11 @@ from app.modules.guest.api_06_courses.query import (
     COUNT_PUBLISHED_COURSES,
     LIST_PUBLISHED_COURSES,
 )
+from app.modules.guest.api_06_courses.validate import validate_course_query
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+from starlette.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -59,41 +61,37 @@ def count_published_courses(db: Session) -> dict[str, Any]:
     ) or {"total": 0, "missing_mentor_count": 0}
 
 
+# API #06 courses
 def get_courses(
     *,
     course_query: CourseQuery,
     db: Session,
     trace_id: str,
-) -> dict[str, Any]:
+) -> dict[str, Any] | JSONResponse:
     """Từ chối bộ lọc category chưa có quan hệ dữ liệu được xác nhận, sau đó đếm và lấy trang khóa
     học PUBLISHED. Hàm kiểm tra tính toàn vẹn mentor, ánh xạ model và phân trang, rollback lỗi
     truy vấn và trả envelope thành công an toàn."""
 
-    if course_query.category is not None:
-        raise ApiError(
-            status_code=422,
-            business_code="DESIGN_VALIDATION_ERROR",
-            message="Bộ lọc category chưa được hỗ trợ.",
-            trace_id=trace_id,
-        )
+    validated_query = validate_course_query(course_query, trace_id=trace_id)
+    if isinstance(validated_query, JSONResponse):
+        return validated_query
+    course_query = validated_query
 
     try:
         count_row = count_published_courses(db)
         if int(count_row.get("missing_mentor_count") or 0) > 0:
-            raise course_internal_error(trace_id)
+            db.rollback()
+            return course_internal_error(trace_id)
         rows = find_published_courses(
             db,
             page=course_query.page,
             size=course_query.size,
             sort=course_query.sort,
         )
-    except _ApiError:
-        db.rollback()
-        raise
-    except SQLAlchemyError as exc:
+    except SQLAlchemyError:
         db.rollback()
         logger.exception("Course lookup failed; trace_id=%s", trace_id)
-        raise course_internal_error(trace_id) from exc
+        return course_internal_error(trace_id)
 
     try:
         items = [map_course(row) for row in rows]
@@ -108,12 +106,9 @@ def get_courses(
                 total_pages=total_pages,
             ),
         )
-    except _ApiError as exc:
+    except (InvalidOperation, TypeError, ValueError, ValidationError):
         logger.exception("Course mapping failed; trace_id=%s", trace_id)
-        raise course_internal_error(trace_id) from exc
-    except (InvalidOperation, TypeError, ValueError, ValidationError) as exc:
-        logger.exception("Course mapping failed; trace_id=%s", trace_id)
-        raise course_internal_error(trace_id) from exc
+        return course_internal_error(trace_id)
 
     return success_response(
         business_code="DESIGN_RESOURCE_RETRIEVED",

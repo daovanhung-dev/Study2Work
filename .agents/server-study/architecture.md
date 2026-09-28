@@ -73,7 +73,7 @@ No current source establishes:
 ## Runtime compatibility repairs
 
 1. `app.api.v1` imports the existing `app.modules.guest` package.
-2. `responses.py` exposes canonical `success_response`, the `ApiError` factory, and `error_response(_ApiError)`.
+2. `responses.py` exposes canonical `success_response` and direct `ApiError(...)` `JSONResponse` construction.
 3. `TraceIdMiddleware` uses the current trace helper names.
 
 Together these repairs restore the current composition; future fix tasks must
@@ -82,11 +82,10 @@ re-evaluate the complete import chain rather than stop at the first error.
 ## Validation workflow boundary
 
 ```text
-app/utils/validate.py: shared validation/normalization helpers
-→ model.py
-→ type/required/basic length/format/normalization
-→ view.py
-→ DB-backed business validation/query/transaction
+app/utils/validate.py: shared normalization helpers
+→ models.py: input data types and conversion
+→ API #1–#7 validate.py: request rules and direct ApiError responses
+→ view.py: DB-backed business validation/query/transaction
 ```
 
 Examples such as no whitespace or an allowed email domain are only applicable

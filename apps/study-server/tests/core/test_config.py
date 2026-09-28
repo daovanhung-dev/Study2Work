@@ -1,7 +1,6 @@
 import pytest
 from app.core import constants
 from app.core.config import Settings
-from app.core.responses import _ApiError
 
 
 def test_settings_defaults_come_from_constants() -> None:
@@ -69,9 +68,8 @@ def test_settings_accept_legacy_constructor_aliases() -> None:
 
 
 def test_settings_reject_unsafe_database_schema() -> None:
-    """Kiểm tra schema chứa ký tự không được phép bị từ chối và được chuyển thành lỗi API nội bộ an
-    toàn."""
-    with pytest.raises(_ApiError) as error:
+    """Kiểm tra schema chứa ký tự không được phép bị từ chối bằng lỗi cấu hình an toàn."""
+    with pytest.raises(ValueError, match="Invalid application settings") as error:
         Settings(
             db_host="localhost",
             db_name="study",
@@ -82,13 +80,11 @@ def test_settings_reject_unsafe_database_schema() -> None:
             jwt_secret_key="test-secret-key-that-is-at-least-32-characters",
         )
 
-    assert error.value.status_code == 500
-    assert error.value.business_code == "INTERNAL_SERVER_ERROR"
-    assert "drop table" not in error.value.message
+    assert "drop table" not in str(error.value)
 
 
 def test_es256_requires_private_key() -> None:
     """Kiểm tra cấu hình ES256 thiếu private key bị từ chối thay vì tạo Settings không thể ký
     access token."""
-    with pytest.raises(_ApiError):
+    with pytest.raises(ValueError, match="Invalid application settings"):
         Settings(jwt_algorithm="ES256", jwt_private_key=None)

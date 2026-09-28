@@ -3,16 +3,17 @@ from __future__ import annotations
 from typing import Any, Literal
 
 import httpx
+from starlette.responses import JSONResponse
 
 from app.core import constants
-from app.core.responses import ApiError, _ApiError
+from app.core.responses import ApiError
 
 MessageRole = Literal["system", "user", "assistant"]
 
 
 class OllamaService:
     """Đóng gói lời gọi HTTP bất đồng bộ tới Ollama cho các service hoặc API. Service dùng cấu hình
-    mặc định khi không có override và chuyển lỗi upstream thành ApiError an toàn."""
+    mặc định khi không có override và trả JSONResponse an toàn khi upstream lỗi."""
 
     def __init__(
         self,
@@ -37,10 +38,10 @@ class OllamaService:
         system: str | None = None,
         model: str | None = None,
         options: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | JSONResponse:
         """Gửi prompt cùng model, system tùy chọn và options tới endpoint /api/generate với stream
-        tắt. Trả model, câu trả lời, trạng thái hoàn tất và payload upstream thô; lỗi HTTP được
-        _request chuyển thành ApiError an toàn."""
+        tắt. Trả model, câu trả lời, trạng thái hoàn tất và payload upstream thô; lỗi được
+        _request trả thành JSONResponse an toàn."""
 
         payload: dict[str, Any] = {
             "model": model or self.model,
@@ -59,6 +60,8 @@ class OllamaService:
             endpoint="/api/generate",
             json=payload,
         )
+        if isinstance(data, JSONResponse):
+            return data
 
         return {
             "model": data.get("model", model or self.model),
@@ -73,7 +76,7 @@ class OllamaService:
         *,
         model: str | None = None,
         options: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | JSONResponse:
         """Gửi danh sách messages cùng model và options tùy chọn tới endpoint /api/chat với stream
         tắt. Trả model, role, nội dung câu trả lời, trạng thái hoàn tất và payload upstream thô."""
 
@@ -91,6 +94,8 @@ class OllamaService:
             endpoint="/api/chat",
             json=payload,
         )
+        if isinstance(data, JSONResponse):
+            return data
 
         message = data.get("message") or {}
 
@@ -102,7 +107,7 @@ class OllamaService:
             "raw": data,
         }
 
-    async def list_models(self) -> list[str]:
+    async def list_models(self) -> list[str] | JSONResponse:
         """Gọi endpoint /api/tags rồi lấy tên từ các phần tử model hợp lệ. Trả danh sách tên model;
         lỗi kết nối hoặc response được xử lý bởi _request."""
 
@@ -110,6 +115,8 @@ class OllamaService:
             method="GET",
             endpoint="/api/tags",
         )
+        if isinstance(data, JSONResponse):
+            return data
 
         return [
             item["name"]
@@ -117,11 +124,13 @@ class OllamaService:
             if isinstance(item, dict) and item.get("name")
         ]
 
-    async def health_check(self) -> dict[str, Any]:
+    async def health_check(self) -> dict[str, Any] | JSONResponse:
         """Gọi list_models để xác nhận Ollama phản hồi, sau đó trả trạng thái available cùng URL,
         model mặc định và danh sách model hiện có."""
 
         models = await self.list_models()
+        if isinstance(models, JSONResponse):
+            return models
 
         return {
             "available": True,
@@ -136,10 +145,10 @@ class OllamaService:
         method: str,
         endpoint: str,
         json: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | JSONResponse:
         """Gửi request HTTP bất đồng bộ tới endpoint tương đối của Ollama bằng timeout đã cấu hình,
         kiểm tra status và giải mã JSON object. Lỗi kết nối, timeout, HTTP, JSON hoặc response
-        sai dạng được chuyển thành ApiError an toàn; _ApiError có sẵn được giữ nguyên."""
+        sai dạng được chuyển thành JSONResponse an toàn qua ApiError()."""
         try:
             async with httpx.AsyncClient(
                 timeout=self.timeout,
@@ -155,27 +164,24 @@ class OllamaService:
             data = response.json()
 
             if not isinstance(data, dict):
-                raise ApiError()
+                return ApiError()
 
             return data
 
-        except httpx.ConnectError as exc:
-            raise ApiError() from exc
+        except httpx.ConnectError:
+            return ApiError()
 
-        except httpx.TimeoutException as exc:
-            raise ApiError() from exc
+        except httpx.TimeoutException:
+            return ApiError()
 
-        except httpx.HTTPStatusError as exc:
-            raise ApiError() from exc
+        except httpx.HTTPStatusError:
+            return ApiError()
 
-        except ValueError as exc:
-            raise ApiError() from exc
+        except ValueError:
+            return ApiError()
 
-        except _ApiError:
-            raise
-
-        except Exception as exc:
-            raise ApiError() from exc
+        except Exception:
+            return ApiError()
 
 
 ai_service = OllamaService()

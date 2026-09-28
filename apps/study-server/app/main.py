@@ -15,12 +15,11 @@ from app.core.config import Settings, get_settings
 from app.core.database import build_engine, build_session_factory, get_db, get_db_from_factory
 from app.core.middleware import (
     TraceIdMiddleware,
-    api_error_handler,
     http_exception_handler,
     request_validation_exception_handler,
     unhandled_exception_handler,
 )
-from app.core.responses import _ApiError, success_response
+from app.core.responses import success_response
 from app.core.trace import get_trace_id
 
 
@@ -60,7 +59,7 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
         )
 
     app.add_middleware(TraceIdMiddleware)
-    app.add_exception_handler(_ApiError, cast(Any, api_error_handler))
+    app.add_exception_handler(HTTPException, cast(Any, http_exception_handler))
     app.add_exception_handler(
         RequestValidationError, cast(Any, request_validation_exception_handler)
     )

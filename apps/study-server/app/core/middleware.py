@@ -13,7 +13,7 @@ from starlette.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import JSONResponse, Response
 
-from app.core.responses import ApiError, ErrorDetail, _ApiError, error_response
+from app.core.responses import ApiError, ErrorDetail
 from app.core.trace import (
     TRACE_HEADER,
     create_trace_id,
@@ -45,34 +45,18 @@ def _validation_field(location: Sequence[Any]) -> str | None:
     return ".".join(parts) or None
 
 
-async def api_error_handler(request: Request, exc: _ApiError) -> JSONResponse:
-    """Chuyển _ApiError thành JSONResponse theo envelope lỗi chuẩn. Handler giữ các header tùy chọn
-    không trùng X-Trace-Id, ghi trace ID của lỗi vào header response và dùng status code do lỗi
-    cung cấp."""
-
-    headers = {
-        key: value for key, value in exc.headers.items() if key.lower() != TRACE_HEADER.lower()
-    }
-    headers[TRACE_HEADER] = exc.trace_id
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=error_response(exc),
-        headers=headers,
-    )
-
-
 async def http_exception_handler(
     request: Request,
     exc: HTTPException,
 ) -> JSONResponse:
-    """Chuyển HTTPException thành _ApiError an toàn, giữ status code và header gốc. Chỉ dùng
+    """Chuyển HTTPException thành JSONResponse an toàn, giữ status code và header gốc. Chỉ dùng
     business code, message, data và meta từ detail khi detail đã có dạng error envelope; các
     detail tùy ý khác không được phản chiếu ra client."""
 
     detail: dict[str, Any] = exc.detail if isinstance(exc.detail, dict) else {}
     has_error_envelope = detail.get("success") is False
     meta = detail.get("meta") if has_error_envelope else None
-    error = ApiError(
+    return ApiError(
         status_code=exc.status_code,
         business_code=(
             str(detail["businessCode"])
@@ -89,7 +73,6 @@ async def http_exception_handler(
         meta=meta if isinstance(meta, dict) else None,
         headers=exc.headers,
     )
-    return await api_error_handler(request, error)
 
 
 async def request_validation_exception_handler(
@@ -108,7 +91,7 @@ async def request_validation_exception_handler(
         )
         for error in exc.errors()
     ]
-    error = ApiError(
+    return ApiError(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         business_code=(
             "DESIGN_VALIDATION_ERROR"
@@ -119,13 +102,11 @@ async def request_validation_exception_handler(
         trace_id=get_trace_id(request),
         errors=errors,
     )
-    return await api_error_handler(request, error)
 
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Ghi exception nội bộ cùng trace ID vào log nhưng chỉ trả message an toàn cho client.
-    Business code được chọn theo endpoint; response cuối cùng đi qua api_error_handler để giữ
-    cùng envelope và header trace."""
+    Business code được chọn theo endpoint và ApiError dựng trực tiếp envelope cùng header trace."""
 
     trace_id = get_trace_id(request)
     logger.exception("Unhandled API error; trace_id=%s", trace_id, exc_info=exc)
@@ -134,13 +115,12 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
         if request.url.path in DESIGN_CONTRACT_PATHS
         else "INTERNAL_SERVER_ERROR"
     )
-    error = ApiError(
+    return ApiError(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         business_code=business_code,
         message="Đã xảy ra lỗi nội bộ hệ thống.",
         trace_id=trace_id,
     )
-    return await api_error_handler(request, error)
 
 
 class TraceIdMiddleware(BaseHTTPMiddleware):
@@ -163,9 +143,6 @@ class TraceIdMiddleware(BaseHTTPMiddleware):
         try:
             response = await call_next(request)
             response.headers[TRACE_HEADER] = trace_id
-            return response
-        except _ApiError as exc:
-            response = await api_error_handler(request, exc)
             return response
         except Exception as exc:
             response = await unhandled_exception_handler(request, exc)

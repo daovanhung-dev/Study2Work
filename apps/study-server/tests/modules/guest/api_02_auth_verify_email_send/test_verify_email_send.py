@@ -5,12 +5,14 @@ from typing import Any
 import pytest
 from app.core.database import get_db
 from app.modules.guest.api_02_auth_verify_email_send.models import VerifyEmailSendRequest
+from app.modules.guest.api_02_auth_verify_email_send.validate import validate_verify_email_request
 from app.service.email.provider import (
     VerificationDispatchResult,
     get_verification_email_provider,
 )
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
+from starlette.responses import JSONResponse
 
 
 class FakeProvider:
@@ -61,11 +63,17 @@ def override_provider(provider: object):
 
 
 def test_verify_email_request_accepts_contract_fields() -> None:
-    """Kiểm tra request xác minh nhận user_id kiểu số nguyên nghiêm ngặt và email đúng định dạng."""
+    """Kiểm tra model giữ kiểu trường body; validator chấp nhận dữ liệu hợp lệ."""
     request = VerifyEmailSendRequest(user_id=1001, email="student@example.com")
 
     assert request.user_id == 1001
-    assert str(request.email) == "student@example.com"
+    validated = validate_verify_email_request(
+        request,
+        raw_payload={"user_id": 1001, "email": "student@example.com"},
+        trace_id="trace-id",
+    )
+    assert isinstance(validated, VerifyEmailSendRequest)
+    assert validated.email == "student@example.com"
 
 
 @pytest.mark.parametrize(
@@ -77,10 +85,21 @@ def test_verify_email_request_accepts_contract_fields() -> None:
         {"user_id": 1001, "email": "not-an-email"},
     ],
 )
-def test_verify_email_request_rejects_invalid_payload(payload: dict[str, object]) -> None:
-    """Kiểm tra request xác minh từ chối user_id sai kiểu và email không hợp lệ."""
-    with pytest.raises(ValidationError):
-        VerifyEmailSendRequest(**payload)
+def test_verify_email_validator_rejects_invalid_payload(payload: dict[str, object]) -> None:
+    """Kiểm tra validator trả field errors cho user_id không nghiêm ngặt hoặc email không hợp lệ."""
+    if "user_id" not in payload or "email" not in payload:
+        with pytest.raises(ValidationError):
+            VerifyEmailSendRequest(**payload)
+        return
+
+    request = VerifyEmailSendRequest(**payload)
+    response = validate_verify_email_request(
+        request,
+        raw_payload=payload,
+        trace_id="trace-id",
+    )
+    assert isinstance(response, JSONResponse)
+    assert response.status_code == 422
 
 
 @pytest.mark.parametrize(
@@ -157,3 +176,4 @@ def test_verify_email_http_uses_design_validation_code(client: TestClient) -> No
 
     assert response.status_code == 422
     assert response.json()["businessCode"] == "DESIGN_VALIDATION_ERROR"
+    assert response.headers["X-Trace-Id"] == response.json()["traceId"]

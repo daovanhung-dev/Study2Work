@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from pydantic import BaseModel, EmailStr, StrictInt
+from pydantic import BaseModel
 
 
 class VerifyEmailSendRequest(BaseModel):
-    """Định nghĩa body tiếp nhận yêu cầu gửi email xác minh. user_id phải là số nguyên nghiêm ngặt
-    và email phải qua kiểm tra định dạng."""
+    """Khai báo các trường và kiểu dữ liệu của body xác minh; rule input nằm trong validate.py."""
 
-    user_id: StrictInt
-    email: EmailStr
+    user_id: int
+    email: str

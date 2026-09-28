@@ -17,7 +17,6 @@ from pydantic import (
 )
 
 from app.core import constants
-from app.core.responses import ApiError
 
 Environment = Literal["local", "test", "staging", "production"]
 JwtAlgorithm = Literal["ES256", "HS256"]
@@ -36,13 +35,13 @@ class Settings(BaseModel):
 
     def __init__(self, **data: Any) -> None:
         """Khởi tạo Settings bằng các giá trị được cung cấp và để Pydantic kiểm tra kiểu cùng ràng
-        buộc trường. Nếu cấu hình không hợp lệ, chuyển ValidationError thành ApiError an toàn để
-        lỗi cấu hình không bị lộ trực tiếp."""
+        buộc trường. Nếu cấu hình không hợp lệ, chuyển ValidationError thành ValueError chung để
+        chi tiết cấu hình không bị lộ trực tiếp."""
 
         try:
             super().__init__(**data)
-        except ValidationError as exc:
-            raise ApiError() from exc
+        except ValidationError:
+            raise ValueError("Invalid application settings.") from None
 
     app_env: Environment = Field(
         default=constants.APP_ENV,
@@ -159,9 +158,11 @@ class Settings(BaseModel):
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: object) -> list[str]:
-        """Chuẩn hóa CORS origins trước khi Pydantic kiểm tra trường. Giá trị None thành danh sách
-        rỗng; chuỗi được tách theo dấu phẩy và danh sách được chuyển từng phần tử sang chuỗi,
-        sau đó loại khoảng trắng và phần tử rỗng; kiểu đầu vào khác bị từ chối bằng ApiError."""
+        """Chuẩn hóa CORS origins trước khi Pydantic kiểm tra trường.
+
+        None thành danh sách rỗng; chuỗi được tách theo dấu phẩy, rồi bỏ khoảng
+        trắng và phần tử rỗng. Kiểu đầu vào khác bị từ chối bằng ValueError.
+        """
 
         if value is None:
             return []
@@ -169,7 +170,7 @@ class Settings(BaseModel):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         if isinstance(value, list):
             return [str(origin).strip() for origin in value if str(origin).strip()]
-        raise ApiError()
+        raise ValueError("CORS_ORIGINS must be a string or list.")
 
     @field_validator("db_schema")
     @classmethod
@@ -179,22 +180,22 @@ class Settings(BaseModel):
 
         normalized = value.strip()
         if not normalized.replace("_", "").isalnum():
-            raise ApiError()
+            raise ValueError("DB_SCHEMA contains unsupported characters.")
         return normalized
 
     @model_validator(mode="after")
     def validate_jwt_key_configuration(self) -> Settings:
         """Kiểm tra cấu hình khóa phù hợp với thuật toán JWT đã chọn: HS256 cần secret key, còn
         ES256 cần cả private key và public key. Trả lại chính Settings khi hợp lệ; thiếu khóa
-        bắt buộc sẽ phát sinh ApiError."""
+            bắt buộc sẽ phát sinh ValueError."""
 
         if self.jwt_algorithm == "HS256" and self.jwt_secret_key is None:
-            raise ApiError()
+            raise ValueError("HS256 requires a JWT secret key.")
         if self.jwt_algorithm == "ES256":
             if self.jwt_private_key is None:
-                raise ApiError()
+                raise ValueError("ES256 requires a JWT private key.")
             if self.jwt_public_key is None:
-                raise ApiError()
+                raise ValueError("ES256 requires a JWT public key.")
         return self
 
     # Bí danh tương thích với API cấu hình viết hoa trước đây.

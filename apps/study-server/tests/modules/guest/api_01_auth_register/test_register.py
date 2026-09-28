@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any
@@ -7,12 +8,12 @@ from typing import Any
 import app.modules.guest.api_01_auth_register.view as auth_view
 import pytest
 from app.core.database import get_db
-from app.core.responses import _ApiError
 from app.modules.guest.api_01_auth_register.models import RegisterRequest
+from app.modules.guest.api_01_auth_register.validate import validate_register_request
 from app.modules.guest.api_01_auth_register.view import create_user
 from fastapi.testclient import TestClient
-from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from starlette.responses import JSONResponse
 
 
 class FakeSession:
@@ -60,16 +61,19 @@ def override_db(session: FakeSession):
 
 
 def test_register_request_validates_and_normalizes_whitespace() -> None:
-    """Kiểm tra RegisterRequest loại khoảng trắng email/họ tên, đồng thời chấp nhận password hợp lệ
-    theo giới hạn model."""
+    """Model giữ dữ liệu thô; validator chuẩn hóa email và full_name trước nghiệp vụ."""
     request = RegisterRequest(
         email=" student@example.com ",
         password="correct horse battery staple",
         full_name=" Nguyen Van A ",
     )
 
-    assert str(request.email) == "student@example.com"
-    assert request.full_name == "Nguyen Van A"
+    assert request.email == " student@example.com "
+    assert request.full_name == " Nguyen Van A "
+    validated = validate_register_request(request, trace_id="trace-id")
+    assert isinstance(validated, RegisterRequest)
+    assert validated.email == "student@example.com"
+    assert validated.full_name == "Nguyen Van A"
 
 
 @pytest.mark.parametrize(
@@ -86,11 +90,15 @@ def test_register_request_validates_and_normalizes_whitespace() -> None:
         },
     ],
 )
-def test_register_request_rejects_invalid_payload(payload: dict[str, str]) -> None:
-    """Kiểm tra RegisterRequest từ chối email sai định dạng, password trắng và trường bắt buộc
-    không hợp lệ."""
-    with pytest.raises(ValidationError):
-        RegisterRequest(**payload)
+def test_register_validator_rejects_invalid_payload(payload: dict[str, str]) -> None:
+    """Kiểm tra validator trả response 422 với fieldErrors cho dữ liệu đăng ký không hợp lệ."""
+    response = validate_register_request(RegisterRequest(**payload), trace_id="trace-id")
+    assert isinstance(response, JSONResponse)
+    assert response.status_code == 422
+    body = json.loads(response.body)
+    assert body["businessCode"] == "DESIGN_VALIDATION_ERROR"
+    assert body["traceId"] == "trace-id"
+    assert body["meta"]["fieldErrors"]
 
 
 def test_create_user_hashes_password_commits_and_returns_safe_response(
@@ -146,8 +154,7 @@ def test_create_user_rejects_duplicate_email(monkeypatch: pytest.MonkeyPatch) ->
     session = FakeSession()
     monkeypatch.setattr(auth_view, "find_user_by_email", lambda db, email: {"id": 1})
 
-    with pytest.raises(_ApiError) as error:
-        create_user(
+    error = create_user(
             user_data=RegisterRequest(
                 email="student@example.com",
                 password="password",
@@ -157,8 +164,9 @@ def test_create_user_rejects_duplicate_email(monkeypatch: pytest.MonkeyPatch) ->
             trace_id="trace-id",
         )
 
-    assert error.value.status_code == 409
-    assert error.value.business_code == "DESIGN_STATE_CONFLICT"
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 409
+    assert json.loads(error.body)["businessCode"] == "DESIGN_STATE_CONFLICT"
     assert session.rollback_count == 1
 
 
@@ -173,8 +181,7 @@ def test_create_user_rolls_back_database_error(monkeypatch: pytest.MonkeyPatch) 
         lambda db, **kwargs: (_ for _ in ()).throw(SQLAlchemyError("database unavailable")),
     )
 
-    with pytest.raises(_ApiError) as error:
-        create_user(
+    error = create_user(
             user_data=RegisterRequest(
                 email="student@example.com",
                 password="password",
@@ -184,8 +191,9 @@ def test_create_user_rolls_back_database_error(monkeypatch: pytest.MonkeyPatch) 
             trace_id="trace-id",
         )
 
-    assert error.value.status_code == 500
-    assert error.value.business_code == "DESIGN_INTERNAL_ERROR"
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 500
+    assert json.loads(error.body)["businessCode"] == "DESIGN_INTERNAL_ERROR"
     assert session.rollback_count == 1
 
 
@@ -204,8 +212,7 @@ def test_create_user_maps_email_unique_race_to_conflict(
         lambda db, **kwargs: (_ for _ in ()).throw(unique_error),
     )
 
-    with pytest.raises(_ApiError) as error:
-        create_user(
+    error = create_user(
             user_data=RegisterRequest(
                 email="student@example.com",
                 password="password",
@@ -215,8 +222,9 @@ def test_create_user_maps_email_unique_race_to_conflict(
             trace_id="trace-id",
         )
 
-    assert error.value.status_code == 409
-    assert error.value.business_code == "DESIGN_STATE_CONFLICT"
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 409
+    assert json.loads(error.body)["businessCode"] == "DESIGN_STATE_CONFLICT"
     assert session.rollback_count == 1
 
 
@@ -261,6 +269,34 @@ def test_register_legacy_path_is_not_exposed(client: TestClient) -> None:
     )
 
     assert response.status_code == 404
+
+
+def test_register_validation_returns_response_before_database_access(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Xác nhận input sai trả JSON lỗi trực tiếp, kèm fieldErrors/trace header và không query DB."""
+    session = FakeSession()
+    client.app.dependency_overrides[get_db] = override_db(session)
+    monkeypatch.setattr(
+        auth_view,
+        "find_user_by_email",
+        lambda *args: (_ for _ in ()).throw(AssertionError("invalid input must fail first")),
+    )
+    trace_id = "00000000-0000-0000-0000-000000000001"
+
+    response = client.post(
+        "/api/v1/auth/register",
+        json={"email": "invalid", "password": "password", "full_name": "Student"},
+        headers={"X-Trace-Id": trace_id},
+    )
+
+    assert response.status_code == 422
+    assert response.headers["X-Trace-Id"] == trace_id
+    assert response.json()["traceId"] == trace_id
+    assert response.json()["businessCode"] == "DESIGN_VALIDATION_ERROR"
+    assert response.json()["meta"]["fieldErrors"][0]["field"] == "email"
+    assert session.rollback_count == 0
 
 
 def test_register_http_duplicate_returns_conflict(

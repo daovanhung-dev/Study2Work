@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from starlette.responses import JSONResponse
+
 from app.core.config import get_settings
 from app.core.security.access_token import create_access_token
 from app.core.security.refresh_token import generate_refresh_token, hash_refresh_token
@@ -26,7 +28,7 @@ class IssuedTokens:
     refresh_expires_in: int
 
 
-def issue_tokens(*, user_id: int | str, role: str) -> IssuedTokens:
+def issue_tokens(*, user_id: int | str, role: str) -> IssuedTokens | JSONResponse:
     """Tạo access token cho user/role và refresh token opaque, tính hash cùng thời điểm hết hạn
     theo Settings. Trả IssuedTokens gồm token để gửi client, hash để lưu database và thời lượng
     hiệu lực tính bằng giây."""
@@ -36,13 +38,19 @@ def issue_tokens(*, user_id: int | str, role: str) -> IssuedTokens:
         user_id=str(user_id),
         roles=[role],
     )
+    if isinstance(access_token, JSONResponse):
+        return access_token
+
     refresh_token = generate_refresh_token()
+    refresh_token_hash = hash_refresh_token(refresh_token)
+    if isinstance(refresh_token_hash, JSONResponse):
+        return refresh_token_hash
     refresh_expires_in = settings.jwt_refresh_token_expire_days * 24 * 60 * 60
 
     return IssuedTokens(
         access_token=access_token,
         refresh_token=refresh_token,
-        refresh_token_hash=hash_refresh_token(refresh_token),
+        refresh_token_hash=refresh_token_hash,
         refresh_expires_at=datetime.now(UTC)
         + timedelta(days=settings.jwt_refresh_token_expire_days),
         expires_in=settings.jwt_access_token_expire_minutes * 60,

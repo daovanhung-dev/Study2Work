@@ -9,9 +9,10 @@ from uuid import uuid4
 
 import jwt
 from jwt.exceptions import InvalidTokenError
+from starlette.responses import JSONResponse
 
 from app.core.config import get_settings
-from app.core.responses import ApiError, _ApiError
+from app.core.responses import ApiError
 
 ACCESS_TOKEN_TYPE = "access"
 
@@ -31,11 +32,11 @@ def create_access_token(
     user_id: str,
     roles: list[str] | None = None,
     claims: Mapping[str, Any] | None = None,
-) -> str:
+) -> str | JSONResponse:
     """Tạo payload access JWT từ user ID, danh sách role và claim bổ sung, sau đó ký bằng khóa theo
     thuật toán đang cấu hình. Payload luôn có sub, type, jti, iat, exp, iss và aud; claim tùy
-    chỉnh không được ghi đè các claim dành riêng. Trả về token đã mã hóa; thiếu khóa ký sẽ phát
-    sinh ApiError."""
+    chỉnh không được ghi đè các claim dành riêng. Trả token đã mã hóa hoặc JSONResponse lỗi nếu
+    thiếu khóa ký."""
 
     settings = get_settings()
     now = datetime.now(UTC)
@@ -59,22 +60,28 @@ def create_access_token(
         claims=claims,
     )
 
+    signing_key = _get_signing_key()
+    if isinstance(signing_key, JSONResponse):
+        return signing_key
+
     return jwt.encode(
         payload,
-        _get_signing_key(),
+        signing_key,
         algorithm=settings.jwt_algorithm,
     )
 
 
 def decode_access_token(
     token: str,
-) -> dict[str, Any]:
+) -> dict[str, Any] | JSONResponse:
     """Giải mã và kiểm tra access JWT bằng khóa, thuật toán, issuer và audience hiện hành. Hàm yêu
     cầu các claim bắt buộc, kiểm tra type là access và sub là chuỗi không rỗng; token sai hoặc
     hết hạn được ánh xạ thành lỗi xác thực 401."""
 
     settings = get_settings()
     verification_key = _get_verification_key()
+    if isinstance(verification_key, JSONResponse):
+        return verification_key
 
     try:
         payload = jwt.decode(
@@ -99,16 +106,16 @@ def decode_access_token(
         InvalidTokenError,
         TypeError,
         ValueError,
-    ) as exc:
-        raise _invalid_access_token() from exc
+    ):
+        return _invalid_access_token()
 
     if payload.get("type") != ACCESS_TOKEN_TYPE:
-        raise _invalid_access_token()
+        return _invalid_access_token()
 
     user_id = payload.get("sub")
 
     if not isinstance(user_id, str) or not user_id:
-        raise _invalid_access_token()
+        return _invalid_access_token()
 
     return payload
 
@@ -129,44 +136,44 @@ def _add_custom_claims(
             payload[key] = value
 
 
-def _get_signing_key() -> str:
+def _get_signing_key() -> str | JSONResponse:
     """Chọn khóa ký theo thuật toán JWT: private key cho ES256 hoặc secret key cho HS256. Hàm mở
-    SecretStr nếu cần và phát sinh ApiError mặc định an toàn khi khóa bắt buộc bị thiếu."""
+    SecretStr nếu cần và trả ApiError mặc định an toàn khi khóa bắt buộc bị thiếu."""
     settings = get_settings()
 
     if settings.jwt_algorithm == "ES256":
         private_key = _secret_value(settings.jwt_private_key)
 
         if not private_key:
-            raise ApiError()
+            return ApiError()
 
         return private_key
 
     secret_key = _secret_value(settings.jwt_secret_key)
 
     if not secret_key:
-        raise ApiError()
+        return ApiError()
 
     return secret_key
 
 
-def _get_verification_key() -> str:
+def _get_verification_key() -> str | JSONResponse:
     """Chọn khóa xác minh theo thuật toán JWT: public key cho ES256 hoặc secret key cho HS256. Hàm
-    mở giá trị secret theo cấu hình và phát sinh ApiError an toàn nếu không có khóa."""
+    mở giá trị secret theo cấu hình và trả ApiError an toàn nếu không có khóa."""
     settings = get_settings()
 
     if settings.jwt_algorithm == "ES256":
         public_key = _secret_value(settings.jwt_public_key)
 
         if not public_key:
-            raise ApiError()
+            return ApiError()
 
         return public_key
 
     secret_key = _secret_value(settings.jwt_secret_key)
 
     if not secret_key:
-        raise ApiError()
+        return ApiError()
 
     return secret_key
 
@@ -184,9 +191,8 @@ def _secret_value(value: Any) -> str | None:
     return str(value)
 
 
-def _invalid_access_token() -> _ApiError:
-    """Tạo _ApiError HTTP 401 với business code yêu cầu xác thực và thông điệp token không hợp lệ
-    hoặc hết hạn. Helper này thống nhất phản hồi cho các lỗi giải mã hay kiểm tra claim."""
+def _invalid_access_token() -> JSONResponse:
+    """Tạo response HTTP 401 thống nhất khi access token không hợp lệ hoặc hết hạn."""
     return ApiError(
         status_code=401,
         business_code="DESIGN_AUTHENTICATION_REQUIRED",

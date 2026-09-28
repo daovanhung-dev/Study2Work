@@ -7,9 +7,11 @@ import app.modules.guest.api_07_courses_search.view as courses_view
 import pytest
 from app.core.database import get_db
 from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
+from app.modules.guest.api_07_courses_search.validate import validate_course_search_query
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
+from starlette.responses import JSONResponse
 
 
 class FakeSession:
@@ -49,14 +51,17 @@ def course_rows() -> list[dict[str, Any]]:
     ]
 
 
-def test_course_search_query_normalizes_keyword_and_uses_fixed_defaults() -> None:
-    """Kiểm tra query search chuẩn hóa q, dùng page mặc định và kích thước trang cố định."""
+def test_course_search_validator_normalizes_keyword_and_uses_fixed_defaults() -> None:
+    """Kiểm tra validator chuẩn hóa q và model giữ page mặc định cùng sort."""
     query = CourseSearchQuery(q="  Programming ", sort="price:asc")
 
-    assert query.q == "programming"
+    assert query.q == "  Programming "
     assert query.category is None
     assert query.page == 1
     assert query.sort == "price:asc"
+    validated = validate_course_search_query(query, trace_id="trace-id")
+    assert isinstance(validated, CourseSearchQuery)
+    assert validated.q == "programming"
 
 
 @pytest.mark.parametrize(
@@ -70,10 +75,15 @@ def test_course_search_query_normalizes_keyword_and_uses_fixed_defaults() -> Non
         {"category": "not-an-int"},
     ],
 )
-def test_course_search_query_rejects_invalid_filters(payload: dict[str, object]) -> None:
-    """Kiểm tra CourseSearchQuery từ chối page hoặc sort không hợp lệ."""
-    with pytest.raises(ValidationError):
-        CourseSearchQuery(**payload)
+def test_course_search_validator_rejects_invalid_filters(payload: dict[str, object]) -> None:
+    """Kiểm tra validator trả 422 cho page, category hoặc sort ngoài quy tắc hiện hành."""
+    try:
+        query = CourseSearchQuery(**payload)
+    except ValidationError:
+        return
+    response = validate_course_search_query(query, trace_id="trace-id")
+    assert isinstance(response, JSONResponse)
+    assert response.status_code == 422
 
 
 def test_find_published_courses_search_uses_parameterized_keyword_and_fixed_page_size(
