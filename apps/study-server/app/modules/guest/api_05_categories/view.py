@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from app.core.database import query_many
 from app.core.responses import ApiError, _ApiError, success_response
 from app.modules.guest.api_05_categories.models import (
     DEFAULT_LOCALE,
@@ -10,12 +11,29 @@ from app.modules.guest.api_05_categories.models import (
     CategoryPage,
     Pagination,
 )
-from app.modules.guest.api_05_categories.query import find_active_categories
+from app.modules.guest.api_05_categories.query import ACTIVE_CATEGORIES
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
+
+
+def find_active_categories(
+    db: Session,
+    *,
+    locale: str,
+) -> list[dict[str, Any]]:
+    """Return active categories for one exact locale."""
+
+    return query_many(
+        db,
+        ACTIVE_CATEGORIES,
+        {
+            "status": "ACTIVE",
+            "locale": locale,
+        },
+    )
 
 
 def get_categories(

@@ -5,16 +5,23 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from app.core.database import query_one
 from app.core.responses import ApiError, _ApiError, success_response
 from app.core.security import decode_access_token
 from app.modules.guest.api_04_users_me.models import UserProfile
-from app.modules.guest.api_04_users_me.query import find_current_user
+from app.modules.guest.api_04_users_me.query import CURRENT_USER_PROFILE
 from app.utils.validate import extract_bearer_token, validate_access_claims
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
+
+
+def find_current_user(db: Session, *, user_id: int) -> dict[str, Any] | None:
+    """Return only the public profile columns for one authenticated user."""
+
+    return query_one(db, CURRENT_USER_PROFILE, {"user_id": user_id})
 
 
 def get_current_user(

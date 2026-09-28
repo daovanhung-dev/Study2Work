@@ -6,9 +6,14 @@
 app/modules/<feature>/
 ├── models.py   # request/response contract and basic model validation
 ├── validate.py # named pure special validation when module-specific rules are needed
-├── query.py    # SQL statements/constants; view owns query execution
-└── view.py     # business orchestration and transaction boundary
+├── query.py    # SQL string constants only
+└── view.py     # query execution, business orchestration and transaction boundary
 ```
+
+`query.py` must not define Python functions/classes, import application helpers
+or execute DB operations. Put `query_one`/`query_many` calls and any SQL
+parameter preparation in `view.py`; keep the parameterized SQL text in
+`query.py`.
 
 `model.py` handles type, required, basic length, format and normalization that
 belongs to the request contract. `validate.py` is for special, pure and
@@ -27,7 +32,8 @@ function; internal helpers do not. Keep event comments concise and attach a DD
 step only when it clarifies the flow.
 
 DB-backed checks such as duplicate, existence, permission or state belong to
-`view.py`, using `query.py` where SQL is needed. The router remains thin.
+`view.py`, which executes SQL constants from `query.py`. The router remains
+thin.
 
 ## Current modules
 

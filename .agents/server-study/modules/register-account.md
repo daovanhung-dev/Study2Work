@@ -34,8 +34,10 @@ request
 ```
 
 `view.py` owns duplicate handling, password hashing, commit/rollback and safe
-error mapping. `query.py` owns parameterized SQL and does not commit. Password
-plaintext/hash is not returned or logged.
+error mapping. It also owns `find_user_by_email` and `insert_user`, which call
+`query_one` with SQL constants from `query.py`. That query file contains only
+`CHECK_DUPLICATE` and `INSERT_USER`; it has no database imports or functions.
+Password plaintext/hash is not returned or logged.
 
 ## Validation boundary
 

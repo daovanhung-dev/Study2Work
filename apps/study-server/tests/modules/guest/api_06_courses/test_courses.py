@@ -3,7 +3,6 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-import app.modules.guest.api_06_courses.query as courses_query
 import app.modules.guest.api_06_courses.view as courses_view
 import pytest
 from app.core.database import get_db
@@ -79,9 +78,9 @@ def test_find_published_courses_uses_parameterized_page_and_allowlisted_sort(
         captured.update(query=query, params=params)
         return []
 
-    monkeypatch.setattr(courses_query, "query_many", fake_query_many)
+    monkeypatch.setattr(courses_view, "query_many", fake_query_many)
 
-    result = courses_query.find_published_courses(
+    result = courses_view.find_published_courses(
         object(),  # type: ignore[arg-type]
         page=2,
         size=10,

@@ -3,14 +3,41 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from app.core.database import query_one
 from app.core.responses import ApiError, _ApiError, success_response
 from app.core.security.password import hash_password
 from app.modules.guest.api_01_auth_register.models import RegisterRequest
-from app.modules.guest.api_01_auth_register.query import find_user_by_email, insert_user
+from app.modules.guest.api_01_auth_register.query import CHECK_DUPLICATE, INSERT_USER
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
+
+
+def find_user_by_email(db: Session, email: str) -> dict[str, Any] | None:
+    """Return the existing user ID for an email, if present."""
+
+    return query_one(db, CHECK_DUPLICATE, {"email": email})
+
+
+def insert_user(
+    db: Session,
+    *,
+    full_name: str,
+    email: str,
+    password_hash: str,
+) -> dict[str, Any] | None:
+    """Insert one account and return its public profile fields."""
+
+    return query_one(
+        db,
+        INSERT_USER,
+        {
+            "full_name": full_name,
+            "email": email,
+            "password_hash": password_hash,
+        },
+    )
 
 
 def create_user(

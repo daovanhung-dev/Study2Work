@@ -3,7 +3,6 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-import app.modules.guest.api_07_courses_search.query as courses_query
 import app.modules.guest.api_07_courses_search.view as courses_view
 import pytest
 from app.core.database import get_db
@@ -78,9 +77,9 @@ def test_find_published_courses_search_uses_parameterized_keyword_and_fixed_page
         captured.update(query=query, params=params)
         return []
 
-    monkeypatch.setattr(courses_query, "query_many", fake_query_many)
+    monkeypatch.setattr(courses_view, "query_many", fake_query_many)
 
-    result = courses_query.find_published_courses_search(
+    result = courses_view.find_published_courses_search(
         object(),  # type: ignore[arg-type]
         q="programming",
         page=2,
@@ -107,9 +106,9 @@ def test_count_published_courses_search_uses_same_keyword_predicate(
         captured.update(query=query, params=params)
         return {"total": 1, "missing_mentor_count": 0}
 
-    monkeypatch.setattr(courses_query, "query_one", fake_query_one)
+    monkeypatch.setattr(courses_view, "query_one", fake_query_one)
 
-    result = courses_query.count_published_courses_search(object(), q="python")  # type: ignore[arg-type]
+    result = courses_view.count_published_courses_search(object(), q="python")  # type: ignore[arg-type]
 
     assert result == {"total": 1, "missing_mentor_count": 0}
     assert captured["params"] == {"status": "PUBLISHED", "q_pattern": "%python%"}

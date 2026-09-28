@@ -4,22 +4,56 @@ import logging
 from decimal import InvalidOperation
 from typing import Any
 
+from app.core.database import query_many, query_one
 from app.core.responses import ApiError, _ApiError, success_response
 from app.modules.guest._shared.course_catalog.helpers import (
+    build_order_by,
     course_internal_error,
     map_course,
 )
 from app.modules.guest._shared.course_catalog.models import CoursePage, Pagination
 from app.modules.guest.api_06_courses.models import CourseQuery
 from app.modules.guest.api_06_courses.query import (
-    count_published_courses,
-    find_published_courses,
+    COUNT_PUBLISHED_COURSES,
+    LIST_PUBLISHED_COURSES,
 )
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
+
+
+def find_published_courses(
+    db: Session,
+    *,
+    page: int,
+    size: int,
+    sort: str | None,
+) -> list[dict[str, Any]]:
+    """Return one page of published courses with their mentor projection."""
+
+    offset = (page - 1) * size
+    query = LIST_PUBLISHED_COURSES.format(order_by=build_order_by(sort))
+    return query_many(
+        db,
+        query,
+        {
+            "status": "PUBLISHED",
+            "limit": size,
+            "offset": offset,
+        },
+    )
+
+
+def count_published_courses(db: Session) -> dict[str, Any]:
+    """Return the total and mentor-integrity count for published courses."""
+
+    return query_one(
+        db,
+        COUNT_PUBLISHED_COURSES,
+        {"status": "PUBLISHED"},
+    ) or {"total": 0, "missing_mentor_count": 0}
 
 
 def get_courses(

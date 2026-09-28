@@ -4,23 +4,65 @@ import logging
 from decimal import InvalidOperation
 from typing import Any
 
+from app.core.database import query_many, query_one
 from app.core.responses import ApiError, _ApiError, success_response
 from app.modules.guest._shared.course_catalog.constants import DEFAULT_SIZE
 from app.modules.guest._shared.course_catalog.helpers import (
+    build_order_by,
     course_internal_error,
     map_course,
 )
 from app.modules.guest._shared.course_catalog.models import CoursePage, Pagination
 from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
 from app.modules.guest.api_07_courses_search.query import (
-    count_published_courses_search,
-    find_published_courses_search,
+    COUNT_SEARCHED_COURSES,
+    LIST_SEARCHED_COURSES,
 )
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
+
+
+def find_published_courses_search(
+    db: Session,
+    *,
+    q: str | None,
+    page: int,
+    sort: str | None,
+) -> list[dict[str, Any]]:
+    """Return one fixed-size page of published courses matching ``q``."""
+
+    offset = (page - 1) * DEFAULT_SIZE
+    query = LIST_SEARCHED_COURSES.format(order_by=build_order_by(sort))
+    return query_many(
+        db,
+        query,
+        {
+            "status": "PUBLISHED",
+            "q_pattern": f"%{q}%" if q else None,
+            "limit": DEFAULT_SIZE,
+            "offset": offset,
+        },
+    )
+
+
+def count_published_courses_search(
+    db: Session,
+    *,
+    q: str | None,
+) -> dict[str, Any]:
+    """Return matching-course count and mentor-integrity count."""
+
+    return query_one(
+        db,
+        COUNT_SEARCHED_COURSES,
+        {
+            "status": "PUBLISHED",
+            "q_pattern": f"%{q}%" if q else None,
+        },
+    ) or {"total": 0, "missing_mentor_count": 0}
 
 
 def search_courses(
