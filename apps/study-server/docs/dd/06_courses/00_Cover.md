@@ -25,7 +25,14 @@ format: markdown
 | Reviewed by | `TBD — chưa được cung cấp` |
 | Approved by | `TBD — chưa được cung cấp` |
 | Created date | `2026-08-28` |
-| Updated date | `2026-08-28` |
+| Updated date | `2026-09-22` |
+
+## Implementation note
+
+- Runtime implementation: `GET /api/v1/courses` is source-backed with focused
+  and full Study tests.
+- The document remains `Draft — Needs Confirmation` because reviewer/approver
+  metadata is still `TBD`.
 
 ## Tên hiển thị
 

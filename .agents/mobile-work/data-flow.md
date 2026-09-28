@@ -4,20 +4,28 @@
 
 ## Global runtime shape
 
-The two apps are direct-data Flutter clients. They do not call
-`apps/work-server` HTTP routes and do not share a Dart package, even though both
-packages are named `work_server`.
+The `student` and `business` flavors are direct-data clients from one Flutter
+package. They do not call `apps/work-server` HTTP routes. Shared infrastructure
+is exposed from `core/data`; role-specific repositories/helpers remain under
+the corresponding feature boundary during migration.
 
 ```text
-Flutter View
-  -> controller or compatibility helper
-      -> NeonDatabase.query/execute -> Neon PostgreSQL
-      -> SQLite helper -> local account/major cache
-      -> AIService -> Gemini HTTP API
+RoleLoginPage
+  -> Riverpod authRepositoryProvider
+      -> StudentAuthRepository | BusinessAuthRepository
+          -> existing role auth controller/helper
+              -> NeonDatabase.query/execute -> Neon PostgreSQL
+              -> SQLite helper -> local account/major cache
+
+Legacy role views
+  -> compatibility controllers/helpers -> the same shared boundaries
+
+AI feature
+  -> Riverpod geminiClientProvider -> GeminiClient -> Gemini HTTP API
 ```
 
 Remote access is direct, parameterized PostgreSQL SQL through
-`lib/helper_db/neon_db.dart` in each app. The helper validates SSL mode,
+`lib/core/data/neon/neon_client.dart`. The helper validates SSL mode,
 removes `channel_binding` for the Dart driver, supplies pool/timeout defaults,
 normalizes `BIGINT` values and owns pool shutdown.
 
@@ -25,12 +33,12 @@ normalizes `BIGINT` values and owns pool shutdown.
 
 | App | Database | Tables | Lifecycle |
 |---|---|---|---|
-| Student | `sinhvien.db` | `sinhvien(id, hoten, email, matkhau, chuyennganh, avt)`; `bannganh(id, nganh)` | Login deletes/replaces cached student, writes majors; logout deletes student rows. |
-| Business | `doanhnghiep.db` | `doanhnghiep(id, hoten, email, matkhau, diachi, sodienthoai)`; `bannganh(id, nganh)` | Login saves company and majors; logout clears company rows. |
+| Student | `sinhvien.db` | `sinhvien(id, hoten, email, matkhau, chuyennganh, avt)`; `bannganh(id, nganh)` | `StudentSessionStore` adapts the existing helper; login deletes/replaces cached student, writes majors; logout deletes student rows. |
+| Business | `doanhnghiep.db` | `doanhnghiep(id, hoten, email, matkhau, diachi, sodienthoai)`; `bannganh(id, nganh)` | `BusinessSessionStore` adapts the existing helper; login saves company and majors; logout clears company rows. |
 
 SQLite is a local session/cache mechanism, not a JWT store. Cached credentials
-are re-used by the student `autoLogin` function; the business app has no
-equivalent startup auto-login flow in current source.
+are re-used by the role `restoreSession` adapters. Student and Business retain
+their existing role-specific login/restore behavior.
 
 ## Neon tables and consumers
 
@@ -63,7 +71,7 @@ DangNhap
   -> getByEmail -> SinhVien.fromMap
   -> SinhVienSQLiteHelper.insertSinhVien
   -> getNganh -> saveNganh
-  -> Menu
+  -> StudentAuthRepository -> AuthNavigationState -> `/student` Menu
 ```
 
 Errors are caught in the login controller and represented as `false`. Debug
@@ -79,7 +87,7 @@ DangNhap
   -> DNSupabase.getDN -> DoanhNghiep.fromMap
   -> HelperDB.saveDoanhNghiep
   -> DNSupabase.getNganh -> HelperDB.saveNganh
-  -> Menu
+  -> BusinessAuthRepository -> AuthNavigationState -> `/business` Menu
 ```
 
 ### Job and application
@@ -121,7 +129,7 @@ No realtime channel, WebSocket or `LISTEN/NOTIFY` contract is wired.
 
 ### Gemini AI
 
-Each app has a duplicated `AIService` that posts prompt text directly to
+The shared `AIService` posts prompt text directly to
 `generativelanguage.googleapis.com` using the `GEMINI_API_KEY` symbol from
 `constants.dart`. `timkiemctrl.dart` constructs a fixed major-list prompt but
 currently discards the returned text. This integration is independent of
@@ -132,10 +140,10 @@ currently discards the returned text. This integration is independent of
 | Item | Evidence | Current status |
 |---|---|---|
 | Supabase names | `helper_supabase.dart`, `DNSupabase`, `SinhVienSupabaseHelper` import `postgres`/`NeonDatabase`, not `supabase_flutter`. | Compatibility naming; do not document as a Supabase runtime. |
-| Direct secrets | Both `constants.dart` files contain Neon/Gemini constants. | Prototype-only security boundary; context redacts values. |
-| Duplicate helper/model trees | Student has `sinh_vien/` and `out_meta/`; business has root helpers/models. | Parallel compatibility shapes; do not merge without contract evidence. |
+| Direct secrets | Unified `app/config/app_config.dart` contains Neon/Gemini constants. | Prototype-only security boundary; context redacts values. |
+| Duplicate helper/model trees | Role-specific code remains under `features/*/legacy` during migration. | Compatibility boundary; do not merge models without contract evidence. |
 | Static/legacy screens | Several files exist beside active page variants. | Marked `UNWIRED`, `LEGACY` or `PLACEHOLDER` in app pages/inventory. |
-| HTTP API boundary | No mobile import targets Work server routes. | Direct Neon/Gemini current behavior; backend boundary is future architecture, not current wiring. |
+| HTTP API boundary | No mobile import targets Work server routes. | Direct Neon/Gemini current behavior behind a shared core boundary; backend boundary is future architecture, not current wiring. |
 | README platform claims | READMEs mention `web/`, but current tracked source inventory has no tracked web source. | Documentation discrepancy; source wins. |
 
 ## Security boundary
@@ -145,4 +153,3 @@ Neon role is broader than a least-privilege mobile credential should be. This
 context records the risk and the exact current direct-data flow, but does not
 copy secret literals. Production work must move database/AI access behind a
 backend boundary, rotate exposed credentials and remove direct client access.
-

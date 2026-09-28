@@ -27,14 +27,16 @@ format: markdown
 
 ## Sources
 
-- [`docs/lists/list_api.md`](../../../docs/lists/list_api.md) — API #5 endpoint, query, response và business codes.
-- [`AC-03 Xem danh sách khóa học`](../../../docs/diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio) — cache-first category loading và active-category read trước course list.
-- [`AC-04 Tìm kiếm khóa học`](../../../docs/diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio) — category loading trước course search.
-- [`createDD-markdown template`](../../../.agents/skills/create_dd/docs/dd/DD_API_Template_MD/) — cấu trúc 8 file DD.
+- [`docs/lists/list_api.md`](../../../../../docs/lists/list_api.md) — API #5 endpoint, query, response và business codes.
+- [`AC-03 Xem danh sách khóa học`](../../diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio) — cache-first category loading và active-category read trước course list.
+- [`AC-04 Tìm kiếm khóa học`](../../diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio) — category loading trước course search.
+- [`createDD-markdown template`](../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/) — cấu trúc 8 file DD.
+- [`Study schema artifact`](../../../../../infra/postgres/study-server/DB.sql) — physical `categories` source mapping.
+- [`categories migration`](../../../../../infra/postgres/study-server/migrations/003_categories.sql) — idempotent schema artifact, chưa apply live.
 
 ## Tables read
 
-- `N/A — physical Categories table/store chưa được ERD/contract xác nhận`.
+- `categories` — source-backed implementation table; live migration application chưa được xác nhận.
 
 ## Tables write
 
@@ -46,17 +48,20 @@ format: markdown
 - `UI áp dụng cache-first: cache hit thì không gọi API; cache miss mới gọi GET /api/v1/categories.`
 - `API chỉ có query locale?; không thêm page/size/sort vào request contract.`
 - `HTTP 200 là protocol status; không thêm HTTPStatus vào JSON envelope.`
+- `Không nhận page, size hoặc sort; response luôn là một trang ngầm định.`
 
 ## Assumptions
 
 - `Page<Category> được biểu diễn như một trang ngầm định vì request không có page/size: page=1, size=total, total_pages=1.`
-- `Danh sách category rỗng vẫn trả 200 với items=[] và tổng bằng 0; đây là quy ước design-only vì diagram không khai báo nhánh 404.`
+- `Danh sách category rỗng vẫn trả 200 với items=[] và tổng bằng 0.`
 - `meta` dùng `{}` vì API #5 không khai báo metadata ngoài pagination nằm trong data.`
+- `Nếu không truyền locale, dùng locale mặc định vi-VN; nếu truyền locale, lọc exact-match.`
+- `categories.status = 'ACTIVE'` biểu diễn danh mục đang hoạt động.
 
 ## Conflicts
 
-- `DISCREPANCY/TBD: list_api.md nêu Categories là schema design-only và chưa xác nhận physical persistence mapping.`
-- `DISCREPANCY/TBD: locale không có enum, format chi tiết hoặc translation fallback được đặc tả.`
+- `Live database metadata và việc apply migration chưa được xác minh trong task này.`
+- `Formal review/approval vẫn TBD; DD giữ trạng thái Draft — Needs Confirmation.`
 - `DISCREPANCY/TBD: cache TTL, cache headers và invalidation policy chưa được source xác nhận.`
 
 ## Security note

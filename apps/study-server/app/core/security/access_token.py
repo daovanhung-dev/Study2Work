@@ -11,8 +11,7 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 
 from app.core.config import get_settings
-from app.core.security.exceptions import TokenError
-
+from app.core.responses import ApiError
 
 ACCESS_TOKEN_TYPE = "access"
 
@@ -70,11 +69,12 @@ def decode_access_token(
     """Decode and validate an access token."""
 
     settings = get_settings()
+    verification_key = _get_verification_key()
 
     try:
         payload = jwt.decode(
             token,
-            _get_verification_key(),
+            verification_key,
             algorithms=[settings.jwt_algorithm],
             issuer=settings.jwt_issuer,
             audience=settings.jwt_audience,
@@ -92,21 +92,18 @@ def decode_access_token(
         )
     except (
         InvalidTokenError,
-        TokenError,
         TypeError,
         ValueError,
     ) as exc:
-        raise TokenError(
-            "Token không hợp lệ hoặc đã hết hạn"
-        ) from exc
+        raise _invalid_access_token() from exc
 
     if payload.get("type") != ACCESS_TOKEN_TYPE:
-        raise TokenError("Sai loại token")
+        raise _invalid_access_token()
 
     user_id = payload.get("sub")
 
     if not isinstance(user_id, str) or not user_id:
-        raise TokenError("Token thiếu user_id hợp lệ")
+        raise _invalid_access_token()
 
     return payload
 
@@ -131,18 +128,14 @@ def _get_signing_key() -> str:
         private_key = _secret_value(settings.jwt_private_key)
 
         if not private_key:
-            raise TokenError(
-                "JWT private key chưa được cấu hình"
-            )
+            raise ApiError.internal()
 
         return private_key
 
     secret_key = _secret_value(settings.jwt_secret_key)
 
     if not secret_key:
-        raise TokenError(
-            "JWT secret key chưa được cấu hình"
-        )
+        raise ApiError.internal()
 
     return secret_key
 
@@ -154,18 +147,14 @@ def _get_verification_key() -> str:
         public_key = _secret_value(settings.jwt_public_key)
 
         if not public_key:
-            raise TokenError(
-                "JWT public key chưa được cấu hình"
-            )
+            raise ApiError.internal()
 
         return public_key
 
     secret_key = _secret_value(settings.jwt_secret_key)
 
     if not secret_key:
-        raise TokenError(
-            "JWT secret key chưa được cấu hình"
-        )
+        raise ApiError.internal()
 
     return secret_key
 
@@ -175,6 +164,15 @@ def _secret_value(value: Any) -> str | None:
         return None
 
     if hasattr(value, "get_secret_value"):
-        return value.get_secret_value()
+        secret_value = value.get_secret_value()
+        return None if secret_value is None else str(secret_value)
 
     return str(value)
+
+
+def _invalid_access_token() -> ApiError:
+    return ApiError(
+        status_code=401,
+        business_code="DESIGN_AUTHENTICATION_REQUIRED",
+        message="Token không hợp lệ hoặc đã hết hạn.",
+    )

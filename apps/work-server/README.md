@@ -113,7 +113,7 @@ storage and webhook operations).
 
 | Constant                | Purpose                                                          |
 | ----------------------- | ---------------------------------------------------------------- |
-| `PORT`                | HTTP port for the Express server (`3002` locally).                |
+| `PORT`                | HTTP port for the Express server (`3002` locally).             |
 | `DATABASE_URL`        | Pooled Neon PostgreSQL connection string used by Prisma runtime. |
 | `DIRECT_DATABASE_URL` | Direct Neon PostgreSQL connection string used by Prisma CLI.     |
 | `JWT_SECRET`          | Secret for JWT helpers.                                          |

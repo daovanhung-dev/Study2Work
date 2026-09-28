@@ -4,9 +4,9 @@ Source root: `apps/study-server/`
 
 ```text
 CONTEXT_MODE: DEEP
-RUNTIME_STATUS: VERIFIED_IMPORT (8 current routes)
-TEST_STATUS: COLLECTION_BLOCKED_BY_STALE_REGISTER_IMPORT
-BUSINESS_MODULE_STATUS: SOURCE_BACKED (register only)
+RUNTIME_STATUS: VERIFIED_IMPORT (13 current routes)
+TEST_STATUS: VERIFIED (160 tests)
+BUSINESS_MODULE_STATUS: SOURCE_BACKED (register, verify-email dispatch stub, login, refresh, categories, courses, course search)
 DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED / do not infer from design docs
 ```
 
@@ -37,15 +37,16 @@ latest user requirement
 
 ## Critical rules
 
-1. Chỉ coi route hiện có là runtime-verified khi import chain và HTTP test đã pass; hiện Study import được nhưng register pytest collection đang bị block bởi stale import.
+1. Chỉ coi route hiện có là runtime-verified khi import chain và HTTP test đã pass; hiện Study import, register, verify-email dispatch, categories, courses, course search và auth login/refresh tests đã pass.
 2. Không dựng lại `app.module.auth`, `app.module.ai.log` hoặc bất kỳ package legacy nào từ docs/Git history nếu requirement chưa xác nhận.
-3. `app/core/security/*` là reusable helper; API #1 là business flow duy nhất đã được triển khai/xác minh.
+3. `app/core/security/*` là reusable helper; API #1 register, API #2 verify-email dispatch stub, API #3 login/refresh, API #5 categories, API #6 courses và API #7 course search là các business flow Study hiện được triển khai/xác minh.
 4. Study DB helper không commit; caller/use-case phải sở hữu transaction khi business module tồn tại.
-5. Không invent table/column: `infra/postgres/study-server/DB.sql` là checked-in
-   schema/design evidence, còn live metadata mới xác nhận runtime availability;
-   migration directory vẫn chưa tồn tại.
+5. Không invent table/column ngoài requirement/contract: `infra/postgres/study-server/DB.sql`
+   và migration artifacts là checked-in schema/design evidence, còn live metadata
+   mới xác nhận runtime availability; migration chưa được apply live.
 6. Trước mọi runtime fix, kiểm tra toàn bộ import chain `main -> api/core` và test collection trong đúng source hiện tại.
-7. Trong module, `model.py` giữ basic contract validation; `validate.py` chỉ định nghĩa special validation thuần/reusable với field, điều kiện và message lỗi rõ ràng. Không query DB hoặc tạo side effect trong `validate.py`; `view.py` gọi special validation trước business check/query. Không áp dụng rule như `@gmail.com` nếu contract chưa xác nhận.
+7. Trong module, `model.py` giữ basic contract validation; `app/utils/validate.py` chứa các helper validation/normalization thuần dùng chung như `strip_email`, `normalize_login_email`, `validate_login_password`, `validate_refresh_token`, `extract_bearer_token` và `validate_access_claims`; `register_account/validate.py` chỉ định nghĩa special validation thuần/reusable với field, điều kiện và message lỗi rõ ràng. Không query DB hoặc tạo side effect trong các validator; `view.py` gọi special validation trước business check/query. Không áp dụng rule như `@gmail.com` nếu contract chưa xác nhận.
 8. Không coi `apps/study-server/AGENTS.md` hoặc `apps/study-server/.agent/` là context hợp lệ; canonical context duy nhất nằm dưới `.agents/server-study/`.
+9. API-facing handler phải có comment header ngắn ngay trước function theo API/endpoint, ví dụ `# API #03 auth_login` và `# API #03 auth_refresh`; helper nội bộ không gắn API header. Inline comment chỉ nêu event chính, có thể dẫn DD step ngắn, và phải mô tả current source khi DD có discrepancy.
 
 Exact status/boundary: `architecture.md`, `tests.md`, project `source-status.md`.

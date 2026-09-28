@@ -25,7 +25,7 @@ format: markdown
 | Reviewed by | `TBD — chưa được cung cấp` |
 | Approved by | `TBD — chưa được cung cấp` |
 | Created date | `2026-08-28` |
-| Updated date | `2026-08-28` |
+| Updated date | `2026-09-22` |
 
 ## Tên hiển thị
 

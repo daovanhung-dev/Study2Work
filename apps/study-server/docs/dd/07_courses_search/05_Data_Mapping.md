@@ -14,10 +14,10 @@ format: markdown
 
 | Request field | Source | Validate | Query usage | Response usage | Gap |
 |---|---|---|---|---|---|
-| `q` | `query["q"]` khi có | String; trim; case-fold; blank trở thành no predicate | `LOWER(c.name) LIKE '%' || q_normalized || '%'` khi có giá trị | Không map trực tiếp | Contains/case-insensitive là design-only |
-| `category` | `query["category"]` khi có | Parse `int64` | Predicate deferred tới khi category–course relation có source | Không map trực tiếp | ERD chưa có relation; không tạo JOIN giả |
-| `page` | `query["page"]` khi có | Parse `int32`; page phải >= 1 theo design-only rule | `OFFSET = (page - 1) * 20` | `data.pagination.page` | Default `1` design-only |
-| `sort` | `query["sort"]` khi có | String; chỉ qua allow-list mapping | Safe `ORDER BY` mapping nếu được xác nhận | Không map trực tiếp | Allow-list/default order TBD |
+| `q` | `query["q"]` khi có | String; trim; lowercase; blank trở thành no predicate | `LOWER(c.name) LIKE :q_pattern` khi có giá trị | Không map trực tiếp | Parameterized query |
+| `category` | `query["category"]` khi có | Parse `int64`; reject when present | Không query; trả `422` trước DB | Không map trực tiếp | ERD chưa có relation; không tạo JOIN/table/cột category giả |
+| `page` | `query["page"]` khi có | Parse `int32`; page phải >= 1 | `OFFSET = (page - 1) * 20` | `data.pagination.page` | Default `1` |
+| `sort` | `query["sort"]` khi có | String; allow-list `field:direction` | Safe `ORDER BY` mapping | Không map trực tiếp | Default `created_at DESC, id ASC` |
 
 ## Query Matrix
 
@@ -46,7 +46,7 @@ format: markdown
 |---|---|---|---|---|---|---|---|
 | `success` | `boolean` | Branch constant | Query outcome | `6.1/6.2/6.3` | `true` on success | `N/A` | N/A |
 | `businessCode` | `string` | Branch constant | Contract | `6.1/6.2/6.3` | Fixed `DESIGN_*` code | `N/A` | N/A |
-| `message` | `string` | Branch message | Application | `6.1/6.2/6.3` | Fixed by branch | Text TBD | N/A |
+| `message` | `string` | Branch message | Application | `6.1/6.2/6.3` | Fixed by branch | Search success/empty or safe error message | N/A |
 | `data.items[].id` | `int64` | Query result | `courses.id` | `5.1` | Direct mapping | `N/A` | N/A |
 | `data.items[].title` | `string` | Query result alias | `courses.name` | `5.1` | Alias to `title` | `N/A` | Contract/ERD naming discrepancy |
 | `data.items[].description` | `string` | Query result | `courses.description` | `5.1` | Direct mapping | `null` when NULL | N/A |
@@ -56,13 +56,13 @@ format: markdown
 | `data.items[].mentor.id` | `int64` | Joined query result | `users.id` | `5.1` | Direct mapping | `N/A` | N/A |
 | `data.items[].mentor.full_name` | `string` | Joined query result | `users.full_name` | `5.1` | Direct mapping | `N/A` | N/A |
 | `data.items[].mentor.avatar_url` | `uri` | Joined query result | `users.avatar_url` | `5.1` | Direct mapping | `null` when NULL | N/A |
-| `data.items[].category` | `Category` | Unresolved source | `N/A` | `5.1` | Omit until relation confirmed | Omit | Category relation missing in ERD |
+| `data.items[].category` | `Category` | Unresolved source | `N/A` | `5.1` | Omit | Omit | Category relation missing in ERD; request category is rejected |
 | `data.pagination.page` | `int32` | Effective query value | `page` | `5.2` | Default `1` | `1` when omitted | Design-only default |
 | `data.pagination.size` | `int32` | Design constant | `20` | `5.2` | Fixed page size | `20` | API has no `size` query |
 | `data.pagination.total` | `int64` | Aggregate query | `COUNT(*)` | `5.2` | Count matching rows | `0` when empty | N/A |
 | `data.pagination.total_pages` | `int32` | Derived | `total_courses`, `20` | `5.2` | `ceil(total / 20)` | `0` when total is `0` | Design-only size |
 | `meta` | `object` | Envelope default | `N/A` | `6.1/6.2/6.3` | `{}` | `{}` | N/A |
-| `traceId` | `uuid` | Correlation generator | `N/A` | `6.1/6.2/6.3` | None | `TBD — generator` | Generator TBD |
+| `traceId` | `uuid` | Correlation generator | `app.core.trace.get_trace_id` | `6.1/6.2/6.3` | None | Request trace or generated UUID | N/A |
 
 ## 0. Check quyền
 
@@ -84,7 +84,7 @@ format: markdown
 - `category`: lấy từ `query["category"]` nếu được gửi.
 - `page`: lấy từ `query["page"]` nếu được gửi; dùng `1` nếu vắng mặt.
 - `sort`: lấy từ `query["sort"]` nếu được gửi.
-- `page_size = 20` là biến nội bộ design-only; không nhận từ client.
+- `page_size = 20` là biến nội bộ cố định; không nhận từ client.
 
 ## 2. Validate data input
 
@@ -94,13 +94,13 @@ format: markdown
 ### 2.1. Validate `q`
 
 - Nếu `q` không có kiểu `string`: trả `422 DESIGN_VALIDATION_ERROR`.
-- Trim và case-fold `q` thành `q_normalized`.
+- Trim và lowercase `q` thành `q_normalized`.
 - Nếu `q_normalized` rỗng: bỏ text predicate.
 
 ### 2.2. Validate `category`
 
 - Nếu `category` không parse được thành `int64`: trả `422 DESIGN_VALIDATION_ERROR`.
-- Nếu `category` có mặt: giữ predicate ở trạng thái `TBD`; không tạo JOIN/table/cột category giả.
+- Nếu `category` có mặt: trả `422 DESIGN_VALIDATION_ERROR` trước query; không tạo JOIN/table/cột category giả.
 
 ### 2.3. Validate `page`
 
@@ -111,8 +111,8 @@ format: markdown
 ### 2.4. Validate `sort`
 
 - Nếu `sort` không có kiểu `string`: trả `422 DESIGN_VALIDATION_ERROR`.
-- Chỉ chuyển `sort` qua allow-list → column/direction mapping đã được xác nhận.
-- Không nội suy raw `sort` vào SQL; allow-list và default order hiện là `TBD`.
+- `sort` phải là một cặp `field:direction`, field thuộc `id|name|price|created_at`, direction thuộc `asc|desc`; giá trị khác trả `422 DESIGN_VALIDATION_ERROR`.
+- Không nội suy raw `sort` vào SQL; map qua static allow-list.
 
 ## 3. Get thông tin
 
@@ -135,21 +135,21 @@ format: markdown
 | Target table | Join condition | Join type |
 |---|---|---|
 | `courses AS c` | `N/A` | `BASE` |
-| `users AS m` | `m.id = c.mentor_id` | `INNER JOIN` |
+| `users AS m` | `m.id = c.mentor_id` | `LEFT JOIN` + mentor integrity check |
 
 > `Course.mentor` là object bắt buộc; published course thiếu mentor tương ứng đi tới lỗi hệ thống.
 
 ### 3.3. WHERE
 
 - `c.status = "PUBLISHED"`.
-- Nếu `q_normalized` khác rỗng: `LOWER(c.name) LIKE CONCAT('%', q_normalized, '%')` với parameter binding.
+- Nếu `q_normalized` khác rỗng: `LOWER(c.name) LIKE :q_pattern` với `q_pattern = '%' + q_normalized + '%'` và parameter binding.
 - Nếu `q_normalized` rỗng: không thêm text predicate.
-- Nếu `category` có mặt: category predicate chỉ được thêm sau khi source relation chính thức được xác nhận; hiện là `TBD`.
+- Nếu `category` có mặt: không chạy query vì đã trả validation error ở bước `2.2`.
 
 ### 3.4. ORDER BY
 
-- Nếu `sort` khớp allow-list đã xác nhận: dùng column/direction mapping tương ứng.
-- Nếu `sort` không có mặt: default order chưa được contract xác nhận; không tự đặt thứ tự nghiệp vụ.
+- Nếu `sort` khớp allow-list: dùng column/direction mapping tương ứng.
+- Nếu `sort` không có mặt: dùng `c.created_at DESC, c.id ASC`.
 
 ### 3.5. Pagination
 
@@ -163,7 +163,7 @@ format: markdown
 ### 4.1. Count matching rows
 
 - Thực hiện `COUNT(*)` trên `courses AS c`.
-- Dùng cùng `PUBLISHED`, `q_normalized` và category predicate (nếu relation được xác nhận) như Q1.
+- Dùng cùng `PUBLISHED` và `q_normalized` predicate như Q1.
 - Lưu kết quả vào `total_courses`.
 
 ## 5. Check kết quả query
@@ -206,9 +206,10 @@ format: markdown
 - `data.pagination.total_pages = ceil(total_courses / 20)`.
 - `success = true`.
 - `businessCode = "DESIGN_RESOURCE_RETRIEVED"`.
-- `message = application success message`.
+- `message = "Courses search completed."` khi có item.
+- `message = "No published courses matched the search."` khi không có item.
 - `meta = {}`.
-- `traceId = request correlation UUID`.
+- `traceId = app.core.trace.get_trace_id(request)`.
 - Response schema: [04_Response.md](./04_Response.md).
 
 ### 6.3. Validation error

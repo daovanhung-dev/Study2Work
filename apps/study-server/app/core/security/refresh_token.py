@@ -8,7 +8,7 @@ import secrets
 from typing import Any
 
 from app.core.config import get_settings
-from app.core.security.exceptions import TokenError
+from app.core.responses import ApiError
 
 
 def generate_refresh_token() -> str:
@@ -51,9 +51,7 @@ def _get_refresh_token_pepper() -> str:
     )
 
     if not pepper:
-        raise TokenError(
-            "Refresh token pepper chưa được cấu hình"
-        )
+        raise ApiError.internal()
 
     return pepper
 
@@ -63,6 +61,7 @@ def _secret_value(value: Any) -> str | None:
         return None
 
     if hasattr(value, "get_secret_value"):
-        return value.get_secret_value()
+        secret_value = value.get_secret_value()
+        return None if secret_value is None else str(secret_value)
 
     return str(value)

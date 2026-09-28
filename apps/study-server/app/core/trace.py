@@ -5,7 +5,6 @@ from uuid import UUID, uuid4
 
 from fastapi import Request
 
-
 TRACE_HEADER = "X-Trace-Id"
 
 _current_trace_id: ContextVar[str | None] = ContextVar(
@@ -50,7 +49,7 @@ def get_trace_id(request: Request) -> str:
     return trace_id
 
 
-def set_trace_id(trace_id: str) -> Token:
+def set_trace_id(trace_id: str) -> Token[str | None]:
     """Store the trace ID in the current execution context."""
 
     return _current_trace_id.set(trace_id)
@@ -62,7 +61,7 @@ def get_current_trace_id() -> str | None:
     return _current_trace_id.get()
 
 
-def reset_trace_id(token: Token) -> None:
+def reset_trace_id(token: Token[str | None]) -> None:
     """Restore the previous trace context."""
 
     _current_trace_id.reset(token)

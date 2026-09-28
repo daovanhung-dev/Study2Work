@@ -22,7 +22,7 @@ format: markdown
 |---:|---|---|---|---|---:|---|---|---|---|---|---|
 | 1 | `success` | Success flag | `success` | `boolean` | `No` | `N/A` | `N/A` | `6.1/6.2/6.3` | `true` on success; `false` on error | `N/A` | `ApiEnvelope` field |
 | 2 | `businessCode` | Business code | `businessCode` | `string` | `No` | `N/A` | `N/A` | `6.1/6.2/6.3` | Fixed by branch | `N/A` | Uses `DESIGN_*` contract code |
-| 3 | `message` | Message | `message` | `string` | `No` | `N/A` | `N/A` | `6.1/6.2/6.3` | Fixed by branch | `TBD — message text chưa đặc tả` | Không trả raw SQL/internal detail |
+| 3 | `message` | Message | `message` | `string` | `No` | `N/A` | `N/A` | `6.1/6.2/6.3` | Fixed by branch | `N/A` | Không trả raw SQL/internal detail |
 | 4 | `data` | Course page | `data` | `object` | `No` | `courses/users` | `N/A` | `5.1/5.2` | Map `Page<Course>` | `{}` on error | `ApiEnvelope<Page<Course>>` |
 | 4.1 | `data.items` | Course items | `items` | `array` | `No` | `courses/users` | `N/A` | `5.1` | Map each published course | `[]` when empty | `Course[]` |
 | 4.1.1 | `data.items[].id` | Course ID | `id` | `int64` | `No` | `courses` | `id` | `3.1` | Direct mapping from BIGSERIAL | `N/A` | |
@@ -42,7 +42,7 @@ format: markdown
 | 4.2.3 | `data.pagination.total` | Total matching courses | `total` | `int64` | `No` | `courses` | `COUNT(*)` | `3.3` | Count with same published/search/filter conditions | `0` when empty | |
 | 4.2.4 | `data.pagination.total_pages` | Total pages | `total_pages` | `int32` | `No` | `N/A` | `N/A` | `5.2` | `ceil(total / 20)` | `0` when total is `0` | Derived from design-only size |
 | 5 | `meta` | Metadata | `meta` | `object` | `No` | `N/A` | `N/A` | `6.1/6.2/6.3` | Empty object | `{}` | No extra metadata contract |
-| 6 | `traceId` | Trace ID | `traceId` | `uuid` | `No` | `N/A` | `N/A` | `6.1/6.2/6.3` | Request correlation/generator | `TBD — exact generator chưa đặc tả` | `ApiEnvelope` field |
+| 6 | `traceId` | Trace ID | `traceId` | `uuid` | `No` | `N/A` | `N/A` | `6.1/6.2/6.3` | `app.core.trace.get_trace_id` | `N/A` | `ApiEnvelope` field |
 
 > `HTTPStatus` là protocol status và không phải property JSON của `ApiEnvelope`.
 >
@@ -54,7 +54,7 @@ format: markdown
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Courses search completed",
+  "message": "Courses search completed.",
   "data": {
     "items": [
       {
@@ -89,7 +89,7 @@ format: markdown
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "No published courses matched the search",
+  "message": "No published courses matched the search.",
   "data": {
     "items": [],
     "pagination": {

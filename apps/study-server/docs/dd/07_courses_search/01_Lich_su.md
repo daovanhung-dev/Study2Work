@@ -20,12 +20,13 @@ format: markdown
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | `1.0` | `2026-08-29` | `Codex (AI authoring agent)` | `Create new` | `Design-only; Draft — Needs Confirmation; API #7 course search` |
+| `1.1` | `2026-09-22` | `Codex (AI coding agent)` | `Sync runtime implementation` | `Add source-backed route/query/test decisions; DD approval remains TBD` |
 
 ## Nguồn và phạm vi thay đổi
 
-- Contract: `docs/lists/list_api.md` row API `7`.
+- Contract: `docs/diagrams/AC_UNICA/00_AC_API_INDEX.md`, row API `7`.
 - Business flow: AC-04 trong `AC_01_GUEST_ACCOUNT.drawio`.
-- No runtime, OpenAPI hoặc ERD change.
+- Runtime: source-backed implementation added for `/api/v1/courses/search`; no OpenAPI or ERD change.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -13,13 +13,14 @@ format: markdown
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | `2026-08-28` |
-| Ngày update cuối cùng | `2026-08-28` |
+| Ngày update cuối cùng | `2026-09-22` |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | `1.0` | `2026-08-28` | `Codex (AI authoring agent)` | `Create new` | `Design-only; Draft — Needs Confirmation; API #5 categories` |
+| `1.1` | `2026-09-22` | `Codex (AI implementation agent)` | `Align implementation contract` | `Add categories source mapping, ACTIVE status, exact locale and default vi-VN; formal approval remains TBD` |
 
 
 ---

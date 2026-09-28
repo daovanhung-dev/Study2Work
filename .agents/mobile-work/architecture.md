@@ -9,28 +9,44 @@ Deep context pages:
 - [`flutter-business.md`](flutter-business.md): business runtime graph and modules.
 - [`data-flow.md`](data-flow.md): Neon/SQLite/Gemini and feature data flows.
 
-## Applications
+## Project and flavors
 
-`apps/work-client/mobile/flutter_student/` and
-`apps/work-client/mobile/flutter_business/` are separate Flutter applications.
-Both intentionally retain the package name `work_server`, so imports must be
-resolved relative to the individual app rather than treated as a shared Dart
-package.
+`apps/work-client/mobile/` is one Flutter application package named
+`study2work_mobile`. Android product flavors `student` and `business` preserve
+the existing application IDs and install as two separate apps. Role-specific
+source is temporarily kept under `lib/features/student/legacy/` and
+`lib/features/business/legacy/` while active flows move behind new feature and
+repository boundaries.
 
 ## Startup and dependency direction
 
-Student `lib/main.dart` khởi động `MaterialApp` với `DangNhap` làm `home`.
-Business `lib/main.dart` cũng khởi động từ `DangNhap` và khởi tạo
-`sqflite_common_ffi` trên desktop non-Android/iOS. Navigation hiện dùng các
-`MaterialPageRoute` từ view; không có shared router package.
+`lib/main.dart` đọc Android `appFlavor`, tạo `AppConfig`, khởi tạo
+`ProviderScope` và `MaterialApp.router`. `app/router/app_router.dart` chọn
+Student/Business login và shell theo flavor, đồng thời áp dụng auth redirect và
+named routes. Legacy screens vẫn còn một số `MaterialPageRoute` nội bộ trong
+giai đoạn migrate; top-level auth/shell đã đi qua go_router.
 
 ```text
-views -> controllers -> helper_db -> NeonDatabase -> Neon PostgreSQL
-views -> controllers -> SQLite helpers (session/cache)
-views -> models
+new presentation -> Riverpod provider -> repository contract -> role adapter
+  -> legacy controller/helper -> NeonDatabase/SQLite helper
+legacy presentation -> controller/helper (transitional compatibility path)
+shared chat polling/model -> role chat repository adapters
 ```
 
-`lib/helper_db/neon_db.dart` is the remote data boundary in each app. It owns
+`features/auth/presentation/role_login_page.dart` receives the role-specific
+`AuthRepository` from Riverpod. The current adapter delegates to the existing
+login controller so SQL and local-session behavior remain unchanged. Logout
+updates `AuthNavigationState` after the existing local clear completes. The
+Student and Business `SessionStore` adapters expose the current SQLite helpers
+without changing their database names or schemas.
+
+Screens that are still transitional use
+`features/student/application/student_legacy_data.dart` or
+`features/business/application/business_legacy_data.dart` as a compatibility
+facade. This removes direct database-helper imports from those views while the
+typed Job/CV/Candidate repositories are migrated slice by slice.
+
+`lib/core/data/neon/neon_client.dart` is the shared remote data boundary. It owns
 lazy singleton pool creation, SSL URL validation/normalization, parameterized
 execution, `BIGINT` row normalization, and pool shutdown. Existing helper class
 names containing `Supabase` remain as compatibility interfaces for current UI
@@ -53,21 +69,19 @@ Chat does not use realtime channels. Each chat screen owns a `Timer` polling
 every three seconds, deduplicates by message `id`, and cancels it in
 `dispose()`.
 
-Both apps also contain `AIService`, which sends prompt text directly to the
-Gemini HTTP API; it is independent of `apps/ai-server` and `apps/work-server`.
+The shared `core/data/gemini/gemini_client.dart` sends prompt text directly to
+the Gemini HTTP API; it is independent of `apps/ai-server` and `apps/work-server`.
 
-The tracked source boundary is 210 files: 110 student files and 100 business
-files. The inventory includes Android host/configuration and bundled assets but
-excludes generated `build/`, `.dart_tool/` and cache directories. Several legacy
-or placeholder screens remain beside active page variants; their wiring status
-is recorded in the per-app pages instead of being inferred from filenames.
+The inventory includes one Android host, flavor resources, shared infrastructure,
+role-specific migration source and tests, but excludes generated `build/`,
+`.dart_tool/` and cache directories. Several legacy or placeholder screens
+remain beside active page variants; their wiring status is recorded in the role
+pages instead of being inferred from filenames.
 
 ## Presentation foundation
 
-Mỗi app có bộ theme độc lập tại `lib/theme/` gồm `design_tokens.dart`,
-`app_theme.dart` và `app_components.dart`. Hai bộ dùng cùng giá trị Cobalt
-trong design context nhưng không tạo Dart package dùng chung. `main.dart`
-khởi tạo Material 3 theme; menu/login/helper UI tiêu thụ `ColorScheme`, token
+Theme dùng chung tại `lib/app/theme/` gồm `design_tokens.dart`, `app_theme.dart`
+và `app_components.dart`. `main.dart` khởi tạo Material 3 theme; menu/login/helper UI tiêu thụ `ColorScheme`, token
 và primitive nội bộ thay cho palette mặc định `deepPurple`. Thay đổi này chỉ
 ở presentation; không chạm vào MaterialPageRoute, session/cache, Neon,
 Gemini hoặc chat polling.

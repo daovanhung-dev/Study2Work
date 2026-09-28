@@ -121,7 +121,7 @@ Study2Work/
 ### `server-study`
 
 - Source root: `apps/study-server/`
-- Status: `SOURCE_BACKED_WITH_TEST_BLOCKER`
+- Status: `SOURCE_BACKED`
 - Entry: [`.agents/server-study/AGENTS.md`](server-study/AGENTS.md)
 - Index: [`.agents/server-study/INDEX.md`](server-study/INDEX.md)
 - Skill ⇢ `createDD-markdown`
@@ -224,8 +224,9 @@ Study2Work/
   - [`.agents/mobile-work/data-flow.md`](mobile-work/data-flow.md)
   - [`.agents/mobile-work/modules/README.md`](mobile-work/modules/README.md)
   - [`.agents/mobile-work/workflows/README.md`](mobile-work/workflows/README.md)
-- The two Flutter apps are independent; select only the affected app page unless
-  the task crosses the mobile data-flow boundary.
+- Role-specific source is under `lib/features/student/legacy/` and
+  `lib/features/business/legacy/`; select only the affected role page unless
+  the task crosses the shared app/core/data-flow boundary.
 
 ### `db-admin`
 

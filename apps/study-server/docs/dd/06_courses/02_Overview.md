@@ -45,34 +45,36 @@ format: markdown
 
 - `AC-03 yêu cầu hệ thống có khóa học ở trạng thái công khai; flow hiển thị filter/pagination cho Guest.`
 - `Chỉ lấy course có status = PUBLISHED; không trả draft/private course.`
-- `Query category được giữ theo contract nhưng ERD chưa có bảng hoặc quan hệ category–course.`
-- `page, size và sort là optional; contract chưa đặc tả default, range hoặc sort allow-list.`
+- `Query category được parse nhưng trả validation error khi được gửi vì ERD chưa có bảng hoặc quan hệ category–course.`
+- `page` mặc định là `1`; `size` mặc định là `20` và hợp lệ trong range `1..100`.
+- `sort` dùng dạng `field:direction`; field allow-list là `id`, `name`, `price`, `created_at`, direction là `asc` hoặc `desc`.
+- Sort mặc định là `created_at DESC, id ASC`; mọi ORDER BY đều được tạo từ mapping tĩnh.
 - `HTTP 200 là protocol status; không thêm HTTPStatus vào JSON envelope.`
 
 ## Assumptions
 
 - `courses.name` được map sang `Course.title` vì contract dùng tên logic title còn ERD dùng physical column name.`
-- `mentor` là field bắt buộc của Course nên dùng INNER JOIN tới users; dữ liệu thiếu mentor được coi là lỗi integrity và đi tới 500.`
-- `Khi không có record phù hợp, trả 200 với data.items = []; quy ước total_pages cho empty page vẫn là TBD.`
-- `Course.category` là optional và được omit cho tới khi có source xác nhận quan hệ category–course.`
+- `mentor` là field bắt buộc của Course; runtime kiểm tra mentor thiếu hoặc không hợp lệ và trả lỗi integrity 500.`
+- `Khi không có record phù hợp, trả 200 với data.items = []; total_pages = 0 khi total = 0 và dùng công thức ceil(total / size) cho các trường hợp còn lại.`
+- `Course.category` được omit; category query bị từ chối cho tới khi có source xác nhận quan hệ category–course.`
 
 ## Conflicts
 
-- `DISCREPANCY/TBD: contract có query category và Course.category nhưng DB_UNICA_ERD chưa có bảng/khóa category.`
+- `DISCREPANCY: contract có query category và Course.category nhưng DB_UNICA_ERD chưa có bảng/khóa category; runtime trả 422 khi category được gửi.`
 - `DISCREPANCY/TBD: contract dùng Course.title; ERD dùng courses.name, mapping được ghi nhận là alias logic.`
-- `DISCREPANCY/TBD: page/size default, min/max, sort allow-list và empty total_pages chưa được contract xác nhận.`
-- `RUNTIME_STATUS: chưa có runtime/OpenAPI course endpoint được xác minh; DD là design-only.`
+- `RESOLVED_FOR_IMPLEMENTATION: page=1, size=20, size range 1..100, sort allow-list và empty total_pages đã được chọn cho runtime.`
+- `RUNTIME_STATUS: source-backed route and tests; live DB metadata remains unverified.`
 
 ## Security note
 
 - `Endpoint public nhưng chỉ expose course có status PUBLISHED.`
 - `Không trả raw SQL, stack trace, credentials hoặc internal storage detail.`
-- `sort không được nội suy trực tiếp vào SQL; allow-list/mapping cần được xác nhận trước implementation.`
+- `sort không được nội suy trực tiếp vào SQL; runtime chỉ dùng mapping allow-list.`
 
 ## Performance note
 
 - `Pagination được áp dụng khi page/size có mặt; count query phải dùng cùng status/category filter.`
-- `Index, cache policy, page-size limit và sort strategy chưa được source xác nhận.`
+- `Không thêm cache; page-size limit là 100; query count dùng cùng published/mentor integrity scope với page query.`
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

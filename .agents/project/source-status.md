@@ -52,20 +52,30 @@ Mọi project context phải nằm dưới `.agents/`; `apps/` không chứa `.a
 
 ```text
 RUNTIME_STATUS: VERIFIED_IMPORT; CURRENT_ROUTE_SOURCE_BACKED
-TEST_STATUS: COLLECTION_BLOCKED_BY_STALE_REGISTER_IMPORT
-BUSINESS_MODULE_STATUS: SOURCE_BACKED_REGISTER_ONLY
+TEST_STATUS: COLLECTION_VERIFIED_AFTER_NAMESPACE_RENAME
+BUSINESS_MODULE_STATUS: SOURCE_BACKED_REGISTER_VERIFY_LOGIN_REFRESH_CATEGORIES_COURSES_SEARCH
 DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED; LIVE_STATUS_NOT_VERIFIED_HERE
 ```
 
 Current evidence:
 
-- `app.main` imports successfully and composes 8 current routes.
+- `app.main` imports successfully and composes 13 current routes.
 - `app/api/v1.py` wires `POST /api/v1/auth/register` to
-  `app.modules.auth.register_account.*`.
+  `app.modules.guest.register_account.*`; `/auth` ở đây là public endpoint
+  contract, không phải Python namespace.
+- `app/api/v1.py` also wires public API #2 verify-email dispatch through the
+  injectable provider stub, API #5 categories, API #6 courses and API #7 course
+  search; these flows
+  have focused HTTP tests and no live DB verification claim.
+- `app/api/v1.py` wires `GET /api/v1/users/me` to
+  `app.modules.guest.users_me.*`; the route verifies the current API#3 JWT
+  `sub`/`roles` shape, requires `STUDENT`, and reads only public profile
+  columns from `users`.
 - `register_account/validate.py` is empty/unwired; current model validators
   remain in `models.py`.
-- `tests/modules/auth/test_register.py` imports removed paths
-  `app.modules.auth.models/view`, so pytest collection is blocked.
+- `tests/modules/guest/test_register.py` imports
+  `app.modules.guest.register_account.models/view` to stay aligned with the
+  runtime namespace.
 - `alembic.ini` references a missing migration directory; this is not schema
   evidence.
 - `apps/study-server/docs/codebase/README.md` and design DD remain
@@ -138,16 +148,17 @@ TEST_STATUS: UNIT_TESTS_PRESENT; FLUTTER_TOOLCHAIN_UNAVAILABLE; NETWORK_SMOKE_OP
 DESIGN_STATUS: SOURCE_BACKED_COBALT_BASELINE_IMPLEMENTED
 ```
 
-- Student and business are separate Flutter apps with package name `work_server`.
-  Both start at `DangNhap`, use direct Neon PostgreSQL through a singleton
+- Student and business are Android flavors of one Flutter project with package
+  name `study2work_mobile`. Both start at role-specific `DangNhap` through the
+  shared flavor router, use direct Neon PostgreSQL through a singleton
   `NeonDatabase`, and keep account/lookup data in SQLite.
 - Chat reads/writes `Chat` and `DoanChat` directly, polls every three seconds,
   deduplicates by message `id`, and cancels screen timers in `dispose()`.
-- Both apps call Gemini directly from `AIService`; this is independent of the
+- The shared core calls Gemini directly from `AIService`; this is independent of the
   Work server and `apps/ai-server`. URL/row/model normalization and polling
   tests exist; connection smoke tests require an explicit Dart define.
-- Each standalone app now owns a local Material 3 Cobalt theme and UI
-  primitives under `lib/theme/`. The refresh changes presentation only; direct
+- The unified app owns a shared Material 3 Cobalt theme and UI primitives under
+  `lib/app/theme/`. The merge preserves direct
   Neon/SQLite/Gemini boundaries and chat polling semantics are preserved.
 
 ## AI server

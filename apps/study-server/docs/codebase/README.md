@@ -19,7 +19,7 @@ exception.
 - [security.py — password và token](#securitypy--password-và-token)
 - [trace.py — Trace ID](#tracepy--trace-id)
 - [middleware.py — HTTP middleware](#middlewarepy--http-middleware)
-- [exceptions.py — exception handlers](#exceptionspy--exception-handlers)
+- [middleware.py — exception handlers](#middlewarepy--exception-handlers)
 - [Các flow sử dụng thực tế](#các-flow-sử-dụng-thực-tế)
 - [Giới hạn và lưu ý bảo mật](#giới-hạn-và-lưu-ý-bảo-mật)
 
@@ -34,8 +34,7 @@ exception.
 | app/core/responses.py | Tạo success/error envelope thống nhất | success_response, error_response |
 | app/core/security.py | Hash password, JWT và opaque refresh token | hash_password, create_access_token |
 | app/core/trace.py | Tạo và truyền X-Trace-Id trong request context | get_trace_id, get_current_trace_id |
-| app/core/middleware.py | Gắn trace ID vào toàn bộ request lifecycle | TraceIdMiddleware |
-| app/core/exceptions.py | Map exception thành response an toàn | các exception handler |
+| app/core/middleware.py | Gắn trace ID và map exception thành response an toàn | TraceIdMiddleware, các exception handler |
 
 app/core/__init__.py chỉ chứa module docstring, không export thêm function
 hay class.
@@ -139,11 +138,11 @@ private helper hiện có trong app/core.
 | trace | set_current_trace_id, reset_current_trace_id | Quản lý ContextVar |
 | trace | get_current_trace_id, get_trace_id | Đọc trace từ context/request |
 | middleware | TraceIdMiddleware.dispatch | Bao request bằng trace context |
-| exceptions | _validation_field | Chuyển Pydantic location thành field path |
-| exceptions | api_error_handler | Render ApiError |
-| exceptions | http_exception_handler | Render HTTP error an toàn |
-| exceptions | request_validation_exception_handler | Render lỗi validation |
-| exceptions | unhandled_exception_handler | Log lỗi nội bộ và trả 500 an toàn |
+| middleware | _validation_field | Chuyển Pydantic location thành field path |
+| middleware | api_error_handler | Render ApiError |
+| middleware | http_exception_handler | Render HTTP error an toàn |
+| middleware | request_validation_exception_handler | Render lỗi validation |
+| middleware | unhandled_exception_handler | Log lỗi nội bộ và trả 500 an toàn |
 
 ### Bảng mục đích và thời điểm sử dụng cho từng callable
 
@@ -1454,7 +1453,7 @@ ContextVar, log/error response và response header/body.
 
 ---
 
-## exceptions.py — exception handlers
+## middleware.py — exception handlers
 
 Module dùng JSONResponse, error_response() và get_trace_id() để giữ API error
 contract. Các handler đều là async vì FastAPI/Starlette gọi chúng theo exception
@@ -1496,8 +1495,8 @@ Render controlled ApiError:
 
 - HTTP status = exc.status_code;
 - body = error_response() với business code/message/errors của exception;
-- trace ID = exc.trace_id nếu có, fallback get_trace_id(request);
-- response headers = exc.headers.
+- trace ID = exc.trace_id;
+- response headers = exc.headers, đồng thời luôn đặt X-Trace-Id theo exc.trace_id.
 
 Handler không expose exception repr. Đăng ký bằng
 app.add_exception_handler(ApiError, api_error_handler).
@@ -1513,11 +1512,11 @@ async def http_exception_handler(
 
 Xử lý lỗi protocol từ Starlette/FastAPI mà không expose arbitrary detail.
 
-- Nếu exc.detail là dict và detail["success"] is False, copy dict đó và thêm
-  traceId nếu dict chưa có.
+- Nếu exc.detail là dict có `success=False`, giữ businessCode/message/data và
+  meta dạng object đã cung cấp; trường thiếu được thay bằng giá trị an toàn.
 - Các detail khác được thay bằng canonical generic error:
   businessCode="HTTP_ERROR", message="Yêu cầu không thể được xử lý.".
-- Giữ exc.status_code và exc.headers.
+- Giữ exc.status_code và exc.headers, rồi chuẩn hóa body qua ApiError.
 
 Vì vậy unknown route trả status 404 nhưng không trả raw "Not Found" trong
 message API.
@@ -1537,10 +1536,10 @@ Map mỗi lỗi trong exc.errors() thành ErrorDetail:
 - code = error["type"] uppercase, dấu . đổi thành _, fallback INVALID_FIELD;
 - message = error["msg"], fallback "Giá trị không hợp lệ.".
 
-Trả HTTP 422 với:
+Trả HTTP 422; businessCode là `DESIGN_VALIDATION_ERROR` cho các endpoint có
+design contract đã khai báo, còn lại là `VALIDATION_ERROR`. Cả hai dùng:
 
 ~~~text
-businessCode = "VALIDATION_ERROR"
 message      = "Dữ liệu đầu vào không hợp lệ."
 meta.fieldErrors = các ErrorDetail
 ~~~
@@ -1555,7 +1554,8 @@ async def unhandled_exception_handler(
 ~~~
 
 Lấy trace ID, log exception nội bộ bằng logger.exception() với
-trace_id=<id>, rồi trả:
+trace_id=<id>, rồi trả `DESIGN_INTERNAL_ERROR` cho các endpoint có design
+contract đã khai báo, còn lại là `INTERNAL_SERVER_ERROR`:
 
 ~~~text
 HTTP 500

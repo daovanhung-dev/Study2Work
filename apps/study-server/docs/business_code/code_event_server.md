@@ -8,10 +8,10 @@ Nguồn: runtime source và Work OpenAPI còn tồn tại, kiểm tra ngày 2026
 | `SYSTEM_ROOT_LOADED` | Study system | Intended root response | 200 | `apps/study-server/app/main.py` | `DECLARED_NOT_RUNNABLE` |
 | `SYSTEM_HEALTH_LIVE` | Study health | Intended liveness response | 200 | `apps/study-server/app/main.py` | `DECLARED_NOT_RUNNABLE` |
 | `SYSTEM_HEALTH_READY` | Study health | Intended configured-dependency response; no probe | 200 | `apps/study-server/app/main.py` | `DECLARED_NOT_RUNNABLE` |
-| `AUTH_CURRENT_USER_FOUND` | Study auth | Intended authenticated-user response | 200 | `apps/study-server/app/api/v1.py` | `DECLARED_NOT_RUNNABLE` |
-| `VALIDATION_ERROR` | Study core | Intended request validation failure | 422 | `apps/study-server/app/core/exceptions.py` | `DECLARED_NOT_RUNNABLE` |
-| `HTTP_ERROR` | Study core | Intended safe mapping of framework HTTP errors | source status | `apps/study-server/app/core/exceptions.py` | `DECLARED_NOT_RUNNABLE` |
-| `INTERNAL_SERVER_ERROR` | Study core | Intended unhandled exception mapping | 500 | `apps/study-server/app/core/exceptions.py` | `DECLARED_NOT_RUNNABLE` |
+| `AUTH_CURRENT_USER_FOUND` | Study auth | Design-only authenticated-user event code; API#4 currently returns `DESIGN_RESOURCE_RETRIEVED` per DD | 200 | no current caller | `UNWIRED` |
+| `VALIDATION_ERROR` | Study core | Safe request validation fallback outside design-contract paths | 422 | `apps/study-server/app/core/middleware.py` | `VERIFIED` |
+| `HTTP_ERROR` | Study core | Safe mapping of framework HTTP errors | source status | `apps/study-server/app/core/middleware.py` | `VERIFIED` |
+| `INTERNAL_SERVER_ERROR` | Study core | Safe unhandled exception fallback outside design-contract paths | 500 | `apps/study-server/app/core/middleware.py` | `VERIFIED` |
 | `SYSTEM_ROOT_LOADED` | Work system | Public Work API root loaded | 200 | `src/system/system.controller.ts` | `VERIFIED` |
 | `SYSTEM_HEALTH_LIVE` | Work health | Process is live | 200 | `src/health/health.controller.ts` | `VERIFIED` |
 | `SYSTEM_HEALTH_READY` | Work health | PostgreSQL probe succeeded | 200 | `src/health/health.controller.ts` | `VERIFIED` |

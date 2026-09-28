@@ -13,7 +13,33 @@ CREATE TABLE users (
     updated_at TIMESTAMP NOT NULL
 );
 
--- 02. COURSE & LEARNING
+CREATE TABLE refresh_tokens (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    revoked_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
+
+-- 02. COURSE & DISCOVERY
+
+CREATE TABLE categories (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(200) NOT NULL,
+    slug VARCHAR(200) NOT NULL,
+    description TEXT NULL,
+    locale VARCHAR(20) NOT NULL DEFAULT 'vi-VN',
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
+);
+
+CREATE INDEX idx_categories_status_locale
+    ON categories(status, locale);
+
+-- 03. COURSE & LEARNING
 
 CREATE TABLE courses (
     id BIGSERIAL PRIMARY KEY,
@@ -67,7 +93,7 @@ CREATE TABLE lesson_progress (
     completed_at TIMESTAMP NULL
 );
 
--- 03. ASSESSMENT
+-- 04. ASSESSMENT
 
 CREATE TABLE quizzes (
     id BIGSERIAL PRIMARY KEY,
@@ -138,7 +164,7 @@ CREATE TABLE assignment_submissions (
     status VARCHAR(20) DEFAULT 'SUBMITTED'
 );
 
--- 04. INTERACTION & SYSTEM
+-- 05. INTERACTION & SYSTEM
 
 CREATE TABLE discussions (
     id BIGSERIAL PRIMARY KEY,

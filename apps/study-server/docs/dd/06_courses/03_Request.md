@@ -34,10 +34,10 @@ format: markdown
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | Category filter | `category` | `int64` | `No` | `TBD` | `TBD` | Integer | `TBD — category source chưa có` | `TBD` | Lọc theo category khi quan hệ category–course được xác nhận | [`1.1`](./05_Data_Mapping.md#11-validate-category) |
-| 2 | Page number | `page` | `int32` | `No` | `TBD` | `TBD` | Integer | `TBD` | `TBD` | Trang cần lấy | [`1.2`](./05_Data_Mapping.md#12-validate-page) |
-| 3 | Page size | `size` | `int32` | `No` | `TBD` | `TBD` | Integer | `TBD` | `TBD` | Số course mỗi trang | [`1.3`](./05_Data_Mapping.md#13-validate-size) |
-| 4 | Sort expression | `sort` | `string` | `No` | `TBD` | `TBD` | String | `TBD — allow-list chưa đặc tả` | `TBD` | Thứ tự sắp xếp kết quả | [`1.4`](./05_Data_Mapping.md#14-validate-sort) |
+| 1 | Category filter | `category` | `int64` | `No` | N/A | N/A | Integer | Integer; runtime chưa hỗ trợ filter | N/A | Nếu được gửi, trả `422 DESIGN_VALIDATION_ERROR` vì chưa có category–course relation | [`1.1`](./05_Data_Mapping.md#11-validate-category) |
+| 2 | Page number | `page` | `int32` | `No` | `1` | N/A | Integer | `>= 1` | `1` | Trang cần lấy | [`1.2`](./05_Data_Mapping.md#12-validate-page) |
+| 3 | Page size | `size` | `int32` | `No` | `1` | `100` | Integer | `1..100` | `20` | Số course mỗi trang | [`1.3`](./05_Data_Mapping.md#13-validate-size) |
+| 4 | Sort expression | `sort` | `string` | `No` | N/A | N/A | `field:direction` | `id|name|price|created_at` + `asc|desc` | `created_at:desc,id:asc` internal default | Thứ tự sắp xếp an toàn; input nhận một cặp field/direction | [`1.4`](./05_Data_Mapping.md#14-validate-sort) |
 
 ## Request body
 
@@ -54,7 +54,9 @@ GET /api/v1/courses?page=1&size=20 HTTP/1.1
 Host: api.example.test
 ```
 
-> `category` và `sort` là query optional theo contract. `page=1` và `size=20` trong ví dụ chỉ minh họa request tường minh, không phải default đã được xác nhận.
+> `category` và `sort` là query optional theo contract. Runtime dùng `page=1`,
+> `size=20` khi không gửi; category được parse nhưng bị từ chối cho tới khi
+> relation category–course được source-backed.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

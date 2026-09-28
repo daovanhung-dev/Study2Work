@@ -46,6 +46,8 @@ Important validators:
 - DB schema only alphanumeric/underscore.
 - HS256 requires secret; ES256 requires private and public key at settings validation time.
 - `get_settings()` is cached/lazy; `_LazySettings` preserves legacy uppercase-style access.
+- Settings construction converts configuration validation failures to a safe
+  context-free `ApiError` (HTTP 500 / `INTERNAL_SERVER_ERROR`).
 
 ## Password — `app/core/security/password.py`
 
@@ -61,7 +63,9 @@ Important validators:
 Creates signed JWT with `sub`, `type=access`, `roles`, `jti`, `iat`, `exp`, `iss`, `aud`; custom claims cannot overwrite reserved claims.
 
 ### `decode_access_token`
-Verifies configured algorithm, issuer/audience and required claims; wrong/expired/invalid token becomes `TokenError`; also requires `type=access` and nonempty string `sub`.
+Verifies configured algorithm, issuer/audience and required claims; wrong,
+expired or malformed token becomes `ApiError` with 401 authentication mapping.
+Missing signing/verification configuration becomes a safe internal `ApiError`.
 
 Signing/verification key selection:
 - ES256: private key signs, public key verifies.
@@ -72,12 +76,18 @@ Signing/verification key selection:
 - `generate_refresh_token`: `secrets.token_urlsafe(48)` opaque token.
 - `hash_refresh_token`: HMAC-SHA256 with configured pepper before DB storage.
 - `compare_refresh_token`: constant-time `hmac.compare_digest`.
+- Missing refresh pepper becomes a safe internal `ApiError`.
+
+Shared Bearer-header and access-claim validators raise `ApiError` for
+authentication failures. Helpers used as Pydantic field validators may raise
+`ValueError` internally; FastAPI's validation handler converts resulting
+request validation failures into `ApiError` before HTTP serialization.
 
 ## Critical absence
 
-Current register SQL references `users`, but source inspection alone does not
-verify live schema/table metadata. `DB.sql` and DD pages are not sufficient
-runtime evidence when they conflict with current source. The register flow
-owns duplicate lookup, password hashing, insert and commit/rollback behavior.
-Login, refresh and other session orchestration remain unwired; do not infer them
-from helper names.
+Current register and auth SQL reference `users`; login/refresh also reference
+`refresh_tokens`, but source inspection alone does not verify live schema/table
+metadata. `DB.sql`, migration artifacts and DD pages are not sufficient runtime
+evidence when they conflict with live metadata. Register and auth views own
+their lookup, security, token persistence and commit/rollback behavior. API #4
+current-user orchestration is wired and uses the shared access-token helpers.

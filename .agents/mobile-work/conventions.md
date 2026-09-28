@@ -15,11 +15,11 @@
   `dispose()`, and callbacks deduplicate messages by database `id`.
 - The direct Neon mobile connection is a development/prototype convention only
   and must be replaced with a least-privilege backend boundary before release.
-- UI code consumes the local `lib/theme/` Cobalt tokens and Material 3
+- UI code consumes the shared `lib/app/theme/` Cobalt tokens and Material 3
   `ColorScheme`; new screen-specific primary colors, shadows or control styles
   should not be introduced. Keep white/transparent colors only where they are
   required for foreground, overlay or compositing semantics.
-- Treat [`file-inventory.md`](file-inventory.md) and the two app pages as the
+- Treat [`file-inventory.md`](file-inventory.md) and the two role pages as the
   source-backed map of file purpose. A file existing is not proof that it is
   wired: use `WIRED`, `UNWIRED`, `LEGACY`, `PLACEHOLDER` and UI-only labels from
   route/import evidence.

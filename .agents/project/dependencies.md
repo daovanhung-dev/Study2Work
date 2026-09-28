@@ -5,7 +5,7 @@
 ```text
 apps/study-server/app/main.py
   -> app/api/v1.py
-       -> app.modules.auth.register_account.* (register route)
+       -> app.modules.guest.register_account.* (register route)
   -> app/core/* (current composition)
   -> PostgreSQL settings; Redis is config-only
   -> app/service/ai/OllamaService (no live caller)
@@ -70,8 +70,8 @@ local snapshot. Không có nghĩa các helper/table tương ứng đã tồn t�
 
 ## Test dependencies
 
-- Study `app.main` hiện import được; `tests/modules/auth/test_register.py` vẫn
-  chặn collection vì import `app.modules.auth.models/view` đã bị thay thế.
+- Study `app.main` hiện import được; register flow nằm dưới
+  `app.modules.guest.register_account.*` và test tương ứng dùng cùng namespace.
 - AI không có tests.
 - Work Web has Vitest tests for role guards and Bearer API boundary. Work server
   has no checked-in test runner; TypeScript/Prisma commands are validation checks.

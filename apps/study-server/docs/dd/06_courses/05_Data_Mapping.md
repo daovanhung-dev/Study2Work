@@ -14,10 +14,10 @@ format: markdown
 
 | Request field | Source | Validate | Query usage | Response usage | Gap |
 |---|---|---|---|---|---|
-| `category` | `query["category"]` khi có | Parse `int64`; relation source TBD | Category predicate only after relation is confirmed | Không map trực tiếp | ERD chưa có category–course relation |
-| `page` | `query["page"]` khi có | Parse `int32`; range/default TBD | Offset pagination | `data.pagination.page` | Contract chưa xác nhận default/range |
-| `size` | `query["size"]` khi có | Parse `int32`; range/default TBD | Limit pagination | `data.pagination.size` | Contract chưa xác nhận default/range |
-| `sort` | `query["sort"]` khi có | Parse `string`; allow-list TBD | Safe ORDER BY mapping only | Không map trực tiếp | Không nội suy raw query vào SQL |
+| `category` | `query["category"]` khi có | Parse `int64`; reject when present | Không query; chưa có relation | Không map | Không tạo JOIN giả |
+| `page` | `query["page"]` hoặc default | Parse `int32`, `>=1`; default `1` | Offset pagination | `data.pagination.page` | |
+| `size` | `query["size"]` hoặc default | Parse `int32`, `1..100`; default `20` | Limit pagination | `data.pagination.size` | |
+| `sort` | `query["sort"]` khi có | Allow-list field/direction | Static ORDER BY mapping | Không map trực tiếp | Không nội suy raw query vào SQL |
 
 ## Query Matrix
 
@@ -101,22 +101,22 @@ format: markdown
 ### 1.1. Validate `category`
 
 - Nếu `category` không parse được thành `int64`: trả `422 DESIGN_VALIDATION_ERROR`.
-- Nếu `category` được gửi nhưng chưa có relation source: giữ discrepancy/TBD, không tạo JOIN giả.
+- Nếu `category` parse được nhưng được gửi: trả `422 DESIGN_VALIDATION_ERROR`; không tạo JOIN giả.
 
 ### 1.2. Validate `page`
 
 - Nếu `page` không parse được thành `int32`: trả `422 DESIGN_VALIDATION_ERROR`.
-- Default và range của `page` chưa được contract xác nhận.
+- `page` mặc định `1`; giá trị nhỏ hơn `1` trả `422 DESIGN_VALIDATION_ERROR`.
 
 ### 1.3. Validate `size`
 
 - Nếu `size` không parse được thành `int32`: trả `422 DESIGN_VALIDATION_ERROR`.
-- Default và range của `size` chưa được contract xác nhận.
+- `size` mặc định `20`; giá trị ngoài range `1..100` trả `422 DESIGN_VALIDATION_ERROR`.
 
 ### 1.4. Validate `sort`
 
 - Nếu `sort` không có kiểu `string`: trả `422 DESIGN_VALIDATION_ERROR`.
-- Allow-list và mapping sort chưa được contract xác nhận; không nội suy raw value vào SQL.
+- `sort` phải là một cặp `field:direction`, field thuộc `id|name|price|created_at`, direction thuộc `asc|desc`; giá trị khác trả `422 DESIGN_VALIDATION_ERROR`.
 
 ## 2. Get thông tin
 
@@ -139,33 +139,33 @@ format: markdown
 | Target table | Join condition | Join type |
 |---|---|---|
 | `courses AS c` | `N/A` | `BASE` |
-| `users AS m` | `m.id = c.mentor_id` | `INNER JOIN` |
+| `users AS m` | `m.id = c.mentor_id` | `LEFT JOIN` + mentor integrity check |
 
 > `Course.mentor` là object bắt buộc trong contract; nếu dữ liệu published course thiếu mentor tương ứng, đi tới lỗi hệ thống thay vì dựng object giả.
 
 ### 2.3. WHERE
 
 - `c.status = "PUBLISHED"`.
-- Nếu `category` có mặt: áp dụng predicate chỉ sau khi category–course relation được source xác nhận; hiện ghi `TBD`.
+- Nếu `category` có mặt: dừng ở bước validation với `422`; không áp dụng predicate khi relation chưa source-backed.
 
 ### 2.4. ORDER BY
 
-- Nếu `sort` có mặt: dùng mapping allow-list đã được xác nhận.
-- Nếu `sort` không có mặt: thứ tự mặc định chưa được contract xác nhận; không tự đặt thứ tự nghiệp vụ.
+- Nếu `sort` có mặt: dùng mapping allow-list đã xác nhận.
+- Nếu `sort` không có mặt: dùng `created_at DESC, id ASC`.
 
 ### 2.5. Pagination
 
-- Nếu `page` và `size` có mặt: `OFFSET = (page - 1) * size`.
-- `LIMIT = size` khi `size` có mặt.
-- Nếu chỉ một trong `page` hoặc `size` được gửi: effective pagination behavior là `TBD`; không tự đặt default cho biến còn thiếu.
-- Default, range và empty-page convention là `TBD`; không tự gán giá trị trong DD.
+- `page` mặc định `1`, `size` mặc định `20`; `OFFSET = (page - 1) * size` và `LIMIT = size`.
+- Nếu chỉ một trong `page` hoặc `size` được gửi, field còn thiếu dùng default.
+- `total_pages = ceil(total / size)`; khi `total = 0`, `total_pages = 0`.
 
 ## 3. Get count
 
 ### 3.1. Count matching rows
 
 - Thực hiện `Q2` trên `courses AS c` với `COUNT(*)`.
-- Dùng cùng điều kiện `c.status = "PUBLISHED"` và cùng category predicate (nếu relation được xác nhận) như `Q1`.
+- Dùng `c.status = "PUBLISHED"` và đếm thêm `missing_mentor_count` qua cùng `LEFT JOIN`.
+- Nếu `missing_mentor_count > 0`, trả `500 DESIGN_INTERNAL_ERROR` thay vì dựng mentor giả.
 - Lưu kết quả vào `total_courses`.
 
 ## 4. Check kết quả query
@@ -205,7 +205,7 @@ format: markdown
 - `data.pagination.size = effective_size`.
 - `data.pagination.total = total_courses`.
 - `data.pagination.total_pages = derive(total_courses, effective_size)`.
-- Nếu effective page/size hoặc empty-page convention chưa xác định: giữ `TBD` trong DD.
+- Giá trị page/size là effective query values sau khi áp dụng default; empty total dùng `total_pages = 0`.
 
 ### 5.3. Map envelope
 

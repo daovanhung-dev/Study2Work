@@ -23,20 +23,20 @@ format: markdown
 | 1 | `HTTPStatus` | HTTP Status | `HTTPStatus` | `integer` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3` | Fixed by branch: `200/422/500` | `N/A` | Protocol status; không phải property JSON |
 | 2 | `success` | Success flag | `success` | `boolean` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3` | `true` on success; `false` on error | `N/A` | `ApiEnvelope` field |
 | 3 | `businessCode` | Business code | `businessCode` | `string` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3` | `DESIGN_RESOURCE_RETRIEVED`, `DESIGN_VALIDATION_ERROR` or `DESIGN_INTERNAL_ERROR` | `N/A` | Chỉ dùng code đã có trong contract |
-| 4 | `message` | Message | `message` | `string` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3` | Fixed by branch | `TBD — message text chưa đặc tả` | Không trả raw SQL/internal detail |
-| 5 | `data` | Category page | `data` | `object` | `No` | `N/A — schema design-only` | `N/A` | `5.1` | Map `Page<Category>` | `{}` on error | `ApiEnvelope<Page<Category>>` |
-| 5.1 | `data.items` | Category items | `items` | `array` | `No` | `N/A — category source TBD` | `N/A` | `4.2/4.3` | Map each active category | `[]` when empty | `Category[]` |
-| 5.1.1 | `data.items[].id` | Category ID | `id` | `int64` | `No` | `N/A — category source TBD` | `N/A` | `4.3` | Direct mapping | `N/A` | Contract field |
-| 5.1.2 | `data.items[].name` | Category name | `name` | `string` | `No` | `N/A — category source TBD` | `N/A` | `4.3` | Direct mapping/locale-aware source when supported | `N/A` | Contract field |
-| 5.1.3 | `data.items[].slug` | Category slug | `slug` | `string` | `No` | `N/A — category source TBD` | `N/A` | `4.3` | Direct mapping | `N/A` | Contract field |
-| 5.1.4 | `data.items[].description` | Category description | `description` | `string` | `Yes` | `N/A — category source TBD` | `N/A` | `4.3` | Direct mapping | `TBD — null/omit rule` | Optional contract field |
+| 4 | `message` | Message | `message` | `string` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3` | `Categories retrieved.`, `No active categories.`, or `Categories could not be retrieved.` | `N/A` | Không trả raw SQL/internal detail |
+| 5 | `data` | Category page | `data` | `object` | `No` | `N/A` | `N/A` | `5.1` | Map `Page<Category>` | `{}` on error | `ApiEnvelope<Page<Category>>` |
+| 5.1 | `data.items` | Category items | `items` | `array` | `No` | `categories` | `id`, `name`, `slug`, `description` | `4.2/4.3` | Map each active category | `[]` when empty | `Category[]` |
+| 5.1.1 | `data.items[].id` | Category ID | `id` | `int64` | `No` | `categories` | `id` | `4.3` | Direct mapping | `N/A` | Contract field |
+| 5.1.2 | `data.items[].name` | Category name | `name` | `string` | `No` | `categories` | `name` | `4.3` | Direct mapping for selected locale | `N/A` | Contract field |
+| 5.1.3 | `data.items[].slug` | Category slug | `slug` | `string` | `No` | `categories` | `slug` | `4.3` | Direct mapping | `N/A` | Contract field |
+| 5.1.4 | `data.items[].description` | Category description | `description` | `string` | `Yes` | `categories` | `description` | `4.3` | Direct mapping | `null` when source is null | Optional contract field |
 | 5.2 | `data.pagination` | Pagination metadata | `pagination` | `object` | `No` | `N/A` | `N/A` | `5.1/5.2` | Implicit single-page metadata | `{}` on error | `PageMeta` |
 | 5.2.1 | `data.pagination.page` | Page number | `page` | `int32` | `No` | `N/A` | `N/A` | `5.1` | Fixed `1` | `N/A` | Single-page convention |
 | 5.2.2 | `data.pagination.size` | Page size | `size` | `int32` | `No` | `N/A` | `N/A` | `5.1` | `total` item count | `0` when empty | Single-page convention |
 | 5.2.3 | `data.pagination.total` | Total count | `total` | `int64` | `No` | `N/A` | `N/A` | `4.3` | Count of returned active categories | `0` when empty | Single-page convention |
 | 5.2.4 | `data.pagination.total_pages` | Total pages | `total_pages` | `int32` | `No` | `N/A` | `N/A` | `5.1` | `1` even when `total=0` | `1` | Single-page convention |
 | 6 | `meta` | Metadata | `meta` | `object` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3` | `{}` | `{}` | No extra operation metadata |
-| 7 | `traceId` | Trace ID | `traceId` | `uuid` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3` | Request correlation/generator | `TBD — exact generator chưa đặc tả` | `ApiEnvelope` field |
+| 7 | `traceId` | Trace ID | `traceId` | `uuid` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3` | Preserve valid `X-Trace-Id` or generate UUID | `N/A` | `ApiEnvelope` field |
 
 > Error response dùng cùng các field `success`, `businessCode`, `message`, `data`, `meta`, `traceId` của `ApiEnvelope`; không tạo `error_code` hoặc `error_message_id` riêng.
 >
@@ -48,7 +48,7 @@ format: markdown
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Categories retrieved",
+  "message": "Categories retrieved.",
   "data": {
     "items": [
       {
@@ -82,7 +82,7 @@ format: markdown
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "No active categories",
+  "message": "No active categories.",
   "data": {
     "items": [],
     "pagination": {
@@ -103,7 +103,7 @@ format: markdown
 {
   "success": false,
   "businessCode": "DESIGN_VALIDATION_ERROR",
-  "message": "Invalid locale",
+  "message": "Dữ liệu đầu vào không hợp lệ.",
   "data": {},
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000003"
@@ -116,7 +116,7 @@ format: markdown
 {
   "success": false,
   "businessCode": "DESIGN_INTERNAL_ERROR",
-  "message": "Categories could not be retrieved",
+  "message": "Categories could not be retrieved.",
   "data": {},
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000004"

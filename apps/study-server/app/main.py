@@ -12,13 +12,13 @@ from starlette.exceptions import HTTPException
 from app.api.v1 import router
 from app.core.config import Settings, get_settings
 from app.core.database import build_engine, build_session_factory, get_db, get_db_from_factory
-from app.core.exceptions import (
+from app.core.middleware import (
+    TraceIdMiddleware,
     api_error_handler,
     http_exception_handler,
     request_validation_exception_handler,
     unhandled_exception_handler,
 )
-from app.core.middleware import TraceIdMiddleware
 from app.core.responses import ApiError, success_response
 from app.core.trace import get_trace_id
 

@@ -1,7 +1,7 @@
 # Mobile context index
 
-Source roots: `apps/work-client/mobile/flutter_student/` and
-`apps/work-client/mobile/flutter_business/`
+Source root: `apps/work-client/mobile/` (one Flutter project, Android flavors
+`student` and `business`).
 
 | Task | Page |
 |---|---|
@@ -16,10 +16,10 @@ Source roots: `apps/work-client/mobile/flutter_student/` and
 | Workflow/tests | `workflows/README.md` |
 | Mobile DD từ BD/BRD | `create-dd-from-bd-mobile` trong `context-manifest.json` |
 
-The two Flutter apps remain independent packages. Read only the affected app's
-source and tests unless a cross-app contract is involved.
+The two flavors share one package and core infrastructure. Read only the
+affected role feature and tests unless a shared boundary is involved.
 
-Current inventory contains 210 tracked files: 110 in `flutter_student/` and 100
-in `flutter_business/`. The app pages contain per-file runtime responsibilities,
-controllers, models, views, route composition and known unwired/legacy states;
-`data-flow.md` is the cross-app boundary page.
+The current source keeps role-specific migration files under
+`lib/features/student/legacy/` and `lib/features/business/legacy/`; new code
+belongs under `app/`, `core/`, `shared/` and role feature subdirectories.
+`data-flow.md` is the shared data boundary page.
