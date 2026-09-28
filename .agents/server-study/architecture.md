@@ -30,14 +30,14 @@ implementation remain unwired.
 - `app/core/middleware.py`: trace middleware and shared FastAPI exception handlers.
 - `app/core/security/*`: password, access token, refresh token primitives.
 - `app/utils/auth.py`: access/refresh token issuance, expiry metadata and public auth payload mapping.
-- `app/utils/validate.py`: shared pure validation/normalization helpers used by request models and API handlers, including API #3 auth validators and API #4 Bearer/JWT claim validators.
+- `app/utils/validate.py`: shared pure validation/normalization helpers used by API validators, including API #3 auth validators and API #4 Bearer/JWT claim validators; request models do not call validation helpers.
 - `app/modules/guest/api_03_auth_login/models.py`: login and refresh request contracts.
 - `app/modules/guest/api_03_auth_login/query.py`: SQL constants for user lookup and refresh-token persistence.
 - `app/modules/guest/api_03_auth_login/view.py`: login credential flow, refresh rotation, transaction and response mapping.
 - `app/modules/guest/api_04_users_me/models.py`: safe current-user profile response model.
 - `app/modules/guest/api_04_users_me/query.py`: parameterized public profile lookup by user ID.
 - `app/modules/guest/api_04_users_me/view.py`: Student role check, profile lookup and canonical response/error mapping.
-- `app/modules/guest/api_05_categories/models.py`: API #5 query and public category page contracts.
+- `app/modules/guest/api_05_categories/models.py`: API #5 query and public category page model classes.
 - `app/modules/guest/api_05_categories/query.py`: parameterized active-category lookup by exact locale.
 - `app/modules/guest/api_05_categories/view.py`: default-locale resolution, category mapping and canonical response/error mapping.
 - `app/modules/guest/api_06_courses/models.py`: API #6 list query contract.
@@ -51,12 +51,13 @@ implementation remain unwired.
 - `app/modules/guest/api_02_auth_verify_email_send/models.py`: strict public `user_id` and `email` request contract.
 - `app/modules/guest/api_02_auth_verify_email_send/view.py`: provider dispatch orchestration and canonical response/error mapping without DB access.
 - `app/service/email/provider.py`: injectable verification-email provider Protocol, result type and development stub.
-- `app/modules/guest/api_01_auth_register/models.py`: API #1 register request model,
-  type/basic validation and normalization.
-- `app/modules/guest/api_01_auth_register/validate.py`: special validation boundary;
-  currently empty and unwired.
+- `app/modules/guest/api_01_auth_register/models.py`: API #1 register request
+  model fields and type conversion.
+- `app/modules/guest/api_01_auth_register/validate.py`: active request validator
+  for email, password and full name; returns `error_response(...)` for invalid
+  input and normalized model data otherwise.
 - `app/modules/guest/api_01_auth_register/query.py`: duplicate lookup and users
-  insert SQL/query helpers.
+  insert SQL constants; query execution is owned by `view.py`.
 - `app/modules/guest/api_01_auth_register/view.py`: register orchestration,
   business check, password hashing, transaction and response mapping.
 - `app/service/ai/ollama_service.py`: Ollama adapter copied/shared with Study codebase; no live Study caller after business modules disappeared.
@@ -82,16 +83,26 @@ re-evaluate the complete import chain rather than stop at the first error.
 ## Validation workflow boundary
 
 ```text
-app/utils/validate.py: shared normalization helpers
-→ models.py: input data types and conversion
-→ API #1–#7 validate.py: request rules and error responses built with `error_response(...)`
-→ view.py: DB-backed business validation/query/transaction
+models.py: declarative model classes, fields/types/defaults and data conversion
+→ app/utils/validate.py: shared pure validation/normalization helpers
+→ API #1–#7 validate.py: input rules and normalization; invalid input returns `error_response(...)`
+→ query.py (only when SQL is needed): SQL statement constants
+→ view.py: main API flow, query/provider calls, business checks, transactions and response mapping
 ```
 
 Examples such as no whitespace or an allowed email domain are only applicable
-when the API contract confirms them. The current register source still keeps
-its password/full-name validators in `models.py`; email whitespace normalization
-is reused from `app/utils/validate.py`. Auth login/refresh binds the shared
-validators directly from `app/utils/validate.py`; API #4 also binds the shared
-Bearer/JWT claim validators there while keeping token persistence and
-transaction ownership in the module view.
+when the API contract confirms them. Current API #1, #2, #3, #4, #6 and #7
+validators map invalid input only through `error_response(...)`; API #5's
+locale resolver currently only supplies a default and has no invalid-input
+branch. API #2 calls an email provider without database access, so it has no
+`query.py`. The current API #5 source still declares `DEFAULT_LOCALE` in
+`models.py`; this is a placement discrepancy from the model-only rule and must
+not be treated as the pattern for new code. No runtime relocation is implied by
+this context note.
+
+Auth login/refresh and API #4 use shared pure helpers from
+`app/utils/validate.py` through their API validators. Module validators handle
+input rules before business/DB operations; DB-backed business checks and
+transaction ownership stay in `view.py`. Comments in `view.py` must explain
+each meaningful operation in handlers and helpers; cohesive consecutive
+statements may share a comment.

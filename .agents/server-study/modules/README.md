@@ -4,35 +4,47 @@
 
 ```text
 app/modules/<feature>/
-├── models.py   # request/response contract and basic model validation
+├── models.py   # declarative request/response model classes and data conversion
 ├── validate.py # input validation and normalization for this API
-├── query.py    # SQL string constants only
-└── view.py     # query execution, business orchestration and transaction boundary
+├── query.py    # optional: SQL statement constants when this API queries a DB
+└── view.py     # main API flow, side effects and response orchestration
 ```
 
-`query.py` must not define Python functions/classes, import application helpers
-or execute DB operations. Put `query_one`/`query_many` calls and any SQL
-parameter preparation in `view.py`; keep the parameterized SQL text in
-`query.py`.
+`models.py` contains model class declarations only: fields, types, defaults,
+model configuration and data/type conversion. Do not put standalone constants,
+helpers, input validation, normalization or business rules there. Runtime input
+rules belong in the API's `validate.py`.
 
-`models.py` declares input/output fields, types, defaults and Pydantic type
-conversion. Put runtime validation and normalization in the API's `validate.py`
-and shared pure helpers in `app/utils/validate.py`. An API validator calls
-`error_response(...)` for invalid input and returns normalized model data otherwise.
-It runs before business checks and DB access; it must not query DB or perform
-side effects. Keep schema-only request metadata in route declarations. Do not
-apply an example such as `@gmail.com` unless the current API contract confirms it.
+An API validator returns normalized model/data when valid and uses only
+`return error_response(...)` to return invalid-input errors. It must not raise
+an API response, construct an alternate error response, query DB or perform
+side effects. A shared pure helper may raise a validation exception internally;
+the API validator catches it and maps it through `error_response(...)`. Keep
+schema-only request metadata in route declarations. Do not apply a rule such as
+`@gmail.com` unless the current API contract confirms it.
 
 APIs #1–#7 each have a module-local `validate.py`; shared email, bearer/JWT,
 sort and search normalization helpers live in `app/utils/validate.py`.
 
-API-facing functions use a short API header comment immediately before the
-function; internal helpers do not. Keep event comments concise and attach a DD
-step only when it clarifies the flow.
+`query.py` is present only when the module needs SQL. It contains SQL statement
+string constants only: no functions, classes, helpers, application/DB imports,
+parameter preparation or database calls. Put parameter binding and
+`query_one`/`query_many` calls in `view.py`. Modules without DB access should not
+add an empty `query.py`; API #2 currently dispatches through an email provider
+and has no query file.
 
-DB-backed checks such as duplicate, existence, permission or state belong to
-`view.py`, which executes SQL constants from `query.py`. The router remains
-thin.
+`view.py` is the primary API flow: it calls validators and query/provider
+helpers, performs DB-backed business checks, owns side effects and transaction
+boundaries, maps failures, and builds the response. Add a concise Vietnamese
+comment for every meaningful operation in each handler and helper, including
+validation, external/DB calls, branches, rollback/commit, data mapping and
+response construction. One comment may cover consecutive statements in one
+cohesive operation; simple variable assignments do not need separate comments.
+API-facing functions keep a short API header comment immediately before the
+function; internal helpers do not. Comments explain the purpose of the step and
+describe current source behavior when a DD differs.
+
+The router remains thin and delegates the API flow to `view.py`.
 
 ## Current modules
 
