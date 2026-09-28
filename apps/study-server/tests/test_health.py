@@ -77,17 +77,24 @@ def test_unknown_route_uses_safe_error_envelope(client: TestClient) -> None:
     assert "Not Found" not in payload["message"]
 
 
-def test_unhandled_error_keeps_trace_header_and_hides_details(client: TestClient) -> None:
+def test_unhandled_error_keeps_trace_header_and_hides_details(
+    client_without_server_exception: TestClient,
+) -> None:
     """Kiểm tra exception nội bộ giữ trace header nhưng không làm lộ message nhạy cảm."""
     def fail_request() -> None:
         """Phát sinh lỗi chứa thông tin nhạy cảm để xác nhận handler không trả detail đó."""
         raise RuntimeError("database password should not be exposed")
 
-    client.app.add_api_route("/test/unhandled", fail_request)
-    response = client.get("/test/unhandled")
+    client_without_server_exception.app.add_api_route("/test/unhandled", fail_request)
+    trace_id = "7c3a2f1b-31c5-4a21-9b3e-7d1745c4748a"
+    response = client_without_server_exception.get(
+        "/test/unhandled",
+        headers={"X-Trace-Id": trace_id},
+    )
 
     payload = response.json()
     assert response.status_code == 500
     assert payload["businessCode"] == "INTERNAL_SERVER_ERROR"
     assert "database password" not in response.text
+    assert payload["traceId"] == trace_id
     assert response.headers["X-Trace-Id"] == payload["traceId"]

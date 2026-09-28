@@ -117,9 +117,6 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
             },
         )
 
-# Đăng ký HTTPException sau bộ xử lý tổng quát để FastAPI giữ nguyên
-# các lỗi giao thức chuẩn nhưng vẫn dùng cấu trúc phản hồi an toàn của ứng dụng.
-    app.add_exception_handler(HTTPException, cast(Any, http_exception_handler))
     return app
 
 

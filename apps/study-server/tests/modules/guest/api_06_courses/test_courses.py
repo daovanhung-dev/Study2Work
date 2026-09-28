@@ -301,7 +301,11 @@ def test_courses_maps_invalid_row_to_safe_internal_error(
         "count_published_courses",
         lambda db: {"total": 1, "missing_mentor_count": 0},
     )
-    monkeypatch.setattr(courses_view, "find_published_courses", lambda **kwargs: [{"id": 101}])
+    monkeypatch.setattr(
+        courses_view,
+        "find_published_courses",
+        lambda db, **kwargs: [{"id": 101}],
+    )
 
     response = client.get("/api/v1/courses")
 

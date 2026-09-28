@@ -353,13 +353,13 @@ def test_register_http_database_error_returns_safe_internal_error(
 
 
 def test_register_http_unexpected_error_uses_design_internal_code(
-    client: TestClient,
+    client_without_server_exception: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Kiểm tra exception ngoài dự kiến tại API đăng ký dùng business code lỗi nội bộ theo design
     contract."""
     session = FakeSession()
-    client.app.dependency_overrides[get_db] = override_db(session)
+    client_without_server_exception.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(auth_view, "find_user_by_email", lambda db, email: None)
     monkeypatch.setattr(
         auth_view,
@@ -367,7 +367,7 @@ def test_register_http_unexpected_error_uses_design_internal_code(
         lambda password: (_ for _ in ()).throw(RuntimeError("unexpected failure")),
     )
 
-    response = client.post(
+    response = client_without_server_exception.post(
         "/api/v1/auth/register",
         json={
             "email": "student@example.com",

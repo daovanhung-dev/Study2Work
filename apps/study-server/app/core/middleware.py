@@ -124,9 +124,8 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 
 class TraceIdMiddleware(BaseHTTPMiddleware):
-    """Middleware gắn một trace ID hợp lệ vào request, context hiện tại và response. Middleware
-    chuyển các lỗi thoát khỏi route qua handler dùng chung rồi luôn khôi phục context trước khi
-    kết thúc request."""
+    """Middleware gắn trace ID vào request và response, quản lý ContextVar theo vòng đời request.
+    Exception chưa xử lý được truyền lên ServerErrorMiddleware của Starlette."""
 
     async def dispatch(
         self,
@@ -134,18 +133,14 @@ class TraceIdMiddleware(BaseHTTPMiddleware):
         call_next: RequestResponseEndpoint,
     ) -> Response:
         """Thiết lập trace ID hợp lệ từ header hoặc tạo UUID mới, lưu vào request và ContextVar rồi
-        gọi middleware kế tiếp. Hàm gắn trace ID vào response; nếu exception thoát ra, chuyển
-        lỗi qua handler dùng chung và luôn khôi phục ContextVar trong finally."""
+        gọi middleware kế tiếp. Hàm gắn trace ID vào response và luôn khôi phục ContextVar trong
+        finally; exception chưa xử lý tiếp tục truyền lên handler cấp ứng dụng."""
         trace_id = validate_trace_id(request.headers.get(TRACE_HEADER)) or create_trace_id()
         request.state.trace_id = trace_id
         context_token = set_trace_id(trace_id)
 
         try:
             response = await call_next(request)
-            response.headers[TRACE_HEADER] = trace_id
-            return response
-        except Exception as exc:
-            response = await unhandled_exception_handler(request, exc)
             response.headers[TRACE_HEADER] = trace_id
             return response
         finally:

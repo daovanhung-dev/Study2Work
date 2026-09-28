@@ -5,14 +5,14 @@ from collections.abc import Iterator
 import pytest
 from app.core.config import Settings
 from app.main import create_app
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 
 @pytest.fixture
-def client() -> Iterator[TestClient]:
-    """Cung cấp fixture TestClient đã compose Study API với cấu hình kiểm thử. Fixture mở client
-    trong context manager, yield cho test sử dụng rồi đóng client sau khi test kết thúc."""
-    app = create_app(
+def app() -> FastAPI:
+    """Tạo Study API với cấu hình kiểm thử và dependency database không kết nối thật."""
+    return create_app(
         Settings(
             app_env="test",
             enable_docs=False,
@@ -28,5 +28,18 @@ def client() -> Iterator[TestClient]:
             jwt_secret_key="test-secret-key-that-is-at-least-32-characters",
         )
     )
+
+
+@pytest.fixture
+def client(app: FastAPI) -> Iterator[TestClient]:
+    """Cung cấp TestClient mặc định, giữ nguyên việc re-raise exception chưa xử lý cho test."""
     with TestClient(app) as test_client:
+        yield test_client
+
+
+@pytest.fixture
+def client_without_server_exception(app: FastAPI) -> Iterator[TestClient]:
+    """Cung cấp TestClient để kiểm tra response 500 do ServerErrorMiddleware tạo mà không re-raise
+    exception gốc sau khi response đã được gửi."""
+    with TestClient(app, raise_server_exceptions=False) as test_client:
         yield test_client

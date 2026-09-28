@@ -53,8 +53,10 @@ status and headers, including `X-Trace-Id`.
 
 ## `app/core/middleware.py` exception handlers
 
-The shared FastAPI exception handlers live with `TraceIdMiddleware` so both
-`create_app` and the middleware dispatch use one implementation.
+The FastAPI exception handlers live beside `TraceIdMiddleware`; `create_app`
+registers them with the app. `TraceIdMiddleware` manages trace state and the
+response header, while unexpected exceptions propagate to Starlette's outer
+`ServerErrorMiddleware` and use the registered `Exception` handler.
 
 - `_validation_field(loc)`: removes protocol location prefixes (`body/query/path/header/cookie`) and joins remaining field path.
 - `http_exception_handler`: converts HTTP exceptions into a direct `ApiError` response, preserving status and safe envelope fields; otherwise maps to `HTTP_ERROR`.
@@ -65,7 +67,8 @@ The shared FastAPI exception handlers live with `TraceIdMiddleware` so both
 - `unhandled_exception_handler`: logs internal exception with trace ID and builds
   a safe `ApiError`; it uses `DESIGN_INTERNAL_ERROR` for API #1 register, API #2 verify-email dispatch,
   auth login/refresh, API #5 categories, API #6 courses and API #7 course
-  search, and `INTERNAL_SERVER_ERROR` elsewhere.
+  search, and `INTERNAL_SERVER_ERROR` elsewhere. It reads the trace ID from
+  `request.state`; `ApiError` returns it in both body and `X-Trace-Id` header.
 
 ## API #2 verification dispatch
 
@@ -112,7 +115,7 @@ The shared FastAPI exception handlers live with `TraceIdMiddleware` so both
 - `get_current_trace_id()`: read ContextVar without Request.
 
 ## `app/core/middleware.py:TraceIdMiddleware.dispatch`
-Flow: validate incoming header -> create if invalid -> attach request/context -> call next -> set response header -> convert unexpected exceptions through the common handler -> reset context. Route errors return `ApiError(...)` responses directly.
+Flow: validate incoming header -> create if invalid -> attach request/context -> call next -> set response header -> reset context. Unexpected exceptions propagate to Starlette's `ServerErrorMiddleware`, which calls the registered `unhandled_exception_handler`; that handler reads the still-present `request.state.trace_id` after the middleware resets its ContextVar. Route/business errors that already return `ApiError(...)` remain direct responses.
 
 Middleware uses `validate_trace_id`, `set_trace_id` and `reset_trace_id` from the
 current trace module.
