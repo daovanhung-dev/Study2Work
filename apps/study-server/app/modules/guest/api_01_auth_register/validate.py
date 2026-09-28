@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.responses import ApiError, ErrorDetail
+from app.core.responses import ErrorDetail, error_response
 from app.modules.guest.api_01_auth_register.models import RegisterRequest
 from app.utils.validate import normalize_email
 from starlette.responses import JSONResponse
@@ -62,7 +62,7 @@ def validate_register_request(
         )
 
     if errors:
-        return ApiError(
+        return error_response(
             status_code=422,
             business_code="DESIGN_VALIDATION_ERROR",
             message="Dữ liệu đầu vào không hợp lệ.",

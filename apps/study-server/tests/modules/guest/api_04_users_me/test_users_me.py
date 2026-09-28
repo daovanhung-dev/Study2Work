@@ -7,7 +7,7 @@ import app.modules.guest.api_04_users_me.validate as users_me_validate
 import app.modules.guest.api_04_users_me.view as users_me_view
 import pytest
 from app.core.database import get_db
-from app.core.responses import ApiError
+from app.core.responses import error_response
 from app.modules.guest.api_04_users_me.query import CURRENT_USER_PROFILE
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import SQLAlchemyError
@@ -146,7 +146,7 @@ def test_current_user_rejects_invalid_jwt(
     monkeypatch.setattr(
         users_me_validate,
         "decode_access_token",
-        lambda token: ApiError(
+        lambda token: error_response(
             status_code=401,
             business_code="DESIGN_AUTHENTICATION_REQUIRED",
             message="invalid token",

@@ -46,8 +46,9 @@ Important validators:
 - DB schema only alphanumeric/underscore.
 - HS256 requires secret; ES256 requires private and public key at settings validation time.
 - `get_settings()` is cached/lazy; `_LazySettings` preserves legacy uppercase-style access.
-- Settings construction converts configuration validation failures to a safe
-  context-free `ApiError` (HTTP 500 / `INTERNAL_SERVER_ERROR`).
+- Settings construction sanitizes Pydantic configuration failures as a generic
+  `ValueError`; configuration is checked outside an HTTP request and does not
+  produce an `error_response(...)`.
 
 ## Password — `app/core/security/password.py`
 
@@ -64,8 +65,8 @@ Creates signed JWT with `sub`, `type=access`, `roles`, `jti`, `iat`, `exp`, `iss
 
 ### `decode_access_token`
 Verifies configured algorithm, issuer/audience and required claims; wrong,
-expired or malformed token becomes `ApiError` with 401 authentication mapping.
-Missing signing/verification configuration becomes a safe internal `ApiError`.
+expired or malformed token becomes `error_response` with 401 authentication mapping.
+Missing signing/verification configuration becomes a safe internal `error_response`.
 
 Signing/verification key selection:
 - ES256: private key signs, public key verifies.
@@ -76,12 +77,12 @@ Signing/verification key selection:
 - `generate_refresh_token`: `secrets.token_urlsafe(48)` opaque token.
 - `hash_refresh_token`: HMAC-SHA256 with configured pepper before DB storage.
 - `compare_refresh_token`: constant-time `hmac.compare_digest`.
-- Missing refresh pepper becomes a safe internal `ApiError`.
+- Missing refresh pepper becomes a safe internal `error_response`.
 
-Shared Bearer-header and access-claim validators raise `ApiError` for
-authentication failures. Helpers used as Pydantic field validators may raise
-`ValueError` internally; FastAPI's validation handler converts resulting
-request validation failures into `ApiError` before HTTP serialization.
+Shared Bearer-header and access-claim validators return `error_response(...)`
+for authentication failures. Helpers used as Pydantic field validators may
+raise `ValueError` internally; FastAPI's validation handler converts resulting
+request validation failures into `error_response(...)` before HTTP serialization.
 
 ## Critical absence
 

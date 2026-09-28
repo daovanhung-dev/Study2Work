@@ -23,7 +23,7 @@ For API implementation, keep the module flow explicit:
 requirement / DD / schema
 -> models.py: request fields, types, defaults and type conversion
 -> app/utils/validate.py: shared pure normalization helpers
--> each API's validate.py: input rules, normalization and direct ApiError response
+-> each API's validate.py: input rules, normalization and `error_response(...)` on invalid input
 -> query.py: parameterized SQL only
 -> view.py: business checks, security, transaction and response orchestration
 -> api/v1.py: route and dependency injection
@@ -31,10 +31,10 @@ requirement / DD / schema
 ```
 
 `app/utils/validate.py` contains shared pure normalization and claim helpers.
-Each API #1–#7 has its own `validate.py` that returns normalized input or an
-`ApiError(...)` `JSONResponse`. Validators do not query DB, commit/rollback or
-perform side effects; DB-backed duplicate/existence/permission checks stay in
-`view.py` with `query.py`.
+Each API #1–#7 has its own `validate.py`; validators return normalized input or
+call `error_response(...)` to build a `JSONResponse`. Validators do not query
+DB, commit/rollback or perform side effects; DB-backed duplicate/existence/
+permission checks stay in `view.py` with `query.py`.
 
 The current register source normalizes email/password/full_name in
 `api_01_auth_register/validate.py`; its model only declares the body fields.

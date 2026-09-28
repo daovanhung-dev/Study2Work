@@ -31,7 +31,7 @@ exception.
 |---|---|---|
 | app/core/config.py | Đọc, parse và validate static settings | Settings, get_settings() |
 | app/core/database.py | Tạo PostgreSQL engine, session factory và query primitive | get_db, query_one, query_many |
-| app/core/responses.py | Tạo success/error envelope thống nhất | success_response, ApiError |
+| app/core/responses.py | Tạo success/error envelope thống nhất | success_response, error_response |
 | app/core/security.py | Hash password, JWT và opaque refresh token | hash_password, create_access_token |
 | app/core/trace.py | Tạo và truyền X-Trace-Id trong request context | get_trace_id, get_current_trace_id |
 | app/core/middleware.py | Gắn trace ID và map exception thành response an toàn | TraceIdMiddleware, các exception handler |
@@ -83,7 +83,7 @@ lazy qua get_engine() khi code thật sự cần database.
   cả chữ hoa (DB_HOST) và tên field (db_host).
 - HTTP API nhận database bằng db: Session = Depends(get_db). View sở hữu
   commit() và rollback(); helper query không commit.
-- Response HTTP dùng success_response() cho envelope thành công; ApiError()
+- Response HTTP dùng success_response() cho envelope thành công; error_response()
   trả trực tiếp JSONResponse cho envelope lỗi.
 - Password mới phải hash bằng Argon2id. Bcrypt chỉ dành cho verify hash legacy.
 - Refresh token mới là opaque token; chỉ lưu digest từ
@@ -116,7 +116,7 @@ private helper hiện có trong app/core.
 | database | execute_query | Chạy SQL parameterized |
 | database | query_one, query_many | Đọc một/nhiều row dạng dict |
 | responses | utc_now_iso | Lấy UTC ISO-8601 không microsecond |
-| responses | ApiError | Tạo trực tiếp JSONResponse lỗi với envelope/status/headers |
+| responses | error_response | Tạo trực tiếp JSONResponse lỗi với envelope/status/headers |
 | responses | success_response | Tạo canonical envelope thành công |
 | security | TokenKeyProvider.get_verification_key | Contract lấy key verify JWT |
 | security | PasswordHasher.hash, verify | Hash/verify password |
@@ -165,7 +165,7 @@ private helper hiện có trong app/core.
 | query_many | Chạy SELECT và lấy toàn bộ row thành list dict. | Khi cần đọc danh sách; không có row trả []. |
 | utc_now_iso | Tạo timestamp UTC ISO-8601 hậu tố Z, không microsecond. | Khi cần timestamp theo đúng format API; không dùng để lấy local time. |
 | ErrorDetail | Biểu diễn một lỗi có field, code và message. | Khi validator tạo field errors dưới meta.fieldErrors. |
-| ApiError | Tạo JSONResponse trực tiếp với HTTP status, business code, message, trace, data/meta, errors và headers. | Trả `ApiError(...)` từ validator/view để FastAPI truyền response lên client. |
+| error_response | Tạo JSONResponse trực tiếp với HTTP status, business code, message, trace, data/meta, errors và headers. | Trả `error_response(...)` từ validator/view để FastAPI truyền response lên client. |
 | success_response | Tạo success envelope gồm success, businessCode, message, data, meta, traceId. | Khi endpoint/view trả kết quả thành công. |
 | TokenKeyProvider.get_verification_key | Định nghĩa interface lấy verification key theo kid. | Khi tích hợp static key store/JWKS provider vào decode_token; không phải implementation fetch JWKS. |
 | PasswordHasher.hash | Hash password bằng Argon2id hoặc Bcrypt theo algorithm chỉ định. | Dùng nội bộ hoặc khi cần hỗ trợ algorithm explicit; password mới nên gọi hash_password. |
@@ -694,10 +694,10 @@ detail = ErrorDetail(
 )
 ~~~
 
-### ApiError response factory
+### error_response factory
 
 ~~~python
-def ApiError(
+def error_response(
     *,
     status_code: int = 500,
     business_code: str = "INTERNAL_SERVER_ERROR",
@@ -709,7 +709,7 @@ def ApiError(
     headers: Mapping[str, str] | None = None,
 ) -> JSONResponse: ...
 
-return ApiError(
+return error_response(
     status_code=404,
     business_code="USER_NOT_FOUND",
     message="Không tìm thấy người dùng.",
@@ -717,7 +717,7 @@ return ApiError(
 )
 ~~~
 
-`ApiError(...)` trả trực tiếp `JSONResponse`; route/view/validator truyền response
+`error_response(...)` trả trực tiếp `JSONResponse`; route/view/validator truyền response
 này lên client. Không truyền đối số sẽ tạo lỗi 500 an toàn, dùng trace ID hiện
 tại hoặc sinh trace ID mới.
 
@@ -760,9 +760,9 @@ return success_response(
 )
 ~~~
 
-### ApiError error envelope
+### Error response envelope
 
-ApiError tạo canonical error envelope cùng status/header HTTP:
+error_response tạo canonical error envelope cùng status/header HTTP:
 
 ~~~json
 {
@@ -1318,7 +1318,7 @@ ContextVar, log/error response và response header/body.
 
 ## middleware.py — exception handlers
 
-Module dùng ApiError() và get_trace_id() để giữ API error contract. Các handler
+Module dùng error_response() và get_trace_id() để giữ API error contract. Các handler
 đều là async vì FastAPI/Starlette gọi chúng theo exception handling protocol.
 
 ### _validation_field
@@ -1359,7 +1359,7 @@ Xử lý lỗi protocol từ Starlette/FastAPI mà không expose arbitrary detai
   meta dạng object đã cung cấp; trường thiếu được thay bằng giá trị an toàn.
 - Các detail khác được thay bằng canonical generic error:
   businessCode="HTTP_ERROR", message="Yêu cầu không thể được xử lý.".
-- Giữ exc.status_code và exc.headers, rồi chuẩn hóa body qua ApiError.
+- Giữ exc.status_code và exc.headers, rồi chuẩn hóa body qua error_response.
 
 Vì vậy unknown route trả status 404 nhưng không trả raw "Not Found" trong
 message API.
@@ -1475,7 +1475,7 @@ db.rollback() theo boundary.
 ~~~python
 from sqlalchemy.exc import IntegrityError
 from app.core.database import execute_query
-from app.core.responses import ApiError
+from app.core.responses import error_response
 
 def create_record(db: Session, trace_id: str) -> dict[str, Any] | JSONResponse:
     try:
@@ -1487,7 +1487,7 @@ def create_record(db: Session, trace_id: str) -> dict[str, Any] | JSONResponse:
         db.commit()
     except IntegrityError:
         db.rollback()
-        return ApiError(
+        return error_response(
             status_code=409,
             business_code="RECORD_ALREADY_EXISTS",
             message="Bản ghi đã tồn tại.",
@@ -1510,7 +1510,7 @@ def load_course(request: Request, db: Session) -> dict[str, Any] | JSONResponse:
         {"id": "course-1"},
     )
     if course is None:
-        return ApiError(
+        return error_response(
             status_code=404,
             business_code="COURSE_NOT_FOUND",
             message="Không tìm thấy khóa học.",
@@ -1524,7 +1524,7 @@ def load_course(request: Request, db: Session) -> dict[str, Any] | JSONResponse:
     )
 ~~~
 
-ApiError đã trả JSONResponse; FastAPI truyền response trực tiếp lên client.
+error_response đã trả JSONResponse; FastAPI truyền response trực tiếp lên client.
 
 ### 5. Password registration/login
 

@@ -28,9 +28,9 @@ Important remaining scope boundaries include:
 - response/security unit tests may exercise helpers independently, but do not prove the full API starts.
 
 Current error contract:
-- `ApiError(...)` returns a `JSONResponse` with the standard envelope, HTTP
+- `error_response(...)` returns a `JSONResponse` with the standard envelope, HTTP
   status and `X-Trace-Id`; no custom API exception class is used.
-- Module validators for APIs #1–#7 return `ApiError(...)` responses for
+- Module validators for APIs #1–#7 return `error_response(...)` responses for
   contract rules; framework type/parse failures use the registered request
   validation handler and `meta.fieldErrors`.
 - Tests cover direct response shape, field errors, validator normalization,

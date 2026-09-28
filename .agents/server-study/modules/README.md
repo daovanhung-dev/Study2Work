@@ -17,8 +17,8 @@ parameter preparation in `view.py`; keep the parameterized SQL text in
 
 `models.py` declares input/output fields, types, defaults and Pydantic type
 conversion. Put runtime validation and normalization in the API's `validate.py`
-and shared pure helpers in `app/utils/validate.py`. An API validator returns
-`ApiError(...)` directly for invalid input and normalized model data otherwise.
+and shared pure helpers in `app/utils/validate.py`. An API validator calls
+`error_response(...)` for invalid input and returns normalized model data otherwise.
 It runs before business checks and DB access; it must not query DB or perform
 side effects. Keep schema-only request metadata in route declarations. Do not
 apply an example such as `@gmail.com` unless the current API contract confirms it.

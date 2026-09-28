@@ -6,7 +6,7 @@ import httpx
 from starlette.responses import JSONResponse
 
 from app.core import constants
-from app.core.responses import ApiError
+from app.core.responses import error_response
 
 MessageRole = Literal["system", "user", "assistant"]
 
@@ -148,7 +148,7 @@ class OllamaService:
     ) -> dict[str, Any] | JSONResponse:
         """Gửi request HTTP bất đồng bộ tới endpoint tương đối của Ollama bằng timeout đã cấu hình,
         kiểm tra status và giải mã JSON object. Lỗi kết nối, timeout, HTTP, JSON hoặc response
-        sai dạng được chuyển thành JSONResponse an toàn qua ApiError()."""
+        sai dạng được chuyển thành JSONResponse an toàn qua error_response()."""
         try:
             async with httpx.AsyncClient(
                 timeout=self.timeout,
@@ -164,24 +164,24 @@ class OllamaService:
             data = response.json()
 
             if not isinstance(data, dict):
-                return ApiError()
+                return error_response()
 
             return data
 
         except httpx.ConnectError:
-            return ApiError()
+            return error_response()
 
         except httpx.TimeoutException:
-            return ApiError()
+            return error_response()
 
         except httpx.HTTPStatusError:
-            return ApiError()
+            return error_response()
 
         except ValueError:
-            return ApiError()
+            return error_response()
 
         except Exception:
-            return ApiError()
+            return error_response()
 
 
 ai_service = OllamaService()

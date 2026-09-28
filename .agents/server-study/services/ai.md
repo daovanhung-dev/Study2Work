@@ -18,7 +18,7 @@ Status: implementation exists; **no verified Study runtime caller** at current s
 
 Error mapping:
 - connection, timeout, non-2xx, non-object JSON, invalid JSON and other request
-  failures -> a direct safe `ApiError()` `JSONResponse` (HTTP 500 /
+  failures -> a direct safe `error_response()` `JSONResponse` (HTTP 500 /
   `INTERNAL_SERVER_ERROR`) propagated by public adapter methods.
 
 Do not add Study endpoint wiring to this service without a current module/requirement proving ownership.

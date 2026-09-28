@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from app.core.database import execute_query, query_one
-from app.core.responses import ApiError, success_response
+from app.core.responses import error_response, success_response
 from app.core.security import verify_password
 from app.core.security.refresh_token import hash_refresh_token
 from app.modules.guest.api_03_auth_login.models import LoginRequest, RefreshRequest
@@ -49,7 +49,7 @@ def login(
         return _internal_error(trace_id, "Không thể xử lý đăng nhập.")
 
     if user is None or not verify_password(user_data.password, str(user["password_hash"])):
-        return ApiError(
+        return error_response(
             status_code=401,
             business_code="DESIGN_AUTHENTICATION_REQUIRED",
             message="Email hoặc mật khẩu không đúng.",
@@ -57,7 +57,7 @@ def login(
         )
 
     if user["status"] != "ACTIVE":
-        return ApiError(
+        return error_response(
             status_code=403,
             business_code="DESIGN_ACCESS_DENIED",
             message="Tài khoản không được phép đăng nhập.",
@@ -122,7 +122,7 @@ def refresh(
         return _internal_error(trace_id, "Không thể xử lý refresh token.")
 
     if session is None:
-        return ApiError(
+        return error_response(
             status_code=401,
             business_code="DESIGN_AUTHENTICATION_REQUIRED",
             message="Refresh token không hợp lệ hoặc đã hết hạn.",
@@ -130,7 +130,7 @@ def refresh(
         )
 
     if session["status"] != "ACTIVE":
-        return ApiError(
+        return error_response(
             status_code=403,
             business_code="DESIGN_ACCESS_DENIED",
             message="Tài khoản không được phép tiếp tục phiên đăng nhập.",
@@ -151,7 +151,7 @@ def refresh(
         ).first()
         if revoked is None:
             db.rollback()
-            return ApiError(
+            return error_response(
                 status_code=401,
                 business_code="DESIGN_AUTHENTICATION_REQUIRED",
                 message="Refresh token không hợp lệ hoặc đã được sử dụng.",
@@ -184,7 +184,7 @@ def refresh(
 def _internal_error(trace_id: str, message: str) -> JSONResponse:
     """Return a safe API #3 internal-error response with the request trace ID."""
 
-    return ApiError(
+    return error_response(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",
         message=message,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.responses import ApiError
+from app.core.responses import error_response
 from app.core.security.access_token import decode_access_token
 from app.utils.validate import extract_bearer_token, validate_access_claims
 from starlette.responses import JSONResponse
@@ -32,7 +32,7 @@ def validate_current_user_request(
         return _authentication_error(trace_id)
 
     if "STUDENT" not in roles:
-        return ApiError(
+        return error_response(
             status_code=403,
             business_code="DESIGN_ACCESS_DENIED",
             message="Access denied.",
@@ -42,7 +42,7 @@ def validate_current_user_request(
 
 
 def _authentication_error(trace_id: str) -> JSONResponse:
-    return ApiError(
+    return error_response(
         status_code=401,
         business_code="DESIGN_AUTHENTICATION_REQUIRED",
         message="Authentication required.",
@@ -51,7 +51,7 @@ def _authentication_error(trace_id: str) -> JSONResponse:
 
 
 def _internal_error(trace_id: str) -> JSONResponse:
-    return ApiError(
+    return error_response(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",
         message="Profile could not be retrieved.",

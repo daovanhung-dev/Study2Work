@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from app.core.database import query_one
-from app.core.responses import ApiError, success_response
+from app.core.responses import error_response, success_response
 from app.modules.guest.api_04_users_me.models import UserProfile
 from app.modules.guest.api_04_users_me.query import CURRENT_USER_PROFILE
 from app.modules.guest.api_04_users_me.validate import validate_current_user_request
@@ -72,7 +72,7 @@ def get_current_user(
 def _authentication_error(trace_id: str) -> JSONResponse:
     """Tạo JSONResponse HTTP 401 với business code xác thực, thông điệp mặc định an toàn và trace ID
     của request."""
-    return ApiError(
+    return error_response(
         status_code=401,
         business_code="DESIGN_AUTHENTICATION_REQUIRED",
         message="Authentication required.",
@@ -83,7 +83,7 @@ def _authentication_error(trace_id: str) -> JSONResponse:
 def _internal_error(trace_id: str) -> JSONResponse:
     """Tạo JSONResponse HTTP 500 với business code nội bộ của API #4, message an toàn và trace ID đã
     nhận."""
-    return ApiError(
+    return error_response(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",
         message="Profile could not be retrieved.",

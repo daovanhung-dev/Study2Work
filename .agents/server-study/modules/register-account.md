@@ -17,7 +17,7 @@ Current endpoint: `POST /api/v1/auth/register`.
 `RegisterRequest` only declares `email`, `password` and `full_name` as string
 fields. `validate_register_request` trims and validates email, rejects blank
 passwords, trims the name and enforces its 1–150 character rule. It returns a
-normalized model or a direct 422 `ApiError(...)` response.
+normalized model or a direct 422 `error_response(...)` response.
 
 ## Current runtime flow
 

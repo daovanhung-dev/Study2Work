@@ -11,7 +11,7 @@ from typing import Any
 from starlette.responses import JSONResponse
 
 from app.core.config import get_settings
-from app.core.responses import ApiError
+from app.core.responses import error_response
 
 
 def generate_refresh_token() -> str:
@@ -23,7 +23,7 @@ def generate_refresh_token() -> str:
 
 def hash_refresh_token(token: str) -> str | JSONResponse:
     """Băm refresh token bằng HMAC-SHA256 với pepper cấu hình trước khi lưu database. Trả về digest
-    dạng hex hoặc trả ApiError an toàn nếu thiếu pepper."""
+    dạng hex hoặc trả error_response an toàn nếu thiếu pepper."""
 
     pepper = _get_refresh_token_pepper()
     if isinstance(pepper, JSONResponse):
@@ -55,7 +55,7 @@ def compare_refresh_token(
 
 def _get_refresh_token_pepper() -> str | JSONResponse:
     """Đọc pepper refresh token từ Settings và mở SecretStr nếu cần. Nếu pepper chưa được cấu hình,
-    trả ApiError mặc định để không băm token bằng khóa rỗng."""
+    trả error_response mặc định để không băm token bằng khóa rỗng."""
     settings = get_settings()
 
     pepper = _secret_value(
@@ -63,7 +63,7 @@ def _get_refresh_token_pepper() -> str | JSONResponse:
     )
 
     if not pepper:
-        return ApiError()
+        return error_response()
 
     return pepper
 

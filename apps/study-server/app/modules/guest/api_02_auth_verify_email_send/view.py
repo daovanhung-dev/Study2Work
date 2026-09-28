@@ -4,7 +4,7 @@ import logging
 from collections.abc import Mapping
 from typing import Any
 
-from app.core.responses import ApiError, success_response
+from app.core.responses import error_response, success_response
 from app.modules.guest.api_02_auth_verify_email_send.models import VerifyEmailSendRequest
 from app.modules.guest.api_02_auth_verify_email_send.validate import validate_verify_email_request
 from app.service.email.provider import VerificationEmailProvider
@@ -22,7 +22,7 @@ def send_verification_email(
     trace_id: str,
 ) -> dict[str, Any] | JSONResponse:
     """Gửi yêu cầu user ID, email và trace ID qua VerificationEmailProvider mà không mở database
-    session. Lỗi provider được log nội bộ rồi chuyển thành ApiError an toàn; kết quả chấp nhận
+    session. Lỗi provider được log nội bộ rồi chuyển thành error_response an toàn; kết quả chấp nhận
     được ánh xạ thành business response, kèm reason nếu provider có trả."""
 
     validated_user_data = validate_verify_email_request(
@@ -46,7 +46,7 @@ def send_verification_email(
             trace_id,
             user_data.user_id,
         )
-        return ApiError(
+        return error_response(
             status_code=500,
             business_code="DESIGN_INTERNAL_ERROR",
             message="Không thể chấp nhận yêu cầu gửi email xác thực.",

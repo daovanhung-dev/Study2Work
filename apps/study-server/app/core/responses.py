@@ -1,5 +1,4 @@
-"""Định nghĩa kiểu chi tiết lỗi, factory lỗi API và các hàm dựng envelope phản hồi của Study
-API."""
+"""Định nghĩa kiểu chi tiết lỗi và các hàm dựng envelope phản hồi của Study API."""
 
 from __future__ import annotations
 
@@ -27,7 +26,7 @@ class ErrorDetail(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-def ApiError(
+def error_response(
     *,
     status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
     business_code: str = "INTERNAL_SERVER_ERROR",
