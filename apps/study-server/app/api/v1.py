@@ -26,12 +26,8 @@ from app.modules.guest.api_06_courses.models import CourseQuery
 from app.modules.guest.api_06_courses.view import get_courses
 from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
 from app.modules.guest.api_07_courses_search.view import search_courses as search_courses_view
-from app.modules.guest.api_11_courses_resources.view import (
-    get_course_resources as get_course_resources_view,
-)
-from app.modules.guest.api_15_courses_enrollment_status.view import (
-    get_enrollment_status as get_enrollment_status_view,
-)
+from app.modules.guest.api_11_courses_resources.view import get_course_resources as get_course_resources_view
+from app.modules.guest.api_15_courses_enrollment_status.view import get_enrollment_status as get_enrollment_status_view
 from app.service.email.provider import (
     VerificationEmailProvider,
     get_verification_email_provider,
