@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
-import app.modules.guest.api_11_courses_resources.view as resources_view
+import app.modules.guest.api_15_courses_enrollment_status.view as enrollment_view
 import pytest
 from app.core.database import get_db
-from app.modules.guest.api_11_courses_resources.models import ResourceItem
+from app.modules.guest.api_15_courses_enrollment_status.models import (
+    EnrollmentStatusResponse,
+)
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -25,33 +28,36 @@ def override_db(session: FakeSession):
     return dependency
 
 
-def sample_resource_row() -> dict[str, Any]:
+def sample_enrollment_row() -> dict[str, Any]:
     return {
-        "id": 101,
-        "name": "Tai lieu tham khao.pdf",
-        "resource_type": "DOCUMENT",
-        "url": "https://cdn.example.com/res/101.pdf",
-        "lesson_id": 12,
+        "id": 501,
+        "user_id": 1001,
+        "course_id": 101,
+        "status": "ACTIVE",
+        "enrolled_at": datetime(2026, 9, 20, 10, 0, 0, tzinfo=UTC),
+        "completed_at": None,
     }
 
 
-def test_resource_item_model_maps_type_and_defaults_visibility() -> None:
-    item = ResourceItem(
+def test_enrollment_status_model_validates_required_fields() -> None:
+    now = datetime.now(UTC)
+    model = EnrollmentStatusResponse(
         id=1,
-        name="Doc",
-        type="DOCUMENT",
-        url="https://example.com/1.pdf",
-        lesson_id=10,
+        user_id=2,
+        course_id=3,
+        status="ACTIVE",
+        enrolled_at=now,
+        completed_at=None,
     )
-    assert item.id == 1
-    assert item.name == "Doc"
-    assert item.type == "DOCUMENT"
-    assert item.url == "https://example.com/1.pdf"
-    assert item.visibility is None
-    assert item.lesson_id == 10
+    assert model.id == 1
+    assert model.user_id == 2
+    assert model.course_id == 3
+    assert model.status == "ACTIVE"
+    assert model.enrolled_at == now
+    assert model.completed_at is None
 
 
-def test_get_resources_course_not_found(
+def test_get_enrollment_status_course_not_found(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -59,19 +65,20 @@ def test_get_resources_course_not_found(
     client.app.dependency_overrides[get_db] = override_db(session)
 
     monkeypatch.setattr(
-        resources_view,
-        "find_published_course",
+        enrollment_view,
+        "find_course_by_id",
         lambda db, *, course_id: None,
     )
 
-    response = client.get("/api/v1/courses/999/resources")
+    response = client.get("/api/v1/courses/999/enrollment-status")
     assert response.status_code == 404
     payload = response.json()
     assert payload["success"] is False
     assert payload["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
+    assert payload["message"] == "Enrollment status not found."
 
 
-def test_get_resources_empty_resources_returns_404(
+def test_get_enrollment_status_enrollment_not_found(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -79,24 +86,24 @@ def test_get_resources_empty_resources_returns_404(
     client.app.dependency_overrides[get_db] = override_db(session)
 
     monkeypatch.setattr(
-        resources_view,
-        "find_published_course",
+        enrollment_view,
+        "find_course_by_id",
         lambda db, *, course_id: {"id": course_id, "status": "PUBLISHED"},
     )
     monkeypatch.setattr(
-        resources_view,
-        "find_course_resources",
-        lambda db, *, course_id: [],
+        enrollment_view,
+        "find_enrollment",
+        lambda db, *, course_id, user_id=None: None,
     )
 
-    response = client.get("/api/v1/courses/1/resources")
+    response = client.get("/api/v1/courses/1/enrollment-status")
     assert response.status_code == 404
     payload = response.json()
     assert payload["success"] is False
     assert payload["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
 
 
-def test_get_resources_success(
+def test_get_enrollment_status_success(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -104,36 +111,33 @@ def test_get_resources_success(
     client.app.dependency_overrides[get_db] = override_db(session)
 
     monkeypatch.setattr(
-        resources_view,
-        "find_published_course",
+        enrollment_view,
+        "find_course_by_id",
         lambda db, *, course_id: {"id": course_id, "status": "PUBLISHED"},
     )
     monkeypatch.setattr(
-        resources_view,
-        "find_course_resources",
-        lambda db, *, course_id: [sample_resource_row()],
+        enrollment_view,
+        "find_enrollment",
+        lambda db, *, course_id, user_id=None: sample_enrollment_row(),
     )
 
     response = client.get(
-        "/api/v1/courses/1/resources",
-        headers={"X-Trace-Id": "00000000-0000-0000-0000-000000000011"},
+        "/api/v1/courses/101/enrollment-status",
+        headers={"X-Trace-Id": "00000000-0000-0000-0000-000000000015"},
     )
     assert response.status_code == 200
     payload = response.json()
     assert payload["success"] is True
     assert payload["businessCode"] == "DESIGN_RESOURCE_RETRIEVED"
-    assert payload["data"] == {
-        "id": 101,
-        "name": "Tai lieu tham khao.pdf",
-        "type": "DOCUMENT",
-        "url": "https://cdn.example.com/res/101.pdf",
-        "visibility": None,
-        "lesson_id": 12,
-    }
-    assert payload["traceId"] == "00000000-0000-0000-0000-000000000011"
+    assert payload["message"] == "Enrollment status retrieved."
+    assert payload["data"]["id"] == 501
+    assert payload["data"]["user_id"] == 1001
+    assert payload["data"]["course_id"] == 101
+    assert payload["data"]["status"] == "ACTIVE"
+    assert payload["traceId"] == "00000000-0000-0000-0000-000000000015"
 
 
-def test_get_resources_database_error_rolls_back(
+def test_get_enrollment_status_database_error_rolls_back(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -143,9 +147,9 @@ def test_get_resources_database_error_rolls_back(
     def fail_course(db, *, course_id):
         raise SQLAlchemyError("DB error")
 
-    monkeypatch.setattr(resources_view, "find_published_course", fail_course)
+    monkeypatch.setattr(enrollment_view, "find_course_by_id", fail_course)
 
-    response = client.get("/api/v1/courses/1/resources")
+    response = client.get("/api/v1/courses/1/enrollment-status")
     assert response.status_code == 500
     assert session.rollback_count == 1
     payload = response.json()

@@ -29,6 +29,9 @@ from app.modules.guest.api_07_courses_search.view import search_courses as searc
 from app.modules.guest.api_11_courses_resources.view import (
     get_course_resources as get_course_resources_view,
 )
+from app.modules.guest.api_15_courses_enrollment_status.view import (
+    get_enrollment_status as get_enrollment_status_view,
+)
 from app.service.email.provider import (
     VerificationEmailProvider,
     get_verification_email_provider,
@@ -205,6 +208,21 @@ def course_resources(
 ) -> dict[str, Any]:
     return get_course_resources_view(
         course_id=course_id,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+@router.get("/courses/{course_id}/enrollment-status", status_code=status.HTTP_200_OK)
+def course_enrollment_status(
+    course_id: int,
+    request: Request,
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any]:
+    return get_enrollment_status_view(
+        course_id=course_id,
+        authorization=authorization,
         db=db,
         trace_id=get_trace_id(request),
     )
