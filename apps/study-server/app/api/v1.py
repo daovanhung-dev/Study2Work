@@ -26,6 +26,9 @@ from app.modules.guest.api_06_courses.models import CourseQuery
 from app.modules.guest.api_06_courses.view import get_courses
 from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
 from app.modules.guest.api_07_courses_search.view import search_courses as search_courses_view
+from app.modules.guest.api_11_courses_resources.view import (
+    get_course_resources as get_course_resources_view,
+)
 from app.service.email.provider import (
     VerificationEmailProvider,
     get_verification_email_provider,
@@ -189,6 +192,19 @@ def current_user(
 ) -> dict[str, Any]:
     return get_current_user(
         authorization=authorization,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+@router.get("/courses/{course_id}/resources", status_code=status.HTTP_200_OK)
+def course_resources(
+    course_id: int,
+    request: Request,
+    db: Session = db_dependency,
+) -> dict[str, Any]:
+    return get_course_resources_view(
+        course_id=course_id,
         db=db,
         trace_id=get_trace_id(request),
     )
