@@ -38,32 +38,37 @@ binds internally to `0.0.0.0:3003` and publishes the host address separately.
 ### `ErrorDetail`
 Pydantic model `{field?, code, message}`, `extra=forbid`.
 
-### `ApiError.__init__`
-Controlled exception carrying HTTP status, business code, safe message, trace ID, tuple of field errors and optional headers.
+### `ApiError(...)`
+Public function that directly returns `JSONResponse` with HTTP status, business
+code, safe message, trace ID, data/meta, field errors and optional headers.
+Views/validators return the response to the route; no custom API exception is
+raised. Calling `ApiError()` with no arguments creates a safe internal 500 and
+uses the current trace context or generates a trace ID.
 
-### `ApiResponse.success_payload()`
-Returns canonical success keys:
-`success`, `businessCode`, `message`, `data`, `meta`, `traceId`.
+`success_response` directly builds the canonical success envelope with keys
+`success`, `businessCode`, `message`, `data`, `meta`, and `traceId`.
+`ApiError(...)` builds the canonical six-key error envelope directly; supplied
+field details are stored in `meta.fieldErrors`. `JSONResponse` provides the
+status and headers, including `X-Trace-Id`.
 
-### `ApiResponse.raise_error()`
-Raises `ApiError` with the model's status/business code/message/trace ID.
+## `app/core/middleware.py` exception handlers
 
-`success_response` and `error_response` are the canonical functional adapters;
-`error_payload` remains only for legacy callers/tests.
-
-## `app/core/exceptions.py`
+The FastAPI exception handlers live beside `TraceIdMiddleware`; `create_app`
+registers them with the app. `TraceIdMiddleware` manages trace state and the
+response header, while unexpected exceptions propagate to Starlette's outer
+`ServerErrorMiddleware` and use the registered `Exception` handler.
 
 - `_validation_field(loc)`: removes protocol location prefixes (`body/query/path/header/cookie`) and joins remaining field path.
-- `api_error_handler`: renders `ApiError` through `error_response`.
-- `http_exception_handler`: preserves already-safe error dicts; otherwise maps to `HTTP_ERROR`.
-- `request_validation_exception_handler`: maps Pydantic errors to `ErrorDetail`, using
+- `http_exception_handler`: converts HTTP exceptions into a direct `ApiError` response, preserving status and safe envelope fields; otherwise maps to `HTTP_ERROR`.
+- `request_validation_exception_handler`: converts Pydantic errors to `ApiError` with `ErrorDetail`, using
   `DESIGN_VALIDATION_ERROR` for API #1 register, API #2 verify-email dispatch,
   auth login/refresh, API #5 categories, API #6 courses and API #7 course
   search, and `VALIDATION_ERROR` elsewhere.
-- `unhandled_exception_handler`: logs internal exception with trace ID; returns
-  `DESIGN_INTERNAL_ERROR` for API #1 register, API #2 verify-email dispatch,
+- `unhandled_exception_handler`: logs internal exception with trace ID and builds
+  a safe `ApiError`; it uses `DESIGN_INTERNAL_ERROR` for API #1 register, API #2 verify-email dispatch,
   auth login/refresh, API #5 categories, API #6 courses and API #7 course
-  search, and `INTERNAL_SERVER_ERROR` elsewhere.
+  search, and `INTERNAL_SERVER_ERROR` elsewhere. It reads the trace ID from
+  `request.state`; `ApiError` returns it in both body and `X-Trace-Id` header.
 
 ## API #2 verification dispatch
 
@@ -110,7 +115,7 @@ Raises `ApiError` with the model's status/business code/message/trace ID.
 - `get_current_trace_id()`: read ContextVar without Request.
 
 ## `app/core/middleware.py:TraceIdMiddleware.dispatch`
-Flow: validate incoming header -> create if invalid -> attach request/context -> call next -> set response header -> safe 500 on exception -> reset context.
+Flow: validate incoming header -> create if invalid -> attach request/context -> call next -> set response header -> reset context. Unexpected exceptions propagate to Starlette's `ServerErrorMiddleware`, which calls the registered `unhandled_exception_handler`; that handler reads the still-present `request.state.trace_id` after the middleware resets its ContextVar. Route/business errors that already return `ApiError(...)` remain direct responses.
 
 Middleware uses `validate_trace_id`, `set_trace_id` and `reset_trace_id` from the
 current trace module.

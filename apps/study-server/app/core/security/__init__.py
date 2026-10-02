@@ -1,10 +1,9 @@
-"""Application security helpers."""
+"""Đánh dấu package chứa các helper bảo mật dùng chung của ứng dụng."""
 
 from app.core.security.access_token import (
     create_access_token,
     decode_access_token,
 )
-from app.core.security.exceptions import TokenError
 from app.core.security.password import (
     hash_password,
     needs_password_rehash,
@@ -17,7 +16,6 @@ from app.core.security.refresh_token import (
 )
 
 __all__ = [
-    "TokenError",
     "hash_password",
     "verify_password",
     "needs_password_rehash",

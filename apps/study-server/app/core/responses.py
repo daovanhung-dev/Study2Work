@@ -1,16 +1,24 @@
-"""Canonical API response models and controlled API errors."""
+"""Định nghĩa kiểu chi tiết lỗi, factory lỗi API và các hàm dựng envelope phản hồi của Study
+API."""
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any, NoReturn
+from typing import Any
 
 from fastapi import status
-from pydantic import BaseModel, ConfigDict, Field
+from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel, ConfigDict
+from starlette.responses import JSONResponse
+
+from app.core.trace import create_trace_id, get_current_trace_id
+
+INTERNAL_ERROR_MESSAGE = "Đã xảy ra lỗi nội bộ hệ thống."
 
 
 class ErrorDetail(BaseModel):
-    """One safe, client-facing validation or business error detail."""
+    """Mô tả một lỗi kiểm tra hoặc lỗi nghiệp vụ an toàn có thể trả cho client. Trường ngoài schema
+    bị từ chối để tránh vô tình đưa dữ liệu không được hỗ trợ vào response."""
 
     field: str | None = None
     code: str
@@ -19,73 +27,46 @@ class ErrorDetail(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class ApiError(Exception):
-    """Controlled API error handled by the global exception handler."""
+def ApiError(
+    *,
+    status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
+    business_code: str = "INTERNAL_SERVER_ERROR",
+    message: str = INTERNAL_ERROR_MESSAGE,
+    trace_id: str | None = None,
+    data: Any = None,
+    meta: Mapping[str, Any] | None = None,
+    errors: Sequence[ErrorDetail] = (),
+    headers: Mapping[str, str] | None = None,
+) -> JSONResponse:
+    """Dựng và trả JSONResponse envelope lỗi chuẩn cùng HTTP status và trace header.
 
-    def __init__(
-        self,
-        *,
-        status_code: int,
-        business_code: str,
-        message: str,
-        trace_id: str,
-        errors: Sequence[ErrorDetail] = (),
-        headers: Mapping[str, str] | None = None,
-    ) -> None:
-        super().__init__(message)
+    Trace ID ưu tiên giá trị truyền vào, sau đó lấy từ ContextVar hoặc tạo UUID mới. Mapping được
+    sao chép; ErrorDetail được tuần tự hóa dưới meta.fieldErrors.
+    """
+    resolved_trace_id = trace_id or get_current_trace_id() or create_trace_id()
+    response_meta = dict(meta or {})
+    if errors:
+        response_meta["fieldErrors"] = [detail.model_dump() for detail in errors]
 
-        self.status_code = status_code
-        self.business_code = business_code
-        self.message = message
-        self.trace_id = trace_id
-        self.errors = tuple(errors)
-        self.headers = dict(headers or {})
+    response_headers = {
+        key: value
+        for key, value in (headers or {}).items()
+        if key.lower() != "x-trace-id"
+    }
+    response_headers["X-Trace-Id"] = resolved_trace_id
 
-
-class ApiResponse(BaseModel):
-    """Build the standard success API response."""
-
-    business_code: str
-    message: str
-    trace_id: str
-
-    result: Any = None
-    meta: dict[str, Any] | None = None
-
-    status_code: int = Field(
-        default=status.HTTP_200_OK,
-        ge=100,
-        le=599,
+    return JSONResponse(
+        status_code=status_code,
+        headers=response_headers,
+        content=jsonable_encoder({
+            "success": False,
+            "businessCode": business_code,
+            "message": message,
+            "data": data if data is not None else {},
+            "meta": response_meta,
+            "traceId": resolved_trace_id,
+        }),
     )
-
-    def success_payload(self) -> dict[str, Any]:
-        """Return the canonical success response envelope."""
-
-        return {
-            "success": True,
-            "businessCode": self.business_code,
-            "message": self.message,
-            "data": self.result,
-            "meta": self.meta or {},
-            "traceId": self.trace_id,
-        }
-
-    def raise_error(
-        self,
-        *,
-        errors: Sequence[ErrorDetail] = (),
-        headers: Mapping[str, str] | None = None,
-    ) -> NoReturn:
-        """Raise a controlled API error."""
-
-        raise ApiError(
-            status_code=self.status_code,
-            business_code=self.business_code,
-            message=self.message,
-            trace_id=self.trace_id,
-            errors=errors,
-            headers=headers,
-        )
 
 
 def success_response(
@@ -96,57 +77,15 @@ def success_response(
     data: Any = None,
     meta: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Build the canonical success response envelope."""
-
-    return ApiResponse(
-        business_code=business_code,
-        message=message,
-        trace_id=trace_id,
-        result=data,
-        meta=dict(meta or {}),
-    ).success_payload()
-
-
-def error_response(
-    *,
-    business_code: str,
-    message: str,
-    trace_id: str,
-    data: Any = None,
-    meta: Mapping[str, Any] | None = None,
-    errors: Sequence[ErrorDetail] = (),
-) -> dict[str, Any]:
-    """Build the canonical error response envelope."""
-
-    response_meta = dict(meta or {})
-    if errors:
-        response_meta["fieldErrors"] = [error.model_dump() for error in errors]
+    """Dựng dictionary envelope thành công với success, businessCode, message, data, meta và
+    traceId. Hàm sao chép meta để không giữ mapping mutable của caller và không tạo response
+    HTTP trực tiếp."""
 
     return {
-        "success": False,
+        "success": True,
         "businessCode": business_code,
         "message": message,
-        "data": data if data is not None else {},
-        "meta": response_meta,
-        "traceId": trace_id,
-    }
-
-
-def error_payload(
-    *,
-    business_code: str,
-    message: str,
-    trace_id: str,
-    data: Any = None,
-    errors: Sequence[ErrorDetail] = (),
-) -> dict[str, Any]:
-    """Build the legacy error shape with top-level error details."""
-
-    return {
-        "success": False,
-        "businessCode": business_code,
-        "message": message,
-        "data": data if data is not None else {},
-        "errors": [error.model_dump() for error in errors],
+        "data": data,
+        "meta": dict(meta or {}),
         "traceId": trace_id,
     }

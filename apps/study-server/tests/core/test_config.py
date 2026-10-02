@@ -1,10 +1,11 @@
 import pytest
 from app.core import constants
 from app.core.config import Settings
-from pydantic import ValidationError
 
 
 def test_settings_defaults_come_from_constants() -> None:
+    """Kiểm tra Settings lấy app environment, CORS, database URL, Redis và các giá trị JWT mặc định
+    từ app.core.constants."""
     settings = Settings()
 
     assert settings.app_env == constants.APP_ENV
@@ -27,6 +28,8 @@ def test_settings_defaults_come_from_constants() -> None:
 
 
 def test_settings_ignore_environment_variables(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Kiểm tra khởi tạo Settings không tự đọc biến môi trường của tiến trình và vẫn dùng các hằng
+    số runtime đã khai báo."""
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv("DB_HOST", "environment-host")
     monkeypatch.setenv("URL_DATABASE", "postgresql://environment-host/environment-db")
@@ -41,6 +44,8 @@ def test_settings_ignore_environment_variables(monkeypatch: pytest.MonkeyPatch) 
 
 
 def test_settings_accept_legacy_constructor_aliases() -> None:
+    """Kiểm tra Settings tiếp tục nhận tên trường viết hoa cũ khi caller truyền cấu hình tường minh
+    vào constructor."""
     settings = Settings(
         APP_ENV="test",
         ENABLE_DOCS=False,
@@ -63,7 +68,8 @@ def test_settings_accept_legacy_constructor_aliases() -> None:
 
 
 def test_settings_reject_unsafe_database_schema() -> None:
-    with pytest.raises(ValidationError):
+    """Kiểm tra schema chứa ký tự không được phép bị từ chối bằng lỗi cấu hình an toàn."""
+    with pytest.raises(ValueError, match="Invalid application settings") as error:
         Settings(
             db_host="localhost",
             db_name="study",
@@ -74,7 +80,11 @@ def test_settings_reject_unsafe_database_schema() -> None:
             jwt_secret_key="test-secret-key-that-is-at-least-32-characters",
         )
 
+    assert "drop table" not in str(error.value)
+
 
 def test_es256_requires_private_key() -> None:
-    with pytest.raises(ValidationError, match="JWT_PRIVATE_KEY"):
+    """Kiểm tra cấu hình ES256 thiếu private key bị từ chối thay vì tạo Settings không thể ký
+    access token."""
+    with pytest.raises(ValueError, match="Invalid application settings"):
         Settings(jwt_algorithm="ES256", jwt_private_key=None)

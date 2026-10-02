@@ -4,40 +4,21 @@ from decimal import Decimal
 from typing import Any
 
 from app.core.responses import ApiError
-from app.modules.guest._shared.course_catalog.constants import (
-    SORT_COLUMNS,
-    SORT_DIRECTIONS,
-    SORT_FIELDS,
-)
+from app.modules.guest._shared.course_catalog.constants import SORT_COLUMNS, SORT_DIRECTIONS
 from app.modules.guest._shared.course_catalog.models import Course, MentorSummary
-
-
-def normalize_sort(value: str | None) -> str | None:
-    """Validate and normalize one public ``field:direction`` sort expression."""
-
-    if value is None:
-        return None
-
-    parts = value.split(":")
-    if len(parts) != 2:
-        raise ValueError("sort phải có định dạng field:direction.")
-
-    field, direction = parts
-    if field not in SORT_FIELDS:
-        raise ValueError("sort field không được hỗ trợ.")
-    if direction not in SORT_DIRECTIONS:
-        raise ValueError("sort direction không được hỗ trợ.")
-    return f"{field}:{direction}"
+from starlette.responses import JSONResponse
 
 
 def build_order_by(sort: str | None) -> str:
-    """Map validated sort input to a static SQL ORDER BY expression."""
+    """Chuyển sort đã kiểm tra thành biểu thức ORDER BY lấy cột từ allowlist tĩnh. Khi không truyền
+    sort, dùng thứ tự mặc định; với field khác id, thêm c.id làm khóa phụ ổn định. Dữ liệu sort
+    không hợp lệ phát sinh ValueError để caller ánh xạ an toàn."""
 
     if sort is None:
         return "c.created_at DESC, c.id ASC"
 
     field, direction = sort.split(":")
-    if field not in SORT_FIELDS or field not in SORT_COLUMNS:
+    if field not in SORT_COLUMNS or direction not in SORT_DIRECTIONS:
         raise ValueError("sort field không được hỗ trợ.")
 
     column = SORT_COLUMNS[field]
@@ -48,12 +29,14 @@ def build_order_by(sort: str | None) -> str:
 
 
 def map_course(row: dict[str, Any]) -> Course:
-    """Map one joined course row to the shared public course contract."""
+    """Ánh xạ một hàng SQL đã join thành model Course công khai, bao gồm mentor projection và giá
+    được tuần tự hóa thành chuỗi thập phân. Thiếu mentor ID hoặc tên mentor phát sinh ValueError
+    để caller xử lý lỗi toàn vẹn dữ liệu."""
 
     mentor_id = row.get("mentor_id")
     mentor_name = row.get("mentor_full_name")
     if mentor_id is None or mentor_name is None:
-        raise ValueError("Published course is missing a mentor.")
+        raise ValueError("Course mentor information is incomplete.")
 
     return Course(
         id=row.get("id"),
@@ -71,15 +54,17 @@ def map_course(row: dict[str, Any]) -> Course:
 
 
 def decimal_string(value: Any) -> str:
-    """Serialize a numeric course price without floating-point conversion."""
+    """Chuyển giá khóa học sang chuỗi decimal mà không đưa qua phép tính floating point. Từ chối
+    giá trị None bằng ValueError và giữ dạng thập phân chính xác theo giá trị nguồn."""
 
     if value is None:
         raise ValueError("Course price is missing.")
     return format(Decimal(str(value)), "f")
 
 
-def course_internal_error(trace_id: str) -> ApiError:
-    """Build the shared safe error for course read failures."""
+def course_internal_error(trace_id: str) -> JSONResponse:
+    """Tạo JSONResponse HTTP 500 dùng chung cho lỗi đọc hoặc ánh xạ khóa học. Hàm gắn business code
+    nội bộ, thông điệp an toàn và trace ID do caller cung cấp."""
 
     return ApiError(
         status_code=500,

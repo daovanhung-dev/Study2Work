@@ -17,8 +17,8 @@ Status: implementation exists; **no verified Study runtime caller** at current s
 - `_request`: creates an `httpx.AsyncClient` per call; no retry/backoff.
 
 Error mapping:
-- connect -> `AIConnectionError`;
-- timeout -> `AITimeoutError`;
-- non-2xx / non-object JSON / invalid JSON -> `AIResponseError`.
+- connection, timeout, non-2xx, non-object JSON, invalid JSON and other request
+  failures -> a direct safe `ApiError()` `JSONResponse` (HTTP 500 /
+  `INTERNAL_SERVER_ERROR`) propagated by public adapter methods.
 
 Do not add Study endpoint wiring to this service without a current module/requirement proving ownership.

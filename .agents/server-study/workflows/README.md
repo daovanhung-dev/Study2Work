@@ -21,25 +21,25 @@ For API implementation, keep the module flow explicit:
 
 ```text
 requirement / DD / schema
--> model.py: request type, required, basic length/format/normalization
--> validate.py: named pure special validation, when contract requires it
+-> models.py: request fields, types, defaults and type conversion
+-> app/utils/validate.py: shared pure normalization helpers
+-> each API's validate.py: input rules, normalization and direct ApiError response
 -> query.py: parameterized SQL only
 -> view.py: business checks, security, transaction and response orchestration
 -> api/v1.py: route and dependency injection
 -> focused tests
 ```
 
-`app/utils/validate.py` contains shared pure validation/normalization helpers
-such as `strip_email(value)` and the API #3 auth validators. Module `validate.py` must state the target field,
-condition and error message for each special rule. Examples include a required
-prefix/suffix or an allowed email domain such as `@gmail.com`; examples are not
-automatic rules. Neither utility nor module validators may query DB,
-commit/rollback, return HTTP responses or create side effects. DB-backed
-duplicate/existence/permission checks stay in `view.py` with `query.py`.
+`app/utils/validate.py` contains shared pure normalization and claim helpers.
+Each API #1–#7 has its own `validate.py` that returns normalized input or an
+`ApiError(...)` `JSONResponse`. Validators do not query DB, commit/rollback or
+perform side effects; DB-backed duplicate/existence/permission checks stay in
+`view.py` with `query.py`.
 
-The current register source uses `app/utils/validate.py` for email
-normalization; `register_account/validate.py` remains empty and current
-password/full-name validators remain in `models.py`.
+The current register source normalizes email/password/full_name in
+`api_01_auth_register/validate.py`; its model only declares the body fields.
+Route OpenAPI metadata retains the prior email and length constraints without
+executing them during model parsing.
 
 For API source comments, place a short API header immediately before each
 API-facing handler, keep one event per inline comment, and use concise DD step

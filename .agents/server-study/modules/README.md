@@ -5,29 +5,34 @@
 ```text
 app/modules/<feature>/
 ├── models.py   # request/response contract and basic model validation
-├── validate.py # named pure special validation when module-specific rules are needed
-├── query.py    # SQL statements/constants; view owns query execution
-└── view.py     # business orchestration and transaction boundary
+├── validate.py # input validation and normalization for this API
+├── query.py    # SQL string constants only
+└── view.py     # query execution, business orchestration and transaction boundary
 ```
 
-`model.py` handles type, required, basic length, format and normalization that
-belongs to the request contract. `validate.py` is for special, pure and
-reusable rules with an explicit field, condition and error message, such as no
-whitespace, a required prefix/suffix or an allowed email domain. It must not
-query DB, commit/rollback or return HTTP responses. Do not apply an example
-such as `@gmail.com` unless the current API contract confirms it.
+`query.py` must not define Python functions/classes, import application helpers
+or execute DB operations. Put `query_one`/`query_many` calls and any SQL
+parameter preparation in `view.py`; keep the parameterized SQL text in
+`query.py`.
 
-API #3 login/refresh request models bind the shared auth validators directly
-from `app/utils/validate.py`; its module does not need a local `validate.py`.
-API #4 binds `extract_bearer_token` and `validate_access_claims` directly from
-`app/utils/validate.py`; its module does not need a local `validate.py`.
+`models.py` declares input/output fields, types, defaults and Pydantic type
+conversion. Put runtime validation and normalization in the API's `validate.py`
+and shared pure helpers in `app/utils/validate.py`. An API validator returns
+`ApiError(...)` directly for invalid input and normalized model data otherwise.
+It runs before business checks and DB access; it must not query DB or perform
+side effects. Keep schema-only request metadata in route declarations. Do not
+apply an example such as `@gmail.com` unless the current API contract confirms it.
+
+APIs #1–#7 each have a module-local `validate.py`; shared email, bearer/JWT,
+sort and search normalization helpers live in `app/utils/validate.py`.
 
 API-facing functions use a short API header comment immediately before the
 function; internal helpers do not. Keep event comments concise and attach a DD
 step only when it clarifies the flow.
 
 DB-backed checks such as duplicate, existence, permission or state belong to
-`view.py`, using `query.py` where SQL is needed. The router remains thin.
+`view.py`, which executes SQL constants from `query.py`. The router remains
+thin.
 
 ## Current modules
 

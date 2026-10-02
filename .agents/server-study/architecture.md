@@ -8,7 +8,6 @@ app/main.py:create_app
   -> app/core/config.py
   -> app/core/database.py
   -> app/core/middleware.py
-  -> app/core/exceptions.py
   -> app/core/responses.py
   -> app/core/trace.py
 ```
@@ -22,12 +21,13 @@ implementation remain unwired.
 
 ## Verified ownership
 
-- `app/main.py`: FastAPI composition root, CORS, middleware, exception handlers, root/health routes.
+- `app/main.py`: FastAPI composition root, CORS, middleware/exception-handler registration, root/health routes.
 - `app/api/v1.py`: declared `/api/v1` routes; exposes health-adjacent utility
   routes, API #1 register, API #2 verification dispatch, API #3 auth, API #4
   current-user profile, API #5 categories, API #6 courses and API #7 course search.
 - `app/core/config.py`: typed settings backed by `app/core/constants.py`.
 - `app/core/database.py`: sync SQLAlchemy engine/session/query primitives.
+- `app/core/middleware.py`: trace middleware and shared FastAPI exception handlers.
 - `app/core/security/*`: password, access token, refresh token primitives.
 - `app/utils/auth.py`: access/refresh token issuance, expiry metadata and public auth payload mapping.
 - `app/utils/validate.py`: shared pure validation/normalization helpers used by request models and API handlers, including API #3 auth validators and API #4 Bearer/JWT claim validators.
@@ -73,7 +73,7 @@ No current source establishes:
 ## Runtime compatibility repairs
 
 1. `app.api.v1` imports the existing `app.modules.guest` package.
-2. `responses.py` exposes canonical `success_response`/`error_response` and the legacy `error_payload` adapter.
+2. `responses.py` exposes canonical `success_response` and direct `ApiError(...)` `JSONResponse` construction.
 3. `TraceIdMiddleware` uses the current trace helper names.
 
 Together these repairs restore the current composition; future fix tasks must
@@ -82,11 +82,10 @@ re-evaluate the complete import chain rather than stop at the first error.
 ## Validation workflow boundary
 
 ```text
-app/utils/validate.py: shared validation/normalization helpers
-→ model.py
-→ type/required/basic length/format/normalization
-→ view.py
-→ DB-backed business validation/query/transaction
+app/utils/validate.py: shared normalization helpers
+→ models.py: input data types and conversion
+→ API #1–#7 validate.py: request rules and direct ApiError responses
+→ view.py: DB-backed business validation/query/transaction
 ```
 
 Examples such as no whitespace or an allowed email domain are only applicable
