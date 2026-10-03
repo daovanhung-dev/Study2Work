@@ -36,6 +36,7 @@ def build_engine(config: Settings) -> Engine:
         pool_size=config.database_pool_size,
         max_overflow=config.database_max_overflow,
     )
+    
 
 
 def build_session_factory(database_engine: Engine) -> sessionmaker[Session]:
