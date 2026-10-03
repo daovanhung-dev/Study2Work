@@ -26,6 +26,8 @@ from app.modules.guest.api_06_courses.models import CourseQuery
 from app.modules.guest.api_06_courses.view import get_courses
 from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
 from app.modules.guest.api_07_courses_search.view import search_courses as search_courses_view
+from app.modules.guest.api_08_courses_detail.view import get_course_detail
+from app.modules.guest.api_09_courses_curriculum.view import get_course_curriculum
 from app.service.email.provider import (
     VerificationEmailProvider,
     get_verification_email_provider,
@@ -176,6 +178,32 @@ def search_courses(
 ) -> dict[str, Any]:
     return search_courses_view(
         course_query=course_query,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+@router.get("/courses/{course_id}", status_code=status.HTTP_200_OK)
+def course_detail(
+    course_id: str,
+    request: Request,
+    db: Session = db_dependency,
+) -> dict[str, Any]:
+    return get_course_detail(
+        course_id_raw=course_id,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+@router.get("/courses/{course_id}/curriculum", status_code=status.HTTP_200_OK)
+def course_curriculum(
+    course_id: str,
+    request: Request,
+    db: Session = db_dependency,
+) -> dict[str, Any]:
+    return get_course_curriculum(
+        course_id_raw=course_id,
         db=db,
         trace_id=get_trace_id(request),
     )
