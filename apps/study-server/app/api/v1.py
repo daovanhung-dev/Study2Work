@@ -26,6 +26,8 @@ from app.modules.guest.api_06_courses.models import CourseQuery
 from app.modules.guest.api_06_courses.view import get_courses
 from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
 from app.modules.guest.api_07_courses_search.view import search_courses as search_courses_view
+from app.modules.guest.api_14_users_me_profile.models import ProfileUpdateRequest
+from app.modules.guest.api_14_users_me_profile.view import update_profile
 from app.service.email.provider import (
     VerificationEmailProvider,
     get_verification_email_provider,
@@ -329,6 +331,60 @@ def current_user(
     vấn hồ sơ do view thực hiện."""
     return get_current_user(
         authorization=authorization,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #14 users_me_profile
+@router.put(
+    "/users/me/profile",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "required": ["full_name", "phone", "avatar_url"],
+                        "properties": {
+                            "full_name": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 150,
+                            },
+                            "phone": {
+                                "anyOf": [
+                                    {"type": "string", "maxLength": 20},
+                                    {"type": "null"},
+                                ]
+                            },
+                            "avatar_url": {
+                                "anyOf": [
+                                    {"type": "string"},
+                                    {"type": "null"},
+                                ]
+                            },
+                        },
+                    }
+                }
+            },
+        }
+    },
+)
+def update_current_profile(
+    user_data: ProfileUpdateRequest,
+    request: Request,
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận profile source-backed và chuyển xác thực, update cùng transaction cho API #14."""
+
+    return update_profile(
+        authorization=authorization,
+        user_data=user_data,
         db=db,
         trace_id=get_trace_id(request),
     )
