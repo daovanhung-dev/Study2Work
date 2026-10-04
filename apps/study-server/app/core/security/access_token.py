@@ -12,7 +12,7 @@ from jwt.exceptions import InvalidTokenError
 from starlette.responses import JSONResponse
 
 from app.core.config import get_settings
-from app.core.responses import ApiError
+from app.core.responses import error_response
 
 ACCESS_TOKEN_TYPE = "access"
 
@@ -138,42 +138,42 @@ def _add_custom_claims(
 
 def _get_signing_key() -> str | JSONResponse:
     """Chọn khóa ký theo thuật toán JWT: private key cho ES256 hoặc secret key cho HS256. Hàm mở
-    SecretStr nếu cần và trả ApiError mặc định an toàn khi khóa bắt buộc bị thiếu."""
+    SecretStr nếu cần và trả error_response mặc định an toàn khi khóa bắt buộc bị thiếu."""
     settings = get_settings()
 
     if settings.jwt_algorithm == "ES256":
         private_key = _secret_value(settings.jwt_private_key)
 
         if not private_key:
-            return ApiError()
+            return error_response()
 
         return private_key
 
     secret_key = _secret_value(settings.jwt_secret_key)
 
     if not secret_key:
-        return ApiError()
+        return error_response()
 
     return secret_key
 
 
 def _get_verification_key() -> str | JSONResponse:
     """Chọn khóa xác minh theo thuật toán JWT: public key cho ES256 hoặc secret key cho HS256. Hàm
-    mở giá trị secret theo cấu hình và trả ApiError an toàn nếu không có khóa."""
+    mở giá trị secret theo cấu hình và trả error_response an toàn nếu không có khóa."""
     settings = get_settings()
 
     if settings.jwt_algorithm == "ES256":
         public_key = _secret_value(settings.jwt_public_key)
 
         if not public_key:
-            return ApiError()
+            return error_response()
 
         return public_key
 
     secret_key = _secret_value(settings.jwt_secret_key)
 
     if not secret_key:
-        return ApiError()
+        return error_response()
 
     return secret_key
 
@@ -193,7 +193,7 @@ def _secret_value(value: Any) -> str | None:
 
 def _invalid_access_token() -> JSONResponse:
     """Tạo response HTTP 401 thống nhất khi access token không hợp lệ hoặc hết hạn."""
-    return ApiError(
+    return error_response(
         status_code=401,
         business_code="DESIGN_AUTHENTICATION_REQUIRED",
         message="Token không hợp lệ hoặc đã hết hạn.",

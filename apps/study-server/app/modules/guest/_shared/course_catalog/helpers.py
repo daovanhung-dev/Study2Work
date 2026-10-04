@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-from app.core.responses import ApiError
+from app.core.responses import error_response
 from app.modules.guest._shared.course_catalog.constants import SORT_COLUMNS, SORT_DIRECTIONS
 from app.modules.guest._shared.course_catalog.models import Course, MentorSummary
 from starlette.responses import JSONResponse
@@ -66,7 +66,7 @@ def course_internal_error(trace_id: str) -> JSONResponse:
     """Tạo JSONResponse HTTP 500 dùng chung cho lỗi đọc hoặc ánh xạ khóa học. Hàm gắn business code
     nội bộ, thông điệp an toàn và trace ID do caller cung cấp."""
 
-    return ApiError(
+    return error_response(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",
         message="Courses could not be retrieved.",

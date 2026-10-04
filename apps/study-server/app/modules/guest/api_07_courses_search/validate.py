@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.responses import ApiError, ErrorDetail
+from app.core.responses import ErrorDetail, error_response
 from app.modules.guest._shared.course_catalog.constants import SORT_DIRECTIONS, SORT_FIELDS
 from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
 from app.utils.validate import normalize_search_query, normalize_sort
@@ -39,7 +39,7 @@ def validate_course_search_query(
         )
 
     if errors:
-        return ApiError(
+        return error_response(
             status_code=422,
             business_code="DESIGN_VALIDATION_ERROR",
             message="Dữ liệu đầu vào không hợp lệ.",
@@ -48,7 +48,7 @@ def validate_course_search_query(
         )
 
     if course_query.category is not None:
-        return ApiError(
+        return error_response(
             status_code=422,
             business_code="DESIGN_VALIDATION_ERROR",
             message="Bộ lọc category chưa được hỗ trợ.",

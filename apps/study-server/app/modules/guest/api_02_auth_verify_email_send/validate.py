@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from app.core.responses import ApiError, ErrorDetail
+from app.core.responses import ErrorDetail, error_response
 from app.modules.guest.api_02_auth_verify_email_send.models import VerifyEmailSendRequest
 from app.utils.validate import normalize_email
 from starlette.responses import JSONResponse
@@ -39,7 +39,7 @@ def validate_verify_email_request(
         errors.append(ErrorDetail(field="email", code="VALUE_ERROR", message=str(exc)))
 
     if errors:
-        return ApiError(
+        return error_response(
             status_code=422,
             business_code="DESIGN_VALIDATION_ERROR",
             message="Dữ liệu đầu vào không hợp lệ.",

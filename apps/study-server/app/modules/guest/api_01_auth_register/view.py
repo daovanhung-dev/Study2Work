@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from app.core.database import query_one
-from app.core.responses import ApiError, success_response
+from app.core.responses import error_response, success_response
 from app.core.security.password import hash_password
 from app.modules.guest.api_01_auth_register.models import RegisterRequest
 from app.modules.guest.api_01_auth_register.query import CHECK_DUPLICATE, INSERT_USER
@@ -53,7 +53,7 @@ def create_user(
     trace_id: str,
 ) -> dict[str, Any] | JSONResponse:
     """Điều phối đăng ký: kiểm tra email trùng, băm mật khẩu, chèn tài khoản và commit trong
-    Session do caller sở hữu. Hàm rollback khi lỗi, ánh xạ unique race/DB error thành ApiError
+    Session do caller sở hữu. Hàm rollback khi lỗi, ánh xạ unique race/DB error thành error_response
     an toàn, ghi log nội bộ và trả success envelope chỉ chứa profile công khai."""
 
     validated_user_data = validate_register_request(user_data, trace_id=trace_id)
@@ -66,7 +66,7 @@ def create_user(
     try:
         if find_user_by_email(db, email) is not None:
             db.rollback()
-            return ApiError(
+            return error_response(
                 status_code=409,
                 business_code="DESIGN_STATE_CONFLICT",
                 message="Email đã tồn tại.",
@@ -81,7 +81,7 @@ def create_user(
         )
         if created_user is None:
             db.rollback()
-            return ApiError(
+            return error_response(
                 status_code=500,
                 business_code="DESIGN_INTERNAL_ERROR",
                 message="Không thể tạo tài khoản.",
@@ -92,14 +92,14 @@ def create_user(
     except IntegrityError as exc:
         db.rollback()
         if _is_email_unique_violation(exc):
-            return ApiError(
+            return error_response(
                 status_code=409,
                 business_code="DESIGN_STATE_CONFLICT",
                 message="Email đã tồn tại.",
                 trace_id=trace_id,
             )
         logger.exception("Account insert integrity error; trace_id=%s", trace_id)
-        return ApiError(
+        return error_response(
             status_code=500,
             business_code="DESIGN_INTERNAL_ERROR",
             message="Không thể tạo tài khoản.",
@@ -108,7 +108,7 @@ def create_user(
     except SQLAlchemyError:
         db.rollback()
         logger.exception("Account insert database error; trace_id=%s", trace_id)
-        return ApiError(
+        return error_response(
             status_code=500,
             business_code="DESIGN_INTERNAL_ERROR",
             message="Không thể tạo tài khoản.",

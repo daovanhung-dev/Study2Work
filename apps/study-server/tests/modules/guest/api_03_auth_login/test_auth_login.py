@@ -7,7 +7,7 @@ from typing import Any
 import app.modules.guest.api_03_auth_login.view as auth_view
 import pytest
 from app.core.database import get_db
-from app.core.responses import ApiError
+from app.core.responses import error_response
 from app.core.security.password import hash_password
 from app.modules.guest.api_03_auth_login.models import LoginRequest, RefreshRequest
 from app.utils.auth import IssuedTokens
@@ -217,7 +217,7 @@ def test_login_rolls_back_database_error(monkeypatch: pytest.MonkeyPatch) -> Non
     assert session.rollback_count == 1
 
 
-def test_login_maps_token_issuance_api_error_to_internal_error(
+def test_login_maps_token_issuance_error_response_to_internal_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Kiểm tra lỗi phát hành token được rollback và chuyển thành lỗi nội bộ, không lộ cấu hình."""
@@ -226,7 +226,7 @@ def test_login_maps_token_issuance_api_error_to_internal_error(
     monkeypatch.setattr(
         auth_view,
         "issue_tokens",
-        lambda **kwargs: ApiError(),
+        lambda **kwargs: error_response(),
     )
 
     error = auth_view.login(

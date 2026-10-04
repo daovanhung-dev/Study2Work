@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.responses import ApiError, ErrorDetail
+from app.core.responses import ErrorDetail, error_response
 from app.modules.guest.api_03_auth_login.models import LoginRequest, RefreshRequest
 from app.utils.validate import normalize_email
 from starlette.responses import JSONResponse
@@ -41,7 +41,7 @@ def validate_login_request(
             )
         )
     if errors:
-        return ApiError(
+        return error_response(
             status_code=422,
             business_code="DESIGN_VALIDATION_ERROR",
             message="Dữ liệu đầu vào không hợp lệ.",
@@ -60,7 +60,7 @@ def validate_refresh_request(
 
     if user_data.refresh_token.strip():
         return user_data
-    return ApiError(
+    return error_response(
         status_code=422,
         business_code="DESIGN_VALIDATION_ERROR",
         message="Dữ liệu đầu vào không hợp lệ.",

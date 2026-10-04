@@ -33,10 +33,10 @@ def test_ollama_constructor_overrides_are_preserved() -> None:
 
 
 @pytest.mark.asyncio
-async def test_ollama_connection_failure_uses_safe_api_error(
+async def test_ollama_connection_failure_uses_safe_error_response(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Kiểm tra ConnectError từ upstream Ollama được chuyển thành ApiError an toàn."""
+    """Kiểm tra ConnectError từ upstream Ollama được chuyển thành error_response an toàn."""
     class FailingClient:
         async def __aenter__(self):
             """Trả client giả khi mở async context để mô phỏng request Ollama."""
@@ -47,7 +47,8 @@ async def test_ollama_connection_failure_uses_safe_api_error(
             return None
 
         async def request(self, **kwargs):
-            """Phát sinh ConnectError giả để kiểm tra chuyển lỗi kết nối upstream thành ApiError."""
+            """Phát sinh ConnectError giả để kiểm tra chuyển lỗi upstream thành
+            error_response an toàn."""
             raise httpx.ConnectError("private upstream address")
 
     monkeypatch.setattr(ollama_service.httpx, "AsyncClient", lambda **kwargs: FailingClient())
