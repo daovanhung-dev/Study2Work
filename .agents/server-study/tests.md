@@ -2,7 +2,7 @@
 
 ```text
 TEST_SUITE_PRESENT: YES
-TEST_STATUS: VERIFIED (163 tests)
+TEST_STATUS: VERIFIED (165 tests)
 ```
 
 Tests under `apps/study-server/tests/` cover config, DB helpers, responses and

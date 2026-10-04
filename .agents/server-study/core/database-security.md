@@ -10,9 +10,13 @@ and channel binding. The URL stays a `SecretStr` until URL construction.
 ### `build_engine(config)`
 - `pool_pre_ping=True`.
 - pool size/max overflow from settings.
-- Does not send `search_path` through startup options because Neon pooler rejects it.
-- The current engine path does not send `search_path`; do not infer the active
-  schema from a configuration field alone.
+- PostgreSQL engines register a SQLAlchemy `begin` listener that applies only
+  `Settings.db_schema` with `SELECT set_config('search_path', quote_ident(:schema), true)`.
+- The setting is transaction-local and is applied at every transaction begin,
+  which supports Neon transaction pooling. Schema setup errors propagate and
+  prevent the transaction from continuing to business queries.
+- Schema is not sent through connection startup options. No `public` fallback
+  is appended and the listener does not create or verify the schema.
 
 ### `build_session_factory(engine)`
 Sync `Session`, `autoflush=False`, `expire_on_commit=False`.
