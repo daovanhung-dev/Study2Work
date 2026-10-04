@@ -1,7 +1,7 @@
 from typing import Any
 
 # Nhập các thành phần cần thiết từ FastAPI.
-from fastapi import APIRouter, Depends, Header, Query, Request, status
+from fastapi import APIRouter, Depends, Header, Path, Query, Request, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
@@ -26,6 +26,7 @@ from app.modules.guest.api_06_courses.models import CourseQuery
 from app.modules.guest.api_06_courses.view import get_courses
 from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
 from app.modules.guest.api_07_courses_search.view import search_courses as search_courses_view
+from app.modules.guest.api_12_resources_detail.view import get_resource_detail
 from app.modules.guest.api_14_users_me_profile.models import ProfileUpdateRequest
 from app.modules.guest.api_14_users_me_profile.view import update_profile
 from app.service.email.provider import (
@@ -331,6 +332,36 @@ def current_user(
     vấn hồ sơ do view thực hiện."""
     return get_current_user(
         authorization=authorization,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #12 resources_detail
+@router.get(
+    "/resources/{resource_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "resource_id",
+                "in": "path",
+                "required": True,
+                "schema": {"type": "integer", "format": "int64"},
+            }
+        ]
+    },
+)
+def resource_detail(
+    request: Request,
+    resource_id: str = Path(include_in_schema=False),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận raw resource ID, Session và trace ID rồi chuyển luồng đọc resource cho API #12."""
+
+    return get_resource_detail(
+        resource_id=resource_id,
         db=db,
         trace_id=get_trace_id(request),
     )
