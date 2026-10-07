@@ -54,7 +54,6 @@ def get_course_resources(
             name=first_row["name"],
             type=first_row["resource_type"],  # map resource_type -> type
             url=first_row["url"],
-            visibility=None,
             lesson_id=first_row["lesson_id"],
         )
     except (ValidationError, KeyError) as exc:

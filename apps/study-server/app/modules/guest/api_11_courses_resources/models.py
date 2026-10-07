@@ -14,5 +14,4 @@ class ResourceItem(BaseModel):
     name: str
     type: str = Field(..., description="Resource type mapped from resource_type")
     url: str
-    visibility: str | None = None
     lesson_id: int

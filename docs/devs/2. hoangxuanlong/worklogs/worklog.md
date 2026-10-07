@@ -6,8 +6,8 @@
 
 | STT | Tên task | Thời gian được giao | Deadline | Thời hạn thực tế hoàn thành | Trạng thái review | Note |
 |---:|---|---|---|---|---|---|
-| 1 |  |  |  |  | Chưa review |  |
-| 2 |  |  |  |  | Chưa review |  |
+| 1 | API #11: Lấy danh sách tài nguyên (`GET /api/v1/courses/{course_id}/resources`) | 2026-09-26 09:00 | 2026-09-29 23:59 | 2026-09-29 20:08 | Đang review | Thừa trường `visibility` so với ERD (xem chi tiết bên dưới) |
+| 2 | API #15: Kiểm tra trạng thái enrollment (`GET /api/v1/courses/{course_id}/enrollment-status`) | 2026-09-26 09:00 | 2026-09-29 23:59 | 2026-09-29 21:13 | Đang review | Kiểm tra lại header `Authorization` so với đặc tả Public |
 | 3 |  |  |  |  | Chưa review |  |
 | 4 |  |  |  |  | Chưa review |  |
 | 5 |  |  |  |  | Chưa review |  |
@@ -106,4 +106,29 @@
 | 98 |  |  |  |  | Chưa review |  |
 | 99 |  |  |  |  | Chưa review |  |
 | 100 |  |  |  |  | Chưa review |  |
+
+---
+
+## Ghi chú đối chiếu Schema ERD & Điểm cần kiểm tra lại sau khi Leader cập nhật code
+
+### 1. API #11 (`GET /api/v1/courses/{course_id}/resources`) - Xem tài nguyên khóa học
+- **Vấn đề xung đột/thừa trường**:
+  - Trong model response `ResourceItem` ([models.py](file:///d:/s2w/Study2Work/apps/study-server/app/modules/guest/api_11_courses_resources/models.py)), hiện tại có trường `visibility: str | None = None`.
+  - Đối chiếu với Database ERD ([DB_UNICA_ERD.drawio](file:///d:/s2w/Study2Work/apps/study-server/docs/diagrams/DB_UNICA_ERD.drawio)) và [DB_UNICA_TABLES.md](file:///d:/s2w/Study2Work/apps/study-server/docs/diagrams/DB_UNICA_TABLES.md#L201-L206): Bảng `resources` chỉ có đúng 6 cột: `id`, `lesson_id`, `name`, `resource_type`, `url`, `created_at`. **Hoàn toàn không có cột `visibility`**.
+  - Tài liệu `DB_UNICA_TABLES.md` đã có ghi chú trước: *"DISCREPANCY: Một số contract API design đề cập resources.visibility, nhưng ERD không có cột này. Không thêm cột hoặc predicate visibility khi chưa có source xác nhận."*
+- **Trạng thái thực hiện**:
+  - Đã thực hiện **Phương án 1**: Xóa bỏ hoàn toàn trường `visibility` khỏi `ResourceItem` trong `models.py` và `view.py`.
+  - Đã cập nhật test tương ứng trong `test_courses_resources.py`. Chạy 10/10 test cases đã PASS 100%. Response hiện tại khớp đúng 100% với schema bảng `resources` trong ERD.
+
+---
+
+### 2. API #15 (`GET /api/v1/courses/{course_id}/enrollment-status`) - Kiểm tra trạng thái ghi danh
+- **Vấn đề xung đột/thừa tham số**:
+  - Trong sơ đồ Sequence [AC_02_STUDENT_LEARNING.drawio](file:///d:/s2w/Study2Work/apps/study-server/docs/diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio#L193) và `list_api.md`, endpoint được quy định là `Public`, chỉ nhận duy nhất `path{course_id:int64!}`.
+  - Trong code hiện tại, router và view có thêm tham số `authorization: str | None = Header(default=None)` để hỗ trợ lấy `user_id` nếu người dùng đăng nhập.
+  - Về mặt Response: Bảng `enrollments` trong ERD có 6 cột (`id`, `user_id`, `course_id`, `status`, `enrolled_at`, `completed_at`), model `EnrollmentStatusResponse` trả về khớp đúng 6 cột này, không thừa cột nào trong DB.
+- **Hành động sau khi Leader cập nhật**:
+  - Kiểm tra xem Leader có yêu cầu bỏ Header `Authorization` khỏi endpoint để thuần túy Public hay giữ lại làm optional token.
+  - Kiểm tra xem Leader có điều chỉnh cách xác định enrollment (hoặc chuyển endpoint thành có yêu cầu Bearer token).
+
 
