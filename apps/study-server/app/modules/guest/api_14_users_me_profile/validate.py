@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.responses import ApiError, ErrorDetail
+from app.core.responses import ErrorDetail, error_response
 from app.modules.guest.api_04_users_me.validate import validate_current_user_request
 from app.modules.guest.api_14_users_me_profile.models import ProfileUpdateRequest
 from starlette.responses import JSONResponse
@@ -55,7 +55,7 @@ def validate_profile_update_request(
 
     avatar_url = _normalize_nullable_text(user_data.avatar_url)
     if errors:
-        return ApiError(
+        return error_response(
             status_code=422,
             business_code="DESIGN_VALIDATION_ERROR",
             message="Dữ liệu đầu vào không hợp lệ.",

@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from app.core.database import query_one
-from app.core.responses import ApiError, success_response
+from app.core.responses import error_response, success_response
 from app.modules.guest.api_12_resources_detail.models import ResourceDetail
 from app.modules.guest.api_12_resources_detail.query import (
     PUBLISHED_PARENT_COURSE,
@@ -80,7 +80,7 @@ def get_resource_detail(
 def _internal_error(trace_id: str) -> JSONResponse:
     """Tạo response 500 an toàn khi query hoặc mapping resource thất bại."""
 
-    return ApiError(
+    return error_response(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",
         message="Resource could not be retrieved",

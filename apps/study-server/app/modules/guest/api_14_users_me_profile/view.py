@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from app.core.database import query_one
-from app.core.responses import ApiError, success_response
+from app.core.responses import error_response, success_response
 from app.modules.guest.api_04_users_me.models import UserProfile
 from app.modules.guest.api_14_users_me_profile.models import ProfileUpdateRequest
 from app.modules.guest.api_14_users_me_profile.query import UPDATE_CURRENT_USER_PROFILE
@@ -92,7 +92,7 @@ def update_profile(
 def _authentication_error(trace_id: str) -> JSONResponse:
     """Trả lỗi xác thực khi JWT subject không còn ánh xạ tới user trong database."""
 
-    return ApiError(
+    return error_response(
         status_code=401,
         business_code="DESIGN_AUTHENTICATION_REQUIRED",
         message="Authentication required.",
@@ -103,7 +103,7 @@ def _authentication_error(trace_id: str) -> JSONResponse:
 def _internal_error(trace_id: str) -> JSONResponse:
     """Trả lỗi nội bộ an toàn khi update, mapping hoặc commit profile thất bại."""
 
-    return ApiError(
+    return error_response(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",
         message="Profile could not be updated.",
