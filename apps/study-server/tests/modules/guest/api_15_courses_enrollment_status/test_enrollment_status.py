@@ -191,3 +191,19 @@ def test_get_enrollment_status_with_valid_bearer_token(
     payload = response.json()
     assert payload["success"] is True
     assert payload["data"]["user_id"] == 1001
+
+
+def test_validate_course_id_success() -> None:
+    from app.modules.guest.api_15_courses_enrollment_status.validate import validate_course_id
+
+    result = validate_course_id(101, trace_id="test-trace-id")
+    assert result == 101
+
+
+def test_validate_course_id_invalid_returns_error_response() -> None:
+    from app.modules.guest.api_15_courses_enrollment_status.validate import validate_course_id
+    from starlette.responses import JSONResponse
+
+    result = validate_course_id(-5, trace_id="test-trace-id")
+    assert isinstance(result, JSONResponse)
+    assert result.status_code == 404

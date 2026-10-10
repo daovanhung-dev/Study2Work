@@ -50,10 +50,9 @@ def get_course_resources(
 ) -> dict[str, Any] | JSONResponse:
     """Return resources for a published course."""
 
-    try:
-        validated_course_id = validate_course_id(course_id)
-    except ValueError:
-        return _not_found_error(trace_id)
+    validated_course_id = validate_course_id(course_id, trace_id=trace_id)
+    if isinstance(validated_course_id, JSONResponse):
+        return validated_course_id
 
     try:
         course = find_published_course(db, course_id=validated_course_id)

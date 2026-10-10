@@ -149,3 +149,19 @@ def test_get_resources_database_error_rolls_back(
     payload = response.json()
     assert payload["success"] is False
     assert payload["businessCode"] == "DESIGN_INTERNAL_ERROR"
+
+
+def test_validate_course_id_success() -> None:
+    from app.modules.guest.api_11_courses_resources.validate import validate_course_id
+
+    result = validate_course_id(1, trace_id="test-trace-id")
+    assert result == 1
+
+
+def test_validate_course_id_invalid_returns_error_response() -> None:
+    from app.modules.guest.api_11_courses_resources.validate import validate_course_id
+    from starlette.responses import JSONResponse
+
+    result = validate_course_id(0, trace_id="test-trace-id")
+    assert isinstance(result, JSONResponse)
+    assert result.status_code == 404

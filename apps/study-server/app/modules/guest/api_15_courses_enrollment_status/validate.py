@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+from app.core.responses import error_response
 from app.core.security.access_token import decode_access_token
 from app.utils.validate import extract_bearer_token, validate_access_claims
 from starlette.responses import JSONResponse
@@ -11,11 +12,20 @@ from starlette.responses import JSONResponse
 logger = logging.getLogger(__name__)
 
 
-def validate_course_id(course_id: int) -> int:
-    """Xác thực course_id nhận từ path đảm bảo là số nguyên hợp lệ."""
+def validate_course_id(
+    course_id: int,
+    *,
+    trace_id: str,
+) -> int | JSONResponse:
+    """Xác thực course_id nhận từ path đảm bảo là số nguyên dương hợp lệ."""
 
-    if not isinstance(course_id, int):
-        raise ValueError("course_id must be an integer.")
+    if not isinstance(course_id, int) or course_id <= 0:
+        return error_response(
+            status_code=404,
+            business_code="DESIGN_RESOURCE_NOT_FOUND",
+            message="Enrollment status not found.",
+            trace_id=trace_id,
+        )
     return course_id
 
 

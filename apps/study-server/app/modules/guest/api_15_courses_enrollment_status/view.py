@@ -64,10 +64,9 @@ def get_enrollment_status(
 ) -> dict[str, Any] | JSONResponse:
     """Check enrollment status for a course."""
 
-    try:
-        validated_course_id = validate_course_id(course_id)
-    except ValueError:
-        return _not_found_error(trace_id)
+    validated_course_id = validate_course_id(course_id, trace_id=trace_id)
+    if isinstance(validated_course_id, JSONResponse):
+        return validated_course_id
 
     user_id = resolve_optional_user_id(authorization, trace_id=trace_id)
 
