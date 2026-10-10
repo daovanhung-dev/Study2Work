@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from app.core.responses import ApiError, success_response
+from app.core.responses import error_response, success_response
 from app.modules.guest.api_11_courses_resources.models import ResourceItem
 from app.modules.guest.api_11_courses_resources.query import (
     find_course_resources,
@@ -14,6 +14,7 @@ from app.modules.guest.api_11_courses_resources.query import (
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
+from starlette.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
@@ -24,28 +25,28 @@ def get_course_resources(
     course_id: int,
     db: Session,
     trace_id: str,
-) -> dict[str, Any]:
+) -> dict[str, Any] | JSONResponse:
     """Return resources for a published course."""
 
     try:
         course = find_published_course(db, course_id=course_id)
-    except SQLAlchemyError as exc:
+    except SQLAlchemyError:
         db.rollback()
         logger.exception("Course visibility check failed; trace_id=%s", trace_id)
-        raise _internal_error(trace_id) from exc
+        return _internal_error(trace_id)
 
     if course is None:
-        raise _not_found_error(trace_id)
+        return _not_found_error(trace_id)
 
     try:
         rows = find_course_resources(db, course_id=course_id)
-    except SQLAlchemyError as exc:
+    except SQLAlchemyError:
         db.rollback()
         logger.exception("Course resources query failed; trace_id=%s", trace_id)
-        raise _internal_error(trace_id) from exc
+        return _internal_error(trace_id)
 
     if not rows:
-        raise _not_found_error(trace_id)
+        return _not_found_error(trace_id)
 
     try:
         first_row = rows[0]
@@ -56,9 +57,9 @@ def get_course_resources(
             url=first_row["url"],
             lesson_id=first_row["lesson_id"],
         )
-    except (ValidationError, KeyError) as exc:
+    except (ValidationError, KeyError):
         logger.exception("Resource mapping failed; trace_id=%s", trace_id)
-        raise _internal_error(trace_id) from exc
+        return _internal_error(trace_id)
 
     return success_response(
         business_code="DESIGN_RESOURCE_RETRIEVED",
@@ -68,8 +69,8 @@ def get_course_resources(
     )
 
 
-def _not_found_error(trace_id: str) -> ApiError:
-    return ApiError(
+def _not_found_error(trace_id: str) -> JSONResponse:
+    return error_response(
         status_code=404,
         business_code="DESIGN_RESOURCE_NOT_FOUND",
         message="Published course or resource not found.",
@@ -77,8 +78,8 @@ def _not_found_error(trace_id: str) -> ApiError:
     )
 
 
-def _internal_error(trace_id: str) -> ApiError:
-    return ApiError(
+def _internal_error(trace_id: str) -> JSONResponse:
+    return error_response(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",
         message="Resources could not be retrieved.",

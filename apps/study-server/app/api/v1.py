@@ -340,12 +340,16 @@ def current_user(
     )
 
 
-@router.get("/courses/{course_id}/resources", status_code=status.HTTP_200_OK)
+@router.get(
+    "/courses/{course_id}/resources",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+)
 def course_resources(
     course_id: int,
     request: Request,
     db: Session = db_dependency,
-) -> dict[str, Any]:
+) -> dict[str, Any] | JSONResponse:
     return get_course_resources_view(
         course_id=course_id,
         db=db,
@@ -353,13 +357,17 @@ def course_resources(
     )
 
 
-@router.get("/courses/{course_id}/enrollment-status", status_code=status.HTTP_200_OK)
+@router.get(
+    "/courses/{course_id}/enrollment-status",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+)
 def course_enrollment_status(
     course_id: int,
     request: Request,
     authorization: str | None = Header(default=None, alias="Authorization"),
     db: Session = db_dependency,
-) -> dict[str, Any]:
+) -> dict[str, Any] | JSONResponse:
     return get_enrollment_status_view(
         course_id=course_id,
         authorization=authorization,
