@@ -5,16 +5,19 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from app.core.database import query_one
 from app.core.responses import error_response, success_response
 from app.modules.guest.api_15_courses_enrollment_status.models import (
     EnrollmentStatusResponse,
 )
 from app.modules.guest.api_15_courses_enrollment_status.query import (
-    find_course_by_id,
-    find_enrollment,
+    FIND_ANY_ENROLLMENT_BY_COURSE,
+    FIND_COURSE,
+    FIND_USER_ENROLLMENT,
 )
 from app.modules.guest.api_15_courses_enrollment_status.validate import (
-    validate_enrollment_status_request,
+    resolve_optional_user_id,
+    validate_course_id,
 )
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
@@ -22,6 +25,33 @@ from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
+
+
+def find_course_by_id(
+    db: Session,
+    *,
+    course_id: int,
+) -> dict[str, Any] | None:
+    """Return course row if it exists."""
+
+    return query_one(db, FIND_COURSE, {"course_id": course_id})
+
+
+def find_enrollment(
+    db: Session,
+    *,
+    course_id: int,
+    user_id: int | None = None,
+) -> dict[str, Any] | None:
+    """Find enrollment for a specific user, or fallback to course scope."""
+
+    if user_id is not None:
+        return query_one(
+            db,
+            FIND_USER_ENROLLMENT,
+            {"course_id": course_id, "user_id": user_id},
+        )
+    return query_one(db, FIND_ANY_ENROLLMENT_BY_COURSE, {"course_id": course_id})
 
 
 # API #15 courses_enrollment_status
@@ -34,17 +64,15 @@ def get_enrollment_status(
 ) -> dict[str, Any] | JSONResponse:
     """Check enrollment status for a course."""
 
-    validation = validate_enrollment_status_request(
-        course_id=course_id,
-        authorization=authorization,
-        trace_id=trace_id,
-    )
-    if isinstance(validation, JSONResponse):
-        return validation
-    valid_course_id, user_id = validation
+    try:
+        validated_course_id = validate_course_id(course_id)
+    except ValueError:
+        return _not_found_error(trace_id)
+
+    user_id = resolve_optional_user_id(authorization, trace_id=trace_id)
 
     try:
-        course = find_course_by_id(db, course_id=valid_course_id)
+        course = find_course_by_id(db, course_id=validated_course_id)
     except SQLAlchemyError:
         db.rollback()
         logger.exception("Course lookup failed; trace_id=%s", trace_id)
@@ -54,7 +82,9 @@ def get_enrollment_status(
         return _not_found_error(trace_id)
 
     try:
-        enrollment_row = find_enrollment(db, course_id=course_id, user_id=user_id)
+        enrollment_row = find_enrollment(
+            db, course_id=validated_course_id, user_id=user_id
+        )
     except SQLAlchemyError:
         db.rollback()
         logger.exception("Enrollment lookup failed; trace_id=%s", trace_id)
