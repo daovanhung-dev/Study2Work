@@ -4,8 +4,8 @@
 
 ```text
 app/api/v1.py
-→ app/utils/validate.py:strip_email
 → app/modules/guest/api_01_auth_register/models.py
+→ app/modules/guest/api_01_auth_register/validate.py
 → app/modules/guest/api_01_auth_register/view.py
    ├─ query.py
    ├─ core/security/password.py
@@ -14,17 +14,18 @@ app/api/v1.py
 
 Current endpoint: `POST /api/v1/auth/register`.
 
-`RegisterRequest` contains `email`, `password` and `full_name`. The model reuses
-`app.utils.validate.strip_email` for email normalization, strips `full_name`,
-rejects blank password input and validates the email type.
-`validate.py` currently exists but is empty and is not called.
+`RegisterRequest` only declares `email`, `password` and `full_name` as string
+fields. `validate_register_request` trims and validates email, rejects blank
+passwords, trims the name and enforces its 1–150 character rule. It returns a
+normalized model or a direct 422 `error_response(...)` response.
 
 ## Current runtime flow
 
 ```text
 request
 → TraceIdMiddleware
-→ RegisterRequest parse/normalize
+→ RegisterRequest type conversion
+→ validate_register_request
 → create_user()
 → duplicate email lookup
 → Argon2id password hash
@@ -34,14 +35,17 @@ request
 ```
 
 `view.py` owns duplicate handling, password hashing, commit/rollback and safe
-error mapping. `query.py` owns parameterized SQL and does not commit. Password
-plaintext/hash is not returned or logged.
+error mapping. It also owns `find_user_by_email` and `insert_user`, which call
+`query_one` with SQL constants from `query.py`. That query file contains only
+`CHECK_DUPLICATE` and `INSERT_USER`; it has no database imports or functions.
+Password plaintext/hash is not returned or logged.
 
 ## Validation boundary
 
-Future special rules go in `validate.py` and are called by `view.py` after model
-parse/normalization and before the duplicate query. Examples are illustrative;
-the module must not add a domain rule without current contract/source evidence.
+Input normalization and field rules live in `validate.py` and run before the
+duplicate lookup. Shared email parsing uses `app/utils/validate.py`. The
+validator returns an HTTP response for invalid input; the view propagates it
+without opening a database operation.
 
 ## Namespace alignment
 

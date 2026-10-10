@@ -1,4 +1,5 @@
-"""Password hashing and verification."""
+"""Băm mật khẩu mới bằng Argon2id và xác minh cả định dạng Argon2id lẫn bcrypt cũ còn được hỗ
+trợ."""
 
 from __future__ import annotations
 
@@ -18,7 +19,8 @@ _password_hasher = PasswordHasher(
 
 
 def hash_password(password: str) -> str:
-    """Hash a new password using Argon2id."""
+    """Băm mật khẩu mới bằng PasswordHasher Argon2id đã cấu hình. Giá trị hash trả về chứa tham số
+    thuật toán và không lưu mật khẩu gốc."""
 
     return _password_hasher.hash(password)
 
@@ -28,11 +30,9 @@ def verify_password(
     hashed_password: str,
     algorithm: str | None = None,
 ) -> bool:
-    """Verify a password against Argon2id or legacy bcrypt.
-
-    ``algorithm`` is retained as an optional compatibility argument for older
-    callers. When omitted, the hash prefix determines the verification method.
-    """
+    """Xác minh mật khẩu gốc với hash Argon2id hoặc bcrypt cũ. Nếu caller truyền algorithm, hàm
+    dùng lựa chọn tương thích đó; nếu bỏ qua, tiền tố hash quyết định bộ xác minh. Trả False khi
+    thuật toán không được hỗ trợ hoặc hash/mật khẩu không khớp."""
 
     normalized_algorithm = algorithm.upper() if algorithm else None
 
@@ -58,7 +58,9 @@ def needs_password_rehash(
     hashed_password: str,
     algorithm: str | None = None,
 ) -> bool:
-    """Return whether the stored password should be upgraded."""
+    """Quyết định hash đã lưu có cần nâng cấp hay không. Bcrypt, định dạng không nhận diện và thuật
+    toán cũ không còn hỗ trợ được đánh dấu cần tạo hash mới; Argon2id được so với tham số hiện
+    hành."""
 
     normalized_algorithm = algorithm.upper() if algorithm else None
     if normalized_algorithm == "BCRYPT":
@@ -75,6 +77,9 @@ def needs_password_rehash(
 
 
 def _needs_argon2_rehash(hashed_password: str) -> bool:
+    """Hỏi PasswordHasher liệu hash Argon2id có dùng tham số đã cũ hay không. Hash lỗi định dạng
+    hoặc kiểu dữ liệu không hợp lệ được xem là cần rehash để không giữ lại credential không thể
+    kiểm tra an toàn."""
     try:
         return _password_hasher.check_needs_rehash(hashed_password)
     except (InvalidHashError, TypeError):
@@ -85,6 +90,8 @@ def _verify_argon2(
     password: str,
     hashed_password: str,
 ) -> bool:
+    """Xác minh password với hash Argon2 qua PasswordHasher. Trả True khi khớp và False cho trường
+    hợp password sai, hash hỏng hoặc lỗi xác minh được thư viện báo."""
     try:
         return _password_hasher.verify(
             hashed_password,
@@ -102,6 +109,8 @@ def _verify_bcrypt(
     password: str,
     hashed_password: str,
 ) -> bool:
+    """Xác minh password với hash bcrypt bằng cách mã hóa hai chuỗi thành UTF-8 rồi gọi
+    bcrypt.checkpw. Trả False nếu hash hoặc kiểu dữ liệu gây ValueError hay TypeError."""
     try:
         return bcrypt.checkpw(
             password.encode("utf-8"),

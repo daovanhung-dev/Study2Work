@@ -1,4 +1,4 @@
-"""Response models for the current-user profile endpoint."""
+"""Định nghĩa model chứa các trường hồ sơ an toàn mà endpoint người dùng hiện tại trả về."""
 
 from __future__ import annotations
 
@@ -8,7 +8,8 @@ from pydantic import BaseModel, ConfigDict
 
 
 class UserProfile(BaseModel):
-    """Safe profile fields returned by API #4."""
+    """Giới hạn response hồ sơ API #4 vào các trường công khai, có kiểu dữ liệu rõ ràng; các trường
+    ngoài model bị bỏ qua khi ánh xạ dữ liệu nguồn."""
 
     model_config = ConfigDict(extra="ignore")
 

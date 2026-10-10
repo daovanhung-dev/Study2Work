@@ -4,7 +4,8 @@ from pydantic import BaseModel, ConfigDict
 
 
 class MentorSummary(BaseModel):
-    """Public mentor projection embedded in a course item."""
+    """Mô tả phần hồ sơ công khai của mentor được nhúng trong từng khóa học. Model chỉ cho phép các
+    trường đã khai báo và avatar có thể vắng mặt."""
 
     model_config = ConfigDict(extra="ignore")
 
@@ -14,7 +15,8 @@ class MentorSummary(BaseModel):
 
 
 class Course(BaseModel):
-    """Public fields returned for one published course."""
+    """Định nghĩa các trường công khai của một khóa học đã xuất bản, bao gồm giá dạng chuỗi và phần
+    tóm tắt mentor."""
 
     model_config = ConfigDict(extra="ignore")
 
@@ -28,7 +30,8 @@ class Course(BaseModel):
 
 
 class Pagination(BaseModel):
-    """Effective pagination metadata for public course APIs."""
+    """Chứa thông tin phân trang hiệu lực gồm trang hiện tại, kích thước trang, tổng số mục và tổng
+    số trang."""
 
     page: int
     size: int
@@ -37,7 +40,7 @@ class Pagination(BaseModel):
 
 
 class CoursePage(BaseModel):
-    """Public course collection and pagination metadata."""
+    """Gom danh sách khóa học cùng metadata phân trang thành cấu trúc response dùng chung."""
 
     items: list[Course]
     pagination: Pagination

@@ -11,6 +11,13 @@ Current source establishes a Neon PostgreSQL connection URL in
 `users`; login/refresh references `users` and the source-backed
 `refresh_tokens` table. Live metadata is still not verified here.
 
+At each PostgreSQL transaction begin, `build_engine()` applies only the
+validated `Settings.db_schema` using transaction-local
+`set_config('search_path', quote_ident(:schema), true)`. This is repeated for
+each transaction on the pooled engine; setup errors propagate. The engine does
+not append `public`, create the schema, or check live schema existence or
+permissions. Schema is not sent in Neon startup options.
+
 `infra/postgres/study-server/DB.sql` is a checked-in schema/design artifact and
 `migrations/002_refresh_tokens.sql` and `migrations/003_categories.sql` are
 idempotent migration artifacts; their
@@ -18,9 +25,7 @@ live application status is not established by source inspection alone.
 Do not treat it as proof that every described table is available to the current
 runtime.
 
-Known discrepancy:
-- current `constants.py` contains a user-specific `DB_SCHEMA` value, while the
-  current engine path does not send `search_path` in the pooled startup package;
+Current runtime details:
 - runtime core parses `constants.URL_DATABASE`, uses `postgresql+psycopg` and
   preserves Neon SSL/channel-binding query options;
 - `alembic.ini` references migration setup/directory that is absent and is not sufficient schema evidence.

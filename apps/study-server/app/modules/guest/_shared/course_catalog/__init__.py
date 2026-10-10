@@ -1,1 +1,1 @@
-"""Shared course-catalog contracts and pure helpers."""
+"""Đánh dấu package chứa contract và helper thuần dùng chung cho API danh mục khóa học."""
