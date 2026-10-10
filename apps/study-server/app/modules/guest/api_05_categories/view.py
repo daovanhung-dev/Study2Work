@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from app.core.database import query_many
-from app.core.responses import ApiError, success_response
+from app.core.responses import error_response, success_response
 from app.modules.guest.api_05_categories.models import (
     Category,
     CategoryPage,
@@ -84,7 +84,7 @@ def get_categories(
 
 def _internal_error(trace_id: str) -> JSONResponse:
     """Return a safe API #5 internal-error response with the request trace ID."""
-    return ApiError(
+    return error_response(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",
         message="Categories could not be retrieved.",

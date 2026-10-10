@@ -21,28 +21,45 @@ For API implementation, keep the module flow explicit:
 
 ```text
 requirement / DD / schema
--> models.py: request fields, types, defaults and type conversion
--> app/utils/validate.py: shared pure normalization helpers
--> each API's validate.py: input rules, normalization and direct ApiError response
--> query.py: parameterized SQL only
--> view.py: business checks, security, transaction and response orchestration
+-> models.py: declarative model classes, fields/types/defaults and data conversion
+-> app/utils/validate.py: shared pure validation/normalization helpers
+-> each API's validate.py: input rules/normalization; invalid input returns `error_response(...)`
+-> query.py when SQL is needed: SQL statement constants only
+-> view.py: main API flow, DB/provider calls, business checks, side effects, transaction and response orchestration
 -> api/v1.py: route and dependency injection
 -> focused tests
 ```
 
 `app/utils/validate.py` contains shared pure normalization and claim helpers.
-Each API #1–#7 has its own `validate.py` that returns normalized input or an
-`ApiError(...)` `JSONResponse`. Validators do not query DB, commit/rollback or
-perform side effects; DB-backed duplicate/existence/permission checks stay in
-`view.py` with `query.py`.
+Each API #1–#7 has its own `validate.py`; validators return normalized input or
+return `error_response(...)` for invalid input. They do not raise response
+errors, construct another error response, query DB or perform side effects.
+Shared pure helpers may raise validation exceptions internally; the API
+validator catches and maps those through `error_response(...)`. API #2 does not
+have `query.py` because it dispatches through a provider without DB access.
+
+`models.py` contains model classes, field declarations, types, defaults,
+configuration and data conversion only. It does not own runtime validation,
+normalization or business rules. If a module needs SQL, `query.py` contains SQL
+string constants only; parameter binding and `query_one`/`query_many` calls
+belong in `view.py`.
+
+`view.py` owns the main API flow: DB/provider operations, business checks,
+transaction boundaries, failure mapping and response construction. Add a short
+Vietnamese comment for each meaningful operation in every handler/helper;
+consecutive statements that form one operation may share a comment, while
+simple assignments do not need individual comments. Keep the API header
+comment immediately before each API-facing handler and omit it for internal
+helpers.
 
 The current register source normalizes email/password/full_name in
 `api_01_auth_register/validate.py`; its model only declares the body fields.
 Route OpenAPI metadata retains the prior email and length constraints without
 executing them during model parsing.
 
-For API source comments, place a short API header immediately before each
-API-facing handler, keep one event per inline comment, and use concise DD step
+For API source comments, explain each meaningful operation in `view.py` and
+place a short API header immediately before each API-facing handler. Comments
+may group consecutive statements in one operation and may use concise DD step
 labels when useful. A comment-only task must not change executable statements;
 verify this from the diff, then run focused tests, full scope tests and static
 checks as available. Do not use comments to reconcile a DD/current-source

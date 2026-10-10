@@ -49,8 +49,8 @@ def make_request(path: str) -> Request:
 
 
 @pytest.mark.asyncio
-async def test_http_exception_is_serialized_through_api_error() -> None:
-    """Kiểm tra HTTPException được chuyển qua handler ApiError, giữ status và trace header nhưng
+async def test_http_exception_is_serialized_through_error_response() -> None:
+    """Kiểm tra exception handler dùng error_response(...) để giữ status và trace header nhưng
     không làm lộ detail tùy ý."""
     response = await http_exception_handler(
         make_request("/missing"),
@@ -72,7 +72,7 @@ async def test_http_exception_is_serialized_through_api_error() -> None:
 
 
 @pytest.mark.asyncio
-async def test_request_validation_becomes_api_error_with_field_errors() -> None:
+async def test_request_validation_becomes_error_response_with_field_errors() -> None:
     """Kiểm tra lỗi validation của request thành HTTP 422 với business code chuẩn và tên trường
     được đặt trong meta.fieldErrors."""
     response = await request_validation_exception_handler(
@@ -103,7 +103,7 @@ async def test_request_validation_becomes_api_error_with_field_errors() -> None:
 
 
 @pytest.mark.asyncio
-async def test_unhandled_exception_becomes_safe_api_error() -> None:
+async def test_unhandled_exception_becomes_safe_error_response() -> None:
     """Kiểm tra exception không xử lý được được ghi log nội bộ nhưng client chỉ nhận envelope lỗi
     an toàn cùng trace ID."""
     response = await unhandled_exception_handler(

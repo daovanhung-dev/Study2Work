@@ -24,7 +24,7 @@ uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 3003
   cấu hình riêng.
 - Dùng `Depends(get_db)` để nhận một SQLAlchemy `Session` theo request; view
   sở hữu `commit()` và `rollback()`.
-- Success envelope dùng `success_response()`; lỗi dùng `ApiError(...)`, hàm
+- Success envelope dùng `success_response()`; lỗi dùng `error_response(...)`, hàm
   trả trực tiếp `JSONResponse` với status, envelope và trace header.
 - Request validation/normalization nằm trong `app/utils/validate.py` và
   `validate.py` theo từng API #1–#7; view gọi validator trước nghiệp vụ hoặc DB.

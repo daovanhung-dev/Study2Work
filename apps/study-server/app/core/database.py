@@ -4,10 +4,10 @@ Study API."""
 from __future__ import annotations
 
 from collections.abc import Generator, Mapping
-from functools import lru_cache
+from functools import lru_cache, partial
 from typing import Any
 
-from sqlalchemy import URL, Engine, create_engine, text
+from sqlalchemy import URL, Connection, Engine, create_engine, event, text
 from sqlalchemy.engine import Result, make_url
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -25,18 +25,35 @@ def build_database_url(config: Settings) -> URL:
     return database_url
 
 
+def _set_transaction_search_path(schema: str, connection: Connection) -> None:
+    """Đặt search_path chỉ trong transaction hiện tại bằng tên schema được bind an toàn.
+
+    Lỗi cấu hình schema được giữ nguyên để transaction dừng trước khi chạy truy vấn nghiệp vụ.
+    """
+    connection.execute(
+        text("SELECT set_config('search_path', quote_ident(:schema), true)"),
+        {"schema": schema},
+    )
+
+
 def build_engine(config: Settings) -> Engine:
     """Tạo SQLAlchemy Engine từ cấu hình đã cung cấp với kiểm tra kết nối trước khi lấy kết nối và
-    giới hạn pool theo Settings. Hàm không thiết lập search_path và không mở transaction nghiệp
-    vụ."""
+    giới hạn pool theo Settings. Với PostgreSQL, hàm đăng ký listener đặt search_path chỉ trong
+    từng transaction; hàm không mở transaction nghiệp vụ."""
 
-    return create_engine(
+    database_engine = create_engine(
         build_database_url(config),
         pool_pre_ping=True,
         pool_size=config.database_pool_size,
         max_overflow=config.database_max_overflow,
     )
-    
+    if database_engine.dialect.name == "postgresql":
+        event.listen(
+            database_engine,
+            "begin",
+            partial(_set_transaction_search_path, config.db_schema),
+        )
+    return database_engine
 
 
 def build_session_factory(database_engine: Engine) -> sessionmaker[Session]:

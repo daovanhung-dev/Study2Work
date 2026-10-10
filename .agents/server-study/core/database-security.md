@@ -10,9 +10,13 @@ and channel binding. The URL stays a `SecretStr` until URL construction.
 ### `build_engine(config)`
 - `pool_pre_ping=True`.
 - pool size/max overflow from settings.
-- Does not send `search_path` through startup options because Neon pooler rejects it.
-- The current engine path does not send `search_path`; do not infer the active
-  schema from a configuration field alone.
+- PostgreSQL engines register a SQLAlchemy `begin` listener that applies only
+  `Settings.db_schema` with `SELECT set_config('search_path', quote_ident(:schema), true)`.
+- The setting is transaction-local and is applied at every transaction begin,
+  which supports Neon transaction pooling. Schema setup errors propagate and
+  prevent the transaction from continuing to business queries.
+- Schema is not sent through connection startup options. No `public` fallback
+  is appended and the listener does not create or verify the schema.
 
 ### `build_session_factory(engine)`
 Sync `Session`, `autoflush=False`, `expire_on_commit=False`.
@@ -46,8 +50,9 @@ Important validators:
 - DB schema only alphanumeric/underscore.
 - HS256 requires secret; ES256 requires private and public key at settings validation time.
 - `get_settings()` is cached/lazy; `_LazySettings` preserves legacy uppercase-style access.
-- Settings construction converts configuration validation failures to a safe
-  context-free `ApiError` (HTTP 500 / `INTERNAL_SERVER_ERROR`).
+- Settings construction sanitizes Pydantic configuration failures as a generic
+  `ValueError`; configuration is checked outside an HTTP request and does not
+  produce an `error_response(...)`.
 
 ## Password — `app/core/security/password.py`
 
@@ -64,8 +69,8 @@ Creates signed JWT with `sub`, `type=access`, `roles`, `jti`, `iat`, `exp`, `iss
 
 ### `decode_access_token`
 Verifies configured algorithm, issuer/audience and required claims; wrong,
-expired or malformed token becomes `ApiError` with 401 authentication mapping.
-Missing signing/verification configuration becomes a safe internal `ApiError`.
+expired or malformed token becomes `error_response` with 401 authentication mapping.
+Missing signing/verification configuration becomes a safe internal `error_response`.
 
 Signing/verification key selection:
 - ES256: private key signs, public key verifies.
@@ -76,12 +81,12 @@ Signing/verification key selection:
 - `generate_refresh_token`: `secrets.token_urlsafe(48)` opaque token.
 - `hash_refresh_token`: HMAC-SHA256 with configured pepper before DB storage.
 - `compare_refresh_token`: constant-time `hmac.compare_digest`.
-- Missing refresh pepper becomes a safe internal `ApiError`.
+- Missing refresh pepper becomes a safe internal `error_response`.
 
-Shared Bearer-header and access-claim validators raise `ApiError` for
-authentication failures. Helpers used as Pydantic field validators may raise
-`ValueError` internally; FastAPI's validation handler converts resulting
-request validation failures into `ApiError` before HTTP serialization.
+Shared Bearer-header and access-claim validators return `error_response(...)`
+for authentication failures. Helpers used as Pydantic field validators may
+raise `ValueError` internally; FastAPI's validation handler converts resulting
+request validation failures into `error_response(...)` before HTTP serialization.
 
 ## Critical absence
 

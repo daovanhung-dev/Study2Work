@@ -13,7 +13,7 @@ from starlette.exceptions import HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import JSONResponse, Response
 
-from app.core.responses import ApiError, ErrorDetail
+from app.core.responses import ErrorDetail, error_response
 from app.core.trace import (
     TRACE_HEADER,
     create_trace_id,
@@ -56,7 +56,7 @@ async def http_exception_handler(
     detail: dict[str, Any] = exc.detail if isinstance(exc.detail, dict) else {}
     has_error_envelope = detail.get("success") is False
     meta = detail.get("meta") if has_error_envelope else None
-    return ApiError(
+    return error_response(
         status_code=exc.status_code,
         business_code=(
             str(detail["businessCode"])
@@ -80,8 +80,8 @@ async def request_validation_exception_handler(
     exc: RequestValidationError,
 ) -> JSONResponse:
     """Chuyển từng lỗi RequestValidationError thành ErrorDetail, chuẩn hóa vị trí trường rồi dựng
-    ApiError HTTP 422. Endpoint thuộc DESIGN_CONTRACT_PATHS dùng business code thiết kế tương
-    ứng; endpoint khác dùng VALIDATION_ERROR."""
+    error_response(...) với HTTP 422. Endpoint thuộc DESIGN_CONTRACT_PATHS dùng business code
+    thiết kế tương ứng; endpoint khác dùng VALIDATION_ERROR."""
 
     errors = [
         ErrorDetail(
@@ -91,7 +91,7 @@ async def request_validation_exception_handler(
         )
         for error in exc.errors()
     ]
-    return ApiError(
+    return error_response(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         business_code=(
             "DESIGN_VALIDATION_ERROR"
@@ -106,7 +106,8 @@ async def request_validation_exception_handler(
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Ghi exception nội bộ cùng trace ID vào log nhưng chỉ trả message an toàn cho client.
-    Business code được chọn theo endpoint và ApiError dựng trực tiếp envelope cùng header trace."""
+    Business code được chọn theo endpoint và error_response(...) dựng trực tiếp envelope cùng header
+    trace."""
 
     trace_id = get_trace_id(request)
     logger.exception("Unhandled API error; trace_id=%s", trace_id, exc_info=exc)
@@ -115,7 +116,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
         if request.url.path in DESIGN_CONTRACT_PATHS
         else "INTERNAL_SERVER_ERROR"
     )
-    return ApiError(
+    return error_response(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         business_code=business_code,
         message="Đã xảy ra lỗi nội bộ hệ thống.",

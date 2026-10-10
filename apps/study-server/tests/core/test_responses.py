@@ -1,6 +1,6 @@
 import json
 
-from app.core.responses import INTERNAL_ERROR_MESSAGE, ApiError, ErrorDetail, success_response
+from app.core.responses import INTERNAL_ERROR_MESSAGE, ErrorDetail, error_response, success_response
 from app.core.trace import reset_trace_id, set_trace_id
 from starlette.responses import JSONResponse
 
@@ -43,9 +43,10 @@ def test_success_response_defaults_data_and_meta() -> None:
     }
 
 
-def test_api_error_returns_json_response_with_canonical_envelope_and_field_errors() -> None:
-    """Xác nhận ApiError trả JSONResponse trực tiếp và đặt lỗi trường dưới meta.fieldErrors."""
-    response = ApiError(
+def test_error_response_returns_json_response_with_canonical_envelope_and_field_errors() -> None:
+    """Xác nhận error_response trả JSONResponse trực tiếp và đặt lỗi trường dưới
+    meta.fieldErrors."""
+    response = error_response(
         status_code=422,
         business_code="VALIDATION_ERROR",
         message="Invalid",
@@ -74,9 +75,9 @@ def test_api_error_returns_json_response_with_canonical_envelope_and_field_error
     }
 
 
-def test_api_error_preserves_http_headers_and_sets_trace_header() -> None:
-    """Xác nhận ApiError giữ header HTTP bổ sung và đặt trace ID do factory chọn."""
-    response = ApiError(
+def test_error_response_preserves_http_headers_and_sets_trace_header() -> None:
+    """Xác nhận error_response giữ header HTTP bổ sung và đặt trace ID đã phân giải."""
+    response = error_response(
         status_code=401,
         business_code="AUTH_REQUIRED",
         headers={"WWW-Authenticate": "Bearer", "X-Trace-Id": "caller-value"},
@@ -89,12 +90,12 @@ def test_api_error_preserves_http_headers_and_sets_trace_header() -> None:
     assert json.loads(response.body)["data"] == {}
 
 
-def test_internal_api_error_uses_current_trace_and_safe_defaults() -> None:
+def test_internal_error_response_uses_current_trace_and_safe_defaults() -> None:
     """Xác nhận lỗi mặc định dùng message an toàn và trace ID trong ContextVar hiện tại."""
     trace_id = "00000000-0000-0000-0000-000000000001"
     token = set_trace_id(trace_id)
     try:
-        response = ApiError()
+        response = error_response()
     finally:
         reset_trace_id(token)
 
@@ -110,9 +111,9 @@ def test_internal_api_error_uses_current_trace_and_safe_defaults() -> None:
     }
 
 
-def test_internal_api_error_generates_trace_without_request_context() -> None:
-    """Xác nhận ApiError sinh trace ID UUID khi không có request context."""
-    response = ApiError()
+def test_internal_error_response_generates_trace_without_request_context() -> None:
+    """Xác nhận error_response sinh trace ID UUID khi không có request context."""
+    response = error_response()
     trace_id = response.headers["X-Trace-Id"]
 
     assert trace_id
