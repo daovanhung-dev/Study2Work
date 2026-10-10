@@ -1,4 +1,5 @@
-"""Trace ID helpers."""
+"""Cung cấp các hàm tạo, kiểm tra và quản lý trace ID trong request cùng ContextVar của tiến
+trình."""
 
 from contextvars import ContextVar, Token
 from uuid import UUID, uuid4
@@ -14,13 +15,14 @@ _current_trace_id: ContextVar[str | None] = ContextVar(
 
 
 def create_trace_id() -> str:
-    """Create a new trace ID."""
+    """Tạo UUID phiên bản 4 và trả về dạng chuỗi canonical dùng làm mã theo dõi request."""
 
     return str(uuid4())
 
 
 def validate_trace_id(trace_id: str | None) -> str | None:
-    """Return a valid UUID trace ID, otherwise None."""
+    """Kiểm tra chuỗi đầu vào có phải UUID hợp lệ hay không và chuẩn hóa UUID về dạng chuỗi chuẩn.
+    Trả None khi giá trị vắng mặt hoặc không phân tích được."""
 
     if not trace_id:
         return None
@@ -32,7 +34,8 @@ def validate_trace_id(trace_id: str | None) -> str | None:
 
 
 def get_trace_id(request: Request) -> str:
-    """Get the trace ID of the current request."""
+    """Đọc trace ID từ request.state, kiểm tra định dạng UUID rồi trả giá trị đã chuẩn hóa. Nếu
+    state thiếu hoặc không hợp lệ, tạo UUID mới, ghi lại vào request.state và trả về."""
 
     trace_id = getattr(
         request.state,
@@ -50,18 +53,21 @@ def get_trace_id(request: Request) -> str:
 
 
 def set_trace_id(trace_id: str) -> Token[str | None]:
-    """Store the trace ID in the current execution context."""
+    """Đặt trace ID vào ContextVar của luồng thực thi hiện tại. Trả về Token để reset_trace_id có
+    thể khôi phục context trước đó sau khi request kết thúc."""
 
     return _current_trace_id.set(trace_id)
 
 
 def get_current_trace_id() -> str | None:
-    """Get the trace ID without needing Request."""
+    """Đọc trace ID từ ContextVar mà không cần truyền Request. Trả None nếu chưa có trace context
+    trong luồng hiện tại."""
 
     return _current_trace_id.get()
 
 
 def reset_trace_id(token: Token[str | None]) -> None:
-    """Restore the previous trace context."""
+    """Khôi phục giá trị ContextVar trước lần set_trace_id tương ứng bằng Token đã nhận. Middleware
+    gọi hàm này trong finally để không rò trace giữa các request."""
 
     _current_trace_id.reset(token)

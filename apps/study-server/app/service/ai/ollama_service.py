@@ -3,15 +3,17 @@ from __future__ import annotations
 from typing import Any, Literal
 
 import httpx
+from starlette.responses import JSONResponse
 
 from app.core import constants
-from app.core.responses import ApiError
+from app.core.responses import error_response
 
 MessageRole = Literal["system", "user", "assistant"]
 
 
 class OllamaService:
-    """Đối tượng dùng chung để gọi Ollama từ service, use case hoặc API."""
+    """Đóng gói lời gọi HTTP bất đồng bộ tới Ollama cho các service hoặc API. Service dùng cấu hình
+    mặc định khi không có override và trả JSONResponse an toàn khi upstream lỗi."""
 
     def __init__(
         self,
@@ -19,6 +21,9 @@ class OllamaService:
         model: str | None = None,
         timeout: float | None = None,
     ) -> None:
+        """Khởi tạo client Ollama bằng giá trị override nếu được truyền, nếu không thì dùng hằng số
+        mặc định. URL được bỏ dấu gạch chéo cuối để ghép endpoint chính xác; model và timeout
+        được lưu để dùng ở các request sau."""
         configured_base_url = base_url or constants.OLLAMA_BASE_URL
         self.base_url = configured_base_url.rstrip("/")
 
@@ -33,8 +38,10 @@ class OllamaService:
         system: str | None = None,
         model: str | None = None,
         options: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        """Gửi một prompt tới endpoint /api/generate."""
+    ) -> dict[str, Any] | JSONResponse:
+        """Gửi prompt cùng model, system tùy chọn và options tới endpoint /api/generate với stream
+        tắt. Trả model, câu trả lời, trạng thái hoàn tất và payload upstream thô; lỗi được
+        _request trả thành JSONResponse an toàn."""
 
         payload: dict[str, Any] = {
             "model": model or self.model,
@@ -53,6 +60,8 @@ class OllamaService:
             endpoint="/api/generate",
             json=payload,
         )
+        if isinstance(data, JSONResponse):
+            return data
 
         return {
             "model": data.get("model", model or self.model),
@@ -67,8 +76,9 @@ class OllamaService:
         *,
         model: str | None = None,
         options: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        """Gửi danh sách messages tới endpoint /api/chat."""
+    ) -> dict[str, Any] | JSONResponse:
+        """Gửi danh sách messages cùng model và options tùy chọn tới endpoint /api/chat với stream
+        tắt. Trả model, role, nội dung câu trả lời, trạng thái hoàn tất và payload upstream thô."""
 
         payload: dict[str, Any] = {
             "model": model or self.model,
@@ -84,6 +94,8 @@ class OllamaService:
             endpoint="/api/chat",
             json=payload,
         )
+        if isinstance(data, JSONResponse):
+            return data
 
         message = data.get("message") or {}
 
@@ -95,13 +107,16 @@ class OllamaService:
             "raw": data,
         }
 
-    async def list_models(self) -> list[str]:
-        """Lấy danh sách model đang có trên Ollama Server."""
+    async def list_models(self) -> list[str] | JSONResponse:
+        """Gọi endpoint /api/tags rồi lấy tên từ các phần tử model hợp lệ. Trả danh sách tên model;
+        lỗi kết nối hoặc response được xử lý bởi _request."""
 
         data = await self._request(
             method="GET",
             endpoint="/api/tags",
         )
+        if isinstance(data, JSONResponse):
+            return data
 
         return [
             item["name"]
@@ -109,10 +124,13 @@ class OllamaService:
             if isinstance(item, dict) and item.get("name")
         ]
 
-    async def health_check(self) -> dict[str, Any]:
-        """Kiểm tra kết nối và trả về danh sách model."""
+    async def health_check(self) -> dict[str, Any] | JSONResponse:
+        """Gọi list_models để xác nhận Ollama phản hồi, sau đó trả trạng thái available cùng URL,
+        model mặc định và danh sách model hiện có."""
 
         models = await self.list_models()
+        if isinstance(models, JSONResponse):
+            return models
 
         return {
             "available": True,
@@ -127,7 +145,10 @@ class OllamaService:
         method: str,
         endpoint: str,
         json: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | JSONResponse:
+        """Gửi request HTTP bất đồng bộ tới endpoint tương đối của Ollama bằng timeout đã cấu hình,
+        kiểm tra status và giải mã JSON object. Lỗi kết nối, timeout, HTTP, JSON hoặc response
+        sai dạng được chuyển thành JSONResponse an toàn qua error_response()."""
         try:
             async with httpx.AsyncClient(
                 timeout=self.timeout,
@@ -143,27 +164,24 @@ class OllamaService:
             data = response.json()
 
             if not isinstance(data, dict):
-                raise ApiError.internal()
+                return error_response()
 
             return data
 
-        except httpx.ConnectError as exc:
-            raise ApiError.internal() from exc
+        except httpx.ConnectError:
+            return error_response()
 
-        except httpx.TimeoutException as exc:
-            raise ApiError.internal() from exc
+        except httpx.TimeoutException:
+            return error_response()
 
-        except httpx.HTTPStatusError as exc:
-            raise ApiError.internal() from exc
+        except httpx.HTTPStatusError:
+            return error_response()
 
-        except ValueError as exc:
-            raise ApiError.internal() from exc
+        except ValueError:
+            return error_response()
 
-        except ApiError:
-            raise
-
-        except Exception as exc:
-            raise ApiError.internal() from exc
+        except Exception:
+            return error_response()
 
 
 ai_service = OllamaService()

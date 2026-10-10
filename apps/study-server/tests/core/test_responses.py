@@ -1,21 +1,18 @@
-import pytest
-from app.core.responses import (
-    INTERNAL_ERROR_MESSAGE,
-    ApiError,
-    ApiResponse,
-    ErrorDetail,
-    error_response,
-    success_response,
-)
+import json
+
+from app.core.responses import INTERNAL_ERROR_MESSAGE, ErrorDetail, error_response, success_response
 from app.core.trace import reset_trace_id, set_trace_id
+from starlette.responses import JSONResponse
 
 
 def test_success_response_uses_canonical_envelope() -> None:
+    """Xác nhận success_response trả đủ sáu khóa envelope chuẩn cùng data, meta và trace ID."""
     response = success_response(
         business_code="COURSE_LOADED",
         message="Loaded",
         trace_id="trace-id",
         data={"id": "course-1"},
+        meta={"page": 1},
     )
 
     assert response == {
@@ -23,70 +20,102 @@ def test_success_response_uses_canonical_envelope() -> None:
         "businessCode": "COURSE_LOADED",
         "message": "Loaded",
         "data": {"id": "course-1"},
+        "meta": {"page": 1},
+        "traceId": "trace-id",
+    }
+
+
+def test_success_response_defaults_data_and_meta() -> None:
+    """Xác nhận success_response mặc định data là None và meta là object rỗng."""
+    response = success_response(
+        business_code="RESOURCE_LOADED",
+        message="Loaded",
+        trace_id="trace-id",
+    )
+
+    assert response == {
+        "success": True,
+        "businessCode": "RESOURCE_LOADED",
+        "message": "Loaded",
+        "data": None,
         "meta": {},
         "traceId": "trace-id",
     }
 
 
-def test_error_response_puts_field_errors_in_canonical_meta() -> None:
-    error = ApiError(
+def test_error_response_returns_json_response_with_canonical_envelope_and_field_errors() -> None:
+    """Xác nhận error_response trả JSONResponse trực tiếp và đặt lỗi trường dưới
+    meta.fieldErrors."""
+    response = error_response(
         status_code=422,
         business_code="VALIDATION_ERROR",
         message="Invalid",
         trace_id="trace-id",
         data={"source": "query"},
         meta={"page": 1},
-        errors=[
-            ErrorDetail(field="email", code="INVALID_EMAIL", message="Invalid email"),
-        ],
+        errors=[ErrorDetail(field="email", code="INVALID_EMAIL", message="Invalid email")],
     )
-    response = error_response(error)
 
-    assert response["success"] is False
-    assert response["businessCode"] == "VALIDATION_ERROR"
-    assert response["message"] == "Invalid"
-    assert response["data"] == {"source": "query"}
-    assert response["traceId"] == "trace-id"
-    assert response["meta"] == {
-        "page": 1,
-        "fieldErrors": [
-            {"field": "email", "code": "INVALID_EMAIL", "message": "Invalid email"},
-        ],
+    assert isinstance(response, JSONResponse)
+    assert response.status_code == 422
+    assert response.headers["X-Trace-Id"] == "trace-id"
+    body = json.loads(response.body)
+    assert body == {
+        "success": False,
+        "businessCode": "VALIDATION_ERROR",
+        "message": "Invalid",
+        "data": {"source": "query"},
+        "meta": {
+            "page": 1,
+            "fieldErrors": [
+                {"field": "email", "code": "INVALID_EMAIL", "message": "Invalid email"},
+            ],
+        },
+        "traceId": "trace-id",
     }
-    assert "errors" not in response
 
 
-def test_internal_api_error_uses_current_trace_and_safe_defaults() -> None:
+def test_error_response_preserves_http_headers_and_sets_trace_header() -> None:
+    """Xác nhận error_response giữ header HTTP bổ sung và đặt trace ID đã phân giải."""
+    response = error_response(
+        status_code=401,
+        business_code="AUTH_REQUIRED",
+        headers={"WWW-Authenticate": "Bearer", "X-Trace-Id": "caller-value"},
+        trace_id="trace-id",
+    )
+
+    assert response.status_code == 401
+    assert response.headers["WWW-Authenticate"] == "Bearer"
+    assert response.headers["X-Trace-Id"] == "trace-id"
+    assert json.loads(response.body)["data"] == {}
+
+
+def test_internal_error_response_uses_current_trace_and_safe_defaults() -> None:
+    """Xác nhận lỗi mặc định dùng message an toàn và trace ID trong ContextVar hiện tại."""
     trace_id = "00000000-0000-0000-0000-000000000001"
     token = set_trace_id(trace_id)
     try:
-        error = ApiError.internal()
+        response = error_response()
     finally:
         reset_trace_id(token)
 
-    assert error.status_code == 500
-    assert error.business_code == "INTERNAL_SERVER_ERROR"
-    assert error.message == INTERNAL_ERROR_MESSAGE
-    assert error.trace_id == trace_id
+    assert response.status_code == 500
+    assert response.headers["X-Trace-Id"] == trace_id
+    assert json.loads(response.body) == {
+        "success": False,
+        "businessCode": "INTERNAL_SERVER_ERROR",
+        "message": INTERNAL_ERROR_MESSAGE,
+        "data": {},
+        "meta": {},
+        "traceId": trace_id,
+    }
 
 
-def test_internal_api_error_generates_trace_without_request_context() -> None:
-    error = ApiError.internal()
+def test_internal_error_response_generates_trace_without_request_context() -> None:
+    """Xác nhận error_response sinh trace ID UUID khi không có request context."""
+    response = error_response()
+    trace_id = response.headers["X-Trace-Id"]
 
-    assert error.trace_id
-    assert len(error.trace_id) == 36
-
-
-def test_api_response_raise_error_uses_controlled_exception() -> None:
-    response = ApiResponse(
-        business_code="RESOURCE_NOT_FOUND",
-        message="Not found",
-        trace_id="trace-id",
-        status_code=404,
-    )
-
-    with pytest.raises(ApiError) as error:
-        response.raise_error()
-
-    assert error.value.status_code == 404
-    assert error.value.business_code == "RESOURCE_NOT_FOUND"
+    assert trace_id
+    assert len(trace_id) == 36
+    assert json.loads(response.body)["traceId"] == trace_id

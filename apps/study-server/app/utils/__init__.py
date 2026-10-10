@@ -1,4 +1,4 @@
-"""Reusable Study application utilities."""
+"""Đánh dấu package chứa các tiện ích dùng chung trong ứng dụng Study."""
 
 from app.utils.auth import IssuedTokens, build_auth_payload, issue_tokens
 from app.utils.validate import (

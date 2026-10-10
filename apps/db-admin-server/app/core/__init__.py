@@ -1,1 +1,0 @@
-"""Shared DB Admin infrastructure."""

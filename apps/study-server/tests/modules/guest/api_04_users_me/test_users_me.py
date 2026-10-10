@@ -3,10 +3,11 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
+import app.modules.guest.api_04_users_me.validate as users_me_validate
 import app.modules.guest.api_04_users_me.view as users_me_view
 import pytest
 from app.core.database import get_db
-from app.core.responses import ApiError
+from app.core.responses import error_response
 from app.modules.guest.api_04_users_me.query import CURRENT_USER_PROFILE
 from fastapi.testclient import TestClient
 from sqlalchemy.exc import SQLAlchemyError
@@ -14,13 +15,18 @@ from sqlalchemy.exc import SQLAlchemyError
 
 class FakeSession:
     def __init__(self) -> None:
+        """Khởi tạo phiên database giả với các bộ đếm commit/rollback dùng để xác minh transaction
+        trong test."""
         self.rollback_count = 0
 
     def rollback(self) -> None:
+        """Tăng bộ đếm rollback để test xác nhận transaction được hoàn tác khi lỗi."""
         self.rollback_count += 1
 
 
 def make_user(*, include_password: bool = False) -> dict[str, Any]:
+    """Tạo profile Student giả; có thể thêm hash để kiểm tra response không lộ
+    thông tin xác thực."""
     created_at = datetime(2026, 9, 15, 12, 0, tzinfo=UTC)
     user: dict[str, Any] = {
         "id": 1001,
@@ -39,13 +45,16 @@ def make_user(*, include_password: bool = False) -> dict[str, Any]:
 
 
 def override_db(session: FakeSession):
+    """Tạo dependency thay thế database để route dùng FakeSession mà không mở kết nối thật."""
     def dependency():
+        """Yield FakeSession được giữ trong closure cho request kiểm thử."""
         yield session
 
     return dependency
 
 
 def valid_claims() -> dict[str, Any]:
+    """Tạo claim access token hợp lệ cho một Student dùng trong kiểm thử."""
     return {"sub": "1001", "roles": ["STUDENT"]}
 
 
@@ -53,9 +62,10 @@ def test_current_user_returns_safe_profile_and_preserves_trace_id(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra API hồ sơ chỉ trả trường an toàn của Student và giữ trace ID trong body/header."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
-    monkeypatch.setattr(users_me_view, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         users_me_view,
         "find_current_user",
@@ -88,12 +98,14 @@ def test_current_user_uses_sub_as_numeric_user_id(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra claim sub dạng chuỗi số được đổi thành user ID nguyên trước khi truy vấn."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     captured: dict[str, int] = {}
-    monkeypatch.setattr(users_me_view, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
 
     def find_user(db, *, user_id: int):
+        """Ghi user ID được tra cứu và trả profile giả để kiểm tra ánh xạ claim sub."""
         captured["user_id"] = user_id
         return make_user()
 
@@ -117,6 +129,7 @@ def test_current_user_rejects_missing_or_malformed_bearer_header(
     client: TestClient,
     authorization: str | None,
 ) -> None:
+    """Kiểm tra Authorization thiếu hoặc sai cú pháp Bearer bị từ chối trước khi đọc hồ sơ."""
     headers = {} if authorization is None else {"Authorization": authorization}
 
     response = client.get("/api/v1/users/me", headers=headers)
@@ -129,15 +142,14 @@ def test_current_user_rejects_invalid_jwt(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra JWT không hợp lệ hoặc hết hạn được ánh xạ thành lỗi xác thực HTTP 401."""
     monkeypatch.setattr(
-        users_me_view,
+        users_me_validate,
         "decode_access_token",
-        lambda token: (_ for _ in ()).throw(
-            ApiError(
-                status_code=401,
-                business_code="DESIGN_AUTHENTICATION_REQUIRED",
-                message="invalid token",
-            )
+        lambda token: error_response(
+            status_code=401,
+            business_code="DESIGN_AUTHENTICATION_REQUIRED",
+            message="invalid token",
         ),
     )
 
@@ -165,7 +177,8 @@ def test_current_user_rejects_invalid_required_claims(
     monkeypatch: pytest.MonkeyPatch,
     claims: dict[str, Any],
 ) -> None:
-    monkeypatch.setattr(users_me_view, "decode_access_token", lambda token: claims)
+    """Kiểm tra access token thiếu subject hoặc role hợp lệ bị từ chối an toàn."""
+    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: claims)
 
     response = client.get(
         "/api/v1/users/me",
@@ -180,8 +193,9 @@ def test_current_user_rejects_non_student_before_database_lookup(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra user không có role STUDENT bị chặn trước khi gọi truy vấn database."""
     monkeypatch.setattr(
-        users_me_view,
+        users_me_validate,
         "decode_access_token",
         lambda token: {"sub": "1001", "roles": ["MENTOR"]},
     )
@@ -204,9 +218,10 @@ def test_current_user_maps_missing_database_record_to_authentication_error(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra không tìm thấy profile cho user đã xác thực được ánh xạ thành lỗi 401."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
-    monkeypatch.setattr(users_me_view, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(users_me_view, "find_current_user", lambda db, *, user_id: None)
 
     response = client.get(
@@ -223,9 +238,10 @@ def test_current_user_rolls_back_and_hides_database_failure(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra lỗi truy vấn profile làm rollback Session và không lộ chi tiết database."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
-    monkeypatch.setattr(users_me_view, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         users_me_view,
         "find_current_user",
@@ -247,7 +263,8 @@ def test_current_user_maps_invalid_profile_shape_to_internal_error(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(users_me_view, "decode_access_token", lambda token: valid_claims())
+    """Kiểm tra hàng thiếu trường bắt buộc của UserProfile thành lỗi nội bộ an toàn."""
+    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         users_me_view,
         "find_current_user",
