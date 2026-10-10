@@ -149,3 +149,12 @@ def test_get_resources_database_error_rolls_back(
     payload = response.json()
     assert payload["success"] is False
     assert payload["businessCode"] == "DESIGN_INTERNAL_ERROR"
+
+
+def test_get_resources_invalid_course_id_returns_422(client: TestClient) -> None:
+    response = client.get("/api/v1/courses/-5/resources")
+    assert response.status_code == 422
+    payload = response.json()
+    assert payload["success"] is False
+    assert payload["businessCode"] == "DESIGN_VALIDATION_ERROR"
+    assert payload["meta"]["fieldErrors"][0]["field"] == "course_id"

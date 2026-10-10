@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from app.core.responses import error_response, success_response
-from app.core.security import decode_access_token
 from app.modules.guest.api_15_courses_enrollment_status.models import (
     EnrollmentStatusResponse,
 )
@@ -14,7 +13,9 @@ from app.modules.guest.api_15_courses_enrollment_status.query import (
     find_course_by_id,
     find_enrollment,
 )
-from app.utils.validate import extract_bearer_token, validate_access_claims
+from app.modules.guest.api_15_courses_enrollment_status.validate import (
+    validate_enrollment_status_request,
+)
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -33,17 +34,17 @@ def get_enrollment_status(
 ) -> dict[str, Any] | JSONResponse:
     """Check enrollment status for a course."""
 
-    user_id: int | None = None
-    if authorization:
-        try:
-            token = extract_bearer_token(authorization)
-            claims = decode_access_token(token)
-            user_id, _ = validate_access_claims(claims)
-        except (ValueError, Exception):
-            logger.debug("Optional token validation failed; trace_id=%s", trace_id)
+    validation = validate_enrollment_status_request(
+        course_id=course_id,
+        authorization=authorization,
+        trace_id=trace_id,
+    )
+    if isinstance(validation, JSONResponse):
+        return validation
+    valid_course_id, user_id = validation
 
     try:
-        course = find_course_by_id(db, course_id=course_id)
+        course = find_course_by_id(db, course_id=valid_course_id)
     except SQLAlchemyError:
         db.rollback()
         logger.exception("Course lookup failed; trace_id=%s", trace_id)

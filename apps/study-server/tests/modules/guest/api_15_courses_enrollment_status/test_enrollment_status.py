@@ -155,3 +155,48 @@ def test_get_enrollment_status_database_error_rolls_back(
     payload = response.json()
     assert payload["success"] is False
     assert payload["businessCode"] == "DESIGN_INTERNAL_ERROR"
+
+
+def test_get_enrollment_status_invalid_course_id_returns_422(client: TestClient) -> None:
+    response = client.get("/api/v1/courses/0/enrollment-status")
+    assert response.status_code == 422
+    payload = response.json()
+    assert payload["success"] is False
+    assert payload["businessCode"] == "DESIGN_VALIDATION_ERROR"
+    assert payload["meta"]["fieldErrors"][0]["field"] == "course_id"
+
+
+def test_get_enrollment_status_with_valid_bearer_token(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = FakeSession()
+    client.app.dependency_overrides[get_db] = override_db(session)
+
+    monkeypatch.setattr(
+        enrollment_view,
+        "find_course_by_id",
+        lambda db, *, course_id: {"id": course_id, "status": "PUBLISHED"},
+    )
+    passed_user_id = None
+
+    def mock_find_enrollment(db, *, course_id, user_id=None):
+        nonlocal passed_user_id
+        passed_user_id = user_id
+        return sample_enrollment_row()
+
+    monkeypatch.setattr(enrollment_view, "find_enrollment", mock_find_enrollment)
+    monkeypatch.setattr(
+        "app.modules.guest.api_15_courses_enrollment_status.validate.decode_access_token",
+        lambda token: {"sub": "1001", "roles": ["STUDENT"]},
+    )
+
+    response = client.get(
+        "/api/v1/courses/101/enrollment-status",
+        headers={"Authorization": "Bearer fake-valid-token"},
+    )
+    assert response.status_code == 200
+    assert passed_user_id == 1001
+    payload = response.json()
+    assert payload["success"] is True
+    assert payload["data"]["user_id"] == 1001

@@ -11,6 +11,9 @@ from app.modules.guest.api_11_courses_resources.query import (
     find_course_resources,
     find_published_course,
 )
+from app.modules.guest.api_11_courses_resources.validate import (
+    validate_course_resources_request,
+)
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -27,6 +30,10 @@ def get_course_resources(
     trace_id: str,
 ) -> dict[str, Any] | JSONResponse:
     """Return resources for a published course."""
+
+    validation = validate_course_resources_request(course_id, trace_id=trace_id)
+    if isinstance(validation, JSONResponse):
+        return validation
 
     try:
         course = find_published_course(db, course_id=course_id)
