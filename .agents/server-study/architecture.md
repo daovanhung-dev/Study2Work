@@ -29,8 +29,8 @@ implementation remain unwired.
 - `app/core/database.py`: sync SQLAlchemy engine/session/query primitives.
 - `app/core/middleware.py`: trace middleware and shared FastAPI exception handlers.
 - `app/core/security/*`: password, access token, refresh token primitives.
-- `app/utils/auth.py`: access/refresh token issuance, expiry metadata and public auth payload mapping.
-- `app/utils/validate.py`: shared pure validation/normalization helpers used by API validators, including API #3 auth validators and API #4 Bearer/JWT claim validators; request models do not call validation helpers.
+- `app/utils/auth.py`: shared Bearer/JWT parsing and claim checks, Student current-user guard, refresh-token input validation, access/refresh token issuance, expiry metadata and public auth payload mapping. It delegates cryptographic operations to `app/core/security`.
+- `app/utils/validate.py`: shared pure input normalization/validation helpers used by API validators, such as email, blank-value, sort and search handling; it does not own Bearer/JWT/token helpers.
 - `app/modules/guest/api_03_auth_login/models.py`: login and refresh request contracts.
 - `app/modules/guest/api_03_auth_login/query.py`: SQL constants for user lookup and refresh-token persistence.
 - `app/modules/guest/api_03_auth_login/view.py`: login credential flow, refresh rotation, transaction and response mapping.
@@ -84,8 +84,9 @@ re-evaluate the complete import chain rather than stop at the first error.
 
 ```text
 models.py: declarative model classes, fields/types/defaults and data conversion
-→ app/utils/validate.py: shared pure validation/normalization helpers
-→ API #1–#7 validate.py: input rules and normalization; invalid input returns `error_response(...)`
+→ app/utils/validate.py: shared pure input validation/normalization helpers
+→ app/utils/auth.py: shared authentication and token helpers used by API #3, #4 and #14
+→ API-specific validate.py when request input rules exist; invalid input returns `error_response(...)`
 → query.py (only when SQL is needed): SQL statement constants
 → view.py: main API flow, query/provider calls, business checks, transactions and response mapping
 ```
@@ -100,9 +101,11 @@ branch. API #2 calls an email provider without database access, so it has no
 not be treated as the pattern for new code. No runtime relocation is implied by
 this context note.
 
-Auth login/refresh and API #4 use shared pure helpers from
-`app/utils/validate.py` through their API validators. Module validators handle
-input rules before business/DB operations; DB-backed business checks and
-transaction ownership stay in `view.py`. Comments in `view.py` must explain
+Auth login/refresh uses shared token helpers from `app/utils/auth.py` and input
+normalization from `app/utils/validate.py`. API #4 and API #14 call the shared
+Student authentication guard from `app/utils/auth.py`; API #4 has no separate
+validator module. Module validators handle API-specific input rules before
+business/DB operations; DB-backed business checks and transaction ownership
+stay in `view.py`. Comments in `view.py` must explain
 each meaningful operation in handlers and helpers; cohesive consecutive
 statements may share a comment.

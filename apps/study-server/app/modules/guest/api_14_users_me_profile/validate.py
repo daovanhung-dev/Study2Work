@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from app.core.responses import ErrorDetail, error_response
-from app.modules.guest.api_04_users_me.validate import validate_current_user_request
 from app.modules.guest.api_14_users_me_profile.models import ProfileUpdateRequest
+from app.utils.auth import validate_current_user_request  #edit
 from starlette.responses import JSONResponse
 
 

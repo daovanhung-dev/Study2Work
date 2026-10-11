@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from app.core.responses import ErrorDetail, error_response
 from app.modules.guest.api_03_auth_login.models import LoginRequest, RefreshRequest
+from app.utils.auth import validate_refresh_token
 from app.utils.validate import normalize_email
 from starlette.responses import JSONResponse
 
@@ -58,7 +59,11 @@ def validate_refresh_request(
 ) -> RefreshRequest | JSONResponse:
     """Từ chối refresh token rỗng hoặc chỉ có khoảng trắng."""
 
-    if user_data.refresh_token.strip():
+    try:
+        validate_refresh_token(user_data.refresh_token)
+    except ValueError:
+        pass
+    else:
         return user_data
     return error_response(
         status_code=422,

@@ -3,8 +3,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-import app.modules.guest.api_04_users_me.validate as users_me_validate
 import app.modules.guest.api_04_users_me.view as users_me_view
+import app.utils.auth as auth_utils
 import pytest
 from app.core.database import get_db
 from app.core.responses import error_response
@@ -65,7 +65,7 @@ def test_current_user_returns_safe_profile_and_preserves_trace_id(
     """Kiểm tra API hồ sơ chỉ trả trường an toàn của Student và giữ trace ID trong body/header."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
-    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         users_me_view,
         "find_current_user",
@@ -102,7 +102,7 @@ def test_current_user_uses_sub_as_numeric_user_id(
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     captured: dict[str, int] = {}
-    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
 
     def find_user(db, *, user_id: int):
         """Ghi user ID được tra cứu và trả profile giả để kiểm tra ánh xạ claim sub."""
@@ -144,7 +144,7 @@ def test_current_user_rejects_invalid_jwt(
 ) -> None:
     """Kiểm tra JWT không hợp lệ hoặc hết hạn được ánh xạ thành lỗi xác thực HTTP 401."""
     monkeypatch.setattr(
-        users_me_validate,
+        auth_utils,
         "decode_access_token",
         lambda token: error_response(
             status_code=401,
@@ -178,7 +178,7 @@ def test_current_user_rejects_invalid_required_claims(
     claims: dict[str, Any],
 ) -> None:
     """Kiểm tra access token thiếu subject hoặc role hợp lệ bị từ chối an toàn."""
-    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: claims)
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: claims)
 
     response = client.get(
         "/api/v1/users/me",
@@ -195,7 +195,7 @@ def test_current_user_rejects_non_student_before_database_lookup(
 ) -> None:
     """Kiểm tra user không có role STUDENT bị chặn trước khi gọi truy vấn database."""
     monkeypatch.setattr(
-        users_me_validate,
+        auth_utils,
         "decode_access_token",
         lambda token: {"sub": "1001", "roles": ["MENTOR"]},
     )
@@ -221,7 +221,7 @@ def test_current_user_maps_missing_database_record_to_authentication_error(
     """Kiểm tra không tìm thấy profile cho user đã xác thực được ánh xạ thành lỗi 401."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
-    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(users_me_view, "find_current_user", lambda db, *, user_id: None)
 
     response = client.get(
@@ -241,7 +241,7 @@ def test_current_user_rolls_back_and_hides_database_failure(
     """Kiểm tra lỗi truy vấn profile làm rollback Session và không lộ chi tiết database."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
-    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         users_me_view,
         "find_current_user",
@@ -264,7 +264,7 @@ def test_current_user_maps_invalid_profile_shape_to_internal_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Kiểm tra hàng thiếu trường bắt buộc của UserProfile thành lỗi nội bộ an toàn."""
-    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         users_me_view,
         "find_current_user",

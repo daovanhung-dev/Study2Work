@@ -23,8 +23,11 @@ the API validator catches it and maps it through `error_response(...)`. Keep
 schema-only request metadata in route declarations. Do not apply a rule such as
 `@gmail.com` unless the current API contract confirms it.
 
-APIs #1–#7 each have a module-local `validate.py`; shared email, bearer/JWT,
-sort and search normalization helpers live in `app/utils/validate.py`.
+Module-local `validate.py` files contain API-specific request rules where
+needed; API #4 uses the shared current-user guard directly and has no
+module-local validator. Shared email, blank-value, sort and search helpers live
+in `app/utils/validate.py`; Bearer/JWT and token helpers live in
+`app/utils/auth.py`. API #14 profile validation reuses that shared auth guard.
 
 `query.py` is present only when the module needs SQL. It contains SQL statement
 string constants only: no functions, classes, helpers, application/DB imports,
@@ -53,6 +56,7 @@ The router remains thin and delegates the API flow to `view.py`.
 | `guest/api_01_auth_register` | `SOURCE_BACKED` | `register-account.md` |
 | `guest/api_03_auth_login` | `SOURCE_BACKED` | Login and refresh-token flow in current source |
 | `guest/api_04_users_me` | `SOURCE_BACKED` | API #4 current Student profile read flow |
+| `guest/api_14_users_me_profile` | `SOURCE_BACKED` | Student profile update; reuses the shared Student guard through `app/utils/auth.py` |
 | `guest/api_05_categories` | `SOURCE_BACKED` | API #5 public active-category read flow |
 | `guest/api_02_auth_verify_email_send` | `SOURCE_BACKED` | API #2 public verification dispatch through injectable stub provider |
 | `guest/api_06_courses` | `SOURCE_BACKED` | API #6 public course list with pagination |

@@ -3,10 +3,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import app.utils.auth as auth_utils
 from app.core.database import execute_query, query_one
 from app.core.responses import error_response, success_response
 from app.core.security import verify_password
-from app.core.security.refresh_token import hash_refresh_token
 from app.modules.guest.api_03_auth_login.models import LoginRequest, RefreshRequest
 from app.modules.guest.api_03_auth_login.query import (
     INSERT_REFRESH_TOKEN,
@@ -18,7 +18,6 @@ from app.modules.guest.api_03_auth_login.validate import (
     validate_login_request,
     validate_refresh_request,
 )
-from app.utils.auth import build_auth_payload, issue_tokens
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
@@ -64,7 +63,7 @@ def login(
             trace_id=trace_id,
         )
 
-    tokens = issue_tokens(user_id=user["id"], role=str(user["role"]))
+    tokens = auth_utils.issue_tokens(user_id=user["id"], role=str(user["role"]))
     if isinstance(tokens, JSONResponse):
         db.rollback()
         logger.error("Login token issuance failed; trace_id=%s", trace_id)
@@ -90,7 +89,7 @@ def login(
         business_code="DESIGN_RESOURCE_RETRIEVED",
         message="Đăng nhập thành công.",
         trace_id=trace_id,
-        data=build_auth_payload(user=user, tokens=tokens),
+        data=auth_utils.build_auth_payload(user=user, tokens=tokens),
     )
 
 
@@ -108,7 +107,7 @@ def refresh(
         return validated_user_data
     user_data = validated_user_data
 
-    refresh_hash = hash_refresh_token(user_data.refresh_token)
+    refresh_hash = auth_utils.hash_refresh_token(user_data.refresh_token)
     if isinstance(refresh_hash, JSONResponse):
         db.rollback()
         logger.error("Refresh-token hashing failed; trace_id=%s", trace_id)
@@ -137,7 +136,7 @@ def refresh(
             trace_id=trace_id,
         )
 
-    tokens = issue_tokens(user_id=session["id"], role=str(session["role"]))
+    tokens = auth_utils.issue_tokens(user_id=session["id"], role=str(session["role"]))
     if isinstance(tokens, JSONResponse):
         db.rollback()
         logger.error("Refresh-token issuance failed; trace_id=%s", trace_id)
@@ -177,7 +176,7 @@ def refresh(
         business_code="DESIGN_RESOURCE_RETRIEVED",
         message="Làm mới phiên đăng nhập thành công.",
         trace_id=trace_id,
-        data=build_auth_payload(user=session, tokens=tokens),
+        data=auth_utils.build_auth_payload(user=session, tokens=tokens),
     )
 
 

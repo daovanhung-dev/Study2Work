@@ -2,13 +2,15 @@
 
 ```text
 TEST_SUITE_PRESENT: YES
-TEST_STATUS: VERIFIED (165 tests)
+TEST_STATUS: VERIFIED (191 tests)
 ```
 
 Tests under `apps/study-server/tests/` cover config, DB helpers, responses and
 exception handlers, security tokens, health/security behavior, API #1 register, API #2 verify-email
-dispatch, API #3 login/refresh, API #4 current-user profile access, API #5
-category retrieval, API #6 public course retrieval and API #7 course search.
+dispatch, API #3 login/refresh, API #4 current-user profile access, API #14
+profile update, API #5 category retrieval, API #6 public course retrieval and
+API #7 course search. API #4 and API #14 share the auth guard in
+`app/utils/auth.py`; security primitive tests remain under `tests/core`.
 The API-specific tests are grouped under
 `tests/modules/guest/api_01_auth_register` through
 `tests/modules/guest/api_07_courses_search`; full collection is available.

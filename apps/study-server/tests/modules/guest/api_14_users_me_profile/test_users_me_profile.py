@@ -3,8 +3,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-import app.modules.guest.api_04_users_me.validate as users_me_validate
 import app.modules.guest.api_14_users_me_profile.view as profile_view
+import app.utils.auth as auth_utils
 import pytest
 from app.core.database import get_db
 from app.modules.guest.api_14_users_me_profile.query import UPDATE_CURRENT_USER_PROFILE
@@ -91,7 +91,7 @@ def test_update_profile_updates_source_backed_fields_and_ignores_bio(
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     captured: dict[str, Any] = {}
-    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
 
     def update_user(db, *, user_id: int, user_data):
         """Ghi dữ liệu đã chuẩn hóa và trả profile giả cho response thành công."""
@@ -149,7 +149,7 @@ def test_update_profile_accepts_null_for_nullable_fields(
 
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
-    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         profile_view,
         "update_current_user_profile",
@@ -202,7 +202,7 @@ def test_update_profile_rejects_blank_full_name_before_database(
 ) -> None:
     """Kiểm tra full_name chỉ có khoảng trắng bị từ chối trước mutation database."""
 
-    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         profile_view,
         "update_current_user_profile",
@@ -242,7 +242,7 @@ def test_update_profile_rejects_non_student_before_database(
     """Kiểm tra role không phải Student nhận 403 trước khi update database."""
 
     monkeypatch.setattr(
-        users_me_validate,
+        auth_utils,
         "decode_access_token",
         lambda token: {"sub": "1001", "roles": ["MENTOR"]},
     )
@@ -272,7 +272,7 @@ def test_update_profile_maps_missing_user_to_authentication_error(
 
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
-    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         profile_view,
         "update_current_user_profile",
@@ -299,7 +299,7 @@ def test_update_profile_rolls_back_database_failure(
 
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
-    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         profile_view,
         "update_current_user_profile",
@@ -326,7 +326,7 @@ def test_update_profile_rolls_back_invalid_returning_shape(
 
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
-    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         profile_view,
         "update_current_user_profile",
@@ -353,7 +353,7 @@ def test_update_profile_rolls_back_commit_failure(
 
     session = FakeSession(commit_error=True)
     client.app.dependency_overrides[get_db] = override_db(session)
-    monkeypatch.setattr(users_me_validate, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
     monkeypatch.setattr(
         profile_view,
         "update_current_user_profile",

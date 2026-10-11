@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection, Mapping
-from typing import Any
+from collections.abc import Collection
 
 from pydantic import EmailStr, TypeAdapter, ValidationError
 
@@ -39,11 +38,6 @@ def validate_login_password(value: object) -> object:
     return reject_blank_password(value)
 
 
-def validate_refresh_token(value: object) -> object:
-    """Áp dụng helper chung để từ chối refresh token rỗng."""
-    return reject_blank_value(value)
-
-
 def normalize_email(value: object, *, max_length: int | None = None) -> str:
     """Trim và kiểm tra email, sau đó trả chuỗi email đã chuẩn hóa bởi Pydantic."""
 
@@ -69,42 +63,6 @@ def require_non_blank(value: object, *, field_name: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field_name} must not be blank.")
     return value
-
-
-def extract_bearer_token(authorization: str | None) -> str:
-    """Tách token từ header Bearer hoặc phát sinh ValueError để validator của API ánh xạ."""
-
-    if authorization is None:
-        raise ValueError("Authorization header is required.")
-
-    parts = authorization.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise ValueError("Authorization header must use Bearer scheme.")
-    return parts[1]
-
-
-def validate_access_claims(claims: Mapping[str, Any]) -> tuple[int, list[str]]:
-    """Kiểm tra subject/roles của access token Study và chuẩn hóa danh sách role."""
-
-    subject = claims.get("sub")
-    if not isinstance(subject, str) or not subject:
-        raise ValueError("JWT subject is missing.")
-
-    try:
-        user_id = int(subject)
-    except ValueError as exc:
-        raise ValueError("JWT subject is not a numeric user ID.") from exc
-
-    if user_id <= 0:
-        raise ValueError("JWT subject is not a positive user ID.")
-
-    raw_roles = claims.get("roles")
-    if not isinstance(raw_roles, list) or not raw_roles:
-        raise ValueError("JWT roles are missing.")
-    if not all(isinstance(role, str) and role.strip() for role in raw_roles):
-        raise ValueError("JWT roles are invalid.")
-
-    return user_id, [role.strip().upper() for role in raw_roles]
 
 
 def normalize_sort(

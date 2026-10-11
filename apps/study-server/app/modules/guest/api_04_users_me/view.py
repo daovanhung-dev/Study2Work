@@ -10,7 +10,7 @@ from app.core.database import query_one
 from app.core.responses import error_response, success_response
 from app.modules.guest.api_04_users_me.models import UserProfile
 from app.modules.guest.api_04_users_me.query import CURRENT_USER_PROFILE
-from app.modules.guest.api_04_users_me.validate import validate_current_user_request
+from app.utils.auth import validate_current_user_request
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session

@@ -5,7 +5,7 @@ Source root: `apps/study-server/`
 ```text
 CONTEXT_MODE: DEEP
 RUNTIME_STATUS: VERIFIED_IMPORT (13 current routes)
-TEST_STATUS: VERIFIED (165 tests)
+TEST_STATUS: VERIFIED (191 tests)
 BUSINESS_MODULE_STATUS: SOURCE_BACKED (register, verify-email dispatch stub, login, refresh, categories, courses, course search)
 DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED / do not infer from design docs
 ```
@@ -45,8 +45,8 @@ latest user requirement
    và migration artifacts là checked-in schema/design evidence, còn live metadata
    mới xác nhận runtime availability; migration chưa được apply live.
 6. Trước mọi runtime fix, kiểm tra toàn bộ import chain `main -> api/core` và test collection trong đúng source hiện tại.
-7. `models.py` chỉ chứa khai báo model class, field, kiểu, default, cấu hình model và chuyển đổi dữ liệu; không đặt hàm/helper, hằng số độc lập, validation input hay business logic ở đây. Validation và chuẩn hóa input thuộc `validate.py`; helper thuần dùng chung nằm trong `app/utils/validate.py`.
-8. Validator của API #1–#7 trả model/dữ liệu đã chuẩn hóa khi hợp lệ; khi input sai, chỉ trả lỗi bằng `return error_response(...)`. Không raise response lỗi, tự dựng error response hoặc truy vấn DB/tạo side effect trong validator. Helper dùng chung có thể báo lỗi nội bộ bằng exception để validator bắt và ánh xạ qua `error_response(...)`. Không áp dụng rule như `@gmail.com` nếu contract chưa xác nhận.
+7. `models.py` chỉ chứa khai báo model class, field, kiểu, default, cấu hình model và chuyển đổi dữ liệu; không đặt hàm/helper, hằng số độc lập, validation input hay business logic ở đây. Validation input thuộc `validate.py`; helper chuẩn hóa dữ liệu dùng chung nằm trong `app/utils/validate.py`, còn xác thực Bearer/JWT và token dùng chung nằm trong `app/utils/auth.py`.
+8. Validator theo API trả model/dữ liệu đã chuẩn hóa khi hợp lệ; khi input sai, chỉ trả lỗi bằng `return error_response(...)`. Chỉ tạo module-local `validate.py` khi API có rule input riêng; API #4 dùng guard chung từ `app/utils/auth.py` trực tiếp. Không raise response lỗi, tự dựng error response hoặc truy vấn DB/tạo side effect trong validator. Helper dùng chung có thể báo lỗi nội bộ bằng exception để validator bắt và ánh xạ qua `error_response(...)`. Không áp dụng rule như `@gmail.com` nếu contract chưa xác nhận.
 9. `query.py`, nếu module cần truy vấn SQL, chỉ chứa các câu SQL dưới dạng constants; không khai báo function/class/helper, import hay gọi DB helper, chuẩn bị tham số hoặc thực thi truy vấn. Việc bind tham số và gọi `query_one`/`query_many` thuộc `view.py`. Không tạo `query.py` rỗng cho module không truy cập DB; API #2 hiện dispatch qua provider và không có file này.
 10. Không coi `apps/study-server/AGENTS.md` hoặc `apps/study-server/.agent/` là context hợp lệ; canonical context duy nhất nằm dưới `.agents/server-study/`.
 11. `view.py` là nơi điều phối luồng chính của API. Mỗi thao tác có ý nghĩa trong handler và helper phải có comment ngắn bằng tiếng Việt giải thích mục đích: validation/early return, query hoặc provider call, nhánh nghiệp vụ/lỗi, rollback/commit, ánh xạ dữ liệu và dựng response. Các câu lệnh liền nhau thuộc cùng một bước có thể dùng chung comment; không cần comment riêng cho phép gán đơn giản. API-facing handler vẫn có comment header ngay trước function theo API/endpoint; helper nội bộ không gắn API header. Comment phải mô tả source hiện tại khi DD có discrepancy. Mọi hàm và method trong source, tests và scripts phải có docstring tiếng Việt nêu mục đích; khi phù hợp, docstring mô tả thêm tham số, giá trị trả về, lỗi và tác dụng phụ.

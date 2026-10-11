@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import app.modules.guest.api_03_auth_login.view as auth_view
+import app.utils.auth as auth_utils
 import pytest
 from app.core.database import get_db
 from app.core.responses import error_response
@@ -121,7 +122,7 @@ def test_login_returns_profile_and_tokens_and_commits(
     executed: list[dict[str, Any]] = []
 
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: user)
-    monkeypatch.setattr(auth_view, "issue_tokens", lambda user_id, role: make_tokens())
+    monkeypatch.setattr(auth_utils, "issue_tokens", lambda user_id, role: make_tokens())
     monkeypatch.setattr(
         auth_view,
         "execute_query",
@@ -224,7 +225,7 @@ def test_login_maps_token_issuance_error_response_to_internal_error(
     session = FakeSession()
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: make_user())
     monkeypatch.setattr(
-        auth_view,
+        auth_utils,
         "issue_tokens",
         lambda **kwargs: error_response(),
     )
@@ -254,9 +255,9 @@ def test_refresh_rotates_old_token_atomically(monkeypatch: pytest.MonkeyPatch) -
     user["refresh_token_id"] = 9
     executed: list[tuple[str, dict[str, Any]]] = []
 
-    monkeypatch.setattr(auth_view, "hash_refresh_token", lambda token: "old-token-hash")
+    monkeypatch.setattr(auth_utils, "hash_refresh_token", lambda token: "old-token-hash")
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: user)
-    monkeypatch.setattr(auth_view, "issue_tokens", lambda user_id, role: make_tokens())
+    monkeypatch.setattr(auth_utils, "issue_tokens", lambda user_id, role: make_tokens())
 
     def execute(db, query, params):
         """Ghi lại SQL cùng tham số rồi trả kết quả giả cho thao tác thu hồi refresh token."""
@@ -282,7 +283,7 @@ def test_refresh_rotates_old_token_atomically(monkeypatch: pytest.MonkeyPatch) -
 def test_refresh_rejects_invalid_token(monkeypatch: pytest.MonkeyPatch) -> None:
     """Kiểm tra refresh token không hợp lệ hoặc không còn hiệu lực bị từ chối với HTTP 401."""
     session = FakeSession()
-    monkeypatch.setattr(auth_view, "hash_refresh_token", lambda token: "missing-hash")
+    monkeypatch.setattr(auth_utils, "hash_refresh_token", lambda token: "missing-hash")
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: None)
 
     error = auth_view.refresh(
@@ -316,7 +317,7 @@ def test_auth_http_login_returns_tokens(
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: make_user())
-    monkeypatch.setattr(auth_view, "issue_tokens", lambda user_id, role: make_tokens())
+    monkeypatch.setattr(auth_utils, "issue_tokens", lambda user_id, role: make_tokens())
     monkeypatch.setattr(
         auth_view,
         "execute_query",
