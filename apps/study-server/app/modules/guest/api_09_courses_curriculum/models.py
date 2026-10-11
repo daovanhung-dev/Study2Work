@@ -1,10 +1,12 @@
+"""Mô hình dữ liệu cho API #9 danh sách bài học của khóa học (curriculum)."""
+
 from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
 
 class Lesson(BaseModel):
-    """Public lesson projection in a course curriculum."""
+    """Mô hình bài học công khai trong curriculum của khóa học."""
 
     model_config = ConfigDict(extra="ignore")
     id: int
@@ -17,7 +19,7 @@ class Lesson(BaseModel):
 
 
 class Pagination(BaseModel):
-    """Pagination metadata for the curriculum page."""
+    """Thông tin phân trang cho trang curriculum."""
 
     page: int
     size: int
@@ -26,7 +28,7 @@ class Pagination(BaseModel):
 
 
 class LessonPage(BaseModel):
-    """Public curriculum page collection and pagination metadata."""
+    """Tập hợp danh sách bài học và metadata phân trang."""
 
     items: list[Lesson]
     pagination: Pagination

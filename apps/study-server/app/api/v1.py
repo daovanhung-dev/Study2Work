@@ -315,12 +315,19 @@ def search_courses(
     )
 
 
-@router.get("/courses/{course_id}", status_code=status.HTTP_200_OK)
+# API #08 courses_detail
+@router.get(
+    "/courses/{course_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+)
 def course_detail(
     course_id: str,
     request: Request,
     db: Session = db_dependency,
-) -> dict[str, Any]:
+) -> dict[str, Any] | JSONResponse:
+    """Nhận course_id, Session và trace ID rồi chuyển cho get_course_detail. Route trả mã HTTP 200;
+    kiểm tra tham số, truy vấn chi tiết khóa học và dựng response do view đảm nhiệm."""
     return get_course_detail(
         course_id_raw=course_id,
         db=db,
@@ -328,12 +335,20 @@ def course_detail(
     )
 
 
-@router.get("/courses/{course_id}/curriculum", status_code=status.HTTP_200_OK)
+# API #09 courses_curriculum
+@router.get(
+    "/courses/{course_id}/curriculum",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+)
 def course_curriculum(
     course_id: str,
     request: Request,
     db: Session = db_dependency,
-) -> dict[str, Any]:
+) -> dict[str, Any] | JSONResponse:
+    """Nhận course_id, Session và trace ID rồi chuyển cho get_course_curriculum. Route trả mã
+    HTTP 200; kiểm tra tham số, kiểm tra khóa học, truy vấn bài học và dựng response do view đảm
+    nhiệm."""
     return get_course_curriculum(
         course_id_raw=course_id,
         db=db,
