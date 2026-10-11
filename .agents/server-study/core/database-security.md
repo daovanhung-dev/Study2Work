@@ -83,10 +83,14 @@ Signing/verification key selection:
 - `compare_refresh_token`: constant-time `hmac.compare_digest`.
 - Missing refresh pepper becomes a safe internal `error_response`.
 
-Shared Bearer-header and access-claim validators return `error_response(...)`
-for authentication failures. Helpers used as Pydantic field validators may
-raise `ValueError` internally; FastAPI's validation handler converts resulting
-request validation failures into `error_response(...)` before HTTP serialization.
+Application-level auth ownership is `app/utils/auth.py`: it parses Bearer
+headers, validates access claims, applies the shared Student current-user guard,
+and rejects blank refresh-token input. It delegates JWT signing/decoding and
+refresh-token generation/hashing to the primitives above. Authentication
+failures retain the existing `error_response(...)` mappings. Helpers used as
+Pydantic field validators may raise `ValueError` internally; FastAPI's
+validation handler converts resulting request validation failures into
+`error_response(...)` before HTTP serialization.
 
 ## Critical absence
 
@@ -94,5 +98,6 @@ Current register and auth SQL reference `users`; login/refresh also reference
 `refresh_tokens`, but source inspection alone does not verify live schema/table
 metadata. `DB.sql`, migration artifacts and DD pages are not sufficient runtime
 evidence when they conflict with live metadata. Register and auth views own
-their lookup, security, token persistence and commit/rollback behavior. API #4
-current-user orchestration is wired and uses the shared access-token helpers.
+their lookup, password checks, token persistence and commit/rollback behavior.
+API #3, API #4 and API #14 use app-level token/auth helpers from
+`app/utils/auth.py`; API #4 and API #14 share the same Student guard.

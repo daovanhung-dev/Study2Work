@@ -22,21 +22,24 @@ For API implementation, keep the module flow explicit:
 ```text
 requirement / DD / schema
 -> models.py: declarative model classes, fields/types/defaults and data conversion
--> app/utils/validate.py: shared pure validation/normalization helpers
--> each API's validate.py: input rules/normalization; invalid input returns `error_response(...)`
+-> app/utils/validate.py: shared input validation/normalization helpers
+-> app/utils/auth.py: shared authentication and token helpers
+-> API-specific validate.py when request input rules exist; invalid input returns `error_response(...)`
 -> query.py when SQL is needed: SQL statement constants only
 -> view.py: main API flow, DB/provider calls, business checks, side effects, transaction and response orchestration
 -> api/v1.py: route and dependency injection
 -> focused tests
 ```
 
-`app/utils/validate.py` contains shared pure normalization and claim helpers.
-Each API #1–#7 has its own `validate.py`; validators return normalized input or
-return `error_response(...)` for invalid input. They do not raise response
-errors, construct another error response, query DB or perform side effects.
-Shared pure helpers may raise validation exceptions internally; the API
-validator catches and maps those through `error_response(...)`. API #2 does not
-have `query.py` because it dispatches through a provider without DB access.
+`app/utils/validate.py` contains shared input normalization helpers.
+`app/utils/auth.py` owns shared Bearer/JWT/refresh-token helpers and the Student
+current-user guard used by API #3, API #4 and API #14. An API has a module-local
+`validate.py` when it has request-specific rules; API #4 calls the shared guard
+directly. Validators return normalized input or `error_response(...)` for
+invalid input. They do not raise response errors, construct alternate errors,
+query DB or perform side effects. Shared pure helpers may raise validation
+exceptions internally for the caller to map. API #2 does not have `query.py`
+because it dispatches through a provider without DB access.
 
 `models.py` contains model classes, field declarations, types, defaults,
 configuration and data conversion only. It does not own runtime validation,

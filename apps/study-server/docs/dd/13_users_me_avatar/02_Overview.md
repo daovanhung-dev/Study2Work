@@ -20,19 +20,19 @@ format: markdown
 | Consumer/Actor | `Authenticated Student` |
 | Authentication | `Bearer JWT bắt buộc` |
 | Authorization | `Role = Student` |
-| Basis | `DIRECT — list_api.md + AC-11; upload-only và không DB mutation theo quyết định task.` |
-| Status | `Draft — Needs Confirmation` |
+| Basis | `DIRECT — list_api.md + AC-11, cập nhật theo các lựa chọn được user duyệt trong implementation plan.` |
+| Status | `Implemented; local tests verify route and S3 adapter stub.` |
 | Transaction | `N/A — không có DB transaction; Object Storage side effect chưa có transaction contract.` |
-| Side effects | `Object Storage upload; không cập nhật users hoặc profile trong API #13.` |
+| Side effects | `S3-compatible Object Storage upload; không cập nhật users hoặc profile trong API #13.` |
 
 ## Sources
 
-- [`docs/lists/list_api.md`](../../../docs/lists/list_api.md) — API #13: `POST`, endpoint, `body{image:string!}`, `ApiEnvelope<UserProfile>` và các status/error code.
-- [`AC_02_STUDENT_LEARNING.drawio`](../../../docs/diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio) — AC-11: Student chọn avatar, API #13 lưu tại Object Storage, sau đó API #14 cập nhật profile.
-- [`00_AC_API_INDEX.md`](../../../docs/diagrams/AC_UNICA/00_AC_API_INDEX.md) — AC-11 actor, precondition, postcondition và API mapping.
-- [`DB_UNICA_ERD.drawio`](../../../docs/diagrams/DB_UNICA_ERD.drawio) — bảng `users`, `avatar_url` và quy tắc V1 không tự thêm bảng/cột.
+- [`docs/lists/list_api.md`](../../../../../docs/lists/list_api.md) — API #13 contract và response `AvatarUploadResult`.
+- [`AC_02_STUDENT_LEARNING.drawio`](../../diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio) — AC-11: API #13 upload avatar, sau đó API #14 cập nhật profile.
+- [`00_AC_API_INDEX.md`](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — AC-11 actor, precondition, postcondition và API mapping.
+- [`DB_UNICA_ERD.drawio`](../../diagrams/DB_UNICA_ERD.drawio) — bảng `users`; API #13 không truy cập hoặc sửa bảng này.
 - [`API #4 DD`](../04_users_me/02_Overview.md) — pattern auth/profile response và cảnh báo contract/ERD gap.
-- [`createDD-markdown skill`](../../../.agents/skills/create_dd/docs/dd/createDD_MARKDOWN_SKILL.md) — source traceability, one-line rule và delivery gates.
+- [`createDD-markdown skill`](../../../../../.agents/skills/create_dd_api/docs/dd/createDD_MARKDOWN_SKILL.md) — source traceability, one-line rule và delivery gates.
 
 ## Tables read
 
@@ -44,45 +44,48 @@ format: markdown
 
 ## External side effect
 
-- `Object Storage` — nhận avatar và lưu asset; adapter, object key, output URL và policy chưa được source đặc tả.
+- `S3-compatible Object Storage` — PUT object `avatars/{user_id}`, URL dựng từ public base URL.
 
 ## Mục chú ý
 
-- Contract giữ nguyên `body{image:string!}`; không chuyển sang `multipart/form-data`.
-- Diagram ghi validate MIME/size nhưng không cung cấp encoding, MIME allowlist hoặc size limit.
-- Contract yêu cầu `ApiEnvelope<UserProfile>`, nhưng flow upload-only không cung cấp nguồn reload đầy đủ cho UserProfile.
+- `image` là JSON Data URL `data:image/<mime>;base64,...`; chỉ nhận PNG, JPEG hoặc WebP.
+- Payload tối đa 5 MiB sau giải mã; MIME khai báo phải khớp chữ ký ảnh.
+- Storage dùng process environment, key cố định `avatars/{user_id}` và URL từ public base URL.
+- Response là `ApiEnvelope<AvatarUploadResult>`; `data` chỉ chứa `avatar_url`.
 - API #14 mới là bước `PUT /api/v1/users/me/profile` trong sequence AC-11.
-- Runtime source hiện không có route API #13; Study server hiện `DECLARED_NOT_RUNNABLE`.
+- API #13 không query hoặc mutation DB; source route/parser/provider hiện được kiểm chứng cục bộ.
 
 ## Assumptions
 
 - Upload-only là boundary của API #13; không `INSERT`, `UPDATE`, `DELETE` hoặc `SELECT` DB.
-- `image` là `string` theo contract; không diễn giải string thành base64, data URI, URL hoặc format khác.
-- Không tự tạo `storage_object_key`, `avatar_url`, MIME policy, size policy, TTL, retry hoặc cleanup rule.
-- Response giữ `ApiEnvelope<UserProfile>`; phần profile chưa có source được ghi `SOURCE_REQUIRED` thay vì tự reload hoặc đổi response schema.
+- `image` chỉ nhận Data URL Base64 theo allowlist PNG/JPEG/WebP; không nhận multipart, URL đầu vào hoặc field khác.
+- Object key là `avatars/{user_id}`; upload mới ghi đè object của cùng user.
+- Timeout storage là connect 5 giây, read 30 giây, tối đa một attempt.
+- API #13 không truy cập DB; API #14 lưu URL vào profile ở bước tiếp theo.
+- Thiếu cấu hình storage chỉ làm request API #13 trả 500 an toàn, không ảnh hưởng startup.
 
 ## Conflicts / Gaps
 
-- `GAP-13-01`: Contract chỉ nói `image:string!`; transport, encoding, MIME và size validation chưa được khóa.
-- `GAP-13-02`: AC-11 có Object Storage nhưng không có storage adapter, object-key rule hoặc response field mapping.
-- `GAP-13-03`: `ApiEnvelope<UserProfile>` cần profile source, trong khi quyết định upload-only không cho phép profile reload hoặc DB update trong API #13.
-- `GAP-13-04`: Cleanup/idempotency khi upload thành công nhưng response/profile flow thất bại chưa có contract.
+- Các khoảng trống Q-13-01..04 được giải quyết theo lựa chọn user duyệt và ghi trong `PLAN_RESULT.md`.
+- API #13 trả URL upload; API #14 vẫn là bước cập nhật `users.avatar_url`.
+- Remote storage/credential verification không nằm trong scope task.
 
 ## Security note
 
 - Verify Bearer JWT trước khi upload và kiểm tra role `Student`.
-- Không đưa token raw, credential, object key nội bộ, raw storage error hoặc stack trace vào response/log.
-- Không suy ra storage namespace từ claim khi storage-key policy chưa được phê duyệt.
-- MIME/size validation phải được khóa trước implementation; không dùng allowlist hoặc giới hạn tự chọn trong DD này.
+- Không đưa token, credentials, raw provider error hoặc stack trace vào response/log.
+- Object key chỉ được dựng từ user ID đã xác thực; client không gửi object key.
+- So khớp chữ ký PNG/JPEG/WebP và giới hạn bytes sau giải mã trước khi upload.
 
 ## Performance note
 
 - Object Storage là external dependency và có thể làm tăng latency của request.
-- Timeout, retry, idempotency và cleanup chưa có source; giữ `TBD`.
+- Timeout là 5 giây kết nối và 30 giây đọc; một attempt, không retry.
+- Cùng user upload lần mới ghi đè cùng key; không có cleanup riêng.
 - Không thêm DB query, cache, index hoặc transaction boundary ngoài contract.
 
 ---
 ## Phụ lục đối chiếu template Markdown
 
-- Template: `../../../.agents/skills/create_dd/docs/dd/DD_API_Template_MD/02_Overview.md`.
+- Template: `../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/02_Overview.md`.
 - Sheet logic: `Overview`.
