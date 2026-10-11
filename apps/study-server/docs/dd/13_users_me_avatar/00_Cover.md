@@ -20,12 +20,12 @@ format: markdown
 | HTTP method | `POST` |
 | Endpoint | `/api/v1/users/me/avatar` |
 | Version | `V1` |
-| Status | `Draft — Needs Confirmation` |
+| Status | `Updated per user-approved implementation plan` |
 | Created by | `Codex (AI authoring agent)` |
 | Reviewed by | `TBD — chưa được cung cấp` |
 | Approved by | `TBD — chưa được cung cấp` |
 | Created date | `2026-09-06` |
-| Updated date | `2026-09-06` |
+| Updated date | `2026-10-11` |
 
 ## Tên hiển thị
 
@@ -36,17 +36,17 @@ Upload avatar nếu có
 
 ## Nguồn chính
 
-- [`docs/lists/list_api.md`](../../../docs/lists/list_api.md) — API #13 contract, actor, request, response và status/error codes.
-- [`AC_02_STUDENT_LEARNING.drawio`](../../../docs/diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio) — AC-11 flow xác thực Student, lưu avatar tại Object Storage và chuyển sang API #14.
-- [`00_AC_API_INDEX.md`](../../../docs/diagrams/AC_UNICA/00_AC_API_INDEX.md) — AC-11 precondition, postcondition và API usage.
-- [`DB_UNICA_ERD.drawio`](../../../docs/diagrams/DB_UNICA_ERD.drawio) — thiết kế V1 của `users` và ghi chú không tự thêm bảng/cột.
-- [`createDD_MARKDOWN_SKILL.md`](../../../.agents/skills/create_dd/docs/dd/createDD_MARKDOWN_SKILL.md) — cấu trúc DD Markdown và quality gates bắt buộc.
+- [`docs/lists/list_api.md`](../../../../../docs/lists/list_api.md) — API #13 contract, actor, request, response và status/error codes.
+- [`AC_02_STUDENT_LEARNING.drawio`](../../diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio) — AC-11 flow xác thực Student, lưu avatar tại Object Storage và chuyển sang API #14.
+- [`00_AC_API_INDEX.md`](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — AC-11 precondition, postcondition và API usage.
+- [`DB_UNICA_ERD.drawio`](../../diagrams/DB_UNICA_ERD.drawio) — thiết kế V1 của `users` và ghi chú không tự thêm bảng/cột.
+- [`createDD_MARKDOWN_SKILL.md`](../../../../../.agents/skills/create_dd_api/docs/dd/createDD_MARKDOWN_SKILL.md) — cấu trúc DD Markdown và quality gates bắt buộc.
 
-> Tài liệu này là design-only; API #13 chưa được xác minh trong runtime hoặc OpenAPI hiện hành.
+> Các lựa chọn transport/storage/response dưới đây được user phê duyệt trong task triển khai. Local source/tests là bằng chứng runtime; chưa xác minh credentials hoặc storage từ xa.
 
 ---
 ## Phụ lục đối chiếu template Markdown
 
-- Template: `../../../.agents/skills/create_dd/docs/dd/DD_API_Template_MD/00_Cover.md`.
+- Template: `../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/00_Cover.md`.
 - Sheet logic: `Cover`.
 - Bộ file giữ nguyên thứ tự baseline: `00_Cover.md` đến `07_table.md`.

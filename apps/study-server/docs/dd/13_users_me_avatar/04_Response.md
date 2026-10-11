@@ -12,9 +12,9 @@ format: markdown
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Format | `JSON — response representation cần xác nhận` |
-| Character encoding | `TBD — response encoding chưa được contract xác nhận` |
-| Content-Type | `TBD — response media type chưa được contract xác nhận` |
+| Format | `JSON` |
+| Character encoding | `UTF-8` |
+| Content-Type | `application/json` |
 
 ## Response fields
 
@@ -23,22 +23,13 @@ format: markdown
 | 1 | `HTTPStatus` | HTTP Status | `HTTPStatus` | `integer` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3/5.4` | Fixed by branch: `201/401/403/422/500` | `N/A` | Protocol status, không phải property JSON. |
 | 2 | `success` | Success flag | `success` | `boolean` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3/5.4` | `true` on success; `false` on error | `N/A` | `ApiEnvelope` field. |
 | 3 | `businessCode` | Business code | `businessCode` | `string` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3/5.4` | Fixed by branch | `N/A` | Dùng `DESIGN_*` code theo contract design. |
-| 4 | `message` | Message | `message` | `string` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3/5.4` | Fixed by branch | `TBD — message catalog chưa có` | Không trả raw storage/DB detail. |
-| 5 | `data` | User profile | `data` | `object` | `No` | `N/A — profile source chưa có` | `N/A` | `5.1` | `ApiEnvelope<UserProfile>` theo contract | `{}` on error | Full profile mapping chưa được source xác nhận trong upload-only flow. |
-| 5.1 | `data.id` | User ID | `id` | `int64` | `No` | `N/A — không reload profile` | `N/A` | `5.1` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | Contract yêu cầu `UserProfile`, nhưng API #13 không có profile query. |
-| 5.2 | `data.full_name` | Full name | `full_name` | `string` | `No` | `N/A — không reload profile` | `N/A` | `5.1` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | Không tự lấy từ `users`. |
-| 5.3 | `data.email` | Email | `email` | `email` | `No` | `N/A — không reload profile` | `N/A` | `5.1` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | Contract type `email`; profile source chưa có. |
-| 5.4 | `data.role` | Role | `role` | `string` | `No` | `N/A — token validation only` | `N/A` | `5.1` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | Token role dùng authorization, chưa đủ làm full profile source. |
-| 5.5 | `data.avatar_url` | Avatar URL | `avatar_url` | `uri` | `Yes` | `Object Storage` | `TBD — storage result field chưa có` | `3.2/5.1` | `SOURCE_REQUIRED — map storage result nếu contract được bổ sung` | `TBD` | Không tự tạo URL hoặc storage-key rule. |
-| 5.6 | `data.bio` | Biography | `bio` | `string` | `Yes` | `N/A — không reload profile` | `N/A` | `5.1` | `SOURCE_REQUIRED` | `Omit when no source` | Contract optional; không có source trong API #13 flow. |
-| 5.7 | `data.phone` | Phone | `phone` | `string` | `Yes` | `N/A — không reload profile` | `N/A` | `5.1` | `SOURCE_REQUIRED` | `Omit when no source` | Contract optional; không có source trong API #13 flow. |
-| 5.8 | `data.status` | Account status | `status` | `string` | `No` | `N/A — không reload profile` | `N/A` | `5.1` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | Không tự gán `ACTIVE`. |
-| 5.9 | `data.created_at` | Created time | `created_at` | `date-time` | `No` | `N/A — không reload profile` | `N/A` | `5.1` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | Không tự tạo timestamp profile. |
-| 5.10 | `data.updated_at` | Updated time | `updated_at` | `date-time` | `No` | `N/A — không reload profile` | `N/A` | `5.1` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | API #13 không update DB theo plan. |
+| 4 | `message` | Message | `message` | `string` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3/5.4` | Fixed by branch | `Avatar upload accepted` or safe error message | Không trả raw storage detail. |
+| 5 | `data` | Avatar upload result | `data` | `object` | `No` | `Object Storage public URL` | `N/A` | `5.1` | `ApiEnvelope<AvatarUploadResult>` | `{}` on error | Thành công chỉ gồm `avatar_url`; không trả UserProfile. |
+| 5.1 | `data.avatar_url` | Public avatar URL | `avatar_url` | `uri` | `No` | `Object Storage` | `OBJECT_STORAGE_PUBLIC_BASE_URL + /avatars/{user_id}` | `3.2/5.1` | URL ghép từ public base URL và object key đã upload | Present after successful upload | `AvatarUploadResult` chỉ có field này. |
 | 6 | `meta` | Metadata | `meta` | `object` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3/5.4` | Empty object | `{}` | Không thêm storage metadata ngoài contract. |
-| 7 | `traceId` | Trace ID | `traceId` | `uuid` | `No` | `N/A` | `N/A` | `5.1/5.2/5.3/5.4` | Request correlation UUID | `TBD — generator chưa được đặc tả` | Envelope field. |
+| 7 | `traceId` | Trace ID | `traceId` | `uuid` | `No` | `N/A` | `N/A` | `5.1-5.5` | Request correlation UUID từ middleware | Always present | Envelope field. |
 
-> `ApiEnvelope<UserProfile>` được giữ nguyên theo contract. Do quyết định upload-only, DD không tự reload profile, không tự update `users.avatar_url` và đánh dấu các mapping chưa có source là `SOURCE_REQUIRED`.
+> API #13 chỉ trả URL upload. API #14 vẫn nhận `avatar_url` để cập nhật profile trong bước kế tiếp của AC-11.
 
 ## Ví dụ thành công — HTTP 201
 
@@ -48,21 +39,14 @@ format: markdown
   "businessCode": "DESIGN_RESOURCE_CREATED",
   "message": "Avatar upload accepted",
   "data": {
-    "id": 1001,
-    "full_name": "Example Student",
-    "email": "student@example.test",
-    "role": "STUDENT",
-    "avatar_url": "https://storage.example.test/avatar/example-1001.png",
-    "status": "ACTIVE",
-    "created_at": "2026-09-06T00:00:00Z",
-    "updated_at": "2026-09-06T00:00:00Z"
+    "avatar_url": "https://storage.example.test/avatars/1001"
   },
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000001"
 }
 ```
 
-> Các giá trị profile/storage trong ví dụ chỉ là dữ liệu minh họa để giữ JSON hợp lệ; chúng không xác nhận schema persistence, storage URL hoặc response reload behavior.
+> URL trong ví dụ là giá trị minh họa; runtime dựng URL từ cấu hình public base URL và `avatars/{user_id}`.
 
 ## Ví dụ lỗi — HTTP 401
 
@@ -119,5 +103,5 @@ format: markdown
 ---
 ## Phụ lục đối chiếu template Markdown
 
-- Template: `../../../.agents/skills/create_dd/docs/dd/DD_API_Template_MD/04_Response.md`.
+- Template: `../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/04_Response.md`.
 - Sheet logic: `2.Response`.

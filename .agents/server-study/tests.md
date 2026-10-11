@@ -2,18 +2,22 @@
 
 ```text
 TEST_SUITE_PRESENT: YES
-TEST_STATUS: VERIFIED (191 tests)
+TEST_STATUS: VERIFIED (217 tests)
 ```
 
 Tests under `apps/study-server/tests/` cover config, DB helpers, responses and
 exception handlers, security tokens, health/security behavior, API #1 register, API #2 verify-email
-dispatch, API #3 login/refresh, API #4 current-user profile access, API #14
-profile update, API #5 category retrieval, API #6 public course retrieval and
-API #7 course search. API #4 and API #14 share the auth guard in
+dispatch, API #3 login/refresh, API #4 current-user profile access, API #12
+resource detail, API #13 avatar upload, API #14 profile update, API #5 category
+retrieval, API #6 public course retrieval and API #7 course search. APIs #4,
+#13 and #14 share the auth guard in
 `app/utils/auth.py`; security primitive tests remain under `tests/core`.
 The API-specific tests are grouped under
-`tests/modules/guest/api_01_auth_register` through
-`tests/modules/guest/api_07_courses_search`; full collection is available.
+`api_01_auth_register`, `api_02_auth_verify_email_send`, `api_03_auth_login`,
+`api_04_users_me`, `api_05_categories`, `api_06_courses`,
+`api_07_courses_search`, `api_12_resources_detail`,
+`api_13_users_me_avatar` and `api_14_users_me_profile`; full collection is
+available.
 
 Important remaining scope boundaries include:
 - health tests expect standard envelope and trace header;
@@ -27,6 +31,7 @@ Important remaining scope boundaries include:
   applies the same published/search predicates to page/count, and rejects
   category until a course-category relation exists;
 - verify-email route is public, uses an injectable stub provider, does not access the database and does not claim real email delivery;
+- API #13 requires Student auth, validates Data URL images, injects the lazy S3 provider, and does not access the database; tests use a S3 client stub only;
 - response/security unit tests may exercise helpers independently, but do not prove the full API starts.
 
 Current error contract:

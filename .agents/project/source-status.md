@@ -1,7 +1,8 @@
 # Source status và discrepancy
 
 Repository deep-context được đối chiếu tại source commit
-`9a70eb6764a6587093a92d3bd7e4cc0bea1651c4` ngày 2026-09-18.
+`9a70eb6764a6587093a92d3bd7e4cc0bea1651c4` ngày 2026-09-18; phần Study server
+dưới đây được refresh theo source ngày 2026-10-11.
 
 ## Tài liệu thiết kế
 
@@ -51,35 +52,31 @@ Mọi project context phải nằm dưới `.agents/`; `apps/` không chứa `.a
 ## Study server
 
 ```text
-RUNTIME_STATUS: VERIFIED_IMPORT; CURRENT_ROUTE_SOURCE_BACKED
-TEST_STATUS: COLLECTION_VERIFIED_AFTER_NAMESPACE_RENAME
-BUSINESS_MODULE_STATUS: SOURCE_BACKED_REGISTER_VERIFY_LOGIN_REFRESH_CATEGORIES_COURSES_SEARCH
+RUNTIME_STATUS: SOURCE_BACKED_API_01_07_12_13_14
+TEST_STATUS: VERIFIED_217_TESTS
+BUSINESS_MODULE_STATUS: SOURCE_BACKED_REGISTER_VERIFY_LOGIN_REFRESH_PROFILE_CATEGORIES_COURSES_SEARCH_RESOURCE_AVATAR
 DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED; LIVE_STATUS_NOT_VERIFIED_HERE
 ```
 
 Current evidence:
 
-- `app.main` imports successfully and composes 13 current routes.
-- `app/api/v1.py` wires `POST /api/v1/auth/register` to
-  `app.modules.guest.register_account.*`; `/auth` ở đây là public endpoint
-  contract, không phải Python namespace.
-- `app/api/v1.py` also wires public API #2 verify-email dispatch through the
-  injectable provider stub, API #5 categories, API #6 courses and API #7 course
-  search; these flows
-  have focused HTTP tests and no live DB verification claim.
-- `app/api/v1.py` wires `GET /api/v1/users/me` to
-  `app.modules.guest.users_me.*`; the route verifies the current API#3 JWT
-  `sub`/`roles` shape, requires `STUDENT`, and reads only public profile
-  columns from `users`.
-- `register_account/validate.py` is empty/unwired; current model validators
-  remain in `models.py`.
-- `tests/modules/guest/test_register.py` imports
-  `app.modules.guest.register_account.models/view` to stay aligned with the
-  runtime namespace.
+- `app.main` imports `app.api.v1`; the router wires APIs #1–#7 and #12–#14.
+- API #13 `POST /api/v1/users/me/avatar` validates the current Student JWT,
+  decodes a PNG/JPEG/WebP Data URL up to 5 MiB, and uploads to the injectable
+  S3-compatible provider without database access.
+- API #13 uses process environment variables for storage configuration, writes
+  `avatars/{user_id}`, and returns `ApiEnvelope<AvatarUploadResult>` containing
+  only `avatar_url`. Missing storage configuration does not affect app startup.
+- API #14 remains the profile database update step; API #13 only returns the
+  URL for that follow-up request.
+- Focused API #13 tests cover parser boundaries, request/auth/response behavior,
+  safe storage failures, no-DB behavior and the S3 adapter stub.
+- Full Study pytest suite currently passes 217 tests; the context validator
+  separately reports pre-existing missing DB Admin context outside this scope.
 - `alembic.ini` references a missing migration directory; this is not schema
   evidence.
-- `apps/study-server/docs/codebase/README.md` and design DD remain
-  non-authoritative when they conflict with current source.
+- `apps/study-server/docs/codebase/README.md` and design DD remain secondary to
+  current source, verified tests and executable contracts.
 
 ## Work server
 

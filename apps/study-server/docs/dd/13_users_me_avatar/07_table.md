@@ -17,6 +17,18 @@ format: markdown
 | Operation | `N/A — không INSERT/UPDATE/DELETE/UPSERT` |
 | Data Mapping step | `3.1 — external Object Storage upload` |
 
+## External storage mapping
+
+| Thuộc tính | Giá trị |
+|---|---|
+| Provider | `S3-compatible Object Storage` |
+| Object key | `avatars/{user_id}` |
+| Content-Type | MIME đã kiểm tra: `image/png`, `image/jpeg` hoặc `image/webp` |
+| Public URL | `OBJECT_STORAGE_PUBLIC_BASE_URL + /avatars/{user_id}` |
+| Overwrite | Upload mới của cùng user ghi đè object hiện tại |
+| Retry | `N/A — tối đa một attempt` |
+| Cleanup | `N/A — không có cleanup riêng` |
+
 ## Update mapping
 
 **Áp dụng khi**
@@ -47,10 +59,10 @@ format: markdown
 |---:|---|---|---|---|---|
 | `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | Không tạo mapping DELETE giả. |
 
-> Object Storage upload, object key, cleanup và idempotency là external behavior; không tự chuyển thành DB table/column mapping.
+> Object Storage upload là external behavior; không tự chuyển thành DB table/column mapping.
 
 ---
 ## Phụ lục đối chiếu template Markdown
 
-- Template: `../../../.agents/skills/create_dd/docs/dd/DD_API_Template_MD/07_table.md`.
+- Template: `../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/07_table.md`.
 - Sheet logic: `table`.

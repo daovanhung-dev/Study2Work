@@ -56,6 +56,8 @@ The router remains thin and delegates the API flow to `view.py`.
 | `guest/api_01_auth_register` | `SOURCE_BACKED` | `register-account.md` |
 | `guest/api_03_auth_login` | `SOURCE_BACKED` | Login and refresh-token flow in current source |
 | `guest/api_04_users_me` | `SOURCE_BACKED` | API #4 current Student profile read flow |
+| `guest/api_12_resources_detail` | `SOURCE_BACKED` | API #12 public resource metadata read with published-parent check; response returns stored URL |
+| `guest/api_13_users_me_avatar` | `SOURCE_BACKED` | Student JSON Data URL upload through injectable S3-compatible storage; no DB access |
 | `guest/api_14_users_me_profile` | `SOURCE_BACKED` | Student profile update; reuses the shared Student guard through `app/utils/auth.py` |
 | `guest/api_05_categories` | `SOURCE_BACKED` | API #5 public active-category read flow |
 | `guest/api_02_auth_verify_email_send` | `SOURCE_BACKED` | API #2 public verification dispatch through injectable stub provider |

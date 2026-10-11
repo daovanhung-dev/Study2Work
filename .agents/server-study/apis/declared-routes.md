@@ -3,8 +3,8 @@
 Global status: current route source is `SOURCE_BACKED`; `app.main` import and
 the register/auth/category/course test modules use the current `guest` internal
 namespace. Current auth login/refresh, verify-email dispatch, current-user,
-category, course and course-search routes are wired; the AI route remains
-`UNWIRED`.
+category, course, course-search, resource-detail, avatar-upload and profile
+update routes are wired; the AI route remains `UNWIRED`.
 
 ## Composition-root routes
 
@@ -140,6 +140,44 @@ course-category relation exists. Missing mentor integrity, query failures and
 mapping failures return safe `500 DESIGN_INTERNAL_ERROR`; empty results return
 `200 DESIGN_RESOURCE_RETRIEVED` with fixed-size pagination. No schema or live DB
 verification is claimed.
+
+### `GET /api/v1/resources/{resource_id}`
+
+Implemented through `app.modules.guest.api_12_resources_detail.view.get_resource_detail(...)`.
+The route is public and reads the resource metadata. If a resource has a lesson,
+the view also requires a published parent course; invalid, missing or
+unpublished-parent resources return `404 DESIGN_RESOURCE_NOT_FOUND`. Success is
+`200 DESIGN_RESOURCE_RETRIEVED` with the source-backed resource fields, including
+the URL stored on the resource. The route does not inject a storage signer.
+
+### `POST /api/v1/users/me/avatar`
+
+Implemented through `app.modules.guest.api_13_users_me_avatar.view.upload_avatar(...)`.
+The route has no database dependency and uses the shared Student Bearer guard.
+JSON `{image}` must contain a strict Base64 Data URL for PNG, JPEG or WebP; the
+decoded image is limited to 5 MiB and its signature must match the declared MIME.
+Extra request fields are rejected.
+
+`app.service.object_storage.avatar.S3AvatarStorageProvider` reads its required
+configuration from process environment when upload is requested, so missing
+storage configuration does not prevent app startup. It writes
+`avatars/{user_id}` with the checked `Content-Type`, then returns a URL derived
+from `OBJECT_STORAGE_PUBLIC_BASE_URL`. The client uses a five-second connect
+timeout, 30-second read timeout and one attempt. Same-user uploads overwrite the
+same key. Failures map to `500 DESIGN_INTERNAL_ERROR` without provider details.
+
+Success is `201 DESIGN_RESOURCE_CREATED` with
+`ApiEnvelope<AvatarUploadResult>`; `data` contains only `avatar_url`. API #13
+does not update `users.avatar_url`; API #14 remains the profile update step in
+AC-11. Route, parser, auth, storage failure and S3 stub behavior have local
+tests; no remote storage call or credential check is claimed.
+
+### `PUT /api/v1/users/me/profile`
+
+Implemented through `app.modules.guest.api_14_users_me_profile.view.update_profile(...)`.
+The route requires Student Bearer auth and owns the profile database update.
+In AC-11 the client sends the URL returned by API #13 as `avatar_url` in this
+follow-up request.
 
 ### `POST /api/v1/chat_log_ai`
 Not currently exposed; implementation remains `UNWIRED`. This is **not** the

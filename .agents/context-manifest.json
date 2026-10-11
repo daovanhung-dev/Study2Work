@@ -209,6 +209,7 @@
         "apps/study-server/app",
         "apps/study-server/tests",
         "apps/study-server/pyproject.toml",
+        "apps/study-server/uv.lock",
         "apps/study-server/.env.example",
         "apps/study-server/alembic.ini",
         "apps/study-server/Dockerfile"
@@ -216,6 +217,7 @@
       "requiredSourcePaths": [
         "apps/study-server/app/main.py",
         "apps/study-server/app/api/v1.py",
+        "apps/study-server/app/core/middleware.py",
         "apps/study-server/app/core/database.py",
         "apps/study-server/app/core/responses.py",
         "apps/study-server/app/utils/__init__.py",
@@ -247,6 +249,12 @@
         "apps/study-server/app/modules/guest/api_07_courses_search/query.py",
         "apps/study-server/app/modules/guest/api_07_courses_search/validate.py",
         "apps/study-server/app/modules/guest/api_07_courses_search/view.py",
+        "apps/study-server/app/modules/guest/api_13_users_me_avatar/__init__.py",
+        "apps/study-server/app/modules/guest/api_13_users_me_avatar/models.py",
+        "apps/study-server/app/modules/guest/api_13_users_me_avatar/validate.py",
+        "apps/study-server/app/modules/guest/api_13_users_me_avatar/view.py",
+        "apps/study-server/app/service/object_storage/avatar.py",
+        "apps/study-server/tests/modules/guest/api_13_users_me_avatar/test_users_me_avatar.py",
         "apps/study-server/app/modules/guest/_shared/course_catalog/constants.py",
         "apps/study-server/app/modules/guest/_shared/course_catalog/models.py",
         "apps/study-server/app/modules/guest/_shared/course_catalog/helpers.py"
