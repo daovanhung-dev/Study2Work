@@ -26,6 +26,7 @@ latest user requirement
 
 | Task | Context phải đọc trước source |
 |---|---|
+| API DD / tài liệu API | `workflows/README.md` (quy tắc deliverable Study API DD) |
 | app startup, response, trace, exception | `core/runtime.md` |
 | DB/session/query helper hoặc migration | `core/database-security.md` + `database.md` |
 | token/password/security helper | `core/database-security.md` |
