@@ -17,7 +17,7 @@ def validate_course_reviews_request(
 
     try:
         parsed_course_id = int(course_id)
-    except (TypeError, ValueError):
+    except:
         return error_response(
             status_code=404,
             business_code="DESIGN_RESOURCE_NOT_FOUND",
@@ -30,7 +30,7 @@ def validate_course_reviews_request(
     else:
         try:
             effective_page = int(course_query.page)
-        except (TypeError, ValueError):
+        except:
             # Contract API #10 chưa xác định behavior cho malformed page.
             # Không tự thêm HTTP/business error branch tại đây.
             raise ValueError("Malformed page") from None

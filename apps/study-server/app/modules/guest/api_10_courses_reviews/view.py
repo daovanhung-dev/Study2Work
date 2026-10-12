@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 import logging
@@ -10,7 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.database import query_many, query_one
-from app.core.responses import error_response
+from app.core.responses import error_response, success_response
 from app.modules.guest.api_10_courses_reviews.models import CourseReviewsQuery
 from app.modules.guest.api_10_courses_reviews.query import (
     COUNT_COURSE_REVIEWS,
@@ -123,7 +122,7 @@ def get_course_reviews(
             course_query=course_query,
             trace_id=trace_id,
         )
-    except ValueError:
+    except:
         # Quy tắc xử lý page không hợp lệ chưa được contract chốt.
         return error_response(
             status_code=500,
@@ -242,16 +241,11 @@ def get_course_reviews(
 
         total_pages = ceil(total / REVIEW_PAGE_SIZE) if total else 0
 
-        # Trả response thành công.
-        return {
-            "success": True,
-            "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-            "message": (
-                "Reviews retrieved"
-                if items
-                else "No reviews found"
-            ),
-            "data": {
+        # Trả response thành công. Gọi success_response để chuẩn hóa response theo cấu trúc của hệ thống.
+        return success_response(
+            business_code="DESIGN_RESOURCE_RETRIEVED",
+            message="Reviews retrieved" if items else "No reviews found",
+            data={
                 "items": items,
                 "pagination": {
                     "page": effective_page,
@@ -260,11 +254,10 @@ def get_course_reviews(
                     "total_pages": total_pages,
                 },
             },
-            "meta": {},
-            "traceId": trace_id,
-        }
+            trace_id=trace_id,
+        )
 
-    except (TypeError, ValueError, KeyError):
+    except:
         db.rollback()
 
         logger.exception(
