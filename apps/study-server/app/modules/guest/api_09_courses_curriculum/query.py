@@ -1,7 +1,5 @@
 """Các câu lệnh SQL cho API #9 danh sách bài học của khóa học (curriculum)."""
 
-from __future__ import annotations
-
 CHECK_PUBLISHED_COURSE = """
 SELECT
     c.id,
