@@ -1,7 +1,5 @@
 """Các câu lệnh SQL cho API #8 chi tiết khóa học."""
 
-from __future__ import annotations
-
 FIND_PUBLISHED_COURSE_DETAIL = """
 SELECT
     c.id,
