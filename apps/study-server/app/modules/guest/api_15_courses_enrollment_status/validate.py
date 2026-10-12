@@ -6,7 +6,7 @@ import logging
 
 from app.core.responses import error_response
 from app.core.security.access_token import decode_access_token
-from app.utils.validate import extract_bearer_token, validate_access_claims
+from app.utils.auth import extract_bearer_token, validate_access_claims
 from starlette.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
