@@ -2,7 +2,7 @@
 
 ```text
 TEST_SUITE_PRESENT: YES
-TEST_STATUS: VERIFIED (217 tests)
+TEST_STATUS: SOURCE_BACKED (217 tests verified before merge; API #08/#09 test modules added but not run in this task)
 ```
 
 Tests under `apps/study-server/tests/` cover config, DB helpers, responses and
@@ -12,10 +12,14 @@ resource detail, API #13 avatar upload, API #14 profile update, API #5 category
 retrieval, API #6 public course retrieval and API #7 course search. APIs #4,
 #13 and #14 share the auth guard in
 `app/utils/auth.py`; security primitive tests remain under `tests/core`.
+The merge adds API #08 course-detail and API #09 curriculum test modules; they
+were not run after integration in this task, so the verified count remains the
+pre-merge baseline and no post-merge total is claimed.
 The API-specific tests are grouped under
 `api_01_auth_register`, `api_02_auth_verify_email_send`, `api_03_auth_login`,
 `api_04_users_me`, `api_05_categories`, `api_06_courses`,
-`api_07_courses_search`, `api_12_resources_detail`,
+`api_07_courses_search`, `api_08_courses_detail`,
+`api_09_courses_curriculum`, `api_12_resources_detail`,
 `api_13_users_me_avatar` and `api_14_users_me_profile`; full collection is
 available.
 
@@ -37,7 +41,7 @@ Important remaining scope boundaries include:
 Current error contract:
 - `error_response(...)` returns a `JSONResponse` with the standard envelope, HTTP
   status and `X-Trace-Id`; no custom API exception class is used.
-- Module validators for APIs #1–#7 return `error_response(...)` responses for
+- Module validators for APIs #1–#9 return `error_response(...)` responses for
   contract rules; framework type/parse failures use the registered request
   validation handler and `meta.fieldErrors`.
 - Tests cover direct response shape, field errors, validator normalization,

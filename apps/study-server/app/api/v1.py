@@ -26,6 +26,8 @@ from app.modules.guest.api_06_courses.models import CourseQuery
 from app.modules.guest.api_06_courses.view import get_courses
 from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
 from app.modules.guest.api_07_courses_search.view import search_courses as search_courses_view
+from app.modules.guest.api_08_courses_detail.view import get_course_detail
+from app.modules.guest.api_09_courses_curriculum.view import get_course_curriculum
 from app.modules.guest.api_12_resources_detail.view import get_resource_detail
 from app.modules.guest.api_13_users_me_avatar.models import AvatarUploadRequest
 from app.modules.guest.api_13_users_me_avatar.view import upload_avatar
@@ -322,6 +324,46 @@ def search_courses(
         trace_id=get_trace_id(request),
     )
 
+
+# API #08 courses_detail
+@router.get(
+    "/courses/{course_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+)
+def course_detail(
+    course_id: str,
+    request: Request,
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận course_id, Session và trace ID rồi chuyển cho get_course_detail. Route trả mã HTTP 200;
+    kiểm tra tham số, truy vấn chi tiết khóa học và dựng response do view đảm nhiệm."""
+    return get_course_detail(
+        course_id_raw=course_id,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #09 courses_curriculum
+@router.get(
+    "/courses/{course_id}/curriculum",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+)
+def course_curriculum(
+    course_id: str,
+    request: Request,
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận course_id, Session và trace ID rồi chuyển cho get_course_curriculum. Route trả mã
+    HTTP 200; kiểm tra tham số, kiểm tra khóa học, truy vấn bài học và dựng response do view đảm
+    nhiệm."""
+    return get_course_curriculum(
+        course_id_raw=course_id,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
 
 # API #04 users_me
 @router.get(
