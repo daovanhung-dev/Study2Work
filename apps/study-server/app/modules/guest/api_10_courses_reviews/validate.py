@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.responses import ApiError
+from app.core.responses import error_response
 from app.modules.guest.api_10_courses_reviews.models import CourseReviewsQuery
 from fastapi.responses import JSONResponse
 
@@ -18,7 +18,7 @@ def validate_course_reviews_request(
     try:
         parsed_course_id = int(course_id)
     except (TypeError, ValueError):
-        return ApiError(
+        return error_response(
             status_code=404,
             business_code="DESIGN_RESOURCE_NOT_FOUND",
             message="Course not found.",

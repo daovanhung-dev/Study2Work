@@ -46,7 +46,7 @@ WHERE r.parent_id IN ({review_id_placeholders})
 
 
 COUNT_COURSE_REVIEWS = """
-SELECT
+SELECT 
     COUNT(*) AS total
 FROM discussions AS d
 WHERE d.course_id = :course_id

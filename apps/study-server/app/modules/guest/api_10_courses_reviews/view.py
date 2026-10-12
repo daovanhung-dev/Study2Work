@@ -1,11 +1,16 @@
+
 from __future__ import annotations
 
 import logging
 from math import ceil
 from typing import Any
 
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
+
 from app.core.database import query_many, query_one
-from app.core.responses import ApiError
+from app.core.responses import error_response
 from app.modules.guest.api_10_courses_reviews.models import CourseReviewsQuery
 from app.modules.guest.api_10_courses_reviews.query import (
     COUNT_COURSE_REVIEWS,
@@ -16,16 +21,13 @@ from app.modules.guest.api_10_courses_reviews.query import (
 from app.modules.guest.api_10_courses_reviews.validate import (
     validate_course_reviews_request,
 )
-from fastapi.responses import JSONResponse
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
 REVIEW_PAGE_SIZE = 20
 
 
-# Kiểm tra khóa học có tồn tại và đang được publish
+# Kiểm tra khóa học có tồn tại và đang được publish.
 def find_published_course(
     db: Session,
     *,
@@ -38,7 +40,7 @@ def find_published_course(
     )
 
 
-# Lấy danh sách review gốc của khóa học
+# Lấy danh sách review gốc của khóa học.
 def find_course_reviews(
     db: Session,
     *,
@@ -58,7 +60,7 @@ def find_course_reviews(
     )
 
 
-# Lấy reply của các review đang có trên trang hiện tại
+# Lấy reply của các review trên trang hiện tại.
 def find_review_replies(
     db: Session,
     *,
@@ -88,7 +90,7 @@ def find_review_replies(
     )
 
 
-# Đếm tổng số review gốc để tính phân trang (pagination)
+# Đếm tổng số review gốc để tính phân trang.
 def count_course_reviews(
     db: Session,
     *,
@@ -106,7 +108,7 @@ def count_course_reviews(
     return int(total_row["total"])
 
 
-# Lấy danh sách review của khóa học
+# Lấy danh sách review và reply của một khóa học.
 def get_course_reviews(
     *,
     course_id: str,
@@ -114,9 +116,7 @@ def get_course_reviews(
     db: Session,
     trace_id: str,
 ) -> dict[str, Any] | JSONResponse:
-    """Lấy danh sách review và reply của một khóa học."""
-
-    # Validate request đầu vào
+    # Validate request đầu vào.
     try:
         validated = validate_course_reviews_request(
             course_id=course_id,
@@ -124,9 +124,8 @@ def get_course_reviews(
             trace_id=trace_id,
         )
     except ValueError:
-        # Behavior của malformed page hiện chưa được contract #10 chốt.
-        # Không tự biến trường hợp này thành business error.
-        return ApiError(
+        # Quy tắc xử lý page không hợp lệ chưa được contract chốt.
+        return error_response(
             status_code=500,
             business_code="DESIGN_INTERNAL_ERROR",
             message="Internal server error.",
@@ -138,7 +137,7 @@ def get_course_reviews(
 
     parsed_course_id, effective_page, _rating = validated
 
-    # Thực hiện các query lấy dữ liệu
+    # Truy vấn dữ liệu.
     try:
         course = find_published_course(
             db,
@@ -146,10 +145,10 @@ def get_course_reviews(
         )
 
         if course is None:
-            return ApiError(
+            return error_response(
                 status_code=404,
                 business_code="DESIGN_RESOURCE_NOT_FOUND",
-                message="Course not found.",
+                message="Published course not found",
                 trace_id=trace_id,
             )
 
@@ -173,6 +172,7 @@ def get_course_reviews(
 
     except SQLAlchemyError:
         db.rollback()
+
         logger.exception(
             "Failed to retrieve course reviews",
             extra={
@@ -181,14 +181,14 @@ def get_course_reviews(
             },
         )
 
-        return ApiError(
+        return error_response(
             status_code=500,
             business_code="DESIGN_INTERNAL_ERROR",
-            message="Internal server error.",
+            message="Reviews could not be retrieved",
             trace_id=trace_id,
         )
 
-    # Gom reply theo review cha
+    # Gom comment/reply theo ID review cha.
     try:
         reply_map: dict[int, list[dict[str, Any]]] = {}
 
@@ -196,19 +196,24 @@ def get_course_reviews(
             parent_id = reply["parent_id"]
 
             reply_item = {
-                "discussion_id": reply["id"],
-                "user": {
+                # ID của comment/reply.
+                "id": reply["id"],
+
+                # ID của review cha chứa comment/reply này.
+                "discussion_id": parent_id,
+
+                "content": reply["content"],
+                "author": {
                     "id": reply["author_id"],
                     "full_name": reply["author_full_name"],
                     "avatar_url": reply["author_avatar_url"],
                 },
-                "content": reply["content"],
                 "created_at": reply["created_at"],
             }
 
             reply_map.setdefault(parent_id, []).append(reply_item)
 
-        # Map dữ liệu review sang response
+        # Map review theo cấu trúc response trong dd.
         items: list[dict[str, Any]] = []
 
         for review in reviews:
@@ -216,14 +221,20 @@ def get_course_reviews(
 
             items.append(
                 {
-                    "discussion_id": review_id,
+                    "id": review_id,
+                    "course_id": review["course_id"],
+
+                    # Discussion.title đang là TBD trong tài liệu.
+                    # Giữ None cho đến khi contract xác định giá trị.
                     "title": None,
+
                     "content": review["content"],
-                    "user": {
+                    "author": {
                         "id": review["author_id"],
                         "full_name": review["author_full_name"],
                         "avatar_url": review["author_avatar_url"],
                     },
+                    "status": review["status"],
                     "created_at": review["created_at"],
                     "comments": reply_map.get(review_id, []),
                 }
@@ -231,11 +242,15 @@ def get_course_reviews(
 
         total_pages = ceil(total / REVIEW_PAGE_SIZE) if total else 0
 
-        # Trả response thành công
+        # Trả response thành công.
         return {
             "success": True,
             "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-            "message": "Reviews retrieved",
+            "message": (
+                "Reviews retrieved"
+                if items
+                else "No reviews found"
+            ),
             "data": {
                 "items": items,
                 "pagination": {
@@ -251,6 +266,7 @@ def get_course_reviews(
 
     except (TypeError, ValueError, KeyError):
         db.rollback()
+
         logger.exception(
             "Failed to map course reviews response",
             extra={
@@ -259,9 +275,9 @@ def get_course_reviews(
             },
         )
 
-        return ApiError(
+        return error_response(
             status_code=500,
             business_code="DESIGN_INTERNAL_ERROR",
-            message="Internal server error.",
+            message="Reviews could not be retrieved",
             trace_id=trace_id,
         )
