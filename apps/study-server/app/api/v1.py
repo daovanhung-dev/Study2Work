@@ -1,7 +1,7 @@
 from typing import Any
 
 # Nhập các thành phần cần thiết từ FastAPI.
-from fastapi import APIRouter, Depends, Header, Query, Request, status
+from fastapi import APIRouter, Depends, Header, Path, Query, Request, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
@@ -29,12 +29,21 @@ from app.modules.guest.api_07_courses_search.view import search_courses as searc
 from app.modules.guest.api_11_courses_resources.view import (
     get_course_resources as get_course_resources_view,
 )
+from app.modules.guest.api_12_resources_detail.view import get_resource_detail
+from app.modules.guest.api_13_users_me_avatar.models import AvatarUploadRequest
+from app.modules.guest.api_13_users_me_avatar.view import upload_avatar
+from app.modules.guest.api_14_users_me_profile.models import ProfileUpdateRequest
+from app.modules.guest.api_14_users_me_profile.view import update_profile
 from app.modules.guest.api_15_courses_enrollment_status.view import (
     get_enrollment_status as get_enrollment_status_view,
 )
 from app.service.email.provider import (
     VerificationEmailProvider,
     get_verification_email_provider,
+)
+from app.service.object_storage.avatar import (
+    AvatarStorageProvider,
+    get_avatar_storage_provider,
 )
 
 router = APIRouter(
@@ -44,6 +53,7 @@ router = APIRouter(
 db_dependency = Depends(get_db)
 category_query_dependency = Depends()
 verification_provider_dependency = Depends(get_verification_email_provider)
+avatar_storage_provider_dependency = Depends(get_avatar_storage_provider)
 
 
 def parse_course_query(
@@ -340,6 +350,7 @@ def current_user(
     )
 
 
+# API #11 courses_resources
 @router.get(
     "/courses/{course_id}/resources",
     status_code=status.HTTP_200_OK,
@@ -357,6 +368,137 @@ def course_resources(
     )
 
 
+# API #12 resources_detail
+@router.get(
+    "/resources/{resource_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "resource_id",
+                "in": "path",
+                "required": True,
+                "schema": {"type": "integer", "format": "int64"},
+            }
+        ]
+    },
+)
+def resource_detail(
+    request: Request,
+    resource_id: str = Path(include_in_schema=False),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận raw resource ID, Session và trace ID rồi chuyển luồng đọc resource cho API #12."""
+
+    return get_resource_detail(
+        resource_id=resource_id,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #13 users_me_avatar
+@router.post(
+    "/users/me/avatar",
+    status_code=status.HTTP_201_CREATED,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "required": ["image"],
+                        "additionalProperties": False,
+                        "properties": {
+                            "image": {
+                                "type": "string",
+                                "format": "data-url",
+                                "description": (
+                                    "Data URL image/png, image/jpeg hoặc image/webp; "
+                                    "tối đa 5 MiB sau giải mã."
+                                ),
+                            },
+                        },
+                    }
+                }
+            },
+        }
+    },
+)
+def upload_current_user_avatar(
+    user_data: AvatarUploadRequest,
+    request: Request,
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    provider: AvatarStorageProvider = avatar_storage_provider_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận Data URL, Authorization và provider rồi chuyển luồng upload cho API #13."""
+
+    return upload_avatar(
+        authorization=authorization,
+        user_data=user_data,
+        provider=provider,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #14 users_me_profile
+@router.put(
+    "/users/me/profile",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "required": ["full_name", "phone", "avatar_url"],
+                        "properties": {
+                            "full_name": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 150,
+                            },
+                            "phone": {
+                                "anyOf": [
+                                    {"type": "string", "maxLength": 20},
+                                    {"type": "null"},
+                                ]
+                            },
+                            "avatar_url": {
+                                "anyOf": [
+                                    {"type": "string"},
+                                    {"type": "null"},
+                                ]
+                            },
+                        },
+                    }
+                }
+            },
+        }
+    },
+)
+def update_current_profile(
+    user_data: ProfileUpdateRequest,
+    request: Request,
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận profile source-backed và chuyển xác thực, update cùng transaction cho API #14."""
+
+    return update_profile(
+        authorization=authorization,
+        user_data=user_data,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #15 courses_enrollment_status
 @router.get(
     "/courses/{course_id}/enrollment-status",
     status_code=status.HTTP_200_OK,

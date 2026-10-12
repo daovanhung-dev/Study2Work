@@ -1,15 +1,17 @@
 from typing import Any
 
 import pytest
-from app.utils.validate import (
+from app.utils.auth import (
     extract_bearer_token,
+    validate_access_claims,
+    validate_refresh_token,
+)
+from app.utils.validate import (
     normalize_login_email,
     reject_blank_password,
     reject_blank_value,
     strip_email,
-    validate_access_claims,
     validate_login_password,
-    validate_refresh_token,
 )
 
 
