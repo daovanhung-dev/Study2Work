@@ -178,8 +178,8 @@ def test_get_enrollment_status_with_valid_bearer_token(
 
     monkeypatch.setattr(enrollment_view, "find_enrollment", mock_find_enrollment)
     monkeypatch.setattr(
-        "app.modules.guest.api_15_courses_enrollment_status.validate.decode_access_token",
-        lambda token: {"sub": "1001", "roles": ["STUDENT"]},
+        "app.modules.guest.api_15_courses_enrollment_status.validate.validate_current_user_request",
+        lambda authorization, *, trace_id: (1001, ["STUDENT"]),
     )
 
     response = client.get(

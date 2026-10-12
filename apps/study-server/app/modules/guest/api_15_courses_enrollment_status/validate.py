@@ -5,8 +5,7 @@ from __future__ import annotations
 import logging
 
 from app.core.responses import error_response
-from app.core.security.access_token import decode_access_token
-from app.utils.auth import extract_bearer_token, validate_access_claims
+from app.utils.auth import validate_current_user_request
 from starlette.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
@@ -39,13 +38,13 @@ def resolve_optional_user_id(
     if not authorization:
         return None
 
-    try:
-        token = extract_bearer_token(authorization)
-        claims = decode_access_token(token)
-        if isinstance(claims, JSONResponse):
-            return None
-        user_id, _ = validate_access_claims(claims)
-        return user_id
-    except Exception:
+    authentication = validate_current_user_request(
+        authorization,
+        trace_id=trace_id,
+    )
+    if isinstance(authentication, JSONResponse):
         logger.debug("Optional token validation ignored; trace_id=%s", trace_id)
         return None
+
+    user_id, _roles = authentication
+    return user_id
