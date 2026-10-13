@@ -1,5 +1,16 @@
 # Study workflow
 
+## Study API DD deliverables
+
+For Web/API DDs in the `server-study` scope, deliver the Markdown folder with
+its required sheets and reports. Do not create a new ZIP for the DD output.
+This scope rule overrides the shared `createDD-markdown` skill's ZIP output
+requirements, including its delivery checklist and packaging step. Validate
+the Markdown files, examples and relative links without requiring a ZIP.
+
+This rule applies only to Study API DD output. Keep the skill's source-archive
+inspection rules, and keep the existing ZIP policy for Work, AI and Web scopes.
+
 For coding/fix tasks:
 
 ```text

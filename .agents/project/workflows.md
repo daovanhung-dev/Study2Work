@@ -27,7 +27,7 @@ load `.agents/context-map.md`
 | Coding | `coding` | requirement/contract → existing pattern → implementation → tests | scope checks + context validator |
 | Fix | `fix`, bug, regression | reproduce → trace → root cause → smallest fix → regression test | reproduction/regression test |
 | Test | test/verification request | inspect requirement, implementation, error paths and test convention | focused test then scope test |
-| Docs/DD | Web/API DD/documentation | load `createDD-markdown`; preserve API template and mark source gaps | contract and DD validation |
+| Docs/DD | Web/API DD/documentation | load `createDD-markdown`; preserve API template and mark source gaps; for `server-study`, follow its [Markdown-only deliverable rule](../server-study/workflows/README.md) | contract and DD validation |
 | Docs/DD Mobile | Mobile module DD/documentation | load `create-dd-from-bd-mobile`; follow BD evidence, module template and review gates | mobile DD validator + context validation |
 | Cross-scope contract | shared API/event/envelope | identify producer/consumer and status before changing either side | `contracts:validate` + context validator |
 | Worklog | every task | run `scripts/select-worklogs.mjs`, read selected same-type logs, record `PRIOR_WORKLOG_REVIEW`, evidence, decisions, changes and verification | required-field checklist + context validator |

@@ -95,9 +95,10 @@ validation handler converts resulting request validation failures into
 ## Critical absence
 
 Current register and auth SQL reference `users`; login/refresh also reference
-`refresh_tokens`, but source inspection alone does not verify live schema/table
-metadata. `DB.sql`, migration artifacts and DD pages are not sufficient runtime
-evidence when they conflict with live metadata. Register and auth views own
+`refresh_tokens`; APIs #08/#09 also query `courses` and `lessons`, but source
+inspection alone does not verify live schema/table metadata.
+`infra/postgres/02_study_db.sql`, migration artifacts and DD pages are not
+sufficient runtime evidence when they conflict with live metadata. Register and auth views own
 their lookup, password checks, token persistence and commit/rollback behavior.
 API #3, API #4 and API #14 use app-level token/auth helpers from
 `app/utils/auth.py`; API #4 and API #14 share the same Student guard.

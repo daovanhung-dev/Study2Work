@@ -1,0 +1,17 @@
+{
+  "source": "03_THIET_KE_CO_SO_DU_LIEU.md",
+  "total_tables": 178,
+  "databases": {
+    "identity_db": 20,
+    "study_db": 60,
+    "work_db": 98
+  },
+  "files": [
+    "02_study_db.sql",
+    "00_bootstrap_databases.sql",
+    "03_work_db.sql",
+    "README.md",
+    "01_identity_db.sql",
+    "setup_all.sh"
+  ]
+}

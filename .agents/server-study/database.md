@@ -1,7 +1,7 @@
 # Study database status
 
 ```text
-SCHEMA_STATUS: SOURCE_BACKED; LIVE_STATUS: NOT_VERIFIED_HERE
+SCHEMA_ARTIFACT_STATUS: PILOT_DDL_CHECKED_IN; LIVE_STATUS: NOT_VERIFIED_HERE
 MIGRATION_DIRECTORY_STATUS: SOURCE_BACKED (refresh token and categories artifacts)
 RUNTIME_DB_HELPER: VERIFIED
 ```
@@ -18,12 +18,13 @@ each transaction on the pooled engine; setup errors propagate. The engine does
 not append `public`, create the schema, or check live schema existence or
 permissions. Schema is not sent in Neon startup options.
 
-`infra/postgres/study-server/DB.sql` is a checked-in schema/design artifact and
-`migrations/002_refresh_tokens.sql` and `migrations/003_categories.sql` are
-idempotent migration artifacts; their
-live application status is not established by source inspection alone.
-Do not treat it as proof that every described table is available to the current
-runtime.
+`infra/postgres/02_study_db.sql` is part of the checked-in V1-PILOT bootstrap
+artifact. `migrations/002_refresh_tokens.sql` and
+`migrations/003_categories.sql` are migration artifacts; none of these files
+establishes live application status by source inspection alone. The merged API
+#08/#09 queries reference `courses` and `lessons`, but do not establish that
+those relations exist in the configured live schema. Do not treat the pilot DDL
+as proof that every described table is available to the current runtime.
 
 Current runtime details:
 - runtime core parses `constants.URL_DATABASE`, uses `postgresql+psycopg` and

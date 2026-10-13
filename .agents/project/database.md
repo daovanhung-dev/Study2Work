@@ -2,12 +2,21 @@
 
 ## Trạng thái
 
-Các standalone SQL/schema từng được README nhắc tới không tồn tại trong working
-tree hiện tại. Không lấy table/column từ Git history hoặc diagram để code.
+`infra/postgres/` hiện chứa bộ DDL bootstrap V1-PILOT cho ba database
+`identity_db`, `study_db`, `work_db`; README và manifest mô tả tổng cộng 178
+bảng. Đây là artifact bootstrap/schema tham khảo trong repository, không chứng
+minh schema đã được áp dụng vào Neon hoặc database live. `setup_all.sh` tạo
+database nếu chưa có, chạy các DDL file và xóa rồi tạo lại một số
+trigger/policy; không chạy script này như một bước merge.
+
+README của bộ DDL ghi nguồn sinh là `03_THIET_KE_CO_SO_DU_LIEU.md`. Chưa xác
+nhận artifact này là migration chain của từng deployable. Không suy ra runtime
+table/column chỉ từ DDL hoặc Git history; cần đối chiếu source, contract được
+phê duyệt và live metadata theo đúng task.
 
 | Scope | Runtime/config | Schema source hiện có |
 |---|---|---|
-| Study | sync SQLAlchemy `postgresql+psycopg`; Postgres/Redis compose | current register query references `users`; migration directory `NOT_FOUND` |
+| Study | sync SQLAlchemy `postgresql+psycopg`; Postgres/Redis compose | current queries reference `users`, `courses`, `lessons`, `categories`, `refresh_tokens`; migration artifacts and `infra/postgres/02_study_db.sql` are checked in, live schema remains unverified |
 | AI | copied SQLAlchemy core, runtime không dùng | `NOT_FOUND`; không migration/model |
 | Work | Prisma + PostgreSQL/Neon | `apps/work-server/prisma/schema.prisma` + migration history |
 | DB Admin | SQLAlchemy + psycopg3 | two named backend-owned targets; runtime catalog plus independent `db_admin` control-plane bootstrap |
@@ -37,9 +46,10 @@ Prisma schema and migrations remain the runtime source of truth.
 
 `apps/study-server/app/core/database.py` có factory/session và parameterized
 query primitive. Current app import được; `/api/v1/test/db` chỉ chứa `SELECT
-NOW()` inline và `/health/ready` không probe DB. Register query hiện references
-`users`, nhưng context không suy rộng thành schema/table contract ngoài source
-query và live metadata.
+NOW()` inline và `/health/ready` không probe DB. API source hiện references
+`users`, `courses` và `lessons`; không suy rộng thành schema/table contract
+ngoài current query, approved contract và live metadata. API #08/#09 source
+wiring có trong checkout sau merge, nhưng chưa được runtime-verified ở task này.
 
 `alembic.ini` trỏ tới directory thiếu và dùng URL asyncpg cứng, trong khi runtime
 core dùng psycopg sync. Ghi discrepancy, không tạo migration theo config này nếu

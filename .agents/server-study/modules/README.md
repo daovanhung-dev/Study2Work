@@ -63,8 +63,10 @@ The router remains thin and delegates the API flow to `view.py`.
 | `guest/api_02_auth_verify_email_send` | `SOURCE_BACKED` | API #2 public verification dispatch through injectable stub provider |
 | `guest/api_06_courses` | `SOURCE_BACKED` | API #6 public course list with pagination |
 | `guest/api_07_courses_search` | `SOURCE_BACKED` | API #7 public course search with pagination |
+| `guest/api_08_courses_detail` | `SOURCE_BACKED` | API #08 public published-course detail; route and test source added by merge, not runtime-verified here |
+| `guest/api_09_courses_curriculum` | `SOURCE_BACKED` | API #09 public published-course curriculum; route and test source added by merge, not runtime-verified here |
 
 Shared course catalog boundary:
 `guest/_shared/course_catalog` contains only response models and pure helpers
-used by API #6 and API #7.
+used by APIs #6–#8.
 | Other Study domain modules | `NOT_FOUND`/`UNWIRED` | Require source/contract before implementation |
