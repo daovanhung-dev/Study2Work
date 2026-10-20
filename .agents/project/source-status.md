@@ -2,7 +2,7 @@
 
 Repository deep-context được đối chiếu tại source commit
 `9a70eb6764a6587093a92d3bd7e4cc0bea1651c4` ngày 2026-09-18; phần Study server
-dưới đây được refresh theo source ngày 2026-10-11.
+dưới đây được refresh theo source ngày 2026-10-12.
 
 ## Tài liệu thiết kế
 
@@ -52,15 +52,16 @@ Mọi project context phải nằm dưới `.agents/`; `apps/` không chứa `.a
 ## Study server
 
 ```text
-RUNTIME_STATUS: SOURCE_BACKED_API_01_07_12_13_14
-TEST_STATUS: VERIFIED_217_TESTS
-BUSINESS_MODULE_STATUS: SOURCE_BACKED_REGISTER_VERIFY_LOGIN_REFRESH_PROFILE_CATEGORIES_COURSES_SEARCH_RESOURCE_AVATAR
-DATABASE_SCHEMA_STATUS: SOURCE_REQUIRED; LIVE_STATUS_NOT_VERIFIED_HERE
+RUNTIME_STATUS: SOURCE_BACKED_API_01_09_12_13_14; API_08_09_POST_MERGE_NOT_VERIFIED
+TEST_STATUS: VERIFIED_217_PRE_MERGE; API_08_09_TESTS_PRESENT_NOT_RUN_HERE
+BUSINESS_MODULE_STATUS: SOURCE_BACKED_REGISTER_VERIFY_LOGIN_REFRESH_PROFILE_CATEGORIES_COURSES_SEARCH_DETAIL_CURRICULUM_RESOURCE_AVATAR
+DATABASE_SCHEMA_STATUS: PILOT_DDL_CHECKED_IN; LIVE_STATUS_NOT_VERIFIED_HERE
 ```
 
 Current evidence:
 
-- `app.main` imports `app.api.v1`; the router wires APIs #1–#7 and #12–#14.
+- `app.main` imports `app.api.v1`; the merged router declares and wires APIs #1–#9 and #12–#14. APIs #08/#09 were added by the merge and have not been import/HTTP-verified in the merged tree here.
+- `infra/postgres/` contains the V1-PILOT bootstrap/schema artifacts for three databases and 178 tables according to its README/manifest. The script was not run; these files do not establish a live schema or migration deployment.
 - API #13 `POST /api/v1/users/me/avatar` validates the current Student JWT,
   decodes a PNG/JPEG/WebP Data URL up to 5 MiB, and uploads to the injectable
   S3-compatible provider without database access.
@@ -71,8 +72,10 @@ Current evidence:
   URL for that follow-up request.
 - Focused API #13 tests cover parser boundaries, request/auth/response behavior,
   safe storage failures, no-DB behavior and the S3 adapter stub.
-- Full Study pytest suite currently passes 217 tests; the context validator
-  separately reports pre-existing missing DB Admin context outside this scope.
+- The pre-merge `develop` Study pytest run passed 217 tests. The merge adds
+  API #08/#09 test files, which were not run during this merge task. The context
+  validator separately reports pre-existing missing DB Admin context outside
+  this scope.
 - `alembic.ini` references a missing migration directory; this is not schema
   evidence.
 - `apps/study-server/docs/codebase/README.md` and design DD remain secondary to

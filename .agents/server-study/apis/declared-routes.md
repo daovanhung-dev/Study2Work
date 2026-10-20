@@ -3,8 +3,10 @@
 Global status: current route source is `SOURCE_BACKED`; `app.main` import and
 the register/auth/category/course test modules use the current `guest` internal
 namespace. Current auth login/refresh, verify-email dispatch, current-user,
-category, course, course-search, resource-detail, avatar-upload and profile
-update routes are wired; the AI route remains `UNWIRED`.
+category, course, course-search, course-detail, curriculum, resource-detail,
+avatar-upload and profile-update routes are wired; the AI route remains
+`UNWIRED`. API #08/#09 route and test source were added by the merge, but their
+import/HTTP behavior has not been verified in the merged tree here.
 
 ## Composition-root routes
 
@@ -140,6 +142,27 @@ course-category relation exists. Missing mentor integrity, query failures and
 mapping failures return safe `500 DESIGN_INTERNAL_ERROR`; empty results return
 `200 DESIGN_RESOURCE_RETRIEVED` with fixed-size pagination. No schema or live DB
 verification is claimed.
+
+### `GET /api/v1/courses/{course_id}`
+
+Implemented through `app.modules.guest.api_08_courses_detail.view.get_course_detail(...)`.
+The route is public. It validates the path ID, selects one `PUBLISHED` course
+with the public mentor projection from `users`, and returns a singleton
+`CoursePage`. An invalid ID, missing course or unpublished course maps to
+`404 DESIGN_RESOURCE_NOT_FOUND`; query or mapping failures map to
+`500 DESIGN_INTERNAL_ERROR`. API #08 source and tests are present after merge;
+no post-merge import/HTTP run or live schema check is claimed.
+
+### `GET /api/v1/courses/{course_id}/curriculum`
+
+Implemented through `app.modules.guest.api_09_courses_curriculum.view.get_course_curriculum(...)`.
+The route is public. It requires a `PUBLISHED` course, then reads its
+`PUBLISHED` lessons ordered by `sort_order` and `id`, returning a `LessonPage`.
+An invalid ID or missing/unpublished course maps to `404
+DESIGN_RESOURCE_NOT_FOUND`; query or mapping failures map to
+`500 DESIGN_INTERNAL_ERROR`. An empty result is a successful page with zero
+items. API #09 source and tests are present after merge; no post-merge
+import/HTTP run or live schema check is claimed.
 
 ### `GET /api/v1/resources/{resource_id}`
 
