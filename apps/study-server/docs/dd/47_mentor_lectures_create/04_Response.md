@@ -1,0 +1,182 @@
+---
+title: "Response"
+order: 4
+source_workbook: "DD_API_Template(1).xlsx"
+source_sheet: "2.Response"
+format: markdown
+dd_id: "47"
+api_name: "Tạo lecture"
+status: "Draft — Needs Confirmation"
+---
+
+# Response
+
+## Format
+
+| Thuộc tính | Giá trị |
+|---|---|
+| Format | JSON |
+| Character encoding | UTF-8 |
+| Content-Type | application/json |
+
+## Response fields
+
+| No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
+|---:|---|---|---|---|---:|---|---|---|---|---|---|
+| 1 | HTTPStatus | HTTP Status | HTTPStatus | integer | No | N/A | N/A | 6 | 201 on success | N/A | Catalog direct: DESIGN_RESOURCE_CREATED. |
+| 2 | success | Success | success | boolean | No | N/A | N/A | 6 | true on success | N/A | Standard envelope. |
+| 3 | businessCode | Business code | businessCode | string | No | N/A | N/A | 6 | DESIGN_RESOURCE_CREATED | N/A | Catalog direct. |
+| 4 | message | Message | message | string | No | N/A | N/A | 6 | Safe Vietnamese message | N/A | Exact message text is not specified. |
+| 5 | data | Lecture | data | object | No | lessons candidate | Returned row | 5 | Map Lecture fields | Must contain required Lecture fields | assets projection remains unresolved. |
+| 6 | data.id | ID | id | int64 | No | lessons candidate | id | 5 | Direct generated identifier | N/A | BIGSERIAL is legacy candidate only. |
+| 7 | data.course_id | Course ID | course_id | int64 | No | lessons candidate | course_id | 5 | Direct | N/A | Legacy candidate. |
+| 8 | data.title | Title | title | string | No | lessons candidate | name | 5 | name → title | N/A | Physical/logical name alias. |
+| 9 | data.content | Content | content | string | Yes | lessons candidate | content | 5 | Candidate decimal string from request int64 | Omit when stored value is NULL; exact null/omit semantics need confirmation | Request and response types conflict. |
+| 10 | data.assets | Assets | assets | UploadAsset[] | No | N/A | N/A | Pending | Resolve every reference to full UploadAsset | No safe empty/null rule is specified | SOURCE_REQUIRED; blocks complete response mapping. |
+| 11 | data.assets[].id | Asset ID | id | int64 | No | N/A | N/A | Pending | N/A | N/A | API #34 ID generation and lookup are unresolved. |
+| 12 | data.assets[].name | Asset name | name | string | No | N/A | N/A | Pending | N/A | N/A | No persistent metadata source in legacy schema. |
+| 13 | data.assets[].url | Asset URL | url | uri | No | N/A | N/A | Pending | N/A | N/A | URL policy/source is unresolved; never trust an arbitrary request URL. |
+| 14 | data.assets[].content_type | Content type | content_type | string | No | N/A | N/A | Pending | N/A | N/A | MIME source is unresolved. |
+| 15 | data.assets[].size_bytes | Size | size_bytes | int64 | No | N/A | N/A | Pending | N/A | N/A | Metadata source is unresolved. |
+| 16 | data.assets[].status | Asset status | status | UploadStatus | No | N/A | N/A | Pending | N/A | N/A | UploadStatus members and persistence are unresolved. |
+| 17 | data.order | Order | order | int32 | No | lessons candidate | sort_order | 5 | sort_order → order | N/A | Legacy candidate. |
+| 18 | data.status | Lesson status | status | LessonStatus | No | lessons candidate | status | 5 | Read inserted row; candidate default DRAFT | N/A | Enum members are not defined in catalog. |
+| 19 | meta | Metadata | meta | object | No | N/A | N/A | 6 | Empty object unless supported metadata is approved | {} | API envelope. |
+| 20 | traceId | Trace ID | traceId | uuid | No | Request context | Trace helper | 6 | Propagate request trace | Always present | API guideline; API #47 has no current route. |
+
+## Ví dụ thành công
+
+~~~json
+{
+  "success": true,
+  "businessCode": "DESIGN_RESOURCE_CREATED",
+  "message": "Đã tạo lecture.",
+  "data": {
+    "id": 47001,
+    "course_id": 1001,
+    "title": "Bài học mở đầu",
+    "content": "12345",
+    "assets": [
+      {
+        "id": 34001,
+        "name": "SOURCE_REQUIRED",
+        "url": "https://example.invalid/SOURCE_REQUIRED",
+        "content_type": "SOURCE_REQUIRED",
+        "size_bytes": 1,
+        "status": "SOURCE_REQUIRED"
+      }
+    ],
+    "order": 1,
+    "status": "DRAFT"
+  },
+  "meta": {},
+  "traceId": "00000000-0000-4000-8000-000000000047"
+}
+~~~
+
+Payload trên chỉ minh họa shape. Asset values SOURCE_REQUIRED không phải giá trị hợp lệ đã xác nhận; content và status cũng dùng candidate. Không coi đây là ví dụ runnable hoặc bằng chứng API có thể trả thành công khi chưa có asset resolver.
+
+## Ví dụ lỗi
+
+~~~json
+{
+  "success": false,
+  "businessCode": "DESIGN_RESOURCE_NOT_FOUND",
+  "message": "Không tìm thấy course.",
+  "data": null,
+  "meta": {},
+  "traceId": "00000000-0000-4000-8000-000000000048"
+}
+~~~
+
+Ví dụ lỗi dùng data:null theo API guidelines. Current Study error helper mặc định data:{}; API #47 chưa có runtime nên hai biểu diễn này vẫn là discrepancy.
+
+---
+## Phụ lục đối chiếu nguồn Excel
+- Workbook nguồn: `DD_API_Template(1).xlsx`
+- Sheet nguồn: `2.Response`
+- Dimension: `A2:BR45`
+- Trạng thái: `visible`
+- Số ô có dữ liệu/công thức: `52`
+- Số vùng merge: `15`
+
+<details>
+<summary>Danh sách vùng merge</summary>
+
+- `B14:C15`
+- `B16:C16`
+- `B21:C21`
+- `B22:BA22`
+- `B23:C23`
+- `B24:C24`
+- `D14:S14`
+- `T14:AK14`
+- `AL14:BA15`
+- `B20:C20`
+- `B17:C17`
+- `B18:C18`
+- `T18:AB18`
+- `AC18:AK18`
+- `B19:BA19`
+
+</details>
+
+<details>
+<summary>Bản ghi từng ô có dữ liệu hoặc công thức</summary>
+
+| Hàng | Ô | Giá trị nguồn | Công thức nguồn |
+|---:|---|---|---|
+| 2 | `B2` | Giải thích |  |
+| 4 | `C4` | Giá trị trả về khi call API |  |
+| 9 | `B9` | Format |  |
+| 9 | `L9` | JSON |  |
+| 10 | `B10` | Code ký tự |  |
+| 10 | `L10` | UTF-8 |  |
+| 11 | `B11` | Content-Type |  |
+| 11 | `L11` | application/json |  |
+| 14 | `B14` | No |  |
+| 14 | `D14` | Response item name |  |
+| 14 | `T14` | Refer DB |  |
+| 14 | `AL14` | Remarks |  |
+| 15 | `D15` | Tên logic |  |
+| 15 | `L15` | Tên vật lý |  |
+| 15 | `T15` | Table nguồn get |  |
+| 15 | `AC15` | Field nguồn get |  |
+| 16 | `B16` | 1 |  |
+| 16 | `D16` | HTTP Status |  |
+| 16 | `L16` | HTTPStatus |  |
+| 16 | `AL16` | Thành công: 200/ Phát sinh lỗi: 500/ Validate lỗi: 400 |  |
+| 17 | `B17` | 2 |  |
+| 17 | `D17` | Status |  |
+| 17 | `L17` | status |  |
+| 17 | `AL17` | Thành công: 1/phát sinh error: 2 |  |
+| 18 | `B18` | 3 |  |
+| 18 | `D18` | Nội dung response |  |
+| 18 | `L18` | response |  |
+| 19 | `B19` | Trường hợp thành công |  |
+| 20 | `B20` | 3.1 |  |
+| 21 | `B21` | 3.2 |  |
+| 22 | `B22` | Các trường hợp lỗi của API |  |
+| 23 | `B23` | 3.1 |  |
+| 23 | `D23` | Error code |  |
+| 23 | `M23` | error_code |  |
+| 24 | `B24` | 3.2 |  |
+| 24 | `D24` | Error Message id |  |
+| 24 | `M24` | error_message_id |  |
+| 26 | `B26` | Ví dụ |  |
+| 27 | `M27` | Trường hợp thành công |  |
+| 28 | `N28` | { |  |
+| 29 | `O29` |   "status": 1, |  |
+| 30 | `O30` |   "response":{ |  |
+| 33 | `O33` | } |  |
+| 34 | `N34` | } |  |
+| 36 | `M36` | Trường hợp lỗi |  |
+| 37 | `N37` | { |  |
+| 38 | `O38` | "status" : 2 , |  |
+| 39 | `O39` | "response" : {  |  |
+| 40 | `P40` | "error_code" : "9999", |  |
+| 41 | `P41` | "error_message_id" : "DLG000000" |  |
+| 42 | `O42` |  } |  |
+| 43 | `N43` |  } |  |
+
+</details>

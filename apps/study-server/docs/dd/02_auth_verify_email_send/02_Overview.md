@@ -23,13 +23,15 @@ format: markdown
 | Basis | `DIRECT — approved design contract + AC-01` |
 | Status | `Draft — Needs Confirmation` |
 | Transaction | `N/A — không có transaction DB được source xác nhận` |
-| Side effects | `Dispatch tới Email Provider; provider failure được log/retry bất đồng bộ sau acceptance` |
+| Side effects | `Expected theo AC-01: dispatch tới Email Provider và log/retry delivery failure sau acceptance. Current source: gọi provider đồng bộ; exception trả 500; chưa có retry worker; provider mặc định không gửi email thật.` |
 
 ## Sources
 
-- [`docs/lists/list_api.md`](../../../docs/lists/list_api.md) — API #2 endpoint, input, response và business codes.
+- [`docs/lists/list_api.md`](../../../../../docs/lists/list_api.md) — API #2 endpoint, input, response và business codes.
 - [`AC-01 Đăng ký tài khoản`](../../../docs/diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio) — điều kiện verification, dispatch flow và provider retry note.
-- [`createDD-markdown template`](../../../.agents/skills/create_dd/docs/dd/DD_API_Template_MD/) — cấu trúc 8 file DD.
+- [`createDD-markdown template`](../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/) — cấu trúc 8 file DD.
+- [`API #02 route`](../../../app/api/v1.py), [`view`](../../../app/modules/guest/api_02_auth_verify_email_send/view.py), [`provider`](../../../app/service/email/provider.py) và [test source](../../../tests/modules/guest/api_02_auth_verify_email_send/test_verify_email_send.py) — current implementation evidence; tests được đọc nhưng không chạy trong task docs.
+- [API #01 dispatch open question](../01_auth_register/OPEN_QUESTIONS.md) — điểm nối account creation → verification.
 
 ## Tables read
 
@@ -47,7 +49,7 @@ format: markdown
 
 ## Assumptions
 
-- `Request được chấp nhận khi dispatch đã được xếp xử lý; provider failure sau acceptance được log và retry bất đồng bộ.`
+- `Expected design: request được chấp nhận khi dispatch đã được xếp xử lý; delivery failure sau acceptance được log và retry bất đồng bộ. Current source chưa có queue/retry worker; xem VERIFICATION_REPORT.md.`
 - `data.status = "accepted"` là giá trị minh họa suy ra từ `DESIGN_OPERATION_ACCEPTED`; tập giá trị chính thức chưa được đặc tả thêm.
 - `meta` dùng `{}` vì contract API #2 không khai báo operation_id hoặc metadata khác.
 
@@ -55,7 +57,7 @@ format: markdown
 
 - `DISCREPANCY/TBD: chưa có schema xác nhận cho verification token, link, expiry, retry tracking hoặc email log.`
 - `DISCREPANCY/TBD: chưa có rule xác nhận user_id tồn tại hoặc khớp với email; DD không tự thêm query/business validation.`
-- `DISCREPANCY/TBD: runtime/OpenAPI/Email Provider contract chưa được xác minh.`
+- `DISCREPANCY: route/view/provider source hiện tại đã được đọc; chưa có provider gửi email thật, token/link/expiry hoặc retry worker được triển khai.`
 
 ## Security note
 
@@ -64,7 +66,7 @@ format: markdown
 
 ## Performance note
 
-- `Dispatch bất đồng bộ để HTTP 202 không phụ thuộc thời gian phản hồi Email Provider.`
+- `Expected design dùng dispatch bất đồng bộ để HTTP 202 không phụ thuộc thời gian provider; current view gọi provider đồng bộ.`
 - `Retry policy/count và deduplication key chưa được source xác nhận; không tự đặt giá trị.`
 
 

@@ -74,3 +74,10 @@ Các câu hỏi giữ lại những business rule, error mapping và response de
 ## Quyết định cần có trước khi đổi trạng thái
 
 Các câu hỏi ảnh hưởng eligibility, access control, attempt lifecycle, persistence và response contract cần được Product/API owner chốt trước khi DD được đánh dấu Final hoặc API được triển khai.
+
+## Phụ thuộc AC-35 — quiz tombstone proposal
+
+- AC-16 yêu cầu quiz đang mở trước khi tạo attempt; AC-35 #90 yêu cầu soft-delete khi quiz đã có attempt.
+- Đề xuất DERIVED: không tạo attempt mới cho quiz đã tombstone; status value, điều kiện quiz-open cụ thể và ánh xạ lỗi 403/404/409/422 chưa được chốt.
+- Không thay catalog hoặc tự coi DELETED là enum đã duyệt.
+- Câu hỏi liên quan: [API #90](../90_admin_quizzes_delete/OPEN_QUESTIONS.md) và [API #91](../91_admin_quizzes_statistics/OPEN_QUESTIONS.md).

@@ -29,13 +29,13 @@ status: "Draft — Needs Confirmation"
 | Target table/API | Column/Field | Condition/Value | Remarks |
 |---|---|---|---|
 | Current authenticated principal | user_id | Principal lấy từ Bearer JWT | Expected contract scope; API #39 chưa wire. |
-| N/A — chưa xác định | N/A | Quyền tham gia course/discussion | AC-19 nêu precondition nhưng không cung cấp access predicate. |
+| enrollments AS e | user_id, course_id, status | e.user_id=:principal_id AND e.status='ACTIVE' | DERIVED gate; nếu có course_id thì e.course_id phải khớp. |
 
 ### 0.3. Check kết quả
 
 - Nếu token thiếu hoặc không hợp lệ: trả 401 theo [06_Error.md](./06_Error.md).
-- Nếu role không phải Student hoặc access bị từ chối: contract có 403.
-- Không suy ra course enrollment/ownership rule từ course_id.
+- Nếu role không phải Student hoặc course_id có nhưng principal không có enrollment ACTIVE tương ứng: 403 theo contract.
+- DERIVED: nếu course_id vắng mặt, chỉ liệt kê trong các course có enrollment ACTIVE của principal; không có enrollment thì trả empty page.
 - Không thêm error code ngoài catalog.
 
 ## 1. Validate data input
@@ -44,20 +44,22 @@ status: "Draft — Needs Confirmation"
 
 - course_id là query parameter optional kiểu int64 theo catalog.
 - Miền giá trị và parse failure behavior chưa được đặc tả.
-- Nếu có course_id, đây là candidate filter dimension; access predicate vẫn chưa rõ.
+- Nếu có course_id, lọc theo course đó và yêu cầu enrollment ACTIVE của principal (DERIVED).
 - Catalog không khai báo 400/422 cho API #39.
 
 ### 1.2. Validate page
 
 - page là query parameter optional kiểu int32 theo catalog.
-- Giá trị tối thiểu/tối đa, default và malformed-value mapping chưa được đặc tả.
-- Response yêu cầu PageMeta nhưng không thể suy ra default page từ schema.
+- DERIVED default là page=1; page phải là số dương theo cách dùng page phổ biến.
+- Page size cố định 20 theo precedent API #10; catalog không nhận size riêng.
+- Parse/range failure vẫn cần xác nhận vì catalog không khai báo 422.
 
 ### 1.3. Validate sort
 
 - sort là query parameter optional kiểu string theo catalog.
-- Allowlist field, direction syntax, default sort và deterministic tie-break chưa được đặc tả.
-- Không tạo ORDER BY từ input tùy ý hoặc tự chọn sort field.
+- DERIVED allowlist: created_at_desc (mặc định) hoặc created_at_asc; id là tie-breaker cùng chiều.
+- Không tạo ORDER BY từ input tùy ý.
+- Giá trị sort ngoài allowlist chưa có error code; fallback/error behavior cần xác nhận.
 - Catalog không khai báo 400/422 cho API #39.
 
 ## 2. Get discussion thread list
@@ -66,8 +68,9 @@ status: "Draft — Needs Confirmation"
 
 | Query ID | Mục đích | Candidate source | Query status |
 |---|---|---|---|
-| Q1 | Lấy page Discussion theo API #39 | discussions và users | DESIGN_ONLY candidate; predicates, projection và paging chưa chốt. |
-| Q2 | Lấy tổng số row cho PageMeta.total | discussions | DESIGN_ONLY candidate; phải dùng cùng scope/filter như Q1 khi được quyết định. |
+| Q1 | Lấy page Discussion roots theo API #39 | discussions, users và enrollments | DERIVED filters: root ACTIVE, course access qua enrollment ACTIVE. |
+| Q2 | Lấy tổng số root thread cho PageMeta.total | discussions | Cùng scope/filter/sort của Q1; query design-only. |
+| Q3 | Lấy comments cho từng root | child discussions và users | DERIVED: tất cả child ACTIVE trực tiếp, cùng schema với API #42. |
 
 ### 2.2. Candidate projection
 
@@ -83,11 +86,11 @@ status: "Draft — Needs Confirmation"
 | users AS u | u.id | Author ID | DB.sql design evidence |
 | users AS u | u.full_name | Author display name | VARCHAR(150) NOT NULL trong DB.sql |
 | users AS u | u.avatar_url | Optional author avatar | TEXT NULL trong DB.sql |
-| discussions AS c | c.id | Comment ID candidate | Chỉ dùng nếu list response bao gồm comments |
+| discussions AS c | c.id | Comment ID candidate | API #39 trả comments trực tiếp ACTIVE theo đề xuất DERIVED |
 | discussions AS c | c.parent_id | Parent discussion ID candidate | Map sang DiscussionComment.discussion_id |
 | discussions AS c | c.content | Comment content candidate | TEXT NOT NULL trong checked-in DDL |
 | discussions AS c | c.user_id | Comment author relation candidate | Nullable trong checked-in DDL |
-| discussions AS c | c.created_at | Comment timestamp candidate | Chỉ dùng nếu list response bao gồm comments |
+| discussions AS c | c.created_at | Comment timestamp candidate | Dùng cho chronological ordering |
 | users AS cu | cu.id | Comment author ID candidate | Join candidate qua c.user_id |
 | users AS cu | cu.full_name | Comment author name candidate | Join candidate qua c.user_id |
 | users AS cu | cu.avatar_url | Optional comment author avatar | Join candidate qua c.user_id |
@@ -100,28 +103,34 @@ status: "Draft — Needs Confirmation"
 |---|---|---|
 | discussions AS d | N/A | Candidate base row |
 | users AS u | u.id = d.user_id | Author projection candidate; DDL FK nullable |
-| discussions AS c | c.parent_id = d.id | Child rows only if API #39 includes comments; unresolved |
-| users AS cu | cu.id = c.user_id | Comment author only if comments are included; unresolved |
+| discussions AS c | c.parent_id = d.id | Direct child comments; status ACTIVE |
+| users AS cu | cu.id = c.user_id | Comment author projection |
+| enrollments AS e | e.user_id = :principal_id AND e.course_id = d.course_id | Access gate; e.status='ACTIVE' |
 
 ### 2.4. WHERE candidates
 
 - d.course_id = :course_id chỉ khi query course_id được truyền.
-- d.parent_id IS NULL là candidate root-thread filter theo DB guide; API #39 predicate cần xác nhận.
-- Visibility predicate chưa được chốt; status = ACTIVE chỉ là candidate, không được coi là approved.
-- Student participation/access predicate chưa được cung cấp.
-- Nếu course_id vắng mặt, phạm vi course được phép đọc chưa được xác định.
+- d.parent_id IS NULL để chỉ lấy root threads.
+- d.status = 'ACTIVE' là visibility proposal DERIVED từ AC-19 “public discussion” và DDL default.
+- Khi course_id có mặt, e.course_id = :course_id; luôn có e.user_id=:principal_id và e.status='ACTIVE'.
+- Khi course_id vắng mặt, scope là toàn bộ course có enrollment ACTIVE của principal.
+- Child comments lấy c.parent_id=d.id và c.status='ACTIVE'; chỉ direct children, không đệ quy.
 
 ### 2.5. ORDER BY
 
-- sort có mặt trong contract nhưng allowlist, direction, default và tie-break chưa có nguồn.
-- Không chốt thứ tự mặc định hoặc dùng raw sort trong SQL.
+- created_at_desc: d.created_at DESC, d.id DESC (DERIVED default).
+- created_at_asc: d.created_at ASC, d.id ASC (DERIVED option).
+- Comments cho mỗi thread: c.created_at ASC, c.id ASC, cùng API #42.
+- Không đưa raw sort vào SQL; invalid sort behavior cần xác nhận.
 
 ### 2.6. Pagination
 
 - page là request input được catalog khai báo.
 - PageMeta.size là response field nhưng catalog không khai báo request size.
-- Page size, page default/range, total_pages formula và empty/out-of-range behavior cần được xác nhận.
-- Count query phải áp dụng cùng scope/filter với list query sau khi các predicate được chốt.
+- DERIVED page default=1, fixed size=20 theo precedent API #10.
+- total_pages = ceil(total/20); total_pages=0 nếu total=0.
+- Count query áp dụng cùng root/access/visibility filters với Q1.
+- Invalid page/range behavior và out-of-range page vẫn cần xác nhận vì catalog không khai báo 422.
 
 ## 3. Insert/Update thông tin
 
@@ -155,23 +164,23 @@ status: "Draft — Needs Confirmation"
 - data.items[].author.full_name lấy từ users.full_name nếu join được xác nhận.
 - data.items[].author.avatar_url lấy từ users.avatar_url; contract cho phép optional URI.
 - data.items[].status lấy từ discussions.status candidate; enum values và visibility semantics chưa chốt.
-- data.items[].comments[] có schema theo catalog nhưng việc API #39 load child rows cần xác nhận với API #42.
+- data.items[].comments[] gồm tất cả direct child ACTIVE theo Q3, cùng cấu trúc/thứ tự API #42.
 
 ### 4.2. Comment item
 
 - data.items[].comments[].id lấy từ candidate child discussions.id.
 - data.items[].comments[].discussion_id map từ candidate child discussions.parent_id.
 - data.items[].comments[].content lấy từ candidate child discussions.content.
-- data.items[].comments[].author cần join child discussions.user_id tới users; inclusion trong list còn mở.
-- data.items[].comments[].created_at lấy từ candidate child discussions.created_at; inclusion trong list còn mở.
+- data.items[].comments[].author cần join child discussions.user_id tới users; missing author là data-integrity error.
+- data.items[].comments[].created_at lấy từ child discussions.created_at; sort cũ trước, mới sau.
 
 ### 4.3. Pagination
 
 - data.pagination.page, size, total, total_pages theo PageMeta schema của catalog.
-- page nhận query input nếu được truyền; default và invalid-value behavior chưa chốt.
-- size không có query input trong catalog; không tự thêm size hoặc page_size.
+- page nhận query input nếu được truyền; vắng mặt thì default 1 (DERIVED).
+- size cố định 20 theo precedent API #10; không thêm query size/page_size.
 - total cần count cùng scope/filter với Q1.
-- total_pages phụ thuộc page size chưa được quyết định.
+- total_pages = ceil(total/20), bằng 0 nếu total=0 (DERIVED).
 
 ## 5. Check kết quả execute query
 
@@ -179,7 +188,7 @@ status: "Draft — Needs Confirmation"
 
 - Trả HTTP 200 với DESIGN_RESOURCE_RETRIEVED theo API catalog.
 - Giữ response contract ApiEnvelope<Page<Discussion>>.
-- Empty page shape và pagination values chưa được đặc tả; không gán default trong DD.
+- Empty result trả items=[]; page/effective page, size=20, total và total_pages theo công thức DERIVED.
 
 ### 5.2. Lỗi xác thực hoặc quyền truy cập
 

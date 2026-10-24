@@ -12,7 +12,7 @@ Tạo tám sheet Markdown theo template Study Server, cùng `PLAN_RESULT.md`, `O
 
 | API | Method | Endpoint | Actor/Auth | Input | Response contract | Source behavior | Folder |
 |---:|---|---|---|---|---|---|---|
-| 40 | POST | `/api/v1/discussions` | Student / Bearer JWT | `body{course_id:int64!, title:string!, content:int64!}` | `ApiEnvelope<Page<Discussion>>` | AC-19 new-topic branch says `INSERT Discussion`; access and persistence mapping remain unresolved | `40_discussions_create` |
+| 40 | POST | `/api/v1/discussions` | Student / Bearer JWT | `body{course_id:int64!, title:string!, content:int64!}` | `ApiEnvelope<Page<Discussion>>` | AC-19 new-topic branch says `INSERT Discussion`; root/access/status/content/page mappings are provisional DERIVED proposals | `40_discussions_create` |
 
 ## Source and evidence classification
 
@@ -47,16 +47,16 @@ Tạo tám sheet Markdown theo template Study Server, cùng `PLAN_RESULT.md`, `O
 |---|---|---|
 | `course_id` | Candidate `discussions.course_id`; course access predicate unresolved | Candidate; DDL FK nullable |
 | `title` | Required logical request/response field; no physical column | `SOURCE_REQUIRED / DISCREPANCY` |
-| `content` | Candidate `discussions.content`; request int64 vs DDL TEXT/logical string | `DISCREPANCY`; no cast invented |
+| `content` | Candidate `discussions.content`; request int64 vs DDL TEXT/logical string | `DISCREPANCY`; base-10 decimal string is a DERIVED proposal needing approval |
 | Bearer JWT | Student role and principal identity | Catalog expected behavior; route unwired |
 
 ### Query and mutation
 
 | Item | Candidate | Status |
 |---|---|---|
-| Course access query | No table/predicate selected | `SOURCE_REQUIRED` |
+| Course access query | `enrollments` with principal/course/status ACTIVE | DERIVED proposal; needs approval |
 | Author lookup | `users` by current principal ID if profile response is required | Candidate only |
-| Mutation | One `INSERT discussions` for AC-19 new-topic branch; `parent_id=NULL` candidate | Design-only; required title/timestamps and content mapping unresolved |
+| Mutation | One root `INSERT discussions`, `parent_id=NULL`, status ACTIVE and server timestamps proposed | Design-only; required title, nullability, timestamps and content mapping need approval |
 | Other writes | No counter/update operation specified for API #40's branch | Not added |
 
 ### Response sources
@@ -66,13 +66,13 @@ Tạo tám sheet Markdown theo template Study Server, cùng `PLAN_RESULT.md`, `O
 | `id`, `course_id` | Inserted discussion row | Generated ID/live schema and FK nullability unverified |
 | `title`, `content` | Logical Discussion schema/request | No title column; content types conflict |
 | `author` | Current principal plus candidate `users` lookup | Profile read not specified |
-| `status`, `comments` | Discussion row/child rows | Enum, initial state and inclusion unresolved |
-| `pagination` | `PageMeta` schema | Create endpoint provides no page policy |
+| `status`, `comments` | Discussion row; new root proposed ACTIVE with `comments=[]` | DERIVED; enum/visibility policy needs approval |
+| `pagination` | `PageMeta` schema | One-item page 1/1/1/1 is DERIVED and needs approval |
 
 ## Scope and handoff
 
 - Keep API #40 contract exact: HTTP 201 `DESIGN_RESOURCE_CREATED`; errors 401, 403, 422 and 500 with catalog codes.
-- Preserve `content:int64!` and `ApiEnvelope<Page<Discussion>>`; list their mismatches as open decisions.
+- Preserve `content:int64!` and `ApiEnvelope<Page<Discussion>>`; mark the decimal-string conversion and one-item page only as DERIVED proposals.
 - Mark current route/module/test state `UNWIRED / NOT_FOUND`; do not run runtime tests for this documentation-only task.
-- Preserve existing API #27–#39 artifacts and source files; create only the API #40 DD and its worklog.
-- Review [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md) before approving the DD or implementing API #40.
+- Refresh only the connected API #39–#42 Markdown DDs during group reconciliation; runtime, catalog, diagrams, ERD and DDL remain untouched.
+- The #39–#42 group now shares provisional access, root/child, visibility, content and response proposals; review [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md) before approving or implementing API #40.

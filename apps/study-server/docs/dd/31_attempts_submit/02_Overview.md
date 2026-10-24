@@ -82,6 +82,13 @@ status: "Draft — Needs Confirmation"
 
 - Candidate grading reads the attempt and its answer/question/choice relations.
 - Question count, answer count, query strategy, transaction duration and concurrency limits are not specified.
+
+## Phụ thuộc AC-35 — quiz tombstone proposal
+
+- API #31 nộp attempt đã tồn tại; AC-35 #90 giữ attempt/answer history khi soft-delete quiz có attempt.
+- Đề xuất DERIVED: attempt IN_PROGRESS được tạo trước tombstone có thể tiếp tục submit/chấm theo AC-16; owner cần xác nhận.
+- Chưa chốt race với DELETE, lock/isolation hoặc cách xử lý khi quiz bị tombstone trong lúc submit.
+- Câu hỏi liên quan: [API #90](../90_admin_quizzes_delete/OPEN_QUESTIONS.md) và [API #91](../91_admin_quizzes_statistics/OPEN_QUESTIONS.md).
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

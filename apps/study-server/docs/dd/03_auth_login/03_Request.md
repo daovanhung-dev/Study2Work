@@ -44,6 +44,15 @@ format: markdown
 
 > Mỗi field phải nằm trên một row riêng. Contract không đặc tả min/max hoặc password character policy.
 
+## Current-source validation — không phải contract normative
+
+| Field | Current source behavior | Contract boundary |
+|---|---|---|
+| `email` | Validator trim khoảng trắng, kiểm tra email và giới hạn tối đa 255 ký tự. | Catalog chỉ yêu cầu `email`; trim và max 255 chưa được duyệt thành policy contract. |
+| `password` | Validator từ chối giá trị chỉ gồm whitespace; route/model cũng yêu cầu string. | Catalog yêu cầu `string!`; min/max và password policy chưa được đặc tả. |
+
+FastAPI có thể từ chối body/type sai trước khi view chạy; các giới hạn/chuẩn hóa ở trên mô tả source hiện tại, không thay đổi ví dụ hay schema expected.
+
 ## Ví dụ Request data
 
 ```json

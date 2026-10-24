@@ -21,8 +21,8 @@ format: markdown
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | `Authorization` | `Yes` | `Bearer <jwt>` | Bearer JWT dùng để xác thực và lấy claim `user_id`/`role` | `05_Data_Mapping.md#11-get-request-header` |
-| 2 | Contents type | `Content-Type` | `No` | `N/A — request không có body` | Không có request body; nếu gửi thì không thay đổi contract | `05_Data_Mapping.md#11-get-request-header` |
+| 1 | Authorization | `Authorization` | `Yes` | `Bearer <jwt>` | Bearer JWT xác thực Student; catalog/AC không khóa tên claim, current source đọc `sub`/`roles` | [`0.1`](./05_Data_Mapping.md#01-get-request-header) |
+| 2 | Content type | `Content-Type` | `No` | `N/A — request không có body` | Endpoint không khai báo request body | [`0.1`](./05_Data_Mapping.md#01-get-request-header) |
 
 ## Path parameters
 
@@ -40,9 +40,16 @@ format: markdown
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|---|
-| `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | `Endpoint GET không có request body` | `N/A` |
+| `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | `N/A` | `Endpoint GET không có request body` | `N/A` |
 
 > Mỗi field phải nằm trên một row riêng. Không gộp nhiều field trong một row.
+
+## Claim boundary
+
+- Expected theo catalog: yêu cầu Bearer JWT và role Student; catalog không định nghĩa claim keys.
+- AC-02 diagram ghi `user_id`, `role`; đây là expected diagram wording.
+- Current source: `decode_access_token` xác minh access JWT; `validate_access_claims` yêu cầu `sub` là numeric user ID dương và `roles` là list string. Đây là source shape, không tự sửa contract hoặc diagram.
+- Ký hiệu `auth{bearer_jwt!}` bị lặp trong catalog được biểu diễn bằng một header `Authorization` vì route chỉ nhận một header.
 
 ## Ví dụ Request
 

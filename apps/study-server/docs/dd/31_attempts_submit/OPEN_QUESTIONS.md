@@ -89,3 +89,10 @@ Các câu hỏi dưới đây giữ lại nội dung chưa được API catalog,
 ## Trạng thái cần duy trì
 
 Giữ Draft — Needs Confirmation đến khi owner chốt ownership/state, grading rules, answer storage compatibility và response disclosure. Không sửa API catalog, AC diagram, ERD hoặc DDL để tự giải quyết các câu hỏi này.
+
+## Phụ thuộc AC-35 — quiz tombstone proposal
+
+- API #31 nộp attempt đã tồn tại; AC-35 #90 giữ attempt/answer history khi soft-delete quiz có attempt.
+- Đề xuất DERIVED: attempt IN_PROGRESS được tạo trước tombstone có thể tiếp tục submit/chấm theo AC-16; owner cần xác nhận.
+- Chưa chốt race với DELETE, lock/isolation hoặc cách xử lý khi quiz bị tombstone trong lúc submit.
+- Câu hỏi liên quan: [API #90](../90_admin_quizzes_delete/OPEN_QUESTIONS.md) và [API #91](../91_admin_quizzes_statistics/OPEN_QUESTIONS.md).

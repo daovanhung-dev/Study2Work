@@ -29,13 +29,13 @@ status: "Draft — Needs Confirmation"
 | Target table/API | Column/Field | Condition/Value | Remarks |
 |---|---|---|---|
 | Current authenticated principal | `user_id` | JWT `sub`, parsed as positive integer by current auth helper | Current helper evidence only; API #40 is unwired. |
-| N/A — access predicate chưa xác định | Course participation | AC-19 precondition: Student có quyền tham gia discussion của course | Không tự suy ra enrollment, course ownership hoặc published status. |
+| enrollments AS e | user_id, course_id, status | e.user_id=:principal_id AND e.course_id=:course_id AND e.status='ACTIVE' | DERIVED access proposal; cần xác nhận. |
 
 ### 0.3. Check kết quả
 
 - Token thiếu hoặc không hợp lệ trả 401 theo catalog.
 - Role khác Student hoặc course access bị từ chối trả 403 theo catalog.
-- Predicate course access và cách phân biệt course không tồn tại/chưa có quyền cần xác nhận.
+- DERIVED: thiếu enrollment ACTIVE cho course_id trả 403 theo catalog; cách phân biệt course không tồn tại/chưa có quyền cần xác nhận.
 - Không thêm 404 hoặc error code ngoài catalog.
 
 ## 1. Validate data input
@@ -44,7 +44,7 @@ status: "Draft — Needs Confirmation"
 
 - `course_id` bắt buộc, kiểu `int64` theo catalog.
 - Min/max, parse boundary và existence behavior chưa được đặc tả.
-- Course access check được yêu cầu ở mức precondition AC-19; query predicate chưa có nguồn.
+- DERIVED: yêu cầu enrollment ACTIVE của principal cho course; policy cần xác nhận.
 
 ### 1.2. Validate `title`
 
@@ -56,7 +56,7 @@ status: "Draft — Needs Confirmation"
 
 - `content` bắt buộc, kiểu `int64` theo catalog.
 - Reusable `Discussion.content` là `string`, còn checked-in DDL dùng `TEXT`.
-- Không cast integer sang string hoặc định nghĩa content encoding khi chưa có quyết định.
+- DERIVED proposal: chuyển integer sang chuỗi thập phân base-10 để lưu TEXT và trả logical string; đây chưa phải quyết định contract.
 
 - Request validation failure dùng 422 `DESIGN_VALIDATION_ERROR` theo catalog.
 - Field constraints ngoài required/type chưa được định nghĩa.
@@ -68,7 +68,7 @@ status: "Draft — Needs Confirmation"
 | Query ID | Purpose | Candidate source | Status |
 |---|---|---|---|
 | Q1 | Lấy `UserSummary` nếu response yêu cầu author projection | `users.id`, `users.full_name`, `users.avatar_url` | Candidate only; query/re-read behavior chưa được phê duyệt. |
-| Q2 | Xác minh course participation nếu cần | N/A — table/predicate chưa được xác định | `SOURCE_REQUIRED`; không tự chọn enrollment/ownership rule. |
+| Q2 | Xác minh course participation | `enrollments.user_id`, `course_id`, `status` | DERIVED proposal: enrollment ACTIVE cho principal và course; cần xác nhận. |
 
 ### 2.2. Candidate user projection
 
@@ -81,8 +81,8 @@ status: "Draft — Needs Confirmation"
 ### 2.3. JOIN / WHERE
 
 - Candidate author lookup condition is `u.id = authenticated_principal.user_id`.
-- No discussion/course access JOIN or WHERE clause is approved for API #40.
-- Do not infer enrollment, ownership, course publication, or visibility predicates.
+- DERIVED access check: EXISTS enrollment where user_id=:principal_id, course_id=:course_id and status='ACTIVE'.
+- Do not infer ownership or course publication predicates.
 
 ## 3. Insert/Update thông tin
 
@@ -93,7 +93,7 @@ status: "Draft — Needs Confirmation"
 ### 3.2. Conditions
 
 - This is the AC-19 “New topic” branch; the activity diagram sends replies to API #41 instead.
-- DB guide says `parent_id IS NULL` identifies a root topic; using NULL for API #40 is a candidate mapping, not runtime evidence.
+- DERIVED: set `parent_id = NULL` to create a root topic, consistent with DB guide and AC-19's separate reply branch.
 
 ### 3.3. Items update/insert
 
@@ -108,10 +108,10 @@ status: "Draft — Needs Confirmation"
 | `user_id` | Authenticated principal ID | Candidate value source; DDL FK nullable but logical relation is required. |
 | `parent_id` | `NULL` | Candidate root-topic mapping from DB guide and AC-19 branch separation. |
 | `title` | `SOURCE_REQUIRED` | Required request/response field has no physical `discussions.title` column. |
-| `content` | `SOURCE_REQUIRED` | Request is `int64`; DB is `TEXT`; conversion rule missing. |
-| `status` | `SOURCE_REQUIRED` | DDL default is `ACTIVE`; whether API should rely on it and enum semantics are unresolved. |
-| `created_at` | `SOURCE_REQUIRED` | DDL requires non-NULL timestamp and defines no default; source of value unresolved. |
-| `updated_at` | `SOURCE_REQUIRED` | DDL requires non-NULL timestamp and defines no default; source of value unresolved. |
+| `content` | Decimal string of request integer | DERIVED proposal for `int64` to `TEXT`/logical string; confirm semantic. |
+| `status` | `ACTIVE` | DERIVED proposal consistent with DDL default; enum/policy needs confirmation. |
+| `created_at` | Server clock at insert | DERIVED; DDL requires NOT NULL and has no default. |
+| `updated_at` | Same server timestamp as `created_at` | DERIVED; DDL requires NOT NULL and has no default. |
 | `id` | Database-generated candidate | DDL declares `BIGSERIAL`; live schema/generation not verified. |
 
 ### 3.5. Transaction
@@ -124,7 +124,7 @@ status: "Draft — Needs Confirmation"
 ### 4.1. Success envelope
 
 - HTTP status is 201 with `DESIGN_RESOURCE_CREATED` per API catalog.
-- `data` retains `Page<Discussion>`; page construction is unresolved for this create endpoint.
+- `data` retains `Page<Discussion>`; DERIVED proposal is one new root with metadata page=1, size=1, total=1, total_pages=1.
 - `traceId` and `meta` follow shared API guidelines.
 
 ### 4.2. Discussion item source matrix
@@ -134,18 +134,18 @@ status: "Draft — Needs Confirmation"
 | `id` | Generated `discussions.id` | Integer ID | Candidate; BIGSERIAL design DDL only. |
 | `course_id` | Request and inserted `discussions.course_id` | Direct | Candidate; DDL nullability conflicts with logical required field. |
 | `title` | N/A | N/A | `SOURCE_REQUIRED`; no physical column. |
-| `content` | `discussions.content` | N/A | `SOURCE_REQUIRED`; no approved conversion from request int64 to TEXT/string. |
+| `content` | `discussions.content` | Decimal string of request integer | `DERIVED` proposal; request int64/response string/DDL TEXT discrepancy remains. |
 | `author.id` | Authenticated principal / `users.id` | Candidate direct mapping | Profile query not specified. |
 | `author.full_name` | `users.full_name` | Candidate direct mapping | Query required; DDL evidence only. |
 | `author.avatar_url` | `users.avatar_url` | Candidate direct mapping | Null/omit rule unresolved. |
-| `status` | `discussions.status` | Candidate status projection | Enum and create policy unresolved; DB default `ACTIVE` is not approved API behavior. |
-| `comments[]` | Child `discussions` rows and users, if returned | N/A | API #42 reloads topic + comments; create response boundary unresolved. |
+| `status` | `discussions.status` | `ACTIVE` | `DERIVED` proposal; DDL default is not approved API behavior. |
+| `comments[]` | No child rows for newly created root | Empty array | `DERIVED`; API #42 reloads topic/comments after create. |
 
 ### 4.3. Page metadata
 
 - `data.pagination.page`, `size`, `total`, and `total_pages` are required by `PageMeta`.
-- API #40 has no page input or creation-specific page calculation source.
-- Do not infer page size, count, total-pages formula, or return-page semantics.
+- DERIVED: one created root item uses page=1, size=1, total=1, total_pages=1.
+- Confirm the one-item page interpretation before implementation.
 
 ## 5. Check kết quả execute query
 

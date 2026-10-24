@@ -12,7 +12,7 @@ Tạo tám sheet Markdown theo template Study Server, cùng OPEN_QUESTIONS.md, P
 
 | API | Method | Endpoint | Actor/Auth | Input | Response contract | Source behavior | Folder |
 |---:|---|---|---|---|---|---|---|
-| 39 | GET | /api/v1/discussions | Student / Bearer JWT | query course_id?:int64, page?:int32, sort?:string | ApiEnvelope<Page<Discussion>> | AC-19: đọc discussion public trong course; quyền/filter semantics chưa chốt | 39_discussions |
+| 39 | GET | /api/v1/discussions | Student / Bearer JWT | query course_id?:int64, page?:int32, sort?:string | ApiEnvelope<Page<Discussion>> | DERIVED: đọc root ACTIVE trong scope enrollment ACTIVE, kèm direct comments ACTIVE; policy cần xác nhận | 39_discussions |
 
 ## Source and evidence classification
 
@@ -47,14 +47,14 @@ Tạo tám sheet Markdown theo template Study Server, cùng OPEN_QUESTIONS.md, P
 | Matrix | Draft treatment | Remaining gap |
 |---|---|---|
 | Request usage | Authorization plus the three catalog query fields only | Query parsing/range and access semantics |
-| Query | Candidate reads from discussions/users; Q1 list and Q2 count only | Root visibility, access filter, comments, sort and page size |
+| Query | Root discussions, users, enrollment access and direct ACTIVE comments are proposed; page=1/size=20 and created_at ordering are DERIVED | Confirm access/status, full-comment list boundary, sort and pagination/parse policy |
 | Mutation | None; GET is read-only | None |
-| Response source | Reusable Discussion/Page schemas preserved | title source, comments scope and PageMeta values |
+| Response source | Reusable Discussion/Page schemas preserved; comments and PageMeta use shared DERIVED proposals with API #42 | title source and approval of access/comment/page proposals |
 
 ## Scope and handoff
 
 - Preserved API #39 catalog request fields, response schema and exact 200/401/403/500 error set.
-- Kept title source, page size/default, sort, course access, visibility and comments scope open.
+- Kept title source and approval of access, visibility, comment scope, sort and pagination proposals open; the current proposal is aligned with API #40–#42.
 - Marked API #39 UNWIRED / NOT_FOUND; database artifacts remain design evidence.
 - No runtime, catalog, diagram, ERD, DDL, API #38 DD or shared context files changed.
 - Review [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md) before marking Ready/Final or implementing API #39.

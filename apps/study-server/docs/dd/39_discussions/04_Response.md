@@ -29,7 +29,7 @@ status: "Draft — Needs Confirmation"
 | 3 | businessCode | Business code | businessCode | string | No | N/A | N/A | 5.1/5.2/5.3 | Theo branch trong catalog | N/A | Không thêm business code. |
 | 4 | message | Message | message | string | No | N/A | N/A | 5.1/5.2/5.3 | Client-safe message | Nội dung chưa đặc tả | ApiEnvelope field; xem API guideline. |
 | 5 | data | Discussion page | data | Page<Discussion> | No | discussions/users | N/A | 4.1 | Map Page<Discussion> | null trên error theo guideline | Logical response schema. |
-| 5.1 | data.items | Thread items | items | array<Discussion> | No | discussions/users | N/A | 2.1/4.1 | Map thread roots khi scope được xác nhận | Empty behavior chưa đặc tả | Page<T>. |
+| 5.1 | data.items | Thread items | items | array<Discussion> | No | discussions/users | N/A | 2.1/4.1 | Root threads trong course scope được phép; ACTIVE visibility/access là DERIVED | Empty result là [] | Page<T>; enrollment và status proposal cần xác nhận. |
 | 5.1.1 | data.items[].id | Discussion ID | id | int64 | No | discussions | id | 2.1 | Direct mapping candidate | N/A | Contract field. |
 | 5.1.2 | data.items[].course_id | Course ID | course_id | int64 | No | discussions | course_id | 2.1 | Direct mapping candidate | DDL nullable, contract required | ERD/DDL discrepancy. |
 | 5.1.3 | data.items[].title | Thread title | title | string | No | N/A — source missing | N/A | 4.1 | SOURCE_REQUIRED | Không map từ content | Required logical field chưa có cột trong ERD/DDL. |
@@ -38,8 +38,8 @@ status: "Draft — Needs Confirmation"
 | 5.1.5.1 | data.items[].author.id | Author ID | id | int64 | No | users | id | 2.1 | Direct mapping candidate | N/A | Source FK is nullable in checked-in DDL. |
 | 5.1.5.2 | data.items[].author.full_name | Author name | full_name | string | No | users | full_name | 2.1 | Direct mapping candidate | N/A | DB.sql declares VARCHAR(150) NOT NULL. |
 | 5.1.5.3 | data.items[].author.avatar_url | Author avatar | avatar_url | uri | Yes | users | avatar_url | 2.1 | Direct mapping candidate | null when source is NULL | Optional UserSummary field. |
-| 5.1.6 | data.items[].status | Discussion status | status | DiscussionStatus | No | discussions | status | 2.1 | Direct mapping candidate | Enum values unresolved | DB.sql default ACTIVE; full enum/visibility rule absent. |
-| 5.1.7 | data.items[].comments | Comments | comments | array<DiscussionComment> | No | discussions/users | N/A | 2.2/4.1 | Candidate map from child rows | Inclusion in list unresolved | API #42 separately reads topic + comments. |
+| 5.1.6 | data.items[].status | Discussion status | status | DiscussionStatus | No | discussions | status | 2.1 | Direct mapping candidate | Enum values unresolved | ACTIVE visibility filter is DERIVED; full enum/policy absent. |
+| 5.1.7 | data.items[].comments | Comments | comments | array<DiscussionComment> | No | discussions/users | N/A | 2.2/4.1 | All direct child rows with status ACTIVE; created_at ASC, id ASC (DERIVED) | [] when none | Same comment projection/order as API #42; needs confirmation. |
 | 5.1.7.1 | data.items[].comments[].id | Comment ID | id | int64 | No | discussions | id | 2.2 | Direct mapping candidate | N/A | Child discussion row ID. |
 | 5.1.7.2 | data.items[].comments[].discussion_id | Parent discussion ID | discussion_id | int64 | No | discussions | parent_id | 2.2 | Map parent_id to discussion_id | N/A | Contract field name differs from physical column. |
 | 5.1.7.3 | data.items[].comments[].content | Comment content | content | string | No | discussions | content | 2.2 | Direct mapping candidate | N/A | Child row content. |
@@ -49,10 +49,10 @@ status: "Draft — Needs Confirmation"
 | 5.1.7.4.3 | data.items[].comments[].author.avatar_url | Comment author avatar | avatar_url | uri | Yes | users | avatar_url | 2.2 | Direct mapping candidate | null when source is NULL | Optional UserSummary field. |
 | 5.1.7.5 | data.items[].comments[].created_at | Comment created time | created_at | date-time | No | discussions | created_at | 2.2 | ISO-8601 serialization candidate | N/A | Child row timestamp. |
 | 5.2 | data.pagination | Pagination | pagination | PageMeta | No | N/A | N/A | 3.1/4.2 | Map PageMeta | N/A | Required reusable response schema. |
-| 5.2.1 | data.pagination.page | Page number | page | int32 | No | N/A | N/A | 1.2/4.2 | Effective page | Default unresolved | Query page is optional. |
-| 5.2.2 | data.pagination.size | Page size | size | int32 | No | N/A | N/A | 3.1/4.2 | SOURCE_REQUIRED | Value unresolved | No size query parameter in API #39. |
-| 5.2.3 | data.pagination.total | Total threads | total | int64 | No | discussions | COUNT(*) candidate | 3.1/4.2 | Count same finalized scope | Predicate unresolved | PageMeta field. |
-| 5.2.4 | data.pagination.total_pages | Total pages | total_pages | int32 | No | N/A | N/A | 3.1/4.2 | Calculation depends on size | SOURCE_REQUIRED | Do not infer zero/empty/default rules. |
+| 5.2.1 | data.pagination.page | Page number | page | int32 | No | N/A | N/A | 1.2/4.2 | Query page; default 1 (DERIVED) | Positive page proposed | Parse/range behavior needs confirmation. |
+| 5.2.2 | data.pagination.size | Page size | size | int32 | No | N/A | N/A | 3.1/4.2 | Fixed 20 per API #10 precedent (DERIVED) | N/A | API #39 has no size query parameter. |
+| 5.2.3 | data.pagination.total | Total threads | total | int64 | No | discussions | COUNT(*) candidate | 3.1/4.2 | Count roots within identical access/visibility/course scope | N/A | PageMeta field; access policy needs confirmation. |
+| 5.2.4 | data.pagination.total_pages | Total pages | total_pages | int32 | No | N/A | N/A | 3.1/4.2 | ceil(total/20); 0 when total=0 (DERIVED) | N/A | Page-size and empty-page proposal needs confirmation. |
 | 6 | meta | Metadata | meta | object | No | N/A | N/A | 5.1/5.2/5.3 | ApiEnvelope metadata | {} per API guideline unless field errors apply | No endpoint-specific metadata defined. |
 | 7 | traceId | Trace ID | traceId | uuid | No | N/A | N/A | 5.1/5.2/5.3 | Trace correlation ID | N/A | ApiEnvelope field. |
 
@@ -85,7 +85,7 @@ status: "Draft — Needs Confirmation"
     ],
     "pagination": {
       "page": 1,
-      "size": 1,
+      "size": 20,
       "total": 1,
       "total_pages": 1
     }
@@ -111,9 +111,9 @@ status: "Draft — Needs Confirmation"
 ## Response gap
 
 - Catalog-required Discussion.title has no source column in the discussions ERD or checked-in DDL.
-- Discussion.comments[] is in the reusable schema, while AC-19 assigns “topic + comments” to API #42; list projection is unresolved.
+- Discussion.comments[] is proposed as all direct ACTIVE children in created_at ASC, id ASC order, matching API #42; confirm whether full comments belong in the list response.
 - Discussion visibility, status enum values and author relation integrity are not confirmed by runtime evidence.
-- PageMeta requires size, total and total_pages; request and DB sources do not define their calculation/defaults.
+- PageMeta values use a DERIVED proposal: page defaults to 1, size is fixed at 20, and total_pages is ceil(total/20), or zero for an empty result. Confirm before implementation.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

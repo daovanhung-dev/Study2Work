@@ -27,10 +27,10 @@ format: markdown
 
 ## Sources
 
-- [`docs/lists/list_api.md`](../../../docs/lists/list_api.md) — API #1 contract, schema và business code design-only.
+- [`docs/lists/list_api.md`](../../../../../docs/lists/list_api.md) — API #1 contract, schema và business code design-only.
 - [`AC-01 Đăng ký tài khoản`](../../../docs/diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio) — actor, flow, validation, duplicate check và verification dispatch.
 - [`DB_UNICA_ERD.drawio`](../../../docs/diagrams/DB_UNICA_ERD.drawio) — bảng `users` và column-level design V1.
-- [`createDD-markdown template`](../../../.agents/skills/create_dd/docs/dd/DD_API_Template_MD/) — cấu trúc file DD.
+- [`createDD-markdown template`](../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/) — cấu trúc file DD.
 
 ## Tables read
 

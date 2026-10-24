@@ -10,7 +10,7 @@ format: markdown
 
 ## Giải thích
 
-Các trường hợp lỗi của API. Provider failure sau khi request đã accepted không tạo error response mới; được log/retry bất đồng bộ theo AC-01.
+Các trường hợp lỗi theo contract. AC-01 mô tả log/retry cho delivery failure sau acceptance; đây là expected behavior, chưa có trong current source. Current view gọi provider đồng bộ và ánh xạ exception thành HTTP 500 trước khi trả success response; không có retry worker.
 
 ## Error cases
 

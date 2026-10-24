@@ -1,0 +1,199 @@
+---
+title: "Response"
+order: 4
+source_workbook: "DD_API_Template(1).xlsx"
+source_sheet: "2.Response"
+format: markdown
+dd_id: "42"
+api_name: "Tải lại thread thảo luận"
+status: "Draft — Needs Confirmation"
+---
+
+# Response
+
+## Format
+
+| Thuộc tính | Giá trị |
+|---|---|
+| Format | JSON |
+| Character encoding | UTF-8 |
+| Content-Type | application/json |
+| Success HTTP status | 200 |
+| Success business code | DESIGN_RESOURCE_RETRIEVED |
+| Success data type | ApiEnvelope<Page<Discussion>> theo approved catalog; page một thread là DERIVED. |
+
+## Response fields
+
+| No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
+|---:|---|---|---|---|---:|---|---|---|---|---|---|
+| 1 | success | Success flag | success | boolean | No | N/A | N/A | Envelope | true on success | N/A | Shared envelope. |
+| 2 | businessCode | Business code | businessCode | string | No | N/A | N/A | Envelope | DESIGN_RESOURCE_RETRIEVED | N/A | Catalog HTTP 200. |
+| 3 | message | Message | message | string | No | N/A | N/A | Envelope | Safe client message | N/A | Exact literal not defined. |
+| 4 | data.items[] | Discussion thread | items | Discussion[] | No | discussions / users | Candidate projection | Root topic + comments | DERIVED: exactly one root thread | Needs confirmation | Missing title source prevents complete physical projection. |
+| 4.1 | data.items[].id | Topic ID | id | int64 | No | discussions | id | Q1 root lookup | Direct mapping | N/A | Row must have parent_id IS NULL. |
+| 4.2 | data.items[].course_id | Course ID | course_id | int64 | No | discussions | course_id | Q1 root lookup | Direct mapping | N/A | DDL nullable; logical relation required. |
+| 4.3 | data.items[].title | Topic title | title | string | No | N/A | N/A | SOURCE_REQUIRED | N/A | SOURCE_REQUIRED | No physical title column; do not derive from content. |
+| 4.4 | data.items[].content | Topic content | content | string | No | discussions | content | Q1 root lookup | Read TEXT as string | Required | Physical TEXT matches logical string. |
+| 4.5 | data.items[].author | Topic author | author | UserSummary | No | users | id, full_name, avatar_url | Q1 author projection | Map ID/name; omit avatar_url when NULL | Required author | DDL user FK nullable; missing required author is data-integrity error. |
+| 4.6 | data.items[].status | Topic status | status | DiscussionStatus | No | discussions | status | Q1 root lookup | Direct status string | Required | Enum members not listed in catalog. |
+| 4.7 | data.items[].comments[] | Direct comments | comments | DiscussionComment[] | No | discussions / users | Child rows | Q2 | Include direct ACTIVE children in chronological order | Empty array when no active child | No nested replies in this proposal. |
+| 4.7.1 | data.items[].comments[].id | Comment ID | id | int64 | No | discussions | id | Q2 | Direct mapping | N/A | Child key. |
+| 4.7.2 | data.items[].comments[].discussion_id | Topic ID | discussion_id | int64 | No | discussions | parent_id | Q2 | Map child parent_id | N/A | Parent topic ID. |
+| 4.7.3 | data.items[].comments[].content | Comment content | content | string | No | discussions | content | Q2 | Read TEXT as string | Required | Previous POST mapping remains a provisional decimal-string conversion. |
+| 4.7.4 | data.items[].comments[].author | Comment author | author | UserSummary | No | users | id, full_name, avatar_url | Q2 author projection | Map ID/name; omit avatar_url when NULL | Required author | Missing required author is data-integrity error. |
+| 4.7.5 | data.items[].comments[].created_at | Comment creation time | created_at | date-time | No | discussions | created_at | Q2 | Serialize ISO-8601 | Required | DDL timestamp has no timezone declaration. |
+| 4.8 | data.pagination | Pagination metadata | pagination | PageMeta | No | N/A | N/A | Derived single-thread page | page=1,size=1,total=1,total_pages=1 | Required | Catalog does not define detail pagination. |
+| 5 | meta | Metadata | meta | object | No | N/A | N/A | Envelope | {} | Required object | No endpoint-specific metadata. |
+| 6 | traceId | Trace ID | traceId | uuid | No | Request trace | N/A | Current trace convention | UUID string | Required | Shared envelope. |
+
+## Ví dụ thành công
+
+> Ví dụ JSON đúng cấu trúc nhưng trường title dùng marker SOURCE_REQUIRED vì chưa có physical source. Các giá trị khác chỉ minh họa; thứ tự/page/gate là DERIVED.
+
+~~~json
+{
+  "success": true,
+  "businessCode": "DESIGN_RESOURCE_RETRIEVED",
+  "message": "Discussion retrieved.",
+  "data": {
+    "items": [
+      {
+        "id": 320,
+        "course_id": 101,
+        "title": "SOURCE_REQUIRED: topic title source",
+        "content": "Question body",
+        "author": {
+          "id": 10,
+          "full_name": "Nguyen Van A"
+        },
+        "status": "ACTIVE",
+        "comments": [
+          {
+            "id": 321,
+            "discussion_id": 320,
+            "content": "123",
+            "author": {
+              "id": 42,
+              "full_name": "Nguyen Van B",
+              "avatar_url": "https://example.invalid/avatar.webp"
+            },
+            "created_at": "2026-10-23T10:00:00Z"
+          }
+        ]
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "size": 1,
+      "total": 1,
+      "total_pages": 1
+    }
+  },
+  "meta": {},
+  "traceId": "00000000-0000-4000-8000-000000000042"
+}
+~~~
+
+## Ví dụ lỗi
+
+~~~json
+{
+  "success": false,
+  "businessCode": "DESIGN_RESOURCE_NOT_FOUND",
+  "message": "Discussion not found.",
+  "data": null,
+  "meta": {},
+  "traceId": "00000000-0000-4000-8000-000000000042"
+}
+~~~
+---
+## Phụ lục đối chiếu nguồn Excel
+- Workbook nguồn: `DD_API_Template(1).xlsx`
+- Sheet nguồn: `2.Response`
+- Dimension: `A2:BR45`
+- Trạng thái: `visible`
+- Số ô có dữ liệu/công thức: `52`
+- Số vùng merge: `15`
+
+<details>
+<summary>Danh sách vùng merge</summary>
+
+- `B14:C15`
+- `B16:C16`
+- `B21:C21`
+- `B22:BA22`
+- `B23:C23`
+- `B24:C24`
+- `D14:S14`
+- `T14:AK14`
+- `AL14:BA15`
+- `B20:C20`
+- `B17:C17`
+- `B18:C18`
+- `T18:AB18`
+- `AC18:AK18`
+- `B19:BA19`
+
+</details>
+
+<details>
+<summary>Bản ghi từng ô có dữ liệu hoặc công thức</summary>
+
+| Hàng | Ô | Giá trị nguồn | Công thức nguồn |
+|---:|---|---|---|
+| 2 | `B2` | Giải thích |  |
+| 4 | `C4` | Giá trị trả về khi call API |  |
+| 9 | `B9` | Format |  |
+| 9 | `L9` | JSON |  |
+| 10 | `B10` | Code ký tự |  |
+| 10 | `L10` | UTF-8 |  |
+| 11 | `B11` | Content-Type |  |
+| 11 | `L11` | application/json |  |
+| 14 | `B14` | No |  |
+| 14 | `D14` | Response item name |  |
+| 14 | `T14` | Refer DB |  |
+| 14 | `AL14` | Remarks |  |
+| 15 | `D15` | Tên logic |  |
+| 15 | `L15` | Tên vật lý |  |
+| 15 | `T15` | Table nguồn get |  |
+| 15 | `AC15` | Field nguồn get |  |
+| 16 | `B16` | 1 |  |
+| 16 | `D16` | HTTP Status |  |
+| 16 | `L16` | HTTPStatus |  |
+| 16 | `AL16` | Thành công: 200/ Phát sinh lỗi: 500/ Validate lỗi: 400 |  |
+| 17 | `B17` | 2 |  |
+| 17 | `D17` | Status |  |
+| 17 | `L17` | status |  |
+| 17 | `AL17` | Thành công: 1/phát sinh error: 2 |  |
+| 18 | `B18` | 3 |  |
+| 18 | `D18` | Nội dung response |  |
+| 18 | `L18` | response |  |
+| 19 | `B19` | Trường hợp thành công |  |
+| 20 | `B20` | 3.1 |  |
+| 21 | `B21` | 3.2 |  |
+| 22 | `B22` | Các trường hợp lỗi của API |  |
+| 23 | `B23` | 3.1 |  |
+| 23 | `D23` | Error code |  |
+| 23 | `M23` | error_code |  |
+| 24 | `B24` | 3.2 |  |
+| 24 | `D24` | Error Message id |  |
+| 24 | `M24` | error_message_id |  |
+| 26 | `B26` | Ví dụ |  |
+| 27 | `M27` | Trường hợp thành công |  |
+| 28 | `N28` | { |  |
+| 29 | `O29` |   "status": 1, |  |
+| 30 | `O30` |   "response":{ |  |
+| 33 | `O33` | } |  |
+| 34 | `N34` | } |  |
+| 36 | `M36` | Trường hợp lỗi |  |
+| 37 | `N37` | { |  |
+| 38 | `O38` | "status" : 2 , |  |
+| 39 | `O39` | "response" : {  |  |
+| 40 | `P40` | "error_code" : "9999", |  |
+| 41 | `P41` | "error_message_id" : "DLG000000" |  |
+| 42 | `O42` |  } |  |
+| 43 | `N43` |  } |  |
+
+</details>
+
+

@@ -13,13 +13,15 @@ format: markdown
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | `2026-08-28` |
-| Ngày update cuối cùng | `2026-08-28` |
+| Ngày update cuối cùng | `2026-10-24` |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | `1.0` | `2026-08-28` | `Codex (AI authoring agent)` | `Create new` | `Design-only; Draft — Needs Confirmation` |
+| `1.1` | `2026-10-24` | `Codex (AI authoring agent)` | `Review source/API flow; separate expected and current behavior` | `Draft — Needs Confirmation` |
+| `1.2` | `2026-10-24` | `Codex (AI authoring agent)` | `Complete source-backed DD and review AC-02/AC-11 API group` | `Draft — Needs Confirmation; open decisions retained` |
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -20,7 +20,7 @@ status: "Draft — Needs Confirmation"
 | Content-Type | `application/json` |
 | Success HTTP status | `201` |
 | Success business code | `DESIGN_RESOURCE_CREATED` |
-| Success data type | `Page<Discussion>` theo approved catalog; page semantics chưa được định nghĩa cho create response. |
+| Success data type | `Page<Discussion>` theo approved catalog; DERIVED proposal: một root item và pagination 1/1/1/1. |
 
 ## Response fields
 
@@ -29,28 +29,28 @@ status: "Draft — Needs Confirmation"
 | 1 | `success` | Success flag | `success` | `boolean` | No | N/A | N/A | Envelope | Fixed `true` on success | N/A | API envelope. |
 | 2 | `businessCode` | Business code | `businessCode` | `string` | No | N/A | N/A | Envelope | `DESIGN_RESOURCE_CREATED` | N/A | Catalog HTTP 201. |
 | 3 | `message` | Message | `message` | `string` | No | N/A | N/A | Envelope | Client-safe text | N/A | Exact text not defined. |
-| 4 | `data.items[]` | Created Discussion item | `items` | `Discussion[]` | No | `discussions` / `users` | Candidate projection | Insert result | Candidate page item | SOURCE_REQUIRED | Catalog does not define comments projection or PageMeta for create. |
+| 4 | `data.items[]` | Created Discussion item | `items` | `Discussion[]` | No | `discussions` / `users` | Candidate projection | Insert result | DERIVED: exactly one new root thread | Needs confirmation | Comments are proposed as empty on create. |
 | 4.1 | `data.items[].id` | Discussion ID | `id` | `int64` | No | `discussions` | `id` | Insert result | Candidate generated ID | N/A | DDL declares BIGSERIAL; live generation unverified. |
 | 4.2 | `data.items[].course_id` | Course ID | `course_id` | `int64` | No | `discussions` | `course_id` | Insert result | Direct mapping candidate | N/A | DDL permits NULL; guide/ERD say required. |
 | 4.3 | `data.items[].title` | Topic title | `title` | `string` | No | N/A | N/A | SOURCE_REQUIRED | N/A | SOURCE_REQUIRED | No `discussions.title` column in ERD/DDL; response mapping unresolved. |
-| 4.4 | `data.items[].content` | Topic content | `content` | `string` | No | `discussions` | `content` | Insert result | No conversion rule | SOURCE_REQUIRED | Response schema string; request declares int64; DDL column is TEXT. |
+| 4.4 | `data.items[].content` | Topic content | `content` | `string` | No | `discussions` | `content` | Insert result | Base-10 decimal string of request integer (DERIVED proposal) | Needs confirmation | Request int64, response string and DDL TEXT remain a discrepancy. |
 | 4.5 | `data.items[].author` | Author summary | `author` | `UserSummary` | No | `users` | Candidate profile fields | Principal lookup | Candidate mapping | SOURCE_REQUIRED | Query/lookup behavior not specified. |
 | 4.5.1 | `data.items[].author.id` | Author ID | `id` | `int64` | No | `users` | `id` | Auth principal / candidate row | Candidate direct mapping | N/A | Current helper parses JWT `sub` as numeric user ID; API #40 is unwired. |
 | 4.5.2 | `data.items[].author.full_name` | Author name | `full_name` | `string` | No | `users` | `full_name` | Candidate user lookup | Direct candidate | SOURCE_REQUIRED | Current access token claims do not include profile fields. |
 | 4.5.3 | `data.items[].author.avatar_url` | Author avatar | `avatar_url` | `uri` | Yes | `users` | `avatar_url` | Candidate user lookup | Direct candidate | SOURCE_REQUIRED | Omit or null policy not endpoint-defined. |
-| 4.6 | `data.items[].status` | Discussion status | `status` | `DiscussionStatus` | No | `discussions` | `status` | Insert result | DDL default `ACTIVE` is candidate only | SOURCE_REQUIRED | Allowed enum and create policy unresolved. |
-| 4.7 | `data.items[].comments[]` | Comments | `comments` | `DiscussionComment[]` | No | `discussions` / `users` | N/A | Not defined | No projection rule | SOURCE_REQUIRED | API #42 reloads topic + comments; create response inclusion unresolved. |
-| 4.8 | `data.pagination` | Pagination metadata | `pagination` | `PageMeta` | No | N/A | N/A | N/A | No source | SOURCE_REQUIRED | Create request has no page input or PageMeta policy. |
-| 4.8.1 | `data.pagination.page` | Page number | `page` | `int32` | No | N/A | N/A | N/A | SOURCE_REQUIRED | N/A | No create-response page rule. |
-| 4.8.2 | `data.pagination.size` | Page size | `size` | `int32` | No | N/A | N/A | N/A | SOURCE_REQUIRED | N/A | No create-response size rule. |
-| 4.8.3 | `data.pagination.total` | Total items | `total` | `int64` | No | N/A | N/A | N/A | SOURCE_REQUIRED | N/A | No create-response count rule. |
-| 4.8.4 | `data.pagination.total_pages` | Total pages | `total_pages` | `int32` | No | N/A | N/A | N/A | SOURCE_REQUIRED | N/A | No page-size or calculation rule. |
+| 4.6 | `data.items[].status` | Discussion status | `status` | `DiscussionStatus` | No | `discussions` | `status` | Insert result | ACTIVE (DERIVED proposal) | Needs confirmation | DDL default is evidence only; allowed enum/policy unresolved. |
+| 4.7 | `data.items[].comments[]` | Comments | `comments` | `DiscussionComment[]` | No | `discussions` / `users` | N/A | New root has no child rows | Empty array (DERIVED) | [] | API #42 reloads the thread after create. |
+| 4.8 | `data.pagination` | Pagination metadata | `pagination` | `PageMeta` | No | N/A | N/A | N/A | One-item page (DERIVED) | Needs confirmation | API #40 has no page input. |
+| 4.8.1 | `data.pagination.page` | Page number | `page` | `int32` | No | N/A | N/A | N/A | 1 (DERIVED) | N/A | One created root item. |
+| 4.8.2 | `data.pagination.size` | Page size | `size` | `int32` | No | N/A | N/A | N/A | 1 (DERIVED) | N/A | One created root item. |
+| 4.8.3 | `data.pagination.total` | Total items | `total` | `int64` | No | N/A | N/A | N/A | 1 (DERIVED) | N/A | Newly created root item. |
+| 4.8.4 | `data.pagination.total_pages` | Total pages | `total_pages` | `int32` | No | N/A | N/A | N/A | 1 (DERIVED) | N/A | One-item response page. |
 | 5 | `meta` | Metadata | `meta` | `object` | No | N/A | N/A | Envelope | `{}` unless field errors apply | N/A | Follow API guidelines. |
 | 6 | `traceId` | Trace ID | `traceId` | `uuid` | No | N/A | N/A | Request trace | Propagated trace ID | N/A | `X-Trace-Id` follows shared API guidelines. |
 
 ## Ví dụ thành công — HTTP 201
 
-> Values are illustrative and do not establish a page policy, status enum, content conversion, author lookup, or comments projection. `content` in the request remains `int64` per catalog; `Discussion.content` in this response remains `string` per reusable schema.
+> Values are illustrative. The one-item page, ACTIVE status and decimal-string conversion are DERIVED proposals needing confirmation; title source and author lookup remain unresolved. Request `content` remains `int64` per catalog.
 
 ```json
 {
@@ -62,14 +62,14 @@ status: "Draft — Needs Confirmation"
       {
         "id": 4001,
         "course_id": 101,
-        "title": "Câu hỏi minh họa",
-        "content": "Nội dung minh họa; chưa xác định chuyển đổi từ request int64",
+        "title": "SOURCE_REQUIRED: discussions.title source",
+        "content": "123",
         "author": {
           "id": 7,
           "full_name": "Người dùng minh họa",
           "avatar_url": null
         },
-        "status": "SOURCE_REQUIRED",
+        "status": "ACTIVE",
         "comments": []
       }
     ],
@@ -100,10 +100,10 @@ status: "Draft — Needs Confirmation"
 
 ## Response gaps
 
-- `Page<Discussion>` is retained exactly from the catalog even though this is a synchronous create operation; pagination values have no source.
+- `Page<Discussion>` is retained exactly from the catalog; a one-item page with metadata 1/1/1/1 is a DERIVED proposal.
 - `Discussion.title` is required by logical schema but has no physical column in the checked-in ERD/DDL.
-- Request `content:int64!`, response `Discussion.content:string`, and DDL `content TEXT` have no approved conversion rule.
-- `DiscussionStatus`, comments inclusion, author lookup and null/omit policy are not fully defined.
+- Request `content:int64!`, response `Discussion.content:string`, and DDL `content TEXT` remain a discrepancy; base-10 decimal-string conversion is a DERIVED proposal.
+- `DiscussionStatus`, author lookup and null/omit policy are not fully defined. Comments are proposed as an empty array for a new root; API #42 reloads the thread.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
