@@ -33,10 +33,17 @@ def validate_verify_email_request(
         )
 
     email = user_data.email
-    try:
-        email = normalize_email(email)
-    except ValueError as exc:
-        errors.append(ErrorDetail(field="email", code="VALUE_ERROR", message=str(exc)))
+    normalized_email = normalize_email(email)
+    if isinstance(normalized_email, ErrorDetail):
+        errors.append(
+            ErrorDetail(
+                field="email",
+                code=normalized_email.code,
+                message=normalized_email.message,
+            )
+        )
+    else:
+        email = normalized_email
 
     if errors:
         return error_response(

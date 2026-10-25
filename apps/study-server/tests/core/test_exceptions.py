@@ -64,7 +64,7 @@ async def test_http_exception_is_serialized_through_error_response() -> None:
         "success": False,
         "businessCode": "HTTP_ERROR",
         "message": "Yêu cầu không thể được xử lý.",
-        "data": {},
+        "data": None,
         "meta": {},
         "traceId": TRACE_ID,
     }

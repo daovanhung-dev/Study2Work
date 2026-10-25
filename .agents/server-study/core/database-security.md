@@ -50,9 +50,10 @@ Important validators:
 - DB schema only alphanumeric/underscore.
 - HS256 requires secret; ES256 requires private and public key at settings validation time.
 - `get_settings()` is cached/lazy; `_LazySettings` preserves legacy uppercase-style access.
-- Settings construction sanitizes Pydantic configuration failures as a generic
-  `ValueError`; configuration is checked outside an HTTP request and does not
-  produce an `error_response(...)`.
+- Settings field validators use Pydantic's custom validation errors;
+  construction sanitizes Pydantic validation failures as a generic
+  `RuntimeError`. Configuration is checked outside an HTTP request and does
+  not produce an `error_response(...)` or `JSONResponse`.
 
 ## Password — `app/core/security/password.py`
 
@@ -68,9 +69,13 @@ Important validators:
 Creates signed JWT with `sub`, `type=access`, `roles`, `jti`, `iat`, `exp`, `iss`, `aud`; custom claims cannot overwrite reserved claims.
 
 ### `decode_access_token`
-Verifies configured algorithm, issuer/audience and required claims; wrong,
-expired or malformed token becomes `error_response` with 401 authentication mapping.
-Missing signing/verification configuration becomes a safe internal `error_response`.
+Verifies configured algorithm, issuer/audience and required claims. Non-ASCII
+input is rejected as an authentication 401. PyJWT validation errors are caught
+by the decoder and mapped to its existing authentication 401 response. A
+`TypeError` from JWT claim decoding propagates to the application auth facade,
+which maps it through the existing authentication `error_response(...)` path
+with 401. Missing signing/verification configuration remains a safe internal
+`error_response`.
 
 Signing/verification key selection:
 - ES256: private key signs, public key verifies.
@@ -84,13 +89,18 @@ Signing/verification key selection:
 - Missing refresh pepper becomes a safe internal `error_response`.
 
 Application-level auth ownership is `app/utils/auth.py`: it parses Bearer
-headers, validates access claims, applies the shared Student current-user guard,
-and rejects blank refresh-token input. It delegates JWT signing/decoding and
+headers, validates access claims, applies the shared
+`validate_current_user_request(...)` guard for an explicit required role, and
+rejects blank refresh-token input. APIs #4/#13/#14 require `STUDENT`; API #46
+requires `MENTOR`. It delegates JWT signing/decoding and
 refresh-token generation/hashing to the primitives above. Authentication
-failures retain the existing `error_response(...)` mappings. Helpers used as
-Pydantic field validators may raise `ValueError` internally; FastAPI's
-validation handler converts resulting request validation failures into
-`error_response(...)` before HTTP serialization.
+failures retain the existing `error_response(...)` mappings. Shared input
+helpers return `ErrorDetail` or a typed failure result for their API
+validator/view to map through `error_response(...)`. Request parsing and type
+failures use FastAPI's registered request-validation handler, which serializes
+them through the existing response helpers. Study Server source and tests do
+not use built-in `ValueError`; errors outside HTTP retain internal error
+handling rather than becoming `JSONResponse`.
 
 ## Critical absence
 
@@ -100,5 +110,6 @@ inspection alone does not verify live schema/table metadata.
 `infra/postgres/02_study_db.sql`, migration artifacts and DD pages are not
 sufficient runtime evidence when they conflict with live metadata. Register and auth views own
 their lookup, password checks, token persistence and commit/rollback behavior.
-API #3, API #4 and API #14 use app-level token/auth helpers from
-`app/utils/auth.py`; API #4 and API #14 share the same Student guard.
+API #3, API #4, API #13, API #14 and API #46 use app-level token/auth helpers
+from `app/utils/auth.py`; all access-JWT protected APIs use the shared
+role-aware guard.

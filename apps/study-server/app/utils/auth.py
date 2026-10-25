@@ -10,10 +10,11 @@ from typing import Any
 from starlette.responses import JSONResponse
 
 from app.core.config import get_settings
-from app.core.responses import error_response
-from app.core.security.access_token import create_access_token, decode_access_token
+from app.core.responses import ErrorDetail, error_response
+from app.core.security.access_token import create_access_token
+from app.core.security.access_token import decode_access_token as decode_signed_access_token
 from app.core.security.refresh_token import generate_refresh_token, hash_refresh_token
-from app.utils.validate import reject_blank_value
+from app.utils.validate import parse_integer, reject_blank_value
 
 
 @dataclass(frozen=True)
@@ -29,72 +30,79 @@ class IssuedTokens:
     refresh_expires_in: int
 
 
-def validate_refresh_token(value: object) -> object:
-    """Từ chối refresh token chỉ có khoảng trắng và giữ nguyên giá trị hợp lệ."""
+def validate_refresh_token(value: object) -> object | ErrorDetail:
+    """Giữ refresh token hợp lệ hoặc trả ErrorDetail nếu token chỉ có khoảng trắng."""
 
     return reject_blank_value(value)
 
 
-def extract_bearer_token(authorization: str | None) -> str:
-    """Tách token từ header Bearer hoặc phát sinh ValueError để validator ánh xạ."""
+def extract_bearer_token(authorization: str | None) -> str | None:
+    """Tách Bearer token; trả None nếu header thiếu hoặc sai định dạng."""
 
     if authorization is None:
-        raise ValueError("Authorization header is required.")
+        return None
 
     parts = authorization.split()
     if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise ValueError("Authorization header must use Bearer scheme.")
+        return None
     return parts[1]
 
 
-def validate_access_claims(claims: Mapping[str, Any]) -> tuple[int, list[str]]:
-    """Kiểm tra subject/roles của access token Study và chuẩn hóa danh sách role."""
+def validate_access_claims(claims: Mapping[str, Any]) -> tuple[int, list[str]] | None:
+    """Chuẩn hóa subject/roles của JWT hoặc trả None khi claims không hợp lệ."""
 
     subject = claims.get("sub")
     if not isinstance(subject, str) or not subject:
-        raise ValueError("JWT subject is missing.")
-
-    try:
-        user_id = int(subject)
-    except ValueError as exc:
-        raise ValueError("JWT subject is not a numeric user ID.") from exc
-
-    if user_id <= 0:
-        raise ValueError("JWT subject is not a positive user ID.")
+        return None
+    user_id = parse_integer(subject)
+    if user_id is None or user_id <= 0:
+        return None
 
     raw_roles = claims.get("roles")
     if not isinstance(raw_roles, list) or not raw_roles:
-        raise ValueError("JWT roles are missing.")
+        return None
     if not all(isinstance(role, str) and role.strip() for role in raw_roles):
-        raise ValueError("JWT roles are invalid.")
+        return None
 
     return user_id, [role.strip().upper() for role in raw_roles]
+
+
+def decode_access_token(token: str) -> dict[str, Any] | JSONResponse:
+    """Gọi decoder JWT cấp thấp và ánh xạ lỗi xác minh thành response 401 ở tầng ứng dụng."""
+
+    try:
+        return decode_signed_access_token(token)
+    except TypeError:
+        return _authentication_error()
 
 
 def validate_current_user_request(
     authorization: str | None,
     *,
+    role: str,
     trace_id: str,
+    internal_error_message: str = "Profile could not be retrieved.",
 ) -> tuple[int, list[str]] | JSONResponse:
-    """Kiểm tra Bearer/JWT và quyền Student trước khi truy cập database."""
+    """Kiểm tra Bearer/JWT và role caller yêu cầu trước khi truy cập tài nguyên."""
 
-    try:
-        token = extract_bearer_token(authorization)
-    except ValueError:
+    token = extract_bearer_token(authorization)
+    if token is None:
         return _authentication_error(trace_id)
 
     claims = decode_access_token(token)
     if isinstance(claims, JSONResponse):
         if claims.status_code == 401:
             return _authentication_error(trace_id)
-        return _internal_error(trace_id)
-
-    try:
-        user_id, roles = validate_access_claims(claims)
-    except ValueError:
+        return _internal_error(trace_id, message=internal_error_message)
+    if not isinstance(claims, Mapping):
         return _authentication_error(trace_id)
 
-    if "STUDENT" not in roles:
+    validated_claims = validate_access_claims(claims)
+    if validated_claims is None:
+        return _authentication_error(trace_id)
+    user_id, roles = validated_claims
+
+    if role.strip().upper() not in roles:
         return error_response(
             status_code=403,
             business_code="DESIGN_ACCESS_DENIED",
@@ -104,7 +112,7 @@ def validate_current_user_request(
     return user_id, roles
 
 
-def _authentication_error(trace_id: str) -> JSONResponse:
+def _authentication_error(trace_id: str | None = None) -> JSONResponse:
     """Tạo response 401 thống nhất cho request thiếu hoặc sai thông tin xác thực."""
 
     return error_response(
@@ -115,13 +123,17 @@ def _authentication_error(trace_id: str) -> JSONResponse:
     )
 
 
-def _internal_error(trace_id: str) -> JSONResponse:
+def _internal_error(
+    trace_id: str,
+    *,
+    message: str = "Profile could not be retrieved.",
+) -> JSONResponse:
     """Tạo response 500 an toàn khi cấu hình giải mã token gặp lỗi nội bộ."""
 
     return error_response(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",
-        message="Profile could not be retrieved.",
+        message=message,
         trace_id=trace_id,
     )
 

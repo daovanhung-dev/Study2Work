@@ -26,46 +26,36 @@ class AvatarImage:
     content_type: str
 
 
-class AvatarInputError(ValueError):
-    """Mô tả lỗi Data URL để validator ánh xạ thành field error an toàn."""
-
-    def __init__(self, code: str, message: str) -> None:
-        """Lưu mã và thông điệp kiểm tra không chứa nội dung ảnh đầu vào."""
-
-        super().__init__(message)
-        self.code = code
-
-
-def parse_avatar_data_url(value: str) -> AvatarImage:
-    """Giải mã Data URL và kiểm tra MIME, chữ ký ảnh cùng giới hạn 5 MiB."""
+def parse_avatar_data_url(value: str) -> AvatarImage | ErrorDetail:
+    """Giải mã Data URL; trả ErrorDetail nếu MIME, chữ ký hoặc kích thước không hợp lệ."""
 
     match = DATA_URL_PATTERN.fullmatch(value)
     if match is None:
-        raise AvatarInputError(
-            "INVALID_DATA_URL",
-            "Image must be a PNG, JPEG, or WebP base64 Data URL.",
+        return ErrorDetail(
+            code="INVALID_DATA_URL",
+            message="Image must be a PNG, JPEG, or WebP base64 Data URL.",
         )
 
     content_type, encoded_content = match.groups()
     if not encoded_content:
-        raise AvatarInputError("EMPTY_IMAGE", "Image data must not be empty.")
+        return ErrorDetail(code="EMPTY_IMAGE", message="Image data must not be empty.")
 
     try:
         content = base64.b64decode(encoded_content, validate=True)
-    except (binascii.Error, ValueError):
-        raise AvatarInputError("INVALID_BASE64", "Image data is not valid base64.") from None
+    except binascii.Error:
+        return ErrorDetail(code="INVALID_BASE64", message="Image data is not valid base64.")
 
     if not content:
-        raise AvatarInputError("EMPTY_IMAGE", "Image data must not be empty.")
+        return ErrorDetail(code="EMPTY_IMAGE", message="Image data must not be empty.")
     if len(content) > MAX_AVATAR_BYTES:
-        raise AvatarInputError(
-            "IMAGE_TOO_LARGE",
-            "Image must not exceed 5 MiB after decoding.",
+        return ErrorDetail(
+            code="IMAGE_TOO_LARGE",
+            message="Image must not exceed 5 MiB after decoding.",
         )
     if not _signature_matches(content_type, content):
-        raise AvatarInputError(
-            "IMAGE_SIGNATURE_MISMATCH",
-            "Image content does not match its declared MIME type.",
+        return ErrorDetail(
+            code="IMAGE_SIGNATURE_MISMATCH",
+            message="Image content does not match its declared MIME type.",
         )
 
     return AvatarImage(content=content, content_type=content_type)
@@ -81,15 +71,15 @@ def validate_avatar_upload_request(
 
     authentication = validate_current_user_request(
         authorization,
+        role="STUDENT",
         trace_id=trace_id,
     )
     if isinstance(authentication, JSONResponse):
         return authentication
     user_id, _roles = authentication
 
-    try:
-        avatar_image = parse_avatar_data_url(user_data.image)
-    except AvatarInputError as exc:
+    avatar_image = parse_avatar_data_url(user_data.image)
+    if isinstance(avatar_image, ErrorDetail):
         return error_response(
             status_code=422,
             business_code="DESIGN_VALIDATION_ERROR",
@@ -98,8 +88,8 @@ def validate_avatar_upload_request(
             errors=[
                 ErrorDetail(
                     field="image",
-                    code=exc.code,
-                    message=str(exc),
+                    code=avatar_image.code,
+                    message=avatar_image.message,
                 )
             ],
         )

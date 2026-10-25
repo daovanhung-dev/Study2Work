@@ -7,9 +7,9 @@ import app.utils.auth as auth_utils
 import boto3  # type: ignore[import-untyped]
 import pytest
 from app.core.database import get_db
+from app.core.responses import ErrorDetail
 from app.modules.guest.api_13_users_me_avatar.validate import (
     AvatarImage,
-    AvatarInputError,
     parse_avatar_data_url,
 )
 from app.service.object_storage.avatar import (
@@ -117,10 +117,9 @@ def test_parse_avatar_data_url_rejects_invalid_input(
 ) -> None:
     """Kiểm tra parser từ chối chuỗi rỗng/sai, MIME ngoài allowlist và chữ ký không khớp."""
 
-    with pytest.raises(AvatarInputError) as error:
-        parse_avatar_data_url(value)
-
-    assert error.value.code == expected_code
+    error = parse_avatar_data_url(value)
+    assert isinstance(error, ErrorDetail)
+    assert error.code == expected_code
 
 
 def test_parse_avatar_data_url_rejects_content_over_five_mib() -> None:
@@ -128,10 +127,10 @@ def test_parse_avatar_data_url_rejects_content_over_five_mib() -> None:
 
     oversized_content = b"\x89PNG\r\n\x1a\n" + b"x" * (5 * 1024 * 1024)
 
-    with pytest.raises(AvatarInputError, match="5 MiB") as error:
-        parse_avatar_data_url(data_url("image/png", oversized_content))
-
-    assert error.value.code == "IMAGE_TOO_LARGE"
+    error = parse_avatar_data_url(data_url("image/png", oversized_content))
+    assert isinstance(error, ErrorDetail)
+    assert error.code == "IMAGE_TOO_LARGE"
+    assert "5 MiB" in error.message
 
 
 def test_parse_avatar_data_url_accepts_exactly_five_mib() -> None:
@@ -141,6 +140,7 @@ def test_parse_avatar_data_url_accepts_exactly_five_mib() -> None:
 
     parsed = parse_avatar_data_url(data_url("image/png", max_size_content))
 
+    assert isinstance(parsed, AvatarImage)
     assert len(parsed.content) == 5 * 1024 * 1024
 
 

@@ -18,21 +18,17 @@ def validate_login_request(
 
     errors: list[ErrorDetail] = []
     email = user_data.email
-    try:
-        email = normalize_email(email, max_length=255)
-    except ValueError as exc:
-        message = str(exc)
+    normalized_email = normalize_email(email, max_length=255)
+    if isinstance(normalized_email, ErrorDetail):
         errors.append(
             ErrorDetail(
                 field="email",
-                code=(
-                    "STRING_TOO_LONG"
-                    if message.startswith("String should have at most")
-                    else "VALUE_ERROR"
-                ),
-                message=message,
+                code=normalized_email.code,
+                message=normalized_email.message,
             )
         )
+    else:
+        email = normalized_email
     if not user_data.password.strip():
         errors.append(
             ErrorDetail(
@@ -59,11 +55,8 @@ def validate_refresh_request(
 ) -> RefreshRequest | JSONResponse:
     """Từ chối refresh token rỗng hoặc chỉ có khoảng trắng."""
 
-    try:
-        validate_refresh_token(user_data.refresh_token)
-    except ValueError:
-        pass
-    else:
+    refresh_token = validate_refresh_token(user_data.refresh_token)
+    if not isinstance(refresh_token, ErrorDetail):
         return user_data
     return error_response(
         status_code=422,

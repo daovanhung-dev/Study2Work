@@ -15,6 +15,7 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+from pydantic_core import PydanticCustomError
 
 from app.core import constants
 
@@ -35,13 +36,13 @@ class Settings(BaseModel):
 
     def __init__(self, **data: Any) -> None:
         """Khởi tạo Settings bằng các giá trị được cung cấp và để Pydantic kiểm tra kiểu cùng ràng
-        buộc trường. Nếu cấu hình không hợp lệ, chuyển ValidationError thành ValueError chung để
+        buộc trường. Nếu cấu hình không hợp lệ, chuyển ValidationError thành RuntimeError chung để
         chi tiết cấu hình không bị lộ trực tiếp."""
 
         try:
             super().__init__(**data)
         except ValidationError:
-            raise ValueError("Invalid application settings.") from None
+            raise RuntimeError("Invalid application settings.") from None
 
     app_env: Environment = Field(
         default=constants.APP_ENV,
@@ -161,7 +162,7 @@ class Settings(BaseModel):
         """Chuẩn hóa CORS origins trước khi Pydantic kiểm tra trường.
 
         None thành danh sách rỗng; chuỗi được tách theo dấu phẩy, rồi bỏ khoảng
-        trắng và phần tử rỗng. Kiểu đầu vào khác bị từ chối bằng ValueError.
+        trắng và phần tử rỗng. Kiểu đầu vào khác bị từ chối bằng lỗi cấu hình Pydantic.
         """
 
         if value is None:
@@ -170,7 +171,10 @@ class Settings(BaseModel):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         if isinstance(value, list):
             return [str(origin).strip() for origin in value if str(origin).strip()]
-        raise ValueError("CORS_ORIGINS must be a string or list.")
+        raise PydanticCustomError(
+            "invalid_cors_origins",
+            "CORS_ORIGINS must be a string or list.",
+        )
 
     @field_validator("db_schema")
     @classmethod
@@ -180,22 +184,31 @@ class Settings(BaseModel):
 
         normalized = value.strip()
         if not normalized.replace("_", "").isalnum():
-            raise ValueError("DB_SCHEMA contains unsupported characters.")
+            raise PydanticCustomError(
+                "invalid_db_schema",
+                "DB_SCHEMA contains unsupported characters.",
+            )
         return normalized
 
     @model_validator(mode="after")
     def validate_jwt_key_configuration(self) -> Settings:
         """Kiểm tra cấu hình khóa phù hợp với thuật toán JWT đã chọn: HS256 cần secret key, còn
         ES256 cần cả private key và public key. Trả lại chính Settings khi hợp lệ; thiếu khóa
-            bắt buộc sẽ phát sinh ValueError."""
+            bắt buộc sẽ làm Pydantic từ chối cấu hình."""
 
         if self.jwt_algorithm == "HS256" and self.jwt_secret_key is None:
-            raise ValueError("HS256 requires a JWT secret key.")
+            raise PydanticCustomError("missing_hs256_key", "HS256 requires a JWT secret key.")
         if self.jwt_algorithm == "ES256":
             if self.jwt_private_key is None:
-                raise ValueError("ES256 requires a JWT private key.")
+                raise PydanticCustomError(
+                    "missing_es256_private_key",
+                    "ES256 requires a JWT private key.",
+                )
             if self.jwt_public_key is None:
-                raise ValueError("ES256 requires a JWT public key.")
+                raise PydanticCustomError(
+                    "missing_es256_public_key",
+                    "ES256 requires a JWT public key.",
+                )
         return self
 
     # Bí danh tương thích với API cấu hình viết hoa trước đây.

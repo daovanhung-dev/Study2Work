@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from app.core.responses import error_response
+from app.utils.validate import parse_integer
 from starlette.responses import JSONResponse
 
 
@@ -16,10 +17,10 @@ def validate_course_id(
     Nếu giá trị không hợp lệ hoặc không thể chuyển đổi thành int, trả về error_response
     với mã HTTP 404 và business code DESIGN_RESOURCE_NOT_FOUND theo DD #09.
     """
-    try:
-        return int(course_id_raw)
-    except (TypeError, ValueError):
+    parsed_course_id = parse_integer(course_id_raw)
+    if parsed_course_id is None:
         return _course_not_found_error(trace_id)
+    return parsed_course_id
 
 
 def parse_course_id(

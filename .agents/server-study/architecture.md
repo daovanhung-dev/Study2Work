@@ -14,11 +14,11 @@ app/main.py:create_app
 
 Current composition, API #1 register flow, API #2 verify-email dispatch stub,
 API #3 login/refresh flow, API #4 current-user flow, API #5 category flow,
-API #6 public course flow, API #7 course-search flow, API #12 resource detail,
-API #13 avatar upload and API #14 profile update are present. The auth,
-verification, category and course test modules use the `guest`
-namespace and the full test collection is available; routes without a current
-implementation remain unwired.
+API #6 public course flow, API #7 course-search flow, API #08 course detail,
+API #09 curriculum, API #12 resource detail, API #13 avatar upload, API #14
+profile update and API #46 Mentor course list are present. The full Study suite
+passes in the current tree; routes without a current implementation remain
+unwired.
 
 ## Verified ownership
 
@@ -26,12 +26,13 @@ implementation remain unwired.
 - `app/api/v1.py`: declared `/api/v1` routes; exposes health-adjacent utility
   routes, API #1 register, API #2 verification dispatch, API #3 auth, API #4
   current-user profile, API #5 categories, API #6 courses, API #7 course search,
-  API #12 resource detail, API #13 avatar upload and API #14 profile update.
+  API #12 resource detail, API #13 avatar upload, API #14 profile update and
+  API #46 Mentor course list.
 - `app/core/config.py`: typed settings backed by `app/core/constants.py`.
 - `app/core/database.py`: sync SQLAlchemy engine/session/query primitives.
 - `app/core/middleware.py`: trace middleware and shared FastAPI exception handlers.
 - `app/core/security/*`: password, access token, refresh token primitives.
-- `app/utils/auth.py`: shared Bearer/JWT parsing and claim checks, Student current-user guard, refresh-token input validation, access/refresh token issuance, expiry metadata and public auth payload mapping. It delegates cryptographic operations to `app/core/security`.
+- `app/utils/auth.py`: shared Bearer/JWT parsing and claim checks, role-aware `validate_current_user_request` guard, refresh-token input validation, access/refresh token issuance, expiry metadata and public auth payload mapping. It delegates cryptographic operations to `app/core/security`.
 - `app/utils/validate.py`: shared pure input normalization/validation helpers used by API validators, such as email, blank-value, sort and search handling; it does not own Bearer/JWT/token helpers.
 - `app/modules/guest/api_03_auth_login/models.py`: login and refresh request contracts.
 - `app/modules/guest/api_03_auth_login/query.py`: SQL constants for user lookup and refresh-token persistence.
@@ -54,6 +55,7 @@ implementation remain unwired.
 - `app/modules/guest/api_13_users_me_avatar/view.py`: upload orchestration and safe storage-failure mapping without database access.
 - `app/service/object_storage/avatar.py`: lazy, injectable S3-compatible avatar provider backed by process environment and public URL base.
 - `app/modules/guest/api_14_users_me_profile/view.py`: Student profile update; consumes `avatar_url` submitted in the follow-up request.
+- `app/modules/mentor/api_46_mentor_courses/`: API #46 Mentor query, role validation, direct-owner SQL and course-list response orchestration. It requires numeric JWT `sub` with role `MENTOR`; the query scopes `courses.mentor_id` to that subject and optionally filters `DRAFT`/`PUBLISHED`.
 - `app/modules/guest/_shared/course_catalog/models.py`: shared course, mentor and pagination response contracts.
 - `app/modules/guest/_shared/course_catalog/helpers.py`: shared sort, course mapping and safe error helpers.
 - `app/modules/guest/api_02_auth_verify_email_send/models.py`: strict public `user_id` and `email` request contract.
@@ -78,7 +80,8 @@ No current source establishes:
 - real Email Provider delivery, verification token/link generation or retry worker;
 - Study domain modules beyond API #1 register, API #2 stub dispatch, API #3 auth,
   API #4 current-user profile, API #5 categories, API #6 courses, API #7 course
-  search, API #12 resource detail, API #13 avatar upload and API #14 profile update.
+  search, API #12 resource detail, API #13 avatar upload, API #14 profile update
+  and API #46 Mentor course list.
 
 ## Runtime compatibility repairs
 
@@ -94,7 +97,7 @@ re-evaluate the complete import chain rather than stop at the first error.
 ```text
 models.py: declarative model classes, fields/types/defaults and data conversion
 → app/utils/validate.py: shared pure input validation/normalization helpers
-→ app/utils/auth.py: shared authentication and token helpers used by API #3, #4, #13 and #14
+→ app/utils/auth.py: shared authentication and token helpers used by API #3, #4, #13, #14 and #46
 → API-specific validate.py when request input rules exist; invalid input returns `error_response(...)`
 → query.py (only when SQL is needed): SQL statement constants
 → view.py: main API flow, query/provider calls, business checks, transactions and response mapping
@@ -111,8 +114,11 @@ not be treated as the pattern for new code. No runtime relocation is implied by
 this context note.
 
 Auth login/refresh uses shared token helpers from `app/utils/auth.py` and input
-normalization from `app/utils/validate.py`. APIs #4, #13 and #14 call the shared
-Student authentication guard from `app/utils/auth.py`; API #13 validates its
+normalization from `app/utils/validate.py`. APIs #4, #13 and #14 call
+`validate_current_user_request(..., role="STUDENT")`; API #46 calls the same
+guard with `role="MENTOR"` through its validator wrapper. The guard owns
+Bearer parsing, JWT decoding, claim validation and required-role enforcement.
+API #13 validates its
 Data URL before calling the injectable storage provider and does not access DB.
 API #4 has no separate validator module. Module validators handle API-specific input rules before
 business/DB operations; DB-backed business checks and transaction ownership

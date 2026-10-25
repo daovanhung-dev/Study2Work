@@ -1,12 +1,12 @@
 # Study declared API surface
 
 Global status: current route source is `SOURCE_BACKED`; `app.main` import and
-the register/auth/category/course test modules use the current `guest` internal
-namespace. Current auth login/refresh, verify-email dispatch, current-user,
+the full Study test suite cover current `guest` and `mentor` modules. Current
+auth login/refresh, verify-email dispatch, current-user,
 category, course, course-search, course-detail, curriculum, resource-detail,
-avatar-upload and profile-update routes are wired; the AI route remains
-`UNWIRED`. API #08/#09 route and test source were added by the merge, but their
-import/HTTP behavior has not been verified in the merged tree here.
+avatar-upload, profile-update and API #46 Mentor course routes are wired; the AI
+route remains `UNWIRED`. API #08/#09 route, import and HTTP behavior pass in the
+current full Study test run.
 
 ## Composition-root routes
 
@@ -150,8 +150,8 @@ The route is public. It validates the path ID, selects one `PUBLISHED` course
 with the public mentor projection from `users`, and returns a singleton
 `CoursePage`. An invalid ID, missing course or unpublished course maps to
 `404 DESIGN_RESOURCE_NOT_FOUND`; query or mapping failures map to
-`500 DESIGN_INTERNAL_ERROR`. API #08 source and tests are present after merge;
-no post-merge import/HTTP run or live schema check is claimed.
+`500 DESIGN_INTERNAL_ERROR`. API #08 source and HTTP tests pass in the current
+full suite; no live schema check is claimed.
 
 ### `GET /api/v1/courses/{course_id}/curriculum`
 
@@ -161,8 +161,8 @@ The route is public. It requires a `PUBLISHED` course, then reads its
 An invalid ID or missing/unpublished course maps to `404
 DESIGN_RESOURCE_NOT_FOUND`; query or mapping failures map to
 `500 DESIGN_INTERNAL_ERROR`. An empty result is a successful page with zero
-items. API #09 source and tests are present after merge; no post-merge
-import/HTTP run or live schema check is claimed.
+items. API #09 source and HTTP tests pass in the current full suite; no live
+schema check is claimed.
 
 ### `GET /api/v1/resources/{resource_id}`
 
@@ -201,6 +201,29 @@ Implemented through `app.modules.guest.api_14_users_me_profile.view.update_profi
 The route requires Student Bearer auth and owns the profile database update.
 In AC-11 the client sends the URL returned by API #13 as `avatar_url` in this
 follow-up request.
+
+### `GET /api/v1/mentor/courses`
+
+Implemented through `app.modules.mentor.api_46_mentor_courses.view.get_mentor_courses(...)`.
+The route requires `Authorization: Bearer <jwt>`, a positive numeric JWT `sub`,
+and a `roles` claim containing `MENTOR`. Missing/invalid authentication returns
+`401 DESIGN_AUTHENTICATION_REQUIRED`; another role returns
+`403 DESIGN_ACCESS_DENIED`. Authentication and role checks run before DB access.
+
+Optional `status` accepts `DRAFT` or `PUBLISHED`. When omitted, the query has no
+status predicate. `page` defaults to `1`, `size` to `20`, and size is limited to
+`1..100`. Results are ordered by `created_at DESC, id ASC`. Both page and count
+queries bind the numeric subject as `courses.mentor_id` and use the same
+optional status predicate. The query reads `courses` and its public mentor
+projection from `users`; assigned courses are not included.
+
+Success is `200 DESIGN_RESOURCE_RETRIEVED` with the shared `CoursePage` shape,
+decimal-string prices, and no category field. Empty and out-of-range pages are
+successful. Invalid status/pagination returns `422 DESIGN_VALIDATION_ERROR`;
+SQL errors or required course/mentor mapping failures return safe
+`500 DESIGN_INTERNAL_ERROR`. Error envelopes use `data: null`. Local route tests
+cover authentication, validation, query parameters, mapping, pagination and DB
+failures. No live schema or deployment verification is claimed.
 
 ### `POST /api/v1/chat_log_ai`
 Not currently exposed; implementation remains `UNWIRED`. This is **not** the

@@ -27,16 +27,21 @@ def validate_course_search_query(
         )
 
     normalized_sort = course_query.sort
-    try:
-        normalized_sort = normalize_sort(
-            course_query.sort,
-            allowed_fields=SORT_FIELDS,
-            allowed_directions=SORT_DIRECTIONS,
-        )
-    except ValueError as exc:
+    normalized_result = normalize_sort(
+        course_query.sort,
+        allowed_fields=SORT_FIELDS,
+        allowed_directions=SORT_DIRECTIONS,
+    )
+    if isinstance(normalized_result, ErrorDetail):
         errors.append(
-            ErrorDetail(field="sort", code="VALUE_ERROR", message=f"Value error, {exc}")
+            ErrorDetail(
+                field="sort",
+                code=normalized_result.code,
+                message=f"Value error, {normalized_result.message}",
+            )
         )
+    else:
+        normalized_sort = normalized_result
 
     if errors:
         return error_response(

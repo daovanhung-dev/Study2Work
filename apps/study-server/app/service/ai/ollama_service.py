@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from json import JSONDecodeError
 from typing import Any, Literal
 
 import httpx
@@ -168,19 +169,13 @@ class OllamaService:
 
             return data
 
-        except httpx.ConnectError:
-            return error_response()
-
-        except httpx.TimeoutException:
+        except httpx.RequestError:
             return error_response()
 
         except httpx.HTTPStatusError:
             return error_response()
 
-        except ValueError:
-            return error_response()
-
-        except Exception:
+        except (JSONDecodeError, UnicodeDecodeError):
             return error_response()
 
 

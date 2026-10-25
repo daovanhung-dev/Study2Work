@@ -2,9 +2,8 @@
 
 Status: source-backed; `app.main` imports and composes the current routes,
 including public API #2 verify-email dispatch, API #5 categories, API #6
-courses and API #7 course search. The current register, verification, category,
-course and course-search pytest modules
-use the `guest` namespace and collection is runnable in the Study virtual environment.
+courses, API #7 course search and API #46 Mentor courses. API #46 has a
+current HTTP test module; the full suite result is recorded in `tests.md`.
 
 The local Study API startup address is `127.0.0.1:3003`. Containerized startup
 binds internally to `0.0.0.0:3003` and publishes the host address separately.
@@ -48,8 +47,9 @@ uses the current trace context or generates a trace ID.
 `success_response` directly builds the canonical success envelope with keys
 `success`, `businessCode`, `message`, `data`, `meta`, and `traceId`.
 `error_response(...)` builds the canonical six-key error envelope directly; supplied
-field details are stored in `meta.fieldErrors`. `JSONResponse` provides the
-status and headers, including `X-Trace-Id`.
+`ErrorDetail` values are serialized under `meta.fieldErrors`. Omitted error
+`data` is serialized as JSON `null`. `JSONResponse` provides the status and
+headers, including `X-Trace-Id`.
 
 ## `app/core/middleware.py` exception handlers
 
@@ -60,14 +60,14 @@ response header, while unexpected exceptions propagate to Starlette's outer
 
 - `_validation_field(loc)`: removes protocol location prefixes (`body/query/path/header/cookie`) and joins remaining field path.
 - `http_exception_handler`: converts HTTP exceptions through `error_response(...)`, preserving status and safe envelope fields; otherwise maps to `HTTP_ERROR`.
-- `request_validation_exception_handler`: converts Pydantic errors to `JSONResponse` values through `error_response(...)` with `ErrorDetail`, using
+- `request_validation_exception_handler`: converts Pydantic errors to `ErrorDetail` values and `JSONResponse` through `error_response(...)`, using
   `DESIGN_VALIDATION_ERROR` for API #1 register, API #2 verify-email dispatch,
-  auth login/refresh, API #5 categories, API #6 courses and API #7 course
-  search, and `VALIDATION_ERROR` elsewhere.
+  auth login/refresh, API #5 categories, API #6 courses, API #7 course
+  search and API #46 Mentor courses, and `VALIDATION_ERROR` elsewhere.
 - `unhandled_exception_handler`: logs internal exception with trace ID and builds
   a safe response through `error_response(...)`; it uses `DESIGN_INTERNAL_ERROR` for API #1 register, API #2 verify-email dispatch,
-  auth login/refresh, API #5 categories, API #6 courses and API #7 course
-  search, and `INTERNAL_SERVER_ERROR` elsewhere. It reads the trace ID from
+  auth login/refresh, API #5 categories, API #6 courses, API #7 course
+  search and API #46 Mentor courses, and `INTERNAL_SERVER_ERROR` elsewhere. It reads the trace ID from
   `request.state`; `error_response` returns it in both body and `X-Trace-Id` header.
 
 ## API #2 verification dispatch
@@ -104,6 +104,24 @@ response header, while unexpected exceptions propagate to Starlette's outer
 - Page and count queries share `PUBLISHED` and search predicates. Mentor
   integrity, query and mapping failures map to `DESIGN_INTERNAL_ERROR`; price
   is serialized as a decimal string and no live DB verification is claimed.
+
+## API #46 Mentor courses
+
+- `app/modules/mentor/api_46_mentor_courses` is composed at
+  `GET /api/v1/mentor/courses` and registered in `DESIGN_CONTRACT_PATHS` for
+  framework validation and unexpected-error business codes.
+- The validator calls `validate_current_user_request(...)` with role `MENTOR`
+  and preserves the API-specific internal-error message before any query.
+  Invalid authentication returns
+  `401`; another role returns `403`.
+- `status` is optional and limited to `DRAFT`/`PUBLISHED`; page/size defaults and
+  bounds follow API #6. The count and page SQL are owner-scoped to the JWT
+  subject and share the optional status condition; results use fixed
+  `created_at DESC, id ASC` ordering.
+- The view reuses shared `Course`, `CoursePage`, mentor mapping and decimal-price
+  serialization. It checks missing mentor integrity, rolls back SQL failures,
+  and maps failures to a safe `DESIGN_INTERNAL_ERROR` response. No live schema
+  check is claimed.
 
 ## `app/core/trace.py`
 

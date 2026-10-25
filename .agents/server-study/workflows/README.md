@@ -43,14 +43,21 @@ requirement / DD / schema
 ```
 
 `app/utils/validate.py` contains shared input normalization helpers.
-`app/utils/auth.py` owns shared Bearer/JWT/refresh-token helpers and the Student
-current-user guard used by API #3, API #4 and API #14. An API has a module-local
+`app/utils/auth.py` owns shared Bearer/JWT/refresh-token helpers and the
+role-aware `validate_current_user_request` guard used by APIs #4, #13, #14 and
+#46 with an explicit required role. API #3 uses the token helpers for
+login/refresh, not this access-JWT guard. An API has a module-local
 `validate.py` when it has request-specific rules; API #4 calls the shared guard
 directly. Validators return normalized input or `error_response(...)` for
 invalid input. They do not raise response errors, construct alternate errors,
-query DB or perform side effects. Shared pure helpers may raise validation
-exceptions internally for the caller to map. API #2 does not have `query.py`
-because it dispatches through a provider without DB access.
+query DB or perform side effects. Do not use built-in `ValueError` in Study
+Server source or tests. Shared pure helpers return `ErrorDetail`, a sentinel or
+another typed result carrying validation failure; API validators/views map it
+through the existing `error_response(...)` builders in
+`app/core/responses.py`. Non-HTTP errors retain internal error handling and do
+not become `JSONResponse`.
+API #2 does not have `query.py` because it dispatches through a provider without
+DB access.
 
 `models.py` contains model classes, field declarations, types, defaults,
 configuration and data conversion only. It does not own runtime validation,

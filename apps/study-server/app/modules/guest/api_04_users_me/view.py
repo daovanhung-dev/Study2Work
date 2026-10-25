@@ -39,6 +39,7 @@ def get_current_user(
 
     authentication = validate_current_user_request(
         authorization,
+        role="STUDENT",
         trace_id=trace_id,
     )
     if isinstance(authentication, JSONResponse):

@@ -9,6 +9,7 @@ from starlette.responses import JSONResponse
 # Nhập các thành phần từ core.
 from app.core.database import get_db, get_engine
 from app.core.trace import get_trace_id
+from app.modules.guest._shared.course_catalog.constants import DEFAULT_PAGE, DEFAULT_SIZE
 
 # Nhập các thành phần từ những package nghiệp vụ của ứng dụng.
 from app.modules.guest.api_01_auth_register.models import RegisterRequest
@@ -33,6 +34,8 @@ from app.modules.guest.api_13_users_me_avatar.models import AvatarUploadRequest
 from app.modules.guest.api_13_users_me_avatar.view import upload_avatar
 from app.modules.guest.api_14_users_me_profile.models import ProfileUpdateRequest
 from app.modules.guest.api_14_users_me_profile.view import update_profile
+from app.modules.mentor.api_46_mentor_courses.models import MentorCourseQuery
+from app.modules.mentor.api_46_mentor_courses.view import get_mentor_courses
 from app.service.email.provider import (
     VerificationEmailProvider,
     get_verification_email_provider,
@@ -511,6 +514,38 @@ def update_current_profile(
     return update_profile(
         authorization=authorization,
         user_data=user_data,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #46 mentor_courses
+@router.get(
+    "/mentor/courses",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+)
+def mentor_courses(
+    request: Request,
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    status_filter: str | None = Query(
+        default=None,
+        alias="status",
+        json_schema_extra={"enum": ["DRAFT", "PUBLISHED"]},
+    ),
+    page: int = Query(default=DEFAULT_PAGE, json_schema_extra={"minimum": 1}),
+    size: int = Query(
+        default=DEFAULT_SIZE,
+        json_schema_extra={"minimum": 1, "maximum": 100},
+    ),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận Bearer token, query fields, Session và trace ID rồi chuyển API #46 cho view kiểm tra
+    Mentor, đọc các course trực tiếp sở hữu và dựng envelope phân trang."""
+    mentor_query = MentorCourseQuery(status=status_filter, page=page, size=size)
+    return get_mentor_courses(
+        authorization=authorization,
+        mentor_query=mentor_query,
         db=db,
         trace_id=get_trace_id(request),
     )
