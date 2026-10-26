@@ -12,6 +12,8 @@ status: "Draft — Needs Confirmation"
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD từ API catalog #64, AC-25 và source/DB artifacts hiện có. | Draft — Needs Confirmation; giữ response Operation theo contract trực tiếp. |
+| 1.1 | 2026-10-25 | Codex | Reconcile DD với implementation local API #64, API #63 outbox mapping và verification fake-session/OpenAPI. | Draft — Needs Confirmation; ownership, aggregation và live schema vẫn chưa được duyệt/xác minh. |
+| 1.1 | 2026-10-25 | Codex | Đối chiếu lại với implementation API #63; ghi local sender/outbox/Operation projection và status aggregation vào request, response, data mapping, errors và open questions. | Các policy/schema mapping là DERIVED; giữ contract trực tiếp và Draft status. |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

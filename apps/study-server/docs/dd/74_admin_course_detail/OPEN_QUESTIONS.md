@@ -1,27 +1,30 @@
 # Câu hỏi còn mở — API #74
 
-Trạng thái tài liệu: `Draft — Needs Confirmation`. Các mục sau cần được chốt trước khi dùng proposal làm implementation contract.
+Trạng thái tài liệu: `Draft — Needs Confirmation`. API #74 đã có local route, module và focused tests. Các fallback bên dưới mô tả source hiện tại; chúng chưa được xem là quyết định product/schema đã duyệt.
 
-1. **Admin authorization:** JWT Admin claim, course-management permission, scope và guard được xác thực bằng nguồn nào? Study hiện chỉ có Student guard.
+## Fallback đã triển khai (`DERIVED`)
+
+- Shared JWT guard yêu cầu role `ADMIN`; chưa có dedicated course-management permission policy.
+- Query legacy BIGINT candidate `courses LEFT JOIN users` theo ID; không lọc status, không query counter và không map `category`.
+- Response giữ `ApiEnvelope<Page<Course>>` với một item và pagination `1/1/1/1` theo catalog cùng API #08 precedent.
+- Malformed/out-of-int64 path ID trả 404; course/mentor/price projection hoặc DB failure trả safe 500 theo catalog.
+- Middleware nhận diện dynamic endpoint qua FastAPI route template; `error_response` hiện trả `data:null`.
+
+## Cần chủ sở hữu/schema xác nhận
+
+1. **Admin permission:** Role `ADMIN` có đủ quyền đọc course management hay cần policy/permission riêng? Scope/tenant boundary là gì?
 2. **Counters trong AC-32:** Counter nào cần đọc, định nghĩa/cách đếm là gì, và thuộc `Course`, `meta` hay response riêng? Catalog hiện không khai báo trường counter.
-3. **Response detail wrapper:** Có giữ `ApiEnvelope<Page<Course>>` với đúng một item như API #08, hay cập nhật catalog/reusable contract thành `ApiEnvelope<Course>`? DD giữ nguyên contract hiện tại và đề xuất singleton Page.
-4. **Chọn schema:** API #74 dùng legacy BIGINT `courses/users` hay V1-PILOT UUID `courses/course_versions`? Live schema và migration state chưa được xác minh.
-5. **Mentor integrity:** Legacy DDL cho phép `courses.mentor_id` NULL trong khi DB table guide ghi bắt buộc và Course.mentor là required. Admin có cần xem/sửa course mồ côi thay vì nhận 500?
-6. **Category mapping:** Course có optional `category`, nhưng không có quan hệ course-category trong schema candidate. Có source/schema nào được duyệt để trả field này không?
-7. **CourseStatus:** Các giá trị hợp lệ và casing là gì? #76 nêu draft/published/suspended; legacy/API #08 có `DRAFT`/`PUBLISHED`.
-8. **Nullable fields:** `description`, `thumbnail_url`, `mentor.avatar_url` được serialize null hay omit? DD đề xuất null theo model #08.
-9. **Path error boundary:** ID malformed/overflow/outside int64 nên ánh xạ 404 như API #08 hay xử lý khác trong khi catalog #74 không có 422?
-10. **Error integration:** Khi wire API #74, thêm path vào `DESIGN_CONTRACT_PATHS` chưa? Chuẩn hóa error `data:null` theo guideline hay giữ helper hiện tại `{}`?
-11. **AC-32 macro-review:** Đã rà #73–#77; owner/counters, response wrapper của #74–#76, status transitions, soft-delete visibility/persistence và enrollment/content policy vẫn cần quyết định.
+3. **Response detail wrapper:** Có giữ `ApiEnvelope<Page<Course>>` singleton hay cập nhật catalog/reusable contract thành `ApiEnvelope<Course>`?
+4. **Schema/live DB:** API dùng legacy BIGINT `courses/users` hay V1-PILOT UUID `courses/course_versions`? Migration và live schema chưa được xác minh.
+5. **Mentor integrity:** Course thiếu mentor hoặc price thì Admin cần thấy/sửa dữ liệu mồ côi hay nhận 500?
+6. **Category mapping:** Có source/schema được duyệt để trả `Course.category` không?
+7. **CourseStatus:** Các giá trị hợp lệ và casing là gì? #76, legacy DDL và API #08 chưa thống nhất.
+8. **Nullable fields:** `description`, `thumbnail_url`, `mentor.avatar_url` serialize null hay omit theo contract cuối?
+9. **Path error boundary:** Giữ fallback malformed/out-of-range int64 → 404 hay catalog cần khai báo 422?
+10. **AC-32 macro-review:** Visibility sau soft-delete và cách #75/#76 xử lý deleted target cần thống nhất với #73/#77.
 
-## Ranh giới proposal
+## Ranh giới bằng chứng
 
-- Query legacy và owner join chỉ là candidate; chưa phải live-schema claim.
-- Page singleton, all-status visibility, invalid-path 404 và orphan mentor 500 là proposal `DERIVED`, chưa được phê duyệt.
-- Không thay đổi catalog, diagram, schema hoặc runtime trong task này.
-## Rà nhóm AC-32 #73–#77 — 2026-10-24
-
-- AC-32 detail yêu cầu course + owner + counters; Course response hiện có owner nhưng reusable schema không định nghĩa counter fields. Không thêm counter vào response/query.
-- #74 giữ nguyên `ApiEnvelope<Page<Course>>` theo catalog; singleton Page chỉ là proposal. #77 trả `DeleteResult`, không đổi cardinality của #74.
-- Nếu #77 soft-delete course, ẩn khỏi #74 là proposal hợp lý nhưng marker/filter chưa có nguồn. #75/#76 với deleted target cũng chưa được định nghĩa.
-- Admin guard, category/mentor/nullability, status casing, schema selection và error middleware còn mở trên toàn nhóm.
+- Local route/tests không xác minh deployment, live DB schema/grants hoặc policy ngoài role `ADMIN`.
+- Diagram yêu cầu owner/counters nhưng không định nghĩa counter schema; không tự thêm field/query.
+- `07_table.md` tiếp tục mô tả mapping schema là candidate, không phải live-schema evidence.

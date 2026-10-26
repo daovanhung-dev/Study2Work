@@ -16,21 +16,21 @@ status: "Draft — Needs Confirmation"
 | HTTP method | POST |
 | URI | /api/v1/mentor/support/{request_id}/reply |
 | Character encoding | UTF-8 |
-| Content-Type | application/json (`DERIVED`; catalog không nêu media type) |
+| Content-Type | application/json — DERIVED because catalog does not state media type |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Catalog yêu cầu role Mentor; route/guard chưa được wiring. | [Data Mapping](./05_Data_Mapping.md) |
-| 2 | Content type | Content-Type | Yes | application/json (`DERIVED`) | Candidate format cho các body string fields; cần xác nhận gateway contract. | [Data Mapping](./05_Data_Mapping.md) |
-| 3 | Trace ID | X-Trace-Id | No | UUID nếu gửi | Theo API Guidelines khi route được wiring. | [Data Mapping](./05_Data_Mapping.md) |
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Shared MENTOR guard; numeric sub maps to current Mentor user ID. | [Data Mapping](./05_Data_Mapping.md) |
+| 2 | Content type | Content-Type | Yes | application/json — DERIVED | Transport candidate for required string fields. | [Data Mapping](./05_Data_Mapping.md) |
+| 3 | Trace ID | X-Trace-Id | No | UUID nếu gửi | Middleware validates/creates trace ID. | [Data Mapping](./05_Data_Mapping.md) |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | Support request ID | request_id | int64 | Yes | Không quy định | Không quy định | Số nguyên 64-bit | SOURCE_REQUIRED | Không có | Khóa logic của SupportRequest cần phản hồi; pilot ID là UUID, không map trực tiếp. | [Data Mapping](./05_Data_Mapping.md) |
+| 1 | Support request ID | request_id | int64 | Yes | Không quy định | Không quy định | Signed 64-bit integer | Số nguyên trong miền int64 | Không có | Khóa request; fallback local là BIGSERIAL từ API #58. | [Data Mapping](./05_Data_Mapping.md) |
 
 ## Query parameters
 
@@ -40,28 +40,29 @@ N/A — API không khai báo query parameter.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|---|
-| 1 | Message | message | string | Yes | Không quy định | Không quy định | Unicode text | N/A | SOURCE_REQUIRED | N/A | Nội dung phản hồi Mentor. Proposal: từ chối rỗng/whitespace-only bằng 422; không đặt length limit. | [Data Mapping](./05_Data_Mapping.md) |
-| 2 | Attachment references | `attachment_refs` (`DERIVED` wire key) | string | Yes | N/A | N/A | Text | Comma-separated UploadAsset int64 IDs (`DERIVED`) | SOURCE_REQUIRED | `""` đề xuất nghĩa là không có attachment | Chuỗi tham chiếu file upload qua #34; key/format/ID lookup cần xác nhận chung với #35/#47. | [Data Mapping](./05_Data_Mapping.md) |
+| 1 | Message | message | string | Yes | Không quy định | Không quy định | Unicode text | N/A | Nonblank string — DERIVED | N/A | Lưu nguyên text; chỉ dùng strip để từ chối rỗng/whitespace-only. Không đặt length limit. | [Data Mapping](./05_Data_Mapping.md) |
+| 2 | Attachment references | attachment_refs — DERIVED wire key | string | Yes | N/A | N/A | ASCII JSON text | JSON array of signed int64 UploadAsset IDs — DERIVED from API #47 source | [] nghĩa không đính kèm; IDs unique | Không có | IDs phải resolve tới upload thuộc Mentor, cùng course, purpose LECTURE, status UPLOADED. | [Data Mapping](./05_Data_Mapping.md) |
 
-> API catalog ghi nguyên văn `attachment refs:string!`; `attachment_refs` và encoding ID phân tách bằng dấu phẩy chỉ là proposal DERIVED, không phải key/format đã duyệt.
+> Catalog ghi logical label attachment refs:string!. attachment_refs là wire key DERIVED. JSON array string được chọn theo current API #47 source; không sửa API #35 hoặc #47 trong task này.
 
 ## Ví dụ Request data
 
-```json
+~~~json
 {
   "message": "Mình đã gửi hướng dẫn xử lý cho bạn.",
-  "attachment_refs": "81001,81002"
+  "attachment_refs": "[81001,81002]"
 }
-```
+~~~
 
-Ví dụ minh họa proposal: `81001,81002` là các `UploadAsset.id` int64 giả định từ API #34. Empty string `""` được đề xuất cho trường hợp không đính kèm. Không dùng trước khi owner xác nhận key/encoding và API #34 có nguồn ID/metadata được duyệt.
+Không đính kèm: attachment_refs là chuỗi JSON `"[]"`. IDs ví dụ chỉ minh họa; upload không tồn tại hoặc ngoài scope trả lỗi 404 chung.
 
-## Candidate validation
+## Validation
 
-- Thiếu `request_id`, `message` hoặc `attachment refs`, sai kiểu khai báo → 422 `DESIGN_VALIDATION_ERROR` theo contract.
-- Đề xuất `message.strip()` phải khác rỗng; nếu chỉ có whitespace thì 422. Giá trị lưu giữ nguyên newline/spacing gốc.
-- Không thêm min/max length, danh sách purpose, parser delimiter/duplicate rules hoặc trạng thái asset chưa có nguồn.
-- Attachment refs không được tin cậy nếu chưa resolve ownership, purpose và khả năng truy cập.
+- Thiếu/sai kiểu request_id, message hoặc attachment_refs → 422 DESIGN_VALIDATION_ERROR.
+- request_id sai format hoặc vượt signed int64 → 422; zero/negative là giá trị int64 hợp lệ nhưng không khớp BIGSERIAL row thì 404.
+- message rỗng hoặc chỉ whitespace → 422; giá trị hợp lệ được lưu nguyên vẹn; không có min/max.
+- attachment_refs phải là JSON array gồm unique integer values trong miền signed int64; object/string/null, malformed JSON, float, bool hoặc duplicate → 422.
+- [] được chấp nhận. ID hợp lệ về cú pháp nhưng không resolve đúng owner/course/purpose/status → 404 chung; không trả asset URL ngoài scope.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

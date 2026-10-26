@@ -15,43 +15,57 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table | SOURCE_REQUIRED — chưa chọn |
-| Logical table | Content review status và approval audit |
-| Operation | UPDATE + APPEND — logical effects only |
-| Data Mapping step | Step 5–6; see [Step 3](./05_Data_Mapping.md#3-insertupdate-thong-tin) |
+| Physical tables | `contents`; `content_review_audit_logs` |
+| Logical table | Content moderation decision |
+| Operation | Lock + UPDATE + audit INSERT trong một transaction |
+| Data Mapping step | Steps 2–6; xem [Data Mapping](./05_Data_Mapping.md#2-get-và-khóa-content) |
+| Schema status | Legacy BIGINT candidate; migration 011 là DERIVED, live chưa verify |
 
-> Đây là logical mutation/gap register, chưa phải physical DB specification. Legacy DDL không có Content review/audit table được chọn. V1-PILOT content_review_decisions dùng UUID revision identity và không được map trực tiếp sang contract Content ID int64.
+> AC-33 trực tiếp yêu cầu approval kèm audit. Legacy `contents` là checked-in runtime candidate. `content_review_audit_logs` là physical fallback DERIVED. V1-PILOT UUID `content_review_decisions` không map trực tiếp vào Content ID/JWT subject hiện tại.
 
-## Update mapping
+## Read mapping — `contents`
 
-**Áp dụng khi**
+| Column | Kiểu | Ràng buộc | Sử dụng |
+|---|---|---|---|
+| `id` | BIGINT/BIGSERIAL | PK | Khóa từ `content_id`; equality check sau query. |
+| `course_id` | BIGINT | FK `courses.id`, NOT NULL | Response `course_id`. |
+| `content_type` | TEXT | NOT NULL | Response `content_type`; không tự giới hạn enum. |
+| `title` | TEXT | NOT NULL | Response `title`. |
+| `payload` | JSONB | NOT NULL, object check | Response `payload`; validate object shape. |
+| `status` | TEXT | NOT NULL | Lock precondition `PENDING_REVIEW`; target `APPROVED`. |
+| `parent_id` | BIGINT | Nullable | Response `parent_id`; NULL bị omit. |
+| `content_order` | INTEGER | NOT NULL | Map sang response `order`. |
+| `deleted_at` | TIMESTAMP | Nullable | Row active khi NULL. |
 
-- AC-33 approve branch được thực hiện và status transition cụ thể đã được chủ sở hữu contract xác nhận.
+## Update mapping — `contents`
 
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---:|---|---|---|---:|---:|---:|---:|---|---|---|---|
-| 1 | SOURCE_REQUIRED | Content review/publication status | ContentStatus | TBD | N/A | TBD | N/A | APPROVED/PUBLISHED theo diagram; exact target chưa chốt | AC-33 node n9 | Step 5 | Logical field only; physical table/column, revision key và transition chưa được xác nhận. |
+| Predicate | Assignment | Result |
+|---|---|---|
+| `id=:content_id AND deleted_at IS NULL AND status='PENDING_REVIEW'` | `status='APPROVED'` | `RETURNING` tám field reusable Content; không update `content_versions`. |
 
-## Insert mapping
+`PENDING_REVIEW` eligibility và `APPROVED` target là fallback DERIVED theo AC-33/#78 và API #52 current transition. Exact revision identity vẫn chưa có input contract.
 
-**Áp dụng khi**
+## Insert mapping — `content_review_audit_logs`
 
-- AC-33 approve branch ghi audit; physical append target và schema cần được duyệt.
+| Column | Kiểu | Khóa/ràng buộc | Value/API #80 |
+|---|---|---|---|
+| `id` | BIGSERIAL | PK | DB-generated. |
+| `content_id` | BIGINT | FK `contents.id`, NOT NULL, RESTRICT | Path ID đã parse. |
+| `actor_user_id` | BIGINT | FK `users.id`, NOT NULL, RESTRICT | Numeric JWT `sub` từ shared ADMIN guard. |
+| `previous_status` | TEXT | NOT NULL | `PENDING_REVIEW`. |
+| `new_status` | TEXT | NOT NULL | `APPROVED`. |
+| `reason` | TEXT | Nullable | `NULL` cho approve; API #81 hiện ghi rejection reason vào decision row riêng. |
+| `recorded_at` | TIMESTAMPTZ | NOT NULL, default current timestamp | DB timestamp. |
 
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---:|---|---|---|---:|---:|---:|---:|---|---|---|---|
-| 1 | SOURCE_REQUIRED | Approval audit/decision record | SOURCE_REQUIRED | TBD | N/A | TBD | N/A | Ghi audit sau approve theo AC-33 | AC-33 node n9 | Step 6 | Không tự thêm reviewer, comment, reason code, timestamp, version hoặc row-version column. |
+Indexes: `(content_id, recorded_at DESC, id DESC)` và `(actor_user_id, recorded_at DESC, id DESC)` hỗ trợ history lookups. Đây là DERIVED candidate, chưa có live performance evidence.
 
-## Delete mapping
+## Transaction boundary
 
-**Áp dụng khi**
-
-- N/A — API #80 không khai báo delete.
-
-| No | Target column | Operator | Value source | Data Mapping step | Remarks |
-|---:|---|---|---|---|---|
-| N/A | N/A | N/A | N/A | N/A | No DELETE operation. |
----
+- Lock current active row.
+- Nếu không tồn tại/đã xóa → 404; nếu status không pending → 422.
+- Update rồi validate returned Content; append audit với old/new state và actor.
+- Commit chỉ sau khi audit và projection thành công; lỗi query/mapping/audit/commit phải rollback.
+- API #81 được wire locally trong task riêng và dùng cùng audit relation để lưu reason với trạng thái `REJECTED`; mapping này là DERIVED, còn chờ owner review và live schema verification.
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `table`

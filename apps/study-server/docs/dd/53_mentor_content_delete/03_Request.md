@@ -37,6 +37,8 @@ status: "Draft — Needs Confirmation"
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
 | 1 | Content ID | content_id | int64 | Yes | N/A | N/A | Số nguyên 64-bit | N/A | N/A | ID Content cần xóa; không suy ra quy tắc số dương. | 1. Validate data input |
 
+Runtime mapping: raw path không parse được hoặc ngoài miền signed-int64 trả `404 DESIGN_RESOURCE_NOT_FOUND`, theo convention của API Content #49–#52. Catalog khóa type/error set nhưng không chỉ rõ nhánh parse.
+
 ## Query parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |

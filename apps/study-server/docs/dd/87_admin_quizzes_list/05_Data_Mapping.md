@@ -36,10 +36,10 @@ status: "Draft — Needs Confirmation"
 
 | Item | Current evidence | Status |
 |---|---|---|
-| Admin Bearer guard | Study auth helper hiện kiểm tra Student; không có Admin helper | NOT_FOUND |
+| Admin Bearer guard | Route #87 gọi shared `validate_current_user_request(..., role="ADMIN")` trước query validation/DB | VERIFIED locally; focused HTTP tests pass |
 | Quiz-management permission | AC-35 nêu precondition; source policy không có | SOURCE_REQUIRED |
-| Route #87 | Không có route/view/test | UNWIRED / NOT_FOUND |
-| Middleware path | /api/v1/admin/quizzes chưa có trong DESIGN_CONTRACT_PATHS | Conditional future wiring gap |
+| Route #87 | `app/api/v1.py` → `api_87_admin_quizzes_list/view.py`; focused HTTP tests present | WIRED locally; fake DB only |
+| Middleware path | `/api/v1/admin/quizzes` có trong `DESIGN_CONTRACT_PATHS` | VERIFIED locally |
 
 <a id="step-1-validate-query"></a>
 ## Step 1 — Validate query
@@ -58,11 +58,11 @@ status: "Draft — Needs Confirmation"
 - Nếu course được gửi thì đề xuất bind course_id và filter bằng equality.
 - Nếu status được gửi thì đề xuất giữ nguyên string và filter bằng equality.
 - Không trim hoặc đổi case status khi enum/casing chưa được xác nhận.
-- Nếu page vắng mặt thì proposal đặt page = 1.
-- Nếu page < 1 thì proposal coi input không hợp lệ; catalog không có 400/422 code cho nhánh này.
-- Nếu page được duyệt thì proposal dùng page_size = 20 theo fixed-size convention API #07.
+- Runtime đặt page = 1 nếu query vắng mặt.
+- Runtime trả 422 `DESIGN_VALIDATION_ERROR` nếu page < 1, không parse được hoặc vượt int32; đây là local DERIVED discrepancy vì catalog không liệt kê 422.
+- Runtime dùng page_size = 20 theo fixed-size convention API #07/#78.
 - Không thêm query size hoặc sort vào contract.
-- Query parser error mapping cần được chốt trước khi route được wire.
+- Query parser error mapping hiện là fallback local; owner vẫn cần duyệt.
 
 <a id="step-2-read-quiz-page"></a>
 ## Step 2 — Read quiz page
@@ -89,27 +89,28 @@ status: "Draft — Needs Confirmation"
 
 **Candidate ordering and page window**
 
-- Candidate default order: q.id ASC để kết quả ổn định; DERIVED.
-- Nếu page 1-based, fixed size 20 được duyệt thì LIMIT = 20.
-- Nếu page 1-based, fixed size 20 được duyệt thì OFFSET = (page - 1) × 20.
-- Page size/order chưa được contract chốt; không coi các giá trị này là runtime SQL.
+- Runtime order: q.id ASC; đây là DERIVED.
+- Runtime LIMIT = 20; OFFSET = (page - 1) × 20.
+- Count/page query dùng cùng exact course/status predicates; các quy tắc này chưa có owner approval.
 
 ### 2.2. Q1C — Candidate total count for Page proposal
 
-- Chỉ chạy Q1C nếu owner duyệt response ApiEnvelope<Page<Quiz>>.
+- Runtime chạy Q1C cùng Q1 để tạo `pagination.total` trong Page fallback.
 - Q1C dùng FROM quizzes AS q.
 - Q1C dùng cùng predicate course/status như Q1.
-- Q1C đếm q.id và trả total cho proposed PageMeta.
+- Q1C đếm q.id và trả total cho PageMeta.
 - Direct ApiEnvelope<Quiz> không khai báo total; count không thuộc direct contract.
 
 ### 2.3. Kết quả truy vấn
 
-- Nếu list proposal được duyệt và không có row thì đề xuất HTTP 200 với items=[] và pagination theo PageMeta.
+- Nếu không có row, runtime trả HTTP 200 với `items=[]` và pagination theo PageMeta.
 - Nếu catalog response singleton được giữ nguyên thì chưa có quy tắc chọn một Quiz từ kết quả list; đây là response cardinality discrepancy, không tự chọn row đầu.
 - Không ánh xạ danh sách rỗng thành 404 vì catalog không khai báo 404.
 
 <a id="step-3-read-nested-question-data"></a>
-## Step 3 — Read nested question data
+## Step 3 — Review nested question data (not queried)
+
+API #87 không truy vấn child tables và trả `questions: []` như metadata-only list projection. Migration 013/API #88 now supplies local DERIVED question_type and choice order on legacy BIGINT rows, but AC-35 list flow does not require nested reads and API #87 keeps its count/page-only query profile. QuestionType values and Admin QuizChoice `{id,text,is_correct}` remain DERIVED, not catalog-approved; V1-PILOT IDs/tables are never joined.
 
 ### 3.1. Q2 — Candidate question batch
 
@@ -119,7 +120,7 @@ status: "Draft — Needs Confirmation"
 | ↑ | qq.quiz_id | Parent Quiz | Candidate join/filter key. |
 | ↑ | qq.question_text | Question text | Alias candidate question_text → text. |
 | ↑ | qq.sort_order | Display order | Candidate order; tie-break id ASC là DERIVED. |
-| ↑ | SOURCE_REQUIRED | QuestionType | Legacy table không có type; pilot field thuộc mô hình khác. |
+| ↑ | qq.question_type | QuestionType | Local nullable column from migration 013; API #87 does not query it. |
 | ↑ | N/A | qq.score | Có trong DDL nhưng không có trong QuizQuestion contract. |
 
 **Candidate relation and order**
@@ -128,7 +129,8 @@ status: "Draft — Needs Confirmation"
 - Nếu Page list được duyệt thì chỉ đọc các quiz IDs thuộc trang hiện tại.
 - Candidate question order: qq.sort_order ASC, qq.id ASC.
 - Không lọc hoặc đổi status câu hỏi; nguồn không có rule đó.
-- AC-35 diagram chỉ ghi “Query quizzes”; đọc nested questions là candidate theo reusable Quiz schema, cần xác nhận.
+- AC-35 diagram chỉ ghi “Query quizzes”; không yêu cầu nested reads riêng.
+- Runtime không đọc Q2/Q3 và trả `questions: []` với nghĩa nested data chưa được nạp, không khẳng định Quiz không có câu hỏi.
 
 ### 3.2. Q3 — Candidate choice batch
 
@@ -137,14 +139,14 @@ status: "Draft — Needs Confirmation"
 | Legacy quiz_choices AS qc | qc.id | Candidate choice ID | Output field chưa có QuizChoice schema. |
 | ↑ | qc.question_id | Parent question | Candidate relation key. |
 | ↑ | qc.choice_text | Candidate text | Output property/name chưa được chốt. |
-| ↑ | N/A | qc.is_correct | Không có trong QuizChoice contract; không đưa vào response nếu chưa được duyệt. |
+| ↑ | qc.is_correct | Admin answer key | Local #88 projection only; API #87 does not query it and Student #28 must omit it. |
 
 **Candidate relation and gap**
 
 - Candidate relation: qc.question_id = qq.id.
-- Legacy quiz_choices không có sort_order; thứ tự choices SOURCE_REQUIRED.
-- QuizChoice schema chưa định nghĩa property, type hoặc nullability.
-- Không tự map is_correct sang field mới.
+- Migration 013 adds `quiz_choices.sort_order` for new local writes; older rows receive default 0, so historic ordering may be incomplete.
+- Catalog QuizChoice schema remains undefined; #88's Admin `{id,text,is_correct}` projection is DERIVED and not used by this list route.
+- Do not return nested choice rows from API #87 without an explicit list-tree decision; never return answer keys from Student API #28.
 - Student API #28 không trả is_correct; API #87 là Admin nhưng contract hiện tại cũng không định nghĩa field này.
 
 <a id="step-4-map-and-build-response"></a>
@@ -160,7 +162,7 @@ status: "Draft — Needs Confirmation"
 - response.data.title = q.name.
 - response.data.duration_minutes = q.time_limit_minutes; null/omit policy cần xác nhận.
 - response.data.passing_score = q.passing_score được serialize thành decimal-string; scale/rounding cần xác nhận.
-- response.data.questions[] = question projection từ Q2 nếu schema list được duyệt.
+- response.data.questions[] = `[]` trong fallback hiện tại; nested data không được nạp.
 - response.data.questions[].type = SOURCE_REQUIRED.
 - response.data.questions[].choices[] = SOURCE_REQUIRED đến khi QuizChoice schema được định nghĩa.
 - response.meta = object theo ApiEnvelope.
@@ -183,7 +185,7 @@ status: "Draft — Needs Confirmation"
 
 - HTTP 200.
 - businessCode = DESIGN_RESOURCE_RETRIEVED.
-- Empty list 200 với items=[] là proposal chỉ áp dụng khi collection response được duyệt.
+- Empty list trả HTTP 200 với items=[] trong Page fallback.
 - Không trả 404 cho danh sách rỗng.
 
 ### 5.2. Authentication/authorization error
@@ -194,15 +196,16 @@ status: "Draft — Needs Confirmation"
 
 ### 5.3. System error
 
-- Query, database hoặc mapping failure: HTTP 500 DESIGN_INTERNAL_ERROR theo catalog.
-- Nếu route được thêm nhưng middleware path chưa allowlist thì current generic handler có thể trả INTERNAL_SERVER_ERROR; đây là conditional future integration discrepancy.
-- API Guidelines yêu cầu error data=null; current helper mặc định {} khi caller không truyền data.
+- Query, database hoặc required Quiz metadata mapping failure: HTTP 500 DESIGN_INTERNAL_ERROR theo catalog; view rollback an toàn.
+- Invalid/out-of-range `course` hoặc `page`: local 422 `DESIGN_VALIDATION_ERROR`, ngoài bộ lỗi catalog.
+- Route #87 hiện nằm trong `DESIGN_CONTRACT_PATHS`; focused tests xác nhận business-code mapping.
+- Error helper hiện serialize `data: null`, khớp API Guidelines và được focused tests xác nhận.
 
 ### 5.4. Query validation gap
 
 - Catalog không khai báo 400 hoặc 422 cho course/page parse error.
-- Không tự gán thêm business code.
-- Cần thống nhất FastAPI validation handler, middleware allowlist và catalog trước khi runtime implementation.
+- Runtime hiện chọn 422 `DESIGN_VALIDATION_ERROR` để không âm thầm mở rộng truy vấn; đây là local DERIVED behavior cần owner duyệt.
+- Route/middleware mapping hiện đã được test; catalog error set vẫn chưa đổi.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

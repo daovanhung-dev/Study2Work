@@ -23,9 +23,9 @@ status: "Draft — Needs Confirmation"
 | Request | Query `reason?:string`, `severity?:string`, `page?:int32`; không body |
 | Direct response | `ApiEnvelope<Page<Discussion>>` |
 | Success | HTTP 200 `DESIGN_RESOURCE_RETRIEVED` |
-| Errors | 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 500 `DESIGN_INTERNAL_ERROR` |
+| Errors | 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 500 `DESIGN_INTERNAL_ERROR`; local 422 page validation `DERIVED` |
 | DD status | `Draft — Needs Confirmation` |
-| Runtime status | `UNWIRED / NOT_FOUND` trong Study source hiện tại |
+| Runtime status | Wired locally; focused HTTP tests pass; migration/live schema and report ingestion are unverified |
 
 ## Mục đích
 
@@ -34,8 +34,8 @@ status: "Draft — Needs Confirmation"
 ## Ranh giới bằng chứng
 
 - Catalog và AC-37 xác định contract/flow thiết kế; không chứng minh behavior runtime.
-- Legacy DDL có bảng `discussions`, nhưng không có relation report hoặc cột `title`, `reason`, `severity`.
-- Không thêm report fields, filter taxonomy, pagination default hay SQL giả định khi chưa có nguồn được duyệt.
+- Legacy DDL không có report relation hoặc cột `title`; implementation thêm Study-local `discussion_reports` migration fallback và title snippet fallback, đều `DERIVED`.
+- Không thêm report fields vào response. Đọc [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md) để xem các giả định `DERIVED`, report-ingest gap và live-schema giới hạn.
 - Đọc [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md) trước khi chuyển DD sang Final hoặc lập trình.
 
 ## Phụ lục đối chiếu nguồn Excel

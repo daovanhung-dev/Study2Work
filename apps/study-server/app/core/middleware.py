@@ -34,8 +34,57 @@ DESIGN_CONTRACT_PATHS = {
     "/api/v1/courses",
     "/api/v1/courses/search",
     "/api/v1/mentor/courses",
+    "/api/v1/mentor/courses/{course_id}/lectures",
+    "/api/v1/mentor/courses/{course_id}/content",
+    "/api/v1/mentor/courses/{course_id}/students",
+    "/api/v1/mentor/courses/{course_id}/progress",
+    "/api/v1/mentor/courses/{course_id}/analytics",
+    "/api/v1/mentor/courses/{course_id}/students/{student_id}/progress",
+    "/api/v1/admin/users",
+    "/api/v1/admin/users/{user_id}",
+    "/api/v1/admin/users/{user_id}/status",
+    "/api/v1/admin/courses",
+    "/api/v1/admin/courses/{course_id}",
+    "/api/v1/admin/courses/{course_id}/status",
+    "/api/v1/admin/content/pending",
+    "/api/v1/admin/content/{content_id}",
+    "/api/v1/admin/content/{content_id}/approve",
+    "/api/v1/admin/content/{content_id}/reject",
+    "/api/v1/admin/lessons",
+    "/api/v1/admin/lessons/{lesson_id}",
+    "/api/v1/admin/lessons/{lesson_id}/status",
+    "/api/v1/admin/quizzes",
+    "/api/v1/admin/quizzes/{quiz_id}",
+    "/api/v1/admin/quizzes/{quiz_id}/statistics",
+    "/api/v1/admin/notifications",
+    "/api/v1/admin/notifications/{notification_id}",
+    "/api/v1/admin/notifications/{notification_id}/status",
+    "/api/v1/admin/discussions/reported",
+    "/api/v1/admin/discussions/{discussion_id}",
+    "/api/v1/mentor/notifications",
+    "/api/v1/mentor/notifications/{notification_id}/status",
+    "/api/v1/mentor/content",
+    "/api/v1/mentor/content/{content_id}",
+    "/api/v1/mentor/content/{content_id}/publish",
+    "/api/v1/mentor/lectures/{lecture_id}",
+    "/api/v1/mentor/submissions",
+    "/api/v1/mentor/submissions/{submission_id}",
+    "/api/v1/mentor/submissions/{submission_id}/grade",
+    "/api/v1/mentor/submissions/{submission_id}/feedback",
+    "/api/v1/mentor/support/requests",
+    "/api/v1/mentor/support/{request_id}",
+    "/api/v1/mentor/support/{request_id}/reply",
+    "/api/v1/mentor/support/{request_id}/resolve",
+    "/api/v1/uploads",
     "/api/v1/users/me/avatar",
 }
+
+
+def _is_design_contract_request(request: Request) -> bool:
+    """Match fixed design paths and FastAPI route templates for parameterized endpoints."""
+
+    route_path = getattr(request.scope.get("route"), "path", None)
+    return request.url.path in DESIGN_CONTRACT_PATHS or route_path in DESIGN_CONTRACT_PATHS
 
 
 def _validation_field(location: Sequence[Any]) -> str | None:
@@ -97,7 +146,7 @@ async def request_validation_exception_handler(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         business_code=(
             "DESIGN_VALIDATION_ERROR"
-            if request.url.path in DESIGN_CONTRACT_PATHS
+            if _is_design_contract_request(request)
             else "VALIDATION_ERROR"
         ),
         message="Dữ liệu đầu vào không hợp lệ.",
@@ -114,9 +163,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     trace_id = get_trace_id(request)
     logger.exception("Unhandled API error; trace_id=%s", trace_id, exc_info=exc)
     business_code = (
-        "DESIGN_INTERNAL_ERROR"
-        if request.url.path in DESIGN_CONTRACT_PATHS
-        else "INTERNAL_SERVER_ERROR"
+        "DESIGN_INTERNAL_ERROR" if _is_design_contract_request(request) else "INTERNAL_SERVER_ERROR"
     )
     return error_response(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

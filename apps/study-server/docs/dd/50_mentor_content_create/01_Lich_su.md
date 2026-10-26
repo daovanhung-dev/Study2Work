@@ -26,12 +26,13 @@ status: "Draft — Needs Confirmation"
 | Phiên bản | Ngày | Nội dung | Người cập nhật | Trạng thái |
 |---|---|---|---|---|
 | 0.1 | 2026-10-24 | Tạo DD từ catalog #50, AC-22/AC-33 và đối chiếu Study Server source/schema hiện có; giữ rõ các mapping chưa có nguồn. | Codex | Draft — Needs Confirmation |
+| 0.2 | 2026-10-25 | Implement API #50 trên local Study source; ghi rõ các quyết định DERIVED cho status/root/order/course-missing; cập nhật mapping/test evidence và giữ live DB, enum/payload subtype, assignment policy là open. | Codex | Draft — Needs Confirmation |
 
 ## Phạm vi tài liệu
 
-- Ghi nhận contract và flow thiết kế hiện có; không khẳng định API đã chạy.
+- Ghi nhận API source và local TestClient evidence; không khẳng định deployment/live DB.
 - Chỉ tạo 8 sheet Markdown và 3 report theo workflow Study Server.
-- Chưa sửa code, DB, catalog, diagram hoặc client.
+- Không sửa catalog hoặc diagram vì contract/logical AC-22 flow không đổi.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

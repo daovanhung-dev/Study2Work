@@ -18,33 +18,32 @@ status: "Draft — Needs Confirmation"
 | Content-Type | application/json |
 | Success HTTP status | 200 `DESIGN_RESOURCE_UPDATED` |
 | Direct contract type | `ApiEnvelope<UserProfile>` theo catalog. |
-| Runtime status | API #71 chưa có route/view; examples dưới đây là candidate. |
+| Runtime status | Route/module/test local đã wired; body/status/session decisions vẫn DERIVED. |
 
-## Contract trực tiếp từ catalog
+## Contract trực tiếp từ catalog và safe UserProfile source
 
-| No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
-|---:|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | HTTPStatus | HTTP Status | HTTPStatus | integer | No | N/A | N/A | 5.1/5.2 | 200 success; error statuses theo catalog | N/A | Protocol status, không phải JSON property. |
-| 2 | success | Success flag | success | boolean | No | N/A | N/A | Envelope | true success; false error | N/A | ApiEnvelope field. |
-| 3 | businessCode | Business code | businessCode | string | No | N/A | N/A | Envelope | Exact catalog code theo branch | N/A | Không tạo code mới. |
-| 4 | message | Message | message | string | No | N/A | N/A | Envelope | Safe message theo branch | SOURCE_REQUIRED | Text chưa được contract định nghĩa. |
-| 5 | data | Updated user | data | object | No | legacy users candidate | Safe projection | 5.1 | `UserProfile` | UserProfile khi success; error branch theo guideline | Mapping là candidate. |
-| 5.1 | data.id | User ID | id | int64 | No | legacy users candidate | id | 5.1 | Direct candidate mapping | Required theo UserProfile | Live schema chưa xác minh. |
-| 5.2 | data.full_name | Full name | full_name | string | No | legacy users candidate | full_name | 5.1 | Giữ profile field hiện có | Required theo UserProfile | Candidate projection; không update ở #71. |
-| 5.3 | data.email | Email | email | email | No | legacy users candidate | email | 5.1 | Giữ profile field hiện có | Required theo UserProfile | PII/Admin-only; không update ở #71. |
-| 5.4 | data.role | Role | role | UserRole | No | legacy users candidate | role | 5.1 | Giữ role hiện tại | Required theo UserProfile | Enum members open; #71 không đổi role. |
-| 5.5 | data.avatar_url | Avatar URL | avatar_url | uri? | Optional | legacy users candidate | avatar_url | 5.1 | Direct candidate mapping | Null/omit cần chốt | Nullable candidate. |
-| 5.6 | data.bio | Biography | bio | string? | Optional | SOURCE_REQUIRED | N/A | 5.1 | Không tạo hoặc trả giá trị giả | Null/omit cần chốt | Không có legacy users/API #4 source mapping. |
-| 5.7 | data.phone | Phone | phone | string? | Optional | legacy users candidate | phone | 5.1 | Direct candidate mapping | Null/omit cần chốt | PII; nullable candidate. |
-| 5.8 | data.status | Account status | status | UserStatus | No | legacy users candidate | status | 5.1 | Trả trạng thái sau mutation | Required theo UserProfile | Candidate `ACTIVE`/`SUSPENDED`; enum contract chưa khóa. |
-| 5.9 | data.created_at | Created time | created_at | date-time | No | legacy users candidate | created_at | 5.1 | ISO-8601 candidate | Required theo UserProfile | Live schema/timezone chưa xác minh. |
-| 5.10 | data.updated_at | Updated time | updated_at | date-time | No | legacy users candidate | updated_at | 5.1 | Candidate timestamp sau status mutation | Required theo UserProfile | Timestamp behavior #71 chưa có source. |
-| 6 | meta | Metadata | meta | object | No | N/A | N/A | Envelope | `{}` candidate khi không có metadata | Error convention cần đối chiếu | #71 không có pagination. |
-| 7 | traceId | Trace ID | traceId | uuid | No | N/A | Middleware | Envelope | Request correlation ID | Required theo ApiEnvelope | Runtime API #71 chưa wired. |
+| No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Transform | Null/empty/omit rule | Remarks |
+|---:|---|---|---|---|---|---|---|---|---|---|
+| 1 | HTTPStatus | HTTP Status | HTTPStatus | integer | No | N/A | N/A | 200 success; error statuses theo catalog | N/A | Protocol status, không phải JSON property. |
+| 2 | success | Success flag | success | boolean | No | N/A | N/A | true success, false error | N/A | ApiEnvelope. |
+| 3 | businessCode | Business code | businessCode | string | No | N/A | N/A | Exact catalog code | N/A | Không tạo code mới. |
+| 4 | message | Message | message | string | No | N/A | N/A | Safe branch text | N/A | Exact message không được catalog định nghĩa. |
+| 5 | data | Updated user | data | object | No | Legacy `users` candidate | Safe projection | `UserProfile` | Present on success | Local target mapping DERIVED; live schema chưa xác minh. |
+| 5.1 | data.id | User ID | id | int64 | No | Legacy `users` candidate | id | Direct candidate mapping | Required | BIGINT candidate. |
+| 5.2 | data.full_name | Full name | full_name | string | No | Legacy `users` candidate | full_name | Preserve | Required | API #71 không update. |
+| 5.3 | data.email | Email | email | email | No | Legacy `users` candidate | email | Preserve | Required | PII/Admin policy open. |
+| 5.4 | data.role | Role | role | string | No | Legacy `users` candidate | role | Preserve | Required | #71 không đổi role. |
+| 5.5 | data.avatar_url | Avatar URL | avatar_url | string? | Yes | Legacy `users` candidate | avatar_url | Preserve | Null giữ null | Safe API #04 model. |
+| 5.6 | data.phone | Phone | phone | string? | Yes | Legacy `users` candidate | phone | Preserve | Null giữ null | PII policy open. |
+| 5.7 | data.status | Account status | status | string | No | Legacy `users` candidate | status | Target status sau UPDATE | Required | ACTIVE/SUSPENDED là DERIVED allowlist. |
+| 5.8 | data.created_at | Created time | created_at | date-time | No | Legacy `users` candidate | created_at | ISO-8601 serialization | Required | Live schema/timezone chưa xác minh. |
+| 5.9 | data.updated_at | Updated time | updated_at | date-time | No | Legacy `users` candidate | updated_at | Server `CURRENT_TIMESTAMP` | Required | No-op request cũng cập nhật timestamp theo fallback. |
+| 6 | meta | Metadata | meta | object | No | N/A | N/A | `{}` | Empty object | Không có pagination/operation metadata. |
+| 7 | traceId | Trace ID | traceId | uuid | No | Middleware | Request trace ID | Propagate | Required | `X-Trace-Id` response header cùng giá trị. |
 
-## Ví dụ success candidate
+`bio`, `password_hash`, refresh-token hashes và raw tokens không được chọn hoặc trả.
 
-JSON hợp lệ về cấu trúc. `SUSPENDED` là status candidate; role placeholder không phải enum member. `bio` được omit vì optional nhưng chưa có source mapping.
+## Ví dụ success
 
 ~~~json
 {
@@ -55,32 +54,34 @@ JSON hợp lệ về cấu trúc. `SUSPENDED` là status candidate; role placeho
     "id": 1001,
     "full_name": "Nguyen Van A",
     "email": "user@example.test",
-    "role": "__USER_ROLE_SOURCE_REQUIRED__",
+    "role": "STUDENT",
     "avatar_url": null,
     "phone": null,
     "status": "SUSPENDED",
     "created_at": "2026-09-15T12:00:00Z",
-    "updated_at": "2026-10-24T09:00:00Z"
+    "updated_at": "2026-10-25T09:00:00Z"
   },
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000001"
 }
 ~~~
 
-## Ví dụ lỗi theo guideline
+`SUSPENDED` trong ví dụ là DERIVED; API runtime serialize `UserProfile` không có `bio`.
 
-Ví dụ dùng `data:null` theo API error guideline; current helper trả `{}` khi không truyền data. Phải thống nhất envelope khi wire API #71.
+## Ví dụ lỗi theo current helper
 
 ~~~json
 {
   "success": false,
   "businessCode": "DESIGN_VALIDATION_ERROR",
-  "message": "Invalid request.",
+  "message": "Dữ liệu đầu vào không hợp lệ.",
   "data": null,
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000001"
 }
 ~~~
+
+`error_response(...)` hiện trả `data: null`; error body thật có thể có `meta.fieldErrors` khi input sai.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

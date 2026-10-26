@@ -3,9 +3,9 @@
 ## Scope
 
 - DD output: apps/study-server/docs/dd/87_admin_quizzes_list/.
-- Task: one API Markdown DD; không sửa runtime, schema, catalog, diagram hoặc context pages.
+- Task: implement one Study Server API and synchronize its Draft DD/context. No database schema, catalog or diagram was changed.
 - DD status: Draft — Needs Confirmation.
-- Application tests: NOT_RUN — docs-only; API #87 không có route.
+- Application tests: RUN; the focused suite and full Study suite passed with fake DB sessions.
 
 ## Template
 
@@ -19,23 +19,24 @@
 |---|---|---|
 | Expected package | 11 Markdown files: 8 sheets + 3 reports | PASS — 11/11 |
 | Template appendix parity | 8/8 appendix suffixes compared byte-for-byte | PASS — 8/8 |
-| Catalog contract | GET/path, query fields/types, ApiEnvelope<Quiz>, 200 and exact 401/403/500 codes retained | PASS |
-| JSON examples | Parsed all four code blocks labeled json | PASS — 4/4 |
-| Tables and fences | 450 Markdown table lines have consistent columns; all five code fences are balanced | PASS |
-| Relative links/anchors | Resolved 32 local links, including 15 anchor links | PASS |
-| Whitespace | Final newline/trailing whitespace checked across all 11 untracked DD files; `git diff --check` checked tracked inventory edit | PASS |
-| Source inventory | No API #87 route/path/ID marker or matching module/test found under Study app/tests | UNWIRED / NOT_FOUND |
-| Runtime behavior | Application tests not run | NOT_RUN |
+| Catalog contract | Direct GET/path, query fields/types, `ApiEnvelope<Quiz>`, 200 and 401/403/500 retained; local 422/Page fallback called out | PASS by source comparison |
+| Focused API #87 | `pytest -q tests/modules/admin/api_87_admin_quizzes_list/test_admin_quizzes_list.py` | PASS — 20 |
+| Linked regression | #07/#78/#82/#86/#87 test files | PASS — 93 |
+| Full Study suite | `.venv/bin/pytest -q` | PASS — 1113; one upstream Starlette/httpx deprecation warning |
+| Ruff | `.venv/bin/ruff check app tests` | PASS |
+| OpenAPI | Imported composition root and inspected schema | PASS — 51 `/api/v1` templates / 58 operations; #87 exposes 200/401/403/422/500 |
+| DD markup | 11/11 expected files, 35 local links/anchors, JSON examples parse, fences/newlines valid | PASS |
+| `git diff --check` | Repository diff whitespace check | PASS |
+| Context validator | Deno full validation reports existing missing `db-admin` pages/source and baseline source drift; `--skip-drift` isolates the same unrelated `db-admin` graph/source errors. No API #87 source/test path is missing. | PARTIAL — unrelated baseline blocker |
 
 ## Findings and limits
 
 - Catalog says ApiEnvelope<Quiz>, while AC-35 and page query imply list/pagination. DD preserves direct type and records ApiEnvelope<Page<Quiz>> as an unapproved proposal.
-- Nested questions are in reusable Quiz, but AC-35 diagram only says “Query quizzes”; QuestionType and QuizChoice are unresolved.
+- Nested questions are in reusable Quiz, but AC-35 list flow only says “Query quizzes”; API #87 keeps a metadata-only projection. API #88 adds DERIVED local question type/order and Admin choice shape candidates, not catalog approval.
 - Legacy BIGINT tables and V1-PILOT UUID assessment model differ. Live DB is not verified.
-- Admin guard is absent; middleware path is not allowlisted. No API #87 runtime behavior is claimed.
-- At authoring time macro-review was pending. The current document-level review is recorded below as `VERIFIED_WITH_OPEN_QUESTIONS`.
-- Static package fingerprint (8 sheets + PLAN_RESULT.md + OPEN_QUESTIONS.md; verification report excluded): `09867b62e5ad28779c76aa202a38e22c105dd9d1fbad62740d6aeb1b3067efa1`.
-- Application tests were not run; these checks validate Markdown structure and contract traceability only.
+- Shared ADMIN guard and middleware path are wired locally; quiz-management permission remains unimplemented because no policy source exists.
+- Runtime returns Page metadata with `questions=[]`; the direct catalog remains singleton Quiz. Empty questions mean child rows are not loaded by this list projection, not that the source Quiz has no questions. Page cardinality and metadata-only projection remain unapproved fallbacks.
+- The DB-facing HTTP tests use fake sessions; they do not verify live SQL/schema, migrations or deployment.
 
 ## AC-35 macro-review #87–#91 — document-level
 
@@ -49,4 +50,4 @@
   - #91 reads aggregate history while the soft-deleted quiz row remains; a hard-deleted or absent quiz maps to the direct 404 contract.
 - AC-35 contract gaps remain: #87 list/page cardinality, #88 nested create schema and DRAFT/open lifecycle, #89 update body/replacement semantics, #91 statistics response versus Quiz, shared QuizQuestion/QuizChoice schema and Admin permission.
 - The quiz status value DELETED, lifecycle transitions, live schema, transaction/concurrency policy, aggregate metrics/rounding and error integration require owner/source confirmation.
-- No catalog, diagram, database schema or runtime source was changed; no application tests were run.
+- API #87 runtime was not changed by API #88. API #88 adds migration 013/bootstrap/DB-diagram candidates; live schema and migration deployment remain unverified.

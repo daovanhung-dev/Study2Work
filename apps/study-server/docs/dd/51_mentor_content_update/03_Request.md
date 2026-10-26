@@ -18,63 +18,64 @@ status: "Draft — Needs Confirmation"
 | HTTP method | PUT |
 | URI | `/api/v1/mentor/content/{content_id}` |
 | Character encoding | UTF-8 |
-| Content-Type | Not declared in catalog; `application/json` in the proposed body design only. |
-| Catalog request body | Not declared (`DISCREPANCY` with update semantics). |
+| Content-Type | `application/json` trong runtime fallback `DERIVED`; catalog chưa khai báo. |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | `Authorization` | Yes | `Bearer <token>` | Bearer JWT; role Mentor per catalog. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
-| 2 | Content type | `Content-Type` | Proposed | `application/json` | Needed only if the proposed JSON body is approved. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
+| 1 | Authorization | `Authorization` | Yes | `Bearer <token>` | Bearer JWT; yêu cầu role Mentor theo catalog. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
+| 2 | Content type | `Content-Type` | Derived | `application/json` | Body shape được suy từ các field editable của API #50. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | Content identifier | `content_id` | int64 | Yes | Not specified | Not specified | Integer | Not specified | None | Selects the existing Content to update. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
+| 1 | Content identifier | `content_id` | int64 | Yes | -2^63 | 2^63-1 | Signed integer | Signed-int64 | None | Chọn active Content cần cập nhật; malformed/out-of-range hiện trả 404. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
 
 ## Query parameters
 
-None declared by catalog or AC-22.
+Không có query parameter theo catalog hoặc diagram.
 
 ## Request body
 
 ### Catalog contract
 
-Catalog row #51 and AC-22 PUT node declare only `path{content_id:int64!}`. They do not define any field to carry the requested changes. Do not treat the following proposal as an approved contract.
+Catalog row #51 và AC-22 PUT node chỉ khai báo `path{content_id:int64!}`; không có body contract. Body dưới đây là runtime fallback `DERIVED`, chưa được contract owner phê duyệt.
 
-### Proposed body — DERIVED, requires confirmation
+### Runtime fallback — full replacement, DERIVED
 
-Reuse the editable content-bearing fields from API #50. Treat this as a complete replacement of the editable representation, not a partial patch. The exact distinction between a new body and existing version snapshot remains a version-model question.
+Body bắt buộc đủ ba field theo API #50. Field khác bị từ chối. Không có enum values, title limits/normalization hoặc payload subtype rules được thêm ngoài source.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|---|
-| 1 | Content type | `content_type` | ContentType | Yes (proposal) | N/A | N/A | N/A | Enum | Members not defined | None | Type of the replacement content; subtype schema must match `payload`. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
-| 2 | Title | `title` | string | Yes (proposal) | Not specified | Not specified | Unicode text | UTF-8 | Any source-approved string | None | Replacement title; max length/normalization unresolved. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
-| 3 | Payload | `payload` | object | Yes (proposal) | N/A | N/A | JSON | Object | Schema by ContentType not defined | None | Complete replacement content object; do not invent keys or nested fields. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
+| 1 | Content type | `content_type` | string | Yes | N/A | N/A | Unicode text | UTF-8 | Open string | None | Giá trị thay thế; type members chưa được chuẩn hóa. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
+| 2 | Title | `title` | string | Yes | N/A | N/A | Unicode text | UTF-8 | Any string | None | Tiêu đề thay thế; runtime không thêm trim hoặc max length. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
+| 3 | Payload | `payload` | object | Yes | N/A | N/A | JSON | JSON object | Object only | None | Payload thay thế; nested schema theo content type chưa được khai báo. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
 
-### Fields excluded from the proposed body
+### Fields excluded from the body
 
-| Field | Proposed handling | Reason/status |
+| Field | Runtime handling | Basis/status |
 |---|---|---|
-| `course_id` | Read from stored Content and preserve | Path targets existing item; API #50 uses course_id only at creation. DERIVED immutability proposal. |
-| `status` | Server lifecycle only | Separate publish API #52 and Admin review flow AC-33. DERIVED. |
-| `parent_id` | Preserve existing value | No parent/move operation appears in AC-22 request. DERIVED; confirm. |
-| `order` | Preserve existing value | No reorder input appears in AC-22 request. DERIVED; confirm. |
-| `id` | Preserve path target | Never accept resource ID in body. |
+| `id` | Lấy từ path và giữ nguyên | Catalog path; direct. |
+| `course_id` | Lấy từ Content đang lưu và giữ nguyên | Stored ownership boundary; derived from API #49. |
+| `status` | Set `PENDING_REVIEW` sau update | AC-33 queue + API #50 precedent; DERIVED. |
+| `parent_id` | Giữ nguyên | Không có thao tác move trong #51 input; DERIVED. |
+| `order` | Giữ nguyên | Không có thao tác reorder trong #51 input; DERIVED. |
 
-## Ví dụ Request data — non-executable until contract approval
-
-The enum value below is a placeholder because `ContentType` members are not defined. The JSON shape is illustrative and must not be used as an API fixture.
+## Ví dụ Request data — runtime fallback
 
 ~~~json
 {
-  "content_type": "<SOURCE_REQUIRED: ContentType member>",
+  "content_type": "lesson-node-v2",
   "title": "Nội dung đã cập nhật",
-  "payload": {}
+  "payload": {
+    "body": "Nội dung mới"
+  }
 }
 ~~~
+
+Shape và values minh họa khớp local request model; body contract vẫn cần xác nhận.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

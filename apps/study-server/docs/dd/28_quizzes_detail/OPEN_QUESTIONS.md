@@ -31,14 +31,14 @@ Các câu hỏi dưới đây giữ lại những phần contract hoặc busines
 
 ## Q-28-03 — QuestionType và QuizChoice
 
-1. QuestionType có những giá trị nào và được lưu ở đâu? DB design/DDL không có type column trong quiz_questions.
-2. QuizChoice có những field logical nào và tên response property nào dùng cho quiz_choices.choice_text?
-3. Có field choice order nào cần thêm vào contract/schema?
+1. Owner có duyệt vocabulary `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TRUE_FALSE` và nullable `quiz_questions.question_type` từ API #88 migration 013 không? Đây là DERIVED local fallback.
+2. QuizChoice fields/property nào sẽ được thêm vào catalog? API #88 locally chooses `{id,text,is_correct}` for Admin only.
+3. Owner có duyệt `quiz_choices.sort_order` zero-based từ migration 013 không?
 4. Field nào ngoài ID/text được phép Student nhìn thấy?
 
 **Decision already applied:** API #28 response không trả quiz_choices.is_correct theo yêu cầu hiện tại. Câu hỏi này không đề xuất mở đáp án đúng trong response.
 
-**Evidence:** API catalog định nghĩa QuizQuestion gồm id, text, type và choices: QuizChoice[], nhưng không có định nghĩa QuizChoice hoặc enum QuestionType. DB design có quiz_choices.id, question_id, choice_text và is_correct.
+**Evidence:** API catalog định nghĩa QuizQuestion gồm id, text, type và choices: QuizChoice[], nhưng không có định nghĩa QuizChoice hoặc enum QuestionType. API #88 migration 013 adds local question_type/order columns; these do not establish owner-approved catalog shape or live deployment.
 
 <a id="q-28-04-logical-physical-schema"></a>
 
@@ -60,7 +60,7 @@ Các câu hỏi dưới đây giữ lại những phần contract hoặc busines
 2. Nếu nhiều question có cùng sort_order, dùng tie-break nào?
 3. quiz_choices có cần thứ tự hiển thị ổn định không? Nếu có, field/order rule là gì?
 
-**Evidence:** DB design mô tả quiz_questions.sort_order là thứ tự câu hỏi trong quiz. Không thấy unique constraint cho thứ tự; quiz_choices không có sort_order.
+**Evidence:** DB design mô tả quiz_questions.sort_order là thứ tự câu hỏi trong quiz. Migration 013 adds choice sort_order for new local writes; historical rows use default 0 and their original order may be unavailable.
 
 <a id="q-28-06-path-not-found-access"></a>
 

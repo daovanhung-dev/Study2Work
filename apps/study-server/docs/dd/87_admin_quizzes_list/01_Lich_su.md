@@ -14,13 +14,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-26 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD draft API #87 từ catalog, AC-35 và các schema artifact liên quan. | Giữ discrepancy list/cardinality, page và schema cần xác nhận. |
+| 1.1 | 2026-10-26 | Codex | Đồng bộ DD với API #87 được wire cục bộ; ghi Page fallback, quy tắc query, auth/error behavior và kết quả test. | Các quyết định đều DERIVED; catalog/schema không đổi, live DB và permission riêng chưa xác minh. |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

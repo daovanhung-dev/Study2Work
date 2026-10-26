@@ -20,7 +20,7 @@ status: "Draft — Needs Confirmation"
 | Content-Type | `application/json` |
 | Success contract | HTTP 201 `DESIGN_RESOURCE_CREATED`; `ApiEnvelope<Content>`. |
 | Error contract | HTTP 401/403/422/500; chỉ dùng code của API catalog. |
-| Runtime status | Endpoint chưa được wire; ví dụ dưới đây là contract design, không phải observed response. |
+| Runtime status | API source-backed locally; TestClient/fake DB evidence không chứng minh live schema/deployment. |
 
 ## Response fields
 
@@ -29,21 +29,21 @@ status: "Draft — Needs Confirmation"
 | `success` | boolean | Có | Envelope success branch (`true`). |
 | `businessCode` | string | Có | `DESIGN_RESOURCE_CREATED` cho success; error code theo catalog. |
 | `message` | string | Có | Human-readable message; exact copy chưa quy định. |
-| `data` | Content | Có | Một logical Content vừa tạo; physical projection chưa được xác nhận. |
+| `data` | Content | Có | Một Content vừa tạo; response model/projection được dùng chung với API #49. |
 | `data.id` | int64 | Có | ID allocation/storage type `SOURCE_REQUIRED`. |
 | `data.course_id` | int64 | Có | Giá trị course được chấp nhận từ request; physical source chưa rõ. |
 | `data.content_type` | ContentType | Có | Echo/project theo enum được duyệt; enum members `SOURCE_REQUIRED`. |
 | `data.title` | string | Có | Giá trị đã lưu; trim/normalization chưa có rule. |
 | `data.payload` | object | Có | JSON object đã lưu; subtype schema `SOURCE_REQUIRED`. |
-| `data.status` | ContentStatus | Có | Dự kiến `PENDING_REVIEW` theo AC-33 precondition; persistence enum chưa xác nhận. |
-| `data.parent_id` | int64? | Không | Đề xuất root `null` vì request không nhận parent; `DERIVED`, cần xác nhận. |
-| `data.order` | int32 | Có | Đề xuất order kế tiếp trong root siblings cùng course; `DERIVED`, schema/algorithm cần xác nhận. |
+| `data.status` | ContentStatus | Có | Implementation gán `PENDING_REVIEW`; DERIVED từ queue precondition AC-33, chưa là direct API rule. |
+| `data.parent_id` | int64? | Không | Root `NULL`; response serialization bỏ field null, khớp API #49. DERIVED. |
+| `data.order` | int32 | Có | Kế tiếp trong active root siblings, first order 0; DERIVED allocation. |
 | `meta` | object | Có | Envelope metadata; pagination không được khai báo cho create. |
-| `traceId` | uuid | Có | Request trace theo envelope convention; runtime behavior chưa được verify cho route này. |
+| `traceId` | uuid | Có | Request trace theo envelope convention; được xác minh qua TestClient. |
 
 ## Success example (illustrative only)
 
-`content_type` placeholder không thuộc enum đã xác minh; `id`, `course_id`, `title`, `payload` và `order` là giá trị minh họa. Không dùng JSON này làm integration fixture.
+`content_type` placeholder không thuộc enum đã xác minh; ID và dữ liệu là minh họa. Ví dụ thể hiện implementation hiện tại: root `parent_id` null bị loại khỏi JSON, status `PENDING_REVIEW`, order bắt đầu từ 0.
 
 ~~~json
 {
@@ -57,7 +57,6 @@ status: "Draft — Needs Confirmation"
     "title": "Nội dung mẫu",
     "payload": {},
     "status": "PENDING_REVIEW",
-    "parent_id": null,
     "order": 0
   },
   "meta": {},
@@ -65,7 +64,7 @@ status: "Draft — Needs Confirmation"
 }
 ~~~
 
-`parent_id=null` và `order=0` trong ví dụ không xác nhận default; phương án đề xuất trong Data Mapping là root order kế tiếp. Chốt response JSON shape và serialization của optional `parent_id` với envelope helper trước khi implementation.
+`parent_id` bị lược khi null bởi response model; field vẫn được hỗ trợ trên Content tree khi node có parent. `order=0` là initial order implementation decision cho root đầu tiên.
 
 ## Error response code set
 

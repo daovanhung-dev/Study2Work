@@ -14,14 +14,14 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ~~~text
-1. Nhận Bearer JWT và body {course_id, content_type, title, payload} theo catalog #50.
-2. AuthN/AuthZ: yêu cầu role Mentor và quyền quản lý course (AC-22). Identity binding/assigned-course relation chưa có trong Study source.
-3. Validate required/type contract. Enum ContentType và schema payload chưa có nguồn; không áp đặt field/max-length riêng.
-4. Candidate course lookup/owner check có thể dùng legacy courses.id/mentor_id nhưng chỉ DERIVED; không dùng làm live assertion.
-5. Logical INSERT Content theo AC-22. AC-33 cho biết queue review chứa status=PENDING_REVIEW; suy ra trạng thái khởi tạo của POST là đề xuất DERIVED, chưa được AC-22 ghi trực tiếp. Content physical table/model chưa được duyệt.
-6. Candidate defaults do request không nhận parent_id/order: root parent_id=null và order nối tiếp trong root siblings của course; DERIVED, cần confirmation.
-7. Map mọi field Content và envelope; id generation, physical projection, payload schema và storage chưa được xác nhận.
-8. Trả 201 DESIGN_RESOURCE_CREATED. AC-22 sau đó reload cây; API #50 hiện UNWIRED/NOT_FOUND.
+1. Nhận Bearer JWT và body `{course_id, content_type, title, payload}` theo catalog #50.
+2. Shared guard yêu cầu role Mentor và numeric JWT subject; view khóa course row rồi kiểm tra direct ownership qua `courses.mentor_id`.
+3. FastAPI strict-validates signed-int64 course ID, string fields, JSON object payload và từ chối body field ngoài contract. Enum/payload subtype chưa có nguồn.
+4. Course thiếu hoặc không thuộc Mentor map cùng 403 `DESIGN_ACCESS_DENIED` theo implementation decision; không thêm 404.
+5. Lấy order kế tiếp của active root siblings (`GREATEST(MAX(content_order)+1, 0)`, first order 0) trong khi course row lock còn hiệu lực.
+6. INSERT `contents` với root `parent_id=NULL`, status `PENDING_REVIEW`, body fields và `content_order`; cast serialized JSON sang JSONB.
+7. Kiểm tra toàn bộ `RETURNING` projection, commit transaction rồi dựng response.
+8. Trả HTTP 201 `DESIGN_RESOURCE_CREATED`; AC-22 mô tả client reload cây sau create. Các default status/root/order là `DERIVED`; local DDL/tests không chứng minh live DB.
 ~~~
 
 ## 0. Check quyền
@@ -31,44 +31,46 @@ status: "Draft — Needs Confirmation"
 - Authentication là Bearer JWT và role Mentor theo catalog.
 - AC-22 precondition yêu cầu Mentor có quyền quản lý course.
 - Không nhận `mentor_id`, principal ID hoặc quyền từ body.
-- Legacy `courses.mentor_id` có thể là candidate direct-owner relation; không bao gồm course assignment và chưa có principal mapping. Không coi đây là rule đã duyệt.
+- Shared guard trả numeric subject; implementation dùng direct `courses.mentor_id` convention của API #47/#49.
+- Assigned-course relation không có trong legacy source; không khẳng định assigned Mentor được phép tạo.
 
 ### 0.2. Query/check quyền
 
 | Target | Column/field | Condition/value | Remarks |
 |---|---|---|---|
-| JWT principal | role | Mentor | Contract DIRECT; guard/binding hiện `NOT_FOUND` cho route. |
-| Legacy `courses` candidate | `id` | bằng request `course_id` | Candidate BIGINT; schema artifact, live DB chưa xác minh. |
-| Legacy `courses` candidate | `mentor_id` | so với numeric Mentor principal | `DERIVED`; principal mapping/assignment chưa có nguồn. |
-| Content write target | N/A | N/A | Physical table/model `SOURCE_REQUIRED`; không dựng INSERT SQL. |
+| JWT principal | role | Mentor | Contract DIRECT; shared guard source-backed. |
+| Legacy `courses` | `id` | bằng request `course_id` | Local BIGINT DDL; lookup locks row for order allocation. |
+| Legacy `courses` | `mentor_id` | so với numeric Mentor principal | Direct-owner implementation convention; assignment policy remains open. |
+| Legacy `contents` | `course_id` | Authorized request course | Local DDL/migration 006; live schema unverified. |
 
 ### 0.3. Check kết quả
 
 - Thiếu/không hợp lệ JWT: HTTP 401 `DESIGN_AUTHENTICATION_REQUIRED`.
-- Không phải Mentor hoặc không có quyền quản lý course: HTTP 403 `DESIGN_ACCESS_DENIED`.
-- Không thấy course / ID không hợp lệ: API không khai báo 404; map sang 422, 403 hay nhánh khác cần xác nhận. Không tự thêm code.
+- Không phải Mentor, course không tồn tại, hoặc course không thuộc direct owner: HTTP 403 `DESIGN_ACCESS_DENIED`.
+- Sai body type/required field/extra field: HTTP 422 `DESIGN_VALIDATION_ERROR`.
+- Không thêm 404; absent-course → 403 là quyết định `DERIVED` trong error set catalog.
 - Lỗi storage/DB hoặc lỗi nội bộ: HTTP 500 `DESIGN_INTERNAL_ERROR`.
 
 ## 1. Validate data input
 
 | Field | Contract validation | Validation detail not established |
 |---|---|---|
-| `course_id` | Required int64 | Positive range, existence semantics and missing-course code mapping. |
-| `content_type` | Required `ContentType` | Enum members and allowed values. |
-| `title` | Required string | Whitespace/empty policy, maximum length, normalization. |
-| `payload` | Required object | Per-type schema, nested validation, size/complexity limits. |
+| `course_id` | Required strict signed int64 | Values outside signed int64 fail framework validation; missing course maps 403 by implementation decision. |
+| `content_type` | Required strict string | `ContentType` enum members remain unknown; implementation does not validate a closed set. |
+| `title` | Required strict string | No whitespace, empty, max-length or normalization rule is applied. |
+| `payload` | Required JSON object | Only object shape is validated; subtype keys/size rules remain unknown. |
 
-HTTP 422 `DESIGN_VALIDATION_ERROR` is declared. Runtime middleware currently has a generic validation fallback; when wiring, add this path/contract so it emits the declared `DESIGN_*` code. No 404 is declared for this endpoint.
+HTTP 422 `DESIGN_VALIDATION_ERROR` is declared and route path is in `DESIGN_CONTRACT_PATHS`. Framework request errors preserve that code. No 404 is declared for this endpoint.
 
 ### Request Usage Matrix
 
 | Request field | Source | Data Mapping step | Validate | SQL/Mutation usage | Branch/Loop | Response usage | Gap |
 |---|---|---:|---|---|---|---|---|
-| Authorization | Header | 1–2 | Bearer JWT, role Mentor | Principal for course access guard | Auth/access branch | Not echoed | Guard and principal mapping unresolved |
-| `course_id` | Body | 1–4 | Required int64 | Bind candidate Q1; logical Content scope | Missing/access decision unresolved | `data.course_id` | Physical FK and course-not-found mapping unresolved |
-| `content_type` | Body | 1, 3 | Required ContentType | Logical Content subtype | Subtype rules unresolved | `data.content_type` | Enum and payload schema absent |
-| `title` | Body | 1, 3 | Required string | Logical Content title | No extra branch known | `data.title` | Length/trim rule absent |
-| `payload` | Body | 1, 3 | Required JSON object | Logical Content payload | Type-specific validation unresolved | `data.payload` | Approved payload schema absent |
+| Authorization | Header | 1–2 | Bearer JWT, role Mentor | Numeric subject for direct-owner check | Auth/access branch | Not echoed | Assignment relation/policy is not source-backed |
+| `course_id` | Body | 1–5 | Required strict int64 | Course lock/owner query and Content FK | Missing/non-owner → 403 | `data.course_id` | 403 mapping is DERIVED; live FK unverified |
+| `content_type` | Body | 1, 3, 6 | Required strict string | Insert open string | No closed enum branch | `data.content_type` | Enum members/payload compatibility absent |
+| `title` | Body | 1, 3, 6 | Required strict string | Insert unchanged | No extra branch | `data.title` | No max/trim rule |
+| `payload` | Body | 1, 3, 6 | Required JSON object | JSON serialize and cast to JSONB | Subtype validation not available | `data.payload` | Subtype schema absent |
 
 ## 2. Get thông tin
 
@@ -78,80 +80,98 @@ HTTP 422 `DESIGN_VALIDATION_ERROR` is declared. Runtime middleware currently has
 
 | Query | Type | Source | Columns | Predicate | Evidence/status |
 |---|---|---|---|---|---|
-| Q1 (candidate) | SELECT | Legacy `courses AS c` | `id`, `mentor_id` | `id = :course_id`; owner comparison needs resolved Mentor principal | `DERIVED` only; not live-schema proof |
-| Q2 | N/A | Content | N/A | No pre-read specified by diagram; uniqueness/existence check unspecified | `SOURCE_REQUIRED` |
+| Q1 | SELECT ... FOR UPDATE | Legacy `courses` | `id`, `mentor_id` | `id = :course_id` | Implemented; direct-owner pattern is DERIVED; local DDL only |
+| Q2 | Aggregate SELECT | Legacy `contents` | `MAX(content_order)` | course match, root (`parent_id IS NULL`), active (`deleted_at IS NULL`) | Implemented; first order 0; allocation is DERIVED |
+| Q3 | INSERT ... RETURNING | Legacy `contents` | All Content response columns | Request fields + server status/root/order | Implemented against local DDL; live schema unverified |
 
-Candidate Q1 for the legacy schema only:
+Q1 used by current source:
 
 ~~~sql
-SELECT c.id, c.mentor_id
-FROM courses AS c
-WHERE c.id = :course_id;
+SELECT id, mentor_id
+FROM courses
+WHERE id = :course_id
+LIMIT 1
+FOR UPDATE;
 ~~~
 
-This query does not establish an approved auth implementation. No course-assignment join is known. Do not run against a live DB without matching schema and resolved identity model.
+The shared auth guard resolves the numeric JWT subject. The course row lock remains held through order allocation and INSERT/commit. No course-assignment join is known; checked-in DDL does not prove live schema.
+
+Q2 computes the next order from active root siblings:
+
+~~~sql
+SELECT GREATEST(COALESCE(MAX(content_order::BIGINT) + 1, 0), 0) AS next_order
+FROM contents
+WHERE course_id = :course_id
+  AND parent_id IS NULL
+  AND deleted_at IS NULL;
+~~~
+
+Q3 inserts one root node with `status='PENDING_REVIEW'` and returns the stored Content projection; payload is bound as JSON text and cast to JSONB.
 
 ### 2.2. JOIN
 
 | Table | Join type | Join condition | Purpose | Evidence |
 |---|---|---|---|---|
-| Legacy `courses AS c` | No join in Q1 candidate | N/A | Candidate course/direct-owner lookup | Legacy DDL only; `DERIVED` |
-| Content persistence relation | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | Persist Content and possibly enforce FK | No generic Content table in legacy schema; pilot block model differs |
+| Legacy `courses` | No join | N/A | Lock course and read direct owner | Current source; legacy DDL only; live schema unverified |
+| `contents` | `course_id` FK | `courses.id` | Persist Content and enforce course relation | DDL/migration 006 source-backed locally; live schema unverified |
 
 ### 2.3. WHERE
 
 | Condition | Value source | Purpose | Evidence/status |
 |---|---|---|---|
-| `c.id = :course_id` | Body `course_id` | Candidate course lookup | `DERIVED` legacy-only |
-| `c.mentor_id = :principal_id` | Resolved Mentor principal | Candidate direct-owner check | `DERIVED`; ID binding and assigned course relation absent |
-| Content predicates/duplicate/idempotency | Not established | No diagram rule | `SOURCE_REQUIRED`; do not invent uniqueness or retry behavior |
+| `id = :course_id` | Body `course_id` | Course lock and existence lookup | Current source; local schema only |
+| `mentor_id = :principal_id` | Shared Mentor guard | Direct-owner check | Implementation convention; assigned-course relation absent |
+| `course_id = :course_id AND parent_id IS NULL AND deleted_at IS NULL` | Body | Root order allocation | Current source; query is in `NEXT_ROOT_CONTENT_ORDER` |
 
 ### 2.4. ORDER BY
 
-Không có read/list response trong API #50. Candidate order allocation is a write concern and remains `DERIVED`: next order among root Content siblings for the course. Exact partition/locking/concurrency behavior needs confirmation; no query is approved.
+Không có read/list response trong API #50. Order allocation là write concern: view lấy aggregate từ active root siblings, bắt đầu từ 0, và giữ khóa course row đến khi commit. Đây là implementation rule `DERIVED`, không phải rule trực tiếp trong catalog/diagram.
 
 ## 3. Insert/Update thông tin
 
 ### 3.1. Target table
 
 - Logical target: one `Content` per catalog/AC-22.
-- Physical target/table/model: `SOURCE_REQUIRED`.
-- Legacy `DB.sql` has `courses`/`lessons` but no generic Content table. V1-PILOT `content_blocks` uses UUID and `lesson_id`; it is not a direct mapping to catalog Content with BIGINT `course_id`.
+- Physical target: legacy `contents`; local source implements API #50, while live availability is unverified.
+- Legacy `DB.sql` now includes generic `contents` fields used by API #49. V1-PILOT `content_blocks` uses UUID and `lesson_id`; it is not a direct mapping to catalog Content with BIGINT `course_id`.
 
 ### 3.2. Conditions
 
 | Condition | Source | Effect | Status |
 |---|---|---|---|
-| Authenticated Mentor | JWT/catalog | Continue only for Mentor role | DIRECT contract; implementation absent |
-| Can manage `course_id` | AC-22 | Allow create | DIRECT precondition; check mechanism SOURCE_REQUIRED |
-| Valid request fields | Catalog | Accept/reject request | DIRECT required fields; detailed enum/payload checks SOURCE_REQUIRED |
-| Review state | AC-22 + AC-33 | Đề xuất item mới vào moderation queue | `PENDING_REVIEW` là DERIVED candidate; cần xác nhận transition create → pending |
+| Authenticated Mentor | JWT/catalog | Continue only for Mentor role | DIRECT contract; shared guard source-backed |
+| Direct owner of `course_id` | API #47/#49 convention + AC-22 | Allow create | DERIVED implementation pattern; assignment support absent |
+| Valid request fields | Catalog + Pydantic model | Accept/reject request | Required types and extra-field rejection are tested; enum/payload subtype remain open |
+| Review state | AC-33 queue | Create node in moderation queue | `PENDING_REVIEW` is DERIVED implementation choice |
+| Parent placement | Request has no `parent_id` | Create a root node | `NULL` is DERIVED from request shape |
+| Root order | Local Content tree field | Next active root order, first 0 | DERIVED; course row lock held through transaction |
 
 ### 3.3. Items insert
 
 | Logical Content field | Input/default | Intended value | Mapping status |
 |---|---|---|---|
-| `course_id` | Body | Accepted course ID | DIRECT contract; physical column/FK SOURCE_REQUIRED |
-| `content_type` | Body | Approved enum member | DIRECT field; enum/storage SOURCE_REQUIRED |
-| `title` | Body | Request title | DIRECT field; column/normalization SOURCE_REQUIRED |
-| `payload` | Body | Request JSON object | DIRECT field; serialization/schema SOURCE_REQUIRED |
-| `status` | Server-side lifecycle | `PENDING_REVIEW` candidate | DERIVED từ AC-22 create + AC-33 pending queue; transition/persistence mapping SOURCE_REQUIRED |
-| `parent_id` | No request field | Candidate `null` (root) | DERIVED proposal; parent relation/optional serialization need confirmation |
-| `order` | No request field | Candidate next order among course roots | DERIVED proposal; allocation/concurrency rule need confirmation |
-| `id` | Server/storage | Generated Content identifier | SOURCE_REQUIRED; strategy and BIGINT mapping unknown |
-| Audit/time fields | Not in contract | Unspecified | SOURCE_REQUIRED; do not invent |
+| `course_id` | Body | Authorized course ID | DIRECT contract; local FK to `courses`; live schema unverified |
+| `content_type` | Body | Store strict string unchanged | DIRECT field; open string; enum members unknown |
+| `title` | Body | Store strict string unchanged | DIRECT field; no added trim/length rule |
+| `payload` | Body | JSON serialize, cast and store as JSONB | DIRECT object shape; subtype schema unknown |
+| `status` | Server-side lifecycle | `PENDING_REVIEW` | DERIVED from AC-33 queue condition |
+| `parent_id` | Server default | `NULL` root | DERIVED from absence of parent input |
+| `content_order` | Server allocator | Next active root order, first order 0 | DERIVED; lock course row during allocation |
+| `id` | Persistence layer | BIGSERIAL-generated Content ID | Present in local DDL; live schema unverified |
+| `deleted_at` | Local DDL default | Omitted from INSERT, therefore NULL | Present in local DDL |
+| Audit/time fields | Not in local table/contract | Not written by API #50 | Do not invent fields |
 
 ### 3.4. Parameters
 
 - Contract body parameters: `course_id`, `content_type`, `title`, `payload`.
 - Do not accept client-supplied status, parent, order, owner, ID, audit actor or timestamps.
-- Exact SQL, bind parameters, transaction boundary and DB return projection remain blocked on the physical schema. Current database helpers leave transaction ownership to caller; that is not a concrete route implementation.
+- SQL remains a set of constants in `query.py`; `view.py` binds values and owns the transaction. It commits only after validating the `RETURNING` projection and rolls back failures.
 
 #### Mutation Matrix
 
 | Mutation | Target | Conditions | Fields | Response | Status |
 |---|---|---|---|---|---|
-| M1 — logical INSERT | `Content` (physical relation `SOURCE_REQUIRED`) | Mentor manages course; request validates | Four body fields + intended state/defaults above | HTTP 201 `DESIGN_RESOURCE_CREATED`, `ApiEnvelope<Content>` | AC-22 direct logical flow; implementation/schema absent |
+| M1 — INSERT | `contents` | Mentor direct-owns course; request validates | Four body fields + DERIVED status/root/order | HTTP 201 `DESIGN_RESOURCE_CREATED`, `ApiEnvelope<Content>` | Local implementation + legacy DDL; live schema unverified |
 | UPDATE/DELETE | N/A | Not part of API #50 | N/A | N/A | Separate APIs #51–#53 |
 
 ## Response Source Matrix
@@ -160,23 +180,23 @@ Không có read/list response trong API #50. Candidate order allocation is a wri
 |---|---|---|---|---|
 | `success` | boolean | Envelope branch | `true` on success | Envelope convention |
 | `businessCode` | string | Catalog | `DESIGN_RESOURCE_CREATED` | DIRECT |
-| `message` | string | Application | Human-readable; exact wording open | DERIVED |
-| `data.id` | int64 | Content persistence | Generated value | SOURCE_REQUIRED |
-| `data.course_id` | int64 | Body and stored row | Must identify authorized course | DIRECT logical input; persistence SOURCE_REQUIRED |
-| `data.content_type` | ContentType | Body and stored row | Valid member per approved enum | SOURCE_REQUIRED enum/storage |
-| `data.title` | string | Body and stored row | Preserve or normalize after rule confirmation | SOURCE_REQUIRED storage/normalization |
-| `data.payload` | object | Body and stored row | Return approved stored JSON | SOURCE_REQUIRED schema/storage |
-| `data.status` | ContentStatus | AC-22 + AC-33 lifecycle | Intended initial `PENDING_REVIEW` candidate | DERIVED transition; enum/schema SOURCE_REQUIRED |
-| `data.parent_id` | int64? | Proposed server default | `null` under root-content proposal | DERIVED; confirm |
-| `data.order` | int32 | Proposed server allocation | Next root sibling order proposal | DERIVED; confirm |
-| `meta` | object | Envelope | No pagination metadata declared | Helper serialization to confirm |
-| `traceId` | uuid | Request trace | Envelope trace propagation | Current generic convention; route behavior absent |
+| `message` | string | API #50 view | `Content created.` | Current source |
+| `data.id` | int64 | `contents.id` | BIGSERIAL-generated value | Base ID mapping is in checked-in DDL; live schema unverified |
+| `data.course_id` | int64 | Stored row | Course from authorized request | DIRECT field; local persistence; live schema unverified |
+| `data.content_type` | ContentType | Stored row | Open string as submitted | DIRECT field; closed enum remains unknown |
+| `data.title` | string | Stored row | String as submitted | DIRECT field; no normalization |
+| `data.payload` | object | Stored JSONB row | JSON object from request | DIRECT shape; subtype schema remains unknown |
+| `data.status` | ContentStatus | Server-side insert | `PENDING_REVIEW` | DERIVED from AC-33 queue condition |
+| `data.parent_id` | int64? | Server-side insert | NULL and omitted by response serialization | DERIVED root placement |
+| `data.order` | int32 | Aggregate query | Next active root order, starts at 0 | DERIVED allocation; serialized by shared Content model |
+| `meta` | object | Envelope helper | Empty object; no pagination metadata | Current helper behavior |
+| `traceId` | uuid | Request trace | Envelope/header trace propagation | Current route behavior covered by TestClient |
 
 ## 4. Check kết quả execute query
 
 ### 4.1. Thành công
 
-Only after the logical Content is durably created should success return HTTP 201 `DESIGN_RESOURCE_CREATED`. AC-22 then reloads the tree. An exact response object cannot be implemented until ID, storage, enum, payload and optional-field serialization are resolved.
+After validating the INSERT/RETURNING row, the view commits and returns HTTP 201 `DESIGN_RESOURCE_CREATED`. AC-22 then reloads the tree. The generated ID and stored row are used in the response; live DB availability remains unverified.
 
 ### 4.2. Lỗi hệ thống
 
@@ -184,7 +204,7 @@ Unexpected persistence/mapping errors map to HTTP 500 `DESIGN_INTERNAL_ERROR`. D
 
 ### 4.3. Validate lỗi
 
-HTTP 422 `DESIGN_VALIDATION_ERROR` is present in the catalog. Preserve it for confirmed request validation branches. Exact behavior for an unknown enum member, type-specific payload failure, nonexistent course and ID overflow is not fully specified; no new code/status may be added here.
+HTTP 422 `DESIGN_VALIDATION_ERROR` covers framework validation for required/type/body-shape/extra-field failures. Closed enum and subtype validation are absent because no members/schema are source-backed. Nonexistent course maps 403 by the derived decision above; order overflow and DB errors map 500.
 
 ### 4.4. Ngoài trường hợp trên
 

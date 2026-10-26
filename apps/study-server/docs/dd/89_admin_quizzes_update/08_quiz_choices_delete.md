@@ -23,24 +23,24 @@ status: "Draft — Needs Confirmation"
 
 - Xóa choices thuộc quiz_questions có quiz_id = quiz_id.
 - Thực hiện trước khi xóa question rows.
-- Chỉ chạy sau khi candidate Q2/Q3 không thấy attempt/answer history và policy được duyệt.
+- Chạy sau khi lock Quiz/Question/Choice và history query không thấy attempt/answer.
 - Không mặc định dùng CASCADE hoặc giả định DB cascade behavior.
 
 ## Relation/condition mapping
 
 | No | Physical column | Logical name | Type | Length | Scale | Required | PK | FK | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|---|
-| 1 | id | Choice ID | BIGSERIAL | N/A | N/A | Yes | Yes | No | Delete matching rows | Existing quiz_choices | Step 5 | Không thay ID. |
+| 1 | id | Choice ID | BIGSERIAL | N/A | N/A | Yes | Yes | No | DELETE ... RETURNING id | Existing quiz_choices | Step 5 | Returned ID set phải khớp tập đã khóa. |
 | 2 | question_id | Question ID | BIGINT | N/A | N/A | Nullable in DDL | No | quiz_questions.id | Question rows where quiz_id matches | Existing relation | Step 5 | Candidate 1:N; live FK chưa xác minh. |
 | 3 | choice_text | Choice text | TEXT | N/A | N/A | Yes | No | No | Delete matching rows | Existing quiz_choices | Step 5 | Không đọc/ghi lại row cũ. |
 | 4 | is_correct | Answer key | BOOLEAN | N/A | N/A | DDL default FALSE | No | No | Delete matching rows | Existing quiz_choices | Step 5 | Không expose trong response. |
 
 ## Safety conditions
 
-- Candidate Q3 phải xác nhận không có quiz_answers.choice_id tham chiếu choice cũ.
-- Nếu có row tham chiếu thì dừng trước DELETE và candidate trả 422; policy cần owner xác nhận.
+- History query xác nhận không có quiz_answers.choice_id tham chiếu choice cũ.
+- Nếu có answer hoặc attempt history, dừng trước DELETE và trả catalog 422 theo fallback DERIVED.
 - FK/DB failure trong transaction → rollback và HTTP 500 DESIGN_INTERNAL_ERROR.
-- Không khẳng định physical DELETE/soft-delete là runtime behavior.
+- API #89 thực hiện physical child delete trong transaction; Quiz parent không bị xóa.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

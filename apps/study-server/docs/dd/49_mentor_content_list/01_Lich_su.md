@@ -18,14 +18,15 @@ status: "Draft — Needs Confirmation"
 | API ID | 49 |
 | API name | Lấy cây nội dung course |
 | Endpoint | GET /api/v1/mentor/courses/{course_id}/content |
-| Phiên bản DD | 0.1 |
+| Phiên bản DD | 0.2 |
 | Trạng thái | Draft — Needs Confirmation |
 
 ## Lịch sử thay đổi
 
 | Phiên bản | Ngày | Người cập nhật | Nội dung | Trạng thái |
 |---|---|---|---|---|
-| 0.1 | 2026-10-24 | Codex | Tạo DD theo catalog và AC-22; tách Content khỏi Lecture, ghi rõ response-tree/schema/Mentor-auth gaps và candidate legacy owner check. | Draft — Needs Confirmation |
+| 0.1 | 2026-10-24 | Codex | Tạo DD theo catalog và AC-22; ghi nhận response-tree/schema/Mentor-auth gaps và candidate legacy owner check. | Draft — Needs Confirmation |
+| 0.2 | 2026-10-25 | Codex | Đồng bộ DD với implementation API #49, `Content[]`, bảng legacy `contents`, error mapping và giới hạn live-schema; giữ các câu hỏi type/status/payload/version cần xác nhận. | Draft — Needs Confirmation |
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

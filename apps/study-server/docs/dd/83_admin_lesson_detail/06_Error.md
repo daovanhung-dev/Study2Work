@@ -11,7 +11,7 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Bảng giữ đúng error set của catalog #83. Nhánh malformed path được ghi là proposal vì catalog khai báo int64 nhưng không có 422 code.
+Bảng giữ đúng error set của catalog #83. Nhánh malformed path dùng local DERIVED mapping vì catalog khai báo int64 nhưng không có 422 code.
 
 ## Error cases
 
@@ -19,9 +19,9 @@ Bảng giữ đúng error set của catalog #83. Nhánh malformed path được 
 |---:|---|---|---|---|---:|---|---|---|---:|---|
 | 1 | Authentication | DIRECT requirement | Authorization | Bearer token thiếu/sai/hết hạn | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | Exact catalog mapping. |
 | 2 | Authorization | DIRECT role + AC permission | Admin role/lesson permission | Principal không có Admin role hoặc lesson-management permission | 403 | `DESIGN_ACCESS_DENIED` | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | Policy implementation SOURCE_REQUIRED. |
-| 3 | Resource lookup | DERIVED query branch | `lesson_id` | Không có row theo `lessons.id = :lesson_id` | 404 | `DESIGN_RESOURCE_NOT_FOUND` | N/A | [Step 3](./05_Data_Mapping.md#step-3-check-ket-qua) | N/A | Code/status DIRECT; legacy table candidate. |
-| 4 | Path validation | DERIVED proposal | `lesson_id` | Path không chuyển được thành int64 | 404 | `DESIGN_RESOURCE_NOT_FOUND` | N/A | [Step 1](./05_Data_Mapping.md#step-1-validate-data-input) | N/A | Cần custom mapping; framework mặc định có thể phát 422 generic. |
-| 5 | System error | SOURCE/schema candidate | Lesson lookup/mapping | Query/database failure hoặc required field không map được (ví dụ `course_id=NULL`) | 500 | `DESIGN_INTERNAL_ERROR` | N/A | [Step 3](./05_Data_Mapping.md#step-3-check-ket-qua) | N/A | Không lộ raw SQL/stack trace. |
+| 3 | Resource lookup | DERIVED query branch | `lesson_id` | Không có row theo `lessons.id = :lesson_id` | 404 | `DESIGN_RESOURCE_NOT_FOUND` | N/A | [Step 3](./05_Data_Mapping.md#step-3-check-ket-qua) | Yes | Code/status DIRECT; legacy table candidate; read transaction rolled back. |
+| 4 | Path validation | DERIVED, locally tested | `lesson_id` | Path không chuyển được thành int64 | 404 | `DESIGN_RESOURCE_NOT_FOUND` | N/A | [Step 1](./05_Data_Mapping.md#step-1-validate-data-input) | N/A | Shared `ADMIN` auth runs first; custom parser prevents framework 422. |
+| 5 | System error | SOURCE/schema candidate | Lesson lookup/mapping | Query/database failure hoặc required field không map được (ví dụ `course_id=NULL`) | 500 | `DESIGN_INTERNAL_ERROR` | N/A | [Step 3](./05_Data_Mapping.md#step-3-check-ket-qua) | Yes | Rollback read transaction; không lộ raw SQL/stack trace. |
 
 > Error message ID không có trong Study API contract; dùng `N/A`, không sao chép mã từ template Excel.
 
@@ -40,7 +40,7 @@ API guideline example:
 }
 ~~~
 
-`error_response(...)` hiện thay `data=None` bằng `{}`; `/api/v1/admin/lessons/{lesson_id}` chưa nằm trong `DESIGN_CONTRACT_PATHS`. Đây là future wiring gap; API #83 không có runtime response hiện hành.
+`error_response(...)` mặc định `data:null`, và route template `/api/v1/admin/lessons/{lesson_id}` đã nằm trong `DESIGN_CONTRACT_PATHS`. Focused HTTP tests xác nhận error envelope; live DB behavior chưa được kiểm tra.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

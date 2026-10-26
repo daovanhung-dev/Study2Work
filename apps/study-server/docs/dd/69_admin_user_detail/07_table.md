@@ -21,9 +21,9 @@ N/A — READ-ONLY API. API #69 không INSERT, UPDATE hoặc DELETE.
 | Full name | Legacy users | full_name | UserProfile.full_name | Candidate; API #4/#14 projection precedent. |
 | Email | Legacy users | email | UserProfile.email | PII; Admin-only. |
 | Role | Legacy users | role | UserProfile.role | VARCHAR candidate; enum members unspecified. |
-| Avatar | Legacy users | avatar_url | UserProfile.avatar_url | Nullable candidate; null/omit semantics open. |
-| Biography | No legacy users column | N/A | UserProfile.bio unresolved | Optional field; no source in current profile queries. |
-| Phone | Legacy users | phone | UserProfile.phone | Nullable PII candidate; null/omit semantics open. |
+| Avatar | Legacy users | avatar_url | UserProfile.avatar_url | Nullable; runtime giữ JSON null theo API #04 model. |
+| Biography | No legacy users column | N/A | Omitted | Optional contract field; không có source trong current profile queries/model. |
+| Phone | Legacy users | phone | UserProfile.phone | Nullable PII; runtime giữ JSON null theo API #04 model. |
 | Status | Legacy users | status | UserProfile.status | VARCHAR candidate; enum members/deletion policy unresolved. |
 | Created time | Legacy users | created_at | UserProfile.created_at | Timestamp candidate; live schema unknown. |
 | Updated time | Legacy users | updated_at | UserProfile.updated_at | Timestamp candidate; live schema unknown. |

@@ -14,6 +14,7 @@ status: "Draft — Needs Confirmation"
 | Phiên bản | Ngày | Người cập nhật | Nội dung |
 |---|---|---|---|
 | 0.1 | 2026-10-24 | Codex | Tạo DD từ API catalog #97, AC-37 và nguồn schema hiện có; giữ trạng thái Draft — Needs Confirmation. |
+| 0.2 | 2026-10-26 | Codex | Wire API #97; chọn Study-local `discussion_reports`, Discussion-grain queue, exact filters, page 1/20, title snippet và comments rỗng làm fallback `DERIVED`; thêm migration 014 và ghi giới hạn live schema/report-ingest. |
 
 ## Quy ước trạng thái
 

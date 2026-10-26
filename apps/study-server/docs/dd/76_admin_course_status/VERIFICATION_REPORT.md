@@ -1,43 +1,39 @@
 # Báo cáo kiểm chứng — API #76
 
 - DD status: Draft — Needs Confirmation.
-- Endpoint: PATCH /api/v1/admin/courses/{course_id}/status.
-- Runtime status: UNWIRED / NOT_FOUND — route, module, Admin guard và focused test không có trong Study source.
-- Direct contract: Bearer/Admin; path course_id:int64!; body chưa khai báo; ApiEnvelope&lt;Page&lt;Course&gt;&gt;; HTTP 200 DESIGN_RESOURCE_UPDATED; errors đúng 401/403/404/422/500 theo catalog.
-- Derived proposal: body {status}, target DRAFT/PUBLISHED/SUSPENDED, legacy courses.status update, updated_at, atomic audit/write transaction và response Page singleton.
-- Source gaps: physical audit mapping không tương thích/được chọn; Admin guard, live schema, transition/readiness/no-op and idempotency behavior unresolved.
-- Application tests: NOT_RUN — docs-only.
+- Endpoint: `PATCH /api/v1/admin/courses/{course_id}/status`.
+- Current source: route/module/middleware template allowlist and focused HTTP tests are present locally. This does not prove deployed API or live DB behavior.
+- Direct contract: Bearer/Admin actor; path `course_id:int64!`; response `ApiEnvelope<Page<Course>>`; HTTP 200 `DESIGN_RESOURCE_UPDATED`; errors exactly 401/403/404/422/500 with catalog codes. Direct request body is absent.
+- DERIVED runtime fallback: strict `{status}` body with DRAFT/PUBLISHED/SUSPENDED; shared ADMIN role; legacy BIGINT course/user mapping; `course_status_audit_logs`; direct target assignment; same-status no-op; atomic status+audit transaction; singleton Page.
+- Live/schema gaps: migration 010 is not verified as applied; dedicated course-management permission, transition/readiness/suspension access policy and audit retention/DB immutability remain unresolved.
 
 ## Kiểm tra
 
 | Check | Kết quả | Trạng thái |
 |---|---|---|
-| Worklog preflight | Selector chọn #48/#49/#50; cả ba đã đọc đầy đủ. | PASS |
-| Plan trước folder | Requirement, Request Usage, Query, Mutation, Response Source matrices có trong worklog trước authoring. | PASS |
-| Catalog/diagram | API #76 exact row, reusable schemas, AC-32 index và toàn bộ node/edge đã đối chiếu. | PASS — STATIC |
-| Current source/schema | Xác nhận chưa có route/module/test; đã đối chiếu Student-only guard, middleware allowlist và legacy/pilot schema split. | PASS — STATIC; endpoint vẫn UNWIRED |
-| Contract/error | Method/path/auth/path, response, success và đúng năm error code catalog. | PASS — STATIC |
-| Field/mutation coverage | Đủ Course/UserSummary/Page fields; status update và logical audit intent có mapping/gap riêng. | PASS_WITH_OPEN_QUESTIONS |
-| Template/package | Đủ đúng 11 file; front matter có mặt và appendix suffix 8/8 byte-match template đã đăng ký. | PASS — STATIC |
-| Markdown/JSON/links | 2 JSON examples parse; 32 bảng, 8 code fences, 26 local links và 10 anchors kiểm tra được; newline/whitespace sạch. | PASS — STATIC |
-| Cross-matrix consistency | Request/body, Q1/M1/M2/Q2, response và error branches đối chiếu; phần suy dẫn/source-required vẫn được gắn nhãn. | PASS_WITH_OPEN_QUESTIONS |
-| AC-32 macro-review | Đã rà #73–#77; giữ đúng ranh giới metadata/status+audit/soft-delete, các policy và schema gaps còn mở. | COMPLETED_WITH_OPEN_QUESTIONS |
-| Application tests | Not run; docs-only. | NOT_RUN |
-| Context validator | No context page/registry modified. | NOT_APPLICABLE |
+| Worklog preflight | Deno selector found 69 coding worklogs; selected #74, #75 and #34; all three read; shortage none. | PASS |
+| Plan-before-code | Classification, expected/current behavior, source trace, discrepancies and detailed plan written before application/schema/DD/context edits. | PASS |
+| Catalog/diagram/schema | AC-32 status→update+audit flow; exact #76 catalog codes; legacy BIGINT and V1-PILOT UUID conflict retained. | PASS — STATIC |
+| HTTP API #76 | 18 passed; status/audit parameters, no-op, ADMIN, validation, missing row, malformed lock projection, transaction rollback, response and OpenAPI covered with fake DB. | PASS — LOCAL TESTS |
+| Linked regression | #06/#08/#71/#73–#76: 134 passed. | PASS — LOCAL TESTS |
+| Full Study suite | 890 passed; one upstream Starlette/httpx TestClient deprecation warning. | PASS — LOCAL TESTS |
+| Ruff | `ruff check app tests`: all checks passed. | PASS — STATIC |
+| OpenAPI | 43 `/api/v1` path templates / 47 operations; API #76 exposes exact catalog responses and enum body schema. | PASS — LOCAL SOURCE |
+| Middleware | Strict body errors return `DESIGN_VALIDATION_ERROR` with `data:null`; exact `/admin/courses/{course_id}/status` template is registered. | PASS — LOCAL HTTP |
+| DDL/migration | `DB.sql` and migration 010 table columns/FKs match; both indexes match. | PASS — STATIC |
+| ERD | Draw.io XML parses; IDs are unique; both new audit relations point to existing Course/User and audit nodes. | PASS — STATIC |
+| DD package | 11 Markdown files; 8 sheet appendices retained; 2 JSON examples parse; 18 local file links resolve. | PASS — STATIC |
+| Context manifest | API #76 module, test and migration paths are registered and exist. | PASS — STATIC |
+| `git diff --check` | No whitespace errors. | PASS — STATIC |
+| Deno context validator | Fails on pre-existing missing DB Admin context/source roots and links outside Study scope; no Study #76 path/context errors reported. | BASELINE FAIL — OUT OF SCOPE |
 
 ## Giới hạn kết luận
 
-Static DD verification only shows consistency with current catalog, diagram, source artifacts and documented candidates. It does not prove the Admin endpoint, audit persistence, live schema or runtime behavior.
+HTTP tests use fake sessions and rows. They do not execute PostgreSQL SQL, prove migration 010 was applied, establish live database constraints/grants, or prove production deployment and authorization policy. The audit-table shape and request/status semantics remain DERIVED local fallbacks; owner approval is still needed. The DD intentionally remains Draft.
 
 ## Fingerprints
 
 | Fingerprint | Phạm vi | SHA-256 |
 |---|---|---|
 | Registered template pack | 8 template sheets; sorted filename + NUL + raw file bytes + NUL | `3dc7fd2242dd1ed1bd9faba50aadad913a31b97ebf1392d6144bb905c5208137` |
-| DD output payload | 8 sheets + `OPEN_QUESTIONS.md` + `PLAN_RESULT.md`; excludes this report; same hash algorithm | `9ffb9af4a6a06b41fb4ca58a73f7a0325e9ae35c7f026ec311c024fa4c8a2457` |
-## Kết quả macro-review AC-32 #73–#77
-
-- Ownership/side effects nhất quán: #73 list, #74 detail, #75 metadata-only, #76 status + audit intent, #77 soft-delete theo policy. #73–#76 giữ `Page<Course>` đúng catalog; #77 dùng `DeleteResult`.
-- Không đưa CourseStatus vào #75; không chuyển status/audit sang #77; không thực hiện hard-delete/cascade. Các body/mutation chưa có trong catalog tiếp tục được đánh dấu proposal.
-- Status visibility, deleted-target behavior, audit persistence, enrollment/content dependency policy, physical marker/timestamp, Admin guard, live schema, error envelope và dynamic path middleware vẫn cần quyết định.
-- Macro-review là static document review; không chứng minh runtime/live schema và không chạy application tests.
+| DD output payload | 8 sheets + `OPEN_QUESTIONS.md` + `PLAN_RESULT.md`; excludes this report; same hash algorithm | `4cbf949c4de75685c1584223ee752dee5831b7aed9161061c9a6e879d249f422` |

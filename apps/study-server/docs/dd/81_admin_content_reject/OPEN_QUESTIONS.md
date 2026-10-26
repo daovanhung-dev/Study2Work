@@ -1,51 +1,50 @@
 # Câu hỏi còn mở — API #81 Từ chối nội dung
 
 Trạng thái: Draft — Needs Confirmation
-Endpoint: PATCH /api/v1/admin/content/{content_id}/reject
+Endpoint: `PATCH /api/v1/admin/content/{content_id}/reject`
 
-## Q-81-01 — Lý do từ chối được lưu và hiển thị thế nào?
+## Q-81-01 — Reason được lưu/giữ bao lâu và ai có thể đọc?
 
-**Bằng chứng**
+**Bằng chứng và implementation local**
 
-- Catalog body có reason:string!.
-- AC-33 reject node yêu cầu UPDATE status = REJECTED + review reason.
-- Reusable Content response có tám field nhưng không có reason.
+- Catalog yêu cầu body `reason:string!`; AC-33 yêu cầu status `REJECTED` cùng review reason.
+- Legacy `contents` không có reason column. Runtime dùng một row trong `content_review_audit_logs`, row đó lưu `content_id`, actor, old/new status và request reason.
+- API #80 migration 011 tạo cột `reason TEXT NULL`; dùng làm #81 destination là DERIVED fallback. Response Content không trả reason.
 
-**Cần xác nhận**
+**Cần owner xác nhận** retention, quyền truy cập lịch sử, và nơi UI/API cần hiển thị reason.
 
-Physical relation/field, retention/history, whether the reason is only persisted internally or needs an API/UI response projection. Không thêm review_reason vào Content response nếu catalog chưa đổi.
+## Q-81-02 — Có validation policy ngoài string type không?
 
-## Q-81-02 — Có rule nào ngoài required string không?
+Runtime yêu cầu strict JSON string, từ chối field thừa và giữ nguyên chuỗi; empty string hiện được chấp nhận. Catalog không định nghĩa trim, max length, blank-only, reason code hay locale. Owner có thể chốt policy nếu cần.
 
-Catalog không khai báo max length, trim/normalization, blank-only behavior, format, reason codes hoặc locale. Cần chốt nếu muốn thêm rule. DD hiện chỉ coi missing body/field là request schema validation; không tự suy ra giới hạn.
+## Q-81-03 — API thao tác đúng revision nào?
 
-## Q-81-03 — API #81 thao tác lên revision nào và xử lý stale item ra sao?
+#79/#81 chỉ truyền `content_id`, trong khi #79 có ý định đọc version và #51 có thể thay current row. Runtime khóa active row lúc #81 chạy nhưng không thể chứng minh đó là revision Admin đã xem. Cần revision selector/optimistic-lock contract và stale error mapping.
 
-#79 đọc version nhưng #78/#79/#81 chỉ mang content_id. Cần revision selector, stale queue behavior, optimistic lock/concurrency policy và error mapping khi revision đổi sau detail.
+## Q-81-04 — Có cần audit event riêng ngoài reason-bearing row không?
 
-## Q-81-04 — Rejection có ghi audit decision riêng không?
+Runtime ghi đúng một `content_review_audit_logs` row để vừa lưu reason vừa ghi decision actor/old/new status. Không có một append thứ hai. Đây là DERIVED vì reject node không chỉ rõ audit riêng; xác nhận nếu audit policy yêu cầu event khác.
 
-#80 diagram ghi status update + audit; #81 diagram ghi status REJECTED + review reason, không nêu audit append. Cần xác nhận cả hai nhánh có cùng audit/history model hay reason update đã là audit record.
+## Q-81-05 — Legacy schema có phải persistence chuẩn và đã deploy chưa?
 
-## Q-81-05 — Content và reason dùng schema nào?
+Runtime dùng checked-in BIGINT `contents` cùng migration 011 audit candidate. V1-PILOT decisions dùng UUID và không map trực tiếp với int64 contract. Cần xác nhận schema live, migration, FK/grants và legacy/V1-PILOT ownership.
 
-Legacy Study DDL không có generic Content/review relation. V1-PILOT content_review_decisions có reason_codes/comment nhưng dùng UUID resource_version_id/reviewer; không phải mapping trực tiếp cho Content int64. Cần physical model, key, status owner và live migration.
+## Q-81-06 — Moderation permission và state policy là gì?
 
-## Q-81-06 — Admin principal, permission và state check xác định ra sao?
+Runtime dùng shared role `ADMIN` và yêu cầu current status `PENDING_REVIEW`; non-pending trả 422. Role mapping và state gate là local fallbacks; dedicated moderation permission, concealment policy và state-machine owner chưa có source.
 
-Catalog yêu cầu Admin; current Study helper chỉ hỗ trợ Student. Cần claim/guard/scope, check order, pending state enforcement và policy 403/404 khi target ngoài quyền hoặc không còn reviewable.
+## Q-81-07 — Revision, concurrency và transaction policy
 
-## Q-81-07 — Request validation, error envelope và middleware được wire thế nào?
+Runtime dùng `SELECT ... FOR UPDATE`, conditional pending update, reason-bearing insert và commit atomically; failures rollback. Đây là derived pattern từ AC-33 cùng #80/#76, không xử lý revision token/stale item. Cần xác nhận nếu contract cần optimistic concurrency hoặc khác biệt 404/422.
 
-Catalog có 422 DESIGN_VALIDATION_ERROR nhưng không nêu đầy đủ trigger. Middleware allowlist chưa có #81; expected error data:null khác helper default {}. Cần integration behavior khi endpoint được triển khai, không thêm code ngoài catalog.
+## Q-81-08 — REJECTED Content có thể publish/delete không?
 
-## Q-81-08 — Từ chối ảnh hưởng tới publish/delete lifecycle ra sao?
-
-AC-22 có publish API #52 và conditional delete #53; chưa chỉ rõ Content REJECTED có thể publish trực tiếp hay xóa thế nào. Cần state ownership và policy cùng với AC-33 approval result.
+AC-22 API #52 và #53 là lifecycle calls riêng; chưa định nghĩa cách rejected content tham gia publish hoặc delete, Mentor resubmission và queue/history visibility.
 
 ## Ranh giới proposal
 
-- Không thêm reason, reviewer, version hoặc audit field vào response.
-- Không thêm request fields ngoài content_id và reason.
-- Không chốt bảng/cột, version selector, state machine, transaction hoặc separate audit append.
-- Khi status thành REJECTED, item không còn khớp predicate PENDING_REVIEW của #78; persistence/current revision behavior vẫn cần schema/rule owner confirmation.
+- Giữ exact body/path/error/response catalog contract; không thêm field, status code hay response metadata.
+- Một decision row trong nullable reason candidate là physical mapping DERIVED; migration 011 chưa được xác nhận trên live DB.
+- Không thêm revision ID, version, author, reason response field, schema mới hoặc second audit write.
+- `PENDING_REVIEW` eligibility, empty-string acceptance, shared ADMIN permission and atomicity remain implementation choices while DD stays Draft.
+- Local HTTP tests use fake DB sessions and do not prove database deployment or actual authorization policy.

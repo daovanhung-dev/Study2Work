@@ -18,39 +18,39 @@ status: "Draft — Needs Confirmation"
 | Content-Type | application/json |
 | Success HTTP status | 200 |
 | Direct response type | ApiEnvelope<Quiz> theo catalog #87. |
-| List response proposal | ApiEnvelope<Page<Quiz>> để biểu diễn danh sách có query page; proposal chưa được duyệt và mâu thuẫn với direct schema. |
+| Local list response | ApiEnvelope<Page<Quiz>>; DERIVED runtime fallback for list intent and query `page`, not owner-approved and not the direct catalog schema. |
 
 ## Response fields — contract trực tiếp
 
 | No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|---|
-| 1 | HTTP status | HTTP status | N/A | integer | No | API catalog | N/A | 5.1/5.2 | 200, 401, 403 hoặc 500 theo catalog | N/A | Không thêm HTTP status. |
+| 1 | HTTP status | HTTP status | N/A | integer | No | API catalog/runtime validation | N/A | 5.1/5.2 | 200, 401, 403 hoặc 500 theo direct catalog; local invalid-query fallback also returns 422 | N/A | 422 is a DERIVED local discrepancy. |
 | 2 | success | Success flag | success | boolean | No | ApiEnvelope<T> | N/A | 5.1/5.2 | true khi thành công, false khi lỗi | Bắt buộc | Reusable envelope. |
 | 3 | businessCode | Business code | businessCode | string | No | API catalog | N/A | 5.1/5.2 | Exact code theo nhánh | Bắt buộc | Giữ code catalog. |
 | 4 | message | Message | message | string | No | Application | N/A | 5.1/5.2 | Thông điệp an toàn | Nội dung chưa chuẩn hóa | Không lộ thông tin nội bộ. |
-| 5 | data | Quiz | data | object (Quiz) | No | Legacy quizzes candidate | N/A | 4.1 | ApiEnvelope<Quiz> trực tiếp | Required theo contract | Mâu thuẫn list intent; không tự đổi type. |
+| 5 | data | Quiz | data | object (Quiz) | No | Legacy quizzes candidate | N/A | 4.1 | Direct catalog contract only | Required theo contract | Runtime instead returns Page<Quiz> as a DERIVED list fallback. |
 | 5.1 | data.id | Quiz ID | id | int64 | No | Legacy quizzes candidate | id | 4.1 | Candidate direct mapping | Bắt buộc theo Quiz | BIGSERIAL candidate; live schema chưa xác minh. |
 | 5.2 | data.course_id | Course ID | course_id | int64 | No | Legacy quizzes candidate | course_id | 4.1 | Candidate direct mapping | Required theo Quiz | Legacy DDL cho phép NULL; discrepancy. |
 | 5.3 | data.title | Quiz title | title | string | No | Legacy quizzes candidate | name | 4.1 | Alias name → title | Bắt buộc theo Quiz | Candidate logical/physical mapping. |
 | 5.4 | data.duration_minutes | Thời lượng | duration_minutes | int32 | Yes | Legacy quizzes candidate | time_limit_minutes | 4.1 | Alias time_limit_minutes → duration_minutes | Null hay omit chưa xác nhận | Optional trong Quiz; physical column nullable. |
 | 5.5 | data.passing_score | Điểm đạt | passing_score | decimal-string | No | Legacy quizzes candidate | passing_score | 4.1 | NUMERIC(5,2) → decimal-string candidate | Bắt buộc theo Quiz | Scale/rounding chưa được runtime xác nhận. |
-| 5.6 | data.questions[] | Danh sách câu hỏi | questions | QuizQuestion[] | No | Legacy quiz_questions candidate | N/A | 4.2 | Relation qua quiz_id | Required theo Quiz schema | Có bao gồm đầy đủ câu hỏi trong list chưa được AC-35 chốt. |
+| 5.6 | data.questions[] | Danh sách câu hỏi | questions | QuizQuestion[] | No | SOURCE_REQUIRED for full tree | N/A | 4.2 | Direct Quiz schema requires it; local list item returns `[]` | Required theo Quiz schema | Does not assert that source Quiz has no questions; nested data is not queried. |
 | 5.6.1 | data.questions[].id | Question ID | id | int64 | No | Legacy quiz_questions candidate | id | 4.2 | Candidate direct mapping | Bắt buộc theo QuizQuestion | BIGSERIAL candidate. |
 | 5.6.2 | data.questions[].text | Question text | text | string | No | Legacy quiz_questions candidate | question_text | 4.2 | Alias question_text → text | Bắt buộc theo QuizQuestion | Candidate mapping. |
-| 5.6.3 | data.questions[].type | Question type | type | QuestionType | No | SOURCE_REQUIRED | N/A | 4.2 | N/A | Required theo schema | Legacy quiz_questions không có type; pilot question_type thuộc UUID model khác. |
-| 5.6.4 | data.questions[].choices[] | Choice list | choices | QuizChoice[] | No | SOURCE_REQUIRED | N/A | 4.3 | N/A | Required theo QuizQuestion | Catalog không định nghĩa QuizChoice shape/fields/order. |
-| 6 | meta | Metadata | meta | object | No | ApiEnvelope<T> | N/A | 5.1/5.2 | Envelope metadata | Members chưa khai báo | PageMeta chỉ xuất hiện trong proposal Page. |
-| 7 | traceId | Trace ID | traceId | uuid | No | ApiEnvelope<T> | N/A | 5.1/5.2 | Trace từ request middleware | Bắt buộc theo schema | Future route chưa được xác minh. |
+| 5.6.3 | data.questions[].type | Question type | type | QuestionType | No | Not loaded by API #87 | question_type | 4.2 | Local schema candidate from API #88 migration 013 | Not present because list projection returns `questions=[]` | Values remain DERIVED. |
+| 5.6.4 | data.questions[].choices[] | Choice list | choices | QuizChoice[] | No | Not loaded by API #87 | N/A | 4.3 | Local #88 Admin shape is DERIVED | Not present because list projection uses `questions=[]` | Catalog fields remain undefined. |
+| 6 | meta | Metadata | meta | object | No | ApiEnvelope<T> | N/A | 5.1/5.2 | Envelope metadata | Members chưa khai báo | Current route returns empty meta unless helper adds data. |
+| 7 | traceId | Trace ID | traceId | uuid | No | ApiEnvelope<T> | N/A | 5.1/5.2 | Trace từ request middleware | Bắt buộc theo schema | Route is locally wired and tested. |
 
-## Response proposal — chỉ áp dụng nếu owner duyệt list contract
+## Local response — implemented DERIVED fallback
 
 | Path | Type | Proposed source/rule | Status |
 |---|---|---|---|
-| data.items[] | Quiz[] | Q1 page result; map Quiz fields phía trên | DERIVED; chưa phải direct catalog contract |
-| data.pagination.page | int32 | Query page; default 1 | DERIVED |
-| data.pagination.size | int32 | Internal fixed size 20; không nhận query size | DERIVED theo precedent API #07 |
-| data.pagination.total | int64 | Q1C count cùng filter | DERIVED; chưa có response count contract |
-| data.pagination.total_pages | int32 | ceil(total / size); 0 khi total=0 | DERIVED; cần xác nhận pagination convention |
+| data.items[] | Quiz[] | Q1 page result; metadata projection plus `questions=[]` | DERIVED; direct catalog returns one Quiz |
+| data.pagination.page | int32 | Query page; default 1 | DERIVED and implemented |
+| data.pagination.size | int32 | Fixed size 20; no request `size` parameter | DERIVED by #07/#78 precedent |
+| data.pagination.total | int64 | Q1C count with identical filters | DERIVED and implemented |
+| data.pagination.total_pages | int32 | ceil(total / 20); 0 when total=0 | DERIVED and implemented |
 
 ## Business code theo status
 
@@ -60,8 +60,9 @@ status: "Draft — Needs Confirmation"
 | 401 | DESIGN_AUTHENTICATION_REQUIRED | Authentication failure theo contract. |
 | 403 | DESIGN_ACCESS_DENIED | Role hoặc quiz-management access bị từ chối theo contract. |
 | 500 | DESIGN_INTERNAL_ERROR | Lỗi nội bộ theo contract. |
+| 422 | DESIGN_VALIDATION_ERROR | Local validation for malformed/out-of-range `course` or `page`; not listed in catalog. |
 
-## Ví dụ thành công — contract trực tiếp HTTP 200
+## Ví dụ thành công — direct catalog Quiz schema (not runtime cardinality)
 
 ~~~json
 {
@@ -81,22 +82,31 @@ status: "Draft — Needs Confirmation"
 }
 ~~~
 
-> Ví dụ chỉ minh họa Quiz đơn theo generic trực tiếp. questions rỗng không khẳng định quiz thực không có câu hỏi; catalog không định nghĩa QuizChoice và QuestionType.
+> Ví dụ này giữ direct catalog schema; route hiện trả Page. `questions: []` không khẳng định Quiz thực không có câu hỏi.
 
-## Ví dụ thành công — proposal list HTTP 200, chưa được duyệt
+## Ví dụ thành công — local Page<Quiz> runtime fallback
 
 ~~~json
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Quiz list (illustrative proposal).",
+  "message": "Quizzes retrieved.",
   "data": {
-    "items": [],
+    "items": [
+      {
+        "id": 501,
+        "course_id": 9001,
+        "title": "Quiz minh họa",
+        "duration_minutes": 30,
+        "passing_score": "70.00",
+        "questions": []
+      }
+    ],
     "pagination": {
       "page": 1,
       "size": 20,
-      "total": 0,
-      "total_pages": 0
+      "total": 1,
+      "total_pages": 1
     }
   },
   "meta": {},
@@ -104,7 +114,7 @@ status: "Draft — Needs Confirmation"
 }
 ~~~
 
-> Đây là proposal ApiEnvelope<Page<Quiz>>, không phải schema đang được catalog khai báo. Empty result 200 và metadata pagination cần được duyệt.
+> This is the implemented DERIVED fallback, not an owner-approved catalog change. `questions=[]` means nested question data is not loaded by this list route.
 
 ## Ví dụ lỗi — HTTP 500
 
@@ -119,7 +129,7 @@ status: "Draft — Needs Confirmation"
 }
 ~~~
 
-> API Guidelines yêu cầu error data=null. Current helper mặc định data={} nếu caller không truyền data; route #87 hiện chưa tồn tại.
+> Current `error_response` returns `data: null`; focused tests verify the safe envelope. Live SQL/schema behavior remains unverified.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

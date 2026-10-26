@@ -13,192 +13,119 @@ status: "Draft — Needs Confirmation"
 
 ~~~text
 Mentor Bearer JWT
--> parse optional course_id/status/page
--> check Mentor access to courses with submissions
--> read candidate assignment_submissions through assignments/course
--> apply supplied filters only
--> resolve UploadAsset[] (SOURCE_REQUIRED)
--> map one Submission per catalog response contract
--> return ApiEnvelope
--> UI selects one row and calls API #55
+-> validate role MENTOR and numeric subject
+-> if course_id supplied, check direct owner (courses.mentor_id)
+-> COUNT submissions in Mentor-owned courses with supplied filters
+-> SELECT one stable page (submitted_at DESC, id DESC; fixed size 20)
+-> resolve at most one UploadAsset by exact file_url + owner + purpose + course
+-> map each Submission and PageMeta
+-> return ApiEnvelope<Page<Submission>>
 ~~~
 
-API #54 chưa có runtime implementation. Các bảng và điều kiện bên dưới là design candidates, không phải SQL đã được xác nhận.
+Fallback pagination/cardinality and upload URL association are DERIVED; source artifacts and test DB do not establish live deployment.
 
 ## Request Usage Matrix
 
-| Request field | Source | Step | Validation | Query/response use | Gap |
+| Request field | Source | Step | Validation | Query/response use | Gap/status |
 |---|---|---:|---|---|---|
-| Authorization | Header | 0.1 | Bearer JWT; role Mentor theo catalog | Xác định principal và course scope | Mentor guard/identity SOURCE_REQUIRED |
-| course_id | Optional query | 1/2.1 | Optional int64; range chưa rõ | Filter candidate assignments.course_id | Không có default/range |
-| status | Optional query | 1/2.1 | Optional string; enum chưa rõ | Filter candidate assignment_submissions.status | Blank/case policy chưa rõ |
-| page | Optional query | 1/2.5 | Optional int32; range/default chưa rõ | Pagination chưa thể xác định | Không có page size hoặc response metadata |
-| Request body | None | N/A | N/A | N/A | Catalog không khai báo body |
+| Authorization | Header | 0.1 | Shared JWT guard; role MENTOR | Numeric subject scopes every row | DIRECT guard shape; assigned Mentor SOURCE_REQUIRED |
+| course_id | Optional query | 1/2 | Positive signed-int64 | Optional assignment course filter; direct-owner precheck | DERIVED direct owner; missing course returns empty page |
+| status | Optional query | 1/2 | Raw optional string | Exact `s.status = :status` filter | No enum or normalization rule |
+| page | Optional query | 1/4 | Positive int32 | OFFSET `(page-1)*20`; returned in pagination | Default 1 and size 20 are DERIVED from shared catalog convention |
+| Request body | None | N/A | N/A | N/A | Catalog does not declare body |
 
 ## 0. Check quyền
 
 ### 0.1. Thực hiện check quyền
 
-- Catalog yêu cầu Bearer JWT và role Mentor.
-- AC-23 yêu cầu Mentor có quyền chấm submission của course.
-- Current Study shared guard chỉ kiểm tra Student; không có Mentor guard cho API #54.
-- JWT subject-to-user mapping cho Mentor chưa được xác nhận trong route hiện tại.
+- Call `validate_current_user_request(..., role="MENTOR")` before reading submissions.
+- JWT `sub` is numeric user ID per current shared helper.
+- With `course_id`, query the course and compare `courses.mentor_id` to the authenticated ID; an existing owner mismatch returns 403.
+- Without `course_id`, every data query scopes through `courses.mentor_id = :mentor_id`.
+- Assigned-Mentor relationships are not represented and are not included.
 
 ### 0.2. Query/check quyền
 
-| Target table/API | Column/Field | Condition/Value | Remarks |
+| Target | Condition | Purpose | Status |
 |---|---|---|---|
-| courses (candidate) | mentor_id | mentor_id = authenticated Mentor ID | DERIVED direct-owner candidate; assigned-course relation chưa có nguồn. |
-| assignments (candidate) | course_id | assignments.course_id = courses.id | ERD relation; DDL permits NULL. |
-| assignment_submissions (candidate) | assignment_id | assignment_submissions.assignment_id = assignments.id | ERD relation; DDL permits NULL. |
+| `courses` | `id = :course_id` | Load an explicitly requested course | Direct source query pattern |
+| `courses` | `mentor_id = :mentor_id` | Restrict course access | Existing API #46/#49 pattern; DERIVED for #54 |
+| `assignments` | `a.course_id = c.id` | Find course scope from assignment | ERD relation; DDL allows NULL, inner join excludes it |
+| `assignment_submissions` | `s.assignment_id = a.id` | Find submissions | ERD relation; DDL allows NULL, inner join excludes it |
+| `users` | `student.id = s.user_id` | Require a valid Student FK for response | DDL FK candidate; null/orphan rows excluded |
 
-### 0.3. Check kết quả
+### 0.3. Check result
 
-- Nếu Bearer/JWT thiếu hoặc không hợp lệ: catalog 401; route guard chưa tồn tại.
-- Nếu actor không phải Mentor hoặc không có quyền course: catalog 403; exact assignment predicate SOURCE_REQUIRED.
-- Nếu course_id không được gửi: phạm vi tất cả courses Mentor được phép chấm là DERIVED; cần xác nhận ownership/assignment coverage.
-- Nếu không có quyền theo candidate: không trả Submission rows; chính sách mask/not-found chưa được định nghĩa.
+- Missing/invalid Bearer or claims: 401.
+- Non-Mentor role or existing course owned by another Mentor: 403.
+- Missing `course_id` target and no matching submissions: 200 with empty `items` and zero totals; API #54 catalog has no 404.
 
 ## 1. Validate data input
 
-- course_id: nhận optional int64; positivity/range/malformed behavior không được catalog nêu.
-- status: nhận optional string; không trim, lowercase hay validate enum khi chưa có rule.
-- page: nhận optional int32; default, minimum, maximum và page-size behavior không được nêu.
-- Catalog không có lỗi 422/404 cho API #54; không thêm error code.
-- Pydantic/FastAPI path behavior hiện tại không phải API #54 behavior vì route chưa được đăng ký.
+- `course_id`: optional positive int64; malformed, zero, negative or overflow query value maps through the shared request-validation handler to 422 `DESIGN_VALIDATION_ERROR`.
+- `status`: optional string matched exactly; no enum, casing, trimming or whitespace rule is added.
+- `page`: optional positive int32, default 1; size is not client configurable and uses shared `DEFAULT_SIZE=20`.
+- `page < 1` or values outside int32 map to 422 `DESIGN_VALIDATION_ERROR`; this is added to the catalog/diagram for the implemented query constraint.
 
 ## 2. Get thông tin
 
-### 2.1. Query
+### 2.1. Q0 — course owner precheck
 
-**Q1 — Candidate SELECT.** Logical base là assignment_submissions; quan hệ tới course đi qua assignments. courses.mentor_id chỉ là candidate access source.
+`FIND_MENTOR_COURSE` selects `id, mentor_id` by `course_id`. Existing course with another owner returns 403 before list data is read. Missing course continues to the count/list query and yields an empty page.
 
-| Target table | Column get | Chú thích | Remarks |
-|---|---|---|---|
-| assignment_submissions AS s | s.id | Submission ID | Candidate từ checked-in DDL. |
-| ↑ | s.assignment_id | Assignment ID | Nullable trong DDL, bắt buộc theo guide/ERD. |
-| ↑ | s.user_id | Student ID | Nullable trong DDL, bắt buộc theo guide/ERD. |
-| ↑ | s.content | Submission text | Nullable candidate. |
-| ↑ | s.file_url | Legacy single-file URL | Không đủ tạo UploadAsset[]. |
-| ↑ | s.submitted_at | Submission time | TIMESTAMP candidate; timezone policy mở. |
-| ↑ | s.score | Graded score | NUMERIC(6,2) candidate; format transform mở. |
-| ↑ | s.feedback | Grader feedback | Nullable candidate. |
-| ↑ | s.status | Submission status | VARCHAR(20) candidate; enum đầy đủ chưa có. |
-| assignments AS a | a.id | Assignment relation | Candidate join key. |
-| ↑ | a.course_id | Course scope | Optional course filter đi qua field này. |
-| courses AS c | c.id | Course relation | Candidate access context. |
-| ↑ | c.mentor_id | Direct course owner | DERIVED candidate; Mentor identity/assignment mapping chưa có. |
+### 2.2. Q1 — COUNT
 
-### 2.2. JOIN
+`COUNT_MENTOR_SUBMISSIONS` joins `assignment_submissions` → `assignments` → `courses` → `users`, scopes by `c.mentor_id`, and applies optional `course_id` and exact `status` filters. No upload join is used in the count.
 
-| Target table | Join condition | Join type |
-|---|---|---|
-| assignment_submissions AS s | N/A | BASE candidate |
-| assignments AS a | a.id = s.assignment_id | SOURCE_REQUIRED join behavior due nullable DDL |
-| courses AS c | c.id = a.course_id | SOURCE_REQUIRED join behavior due nullable DDL |
+### 2.3. Q2 — LIST
 
-ERD/table guide model the foreign keys as required; checked-in DDL allows NULL on s.assignment_id and a.course_id. This DD does not choose how orphan/null rows are handled.
+`LIST_MENTOR_SUBMISSIONS` uses the same base joins and predicates, orders by `s.submitted_at DESC, s.id DESC`, and binds `LIMIT 20` plus `OFFSET (page-1)*20`.
 
-### 2.3. WHERE
+### 2.4. Q3 — asset projection
 
-- Apply a.course_id = :course_id only if optional query course_id is supplied.
-- Apply s.status = :status only if optional query status is supplied.
-- Restrict every returned course to the authenticated Mentor's approved authorization scope; physical predicate SOURCE_REQUIRED.
-- c.mentor_id = :mentor_id is a DERIVED direct-owner candidate only.
-- No status default, allowed-value list, hidden/deleted filter or course lifecycle filter is defined.
+A lateral lookup matches `uploads.url = s.file_url`, `uploads.owner_id = s.user_id`, `uploads.purpose = 'SUBMISSION'` and `uploads.course_id = a.course_id`, ordered by upload ID and limited to one. This is a DERIVED association: `assignment_submissions.file_url` has no FK to `uploads` and API #35 file-ref encoding is unresolved. No match returns `files: []`; a partial projection is rejected as an internal mapping error.
 
-### 2.4. ORDER BY
+### 2.5. Query matrix
 
-- N/A — Catalog and AC-23 do not define a stable sort order.
-
-### 2.5. Pagination
-
-- page is declared optional.
-- No page size, default, minimum/maximum, offset rule or pagination metadata is declared.
-- Do not specify LIMIT/OFFSET or reuse another endpoint's page-size convention.
-- Whether a supplied page is ignored, rejected or applied under an external fixed size is SOURCE_REQUIRED.
-
-### Query Matrix
-
-| Query ID | Purpose | Type | Candidate base | Candidate joins | Filters | Order/pagination | Result |
-|---|---|---|---|---|---|---|---|
-| Q1 | Read submissions in Mentor scope | SELECT | assignment_submissions AS s | assignments AS a; courses AS c | Optional course_id/status plus approved Mentor scope | SOURCE_REQUIRED | Submission candidate rows |
-| Q2 | Count matching submissions | N/A | N/A | N/A | No count contract | N/A | Do not invent PageMeta |
+| Query ID | Purpose | Type | Tables | Conditions | Order/pagination | Result |
+|---|---|---|---|---|---|---|
+| Q0 | Explicit course owner check | SELECT | courses | `id = :course_id` | LIMIT 1 | 403 if owner differs |
+| Q1 | Count matching submissions | SELECT COUNT | assignment_submissions, assignments, courses, users | Mentor scope + optional course/status | None | `total` |
+| Q2 | Read current page | SELECT | assignment_submissions, assignments, courses, users, uploads | Same as Q1; asset match is constrained | stable order; size 20 | Submission rows with 0/1 asset |
 
 ## Mutation Matrix
 
-| Mutation ID | Operation | Target | Condition | Result |
-|---|---|---|---|---|
-| N/A | N/A | N/A | API is read-only | N/A — READ-ONLY API |
+| Operation | Result |
+|---|---|
+| INSERT/UPDATE/DELETE | N/A — READ-ONLY API |
 
 ## 3. Resolve response fields
 
-### 3.1. Candidate Submission mapping
-
-| Response field | Candidate source | Transform/null handling | Status |
-|---|---|---|---|
-| data.id | s.id | Direct candidate | Live schema unverified |
-| data.assignment_id | s.assignment_id | Direct candidate | DDL nullability conflict |
-| data.user_id | s.user_id | Direct candidate | DDL nullability conflict |
-| data.content | s.content | Preserve value; null/omit policy open | Nullable candidate |
-| data.status | s.status | Preserve candidate value | Enum/lifecycle open |
-| data.submitted_at | s.submitted_at | Serialize date-time | Zone/precision open |
-| data.score | s.score | NUMERIC(6,2) to decimal-string | Rounding/serialization open |
-| data.feedback | s.feedback | Preserve value | Null/disclosure policy open |
-| data.files[] | No approved source | Do not map one file_url into UploadAsset[] | SOURCE_REQUIRED |
-
-### Response Source Matrix
-
-| Response path | Candidate source | Transform | Gap |
-|---|---|---|---|
-| data.id | assignment_submissions.id | Direct candidate | Live schema unverified |
-| data.assignment_id | assignment_submissions.assignment_id | Direct candidate | DDL permits NULL |
-| data.user_id | assignment_submissions.user_id | Direct candidate | DDL permits NULL |
-| data.content | assignment_submissions.content | Preserve nullable value | Null/omit rule open |
-| data.files[] and nested UploadAsset fields | No approved source | No transform approved | SOURCE_REQUIRED |
-| data.status | assignment_submissions.status | Preserve candidate value | Enum/lifecycle open |
-| data.submitted_at | assignment_submissions.submitted_at | Serialize date-time | Zone/precision open |
-| data.score | assignment_submissions.score | NUMERIC to decimal-string | Serialization rule open |
-| data.feedback | assignment_submissions.feedback | Preserve nullable value | Disclosure/null rule open |
-| meta | Envelope convention | Empty object candidate | No page metadata |
-| traceId | Request trace context | UUID propagation | Route absent |
-
-### 3.2. Resolve files
-
-- API #35 records the candidate mismatch between files:UploadAsset[] and one file_url.
-- No approved asset table, association, ID, name, content type, size, status or URL policy was found.
-- Do not synthesize asset objects or assert files: [] for real results.
-- This blocks a complete response projection until the asset contract is supplied.
-
-### 3.3. List/cardinality branch
-
-- Catalog success schema is one Submission.
-- AC-23 says “Đọc submissions” and the endpoint name is plural.
-- Empty-result semantics and collection wrapper are not defined.
-- Preserve singular schema in this draft; do not infer array, Page, 404 or a synthetic empty Submission.
+- `id`, `assignment_id`, `user_id`, `content`, `status`, `submitted_at`, `score`, `feedback` come from `assignment_submissions`.
+- `score` is converted to decimal string using `str(DB value)`.
+- `files[]` comes only from the constrained API #34 upload match; one legacy `file_url` allows at most one asset.
+- `items` contains the current page. `pagination` uses requested/default page, fixed size 20, count query total and ceiling division; `total_pages=0` when total=0.
+- `meta` remains `{}`; page metadata is inside `data.pagination` per `Page<T>`.
 
 ## 4. Trả về response
 
 ### 4.1. Thành công
 
-- HTTPStatus = 200.
-- businessCode = DESIGN_RESOURCE_RETRIEVED.
-- Map data to exactly the catalog Submission type pending resolution of its list/cardinality mismatch.
-- Return shared ApiEnvelope fields success, message, meta and traceId.
-- Do not add items, count or pagination properties to meta.
+- HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<Page<Submission>>`.
+- Empty results return a valid empty page, never a synthetic Submission or 404.
 
 ### 4.2. Business error
 
-- 401 → DESIGN_AUTHENTICATION_REQUIRED.
-- 403 → DESIGN_ACCESS_DENIED.
-- 409 → DESIGN_STATE_CONFLICT; trigger SOURCE_REQUIRED because AC-23 has no conflict branch.
-- Keep error data behavior aligned after resolving the API Guidelines versus current helper discrepancy.
+- 401 `DESIGN_AUTHENTICATION_REQUIRED`.
+- 403 `DESIGN_ACCESS_DENIED`.
+- 409 `DESIGN_STATE_CONFLICT` remains listed but has no source-defined or implemented trigger.
+- 422 `DESIGN_VALIDATION_ERROR` for invalid query types/ranges.
 
 ### 4.3. System error
 
-- 500 → DESIGN_INTERNAL_ERROR.
-- Do not expose raw database errors, SQL, token values or stack traces.
-- No rollback applies; API is read-only.
+- 500 `DESIGN_INTERNAL_ERROR` for SQL or response projection failure.
+- Roll back a failed read transaction; never commit.
+- Error envelope uses `data: null` through current `error_response()`.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

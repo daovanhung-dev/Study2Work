@@ -1,27 +1,23 @@
 # Câu hỏi còn mở — API #77
 
-Trạng thái tài liệu: `Draft — Needs Confirmation`. Catalog và AC-32 xác nhận intent soft-delete có điều kiện, nhưng policy, schema và runtime chưa chốt.
+Trạng thái tài liệu: `Draft — Needs Confirmation`. API đã được wire theo fallback `DERIVED`; policy owner, live schema và linked lifecycle behavior vẫn chưa được xác nhận.
 
-1. **Dependency policy:** Enrollment/content nào ngăn xóa? Có tính cả inactive/completed records, bản nháp, dữ liệu lịch sử hoặc bản ghi đã archive không? Catalog nêu cần kiểm tra enrollment/content nhưng không định nghĩa predicate.
-2. **Content relation:** Content được quản lý qua `lessons`, hay còn resource/quiz/assignment/discussion/payment và bảng khác? Legacy FK là candidate, không chứng minh đây là tập dependency đầy đủ.
-3. **Blocked behavior:** Khi policy chặn, có dùng HTTP 422 `DESIGN_VALIDATION_ERROR` theo catalog không? Message/fieldErrors nào được trả? Không thêm business code hoặc field `reason` chưa có contract.
-4. **Soft-delete persistence:** Schema được duyệt có marker, timestamp và semantics nào? Legacy `courses` không có deletion marker; V1-PILOT `archived_at` là archive trên UUID model và không tự động tương đương `deleted_at`.
-5. **`DeleteResult.deleted_at`:** Timestamp lấy từ DB hay application clock, timezone/precision nào? Reusable response yêu cầu field này nhưng physical source chưa có.
-6. **Schema/live DB:** Chọn legacy BIGINT course hay V1-PILOT UUID/versioned model? Live schema, migration, grants và FK metadata chưa xác minh.
-7. **Admin authorization:** JWT claim/guard nào xác nhận Admin có quyền quản lý course? Actor/scope/tenant boundary lấy từ đâu? AC-32 là yêu cầu, current Study helper chỉ có Student guard.
-8. **Repeated DELETE/idempotency:** Xóa lại trả 200 cùng result hay 404/422? Có cần `Idempotency-Key` cho retry và semantics replay/TTL nào? Catalog không quy định.
-9. **Concurrency/transaction:** Dependency check và soft-delete mutation cần một transaction/locking strategy nào để tránh enrollment/content phát sinh giữa hai bước? Atomicity là proposal `DERIVED`.
-10. **Visibility và mutation boundary:** Sau delete, #73 list và #74 detail có ẩn course không? #75 metadata và #76 status phải xử lý target đã soft-deleted thế nào? Marker/filter chưa được chọn.
-11. **Audit boundary:** AC-32 ghi audit log cho nhánh #76 status; nhánh #77 chỉ nói soft-delete theo policy. Có yêu cầu audit riêng cho #77 không? Không sao chép side effect audit của #76 khi chưa có nguồn.
-12. **Error integration:** Khi wire dynamic `/api/v1/admin/courses/{course_id}`, middleware exact-path allowlist và error `data:null` được đồng bộ ra sao? Hiện allowlist không có Admin course path và helper trả `{}` khi data bị bỏ trống.
+1. **Dependency policy:** Runtime blocks any enrollment row, active generic Content row, lesson, quiz or assignment. Is this complete, and should completed/inactive records also block? Current set is DERIVED.
+2. **Content coverage:** Legacy DDL/API sources also include other course-linked relations; owner should confirm whether the selected learning-content set is sufficient. No child rows are mutated.
+3. **Soft-delete representation:** Runtime uses `courses.status='DELETED'` and maps DB-returned `updated_at` to `DeleteResult.deleted_at`, following API #72. Confirm this marker/timestamp mapping for the target environment.
+4. **Schema/live DB:** Runtime targets the checked-in legacy BIGINT candidate. Live schema, migration state, grants and FK metadata are not verified; V1-PILOT UUID/`archived_at` remains separate.
+5. **Admin authorization:** Shared JWT role `ADMIN` is enforced; does deployment require a separate course-management permission or scope check?
+6. **Visibility/restore:** #73/#74 can expose the `DELETED` status; #75 can still update metadata and #76 can replace the status. Confirm whether deleted courses should remain visible or become immutable, and whether #76 is an allowed restore path.
+7. **Other course writers:** Mentor APIs #47/#50 and other course-linked operations were not changed in this one-API task. Confirm their behavior when course status is `DELETED`.
+8. **Repeated DELETE:** Runtime returns 404 for a missing/already-`DELETED` course. Confirm whether retries should instead be idempotent.
+9. **Audit boundary:** #77 does not write the #76 audit relation because AC-32 assigns audit to status updates only. Confirm if delete auditing is separately required.
 
 ## Ranh giới proposal
 
-- Nếu policy được duyệt xác định dependency blocker, trả catalog 422 là proposal `DERIVED`; blocker set và exact response vẫn cần owner duyệt.
-- Khi không bị chặn, AC-32 yêu cầu logical soft-delete. Không chọn hard delete, cascade, child mutation hoặc physical column.
-- `DeleteResult.status="deleted"` và ba field của schema là contract trực tiếp; mapping timestamp và mutation source hiện `SOURCE_REQUIRED`.
-- Không thêm audit, idempotency behavior, error code, response field hoặc visibility rule bằng suy đoán.
+- Runtime uses the selected 422 blocker fallback and `status='DELETED'`; both remain `DERIVED` and require owner confirmation.
+- `DeleteResult.status="deleted"` and its three fields are direct contract; `deleted_at <- updated_at` is DERIVED.
+- No hard delete, cascade, child mutation, audit, Idempotency-Key, new business code or response field is added.
 
 ## Rà nhóm AC-32 #73–#77
 
-Đã rà ở mức tài liệu sau khi #77 được tạo. Nhóm giữ ranh giới: #73 list, #74 detail, #75 metadata-only update, #76 status + diagram audit, #77 soft-delete theo policy. Các điểm chưa thống nhất thành implementation contract vẫn là category relation, counters, response wrapper của #74–#76, Admin guard, status enum/casing và soft-delete visibility/persistence. Chi tiết ở `VERIFICATION_REPORT.md`.
+Đã rà runtime/DD boundary: #73 list, #74 detail, #75 metadata-only update, #76 status + audit, #77 soft-delete. #73/#74 hiện có thể hiển thị `DELETED`; #76 có thể thay trạng thái marker. Category/counter/response wrapper và permission riêng là gaps khác trong AC-32; không đổi chúng trong API #77 task. Chi tiết ở `VERIFICATION_REPORT.md`.

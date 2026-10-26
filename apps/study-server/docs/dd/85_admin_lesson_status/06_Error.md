@@ -13,23 +13,23 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Giữ nguyên error set và mã từ catalog #85. Conditions cụ thể của request body, Admin policy và audit persistence chưa được phê duyệt.
+Giữ nguyên error set/catalog code của API #85. Body/status enum, legacy audit table và atomicity là fallback DERIVED; live schema và fine-grained lesson-management permission chưa xác minh.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Credential thiếu, sai hoặc hết hạn | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | DIRECT business code; Study không có message ID riêng. |
-| 2 | Authorization | Admin role/permission | Principal | Không có Admin role hoặc lesson-management permission | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | DIRECT requirement; policy implementation SOURCE_REQUIRED. |
-| 3 | Not found | UPDATE RETURNING | lesson_id | Không có row lesson khớp ID | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | [Step 4](./05_Data_Mapping.md#step-4-check-ket-qua-va-map-response) | Rollback nếu transaction bắt đầu | No-row → 404 là candidate branch. |
-| 4 | Validation | Request validation | Path/body candidate | Path parse hoặc target status không hợp lệ theo rule được duyệt | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) / [Step 2](./05_Data_Mapping.md#step-2-check-status-proposal) | N/A trước mutation | Status/code DIRECT; exact fields/enum/conditions SOURCE_REQUIRED. |
-| 5 | System error | DB/update/audit/response mapping | N/A | Database, audit, mapping hoặc commit failure không xử lý được | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 3](./05_Data_Mapping.md#step-3-update-audit) / [Step 4](./05_Data_Mapping.md#step-4-check-ket-qua-va-map-response) | Rollback theo transaction owner | DIRECT business code; audit storage SOURCE_REQUIRED. |
+| 1 | Authentication | Bearer/JWT | Authorization | Credential thiếu, sai hoặc hết hạn | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | Shared ADMIN auth. |
+| 2 | Authorization | Role check | Principal | Không có role ADMIN | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | AC-34 fine-grained lesson permission remains unsupported. |
+| 3 | Not found | SELECT FOR UPDATE | lesson_id | Không có row lesson khớp ID | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | [Step 3](./05_Data_Mapping.md#step-3-update-audit) | Rollback read transaction | Soft-delete visibility remains linked to #86. |
+| 4 | Validation | FastAPI/Pydantic and path parser | Path/body | Invalid int64, missing/extra/wrong field, or status outside DERIVED enum | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) / [Step 2](./05_Data_Mapping.md#step-2-check-status-proposal) | Before mutation | Catalog status/code; exact conditions follow local DERIVED model. |
+| 5 | System error | DB/lock/update/audit/mapping/commit | N/A | Query, audit insert, response mapping or commit fails | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 3](./05_Data_Mapping.md#step-3-update-audit) / [Step 4](./05_Data_Mapping.md#step-4-check-ket-qua-va-map-response) | Roll back transaction | Audit update and status change share one Session transaction. |
 
 ## Error envelope
 
-- API guidelines quy định top-level data:null; field-level details nằm trong meta.fieldErrors.
-- Current error_response(...) biến absent data thành {}; đây là discrepancy.
-- API #85 route/view chưa tồn tại nên endpoint error behavior chưa được kiểm chứng.
+- Current `error_response(...)` returns top-level `data: null`; field details use `meta.fieldErrors`.
+- Focused HTTP tests verify 401/403/404/422/500 envelopes and safe messages.
+- Local fake DB tests do not verify live database behavior or migration deployment.
 - Không thêm business code hoặc HTTP status ngoài tập catalog #85.
 
 ## Error response example — 404
@@ -38,13 +38,12 @@ Giữ nguyên error set và mã từ catalog #85. Conditions cụ thể của re
 {
   "success": false,
   "businessCode": "DESIGN_RESOURCE_NOT_FOUND",
-  "message": "Không tìm thấy lesson.",
+  "message": "Lesson not found.",
   "data": null,
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000085"
 }
 ```
-
 ---
 
 ## Phụ lục đối chiếu nguồn Excel

@@ -16,28 +16,27 @@ status: "Draft — Needs Confirmation"
 | Format | JSON |
 | Character encoding | UTF-8 |
 | Content-Type | application/json |
-| HTTP status thành công | 200 DESIGN_RESOURCE_DELETED |
-| Direct contract type | ApiEnvelope<DeleteResult> theo catalog. |
-| Runtime status | API #72 chưa có route/view; ví dụ chỉ minh họa contract. |
+| Success HTTP status | 200 `DESIGN_RESOURCE_DELETED` |
+| Direct contract type | `ApiEnvelope<DeleteResult>` theo catalog. |
+| Runtime status | Route/module/tests wired; soft-delete marker và timestamp source là DERIVED. |
 
-## Contract trực tiếp từ catalog
+## Response fields
 
 | No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
-|---:|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | HTTPStatus | HTTP Status | HTTPStatus | integer | No | N/A | N/A | 5.1/5.2/5.3/5.4 | 200 hoặc catalog error status | N/A | Protocol status, không phải JSON property. |
-| 2 | success | Success flag | success | boolean | No | N/A | N/A | Envelope | true khi thành công; false khi lỗi | N/A | ApiEnvelope field. |
-| 3 | businessCode | Business code | businessCode | string | No | N/A | N/A | Envelope | Chính xác code theo catalog | N/A | Không tạo code mới. |
-| 4 | message | Message | message | string | No | N/A | N/A | Envelope | Thông điệp an toàn theo branch | Chưa đặc tả | Exact text chưa được catalog định nghĩa. |
-| 5 | data | Delete result | data | object | No | Chưa xác định | Chưa xác định | 5.1 | DeleteResult | Bắt buộc khi success theo response schema | Physical mapping unresolved. |
-| 5.1 | data.id | User ID | id | int64 | No | User target chưa xác định | N/A | 5.1 | ID của user được xử lý thành công | Bắt buộc | Type DIRECT; candidate lấy từ user row/path cần xác nhận policy. |
-| 5.2 | data.status | Delete status | status | literal string "deleted" | No | N/A | N/A | 5.1 | Hằng literal theo reusable schema | Bắt buộc | DIRECT; exact lowercase string. |
-| 5.3 | data.deleted_at | Deletion time | deleted_at | date-time | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 5.1 | Từ timestamp được policy/schema phê duyệt | Bắt buộc | Contract DIRECT; legacy users không có source column. |
-| 6 | meta | Metadata | meta | object | No | N/A | N/A | Envelope | {} candidate khi không có metadata | {} | No pagination contract. |
-| 7 | traceId | Trace ID | traceId | uuid | No | N/A | Middleware | Envelope | UUID được validate/tạo theo middleware | Bắt buộc theo envelope | Endpoint chưa wired. |
+|---:|---|---|---|---|---:|---|---|---|---|---|---|
+| 1 | HTTPStatus | HTTP Status | HTTPStatus | integer | No | N/A | N/A | 6.1 | 200 success; error status theo catalog | N/A | Protocol status. |
+| 2 | success | Success flag | success | boolean | No | N/A | N/A | 6.1 | true success, false error | N/A | ApiEnvelope. |
+| 3 | businessCode | Business code | businessCode | string | No | Catalog | N/A | 6.1 | Exact `DESIGN_*` code | N/A | Không tạo code mới. |
+| 4 | message | Message | message | string | No | N/A | N/A | 6.1 | Safe branch message | N/A | Exact text không được catalog định nghĩa. |
+| 5 | data.id | User ID | id | int64 | No | Legacy `users` candidate | id | 4.1 | Direct returned ID | Required | BIGINT candidate; live schema chưa xác minh. |
+| 6 | data.status | Delete status | status | literal string | No | Catalog | N/A | 5.1 | Constant `deleted` | Required | Direct `DeleteResult` field. |
+| 7 | data.deleted_at | Deletion event time | deleted_at | date-time | No | Legacy `users` candidate | updated_at | 4.1 | `UPDATE RETURNING updated_at AS deleted_at` | Required | DERIVED response alias; không lưu riêng. |
+| 8 | meta | Metadata | meta | object | No | N/A | N/A | 6.1 | `{}` | Empty object | Không có pagination. |
+| 9 | traceId | Trace ID | traceId | uuid | No | Middleware | Request trace ID | 6.1 | Propagate | Required | Cùng giá trị với `X-Trace-Id`. |
 
-## Ví dụ success theo contract
+`password_hash`, token fields, email, phone và profile không được select hoặc trả.
 
-Ví dụ minh họa shape DeleteResult; timestamp không khẳng định physical source hay runtime response.
+## Ví dụ thành công
 
 ~~~json
 {
@@ -47,29 +46,27 @@ Ví dụ minh họa shape DeleteResult; timestamp không khẳng định physica
   "data": {
     "id": 1001,
     "status": "deleted",
-    "deleted_at": "2026-10-24T10:00:00Z"
+    "deleted_at": "2026-10-25T10:30:00"
   },
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000001"
 }
 ~~~
 
-## Ví dụ lỗi theo guideline
-
-Guideline Study yêu cầu data null cho error envelope. Current error_response helper mặc định data thành {}; API #72 chưa wired nên chưa có endpoint runtime để xác nhận.
+## Ví dụ lỗi
 
 ~~~json
 {
   "success": false,
-  "businessCode": "DESIGN_ACCESS_DENIED",
-  "message": "Access denied.",
+  "businessCode": "DESIGN_RESOURCE_NOT_FOUND",
+  "message": "User not found.",
   "data": null,
   "meta": {},
-  "traceId": "00000000-0000-0000-0000-000000000002"
+  "traceId": "00000000-0000-0000-0000-000000000001"
 }
 ~~~
 
-Không trả full UserProfile, email, phone, password_hash, token hoặc token hash trong DeleteResult.
+`error_response(...)` trả `data: null`; validation error có thể thêm `meta.fieldErrors`.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

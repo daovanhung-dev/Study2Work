@@ -13,22 +13,23 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Bảng lỗi giữ đúng API catalog #48: chỉ 401, 403, 404 và 500 với business code tương ứng. Điều kiện Mentor/course access và integrity behavior là candidate DERIVED; API #48 chưa có handler runtime. Không thêm 422, 409 hoặc 503.
+Bảng lỗi giữ đúng API catalog #48: chỉ 401, 403, 404 và 500 với business code tương ứng. Local runtime uses the shared Mentor guard, direct-owner check and integrity checks. Malformed/out-of-range IDs map to the existing 404 as an implementation decision. Không thêm 422, 409 hoặc 503.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Thiếu, sai định dạng hoặc token không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | 0.1 | N/A | Catalog direct; Mentor guard chưa có trong current source. |
+| 1 | Authentication | Bearer/JWT | Authorization | Thiếu, sai định dạng hoặc token không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | 0.1 | N/A | Catalog direct; shared Mentor guard runs before DB access. |
 | 2 | Authorization | Role | role | Principal không có role Mentor | 403 | DESIGN_ACCESS_DENIED | N/A | 0.3 | N/A | Catalog direct. |
-| 3 | Authorization | Course access | lecture_id/course owner | Lecture tồn tại nhưng principal không được phép quản lý course theo candidate access rule | 403 | DESIGN_ACCESS_DENIED | N/A | 0.3 | N/A | Direct-owner check DERIVED; assigned-course relation và identity mapping SOURCE_REQUIRED. |
-| 4 | Not found | Lecture lookup | lecture_id | Không có lesson/lecture theo path ID | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | 2.1 | N/A | Catalog direct; legacy lookup candidate. |
-| 5 | System/integrity | Parent course and required fields | lessons.course_id | Lecture row tồn tại nhưng course_id NULL hoặc parent course không tồn tại | 500 | DESIGN_INTERNAL_ERROR | N/A | 2.1/4.2 | N/A | DERIVED; Lecture yêu cầu course_id và cần owner scope. |
-| 6 | System error | Database/read mapping | Q1 | Truy vấn hoặc ánh xạ thất bại | 500 | DESIGN_INTERNAL_ERROR | N/A | 4.2 | N/A | Catalog direct; không lộ chi tiết nội bộ. |
+| 3 | Authorization | Course access | lecture_id/course owner | Lecture exists but `courses.mentor_id` differs from authenticated principal | 403 | DESIGN_ACCESS_DENIED | N/A | 0.3 | Read transaction rolled back | Direct-owner matches #46/#47; assigned-course relation remains unsupported. |
+| 4 | Not found | Lecture lookup/path parse | lecture_id | No lesson exists, ID is malformed, or value is outside signed int64 | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | 1/2.1 | Read transaction rolled back only for DB lookup | Malformed ID mapping is an implementation decision; catalog has no 422. |
+| 5 | System/integrity | Parent course and required fields | lessons.course_id | Lecture row exists but course_id is NULL or parent course is missing | 500 | DESIGN_INTERNAL_ERROR | N/A | 2.1/4.2 | Read transaction rolled back | Lecture requires course_id for response and owner scope. |
+| 6 | System/integrity | Upload link resolution | lesson_uploads.upload_id | Linked uploads metadata is missing or outside owner/purpose/course scope | 500 | DESIGN_INTERNAL_ERROR | N/A | Q2/4.2 | Read transaction rolled back | Do not expose metadata that fails scope. |
+| 7 | System error | Database/read mapping | Q1/Q2 | Query or response mapping fails | 500 | DESIGN_INTERNAL_ERROR | N/A | 4.2 | Read transaction rolled back | Catalog direct; no internal details. |
 
-> API Guidelines yêu cầu error envelope có data:null. Current app/core/responses.py dùng data={} khi caller không truyền data; API #48 chưa có runtime để xác định hiện trạng endpoint.
+> `error_response()` defaults to `data: null`, and API #48 uses this helper.
 >
-> Path sai định dạng/vượt int64 chưa có mapping lỗi được catalog xác nhận. Không thêm 422 vì catalog #48 không khai báo mã đó.
+> Runtime maps malformed/out-of-range `lecture_id` to 404 to preserve the catalog error set. This mapping still needs contract-owner confirmation; no 422 was added.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

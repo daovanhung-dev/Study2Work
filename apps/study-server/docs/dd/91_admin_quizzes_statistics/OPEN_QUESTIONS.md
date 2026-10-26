@@ -48,9 +48,11 @@ Các metric và lifecycle proposal là `DERIVED`, chưa được owner phê duy�
 
 ## Q-91-06 — Admin authorization/error wiring
 
-**Evidence:** AC-35 yêu cầu Admin + quiz-management permission; Study source hiện không có Admin guard và path trong DESIGN_CONTRACT_PATHS.
+**Evidence:** Runtime #91 uses the shared ADMIN role guard. AC-35 fine-grained quiz-management policy has no source. The shared detail path and exact `/statistics` route template are now registered.
 
-**Cần xác nhận:** Claim/policy Admin nào được dùng? Middleware nào giữ đúng 401/403/404/500 catalog codes khi route được wire?
+**Current behavior:** Shared ADMIN guard runs before path parsing/DB access; #91 uses the registered DESIGN_CONTRACT path for standard error handling.
+
+**Cần xác nhận:** Claim/policy Admin nào được dùng để thực thi fine-grained permission quiz-management?
 
 ## Q-91-07 — Direct Quiz nested projection
 

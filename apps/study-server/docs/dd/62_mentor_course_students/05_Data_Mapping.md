@@ -11,163 +11,192 @@ status: "Draft — Needs Confirmation"
 
 ## Flow xử lý data
 
-1. Xác thực Bearer và role Mentor.
-2. Parse `course_id:int64`; không tự thêm positivity rule.
-3. Đọc course trong authorization scope; direct-owner legacy predicate chỉ là candidate.
-4. Sau khi scope được kiểm tra, đọc active enrollments; không dispatch notification.
-5. Đối chiếu response: `Page<Course>` không khớp roster; không tạo mapping giả.
-6. Trả đúng catalog error codes; framework path parsing và middleware chưa được API #62 xác nhận.
+1. Nhận Bearer token, `course_id` path và trace ID.
+2. Xác thực token và role `MENTOR`; nhận numeric user ID từ JWT subject.
+3. Parse raw `course_id` theo signed int64; sai định dạng/tràn int64 trả catalog 404.
+4. Đọc course theo ID; không tồn tại trả 404, owner khác trả 403.
+5. Đọc distinct Student có enrollment `ACTIVE`, giữ scope trực tiếp `courses.mentor_id` trong SQL.
+6. Map tối thiểu thành `UserSummary[]`; roster rỗng trả 200 `[]`.
+7. Không ghi DB hoặc gọi dịch vụ gửi thông báo; #63 sở hữu notification dispatch.
 
 ### Mục lục
 
-- [0. Check quyền](#step-0-check-quyen)
-- [1. Nhận request](#step-1-nhan-request)
-- [2. Course lookup/scope](#step-2-course-lookup-scope)
-- [3. Enrollment roster](#step-3-enrollment-roster)
-- [4. Response/pagination](#step-4-response-pagination)
-- [5. Return/error](#step-5-return-error)
+- [0. Auth và nhận request](#step-0-auth-va-nhan-request)
+- [1. Parse course ID](#step-1-parse-course-id)
+- [2. Check course scope](#step-2-check-course-scope)
+- [3. Đọc active Student roster](#step-3-doc-active-student-roster)
+- [4. Map response](#step-4-map-response)
+- [5. Return/error](#step-5-returnerror)
+- [Ma trận request/query/response](#ma-tran-requestqueryresponse)
 
-<a id="step-0-check-quyen"></a>
+<a id="step-0-auth-va-nhan-request"></a>
 
-## 0. Check quyền
+## 0. Auth và nhận request
 
-### 0.1. Actor
+### 0.1. Authorization
 
-- Bearer JWT và role `MENTOR` là yêu cầu DIRECT từ catalog.
-- Helper Study hiện chỉ hỗ trợ Student; không khẳng định helper này phân quyền được cho Mentor.
-- Claim Mentor và ánh xạ identity numeric/UUID là SOURCE_REQUIRED.
+- Đọc `Authorization` từ request header.
+- Gọi `validate_current_user_request(..., role="MENTOR")` trước database access.
+- Guard dùng Study JWT decoder, kiểm tra Bearer/JWT, `sub` numeric dương và `roles` chứa `MENTOR`.
+- Lỗi auth trả 401 `DESIGN_AUTHENTICATION_REQUIRED`.
+- Principal không có role Mentor trả 403 `DESIGN_ACCESS_DENIED`.
 
-### 0.2. Course scope
+### 0.2. Trace
 
-- AC-25 yêu cầu Mentor có quyền gửi thông báo tới learner trong course.
-- Legacy `courses.mentor_id = authenticated Mentor ID` chỉ là candidate direct-owner; relation legacy đã kiểm tra không biểu diễn course được phân công.
-- Không trả roster trước khi kiểm tra scope; thứ tự 403/404 cần quyết định về quyền riêng tư.
+- Dùng trace ID từ middleware qua `get_trace_id(request)`.
+- Envelope và response header dùng cùng trace ID.
 
-| Target table/API | Column/Field | Condition/Value | Remarks |
+<a id="step-1-parse-course-id"></a>
+
+## 1. Parse course ID
+
+- Nhận `course_id` dưới dạng raw path string để giữ catalog error set.
+- Chấp nhận signed decimal integer trong range `[-2^63, 2^63-1]`.
+- Không thêm điều kiện `course_id > 0` ngoài contract.
+- Nếu path không phải số nguyên hoặc vượt signed-int64, trả 404 `DESIGN_RESOURCE_NOT_FOUND` trước DB access.
+
+<a id="step-2-check-course-scope"></a>
+
+## 2. Check course scope
+
+### 2.1. Q1 — kiểm tra course
+
+| Target table | Column get | Chú thích | Remarks |
 |---|---|---|---|
-| JWT principal | `roles` | Phải có `MENTOR` | Role DIRECT; chưa có guard. |
-| Legacy `courses` | `mentor_id` | Candidate bằng Mentor ID đã xác thực | Chỉ DERIVED; claim/key chưa rõ. |
-| Course assignment | N/A | Chưa có relation được duyệt | SOURCE_REQUIRED. |
+| `courses AS c` | `c.id` | So khớp path ID | Legacy BIGSERIAL/BIGINT; live schema chưa xác minh. |
+| `courses AS c` | `c.mentor_id` | Direct owner của course | So với numeric JWT subject. |
 
-<a id="step-1-nhan-request"></a>
+**WHERE**
 
-## 1. Nhận request
+- `c.id = :course_id`.
 
-| Field | Source | Use | Rule/status |
+**LIMIT**
+
+- `1` row.
+
+### 2.2. Branch theo Q1
+
+- Không có row: rollback read transaction và trả 404 `DESIGN_RESOURCE_NOT_FOUND`.
+- Projection không phải mapping hoặc `id` khác path: rollback và trả 500 `DESIGN_INTERNAL_ERROR`.
+- `mentor_id` không bằng authenticated Mentor ID: rollback và trả 403 `DESIGN_ACCESS_DENIED`.
+- Owner khớp: tiếp tục Q2.
+
+Direct owner là fallback theo API #46/#49/#54. Assigned-Mentor relation không có trong schema legacy đã chọn và không được cấp quyền bởi #62.
+
+<a id="step-3-doc-active-student-roster"></a>
+
+## 3. Đọc active Student roster
+
+### 3.1. Q2 — danh sách recipient
+
+| Target table | Column get | Chú thích | Remarks |
 |---|---|---|---|
-| `course_id` | Path int64 bắt buộc | Q1 lookup và Q2 lọc course | Type DIRECT; chưa quy định range/giá trị dương. |
-| Query/body | Catalog không khai báo | None | Không thêm page/size. |
+| `users AS u` | `u.id` | Recipient ID | `DISTINCT`; sort tăng dần. |
+| `users AS u` | `u.full_name` | Tên hiển thị tối thiểu | Required trong legacy DDL. |
+| `users AS u` | `u.avatar_url` | Avatar tùy chọn | NULL sẽ bị omit trong response. |
+| `courses AS c` | `c.id` | Course scope | Khớp `course_id` trong path. |
+| `courses AS c` | `c.mentor_id` | Mentor scope lần nữa | Bảo vệ roster query bằng direct owner predicate. |
+| `enrollments AS e` | `e.user_id` | Link tới User | INNER JOIN loại enrollment không có user. |
+| `enrollments AS e` | `e.course_id` | Link tới Course | INNER JOIN loại enrollment không có course. |
+| `enrollments AS e` | `e.status` | Enrollment eligibility | Exact match `ACTIVE`. |
+| `users AS u` | `u.role` | Actor eligibility | Exact match `STUDENT`. |
 
-Catalog không có mã lỗi riêng cho path sai định dạng hoặc tràn int64 của API #62. Không thêm 422.
+**JOIN**
 
-<a id="step-2-course-lookup-scope"></a>
+| Target table | Join condition | Join type |
+|---|---|---|
+| `courses AS c` | N/A | BASE |
+| `enrollments AS e` | `e.course_id = c.id` | INNER JOIN |
+| `users AS u` | `u.id = e.user_id` | INNER JOIN |
 
-## 2. Course lookup/scope
+**WHERE**
 
-### 2.1. Q1 — logical course lookup
+- `c.id = :course_id`.
+- `c.mentor_id = :mentor_id`.
+- `e.status = 'ACTIVE'`.
+- `u.role = 'STUDENT'`.
 
-| Target | Field | Purpose | Evidence/status |
-|---|---|---|---|
-| Course | `id` | Khớp `course_id` | Legacy BIGINT candidate; xung đột với UUID của V1-PILOT. |
-| Course | Owner/assignment | Xác thực Mentor scope | Quyền là DIRECT theo AC-25; predicate vật lý SOURCE_REQUIRED. |
-| Course | Trạng thái vòng đời | Quy định hành vi với course archived/draft | Diagram không nói; không tự thêm filter. |
+**SELECT behavior**
 
-Điều kiện candidate legacy: `courses.id = :course_id`; `courses.mentor_id = :mentor_id`. Course không tồn tại → candidate 404. Course tồn tại nhưng ngoài scope đã duyệt → catalog 403, còn phụ thuộc xác nhận thứ tự kiểm tra/quyền riêng tư. Đây chưa phải SQL runtime được duyệt.
+- `DISTINCT` trên `u.id`, `u.full_name`, `u.avatar_url` để cùng một user chỉ xuất hiện một lần.
+- Không lọc `users.status`; AC-25, catalog và legacy DDL chưa đặt điều kiện account status.
 
-<a id="step-3-enrollment-roster"></a>
+**ORDER BY**
 
-## 3. Enrollment roster
+- `u.id ASC`.
 
-### 3.1. Q2 — legacy query candidate
+**Pagination**
 
-| Target table | Column | Use | Evidence/status |
-|---|---|---|---|
-| `enrollments` | `course_id` | Khớp path course | Legacy BIGINT; nullable trong DDL đã kiểm tra. |
-| `enrollments` | `user_id` | Join learner | Legacy BIGINT; nullable trong DDL đã kiểm tra. |
-| `enrollments` | `status` | Predicate enrollment active | Diagram nói active; `ACTIVE` từ default legacy là DERIVED. |
-| `enrollments` | `enrolled_at` | Có thể dùng để sắp xếp ổn định | Catalog không quy định sort; chưa sắp xếp. |
-| `users` | `id` | Candidate UserSummary ID | Legacy BIGINT; pilot mapping khác. |
-| `users` | `full_name` | Candidate tên hiển thị | Bắt buộc trong legacy; projection riêng tư còn mở. |
-| `users` | `avatar_url` | Candidate avatar optional | Legacy nullable; quy tắc hiển thị còn mở. |
-| `users` | `role` | Candidate lọc role Student | `STUDENT` suy ra từ endpoint/AC; DERIVED. |
+- N/A — Request không khai báo `page` hoặc `size`; không thêm input hoặc PageMeta.
 
-Nếu schema legacy được duyệt, đây là query read-only candidate cho response `Page<UserSummary>` đã được sửa:
+### 3.2. Empty result
 
-```sql
-SELECT DISTINCT u.id, u.full_name, u.avatar_url
-FROM enrollments AS e
-JOIN users AS u ON u.id = e.user_id
-WHERE e.course_id = :course_id
-  AND e.status = 'ACTIVE'
-  AND u.role = 'STUDENT';
-```
+- Course đã qua scope nhưng Q2 trả 0 row: trả HTTP 200 với `data: []`.
+- Empty recipient set không phải lỗi 404.
 
-Query này không thể tạo `Course[]` theo catalog hiện tại và chưa phải SQL production được duyệt. Legacy DDL cho phép reference NULL và không có unique key `(course_id,user_id)`. Inner join sẽ bỏ các reference không hợp lệ; `DISTINCT` là đề xuất DERIVED để tránh hiện cùng người nhận nhiều lần. Cách xử lý orphan và grain đếm còn mở.
+<a id="step-4-map-response"></a>
 
-V1-PILOT nối UUID `course_enrollments.learner_id`/`course_version_id` qua `course_versions.course_id` tới UUID `courses.id`; learner identity nằm trong `learner_profiles`. Status là `ENROLLED|IN_PROGRESS|COMPLETED`, khác `ACTIVE` của legacy. Không join ngầm hai model.
+## 4. Map response
 
-### 3.2. Q3 — count/pagination
+- `response.data[].id = query_result.u.id`.
+- `response.data[].full_name = query_result.u.full_name`.
+- `response.data[].avatar_url = query_result.u.avatar_url` khi giá trị khác NULL.
+- Reject duplicate IDs, missing/non-string `full_name`, invalid positive int64 ID hoặc non-string `avatar_url` bằng lỗi 500; không trả projection một phần.
+- Omit `avatar_url` khi SQL value là NULL.
+- `response.meta = {}`; không dựng pagination metadata.
+- Không đưa email, phone, account status hoặc enrollment ID vào response.
 
-- `PageMeta.total` phụ thuộc grain của response: số Course hay số người nhận duy nhất.
-- Không có query page/size; size/default/max/order/offset và cách lấy trang tiếp theo là SOURCE_REQUIRED.
-- Nếu contract `Page<UserSummary>` và query phân trang được duyệt, hãy đếm learner đủ điều kiện duy nhất bằng cùng predicate Q2. Không đếm enrollment rows khi chưa được duyệt.
-
-<a id="step-4-response-pagination"></a>
-
-## 4. Response/pagination
-
-- Giữ `ApiEnvelope<Page<Course>>` theo catalog.
-- Toàn bộ field Course/PageMeta được liệt kê trong [04_Response.md](./04_Response.md).
-- Query enrollment trả learner candidate, không trả Course row: `DISCREPANCY / SOURCE_REQUIRED`; không lặp Course thành một item cho mỗi student.
-- `Page<UserSummary>` chỉ là đề xuất sửa contract ở mức DERIVED. `id`, `full_name`, `avatar_url?` là field User candidate từ legacy.
-- Roster rỗng trả 200 với page rỗng là đề xuất; số liệu/default metadata cần xác nhận.
-
-<a id="step-5-return-error"></a>
+<a id="step-5-returnerror"></a>
 
 ## 5. Return/error
 
-- Thành công trả HTTP 200 `DESIGN_RESOURCE_RETRIEVED`.
-- Course không tồn tại candidate map sang 404; sai role/ngoài quyền candidate map sang 403.
-- Roster rỗng là collection thành công theo đề xuất DERIVED, không phải resource không tồn tại.
-- Lỗi query/projection ngoài dự kiến map sang 500 theo catalog.
-- Không thêm 422, 409 hoặc 503; #62 không gọi dịch vụ gửi bên ngoài.
-- Guideline yêu cầu error `data:null`; helper hiện tại mặc định `{}` và route chưa nằm trong allowlist. Đây chỉ là discrepancy khi wiring trong tương lai.
+- Thành công: HTTP 200 `DESIGN_RESOURCE_RETRIEVED` và `UserSummary[]`.
+- Auth lỗi: 401 `DESIGN_AUTHENTICATION_REQUIRED`.
+- Role/owner mismatch: 403 `DESIGN_ACCESS_DENIED`.
+- Invalid signed-int64 path hoặc course không tồn tại: 404 `DESIGN_RESOURCE_NOT_FOUND`.
+- DB query/projection lỗi: 500 `DESIGN_INTERNAL_ERROR`; rollback dọn read transaction.
+- Không thêm 422, 409 hoặc 503.
+- Không commit; không ghi Notification, recipient, queue hoặc delivery.
+- #63 `recipients:string!` encoding vẫn open; #62 trả số User ID và không serialize cho endpoint khác.
 
-## Request Usage Matrix
+## Ma trận request/query/response
 
-| Request item | Source | Mapping step | Query use | Gap |
-|---|---|---|---|---|
-| Authorization | Bearer JWT | 0.1 | Principal cho scope | Guard/claim Mentor chưa rõ. |
-| `course_id` | Path int64 | 1 | Q1 và Q2 | Xung đột ID giữa legacy/pilot. |
-| Query/body | None | N/A | None | Không có input phân trang. |
+### Request Usage Matrix
 
-## Query Matrix
-
-| Query | Type | Candidate base/join | Predicate | Output/status |
-|---|---|---|---|---|
-| Q1 | SELECT | Legacy `courses` | `id=:course_id`; Mentor scope đã duyệt | Direct-owner chỉ là candidate DERIVED. |
-| Q2 | SELECT DISTINCT | Legacy `enrollments` JOIN `users` | Khớp course; candidate ACTIVE + STUDENT | Roster candidate xung đột response Course. |
-| Q3 | COUNT DISTINCT | Cùng roster candidate | Cùng scope/active predicate | SOURCE_REQUIRED đến khi duyệt item grain và phân trang. |
-
-## Mutation Matrix
-
-| Operation | Target | Condition | Fields | Status |
-|---|---|---|---|---|
-| None | N/A | Tra cứu chỉ đọc | Không INSERT/UPDATE/DELETE | `N/A — API chỉ đọc`; #63 sở hữu ghi/gửi. |
-
-## Response Source Matrix
-
-| Response field/group | Contract | Candidate source | Status |
+| Request field | Source | Use | Validation/branch |
 |---|---|---|---|
-| `data.items[]` | `Course[]` | Không map được từ learner rows | `DISCREPANCY / SOURCE_REQUIRED`. |
-| Field của Course item | Course schema | `courses` biểu diễn course, không phải người nhận | Shape DIRECT; lệch ngữ nghĩa. |
-| `data.pagination` | PageMeta | Chưa duyệt page/size/default/grain đếm | SOURCE_REQUIRED. |
-| `UserSummary` đề xuất | id/full_name/avatar_url | Legacy users qua enrollments | Chỉ là đề xuất sửa contract DERIVED. |
-| `meta`, `traceId` | Quy ước envelope | Helper dùng chung | Endpoint chưa có runtime. |
+| `Authorization` | HTTP header | Auth guard | Bearer JWT và role `MENTOR` trước DB. |
+| `course_id` | Path | Q1 và Q2 | signed-int64; malformed/out-of-range→404. |
+| Query/body | N/A | N/A | Không khai báo. |
 
-## Mutation / DB mapping
+### Query Matrix
 
-N/A — API #62 chỉ đọc; không có mapping ghi hoặc định nghĩa table mới.
+| Query | Type | Tables and projection | Conditions | Order/pagination | Result |
+|---|---|---|---|---|---|
+| Q1 | SELECT | `courses.id`, `courses.mentor_id` | `id=:course_id` | `LIMIT 1` | phân biệt missing, owner match và 403. |
+| Q2 | SELECT DISTINCT | `users.id/full_name/avatar_url`, `courses`, `enrollments` | course ID, Mentor owner, ACTIVE enrollment, STUDENT role | `users.id ASC`; no pagination | recipient summary rows. |
+
+### Mutation Matrix
+
+| Operation | Target | Behavior |
+|---|---|---|
+| N/A | N/A | N/A — READ-ONLY API; no commit or external call. |
+
+### Response Source Matrix
+
+| Response field | Type | Source | Transform | Empty/null rule |
+|---|---|---|---|---|
+| `data[].id` | int64 | `users.id` | Direct | Required. |
+| `data[].full_name` | string | `users.full_name` | Direct | Required. |
+| `data[].avatar_url` | uri? | `users.avatar_url` | Direct | Omit when NULL. |
+| `data` | array | Q2 rows | One summary per distinct user | Empty → `[]`. |
+| `meta` | object | Envelope | `{}` | Always present. |
+
+## Boundary với API #63/#64
+
+- #62 chỉ đọc roster.
+- #63 nhận `recipients:string!` nhưng chưa chỉ định CSV, JSON hay ID khác; implementation #62 không chọn encoding.
+- #64 đọc delivery status; không có side effect hoặc notification status trong #62.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

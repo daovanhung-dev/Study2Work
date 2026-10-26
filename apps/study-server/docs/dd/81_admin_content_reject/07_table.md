@@ -15,43 +15,44 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table | SOURCE_REQUIRED — chưa chọn |
-| Logical table | Content review outcome |
-| Operation | UPDATE logical status and store review reason |
-| Data Mapping step | Step 5; see [Step 3](./05_Data_Mapping.md#3-insertupdate-thong-tin) |
+| Physical candidates | Legacy `contents`; `content_review_audit_logs` from migration 011 |
+| Logical table | Content review state and decision |
+| Operation | UPDATE status; INSERT one reason-bearing decision/audit row |
+| Data Mapping step | [Step 3](./05_Data_Mapping.md#step-3-mutation) |
 
-> Đây là logical mutation/gap register, chưa phải physical DB specification. Legacy DDL không có generic Content/review table. V1-PILOT content_review_decisions dùng UUID revision identity và không được map trực tiếp sang Content ID int64.
+> AC-33 directly requires `REJECTED` plus review reason. The physical source below reuses checked-in legacy BIGINT candidates and is DERIVED; migration 011 is not proof of live deployment. V1-PILOT `content_review_decisions` uses UUID revision/reviewer IDs and is not selected for this int64 contract.
 
-## Update mapping
+## Update mapping — `contents`
 
-**Áp dụng khi**
+**Áp dụng khi** locked active Content currently has `PENDING_REVIEW`.
 
-- AC-33 reject branch được thực hiện với target Content/revision đã được policy xác nhận.
+| No | Physical column | Logical name | Type | Length | Required | Key | Setting content | Source | Data Mapping step | Remarks |
+|---:|---|---|---|---:|---:|---|---|---|---|---|
+| 1 | `status` | Content review status | TEXT | N/A | Yes | `contents.id` | Literal `REJECTED` | AC-33 node n11; legacy DDL candidate | Step 3.1 | `PENDING_REVIEW` predicate is DERIVED; no `updated_at` column exists in legacy `contents`. |
 
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---:|---|---|---|---:|---:|---:|---:|---|---|---|---|
-| 1 | SOURCE_REQUIRED | Content status | ContentStatus | TBD | N/A | TBD | N/A | Set REJECTED theo AC-33 node n11 | AC-33 node n11 | Step 5 | Logical field; physical table/column and state ownership unresolved. |
-| 2 | SOURCE_REQUIRED | Rejection reason value | string | TBD | N/A | Yes at request | N/A | Request body reason | API catalog #81 and AC-33 node n11 | Step 5 | Logical value only; physical column/relation and null/retention policy unresolved. |
+## Insert mapping — `content_review_audit_logs`
 
-## Insert mapping
+**Áp dụng khi** the conditional status update returns a valid Content projection. One row stores the decision and direct review reason; no separate second audit append is performed.
 
-**Áp dụng khi**
+| No | Physical column | Logical name | Type | Length | Required | Key | Setting content | Source | Data Mapping step | Remarks |
+|---:|---|---|---|---:|---:|---|---|---|---|---|
+| 1 | `id` | Decision row ID | BIGSERIAL | N/A | Generated | PK | Database sequence/default | Migration 011 | Step 3.2 | Omitted from INSERT and response. |
+| 2 | `content_id` | Content ID | BIGINT | N/A | Yes | FK → `contents.id` | Parsed path ID | Catalog #81 + migration 011 | Step 3.2 | Bound parameter. |
+| 3 | `actor_user_id` | Admin actor | BIGINT | N/A | Yes | FK → `users.id` | Numeric JWT `sub` | Shared ADMIN guard + migration 011 | Step 3.2 | Never accepted from request. |
+| 4 | `previous_status` | Previous Content status | TEXT | N/A | Yes | — | Locked value `PENDING_REVIEW` | Current locked row | Step 3.2 | Bound parameter. |
+| 5 | `new_status` | Resulting Content status | TEXT | N/A | Yes | — | Literal `REJECTED` | AC-33 node n11 | Step 3.2 | Bound parameter. |
+| 6 | `reason` | Review reason | TEXT NULL | N/A | Request required | — | Body `reason`, unchanged | Catalog #81; migration 011 candidate | Step 3.2 | Required in request; nullable column is shared with bodyless #80 approval. |
+| 7 | `recorded_at` | Decision time | TIMESTAMPTZ | N/A | Generated | — | Database default `CURRENT_TIMESTAMP` | Migration 011 | Step 3.2 | Omitted from INSERT and response. |
 
-- Không có append/insert write được nêu rõ cho nhánh reject; audit parity với API #80 cần xác nhận.
+## Transaction
 
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---:|---|---|---|---:|---:|---:|---:|---|---|---|---|
-| N/A | N/A | Separate audit/decision append | N/A | N/A | N/A | N/A | N/A | Not specified by reject diagram node | AC-33 node n11 | N/A | Do not infer an additional audit write; resolve with #80 before implementation. |
+`contents.status` update and the single decision-row INSERT run in the same caller-owned transaction. Validate the Content projection before commit. Query, insert, response mapping or commit failure rolls back both writes. This atomicity is a DERIVED local implementation choice; it does not prove live DB behavior.
 
-## Delete mapping
+## Unchanged mappings
 
-**Áp dụng khi**
-
-- N/A — API #81 không khai báo delete.
-
-| No | Target column | Operator | Value source | Data Mapping step | Remarks |
-|---:|---|---|---|---|---|
-| N/A | N/A | N/A | N/A | N/A | No DELETE operation. |
+- No `content_versions` insert/update is performed; #81 has no revision selector.
+- No DELETE or second audit row is issued.
+- `reason`, reviewer, version and audit columns are not added to the Content response.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

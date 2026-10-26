@@ -13,13 +13,13 @@ status: "Draft — Needs Confirmation"
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu, sai hoặc hết hạn | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT code/status; Admin auth chưa wired. |
-| 2 | Authorization | Role/permission | Admin course-management | Principal không có role Admin/quyền quản lý course | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT code/status; policy SOURCE_REQUIRED. |
-| 3 | Validation | Query parsing | status/mentor/category/page | Query value không parse được theo kiểu catalog | 422 | DESIGN_VALIDATION_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-1-validate-data-input) | No | Code/status DIRECT; middleware path allowlist chưa có. |
+| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu, sai hoặc hết hạn | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT code/status; shared guard wired locally. |
+| 2 | Authorization | Role | Admin | Principal không có role `ADMIN` | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | Shared guard wired; dedicated course-management permission remains open. |
+| 3 | Validation | Query parsing | status/mentor/category/page | Query value không parse được theo kiểu/range của contract | 422 | DESIGN_VALIDATION_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-1-validate-data-input) | No | Middleware path allowlist wired. |
 | 4 | Validation | Page range | page | Page nhỏ hơn 1 theo proposal | 422 | DESIGN_VALIDATION_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-1-validate-data-input) | No | Status/code DIRECT; minimum DERIVED. |
 | 5 | System error | Database query | Q1/Q2 | DB/query/count failure | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua) | Candidate rollback khi cần; read-only | DIRECT code/status; không trả raw DB details. |
-| 6 | System error | Course mapping | Course fields | Price NULL/invalid hoặc required Course field không map được | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua) | Candidate rollback khi cần; read-only | Mapping integrity candidate theo API #06. |
-| 7 | System error | Mentor integrity | `Course.mentor` | Không tìm thấy mentor tương ứng trong `users` | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-2-get-thong-tin) | Candidate rollback khi cần; read-only | Theo #06 precedent; Admin recovery behavior cần xác nhận. |
+| 6 | System error | Course mapping | Course fields | Price NULL/invalid hoặc required Course field không map được | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua) | Rollback; read-only | Runtime maps shared Course errors to safe 500. |
+| 7 | System error | Mentor integrity | `Course.mentor` | `missing_mentor_count > 0` hoặc mentor mapping thiếu | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-2-get-thong-tin) | Rollback; read-only | API #06 precedent; Admin recovery behavior cần xác nhận. |
 
 ## Candidate branches — không thêm HTTP contract
 
@@ -28,21 +28,20 @@ status: "Draft — Needs Confirmation"
 | Không có course phù hợp | 200, `items=[]`, total=0 | DERIVED theo API #06 precedent; collection rỗng không phải 404. |
 | Page vượt phạm vi | 200, items rỗng, giữ total và total_pages | DERIVED theo API #06 test/source. |
 | Status lạ | Exact filter trả 0 row nếu không có giá trị đó | DERIVED; không tạo enum whitelist. |
-| Category được gửi | Không có predicate vật lý được phép hiện tại | SOURCE_REQUIRED; không bỏ qua filter, cũng không tự reject valid filter. |
+| Category int64 hợp lệ được gửi | 422 `DESIGN_VALIDATION_ERROR` trước DB | Fallback `DERIVED` theo API #06; relation cần được owner/schema xác nhận. |
 | Course không có mentor | Safe 500 theo API #06 precedent | DERIVED; Admin recovery policy cần owner xác nhận. |
 
 ## Error envelope và wiring gap
 
-- `error_response(...)` hiện dùng `data={}` khi không truyền data; API guideline yêu cầu `data=null` cho lỗi.
-- Middleware `DESIGN_CONTRACT_PATHS` chưa có `/api/v1/admin/courses`; nếu route tương lai dựa vào exception handler trước khi cập nhật allowlist, có thể trả `VALIDATION_ERROR`/`INTERNAL_SERVER_ERROR`.
-- Đây là gap integration hiện tại/conditional future behavior; API #73 chưa tồn tại nên không phải quan sát runtime endpoint.
+- `error_response(...)` dùng `data:null` khi không truyền data.
+- Middleware `DESIGN_CONTRACT_PATHS` hiện chứa `/api/v1/admin/courses`; route local error handling dùng `DESIGN_*` mapping.
 - Không trả SQL, stack trace, email hoặc thông tin mentor ngoài UserSummary.
 
 ## Không thêm
 
 - Không thêm 404 cho empty list.
 - Không thêm 409, 503 hoặc business code mới.
-- Không biến category relation gap thành “category chưa hỗ trợ” response khi contract chưa cho behavior đó.
+- Category 422 là fallback `DERIVED` để tránh bỏ qua filter hoặc bịa relation; không coi là catalog-approved behavior.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

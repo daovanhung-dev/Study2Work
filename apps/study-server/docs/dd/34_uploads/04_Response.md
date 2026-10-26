@@ -4,7 +4,7 @@ order: 4
 dd_id: "34"
 api_name: "Upload file"
 source_sheet: "2.Response"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 
 # Response
@@ -20,20 +20,20 @@ status: "Draft — Needs Confirmation"
 ## Response fields
 
 | No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
-|---:|---|---|---|---|---:|---|---|---|---|---|---|
-| 1 | HTTPStatus | HTTP Status | HTTPStatus | integer | No | N/A | N/A | 5 | Fixed by branch | N/A | Protocol status, not a JSON property. Success is 201; errors use only catalog statuses 401/403/422/503/500. |
-| 2 | success | Success flag | success | boolean | No | N/A | N/A | 5 | true on success; false on error | N/A | ApiEnvelope field. |
-| 3 | businessCode | Business code | businessCode | string | No | N/A | N/A | 5 | Fixed by branch | N/A | Use DESIGN codes from API #34 catalog. |
-| 4 | message | Message | message | string | No | N/A | N/A | 5 | Fixed safe message by branch | Text always present | Exact localized wording is not defined. |
-| 5 | data | Upload asset | data | object / null | Yes | N/A | N/A | 5 | ApiEnvelope<UploadAsset> on success; null on error | null on error | Error envelope rule from API Guidelines. |
-| 5.1 | data.id | Asset ID | id | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 4 | SOURCE_REQUIRED | Required by logical schema | Catalog does not define an ID generator or physical source. |
-| 5.2 | data.name | File name | name | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 4 | SOURCE_REQUIRED | Required by logical schema | Whether this is the submitted filename or a normalized name is open. |
-| 5.3 | data.url | Asset URL | url | uri | No | Object Storage (candidate) | SOURCE_REQUIRED | 4 | Return URL from the storage/upload flow | Required by logical schema | Public URL versus signed URL, expiry and access policy are undefined. |
-| 5.4 | data.content_type | Content type | content_type | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 4 | SOURCE_REQUIRED | Required by logical schema | Detection/trust policy and supported MIME values are undefined. |
-| 5.5 | data.size_bytes | File size in bytes | size_bytes | int64 | No | Upload bytes (candidate) | SOURCE_REQUIRED | 4 | SOURCE_REQUIRED | Required by logical schema | Counting/limit rules are not defined. |
-| 5.6 | data.status | Upload status | status | UploadStatus | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 4 | SOURCE_REQUIRED | Required by logical schema | UploadStatus values and lifecycle are not defined. |
-| 6 | meta | Metadata | meta | object | No | N/A | N/A | 5 | Empty object unless envelope adds supported metadata | {} in examples | No upload-specific metadata shape is defined. |
-| 7 | traceId | Trace ID | traceId | uuid | No | N/A | N/A | 5 | Request correlation UUID | Always present | API Guidelines require trace propagation. |
+|---:|---|---|---|---|---:|---|---|---:|---|---|---|
+| 1 | HTTPStatus | HTTP Status | HTTPStatus | integer | No | N/A | N/A | 5 | 201 on create | N/A | Error statuses are exactly 401/403/422/503/500. |
+| 2 | success | Success flag | success | boolean | No | N/A | N/A | 5 | true on success; false on error | Always present | ApiEnvelope. |
+| 3 | businessCode | Business code | businessCode | string | No | N/A | N/A | 5 | DESIGN_RESOURCE_CREATED on success | Always present | Error codes follow API catalog. |
+| 4 | message | Message | message | string | No | N/A | N/A | 5 | Safe application message | Always present | Exact text is implementation-owned. |
+| 5 | data | Upload asset | data | object / null | Yes | N/A | N/A | 5 | UploadAsset on success | null on error | Error envelope uses data:null. |
+| 5.1 | data.id | Asset ID | id | int64 | No | uploads | id | 4 | BIGSERIAL value returned by INSERT | Required | Durable ID for later references. |
+| 5.2 | data.name | File name | name | string | No | uploads | file_name | 4 | Multipart filename, or `upload` fallback | Required | Original filename is metadata; it is not used in storage key. |
+| 5.3 | data.url | Asset URL | url | uri | No | uploads | url | 4 | Public base URL joined with server UUID storage key | Required | URL is also persisted. |
+| 5.4 | data.content_type | Content type | content_type | string | No | uploads | content_type | 4 | Multipart part Content-Type, or `application/octet-stream` fallback | Required | No MIME allowlist or sniffing. |
+| 5.5 | data.size_bytes | File size in bytes | size_bytes | int64 | No | uploads | size_bytes | 4 | Count of bytes in received stream | 0 is valid | No application size cap. |
+| 5.6 | data.status | Upload status | status | UploadStatus | No | uploads | status | 4 | Fixed value `UPLOADED` | Required | The API currently creates only this status. |
+| 6 | meta | Metadata | meta | object | No | N/A | N/A | 5 | Empty object unless field errors are present | Always present | Shared envelope. |
+| 7 | traceId | Trace ID | traceId | uuid | No | Request context | Trace helper | 5 | Propagate request trace | Always present | API guidelines. |
 
 ## Ví dụ thành công — HTTP 201
 
@@ -41,21 +41,19 @@ status: "Draft — Needs Confirmation"
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_CREATED",
-  "message": "Upload accepted (illustrative text).",
+  "message": "Upload accepted.",
   "data": {
     "id": 34001,
-    "name": "example.bin",
-    "url": "https://storage.example.test/resource",
-    "content_type": "application/octet-stream",
-    "size_bytes": 1,
-    "status": "SOURCE_REQUIRED"
+    "name": "homework.pdf",
+    "url": "https://cdn.example.test/uploads/123e4567-e89b-12d3-a456-426614174000",
+    "content_type": "application/pdf",
+    "size_bytes": 11,
+    "status": "UPLOADED"
   },
   "meta": {},
   "traceId": "00000000-0000-4000-8000-000000000034"
 }
 ~~~
-
-All sample values are illustrative. SOURCE_REQUIRED is a visible placeholder, not an allowed UploadStatus; the sample MIME type and URL do not define an allowlist or storage URL policy. The id value does not define how an asset ID is generated.
 
 ## Ví dụ lỗi — HTTP 503
 
@@ -63,14 +61,13 @@ All sample values are illustrative. SOURCE_REQUIRED is a visible placeholder, no
 {
   "success": false,
   "businessCode": "DESIGN_DEPENDENCY_UNAVAILABLE",
-  "message": "Upload dependency unavailable (illustrative text).",
+  "message": "Upload storage is unavailable.",
   "data": null,
   "meta": {},
-  "traceId": "00000000-0000-4000-8000-000000000035"
+  "traceId": "00000000-0000-4000-8000-000000000034"
 }
 ~~~
 
-Error example illustrates the shared envelope and catalog code only. Exact provider-failure mapping and message text remain open.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

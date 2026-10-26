@@ -13,17 +13,17 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-API #52 giữ đúng năm lỗi trong catalog. Các điều kiện phụ thuộc body/state là proposal DERIVED; route chưa được triển khai.
+API #52 giữ đúng năm lỗi trong catalog. Local route/test wiring có source; request body và các điều kiện phụ thuộc trạng thái vẫn là proposal DERIVED.
 
 ## Error cases
 
 | No | HTTP status | Business code | Điều kiện theo contract | Data Mapping reference | Response/source rule | Status |
 |---:|---:|---|---|---:|---|---|
-| 1 | 401 | DESIGN_AUTHENTICATION_REQUIRED | Bearer JWT thiếu, sai hoặc hết hạn | 0 | Safe error envelope; không echo token/claims. | Code DIRECT; route absent |
-| 2 | 403 | DESIGN_ACCESS_DENIED | Principal không có role Mentor hoặc không có quyền quản lý course chứa Content | 0 | Không tiết lộ owner/assignment internals. | Code DIRECT; access predicate SOURCE_REQUIRED |
-| 3 | 404 | DESIGN_RESOURCE_NOT_FOUND | content_id không ánh xạ tới Content | 2 | Error envelope, không trả dữ liệu một phần. | Code DIRECT; physical lookup SOURCE_REQUIRED |
-| 4 | 422 | DESIGN_VALIDATION_ERROR | Request target/body sai nếu proposal được duyệt, readiness không đạt, hoặc transition không hợp lệ theo policy được duyệt | 1, 2, 3 | Không echo payload nhạy cảm; catalog giữ nguyên code. | Code DIRECT; conditions DERIVED/SOURCE_REQUIRED |
-| 5 | 500 | DESIGN_INTERNAL_ERROR | Lỗi bất ngờ khi load/readiness/update publication state | 2–4 | Safe error; không trả SQL, schema, stack/provider detail. | Code DIRECT; route absent |
+| 1 | 401 | DESIGN_AUTHENTICATION_REQUIRED | Bearer JWT thiếu, sai hoặc hết hạn | 0 | Safe error envelope; không echo token/claims. | Code DIRECT; local HTTP test |
+| 2 | 403 | DESIGN_ACCESS_DENIED | Principal không có role Mentor hoặc direct owner không khớp | 0 | Không tiết lộ owner internals; assigned-Mentor policy SOURCE_REQUIRED. | Code DIRECT; owner fallback DERIVED; local HTTP test |
+| 3 | 404 | DESIGN_RESOURCE_NOT_FOUND | content_id sai int64 hoặc không ánh xạ tới active Content | 2 | Error envelope, không trả dữ liệu một phần. | Code DIRECT; local HTTP test; DDL/live mapping unverified |
+| 4 | 422 | DESIGN_VALIDATION_ERROR | Body sai shape/type hoặc state không đủ điều kiện theo fallback | 1, 2, 3 | Không echo payload nhạy cảm; catalog giữ nguyên code. | Code DIRECT; body/state DERIVED; local HTTP test |
+| 5 | 500 | DESIGN_INTERNAL_ERROR | Lỗi lookup/update, projection hoặc commit | 2–4 | Safe error; không trả SQL, schema, stack/provider detail. | Code DIRECT; local HTTP test; DB is fake |
 
 ## Nhánh cần xác nhận
 
@@ -31,14 +31,14 @@ API #52 giữ đúng năm lỗi trong catalog. Các điều kiện phụ thuộc
 |---|---|---|
 | APPROVED Content thiếu dữ liệu cần thiết | 422 candidate | Readiness criteria theo từng ContentType/payload chưa có nguồn. |
 | PENDING_REVIEW hoặc REJECTED được yêu cầu publish | 422 candidate | State machine DERIVED; enum đầy đủ SOURCE_REQUIRED. |
-| Unpublish Content đã PUBLISHED | 200 candidate | Đề xuất trở về APPROVED; cần xác nhận review semantics. |
-| Request lặp lại target state | 200 candidate | No-op/idempotency là DERIVED proposal. |
+| Unpublish Content đã PUBLISHED | 200 local fallback | Trở về APPROVED; transition DERIVED, cần xác nhận review semantics. |
+| Request lặp lại target state | 200 local fallback | No-op/idempotency đã implement nhưng vẫn DERIVED. |
 | Content không tồn tại với Mentor không có quyền | 403 hoặc 404 | Thứ tự check/anti-enumeration cần policy; giữ nguyên code set. |
-| Path int64 sai/overflow | Framework behavior chưa được xác nhận | Catalog không có 422 cho path riêng; kiểm tra khi runtime implementation được tạo. |
+| Path int64 sai/overflow | 404 local fallback | Parser trong view ánh xạ sai format/range về `DESIGN_RESOURCE_NOT_FOUND`; focused test đã pass. |
 
-## Middleware integration discrepancy
+## Middleware integration
 
-API #52 chưa có route và /api/v1/mentor/content/{content_id}/publish không có trong DESIGN_CONTRACT_PATHS. Nếu route được wire mà allowlist/error mapping không đổi, framework validation/unhandled exceptions có thể trả generic VALIDATION_ERROR/INTERNAL_SERVER_ERROR thay cho DESIGN_VALIDATION_ERROR/DESIGN_INTERNAL_ERROR. Đây là discrepancy tích hợp tương lai, không phải current runtime behavior của API #52.
+`/api/v1/mentor/content/{content_id}/publish` is now in `DESIGN_CONTRACT_PATHS`; local TestClient coverage confirms body-validation code `DESIGN_VALIDATION_ERROR`. Unexpected exception mapping is wired through the same middleware path. Fake DB tests do not prove live PostgreSQL/runtime behavior.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -7,23 +7,24 @@ source_sheet: "4.Error"
 status: "Draft — Needs Confirmation"
 ---
 
+
 # Error
 
 ## Giải thích
 
-Giữ đúng error set catalog #64: 401, 403, 404, 500. Không thêm 400, 422, 409 hoặc 503. Permission relation và malformed path behavior cần được chốt trước implementation.
+Giữ đúng error set catalog #64: 401, 403, 404 và 500. Không thêm 400, 422, 409 hoặc 503. Các mapping path/scope/status resource dưới đây là local DERIVED fallback và DD vẫn Draft.
 
 ## Error cases
 
-| No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
+| No | Category | Check | Item | Condition | HTTP status | Error code | Message | Data Mapping reference | Transaction | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu hoặc không hợp lệ | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-auth) | N/A — read-only | Principal mapping chưa wired. |
-| 2 | Authorization | Role/scope | Mentor/notification | Sai role hoặc caller không có quyền xem theo policy được duyệt | 403 | `DESIGN_ACCESS_DENIED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-2-access) | N/A — read-only | Predicate và 403/404 privacy order SOURCE_REQUIRED. |
-| 3 | Not found | Resource existence | `notification_id` | Notification không tồn tại | 404 | `DESIGN_RESOURCE_NOT_FOUND` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-2-access) | N/A — read-only | Chưa map physical source. Chưa có delivery row không tự đồng nghĩa resource không tồn tại. |
-| 4 | System error | Persistence/mapping | Notification/delivery/Operation | Lỗi nội bộ khi đọc hoặc dựng response | 500 | `DESIGN_INTERNAL_ERROR` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-5-response-errors) | N/A — read-only | Không trả SQL, provider detail hoặc stack trace. |
+| 1 | Authentication | Bearer/JWT | Authorization | Header thiếu hoặc token không hợp lệ | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Safe authentication message | [0. Auth](./05_Data_Mapping.md#step-0-auth) | N/A — read-only | Shared MENTOR guard. |
+| 2 | Authorization | Role/owner | Mentor/notification | Sai role hoặc notification thuộc sender Mentor khác | 403 | `DESIGN_ACCESS_DENIED` | Safe access-denied message | [0. Auth](./05_Data_Mapping.md#step-0-auth), [2. Scope](./05_Data_Mapping.md#step-2-access) | N/A — read-only | Owner predicate từ `sender_id` là DERIVED. |
+| 3 | Not found | Parse/resource/status resource | `notification_id` | Path sai/out-of-range; notification không tồn tại; không có Operation ID hoặc delivery rows | 404 | `DESIGN_RESOURCE_NOT_FOUND` | Safe not-found message | [1. Parse](./05_Data_Mapping.md#step-1-request), [2. Scope](./05_Data_Mapping.md#step-2-access) | N/A — read-only | No extra 400/422; older non-dispatch notifications have no status resource. |
+| 4 | System error | DB/projection/model | Notification/outbox/Operation projection | Query fails, status counts contradict total, or required UUID/owner/timestamps are malformed | 500 | `DESIGN_INTERNAL_ERROR` | Safe internal-error message | [3. Aggregate](./05_Data_Mapping.md#step-3-read-delivery), [4. Map](./05_Data_Mapping.md#step-4-map-response) | Rollback failed read transaction; no mutation | Never expose SQL, provider details or stack trace. |
 
-> API Guidelines dùng error `data:null`; current helper mặc định `{}`. Route #64 chưa wired nên behavior runtime chưa được xác minh.
----
+Error envelope uses `data:null`, `meta:{}` or safe field metadata as supplied by shared `error_response(...)`; trace ID is kept in body/header.
+
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `4.Error`

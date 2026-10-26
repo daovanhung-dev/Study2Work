@@ -24,22 +24,22 @@ status: "Draft — Needs Confirmation"
 | No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|---|
 | 1 | HTTP status | HTTP Status | HTTP status | integer | No | N/A | N/A | Success/error branch | Catalog status | Success 200; errors 401, 403, 404, 422, 500 | Not a JSON body field. |
-| 2 | success | Success | success | boolean | No | Envelope | N/A | Envelope build | true on success; false on error | Always present | Study helper convention; route absent. |
+| 2 | success | Success | success | boolean | No | Envelope | N/A | Envelope build | true on success; false on error | Always present | Shared Study response helper. |
 | 3 | businessCode | Business code | businessCode | string | No | Catalog/envelope | N/A | Envelope build | Exact catalog literal | Always present | Success DESIGN_RESOURCE_UPDATED; errors in 06_Error.md. |
 | 4 | message | Message | message | string | No | Application | N/A | Envelope build | Safe localized text | Always present | Exact message is not specified. |
-| 5 | data | Content | data | Content | No | Logical Content | SOURCE_REQUIRED | Step 7 | Project declared Content schema | One Content object | No Page/list wrapper. |
-| 5.1 | data.id | Content ID | id | int64 | No | Logical Content | SOURCE_REQUIRED | Step 7 | Direct logical identity | Required | Physical key unresolved. |
-| 5.2 | data.course_id | Course ID | course_id | int64 | No | Logical Content | SOURCE_REQUIRED | Step 7 | Stored relationship | Required | No source relation selected. |
-| 5.3 | data.content_type | Content type | content_type | ContentType | No | Logical Content | SOURCE_REQUIRED | Step 7 | Return stored value | Required | Enum members unresolved. |
-| 5.4 | data.title | Title | title | string | No | Logical Content | SOURCE_REQUIRED | Step 7 | Return stored value | Required | Physical source unresolved. |
-| 5.5 | data.payload | Payload | payload | object | No | Logical Content | SOURCE_REQUIRED | Step 7 | Return stored object | Required | Object keys/schema unresolved; do not invent. |
-| 5.6 | data.status | Content status | status | ContentStatus | No | Logical Content | SOURCE_REQUIRED | Step 7 | Return post-action status | Required | Exact target APPROVED versus PUBLISHED unresolved. |
-| 5.7 | data.parent_id | Parent Content ID | parent_id | int64? | Yes | Logical Content | SOURCE_REQUIRED | Step 7 | Return stored optional value | Null/omit rule unresolved | Optional per reusable schema. |
-| 5.8 | data.order | Display order | order | int32 | No | Logical Content | SOURCE_REQUIRED | Step 7 | Return stored value | Required | Physical source unresolved. |
-| 6 | meta | Metadata | meta | object | No | Envelope | N/A | Envelope build | Candidate empty object | No pagination metadata declared | Empty/null convention needs runtime alignment. |
-| 7 | traceId | Trace ID | traceId | uuid | No | Request trace | N/A | Envelope build | Propagate request trace | Always present | Trace convention direct; route absent. |
+| 5 | data | Content | data | Content | No | `contents` | Returned update projection | Step 7 | Reusable `ContentResponse` allowlist | One Content object | No Page/list wrapper. |
+| 5.1 | data.id | Content ID | id | int64 | No | `contents` | `id` | Step 7 | Direct stored identity | Required | Legacy BIGINT candidate. |
+| 5.2 | data.course_id | Course ID | course_id | int64 | No | `contents` | `course_id` | Step 7 | Direct stored relationship | Required | FK to legacy `courses.id`. |
+| 5.3 | data.content_type | Content type | content_type | ContentType | No | `contents` | `content_type` | Step 7 | Return stored value | Required | Enum members remain open. |
+| 5.4 | data.title | Title | title | string | No | `contents` | `title` | Step 7 | Return stored value | Required | Legacy text column. |
+| 5.5 | data.payload | Payload | payload | object | No | `contents` | `payload` | Step 7 | Return stored JSON object | Required | No subtype validation is added. |
+| 5.6 | data.status | Content status | status | ContentStatus | No | `contents` | `status` | Step 7 | Fixed transition result | `APPROVED` | Target is a DERIVED intermediate state. |
+| 5.7 | data.parent_id | Parent Content ID | parent_id | int64? | Yes | `contents` | `parent_id` | Step 7 | Return stored optional value | Null is omitted by route serialization | Optional per reusable schema. |
+| 5.8 | data.order | Display order | order | int32 | No | `contents` | `content_order` | Step 7 | Map physical name to response `order` | Required | Legacy column alias. |
+| 6 | meta | Metadata | meta | object | No | Envelope | N/A | Envelope build | Shared helper emits empty object | `{}` | No pagination metadata declared. |
+| 7 | traceId | Trace ID | traceId | uuid | No | Request trace | N/A | Envelope build | Propagate request trace | Always present | API #80 route propagates the request trace through the shared helper. |
 
-Các giá trị ContentType, ContentStatus, payload và status sau approve trong ví dụ dưới đây là placeholder, không phải enum/value được duyệt.
+ContentType và payload shape trong ví dụ là placeholder; status `APPROVED` phản ánh lựa chọn implementation DERIVED, chưa phải enum/state policy được duyệt.
 
 ## Ví dụ thành công
 
@@ -54,7 +54,7 @@ Các giá trị ContentType, ContentStatus, payload và status sau approve trong
     "content_type": "<ContentType>",
     "title": "<title>",
     "payload": {},
-    "status": "<ContentStatus>",
+    "status": "APPROVED",
     "parent_id": 789,
     "order": 1
   },
@@ -63,7 +63,7 @@ Các giá trị ContentType, ContentStatus, payload và status sau approve trong
 }
 ~~~
 
-payload:{} và các chuỗi placeholder chỉ minh họa shape; không xác định dữ liệu hợp lệ hoặc status transition.
+payload:{} và các chuỗi placeholder chỉ minh họa shape; transition `APPROVED` là fallback DERIVED.
 
 ## Ví dụ lỗi
 
@@ -78,7 +78,7 @@ payload:{} và các chuỗi placeholder chỉ minh họa shape; không xác đ�
 }
 ~~~
 
-data:null theo API guideline là expected error shape; current error_response() mặc định {} nếu caller không truyền data. API #80 chưa được wire.
+data:null theo `error_response()` hiện hành; API #80 gọi shared helper.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

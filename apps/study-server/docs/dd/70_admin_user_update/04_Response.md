@@ -18,7 +18,7 @@ status: "Draft — Needs Confirmation"
 | Content-Type | application/json |
 | Success HTTP status | 200 `DESIGN_RESOURCE_UPDATED` |
 | Direct contract type | `ApiEnvelope<UserProfile>` theo catalog. |
-| Runtime status | API #70 chưa có route/view; ví dụ bên dưới là candidate. |
+| Runtime status | Route/module/test có trong source; body/legacy mapping là fallback `DERIVED`, live schema chưa xác minh. |
 
 ## Contract trực tiếp từ catalog
 
@@ -28,23 +28,23 @@ status: "Draft — Needs Confirmation"
 | 2 | success | Success flag | success | boolean | No | N/A | N/A | Envelope | true success; false error | N/A | ApiEnvelope field. |
 | 3 | businessCode | Business code | businessCode | string | No | N/A | N/A | Envelope | Exact catalog code theo branch | N/A | Không tạo code mới. |
 | 4 | message | Message | message | string | No | N/A | N/A | Envelope | Message an toàn theo branch | SOURCE_REQUIRED | Message text chưa được contract định nghĩa. |
-| 5 | data | Updated user | data | object | No | legacy users candidate | Safe projection | 5.1 | `UserProfile` | UserProfile khi success; lỗi theo error envelope guideline | Type trực tiếp; persistence mapping là candidate. |
+| 5 | data | Updated user | data | object | No | legacy users candidate | `UPDATE ... RETURNING` safe projection | 5.1 | `UserProfile` | UserProfile khi success; lỗi dùng `data:null` | Type trực tiếp; legacy mapping là fallback `DERIVED`. |
 | 5.1 | data.id | User ID | id | int64 | No | legacy users candidate | id | 5.1 | Map ID user đã update | Required theo UserProfile | Live schema chưa xác minh. |
 | 5.2 | data.full_name | Full name | full_name | string | No | legacy users candidate | full_name | 5.1 | Giá trị sau mutation candidate | Required theo UserProfile | API #14 precedent; body field candidate. |
 | 5.3 | data.email | Email | email | email | No | legacy users candidate | email | 5.1 | Giữ giá trị hiện có | Required theo UserProfile | Không editable trong candidate body; PII. |
-| 5.4 | data.role | Role | role | UserRole | No | legacy users candidate | role | 5.1 | Giá trị sau mutation candidate | Required theo UserProfile | Enum values và policy chưa biết. |
-| 5.5 | data.avatar_url | Avatar URL | avatar_url | uri? | Optional | legacy users candidate | avatar_url | 5.1 | Map safe projection | Null/omit cần chốt | Nullable candidate; current API #14 serializes model field. |
-| 5.6 | data.bio | Biography | bio | string? | Optional | SOURCE_REQUIRED | N/A | 5.1 | Không tạo hoặc trả giá trị giả | Omit/null cần chốt | Không có legacy users column hoặc API #14 query mapping. |
-| 5.7 | data.phone | Phone | phone | string? | Optional | legacy users candidate | phone | 5.1 | Map safe projection | Null/omit cần chốt | Nullable PII candidate. |
+| 5.4 | data.role | Role | role | UserRole | No | legacy users candidate | role | 5.1 | Role sau mutation | Required theo UserProfile | Allowlist runtime là fallback DERIVED; policy còn mở. |
+| 5.5 | data.avatar_url | Avatar URL | avatar_url | uri? | Optional | legacy users candidate | avatar_url | 5.1 | Map safe projection | JSON null khi nguồn null | API #04 model giữ null; URL format chưa được validate. |
+| 5.6 | data.bio | Biography | bio | string? | Optional | SOURCE_REQUIRED | N/A | 5.1 | Không tạo hoặc trả giá trị giả | Omit | Không có legacy users column/API #04 mapping; model bỏ field. |
+| 5.7 | data.phone | Phone | phone | string? | Optional | legacy users candidate | phone | 5.1 | Map safe projection | JSON null khi nguồn null | API #04 model giữ null; PII policy còn mở. |
 | 5.8 | data.status | Account status | status | UserStatus | No | legacy users candidate | status | 5.1 | Giữ status hiện tại; không mutation ở #70 | Required theo UserProfile | Status update thuộc API #71; enum members chưa biết. |
 | 5.9 | data.created_at | Created time | created_at | date-time | No | legacy users candidate | created_at | 5.1 | ISO-8601 candidate | Required theo UserProfile | Live schema/timezone chưa xác minh. |
-| 5.10 | data.updated_at | Updated time | updated_at | date-time | No | legacy users candidate | updated_at | 5.1 | Candidate server timestamp sau update | Required theo UserProfile | API #14 precedent; behavior #70 chưa có source. |
-| 6 | meta | Metadata | meta | object | No | N/A | N/A | Envelope | `{}` candidate khi không phân trang | Guideline chưa khóa nhánh update | #70 không có pagination metadata. |
-| 7 | traceId | Trace ID | traceId | uuid | No | N/A | Middleware | Envelope | Request correlation ID | Bắt buộc theo ApiEnvelope | Runtime API #70 chưa wired. |
+| 5.10 | data.updated_at | Updated time | updated_at | date-time | No | legacy users candidate | updated_at | 5.1 | Server `CURRENT_TIMESTAMP` | Required theo UserProfile | Theo API #14 precedent; live DB timezone chưa xác minh. |
+| 6 | meta | Metadata | meta | object | No | N/A | N/A | Envelope | `{}` | Current helper | Không có pagination metadata. |
+| 7 | traceId | Trace ID | traceId | uuid | No | N/A | Middleware | Envelope | Request correlation ID | Bắt buộc theo ApiEnvelope | Current middleware gắn trace ID. |
 
 ## Ví dụ success candidate
 
-JSON hợp lệ về cấu trúc; role/status placeholders không xác định enum values. `bio` được omit vì optional nhưng chưa có source mapping. Ví dụ không khẳng định null/omit policy.
+JSON hợp lệ theo runtime fallback. `bio` được omit vì model/source không có mapping; `phone` và `avatar_url` có thể null.
 
 ~~~json
 {
@@ -55,12 +55,12 @@ JSON hợp lệ về cấu trúc; role/status placeholders không xác định e
     "id": 1001,
     "full_name": "Nguyen Van A",
     "email": "user@example.test",
-    "role": "__USER_ROLE_SOURCE_REQUIRED__",
+    "role": "STUDENT",
     "avatar_url": null,
     "phone": null,
-    "status": "__USER_STATUS_SOURCE_REQUIRED__",
+    "status": "ACTIVE",
     "created_at": "2026-09-15T12:00:00Z",
-    "updated_at": "2026-10-24T08:30:00Z"
+    "updated_at": "2026-10-25T08:30:00Z"
   },
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000001"
@@ -69,7 +69,7 @@ JSON hợp lệ về cấu trúc; role/status placeholders không xác định e
 
 ## Ví dụ lỗi theo guideline
 
-Ví dụ lỗi dùng data null theo shared API guideline; current `error_response` helper đang fallback data `{}`, nên envelope cần được thống nhất trước khi API #70 được wire.
+Ví dụ lỗi dùng `data:null`, đúng `error_response` hiện hành.
 
 ~~~json
 {

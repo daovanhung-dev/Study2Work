@@ -2,24 +2,43 @@
 
 ## Kết quả
 
-- Đã author DD Markdown tiếng Việt cho `GET /api/v1/admin/discussions/reported`.
-- Giữ nguyên contract trực tiếp: Bearer JWT/Admin, query `reason?:string`, `severity?:string`, `page?:int32`, `ApiEnvelope<Page<Discussion>>`, HTTP 200 và errors 401/403/500.
-- Ghi AC-37 flow đọc reports + discussion summary; không phát minh physical report table, field hoặc query.
-- Ghi rõ response `Discussion` thiếu report data; `title` không có trong legacy DDL; pagination/Admin policy còn cần nguồn/confirmation.
-- Tạo 8 template-backed sheets và 3 reports. DD status vẫn `Draft — Needs Confirmation`.
+- Wired `GET /api/v1/admin/discussions/reported` with the direct catalog
+  envelope and success/error codes, plus local `DERIVED` 422 page validation.
+- Uses the shared `ADMIN` JWT guard before page parsing and database queries.
+- Adds a Study-local legacy BIGINT `discussion_reports` schema candidate in
+  migration 014, linked to `discussions.id`. Active queue states are `OPEN` and
+  `IN_REVIEW`; reason/severity are exact-match AND filters on the same report.
+- Queue grain is one Discussion. Pagination defaults to page 1 / fixed size 20,
+  sorted by latest matching report timestamp then discussion ID descending.
+- `Discussion.title` derives from normalized content clipped to 120 characters;
+  the queue summary returns `comments=[]`. Both are `DERIVED` mappings for
+  reusable catalog fields missing from legacy storage or summary behavior.
+- Does not add report fields to the catalog response. No report-ingest endpoint
+  is included in API #97; live schema, migration deployment, Admin permission
+  scope and any report writer remain unverified.
+- DD status stays `Draft — Needs Confirmation` because the physical schema and
+  projection decisions are local fallbacks.
 
-## Plan result
+## AC-37 macro-review
 
-| Hạng mục | Kết quả |
+| API | Linked finding |
 |---|---|
-| Contract matrix | Direct catalog contract retained; no additional API fields/codes |
-| Request/query mapping | Every declared query listed; semantics/defaults open |
-| Read mapping | Logical Q1 plus legacy candidate projections separated; no guessed SQL |
-| Mutation mapping | N/A — read-only |
-| Response mapping | PageMeta, Discussion, DiscussionComment and UserSummary fields inventoried |
-| AC-37 review | #97 flow and post-#100 macro-review recorded; contract/schema gaps remain open |
-| Output format | Markdown only, 11 expected files |
+| #98 | Can reuse `discussion_reports.discussion_id`; its `Page<Discussion>` response still has no report detail fields, and title/thread projection must remain consistent. |
+| #99 | Must define action/state/audit behavior and transition active reports out of `OPEN`/`IN_REVIEW`; this API does not mutate them. |
+| #100 | Must define delete marker, timestamp, audit and whether deleted discussions remain in the report queue. Migration 014 uses `ON DELETE RESTRICT`, so hard delete must retain/reconcile report evidence or change the approved FK policy. |
 
-## Chưa quyết định
+## Verification recorded so far
 
-See [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md): report relation/grain, response report fields, Discussion title, filters, pagination, comments scope, Admin authorization and future error integration.
+- Focused HTTP tests: 15 passed; linked #92–#95/#97 regression: 102 passed;
+  full Study suite: 1315 passed with one upstream Starlette/httpx warning.
+- `ruff check app tests` and scoped format check for all touched Python files
+  passed. Repo-wide format check reports 60 out-of-scope files that would be
+  reformatted; none were rewritten.
+- Local OpenAPI exposes 57 `/api/v1` path templates / 68 operations.
+- Deno context validation reports existing missing DB Admin context/source
+  paths and unavailable source-drift baseline commit; no API #97 source path
+  error was reported.
+- Markdown, JSON blocks, relative file links, code fences and table column
+  counts passed the local checks documented in `VERIFICATION_REPORT.md`.
+- All evidence boundaries and the live-schema/report-ingestion limitation are
+  recorded in `VERIFICATION_REPORT.md`.

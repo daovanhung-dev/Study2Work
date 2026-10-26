@@ -20,11 +20,11 @@ status: "Draft — Needs Confirmation"
 | Purpose | Đọc chi tiết một user đã được Admin chọn. |
 | Consumer/Actor | Admin |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin và quyền user management theo catalog/AC-31; current Study chưa có Admin guard. |
+| Authorization | Shared JWT guard yêu cầu claim ADMIN trước DB; ánh xạ claim này thành quyền user management là fallback DERIVED giống API #68. |
 | Direct response | ApiEnvelope<UserProfile> |
-| Basis | Method/path/auth/path type/status/response/errors DIRECT; query và no-row branch là candidate DERIVED. |
+| Basis | Method/path/auth/path type/status/response/errors DIRECT; legacy query, ADMIN-claim mapping, invalid-path 404 và no-row 404 là DERIVED. |
 | Status | Draft — Needs Confirmation |
-| Current runtime state | UNWIRED / NOT_FOUND — không có route, module hoặc test API #69. |
+| Current runtime state | SOURCE_BACKED_WITH_DERIVED_MAPPING — route/module/test được wire; legacy target và path/no-row mappings là DERIVED. |
 | Transaction | N/A — chỉ đọc. |
 | Side effects | Không ghi dữ liệu; không đọc password_hash. |
 
@@ -38,8 +38,8 @@ status: "Draft — Needs Confirmation"
 - [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — UUID identity/profile/role relations khác model legacy.
 - [API #4 profile query/model](../../../app/modules/guest/api_04_users_me/query.py) — safe projection hiện có; bio không được chọn.
 - [API #14 profile query](../../../app/modules/guest/api_14_users_me_profile/query.py) — fields trả về sau cập nhật profile.
-- [Current auth helper](../../../app/utils/auth.py) — guard hiện tại yêu cầu Student; không có Admin guard.
-- [API #68 Overview/Response](../68_admin_users_list/02_Overview.md) và [Response](../68_admin_users_list/04_Response.md) — phần list/pagination mismatch giữ riêng ở #68.
+- [Current auth helper](../../../app/utils/auth.py) — role-aware shared guard; API #68 dùng `role="ADMIN"` trước DB access.
+- [API #68 Overview/Response](../68_admin_users_list/02_Overview.md) và [Response](../68_admin_users_list/04_Response.md) — API #68 hiện trả `Page<UserProfile>`; API #69 vẫn là detail đơn.
 
 ## Tables read
 
@@ -56,24 +56,24 @@ Không có — API GET chỉ đọc.
 ## Mục chú ý
 
 - Catalog và diagram cùng mô tả một user detail với ApiEnvelope<UserProfile>; API #69 không có pagination.
-- AC-31 yêu cầu Admin đăng nhập và có quyền user management; Study hiện chỉ có shared Student guard.
+- AC-31 yêu cầu Admin đăng nhập và có quyền user management. Runtime dùng shared role-aware guard với claim `ADMIN`, nhất quán API #68; permission relation riêng/tenant/MFA policy không có source.
 - Legacy users là nguồn candidate; DDL/schema artifact không chứng minh relation tồn tại trong live DB.
-- UserProfile.bio là optional nhưng không có cột trong legacy users hoặc field trong API #4/#14 projection.
+- UserProfile.bio là optional nhưng không có cột trong legacy users hoặc field trong API #4/#14 projection; runtime omit field này thay vì ghép UUID pilot profile.
 - UserRole và UserStatus không có danh sách enum members trong catalog; source profile model dùng string.
 - Email và phone là PII; chỉ được đọc/trả sau khi Admin được xác thực và có quyền.
 
-## Candidate mapping — DERIVED
+## Runtime mapping — legacy candidate, DERIVED
 
-Candidate Q1 đọc một row theo users.id = :user_id và chỉ lấy profile allowlist hiện có trong API #4/#14. Nếu không có row, ánh xạ sang 404 là đề xuất phù hợp với detail resource contract. Cả query lẫn nhánh này đều chưa chạy trong API #69.
+Q1 đọc một row theo `users.id = :user_id` và chỉ lấy profile allowlist hiện có trong API #04/#14. Runtime dùng shared `ADMIN` guard trước lookup, malformed/out-of-int64 path và no-row đều trả 404 theo error set catalog. Query target và hai nhánh 404 vẫn là DERIVED; live schema chưa xác minh.
 
 ## Conflicts
 
 - Legacy schema dùng BIGINT users; V1-PILOT dùng UUID identity/profile/role relations và không cùng một UserProfile projection.
 - Reusable UserProfile có bio?, nhưng legacy users và current API #4/#14 source không có bio.
 - Catalog dùng UserRole/UserStatus nhưng không định nghĩa enum members.
-- Current Student-only guard không thực hiện authorization Admin theo AC-31.
-- Error guideline yêu cầu data null; current helper thay data vắng mặt bằng {}.
-- API #68 list vẫn có discrepancy list/pagination; API #69 direct detail response không tự sửa contract của #68.
+- Shared guard có thể yêu cầu claim `ADMIN`; policy riêng ngoài claim này chưa có source.
+- `error_response` hiện serialize data vắng mặt thành JSON null; runtime API #69 giữ convention đó.
+- API #68 list/pagination đã được đồng bộ riêng trong catalog và diagram; API #69 giữ contract detail `UserProfile`.
 
 ## Security note
 

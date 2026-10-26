@@ -24,13 +24,14 @@ status: "Draft — Needs Confirmation"
 | Phiên bản | Ngày | Người thay đổi | Nội dung | Trạng thái |
 |---|---|---|---|---|
 | 0.1 | 2026-10-24 | Codex | Tạo DD #95; phân tách contract DeleteResult khỏi đề xuất draft removal/scheduled cancellation; persistence còn SOURCE_REQUIRED. | Draft — Needs Confirmation |
+| 0.2 | 2026-10-26 | Codex | Wire API #95 theo local fallback: khóa notification và delivery, chỉ hard-delete khi mọi delivery đang QUEUED; DB trả deleted_at; ghi rõ cascade và scheduler boundary. | Draft — Needs Confirmation |
 
 ## Ranh giới thay đổi
 
-- Không sửa API catalog, AC-36 diagram, database schema hoặc Study runtime.
+- Không sửa API catalog, AC-36 diagram hoặc database schema; API #95 Study runtime/tests được thêm.
 - Giữ nguyên path-only request, DeleteResult response và đúng error codes.
-- Không hard-delete recipients/delivery history trong proposal.
-- Eligibility, tombstone và scheduler cancellation chưa được owner xác nhận.
+- Chỉ xóa path-selected recipient-level row; không xóa các notification khác cùng `operation_id`.
+- `QUEUED`-only eligibility và cascade là fallback `DERIVED`; lifecycle approval và external scheduler cancellation chưa được xác nhận.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

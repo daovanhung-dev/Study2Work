@@ -14,13 +14,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-25 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD API #54 từ API catalog và AC-23; ghi rõ schema, pagination, quyền và response gaps. | Draft — Needs Confirmation |
+| 1.1 | 2026-10-25 | Codex | Cập nhật theo implementation API #54 và fallback DERIVED: Page<Submission>, page size 20, stable order, direct-owner access và upload lookup theo URL/owner/purpose/course. | Draft — Needs Confirmation; live schema và các quyết định DERIVED chưa được owner xác nhận. |
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -38,21 +38,21 @@ status: "Draft — Needs Confirmation"
 | 5.6.3 | `data.questions[].type` | Question type | `type` | QuestionType | No | SOURCE_REQUIRED | N/A | Không có legacy column đã xác nhận | Required schema gap. |
 | 5.6.4 | `data.questions[].choices[]` | Choices | `choices` | QuizChoice[] | No | SOURCE_REQUIRED | N/A | QuizChoice schema chưa có | Không tự thêm answer-key field. |
 | 6 | `meta` | Metadata | `meta` | object | No | ApiEnvelope | Envelope | Không có pagination contract | Members chưa quy định. |
-| 7 | `traceId` | Trace ID | `traceId` | uuid | No | Request context | Envelope | Propagate trace | Route #91 chưa được wire. |
+| 7 | `traceId` | Trace ID | `traceId` | uuid | No | Request context | Envelope | Propagate trace | Runtime giữ trace của request. |
 
-## Response proposal — DERIVED, chưa được duyệt
+## Response proposal — runtime fallback DERIVED, chưa được duyệt
 
-AC-35 yêu cầu statistics nhưng reusable Quiz không có metric. Đề xuất riêng `ApiEnvelope<QuizStatistics>`; đây không phải schema catalog hiện tại.
+AC-35 yêu cầu statistics nhưng reusable Quiz không có metric. Runtime dùng DTO riêng `ApiEnvelope<QuizStatistics>` theo phương án DERIVED; đây không phải schema catalog hiện tại và chưa được owner duyệt.
 
 | Path | Type | Candidate source/expression | Null/transform rule | Status |
 |---|---|---|---|---|
-| `data.quiz_id` | int64 | quizzes.id | ID row được tìm thấy | DERIVED |
-| `data.attempt_count` | int64 | COUNT(quiz_attempts.id) | Tất cả attempt gắn với quiz | DERIVED |
-| `data.submitted_attempt_count` | int64 | COUNT(submitted_at) | submitted_at khác NULL | DERIVED |
-| `data.graded_attempt_count` | int64 | COUNT(score) | score khác NULL | DERIVED |
-| `data.average_score` | decimal-string? | AVG(score) | NULL khi không có scored attempt; scale/rounding mở | DERIVED |
-| `data.passed_attempt_count` | int64? | COUNT(score >= passing_score) | NULL nếu threshold NULL; 0 nếu threshold có giá trị nhưng không ai đạt | DERIVED |
-| `data.pass_rate_percent` | decimal-string? | passed / graded × 100 | NULL khi threshold NULL hoặc graded=0; rounding mở | DERIVED |
+| `data.quiz_id` | int64 | quizzes.id | ID row được tìm thấy | DERIVED; runtime local |
+| `data.attempt_count` | int64 | COUNT(quiz_attempts.id) | Tất cả attempt gắn với quiz | DERIVED; runtime local |
+| `data.submitted_attempt_count` | int64 | COUNT(submitted_at) | submitted_at khác NULL | DERIVED; runtime local |
+| `data.graded_attempt_count` | int64 | COUNT(score) | score khác NULL | DERIVED; runtime local |
+| `data.average_score` | decimal-string? | AVG(score) | NULL khi không có scored attempt; scale/rounding mở | DERIVED; runtime local |
+| `data.passed_attempt_count` | int64? | COUNT(score >= passing_score) | NULL nếu threshold NULL; 0 nếu threshold có giá trị nhưng không ai đạt | DERIVED; runtime local |
+| `data.pass_rate_percent` | decimal-string? | passed / graded × 100 | NULL khi threshold NULL hoặc graded=0; không làm tròn trong app | DERIVED; runtime local |
 
 ## Ví dụ thành công — direct contract
 
@@ -131,7 +131,7 @@ AC-35 yêu cầu statistics nhưng reusable Quiz không có metric. Đề xuất
 }
 ~~~
 
-> API Guidelines ghi data=null; current error_response tuần tự hóa None thành {}. Đây là discrepancy nguồn/helper, không phải API #91 runtime behavior.
+> API Guidelines và current `error_response` đều tuần tự hóa error `data` thành `null`; route #91 dùng helper hiện hành.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

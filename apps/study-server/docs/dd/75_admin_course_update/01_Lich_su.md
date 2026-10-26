@@ -14,13 +14,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | `2026-10-24` |
-| Ngày update cuối cùng | `2026-10-24` |
+| Ngày update cuối cùng | `2026-10-26` |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | `1.0` | `2026-10-24` | `Codex` | Tạo DD API #75 từ catalog, AC-32 và các nguồn Study hiện có. | Body metadata là proposal `DERIVED`; cần xác nhận trước implementation. |
+| `1.0` | `2026-10-26` | `Codex` | Đồng bộ DD với API #75 source-backed implementation. | Body, validation, schema mapping và transaction vẫn `DERIVED`; live DB chưa xác minh. |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

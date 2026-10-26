@@ -21,14 +21,14 @@ status: "Draft — Needs Confirmation"
 | API ID | 49 |
 | API name | Lấy cây nội dung course |
 | HTTP method | GET |
-| Endpoint | /api/v1/mentor/courses/{course_id}/content |
+| Endpoint | `/api/v1/mentor/courses/{course_id}/content` |
 | Version | v1 |
 | Status | Draft — Needs Confirmation |
 | Created by | Codex |
 | Reviewed by | Chưa xác nhận |
 | Approved by | Chưa xác nhận |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-25 |
 
 ## Tên hiển thị
 
@@ -36,18 +36,19 @@ status: "Draft — Needs Confirmation"
 
 ## Mục tiêu
 
-Đọc nội dung của một course trong màn hình quản lý của Mentor theo luồng AC-22. Catalog quy định `ApiEnvelope<Content>`; việc schema một `Content` có đại diện cả cây hay chỉ một node chưa được nguồn xác nhận.
+Đọc các Content node đang hoạt động trong course để Mentor xem cây trước các thao tác AC-22. Implementation trả `ApiEnvelope<Content[]>`; `parent_id` liên kết node với parent và root không serialize `parent_id`.
 
 ## Tài liệu liên quan
 
 - Catalog: `docs/lists/list_api.md`, API #49 và reusable schema `Content`.
 - AC-22: `apps/study-server/docs/diagrams/AC_UNICA/00_AC_API_INDEX.md` và `AC_03_MENTOR_TEACHING.drawio`.
-- DB artifacts: `apps/study-server/docs/diagrams/DB_UNICA_TABLES.md`, `DB_UNICA_ERD.drawio`, `infra/postgres/02_study_db.sql`.
+- DB artifacts: `apps/study-server/docs/diagrams/DB_UNICA_TABLES.md`, `DB_UNICA_ERD.drawio`, `infra/postgres/study-server/DB.sql`, migration `006_contents.sql`.
+- Runtime: `apps/study-server/app/modules/mentor/api_49_mentor_content_list/`.
 - Workflow: `.agents/server-study/workflows/README.md`; skill registry `createDD-markdown`.
 
 ## Phạm vi
 
-Tài liệu này đặc tả riêng API #49. Các thao tác tạo/sửa/xóa/publish là API #50–#53 và không thuộc endpoint này.
+Tài liệu này đặc tả riêng API #49. Các thao tác tạo/sửa/version/publish/xóa là API #50–#53. Bộ DD vẫn cần business/schema owner xác nhận các câu hỏi còn mở; DDL trong repository chưa chứng minh trạng thái DB live.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

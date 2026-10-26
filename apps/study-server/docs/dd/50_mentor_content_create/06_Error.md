@@ -13,30 +13,30 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Bảng dưới đây giữ đúng error set của API #50 trong catalog: HTTP 401/403/422/500. Điều kiện nhánh ở mức contract; chi tiết schema, course lookup và middleware wiring chưa được runtime xác minh.
+Bảng dưới đây giữ đúng error set của API #50 trong catalog: HTTP 401/403/422/500. Local route/test hiện xác minh các nhánh; live schema/deployment chưa được xác minh.
 
 ## Error cases
 
 | No | HTTP status | Business code | Điều kiện theo contract | Data Mapping step | Response/source rule | Status |
 |---:|---:|---|---|---:|---|---|
-| 1 | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Bearer JWT thiếu hoặc không hợp lệ | 1–2 | Error envelope; không trả token/claims | Code DIRECT; endpoint UNWIRED |
-| 2 | 403 | `DESIGN_ACCESS_DENIED` | Principal không có role Mentor hoặc Mentor không có quyền quản lý course | 2 | Error envelope; không lộ quyền/ID nội bộ | Code DIRECT; access implementation SOURCE_REQUIRED |
-| 3 | 422 | `DESIGN_VALIDATION_ERROR` | Request không đạt validation được xác nhận: required field/type/body shape; enum/payload rules sau khi có schema | 3 | Error envelope; không echo payload nhạy cảm | Code DIRECT; điều kiện chi tiết một phần SOURCE_REQUIRED |
-| 4 | 500 | `DESIGN_INTERNAL_ERROR` | Lỗi nội bộ/persistence/mapping không dự kiến | 5–8 | Error envelope; không trả SQL/stack/provider detail | Code DIRECT; route chưa có |
+| 1 | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Bearer JWT thiếu hoặc không hợp lệ | 1–2 | Error envelope; không trả token/claims | Code DIRECT; local route test verified |
+| 2 | 403 | `DESIGN_ACCESS_DENIED` | JWT role không phải Mentor; course không tồn tại; hoặc Mentor không trực tiếp sở hữu course | 2–3 | Error envelope chung; không phân biệt course vắng và ngoài quyền | Code DIRECT; absent-course mapping DERIVED |
+| 3 | 422 | `DESIGN_VALIDATION_ERROR` | Body thiếu/sai type, payload không phải object, hoặc có field ngoài request contract | 3 | Error envelope + field errors; không echo payload | Code DIRECT; local framework TestClient verified |
+| 4 | 500 | `DESIGN_INTERNAL_ERROR` | Query/order/insert/commit failure hoặc invalid DB projection/order range | 4–8 | Rollback; error envelope không trả SQL/stack/provider detail | Code DIRECT; local view/TestClient verified |
 
 ## Tình huống chưa được định nghĩa
 
 | Tình huống | Catalog có code tương ứng? | Ghi chú |
 |---|---|---|
-| Course ID không tồn tại | Không có 404 trong API #50 | Cần quyết định trả 422, 403 hay hành vi khác trong giới hạn contract; không tự thêm status/code. |
-| Mentor không được assign course nhưng có role Mentor | 403 được khai báo | Quy tắc direct ownership/assignment và principal mapping cần source/approval. |
-| `content_type` không phải enum member | 422 có thể là validation branch | Enum member set và validation source chưa có. |
-| `payload` sai schema của subtype | 422 có thể là validation branch | Schema theo loại Content chưa có. |
-| Race khi cấp `order` hoặc lặp request | Không có 409/idempotency contract | Concurrency/retry policy cần xác nhận; không invent code. |
+| Course ID không tồn tại | Không có 404 trong API #50 | Implementation map cùng 403 `DESIGN_ACCESS_DENIED` như owner mismatch; DERIVED để tránh ID enumeration. |
+| Mentor được assign nhưng không trực tiếp sở hữu course | 403 được khai báo | Current source chỉ hỗ trợ direct `courses.mentor_id`; assignment relation/policy vẫn SOURCE_REQUIRED. |
+| `content_type` không phải enum member | 422 được khai báo | Chưa có enum member set nên hiện chỉ validate strict string; enum validation chưa thực hiện. |
+| `payload` sai schema của subtype | 422 được khai báo | Chưa có schema subtype; hiện chỉ yêu cầu JSON object. |
+| Race khi cấp `order` hoặc lặp request | Không có 409/idempotency contract | Row lock tuần tự hóa order allocation của API #50 trên cùng course; idempotency/retry vẫn chưa được quy định. |
 
 ## Middleware integration discrepancy
 
-Route API #50 chưa tồn tại. Nếu route được wire trong tương lai mà path chưa được thêm vào `DESIGN_CONTRACT_PATHS`, validation fallback có thể trả `VALIDATION_ERROR` và exception fallback `INTERNAL_SERVER_ERROR`, khác catalog `DESIGN_VALIDATION_ERROR` / `DESIGN_INTERNAL_ERROR`. Đây là điều kiện tích hợp cần xử lý khi triển khai, không phải behavior API #50 hiện tại.
+Route API #50 đã được thêm vào `DESIGN_CONTRACT_PATHS`. TestClient xác minh validation framework trả `DESIGN_VALIDATION_ERROR`; view tự map persistence/integrity errors thành `DESIGN_INTERNAL_ERROR`.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

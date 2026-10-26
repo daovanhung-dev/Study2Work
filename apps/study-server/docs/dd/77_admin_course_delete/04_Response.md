@@ -20,7 +20,7 @@ status: "Draft — Needs Confirmation"
 | Content-Type | application/json |
 | Success HTTP status | 200 `DESIGN_RESOURCE_DELETED` |
 | Direct response type | `ApiEnvelope<DeleteResult>` theo catalog. |
-| Runtime status | API #77 chưa được wire; examples là expected design, không phải runtime output. |
+| Runtime status | API #77 route/module/tests đã wire local; tests dùng fake DB session, không phải live DB evidence. |
 
 ## Response fields
 
@@ -30,27 +30,27 @@ status: "Draft — Needs Confirmation"
 | 2 | `success` | Success flag | `success` | boolean | No | Envelope | N/A | Branch | true success; false error | N/A | Direct envelope convention. |
 | 3 | `businessCode` | Business code | `businessCode` | string | No | Catalog | N/A | Branch | `DESIGN_RESOURCE_DELETED` hoặc exact catalog error code | N/A | Không tạo code mới. |
 | 4 | `message` | Message | `message` | string | No | Application | N/A | Branch | Safe localized message | Exact text chưa đặc tả | Không trả raw database detail. |
-| 5 | `data` | DeleteResult | `data` | object | No | Approved soft-delete target | N/A | 5.1 | Map theo reusable schema | Required on success; error data theo API guideline null | Physical mapping chưa có source. |
-| 5.1 | `data.id` | Course ID | `id` | int64 | No | Course target candidate | `id` candidate | 5.1 | ID của course được đánh dấu xóa thành công | Required | Physical target schema/live mapping chưa xác nhận. |
+| 5 | `data` | DeleteResult | `data` | object | No | `courses` | N/A | 5.1 | Map theo reusable schema | Required on success; error data theo API guideline null | Legacy candidate; live mapping chưa xác nhận. |
+| 5.1 | `data.id` | Course ID | `id` | int64 | No | `courses` | `id` | 5.1 | ID của course vừa được đánh dấu `DELETED` | Required | Candidate legacy BIGINT; live schema chưa xác nhận. |
 | 5.2 | `data.status` | Delete status | `status` | literal `"deleted"` | No | DeleteResult schema | N/A | 5.1 | Literal `deleted` | Required | Direct reusable schema; không phải CourseStatus. |
-| 5.3 | `data.deleted_at` | Deletion timestamp | `deleted_at` | date-time | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 5.1 | Timestamp do approved soft-delete persistence cung cấp | Required; không tự fallback sang request time | Legacy courses không có marker; pilot `archived_at` khác nghĩa/model. |
+| 5.3 | `data.deleted_at` | Deletion timestamp | `deleted_at` | date-time | No | `courses` | `updated_at` | 5.1 | DB timestamp từ `UPDATE ... RETURNING updated_at` | Required; không dùng application clock | DERIVED theo API #72; legacy timestamp không có timezone. |
 | 6 | `meta` | Metadata | `meta` | object | No | Envelope | N/A | Branch | `{}` candidate | Empty object candidate | Không có pagination. |
-| 7 | `traceId` | Trace ID | `traceId` | uuid | No | Shared trace | `X-Trace-Id` | 0.1/Branch | Validate hoặc generate theo convention | Required trong envelope | Endpoint chưa wired. |
-| E1 | Error `data` | Error payload | `data` | null by guideline | N/A | N/A | N/A | Error branch | API guideline yêu cầu `null` | Current helper default là `{}` | Conditional source/contract discrepancy. |
+| 7 | `traceId` | Trace ID | `traceId` | uuid | No | Shared trace | `X-Trace-Id` | 0.1/Branch | Validate hoặc generate theo convention | Required trong envelope | Shared middleware/header is locally wired. |
+| E1 | Error `data` | Error payload | `data` | null by guideline | N/A | N/A | N/A | Error branch | API guideline yêu cầu `null` | Current helper default là `null` | Conditional source/contract discrepancy. |
 
 ## Ví dụ thành công — HTTP 200
 
-Ví dụ theo `DeleteResult` trực tiếp. `deleted_at` minh họa định dạng; nguồn persistable chưa được chọn nên không dùng giá trị ví dụ như implementation source.
+Ví dụ minh họa `DeleteResult` local; timestamp thực tế lấy từ DB `updated_at` sau mutation.
 
 ~~~json
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_DELETED",
-  "message": "Đã xóa khóa học theo policy.",
+  "message": "Course deleted.",
   "data": {
     "id": 101,
     "status": "deleted",
-    "deleted_at": "2026-10-24T12:00:00Z"
+    "deleted_at": "2026-10-26T10:30:00"
   },
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000077"
@@ -59,13 +59,13 @@ Ví dụ theo `DeleteResult` trực tiếp. `deleted_at` minh họa định dạ
 
 ## Ví dụ lỗi dependency — HTTP 422 — DERIVED
 
-Ví dụ branch nếu policy được duyệt quy định enrollment/content hiện hữu chặn soft delete. Business code có trong catalog; điều kiện, field errors và message chưa được duyệt. `data:null` theo API guideline, khác helper hiện tại.
+Ví dụ nhánh fallback khi có enrollment hoặc nội dung học tập đang tồn tại. Business code có trong catalog; blocker semantics vẫn cần owner xác nhận. `data:null` theo current `error_response` helper.
 
 ~~~json
 {
   "success": false,
   "businessCode": "DESIGN_VALIDATION_ERROR",
-  "message": "Không thể xóa khóa học do điều kiện policy.",
+  "message": "Course with enrollments or content cannot be deleted.",
   "data": null,
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000077"

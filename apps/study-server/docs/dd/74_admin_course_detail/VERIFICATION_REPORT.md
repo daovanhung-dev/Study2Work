@@ -1,47 +1,41 @@
 # Báo cáo kiểm tra — API #74
 
-Trạng thái: kiểm tra tĩnh tài liệu; API #74 chưa được wire.
+Trạng thái: local source/test verification completed on 2026-10-26. The DD remains `Draft — Needs Confirmation`; no live database or deployment was verified.
 
-## Phạm vi nguồn
+## Evidence reviewed
 
-| Nguồn | Đã đọc | Ghi chú |
-|---|---:|---|
-| API catalog #74 và reusable schemas | Có | Contract giữ nguyên; `Page<Course>` là singleton proposal. |
-| AC-32 index và toàn bộ node/edge của diagram | Có | #73 → #74 → #75/#76/#77 → reload; counters chưa có schema. |
-| Legacy DB guide/ERD/DDL | Có, phần Course/User liên quan | Mapping `DESIGN_ONLY`; live schema không xác minh; mentor nullability có discrepancy. |
-| V1-PILOT DDL | Có, phần courses/course_versions | UUID/versioned model không map ngầm sang BIGINT. |
-| Current API #06/#08 source và API #08 tests | Có | Chỉ dùng mapping/error/Page precedents; không áp dụng public `PUBLISHED` filter. Không chạy tests. |
-| DD tham khảo #69/#73 | Có | Admin guard boundary, Course projection và AC-32 continuity. |
-| Template | Có, 8/8 file mở | Fingerprint/manifests bên dưới; appendix phải khớp byte với baseline. |
+| Source | Result |
+|---|---|
+| AC-32 activity diagram | `#73 → #74 course/owner/counters → #75/#76/#77 → reload`; counters have no response field definition. |
+| Legacy and V1-PILOT DDL | Legacy `courses/users` use BIGINT and fit the API int64 candidate; V1-PILOT UUID/versioned model is incompatible. Neither verifies live schema. |
+| API catalog and reusable schemas | Direct route/auth/`ApiEnvelope<Page<Course>>`/200 and 401/403/404/500 retained. Course lacks counters; category is optional. |
+| Current #08/#69/#73 and shared auth/mapping/middleware | Public detail is a singleton Page precedent; Admin detail uses shared role guard, safe Course mapper and route-template middleware matching. |
 
-## Kết quả kiểm tra
+## Verification
 
-| Check | Kết quả | Trạng thái |
-|---|---|---|
-| Exact deliverables | Đúng 11 file: 8 sheet + 3 report; không có ZIP. | PASS |
-| Front matter/template appendix | 8/8 sheet có metadata; appendix cuối khớp byte với 8 template tương ứng. | PASS |
-| Catalog request/response/error contract | GET/path/auth/response và đúng success 200 + error 401/403/404/500; không thêm business code. | PASS |
-| Course/Page field coverage | Có toàn bộ field Course, UserSummary và PageMeta; `category` optional được ghi SOURCE_REQUIRED/omit, counters giữ open vì chưa có field contract. | PASS_WITH_OPEN_GAPS |
-| JSON examples | 2/2 JSON example parse hợp lệ. | PASS |
-| Tables/fences/links/anchors/whitespace | 32 bảng có số cột nhất quán; code fence đóng; 39 link nội bộ/anchor resolve; không trailing whitespace; có final newline. | PASS |
-| Output fingerprint | Digest của 8 sheet + PLAN_RESULT + OPEN_QUESTIONS; loại VERIFICATION_REPORT để tránh self-reference. | RECORDED |
-| Route/module/test absence | Đã xác nhận trước authoring | VERIFIED_STATIC_ONLY |
-| Runtime tests | Không chạy — docs-only | NOT_RUN |
-| AC-32 macro-review #73–#77 | Đã rà cả năm DD; counters, visibility, Admin guard, schema/status và error integration vẫn mở. | COMPLETED_WITH_OPEN_QUESTIONS |
+| Check | Result |
+|---|---|
+| Focused API #74 suite | `15 passed`, one upstream Starlette/httpx deprecation warning. |
+| Linked #06/#08/#69/#73/#74 regression | `80 passed`, same warning. |
+| Full Study Server suite | `845 passed`, same warning. |
+| Ruff | `.venv/bin/ruff check app tests` — all checks passed. |
+| OpenAPI | Route exists as `GET /api/v1/admin/courses/{course_id}` with signed-int64 path metadata and catalog 401/403/404/500 errors; overall 42 unique `/api/v1` templates / 45 operations. |
+| Error/middleware | Dynamic route template is in `DESIGN_CONTRACT_PATHS`; middleware resolves FastAPI route template; current error helper defaults `data:null`. |
+| Agent context validator | Deno fallback with `--skip-drift` still reports missing DB Admin context/source roots and broken DB Admin links outside this scope. | `BASELINE_FAIL_OUT_OF_SCOPE` |
+| DD appendices / diff | All 8 template appendix suffixes match the prior file byte-for-byte; `git diff --check` passes. | PASS |
+| Worktree/static boundaries | No migration or catalog/diagram edit for #74; all other dirty worktree files were preserved. |
 
-## Fingerprint
+## Implemented local fallbacks
 
-- Template manifest SHA-256 (tên file sort + SHA-256 từng file): `ffc3df52dfdfa6ff69a9c71420300fdbd5b083352255f89685dd6214a91a591b`.
-- DD payload SHA-256: `8b267a0f66c8d77a7f18c7e74a46768a2f021140a254a0fe1c155509e6460ea5`; gồm 8 sheet và 2 report `PLAN_RESULT.md`/`OPEN_QUESTIONS.md`, loại trừ file report này.
+- Shared JWT role `ADMIN` is enforced before path parsing/DB access; dedicated course-management permission policy remains absent.
+- One bound legacy BIGINT candidate read uses `courses LEFT JOIN users`, does not filter status, and does not query category/counters.
+- Response is one mapped `Course` in `Page<Course>` with page metadata 1/1/1/1; invalid/out-of-int64 path maps to 404.
+- Query/projection errors map to safe 500 with rollback; the read path never commits.
 
-## Giới hạn bằng chứng
+These are local implementation choices where design evidence is incomplete, not owner-approved business/schema decisions.
 
-- Tài liệu là `Draft — Needs Confirmation`, không chứng minh API #74 runtime/DB/live schema.
-- Không chạy application tests; source evidence được đọc tĩnh.
-- AC-32 macro-review đã hoàn tất ở mức tài liệu sau khi DD #77 có mặt.
-## Kết quả macro-review AC-32 #73–#77
+## Limits
 
-- Ownership: #73 list/filter, #74 detail, #75 metadata-only, #76 status + audit intent, #77 policy soft-delete. #73–#76 giữ `Page<Course>` theo catalog; #77 giữ `DeleteResult`.
-- Diagram nhắc owner và counters cho detail; Course/UserSummary có owner nhưng counter definitions/fields không có trong contract. Không tự thêm counter response/query.
-- Visibility sau soft-delete, behavior của update/status trên deleted target, category relation, Admin guard, CourseStatus casing, schema generation và middleware/error convention còn quyết định.
-- Static document review only; không xác minh live schema/runtime và không chạy application tests.
+- Fake DB tests do not establish PostgreSQL schema, grants, migration state, deployment or production behavior.
+- The role-only guard does not prove that the separate course-management permission in AC-32 is enforced.
+- Counter definitions, category relation, nullable/orphan projection handling and CourseStatus enum/casing remain unresolved; document status stays `Draft — Needs Confirmation`.

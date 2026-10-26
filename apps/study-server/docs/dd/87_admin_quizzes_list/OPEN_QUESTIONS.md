@@ -4,7 +4,7 @@
 **Endpoint:** GET /api/v1/admin/quizzes
 **Nhóm:** AC-35, API #87–#91
 
-Các đề xuất trong DD đều được đánh dấu DERIVED. Catalog và runtime không được sửa để lấp các câu hỏi dưới đây.
+Các đề xuất trong DD đều được đánh dấu DERIVED. Runtime hiện triển khai các fallback được nêu dưới đây; catalog, diagram và schema chưa được sửa để biến chúng thành contract đã duyệt.
 
 ## Q-87-01 — Cardinality của response list
 
@@ -26,15 +26,15 @@ Các đề xuất trong DD đều được đánh dấu DERIVED. Catalog và run
 
 **Evidence:** Reusable Quiz yêu cầu questions:QuizQuestion[], nhưng AC-35 activity diagram chỉ nêu “Query quizzes”. API #28 detail đọc quiz, questions và choices.
 
-**Đề xuất:** Nếu giữ Quiz response schema, đọc nested data theo batch cho các quiz trên trang; nếu đây là list nhẹ, sửa response contract thành summary type riêng trước khi implement.
+**Runtime fallback:** Trả `questions: []` và không query child tables. API #88 migration 013 now provides local question_type/choice-order candidates, but AC-35 list node says only “Query quizzes”; #87 keeps a metadata-only projection. Empty array does not assert that Quiz has no questions.
 
 **Cần xác nhận:** #87 có trả questions/choices cho mọi quiz không, hay chỉ metadata và dùng endpoint detail khác?
 
 ## Q-87-04 — QuestionType và QuizChoice shape
 
-**Evidence:** QuizQuestion yêu cầu type và choices; catalog không định nghĩa enum QuestionType hoặc schema QuizChoice. Legacy quiz_questions không có type column; legacy quiz_choices có id, question_id, choice_text, is_correct. Pilot question_type thuộc schema UUID khác.
+**Evidence:** Catalog still does not define QuestionType values or QuizChoice fields. API #88 migration 013 adds a local nullable `question_type` and `quiz_choices.sort_order`; the API #88 DD chooses Admin choice `{id,text,is_correct}`. These remain DERIVED and are not owner-approved; pilot IDs/tables are not joined.
 
-**Đề xuất:** Không đưa is_correct hoặc field mới vào response cho tới khi QuizChoice contract được định nghĩa. Không map pilot question_type sang legacy quiz ID.
+**Đề xuất:** Keep API #87 metadata-only; do not load nested child rows from the list route. Treat the #88 shape as a DERIVED Admin projection, and never expose `is_correct` to Student API #28.
 
 **Cần xác nhận:** QuizChoice có những property nào, có trả is_correct cho Admin không, và thứ tự choices lấy từ đâu?
 
@@ -64,29 +64,27 @@ Các đề xuất trong DD đều được đánh dấu DERIVED. Catalog và run
 
 ## Q-87-08 — Admin authentication/authorization
 
-**Evidence:** Catalog role Admin; AC-35 yêu cầu quiz-management permission; current Study helper chỉ kiểm tra Student và không có route Admin.
+**Evidence:** Catalog role Admin; runtime #87 dùng shared `ADMIN` guard. AC-35 còn yêu cầu quiz-management permission nhưng Study chưa có policy/claim mapping riêng.
 
 **Cần xác nhận:** Admin claim/role source, permission policy và mapping 401 so với 403 là gì?
 
 ## Q-87-09 — Query validation và error mapping
 
-**Evidence:** Catalog chỉ liệt kê 401/403/500; invalid course/page thường đi qua FastAPI request validation. Middleware hiện không có /api/v1/admin/quizzes trong DESIGN_CONTRACT_PATHS.
+**Evidence:** Catalog chỉ liệt kê 401/403/500. Runtime #87 parse raw query sau auth, trả 422 `DESIGN_VALIDATION_ERROR` cho course/page sai và đã có path trong `DESIGN_CONTRACT_PATHS`.
 
-**Đề xuất:** Không thêm 400/422 vào direct error table; giữ discrepancy giữa catalog và future integration.
-
-**Cần xác nhận:** Invalid int64/int32/status trả code nào? Khi route được wire, có đưa path vào DESIGN_CONTRACT_PATHS để giữ DESIGN_INTERNAL_ERROR mapping không?
+**Cần xác nhận:** Owner có chấp nhận 422 cho invalid int64/int32 không? Status hiện là exact string, không có enum validation.
 
 ## Q-87-10 — Error envelope
 
-**Evidence:** API Guidelines yêu cầu data=null; current error_response thay data=None bằng {} khi serialize.
+**Evidence:** API Guidelines yêu cầu data=null; current `error_response` trả null và API #87 focused tests xác nhận.
 
-**Cần xác nhận:** Runtime helper hay guideline là chuẩn bắt buộc khi endpoint Admin được implement?
+**Trạng thái:** Không còn mismatch ở current source. Cần giữ regression khi shared response helper thay đổi.
 
 ## Q-87-11 — Empty list và course không tồn tại
 
 **Evidence:** Direct catalog response không mô tả collection; list có thể không có row; error set không có 404.
 
-**Đề xuất DERIVED:** Nếu collection contract được duyệt, empty result trả HTTP 200 với items=[]; không trả 404 chỉ vì list rỗng.
+**Runtime fallback DERIVED:** Empty result trả HTTP 200 với Page `items=[]`; không trả 404 chỉ vì list rỗng. Course tồn tại được kiểm tra riêng không.
 
 **Cần xác nhận:** course ID không có quiz trả empty list hay 404 sau khi response cardinality được sửa?
 
@@ -100,8 +98,8 @@ Các đề xuất trong DD đều được đánh dấu DERIVED. Catalog và run
 ## Ranh giới proposal
 
 - DIRECT: endpoint, actor/auth type, query names/types, ApiEnvelope<Quiz>, HTTP 200 và errors 401/403/500.
-- DERIVED: exact filters, page default, fixed page size, stable ordering và empty collection.
-- SOURCE_REQUIRED: active schema, Admin policy, QuizChoice/QuestionType, nested-list projection, parse errors và live query behavior.
-- DISCREPANCY: response singleton so với list/page semantics; error envelope guideline so với current helper.
+- DERIVED/current local: shared ADMIN role fallback, ApiEnvelope<Page<Quiz>>, exact filters, page default/size/order, empty Page 200, metadata-only `questions=[]`, tombstone filtering and query 422.
+- SOURCE_REQUIRED: active schema, dedicated Admin policy, QuizChoice/QuestionType, nested-list projection, query-422 approval và live query behavior.
+- DISCREPANCY: response singleton so với list/page runtime; required nested schema so với metadata-only projection; local 422 ngoài catalog.
 
 Cần chốt các câu hỏi ảnh hưởng contract, schema hoặc quyền truy cập trước khi đổi DD sang Approved/Final hoặc dùng làm implementation contract.

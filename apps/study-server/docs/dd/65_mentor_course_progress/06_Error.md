@@ -13,10 +13,10 @@ status: "Draft — Needs Confirmation"
 
 | HTTP | Business code | Direct meaning | Candidate trigger | Status |
 |---:|---|---|---|---|
-| 401 | DESIGN_AUTHENTICATION_REQUIRED | Bearer JWT thiếu/không hợp lệ. | Không xác thực được principal. | Code/status DIRECT; Study route chưa wired. |
-| 403 | DESIGN_ACCESS_DENIED | Không đủ role hoặc quyền truy cập. | Candidate: course tồn tại nhưng principal không có quyền. | Code DIRECT; predicate/ordering DERIVED. |
-| 404 | DESIGN_RESOURCE_NOT_FOUND | Resource không tồn tại. | Candidate: course ID không tồn tại. | Code DIRECT; missing-resource scope DERIVED. |
-| 500 | DESIGN_INTERNAL_ERROR | Lỗi nội bộ không xác định. | Lỗi ngoài các nhánh đã biết. | Code/status DIRECT; response/runtime chưa xác minh. |
+| 401 | DESIGN_AUTHENTICATION_REQUIRED | Bearer JWT thiếu/không hợp lệ. | Guard không xác thực được principal. | Code/status DIRECT; local route tested. |
+| 403 | DESIGN_ACCESS_DENIED | Không đủ role hoặc quyền truy cập. | Role không phải Mentor hoặc course thuộc Mentor khác. | Code DIRECT; direct-owner rule DERIVED, local route tested. |
+| 404 | DESIGN_RESOURCE_NOT_FOUND | Resource không tồn tại. | Malformed/overflow course ID hoặc course không tồn tại. | Code DIRECT; local mapping DERIVED and tested. |
+| 500 | DESIGN_INTERNAL_ERROR | Lỗi nội bộ không xác định. | Query hoặc projection/aggregate mapping failure. | Code/status DIRECT; safe local mapping tested. |
 
 Không thêm 422, 409 hoặc 503 vì catalog #65 không khai báo các lỗi này.
 
@@ -24,18 +24,17 @@ Không thêm 422, 409 hoặc 503 vì catalog #65 không khai báo các lỗi nà
 
 | Điều kiện | Candidate behavior | Trạng thái |
 |---|---|---|
-| Bearer absent/invalid | 401 | DIRECT code; cụ thể hóa từ auth contract. |
-| Principal không có role Mentor | 403 | DIRECT code; Mentor guard chưa có trong Study source. |
-| Course không tồn tại | 404 | DERIVED từ code catalog; chưa có route/query. |
-| Course có nhưng không thuộc scope Mentor | 403 | DERIVED; privacy policy có thể yêu cầu 404 thay thế. |
-| Schema/query/aggregation failure | 500 | DIRECT code; error boundary/source chưa chạy cho API #65. |
+| Bearer absent/invalid | 401 | Shared guard local behavior; HTTP tested. |
+| Principal không có role Mentor | 403 | Shared guard local behavior; HTTP tested. |
+| Course không tồn tại | 404 | Direct catalog code; local lookup behavior DERIVED and tested. |
+| Course có nhưng không thuộc scope Mentor | 403 | Direct catalog code; direct-owner fallback DERIVED and tested. |
+| Schema/query/aggregation failure | 500 | Direct catalog code; safe error behavior tested with fake DB. |
 
 ## Error envelope discrepancy
 
-- API guideline quy định error response với data:null.
-- Current error_response mặc định absent data thành {}.
-- API #65 chưa có route nên đây là current helper evidence, chưa phải observed endpoint response.
-- Middleware design-code allowlist chưa có path #65; khi wire route phải kiểm tra path mapping để giữ đúng DESIGN_* codes.
+- API guideline quy định error response với data:null; shared `error_response` mặc định `data=None`, HTTP test xác nhận 401 trả null.
+- Route template đã được thêm vào `DESIGN_CONTRACT_PATHS`, giữ các DESIGN_* mappings cho handler.
+- HTTP tests xác minh 401/403/404/500 local; không xác minh live DB errors hoặc deployment config.
 
 ## Security handling
 

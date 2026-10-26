@@ -2,57 +2,44 @@
 
 ## Phạm vi
 
-Kiểm tra tĩnh bộ DD Markdown cho API #48, catalog, AC-21/AC-22, schema candidate, source boundary và macro review nhóm #46–#48. Không thay đổi Study runtime, catalog, schema hoặc diagrams. Không chạy application tests.
+Đối chiếu API #48 với catalog, AC-21/AC-22, checked-in legacy DDL/migrations, API #34/#47 source, runtime route/module và focused HTTP tests. Không kết nối hoặc thay đổi live database, không deploy migration, không xác nhận Object Storage hay assigned-course behavior.
 
 ## Deliverable manifest
 
 | File | Vai trò | Trạng thái |
 |---|---|---|
-| 00_Cover.md | Cover | PASS |
-| 01_Lich_su.md | Lịch sử | PASS |
-| 02_Overview.md | Overview | PASS |
-| 03_Request.md | Request | PASS |
-| 04_Response.md | Response | PASS |
-| 05_Data_Mapping.md | Flow và ma trận | PASS |
-| 06_Error.md | Error cases | PASS |
-| 07_table.md | Read-only source mapping | PASS |
-| PLAN_RESULT.md | Plan và pre-authoring matrices | PASS |
-| OPEN_QUESTIONS.md | Gaps/blockers | PASS |
-| VERIFICATION_REPORT.md | Verification record | PASS |
+| 00_Cover.md | Cover | Draft — Needs Confirmation |
+| 01_Lich_su.md | Lịch sử | Updated for local implementation |
+| 02_Overview.md | Overview | Updated for route/schema status |
+| 03_Request.md | Request | Contract unchanged; raw path parsed in view |
+| 04_Response.md | Response projection | Updated for uploads relation and nullable content |
+| 05_Data_Mapping.md | Query, mapping and error flow | Updated for Q1/Q2 and runtime branches |
+| 06_Error.md | Error mapping | Contract remains catalog 401/403/404/500 |
+| 07_table.md | Read-only source mapping | Updated for lessons/courses/lesson_uploads/uploads |
+| PLAN_RESULT.md | Plan and macro review | Updated with implementation evidence and remaining gaps |
+| OPEN_QUESTIONS.md | Unconfirmed decisions | Updated; deployment/business questions remain |
+| VERIFICATION_REPORT.md | Verification evidence | Current report |
 
 ## Contract/source checks
 
-| Check | Kết quả | Trạng thái |
+| Check | Evidence | Status |
 |---|---|---|
-| Worklog preflight | Selector `docs` chọn #41–#43; cả ba worklogs được đọc đầy đủ. | VERIFIED |
-| API catalog #48 | GET path, Mentor Bearer, lecture_id:int64!, ApiEnvelope<Lecture>, 200 và exact errors 401/403/404/500 khớp dòng catalog. | PASS |
-| AC-21 activity diagram | Parse đủ node/edge của luồng; xác nhận #47 create → #48 GET detail → hiển thị lecture. | PASS |
-| AC-22 boundary | Content CRUD vẫn là workflow riêng; không thêm Content query/table vào #48. | PASS |
-| Current Study source | Không có #48 route, module hoặc Python test source; trạng thái UNWIRED / NOT_FOUND. | VERIFIED_STATIC_ONLY |
-| Schema boundary | Legacy BIGINT lessons/courses chỉ là candidate; V1-PILOT UUID/versioned giữ riêng; live schema chưa xác minh. | PASS WITH OPEN QUESTIONS |
-| Response projection | Tất cả Lecture fields và UploadAsset nested fields được liệt kê; assets[] không bị giả lập. | PASS WITH BLOCKING SOURCE_REQUIRED |
-| AC-21 macro review #46–#48 | Owner candidate, DRAFT/read-after-create, schema split, asset gap, Content boundary và error-envelope discrepancy được so sánh; blockers còn mở. | PASS WITH OPEN QUESTIONS |
-| Template appendices | Appendix của 8/8 sheet khớp byte-for-byte với registered Markdown templates. | PASS |
-| Static Markdown checks | 11/11 file, front matter, JSON example, local links, table widths và fences hợp lệ; lượt đầu phát hiện rồi đã xóa trailing spaces ở metadata OPEN_QUESTIONS, lượt kiểm tra lại sạch. | PASS |
-| Archive gate | Không tìm thấy ZIP/XLSX/XLSM trong apps/study-server/docs. | VERIFIED |
-| Runtime tests | Không chạy; docs-only và API #48 chưa wired. | NOT_RUN |
+| API catalog | GET `/api/v1/mentor/lectures/{lecture_id}`, Mentor Bearer, int64 path, `ApiEnvelope<Lecture>`, 200 and catalog errors 401/403/404/500 | PASS |
+| AC-21 / AC-22 boundary | #47 creates the lecture, #48 reloads it; Content CRUD remains separate | PASS |
+| API #34 metadata | Local API #34 source and migration 004 persist UploadAsset metadata in legacy `uploads` | SOURCE_BACKED; live DB unknown |
+| API #47 relation | Local API #47 validates ordered refs and inserts `lesson_uploads` rows atomically with `lessons`; empty refs skip link insert | SOURCE_BACKED; live DB unknown |
+| API #48 projection | Reads one lesson/course row, checks direct owner, reads upload links in position order, scopes metadata by owner/purpose/course | SOURCE_BACKED |
+| Nullable content | Shared Lecture response model is `str | None`; API #48 test verifies JSON null | VERIFIED_LOCALLY |
+| OpenAPI | Route is wired with `lecture_id` integer/int64 schema and Lecture response | VERIFIED_LOCALLY |
+| Focused HTTP tests | API #47 + #48 focused files: `42 passed`, including empty-assets and incomplete-link rollback coverage | VERIFIED_LOCALLY |
+| Full Study suite | `uv run pytest -q`: `336 passed` | VERIFIED_LOCALLY |
+| Ruff | `uv run ruff check app tests`: all checks passed | VERIFIED_LOCALLY |
+| Markdown links and source manifest | 37 local DD links resolve; manifest JSON parses and every required server-study source path exists | VERIFIED_STATIC_ONLY |
+| Context validator | Full run reports missing DB Admin context/source and broad historical snapshot drift; `--skip-drift` leaves DB Admin baseline failures only. No API #48 required-source or context-link finding. | BLOCKED_BY_REPOSITORY_BASELINE |
+| Checked-in migration | `005_lesson_uploads.sql` references legacy lessons/uploads; migration application not performed | VERIFIED_STATIC_ONLY |
+| Assignment and identity | Direct `courses.mentor_id` plus numeric JWT subject follows #46/#47; no assignment relation was found in inspected artifacts | SOURCE_REQUIRED / NOT_IMPLEMENTED |
+| Live deployment | No live DB inspection or deployed endpoint call | NOT_VERIFIED |
 
-## SHA-256 fingerprints — 8 DD sheets
+## Verification boundary
 
-| File | SHA-256 |
-|---|---|
-| 00_Cover.md | e1937a70e7829e87ae1a7c1ce5de504ad37831efe0f45503615600ada4c7ac2d |
-| 01_Lich_su.md | aa3494fe38b26c56a8522ea458a036850d8314fc2245aaa74b774425682d324b |
-| 02_Overview.md | 1c6d5efb1900ee884bef1da421831cc43fe143bfb6fad5de05649e6e456f832e |
-| 03_Request.md | 0bee7c5861d158967b7a44168068792d1aef8c59eac5deb8252c68c6f7b29c23 |
-| 04_Response.md | 3385b3806d5d67bcc365ca7a5adf808cb914afa2a3bad19783192de7185f97a8 |
-| 05_Data_Mapping.md | b153b2c6d8751e2310cff8e7a6f0622c5d9aac1f42bd5a5e3a033969ee250698 |
-| 06_Error.md | cb3512f09a1a2aad51f8a3fee46a7c4169f9122563081a8fbaa370178700aae8 |
-| 07_table.md | 5da53d5807f5e13342b624a80484ab072efa211b0aebc893413ec8a63b282d9b |
-
-## Giới hạn bằng chứng
-
-- Kiểm tra tĩnh không chứng minh handler chạy, live DB schema, Mentor authorization hoặc UploadAsset lookup.
-- assets[] là field bắt buộc nhưng chưa có source resolver/persistence; DD giữ Draft — Needs Confirmation và chưa đủ làm implementation approval.
-- Runtime/API tests không được chạy vì scope chỉ là tài liệu.
-- Macro review xác nhận tính nhất quán của candidate và chỉ rõ gap; không xác nhận business owner đã phê duyệt các candidate.
+Local TestClient tests and OpenAPI generation establish the checked-in application behavior only. They do not prove live schema compatibility, that migrations 004/005 are applied, deployed authorization policy, or external storage behavior. The suite emitted one existing Starlette/httpx deprecation warning. The DD remains `Draft — Needs Confirmation` until open business and environment decisions are resolved.

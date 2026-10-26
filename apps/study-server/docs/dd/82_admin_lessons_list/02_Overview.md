@@ -6,7 +6,6 @@ api_name: "Lấy danh sách lesson"
 source_sheet: "Overview"
 status: "Draft — Needs Confirmation"
 ---
-
 # Overview
 
 ## Khái quát
@@ -18,13 +17,13 @@ status: "Draft — Needs Confirmation"
 | Method | GET |
 | Endpoint | `/api/v1/admin/lessons` |
 | Purpose | Admin tra cứu lesson để chọn lesson cần xem hoặc quản lý. |
-| Consumer/Actor | Admin có quyền quản lý bài học |
-| Authentication | Bearer JWT |
-| Authorization | Role Admin theo catalog và quyền lesson management theo tiền điều kiện AC-34; guard/policy hiện chưa có trong Study source. |
-| Basis | Method/path/query/response/status/errors DIRECT; filter, collection shape, order và empty result là DERIVED hoặc cần xác nhận. |
+| Consumer/Actor | Admin có quyền quản lý bài học theo tiền điều kiện AC-34. |
+| Authentication | Bearer JWT qua shared guard. |
+| Authorization | Runtime yêu cầu role `ADMIN`; quyền lesson-management riêng chưa có policy source. |
+| Basis | Method/path/query, reusable schemas và catalog status/error là DIRECT. Collection, exact filters, ordering và malformed-input 422 là DERIVED để khớp list intent và schema sẵn có. |
 | Status | Draft — Needs Confirmation |
-| Current implementation | `UNWIRED / NOT_FOUND`: không có route, module hoặc test API #82 trong current source. |
-| Transaction | N/A — API chỉ đọc. |
+| Current implementation | Wired locally; route, module, query và HTTP tests tồn tại. Runtime test dùng fake DB, không xác minh live schema/deployment. |
+| Transaction | N/A — API chỉ đọc; khi query/projection lỗi, view rollback an toàn. |
 | Side effects | Không ghi dữ liệu; các thao tác detail/update/status/delete thuộc API #83–#86. |
 
 ## Sources
@@ -32,18 +31,18 @@ status: "Draft — Needs Confirmation"
 - [Catalog và reusable schemas](../../../../../docs/lists/list_api.md) — API #82, `Lesson`, `ApiEnvelope<T>`, business codes.
 - [AC/API index, AC-34](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — actor, permission precondition và nhóm API #82–#86.
 - [AC-34 activity diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — Admin mở lesson management, query danh sách, chọn thao tác tiếp theo và reload.
-- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — candidate BIGINT table `lessons`.
+- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — candidate BIGINT table `lessons`; không xác nhận live schema.
 - [Study schema tables](../../diagrams/DB_UNICA_TABLES.md) and [ERD](../../diagrams/DB_UNICA_ERD.drawio) — design artifacts, chưa chứng minh live schema.
-- [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — model UUID/versioned khác contract BIGINT.
-- [API #09 Lesson model/query/view](../../../app/modules/guest/api_09_courses_curriculum/) — precedent map field công khai; predicate `PUBLISHED` không được chuyển sang Admin list.
-- [API #73 Admin list DD](../73_admin_courses_list/02_Overview.md) and [API #78 queue DD](../78_admin_content_pending/02_Overview.md) — precedent ghi rõ mismatch list và response singleton.
+- [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — UUID/versioned lesson model khác reusable BIGINT contract.
+- [API #09 Lesson model/query/view](../../../app/modules/guest/api_09_courses_curriculum/) — reusable projection; `name -> title`, `sort_order -> order`. Predicate `PUBLISHED` chỉ thuộc public curriculum.
+- [API #78 Admin list DD](../78_admin_content_pending/02_Overview.md) — precedent cho việc ghi rõ list-shape discrepancy và DERIVED choice.
 
 ## Tables read
 
 | Relation | Candidate fields | Basis/status |
 |---|---|---|
 | Legacy `lessons` | `id`, `course_id`, `name`, `content`, `video_url`, `sort_order`, `status` | Candidate BIGINT DDL; `name -> title`, `sort_order -> order`; live schema chưa xác minh. |
-| V1-PILOT `lessons` | UUID `id`, `chapter_id`, `course_version_id`, `title`, `summary`, `position`, `estimated_minutes`, `is_preview` | Khác ID và response fields; không map trực tiếp sang `Lesson` BIGINT. |
+| V1-PILOT `lessons` | UUID `id`, `chapter_id`, `course_version_id`, `title`, `summary`, `position`, `estimated_minutes`, `is_preview` | Khác ID và response fields; không map trực tiếp sang reusable `Lesson`. |
 | `resources`, `lesson_progress` | References to lesson | Diagram relations only; không cần join cho response #82. |
 
 ## Tables write
@@ -52,48 +51,46 @@ Không có — GET chỉ đọc.
 
 ## Mục chú ý
 
-- Catalog khai báo response `ApiEnvelope<Lesson>` (một object), trong khi tên API và AC-34 mô tả lấy danh sách. Đây là `DISCREPANCY`. DD giữ contract trực tiếp và chỉ đề xuất `ApiEnvelope<Lesson[]>` như phương án cần owner xác nhận; không tự chuyển thành `Page<Lesson>`.
-- Query `course`, `status`, `type` là các field trực tiếp. Exact-match `course`/`status` là semantics `DERIVED`; legacy DDL không có cột `type` cho Lesson nên filter đó là `SOURCE_REQUIRED`.
-- Không thêm `page`, `size`, `sort` vì catalog không khai báo. Pagination và collection limit chưa được đặc tả.
-- Admin list không dùng predicate `PUBLISHED` của API #09; khi không có `status`, proposal là không lọc trạng thái để Admin thấy mọi trạng thái.
-- API #86 có proposal soft-delete nhưng chưa có deletion marker hoặc visibility policy được chọn. #82 không tự kết luận lesson đã xóa sẽ được đưa vào hay loại khỏi danh sách.
-- Legacy DDL cho phép `course_id` NULL nhưng reusable `Lesson.course_id` bắt buộc; live schema chưa xác minh.
-- LessonStatus members/casing chưa được liệt kê đầy đủ; không tự tạo enum hoặc validation whitelist.
+- Catalog khai báo `ApiEnvelope<Lesson>` nhưng tên API và AC-34 yêu cầu danh sách. Runtime chọn `ApiEnvelope<Lesson[]>` làm fallback DERIVED để thể hiện list intent; discrepancy với catalog vẫn phải được owner xác nhận.
+- Query `course`, `status`, `type` có trong catalog. Runtime dùng exact equality cho `course -> course_id` và `status -> status`. Legacy candidate không có `type`; nếu client gửi `type`, runtime trả HTTP 422 `DESIGN_VALIDATION_ERROR` (`UNSUPPORTED_FILTER`) thay vì âm thầm bỏ filter.
+- Không có `page`, `size`, `sort`, Page metadata, count query hay giới hạn kết quả được khai báo. Runtime trả toàn bộ kết quả khớp filter theo thứ tự ổn định `course_id ASC NULLS LAST, sort_order ASC NULLS LAST, id ASC`.
+- Khi không truyền `status`, không áp dụng mặc định `PUBLISHED`; Admin có thể thấy các trạng thái lưu trong nguồn. API #09 public curriculum có predicate riêng và không được dùng lại ở đây.
+- API #86 chọn local DERIVED marker `status='DELETED'`; #82 loại tombstone khỏi mọi list query, kể cả khi client gửi `status=DELETED`.
+- Legacy DDL cho phép `course_id`, `sort_order`, `status` NULL trong khi reusable `Lesson` yêu cầu các giá trị tương ứng. Projection không hợp lệ trả 500 an toàn; không loại row hay tự gán giá trị.
+- LessonStatus members/casing chưa được liệt kê đầy đủ; endpoint nhận chuỗi status và dùng exact equality, không tự tạo whitelist.
 
 ## Assumptions
 
-- `course` và `status` dùng exact equality nếu được truyền; vắng mặt thì không thêm predicate tương ứng. Đây là `DERIVED`, cần xác nhận.
-- Candidate stable order cho list: `course_id ASC, sort_order ASC, id ASC`; không có order contract trực tiếp.
-- Nếu collection được duyệt, kết quả rỗng dự kiến trả 200 với `data: []`; đây là proposal, không diễn đạt được bằng response singleton hiện tại.
-- Query `type` phải chờ nguồn field/relation và quy tắc so khớp; không bỏ qua âm thầm.
+- `course` parse thành signed int64; query sai định dạng hoặc ngoài range trả 422 `DESIGN_VALIDATION_ERROR` (`INT_PARSING`) sau khi xác thực Admin.
+- `course` và `status` dùng exact equality; khi vắng mặt không thêm predicate. Đây là fallback DERIVED.
+- Kết quả rỗng trả HTTP 200 với `data: []`. Response không có pagination metadata.
+- Shared guard yêu cầu role `ADMIN`; riêng AC-34 lesson-management permission chưa có executable policy source.
 
 ## Conflicts
 
-- Catalog response singleton đối lập với list intent từ tên/AC-34.
+- Catalog singleton `ApiEnvelope<Lesson>` đối lập với list intent; runtime chọn array fallback và DD vẫn Draft.
 - Legacy BIGINT schema và V1-PILOT UUID/versioned model không tương đương; live database chưa kiểm chứng.
-- `course_id` nullable trong legacy DDL nhưng required trong reusable `Lesson` schema.
-- Có query `type` nhưng không có Lesson type trong reusable schema/DDL đã kiểm tra.
-- Admin guard/permission source chưa tồn tại trong Study source. Middleware hiện tại không allowlist API #82 và không chứng minh catalog error codes.
-- Current helper có thể serialize `data={}` cho lỗi, trong khi API guideline chỉ định `data:null` cho error; phải thống nhất khi tích hợp.
+- `course_id`, `sort_order`, `status` nullable trong legacy DDL nhưng fields của reusable `Lesson` required.
+- Query có `type` nhưng không có Lesson type trong reusable schema/DDL đã kiểm tra; runtime trả explicit unsupported-filter validation error.
+- AC-34 nêu lesson-management permission, còn executable shared guard chỉ kiểm tra role `ADMIN`; permission chuyên biệt vẫn chưa được implement/source-backed.
 
 ## Security note
 
-- Chỉ principal có Bearer JWT hợp lệ, role Admin và lesson-management permission mới được đọc dữ liệu.
-- Authorization phải hoàn tất trước query; không dùng `course` filter để thay quyền truy cập.
-- Không đưa thông tin học viên hoặc progress/resources vào projection khi API chỉ trả reusable `Lesson`.
-- Không áp dụng Student guard cho Admin endpoint.
+- Shared JWT guard yêu cầu Bearer token hợp lệ và role `ADMIN` trước query validation/DB access.
+- Authorization không dựa vào `course` filter. Không đưa thông tin học viên, progress hoặc resources vào projection.
+- AC-34 fine-grained permission chưa được chứng minh bởi shared role guard.
 
 ## Performance note
 
-- Không có pagination, maximum result count, SLA hoặc index contract trong catalog/AC-34; response volume cần owner xác nhận trước khi triển khai.
-- Candidate SQL dùng bound parameters; không nối query values trực tiếp vào SQL.
-- `course_id ASC, sort_order ASC, id ASC` chỉ là thứ tự ổn định đề xuất; index/workload chưa được kiểm chứng.
+- Không có pagination, maximum result count, SLA hoặc index contract trong catalog/AC-34; runtime có thể trả mọi row khớp filter.
+- SQL bind parameters cho filters; không nối query values trực tiếp vào SQL.
+- Thứ tự `course_id ASC NULLS LAST, sort_order ASC NULLS LAST, id ASC` bảo đảm kết quả ổn định; index/workload chưa được kiểm chứng.
 
 ## Contract interpretation
 
-- DIRECT: method, path, authentication, role, query names/types, declared `ApiEnvelope<Lesson>`, HTTP 200 and exact 401/403/500 codes.
-- DERIVED: exact-match behavior, all-status default, collection cardinality proposal, empty collection and candidate ordering.
-- SOURCE_REQUIRED: `type` mapping, live/selected schema, Admin guard implementation, LessonStatus values and error-envelope integration.
+- DIRECT: method, path, Bearer authentication, role Admin, query names/types, catalog `ApiEnvelope<Lesson>`, HTTP 200 và exact 401/403/500 codes.
+- DERIVED: collection response để khớp list intent, exact-match `course`/`status`, all-status default, empty array, stable ordering, và 422 khi query không parse được hoặc `type` chưa có mapping.
+- SOURCE_REQUIRED: live/selected DB schema, dedicated lesson-management permission, LessonStatus enum đầy đủ và pagination/result cap. Tombstone visibility is implemented locally but remains DERIVED.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

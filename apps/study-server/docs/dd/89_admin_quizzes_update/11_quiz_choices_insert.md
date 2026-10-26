@@ -17,7 +17,7 @@ status: "Draft — Needs Confirmation"
 | Physical table | legacy quiz_choices |
 | Operation | INSERT |
 | Data Mapping step | [M5 — Step 7](./05_Data_Mapping.md#step-7-insert-replacement-question-set) |
-| Basis | Candidate mapping từ legacy DDL; QuizChoice output schema chưa định nghĩa. |
+| Basis | Legacy DDL plus migration 013; local `{id,text,is_correct}` shape inherited from API #88 is DERIVED. |
 
 ## Insert mapping
 
@@ -26,12 +26,13 @@ status: "Draft — Needs Confirmation"
 | 1 | id | Choice ID | BIGSERIAL | N/A | N/A | Yes | Yes | No | Database-generated | Database | Step 7 | Output visibility chưa chốt. |
 | 2 | question_id | Question ID | BIGINT | N/A | N/A | Nullable in DDL | No | quiz_questions.id | Generated question ID từ M4 | New question row | Step 7 | DDL nullable; ERD required. |
 | 3 | choice_text | Choice text | TEXT | N/A | N/A | Yes | No | No | choices[j].text | Proposed request body | Step 7 | DERIVED input mapping. |
-| 4 | is_correct | Answer key | BOOLEAN | N/A | N/A | DDL default FALSE | No | No | choices[j].is_correct | Proposed request body | Step 7 | DERIVED; không trả trong response mặc định. |
+| 4 | is_correct | Answer key | BOOLEAN | N/A | N/A | DDL default FALSE | No | No | choices[j].is_correct or false | DERIVED request body / #88 validator | Step 7 | Optional input defaults false; Admin response includes it; Student reads must omit. |
+| 5 | sort_order | Choice order | INT | N/A | N/A | NOT NULL default 0 | No | No | j, zero-based | Migration 013 / API #88 | Step 7 | Preserve replacement input order. |
 
 ## Ordering and response gap
 
-- Legacy quiz_choices không có order column; input order không được bảo đảm bền vững.
-- QuizChoice fields, ID visibility và answer-key visibility chưa được logical contract định nghĩa.
+- Migration 013 adds `sort_order`; replacement writes should preserve zero-based request order as API #88 does.
+- Catalog still does not define QuizChoice fields; API #88's Admin `{id,text,is_correct}` response is a local DERIVED shape. Student API #28 must omit the answer key.
 - Không thêm order column hoặc đổi sang V1-PILOT quiz_options khi chưa có schema approval.
 ---
 ## Phụ lục đối chiếu nguồn Excel

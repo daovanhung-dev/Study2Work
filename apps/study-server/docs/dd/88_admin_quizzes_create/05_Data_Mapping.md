@@ -24,42 +24,26 @@ status: "Draft — Needs Confirmation"
 <a id="step-0-authentication-and-authorization"></a>
 ## Step 0 — Authentication and authorization
 
-- Nhận Authorization Bearer JWT theo catalog.
-- Token thiếu/sai/hết hạn → HTTP 401 DESIGN_AUTHENTICATION_REQUIRED.
-- Thiếu role Admin hoặc quiz-management permission → HTTP 403 DESIGN_ACCESS_DENIED.
-- AC-35 xác định permission business; source chưa mô tả claim/policy mapping.
-- Kiểm tra quyền trước khi đọc course hoặc ghi dữ liệu.
-- Không nhận Admin ID từ body và không dùng Student guard thay cho Admin authorization.
-
-| Item | Current evidence | Status |
-|---|---|---|
-| Admin Bearer guard | Study auth helper hiện kiểm tra Student; không có Admin helper | NOT_FOUND |
-| Quiz-management permission | AC-35 precondition; source policy không có | SOURCE_REQUIRED |
-| Route/API #88 | Không có route, module hoặc test | UNWIRED / NOT_FOUND |
-| Middleware path | /api/v1/admin/quizzes chưa có trong DESIGN_CONTRACT_PATHS | Conditional future wiring gap |
+- Route nhận raw Request; không dùng typed body để FastAPI parse trước endpoint.
+- View gọi `validate_current_user_request(..., role="ADMIN")` trước khi đọc/parse body hoặc truy cập DB.
+- Token thiếu/sai/hết hạn trả 401; principal không có role ADMIN trả 403.
+- AC-35 fine-grained quiz-management permission chưa có claim/policy source; shared ADMIN là local implementation boundary.
+- Không nhận Admin ID từ body.
 
 <a id="step-1-validate-and-parse-body"></a>
 ## Step 1 — Validate and parse body
 
-| Field | Direct rule | Proposed parse/use | Status |
+| Field | Contract | Local parsing/mapping | Status |
 |---|---|---|---|
-| config | Required string | Parse JSON object | Direct type; embedded JSON DERIVED |
-| questions | Required string | Parse JSON array | Direct type; embedded JSON DERIVED |
+| config | Required string | JSON object `{course_id,title,duration_minutes?,passing_score}` | Outer type DIRECT; members DERIVED. |
+| questions | Required string | JSON array `{text,type,choices:[{text,is_correct?}]}` | Outer type DIRECT; members DERIVED. |
+| type | QuestionType | Values `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TRUE_FALSE` | DERIVED vocabulary from V1-PILOT; stored on legacy BIGINT row. |
+| choices[].is_correct | Not defined by catalog | Optional boolean, default false | DERIVED from legacy column default. |
 
-- Thiếu field, sai outer type hoặc body sai schema → HTTP 422 DESIGN_VALIDATION_ERROR theo catalog.
-- Chỉ parse embedded JSON nếu owner duyệt cấu trúc string-encoded JSON.
-- Không đổi outer contract thành config object hoặc questions array.
-
-| Value | Proposed members | Mapping/status |
-|---|---|---|
-| config | course_id, title, duration_minutes?, passing_score | Logical Quiz fields; DERIVED |
-| questions[] | text, type, choices[] | Logical QuizQuestion fields; DERIVED |
-| choices[] | text, is_correct | Candidate create input từ legacy choice_text/is_correct; DERIVED, không phải output schema |
-
-- Embedded JSON sai cú pháp hoặc member type sai → đề xuất 422 DESIGN_VALIDATION_ERROR.
-- Không chốt enum, số question/choice, số đáp án đúng, range điểm hoặc payload limit.
-- SINGLE_CHOICE trong ví dụ chỉ có trong V1-PILOT constraint, không được áp làm enum trực tiếp.
-- Validate toàn bộ nested input trước transaction.
+- Unknown fields, malformed outer/embedded JSON, invalid member types, unsupported type values and values outside physical int/numeric ranges return 422.
+- Passing score must fit legacy `NUMERIC(5,2)` without a business range rule.
+- Title must fit legacy `VARCHAR(200)`; no body-size or array-count limit is added.
+- Validate every nested item before opening the write flow.
 
 <a id="step-2-validate-course-reference"></a>
 ## Step 2 — Validate course reference
@@ -68,11 +52,10 @@ status: "Draft — Needs Confirmation"
 
 | Target | Column | Predicate | Purpose | Status |
 |---|---|---|---|---|
-| courses AS c | c.id | c.id = config.course_id | Kiểm tra course trước insert | DERIVED; live schema chưa xác minh |
+| courses AS c | c.id | c.id = :course_id | Ensure Quiz FK target is present | Legacy candidate; live schema unverified. |
 
-- Course không tồn tại → đề xuất HTTP 422 DESIGN_VALIDATION_ERROR vì API #88 không có 404.
-- Không lọc course status, mentor owner hoặc publication state; AC-35 chỉ yêu cầu Admin quiz-management permission.
-- Candidate precheck và DDL FK không chứng minh live DB constraint.
+- Course không tồn tại trả 422 `DESIGN_VALIDATION_ERROR`; catalog không có 404.
+- Không lọc course status, Mentor owner hoặc publication state vì AC-35 không đặt các điều kiện này cho Admin.
 
 <a id="step-3-insert-quiz-parent"></a>
 ## Step 3 — Insert Quiz parent
@@ -81,19 +64,15 @@ status: "Draft — Needs Confirmation"
 
 | Input/logical field | Candidate column | Transform/setting | Status |
 |---|---|---|---|
-| config.course_id | quizzes.course_id | Giữ int64 | DERIVED; DDL nullable, DB guide mô tả required |
-| config.title | quizzes.name | Alias title → name | DERIVED; VARCHAR(200) NOT NULL candidate |
-| config.passing_score | quizzes.passing_score | decimal-string → NUMERIC(5,2) | Candidate; range/scale open |
-| config.duration_minutes | quizzes.time_limit_minutes | Alias trực tiếp; NULL nếu absent theo proposal | Candidate nullable |
-| N/A | quizzes.description | Không ghi | Không có Quiz/config field |
-| N/A | quizzes.status | DDL default DRAFT | Candidate default; lifecycle chưa chốt |
-| Transaction time | quizzes.created_at | Thời điểm tạo | DDL NOT NULL, không có default |
-| Same time | quizzes.updated_at | Cùng created_at khi tạo | DDL NOT NULL, không có default |
-| Database | quizzes.id | BIGSERIAL generated ID | Legacy candidate |
-
-- Generated Quiz ID được dùng cho question rows.
-- Insert/ID retrieval lỗi → rollback transaction, 500 DESIGN_INTERNAL_ERROR.
-- Không ghi description, status input, Admin ID hoặc audit row ngoài contract.
+| config.course_id | quizzes.course_id | int64 direct | Required by logical Quiz; candidate DDL nullable. |
+| config.title | quizzes.name | title → name | Required, max 200 by candidate DDL. |
+| config.passing_score | quizzes.passing_score | decimal-string → NUMERIC(5,2) | Enforce physical representability; business range open. |
+| config.duration_minutes | quizzes.time_limit_minutes | Direct or NULL | Optional. |
+| N/A | quizzes.description | Leave NULL | Not in input/Quiz contract. |
+| N/A | quizzes.status | Existing DDL default `DRAFT` | Lifecycle remains open. |
+| Current transaction time | quizzes.created_at | Set explicitly | DDL NOT NULL, no default. |
+| Same time | quizzes.updated_at | Set explicitly | DDL NOT NULL, no default. |
+| Database | quizzes.id | BIGSERIAL generated | Used for all child rows. |
 
 <a id="step-4-insert-question-and-choice-children"></a>
 ## Step 4 — Insert question and choice children
@@ -102,75 +81,70 @@ status: "Draft — Needs Confirmation"
 
 | Input/logical field | Candidate column | Transform/setting | Status |
 |---|---|---|---|
-| Generated quiz ID | quiz_questions.quiz_id | Parent ID từ M1 | Legacy candidate |
-| questions[i].text | quiz_questions.question_text | Alias text → question_text | Candidate |
-| Input array index | quiz_questions.sort_order | Zero-based request index | DERIVED; DDL default 0 |
-| N/A | quiz_questions.score | DDL default 1 | Candidate; không có score field trong API schema |
-| Database | quiz_questions.id | BIGSERIAL generated ID | Legacy candidate |
-| questions[i].type | SOURCE_REQUIRED | Legacy table không có cột type | DISCREPANCY với QuizQuestion |
-
-- Tạo một row cho mỗi phần tử questions[] theo thứ tự array.
-- Không thêm cột type hoặc map pilot question row vào legacy Quiz ID.
+| Generated Quiz ID | quiz_questions.quiz_id | Parent ID from M1 | Legacy FK candidate. |
+| questions[i].text | quiz_questions.question_text | Direct alias | Required by logical Question. |
+| questions[i].type | quiz_questions.question_type | Persist one of three local values | Migration 013 adds nullable column + CHECK; API writes non-null. |
+| Input array index | quiz_questions.sort_order | Zero-based | Existing legacy column; preserves question order. |
+| N/A | quiz_questions.score | Omit; use DDL default 1 | No score input. |
+| Database | quiz_questions.id | BIGSERIAL generated | Used for choices and response. |
 
 ### M3 — Candidate insert vào legacy quiz_choices
 
 | Input/logical field | Candidate column | Transform/setting | Status |
 |---|---|---|---|
-| Generated question ID | quiz_choices.question_id | Parent ID từ M2 | Legacy candidate |
-| choices[j].text | quiz_choices.choice_text | Alias text → choice_text | DERIVED input mapping |
-| choices[j].is_correct | quiz_choices.is_correct | Boolean answer key | DERIVED; QuizChoice chưa có contract |
-| Database | quiz_choices.id | BIGSERIAL generated ID | Legacy candidate |
-| Array order | N/A | Table không có sort_order | SOURCE_REQUIRED nếu order phải bền vững |
+| Generated Question ID | quiz_choices.question_id | Parent ID from M2 | Legacy FK candidate. |
+| choices[j].text | quiz_choices.choice_text | Direct alias | Required by local request proposal. |
+| choices[j].is_correct | quiz_choices.is_correct | bool; absent defaults false | Existing physical answer-key column. |
+| Choice array index | quiz_choices.sort_order | Zero-based | Migration 013 adds order for stable local projection. |
+| Database | quiz_choices.id | BIGSERIAL generated | Returned to Admin. |
 
-- Choice INSERT là DERIVED theo QuizQuestion.choices và candidate relation; AC-35 diagram chỉ ghi Quiz + Questions.
-- Lưu cả lựa chọn đúng và sai; không bỏ các choice có is_correct=false.
-- Không đưa is_correct vào response theo suy luận; QuizChoice output schema chưa định nghĩa.
-- Bất kỳ lỗi child INSERT nào rollback cả Quiz và mọi child rows.
+- Insert all question and choice items in request order.
+- No rule is imposed for number of correct answers per question type.
+- Student-facing API #28 must omit the answer-key field even though this Admin create response includes it.
+- A failure in any child insert rolls back Quiz and every previously inserted child.
 
 <a id="step-5-build-response-and-commit"></a>
 ## Step 5 — Build response and commit
 
-- Dựng Quiz response từ config, parent ID và IDs của child rows trong transaction.
-- data.id lấy từ quizzes.id; course_id/title/duration_minutes/passing_score map từ config/stored row.
-- questions[].id/text/choices[] lấy từ các row vừa tạo theo input order proposal.
-- questions[].type không thể đọc từ legacy question table; cần chốt persistence trước khi khẳng định response đầy đủ.
-- QuizChoice field names, ID visibility, is_correct visibility và choice ordering chưa được định nghĩa.
-- Nếu không dựng được đủ Quiz schema, không trả field giả/rỗng hoặc đổi response type; chốt schema/contract trước khi triển khai.
-- Commit chỉ sau khi insert và response mapping hợp lệ; lỗi trước commit rollback toàn transaction.
+- Build direct `ApiEnvelope<Quiz>` from INSERT/RETURNING projections before commit.
+- Quiz maps `id`, `course_id`, `title`, optional `duration_minutes`, `passing_score`, and `questions[]`.
+- Each question maps `id`, `text`, and persisted `type`; each choice maps `{id,text,is_correct}`.
+- Return choices in `sort_order ASC,id ASC`; input indices make order deterministic.
+- Any missing/mismatched ID or projection field is internal mapping failure and rolls back.
+- Commit only after the complete response projection validates.
 
 | Boundary | Action | Failure behavior | Status |
 |---|---|---|---|
-| Before transaction | Parse outer/embedded input | 422; không có write | Outer direct; embedded DERIVED |
-| Transaction body | Q0 course check → M1 parent → M2 questions → M3 choices | Không có course: không write; lỗi sau Q0 rollback toàn bộ | Q0+atomicity DERIVED |
-| Commit | Sau insert và response mapping | 500 nếu DB commit lỗi | Candidate |
-| External call | Không có | N/A | Theo diagram/contract |
+| Before DB | Auth then outer/embedded validation | 401/403 or 422; no write | Auth helper direct runtime; embedded shape DERIVED. |
+| Transaction body | Q0 → M1 → M2 → M3 | Missing course 422; DB/mapping error 500 + rollback | Atomicity DERIVED. |
+| Commit | After response mapping | Commit error 500 + rollback | Current Study transaction pattern. |
+| External call | None | N/A | Diagram/contract. |
 
 <a id="step-6-return-success-or-error"></a>
 ## Step 6 — Return success or error
 
-### 6.1. Thành công
+### 6.1 Success
 
 - HTTP 201.
-- businessCode = DESIGN_RESOURCE_CREATED.
-- Direct response ApiEnvelope<Quiz>.
-- Không thêm status, description, question score, answer key hoặc pagination metadata.
+- `businessCode=DESIGN_RESOURCE_CREATED`.
+- `data` is the newly persisted Quiz.
+- `meta={}` and `traceId` follows shared Study envelope/middleware.
 
-### 6.2. Authentication/authorization
+### 6.2 Authentication and authorization
 
-- Token thiếu/sai: HTTP 401 DESIGN_AUTHENTICATION_REQUIRED.
-- Role Admin/permission bị từ chối: HTTP 403 DESIGN_ACCESS_DENIED.
+- Missing/invalid/expired Bearer token: HTTP 401 `DESIGN_AUTHENTICATION_REQUIRED`.
+- Missing ADMIN role: HTTP 403 `DESIGN_ACCESS_DENIED`.
+- Fine-grained quiz-management permission is not source-backed and remains an explicit gap.
 
-### 6.3. Validation
+### 6.3 Validation
 
-- Outer validation theo direct contract; embedded validation theo proposal: HTTP 422 DESIGN_VALIDATION_ERROR.
-- Course ID không tồn tại dùng 422 chỉ là đề xuất vì catalog không khai báo 404.
-- Không thêm 400, 404 hoặc 409.
+- Outer/embedded JSON validation, unsupported QuestionType, physical type range, or missing course: HTTP 422 `DESIGN_VALIDATION_ERROR`.
+- No 404/409 is added.
 
-### 6.4. System error
+### 6.4 System error
 
-- Database, insert, ID retrieval, required mapping hoặc commit failure: HTTP 500 DESIGN_INTERNAL_ERROR.
-- Nếu path chưa vào DESIGN_CONTRACT_PATHS, current middleware có thể trả INTERNAL_SERVER_ERROR.
-- API Guidelines yêu cầu data=null; current helper serialize data=None thành {}.
+- Query/insert/response mapping/commit failure: HTTP 500 `DESIGN_INTERNAL_ERROR`.
+- Roll back all writes and return a safe message without SQL or stack details.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

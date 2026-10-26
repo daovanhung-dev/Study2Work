@@ -20,37 +20,40 @@ status: "Draft — Needs Confirmation"
 | Direct response type | ApiEnvelope<Quiz> theo catalog #88. |
 | Success business code | DESIGN_RESOURCE_CREATED |
 
-## Response fields — direct contract
+## Response fields
 
 | No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|---|
-| 1 | HTTP status | HTTP status | N/A | integer | No | API catalog | N/A | 6.1/6.2 | 201 success; errors theo catalog | N/A | Không thêm HTTP status. |
+| 1 | HTTP status | HTTP status | N/A | integer | No | API catalog | N/A | 6.1/6.2 | 201 success; errors theo catalog | N/A | DIRECT. |
 | 2 | success | Success flag | success | boolean | No | ApiEnvelope<T> | N/A | 6.1/6.2 | true success, false error | Required | Reusable envelope. |
 | 3 | businessCode | Business code | businessCode | string | No | API catalog | N/A | 6.1/6.2 | Exact code theo nhánh | Required | Giữ code catalog. |
-| 4 | message | Message | message | string | No | Application | N/A | 6.1/6.2 | Safe message | Nội dung chưa chuẩn hóa | Không lộ thông tin nội bộ. |
-| 5 | data | Quiz | data | object (Quiz) | No | Candidate insert results | N/A | 5.1 | ApiEnvelope<Quiz> | Required on success | Cần IDs đã sinh và nested fields theo Quiz schema. |
-| 5.1 | data.id | Quiz ID | id | int64 | No | Legacy quizzes candidate | id | 3.1 | Generated BIGSERIAL → int64 | Required | Live model chưa xác minh. |
-| 5.2 | data.course_id | Course ID | course_id | int64 | No | config.course_id / quizzes | course_id | 3.1 | Candidate direct mapping | Required | Embedded field DERIVED; physical column nullable trong DDL. |
-| 5.3 | data.title | Quiz title | title | string | No | config.title / quizzes | name | 3.1 | Alias title → name | Required | Candidate alias. |
-| 5.4 | data.duration_minutes | Duration | duration_minutes | int32 | Yes | config / quizzes | time_limit_minutes | 3.1 | Alias duration_minutes → time_limit_minutes | Optional | Null/omit rule chưa xác nhận. |
-| 5.5 | data.passing_score | Passing score | passing_score | decimal-string | No | config / quizzes | passing_score | 3.1 | Candidate NUMERIC → decimal-string | Required | Scale policy chưa xác nhận. |
-| 5.6 | data.questions[] | Questions | questions | QuizQuestion[] | No | Inserted question/choice candidates | N/A | 4.1–4.2 | Preserve request order proposal | Required array | AC-35 says insert Quiz + Questions; nested projection follows Quiz schema. |
-| 5.6.1 | data.questions[].id | Question ID | id | int64 | No | Legacy quiz_questions candidate | id | 4.1 | Generated BIGSERIAL → int64 | Required | Legacy candidate. |
-| 5.6.2 | data.questions[].text | Question text | text | string | No | questions input | question_text | 4.1 | Candidate alias | Required | Candidate column NOT NULL. |
-| 5.6.3 | data.questions[].type | Question type | type | QuestionType | No | SOURCE_REQUIRED | N/A | 4.1 | No legacy column | Required by schema | Pilot field belongs to separate UUID model. |
-| 5.6.4 | data.questions[].choices[] | Choice list | choices | QuizChoice[] | No | Legacy quiz_choices candidate | N/A | 4.2 | Output shape not defined | Required by QuizQuestion | Contract omits QuizChoice fields. |
-| 6 | meta | Metadata | meta | object | No | ApiEnvelope<T> | N/A | 6.1/6.2 | Envelope metadata | Members unspecified | No create metadata declared. |
-| 7 | traceId | Trace ID | traceId | uuid | No | ApiEnvelope<T> | N/A | 6.1/6.2 | Request trace | Required | API Guidelines convention. |
+| 4 | message | Message | message | string | No | Application | N/A | 6.1/6.2 | Safe message | Required | Không lộ thông tin nội bộ. |
+| 5 | data | Quiz | data | object (Quiz) | No | Inserted rows | N/A | 5.1 | ApiEnvelope<Quiz> | Required on success | DIRECT response type. |
+| 5.1 | data.id | Quiz ID | id | int64 | No | quizzes | id | 3.1 | BIGSERIAL → int64 | Required | Legacy candidate. |
+| 5.2 | data.course_id | Course ID | course_id | int64 | No | config / quizzes | course_id | 3.1 | Direct | Required | Embedded field DERIVED. |
+| 5.3 | data.title | Quiz title | title | string | No | config / quizzes | name | 3.1 | Alias title → name | Required | Candidate alias. |
+| 5.4 | data.duration_minutes | Duration | duration_minutes | int32 | Yes | config / quizzes | time_limit_minutes | 3.1 | Alias | Omit if input omitted/DB NULL | Optional by logical Quiz. |
+| 5.5 | data.passing_score | Passing score | passing_score | decimal-string | No | config / quizzes | passing_score | 3.1 | NUMERIC → fixed non-exponent decimal string | Required | Candidate precision NUMERIC(5,2). |
+| 5.6 | data.questions[] | Questions | questions | QuizQuestion[] | No | quiz_questions | N/A | 4.1 | Preserve request order | Required array | Question IDs and values come from INSERT/RETURNING. |
+| 5.6.1 | data.questions[].id | Question ID | id | int64 | No | quiz_questions | id | 4.1 | BIGSERIAL → int64 | Required | Legacy candidate. |
+| 5.6.2 | data.questions[].text | Question text | text | string | No | request / quiz_questions | question_text | 4.1 | Alias | Required | Stored content. |
+| 5.6.3 | data.questions[].type | Question type | type | QuestionType | No | quiz_questions | question_type | 4.1 | Read returned candidate type | Required | Three values are DERIVED from V1-PILOT vocabulary. |
+| 5.6.4 | data.questions[].choices[] | Choice list | choices | QuizChoice[] | No | quiz_choices | N/A | 4.2 | Preserve request order | Required array | Local admin shape DERIVED. |
+| 5.6.4.1 | data.questions[].choices[].id | Choice ID | id | int64 | No | quiz_choices | id | 4.2 | BIGSERIAL → int64 | Required | Candidate ID. |
+| 5.6.4.2 | data.questions[].choices[].text | Choice text | text | string | No | quiz_choices | choice_text | 4.2 | Alias | Required | Local shape DERIVED. |
+| 5.6.4.3 | data.questions[].choices[].is_correct | Correct answer | is_correct | boolean | No | quiz_choices | is_correct | 4.2 | Boolean direct column mapping | Required | Returned only to ADMIN endpoint; Student API #28 must omit. |
+| 6 | meta | Metadata | meta | object | No | ApiEnvelope<T> | N/A | 6.1/6.2 | Empty object on success | `{}` | No create metadata declared. |
+| 7 | traceId | Trace ID | traceId | uuid | No | ApiEnvelope<T> | N/A | 6.1/6.2 | Request trace | Required | API Guidelines/current middleware. |
 
 ## Business code theo status
 
 | HTTP status | Business code | Contract meaning |
 |---:|---|---|
-| 201 | DESIGN_RESOURCE_CREATED | Quiz được tạo theo catalog; embedded questions shape còn proposal. |
+| 201 | DESIGN_RESOURCE_CREATED | Quiz và nested rows được tạo atomically theo local fallback. |
 | 401 | DESIGN_AUTHENTICATION_REQUIRED | Authentication failure theo contract. |
-| 403 | DESIGN_ACCESS_DENIED | Admin role/permission bị từ chối theo contract. |
-| 422 | DESIGN_VALIDATION_ERROR | Request validation failure theo contract. |
-| 500 | DESIGN_INTERNAL_ERROR | Lỗi nội bộ theo contract. |
+| 403 | DESIGN_ACCESS_DENIED | ADMIN role bị từ chối; fine-grained policy chưa có source. |
+| 422 | DESIGN_VALIDATION_ERROR | Outer/embedded validation hoặc course reference không hợp lệ. |
+| 500 | DESIGN_INTERNAL_ERROR | Lỗi nội bộ; transaction rollback. |
 
 ## Ví dụ thành công — HTTP 201
 
@@ -65,14 +68,24 @@ status: "Draft — Needs Confirmation"
     "title": "Quiz minh họa",
     "duration_minutes": 30,
     "passing_score": "70.00",
-    "questions": []
+    "questions": [
+      {
+        "id": 6101,
+        "text": "Câu hỏi minh họa?",
+        "type": "SINGLE_CHOICE",
+        "choices": [
+          {"id": 7101, "text": "Phương án A", "is_correct": true},
+          {"id": 7102, "text": "Phương án B", "is_correct": false}
+        ]
+      }
+    ]
   },
   "meta": {},
   "traceId": "00000000-0000-4000-8000-000000000088"
 }
 ~~~
 
-> Ví dụ tập trung vào direct envelope/Quiz fields. questions rỗng minh họa kiểu mảng, không khẳng định API chấp nhận tạo Quiz không có câu hỏi. Question type và QuizChoice output phải được chốt trước khi dùng ví dụ làm implementation fixture.
+> Nested `QuizQuestion` values use the logical catalog fields. `QuizChoice={id,text,is_correct}` is a DERIVED local Admin response shape. `is_correct` is never exposed by a Student read projection.
 
 ## Ví dụ lỗi — HTTP 422
 
@@ -84,18 +97,14 @@ status: "Draft — Needs Confirmation"
   "data": null,
   "meta": {
     "fieldErrors": [
-      {
-        "field": "config",
-        "code": "INVALID_JSON",
-        "message": "config phải chứa JSON hợp lệ."
-      }
+      {"field": "config", "code": "INVALID_JSON", "message": "config phải chứa JSON hợp lệ."}
     ]
   },
   "traceId": "00000000-0000-4000-8000-000000000089"
 }
 ~~~
 
-> API Guidelines yêu cầu fieldErrors trong meta và data=null. Current helper đổi data=None thành {}. Middleware chỉ phát DESIGN_VALIDATION_ERROR khi path nằm trong allowlist; API #88 chưa được wire.
+> Current shared error helper emits `data:null` and `meta.fieldErrors`; API #88 path already belongs to `DESIGN_CONTRACT_PATHS` through API #87.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

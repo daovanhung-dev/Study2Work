@@ -14,13 +14,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-25 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD từ catalog, diagram AC-23, schema và DDL candidate; ghi rõ điểm chưa có nguồn xác nhận. | Draft — Needs Confirmation |
+| 1.1 | 2026-10-25 | Codex | Wire API và TestClient; ghi fallback DERIVED cho feedback_text, ghi đè feedback hiện có, scope Mentor và giữ attachments opaque không lưu. | Draft — Needs Confirmation |
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

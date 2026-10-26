@@ -14,7 +14,7 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ```text
-Admin Bearer principal -> authorize Admin -> parse optional reason/severity/page -> logical AC-37 read reports + discussion summary -> candidate discussion/author/comment projection if approved schema supports it -> Page<Discussion> with unresolved PageMeta values -> 200 DESIGN_RESOURCE_RETRIEVED; auth failures 401/403; internal failures 500
+Admin Bearer principal -> shared ADMIN guard -> parse optional reason/severity/page -> Study-local `discussion_reports` active queue read -> one Discussion summary per ID -> fixed Page metadata -> 200 DESIGN_RESOURCE_RETRIEVED; auth failures 401/403; invalid page 422 DERIVED; internal failures 500
 ```
 
 ## Mục lục
@@ -32,61 +32,54 @@ Admin Bearer principal -> authorize Admin -> parse optional reason/severity/page
 <a id="step-0-check-quyen"></a>
 ## 0. Check quyền
 
-- Xác thực Bearer JWT trước khi đọc reports/discussions.
-- Yêu cầu Admin role theo catalog. Current `validate_current_user_request` chỉ authorize Student; không tái sử dụng cho API #97.
-- Admin claim shape, identity mapping, scope/policy và guard chưa có source trong Study; giữ `SOURCE_REQUIRED`.
+- Xác thực Bearer JWT bằng `validate_current_user_request(..., role="ADMIN")` trước khi đọc reports/discussions.
+- Shared ADMIN guard hiện có và được dùng bởi Admin APIs #68–#96; fine-grained AC-37 permission/tenant policy vẫn chưa được xác minh.
 - Không chạy queue query trước authorization thành công và không làm lộ dữ liệu queue cho principal bị từ chối.
 - 401/403 dùng đúng business code catalog. Thứ tự kiểm tra role so với các query filter không được phép tạo side channel.
 
 <a id="step-1-validate-request"></a>
 ## 1. Validate request
 
-- `reason` và `severity` là optional string; filter logic trực tiếp trên report source chưa có schema.
-- `page` là optional int32. Catalog không có default/min/max, không có `size` và không nêu sort.
-- Không chuẩn hóa trim/casing, không xác định AND/OR, không từ chối giá trị lạ khi taxonomy chưa được định nghĩa.
-- Catalog không liệt kê 422; parse/range behavior của framework khi route được wire cần được giải quyết mà không tự thêm business code vào contract.
+- `reason` và `severity` là optional string, được bind exact-match không chuẩn hóa; nếu cùng truyền thì kết hợp AND trên cùng report.
+- `page` là optional int32; fallback dùng default 1, yêu cầu dương, page size cố định 20.
+- Page parse/range lỗi trả 422 `DESIGN_VALIDATION_ERROR` theo fallback `DERIVED`; catalog không liệt kê status này.
 
 <a id="step-2-doc-queue"></a>
 ## 2. Đọc queue
 
 ### 2.1. Q1 — logical reported queue read
 
-AC-37 diagram node n3 trực tiếp yêu cầu “Đọc reports + discussion summary”. Đây là logical read; sơ đồ không nêu relation, report ID, report grain, join key, dedup rule hoặc sort.
+AC-37 diagram node n3 trực tiếp yêu cầu “Đọc reports + discussion summary”. Do không có report relation Study, implementation thêm migration fallback `discussion_reports` gắn vào Discussion BIGINT.
 
 | Logical input/field | Use | Rule/status |
 |---|---|---|
-| Report state | Chọn report thuộc queue | AC-37 precondition nói có discussion bị report hoặc cần moderation; trạng thái lưu trữ `SOURCE_REQUIRED` |
-| `reason` | Optional report filter | DIRECT query name/type; source field, taxonomy và matching `SOURCE_REQUIRED` |
-| `severity` | Optional report filter | DIRECT query name/type; source field, taxonomy và matching `SOURCE_REQUIRED` |
-| `discussion_id` | Join report với discussion | Diagram implies relationship; physical key/source `SOURCE_REQUIRED` |
-| `page` | Paginate queue | DIRECT query name/type; default, size, sort, count grain `SOURCE_REQUIRED` |
-| Deduplication | One row per discussion or one row per report | Not defined by catalog/diagram; `SOURCE_REQUIRED` |
+| Report state | Chọn report thuộc queue | `OPEN` hoặc `IN_REVIEW`; `DERIVED` từ generic moderation report status tokens |
+| `reason` | Optional report filter | Exact `discussion_reports.reason_code` match; free-form taxonomy |
+| `severity` | Optional report filter | Exact `discussion_reports.severity` match; free-form taxonomy |
+| `discussion_id` | Join report với discussion | BIGINT FK `discussion_reports.discussion_id` → `discussions.id` |
+| `page` | Paginate queue | Default 1, fixed size 20, positive int32, stable order |
+| Deduplication | Queue item grain | One unique Discussion; count distinct IDs |
 
-Không viết SQL giả định như `reports` hoặc `discussion_reports`. Legacy DDL chỉ có `discussions`; chưa có relation để nhận diện reported rows hay filter reason/severity.
+Physical table and status/filter rules are a local `DERIVED` fallback; the migration is not deployed-schema evidence and this API has no report-ingest writer.
 
-### 2.2. Candidate discussion projection — not an approved query
+### 2.2. Discussion summary projection
 
 | Candidate source | Candidate field | Possible response use | Evidence/status |
 |---|---|---|---|
-| legacy `discussions` | `id` | `Discussion.id` | DDL candidate, not live confirmation |
-| legacy `discussions` | `course_id` | `Discussion.course_id` | DDL nullable vs logical required |
-| legacy `discussions` | `content` | `Discussion.content` | Candidate direct mapping |
-| legacy `discussions` | `user_id` | Join key for author | DDL nullable; author required |
-| legacy `discussions` | `status` | `Discussion.status` | Enum and moderation visibility unresolved |
-| legacy `discussions` | `parent_id` | Root/comment relation candidate | No root-only or child inclusion rule in #97 |
-| legacy `discussions` | timestamps | Candidate ordering only | No ordering contract; do not use as chosen sort |
-| legacy `users` | `id`, `full_name`, `avatar_url` | `UserSummary` | Candidate projection only |
-| legacy `discussions` | `title` | `Discussion.title` | Missing column; no derivation from `content` |
+| legacy `discussions` | `id`, `course_id`, `content`, `status` | `Discussion` | Legacy candidate; required nulls/status strings are validated |
+| legacy `discussions` | `content` | `Discussion.title` | Whitespace-normalized and clipped to 120 characters; `DERIVED` |
+| legacy `discussions` | `user_id` | Join key for author | Legacy nullable FK; absent user makes projection fail safely |
+| legacy `users` | `id`, `full_name`, `avatar_url` | `UserSummary` | Legacy join candidate, live schema unverified |
+| `discussion_reports` | `created_at`, `discussion_id` | Queue order and Discussion grouping | Latest matching active report per Discussion |
+| `discussions` self-reference | `parent_id` | `comments[]` | Not loaded in queue summary; returned `[]`, `DERIVED` |
 
 ### 2.3. Q2 — Page metadata
 
-`PageMeta` directly requires `page`, `size`, `total`, `total_pages`. Request exposes only optional `page`; catalog and AC-37 do not define default, page size, ordering, count grain, out-of-range behavior, or whether total counts reports or unique discussions. Keep values `SOURCE_REQUIRED`.
-
-A candidate `page=1`, fixed `size=20`, count with same filters, and `ceil(total/size)` is `DERIVED` only by analogy with other Admin list DDs. It is not approved behavior and is not used to close the gap in this DD.
+`PageMeta` returns the requested/default page, fixed size 20, count of unique Discussions with a matching active report, and `ceil(total/20)` (`0` when total is 0). Out-of-range pages return an empty `items` array and preserve the requested page. All values are `DERIVED`.
 
 ### 2.4. Q3 — nested comments
 
-`Discussion.comments` is a required array in the reusable schema, while AC-37 step calls this a discussion summary and API #98 separately reads full thread detail. Whether #97 includes no comments, comment preview, all comments, or only direct children is unresolved. Candidate self-reference is `discussions.parent_id`; do not create an empty-array policy or status/order filter without confirmation.
+`Discussion.comments` is a required array in the reusable schema. AC-37 calls #97 a summary and #98 separately reads full thread detail; therefore #97 returns an empty array and leaves child rows to #98 (`DERIVED`).
 
 <a id="step-3-mutation"></a>
 ## 3. Mutation
@@ -96,31 +89,30 @@ No mutation is declared. API #97 performs no `INSERT`, `UPDATE`, `DELETE`, repor
 <a id="step-4-response-mapping"></a>
 ## 4. Response mapping
 
-- Return only the catalog `ApiEnvelope<Page<Discussion>>`; do not add report reason/severity fields to Discussion.
-- Every Discussion/DiscussionComment/UserSummary field is inventoried in Response Source Matrix.
-- `title` cannot be sourced from legacy DDL. Do not derive it from `content`.
-- Candidate `course_id`, `user_id` are nullable in DDL although logical response requires course and author. Treat missing required joins as an unresolved integrity mapping, not an empty/fabricated value.
-- Do not claim that example pagination values are defaults.
+- Return only catalog `ApiEnvelope<Page<Discussion>>`; do not add report fields to Discussion.
+- `title` uses the documented normalized-content snippet fallback; `comments=[]` is the queue-summary fallback.
+- Required `course_id` and author fields are validated; malformed/nullable projection returns 500, never fabricated values.
+- Pagination behavior is `DERIVED` and recorded above.
 
 ## Request Usage Matrix
 
 | Request item | Source/use | Query/response use | Rule/status |
 |---|---|---|---|
-| Authorization | Bearer header | Authenticate and authorize Admin | Role direct; implementation `SOURCE_REQUIRED` |
-| `reason` | Optional query string | Logical report filter | DIRECT name/type; physical source/semantics unresolved |
-| `severity` | Optional query string | Logical report filter | DIRECT name/type; enum/semantics unresolved |
-| `page` | Optional int32 query | Requested result page | DIRECT name/type; pagination policy unresolved |
+| Authorization | Bearer header | Shared ADMIN guard | DIRECT role; shared guard used before query |
+| `reason` | Optional query string | Exact filter on `reason_code` | `DERIVED`; no taxonomy/normalization |
+| `severity` | Optional query string | Exact filter on `severity` | `DERIVED`; no taxonomy/normalization |
+| `page` | Optional int32 query | Requested result page | Default 1; positive int32; size 20 (`DERIVED`) |
 | Body/path | None declared | None | DIRECT |
 
 ## Query Matrix
 
 | Query | Operation | Relation/fields | Purpose | Status |
 |---|---|---|---|---|
-| Q1 | Logical SELECT | Report source + discussion join, fields/key/filter/order unknown | AC-37 reported queue | `SOURCE_REQUIRED`; no SQL/table invented |
-| Q1a | Candidate SELECT only | legacy `discussions`: id, course_id, user_id, parent_id, content, status, timestamps | Discussion projection candidate | Legacy schema artifact; cannot identify report rows or title |
-| Q1b | Candidate JOIN only | legacy `users`: id, full_name, avatar_url via candidate `user_id` | `UserSummary` candidate | Join/null/live behavior unresolved |
-| Q1c | Candidate self-JOIN only | `discussions.parent_id` and child rows | `comments[]` candidate | Summary extent/status/order unresolved |
-| Q2 | Logical COUNT/page | Queue grain and predicates unavailable | PageMeta | `SOURCE_REQUIRED` |
+| Q1 | SELECT + `DISTINCT ON` | `discussion_reports` active rows joined to legacy `discussions` | Unique reported Discussion queue | `DERIVED`; migration 014 candidate |
+| Q1a | SELECT | `discussions`: id, course_id, user_id, content, status | Discussion projection | Legacy DDL candidate; title derives from content |
+| Q1b | LEFT JOIN | `users.id = discussions.user_id` | `UserSummary` | Missing required author returns 500 |
+| Q1c | No query | Child rows are not loaded | `comments=[]` summary | `DERIVED`; #98 owns full thread |
+| Q2 | COUNT DISTINCT | Same active-state and exact filters as Q1 | PageMeta | Unique Discussion count, `DERIVED` |
 
 ## Mutation Matrix
 
@@ -135,31 +127,23 @@ No mutation is declared. API #97 performs no `INSERT`, `UPDATE`, `DELETE`, repor
 | `success` | boolean | Envelope | `true` on success branch | DIRECT convention |
 | `businessCode` | string | Catalog | `DESIGN_RESOURCE_RETRIEVED` | DIRECT |
 | `message` | string | Application | Safe message | Exact wording unspecified |
-| `data` | `Page<Discussion>` | Logical Q1 result | Queue grain/dedup unresolved | DIRECT schema; source `SOURCE_REQUIRED` |
-| `data.items[]` | `Discussion[]` | Logical Q1 result | Queue grain/dedup unresolved | DIRECT schema; source `SOURCE_REQUIRED` |
-| `data.items[].id` | int64 | `discussions.id` candidate | Direct candidate | Legacy only |
-| `data.items[].course_id` | int64 | `discussions.course_id` candidate | Required; physical null discrepancy | Legacy nullable |
-| `data.items[].title` | string | No source | Do not alias from `content` | `SOURCE_REQUIRED` |
-| `data.items[].content` | string | `discussions.content` candidate | Preserve text | Legacy candidate |
-| `data.items[].author` | `UserSummary` | Candidate `users` join | Required object; missing author behavior unresolved | `SOURCE_REQUIRED` if absent |
-| `data.items[].author.id` | int64 | `users.id` candidate | Candidate join on user_id | Live join/required author unresolved |
-| `data.items[].author.full_name` | string | `users.full_name` candidate | Direct candidate | Legacy candidate |
-| `data.items[].author.avatar_url` | uri? | `users.avatar_url` candidate | Omit if null | Legacy candidate |
-| `data.items[].status` | `DiscussionStatus` | `discussions.status` candidate | Return source token only if enum approved | Enum unresolved |
-| `data.items[].comments` | `DiscussionComment[]` | Child discussion rows | No inclusion/cardinality rule | `SOURCE_REQUIRED` |
-| `data.items[].comments[].id` | int64 | Child `discussions.id` | Direct candidate | Legacy only |
-| `data.items[].comments[].discussion_id` | int64 | Child `parent_id` | Candidate parent key | Legacy nullable |
-| `data.items[].comments[].content` | string | Child `discussions.content` | Preserve text | Legacy candidate |
-| `data.items[].comments[].author` | `UserSummary` | Candidate child `users` join | Required object | Missing-author behavior unresolved |
-| `data.items[].comments[].author.id` | int64 | Child `user_id` → `users.id` | Candidate author key | Legacy only; live join unverified |
-| `data.items[].comments[].author.full_name` | string | `users.full_name` candidate | Direct candidate | Legacy only |
-| `data.items[].comments[].author.avatar_url` | uri? | `users.avatar_url` candidate | Omit if null | Legacy only |
-| `data.items[].comments[].created_at` | date-time | Child `discussions.created_at` | Serialize per approved timezone convention | DDL timestamp lacks timezone |
-| `data.pagination` | `PageMeta` | Logical page metadata | Values/default unresolved | DIRECT schema; source `SOURCE_REQUIRED` |
-| `data.pagination.page` | int32 | Request/default policy | No default inferred | `SOURCE_REQUIRED` |
-| `data.pagination.size` | int32 | Page-size policy | No size query or approved fixed size | `SOURCE_REQUIRED` |
-| `data.pagination.total` | int64 | Queue count | Report-vs-discussion grain unresolved | `SOURCE_REQUIRED` |
-| `data.pagination.total_pages` | int32 | Page calculation | Formula/default unresolved | `SOURCE_REQUIRED` |
+| `data` | `Page<Discussion>` | Queue result | One unique Discussion per active-report group | DIRECT schema; grain `DERIVED` |
+| `data.items[]` | `Discussion[]` | Joined Discussion row | Empty when no active report matches | DIRECT schema |
+| `data.items[].id` | int64 | `discussions.id` | Direct mapping | Legacy candidate |
+| `data.items[].course_id` | int64 | `discussions.course_id` | Required; null fails projection | Legacy nullable |
+| `data.items[].title` | string | `discussions.content` | Normalize whitespace, clip to 120 chars | `DERIVED` |
+| `data.items[].content` | string | `discussions.content` | Preserve exact content | Legacy candidate |
+| `data.items[].author` | `UserSummary` | `users` join | Required; missing author fails projection | Legacy candidate |
+| `data.items[].author.id` | int64 | `users.id` | Join by discussion.user_id | Legacy candidate |
+| `data.items[].author.full_name` | string | `users.full_name` | Direct mapping | Legacy candidate |
+| `data.items[].author.avatar_url` | uri? | `users.avatar_url` | Omit if null | Legacy candidate |
+| `data.items[].status` | `DiscussionStatus` | `discussions.status` | Return stored string | Legacy nullable; null fails projection |
+| `data.items[].comments` | `DiscussionComment[]` | Queue summary | Always empty array | `DERIVED` |
+| `data.pagination` | `PageMeta` | Local page policy | Page 1 default, size 20 | `DERIVED` |
+| `data.pagination.page` | int32 | Request/default | Requested positive page or 1 | `DERIVED` |
+| `data.pagination.size` | int32 | Local constant | 20 | `DERIVED` |
+| `data.pagination.total` | int64 | `COUNT(DISTINCT d.id)` | Same active reports/filters | `DERIVED` |
+| `data.pagination.total_pages` | int32 | `ceil(total / 20)` | 0 when total is 0 | `DERIVED` |
 | `meta` | object | Envelope | No endpoint-specific fields defined | DIRECT type |
 | `traceId` | uuid | Request trace | Propagate trace ID | Envelope convention |
 
@@ -168,14 +152,14 @@ No mutation is declared. API #97 performs no `INSERT`, `UPDATE`, `DELETE`, repor
 | Condition | HTTP/business code | Basis/status |
 |---|---|---|
 | Missing/invalid Bearer JWT | 401 `DESIGN_AUTHENTICATION_REQUIRED` | Catalog direct |
-| Authenticated non-Admin | 403 `DESIGN_ACCESS_DENIED` | Catalog direct; Admin guard source absent |
+| Authenticated non-Admin | 403 `DESIGN_ACCESS_DENIED` | Catalog direct; shared `ADMIN` guard |
 | Query/data retrieval or required-field mapping failure | 500 `DESIGN_INTERNAL_ERROR` | Catalog direct; exact internal branch unspecified |
-| Invalid query parse/range | No catalog code specified | `SOURCE_REQUIRED`; do not add 422 |
-| No matching reported rows | 200 success candidate with empty `items` | `DERIVED`; empty page metadata policy unresolved |
+| Invalid page parse/range | 422 `DESIGN_VALIDATION_ERROR` | Local `DERIVED` fallback; absent from catalog |
+| No matching reported rows | 200 `DESIGN_RESOURCE_RETRIEVED` | Empty `items`, total_pages 0 |
 
 ## Runtime and envelope discrepancy
 
-API #97 is absent. Current middleware `DESIGN_CONTRACT_PATHS` does not include its route, so future framework validation/unhandled errors would use generic fallback codes unless the allowlist/wiring is updated. Current `error_response` emits `{}` for absent `data`; API guidelines describe `data:null`. This is conditional integration discrepancy, not current #97 behavior.
+API #97 is wired and its static route is in `DESIGN_CONTRACT_PATHS`; raw query values let ADMIN authorization run before page validation. `error_response` emits `data:null`, matching the API guideline. Migration deployment and live schema remain unverified.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -33,7 +33,7 @@ status: "Draft — Needs Confirmation"
 
 - `quiz_id` là path parameter, không phải query/body.
 - Catalog chỉ định `int64!`; không định nghĩa min/max cụ thể.
-- Malformed/overflow path mapping chưa có trong catalog; không tự thêm 400/422 vào direct contract.
+- Malformed/overflow path mapping chưa có trong catalog; runtime fallback ánh xạ sang 404 trong exact error set, đây là quyết định DERIVED chứ không đổi direct contract.
 
 ## Query parameters
 

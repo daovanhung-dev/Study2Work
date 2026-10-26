@@ -17,19 +17,21 @@ status: "Draft — Needs Confirmation"
 | Tài liệu | Admin cập nhật notification |
 | Trạng thái | Draft — Needs Confirmation |
 | Ngày tạo | 2026-10-24 |
-| Nguồn chính | docs/lists/list_api.md, AC-36 và Study server source hiện tại |
+| Nguồn chính | docs/lists/list_api.md, AC-36, Study server source và legacy DDL candidate |
 
 ## Lịch sử thay đổi
 
 | Phiên bản | Ngày | Người thay đổi | Nội dung | Trạng thái |
 |---|---|---|---|---|
 | 0.1 | 2026-10-24 | Codex | Tạo DD từ contract #94; body/state proposal được đánh dấu DERIVED; persistence và permission còn cần xác nhận. | Draft — Needs Confirmation |
+| 0.2 | 2026-10-26 | Codex | Wire PUT fallback chỉ sửa title/content khi delivery còn QUEUED; thêm fake-DB HTTP coverage và cập nhật mapping. Giữ rõ ranh giới DERIVED và live-schema chưa xác minh. | Draft — Needs Confirmation |
 
 ## Ranh giới thay đổi
 
-- Không sửa API catalog, AC-36 diagram, database schema hoặc Study runtime.
-- Giữ response và error codes đúng catalog.
-- Body PUT, full-replacement behavior và editability guard là proposal DERIVED, không phải contract đã duyệt.
+- Không sửa API catalog, AC-36 diagram hoặc database schema.
+- Study runtime hiện có route/module/test cho API #94; điều này không chứng minh migration, live DB hay deployment.
+- Body `{title, content}` và chỉ cho sửa khi mọi delivery `QUEUED` là fallback DERIVED, chưa được owner duyệt.
+- Không thay recipients, channels, schedule, read state, sender hoặc delivery rows.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

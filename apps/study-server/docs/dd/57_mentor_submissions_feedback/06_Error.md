@@ -11,17 +11,17 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Các trường hợp dưới đây giữ đúng catalog API #57. Điều kiện authorization cụ thể và thông điệp chưa được xác nhận từ runtime vì API chưa có route.
+Các trường hợp dưới đây giữ đúng catalog API #57. Điều kiện access dùng fallback direct owner DERIVED; response message là implementation text, không phải catalog literal.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer JWT | Authorization | Thiếu hoặc token không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa định nghĩa | 0.1 | N/A | Direct code từ catalog; runtime guard chưa có. |
-| 2 | Authorization | Role/course access | Mentor | Actor không phải Mentor hoặc không có quyền trên course | 403 | DESIGN_ACCESS_DENIED | Chưa định nghĩa | 0.1, 0.3 | N/A | Exact Mentor identity/assignment predicate và mask policy chưa có nguồn. |
-| 3 | Not found | Submission lookup | submission_id | Không tìm thấy submission theo candidate lookup | 404 | DESIGN_RESOURCE_NOT_FOUND | Chưa định nghĩa | 2.1, 0.3 | N/A | Catalog code DIRECT; candidate lookup semantics cần schema/runtime xác nhận. |
-| 4 | Validation | Request schema | submission_id, feedback text, attachments | Path/body thiếu hoặc sai kiểu theo descriptor contract | 422 | DESIGN_VALIDATION_ERROR | Chưa định nghĩa | 1 | N/A | Không thêm length, non-empty, URL hoặc attachment encoding rule. |
-| 5 | System error | Database/provider | Request processing | Lỗi query hoặc lưu dữ liệu | 500 | DESIGN_INTERNAL_ERROR | Chưa định nghĩa | 4.2 | Theo transaction rule sau khi được xác nhận | Không trả chi tiết nội bộ. |
+| 1 | Authentication | Bearer JWT | Authorization | Thiếu hoặc token không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa định nghĩa | 0.1 | N/A | Shared Mentor guard. |
+| 2 | Authorization | Role/course access | Mentor | Actor không phải Mentor hoặc không sở hữu course theo direct-owner fallback | 403 | DESIGN_ACCESS_DENIED | Chưa định nghĩa | 0.1, 0.3 | Rollback nếu transaction đã mở | Direct owner là DERIVED; assigned-Mentor policy chưa có nguồn. |
+| 3 | Not found | Submission lookup | submission_id | Không tìm thấy submission | 404 | DESIGN_RESOURCE_NOT_FOUND | Chưa định nghĩa | 2.1, 0.3 | Rollback read transaction | Live schema chưa xác minh. |
+| 4 | Validation | Request schema | submission_id, feedback_text, attachments | Path sai/overflow; body thiếu field hoặc sai kiểu | 422 | DESIGN_VALIDATION_ERROR | Chưa định nghĩa | 1 | N/A | Không thêm length, non-empty, URL hoặc attachment encoding rule. |
+| 5 | System error | Database/response mapping | Request processing | Query, broken required relation, mapping hoặc commit lỗi | 500 | DESIGN_INTERNAL_ERROR | Chưa định nghĩa | 4.2 | Rollback | Không trả chi tiết nội bộ. |
 
 > Không thêm 400, 409, 503 hoặc business code ngoài catalog.
 

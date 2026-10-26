@@ -15,14 +15,14 @@ status: "Draft — Needs Confirmation"
 
 ### 0.1. Thực hiện check quyền
 
-- Xác thực Bearer JWT và yêu cầu role Admin cùng course-management permission theo catalog/AC-32.
-- Study runtime hiện chỉ có guard Student; claim mapping và permission policy của Admin là `SOURCE_REQUIRED`.
+- Gọi shared `validate_current_user_request(..., role="ADMIN")` trước khi parse path hoặc mutation.
+- Policy riêng cho course-management permission chưa có source; runtime chỉ kiểm tra role `ADMIN`, đây là fallback `DERIVED`.
 
 ### 0.2. Query/check quyền
 
 | Target table/API | Column/Field | Condition/Value | Remarks |
 |---|---|---|---|
-| Admin auth provider/guard | JWT claims and permission | `Admin` + course-management permission | No Study source; do not reuse Student guard. |
+| `app.utils.auth.validate_current_user_request` | JWT `sub` + `roles` | Role `ADMIN` | Current shared guard; finer course-management permission is not checked. |
 
 ### 0.3. Check kết quả
 
@@ -32,9 +32,9 @@ status: "Draft — Needs Confirmation"
 
 ## 1. Validate data input
 
-- Validate `course_id` theo required int64 của catalog; positive/range boundary ngoài int64 chưa được chỉ định thêm.
-- Body full replacement với bốn field là proposal `DERIVED`, chưa thuộc direct catalog contract.
-- Validate từng body field chỉ theo rules được duyệt; catalog cung cấp nhánh 422 nhưng không nêu field constraints.
+- Parse raw path thành signed-int64; malformed/out-of-range trả catalog 422 trước DB.
+- Body full replacement gồm bốn field là fallback `DERIVED`, chưa thuộc direct catalog contract.
+- Runtime áp max 200 cho title theo legacy DDL candidate; price decimal string phải vừa `NUMERIC(12,2)` không rounding. Không trim title, validate URL host hoặc cấm giá âm.
 - Chi tiết lỗi refer [06_Error.md](./06_Error.md).
 
 ## 2. Get thông tin
@@ -95,15 +95,15 @@ Q1 là candidate trên legacy BIGINT `courses`; live schema chưa xác minh.
 | `:description` | body `description` | Full-replacement proposal; null clears. |
 | `:thumbnail_url` | body `thumbnail_url` | Full-replacement proposal; null clears. |
 | `:price` | body `price` as exact decimal | Preserve decimal precision; limits unresolved. |
-| `:updated_at` | server current timestamp | Proposal; legacy column candidate. |
+| `updated_at` | `CURRENT_TIMESTAMP` trong SQL | Không bind client timestamp; legacy column candidate. |
 
 ### 3.5. Check kết quả
 
-- Nếu Q1 không update row: rollback transaction và trả 404 `DESIGN_RESOURCE_NOT_FOUND` (candidate branch).
-- Nếu Q1 update được row: đọc Q2 và map Course fields cùng UserSummary.
-- Nếu owner không map được vào required `Course.mentor`: trả candidate 500; orphan policy cần chốt.
-- Nếu mapping hợp lệ: tạo `Page<Course>` singleton proposal, commit transaction và trả success envelope.
-- Nếu DB, mapping hoặc commit lỗi sau khi bắt đầu transaction: rollback và trả 500 `DESIGN_INTERNAL_ERROR`.
+- Nếu UPDATE không trả row: rollback transaction và trả 404 `DESIGN_RESOURCE_NOT_FOUND`.
+- Nếu UPDATE trả đúng ID: chạy Q2 Course/mentor projection trong cùng Session.
+- Nếu Q2 thiếu row, identity lệch hoặc required mentor/price không map được: trả 500 và rollback.
+- Nếu mapping hợp lệ: dựng singleton `Page<Course>` `DERIVED`, commit transaction và trả `DESIGN_RESOURCE_UPDATED`.
+- Lỗi UPDATE/Q2/projection/commit trả 500 an toàn; rollback khi transaction đã bắt đầu.
 
 ## 4. Check kết quả execute query
 
@@ -114,13 +114,13 @@ Q1 là candidate trên legacy BIGINT `courses`; live schema chưa xác minh.
 - `data.items` chứa một Course vừa cập nhật; singleton cardinality là `DERIVED` theo API #74.
 - `data.pagination = {page: 1, size: 1, total: 1, total_pages: 1}` là `DERIVED`.
 - Map từng field theo [04_Response.md](./04_Response.md).
-- Commit sau khi response projection được xác thực; transaction design là proposal.
+- Runtime commit sau khi response projection được xác thực; thứ tự transaction là fallback `DERIVED`.
 
 ### 4.2. Lỗi
 
 - 401/403 theo bước 0; không truy vấn hoặc mutate course khi chưa được authorize.
 - 422 theo bước 1; không bắt đầu mutation khi validation fail.
-- 404 khi Q1 không tìm thấy row; rollback transaction candidate.
+- 404 khi UPDATE không trả row; rollback transaction.
 - 500 khi query, projection, transaction hoặc commit thất bại; rollback nếu transaction đã mở.
 - Mỗi business code và data mapping xem [06_Error.md](./06_Error.md).
 ---

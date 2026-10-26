@@ -22,39 +22,39 @@ status: "Draft — Needs Confirmation"
 
 ## Response fields
 
-| No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
-|---:|---|---|---|---|---:|---|---|---:|---|---|---|
-| 1 | `HTTPStatus` | HTTP Status | `HTTPStatus` | integer | No | N/A | N/A | 7 | Fixed by branch | N/A | Success 200; errors giữ đúng catalog. |
-| 2 | `success` | Success flag | `success` | boolean | No | N/A | N/A | 7 | true success; false error | Luôn có | ApiEnvelope field. |
-| 3 | `businessCode` | Business code | `businessCode` | string | No | Catalog | Literal catalog | 7 | Fixed by branch | Luôn có | Success `DESIGN_RESOURCE_UPDATED`; error code theo branch. |
-| 4 | `message` | Message | `message` | string | No | Application | Safe message | 7 | Branch message | Luôn có | Câu chữ cụ thể chưa được quy định. |
-| 5 | `data` | Support request | `data` | SupportRequest | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6 | Object mapping | Không null khi success | Catalog trả object đơn. |
-| 6 | `data.id` | Request ID | `id` | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.1 | N/A | Không null | Pilot ID là UUID, chưa map sang int64. |
-| 7 | `data.course_id` | Course ID | `course_id` | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.1 | N/A | Không null | Pilot support_tickets không có course_id. |
-| 8 | `data.student` | Student | `student` | UserSummary | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.1 | Object mapping | Không null | Projection chưa được duyệt. |
-| 9 | `data.student.id` | Student ID | `id` | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.1 | N/A | Không null | Pilot learner profile ID là UUID. |
-| 10 | `data.student.full_name` | Student full name | `full_name` | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.1 | N/A | Không null | Pilot candidate có nullability chưa khớp contract. |
-| 11 | `data.student.avatar_url` | Student avatar URL | `avatar_url` | uri? | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.1 | URL resolver chưa có | Optional theo schema | Null-versus-omit và URL policy chưa chốt. |
-| 12 | `data.status` | Request status | `status` | SupportStatus | No | V1-PILOT candidate only | `status` | 6.1 | `OPEN` → `RESOLVED` | Không null | State transition DIRECT ở AC-24; enum/storage mapping chưa duyệt. |
-| 13 | `data.messages[]` | Messages | `messages` | SupportMessage[] | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | Giữ thread hiện tại | Array theo schema | #61 không thêm/sửa message; order/visibility/limit còn mở. |
-| 14 | `data.messages[].id` | Message ID | `id` | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | N/A | Không null | Pilot message ID là UUID. |
-| 15 | `data.messages[].author` | Author | `author` | UserSummary | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | Object mapping | Không null | Identity projection chưa được duyệt. |
-| 16 | `data.messages[].author.id` | Author ID | `id` | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | N/A | Không null | Pilot author subject ID là UUID. |
-| 17 | `data.messages[].author.full_name` | Author full name | `full_name` | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | N/A | Không null | Identity projection chưa có. |
-| 18 | `data.messages[].author.avatar_url` | Author avatar URL | `avatar_url` | uri? | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | URL resolver chưa có | Optional theo schema | Null-versus-omit chưa chốt. |
-| 19 | `data.messages[].content` | Message content | `content` | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | Candidate `body` → `content` | Không null | Reuse #59/#60 candidate mapping; chưa approved. |
-| 20 | `data.messages[].attachments[]` | Attachments | `attachments` | UploadAsset[] | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | Giữ projection hiện tại | Array theo schema | Asset resolver và empty-list policy chưa được duyệt. |
-| 21 | `data.messages[].attachments[].id` | Attachment ID | `id` | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | N/A | Không null | Candidate file IDs là UUID. |
-| 22 | `data.messages[].attachments[].name` | Attachment name | `name` | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | Candidate `original_name` → `name` | Không null | Candidate only. |
-| 23 | `data.messages[].attachments[].url` | Attachment URL | `url` | uri | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | Signed URL resolver chưa có | Không null | Không trả storage key. |
-| 24 | `data.messages[].attachments[].content_type` | Content type | `content_type` | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | Candidate MIME mapping chưa chọn | Không null | Không tự chọn declared/detected MIME. |
-| 25 | `data.messages[].attachments[].size_bytes` | Attachment size | `size_bytes` | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | Candidate direct mapping | Không null | Candidate file_objects schema chưa được duyệt. |
-| 26 | `data.messages[].attachments[].status` | Upload status | `status` | UploadStatus | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | Enum mapping chưa có | Không null | Không map scan status theo suy đoán. |
-| 27 | `data.messages[].created_at` | Message creation time | `created_at` | date-time | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.2 | Candidate `sent_at` → `created_at` | Không null | Candidate only; thread ordering chưa chốt. |
-| 28 | `data.created_at` | Request creation time | `created_at` | date-time | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 6.1 | Candidate direct mapping | Không null | Pilot field candidate, không phải runtime proof. |
-| 29 | `data.resolved_at` | Resolution time | `resolved_at` | date-time? | Yes | V1-PILOT candidate only | `resolved_at` | 6.1 | Server timestamp on first transition proposal | Optional theo schema | Null/omit, timezone và write rule cần xác nhận. |
-| 30 | `meta` | Metadata | `meta` | object | No | Envelope convention | N/A | 7 | Empty object candidate | `{}` candidate | Không có pagination metadata. |
-| 31 | `traceId` | Trace ID | `traceId` | uuid | No | Request trace | X-Trace-Id/generated | 1.2/7 | Propagate/generate | Luôn có | Shared convention khi route được wiring. |
+| No | Path | Logical name | Physical source | Type | Nullable | Mapping/rule | Remarks |
+|---:|---|---|---|---|---:|---|---|
+| 1 | `HTTPStatus` | HTTP Status | Route | integer | No | Success fixed at 200 | Errors use catalog status. |
+| 2 | `success` | Success flag | Envelope | boolean | No | `true` on success | Always present. |
+| 3 | `businessCode` | Business code | Catalog | string | No | `DESIGN_RESOURCE_UPDATED` | Error branch uses exact catalog code. |
+| 4 | `message` | Message | Application | string | No | Safe fixed text | No contract-specific message ID. |
+| 5 | `data` | Support request | Reusable model | SupportRequest | No | One mapped request | Catalog declares singleton object. |
+| 6 | `data.id` | Request ID | `support_requests.id` | int64 | No | BIGINT → int64 | Local migration 008; live schema unverified. |
+| 7 | `data.course_id` | Course ID | `support_requests.course_id` | int64 | No | BIGINT → int64 | Course owner scope uses `courses.mentor_id`. |
+| 8 | `data.student` | Student | `users` | UserSummary | No | Project `id`, `full_name`, `avatar_url` | Required parent projection. |
+| 9 | `data.student.id` | Student ID | `support_requests.student_id` / `users.id` | int64 | No | FK must match public user row | Numeric local fallback. |
+| 10 | `data.student.full_name` | Student name | `users.full_name` | string | No | Direct projection | Required by response model. |
+| 11 | `data.student.avatar_url` | Student avatar | `users.avatar_url` | uri? | Yes | Direct projection | `null` omitted by route serializer. |
+| 12 | `data.status` | Request status | `support_requests.status` | string | No | Active state → `RESOLVED`; resolved retry unchanged | Transition matrix is DERIVED. |
+| 13 | `data.messages[]` | Thread | `support_messages` | SupportMessage[] | No | API #59 owner-scoped read, chronological order | #61 does not mutate messages. |
+| 14 | `data.messages[].id` | Message ID | `support_messages.id` | int64 | No | BIGINT → int64 | Local migration 008. |
+| 15 | `data.messages[].author` | Author | `users` | UserSummary | No | Public author projection | Author must map to numeric user ID. |
+| 16 | `data.messages[].author.id` | Author ID | `support_messages.author_id` / `users.id` | int64 | No | FK must match public user row | No JWT subject is emitted. |
+| 17 | `data.messages[].author.full_name` | Author name | `users.full_name` | string | No | Direct projection | Required by response model. |
+| 18 | `data.messages[].author.avatar_url` | Author avatar | `users.avatar_url` | uri? | Yes | Direct projection | `null` omitted by route serializer. |
+| 19 | `data.messages[].content` | Message content | `support_messages.content` | string | No | Direct projection | #61 preserves current thread. |
+| 20 | `data.messages[].attachments[]` | Attachments | `support_message_uploads` + `uploads` | UploadAsset[] | No | Reuse API #59 scoped resolver | Empty list when no links. |
+| 21 | `data.messages[].attachments[].id` | Attachment ID | `uploads.id` | int64 | No | BIGINT → int64 | Only matching link/upload rows are included. |
+| 22 | `data.messages[].attachments[].name` | Attachment name | `uploads.file_name` | string | No | Map to `name` | Existing UploadAsset response model. |
+| 23 | `data.messages[].attachments[].url` | Attachment URL | `uploads.url` | uri | No | Direct local metadata projection | No new signed URL generation. |
+| 24 | `data.messages[].attachments[].content_type` | Content type | `uploads.content_type` | string | No | Direct projection | Existing local resolver. |
+| 25 | `data.messages[].attachments[].size_bytes` | Attachment size | `uploads.size_bytes` | int64 | No | BIGINT → int64 | Existing local resolver. |
+| 26 | `data.messages[].attachments[].status` | Upload status | `uploads.status` | string | No | Existing scoped resolver requires `UPLOADED` | No status conversion. |
+| 27 | `data.messages[].created_at` | Message creation time | `support_messages.created_at` | date-time | No | Direct projection; order by timestamp then ID | Local migration 008. |
+| 28 | `data.created_at` | Request creation time | `support_requests.created_at` | date-time | No | Direct projection | Required by response model. |
+| 29 | `data.resolved_at` | Resolution time | `support_requests.resolved_at` | date-time | Yes in shared model | DB `CURRENT_TIMESTAMP` on first transition | New transitions return a timestamp; a pre-existing resolved row may remain null and is preserved on retry. |
+| 30 | `meta` | Metadata | Envelope | object | No | `{}` | No pagination metadata. |
+| 31 | `traceId` | Trace ID | Trace middleware | uuid | No | Propagate or generate | Also returned in `X-Trace-Id`. |
 
 ## Ví dụ thành công
 
@@ -62,14 +62,13 @@ status: "Draft — Needs Confirmation"
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_UPDATED",
-  "message": "Đã đóng yêu cầu hỗ trợ.",
+  "message": "Support request resolved.",
   "data": {
     "id": 59001,
     "course_id": 120,
     "student": {
       "id": 2042,
-      "full_name": "Nguyễn An",
-      "avatar_url": "https://example.invalid/assets/student.png"
+      "full_name": "Nguyễn An"
     },
     "status": "RESOLVED",
     "messages": [
@@ -85,14 +84,14 @@ status: "Draft — Needs Confirmation"
       }
     ],
     "created_at": "2026-10-24T08:20:00Z",
-    "resolved_at": "2026-10-24T08:40:00Z"
+    "resolved_at": "2026-10-25T08:40:00Z"
   },
   "meta": {},
   "traceId": "123e4567-e89b-42d3-a456-426614174000"
 }
 ```
 
-Ví dụ minh họa shape theo catalog và một message đã được gửi ở bước #60. IDs, timestamp, identity và attachment values là giả lập; chúng không chứng minh DB mapping. `resolved_at` là DERIVED proposal. `attachments: []` chỉ minh họa request không có attachment.
+Shape theo catalog và reusable model #58–#60. Giá trị cụ thể chỉ minh họa; local mapping là fallback DERIVED và chưa chứng minh live data.
 
 ## Ví dụ lỗi
 
@@ -100,14 +99,14 @@ Ví dụ minh họa shape theo catalog và một message đã được gửi ở
 {
   "success": false,
   "businessCode": "DESIGN_VALIDATION_ERROR",
-  "message": "Trạng thái yêu cầu không cho phép đóng.",
+  "message": "Support request cannot be resolved in its current state.",
   "data": null,
   "meta": {},
   "traceId": "123e4567-e89b-42d3-a456-426614174000"
 }
 ```
 
-422 cho state không hợp lệ là proposal DERIVED; catalog chỉ khóa business code, chưa định nghĩa reason/message. Error example dùng `data:null` theo API Guidelines; current helper mặc định `{}` nếu data vắng mặt.
+422 dùng catalog code cho path/state validation; current `error_response` serialize `data: null` và chi tiết field validation dưới `meta.fieldErrors`.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

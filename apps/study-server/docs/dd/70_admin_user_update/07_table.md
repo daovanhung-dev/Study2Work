@@ -13,40 +13,40 @@ status: "Draft — Needs Confirmation"
 
 | Table/Relation | Loại | Vai trò | Trạng thái |
 |---|---|---|---|
-| Legacy `users` | UPDATE/RETURNING candidate | Cập nhật profile và role; trả safe UserProfile projection | DERIVED CANDIDATE; live schema chưa verify. |
-| V1-PILOT identity/profile/role relations | Không dùng trong candidate | Schema UUID khác legacy int64 user model | Không map/join khi chưa có contract identity mapping. |
+| Legacy `users` | UPDATE/RETURNING runtime target candidate | Cập nhật profile và role; trả safe UserProfile projection | Runtime local; live schema/deployment chưa verify. |
+| V1-PILOT identity/profile/role relations | Không dùng | Schema UUID khác legacy int64 user model | Không map/join khi chưa có contract identity mapping. |
 
 Không migration hoặc DDL nào được tạo bởi DD này.
 
-## Candidate read/write source — legacy users
+## Runtime read/write source — legacy users candidate
 
 Candidate cột theo `infra/postgres/study-server/DB.sql` và API #14 precedent:
 
 | Logical field | Relation | Column | Operation | Mapping/status |
 |---|---|---|---|---|
 | User ID | Legacy users | id | WHERE/RETURNING | BIGINT candidate; match `user_id` chỉ là DERIVED. |
-| Full name | Legacy users | full_name | UPDATE/RETURNING | Body candidate; API #14 precedent; validation reuse needs approval. |
-| Phone | Legacy users | phone | UPDATE/RETURNING | Nullable PII candidate; null/omit semantics open. |
-| Avatar URL | Legacy users | avatar_url | UPDATE/RETURNING | Candidate; exact URI/null behavior open. |
-| Role | Legacy users | role | UPDATE/RETURNING | Inferred from #70 intent; enum/policy/transition SOURCE_REQUIRED. |
-| Updated time | Legacy users | updated_at | UPDATE/RETURNING | Candidate server timestamp; API #14 precedent. |
+| Full name | Legacy users | full_name | UPDATE/RETURNING | Runtime fallback; API #14 trim/nonblank/max 150 rules. |
+| Phone | Legacy users | phone | UPDATE/RETURNING | Runtime fallback; nullable, trim/blank-to-null, max 20. |
+| Avatar URL | Legacy users | avatar_url | UPDATE/RETURNING | Runtime fallback; nullable trim/blank-to-null; URL syntax not checked. |
+| Role | Legacy users | role | UPDATE/RETURNING | Runtime allowlist `STUDENT`/`MENTOR`/`ADMIN`; DERIVED. |
+| Updated time | Legacy users | updated_at | UPDATE/RETURNING | `CURRENT_TIMESTAMP`; API #14 precedent. |
 | Email | Legacy users | email | RETURNING only | Preserve; not writable in candidate body; PII. |
 | Status | Legacy users | status | RETURNING only | Preserve; API #71 owns status mutation. |
-| Created time | Legacy users | created_at | RETURNING only | Candidate response mapping; live type/timezone unverified. |
+| Created time | Legacy users | created_at | RETURNING only | Response mapping; live type/timezone unverified. |
 | Biography | No legacy users column | N/A | No mapping | UserProfile.bio optional; source gap, no fabricated persistence. |
 | Credential | Legacy users | password_hash | EXCLUDED | Never select, return or update. |
 
-## Candidate UPDATE mapping
+## Runtime UPDATE mapping
 
 | Parameter/source | Target column | Operation | Evidence |
 |---|---|---|---|
 | `:user_id` | `users.id` | WHERE | Path type direct; relation mapping derived. |
-| `:full_name` | `users.full_name` | UPDATE | Derived from user/profile intent and API #14. |
-| `:phone` | `users.phone` | UPDATE | Derived from API #14; null/omission open. |
-| `:avatar_url` | `users.avatar_url` | UPDATE | Derived from API #14; URI/null semantics open. |
-| `:role` | `users.role` | UPDATE | Derived from API title/AC-31; exact role values/policy open. |
-| Server timestamp | `users.updated_at` | UPDATE | Derived from API #14 precedent. |
-| Returned safe fields | id/full_name/email/role/avatar_url/phone/status/created_at/updated_at | RETURNING | Candidate UserProfile projection; excludes password_hash; bio unavailable. |
+| `:full_name` | `users.full_name` | UPDATE | Runtime fallback; normalized by API #14 rules. |
+| `:phone` | `users.phone` | UPDATE | Runtime fallback; null clears the column. |
+| `:avatar_url` | `users.avatar_url` | UPDATE | Runtime fallback; null clears the column. |
+| `:role` | `users.role` | UPDATE | Runtime allowlist from current Study role labels; transition policy open. |
+| Server timestamp | `users.updated_at` | UPDATE | `CURRENT_TIMESTAMP`; API #14 precedent. |
+| Returned safe fields | id/full_name/email/role/avatar_url/phone/status/created_at/updated_at | RETURNING | Runtime UserProfile projection; excludes password_hash; bio unavailable. |
 
 ## Alternate V1-PILOT source boundary
 

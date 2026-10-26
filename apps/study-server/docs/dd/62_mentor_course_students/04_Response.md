@@ -17,82 +17,64 @@ status: "Draft — Needs Confirmation"
 | Character encoding | UTF-8 |
 | Content-Type | `application/json` |
 | HTTP success | 200 `DESIGN_RESOURCE_RETRIEVED` |
-| Contract type | `ApiEnvelope<Page<Course>>` |
+| Contract type | `ApiEnvelope<UserSummary[]>` — DERIVED fallback, owner confirmation pending |
 
 ## Response fields
 
 | No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|---|
-| 1 | `HTTPStatus` | HTTP Status | `HTTPStatus` | integer | No | N/A | N/A | 5 | Cố định theo catalog | N/A | DIRECT: 200. |
-| 2 | `success` | Success | `success` | boolean | No | N/A | N/A | 5 | `true` | N/A | Theo quy ước envelope. |
-| 3 | `businessCode` | Business code | `businessCode` | string | No | N/A | N/A | 5 | Literal trong catalog | N/A | `DESIGN_RESOURCE_RETRIEVED`. |
-| 4 | `message` | Message | `message` | string | No | N/A | N/A | 5 | Thông điệp an toàn | Chưa quy định câu chữ | Không lộ chi tiết nội bộ. |
-| 5 | `data` | Payload | `data` | `Page<Course>` | No | N/A | N/A | 5 | Giữ schema catalog | Required | Lệch mục đích trả roster. |
-| 5.1 | `data.items` | Items | `items` | `Course[]` | No | N/A | N/A | 4 | Generic type theo catalog | `[]` là DERIVED | Chưa có mapping người nhận. |
-| 5.1.1 | `data.items[].id` | Course ID | `id` | int64 | No | `courses` candidate | `id` | 4 | Field Course trực tiếp | SOURCE_REQUIRED nếu dùng làm mục roster | Không phải learner ID. |
-| 5.1.2 | `data.items[].title` | Course title | `title` | string | No | `courses` candidate | `name` candidate | 4 | Candidate `name → title` | SOURCE_REQUIRED nếu dùng làm mục roster | Không phải field người nhận. |
-| 5.1.3 | `data.items[].description` | Course description | `description` | string? | Yes | `courses` candidate | `description` | 4 | Candidate trực tiếp | Quy tắc null/omit còn mở | Field Course optional. |
-| 5.1.4 | `data.items[].thumbnail_url` | Thumbnail | `thumbnail_url` | uri? | Yes | `courses` candidate | `thumbnail_url` | 4 | Candidate trực tiếp | Quy tắc null/omit còn mở | Field Course optional. |
-| 5.1.5 | `data.items[].price` | Price | `price` | decimal-string | No | `courses` candidate | `price` | 4 | Chuyển đổi decimal an toàn | NULL là lỗi toàn vẹn nguồn | Không phải field người nhận. |
-| 5.1.6 | `data.items[].status` | Trạng thái course | `status` | CourseStatus | No | `courses` candidate | `status` | 4 | Chỉ dùng enum đã duyệt | Enum chưa xác định | Vòng đời course, không phải enrollment. |
-| 5.1.7 | `data.items[].mentor.id` | Mentor ID | `id` | int64 | No | `users` candidate | `id` | 4 | Projection Mentor của Course | SOURCE_REQUIRED cho roster | Không phải learner đã ghi danh. |
-| 5.1.8 | `data.items[].mentor.full_name` | Tên Mentor | `full_name` | string | No | `users` candidate | `full_name` | 4 | Projection Mentor của Course | SOURCE_REQUIRED cho roster | Không phải learner đã ghi danh. |
-| 5.1.9 | `data.items[].mentor.avatar_url` | Mentor avatar | `avatar_url` | uri? | Yes | `users` candidate | `avatar_url` | 4 | Projection Mentor của Course | Quy tắc null/omit còn mở | Field UserSummary optional. |
-| 5.1.10 | `data.items[].category.id` | Category ID | `id` | int64 | No when present | Chưa có relation được duyệt | N/A | 4 | None | Có thể bỏ object cha optional | Category là optional. |
-| 5.1.11 | `data.items[].category.name` | Category name | `name` | string | No when present | Chưa có relation được duyệt | N/A | 4 | None | Có thể bỏ object cha optional | Field Category. |
-| 5.1.12 | `data.items[].category.slug` | Category slug | `slug` | string | No when present | Chưa có relation được duyệt | N/A | 4 | None | Có thể bỏ object cha optional | Field Category. |
-| 5.1.13 | `data.items[].category.description` | Category description | `description` | string? | Yes | Chưa có relation được duyệt | N/A | 4 | None | Optional/null policy open | Field Category. |
-| 5.2 | `data.pagination` | Phân trang | `pagination` | PageMeta | No | N/A | N/A | 4 | Schema dùng chung | Required | #62 không có input page/size. |
-| 5.2.1 | `data.pagination.page` | Trang hiện tại | `page` | int32 | No | N/A | N/A | 4 | SOURCE_REQUIRED | Chưa quy định default/range | Không sao chép từ #6/#46. |
-| 5.2.2 | `data.pagination.size` | Kích thước trang | `size` | int32 | No | N/A | N/A | 4 | SOURCE_REQUIRED | Chưa quy định default/giới hạn | Request không có query. |
-| 5.2.3 | `data.pagination.total` | Tổng số mục | `total` | int64 | No | Candidate count | N/A | 4 | Chưa rõ grain đếm | Empty→0 là DERIVED | Xung đột giữa số Course và số learner. |
-| 5.2.4 | `data.pagination.total_pages` | Tổng số mục pages | `total_pages` | int32 | No | N/A | N/A | 4 | Cần tổng số và size | Quy tắc chưa xác định | SOURCE_REQUIRED. |
-| 6 | `meta` | Metadata | `meta` | object | No | N/A | N/A | 5 | Theo quy ước envelope | Candidate `{}` | Catalog không khai báo metadata riêng cho #62. |
-| 7 | `traceId` | Trace ID | `traceId` | uuid | No | N/A | N/A | 5 | Quy ước trace dùng chung | Tạo/truyền tiếp khi wired | Chưa có runtime. |
+| 1 | `HTTPStatus` | HTTP Status | `HTTPStatus` | integer | No | N/A | N/A | 5 | Fixed by branch | N/A | Success 200; errors 401/403/404/500. |
+| 2 | `success` | Success | `success` | boolean | No | N/A | N/A | 5 | `true` on success | Required | Standard envelope. |
+| 3 | `businessCode` | Business code | `businessCode` | string | No | Catalog | literal | 5 | `DESIGN_RESOURCE_RETRIEVED` | Required | Catalog code retained. |
+| 4 | `message` | Message | `message` | string | No | Application | N/A | 5 | Safe success message | Required | Empty roster uses “No students found.” |
+| 5 | `data` | Recipient roster | `data` | `UserSummary[]` | No | Query result | distinct rows | 4 | Map each eligible Student once | Empty roster is `[]` | No pagination because request has no page/size input. |
+| 5.1 | `data[].id` | User ID | `id` | int64 | No | `users` | `id` | 4 | Direct numeric mapping | Required | Student identity sent to the recipient picker. |
+| 5.2 | `data[].full_name` | Full name | `full_name` | string | No | `users` | `full_name` | 4 | Direct mapping | Required | No extra profile fields are exposed. |
+| 5.3 | `data[].avatar_url` | Avatar URI | `avatar_url` | uri | Yes | `users` | `avatar_url` | 4 | Direct mapping | Omit when SQL value is NULL | Implementation preserves the stored string; it does not revalidate the URI. |
+| 6 | `meta` | Metadata | `meta` | object | No | Envelope | N/A | 5 | `{}` | Required | No pagination metadata. |
+| 7 | `traceId` | Trace ID | `traceId` | uuid | No | Request trace | trace ID | 5 | Propagate request trace | Required | Also returned in `X-Trace-Id`. |
 
-## Ví dụ thành công — chỉ minh họa cấu trúc
-
-JSON trang rỗng chỉ minh họa các kiểu dữ liệu trong catalog. Giá trị phân trang là ví dụ, chưa phải default được duyệt; #62 không có input phân trang. Ví dụ này không giải quyết xung đột Course/roster.
+## Ví dụ thành công
 
 ```json
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "<MESSAGE_TEXT>",
-  "data": {
-    "items": [],
-    "pagination": {
-      "page": 1,
-      "size": 1,
-      "total": 0,
-      "total_pages": 0
+  "message": "Students retrieved.",
+  "data": [
+    {
+      "id": 2001,
+      "full_name": "Nguyễn An",
+      "avatar_url": "https://cdn.example.test/avatar/2001.png"
+    },
+    {
+      "id": 2002,
+      "full_name": "Trần Bình"
     }
-  },
+  ],
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000000"
 }
 ```
 
-## Ví dụ lỗi — envelope theo guideline
+Ví dụ chỉ minh họa schema. `avatar_url` bị lược khi nguồn là NULL; response không có trường email hoặc phone.
 
-`data:null` theo API Guidelines. Helper hiện tại khác quy ước này và #62 chưa có route; đây không phải ví dụ runtime.
+## Ví dụ lỗi
 
 ```json
 {
   "success": false,
   "businessCode": "DESIGN_RESOURCE_NOT_FOUND",
-  "message": "<SAFE_MESSAGE>",
+  "message": "Course not found.",
   "data": null,
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000000"
 }
 ```
 
-## Khoảng trống trong response contract
+## Contract discrepancy
 
-- Giữ `Page<Course>` trong DD vì đây là type hiện tại của catalog.
-- Không chép learner data vào Course fields hoặc tạo Course giả cho từng enrollment.
-- `Page<UserSummary>` chỉ là đề xuất sửa contract; xem [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md#q-62-01-response-resource).
+Diagram/catalog ban đầu khai báo `ApiEnvelope<Page<Course>>`. API #62 cần trả learner recipients và không nhận pagination input. Fallback dùng `ApiEnvelope<UserSummary[]>`; API catalog và AC-25 node đã được đồng bộ. Đây là quyết định DERIVED, giữ DD `Draft — Needs Confirmation`.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

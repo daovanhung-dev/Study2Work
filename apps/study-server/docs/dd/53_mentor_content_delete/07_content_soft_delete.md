@@ -17,16 +17,16 @@ status: "Draft — Needs Confirmation"
 |---|---|
 | API ID | #53 |
 | Logical entity | Content |
-| Physical table | SOURCE_REQUIRED — không có generic Content table tương thích trong DDL hiện có. |
+| Physical table | `contents` in legacy DDL/migration 006; live schema unverified. |
 | Operation | Soft delete |
-| Logical key | id:int64 theo reusable Content; physical key chưa xác nhận. |
+| Logical key | `contents.id` BIGINT in the local DDL; live schema unverified. |
 | Dependencies | Content.parent_id là quan hệ parent-child trực tiếp được catalog khai báo. |
-| Transaction | Một logical mutation; physical transaction chưa xác nhận. |
+| Transaction | View-owned transaction; validate RETURNING before commit, rollback on failure. |
 | History | Giữ Content/version/review history theo proposal; storage chưa xác nhận. |
 
 ## Update mapping
 
-N/A — API #53 dùng logical soft delete; không định nghĩa UPDATE columns khi physical schema chưa có.
+API #53 updates local `contents.deleted_at = CURRENT_TIMESTAMP` and returns the stored timestamp; live schema and migration application remain unverified.
 
 ## Insert mapping
 
@@ -36,14 +36,14 @@ N/A — API #53 không tạo Content hoặc record nghiệp vụ khác.
 
 | No | Logical target | Logical field | Value source | Rule | Physical mapping/status |
 |---:|---|---|---|---|---|
-| 1 | Content target | id | Path content_id | Chọn target đã được xác thực và Mentor có quyền quản lý | Physical relation/key SOURCE_REQUIRED. |
-| 2 | Content target | Deleted marker | Soft-delete action | Đánh dấu target không còn hoạt động; không hard-delete | Marker/column/value SOURCE_REQUIRED; logical effect DIRECT. |
-| 3 | Content target | deleted_at result | Thời điểm thao tác thành công | Trả trong DeleteResult; không giả định cột lưu | Field DIRECT; generator/storage DERIVED/SOURCE_REQUIRED. |
-| 4 | Content child | parent_id | Stored Content relation | Nếu còn child chưa xóa, 422 candidate; không cascade/reparent | Field DIRECT; active predicate DERIVED; physical relation SOURCE_REQUIRED. |
+| 1 | Content target | id | Path content_id | Chọn target đã được xác thực và Mentor có quyền quản lý | Local `contents.id`; live schema unverified. |
+| 2 | Content target | Deleted marker | Soft-delete action | Đánh dấu target không còn hoạt động; không hard-delete | Local column `contents.deleted_at`; runtime sets it to `CURRENT_TIMESTAMP`; live schema unverified. |
+| 3 | Content target | deleted_at result | Database RETURNING value | Trả timestamp được ghi bởi UPDATE trong DeleteResult | Field DIRECT; local implementation returns `contents.deleted_at`; DDL timestamp has no timezone and live interpretation is unverified. |
+| 4 | Content child | parent_id | Stored Content relation | Nếu còn child chưa xóa, 422 candidate; không cascade/reparent | Field DIRECT; Active predicate `deleted_at IS NULL` is used by API #49; child-block/cascade policy remains DERIVED. |
 | 5 | Content target | status | Stored Content status | Nếu PUBLISHED, đề xuất gọi #52 unpublish; không gán DELETED | Gate DERIVED; enum/storage chưa đầy đủ. |
 | 6 | Content/version/review history | Existing logical state | Soft-delete operation | Giữ history, không xóa revision/review decision | DERIVED; physical retention/audit SOURCE_REQUIRED. |
 
-Không có SQL mutation vật lý được đưa ra vì schema Content và soft-delete columns chưa được xác nhận. Chi tiết: [05_Data_Mapping.md](./05_Data_Mapping.md).
+Local API #53 mutation is implemented. The direct-child and PUBLISHED guards, non-PUBLISHED eligibility, repeat-delete semantics, moderation queue behavior, and history/audit retention policy remain open or DERIVED. Chi tiết: [05_Data_Mapping.md](./05_Data_Mapping.md).
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -14,16 +14,16 @@ status: "Draft — Needs Confirmation"
 | No | HTTP | Business code | Direct trigger/source | Handling/status |
 |---:|---:|---|---|---|
 | 1 | 401 | DESIGN_AUTHENTICATION_REQUIRED | Missing/invalid Bearer JWT per catalog code | Direct code; token policy is shared auth source |
-| 2 | 403 | DESIGN_ACCESS_DENIED | Authenticated caller lacks Admin/notification-management access | Requirement direct; claim/policy source required |
-| 3 | 404 | DESIGN_RESOURCE_NOT_FOUND | Target notification does not exist | Direct code; target model and precedence unresolved |
-| 4 | 422 | DESIGN_VALIDATION_ERROR | Catalog lists code; policy/parse triggers are not specified | Direct code; proposed disallowed lifecycle state is DERIVED |
+| 2 | 403 | DESIGN_ACCESS_DENIED | Shared ADMIN guard rejects caller role | Direct catalog code; fine-grained permission remains SOURCE_REQUIRED |
+| 3 | 404 | DESIGN_RESOURCE_NOT_FOUND | Path-selected notification is absent or was physically removed by an earlier request | Direct code; legacy row mapping is DERIVED |
+| 4 | 422 | DESIGN_VALIDATION_ERROR | Path is not a positive signed-int64, or there is no delivery / at least one locked delivery is not QUEUED | Trigger is local `DERIVED` fallback using a direct catalog code |
 | 5 | 500 | DESIGN_INTERNAL_ERROR | Unexpected query, persistence, transaction or response failure | Direct code; rollback/error serialization source required |
 
 ## Error contract boundaries
 
 - Preserve the exact five catalog error codes and statuses. Do not add 409/410/503.
-- A delivery-started or policy-disallowed target maps to 422 only as a proposal using an existing catalog code; owner confirmation is required.
-- Missing path parse behavior and idempotent repeat-delete behavior are not specified.
+- Invalid path and missing/started delivery map to 422 under the local `DERIVED` policy; catalog itself does not define these triggers.
+- A repeated DELETE after physical removal returns 404; catalog does not define idempotency.
 - No recipient/dependency conflict is mapped to an error without an approved rule.
 - Error envelope data nullability follows API Guidelines/current Study helper boundary; this DD does not change shared serialization.
 - Do not expose recipient IDs, provider details, queue IDs, SQL or stack traces.

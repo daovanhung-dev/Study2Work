@@ -19,72 +19,68 @@ status: "Draft — Needs Confirmation"
 | Character encoding | UTF-8 |
 | Content-Type | `application/json` |
 | Success contract | HTTP 200 `DESIGN_RESOURCE_UPDATED`; `ApiEnvelope<Content>`. |
-| Error contract | HTTP 401/403/404/422/500; đúng `DESIGN_*` code của catalog. |
-| Runtime status | API #51 chưa có route/module/test; ví dụ là expected design, không phải observed response. |
+| Error contract | HTTP 401/403/404/422/500; catalog `DESIGN_*` codes. |
+| Runtime status | Route/view and focused TestClient tests pass locally; tests fake DB and do not verify live schema. |
 
 ## Response fields
 
-| Field | Type | Required | Source/rule |
-|---|---|---:|---|
-| `success` | boolean | Có | true trên success. |
-| `businessCode` | string | Có | `DESIGN_RESOURCE_UPDATED` trên success. |
-| `message` | string | Có | Human-readable message; nội dung chính xác chưa có contract. |
-| `data` | Content | Có | Logical Content sau update; mapping vật lý chưa xác định. |
-| `data.id` | int64 | Có | Giữ nguyên `content_id`; stored projection SOURCE_REQUIRED. |
-| `data.course_id` | int64 | Có | Giữ nguyên course của Content; physical mapping SOURCE_REQUIRED. |
-| `data.content_type` | ContentType | Có | Trả giá trị đã lưu; body proposal DERIVED, enum SOURCE_REQUIRED. |
-| `data.title` | string | Có | Trả giá trị đã lưu; normalization/column SOURCE_REQUIRED. |
-| `data.payload` | object | Có | Trả payload của revision mới; subtype schema/storage SOURCE_REQUIRED. |
-| `data.status` | ContentStatus | Có | Đề xuất `PENDING_REVIEW` cho revision mới; DERIVED, cần xác nhận. |
-| `data.parent_id` | int64? | Không | Preserve placement; mapping/null omission SOURCE_REQUIRED. |
-| `data.order` | int32 | Có | Preserve order trong đề xuất; physical mapping SOURCE_REQUIRED. |
-| `meta` | object | Có | Không có pagination; serialization cần helper alignment. |
-| `traceId` | uuid | Có | Current response convention; route behavior chưa được verify. |
+| No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
+|---:|---|---|---|---|---:|---|---|---|---|---|---|
+| 1 | `success` | Success | `success` | boolean | No | N/A | N/A | R1 | Fixed `true` | N/A | Success envelope. |
+| 2 | `businessCode` | Business code | `businessCode` | string | No | N/A | N/A | R1 | Fixed `DESIGN_RESOURCE_UPDATED` | N/A | Catalog #51. |
+| 3 | `message` | Message | `message` | string | No | N/A | N/A | R1 | Fixed `Content updated.` | N/A | Current implementation text; not separately fixed by catalog. |
+| 4 | `data` | Content | `data` | object | No | `contents` | projection | R1 | Shared `ContentResponse` | N/A | Reusable Content contract. |
+| 4.1 | `data.id` | Content identifier | `id` | int64 | No | `contents` | `id` | R1 | Return path target | N/A | Mapped from locked and updated row. |
+| 4.2 | `data.course_id` | Course identifier | `course_id` | int64 | No | `contents` | `course_id` | R1 | Preserve existing | N/A | Course does not come from body. |
+| 4.3 | `data.content_type` | Content type | `content_type` | string | No | `contents` | `content_type` | R1 | Return replacement string | N/A | Open string in current model; enum unresolved. |
+| 4.4 | `data.title` | Title | `title` | string | No | `contents` | `title` | R1 | Return replacement string | N/A | No normalization added. |
+| 4.5 | `data.payload` | Payload | `payload` | object | No | `contents` | `payload` | R1 | Return JSONB object | N/A | Subtype keys are not validated. |
+| 4.6 | `data.status` | Status | `status` | string | No | `contents` | `status` | R1 | Set `PENDING_REVIEW` | N/A | DERIVED lifecycle rule. |
+| 4.7 | `data.parent_id` | Parent Content identifier | `parent_id` | int64? | Yes | `contents` | `parent_id` | R1 | Preserve existing | Null value omitted | Shared model excludes none. |
+| 4.8 | `data.order` | Content order | `order` | int32 | No | `contents` | `content_order` | R1 | Preserve existing | N/A | Alias mapping. |
+| 5 | `meta` | Metadata | `meta` | object | No | N/A | N/A | R1 | Empty object | `{}` | No pagination. |
+| 6 | `traceId` | Trace identifier | `traceId` | uuid | No | N/A | N/A | R1 | Request trace ID | N/A | Shared response helper. |
 
-Catalog Content không có field version. Không thêm `version`, `version_id` hoặc audit fields vào response của API #51 nếu chưa đổi contract.
+Không thêm version/audit fields vào response. Catalog không định nghĩa chúng.
 
-## Ví dụ thành công (illustrative only)
-
-`content_type` là placeholder không executable. Các ID/trường còn lại chỉ minh họa shape; status là lifecycle proposal DERIVED.
+## Ví dụ thành công
 
 ~~~json
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_UPDATED",
-  "message": "Content updated",
+  "message": "Content updated.",
   "data": {
-    "id": 9001,
-    "course_id": 123,
-    "content_type": "<SOURCE_REQUIRED: ContentType member>",
+    "id": 50001,
+    "course_id": 101,
+    "content_type": "lesson-node-v2",
     "title": "Nội dung đã cập nhật",
-    "payload": {},
+    "payload": {"body": "Nội dung mới"},
     "status": "PENDING_REVIEW",
-    "parent_id": null,
-    "order": 1
+    "parent_id": 42001,
+    "order": 3
   },
   "meta": {},
   "traceId": "00000000-0000-4000-8000-000000000001"
 }
 ~~~
 
-Giá trị `parent_id`, `order`, `status` trong ví dụ không phải default đã xác nhận. Response chỉ dùng schema `Content` hiện có.
+Shape khớp current local response; IDs và lifecycle field chỉ là ví dụ, lifecycle vẫn DERIVED.
 
 ## Ví dụ lỗi
-
-Ví dụ contract-level 404 khi `content_id` không tồn tại; current API #51 runtime chưa được triển khai.
 
 ~~~json
 {
   "success": false,
   "businessCode": "DESIGN_RESOURCE_NOT_FOUND",
-  "message": "Content not found",
-  "data": {},
+  "message": "Content not found.",
+  "data": null,
   "meta": {},
   "traceId": "00000000-0000-4000-8000-000000000001"
 }
 ~~~
 
-Khi wire route, cần giữ envelope hiện hành của `error_response`. Catalog chưa quy định nội dung thông báo tiếng Việt cụ thể.
+Error data là `null` theo `error_response`; field errors của body 422 được đặt trong `meta.fieldErrors`.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

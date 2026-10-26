@@ -17,78 +17,72 @@ status: "Draft — Needs Confirmation"
 | Module | ADMIN / SYSTEM MANAGEMENT — AC-31 |
 | Method | DELETE |
 | Endpoint | /api/v1/admin/users/{user_id} |
-| Purpose | Yêu cầu xóa user theo policy quản trị đã được phê duyệt sau khi kiểm tra ràng buộc. |
-| Consumer/Actor | Admin có quyền quản lý user theo precondition AC-31. |
+| Purpose | Đánh dấu user đã xóa logic theo fallback soft-delete. |
+| Consumer/Actor | Admin theo precondition AC-31. |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin và quyền user management; Study hiện chưa có Admin guard/policy. |
-| Direct request | path user_id:int64!; không có body/query được khai báo. |
-| Direct response | ApiEnvelope<DeleteResult>; 200 DESIGN_RESOURCE_DELETED. |
-| DeleteResult | id:int64, status literal "deleted", deleted_at:date-time. |
-| Direct errors | 401/403/404/422/500 với đúng mã DESIGN_* theo catalog. |
-| Basis | Method/path/auth/input/response/codes DIRECT; physical policy, dependency rules và persistence SOURCE_REQUIRED. |
+| Authorization | Shared `ADMIN` JWT role theo API #68–#71; dedicated permission/tenant/MFA chưa có source. |
+| Direct request | `path{user_id:int64!}`; không body/query. |
+| Direct response | `ApiEnvelope<DeleteResult>`; 200 `DESIGN_RESOURCE_DELETED`. |
+| DeleteResult | `id:int64`, `status:"deleted"`, `deleted_at:date-time`. |
+| Direct errors | 401/403/404/422/500 với đúng mã `DESIGN_*`. |
+| Basis | Method/path/auth/input/response/codes DIRECT; `status='DELETED'`, timestamp mapping và dependency behavior DERIVED. |
 | Status | Draft — Needs Confirmation |
-| Current runtime state | UNWIRED / NOT_FOUND — không có route, module hoặc test API #72. |
-| Transaction | Chưa có policy/schema để xác định target, transaction hoặc rollback. |
-| Side effects | AC-31 yêu cầu soft delete/anonymize theo policy; không yêu cầu physical DELETE. |
+| Runtime state | SOURCE_BACKED_WITH_DERIVED_CONTRACT; route/module/focused HTTP tests đã wire. |
+| Transaction | Một conditional `UPDATE users`; map DeleteResult trước commit; lỗi query/mapping/commit rollback. |
+| Side effects | Đổi status và updated_at; giữ profile, refresh-token rows và mọi user-linked records. |
 
 ## Sources
 
-- [API catalog và reusable schemas](../../../../../docs/lists/list_api.md) — API #72, ApiEnvelope, DeleteResult.
-- [AC/API index, AC-31](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — Admin user-management precondition và API group.
-- [AC-31 activity diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — #68 list → #69 detail → Update/Status/Delete → #72 → reload.
-- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — candidate users BIGINT và FK relations; live schema chưa xác minh.
-- [V1-PILOT DDL](../../../../../infra/postgres/02_study_db.sql) — UUID identity_projections/account_status và learner_profiles.deleted_at; khác legacy users.
-- [DB table guide](../../diagrams/DB_UNICA_TABLES.md) — users field/relationship overview ở trạng thái design-only.
-- [API #68–#71 overview](../68_admin_users_list/02_Overview.md), [#69](../69_admin_user_detail/02_Overview.md), [#70](../70_admin_user_update/02_Overview.md), [#71](../71_admin_user_status/02_Overview.md) — group boundaries.
+- [API catalog và reusable schemas](../../../../../docs/lists/list_api.md) — API #72 và DeleteResult.
+- [AC-31 activity diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — DELETE branch, logical delete theo policy, reload.
+- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — BIGINT users, VARCHAR status, updated_at và FK relations; live schema chưa xác minh.
+- [V1-PILOT DDL](../../../../../infra/postgres/02_study_db.sql) — UUID identity lifecycle; không dùng làm target API int64.
+- [API #03 auth](../../../app/modules/guest/api_03_auth_login/view.py) — login/refresh yêu cầu status ACTIVE.
+- [API #68–#71 DD](../68_admin_users_list/02_Overview.md), [#69](../69_admin_user_detail/02_Overview.md), [#70](../70_admin_user_update/02_Overview.md), [#71](../71_admin_user_status/02_Overview.md) — cùng Admin group.
 
 ## Tables read
 
-| Relation | Fields/relationship candidate | Basis/status |
+| Relation | Fields/relationship | Basis/status |
 |---|---|---|
-| Legacy users | id, role, status and existing profile columns | Candidate lookup only from legacy DDL; no deleted_at/anonymized_at; live schema unknown. |
-| Legacy user-linked relations | courses.mentor_id; enrollments.user_id; lesson_progress.user_id; quiz_attempts.user_id; assignment_submissions.user_id; discussions.user_id; notifications.user_id/sender_id; payments.user_id; refresh_tokens.user_id | Legacy DDL dependency candidates only; not proof of live FK constraints or deletion policy. |
-| V1-PILOT identity_projections | UUID subject, account_status, identity_version | Different identity model; not a BIGINT users target. |
-| V1-PILOT learner_profiles | UUID subject, deleted_at, profile fields | Different profile model; no approved mapping to API user_id. |
+| Legacy `users` | `id`, `status`, `updated_at` | Conditional UPDATE dùng primary key và trạng thái để tránh lặp marker; checked-in candidate. |
 
 ## Tables write
 
-Chưa xác định physical relation/column để soft-delete hoặc anonymize. Không có physical DELETE/UPDATE được phê duyệt trong nguồn hiện tại.
+| Relation | Fields | Operation/status |
+|---|---|---|
+| Legacy `users` | `status`, `updated_at` | Đặt `status='DELETED'`, `updated_at=CURRENT_TIMESTAMP`; fallback DERIVED, không migration. |
 
 ## Mục chú ý
 
-- Diagram chỉ định soft delete/anonymize theo policy; không chọn một trong hai và không nêu field/transition.
-- DeleteResult yêu cầu deleted_at nhưng legacy users không có deletion timestamp.
-- Legacy DDL cho thấy nhiều relation user-linked; diagram không định nghĩa relation nào chặn xóa, relation nào giữ lịch sử hoặc có cascade.
-- Catalog 422 tồn tại nhưng không nói dependency condition cụ thể hoặc cách ánh xạ policy conflict.
-- Không khẳng định refresh_tokens ON DELETE CASCADE được kích hoạt; đó là DDL artifact trong khi candidate flow không hard-delete.
-- API #68 list response/cardinality mismatch vẫn tồn tại; API #72 không tự sửa #68.
-- Email/phone là PII; response DeleteResult không trả profile/credential.
+- Soft-delete giữ nguyên user row nên mọi foreign-key reference vẫn còn hợp lệ; không cần hard-delete dependency blocker/cascade query cho fallback này.
+- User đã có `status='DELETED'` hoặc không tồn tại nhận 404; không thêm 409.
+- Response `deleted_at` là alias của `updated_at` từ mutation hiện tại, không phải column được lưu riêng.
+- API #03 chặn login/refresh do chỉ cho ACTIVE; shared access-JWT guard không đọc status nên token đã cấp có thể còn hiệu lực tới expiry.
+- API #68/#69 không lọc status; user DELETED vẫn hiển thị cho Admin với marker trạng thái. API #70 không đổi status; API #71 từ chối state ngoài ACTIVE/SUSPENDED.
+- Soft-delete giữ PII và không có self/last-Admin, audit, retention hoặc anonymization rule được phê duyệt.
 
-## Candidate mapping — DERIVED
+## Assumptions
 
-Trước hết authorize Admin, sau đó locate target và đánh giá các ràng buộc theo policy đã được duyệt. Nếu policy cho phép, thực hiện soft-delete hoặc anonymization đã được chọn và trả DeleteResult. Đây chỉ là flow logic theo diagram; Q2 dependencies, physical mutation, transaction và deleted_at source đều SOURCE_REQUIRED. Không được dùng hard DELETE làm fallback.
+- Chọn soft-delete marker `DELETED` vì không có field physical delete/anonymization được duyệt; đây là DERIVED fallback theo chỉ thị chọn phương án đơn giản.
+- Mọi linked records được giữ lại; status marker không làm thay đổi relation.
+- `updated_at` được dùng làm timestamp sự kiện trong response; không khẳng định timestamp xóa được lưu độc lập.
 
 ## Conflicts
 
-- Legacy users BIGINT không có deletion field; V1-PILOT UUID model có lifecycle/deleted_at nhưng không tương đương.
-- Diagram cho phép soft-delete/anonymize nhưng physical policy chưa được chọn.
-- Catalog yêu cầu deleted_at trong success response nhưng chưa có source.
-- Legacy DDL có FK tới users; live constraints và retention/dependency policy chưa xác minh.
-- Current Study không có Admin authorization; endpoint chưa được wire.
-- Error guideline mong data null; current helper mặc định {}. Middleware allowlist chưa có path #72.
+- Diagram/catelog yêu cầu logical deletion/DeleteResult; legacy users thiếu `deleted_at`, còn V1-PILOT dùng UUID khác model.
+- Catalog nói kiểm tra ràng buộc nhưng không chỉ ra relation nào chặn; soft-delete được chọn để bảo toàn toàn bộ FK row.
+- Policy owner vẫn cần xác nhận marker, PII retention/anonymization, timestamp persistence, idempotency và Admin safeguards.
 
 ## Security note
 
-- Authenticate và authorize Admin/user-management trước khi xác nhận target tồn tại hoặc đọc dữ liệu liên quan.
-- Không đọc hoặc trả password_hash, refresh-token hash hay thông tin profile không cần thiết.
-- Không log token, email, phone hoặc dữ liệu user trong response.
-- Anonymization, retention, audit actor/reason và quyền xóa Admin/user cụ thể cần policy owner xác nhận.
+- Shared ADMIN JWT guard chạy trước path parsing/query; dedicated permission policy chưa có source.
+- Không đọc/trả password hash, token hash hoặc profile trong DeleteResult.
+- Status DELETED chặn login/refresh mới nhưng không thu hồi access JWT đang tồn tại.
 
 ## Performance note
 
-- Lookup theo một user_id có thể dùng khóa chính nếu legacy schema được chọn; live index/query plan chưa xác minh.
-- Dependency check không thể định cỡ hoặc tối ưu trước khi policy xác định các relation cần kiểm tra.
-- Không đề xuất migration/index khi chưa có schema owner và workload.
+- Mutation theo `users.id` primary key; một statement, không quét các quan hệ user-linked.
+- Không có live query plan hoặc schema metadata; fake DB test không đo hiệu năng database.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

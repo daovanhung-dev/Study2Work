@@ -26,14 +26,14 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|
-| 1 | Authorization | `Authorization` | Yes | Bearer JWT | Xác thực principal Admin trước khi đọc dữ liệu. Claim/guard chưa có source. | [Data Mapping](./05_Data_Mapping.md#0-check-quyen) |
-| 2 | Trace ID | `X-Trace-Id` | No | UUID | Shared middleware validate hoặc tạo correlation ID; không phải field nghiệp vụ. | [Data Mapping](./05_Data_Mapping.md#0-check-quyen) |
+| 1 | Authorization | `Authorization` | Yes | Bearer JWT | Shared guard yêu cầu role `ADMIN` trước khi parse path hoặc đọc dữ liệu; permission moderation riêng chưa có source. | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) |
+| 2 | Trace ID | `X-Trace-Id` | No | UUID | Shared middleware validate hoặc tạo correlation ID; không phải field nghiệp vụ. | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Content ID | `content_id` | int64 | Yes | Chưa đặc tả | Chưa đặc tả | Số nguyên 64-bit | ID Content theo nguồn được chọn | Không có | Định danh Content được chọn từ AC-33 queue; ID vật lý chưa xác nhận. | [Data Mapping](./05_Data_Mapping.md#1-validate-data-input) |
+| 1 | Content ID | `content_id` | int64 | Yes | Chưa đặc tả | Chưa đặc tả | Số nguyên signed 64-bit | ID Content theo nguồn được chọn | Không có | Runtime parse raw path signed-int64; sai format/overflow trả catalog 404 theo API #69 precedent. | [Data Mapping](./05_Data_Mapping.md#1-validate-data-input) |
 
 ## Query parameters
 
@@ -55,7 +55,7 @@ ID 901 chỉ là giá trị minh họa, không khẳng định dải ID hoặc p
 ## Quy tắc input đang mở
 
 - Catalog khai báo content_id:int64!; không thêm min/max nghiệp vụ.
-- Catalog không liệt kê lỗi 422. Behavior khi path không parse được hoặc vượt miền int64 cần xác nhận; không tạo business code mới.
+- Catalog không liệt kê lỗi 422. Runtime giữ raw path và map sai format/overflow về 404 `DESIGN_RESOURCE_NOT_FOUND`; đây là fallback DERIVED tương thích direct error set.
 - API #79 không nhận version_id, author_id, expected row version, body, query parameter hoặc pagination.
 - Nếu API #80/#81 phải chốt đúng revision mà #79 đã hiển thị, request hiện tại không mang revision/concurrency token.
 

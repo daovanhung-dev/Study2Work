@@ -11,20 +11,18 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Các lỗi được giới hạn theo catalog API #59 và AC-24. Không thêm lỗi ngoài bộ 401/403/404/500 được khai báo.
+Các lỗi giữ nguyên catalog API #59. Malformed/out-of-range `request_id` trả catalog 404 theo pattern API #48 vì #59 không khai báo 422. Error helper hiện tại trả `data:null` và trace ID.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Header thiếu hoặc token không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [1.1](./05_Data_Mapping.md) | No | Catalog; Mentor claim validation chưa có source. |
-| 2 | Authorization | Role/scope | Mentor principal/request scope | Role không phải Mentor hoặc request ngoài phạm vi được phép | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [2](./05_Data_Mapping.md) | No | Predicate, identity mapping và existence-vs-scope order chưa chốt. |
-| 3 | Not found | Resource lookup | Support request | Không tìm thấy request theo ID và quy tắc truy cập được duyệt | 404 | DESIGN_RESOURCE_NOT_FOUND | Chưa quy định | [4.1](./05_Data_Mapping.md) | No | Catalog; physical query chưa có. |
-| 4 | System error | Query/projection | Request/thread data | DB, identity/asset resolver hoặc mapping lỗi ngoài dự kiến | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [4–6](./05_Data_Mapping.md) | No | Không trả stack trace/provider detail. |
+| 1 | Authentication | Bearer/JWT | Authorization | Header thiếu, token invalid hoặc claim không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [1.1](./05_Data_Mapping.md#11-xác-thực-bearer-jwt) | No | Shared auth guard. |
+| 2 | Authorization | Role/scope | Mentor/request | Role không phải Mentor hoặc request hiện hữu thuộc course của Mentor khác | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [2.1](./05_Data_Mapping.md#21-đọc-request-và-owner) | Yes — rollback read transaction | Access predicate direct `courses.mentor_id`; owner mismatch follows #48/#55. |
+| 3 | Not found | Path/query | `request_id` | Path sai định dạng/ngoài int64 hoặc request ID không tồn tại | 404 | DESIGN_RESOURCE_NOT_FOUND | Chưa quy định | [3.1](./05_Data_Mapping.md#31-path-parameter), [4.1](./05_Data_Mapping.md#41-q1--supportrequest-detail-và-student) | No | Không thêm 422 ngoài catalog. |
+| 4 | System error | Query/projection | Request/thread/assets | DB lỗi hoặc required relation/asset projection không nhất quán | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [4–6](./05_Data_Mapping.md#4-đọc-request-và-conversation) | Yes — best-effort rollback | Không trả stack trace hoặc partial thread. |
 
-> Catalog không khai báo 422 cho malformed path; framework behavior khi route được wiring cần được xác nhận, không tự thêm error case.
-
-> API Guidelines yêu cầu error `data:null`; current helper mặc định `{}` nếu caller bỏ qua data. API #59 chưa wired nên đây là conditional future discrepancy.
+Error envelope dùng shared `error_response(...)`, bao gồm `data:null`, `meta` và `traceId` theo runtime hiện tại.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

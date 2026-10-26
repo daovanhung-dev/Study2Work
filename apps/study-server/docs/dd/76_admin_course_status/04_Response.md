@@ -18,7 +18,7 @@ status: "Draft — Needs Confirmation"
 | Content-Type | application/json |
 | Success HTTP status | 200 DESIGN_RESOURCE_UPDATED |
 | Direct response type | ApiEnvelope&lt;Page&lt;Course&gt;&gt; theo catalog. |
-| Runtime status | API #76 chưa được wire; response dưới đây là design proposal. |
+| Current source status | Route/module có trong Study source; HTTP fake-DB tests xác nhận envelope và projection. Live DB chưa xác minh. |
 
 ## Response fields
 
@@ -46,7 +46,7 @@ status: "Draft — Needs Confirmation"
 | 5.2.3 | data.pagination.total_pages | Total pages | total_pages | int32 | No | Singleton page | N/A | 5.1 | Fixed 1 | 1 | DERIVED. |
 | 6 | meta | Metadata | meta | object | No | Envelope | N/A | 5.1 | Empty object candidate | {} | No counters in Course/Page schema. |
 | 7 | traceId | Trace ID | traceId | uuid | No | Middleware | N/A | 5.1/5.2 | Propagate/generate current request trace | UUID | Shared Study trace convention. |
-| 8 | Error data | Error payload | data | null by guideline | N/A | N/A | N/A | Error branch | API guideline requires null | Current helper emits {} by default | Conditional source/contract discrepancy. |
+| 8 | Error data | Error payload | data | null by guideline | N/A | N/A | N/A | Error branch | API guideline requires null | Current helper emits `null` by default | Conditional source/contract discrepancy. |
 
 ## Ví dụ thành công
 
@@ -56,7 +56,7 @@ Candidate response theo catalog Page&lt;Course&gt;. category bị omit vì optio
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_UPDATED",
-  "message": "Đã cập nhật trạng thái khóa học.",
+  "message": "Course status updated.",
   "data": {
     "items": [
       {
@@ -87,7 +87,7 @@ Candidate response theo catalog Page&lt;Course&gt;. category bị omit vì optio
 
 ## Ví dụ lỗi
 
-Ví dụ 404 theo catalog và API guideline. Current helper mặc định data {} ; route chưa tồn tại nên đây là expected design envelope, không phải runtime output.
+Ví dụ 404 theo catalog/API guideline. Current helper mặc định `data:null`; local HTTP tests xác nhận error envelope, còn DB existence/live behavior chưa được xác minh.
 
 ~~~json
 {

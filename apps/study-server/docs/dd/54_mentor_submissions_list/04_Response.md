@@ -18,34 +18,34 @@ status: "Draft — Needs Confirmation"
 | Content-Type | application/json |
 | Success HTTP status | 200 |
 | Success business code | DESIGN_RESOURCE_RETRIEVED |
-| Contract data type | ApiEnvelope<Submission> |
+| Contract data type | ApiEnvelope<Page<Submission>> |
 
 ## Response fields
 
 | No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
 |---:|---|---|---|---|---:|---|---|---:|---|---|---|
-| 1 | HTTPStatus | HTTP Status | HTTPStatus | integer | No | N/A | N/A | 4 | Fixed by branch | N/A | Success 200; error statuses exactly those in catalog. |
-| 2 | success | Success flag | success | boolean | No | N/A | N/A | 4 | true on success; false on error | Always present | Shared ApiEnvelope field. |
-| 3 | businessCode | Business code | businessCode | string | No | API catalog | Catalog literal | 4 | Fixed by branch | Always present | Keep exact DESIGN_* code. |
-| 4 | message | Message | message | string | No | Application | Safe message | 4 | Branch message | Always present | Exact text/language unspecified. |
-| 5 | data | Submission | data | object / null | Yes | N/A | N/A | 3/4 | ApiEnvelope<Submission> on success; null expected on error | Null on error per API Guidelines | Singular contract conflicts with list endpoint semantics. |
-| 5.1 | data.id | Submission ID | id | int64 | No | assignment_submissions (candidate) | id | 2/3 | Candidate direct mapping | Required by logical schema | BIGSERIAL candidate; live schema not verified. |
-| 5.2 | data.assignment_id | Assignment ID | assignment_id | int64 | No | assignment_submissions (candidate) | assignment_id | 2/3 | Candidate direct mapping | Required logically; DDL permits NULL | Guide/DDL nullability discrepancy. |
-| 5.3 | data.user_id | Student ID | user_id | int64 | No | assignment_submissions (candidate) | user_id | 2/3 | Candidate direct mapping | Required logically; DDL permits NULL | Do not derive display name; schema has no student object. |
-| 5.4 | data.content | Submission content | content | string | Yes | assignment_submissions (candidate) | content | 2/3 | Preserve candidate value | Null/omit serialization unspecified | Nullable in reusable schema and candidate DDL. |
-| 5.5 | data.files | Submitted files | files | UploadAsset[] | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | No approved mapping | Array/null/empty policy needs confirmation | Candidate file_url is not an UploadAsset array. |
-| 5.5.1 | data.files[].id | Asset ID | id | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | No approved lookup | Required by UploadAsset | No source-backed asset ID relation. |
-| 5.5.2 | data.files[].name | File name | name | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | No approved lookup | Required by UploadAsset | No metadata source. |
-| 5.5.3 | data.files[].url | Asset URL | url | uri | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | file_url is insufficient | Required by UploadAsset | Access/signing policy unresolved. |
-| 5.5.4 | data.files[].content_type | Content type | content_type | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | No approved lookup | Required by UploadAsset | No metadata source. |
-| 5.5.5 | data.files[].size_bytes | File size | size_bytes | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | No approved lookup | Required by UploadAsset | No metadata source. |
-| 5.5.6 | data.files[].status | Upload status | status | UploadStatus | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | No approved lookup | Required by UploadAsset | Enum and lifecycle not defined. |
-| 5.6 | data.status | Submission status | status | SubmissionStatus | No | assignment_submissions (candidate) | status | 2/3 | Candidate stored value | Enum members/lifecycle unresolved | AC-17 states initial SUBMITTED only. |
-| 5.7 | data.submitted_at | Submission time | submitted_at | date-time | No | assignment_submissions (candidate) | submitted_at | 2/3 | Candidate timestamp serialization | Zone/precision/format policy unresolved | DDL type is TIMESTAMP. |
-| 5.8 | data.score | Score | score | decimal-string | Yes | assignment_submissions (candidate) | score | 2/3 | NUMERIC-to-decimal-string transform SOURCE_REQUIRED | Omit/null behavior not specified | Candidate NUMERIC(6,2), nullable. |
-| 5.9 | data.feedback | Feedback | feedback | string | Yes | assignment_submissions (candidate) | feedback | 2/3 | Preserve candidate value | Null/omit policy not specified | Candidate nullable; disclosure policy not specified. |
-| 6 | meta | Metadata | meta | object | No | N/A | N/A | 4 | Empty object candidate | No pagination fields defined | Do not add page/count. |
-| 7 | traceId | Trace ID | traceId | uuid | No | Trace context | Request trace ID | 4 | Propagate UUID | Always present by shared convention | Current route absent. |
+| 1 | HTTPStatus | HTTP Status | HTTPStatus | integer | No | N/A | N/A | 4 | Fixed by branch | N/A | Success 200; errors 401/403/409/422/500. |
+| 2 | success | Success flag | success | boolean | No | N/A | N/A | 4 | true on success, false on error | Always present | Shared envelope. |
+| 3 | businessCode | Business code | businessCode | string | No | API catalog | Catalog literal | 4 | Fixed by branch | Always present | DESIGN_* code. |
+| 4 | message | Message | message | string | No | Application | Safe message | 4 | Fixed by branch | Always present | English text follows current API #46/#49 style. |
+| 5 | data | Page<Submission> | data | object / null | Yes | N/A | N/A | 3/4 | Page object on success; null on error | Null on error | Fallback to resolve list/select versus previous singular type. |
+| 5.1 | data.items | Submission list | items | Submission[] | No | assignment_submissions (candidate) | Selected columns | 2/3 | Map each row | Empty array when no matches | Ordered by `submitted_at DESC, id DESC`. |
+| 5.1.1 | data.items[].id | Submission ID | id | int64 | No | assignment_submissions | id | 2/3 | Direct | Positive integer | BIGSERIAL candidate. |
+| 5.1.2 | data.items[].assignment_id | Assignment ID | assignment_id | int64 | No | assignment_submissions | assignment_id | 2/3 | Direct | Required after inner join | Nullable DDL rows are excluded. |
+| 5.1.3 | data.items[].user_id | Student ID | user_id | int64 | No | assignment_submissions | user_id | 2/3 | Direct | Required after inner join to users | Not accepted from request. |
+| 5.1.4 | data.items[].content | Submission content | content | string | Yes | assignment_submissions | content | 2/3 | Preserve nullable value | Omitted when null | Candidate DDL permits NULL. |
+| 5.1.5 | data.items[].files | Submitted files | files | UploadAsset[] | No | uploads (candidate) | id, file_name, url, content_type, size_bytes, status | 2/3 | Exact URL + owner + purpose + course lookup | Empty array if no matching metadata | Derived relation; at most one item from `file_url`. |
+| 5.1.6 | data.items[].status | Submission status | status | SubmissionStatus/string | No | assignment_submissions | status | 2/3 | Preserve database value | Exact stored value | Enum/lifecycle unresolved. |
+| 5.1.7 | data.items[].submitted_at | Submission time | submitted_at | date-time | No | assignment_submissions | submitted_at | 2/3 | ISO date-time serialization | Always present | DDL is TIMESTAMP; timezone semantics remain open. |
+| 5.1.8 | data.items[].score | Score | score | decimal-string | Yes | assignment_submissions | score | 2/3 | `str(DB value)` | Omitted when null | Candidate NUMERIC(6,2). |
+| 5.1.9 | data.items[].feedback | Grader feedback | feedback | string | Yes | assignment_submissions | feedback | 2/3 | Preserve nullable value | Omitted when null | Disclosure timing remains open. |
+| 5.2 | data.pagination | Page metadata | pagination | PageMeta | No | Query result | page/size/total | 4 | Derived from request and count | Always present | `total_pages=0` when total is 0. |
+| 5.2.1 | data.pagination.page | Current page | page | int32 | No | Request | page | 1/4 | Default 1 | Positive integer | 1-based. |
+| 5.2.2 | data.pagination.size | Fixed page size | size | int32 | No | Shared constant | DEFAULT_SIZE | 4 | Value 20 | Always 20 | Reuses the project shared default. |
+| 5.2.3 | data.pagination.total | Matching records | total | int64 | No | COUNT query | COUNT(*) | 2/4 | Direct integer | Non-negative | Uses same access and filter predicates as list query. |
+| 5.2.4 | data.pagination.total_pages | Page count | total_pages | int32 | No | Count + size | N/A | 4 | Ceiling division | 0 when total=0 | Derived. |
+| 6 | meta | Envelope metadata | meta | object | No | N/A | N/A | 4 | Empty object | Always present | Pagination stays inside `data.pagination`. |
+| 7 | traceId | Trace ID | traceId | uuid | No | Trace context | Request trace ID | 4 | Propagate UUID | Always present | Shared convention. |
 
 ### Ví dụ thành công — HTTP 200
 
@@ -53,37 +53,55 @@ status: "Draft — Needs Confirmation"
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Submissions retrieved (illustrative text).",
+  "message": "Submissions retrieved.",
   "data": {
-    "id": 54001,
-    "assignment_id": 1201,
-    "user_id": 804,
-    "content": "Illustrative submission text.",
-    "files": [],
-    "status": "SUBMITTED",
-    "submitted_at": "2026-10-24T09:30:00Z"
+    "items": [
+      {
+        "id": 54001,
+        "assignment_id": 1201,
+        "user_id": 804,
+        "content": "Illustrative submission text.",
+        "files": [
+          {
+            "id": 34001,
+            "name": "answer.pdf",
+            "url": "https://storage.example/answer.pdf",
+            "content_type": "application/pdf",
+            "size_bytes": 12345,
+            "status": "UPLOADED"
+          }
+        ],
+        "status": "SUBMITTED",
+        "submitted_at": "2026-10-24T09:30:00",
+        "score": "8.50"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "size": 20,
+      "total": 1,
+      "total_pages": 1
+    }
   },
   "meta": {},
   "traceId": "00000000-0000-4000-8000-000000000054"
 }
 ~~~
 
-IDs, content and timestamp are illustrative. `SUBMITTED` is evidenced as AC-17's initial state, not the full SubmissionStatus enum. The empty `files` array only demonstrates the declared array type; it does not decide when empty files are returned. `data` is shown as one object to preserve the catalog contract; list cardinality remains open.
+Example values are illustrative. File resolution is a DERIVED URL match and local tests do not verify the live database relation.
 
-### Ví dụ lỗi — HTTP 409
+### Ví dụ lỗi — HTTP 403
 
 ~~~json
 {
   "success": false,
-  "businessCode": "DESIGN_STATE_CONFLICT",
-  "message": "State conflict (illustrative text).",
+  "businessCode": "DESIGN_ACCESS_DENIED",
+  "message": "Access denied.",
   "data": null,
   "meta": {},
-  "traceId": "00000000-0000-4000-8000-000000000055"
+  "traceId": "00000000-0000-4000-8000-000000000054"
 }
 ~~~
-
-The catalog declares 409 but AC-23 does not define its trigger. `data: null` follows API Guidelines; current `error_response()` defaults omitted/None data to `{}`, so the future route needs an explicit compatibility decision.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

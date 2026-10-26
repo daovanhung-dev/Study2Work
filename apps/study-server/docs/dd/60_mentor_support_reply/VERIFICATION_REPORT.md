@@ -2,44 +2,42 @@
 
 ## Kết quả
 
-- DD status: `Draft — Needs Confirmation`.
-- Tài liệu: `VERIFIED_STATIC_ONLY`; support model/attachment resolver/authorization vẫn là blockers.
-- Runtime API #60: `UNWIRED / NOT_FOUND`; không khẳng định runtime behavior.
-- Scope: Markdown DD và worklog; không sửa source, test, schema, catalog, diagram hoặc context pages.
+- DD status: `Draft — Needs Confirmation`; local fallback behavior is documented as `DERIVED`.
+- Runtime: `SOURCE_BACKED` for the checked-in route/module and passing fake-DB TestClient coverage.
+- API contract remains #60's POST route, required request fields, HTTP 200 `DESIGN_RESOURCE_UPDATED`, singleton `SupportRequest`, and catalog errors 401/403/404/422/500.
+- No support migration, live database, API catalog, AC diagram, API #35/#47 contract, or API #61 source was changed by this task.
 
 ## Deliverable manifest
 
 | Nhóm | File |
 |---|---|
-| Sheets | `00_Cover.md`, `01_Lich_su.md`, `02_Overview.md`, `03_Request.md`, `04_Response.md`, `05_Data_Mapping.md`, `06_Error.md`, `07_table.md` |
+| Sheets | `00_Cover.md`, `01_Lich_su.md`, `02_Overview.md`, `03_Request.md`, `04_Response.md`, `05_Data_Mapping.md`, `06_Error.md`, `07_support_messages_insert.md`, `08_support_message_uploads_insert.md` |
 | Reports | `PLAN_RESULT.md`, `OPEN_QUESTIONS.md`, `VERIFICATION_REPORT.md` |
-| Tổng | 11 Markdown files; không tạo ZIP theo Study workflow. |
+| Tổng | 12 Markdown files; no ZIP per Study workflow. |
 
 ## Kiểm tra
 
 | Check | Kết quả | Trạng thái |
 |---|---|---|
-| Skill/template registry | `createDD-markdown` được wire cho `server-study`; hash 8 template đối chiếu với registry source. | PASS |
-| Template appendix | Appendix của cả 8 sheet trùng template tương ứng byte-for-byte. | PASS |
-| Front matter | Tám sheet có dd_id 60 và `Draft — Needs Confirmation`. | PASS |
-| API contract | POST path, Mentor Bearer, int64 path, body fields, 200 updated, SupportRequest và exact 401/403/404/422/500 khớp catalog. | PASS |
-| Mutation/flow | #60 INSERT SupportMessage; resolve riêng qua #61; nhánh NO giữ OPEN theo AC-24. | PASS |
-| Response coverage | Đủ 24 field SupportRequest/UserSummary/SupportMessage/UploadAsset. | PASS |
-| JSON examples | Success/error examples parse JSON; attachment/status placeholders và proposal được ghi rõ. | PASS |
-| Markdown | 42 relative links/anchors tồn tại; table widths, code fences, whitespace và `git diff --check` đạt. | PASS |
-| Scope/runtime | Không đổi executable source; tests không chạy vì docs-only và endpoint chưa wired. | NOT_RUN |
-| AC-24 macro-review | Đã review cùng #58/#59/#61: #60 chỉ INSERT reply; #61 sở hữu resolve; attachment/lifecycle gaps giữ mở. | VERIFIED_WITH_OPEN_QUESTIONS |
+| Focused API #59/#60 tests | 34 passed; includes 13 API #59 regressions and 21 API #60 cases. | PASS |
+| Full Study suite | 584 passed; one upstream Starlette/httpx TestClient deprecation warning. | PASS |
+| Ruff | Changed runtime modules, route/middleware and API #60 tests pass `ruff check`. | PASS |
+| OpenAPI | 30 `/api/v1` path templates and 31 operations; #60 path is present with `request_id` integer/int64 and required strict body fields. | PASS |
+| DD structure | 12 Markdown files; 9 sheets have API #60 front matter and `Draft — Needs Confirmation`. | PASS |
+| Template appendix | The seven base sheets and both split table mappings preserve exact source-template appendix bytes. | PASS |
+| DD examples/links | JSON examples parse; all relative file targets exist. | PASS |
+| Context manifest | All API #60 and shared projection source paths registered for server-study exist. | PASS |
+| `git diff --check` | No whitespace errors. | PASS |
+| Context validator | Deno validator reports missing DB Admin context/source paths and broad existing source drift in the dirty workspace; `--skip-drift` leaves only DB Admin failures outside this task. | BASELINE_FAILURE_OUT_OF_SCOPE |
 
-## Open implementation blockers
+## Runtime verification boundary
 
-- Support table/ID model và Mentor principal/assignment predicate.
-- API #34 UploadAsset registry, ID mapping, ownership/purpose/status validation và URL resolver.
-- Wire key/encoding cho #35/#47/#60; pilot UUID attachment IDs không khớp contract int64.
-- Blank/length validation, Mentor author type, learner visibility, reply sau resolve.
-- Thread order/limit, transaction boundary và conditional error middleware wiring.
+TestClient uses fake DB rows. These results verify route wiring, validation, owner/error mapping, transaction calls, response mapping and rollback branches; they do not verify PostgreSQL schema/application, migration 008 deployment, live concurrency, deployed authorization or Object Storage URL reachability.
 
-## Kết quả macro-review AC-24 #58–#61
+## Open business decisions
 
-`VERIFIED_WITH_OPEN_QUESTIONS`. Ranh giới mutation đúng diagram: #60 chỉ INSERT SupportMessage, còn #61 đổi status ở nhánh YES; nhánh NO giữ OPEN. Attachment reference chưa thống nhất với #34/#35/#47, và policy reply sau resolve/cancel, model/IDs, Mentor scope तथा response projection vẫn cần xác nhận. Xem [macro-review tổng hợp](../61_mentor_support_resolve/PLAN_RESULT.md#macro-review-ac-24-58-61).
+- Confirm the local support BIGINT schema, direct course-owner policy, and `attachment_refs` JSON-array wire representation.
+- Confirm nonblank/length rules, thread size limits, and replies after RESOLVED/CANCELLED.
+- Complete AC-24 macro-review across APIs #58–#61 after API #61 implementation.
 
-Xem [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md) và [PLAN_RESULT.md](./PLAN_RESULT.md).
+See [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md), [PLAN_RESULT.md](./PLAN_RESULT.md), and [API #59 DD](../59_mentor_support_request_detail/02_Overview.md).

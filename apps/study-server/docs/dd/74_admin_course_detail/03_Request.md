@@ -45,7 +45,7 @@ GET /api/v1/admin/courses/101
 Authorization: Bearer <token>
 ```
 
-> `101` và token trong ví dụ chỉ minh họa định dạng; API #74 chưa được wire trong runtime.
+> `101` và token trong ví dụ chỉ minh họa định dạng; API #74 được wire trong local source, chưa xác minh deployment hoặc live DB.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

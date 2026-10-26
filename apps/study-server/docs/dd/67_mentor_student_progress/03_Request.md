@@ -51,9 +51,9 @@ status: "Draft — Needs Confirmation"
 
 | Request item | Source/use | Data Mapping step | Query/response use | Rule/status |
 |---|---|---|---|---|
-| Authorization | Bearer JWT | 0.1 | Xác định Mentor principal để kiểm tra course scope | Bearer/role DIRECT; guard và ID mapping SOURCE_REQUIRED. |
-| `course_id` | Required path int64 | 1.1 | Q1 course lookup và giới hạn lesson/progress scope | Type DIRECT; physical ID/live schema chưa xác nhận. |
-| `student_id` | Required path int64 | 1.1 | Q2 learner membership và Q4 progress scope | Type DIRECT; không đủ để cấp quyền truy cập. |
+| Authorization | Bearer JWT | 0.1 | Xác định Mentor principal để kiểm tra course scope | Bearer/role DIRECT; shared `MENTOR` guard hiện được gọi. `sub → courses.mentor_id` là fallback DERIVED theo #65/#66. |
+| `course_id` | Required path int64 | 1.1 | Q1 course lookup và giới hạn lesson/progress scope | Type DIRECT; raw signed-int64 parser như #65; lỗi parse ánh xạ 404. Live schema chưa xác nhận. |
+| `student_id` | Required path int64 | 1.1 | Q2 active roster lookup và Q3 progress scope | Type DIRECT; raw signed-int64 parser; membership vẫn bắt buộc, không dùng path ID làm quyền. |
 | Query | Không khai báo | N/A | Không có pagination/filter/window | DIRECT. |
 | Body | Không khai báo | N/A | Không có mutation payload | DIRECT. |
 
@@ -64,7 +64,7 @@ GET /api/v1/mentor/courses/321/students/778/progress
 Authorization: Bearer <JWT>
 ```
 
-Ví dụ minh họa method/path/header trong catalog; không khẳng định route hiện được phục vụ bởi Study Server.
+Ví dụ dùng method/path/header trực tiếp; route Study Server hiện đã wired.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

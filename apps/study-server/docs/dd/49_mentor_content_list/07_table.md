@@ -9,17 +9,17 @@ api_name: "Lấy cây nội dung course"
 status: "Draft — Needs Confirmation"
 ---
 
-# Định nghĩa table — N/A — READ-ONLY API
+# Định nghĩa table — READ-ONLY API
 
 ## Table metadata
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table | Legacy `courses` chỉ là candidate cho Q1; Content tree source chưa xác định |
-| Logical table | Course content tree / `Content` response theo catalog |
-| Operation | SELECT design only; không có write |
+| Physical table | `courses`, `contents` trong legacy Study DDL artifact |
+| Logical table | Course và Content nodes |
+| Operation | SELECT; không ghi |
 | Data Mapping step | 2 |
-| Evidence | API #49 catalog, AC-22, DB guide/ERD, pilot DDL; live schema chưa xác minh |
+| Evidence | API #49 query module, `DB.sql`, migration 006; live schema chưa xác minh |
 
 ## Update mapping
 
@@ -45,7 +45,7 @@ status: "Draft — Needs Confirmation"
 
 **Áp dụng khi**
 
-- N/A — API #49 không xóa record. API #52 là endpoint delete riêng.
+- N/A — API #49 không xóa record. API #53 là endpoint delete riêng.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---|---|---|---:|---|
@@ -55,10 +55,18 @@ status: "Draft — Needs Confirmation"
 
 | No | Source/table | Column | Schema type | Contract field/use | Evidence/status |
 |---:|---|---|---|---|---|
-| 1 | Legacy `courses` | `id` | BIGSERIAL | Candidate lookup using path course_id | ERD V1 design only; ID format not live-verified |
-| 2 | Legacy `courses` | `mentor_id` | BIGINT | Candidate direct-owner access check | `DERIVED`; Mentor identity/assignment unresolved |
-| 3 | Content tree | SOURCE_REQUIRED | SOURCE_REQUIRED | `data.id`, `content_type`, `title`, `payload`, `status`, `parent_id`, `order` | No approved generic relation or mapping |
-| 4 | V1-PILOT `chapters` / `lessons` / `content_blocks` | UUID IDs, versioned fields | Pilot schema | Possible conceptual learning hierarchy only | Do not map to API BIGINT `Content` without contract/schema decision |
+| 1 | `courses` | `id` | BIGSERIAL | Q1 course lookup by path ID | Legacy DDL and current query; live schema unverified |
+| 2 | `courses` | `mentor_id` | BIGINT | Q1 direct-owner comparison | Runtime owner check; assignment relation not included |
+| 3 | `contents` | `id` | BIGSERIAL | `data[].id` | Legacy DDL/migration 006; live schema unverified |
+| 4 | `contents` | `course_id` | BIGINT | Query scope and `data[].course_id` | FK → `courses.id` |
+| 5 | `contents` | `content_type` | TEXT | `data[].content_type` | Open string; enum values unspecified |
+| 6 | `contents` | `title` | TEXT | `data[].title` | Direct projection |
+| 7 | `contents` | `payload` | JSONB object | `data[].payload` | DDL check requires object; subtype keys unspecified |
+| 8 | `contents` | `status` | TEXT | `data[].status` | Open string; all values returned |
+| 9 | `contents` | `parent_id` | BIGINT NULL | `data[].parent_id` | Composite same-course FK; null omitted in response |
+| 10 | `contents` | `content_order` | INTEGER | `data[].order` | Direct alias; sorts before ID tie-breaker |
+| 11 | `contents` | `deleted_at` | TIMESTAMP NULL | Active tree predicate | API filters `deleted_at IS NULL`; physical soft-delete date |
+| 12 | V1-PILOT `chapters` / `lessons` / `content_blocks` | UUID/versioned fields | Pilot schema | No direct mapping | Kept separate from legacy BIGINT API model |
 
 ## Mutation summary
 

@@ -25,36 +25,36 @@ status: "Draft — Needs Confirmation"
 | 2 | `success` | Success flag | `success` | boolean | No | N/A | N/A | 5 | `true` success; `false` error | Always present | Shared `ApiEnvelope`. |
 | 3 | `businessCode` | Business code | `businessCode` | string | No | API catalog | N/A | 5 | Fixed by branch | Always present | Exact catalog code. |
 | 4 | `message` | Message | `message` | string | No | Application message | N/A | 5 | Safe branch message | Always present | Wording/localization not specified. |
-| 5 | `data` | Submission | `data` | object / null | Error: null theo guideline | N/A | N/A | 5 | `ApiEnvelope<Submission>` on success | Null on error per guideline | Current helper emits `{}` for absent data; discrepancy. |
+| 5 | `data` | Submission | `data` | object / null | Error: null theo guideline | N/A | N/A | 5 | `ApiEnvelope<Submission>` on success | Null on error per guideline | Current `error_response()` emits null. |
 | 5.1 | `data.id` | Submission ID | `id` | int64 | No | `assignment_submissions` (candidate) | `id` | 4 | Direct candidate mapping | Required | Legacy DDL primary key; live schema unverified. |
 | 5.2 | `data.assignment_id` | Assignment ID | `assignment_id` | int64 | No | `assignment_submissions` (candidate) | `assignment_id` | 4 | Direct candidate mapping | Required; DDL permits NULL | Orphan/null handling is open. |
 | 5.3 | `data.user_id` | Student ID | `user_id` | int64 | No | `assignment_submissions` (candidate) | `user_id` | 4 | Direct candidate mapping | Required; DDL permits NULL | Do not join/return unrelated student profile fields. |
-| 5.4 | `data.content` | Bài làm dạng text | `content` | string | Optional | `assignment_submissions` (candidate) | `content` | 4 | Preserve stored text | Null-versus-omit unspecified | Optional in reusable `Submission`; candidate column nullable. |
-| 5.5 | `data.files` | Tệp đính kèm | `files` | `UploadAsset[]` | No | No approved relation | N/A | 4 / SOURCE_REQUIRED | No approved transform | Do not fabricate assets or force `[]` for real data | Contract field; candidate DDL has one `file_url` only. |
-| 5.5.1 | `data.files[].id` | Asset ID | `id` | int64 | No | No approved relation | N/A | 4 / SOURCE_REQUIRED | None approved | SOURCE_REQUIRED | No asset identity source. |
-| 5.5.2 | `data.files[].name` | Tên tệp | `name` | string | No | No approved relation | N/A | 4 / SOURCE_REQUIRED | None approved | SOURCE_REQUIRED | No persisted name source. |
-| 5.5.3 | `data.files[].url` | URL tệp | `url` | uri | No | `assignment_submissions` (candidate) | `file_url` | 4 / SOURCE_REQUIRED | Do not treat URL as complete asset record | URL access policy unspecified | A single URL cannot define an `UploadAsset[]`. |
-| 5.5.4 | `data.files[].content_type` | MIME type | `content_type` | string | No | No approved relation | N/A | 4 / SOURCE_REQUIRED | None approved | SOURCE_REQUIRED | Not present in candidate submission DDL. |
-| 5.5.5 | `data.files[].size_bytes` | Kích thước byte | `size_bytes` | int64 | No | No approved relation | N/A | 4 / SOURCE_REQUIRED | None approved | SOURCE_REQUIRED | Not present in candidate submission DDL. |
-| 5.5.6 | `data.files[].status` | Trạng thái asset | `status` | UploadStatus | No | No approved relation | N/A | 4 / SOURCE_REQUIRED | None approved | SOURCE_REQUIRED | Enum/lifecycle source absent for this relation. |
+| 5.4 | `data.content` | Bài làm dạng text | `content` | string | Optional | `assignment_submissions` (candidate) | `content` | 4 | Preserve stored text | Current source omits null with `exclude_none`; contract does not settle null versus omit | Optional in reusable `Submission`; candidate column nullable. |
+| 5.5 | `data.files` | Tệp đính kèm | `files` | `UploadAsset[]` | No | DERIVED `uploads` lookup | URL/owner/purpose/course | 4 / DERIVED | Reuse API #54 constrained lookup | `[]` when no matching row | No submission-upload FK; API #35 must persist the matching URL. |
+| 5.5.1 | `data.files[].id` | Asset ID | `id` | int64 | No | `uploads` (candidate) | `id` | 4 / DERIVED | Direct from matched row | Empty array when no match | Requires exact URL match. |
+| 5.5.2 | `data.files[].name` | Tên tệp | `name` | string | No | `uploads` (candidate) | `file_name` | 4 / DERIVED | Alias to name | Empty array when no match | Metadata comes from API #34 upload record. |
+| 5.5.3 | `data.files[].url` | URL tệp | `url` | `uri` | No | `uploads` (candidate) | `url` | 4 / DERIVED | Exact URL match to `assignment_submissions.file_url` | Empty array when no match | Owner, purpose and course are also checked. |
+| 5.5.4 | `data.files[].content_type` | MIME type | `content_type` | string | No | `uploads` (candidate) | `content_type` | 4 / DERIVED | Direct from matched row | Empty array when no match | Live metadata remains unverified. |
+| 5.5.5 | `data.files[].size_bytes` | Kích thước byte | `size_bytes` | int64 | No | `uploads` (candidate) | `size_bytes` | 4 / DERIVED | Direct from matched row | Empty array when no match | Live metadata remains unverified. |
+| 5.5.6 | `data.files[].status` | Trạng thái asset | `status` | `UploadStatus` | No | `uploads` (candidate) | `status` | 4 / DERIVED | Direct from matched row | Empty array when no match | API #34 currently writes UPLOADED. |
 | 5.6 | `data.status` | Trạng thái submission | `status` | SubmissionStatus | No | `assignment_submissions` (candidate) | `status` | 4 | Preserve candidate value | Required; legacy column permits NULL | AC-17 names `SUBMITTED`; complete enum is unspecified. |
-| 5.7 | `data.submitted_at` | Thời điểm nộp | `submitted_at` | date-time | No | `assignment_submissions` (candidate) | `submitted_at` | 4 | Serialize timestamp as ISO-8601 candidate | Required | Legacy TIMESTAMP lacks zone/precision policy. |
-| 5.8 | `data.score` | Điểm | `score` | decimal-string | Optional | `assignment_submissions` (candidate) | `score` | 4 | Candidate NUMERIC(6,2) to decimal-string | Omit/null policy unspecified | API #56 input uses `int32`; range/scale alignment unresolved. |
-| 5.9 | `data.feedback` | Feedback | `feedback` | string | Optional | `assignment_submissions` (candidate) | `feedback` | 4 | Preserve stored text | Omit/null and Student disclosure timing unspecified | Candidate nullable column. |
+| 5.7 | `data.submitted_at` | Thời điểm nộp | `submitted_at` | date-time | No | `assignment_submissions` (candidate) | `submitted_at` | 4 | Pydantic JSON serialization | Required | Legacy TIMESTAMP lacks zone/precision policy. |
+| 5.8 | `data.score` | Điểm | `score` | decimal-string | Optional | `assignment_submissions` (candidate) | `score` | 4 | Convert stored numeric with `str(score)` | Current source omits null with `exclude_none`; scale/range unresolved | API #56 input uses `int32`; range/scale alignment unresolved. |
+| 5.9 | `data.feedback` | Feedback | `feedback` | string | Optional | `assignment_submissions` (candidate) | `feedback` | 4 | Preserve stored text | Current source omits null with `exclude_none`; Student disclosure timing remains unresolved | Candidate nullable column. |
 | 6 | `meta` | Metadata | `meta` | object | No | Envelope convention | N/A | 5 | Empty object candidate | `{}` if no metadata | No pagination/extra metadata contract. |
 | 7 | `traceId` | Trace ID | `traceId` | uuid | No | Request trace | N/A | 5 | Propagate validated/generated trace ID | Always present | API Guidelines use `X-Trace-Id`. |
 
-> AC-23 node says đọc rubric, nhưng reusable `Submission` không khai báo `rubric`. DD này giữ nguyên `ApiEnvelope<Submission>` và không thêm field; contract cần được sửa đồng bộ trước khi client có thể nhận rubric từ API #55.
+> AC-23 node says đọc rubric, nhưng reusable `Submission` không khai báo `rubric`. Current API #55 returns the catalog `ApiEnvelope<Submission>` shape and omits rubric; a linked source/schema/contract is required before adding it.
 
 ## Ví dụ thành công
 
-Payload minh họa shape contract cho một submission chưa chấm. `files: []` chỉ minh họa kiểu array; khả năng trả array rỗng và asset lookup thật chưa được nguồn xác nhận. Không có `score`/`feedback` vì hai field optional; đây không xác nhận null/omit policy.
+Payload minh họa shape contract cho một submission chưa chấm. `files: []` là kết quả source hiện hành khi không có metadata row khớp fallback URL/owner/purpose/course; API #35 compatibility chưa xác nhận. `score`/`feedback` bị omit khi null theo response model hiện hành. Timestamp không có timezone vì legacy column là `TIMESTAMP`.
 
 ~~~json
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Lấy bài làm thành công.",
+  "message": "Submission retrieved.",
   "data": {
     "id": 7301,
     "assignment_id": 120,
@@ -62,18 +62,18 @@ Payload minh họa shape contract cho một submission chưa chấm. `files: []`
     "content": "Nội dung bài làm minh họa.",
     "files": [],
     "status": "SUBMITTED",
-    "submitted_at": "2026-10-24T09:30:00Z"
+    "submitted_at": "2026-10-24T09:30:00"
   },
   "meta": {},
   "traceId": "4fbb48a1-ccaa-4719-a8de-4a75439d0a6f"
 }
 ~~~
 
-`SUBMITTED` được AC-17 nêu làm trạng thái sau khi nộp; enum đầy đủ của `SubmissionStatus` vẫn chưa có. `rubric` không xuất hiện vì không thuộc reusable schema.
+`SUBMITTED` được AC-17 nêu làm trạng thái sau khi nộp; enum đầy đủ của `SubmissionStatus` vẫn chưa có. `rubric` không xuất hiện vì không thuộc reusable schema và chưa có quan hệ dữ liệu.
 
 ## Ví dụ lỗi
 
-Ví dụ theo API Guidelines (`data:null`). Current Study helper serialize absent error data thành `{}`; endpoint #55 chưa được wiring nên đây là expected/current discrepancy, không phải runtime result của API #55.
+Ví dụ theo API Guidelines (`data:null`). Current Study helper serializes omitted error data as null; API #55 uses it for catalog error branches.
 
 ~~~json
 {

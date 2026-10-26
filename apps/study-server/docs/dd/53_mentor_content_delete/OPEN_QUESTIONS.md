@@ -8,7 +8,8 @@
 **Bằng chứng**
 
 - Catalog nêu conditional delete và dependency check.
-- Reusable Content khai báo parent_id tùy chọn; generic Content DDL chưa có.
+- Reusable Content khai báo `parent_id`; local migration 006 has the column and composite course relation. Live schema unverified.
+- API #53 currently blocks an active direct child with 422 to keep API #49 active tree valid; this guard is DERIVED and does not cover unmodeled dependencies.
 
 **Đề xuất cần xác nhận**
 
@@ -27,11 +28,11 @@ AC-33 có pending queue, approval và rejection; AC-22 không nói xóa có with
 
 ## Q-53-04 — Soft delete và history được lưu thế nào?
 
-AC-22 chỉ nêu soft delete; DeleteResult có deleted_at nhưng không chỉ định cột. Legacy DDL thiếu generic Content, pilot content_blocks là UUID/lesson-bound. Cần chọn tombstone field/table, timestamp source/timezone, transaction, retention và audit policy.
+Local migration 006 defines `contents.deleted_at TIMESTAMP`; API #53 updates it with `CURRENT_TIMESTAMP`, validates `RETURNING`, and commits transactionally. This does not verify live migration state. Timestamp timezone interpretation, audit, and formal history retention policy remain to confirm.
 
 ## Q-53-05 — DELETE lặp với ID đã soft-delete trả gì?
 
-Đề xuất target đã soft-delete là unavailable và trả 404. Cần xác nhận 404 hay idempotent 200 với DeleteResult để khóa retry semantics.
+Runtime active-row lookup returns 404 for a target already soft-deleted. This is DERIVED; confirm 404 versus idempotent 200 for retry semantics.
 
 ## Q-53-06 — Mentor và course permission được xác định ra sao?
 
@@ -43,4 +44,4 @@ AC-22 yêu cầu reload tree sau delete; #49 trả singular Content dù purpose 
 
 ## Q-53-08 — Middleware map lỗi thế nào?
 
-Endpoint hiện không có trong route hoặc DESIGN_CONTRACT_PATHS. Khi implement cần xác nhận malformed/out-of-range content_id, dependency 422 và 500 integration mapping; giữ đúng business code catalog.
+DELETE route and local HTTP tests now exist; the same parameterized route template is registered by API #51 in `DESIGN_CONTRACT_PATHS`. Invalid path IDs currently map to 404 by Content API convention; child/PUBLISHED guards map to catalog 422. These mappings are source-backed local behavior, while policy remains DERIVED.

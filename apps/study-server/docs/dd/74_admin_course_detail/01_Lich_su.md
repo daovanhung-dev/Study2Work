@@ -14,13 +14,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | `2026-10-24` |
-| Ngày update cuối cùng | `2026-10-24` |
+| Ngày update cuối cùng | `2026-10-26` |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | `1.0` | `2026-10-24` | `Codex` | Tạo DD API #74 theo catalog và AC-32; truy vết query candidate và các source gap. | `Draft — Needs Confirmation`; chờ review AC-32 #73–#77. |
+| `1.1` | `2026-10-26` | `Codex` | Ghi nhận route/module/test local cùng các fallback `DERIVED`; cập nhật trạng thái middleware và error envelope theo source hiện tại. | `Draft — Needs Confirmation`; schema live, dedicated permission và counter contract vẫn chưa xác nhận. |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

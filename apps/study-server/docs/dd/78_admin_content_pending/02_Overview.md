@@ -19,42 +19,43 @@ status: "Draft — Needs Confirmation"
 | Module | ADMIN / SYSTEM MANAGEMENT — AC-33 |
 | Method | GET |
 | Endpoint | `/api/v1/admin/content/pending` |
-| Purpose | Đọc hàng đợi Content chờ Admin review. |
+| Purpose | Đọc hàng chờ Content có trạng thái `PENDING_REVIEW`. |
 | Consumer/Actor | Admin |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin theo catalog; Admin guard/policy chưa có trong Study source. |
-| Direct request | Query `type?:string`, `course?:int64`, `page?:int32`; không có body. |
+| Authorization | Catalog yêu cầu Admin; runtime dùng shared `ADMIN` guard. Permission moderation riêng chưa được xác minh. |
+| Direct request | Query `type?:string`, `course?:int64`, `page?:int32`; không body. |
 | Direct response | HTTP 200 `ApiEnvelope<Content>` theo catalog. |
+| Local runtime response | `ApiEnvelope<Page<Content>>` — fallback `DERIVED` để endpoint queue có thể trả danh sách/phân trang. |
 | Direct errors | 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 500 `DESIGN_INTERNAL_ERROR`. |
-| AC-33 queue condition | Đọc Content có `status=PENDING_REVIEW`. |
-| Runtime state | `UNWIRED / NOT_FOUND`; API #78 chưa có route/module/test. |
+| Local derived validation | 422 `DESIGN_VALIDATION_ERROR` cho `course`/`page` sai kiểu hoặc ngoài miền. |
+| AC-33 queue condition | `contents.status=PENDING_REVIEW`; diagram yêu cầu đọc trạng thái này. |
+| Runtime state | `SOURCE_BACKED / LOCAL_TESTED`; route, shared Admin guard, module và HTTP tests đã được wire. |
 | Side effects | Read-only; không approve/reject, audit-write hoặc cập nhật Content. |
 
 ### Discrepancy: danh sách so với response
 
-Tên API “Lấy pending content”, query `page` và AC-33 queue đều hàm ý một tập bản ghi. Catalog hiện trả `ApiEnvelope<Content>` đơn, không có collection hoặc pagination schema. Giữ contract này là DIRECT; `ApiEnvelope<Page<Content>>` chỉ là proposal `DERIVED` cần đồng bộ catalog trước implementation. API #68 có mismatch cùng dạng; API #73 khai báo `Page<Course>` trực tiếp.
+Tên API, AC-33 queue và query `page` biểu thị collection; catalog vẫn khai báo `ApiEnvelope<Content>` đơn. Runtime dùng `ApiEnvelope<Page<Content>>` theo fallback `DERIVED`, giữ size cố định 20, page mặc định 1 và `id ASC`. Không sửa catalog hoặc diagram; cần owner đồng bộ direct contract. DD vẫn `Draft — Needs Confirmation`.
 
 ## Sources
 
-- [API catalog và reusable schemas](../../../../../docs/lists/list_api.md) — #78–#81 và `Content`, `Page`, `PageMeta`.
 - [AC/API index](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — AC-33 actors, precondition và endpoint sequence.
-- [AC-33 moderation diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — queue filter, detail handoff, approve/reject branches và reload.
-- [AC-22 content lifecycle diagram](../../diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio) — Mentor create/update/publish/delete and queue producer context.
-- [Legacy DB table guide](../../diagrams/DB_UNICA_TABLES.md) và [legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — không có generic Content table tương thích.
-- [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — UUID `content_blocks` và `content_review_decisions`; là schema artifact khác, live DB chưa xác minh.
-- [Mentor Content #49](../49_mentor_content_list/02_Overview.md), [#50](../50_mentor_content_create/02_Overview.md), [#51](../51_mentor_content_update/02_Overview.md), [#52](../52_mentor_content_publish/02_Overview.md), [#53](../53_mentor_content_delete/02_Overview.md) — Content projection/lifecycle proposals, giữ trạng thái nguồn mở.
-- [Admin user list #68](../68_admin_users_list/04_Response.md) và [Admin course list #73](../73_admin_courses_list/04_Response.md) — precedent cho cardinality mismatch và Page response đã được khai báo trực tiếp.
-- [Current router](../../../app/api/v1.py), [auth helper](../../../app/utils/auth.py), [middleware](../../../app/core/middleware.py), [response helper](../../../app/core/responses.py) — route absence, Student-only guard và error integration hiện hành.
-- [API guidelines](../../../../../contracts/api-guidelines/README.md) — envelope/error representation and query guidance.
+- [AC-33 moderation diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — queue predicate, #79 detail, #80/#81 branches và reload.
+- [API catalog và reusable schemas](../../../../../docs/lists/list_api.md) — #78–#81, Content, Page và PageMeta.
+- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql), [migration 006](../../../../../infra/postgres/study-server/migrations/006_contents.sql), [migration 007](../../../../../infra/postgres/study-server/migrations/007_content_versions.sql) — checked-in legacy candidates; live DB chưa xác minh.
+- [Mentor Content #49](../49_mentor_content_list/02_Overview.md), [#50](../50_mentor_content_create/02_Overview.md), [#51](../51_mentor_content_update/02_Overview.md), [#52](../52_mentor_content_publish/02_Overview.md), [#53](../53_mentor_content_delete/02_Overview.md) — current Content projection/lifecycle source.
+- [Admin course list #73](../73_admin_courses_list/04_Response.md) — fixed size 20, `id ASC`, empty/out-of-range Page 200 and shared Admin list convention.
+- [Admin review #79](../79_admin_content_detail/02_Overview.md), [#80](../80_admin_content_approve/02_Overview.md), [#81](../81_admin_content_reject/02_Overview.md) — linked review/version/audit boundaries remain separate.
+- [Current router](../../../app/api/v1.py), [auth helper](../../../app/utils/auth.py), [middleware](../../../app/core/middleware.py), [response helper](../../../app/core/responses.py) — local route/auth/error integration.
+- [API guidelines](../../../../../contracts/api-guidelines/README.md) — envelope and error representation.
 
 ## Tables read
 
 | Relation/source | Mục đích | Basis/status |
 |---|---|---|
-| Logical Content pending set | Candidate rows cần review | AC-33 direct; physical relation `SOURCE_REQUIRED`. |
-| Legacy `courses`, `lessons`, `resources` | Inventory kiểm tra khả năng mapping | Không có generic Content/queue relation; legacy artifact, không phải live proof. |
-| V1-PILOT `content_blocks` | So sánh mô hình content | UUID, lesson-bound, không có `Content` BIGINT trực tiếp. |
-| V1-PILOT `content_review_decisions` | So sánh decision history | Append-only UUID review log; không phải pending Content source. |
+| Legacy `contents` | Current logical Content row and queue source | Checked-in DDL + migrations 006 and current APIs #49–#53; live schema not verified. |
+| Legacy `content_versions` | Previous-state snapshots created by API #51 | Migration 007/current code; not joined for queue items. |
+| V1-PILOT `content_blocks` | Compare versioned lesson-bound model | UUID model, not mapped to int64 Content API. |
+| V1-PILOT `content_review_decisions` | Compare append-only review decision model | UUID revision log, not queue source for this API. |
 
 ## Tables write
 
@@ -62,38 +63,38 @@ Không có. API #78 chỉ đọc; approval/rejection/audit thuộc #80/#81 theo 
 
 ## Mục chú ý
 
-- AC-33 trực tiếp yêu cầu queue đọc `status=PENDING_REVIEW`; không tự đưa `APPROVED`, `PUBLISHED` hoặc `REJECTED` vào hàng đợi.
-- #79 đọc `content/version/author`; #78 chỉ map reusable `Content`, không thêm author/version/review metadata.
-- Query `type` và `course` là direct input; exact equality với `content_type`/`course_id` là proposal, physical mapping chưa có nguồn.
-- Query `page` xung đột với response `Content` đơn. Không tạo query `size`, collection response hoặc PageMeta thành direct contract.
-- #50 tạo Content ở `PENDING_REVIEW` và #51 revision mới cùng trạng thái chỉ là proposal trong DD trước; producer lifecycle cần xác nhận.
-- AC-33 không nói queue filter revision nào, deleted/stale item behavior, thứ tự review hay empty-result shape.
-- Pilot `content_review_decisions` ghi quyết định review append-only bằng UUID/resource-version ID; không map sang queue query hoặc catalog Content BIGINT.
-- Current Study auth helper chỉ cho Student; không dùng lại làm Admin guard.
+- AC-33 directly requires `status=PENDING_REVIEW`; current API #50 creates that status and API #51 sets the current logical Content row to that status after archiving its prior state.
+- Runtime filters `contents.deleted_at IS NULL` by DERIVED fallback, consistent with active views in APIs #49/#53. AC-33 does not directly specify deleted-item visibility.
+- `type` maps exactly to `content_type`; `course` maps exactly to `course_id`. No enum whitelist, trimming or case normalization is added.
+- Page behavior is DERIVED from Admin list API #73: page 1 default, fixed size 20, `id ASC`, count/list share identical filters; no `size`/`sort` query is introduced.
+- Queue returns current logical `contents` rows only; it does not join `content_versions` or add author/version/review metadata. Which revision #79–#81 act on remains open.
+- `error_response()` defaults error `data` to JSON `null`; the fixed API #78 path is now in `DESIGN_CONTRACT_PATHS`.
+- Legacy DDL/migrations and fake-session tests do not verify live schema, deployment, grants or moderation policy.
 
 ## Assumptions
 
-- Nếu catalog được đổi sang Page, page 1-based/default 1, fixed size 20 và stable `id ASC` là phương án đơn giản `DERIVED`, dựa trên precedent #68/#73. Chưa áp dụng vào direct contract.
-- Khi response là Page, không có pending row có thể trả HTTP 200 với `items=[]`; điều này cần được xác nhận cùng cardinality.
-- Nếu `type` được dùng như filter, exact match với ContentType là proposal `DERIVED`; member/casing chưa xác nhận.
+- Local response is `ApiEnvelope<Page<Content>>` because the endpoint is a queue and the direct query contains `page`; this is a DERIVED fallback and conflicts with the catalog's singular `Content` response.
+- `page` is 1-based/default 1, must fit positive int32, uses fixed size 20 and stable `id ASC`; numeric parse/range failures use derived 422 `DESIGN_VALIDATION_ERROR`.
+- Empty queue and pages beyond the last page return HTTP 200 with `items=[]`; no 404 is added.
+- Soft-deleted rows are excluded; exact `type`/`course` equality is applied only when supplied.
 
 ## Conflicts
 
-- API purpose, query `page` và AC-33 list flow không khớp direct response `ApiEnvelope<Content>`.
-- Reusable Content yêu cầu BIGINT fields; legacy DDL thiếu generic Content, còn V1-PILOT content/review relations dùng UUID/version model khác.
-- `PENDING_REVIEW` là direct queue predicate nhưng POST #50 và revision #51 transition vào queue chỉ là `DERIVED` trong các DD liên quan.
-- Current middleware allowlist không chứa endpoint; error helper trả `{}` khi `data` vắng mặt, trong khi API guideline yêu cầu `null`.
+- Direct catalog response `ApiEnvelope<Content>` cannot represent the queue/page flow; runtime uses a documented `DERIVED` Page fallback without changing catalog.
+- Catalog lists only 401/403/500, while runtime adds 422 for numeric query parsing based on the shared Admin-list validation convention; this error-set discrepancy remains open for contract correction.
+- Checked-in legacy `contents`/`content_versions` and current APIs #49–#53 supersede the older DD statement that no generic Content source exists; neither proves live DB state.
+- AC-33 does not define deleted/stale visibility, enum members, approval revision identity, Admin moderation permission or live migration/deployment.
 
 ## Security note
 
-- Xác thực Bearer và role Admin trước khi đọc Content để tránh tiết lộ queue cho principal trái quyền.
-- Không trả JWT, raw review comments/decision history, author fields ngoài Content schema, hoặc nội dung DB lỗi.
-- Không sửa trạng thái, ghi audit hoặc thực hiện review trong API read-only này.
+- Shared Bearer/JWT guard requires role `ADMIN` before parsing numeric query values or reading the queue.
+- No author, reviewer, decision history, JWT claim, raw payload internals beyond the reusable Content payload, SQL detail or stack trace is added to the response.
+- The shared role does not establish a separate content-moderation permission policy.
 
 ## Performance note
 
-- Candidate list cần giới hạn trang nếu contract xác nhận Page; không tải toàn bộ payload lớn theo mặc định.
-- Query/filter/index/page plan chưa thể xác nhận khi Content relation và live schema chưa có nguồn.
+- Query uses count plus a bounded 20-row page with `id ASC`; count/list share the same predicates.
+- No review-history join or unbounded payload query is added. Query plans/indexes and live schema are unverified.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

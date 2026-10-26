@@ -2,30 +2,31 @@
 
 ## Phạm vi
 
-Tạo DD Markdown cho `PUT /api/v1/admin/users/{user_id}` theo catalog và AC-31. Chỉ tạo tài liệu; không sửa source, schema, catalog hoặc diagram; không tạo ZIP. Khi tạo #70, macro-review AC-31 chờ DD #71–#72; document-level review đã hoàn tất sau khi tạo #72.
+Triển khai `PUT /api/v1/admin/users/{user_id}` trong AC-31, đồng bộ DD và server-study context. Không sửa API #71/#72 runtime, catalog, diagram hoặc DDL; không thêm migration. Giữ mọi thay đổi worktree có sẵn.
 
 ## Plan đã thực hiện
 
 | Bước | Kết quả |
 |---|---|
-| Phân loại task | docs; scope server-study; không có dependency cross-scope. |
-| Worklog preflight | Selector chọn #48/#49/#50; đọc đủ ba worklog trước khi inspect sâu. |
-| Context và skill | Đọc router/context-map, server-study scope, manifest registry và createDD-markdown resources; workflow Study yêu cầu Markdown. |
-| Catalog/diagram | Đối chiếu row #70, reusable UserProfile, AC-31 index và flow update/status/delete. |
-| Source/schema | Không có route/module/test/Admin guard; so sánh API #14 profile mutation, legacy BIGINT users và V1-PILOT UUID model. |
-| Plan-before-authoring | Requirement, Request Usage, Query, Mutation và Response Source matrices được ghi vào worklog trước khi tạo DD folder. |
-| Authoring | Tạo 8 template sheets và 3 reports; giữ body/query/mutation ngoài contract là DERIVED hoặc SOURCE_REQUIRED. |
-| Macro-review | Đã rà document-level nhóm #68–#72; role/status/delete boundaries được giữ riêng. |
+| Context/preflight | Đọc router/context map, server-study AGENTS/INDEX/workflow, selector coding logs #34/#47/#48, manifest và các API/DD liên kết. |
+| Contract/source trace | Đối chiếu AC-31 node, catalog #70, legacy DDL, API #14 profile mutation, API #68/#69 auth/profile, #71/#72 boundaries và current response/middleware. |
+| Fallback decision | Direct contract không có body. Chọn full-replacement body bốn field, ba role hiện có, API #14 normalization, legacy BIGINT UPDATE RETURNING, invalid path 422; ghi rõ DERIVED trước code. |
+| Runtime | Thêm module #70, shared ADMIN guard, path/body validation, một bound UPDATE, response mapping, commit/rollback và safe errors. |
+| Route/OpenAPI | Wire PUT cùng path template GET #69, required Authorization, int64 path, JSON request model và 200/401/403/404/422/500. Middleware template đã tồn tại từ #69. |
+| HTTP tests | Thêm focused TestClient coverage auth, body/path validation, normalized update, role/field boundaries, 404/500/rollback, trace và OpenAPI. |
+| DD | Đồng bộ tám sheets và ba reports với runtime; giữ Appendix Excel của tám sheets nguyên byte. |
+| AC-31 macro-review | Cập nhật #71/#72 report summaries để ghi #70 đã wired; giữ status/delete và policy gaps tách riêng. |
+| Context | Cập nhật route/runtime/security/database/architecture/module/tests/entry/source-status và manifest theo source/test/API operation mới. |
 
-## Quyết định tài liệu
+## Quyết định fallback
 
-- Giữ direct method/path/auth/path type/response/status/error set chính xác theo catalog.
-- Body chưa được đặc tả; candidate `full_name`, `phone`, `avatar_url`, `role` gắn nhãn DERIVED; requiredness/nullability/enum values vẫn mở.
-- Candidate UPDATE trên legacy `users` không phải runtime SQL; không đọc password_hash, không persist bio.
-- Status update thuộc API #71; không tự thêm delete, audit, session revoke hoặc role transition policy.
-- `UserProfile.bio` source gap; UserRole/UserStatus members chưa được định nghĩa.
-- Admin authorization, live schema, error envelope và PUT semantics còn mở.
+- Giữ method/path/auth/response/status/error set trực tiếp theo catalog và diagram.
+- Body là `full_name`, `phone`, `avatar_url`, `role`, tất cả required; nullable phone/avatar được xóa bằng null; extra fields bị từ chối.
+- Dùng `STUDENT`, `MENTOR`, `ADMIN` làm role allowlist local; giá trị/transition chính thức vẫn cần owner xác nhận.
+- Dùng shared ADMIN claim, legacy BIGINT `users`, API #14 profile normalization; không nối V1-PILOT UUID model.
+- Invalid/out-of-range signed-int64 path trả 422 vì #70 khai báo validation error; no-row trả 404.
+- Không đổi `status`, email, password, bio; không thêm audit hoặc token revocation. Những policy này còn mở.
 
 ## Trạng thái
 
-Draft — Needs Confirmation. Chưa implementation-ready cho đến khi request body/role policy/Admin guard/schema và side effects được chốt.
+Runtime có source và HTTP tests local. DD giữ `Draft — Needs Confirmation` vì body/role/Admin policy và live schema chưa được owner xác nhận; fake DB tests không chứng minh deployment.

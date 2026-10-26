@@ -1,32 +1,23 @@
 # Câu hỏi còn mở — API #75
 
-Trạng thái tài liệu: `Draft — Needs Confirmation`. Body và mutation bên dưới chỉ là proposal `DERIVED`; không dùng làm implementation contract trước khi các câu hỏi này được chốt.
+Trạng thái tài liệu: `Draft — Needs Confirmation`. API #75 đã được wire local theo các fallback bên dưới. Đây là quyết định triển khai `DERIVED`, không phải approval sản phẩm hoặc bằng chứng schema live.
 
-1. **Request body:** API catalog và AC-32 chỉ có path, trong khi node diagram ghi `UPDATE course metadata`. Body gồm `title`, `description`, `thumbnail_url`, `price` có đúng phạm vi không?
-2. **PUT semantics:** Bốn field có bắt buộc trong full replacement không? Có hỗ trợ partial update hay omission giữ giá trị hiện tại?
-3. **Null/omission:** `description` và `thumbnail_url` có nhận `null` để xóa không? Omit, null và chuỗi rỗng được xử lý thế nào?
-4. **Title validation:** Có rule trim, nonblank hoặc giới hạn ký tự nào không? Legacy `courses.name VARCHAR(200)` chỉ là candidate, không xác nhận live constraint.
-5. **Thumbnail URL:** URI scheme, host allowlist, URL length và nullable policy là gì?
-6. **Price:** Body dùng decimal-string? Precision/scale, min/max, số âm, rounding và nullability nào được duyệt? Legacy `NUMERIC(12,2)` cho phép NULL.
-7. **Admin authorization:** JWT claim nào xác nhận Admin và course-management permission? Có scope/tenant boundary, guard hoặc policy source nào được dùng?
-8. **Schema/persistence:** Chọn legacy BIGINT `courses` hay V1-PILOT UUID `courses`/`course_versions`? Live relation, columns, permissions và migration state đã được xác minh chưa?
-9. **Response owner/category:** `Course.mentor` bắt buộc nhưng legacy `mentor_id` nullable; xử lý orphan/NULL thế nào? Có nguồn course-category relation được duyệt hay tiếp tục omit `category`?
-10. **Response cardinality:** Có giữ `ApiEnvelope<Page<Course>>` với đúng một item như proposal theo #74, hay cần sửa catalog/reusable contract?
-11. **Status/audit boundary:** Xác nhận #75 không đổi `status`/audit vì AC-32 giao status + audit cho #76.
-12. **Timestamp/transaction:** Ai sở hữu `updated_at`, transaction boundary và rollback khi Q2 response mapping hoặc commit lỗi?
-13. **Counters:** AC-32 detail yêu cầu đọc counters nhưng `Course` response không có counter fields. Có cần mở rộng contract hoặc tiếp tục loại khỏi #75?
-14. **Error handling:** Xác nhận error envelope dùng `data:null` theo API guidelines hay `{}` theo helper hiện tại; thêm route Admin vào `DESIGN_CONTRACT_PATHS` khi wire?
-15. **Macro-review AC-32:** Đã rà #73–#77; metadata/status/delete boundaries giữ riêng, còn Page singleton, deleted-target behavior, soft-delete policy/visibility và shared Admin/schema gaps cần chốt.
+1. **Request body:** Catalog và AC-32 chỉ khai báo `course_id`; runtime hiện dùng `title`, `description`, `thumbnail_url`, `price`. Owner có duyệt bộ field này không?
+2. **PUT semantics:** Runtime yêu cầu đủ cả bốn field và từ chối field lạ. Đây có phải full-replacement contract mong muốn không?
+3. **Null/omission:** Runtime cho phép `description` và `thumbnail_url` là `null` để xóa; không cho omission. Có cần đổi semantics này không?
+4. **Title validation:** Runtime giữ nguyên whitespace, không áp nonblank rule và giới hạn 200 ký tự theo legacy DDL candidate. Có rule khác được duyệt không?
+5. **Thumbnail URL:** Runtime nhận string hoặc null, không kiểm tra URI scheme/host/length. Chính sách URL nào cần áp dụng?
+6. **Price:** Runtime chỉ nhận decimal string, không exponent/rounding, scale tối đa 2 và 10 chữ số nguyên theo legacy `NUMERIC(12,2)`; cho phép số âm vì DDL không có CHECK. Precision/range/minimum nào được duyệt?
+7. **Admin authorization:** Runtime dùng shared JWT role `ADMIN`. Claim/policy riêng cho “course-management permission” có được yêu cầu không?
+8. **Schema/persistence:** Runtime nhắm legacy BIGINT `courses`; V1-PILOT dùng UUID/versioned `courses`. Schema nào đang được triển khai thật và live migration state là gì?
+9. **Response owner/category:** `Course.mentor` và `price` bắt buộc nhưng legacy DDL cho phép null ở FK/price. Runtime trả 500 cho projection thiếu; có orphan/null policy khác không? Category tiếp tục omit đến khi có relation được duyệt?
+10. **Response cardinality:** Runtime trả `Page<Course>` singleton 1/1/1/1 như #74. Catalog có cần chuyển sang resource đơn không?
+11. **Status/audit boundary:** Xác nhận API #75 giữ nguyên `status`/`mentor_id` và không ghi audit; AC-32 giao status/audit cho #76.
+12. **Timestamp/transaction:** Runtime đặt `updated_at=CURRENT_TIMESTAMP`, đọc lại projection cùng Session, commit sau mapping hợp lệ và rollback query/projection/commit failures. Có transaction/audit policy khác không?
+13. **Counters/deleted target:** API #74 diagram nhắc counters nhưng Course response không có field; #77 soft-delete policy/visibility cũng chưa xác định. Không có counters query hoặc deleted filter trong #75.
 
 ## Ranh giới proposal
 
-- Bốn body fields và full-replacement/null-clear behavior là `DERIVED`; cần xác nhận.
-- Legacy Course/User query và columns là candidates; live schema chưa xác minh.
-- Page singleton, no-status-change, 404 on unmatched ID và transaction handling là proposals.
-- Không thay đổi catalog, diagram, schema, runtime hoặc API #76/#77 trong DD #75.
-## Rà nhóm AC-32 #73–#77 — 2026-10-24
-
-- #75 chỉ sở hữu metadata; không đổi `status`, owner/category/counters hoặc audit. #76 giữ status + audit intent; #77 giữ soft-delete intent, không copy audit hoặc child-row mutation.
-- Response #75 giữ `ApiEnvelope<Page<Course>>` theo catalog; body full-replacement là proposal `DERIVED`. #77 dùng `DeleteResult`.
-- Cần quyết định #75 behavior khi target đã deleted và liệu #73/#74 phải ẩn target sau #77; chưa chọn physical marker/filter.
-- Category relation, counters, Admin guard, CourseStatus casing, live schema, middleware và error envelope tiếp tục là blockers chung.
+- Body, full-replacement/null behavior, numeric limits, legacy table mapping, singleton Page và transaction sequence là `DERIVED`.
+- Shared role `ADMIN` là guard hiện có; dedicated course-management permission chưa có source.
+- Không thay đổi API catalog, AC-32 diagram, schema artifact, API #76/#77 hay live database trong task này.

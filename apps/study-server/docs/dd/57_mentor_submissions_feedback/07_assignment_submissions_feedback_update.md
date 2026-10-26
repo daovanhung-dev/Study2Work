@@ -15,25 +15,25 @@ status: "Draft — Needs Confirmation"
 |---|---|
 | Physical table | assignment_submissions |
 | Logical table | Bài nộp bài tập |
-| Operation | UPDATE candidate |
+| Operation | UPDATE (DERIVED fallback) |
 | Data Mapping step | 3 |
 
 ## Update mapping
 
 **Áp dụng khi**
 
-- Candidate submission hiện hữu được xác định và Mentor được xác nhận có quyền trên course.
+- Candidate submission hiện hữu được xác định và trực tiếp sở hữu course theo fallback `courses.mentor_id`.
 - Cập nhật field này là DERIVED từ legacy nullable feedback column và AC-23 feedback step; live schema chưa xác minh.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---|---|---|---|---:|---|
-| 1 | feedback | Feedback text | TEXT | SOURCE_REQUIRED | N/A | N | N/A | Thay giá trị hiện tại bằng candidate feedback value | Request descriptor feedback text sau khi wire key được xác nhận | 3 | Existing legacy candidate column; nullable in DDL; overwrite/history semantics unresolved. |
+| 1 | feedback | Feedback text | TEXT | SOURCE_REQUIRED | N/A | N | N/A | Ghi đè bằng `feedback_text` request value | Required strict JSON string under DERIVED wire key | 3 | Single-column overwrite is DERIVED; nullable in DDL; live schema and history approval remain open. |
 
 ## Insert mapping
 
 **Áp dụng khi**
 
-- SOURCE_REQUIRED — diagram ghi INSERT/UPDATE nhưng không có bảng history hoặc quy tắc insert được duyệt.
+- Not used — runtime uses the existing feedback column only. Diagram also says INSERT, but no history target/relation is supported; do not invent one.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---|---|---|---|---:|---|

@@ -15,11 +15,11 @@ status: "Draft — Needs Confirmation"
 
 0. Xác thực Bearer JWT, yêu cầu role Mentor và quyền quản lý course theo AC-22.
 1. Đọc path content_id. Catalog không khai báo body/query.
-2. Nếu contract owner chấp thuận proposal, nhận published:boolean làm trạng thái đích; nếu không, request direction vẫn chưa xác định.
-3. Đọc logical Content, course scope và publication/review state hiện tại. Chưa có physical relation được duyệt.
-4. Khi published=true, kiểm tra readiness. Chỉ APPROVED là điều kiện state candidate; kiểm tra payload/assets cụ thể còn SOURCE_REQUIRED.
-5. Khi published=false, chuyển Content đã PUBLISHED về APPROVED theo proposal. Nếu trạng thái đã bằng target, trả lại hiện trạng không ghi thêm.
-6. Cập nhật publication status theo AC-22; không đổi content_type/title/payload và không tạo version trong proposal này.
+2. Local route nhận published:boolean làm trạng thái đích; đây là request body DERIVED và chưa có trong catalog/AC-22.
+3. Đọc local legacy `contents`, course scope và publication/review state; live schema/version selector chưa được xác minh.
+4. Khi published=true, chỉ cho phép status APPROVED làm readiness gate tối thiểu; kiểm tra payload/assets theo ContentType chưa có nguồn.
+5. Khi published=false, chuyển Content đang PUBLISHED về APPROVED theo transition DERIVED. Nếu đã ở target status, trả hiện trạng và không chạy UPDATE.
+6. Cập nhật `contents.status` theo AC-22; không đổi content_type/title/payload và không tạo version.
 7. Trả HTTP 200 DESIGN_RESOURCE_UPDATED với ApiEnvelope<Content>. AC-22 client reload cây sau response.
 
 ## 0. Check quyền
@@ -35,7 +35,7 @@ status: "Draft — Needs Confirmation"
 
 | Target table/API | Column/Field | Condition/Value | Remarks |
 |---|---|---|---|
-| Logical Content | course_id | Load from stored Content selected by content_id | Logical relationship from reusable schema; physical relation SOURCE_REQUIRED. |
+| `contents` | `course_id` | Load with Content selected by content_id | Base BIGINT relation defined in local DDL/migration 006; live schema unverified. |
 | Legacy courses candidate | id, mentor_id | courses.id = stored Content.course_id; compare owner to resolved Mentor | DERIVED only; no identity binding or assigned-course relation. |
 
 ### 0.3. Check kết quả
@@ -62,7 +62,7 @@ status: "Draft — Needs Confirmation"
 | Q3 | Readiness data | ContentType-specific required content and asset state | Validate before publish=true | Exact checks unknown | SOURCE_REQUIRED; do not invent joins. |
 | Q4 | Course access candidate | Course key and owner/assignment | Authorize Mentor against stored course | No permission → 403 | Legacy direct-owner candidate DERIVED; identity/assignment SOURCE_REQUIRED. |
 
-No executable Content SQL is approved. Legacy courses may be inspected only as an explicitly labeled candidate. V1-PILOT content_blocks is UUID/lesson-bound and is not a mapping for the generic BIGINT Content contract.
+Local implementation queries the legacy BIGINT `contents` relation and joins `courses`; these SQL statements and direct-owner check are DERIVED from current Study #49–#51 patterns. They do not establish canonical or live schema. V1-PILOT content_blocks is UUID/lesson-bound and is not a mapping for generic Content.
 
 ### 2.2. JOIN
 
@@ -90,7 +90,7 @@ Không trả danh sách. Current revision selector/order is SOURCE_REQUIRED; do 
 ### 3.1. Target table
 
 - Logical target: publication status of the Content/current revision, per AC-22 UPDATE publication status.
-- Physical table and publication column: SOURCE_REQUIRED.
+- Local fallback writes `contents.status`; canonical table/column and live availability remain SOURCE_REQUIRED/unverified.
 - No INSERT or new revision is proposed; API #51 already owns the separate UPDATE Content + version operation.
 
 ### 3.2. Conditions
@@ -100,9 +100,9 @@ Không trả danh sách. Current revision selector/order is SOURCE_REQUIRED; do 
 | Authenticated Mentor | Catalog | Continue as Mentor | DIRECT role; identity mapping unresolved |
 | Can manage stored course | AC-22 | Allow operation | DIRECT precondition; query SOURCE_REQUIRED |
 | Content exists | Path + catalog 404 | Select target | DIRECT error; lookup SOURCE_REQUIRED |
-| Ready to publish | Catalog purpose | Allow publish branch | Readiness intent DIRECT; exact criteria SOURCE_REQUIRED |
-| Approved state before publishing | AC-33 uses APPROVED/PUBLISHED | Proposed eligibility rule | DERIVED |
-| Valid target-state body | Proposed published:boolean | Choose branch | DERIVED; catalog currently omits body |
+| Ready to publish | Catalog purpose | Allow publish branch | Readiness intent DIRECT; local APPROVED gate DERIVED; payload/assets SOURCE_REQUIRED |
+| Approved state before publishing | AC-33 uses APPROVED/PUBLISHED | Local eligibility rule | DERIVED |
+| Valid target-state body | Proposed/implemented published:boolean | Choose branch | DERIVED; catalog still omits body |
 
 ### 3.3. Items update/insert
 
@@ -136,7 +136,7 @@ Không trả danh sách. Current revision selector/order is SOURCE_REQUIRED; do 
 
 ### 3.5. Transaction
 
-A single status change should be atomic; this is a DERIVED implementation recommendation. Study database helpers do not commit, but no API #52 view/use-case exists. Physical transaction owner and audit behavior require the selected schema.
+Local API #52 locks the Content and Course rows, validates the returned Content projection, then commits the status update in the view. This is DERIVED and verified only with fake Session tests. Study database helpers do not commit; physical transaction/deployment and audit behavior remain unverified.
 
 ## 4. Check kết quả execute query
 
@@ -152,7 +152,7 @@ A single status change should be atomic; this is a DERIVED implementation recomm
 
 - HTTPStatus = 500; businessCode DESIGN_INTERNAL_ERROR.
 - Return safe error envelope; do not expose SQL, schema, stack or provider details.
-- Current route is absent; this is expected design behavior only.
+- Local route is present and fake DB HTTP tests cover its response; deployment/live schema behavior is not verified.
 
 ### 4.3. Validate lỗi
 
@@ -164,13 +164,13 @@ A single status change should be atomic; this is a DERIVED implementation recomm
 
 - Preserve exactly 401/403/404/422/500 and their catalog codes.
 - Do not add 409, 400, 423 or 503.
-- If the route is wired, add its path to the middleware contract allowlist or implement equivalent mapping; current allowlist excludes it.
+- The route is listed in `DESIGN_CONTRACT_PATHS`; tests confirm framework body validation maps to `DESIGN_VALIDATION_ERROR`. Live runtime behavior remains unverified.
 
 ## Response Source Matrix
 
 | Response field | Type | Source/candidate | Rule/status |
 |---|---|---|---|
-| success | boolean | Envelope branch | Study envelope convention; endpoint absent |
+| success | boolean | Envelope branch | Local route uses Study envelope helper; fake DB HTTP test |
 | businessCode | string | Catalog | DIRECT DESIGN_RESOURCE_UPDATED |
 | message | string | Application | Exact wording unspecified; DERIVED |
 | data.id | int64 | Path-selected Content | Physical projection SOURCE_REQUIRED |
@@ -182,7 +182,7 @@ A single status change should be atomic; this is a DERIVED implementation recomm
 | data.parent_id | int64? | Stored Content | Null/omit and persistence SOURCE_REQUIRED |
 | data.order | int32 | Stored Content | Persistence SOURCE_REQUIRED |
 | meta | object | Envelope | No pagination contract; helper serialization alignment required |
-| traceId | uuid | Request trace | Study envelope convention; endpoint absent |
+| traceId | uuid | Request trace | Local route uses Study trace helper; fake DB HTTP test |
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -14,28 +14,27 @@ status: "Draft — Needs Confirmation"
 
 | No | Trigger | HTTP status | Business code | Message | Basis/status |
 |---:|---|---:|---|---|---|
-| E1 | Bearer token thiếu/sai theo Admin auth policy | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Thông điệp xác thực an toàn | Code DIRECT; guard/claim chưa có source |
-| E2 | Token hợp lệ nhưng không có Admin role hoặc notification-management permission | 403 | `DESIGN_ACCESS_DENIED` | Không có quyền quản lý thông báo | Code DIRECT; policy SOURCE_REQUIRED |
-| E3 | Dependency không khả dụng | 503 | `DESIGN_DEPENDENCY_UNAVAILABLE` | Dịch vụ phụ thuộc hiện không khả dụng | Code DIRECT; trigger cụ thể chưa có trong #92 diagram |
-| E4 | Query/mapping/internal failure không được xử lý riêng | 500 | `DESIGN_INTERNAL_ERROR` | Đã xảy ra lỗi nội bộ hệ thống. | Code DIRECT; endpoint chưa được wire |
+| E1 | Bearer token thiếu/sai | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Thông điệp xác thực an toàn | Code DIRECT; current shared guard |
+| E2 | Token hợp lệ nhưng role không phải Admin | 403 | `DESIGN_ACCESS_DENIED` | Không có quyền quản lý thông báo | Code DIRECT; role guard current; permission chuyên biệt chưa có |
+| E3 | Database operational/connection-invalidated error | 503 | `DESIGN_DEPENDENCY_UNAVAILABLE` | Notifications are temporarily unavailable. | Code DIRECT; DB trigger DERIVED |
+| E4 | SQL error khác, count/row malformed hoặc projection failure | 500 | `DESIGN_INTERNAL_ERROR` | Notifications could not be retrieved. | Code DIRECT; mapping current source |
+| E5 | `page` không phải int32 dương | 422 | `DESIGN_VALIDATION_ERROR` | Dữ liệu đầu vào không hợp lệ. | DERIVED; catalog không liệt kê 422 |
 
 ## Nguyên tắc lỗi
 
-- Direct error set chỉ gồm 401, 403, 503 và 500; không thêm 404 hoặc 422.
-- #92 diagram chỉ nêu “Query notifications”; không chỉ rõ external dependency nên không gán DB outage, delivery provider hoặc operation service thành trigger 503.
-- Query trả rỗng chưa có semantics được duyệt; catalog không khai báo 404 cho API list.
-- API Guidelines yêu cầu error `data=null`; current `error_response` chuẩn hóa `None` thành `{}`. Đây là discrepancy có điều kiện khi API được wire, không phải behavior #92 hiện tại.
-- `/api/v1/admin/notifications` chưa thuộc `DESIGN_CONTRACT_PATHS`; cập nhật allowlist và mapping khi implementation được phê duyệt, không coi DD là evidence runtime.
+- Direct error set chỉ gồm 401, 403, 503 và 500; E5 là local fallback ngoài catalog.
+- 503 chỉ dành cho SQLAlchemy `OperationalError` hoặc `DBAPIError.connection_invalidated`; không suy provider failure vì GET không gọi provider.
+- Query trả rỗng hoặc page vượt trang cuối là 200 Page rỗng; không trả 404.
+- Current `error_response` tạo envelope chuẩn; không trả raw SQL, stack trace hoặc thông tin nội bộ.
+- `/api/v1/admin/notifications` hiện thuộc `DESIGN_CONTRACT_PATHS`; validation exception handler nhận diện path này.
 
 ## Ví dụ lỗi — 503
-
-Code/HTTP dưới đây trực tiếp theo catalog. Message là placeholder an toàn; điều kiện dependency chưa được nguồn chốt.
 
 ~~~json
 {
   "success": false,
   "businessCode": "DESIGN_DEPENDENCY_UNAVAILABLE",
-  "message": "Dịch vụ phụ thuộc hiện không khả dụng.",
+  "message": "Notifications are temporarily unavailable.",
   "data": null,
   "meta": {},
   "traceId": "550e8400-e29b-41d4-a716-446655440000"

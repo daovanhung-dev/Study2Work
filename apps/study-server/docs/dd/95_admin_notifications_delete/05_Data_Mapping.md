@@ -12,20 +12,21 @@ status: "Draft — Needs Confirmation"
 
 ## Flow xử lý data
 
-1. Authenticate Bearer JWT and authorize Admin notification-management permission.
-2. Read notification_id; the request has no body or query.
-3. Load the target using an owner-approved Admin notification persistence model.
-4. Evaluate lifecycle and delivery-start eligibility only from an approved status/aggregate source.
-5. If the approved policy allows action, logically remove a draft or mark an eligible scheduled notification cancelled; retain delivery history.
-6. If scheduled jobs exist, coordinate cancellation only through an approved scheduler contract; no such runtime call is currently source-backed.
-7. Return the exact DeleteResult envelope on success, otherwise one of the catalog error codes.
+1. Nhận raw path/header; shared ADMIN guard chạy trước parse path và DB.
+2. Parse `notification_id` là ASCII digits, số dương trong miền signed-int64; sai trả 422.
+3. Khóa một row `notifications` theo path ID; thiếu row trả 404.
+4. Khóa các `notification_deliveries` theo `channel ASC`, kiểm tra đúng notification ID, channel/status hợp lệ và không trùng channel.
+5. Nếu không có delivery hoặc bất kỳ status nào khác `QUEUED`, rollback và trả 422 theo fallback `DERIVED`.
+6. Xóa đúng parent row và lấy `id/deleted_at` bằng `DELETE ... RETURNING`; checked-in FK cascade xóa outbox row cùng transaction.
+7. Validate DeleteResult/envelope rồi commit; query/mapping/commit error rollback và trả 500.
+8. API không gọi scheduler/provider và không xóa notification rows khác có cùng `operation_id`.
 
 ### Mục lục
 
 - [Step 0 — Authentication and permission](#step-0-authentication-and-permission)
 - [Step 1 — Read request](#step-1-read-request)
-- [Step 2 — Resolve notification and eligibility](#step-2-resolve-notification-and-eligibility)
-- [Step 3 — Apply logical delete/cancel](#step-3-apply-logical-deletecancel)
+- [Step 2 — Lock target and deliveries](#step-2-lock-target-and-deliveries)
+- [Step 3 — Delete eligible notification](#step-3-delete-eligible-notification)
 - [Step 4 — Scheduler boundary](#step-4-scheduler-boundary)
 - [Step 5 — Map DeleteResult](#step-5-map-deleteresult)
 - [Step 6 — Return result or error](#step-6-return-result-or-error)
@@ -34,97 +35,87 @@ status: "Draft — Needs Confirmation"
 ## Step 0 — Authentication and permission
 
 - Direct auth: Bearer JWT; catalog role Admin.
-- AC-36 requires notification-management permission.
-- Resolve the principal and policy through an approved Admin guard before target lookup/mutation.
-- Missing/invalid credentials map to 401; denied role/permission maps to 403 using direct catalog codes.
-- Claim mapping, tenant/global scope and authorization/404 precedence are SOURCE_REQUIRED.
+- AC-36 requires notification-management permission, while local implementation uses the shared ADMIN guard only.
+- Missing/invalid credentials map to 401; denied role maps to 403 before path validation/resource lookup.
+- Fine-grained permission, claim mapping, tenant/global scope and dedicated-policy enforcement are SOURCE_REQUIRED.
 
 <a id="step-1-read-request"></a>
 ## Step 1 — Read request
 
 | Input | Direct source | Use | Validation/source boundary |
 |---|---|---|---|
-| notification_id | Path int64! | Identify target notification | Positive range, parser behavior and physical key mapping SOURCE_REQUIRED |
+| notification_id | Path int64! | Identify exactly one notification row | Positive ASCII integer through signed-int64 max; invalid input maps to 422 as DERIVED. |
 | Body | None | No action/reason/policy flag is accepted | N/A |
 | Query | None | No selector or filter | N/A |
+| Operation ID | None | No batch/job selector | Do not infer grouping from shared `operation_id`. |
 
-<a id="step-2-resolve-notification-and-eligibility"></a>
-## Step 2 — Resolve notification and eligibility
+<a id="step-2-lock-target-and-deliveries"></a>
+## Step 2 — Lock target and deliveries
 
-1. Resolve the target in an owner-approved Admin notification model.
-2. If absent, return catalog 404 DESIGN_RESOURCE_NOT_FOUND.
-3. Read lifecycle and delivery state from approved source; do not infer state from #96 response because it contains only Notification.
-4. Proposed rule DERIVED: conceptual Draft may be removed; conceptual Scheduled may be cancelled only if no delivery has started.
-5. Proposed rule DERIVED: if delivery has started, policy disallows cancellation and the existing 422 code is returned.
-6. State labels, aggregate criteria, concurrent dispatch race and repeat-request behavior remain unconfirmed.
-7. No SELECT SQL can be specified from current sources.
+1. Query `notifications.id` by the bound path ID with `FOR UPDATE`; if absent, rollback and return 404.
+2. Query and lock `notification_deliveries` for that exact ID, ordered by channel. Reject malformed identity/channel/status/duplicate-channel projections as safe 500.
+3. Require at least one delivery and every status to be `QUEUED`; otherwise rollback and return 422 `DESIGN_VALIDATION_ERROR`.
+4. This is `DERIVED` from #93 creating one or more queued rows and #94's queued-only edit gate. Catalog/diagram do not define the trigger; current outbox status does not prove external provider state.
+5. Lock order follows API #94's parent-before-delivery sequence. PostgreSQL concurrency and any worker order are not exercised by fake-DB tests.
 
 ### Query matrix
 
 | Query ID | Purpose | Physical source/columns | Predicate | Status |
 |---|---|---|---|---|
-| Q1 | Load notification target | No approved Admin campaign table; legacy notifications is partial | Logical id equals path notification_id | SOURCE_REQUIRED; no SQL invented |
-| Q2 | Read state and delivery-start eligibility | No approved Admin state/delivery aggregate | Draft/Scheduled and no delivery started are proposed concepts | DERIVED / SOURCE_REQUIRED |
-| Q3 | Find scheduled work to cancel | Queue/scheduler/Operation source not found | No job ID or external key in request | SOURCE_REQUIRED; no current call defined |
+| Q1 | Lock parent | `notifications.id` | `id = :notification_id FOR UPDATE` | Current local legacy candidate; live schema unverified. |
+| Q2 | Lock/read deliveries | `notification_deliveries.notification_id, channel, status` | Exact parent id; `ORDER BY channel ASC FOR UPDATE` | Migration 009 candidate; live schema/worker unverified. |
+| Q3 | Delete parent and obtain response fields | `notifications.id` | Exact parent id; `RETURNING id, CURRENT_TIMESTAMP AS deleted_at` | Local SQL; relies on checked-in DDL candidate. |
+| Q4 | Remove child outbox rows | FK cascade | Parent `notifications` row is deleted | Direct checked-in DDL behavior; not live-DB verified. |
 
-<a id="step-3-apply-logical-deletecancel"></a>
-## Step 3 — Apply logical delete/cancel
+<a id="step-3-delete-eligible-notification"></a>
+## Step 3 — Delete eligible notification
 
-### M1 — Remove a draft from active management
+### Local fallback — one recipient row and its queued outbox rows
 
-- Proposed effect: record a tombstone/removal marker and retain recipient/delivery history.
-- Do not physically DELETE notification, recipient or delivery rows without an approved retention policy.
-- Tombstone value, timestamp column, audit and transaction are SOURCE_REQUIRED.
-- Mapping details: [07_notifications_delete.md](./07_notifications_delete.md).
-
-### M2 — Cancel an eligible scheduled notification
-
-- Proposed effect: mark the notification cancelled before dispatch begins.
-- Do not claim that an external queue or provider was cancelled unless an approved scheduler integration confirms it.
-- Do not rewrite/delete delivery history. The V1-PILOT delivery table is not the Admin target and is append-only in that separate model.
-- Whether cancellation and scheduler acknowledgement are atomic is unresolved.
-- Mapping boundary: [08_notification_delivery_cancel.md](./08_notification_delivery_cancel.md).
+- Delete exactly the `notifications` row selected by `notification_id`.
+- Migration 009 and `DB.sql` define `notification_deliveries.notification_id` with `ON DELETE CASCADE`; candidate DB behavior removes that parent's delivery rows in the same transaction.
+- The returned database `CURRENT_TIMESTAMP` maps to required `DeleteResult.deleted_at`. No tombstone or deletion column is written.
+- `operation_id` can be shared across recipient rows. #95 does not fan out by that field and leaves siblings untouched.
+- All effects and eligibility rules in this subsection are local `DERIVED` behavior over the current #93/#94 candidate model, not an approved retention policy.
 
 ### Mutation matrix
 
-| ID | Logical operation | Condition | Fields/effect | Transaction/failure | Status |
+| ID | Operation | Condition | Fields/effect | Transaction/failure | Status |
 |---|---|---|---|---|---|
-| M1 | Logical draft removal | Proposed Draft state | Remove from active management; retain history | Tombstone/timestamp/transaction unknown | DERIVED; physical mapping SOURCE_REQUIRED |
-| M2 | Mark scheduled notification cancelled | Proposed Scheduled and no delivery started | Record cancellation; scheduler cooperation unknown | Dispatch race and cancellation acknowledgement unresolved | DERIVED / SOURCE_REQUIRED |
-| M3 | Physical cascade delete | None | No history deletion proposed | No cascade or child deletion inferred | N/A |
-
-- Proposed repeated DELETE against an existing tombstone returns 200 with the original DeleteResult to make retries stable. This is DERIVED, not direct.
-- The catalog 422 code is available for a policy rejection; the exact rejection state is not defined.
+| M1 | DELETE parent | At least one locked delivery, all QUEUED | Delete one `notifications` row; FK cascades its delivery rows; return id/time | Validate full response before commit; rollback on query/mapping/commit error | DERIVED local fallback |
+| M2 | Reject eligibility | No delivery or any delivery status SENT/FAILED | No mutation | Rollback; return catalog 422 | DERIVED local fallback |
+| M3 | Repeated request | Parent already deleted | No row to lock | Return catalog 404 | DERIVED consequence; no idempotency contract |
 
 <a id="step-4-scheduler-boundary"></a>
 ## Step 4 — Scheduler boundary
 
-- AC-36 shows DELETE/mark cancelled but no queue, worker, provider or scheduler call.
-- If a scheduled job exists, an approved implementation must prevent later dispatch after the cancellation marker and define how in-flight sends are handled.
-- The current DD does not invent an Operation ID, cancellation endpoint, retry policy or provider acknowledgement.
+- AC-36 requires a delete/cancel action but no queue, worker, provider or scheduler API is present in current Study source.
+- The local transaction removes queued outbox rows under the checked-in FK candidate. It does not call an external scheduler/provider or prove an in-flight send was stopped.
+- Worker polling/claim locking, dispatch race, scheduler acknowledgement, Operation ID and retry policy are SOURCE_REQUIRED. Do not report external cancellation as verified.
+- See [08_notification_delivery_cancel.md](./08_notification_delivery_cancel.md).
 
 <a id="step-5-map-deleteresult"></a>
 ## Step 5 — Map DeleteResult
 
 | Response field | Logical source | Mapping rule | Status |
 |---|---|---|---|
-| id | Target notification | Preserve target identity | DIRECT type; physical source unresolved |
-| status | DeleteResult schema | Always literal deleted | DIRECT |
-| deleted_at | Successful logical mutation | Proposed timestamp when removal/cancellation commits | DIRECT field; time source/persistence SOURCE_REQUIRED |
-| businessCode | Catalog | DESIGN_RESOURCE_DELETED | DIRECT |
-| traceId | Request context | Propagate shared trace convention | Convention; route absent |
+| id | DELETE RETURNING | Preserve the path-selected parent ID; validate positive signed-int64 | DIRECT type; local legacy mapping DERIVED |
+| status | DeleteResult schema | Always literal `deleted` | DIRECT |
+| deleted_at | DELETE RETURNING | Database `CURRENT_TIMESTAMP` from the delete statement | DIRECT field; local clock mapping DERIVED; not persisted |
+| businessCode | Catalog | `DESIGN_RESOURCE_DELETED` | DIRECT |
+| traceId | Request context | Propagate shared trace convention | Shared convention |
 
-- For a scheduled cancellation, the response status literal remains deleted because catalog fixes it; do not serialize NotificationStatus here.
-- If a repeat-delete no-op is approved, return the original persisted deleted_at rather than generating a new one.
+- Do not serialize NotificationStatus or an Operation ID in DeleteResult.
+- If no tombstone exists after success, a repeated DELETE returns 404.
 
 <a id="step-6-return-result-or-error"></a>
 ## Step 6 — Return result or error
 
-- Direct success: HTTP 200 DESIGN_RESOURCE_DELETED, ApiEnvelope<DeleteResult>.
-- Exact direct errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR.
-- Do not add 409, 410 or 503 for scheduler/policy assumptions.
-- Return 422 for disallowed state only as the stated DERIVED policy proposal; catalog does not define its trigger.
-- Do not return recipient PII, provider errors, queue identifiers, SQL or stack traces.
+- Direct success: HTTP 200 `DESIGN_RESOURCE_DELETED`, `ApiEnvelope<DeleteResult>`.
+- Exact direct errors: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 422 `DESIGN_VALIDATION_ERROR`, 500 `DESIGN_INTERNAL_ERROR`.
+- Local 422 triggers are invalid path or no/started delivery; these are DERIVED, not catalog policy.
+- Do not add 409, 410 or 503 for scheduler assumptions.
+- Do not return recipient PII, provider errors, delivery IDs, SQL or stack traces.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

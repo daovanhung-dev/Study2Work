@@ -12,6 +12,7 @@ status: "Draft — Needs Confirmation"
 | Phiên bản | Ngày | Nội dung | Trạng thái |
 |---|---|---|---|
 | 0.1 | 2026-10-24 | Tạo DD draft theo catalog, AC-25 và source hiện có; ghi nhận các lệch contract, scope, persistence và tracking. | Draft — Needs Confirmation |
+| 0.2 | 2026-10-25 | Ghi fallback local DERIVED cho CSV, legacy BIGINT Notification rows, queued delivery outbox, Operation UUID và API #64 ID handoff; runtime wired, worker/live DB chưa xác minh. | Draft — Needs Confirmation |
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

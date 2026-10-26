@@ -31,10 +31,10 @@ status: "Draft — Needs Confirmation"
 | 5.1 | `data.id` | Lesson ID | `id` | int64 | No | Legacy `lessons` candidate | `id` | 4.1 | Copy | Required | BIGINT candidate; live schema chưa xác minh. |
 | 5.2 | `data.course_id` | Course ID | `course_id` | int64 | No | Legacy `lessons` candidate | `course_id` | 4.1 | Copy | Required trong contract; source NULL không map được | Legacy DDL nullable. |
 | 5.3 | `data.title` | Lesson title | `title` | string | No | Legacy `lessons` candidate | `name` | 4.1 | Alias `name -> title` | Required | API #09 mapping precedent. |
-| 5.4 | `data.content` | Lesson content | `content` | string? | Yes | Legacy `lessons` candidate | `content` | 4.1 | Copy | NULL khi source NULL là candidate; optional field | API #09 model/test precedent. |
-| 5.5 | `data.video_url` | Video URL | `video_url` | uri? | Yes | Legacy `lessons` candidate | `video_url` | 4.1 | Copy | NULL khi source NULL là candidate; optional field | API #09 model/test precedent. |
+| 5.4 | `data.content` | Lesson content | `content` | string? | Yes | Legacy `lessons` candidate | `content` | 4.1 | Copy | NULL khi source NULL | API #09 model/test precedent. |
+| 5.5 | `data.video_url` | Video URL | `video_url` | string? | Yes | Legacy `lessons` candidate | `video_url` | 4.1 | Copy | NULL khi source NULL | API #09 Lesson uses an optional string; không thêm URI validation. |
 | 5.6 | `data.order` | Lesson order | `order` | int32 | No | Legacy `lessons` candidate | `sort_order` | 4.1 | Alias `sort_order -> order` | Required | API #09 mapping precedent. |
-| 5.7 | `data.status` | Lesson status | `status` | LessonStatus | No | Legacy `lessons` candidate | `status` | 4.1 | Preserve stored value | Required | Enum values/casing chưa có danh sách chuẩn. |
+| 5.7 | `data.status` | Lesson status | `status` | string | No | Legacy `lessons` candidate | `status` | 4.1 | Preserve stored value | Required | Reusable Lesson type is string; enum values/casing chưa có danh sách chuẩn. |
 | 6 | `meta` | Metadata | `meta` | object | No | Envelope convention | N/A | 5.1 | Empty object candidate | `{}` on success | Current convention; no detail-specific metadata. |
 | 7 | `traceId` | Trace ID | `traceId` | uuid | No | Trace middleware | `X-Trace-Id` or generated | 0/5 | Propagate or generate UUID | Required | Current Study trace convention. |
 
@@ -74,7 +74,7 @@ Ví dụ minh họa `ApiEnvelope<Lesson>` trực tiếp; optional field NULL ser
 }
 ~~~
 
-Error envelope tuân API guideline. Current helper mặc định `data:{}` nếu caller không truyền data; route #83 chưa tồn tại nên chưa có endpoint behavior để xác nhận.
+Error envelope tuân API guideline. Current `error_response` mặc định `data:null`; route template #83 đã nằm trong middleware design-contract allowlist. Focused HTTP tests xác nhận 404/500 envelope.
 
 ## Dependency boundary
 

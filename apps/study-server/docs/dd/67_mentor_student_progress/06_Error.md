@@ -13,36 +13,36 @@ status: "Draft — Needs Confirmation"
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu hoặc không hợp lệ | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT code/status; endpoint chưa wired. |
-| 2 | Authorization | Role/course scope | Mentor/course | Sai role Mentor hoặc không có quyền course | 403 | `DESIGN_ACCESS_DENIED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT code; predicate/assignment unresolved. |
-| 3 | Not found | Resource/membership | Course/Student | Candidate course hoặc Student/course membership không tồn tại theo policy | 404 | `DESIGN_RESOURCE_NOT_FOUND` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-2-get-thong-tin) | No | DIRECT code; exact resource and privacy order SOURCE_REQUIRED. |
+| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu hoặc không hợp lệ | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT code/status; shared Mentor guard hiện được gọi. |
+| 2 | Authorization | Role/course scope | Mentor/course | Sai role Mentor hoặc không có quyền sở hữu course | 403 | `DESIGN_ACCESS_DENIED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT code; runtime fallback dùng direct owner `courses.mentor_id = sub`. |
+| 3 | Not found | Resource/membership | Course/Student | Course không tồn tại hoặc Student không thuộc ACTIVE roster của course | 404 | `DESIGN_RESOURCE_NOT_FOUND` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-2-get-thong-tin) | No | DIRECT code; Student eligibility/404 privacy behavior là DERIVED fallback. |
 | 4 | System error | Database/mapping | Progress query/result | Database failure hoặc không dựng được response | 500 | `DESIGN_INTERNAL_ERROR` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua-execute-query) | No | DIRECT code/status; không trả SQL/stack trace. |
 
 Không thêm error code hoặc HTTP status ngoài catalog #67.
 
-## Candidate branch rules
+## Runtime fallback branch rules
 
-| Điều kiện | Candidate behavior | Trạng thái |
+| Điều kiện | Runtime fallback behavior | Trạng thái |
 |---|---|---|
-| Bearer thiếu/sai/hết hạn | 401 `DESIGN_AUTHENTICATION_REQUIRED` | Code/status DIRECT; current endpoint chưa wired. |
-| Principal không có role Mentor | 403 `DESIGN_ACCESS_DENIED` | Code DIRECT; Mentor guard SOURCE_REQUIRED. |
-| Course ngoài quyền Mentor | 403 hoặc privacy-preserving 404 | SOURCE_REQUIRED; owner/assignment policy và thứ tự kiểm tra chưa chốt. |
-| Student không thuộc learner set của course | 404 hoặc 403 theo privacy policy | SOURCE_REQUIRED; dùng cùng roster eligibility với #65. |
-| Student hợp lệ nhưng chưa có lesson progress row | Candidate 200; lesson state NOT_STARTED/0 | DERIVED; absent-row behavior chưa được duyệt. |
-| Course/Student không tồn tại | Candidate 404 `DESIGN_RESOURCE_NOT_FOUND` | Code DIRECT; lookup/policy chưa được xác nhận. |
-| Query/projection error | 500 `DESIGN_INTERNAL_ERROR` | Code/status DIRECT; route/query chưa tồn tại. |
+| Bearer thiếu/sai/hết hạn | 401 `DESIGN_AUTHENTICATION_REQUIRED` | Shared guard hiện hành; verified bằng HTTP test. |
+| Principal không có role Mentor | 403 `DESIGN_ACCESS_DENIED` | Shared MENTOR guard hiện hành; verified bằng HTTP test. |
+| Course ngoài quyền Mentor | 403 `DESIGN_ACCESS_DENIED` | Runtime direct-owner fallback theo #65/#66. |
+| Student không thuộc active learner set của course | 404 `DESIGN_RESOURCE_NOT_FOUND` | Runtime fallback dùng ACTIVE enrollment và STUDENT role như #65. |
+| Student hợp lệ nhưng chưa có lesson progress row | 200; lesson state NOT_STARTED/0, timestamps null | DERIVED fallback được implement. |
+| Course/Student không tồn tại hoặc signed-int64 path lỗi | 404 `DESIGN_RESOURCE_NOT_FOUND` | Code/status trực tiếp; path/resource mapping theo local #65/#66 pattern. |
+| Query/projection error | 500 `DESIGN_INTERNAL_ERROR`, error `data:null` | Shared helper hiện hành; rollback và response an toàn. |
 
-## Error envelope discrepancy
+## Runtime error behavior
 
-- API guideline yêu cầu error `data:null`; current `error_response` mặc định `{}` khi không truyền data.
-- Middleware `DESIGN_CONTRACT_PATHS` chưa có path #67; future wiring phải thêm mapping nếu cần giữ DESIGN_* codes.
-- Catalog không khai báo 422 cho malformed path; không tự thêm code.
-- Đây là discrepancy cho tích hợp tương lai, không phải response đã quan sát của API #67.
+- Current `error_response` mặc định `data:null` và gắn trace ID/header.
+- Middleware `DESIGN_CONTRACT_PATHS` đã chứa path #67.
+- Catalog không khai báo 422 cho malformed path; API #67 ánh xạ path int64 lỗi sang 404 theo fallback #65/#66.
+- Fake DB HTTP tests kiểm tra local response; không xác minh production DB/schema/deployment.
 
 ## Security handling
 
 - Xác minh Mentor course scope và Student membership trước khi đọc/trả progress.
-- Không lộ việc Student có enrollment/progress hay không trước khi áp dụng privacy policy.
+- Student ngoài ACTIVE roster trả 404 với message Student chung; policy privacy vẫn cần business approval.
 - Không trả token, email, quiz answers, assignment submissions, raw SQL hoặc stack trace.
 
 ---

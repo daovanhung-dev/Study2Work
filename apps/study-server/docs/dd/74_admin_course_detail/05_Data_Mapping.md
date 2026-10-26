@@ -12,7 +12,7 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ```text
-Admin Bearer principal -> kiểm tra role Admin + course-management permission -> nhận path course_id -> Q1 đọc một legacy candidate course và mentor, không lọc status -> không có row: 404 -> map Course -> bọc Page<Course> singleton -> trả 200 hoặc exact catalog errors
+Admin Bearer principal -> shared JWT guard kiểm tra role ADMIN -> parse signed-int64 course_id -> Q1 đọc một legacy candidate course và mentor, không lọc status -> không có row: 404 -> map Course -> bọc Page<Course> singleton -> trả 200 hoặc exact catalog errors
 ```
 
 # Mục lục
@@ -34,11 +34,9 @@ Admin Bearer principal -> kiểm tra role Admin + course-management permission -
 
 ### 0.1. Xác thực và authorization
 
-- Xác thực Bearer JWT và kiểm tra role Admin cùng quyền course management trước khi truy cập course data.
-- Thiếu hoặc token không hợp lệ trả 401 `DESIGN_AUTHENTICATION_REQUIRED` theo catalog.
-- Principal không phải Admin hoặc thiếu course-management permission trả 403 `DESIGN_ACCESS_DENIED` theo catalog.
-- Study hiện chỉ có Student guard; không dùng guard này thay cho Admin authorization.
-- Claim role, permission policy, scope và identity mapping của Admin chưa có source; không tự tạo permission table hoặc claim name.
+- Shared `validate_current_user_request(..., role="ADMIN")` xác thực Bearer JWT và yêu cầu role `ADMIN` trước khi truy cập course data.
+- Thiếu/token không hợp lệ trả 401 `DESIGN_AUTHENTICATION_REQUIRED`; principal thiếu role `ADMIN` trả 403 `DESIGN_ACCESS_DENIED`.
+- Chưa có policy source cho dedicated course-management permission, scope hoặc tenant; implementation không tự tạo claim/table và chỉ dùng role `ADMIN` làm local fallback `DERIVED`.
 
 ### 0.2. Thứ tự truy cập
 
@@ -52,9 +50,9 @@ Admin Bearer principal -> kiểm tra role Admin + course-management permission -
 
 ### 1.1. `course_id`
 
-- Nhận `course_id` từ path với kiểu int64 bắt buộc theo catalog.
-- Không thêm minimum, maximum nghiệp vụ, enum hoặc query parameter.
-- API #74 không khai báo HTTP 422; đề xuất ánh xạ path không chuyển được thành số sang 404 theo precedent validator API #08. Xác nhận overflow/ngoài miền int64 ở implementation review.
+- Nhận raw path `course_id` và parse signed int64 sau khi authorization thành công.
+- Không thêm minimum nghiệp vụ, enum hoặc query parameter.
+- Catalog #74 không khai báo 422; malformed hoặc ngoài signed-int64 được ánh xạ sang 404 theo fallback `DERIVED`, phù hợp #08/#69 và test local.
 
 <a id="step-2-get-thong-tin"></a>
 
@@ -129,7 +127,7 @@ Admin Bearer principal -> kiểm tra role Admin + course-management permission -
 ### 4.1. Thành công
 
 - Q1 trả đúng một row: kiểm tra các trường bắt buộc của Course và UserSummary.
-- Thiếu `mentor.id`, `mentor.full_name` hoặc `price` là candidate integrity/mapping failure và trả 500 `DESIGN_INTERNAL_ERROR` theo API #06/#08 precedent; owner cần xác nhận cách Admin xử lý course mồ côi.
+- Thiếu `mentor.id`, `mentor.full_name` hoặc `price` trả 500 `DESIGN_INTERNAL_ERROR` theo fallback `DERIVED` và test local; owner cần xác nhận cách Admin xử lý course mồ côi.
 - Map các trường theo [04_Response.md](./04_Response.md#response-fields).
 - Không SELECT email, phone, password hash, learner count hoặc PII khác.
 
@@ -141,7 +139,7 @@ Admin Bearer principal -> kiểm tra role Admin + course-management permission -
 ### 4.3. Lỗi hệ thống
 
 - Lỗi query/mapping không được trả raw SQL, stack trace hoặc credential.
-- Query exception dùng 500 `DESIGN_INTERNAL_ERROR`; rollback session theo precedent API #08 khi query thất bại.
+- Query exception dùng 500 `DESIGN_INTERNAL_ERROR`; rollback session khi query hoặc projection thất bại; không commit read-only request.
 
 <a id="step-5-map-response"></a>
 
@@ -172,7 +170,7 @@ Admin Bearer principal -> kiểm tra role Admin + course-management permission -
 ### 5.3. Envelope
 
 - Success: HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, `data` là singleton `Page<Course>`, `meta={}` candidate, `traceId` theo Study trace convention.
-- Error: giữ chính xác các code ở [06_Error.md](./06_Error.md#error-cases); expected guideline dùng `data:null`, còn helper hiện tại mặc định `{}` khi không truyền data.
+- Error: giữ chính xác các code ở [06_Error.md](./06_Error.md#error-cases); `error_response` hiện mặc định `data:null`.
 
 <a id="request-usage-matrix"></a>
 
@@ -180,7 +178,7 @@ Admin Bearer principal -> kiểm tra role Admin + course-management permission -
 
 | Request item | Source | Data Mapping step | Validate | Query/mutation usage | Response usage | Gap/status |
 |---|---|---|---|---|---|---|
-| Authorization | Header | 0 | Bearer JWT; Admin + course-management permission | Không đưa vào SQL | Không map | Permission implementation `SOURCE_REQUIRED`. |
+| Authorization | Header | 0 | Shared Bearer JWT guard; role `ADMIN` | Không đưa vào SQL | Không map | Role guard VERIFIED locally; dedicated permission `SOURCE_REQUIRED`. |
 | `course_id` | Path | 1, 2.1 | int64 bắt buộc; không tự thêm minimum | Bind `:course_id` trong Q1 | Course ID nằm ở `items[0].id` | Invalid ID → 404 là DERIVED từ #08. |
 | Request body | None | N/A | N/A | None | None | DIRECT. |
 | Query parameters | None | N/A | N/A | None | None | DIRECT. |
@@ -242,7 +240,7 @@ Admin Bearer principal -> kiểm tra role Admin + course-management permission -
 ## Error linkage
 
 - Authentication, authorization, not-found và internal error branches xem [06_Error.md](./06_Error.md#error-cases).
-- API #74 chưa wired; `DESIGN_CONTRACT_PATHS` hiện chưa chứa route detail này.
+- Route template `/api/v1/admin/courses/{course_id}` đã có trong `DESIGN_CONTRACT_PATHS`; middleware so template từ FastAPI route để nhận diện path có ID động.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

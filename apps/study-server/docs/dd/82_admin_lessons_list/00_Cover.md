@@ -8,7 +8,6 @@ source_sheet: "Cover"
 format: markdown
 status: "Draft — Needs Confirmation"
 ---
-
 # Study2Work — API Detail Design
 
 ## Thông tin tài liệu
@@ -22,13 +21,13 @@ status: "Draft — Needs Confirmation"
 | API name | **Lấy danh sách lesson** |
 | HTTP method | **GET** |
 | Endpoint | **/api/v1/admin/lessons** |
-| Version | **1.0** |
+| Version | **1.1** |
 | Status | **Draft — Needs Confirmation** |
 | Created by | **Codex** |
 | Reviewed by | **Chưa xác nhận** |
 | Approved by | **Chưa xác nhận** |
 | Created date | **2026-10-24** |
-| Updated date | **2026-10-24** |
+| Updated date | **2026-10-26** |
 
 ## Tên hiển thị
 

@@ -2,49 +2,32 @@
 
 ## Kết quả
 
-- DD status: `Draft — Needs Confirmation`.
-- Tài liệu: `VERIFIED_STATIC_ONLY` với open questions chặn mapping implementation.
-- Runtime API #58: `UNWIRED / NOT_FOUND`; không khẳng định runtime behavior.
-- Scope: Markdown DD và worklog; không sửa source, test, schema, catalog, diagram hoặc DB.
+- API #58: `SOURCE_BACKED_WITH_DERIVED_PROJECTIONS`; route, view, SQL constants, response models and HTTP tests are wired locally.
+- DD status remains `Draft — Needs Confirmation`. The collection response, legacy BIGINT support schema, lifecycle values, no-pagination behavior and attachment relation are implementation fallbacks selected under the user's direction; they are not live-schema evidence or contract-owner approval.
+- Runtime DB, migration application and deployment were not accessed or verified.
 
-## Deliverable manifest
+## Deliverable scope
 
 | Nhóm | Kết quả |
 |---|---|
-| Sheet template | Đủ 8 file: 00_Cover đến 07_table. |
-| Reports | PLAN_RESULT.md, OPEN_QUESTIONS.md, VERIFICATION_REPORT.md. |
-| Tổng | 11 Markdown files; không tạo ZIP theo Study workflow. |
+| API module | `api_58_mentor_support_requests` models/query/view added; route and exact-path middleware contract wired. |
+| Persistence | Legacy `DB.sql` plus migration 008 define `support_requests`, `support_messages` and ordered `support_message_uploads`. Migration remains unapplied here. |
+| Contract | DD updated; catalog and AC-24 diagram synchronized to collection shape and 422 query-validation behavior. |
+| Tests | Focused API #58 TestClient module covers response, auth/scope, filtering, errors and OpenAPI. |
+| Context | Server-study pages and context manifest updated to include API #58 and its source boundaries. |
 
-## Kiểm tra đã chạy
+## Checks
 
-| Check | Kết quả | Trạng thái |
+| Check | Result | Status |
 |---|---|---|
-| Skill/template registry | createDD-markdown được wire cho server-study; 8 template Markdown mở được và hash nằm trong PLAN_RESULT.md. | PASS |
-| Template appendix | Appendix của cả 8 sheet output trùng byte-for-byte với template tương ứng. | PASS |
-| Front matter | Cả 8 sheet có dd_id 58 và Draft — Needs Confirmation. | PASS |
-| API contract | GET path, Mentor Bearer, query course_id/status, singular ApiEnvelope<SupportRequest>, HTTP 200 và 3 error codes giữ đúng catalog. | PASS |
-| Error set | Chỉ 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 500 DESIGN_INTERNAL_ERROR trong 06_Error.md. | PASS |
-| Response coverage | Mọi field SupportRequest, UserSummary, SupportMessage và UploadAsset có row trong response matrix. | PASS |
-| JSON examples | Success/error code fences parse thành JSON hợp lệ. | PASS |
-| Markdown | Table column count nhất quán; code fences cân bằng; không trailing whitespace. | PASS |
-| Links and anchors | Các relative path và anchor đang có resolve được; report link hoàn chỉnh trong final check. | PASS |
-| Source trace | Catalog/AC-24/DB candidates và missing API #58 source được ghi; không tạo SQL vật lý ngoài schema đã được chọn. | PASS |
-| Runtime tests | Không chạy; docs-only và API #58 không có route để thực thi. | NOT_RUN |
-| Agent context validator | Đã chạy nhưng trả `AGENT_CONTEXT_INVALID`: thiếu cây context/source DB Admin và báo `CONTEXT_STALE server-study` do source drift sẵn có. Không có báo lỗi worklog; API #58 không sửa source/context page. | FAILED — UNRELATED REPOSITORY DRIFT |
-| AC-24 macro-review | Đã review cùng #59–#61: luồng/ranh giới mutation khớp; giữ cardinality conflict và shared schema/access/projection blockers mở. | VERIFIED_WITH_OPEN_QUESTIONS |
+| Focused API #58 tests | 12 passed; one upstream Starlette/httpx deprecation warning from TestClient. | PASS |
+| Full Study Server suite | 550 passed; same upstream warning. | PASS |
+| Ruff | `uv run ruff check app tests` reported all checks passed. | PASS |
+| OpenAPI | Focused test verifies collection response and int64 `course_id`; `app.openapi()` reports 28 API v1 path templates and 29 operations. | PASS |
+| Live database / migration | Not queried or applied. | NOT VERIFIED |
+| Agent context validator | Full run returns `AGENT_CONTEXT_INVALID` for missing DB Admin context/source and reports broad existing `CONTEXT_STALE` source drift. `--skip-drift` leaves only the unrelated missing DB Admin context/source errors; Study context references validate. | FAILED — REPOSITORY BASELINE |
+| `git diff --check` | No whitespace errors. | PASS |
 
-## Open implementation blockers
+## AC-24 linked API review
 
-- List response cardinality và empty-result behavior.
-- Physical support model và int64/UUID boundary.
-- Course association/filter.
-- Mentor identity/assignment scope.
-- SupportStatus members và invalid-query error behavior.
-- Inclusion/order/bounds của messages[] trong list response.
-- Student/author projection, UploadAsset ID/status và signed URL resolver.
-
-## Kết quả macro-review AC-24 #58–#61
-
-`VERIFIED_WITH_OPEN_QUESTIONS`. #58 vẫn giữ nguyên response singleton theo catalog dù flow/path là danh sách; không tự đổi thành Page. Nhóm chưa implementation-ready do support schema và UUID/int64 mapping, course relation, Mentor identity/scope, nested response projection, lifecycle/attachment rules và error middleware wiring còn `SOURCE_REQUIRED`/chưa xác nhận. Xem [macro-review tổng hợp](../61_mentor_support_resolve/PLAN_RESULT.md#macro-review-ac-24-58-61).
-
-Không đánh dấu implementation-ready hoặc group-review complete. Xem [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md) và [PLAN_RESULT.md](./PLAN_RESULT.md).
+Reviewed #59 detail, #60 reply and #61 resolve boundaries. API #59 can reuse the selected request/message model and direct course-owner predicate. API #60 owns message insertion; API #61 owns status resolution. They remain outside this implementation and must make their own decisions about write payloads, transitions and retries.

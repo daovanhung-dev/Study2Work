@@ -26,17 +26,17 @@ Direct success response is ApiEnvelope<DeleteResult> with HTTP 200 and business 
 | 1 | success | boolean | Yes | Shared envelope; true on successful delete/cancel action | Envelope convention |
 | 2 | businessCode | string | Yes | DESIGN_RESOURCE_DELETED | DIRECT |
 | 3 | message | string | Yes | Safe success message; exact text unspecified | SOURCE_REQUIRED |
-| 4 | data.id | int64 | Yes | Notification identifier from target resource | DIRECT type; physical source unresolved |
+| 4 | data.id | int64 | Yes | ID returned by DELETE of the path-selected legacy notification row | DIRECT type; local target is DERIVED |
 | 5 | data.status | literal "deleted" | Yes | Exact reusable DeleteResult literal | DIRECT |
-| 6 | data.deleted_at | date-time | Yes | Time of logical deletion/cancellation completion under proposal | Direct field; clock and persistence SOURCE_REQUIRED |
-| 7 | traceId | string | Convention | Request trace context | Shared convention; API route absent |
+| 6 | data.deleted_at | date-time | Yes | `CURRENT_TIMESTAMP` returned by the database with the deleted row | Direct field; local timestamp mapping is DERIVED |
+| 7 | traceId | string | Convention | Request trace context | Shared middleware convention |
 | 8 | meta | object | Convention | Shared envelope metadata | Exact schema follows API Guidelines/current helper boundary |
 
-The status field is the DeleteResult action result, not a NotificationStatus value. If the API cancels a scheduled notification, its stored NotificationStatus may be cancelled while this response still carries the direct literal deleted; that interpretation requires owner approval.
+The status field is the DeleteResult action result, not a NotificationStatus value. The local hard-delete returns literal `deleted`. It does not claim that an external scheduled job or provider acknowledged cancellation.
 
 ## Structural success example
 
-This example preserves the direct envelope/schema. For a cancellation, deleted_at is proposed as the completion time of the cancellation marker, not proof that a scheduler/provider has acknowledged cancellation.
+This example preserves the direct envelope/schema. `deleted_at` is the database timestamp from the successful DELETE statement; it is not a persisted tombstone or proof of external scheduler/provider cancellation.
 
 ~~~json
 {
@@ -58,7 +58,7 @@ This example preserves the direct envelope/schema. For a cancellation, deleted_a
 
 - Catalog response is DeleteResult, not Notification and not Operation.
 - status literal "deleted" does not distinguish draft removal from scheduled cancellation.
-- deleted_at is required by schema but no compatible Admin physical timestamp exists in reviewed DDL.
+- deleted_at is required by schema; local fallback maps it to database `CURRENT_TIMESTAMP` returned by DELETE, not a stored column.
 - API #96 direct Notification response does not include a delivery aggregate, and #95 does not return an Operation ID.
 
 ## Phụ lục đối chiếu nguồn Excel

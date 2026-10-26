@@ -26,14 +26,14 @@ status: "Draft — Needs Confirmation"
 | Reviewed by | Chưa phân công |
 | Approved by | Chưa phê duyệt |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-26 |
 
 ## Tên hiển thị
 
     Study2Work API design
     Lấy danh sách quiz
 
-> DD chỉ mô tả API #87 theo catalog và AC-35. Query, schema vật lý và quyền Admin hiện chưa được runtime xác nhận.
+> DD giữ nguyên contract catalog/AC-35 và ghi rõ fallback API #87 đã được wire, test bằng fake DB; schema live và quyền quiz-management riêng vẫn chưa xác minh.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

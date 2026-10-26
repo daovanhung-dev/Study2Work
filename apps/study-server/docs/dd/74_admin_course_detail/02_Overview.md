@@ -20,11 +20,11 @@ status: "Draft — Needs Confirmation"
 | Purpose | Admin đọc thông tin khóa học đã chọn trước khi cập nhật nội dung, đổi trạng thái hoặc xóa theo policy. |
 | Consumer/Actor | Admin có quyền course management |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin và quyền course management theo catalog/AC-32; cơ chế guard/permission chưa có trong Study source. |
+| Authorization | Shared JWT guard yêu cầu role `ADMIN`; dedicated course-management permission chưa có policy source và chưa được kiểm tra riêng. |
 | Direct response | `ApiEnvelope<Page<Course>>` |
 | Basis | Method/path/auth/path/response/status/errors DIRECT; truy vấn, page singleton và status visibility DERIVED; counter mapping chưa có nguồn. |
 | Status | `Draft — Needs Confirmation` |
-| Current runtime state | `UNWIRED / NOT_FOUND` — không có route, module hoặc test API #74. |
+| Current local source state | `VERIFIED_LOCAL_SOURCE` — route, module, middleware route-template mapping và focused tests đã có; live DB/deployment chưa xác minh. |
 | Transaction | N/A — API chỉ đọc. |
 | Side effects | Không ghi dữ liệu. |
 
@@ -40,7 +40,7 @@ status: "Draft — Needs Confirmation"
 - [API #08 tests](../../../tests/modules/guest/api_08_courses_detail/test_courses_detail.py) — current source precedent cho invalid/missing detail, query/mapping errors và singleton Page; không chạy trong task này.
 - [API #06 shared Course mapping](../../../app/modules/guest/_shared/course_catalog/helpers.py) — decimal-string price và required mentor mapping.
 - [API #69 Admin detail DD](../69_admin_user_detail/02_Overview.md) và [API #73 Admin list DD](../73_admin_courses_list/02_Overview.md) — Admin authorization boundary, Course field mapping và AC-32 continuity.
-- [Current auth helper](../../../app/utils/auth.py), [middleware](../../../app/core/middleware.py), [error response](../../../app/core/responses.py) — Student-only guard, error-code path allowlist và current error envelope behavior.
+- [Current auth helper](../../../app/utils/auth.py), [middleware](../../../app/core/middleware.py), [error response](../../../app/core/responses.py) — shared role-aware JWT guard, FastAPI route-template allowlist matching và lỗi mặc định `data:null`.
 - [API guidelines](../../../../../contracts/api-guidelines/README.md) — chuẩn lỗi yêu cầu `data:null`.
 
 ## Tables read
@@ -79,11 +79,11 @@ Không có — API GET chỉ đọc.
 - `courses.mentor_id` được DB guide mô tả required nhưng legacy `DB.sql` cho phép NULL.
 - Legacy BIGINT schema và V1-PILOT UUID/versioned schema không tương đương; live DB chưa xác minh.
 - `ApiEnvelope<Page<Course>>` dùng cho detail path; API #08 có singleton Page precedent nhưng vẫn cần xác nhận wrapper chung ở macro-review.
-- Current Student-only auth, middleware allowlist và error `data` behavior chưa đáp ứng Admin endpoint/design guideline nếu route được wire.
+- Shared guard kiểm tra role `ADMIN`, nhưng không có dedicated course-management permission policy. Middleware nhận diện route template qua `request.scope.route.path`; helper lỗi hiện dùng `data:null`.
 
 ## Security note
 
-- Chỉ Admin đã xác thực và được cấp course-management permission mới được truy vấn course.
+- Local fallback chỉ yêu cầu JWT role `ADMIN` trước khi parse ID hoặc truy vấn course; không khẳng định đã enforce dedicated course-management permission.
 - Current Student guard không thay thế Admin guard; nguồn claim/permission chưa xác định.
 - Query chỉ lấy `Course` và `UserSummary`; không đọc email, phone, password hash, token hoặc dữ liệu học viên.
 - Không trả course existence trước bước authorization.

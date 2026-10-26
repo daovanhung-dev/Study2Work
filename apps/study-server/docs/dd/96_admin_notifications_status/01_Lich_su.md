@@ -14,10 +14,11 @@ status: "Draft — Needs Confirmation"
 | Version | Ngày | Người cập nhật | Nội dung | Trạng thái |
 |---|---|---|---|---|
 | 0.1 | 2026-10-24 | Study2Work docs | Tạo DD từ catalog #96 và AC-36; giữ `ApiEnvelope<Notification>`; ghi delivery aggregate, Admin schema, permission và enum còn thiếu nguồn. | Draft — Needs Confirmation |
+| 0.2 | 2026-10-26 | Study2Work coding | Wire GET bằng một aggregate read-only query; tái dùng Notification projection và QUEUED/FAILED/SENT precedence của #92; invalid ID hoặc không có delivery status trả 404 theo fallback DERIVED. | Draft — Needs Confirmation |
 
 ## Ghi chú
 
-Đây là bản DD design-only. Chưa có route/module/test cho #96 trong Study source; không thể dùng nội dung này làm bằng chứng đã triển khai.
+DD vẫn là `Draft — Needs Confirmation`. Source/test local của #96 hiện wired; fallback schema, status precedence, empty-delivery 404 và role-only ADMIN authorization vẫn `DERIVED` hoặc `SOURCE_REQUIRED`. Không coi local test là bằng chứng live schema/deployment.
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `Lịch sử`

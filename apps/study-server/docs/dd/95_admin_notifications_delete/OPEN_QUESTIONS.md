@@ -1,96 +1,104 @@
 # Câu hỏi còn mở — Study API #95 Admin xóa hoặc hủy notification
 
-**Trạng thái DD:** Draft — Needs Confirmation. Contract DeleteResult trực tiếp được giữ; policy proposal chưa được duyệt.
+**Trạng thái DD:** Draft — Needs Confirmation. Direct contract and local fallback are documented separately. Implementation is locally wired and fake-DB tested; owner approval, live schema and external cancellation remain unverified.
 
 <a id="q-95-01-eligibility"></a>
-## Q-95-01 — Khi nào được xóa hoặc hủy?
+## Q-95-01 — Lifecycle policy và eligibility
 
-**Evidence:** Catalog purpose ghi xóa draft/cancel nếu policy cho phép; AC-36 diagram chỉ ghi DELETE/mark cancelled. Không có NotificationStatus tokens hoặc state transition.
+**Evidence:** Catalog purpose ghi xóa draft/cancel nếu policy cho phép; AC-36 diagram chỉ ghi `DELETE/mark cancelled`. Legacy model không có Draft/Scheduled status.
 
-**Đề xuất DERIVED:** Draft chưa dispatch được logical remove; Scheduled chưa bắt đầu delivery được mark cancelled; khi delivery đã bắt đầu thì trả 422.
+**Local fallback DERIVED:** Chỉ cho phép khi có ít nhất một delivery row và tất cả row đang `QUEUED`; thiếu delivery hoặc có `SENT/FAILED` trả 422. Runtime không suy ra enum Draft/Scheduled.
 
-**Cần xác nhận:** State names/tokens, policy cho từng state, partial/in-flight delivery và điều kiện nào dùng 422?
+**Cần xác nhận:** Quy tắc queued-only có phản ánh lifecycle được duyệt không? Trạng thái nào đại diện cho draft/scheduled/in-flight?
 
 <a id="q-95-02-hard-or-soft-delete"></a>
-## Q-95-02 — Hard delete hay tombstone?
+## Q-95-02 — Hard delete hay tombstone/retention
 
-**Evidence:** DeleteResult yêu cầu deleted_at; legacy notifications không có deletion marker/timestamp. AC-36 mô tả DELETE/mark cancelled nhưng không chỉ physical operation.
+**Evidence:** Checked-in legacy FK `notification_deliveries.notification_id` dùng `ON DELETE CASCADE`; notification không có deleted_at/status. API #93/#94 hiện dùng cùng candidate legacy rows.
 
-**Đề xuất DERIVED:** Giữ Notification và history bằng logical tombstone/cancel marker; không hard-delete recipients/delivery history.
+**Local fallback DERIVED:** DELETE đúng parent row; FK cascade loại bỏ queued delivery rows của parent. Không xóa sibling recipients cùng `operation_id`.
 
-**Cần xác nhận:** Có duyệt logical deletion không? Chọn physical state/timestamp nào? Có retention/anonymization rule không?
+**Cần xác nhận:** Có duyệt retention/cascade này cho Admin notification không? Cần tombstone hoặc audit trail nào?
 
 <a id="q-95-03-scheduled-work"></a>
 ## Q-95-03 — Scheduler/queue cancellation
 
-**Evidence:** Không tìm thấy Admin scheduler, queue producer, job ID hoặc cancellation endpoint. Diagram không nêu scheduler call.
+**Evidence:** Không tìm thấy Admin scheduler, worker, job ID hoặc cancellation endpoint. Diagram không nêu scheduler call.
 
-**Đề xuất DERIVED:** Với Scheduled chưa dispatch, mark notification cancelled để worker không gửi; nếu external job tồn tại, contract phải xác nhận cancellation.
+**Local behavior:** Xóa parent và outbox candidate trong DB transaction; không gọi external system và không tuyên bố đã ngăn provider send.
 
-**Cần xác nhận:** Scheduler nào xử lý schedule? Mark cancelled có đủ ngăn dispatch không? In-flight call/ack/retry xử lý thế nào? Có Operation ID không?
+**Cần xác nhận:** Scheduler nào xử lý queued work? Có cần cancellation API/ack, worker synchronization hoặc retry policy không?
 
 <a id="q-95-04-delete-result"></a>
-## Q-95-04 — DeleteResult khi action là cancellation
+## Q-95-04 — DeleteResult khi diagram nói cancellation
 
-**Evidence:** Catalog response là DeleteResult với literal status="deleted" và required deleted_at; AC-36 cho phép mark cancelled.
+**Evidence:** Catalog yêu cầu literal `status="deleted"` và `deleted_at`; AC-36 cho phép `mark cancelled`.
 
-**Đề xuất DERIVED:** Giữ literal deleted như contract; deleted_at là thời điểm logical remove/cancel được commit. Notification lifecycle state riêng có thể là cancelled.
+**Local fallback DERIVED:** Trả direct literal và map `deleted_at` từ DB `CURRENT_TIMESTAMP` trong DELETE RETURNING; đây không phải tombstone timestamp.
 
-**Cần xác nhận:** Literal deleted có đúng cho cancellation không? deleted_at do database hay service clock cung cấp? Timestamp offset/precision nào áp dụng?
+**Cần xác nhận:** DeleteResult có đúng khi nghiệp vụ gọi đây là cancel? Có cần persisted audit timestamp/offset precision khác không?
 
 <a id="q-95-05-repeat-request"></a>
-## Q-95-05 — DELETE lặp lại và target đã bị hủy
+## Q-95-05 — DELETE lặp lại
 
-**Evidence:** Catalog có 404 và 422 nhưng không định nghĩa idempotency. API #95 là DELETE; tombstone persistence chưa biết.
+**Evidence:** Catalog có 404 nhưng không khai báo idempotency/tombstone.
 
-**Đề xuất DERIVED:** Nếu tombstone còn tồn tại, repeated DELETE trả 200 cùng DeleteResult và timestamp; target không tồn tại trả 404.
+**Local fallback DERIVED:** Sau hard delete, request lặp không tìm thấy parent và trả 404.
 
-**Cần xác nhận:** Có duyệt idempotent no-op không? Tombstone có giữ đủ để trả cùng result không? Notification đã cancelled nhưng vẫn còn history thì lần xóa sau trả gì?
+**Cần xác nhận:** Có yêu cầu repeated DELETE trả success không? Nếu có, cần tombstone/idempotency record nào?
 
-<a id="q-95-06-delivery-aggregate"></a>
-## Q-95-06 — Nguồn quyết định delivery đã bắt đầu
+<a id="q-95-06-delivery aggregate và race với dispatcher"></a>
+## Q-95-06 — Delivery source và race
 
-**Evidence:** API #96 response là Notification, không có delivery aggregate fields; V1-PILOT delivery model dùng UUID và learner scope, không phải Admin campaign schema.
+**Evidence:** #96 response là Notification, không có delivery aggregate. Local #93 creates per-channel queued rows; #94 locks parent trước child. No worker protocol is source-backed.
 
-**Cần xác nhận:** Aggregate/query nào cho sent/in-flight delivery? Đơn vị là notification, recipient, channel hay attempt? Khi chỉ một recipient đã nhận, policy hủy còn cho phép không?
+**Local fallback DERIVED:** Lock parent then child rows and require all QUEUED; fake DB tests verify SQL ordering only.
+
+**Cần xác nhận:** Worker claim/dispatch lock order, in-flight semantics, aggregate grain and race handling nào được duyệt?
 
 <a id="q-95-07-admin-permission"></a>
-## Q-95-07 — Admin permission và 404 precedence
+## Q-95-07 — Fine-grained Admin permission
 
-**Evidence:** Catalog role Admin; AC-36 yêu cầu notification-management permission; Study Admin guard chưa được xác minh.
+**Evidence:** Catalog role Admin; AC-36 yêu cầu notification-management permission; shared Study guard hiện kiểm tra ADMIN role.
 
-**Cần xác nhận:** Claim/permission key, actor ID, tenant/global scope và thứ tự auth → resource lookup?
+**Local fallback:** Dùng shared ADMIN guard như #92–#94; không tuyên bố dedicated permission đã wire.
 
-<a id="q-95-08-physical-model"></a>
-## Q-95-08 — Physical model, transaction và timestamp
+**Cần xác nhận:** Permission claim/key, principal mapping và tenant/global scope nào được duyệt?
 
-**Evidence:** Legacy BIGINT notifications thiếu lifecycle/deleted_at; V1-PILOT UUID notifications/deliveries khác grain và delivery rows append-only.
+<a id="q-95-08-live-schema-and-transaction"></a>
+## Q-95-08 — Live schema và transaction
 
-**Cần xác nhận:** Admin campaign table/columns, tombstone, audit, transaction boundary, race với dispatcher, rollback và clock source nào được duyệt?
+**Evidence:** DB.sql/migration 009 được kiểm tra trong repo; test API dùng fake DB; không có live DB/deployment verification.
+
+**Local fallback:** Khóa parent/delivery, DELETE, build/validate response rồi commit; query/mapping/commit failure rollback.
+
+**Cần xác nhận:** Migration/deployment/live FK cascade có đúng môi trường target không? Có yêu cầu audit/transaction khác không?
 
 <a id="q-95-09-error-behavior"></a>
-## Q-95-09 — Trigger 404/422/500
+## Q-95-09 — Error triggers
 
-**Evidence:** Direct error codes 401/403/404/422/500; missing target, policy refusal, repeat delete và scheduler failure chưa có mapping.
+**Evidence:** Catalog errors are exactly 401/403/404/422/500; it does not define parse or eligibility triggers.
 
-**Cần xác nhận:** Missing/tombstone precedence, exact 422 conditions, scheduler failure mapping và error envelope data shape. Không thêm 409/410/503 nếu chưa cập nhật contract.
+**Local fallback DERIVED:** Invalid/non-positive/out-of-range path → 422; missing target → 404; no/started delivery → 422; unexpected SQL/projection/commit failure → 500.
+
+**Cần xác nhận:** Các trigger này có cần đổi khi lifecycle contract được chốt? Không thêm 409/410/503 nếu catalog không đổi.
 
 <a id="q-95-10-ac36-macro"></a>
-## Q-95-10 — Macro-review AC-36 và Operation bridge
+## Q-95-10 — AC-36 macro-review và Operation bridge
 
-**Evidence:** #92–#96 là nhóm Admin notification. #93 Notification-vs-Operation/ID bridge còn mở; #94 body/schedule cũng là DERIVED; #96 status response không chứa delivery aggregate.
+**Evidence:** #92–#96 share Admin notification workflow. #93 Notification-vs-Operation/ID bridge remains open; #96 direct response lacks aggregate fields.
 
-**Cần xác nhận:** Sau khi #96 DD hoàn tất, owner cần chốt audience/campaign grain, send action/schedule handoff, update/cancel policy, status projection, Operation ID bridge và schema model chung.
+**Cần xác nhận:** Owner cần chốt audience/campaign grain, send/schedule handoff, update/cancel policy, status projection, Operation bridge và schema model chung.
 
 ## Ranh giới giữ nguyên
 
-- DIRECT: DELETE path-only contract, Admin Bearer, DeleteResult shape, HTTP 200 và đúng 401/403/404/422/500; diagram DELETE/mark cancelled/reload.
-- DERIVED: logical tombstone, Draft removal, Scheduled pre-dispatch cancel, preserve history, repeat DELETE no-op và 422 for disallowed state.
-- SOURCE_REQUIRED: Admin schema, state enum, delivery-start query, scheduler, Admin permission, timestamp and transaction.
-- DISCREPANCY: cancellation represented by status="deleted"; no #96 delivery aggregate source.
+- DIRECT: DELETE path-only contract, Bearer/Admin role, DeleteResult shape, HTTP 200, exact 401/403/404/422/500 codes; diagram says DELETE/mark cancelled/reload.
+- DERIVED: positive signed-int64 parsing, legacy recipient-row target, queued-only eligibility, physical delete/cascade, DB timestamp and repeated-delete 404.
+- SOURCE_REQUIRED: lifecycle/retention approval, dedicated permission, live schema/deployment, worker/scheduler contract, in-flight race and Operation bridge.
+- DISCREPANCY: diagram says cancellation while result literal says deleted; no external cancellation acknowledgement is represented.
 
 ## AC-36 macro-review result
 
 - Status: `VERIFIED_WITH_OPEN_QUESTIONS` at document level; this API remains `Draft — Needs Confirmation`.
 - Group findings and owner decisions: [AC-36 macro-review #92–#96](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
-- No runtime, live-schema, deployment, or owner approval is implied.
+- Local API tests do not imply runtime deployment, live schema, provider delivery or owner approval.

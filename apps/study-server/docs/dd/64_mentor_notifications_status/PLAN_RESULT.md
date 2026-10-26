@@ -6,6 +6,24 @@
 - API: #64 — Theo dõi trạng thái gửi; trạng thái `Draft — Needs Confirmation`.
 - Giao phẩm: 8 sheet template + 3 report Markdown; không tạo ZIP.
 
+The source and matrix sections below record the DD planning snapshot before the
+API #64 runtime implementation. See the reconciliation at the end and
+[VERIFICATION_REPORT.md](./VERIFICATION_REPORT.md) for current local source and
+verification status.
+
+## Reconciliation trước và sau implementation API #64
+
+- Trước runtime edits, giữ nguyên contract trực tiếp: GET signed-int64 path,
+  Mentor Bearer, no body/query, HTTP 200 `ApiEnvelope<Operation>` và errors
+  401/403/404/500. DD tiếp tục ở trạng thái Draft.
+- Sau khi đối chiếu producer API #63, dùng local DERIVED fallback: đọc legacy
+  BIGINT `notifications` cùng `notification_deliveries`; kiểm tra
+  `sender_id == JWT sub`; dựng Operation từ `operation_id`, sender và timestamps;
+  aggregate `QUEUED` ưu tiên, sau đó `FAILED`, còn lại all `SENT`.
+- Runtime route/module/query/test hiện đã có local source và pass HTTP/OpenAPI
+  verification bằng fake DB. Migration 009/live schema, policy approval và
+  Push/Email worker/provider delivery vẫn chưa được xác minh.
+
 ## Sources đã đối chiếu
 
 | Nguồn | Bằng chứng sử dụng | Trạng thái |
@@ -16,7 +34,7 @@
 | Legacy DB guide/DDL | Notification BIGINT/user_id/sender_id/is_read; không có delivery table/status | Candidate; không phải live query source |
 | V1-PILOT DDL | Notification/delivery UUID; delivery status/channel/attempt rows | Candidate khác model; không ghép legacy |
 | Prior DDs #18/#43/#45/#62/#63 | Operation ID/persistence, read-state boundary, roster/create/status flow | Precedent; không thay contract #64 |
-| Study router/middleware/test source | Không có route/query/module/provider/test #64; path ngoài `DESIGN_CONTRACT_PATHS` | `UNWIRED / NOT_FOUND` |
+| Study router/middleware/test source | Tại thời điểm lập DD chưa có route/query/module/provider/test #64; path ngoài `DESIGN_CONTRACT_PATHS` | `UNWIRED / NOT_FOUND` ở snapshot trước implementation; hiện đã wired local |
 
 ## API Requirement Matrix
 
@@ -31,7 +49,7 @@
 → Push/Email → #64 đọc delivery status → UI hiển thị
 ```
 
-API #64 là đọc trạng thái delivery theo notification ID. API #18 là generic Operation polling nhưng node diagram rời; không dùng Operation ID thay notification ID. Catalog #63 không công bố notification ID trong response, nên đường đi client bị chặn.
+API #64 là đọc trạng thái delivery theo notification ID. API #18 là generic Operation polling nhưng node diagram rời; không dùng Operation ID thay notification ID. Catalog #63 không khai báo notification ID, còn local API #63 hiện trả `meta.notification_ids` theo mapping DERIVED để gọi #64.
 
 ## Ma trận sử dụng request
 
@@ -45,8 +63,8 @@ API #64 là đọc trạng thái delivery theo notification ID. API #18 là gene
 
 | ID | Operation | Logical target | Result/status |
 |---|---|---|---|
-| Q1 | SELECT notification + permission scope | Notification | Physical table/owner relation chưa xác nhận; không viết SQL. |
-| Q2 | SELECT/aggregate delivery state | NotificationDelivery | Aggregate/status semantics chưa chốt; pilot attempt rows không có recipient key. |
+| Q1 | SELECT notification + permission scope | Notification | Initial DD snapshot chưa có source; current local implementation reads legacy BIGINT notification and checks `sender_id` against JWT `sub` as DERIVED. |
+| Q2 | SELECT/aggregate delivery state | NotificationDelivery | Initial DD snapshot left source unresolved; current local implementation reads migration 009 delivery rows and aggregates their state as DERIVED. |
 | M1 | N/A | N/A | GET read-only; không có mutation/provider call. |
 
 ## Response Source Matrix
@@ -54,8 +72,8 @@ API #64 là đọc trạng thái delivery theo notification ID. API #18 là gene
 | Response field | Contract | Mapping/gap |
 |---|---|---|
 | Envelope | `ApiEnvelope<Operation>` | Direct response shape; message/meta/error body convention còn gap. |
-| `data.id` | Operation UUID | Không có mapping từ `notification_id:int64`. |
-| `data.kind/status/owner_id/timestamps` | Operation fields | Persistence, lifecycle, enums và owner source SOURCE_REQUIRED. |
+| `data.id` | Operation UUID | Current local mapping uses `notifications.operation_id`, separate from path `notification_id`. |
+| `data.kind/status/owner_id/timestamps` | Operation fields | Current local mapping uses API #63's kind, aggregate channel state, `sender_id`, `created_at`, and latest delivery `updated_at`; DERIVED. |
 | `data.result?:Payment` | Optional Payment | Direct reusable schema nhưng không chứa delivery data. |
 | `NotificationDelivery` | notification ID/status/queued/sent/failed | Ý định gần với AC-25; chưa phải response direct và không có approved query source. |
 
@@ -73,7 +91,7 @@ API #64 là đọc trạng thái delivery theo notification ID. API #18 là gene
 - AC-25 node/edge và detached #18 được ghi rõ: PASS.
 - Prior DD #18/#43/#45/#62/#63 được đối chiếu: PASS.
 - Requirement/Request/Query/Mutation/Response matrices lập trước authoring: PASS.
-- Physical query, auth relation, response bridge và delivery aggregation ghi SOURCE_REQUIRED/open: PASS.
+- Physical query, auth relation, response bridge và delivery aggregation were recorded SOURCE_REQUIRED/open before runtime edits: PASS.
 - Macro-review #62–#64 + #18: `VERIFIED_WITH_OPEN_QUESTIONS`; xem nhóm findings dưới đây.
 
 ## Template fingerprints
@@ -92,7 +110,7 @@ API #64 là đọc trạng thái delivery theo notification ID. API #18 là gene
 
 ## Macro-review AC-25 #62–#64 + API #18
 
-**Trạng thái:** `VERIFIED_WITH_OPEN_QUESTIONS` — review logic nhóm đã hoàn tất; contract/schema/runtime chưa được sửa hoặc xác nhận.
+**Trạng thái:** `VERIFIED_WITH_OPEN_QUESTIONS` — review nhóm đã hoàn tất; catalog/diagram policy vẫn chưa được phê duyệt dù local fallback đã được implement.
 
 | Mắt xích | Kết quả review | Ảnh hưởng/việc cần chốt |
 |---|---|---|
@@ -100,6 +118,16 @@ API #64 là đọc trạng thái delivery theo notification ID. API #18 là gene
 | #63 create/send | `recipients:string!` thiếu encoding và course scope; `content:int64` lệch nhập text; response 202 Operation không có notification_id. | Client không thể xác thực recipient set đầy đủ hoặc gọi #64 bằng ID direct. |
 | #64 delivery status | Path dùng notification_id:int64 nhưng response là Operation; `NotificationDelivery` gần với delivery intent nhưng enum/counts/physical query chưa rõ. | Không map delivery status/counters từ direct Operation. |
 | #18 job polling | Node trong diagram AC-25 rời; row path int64 lệch UUID schema/diagram; owner, result và Study storage còn mở. | Job state và per-notification delivery phải tách, ID handoff cần contract. |
-| Persistence/auth | Legacy BIGINT notification chỉ lưu `is_read`; pilot dùng UUID attempts không có recipient ID; Mentor scope chưa có source. | Không viết physical query hoặc coi read state là send state. |
+| Persistence/auth | Initial DDL snapshot lacked delivery rows; API #63 now writes a local BIGINT outbox, while pilot UUID attempts remain a separate schema. | API #64 uses the local #63 rows as DERIVED; do not treat `is_read` as send state or claim live deployment. |
 
-**Khuyến nghị DERIVED để thống nhất trước implementation:** (1) #62 trả learner projection với pagination được khai báo; (2) #63 nhận course scope và recipient IDs/channel/content có encoding rõ, đồng thời bàn giao notification_id và operation_id riêng; (3) #64 trả delivery summary có enum/count grain được duyệt; (4) #18 theo dõi operation job riêng. Đây là đề xuất thay đổi contract, không phải behavior direct hiện tại.
+**Khuyến nghị DERIVED để thống nhất contract:** (1) #62 trả learner projection với pagination được khai báo; (2) #63 nhận course scope và recipient IDs/channel/content có encoding rõ, đồng thời bàn giao notification_id và operation_id riêng; (3) #64 trả delivery summary có enum/count grain được duyệt; (4) #18 theo dõi operation job riêng. Đây là đề xuất đổi contract, không phải behavior direct hiện tại; local APIs #62–#64 hiện dùng fallback đã ghi trong từng DD.
+
+## Reconciliation trước implementation API #64
+
+- Giữ nguyên direct catalog `GET /api/v1/mentor/notifications/{notification_id}/status`, int64 path, HTTP 200 `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<Operation>`, và chỉ các lỗi 401/403/404/500.
+- Dùng local legacy BIGINT `notifications` và `notification_deliveries` do API #63 hiện ghi; API #63 đã persist `operation_id`, `sender_id`, `created_at` và một row cho mỗi channel trong cùng acceptance transaction. Không dùng `is_read` hoặc UUID V1-PILOT relation.
+- API #63 `meta.notification_ids` cung cấp path key; #64 ánh xạ `operation_id` thành Operation UUID, `sender_id` thành owner, `created_at` thành submitted time và `MAX(delivery.updated_at)` thành updated time.
+- Chỉ sender Mentor khớp JWT `sub` được đọc; owner mismatch là 403, còn ID/path hoặc dispatch-status resource thiếu là 404. Đây là local DERIVED policy.
+- Aggregate status theo trạng thái outbox hiện có: bất kỳ `QUEUED` thì `QUEUED`; nếu không, bất kỳ `FAILED` thì `FAILED`; nếu toàn bộ `SENT` thì `SENT`. Trạng thái partial bị tóm tắt là FAILED; direct Operation không xuất counts.
+- Omit `completed_at` và Payment-shaped `result` vì Study không có Operation persistence/lifecycle/result mapping tương ứng. Không thêm table, provider call hoặc API #18 behavior.
+- Các quyết định thực thi được ghi là DERIVED trong DD; không đổi catalog contract hoặc trạng thái `Draft — Needs Confirmation`. Migration 009 vẫn chỉ là checked-in artifact, chưa xác minh live.

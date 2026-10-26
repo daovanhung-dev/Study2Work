@@ -13,23 +13,24 @@ status: "Draft — Needs Confirmation"
 
 ## Quy ước
 
-Các mã dưới đây là error contract trực tiếp của catalog #96. Trạng thái/trigger chi tiết, error envelope runtime và thứ tự quyền/resource chưa được xác nhận vì endpoint chưa có source.
+Các mã dưới đây giữ đúng error contract trực tiếp của catalog #96. Trigger ghi nhận current local behavior; positive-ID, no-delivery và role-only checks là fallback `DERIVED` khi chưa có owner-approved policy.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP | Business code | Data Mapping reference | Remarks |
 |---:|---|---|---|---|---:|---|---|---|
-| 1 | Authentication | Có | Bearer JWT | Token thiếu/không hợp lệ theo contract | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | 0 | Claim/parser hiện tại cho Admin chưa được xác minh. |
-| 2 | Authorization | Có | Admin permission | Sai role hoặc không có permission được cấp | 403 | `DESIGN_ACCESS_DENIED` | 0 | Permission key/scope và precedence chưa có nguồn. |
-| 3 | Resource lookup | Có | `notification_id` | Notification không tồn tại theo lookup được owner duyệt | 404 | `DESIGN_RESOURCE_NOT_FOUND` | 2 | Exact not-found/tombstone semantics chưa rõ. |
-| 4 | System error | Có | Read/aggregate | Lỗi nội bộ khi đọc source đã được duyệt | 500 | `DESIGN_INTERNAL_ERROR` | 2 | Không trả SQL, provider detail hoặc stack trace. |
+| 1 | Authentication | Có | Bearer JWT | Token thiếu/không hợp lệ | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | 0 | Shared access-JWT guard; local HTTP tests. |
+| 2 | Authorization | Có | Admin role | Token hợp lệ nhưng thiếu ADMIN role | 403 | `DESIGN_ACCESS_DENIED` | 0 | AC-36 fine-grained permission key/scope vẫn `SOURCE_REQUIRED`. |
+| 3 | Resource/path | Có | `notification_id` | Invalid/overflow/non-positive ID, notification absent, hoặc query không có delivery rows | 404 | `DESIGN_RESOURCE_NOT_FOUND` | 1.1, 2 | Invalid-ID and no-delivery mapping are `DERIVED`; owner semantics remain open. |
+| 4 | System error | Có | Read/aggregate/projection | SQL error hoặc projection không khớp Notification schema | 500 | `DESIGN_INTERNAL_ERROR` | 2 | Safe message; rollback read transaction; không lộ SQL/stack. |
 
 ## Không tự thêm error
 
 - Catalog #96 không khai báo 422, 409 hoặc 503; không thêm các status này trong DD.
-- Malformed/overflow `notification_id` không có mapping riêng trong catalog; cần xác nhận trước khi thay đổi error contract.
-- Lỗi delivery dependency hiện chưa có 503 ở #96, dù API #92 có 503; không sao chép code giữa endpoint.
-- 404, 403 precedence và error `data` shape cần owner/runtime convention review.
+- Runtime maps malformed/overflow/non-positive path to 404, following status-resource precedent #64 because #96 catalog has no 422; đây là `DERIVED`.
+- Lỗi DB của #96 ánh xạ 500; catalog không có 503, dù #92 có 503. Không sao chép code giữa endpoint.
+- `error_response` trả `data:null`, `meta:{}`, trace ID và header `X-Trace-Id`; HTTP tests xác minh local behavior.
+- Shared ADMIN role check precedes path/query. Fine-grained permission and official 403/404 policy remain open.
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `4.Error`

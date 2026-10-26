@@ -14,26 +14,32 @@ status: "Draft — Needs Confirmation"
 
 | Property | Value |
 |---|---|
-| Physical table | SOURCE_REQUIRED — compatible relation not found |
-| Logical entity | Notification-to-recipient association |
-| Operation | INSERT proposal; not executable |
-| Data Mapping step | [Step 2](./05_Data_Mapping.md#step-2-resolve-audience) and [Step 3](./05_Data_Mapping.md#step-3-create-notification) |
+| Physical table | `notifications` — checked-in legacy candidate |
+| Logical entity | Notification-to-recipient association represented by one row per recipient |
+| Operation | Local INSERT fallback; not an approved campaign schema |
+| Data Mapping step | [Step 2](./05_Data_Mapping.md#step-2-resolve-audience) and [Step 3](./05_Data_Mapping.md#step-3-create-notification-and-delivery-rows) |
 
-## Logical input mapping
+## Recipient mapping
 
 | No | Logical value | Source | Physical column | Type/constraint | Status |
 |---:|---|---|---|---|---|
-| 1 | Notification reference | Created logical Notification ID | SOURCE_REQUIRED | SOURCE_REQUIRED | ID relationship unknown |
-| 2 | Recipient reference | recipients[] or segment expansion | SOURCE_REQUIRED | SOURCE_REQUIRED | No approved table/key |
-| 3 | Segment reference | Request segment | SOURCE_REQUIRED | SOURCE_REQUIRED | Enum/storage unknown |
+| 1 | Notification reference | Generated notification row | `notifications.id` | BIGSERIAL / int64 | Candidate DDL; returned ID |
+| 2 | Recipient reference | One ID from explicit `recipients[]` | `notifications.user_id` | Nullable BIGINT FK to `users.id` | Runtime inserts one row for each supplied user |
+| 3 | Batch reference | App-generated UUID shared by batch | `notifications.operation_id` | Nullable UUID | Migration 009 candidate; no Operation store bridge |
 
-## Candidate evidence
+## Resolution behavior
 
-- Legacy notifications.user_id stores one nullable recipient per row; it does not define a campaign association table.
-- V1-PILOT learner notifications use UUID and are not the Admin campaign relation.
-- AC-36 requires Notification + recipients but names no tables, keys, uniqueness, or partial-write behavior.
-- Do not invent physical table/column names, SQL, or constraints.
-- Duplicate handling, expansion snapshot, atomicity, and rollback are SOURCE_REQUIRED.
+- The runtime rejects missing, empty, duplicate, non-positive, out-of-range, or unknown recipient IDs with catalog 422.
+- A recipient existence query reads only `users.id`; it does not enforce learner role, account status, course membership, or segment rules.
+- Each `notifications.user_id` row also stores the shared title/content/sender values. There is no separate `notification_recipients` physical table in this fallback.
+- Insert order follows the request order. All recipient rows and their delivery rows share one transaction.
+
+## Candidate evidence and limits
+
+- Legacy `notifications.user_id` stores a recipient on a notification row; it does not represent a campaign with a separate recipient table.
+- AC-36 requires Notification + recipients but names no physical table, keys, uniqueness, or partial-write behavior.
+- V1-PILOT UUID learner notifications are not the Admin campaign relation.
+- This mapping documents current DERIVED local behavior only. Owner confirmation and live schema verification remain open.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

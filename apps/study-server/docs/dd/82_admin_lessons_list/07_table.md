@@ -6,7 +6,6 @@ api_name: "Lấy danh sách lesson"
 source_sheet: "table"
 status: "Draft — Needs Confirmation"
 ---
-
 # Định nghĩa table
 
 ## Phạm vi thao tác
@@ -27,17 +26,19 @@ N/A — READ-ONLY API. API #82 chỉ đọc danh sách lesson; không có INSERT
 | Physical column | Candidate response/query mapping | Nullable in legacy DDL | Notes |
 |---|---|---:|---|
 | `id` | `id` | No | BIGSERIAL primary key. |
-| `course_id` | `course_id`; query filter `course` | Yes | Contract `Lesson.course_id` required; discrepancy. |
+| `course_id` | `course_id`; query filter `course` | Yes | Contract `Lesson.course_id` required; NULL row causes projection failure and safe 500. |
 | `name` | `title` | No | Alias also used by API #09. |
-| `content` | `content` | Yes | Optional in reusable schema. |
-| `video_url` | `video_url` | Yes | Optional in reusable schema. |
-| `sort_order` | `order` | Yes in legacy DDL | DDL default 0; contract requires int32. |
-| `status` | `status` and optional filter | Yes in legacy DDL | DDL default `DRAFT`; full enum/casing unknown. |
-| `type` | No mapping | N/A | No compatible Lesson type column in inspected source. |
+| `content` | `content` | Yes | Optional in reusable schema; null preserved. |
+| `video_url` | `video_url` | Yes | Optional in reusable schema; null preserved. |
+| `sort_order` | `order`; ordering key | Yes | DDL default 0; model requires int32; NULL row causes safe 500. |
+| `status` | `status` and optional filter | Yes | DDL default `DRAFT`; model requires value; enum/casing unknown; NULL row causes safe 500. |
+| `type` | No mapping | N/A | No compatible Lesson type column; request gets explicit 422 if present. |
+
+SQL selects these legacy candidate columns only. It uses bound optional `course_id`/`status` predicates, no joins, no count, no pagination, and order `course_id ASC NULLS LAST, sort_order ASC NULLS LAST, id ASC`.
 
 ## Non-selected V1-PILOT model
 
-`infra/postgres/02_study_db.sql` defines UUID lessons connected to chapters and course versions, with `title`, `summary`, `position`, `estimated_minutes`, and `is_preview`. It lacks the same BIGINT `course_id`/status model and does not establish `type`; do not use it as if equivalent to the catalog Lesson schema.
+`infra/postgres/02_study_db.sql` defines UUID lessons connected to chapters and course versions, with `title`, `summary`, `position`, `estimated_minutes`, and `is_preview`. It lacks the same BIGINT `course_id`/status model; it is not treated as equivalent to the catalog Lesson schema.
 
 ## Write mapping
 

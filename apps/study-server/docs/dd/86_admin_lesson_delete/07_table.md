@@ -15,29 +15,30 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical mutation table | SOURCE_REQUIRED |
+| Physical mutation table | Legacy BIGINT `lessons` candidate |
 | Logical table | Lesson |
-| Operation | Logical soft-delete candidate; dependency SELECT checks |
+| Operation | `UPDATE lessons.status/updated_at`; dependency `EXISTS` checks |
 | Data Mapping step | [Step 3](./05_Data_Mapping.md#step-3-check-dependency-va-policy), [Step 4](./05_Data_Mapping.md#step-4-soft-delete-theo-policy) |
-| Schema status | Legacy BIGINT DDL candidate lacks delete marker; V1-PILOT UUID model is separate; live schema unknown. |
+| Schema status | Legacy BIGINT DDL candidate; `DELETED` marker and timestamp alias are DERIVED; V1-PILOT UUID model is separate; live schema unknown. |
 
 ## Dependency read mapping — legacy candidates
 
 | No | Relation/column | Type | Key/reference | Condition | Data Mapping step | Remarks |
 |---:|---|---|---|---|---|---|
 | 1 | resources.lesson_id | BIGINT candidate | FK candidate to lessons.id | lesson_id = :lesson_id | Q2a | Legacy DDL artifact; live FK/policy unknown. |
-| 2 | lesson_progress.lesson_id | BIGINT candidate | FK candidate to lessons.id | lesson_id = :lesson_id | Q2b | Legacy DDL artifact; progress status blocker rules unknown. |
-| 3 | lessons.id | BIGSERIAL candidate | Primary key | id = :lesson_id | Q1 | Candidate target identity; no approved live-schema claim. |
+| 2 | lesson_progress.lesson_id | BIGINT candidate | FK candidate to lessons.id | lesson_id = :lesson_id | Q2b | Any progress status blocks; legacy DDL artifact. |
+| 3 | lesson_uploads.lesson_id | BIGINT candidate | FK candidate to lessons.id | lesson_id = :lesson_id | Q2c | Any linked upload blocks; links/assets remain unchanged. |
+| 4 | lessons.id | BIGSERIAL candidate | Primary key | id = :lesson_id | Q1 | Candidate target identity; no approved live-schema claim. |
 
 ## Soft-delete mutation mapping
 
-Physical columns cannot be listed because no current schema artifact defines a lesson deletion marker or persisted deleted_at. Do not add a column or write an UPDATE/DELETE statement from this DD alone.
+No new column is introduced. The local fallback uses the legacy Lesson status and modification timestamp, following API #77.
 
 | Logical field/effect | Physical source | Required mapping | Status |
 |---|---|---|---|
-| Lesson deleted state | No approved relation/column | Select soft-delete marker and visibility semantics | SOURCE_REQUIRED |
-| deleted_at | No approved lesson timestamp column | Select persisted timestamp and timezone/precision source | SOURCE_REQUIRED |
-| DeleteResult.id | Approved lesson target | Bind returned target ID after mutation | Physical target SOURCE_REQUIRED |
+| Lesson deleted state | lessons.status | Set literal `DELETED` | DERIVED from API #77 and checked-in DDL |
+| deleted_at | lessons.updated_at | Set `CURRENT_TIMESTAMP`; return DB value | DERIVED mapping; live metadata unverified |
+| DeleteResult.id | lessons.id | Return target ID from UPDATE RETURNING | Legacy BIGINT candidate |
 | DeleteResult.status | Reusable DeleteResult | Literal deleted | DIRECT schema value |
 
 ## Insert mapping
@@ -54,11 +55,11 @@ Physical columns cannot be listed because no current schema artifact defines a l
 
 **Áp dụng khi**
 
-- Candidate logical soft-delete; physical DELETE operation has not been selected.
+- N/A — no physical DELETE statement; operation is a status tombstone.
 
 | No | Target relation/column | Operator | Value source | Data Mapping step | Remarks |
 |---|---|---|---|---|---|
-| N/A | SOURCE_REQUIRED | N/A | N/A | M1 | No physical delete mapping until policy/schema owner chooses a marker. |
+| 1 | lessons | UPDATE | `status='DELETED'`, `updated_at=CURRENT_TIMESTAMP` | M1 | Preserve row and all dependent/history rows. |
 
 ---
 

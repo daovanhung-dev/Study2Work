@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -79,11 +79,11 @@ def decode_access_token(token: str) -> dict[str, Any] | JSONResponse:
 def validate_current_user_request(
     authorization: str | None,
     *,
-    role: str,
+    role: str | Sequence[str],
     trace_id: str,
     internal_error_message: str = "Profile could not be retrieved.",
 ) -> tuple[int, list[str]] | JSONResponse:
-    """Kiểm tra Bearer/JWT và role caller yêu cầu trước khi truy cập tài nguyên."""
+    """Kiểm tra Bearer/JWT và một hoặc nhiều role caller yêu cầu trước khi truy cập tài nguyên."""
 
     token = extract_bearer_token(authorization)
     if token is None:
@@ -102,7 +102,12 @@ def validate_current_user_request(
         return _authentication_error(trace_id)
     user_id, roles = validated_claims
 
-    if role.strip().upper() not in roles:
+    required_roles = (
+        {role.strip().upper()}
+        if isinstance(role, str)
+        else {required_role.strip().upper() for required_role in role}
+    )
+    if not required_roles.intersection(roles):
         return error_response(
             status_code=403,
             business_code="DESIGN_ACCESS_DENIED",

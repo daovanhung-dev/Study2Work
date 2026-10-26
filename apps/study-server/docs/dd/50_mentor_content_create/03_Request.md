@@ -19,8 +19,8 @@ status: "Draft — Needs Confirmation"
 | Method | POST |
 | Endpoint | `/api/v1/mentor/content` |
 | Authentication | Bearer JWT |
-| Authorization | `role=Mentor`; AC-22 yêu cầu Mentor có quyền quản lý course. Cách map principal/quyền chưa được implementation source xác nhận. |
-| Content-Type | `application/json` theo body object của contract; runtime endpoint chưa có. |
+| Authorization | Shared guard yêu cầu role `MENTOR`; implementation so numeric JWT `sub` với `courses.mentor_id`. Assigned-course relation chưa được source-backed. |
+| Content-Type | `application/json`; FastAPI request model đã wire. |
 | Path parameters | Không có |
 | Query parameters | Không khai báo |
 
@@ -28,22 +28,22 @@ status: "Draft — Needs Confirmation"
 
 | Field | Type | Required | Source/validation | Ý nghĩa/use |
 |---|---|---:|---|---|
-| `course_id` | int64 | Có | DIRECT type/required từ catalog. Tính hợp lệ của ID và lỗi khi course không tồn tại cần xác nhận. | Course đích; phải được kiểm tra quyền quản lý theo AC-22. |
-| `content_type` | ContentType | Có | DIRECT type/required. Enum members chưa có trong catalog/source được duyệt (`SOURCE_REQUIRED`). | Chọn loại Content; subtype validation chưa được định nghĩa. |
-| `title` | string | Có | DIRECT type/required. Không có max length, normalization hoặc trim rule trong contract. | Tiêu đề Content. |
-| `payload` | object | Có | DIRECT object/required. Schema theo `content_type`, field constraints và kích thước tối đa chưa có nguồn. | Nội dung có cấu trúc; không tự thêm keys. |
+| `course_id` | int64 | Có | Strict signed-int64 theo catalog. Course thiếu và course ngoài quyền cùng map 403 theo implementation decision. | Course đích; phải thuộc trực tiếp Mentor hiện tại. |
+| `content_type` | ContentType | Có | Strict string theo JSON shape; enum member chưa có source (`SOURCE_REQUIRED`). | Chọn loại Content; subtype validation chưa được định nghĩa. |
+| `title` | string | Có | Strict string. Không có max length, normalization hoặc trim rule trong contract/source. | Tiêu đề Content. |
+| `payload` | object | Có | JSON object bắt buộc; các key và subtype rules chưa có source. | Lưu object nguyên dạng vào JSONB; không tự thêm keys. |
 
-Không có body field cho `parent_id`, `order`, trạng thái, owner/mentor ID, audit fields hoặc timestamp. Không tự nhận các giá trị đó từ client.
+Không có body field cho `parent_id`, `order`, trạng thái, owner/mentor ID, audit fields hoặc timestamp. Request model từ chối field ngoài contract. `parent_id`, `order` và status được server gán theo các quyết định DERIVED tại Overview/Data Mapping.
 
 ## Request Usage Matrix
 
 | Request field | Đọc/validate | Query/mutation use | Response use | Tình trạng |
 |---|---|---|---|---|
-| Authorization | Bearer token; role Mentor | Principal phục vụ access check | Không echo token/claims | Role DIRECT; identity binding SOURCE_REQUIRED |
-| `course_id` | Required int64 | Scope tạo Content và candidate course access check | `Content.course_id` | Contract DIRECT; physical FK/access rule unresolved |
-| `content_type` | Required ContentType | Chọn logical content subtype | `Content.content_type` | Enum/payload compatibility SOURCE_REQUIRED |
-| `title` | Required string | Ghi title | `Content.title` | Max/normalization SOURCE_REQUIRED |
-| `payload` | Required JSON object | Ghi nguyên object theo schema được duyệt | `Content.payload` | Schema SOURCE_REQUIRED; không invent member |
+| Authorization | Bearer token; role Mentor | Numeric principal dùng trong direct-owner check | Không echo token/claims | Role DIRECT; direct-owner là implementation convention; assignment chưa có |
+| `course_id` | Required signed int64 | Course lookup/row lock; Content scope | `Content.course_id` | Contract DIRECT; absent/non-owner → 403 DERIVED |
+| `content_type` | Required strict string | Ghi open content type | `Content.content_type` | Field DIRECT; enum members/source chưa có |
+| `title` | Required strict string | Ghi nguyên title | `Content.title` | Field DIRECT; không thêm trim/max |
+| `payload` | Required JSON object | Serialize rồi cast JSONB | `Content.payload` | Object shape DIRECT; subtype keys SOURCE_REQUIRED |
 
 ## Ví dụ body (không executable)
 

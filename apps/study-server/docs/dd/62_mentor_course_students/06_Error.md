@@ -11,20 +11,25 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Giữ đúng catalog error set API #62: 401, 403, 404, 500. Không thêm 422, 409 hoặc 503.
+API #62 chỉ dùng catalog error codes 401/403/404/500. Path ID sai format/range được map sang 404 để giữ error set; không thêm HTTP 422. Course có roster rỗng là thành công với `data: []`.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu hoặc không hợp lệ | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | Mentor guard chưa wired. |
-| 2 | Authorization | Role/scope | Mentor/course | Sai role hoặc course ngoài quyền được cấp | 403 | `DESIGN_ACCESS_DENIED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-2-course-lookup-scope) | No | Predicate và 403/404 order cần xác nhận. |
-| 3 | Not found | Resource lookup | Course | Course không tồn tại theo access policy | 404 | `DESIGN_RESOURCE_NOT_FOUND` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-2-course-lookup-scope) | No | Candidate semantics; roster rỗng không phải 404 theo proposal. |
-| 4 | System error | DB/projection | Course/enrollment/user read | Lỗi query hoặc không thể dựng response | 500 | `DESIGN_INTERNAL_ERROR` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-5-return-error) | No | Không trả SQL, stack trace hoặc dữ liệu nội bộ. |
+| 1 | Authentication | Bearer/JWT | `Authorization` | Header thiếu, sai scheme hoặc JWT/sub/roles không hợp lệ. | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | N/A | [Data Mapping](./05_Data_Mapping.md#step-0-auth-va-nhan-request) | No DB transaction | Shared auth guard. |
+| 2 | Authorization | Role | JWT roles | Token hợp lệ nhưng không có role `MENTOR`. | 403 | `DESIGN_ACCESS_DENIED` | N/A | [Data Mapping](./05_Data_Mapping.md#step-0-auth-va-nhan-request) | No DB transaction | Không đọc course/roster. |
+| 3 | Authorization | Direct owner | `courses.mentor_id` | Course tồn tại nhưng owner khác principal. | 403 | `DESIGN_ACCESS_DENIED` | N/A | [Data Mapping](./05_Data_Mapping.md#step-2-check-course-scope) | Rollback read transaction | Roster query không chạy. |
+| 4 | Not found | Path/course lookup | `course_id` / `courses.id` | Raw ID sai signed-int64 format/range hoặc course không tồn tại. | 404 | `DESIGN_RESOURCE_NOT_FOUND` | N/A | [Data Mapping](./05_Data_Mapping.md#step-1-parse-course-id) | Rollback if course lookup ran | Không thêm 422. |
+| 5 | System error | DB/projection | `courses`, `enrollments`, `users` | Query lỗi hoặc response projection không hợp lệ. | 500 | `DESIGN_INTERNAL_ERROR` | N/A | [Data Mapping](./05_Data_Mapping.md#step-5-returnerror) | Rollback read transaction | Không lộ SQL, stack trace hoặc dữ liệu nội bộ. |
 
-> Catalog không khai báo 422 cho path parse failure; API #62 source chưa xác định framework mapping.
+## Error envelope
 
-> API Guidelines yêu cầu error `data:null`; current helper mặc định `{}`. Route #62 chưa wired nên đây là discrepancy future integration.
+`error_response` trả `data: null`, `meta: {}` và cùng trace ID trong body/header. Response không phản chiếu chi tiết lỗi database.
+
+## Empty roster
+
+Không phải error case. Course tồn tại, đúng owner nhưng không có enrollment đủ điều kiện trả HTTP 200 `DESIGN_RESOURCE_RETRIEVED` với `data: []`.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

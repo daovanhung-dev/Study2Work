@@ -11,7 +11,7 @@ status: "Draft — Needs Confirmation"
 
 ## Format
 
-Direct success response is ApiEnvelope<Notification> with HTTP 200 and business code DESIGN_RESOURCE_UPDATED. The catalog defines the logical schema, but no approved Admin persistence model can supply all fields.
+Direct success response là `ApiEnvelope<Notification>` HTTP 200 với `DESIGN_RESOURCE_UPDATED`. Runtime tái dùng `AdminNotificationResponse` của API #92. Optional `read_at`/`scheduled_at` bị omit vì candidate schema không cung cấp chúng.
 
 ## HTTP success
 
@@ -21,27 +21,24 @@ Direct success response is ApiEnvelope<Notification> with HTTP 200 and business 
 
 ## Response fields
 
-| No | Field | Type | Required | Source/transform | Status |
-|---:|---|---|---:|---|---|
-| 1 | success | boolean | Yes | Shared envelope; true on successful update | Envelope convention |
-| 2 | businessCode | string | Yes | DESIGN_RESOURCE_UPDATED | DIRECT |
-| 3 | message | string | Yes | Human-readable success message; exact text unspecified | SOURCE_REQUIRED |
-| 4 | data.id | int64 | Yes | Notification identity from target resource | DIRECT type; physical source unresolved |
-| 5 | data.title | string | Yes | Updated title if body proposal is approved | Logical field DIRECT; input/persistence mapping DERIVED/SOURCE_REQUIRED |
-| 6 | data.content | string | Yes | Updated content if body proposal is approved | Logical field DIRECT; input/persistence mapping DERIVED/SOURCE_REQUIRED |
-| 7 | data.channels[] | NotificationChannel[] | Yes | Updated channels if body proposal is approved | Enum and storage projection SOURCE_REQUIRED |
-| 8 | data.status | NotificationStatus | Yes | Status of updated notification | Enum and transition SOURCE_REQUIRED |
-| 9 | data.read_at | date-time | Optional | Existing read timestamp; this API does not propose changing read state | Physical source/omit-vs-null SOURCE_REQUIRED |
-| 10 | data.scheduled_at | date-time | Optional | Proposed schedule value if body is approved | DERIVED input; physical source and null rule SOURCE_REQUIRED |
-| 11 | data.created_at | date-time | Yes | Original creation timestamp; update must not replace it | Physical source/precision SOURCE_REQUIRED |
-| 12 | traceId | string | Convention | Request trace context | Shared convention; #94 route absent |
-| 13 | meta | object | Convention | Envelope metadata follows API Guidelines | Exact schema SOURCE_REQUIRED |
+| Field | Runtime mapping | Status |
+|---|---|---|
+| success | true | Shared envelope convention. |
+| businessCode | `DESIGN_RESOURCE_UPDATED` | DIRECT. |
+| message | `Notification updated.` | Runtime text; wording not specified by catalog. |
+| data.id | Locked `notifications.id` | BIGINT candidate; live source unverified. |
+| data.title/content | Values returned by UPDATE | DERIVED input mapping to legacy columns. |
+| data.channels[] | Distinct channel values from locked delivery rows, ordered by channel | DERIVED projection from candidate outbox. |
+| data.status | `QUEUED` only when all delivery rows are QUEUED | Delivery aggregate fallback; not Notification Draft/Scheduled state. |
+| data.read_at | Omitted | No compatible legacy timestamp; no read mutation. |
+| data.scheduled_at | Omitted | No schedule column or scheduler. |
+| data.created_at | Original value returned by UPDATE and checked against locked row | Preserved by SQL; legacy candidate. |
+| meta | Empty object | Shared success helper convention. |
+| traceId | Request trace context | Shared Study convention. |
 
-Do not add updated_at, recipient lists or Operation fields to the direct Notification response; they are not in the reviewed reusable schema.
+The response contains no recipients, sender ID, Operation ID, updated_at, or provider/queue details.
 
-## Structural success example — logical shape
-
-This example illustrates only the catalog envelope and Notification fields. The status/channel strings are placeholders, not approved enum values.
+## Success example — runtime fallback shape
 
 ~~~json
 {
@@ -52,23 +49,21 @@ This example illustrates only the catalog envelope and Notification fields. The 
     "id": 901,
     "title": "Lịch học đã cập nhật",
     "content": "Thời gian học đã được điều chỉnh.",
-    "channels": ["<approved-NotificationChannel>"],
-    "status": "<approved-NotificationStatus>",
-    "scheduled_at": "2026-10-25T09:00:00+07:00",
+    "channels": ["EMAIL", "PUSH"],
+    "status": "QUEUED",
     "created_at": "2026-10-20T03:00:00Z"
   },
-  "meta": {
-    "traceId": "00000000-0000-0000-0000-000000000094"
-  }
+  "meta": {},
+  "traceId": "00000000-0000-0000-0000-000000000094"
 }
 ~~~
 
 ## Response discrepancy
 
-- Catalog says ApiEnvelope<Notification>; preserve this exact cardinality and shape.
-- No approved Admin campaign table maps all Notification fields. Legacy is_read is not read_at or status; legacy type is not proven to be channels.
-- NotificationStatus and NotificationChannel tokens remain undefined in reviewed sources.
-- API #93 Operation tracking prose conflicts with its Notification response and IDs. #94 does not invent an Operation field or ID bridge.
+- Catalog keeps singular `Notification`; runtime returns one recipient-level legacy row.
+- `channels` and `status` come from the existing delivery outbox; only QUEUED rows are eligible.
+- `QUEUED` is not asserted to mean Draft/Scheduled Notification.
+- #93 Operation tracking and ID bridge remain unresolved; #94 adds no Operation fields.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -34,8 +34,8 @@ status: "Draft — Needs Confirmation"
 | 5.1 | `data.id` | Lesson ID | `id` | int64 | No | Legacy lessons candidate | `id` | 4.1 | Copy returned row | Required | BIGINT candidate; live schema unknown. |
 | 5.2 | `data.course_id` | Course ID | `course_id` | int64 | No | Legacy lessons candidate | `course_id` | 4.1 | Preserve existing relation | Required by contract | Nullable DDL discrepancy. |
 | 5.3 | `data.title` | Lesson title | `title` | string | No | Legacy lessons candidate | `name` | 4.1 | Alias `name -> title` | Required | API #09 source alias precedent. |
-| 5.4 | `data.content` | Lesson content | `content` | string? | Yes | Legacy lessons candidate | `content` | 4.1 | Copy returned value | Null/omit unresolved | Optional schema; DDL nullable. |
-| 5.5 | `data.video_url` | Video URL | `video_url` | uri? | Yes | Legacy lessons candidate | `video_url` | 4.1 | Copy returned value | Null/omit unresolved | DDL TEXT candidate. |
+| 5.4 | `data.content` | Lesson content | `content` | string? | Yes | Legacy lessons candidate | `content` | 4.1 | Copy returned value | Null preserved; field remains present | Optional schema; DDL nullable. |
+| 5.5 | `data.video_url` | Video URL | `video_url` | string? | Yes | Legacy lessons candidate | `video_url` | 4.1 | Copy returned value | Null preserved; field remains present | DDL TEXT and reusable Lesson candidate. |
 | 5.6 | `data.order` | Lesson order | `order` | int32 | No | Legacy lessons candidate | `sort_order` | 4.1 | Alias `sort_order -> order` | Required | API #09 source alias precedent. |
 | 5.7 | `data.status` | Lesson status | `status` | LessonStatus | No | Legacy lessons candidate | `status` | 4.1 | Return unchanged | Enum values/casing unresolved | #84 does not update status; #85 owns transition. |
 | 6 | `meta` | Metadata | `meta` | object | No | Envelope convention | N/A | 5.1 | Empty object candidate | `{}` on success | No API-specific meta contract. |
@@ -90,7 +90,7 @@ Cấu trúc theo ApiEnvelope<Lesson>; mapping là legacy candidate. DRAFT chỉ 
 }
 ```
 
-API guideline yêu cầu error data:null; current helper mặc định data:{} khi không truyền data. API #84 chưa được wire nên đây là integration discrepancy.
+Current `error_response` mặc định `data:null`; API #84 HTTP tests xác minh null error data cho 401/403/404/422/500 paths.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

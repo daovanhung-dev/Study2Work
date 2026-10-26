@@ -12,7 +12,7 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ~~~text
-Admin Bearer principal -> xác thực role/quyền user management -> nhận path user_id -> Q1 candidate đọc một legacy users row theo id -> không có row: candidate 404 -> map UserProfile safe projection -> trả 200 hoặc exact catalog errors
+Admin Bearer principal -> shared ADMIN JWT guard -> parse raw signed-int64 user_id -> SELECT safe legacy users projection by id -> no row/invalid path: catalog 404 -> map API #04 UserProfile -> 200 or exact catalog errors
 ~~~
 
 # Mục lục
@@ -34,11 +34,12 @@ Admin Bearer principal -> xác thực role/quyền user management -> nhận pat
 
 ### 0.1. Xác thực và authorization
 
-- Xác thực Bearer JWT và kiểm tra role Admin cùng quyền user management trước khi đọc hồ sơ.
+- Gọi shared `validate_current_user_request(..., role="ADMIN")` trước khi parse path hoặc đọc hồ sơ.
+- Claim ADMIN là fallback cho quyền user management theo API #68; permission/tenant/MFA policy riêng chưa có source.
 - Thiếu hoặc token không hợp lệ map theo catalog sang 401 DESIGN_AUTHENTICATION_REQUIRED.
 - Principal không có quyền Admin/user management map theo catalog sang 403 DESIGN_ACCESS_DENIED.
-- Current helper validate_current_user_request chỉ cho Student; không dùng helper này làm Admin guard.
-- Claim role, permission policy, identity mapping và tenant/scope boundary chưa có source; phải được chốt trước implementation.
+- Shared guard hiện nhận role tường minh; API #68 và #69 đều yêu cầu ADMIN.
+- Không query user row trước authorization; không lookup Admin identity ngoài claim sub vì không có contract/schema riêng.
 
 ### 0.2. Thứ tự truy cập
 
@@ -53,15 +54,15 @@ Admin Bearer principal -> xác thực role/quyền user management -> nhận pat
 
 - Nhận path user_id theo kiểu int64 bắt buộc.
 - Không tự thêm minimum, enum, format hoặc validation rule khác catalog.
-- Catalog không liệt kê 422; malformed, overflow hoặc ID ngoài miền hỗ trợ cần được contract owner xác nhận trước khi chọn HTTP behavior.
+- Parse raw path thành signed int64; malformed/out-of-range trả 404 DESIGN_RESOURCE_NOT_FOUND theo fallback DERIVED, không thêm 422.
 
 <a id="step-2-get-thong-tin"></a>
 
 ## 2. Get thông tin
 
-### 2.1. Query candidate — legacy users
+### 2.1. Runtime query — legacy users candidate
 
-Query dưới đây chỉ là candidate trên legacy BIGINT schema; không khẳng định relation đó hiện có trong live DB.
+Runtime dùng query sau theo checked-in legacy BIGINT candidate; không khẳng định relation/cột tồn tại trong live DB.
 
 ~~~sql
 SELECT
@@ -86,10 +87,11 @@ LIMIT 1
 
 ### 2.2. Candidate branch
 
-- Nếu Q1 trả một row, map sang UserProfile và trả 200 DESIGN_RESOURCE_RETRIEVED.
-- Nếu Q1 không có row, trả 404 DESIGN_RESOURCE_NOT_FOUND. Mapping này là DERIVED theo detail resource contract.
-- Nếu query hoặc mapping thất bại, trả 500 DESIGN_INTERNAL_ERROR theo catalog.
-- Nếu authorization thất bại, trả 401/403 trước khi thực hiện Q1.
+- Nếu Q1 trả một row hợp lệ, map sang UserProfile và trả 200 DESIGN_RESOURCE_RETRIEVED.
+- Nếu Q1 không có row, trả 404 DESIGN_RESOURCE_NOT_FOUND; branch là DERIVED theo detail resource semantics.
+- Nếu path malformed/out-of-int64, trả cùng 404 trước Q1 để không thêm 422.
+- Nếu query hoặc projection mapping thất bại, rollback an toàn và trả 500 DESIGN_INTERNAL_ERROR.
+- Nếu authorization thất bại, trả 401/403 trước parse/query.
 
 ### 2.3. JOIN
 
@@ -106,7 +108,7 @@ N/A — API #69 chỉ đọc một hồ sơ; không có INSERT, UPDATE hoặc DE
 ## 4. Check kết quả execute query
 
 - Kết quả có đúng một row: đi tới bước 5.
-- Không có row: candidate 404 DESIGN_RESOURCE_NOT_FOUND.
+- Không có row: runtime trả 404 DESIGN_RESOURCE_NOT_FOUND; lookup theo legacy candidate vẫn DERIVED.
 - Query exception hoặc mapping không hợp lệ: 500 DESIGN_INTERNAL_ERROR.
 - Không chuyển lỗi SQL hoặc stack trace ra response.
 
@@ -120,9 +122,9 @@ N/A — API #69 chỉ đọc một hồ sơ; không có INSERT, UPDATE hoặc DE
 | data.full_name | users.full_name | Direct mapping | Legacy candidate |
 | data.email | users.email | Direct mapping; Admin-only PII | Legacy candidate |
 | data.role | users.role | Return stored value; do not invent enum conversion | Legacy candidate; enum set unresolved |
-| data.avatar_url | users.avatar_url | Preserve source value; null/omit behavior open | Nullable candidate |
-| data.bio | No approved source | Do not synthesize; omit only as optional-field proposal | SOURCE_REQUIRED |
-| data.phone | users.phone | Preserve source value; null/omit behavior open | Nullable PII candidate |
+| data.avatar_url | users.avatar_url | Preserve source value; serialize null | Nullable candidate; API #04 model behavior |
+| data.bio | No legacy/API #04 source | Omit; do not synthesize or join UUID pilot profile | Optional field; omitted in runtime model |
+| data.phone | users.phone | Preserve source value; serialize null | Nullable PII candidate; API #04 model behavior |
 | data.status | users.status | Return stored value; do not invent enum conversion | Legacy candidate; enum set unresolved |
 | data.created_at | users.created_at | Serialize as date-time | Legacy candidate; timezone unresolved |
 | data.updated_at | users.updated_at | Serialize as date-time | Legacy candidate; timezone unresolved |
@@ -142,7 +144,7 @@ Không trả password_hash, token, token hash hoặc credential.
 
 ### 5.2. Lỗi
 
-Chi tiết HTTP status và businessCode xem [06_Error.md](./06_Error.md). Current error helper dùng data:{} nếu caller không truyền data; API guideline mô tả data:null. API #69 chưa wired nên discrepancy này chưa phải runtime behavior của endpoint.
+Chi tiết HTTP status và businessCode xem [06_Error.md](./06_Error.md). Current error helper trả data:null khi view không truyền data; API #69 dùng đúng helper này.
 
 <a id="request-usage-matrix"></a>
 
@@ -150,8 +152,8 @@ Chi tiết HTTP status và businessCode xem [06_Error.md](./06_Error.md). Curren
 
 | Request item | Used by | Candidate query or response use | Status |
 |---|---|---|---|
-| Authorization | Step 0 | Authenticate and authorize Admin before Q1 | DIRECT requirement; Admin implementation SOURCE_REQUIRED |
-| user_id | Step 1/Q1 | Bound to u.id = :user_id; maps to data.id | Type DIRECT; query candidate |
+| Authorization | Step 0 | Shared ADMIN claim guard before path parsing/Q1 | Admin requirement DIRECT; claim-to-permission mapping DERIVED by API #68 precedent |
+| user_id | Step 1/Q1 | Parse signed int64 and bind to u.id = :user_id; maps to data.id | Type DIRECT; malformed/out-of-range→404 DERIVED |
 | Body | None | None | DIRECT |
 | Query | None | None | DIRECT |
 
@@ -189,12 +191,12 @@ Chi tiết HTTP status và businessCode xem [06_Error.md](./06_Error.md). Curren
 | data.email | email | users.email | Direct candidate mapping; Admin-only PII | Legacy candidate |
 | data.role | UserRole | users.role | Preserve stored value | Candidate; enum members unresolved |
 | data.avatar_url | uri? | users.avatar_url | Preserve value; null/omit open | Nullable candidate |
-| data.bio | string? | No current source | Never synthesize; optional omission proposal | SOURCE_REQUIRED |
+| data.bio | string? | No current source/API #04 model field | Omit in runtime; never synthesize or join UUID pilot profile | SOURCE_REQUIRED if the contract later requires a value |
 | data.phone | string? | users.phone | Preserve value; PII and null/omit open | Nullable candidate |
 | data.status | UserStatus | users.status | Preserve stored value | Candidate; enum members unresolved |
 | data.created_at | date-time | users.created_at | ISO-8601 candidate | Legacy candidate |
 | data.updated_at | date-time | users.updated_at | ISO-8601 candidate | Legacy candidate |
-| data on 404/error | null by guideline | Current helper defaults absent value to {} | Do not claim endpoint output | DISCREPANCY |
+| data on 404/error | null | `error_response` default | Current runtime convention used by API #69 | SOURCE_BACKED |
 | meta | object | Envelope helper | Empty object candidate | Current helper convention |
 | traceId | uuid | Trace middleware | Validated or generated | Current source-backed convention |
 | password_hash | Excluded | Legacy users.password_hash | Never select or return | Security boundary |

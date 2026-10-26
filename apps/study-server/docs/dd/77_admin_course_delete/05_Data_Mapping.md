@@ -14,7 +14,7 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ~~~text
-Admin Bearer principal -> authorize course management -> receive course_id:int64 -> Q1 candidate course lookup -> Q2 enrollment/content eligibility under approved policy -> M1 logical soft-delete using approved persistence -> map DeleteResult -> 200 DESIGN_RESOURCE_DELETED; policy blocker -> catalog 422; source/runtime errors -> catalog 500
+Admin Bearer principal -> shared ADMIN guard -> parse signed-int64 course_id -> Q1 lock non-DELETED course -> Q2 check enrollment/content blockers -> M1 set status=DELETED and updated_at=CURRENT_TIMESTAMP -> map UPDATE RETURNING to DeleteResult -> commit -> 200 DESIGN_RESOURCE_DELETED; blocker -> 422; missing/already-deleted -> 404; DB/mapping/commit failure -> rollback + 500
 ~~~
 
 ## Mục lục
@@ -37,11 +37,10 @@ Admin Bearer principal -> authorize course management -> receive course_id:int64
 
 ### 0.1. Xác thực và authorization
 
-- Xác thực Bearer JWT và quyền Admin/course management trước mọi lookup.
+- Xác thực Bearer JWT và shared role `ADMIN` trước mọi path parsing/lookup.
 - Token thiếu/sai/hết hạn dùng 401 `DESIGN_AUTHENTICATION_REQUIRED` theo catalog.
-- Principal không có quyền Admin/course management dùng 403 `DESIGN_ACCESS_DENIED` theo catalog.
-- Study hiện chỉ có shared Student guard; không tái sử dụng guard đó cho Admin.
-- Claim, permission source, numeric/UUID identity binding và scope boundary chưa có nguồn.
+- Principal thiếu role `ADMIN` dùng 403 `DESIGN_ACCESS_DENIED` theo catalog.
+- Shared guard không chứng minh permission course-management riêng; đây là fallback `DERIVED`.
 
 ### 0.2. Thứ tự truy cập
 
@@ -54,9 +53,10 @@ Admin Bearer principal -> authorize course management -> receive course_id:int64
 
 ### 1.1. `course_id`
 
-- Nhận path `course_id` theo `int64` bắt buộc trong catalog.
-- Không tự thêm minimum, body hoặc query rule.
-- Catalog khai báo 422 `DESIGN_VALIDATION_ERROR`; malformed/overflow/positive-range mapping chưa được source xác nhận.
+- Nhận path raw `course_id` theo `int64` bắt buộc trong catalog.
+- Parse signed decimal integer; malformed hoặc overflow trả catalog 422.
+- Signed-int64 âm/zero được query theo ID và sẽ trả 404 nếu không có course tương ứng.
+- Không nhận body hoặc query.
 
 <a id="step-2-get-thong-tin"></a>
 
@@ -64,13 +64,14 @@ Admin Bearer principal -> authorize course management -> receive course_id:int64
 
 ### 2.1. Q1 — candidate course existence lookup
 
-Legacy `courses.id` là BIGSERIAL candidate trong DDL artifact; live schema chưa xác minh. Đây là query candidate, không phải runtime SQL đã duyệt.
+Legacy `courses.id/status` là BIGSERIAL/`VARCHAR(20)` candidate; live schema chưa xác minh. Runtime khóa course chưa soft-delete.
 
 ~~~sql
-SELECT c.id
-FROM courses AS c
-WHERE c.id = :course_id
-LIMIT 1
+SELECT id
+FROM courses
+WHERE id = :course_id
+  AND status IS DISTINCT FROM 'DELETED'
+FOR UPDATE
 ~~~
 
 - Bind `:course_id` từ path bằng parameter binding; không ghép chuỗi SQL.
@@ -79,61 +80,79 @@ LIMIT 1
 
 ### 2.2. Q1 result branch
 
-- Có một row: tiếp tục Q2 theo dependency policy đã được duyệt.
-- Không có row: candidate 404 `DESIGN_RESOURCE_NOT_FOUND` sau authorization.
-- Query/mapping failure: 500 `DESIGN_INTERNAL_ERROR` theo catalog.
+- Có một row có đúng `id`: tiếp tục Q2.
+- Không có row, kể cả status đã `DELETED`: 404 `DESIGN_RESOURCE_NOT_FOUND`.
+- Projection/query failure: 500 `DESIGN_INTERNAL_ERROR` và rollback.
 
 <a id="step-3-check-policy-and-soft-delete"></a>
 
 ## 3. Check policy and soft-delete
 
-### 3.1. Enrollment dependency — Q2a candidate
+### 3.1. Enrollment and course content dependency — Q2
 
-Legacy DDL có `enrollments.course_id` tham chiếu `courses.id`; status mặc định `ACTIVE`. Catalog không xác định status nào chặn và DDL/live FK không xác nhận policy.
+Legacy DDL/migrations have `enrollments`, `contents`, `lessons`, `quizzes` and `assignments` relations with `course_id`. Runtime checks them using bounded `EXISTS` projections in one query.
 
 ~~~sql
-SELECT EXISTS (
-    SELECT 1
-    FROM enrollments AS e
-    WHERE e.course_id = :course_id
-)
+SELECT
+    EXISTS (
+        SELECT 1
+        FROM enrollments AS enrollment
+        WHERE enrollment.course_id = :course_id
+    ) AS has_enrollments,
+    (
+        EXISTS (
+            SELECT 1
+            FROM contents AS content
+            WHERE content.course_id = :course_id
+              AND content.deleted_at IS NULL
+        )
+        OR EXISTS (
+            SELECT 1
+            FROM lessons AS lesson
+            WHERE lesson.course_id = :course_id
+        )
+        OR EXISTS (
+            SELECT 1
+            FROM quizzes AS quiz
+            WHERE quiz.course_id = :course_id
+        )
+        OR EXISTS (
+            SELECT 1
+            FROM assignments AS assignment
+            WHERE assignment.course_id = :course_id
+        )
+    ) AS has_content
 ~~~
 
-- Q2a chỉ là legacy relation candidate; xác nhận live relation, status predicate và cách giữ lịch sử trước implementation.
-- Proposal `DERIVED`: nếu policy coi enrollment hiện hữu là blocker thì không chạy M1 và trả 422 `DESIGN_VALIDATION_ERROR`.
-- Không xóa enrollment hoặc progress để “dọn” dependency.
+- Any enrollment row blocks, regardless of status/completion, to preserve learner history; this is `DERIVED`.
+- Any active generic `contents` row blocks; `contents.deleted_at IS NOT NULL` rows do not block.
+- Any `lessons`, `quizzes` or `assignments` row blocks because these candidate relations have no soft-delete marker.
+- If `has_enrollments OR has_content`, return 422 and never mutate child rows.
+- The exact dependency set/predicates are `DERIVED`; live table presence and owner policy remain unverified.
 
-### 3.2. Course content dependency — Q2b
+### 3.2. Chọn nhánh
 
-- Catalog title yêu cầu kiểm tra content; legacy DDL không có generic Content table/relation.
-- `lessons.course_id` là một khả năng đại diện course content, nhưng không chứng minh toàn bộ content hoặc API #50 generic Content persistence.
-- Q2b physical relation, columns, predicates, version/status inclusion và dependency set là `SOURCE_REQUIRED`; không viết SQL giả định.
-- Proposal `DERIVED`: nếu policy xác định có content hiện hữu là blocker, không chạy M1 và trả 422 `DESIGN_VALIDATION_ERROR`.
+- Both flags false: continue to M1.
+- Either flag true: return catalog 422 and roll back the course lock transaction.
+- Do not delete enrollment, progress or content rows to clear the blocker.
 
-### 3.3. Chọn nhánh theo policy
+### 3.3. M1 — logical soft-delete
 
-- Nếu có enrollment/content thuộc tập blocker được owner duyệt: dừng trước mutation; trả 422 theo catalog với message an toàn. Câu này là proposal, không phải behavior đã được duyệt.
-- Nếu không có blocker và policy/schema physical đã được chọn: tiếp tục M1.
-- Nếu policy cho phép soft-delete khi còn dependency: chỉ thực hiện theo retention/history rules đã duyệt; không suy ra từ DDL.
-- Không trả 409 vì catalog #77 không liệt kê `DESIGN_STATE_CONFLICT`.
-
-### 3.4. M1 — logical soft-delete
-
-- AC-32 diagram yêu cầu “Soft delete theo policy”; không thực hiện physical `DELETE FROM courses`.
-- Physical relation, marker/column, status transition, timestamp source và affected-row semantics chưa có nguồn.
-- Không dùng pilot `courses.archived_at` làm `deleted_at`; model này dùng UUID/versioned course.
-- Không cập nhật CourseStatus, metadata, enrollment/content children hoặc audit event như side effect mặc định.
-- Nếu persistence được duyệt, dependency check và M1 nên cùng transaction để tránh race; locking/isolation/transaction owner cần xác nhận.
+- AC-32 yêu cầu soft delete; runtime đặt legacy candidate `courses.status='DELETED'` và `updated_at=CURRENT_TIMESTAMP`.
+- Đây là fallback `DERIVED` theo API #72; không thêm course column, table hoặc migration.
+- `updated_at` từ DB `RETURNING` được ánh xạ vào `DeleteResult.deleted_at`.
+- Không hard-delete, cascade, đổi metadata/mentor, cập nhật child rows hoặc ghi audit #76.
+- Q1 khóa row trước Q2/M1; dependency check và marker update cùng transaction.
 
 <a id="step-4-check-mutation-result"></a>
 
 ## 4. Check mutation result
 
-- Một logical soft-delete đã được persist và timestamp đọc được từ approved source: tiếp tục map response.
-- Mutation không tìm thấy target do race: mapping 404 hay kết quả khác cần xác nhận cùng concurrency policy; không trả success khi marker không được ghi.
-- Dependency blocker: trả 422 candidate như bước 3.3; không thay đổi bảng con.
-- Query, mutation, timestamp mapping hoặc commit failure: rollback theo transaction được duyệt và trả 500 `DESIGN_INTERNAL_ERROR`.
-- Hard-delete/cascade không phải fallback khi soft-delete storage chưa được chọn.
+- `UPDATE ... RETURNING` trả đúng ID và timestamp: map result rồi commit.
+- Lock không tìm thấy course hoặc course đã `DELETED`: 404 theo fallback.
+- Dependency blocker: 422; không thay đổi bảng con.
+- Query, projection, timestamp mapping hoặc commit failure: rollback và trả 500 `DESIGN_INTERNAL_ERROR`.
+- Không chạy physical `DELETE`, cascade hoặc audit mutation.
 
 <a id="step-5-map-response"></a>
 
@@ -143,30 +162,30 @@ SELECT EXISTS (
 
 - `response.data.id = course_id` sau khi course được soft-delete thành công.
 - `response.data.status = "deleted"` theo reusable schema.
-- `response.data.deleted_at = approved persisted soft-delete timestamp`.
-- Không dùng `CURRENT_TIMESTAMP` làm source có thể khẳng định cho response nếu không có persistence rule.
-- Chưa thể hoàn tất success mapping khi physical marker/timestamp còn `SOURCE_REQUIRED`.
+- `response.data.deleted_at = courses.updated_at` đọc từ `UPDATE RETURNING`.
+- Timestamp đến từ DB; không dùng application clock.
+- `updated_at` mapping là `DERIVED`, không phải dedicated deletion timestamp.
 
 ### 5.2. Envelope
 
 - Thành công: HTTP 200, `DESIGN_RESOURCE_DELETED`, `ApiEnvelope<DeleteResult>`.
 - Lỗi: giữ exact catalog 401/403/404/422/500 codes.
-- `meta = {}` là envelope candidate; không thêm pagination hoặc dependency fields.
+- `meta = {}` theo `success_response`; không thêm pagination hoặc dependency fields.
 - Propagate/generate trace ID theo shared convention.
-- API guideline yêu cầu error `data:null`; current Study helper default `{}`. Đây là discrepancy, endpoint chưa wired.
+- API error helper mặc định `data:null`; shared route-template middleware đã áp dụng cho DELETE #77.
 
 <a id="step-6-tra-response-hoac-loi"></a>
 
 ## 6. Trả response hoặc lỗi
 
-1. Authorize Admin trước lookup.
-2. Validate path type theo direct contract.
-3. Q1 no-row candidate → 404.
-4. Q2a/Q2b theo dependency policy được duyệt.
-5. Policy blocker candidate → 422, không mutation.
-6. M1 approved soft-delete; nếu thất bại, rollback theo transaction được duyệt và trả 500.
-7. Map đầy đủ `DeleteResult`; nếu timestamp source chưa được chọn, DD chưa implementation-ready.
-8. Không trả SQL, dependency record, learner data hoặc internal policy detail.
+1. Authorize shared `ADMIN` trước path parsing và lookup.
+2. Validate raw `course_id` as signed int64; malformed/overflow → 422.
+3. Q1 no-row/already-`DELETED` → 404.
+4. Q2 enrollment/content blocker → 422, rollback lock transaction, no mutation.
+5. M1 updates `status` and `updated_at`; map `RETURNING` result before commit.
+6. Query/projection/commit failure → rollback + safe 500.
+7. Return `ApiEnvelope<DeleteResult>` with the DB timestamp.
+8. Do not return SQL, dependency identities, learner data or raw policy/database details.
 
 Chi tiết: [06_Error.md](./06_Error.md).
 
@@ -174,26 +193,25 @@ Chi tiết: [06_Error.md](./06_Error.md).
 
 | Request item | Nguồn | Mapping step | Query/mutation use | Branch/response use | Gap |
 |---|---|---|---|---|---|
-| Authorization | Catalog + AC-32 DIRECT | 0.1 | Không bind vào SQL; authorization trước Q1 | 401/403; actor chỉ nếu audit được duyệt | Admin guard/claim/scope `SOURCE_REQUIRED`. |
-| `course_id` | Catalog DIRECT | 1.1/Q1/M1 | Q1 identity; Q2 dependency scope; M1 logical target | `data.id` nếu mutation thành công; no-row candidate 404 | Physical/live relation và malformed-path mapping chưa xác nhận. |
+| Authorization | Catalog + AC-32 DIRECT | 0.1 | Shared ADMIN guard trước mọi query | 401/403 | Finer course-management permission `SOURCE_REQUIRED`. |
+| `course_id` | Catalog DIRECT | 1.1/Q1/Q2/M1 | Bound signed-int64 course identity | `data.id`; malformed/overflow 422; missing/already deleted 404 | Legacy BIGINT mapping is DERIVED; live schema unknown. |
 | Body | Không khai báo | N/A | None | None | DIRECT absence. |
 | Query | Không khai báo | N/A | None | None | DIRECT absence. |
-| `Idempotency-Key` | Không có trong catalog | N/A | Không dùng cho đến khi retryability được duyệt | Replay/repeated-delete behavior chưa xác định | Guidelines có điều kiện cho retryable mutation. |
+| `Idempotency-Key` | Không có trong catalog | N/A | Không được đọc hoặc bind | N/A | Repeat DELETE returns 404 by DERIVED fallback; no key/replay behavior. |
 
 ## Query Matrix
 
 | Query ID | Type | Candidate source | Columns/condition | Result/branch | Evidence/status |
 |---|---|---|---|---|---|
-| Q1 | SELECT | Legacy `courses AS c` | `c.id`; `c.id = :course_id`; `LIMIT 1` | One row → policy check; no row → candidate 404 | Legacy DDL artifact; live schema unknown. |
-| Q2a | EXISTS | Legacy `enrollments AS e` | `e.course_id = :course_id`; no status predicate approved | Existing enrollment may block under approved policy | Catalog title + legacy DDL; active/status semantics SOURCE_REQUIRED. |
-| Q2b | SOURCE_REQUIRED | No approved generic Content relation | Base relation/columns/predicate unknown; `lessons.course_id` is only a possible candidate | Must not invent a complete content check | Generic Content schema absent; pilot model differs. |
-| Q3 | N/A | No owner/counter projection | No Course response read specified | N/A | DeleteResult contains no Course fields. |
+| Q1 | `SELECT ... FOR UPDATE` | Legacy `courses` | `id=:course_id AND status IS DISTINCT FROM 'DELETED'` | Row → Q2; no row → 404 | Legacy DDL + API #72 fallback; live schema unknown. |
+| Q2 | `SELECT EXISTS` | Legacy `enrollments`, `contents`, `lessons`, `quizzes`, `assignments` | `course_id=:course_id`; `contents.deleted_at IS NULL` | Either boolean true → 422; both false → M1 | Exact blocker set/predicates DERIVED from catalog title + checked-in DDL/runtime. |
+| Q3 | `UPDATE ... RETURNING` | Legacy `courses` | Set `status='DELETED'`, `updated_at=CURRENT_TIMESTAMP`; filter non-DELETED row | Correct row/timestamp → commit; no row → 404 | API #72 precedent; live schema unknown. |
 
 ## Mutation Matrix
 
 | Mutation ID | Operation | Target table | Condition | Fields/effect | Transaction/failure | Status |
 |---|---|---|---|---|---|---|
-| M1 | Logical soft-delete | Physical target `SOURCE_REQUIRED` | Q1 exists; approved dependency policy permits | Mark course deleted; do not delete/modify children | Atomic with checks is DERIVED; rollback/owner/isolation unresolved | Intent DIRECT; mapping SOURCE_REQUIRED. |
+| M1 | Soft-delete marker | Legacy candidate `courses` | Q1 exists; both Q2 flags false | Set `status='DELETED'`, `updated_at=CURRENT_TIMESTAMP` | Q1/Q2/M1 in one transaction; rollback on failure | Intent DIRECT; physical mapping DERIVED from #72. |
 | Hard delete/cascade | Excluded | N/A | N/A | No physical parent/child delete | N/A | Not supported by AC-32 soft-delete intent. |
 | Audit event | Not specified for #77 | N/A | N/A | Do not copy #76 audit write by analogy | N/A | Needs separate owner requirement if required. |
 
@@ -204,19 +222,20 @@ Chi tiết: [06_Error.md](./06_Error.md).
 | `success` | boolean | Envelope | Branch | true on success; false on error | DIRECT convention. |
 | `businessCode` | string | Catalog | Success/error branch | Exact code only | DIRECT. |
 | `message` | string | Application | Safe localized text | Exact text unspecified | DERIVED. |
-| `data.id` | int64 | DeleteResult | Target `course_id` after successful mutation | Required | Physical marker/target binding SOURCE_REQUIRED. |
+| `data.id` | int64 | Legacy candidate | `courses.id` from UPDATE RETURNING | Required; match requested ID | DERIVED; live schema unknown. |
 | `data.status` | literal `"deleted"` | Reusable schema | Constant | Exact lowercase literal | DIRECT. |
-| `data.deleted_at` | date-time | Persistence | Approved deletion timestamp | Required; no inferred fallback | SOURCE_REQUIRED; legacy source absent. |
+| `data.deleted_at` | date-time | Legacy candidate | `courses.updated_at` from UPDATE RETURNING | Required; serialize DB datetime | DERIVED by API #72 precedent; no dedicated timestamp. |
 | `data.reason` | Not declared in DeleteResult | N/A | No source | Do not add field | DIRECT schema boundary. |
-| `meta` | object | Envelope | `{}` candidate | Empty object; no pagination | Candidate. |
-| `traceId` | uuid | Middleware | Current request trace | Propagate or generate | Current shared convention; route unwired. |
-| Error `data` | null by guideline | Response helper | Current helper defaults to `{}` | Reconcile before runtime wiring | DISCREPANCY. |
+| `meta` | object | Envelope | `{}` | Empty object; no pagination | Current `success_response()` behavior. |
+| `traceId` | uuid | Middleware | Current request trace | Propagate or generate | Current shared convention; route locally wired. |
+| Error `data` | null by guideline | Response helper | Current helper defaults to `null` | Match current error helper | Current source behavior. |
 
 ## Cross-API boundary
 
 - #75 owns course metadata update; #76 owns status update and the diagram’s audit event; #77 owns the soft-delete request only.
-- If #77 succeeds, #73 list/#74 detail should likely hide the deleted course, but the marker/filter is not selected. #75/#76 behavior for an already deleted target also remains open.
-- This group visibility proposal does not add a physical filter or change any endpoint contract.
+- #73 list/#74 detail currently expose course status and do not filter `DELETED`; the Admin can see the tombstone status. This is a chosen local visibility fallback, not a catalog rule.
+- #75 can update metadata without changing `DELETED`; #76 can set a listed status on the same row. Restore/immutability semantics are not changed in this one-API task and remain an owner decision.
+- Public course queries already require `PUBLISHED`; behavior of Mentor course/content write APIs for a DELETED course is outside this API task and remains a follow-up risk.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

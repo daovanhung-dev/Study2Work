@@ -25,8 +25,8 @@ status: "Draft — Needs Confirmation"
 | Authorization | role=Mentor và quyền quản lý course chứa Content theo AC-22; principal/assignment mapping chưa có source. |
 | Basis | Contract và soft-delete effect DIRECT; dependency/status/history proposals DERIVED. |
 | Status | Draft — Needs Confirmation |
-| Transaction | Một logical mutation; physical transaction chưa thể chỉ định khi thiếu Content schema. |
-| Side effects | Soft-delete Content; không cascade/reparent child theo proposal; trả DeleteResult và client reload cây. |
+| Transaction | View sở hữu transaction; commit sau khi `DeleteResult` được validate, rollback khi lỗi. |
+| Side effects | Ghi `contents.deleted_at = CURRENT_TIMESTAMP`; không hard-delete, cascade hoặc reparent. Child/PUBLISHED guards là DERIVED; trả DeleteResult và client reload cây. |
 
 ## Sources
 
@@ -40,12 +40,12 @@ status: "Draft — Needs Confirmation"
 
 ## Tables read
 
-- Logical Content target and owning course: physical relation SOURCE_REQUIRED.
-- Direct child Content through parent_id: physical relation and deleted-row predicate SOURCE_REQUIRED.
+- Content target and owning course map to local `contents`/`courses`; live schema remains unverified.
+- Direct child and active-row predicates map to `contents.parent_id` and `deleted_at IS NULL`; child-block policy remains DERIVED.
 
 ## Tables write
 
-- Logical Content: soft-delete only; physical table/tombstone column SOURCE_REQUIRED.
+- API #53 updates local `contents.deleted_at`; migration deployment remains unverified.
 - Content version/review history: no physical mutation proposed; retain history is DERIVED.
 
 ## Mục chú ý
@@ -55,14 +55,15 @@ status: "Draft — Needs Confirmation"
 - Content.parent_id is the only explicit generic parent-child relation.
 - Proposed child dependency returns catalog 422 without cascade or reparent.
 - Proposed PUBLISHED gate requires API #52 unpublish first so #52 remains publication-state owner.
-- DeleteResult.status is literal deleted. No ContentStatus=DELETED or physical deleted_at column is invented.
-- Current Study source has no API #53 route/module/test; this is design-only.
+- DeleteResult.status is literal deleted. No ContentStatus=DELETED is invented; the local implementation uses nullable `contents.deleted_at` as the tombstone.
+- Current Study source has a DELETE route, module, middleware contract mapping (shared path template with PUT), and fake-DB HTTP tests. These establish local behavior only, not live DB/deployment.
 
 ## Assumptions
 
-- A non-deleted child whose parent_id equals the target is a dependency; physical check SOURCE_REQUIRED.
-- PUBLISHED content must be unpublished through API #52 before deletion; DERIVED proposal.
-- Soft delete preserves revisions/review history and excludes the target from active views; DERIVED proposal.
+- A non-deleted child whose parent_id equals the target blocks deletion with 422; no cascade/reparent. This is DERIVED and avoids an invalid active tree in current API #49.
+- PUBLISHED content returns 422 and must be unpublished through API #52 first; DERIVED proposal.
+- Non-PUBLISHED statuses are currently deletable under the DERIVED fallback; queue withdrawal and review policy remain open.
+- Soft delete writes `deleted_at` using database `CURRENT_TIMESTAMP`; local active API #49 excludes the target. History retention is not mutated, but formal retention/audit policy remains open.
 - Exact deletion eligibility for pending/rejected/approved content requires confirmation.
 
 ## Conflicts

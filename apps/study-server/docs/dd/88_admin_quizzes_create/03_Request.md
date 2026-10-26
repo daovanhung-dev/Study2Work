@@ -18,14 +18,14 @@ status: "Draft — Needs Confirmation"
 | Character encoding | UTF-8 |
 | Content-Type | application/json |
 | Authentication | Bearer JWT |
-| Role | Admin; AC-35 yêu cầu thêm quiz-management permission. |
+| Role | Admin; runtime áp dụng shared ADMIN role. AC-35 fine-grained permission chưa có source. |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Principal cần role Admin và quiz-management permission; guard chưa có trong Study. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) |
-| 2 | Trace ID | X-Trace-Id | No | UUID | Correlation header theo API Guidelines/current middleware convention. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) |
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Principal cần role ADMIN. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) |
+| 2 | Trace ID | X-Trace-Id | No | UUID | Correlation header theo API Guidelines/current middleware. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) |
 
 ## Path parameters
 
@@ -39,51 +39,47 @@ Không có query parameter.
 
 | No | Logical name | Field name | Type | Required | Format | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|
-| 1 | Quiz configuration | config | string | Yes | Chuỗi UTF-8 | Direct catalog chỉ định string; embedded schema chưa được catalog định nghĩa. | [Step 1](./05_Data_Mapping.md#step-1-validate-and-parse-body) |
-| 2 | Question set | questions | string | Yes | Chuỗi UTF-8 | Direct catalog chỉ định string; embedded schema chưa được catalog định nghĩa. | [Step 1](./05_Data_Mapping.md#step-1-validate-and-parse-body) |
+| 1 | Quiz configuration | config | string | Yes | Chuỗi UTF-8 chứa JSON theo fallback DERIVED | Outer type giữ nguyên direct catalog. | [Step 1](./05_Data_Mapping.md#step-1-validate-and-parse-body) |
+| 2 | Question set | questions | string | Yes | Chuỗi UTF-8 chứa JSON theo fallback DERIVED | Outer type giữ nguyên direct catalog. | [Step 1](./05_Data_Mapping.md#step-1-validate-and-parse-body) |
 
-## JSON schema đề xuất bên trong các string — DERIVED
-
-Contract phía ngoài vẫn là hai trường string. Đề xuất parse nội dung như sau:
+## Embedded JSON schema — DERIVED fallback
 
 ### config
 
-| Embedded key | Type đề xuất | Required | Mapping/purpose | Status |
+| Embedded key | Type | Required | Mapping/purpose | Validation/status |
 |---|---|---:|---|---|
-| course_id | int64 | Yes | Course chứa quiz; candidate kiểm tra courses.id. | DERIVED |
-| title | string | Yes | Tên quiz; candidate map sang quizzes.name. | DERIVED |
-| duration_minutes | int32 | No | Thời lượng; candidate map sang quizzes.time_limit_minutes. | DERIVED |
-| passing_score | decimal-string | Yes | Ngưỡng điểm đạt; candidate map sang quizzes.passing_score. | DERIVED |
+| course_id | int64 | Yes | Course chứa quiz; kiểm tra courses.id. | Signed 64-bit integer; existence check. |
+| title | string | Yes | Tên quiz; map quizzes.name. | Required string; tối đa 200 ký tự theo physical candidate, không tự đặt min length. |
+| duration_minutes | int32 | No | Map quizzes.time_limit_minutes; NULL nếu absent. | Signed 32-bit integer; không thêm positivity rule. |
+| passing_score | decimal-string | Yes | Map quizzes.passing_score. | Phải biểu diễn được dưới NUMERIC(5,2); không thêm range nghiệp vụ. |
 
 ### questions[]
 
-| Embedded key | Type đề xuất | Required | Mapping/purpose | Status |
+| Embedded key | Type | Required | Mapping/purpose | Validation/status |
 |---|---|---:|---|---|
-| text | string | Yes | Question text; candidate map sang quiz_questions.question_text. | DERIVED |
-| type | string / QuestionType | Yes | Logical QuizQuestion.type; enum values/storage chưa chốt. | Input mapping DERIVED theo response schema |
-| choices | array | Yes | Answer choices; QuizChoice chưa định nghĩa. | DERIVED |
-| choices[].text | string | Yes | Candidate choice text; map sang quiz_choices.choice_text. | DERIVED |
-| choices[].is_correct | boolean | Yes | Candidate answer-key input; map sang quiz_choices.is_correct. | DERIVED; không phải output QuizChoice field |
+| text | string | Yes | Map quiz_questions.question_text. | String; không tự đặt min length theo business rule. |
+| type | QuestionType | Yes | Map quiz_questions.question_type. | DERIVED values: SINGLE_CHOICE, MULTIPLE_CHOICE, TRUE_FALSE. |
+| choices | array | Yes | Choices thuộc question, giữ nguyên input order. | Cho phép array rỗng; không thêm minimum chưa có nguồn. |
+| choices[].text | string | Yes | Map quiz_choices.choice_text. | String; không tự đặt min length theo business rule. |
+| choices[].is_correct | boolean | No | Map quiz_choices.is_correct. | Default false theo physical DDL; không áp quy tắc số đáp án đúng. |
 
-> Max length title, số question/choice, enum QuestionType, số đáp án đúng và payload size chưa được direct contract quy định.
+> Field names/type values bên trong hai string là fallback local dựa trên logical Quiz/QuizQuestion, legacy column mapping và vocabulary V1-PILOT; chưa phải catalog schema được phê duyệt.
 
 ## Ví dụ Request data
 
 ~~~json
 {
-  "config": "{\"course_id\": 9001, \"title\": \"Quiz minh họa\", \"duration_minutes\": 30, \"passing_score\": \"70.00\"}",
-  "questions": "[{\"text\":\"Câu hỏi minh họa?\",\"type\":\"SINGLE_CHOICE\",\"choices\":[{\"text\":\"Phương án A\",\"is_correct\":true},{\"text\":\"Phương án B\",\"is_correct\":false}]}]"
+  "config": "{"course_id": 9001, "title": "Quiz minh họa", "duration_minutes": 30, "passing_score": "70.00"}",
+  "questions": "[{"text":"Câu hỏi minh họa?","type":"SINGLE_CHOICE","choices":[{"text":"Phương án A","is_correct":true},{"text":"Phương án B","is_correct":false}]}]"
 }
 ~~~
 
-Ví dụ giữ đúng outer string types. Sau JSON decode lần hai, config thành object và questions thành array theo proposal DERIVED. SINGLE_CHOICE chỉ là ví dụ từ V1-PILOT, chưa chốt làm QuestionType API #88. is_correct là candidate input từ legacy DDL, chưa phải QuizChoice contract.
-
 ## Quy tắc input và lỗi
 
-- Thiếu config/questions, outer type không phải string hoặc outer body sai schema: HTTP 422 DESIGN_VALIDATION_ERROR theo contract.
-- Embedded JSON sai cú pháp hoặc shape theo proposal: đề xuất 422 DESIGN_VALIDATION_ERROR.
-- Course ID không tồn tại: đề xuất 422 DESIGN_VALIDATION_ERROR; catalog không có 404.
-- Không tự đặt giới hạn số question/choice, body size, passing_score range hoặc allowed QuestionType list.
+- Thiếu `config`/`questions`, sai outer JSON/type, embedded JSON sai cú pháp hoặc sai fallback shape trả HTTP 422 `DESIGN_VALIDATION_ERROR`.
+- Unknown embedded fields bị từ chối để tránh silently dropping input.
+- Course không tồn tại trả 422 vì direct error set không có 404.
+- Không kiểm tra số đáp án đúng theo type, quiz status, course publication, body size hay minimum array count.
 - Không thêm query, path hoặc top-level body field ngoài catalog.
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -1,44 +1,41 @@
 # Báo cáo kiểm chứng — API #69
 
 - DD status: Draft — Needs Confirmation.
-- Endpoint: GET /api/v1/admin/users/{user_id}.
-- Runtime status: UNWIRED / NOT_FOUND — route, module, Admin guard và focused test không có trong Study source.
-- Direct contract: ApiEnvelope<UserProfile>, HTTP 200 DESIGN_RESOURCE_RETRIEVED; đúng direct errors 401/403/404/500.
-- Candidate query/no-row mapping: DERIVED trên legacy users; không phải runtime SQL.
-- Application tests: NOT_RUN — task docs-only.
+- Endpoint: `GET /api/v1/admin/users/{user_id}`.
+- Runtime status: route, module và focused HTTP tests có trong Study source; legacy user table, mapping quyền Admin và live deployment chưa xác minh.
+- Direct contract: `ApiEnvelope<UserProfile>`, HTTP 200 `DESIGN_RESOURCE_RETRIEVED`; direct errors đúng 401/403/404/500.
+- Local fallback: shared JWT role `ADMIN`; đọc candidate legacy BIGINT `users`; malformed/out-of-range ID và không có row đều trả 404; bio bị omit, avatar/phone nullable được giữ null.
 
 ## Kiểm tra
 
 | Check | Kết quả | Trạng thái |
 |---|---|---|
-| Worklog preflight | Selector chọn #48/#49/#50; đã đọc đủ cả ba. | PASS |
-| Plan trước khi tạo DD | Requirement/request/query/mutation/response-source matrices có trong worklog trước khi tạo DD folder. | PASS |
-| Catalog và diagram | API #69 row, UserProfile reusable schema, AC-31 index và toàn bộ page nodes/edges đã đối chiếu. | PASS — STATIC |
-| Source/Admin/auth | Không có route/module/test API #69; current shared guard chỉ cho Student; Admin path chưa có trong middleware allowlist. | PASS — STATIC SOURCE REVIEW |
-| Schema/profile | Legacy BIGINT users, V1-PILOT UUID relations và API #4/#14 profile projection đối chiếu; live schema không xác minh. | PASS — STATIC |
-| Contract/error | Method/path/auth/path type/response/status/error set giữ đúng catalog; không thêm 422. | PASS |
-| UserProfile fields | Đủ field id/full_name/email/role/avatar_url/bio/phone/status/created_at/updated_at; bio source gap và enum/null rules nêu rõ. | PASS |
-| Data safety | Query candidate chỉ chọn safe profile fields; không lấy password_hash; PII và Admin boundary được nêu. | PASS |
-| Template/package | 11-file package; 8 sheet dùng đúng front matter/appendix từ registered template pack. | PASS |
-| Markdown/JSON/links | 2 ví dụ JSON parse; relative links và explicit anchors, table cell counts, fences và trailing whitespace đã pass. | PASS — STATIC |
-| AC-31 macro-review | Rà document-level #68–#72; delete visibility, profile gaps, Admin policy và error consistency còn mở. | VERIFIED_WITH_OPEN_QUESTIONS |
-| Inventory | Catalog 103 IDs; 72 DD folders, 60 full 11-file packages, 31 missing DD; 12 route-plus-view pairs and 91 without a pair. | PASS — STATIC |
-| git diff --check | Chạy sau DD, inventory, report và worklog update; không có diagnostics. | PASS |
-| Application tests | Không chạy; docs-only. | NOT_RUN |
-| Context validator | Không áp dụng vì không sửa context page/manifest. | NOT_APPLICABLE |
+| Coding worklog preflight | Selector tìm thấy 62 coding worklogs; đã chọn và đọc #34/#47/#48, cùng worklog implementation #68 và DD #69. | PASS |
+| Plan trước code | Source trace, discrepancies và implementation plan được ghi trước khi sửa runtime. | PASS |
+| Contract/source trace | Catalog, AC-31, #68–#72 boundary, API #04 profile, API #48 path fallback, auth, middleware và DDL đã đối chiếu. | PASS — SOURCE REVIEW |
+| Focused API #69 suite | 13 TestClient tests passed; một cảnh báo deprecation Starlette/httpx hiện hữu. | PASS |
+| Full Study suite | `751 passed, 1 warning in 31.37s`. | PASS |
+| Ruff | `./.venv/bin/ruff check app tests` — all checks passed. | PASS |
+| OpenAPI | 39 `/api/v1` path templates, 40 operations; #69 có required int64 `user_id`, required Authorization và đúng 200/401/403/404/500. | PASS |
+| DD package | 8 sheets và 3 reports; appendix Excel của 8 sheets được giữ nguyên byte-for-byte so với `HEAD`. | PASS — STATIC |
+| DD Markdown/JSON/links | Relative links resolve; ví dụ JSON parse; fenced blocks cân bằng; không có trailing whitespace. | PASS — STATIC |
+| AC-31 macro-review | Rà trạng thái hiện tại #68–#72; #68–#71 có route/module/focused HTTP tests local; #72 delete đã được wire và có focused HTTP tests, dùng status marker DERIVED. Boundaries và câu hỏi schema/policy vẫn được giữ. | PASS — DOCUMENT REVIEW |
+| Context pages/manifest | Cập nhật route/runtime/security/database/architecture/module/test/source-status; 6 source paths mới có trong manifest và đều tồn tại. | PASS — STATIC |
+| Context validator `--skip-drift` | Study paths không có lỗi; validator vẫn báo thiếu context/source và links của DB Admin ngoài scope. | PARTIAL — BASELINE |
+| Context validator mặc định | Cùng lỗi DB Admin và thêm `CONTEXT_STALE` do worktree changes hiện có; không thay snapshot commit để che drift. | PARTIAL — BASELINE |
+| `git diff --check` | Không có diagnostics. | PASS |
 
 ## AC-31 group macro-review
 
-Status: VERIFIED_WITH_OPEN_QUESTIONS — document-level review of APIs #68–#72.
+Status: `VERIFIED_WITH_OPEN_QUESTIONS` — document-level review of APIs #68–#72.
 
-- #68 catalog response remains ApiEnvelope<UserProfile>, while AC-31 describes a list/pagination flow; the discrepancy is still open and #72 does not change it.
-- #69 detail, #68 list and #70/#71 UserProfile responses share the UserProfile schema, but bio has no legacy/source mapping; role/status enum members, optional null behavior, PII access and audit policy remain unresolved.
-- #70 owns candidate profile/role updates; #71 owns candidate account ACTIVE/SUSPENDED transitions and conditional refresh-token revocation; #72 owns the delete/anonymization intent. Do not overlap these writes.
-- #72 keeps DeleteResult and the diagram's soft-delete/anonymize intent. Physical policy/schema, dependency rules, deleted_at source and repeat-delete behavior remain SOURCE_REQUIRED.
-- List/detail visibility after suspend/delete/anonymization, Admin authorization, live schema and error data null-versus-empty remain shared implementation questions.
-- Legacy user-linked relations are DDL context only; no blanket dependency block, cascade or hard-delete rule was inferred.
-- No route/runtime or application-test claim is made; all five APIs remain UNWIRED / NOT_FOUND.
+- #68 list trả `ApiEnvelope<Page<UserProfile>>`; #69 đọc một `UserProfile`. Hai API có runtime route/module/focused HTTP tests local.
+- #69 dùng profile allowlist của API #04, bỏ `bio` chưa có nguồn mapping và không đọc credential. Enum/null policy, PII access, audit và lifecycle visibility vẫn cần chủ sở hữu xác nhận.
+- #70 sở hữu profile/role update; #71 sở hữu trạng thái account; #72 sở hữu ý định delete/anonymize. Các mutation không nằm trong handler #69.
+- #72 hiện dùng `status=DELETED`, response timestamp alias từ `updated_at`, giữ dependent rows và trả 404 khi lặp; các lựa chọn này DERIVED, chưa có owner approval hoặc live schema evidence.
+- Legacy user-linked relations chỉ là DDL context; không suy luận cascade hoặc hard-delete.
+- Test dùng fake DB sessions. APIs #68–#72 có local route/OpenAPI/test evidence; điều đó không xác nhận live schema, migration deployment, policy Admin, hoặc hành vi PII/lifecycle ngoài ứng dụng.
 
 ## Open status
 
-Các câu hỏi về Admin authorization, schema, bio/enum/null, PII/audit, deletion visibility và error envelope còn trong [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md). Macro-review là document-level, không xác nhận runtime.
+Các câu hỏi về live schema, quyền Admin riêng/tenant/MFA, bio và enum/null policy, PII/audit, visibility sau #71/#72 và deployment còn trong [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md). DD giữ trạng thái `Draft — Needs Confirmation`.

@@ -13,34 +13,37 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Logical operation | Cancel scheduled notification delivery |
-| Trigger | AC-36 DELETE/mark cancelled; catalog policy is conditional |
-| Candidate scheduler/queue | None found in current Study/Admin source |
-| Physical delivery target | No approved Admin relation |
-| Status | DERIVED logical intent; external/persistence contract SOURCE_REQUIRED |
+| Logical operation | AC-36 says delete/mark cancelled; local API #95 deletes one legacy recipient row |
+| Trigger | Catalog #95 says draft delete/cancel when policy allows |
+| Candidate local outbox | `notification_deliveries` rows created by #93 |
+| External scheduler/queue | None found in current Study/Admin source |
+| Status | Local QUEUED-only gate and FK cascade are DERIVED; external cancellation SOURCE_REQUIRED |
 
-## Eligibility and effect proposal
+## Eligibility and effect
 
-| Item | Proposed rule/effect | Basis/status |
+| Item | Local behavior | Basis/status |
 |---|---|---|
-| Scheduled target | Permit cancel only before any delivery starts | DERIVED; policy says cancel if allowed, no state model |
-| Dispatch started | Reject using existing 422 code | DERIVED; trigger requires owner approval |
-| Pending job | Mark target cancelled and prevent later dispatch | DERIVED intent; no worker/scheduler source |
-| In-flight provider call | Do not claim cancellation succeeded | SOURCE_REQUIRED; provider semantics unknown |
-| Delivery history | Preserve prior attempts and provider results | Conservative DERIVED proposal; no Admin table selected |
-| Scheduler acknowledgement | Not represented in DeleteResult | SOURCE_REQUIRED; no operation/job ID contract |
-| Repeat DELETE | Return stable original DeleteResult if tombstone remains | DERIVED idempotency proposal |
+| Target grain | Delete only `notifications.id = notification_id` | Current #93 writes one row per recipient; DERIVED mapping |
+| Delivery rows | Require at least one; lock them and require every status to be QUEUED | #93 creates per-channel QUEUED rows and #94 uses same gate; DERIVED policy |
+| Parent/outbox effect | Delete parent; checked-in `ON DELETE CASCADE` removes its child delivery rows | DDL candidate, not live-verified |
+| No delivery / SENT / FAILED | Return existing catalog 422; do not DELETE | DERIVED eligibility fallback |
+| Pending external job | No scheduler call is made or inferred | SOURCE_REQUIRED; no worker contract found |
+| In-flight provider call | Local success is not proof the call stopped | Provider semantics unknown |
+| Batch siblings | Leave other recipient rows sharing `operation_id` untouched | Path identifies one row; no batch input contract |
+| Repeat DELETE | Return 404 after parent removal | Physical row is absent; no tombstone/idempotency contract |
+| Response timestamp | Return database `CURRENT_TIMESTAMP` from DELETE RETURNING | DeleteResult field direct; local mapping DERIVED |
 
 ## Candidate evidence
 
-| Source | Evidence | Why it is not a direct Admin mapping |
+| Source | Evidence | Limit |
 |---|---|---|
-| AC-36 diagram | API #95 → DELETE/mark cancelled → reload management | Does not identify scheduler, job ID, delivery-start signal or transaction |
-| Catalog API #96 | GET status returns ApiEnvelope<Notification> | Notification response has no delivery aggregate schema |
-| V1-PILOT notification_deliveries | UUID notification_id, channel/status/retry fields; append-only | Learner/delivery grain differs from Admin BIGINT contract |
-| Catalog Operation tracking | Operation schema/summary exists | #93 response and Operation ID mapping are inconsistent; #95 has no Operation input/output |
+| AC-36 diagram | API #95 → `DELETE/mark cancelled` → reload management | Does not identify scheduler, job ID, delivery-start signal or transaction. |
+| Catalog API #96 | GET status returns `ApiEnvelope<Notification>` | No delivery aggregate in direct response; #95 reads its local outbox candidate. |
+| #93/#94 runtime | #93 writes `QUEUED` outbox rows; #94 locks parent then deliveries | Local behavior only; fake-DB tests do not establish live PostgreSQL/worker behavior. |
+| Migration 009 | Delivery FK uses `ON DELETE CASCADE`, statuses include QUEUED/SENT/FAILED | Checked-in migration is not proof it is deployed. |
+| V1-PILOT delivery model | Separate UUID learner delivery data | Not used by #95 and does not establish Admin scheduler behavior. |
 
-No physical table, queue API, Operation ID, SQL or provider call is inferred.
+API #95 does not call a provider, queue, scheduler or Operation endpoint. A successful 200 confirms only the local transaction result under the checked-in candidate model; it does not assert external delivery cancellation or retained audit history.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

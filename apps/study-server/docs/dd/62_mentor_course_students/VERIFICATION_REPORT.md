@@ -2,35 +2,32 @@
 
 ## Kết quả
 
-- DD status: `Draft — Needs Confirmation`.
-- Giao phẩm Markdown: 8 sheet chính + 3 report, đủ 11/11 file.
-- Kiểm tra tĩnh tài liệu: PASS cho manifest, front matter, appendix template, fingerprint, contract errors, response fields, JSON, liên kết/anchor, bảng, code fence và whitespace.
-- Runtime API #62: `UNWIRED / NOT_FOUND`; không khẳng định behavior runtime.
-- Phạm vi: DD và worklog; không sửa source, tests, schema, catalog, diagram hoặc context pages.
+- API #62 đã được wire cục bộ: `GET /api/v1/mentor/courses/{course_id}/students`.
+- Response hiện là `ApiEnvelope<UserSummary[]>`; catalog và node AC-25 đã đồng bộ, không có pagination input/output.
+- DD vẫn `Draft — Needs Confirmation` vì response/schema/owner policy là fallback DERIVED; API #63 recipient-string encoding vẫn mở.
+- Implementation chỉ đọc legacy BIGINT `courses`, `enrollments`, `users`; không thêm bảng/migration, không commit và không gọi dịch vụ ngoài.
+- Live DB schema, migration state, service deployment và API #63 integration chưa được xác minh.
 
 ## Kiểm tra
 
 | Check | Kết quả | Trạng thái |
 |---|---|---|
-| Skill/template registry | `createDD-markdown` được đăng ký cho `server-study`; fingerprint 8 template được ghi trong PLAN_RESULT. | PASS |
-| Appendix template | Phần appendix khớp byte-for-byte với 8 template hiện hành. | PASS |
-| Front matter | 8/8 sheet có front matter và `dd_id: 62`. | PASS |
-| Contract/error set | Method/path, input/output được đối chiếu; đúng bốn error code catalog 401/403/404/500. | PASS |
-| Flow AC-25 | Ranh giới #62 chỉ đọc; #63 tạo/gửi notification; #64 tra trạng thái được giữ. | PASS |
-| Response coverage | Các field Course, Category, UserSummary và PageMeta được liệt kê trong response matrix. | PASS |
-| JSON examples | Hai JSON fence parse thành công. | PASS |
-| Markdown | 29 liên kết cục bộ và 11 anchor hợp lệ; độ rộng bảng nhất quán; code fence cân bằng; không có trailing whitespace. | PASS |
-| Manifest/fingerprint | Đủ 11 file; SHA-256 của 8 template khớp bảng trong PLAN_RESULT. | PASS |
-| `git diff --check` | Không có whitespace error trong tracked diff. | PASS |
-| Macro-review AC-25 #62–#64 + API #18 | Đã so sánh roster → create/async → delivery lookup; giữ các ID, schema và permission gap mở, không đổi direct contract. | VERIFIED_WITH_OPEN_QUESTIONS |
-| Runtime tests | Không chạy; docs-only và endpoint chưa wired. | NOT_RUN |
-| Agent context validator | Không chạy; không đổi context page. | NOT_APPLICABLE |
+| API #62 TestClient | 18 passed; bao gồm auth/role, signed-int64 path, 404/403 scope, active Student roster, empty result, projection/query errors, trace và OpenAPI. | PASS; 1 upstream Starlette/httpx deprecation warning |
+| Linked API regression | API #49 và #54: 32 passed. | PASS; 1 upstream Starlette/httpx deprecation warning |
+| Full Study suite | `uv run pytest -q`: 615 passed. | PASS; 1 upstream Starlette/httpx deprecation warning |
+| Ruff | `uv run ruff check app tests`: all checks passed. | PASS |
+| OpenAPI/import | 32 unique `/api/v1` paths, 33 operations; #62 exposes int64 path and array response model. | PASS |
+| DD static checks | 11 Markdown files; 8 sheet front matters/source appendices; JSON examples parse; local links resolve. | PASS |
+| Diagram | AC-03 Draw.io XML parses; AC-25 #62 output is `ApiEnvelope<UserSummary[]>`. | PASS |
+| Whitespace | `git diff --check`. | PASS |
+| Context validator | Full validator reports missing DB Admin context/source plus broad tracked-source drift in the shared dirty worktree. `--skip-drift` leaves only the unrelated DB Admin gaps; no Study Server page/reference error was reported. | FAILED — repository baseline/out of scope |
+| Live database/deployment | Not accessed. | NOT_VERIFIED_HERE |
 
-## Blockers
+## Quyết định còn cần owner xác nhận
 
-- Catalog `Page<Course>` không khớp roster học viên.
-- PageMeta không có page/size input.
-- Enrollment schema/status, Mentor scope, recipient encoding và live schema chưa xác nhận.
-- #63 chưa bàn giao notification_id cho #64; #64 response Operation lệch delivery summary; xem macro-review trong [API #64 report](../64_mentor_notifications_status/VERIFICATION_REPORT.md).
+- Chấp thuận `UserSummary[]` không phân trang thay cho contract ban đầu `Page<Course>`.
+- Xác nhận runtime schema là legacy BIGINT và active enrollment chỉ là `status='ACTIVE'`.
+- Xác nhận direct `courses.mentor_id` ownership là đủ; assigned Mentor chưa được cấp quyền.
+- Chốt cách API #63 serialize `recipients:string!` từ numeric user IDs.
 
-Xem [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md) và [PLAN_RESULT.md](./PLAN_RESULT.md).
+Xem [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md), [PLAN_RESULT.md](./PLAN_RESULT.md) và [worklog](../../../../../.agents/worklog/2026-10-25/implement-api62.md).

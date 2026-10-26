@@ -4,7 +4,7 @@ order: 7
 dd_id: "34"
 api_name: "Upload file"
 source_sheet: "table"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 
 # Định nghĩa table
@@ -13,42 +13,63 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table | N/A |
-| Logical table | N/A |
-| Operation | N/A — không có DB table mapping được xác nhận |
-| Data Mapping step | N/A |
+| Physical table | uploads |
+| Logical table | UploadAsset metadata |
+| Operation | INSERT |
+| Data Mapping step | 4 |
 
-## Update mapping
-
-**Áp dụng khi**
-
-- N/A — API #34 không có DB update được catalog, AC-17/AC-21, ERD V1 hoặc DB table notes xác định.
-
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---:|---|---|---|---:|---:|---:|---:|---|---|---:|---|
-| N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | No DB update mapping is specified. |
+Target schema là checked-in legacy BIGINT Study DDL. Migration chỉ được thêm vào source; chưa được áp dụng lên live database.
 
 ## Insert mapping
 
 **Áp dụng khi**
 
-- N/A — không tự tạo bảng uploads khi ERD V1 không có table mapping cho asset metadata.
+- Object Storage upload thành công và course scope check đã đạt.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---:|---|---|---:|---|
-| N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | Object Storage write is described in 05_Data_Mapping.md; it is not a DB insert mapping. |
+| 1 | id | UploadAsset ID | BIGSERIAL | 64-bit | N/A | Y | ● | Database generated ID | RETURNING id | 4 | Durable int64 reference. |
+| 2 | owner_id | Owner user ID | BIGINT | 64-bit | N/A | Y |  | JWT numeric subject | Authorization | 0 | REFERENCES users(id). |
+| 3 | purpose | Upload purpose | VARCHAR | 20 | N/A | Y |  | SUBMISSION or LECTURE | Multipart purpose | 2 | CHECK restricts current enum. |
+| 4 | course_id | Course context ID | BIGINT | 64-bit | N/A | N |  | Student optional; Mentor LECTURE required | Multipart field | 2 | REFERENCES courses(id). |
+| 5 | storage_key | Object key | TEXT | N/A | N/A | Y |  | `uploads/<UUID>` | Server UUID | 3 | Unique; never client supplied. |
+| 6 | file_name | Original file name | TEXT | N/A | N/A | Y |  | Filename or `upload` | Multipart filename | 2 | Used as metadata, not key. |
+| 7 | url | Public URL | TEXT | N/A | N/A | Y |  | Public base URL plus key | Object Storage config | 3 | Persisted and returned. |
+| 8 | content_type | Content type | TEXT | N/A | N/A | Y |  | Multipart Content-Type or octet-stream | File part header | 2 | No MIME allowlist. |
+| 9 | size_bytes | Actual size in bytes | BIGINT | 64-bit | N/A | Y |  | Byte count from received stream | Uploaded bytes | 2 | CHECK size_bytes >= 0. |
+| 10 | status | Upload status | VARCHAR | 20 | N/A | Y |  | Constant `UPLOADED` | API constant/DB default | 4 | CHECK restricts current lifecycle state. |
+
+## Update mapping
+
+**Áp dụng khi**
+
+- N/A — API #34 creates an UploadAsset and does not update existing rows.
+
+| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
+|---:|---|---|---|---:|---:|---:|---:|---|---|---:|---|
+| N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | No update operation. |
 
 ## Delete mapping
 
 **Áp dụng khi**
 
-- N/A — API #34 contract does not define delete/cleanup operation.
+- No business delete endpoint is defined. Compensation only calls Object Storage delete when metadata transaction fails.
 
 | No | Target column | Operator | Value source | Data Mapping step | Remarks |
 |---|---|---|---|---:|---|
-| N/A | N/A | N/A | N/A | N/A | Cleanup and retention policy are SOURCE_REQUIRED. |
+| 1 | storage_key | = | Server-generated UUID for attempted upload | 5.2 | Best-effort S3 cleanup; no uploads row is retained after rolled-back INSERT. |
 
-> DB_UNICA_ERD.drawio has a note “Uploads lưu URL” but no Uploads entity/table; DB_UNICA_TABLES.md also states logical uploads is absent from the 16 ERD V1 tables. This file records the current gap, not a claim that no metadata persistence will ever exist.
+## Constraints and indexes
+
+- `uploads.id` is `BIGSERIAL PRIMARY KEY`.
+- `uploads.owner_id` references `users(id)`.
+- `uploads.course_id` optionally references `courses(id)`.
+- `uploads.purpose` accepts `SUBMISSION` or `LECTURE` only.
+- `uploads.storage_key` is unique.
+- `uploads.size_bytes` must be non-negative.
+- `uploads.status` defaults to and is constrained to `UPLOADED`.
+- `idx_uploads_owner_purpose_course` supports future owner/purpose/course asset resolution.
+
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

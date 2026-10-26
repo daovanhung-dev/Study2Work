@@ -11,19 +11,19 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Giữ đúng catalog error set API #63: 401, 403, 422, 503, 500. Không thêm 404, 409 hoặc mã nghiệp vụ mới. Các nhánh về course/recipient là khuyến nghị DERIVED và chỉ thực hiện sau khi contract được sửa.
+Giữ đúng catalog error set API #63: 401, 403, 422, 503, 500. Không thêm 404, 409 hoặc mã nghiệp vụ mới. Recipient/course checks dùng fallback DERIVED nhưng vẫn map vào 403; malformed CSV/body map vào 422.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu hoặc không hợp lệ | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-auth) | No | Mentor guard chưa wired. |
-| 2 | Authorization | Role/scope | Mentor/course/recipient | Sai role hoặc Mentor không có quyền với course/recipient | 403 | `DESIGN_ACCESS_DENIED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-2-recipient-scope) | No | Course ID vắng trong direct body; scope branch chưa thể hoàn thiện. |
-| 3 | Validation | Required/type/encoding | Request body | Thiếu field, sai kiểu hoặc encoding không hợp lệ sau khi được duyệt | 422 | `DESIGN_VALIDATION_ERROR` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-1-request) | Rollback logical writes | Không tự thêm length/enum/batch limit. |
-| 4 | Dependency | Queue/provider | Operation dispatch | Queue/provider không thể nhận yêu cầu trước khi API chấp nhận | 503 | `DESIGN_DEPENDENCY_UNAVAILABLE` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-operation-queue) | Rollback chưa chốt | Sau 202, lỗi delivery thuộc status lifecycle; không đổi response đã trả. |
-| 5 | System error | Persistence/runtime | Notification/recipient/Operation | Lỗi nội bộ ngoài dự kiến khi lưu hoặc dựng response | 500 | `DESIGN_INTERNAL_ERROR` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-6-response-errors) | Theo transaction được duyệt | Không trả SQL, provider detail hoặc stack trace. |
+| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu hoặc không hợp lệ | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-auth) | No | Shared Mentor guard runs before DB access. |
+| 2 | Authorization | Role/scope | Mentor/recipient roster | Sai role hoặc recipient set không cùng thuộc ACTIVE roster của course Mentor sở hữu | 403 | `DESIGN_ACCESS_DENIED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-2-recipient-scope) | No | Course inference is DERIVED because body has no course_id. |
+| 3 | Validation | Required/type/encoding | Request body | Thiếu/sai type, ID CSV sai, channel token không hỗ trợ, hoặc title vượt 200 ký tự | 422 | `DESIGN_VALIDATION_ERROR` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-1-request) | No DB writes before validation completes | Exact code is in catalog; title bound comes from local legacy DDL. |
+| 4 | Dependency | Database/outbox | Recipient check or persistence | DB/outbox dependency unavailable before acceptance | 503 | `DESIGN_DEPENDENCY_UNAVAILABLE` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-5-errors) | Rollback | No 202 until all outbox rows commit. |
+| 5 | System error | Persistence/runtime | Notification/delivery projection | Invalid DB projection or unexpected internal error | 500 | `DESIGN_INTERNAL_ERROR` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-5-errors) | Rollback | Do not expose SQL, provider detail or stack trace. |
 
-> Error envelope theo API Guidelines dùng `data:null`; current helper mặc định `{}`. Route #63 chưa wired nên chưa có behavior runtime.
+> Runtime uses shared `error_response(...)`; omitted error data serializes as JSON `null`, with the standard trace ID in the response body/header.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

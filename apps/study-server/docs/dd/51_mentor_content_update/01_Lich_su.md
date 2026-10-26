@@ -16,18 +16,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-25 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
-| 0.1 | 2026-10-24 | Codex | Tạo DD API #51 từ catalog, AC-22/AC-33 và source/schema hiện tại. | Draft — Needs Confirmation; body/version lifecycle là DERIVED proposals. |
-
-## Phạm vi thay đổi
-
-- Chỉ tạo tài liệu DD Markdown cho API #51 và worklog.
-- Không sửa runtime, database, catalog, diagram hoặc client.
+| `0.1` | `2026-10-24` | `Codex` | `Create new` | Body/version schema còn SOURCE_REQUIRED. |
+| `0.2` | `2026-10-25` | `Codex` | `Record API #51 runtime fallback` | Body và content_versions là DERIVED; runtime/local tests wired; chưa được approve và không chứng minh live schema. |
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

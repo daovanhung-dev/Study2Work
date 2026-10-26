@@ -22,14 +22,14 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | `Authorization` | Yes | `Bearer <JWT>` | Catalog yêu cầu actor role Mentor; API #61 chưa wired. | [Data Mapping](./05_Data_Mapping.md) |
-| 2 | Trace ID | `X-Trace-Id` | No | UUID nếu gửi | Theo API Guidelines khi endpoint được wired. | [Data Mapping](./05_Data_Mapping.md) |
+| 1 | Authorization | `Authorization` | Yes | `Bearer <JWT>` | Yêu cầu role Mentor qua shared JWT guard. | [Data Mapping](./05_Data_Mapping.md) |
+| 2 | Trace ID | `X-Trace-Id` | No | UUID nếu gửi | Middleware xác thực hoặc tạo trace ID; trả lại trong envelope/header. | [Data Mapping](./05_Data_Mapping.md) |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | Support request ID | `request_id` | int64 | Yes | Không quy định | Không quy định | Số nguyên 64-bit | Một SupportRequest trong scope Mentor | Không có | Khóa logic để xác định request cần resolve; V1-PILOT dùng UUID và chưa map trực tiếp được. | [Data Mapping](./05_Data_Mapping.md) |
+| 1 | Support request ID | `request_id` | int64 | Yes | Không quy định | Không quy định | Số nguyên 64-bit | Khóa SupportRequest trong local fallback | Không có | Mapped to BIGINT `support_requests.id` theo fallback đang dùng ở #58–#60. | [Data Mapping](./05_Data_Mapping.md) |
 
 ## Query parameters
 
@@ -46,15 +46,16 @@ PATCH /api/v1/mentor/support/59001/resolve
 Authorization: Bearer <JWT>
 ```
 
-`59001` chỉ minh họa path int64 theo catalog; không đại diện ID trong V1-PILOT hoặc database runtime.
+`59001` minh họa signed-int64 path. Catalog không đặt minimum; giá trị parse hợp lệ nhưng không tồn tại trả 404.
 
-## Candidate validation
+## Validation và authorization
 
-- Thiếu path segment, giá trị không parse được thành int64 hoặc vượt miền int64 → 422 `DESIGN_VALIDATION_ERROR` theo contract.
-- Không đặt điều kiện `request_id > 0`; catalog chỉ khai báo int64, không khai báo min/range.
-- Path hợp lệ nhưng không có request → 404 `DESIGN_RESOURCE_NOT_FOUND`.
-- Request tồn tại nhưng ngoài phạm vi Mentor → 403 `DESIGN_ACCESS_DENIED` theo mapping candidate; thứ tự check cần xác nhận theo privacy policy.
-- Không có body nên không có content field, attachment ref hoặc query filter.
+- Thiếu/invalid Bearer JWT → 401 `DESIGN_AUTHENTICATION_REQUIRED`.
+- Role không phải Mentor → 403 `DESIGN_ACCESS_DENIED`.
+- `request_id` sai format hoặc vượt signed-int64 → 422 `DESIGN_VALIDATION_ERROR`.
+- ID hợp lệ nhưng request không tồn tại → 404 `DESIGN_RESOURCE_NOT_FOUND`.
+- Request tồn tại nhưng `courses.mentor_id` khác numeric JWT `sub` → 403 `DESIGN_ACCESS_DENIED`.
+- Không đặt điều kiện `request_id > 0`; không có body, query filter hoặc resolution reason.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

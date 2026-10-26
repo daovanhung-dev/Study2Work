@@ -3,93 +3,38 @@
 **Trạng thái DD:** Draft — Needs Confirmation  
 **Endpoint:** `GET /api/v1/mentor/courses/{course_id}/content`
 
-Các câu hỏi dưới đây ảnh hưởng trực tiếp tới response/query/authorization. Không tự tạo bảng, enum, payload key hoặc business code để lấp khoảng trống.
+## Q-49-01 — Response shape của “cây”
 
-## Q-49-01 — “Cây” được biểu diễn thế nào trong response?
+**Implementation decision:** `Content[]` phẳng, `parent_id` nối node, không tạo nested `children[]` hoặc pagination. Catalog và AC-22 node đã được đồng bộ. Đây là quyết định code cần API/business owner xác nhận.
 
-**Bằng chứng**
+## Q-49-02 — Persistence của Content
 
-- Tên API và AC-22 diagram mô tả đọc cây sections/lessons/content.
-- Catalog chỉ trả `ApiEnvelope<Content>`; reusable Content có `parent_id?` nhưng không có `children[]` hay `Page<Content>`.
-
-**Cần xác nhận**
-
-1. Endpoint trả một root Content, danh sách nodes, hay nested tree?
-2. Nếu nested, field con và thứ tự node được khai báo ở contract nào?
-3. Course không có nội dung trả object rỗng, collection rỗng, hay 404?
-
-**Ảnh hưởng:** Chặn response shape và success example có thể chạy.
-
-## Q-49-02 — Nguồn persistence của Content
-
-**Bằng chứng**
-
-- Legacy DB guide/ERD có `courses`, `lessons`, `resources` nhưng không có generic Content/sections/parent-content table.
-- V1-PILOT DDL có `chapters`, `lessons`, `content_blocks` với UUID và quan hệ course-version; model khác contract BIGINT/`Content.parent_id`.
-
-**Cần xác nhận**
-
-1. API #49 dùng schema nào trong hai mô hình, hay có schema khác?
-2. Bảng/column/PK/FK/version/filter đã được duyệt cho tree read là gì?
-3. Live schema nào đã được deploy và xác minh?
-
-**Ảnh hưởng:** Q2 query và tất cả Content field mappings hiện `SOURCE_REQUIRED`.
+**Implementation decision:** legacy BIGINT `contents` table trong `DB.sql` và migration `006_contents.sql`, gồm payload JSONB, parent cùng course, order và `deleted_at`. Migration chưa được xác minh/apply trên DB live. UUID V1-PILOT `content_blocks` không được dùng.
 
 ## Q-49-03 — Content schema và lifecycle
 
-**Bằng chứng**
+Còn cần xác nhận:
 
-- `ContentType`, `ContentStatus`, `payload:object`, `parent_id?`, `order` có trong reusable schema.
-- Catalog không liệt kê enum values, payload members, null/omit policy, sibling order hoặc draft/published visibility.
+- Tập giá trị hợp lệ của `ContentType` và `ContentStatus`.
+- Payload schema cho từng content type.
+- Status transition, publish/readiness semantics và có trả draft cùng published không.
+- Có cần audit/version history hoặc version selection. Bảng `contents` hiện chỉ lưu một row trạng thái, không có version history.
+- Quy tắc khi node đang hoạt động có parent đã soft-delete.
 
-**Cần xác nhận**
-
-Enum members, payload schema/version, parent semantics, ordering/tie-breaker, visibility filters, and null/empty/omit rules.
-
-**Ảnh hưởng:** Response mapping, validation and future API #50–#53 compatibility.
+API #49 hiện lưu/đọc type và status dạng open string, JSON object, trả mọi status, và trả 500 nếu parent node không có trong active result. Đây là current implementation behavior.
 
 ## Q-49-04 — Mentor identity and assigned-course access
 
-**Bằng chứng**
+Current source dùng Study JWT guard, numeric principal và direct predicate `courses.mentor_id = principal_id`. Cần product/security owner xác nhận liệu direct owner là đủ hay Mentor được phân công cũng cần truy cập; API hiện chưa kiểm tra assignment relation.
 
-- AC-22 precondition yêu cầu Mentor có quyền quản lý course.
-- Legacy `courses.mentor_id` supports a direct-owner candidate; assignment relation and current Study Mentor token binding are not source-backed.
-- V1-PILOT uses `owner_subject_id uuid` and course UUID.
+## Q-49-05 — 404 and empty result semantics
 
-**Cần xác nhận**
+**Implementation decision:** malformed/out-of-range signed-int64 path và missing course trả 404; existing course with no active Content trả 200 với `data: []`; wrong role/owner trả 403. Đây là implementation resolution, chưa phải approval business.
 
-1. Mentor principal maps to which identity and key?
-2. Is access limited to direct owner, or can assigned Mentors manage the course?
-3. Which approved relation/policy evaluates assigned-course access?
+## Q-49-06 — Versioning boundary với API #50–#53
 
-**Ảnh hưởng:** Candidate Q1 does not fully implement authorization; 403 branch is not implementation-ready.
+Cần xác nhận #49 đọc revision nào, #51 revision update được lưu ở đâu, #52 publish version nào, và cách phân biệt draft/published khi Mentor tải lại cây. API #49 hiện trả mọi `status` từ `contents` và không chọn version.
 
-## Q-49-05 — 404 and malformed path semantics
+## Q-49-07 — Soft-deleted node và active children
 
-**Bằng chứng**
-
-- Catalog declares 404 but does not identify whether it means missing course, missing content root or both.
-- No 422 is declared for invalid `course_id`.
-
-**Cần xác nhận**
-
-Define missing-course, missing-tree, empty-course, malformed/overflow path outcomes without changing the declared error set unless contract is updated. Current middleware fallback is HTTP 422 `VALIDATION_ERROR` outside its allowlist; confirm how future #49 route preserves the catalog set.
-
-**Ảnh hưởng:** Error mapping and framework parse behavior.
-
-## Q-49-06 — Versioning boundary with API #50–#53
-
-**Bằng chứng**
-
-- AC-22 has create/update/delete/publish endpoints after this GET.
-- Pilot schema makes published course versions immutable and has draft/version fields; AC-22 contract does not state version selection or draft behavior.
-
-**Cần xác nhận**
-
-Which draft/published version #49 returns, how it relates to mutation APIs, and whether each Mentor sees own draft or latest published content.
-
-**Ảnh hưởng:** Tree query predicates and coherent AC-22 behavior.
-
-## Q-49-07 — Cây nội dung lọc soft-deleted node thế nào?
-
-AC-22 yêu cầu reload cây sau DELETE; API #53 đề xuất soft-delete và loại Content đã xóa khỏi active views. Catalog #49 hiện chỉ trả một Content, không khai báo children collection hoặc deleted marker. Cần xác nhận query/tree shape và quy tắc ẩn node đã xóa để nội dung không xuất hiện lại sau reload.
+API #49 loại các row có `deleted_at`. Nếu node active trỏ tới parent đã soft-delete, parent reference thiếu trong kết quả và API trả 500 để không phát cây không nhất quán. Cần quyết định #53 có chặn xóa parent còn child, cascade soft-delete, hay cho phép ẩn subtree.

@@ -1,27 +1,25 @@
 # Open Questions — API #47 Tạo lecture
 
-Trạng thái: Draft — Needs Confirmation. Các câu hỏi dưới đây cần được giải quyết trước khi DD được coi là implementation-ready.
+Trạng thái: API decision đã chốt cho implementation local. DD vẫn `Draft — Needs Confirmation` đến khi xác nhận target schema/migration trên live database.
 
 | ID | Câu hỏi | Bằng chứng hiện có | Ảnh hưởng | Trạng thái |
 |---|---|---|---|---|
-| Q1 | content:int64 là nội dung chữ được biểu diễn số, hay ID tham chiếu tới Content khác? | Catalog request int64; Lecture schema string?; legacy lessons.content TEXT; AC-21 ghi INSERT Lecture/Content; không có bảng contents trong legacy ERD/DDL. | Request parsing, storage và data.content response. | DISCREPANCY / SOURCE_REQUIRED |
-| Q2 | asset refs dùng wire key nào và chuỗi có định dạng gì? | Catalog/diagram chỉ ghi asset refs:string!; không có delimiter/JSON/array semantics. | Request validation, parsing, duplicate handling và response assets. | SOURCE_REQUIRED |
-| Q3 | API #34 sinh UploadAsset.id như thế nào và metadata được lưu/tra ở đâu? | API #34 DD không có DB write; legacy schema không có uploads; resources thiếu content_type, size_bytes, UploadStatus. | API #47 không thể tạo Lecture.assets[] đầy đủ hoặc xác minh asset thuộc uploader/course. | SOURCE_REQUIRED |
-| Q4 | Asset refs có được lưu thành resources rows không, hay chỉ tham chiếu Object Storage/file registry? | Legacy resources có lesson_id, name, resource_type, url; API #34 persistence chưa xác định; V1-PILOT file_objects dùng UUID/schema khác. | Có/không có resources mutation, transaction, delete/cleanup và response mapping. | SOURCE_REQUIRED |
-| Q5 | Mentor “được phân công” course được xác định bởi relation nào? | AC-21 gồm owns/assigned; API #46 candidate dùng courses.mentor_id; không có assignment table trong legacy ERD/DDL. | Q1 permission, 403 và candidate Mentor scope. | SOURCE_REQUIRED |
-| Q6 | JWT Mentor principal là numeric users.id hay UUID subject; Mentor guard nào chuẩn? | API #46 nêu conflict; current Study helper có Student guard; V1-PILOT dùng UUID owner subject. | Ownership query, authz và schema binding. | DISCREPANCY |
-| Q7 | Schema nào là target runtime: legacy BIGINT hay V1-PILOT UUID/versioned? | Hai DDL có cấu trúc lessons/courses khác nhau; database context nói live schema chưa verify. | ID types, table/columns, FK, defaults và migration. | NOT_VERIFIED |
-| Q8 | LessonStatus gồm những giá trị nào và DRAFT có hợp lệ cho lecture mới không? | Legacy lessons.status default DRAFT; catalog không khai enum member list; pilot dùng versioned statuses. | INSERT default, response status và API #48 reload. | SOURCE_REQUIRED |
-| Q9 | API #47 có yêu cầu course ở trạng thái cụ thể hoặc lecture tạo ra có publish state nào không? | AC-21 là Mentor create flow; catalog không có status input; #48 candidate đọc lại mà không lọc PUBLISHED; API #9 public read lọc PUBLISHED nhưng khác actor/flow. | Có thêm predicate/validation hay không; LessonStatus và quyền đọc draft vẫn cần xác nhận. | DERIVED / NEEDS_CONFIRMATION |
-| Q10 | Response content khi DB value NULL phải omit hay trả null? | Lecture.content là optional; legacy column nullable; envelope schema không nói optional-field serialization. | JSON response stability. | SOURCE_REQUIRED |
-| Q11 | created_at/updated_at phải serialize với timezone nào khi legacy cột là TIMESTAMP? | Legacy DDL yêu cầu timestamp nhưng không chỉ rõ timezone/default; API contract dùng date-time. | Timestamp correctness và round trip. | SOURCE_REQUIRED |
-| Q12 | Error envelope dùng data:null theo guidelines hay data:{} theo current helper? | API guidelines yêu cầu null; app/core/responses.py default {}. | Expected response behavior chung. | DISCREPANCY |
+| Q1 | `content:int64` được chuyển thành kiểu nào khi lưu/trả? | Người dùng chốt request giữ int64, lưu `str(content)` trong `lessons.content TEXT` và response `content:string`; test HTTP xác minh giá trị thập phân. | Request, persistence và response mapping. | RESOLVED_BY_USER; SOURCE_BACKED |
+| Q2 | `asset_refs` wire key/format và order là gì? | JSON string chứa ordered array signed int64 IDs; `[]` hợp lệ; duplicate reject; response giữ request order. | Parse, query và response assets. | RESOLVED_BY_USER; SOURCE_BACKED |
+| Q3 | API #34 lưu metadata UploadAsset ở đâu? | Source API #34 và migration artifact dùng BIGINT `uploads`, status `UPLOADED`; live DB chưa xác minh. | API #47 metadata resolver. | SOURCE_BACKED; LIVE_SCHEMA_NOT_VERIFIED |
+| Q4 | API #47 có ghi `resources` hoặc thay đổi `uploads` không? | Người dùng chốt chỉ resolve `uploads` metadata, không ghi resources hoặc mutate uploads. | Asset persistence boundary. | RESOLVED_BY_USER; SOURCE_BACKED |
+| Q5 | Mentor được phân công course có được tạo lecture không? | Người dùng chốt chỉ Mentor trực tiếp sở hữu course qua `courses.mentor_id`; không dùng assignment relation. | Authorization và course lookup. | RESOLVED_BY_USER; SOURCE_BACKED |
+| Q6 | JWT Mentor principal được map vào owner thế nào? | Shared access-JWT guard xác minh role `MENTOR` và trả numeric user ID; API #46 cùng dùng `courses.mentor_id`. | Bind owner query. | SOURCE_BACKED |
+| Q7 | Target schema đang chạy là legacy BIGINT hay V1-PILOT UUID/versioned? | Legacy `DB.sql`/migration 004 có `courses`, `lessons`, `uploads` BIGINT; V1-PILOT khác cấu trúc; không có live metadata trong task. | Runtime database compatibility/deployment. | NOT_VERIFIED; KEEPS_DD_DRAFT |
+| Q8 | Lesson mới dùng trạng thái nào? | Người dùng chốt `PUBLISHED`; source INSERT ghi trạng thái tường minh và response lấy từ returned row. | INSERT và response. | RESOLVED_BY_USER; SOURCE_BACKED |
+| Q9 | Course cần status cụ thể không? | Người dùng chốt không lọc status; test xác minh course `DRAFT` được phép nếu thuộc Mentor. | Predicate/validation. | RESOLVED_BY_USER; SOURCE_BACKED |
+| Q10 | Response `content` có thể null/omit không? | Request content là required signed int64; runtime chuyển thành decimal string và response model yêu cầu string. | Response nullability. | RESOLVED_BY_USER; SOURCE_BACKED |
+| Q11 | Timestamp có timezone semantics nào? | Runtime truyền `CURRENT_TIMESTAMP` cho cả hai cột bắt buộc theo legacy DDL; live database/session timezone chưa kiểm tra. | Database timestamp interpretation. | SOURCE_BACKED_EXPRESSION; LIVE_BEHAVIOR_NOT_VERIFIED |
+| Q12 | Error envelope dùng `data:null` hay object rỗng? | `app.core.responses.error_response` hiện serialize `data:null`; API #47 dùng helper hiện hành. | Error response shape. | SOURCE_BACKED |
+| Q13 | Asset thiếu/ngoài scope map về lỗi nào? | Người dùng chốt cùng generic 404; source trả `DESIGN_RESOURCE_NOT_FOUND` và không phân biệt nguyên nhân. | Asset enumeration/privacy behavior. | RESOLVED_BY_USER; SOURCE_BACKED |
 
-## Candidate handling trong bản draft
+## Remaining verification boundary
 
-- Legacy lessons là một candidate mapping, không xác nhận live schema.
-- Candidate courses.mentor_id = current Mentor ID kế thừa hướng của API #46 nhưng không xử lý course assigned.
-- content decimal-string conversion, title max 200, asset_refs wire key và default DRAFT đều cần xác nhận.
-- Không tạo bảng/cột, không chuyển upload thành resource, không giả định mọi lecture là PUBLISHED.
-- Không thêm error code ngoài 401/403/404/422/500 của catalog.
-
+- Không còn quyết định nghiệp vụ/API nào chặn implementation local.
+- Live schema, migration application và runtime database behavior chưa được kiểm tra; tài liệu vẫn ở trạng thái Draft.
+- Các test dùng fake DB session/query và không chứng minh schema hoặc deployment trên môi trường thật.

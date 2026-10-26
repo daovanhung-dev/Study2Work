@@ -32,13 +32,14 @@ status: "Draft — Needs Confirmation"
 | 5.1 | data.id | Quiz ID | id | int64 | No | Legacy quizzes candidate | id | Step 2 | Existing BIGSERIAL key | Required | Live schema chưa xác minh. |
 | 5.2 | data.course_id | Course ID | course_id | int64 | No | quizzes/config | course_id | Step 4 | Updated candidate value | Required | Legacy nullable; course-move policy open. |
 | 5.3 | data.title | Quiz title | title | string | No | config/quizzes | name | Step 4 | Alias title → name | Required | Request field is DERIVED. |
-| 5.4 | data.duration_minutes | Duration | duration_minutes | int32 | Yes | config/quizzes | time_limit_minutes | Step 4 | Alias trực tiếp | Null/omit unresolved | Optional in Quiz schema. |
+| 5.4 | data.duration_minutes | Duration | duration_minutes | int32 | Yes | config/quizzes | time_limit_minutes | Step 4 | Alias trực tiếp | Omitted when null via response model | Omission/null input writes NULL. |
 | 5.5 | data.passing_score | Passing score | passing_score | decimal-string | No | config/quizzes | passing_score | Step 4 | NUMERIC → decimal-string candidate | Required | Precision/scale open. |
 | 5.6 | data.questions[] | Questions | questions | QuizQuestion[] | No | Candidate replacement rows | N/A | Steps 6–8 | Replacement rows in proposed order | Required array | Strategy DERIVED. |
 | 5.6.1 | data.questions[].id | Question ID | id | int64 | No | quiz_questions candidate | id | Step 7 | Generated ID | Required | Legacy BIGSERIAL candidate. |
 | 5.6.2 | data.questions[].text | Question text | text | string | No | quiz_questions candidate | question_text | Step 7 | Alias question_text → text | Required | Candidate physical mapping. |
-| 5.6.3 | data.questions[].type | Question type | type | QuestionType | No | SOURCE_REQUIRED | N/A | Step 8 | No legacy column | Required | Blocks complete legacy response projection. |
-| 5.6.4 | data.questions[].choices[] | Choices | choices | QuizChoice[] | No | quiz_choices candidate | N/A | Step 8 | Relation by question_id | Required array | Shape/order unresolved. |
+| 5.6.3 | data.questions[].type | Question type | type | QuestionType | No | quiz_questions — local candidate | question_type | Step 8 | Read stored migration 013 column | Required | Values remain DERIVED and old rows may be NULL. |
+| 5.6.4 | data.questions[].choices[] | Choices | choices | QuizChoice[] | No | quiz_choices candidate | N/A | Step 8 | Relation by question_id | Required array | Admin projection reuses #88 `{id,text,is_correct}` DERIVED shape. |
+| 5.6.5 | data.questions[].choices[].is_correct | Answer key | is_correct | boolean | No | quiz_choices candidate | is_correct | Step 8 | Stored boolean | Required boolean | Included for Admin following API #88; Student #28 must omit it. |
 | 6 | meta | Metadata | meta | object | No | ApiEnvelope<T> | meta | Step 9 | Empty object candidate | Members unspecified | Current envelope convention. |
 | 7 | traceId | Trace ID | traceId | uuid | No | ApiEnvelope<T> | traceId | Step 9 | Request trace | Required | Middleware generates/propagates current trace. |
 
@@ -73,7 +74,7 @@ status: "Draft — Needs Confirmation"
 }
 ~~~
 
-questions: [] chỉ làm ví dụ envelope hợp lệ; không khẳng định update xóa hết câu hỏi. Logical response yêu cầu QuizQuestion nhưng QuestionType/QuizChoice chưa thể biểu diễn đầy đủ bằng legacy mapping hiện tại.
+`questions: []` là giá trị được implementation chấp nhận và thay child set bằng rỗng. Migration 013 adds local type/order persistence; request/response semantics and QuizChoice catalog shape remain DERIVED/open.
 
 ## Ví dụ lỗi — HTTP 404
 
@@ -88,7 +89,7 @@ questions: [] chỉ làm ví dụ envelope hợp lệ; không khẳng định up
 }
 ~~~
 
-API Guidelines yêu cầu error data=null. Current helper đổi data=None thành {}; integration cần thống nhất trước khi wire API #89.
+API Guidelines và current helper đều trả error `data:null`, `meta.fieldErrors` khi có validation detail. API #89 đã đăng ký dynamic path template cho exact catalog error mapping.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -22,8 +22,8 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Catalog yêu cầu role Mentor. Runtime route/guard chưa có. | 0.1 |
-| 2 | Trace ID | X-Trace-Id | No | UUID nếu được gửi | Shared API Guidelines quy định request/response propagation; endpoint chưa được wiring. | 0.2 |
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Role MENTOR, numeric `sub`; direct course owner được kiểm tra trước khi trả bài nộp. | 0.1 |
+| 2 | Trace ID | X-Trace-Id | No | UUID nếu được gửi | Propagated theo shared API Guidelines. | 0.2 |
 
 ## Path parameters
 
@@ -33,9 +33,11 @@ N/A — API không nhận path parameter.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | Course ID | course_id | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | Integer | SOURCE_REQUIRED | SOURCE_REQUIRED | Candidate giới hạn submissions thuộc course; exact access rule chưa được chốt. | 1.1, 2.1 |
-| 2 | Status | status | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | String | SOURCE_REQUIRED | SOURCE_REQUIRED | Candidate filter theo status của submission; enum, blank handling và casing chưa được chốt. | 1.1, 2.1 |
-| 3 | Page | page | int32 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | Integer | SOURCE_REQUIRED | SOURCE_REQUIRED | Catalog có page nhưng không có page size, default, range hoặc meta pagination. | 1.1, 2.1 |
+| 1 | Course ID | course_id | int64 | No | 1 | 9223372036854775807 | Integer | Positive integer | N/A | Giới hạn bài nộp theo course; nếu course tồn tại nhưng do Mentor khác sở hữu thì trả 403. | 1.1, 2.1 |
+| 2 | Status | status | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | String | Any exact string | N/A | So sánh chính xác với `assignment_submissions.status`; không trim, đổi chữ hoa/thường hoặc validate enum. | 1.1, 2.1 |
+| 3 | Page | page | int32 | No | 1 | 2147483647 | Integer | Positive integer | 1 | Trang 1-based; size cố định 20 theo shared default. | 1.1, 2.3 |
+
+Page size không phải query parameter. Response dùng `data.pagination` với `page`, `size=20`, `total` và `total_pages`.
 
 ## Request body
 
@@ -44,10 +46,10 @@ N/A — API không nhận Request Body.
 ## Ví dụ Request data
 
 ~~~text
-GET /api/v1/mentor/submissions?course_id=120&page=1
+GET /api/v1/mentor/submissions?course_id=120&status=SUBMITTED&page=1
 ~~~
 
-`course_id=120` và `page=1` chỉ minh họa cách gửi query; không xác nhận giá trị tối thiểu, default hoặc cách phân trang.
+`course_id`, `status` và `page` minh họa các filter; status không xác nhận enum đầy đủ.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

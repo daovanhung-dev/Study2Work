@@ -17,35 +17,35 @@ status: "Draft — Needs Confirmation"
 | Module | MENTOR / TEACHING & SUPPORT |
 | Method | GET |
 | Endpoint | /api/v1/mentor/submissions |
-| Purpose | Đọc submissions theo quyền Mentor để chọn một submission và chuyển sang API #55 xem chi tiết. |
+| Purpose | Đọc một trang submissions thuộc course do Mentor trực tiếp sở hữu để chọn một bài và chuyển sang API #55 xem chi tiết. |
 | Consumer/Actor | Mentor |
 | Authentication | Bearer JWT |
-| Authorization | Mentor có quyền chấm submissions thuộc course; predicate và identity mapping SOURCE_REQUIRED. |
-| Basis | Catalog và AC-23 là DIRECT; query/schema là design candidate. |
+| Authorization | Role MENTOR; `courses.mentor_id` phải bằng numeric JWT subject. Cách này theo API #46/#49; assigned Mentor chưa được hỗ trợ. |
+| Basis | AC-23 list/select flow và catalog là DIRECT; pagination, cardinality và file URL lookup là fallback DERIVED theo yêu cầu của người dùng. |
 | Status | Draft — Needs Confirmation |
 | Transaction | N/A — READ-ONLY API |
-| Side effects | Không có mutation được khai báo. |
+| Side effects | Không mutation; không commit. |
 
 ## Sources
 
-- [API catalog và reusable Submission schema](../../../../../docs/lists/list_api.md).
+- [API catalog và reusable schemas](../../../../../docs/lists/list_api.md).
 - [AC/API index, AC-23](../../diagrams/AC_UNICA/00_AC_API_INDEX.md).
 - [AC-23 diagram](../../diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio).
-- [DB table guide](../../diagrams/DB_UNICA_TABLES.md).
-- [DB ERD](../../diagrams/DB_UNICA_ERD.drawio).
-- [Checked-in V1-PILOT DDL](../../../../../infra/postgres/study-server/DB.sql).
-- [Related API #35 Overview](../35_assignments_submissions/02_Overview.md).
-- [Current Study route source](../../../../../apps/study-server/app/api/v1.py).
-- [Study auth helper](../../../../../apps/study-server/app/utils/auth.py).
-- [API Guidelines](../../../../../contracts/api-guidelines/README.md).
-- [Study Server declared route context](../../../../../.agents/server-study/apis/declared-routes.md).
+- [DB table guide](../../diagrams/DB_UNICA_TABLES.md) và [ERD](../../diagrams/DB_UNICA_ERD.drawio).
+- [Checked-in V1-PILOT DDL](../../../../../infra/postgres/study-server/DB.sql) và [uploads migration](../../../../../infra/postgres/study-server/migrations/004_uploads.sql); chưa xác minh live schema.
+- [Related API #34 UploadAsset](../34_uploads/02_Overview.md) và [API #35 submission create](../35_assignments_submissions/02_Overview.md), [API #36 submission detail](../36_submissions_detail/02_Overview.md).
+- [Related APIs #55–#57](../55_mentor_submissions_detail/02_Overview.md), [grade](../56_mentor_submissions_grade/02_Overview.md), [feedback](../57_mentor_submissions_feedback/02_Overview.md).
+- [Current Study route source](../../../../../apps/study-server/app/api/v1.py), [auth helper](../../../../../apps/study-server/app/utils/auth.py), API #46/#49 views and tests.
+- [API Guidelines](../../../../../contracts/api-guidelines/README.md) and [Study Server declared routes](../../../../../.agents/server-study/apis/declared-routes.md).
 - [createDD-markdown skill](../../../../../.agents/skills/create_dd_api/docs/dd/createDD_MARKDOWN_SKILL.md).
 
 ## Tables read
 
-- assignment_submissions — candidate source for Submission fields.
-- assignments — candidate relation for course scope.
-- courses — candidate direct-owner relation for Mentor access.
+- `assignment_submissions` — Submission projection and legacy `file_url`.
+- `assignments` — course relation for submission visibility.
+- `courses` — direct Mentor ownership.
+- `users` — required Student FK join.
+- `uploads` — candidate asset metadata matched by exact URL, owner, purpose and course.
 
 ## Tables write
 
@@ -53,36 +53,39 @@ status: "Draft — Needs Confirmation"
 
 ## Mục chú ý
 
-- API name and AC-23 flow describe a list, while the catalog response is singular `ApiEnvelope<Submission>`.
-- Query `page` has no declared size, default, range, sort or pagination metadata.
-- `status` is an optional string; allowed values and normalization are not defined.
-- Logical `Submission.files` is an `UploadAsset[]`; candidate DDL exposes one nullable `file_url` and no approved asset metadata relation.
-- AC-23 next calls API #55 for one selected submission and its files/rubric; rubric is outside API #54 response fields.
-- API #54 has no current route, module or test in the Study Server.
+- AC-23 says Mentor opens the grading list, then selects one submission for API #55. The original catalog/diagram typed the response as singular `Submission`; this DD and the catalog/diagram row now use `Page<Submission>` to support that flow.
+- `page` defaults to 1; page size is fixed to the existing shared default 20. Ordering is `submitted_at DESC, id DESC`; page metadata is inside `data.pagination`.
+- `status` is matched exactly as supplied. No enum, trimming or case normalization is introduced.
+- `assignment_submissions` stores one nullable `file_url`; the fallback resolves at most one API #34 asset by URL plus `owner_id=user_id`, `purpose='SUBMISSION'` and `course_id`. No FK proves this link.
+- The API remains read-only. No rubric is returned here; AC-23 sends the selected ID to API #55.
+- 409 remains declared by source artifacts but has no implemented trigger because AC-23 gives no conflict rule.
 
 ## Assumptions
 
-- Apply `course_id` and `status` filters only when the caller supplies them; do not assign defaults or enum values.
-- `courses.mentor_id` is a DERIVED direct-owner candidate only; this does not establish support for assigned Mentors.
-- Keep the catalog's singular `Submission` response in this draft until the contract owner resolves list cardinality.
+- The collection interpretation follows the AC-23 list-and-select flow; the previous `ApiEnvelope<Submission>` declaration is a documented conflict resolved as `ApiEnvelope<Page<Submission>>` for this implementation.
+- `courses.mentor_id = authenticated numeric sub` is used because current APIs #46/#49 and API #34 lecture upload use direct ownership. This does not cover assigned Mentors.
+- Page defaults use shared `DEFAULT_PAGE=1`, fixed `DEFAULT_SIZE=20`, and the existing Page shape `{items, pagination}`.
+- `assignment_submissions.file_url` is assumed to store the API #34 upload URL. Only a metadata row matching URL, student owner, SUBMISSION purpose and assignment course is returned; no match produces `files: []`.
+- Inner joins through `assignments`, `courses` and `users` exclude rows with null/orphan relations, matching the ERD's required relationships without changing DDL.
 
 ## Conflicts
 
-- List endpoint semantics conflict with singular `Submission` response shape.
-- ERD/table guide show assignment/course references as required, while checked-in DDL permits NULL foreign keys.
-- API Guidelines expect `data: null` on errors; current `error_response()` serializes omitted/None data as `{}`.
-- Catalog includes 409 for a GET flow with no conflict branch in AC-23.
+- The original API catalog and diagram declared singular `ApiEnvelope<Submission>` while the endpoint and AC-23 flow are list/select. The implementation uses `ApiEnvelope<Page<Submission>>`; catalog and diagram were updated to make the fallback explicit.
+- ERD/table guide require assignment/course/user relations; checked-in DDL permits nullable FKs. Inner joins omit orphan rows; live schema remains unverified.
+- `file_url` to `uploads.url` is a `DERIVED` association, not a declared FK or API #35 guarantee.
+- 409 is listed without a trigger; it remains unreachable pending a business rule.
 
 ## Security note
 
-- Never expose submissions outside the caller's Mentor course authorization.
-- Current shared auth guard is Student-only; Mentor JWT claim and course assignment mapping are SOURCE_REQUIRED.
-- Do not accept a student identity parameter; the endpoint has none.
+- Every query is scoped to `courses.mentor_id = authenticated Mentor ID` before rows are returned.
+- When `course_id` is supplied, an existing course owned by another Mentor returns 403. A missing course yields an empty page because the catalog has no 404 for #54.
+- Assigned-Mentor authorization is not represented in the current source or schema.
 
 ## Performance note
 
-- No supported page size, stable ordering or count contract exists, so query cost and response bounds cannot be specified.
-- The exact asset lookup needed for `files[]` is not source-backed.
+- The route performs a count query and a paged list query; page size is capped implicitly at 20.
+- The asset lookup is a lateral query restricted by exact URL, owner, purpose and course, with at most one asset returned.
+- No live query plan, index check or deployment verification is claimed.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

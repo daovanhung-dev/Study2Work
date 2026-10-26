@@ -1,45 +1,41 @@
-# Kết quả plan — API #79 Lấy chi tiết Content
+# Kết quả lập kế hoạch — API #79 Lấy chi tiết Content
 
-## Phạm vi
+Trạng thái tài liệu: `Draft — Needs Confirmation`.
 
-Tạo DD Markdown cho `GET /api/v1/admin/content/{content_id}` theo catalog và AC-33. Không sửa runtime, schema/migration, catalog, diagram hoặc client. Study workflow chỉ yêu cầu Markdown folder; không tạo ZIP.
+## Nguồn đã đối chiếu
 
-## Input/source manifest
+| Nguồn | Đọc/đối chiếu | Kết quả |
+|---|---|---|
+| `docs/lists/list_api.md` | API #79 + reusable Content | Bearer/Admin, int64 path, singleton `ApiEnvelope<Content>`, errors 401/403/404/500. |
+| `AC_UNICA/00_AC_API_INDEX.md` và `AC_04_ADMIN_MANAGEMENT.drawio` | AC-33 entry/nodes/edges | #78 queue → #79 reads content/version/author → #80/#81 decision → reload. |
+| DD #78 | Overview/Mapping/Open Questions/Report | Queue selects active pending rows; revision and stale-item policy remain open. |
+| APIs #49–#53 source | Content list/create/update/publish/delete | Current Study source uses `contents`; no creator field in insert; `archived_by` is updater. |
+| Legacy `DB.sql`, migrations 006/007 and table guide | Physical candidate relations | `contents` and `content_versions` have BIGINT Content projection/snapshot fields; author source absent. |
+| V1-PILOT `02_study_db.sql` | course_versions/content_blocks/review decisions | UUID-scoped model; not mapped directly to current BIGINT Content contract. |
+| API #69/#78 and shared router/auth/middleware/response | Closest local runtime patterns | Raw int64 path detail, ADMIN guard, static queue precedence, error `data:null`. |
+| Worklog selector and selected coding logs | Required preflight | #74/#75/#76 plus API #78 implementation worklog read before source edits. |
 
-| Source | Đơn vị/phạm vi đọc | Evidence sử dụng | Status |
-|---|---|---|---|
-| `docs/lists/list_api.md` | API #79, #78–#81 và reusable Content | Direct path/auth/input/response/errors; Content fields | DIRECT |
-| `AC_UNICA/00_AC_API_INDEX.md` | Toàn bộ AC-33 entry | Admin actor, pending precondition, four endpoint sequence | DIRECT |
-| `AC_04_ADMIN_MANAGEMENT.drawio` | Toàn bộ trang AC-33 nodes/edges | #78 queue, #79 reads content/version/author, #80/#81 branches, reload | DIRECT |
-| DD #78 | Overview/Request/Response/Mapping/Open Questions/Report | Queue state, response contract mismatch, revision/stale-item questions | Existing Draft evidence |
-| DD #69 and #74 | Admin detail response/mapping patterns | Keep catalog singleton; distinguish direct Page from derived singleton | Pattern/reference only |
-| Legacy `DB.sql`, `DB_UNICA_TABLES.md` | Relation inventory | No generic Content/version/author relation | Legacy artifact |
-| V1-PILOT `02_study_db.sql` | course_versions, content_blocks, content_review_decisions | UUID model, course-version creator, reviewer decision-log boundary | PILOT ARTIFACT; live DB unknown |
-| Current Study router/auth/middleware/responses/tests | API #79 path/module/guard/error/test scan | Route absent; Student-only guard; allowlist/error discrepancies | CURRENT SOURCE |
-| Registered createDD-markdown template/skill/workflow | Manifest, skill, eight sheets, Study workflow | 11-file Markdown delivery; appendices and no ZIP | REGISTRY-WIRED |
+## Implementation decisions
 
-## API Requirement Matrix
+- Add GET `/api/v1/admin/content/{content_id}` after fixed #78 route and register the dynamic contract path.
+- Guard ADMIN before parsing raw path/DB access; invalid signed-int64 and missing/soft-deleted rows map to 404 per catalog/#69 precedent.
+- Read one active `contents` row with a bound ID and map the exact eight Content fields. Do not filter current status again.
+- Return only direct `ApiEnvelope<Content>`; no version/author fields or inferred join. Do not mutate or commit.
+- Query/projection failures use safe 500 with rollback. Fake database tests establish local route behavior only.
+- Keep DD Draft and record checked-in DDL vs live schema boundary plus AC-33 version/author discrepancy.
 
-| Requirement | Source | DD coverage | Status |
-|---|---|---|---|
-| GET path + Bearer Admin | Catalog #79; AC-33 | Cover/Overview/Request/Mapping/Error | DIRECT requirement; runtime guard absent |
-| Required `content_id:int64!` | Catalog #79 | Request + Request Usage/Query matrices | DIRECT |
-| Success | Catalog #79 | Response/Mapping | HTTP 200 `DESIGN_RESOURCE_RETRIEVED`; `ApiEnvelope<Content>` DIRECT |
-| Errors | Catalog #79 | Error/Mapping | Exact 401/403/404/500 only |
-| Detail workflow | AC-33 nodes n5–n7 | Overview/Mapping/Open Questions | #78 selection → #79 detail → decision |
-| Metadata read | AC-33 node n6 | Overview/Mapping/Response/Open Questions | `content/version/author` read intent DIRECT; schema/response discrepancy |
-| No mutation in #79 | GET route + AC-33 | Overview/Mutation Matrix/table mapping | Read-only; #80/#81 own decisions/audit |
+## Direct-versus-derived boundary
 
-## Quyết định tài liệu
+| Item | Evidence | Status |
+|---|---|---|
+| Path/auth/response/errors | API catalog #79 | DIRECT |
+| Read version/author intent | AC-33 n6 | DIRECT, conflicts with response schema |
+| `contents` current-row projection | DDL + APIs #49–#53 | CURRENT SOURCE candidate |
+| Active-row filter | API #49/#53 and deleted_at column | DERIVED |
+| Return current status without pending recheck | Catalog omits status filter; #78 already selects pending | DERIVED; stale policy open |
+| Malformed/out-of-range path → 404 | API #69 precedent and #79 error set | DERIVED |
+| Author and selected revision | No matching field/selector | SOURCE_REQUIRED; not implemented |
 
-- Giữ exact catalog contract, nhất là `ApiEnvelope<Content>` và tám Content fields; không thêm version/author/reviewer fields.
-- Ghi discrepancy AC-33 n6 `content/version/author` so với catalog/reusable schema. Version/author reads là Q2/Q3 logical `SOURCE_REQUIRED`, không viết SQL.
-- Candidate Q1 lọc `Content.id = :content_id`. Không thêm `PENDING_REVIEW` predicate cho detail; trạng thái row được trả như đã đọc. Đây là `DERIVED`, stale-item policy mở.
-- Không chọn legacy resources/lessons hoặc pilot UUID `content_blocks` làm Content table. Không chuyển đổi UUID sang BIGINT.
-- Phân biệt pilot `course_versions.created_by_subject_id` (Course version creator) và `content_review_decisions.reviewer_subject_id` (reviewer); chưa có Content author mapping.
-- #79 không ghi decision/audit hoặc thay đổi status; `07_table.md` là `N/A — READ-ONLY API`.
-- Giữ Admin auth, error allowlist và `data:null`/`{}` helper mismatch như integration gaps.
+## AC-33 handoff
 
-## Trạng thái
-
-`Draft — Needs Confirmation`; chưa implementation-ready do AC-33 metadata projection, Content/version/author persistence, revision identity qua #78–#81, Admin guard, pending/stale detail rule và error integration chưa được quyết định. AC-33 macro-review #78–#81 đã hoàn tất ở mức tài liệu; các câu hỏi chưa có nguồn được giữ lại trong [báo cáo review nhóm](../81_admin_content_reject/VERIFICATION_REPORT.md).
+API #79 is read-only. API #80/#81 own approval/rejection and any decision/audit writes. Current detail path does not identify a revision, so the next APIs must not claim that `content_versions.archived_by` identifies the author or that the queue item remains current. The broader AC-33 sequence remains under review until revision identity and metadata projection are resolved.

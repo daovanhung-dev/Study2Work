@@ -18,7 +18,7 @@ status: "Draft — Needs Confirmation"
 | Format | JSON |
 | Character encoding | UTF-8 |
 | Content-Type | application/json |
-| Success contract | HTTP 200 `DESIGN_RESOURCE_RETRIEVED`; `ApiEnvelope<Content>`. |
+| Success contract | HTTP 200 `DESIGN_RESOURCE_RETRIEVED`; `ApiEnvelope<Content[]>`. |
 | Error contract | HTTP 401/403/404/500; chỉ dùng các code trong API catalog. |
 
 ## Response fields
@@ -28,53 +28,63 @@ status: "Draft — Needs Confirmation"
 | 1 | HTTPStatus | HTTP status | HTTPStatus | integer | No | N/A | N/A | 4 | 200 on success | N/A | Error statuses: 401, 403, 404, 500. |
 | 2 | success | Success flag | success | boolean | No | N/A | N/A | 4 | true on success; false on error | Required | ApiEnvelope convention. |
 | 3 | businessCode | Business code | businessCode | string | No | API catalog | literal | 4 | `DESIGN_RESOURCE_RETRIEVED` on success | Required | DIRECT. |
-| 4 | message | Message | message | string | No | Application | N/A | 4 | Safe localized text | Exact text unspecified | Do not expose SQL/schema errors. |
-| 5 | data | Content | data | object | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | One Content object per catalog | Required | Tree cardinality/nesting unresolved. |
-| 5.1 | data.id | Content ID | id | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | No approved mapping | Required | No generic Content table in legacy ERD. |
-| 5.2 | data.course_id | Course ID | course_id | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | No approved row/path mapping | Required | `course_id` path scopes the request; response mapping needs confirmation. |
-| 5.3 | data.content_type | Content type | content_type | ContentType | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | No enum mapping | Required | Type members/scalar encoding undefined. |
-| 5.4 | data.title | Title | title | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | No approved generic Content source | Required | Chapter/lesson titles in pilot are not automatic Content mapping. |
-| 5.5 | data.payload | Payload | payload | object | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | No keys or transformation defined | Required object | `{}` in example is a shape placeholder, not default. |
-| 5.6 | data.status | Content status | status | ContentStatus | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | No enum mapping | Required | ContentStatus values and visibility policy undefined. |
-| 5.7 | data.parent_id | Parent ID | parent_id | int64 | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | Optional field per reusable schema | Omit/null rule unresolved | No generic parent-content relation. |
-| 5.8 | data.order | Order | order | int32 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3 | No approved mapping | Required | Order direction/tie-breaker undefined. |
-| 6 | meta | Metadata | meta | object | No | Envelope | N/A | 4 | No pagination fields defined | Empty/object policy needs confirmation | Catalog ApiEnvelope. |
-| 7 | traceId | Trace ID | traceId | uuid | No | Request trace | trace ID | 4 | Propagate request trace | Required | Runtime route absent. |
+| 4 | message | Message | message | string | No | Application | N/A | 4 | Safe message; empty result uses “No course content found.” | Required | Text is implementation-owned. |
+| 5 | data | Content list | data | array | No | `contents` | result rows | 3 | Each active row maps to one Content object | Empty course → `[]` | Flat list; `parent_id` links nodes. |
+| 5.1 | `data[].id` | Content ID | `id` | int64 | No | `contents` | `id` | 3 | Direct mapping | Required | BIGSERIAL/BIGINT; live schema unverified. |
+| 5.2 | `data[].course_id` | Course ID | `course_id` | int64 | No | `contents` | `course_id` | 3 | Direct mapping | Required | Must match requested course. |
+| 5.3 | `data[].content_type` | Content type | `content_type` | string | No | `contents` | `content_type` | 3 | Direct mapping | Required | Open string; enum members unspecified. |
+| 5.4 | `data[].title` | Title | `title` | string | No | `contents` | `title` | 3 | Direct mapping | Required |  |
+| 5.5 | `data[].payload` | Payload | `payload` | object | No | `contents` | `payload` | 3 | Direct JSON object mapping | Required object | DB check requires JSON object; subtype keys unspecified. |
+| 5.6 | `data[].status` | Content status | `status` | string | No | `contents` | `status` | 3 | Direct mapping | Required | Open string; no status filter. |
+| 5.7 | `data[].parent_id` | Parent ID | `parent_id` | int64 | Yes | `contents` | `parent_id` | 3 | Direct mapping | Null root is omitted | `exclude_none=True`; no nested `children[]`. |
+| 5.8 | `data[].order` | Order | `order` | int32 | No | `contents` | `content_order` | 3 | Alias mapping | Required | SQL sorts by parent, order, then id. |
+| 6 | meta | Metadata | meta | object | No | Envelope | N/A | 4 | Empty mapping `{}`; no pagination | Required object | No pagination contract. |
+| 7 | traceId | Trace ID | traceId | uuid | No | Request trace | trace ID | 4 | Propagate request trace | Required | Also returned in `X-Trace-Id`. |
 
 ## Ví dụ thành công
-
-Đây là ví dụ shape, không phải response có thể dùng để kiểm thử: enum và payload chưa được định nghĩa; giá trị `SOURCE_REQUIRED` chỉ là placeholder.
 
 ```json
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Nội dung course đã được đọc.",
-  "data": {
-    "id": 1001,
-    "course_id": 501,
-    "content_type": "SOURCE_REQUIRED",
-    "title": "SOURCE_REQUIRED",
-    "payload": {},
-    "status": "SOURCE_REQUIRED",
-    "order": 1
-  },
+  "message": "Course content retrieved.",
+  "data": [
+    {
+      "id": 1001,
+      "course_id": 501,
+      "content_type": "lesson-node",
+      "title": "Nội dung mẫu",
+      "payload": {"body": "Nội dung"},
+      "status": "draft-like",
+      "order": 1
+    },
+    {
+      "id": 1002,
+      "course_id": 501,
+      "content_type": "lesson-node",
+      "title": "Nội dung con",
+      "payload": {"body": "Chi tiết"},
+      "status": "published-like",
+      "parent_id": 1001,
+      "order": 1
+    }
+  ],
   "meta": {},
   "traceId": "7b9c43d2-03d1-4f69-baf7-09bc6c1f8741"
 }
 ```
 
-`parent_id` là optional và bị lược trong ví dụ; quy tắc null/omit chưa xác nhận. `payload: {}` chỉ giữ đúng type object, không phải mặc định rỗng. `ContentType`/`ContentStatus` placeholder không đại diện enum hợp lệ.
+Các `content_type`/`status` trên chỉ minh họa open strings; không phải enum members đã duyệt. Empty result trả `data: []`. Root `parent_id: null` bị lược khỏi object.
 
 ## Ví dụ lỗi
 
-Ví dụ theo envelope design. Current Study helper được context ghi nhận mặc định `data: {}` khi không truyền `data`, vì vậy error body cần được xác nhận khi API được nối vào runtime.
+`error_response` hiện trả `data: null` và `meta: {}` nếu caller không truyền giá trị riêng.
 
 ```json
 {
   "success": false,
   "businessCode": "DESIGN_RESOURCE_NOT_FOUND",
-  "message": "Không tìm thấy tài nguyên.",
+  "message": "Course not found.",
   "data": null,
   "meta": {},
   "traceId": "7b9c43d2-03d1-4f69-baf7-09bc6c1f8741"

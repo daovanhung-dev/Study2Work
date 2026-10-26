@@ -7,7 +7,7 @@
 - Catalog và AC-22 chỉ khai báo path; body/action selector vắng mặt dù API title có publish/unpublish. Proposal {published:boolean!} được đánh dấu DERIVED, không thay contract canonical.
 - AC-22 quy định logical UPDATE publication status rồi reload cây. AC-33 nêu PENDING_REVIEW và APPROVED/PUBLISHED + audit, nhưng không tách approval khỏi publication.
 - Proposal state machine: APPROVED → PUBLISHED sau readiness; PUBLISHED → APPROVED khi unpublish; same target no-op. Không eligible state → 422 candidate. Mọi transition/readiness detail DERIVED.
-- Generic Content/version relation chưa có trong legacy schema. Pilot content_blocks là UUID/lesson-bound và không được thay thế Content BIGINT.
+- Follow-up API #49 ngày 2026-10-25 thêm legacy `contents` base relation vào DDL/migration 006; version-history relation còn thiếu. Pilot content_blocks là UUID/lesson-bound và không thay thế Content BIGINT.
 - DD #49–#51 review: #50 create và #51 new revision đề xuất PENDING_REVIEW; #52 phải phối hợp với Admin AC-33 trước khi lifecycle được chốt.
 - Current source không có API #52 route/module/test; middleware allowlist thiếu path.
 - Output: 8 template sheets + PLAN_RESULT.md + OPEN_QUESTIONS.md + VERIFICATION_REPORT.md.
@@ -21,7 +21,7 @@
 | AC_03_MENTOR_TEACHING.drawio | Page AC22 nodes/edges | PATCH → UPDATE publication status → reload tree | DIRECT logical effect |
 | AC_04_ADMIN_MANAGEMENT.drawio | Page AC33 nodes/edges | PENDING_REVIEW queue; APPROVED/PUBLISHED + audit | DIRECT evidence; relation to #52 unresolved |
 | DD #49, #50, #51 | Overview/request/mapping/open questions | Tree/read semantics, create initial state and update version proposal | Related design evidence; proposals remain DERIVED |
-| Legacy DB guide and infra/postgres/study-server/DB.sql | courses/content relations | No generic Content/version table | Legacy design artifact; live DB unknown |
+| Legacy DB guide, `DB.sql`, migration 006 | course/Content base relations | `contents` base model present locally; no version-history relation | Legacy design artifact; live DB unknown |
 | infra/postgres/02_study_db.sql | course_versions/chapters/lessons/content_blocks | UUID, lesson-bound model | V1-PILOT artifact; not equivalent |
 | apps/study-server/app/api/v1.py | Route declarations | No #52 route; 12 catalog IDs route matched | Current source |
 | middleware.py/responses.py | DESIGN_CONTRACT_PATHS and error serialization | Path absent; missing error data becomes {} | Current source |
@@ -110,3 +110,7 @@ No executable SQL is supplied for generic Content. Do not infer table/column nam
 | Shared auth/schema/errors | Mentor course permission cần thiết; generic Content BIGINT model, enum/payload/version, principal binding và middleware path wiring chưa có source runtime. | SOURCE_REQUIRED; không DD nào là implementation-ready. |
 
 Không có thay đổi nào biến các proposal thành contract đã duyệt. API #53 và các DD #49–#52 vẫn ở trạng thái Draft — Needs Confirmation.
+
+## Implementation follow-up — 2026-10-25
+
+API #52 is now implemented locally in `app/modules/mentor/api_52_mentor_content_publish` and wired through `app/api/v1.py` plus `DESIGN_CONTRACT_PATHS`. The strict `{published:boolean}` body, APPROVED→PUBLISHED/PUBLISHED→APPROVED transitions, same-target no-op, APPROVED status readiness gate, and direct `courses.mentor_id` check are DERIVED fallbacks; catalog and AC-22 still declare path only. The view locks Content/Course and changes only `contents.status`; it does not create a revision. Fake DB tests do not establish live PostgreSQL schema/deployment or AC-33 approval behavior. See the current implementation addendum in `VERIFICATION_REPORT.md` after final verification.

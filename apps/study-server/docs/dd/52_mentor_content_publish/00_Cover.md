@@ -28,7 +28,7 @@ status: "Draft — Needs Confirmation"
 | Reviewed by | Pending |
 | Approved by | Pending |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-25 |
 
 ## Tên hiển thị
 

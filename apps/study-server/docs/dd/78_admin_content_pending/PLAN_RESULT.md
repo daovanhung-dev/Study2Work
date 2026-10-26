@@ -2,44 +2,28 @@
 
 ## Phạm vi
 
-Tạo DD Markdown cho `GET /api/v1/admin/content/pending` theo catalog và AC-33. Không sửa runtime, schema/migration, catalog, diagram hoặc client. Study workflow chỉ yêu cầu Markdown folder; không tạo ZIP.
+Triển khai `GET /api/v1/admin/content/pending`, HTTP tests, DD #78 và Study Server context. Không sửa catalog/diagram/schema/migration/client; không triển khai #79–#81. Không tạo ZIP.
 
-## Input/source manifest
+## Thứ tự nguồn và bằng chứng
 
-| Source | Đơn vị/phạm vi đọc | Evidence sử dụng | Status |
-|---|---|---|---|
-| `docs/lists/list_api.md` | Rows #78–#81, reusable Content/Page/PageMeta | Request/response/error contract, AC-33 endpoint order | DIRECT |
-| `AC_UNICA/00_AC_API_INDEX.md` | AC-22 and AC-33 sections | Actors, preconditions, queue/review sequence | DIRECT |
-| `AC_04_ADMIN_MANAGEMENT.drawio` | Full page AC-33 nodes and edges | Pending queue predicate, #79 detail, #80/#81 decisions, reload | DIRECT |
-| `AC_03_MENTOR_TEACHING.drawio` | Full page AC-22 nodes and edges | Content create/update/publish/delete producer context | DIRECT logical flow |
-| DD #49–#53 | Overview/request/response/mapping/open questions and linked lifecycle findings | Content projection, PENDING_REVIEW proposals, version/delete questions | Existing Draft evidence; proposals remain DERIVED |
-| DD #68 and #73 | Response/list patterns | Cardinality mismatch and direct Page precedent | Related DD evidence; does not override catalog #78 |
-| `DB_UNICA_TABLES.md`, legacy `DB.sql` | Content relation/table inventory | No generic Content queue relation | Legacy design artifact; live DB unknown |
-| `infra/postgres/02_study_db.sql` | `content_blocks`, `content_review_decisions` | UUID/version/lesson model and append-only decision-log boundary | PILOT ARTIFACT; not catalog mapping |
-| Current Study router/auth/middleware/responses/tests | API #78 path/module/guard/error scan | No route/module/test; Student-only guard; allowlist/error discrepancies | CURRENT SOURCE |
-| Registered template/skill/workflow | Manifest, `createDD-markdown`, 8 templates, Study docs workflow | 11-file Markdown delivery and appendix baseline | Registry-wired |
+| Order | Source | Evidence | Status |
+|---:|---|---|---|
+| 1 | AC-33 diagram/index | Admin queue; `status=PENDING_REVIEW`; #78 → #79 detail → #80/#81 → reload. | DIRECT |
+| 2 | Legacy `DB.sql`, migrations 006/007 | BIGINT `contents` and `content_versions` candidate; payload JSONB object and nullable deleted_at. | CHECKED_IN CANDIDATE; live DB unknown |
+| 3 | API catalog #78 / reusable schemas | Query type/course/page, `ApiEnvelope<Content>`, exact 401/403/500. | DIRECT |
+| 4 | Current APIs #49–#53 | Content projection, active-row filter, create/update set PENDING_REVIEW, update snapshots previous state. | CURRENT SOURCE |
+| 5 | DD #78 and linked #79–#81 | Earlier source-gap/cardinality/version questions and moderation boundary. | Draft evidence; stale physical/auth claims corrected for #78 |
 
-## API Requirement Matrix
+## Implementation decisions
 
-| Requirement | Source | DD coverage | Status |
-|---|---|---|---|
-| GET path + Bearer Admin | Catalog #78; AC-33 | Cover, Overview, Request, Mapping, Error | DIRECT requirement; runtime guard absent |
-| Optional `type`, `course`, `page` | Catalog #78 | Request + usage/query matrices | DIRECT fields; interpretation partly open |
-| Pending predicate | AC-33 diagram node n3 | Overview/Mapping/Response | DIRECT `status=PENDING_REVIEW` |
-| Success contract | Catalog #78 | Response/Mapping | DIRECT `ApiEnvelope<Content>`; cardinality conflict retained |
-| Errors | Catalog #78 | Error/Mapping | Exact 401/403/500 only |
-| Detail/decision/reload sequence | AC-33 nodes n5–n12 | Overview/Mapping/Open Questions | #79 detail; #80 approve; #81 reject; #78 has no mutation |
+- Shared `ADMIN` guard before raw query parse and DB access.
+- Use current logical rows from `contents`; filter `status='PENDING_REVIEW' AND deleted_at IS NULL`.
+- Optional exact filters: `type -> content_type`, `course -> course_id`; no ContentType whitelist.
+- Because collection/page flow conflicts with catalog singleton Content, local runtime uses `Page<Content>` as DERIVED. Page defaults to 1, size fixed 20, order `id ASC`, count/list use same filters, and empty/out-of-range page returns 200 empty.
+- Invalid numeric `course`/`page` returns derived 422 `DESIGN_VALIDATION_ERROR`; API row currently omits 422.
+- Reuse the API #49 Content projection; no version/author join, mutation, audit, schema change or migration.
+- DD remains `Draft — Needs Confirmation`; catalog and diagram remain unchanged.
 
-## Quyết định tài liệu
+## Status
 
-- Giữ exact direct response `ApiEnvelope<Content>`. `Page<Content>` là proposal `DERIVED` riêng, cần owner/catalog correction vì endpoint/page query biểu thị list.
-- Dùng `status=PENDING_REVIEW` làm logical fixed predicate. Không khẳng định mọi POST #50 hoặc update #51 đều thực sự đưa revision vào trạng thái này.
-- `type` → `content_type` và `course` → `course_id` exact filters là candidate; physical table, enum/casing và live schema chưa xác nhận.
-- Nếu Page được duyệt: candidate page 1-based/default 1, fixed size 20, `id ASC`, count cùng predicates, empty list 200. Không thêm query `size`/`sort` vào contract hiện tại.
-- #78 chỉ map các field reusable của Content; author/version thuộc #79; approval/rejection/audit thuộc #80/#81.
-- Legacy schema thiếu generic Content; V1-PILOT `content_blocks`/`content_review_decisions` không map trực tiếp sang Content BIGINT. Không viết executable SQL hoặc mutation mapping.
-- Current Study source không có Admin route/guard; no application test or live DB verification was run.
-
-## Trạng thái
-
-`Draft — Needs Confirmation`; chưa implementation-ready do list cardinality/page contract, Content/version persistence, enum/type matching, queue version/deletion visibility, Admin guard và error integration chưa được quyết định. AC-33 macro-review #78–#81 đã hoàn tất ở mức tài liệu; các câu hỏi chưa có nguồn được giữ lại trong [báo cáo review nhóm](../81_admin_content_reject/VERIFICATION_REPORT.md).
+Runtime and focused HTTP suite were added. Full verification, final fingerprints and context count are recorded in `VERIFICATION_REPORT.md` and the worklog after the requested tests/static checks complete.

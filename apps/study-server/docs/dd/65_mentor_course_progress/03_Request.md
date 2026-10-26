@@ -48,9 +48,9 @@ N/A — GET không khai báo body trong catalog.
 
 | Request item | Source/use | Query/response use | Rule/status |
 |---|---|---|---|
-| Authorization | Header | Xác thực Bearer và xác định role/principal để áp dụng course scope | Bearer + role Mentor DIRECT; guard và principal-to-user mapping SOURCE_REQUIRED. |
-| course_id | Required path, int64 | Candidate course lookup và giới hạn enrollment/progress query theo course | Kiểu DIRECT; schema/live column mapping unresolved. |
-| Query | Không khai báo | Không có paging/filter input | DIRECT; xung đột với PageMeta nếu roster lớn. |
+| Authorization | Header | Xác thực Bearer và xác định role/principal để áp dụng course scope | Bearer + role Mentor DIRECT; local route đọc raw header và shared guard kiểm tra JWT. |
+| course_id | Required path, int64 | Course lookup và giới hạn enrollment/progress query theo course | Kiểu DIRECT; local route đọc raw path, OpenAPI khai báo int64, malformed/overflow trả 404 DERIVED. |
+| Query | Không khai báo | Không có paging/filter input | DIRECT; local runtime trả một page roster đầy đủ, có thể không giới hạn. |
 | Body | Không khai báo | Không có payload mutation | DIRECT. |
 
 ## Ví dụ request
@@ -60,7 +60,7 @@ GET /api/v1/mentor/courses/321/progress
 Authorization: Bearer <JWT>
 ~~~
 
-Ví dụ chỉ minh họa method/path/header đã có trong catalog; không khẳng định route hiện được phục vụ bởi Study Server.
+Route hiện có trong Study Server; response cục bộ dùng progress page DERIVED được mô tả ở [Response](./04_Response.md), khác trực tiếp contract `Page<Course>` trong catalog.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -16,13 +16,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-26 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | `1.0` | `2026-10-24` | `Codex` | Tạo DD API #84 theo catalog và AC-34; body/schema candidate được đánh dấu DERIVED. | Draft — Needs Confirmation. |
+| `1.1` | `2026-10-26` | `Codex` | Đồng bộ DD với API #84 local implementation; ghi body/SQL/transaction là DERIVED và cập nhật ranh giới schema/auth chưa xác minh. | Runtime source/tests verified locally; live schema and owner approval remain open. |
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

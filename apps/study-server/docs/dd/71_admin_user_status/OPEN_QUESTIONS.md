@@ -1,6 +1,6 @@
 # Câu hỏi còn mở — API #71
 
-Trạng thái tài liệu: Draft — Needs Confirmation. Candidate bên dưới không phải implementation contract trước khi được xác nhận.
+Trạng thái tài liệu: Draft — Needs Confirmation. Runtime đã triển khai các fallback DERIVED bên dưới để giữ API #71 hoạt động theo contract hiện có; các lựa chọn này chưa được owner phê duyệt và không trở thành canonical contract chỉ vì đã có code.
 
 1. **Request body:** API #71 nhận `body{status:UserStatus!}` hay một shape khác? Body required và PATCH có semantics set-target-state như candidate không?
 2. **Status enum:** `UserStatus` gồm những giá trị nào? Có thể chốt `ACTIVE` để mở và `SUSPENDED` để khóa không? V1-PILOT enum có được phép làm nguồn cho legacy Study không?
@@ -19,5 +19,5 @@ Trạng thái tài liệu: Draft — Needs Confirmation. Candidate bên dưới 
 
 - `ACTIVE`/`SUSPENDED`, body `{status}`, user status UPDATE và revoke refresh-token rows khi khóa là `DERIVED` candidates.
 - Candidate refresh-token revoke không có nghĩa access JWT hiện hữu bị vô hiệu ngay.
-- Không thay đổi catalog, diagram, schema, router hoặc runtime trong task này.
+- Catalog, diagram và schema không được đổi để hợp thức hóa các fallback. Runtime hiện tại được mô tả riêng trong DD; owner cần xác nhận hoặc thay đổi các quyết định DERIVED qua một task có contract rõ ràng.
 - AC-31 macro-review document-level đã hoàn tất sau khi API #72 DD được tạo; các policy questions chưa được giải quyết.

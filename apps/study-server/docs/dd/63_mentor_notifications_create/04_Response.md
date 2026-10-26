@@ -27,13 +27,13 @@ status: "Draft — Needs Confirmation"
 | 2 | `success` | Cờ thành công | `success` | boolean | Không | Envelope | `true` khi được tiếp nhận | Không đồng nghĩa delivery thành công. |
 | 3 | `businessCode` | Mã nghiệp vụ | `businessCode` | string | Không | Catalog | Giá trị cố định | `DESIGN_OPERATION_ACCEPTED`. |
 | 4 | `message` | Thông điệp | `message` | string | Không | Ứng dụng | Nội dung an toàn | Câu chữ chưa được quy định. |
-| 5 | `data` | Operation | `data` | Operation | Không | Schema dùng chung | Ánh xạ theo schema | Operation storage chưa được xác nhận. |
-| 5.1 | `data.id` | Operation ID | `id` | uuid | Không | Operation schema | UUID | API #18 catalog row lại khai báo path int64. |
-| 5.2 | `data.kind` | Operation kind | `kind` | OperationKind | Không | Operation schema | Giá trị enum trực tiếp theo schema | Các giá trị enum và nguồn chưa có. |
-| 5.3 | `data.status` | Operation status | `status` | OperationStatus | Không | Operation schema | Trạng thái của job, không suy là provider đã gửi | Enum/lifecycle chưa có. |
-| 5.4 | `data.owner_id` | Operation owner | `owner_id` | int64 | Không | Operation schema | ID chủ sở hữu | Chưa có mapping Mentor principal sang int64. |
-| 5.5 | `data.submitted_at` | Thời điểm nhận | `submitted_at` | date-time | Không | Operation schema | ISO-8601 theo convention | Chưa có nguồn clock hoặc độ chính xác thời gian. |
-| 5.6 | `data.updated_at` | Thời điểm cập nhật | `updated_at` | date-time | Không | Operation schema | ISO-8601 theo convention | Lifecycle chưa có. |
+| 5 | `data` | Operation | `data` | Operation | Không | Schema dùng chung | Project từ batch notification đã commit | Local projection; không có Operation table riêng. |
+| 5.1 | `data.id` | Operation ID | `id` | uuid | Không | Sinh UUID trước khi ghi notification rows | Dùng chung làm `notifications.operation_id`; API #18 path discrepancy vẫn mở. |
+| 5.2 | `data.kind` | Operation kind | `kind` | OperationKind | Không | Fallback cố định `NOTIFICATION_DISPATCH` | Giá trị DERIVED; enum catalog chưa khai báo. |
+| 5.3 | `data.status` | Operation status | `status` | OperationStatus | Không | `QUEUED` sau commit outbox | Không suy ra provider đã gửi; giá trị DERIVED. |
+| 5.4 | `data.owner_id` | Operation owner | `owner_id` | int64 | Không | Numeric Mentor `sub` | Cùng key với legacy `notifications.sender_id`. |
+| 5.5 | `data.submitted_at` | Thời điểm nhận | `submitted_at` | date-time | Không | DB `notifications.created_at` | ISO-8601; DB timestamp precision is preserved. |
+| 5.6 | `data.updated_at` | Thời điểm cập nhật | `updated_at` | date-time | Không | Bằng `submitted_at` khi mới QUEUED | Future outbox worker may advance delivery timestamps; not implemented here. |
 | 5.7 | `data.completed_at` | Thời điểm hoàn tất | `completed_at` | date-time? | Tùy chọn | Operation schema | Bỏ hoặc null theo serializer được duyệt | Thường chưa có tại 202; semantics chưa chốt. |
 | 5.8 | `data.result` | Operation result | `result` | Payment? | Tùy chọn | Operation schema | Giữ nguyên schema trực tiếp | `Payment` không phù hợp notification job; không tự thay bằng NotificationDelivery. |
 | 5.8.1 | `data.result.id` | Payment ID | `id` | int64 | Bắt buộc nếu có Payment | Payment schema | Field lồng trực tiếp | Không có ý nghĩa cho notification job. |
@@ -43,20 +43,21 @@ status: "Draft — Needs Confirmation"
 | 5.8.5 | `data.result.status` | Payment status | `status` | PaymentStatus | Bắt buộc nếu có Payment | Payment schema | Enum direct | Không có ý nghĩa cho notification job. |
 | 5.8.6 | `data.result.transaction_code` | Transaction code | `transaction_code` | string? | Tùy chọn | Payment schema | Optional field | Không có ý nghĩa cho notification job. |
 | 5.8.7 | `data.result.paid_at` | Thời điểm thanh toán | `paid_at` | date-time? | Tùy chọn | Payment schema | ISO-8601 | Không có ý nghĩa cho notification job. |
-| 6 | `meta` | Metadata | `meta` | object | Không | Envelope | `{}` chỉ minh họa | Các field meta riêng của API chưa được khai báo. |
+| 6 | `meta` | Metadata | `meta` | object | Không | Envelope | `{ "notification_ids": [int64, ...] }` | DERIVED handoff; one legacy notification ID per recipient for API #64. |
+| 6.1 | `meta.notification_ids[]` | Notification ID theo recipient | `notification_ids` | int64[] | Không | `notifications.id` rows vừa commit | Client gọi API #64 một lần cho mỗi ID; preserve request recipient order. |
 | 7 | `traceId` | Trace ID | `traceId` | uuid | Không | Quy ước dùng chung | Truyền tiếp trace của request | Endpoint chưa có route. |
 
 ## Khoảng trống trong response contract
 
-- Catalog yêu cầu `ApiEnvelope<Operation>`; các field Operation được giữ đúng schema dùng chung.
-- `Operation.id` là UUID nhưng API #64 yêu cầu `notification_id:int64`; #63 chưa có field nguồn nào trao ID đó cho client.
+- Catalog yêu cầu `ApiEnvelope<Operation>`; direct Operation fields giữ nguyên schema dùng chung.
+- `Operation.id` là UUID; mỗi Notification ID int64 được công bố trong `meta.notification_ids` để client gọi API #64 riêng cho từng recipient.
 - `Operation.result` hiện chỉ là `Payment?`; không thay bằng `NotificationDelivery` nếu catalog chưa đổi.
 - `NotificationDelivery` reusable schema có `notification_id`, `status`, `queued`, `sent`, `failed`, nhưng chưa được khai báo làm Operation result hoặc response #64.
 - Node API #18 trong AC-25 có UUID operation_id nhưng không nối trên diagram; API #18 row còn khai báo int64.
 
 ## Ví dụ thành công — minh họa cấu trúc
 
-HTTP 202 xác nhận đã tiếp nhận để xử lý. Enum placeholders chưa phải enum value được duyệt; `result` được lược vì là optional và schema hiện khai báo Payment, không phải delivery notification.
+HTTP 202 xác nhận Notification và QUEUED outbox rows đã được commit. Enum values bên dưới là fallback DERIVED; `result` được lược vì là optional và schema hiện khai báo Payment, không phải delivery notification.
 
 ```json
 {
@@ -65,20 +66,20 @@ HTTP 202 xác nhận đã tiếp nhận để xử lý. Enum placeholders chưa 
   "message": "<SAFE_ACCEPTED_MESSAGE>",
   "data": {
     "id": "00000000-0000-4000-8000-000000000063",
-    "kind": "<OperationKind_SOURCE_REQUIRED>",
-    "status": "<OperationStatus_SOURCE_REQUIRED>",
+    "kind": "NOTIFICATION_DISPATCH",
+    "status": "QUEUED",
     "owner_id": 1001,
     "submitted_at": "2026-10-24T00:00:00Z",
     "updated_at": "2026-10-24T00:00:00Z"
   },
-  "meta": {},
+  "meta": {"notification_ids": [30001, 30002]},
   "traceId": "00000000-0000-4000-8000-000000000064"
 }
 ```
 
 ## Ví dụ lỗi — theo API Guidelines
 
-`data:null` theo guideline; helper hiện tại mặc định `{}` nếu không truyền data. API #63 chưa có route nên đây chưa phải behavior runtime.
+`error_response(...)` hiện dùng cho API #63; khi không truyền `data`, runtime error envelope chứa `data:null`.
 
 ```json
 {

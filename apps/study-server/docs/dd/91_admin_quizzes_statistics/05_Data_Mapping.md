@@ -28,7 +28,7 @@ status: "Draft — Needs Confirmation"
 | Bearer token | API catalog #91 | Request phải có Bearer JWT | DIRECT |
 | Role | API catalog #91 | Actor là Admin | DIRECT |
 | Quiz permission | AC-35 | Admin có quiz-management permission | DIRECT intent; claim/policy SOURCE_REQUIRED |
-| Current guard | Study router/auth source | Chưa có Admin guard hoặc route #91 | CURRENT_BEHAVIOR: UNWIRED / NOT_FOUND |
+| Current guard | `app/utils/auth.py` qua #91 validator | Shared `validate_current_user_request(..., role="ADMIN")` trước raw path parse; route #91 đã wired | CURRENT_BEHAVIOR: SOURCE_BACKED locally |
 
 - Authorize trước khi đọc quiz/attempt data.
 - Không nhận user_id/role từ request và không dùng Student guard thay Admin policy.
@@ -46,9 +46,9 @@ status: "Draft — Needs Confirmation"
 | Body | None | None | DIRECT |
 | Query | None | None | DIRECT |
 
-### Q1 — Candidate aggregate query
+### Q1 — Runtime aggregate query
 
-> Logical PostgreSQL candidate over legacy design only; live schema and runtime query are unverified.
+> Runtime query over the checked-in legacy BIGINT design candidate. Live schema and deployment remain unverified; metric meanings remain DERIVED.
 
 ~~~sql
 SELECT
@@ -80,7 +80,7 @@ GROUP BY q.id, q.passing_score;
 
 | Query | Type | Candidate source | Column/expression | Predicate/transform | Purpose/status |
 |---|---|---|---|---|---|
-| Q1 | SELECT | quizzes q | q.id | q.id = :quiz_id | Existence and quiz ID; legacy candidate. |
+| Q1 | SELECT | quizzes q | q.id | q.id = :quiz_id | Existence and quiz ID; runtime local, legacy candidate. |
 | Q1 | SELECT | quizzes q | q.passing_score | GROUP BY q.id, q.passing_score | Pass threshold; nullable DDL discrepancy. |
 | Q1 | LEFT JOIN | quiz_attempts a | a.quiz_id = q.id | Include linked rows | Candidate 1:N relation; live FK unverified. |
 | Q1 | COUNT | quiz_attempts a | a.id | COUNT(a.id) | All linked attempts; zero if none. |
@@ -108,7 +108,7 @@ GROUP BY q.id, q.passing_score;
 | Quiz có attempts | Aggregate các row liên kết | DERIVED |
 | passing_score NULL | Passed count/rate NULL | DERIVED |
 | Quiz row không tồn tại | 404 DESIGN_RESOURCE_NOT_FOUND | Code DIRECT; interpretation DERIVED |
-| Query/mapping failure | 500 DESIGN_INTERNAL_ERROR | Code DIRECT; route chưa có |
+| Query/mapping failure | 500 DESIGN_INTERNAL_ERROR | Code DIRECT; runtime maps SQL/projection failures safely and rolls back |
 
 <a id="step-2-map-response"></a>
 
@@ -156,10 +156,10 @@ Direct Quiz schema cannot carry the proposed statistics and its nested projectio
 
 ## Step 3 — Return result or catalog error
 
-- Direct success contract: HTTP 200 DESIGN_RESOURCE_RETRIEVED, ApiEnvelope<Quiz>.
-- AC-35 statistics requires a schema change or approved response decision before implementation; QuizStatistics remains a separate proposal.
+- Direct success contract: HTTP 200 DESIGN_RESOURCE_RETRIEVED, ApiEnvelope<Quiz> per diagram/catalog.
+- Current local runtime returns `ApiEnvelope<QuizStatistics>` as a separately named DERIVED fallback; the direct catalog/diagram conflict remains unresolved and the DD remains Draft.
 - Error set is exactly 401/403/404/500 with catalog DESIGN_* codes.
-- Current helper/middleware do not prove #91 behavior because no route is registered.
+- #91 route template is registered in `DESIGN_CONTRACT_PATHS`; auth, parsing, error mapping and aggregate behavior are covered by local HTTP tests.
 - Không trả SQL, answer rows, answer key hoặc Student identifiers.
 ---
 ## Phụ lục đối chiếu nguồn Excel

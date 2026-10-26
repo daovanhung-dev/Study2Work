@@ -17,7 +17,7 @@ status: "Draft — Needs Confirmation"
 1. [Step 0 — Authentication and permission](#step-0-authentication-and-permission)
 2. [Step 1 — Read request](#step-1-read-request)
 3. [Step 2 — Resolve audience](#step-2-resolve-audience)
-4. [Step 3 — Create Notification](#step-3-create-notification)
+4. [Step 3 — Create Notification and delivery rows](#step-3-create-notification-and-delivery-rows)
 5. [Step 4 — Accept and dispatch](#step-4-accept-and-dispatch)
 6. [Step 5 — Map response](#step-5-map-response)
 7. [Step 6 — Return result or error](#step-6-return-result-or-error)
@@ -26,78 +26,70 @@ status: "Draft — Needs Confirmation"
 
 ## Step 0 — Authentication and permission
 
-- Read Authorization and validate Bearer JWT; missing/invalid maps to 401 DESIGN_AUTHENTICATION_REQUIRED.
-- Check role Admin and AC-36 notification-management permission before audience resolution.
-- Permission key, claim mapping, caller ID and 403 precedence are SOURCE_REQUIRED.
-- Current source has no #93 route or verified Admin guard: UNWIRED / NOT_FOUND.
+- Shared `validate_current_user_request(..., role="ADMIN")` runs before body parsing or recipient queries.
+- The shared guard supplies the caller ID used as `sender_id`. No fine-grained notification permission is source-backed or checked.
+- Local fake-DB HTTP tests cover 401/403 ordering; no live token, database, or deployment check was run.
 - Error: [06_Error.md](./06_Error.md#error-401).
 
 <a id="step-1-read-request"></a>
 
 ## Step 1 — Read request
 
-| Input | Direct type | Use | Status |
+| Input | Direct type | Runtime behavior | Status |
 |---|---|---|---|
-| recipients | Optional int64[] | Explicit audience candidate | Selector rule open |
-| segment | Optional AudienceSegment | Segment candidate | Values/expansion SOURCE_REQUIRED |
-| title | Required string | Notification title | Blank/length rules absent |
-| content | Required string | Notification content | Blank/length rules absent |
-| channels | Required NotificationChannel[] | Delivery intent | Enum/provider mapping absent |
+| recipients | Optional int64[] | Required by fallback; non-empty, positive, unique IDs | DERIVED |
+| segment | Optional AudienceSegment | Rejected when supplied | DERIVED; values and expansion predicate SOURCE_REQUIRED |
+| title | Required string | Nonblank; at most 200 characters | DERIVED from legacy DDL candidate |
+| content | Required string | Nonblank; no maximum added | DERIVED |
+| channels | Required NotificationChannel[] | Non-empty unique `PUSH` / `EMAIL` | DERIVED from diagram and outbox candidate |
 
-- Preserve names, types and requiredness.
-- Do not add action, scheduled_at, operation_id or an undeclared header.
-- DERIVED proposal: exactly one audience selector, non-empty channels, nonblank title/content; not approved.
+- Preserve request field names and requiredness in the direct contract.
+- Unknown fields, invalid JSON, and wrong types return catalog 422. Strings are checked for blankness but otherwise preserved.
+- No action, `scheduled_at`, `operation_id`, or `Idempotency-Key` is added to the request.
 
 <a id="step-2-resolve-audience"></a>
 
 ## Step 2 — Resolve audience
 
-- Contract does not define both/neither selector behavior, empty lists, duplicate IDs, segment values, or recipient eligibility.
-- AC-36 does not identify a physical audience source.
+- Runtime uses only the explicit recipient IDs; it does not infer a default audience or expand segments.
+- Query `FIND_ADMIN_NOTIFICATION_RECIPIENTS` selects matching `users.id` values for the supplied IDs. A missing ID returns one generic 422 without identifying which user is absent.
+- No role, status, course, or enrollment predicate is added. Fan-out follows recipient request order.
 - Do not copy Mentor course checks from #63 or Student ownership from #43–#45.
-- No executable SELECT, partial-recipient behavior or ordering is specified: SOURCE_REQUIRED.
 
 ### Query matrix
 
 | ID | Purpose | Type/source | Columns/conditions | Pagination | Status |
 |---|---|---|---|---|---|
-| Q1 | Resolve recipient IDs or segment | No approved table/view | Predicate and scope undefined | N/A | SOURCE_REQUIRED |
+| Q1 | Verify explicit recipient IDs exist | `users` legacy schema candidate | `id = ANY(:recipient_ids)` | N/A | Wired locally; candidate schema only |
 | Q2 | Read Operation if response uses it | No Study Operation store found | API #18 ID/owner conflict | N/A | SOURCE_REQUIRED |
 
-<a id="step-3-create-notification"></a>
+<a id="step-3-create-notification-and-delivery-rows"></a>
 
-## Step 3 — Create Notification
+## Step 3 — Create Notification and delivery rows
 
-- AC-36 node n6 requires logical Notification + recipients.
-- Use title/content as logical Notification values.
-- Treat channels as delivery intent; do not map to legacy notifications.type.
-- Admin identity mapping, physical target, ID/status/time generation, audit and rollback are SOURCE_REQUIRED.
-- Legacy notifications is only a partial candidate; V1-PILOT UUID learner model is separate.
-- See [07_table.md](./07_table.md); it is not an executable INSERT.
+- AC-36 node n6 requires logical Notification + recipients. Local fallback uses the checked-in legacy BIGINT candidate, one notification row per recipient.
+- Insert `user_id`, `sender_id`, `title`, `content`, `type=NULL`, `is_read=FALSE`, `created_at=CURRENT_TIMESTAMP`, and one shared UUID `operation_id`; read `id` and `created_at` with `RETURNING`.
+- For each inserted notification, insert one `notification_deliveries` row per requested channel with status `QUEUED`, `queued_at=CURRENT_TIMESTAMP`, and `updated_at=CURRENT_TIMESTAMP`.
+- Candidate DDL is checked in but live schema, ownership approval, and worker availability are not verified. Do not use V1-PILOT UUID learner tables.
+- See [07_table.md](./07_table.md), [08 recipient mapping](./08_notification_recipients_insert.md), and [09 delivery mapping](./09_notification_deliveries_insert.md).
 
 ### Mutation matrix
 
 | ID | Logical operation | Target | Fields/source | Transaction/failure | Mapping |
 |---|---|---|---|---|---|
-| M1 | INSERT Notification | No approved target | See 07_table.md per-field candidates; ID/status/time unknown | Boundary SOURCE_REQUIRED | [07_table.md](./07_table.md) |
-| M2 | INSERT recipient association | No compatible table | Explicit recipients or segment expansion | Duplicate/partial-write behavior SOURCE_REQUIRED | [08 mapping](./08_notification_recipients_insert.md) |
-| M3 | Accept async send operation | Queue/Operation store not found | Logical Notification/audience/channels | DERIVED only | No physical mapping |
-
-- A simple proposal writes Notification and recipient associations consistently.
-- Transaction mechanism and durable acceptance boundary need confirmation.
+| M1 | INSERT one Notification per recipient | `notifications` candidate | `user_id`, `sender_id`, `title`, `content`, `type=NULL`, `is_read=FALSE`, timestamp, shared UUID | Same DB transaction | [07_table.md](./07_table.md) |
+| M2 | Associate recipient | `notifications.user_id` candidate | One recipient key on each notification row | Same DB transaction | [08 mapping](./08_notification_recipients_insert.md) |
+| M3 | INSERT delivery outbox rows | `notification_deliveries` candidate | One row per created notification × requested channel; `QUEUED` | Same DB transaction | [09 mapping](./09_notification_deliveries_insert.md) |
 
 <a id="step-4-accept-and-dispatch"></a>
 
 ## Step 4 — Accept and dispatch
 
-- Diagram n7 calls Push/Email only if action is Send; request has no action or schedule field.
-- DERIVED proposal: POST creates and enqueues immediate dispatch because purpose is create/send and response is 202 accepted.
-- Accept only after the logical request is durably queued; queue/outbox/Operation store is SOURCE_REQUIRED.
-- 202 means accepted for processing, not provider delivery success.
-- 503 before acceptance is a plausible dependency trigger, not a verified branch.
-- Provider failure after 202 belongs to delivery lifecycle; #96 status aggregation is SOURCE_REQUIRED.
-- API Guidelines recommend Idempotency-Key for retryable mutations; #93 does not declare that header.
-- See [Q-93-05](./OPEN_QUESTIONS.md#q-93-05-create-draft-or-send).
+- DERIVED fallback: POST creates outbox rows for immediate asynchronous Push/Email intent because the diagram has CREATE/SEND and response is 202 accepted. Request has no draft/action/schedule field.
+- The transaction commits only after all notification/outbox inserts and response projection succeed. 202 means rows committed locally, not provider delivery success.
+- No provider or worker call is wired by this endpoint. The checked-in outbox DDL is not evidence that a worker consumes it.
+- SQL `OperationalError` or invalidated DB connection maps to 503; other SQL, mapping, or commit failures map to 500. The view attempts rollback before returning an error.
+- See [Q-93-05](./OPEN_QUESTIONS.md#q-93-05-create-draft-or-send) and [Q-93-07](./OPEN_QUESTIONS.md#q-93-07-acceptance-and-operation-lifecycle).
 
 <a id="step-5-map-response"></a>
 
@@ -106,27 +98,31 @@ status: "Draft — Needs Confirmation"
 | Path | Logical source | Rule/status |
 |---|---|---|
 | success | Accepted branch | true by envelope convention |
-| businessCode | Catalog | DESIGN_OPERATION_ACCEPTED DIRECT |
-| data.id | Notification | int64; allocator SOURCE_REQUIRED |
-| data.title | Request title | Logical copy; storage projection SOURCE_REQUIRED |
-| data.content | Request content | Logical copy; storage projection SOURCE_REQUIRED |
-| data.channels[] | Request | Enum/storage SOURCE_REQUIRED |
-| data.status | NotificationStatus | Initial value SOURCE_REQUIRED |
-| data.read_at | Optional field | Value/omit rule SOURCE_REQUIRED |
-| data.scheduled_at | Optional field | No request input; mapping SOURCE_REQUIRED |
-| data.created_at | Persistence clock | Timezone/precision SOURCE_REQUIRED |
-| meta/traceId | Envelope/request context | Shape/route wiring not verified |
+| businessCode | Catalog | `DESIGN_OPERATION_ACCEPTED` DIRECT |
+| data | First Notification row in recipient request order | Endpoint-specific direct shape; batch projection DERIVED |
+| data.id | First `notifications.id` | BIGINT/int64 from `RETURNING`; candidate only |
+| data.title/content | Request | Preserved in response and insert bindings |
+| data.channels[] | Request | `PUSH` / `EMAIL`; DERIVED enum fallback |
+| data.status | Delivery outbox state | `QUEUED`; DERIVED Notification projection |
+| data.read_at/scheduled_at | No source/input | Omitted |
+| data.created_at | First row | Database-returned timestamp |
+| meta.operation_id | App-generated UUID | Persisted on each notification row; DERIVED handoff |
+| meta.notification_ids[] | All created rows | int64 IDs in recipient request order; DERIVED batch metadata |
+| traceId | Request context | Propagated by response helper |
 
-- Operation summary conflicts with the direct Notification response; do not add Operation fields.
+- Operation tracking prose still conflicts with the direct Notification response. Local fallback retains Notification and adds derived batch metadata; owner decision remains open.
+- `data` represents only the first recipient row. Consumers needing every created row must use `meta.notification_ids` while this DERIVED response remains in place.
 
 <a id="step-6-return-result-or-error"></a>
 
 ## Step 6 — Return result or error
 
-- Success: HTTP 202 DESIGN_OPERATION_ACCEPTED.
-- Keep only catalog errors 401, 403, 422, 503 and 500.
-- Validation, permission, queue, rollback and envelope details remain unresolved.
-- See [06_Error.md](./06_Error.md); never expose secrets, raw SQL or stack traces.
+- Success: HTTP 202 `DESIGN_OPERATION_ACCEPTED` after commit.
+- Keep only catalog errors 401, 403, 422, 503, and 500.
+- Validation predicates and the 503 trigger are local DERIVED behavior; permission remains the shared ADMIN role guard only.
+- Do not expose secrets, raw SQL, recipient values, or stack traces.
+- See [06_Error.md](./06_Error.md).
+
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

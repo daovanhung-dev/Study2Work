@@ -13,54 +13,51 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Logical entity | Admin Notification |
-| Candidate physical table | Legacy notifications only; not approved for API #94 |
-| Source | infra/postgres/study-server/DB.sql and DB_UNICA_TABLES.md |
-| Runtime status | No API #94 persistence source verified |
-| Mutation | Logical UPDATE per AC-36; concrete column set unresolved |
+| Logical entity | Admin Notification (recipient-level fallback) |
+| Candidate physical table | Legacy notifications and notification_deliveries |
+| Source | infra/postgres/study-server/DB.sql; migration 009_notification_delivery_outbox.sql |
+| Runtime status | API #94 targets these checked-in candidates; deployed schema unverified |
+| Mutation | UPDATE `notifications.title/content` only; read/lock delivery rows |
 
-## Candidate legacy columns
+## Legacy candidate columns
 
-| Column | Legacy type/constraint | Candidate relation to API | Status |
-|---|---|---|---|
-| id | BIGSERIAL PRIMARY KEY | Candidate for Notification.id:int64 | Compatible type candidate; active Admin model unverified |
-| user_id | BIGINT NULL REFERENCES users(id) | One recipient on a legacy row | Cannot represent campaign recipient association by itself |
-| sender_id | BIGINT NULL REFERENCES users(id) | Possible actor/sender relation | Do not set from token without approved actor mapping |
-| title | VARCHAR(200) NOT NULL | Candidate for Notification.title | Candidate only; no live constraint confirmation |
-| content | TEXT NOT NULL | Candidate for Notification.content | Candidate only |
-| type | VARCHAR(30) NULL | Legacy notification category | Not proven equivalent to channels[] |
-| is_read | BOOLEAN DEFAULT FALSE | Legacy read flag | Not equivalent to Notification.status or read_at |
-| created_at | TIMESTAMP NOT NULL | Candidate for Notification.created_at | Preserve on update; active table/precision unverified |
+| Column | Legacy type/constraint | API #94 mapping |
+|---|---|---|
+| id | BIGSERIAL PRIMARY KEY | `notification_id` and `data.id` candidate. |
+| user_id | BIGINT NULL REFERENCES users(id) | Existing recipient is preserved; no audience update. |
+| sender_id | BIGINT NULL REFERENCES users(id) | Preserved; not set from token. |
+| title | VARCHAR(200) NOT NULL | Updated from required body title. |
+| content | TEXT NOT NULL | Updated from required body content. |
+| type | VARCHAR(30) NULL | Preserved; not mapped to channels. |
+| is_read | BOOLEAN DEFAULT FALSE | Preserved; not mapped to read_at/status. |
+| created_at | TIMESTAMP NOT NULL | Returned and preserved; never updated. |
 
-## Insert mapping
+## Delivery candidate columns
 
-N/A — API #94 is an UPDATE endpoint. No insert is specified by AC-36.
+| Column | Candidate type/constraint | API #94 mapping |
+|---|---|---|
+| notification_id | BIGINT FK to notifications.id | Filter and lock target delivery rows. |
+| channel | VARCHAR(16), PUSH/EMAIL | Return distinct ordered channels; do not update. |
+| status | VARCHAR(16), QUEUED/SENT/FAILED | Require all rows QUEUED; return QUEUED. |
 
 ## Update mapping
 
-| Logical input/output | Candidate column | Proposed operation | Status |
+| Logical field | Candidate column | Runtime action | Status |
 |---|---|---|---|
-| notification_id / data.id | notifications.id | Locate existing row | Candidate mapping; target model unapproved |
-| title | notifications.title | Replace value if body is approved | DERIVED field; candidate column only |
-| content | notifications.content | Replace value if body is approved | DERIVED field; candidate column only |
-| channels[] | No compatible legacy column found | No physical update mapping | SOURCE_REQUIRED |
-| status | No compatible legacy column found | No physical update mapping | SOURCE_REQUIRED |
-| scheduled_at | No compatible legacy column found | No physical update mapping | SOURCE_REQUIRED |
-| read_at | No compatible legacy column found | Preserve/no mutation specified | SOURCE_REQUIRED |
-| created_at | notifications.created_at | Preserve original value | Candidate only; do not update |
-| Recipient association | notifications.user_id is singular per row | Do not infer campaign relationship from it | No approved mapping |
+| id | notifications.id | SELECT FOR UPDATE and same ID in response | DERIVED candidate mapping. |
+| title | notifications.title | UPDATE bound title value | DERIVED body mapping. |
+| content | notifications.content | UPDATE bound content value | DERIVED body mapping. |
+| channels/status | notification_deliveries | SELECT FOR UPDATE only | DERIVED response/editability projection. |
+| recipients, schedule, read state | None | No mutation | Not supported by fallback. |
+| created_at | notifications.created_at | Preserve original | No UPDATE assignment. |
 
-No SQL or new table/column is proposed. Legacy schema is a design candidate, not evidence of live persistence.
-
-## Delete mapping
-
-N/A — API #94 does not declare DELETE. Cancellation belongs to the adjacent #95 design and is not inferred here.
+No table, column, migration, or index is added. The checked-in legacy DDL is a candidate and does not prove live persistence.
 
 ## Physical mapping boundary
 
-- V1-PILOT notifications and notification_deliveries use a separate UUID learner/delivery model; they are not candidate targets for this BIGINT Admin contract without an explicit architecture decision.
-- No channels, campaign status, scheduled_at or Admin recipient association is present in the reviewed legacy table.
-- The owner must select a persistence model and define the full update transaction before this mapping can be implementation-ready.
+- V1-PILOT notifications/deliveries remain a separate UUID learner model and are not used.
+- API #94 works at the legacy recipient-row grain; this does not establish campaign-level semantics.
+- The body/editability fallback remains DERIVED until the owner approves the contract and Admin model.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

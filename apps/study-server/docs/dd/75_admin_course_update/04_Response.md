@@ -24,7 +24,7 @@ status: "Draft — Needs Confirmation"
 | 1 | `HTTPStatus` | HTTP status | `HTTPStatus` | integer | No | N/A | N/A | 6.1 | Fixed | N/A | Success is 200; error statuses follow catalog. |
 | 2 | `success` | Thành công | `success` | boolean | No | N/A | N/A | 6.1 | `true` on success | N/A | Envelope field. |
 | 3 | `businessCode` | Business code | `businessCode` | string | No | N/A | N/A | 6.1 | Fixed by branch | N/A | Success `DESIGN_RESOURCE_UPDATED`. |
-| 4 | `message` | Message | `message` | string | No | N/A | N/A | 6.1 | Safe application message | Exact text unspecified | Do not expose DB/provider details. |
+| 4 | `message` | Message | `message` | string | No | N/A | N/A | 6.1 | `Course updated.` | Fixed by local implementation | Do not expose DB/provider details. |
 | 5 | `data.items[].id` | Course ID | `id` | int64 | No | `courses` | `id` | 5.1 | Copy | N/A | Legacy source candidate. |
 | 6 | `data.items[].title` | Tiêu đề | `title` | string | No | `courses` | `name` | 5.1 | `name` → `title` | N/A | Legacy source candidate. |
 | 7 | `data.items[].description` | Mô tả | `description` | string? | Yes | `courses` | `description` | 5.1 | Copy | Null or omit unresolved; proposal follows nullable source as null. | Legacy candidate. |
@@ -77,17 +77,17 @@ status: "Draft — Needs Confirmation"
 }
 ```
 
-> Ví dụ response là proposal `DERIVED` cho Page một phần tử; giá trị Category bị omit do chưa có relation source-backed. Enum và null serialization chưa được duyệt.
+> Ví dụ response là proposal `DERIVED` cho Page một phần tử; Category bị omit do chưa có relation source-backed. Runtime dùng shared `map_course`, giữ status/mentor từ projection và trả singleton pagination. Enum/casing và live data vẫn chưa được duyệt.
 
 ## Lỗi
 
 | HTTP status | Business code | Điều kiện theo contract | Data hiện tại |
 |---:|---|---|---|
-| 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Thiếu/sai Bearer JWT | Current `error_response` mặc định `{}`; guideline yêu cầu `null`. |
-| 403 | `DESIGN_ACCESS_DENIED` | Không có role Admin/course-management permission | Current `error_response` mặc định `{}`; guideline yêu cầu `null`. |
-| 404 | `DESIGN_RESOURCE_NOT_FOUND` | Không tìm thấy course; điều kiện thực thi là proposal | Current `error_response` mặc định `{}`; guideline yêu cầu `null`. |
-| 422 | `DESIGN_VALIDATION_ERROR` | Request không hợp lệ; field rules chưa được duyệt | Current middleware chỉ dùng code này khi route có trong allowlist. |
-| 500 | `DESIGN_INTERNAL_ERROR` | Lỗi DB/mapping/internal | Current middleware chỉ dùng code này khi route có trong allowlist. |
+| 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Thiếu/sai Bearer JWT | Current `error_response` trả `data:null`. |
+| 403 | `DESIGN_ACCESS_DENIED` | Không có role `ADMIN` | Current runtime kiểm tra shared role; permission riêng chưa có source. `data:null`. |
+| 404 | `DESIGN_RESOURCE_NOT_FOUND` | UPDATE không trả course row | Current handler rollback và trả `data:null`. |
+| 422 | `DESIGN_VALIDATION_ERROR` | Signed-int64 path/body candidate không hợp lệ | Route template #75 được middleware nhận diện; field constraints vẫn là `DERIVED`. |
+| 500 | `DESIGN_INTERNAL_ERROR` | Query, Course projection hoặc commit lỗi | Current handler rollback khi transaction đã bắt đầu. |
 
 Chi tiết: [06_Error.md](./06_Error.md).
 ---

@@ -24,17 +24,18 @@ status: "Draft — Needs Confirmation"
 | Direct response | `ApiEnvelope<Notification>` |
 | Success | HTTP 200 `DESIGN_RESOURCE_RETRIEVED` |
 | DD status | `Draft — Needs Confirmation` |
-| Runtime status | `UNWIRED / NOT_FOUND` theo source Study hiện tại |
+| Runtime status | `WIRED / DERIVED` trong source local; chưa xác minh live DB/deployment |
 
 ## Mục đích
 
-Đặc tả contract trực tiếp của API #96 và ghi rõ khoảng cách giữa response `Notification` trong catalog với bước “Đọc delivery aggregate” trong AC-36. Không tự thêm count, channel-result hoặc operation field vào response.
+Đặc tả contract trực tiếp của API #96 và ghi rõ cách source local đọc delivery aggregate rồi chiếu vào response `Notification` hiện có. Không thêm count, channel-result hoặc operation field vào response.
 
 ## Ranh giới bằng chứng
 
-- Catalog và AC-36 xác định contract/flow thiết kế, chưa chứng minh behavior runtime.
-- Legacy DDL và V1-PILOT DDL là hai nguồn schema khác grain; không coi chúng là Admin persistence đã duyệt.
-- Đọc [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md) trước khi chuyển DD sang Final hoặc lập trình.
+- Catalog và AC-36 xác định contract/flow thiết kế; route/test local hiện xác minh fallback, không chứng minh deployment.
+- Projection của #96 tái dùng legacy BIGINT notification/outbox candidate và status precedence của #92; đây là `DERIVED`, không phải schema/owner approval.
+- Legacy DDL và V1-PILOT DDL khác grain; không coi checked-in artifact là bằng chứng live schema.
+- Đọc [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md) trước khi chuyển DD sang Final hoặc đổi fallback.
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `Cover`

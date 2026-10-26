@@ -9,33 +9,32 @@ status: "Draft — Needs Confirmation"
 
 # Error
 
-## Error cases trực tiếp từ catalog
+## Error cases theo catalog đã đồng bộ
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT code/status; endpoint chưa wired. |
-| 2 | Authorization | Role/policy | Admin user-management permission | Principal không có role/quyền Admin | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT code/status; guard/policy SOURCE_REQUIRED. |
-| 3 | System error | Database/profile mapping | Query hoặc response projection | Database/query/mapping failure | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua-execute-query) | No | DIRECT code/status; không trả raw SQL/stack trace. |
+| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT; shared guard. |
+| 2 | Authorization | Role/policy | ADMIN role | Principal không có claim ADMIN | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT role; user-management permission mapping is DERIVED. |
+| 3 | Validation | Query page | page | Không parse được integer, <1 hoặc >2147483647 | 422 | DESIGN_VALIDATION_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-1-validate-data-input) | No | Page int32 validation; catalog đã đồng bộ theo API #07 precedent. |
+| 4 | System error | Database/profile mapping | Query or projection | Query, count hoặc UserProfile mapping failure | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua-execute-query) | Read transaction rollback | Không trả raw SQL, stack trace hoặc PII. |
 
-Không thêm 404 hoặc 422 vào direct error set. Empty results là candidate 200, nhưng response list cần contract correction.
+## Branch behavior
 
-## Candidate branch questions — không phải HTTP contract
-
-| Điều kiện | Candidate hoặc câu hỏi | Trạng thái |
+| Điều kiện | Response | Status |
 |---|---|---|
-| Role/status không có trong dữ liệu | Exact-match filter cho zero rows; candidate empty list 200 | DERIVED; cần chốt semantics response list. |
-| Keyword rỗng sau trim | Bỏ keyword predicate | DERIVED; cần xác nhận trim/normalization. |
-| Page không truyền | Proposal dùng page 1 | DERIVED; catalog chưa ghi default. |
-| Page bằng 0/âm | Không tự chọn clamp, reject hay code lỗi | SOURCE_REQUIRED; catalog không liệt kê 422. |
-| Không có user khớp | Proposal trả items=[]/total=0 trong HTTP 200 | DERIVED; direct UserProfile không biểu diễn empty list. |
-| DB query hoặc mapping lỗi | 500 DESIGN_INTERNAL_ERROR | Code/status DIRECT; #68 chưa wired. |
+| Role/status filter không match | items=[] và pagination total=0 | HTTP 200; exact-match filter. |
+| Keyword blank sau trim | Không thêm keyword predicate | HTTP 200 nếu query thành công. |
+| Không có user khớp | Empty Page<UserProfile> | HTTP 200; không dùng 404. |
+| Database/query/mapping failure | Error envelope an toàn | 500 DESIGN_INTERNAL_ERROR. |
+| Page malformed, <1 hoặc vượt int32 | Field error page | 422 DESIGN_VALIDATION_ERROR. |
 
-## Error envelope discrepancy
+## Error envelope
 
-- Current error_response helper thay data bị lược bằng {}.
-- API guideline quy định data:null cho lỗi.
-- Middleware DESIGN_CONTRACT_PATHS chưa có /api/v1/admin/users; nếu wire sau này, phải cập nhật allowlist để không rơi về fallback VALIDATION_ERROR/INTERNAL_SERVER_ERROR.
-- Đây là current infrastructure và conditional future wiring; không phải quan sát runtime API #68.
+Current error_response mặc định data:null, trả traceId cùng X-Trace-Id và đưa fieldErrors vào meta khi có. API #68 được thêm vào DESIGN_CONTRACT_PATHS để framework validation/unhandled errors dùng các DESIGN_* codes.
+
+## Security boundary
+
+Authorization hoàn tất trước mọi user query. Không đưa token, password_hash, email/phone hoặc raw query data vào message/log.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

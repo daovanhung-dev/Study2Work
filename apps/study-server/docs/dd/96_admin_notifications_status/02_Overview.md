@@ -26,7 +26,7 @@ status: "Draft — Needs Confirmation"
 | Direct response | `ApiEnvelope<Notification>` |
 | Success | HTTP 200 `DESIGN_RESOURCE_RETRIEVED` |
 | Errors | 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 404 `DESIGN_RESOURCE_NOT_FOUND`; 500 `DESIGN_INTERNAL_ERROR`. |
-| Current implementation | `UNWIRED / NOT_FOUND`: không có route, module hoặc test #96 trong Study source. |
+| Current implementation | `WIRED / DERIVED`: local route/module/tests dùng cùng notification/outbox projection với #92; live schema/deployment chưa xác minh. |
 | Mutation | N/A — read-only API. |
 
 ## Nguồn
@@ -42,7 +42,7 @@ status: "Draft — Needs Confirmation"
 
 ## Đọc/ghi dữ liệu
 
-- Logical resource cần đọc: Admin Notification theo `notification_id`; physical relation/grain chưa được duyệt.
+- Local fallback đọc legacy BIGINT `notifications` và aggregate `notification_deliveries` theo `notification_id`, cùng candidate schema mà #92–#95 đang dùng.
 - Logical delivery summary trong catalog: `NotificationDelivery` có `notification_id`, `status`, `queued`, `sent`, `failed`; catalog không quy định đây là response của #96.
 - Ghi dữ liệu/provider: không có; API #96 là GET/read-only.
 
@@ -50,17 +50,18 @@ status: "Draft — Needs Confirmation"
 
 - `DIRECT`: method/path, Admin Bearer, path int64 bắt buộc, không body/query, `ApiEnvelope<Notification>`, HTTP 200 và đúng bốn lỗi catalog.
 - `DIRECT` từ AC-36: sau nhánh STATUS có bước “Đọc delivery aggregate”, rồi reload notification management.
-- `DISCREPANCY`: bước aggregate không có physical relation/query/grain; response Notification không có queued/sent/failed hoặc per-channel delivery results.
-- `DERIVED` cần duyệt: nếu tổng hợp delivery vào response, chỉ có thể chiếu qua `Notification.status` hiện hữu mà không đổi shape; rule projection và status token vẫn chưa có nguồn.
-- `SOURCE_REQUIRED`: Admin data model, NotificationChannel/NotificationStatus/OperationStatus values, aggregation policy, permission predicate, empty/missing behavior.
+- `DISCREPANCY`: diagram yêu cầu đọc aggregate nhưng response Notification không có queued/sent/failed hoặc per-channel result.
+- `DERIVED`: source local chiếu vào `Notification.channels/status` hiện hữu theo #92: channels sắp xếp theo tên; status ưu tiên `QUEUED` nếu có queued, tiếp đến `FAILED` nếu có failed, còn lại `SENT` khi tất cả delivery sent. Không thêm count field.
+- `DERIVED`: inner join không có hàng khi notification thiếu hoặc chưa có delivery; trả catalog 404. Path sai/ngoài signed-int64 dương cũng trả 404 để không thêm lỗi ngoài catalog.
+- `SOURCE_REQUIRED`: Admin model/grain được duyệt, status precedence, channel/status enum approval, permission key/scope và semantics missing/empty chính thức.
 
 ## Xung đột và giới hạn
 
 | Nguồn A | Nguồn B | Xung đột | Tác động |
 |---|---|---|---|
-| AC-36 diagram | Catalog #96 | Diagram đọc delivery aggregate; catalog trả `Notification`. | Không có contract cho counts/per-channel results. |
+| AC-36 diagram | Catalog #96 | Diagram đọc delivery aggregate; catalog trả `Notification`. | Local source chiếu vào các field Notification hiện có; aggregate counts không được trả. |
 | Reusable `NotificationDelivery` | Reusable `Notification` | Delivery summary có counts nhưng không phải response type của #96. | Không thêm các field `queued/sent/failed` vào `Notification`. |
-| Legacy `notifications` | Notification schema | Legacy có `is_read` nhưng thiếu `channels/status/read_at/scheduled_at`. | Không thể map response đầy đủ từ row legacy. |
+| Legacy `notifications` | Notification schema | Legacy có `is_read` nhưng thiếu `channels/status/read_at/scheduled_at`. | Local response lấy channels/status từ outbox; `read_at` và `scheduled_at` optional bị lược bỏ. |
 | V1-PILOT delivery | BIGINT Admin contract | Pilot IDs là UUID và delivery grain khác. | Không ghép schema hoặc ID. |
 | Catalog #93 | Operation tracking summary | Notification response so với Operation response/UUID tracking. | Giữ thành open issue của macro-review AC-36. |
 

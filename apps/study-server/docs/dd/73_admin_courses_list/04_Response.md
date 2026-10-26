@@ -27,25 +27,25 @@ status: "Draft — Needs Confirmation"
 | 2 | success | Success flag | success | boolean | No | N/A | N/A | 6.1/6.2/6.3 | true khi success, false khi error | N/A | ApiEnvelope field. |
 | 3 | businessCode | Business code | businessCode | string | No | Catalog | N/A | 6.1/6.2/6.3 | Exact catalog code theo nhánh | N/A | Không tạo code mới. |
 | 4 | message | Message | message | string | No | Application | N/A | 6.1/6.2/6.3 | Safe localized branch message | Text chưa đặc tả | Không trả raw DB detail. |
-| 5 | data | Page<Course> | data | object | No | courses/users candidate | N/A | 5.1/5.2 | Map Page<Course> | `{}` khi error theo helper hiện tại; guideline muốn null | Direct success schema. |
+| 5 | data | Page<Course> | data | object? | Yes | courses/users candidate | N/A | 5.1/5.2 | Success map Page<Course>; error helper emits null | Page on success; null on error | Success schema trực tiếp; generic error envelope current source. |
 | 5.1 | data.items | Course items | items | array | No | courses/users candidate | N/A | 5.1 | Map từng Course | `[]` khi không có kết quả (DERIVED) | `Course[]`. |
 | 5.1.1 | data.items[].id | Course ID | id | int64 | No | courses | id | 5.1 | Direct candidate | Bắt buộc | Legacy BIGSERIAL candidate. |
 | 5.1.2 | data.items[].title | Course title | title | string | No | courses | name | 5.1 | Alias `name → title` | Bắt buộc | API #06 dùng cùng alias. |
 | 5.1.3 | data.items[].description | Description | description | string? | Yes | courses | description | 5.1 | Direct candidate | null khi source NULL theo #06 | Optional schema field. |
 | 5.1.4 | data.items[].thumbnail_url | Thumbnail | thumbnail_url | uri? | Yes | courses | thumbnail_url | 5.1 | Direct candidate | null khi source NULL theo #06 | Optional schema field. |
 | 5.1.5 | data.items[].price | Price | price | decimal-string | No | courses | price | 5.1 | Serialize decimal chính xác thành string | Không nhận NULL; null là mapping error candidate | Không chuyển qua float. |
-| 5.1.6 | data.items[].status | Course status | status | CourseStatus | No | courses | status | 5.1 | Giữ giá trị source | Bắt buộc | Enum members/casing chưa xác nhận. |
+| 5.1.6 | data.items[].status | Course status | status | string | No | courses | status | 5.1 | Giữ giá trị source | Bắt buộc | Runtime reusable Course model uses string; enum members/casing chưa xác nhận. |
 | 5.1.7 | data.items[].mentor | Mentor summary | mentor | object | No | users | N/A | 5.1 | Map UserSummary | Không dựng object giả | Course contract yêu cầu mentor. |
 | 5.1.7.1 | data.items[].mentor.id | Mentor ID | id | int64 | No | users | id | 5.1 | Direct candidate qua mentor_id | Bắt buộc | Join candidate `users.id=courses.mentor_id`. |
 | 5.1.7.2 | data.items[].mentor.full_name | Mentor name | full_name | string | No | users | full_name | 5.1 | Direct candidate | Bắt buộc | Không lấy email/phone. |
 | 5.1.7.3 | data.items[].mentor.avatar_url | Mentor avatar | avatar_url | uri? | Yes | users | avatar_url | 5.1 | Direct candidate | null khi source NULL theo #06 | Optional UserSummary field. |
-| 5.1.8 | data.items[].category | Category | category | Category? | Yes | SOURCE_REQUIRED | N/A | 5.1 | Omit tới khi có relation/source được duyệt | Omit — optional field | Không tạo category giả. |
+| 5.1.8 | data.items[].category | Category | category | Category? | Yes | SOURCE_REQUIRED | N/A | 5.1 | Catalog field optional; current shared Course model does not declare it | Omitted from runtime response/OpenAPI | Relation and runtime field remain unresolved. |
 | 5.2 | data.pagination | Pagination | pagination | object | No | N/A | N/A | 5.2 | Map PageMeta | Required | Reusable Page schema. |
 | 5.2.1 | data.pagination.page | Current page | page | int32 | No | Query effective value | page | 5.2 | Default 1 nếu omitted | 1 khi omitted (DERIVED) | Page 1-based proposal. |
 | 5.2.2 | data.pagination.size | Page size | size | int32 | No | Fixed setting | N/A | 5.2 | Fixed 20 | 20 | Không có request size field. |
-| 5.2.3 | data.pagination.total | Total rows | total | int64 | No | courses | COUNT(*) | 4.3 | Count cùng predicates Q1 | 0 khi không có row | Category count chưa thể map nếu category query được dùng. |
+| 5.2.3 | data.pagination.total | Total rows | total | int64 | No | courses | COUNT(*) | 4.3 | Count cùng status/mentor predicates | 0 khi không có row | Category filter bị từ chối trước query. |
 | 5.2.4 | data.pagination.total_pages | Total pages | total_pages | int32 | No | Derived | total,size | 5.2 | `ceil(total/20)` | 0 khi total=0 | Fixed-size proposal. |
-| 6 | meta | Metadata | meta | object | No | N/A | N/A | 6.1/6.2/6.3 | Empty object theo success helper | `{}` candidate | Error guideline null-data khác current helper. |
+| 6 | meta | Metadata | meta | object | No | N/A | N/A | 6.1/6.2/6.3 | Empty object theo shared helper | `{}` | Error `data` là null; `meta` vẫn là object. |
 | 7 | traceId | Trace ID | traceId | uuid | No | Middleware | X-Trace-Id | 0.1/6.1/6.2/6.3 | Validate hoặc tạo UUID | Bắt buộc trong envelope | Current source convention. |
 
 ## Ví dụ thành công — HTTP 200
@@ -54,7 +54,7 @@ status: "Draft — Needs Confirmation"
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Đã lấy danh sách khóa học.",
+  "message": "Courses retrieved.",
   "data": {
     "items": [
       {
@@ -83,7 +83,7 @@ status: "Draft — Needs Confirmation"
 }
 ```
 
-Ví dụ theo Page<Course>; `category` bị omit vì optional và chưa có mapping source-backed. Giá `49.90` minh họa decimal-string theo API #06. Page size 20 là proposal `DERIVED`.
+Ví dụ theo Page<Course>; `category` bị omit vì shared runtime Course model không khai báo field này. Giá `49.90` minh họa decimal-string theo API #06. Page size 20 là proposal `DERIVED`.
 
 ## Ví dụ danh sách rỗng — HTTP 200
 
@@ -91,7 +91,7 @@ Ví dụ theo Page<Course>; `category` bị omit vì optional và chưa có mapp
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Không tìm thấy khóa học phù hợp.",
+  "message": "No courses found.",
   "data": {
     "items": [],
     "pagination": {
@@ -106,7 +106,7 @@ Ví dụ theo Page<Course>; `category` bị omit vì optional và chưa có mapp
 }
 ```
 
-Empty list trả 200 là proposal theo API #06; không dùng 404 cho collection rỗng.
+Empty list trả 200 theo runtime local và API #06 precedent; message hiện tại là `No courses found.`.
 
 ## Ví dụ lỗi validation — HTTP 422
 
@@ -114,14 +114,14 @@ Empty list trả 200 là proposal theo API #06; không dùng 404 cho collection 
 {
   "success": false,
   "businessCode": "DESIGN_VALIDATION_ERROR",
-  "message": "Dữ liệu query không hợp lệ.",
-  "data": {},
+  "message": "Dữ liệu đầu vào không hợp lệ.",
+  "data": null,
   "meta": {
     "fieldErrors": [
       {
         "field": "page",
         "code": "GREATER_THAN_EQUAL",
-        "message": "Page phải lớn hơn hoặc bằng 1."
+        "message": "Input should be greater than or equal to 1"
       }
     ]
   },
@@ -129,7 +129,7 @@ Empty list trả 200 là proposal theo API #06; không dùng 404 cho collection 
 }
 ```
 
-Mã HTTP/business code trực tiếp từ catalog. Ví dụ page validation là `DERIVED`; path admin chưa có trong middleware allowlist. `data={}` phản ánh current helper, còn guideline yêu cầu `data=null`.
+HTTP/business code set lấy từ catalog. Ví dụ page validation dùng code/message hiện tại của API #73; `error_response` serialize `data:null` và middleware allowlist có exact path.
 
 ## Ví dụ lỗi quyền — HTTP 403
 
@@ -137,14 +137,14 @@ Mã HTTP/business code trực tiếp từ catalog. Ví dụ page validation là 
 {
   "success": false,
   "businessCode": "DESIGN_ACCESS_DENIED",
-  "message": "Không có quyền quản lý khóa học.",
-  "data": {},
+  "message": "Access denied.",
+  "data": null,
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000004"
 }
 ```
 
-Role Admin và quyền course management là direct requirement; guard runtime chưa tồn tại.
+Runtime dùng shared `ADMIN` role guard. Dedicated course-management permission chưa được kiểm tra và là discrepancy/open question so với AC-32.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

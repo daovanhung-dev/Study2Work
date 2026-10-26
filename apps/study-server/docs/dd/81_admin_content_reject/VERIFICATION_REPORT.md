@@ -1,52 +1,40 @@
 # Verification Report — API #81 Từ chối nội dung
 
-## Scope
+## Scope and status
 
-- DD output: apps/study-server/docs/dd/81_admin_content_reject/.
-- Task: Markdown DD and connected AC-33 review; no runtime/schema/catalog/diagram changes.
-- DD status: Draft — Needs Confirmation.
-- Application tests: NOT_RUN; API #81 has no route.
+- Runtime: `PATCH /api/v1/admin/content/{content_id}/reject` source-backed locally and HTTP-tested.
+- DD: Draft — Needs Confirmation; implementation fallbacks remain DERIVED.
+- DB: migration 011/legacy BIGINT schema is a checked-in candidate only; no live migration was run.
 
-## Static checks
+## Runtime verification
 
 | Check | Result | Status |
 |---|---|---|
-| Expected package | Exact 11 Markdown files: eight template sheets and three standard reports | PASS |
-| Template appendix parity | 8/8 compared byte-for-byte with registered template suffixes | PASS |
-| Catalog contract | Request, Content response, success and error codes match row #81 | PASS |
-| Response coverage | Eight reusable Content fields represented; no reason field added | PASS |
-| JSON examples | 4/4 JSON blocks parsed | PASS |
-| Relative links/anchors | 41 local links resolve | PASS |
-| Markdown tables/fences | 37 tables have consistent column counts; 5 fenced blocks are balanced | PASS |
-| Whitespace | Final newline on all files; no trailing whitespace | PASS |
-| Inventory | 81 DD folders / 22 missing; 69 full packages; 12 route/view pairs / 91 without pair | PASS — STATIC |
-| AC-33 macro-review | #78–#81 document review completed; unresolved questions remain explicitly listed below | REVIEWED_WITH_OPEN_QUESTIONS |
+| Focused API #81 HTTP tests | 29 passed; one upstream Starlette/httpx TestClient deprecation warning. | PASS — LOCAL |
+| Linked regression | APIs #49–#53 and #78–#81: 200 passed; same upstream warning. | PASS — LOCAL |
+| Full Study suite | 997 passed; same upstream warning. | PASS — LOCAL |
+| Ruff | API #81 route, middleware, module and tests: all checks passed. | PASS — STATIC |
+| OpenAPI | 47 unique `/api/v1` path templates / 52 operations; required body/path/header and catalog error set asserted by tests. | PASS — LOCAL SOURCE |
+| Route behavior | #78 queue, #79 detail and #80 approval remain reachable in regression tests. | PASS — LOCAL HTTP |
 
-## Fingerprints
+## DD/static checks
 
-| Fingerprint | Scope | SHA-256 |
+| Check | Result | Status |
 |---|---|---|
-| Registered template pack | Eight sorted template sheet names + NUL + raw bytes + NUL | `3dc7fd2242dd1ed1bd9faba50aadad913a31b97ebf1392d6144bb905c5208137` |
-| DD output payload | Eight sheets, `OPEN_QUESTIONS.md`, and `PLAN_RESULT.md`; verification report excluded | `40f1b96aa33c6d298a64861e77452cd8e7ae533f1176a5279180c17eb5c8e5de` |
+| DD package | 11 Markdown files; all 8 template appendix suffixes byte-exact. | PASS |
+| Examples | 4 fenced JSON examples parse. | PASS |
+| Relative links | 41 relative links resolve, including API #81 internal anchors. | PASS |
+| Manifest | JSON parses; all 6 API #81 required-source paths exist (288 required paths total). | PASS |
+| Whitespace | `git diff --check` clean after final synchronization. | PASS |
 
-## Findings and limits
+## Implementation findings and limits
 
-- AC-33 directly gives the logical rejection effect REJECTED plus review reason.
-- Physical Content/reason persistence and parity of audit writes with #80 remain open.
-- Cross-DD anchor links in #78–#80 were corrected during the group review and checked against their Data Mapping headings.
-- Current source has no API #81 route/module/test. Static DD checks do not prove Admin authorization, live schema, database writes or runtime behavior.
+- Direct behavior remains the catalog PATCH/body/response/error contract and AC-33 logical rejection effect.
+- Runtime requires current active `PENDING_REVIEW`, updates to `REJECTED`, and inserts one actor/old/new/reason decision row into migration 011's nullable-reason candidate. State gate, physical mapping and transaction are DERIVED.
+- Empty reason strings are accepted because no blank-only rule is declared; a stricter owner policy would require a contract decision.
+- Tests use fake DB sessions. They do not verify live PostgreSQL schema, FK/grant state, migration deployment, dedicated moderation permission or actual rollback on a real database.
+- Revision identity remains unresolved: #79/#81 do not carry a version selector. Runtime acts on the active row locked at request time.
 
-## AC-33 macro-review #78–#81
+## Context validator
 
-Kết luận: review liên kết tài liệu đã hoàn tất; không có contract, schema hay source nào được sửa để tự giải quyết điểm chưa có bằng chứng. Một số liên kết tới các bước Data Mapping trong #78–#80 được sửa để trỏ đúng heading; toàn bộ local link/anchor trong nhóm #78–#81 hiện resolve.
-
-| Area | Cross-DD finding | Status |
-|---|---|---|
-| Queue and reload (#78) | Queue dùng predicate `status=PENDING_REVIEW`, còn catalog trả `Content` đơn dù tên/`page` gợi ý danh sách. Nếu đúng cùng row được chuyển sang `REJECTED`, row đó không còn khớp predicate khi tải lại; revision identity chưa chứng minh hai thao tác nhắm cùng row. | DISCREPANCY / SOURCE_REQUIRED |
-| Detail projection (#79) | AC-33 yêu cầu đọc `content/version/author`, nhưng reusable `Content` chỉ có tám field và không chứa version/author. Không tự thêm field response. | DISCREPANCY |
-| Approval/rejection states (#80/#81) | #80 ghi `APPROVED/PUBLISHED` và audit; API #52 quản lý publish riêng. #81 ghi `REJECTED` cùng review reason nhưng không nêu audit append. Casing/ý nghĩa trạng thái và audit parity chưa được chốt. | SOURCE_REQUIRED |
-| Revision identity (#78–#81) | Các catalog request chỉ truyền `content_id`; không có revision ID/expected row version. Stale decision, locking và conflict error chưa được định nghĩa. | SOURCE_REQUIRED |
-| Authorization and storage | Catalog yêu cầu Admin, nhưng current Study source chưa có Admin route/guard. Legacy DDL không có generic Content/review relation; pilot decision log dùng UUID revision identity, không map trực tiếp sang Content int64. | UNWIRED / SOURCE_REQUIRED |
-| Delete/lifecycle (#52/#53) | Publish/delete là API riêng. Quy tắc cho rejected content, soft delete và queue filtering chưa được nối với AC-33. | SOURCE_REQUIRED |
-
-Application tests remain `NOT_RUN`; this review checks document consistency only.
+`deno run --allow-read --allow-env scripts/validate-agent-context.mjs --skip-drift` returns `AGENT_CONTEXT_INVALID` only for the checkout's missing DB Admin context/source roots and their dependent links. No Study Server/API #81 issue was reported; these DB Admin findings are outside this task.

@@ -18,13 +18,13 @@ status: "Draft — Needs Confirmation"
 | Character encoding | UTF-8 |
 | Content-Type | N/A — không có request body. |
 | Authentication | Bearer JWT |
-| Role | Admin; AC-35 yêu cầu thêm quiz-management permission. |
+| Role | Runtime yêu cầu role `ADMIN`; AC-35 còn yêu cầu quiz-management permission riêng nhưng policy chưa có source. |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Principal cần role Admin và quiz-management permission; guard hiện chưa có trong Study. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) |
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Shared guard yêu cầu role `ADMIN` trước query validation/DB; permission quiz-management riêng chưa được thực thi. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) |
 | 2 | Trace ID | X-Trace-Id | No | UUID | Correlation header theo middleware convention; không phải filter nghiệp vụ. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) |
 
 ## Path parameters
@@ -35,11 +35,11 @@ Không có path parameter.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | Course filter | course | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | Số nguyên 64-bit | SOURCE_REQUIRED | Không có predicate nếu vắng mặt (DERIVED) | Candidate exact-match filter tới quizzes.course_id; physical schema chưa xác minh. | [Step 1](./05_Data_Mapping.md#step-1-validate-query) |
+| 1 | Course filter | course | int64 | No | -9223372036854775808 (DERIVED parser range) | 9223372036854775807 (DERIVED parser range) | Signed 64-bit integer | Any signed-int64 value | Không có predicate nếu vắng mặt | Exact-match filter tới `quizzes.course_id`; không kiểm tra course tồn tại riêng. | [Step 1](./05_Data_Mapping.md#step-1-validate-query) |
 | 2 | Quiz status filter | status | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | Text | Enum/casing SOURCE_REQUIRED | Không có predicate nếu vắng mặt (DERIVED) | Candidate exact-match filter tới quizzes.status; không tự tạo status whitelist. | [Step 1](./05_Data_Mapping.md#step-1-validate-query) |
-| 3 | Page index | page | int32 | No | 1 (DERIVED) | SOURCE_REQUIRED | Số nguyên 32-bit | Trang từ 1 (DERIVED) | 1 (DERIVED) | Page 1-based; đề xuất size nội bộ cố định 20 theo API #07. Catalog không khai báo size hoặc pagination response. | [Step 1](./05_Data_Mapping.md#step-1-validate-query) |
+| 3 | Page index | page | int32 | No | 1 | 2147483647 | Positive signed 32-bit integer | page ≥ 1 | 1 | Page 1-based; runtime dùng size nội bộ cố định 20 và không nhận query `size`. Size/pagination response vẫn là DERIVED. | [Step 1](./05_Data_Mapping.md#step-1-validate-query) |
 
-> Catalog không quy định trim/case normalization, range của course, status enum, page default, page size, sort hoặc lỗi parse query. Các đề xuất page được đánh dấu DERIVED.
+> Catalog không quy định status enum, page default, page size, sort hoặc lỗi parse query. Parser runtime giữ nguyên `status`; range page/course và page defaults là local DERIVED behavior.
 
 ## Request body
 
@@ -52,14 +52,14 @@ GET /api/v1/admin/quizzes?course=9001&status=DRAFT&page=1 HTTP/1.1
 Authorization: Bearer <admin-access-token>
 ~~~
 
-Ví dụ minh họa tên query. DRAFT chỉ là giá trị xuất hiện trong legacy DDL; enum/casing của API chưa được xác nhận. Page 1/default 1 và page size 20 là proposal DERIVED.
+Ví dụ minh họa query; `DRAFT` chỉ là giá trị xuất hiện trong legacy DDL, không phải enum được xác nhận. Runtime dùng page mặc định 1 và size 20 theo fallback DERIVED.
 
 ## Quy tắc input đang mở
 
-- Catalog chỉ định course:int64, status:string và page:int32; không quy định positivity/range, trim, case normalization hoặc enum.
-- Course/status exact-match semantics là proposal DERIVED.
-- Invalid int64/int32 query có thể bị framework parse từ chối; catalog không liệt kê 400/422 hoặc business code tương ứng.
-- Query page không có size; fixed size 20 chỉ là đề xuất theo API #07.
+- Catalog chỉ định course:int64, status:string và page:int32; runtime parse raw query sau auth để giữ auth-first ordering.
+- Course/status exact-match semantics là local DERIVED behavior; status không trim/case-normalize.
+- Malformed/out-of-range course/page hoặc page < 1 trả HTTP 422 `DESIGN_VALIDATION_ERROR`; đây là discrepancy vì direct catalog chỉ liệt kê 401/403/500.
+- Query page không có `size`; runtime dùng fixed size 20 theo API #07/#78 precedent.
 - Không thêm query size, sort hoặc search text vì catalog không khai báo.
 ---
 ## Phụ lục đối chiếu nguồn Excel

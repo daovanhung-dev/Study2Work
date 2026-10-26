@@ -30,20 +30,20 @@ status: "Draft — Needs Confirmation"
 | 3 | `businessCode` | Business code | `businessCode` | string | Không | Catalog | Literal theo success/error branch | Không tự đổi code. |
 | 4 | `message` | Message | `message` | string | Không | Application | Nội dung an toàn | Exact text chưa được contract quy định. |
 | 5 | `data` | Notification | `data` | object | Không | Reusable `Notification` | Giữ đúng schema dưới đây | Response không phải `NotificationDelivery`. |
-| 5.1 | `data.id` | Notification ID | `id` | int64 | Không | Không có Admin source | Không suy từ delivery row khác grain. | Physical key chưa được duyệt. |
-| 5.2 | `data.title` | Title | `title` | string | Không | Legacy `notifications.title` là candidate | Giữ chuỗi theo source nếu được chọn | Mapping Admin chưa được duyệt. |
-| 5.3 | `data.content` | Content | `content` | string | Không | Legacy `notifications.content` là candidate | Không diễn giải body/content khác schema | Mapping Admin chưa được duyệt. |
-| 5.4 | `data.channels` | Channels | `channels` | `NotificationChannel[]` | Không | Không có nguồn Admin được duyệt | Không suy từ `type` hoặc delivery attempts | Enum members chưa có. |
-| 5.5 | `data.status` | Notification status | `status` | `NotificationStatus` | Không | Không có nguồn Admin được duyệt | Không tự tính từ delivery counts | Enum và projection chưa có. |
-| 5.6 | `data.read_at` | Read time | `read_at` | date-time? | Tùy chọn | Không có nguồn Admin được duyệt | Optional theo schema | Legacy `is_read` không cung cấp timestamp. |
-| 5.7 | `data.scheduled_at` | Scheduled time | `scheduled_at` | date-time? | Tùy chọn | Không có nguồn Admin được duyệt | Optional theo schema | Không có cột này trong DDL đã rà soát. |
-| 5.8 | `data.created_at` | Creation time | `created_at` | date-time | Không | Legacy `notifications.created_at` là candidate | ISO-8601 convention | Không chứng minh Admin row/grain. |
+| 5.1 | `data.id` | Notification ID | `id` | int64 | Không | Legacy candidate `notifications.id` | Preserve signed-int64 positive key | Local candidate; Admin grain chưa được duyệt. |
+| 5.2 | `data.title` | Title | `title` | string | Không | Legacy candidate `notifications.title` | Preserve text | Local #92 response model; Admin mapping `DERIVED`. |
+| 5.3 | `data.content` | Content | `content` | string | Không | Legacy candidate `notifications.content` | Preserve text | Local #92 response model; Admin mapping `DERIVED`. |
+| 5.4 | `data.channels` | Channels | `channels` | `NotificationChannel[]` | Không | Aggregate `notification_deliveries.channel` | ARRAY_AGG ordered by channel; current candidate allows `EMAIL`/`PUSH` and has unique notification/channel | `DERIVED` from #92; catalog enum members remain unapproved. |
+| 5.5 | `data.status` | Notification status | `status` | `NotificationStatus` | Không | Aggregate delivery row statuses | `QUEUED` if any queued; else `FAILED` if any failed; else `SENT` when all rows sent | `DERIVED` from #92; values/precedence need owner approval. |
+| 5.6 | `data.read_at` | Read time | `read_at` | date-time? | Tùy chọn | Không có column trong legacy candidate | Omit khi absent; không chuyển `is_read` thành timestamp | Optional field không được suy diễn. |
+| 5.7 | `data.scheduled_at` | Scheduled time | `scheduled_at` | date-time? | Tùy chọn | Không có column trong legacy candidate | Omit khi absent | Optional field không được suy diễn. |
+| 5.8 | `data.created_at` | Creation time | `created_at` | date-time | Không | Legacy candidate `notifications.created_at` | Serialize ISO-8601 | Local #92 response model; live schema chưa xác minh. |
 | 6 | `meta` | Metadata | `meta` | object | Không | ApiEnvelope | Schema không quy định keys cho #96 | Không thêm pagination. |
-| 7 | `traceId` | Trace ID | `traceId` | uuid | Không | Request trace convention | UUID của request | Runtime #96 chưa verified. |
+| 7 | `traceId` | Trace ID | `traceId` | uuid | Không | Request trace context | UUID của request | HTTP tests xác minh trace/envelope local. |
 
 ## Aggregate boundary
 
-Reusable `NotificationDelivery` có `notification_id:int64`, `status:OperationStatus`, `queued:int32`, `sent:int32`, `failed:int32`. AC-36 yêu cầu đọc aggregate, nhưng catalog #96 trả `Notification` và không định nghĩa field projection, count semantics, delivery grain hoặc channel breakdown. Không đưa các field của `NotificationDelivery` vào response này.
+Reusable `NotificationDelivery` có `notification_id:int64`, `status:OperationStatus`, `queued:int32`, `sent:int32`, `failed:int32`. AC-36 yêu cầu đọc aggregate, nhưng catalog #96 trả `Notification` và không định nghĩa field projection, count semantics, delivery grain hoặc channel breakdown. Local fallback dùng channel/status aggregate của #92 để gán `data.channels` và `data.status`; counts không thuộc response và không được thêm.
 
 ## Ví dụ success — placeholders là design-only
 
@@ -56,9 +56,8 @@ Reusable `NotificationDelivery` có `notification_id:int64`, `status:OperationSt
     "id": 123,
     "title": "<SOURCE_REQUIRED>",
     "content": "<SOURCE_REQUIRED>",
-    "channels": ["<NotificationChannel_SOURCE_REQUIRED>"],
-    "status": "<NotificationStatus_SOURCE_REQUIRED>",
-    "scheduled_at": "2026-10-24T12:00:00Z",
+    "channels": ["EMAIL", "PUSH"],
+    "status": "QUEUED",
     "created_at": "2026-10-24T10:00:00Z"
   },
   "meta": {},
@@ -66,11 +65,11 @@ Reusable `NotificationDelivery` có `notification_id:int64`, `status:OperationSt
 }
 ```
 
-Ví dụ chỉ minh họa field/type của contract. Enum placeholder, giá trị record và quy tắc có mặt của optional field chưa được duyệt. Delivery counts bị lược bỏ vì không thuộc `Notification` schema.
+Ví dụ minh họa các token `DERIVED` của fallback #92; giá trị record chỉ mang tính ví dụ. `scheduled_at` là field optional của schema nhưng không có trong legacy projection nên bị lược bỏ. Delivery counts bị lược bỏ vì không thuộc `Notification` schema.
 
 ## Ví dụ lỗi — resource không tìm thấy
 
-API Guidelines mô tả `data:null`; helper hiện tại mặc định `{}` khi không truyền data. API #96 chưa wired nên chưa có behavior runtime để xác nhận.
+`error_response` đặt `data:null`; HTTP test của API #96 xác minh hành vi local này.
 
 ```json
 {

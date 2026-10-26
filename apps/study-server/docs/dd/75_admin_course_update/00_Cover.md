@@ -26,7 +26,7 @@ status: "Draft — Needs Confirmation"
 | Reviewed by | `Chưa chỉ định` |
 | Approved by | `Chưa phê duyệt` |
 | Created date | `2026-10-24` |
-| Updated date | `2026-10-24` |
+| Updated date | `2026-10-26` |
 
 ## Tên hiển thị
 

@@ -19,6 +19,7 @@ SELECT
 FROM lessons AS l
 JOIN courses AS c ON c.id = l.course_id
 WHERE l.id = :lesson_id
+  AND l.status IS DISTINCT FROM 'DELETED'
   AND c.status = 'PUBLISHED'
 LIMIT 1
 """

@@ -51,27 +51,31 @@ status: "Draft — Needs Confirmation"
 |---:|---|---|---|---:|---|
 | N/A | N/A | N/A | N/A | N/A | Không có DELETE. |
 
-## Candidate read projection
+## Current checked-in read projection
 
-> Đây là design evidence từ legacy DDL, không khẳng định live schema hoặc SQL đã được duyệt.
+> Runtime reads the checked-in legacy BIGINT schema; this does not prove the live database has migration 004/005 applied.
 
 | No | Table | Candidate column | Type in checked-in DB.sql | DDL constraint | Data Mapping use | Source status |
 |---:|---|---|---|---|---|---|
-| 1 | lessons AS l | id | BIGSERIAL | PRIMARY KEY | Lecture.id | Legacy candidate |
-| 2 | lessons AS l | course_id | BIGINT | FK; nullable trong DB.sql | Lecture.course_id và join parent | DISCREPANCY với DB guide; live unknown |
-| 3 | lessons AS l | name | VARCHAR(200) | NOT NULL | Map sang Lecture.title | Legacy candidate |
-| 4 | lessons AS l | content | TEXT | NULL | Map sang Lecture.content | Legacy candidate; null/omit unresolved |
-| 5 | lessons AS l | sort_order | INT | DEFAULT 0 | Map sang Lecture.order | Legacy candidate |
-| 6 | lessons AS l | status | VARCHAR(20) | DEFAULT DRAFT | Map sang Lecture.status tanpa filter | Enum members unresolved |
-| 7 | courses AS c | id | BIGSERIAL | PRIMARY KEY | Kiểm tra parent course | Legacy candidate |
-| 8 | courses AS c | mentor_id | BIGINT | Nullable FK to users.id | Candidate direct-owner access | Assignment/identity unresolved |
+| 1 | lessons AS l | id | BIGSERIAL | PRIMARY KEY | Lecture.id | Checked-in legacy source |
+| 2 | lessons AS l | course_id | BIGINT | FK; nullable trong DB.sql | Lecture.course_id và join parent | DDL/guide discrepancy; live unknown |
+| 3 | lessons AS l | name | VARCHAR(200) | NOT NULL | Map sang Lecture.title | Checked-in legacy source |
+| 4 | lessons AS l | content | TEXT | NULL | Map sang Lecture.content | SQL NULL serializes as JSON null |
+| 5 | lessons AS l | sort_order | INT | DEFAULT 0 | Map sang Lecture.order | Checked-in legacy source |
+| 6 | lessons AS l | status | VARCHAR(20) | DEFAULT DRAFT | Map sang Lecture.status tanpa filter | Enum members unspecified |
+| 7 | courses AS c | id | BIGSERIAL | PRIMARY KEY | Kiểm tra parent course | Checked-in legacy source |
+| 8 | courses AS c | mentor_id | BIGINT | Nullable FK to users.id | Direct-owner access | Assignment/identity unresolved |
+| 9 | lesson_uploads AS lu | lesson_id | BIGINT | FK lessons.id; ON DELETE CASCADE | Resolve links for lecture | Migration 005; live schema unknown |
+| 10 | lesson_uploads AS lu | upload_id | BIGINT | FK uploads.id | Resolve UploadAsset ID | Migration 005; live schema unknown |
+| 11 | lesson_uploads AS lu | asset_position | BIGINT | Nonnegative; unique per lesson | Preserve asset order | Migration 005; live schema unknown |
+| 12 | uploads AS u | id, file_name, url, content_type, size_bytes, status | BIGINT/TEXT/VARCHAR | Required metadata in migration 004 | UploadAsset projection | API #34 source; live schema unknown |
 
 ## Mapping gaps
 
 | Contract item | Candidate source | Status | Impact |
 |---|---|---|---|
-| Lecture.assets[] | API #34/#47; no approved resolver | SOURCE_REQUIRED | Không dựng được đầy đủ success payload. |
-| UploadAsset nested metadata | Legacy resources thiếu content_type, size_bytes, status | SOURCE_REQUIRED | Không đoán cột hoặc map resource_type/status tương đương. |
+| Lecture.assets[] | lesson_uploads + uploads | IMPLEMENTED_IN_CHECKED_IN_SOURCE | #47 writes links and #48 resolves ordered metadata locally; live migration not verified. |
+| UploadAsset nested metadata | uploads metadata from API #34 | IMPLEMENTED_IN_CHECKED_IN_SOURCE | Not mapped from legacy resources or V1-PILOT file_objects. |
 | Assigned Mentor course | No assignment relation in inspected legacy artifacts | SOURCE_REQUIRED | Candidate mentor_id không bao phủ AC-21 assigned-course case. |
 | Live schema | Legacy and V1-PILOT differ; live metadata not verified | NOT_VERIFIED | Candidate SQL not implementation approval. |
 

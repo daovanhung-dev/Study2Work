@@ -13,17 +13,17 @@ status: "Draft — Needs Confirmation"
 
 N/A — READ-ONLY API. API #67 không INSERT, UPDATE hoặc DELETE nên không có mutation mapping.
 
-## Candidate read source boundary
+## Runtime read source boundary
 
 | Logical role | Relation | Dữ liệu cần có | Trạng thái |
 |---|---|---|---|
-| Course scope | Legacy candidate `courses` | Course ID và Mentor owner | DESIGN_ONLY; Mentor identity/assignment chưa xác nhận. |
-| Learner eligibility | Legacy candidate `enrollments`, `users` | Course/Student membership và learner role | DESIGN_ONLY; status/privacy policy chưa xác nhận. |
-| Curriculum | Legacy candidate `lessons` | Lesson ID, course ID, title, order, status | Checked-in DDL candidate; API #9 current source filters PUBLISHED. |
-| Per-lesson state | Legacy candidate `lesson_progress` | Student/lesson key, status, percent, accessed/completed timestamps | DESIGN_ONLY; không có unique `(user_id, lesson_id)` trong DDL. |
+| Course scope | Legacy `courses` | Course ID và Mentor owner | Current query source; direct-owner fallback theo #65/#66; live schema/assignment policy chưa xác nhận. |
+| Learner eligibility | Legacy `enrollments`, `users` | Course/Student membership và learner role | Current query source; ACTIVE + STUDENT như #65; privacy/business approval chưa xác nhận. |
+| Curriculum | Legacy `lessons` | Lesson ID, course ID, name, sort order, status | Current query source; API #9 filters PUBLISHED and orders `sort_order,id`. |
+| Per-lesson state | Legacy `lesson_progress` | Student/lesson key, status, percent, accessed/completed timestamps | Current query source; latest timestamp/id selected; checked-in DDL lacks unique `(user_id, lesson_id)`. |
 | Alternate progress source | V1-PILOT `lesson_progress_facts`, `progress_snapshots` | UUID enrollment facts and course-version aggregates | Khác ID model; lesson_progress_facts không có percent; live deployment chưa xác minh. |
 
-Không tạo table, column, SQL hoặc index mới. Không coi progress snapshot/fact là learning-event log cho API #66.
+Implementation chỉ dùng tên bảng/cột legacy hiện có và không tạo table/column/index. Không coi V1-PILOT progress snapshot/fact là learning-event log cho API #66. Fake DB tests không chứng minh các relation này tồn tại trong live database.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

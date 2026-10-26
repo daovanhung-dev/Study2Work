@@ -16,13 +16,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | `2026-10-24` |
-| Ngày update cuối cùng | `2026-10-24` |
+| Ngày update cuối cùng | `2026-10-26` |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | `1.0` | `2026-10-24` | Codex | Tạo DD API #90 theo catalog và AC-35. | Draft — Needs Confirmation; còn mở physical tombstone, timestamp, no-attempt delete policy và concurrency. |
+| `1.1` | `2026-10-26` | Codex | Cập nhật DD theo route/view/tests API #90 đã wire cục bộ. | Runtime/test được ghi nhận; policy tombstone, hard-delete và race với API #29 vẫn DERIVED/SOURCE_REQUIRED. |
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

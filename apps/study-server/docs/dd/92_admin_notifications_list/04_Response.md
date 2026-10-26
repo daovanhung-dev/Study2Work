@@ -18,71 +18,49 @@ status: "Draft — Needs Confirmation"
 | Character encoding | `UTF-8` |
 | Content-Type | `application/json` |
 
-## Response fields — direct catalog contract
+## Response fields — direct contract và current fallback
 
-Catalog mô tả `ApiEnvelope<Notification>` (một `Notification` object). Đây là contract phải giữ nguyên trong DD; phần list/page bên dưới chỉ là proposal.
+Catalog khai báo `ApiEnvelope<Notification>`; runtime hiện dùng `ApiEnvelope<Page<Notification>>` để đáp ứng list intent/query `page`. Page là `DERIVED` và cần owner/catalog confirmation.
 
 | No | Path | Logical name | Physical name | Type | Nullable | Candidate source | Source step | Transform/null rule | Remarks |
 |---:|---|---|---|---|---|---|---|---|---|
-| 1 | `HTTPStatus` | HTTP status | `HTTPStatus` | integer | No | Catalog | Branch | 200 success hoặc status trong error catalog | Không thêm status. |
+| 1 | `HTTPStatus` | HTTP status | `HTTPStatus` | integer | No | Catalog | Branch | 200 success hoặc status trong error catalog | Không thêm status trực tiếp; runtime 422 page là DERIVED. |
 | 2 | `success` | Cờ thành công | `success` | boolean | No | ApiEnvelope | Envelope | true success, false error | Direct schema. |
 | 3 | `businessCode` | Mã nghiệp vụ | `businessCode` | string | No | Catalog | Branch | Giữ literal catalog | DIRECT. |
-| 4 | `message` | Thông điệp | `message` | string | No | Application | Branch | Nội dung an toàn; exact text chưa chỉ định | DERIVED. |
-| 5 | `data` | Notification | `data` | object (`Notification`) | No | Chưa có source hoàn chỉnh | Q1 | Giữ direct object; không tự đổi thành array/Page | DISCREPANCY với list intent. |
-| 5.1 | `data.id` | Notification ID | `id` | int64 | No | Legacy `notifications.id` | Q1-L | BIGSERIAL là candidate; campaign identity chưa xác nhận | SOURCE_REQUIRED cho Admin grain. |
-| 5.2 | `data.title` | Tiêu đề | `title` | string | No | Legacy/pilot notification `title` | Q1-L/Q1-P | Map candidate theo model tương ứng | Hai model không được gộp. |
-| 5.3 | `data.content` | Nội dung | `content` | string | No | Legacy `notifications.content` | Q1-L | Pilot field là `body`; không tự alias khi chưa duyệt | Legacy candidate. |
-| 5.4 | `data.channels[]` | Kênh gửi | `channels` | `NotificationChannel[]` | No | Pilot delivery channel, không tương đương notification-level channels | Q1-P | Không map legacy `type`; enum values chưa có | SOURCE_REQUIRED. |
-| 5.5 | `data.status` | Trạng thái notification | `status` | `NotificationStatus` | No | Không có nguồn Notification-level được duyệt | Q1 | Không map `is_read` hoặc delivery status | SOURCE_REQUIRED. |
-| 5.6 | `data.read_at` | Thời điểm đọc | `read_at` | date-time | Yes | Pilot learner notification | Q1-P | Không có trong legacy; pilot là learner-scoped | Optional theo schema, Admin meaning chưa rõ. |
-| 5.7 | `data.scheduled_at` | Thời điểm dự kiến gửi | `scheduled_at` | date-time | Yes | Không thấy trong legacy/pilot DDL đã rà soát | N/A | Không map `expires_at` | SOURCE_REQUIRED. |
-| 5.8 | `data.created_at` | Thời điểm tạo | `created_at` | date-time | No | Legacy/pilot notification `created_at` | Q1-L/Q1-P | Candidate; timezone/grain phụ thuộc schema được chọn | Live schema chưa xác minh. |
-| 6 | `meta` | Metadata | `meta` | object | No | ApiEnvelope | Envelope | Giữ object; member chưa định nghĩa | Không tự gắn PageMeta vào meta. |
-| 7 | `traceId` | Trace ID | `traceId` | uuid | No | Request context | Envelope | Theo trace request | Endpoint chưa được wire. |
+| 4 | `message` | Thông điệp | `message` | string | No | Application | Branch | Message an toàn | Runtime message có/không có item. |
+| 5 | `data` | Notification page | `data` | object (`Page<Notification>`) | No | API #92 runtime fallback | Q1 | Gồm `items` và `pagination` | DERIVED; khác catalog singleton. |
+| 5.1 | `data.items[]` | Notification item | `items[]` | array of object | No | Legacy notifications + delivery outbox | Q1-L | Một item trên mỗi `notifications.id` có delivery | Recipient/campaign grain vẫn cần xác nhận. |
+| 5.1.1 | `data.items[].id` | Notification ID | `id` | int64 | No | `notifications.id` | Q1-L | BIGSERIAL candidate | Không trả operation UUID. |
+| 5.1.2 | `data.items[].title` | Tiêu đề | `title` | string | No | `notifications.title` | Q1-L | Direct candidate | Legacy candidate. |
+| 5.1.3 | `data.items[].content` | Nội dung | `content` | string | No | `notifications.content` | Q1-L | Direct candidate | Legacy candidate. |
+| 5.1.4 | `data.items[].channels[]` | Kênh gửi | `channels` | NotificationChannel[] | No | `notification_deliveries.channel` | Q1-L | Aggregate ordered distinct channel rows | `PUSH`/`EMAIL` là local API #63/DDL fallback. |
+| 5.1.5 | `data.items[].status` | Trạng thái notification | `status` | NotificationStatus | No | Delivery status aggregate | Q1-L | API #64 precedence QUEUED → FAILED → SENT | Mapping Notification-level status is DERIVED. |
+| 5.1.6 | `data.items[].read_at` | Thời điểm đọc | `read_at` | date-time | Yes | N/A | Q1-L | Omit; legacy only has boolean `is_read` | Optional in reusable schema. |
+| 5.1.7 | `data.items[].scheduled_at` | Thời điểm lên lịch | `scheduled_at` | date-time | Yes | N/A | Q1-L | Omit; no candidate column | Do not map pilot `expires_at`. |
+| 5.1.8 | `data.items[].created_at` | Thời điểm tạo | `created_at` | date-time | No | `notifications.created_at` | Q1-L | Serialize stored timestamp | Timezone semantics follow DB driver; live behavior unverified. |
+| 5.2 | `data.pagination.page` | Trang hiện tại | `page` | int32 | No | Validated query | Q1 | Echo requested page | Default 1 DERIVED. |
+| 5.3 | `data.pagination.size` | Kích thước trang | `size` | int32 | No | Fixed local constant | Q1 | 20 | DERIVED. |
+| 5.4 | `data.pagination.total` | Tổng số notification | `total` | int64 | No | Count query | Q1 | Same exact status/channel predicates as item query | DERIVED. |
+| 5.5 | `data.pagination.total_pages` | Tổng số trang | `total_pages` | int32 | No | Count + size | Q1 | ceil(total / 20); 0 when total is 0 | DERIVED. |
+| 6 | `meta` | Metadata | `meta` | object | No | ApiEnvelope | Envelope | `{}` | No separate operation metadata. |
+| 7 | `traceId` | Trace ID | `traceId` | uuid string | No | Request context | Envelope | Shared trace convention | Direct envelope. |
 
-## Ví dụ thành công — direct contract
-
-Giá trị enum bên dưới là placeholder minh họa kiểu JSON, không phải enum token được duyệt.
-
-~~~json
-{
-  "success": true,
-  "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Đã lấy notification.",
-  "data": {
-    "id": 1205,
-    "title": "Thông báo lịch học",
-    "content": "Lịch học mới đã được cập nhật.",
-    "channels": ["<NotificationChannel>"],
-    "status": "<NotificationStatus>",
-    "scheduled_at": "2026-11-01T02:00:00Z",
-    "created_at": "2026-10-24T02:00:00Z"
-  },
-  "meta": {},
-  "traceId": "550e8400-e29b-41d4-a716-446655440000"
-}
-~~~
-
-> Ví dụ giữ `data` là một object theo catalog; nó không giải quyết ý nghĩa list hoặc pagination.
-
-## Ví dụ thành công — Page proposal `DERIVED`, chưa được duyệt
-
-Chỉ dùng ví dụ này nếu API owner sửa contract sang `ApiEnvelope<Page<Notification>>`. Các token enum vẫn là placeholder giải thích ở trên.
+## Ví dụ thành công
 
 ~~~json
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Đã lấy danh sách notification.",
+  "message": "Notifications retrieved.",
   "data": {
     "items": [
       {
-        "id": 1205,
+        "id": 501,
         "title": "Thông báo lịch học",
-        "content": "Lịch học mới đã được cập nhật.",
-        "channels": ["<NotificationChannel>"],
-        "status": "<NotificationStatus>",
-        "created_at": "2026-10-24T02:00:00Z"
+        "content": "Lịch học được cập nhật.",
+        "channels": ["EMAIL", "PUSH"],
+        "status": "QUEUED",
+        "created_at": "2026-10-26T08:30:00Z"
       }
     ],
     "pagination": {
@@ -97,22 +75,20 @@ Chỉ dùng ví dụ này nếu API owner sửa contract sang `ApiEnvelope<Page<
 }
 ~~~
 
-## Ví dụ lỗi — 503
+`read_at` và `scheduled_at` được bỏ qua vì optional và không có nguồn legacy được xác nhận. Danh sách rỗng vẫn trả HTTP 200 với `items: []`.
 
-HTTP 503 và code dưới đây là direct catalog values; điều kiện dependency của API GET #92 chưa được diagram chỉ ra.
+## Ví dụ lỗi — DB unavailable
 
 ~~~json
 {
   "success": false,
   "businessCode": "DESIGN_DEPENDENCY_UNAVAILABLE",
-  "message": "Dịch vụ phụ thuộc hiện không khả dụng.",
+  "message": "Notifications are temporarily unavailable.",
   "data": null,
   "meta": {},
   "traceId": "550e8400-e29b-41d4-a716-446655440000"
 }
 ~~~
-
-> API guideline yêu cầu error `data=null`; current helper serialize `None` thành `{}`. Đây là discrepancy có điều kiện, không phải API #92 runtime behavior.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -3,9 +3,10 @@
 ## Scope
 
 - DD output: `apps/study-server/docs/dd/90_admin_quizzes_delete/`.
-- Task: một API Markdown DD; không sửa runtime, schema, catalog, diagram hoặc context pages.
+- Task: wire một API theo catalog/AC-35, cập nhật DD và Study context; không sửa schema, catalog hoặc diagram.
 - DD status: `Draft — Needs Confirmation`.
-- Application tests: `NOT_RUN` — docs-only; API #90 không có route/module/test.
+- Application tests: 18 focused; 100 linked #86–#90; full Study suite 1178 passed.
+- OpenAPI: 52 unique `/api/v1` path templates / 61 operations; API #90 DELETE shares API #89's path template.
 
 ## Template
 
@@ -23,21 +24,23 @@
 | AC-35/AC-16 trace | Full AC-35 #90 branch and AC-16 attempt/history references recorded | PASS |
 | JSON examples | 2/2 success and 404 error envelopes parse and preserve direct schema/codes | PASS |
 | Mutation mapping | Soft update and 3 ordered no-attempt deletes cross-reference Data Mapping | PASS |
-| Tables/fences | 34 tables / 407 rows have consistent widths; 4 code-fence pairs balanced | PASS |
-| Relative links/anchors | 37 local links and 12 anchors resolve | PASS |
+| Tables/fences | 34 tables / 410 data rows have consistent widths; 4 code-fence pairs balanced | PASS |
+| Relative links/anchors | 39 local links and all in-package anchors resolve | PASS |
 | Whitespace | Final newlines present; no trailing whitespace | PASS |
-| Source inventory | No API #90 route/module/test marker found under app/tests; endpoint remains UNWIRED | PASS |
-| Runtime behavior | Application tests not run | NOT_RUN |
+| Source inventory | API #90 route/module/test marker exists under app/tests and imports through the FastAPI router | PASS |
+| Runtime source | Route/module/test exist locally; raw path, ADMIN auth, transaction and catalog response are wired | PASS |
+| Runtime behavior | Focused/linked/full HTTP tests use fake DB sessions; live PostgreSQL/deployment not verified | PASS_WITH_LIMITS |
 
-- Template manifest fingerprint (SHA-256 over sorted filenames and per-file SHA-256 digests): `3f033d853d64ce417542903e53a10f741b0a0a9b5187d04beb038c99866f2bb6`.
-- Output manifest fingerprint (11 sheets + PLAN_RESULT + OPEN_QUESTIONS; same manifest formula): `9254b0a3f946a2d376b4130e87d994c9af8d7817fe24c4d10659175726c560ec`.
+- Template manifest fingerprint (SHA-256 over sorted `filename digest` lines for the seven shared sheets and the table template): `6db317d91d0c072ff46e2086221a9534116d28006ae17afc268c31fae31ab5d4`.
+- Output manifest fingerprint (same formula over 11 sheets, `OPEN_QUESTIONS.md` and `PLAN_RESULT.md`): `899df2f7d4940120f65efec2ec4c5c3e15b6a50a97a80aa0795df102afb129a5`.
 
 ## Findings and limits
 
-- AC-35 directly specifies soft-delete intent when attempts exist. Physical tombstone fields/value are unresolved.
-- Hard delete when there are no attempts and child-first order are DERIVED proposals.
+- AC-35 directly specifies soft-delete intent when attempts exist. Runtime applies that branch and retains history; the `DELETED` value/timestamp mapping remain DERIVED.
+- Runtime also treats linked answer rows without an attempt row as history to protect references; this integrity safeguard is DERIVED.
+- Runtime hard-deletes choices → questions → Quiz when no attempt/answer history exists. This no-history branch and child-first order remain DERIVED proposals.
 - No live schema verification; legacy and V1-PILOT models are distinct.
-- AC-35 macro-review #87–#91 remains pending until API #91 DD exists.
+- API #29's create-attempt status/locking policy remains unresolved; API #90's own row locks do not establish cross-API race safety.
 
 ## AC-35 macro-review #87–#91 — document-level
 
@@ -51,4 +54,4 @@
   - #91 reads aggregate history while the soft-deleted quiz row remains; a hard-deleted or absent quiz maps to the direct 404 contract.
 - AC-35 contract gaps remain: #87 list/page cardinality, #88 nested create schema and DRAFT/open lifecycle, #89 update body/replacement semantics, #91 statistics response versus Quiz, shared QuizQuestion/QuizChoice schema and Admin permission.
 - The quiz status value DELETED, lifecycle transitions, live schema, transaction/concurrency policy, aggregate metrics/rounding and error integration require owner/source confirmation.
-- No catalog, diagram, database schema or runtime source was changed; no application tests were run.
+- No catalog, diagram, database schema or migration was changed. API #90 source and HTTP tests now exist locally; fake-session tests do not establish live database behavior or deployment.

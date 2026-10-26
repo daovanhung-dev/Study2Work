@@ -16,13 +16,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-26 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
-| 1.0 | 2026-10-24 | Codex | Tạo DD API #85 từ catalog và AC-34; body status là phương án DERIVED, audit storage và enum để mở. | Draft — Needs Confirmation. |
+| 1.0 | 2026-10-24 | Codex | Tạo DD API #85 từ catalog và AC-34. | Draft — Needs Confirmation. |
+| 1.1 | 2026-10-26 | Codex | Wire PATCH status với body/status enum, transaction audit legacy BIGINT và HTTP tests theo fallback DERIVED; live schema và fine-grained permission còn mở. | Draft — Needs Confirmation. |
 
 ---
 

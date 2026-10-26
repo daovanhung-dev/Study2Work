@@ -13,14 +13,27 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table | N/A |
-| Logical table | N/A — READ-ONLY API |
-| Operation | N/A |
-| Data Mapping step | N/A |
+| Physical table | `courses`, `enrollments`, `users` — read only |
+| Logical table | Course ownership, active enrollment and Student summary |
+| Operation | `SELECT` only |
+| Data Mapping step | Q1 at [step 2](./05_Data_Mapping.md#step-2-check-course-scope); Q2 at [step 3](./05_Data_Mapping.md#step-3-doc-active-student-roster) |
 
 ## Mapping
 
-N/A — API #62 không ghi DB. Candidate read sources và giới hạn mapping nằm trong [05_Data_Mapping.md](./05_Data_Mapping.md); chưa chọn schema live làm implementation contract.
+N/A — READ-ONLY API. No `INSERT`, `UPDATE`, `DELETE`, schema change or commit is performed. Selected read columns, joins and predicates are listed in [05_Data_Mapping.md](./05_Data_Mapping.md).
+
+| Table | Read columns | Purpose |
+|---|---|---|
+| `courses` | `id` | Find the requested course. |
+| `courses` | `mentor_id` | Check direct owner against the authenticated Mentor. |
+| `enrollments` | `course_id` | Match the path course. |
+| `enrollments` | `user_id` | Join to Student identity. |
+| `enrollments` | `status` | Require `ACTIVE`. |
+| `users` | `id` | Recipient ID. |
+| `users` | `full_name` | Display name. |
+| `users` | `avatar_url` | Optional avatar URI. |
+| `users` | `role` | Require `STUDENT`. |
+
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

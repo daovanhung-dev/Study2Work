@@ -39,15 +39,15 @@ N/A — no query parameter.
 | No | Location | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---|---:|---:|---:|---|---|---|---|---|
 | 1 | Body | Recipients | `recipients` | `int64[]` | No | Unspecified | Unspecified | Array | Not declared | None | Explicit recipient IDs | [Step 1](./05_Data_Mapping.md#step-1-read-request) |
-| 2 | Item | Recipient ID | `recipients[]` | `int64` | Conditional | Unspecified | Unspecified | Integer | Not declared | None | Element/duplicate rules unspecified | [Step 2](./05_Data_Mapping.md#step-2-resolve-audience) |
-| 3 | Body | Segment | `segment` | `AudienceSegment` | No | N/A | N/A | Enum | SOURCE_REQUIRED | None | Segment selector | [Step 2](./05_Data_Mapping.md#step-2-resolve-audience) |
-| 4 | Body | Title | `title` | `string` | Yes | Unspecified | Unspecified | String | Not declared | None | Notification title | [Step 1](./05_Data_Mapping.md#step-1-read-request) |
-| 5 | Body | Content | `content` | `string` | Yes | Unspecified | Unspecified | String | Not declared | None | Notification content | [Step 1](./05_Data_Mapping.md#step-1-read-request) |
-| 6 | Body | Channels | `channels` | `NotificationChannel[]` | Yes | Unspecified | Unspecified | Enum array | Values unspecified | None | Delivery channel list | [Step 1](./05_Data_Mapping.md#step-1-read-request) |
-| 7 | Item | Channel | `channels[]` | `NotificationChannel` | Conditional | Unspecified | Unspecified | Enum | SOURCE_REQUIRED | None | Token/provider mapping unknown | [Step 4](./05_Data_Mapping.md#step-4-accept-and-dispatch) |
+| 2 | Item | Recipient ID | `recipients[]` | `int64` | DERIVED required | 1 | 9223372036854775807 | Positive integer | Unique within array | None | Runtime requires existing, positive, unique IDs; recipient role/status is not filtered | [Step 2](./05_Data_Mapping.md#step-2-resolve-audience) |
+| 3 | Body | Segment | `segment` | `AudienceSegment` | No | N/A | N/A | Enum | SOURCE_REQUIRED | None | Runtime rejects this selector with 422 until tokens and expansion predicate are defined | [Step 2](./05_Data_Mapping.md#step-2-resolve-audience) |
+| 4 | Body | Title | `title` | `string` | Yes | 1 non-whitespace | 200 characters | String | Any text within local candidate limit | None | Runtime preserves submitted text; 200 comes from legacy candidate `VARCHAR(200)` | [Step 1](./05_Data_Mapping.md#step-1-read-request) |
+| 5 | Body | Content | `content` | `string` | Yes | 1 non-whitespace | Unspecified | String | Any text | None | Runtime preserves submitted text; no maximum is added | [Step 1](./05_Data_Mapping.md#step-1-read-request) |
+| 6 | Body | Channels | `channels` | `NotificationChannel[]` | Yes | 1 | Unspecified | Enum array | Runtime fallback: `PUSH`, `EMAIL`; unique | None | Delivery channel list; values are DERIVED from diagram and outbox candidate | [Step 1](./05_Data_Mapping.md#step-1-read-request) |
+| 7 | Item | Channel | `channels[]` | `NotificationChannel` | DERIVED required | N/A | N/A | Enum | `PUSH`, `EMAIL` | None | Provider mapping and delivery worker remain unavailable | [Step 4](./05_Data_Mapping.md#step-4-accept-and-dispatch) |
 
-- No minimum array length, ID positivity/uniqueness, string length, trimming or unknown-field rule is declared.
-- DERIVED proposal: exactly one audience selector, non-empty channels, nonblank title/content. Confirmation required.
+- Direct catalog leaves selector and validation details unspecified. Runtime fallback requires `recipients`, rejects any supplied `segment`, empty/duplicate/non-positive/out-of-int64 IDs, empty/duplicate/unknown channels, blank title/content, and title longer than 200 characters. These are DERIVED and need confirmation.
+- Unknown body fields and wrong JSON types return the catalog 422 code. Strings are checked for blankness but otherwise preserved.
 - No action, scheduled_at or Idempotency-Key is in the direct request contract.
 
 ## Ví dụ Request data

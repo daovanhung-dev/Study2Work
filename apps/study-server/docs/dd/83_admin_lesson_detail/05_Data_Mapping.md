@@ -33,19 +33,19 @@ Admin Bearer JWT -> xác thực role/lesson-management permission -> validate `l
 ### 0.1. Xác thực và authorization
 
 - Xác thực Bearer JWT và role Admin theo catalog.
-- Yêu cầu lesson-management permission theo tiền điều kiện AC-34.
+- AC-34 yêu cầu lesson-management permission; current source chỉ có role `ADMIN`, chưa có fine-grained permission policy.
 - Token thiếu/sai/hết hạn -> HTTP 401 `DESIGN_AUTHENTICATION_REQUIRED`.
 - Principal không có role Admin hoặc permission -> HTTP 403 `DESIGN_ACCESS_DENIED`.
-- Current `app/utils/auth.py` chỉ có Student guard; Admin claims, permission source và guard chưa có.
+- Current `app/utils/auth.py` cung cấp shared `validate_current_user_request(..., role="ADMIN")`; lesson-management permission source chưa có.
 - Hoàn thành authorization trước Q1 để không làm lộ lesson tồn tại cho caller không đủ quyền.
 
 ### 0.2. Query/check quyền
 
 | Target table/API | Column/Field | Condition/Value | Remarks |
 |---|---|---|---|
-| Authorization header | Bearer credential | Token hợp lệ/chưa hết hạn | DIRECT requirement; route chưa wired. |
-| Principal policy | Admin role | Principal có role Admin | DIRECT; claim source chưa có. |
-| Admin policy | lesson-management permission | Principal được phép quản lý bài học | AC-34 precondition; implementation SOURCE_REQUIRED. |
+| Authorization header | Bearer credential | Token hợp lệ/chưa hết hạn | DIRECT requirement; current view gọi shared JWT guard. |
+| Principal policy | Admin role | Principal có role Admin | DIRECT; role enforcement dùng shared guard. |
+| Admin policy | lesson-management permission | Principal được phép quản lý bài học | AC-34 precondition; fine-grained policy SOURCE_REQUIRED, chưa được enforce. |
 
 <a id="step-1-validate-data-input"></a>
 
@@ -56,7 +56,7 @@ Admin Bearer JWT -> xác thực role/lesson-management permission -> validate `l
 - Path parameter required, kiểu int64 theo catalog.
 - Không thêm minimum/positive constraint; catalog không khai báo.
 - ID parse được nhưng không tìm thấy row -> 404 `DESIGN_RESOURCE_NOT_FOUND`.
-- Path không parse được int64 -> candidate 404 để giữ error set catalog; đây là DERIVED proposal. FastAPI/middleware hiện có thể trả 422 generic nếu future route không xử lý riêng.
+- Path không parse được int64 -> current custom parser trả 404 để giữ error set catalog; đây là DERIVED theo API #74 và đã có focused HTTP test.
 - Không có body/query parameters.
 
 <a id="step-2-get-thong-tin"></a>
@@ -124,7 +124,7 @@ WHERE l.id = :lesson_id
 
 ### 3.2. Không có lesson
 
-- Nếu Q1 không trả row, trả HTTP 404 `DESIGN_RESOURCE_NOT_FOUND`.
+- Nếu Q1 không trả row, rollback read transaction và trả HTTP 404 `DESIGN_RESOURCE_NOT_FOUND`.
 - Lesson soft-deleted có được xem là “không có” hay không chưa xác định; legacy schema không có deleted marker và #86 policy còn mở.
 
 ### 3.3. Lỗi truy vấn/mapping
@@ -146,13 +146,13 @@ WHERE l.id = :lesson_id
 - `data.order = row.sort_order`.
 - `data.status = row.status`.
 - Không thêm resources, progress, counters, timestamps hoặc dependency fields.
-- Nếu `content`/`video_url` source NULL thì serialize `null` là proposal theo API #09 model/test precedent; cần chốt optional-field wire behavior.
+- Nếu `content`/`video_url` source NULL thì serialize `null` theo API #09 model/test precedent và API #83 focused test.
 - Không dựng/chuẩn hóa LessonStatus whitelist khi enum members/casing chưa có nguồn.
 
 ### 4.2. Envelope
 
 - Thành công: `success=true`, code `DESIGN_RESOURCE_RETRIEVED`, HTTP 200, `data` là một object Lesson, `meta={}` candidate, `traceId` theo middleware convention.
-- Lỗi: giữ exact catalog codes/statuses. API guideline muốn `data:null`, nhưng current `error_response` mặc định `{}` và path chưa allowlist #83.
+- Lỗi: giữ exact catalog codes/statuses. Current `error_response` mặc định `data:null`; middleware allowlist đã nhận route template #83.
 
 <a id="step-5-tra-response"></a>
 
@@ -167,7 +167,7 @@ WHERE l.id = :lesson_id
 
 - 401 `DESIGN_AUTHENTICATION_REQUIRED` — Bearer credential thiếu/sai.
 - 403 `DESIGN_ACCESS_DENIED` — role Admin/lesson permission không đạt.
-- 404 `DESIGN_RESOURCE_NOT_FOUND` — lesson không tồn tại; malformed ID -> 404 chỉ là proposal.
+- 404 `DESIGN_RESOURCE_NOT_FOUND` — lesson không tồn tại hoặc malformed ID theo local DERIVED mapping.
 - 500 `DESIGN_INTERNAL_ERROR` — query hoặc mapping thất bại.
 - Không tạo 422/409 hoặc business code mới.
 
@@ -175,9 +175,9 @@ WHERE l.id = :lesson_id
 
 | Request item | Data Mapping step | Validation | Query usage | Response usage | Status/gap |
 |---|---|---|---|---|---|
-| Authorization Bearer | 0 | Authenticate token | Không đưa vào SQL | Không map | DIRECT; guard SOURCE_REQUIRED |
+| Authorization Bearer | 0 | Authenticate token | Không đưa vào SQL | Không map | DIRECT; shared guard wired, permission fine-grained chưa có |
 | Admin role | 0 | Require Admin | Check trước Q1 | Không map | DIRECT |
-| lesson-management permission | 0 | Require permission | Check trước Q1 | Không map | AC-34 DIRECT; policy SOURCE_REQUIRED |
+| lesson-management permission | 0 | Require permission | Check trước Q1 | Không map | AC-34 DIRECT; policy SOURCE_REQUIRED, chưa được enforce |
 | `lesson_id` | 1/2 | Required int64; no extra range | Q1 bind `:lesson_id` | `data.id` | DIRECT type; invalid parse -> 404 DERIVED |
 | Request body | — | Not declared | None | None | DIRECT absence |
 | Query parameters | — | Not declared | None | None | DIRECT absence |
@@ -192,7 +192,7 @@ WHERE l.id = :lesson_id
 | Q1 | Map content | SELECT | Legacy `lessons AS l` candidate | `l.content` | Same row | Optional response field | Null handling DERIVED |
 | Q1 | Map video URL | SELECT | Legacy `lessons AS l` candidate | `l.video_url` | Same row | Optional response field | Null handling DERIVED |
 | Q1 | Map order | SELECT | Legacy `lessons AS l` candidate | `l.sort_order` | Same row | Alias to `order` | API #09 precedent |
-| Q1 | Map status | SELECT | Legacy `lessons AS l` candidate | `l.status` | Same row; no status predicate | Lesson status | Enum members unknown |
+| Q1 | Map status | SELECT | Legacy `lessons AS l` candidate | `l.status` | Same non-`DELETED` row; query excludes API #86 tombstone | Lesson status | Enum members unknown |
 | Q-dependencies | No approved read | N/A | `resources`, `lesson_progress` are possible relations only | No selected fields | AC n5 lacks output/use rule | No query included | SOURCE_REQUIRED |
 | Q-count | Not applicable | N/A | N/A | N/A | No count/page contract | None | N/A |
 
@@ -200,7 +200,7 @@ WHERE l.id = :lesson_id
 
 | Mutation ID | Operation | Target table | Record condition | Fields/audit | Transaction/failure |
 |---|---|---|---|---|---|
-| N/A | None — READ ONLY | N/A | API #83 is GET; later changes use #84–#86 | No mutation/audit write | No transaction/commit; read failures -> catalog 500 |
+| N/A | None — READ ONLY | N/A | API #83 is GET; later changes use #84–#86 | No mutation/audit write | No write/commit; rollback on missing row or read/mapping error |
 
 ## Response Source Matrix
 
@@ -213,10 +213,10 @@ WHERE l.id = :lesson_id
 | `data.id` | int64 | DB candidate | `lessons.id` | 4 | Copy | Required | Legacy candidate |
 | `data.course_id` | int64 | DB candidate | `lessons.course_id` | 4 | Copy | Required; source NULL cannot map | DDL discrepancy |
 | `data.title` | string | DB candidate | `lessons.name` | 4 | `name -> title` | Required | API #09 precedent |
-| `data.content` | string? | DB candidate | `lessons.content` | 4 | Copy | NULL candidate | Optional; confirm null/omit |
-| `data.video_url` | uri? | DB candidate | `lessons.video_url` | 4 | Copy | NULL candidate | Optional; confirm null/omit |
+| `data.content` | string? | DB candidate | `lessons.content` | 4 | Copy | `null` when source NULL | API #09 model/test precedent |
+| `data.video_url` | string? | DB candidate | `lessons.video_url` | 4 | Copy | `null` when source NULL | API #09 model/test precedent |
 | `data.order` | int32 | DB candidate | `lessons.sort_order` | 4 | `sort_order -> order` | Required | API #09 precedent |
-| `data.status` | LessonStatus | DB candidate | `lessons.status` | 4 | Preserve stored string | Required | Enum/casing SOURCE_REQUIRED |
+| `data.status` | string | DB candidate | `lessons.status` | 4 | Preserve stored string | Required | Enum/casing SOURCE_REQUIRED |
 | `meta` | object | Envelope convention | N/A | 4/5 | Empty object candidate | `{}` success | Current helper convention |
 | `traceId` | uuid | Middleware | Header or generated UUID | 0/5 | Propagate/generate | Required | Current Study convention |
 | Dependencies | Not in response schema | No approved source/output | N/A | N/A | Do not emit | Not applicable | AC diagram conflict |

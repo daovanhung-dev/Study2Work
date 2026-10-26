@@ -37,7 +37,7 @@ status: "Draft — Needs Confirmation"
 | 5.4 | data.content | Lesson content | content | string? | Yes | Legacy lessons candidate | content | 4.1 | Copy returned value | Null/omit unresolved | Legacy column nullable. |
 | 5.5 | data.video_url | Video URL | video_url | uri? | Yes | Legacy lessons candidate | video_url | 4.1 | Copy returned value | Null/omit unresolved | Legacy TEXT candidate. |
 | 5.6 | data.order | Lesson order | order | int32 | No | Legacy lessons candidate | sort_order | 4.1 | Alias sort_order → order | Required | API #09 mapping precedent. |
-| 5.7 | data.status | Lesson status | status | LessonStatus | No | Legacy lessons candidate | status | 4.1 | Return updated value | N/A | Enum members/casing unresolved; V1-PILOT has no Lesson status field. |
+| 5.7 | data.status | Lesson status | status | LessonStatus | No | Legacy lessons candidate | status | 4.1 | Return updated value | N/A | Response value is copied; request enum remains DERIVED. V1-PILOT has no Lesson status field. |
 | 6 | meta | Metadata | meta | object | No | Envelope convention | N/A | 5.1 | Empty object candidate | {} on success | No API-specific meta contract. |
 | 7 | traceId | Trace ID | traceId | uuid | No | Trace middleware | X-Trace-Id or generated | 0/5 | Propagate or generate | Required | Current Study convention. |
 
@@ -62,7 +62,7 @@ status: "Draft — Needs Confirmation"
 }
 ```
 
-DRAFT chỉ minh họa source value có trong legacy DDL; không xác nhận enum, transition hoặc cách ghi audit. Lesson projection là candidate legacy mapping; V1-PILOT không tương thích trực tiếp.
+Response value follows the returned row. Request enum and audit persistence are local DERIVED choices; Lesson projection follows the legacy candidate and V1-PILOT remains separate.
 
 ## Ví dụ lỗi không tìm thấy — HTTP 404
 
@@ -90,7 +90,7 @@ DRAFT chỉ minh họa source value có trong legacy DDL; không xác nhận enu
 }
 ```
 
-API guideline yêu cầu error data:null; current helper mặc định absent data thành {}. API #85 chưa có route nên đây là discrepancy cần xử lý khi wire API.
+Current `error_response` helper trả `data: null`; focused API #85 HTTP tests xác nhận error envelope. Route dùng trực tiếp reusable Lesson response.
 
 ---
 

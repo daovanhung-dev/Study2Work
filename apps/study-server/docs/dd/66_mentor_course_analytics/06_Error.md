@@ -11,37 +11,34 @@ status: "Draft — Needs Confirmation"
 
 ## Error codes trực tiếp từ catalog
 
-| HTTP | Business code | Direct meaning | Candidate trigger | Status |
-|---:|---|---|---|---|
-| 401 | DESIGN_AUTHENTICATION_REQUIRED | Bearer JWT thiếu hoặc không hợp lệ. | Không xác thực được principal. | Code/status DIRECT; endpoint chưa wired. |
-| 403 | DESIGN_ACCESS_DENIED | Role hoặc quyền truy cập không hợp lệ. | Candidate: course ngoài scope Mentor. | Code DIRECT; quyền và predicate DERIVED/SOURCE_REQUIRED. |
-| 404 | DESIGN_RESOURCE_NOT_FOUND | Resource không tồn tại. | Candidate: course không tồn tại. | Code DIRECT; object/authorization order chưa chốt. |
-| 500 | DESIGN_INTERNAL_ERROR | Lỗi hệ thống không xác định. | Query/source/aggregation failure. | Code/status DIRECT; endpoint error mapping chưa chạy. |
+| HTTP | Business code | Trigger trong local runtime | Status |
+|---:|---|---|---|
+| 401 | DESIGN_AUTHENTICATION_REQUIRED | Thiếu hoặc không xác thực được Bearer JWT. | Code/status DIRECT; shared auth helper wired. |
+| 403 | DESIGN_ACCESS_DENIED | Principal thiếu role MENTOR hoặc course do Mentor khác sở hữu. | Code DIRECT; owner policy DERIVED từ courses.mentor_id. |
+| 404 | DESIGN_RESOURCE_NOT_FOUND | course_id không parse được signed int64 hoặc course không tồn tại. | Code DIRECT; path mapping local runtime. |
+| 500 | DESIGN_INTERNAL_ERROR | Query lỗi hoặc aggregate projection sai schema/value. | Code/status DIRECT; safe mapping local runtime. |
 
 Không thêm error code vào direct contract.
 
-## Candidate branch rules
+## Error response mapping
 
-| Điều kiện | Candidate behavior | Trạng thái |
-|---|---|---|
-| Bearer thiếu/sai/hết hạn | 401 | Code DIRECT; auth helper hiện tại chỉ hỗ trợ Student guard. |
-| Principal không có role Mentor | 403 | Code DIRECT; Mentor guard chưa có source. |
-| Course không tồn tại | 404 | DERIVED mapping từ catalog error; query chưa tồn tại. |
-| Course tồn tại nhưng ngoài scope Mentor | 403 hoặc privacy-preserving 404 | SOURCE_REQUIRED; policy chưa có. |
-| Event source/query lỗi | 500 | Code DIRECT; physical source chưa được chọn. |
+| Điều kiện | HTTP | Business code | Data | Side effect |
+|---|---:|---|---|---|
+| Bearer thiếu/sai/hết hạn | 401 | DESIGN_AUTHENTICATION_REQUIRED | null | Không truy vấn DB. |
+| JWT hợp lệ nhưng thiếu role Mentor | 403 | DESIGN_ACCESS_DENIED | null | Không truy vấn DB. |
+| course_id malformed/out of int64 range | 404 | DESIGN_RESOURCE_NOT_FOUND | null | Không truy vấn DB. |
+| Course không tồn tại | 404 | DESIGN_RESOURCE_NOT_FOUND | null | Rollback read transaction. |
+| Course không do Mentor hiện tại sở hữu | 403 | DESIGN_ACCESS_DENIED | null | Không chạy aggregate; rollback read transaction. |
+| SQL hoặc response mapping lỗi | 500 | DESIGN_INTERNAL_ERROR | null | Rollback read transaction; không lộ SQL/stack trace. |
 
-## Error envelope discrepancy
-
-- API guidelines quy định data:null khi lỗi.
-- Current error_response thay data absent thành {}.
-- Middleware DESIGN_CONTRACT_PATHS chưa có path #66; nếu route được wire mà allowlist không cập nhật, request-validation/unhandled error có thể dùng fallback code.
-- Đây là điều kiện tích hợp tương lai, không phải response đã quan sát của API #66.
+Shared error_response mặc định data absent thành JSON null. Middleware design-contract allowlist hiện đã bao gồm path #66; endpoint không sinh framework 422 cho path ID vì view parse raw path string.
 
 ## Security handling
 
-- Không truy vấn/serialize analytics trước khi xác định Mentor và quyền course.
-- Không trả raw event payload, nội dung nhạy cảm, SQL hoặc stack trace.
-- Giữ tổng hợp ở mức course; metric theo learner không được thêm nếu chưa có contract/quyền rõ ràng.
+- Xác thực role Mentor trước mọi query.
+- Kiểm tra course owner trước aggregate và lặp owner predicate trong aggregate SQL.
+- Không trả learner IDs, raw activity rows, SQL hoặc stack trace.
+- Course access policy này là DERIVED từ legacy courses.mentor_id; chưa xác nhận assignment model/live schema.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

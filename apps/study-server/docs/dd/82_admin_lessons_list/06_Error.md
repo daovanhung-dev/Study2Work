@@ -6,41 +6,46 @@ api_name: "Lấy danh sách lesson"
 source_sheet: "4.Error"
 status: "Draft — Needs Confirmation"
 ---
-
 # Error
 
 ## Giải thích
 
-Các nhánh lỗi dưới đây giữ đúng danh sách API #82 trong catalog. Không thêm 404, 422 hoặc business code khác. Điều kiện malformed query và error envelope cần owner/source xác nhận trước khi wire route.
+Các lỗi authentication/authorization/system giữ mã catalog API #82. Local implementation bổ sung 422 `DESIGN_VALIDATION_ERROR` làm fallback DERIVED cho input không parse được hoặc filter `type` chưa có source mapping; do đó DD vẫn Draft.
 
 ## Error cases
 
-| No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
+| No | Category | Verify check | Item | Condition | HTTP status | Error code | Error Message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Authentication | SOURCE_REQUIRED | Authorization | Bearer token thiếu, sai hoặc hết hạn | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | N/A | [Step 0](./05_Data_Mapping.md#0-check-quyen) | N/A | Code/status DIRECT; guard hiện chưa có. |
-| 2 | Authorization | SOURCE_REQUIRED | Admin role/lesson permission | Principal không có Admin role hoặc permission | 403 | `DESIGN_ACCESS_DENIED` | N/A | [Step 0](./05_Data_Mapping.md#0-check-quyen) | N/A | Role DIRECT; permission theo AC-34; policy source chưa có. |
-| 3 | System error | SOURCE_REQUIRED | Lesson query/mapping | DB query hoặc required field mapping lỗi | 500 | `DESIGN_INTERNAL_ERROR` | N/A | [Step 3](./05_Data_Mapping.md#3-check-ket-qua-execute-query) | N/A | Candidate legacy `course_id=NULL` cũng không map được required field; behavior cần chốt. |
-| 4 | Contract integration | SOURCE_REQUIRED | Query validation | `course` không parse được int64 hoặc query schema invalid | Chưa xác định | Chưa có trong catalog | N/A | [Step 1](./05_Data_Mapping.md#1-validate-data-input) | N/A | Không tự gán 400/422; direct error set chỉ có 401/403/500. |
-| 5 | Contract integration | SOURCE_REQUIRED | Query `type` | Client gửi `type` nhưng không có Lesson field/predicate nguồn | Chưa xác định | Chưa có trong catalog | N/A | [Step 1](./05_Data_Mapping.md#1-validate-data-input) | N/A | Không bỏ qua filter; cần schema/contract resolution. |
+| 1 | Authentication | VERIFIED by local HTTP tests | Authorization | Bearer token thiếu, sai hoặc hết hạn | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | N/A | [Step 0](./05_Data_Mapping.md#0-check-quyen) | N/A | Code/status DIRECT; shared guard. |
+| 2 | Authorization | VERIFIED by local HTTP tests | Admin role | Principal không có role `ADMIN` | 403 | `DESIGN_ACCESS_DENIED` | N/A | [Step 0](./05_Data_Mapping.md#0-check-quyen) | N/A | Role DIRECT; fine-grained lesson permission chưa có check. |
+| 3 | Validation | DERIVED/local behavior | Query `course` | Không parse được signed int64 hoặc vượt range | 422 | `DESIGN_VALIDATION_ERROR` | N/A | [Step 1](./05_Data_Mapping.md#1-validate-data-input) | N/A | `meta.fieldErrors`: field `course`, code `INT_PARSING`; DB chưa được gọi. |
+| 4 | Validation | DERIVED/local behavior | Query `type` | Client gửi type khi không có Lesson type mapping | 422 | `DESIGN_VALIDATION_ERROR` | N/A | [Step 1](./05_Data_Mapping.md#1-validate-data-input) | N/A | `meta.fieldErrors`: field `type`, code `UNSUPPORTED_FILTER`; không âm thầm bỏ filter. |
+| 5 | System error | VERIFIED by local HTTP tests | Lesson query/mapping | DB query lỗi hoặc projection không map được reusable Lesson | 500 | `DESIGN_INTERNAL_ERROR` | N/A | [Step 3](./05_Data_Mapping.md#3-check-ket-qua-execute-query) | Best-effort | Legacy nullable required fields nếu NULL làm mapping thất bại. |
 
 > Error message ID không có trong Study API contract; dùng `N/A`, không sao chép mã từ template Excel.
 
 ## Error envelope
 
-API guideline shape:
-
 ~~~json
 {
   "success": false,
-  "businessCode": "DESIGN_INTERNAL_ERROR",
-  "message": "Không thể xử lý yêu cầu.",
+  "businessCode": "DESIGN_VALIDATION_ERROR",
+  "message": "Dữ liệu đầu vào không hợp lệ.",
   "data": null,
-  "meta": {},
+  "meta": {
+    "fieldErrors": [
+      {
+        "field": "type",
+        "code": "UNSUPPORTED_FILTER",
+        "message": "Lesson type filter is not supported by the available schema."
+      }
+    ]
+  },
   "traceId": "00000000-0000-0000-0000-000000000003"
 }
 ~~~
 
-Current helper mặc định `data={}` nếu caller không truyền data; current middleware path chưa allowlist `/api/v1/admin/lessons`. API #82 chưa có route nên chưa có runtime error behavior để xác nhận. Xem [conflicts](./02_Overview.md#conflicts).
+`error_response(...)` trả `data: null`; validation error giữ field error trong `meta.fieldErrors`. Query/projection 500 rollback best-effort. Local HTTP tests không xác minh live DB/schema.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

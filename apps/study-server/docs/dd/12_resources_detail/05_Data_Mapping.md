@@ -38,7 +38,7 @@ format: markdown
 | `Q1` | Filter | `r.id = :resource_id` | Scope trực tiếp theo path parameter. |
 | `Q2` | Join | `r.lesson_id = l.id` | Quan hệ `resources.lesson_id → lessons.id` từ ERD. |
 | `Q2` | Join | `l.course_id = c.id` | Quan hệ `lessons.course_id → courses.id` từ ERD. |
-| `Q2` | Filter | `c.status = 'PUBLISHED'` | Derived public-course gate; cần xác nhận trước implementation. |
+| `Q2` | Filter | `c.status = 'PUBLISHED'` and `l.status IS DISTINCT FROM 'DELETED'` | Course gate is the existing public rule; Lesson tombstone is hidden by API #86 local policy. |
 | `Q3` | Branch | `resource visibility = PRIVATE` | Visibility source và storage adapter chưa được đặc tả. |
 | `Q3` | Input | `object key` | Không expose object key trong response; nguồn key chưa có trong ERD. |
 

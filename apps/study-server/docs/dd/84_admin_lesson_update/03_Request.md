@@ -18,23 +18,23 @@ status: "Draft — Needs Confirmation"
 | HTTP method | PUT |
 | URI | `/api/v1/admin/lessons/{lesson_id}` |
 | Character encoding | UTF-8 |
-| Content-Type | application/json là DERIVED cho body proposal; catalog chưa xác nhận body/content type. |
+| Content-Type | `application/json` cho request model DERIVED đang chạy. |
 | Authentication | Bearer JWT |
-| Role | Admin; lesson-management permission theo AC-34. |
+| Role | Shared `ADMIN` role guard; permission lesson-management riêng chưa có trong current source. |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | `Authorization` | Yes | `Bearer <token>` | Principal cần Admin và lesson-management permission; guard/policy chưa có trong Study. | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) |
-| 2 | Content type | `Content-Type` | DERIVED | `application/json` | Candidate header nếu JSON body được duyệt. | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) |
+| 1 | Authorization | `Authorization` | Yes | `Bearer <token>` | Shared guard yêu cầu role `ADMIN`; AC-34 fine-grained permission chưa có trong Study source. | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) |
+| 2 | Content type | `Content-Type` | Yes | `application/json` | Media type của request model DERIVED hiện tại. | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) |
 | 3 | Trace ID | `X-Trace-Id` | No | UUID | Current Study trace middleware convention; không phải input nghiệp vụ. | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | Lesson ID | `lesson_id` | int64 | Yes | Chưa đặc tả | Chưa đặc tả | Số nguyên 64-bit | Chỉ xác nhận type int64 | N/A | ID lesson; candidate predicate tới lessons.id. | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) |
+| 1 | Lesson ID | `lesson_id` | int64 | Yes | Chưa đặc tả | Chưa đặc tả | Số nguyên 64-bit | Signed int64 được parse; malformed/out-of-range -> 422 | N/A | ID lesson; bound predicate tới legacy lessons.id candidate. | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) |
 
 ## Query parameters
 
@@ -42,18 +42,18 @@ N/A — catalog và AC-34 diagram không khai báo query parameter.
 
 ## Request body
 
-Catalog và diagram chỉ khai báo `path{lesson_id:int64!}`. Các field dưới đây là candidate DERIVED để cụ thể hóa UPDATE; chưa được duyệt.
+Catalog và diagram chỉ khai báo `path{lesson_id:int64!}`. Runtime cụ thể hóa UPDATE bằng body DERIVED dưới đây; PUT thay thế đủ bốn field và từ chối field lạ.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Tiêu đề lesson | `title` | string | Yes, proposal | Chưa đặc tả | 200 legacy candidate | Unicode | N/A | N/A | N/A | Map candidate tới legacy lessons.name VARCHAR(200); không xác nhận live validation. | [Step 2](./05_Data_Mapping.md#step-2-check-body-proposal) |
-| 2 | Nội dung lesson | `content` | string or null | Yes, proposal | Chưa đặc tả | Chưa đặc tả | Unicode | N/A | N/A | Null-to-clear candidate | Null/omission semantics cần xác nhận. | [Step 2](./05_Data_Mapping.md#step-2-check-body-proposal) |
-| 3 | URL video | `video_url` | uri or null | Yes, proposal | Chưa đặc tả | Chưa đặc tả | Unicode | URI candidate | Chưa đặc tả | Null-to-clear candidate | Scheme/host/length validation chưa có nguồn. | [Step 2](./05_Data_Mapping.md#step-2-check-body-proposal) |
-| 4 | Thứ tự lesson | `order` | int32 | Yes, proposal | Chưa đặc tả | Chưa đặc tả | N/A | Số nguyên 32-bit | N/A | N/A | Map candidate tới legacy lessons.sort_order; range/uniqueness chưa xác nhận. | [Step 2](./05_Data_Mapping.md#step-2-check-body-proposal) |
+| 1 | Tiêu đề lesson | `title` | string | Yes | 0 | 200 | Unicode | N/A | N/A | N/A | Strict string, max 200 theo legacy lessons.name và API #47 precedent; không trim hoặc cấm chuỗi rỗng. | [Step 2](./05_Data_Mapping.md#step-2-check-body-proposal) |
+| 2 | Nội dung lesson | `content` | string or null | Yes | Chưa giới hạn | Chưa giới hạn | Unicode | N/A | N/A | Null clears value | Omission invalid; null is accepted from nullable Lesson model/DDL. | [Step 2](./05_Data_Mapping.md#step-2-check-body-proposal) |
+| 3 | URL video | `video_url` | string or null | Yes | Chưa giới hạn | Chưa giới hạn | Unicode | N/A | N/A | Null clears value | No URI/scheme/host validation; omission invalid. | [Step 2](./05_Data_Mapping.md#step-2-check-body-proposal) |
+| 4 | Thứ tự lesson | `order` | int32 | Yes | -2147483648 | 2147483647 | N/A | Số nguyên 32-bit strict | N/A | N/A | Map tới legacy lessons.sort_order; no positivity/uniqueness/reorder rule. | [Step 2](./05_Data_Mapping.md#step-2-check-body-proposal) |
 
-> “Yes, proposal” là một phương án full replacement để review. Requiredness, omission/null behavior và PUT semantics cần owner xác nhận.
+> Body và validation là DERIVED implementation fallback do catalog/diagram không định nghĩa; DD vẫn Draft — Needs Confirmation. FastAPI validates the typed JSON body before invoking the endpoint, so malformed body may return 422 before the view checks Authorization; no database access occurs on this path.
 
-Không gửi lesson_id trong body. Không gửi course_id vì chưa có rule chuyển course. Không gửi status vì API #85 quản lý trạng thái. Không gửi timestamps hoặc fields ngoài proposal.
+Không gửi lesson_id trong body. Không gửi course_id vì chưa có rule chuyển course. Không gửi status vì API #85 quản lý trạng thái. Không gửi timestamps hoặc fields ngoài fallback này.
 
 ## Ví dụ Request data — DERIVED
 
@@ -71,13 +71,16 @@ X-Trace-Id: 00000000-0000-0000-0000-000000000084
 }
 ```
 
-Ví dụ minh họa body candidate; không xác nhận field rules hoặc replacement semantics.
+Ví dụ minh họa body fallback đang chạy; chưa có trong direct catalog/diagram contract.
 
-## Quy tắc input đang mở
+## Quy tắc input được chọn cho implementation fallback
 
 - Catalog xác nhận lesson_id:int64!; minimum/positive constraint chưa được đặc tả.
-- Catalog có 422 DESIGN_VALIDATION_ERROR nhưng không chỉ rõ field validation rules.
-- Body fields, requiredness, null/omission, title rules, URI policy, order bounds/uniqueness và Content-Type cần owner xác nhận.
+- Path `lesson_id` parse signed-int64; malformed/out-of-range trả 422 `DESIGN_VALIDATION_ERROR`.
+- Cả bốn body field bắt buộc; thiếu/sai type/thừa field trả 422 trước mutation.
+- `content` và `video_url` nhận null để clear; URL không có URI-format rule.
+- `title` chỉ giới hạn tối đa 200 ký tự; `order` giới hạn miền int32; không thêm business rule khác.
+- Đây là DERIVED fallback, không phải field/rules được ghi trong catalog/diagram; live schema chưa xác minh.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

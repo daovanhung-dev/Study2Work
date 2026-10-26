@@ -9,52 +9,55 @@ api_name: "Tạo nội dung mới Conditional"
 status: "Draft — Needs Confirmation"
 ---
 
-# Định nghĩa table — Logical Content, physical mapping SOURCE_REQUIRED
+# Định nghĩa table — Content insert target `contents` (DDL artifact)
 
 ## Table metadata
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table/model | `SOURCE_REQUIRED`; chưa có generic Content table tương thích trong legacy DDL. |
+| Physical table/model | Legacy `contents` trong `DB.sql` và migration 006; live schema chưa xác minh. |
 | Logical entity | `Content` theo API catalog #50. |
 | Operation | Một logical INSERT theo AC-22. |
 | Data Mapping step | 5–7 |
 | Evidence | Catalog row #50 + Content schema; AC-22 INSERT node; AC-33 pending queue; legacy/pilot DDL comparison. |
-| Runtime | Route/service/test chưa được tìm thấy (`UNWIRED` / `NOT_FOUND`). |
+| Runtime | API #50 route/module/TestClient tests source-backed locally; live schema/migration status remains unverified. |
 
 ## Insert mapping
 
 | Logical field | Value source | Candidate rule | Evidence/status |
 |---|---|---|---|
-| `id` | Persistence layer | Generate BIGINT-compatible Content ID | `SOURCE_REQUIRED`; allocator/schema absent |
-| `course_id` | Request body | Persist selected course after permission check | DIRECT logical input; physical FK SOURCE_REQUIRED |
-| `content_type` | Request body | Persist approved enum member | DIRECT field; enum/type storage SOURCE_REQUIRED |
-| `title` | Request body | Persist title | DIRECT field; length/normalization/schema SOURCE_REQUIRED |
-| `payload` | Request body | Persist JSON object matching approved subtype schema | DIRECT field; payload/storage SOURCE_REQUIRED |
-| `status` | Server lifecycle | `PENDING_REVIEW` candidate | DERIVED inference from AC-22 create + AC-33 pending queue; confirm transition and persistence |
-| `parent_id` | Server default; not request | Candidate `NULL` for root Content | `DERIVED`; parent relationship and root creation policy need confirmation |
-| `order` | Server allocator; not request | Candidate next order among root siblings of the course | `DERIVED`; scope, transaction/locking and uniqueness rule need confirmation |
-| `created_by`/timestamps/audit | Not in contract | No value assigned here | `SOURCE_REQUIRED`; do not invent columns or payload fields |
+| `id` | Persistence layer | BIGSERIAL generates Content ID | Column/key source-backed in local DDL; live schema unverified |
+| `course_id` | Request body | Persist after direct-owner check | Contract field; local FK to `courses`; live schema unverified |
+| `content_type` | Request body | Persist open string unchanged | Contract field; local column TEXT; enum members unknown |
+| `title` | Request body | Persist strict string unchanged | Contract field; local column TEXT; no additional length/normalization rule |
+| `payload` | Request JSON object | JSON serialize then `CAST(:payload AS JSONB)` | Contract object; local JSONB object constraint; subtype keys unknown |
+| `status` | Server lifecycle | `PENDING_REVIEW` | DERIVED from AC-33 queue condition; runtime implementation decision |
+| `parent_id` | Server default; not request | SQL NULL for root Content | DERIVED from absence of parent input; response omits null |
+| `content_order` / response `order` | Server allocator; not request | `GREATEST(MAX(content_order)+1, 0)` among active roots, first order 0 | DERIVED; course row lock serializes API #50 allocation per course |
+| `id` | Persistence layer | BIGSERIAL-generated Content ID | Present in local DDL; live schema unverified |
+| `deleted_at` | Local DDL default | Omitted in INSERT, therefore NULL | Local DDL column; active-row predicate used for root order |
 
 ## SQL mapping
 
-No physical `INSERT` statement is approved. The target table, column names/types, constraints, ID strategy, transaction handling and returned row projection are unknown. Legacy `lessons` and V1-PILOT `content_blocks` are not substituted for generic Content.
+The local legacy DDL/migration 006 defines `id`, `course_id`, `content_type`, `title`, `payload`, `status`, `parent_id`, `content_order` and `deleted_at`. API #50 inserts the writable fields and reads the generated ID/JSONB projection with `RETURNING`; it does not set `deleted_at`, audit fields or timestamps. V1-PILOT `content_blocks` is not substituted. Live schema and migration application remain unverified.
 
 ### Legacy course access candidate only
 
 ~~~sql
-SELECT c.id, c.mentor_id
-FROM courses AS c
-WHERE c.id = :course_id;
+SELECT id, mentor_id
+FROM courses
+WHERE id = :course_id
+LIMIT 1
+FOR UPDATE;
 ~~~
 
-This is only a legacy-schema query candidate for course existence/direct owner. It is not the Content write target, does not resolve JWT-to-Mentor identity, and does not cover course assignment. Live schema is not verified.
+This query is implemented against the checked-in legacy source. The shared JWT guard supplies numeric Mentor subject; the view compares it to `mentor_id`. The row lock supports serialized order allocation for API #50 writes. Assignment access is not included and live schema is not verified.
 
 ## Cross-API lifecycle
 
-- API #50 creates Content; AC-33 expects review queue items at `PENDING_REVIEW`.
+- API #50 creates Content with DERIVED status `PENDING_REVIEW`; AC-33 queue reads this state.
 - API #51 updates Content, #52 publishes/unpublishes and #53 deletes. Their interactions with pending/rejected/approved content and the physical model need the AC-22 macro-review after #51–#53 DDs are available.
-- AC-33 approves/rejects and refers to audit/review data; that does not authorize adding audit columns to this API's table without schema evidence.
+- AC-33 approves/rejects and refers to audit/review data; API #50 adds no audit columns. Pending item deletion/withdrawal behavior remains open with API #53.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

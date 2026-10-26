@@ -14,13 +14,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-25 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD theo catalog API #69, AC-31 và source hiện có. | Draft — Needs Confirmation; schema và Admin authorization chưa được xác nhận. |
+| 1.1 | 2026-10-25 | Codex | Triển khai route/detail query, ADMIN guard, signed-int64 path mapping và HTTP tests; cập nhật source evidence. | Các rule schema/quyền còn lại là DERIVED hoặc SOURCE_REQUIRED; DD giữ Draft. |
 
 ## Tài liệu tham chiếu
 
@@ -30,12 +31,13 @@ status: "Draft — Needs Confirmation"
 - [DB table guide](../../diagrams/DB_UNICA_TABLES.md) và [DB ERD](../../diagrams/DB_UNICA_ERD.drawio) — legacy users candidate, design-only.
 - [API #4 query/model](../../../app/modules/guest/api_04_users_me/query.py) — safe profile projection hiện có.
 - [API #14 query](../../../app/modules/guest/api_14_users_me_profile/query.py) — profile projection sau update hiện có.
-- [API #68 Overview](../68_admin_users_list/02_Overview.md) — cùng AC-31; list response discrepancy còn mở.
-- [Worklog API #69](../../../../../.agents/worklog/2026-10-24/create-study-api69-dd.md) — preflight, plan và ma trận trước khi author.
+- [API #68 Overview](../68_admin_users_list/02_Overview.md) — cùng AC-31; API #68 list hiện dùng `Page<UserProfile>`, còn #69 là detail.
+- [Worklog API #69 design](../../../../../.agents/worklog/2026-10-24/create-study-api69-dd.md) — source review và plan authoring ban đầu.
+- [Implementation worklog](../../../../../.agents/worklog/2026-10-25/implement-api69-admin-user-detail.md) — coding plan, decisions và verification.
 
 ## Ranh giới
 
-Không sửa router, schema, catalog hoặc diagram. Không thêm error code, enum member, field hay quyền vật lý chưa có nguồn. Tại thời điểm tạo #69, macro-review còn chờ DD #70–#72; document-level review đã hoàn tất sau khi tạo #72.
+API #69 không thay đổi catalog, diagram hoặc schema vì direct contract đã đủ cho detail. API #70–#72 vẫn sở hữu riêng profile/role, status và delete mutations; macro-review AC-31 vẫn theo dõi các policy/schema gaps còn lại.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -1,83 +1,93 @@
 # Câu hỏi mở — API #92 Lấy notification list
 
-**Trạng thái:** `Draft — Needs Confirmation`; contract direct được giữ, các proposal bên dưới không được hiểu là owner approval.
+**Trạng thái:** `Draft — Needs Confirmation`; runtime có fallback cụ thể nhưng chưa có owner approval.
 
 ## Q-92-01 — Response singleton hay danh sách
 
-**Evidence:** Catalog #92 khai báo `ApiEnvelope<Notification>`; API name, `page` query và AC-36 intent nói tới notification list. Notification schema không có collection wrapper.
+**Evidence:** Catalog #92 khai báo `ApiEnvelope<Notification>`; API name, `page` query và AC-36 intent là list. Diagram không mô tả response wrapper.
 
-**Đề xuất DERIVED:** Đổi response thành `ApiEnvelope<Page<Notification>>` nếu mục tiêu là danh sách có pagination. API #43 là precedent Page, không chuyển Student access predicate sang Admin.
+**Current fallback DERIVED:** Runtime trả `ApiEnvelope<Page<Notification>>` để danh sách có pagination.
 
-**Cần xác nhận:** Direct singleton có chủ ý không? Nếu list: Page nằm ở `data` hay `meta`, có `total/total_pages` không?
+**Cần xác nhận:** Catalog có đổi sang Page không? PageMeta thuộc `data` như runtime hay nơi khác?
 
 ## Q-92-02 — Page origin, size và ordering
 
-**Evidence:** Request có `page?:int32` nhưng không có `size`, default, range, response PageMeta hoặc ordering.
+**Evidence:** Request chỉ có `page?:int32`; catalog không định nghĩa origin, default, size, PageMeta hoặc ordering.
 
-**Đề xuất DERIVED:** Nếu #92 được duyệt thành Page, dùng page bắt đầu 1, fixed size 20, sort `created_at DESC, id DESC` theo precedent #43.
+**Current fallback DERIVED:** Page bắt đầu 1, default 1, fixed size 20, sort `created_at DESC, id DESC`, count trùng predicate.
 
-**Cần xác nhận:** Page có bắt đầu từ 0 hay 1? Size cố định bao nhiêu? Thứ tự có ưu tiên `scheduled_at` không? Có cần total count?
+**Cần xác nhận:** Các giá trị này có được duyệt không? Có cần con trỏ hoặc scheduled-first ordering?
 
 ## Q-92-03 — Campaign hay recipient-level notification
 
-**Evidence:** AC-36 #93 tạo Notification và recipients. Legacy `notifications` là row có `user_id` recipient nullable; V1-PILOT notification gắn `learner_id`. Không có campaign/recipient aggregate được thống nhất.
+**Evidence:** AC-36 #93 tạo Notification và recipients; legacy/API #63 ghi từng `notifications.id` theo recipient, dùng `operation_id` chung cho một dispatch. Không có campaign aggregate được duyệt.
 
-**Cần xác nhận:** Admin list một notification campaign, từng recipient notification hay một row theo recipient/channel? Các row nào được gom thành một Notification response?
+**Current fallback DERIVED:** Mỗi item là một notification ID có delivery; không group operation/campaign và không trả recipient identity.
 
-## Q-92-04 — Field projection và schema vật lý
+**Cần xác nhận:** Admin list nên hiển thị từng recipient notification hay một campaign summary?
 
-**Evidence:** Logical `Notification` yêu cầu id/title/content/channels/status/read_at/scheduled_at/created_at. Legacy chỉ có id/title/content/type/is_read/created_at. Pilot dùng UUID/title/body/read_at/created_at và delivery relation riêng; không có scheduled_at.
+## Q-92-04 — Physical Admin notification model
 
-**Đề xuất:** Không tạo query đầy đủ hoặc gộp legacy/pilot cho tới khi chọn model/schema.
+**Evidence:** Legacy `notifications` + migration 009/outbox phục vụ API #63; V1-PILOT notification là UUID/learner-scoped. Không có Admin model được duyệt.
 
-**Cần xác nhận:** Schema nào là nguồn Admin notification? Có campaign table, recipient relation và physical scheduled/status fields nào?
+**Current fallback DERIVED:** Dùng legacy BIGINT candidate và delivery outbox; chỉ lấy notification có delivery rows để đủ required channels/status.
+
+**Cần xác nhận:** Admin #93 sẽ ghi cùng legacy/outbox model không? Draft/scheduled rows chưa có delivery được quản lý ra sao?
 
 ## Q-92-05 — `NotificationChannel` và `NotificationStatus`
 
-**Evidence:** Catalog nêu enum types nhưng không liệt kê value set. Pilot channel/status ở per-delivery rows; legacy `type` không phải channels và `is_read` không phải status.
+**Evidence:** Catalog không liệt kê enum values. API #63/DDL có `PUSH`/`EMAIL`; API #64 aggregate có `QUEUED`/`FAILED`/`SENT`.
 
-**Cần xác nhận:** Các enum token là gì? Filter `channel` yêu cầu một phần tử trong delivery channels hay channel của campaign? Status là draft/scheduled hay delivery aggregate?
+**Current fallback DERIVED:** Channels từ delivery rows; status dùng API #64 precedence (queued trước failed, rồi sent). Filter exact.
+
+**Cần xác nhận:** Các value set/aggregate semantics này có áp dụng cho Admin Notification không?
 
 ## Q-92-06 — `read_at` và `scheduled_at`
 
-**Evidence:** `read_at` chỉ có trong pilot learner notification; không có legacy. `scheduled_at` không có trong hai DDL đã rà soát; pilot `expires_at` có nghĩa khác.
+**Evidence:** Legacy chỉ có `is_read`; không có `scheduled_at`. Pilot `read_at` theo learner UUID model; `expires_at` khác nghĩa scheduled time.
 
-**Cần xác nhận:** Hai trường có áp dụng cho Admin-managed notification không? Nếu `read_at` theo recipient, list aggregate sẽ xử lý thế nào?
+**Current fallback:** Runtime omit cả hai optional fields; không đổi boolean hay expiry timestamp.
 
-## Q-92-07 — Admin permission
+**Cần xác nhận:** Admin list có cần các field này và nguồn vật lý nào?
 
-**Evidence:** Catalog yêu cầu Admin; AC-36 yêu cầu notification-management permission. Current Study helper chưa có Admin guard/policy.
+## Q-92-07 — Admin permission và visibility scope
 
-**Cần xác nhận:** Claim/permission code và scope (toàn hệ thống/tenant/sender) nào được dùng? 401/403 áp dụng thế nào?
+**Evidence:** Catalog yêu cầu Admin; AC-36 yêu cầu notification-management permission. Current Study guard có role ADMIN nhưng chưa có permission key hoặc tenant scope.
 
-## Q-92-08 — 503 dependency trigger và middleware wiring
+**Current fallback DERIVED:** Shared ADMIN guard; query nhìn thấy mọi legacy row có delivery; không trả user IDs.
 
-**Evidence:** Catalog/diagram #92 liệt kê 503, nhưng node list chỉ nói “Query notifications”; không nêu external dependency. Path chưa có trong `DESIGN_CONTRACT_PATHS`.
+**Cần xác nhận:** Permission claim và phạm vi global/tenant/sender nào được dùng?
 
-**Cần xác nhận:** Dependency nào có thể làm GET list trả 503? Khi wire route, middleware map direct error codes ra sao?
+## Q-92-08 — 503 dependency trigger
+
+**Evidence:** Catalog có 503, diagram chỉ ghi “Query notifications”.
+
+**Current fallback DERIVED:** Database operational/connection-invalidated failures trả 503; SQL/data-mapping failures khác trả 500.
+
+**Cần xác nhận:** Owner có chủ ý gắn DB connectivity với dependency code 503 không?
 
 ## Q-92-09 — Empty result và validation errors
 
-**Evidence:** Catalog không liệt kê 404/422. Singleton response và Page proposal có semantics khác nhau; query types không có range/enum values.
+**Evidence:** Catalog không liệt kê 404/422. Page query nhận int32 nhưng không có range rule.
 
-**Đề xuất DERIVED:** Nếu Page được duyệt, danh sách rỗng trả 200 với `items: []`; không trả 404 chỉ vì rỗng.
+**Current fallback DERIVED:** Empty/out-of-range page trả 200 Page rỗng; page invalid/non-positive trả 422; filter không match trả 200 rỗng.
 
-**Cần xác nhận:** Singleton direct contract xử lý không có notification thế nào? Parse/range/filter validation có business code nào trong contract?
+**Cần xác nhận:** Có chấp nhận 422 ngoài direct error set và semantics này không?
 
 ## Q-92-10 — #93 create response và Operation tracker
 
-**Evidence:** AC-36 index liệt kê operation polling riêng; catalog #93 row trả `ApiEnvelope<Notification>` ở 202, còn tracking summary nói Admin notification POST trả `Operation`. #63/#64 Mentor flow cũng chưa có ID bridge.
+**Evidence:** Catalog/diagram #93 trả Notification nhưng operation tracking prose nói Admin notification POST trả Operation; ID types khác nhau.
 
-**Đề xuất:** Giữ #92 độc lập và không suy Operation result/notification ID.
+**Current handling:** API #92 không chọn Operation ID, không group theo operation và không giải quyết bridge.
 
-**Cần xác nhận:** #93 trả Notification hay Operation? Operation ID và notification ID được nối ra sao để #92/#96 reload đúng resource?
+**Cần xác nhận:** #93 trả Notification hay Operation? Operation UUID và notification int64 nối thế nào?
 
 ## Ranh giới giữ nguyên
 
-Cho tới khi các câu hỏi trên được chốt, không đổi catalog/schema/diagram, không map `type`/`is_read`/delivery status sang field khác, và không đánh dấu DD Approved/Final.
+Không đổi catalog/schema/diagram hoặc đánh dấu DD Approved/Final. Chưa xác minh live schema, migration deployment, Admin permission hoặc Notification campaign model.
 
 ## AC-36 macro-review result
 
-- Status: `VERIFIED_WITH_OPEN_QUESTIONS` at document level; this API remains `Draft — Needs Confirmation`.
-- Group findings and owner decisions: [AC-36 macro-review #92–#96](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
-- No runtime, live-schema, deployment, or owner approval is implied.
+- Status: `VERIFIED_WITH_OPEN_QUESTIONS` ở document level; quyết định cho API #92 chưa được owner phê duyệt.
+- Group findings: [AC-36 macro-review #92–#96](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
+- Source wiring/test của #92 được cập nhật trong [VERIFICATION_REPORT.md](./VERIFICATION_REPORT.md); trạng thái hiện tại của #93–#96 được tổng hợp trong [AC-36 macro-review](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).

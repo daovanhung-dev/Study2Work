@@ -20,13 +20,13 @@ status: "Draft — Needs Confirmation"
 | API name | Khóa/mở khóa user Conditional |
 | HTTP method | PATCH |
 | Endpoint | /api/v1/admin/users/{user_id}/status |
-| Version | 1.0 |
+| Version | 1.1 |
 | Status | Draft — Needs Confirmation |
 | Created by | Codex |
 | Reviewed by | Chờ xác nhận |
 | Approved by | Chờ xác nhận |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-25 |
 
 ## Tên hiển thị
 
@@ -36,11 +36,11 @@ PATCH /api/v1/admin/users/{user_id}/status — Khóa/mở khóa user
 
 ## Phạm vi và trạng thái
 
-Catalog xác nhận PATCH theo `user_id:int64!`, Admin Bearer JWT, response `ApiEnvelope<UserProfile>`, HTTP 200 `DESIGN_RESOURCE_UPDATED` và các lỗi 401/403/404/422/500. AC-31 đặt API #71 trong nhánh STATUS, cập nhật account status rồi reload danh sách/chi tiết; diagram ghi thêm “revoke session nếu cần”.
+Catalog trực tiếp xác nhận Bearer JWT/Admin, `user_id:int64!`, `ApiEnvelope<UserProfile>`, HTTP 200 `DESIGN_RESOURCE_UPDATED` và đúng errors 401/403/404/422/500. AC-31 đặt endpoint ở nhánh STATUS; diagram yêu cầu cập nhật account status, thu hồi session “nếu cần”, rồi reload list/detail.
 
-Request body và các giá trị `UserStatus` không được catalog/diagram đặc tả. DD đề xuất body `{status}` và `ACTIVE`/`SUSPENDED` ở mức `DERIVED`, cần xác nhận. Refresh-token revocation cũng là candidate có điều kiện; current access JWT không được guard kiểm tra lại account status hoặc revocation nên không tuyên bố token đang phát hành bị thu hồi ngay.
+Runtime hiện có route, module, Admin JWT role guard và HTTP tests. Body `{status}` với hai giá trị `ACTIVE`/`SUSPENDED`, rule không đổi trạng thái lifecycle khác, `updated_at`, và thu hồi refresh tokens còn hiệu lực khi khóa là các quyết định triển khai `DERIVED`; catalog/diagram không mô tả body hoặc enum. Legacy DDL chỉ là candidate, live schema chưa xác minh.
 
-Study Server chưa có route, module hoặc test cho API #71. Schema DDL và query bên dưới chỉ là candidate; live schema chưa xác minh.
+API chỉ thu hồi refresh credentials; shared access-JWT guard không kiểm tra `users.status` hoặc revocation, nên access JWT đã cấp có thể còn dùng đến expiry. DD giữ `Draft — Needs Confirmation` cho tới khi contract, policy và schema được xác nhận.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

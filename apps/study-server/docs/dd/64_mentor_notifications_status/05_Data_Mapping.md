@@ -7,124 +7,114 @@ source_sheet: "3. Data mapping"
 status: "Draft — Needs Confirmation"
 ---
 
+
 # Data Mapping
 
-## Luồng xử lý thiết kế
+## Luồng xử lý
 
-1. Xác thực Bearer JWT và role Mentor.
-2. Đọc `notification_id` từ path theo kiểu `int64`.
-3. Xác định notification và kiểm tra caller có quyền xem; permission relation chưa có nguồn.
-4. Đọc delivery state đã lưu theo notification; physical source/query chưa được phê duyệt. GET không gọi lại Push/Email.
-5. Ánh xạ response theo `ApiEnvelope<Operation>` direct; hiện không có mapping từ notification delivery sang Operation.
-6. Trả HTTP 200 khi resource/status được đọc; các lỗi dùng đúng catalog 401/403/404/500.
+1. Xác thực Bearer JWT và role MENTOR trước path/database work.
+2. Parse raw `notification_id` thành signed int64; parse/range failure trả catalog 404.
+3. Đọc `notifications` và aggregate delivery outbox theo notification ID.
+4. Không có notification hoặc không có `operation_id`/delivery rows → 404; sender khác JWT `sub` → 403.
+5. Validate projection, tổng số delivery và UUID/timestamps; inconsistent projection → 500.
+6. Dựng Operation từ rows API #63 tạo và trả HTTP 200 `DESIGN_RESOURCE_RETRIEVED`.
+7. Không commit, update, gọi provider hoặc sửa read/delivery state.
 
 ### Mục lục
 
-- [0. Xác thực](#step-0-auth)
-- [1. Nhận request](#step-1-request)
-- [2. Kiểm tra resource và quyền](#step-2-access)
-- [3. Đọc delivery state](#step-3-read-delivery)
-- [4. Map response](#step-4-map-response)
+- [0. Auth](#step-0-auth)
+- [1. Parse request](#step-1-request)
+- [2. Load notification và scope](#step-2-access)
+- [3. Aggregate delivery state](#step-3-read-delivery)
+- [4. Map Operation response](#step-4-map-response)
 - [5. Trả response/lỗi](#step-5-response-errors)
 
 <a id="step-0-auth"></a>
 
-## 0. Xác thực
+## 0. Auth
 
-- Thiếu hoặc token Bearer/JWT không hợp lệ → 401 `DESIGN_AUTHENTICATION_REQUIRED`.
-- Token hợp lệ nhưng role không phải Mentor → 403 `DESIGN_ACCESS_DENIED`.
-- Không lấy owner/sender ID từ request; principal claim và kiểu ID số chưa có Mentor runtime source.
-- Không đọc delivery data trước khi hoàn tất authorization.
+- Gọi `validate_current_user_request(..., role="MENTOR")` trước mọi DB query.
+- Missing/invalid Bearer/JWT → 401 `DESIGN_AUTHENTICATION_REQUIRED`.
+- Valid token không có role MENTOR → 403 `DESIGN_ACCESS_DENIED`.
+- Numeric JWT `sub` là authenticated sender identity; không nhận owner từ request.
 
 <a id="step-1-request"></a>
 
-## 1. Nhận request
+## 1. Parse request
 
-| Field | Kiểu trực tiếp | Sử dụng | Validation/status |
+| Input | Source | Rule | Error/status |
 |---|---|---|---|
-| `notification_id` | int64! path | Khóa logic để xác định notification/status | Kiểu DIRECT; không có range khác; physical key SOURCE_REQUIRED. |
-| Body/query | Không khai báo | Không có | DIRECT từ catalog. |
+| `notification_id` | Raw path text | Parse signed int64 using the current API #48 signed-path pattern. | Malformed/overflow → 404 `DESIGN_RESOURCE_NOT_FOUND` (DERIVED; no 400/422 in catalog). |
+| Body/query | None | No request body or query fields. | N/A. |
 
-- Nếu path không parse được thành int64, catalog chưa khai báo HTTP/business mapping riêng; không tự thêm 400/422.
-- Không tự thêm `operation_id`, `course_id`, `status` hoặc pagination filter.
+No positive-only validation is added. Zero, negative and valid nonmatching IDs naturally return 404 from the BIGINT resource lookup.
 
 <a id="step-2-access"></a>
 
-## 2. Kiểm tra resource và quyền
+## 2. Load notification và scope
 
-- AC-25 precondition yêu cầu Mentor có quyền gửi tới học viên thuộc course; catalog yêu cầu role Mentor.
-- API #64 chỉ nhận notification ID; contract không cung cấp course ID, sender ID hoặc permission claim.
-- Cần kiểm tra notification tồn tại và caller được phép xem trước khi trả delivery state.
-- Quan hệ vật lý, direct sender/owner predicate và thứ tự 403/404 chưa được duyệt. Không dùng `notifications.sender_id` như runtime fact dù legacy DDL có candidate column.
-- Nếu resource không tồn tại, catalog cho phép 404 `DESIGN_RESOURCE_NOT_FOUND`; nếu caller bị từ chối quyền, catalog cho phép 403 `DESIGN_ACCESS_DENIED`. Trường hợp không tìm thấy do query đã scope quyền cần policy chống lộ sự tồn tại.
+### Q1 — `FIND_NOTIFICATION_STATUS`
+
+- Read one `notifications` row by `id = :notification_id`.
+- LEFT JOIN `notification_deliveries` by `notification_id` so the query can distinguish the notification from its delivery state.
+- Project `id`, `operation_id`, `sender_id`, `created_at`, delivery row count, status counts, and latest `updated_at`.
+- Group only by the notification primary key and its operation/sender/time fields; one result row represents one notification ID.
+- Do not filter by `sender_id` in SQL so the handler can return the catalog's 403 for another Mentor after it knows the resource exists.
+- If there is no notification row, return 404.
+- If `sender_id` differs from authenticated Mentor `sub`, return 403 without returning Operation fields.
+- If `operation_id` is NULL or there are zero delivery rows, return 404 because no API #63 dispatch status resource exists.
+
+The local `sender_id` scope is derived from API #63's insert binding. The query/result and authorization behavior do not prove a live schema or approved global policy.
 
 <a id="step-3-read-delivery"></a>
 
-## 3. Đọc delivery state
+## 3. Aggregate delivery state
 
-### Q1 — Đọc logical notification và permission scope
+| Aggregate | Meaning | Validation |
+|---|---|---|
+| `delivery_count` | Number of channel outbox rows for this notification. | Must be a positive integer. |
+| `queued_count` | Rows with `status='QUEUED'`. | Non-negative and no greater than `delivery_count`. |
+| `sent_count` | Rows with `status='SENT'`. | Non-negative and no greater than `delivery_count`. |
+| `failed_count` | Rows with `status='FAILED'`. | Non-negative and no greater than `delivery_count`. |
+| Status count sum | `queued_count + sent_count + failed_count`. | Must equal `delivery_count`; otherwise the projection is invalid. |
+| `updated_at` | Maximum channel delivery update timestamp. | Must be a datetime when delivery rows exist. |
 
-| Target | Cột logic cần biết | Điều kiện logic | Bằng chứng/trạng thái |
-|---|---|---|---|
-| Notification | `id` | Khớp `notification_id` | Contract ID int64; physical schema/live status chưa xác nhận. |
-| Notification | owner/sender/course scope | Khớp permission đã duyệt | Không được API/schema/diagram chốt; SOURCE_REQUIRED. |
-
-### Q2 — Đọc logical delivery summary
-
-| Target | Dữ liệu logic cần biết | Điều kiện logic | Bằng chứng/trạng thái |
-|---|---|---|---|
-| NotificationDelivery | status và counts | Theo notification | Reusable schema; chưa có physical source khớp ID. |
-| Delivery attempts | status/channel/attempt | Cần quy tắc aggregate đã duyệt | Pilot table có attempt rows nhưng UUID, không có recipient ID; không dùng làm query live. |
-
-- Legacy `notifications.is_read` là trạng thái đọc, không đại diện trạng thái gửi.
-- Không đếm từng row delivery attempt như một người nhận; retry có thể tạo nhiều attempt cho cùng channel.
-- Nếu notification tồn tại nhưng chưa có delivery row, behavior pending/queued chưa được định nghĩa; không trả 404 chỉ vì chưa có receipt.
-- Không chốt aggregate, latest-attempt selection, per-channel status precedence hay “partial success” khi chưa có rule.
+- Any queued channel → Operation status `QUEUED`.
+- Otherwise, any failed channel → Operation status `FAILED`; mixed sent/failed is summarized as FAILED because the direct Operation schema has no partial status/count fields.
+- Otherwise, all channels sent → Operation status `SENT`.
+- The statuses reuse the local API #63 outbox constraint. OperationStatus enum membership is not catalog-defined and remains DERIVED.
+- Do not use `notifications.is_read`; read receipt is not delivery state.
+- Do not query Push/Email providers or infer delivery from API #63 HTTP 202.
 
 <a id="step-4-map-response"></a>
 
-## 4. Map response
+## 4. Map Operation response
 
-| Field response | Nguồn logic trực tiếp | Mapping | Gap |
+| Response field | Physical/local source | Mapping | Status |
 |---|---|---|---|
-| `HTTPStatus` | Nhánh response | Cố định 200 | Catalog DIRECT. |
-| `success` | Nhánh đọc thành công | `true` | Theo envelope convention. |
-| `businessCode` | Catalog | `DESIGN_RESOURCE_RETRIEVED` | DIRECT. |
-| `message` | Ứng dụng | Safe message | Literal chưa quy định. |
-| `data` | Operation schema | Operation object | Không có source/persistence được duyệt. |
-| `data.id` | Operation | Operation UUID | Chưa có liên kết từ path notification_id. |
-| `data.kind` | Operation | Enum trực tiếp | Giá trị/lifecycle SOURCE_REQUIRED. |
-| `data.status` | Operation | OperationStatus | Không tự dùng pilot notification_status. |
-| `data.owner_id` | Operation | int64 owner | Principal/owner relation SOURCE_REQUIRED. |
-| `data.submitted_at` | Operation | date-time | Operation source chưa có. |
-| `data.updated_at` | Operation | date-time | Operation source chưa có. |
-| `data.completed_at` | Operation | Optional date-time | Field có thể omit/null theo serializer chưa chốt. |
-| `data.result` | Operation | Optional Payment schema | Không phải delivery summary; không tạo Payment giả. |
-| `data.result.id` | Payment | int64 | SOURCE_REQUIRED; không có nghĩa vụ thanh toán trong flow notification. |
-| `data.result.order_id` | Payment | int64 | SOURCE_REQUIRED; không có nghĩa vụ thanh toán trong flow notification. |
-| `data.result.provider` | Payment | PaymentProvider | Enum và source SOURCE_REQUIRED. |
-| `data.result.amount` | Payment | decimal-string | SOURCE_REQUIRED; không có nghĩa vụ thanh toán trong flow notification. |
-| `data.result.status` | Payment | PaymentStatus | Enum và source SOURCE_REQUIRED. |
-| `data.result.transaction_code` | Payment | Optional string | SOURCE_REQUIRED; không có nghĩa vụ thanh toán trong flow notification. |
-| `data.result.paid_at` | Payment | Optional date-time | SOURCE_REQUIRED; không có nghĩa vụ thanh toán trong flow notification. |
-| `meta` | Envelope | `{}` nếu không có metadata riêng | Policy current source khác error guideline. |
-| `traceId` | Request trace | Trace UUID | Runtime endpoint chưa có. |
+| `data.id` | `notifications.operation_id` | Preserve UUID shared by API #63 recipient rows. | DERIVED local Operation persistence. |
+| `data.kind` | API #63 accepted response | `NOTIFICATION_DISPATCH`. | DERIVED value reused from current producer. |
+| `data.status` | Delivery status aggregate | `QUEUED`, `FAILED`, or `SENT` by precedence above. | DERIVED; channel counts/partial-success result are not returned. |
+| `data.owner_id` | `notifications.sender_id` | Numeric Mentor owner already checked against JWT `sub`. | DERIVED local ownership mapping. |
+| `data.submitted_at` | `notifications.created_at` | Preserve timestamp. | Local DB timestamp. |
+| `data.updated_at` | `MAX(notification_deliveries.updated_at)` | Latest persisted channel status update. | DERIVED projection. |
+| `data.completed_at` | No source | Omit optional field. | Lifecycle semantics unresolved. |
+| `data.result` | Optional Payment schema | Omit; no payment or notification result object is defined. | No synthetic Payment. |
+| `meta` | Envelope | `{}`. | No additional fields. |
 
-- `NotificationDelivery.notification_id/status/queued/sent/failed` không được map vào các Operation fields bằng suy đoán.
-- Nếu contract đổi để #64 trả `NotificationDelivery`, cần thêm nguồn/định nghĩa cho từng count và status trước khi viết query.
+Validate the complete Operation/envelope before returning; projection/model failure maps to 500 `DESIGN_INTERNAL_ERROR`.
 
 <a id="step-5-response-errors"></a>
 
-## 5. Trả response và lỗi
+## 5. Response and errors
 
-- Thành công: HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<Operation>` theo catalog direct.
-- Token thiếu/sai: 401 `DESIGN_AUTHENTICATION_REQUIRED`.
-- Sai role hoặc access policy từ chối: 403 `DESIGN_ACCESS_DENIED`.
-- Notification không tồn tại: 404 `DESIGN_RESOURCE_NOT_FOUND`.
-- Lỗi persistence/mapping nội bộ: 500 `DESIGN_INTERNAL_ERROR`.
-- GET không tạo transaction mutation, không dispatch provider và không thay đổi trạng thái read/delivery.
-- Error guidelines yêu cầu `data:null`; current helper mặc định `{}`. Middleware design allowlist chưa có path #64; đây là discrepancy khi wired, không phải runtime hiện tại.
----
+- Success: HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<Operation>`.
+- Missing/invalid notification ID, absent Operation ID or absent delivery status rows → 404 `DESIGN_RESOURCE_NOT_FOUND`.
+- Another Mentor's notification → 403 `DESIGN_ACCESS_DENIED`.
+- Database/query/projection error → safe 500 `DESIGN_INTERNAL_ERROR`; failed read transaction is rolled back.
+- All error envelopes use shared `error_response(...)`, `data:null` and trace ID.
+- Successful GET is read-only and issues no commit or mutation.
+
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `3. Data mapping`

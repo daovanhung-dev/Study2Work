@@ -13,31 +13,21 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-API #51 giữ nguyên 5 lỗi trong catalog. Body-validation conditions dưới đây chỉ áp dụng nếu proposed body được chấp thuận; route hiện chưa tồn tại.
+Các lỗi runtime của API #51 dùng đúng status/business code trong catalog. Body validation dựa trên body `DERIVED`; path malformed maps 404 theo implementation convention của API #48. Các lỗi database không đưa SQL detail ra response.
 
 ## Error cases
 
-| No | HTTP status | Business code | Điều kiện theo contract | Data Mapping step | Response/source rule | Status |
-|---:|---:|---|---|---:|---|---|
-| 1 | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Bearer JWT thiếu/không hợp lệ | 1 | Error envelope; không trả token/claims | Code DIRECT; runtime route absent |
-| 2 | 403 | `DESIGN_ACCESS_DENIED` | Không phải Mentor hoặc không có quyền quản lý course chứa Content | 2–4 | Error envelope; không tiết lộ thông tin quyền nội bộ | Code DIRECT; exact access predicate SOURCE_REQUIRED |
-| 3 | 404 | `DESIGN_RESOURCE_NOT_FOUND` | `content_id` không tồn tại | 4 | Error envelope; không trả dữ liệu một phần | Code DIRECT; physical lookup SOURCE_REQUIRED |
-| 4 | 422 | `DESIGN_VALIDATION_ERROR` | Validation không đạt theo contract; field-specific conditions của proposed body cần duyệt | 2–3 | Error envelope; không echo payload nhạy cảm | Code DIRECT; body proposal DERIVED |
-| 5 | 500 | `DESIGN_INTERNAL_ERROR` | Lỗi bất ngờ khi đọc/cập nhật Content hoặc version | 4–8 | Safe error envelope; không trả SQL/stack/provider detail | Code DIRECT; route absent |
+| No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
+|---:|---|---|---|---|---:|---|---|---|---:|---|
+| 1 | Authentication | Yes | `Authorization` | Thiếu/sai Bearer, JWT không hợp lệ | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | N/A | Step 0 | No | Catalog direct. |
+| 2 | Authorization | Yes | role | JWT không có role `MENTOR` | 403 | `DESIGN_ACCESS_DENIED` | N/A | Step 0 | No | Catalog direct. |
+| 3 | Resource | Yes | `content_id` | Signed-int64 parse lỗi hoặc Content absent/soft-deleted | 404 | `DESIGN_RESOURCE_NOT_FOUND` | N/A | Steps 1–2 | Yes | Invalid path -> 404 is current implementation convention. |
+| 4 | Authorization | Yes | stored course owner | `courses.mentor_id` không khớp principal | 403 | `DESIGN_ACCESS_DENIED` | N/A | Step 3 | Yes | Direct-owner fallback derived from #49. |
+| 5 | Validation | Yes | body | Thiếu field, sai type, `payload` không phải object hoặc có field thừa | 422 | `DESIGN_VALIDATION_ERROR` | N/A | Step 1 | No | Validation rules derived from API #50 request model. |
+| 6 | System error | No | Q1/Q2/Q3 | Query/serialization/version/update projection fails | 500 | `DESIGN_INTERNAL_ERROR` | N/A | Steps 2–5 | Yes | Safe message; rollback transaction. |
+| 7 | System error | No | transaction | Commit fails | 500 | `DESIGN_INTERNAL_ERROR` | N/A | Step 6 | Yes | Rollback attempted; private DB detail is not returned. |
 
-## Các nhánh cần xác nhận
-
-| Tình huống | Contract code hiện có | Ghi chú |
-|---|---|---|
-| Content tồn tại nhưng Mentor không có quyền quản lý course | 403 | AC-22 permission direct; identity/assignment query chưa có nguồn. |
-| Content ở trạng thái không cho phép sửa | 422 candidate only | AC-22 không chỉ rõ editable statuses; không thêm 409. |
-| ContentType không hợp lệ hoặc payload sai subtype | 422 nếu proposed body được duyệt | Enum/payload schema chưa có. |
-| Hai PUT đồng thời hoặc revision race | Không có 409 | Cần concurrency/version policy; không tự thêm code/status. |
-| Body thiếu/không hợp lệ | 422 nếu body proposal được duyệt | Catalog hiện không khai báo body; phải chốt contract trước implementation. |
-
-## Middleware integration discrepancy
-
-API #51 chưa được wire và path hiện không nằm trong `DESIGN_CONTRACT_PATHS`. Nếu thêm route mà không cập nhật allowlist, validation/unhandled fallback có thể trả `VALIDATION_ERROR`/`INTERNAL_SERVER_ERROR` thay vì `DESIGN_VALIDATION_ERROR`/`DESIGN_INTERNAL_ERROR`. Đây là integration requirement tương lai, không phải current API behavior.
+Catalog code set is exactly 401/403/404/422/500. No 409 is added; row lock serializes concurrent API #51 updates but no optimistic conflict token is defined.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

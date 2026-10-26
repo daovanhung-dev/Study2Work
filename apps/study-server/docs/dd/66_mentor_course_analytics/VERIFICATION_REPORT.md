@@ -3,52 +3,52 @@
 ## Kết quả
 
 - DD status: Draft — Needs Confirmation.
-- Deliverables: đủ 8 template sheets và 3 reports, tổng cộng đúng 11 Markdown files.
-- Runtime API #66: UNWIRED / NOT_FOUND; không có route, module hoặc focused test.
-- AC-26 macro-review #65–#67: VERIFIED_WITH_OPEN_QUESTIONS sau khi tạo DD #67; xem phần group review và [API #67 report](../67_mentor_student_progress/VERIFICATION_REPORT.md).
-- Runtime tests: không chạy; phạm vi docs-only.
+- Deliverables: 8 standard sheets + OPEN_QUESTIONS.md, PLAN_RESULT.md và VERIFICATION_REPORT.md; tổng cộng 11 Markdown files.
+- Runtime: API #66 route/module/middleware path wired; focused HTTP tests exercise success and error branches using fake DB sessions.
+- Local response: DERIVED activity proxy from current lesson progress timestamps. It does not count learning events or event frequency.
+- AC-26 related APIs: #65 course roster/progress, #66 activity proxy and #67 selected-Student progress remain separate; no server-to-server call.
+- Direct discrepancy: diagram/catalog success type remains ApiEnvelope<Page<Course>>, while local summary is an activity object. Catalog and diagram were not modified.
+- Runtime tests do not establish PostgreSQL live schema, migration deployment or production behavior.
 
-## Kiểm tra
+## Checks
 
-| Check | Kết quả | Trạng thái |
+| Check | Result | Status |
 |---|---|---|
-| Worklog preflight | Đã đọc đủ #48, #49, #50; không thiếu worklog cùng loại. | PASS |
-| Catalog/diagram | Contract catalog #66 khớp method/path/actor/input/response/error set; AC-26 sequence #65 → #66 → #67 được ghi riêng. | PASS |
-| Source/schema | Không tìm thấy route/module/test #66; DDL đã rà soát không có approved learner event ledger. | PASS — STATIC SOURCE REVIEW |
-| Manifest/front matter | Đúng 11-file set; cả 8 sheet có dd_id 66 và Draft — Needs Confirmation. | PASS |
-| Contract/error set | GET path, Bearer JWT/Mentor, course_id:int64!, no query/body, ApiEnvelope<Page<Course>>, HTTP 200; đúng 4 lỗi 401/403/404/500, không thêm direct error. | PASS |
-| Response/data mapping | Course, PageMeta, envelope fields được liệt kê; candidate metrics tách biệt và đánh dấu DERIVED. | PASS |
-| Template appendix | 8/8 phần appendix đối chiếu nguồn bằng byte với registered template suffix. | PASS |
-| JSON/Markdown | JSON hợp lệ; relative links resolve; tables nhất quán; fences cân bằng; không có trailing whitespace. | PASS |
-| `git diff --check` | Kiểm tra sau khi cập nhật report và worklogs. | PASS |
-| AC-26 macro-review | #65 roster, #66 event analytics, #67 Student progress tách biệt; response/page gap, shared access/schema/error questions được ghi lại. | VERIFIED_WITH_OPEN_QUESTIONS |
-| Runtime tests | Không chạy; docs-only và API chưa wired. | NOT_RUN |
-| Context validator | Không áp dụng; không sửa context page hoặc manifest. | NOT_APPLICABLE |
+| Worklog preflight | Selected 3 coding worklogs; read all 3; no shortage. | PASS |
+| Source reconciliation | AC-26 diagram → checked-in DDL/table guide → API catalog → runtime #65/#66/#67 review completed. No approved event ledger found. | PASS — STATIC SOURCE REVIEW |
+| API #66 focused HTTP | 18 passed; auth, role, raw int64 path, owner, aggregate, empty result, invalid projection, safe DB error, trace, read-only and OpenAPI covered. | PASS |
+| API #65–#66 linked regression | 38 passed. | PASS |
+| Full Study suite | 698 passed; one upstream Starlette/httpx TestClient deprecation warning. | PASS |
+| Ruff | Changed Study Server Python modules/routes/middleware/tests passed. | PASS |
+| Import | compileall for API #66 module and focused test module passed. | PASS |
+| OpenAPI | 39 path templates / 40 operations. API #66 exposes required int64 course_id and Authorization header; responses exactly 200/401/403/404/500. | PASS |
+| DD folder/static | 11 files; 8 sheets have dd_id 66 and Draft status; Markdown fences and local relative links pass. | PASS |
+| Template appendix | All 8 standard sheet suffixes match registered Markdown templates byte-for-byte. | PASS |
+| Manifest | Six API #66 source/test entries exist in server-study requiredSourcePaths. | PASS |
+| git diff --check | Scoped API #66/runtime/context/DD paths pass. | PASS |
+| Context validator | AGENT_CONTEXT_INVALID because the existing DB Admin context/source and linked context-map targets are absent. No server-study/API #66-specific error was reported. | BASELINE LIMIT |
+| Live DB/deployment | Not exercised by fake-session tests or local source inspection. | NOT VERIFIED |
 
-## Output fingerprints — SHA-256
+## Template output SHA-256
 
 | Sheet | SHA-256 |
 |---|---|
-| 00_Cover.md | bff1d84f3557a4dcf31defe8826c3596e286c521ec5e440fb52c82e3b5ed9836 |
-| 01_Lich_su.md | 6b779d051ed1951735262acf8f8f886a4e9d3276d17434992f41efdcef92039a |
-| 02_Overview.md | fc53b372ec6c1a6b4e602eed36ea0e85a7e1564eb522a1eb6f41225036712ccf |
-| 03_Request.md | c266e3540613e32ec1ee4e052acb5feb08b0e11e8346dfb87da0c6ac181dab2e |
-| 04_Response.md | 16fd9ff208be787f5969d1e15f7d87e6db5f1a275490b4941c7d46f3f0e96451 |
-| 05_Data_Mapping.md | caaaf6a10612b9e46a25c88595bd5cf11ecc8c68668725f640530eeb612e36c8 |
-| 06_Error.md | 154fe64006a27262e3d2831039eeeb299366f0f2c9e4b1ee05c7a02c2d1c2947 |
-| 07_table.md | 5b88409dea0e224b7c87466c1f2738172b6820a53eb8c7d38549a49607ae5c6d |
+| 00_Cover.md | b4e179e32783ff16f2d0ae1ac5e018497f5040c608b7298ecdbeaffa0808bb8a |
+| 01_Lich_su.md | 1a269bd73f7cf32b5183f4911718d78f69b7d5c62eb97bec543900d0b5124c9c |
+| 02_Overview.md | 212a440b40372b09299915c415cf8b29f9d4f22d2b893530851c3638cbe20366 |
+| 03_Request.md | f3f193c4d69401cf54e261ed3b23020b38f582b31ab80592d8e813000a10eb01 |
+| 04_Response.md | 8345d87f11614b9f6dc5e923c3eb6ab2e119ac33b183e9bb5b7613d9b3b61bc3 |
+| 05_Data_Mapping.md | e9b23dd6f9feab43cf9554f5225ba02f602d6e6a915c3f31806988f7e6239b57 |
+| 06_Error.md | fae9b8c92e03aedd6de4d771bff5558591bb3944c58aadb9c819502a6aefb8d4 |
+| 07_table.md | af29fb9f20f07264f8850ecac279142d17c35c0b21c783b7407a9d2679d93ec9 |
 
-## Macro-review AC-26 #65–#67 — 2026-10-24
+## Macro-review AC-26 #65–#67
 
-Status: `VERIFIED_WITH_OPEN_QUESTIONS` — review tài liệu/source tĩnh sau khi DD #67 tồn tại.
+Status: VERIFIED_WITH_OPEN_QUESTIONS — source/DD review and local tests.
 
-- **Luồng:** Mentor mở dashboard; #65 trả class-level enrollment/progress candidate; #66 riêng course-wide learning-event candidate; UI chọn Student rồi gọi #67. Diagram không mô tả server-to-server calls.
-- **Payload trực tiếp:** Cả ba catalog row đều khai báo `ApiEnvelope<Page<Course>>`, không schema nào chứa progress hoặc analytics. Đây là discrepancy nhóm; catalog được giữ nguyên trong các DD. Các PageMeta cũng không có page/size request nên chưa có pagination semantics/bounds.
-- **Candidate boundary:** #65 là roster summary; #66 là event aggregate. `students_with_learning_events` đếm Student có event hợp lệ, không đồng nghĩa tổng enrollment của #65. Không dùng `lesson_progress`, `last_accessed_at`, progress snapshots hoặc `last_event_id` để thay event source #66.
-- **Progress consistency:** #65 và #67 candidate dùng cùng tập lesson PUBLISHED và cùng formula floor-average; #67 chỉ thêm current state theo lesson cho Student được chọn. Candidate #67 không thêm quiz/assignment vì AC-26 không nêu chúng; API #37/AC-18 là flow khác. Tập eligible enrollment, status, duplicate progress rows, formula, rounding và empty behavior vẫn phải được duyệt.
-- **Authorization/data:** Ba API yêu cầu Mentor role và course scope; #67 còn phải xác minh Student thuộc cùng roster eligibility như #65. Mentor principal binding, owner/assignment, privacy-aware 403/404 order và schema live chưa có nguồn.
-- **Shared error gap:** Cả ba có direct error set 401/403/404/500. Guideline `data:null` khác helper `{}`; cả ba path chưa nằm trong middleware design-code allowlist. Cần đồng bộ khi wiring.
-- **Runtime:** #65–#67 đều không có route/module/focused test source hiện tại; review này không phải runtime verification.
-
-Xem [API #67 report](../67_mentor_student_progress/VERIFICATION_REPORT.md) và open questions của từng DD.
-
+- #65 returns class roster progress; #66 returns a distinct Student/lesson activity proxy; #67 is the selected-Student progress detail. The diagram does not show server-to-server calls.
+- tracked_lesson_accesses counts distinct current progress pairs with last_accessed_at, not events. students_with_activity is not enrollment count. last_activity_at is the latest timestamp still present in current progress rows.
+- The legacy DDL has no learner event history. V1-PILOT last_event_id, progress snapshots, audit_events and outbox_events do not establish a learner event source.
+- Direct diagram/catalog Page<Course> does not express analytics fields; the local summary remains DERIVED and the DD remains Draft.
+- Mentor direct-owner scope and legacy BIGINT mapping are local choices; live identity/schema and deployment remain unverified.
+- Review of DD #67 found stale notes that Mentor guard is absent and error data defaults to an object. Current shared auth accepts MENTOR and current error helper emits null; #67 itself remains UNWIRED and should reconcile these notes in its implementation session.

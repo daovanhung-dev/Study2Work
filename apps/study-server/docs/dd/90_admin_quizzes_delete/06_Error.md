@@ -13,25 +13,25 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Các trường hợp lỗi của API #90. Contract catalog là nguồn trực tiếp cho HTTP status và business code; điều kiện chi tiết chưa được wire trong Study Server.
+Các trường hợp lỗi của API #90. Contract catalog là nguồn trực tiếp cho HTTP status/business code; route và error mapping đã có source cục bộ.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | `-` | Bearer JWT | Token thiếu, sai hoặc hết hạn theo auth policy | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | `DESIGN_AUTHENTICATION_REQUIRED` | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | No mutation started | Catalog code direct; current Admin guard absent. |
-| 2 | Authorization | `-` | Admin quiz-management permission | Role/permission không cho phép thao tác | 403 | `DESIGN_ACCESS_DENIED` | `DESIGN_ACCESS_DENIED` | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | No mutation started | Exact Admin policy SOURCE_REQUIRED. |
+| 1 | Authentication | `-` | Bearer JWT | Token thiếu, sai hoặc hết hạn theo auth policy | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | `DESIGN_AUTHENTICATION_REQUIRED` | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | No mutation started | Shared ADMIN guard chạy trước path parsing/DB; permission claim chi tiết chưa xác minh. |
+| 2 | Authorization | `-` | ADMIN role | Principal không có role ADMIN | 403 | `DESIGN_ACCESS_DENIED` | `DESIGN_ACCESS_DENIED` | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | No mutation started | Fine-grained quiz-management permission SOURCE_REQUIRED. |
 | 3 | Resource not found | `○` | `quiz_id` | Không tìm thấy quiz theo path | 404 | `DESIGN_RESOURCE_NOT_FOUND` | `DESIGN_RESOURCE_NOT_FOUND` | [Step 2](./05_Data_Mapping.md#step-2-tim-quiz) | No mutation started | Candidate Q1 missing-row mapping. |
-| 4 | Request validation | `○` | `quiz_id` | Framework không parse được int64 path | 422 | `DESIGN_VALIDATION_ERROR` | `DESIGN_VALIDATION_ERROR` | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) | No mutation started | Catalog code direct; malformed/overflow rule and current middleware mapping unresolved. |
+| 4 | Request validation | `○` | `quiz_id` | Raw path không phải positive signed-int64 | 422 | `DESIGN_VALIDATION_ERROR` | `DESIGN_VALIDATION_ERROR` | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) | No mutation started | Runtime validate sau ADMIN; positivity và exact parser là DERIVED. |
 | 5 | System error | `-` | DB/transaction/response mapping | Query, mutation, commit hoặc mapping lỗi | 500 | `DESIGN_INTERNAL_ERROR` | `DESIGN_INTERNAL_ERROR` | [Step 4B](./05_Data_Mapping.md#step-4b-khong-co-attempts-candidate-hard-delete) | Rollback if transaction active | Không trả raw SQL/stack trace. |
 
-> Catalog cũng liệt kê 422 nhưng không ánh xạ policy dependency cụ thể. Có attempts thì AC-35 chỉ định soft-delete, không trả lỗi dependency. Không thêm 409 vì API #90 không khai báo code này.
+> Catalog cũng liệt kê 422 nhưng không ánh xạ policy dependency cụ thể. Có attempt/answer history thì runtime giữ dữ liệu và soft-delete; không trả dependency error. Không thêm 409 vì API #90 không khai báo code này.
 
 ## Error envelope note
 
 - API Guidelines yêu cầu `data:null` cho lỗi.
-- Current `error_response(data=None)` serialize `data` thành `{}`.
-- API #90 chưa được wire; cần tích hợp exact catalog codes khi có route.
+- API #90 dùng `error_response(data=None)` để serialize `data:null`; focused HTTP tests kiểm tra.
+- Query, projection, mutation và commit failure rollback an toàn, sau đó map exact catalog `DESIGN_INTERNAL_ERROR`.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

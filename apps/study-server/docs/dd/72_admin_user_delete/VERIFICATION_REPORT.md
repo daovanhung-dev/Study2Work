@@ -1,42 +1,42 @@
 # Báo cáo kiểm chứng — API #72
 
-- DD status: Draft — Needs Confirmation.
+- DD status: `Draft — Needs Confirmation`.
 - Endpoint: `DELETE /api/v1/admin/users/{user_id}`.
-- Runtime status: `UNWIRED / NOT_FOUND` — route, module, Admin guard và focused test không có trong Study source.
-- Direct contract: Bearer JWT/Admin, path `user_id:int64!`, `ApiEnvelope<DeleteResult>`, HTTP 200 `DESIGN_RESOURCE_DELETED`; direct errors 401/403/404/422/500.
-- DeleteResult direct fields: `id:int64`, status literal `deleted`, `deleted_at:date-time`. Timestamp persistence source chưa xác định.
-- Delete policy: diagram yêu cầu soft-delete/anonymize theo policy; không có nguồn cho physical field/table/dependency branch. Không đề xuất hard delete.
-- Application tests: `NOT_RUN` — docs-only.
+- Runtime status: `SOURCE_BACKED_WITH_DERIVED_CONTRACT` — route, module, ADMIN guard và focused HTTP tests có trong local Study source.
+- Direct contract: Bearer JWT/Admin, path `user_id:int64!`, `ApiEnvelope<DeleteResult>`, HTTP 200 `DESIGN_RESOURCE_DELETED`; errors 401/403/404/422/500.
+- Local fallback: conditional soft-delete bằng `users.status='DELETED'`, `updated_at=CURRENT_TIMESTAMP`, response `deleted_at` lấy từ timestamp update; không thêm schema, không hard-delete/anonymize/cascade. Đây là lựa chọn DERIVED, chưa được policy owner xác nhận.
+- Session boundary: API #03 login/refresh từ chối non-ACTIVE; access JWT đã cấp có thể còn hiệu lực đến expiry. Live schema, migration deployment, Admin policy và production behavior chưa xác minh.
 
 ## Kiểm tra
 
 | Check | Kết quả | Trạng thái |
 |---|---|---|
-| Worklog preflight | Selector chọn #48/#49/#50; đã đọc đầy đủ cả ba. | PASS |
-| Plan trước khi tạo DD | Requirement/request/query/mutation/response-source matrices có trong worklog trước khi tạo folder DD. | PASS |
-| Catalog và diagram | API #72 row, DeleteResult, AC-31 index và toàn bộ nodes/edges đã đối chiếu. | PASS — STATIC |
-| Source/Admin/auth | Không có route/module/test API #72; shared guard chỉ cho Student; middleware path chưa allowlist. | PASS — STATIC SOURCE REVIEW |
-| Schema/dependencies | Legacy users thiếu deletion timestamp và có các FK user-linked; V1-PILOT UUID model được tách; live schema không xác minh. | PASS — STATIC |
-| Contract/error | Method/path/auth/path/response/status/error set giữ đúng catalog; không thêm code/status. | PASS |
-| Response fields | id/status/deleted_at được liệt kê; deleted_at không gán nguồn vật lý chưa được duyệt. | PASS |
-| Policy/data safety | Không có hard-delete/cascade hoặc relation-block rule tự suy ra; response không trả PII. | PASS |
-| Template/package | Exact 11-file package; 8/8 appendix suffixes khớp registered templates. | PASS |
-| Markdown/JSON/links | JSON parse; relative links/anchors, tables/fences, Unicode và whitespace kiểm tra. | PASS — STATIC |
-| AC-31 macro-review | #68–#72 được rà document-level; findings và open gaps đã cập nhật ở các DD liên quan. | VERIFIED_WITH_OPEN_QUESTIONS |
-| Application tests | Không chạy; docs-only. | NOT_RUN |
-| Context validator | Không áp dụng nếu không sửa context page/manifest. | NOT_APPLICABLE |
+| Worklog preflight | Selector `coding --limit 3` tìm 65 logs; đã đọc đủ #34/#47/#48. | PASS |
+| Plan trước code | Source trace, discrepancies và implementation plan được ghi trong worklog trước runtime edit. | PASS |
+| Catalog/diagram/schema | API #72, DeleteResult, AC-31, legacy BIGINT DDL và tách biệt V1-PILOT UUID được đối chiếu. | PASS — STATIC |
+| Focused API #72 | 11 HTTP tests passed; success, missing/repeat 404, validation, auth order, safe projection, rollback và OpenAPI. | PASS |
+| Linked regression | API #03 + Admin #68–#72: 95 tests passed. | PASS |
+| Full Study suite | 806 passed; một upstream Starlette/httpx TestClient deprecation warning. | PASS |
+| Ruff | `./.venv/bin/ruff check app tests` — All checks passed. | PASS |
+| OpenAPI | 40 unique `/api/v1` path templates, 43 operations; DELETE shares `/admin/users/{user_id}` with GET/PUT and declares expected path/header/error contract. | PASS — LOCAL IMPORT |
+| DD package | 8 sheets + 3 reports; Excel appendix suffixes of 8 sheets preserved byte-for-byte. | PASS — STATIC |
+| DD Markdown/JSON/links | Static checks recorded after authoring; JSON examples parse, relative links resolve, fences balance and no trailing whitespace. | PASS — STATIC |
+| AC-31 macro-review | #68–#72 source/DD boundaries updated; outstanding approval questions retained. | VERIFIED_WITH_OPEN_QUESTIONS |
+| Context validator `--skip-drift` | Expected existing DB Admin context/source/link diagnostics remain outside server-study scope. | PARTIAL — BASELINE |
+| Context validator default | Also reports tracked worktree/source snapshot drift; snapshot commit was not changed to conceal it. | PARTIAL — BASELINE |
+| Live DB/deployment | Not checked; local fake-session tests and checked-in DDL do not prove runtime metadata or deployment. | NOT_VERIFIED |
 
 ## AC-31 group macro-review
 
-Status: `VERIFIED_WITH_OPEN_QUESTIONS` — document-level review of APIs #68–#72.
+Status: `VERIFIED_WITH_OPEN_QUESTIONS` — local source and document review of APIs #68–#72.
 
-- #68 list giữ đúng catalog response hiện tại, nhưng catalog khai báo `ApiEnvelope<UserProfile>` trong khi diagram yêu cầu danh sách/pagination; contract cardinality cần được chốt.
-- #69 detail và #68 list cùng cần quyết định projection `UserProfile`, visibility của user đã xóa/ẩn danh, PII và audit access.
-- #70 PUT profile, #71 PATCH status/session effect và #72 DELETE lifecycle được giữ thành ba thao tác riêng; enum, nullability, trạng thái hợp lệ và tác động session vẫn cần nguồn được duyệt.
-- #72 chỉ có logical intent soft-delete/anonymize theo policy. Physical target, dependency rules, `deleted_at` persistence, idempotency và retention chưa được xác định; không suy ra hard delete/cascade từ legacy DDL.
-- Cross-cutting: Admin guard chưa có trong Study source; legacy BIGINT `users` và V1-PILOT UUID model không được ghép ngầm; live schema và error-envelope `data` convention chưa được xác minh.
-- Runtime status của #68–#72: `UNWIRED / NOT_FOUND`; không có route/module/focused tests cho nhóm. Không chạy application tests trong task docs-only.
+- #68 list and #69 detail use safe profile projections; both currently include rows regardless of status.
+- #70 owns profile/role update; #71 owns ACTIVE/SUSPENDED account status and conditional refresh-token revocation; #72 owns the DERIVED DELETED marker. These remain separate operations.
+- API #03 blocks new login/refresh for DELETED; access-token guard does not query current status or revoke existing access JWTs.
+- #72 preserves linked rows, does not anonymize PII, and maps response `deleted_at` to update timestamp without a dedicated deletion column. These are implementation fallbacks, not approved retention policy.
+- Admin permission/tenant/MFA/self/last-admin/audit policy, live schema and deployment remain unverified.
+- #68–#72 local route/module/HTTP evidence uses fake DB sessions; it does not confirm PostgreSQL behavior or deployed API behavior.
 
-## Giới hạn kết luận
+## Open status
 
-Static verification chứng minh cấu trúc và tài liệu nhất quán với contract/diagram đã kiểm tra; không chứng minh API, Admin auth, live schema, persistence, deletion policy hoặc runtime response đã được triển khai.
+Owner decisions remain in [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md). The endpoint is locally wired and tested; DD and policy remain Draft pending approval.

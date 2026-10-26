@@ -1,6 +1,10 @@
 # Verification Report — API #52 Publish/unpublish nội dung Mentor
 
+> The original report below is an authoring-time snapshot from before the runtime implementation. The current implementation/verification addendum is appended after that historical report.
+
 ## Phạm vi
+
+> Historical verification snapshot: this report predates API #49 implementation. On 2026-10-25 the local legacy `contents` DDL/migration 006 was added; this does not verify live schema or API runtime for this DD.
 
 Kiểm tra bộ DD Markdown #52, catalog/diagram, cross-API lifecycle, current Study route/middleware/schema evidence, template appendix equality và document integrity. Không sửa runtime, schema, catalog, diagram, client hoặc deployment. Không chạy application tests vì đây là task authoring tài liệu và API #52 chưa có implementation.
 
@@ -81,4 +85,30 @@ All eight sheet appendices byte-match their registered template appendix. Front 
 - #49 trả singular Content dù purpose là tree. Cách loại soft-deleted items khỏi #49, public views và AC-33 queue cần xác nhận.
 - Generic Content persistence/version schema, Mentor principal/assignment, payload/enums, readiness, dependency set, soft-delete/audit fields và middleware mapping đều còn SOURCE_REQUIRED.
 - Không chạy application tests; DD/source review không chứng minh API runtime hoặc live schema.
+
+## Implementation verification addendum — 2026-10-25
+
+### Current local source
+
+- Route: `PATCH /api/v1/mentor/content/{content_id}/publish`, HTTP 200, shared `ContentResponse` envelope, and middleware contract path registered.
+- Request: strict required `{published:boolean}` body. This is an implemented DERIVED fallback and still conflicts with the path-only catalog/AC-22 request.
+- Mutation: lock active Content/Course, require direct `courses.mentor_id` ownership, allow APPROVED→PUBLISHED and PUBLISHED→APPROVED, return same-target no-op, update only `contents.status`, and commit after response projection validation.
+- Readiness: APPROVED status is the only gate available in current schema/source. Payload, asset, ContentType, and revision readiness are not checked because their rules/data are SOURCE_REQUIRED.
+- Schema/deployment: tests use fake database queries and do not verify live schema or migration deployment.
+
+### Verification
+
+| Check | Result | Status |
+|---|---|---|
+| Focused API #52 HTTP tests | `27 passed`, including OpenAPI, trace and middleware validation coverage | PASS |
+| Full Study suite | `431 passed`; includes adjacent #49–#51 tests | PASS |
+| Ruff check and format | `All checks passed`; 8 files already formatted | PASS |
+| Compile check | `python3 -m compileall` on route, middleware, API #52 module and tests | PASS |
+| Narrow mypy | API #52 module: `Success: no issues found in 5 source files` | PASS |
+| Broader mypy | `app/api/v1.py` plus API #52 module reports two errors in existing shared catalog/login files; no API #52 diagnostic | PARTIAL; unrelated baseline issues |
+| OpenAPI | Path int64, required strict boolean body, response HTTP 200 checked by focused test | PASS; request body remains DERIVED |
+| Scoped `git diff --check` and whitespace scan | No diagnostics in tracked changes or 18 scoped files | PASS |
+| Context validator | Node unavailable; Deno `--skip-drift` reports missing out-of-scope DB Admin context/source; full Deno run additionally reports broad pre-existing `CONTEXT_STALE` source snapshots across the worktree | BLOCKED_BY_BASELINE |
+
+The API #52 DD remains `Draft — Needs Confirmation`. Resolve Q-52-01 through Q-52-09 and the AC-22/AC-33 lifecycle review before treating the local fallback as canonical.
 

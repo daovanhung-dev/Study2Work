@@ -22,14 +22,16 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Catalog yêu cầu role Mentor; route/guard chưa được wiring. | [1.1](./05_Data_Mapping.md) |
-| 2 | Trace ID | X-Trace-Id | No | UUID nếu được gửi | Theo API Guidelines; route chưa wired. | [1.2](./05_Data_Mapping.md) |
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Shared guard yêu cầu role `MENTOR`; JWT `sub` phải là numeric Study user ID theo current auth convention. | [1.1](./05_Data_Mapping.md#11-xác-thực-bearer-jwt) |
+| 2 | Trace ID | X-Trace-Id | No | UUID nếu được gửi | Theo API Guidelines; middleware validate/tạo trace ID và trả trong header/envelope. | [1.2](./05_Data_Mapping.md#12-nhận-trace-id) |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | Support request ID | request_id | int64 | Yes | Không quy định | Không quy định | Số nguyên 64-bit | SOURCE_REQUIRED | Không có | Khóa logic để lấy request và conversation; pilot ID là UUID nên chưa có physical mapping. | [3.1](./05_Data_Mapping.md) |
+| 1 | Support request ID | request_id | int64 | Yes | Không quy định | Không quy định | Signed 64-bit integer | Signed int64; row thực tế là positive BIGSERIAL theo fallback #58 | Không có | Khóa tra một support request; map tới `support_requests.id`. | [3.1](./05_Data_Mapping.md#31-path-parameter) |
+
+Route dùng raw path string cùng OpenAPI integer/int64 metadata để view kiểm tra overflow/malformed và trả lỗi 404 thuộc catalog. Không thêm error 422.
 
 ## Query parameters
 
@@ -46,7 +48,7 @@ GET /api/v1/mentor/support/59001
 Authorization: Bearer <JWT>
 ```
 
-`59001` chỉ minh họa kiểu int64 của catalog, không đại diện cho ID trong V1-PILOT hay runtime database.
+`59001` minh họa kiểu int64 và không xác nhận ID tồn tại trong runtime database.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

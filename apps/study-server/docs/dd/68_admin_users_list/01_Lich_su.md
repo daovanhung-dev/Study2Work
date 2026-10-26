@@ -14,22 +14,24 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-25 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
-| 1.0 | 2026-10-24 | Codex | Tạo DD từ catalog, AC-31 và source hiện có. | Draft — Needs Confirmation; giữ discrepancy response list/pagination. |
+| 1.0 | 2026-10-24 | Codex | Tạo DD từ catalog, AC-31 và source hiện có. | Draft — Needs Confirmation. |
+| 1.1 | 2026-10-25 | Codex | Triển khai API #68; đồng bộ response Page<UserProfile>, page validation 422, Admin JWT guard, filters và runtime evidence. | Quyết định list/pagination/filter là DERIVED; live schema và Admin permission policy chưa xác nhận nên vẫn Draft. |
 
 ## Tài liệu tham chiếu
 
-- [Catalog API](../../../../../docs/lists/list_api.md) — contract API #68 và UserProfile.
+- [Catalog API](../../../../../docs/lists/list_api.md) — contract hiện hành API #68.
 - [AC-31 index](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — precondition và danh sách API quản trị user.
-- [AC-31 diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — list → pagination → chọn user/thao tác → reload.
+- [AC-31 diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — list, pagination, chọn user/thao tác và reload.
 - [API #4 Data Mapping](../04_users_me/05_Data_Mapping.md) và [API #14 Response](../14_users_me_profile/04_Response.md) — profile projection hiện có.
-- [API #07 Data Mapping](../07_courses_search/05_Data_Mapping.md) — precedent phân trang kích thước cố định 20.
-- [Worklog API #68](../../../../../.agents/worklog/2026-10-24/create-study-api68-dd.md) — preflight, plan, source trace và verification.
+- [API #07 Data Mapping](../07_courses_search/05_Data_Mapping.md) — pagination size 20 và page validation precedent.
+- [API #69–#72 DDs](../69_admin_user_detail/00_Cover.md) — ranh giới detail/profile update/status/delete.
+- [Implementation worklog](../../../../../.agents/worklog/2026-10-25/implement-api68-admin-users-list.md) — plan, source trace và verification.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

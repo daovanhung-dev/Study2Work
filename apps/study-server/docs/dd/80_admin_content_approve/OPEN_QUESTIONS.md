@@ -3,64 +3,40 @@
 Trạng thái: Draft — Needs Confirmation
 Endpoint: PATCH /api/v1/admin/content/{content_id}/approve
 
-## Q-80-01 — Approve chuyển sang APPROVED hay đồng thời PUBLISHED?
+Các quyết định dưới đây là fallback để triển khai local theo chỉ dẫn của user. Chúng không thay thế xác nhận của contract owner hoặc bằng chứng live schema.
 
-**Bằng chứng**
+## Đã chọn cho implementation local
 
-- AC-33 node n9 ghi UPDATE status = APPROVED/PUBLISHED + audit.
-- AC-22 có API #52 riêng để đổi publication status.
-- DD #52 ghi nhận chính sự mơ hồ này và chưa có state machine được duyệt.
+| Vấn đề | Quyết định | Trạng thái |
+|---|---|---|
+| Approve state | `PENDING_REVIEW` → `APPROVED`; API #52 giữ publication transition `APPROVED` ↔ `PUBLISHED`. | `RESOLVED_FOR_IMPLEMENTATION — DERIVED` |
+| Eligible row | Chỉ active `contents` row đang `PENDING_REVIEW`; non-pending trả catalog 422. | `RESOLVED_FOR_IMPLEMENTATION — DERIVED` |
+| Physical schema | Legacy BIGINT `contents`; thêm `content_review_audit_logs` và migration 011 với nullable `reason`. | `RESOLVED_FOR_IMPLEMENTATION — DERIVED; LIVE_UNVERIFIED` |
+| Actor | Shared `ADMIN` guard; numeric JWT `sub` ghi vào `actor_user_id`. | `RESOLVED_FOR_IMPLEMENTATION — DERIVED` |
+| Atomicity | Row lock, status update, audit insert, response projection và commit thuộc một transaction; failure rollback. | `RESOLVED_FOR_IMPLEMENTATION — DERIVED` |
+| Response | Direct reusable eight-field `Content`; không thêm audit/reason/reviewer/version metadata. | `DIRECT CONTRACT` |
+| Invalid input | Malformed/out-of-range int64 path và non-pending state dùng catalog 422. | `RESOLVED_FOR_IMPLEMENTATION — DERIVED` |
 
-**Cần xác nhận**
+## Q-80-01 — #80 có tác động đúng revision mà Admin đã xem ở #79 không?
 
-1. Admin approve chỉ đưa revision tới APPROVED hay cũng publish ngay?
-2. Nếu approve đồng thời publish, API #52 vẫn chịu trách nhiệm cho trường hợp nào?
-3. Status thuộc Content logic hay từng revision?
+#79/#80 chỉ truyền `content_id`; không có revision ID hoặc expected row version. #80 khóa và quyết định trên active row tại thời điểm gọi, nhưng không thể chứng minh đó là cùng revision đã hiển thị trước đó. Revision continuity, stale-item policy và optimistic concurrency cần contract owner xác nhận.
 
-**Ảnh hưởng:** Chặn status transition của #80 và lifecycle liên kết #50–#53.
+## Q-80-02 — Legacy candidate và migration 011 có được deploy/live xác nhận không?
 
-## Q-80-02 — Quyết định được khóa vào revision nào?
+`DB.sql` và migration 011 là checked-in source artifacts; focused tests dùng fake DB session. Live metadata, FK/index presence, grants, migration application và deployment chưa được kiểm tra.
 
-**Bằng chứng**
+## Q-80-03 — Role ADMIN có đủ cho moderation không?
 
-- AC-33 #79 đọc content/version/author.
-- Catalog #80 chỉ nhận content_id; không có revision ID hoặc expected row version.
-- #78/#79 hiện chưa chọn quy tắc pending/latest/current revision.
+Implementation dùng shared role `ADMIN`, như các API Admin hiện có. AC-33 không có source-backed dedicated moderation permission; policy chi tiết cần xác nhận riêng.
 
-**Cần xác nhận**
+## Q-80-04 — API #81 có dùng cùng audit record để lưu rejection reason không?
 
-Revision selector, stale detail behavior, concurrency/optimistic lock và branch khi revision đổi sau #79. Không chọn latest ngầm.
+API #81 hiện được wire locally và dùng một row trong `content_review_audit_logs` để lưu actor, chuyển trạng thái và rejection reason. Đây là mapping DERIVED từ migration 011 candidate; cần owner xác nhận và không chứng minh migration/schema đã triển khai live. Transaction của #81 thuộc implementation riêng, không phụ thuộc việc reuse handler #80.
 
-## Q-80-03 — Content và audit được lưu trong schema nào?
-
-Legacy Study DDL không có generic Content/review/audit relation. V1-PILOT content_review_decisions dùng UUID resource_version_id, UUID reviewer và expected_row_version; đây là artifact khác ID space, không phải mapping trực tiếp cho Content int64.
-
-Cần physical Content/revision/audit model, key/FK, status ownership, live migration evidence và retention policy đã được duyệt.
-
-## Q-80-04 — Admin principal và authorization scope lấy từ đâu?
-
-Catalog yêu cầu Admin, nhưng Study shared auth helper hiện chỉ có Student guard. Cần JWT claim/role parser, Admin guard, quyền moderation scope, thứ tự check và policy 403 so với 404.
-
-## Q-80-05 — 422 dùng cho điều kiện nào?
-
-Catalog khai báo 422 DESIGN_VALIDATION_ERROR nhưng không nêu trigger. Cần xác nhận parse/validation behavior, invalid transition và stale revision mapping mà không thêm code ngoài catalog. Chưa giả định state khác PENDING_REVIEW sẽ trả 422.
-
-## Q-80-06 — Status update và audit có cùng transaction không?
-
-AC-33 yêu cầu cả update status và audit nhưng không chỉ rõ thứ tự atomicity, rollback hoặc behavior khi chỉ một write thành công. Cần chọn transaction boundary sau khi physical schema được duyệt.
-
-## Q-80-07 — Response phản ánh version/status nào?
-
-Catalog trả một Content với tám field; AC-33 cũng đọc version/author nhưng request/response không chứa revision metadata. Cần xác nhận status sau approve và liệu metadata chỉ nội bộ hay catalog cần đổi.
-
-## Q-80-08 — Error envelope và route integration được đồng bộ ra sao?
-
-Middleware allowlist chưa có #80; framework fallback có thể phát generic codes. API guideline mong error data:null, còn current error_response() mặc định {} nếu caller không truyền data. Cần cập nhật wiring khi implementation được duyệt, đồng thời giữ exact code set từ catalog.
-
-## Ranh giới proposal
+## Ranh giới
 
 - Không thêm published, reason, version, reviewer hoặc expected-row-version vào #80 request.
 - Không thêm version, author, audit hoặc review metadata vào response.
-- Không chọn physical Content/audit table hoặc SQL.
-- Không đổi APPROVED/PUBLISHED thành một state machine nếu owner chưa quyết định.
-- Macro-review tài liệu AC-33 #78–#81 đã hoàn tất; các điểm chưa quyết định được ghi trong [báo cáo nhóm](../81_admin_content_reject/VERIFICATION_REPORT.md).
+- Không tuyên bố API #80 thao tác chính xác revision Admin đã xem ở #79.
+- Không coi migration 011/fake DB tests là bằng chứng live schema hoặc deployed behavior.
+- #80 DD vẫn `Draft — Needs Confirmation`.

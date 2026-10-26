@@ -1,37 +1,37 @@
 # Câu hỏi còn mở — API #79 Lấy chi tiết Content
 
-Trạng thái: `Draft — Needs Confirmation`. Catalog xác nhận path, Admin actor, Content response và error set; AC-33 đọc thêm version/author nhưng persistence, projection và revision identity chưa được xác định.
+Trạng thái: `Draft — Needs Confirmation`. Runtime có local route/read projection trên legacy `contents` candidate. AC-33 đọc thêm version/author nhưng catalog trả `ApiEnvelope<Content>`; metadata projection và revision identity chưa được quyết định.
 
 ## Q-79-01 — Version và author được trả về hay chỉ đọc nội bộ?
 
 **Bằng chứng**
 
 - AC-33 node n6 yêu cầu đọc `content/version/author`.
-- Catalog #79 trả `ApiEnvelope<Content>`; reusable Content chỉ có tám field và không có version/author.
-- #78 cùng flow trả Content đơn và không mang revision metadata.
+- Catalog #79 trả `ApiEnvelope<Content>`; reusable Content chỉ có tám field, không có version/author.
+- Runtime giữ response đúng catalog và không thêm metadata vào `data` hoặc `meta`.
 
 **Cần xác nhận**
 
 1. Version/author chỉ là dữ liệu nội bộ để xử lý, còn response vẫn là Content?
 2. Nếu UI cần metadata, catalog có cần response projection riêng không? Cần schema/type và field allowlist trước khi thêm.
 
-**Ảnh hưởng:** Chặn xác định output của phần “metadata review” mà API name/diagram yêu cầu.
+**Ảnh hưởng:** Chặn xác định output đầy đủ cho “metadata review” mà API name/diagram yêu cầu.
 
-## Q-79-02 — Content BIGINT được lưu ở đâu?
+## Q-79-02 — Legacy `contents` có phải nguồn được duyệt cho API #79 không?
 
-Legacy DDL không có generic Content. V1-PILOT `content_blocks` dùng UUID, gắn `lesson_id` và có `content_json`; không map thẳng sang Content BIGINT với `course_id/content_type/title/payload`. Cần bảng/model/key/foreign keys và live schema đã duyệt.
+Checked-in `DB.sql`/migrations 006/007 định nghĩa BIGINT `contents`/`content_versions`, và APIs #49–#53/#78/#79 hiện dùng `contents`. Runtime dùng `contents` làm source candidate. Cần xác nhận live schema/deployment và xem đây có phải persistence chuẩn AC-33 hay pilot UUID model mới thay thế.
 
 ## Q-79-03 — Version nào là phiên bản được review?
 
-Chưa rõ queue/detail chọn pending revision, latest draft, latest published hay Content logical hiện hành. `content_id` không định danh version; cần version selector và quy tắc giữ cùng revision qua #78 → #79 → #80/#81.
+`content_versions` lưu snapshot cũ trước update, nhưng #79 nhận `content_id` và không có version field trong response. Chưa rõ queue/detail chọn pending revision, latest draft, latest published hay current logical row; cần version selector và quy tắc giữ đúng revision qua #78 → #79 → #80/#81.
 
 ## Q-79-04 — Author có nghĩa là ai và join từ đâu?
 
-Chưa có author field hoặc identity mapping cho Content. `content_review_decisions.reviewer_subject_id` là reviewer, không phải author. `course_versions.created_by_subject_id` trong pilot chỉ nói về Course version, không chứng minh tác giả Content. Cần định nghĩa nguồn, ID space và response PII policy.
+`contents` không có author/creator field; #50 không ghi creator. `content_versions.archived_by` là updater lưu snapshot, còn `content_review_decisions.reviewer_subject_id` là reviewer. Cần nguồn, ID space và response PII policy được duyệt; không suy ra từ course Mentor hoặc pilot creator.
 
 ## Q-79-05 — #79 có chỉ trả Content còn pending không?
 
-#78 lọc `status=PENDING_REVIEW`, nhưng diagram không chỉ định status recheck tại #79. Chốt hành vi khi item đã approved/rejected/withdrawn sau lúc mở queue; catalog không có conflict code.
+#78 lọc `status=PENDING_REVIEW`, nhưng #79 trả status hiện tại và không áp dụng status predicate. Chốt hành vi khi item đổi trạng thái sau lúc mở queue; catalog không có conflict code.
 
 ## Q-79-06 — #80/#81 khóa quyết định vào đúng version ra sao?
 
@@ -39,15 +39,15 @@ Catalog #80/#81 chỉ nhận `content_id`; AC-33 n6 có version nhưng decision 
 
 ## Q-79-07 — Admin access và concealment policy là gì?
 
-Catalog yêu cầu role Admin; Study helper hiện chỉ cho Student và không có Admin guard/claim policy. Cần guard/scope và quy tắc 403 so với 404 khi Content ngoài phạm vi.
+Runtime dùng shared `validate_current_user_request(..., role="ADMIN")` trước DB. Catalog không chỉ rõ moderation-specific permission, tenant scope hoặc 403/404 concealment khi Admin thiếu quyền trên một Content cụ thể. Cần owner policy trước khi thêm scope guard.
 
-## Q-79-08 — Invalid path và error envelope được xử lý thế nào?
+## Q-79-08 — Invalid path và error envelope có khớp catalog không?
 
-Catalog không nêu 422 cho path parse; middleware allowlist thiếu endpoint; guideline yêu cầu error `data:null` nhưng helper mặc định `{}`. Cần đồng bộ khi route được wire mà không thêm code ngoài catalog.
+Runtime truyền raw path để guard chạy trước parse; malformed/out-of-range int64 trả catalog 404 theo #69 precedent. Dynamic path đã vào `DESIGN_CONTRACT_PATHS`; shared `error_response()` trả `data:null`. Xác nhận các fallback này làm behavior chuẩn cho #79.
 
 ## Ranh giới proposal
 
-- Q1 tìm Content theo `content_id` và map direct Content schema là proposal `DERIVED`; không chọn physical table.
-- #79 trả trạng thái hiện có và không tự lọc `PENDING_REVIEW` là proposal `DERIVED`; stale-item policy vẫn mở.
-- Q2/Q3 đọc version/author chỉ ở logical level theo AC-33; không có SQL/join cụ thể được duyệt.
-- Không thêm response field, status, business code, table/column hoặc decision write ngoài catalog/diagram evidence.
+- Runtime Q1 dùng active `contents` row theo `content_id` và map direct Content schema; đây là source-backed local implementation, chưa phải live schema proof.
+- #79 trả status hiện có và không tự lọc `PENDING_REVIEW`; policy stale-item vẫn mở.
+- Q2/Q3 không có SQL/join vì revision selector và author source chưa có.
+- Không thêm response field, status, business code, table/column hoặc decision write ngoài catalog/source evidence.

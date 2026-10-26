@@ -1,136 +1,62 @@
-# Open Questions — Study API #54 Lấy submissions
+---
+title: "Open Questions — Study API #54 Lấy submissions"
+order: 10
+dd_id: "54"
+api_name: "Lấy submissions"
+source_sheet: "Open Questions"
+status: "Draft — Needs Confirmation"
+---
 
-**Trạng thái DD:** Draft — Needs Confirmation
+# Câu hỏi còn mở — Study API #54
+
 **Endpoint:** GET /api/v1/mentor/submissions
+**Status:** Draft — Needs Confirmation
 
-Các câu hỏi dưới đây ảnh hưởng response contract, phân trang, quyền truy cập hoặc khả năng map Submission. DD giữ nguyên catalog và không tự chọn câu trả lời.
+## Đã chọn fallback theo chỉ dẫn của người dùng
 
-## Q-54-01 — Cardinality và empty-result response
+- Collection response được chọn để phục vụ AC-23 list/select: `ApiEnvelope<Page<Submission>>`.
+- `page` dùng trang 1 mặc định, kích thước cố định 20 và stable order `submitted_at DESC, id DESC`.
+- File asset được resolve bằng exact URL, owner, purpose và course; đây là `DERIVED`, không phải FK.
+- Direct-owner Mentor scope tái sử dụng API #46/#49; assigned Mentors chưa được hỗ trợ.
 
-**Bằng chứng**
+Các lựa chọn trên đã được triển khai để API #54 chạy nhất quán. Chúng vẫn cần API/schema owner xác nhận trước khi DD được coi là approved.
 
-- Catalog và AC-23 đặt tên API là lấy submissions/đọc submissions.
-- API catalog khai báo ApiEnvelope<Submission>, là một object.
-- AC-23 chuyển từ danh sách sang chọn một submission rồi gọi API #55.
+## Q-54-01 — Producer contract cho file URL
 
-**Cần xác nhận**
+**Bằng chứng:** API #35 nhận `file refs:string!`, còn DDL lưu một nullable `assignment_submissions.file_url`; API #34 trả URL và metadata UploadAsset, nhưng không có association table.
 
-1. data là một Submission, Submission[] hay Page<Submission>?
-2. Nếu là collection, array/pagination metadata nằm ở đâu và có tương thích ngược không?
-3. Khi không có submissions, trả collection rỗng hay một trạng thái khác?
+**Cần xác nhận:** API #35 có lưu đúng URL của API #34 vào `file_url` hay cần bảng liên kết asset-submission? Nếu khác, cung cấp khóa chính thức để API #54 tra files.
 
-**Ảnh hưởng:** Response schema, ví dụ JSON, empty state và API client.
+**Ảnh hưởng:** Submission.files completeness và tương thích producer #35.
 
-## Q-54-02 — Pagination, ordering và query validation
+## Q-54-02 — Assigned Mentor và access policy
 
-**Bằng chứng**
+**Bằng chứng:** API #46/#49 và API #34 lecture upload chỉ dùng `courses.mentor_id`; không có relation assigned Mentor trong các nguồn đã đọc.
 
-- Request có page?:int32.
-- Không có size, default, min/max, sort, count hoặc PageMeta trong API contract.
-- Error catalog không có 422.
+**Cần xác nhận:** AC-23 có cho phép Mentor được phân công chấm course của owner khác không? Nếu có, cung cấp relation/predicate.
 
-**Cần xác nhận**
+**Ảnh hưởng:** Authorization coverage; API #54 hiện chỉ cho direct owner.
 
-1. Page bắt đầu từ 0 hay 1; giá trị mặc định và phạm vi là gì?
-2. Page size cố định hay cần query size; có stable order và total count không?
-3. Query sai kiểu/ngoài phạm vi trả business code nào khi API không khai báo 422?
+## Q-54-03 — Status lifecycle và grading 409
 
-**Ảnh hưởng:** Query contract, error mapping, response metadata và giới hạn tải.
+**Bằng chứng:** Catalog nhận `status:string`; DDL có `VARCHAR(20)`; AC-17 cho trạng thái đầu `SUBMITTED`, AC-23 đưa trạng thái `GRADED`; catalog #54 giữ 409 nhưng không chỉ ra trigger.
 
-## Q-54-03 — Status filter
+**Cần xác nhận:** Enum/status lifecycle đầy đủ là gì và điều kiện nào (nếu có) tạo `409 DESIGN_STATE_CONFLICT`?
 
-**Bằng chứng**
+**Ảnh hưởng:** Filter compatibility và 409 contract; hiện không có nhánh 409 runtime.
 
-- Query status là string tùy chọn.
-- Reusable Submission dùng SubmissionStatus nhưng không liệt kê enum.
-- AC-17 đặt trạng thái ban đầu là SUBMITTED; AC-23 ghi grading cập nhật status thành GRADED.
+## Q-54-04 — Nullability, timestamp và live schema
 
-**Cần xác nhận**
+**Bằng chứng:** Guide/ERD yêu cầu assignment/course/student relations, trong khi checked-in DDL cho phép FK NULL; `submitted_at` là TIMESTAMP không có timezone; live metadata chưa được kiểm tra.
 
-1. Danh sách đầy đủ status nào được lọc?
-2. Blank value, casing và status không hợp lệ được xử lý thế nào?
-3. Có status nào bị ẩn khỏi danh sách chấm không?
+**Cần xác nhận:** Schema artifact nào là baseline? Quan hệ null/orphan và timezone serialization được xử lý theo rule nào? Migration/API runtime đã triển khai ở môi trường đích chưa?
 
-**Ảnh hưởng:** Validation, filter predicate và trạng thái hiển thị.
+**Ảnh hưởng:** Row completeness, date-time contract và deployment readiness.
 
-## Q-54-04 — Mentor identity và course authorization
+## Q-54-05 — Error catalog confirmation
 
-**Bằng chứng**
+**Bằng chứng:** Route query constraints trả 422 `DESIGN_VALIDATION_ERROR`, đã được bổ sung vào API catalog và AC-23 node; 409 vẫn khai báo nhưng không có trigger.
 
-- AC-23 yêu cầu Mentor có quyền chấm submissions của course.
-- course_id tùy chọn nên API cần quy tắc phạm vi khi field này vắng mặt.
-- Study auth helper hiện có Student guard; không có Mentor identity/assignment mapping.
-- Candidate courses.mentor_id chỉ mô tả direct owner, không xác nhận assigned Mentors.
+**Cần xác nhận:** Chủ sở hữu contract chấp thuận việc bổ sung 422 và giữ 409 unreachable cho tới khi có business rule không?
 
-**Cần xác nhận**
-
-1. Mentor identity lấy từ JWT claim nào và map sang users.id thế nào?
-2. Quyền dựa trên direct ownership, assignment hay quan hệ khác?
-3. Khi không truyền course_id, trả submissions của tất cả courses được phép chấm hay yêu cầu chọn course?
-4. Course tồn tại nhưng không thuộc quyền Mentor trả 403 hay được mask?
-
-**Ảnh hưởng:** Authorization và dữ liệu có thể lộ giữa courses.
-
-## Q-54-05 — Persistence và mapping của Submission.files
-
-**Bằng chứng**
-
-- Logical Submission.files là UploadAsset[].
-- Candidate assignment_submissions có một file_url nullable.
-- Không có source được duyệt cho asset ID, tên, content type, size, status hoặc association.
-
-**Cần xác nhận**
-
-1. UploadAsset được lưu ở đâu và liên kết với submission bằng khóa nào?
-2. URL là public hay signed; API #54 có trả file_url hay resolve asset metadata?
-3. File list có thể rỗng không và thứ tự của files là gì?
-
-**Ảnh hưởng:** Response projection, storage access và data model.
-
-## Q-54-06 — Ý nghĩa của 409
-
-**Bằng chứng**
-
-- Catalog khai báo 409 DESIGN_STATE_CONFLICT.
-- AC-23 không có nhánh conflict cho API GET danh sách.
-
-**Cần xác nhận**
-
-1. Điều kiện nào của API #54 tạo state conflict?
-2. 409 có thuộc endpoint này hay là lỗi sót trong catalog?
-
-**Ảnh hưởng:** Error contract và test cases; không suy ra từ empty result/status filter.
-
-## Q-54-07 — Baseline schema và nullability
-
-**Bằng chứng**
-
-- ERD/table guide cho quan hệ assignment và course là required.
-- Checked-in V1-PILOT DDL cho phép NULL ở assignment_submissions.assignment_id, assignment_submissions.user_id và assignments.course_id.
-- Live schema chưa được xác minh.
-
-**Cần xác nhận**
-
-1. Schema artifact nào là baseline cho API #54?
-2. Null/orphan relation được xử lý ra sao nếu DDL hiện hành vẫn cho phép?
-3. Live schema cần được xác minh trước khi chuyển DD sang implementation-ready?
-
-**Ảnh hưởng:** Joins, completeness, authorization scope và deployment readiness.
-
-## Q-54-08 — Error envelope data
-
-**Bằng chứng**
-
-- API Guidelines yêu cầu data: null ở error response.
-- Current error_response() chuyển data=None thành {}.
-- API #54 chưa có route để xác nhận behavior.
-
-**Cần xác nhận**
-
-1. Endpoint mới phải giữ {} theo helper hiện tại hay thay đổi helper/convention để trả null?
-
-**Ảnh hưởng:** Contract conformance và error examples.
-
-## Trạng thái cần duy trì
-
-Giữ Draft — Needs Confirmation tới khi cardinality, pagination, status, quyền Mentor và asset mapping được quyết định. Macro-review AC-23 #54–#57 đã hoàn tất ở mức tài liệu; các câu hỏi contract/source nêu trên vẫn mở.
+**Ảnh hưởng:** API client generation và final contract approval.

@@ -16,13 +16,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | **2026-10-24** |
-| Ngày update cuối cùng | **2026-10-24** |
+| Ngày update cuối cùng | **2026-10-26** |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | **1.0** | **2026-10-24** | **Codex** | Tạo DD API #81 theo catalog và AC-33; giữ open questions về reason persistence, audit, revision và Admin policy. | Draft — Needs Confirmation |
+| **1.1** | **2026-10-26** | **Codex** | Ghi nhận implementation local: status gate và reason-bearing audit mapping là DERIVED; đồng bộ transaction/error/runtime; giữ mở live schema, permission và revision identity. | Draft — Needs Confirmation |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

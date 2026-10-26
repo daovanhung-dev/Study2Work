@@ -32,18 +32,18 @@ status: "Draft — Needs Confirmation"
 | 5.2 | data.full_name | Full name | full_name | string | No | users candidate | full_name | 4.1 | Direct candidate mapping | Bắt buộc khi success | API #4/#14 projection precedent. |
 | 5.3 | data.email | Email | email | email | No | users candidate | email | 4.1 | Direct candidate mapping | Bắt buộc khi success | PII; Admin-only. |
 | 5.4 | data.role | Role | role | UserRole | No | users candidate | role | 4.1 | Giữ giá trị lưu trong source candidate | Bắt buộc khi success | Enum members chưa được định nghĩa. |
-| 5.5 | data.avatar_url | Avatar URL | avatar_url | uri? | Optional | users candidate | avatar_url | 4.1 | Direct candidate mapping | Null hay omit cần chốt; API #4 model serialize null | Nullable trong legacy candidate. |
-| 5.6 | data.bio | Biography | bio | string? | Optional | SOURCE_REQUIRED | N/A | 4.1 | Không tạo giá trị; omit là candidate vì field optional | Omit/null semantics cần chốt | Không có source trong legacy users hoặc API #4/#14 projection. |
-| 5.7 | data.phone | Phone | phone | string? | Optional | users candidate | phone | 4.1 | Direct candidate mapping | Null hay omit cần chốt; API #4 model serialize null | PII; nullable trong legacy candidate. |
+| 5.5 | data.avatar_url | Avatar URL | avatar_url | uri? | Optional | users candidate | avatar_url | 4.1 | Direct mapping qua API #04 UserProfile | Giữ null khi source null | Nullable trong legacy candidate; current profile model serialize null. |
+| 5.6 | data.bio | Biography | bio | string? | Optional | Không chọn | N/A | 4.1 | Omit vì source/API #04 model không có field | Omit | Optional contract field; legacy users và API #04/#14 không có nguồn bio. |
+| 5.7 | data.phone | Phone | phone | string? | Optional | users candidate | phone | 4.1 | Direct mapping qua API #04 UserProfile | Giữ null khi source null | PII; nullable trong legacy candidate và current model. |
 | 5.8 | data.status | Account status | status | UserStatus | No | users candidate | status | 4.1 | Giữ giá trị lưu trong source candidate | Bắt buộc khi success | Enum members chưa được định nghĩa. |
 | 5.9 | data.created_at | Created time | created_at | date-time | No | users candidate | created_at | 4.1 | ISO-8601 candidate | Bắt buộc khi success | Live schema/timezone chưa xác minh. |
 | 5.10 | data.updated_at | Updated time | updated_at | date-time | No | users candidate | updated_at | 4.1 | ISO-8601 candidate | Bắt buộc khi success | Live schema/timezone chưa xác minh. |
 | 6 | meta | Metadata | meta | object | No | N/A | N/A | Envelope | {} | {} | API #69 không có pagination metadata. |
-| 7 | traceId | Trace ID | traceId | uuid | No | N/A | X-Trace-Id/middleware | Envelope | UUID request đã validate hoặc tạo mới theo current middleware | Bắt buộc trong envelope | Runtime API #69 chưa wired. |
+| 7 | traceId | Trace ID | traceId | uuid | No | N/A | X-Trace-Id/middleware | Envelope | UUID request đã validate hoặc tạo mới theo current middleware | Bắt buộc trong envelope | Runtime API #69 trả traceId do current middleware xác thực/tạo. |
 
 ## Ví dụ success candidate
 
-JSON sau minh họa contract UserProfile. Giá trị role/status chỉ là dữ liệu ví dụ, không xác định enum members. bio được omit do optional và chưa có source trong candidate projection.
+Response runtime dùng UserProfile của API #04. Giá trị role/status được trả nguyên trạng vì catalog chưa định nghĩa enum members; bio bị omit do không có source field.
 
 ~~~json
 {
@@ -68,7 +68,7 @@ JSON sau minh họa contract UserProfile. Giá trị role/status chỉ là dữ 
 
 ## Ví dụ lỗi theo guideline
 
-Ví dụ giữ data:null theo API guideline; API #69 chưa có runtime để xác nhận output. Current error_response helper mặc định data thành {} khi không truyền data.
+Ví dụ lỗi theo runtime hiện tại: error_response mặc định data thành JSON null.
 
 ~~~json
 {

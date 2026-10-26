@@ -9,7 +9,7 @@ format: markdown
 status: "Draft — Needs Confirmation"
 ---
 
-# Định nghĩa table — `quizzes` UPDATE (soft-delete candidate)
+# Định nghĩa table — `quizzes` UPDATE (soft-delete)
 
 ## Table metadata
 
@@ -19,33 +19,33 @@ status: "Draft — Needs Confirmation"
 | Logical table | Quiz |
 | Operation | UPDATE |
 | Data Mapping step | [Step 4A — soft delete](./05_Data_Mapping.md#step-4a-soft-delete) |
-| Basis | AC-35 yêu cầu soft-delete khi có attempts; physical marker/value chưa được xác nhận. |
+| Basis | AC-35 yêu cầu soft-delete khi có attempts; marker/value runtime là DERIVED và chưa được xác nhận. |
 
 ## Update mapping
 
 **Áp dụng khi**
 
-- Q2 tìm thấy ít nhất một `quiz_attempts` row cho `quiz_id` và `quizzes.status` chưa là tombstone `DELETED`.
+- Q2 tìm thấy attempt hoặc answer trỏ tới question/choice của quiz, và Quiz chưa là tombstone `DELETED`.
 - Giữ nguyên các question/choice/attempt/answer rows.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
 | 1 | `id` | Quiz ID | BIGSERIAL | N/A | N/A | Yes | Yes | `quiz_id` từ path, chỉ định record | Request path | Step 2 / Step 4A | Candidate legacy PK; live schema chưa xác minh. |
-| 2 | `status` | Quiz status | VARCHAR | 20 | N/A | Nullable; DDL default DRAFT | No | Candidate literal `DELETED` | DERIVED proposal | Step 4A | Cột có trong DDL; allowed values không canonical. |
-| 3 | `updated_at` | Last updated time | TIMESTAMP | N/A | N/A | Yes | No | Candidate thời điểm lần đầu soft-delete; giữ nguyên khi DELETE lặp lại | DERIVED proposal | Step 4A | DDL có cột; timezone/clock policy và việc map sang `deleted_at` cần xác nhận. |
+| 2 | `status` | Quiz status | VARCHAR | 20 | N/A | Nullable; DDL default DRAFT | No | `DELETED` | Runtime source; value DERIVED | Step 4A | Cột có trong DDL; allowed values không canonical. |
+| 3 | `updated_at` | Last updated time | TIMESTAMP | N/A | N/A | Yes | No | DB timestamp lần đầu soft-delete; giữ nguyên khi DELETE lặp lại | Runtime source; semantics DERIVED | Step 4A | DDL có cột; timezone/clock policy và map sang `deleted_at` cần xác nhận. |
 
 ## Điều kiện UPDATE
 
 - `quizzes.id = :quiz_id`.
-- Chỉ chạy khi Q2 `EXISTS quiz_attempts WHERE quiz_id = :quiz_id`.
+- Chỉ chạy khi Q2 thấy attempt hoặc linked answer history.
 - Không cập nhật course/title/questions/choices hoặc `created_at`.
-- Nếu status đã `DELETED`, không ghi lại timestamp theo proposal idempotency; giữ source row nguyên trạng.
+- Nếu status đã `DELETED`, runtime không ghi lại timestamp; giữ source row nguyên trạng theo policy idempotency DERIVED.
 - Không thay đổi status nếu tombstone state chưa được owner phê duyệt.
 
 ## Gap
 
 - Legacy `quizzes` không có `deleted_at`; `status='DELETED'` là giá trị DERIVED, chưa được định nghĩa trong enum.
-- `DeleteResult.deleted_at` map từ `updated_at` chỉ là candidate nếu tombstone update và future immutability được duyệt.
+- `DeleteResult.deleted_at` map từ `updated_at` trong runtime; tombstone semantics và future immutability cần được duyệt.
 - Nếu physical schema được chọn không có status/timestamp tương ứng, cần schema decision ngoài phạm vi DD này.
 
 ---

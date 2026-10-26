@@ -14,18 +14,23 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table | N/A — chưa chọn source đầy đủ; legacy/Pilot chỉ là candidate khác mô hình. |
-| Logical table | Notification — logical entity theo catalog/AC-36. |
-| Operation | N/A — READ-ONLY API. |
-| Data Mapping step | Q1 candidate trong `05_Data_Mapping.md#step-2-đọc-notification`; chưa có SQL được duyệt. |
+| Physical table | `notifications` + `notification_deliveries` — legacy BIGINT candidate |
+| Logical table | Notification + per-channel delivery aggregate |
+| Operation | SELECT only |
+| Data Mapping step | Q1/Q2 tại `05_Data_Mapping.md#step-2-đọc-notification-và-delivery-aggregate` |
 
-## Candidate read sources — không phải mutation mapping
+## Read mapping — candidate only
 
-| Source | ID/grain | Các field candidate | Field contract còn thiếu hoặc không tương thích |
-|---|---|---|---|
-| Legacy `notifications` | BIGSERIAL; `user_id` nullable; recipient/sender relation | `title`, `content`, `type`, `is_read`, `created_at` | Không có channels/status/read_at/scheduled_at; không chứng minh campaign-level row. |
-| V1-PILOT `notifications` | UUID, learner-scoped | `title`, `body`, `read_at`, `created_at` | Khác int64/actor grain; không có Notification-level channels/status/scheduled_at. |
-| V1-PILOT `notification_deliveries` | UUID notification FK, per-channel delivery row | `channel`, delivery `status` | Không map sang Notification-level fields; schema chưa được chọn cho API. |
+| No | Table | Column | Type in checked-in DDL | Use | Status/remarks |
+|---:|---|---|---|---|---|
+| 1 | `notifications` | `id` | BIGSERIAL | Notification ID and stable sort tie-breaker | Candidate; not live evidence |
+| 2 | `notifications` | `title` | VARCHAR(200) | Response `title` | Candidate |
+| 3 | `notifications` | `content` | TEXT | Response `content` | Candidate |
+| 4 | `notifications` | `created_at` | TIMESTAMP | Response timestamp and page order | Candidate; timezone behavior unverified |
+| 5 | `notification_deliveries` | `notification_id` | BIGINT | Join and group key | Migration 009/API #63 candidate |
+| 6 | `notification_deliveries` | `channel` | VARCHAR(16) | Aggregate response/filter channels | DDL check `PUSH`/`EMAIL`; DERIVED Notification mapping |
+| 7 | `notification_deliveries` | `status` | VARCHAR(16) | Count queued/sent/failed states | DDL check; aggregate precedence from API #64 |
+| 8 | `notification_deliveries` | `updated_at` | TIMESTAMPTZ | Not projected | Migration field; not selected by #92 |
 
 ## Update mapping
 
@@ -34,7 +39,7 @@ status: "Draft — Needs Confirmation"
 - N/A — READ-ONLY API; không có UPDATE.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---:|---|---|---|---:|---:|---|---|---|---|---|---|
+|---:|---|---|---|---:|---:|---:|---|---|---|---|---|
 | — | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | Không có mutation. |
 
 ## Insert mapping
@@ -59,9 +64,10 @@ status: "Draft — Needs Confirmation"
 
 ## Query-only note
 
-- Không ghi SQL có thể bị hiểu là executable khi chưa xác định campaign/recipient grain, status/channel source và response cardinality.
-- API #92 không thay cho API #96 delivery status và không dùng `is_read` như trạng thái gửi.
-- `07_table.md` giữ nguyên vai trò read-only/N/A theo template.
+- Runtime chỉ query notification có tối thiểu một outbox delivery để dựng required channels/status.
+- Một item tương ứng một `notifications.id`; không gom theo `operation_id` hoặc campaign.
+- Không query/map `user_id`, `sender_id`, `type`, `is_read`, `operation_id`, pilot UUID fields hoặc provider data.
+- DDL/migration chỉ là checked-in candidate; không thêm schema, migration hoặc ERD relation trong task #92.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

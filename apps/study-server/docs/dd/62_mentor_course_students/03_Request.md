@@ -22,14 +22,14 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | `Authorization` | Yes | Bearer JWT | Catalog yêu cầu role Mentor; current guard là Student-specific và API #62 chưa wired. | 0.1, 0.2 |
-| 2 | Trace ID | `X-Trace-Id` | No | UUID nếu gửi | Shared API Guidelines convention; endpoint chưa có runtime propagation riêng. | 0.3 |
+| 1 | Authorization | `Authorization` | Yes | Bearer JWT | Shared guard xác minh token và yêu cầu role `MENTOR`. | 0.1 |
+| 2 | Trace ID | `X-Trace-Id` | No | UUID nếu gửi | Middleware dùng chung propagate trace ID. | 0.2 |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | Course ID | `course_id` | int64 | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | Integer | SOURCE_REQUIRED | N/A | Course cần kiểm tra quyền và lọc enrollment; catalog không nêu positivity constraint. | 1.1, 2.1, 3.1 |
+| 1 | Course ID | `course_id` | signed int64 | Yes | `-2^63` | `2^63-1` | Integer | Decimal integer with optional sign | N/A | Parse raw path; malformed/out-of-range values map to catalog 404; no positivity rule is added. | 1.1, 2.1, 3.1 |
 
 ## Query parameters
 
@@ -43,8 +43,8 @@ N/A — GET không có request body.
 
 | Request item | Mapping step | Mục đích | Status |
 |---|---|---|---|
-| `Authorization` | 0.1 | Xác thực Bearer và role Mentor. | Role DIRECT; guard/principal binding SOURCE_REQUIRED. |
-| `course_id` | 1.1, 2.1, 3.1 | Course scope lookup và candidate enrollment filter. | Type DIRECT; legacy/pilot key conflict. |
+| `Authorization` | 0.1 | Xác thực Bearer và role Mentor. | Current shared guard returns numeric JWT subject. |
+| `course_id` | 1.1, 2.1, 3.1 | Course scope lookup và active enrollment filter. | Path type DIRECT; raw signed-int64 parse maps invalid values to 404. |
 | Query/body | N/A | None. | DIRECT; do not add pagination inputs. |
 
 ## Request example

@@ -24,7 +24,7 @@ status: "Draft — Needs Confirmation"
 |---:|---|---|---:|---|---|---|
 | 1 | Authorization | `Authorization` | Có | Bearer JWT | Catalog yêu cầu Mentor; claim và mapping identity số chưa có runtime source. | 0.1 |
 | 2 | Trace ID | `X-Trace-Id` | Không | UUID nếu gửi | Header theo API Guidelines; endpoint hiện chưa có route. | 0.2 |
-| 3 | Idempotency key | `Idempotency-Key` | DERIVED recommendation | Key duy nhất, không mang ý nghĩa, cho mỗi thao tác người dùng | API Guidelines yêu cầu với mutation có retry; catalog chưa có rule hoặc persistence. | 4.2 |
+| 3 | Idempotency key | `Idempotency-Key` | Không khai báo | Không được gửi như contract field của API #63 hiện tại. | Retry deduplication remains unresolved; no key persistence is implemented. | 4.2 |
 
 ## Path parameters
 
@@ -38,39 +38,41 @@ N/A — catalog không khai báo query parameter.
 
 | Không | Logical name | Field | Type | Required | Rule từ catalog | Data Mapping reference | Gap |
 |---:|---|---|---|---:|---|---|---|
-| 1 | Recipients | `recipients` | string | Có | Không có encoding/format được khai báo. | 2.1, 3.2 | Không biết user ID hay enrollment ID; thiếu ràng buộc course. |
-| 2 | Title | `title` | string | Có | Không có min/max length hoặc trim rule. | 1.2, 3.1 | Legacy/Pilot title length 200 chỉ là candidate schema. |
-| 3 | Content | `content` | int64 | Có | Giữ đúng scalar type catalog. | 1.3, 3.1 | Lệch với UI nhập nội dung và `Notification.content:string`. |
-| 4 | Channels | `channels` | string | Có | Không có encoding hoặc giá trị được phép. | 2.2, 3.3 | Diagram ghi Push/Email; Notification schema là enum array. |
+| 1 | Recipients | `recipients` | string | Có | CSV positive int64 Student `users.id`, ví dụ `101,202`; duplicate IDs được collapse theo lần đầu. | 2.1, 3.2 | Fallback DERIVED từ API #62 UserSummary IDs và legacy BIGINT users. |
+| 2 | Title | `title` | string | Có | Tối đa 200 ký tự theo cột legacy `notifications.title`; giữ nguyên nội dung đầu vào. | 1.2, 3.1 | Max length là constraint vật lý local; live schema chưa xác minh. |
+| 3 | Content | `content` | int64 | Có | Giữ scalar int64 trực tiếp; ghi vào TEXT dưới dạng chuỗi thập phân. | 1.3, 3.1 | Fallback DERIVED; vẫn lệch UI nhập text và reusable Notification.content. |
+| 4 | Channels | `channels` | string | Có | CSV token `PUSH` và/hoặc `EMAIL`; duplicate token được collapse theo lần đầu. | 2.2, 3.3 | Fallback DERIVED từ nhãn Push/Email trong AC-25. |
 
 ## Quy ước query/body
 
-- Không có field `course_id` trong body trực tiếp. Đề xuất thêm `course_id:int64!` để kiểm tra toàn bộ recipients nằm trong course được Mentor quản lý là DERIVED, cần cập nhật catalog.
-- Không thêm field `operation_id`, `notification_id`, recipient count hoặc delivery result vào request.
+- Giữ đúng bốn body fields trực tiếp của catalog; không thêm `course_id`, `operation_id` hoặc `notification_id`.
+- Vì body không mang `course_id`, server chỉ chấp nhận khi toàn bộ recipient IDs cùng có ACTIVE enrollment trong ít nhất một course do Mentor trực tiếp sở hữu. Không thể xác nhận đó chính là course đã mở trên UI; đây là giới hạn DERIVED.
+- `recipients` và `channels` là CSV; mỗi item được trim hai đầu, item rỗng hoặc sai format trả 422.
+- Không thêm Idempotency-Key, recipient limit hoặc content length limit vào request API này.
 
 ## Validation đề xuất — chưa phải rule trong catalog
 
 | Field/condition | Kiểm tra đơn giản đề xuất | Trạng thái |
 |---|---|---|
-| `recipients` | Không rỗng; sau khi duyệt encoding, parse ID; loại giá trị trống/sai kiểu; khử ID lặp theo lần xuất hiện đầu. | DERIVED; encoding/id type cần xác nhận. |
-| Recipient scope | Từ chối nếu bất kỳ recipient nào không phải Student đủ điều kiện trong course đã chọn. | DERIVED; cần thêm course_id và chọn schema/status. |
-| `title` | Trim khoảng trắng; không rỗng; giới hạn 200 ký tự là candidate theo hai schema. | DERIVED; không có rule trực tiếp. |
-| `content` | Giữ int64 chỉ để mô tả contract trực tiếp; chưa có kiểm tra business meaning. Nếu đây là nội dung nhập tay, đổi kiểu sang string trước khi triển khai. | DISCREPANCY. |
-| `channels` | Không rỗng; sau khi duyệt encoding, chỉ chấp nhận channel được cấu hình; loại giá trị trùng. | DERIVED; enum chưa định nghĩa. |
-| Idempotency | Cùng key + cùng body chỉ tạo một Operation đã được tiếp nhận; cùng key + body khác trả lỗi theo rule được duyệt. | DERIVED; 409 không có trong error set API #63 nên chưa chốt status. |
+| `recipients` | Parse positive int64 IDs; reject empty/non-numeric/out-of-range items; collapse duplicates preserving first-seen order. | DERIVED CSV mapping from #62 IDs. |
+| Recipient scope | Require all IDs to be ACTIVE Students in a common course directly owned by the Mentor; reject the full request otherwise. | DERIVED; body cannot identify the exact course. |
+| `title` | Enforce legacy database maximum 200 characters; do not trim or impose a non-empty rule beyond required string type. | Local DDL-backed limit; live schema unverified. |
+| `content` | Require JSON integer/int64; persist its base-10 string form because legacy Notification stores TEXT. | DERIVED scalar-to-text mapping; business meaning remains open. |
+| `channels` | Parse CSV; accept only `PUSH` and `EMAIL`; collapse duplicates preserving first-seen order. | DERIVED machine tokens from diagram labels. |
+| Batch size/idempotency | No extra limit or idempotency behavior is added because neither is in the direct request contract or error set. | Retry deduplication remains unresolved. |
 
 ## Ví dụ request — chỉ minh họa kiểu trực tiếp
 
 ```json
 {
-  "recipients": "<RECIPIENT_ENCODING_SOURCE_REQUIRED>",
+  "recipients": "2001,2002",
   "title": "Thong bao lop hoc",
   "content": 123,
-  "channels": "<CHANNEL_ENCODING_SOURCE_REQUIRED>"
+  "channels": "PUSH,EMAIL"
 }
 ```
 
-Các chuỗi placeholder trên chỉ biểu thị kiểu JSON `string`; chúng không phải encoding đã duyệt. Số `123` minh họa kiểu `int64` trực tiếp của catalog và không giải quyết xung đột nội dung text.
+CSV encoding là fallback `DERIVED`, chưa phải contract owner phê duyệt. `content:123` được lưu thành chuỗi `"123"`; API không diễn giải nó thành free-form message hoặc template ID.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

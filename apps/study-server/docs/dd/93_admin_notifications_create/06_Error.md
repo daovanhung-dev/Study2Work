@@ -16,25 +16,21 @@ status: "Draft — Needs Confirmation"
 
 | No | Category | Verify check | Item/field | Condition | HTTP status | Business/Error code | Message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer JWT | Authorization | Missing or invalid token | 401 | DESIGN_AUTHENTICATION_REQUIRED | SOURCE_REQUIRED | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-permission) | N/A | Status/code direct; route absent |
-| 2 | Authorization | Admin permission | Principal | Caller lacks Admin role/permission | 403 | DESIGN_ACCESS_DENIED | SOURCE_REQUIRED | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-permission) | N/A | Policy SOURCE_REQUIRED |
-| 3 | Validation | Request body | recipients | Approved schema validation fails; exact predicate TBD | 422 | DESIGN_VALIDATION_ERROR | SOURCE_REQUIRED | [Step 1](./05_Data_Mapping.md#step-1-read-request) | Write behavior TBD | Field rule SOURCE_REQUIRED |
-| 4 | Validation | Request body | recipients[] | Approved schema validation fails; exact predicate TBD | 422 | DESIGN_VALIDATION_ERROR | SOURCE_REQUIRED | [Step 2](./05_Data_Mapping.md#step-2-resolve-audience) | Write behavior TBD | Element rule SOURCE_REQUIRED |
-| 5 | Validation | Request body | segment | Approved schema validation fails; exact predicate TBD | 422 | DESIGN_VALIDATION_ERROR | SOURCE_REQUIRED | [Step 2](./05_Data_Mapping.md#step-2-resolve-audience) | Write behavior TBD | Enum rule SOURCE_REQUIRED |
-| 6 | Validation | Request body | title | Approved schema validation fails; exact predicate TBD | 422 | DESIGN_VALIDATION_ERROR | SOURCE_REQUIRED | [Step 1](./05_Data_Mapping.md#step-1-read-request) | Write behavior TBD | Direct field required; other rules unspecified |
-| 7 | Validation | Request body | content | Approved schema validation fails; exact predicate TBD | 422 | DESIGN_VALIDATION_ERROR | SOURCE_REQUIRED | [Step 1](./05_Data_Mapping.md#step-1-read-request) | Write behavior TBD | Direct field required; other rules unspecified |
-| 8 | Validation | Request body | channels | Approved schema validation fails; exact predicate TBD | 422 | DESIGN_VALIDATION_ERROR | SOURCE_REQUIRED | [Step 1](./05_Data_Mapping.md#step-1-read-request) | Write behavior TBD | Direct field required; array rules unspecified |
-| 9 | Validation | Request body | channels[] | Approved schema validation fails; exact predicate TBD | 422 | DESIGN_VALIDATION_ERROR | SOURCE_REQUIRED | [Step 4](./05_Data_Mapping.md#step-4-accept-and-dispatch) | Write behavior TBD | Channel token rule SOURCE_REQUIRED |
-| 10 | Dependency | Acceptance dependency | Queue/dispatch | Dependency unavailable before acceptance | 503 | DESIGN_DEPENDENCY_UNAVAILABLE | SOURCE_REQUIRED | [Step 4](./05_Data_Mapping.md#step-4-accept-and-dispatch) | Transaction boundary SOURCE_REQUIRED | Trigger is DERIVED |
-| 11 | System | Internal processing | Persistence/processing | Unexpected internal failure | 500 | DESIGN_INTERNAL_ERROR | SOURCE_REQUIRED | [Step 3](./05_Data_Mapping.md#step-3-create-notification) | Rollback SOURCE_REQUIRED | Do not expose internals |
+| 1 | Authentication | Bearer JWT | Authorization | Missing/invalid token or failed auth | 401 | DESIGN_AUTHENTICATION_REQUIRED | Runtime envelope | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-permission) | N/A | Shared guard; checked before body and DB |
+| 2 | Authorization | Role | Principal | Role is not `ADMIN` | 403 | DESIGN_ACCESS_DENIED | Runtime envelope | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-permission) | N/A | Fine-grained notification permission is not implemented |
+| 3 | Validation | JSON/body schema | Body fields | Invalid JSON/type or unknown field | 422 | DESIGN_VALIDATION_ERROR | Runtime envelope | [Step 1](./05_Data_Mapping.md#step-1-read-request) | No writes have started | Direct error code; field predicates are DERIVED |
+| 4 | Validation | Audience | recipients / segment | Missing, null, empty, non-positive, out-of-int64, duplicate recipient ID; segment supplied; one or more users missing | 422 | DESIGN_VALIDATION_ERROR | Runtime envelope | [Step 2](./05_Data_Mapping.md#step-2-resolve-audience) | Roll back if transaction was opened | Explicit recipient fallback; no missing ID is disclosed |
+| 5 | Validation | Notification text | title / content | Blank title/content or title exceeds 200 characters | 422 | DESIGN_VALIDATION_ERROR | Runtime envelope | [Step 1](./05_Data_Mapping.md#step-1-read-request) | No notification writes | Title limit is from local DDL candidate |
+| 6 | Validation | Delivery channels | channels | Empty, duplicate, or value other than `PUSH`/`EMAIL` | 422 | DESIGN_VALIDATION_ERROR | Runtime envelope | [Step 1](./05_Data_Mapping.md#step-1-read-request) | No notification writes | Channel values are DERIVED fallback |
+| 7 | Dependency | DB acceptance dependency | Recipient/read/write/commit | SQL OperationalError or invalidated DB connection | 503 | DESIGN_DEPENDENCY_UNAVAILABLE | Runtime envelope | [Step 4](./05_Data_Mapping.md#step-4-accept-and-dispatch) | Attempt rollback after transaction begins | DB mapping is DERIVED; no live dependency was exercised |
+| 8 | System | Persistence/projection | Insert/response/commit | Other SQLAlchemy error or invalid returned projection | 500 | DESIGN_INTERNAL_ERROR | Runtime envelope | [Step 3](./05_Data_Mapping.md#step-3-create-notification-and-delivery-rows) | Attempt rollback after transaction begins | Raw internals are not returned |
 
 ## Error contract boundaries
 
-- Exact status/code set matches API #93.
-- Do not add 400, 404, 409 or other codes absent from the catalog.
-- Field messages and error-envelope details are not specified for #93.
-- API Guidelines specify null error data; current helper/future middleware behavior is not verified.
-- No runtime error branch exists for #93.
+- Runtime uses only catalog statuses/codes: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 422 `DESIGN_VALIDATION_ERROR`, 503 `DESIGN_DEPENDENCY_UNAVAILABLE`, and 500 `DESIGN_INTERNAL_ERROR`.
+- Validation predicates and database failure classification are DERIVED implementation choices pending owner confirmation.
+- The view rolls back failures during recipient lookup, notification insert, delivery insert, response mapping, and commit. Rollback failure is logged with trace ID and does not replace the response.
+- No live database, deployment, or provider failure branch was verified.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

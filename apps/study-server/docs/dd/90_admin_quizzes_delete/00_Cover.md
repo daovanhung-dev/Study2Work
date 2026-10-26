@@ -28,7 +28,11 @@ status: "Draft — Needs Confirmation"
 | Reviewed by | Chưa review |
 | Approved by | Chưa phê duyệt |
 | Created date | `2026-10-24` |
-| Updated date | `2026-10-24` |
+| Updated date | `2026-10-26` |
+
+## Implementation status
+
+API #90 hiện được wire cục bộ với shared ADMIN guard, transaction xóa mềm/cứng và focused HTTP tests. Các lựa chọn `DELETED`, timestamp mapping, hard-delete khi không có history và answer-only protection vẫn là `DERIVED`; tài liệu giữ trạng thái Draft cho đến khi có xác nhận nghiệp vụ/schema.
 
 ## Tên hiển thị
 

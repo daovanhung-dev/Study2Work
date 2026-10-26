@@ -1,42 +1,50 @@
 # Plan result — API #94 Admin cập nhật notification
 
 ## Status
-- Result: PARTIALLY COMPLETED — source-backed DD authored; owner decisions remain.
+
+- Result: IMPLEMENTED WITH DERIVED FALLBACK; owner/design decisions remain open.
 - DD status: Draft — Needs Confirmation.
-- Runtime status: UNWIRED / NOT_FOUND by scoped static source scan.
-- AC-36 macro-review: pending until #96 DD is complete.
+- Runtime status: Wired in Study source; fake-DB HTTP verification only.
+- AC-36 macro-review: `VERIFIED_WITH_OPEN_QUESTIONS`; APIs #95/#96 remain outside this implementation.
 
 ## Direct API requirement
-- API #94: PUT /api/v1/admin/notifications/{notification_id}.
-- Auth: Bearer JWT; role Admin; AC-36 requires notification-management permission.
-- Direct request: notification_id:int64!; no body or query declared.
-- Direct response: ApiEnvelope<Notification>.
-- Success: HTTP 200 DESIGN_RESOURCE_UPDATED.
-- Errors: 401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 404 DESIGN_RESOURCE_NOT_FOUND; 422 DESIGN_VALIDATION_ERROR; 500 DESIGN_INTERNAL_ERROR.
-- AC-36 branch: UPDATE Notification, then reload notification management.
 
-## Sources reviewed
-- Catalog #94 and Notification/NotificationChannel/NotificationStatus/AudienceSegment schemas.
-- AC/API index and AC-36 diagram UPDATE branch.
-- DD #92 and #93, plus Admin PUT precedents #75 and #89.
-- Legacy Study notifications table guide/DDL and separate V1-PILOT notification/delivery DDL.
-- Current Study router, middleware, API Guidelines and registered createDD-markdown template pack.
-- Selector worklogs #48–#50; each was read before authoring.
+- API #94: `PUT /api/v1/admin/notifications/{notification_id}`.
+- Auth: Bearer JWT/Admin; AC-36 additionally names notification-management permission.
+- Direct request: `notification_id:int64!`; no body/query is declared.
+- Direct response: `ApiEnvelope<Notification>`.
+- Success: HTTP 200 `DESIGN_RESOURCE_UPDATED`.
+- Errors: 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 404 `DESIGN_RESOURCE_NOT_FOUND`; 422 `DESIGN_VALIDATION_ERROR`; 500 `DESIGN_INTERNAL_ERROR`.
+- AC-36 branch: UPDATE Notification, then reload management.
 
-## Data and side effects
-- Catalog and diagram have no #94 body. Proposal reuses #93 audience/title/content/channels and adds scheduled_at; all remain DERIVED.
-- Logical mutations are Notification UPDATE and proposed recipient association replacement. No compatible Admin physical relation is approved.
-- Scheduler, queue, operation tracking, transaction, actor audit, ID model and lifecycle transition are SOURCE_REQUIRED.
-- No application code or schema was changed; no application tests were run.
+## Local fallback implemented
 
-## Conflicts preserved
-- UPDATE intent without request body or field list.
-- Notification logical schema versus partial legacy BIGINT table and separate V1-PILOT UUID delivery model.
-- Draft/scheduled intent without enum/state transition or scheduler contract.
-- #93 Notification-vs-Operation response and identifier bridge remain open.
+- Strict `{title, content}` body; nonblank strings; title maximum 200 based on legacy DDL candidate.
+- Shared ADMIN role guard runs before path/body parsing and database access.
+- Lock one recipient-level BIGINT notification row and its delivery rows. Only rows with at least one delivery and all delivery statuses `QUEUED` can be updated.
+- Update only `notifications.title/content`; preserve recipient, sender, type, read state, channel/delivery rows and `created_at`.
+- Return one `AdminNotificationResponse`; derive channels/status from locked outbox rows. Do not call scheduler/provider or add migration.
+- These request/lifecycle/mapping choices are DERIVED, not approved contract and not proof of live schema.
 
-## Output
-- Eight standard sheets 00_Cover.md through 07_table.md.
-- One supplementary recipient association mapping.
-- Three standard reports.
-- Study workflow output is a Markdown folder; no ZIP.
+## Changed areas
+
+- New API #94 models, SQL-only query constants, validator, view and PUT route.
+- Dynamic notification path added to middleware contract paths; linked API #92/#93 OpenAPI counts updated.
+- Focused HTTP tests use fake sessions and query doubles.
+- DD #94, AC-36 macro-review and server-study context updated.
+
+## Verification
+
+- Focused API #94 HTTP tests: 20 passed.
+- Linked #92–#94 regression: 66 passed.
+- Full Study Server suite: 1263 passed; one upstream Starlette/httpx TestClient deprecation warning.
+- Ruff check and scoped format checks pass; OpenAPI exposes 55 paths / 65 operations.
+- Static DD package contains 12 Markdown files and preserves the existing template appendix suffixes. These checks do not verify runtime DB behavior.
+
+## Remaining decisions
+
+- Approve/replace body and title/content validation.
+- Confirm Admin target grain/schema and delivery editability policy.
+- Define audience/channels/schedule mutation and fine-grained notification-management permission.
+- Resolve shared #93 Operation bridge and #95/#96 semantics.
+- No PostgreSQL, live schema, production deployment or provider delivery verification was performed.

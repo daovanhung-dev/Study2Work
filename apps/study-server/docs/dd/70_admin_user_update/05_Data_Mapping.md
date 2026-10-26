@@ -12,7 +12,7 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ~~~text
-Admin Bearer principal -> xác thực role Admin/user-management permission -> nhận path user_id -> validate body theo contract đã duyệt -> UPDATE candidate legacy users WHERE id=:user_id RETURNING safe UserProfile fields -> no row: candidate 404 -> validate response mapping -> commit -> 200 DESIGN_RESOURCE_UPDATED
+PUT route -> shared ADMIN JWT guard -> signed-int64 path/body validation -> UPDATE checked-in legacy users by id RETURNING safe UserProfile -> 0 rows: 404 / invalid input: 422 / SQL or mapping/commit failure: rollback + 500 -> commit -> 200 DESIGN_RESOURCE_UPDATED
 ~~~
 
 # Mục lục
@@ -34,17 +34,16 @@ Admin Bearer principal -> xác thực role Admin/user-management permission -> n
 
 ### 0.1. Xác thực và authorization
 
-- Xác thực Bearer JWT trước khi truy cập user row.
-- Principal thiếu/sai/không hợp lệ map theo catalog thành 401 `DESIGN_AUTHENTICATION_REQUIRED`.
-- Principal không có role Admin hoặc quyền user-management map theo catalog thành 403 `DESIGN_ACCESS_DENIED`.
-- AC-31 ghi precondition Admin đăng nhập và có quyền quản lý user; exact claim, permission source, tenant boundary và policy chưa được định nghĩa.
-- Current `validate_current_user_request` chỉ cho Student; không tái sử dụng nó làm Admin guard.
-- Authorization chạy trước lookup/update để không tiết lộ user existence cho caller không được phép.
+- Shared `validate_current_user_request(..., role="ADMIN")` xác thực Bearer/JWT trước khi path parsing hoặc DB access.
+- Thiếu/sai JWT trả 401 `DESIGN_AUTHENTICATION_REQUIRED`; thiếu role ADMIN trả 403 `DESIGN_ACCESS_DENIED`.
+- ADMIN claim là fallback theo APIs #68/#69; permission relation, tenant boundary, MFA và account-status lookup không có trong current source.
+- Error responses dùng helper hiện hành với `data:null` và trace ID.
 
-### 0.2. Thứ tự truy cập
+### 0.2. Ranh giới mutation
 
-- Chỉ bắt đầu candidate mutation sau khi authentication và authorization thành công.
-- Không gọi session revoke hoặc audit service theo suy đoán; AC-31 chỉ nêu session revoke ở API #71.
+- API #70 chỉ cập nhật `full_name`, `phone`, `avatar_url`, `role`, `updated_at`.
+- API #71 sở hữu `status`; API #72 sở hữu delete/anonymization.
+- Không thêm audit hoặc revoke refresh/access token; policy và ảnh hưởng token sau role change còn SOURCE_REQUIRED.
 
 <a id="step-1-validate-data-input"></a>
 
@@ -52,35 +51,38 @@ Admin Bearer principal -> xác thực role Admin/user-management permission -> n
 
 ### 1.1. user_id
 
-- Nhận `user_id:int64!` theo catalog.
-- Minimum, malformed/overflow behavior và domain constraint chưa được nêu; không thêm rule ngoài contract.
+- Nhận raw path `user_id:int64!` và parse signed-int64.
+- Malformed hoặc out-of-range trả 422 `DESIGN_VALIDATION_ERROR` với field `user_id`.
+- Signed-int64 hợp lệ nhưng không có user row trả 404 `DESIGN_RESOURCE_NOT_FOUND`.
+- ID âm/0 vẫn nằm trong miền int64; legacy BIGSERIAL không có row tương ứng nên UPDATE trả zero rows.
 
-### 1.2. Candidate body
+### 1.2. Body fallback — DERIVED
 
-- Direct body schema chưa được đặc tả; body fields/requiredness/nullability là `SOURCE_REQUIRED`.
-- Candidate fields `full_name`, `phone`, `avatar_url`, `role` được suy ra từ intent #70, reusable UserProfile và API #14 precedent; mỗi field vẫn cần owner xác nhận.
-- API #14 hiện trim/nonblank/max-150 cho full_name, max-20/nullable-normalize phone, nullable-normalize avatar_url. Chỉ áp dụng cho #70 nếu contract owner duyệt.
-- UserRole values, transition policy, phone/avatar null semantics và PUT replacement behavior chưa có nguồn.
-- Catalog khai báo 422 `DESIGN_VALIDATION_ERROR`; detailed field errors chưa được định nghĩa.
-- Không nhận `status`, `bio`, email, id hoặc credentials từ body candidate.
+Catalog/diagram không khai báo body. Runtime dùng JSON full-replacement với đúng bốn required keys:
+
+| Field | Runtime rule | Evidence/status |
+|---|---|---|
+| `full_name` | Required string; trim; reject blank; max 150 characters. | API #14 + legacy `VARCHAR(150)`; DERIVED for #70. |
+| `phone` | Required key; string or null; trim; blank becomes null; max 20 characters when string. | API #14 + legacy nullable `VARCHAR(20)`; DERIVED for #70. |
+| `avatar_url` | Required key; string or null; trim; blank becomes null; no URL syntax/length validation. | API #14 + legacy nullable TEXT; DERIVED for #70. |
+| `role` | Required exact string `STUDENT`, `MENTOR` or `ADMIN`. | Current Study role usage + legacy VARCHAR(20); allowlist/transition policy DERIVED. |
+
+- Extra keys are rejected; `status`, `bio`, `email`, IDs, timestamps and credentials are not writable.
+- Pydantic body parsing and API-specific validation failures use 422 `DESIGN_VALIDATION_ERROR`.
 
 <a id="step-2-get-thong-tin"></a>
 
 ## 2. Get thông tin
 
-### 2.1. Lookup/update result
+### 2.1. UPDATE RETURNING projection
 
-Không có direct SELECT contract. Candidate `UPDATE ... RETURNING` theo id vừa thực hiện mutation và đồng thời trả safe projection; bảng legacy `users` chỉ là source candidate, live schema chưa xác minh.
+Không có SELECT trước mutation. Một bound `UPDATE users ... WHERE id=:user_id RETURNING ...` vừa thực hiện thay đổi vừa trả projection để dựng `UserProfile` trong cùng transaction.
 
-### 2.2. Candidate branch
+### 2.2. Source boundary
 
-- Một row được trả về: map UserProfile candidate.
-- Không có row theo id: 404 `DESIGN_RESOURCE_NOT_FOUND` là status/code trực tiếp; điều kiện row-not-found là candidate mapping.
-- Không đọc `password_hash`.
-
-### 2.3. JOIN
-
-N/A trong candidate tối thiểu. Không nối legacy BIGINT users với UUID V1-PILOT relations khi chưa có identity mapping được duyệt.
+- Runtime truy vấn checked-in legacy BIGINT `users` candidate, khớp int64 ID và các field của API #04.
+- Không JOIN V1-PILOT UUID identity/profile/role relations; không có identity mapping được xác nhận.
+- Live schema, grants, migration/deployment chưa được kiểm tra.
 
 <a id="step-3-insertupdate-thong-tin"></a>
 
@@ -88,15 +90,9 @@ N/A trong candidate tối thiểu. Không nối legacy BIGINT users với UUID V
 
 ### 3.1. Target table
 
-`users` legacy là candidate table theo `infra/postgres/study-server/DB.sql`; live table/schema chưa xác minh.
+`users` trong `infra/postgres/study-server/DB.sql` là local candidate; không thêm migration.
 
-### 3.2. Conditions
-
-Candidate predicate `id = :user_id`. Điều kiện soft-delete/tenant scope chưa được schema/contract xác nhận.
-
-### 3.3. Items update/insert
-
-Candidate full-replacement mutation chỉ khi owner xác nhận:
+### 3.2. Runtime mutation
 
 ~~~sql
 UPDATE users
@@ -109,82 +105,96 @@ WHERE id = :user_id
 RETURNING id, full_name, email, role, avatar_url, phone, status, created_at, updated_at
 ~~~
 
-Đây là `DERIVED CANDIDATE`, không phải current source. Không update `status` (API #71), không persist `bio`, không return `password_hash`. API #14 là precedent cho các profile fields và updated_at, nhưng không cập nhật role.
+### 3.3. Điều kiện và field ownership
+
+- `WHERE id = :user_id` là bound predicate; body không được nối vào SQL text.
+- `email`, `status`, `created_at` được giữ nguyên; không cập nhật password hash hoặc bio.
+- Không áp dụng status/deleted filter: legacy table hiện không có `deleted_at`; suspended/deleted visibility remains an owner policy question.
+- SQL được đặt thành constant trong `query.py`; `view.py` bind parameter, execute, map response, commit/rollback.
 
 ### 3.4. Parameters
 
-| Parameter | Candidate source | Gap |
-|---|---|---|
-| `:user_id` | Path `user_id:int64!` (DIRECT) | Malformed/domain rule chưa định nghĩa. |
-| `:full_name` | Candidate body `full_name` (DERIVED) | Requiredness và validation cần xác nhận. |
-| `:phone` | Candidate body `phone` (DERIVED) | Requiredness, null/omit and clear semantics cần xác nhận. |
-| `:avatar_url` | Candidate body `avatar_url` (DERIVED) | URI and null/omit semantics cần xác nhận. |
-| `:role` | Candidate body `role` (DERIVED) | Enum values, authorization and transition rules cần xác nhận. |
+| Parameter | Source | Target | Status |
+|---|---|---|---|
+| `:user_id` | raw path `user_id:int64!` | `users.id` | Path DIRECT; legacy mapping DERIVED. |
+| `:full_name` | normalized body | `users.full_name` | Body/target mapping DERIVED; API #14 validation reused. |
+| `:phone` | normalized body | `users.phone` | Body/target mapping DERIVED; null clears the column. |
+| `:avatar_url` | normalized body | `users.avatar_url` | Body/target mapping DERIVED; null clears the column. |
+| `:role` | allowlisted body | `users.role` | Body/role allowlist DERIVED; transition policy open. |
+| server timestamp | `CURRENT_TIMESTAMP` | `users.updated_at` | API #14 precedent; live type/timezone unverified. |
 
 <a id="step-4-check-ket-qua-query"></a>
 
 ## 4. Check kết quả execute query
 
-- `RETURNING` có row và response mapping hợp lệ: candidate commit transaction rồi trả 200 `DESIGN_RESOURCE_UPDATED`.
-- Không có row: trả 404 `DESIGN_RESOURCE_NOT_FOUND`; no-row condition là `DERIVED`.
-- Body validation failure: trả 422 `DESIGN_VALIDATION_ERROR`; detailed rules/error structure chưa được định nghĩa.
-- DB, mapping hoặc commit failure: trả 500 `DESIGN_INTERNAL_ERROR`; không trả raw SQL/stack detail.
-- Transaction ownership/rollback boundary chưa được xác nhận cho #70; API #14 view là precedent hiện tại, không tự động là implementation contract.
+- One valid `RETURNING` row: validate safe projection, commit and return 200 `DESIGN_RESOURCE_UPDATED`.
+- Zero rows: rollback and return 404 `DESIGN_RESOURCE_NOT_FOUND`.
+- Invalid path/body: return 422 `DESIGN_VALIDATION_ERROR`; no DB mutation is attempted for API-level validator failures.
+- Query, invalid projection or commit failure: rollback and return safe 500 `DESIGN_INTERNAL_ERROR`.
+- Transaction ownership is in the API view, following the existing API #14 caller-owned Session pattern.
 
 <a id="step-5-map-response"></a>
 
 ## 5. Map response
 
-### 5.1. Thành công
+### 5.1. Success
 
-Map `RETURNING` safe fields vào `UserProfile`: id, full_name, email, role, avatar_url, phone, status, created_at, updated_at. `bio` không có source trong legacy users/API #14 query; omit/null behavior phải được contract owner xác nhận. Trả exact business code `DESIGN_RESOURCE_UPDATED`.
+Map only `id`, `full_name`, `email`, `role`, `avatar_url`, `phone`, `status`, `created_at`, `updated_at` into API #04 `UserProfile`. The model omits unsupported `bio` and ignores any extra source fields. `avatar_url` and `phone` serialize as JSON null when their database values are null. `password_hash` is never selected or returned.
 
-### 5.2. Lỗi
+Success envelope uses `DESIGN_RESOURCE_UPDATED`, safe message, empty `meta`, and current trace ID.
 
-Giữ đúng catalog error status/code: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 422 `DESIGN_VALIDATION_ERROR`, 500 `DESIGN_INTERNAL_ERROR`. Error envelope null-vs-empty cần đồng bộ với guideline/current helper trước khi wire.
+### 5.2. Errors
+
+- 401 → `DESIGN_AUTHENTICATION_REQUIRED`
+- 403 → `DESIGN_ACCESS_DENIED`
+- 404 → `DESIGN_RESOURCE_NOT_FOUND`
+- 422 → `DESIGN_VALIDATION_ERROR`
+- 500 → `DESIGN_INTERNAL_ERROR`
+
+Error `data` is JSON null under current `error_response`; no shared helper change is needed.
 
 ## Request Usage Matrix
 
-| Request field | Nguồn | Data Mapping step | Validate | SQL/Mutation usage | Branch/Loop | Response usage | Gap |
-|---|---|---|---|---|---|---|---|
-| Authorization | Catalog DIRECT | 0.1 | Bearer/JWT; Admin policy SOURCE_REQUIRED | Authorization only | 401/403 | None | Admin guard absent. |
-| user_id | Catalog DIRECT | 1.1, 3.2 | int64 required; extra constraints SOURCE_REQUIRED | `WHERE id=:user_id` candidate | no row candidate branch | data.id | Legacy id mapping/live schema unverified. |
-| full_name | DERIVED from API #14/profile intent | 1.2, 3.3 | Candidate API #14 rules only if approved | Candidate UPDATE | none | data.full_name | Body and requiredness SOURCE_REQUIRED. |
-| phone | DERIVED from API #14/profile intent | 1.2, 3.3 | Candidate nullable max-20 only if approved | Candidate UPDATE | none | data.phone | Null/omit/clear semantics open. |
-| avatar_url | DERIVED from API #14/profile intent | 1.2, 3.3 | Candidate nullable normalization only if approved | Candidate UPDATE | none | data.avatar_url | Exact URI/null rules open. |
-| role | DERIVED from API name/AC-31 | 1.2, 3.3 | Enum/policy SOURCE_REQUIRED | Candidate UPDATE | role transition questions | data.role | No role policy or enum members. |
+| Request field | Source | Step | Validation | Mutation use | Response use | Status/gap |
+|---|---|---|---|---|---|---|
+| Authorization | Catalog | 0.1 | Bearer/JWT + ADMIN claim | Access guard | None | Admin permission mapping DERIVED; tenant/MFA open. |
+| user_id | Catalog | 1.1, 3.3 | Signed-int64 parse | `WHERE id=:user_id` | `data.id` | Invalid parse 422; no row 404; table mapping DERIVED. |
+| full_name | DERIVED body | 1.2, 3.2 | Required, trim, nonblank, max 150 | `users.full_name` | `data.full_name` | API #14 rule reused. |
+| phone | DERIVED body | 1.2, 3.2 | Required key, nullable, trim, max 20 | `users.phone` | `data.phone` | Null/blank clears field; PII policy open. |
+| avatar_url | DERIVED body | 1.2, 3.2 | Required key, nullable, trim | `users.avatar_url` | `data.avatar_url` | No URL syntax validation; source rule absent. |
+| role | DERIVED body | 1.2, 3.2 | Exact allowlist | `users.role` | `data.role` | Current role labels only; transition policy open. |
 
 ## Query Matrix
 
-| Query ID | Mục đích | Type | Base table/view | Alias | Columns | JOIN | WHERE | GROUP/HAVING | ORDER | Pagination | Result variable | Branch |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Q1 | Update profile/role and return safe projection | `UPDATE ... RETURNING` candidate | Legacy `users` candidate | N/A | Candidate SET fields plus safe returned UserProfile fields | None | `id=:user_id` candidate | N/A | N/A | N/A | updated user row | one row success; zero row → candidate 404; DB/mapping failure → catalog 500. |
+| Query ID | Mục đích | Type | Relation | Set/return columns | WHERE | Result | Branch |
+|---|---|---|---|---|---|---|---|
+| Q1 | Update user profile/role and return safe UserProfile | UPDATE RETURNING | Legacy `users` candidate | Set full_name/phone/avatar_url/role/updated_at; return safe profile fields | `id=:user_id` | One mapped row or None | Success commit; no row 404; query/projection/commit error 500. |
 
 ## Mutation Matrix
 
-| Mutation ID | Operation | Target table | Record condition | Fields | Value sources | Audit | Mapping file | Transaction | Failure behavior |
-|---|---|---|---|---|---|---|---|---|---|
-| M1 | UPDATE candidate | Legacy `users` (unverified) | `id=:user_id` candidate | full_name, phone, avatar_url, role, updated_at | Body candidates DERIVED; timestamp server-side candidate | SOURCE_REQUIRED; do not invent audit | This DD; no generated mapping | Transaction/rollback ownership SOURCE_REQUIRED; API #14 precedent only | 404 no row (condition DERIVED), 422 validation, 500 system per direct catalog. |
+| Mutation ID | Operation | Target | Condition | Fields | Transaction | Audit/side effect | Failure |
+|---|---|---|---|---|---|---|---|
+| M1 | UPDATE | legacy `users` candidate | `id=:user_id` | full_name, phone, avatar_url, role, updated_at | View commits after safe mapping; rollback no-row/query/map/commit failure | No audit/session/status/delete side effect | Catalog 404/422/500 as above. |
 
 ## Response Source Matrix
 
-| Response field | Type | Source type | Table/column or generator | Data Mapping step | Transform | Null/empty rule | Gap |
-|---|---|---|---|---|---|---|---|
-| success | boolean | Direct envelope | Envelope generator | 5.1/5.2 | true/false by outcome | Required | Runtime helper behavior is separate. |
-| businessCode | string | Direct catalog | Catalog code | 5.1/5.2 | Exact branch code | Required | No extra code. |
-| message | string | Envelope | Message generator | 5.1/5.2 | Safe text | SOURCE_REQUIRED | Exact messages unspecified. |
-| data.id | int64 | UserProfile direct type; candidate source | `users.id` | 5.1 | Direct mapping candidate | Required on success | Live schema unverified. |
-| data.full_name | string | UserProfile direct type; candidate source | `users.full_name` | 5.1 | Updated value | Required | Body/write mapping candidate. |
-| data.email | email | UserProfile direct type; candidate source | `users.email` | 5.1 | Preserve existing value | Required | PII policy/source candidate. |
-| data.role | UserRole | UserProfile direct type; candidate source | `users.role` | 5.1 | Updated value | Required | Enum and transition policy open. |
-| data.avatar_url | uri? | UserProfile direct type; candidate source | `users.avatar_url` | 5.1 | Direct mapping candidate | Null/omit open | Nullable mapping candidate. |
-| data.bio | string? | UserProfile optional field | SOURCE_REQUIRED | 5.1 | Do not fabricate | Null/omit open | No source column/query mapping. |
-| data.phone | string? | UserProfile direct type; candidate source | `users.phone` | 5.1 | Direct mapping candidate | Null/omit open | PII/null semantics open. |
-| data.status | UserStatus | UserProfile direct type; candidate source | `users.status` | 5.1 | Preserve; not mutated here | Required | Enum values; API #71 owns status update. |
-| data.created_at | date-time | UserProfile direct type; candidate source | `users.created_at` | 5.1 | ISO-8601 candidate | Required | Live schema/timezone open. |
-| data.updated_at | date-time | UserProfile direct type; candidate source | `users.updated_at` | 5.1 | Candidate server timestamp | Required | Runtime behavior unimplemented. |
-| meta | object | Envelope | Envelope generator | 5.1/5.2 | `{}` candidate | Required | Update metadata policy open. |
-| traceId | uuid | Envelope/middleware | Request trace generator | 5.1/5.2 | Current correlation id | Required | Exact middleware integration when wired. |
+| Response field | Type | Runtime source | Transform/null rule | Gap |
+|---|---|---|---|---|
+| success | boolean | success envelope helper | true on success | Current source-backed. |
+| businessCode | string | catalog | exact `DESIGN_RESOURCE_UPDATED` | Direct. |
+| message | string | view | safe `User updated.` | Wording implementation detail. |
+| data.id | int64 | `users.id` RETURNING | direct | Live schema unverified. |
+| data.full_name | string | `users.full_name` RETURNING | normalized updated value | Body mapping DERIVED. |
+| data.email | email | `users.email` RETURNING | preserve existing value | PII policy open. |
+| data.role | UserRole | `users.role` RETURNING | updated allowlisted value | Enum/transition policy DERIVED/open. |
+| data.avatar_url | uri? | `users.avatar_url` RETURNING | null stays null | URI syntax not validated. |
+| data.bio | string? | No legacy column/API #04 mapping | Omit | Source gap. |
+| data.phone | string? | `users.phone` RETURNING | null stays null | PII policy open. |
+| data.status | UserStatus | `users.status` RETURNING | preserve; never mutated | API #71 owns change. |
+| data.created_at | date-time | `users.created_at` RETURNING | ISO serialization | Live timestamp type/timezone unverified. |
+| data.updated_at | date-time | `users.updated_at` RETURNING | server timestamp | API #14 precedent; live behavior unverified. |
+| meta | object | success helper | `{}` | No pagination metadata. |
+| traceId | uuid | middleware | request trace ID | Current source-backed. |
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

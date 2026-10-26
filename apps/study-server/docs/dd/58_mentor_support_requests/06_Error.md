@@ -11,7 +11,7 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Các trường hợp lỗi bị giới hạn theo catalog API #58 và AC-24. Không thêm error code cho malformed query, missing course hoặc empty list khi chưa có contract.
+Các trường hợp lỗi theo catalog API #58 sau khi đồng bộ fallback collection. Query `course_id` sai kiểu hoặc ngoài miền BIGINT trả 422 theo validation handler hiện có; course không tồn tại và collection rỗng đều trả 200 với `data: []`.
 
 ## Error cases
 
@@ -19,11 +19,10 @@ Các trường hợp lỗi bị giới hạn theo catalog API #58 và AC-24. Kh�
 |---:|---|---|---|---|---:|---|---|---|---:|---|
 | 1 | Authentication | Bearer/JWT | Authorization | Header thiếu hoặc token không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [1.1](./05_Data_Mapping.md#11-nhận-request-metadata) | No | Catalog + AC-24; chi tiết claim validation chưa có. |
 | 2 | Authorization | Role/scope | Mentor principal/request scope | Role không phải Mentor hoặc request nằm ngoài scope | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [2.1–2.2](./05_Data_Mapping.md#2-kiểm-tra-quyền-mentor) | No | Scope predicate chưa có schema/runtime binding. |
-| 3 | System error | Query/projection | Support request data | DB, identity/asset resolver hoặc mapping lỗi ngoài dự kiến | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [4–6](./05_Data_Mapping.md#4-đọc-support-requests) | No | Catalog; không trả stack trace/provider detail. |
+| 3 | Request validation | Query | course_id | Không parse được thành positive int64 hoặc vượt BIGINT | 422 | DESIGN_VALIDATION_ERROR | Chưa quy định | [3.1](./05_Data_Mapping.md#31-đọc-course_id) | No | Bổ sung đồng bộ catalog/diagram; status string không enum-validate. |
+| 4 | System error | Query/projection | Support request data | DB hoặc mapping lỗi ngoài dự kiến | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [4–6](./05_Data_Mapping.md#4-đọc-support-requests) | No | Không trả stack trace hoặc dữ liệu nội bộ. |
 
-> Không thêm 422 cho query type/format vì catalog API #58 không khai báo 422. FastAPI behavior khi route được wiring cần được xác nhận.
-
-> API Guidelines yêu cầu error data=null; current helper mặc định {}. API #58 chưa wired nên đây là conditional future discrepancy.
+Error envelope sử dụng shared helper hiện tại và serialize `data:null`, phù hợp API Guidelines.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

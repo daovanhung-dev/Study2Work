@@ -11,18 +11,18 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Catalog #74 chỉ cho phép các business code dưới đây. Không thêm 422/409 hoặc code khác. Endpoint chưa wired nên các lỗi là expected contract/proposal, không phải runtime result.
+Catalog #74 chỉ cho phép các business code dưới đây. Không thêm 422/409 hoặc code khác. Mapping role/path/DB hiện là local implementation; live deployment chưa xác minh.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Authentication | Bearer/JWT validation | `Authorization` | Header thiếu, token sai/hết hạn hoặc principal không hợp lệ | `401` | `DESIGN_AUTHENTICATION_REQUIRED` | `N/A — Catalog không định nghĩa message ID riêng.` | [05_Data_Mapping.md#step-0-check-quyen](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT catalog; auth mechanism chưa có Admin guard. |
-| 2 | Authorization | Admin/course permission | Principal | Không phải Admin hoặc không có quyền course management | `403` | `DESIGN_ACCESS_DENIED` | `N/A — Catalog không định nghĩa message ID riêng.` | [05_Data_Mapping.md#step-0-check-quyen](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT catalog/AC-32; permission source chưa xác định. |
-| 3 | Not found | Parse path / Q1 result | `course_id` | ID không parse được (DERIVED theo #08) hoặc Q1 không tìm thấy course | `404` | `DESIGN_RESOURCE_NOT_FOUND` | `N/A — Catalog không định nghĩa message ID riêng.` | [05_Data_Mapping.md#step-1-validate-data-input](./05_Data_Mapping.md#step-1-validate-data-input) / [#step-2-get-thong-tin](./05_Data_Mapping.md#step-2-get-thong-tin) | No | Không thêm status=PUBLISHED; DRAFT vẫn là Admin-visible. |
-| 4 | System/data integrity | Query/mapping | Course/UserSummary | DB error, thiếu required price hoặc mentor projection không đầy đủ | `500` | `DESIGN_INTERNAL_ERROR` | `N/A — Catalog không định nghĩa message ID riêng.` | [05_Data_Mapping.md#step-4-check-ket-qua-query](./05_Data_Mapping.md#step-4-check-ket-qua-query) | Rollback query exception only, per #08 precedent | Safe message; orphan mentor behavior là candidate cần xác nhận. |
+| 1 | Authentication | Shared Bearer/JWT guard | `Authorization` | Header thiếu, token sai/hết hạn hoặc principal không hợp lệ | `401` | `DESIGN_AUTHENTICATION_REQUIRED` | `N/A — Catalog không định nghĩa message ID riêng.` | [05_Data_Mapping.md#step-0-check-quyen](./05_Data_Mapping.md#step-0-check-quyen) | No | Catalog + shared guard; local source/test. |
+| 2 | Authorization | Shared role guard | Principal | Principal không có role `ADMIN` | `403` | `DESIGN_ACCESS_DENIED` | `N/A — Catalog không định nghĩa message ID riêng.` | [05_Data_Mapping.md#step-0-check-quyen](./05_Data_Mapping.md#step-0-check-quyen) | No | Shared `ADMIN` guard is implemented; dedicated course-management permission remains SOURCE_REQUIRED. |
+| 3 | Not found | Signed-int64 parse / Q1 result | `course_id` | ID malformed/outside int64 hoặc Q1 không tìm thấy course | `404` | `DESIGN_RESOURCE_NOT_FOUND` | `N/A — Catalog không định nghĩa message ID riêng.` | [05_Data_Mapping.md#step-1-validate-data-input](./05_Data_Mapping.md#step-1-validate-data-input) / [#step-2-get-thong-tin](./05_Data_Mapping.md#step-2-get-thong-tin) | No | Fallback `DERIVED`, covered by focused tests; no `PUBLISHED` filter. |
+| 4 | System/data integrity | Query/mapping | Course/UserSummary | DB error, thiếu required price hoặc mentor projection không đầy đủ | `500` | `DESIGN_INTERNAL_ERROR` | `N/A — Catalog không định nghĩa message ID riêng.` | [05_Data_Mapping.md#step-4-check-ket-qua-query](./05_Data_Mapping.md#step-4-check-ket-qua-query) | Rollback on missing row or query/projection failure; read path never commits | Safe message; orphan mentor behavior là candidate cần xác nhận. |
 
-> `data:null` theo API guideline là expected error envelope. Current helper trả `{}` khi không truyền data; chưa có API #74 runtime để xác nhận behavior.
+> Current `error_response` serializes omitted error data as `null`; this is local source behavior, with deployment unverified.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

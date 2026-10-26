@@ -15,7 +15,7 @@ status: "Draft — Needs Confirmation"
 |---|---|
 | Physical table mutation | `N/A — READ-ONLY API` |
 | Source relations candidate | Legacy `courses`, `users` |
-| Relation gap | Course-category relation `SOURCE_REQUIRED` |
+| Relation gap | Course-category relation `SOURCE_REQUIRED`; valid category query returns local 422 fallback before DB |
 | Operation | `N/A — no DB mutation` |
 | Data Mapping step | 2/3/4 — SELECT/count only |
 

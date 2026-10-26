@@ -16,9 +16,9 @@ status: "Draft — Needs Confirmation"
 - [1. Nhận metadata request](#step-1)
 - [2. Kiểm tra quyền Mentor](#step-2)
 - [3. Đọc và kiểm tra request_id](#step-3)
-- [4. Đọc SupportRequest và trạng thái](#step-4)
+- [4. Khóa SupportRequest và trạng thái](#step-4)
 - [5. Resolve request](#step-5)
-- [6. Nạp lại response](#step-6)
+- [6. Nạp thread response](#step-6)
 - [7. Giao dịch và trả kết quả](#step-7)
 - [8. Xử lý lỗi](#step-8)
 
@@ -28,127 +28,112 @@ status: "Draft — Needs Confirmation"
 
 ### 1.1. Xác thực Bearer JWT
 
-- Đọc `Authorization` theo contract.
-- Token thiếu/không hợp lệ → 401 `DESIGN_AUTHENTICATION_REQUIRED`.
-- Catalog yêu cầu role Mentor; Study hiện chỉ có guard Student dùng bởi API khác. Mentor claim/subject mapping còn `SOURCE_REQUIRED`.
+- Dùng `validate_current_user_request(..., role="MENTOR")` trước mọi DB query.
+- Guard hiện tại đọc numeric `sub` làm `mentor_id`; JWT thiếu/sai → 401, role khác → 403.
+- Cách này tái sử dụng chính xác local pattern của API #58–#60.
 
 ### 1.2. Nhận trace ID
 
-- Đọc `X-Trace-Id` nếu client gửi theo API Guidelines.
-- Khi được wired, propagate trace đã được middleware xác thực hoặc trace middleware tạo vào envelope/header.
-- Đây là convention; API #61 hiện chưa có route.
+- Middleware xác thực `X-Trace-Id` hoặc tạo trace; view truyền trace qua success/error envelope.
+- Response trả cùng trace trong `traceId` và `X-Trace-Id`.
 
 <a id="step-2"></a>
 
 ## 2. Kiểm tra quyền Mentor
 
-### 2.1. Xác nhận role
-
-- Role khác Mentor hoặc thiếu quyền → 403 `DESIGN_ACCESS_DENIED`.
-- Không dùng Student guard hiện hành như bằng chứng cho Mentor.
-
-### 2.2. Giới hạn request theo scope
-
-- AC-24 yêu cầu request thuộc phạm vi phụ trách của Mentor.
-- Candidate đơn giản theo V1-PILOT là request được gán trực tiếp qua `assigned_to_subject_id`; subject mapping và cột này chưa được chọn làm predicate runtime.
-- Request tồn tại nhưng ngoài scope → candidate 403; request không tồn tại → 404 theo catalog. Thứ tự check cần xác nhận nếu phải tránh resource enumeration.
-- Không dùng `request_id` làm bằng chứng ownership.
+- Mentor scope local là `courses.mentor_id = numeric JWT sub`.
+- Request được đọc kèm `course_id`, course parent và student projection; request row được khóa bằng `FOR UPDATE`.
+- Request tồn tại nhưng course thuộc Mentor khác → 403 `DESIGN_ACCESS_DENIED`; request không có → 404 `DESIGN_RESOURCE_NOT_FOUND`.
+- Đây là fallback `DERIVED` hiện đã dùng trong #58–#60; không dùng `request_id` làm bằng chứng ownership.
 
 <a id="step-3"></a>
 
 ## 3. Đọc và kiểm tra `request_id`
 
-### 3.1. Path parameter
-
-| Item | Type contract | Candidate source | Rule | Status |
+| Item | Type contract | Local mapping | Rule | Status |
 |---|---|---|---|---|
-| `request_id` | required int64 | No approved physical key; V1-PILOT `support_tickets.id` UUID | Dùng làm logical key duy nhất cho SupportRequest | Type DIRECT; physical mapping SOURCE_REQUIRED |
+| `request_id` | required int64 | `support_requests.id BIGINT` | Parse signed-int64 rồi bind parameterized query | Catalog type DIRECT; physical mapping DERIVED from migration 008/#58–#60 |
 
-- Thiếu, sai kiểu hoặc overflow int64 → 422 `DESIGN_VALIDATION_ERROR` theo contract #61.
-- Không thêm positive/minimum constraint vì catalog không khai báo.
-- Không cast UUID candidate thành int64.
+- Sai format hoặc overflow → 422 `DESIGN_VALIDATION_ERROR`.
+- Không thêm minimum/positive constraint; ID không tồn tại → 404.
 
 <a id="step-4"></a>
 
-## 4. Đọc SupportRequest và trạng thái
+## 4. Khóa SupportRequest và trạng thái
 
-### 4.1. Q1 — Request scope/existence/current status
+### 4.1. Request/parent projection
 
-| Target | Candidate fields | Điều kiện logic | Trạng thái |
+| Target | Table/fields | Điều kiện | Trạng thái |
 |---|---|---|---|
-| V1-PILOT `support_tickets` (candidate only) | `id`, `status`, `assigned_to_subject_id`, `resolved_at` | Tìm request theo logical ID và xác minh assignment Mentor | `SOURCE_REQUIRED`; ID UUID và subject mapping chưa khớp contract |
+| SupportRequest | `support_requests.id`, `course_id`, `student_id`, `status`, `created_at`, `resolved_at` | Match ID và khóa request row | Local checked-in source; live deployment chưa xác minh |
+| Owner | `courses.id`, `courses.mentor_id` | `course.id = request.course_id`; compare owner với JWT `sub` | DERIVED local convention from #58–#60 |
+| Student | `users.id`, `full_name`, `avatar_url` | `student.id = request.student_id` | Local projection convention |
 
-- Legacy Study DB/ERD không có support relation.
-- Không viết SQL vật lý trước khi owner chọn schema và ID mapping.
-- Không đọc/ghi `support_messages` ở bước này ngoài projection response sau khi đã kiểm soát scope.
+- `infra/postgres/study-server/migrations/008_support_requests.sql` và `DB.sql` là local artifacts; không phải bằng chứng live schema.
+- V1-PILOT UUID `support_tickets` không dùng cho API #61 vì không khớp int64 và không phải model hiện tại của #58–#60.
 
 <a id="step-5"></a>
 
 ## 5. Resolve request
 
-### 5.1. M1 — State transition proposal
+### 5.1. State transition matrix
 
 | Current status | Action | Result | Basis/status |
 |---|---|---|---|
-| `OPEN` | Cập nhật request status | `RESOLVED` | AC-24 direct status labels; pilot persistence candidate |
-| `RESOLVED` | Không UPDATE, giữ timestamp ban đầu | Trả success idempotent | DERIVED — retry behavior cần xác nhận |
-| Khác `OPEN`/`RESOLVED` | Không UPDATE | 422 `DESIGN_VALIDATION_ERROR` | DERIVED — allowed state set chưa được duyệt |
+| `OPEN` | UPDATE `status` | `RESOLVED` | AC-24 status effect DIRECT; allowed pre-state DERIVED |
+| `IN_PROGRESS` | UPDATE `status` | `RESOLVED` | DERIVED: active state trong local migration |
+| `WAITING_LEARNER` | UPDATE `status` | `RESOLVED` | DERIVED: active state trong local migration |
+| `RESOLVED` | Không UPDATE | Success, giữ timestamp hiện tại | DERIVED idempotency |
+| `CANCELLED` hoặc state khác | Không UPDATE | 422 `DESIGN_VALIDATION_ERROR` | DERIVED transition guard |
 
-- Nhánh YES của AC-24 gọi #61 và cập nhật status `RESOLVED`.
-- Nhánh NO không gọi #61; request giữ `OPEN` sau #60 theo diagram.
-- Cách xử lý state ngoài OPEN/RESOLVED chỉ là proposal để dùng code 422 đã có trong catalog; không coi pilot enum là SupportStatus contract.
+AC-24 YES branch gọi #61 và cập nhật status `RESOLVED`; NO branch không gọi #61 và giữ `OPEN`. Migration 008 liệt kê năm enum local; allowed transition chưa có approval riêng. Ma trận trên là implementation fallback dễ hiểu cho mọi trạng thái đang hoạt động.
 
-### 5.2. M1 — Ghi trạng thái và thời gian
+### 5.2. Ghi status và timestamp
 
-- Khi request đang OPEN, ghi `status = RESOLVED`.
-- Đề xuất gán `resolved_at` bằng thời gian hiện tại của server/DB ở lần chuyển trạng thái đầu tiên.
-- Khi request đã RESOLVED, không ghi lại `resolved_at` để retry không thay thời điểm xử lý ban đầu.
-- Không đặt `resolution_code`; API không nhận reason và sơ đồ không yêu cầu.
-- Physical candidate `support_tickets.status/resolved_at` và trigger `updated_at/row_version` chỉ mô tả V1-PILOT, chưa phải runtime mapping.
+- UPDATE `support_requests.status = 'RESOLVED'` cho ba active states.
+- Set `resolved_at = COALESCE(resolved_at, CURRENT_TIMESTAMP)` để chỉ có một thời điểm resolve.
+- Nếu đã `RESOLVED`, không chạy UPDATE và giữ timestamp gốc.
+- Không ghi `resolution_code`, `cancelled_at` hoặc message rows.
 
 ### 5.3. Đồng thời và transaction
 
-- Đề xuất kiểm tra trạng thái và ghi trong một transaction caller-owned.
-- Để hai request resolve đồng thời không ghi đè timestamp, implementation có thể khóa dòng hoặc dùng conditional update rồi nạp lại trạng thái; chọn cơ chế sau khi schema runtime được duyệt.
-- Nếu lỗi xảy ra trước commit, rollback trạng thái. Nếu state đã RESOLVED do request song song, trả kết quả thành công idempotent theo proposal.
-- Đây là DERIVED transaction/concurrency behavior; API #61 hiện không có code.
+- `SELECT ... FOR UPDATE` tuần tự hóa các lần resolve trên cùng request.
+- View sở hữu transaction: lock → check scope/state → update → query thread → validate full response → commit.
+- Bất kỳ lỗi query/update/projection/envelope/commit nào trước khi hoàn tất đều rollback và trả lỗi an toàn.
 
 <a id="step-6"></a>
 
-## 6. Nạp lại response
+## 6. Nạp thread response
 
-### 6.1. Q2 — SupportRequest projection
-
-- Nạp lại một `SupportRequest` sau update; status success phải là `RESOLVED`.
-- Reuse projection logic ở API #59/#60; không tạo schema response riêng cho #61.
-- Giữ thread hiện tại; #61 không insert/update/delete `SupportMessage`.
-- `data.course_id`, `student`, author, attachment URL/status và numeric IDs vẫn `SOURCE_REQUIRED` do physical model/resolver chưa được duyệt.
-- `resolved_at` lấy từ cột được duyệt nếu có; policy null/omit/timezone chưa chốt.
+- Dùng `LIST_MENTOR_SUPPORT_REQUEST_MESSAGES` của API #59 với `request_id` và `mentor_id`; query kiểm tra owner ở lần đọc thread.
+- Dùng chung `map_support_request` và `append_support_messages` từ Mentor `_shared` để dựng model #58.
+- Giữ toàn bộ messages theo `created_at ASC, id ASC`; upload chỉ map khi đúng author, course, purpose và trạng thái `UPLOADED`, theo local #59 resolver.
+- Status cuối response phải là `RESOLVED`; #61 không thay đổi nội dung conversation.
 
 <a id="step-7"></a>
 
 ## 7. Giao dịch và trả kết quả
 
-- Sau khi status change và full response projection thành công, trả HTTP 200 `DESIGN_RESOURCE_UPDATED` với `ApiEnvelope<SupportRequest>`.
-- `message` là text an toàn, không lộ SQL, token hay internal detail; câu chữ chính xác chưa thuộc contract.
-- Caller sở hữu commit/rollback theo DB helper convention. Không có API #61 source/runtime hiện tại.
+- Trả HTTP 200 `DESIGN_RESOURCE_UPDATED`, `ApiEnvelope<SupportRequest>` và `meta: {}`.
+- Dựng, validate envelope trước `db.commit()`; commit một lần sau khi projection hợp lệ.
+- Lỗi trước commit gọi rollback; lỗi query/commit trả 500 `DESIGN_INTERNAL_ERROR`.
+- Error helper hiện serialize `data: null`; lỗi field dùng `meta.fieldErrors`.
 
 <a id="step-8"></a>
 
 ## 8. Xử lý lỗi
 
-- Bearer thiếu/invalid → 401 `DESIGN_AUTHENTICATION_REQUIRED`.
-- Sai role hoặc request ngoài scope → 403 `DESIGN_ACCESS_DENIED`.
+- Bearer/JWT thiếu hoặc sai → 401 `DESIGN_AUTHENTICATION_REQUIRED`.
+- Role sai hoặc request ngoài course owner scope → 403 `DESIGN_ACCESS_DENIED`.
 - Request không tồn tại → 404 `DESIGN_RESOURCE_NOT_FOUND`.
-- Path không parse được hoặc state ngoài allowed set theo DERIVED proposal → 422 `DESIGN_VALIDATION_ERROR`.
-- DB/update/reload failure → 500 `DESIGN_INTERNAL_ERROR`; không trả stack trace.
-- Không thêm 409 hoặc 503.
-- Catalog không nêu check order của 403/404; giữ câu hỏi privacy trong [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md).
+- Path sai signed-int64 hoặc trạng thái không được resolve → 422 `DESIGN_VALIDATION_ERROR`.
+- DB/update/thread projection/envelope failure → 500 `DESIGN_INTERNAL_ERROR`; rollback, không trả nội bộ.
+- Không thêm HTTP 409, 503 hoặc business code ngoài catalog.
 
 ## Mapping table
 
-- Candidate UPDATE mapping: [07_table.md](./07_table.md).
-- API #61 không ghi SupportMessage; reply INSERT do [API #60](../60_mentor_support_reply/05_Data_Mapping.md) sở hữu.
+- [UPDATE `support_requests`](./07_table.md).
+- API #61 không ghi SupportMessage; INSERT message/relation thuộc [API #60](../60_mentor_support_reply/05_Data_Mapping.md).
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

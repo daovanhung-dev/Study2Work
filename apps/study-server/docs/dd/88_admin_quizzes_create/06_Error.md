@@ -11,17 +11,17 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Giữ đúng error set API #88: 401, 403, 422, 500. Embedded JSON structure là proposal DERIVED; không thêm 404/409.
+Giữ đúng error set API #88: 401, 403, 422, 500. Các schema nested và missing-course mapping là fallback DERIVED; không thêm 404/409.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | SOURCE_REQUIRED | Authorization | Bearer token thiếu, sai hoặc hết hạn | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) | Không mở transaction | Code/status DIRECT; Admin guard chưa có. |
-| 2 | Authorization | SOURCE_REQUIRED | Admin role/permission | Principal không có Admin role hoặc quiz-management permission | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) | Không mở transaction | Role catalog DIRECT; policy chưa có source. |
-| 3 | Validation | DERIVED | config/questions | Outer field thiếu/sai type; embedded JSON sai cú pháp/shape sau khi proposal được duyệt | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 1](./05_Data_Mapping.md#step-1-validate-and-parse-body) | Không có write | HTTP/code DIRECT; inner rules DERIVED. |
-| 4 | Validation | DERIVED | config.course_id | Course không tồn tại theo candidate Q0 | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 2](./05_Data_Mapping.md#step-2-validate-course-reference) | Không có write | DERIVED vì catalog không có 404. |
-| 5 | System error | SOURCE_REQUIRED | Parent/child insert or commit | DB/ID retrieval/response mapping/commit lỗi | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 3](./05_Data_Mapping.md#step-3-insert-quiz-parent) | Rollback cả transaction | Không lộ lỗi nội bộ. |
+| 1 | Authentication | Direct | Authorization | Bearer token thiếu, sai hoặc hết hạn | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) | Không mở transaction | Shared ADMIN guard. |
+| 2 | Authorization | Direct role / permission open | Admin role | Principal không có role ADMIN | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) | Không mở transaction | Fine-grained quiz-management permission remains SOURCE_REQUIRED. |
+| 3 | Validation | Direct outer / DERIVED embedded | config/questions | Body sai shape, embedded JSON/member/type invalid | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 1](./05_Data_Mapping.md#step-1-validate-and-parse-body) | Không có write | Unknown nested fields rejected. |
+| 4 | Validation | DERIVED | config.course_id | Course không tồn tại theo Q0 | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 2](./05_Data_Mapping.md#step-2-validate-course-reference) | Rollback read transaction | Catalog không có 404. |
+| 5 | System error | Runtime | Parent/child insert or commit | DB failure, invalid RETURNING projection hoặc commit error | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 3](./05_Data_Mapping.md#step-3-insert-quiz-parent) | Rollback toàn bộ | Không lộ lỗi nội bộ. |
 
 Error message ID không có trong Study API contract; ghi N/A, không dùng mã từ template Excel.
 
@@ -35,18 +35,14 @@ Error message ID không có trong Study API contract; ghi N/A, không dùng mã 
   "data": null,
   "meta": {
     "fieldErrors": [
-      {
-        "field": "questions",
-        "code": "INVALID_JSON",
-        "message": "questions phải chứa JSON hợp lệ."
-      }
+      {"field": "questions", "code": "INVALID_JSON", "message": "questions phải chứa JSON hợp lệ."}
     ]
   },
   "traceId": "00000000-0000-4000-8000-000000000088"
 }
 ~~~
 
-API Guidelines quy định data=null và fieldErrors trong meta. Current helper serialize data=None thành {}; middleware chỉ phát DESIGN_VALIDATION_ERROR khi path thuộc allowlist. API #88 hiện chưa có route.
+Current shared error helper emits `data:null`, puts validation errors under `meta.fieldErrors`, and API #88 shares the registered `/api/v1/admin/quizzes` contract path with API #87.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

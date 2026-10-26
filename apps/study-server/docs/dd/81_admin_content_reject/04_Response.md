@@ -24,20 +24,20 @@ status: "Draft — Needs Confirmation"
 | No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|---|
 | 1 | HTTP status | HTTP Status | HTTP status | integer | No | N/A | N/A | Success/error branch | Catalog status | Success 200; errors 401, 403, 404, 422, 500 | Not a JSON body field. |
-| 2 | success | Success | success | boolean | No | Envelope | N/A | Envelope build | true on success; false on error | Always present | Study helper convention; route absent. |
+| 2 | success | Success | success | boolean | No | Envelope | N/A | Envelope build | true on success; false on error | Always present | Current API #81 route uses the Study envelope helper. |
 | 3 | businessCode | Business code | businessCode | string | No | Catalog/envelope | N/A | Envelope build | Exact catalog literal | Always present | Success DESIGN_RESOURCE_UPDATED; errors in 06_Error.md. |
 | 4 | message | Message | message | string | No | Application | N/A | Envelope build | Safe localized text | Always present | Exact success message unspecified. |
-| 5 | data | Content | data | Content | No | Logical Content | SOURCE_REQUIRED | Step 7 | Project declared Content schema | One Content object | No Page/list wrapper. |
-| 5.1 | data.id | Content ID | id | int64 | No | Logical Content | SOURCE_REQUIRED | Step 7 | Direct logical identity | Required | Physical key unresolved. |
-| 5.2 | data.course_id | Course ID | course_id | int64 | No | Logical Content | SOURCE_REQUIRED | Step 7 | Stored relationship | Required | Physical relation unresolved. |
-| 5.3 | data.content_type | Content type | content_type | ContentType | No | Logical Content | SOURCE_REQUIRED | Step 7 | Return stored value | Required | Enum members unresolved. |
-| 5.4 | data.title | Title | title | string | No | Logical Content | SOURCE_REQUIRED | Step 7 | Return stored value | Required | Physical source unresolved. |
-| 5.5 | data.payload | Payload | payload | object | No | Logical Content | SOURCE_REQUIRED | Step 7 | Return stored object | Required | Object keys/schema unresolved; do not invent. |
-| 5.6 | data.status | Content status | status | ContentStatus | No | Logical Content | SOURCE_REQUIRED | Step 7 | Resulting logical status REJECTED | Required | Physical serialization/state owner unresolved. |
-| 5.7 | data.parent_id | Parent Content ID | parent_id | int64? | Yes | Logical Content | SOURCE_REQUIRED | Step 7 | Return stored optional value | Null/omit rule unresolved | Optional per reusable schema. |
-| 5.8 | data.order | Display order | order | int32 | No | Logical Content | SOURCE_REQUIRED | Step 7 | Return stored value | Required | Physical source unresolved. |
+| 5 | data | Content | data | Content | No | `contents` candidate | Eight selected columns | Step 6 | Project declared Content schema | One Content object | No Page/list wrapper; live schema unverified. |
+| 5.1 | data.id | Content ID | id | int64 | No | `contents` candidate | `id` | Step 6 | Direct ID | Required | Legacy BIGINT candidate. |
+| 5.2 | data.course_id | Course ID | course_id | int64 | No | `contents` candidate | `course_id` | Step 6 | Direct relation key | Required | Legacy BIGINT candidate. |
+| 5.3 | data.content_type | Content type | content_type | ContentType | No | `contents` candidate | `content_type` | Step 6 | Return stored value | Required | Stored TEXT; enum members remain open. |
+| 5.4 | data.title | Title | title | string | No | `contents` candidate | `title` | Step 6 | Return stored value | Required | Stored TEXT. |
+| 5.5 | data.payload | Payload | payload | object | No | `contents` candidate | `payload` | Step 6 | Return stored JSON object | Required | JSONB object; payload keys/schema remain open. |
+| 5.6 | data.status | Content status | status | ContentStatus | No | `contents` candidate | `status` | Step 6 | Return resulting status REJECTED | Required | Update mapping is DERIVED. |
+| 5.7 | data.parent_id | Parent Content ID | parent_id | int64? | Yes | `contents` candidate | `parent_id` | Step 6 | Return stored optional value | Null is omitted by route serialization | Optional per reusable schema. |
+| 5.8 | data.order | Display order | order | int32 | No | `contents` candidate | `content_order` | Step 6 | Map to response `order` | Required | Legacy INTEGER candidate. |
 | 6 | meta | Metadata | meta | object | No | Envelope | N/A | Envelope build | Candidate empty object | No pagination metadata declared | Empty/null convention needs runtime alignment. |
-| 7 | traceId | Trace ID | traceId | uuid | No | Request trace | N/A | Envelope build | Propagate request trace | Always present | Trace convention direct; route absent. |
+| 7 | traceId | Trace ID | traceId | uuid | No | Request trace | N/A | Envelope build | Propagate request trace | Always present | Current API #81 route propagates the request trace. |
 
 Không có reason, reviewer, version, audit hoặc metadata field nào trong reusable Content response.
 
@@ -63,7 +63,7 @@ Không có reason, reviewer, version, audit hoặc metadata field nào trong reu
 }
 ~~~
 
-ContentType và payload là placeholders vì enum members/payload schema chưa được xác nhận; payload:{} chỉ minh họa object shape. Status REJECTED phản ánh effect ở diagram, physical mapping chưa có.
+ContentType và payload là placeholders vì enum members/payload schema chưa được xác nhận; payload:{} chỉ minh họa object shape. Status REJECTED phản ánh effect ở diagram; physical status/reason mapping dùng legacy candidates và vẫn là DERIVED.
 
 ## Ví dụ lỗi
 
@@ -78,7 +78,7 @@ ContentType và payload là placeholders vì enum members/payload schema chưa �
 }
 ~~~
 
-data:null theo API guideline là expected error shape; current error_response() mặc định {} khi caller không truyền data. #81 chưa được wire.
+`error_response()` hiện mặc định `data:null`; API #81 dùng helper này cho error responses and includes the route in `DESIGN_CONTRACT_PATHS` so automatic validation/unhandled errors use DESIGN business codes.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

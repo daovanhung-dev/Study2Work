@@ -13,144 +13,137 @@ status: "Draft — Needs Confirmation"
 
 ## Mục lục
 
-- [1. Nhận request metadata](#1-nhận-request-metadata)
-- [2. Kiểm tra quyền Mentor](#2-kiểm-tra-quyền-mentor)
-- [3. Validate request](#3-validate-request)
-- [4. Đọc request và resolve attachment refs](#4-đọc-request-và-resolve-attachment-refs)
-- [5. Ghi SupportMessage](#5-ghi-supportmessage)
-- [6. Rehydrate SupportRequest](#6-rehydrate-supportrequest)
-- [7. Transaction và lỗi](#7-transaction-và-lỗi)
-- [8. Trả envelope](#8-trả-envelope)
+- [1. Nhận metadata và xác thực](#1-nhận-metadata-và-xác-thực)
+- [2. Parse request](#2-parse-request)
+- [3. Lock và kiểm tra SupportRequest](#3-lock-và-kiểm-tra-supportrequest)
+- [4. Resolve UploadAsset references](#4-resolve-uploadasset-references)
+- [5. Insert SupportMessage](#5-insert-supportmessage)
+- [6. Insert message-upload links](#6-insert-message-upload-links)
+- [7. Rehydrate response và commit](#7-rehydrate-response-và-commit)
+- [8. Xử lý lỗi](#8-xử-lý-lỗi)
 
-## 1. Nhận request metadata
+## 1. Nhận metadata và xác thực
 
-### 1.1. Xác thực Bearer JWT
+### 1.1. Bearer JWT
 
-- Đọc Authorization header.
-- Token thiếu hoặc không hợp lệ → 401 `DESIGN_AUTHENTICATION_REQUIRED`.
-- Catalog yêu cầu Mentor; current Student guard không được dùng thay Mentor guard.
+- Gọi validate_current_user_request(..., role="MENTOR") trước DB access.
+- JWT sub phải ánh xạ numeric users.id theo current Study auth guard.
+- Thiếu/invalid token → 401 DESIGN_AUTHENTICATION_REQUIRED; role sai → 403 DESIGN_ACCESS_DENIED.
 
 ### 1.2. Trace ID
 
-- Đọc `X-Trace-Id` nếu có theo API Guidelines.
-- Khi route được wiring, propagate trace đã validate hoặc trace do middleware tạo vào envelope/header.
+- Middleware validate X-Trace-Id hoặc tạo UUID.
+- Shared response helper trả cùng trace trong envelope và header.
 
-## 2. Kiểm tra quyền Mentor
+## 2. Parse request
 
-### 2.1. Xác nhận role
+### 2.1. Path request_id
 
-- Role phải là Mentor theo catalog và AC-24.
-- Sai role hoặc request ngoài quyền → 403 `DESIGN_ACCESS_DENIED`.
-- Claim shape và subject-to-database key mapping chưa có current source.
+- Route giữ raw path string; parser chấp nhận signed decimal nằm trong miền [-2^63, 2^63-1].
+- Sai format/overflow → 422 DESIGN_VALIDATION_ERROR, field request_id.
+- Không áp dụng positive constraint vì catalog không khai báo minimum; zero/negative không khớp BIGSERIAL row và sẽ 404.
 
-### 2.2. Giới hạn SupportRequest
+### 2.2. Body message
 
-- AC-24 precondition: request thuộc phạm vi phụ trách của Mentor.
-- Không dùng path ID, `attachment_refs` hoặc course value do client gửi làm bằng chứng quyền.
-- Pilot `assigned_to_subject_id` nullable UUID là candidate, không phải approved predicate.
-- Quy tắc 404 khi không tồn tại và 403 khi ngoài scope đúng catalog; thứ tự check/privacy policy cần xác nhận.
+- Body strict model yêu cầu message:string và attachment_refs:string; extra fields bị từ chối.
+- message.strip() rỗng → 422; khi hợp lệ lưu chính xác chuỗi gốc.
+- Không thêm min/max length, trim nội dung, markdown policy hoặc sanitizer chưa có nguồn.
 
-## 3. Validate request
+### 2.3. Body attachment_refs
 
-### 3.1. Path `request_id`
+- Decode JSON string thành list; chỉ nhận JSON integer thật trong miền signed int64.
+- [] là không có attachment; reject malformed JSON, list sai kiểu, float, boolean, duplicate ID bằng 422.
+- Wire key attachment_refs và JSON encoding là DERIVED từ current API #47 asset_refs source; không thay đổi API #35/#47.
 
-| Item | Type | Use | Status |
+## 3. Lock và kiểm tra SupportRequest
+
+### 3.1. Q1 — request + course + learner
+
+| Target | Columns | Join/predicate | Mapping |
 |---|---|---|---|
-| `request_id` | required int64 | Logical lookup một support request | Type DIRECT; pilot key UUID không tương thích; no SQL finalized |
+| support_requests AS request | id, course_id, student_id, status, created_at, resolved_at | request.id = :request_id; FOR UPDATE OF request | Local BIGINT fallback from migration 008. |
+| courses AS course | id, mentor_id | LEFT JOIN course.id = request.course_id | Required parent projection; direct owner check. |
+| users AS student | id, full_name, avatar_url | LEFT JOIN student.id = request.student_id | Required learner projection. |
 
-- Không thêm range/positive constraint ngoài int64 vì catalog không quy định.
-- Parse error behavior khi route được wiring phải giữ error contract đã khai báo; không tự thêm 400/409.
+- No row → 404 DESIGN_RESOURCE_NOT_FOUND.
+- Broken course/student projection → 500 DESIGN_INTERNAL_ERROR; do not treat corrupt parent as missing request.
+- Existing row with course.mentor_id != JWT sub → 403 DESIGN_ACCESS_DENIED.
+- Scope uses direct course owner; no assigned-Mentor relation is source-backed in this fallback.
+- The request row lock serializes reply inserts with a future resolve implementation that locks the same row; API #60 itself does not gate on status.
 
-### 3.2. Body `message`
+## 4. Resolve UploadAsset references
 
-- Catalog yêu cầu string.
-- Proposal đơn giản: dùng `message.strip()` chỉ để kiểm tra; nếu rỗng/whitespace-only trả 422 `DESIGN_VALIDATION_ERROR`; lưu nguyên chuỗi gốc để giữ xuống dòng/format.
-- Không thêm min/max length hoặc loại bỏ ký tự vì contract chưa quy định.
-- Đây là `DERIVED`; cần API owner xác nhận trước implementation.
+### 4.1. Q2 — metadata lookup
 
-### 3.3. Body attachment references
-
-- Catalog notation là required `attachment refs:string!`.
-- Proposed wire field: `attachment_refs` (`DERIVED` theo precedent #47 `asset_refs`).
-- Proposed representation: comma-separated int64 `UploadAsset.id`; empty string `""` nghĩa là không đính kèm. Cần harmonize với #35 `file refs` và #47 `asset refs`.
-- Không parse, cast, deduplicate hay query `file_objects` theo proposal trước khi #34 ID/registry được duyệt.
-- Missing/wrong type/format invalid sau khi proposal được duyệt → 422 `DESIGN_VALIDATION_ERROR`.
-
-## 4. Đọc request và resolve attachment refs
-
-### 4.1. Q1 — Request scope/existence
-
-| Target | Field | Predicate/purpose | Remarks |
+| Target | Columns | Predicate | Status |
 |---|---|---|---|
-| SOURCE_REQUIRED; V1-PILOT `support_tickets` candidate | id, learner_id, status, assigned_to_subject_id | Locate request by path ID and scope it to authenticated Mentor | Ticket ID UUID, no course relation; no production SQL. |
+| uploads AS upload | id, owner_id, course_id, purpose, file_name, url, content_type, size_bytes, status | upload.id = ANY(:asset_ids); owner_id=:mentor_id; course_id=:request_course_id; purpose='LECTURE'; status='UPLOADED' | Reuse API #34 metadata and API #47 query pattern. |
 
-- Không tìm thấy request theo access rule được duyệt → 404 `DESIGN_RESOURCE_NOT_FOUND`.
-- Request ngoài phạm vi Mentor → 403 `DESIGN_ACCESS_DENIED`.
-- Không chốt check order nếu privacy policy chưa xác nhận.
+- [] skips Q2.
+- Compare resolved ID set/count with requested IDs and restore request order in memory.
+- Any syntactically valid ID not resolvable under all scope predicates → generic 404 DESIGN_RESOURCE_NOT_FOUND; do not reveal cross-owner existence.
+- Query failure → rollback and safe 500.
 
-### 4.2. Q2 — Resolve attachment refs
+## 5. Insert SupportMessage
 
-| Target | Candidate fields | Check required before insert | Status |
+### 5.1. M1 — INSERT
+
+| Table | Columns | Values | Source/status |
 |---|---|---|---|
-| API #34 UploadAsset registry (not established); V1-PILOT `file_objects` candidate | id, owner_subject_id, purpose, scan_status, storage_key, original_name, MIME, size_bytes | Resolve every ref; validate allowed uploader/purpose/state and build UploadAsset response projection | `SOURCE_REQUIRED`; pilot IDs UUID |
+| support_messages | request_id | Locked request ID | Q1; local migration 008. |
+| support_messages | author_id | JWT sub | Shared MENTOR guard; local numeric user ID. |
+| support_messages | content | Request message | Original nonblank text. |
+| support_messages | created_at | Omitted; database CURRENT_TIMESTAMP | Migration 008 default; local fallback. |
+| support_messages | id | Omitted; BIGSERIAL | Migration 008 generator. |
 
-- API #34 has no approved metadata persistence/lookup in its DD; do not treat the storage URL or ref string as safe metadata.
-- `attachment_file_ids` in pilot support_messages is UUID[]; a direct int64 list cannot populate it without an approved identity mapping.
-- If the proposal is approved, malformed/missing asset reference may map to 422; cross-user/cross-purpose access may map to 403. Exact branch mapping remains open.
+- INSERT ... RETURNING id, created_at must return one valid row.
+- No is_internal/author_type field exists in the selected local table; replies appear in the shared visible thread under the #58/#59 fallback.
+- Do not update support_requests.status, resolved_at or timestamps at API #60.
 
-## 5. Ghi SupportMessage
+## 6. Insert message-upload links
 
-### 5.1. M1 — Logical INSERT
+### 6.1. M2 — ordered INSERT
 
-| Logical field | Pilot candidate column | Candidate value | Status |
+| Table | Column | Value | Rule |
 |---|---|---|---|
-| Message ID | `id` | Generated ID | pilot UUID, no DB default; contract int64; `SOURCE_REQUIRED` |
-| Support request ID | `ticket_id` | Related request key | pilot UUID vs path int64; `SOURCE_REQUIRED` |
-| Mentor author | `author_subject_id` | Authenticated Mentor subject | identity mapping `SOURCE_REQUIRED` |
-| Author type | `author_type` | `STAFF` | Candidate enum; Mentor→STAFF `DERIVED` |
-| Message body | `body` | `message` request value | Alias candidate; no length limit |
-| Attachment refs | `attachment_file_ids` | Resolved file IDs | pilot UUID[] vs UploadAsset int64; `SOURCE_REQUIRED` |
-| Learner visibility | `is_internal` | `false` | pilot default; public reply interpretation `DERIVED` |
-| Message time | `sent_at` | Server-generated time | pilot required/no default; clock/timezone `SOURCE_REQUIRED` |
+| support_message_uploads | message_id | M1 returned id | FK to inserted support_messages.id. |
+| support_message_uploads | upload_id | Resolved UploadAsset IDs | Preserve attachment_refs order. |
+| support_message_uploads | asset_position | Array ordinal - 1 | Zero-based integer; unique per message. |
 
-- Diagram xác nhận effect `INSERT SupportMessage`; không xác nhận table/columns.
-- Không update status/ticket timestamp tại API #60. Diagram để API #61 ghi `status=RESOLVED`; nhánh NO giữ OPEN.
-- Đây là candidate mapping, không phải SQL đã duyệt.
+- Use UNNEST(... WITH ORDINALITY) so each accepted upload gets its request position.
+- Skip M2 for []. Any insert/link count or position mismatch → rollback and 500.
+- Storage bytes/object and uploads metadata are not written by this endpoint; API #34 owns upload.
 
-## 6. Rehydrate SupportRequest
+## 7. Rehydrate response và commit
 
-- Sau logical insert, đọc lại SupportRequest/thread và map reply mới vào `messages[]`; contract yêu cầu response object `ApiEnvelope<SupportRequest>`.
-- Response phải giữ status request hiện tại; API #60 không giải quyết request.
-- SupportRequest/course/student/status, author UserSummary, attachments UploadAsset[] và message ordering cần approved source/resolver.
-- Nếu API #34 asset resolver không thể trả đủ fields, không tạo UploadAsset giả hoặc storage URL từ ref.
+### 7.1. Q3 — current request/thread
 
-## 7. Transaction và lỗi
+- Re-read request/course/student and full message thread using API #59 predicates and projection.
+- Keep direct course.mentor_id=:mentor_id in the thread query.
+- Thread order is message.created_at ASC, message.id ASC; assets order by asset_position ASC. No pagination/limit exists in the contract or #59 fallback.
+- Shared pure support-request projection is used by APIs #59 and #60 to validate parents, users, message consistency and scoped asset rows.
+- Verify the newly inserted message is present and attachments match the inserted link rows; any projection failure rolls back the whole transaction.
 
-### 7.1. Candidate transaction boundary
+### 7.2. Response/transaction
 
-- Sau auth, request-scope và attachment checks, insert và rehydrate trong một transaction do caller/use case sở hữu.
-- Chỉ commit sau khi đầy đủ response mapping; lỗi DB/projection trước commit → rollback insert.
-- Current `get_db()` chỉ yield/close Session; `execute_query` không commit. Đây là current helper convention, không phải API #60 runtime.
+- Validate ApiEnvelope<SupportRequest> with success=true, businessCode=DESIGN_RESOURCE_UPDATED and meta={} before commit.
+- Commit once after the complete data projection is valid.
+- SQL, link, projection or commit failure → safe 500; attempt rollback and do not return partial thread.
 
-### 7.2. Error mapping
+## 8. Xử lý lỗi
 
-- Missing/invalid Bearer → 401 `DESIGN_AUTHENTICATION_REQUIRED`.
-- Wrong role/request scope/file access bị từ chối → 403 `DESIGN_ACCESS_DENIED` (file branch là proposal cần confirm).
-- Request không tồn tại → 404 `DESIGN_RESOURCE_NOT_FOUND`.
-- Body validation/reference format → 422 `DESIGN_VALIDATION_ERROR`.
-- Query, insert, asset projection hoặc unexpected mapping failure → 500 `DESIGN_INTERNAL_ERROR`.
-- Không thêm 409 hoặc 503; catalog #60 không khai báo các code đó.
+- Bearer/JWT invalid → 401 DESIGN_AUTHENTICATION_REQUIRED.
+- Role mismatch or request owned by another Mentor → 403 DESIGN_ACCESS_DENIED.
+- Missing request or unresolved/out-of-scope upload refs → 404 DESIGN_RESOURCE_NOT_FOUND.
+- Invalid int64 path, missing/wrong body fields, blank message, malformed/duplicate/non-int64 ref array → 422 DESIGN_VALIDATION_ERROR.
+- DB, required-parent, write/link, projection or commit failure → 500 DESIGN_INTERNAL_ERROR; log only trace, never SQL or raw exception to client.
+- No status mutation, reopen, notification, 409 or 503.
 
-## 8. Trả envelope
+## Mapping files
 
-- HTTP 200, business code `DESIGN_RESOURCE_UPDATED`, data là SupportRequest có reply mới.
-- Envelope gồm success, businessCode, message, data, meta, traceId.
-- API Guidelines error `data:null` và current helper default `{}` là conditional discrepancy khi route được wiring.
-- Xem field-level projection tại [04_Response.md](./04_Response.md).
-
-## Mapping table
-
-- [07_table.md](./07_table.md) ghi pilot `support_messages` columns dưới nhãn candidate và liệt kê ID/schema mismatch.
+- SupportMessage insert: [07_support_messages_insert.md](./07_support_messages_insert.md).
+- Ordered attachment relation insert: [08_support_message_uploads_insert.md](./08_support_message_uploads_insert.md).
+- API #61 owns SupportRequest resolve/status mutation.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

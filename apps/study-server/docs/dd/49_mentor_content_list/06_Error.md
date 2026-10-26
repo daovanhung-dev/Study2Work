@@ -13,29 +13,28 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Bảng dưới đây giữ đúng error code và HTTP status do API #49 khai báo. Điều kiện kích hoạt cụ thể cần được chốt với Mentor access/content model; không tự thêm lỗi validation hoặc conflict.
+Bảng dưới đây giữ đúng business-code/status trong catalog #49. Các nhánh được ánh xạ theo source hiện tại; các quy tắc owner/version vẫn cần owner confirmation.
 
 ## Error cases
 
-| No | HTTP status | Business code | Điều kiện theo contract | Data Mapping step | Response/source rule | Status |
+| No | HTTP status | Business code | Điều kiện hiện tại | Data Mapping step | Response/source rule | Status |
 |---:|---:|---|---|---:|---|---|
-| 1 | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Bearer JWT thiếu/không hợp lệ | 1 | Error envelope; không trả token/claims | Code DIRECT; exact Study route absent |
-| 2 | 403 | `DESIGN_ACCESS_DENIED` | Role/access/ownership không đủ để quản lý course | 1–2 | Error envelope; không lộ quyền/ID nội bộ | Code DIRECT; access query/identity DERIVED or SOURCE_REQUIRED |
-| 3 | 404 | `DESIGN_RESOURCE_NOT_FOUND` | Course không tồn tại là candidate; content-tree empty/missing semantics chưa rõ | 2–3 | Error envelope; không trả dữ liệu một phần | Code DIRECT; condition needs confirmation |
-| 4 | 500 | `DESIGN_INTERNAL_ERROR` | Lỗi không xác định khi đọc/map dữ liệu | 3–4 | Safe generic error; current helper serialization differs from guideline `data:null` | Code DIRECT; runtime route absent |
+| 1 | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Bearer JWT thiếu hoặc không hợp lệ | 1 | Shared error envelope; không trả token/claims | Source-backed guard; catalog DIRECT |
+| 2 | 403 | `DESIGN_ACCESS_DENIED` | Role không phải Mentor hoặc `courses.mentor_id` không khớp principal | 1–2 | Không tiết lộ nội dung/course owner | Direct-owner là implementation choice |
+| 3 | 404 | `DESIGN_RESOURCE_NOT_FOUND` | Path ID sai format/out-of-range hoặc course không tồn tại | 2 | `data: null`; không có Content một phần | Catalog DIRECT; condition source-backed |
+| 4 | 500 | `DESIGN_INTERNAL_ERROR` | Query, projection hoặc cây không nhất quán/có cycle | 3–4 | Message an toàn; rollback nếu DB transaction dở | Catalog DIRECT; source-backed handling |
 
 ## Error envelope boundary
 
-Catalog dùng business-code design. `error_response(...)` hiện dựng envelope sáu khóa và khi `data` không truyền thì trả `{}`; Error example ở trên dùng `data: null` theo expected design nên có discrepancy. API #49 chưa có route; middleware allowlist hiện chưa chứa path này.
+`error_response` dựng envelope sáu khóa. Nếu caller không truyền data, JSON là `data: null`; `meta` mặc định `{}`. API #49 path template đã nằm trong `DESIGN_CONTRACT_PATHS`, nên middleware nhận design business-code dispatch.
 
-## Current middleware boundary
+## Input boundary
 
-- `request_validation_exception_handler` hiện trả HTTP 422 và `VALIDATION_ERROR` cho path không nằm trong `DESIGN_CONTRACT_PATHS`. Nếu route #49 được nối mà không cập nhật allowlist, parse lỗi `course_id` sẽ dùng fallback này; catalog #49 không khai báo HTTP 422. Đây là conditional future-wiring discrepancy, không phải behavior của route đang chạy.
-- `unhandled_exception_handler` hiện dùng `DESIGN_INTERNAL_ERROR` chỉ cho path trong allowlist; path ngoài allowlist dùng `INTERNAL_SERVER_ERROR`. Future implementation cần nối path #49 vào contract dispatch để giữ catalog 500 code.
+Route nhận `course_id` dưới dạng raw string và view tự parse signed int64. Vì vậy path lỗi/out-of-range trả API #49 404; request không đi qua FastAPI integer validation và không phát sinh 422 cho trường hợp này.
 
 ## Không khai báo
 
-HTTP 422, 409 và 503 không nằm trong API #49 contract; không thêm chúng vào error table.
+HTTP 422, 409 và 503 không nằm trong API #49 contract; implementation không thêm các business code đó.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

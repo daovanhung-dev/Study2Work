@@ -13,7 +13,19 @@ status: "Draft — Needs Confirmation"
 
 ## Table metadata
 
-N/A — READ-ONLY API. Chưa có physical Content/version/author table được xác nhận cho API #79; không tạo mapping giả.
+API #79 chỉ đọc một current Content row từ checked-in legacy candidate `contents`; live schema/deployment chưa được xác minh.
+
+| Table | Cột dùng | Ý nghĩa | Điều kiện/ghi chú |
+|---|---|---|---|
+| `contents` | `id` | Khóa Content | Bind bằng path `content_id`. |
+| `contents` | `course_id` | Course owner relation | Trả trực tiếp; không dùng để suy ra author. |
+| `contents` | `content_type`, `title`, `payload`, `status` | Content projection | Map sang reusable Content response. |
+| `contents` | `parent_id`, `content_order` | Quan hệ cha và thứ tự sibling | `parent_id` nullable; `content_order` map thành `order`. |
+| `contents` | `deleted_at` | Soft-delete marker | Chỉ trả row khi `deleted_at IS NULL`. |
+| `content_versions` | No columns queried | Snapshot history from migration 007 | No revision selector; not read by API #79. |
+| Content author | No source column/relation | AC-33 metadata read intent | No approved mapping; do not infer from updater, reviewer, or course Mentor. |
+
+`contents`/`content_versions` are checked-in legacy schema candidates used by APIs #49–#53 and #78–#79. This does not establish that the schema is deployed. V1-PILOT UUID content artifacts are not interchangeable with this BIGINT projection.
 
 ## Update mapping
 

@@ -7,6 +7,7 @@ source_sheet: "Overview"
 status: "Draft — Needs Confirmation"
 ---
 
+
 # Overview
 
 ## Khái quát
@@ -17,82 +18,84 @@ status: "Draft — Needs Confirmation"
 | Module | MENTOR / TEACHING & SUPPORT — AC-25 |
 | Method | `GET` |
 | Endpoint | `/api/v1/mentor/notifications/{notification_id}/status` |
-| Purpose | Đọc trạng thái phát của một notification để UI hiển thị sau khi #63 yêu cầu gửi. |
+| Purpose | Đọc trạng thái dispatch đã lưu của một notification để UI hiển thị sau API #63. |
 | Consumer/Actor | Mentor |
 | Authentication | Bearer JWT |
-| Authorization | Role Mentor theo catalog; phạm vi xem từng notification chưa được xác định. |
-| Basis | Method/path/input/response/status/errors DIRECT từ catalog; bước đọc delivery status DIRECT từ AC-25; physical query và permission predicate SOURCE_REQUIRED. |
+| Authorization | Role Mentor trực tiếp từ catalog; quyền theo notification được suy ra từ `notifications.sender_id` và giữ nhãn DERIVED. |
+| Basis | Method/path/response/status/errors DIRECT từ catalog; đọc delivery state DIRECT từ AC-25; legacy outbox/owner/status mapping DERIVED từ implementation #63. |
 | Status | `Draft — Needs Confirmation` |
-| Current runtime state | `UNWIRED / NOT_FOUND` — chưa có route, query, module hoặc delivery provider/test cho API #64 trong Study source. |
-| Transaction | N/A — API chỉ đọc; snapshot/consistency contract chưa được quy định. |
-| Side effects | Không có mutation hay provider call được đặc tả; đọc trạng thái đã lưu là mục tiêu của flow. |
+| Current runtime state | Route/module/query/test của API #64 đã wired trong local source; fake-session HTTP tests pass. Live schema, migration 009 và worker/provider delivery chưa được xác minh. |
+| Transaction | N/A — read-only; caller DB session không được commit. |
+| Side effects | Không mutation hoặc provider call; chỉ đọc notification/outbox đã lưu. |
 
 ## Sources
 
-- [API catalog và reusable schemas](../../../../../docs/lists/list_api.md) — #18, #62–#64, ApiEnvelope, Operation, Notification, NotificationDelivery, Payment.
-- [AC/API index, AC-25](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — actor, precondition, postcondition và ba API #62–#64; API #18 cũng được liệt kê trong tracking summary.
-- [AC-25 activity diagram](../../diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio) — #62 roster → #63 tạo/phát → #64 đọc delivery status; node #18 không có edge.
-- [DB table guide](../../diagrams/DB_UNICA_TABLES.md) — notifications và trạng thái DESIGN_ONLY cho #63–#64.
-- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — BIGINT notification ID, recipient/sender, `is_read`; không có delivery table.
-- [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — UUID notification và append-only `notification_deliveries`; không được coi là live schema.
-- [API #18 Operation overview](../18_operations/02_Overview.md) và [open questions](../18_operations/OPEN_QUESTIONS.md) — operation ID, owner, lifecycle, result và persistence còn bất nhất.
-- [API #62 recipient overview](../62_mentor_course_students/02_Overview.md) và [open questions](../62_mentor_course_students/OPEN_QUESTIONS.md) — roster projection và ID chưa chốt.
-- [API #63 create notification overview](../63_mentor_notifications_create/02_Overview.md), [response](../63_mentor_notifications_create/04_Response.md), [open questions](../63_mentor_notifications_create/OPEN_QUESTIONS.md) — Operation response chưa bàn giao notification_id.
-- [API #43 notification list](../43_users_me_notifications/02_Overview.md) và [API #45 read-all](../45_notifications_read_all/02_Overview.md) — trạng thái đã đọc khác trạng thái delivery.
-- Current [Study router](../../../app/api/v1.py), [middleware](../../../app/core/middleware.py), [API guidelines](../../../../../contracts/api-guidelines/README.md).
-- [Canonical DD Markdown templates](../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/) — tám sheet; fingerprint trong [PLAN_RESULT](./PLAN_RESULT.md).
+- [API catalog và reusable schemas](../../../../../docs/lists/list_api.md) — #18, #63–#64, `ApiEnvelope`, `Operation`, `NotificationDelivery`.
+- [AC/API index, AC-25](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) và [AC-25 diagram](../../diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio) — #63 acceptance/outbox → Push/Email → #64 status read; #18 không có edge trong flow.
+- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) và [migration 009](../../../../../infra/postgres/study-server/migrations/009_notification_delivery_outbox.sql) — local BIGINT notification/outbox source; chưa chứng minh live deployment.
+- [API #63 source](../../../app/modules/mentor/api_63_mentor_notifications_create/query.py) — writes `operation_id`, `sender_id`, `created_at`, and `QUEUED` per-channel rows atomically.
+- [API #63 DD](../63_mentor_notifications_create/02_Overview.md), [response](../63_mentor_notifications_create/04_Response.md), and [open questions](../63_mentor_notifications_create/OPEN_QUESTIONS.md) — `meta.notification_ids` is the current local handoff; Operation UUID remains separate.
+- [API #18 Operation overview](../18_operations/02_Overview.md) — generic job tracking remains a separate contract with unresolved identity/lifecycle.
+- [API #43 list](../43_users_me_notifications/02_Overview.md) and [API #45 read-all](../45_notifications_read_all/02_Overview.md) — read state is not delivery state.
+- Current [Study router](../../../app/api/v1.py), [middleware](../../../app/core/middleware.py), [auth helper](../../../app/utils/auth.py), and [response helper](../../../app/core/responses.py) — runtime/auth/error boundaries.
+- [Canonical DD Markdown templates](../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/) — eight-sheet template fingerprints are recorded in [PLAN_RESULT](./PLAN_RESULT.md).
 
 ## Tables/entities đọc
 
-- `Notification` — logical resource cần tra notification ID; physical candidate legacy có `id`, `user_id`, `sender_id`, `is_read`, không có delivery state.
-- `NotificationDelivery` — logical delivery summary trong reusable schema; pilot có delivery attempts nhưng UUID identity, chưa phải query source được duyệt.
-- `Operation` — reusable response schema; Study physical table, ownership relation, enums và lifecycle chưa có nguồn.
+- `notifications` — API #63's local BIGINT rows; key, Operation UUID, sending Mentor and submission timestamp.
+- `notification_deliveries` — API #63's local per-notification/channel outbox rows and persisted delivery state.
+- `Operation` — logical response type; reconstructed from the same API #63 rows because Study has no Operation table.
 
 ## Tables/entities ghi
 
-N/A — READ-ONLY API. API #64 không tạo notification, recipient, delivery hay Operation.
+N/A — READ-ONLY API. No notification, delivery or Operation row is changed.
 
 ## Mục chú ý
 
-- Giữ direct contract: path `notification_id:int64!`, response `ApiEnvelope<Operation>`, 200 `DESIGN_RESOURCE_RETRIEVED`, đúng bốn lỗi 401/403/404/500.
-- AC-25 yêu cầu đọc delivery status; `Operation` biểu diễn job và không có mapping từ int64 notification ID. `NotificationDelivery` gần với intent hơn nhưng không phải response được khai báo.
-- API #63 trả Operation UUID, không công bố `notification_id:int64`; client chưa có ID đúng loại để gọi #64.
-- Không dùng `notifications.is_read` làm trạng thái gửi; không gọi provider trong GET để tính lại trạng thái.
-- Pilot `notification_deliveries` lưu attempt rows, không có recipient ID; không diễn giải số attempt thành số người nhận đã gửi/thất bại.
+- Preserve direct contract: path `notification_id:int64!`, `ApiEnvelope<Operation>`, HTTP 200 `DESIGN_RESOURCE_RETRIEVED`, and only 401/403/404/500 errors.
+- AC-25 describes delivery status while the catalog returns Operation. Keep the direct response type; map its `status` from persisted per-channel states as a local DERIVED fallback.
+- API #63 currently exposes notification IDs in `meta.notification_ids`; `data.id` remains its separate Operation UUID.
+- Mentor access uses the same local `notifications.sender_id` written from JWT `sub` by API #63; another sender receives 403.
+- For multiple channels, any queued row keeps aggregate status `QUEUED`; with no queued row, any failed row yields `FAILED`; otherwise all rows must be `SENT`.
+- Partial success is summarized as `FAILED`; the direct Operation response has no delivery count fields, so counts are not added to `data` or `meta`.
+- Do not use `notifications.is_read` or call Push/Email from this GET.
 
-## Đề xuất DERIVED cần xác nhận
+## Assumptions
 
-| Chủ đề | Đề xuất đơn giản | Trạng thái |
-|---|---|---|
-| Mục tiêu #64 | Dùng #64 để trả `NotificationDelivery`; dùng #18 riêng cho trạng thái Operation/job. | DERIVED — cần sửa catalog/diagram và thống nhất với #63. |
-| ID handoff | #63 phải cung cấp `notification_id:int64` đã được lưu; giữ `operation_id:uuid` riêng cho #18. | DERIVED — result schema hiện không có mapping. |
-| Delivery status | Chốt enum và cách tổng hợp theo recipient/channel; không dùng `OperationStatus` nếu lifecycle khác. | SOURCE_REQUIRED — chưa có trạng thái/aggregate đã duyệt. |
-| Permission | Chỉ Mentor có quyền trên notification/course được xem; chọn sender/owner relation sau khi schema và policy được duyệt. | DERIVED — không tự áp dụng candidate `sender_id`. |
+- `Operation.id` is `notifications.operation_id`, generated and grouped by API #63.
+- `Operation.kind` is `NOTIFICATION_DISPATCH`, matching API #63's accepted response.
+- `Operation.owner_id` is `notifications.sender_id`.
+- `Operation.submitted_at` is `notifications.created_at`.
+- `Operation.updated_at` is the latest `notification_deliveries.updated_at` for this notification.
+- `Operation.status` reuses local outbox values `QUEUED`, `SENT`, or `FAILED`; enum values remain DERIVED because catalog members are not listed.
+- `completed_at` and optional Payment `result` are omitted because no Study persistence/semantics support them.
+- A notification without `operation_id` or delivery rows has no API #63 dispatch status and returns 404; this is a local resource boundary.
+- All assumptions remain `Draft — Needs Confirmation`; checked-in DDL and fake DB tests do not verify live database state.
 
 ## Conflicts
 
-| Nguồn A | Nguồn B | Xung đột | Ảnh hưởng |
+| Source A | Source B | Conflict | Local resolution/status |
 |---|---|---|---|
-| Catalog #64 | AC-25 diagram | Response là `Operation`, nhưng flow cần delivery status theo `notification_id`. | Không có delivery counts/state trong response direct. |
-| #64 path | #63 response + #18 | #64 cần int64 notification ID; #63 trả Operation UUID và #18 dùng operation ID; không có cầu nối được công bố. | Client không thể nối create → delivery status một cách chắc chắn. |
-| Reusable schemas | V1-PILOT DDL | `NotificationDelivery.status` là OperationStatus; pilot dùng `notification_status`; các ID và channel model khác nhau. | Không tự map enum hoặc vật lý schema. |
-| Legacy notifications | AC-25 delivery | Legacy có `is_read` nhưng không có send status/delivery table. | Read receipt không thể thay delivery state. |
-| API #18 sources | Operation tracking summary / AC diagrams | Row #18 dùng int64 nhưng quy ước/schema/diagram dùng UUID; owner/Admin access cũng chưa thống nhất. | Job polling vẫn là contract riêng cần macro-review. |
-| API guidelines | Current middleware/helper | Error guideline `data:null`; helper mặc định `{}`; path #64 chưa thuộc design allowlist. | Future wiring discrepancy, không phải runtime #64. |
+| Catalog #64 | AC-25 delivery flow | Response type is Operation while the use case is delivery status. | Keep direct `ApiEnvelope<Operation>` and derive Operation.status from outbox; no new response field. |
+| Catalog `Operation` | API #63 local source | Operation persistence/lifecycle is absent, but #63 stores UUID, sender and timestamps on notification rows. | Reconstruct Operation from API #63 rows; DERIVED local mapping. |
+| Reusable OperationStatus | Migration 009 outbox | OperationStatus members are unspecified; delivery states are constrained to QUEUED/SENT/FAILED. | Reuse the three checked-in local states for Operation.status; DERIVED, not enum approval. |
+| API #64 path | API #63 response | Operation UUID is not the notification int64 path key. | Consume API #63 `meta.notification_ids`; keep both IDs separate. |
+| Legacy notifications | API #64 status lookup | Old notification rows may have no Operation/outbox. | Return 404 for no dispatch status resource; do not infer state from `is_read`. |
+| Checked-in SQL | Live DB | DDL/migration do not prove deployment. | Local source/test only; live metadata remains unverified. |
 
 ## Security note
 
-- Xác thực Bearer và Mentor role trước khi truy vấn trạng thái.
-- Không trả status hoặc số liệu cho notification ngoài phạm vi Mentor được phép.
-- Không quyết định sender/owner predicate hoặc 403/404 privacy order khi chưa có policy/schema.
-- Không trả provider message ID, raw provider error, SQL, stack trace hay token.
+- Authenticate Bearer and require MENTOR before parsing or querying.
+- Derive principal only from JWT; never accept sender ID from path/query.
+- Compare the notification sender to the authenticated numeric subject before returning Operation data.
+- Do not expose provider IDs/errors, SQL, stack traces or token claims.
 
 ## Reliability note
 
-- GET chỉ đọc trạng thái đã lưu; không gọi Push/Email để tái gửi hoặc kiểm tra trực tiếp.
-- Polling interval, cache, trạng thái pending khi chưa có delivery row và SLA chưa được quy định.
-- Không kết luận delivery thành công từ việc #63 trả HTTP 202.
----
+- Read only persisted status; no synchronous provider call, resending or mutation.
+- API #63 commits the outbox before returning 202. With no worker wired in this Study source, local accepted rows remain `QUEUED` until an external actor changes them.
+- Polling cadence, retry semantics, delivery SLA, enum approval and live migration state remain outside local verification.
+
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `Overview`

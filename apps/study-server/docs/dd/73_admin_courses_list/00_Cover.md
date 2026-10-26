@@ -26,7 +26,7 @@ status: "Draft — Needs Confirmation"
 | Reviewed by | Chờ xác nhận |
 | Approved by | Chờ xác nhận |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-26 |
 
 ## Tên hiển thị
 
@@ -39,7 +39,7 @@ Lấy danh sách khóa học để quản trị
 
 Catalog yêu cầu Bearer JWT role Admin, query `status`, `mentor`, `category`, `page` tùy chọn và response `ApiEnvelope<Page<Course>>`. AC-32 đặt API này trước bước mở detail #74 và các nhánh update #75, status #76, delete #77.
 
-Study hiện không có route, module hoặc test API #73. DDL legacy `courses` không có quan hệ category; Course response có `category?` nhưng optional. Phân trang mặc định và thứ tự là proposal `DERIVED`, còn query category vật lý, Admin guard và live schema vẫn `SOURCE_REQUIRED`.
+Study hiện có route/module/test cục bộ cho API #73. Runtime dùng shared JWT role `ADMIN`, truy vấn legacy candidate `courses/users`, và từ chối `category` hợp lệ bằng 422 trước DB vì DDL không có quan hệ course-category. Fallback này cùng page 1, size 20, thứ tự ID tăng dần, equality filters, all-status mặc định và lỗi integrity 500 là `DERIVED`; DD vẫn Draft. Test dùng fake DB, nên live schema/deployment và quyền course-management riêng chưa được xác minh.
 
 ## Tài liệu tham chiếu
 

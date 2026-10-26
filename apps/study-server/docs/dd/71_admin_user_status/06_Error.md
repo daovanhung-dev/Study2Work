@@ -9,35 +9,32 @@ status: "Draft — Needs Confirmation"
 
 # Error
 
-## Error cases trực tiếp từ catalog
+## Error cases trực tiếp từ catalog và runtime fallback
 
-| No | Category | Verify check | Item | Nội dung check | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
-|---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu, sai hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | N/A | Status/code DIRECT; route chưa wired. |
-| 2 | Authorization | Admin/user-management policy | Principal | Caller không có quyền Admin quản lý user | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | N/A | Status/code DIRECT; policy SOURCE_REQUIRED. |
-| 3 | Not found | User update result | user_id | Không tìm thấy user để update status | 404 | DESIGN_RESOURCE_NOT_FOUND | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua-query) | Candidate rollback | Code/status DIRECT; zero-row condition DERIVED. |
-| 4 | Validation | Request validation | Path/body status | Input sai schema/status policy được duyệt | 422 | DESIGN_VALIDATION_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-1-validate-data-input) | Candidate rollback | Status/code DIRECT; exact body and validation rules chưa đặc tả. |
-| 5 | System error | Database/session operation/mapping | Update pipeline | DB/query/mapping/transaction failure | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua-query) | Candidate rollback | Status/code DIRECT; không trả raw SQL/token detail. |
+| No | Category | Verify check | Item | Nội dung check | HTTP status | Error code | Rollback | Runtime mapping |
+|---:|---|---|---|---|---:|---|---|---|
+| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu, sai hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | Shared ADMIN guard. |
+| 2 | Authorization | Admin role | Principal | Caller không có ADMIN claim | 403 | DESIGN_ACCESS_DENIED | N/A | Shared role guard trước DB. Dedicated permission policy chưa source-backed. |
+| 3 | Not found | User lock/update | user_id | Không có user row | 404 | DESIGN_RESOURCE_NOT_FOUND | Read transaction rollback | Zero-row Q0 hoặc Q1. |
+| 4 | Validation | Path/body/current state | Request | Path sai int64, body sai schema/status hoặc current state không lockable | 422 | DESIGN_VALIDATION_ERROR | Read transaction rollback nếu đã lock | Invalid current state ngoài ACTIVE/SUSPENDED là DERIVED. |
+| 5 | System error | DB/mapping/transaction | Update pipeline | Lock/update/revoke/projection/commit thất bại | 500 | DESIGN_INTERNAL_ERROR | Rollback toàn bộ mutation | Không trả SQL/token details. |
 
-Không thêm HTTP status, business code hoặc error-message ID ngoài catalog.
+Không thêm HTTP status hoặc business code ngoài catalog.
 
-## Candidate branch questions — không phải HTTP contract
+## Runtime branch details
 
-| Condition | Candidate or question | Status |
-|---|---|---|
-| user_id malformed/overflow | Behavior chưa được catalog nêu; không tự thêm status/code. | SOURCE_REQUIRED |
-| Status field missing/null | Direct body schema không tồn tại trong catalog/diagram. | SOURCE_REQUIRED |
-| Status value không thuộc enum đã duyệt | Catalog có 422, nhưng exact enum/rule/details cần contract owner xác nhận. | SOURCE_REQUIRED |
-| User row không tồn tại | Zero-row UPDATE → 404 `DESIGN_RESOURCE_NOT_FOUND` là candidate. | DERIVED |
-| Refresh-token revoke fails | Nếu conditional M2 được duyệt, transaction rollback và 500 là candidate. | DERIVED |
-| Access JWT còn hạn sau khi khóa | Current guard không tra status/revocation; cần owner quyết định immediate-vs-expiry semantics. | SOURCE_REQUIRED |
-| User đang ở target status | PATCH no-op behavior/updated_at behavior chưa định nghĩa; không thêm 409 vì catalog không có. | SOURCE_REQUIRED |
+- Invalid raw signed-int64 `user_id`, missing/null/extra/unsupported body field → 422. Middleware route template map framework body validation thành `DESIGN_VALIDATION_ERROR`.
+- Existing user status ngoài ACTIVE/SUSPENDED → 422; endpoint không chuyển pending/deletion lifecycle states.
+- Status update không tìm thấy row → 404.
+- Khi SUSPENDED, revoke query chạy cùng transaction; lỗi revoke hoặc commit rollback status mutation và trả 500.
+- Query/projection/rollback failures chỉ trả safe message; không echo stack, SQL, password hash, refresh-token hash hoặc token.
+- `error_response(...)` trả `data:null`, có `meta.fieldErrors` cho lỗi validation và `X-Trace-Id`.
 
-## Error envelope and routing discrepancy
+## Discrepancies and limits
 
-- Shared `error_response` đổi data vắng mặt thành `{}`; server-study API guideline yêu cầu `data:null` cho error envelope.
-- Current middleware `DESIGN_CONTRACT_PATHS` chưa chứa `/api/v1/admin/users/{user_id}/status`; future route phải cập nhật mapping để giữ business code `DESIGN_*`.
-- API #71 chưa wired; các điểm trên là current infrastructure gaps, không phải runtime response hiện có của API #71.
+- Catalog/diagram không định nghĩa body, enum members, malformed-path mapping hoặc transition matrix. Required `{status}`, ACTIVE/SUSPENDED allowlist, current-state gate và 422 fallback đều `DERIVED`.
+- Diagram nói “revoke session nếu cần”; runtime chọn revoke refresh rows chưa revoke/chưa hết hạn khi khóa. Access JWT hiện hữu không bị vô hiệu tức thời.
+- Live legacy schema, dedicated Admin permission, audit/PII rules và self/last-admin policy chưa xác minh.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

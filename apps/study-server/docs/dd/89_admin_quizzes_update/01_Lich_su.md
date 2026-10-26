@@ -14,13 +14,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-26 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD draft API #89 từ catalog, AC-35, DD quiz liên quan và schema artifacts. | Body/replace semantics, attempt history, QuestionType, QuizChoice và live schema cần xác nhận. |
+| 2.0 | 2026-10-26 | Codex | Đồng bộ DD với runtime API #89 và kiểm chứng package sau implementation. | Request/history/locking vẫn là DERIVED; DD tiếp tục Draft — Needs Confirmation. |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

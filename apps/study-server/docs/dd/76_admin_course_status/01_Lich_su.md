@@ -24,13 +24,14 @@ status: "Draft — Needs Confirmation"
 | Version | Ngày | Nội dung | Người cập nhật |
 |---|---|---|---|
 | 0.1 | 2026-10-24 | Tạo DD từ API catalog và AC-32; body status, casing, audit mapping và transition policy được đánh dấu cần xác nhận. | Codex |
+| 0.2 | 2026-10-26 | Implement API #76 với fallback DERIVED cho body/status, bảng audit legacy BIGINT, transaction và singleton Page; giữ Draft, permission/schema live còn mở. | Codex |
 
 ## Nguồn chính
 
 - API catalog #76 và reusable schemas.
 - AC-32 index/activity diagram.
 - API #71 status DD và API #73–#75 trong cùng luồng quản trị course.
-- Current Study source, legacy DB artifact và V1-PILOT schema; không nguồn nào chứng minh live schema.
+- Current Study source, legacy DB artifact, API #76 migration candidate và V1-PILOT schema; không nguồn nào chứng minh live schema.
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `Lịch sử`

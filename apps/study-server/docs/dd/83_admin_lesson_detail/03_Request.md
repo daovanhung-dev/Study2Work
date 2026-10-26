@@ -18,7 +18,7 @@ status: "Draft — Needs Confirmation"
 | Character encoding | UTF-8 |
 | Content-Type | N/A — GET không khai báo request body. |
 | Authentication | Bearer JWT |
-| Role | Admin; lesson-management permission theo AC-34. |
+| Role | `ADMIN` qua shared guard; lesson-management permission theo AC-34 chưa có policy source trong runtime. |
 
 ## Request header
 
@@ -49,13 +49,13 @@ Authorization: Bearer <admin-access-token>
 X-Trace-Id: 00000000-0000-0000-0000-000000000083
 ~~~
 
-`501` và trace ID chỉ minh họa format; API #83 chưa có route runtime. Không có query/body.
+`501` và trace ID chỉ minh họa format; route API #83 hiện chuyển raw path sang custom parser. Không có query/body.
 
 ## Quy tắc input đang mở
 
 - Chỉ yêu cầu `lesson_id` kiểu int64; catalog không nêu minimum, positive constraint hay range ngoài kiểu dữ liệu.
 - Nếu ID hợp lệ nhưng không có lesson tương ứng, trả 404 theo catalog.
-- Nếu path không parse được int64, 404 là proposal để không thêm mã ngoài contract. FastAPI validation hiện có thể tạo 422 generic cho route chưa được allowlist; future implementation cần giải quyết trước khi nhận behavior này là verified.
+- Nếu path không parse được int64, implementation hiện ánh xạ 404 để không thêm mã ngoài contract; focused HTTP test xác nhận behavior này. Đây là DERIVED theo API #74, không phải rule trực tiếp trong catalog.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

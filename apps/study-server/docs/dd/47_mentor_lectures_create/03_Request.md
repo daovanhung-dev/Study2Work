@@ -18,20 +18,20 @@ status: "Draft — Needs Confirmation"
 | HTTP method | POST |
 | URI | /api/v1/mentor/courses/{course_id}/lectures |
 | Character encoding | UTF-8 |
-| Content-Type | application/json (DERIVED; catalog không nêu media type) |
+| Content-Type | application/json (catalog không nêu media type; candidate theo request JSON AC-21) |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Content type | Content-Type | Yes | application/json | Candidate JSON body format; cần xác nhận nếu API gateway yêu cầu khác. | 1 |
-| 2 | Authorization | Authorization | Yes | Bearer JWT | Contract yêu cầu role Mentor. | 0 |
+| 1 | Content type | Content-Type | Yes | application/json | Candidate JSON body format. | 1 |
+| 2 | Authorization | Authorization | Yes | Bearer JWT | Role Mentor theo catalog. | 0 |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | Course ID | course_id | int64 | Yes | N/A | N/A | Số nguyên 64-bit | N/A | N/A | Course mà Mentor tạo lecture. Không thêm điều kiện số dương. | 1 |
+| 1 | Course ID | course_id | int64 | Yes | N/A | N/A | Signed 64-bit integer | N/A | N/A | Course để tạo lecture. | 1 |
 
 ## Query parameters
 
@@ -41,10 +41,10 @@ Không có query parameter theo catalog API #47.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|---|
-| 1 | Title | title | string | Yes | N/A | 200 (DERIVED từ legacy lessons.name VARCHAR(200)) | Unicode text | N/A | N/A | N/A | Tên lecture; không suy ra trim hoặc minimum length. | 1 |
-| 2 | Content | content | int64 | Yes | N/A | N/A | N/A | Số nguyên 64-bit | N/A | N/A | Catalog khai báo int64; mapping thành TEXT chỉ là candidate cần xác nhận. | 1 |
-| 3 | Asset refs | asset_refs (DERIVED wire key) | string | Yes | N/A | N/A | Unicode text | SOURCE_REQUIRED | N/A | N/A | Catalog ghi “asset refs”; key/format/lookup chưa chốt. Giữ giá trị opaque. | 1 |
-| 4 | Order | order | int32 | Yes | N/A | N/A | N/A | Số nguyên 32-bit | N/A | N/A | Thứ tự lecture trong course; không thêm điều kiện không âm. | 1 |
+| 1 | Title | title | string | Yes | N/A | 200 (DERIVED từ legacy lessons.name VARCHAR(200)) | Unicode text | N/A | N/A | N/A | Lecture title; không suy ra trim/minimum length. | 1 |
+| 2 | Content | content | int64 | Yes | N/A | N/A | N/A | Signed 64-bit integer | N/A | N/A | Nhận signed int64; khi lưu `lessons.content` và trả response, runtime đổi sang chuỗi thập phân. | 1 |
+| 3 | Asset refs | asset_refs | string | Yes | N/A | N/A | Unicode text | JSON text containing int64 ID array | Ordered unique IDs; empty array allowed | N/A | Duplicate IDs rejected; IDs must resolve to same Mentor, LECTURE purpose and this course. | 1 |
+| 4 | Order | order | int32 | Yes | N/A | N/A | N/A | Signed 32-bit integer | N/A | N/A | Lecture order; không thêm điều kiện không âm. | 1 |
 
 ## Ví dụ Request data
 
@@ -52,12 +52,12 @@ Không có query parameter theo catalog API #47.
 {
   "title": "Bài học mở đầu",
   "content": 12345,
-  "asset_refs": "SOURCE_REQUIRED",
+  "asset_refs": "[34001,34002]",
   "order": 1
 }
 ~~~
 
-Ví dụ chỉ minh họa kiểu dữ liệu. asset_refs là placeholder, không phải định dạng tham chiếu được API #34 xác nhận; tên wire key asset_refs cũng là DERIVED. Không dùng ví dụ này làm request triển khai trước khi chốt hai điểm đó.
+`asset_refs` là JSON string; nội dung của string là JSON array số nguyên int64. `"[]"` là hợp lệ. ID trùng, JSON không hợp lệ, element không phải int64 hoặc ID ngoài signed int64 range bị từ chối. Response assets giữ nguyên thứ tự ID đầu vào.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

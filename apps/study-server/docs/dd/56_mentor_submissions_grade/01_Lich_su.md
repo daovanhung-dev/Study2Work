@@ -16,13 +16,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-25 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
-| 1.0 | 2026-10-24 | Codex | Tạo DD Markdown từ API catalog và AC-23 | Draft — Needs Confirmation; rubric, score policy, schema và quyền Mentor còn gap nguồn |
+| 1.0 | 2026-10-24 | Codex | Tạo DD Markdown từ API catalog và AC-23 | Draft — Needs Confirmation |
+| 1.1 | 2026-10-25 | Codex | Đồng bộ DD với API #56 runtime, TestClient và fallback rubric/score | Rubric chưa có persistence target; score range và owner policy là DERIVED; live schema chưa xác minh |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -20,13 +20,13 @@ status: "Draft — Needs Confirmation"
 | API name | Cập nhật thông tin/role Conditional |
 | HTTP method | PUT |
 | Endpoint | /api/v1/admin/users/{user_id} |
-| Version | 1.0 |
+| Version | 1.1 |
 | Status | Draft — Needs Confirmation |
 | Created by | Codex |
 | Reviewed by | Chờ xác nhận |
 | Approved by | Chờ xác nhận |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-25 |
 
 ## Tên hiển thị
 
@@ -36,9 +36,9 @@ PUT /api/v1/admin/users/{user_id} — Cập nhật thông tin/role
 
 ## Phạm vi và trạng thái
 
-Catalog và AC-31 xác nhận Admin cập nhật user/profile bằng API #70, trả `ApiEnvelope<UserProfile>`. Input trực tiếp hiện chỉ nêu `path{user_id:int64!}`; request body chưa được đặc tả. Các trường body, query và mutation trong DD này là candidate `DERIVED`, chưa phải contract đã duyệt.
+Catalog và AC-31 xác nhận Admin cập nhật user/profile bằng API #70, trả `ApiEnvelope<UserProfile>`. Input trực tiếp chỉ nêu `path{user_id:int64!}`; request body không được đặc tả. Runtime hiện dùng fallback `DERIVED`: PUT thay thế đủ `full_name`, `phone`, `avatar_url`, `role`; role chỉ nhận các nhãn đang dùng trong Study (`STUDENT`, `MENTOR`, `ADMIN`).
 
-Study Server hiện chưa có route, module hoặc test cho API #70. Candidate ghi dữ liệu dựa trên API #14 và legacy DDL; live schema và Admin authorization chưa được xác minh. API #71 phụ trách đổi status; API #70 không thêm status, delete hoặc revoke session.
+Study Server hiện có route, module và focused HTTP tests cho API #70. Module yêu cầu JWT role `ADMIN`, chuẩn hóa profile theo API #14, cập nhật checked-in legacy BIGINT `users` và trả safe `UserProfile`. Body/role/path mapping là fallback `DERIVED`; live schema, permission policy, audit/PII và token effect chưa xác minh. API #71 phụ trách đổi status; API #70 không thêm status, delete, audit hoặc revoke session.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

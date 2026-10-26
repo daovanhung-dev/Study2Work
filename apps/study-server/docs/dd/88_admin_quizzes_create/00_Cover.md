@@ -26,14 +26,14 @@ status: "Draft — Needs Confirmation"
 | Reviewed by | Chưa phân công |
 | Approved by | Chưa phê duyệt |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-26 |
 
 ## Tên hiển thị
 
     Study2Work API design
     Tạo quiz mới
 
-> Contract trực tiếp yêu cầu body có hai chuỗi config và questions. Cấu trúc JSON lồng trong chuỗi, schema vật lý và quyền Admin chưa được runtime xác nhận.
+> Contract trực tiếp yêu cầu body có hai chuỗi config và questions. Embedded JSON và hai cột hỗ trợ question type/choice order là fallback DERIVED cho implementation local; fine-grained permission, live schema và migration deployment chưa được xác nhận.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

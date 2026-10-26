@@ -16,13 +16,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | **2026-10-24** |
-| Ngày update cuối cùng | **2026-10-24** |
+| Ngày update cuối cùng | **2026-10-26** |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | **1.0** | **2026-10-24** | **Codex** | Tạo DD API #80 theo catalog và AC-33; giữ open questions về trạng thái duyệt, revision, audit và Admin policy. | Draft — Needs Confirmation |
+| **1.1** | **2026-10-26** | **Codex** | Đồng bộ với implementation local: ADMIN guard, PENDING_REVIEW → APPROVED, legacy BIGINT audit candidate và transaction atomic; giữ open revision/live-schema gaps. | Draft — Needs Confirmation; physical schema là DERIVED |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

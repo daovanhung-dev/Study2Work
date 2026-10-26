@@ -20,32 +20,38 @@ status: "Draft — Needs Confirmation"
 | Content-Type | application/json |
 | Success HTTP status | 200 `DESIGN_RESOURCE_RETRIEVED` |
 | Direct response type | `ApiEnvelope<Content>` theo catalog. |
-| Runtime status | API #78 chưa được wire; examples là expected design, không phải runtime output. |
+| Local runtime response | `ApiEnvelope<Page<Content>>` — `DERIVED` queue/cardinality fallback. |
+| Runtime status | Route/module/shared ADMIN guard và focused HTTP tests đã wire; tests dùng fake DB session. |
 
-## Direct contract fields
+## Runtime Content projection
 
 | No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
 |---:|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | `HTTPStatus` | HTTP status | `HTTPStatus` | integer | No | N/A | N/A | Branch | 200 success; 401/403/500 errors | N/A | Protocol status, không phải JSON field. |
-| 2 | `success` | Success flag | `success` | boolean | No | Envelope | N/A | Branch | true success; false error | N/A | Envelope convention. |
-| 3 | `businessCode` | Business code | `businessCode` | string | No | Catalog | N/A | Branch | `DESIGN_RESOURCE_RETRIEVED` hoặc exact catalog error code | N/A | Không tạo code mới. |
-| 4 | `message` | Message | `message` | string | No | Application | N/A | Branch | Safe localized message | Exact text chưa đặc tả | Không trả raw query/content details. |
-| 5 | `data` | Content | `data` | object | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Một Content theo catalog | Required on success | Cardinality của queue/page chưa nhất quán. |
-| 5.1 | `data.id` | Content ID | `id` | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Logical Content identifier | Required | Generic BIGINT Content persistence chưa có nguồn. |
-| 5.2 | `data.course_id` | Course ID | `course_id` | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Logical owning course | Required | Có thể là filter `course`; physical relation chưa xác nhận. |
-| 5.3 | `data.content_type` | Content type | `content_type` | ContentType | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Serialize approved enum value | Required | Members/casing chưa được liệt kê. |
-| 5.4 | `data.title` | Content title | `title` | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Preserve approved stored value | Required | Không suy ra table/column. |
-| 5.5 | `data.payload` | Content payload | `payload` | object | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Preserve approved subtype object | Required object | Payload keys/default chưa xác nhận. |
-| 5.6 | `data.status` | Content status | `status` | ContentStatus | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 2.1/3.1 | Row thỏa `PENDING_REVIEW` | Required | Filter DIRECT; enum/storage chưa xác nhận. |
-| 5.7 | `data.parent_id` | Parent Content ID | `parent_id` | int64? | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Optional field | Null/omit rule unresolved | Không có generic parent relation. |
-| 5.8 | `data.order` | Content order | `order` | int32 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Preserve sibling order | Required | Không dùng làm queue sort mặc định. |
-| 6 | `meta` | Metadata | `meta` | object | No | Envelope | N/A | Branch | `{}` candidate | Empty object candidate | Direct response không khai báo PageMeta. |
-| 7 | `traceId` | Trace ID | `traceId` | uuid | No | Shared trace | `X-Trace-Id` | 0.1/Branch | Validate or generate | Required | Endpoint chưa wired. |
-| E1 | Error `data` | Error payload | `data` | null by guideline | N/A | N/A | N/A | Error branch | API guideline yêu cầu `null` | Current helper default `{}` | Conditional source/contract discrepancy. |
+| 1 | `HTTPStatus` | HTTP status | `HTTPStatus` | integer | No | N/A | N/A | Branch | 200 success; 401/403/422/500 errors | N/A | 422 là derived query validation; không phải catalog #78 direct error. |
+| 2 | `success` | Success flag | `success` | boolean | No | Envelope | N/A | Branch | true success; false error | N/A | Shared response helper. |
+| 3 | `businessCode` | Business code | `businessCode` | string | No | Catalog/helper | N/A | Branch | `DESIGN_RESOURCE_RETRIEVED` hoặc error code | N/A | Không tạo code khác. |
+| 4 | `message` | Message | `message` | string | No | Application | N/A | Branch | Safe localized message | Exact text chưa đặc tả | Không trả raw database detail. |
+| 5 | `data.items[]` | Content list | reusable Content | object[] | No | `contents` | `id`, `course_id`, `content_type`, `title`, `payload`, `status`, `parent_id`, `content_order` | Q1 page | `content_order AS order`; map bằng API #49 `ContentResponse` | `parent_id` có thể null | Page shape DERIVED; only current active logical rows. |
+| 5.1 | `data.items[].id` | Content ID | `id` | int64 | No | `contents` | `id` | Q1 | Preserve | Required | Checked-in BIGINT candidate; live schema chưa xác nhận. |
+| 5.2 | `data.items[].course_id` | Course ID | `course_id` | int64 | No | `contents` | `course_id` | Q1 | Preserve | Required | Filter target for `course`. |
+| 5.3 | `data.items[].content_type` | Content type | `content_type` | ContentType/string | No | `contents` | `content_type` | Q1 | Preserve exact stored value | Required | No enum whitelist. |
+| 5.4 | `data.items[].title` | Content title | `title` | string | No | `contents` | `title` | Q1 | Preserve | Required | Required by DDL candidate. |
+| 5.5 | `data.items[].payload` | Content payload | `payload` | object | No | `contents` | `payload` | Q1 | JSON object to mapping | Required object | DDL requires JSONB object. |
+| 5.6 | `data.items[].status` | Content status | `status` | ContentStatus/string | No | `contents` | `status` | Q1 | Fixed predicate `PENDING_REVIEW` | Required | Direct AC-33 predicate. |
+| 5.7 | `data.items[].parent_id` | Parent Content ID | `parent_id` | int64? | Yes | `contents` | `parent_id` | Q1 | Preserve nullable parent | Null serializes as null | Reusable field optional. |
+| 5.8 | `data.items[].order` | Content order | `order` | int32 | No | `contents` | `content_order` | Q1 | Alias physical column | Required | Not queue ordering. |
+| 6 | `data.pagination` | Page metadata | PageMeta | object | No | Derived query/page | `page`, fixed `size`, count | Q1/Q2 | page 1/default; size 20; total; ceil total/size | total_pages 0 when empty | DERIVED; absent from direct Content response. |
+| 7 | `meta` | Metadata | `meta` | object | No | Envelope | N/A | Branch | `{}` | Empty object | No separate pagination in meta. |
+| 8 | `traceId` | Trace ID | `traceId` | uuid | No | Shared middleware | `X-Trace-Id` | Branch | Validate or generate | Required | Current route is registered. |
+| E1 | Error `data` | Error payload | `data` | null | Yes | Shared helper | N/A | Error branch | Current `error_response()` default | JSON null | Matches current runtime/helper, not old DD `{}` claim. |
 
-## Ví dụ trực tiếp theo catalog — một Content object
+## Contract discrepancy
 
-Ví dụ giữ `ApiEnvelope<Content>` hiện tại. `content_type: "SOURCE_REQUIRED"` là placeholder có giải thích, không phải enum value hợp lệ; `payload: {}` chỉ minh họa JSON object, không phải payload mặc định. Example không giải quyết list/page cardinality.
+Catalog #78 directly declares a single `Content` under `data`, while this queue endpoint has a `page` query and AC-33 requires opening a queue. The local implementation returns `Page<Content>` so it can represent zero or many pending rows. This is `DERIVED`; the catalog/diagram were not changed and the DD remains Draft for owner correction.
+
+## Ví dụ direct theo catalog — một Content object
+
+Ví dụ này giữ shape direct hiện tại của catalog; nó không phải response runtime sau fallback Page.
 
 ~~~json
 {
@@ -55,9 +61,9 @@ Ví dụ giữ `ApiEnvelope<Content>` hiện tại. `content_type: "SOURCE_REQUI
   "data": {
     "id": 901,
     "course_id": 501,
-    "content_type": "SOURCE_REQUIRED",
+    "content_type": "QUIZ",
     "title": "Nội dung chờ duyệt",
-    "payload": {},
+    "payload": {"question_count": 4},
     "status": "PENDING_REVIEW",
     "parent_id": null,
     "order": 1
@@ -67,60 +73,51 @@ Ví dụ giữ `ApiEnvelope<Content>` hiện tại. `content_type: "SOURCE_REQUI
 }
 ~~~
 
-`PENDING_REVIEW` là predicate trực tiếp của AC-33; `content_type`, ID, payload và parent/order chỉ minh họa shape vì physical source/enum chưa được duyệt.
+`QUIZ`/payload chỉ minh họa kiểu; enum member và payload schema chưa được định nghĩa. Predicate `PENDING_REVIEW` là direct từ AC-33.
 
-## Candidate response nếu catalog được sửa — DERIVED
-
-Nếu API thực sự trả danh sách phân trang, phương án đề xuất là `ApiEnvelope<Page<Content>>`. Đây không phải response contract hiện tại; cần đổi catalog và xác nhận pagination trước implementation.
+## Ví dụ local runtime — DERIVED Page<Content>
 
 ~~~json
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Đã đọc hàng đợi chờ duyệt.",
+  "message": "Pending content retrieved.",
   "data": {
-    "items": [
-      {
-        "id": 901,
-        "course_id": 501,
-        "content_type": "SOURCE_REQUIRED",
-        "title": "Nội dung chờ duyệt",
-        "payload": {},
-        "status": "PENDING_REVIEW",
-        "parent_id": null,
-        "order": 1
-      }
-    ],
-    "pagination": {
-      "page": 1,
-      "size": 20,
-      "total": 1,
-      "total_pages": 1
-    }
+    "items": [{
+      "id": 901,
+      "course_id": 501,
+      "content_type": "QUIZ",
+      "title": "Nội dung chờ duyệt",
+      "payload": {"question_count": 4},
+      "status": "PENDING_REVIEW",
+      "parent_id": null,
+      "order": 1
+    }],
+    "pagination": {"page": 1, "size": 20, "total": 1, "total_pages": 1}
   },
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000078"
 }
 ~~~
 
-Giá trị type/payload tiếp tục là placeholders; empty-page behavior và page size 20 vẫn là proposals.
+Queue rỗng hoặc page vượt cuối dùng HTTP 200 với `items:[]`; `total_pages=0` khi `total=0`.
 
 ## Ví dụ lỗi authorization — HTTP 403
 
-Ví dụ theo API guideline `data:null`; current helper phát `{}` khi `data` bị bỏ trống. Endpoint chưa wired nên không có runtime response.
+Current helper trả error `data:null`.
 
 ~~~json
 {
   "success": false,
   "businessCode": "DESIGN_ACCESS_DENIED",
-  "message": "Không có quyền truy cập hàng đợi duyệt.",
+  "message": "Access denied.",
   "data": null,
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000078"
 }
 ~~~
 
-Không trả author/reviewer metadata từ #79, decision reason từ #81, raw payload/schema errors hoặc database details ngoài direct Content contract.
+Không trả author/version metadata của #79, reviewer/decision history của #80/#81 hoặc raw database exception.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

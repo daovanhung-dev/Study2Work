@@ -64,10 +64,12 @@ Các cột dưới đây là candidate projection từ DB design/checked-in DDL.
 | 8 | quiz_questions.quiz_id | Quiz ID | BIGINT / int64 | N/A | N/A | Y | FK candidate | Candidate relation to quizzes.id | DB design and checked-in DDL | 2.2 | Design docs say required; checked-in DDL permits NULL. |
 | 9 | quiz_questions.question_text | Question text | TEXT / string | N/A | N/A | Y |  | Candidate response data.questions[].text | DB design, checked-in DDL and logical schema | 2.2, 3 | Candidate alias question_text → text. |
 | 10 | quiz_questions.sort_order | Question order | INT / int32 | N/A | N/A | N |  | Candidate ORDER BY source; not response field | DB design and checked-in DDL | 2.2 | Default 0; duplicate tie-break SOURCE_REQUIRED. |
+| 10.1 | quiz_questions.question_type | Question type | VARCHAR(24) | 24 | N/A | Nullable |  | Candidate response data.questions[].type | API #88 migration 013 | 2.2, 3 | API writes non-null; values are DERIVED; old rows may be NULL. |
 | 11 | quiz_questions.score | Question score | NUMERIC | 5 | 2 | N |  | Not included in logical QuizQuestion | DB design and checked-in DDL | 2.2 | Do not add to response without contract change. |
 | 12 | quiz_choices.id | Choice ID | BIGSERIAL / int64 | N/A | N/A | Y | Primary key | Candidate QuizChoice field; not confirmed | DB design and checked-in DDL | 2.3 | QuizChoice logical fields are undefined. |
 | 13 | quiz_choices.question_id | Question ID | BIGINT / int64 | N/A | N/A | Y | FK candidate | Candidate relation to quiz_questions.id | DB design and checked-in DDL | 2.3 | DDL permits NULL; live schema/query not verified. |
-| 14 | quiz_choices.choice_text | Choice text | TEXT / string | N/A | N/A | Y |  | Candidate QuizChoice field; not confirmed | DB design and checked-in DDL | 2.3 | Exact response property name/shape SOURCE_REQUIRED. |
+| 14 | quiz_choices.choice_text | Choice text | TEXT / string | N/A | N/A | Y |  | Candidate QuizChoice field; not confirmed | DB design and checked-in DDL | 2.3 | API #88 local Admin alias is DERIVED; Student field shape remains SOURCE_REQUIRED. |
+| 15 | quiz_choices.sort_order | Choice order | INT / int32 | N/A | N/A | Y |  | Candidate ordering | API #88 migration 013 | 2.3 | Zero-based local fallback; live schema unverified. |
 
 ### Excluded source field
 

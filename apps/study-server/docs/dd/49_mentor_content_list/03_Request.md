@@ -19,20 +19,20 @@ status: "Draft — Needs Confirmation"
 | Method | GET |
 | Endpoint | `/api/v1/mentor/courses/{course_id}/content` |
 | Authentication | Bearer JWT |
-| Authorization | role=Mentor; phải có quyền quản lý course |
+| Authorization | Role Mentor; current implementation yêu cầu `courses.mentor_id` bằng authenticated numeric user ID |
 | Content-Type | Không có request body |
 
 ## Request header
 
 | No | Header | Required | Type | Value/rule | Usage |
 |---:|---|---:|---|---|---|
-| 1 | `Authorization` | Yes | string | `Bearer <JWT>` | Xác thực principal Mentor; guard và claim-to-course identity chưa được source xác nhận. |
+| 1 | `Authorization` | Yes | string | `Bearer <JWT>` | Authenticate Mentor; numeric principal lấy từ Study JWT guard hiện hành. |
 
 ## Path parameters
 
 | No | Parameter | Required | Type | Rule | Usage |
 |---:|---|---:|---|---|---|
-| 1 | `course_id` | Yes | int64 | Theo catalog; không có rule min/max hoặc 422 được khai báo | Scope course lookup và đọc cây nội dung; schema physical ID chưa chốt. |
+| 1 | `course_id` | Yes | signed int64 | Raw path phải là số nguyên signed và nằm trong `[-2^63, 2^63-1]`; path lỗi/range lỗi trả 404 theo catalog error set. | Tìm course và đọc Content rows trong course đó. |
 
 ## Query parameters
 
@@ -50,7 +50,7 @@ Authorization: Bearer <JWT>
 Accept: application/json
 ```
 
-`501` chỉ là ví dụ cú pháp int64, không khẳng định course ID tồn tại. Hành vi với path ID không parse được chưa được catalog định nghĩa; không tự thêm business code 422.
+`501` chỉ là ví dụ cú pháp; không khẳng định course ID tồn tại. Course không tồn tại trả 404; course tồn tại nhưng chưa có Content trả 200 với `data: []`.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

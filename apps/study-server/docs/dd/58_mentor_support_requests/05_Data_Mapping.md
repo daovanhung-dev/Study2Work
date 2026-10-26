@@ -23,124 +23,124 @@ status: "Draft — Needs Confirmation"
 
 ## 1. Nhận request metadata
 
-### 1.1. Nhận request metadata
+### 1.1. Nhận Authorization
 
-- Đọc Authorization header theo Bearer JWT.
-- Nếu thiếu hoặc token không hợp lệ, trả 401 DESIGN_AUTHENTICATION_REQUIRED theo [06_Error.md](./06_Error.md#error-cases).
+- Đọc Bearer JWT qua shared auth helper.
+- Yêu cầu role `MENTOR` trước mọi truy vấn DB.
+- `sub` phải là positive numeric user ID theo Study Server token convention.
 
 ### 1.2. Nhận trace ID
 
-- Đọc X-Trace-Id nếu request gửi theo API Guidelines.
-- Nếu header không có, sử dụng trace ID do middleware tạo khi route được wiring.
-- Gắn trace ID vào envelope traceId và response header theo convention chung.
+- Đọc `X-Trace-Id` nếu request gửi theo API Guidelines.
+- Nếu header không có hoặc không hợp lệ, middleware tạo UUID trace ID.
+- Shared response helper đưa trace ID vào envelope và response header.
 
 ## 2. Kiểm tra quyền Mentor
 
 ### 2.1. Xác nhận actor
 
-- Yêu cầu role Mentor theo catalog và AC-24.
-- Nếu role không được phép, trả 403 DESIGN_ACCESS_DENIED.
-- Current shared current-user guard chỉ chấp nhận STUDENT; không dùng guard này cho API #58.
+- Gọi `validate_current_user_request(..., role="MENTOR")`.
+- Thiếu/sai token → 401; token không có role Mentor → 403.
 
 ### 2.2. Giới hạn dữ liệu theo Mentor
 
-- AC-24 yêu cầu chỉ đọc request hỗ trợ thuộc phạm vi Mentor.
-- V1-PILOT assigned_to_subject_id là nullable UUID candidate; không có source nối Mentor principal với subject ID.
-- Không suy ra quyền sở hữu ticket từ course_id query hoặc student enrollment.
-- Predicate vật lý chưa chốt cho đến khi identity và assignment semantics được xác nhận.
+- Mỗi request được scope qua `support_requests.course_id = courses.id` và `courses.mentor_id = :mentor_id`.
+- Nếu có `course_id` và course tồn tại nhưng thuộc Mentor khác, trả 403.
+- Nếu `course_id` không tồn tại, truy vấn list không có hàng và trả 200 `data: []` vì catalog không khai báo 404.
+- `course_id` query chỉ là filter; không được dùng làm bằng chứng quyền.
+- Đây là fallback `DERIVED`, nhất quán với API #46/#49/#54 direct-owner scope.
 
 ## 3. Nhận và xử lý query filter
 
-### 3.1. Đọc course_id
+### 3.1. Đọc `course_id`
 
-- Nếu query có course_id, giữ giá trị int64 làm filter dự kiến.
-- Catalog không quy định default, min/max hoặc behavior với course không tồn tại.
-- Candidate support_tickets không có course_id/course_version_id; không thêm JOIN qua course_enrollments khi chưa có nguồn.
+- Optional positive int64; miền `1..9223372036854775807`.
+- Nếu có, truyền parameterized predicate `support_requests.course_id = :course_id`.
+- Sai kiểu, số âm/0 hoặc vượt BIGINT → 422 `DESIGN_VALIDATION_ERROR`.
 
-### 3.2. Đọc status
+### 3.2. Đọc `status`
 
-- Nếu query có status, giữ nguyên chuỗi làm filter candidate.
-- Enum values, default, casing và blank behavior chưa được xác nhận.
-- Exact equality và kết hợp filter bằng AND là DERIVED, cần xác nhận.
-- Catalog không có 422; malformed query/type behavior phải được chốt trước khi wiring.
+- Optional string, không trim hoặc đổi casing.
+- Exact match với `support_requests.status`; nếu không có hàng khớp thì trả collection rỗng.
+- Query `course_id` và `status` kết hợp bằng AND.
+- DDL fallback giới hạn status ở `OPEN`, `IN_PROGRESS`, `WAITING_LEARNER`, `RESOLVED`, `CANCELLED`; status lạ không bị enum-validate ở HTTP layer.
 
 ## 4. Đọc support requests
 
-### 4.1. Query logic Q1
+### 4.1. Query logic Q1 — request và student
 
 | Target | Column/item | Điều kiện | Remarks |
 |---|---|---|---|
-| SOURCE_REQUIRED; pilot support_tickets candidate | id, learner_id, status, created_at, resolved_at, assigned_to_subject_id | Scope Mentor; status nếu được gửi | UUID IDs và principal mapping chưa tương thích. |
-| SOURCE_REQUIRED | course_id | Filter nếu được gửi | Không có course_id hoặc course relation trên support_tickets. |
+| `support_requests` | `id`, `course_id`, `student_id`, `status`, `created_at`, `resolved_at` | Filter `course_id`/`status` nếu được gửi | Legacy BIGINT fallback; migration 008. |
+| `courses` | `id`, `mentor_id` | `courses.id = support_requests.course_id`; `mentor_id = :mentor_id` | Direct-owner predicate; mọi row đều scoped trong SQL. |
+| `users` | `id`, `full_name`, `avatar_url` | `users.id = support_requests.student_id` | Numeric UserSummary projection. |
 
-- Không viết SQL production cho đến khi chủ model chọn schema và ID contract.
-- Không thêm pagination, count, sort hoặc limit vì catalog không khai báo.
-- Không suy thứ tự API từ index pilot.
+- Stable request order: `support_requests.created_at DESC, support_requests.id DESC`.
+- Không có page/size/count; trả toàn bộ các request khớp filter.
+- Course precheck chỉ cần khi `course_id` được gửi; list query vẫn giữ predicate owner.
 
-### 4.2. Query logic Q2 — messages
-
-| Target | Column/item | Điều kiện | Remarks |
-|---|---|---|---|
-| pilot support_messages candidate | id, ticket_id, author_subject_id, author_type, body, attachment_file_ids, sent_at | Candidate ticket_id = support_tickets.id | UUID; không khớp int64 message/author IDs. |
-
-- SupportRequest.messages là field bắt buộc; chưa rõ #58 tải toàn bộ thread hay để #59 tải thread.
-- Nếu pilot được duyệt, sent_at ASC, id ASC là thứ tự chronologic DERIVED, không phải contract.
-
-### 4.3. Query logic Q3 — student và attachment
+### 4.2. Query logic Q2 — messages và UploadAsset
 
 | Target | Column/item | Điều kiện | Remarks |
 |---|---|---|---|
-| pilot learner_profiles candidate | id, full_name, avatar_file_id | Candidate id = support_tickets.learner_id | UUID; full_name nullable; không có numeric UserSummary mapping. |
-| pilot file_objects candidate | id, original_name, declared_mime, detected_mime, size_bytes, scan_status, storage_key | Candidate IDs nằm trong file references | UUID; purpose/status/URL resolver chưa chốt. |
+| `support_messages` | `id`, `request_id`, `author_id`, `content`, `created_at` | Join theo request; giữ cùng owner/course/status predicates | Một bulk query, không N+1. |
+| `users` | `id`, `full_name`, `avatar_url`, `role` | `users.id = support_messages.author_id` | UserSummary của tác giả. |
+| `support_message_uploads` | `message_id`, `upload_id`, `asset_position` | Link message-upload có thứ tự | Bảng nối fallback phục vụ UploadAsset[]. |
+| `uploads` | `id`, `owner_id`, `purpose`, `course_id`, `file_name`, `url`, `content_type`, `size_bytes`, `status` | Link ID phải khớp author/course/purpose và `UPLOADED` | `STUDENT`→`SUBMISSION`; `MENTOR`→`LECTURE`. |
 
-### 4.4. Check cardinality
+- Message order trong mỗi request: `created_at ASC, id ASC`.
+- Attachment order: `asset_position ASC`.
+- Không có message thì `messages: []`; không có attachment thì `attachments: []`.
+- Link tồn tại nhưng metadata không thỏa owner/course/purpose/status hoặc projection bị thiếu thì mapping lỗi an toàn thành 500, không trả asset một phần.
 
-- Catalog/diagram trả một SupportRequest, trong khi URI/name và AC-24 action là list.
-- Nếu Q1 trả 0 hoặc nhiều record, chưa có contract duyệt để mã hóa empty result hoặc danh sách.
-- Không lấy bản ghi đầu tiên, cắt kết quả hoặc tự đổi response thành SupportRequest[]/Page.
-- Cần chốt response shape trước khi implementation xác định branch trả dữ liệu.
+### 4.3. Cardinality và result set
+
+- Collection response: `SupportRequest[]`, chọn từ list path/action của AC-24.
+- Không lấy row đầu, không phân trang và không cắt thread vì request schema không khai báo page/size/message limit.
+- Không có kết quả → HTTP 200, `data: []`, message `No support requests found.`.
 
 ## 5. Map response
 
-### 5.1. SupportRequest
+### 5.1. `SupportRequest`
 
-- data.id cần nguồn int64 được xác nhận; pilot ticket ID là UUID, không map trực tiếp.
-- data.course_id cần quan hệ hỗ trợ tới course đã được xác nhận; hiện SOURCE_REQUIRED.
-- data.student.id/full_name/avatar_url cần identity projection được xác nhận; pilot profile không tương thích trực tiếp.
-- data.status cần enum SupportStatus được xác nhận; không tự coi pilot values là enum API.
-- data.created_at/resolved_at lấy từ model được chốt; resolved_at optional, null-versus-omit chưa rõ.
+- `id`, `course_id`, `status`, `created_at`, `resolved_at` lấy từ `support_requests`.
+- `student` map từ `users` theo `student_id`; `full_name` là required theo legacy DDL, `avatar_url` optional.
+- `messages` được khởi tạo rỗng cho mọi request rồi được group từ Q2.
+- `resolved_at` NULL bị omit theo `response_model_exclude_none=True`.
 
-### 5.2. SupportMessage
+### 5.2. `SupportMessage`
 
-- Map từng message id, author, content, attachments, created_at theo [04_Response.md](./04_Response.md#response-fields).
-- Pilot body là candidate cho content; ID và author projection còn SOURCE_REQUIRED.
-- Nếu model có is_internal, visibility rule phải được xác nhận trước khi dùng pilot schema.
+- Map `id`, `content`, `created_at` từ `support_messages`.
+- `author` map từ `users` theo `author_id`.
+- Tạo đúng một message cho mỗi `message_id`, dù query có nhiều attachment rows.
+- Dữ liệu lặp giữa các attachment rows phải nhất quán; projection mâu thuẫn → 500.
 
-### 5.3. UploadAsset
+### 5.3. `UploadAsset`
 
-- Mỗi attachment phải map đủ id, name, url, content_type, size_bytes, status.
-- Không trả storage_key làm URL.
-- Không phát URL chưa ký; signer, file purpose và scan eligibility cần nguồn/contract được duyệt.
-- Không bịa giá trị hoặc trả asset thiếu field required như mapping đầy đủ.
+- Map `id`, `name`, `url`, `content_type`, `size_bytes`, `status` từ `uploads`.
+- Kiểm tra owner trùng tác giả, course trùng request, purpose khớp vai trò tác giả và status là `UPLOADED`.
+- Không trả `storage_key`; URL lấy từ metadata API #34.
 
 ## 6. Trả envelope
 
-- Success dùng HTTP 200 và DESIGN_RESOURCE_RETRIEVED.
-- Envelope gồm success, businessCode, message, data, meta, traceId.
-- API Guidelines yêu cầu error data=null; current error_response mặc định {} nếu data không truyền. Đây là discrepancy cần xử lý khi wiring, không tự đổi code trong DD.
-- Response paths và JSON example nằm trong [04_Response.md](./04_Response.md#response-fields).
+- Success dùng HTTP 200 và `DESIGN_RESOURCE_RETRIEVED`.
+- Envelope gồm `success`, `businessCode`, `message`, `data`, `meta`, `traceId`; `meta` là `{}` vì endpoint không phân trang.
+- Empty collection vẫn là success với `data: []`.
+- Error envelope dùng shared helper; error `data` serialize thành `null`.
 
 ## 7. Xử lý lỗi
 
-- Missing/invalid Bearer JWT → [401 DESIGN_AUTHENTICATION_REQUIRED](./06_Error.md).
-- Role hoặc scope không hợp lệ → [403 DESIGN_ACCESS_DENIED](./06_Error.md).
-- Lỗi hệ thống ngoài dự kiến → [500 DESIGN_INTERNAL_ERROR](./06_Error.md).
-- Không thêm 404, 409, 422 hoặc 503 vì catalog API #58 không khai báo các code đó.
-- API read-only nên không có transaction/rollback mutation branch.
+- Missing/invalid Bearer JWT → 401 `DESIGN_AUTHENTICATION_REQUIRED`.
+- Sai role hoặc course thuộc Mentor khác → 403 `DESIGN_ACCESS_DENIED`.
+- Query `course_id` không parse/range hợp lệ → 422 `DESIGN_VALIDATION_ERROR`.
+- DB, row mapping, required relation hoặc asset-link integrity lỗi → 500 `DESIGN_INTERNAL_ERROR`.
+- Read-only API không commit; rollback transaction an toàn trên DB/mapping error.
 
 ## Read-only mapping
 
-- [07_table.md](./07_table.md) giữ theo baseline và ghi N/A — READ-ONLY API.
+- [07_table.md](./07_table.md) ghi `N/A — READ-ONLY API`.
+- DDL/migration là source artifact; API source tests không chứng minh live database đã áp dụng migration 008.
+
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

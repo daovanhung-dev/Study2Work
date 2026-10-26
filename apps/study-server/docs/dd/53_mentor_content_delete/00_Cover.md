@@ -28,7 +28,7 @@ status: "Draft — Needs Confirmation"
 | Reviewed by | Chưa xác nhận |
 | Approved by | Chưa phê duyệt |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-25 |
 
 ## Tên hiển thị
 
@@ -39,7 +39,7 @@ Xóa nội dung Mentor
 
 ## Phạm vi và trạng thái
 
-DD thiết kế dựa trên catalog và AC-22. Quy tắc dependency, trạng thái được phép xóa và physical soft-delete chưa được nguồn xác nhận; đề xuất được đánh dấu DERIVED.
+DD thiết kế dựa trên catalog và AC-22. API #53 hiện có local source/HTTP tests; việc dùng `contents.deleted_at` bám local migration 006, còn eligibility guards và lifecycle policy vẫn là DERIVED. Live schema/deployment chưa được xác minh.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

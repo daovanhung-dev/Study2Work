@@ -7,73 +7,76 @@ source_sheet: "table"
 status: "Draft — Needs Confirmation"
 ---
 
+title: "Định nghĩa table"
+order: 7
+dd_id: "76"
+api_name: "Thay đổi trạng thái khóa học Admin"
+source_sheet: "table"
+status: "Draft — Needs Confirmation"
+---
+
 # Định nghĩa table
 
 ## Table metadata
 
 | Table/Relation | Loại | Vai trò | Trạng thái |
 |---|---|---|---|
-| Legacy courses | UPDATE candidate | Đổi trạng thái khóa học theo AC-32 STATUS branch | DERIVED candidate; live schema chưa verify. |
-| Audit event | Logical append effect | Bắt buộc theo diagram nhưng chưa có physical table tương thích direct int64 contract | SOURCE_REQUIRED; không tạo mapping giả. |
+| Legacy `courses` | `SELECT FOR UPDATE` / `UPDATE` | Đổi trạng thái theo AC-32 STATUS branch | Legacy BIGINT candidate; live schema chưa verify. |
+| `course_status_audit_logs` | `INSERT` | Lưu course, Admin actor, status cũ/mới và thời điểm | Physical fallback DERIVED; migration 010 chưa xác nhận đã áp dụng. |
 
-Legacy Study DDL xác nhận courses.id BIGSERIAL, courses.status VARCHAR(20) DEFAULT 'DRAFT', courses.updated_at TIMESTAMP NOT NULL. Đây là DDL artifact, không chứng minh schema runtime.
+Legacy Study DDL xác nhận candidate `courses.id BIGSERIAL`, nullable `status VARCHAR(20)` và `updated_at TIMESTAMP NOT NULL`. Đây là DDL artifact, không chứng minh schema runtime.
 
-V1-PILOT có UUID courses, UUID course_versions, course_versions.status enum và audit_events với UUID resource_id/actor_subject_id. Các bảng này không phải target tương đương cho API #76 BIGINT path. Live DB chưa được xác minh.
+V1-PILOT có UUID courses/course_versions và `audit_events` với UUID actor/resource IDs. API #76 dùng int64 contract và runtime legacy candidate; không nối ngầm sang UUID pilot. Live DB chưa được xác minh.
 
 ## Update mapping
 
-### Candidate target — legacy courses
-
 | Logical field | Relation | Column | Operation | Mapping/status |
 |---|---|---|---|---|
-| Course ID | courses | id | WHERE | Map course_id:int64; legacy BIGSERIAL candidate. |
-| Target status | courses | status | UPDATE/RETURNING | Body status candidate; allowed semantics from catalog; exact enum/casing DERIVED/SOURCE_REQUIRED. |
-| Updated time | courses | updated_at | UPDATE | Candidate database current timestamp; not direct AC rule. |
-| Course metadata | courses | name, description, thumbnail_url, price | No change | Owned by API #75; preserve values. |
-| Mentor owner | courses | mentor_id | No change | Not part of API #76. |
+| Course ID | `courses` | `id` | WHERE/lock | `course_id:int64`; legacy BIGSERIAL candidate. |
+| Target status | `courses` | `status` | UPDATE/RETURNING | Body `{status}`; DRAFT/PUBLISHED/SUSPENDED là fallback DERIVED. |
+| Updated time | `courses` | `updated_at` | UPDATE | `CURRENT_TIMESTAMP`, DERIVED. |
+| Course metadata | `courses` | `name`, `description`, `thumbnail_url`, `price` | No change | Owned by API #75. |
+| Mentor owner | `courses` | `mentor_id` | No change | Not part of API #76. |
 
-### Update condition
+## Audit relation mapping — DERIVED fallback
 
-- Candidate predicate: courses.id = :course_id.
-- Q1 obtains courses.status and locks the row before mutation.
-- No old-status transition predicate is proposed because AC-32 has no transition matrix.
-- No PUBLISHED filter; Admin may update all states.
-- If no row matches, return 404 DESIGN_RESOURCE_NOT_FOUND candidate.
-- SQL is design-only until schema/runtime owner confirms legacy model.
+| Logical field | Relation.column | Type/rule | Mapping/status |
+|---|---|---|---|
+| Audit identity | `course_status_audit_logs.id` | `BIGSERIAL PK` | Local schema fallback. |
+| Course | `course_status_audit_logs.course_id` | `BIGINT NOT NULL FK courses.id ON DELETE RESTRICT` | API path ID; legacy key match. |
+| Actor | `course_status_audit_logs.actor_user_id` | `BIGINT NOT NULL FK users.id ON DELETE RESTRICT` | Numeric user ID returned by shared JWT guard. |
+| Previous status | `course_status_audit_logs.previous_status` | `VARCHAR(20) NULL` | Captures legacy nullable status. |
+| New status | `course_status_audit_logs.new_status` | `VARCHAR(20) NOT NULL` | Target status from request. |
+| Event time | `course_status_audit_logs.changed_at` | `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP` | Database timestamp. |
 
-### Audit event mapping — SOURCE_REQUIRED
+AC-32 diagram directly requires an audit log but does not define its table or fields. This table is the smallest persistent fallback compatible with the current legacy int64 candidate. It is present in `DB.sql`, migration 010, the DB table guide/ERD and source SQL; none proves that a live database has the relation. The V1-PILOT `audit_events` table remains incompatible by key type.
 
-| Logical field | Candidate source | Physical mapping |
-|---|---|---|
-| Actor | Authenticated Admin principal | ID claim/type not known; do not convert numeric ID to UUID. |
-| Resource | Course ID and resource type | Legacy course ID is int64; pilot audit resource_id is UUID, incompatible. |
-| Action | Change course status | Exact action name not specified. |
-| Change details | Previous and target status | Pilot has changes jsonb; no approved legacy audit target. |
-| Outcome/code | Successful status update | Pilot audit_outcome/business_code are not direct contract. |
-| Trace | Request trace ID | Study runtime trace is UUID; pilot audit trace_id is varchar. |
-| Timestamp | Event occurrence | Source/timezone/retention policy not selected. |
+## Mutation and transaction boundary
 
-No audit INSERT SQL or table mapping can be finalized until the project selects a schema compatible with API #76 and defines actor/resource/event fields. The diagram requirement remains mandatory; a status-only write is not complete.
+1. Lock `courses` by `id`; no row returns 404.
+2. If status differs, update `status` and `updated_at`, then insert actor/course/old/new into `course_status_audit_logs` in the same transaction.
+3. If status already equals the target, treat as idempotent no-op: no timestamp change and no duplicate audit row. This is DERIVED.
+4. Read the #74 Course/mentor projection, validate it and commit only after mapping succeeds.
+5. Roll back status and audit together on query, audit, projection, mapping or commit failure.
 
-### Transaction boundary
-
-Candidate transaction:
-
-1. Lock/read course.
-2. Update status and timestamp.
-3. Append audit event using approved physical mapping.
-4. Read updated Course projection.
-5. Commit only when all required operations succeed.
-
-Study DB helpers do not commit; the use case/caller must own the transaction. Roll back if update, audit append, projection or commit fails.
+No transition/readiness gate, enrollment/content update, notification, action JSON, retention policy, trace column, audit read/update/delete endpoint or DB append-only trigger is inferred. Fine-grained Admin permission remains SOURCE_REQUIRED.
 
 ## Insert mapping
 
-Không xác định được physical audit relation cho API #76 từ legacy int64 schema. Audit log là logical side effect bắt buộc; physical INSERT mapping SOURCE_REQUIRED. Không coi pilot audit_events là tương thích khi resource/actor IDs vẫn UUID và live schema chưa xác minh.
+~~~sql
+INSERT INTO course_status_audit_logs (
+    course_id, actor_user_id, previous_status, new_status
+) VALUES (
+    :course_id, :actor_user_id, :previous_status, :new_status
+)
+~~~
+
+The audit insert occurs only for an actual status change. SQL is parameterized in `query.py`; the view owns the shared transaction. The candidate migration is `infra/postgres/study-server/migrations/010_course_status_audit_logs.sql`.
 
 ## Delete mapping
 
 N/A — API #76 không xóa khóa học. Soft delete và dependency policy thuộc API #77.
+
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `table`

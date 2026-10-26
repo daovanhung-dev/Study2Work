@@ -31,234 +31,161 @@ status: "Draft — Needs Confirmation"
 
 ## 0. Check quyền
 
-### 0.1. Authenticate và authorize
-
-- Xác thực Bearer JWT theo catalog.
-- Yêu cầu role Admin theo catalog.
-- Yêu cầu lesson-management permission theo AC-34.
-- Credential thiếu/sai/hết hạn → HTTP 401 DESIGN_AUTHENTICATION_REQUIRED.
-- Thiếu role/permission → HTTP 403 DESIGN_ACCESS_DENIED.
-- Current Study auth helper chỉ có Student guard; Admin claim, permission provider và guard chưa có.
-- Authorize trước khi truy vấn hoặc mutation.
-- Actor subject dùng cho audit phải lấy từ principal đã authorize; claim mapping SOURCE_REQUIRED.
-
-### 0.2. Quyền truy cập
-
-| Target table/API | Column/Field | Condition/Value | Remarks |
-|---|---|---|---|
-| Authorization header | Bearer credential | Token hợp lệ | DIRECT requirement; route chưa có. |
-| Principal policy | Admin role | Principal có role Admin | DIRECT requirement; claim source chưa có. |
-| AC-34 policy | lesson-management permission | Principal được phép quản lý lesson | DIRECT precondition; implementation SOURCE_REQUIRED. |
-| Audit actor | Admin subject ID | Được map từ principal | Audit intent cần actor; physical claim mapping SOURCE_REQUIRED. |
+- Bearer JWT xác thực qua shared `validate_current_user_request(... role="ADMIN")`.
+- Thiếu/sai/hết hạn credential → 401 `DESIGN_AUTHENTICATION_REQUIRED`; thiếu ADMIN role → 403 `DESIGN_ACCESS_DENIED`.
+- Guard trả numeric user ID từ JWT `sub`; view dùng ID này làm `actor_user_id` cho audit.
+- AC-34 còn yêu cầu lesson-management permission riêng, nhưng current shared guard chỉ kiểm tra ADMIN role. Đây là discrepancy, không tuyên bố policy riêng đã thực thi.
+- Auth chạy trước signed-int64 path parse và mọi query DB trong view. Typed body validation của FastAPI chạy trước handler/auth theo convention hiện tại.
 
 <a id="step-1-nhan-request"></a>
 
 ## 1. Nhận request
 
-### 1.1. Path
-
-- lesson_id lấy từ path và có kiểu int64 theo catalog.
-- Không thêm positive/minimum rule vì catalog không nêu.
-- Path không parse được/out-of-range có thể map 422 DESIGN_VALIDATION_ERROR theo error set; chi tiết cần xác nhận.
-
-### 1.2. Header và body
-
-- Authorization lấy từ request header.
-- X-Trace-Id được current middleware truyền hoặc khởi tạo; không phải input nghiệp vụ.
-- Catalog/diagram không khai báo body hoặc Content-Type.
-- JSON object có field status là DERIVED proposal để nêu trạng thái đích; không phải contract đã duyệt.
-- Không có query parameter.
+- `lesson_id` nhận từ raw path và parse signed int64; malformed/out-of-range trả 422 `DESIGN_VALIDATION_ERROR` trước query.
+- JSON body strict chỉ nhận `{status}`; không nhận query parameter hoặc metadata fields.
+- `X-Trace-Id` được current middleware truyền hoặc sinh; body `status` chỉ định target theo DERIVED enum ở Step 2.
 
 <a id="step-2-check-status-proposal"></a>
 
 ## 2. Check status proposal
 
-- status phải chỉ định một target theo LessonStatus sau khi owner cung cấp enum/casing.
-- Catalog/diagram/reusable Lesson không liệt kê các enum member.
-- Legacy DDL đặt default DRAFT nhưng không xác nhận DRAFT là target được chấp nhận hoặc là tập trạng thái đầy đủ.
-- Không tạo whitelist, transition matrix, readiness gate hoặc side effect cho enrollment/content.
-- Thiếu/sai target có thể map 422 DESIGN_VALIDATION_ERROR; code là DIRECT, điều kiện cụ thể SOURCE_REQUIRED.
-- Same-status request, retry và idempotency behavior cần xác nhận.
-- Validate input trước mutation; validator không truy vấn DB hay ghi audit theo Study convention.
+- Cho phép đúng các giá trị `DRAFT`, `PUBLISHED`, `SUSPENDED`, tái dùng candidate status set của API #76 do catalog/diagram không liệt kê LessonStatus riêng.
+- Body thiếu/thừa field, sai type hoặc status khác ba giá trị trên bị FastAPI/Pydantic từ chối với 422 `DESIGN_VALIDATION_ERROR`.
+- Không áp transition matrix, readiness gate, moderation, enrollment/progress side effect hoặc idempotency key.
+- Nếu target bằng status hiện tại, view trả Lesson hiện tại, không UPDATE và không ghi audit duplicate.
 
 <a id="step-3-update-audit"></a>
 
 ## 3. Update và audit
 
-### 3.1. M1 — Candidate UPDATE theo lesson ID
-
-SQL dưới đây chỉ là proposal trên legacy DDL; chưa chạy và không chứng minh live schema.
+### 3.1. M1 — Khóa và đọc Lesson
 
 ```sql
-UPDATE lessons AS l
-SET
-    status = :status,
-    updated_at = CURRENT_TIMESTAMP
-WHERE l.id = :lesson_id
-RETURNING
-    id,
-    course_id,
-    name,
-    content,
-    video_url,
-    sort_order,
-    status
+SELECT
+    id, course_id, name AS title, content, video_url,
+    sort_order AS "order", status
+FROM lessons
+WHERE id = :lesson_id
+FOR UPDATE
 ```
 
-- :lesson_id bind từ path; :status bind từ request proposal.
-- Chỉ đổi status và updated_at candidate; giữ nguyên relation, metadata, dependencies và progress.
-- updated_at tồn tại trong legacy DDL; cập nhật bằng server time là DERIVED và cần xác nhận trigger/owner khác.
-- WHERE predicate, table và returned columns là candidate từ legacy schema; live target chưa được chọn.
-- Không có row trả về → candidate 404 DESIGN_RESOURCE_NOT_FOUND.
-- Transaction commit/rollback thuộc caller/use case theo DB helper convention; API #85 caller chưa tồn tại.
+- SQL target là legacy BIGINT `lessons` mapping dùng bởi APIs #82–#84; V1-PILOT UUID Lesson không được ghép vào flow này.
+- Không có row → 404 `DESIGN_RESOURCE_NOT_FOUND`; không query lesson trước Admin authorization.
+- `FOR UPDATE` giữ status cũ ổn định cho audit và nhánh same-status trong transaction.
 
-### 3.2. M2 — Audit theo AC-34
+### 3.2. M2 — Cập nhật status khi có thay đổi
 
-- AC-34 diagram yêu cầu “UPDATE status + audit”; logical audit event là DIRECT intent.
-- Legacy Study DDL không có audit relation.
-- V1-PILOT có audit_events, nhưng pilot lessons.id là UUID và không có status field; audit resource_id cũng là UUID.
-- Không viết INSERT, action name, old/new payload hoặc khóa resource giả định.
-- Physical audit relation, actor/resource key mapping, status before/after, trace binding và append-only policy đều SOURCE_REQUIRED.
-- DERIVED proposal: chỉ hoàn tất success khi status change và audit được lưu cùng transaction theo schema đã duyệt.
-- DERIVED failure handling: nếu audit hoặc response projection thất bại sau mutation, rollback candidate và trả 500 DESIGN_INTERNAL_ERROR; transaction owner cần được chốt.
-- Current helper query_one/query_many không commit; caller sở hữu transaction.
+```sql
+UPDATE lessons
+SET status = :status, updated_at = CURRENT_TIMESTAMP
+WHERE id = :lesson_id
+RETURNING
+    id, course_id, name AS title, content, video_url,
+    sort_order AS "order", status
+```
 
-### 3.3. Query Matrix
+- Chỉ thay `status` và `updated_at`; không sửa metadata, course relation, uploads/resources, dependencies hoặc progress.
+- Returned row phải map được thành reusable API #09 `Lesson` và status phải bằng request target; nếu không, rollback rồi trả 500 `DESIGN_INTERNAL_ERROR`.
+- UPDATE không trả row → 404 `DESIGN_RESOURCE_NOT_FOUND`.
 
-| Query | Type | Table/source | Conditions/effect | Result/status |
+### 3.3. M3 — Append audit trong cùng transaction
+
+```sql
+INSERT INTO lesson_status_audit_logs (
+    lesson_id, actor_user_id, previous_status, new_status
+)
+VALUES (
+    :lesson_id, :actor_user_id, :previous_status, :new_status
+)
+```
+
+- Relation/columns được khai báo ở migration 012 theo fallback DERIVED legacy BIGINT, dựa trên patterns #76/#80.
+- Chỉ ghi khi status thực sự đổi; actor là numeric subject đã qua shared ADMIN guard.
+- View sở hữu transaction: status update, audit insert, response mapping rồi commit; DB/audit/mapping/commit failure rollback toàn bộ và trả safe 500.
+- Migration 012 là source artifact, chưa chứng minh đã chạy trên live schema. `audit_events` pilot không dùng vì UUID resource key và Lesson schema không tương thích.
+
+### 3.4. Query Matrix
+
+| Query | Type | Target | Conditions/effect | Result/status |
 |---|---|---|---|---|
-| M1 | UPDATE RETURNING | Legacy lessons candidate | id = :lesson_id; SET status, candidate updated_at | One updated Lesson candidate; live schema unknown. |
-| M2 | Logical audit append | No approved compatible relation | Admin changes lesson status | Diagram intent DIRECT; physical mapping SOURCE_REQUIRED; no SQL guessed. |
-| M1 no row | Result branch | UPDATE RETURNING | No returned lesson | Candidate 404 DESIGN_RESOURCE_NOT_FOUND. |
-| Other queries | None | Courses/dependencies/progress | No join, count or bulk scan | Not requested by status branch. |
+| M1 | SELECT FOR UPDATE | Legacy `lessons` candidate | `id = :lesson_id` | Current Lesson/status; no row → 404. |
+| M2 | UPDATE RETURNING | Legacy `lessons` candidate | Set target status and `updated_at` when value changes | Updated Lesson projection. |
+| M3 | INSERT | `lesson_status_audit_logs` migration 012 | Actor, lesson, old/new status on actual change | Same transaction; no-op skips insert. |
 
-### 3.4. Mutation Matrix
+### 3.5. Mutation Matrix
 
-| Mutation | Target | Field/effect | Value source | Status |
+| Mutation | Target | Fields/effect | Value source | Status |
 |---|---|---|---|---|
-| M1 UPDATE | Legacy lessons candidate | status | Body status proposal | Logical status change DIRECT; physical candidate DERIVED. |
-| M1 UPDATE | Legacy lessons candidate | updated_at | Server current timestamp | DERIVED; timestamp ownership/live schema unresolved. |
-| M2 audit append | Logical audit event | Record Admin status action | AC-34 | DIRECT intent; physical mapping SOURCE_REQUIRED. |
-| No mutation | Lesson metadata/dependencies/progress | Preserve without cascade | N/A | Scope boundary; no policy supports writes. |
+| M2 UPDATE | `lessons` | status, updated_at | Validated body and DB clock | DERIVED legacy mapping. |
+| M3 INSERT | `lesson_status_audit_logs` | lesson_id, actor_user_id, previous_status, new_status | Locked row and validated principal | DERIVED; atomic with M2. |
+| No mutation | metadata, relation, resources, progress | Preserve | N/A | Outside API #85 scope. |
 
 <a id="step-4-check-ket-qua-va-map-response"></a>
 
 ## 4. Check kết quả và map response
 
-### 4.1. Có row trả về
-
-- Khi UPDATE RETURNING trả đúng một row và response fields map được, tạo một Lesson.
-- data.id = row.id.
-- data.course_id = row.course_id; không đổi relation.
-- data.title = row.name.
-- data.content = row.content.
-- data.video_url = row.video_url.
-- data.order = row.sort_order.
-- data.status = row.status sau update.
-- Legacy course_id có thể NULL nhưng reusable Lesson yêu cầu int64; không map NULL thành 0.
-- content/video_url nullable; null-versus-omit serialization cần xác nhận.
-- Không trả audit record trong Lesson response.
-- Audit phải được ghi thành công trong cùng transaction trước khi success được commit.
-
-### 4.2. Không có row
-
-- Không có row từ M1 → candidate HTTP 404 DESIGN_RESOURCE_NOT_FOUND.
-- Soft-delete visibility chưa có policy/marker chung.
-- Không đọc lesson trước authorization.
-
-### 4.3. Database hoặc mapping failure
-
-- Không trả raw SQL hoặc stack trace.
-- Trả HTTP 500 DESIGN_INTERNAL_ERROR theo catalog.
-- Rollback status nếu audit, projection, mapping hoặc commit thất bại; transaction owner chưa xác nhận implementation.
-
-### 4.4. Response Source Matrix
-
-| Response field | Candidate source | Transform/null rule | Status |
-|---|---|---|---|
-| success | Envelope branch | true success / false error | DIRECT reusable envelope shape |
-| businessCode | Catalog | Exact code per branch | DIRECT |
-| message | Application | Safe text; exact text unspecified | DERIVED wording |
-| data.id | M1 returned id | Copy | Legacy candidate |
-| data.course_id | M1 returned course_id | Copy; NULL conflicts with required int64 | Legacy discrepancy |
-| data.title | M1 returned name | Alias name → title | Legacy candidate; API #09 precedent |
-| data.content | M1 returned content | Copy; null/omit unresolved | Nullable candidate |
-| data.video_url | M1 returned video_url | Copy; URI/null/omit unresolved | TEXT candidate |
-| data.order | M1 returned sort_order | Alias sort_order → order | Legacy candidate; API #09 precedent |
-| data.status | M1 returned status | Copy updated value | Contract field DIRECT; enum/casing unresolved |
-| meta | Envelope convention | Empty object candidate on success | No API-specific data |
-| traceId | Current trace middleware | Propagate or generate UUID | Current-source convention |
-
-### 4.5. Schema boundary
-
-- Catalog request body absent; candidate status field is not an implementation contract.
-- Legacy BIGINT lesson schema and V1-PILOT UUID/versioned lesson schema are distinct.
-- Legacy status column supports only a physical candidate; status values/transitions remain unknown.
-- Audit storage cannot be paired with the selected lesson schema from current checked-in artifacts.
-- No live-schema metadata, route, migration deployment or SQL execution is claimed.
+- Successful changed row or no-op locked row maps through API #09 `Lesson`: id, course_id, title, content, video_url, order, status.
+- `course_id` must satisfy reusable Lesson required int64; legacy NULL is not replaced with a fabricated value and produces safe 500/rollback.
+- Nullable content/video_url serialize as JSON null. Audit fields are not returned in Lesson.
+- Missing lesson returns 404; DB, audit, mapping or commit failure returns 500 with rollback and no raw SQL/detail.
+- #85 does not filter a soft-delete marker; #86 visibility policy remains a linked open question.
 
 <a id="step-5-tra-response"></a>
 
 ## 5. Trả response
 
-- Thành công: HTTP 200, businessCode DESIGN_RESOURCE_UPDATED, một ApiEnvelope<Lesson>.
-- Errors: preserve exact catalog statuses/codes 401/403/404/422/500.
-- Error guideline yêu cầu data:null; current Study error_response defaults absent data thành {}. Đây là discrepancy khi tích hợp.
-- Trace ID tuân theo middleware convention.
-- Sau success, UI reload danh sách lesson theo AC-34.
+- Success: HTTP 200, `DESIGN_RESOURCE_UPDATED`, one `ApiEnvelope<Lesson>`.
+- Error set stays exactly catalog 401/403/404/422/500 codes.
+- Current `error_response` returns top-level `data: null`; focused API #85 HTTP tests cover error responses.
+- Successful AC-34 flow returns to API #82 list reload. No list query is added here.
 
 ## Requirement Matrix
 
 | Requirement | Source | Status |
 |---|---|---|
-| PATCH status path, Bearer JWT, Admin, required path int64 | API #85 catalog | DIRECT |
-| Lesson envelope and 200 update code | API #85 catalog | DIRECT |
-| Exact 401/403/404/422/500 codes | API #85 catalog | DIRECT |
-| Admin lesson-management permission | AC-34 precondition | DIRECT intent; policy source absent |
-| Update status plus audit, then reload list | AC-34 nodes n9/n10/n13 | DIRECT intent |
-| Body status field and JSON content type | Needed target for PATCH; absent from catalog/diagram | DERIVED proposal |
-| Enum members, casing, transition/no-op/retry rules | Not defined by sources | SOURCE_REQUIRED |
+| PATCH path, Bearer JWT/Admin, int64 path | Catalog #85 | DIRECT |
+| Lesson envelope, 200 update code, exact error set | Catalog #85 | DIRECT |
+| lesson-management permission and status+audit intent | AC-34 | DIRECT intent; fine-grained permission not implemented |
+| Body `{status}` and values DRAFT/PUBLISHED/SUSPENDED | Catalog/diagram omit body; API #76 precedent | DERIVED |
+| Row lock, no-op, updated_at and atomic audit | Existing #76/#80 patterns and legacy schema | DERIVED |
+| Migration 012 deployment/live schema | Not verified by source tests | SOURCE_REQUIRED |
 
 ## Request Usage Matrix
 
 | Request item | Source/use | Query/response use | Rule/status |
 |---|---|---|---|
-| Authorization | Bearer JWT | Admin authorization and audit actor candidate | DIRECT; claims/policy mapping SOURCE_REQUIRED |
-| lesson_id | Required path int64 | M1 predicate and data.id | DIRECT type; legacy mapping candidate |
-| Body status | Candidate JSON target | M1 SET and data.status | DERIVED; enum and validation SOURCE_REQUIRED |
+| Authorization | Bearer JWT | Shared ADMIN guard and audit actor | ADMIN is current; fine-grained permission absent |
+| lesson_id | Required path int64 | M1 predicate and response identity | DIRECT type; legacy key candidate |
+| Body status | Strict JSON | M2 target and response status | DERIVED three-value enum; invalid input 422 |
 | Query parameters | None | None | Direct absence |
-| X-Trace-Id | Current middleware | Envelope/audit correlation candidate | Current-source convention; audit storage unknown |
+| X-Trace-Id | Current middleware | Envelope trace | Current-source convention; not stored in audit row |
 
 ## Query Matrix
 
 | Step | Type | Source/target | Purpose/status |
 |---|---|---|---|
-| M1 | UPDATE RETURNING | Legacy lessons candidate | Change status by id; physical schema candidate, live schema unknown |
-| M2 | Logical audit append | No approved physical source | Required by diagram; physical mapping SOURCE_REQUIRED |
-| No-row branch | Result check | M1 result | Candidate 404 |
-| No additional query | No dependency/list/progress query | N/A | Not required by status branch |
+| M1 | SELECT FOR UPDATE | Legacy `lessons` | Read status and serialize changes per row |
+| M2 | UPDATE RETURNING | Legacy `lessons` | Change status and updated_at only |
+| M3 | INSERT | `lesson_status_audit_logs` | Append actor and old/new values atomically |
+| No-op | No mutation | Locked `lessons` row | Return current Lesson and commit to release lock |
 
 ## Mutation Matrix
 
-| Operation | Target | Condition | Fields/effect | Status |
-|---|---|---|---|---|
-| M1 UPDATE | Legacy lessons candidate | id = :lesson_id | Set status and candidate updated_at; preserve remaining lesson fields | DERIVED physical mapping |
-| M2 audit append | Logical audit event | Accepted status change | Record Admin status operation | Direct intent; physical schema SOURCE_REQUIRED |
-| Bulk/dependency mutation | None | No source condition | No cascade to resources/progress/enrollment | Out of scope |
+| Step | Target | Effect | Atomicity |
+|---|---|---|---|
+| M2 | `lessons` | Change status and updated_at | Same Session transaction |
+| M3 | `lesson_status_audit_logs` | Record the accepted status change | Same Session transaction; skipped for no-op |
 
 ## Response Source Matrix
 
-| Response field | Candidate source/transform | Gap/status |
-|---|---|---|
-| HTTP status/businessCode | API #85 catalog | Exact set is DIRECT |
-| data | One returned Lesson | ApiEnvelope<Lesson> DIRECT |
-| data.id/course_id | Legacy lessons id/course_id | Candidate; nullable course_id discrepancy |
-| data.title | Legacy name → title | Candidate alias |
-| data.content/video_url | Legacy matching columns | Candidate; null/omit unresolved |
-| data.order | Legacy sort_order → order | Candidate alias |
-| data.status | Updated row status | Direct response field; enum/casing unknown |
-| meta/traceId | Envelope and current middleware | Empty meta candidate; current trace convention |
-
+| Response field | Source | Transform/null rule | Status |
+|---|---|---|---|
+| success/businessCode | Envelope/catalog | true and `DESIGN_RESOURCE_UPDATED` | DIRECT |
+| data | Lesson row | One reusable API #09 Lesson | DIRECT response shape; legacy mapping candidate |
+| data.title/order | name/sort_order | Aliased by SQL | Legacy mapping used by #82–#84 |
+| data.status | Returned row | Copy exact new/current value | DIRECT field; enum is DERIVED |
+| meta | Envelope helper | Empty object on success | Current helper |
+| traceId | Middleware | Propagate or generate UUID | Current-source convention |
 ---
 
 ## Phụ lục đối chiếu nguồn Excel

@@ -18,16 +18,16 @@ status: "Draft — Needs Confirmation"
 | HTTP method | PATCH |
 | URI | `/api/v1/admin/lessons/{lesson_id}/status` |
 | Character encoding | UTF-8 |
-| Content-Type | application/json là DERIVED cho body proposal; catalog chưa khai báo. |
+| Content-Type | application/json là DERIVED cho body đã implement; catalog chưa khai báo. |
 | Authentication | Bearer JWT |
-| Role | Admin; lesson-management permission theo AC-34. |
+| Role | `ADMIN` guard được dùng; lesson-management permission riêng theo AC-34 chưa được thực thi. |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | `Authorization` | Yes | `Bearer <token>` | Yêu cầu principal có Admin role và lesson-management permission; guard/policy chưa có trong Study. | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) |
-| 2 | Content type | `Content-Type` | DERIVED | `application/json` | Candidate header nếu body JSON được owner duyệt. | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) |
+| 1 | Authorization | `Authorization` | Yes | `Bearer <token>` | Shared guard yêu cầu role `ADMIN`; AC-34 permission chuyên biệt chưa được kiểm tra. | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) |
+| 2 | Content type | `Content-Type` | DERIVED | `application/json` | Body JSON status đã implement. | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) |
 | 3 | Trace ID | `X-Trace-Id` | No | UUID | Current Study middleware convention; không phải input nghiệp vụ. | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) |
 
 ## Path parameters
@@ -40,15 +40,15 @@ status: "Draft — Needs Confirmation"
 
 N/A — catalog và AC-34 diagram không khai báo query parameter.
 
-## Request body — DERIVED proposal
+## Request body — DERIVED fallback implemented locally
 
-Catalog và diagram chỉ khai báo path. Body dưới đây là phương án tối thiểu để chỉ định trạng thái đích cho thao tác PATCH; chưa được duyệt.
+Catalog và diagram chỉ khai báo path. Implementation dùng body tối thiểu `{status}`; enum là DERIVED fallback theo API #76, chưa phải Lesson-specific approved contract.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Trạng thái lesson | `status` | LessonStatus / string representation | Yes, proposal | Chưa đặc tả | Chưa đặc tả | Unicode | N/A | SOURCE_REQUIRED | Không có | Giá trị đích candidate; cần xác định enum/casing/transition. | [Step 2](./05_Data_Mapping.md#step-2-check-status-proposal) |
+| 1 | Trạng thái lesson | `status` | string enum | Yes, DERIVED | 1 | 10 | Unicode | N/A | `DRAFT`, `PUBLISHED`, `SUSPENDED` | Không có | Target status; enum tái dùng API #76, chưa có owner approval riêng cho Lesson. | [Step 2](./05_Data_Mapping.md#step-2-check-status-proposal) |
 
-Không gửi lesson_id hoặc metadata trong body. Status field, JSON encoding, requiredness và 422 conditions đều cần owner confirmation.
+Không gửi lesson_id hoặc metadata trong body. Status field, JSON encoding, requiredness và body 422 conditions là DERIVED implementation choices; owner approval riêng cho Lesson vẫn mở.
 
 ## Ví dụ Request data — DERIVED
 
@@ -63,13 +63,13 @@ X-Trace-Id: 00000000-0000-0000-0000-000000000085
 }
 ```
 
-DRAFT là default trong legacy DDL và chỉ minh họa string representation. DDL không xác nhận DRAFT là request target hợp lệ hoặc liệt kê toàn bộ LessonStatus.
+Body enum gồm DRAFT, PUBLISHED, SUSPENDED theo DERIVED API #76 fallback. Legacy DDL chỉ xác nhận default DRAFT, không xác nhận toàn bộ enum.
 
 ## Quy tắc input đang mở
 
 - Catalog xác nhận lesson_id:int64!; positive/minimum constraint chưa được đặc tả.
 - Catalog có 422 DESIGN_VALIDATION_ERROR nhưng không chỉ rõ body schema hoặc field validation.
-- Body status, requiredness, enum values/casing, transition/no-op/retry behavior và Content-Type cần owner xác nhận.
+- Body chỉ nhận `status` đúng một trong ba giá trị DERIVED; thiếu/thừa field, sai type hoặc status ngoài enum trả 422. Same-status là no-op không audit; transition matrix/idempotency key không được thêm.
 - Không suy ra readiness, enrollment, moderation hoặc audit reason rules từ schema khác.
 
 ---

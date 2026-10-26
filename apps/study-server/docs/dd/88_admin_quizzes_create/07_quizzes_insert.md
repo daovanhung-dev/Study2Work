@@ -34,27 +34,26 @@ status: "Draft — Needs Confirmation"
 
 **Áp dụng khi**
 
-- Sau khi Admin được phép và config được parse theo proposal DERIVED.
-- Course reference đã được kiểm tra theo candidate Q0.
-- Cùng transaction với INSERT question và choice rows.
+- Sau shared ADMIN guard, embedded config validation và course existence check.
+- Cùng transaction với question và choice INSERT.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | id | Quiz ID | BIGSERIAL / int64 | N/A | N/A | Y | PK | Database generated | DB.sql candidate | 3 | Contract requires int64; live schema unverified. |
-| 2 | course_id | Course ID | BIGINT / int64 | 8 bytes | N/A | Y by proposal | FK | config.course_id | Quiz schema + embedded config | 3 | DDL nullable; table guide says relation required. |
-| 3 | name | Quiz title | VARCHAR | 200 | N/A | Y |  | config.title → name | Quiz.title + legacy DDL | 3 | Alias DERIVED; candidate physical max 200. |
-| 4 | description | Description | TEXT | N/A | N/A | N |  | NULL / not provided | No Quiz/config field | 3 | Nullable candidate; do not invent input. |
-| 5 | passing_score | Passing score | NUMERIC | 5 | 2 | Y |  | config.passing_score | Quiz schema + legacy DDL | 3 | Decimal range/scale policy open. |
-| 6 | time_limit_minutes | Duration | INT | 4 | N/A | N |  | config.duration_minutes or NULL | Quiz.duration_minutes? + legacy DDL | 3 | Optional; null/omit response rule open. |
-| 7 | status | Quiz status | VARCHAR | 20 | N/A | N |  | Use DDL default DRAFT | Legacy DB.sql | 3 | Not in request/Quiz response; lifecycle unresolved. |
-| 8 | created_at | Created time | TIMESTAMP | N/A | N/A | Y |  | Current transaction time | Legacy DB.sql | 3 | DDL NOT NULL; no default. |
-| 9 | updated_at | Updated time | TIMESTAMP | N/A | N/A | Y |  | Same value as created_at | Legacy DB.sql | 3 | DDL NOT NULL; no default. |
+| 1 | id | Quiz ID | BIGSERIAL / int64 | N/A | N/A | Y | PK | Database generated | DB.sql candidate | 3 | Live schema unverified. |
+| 2 | course_id | Course ID | BIGINT / int64 | 8 bytes | N/A | Y by logical model | FK | config.course_id | Quiz schema + local embedded shape | 3 | DDL nullable; API supplies a checked ID. |
+| 3 | name | Quiz title | VARCHAR | 200 | N/A | Y |  | config.title → name | Quiz.title + legacy DDL | 3 | Alias; max follows physical candidate. |
+| 4 | description | Description | TEXT | N/A | N/A | N |  | Omit / NULL | No Quiz/config field | 3 | Do not invent input. |
+| 5 | passing_score | Passing score | NUMERIC | 5 | 2 | Y |  | config.passing_score | Quiz schema + legacy DDL | 3 | Must fit storage; no business range added. |
+| 6 | time_limit_minutes | Duration | INT | 4 | N/A | N |  | config.duration_minutes or NULL | Quiz schema + legacy DDL | 3 | Optional. |
+| 7 | status | Quiz status | VARCHAR | 20 | N/A | N |  | Use DDL default DRAFT | Legacy DB.sql | 3 | Lifecycle unresolved. |
+| 8 | created_at | Created time | TIMESTAMP | N/A | N/A | Y |  | Current transaction time | Legacy DB.sql | 3 | DDL has no default. |
+| 9 | updated_at | Updated time | TIMESTAMP | N/A | N/A | Y |  | Same value as created_at | Legacy DB.sql | 3 | DDL has no default. |
 
 ## Delete mapping
 
 **Áp dụng khi**
 
-- N/A — deletion thuộc API #90 và phụ thuộc attempts/policy.
+- N/A — deletion thuộc API #90.
 
 | No | Target column | Operator | Value source | Data Mapping step | Remarks |
 |---:|---|---|---|---|---|

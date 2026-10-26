@@ -82,9 +82,9 @@ UserSummary: id:int64, full_name:string, avatar_url?:uri. Category: id:int64, na
 
 Đây là ví dụ shape theo schema catalog; các giá trị minh họa, CourseStatus là placeholder chứ không xác nhận enum member, và response không có learner/progress.
 
-## Candidate response để review — DERIVED, không phải contract
+## Response local hiện tại — DERIVED, không phải contract catalog
 
-AC-26 cần một row mỗi learner. Nếu contract được sửa sang Page<MentorStudentProgress>, shape tối thiểu có thể là:
+AC-26 cần một row mỗi learner. Theo lựa chọn fallback được ủy quyền, route hiện trả Page<MentorStudentProgress> sau khi kiểm tra direct course owner:
 
 ~~~json
 {
@@ -116,11 +116,11 @@ AC-26 cần một row mỗi learner. Nếu contract được sửa sang Page<Men
 }
 ~~~
 
-Candidate fields and one-page behavior are DERIVED proposals only. The catalog remains the direct contract until explicitly changed.
+Các field, phép tính và one-page behavior là DERIVED local fallback, được kiểm tra bằng focused HTTP tests. Catalog vẫn là nguồn contract trực tiếp `Page<Course>` cho tới khi owner phê duyệt thay đổi. No pagination limit exists.
 
 ## Error response note
 
-The exact error business codes/statuses are listed in [Error](./06_Error.md). The shared API guideline expects data:null for error; the current helper defaults absent data to {}. API #65 has no route, so no endpoint-specific serialization is verified.
+The exact error business codes/statuses are listed in [Error](./06_Error.md). The shared `error_response` defaults `data=None`, serialized as JSON null and confirmed by local HTTP tests. OpenAPI declares 200/401/403/404/500; the route does not create a synthetic 422. Fake DB tests do not prove live schema/deployment behavior.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

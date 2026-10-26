@@ -18,12 +18,12 @@ N/A — READ-ONLY API. API #65 không tạo, sửa hoặc xóa dữ liệu. Khô
 | Logical role | Legacy candidate | Dữ liệu cần đọc | Trạng thái |
 |---|---|---|---|
 | Course/access | courses | Course ID, owner Mentor ID | DESIGN_ONLY; owner predicate DERIVED. |
-| Enrollment roster | enrollments | Course ID, learner ID | DESIGN_ONLY; status/uniqueness policy SOURCE_REQUIRED. |
-| Learner profile | users | ID, full name, avatar URL | Candidate for UserSummary; role/null/deletion policy unresolved. |
-| Denominator | lessons | ID, course ID, status | Published filter DERIVED from API #9. |
-| Per-lesson progress | lesson_progress | Learner ID, lesson ID, status, percent | Key/enums/aggregation and live schema unverified. |
+| Enrollment roster | enrollments | `course_id`, `user_id`, `status` | Local query filters `ACTIVE`, collapses duplicate learner rows through DISTINCT, DERIVED from API #62. |
+| Learner profile | users | `id`, `full_name`, `avatar_url`, `role` | Local query requires `STUDENT`; legacy DDL/live nullability remains unverified. |
+| Denominator | lessons | `id`, `course_id`, `status` | Local query counts `PUBLISHED`, DERIVED from API #9. |
+| Per-lesson progress | lesson_progress | `user_id`, `lesson_id`, `status`, `progress_percent`, `last_accessed_at`, `id` | Local query chooses latest row per pair; percent range checked in view; DDL has no unique/range constraint. |
 
-V1-PILOT relations course_enrollments, lesson_progress_facts, and progress_snapshots use UUID/versioned design and are not interchangeable with the catalog int64 IDs or legacy candidate above.
+V1-PILOT relations course_enrollments, lesson_progress_facts, and progress_snapshots use UUID/versioned design and are not used by this int64 local query. Checked-in legacy DDL is not live-schema proof.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

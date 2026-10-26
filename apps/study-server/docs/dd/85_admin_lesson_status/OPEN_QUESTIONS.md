@@ -1,30 +1,20 @@
 # Câu hỏi còn mở — API #85
 
-Trạng thái: Draft — Needs Confirmation. Catalog/diagram chỉ khai báo path; request body dưới đây là proposal DERIVED, chưa phải contract được duyệt.
+Trạng thái: `Draft — Needs Confirmation`. Runtime đã chọn fallback DERIVED để có implementation nhất quán; các mục sau cần owner/schema confirmation trước khi coi là contract được duyệt hoặc triển khai production.
 
-1. **Request body:** Xác nhận body JSON có field bắt buộc status không? Có field nào khác không?
-2. **Status enum:** LessonStatus có những giá trị và casing nào? Legacy default DRAFT không phải danh sách enum.
-3. **Transition policy:** Trạng thái nào được chuyển sang trạng thái nào? Có readiness, moderation, enrollment hoặc progress condition không?
-4. **Same status và retry:** Gửi lại cùng status là no-op hay vẫn tạo audit? Retry có idempotency contract không?
-5. **Audit semantics:** Event phải lưu actor, lesson ID, trạng thái cũ/mới, reason, trace hoặc metadata nào?
-6. **Audit schema:** Chọn physical relation và mapping nào? Legacy Study DDL không có audit relation; V1-PILOT audit_events dùng UUID trong khi legacy lesson ID là BIGINT.
-7. **Active schema:** Runtime dùng legacy BIGINT lessons hay V1-PILOT UUID/versioned model? Live schema/migration state đã được xác nhận chưa?
-8. **Timestamp:** Có cập nhật updated_at khi đổi status không? Trigger hay application caller là owner?
-9. **Transaction:** Status và audit phải nguyên tử theo AC-34; caller/use case nào sở hữu transaction/commit/rollback?
-10. **Admin authorization:** JWT claim nào xác nhận role Admin và lesson-management permission? Principal ID map sang audit actor thế nào?
-11. **404/soft delete:** Không có lesson có trả 404 DESIGN_RESOURCE_NOT_FOUND không? Sau policy soft-delete ở #86, xác nhận #82 list, #83 detail và #84/#85 mutation xử lý lesson đó nhất quán thế nào.
-12. **422:** Path/body validation conditions và meta.fieldErrors shape nào được duyệt?
-13. **Response nullability:** Legacy course_id nullable nhưng reusable Lesson yêu cầu int64; content/video_url null serialize hay omit?
-14. **Error envelope:** Guideline yêu cầu data:null; current helper defaults absent data to {}. Quyết định integration behavior khi wire route?
-15. **Middleware and tests:** Khi API được implement, Admin route guard/allowlist, matching HTTP tests và runtime verification plan là gì?
+1. **Status enum:** Implementation dùng `DRAFT`, `PUBLISHED`, `SUSPENDED` theo API #76 vì lesson-specific enum chưa có nguồn. Owner có xác nhận dùng chung tập này cho Lesson không?
+2. **Transition policy:** Hiện không có transition matrix, readiness, moderation, enrollment hoặc progress condition. Có cần bổ sung rule nào không?
+3. **Same status và retry:** Implementation coi cùng status là no-op và không tạo audit duplicate; không có idempotency key. Xác nhận chính sách này.
+4. **Audit schema/deployment:** Migration 012 tạo `lesson_status_audit_logs` theo legacy BIGINT Lesson. Xác nhận runtime/live DB dùng schema legacy và migration đã được áp dụng trước deploy.
+5. **Audit semantics:** Hiện lưu actor, lesson ID, status cũ/mới, timestamp; không có reason/trace field. Xác nhận đủ dữ liệu audit.
+6. **Admin authorization:** Current guard yêu cầu role `ADMIN`; AC-34 còn nêu lesson-management permission riêng. Xác nhận policy/claim để thực thi permission đó.
+7. **Timestamp:** Implementation cập nhật `lessons.updated_at` bằng `CURRENT_TIMESTAMP`; xác nhận không có DB trigger/owner khác.
+8. **404/soft delete:** #85 trả 404 khi row không tồn tại, chưa lọc soft-delete marker. Đồng bộ policy visibility với API #82–#84 và #86.
+9. **Lesson projection:** Reusable Lesson yêu cầu `course_id:int64`, trong khi legacy DDL cho phép NULL. Xác nhận dữ liệu thực tế không tạo projection lỗi 500.
+10. **Validation/envelope:** Local body enum/422 shape và `data:null` error envelope đã được HTTP-test; xác nhận giữ làm API contract.
 
-## Ranh giới proposal
+## Decision record
 
-- DIRECT: method/path/auth/role/path type/response/status/error codes; AC-34 permission and status+audit intent.
-- DERIVED: one-field status body, JSON encoding, legacy one-row update/returning, updated_at candidate and no-row 404.
-- SOURCE_REQUIRED: enum/transition rules, physical audit mapping, active schema/live DB, Admin policy, transaction owner and error integration.
-
-## Kết quả macro-review AC-34
-
-- Status: `VERIFIED_WITH_OPEN_QUESTIONS` — đã đối chiếu tài liệu #82–#86; đây không phải owner approval hoặc runtime verification.
-- Audit chỉ thuộc nhánh status #85 theo AC-34; ranh giới mutation và reload được ghi trong [báo cáo macro-review](../86_admin_lesson_delete/VERIFICATION_REPORT.md#ac-34-macro-review).
+- DIRECT: method/path/Bearer/Admin/path type/response/error set; AC-34 yêu cầu status + audit rồi reload list.
+- DERIVED: body `{status}`, enum ba giá trị, legacy BIGINT audit table migration 012, row lock, updated timestamp, same-status no-op và transaction rollback behavior.
+- SOURCE_REQUIRED before production claim: live schema/migration deployment, fine-grained permission, soft-delete policy, Lesson nullability and owner approval of status rules.

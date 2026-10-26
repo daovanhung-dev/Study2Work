@@ -4,14 +4,14 @@
 **Endpoint:** PUT /api/v1/admin/quizzes/{quiz_id}
 **Nhóm:** AC-35, API #87–#91
 
-Catalog contract được giữ nguyên. Body và persistence proposal chưa phải quyết định đã duyệt.
+Catalog contract được giữ nguyên. Runtime có các lựa chọn DERIVED dưới đây; chúng chưa phải quyết định owner-approved.
 
 <a id="q-89-01-request-body"></a>
 ## Q-89-01 — Request body của PUT
 
 **Evidence:** Catalog #89 chỉ khai báo path quiz_id:int64!; AC-35 mô tả “UPDATE quiz/question set”; API #88 nhận config:string! và questions:string!.
 
-**Đề xuất DERIVED:** Reuse cùng hai string fields và nested JSON shape của #88 để update metadata/question set.
+**Implementation DERIVED:** Reuse hai string fields và nested JSON shape của #88 để update metadata/question set.
 
 **Cần xác nhận:** API #89 có nhận body không? Nếu có, fields/types có giống #88 không? Có được đổi course qua config.course_id không?
 
@@ -20,7 +20,7 @@ Catalog contract được giữ nguyên. Body và persistence proposal chưa ph�
 
 **Evidence:** HTTP method PUT; request schema không có trong catalog/diagram; body candidate của #88 không có nested question/choice IDs.
 
-**Đề xuất DERIVED:** config và questions là full replacement; thiếu required field thì 422 theo catalog.
+**Implementation DERIVED:** config và questions là full replacement; duration omit/null ghi NULL; arrays rỗng thay child set bằng rỗng; thiếu required field thì 422.
 
 **Cần xác nhận:** Field omit giữ giá trị cũ hay bị xóa/reset? duration_minutes null/omit nghĩa là gì? questions rỗng có được phép xóa toàn bộ không?
 
@@ -29,16 +29,16 @@ Catalog contract được giữ nguyên. Body và persistence proposal chưa ph�
 
 **Evidence:** Legacy quiz_attempts.quiz_id gắn với Quiz; quiz_answers.question_id/choice_id tham chiếu question/choice; AC-35 #90 ghi soft delete nếu đã có attempts. Legacy model không có version cho question set.
 
-**Đề xuất DERIVED:** Không thay child IDs khi có attempt/answer history; candidate trả 422 DESIGN_VALIDATION_ERROR trước mọi write.
+**Implementation DERIVED:** Không thay child IDs khi có attempt/answer history; trả 422 DESIGN_VALIDATION_ERROR trước mọi write.
 
 **Cần xác nhận:** Có cấm update cả metadata và questions sau attempt không? Cần versioning/snapshot hay tạo Quiz version mới? API #29/#30 có cần khóa cùng Quiz khi tạo attempt/answer để tránh race?
 
 <a id="q-89-04-question-type-and-choice"></a>
 ## Q-89-04 — QuestionType, QuizChoice và ordering
 
-**Evidence:** QuizQuestion response yêu cầu type; legacy quiz_questions không có type; legacy quiz_choices không có order; QuizChoice chưa có logical schema.
+**Evidence:** API #88 migration 013 adds legacy `question_type` and `sort_order`; its type vocabulary and Admin `{id,text,is_correct}` choice projection are DERIVED. Catalog still does not define QuestionType values or QuizChoice fields.
 
-**Cần xác nhận:** Enum/type lưu ở đâu? QuizChoice có field nào? Có trả is_correct cho Admin không? Choice order được lưu/khôi phục thế nào?
+**Cần xác nhận:** Owner có duyệt migration 013's type vocabulary/columns and Admin choice projection? Student API #28 must continue omitting is_correct.
 
 <a id="q-89-05-validation-and-course"></a>
 ## Q-89-05 — Validation và thay course
@@ -50,7 +50,7 @@ Catalog contract được giữ nguyên. Body và persistence proposal chưa ph�
 <a id="q-89-06-admin-permission"></a>
 ## Q-89-06 — Admin permission
 
-**Evidence:** Catalog role=Admin; AC-35 yêu cầu quiz-management permission; current helper chỉ xác minh Student.
+**Evidence:** Catalog role=Admin; shared ADMIN guard exists in current Study source, but AC-35 fine-grained quiz-management permission has no claim/policy source.
 
 **Cần xác nhận:** Admin role/permission claim và policy scope nào sẽ được dùng? 401/403 mapping có giữ catalog không?
 
@@ -64,16 +64,16 @@ Catalog contract được giữ nguyên. Body và persistence proposal chưa ph�
 <a id="q-89-08-errors-envelope"></a>
 ## Q-89-08 — Error mapping và envelope
 
-**Evidence:** Direct errors 401/403/404/422/500; path chưa có middleware allowlist; API Guidelines yêu cầu data=null nhưng current helper serialize {}.
+**Evidence:** Direct errors 401/403/404/422/500; shared error helper emits `data:null`; API #89 dynamic route template is now registered.
 
 **Cần xác nhận:** Khi wire dynamic path, middleware map đủ catalog codes thế nào? Error data chuẩn null hay object rỗng?
 
 <a id="q-89-09-concurrency"></a>
 ## Q-89-09 — Đồng thời update và tạo attempt
 
-**Evidence:** Full replacement có thể xóa question/choice IDs trong khi APIs #29–#31 tạo attempt/answers; current source không có quiz Admin hoặc attempt runtime được xác minh.
+**Evidence:** Full replacement có thể xóa question/choice IDs trong khi APIs #29–#31 tạo attempt/answers; API #89 hiện khóa Quiz/Question/Choice trong local candidate transaction, còn attempt/answer APIs chưa có runtime coordination source.
 
-**Đề xuất:** Cần transaction/locking hoặc versioning coordination giữa #89 và #29/#30 trước triển khai.
+**Implementation DERIVED:** API #89 khóa parent `FOR UPDATE`, khóa current question/choice rows `FOR UPDATE`, sau đó history-check. PostgreSQL FK lock behavior và phối hợp với #29/#30 chưa được kiểm chứng live.
 
 **Cần xác nhận:** Isolation/row lock nào được dùng và bên nào lấy cùng lock? Có row_version/optimistic concurrency không?
 
@@ -89,8 +89,8 @@ Catalog contract được giữ nguyên. Body và persistence proposal chưa ph�
 ## Ranh giới proposal
 
 - DIRECT: PUT/path/auth role/response/success/error codes.
-- DERIVED: config/questions body, full child replacement, 404 mapping, history guard 422, atomic transaction và question order candidate.
+- DERIVED: config/questions body, full child replacement, positive path parsing, 404 mapping, history/course 422, atomic transaction, tombstone rule, lock order and question order.
 - SOURCE_REQUIRED: Admin permission, live schema, QuestionType/QuizChoice, attempt/version policy, course move và field validation.
 - DISCREPANCY: catalog path-only so với diagram update set; logical QuizQuestion so với legacy persistence.
 
-Cần chốt body, persistence, attempt history và security policy trước khi DD được Approved/Final hoặc dùng làm implementation contract.
+Owner cần xác nhận body, persistence, attempt history và security policy trước khi DD được Approved/Final hoặc các fallback thành canonical contract. Runtime hiện tại vẫn là implementation DERIVED.

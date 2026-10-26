@@ -20,33 +20,33 @@ status: "Draft — Needs Confirmation"
 | Endpoint | `GET /api/v1/mentor/courses/{course_id}/content` |
 | Actor | Mentor |
 | Authentication | Bearer JWT |
-| Authorization | Mentor có quyền quản lý course; cách kiểm tra cụ thể cần xác nhận |
+| Authorization | Role Mentor và direct owner match `courses.mentor_id` trong current implementation |
 | Success | HTTP 200 `DESIGN_RESOURCE_RETRIEVED` |
-| Response | `ApiEnvelope<Content>` |
+| Response | `ApiEnvelope<Content[]>` |
 | Mutation | Không |
-| Trạng thái hiện tại | `UNWIRED / NOT_FOUND` trong Study source |
+| Trạng thái source hiện tại | Route/module/query/test đã được wire trong Study source; live DB/deployment chưa xác minh |
 
-API được gọi khi Mentor mở màn hình quản lý nội dung. AC-22 mô tả bước đọc `sections/lessons/content`, sau đó mới cho Mentor chọn thao tác CRUD/publish. API này chỉ đọc.
+API được gọi khi Mentor mở màn hình quản lý nội dung. AC-22 mô tả bước đọc cây trước khi chọn CRUD/publish. API #49 chỉ đọc.
 
 ## Sources
 
 | Nguồn | Loại | Bằng chứng dùng | Trạng thái |
 |---|---|---|---|
-| `docs/lists/list_api.md` | Contract | API #49: method/path/actor/input/response/status/errors; reusable Content fields | DIRECT |
+| `docs/lists/list_api.md` | Contract | API #49 method/path/actor/input/response/status/errors và reusable Content fields | DIRECT; response đã đồng bộ thành collection |
 | `AC_UNICA/00_AC_API_INDEX.md` | Workflow | AC-22 precondition và năm endpoint #49–#53 | DIRECT |
-| `AC_03_MENTOR_TEACHING.drawio`, page AC22 | Activity diagram | GET → đọc sections/lessons/content → nhánh CRUD/publish | DIRECT |
-| `DB_UNICA_TABLES.md`, `DB_UNICA_ERD.drawio` | Legacy schema design | 16 legacy tables; `courses.mentor_id`, `lessons`; không có generic Content/sections table | `DESIGN_ONLY` |
-| `infra/postgres/02_study_db.sql` | V1-PILOT DDL | UUID `courses/course_versions/chapters/lessons/content_blocks` | PILOT ARTIFACT; không tương thích trực tiếp ID int64; live status chưa xác minh |
-| DD #46–#48 | Related DD | Direct-owner query là candidate; AC-21 lecture workflow không phải AC-22 Content | DERIVED / OPEN |
-| Current Study router/modules/tests | Runtime source | Không có Mentor route/module/test cho API #49 | CURRENT: UNWIRED / NOT_FOUND |
+| `AC_03_MENTOR_TEACHING.drawio`, page AC22 | Activity diagram | GET → đọc sections/lessons/content → CRUD/publish; output schema đồng bộ `Content[]` | DIRECT |
+| `DB_UNICA_TABLES.md`, `DB_UNICA_ERD.drawio`, `infra/postgres/study-server/DB.sql` | Legacy schema artifacts | `courses.mentor_id` và `contents`; legacy Content table là source artifact sau thay đổi này | CHECKED-IN DDL; live status chưa xác minh |
+| `infra/postgres/study-server/migrations/006_contents.sql` | Migration artifact | Tạo bảng `contents`, same-course parent FK và active-tree index | CHECKED-IN; chưa áp dụng live |
+| `infra/postgres/02_study_db.sql` | V1-PILOT DDL | UUID `course_versions/chapters/lessons/content_blocks`, model khác runtime legacy | PILOT ARTIFACT; không được trộn vào API #49 |
+| Current Study router/module/test | Runtime source | Route #49, Mentor access, query, projection và API tests | SOURCE_BACKED locally; live behavior chưa xác minh |
 
 ## Tables read
 
 | Table/source | Mục đích | Trạng thái |
 |---|---|---|
-| Legacy `courses` | Candidate lookup course + direct owner `mentor_id` | `DERIVED`; schema/runtime chưa xác nhận, không bao phủ assigned course |
-| Content tree source | Đọc sections/lessons/nodes theo course | `SOURCE_REQUIRED`; legacy ERD không có generic Content table, không tạo query giả |
-| Pilot `chapters`, `lessons`, `content_blocks` | Có thể liên quan về khái niệm tới cây học liệu | DDL có UUID/versioned schema riêng; không map ngầm sang Content int64 |
+| Legacy `courses` | Xác nhận course tồn tại và direct owner `mentor_id` | Source/DDL-backed; principal là numeric authenticated user ID; course được phân công không được cấp quyền bởi endpoint này |
+| Legacy `contents` | Đọc Content nodes theo `course_id`, chỉ lấy `deleted_at IS NULL` | Source/DDL/migration-backed locally; live migration chưa xác minh |
+| Pilot `chapters`, `lessons`, `content_blocks` | Model học liệu pilot khác | Không map sang API BIGINT `Content` |
 
 ## Tables write
 
@@ -54,25 +54,24 @@ N/A — API #49 là read-only; không INSERT/UPDATE/DELETE.
 
 ## Mục chú ý
 
-- Giữ response catalog là `ApiEnvelope<Content>`. Không đổi thành `Page<Content>`, array hoặc nested tree.
-- Tên “cây nội dung” và diagram đọc nhiều loại node, nhưng response `Content` chỉ khai báo một object cùng `parent_id?`; chưa có `children[]`, root convention, empty-tree rule hoặc pagination.
-- Content schema có `id`, `course_id`, `content_type`, `title`, `payload`, `status`, `parent_id?`, `order`. Không có nguồn approved cho generic table, `payload` keys hoặc member values của `ContentType`/`ContentStatus`.
-- AC-22 yêu cầu Mentor có quyền quản lý course. Legacy `courses.mentor_id` là direct-owner candidate giống #46/#47; Mentor ID binding và course assignment relation chưa có nguồn.
-- Catalog chỉ khai báo lỗi 401/403/404/500. Không thêm error contract khác. Current middleware chưa có path API #49 trong `DESIGN_CONTRACT_PATHS`; nếu future route không được thêm vào allowlist, lỗi parse/unhandled có thể dùng fallback code chung.
-- Live schema chưa được kiểm tra; pilot DDL là artifact, không phải bằng chứng schema runtime.
+- Response là mảng phẳng `Content[]`; `parent_id` dùng để dựng cây client-side. Không có pagination metadata.
+- Nodes được sắp xếp `parent_id NULLS FIRST, content_order ASC, id ASC`; `order` map từ `content_order`.
+- API trả mọi `status` hiện lưu; không lọc theo draft/published. Soft-deleted rows bị lọc.
+- Course tồn tại nhưng chưa có node trả HTTP 200 `data: []`; course thiếu, path sai format hoặc ngoài signed-int64 trả 404. Mentor khác owner nhận 403.
+- `content_type` và `status` giữ open string; `payload` giữ JSON object. Enum members, payload subtype validation, version selection và assigned-course policy chưa được chốt.
+- Status tài liệu vẫn Draft — Needs Confirmation. Local DDL/migration không chứng minh DB live đã có bảng `contents`.
 
-## Assumptions
+## Quyết định triển khai và giới hạn
 
-- Candidate direct-owner predicate có thể được khảo sát trên legacy schema dưới dạng `courses.mentor_id = authenticated mentor ID`; đây là `DERIVED`, không phải quyết định đã duyệt.
-- Q1 course existence/ownership và Q2 content-tree retrieval phải được xác nhận riêng; hiện không có cơ sở cho SQL Q2.
-- Ví dụ response trong `04_Response.md` chỉ minh họa kiểu dữ liệu; placeholder enum/payload không phải giá trị mặc định hay runnable response.
+Catalog ban đầu dùng `ApiEnvelope<Content>` trong khi AC-22 gọi là cây. Để biểu diễn nhiều node mà không tự tạo nested `children[]`, API catalog và node GET trong AC-22 đã được đồng bộ sang `ApiEnvelope<Content[]>`; `parent_id` giữ liên kết phân cấp. Đây là quyết định triển khai cần business/API owner xác nhận.
+
+Legacy BIGINT schema phù hợp ID/runtime của API #46–#48. V1-PILOT UUID/version schema không được dùng làm bảng thay thế. Direct owner access, empty-array semantics, parent ordering và soft-delete filtering là implementation choices, không phải bằng chứng về DB live hoặc policy assignment.
 
 ## Conflicts
 
-- API purpose/diagram biểu đạt một “cây” nhưng catalog trả `Content` đơn lẻ: `DISCREPANCY`.
-- Legacy ERD không có `Content`, `sections` hay parent-content relation. Pilot content model dùng UUID và liên kết `course_version → chapter → lesson → content_block`: không đồng nhất với contract BIGINT/`parent_id`.
-- Mentor identity/access assignment chưa được ánh xạ tới legacy `users.id/courses.mentor_id`.
-- Null/empty/omit, enum, ordering, visibility, version, and empty result behavior chưa có nguồn.
+- Catalog response ban đầu singular so với AC-22 tree purpose: implementation/catalog/diagram đã dùng `Content[]`; cần owner confirmation.
+- Reusable Content fields không định nghĩa enum members, payload subtype keys hay version history.
+- Active child có parent đã soft-delete không thể dựng thành cây nhất quán; current mapping trả 500 thay vì trả cây một phần. Chính sách dữ liệu này vẫn cần xác nhận.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

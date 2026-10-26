@@ -12,6 +12,7 @@ status: "Draft — Needs Confirmation"
 | Phiên bản | Ngày | Người cập nhật | Nội dung | Trạng thái |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD theo catalog #67 và AC-26; giữ Page<Course> trực tiếp, tách proposal tiến độ theo lesson ở trạng thái DERIVED. | Draft — Needs Confirmation |
+| 1.1 | 2026-10-25 | Codex | Wire API #67 theo fallback progress lesson DERIVED; dùng Mentor guard, ACTIVE Student roster, PUBLISHED lessons, latest progress và formula nhất quán với #65. Giữ mismatch Page<Course> và schema live ở trạng thái cần xác nhận. | Draft — Needs Confirmation |
 
 ## Nguồn thay đổi
 

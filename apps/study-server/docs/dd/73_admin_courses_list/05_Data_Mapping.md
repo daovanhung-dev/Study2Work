@@ -12,7 +12,7 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ```text
-Admin Bearer principal -> xác thực role + course-management permission -> nhận status/mentor/category/page -> validate query và page -> Q1 lấy một trang Course + Q2 count cùng filter -> map Page<Course> -> 200 hoặc exact catalog errors
+Admin Bearer principal -> shared ADMIN JWT guard -> parse status/mentor/category/page -> validate query -> reject valid category before DB -> Q2 count/integrity -> Q1 page query -> map Page<Course> -> 200 or catalog error
 ```
 
 # Mục lục
@@ -35,10 +35,10 @@ Admin Bearer principal -> xác thực role + course-management permission -> nh�
 
 ### 0.1. Xác thực và authorization
 
-- Xác thực Bearer JWT và role Admin/course-management permission trước mọi truy vấn khóa học.
+- Xác thực Bearer JWT và shared role `ADMIN` trước khi parse query hoặc truy vấn khóa học.
 - Token thiếu/sai/không hợp lệ trả 401 `DESIGN_AUTHENTICATION_REQUIRED`.
-- Principal không có role/quyền trả 403 `DESIGN_ACCESS_DENIED`.
-- Claim, permission source, tenant/scope và Admin guard chưa có current Study source.
+- Principal không có role `ADMIN` trả 403 `DESIGN_ACCESS_DENIED`; course-management permission riêng chưa được kiểm tra.
+- Shared JWT role guard có runtime source; course-management permission, tenant/scope policy riêng chưa có source.
 - Không gọi shared Student guard của `app/utils/auth.py` cho API Admin.
 
 ### 0.2. Thứ tự truy cập
@@ -50,9 +50,9 @@ Admin Bearer principal -> xác thực role + course-management permission -> nh�
 
 | Target table/API | Column/field | Condition/value | Remarks |
 |---|---|---|---|
-| Authorization header | Bearer credential | Token hợp lệ/chưa hết hạn | DIRECT requirement; endpoint chưa wired. |
-| JWT claims/policy | Admin role | Principal có Admin role | DIRECT role; claim source chưa có. |
-| Admin policy | course-management permission | Permission được cấp | AC-32 precondition; implementation SOURCE_REQUIRED. |
+| Authorization header | Bearer credential | Token hợp lệ/chưa hết hạn | DIRECT requirement; shared guard wired locally. |
+| JWT claims/policy | Admin role | Principal có role `ADMIN` | DIRECT role; shared guard reads normalized roles. |
+| Admin policy | course-management permission | Chưa kiểm tra riêng | AC-32 precondition; role-to-permission mapping `DERIVED`. |
 
 <a id="step-1-validate-data-input"></a>
 
@@ -61,7 +61,7 @@ Admin Bearer principal -> xác thực role + course-management permission -> nh�
 ### 1.1. `status`
 
 - Nhận string tùy chọn theo catalog.
-- Nếu có, proposal dùng exact equality `courses.status = :status`; nếu vắng mặt thì không thêm status predicate.
+- Nếu có, runtime dùng exact equality `courses.status = :status`; nếu vắng mặt thì không thêm status predicate.
 - Không mặc định `PUBLISHED`, không normalize casing và không tạo enum allowlist.
 - Catalog #76 ghi nhãn draft/published/suspended; current legacy/API #06 có `DRAFT`/`PUBLISHED`; casing và đầy đủ enum cần owner xác nhận.
 
@@ -74,16 +74,17 @@ Admin Bearer principal -> xác thực role + course-management permission -> nh�
 ### 1.3. `category`
 
 - Nhận int64 tùy chọn theo contract.
-- Logical proposal là exact match theo category ID.
+- Parse signed int64 theo catalog.
 - Không có `courses.category_id` hoặc association table trong legacy DDL; pilot UUID model cũng không cho quan hệ category.
-- Không reject như API #06 vì #73 khai báo category trực tiếp; không bỏ qua filter khi được gửi. Query này `SOURCE_REQUIRED` tới khi schema relation được xác định.
+- Với giá trị int64 hợp lệ, runtime trả 422 `DESIGN_VALIDATION_ERROR` trước DB theo API #06 precedent. Đây là fallback `DERIVED`; category filter contract chưa được thực hiện cho tới khi relation được duyệt.
+- Với kiểu hoặc miền số không hợp lệ, trả 422 field error `category`.
 
 ### 1.4. `page`
 
 - Nhận int32 tùy chọn.
-- Proposal `DERIVED`: page 1-based, omitted dùng 1, page < 1 trả 422 `DESIGN_VALIDATION_ERROR`.
+- Runtime `DERIVED`: page 1-based int32, omitted dùng 1, page < 1 hoặc > 2147483647 trả 422 `DESIGN_VALIDATION_ERROR`.
 - `PageMeta.size` bắt buộc nhưng catalog không khai báo query size; proposal dùng fixed size 20 theo API #06/#68.
-- Integer parse lỗi dùng HTTP/business 422 theo catalog; future router cần nằm trong `DESIGN_CONTRACT_PATHS`.
+- Integer parse lỗi dùng HTTP/business 422; exact route đã nằm trong `DESIGN_CONTRACT_PATHS`.
 
 ### 1.5. Query không được khai báo
 
@@ -94,9 +95,9 @@ Admin Bearer principal -> xác thực role + course-management permission -> nh�
 
 ## 2. Get thông tin
 
-### 2.1. Q1 — candidate page query khi category không được gửi
+### 2.1. Q1 — page query after validation
 
-Đây là query candidate trên legacy DDL, chỉ thực hiện khi các filter vật lý có mapping. Không coi là SQL runtime đã duyệt hoặc live schema đã xác minh.
+Đây là SQL runtime cục bộ trên legacy candidate DDL. Fake DB tests kiểm tra query/binds; live schema chưa xác minh.
 
 ```sql
 SELECT
@@ -114,12 +115,12 @@ LEFT JOIN users AS m ON m.id = c.mentor_id
 WHERE (:status IS NULL OR c.status = :status)
   AND (:mentor IS NULL OR c.mentor_id = :mentor)
 ORDER BY c.id ASC
-LIMIT 20 OFFSET :offset
+LIMIT :limit OFFSET :offset
 ```
 
-- `offset = (page - 1) * 20` theo proposal fixed page size.
+- `limit = 20`; `offset = (page - 1) * 20` theo implementation `DERIVED`.
 - Không thêm predicate `c.status = 'PUBLISHED'` khi `status` vắng mặt.
-- Nếu `category` có mặt, không chạy query này như thể filter đã áp dụng; physical category predicate chưa có nguồn.
+- Nếu `category` có giá trị hợp lệ, không chạy query này; validator trả 422 trước DB.
 - Chỉ chọn Course và UserSummary fields; không lấy user email/phone/credential.
 
 ### 2.2. Q1 result integrity
@@ -133,7 +134,7 @@ LIMIT 20 OFFSET :offset
 | Base table | Joined table | Condition | Type | Purpose/status |
 |---|---|---|---|---|
 | `courses AS c` | `users AS m` | `m.id = c.mentor_id` | LEFT JOIN candidate | Map required `Course.mentor`; integrity check theo API #06 precedent. |
-| `courses AS c` | Category relation | Chưa xác định | N/A | `SOURCE_REQUIRED`; không thêm JOIN giả. |
+| `courses AS c` | Category relation | Chưa xác định | N/A | Không có JOIN; valid category request trả 422 `DERIVED`. |
 
 ### 2.4. WHERE
 
@@ -142,7 +143,7 @@ LIMIT 20 OFFSET :offset
 | Có `status` | `c.status = :status` | Exact-match `DERIVED`; enum/case unresolved. |
 | Không có `status` | Không thêm status predicate | All-status list `DERIVED`; không lọc `PUBLISHED`. |
 | Có `mentor` | `c.mentor_id = :mentor` | Direct filter + candidate physical mapping. |
-| Có `category` | Exact category ID qua quan hệ course-category | Logical filter direct; relation/predicate `SOURCE_REQUIRED`. |
+| Có `category` | Không chạy query; trả 422 trước DB | Fallback `DERIVED`; relation/predicate chưa có nguồn. |
 | Không có filter | Không áp dụng các optional predicate | `DERIVED`. |
 
 ### 2.5. ORDER BY và pagination
@@ -150,13 +151,13 @@ LIMIT 20 OFFSET :offset
 - Default order proposal: `c.id ASC` vì API không khai báo sort input.
 - `page` mặc định 1; fixed size 20; `offset = (page - 1) * 20`; `LIMIT = 20`.
 - Page vượt tổng vẫn trả page rỗng với tổng count; không trả 404.
-- Category filter nếu được gửi phải tham gia cả Q1 và Q2 sau khi source relation được duyệt.
+- Query category hợp lệ bị reject trước cả Q1/Q2 cho tới khi relation được xác nhận.
 
 <a id="step-3-get-count"></a>
 
 ## 3. Get count
 
-### 3.1. Q2 — count candidate
+### 3.1. Q2 — count query
 
 ```sql
 SELECT
@@ -168,9 +169,10 @@ WHERE (:status IS NULL OR c.status = :status)
   AND (:mentor IS NULL OR c.mentor_id = :mentor)
 ```
 
-- Q2 dùng cùng status/mentor predicates với Q1.
-- Nếu category filter được gửi thì Q2 cũng cần category relation/predicate; hiện `SOURCE_REQUIRED`, không được đếm không filter.
-- Nếu `missing_mentor_count > 0`, candidate trả 500 theo API #06 thay vì dựng mentor rỗng; cần owner xác nhận Admin recovery behavior.
+- Runtime gọi Q2 trước Q1; cả hai dùng cùng status/mentor predicates.
+- Valid category request bị từ chối trước Q2; query không đếm khi filter không được áp dụng.
+- Nếu `missing_mentor_count > 0`, runtime trả safe 500 theo API #06 precedent; Admin recovery behavior vẫn cần owner xác nhận.
+- Count projection thiếu hoặc có giá trị NULL/âm trả safe 500; aggregate query phải cung cấp cả `total` và `missing_mentor_count`.
 
 ### 3.2. Page metadata
 
@@ -196,14 +198,14 @@ WHERE (:status IS NULL OR c.status = :status)
 
 ### 4.3. Lỗi query hoặc mapping
 
-- Query/count/decimal/course mapping lỗi dùng 500 `DESIGN_INTERNAL_ERROR`.
+- SQLAlchemy query lỗi, count/projection lỗi, decimal/course mapping lỗi dùng 500 `DESIGN_INTERNAL_ERROR` và rollback an toàn.
 - Không trả SQL, stack trace, hay thông tin credential.
 - Thiếu mandatory mentor/price là candidate integrity failure; owner cần xác nhận có chặn toàn trang hay báo row-level.
 
 ### 4.4. Input validation
 
 - Sai kiểu query hoặc page < 1 trả 422 `DESIGN_VALIDATION_ERROR`.
-- Không tự tạo error cho category unsupported; physical relation gap là implementation blocker, không phải runtime behavior đã được chốt.
+- Valid category trả 422 `DESIGN_VALIDATION_ERROR` trước DB theo fallback `DERIVED`; không tuyên bố đây là behavior owner-approved.
 
 <a id="step-5-map-response"></a>
 
@@ -220,7 +222,7 @@ WHERE (:status IS NULL OR c.status = :status)
 - `items[].mentor.id = users.id`.
 - `items[].mentor.full_name = users.full_name`.
 - `items[].mentor.avatar_url = users.avatar_url`.
-- `items[].category` chỉ map sau khi có category relation/source; hiện omit vì optional.
+- Catalog `items[].category` optional chưa có field trong reusable runtime `Course`; hiện OpenAPI/response omit field này.
 - Optional description/thumbnail/avatar theo API #06 precedent serialize `null` khi source NULL; cần xác nhận contract null-vs-omit.
 
 ### 5.2. Map PageMeta
@@ -234,10 +236,10 @@ WHERE (:status IS NULL OR c.status = :status)
 
 | Request field | Source | Query use | Response use | Basis/status |
 |---|---|---|---|---|
-| Authorization | Bearer header | Không đưa vào SQL; kiểm tra trước query | Không map | Admin/course permission DIRECT; runtime guard SOURCE_REQUIRED. |
+| Authorization | Bearer header | Không đưa vào SQL; shared `ADMIN` check trước parse/query | Không map | Role guard source-backed; dedicated permission mapping `DERIVED`. |
 | `status` | Query string | Optional `c.status = :status` trong Q1/Q2 | Không map trực tiếp | Filter DIRECT; equality DERIVED. |
 | `mentor` | Query int64 | Optional `c.mentor_id = :mentor` trong Q1/Q2 | Không map trực tiếp | Filter DIRECT; legacy candidate. |
-| `category` | Query int64 | Exact category filter cần relation chưa có | Không map trực tiếp | Query DIRECT; physical mapping SOURCE_REQUIRED. |
+| `category` | Query int64 | Valid int64 rejected before DB; invalid value gets parse 422 | Không map trực tiếp | Filter DIRECT; current fallback `DERIVED`, relation unresolved. |
 | `page` | Query int32 hoặc default | Q1 offset | `pagination.page` | Type DIRECT; default/minimum DERIVED. |
 | Body | None | None | None | DIRECT. |
 
@@ -245,7 +247,7 @@ WHERE (:status IS NULL OR c.status = :status)
 
 | Query ID | Type | Source | Selected fields | Predicate/order/page | Result/status |
 |---|---|---|---|---|---|
-| Q1 | SELECT | Legacy `courses AS c` | `c.id` | Status/mentor optional; `id ASC`; limit 20; offset `(page-1)*20` | Course ID candidate. |
+| Q1 | SELECT | Legacy `courses AS c` LEFT JOIN `users AS m` | Course and mentor projection | Status/mentor optional; `id ASC`; bind limit 20 and offset `(page-1)*20` | Runtime local; live schema unverified. |
 | ↑ | SELECT | Legacy `courses AS c` | `c.name AS title` | Same row as Q1 | Alias theo Course.title. |
 | ↑ | SELECT | Legacy `courses AS c` | `c.description` | Same row as Q1 | Nullable candidate. |
 | ↑ | SELECT | Legacy `courses AS c` | `c.thumbnail_url` | Same row as Q1 | Nullable candidate. |
@@ -257,7 +259,7 @@ WHERE (:status IS NULL OR c.status = :status)
 | ↑ | LEFT JOIN | Legacy `users AS m` | `m.avatar_url` | `m.id=c.mentor_id` | Optional mentor avatar projection. |
 | Q2 | COUNT | Legacy `courses AS c` LEFT JOIN `users AS m` | `COUNT(*)` | Same status/mentor predicates as Q1 | Candidate `PageMeta.total`. |
 | ↑ | COUNT | Legacy `courses AS c` LEFT JOIN `users AS m` | `COUNT(*) FILTER (WHERE m.id IS NULL)` | Same status/mentor predicates as Q1 | Candidate mentor integrity count. |
-| Q3 | Category filter | No approved relation | Không chọn column/JOIN | Exact category ID logic | `SOURCE_REQUIRED`; implementation blocked for request có category. |
+| Q3 | Category validation | No approved relation | Không chọn column/JOIN | Signed int64 validation, then reject valid value before DB | `DERIVED` fallback 422. |
 
 ## Mutation Matrix
 
@@ -278,16 +280,16 @@ WHERE (:status IS NULL OR c.status = :status)
 | `data.items[].description` | string? | `courses.description` | null when source NULL | Optional; #06 precedent. |
 | `data.items[].thumbnail_url` | uri? | `courses.thumbnail_url` | null when source NULL | Optional; #06 precedent. |
 | `data.items[].price` | decimal-string | `courses.price` via exact Decimal formatting | Required; NULL → candidate 500 | #06 source precedent. |
-| `data.items[].status` | CourseStatus | `courses.status` | Preserve source value | Enum/case incomplete. |
+| `data.items[].status` | string | `courses.status` | Preserve source value | Runtime model uses string; enum/case incomplete. |
 | `data.items[].mentor.id` | int64 | `users.id` joined on mentor_id | Required; missing mentor → candidate 500 | Legacy nullable integrity gap. |
 | `data.items[].mentor.full_name` | string | `users.full_name` | Required | UserSummary candidate. |
 | `data.items[].mentor.avatar_url` | uri? | `users.avatar_url` | null when source NULL | Optional; #06 precedent. |
-| `data.items[].category` | Category? | No approved relation | Omit while optional and unsourced | `SOURCE_REQUIRED`. |
+| `data.items[].category` | Category? | Catalog optional; runtime Course model omits field | Omitted | Relation/runtime schema discrepancy. |
 | `data.pagination.page` | int32 | Effective page/default 1 | 1 when omitted | Default DERIVED. |
 | `data.pagination.size` | int32 | Fixed configuration | 20 | DERIVED; no request field. |
 | `data.pagination.total` | int64 | Q2 count | 0 if no rows | Candidate. |
 | `data.pagination.total_pages` | int32 | `ceil(total/20)` | 0 if total=0 | DERIVED. |
-| `meta` | object | Envelope convention | `{}` candidate | Current helper; error guideline differs. |
+| `meta` | object | Envelope convention | `{}` | Current helper on success/error. |
 | `traceId` | uuid | Middleware | Validated/generated | Current source convention. |
 
 <a id="step-6-tra-ve-response"></a>
@@ -302,7 +304,7 @@ WHERE (:status IS NULL OR c.status = :status)
 ### 6.2. Lỗi validation hoặc quyền
 
 - Auth thiếu/sai: 401 `DESIGN_AUTHENTICATION_REQUIRED`.
-- Không đủ Admin/course-management permission: 403 `DESIGN_ACCESS_DENIED`.
+- Không có `ADMIN` role: 403 `DESIGN_ACCESS_DENIED`; dedicated course-management permission chưa được kiểm tra.
 - Query parse/page invalid: 422 `DESIGN_VALIDATION_ERROR`.
 
 ### 6.3. Lỗi hệ thống

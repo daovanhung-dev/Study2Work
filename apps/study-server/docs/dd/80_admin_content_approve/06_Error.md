@@ -13,17 +13,18 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Các trường hợp dưới đây giữ đúng HTTP status/business code từ catalog #80. Điều kiện thực thi cụ thể chỉ được ghi khi có nguồn; API #80 chưa có route hoặc runtime mapping.
+Các trường hợp dưới đây giữ đúng HTTP status/business code từ catalog #80. Điều kiện nội bộ không được catalog mô tả đều được ghi là fallback DERIVED.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Authentication | SOURCE_REQUIRED | Authorization | Bearer thiếu hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | [Step 0](./05_Data_Mapping.md#0-check-quyen) | N/A | Điều kiện theo Bearer contract; current route absent. |
-| 2 | Authorization | SOURCE_REQUIRED | Admin role/access | Role hoặc quyền không đạt | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#0-check-quyen) | N/A | Admin guard and access scope chưa có source. |
-| 3 | Resource lookup | SOURCE_REQUIRED | content_id | Content không tồn tại | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | [Step 2](./05_Data_Mapping.md#2-get-thong-tin) | N/A | Catalog code direct; physical lookup unresolved. |
-| 4 | Validation/state | SOURCE_REQUIRED | Path or approval eligibility | Catalog khai báo validation error nhưng không mô tả trigger | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 1](./05_Data_Mapping.md#1-validate-data-input) | TBD | Do not infer that stale/non-pending state is the approved trigger. |
-| 5 | System error | SOURCE_REQUIRED | Content update/audit | Query, update, audit or response mapping fails | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 4](./05_Data_Mapping.md#4-check-ket-qua-execute-query) | TBD | Transaction and rollback behavior unresolved. |
+| 1 | Authentication | SOURCE_BACKED | Authorization | Bearer thiếu, sai hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | [Step 0](./05_Data_Mapping.md#0-check-quyen) | N/A | Shared auth guard chạy trước path/DB. |
+| 2 | Authorization | SOURCE_BACKED | Admin role | Principal không có role `ADMIN` | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#0-check-quyen) | N/A | Dedicated moderation permission chưa được xác minh. |
+| 3 | Resource lookup | DERIVED | content_id | Không có active row hoặc row đã soft-delete | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | [Step 2](./05_Data_Mapping.md#2-get-thong-tin) | Yes | Lookup candidate dùng `deleted_at IS NULL`. |
+| 4 | Validation/path | DERIVED | content_id | Malformed hoặc ngoài signed-int64 range | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 1](./05_Data_Mapping.md#1-validate-data-input) | N/A | Raw path được parse sau ADMIN auth và trước DB. |
+| 5 | Validation/state | DERIVED | Content status | Active row hiện không ở `PENDING_REVIEW` | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 3](./05_Data_Mapping.md#3-insertupdate-thong-tin) | Yes | Eligibility theo AC-33 precondition/#78 queue. |
+| 6 | System error | SOURCE_BACKED | Content update/audit/projection | Lock/update/audit, mapping hoặc commit thất bại | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 4](./05_Data_Mapping.md#4-check-ket-qua-execute-query) | Yes | Rollback toàn transaction; lỗi nội bộ không lộ ra response. |
 
 > Error message ID không có trong Study API contract; dùng N/A, không sao chép mã từ template Excel.
 
@@ -42,7 +43,7 @@ Expected API guideline shape:
 }
 ~~~
 
-Current helper defaults missing error data to {}; #80 route has not been integrated. See [02_Overview.md](./02_Overview.md#conflicts).
+Current shared helper returns `data:null` when omitted and carries trace ID in body/header. API #80 route is registered in the design-contract middleware allowlist.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

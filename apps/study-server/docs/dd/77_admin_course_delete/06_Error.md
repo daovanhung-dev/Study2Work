@@ -14,37 +14,38 @@ status: "Draft — Needs Confirmation"
 ## Giải thích
 
 - Giữ đúng HTTP status và business code của API catalog #77.
-- Endpoint chưa có route/Admin guard; các hàng dưới là design branches, không phải runtime evidence.
-- Dependency-block 422 là đề xuất `DERIVED`; catalog có code này nhưng chưa định nghĩa điều kiện hoặc error detail.
+- Route/Admin guard/HTTP tests hiện có trong local Study source; tests dùng fake DB session.
+- Dependency-block 422 là runtime fallback `DERIVED`; catalog có code nhưng không định nghĩa blocker predicate/message.
 - Không thêm HTTP status, business code hoặc error-message ID ngoài catalog.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu, sai hoặc hết hạn | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | Status/code DIRECT; route/auth chưa wire. |
-| 2 | Authorization | Admin policy | Course-management permission | Principal hợp lệ nhưng không có Admin/course-management permission | 403 | `DESIGN_ACCESS_DENIED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | Status/code DIRECT; policy SOURCE_REQUIRED. |
-| 3 | Not found | Candidate Q1 | `course_id` | Không tìm thấy course sau authorization | 404 | `DESIGN_RESOURCE_NOT_FOUND` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-2-get-thong-tin) | No | Code/status DIRECT; no-row mapping DERIVED. |
-| 4 | Validation/policy | Path or approved dependency rule | `course_id` / dependency set | Path không hợp lệ hoặc policy được duyệt chặn soft-delete | 422 | `DESIGN_VALIDATION_ERROR` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-3-check-policy-and-soft-delete) | Candidate rollback only if transaction began | Code/status DIRECT; malformed path and dependency mapping DERIVED/SOURCE_REQUIRED. |
-| 5 | System error | Query/mutation/commit/mapping | Delete pipeline | Lỗi DB, mutation, timestamp source hoặc transaction | 500 | `DESIGN_INTERNAL_ERROR` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-mutation-result) | Rollback if approved transaction began | Không trả raw SQL/policy details; storage target chưa xác định. |
+| 1 | Authentication | Shared Bearer/JWT guard | Authorization | Token thiếu, sai hoặc hết hạn | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | Code/status DIRECT; local shared guard. |
+| 2 | Authorization | Shared role guard | `ADMIN` role | Principal không có role `ADMIN` | 403 | `DESIGN_ACCESS_DENIED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | Finer course-management permission remains SOURCE_REQUIRED. |
+| 3 | Not found | Q1 locked lookup | `course_id` | Course vắng hoặc status đã `DELETED` | 404 | `DESIGN_RESOURCE_NOT_FOUND` | `Course not found.` | [Data Mapping](./05_Data_Mapping.md#step-2-get-thong-tin) | Rollback lock transaction | No-row/repeat mapping DERIVED; exact code DIRECT. |
+| 4 | Validation | Raw path parser | `course_id` | Malformed hoặc ngoài signed-int64 range | 422 | `DESIGN_VALIDATION_ERROR` | `Dữ liệu đầu vào không hợp lệ.` | [Data Mapping](./05_Data_Mapping.md#step-1-validate-data-input) | No DB transaction | 422 code DIRECT; parser mapping DERIVED. |
+| 5 | Dependency policy | Q2 EXISTS checks | Enrollment/content | Any enrollment or active learning content exists | 422 | `DESIGN_VALIDATION_ERROR` | `Course with enrollments or content cannot be deleted.` | [Data Mapping](./05_Data_Mapping.md#step-3-check-policy-and-soft-delete) | Rollback lock transaction; no mutation | Blocker set and message DERIVED. |
+| 6 | System error | Query/projection/commit | Delete pipeline | DB failure or invalid lock/dependency/RETURNING projection | 500 | `DESIGN_INTERNAL_ERROR` | `Course could not be deleted.` | [Data Mapping](./05_Data_Mapping.md#step-4-check-mutation-result) | Rollback | Safe response; no raw DB detail. |
 
 ## Candidate branch questions — không phải HTTP contract
 
 | Condition | Candidate or question | Status |
 |---|---|---|
-| `course_id` malformed/overflow | Catalog có 422; parser/middleware mapping chưa có source. | SOURCE_REQUIRED |
-| Course không tồn tại | Candidate 404 sau khi Admin authorization thành công. | DERIVED |
-| Enrollment tồn tại | Proposal là 422 nếu policy duyệt enrollment là blocker; status/retention rule chưa xác định. | DERIVED / SOURCE_REQUIRED |
-| Content tồn tại | Relation/predicate chưa được chọn; không suy diễn generic Content thành `lessons`/`content_blocks`. | SOURCE_REQUIRED |
-| Course đã soft-delete | Repeat DELETE có thể success, 404 hoặc policy result; chưa có idempotency/lifecycle rule. | SOURCE_REQUIRED |
-| Query/mutation/commit/timestamp lỗi | Catalog 500 `DESIGN_INTERNAL_ERROR`; rollback scope tùy approved transaction. | Code/status DIRECT; transaction SOURCE_REQUIRED |
+| `course_id` malformed/overflow | Raw signed-int64 parser returns 422 before DB. | VERIFIED_LOCAL / DERIVED_MAPPING |
+| Course missing/already `DELETED` | Q1 no-row returns 404; repeated DELETE is not idempotent. | VERIFIED_LOCAL / DERIVED_MAPPING |
+| Enrollment exists | Any enrollment status blocks and returns 422. | DERIVED_POLICY |
+| Active generic Content exists | `contents.deleted_at IS NULL` blocks and returns 422. | DERIVED_POLICY |
+| Lesson/quiz/assignment exists | Any matching legacy learning record blocks and returns 422. | DERIVED_POLICY |
+| Query/projection/commit failure | Catalog 500 `DESIGN_INTERNAL_ERROR`; view rolls back. | VERIFIED_LOCAL; live DB not verified |
 
 ## Error envelope discrepancy
 
 - API guideline yêu cầu error `data:null` và `meta.fieldErrors` cho field-level validation.
-- Current `error_response()` đổi data vắng mặt thành `{}`.
-- `DESIGN_CONTRACT_PATHS` chưa có Admin course path; middleware dùng exact `request.url.path` membership nên route có numeric `course_id` cần dynamic/route-aware mapping khi wire.
-- API #77 chưa wired; đây là discrepancy hiện tại và yêu cầu tích hợp tương lai, không phải response runtime của endpoint.
+- Current `error_response()` serializes omitted data as `null`.
+- API #74 registered the shared Admin course path template; middleware matches API #77 via FastAPI route metadata.
+- Local TestClient coverage verifies the error envelope and code branches; fake sessions do not prove PostgreSQL behavior.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

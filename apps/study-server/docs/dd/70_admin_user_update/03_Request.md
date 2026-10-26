@@ -16,9 +16,9 @@ status: "Draft — Needs Confirmation"
 | HTTP method | PUT |
 | URI | /api/v1/admin/users/{user_id} |
 | Character encoding | UTF-8 |
-| Content-Type | SOURCE_REQUIRED — catalog/diagram chưa xác nhận request body. `application/json` chỉ là candidate nếu body được duyệt. |
+| Content-Type | `application/json` trong runtime fallback `DERIVED`; catalog/diagram không đặc tả body. |
 | Authentication | Bearer JWT |
-| Role | Admin; AC-31 còn yêu cầu quyền user management. |
+| Role | Shared JWT guard yêu cầu `ADMIN`; permission user-management riêng còn `SOURCE_REQUIRED`. |
 | Direct input | `path{user_id:int64!}` |
 
 ## Request header
@@ -33,7 +33,7 @@ Không có header nghiệp vụ bổ sung trong catalog. Trace ID do middleware 
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | User ID | user_id | int64 | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | Số nguyên 64-bit | SOURCE_REQUIRED | Không có | ID user cần cập nhật. Contract chỉ xác nhận type và required. | 1.1 |
+| 1 | User ID | user_id | int64 | Yes | Không quy định | Không quy định | Số nguyên signed 64-bit | Trong signed-int64 range | Không có | Sai định dạng/vượt miền trả 422; ID hợp lệ không có row trả 404. | 1.1 |
 
 ## Query parameters
 
@@ -43,20 +43,20 @@ N/A — catalog không khai báo query parameter.
 
 **Direct contract:** catalog và diagram không đặc tả body schema. Không thể kết luận body bị cấm hoặc xác định requiredness từ path-only input notation.
 
-**Candidate body — DERIVED, cần owner xác nhận:**
+**Runtime body fallback — DERIVED; không được catalog/diagram đặc tả:**
 
 | No | Location | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | body | Full name | full_name | string | SOURCE_REQUIRED | Candidate 1 | Candidate 150 | N/A | Không rỗng nếu áp dụng API #14 rule | SOURCE_REQUIRED | Field profile theo API #14 precedent; rule không phải contract #70. | 1.2 |
-| 2 | body | Phone | phone | string or null | SOURCE_REQUIRED | SOURCE_REQUIRED | Candidate 20 | N/A | SOURCE_REQUIRED | SOURCE_REQUIRED | Nullable theo API #14 source/legacy DDL; null/omit semantics cần chốt. | 1.2 |
-| 3 | body | Avatar URL | avatar_url | uri/string or null | SOURCE_REQUIRED | SOURCE_REQUIRED | SOURCE_REQUIRED | URI cần xác nhận | SOURCE_REQUIRED | SOURCE_REQUIRED | Candidate từ API #14; exact URI/null semantics chưa khóa cho #70. | 1.2 |
-| 4 | body | Role | role | UserRole | SOURCE_REQUIRED | N/A | N/A | Named type; enum members chưa biết | SOURCE_REQUIRED | SOURCE_REQUIRED | Suy ra từ tên API và AC-31 update role; permission/transition policy chưa có nguồn. | 1.2 |
+| 1 | body | Full name | full_name | string | Yes | 1 | 150 | UTF-8 string | Không rỗng sau trim | N/A | Required PUT field; reuse API #14 trim/nonblank/max rule. | 1.2 |
+| 2 | body | Phone | phone | string or null | Yes | 0 | 20 nếu string | UTF-8 string or JSON null | N/A | Null hoặc blank-to-null | Required key để thể hiện full replacement; reuse API #14 normalization. | 1.2 |
+| 3 | body | Avatar URL | avatar_url | string or null | Yes | N/A | Không giới hạn trong runtime | String or JSON null | URI syntax không validate | Null hoặc blank-to-null | Required key; reuse API #14 normalization; URL syntax chưa có rule source. | 1.2 |
+| 4 | body | Role | role | UserRole string | Yes | N/A | N/A | Exact uppercase string | `STUDENT`, `MENTOR`, `ADMIN` | N/A | Allowlist DERIVED từ các role hiện dùng trong Study source. | 1.2 |
 
-Các candidate fields không xác định PUT replacement/partial semantics. Không đưa `status` (API #71), `bio` (không có persistence source), `email`, `id`, `created_at`, `updated_at` hoặc `password_hash` vào writable body.
+Đây là full-replacement fallback: đủ bốn keys phải có; `phone` và `avatar_url` có thể null để xóa. Extra fields bị từ chối. Không đưa `status` (API #71), `bio` (không có persistence source), `email`, `id`, `created_at`, `updated_at` hoặc `password_hash` vào writable body.
 
 ## Ví dụ Request data
 
-Ví dụ dưới đây là JSON candidate để minh họa cấu trúc, không phải body contract đã duyệt. `role` là placeholder, không phải enum member.
+Ví dụ dưới đây minh họa body runtime fallback `DERIVED`; `role` dùng một trong ba giá trị hiện cho phép.
 
 ~~~http
 PUT /api/v1/admin/users/1001
@@ -67,16 +67,17 @@ Content-Type: application/json
   "full_name": "Nguyen Van A",
   "phone": null,
   "avatar_url": null,
-  "role": "__SOURCE_REQUIRED__"
+  "role": "STUDENT"
 }
 ~~~
 
 ## Quy tắc input đang mở
 
-- `user_id:int64!` là input trực tiếp; minimum, malformed/overflow handling chưa được quy định.
-- Catalog có 422 `DESIGN_VALIDATION_ERROR`, nhưng chưa liệt kê field rules hoặc body schema.
-- API #14 có full_name trim/nonblank/max 150, phone max 20/nullable và avatar_url nullable normalization; chỉ dùng làm candidate nếu owner xác nhận dùng chung.
-- Role enum members, chuyển role hợp lệ, permission policy và null/omission behavior đều `SOURCE_REQUIRED`.
+- `user_id:int64!` là input trực tiếp; malformed/out-of-range map 422 theo error set #70.
+- Catalog có 422 `DESIGN_VALIDATION_ERROR`; runtime dùng mã này cho body/path validation.
+- `full_name` trim/nonblank/max 150; phone trim/max 20/blank-to-null; avatar_url trim/blank-to-null theo API #14 precedent.
+- Body phải có đủ bốn keys; `phone`/`avatar_url` nhận null; extra keys bị từ chối.
+- Role phải chính xác là `STUDENT`, `MENTOR` hoặc `ADMIN`; enum/transition policy chưa được owner xác nhận.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

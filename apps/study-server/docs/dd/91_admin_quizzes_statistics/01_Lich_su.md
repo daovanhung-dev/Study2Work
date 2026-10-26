@@ -13,6 +13,7 @@ status: "Draft — Needs Confirmation"
 | Phiên bản | Ngày | Người cập nhật | Nội dung thay đổi | Trạng thái |
 |---|---|---|---|---|
 | 0.1 | 2026-10-24 | Codex | Tạo DD theo catalog #91, AC-35/AC-16, DB design candidate và macro-review #87–#91. | Draft — Needs Confirmation |
+| 0.2 | 2026-10-26 | Codex | Ghi nhận API #91 local runtime dùng `QuizStatistics` fallback DERIVED, guard ADMIN, aggregate SQL, errors và test; giữ conflict catalog/diagram mở. | Draft — Needs Confirmation |
 
 ## Quy tắc cập nhật
 

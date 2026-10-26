@@ -25,15 +25,15 @@ status: "Draft — Needs Confirmation"
 
 **Áp dụng khi**
 
-- Candidate lesson row có lessons.id = :lesson_id và Admin đã authorize.
+- Lesson row có `lessons.id = :lesson_id` trong legacy schema candidate; request đã qua shared `ADMIN` guard.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---|---|---|---|---|---|
-| 1 | name | Lesson title | VARCHAR | 200 | N/A | Yes in legacy DDL | No | :title | Body proposal title | 3.1 | Candidate legacy column; live schema/title rules unresolved. |
-| 2 | content | Lesson content | TEXT | N/A | N/A | No, nullable in legacy DDL | No | :content or NULL candidate | Body proposal content | 3.1 | Null/omit behavior needs confirmation. |
-| 3 | video_url | Video URL | TEXT | N/A | N/A | No, nullable in legacy DDL | No | :video_url or NULL candidate | Body proposal video_url | 3.1 | URI policy needs confirmation. |
-| 4 | sort_order | Lesson order | INT | N/A | N/A | Nullable/default 0 in legacy DDL | No | :order | Body proposal order | 3.1 | Range/uniqueness unresolved. |
-| 5 | updated_at | Updated timestamp | TIMESTAMP | N/A | N/A | Yes in legacy DDL | No | CURRENT_TIMESTAMP candidate | Server clock unless another owner/trigger applies | 3.1 | DERIVED; timestamp ownership unresolved. |
+| 1 | name | Lesson title | VARCHAR | 200 | N/A | Yes in legacy DDL | No | :title | Required body title | 3.1 | DERIVED runtime mapping; live schema remains unverified. |
+| 2 | content | Lesson content | TEXT | N/A | N/A | No, nullable in legacy DDL | No | :content or NULL | Required nullable body content | 3.1 | Null writes SQL NULL; omission is rejected by request model. |
+| 3 | video_url | Video URL | TEXT | N/A | N/A | No, nullable in legacy DDL | No | :video_url or NULL | Required nullable body video_url | 3.1 | Null writes SQL NULL; no URI validation. |
+| 4 | sort_order | Lesson order | INT | N/A | N/A | Nullable/default 0 in legacy DDL | No | :order | Required strict int32 body order | 3.1 | No extra positivity/uniqueness rule. |
+| 5 | updated_at | Updated timestamp | TIMESTAMP | N/A | N/A | Yes in legacy DDL | No | CURRENT_TIMESTAMP | Server clock | 3.1 | DERIVED by #75 precedent; no lesson trigger found in checked DDL/migrations. |
 
 ## Insert mapping
 
@@ -59,17 +59,17 @@ status: "Draft — Needs Confirmation"
 
 | No | Target column | Operator | Value source | Data Mapping step | Remarks |
 |---:|---|---|---|---|---|
-| 1 | lessons.id | = | Path lesson_id | 3.1 | Candidate primary-key predicate from legacy DDL. |
+| 1 | lessons.id | = | Path lesson_id | 3.1 | Bound primary-key predicate from legacy DDL candidate. |
 
 ## Response columns
 
 | No | Column/source | Response path | Transform/status |
 |---:|---|---|---|
-| 1 | id | data.id | Copy candidate. |
+| 1 | id | data.id | Copy from UPDATE RETURNING. |
 | 2 | course_id | data.course_id | Required response vs nullable legacy DDL discrepancy. |
 | 3 | name | data.title | Alias name -> title. |
-| 4 | content | data.content | Null/omit unresolved. |
-| 5 | video_url | data.video_url | URI/null handling unresolved. |
+| 4 | content | data.content | Null is preserved as JSON null. |
+| 5 | video_url | data.video_url | Null is preserved as JSON null; no URI validator. |
 | 6 | sort_order | data.order | Alias sort_order -> order. |
 | 7 | status | data.status | Return unchanged; enum/casing unresolved; #84 does not update it. |
 

@@ -24,6 +24,7 @@ status: "Draft — Needs Confirmation"
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | `1.0` | 2026-10-24 | Codex | Tạo DD draft từ catalog, AC-33 và nguồn Content liên quan; ghi rõ response cardinality và persistence còn mở. | Chưa implementation-ready. |
+| `1.1` | 2026-10-26 | Codex | Cập nhật current source/API #49–#53; ghi fallback Page<Content>, legacy contents mapping, auth/error wiring và local runtime verification. | Response/pagination/422 fallback vẫn DERIVED; DD chưa được owner duyệt. |
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

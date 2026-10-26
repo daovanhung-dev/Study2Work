@@ -28,28 +28,28 @@ status: "Draft — Needs Confirmation"
 | 2 | success | Success flag | success | boolean | No | Envelope branch | N/A | 5 | true on success; false on error | Always present | Shared ApiEnvelope field. |
 | 3 | businessCode | Business code | businessCode | string | No | Catalog | Catalog literal | 5 | Fixed by branch | Always present | Success DESIGN_RESOURCE_UPDATED; exact error codes are in 06_Error.md. |
 | 4 | message | Message | message | string | No | Application message | N/A | 5 | Safe branch message | Always present | Exact message text is not specified. |
-| 5 | data | Submission | data | Submission object or null | Yes | Candidate response mapping | N/A | 4, 5 | Updated Submission on success; null is API Guidelines error expectation | Success contains Submission; errors follow envelope contract | Current response helper serializes omitted error data as {}. |
+| 5 | data | Submission | data | Submission object or null | Yes | Candidate response mapping | N/A | 4, 5 | Updated Submission on success; null is API Guidelines error expectation | Success contains Submission; errors follow envelope contract | Current response helper serializes omitted error data as null. |
 | 5.1 | data.id | Submission ID | id | int64 | No | assignment_submissions candidate | id | 2, 4 | Direct candidate | Required by reusable Submission | Legacy DDL candidate; live schema unverified. |
 | 5.2 | data.assignment_id | Assignment ID | assignment_id | int64 | No | assignment_submissions candidate | assignment_id | 2, 4 | Direct candidate | Required by reusable Submission | Legacy DDL allows NULL. |
 | 5.3 | data.user_id | Student ID | user_id | int64 | No | assignment_submissions candidate | user_id | 2, 4 | Direct candidate | Required by reusable Submission | Do not accept this value from the Mentor request. |
 | 5.4 | data.content | Submission content | content | string | Yes | assignment_submissions candidate | content | 2, 4 | Direct candidate | Optional; null/omit rule unresolved | Legacy DDL allows NULL. |
-| 5.5 | data.files | Student-submitted files | files | UploadAsset[] | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 4 | No approved asset resolver | Required array in reusable schema | Do not map feedback attachments or legacy file_url into this field. |
-| 5.5.1 | data.files[].id | Asset ID | id | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 4 | SOURCE_REQUIRED | Required by UploadAsset | Asset relation is not identified. |
-| 5.5.2 | data.files[].name | File name | name | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 4 | SOURCE_REQUIRED | Required by UploadAsset | Metadata source is not identified. |
-| 5.5.3 | data.files[].url | Asset URL | url | uri | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 4 | SOURCE_REQUIRED | Required by UploadAsset | Public/signed URL and access rules are open. |
-| 5.5.4 | data.files[].content_type | Content type | content_type | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 4 | SOURCE_REQUIRED | Required by UploadAsset | Metadata source is not identified. |
-| 5.5.5 | data.files[].size_bytes | File size | size_bytes | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 4 | SOURCE_REQUIRED | Required by UploadAsset | Metadata source is not identified. |
-| 5.5.6 | data.files[].status | Asset status | status | UploadStatus | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 4 | SOURCE_REQUIRED | Required by UploadAsset | Enum and lifecycle are open. |
+| 5.5 | data.files | Student-submitted files | files | UploadAsset[] | No | uploads (candidate; DERIVED via API #54) | id, file_name, url, content_type, size_bytes, status | 3 / 4 (DERIVED) | Exact URL + owner + purpose + course lookup used by API #54 | Matched metadata or [] when no match | Keep feedback attachments separate; API #35 URL persistence is unconfirmed. |
+| 5.5.1 | data.files[].id | Asset ID | id | int64 | No | uploads (candidate; DERIVED via API #54) | id | 3 / 4 (DERIVED) | Exact URL + owner + purpose + course lookup used by API #54 | Matched metadata or [] when no match | API #35 must persist the matching URL; not confirmed. |
+| 5.5.2 | data.files[].name | File name | name | string | No | uploads (candidate; DERIVED via API #54) | file_name | 3 / 4 (DERIVED) | Exact URL + owner + purpose + course lookup used by API #54 | Matched metadata or [] when no match | API #35 must persist the matching URL; not confirmed. |
+| 5.5.3 | data.files[].url | Asset URL | url | uri | No | uploads (candidate; DERIVED via API #54) | url | 3 / 4 (DERIVED) | Exact URL + owner + purpose + course lookup used by API #54 | Matched metadata or [] when no match | API #35 must persist the matching URL; not confirmed. |
+| 5.5.4 | data.files[].content_type | Content type | content_type | string | No | uploads (candidate; DERIVED via API #54) | content_type | 3 / 4 (DERIVED) | Exact URL + owner + purpose + course lookup used by API #54 | Matched metadata or [] when no match | API #35 must persist the matching URL; not confirmed. |
+| 5.5.5 | data.files[].size_bytes | File size | size_bytes | int64 | No | uploads (candidate; DERIVED via API #54) | size_bytes | 3 / 4 (DERIVED) | Exact URL + owner + purpose + course lookup used by API #54 | Matched metadata or [] when no match | API #35 must persist the matching URL; not confirmed. |
+| 5.5.6 | data.files[].status | Asset status | status | UploadStatus | No | uploads (candidate; DERIVED via API #54) | status | 3 / 4 (DERIVED) | Exact URL + owner + purpose + course lookup used by API #54 | Matched metadata or [] when no match | API #35 must persist the matching URL; not confirmed. |
 | 5.6 | data.status | Submission status | status | SubmissionStatus | No | assignment_submissions candidate | status | 2, 4 | Preserve stored status | Required; enum members unresolved | AC-23 #56 sets candidate status GRADED; #57 does not update it. |
 | 5.7 | data.submitted_at | Submission time | submitted_at | date-time | No | assignment_submissions candidate | submitted_at | 2, 4 | Serialize timestamp | Required | Legacy DDL uses TIMESTAMP; timezone policy is open. |
 | 5.8 | data.score | Score | score | decimal-string | Yes | assignment_submissions candidate | score | 2, 4 | Preserve #56 value; do not recalculate | Optional; null/omit rule unresolved | Decimal conversion/rule remains open in #56. |
-| 5.9 | data.feedback | Feedback text | feedback | string | Yes | assignment_submissions candidate | feedback | 3, 4 | Candidate value after update | Optional in reusable schema | Candidate source is nullable TEXT; feedback wire key and overwrite/history rule remain open. |
+| 5.9 | data.feedback | Feedback text | feedback | string | Yes | assignment_submissions candidate | feedback | 3, 4 | Updated value from `feedback_text` request | Optional in reusable schema; null is omitted | Single-column overwrite is DERIVED; feedback column is nullable in candidate DDL and live schema is unverified. |
 | 6 | meta | Metadata | meta | object | No | Envelope convention | N/A | 5 | Empty object candidate; no pagination | Always present | API #57 has no pagination or operation metadata. |
 | 7 | traceId | Trace ID | traceId | uuid | No | Request trace context | N/A | 5 | Propagate request trace | Always present | API Guidelines defines X-Trace-Id propagation. |
 
 ## Ví dụ thành công
 
-Các giá trị mang hậu tố PLACEHOLDER minh họa kiểu dữ liệu; chúng không công bố enum member, asset, user hay DB record thật. JSON này minh họa envelope/schema shape, không chứng minh có thể dựng đầy đủ Submission từ source hiện tại.
+Các giá trị minh họa kiểu dữ liệu; chúng không công bố asset, user hay DB record thật. JSON shape được dựng từ runtime model; nó không xác minh live schema.
 
 ~~~json
 {

@@ -20,15 +20,16 @@ status: "Draft — Needs Confirmation"
 | Purpose | Admin cập nhật thông tin/profile và role của user. |
 | Consumer/Actor | Admin có quyền quản lý user theo precondition AC-31. |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin; permission user-management theo AC-31. Current Study chưa có Admin guard/policy. |
-| Direct request | `path{user_id:int64!}`; body chưa đặc tả. |
+| Authorization | Shared JWT guard yêu cầu claim `ADMIN`; mapping này theo fallback #68/#69. Permission/tenant/MFA policy riêng chưa có nguồn. |
+| Direct request | `path{user_id:int64!}`; catalog/diagram không khai báo body. |
+| Runtime request fallback | JSON full-replacement: required `full_name:string`, `phone:string|null`, `avatar_url:string|null`, `role:STUDENT\|MENTOR\|ADMIN`; extra fields bị từ chối. `DERIVED`. |
 | Direct response | `ApiEnvelope<UserProfile>`; 200 `DESIGN_RESOURCE_UPDATED`. |
 | Direct errors | 401, 403, 404, 422, 500 với mã trong catalog. |
 | Basis | Method/path/auth/path type/response/status/error set DIRECT; body/query/mutation mapping DERIVED hoặc SOURCE_REQUIRED. |
 | Status | Draft — Needs Confirmation |
-| Current runtime state | UNWIRED / NOT_FOUND — route, module và focused test chưa có. |
-| Transaction | Candidate transaction theo API #14 precedent; ownership chưa có source cho #70. |
-| Side effects | Candidate cập nhật user/profile/role. Audit và token/session effects chưa được định nghĩa. |
+| Current runtime state | Route/module/focused HTTP tests được wire local; live schema/deployment chưa xác minh. |
+| Transaction | `view.py` sở hữu UPDATE, commit sau khi map response hợp lệ và rollback no-row/query/mapping/commit failure; pattern theo API #14. |
+| Side effects | Cập nhật full_name, phone, avatar_url, role, updated_at. Giữ email/status; không audit hoặc revoke session. |
 
 ## Sources
 
@@ -39,7 +40,7 @@ status: "Draft — Needs Confirmation"
 - [API #14 source](../../../app/modules/guest/api_14_users_me_profile/query.py) — hiện update full_name, phone, avatar_url, updated_at; không update role/bio.
 - [API #14 validation](../../../app/modules/guest/api_14_users_me_profile/validate.py) — Student guard và profile normalization hiện tại; không phải Admin policy.
 - [Current auth helper](../../../app/utils/auth.py) — `validate_current_user_request` hiện yêu cầu Student.
-- [API #68 Overview](../68_admin_users_list/02_Overview.md) và [API #69 Overview](../69_admin_user_detail/02_Overview.md) — cùng AC-31; response/list discrepancies giữ riêng.
+- [API #68 Overview](../68_admin_users_list/02_Overview.md) và [API #69 Overview](../69_admin_user_detail/02_Overview.md) — cùng AC-31; #68 là list `Page<UserProfile>`, #69 là detail và #70 là mutation.
 
 ## Tables read
 
@@ -52,38 +53,39 @@ status: "Draft — Needs Confirmation"
 
 | Relation | Candidate fields | Basis/status |
 |---|---|---|
-| Legacy users | full_name, phone, avatar_url, role, updated_at | `DERIVED CANDIDATE` từ intent #70, API #14 precedent và legacy DDL; body/schema chưa được duyệt. |
+| Legacy users | full_name, phone, avatar_url, role, updated_at | Runtime fallback `DERIVED` từ intent #70, API #14 precedent và checked-in legacy DDL; live schema chưa xác minh. |
 
 ## Mục chú ý
 
-- Catalog và diagram không khai báo body schema; không hiểu path-only notation là bằng chứng API không nhận body.
-- Tên API/AC-31 cho phép suy ra role thuộc intent; exact writable fields và PUT replacement semantics vẫn cần xác nhận.
+- Catalog và diagram không khai báo body schema; runtime dùng fallback body để làm rõ thao tác PUT.
+- Fallback yêu cầu đủ bốn field; nullable `phone`/`avatar_url` được trim và chuỗi trắng thành null; `full_name` dùng API #14 rules.
+- Role fallback giới hạn `STUDENT`, `MENTOR`, `ADMIN`, là các nhãn hiện được dùng trong source; enum/transition policy vẫn cần owner xác nhận.
 - Status thuộc API #71; không cập nhật status trong #70.
 - UserProfile.bio không có cột trong legacy users hoặc trong API #14 query hiện tại.
 - UserRole/UserStatus là named types; enum members chưa được định nghĩa.
-- Email/phone là PII; response chỉ được cấp sau khi policy Admin phù hợp được xác nhận.
+- Email/phone là PII; runtime trả theo `UserProfile` sau ADMIN claim; masking, audit và field-level policy còn mở.
 
 ## Candidate mapping — DERIVED
 
-Candidate full-replacement body: `full_name`, `phone`, `avatar_url`, `role`. Candidate SQL có thể cập nhật bốn trường đó và `updated_at`, lọc theo `users.id`, rồi `RETURNING` safe UserProfile fields. Từng quyết định body requiredness/nullability, role policy, live table, audit và transaction cần xác nhận trước implementation.
+Runtime full-replacement body: `full_name`, `phone`, `avatar_url`, `role`. SQL cập nhật bốn trường và `updated_at`, lọc theo `users.id`, rồi `RETURNING` safe UserProfile fields. Các quyết định body/role/schema là fallback `DERIVED`; permission policy, live table, audit/PII và token effect vẫn cần xác nhận.
 
 ## Conflicts
 
-- API #70 catalog/diagram không liệt kê body, trong khi tên và AC-31 nói update user/profile/role: body là `SOURCE_REQUIRED`; candidate fields chỉ mang nhãn `DERIVED`.
+- API #70 catalog/diagram không liệt kê body, trong khi tên và AC-31 nói update user/profile/role: runtime chọn body full-replacement là `DERIVED`; client phải dùng schema OpenAPI hiện tại.
 - UserProfile có `bio?`, nhưng legacy DDL/API #14 không có nguồn bio: không persist hoặc tạo giá trị bio.
 - Legacy DDL dùng BIGINT users; V1-PILOT dùng UUID projections/roles: không trộn hai mô hình.
-- API #68 list response và #69 detail/list intent có discrepancy riêng; không giải quyết trong #70.
+- API #68 list contract đã đồng bộ thành `Page<UserProfile>`; API #69 detail và #70 mutation giữ scope riêng.
 
 ## Security note
 
 - Xác thực và kiểm tra Admin/user-management permission trước khi đọc hoặc ghi user row.
-- Current helper chỉ cấp Student; không tái sử dụng guard đó cho API Admin.
+- Shared ADMIN guard chạy trước path parsing và DB access; permission/tenant/MFA mapping riêng chưa được chứng minh.
 - Không đọc/trả password_hash; email/phone cần PII policy phù hợp.
 - Diagram không yêu cầu revoke session ở #70; không tự thêm side effect đó.
 
 ## Performance note
 
-Candidate UPDATE theo primary key `users.id` dự kiến một row; primary-key/index behavior phải xác minh trên live schema. Không có pagination hoặc bulk mutation trong contract #70.
+UPDATE theo primary key `users.id` dự kiến một row; primary-key/index behavior phải xác minh trên live schema. Không có pagination hoặc bulk mutation trong contract #70.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

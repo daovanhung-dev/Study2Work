@@ -31,7 +31,7 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field | Type | Required | Range/format | Direct rule | Data Mapping reference | Gap |
 |---:|---|---|---|---:|---|---|---|---|
-| 1 | Notification ID | `notification_id` | int64 | Có | Integer path segment | Không có range/business rule nào khác trong catalog. | 1.1, 2.1 | Physical key và Admin relation chưa được duyệt. |
+| 1 | Notification ID | `notification_id` | int64 | Có | Integer path segment | Direct contract chỉ nêu int64. Local fallback chấp nhận số nguyên dương trong miền signed-int64. | 1.1, 2.1 | Quy tắc dương và invalid-to-404 là `DERIVED`; physical key/Admin relation chưa được duyệt. |
 
 ## Query parameters
 
@@ -45,7 +45,7 @@ N/A — GET endpoint không có request body.
 
 - Không thêm `channel`, `status`, `page`, `operation_id` hoặc recipient ID vào path/query/body.
 - Không suy `notification_id` thành UUID Operation ID.
-- Không thêm quy tắc `notification_id > 0` hoặc mã lỗi cho path parse ngoài contract.
+- Runtime local parse ID sau ADMIN auth; malformed, zero, negative và overflow trả 404 vì catalog #96 không có 422. Đây là fallback `DERIVED`, không phải validation rule được catalog khai báo.
 
 ## Ví dụ request
 

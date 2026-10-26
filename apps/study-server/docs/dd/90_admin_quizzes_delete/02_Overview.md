@@ -22,11 +22,11 @@ status: "Draft — Needs Confirmation"
 | Purpose | Admin xóa quiz; AC-35 yêu cầu soft delete nếu quiz đã có attempts. |
 | Consumer/Actor | Admin có quiz-management permission |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin theo catalog; quiz-management permission theo AC-35. Guard/policy chưa có trong Study source. |
-| Basis | Method/path/auth/input/response/status/error set DIRECT; attempt soft-delete intent DIRECT từ AC-35; no-attempt hard delete và physical tombstone DERIVED/SOURCE_REQUIRED. |
+| Authorization | Runtime dùng shared `ADMIN` role guard. AC-35 fine-grained quiz-management permission chưa có policy source. |
+| Basis | Contract và AC-35 soft-delete intent DIRECT; route/auth/transaction là SOURCE_BACKED local; no-attempt hard delete, tombstone value/time và answer-only protection DERIVED. |
 | Status | Draft — Needs Confirmation |
-| Transaction | DERIVED candidate: lookup, attempt check và nhánh mutation nằm trong một transaction; khóa/isolation và phối hợp với API #29 cần xác nhận. |
-| Side effects | Có attempts: đề xuất đánh dấu quiz đã xóa và giữ nguyên câu hỏi/lựa chọn/lịch sử. Không có attempts: đề xuất xóa choices → questions → quiz. |
+| Transaction | Runtime khóa quiz → questions → choices, kiểm tra attempt/answer history, mutation và commit trong một transaction; policy phối hợp với API #29 vẫn cần xác nhận. |
+| Side effects | Có attempt hoặc answer liên kết: đặt `status='DELETED'`, cập nhật `updated_at`, giữ child/history. Không có history: xóa choices → questions → quiz. Đây là policy DERIVED. |
 
 ## Sources
 
@@ -47,36 +47,37 @@ status: "Draft — Needs Confirmation"
 
 | Relation | Candidate fields/relationship | Basis/status |
 |---|---|---|
-| Legacy `quizzes` | `id`, `status`, `updated_at` | BIGINT DDL artifact; `status` enum chưa chốt; không có `deleted_at`; live schema chưa xác minh. |
+| Legacy `quizzes` | `id`, `status`, `updated_at` | BIGINT DDL artifact; `status` enum chưa chốt; không có `deleted_at`; live schema chưa xác minh. Runtime dùng các cột candidate này. |
 | Legacy `quiz_attempts` | `id`, `quiz_id`, `status` | Candidate existence check; mọi status được tính là attempt; DDL cho phép NULL `quiz_id` dù DB guide mô tả required; live schema chưa xác minh. |
 | Legacy `quiz_questions` | `id`, `quiz_id` | Candidate child relation để xóa khi chưa có attempts. |
 | Legacy `quiz_choices` | `id`, `question_id` | Candidate child relation; DDL cho phép NULL `question_id` dù DB guide nói required; xóa trước question rows nếu hard-delete branch được duyệt. |
-| Legacy `quiz_answers` | `attempt_id`, `question_id`, `choice_id` | Lịch sử answer nối với attempts/questions/choices; không xóa trong nhánh có attempts. |
+| Legacy `quiz_answers` | `attempt_id`, `question_id`, `choice_id` | History query kiểm tra answer trỏ tới question/choice của quiz; answer-only reference cũng chọn nhánh soft để tránh orphan. |
 | V1-PILOT assessment relations | UUID `assessments`, `quiz_questions`, `quiz_options`, `assessment_attempts`, `assessment_answers` | Schema khác int64; chỉ ghi nhận discrepancy, không dùng làm mapping cho API #90. |
 
 ## Tables write
 
-- Candidate soft-delete branch: UPDATE legacy `quizzes.status` và `quizzes.updated_at`; `DELETED` là giá trị đề xuất, chưa có enum/source được duyệt.
-- Candidate no-attempt branch: DELETE `quiz_choices`, `quiz_questions`, rồi `quizzes` trong một transaction; không dựa vào cascade.
+- Runtime soft-delete branch: UPDATE `quizzes.status='DELETED'` và `updated_at`; value và timestamp meaning là lựa chọn DERIVED, chưa có enum/source được duyệt.
+- Runtime no-history branch: DELETE `quiz_choices`, `quiz_questions`, rồi `quizzes` trong một transaction; không dựa vào cascade.
 - Không xóa `quiz_attempts` hoặc `quiz_answers` ở bất kỳ nhánh có lịch sử nào.
 
 ## Mục chú ý
 
 - Catalog trực tiếp chỉ khai báo path `quiz_id:int64!`; không thêm body/query, `reason`, confirmation flag hay idempotency field.
 - AC-35 trực tiếp yêu cầu soft delete nếu có attempts; diagram không mô tả rõ nhánh không có attempt. Hard-delete branch là đề xuất `DERIVED`.
-- Legacy `quizzes.status` có `VARCHAR(20)` nhưng không có enum canonical; legacy DDL không có `deleted_at`. Dùng `status='DELETED'` và `updated_at` làm candidate tombstone/timestamp cần owner xác nhận.
-- `DeleteResult` yêu cầu `id`, literal `status="deleted"`, `deleted_at:date-time`. Physical source cho thời điểm xóa chưa được xác nhận.
+- Legacy `quizzes.status` có `VARCHAR(20)` nhưng không có enum canonical; legacy DDL không có `deleted_at`. Runtime dùng `status='DELETED'` và `updated_at` làm tombstone/timestamp candidate; owner cần xác nhận.
+- `DeleteResult` yêu cầu `id`, literal `status="deleted"`, `deleted_at:date-time`. Runtime map từ `updated_at` trên soft delete/repeat và lấy `CURRENT_TIMESTAMP` trong `DELETE RETURNING` trên hard delete.
 - #29 chưa chốt predicate quiz-open/status/concurrency. Sau soft delete phải ngăn tạo attempt mới, nhưng vẫn giữ #30–#32 và #91 đọc lịch sử theo policy.
 - #87 list visibility, #89 update eligibility, #91 statistics visibility cần được đối chiếu trong macro-review sau khi #91 DD tồn tại.
-- Current Study source chưa có API #90, Admin guard hoặc Admin quiz path trong middleware error-code set.
+- API #90 đã có route/module/test trong source cục bộ; shared ADMIN guard và path template được dùng. Fine-grained quiz-management permission vẫn chưa có policy source.
 
 ## Assumptions
 
 - Q2 kiểm tra attempt tồn tại với bất kỳ `quiz_attempts.status` nào; không lọc `IN_PROGRESS`/`SUBMITTED` vì catalog/diagram nói attempts, không nói chỉ attempt đang chạy.
+- Runtime cũng kiểm tra answer rows gắn với question/choice của quiz; answer-only reference chọn soft delete như một integrity safeguard DERIVED.
 - Nếu quiz đã có tombstone `DELETED`, đề xuất giữ nguyên timestamp và trả cùng DeleteResult 200 (no-op); đây là idempotency proposal `DERIVED`, cần duyệt.
 - Khi có attempt, giữ nguyên question/choice/attempt/answer rows để giữ lịch sử và candidate statistics; đây là hệ quả an toàn `DERIVED` của soft delete.
 - Khi không có attempt, đề xuất hard delete child-first `quiz_choices` → `quiz_questions` → `quizzes`, dựa trên quan hệ legacy và việc DDL không khai báo cascade.
-- Dùng `quizzes.status='DELETED'` và `updated_at` làm tombstone/timestamp candidate để không thêm cột; cả state value và map `deleted_at` từ `updated_at` cần phê duyệt.
+- Dùng `quizzes.status='DELETED'` và `updated_at` làm tombstone/timestamp candidate; state value và map `deleted_at` từ `updated_at` cần phê duyệt. Hard delete lấy timestamp từ transaction DB.
 - Không tự ánh xạ attempts dependency thành 422; nhánh có attempts được AC-35 xử lý bằng soft delete. Trigger của catalog 422 chưa được đặc tả.
 
 ## Conflicts
@@ -85,15 +86,15 @@ status: "Draft — Needs Confirmation"
 - No-attempt hard delete là nhánh suy diễn, không được activity diagram mô tả trực tiếp.
 - V1-PILOT schema dùng UUID/versioned assessment, khác catalog BIGINT và legacy `quizzes`.
 - API #29 chưa chốt trạng thái quiz mở và concurrency; AC-35 tombstone cần đồng bộ với tạo attempt.
-- API Guidelines yêu cầu error `data:null`; current helper serialize absent `data` thành `{}`.
-- Current Study auth guard chỉ có Student; `DESIGN_CONTRACT_PATHS` không bao gồm dynamic Admin quiz path.
+- API Guidelines và current helper trả error `data:null`; API #90 tests xác minh response này.
+- Shared ADMIN guard và dynamic `/api/v1/admin/quizzes/{quiz_id}` template đã được dùng bởi route #89/#90. Fine-grained permission vẫn chưa có policy source.
 
 ## Security note
 
-- Xác thực Bearer và authorize Admin + quiz-management trước khi đọc quiz/attempts.
+- Shared ADMIN Bearer guard chạy trước path parsing và database lookup; fine-grained quiz-management authorization chưa được triển khai vì policy source chưa có.
 - Không dùng Student guard thay Admin guard.
 - Không trả attempt/answer details trong DeleteResult hoặc log dữ liệu Student.
-- Không xóa hoặc cascade attempt/answer history; nhánh hard delete chỉ được chọn khi Q2 không tìm thấy attempt.
+- Không xóa attempt/answer history. Hard delete chỉ được chọn khi không tìm thấy attempt hoặc answer link tới question/choice của quiz.
 
 ## Performance note
 
@@ -104,7 +105,8 @@ status: "Draft — Needs Confirmation"
 ## Contract interpretation
 
 - DIRECT: DELETE/path/Admin Bearer, DeleteResult, HTTP 200, exact five error codes; AC-35 soft-delete intent when attempts exist.
-- DERIVED: hard delete when no attempt; use status tombstone and `updated_at`; retain historical child rows; proposed ordered transaction.
+- SOURCE_BACKED local: raw route, shared ADMIN guard, positive signed-int64 validation, row locks, transaction/rollback, exact envelope and error codes.
+- DERIVED: hard delete when no attempt/answer reference; use status tombstone and timestamp mapping; answer-only protection; idempotent repeat DELETE.
 - SOURCE_REQUIRED: allowed status values, persistent deleted timestamp, Admin authorization, #29 coordination/locking, repeat-delete semantics and visibility across #87/#89/#91.
 
 ## Tình trạng nhóm AC-35

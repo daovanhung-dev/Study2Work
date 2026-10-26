@@ -18,96 +18,96 @@ status: "Draft — Needs Confirmation"
 | Module | ADMIN / SYSTEM MANAGEMENT — AC-36 |
 | Method | DELETE |
 | Endpoint | /api/v1/admin/notifications/{notification_id} |
-| Purpose | Xóa draft/cancel notification nếu policy cho phép; điều kiện cụ thể chưa được nguồn định nghĩa. |
-| Consumer/Actor | Admin có notification-management permission |
+| Purpose | Xóa draft/cancel notification nếu policy cho phép; catalog không định nghĩa state machine. |
+| Consumer/Actor | Admin theo catalog; AC-36 còn yêu cầu notification-management permission. |
 | Authentication | Bearer JWT |
-| Authorization | Catalog role Admin; AC-36 yêu cầu notification-management permission. Study Admin guard/policy chưa được xác minh. |
-| Direct request | Path notification_id:int64!; không body/query. |
-| Direct response | HTTP 200 DESIGN_RESOURCE_DELETED, ApiEnvelope<DeleteResult>. |
-| DeleteResult | id:int64, status literal "deleted", deleted_at:date-time. |
+| Authorization | Local fallback dùng shared `ADMIN` guard; fine-grained permission và tenant/global scope chưa được wire. |
+| Direct request | Path `notification_id:int64!`; không body/query. |
+| Direct response | HTTP 200 `DESIGN_RESOURCE_DELETED`, `ApiEnvelope<DeleteResult>`. |
+| DeleteResult | `id:int64`, `status:"deleted"`, `deleted_at:date-time`. |
 | Direct errors | 401/403/404/422/500 đúng business codes trong catalog. |
-| Current implementation | UNWIRED / NOT_FOUND: không có route/module/test API #95 trong scoped Study source scan. |
-| Transaction | Không được catalog/diagram quy định. |
-| Side effects | Diagram ghi DELETE/mark cancelled rồi reload management; physical write và scheduler effect chưa rõ. |
+| Current implementation | WIRED locally: raw-path route, shared ADMIN guard, signed-int64 parser, parent/delivery locks, queued-only delete, fake-DB tests. |
+| Transaction | View locks parent then deliveries, deletes parent and commits after response projection; local fallback. |
+| Side effects | Deletes one path-selected legacy notification. Candidate FK cascades its delivery rows. External scheduler/provider cancellation is not called or verified. |
 | DD status | Draft — Needs Confirmation |
 
 ## Sources
 
-- [API catalog và reusable schemas](../../../../../docs/lists/list_api.md) — #92–#96, DeleteResult, Notification, NotificationChannel, NotificationStatus.
-- [AC/API index, AC-36](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — Admin permission, postcondition và các API notification.
-- [AC-36 activity diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — DELETE branch: API #95 → DELETE/mark cancelled → reload notification management.
-- [DB table guide](../../diagrams/DB_UNICA_TABLES.md) và [legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — BIGINT notification row; không có lifecycle tombstone/time column.
-- [V1-PILOT DDL](../../../../../infra/postgres/02_study_db.sql) — UUID learner notification/delivery schema riêng.
-- [DD #92](../92_admin_notifications_list/02_Overview.md), [DD #93](../93_admin_notifications_create/02_Overview.md), [DD #94](../94_admin_notifications_update/02_Overview.md) — shared schema, create/update lifecycle và outstanding Operation/schema gaps.
-- [DELETE precedent #77](../77_admin_course_delete/02_Overview.md), [DELETE precedent #90](../90_admin_quizzes_delete/02_Overview.md) — giữ DeleteResult direct, tách policy-derived behavior khỏi physical schema.
+- [API catalog và reusable schemas](../../../../../docs/lists/list_api.md) — #92–#96, DeleteResult and Notification contracts.
+- [AC/API index, AC-36](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — Admin permission, postcondition and notification APIs.
+- [AC-36 activity diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — #95 → `DELETE/mark cancelled` → reload management.
+- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) and [migration 009](../../../../../infra/postgres/study-server/migrations/009_notification_delivery_outbox.sql) — BIGINT recipient row; delivery FK has `ON DELETE CASCADE`, statuses are QUEUED/SENT/FAILED; no notification lifecycle/tombstone timestamp.
+- [V1-PILOT DDL](../../../../../infra/postgres/02_study_db.sql) — separate UUID learner notification/delivery model; not used by #95.
+- [DD #92](../92_admin_notifications_list/02_Overview.md), [DD #93](../93_admin_notifications_create/02_Overview.md), [DD #94](../94_admin_notifications_update/02_Overview.md) — local list/create/update fallbacks and remaining AC-36 questions.
+- [DELETE precedent #90](../90_admin_quizzes_delete/02_Overview.md) — DeleteResult and DB-returned timestamp pattern.
 - [Current Study router](../../../app/api/v1.py), [middleware](../../../app/core/middleware.py), [API Guidelines](../../../../../contracts/api-guidelines/README.md).
 
 ## Tables/entities read
 
 | Relation/entity | Candidate fields | Basis/status |
 |---|---|---|
-| Legacy notifications | id, user_id, sender_id, title, content, type, is_read, created_at | BIGINT recipient-row candidate; không có status, scheduled_at, deleted_at hoặc campaign relation. |
-| V1-PILOT notifications | UUID id, learner_id, category, title, body, read_at, expires_at, created_at | Learner-scoped model, không phải Admin campaign. |
-| V1-PILOT notification_deliveries | UUID notification_id, channel, status, provider/retry fields | Delivery-level append-only rows; khác ID/grain của Admin API. |
-| Logical Notification lifecycle | draft, scheduled, cancelled/deleted, delivery started | Catalog/diagram không định nghĩa enum hoặc transition table; trạng thái chưa được xác nhận. |
+| Legacy `notifications` | id, user_id, sender_id, title, content, type, is_read, created_at, operation_id | Current #93/#94 fallback target; recipient-level BIGINT row; no lifecycle status or tombstone. Local #95 uses path id only. |
+| Legacy `notification_deliveries` | id, notification_id, channel, status, queued_at, updated_at | Migration 009 candidate; channel/status checked; parent FK cascades on DELETE. Live deployment is unverified. |
+| V1-PILOT notifications/deliveries | UUID notification/learner/delivery fields | Separate learner model; not queried or changed by #95. |
+| Logical Notification lifecycle | Draft, Scheduled, cancelled/deleted, dispatch-started | Catalog/diagram do not define tokens or transitions; no lifecycle field exists in legacy row. |
 
 ## Tables write
 
-AC-36 diagram yêu cầu logical DELETE/mark cancelled. Không có physical Admin notification model hoặc tombstone fields được chốt. Proposal dưới đây không phát sinh SQL, table hay column.
+Local fallback executes `DELETE FROM notifications WHERE id = :notification_id RETURNING id, CURRENT_TIMESTAMP AS deleted_at`. It first locks the parent and all its delivery rows. The checked-in legacy FK `notification_deliveries.notification_id ... ON DELETE CASCADE` removes only that parent's outbox rows in the same transaction. No DDL or migration is changed; checked-in DDL is not live-schema evidence.
 
 ## Mục chú ý
 
-- Catalog purpose nêu “Xóa draft/cancel nếu policy cho phép”; diagram node nói “DELETE/mark cancelled”. Không có nhánh state/status cụ thể.
-- Reusable DeleteResult bắt buộc literal status "deleted", kể cả khi logical action là cancellation. Giữ schema trực tiếp; meaning của literal trong nhánh cancel cần owner xác nhận.
-- Legacy notifications không có deletion/cancellation timestamp hoặc state. V1-PILOT timestamps/status thuộc UUID learner/delivery model, không thể dùng thay cho Admin BIGINT contract.
-- Notification delivery rows trong V1-PILOT được mô tả là append-only. Không dùng DDL đó để update/delete delivery history cho API #95.
-- #96 direct response là Notification và không có delivery aggregate collection/field. Không dựa vào contract #96 để xác định đã dispatch hay chưa.
-- #93 Operation response/ID bridge và request không có action field vẫn là group gaps. #95 không tự tạo Operation ID hoặc action.
-- Scheduler/queue cancellation API chưa được tìm thấy; không claim provider đã huỷ gửi.
+- Catalog purpose is conditional; AC-36 says `DELETE/mark cancelled` but does not specify draft/scheduled state or persistence method.
+- Local `DERIVED` eligibility requires at least one valid delivery and every locked delivery status to be `QUEUED`; no delivery or any `SENT`/`FAILED` row returns the existing 422 code.
+- The endpoint deletes the single recipient-level row identified by `notification_id`; it does not delete sibling rows sharing an `operation_id`.
+- DeleteResult keeps direct literal `status="deleted"`; `deleted_at` maps to database `CURRENT_TIMESTAMP` from DELETE RETURNING, not a stored tombstone.
+- The route uses shared `ADMIN` role auth. AC-36 fine-grained permission is `SOURCE_REQUIRED` and not locally enforced.
+- #96 response is Notification without a delivery aggregate; eligibility reads the local legacy outbox and is `DERIVED`.
+- #93 Operation response/ID bridge and batch cancellation semantics remain open. #95 accepts no Operation ID.
+- No scheduler/provider cancellation call is present. Queued-only row state is not proof that an external send was prevented.
 
 ## Assumptions
 
-- DERIVED proposal: Draft chưa dispatch được gỡ khỏi active management bằng logical removal, giữ recipient/delivery history.
-- DERIVED proposal: Scheduled chỉ được mark cancelled khi chưa delivery nào bắt đầu; nếu dispatch đã bắt đầu thì từ chối bằng 422 hiện có.
-- DERIVED proposal: repeated request cho cùng tombstone trả lại cùng DeleteResult 200 để DELETE retry an toàn; cần owner xác nhận.
-- DeleteResult.deleted_at được hiểu là thời điểm logical removal/cancellation được commit. Nguồn clock/column chưa được chọn.
-- Không coi các proposal là implementation contract đã duyệt.
+- `DERIVED`: checked-in legacy BIGINT table/outbox are used because they are the model currently written by #93 and edited by #94.
+- `DERIVED`: a notification is locally cancellable only when it has at least one delivery and every delivery is QUEUED; a missing delivery cannot establish eligibility.
+- `DERIVED`: physical delete is the simplest mapping supported by the checked-in FK cascade and direct DeleteResult. The action affects one recipient row and its outbox only.
+- `DERIVED`: deleted_at is the database transaction timestamp; a later repeated DELETE receives 404 because no tombstone remains.
+- These choices are implementation fallbacks, not owner-approved lifecycle or retention policy. They do not prove live schema, worker behavior or external cancellation.
 
 ## Conflicts
 
 | Source A | Source B | Conflict | Impact |
 |---|---|---|---|
-| Catalog #95 purpose | AC-36 DELETE node | Delete draft/cancel conditionally vs generic DELETE/mark cancelled | Eligibility/state policy unresolved. |
-| DeleteResult | Scheduled cancellation outcome | Response literal says deleted while lifecycle action may be cancelled | Preserve direct shape; clarify semantic meaning. |
-| Notification schema | Legacy notifications | No status, schedule or deletion timestamp | Cannot implement exact lifecycle from legacy row alone. |
-| Admin campaign | V1-PILOT notification/delivery schema | UUID learner/delivery model and append-only delivery history | Do not conflate or mutate pilot tables by analogy. |
-| API #96 | Delivery-start eligibility | Its response is Notification, without delivery aggregate fields | No cross-API proof of cancellation eligibility. |
-| #93 operation notes | AC-36 Operation tracker and #18 IDs | Response type/operation ID bridge unresolved | #95 cannot name or cancel an assumed Operation. |
-| AC permission | Current Study auth source | No verified Admin notification guard | Permission implementation is SOURCE_REQUIRED. |
+| Catalog #95 purpose | AC-36 DELETE node | Conditional draft delete/cancel vs generic DELETE/mark cancelled | Eligibility and physical-vs-logical lifecycle remain unresolved; local rule is DERIVED. |
+| DeleteResult | Cancellation wording | Literal says deleted while diagram also says cancelled | Direct response shape retained; external cancellation is not claimed. |
+| Legacy notification DDL | Desired lifecycle | No state, schedule or tombstone timestamp | Use current #93/#94 recipient row only as a local candidate. |
+| Legacy delivery FK | History preservation proposal in earlier DD | FK cascades child delivery rows on hard delete | Local queued rows are removed; retention policy needs owner approval. |
+| API #96 | Delivery-start eligibility | Response has no aggregate fields | #95 reads locked legacy outbox; this remains DERIVED. |
+| AC permission | Current Study auth | Shared guard checks ADMIN role, no dedicated notification permission | Fine-grained permission remains SOURCE_REQUIRED. |
 
 ## Security note
 
-- Authenticate Bearer JWT and authorize Admin plus notification-management permission before resource lookup or mutation.
-- Do not expose notification existence to unauthorized callers; exact authorization/404 precedence needs the shared Admin policy.
-- Do not log or return recipient PII, provider details, queue IDs or SQL errors.
-- Do not accept an actor ID or permission from request input.
+- Authenticate Bearer JWT and apply the shared ADMIN role guard before path parsing or resource lookup.
+- Do not expose target existence to unauthorized callers. Dedicated permission and tenant/global scope remain unverified.
+- Do not log or return recipient PII, provider details, delivery IDs or SQL errors.
+- Do not accept actor ID, permission, action override or Operation ID from request input.
 
-## Performance note
+## Performance and transaction note
 
-- Eligibility should use bounded existence/status reads rather than loading recipient/delivery history, if the owner approves a physical model.
-- Delivery-start aggregate/index/query is not defined; no performance or transaction claim is made.
-- Scheduler cancellation timeout/retry behavior remains unknown.
+- The view uses bounded row-locking reads for one parent and its delivery rows, ordered by channel, then one parent DELETE.
+- Parent lock precedes child locks to match API #94 and block new FK-linked delivery inserts during the transaction. Live PostgreSQL lock behavior and any worker lock order are not verified here.
+- Scheduler cancellation timeout/retry behavior is not implemented.
 
 ## Contract interpretation
 
-- DIRECT: DELETE/path/auth role/path type/no body or query/DeleteResult/HTTP 200/exact 401/403/404/422/500 codes; AC-36 permission and DELETE/mark cancelled/reload intent.
-- DERIVED: draft removal, scheduled pre-dispatch cancellation, preserve history, existing 422 for disallowed state and idempotent repeated delete.
-- SOURCE_REQUIRED: schema/tombstone/timestamp, enum/state values, delivery-start signal, Admin permission and scheduler protocol.
-- DISCREPANCY: cancel action represented by DeleteResult.status="deleted"; API #96 does not expose delivery aggregate needed by the proposed guard.
+- DIRECT: DELETE/path/auth role/path int64/no body or query/DeleteResult/HTTP 200/exact catalog 401/403/404/422/500; AC-36 permission and DELETE/mark-cancelled/reload intent.
+- DERIVED: positive-int64 parsing to 422, shared ADMIN guard fallback, legacy recipient-row target, at-least-one/all-QUEUED eligibility, physical parent delete/cascade, DB timestamp and repeat-delete 404.
+- SOURCE_REQUIRED: approved lifecycle/retention policy, dedicated Admin permission, live schema, scheduler/worker protocol, dispatch race and Operation bridge.
+- DISCREPANCY: diagram uses cancellation language but response says deleted; external cancellation is not represented in response.
 
 ## Tình trạng nhóm AC-36
 
-AC-36 macro-review #92–#96 is complete at document level with open questions. #93 send/action/Operation, #94 draft/schedule, #95 delete/cancel policy and #96 aggregate projection remain unresolved. See [AC-36 macro-review](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
+Macro-review #92–#96 remains `VERIFIED_WITH_OPEN_QUESTIONS`: #92–#95 are locally wired, while #96 remains unwired. The current fallbacks do not resolve catalog response/cardinality questions, shared schema, fine-grained permission, Operation bridge or live deployment. See [AC-36 macro-review](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

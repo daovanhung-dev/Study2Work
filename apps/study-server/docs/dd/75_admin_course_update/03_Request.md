@@ -37,7 +37,7 @@ Không khai báo query parameter trong catalog hoặc AC-32 diagram.
 
 ## Request body
 
-Catalog và AC-32 diagram chỉ khai báo path. Bốn field dưới đây là proposal `DERIVED` để cụ thể hóa “UPDATE course metadata”; chúng chưa phải request contract đã phê duyệt.
+Catalog và AC-32 diagram chỉ khai báo path. Bốn field dưới đây được triển khai như fallback `DERIVED` để cụ thể hóa “UPDATE course metadata”; chúng chưa phải request contract đã phê duyệt.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|---|
@@ -46,7 +46,7 @@ Catalog và AC-32 diagram chỉ khai báo path. Bốn field dưới đây là pr
 | 3 | URL thumbnail | `thumbnail_url` | `uri \| null` | Yes, proposal | N/A | N/A | Unicode | URI candidate | N/A | N/A | Full replacement; `null` đề xuất xóa URL. Rule URI/host chưa có nguồn. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
 | 4 | Giá | `price` | `decimal-string` | Yes, proposal | N/A | N/A | ASCII decimal candidate | Decimal string | N/A | N/A | Full replacement; legacy `NUMERIC(12,2)` chỉ là schema candidate. | [05_Data_Mapping.md](./05_Data_Mapping.md) |
 
-> PUT full replacement, requiredness của từng key, null-vs-omit, blank title, URI policy và precision/range giá đều cần xác nhận. Không suy ra thêm validation ngoài contract.
+> Runtime hiện yêu cầu đủ bốn key, từ chối key lạ và JSON type không phải string. `title` giữ nguyên whitespace và chỉ áp giới hạn legacy `VARCHAR(200)`; `description`/`thumbnail_url` cho phép null; `thumbnail_url` không kiểm tra scheme/host; `price` yêu cầu decimal string, không exponent/rounding, tối đa 2 chữ số thập phân và 10 chữ số nguyên theo legacy `NUMERIC(12,2)`. Đây là fallback `DERIVED`; owner vẫn cần xác nhận.
 
 ## Ví dụ Request data
 

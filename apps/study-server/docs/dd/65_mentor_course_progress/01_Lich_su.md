@@ -12,12 +12,14 @@ status: "Draft — Needs Confirmation"
 | Phiên bản | Ngày | Người cập nhật | Nội dung | Trạng thái |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD theo catalog #65 và AC-26; tách contract trực tiếp khỏi phương án tổng hợp progress được suy luận. | Draft — Needs Confirmation |
+| 1.1 | 2026-10-25 | Codex | Wire API #65 theo fallback progress roster DERIVED; bổ sung current source, tests, formula/latest-row/paging details; giữ discrepancy Page<Course> và DD Draft. | Draft — Needs Confirmation |
 
 ## Nguồn thay đổi
 
 - [API catalog](../../../../../docs/lists/list_api.md) — endpoint, auth, input, response và business code.
 - [AC-26 index](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) và [activity diagram](../../diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio) — vị trí #65 trong luồng theo dõi tiến độ.
 - [Worklog tạo DD #65](../../../../../.agents/worklog/2026-10-24/create-study-api65-dd.md) — plan, ma trận truy vết và ranh giới evidence.
+- [Worklog triển khai API #65](../../../../../.agents/worklog/2026-10-25/implement-api65-mentor-course-progress.md) — source trace, quyết định DERIVED, implementation và local verification.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -13,22 +13,22 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Giữ nguyên error set và mã từ catalog #86. Dependency-blocker behavior là proposal; không bổ sung business code hoặc HTTP status.
+Giữ nguyên error set và mã từ catalog #86. Dependency blockers dùng status/code đã có trong catalog; không bổ sung business code hoặc HTTP status.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
 | 1 | Authentication | Bearer/JWT | Authorization | Credential thiếu, sai hoặc hết hạn | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | DIRECT code; message ID không được catalog cung cấp. |
-| 2 | Authorization | Admin role/permission | Principal | Không có Admin role hoặc lesson-management permission | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | DIRECT requirement; policy source absent. |
-| 3 | Not found | Q1 target lookup | lesson_id | Không có lesson khớp path ID | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | [Step 2](./05_Data_Mapping.md#step-2-tim-lesson) | N/A | No-row → 404 là candidate semantics. |
-| 4 | Validation/policy | Path/dependency check | lesson_id/reference/progress | Path invalid theo parser được duyệt hoặc dependency policy chặn soft-delete | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) / [Step 3](./05_Data_Mapping.md#step-3-check-dependency-va-policy) | N/A trước mutation | Catalog code DIRECT; dependency branch DERIVED. |
-| 5 | System error | Query/persistence/mapping/commit | N/A | Database hoặc response mapping failure không xử lý được | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 4](./05_Data_Mapping.md#step-4-soft-delete-theo-policy) / [Step 5](./05_Data_Mapping.md#step-5-map-deleteresult) | Rollback theo approved transaction | DIRECT code; transaction owner unresolved. |
+| 2 | Authorization | Admin role/permission | Principal | Không có ADMIN role | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | Shared role guard is implemented; fine-grained permission remains unsupported. |
+| 3 | Not found | Locked target lookup | lesson_id | Không có Lesson hoặc Lesson đã có marker `DELETED` | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | [Step 2](./05_Data_Mapping.md#step-2-tim-lesson) | Rollback read transaction | Repeat-delete 404 is a DERIVED local choice. |
+| 4 | Validation/policy | Path/dependency check | lesson_id/reference/progress | Path sai signed-int64 hoặc có progress/resource/upload reference | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) / [Step 3](./05_Data_Mapping.md#step-3-check-dependency-va-policy) | N/A trước mutation | Catalog code DIRECT; parser and blocker set DERIVED. |
+| 5 | System error | Query/mapping/commit | N/A | Database hoặc response mapping failure không xử lý được | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 4](./05_Data_Mapping.md#step-4-soft-delete-theo-policy) / [Step 5](./05_Data_Mapping.md#step-5-map-deleteresult) | Rollback transaction | Catalog code DIRECT; local transaction is view-owned. |
 
 ## Error envelope
 
 - API guideline yêu cầu error data:null; field detail nằm trong meta.fieldErrors.
-- Current error_response(...) đổi absent data thành {}; endpoint #86 chưa có route để chứng minh behavior riêng.
+- Current `error_response(...)` emits `data:null`; API #86 HTTP tests verify the blocker envelope.
 - Không thêm 409 hoặc code khác ngoài error set catalog #86.
 
 ## Error response example — dependency blocker 422 — DERIVED
@@ -37,7 +37,7 @@ Giữ nguyên error set và mã từ catalog #86. Dependency-blocker behavior l�
 {
   "success": false,
   "businessCode": "DESIGN_VALIDATION_ERROR",
-  "message": "Không thể xóa lesson do policy dependency.",
+  "message": "Lesson with progress or linked resources cannot be deleted.",
   "data": null,
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000086"

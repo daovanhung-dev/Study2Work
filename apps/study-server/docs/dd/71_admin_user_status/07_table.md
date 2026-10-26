@@ -1,50 +1,56 @@
 ---
-title: "Định nghĩa table"
+title: "Định nghĩa users update"
 order: 7
 dd_id: "71"
 api_name: "Khóa/mở khóa user Conditional"
-source_sheet: "table"
+source_sheet: "table — users"
 status: "Draft — Needs Confirmation"
 ---
 
-# Định nghĩa table
+# Định nghĩa bảng users update
 
 ## Table mapping
 
 | Table/Relation | Loại | Vai trò | Trạng thái |
 |---|---|---|---|
-| Legacy `users` | UPDATE/RETURNING candidate | Cập nhật account status và trả UserProfile safe projection | DERIVED CANDIDATE; live schema chưa verify. |
-| Legacy `refresh_tokens` | Conditional UPDATE candidate | Đặt `revoked_at` cho refresh-token rows đang hiệu lực khi khóa nếu policy yêu cầu | DERIVED CANDIDATE; không revoke access JWT. |
-| V1-PILOT `identity_projections` | Không dùng làm target candidate | Có UUID subject và account_status enum | DDL model khác; không map ngầm sang legacy BIGINT users. |
+| Legacy `users` | SELECT FOR UPDATE / UPDATE RETURNING | Khóa và đổi account status; trả safe UserProfile | Checked-in DDL candidate; live schema chưa verify. |
+| V1-PILOT `identity_projections` | Không dùng | UUID account status model khác legacy users | Không JOIN hoặc mutate. |
 
-Không migration, DDL hoặc index nào được tạo bởi DD này.
+## User status query and mutation
 
-## Candidate status source — legacy users
+~~~sql
+SELECT status
+FROM users
+WHERE id = :user_id
+FOR UPDATE
+~~~
 
-| Logical field | Relation | Column | Operation | Mapping/status |
+~~~sql
+UPDATE users
+SET status = :status,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = :user_id
+RETURNING id, full_name, email, role, avatar_url, phone, status, created_at, updated_at
+~~~
+
+## Column mapping
+
+| Logical field | Column | Operation | Value/source | Runtime rule |
 |---|---|---|---|---|
-| User ID | Legacy users | id | WHERE/RETURNING | BIGSERIAL candidate; map với `user_id` là DERIVED. |
-| Account status | Legacy users | status | UPDATE/RETURNING | VARCHAR(20), default ACTIVE trong DDL; legal values chưa được constraint. |
-| Updated time | Legacy users | updated_at | UPDATE/RETURNING | Candidate server timestamp; cần xác nhận behavior #71. |
-| Safe profile | Legacy users | full_name/email/role/avatar_url/phone/created_at | RETURNING | UserProfile candidate; không lấy `password_hash`. |
-| Biography | No legacy users column | N/A | No mapping | UserProfile.bio optional; source gap. |
+| User identity | `id` | WHERE/RETURNING | Path `user_id` | BIGSERIAL candidate; bound int64. |
+| Current account status | `status` | SELECT FOR UPDATE | Stored value | Only ACTIVE/SUSPENDED may transition through #71; other state returns 422 DERIVED. |
+| Target account status | `status` | UPDATE/RETURNING | Body `status` | ACTIVE or SUSPENDED only; request allowlist DERIVED. |
+| Modification time | `updated_at` | UPDATE/RETURNING | `CURRENT_TIMESTAMP` | Set on each accepted request, including same-state request; DERIVED. |
+| User name | `full_name` | RETURNING | Stored value | Required safe UserProfile field; not changed. |
+| Email | `email` | RETURNING | Stored value | Required safe UserProfile field; not changed. |
+| Role | `role` | RETURNING | Stored value | Required safe UserProfile field; not changed. |
+| Avatar | `avatar_url` | RETURNING | Stored value | Nullable; preserve null. |
+| Phone | `phone` | RETURNING | Stored value | Nullable; preserve null. |
+| Creation time | `created_at` | RETURNING | Stored value | Required UserProfile field. |
+| Password hash | `password_hash` | Excluded | N/A | Never selected or returned. |
+| Biography | No legacy `users` column | Excluded | N/A | No fabricated `bio`; API #04 UserProfile model omits it. |
 
-V1-PILOT có enum `account_status` gồm ACTIVE, SUSPENDED, DELETION_PENDING, ANONYMIZED và lưu trên UUID identity projection. Chỉ ACTIVE/SUSPENDED được nêu như candidate cho operation khóa/mở khóa; không coi enum này là legacy users schema hoặc contract UserStatus.
-
-## Candidate refresh-token mapping
-
-| Logical field | Relation | Column | Operation | Mapping/status |
-|---|---|---|---|---|
-| User ID | Legacy refresh_tokens | user_id | WHERE | BIGINT FK candidate tới `users.id`. |
-| Revoked time | Legacy refresh_tokens | revoked_at | Conditional UPDATE | Chỉ revoke rows chưa revoke và chưa hết hạn khi target status là SUSPENDED nếu policy được duyệt. |
-| Token hash | Legacy refresh_tokens | token_hash | EXCLUDED | Không đọc/trả token hash; API #3 lưu hash và revoke bằng row ID. |
-| Expiry | Legacy refresh_tokens | expires_at | Optional selection/filter | Candidate query có thể chỉ xét chưa hết hạn; policy “active session” cần xác nhận. |
-
-Current API #3 revokes one refresh-token row by token ID. Bulk revoke by user is a proposal for #71. Refresh-token revocation alone does not invalidate existing stateless access JWTs.
-
-## Alternate V1-PILOT source boundary
-
-V1-PILOT `identity_projections` dùng UUID và `account_status`; legacy Study `users` dùng BIGINT và VARCHAR `status`. Không JOIN, thay thế hoặc gộp hai mô hình khi chưa có identity mapping/schema contract được duyệt.
+No migration, DDL change or index is introduced. BIGINT schema and live deployment are unverified.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

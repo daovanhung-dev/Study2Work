@@ -16,13 +16,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-26 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD API #86 từ catalog và AC-34; soft-delete/dependency policy và timestamp mapping giữ rõ DIRECT/DERIVED/SOURCE_REQUIRED. | Draft — Needs Confirmation. |
+| 1.1 | 2026-10-26 | Codex | Ghi local DERIVED legacy tombstone, dependency blockers, timestamp mapping và API #86 runtime verification; giữ live schema/owner approval ở trạng thái mở. | Draft — Needs Confirmation. |
 
 ---
 

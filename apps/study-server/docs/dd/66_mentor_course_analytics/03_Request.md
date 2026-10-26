@@ -24,19 +24,19 @@ status: "Draft — Needs Confirmation"
 
 ## Path parameters
 
-| Tên | Kiểu | Bắt buộc | Mô tả | Validation trực tiếp |
+| Tên | Kiểu | Bắt buộc | Mô tả | Runtime behavior |
 |---|---|---:|---|---|
-| course_id | int64 | Có | Course cần xem analytics. | Catalog chỉ xác định required/int64; malformed, range và coercion behavior chưa được endpoint source xác nhận. |
+| course_id | int64 | Có | Course cần xem activity summary. | Raw path được parse thành signed int64; malformed hoặc ngoài range trả 404 DESIGN_RESOURCE_NOT_FOUND. |
 
 ## Headers
 
 | Header | Bắt buộc | Giá trị | Mục đích |
 |---|---:|---|---|
-| Authorization | Có | Bearer <JWT> | Xác thực principal có role Mentor theo catalog. |
+| Authorization | Có | Bearer <JWT> | Shared access-JWT guard xác thực principal và role MENTOR trước DB. |
 
 ## Query parameters
 
-Không có query parameters trong catalog #66. Không tự thêm from/to, event_type, page, size, sort hoặc filter.
+Catalog không khai báo query parameters. Không có from/to, event_type, page, size, sort hoặc filter.
 
 ## Request body
 
@@ -46,19 +46,17 @@ N/A — GET không khai báo body trong catalog.
 
 | Request item | Source/use | Query/response use | Rule/status |
 |---|---|---|---|
-| Authorization | Header | Xác thực Bearer và xác định Mentor principal để áp dụng course permission | Bearer + role Mentor DIRECT; Mentor guard/identity mapping SOURCE_REQUIRED. |
-| course_id | Required path, int64 | Giới hạn candidate course lookup và conceptual event scope | Kiểu DIRECT; physical event association/live mapping SOURCE_REQUIRED. |
-| Query | Không khai báo | Không có time window, event-type filter hay pagination input | DIRECT; all-time scope chỉ là DERIVED proposal. |
+| Authorization | Header | Xác thực Bearer và lấy JWT sub để kiểm tra direct course owner | Bearer + role Mentor DIRECT; owner predicate DERIVED từ legacy schema. |
+| course_id | Required path, int64 | Course lookup và giới hạn activity projection | Path type DIRECT; malformed/range behavior 404 theo local runtime pattern. |
+| Query | Không khai báo | Không có time window, event-type filter hoặc pagination input | DIRECT; không tự thêm query fields. |
 | Body | Không khai báo | Không có mutation payload | DIRECT. |
 
 ## Ví dụ request
 
-```http
 GET /api/v1/mentor/courses/321/analytics
 Authorization: Bearer <JWT>
-```
 
-Ví dụ minh họa contract đã khai báo, không khẳng định endpoint hiện được phục vụ bởi Study Server.
+Request thể hiện direct path/header contract. Response cục bộ là DERIVED summary; xem Response và Overview.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

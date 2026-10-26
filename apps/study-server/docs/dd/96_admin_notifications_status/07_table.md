@@ -15,10 +15,14 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table | N/A — chưa có Admin relation được duyệt |
-| Logical table | Admin Notification và delivery aggregate (logical only) |
-| Operation | SELECT / read-only |
-| Data Mapping step | 2 |
+| Physical tables queried by local fallback | `notifications`, `notification_deliveries` |
+| Logical table | Admin Notification plus delivery aggregate |
+| Operation | One SELECT / read-only; no schema mutation |
+| Data Mapping step | Q1 in section 2 |
+
+## Source and approval boundary
+
+The two relation names and columns are from the checked-in legacy BIGINT DDL and local APIs #92–#95. They are a `DERIVED` implementation candidate, not an approved Admin model and not proof the live database has migration 009. No table/column is created or altered by API #96.
 
 ## Update mapping
 
@@ -52,7 +56,7 @@ status: "Draft — Needs Confirmation"
 
 ## Query/source boundary
 
-Các bảng legacy/pilot được ghi trong [05_Data_Mapping.md](./05_Data_Mapping.md) chỉ là evidence/candidate. Không có physical SELECT mapping nào được chốt cho đến khi owner chọn Admin model, grain và delivery aggregate source.
+Current SQL reads the legacy candidate by notification ID and groups candidate delivery rows by notification ID. V1-PILOT UUID tables are not used. The physical source/grain and status projection remain `DERIVED / SOURCE_REQUIRED`; no write mapping applies to this GET API.
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `table`

@@ -16,13 +16,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-25 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD API #53 từ catalog và AC-22 | Draft — Needs Confirmation; API chưa có implementation |
+| 1.1 | 2026-10-25 | Codex | Cập nhật mapping theo route, module và HTTP tests API #53 | Local implementation verified; các guard DERIVED và live schema vẫn cần xác nhận |
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

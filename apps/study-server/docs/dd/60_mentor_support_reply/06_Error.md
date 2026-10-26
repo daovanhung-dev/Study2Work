@@ -17,15 +17,16 @@ Giữ đúng error set API #60: 401, 403, 404, 422, 500. Không thêm 409, 503 h
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Header thiếu hoặc token không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md) | No | Catalog; Mentor claim validation chưa có source. |
-| 2 | Authorization | Role/scope | Mentor/request/asset scope | Sai role, request ngoài phạm vi hoặc file ref không được phép dùng | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md) | No | Request scope direct từ AC-24; attachment ownership branch cần confirm. |
-| 3 | Not found | Request lookup | Support request | Không tìm thấy request theo ID và access rule được duyệt | 404 | DESIGN_RESOURCE_NOT_FOUND | Chưa quy định | [Data Mapping](./05_Data_Mapping.md) | No | Catalog; physical lookup chưa có. |
-| 4 | Request validation | Required/type/content | `request_id`, `message`, `attachment refs` | Thiếu/sai kiểu; hoặc proposal message rỗng/whitespace; ref format invalid nếu CSV proposal được duyệt | 422 | DESIGN_VALIDATION_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md) | No | Nonblank/CSV checks là DERIVED; không thêm length limit. |
-| 5 | System error | DB/asset projection/response mapping | SupportMessage/SupportRequest | Lỗi query, insert hoặc mapping ngoài dự kiến | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md) | Yes, candidate transaction rollback trước commit | Catalog; không trả stack trace/provider detail. |
+| 1 | Authentication | Bearer/JWT | Authorization | Header thiếu hoặc token không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md) | No | Shared MENTOR guard. |
+| 2 | Authorization | Role/scope | Mentor/request | Role sai hoặc request thuộc direct course owner khác | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md) | Yes after Q1 | Request exists before owner branch under API #59 pattern. |
+| 3 | Not found | Request lookup | SupportRequest | Không có request ID tương ứng | 404 | DESIGN_RESOURCE_NOT_FOUND | Chưa quy định | [Data Mapping](./05_Data_Mapping.md) | Yes | Local BIGSERIAL lookup. |
+| 4 | Not found | Asset scope | attachment_refs[] | ID hợp lệ cú pháp nhưng không resolve đúng owner/course/LECTURE/UPLOADED | 404 | DESIGN_RESOURCE_NOT_FOUND | Chưa quy định | [Data Mapping](./05_Data_Mapping.md) | Yes | Generic response; không lộ asset ngoài scope. |
+| 5 | Request validation | Path/body/ref syntax | request_id, message, attachment_refs | Sai/overflow int64; field thiếu/sai kiểu; message blank; JSON refs sai shape/non-integer/duplicate | 422 | DESIGN_VALIDATION_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md) | No before DB write | Nonblank and JSON-array policy are DERIVED. |
+| 6 | System error | DB/projection/transaction | SupportRequest/SupportMessage | Query, parent integrity, insert/link, mapping, reload hoặc commit thất bại | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md) | Yes | Rollback before response; safe log by trace only. |
 
-> Catalog không khai báo mã state-conflict HTTP 409; post-resolution reply behavior chưa chốt và không tự thêm 409. Nếu API owner muốn chặn reply trên request đã resolved/cancelled, status branch phải được ánh xạ bằng error contract đã duyệt.
+> Catalog không khai báo mã state-conflict HTTP 409. API #60 không sửa status; post-resolve reply policy vẫn cần business owner xác nhận.
 
-> API Guidelines yêu cầu error `data:null`; current helper mặc định `{}` khi caller bỏ qua data. API #60 chưa wired nên đây là conditional future discrepancy.
+> API Guidelines và current helper có khác biệt serialization error data; API #60 dùng shared error_response convention khi runtime được wiring.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

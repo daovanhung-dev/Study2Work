@@ -17,7 +17,8 @@ status: "Draft — Needs Confirmation"
 | Character encoding | UTF-8 |
 | Content-Type | application/json |
 | HTTP status | 200 |
-| Contract type | ApiEnvelope<Page<Course>> theo catalog trực tiếp. |
+| Contract trực tiếp | ApiEnvelope<Page<Course>> theo diagram/catalog. |
+| Runtime fallback | ApiEnvelope<StudentCourseProgress> theo mục đích AC-26; DERIVED và chưa được contract owner phê duyệt. |
 
 ## Contract trực tiếp từ catalog
 
@@ -34,7 +35,7 @@ HTTP 200, business code `DESIGN_RESOURCE_RETRIEVED`. Giữ nguyên schema trực
 | 7 | `data.pagination.total` | Total items | `total` | int64 | No | N/A | N/A | 4.1 | Theo PageMeta | DIRECT schema | Semantics chưa rõ nếu direct response giữ Course. |
 | 8 | `data.pagination.total_pages` | Total pages | `total_pages` | int32 | No | N/A | N/A | 4.1 | Theo PageMeta | DIRECT schema | Pagination policy chưa chốt. |
 | 9 | `meta` | Envelope metadata | `meta` | object | No | N/A | N/A | 4.1 | Theo ApiEnvelope<T> | Object fields chưa đặc tả | DIRECT schema. |
-| 10 | `traceId` | Trace ID | `traceId` | uuid | No | N/A | N/A | 4.1 | Theo ApiEnvelope<T> | N/A | DIRECT schema; route chưa wired. |
+| 10 | `traceId` | Trace ID | `traceId` | uuid | No | N/A | N/A | 4.1 | Theo ApiEnvelope<T> | N/A | DIRECT schema; route hiện truyền trace ID. |
 
 ### Reusable Course fields
 
@@ -92,33 +93,33 @@ Category gồm `id:int64`, `name:string`, `slug:string`, `description?:string`. 
 
 `CourseStatus` là placeholder minh họa, không xác nhận enum member. Ví dụ không chứa tiến độ Student.
 
-## Candidate response để review — DERIVED, không phải wire contract
+## Runtime response fallback — DERIVED, chưa phải contract catalog đã duyệt
 
-Đề xuất singular `StudentCourseProgress` vì path xác định đúng một course và một Student. Candidate chỉ gồm lesson progress để đồng bộ với #65; không gồm learning events của #66, quiz hoặc assignment progress.
+Runtime dùng singular `StudentCourseProgress` vì path xác định đúng một course và một Student. Shape là DERIVED fallback cho AC-26; chỉ gồm lesson progress để đồng bộ với #65, không gồm learning events của #66, quiz hoặc assignment progress.
 
-| Candidate field | Type | Null/empty rule candidate | Basis/status |
+| Runtime field | Type | Null/empty rule | Basis/status |
 |---|---|---|---|
 | `course_id` | int64 | Bằng course path đã được xác thực | DERIVED; cần sửa response contract. |
-| `student` | UserSummary | Chỉ trả sau khi Student thuộc scope được duyệt | DERIVED; privacy/projection SOURCE_REQUIRED. |
-| `summary.completed_lessons` | int32 | 0 nếu không có completed lesson | DERIVED; trạng thái cần xác nhận. |
+| `student` | UserSummary | `avatar_url` hiện có thể là JSON null | DERIVED; chỉ trả sau khi Student thuộc active roster. |
+| `summary.completed_lessons` | int32 | 0 nếu không có completed lesson | DERIVED runtime; đếm trạng thái COMPLETED. |
 | `summary.total_lessons` | int32 | 0 nếu course không có lesson PUBLISHED | DERIVED từ API #9/#65. |
-| `summary.progress_percent` | int32 | 0 nếu total_lessons = 0 | DERIVED; cùng formula candidate #65. |
+| `summary.progress_percent` | int32 | 0 nếu total_lessons = 0 | DERIVED runtime; cùng formula floor-average #65. |
 | `lessons[]` | LessonProgress[] | Một item mỗi lesson PUBLISHED theo sort_order, id | DERIVED; unbounded, request không có pagination. |
-| `lessons[].lesson_id` | int64 | Required trong candidate | Legacy candidate; schema ID chưa chốt. |
-| `lessons[].title` | string | Tên lesson theo API #9 projection | Candidate `lessons.name → title`. |
-| `lessons[].order` | int32 | Theo API #9 projection | Candidate `lessons.sort_order → order`. |
-| `lessons[].progress_status` | string | NOT_STARTED khi không có progress row | DERIVED; enum chưa canonical. |
-| `lessons[].progress_percent` | int32 | 0 khi không có progress row | DERIVED; range chưa xác nhận. |
-| `lessons[].last_accessed_at` | date-time? | null nếu không có timestamp | DDL candidate; serialization chưa xác nhận. |
-| `lessons[].completed_at` | date-time? | null nếu chưa hoàn thành | DDL candidate; serialization chưa xác nhận. |
+| `lessons[].lesson_id` | int64 | Required | Legacy query source; live schema chưa xác nhận. |
+| `lessons[].title` | string | Tên lesson theo API #9 projection | Runtime map `lessons.name → title`. |
+| `lessons[].order` | int32 | Theo API #9 projection | Runtime map `lessons.sort_order → order`. |
+| `lessons[].progress_status` | string | NOT_STARTED khi không có progress row | DERIVED runtime; allowed state set vẫn cần phê duyệt. |
+| `lessons[].progress_percent` | int32 | 0 khi không có progress row | DERIVED runtime; kiểm tra range 0–100. |
+| `lessons[].last_accessed_at` | date-time? | JSON null nếu không có progress row/timestamp | Runtime giữ null; field source vẫn là legacy DDL candidate. |
+| `lessons[].completed_at` | date-time? | JSON null nếu chưa hoàn thành | Runtime giữ null; field source vẫn là legacy DDL candidate. |
 
-### Candidate JSON — DERIVED, không phải contract
+### Runtime JSON fallback — DERIVED, không phải contract catalog
 
 ```json
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Student course progress retrieved",
+  "message": "Student progress retrieved.",
   "data": {
     "course_id": 321,
     "student": {
@@ -138,8 +139,8 @@ Category gồm `id:int64`, `name:string`, `slug:string`, `description?:string`. 
         "order": 1,
         "progress_status": "COMPLETED",
         "progress_percent": 100,
-        "last_accessed_at": "2026-10-23T09:00:00Z",
-        "completed_at": "2026-10-23T09:20:00Z"
+        "last_accessed_at": "2026-10-23T09:00:00",
+        "completed_at": "2026-10-23T09:20:00"
       },
       {
         "lesson_id": 9002,
@@ -147,7 +148,7 @@ Category gồm `id:int64`, `name:string`, `slug:string`, `description?:string`. 
         "order": 2,
         "progress_status": "IN_PROGRESS",
         "progress_percent": 50,
-        "last_accessed_at": "2026-10-24T09:00:00Z",
+        "last_accessed_at": "2026-10-24T09:00:00",
         "completed_at": null
       },
       {
@@ -175,11 +176,11 @@ Category gồm `id:int64`, `name:string`, `slug:string`, `description?:string`. 
 }
 ```
 
-Summary candidate: `floor((100 + 50 + 0 + 0) / 4) = 37`; 1 of 4 lessons is COMPLETED. Đây chỉ là proposal, không sửa contract catalog.
+Runtime fallback summary: `floor((100 + 50 + 0 + 0) / 4) = 37`; 1 of 4 lessons is COMPLETED. Đây là DERIVED behavior; không sửa contract catalog.
 
 ## Error response note
 
-Catalog chỉ liệt kê 401/403/404/500; xem [06_Error](./06_Error.md). API guideline yêu cầu error `data:null`, current helper mặc định `{}`; API #67 chưa có route nên không có serialization runtime để xác minh.
+Catalog chỉ liệt kê 401/403/404/500; xem [06_Error](./06_Error.md). API guideline và current `error_response` thống nhất error `data:null`; middleware design-code allowlist đã gồm path #67. Malformed signed-int64 path được view ánh xạ 404 theo fallback cùng nhóm #65/#66.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

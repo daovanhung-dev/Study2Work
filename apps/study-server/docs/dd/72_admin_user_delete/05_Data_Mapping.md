@@ -11,177 +11,109 @@ status: "Draft — Needs Confirmation"
 
 ## Flow xử lý data
 
-~~~text
-Admin Bearer principal -> xác thực/ủy quyền Admin user-management -> nhận user_id:int64 -> Q1 candidate kiểm tra target -> Q2 đánh giá ràng buộc theo policy đã duyệt -> áp dụng soft-delete/anonymization được duyệt, không hard-delete -> map DeleteResult nếu đủ nguồn -> 200 DESIGN_RESOURCE_DELETED hoặc exact catalog errors
-~~~
-
-# Mục lục
-
-- [0. Check quyền](#step-0-check-quyen)
-- [1. Validate data input](#step-1-validate-data-input)
-- [2. Get thông tin](#step-2-get-thong-tin)
-- [3. Check dependency và thực hiện policy](#step-3-check-dependency-va-thuc-hien-policy)
-- [4. Check kết quả](#step-4-check-ket-qua)
-- [5. Map response](#step-5-map-response)
-- [Request Usage Matrix](#request-usage-matrix)
-- [Query Matrix](#query-matrix)
-- [Mutation Matrix](#mutation-matrix)
-- [Response Source Matrix](#response-source-matrix)
-
-<a id="step-0-check-quyen"></a>
+```text
+DELETE route
+→ validate shared ADMIN JWT role
+→ parse raw user_id as signed int64
+→ conditional soft-delete UPDATE users
+→ validate returned id/deleted_at event time
+→ commit
+→ DeleteResult envelope
+```
 
 ## 0. Check quyền
 
-### 0.1. Xác thực và authorization
+### 0.1. Thực hiện check quyền
 
-- Xác thực Bearer JWT và quyền Admin/user-management trước khi kiểm tra user tồn tại.
-- Token thiếu/sai/không hợp lệ dùng 401 DESIGN_AUTHENTICATION_REQUIRED theo catalog.
-- Principal không có Admin role/quyền user management dùng 403 DESIGN_ACCESS_DENIED theo catalog.
-- Claim, permission source, tenant/scope boundary và Admin guard chưa có Study source.
-- Current shared guard chỉ yêu cầu Student; không tái sử dụng guard đó cho Admin.
+- Gọi `validate_current_user_request(..., role="ADMIN")` trước path parsing và database access.
+- Guard trả 401 khi JWT thiếu/sai; trả 403 khi role không phải ADMIN.
+- Mapping claim ADMIN thành quyền user-management là DERIVED theo APIs #68–#71; tenant/MFA/dedicated permission chưa có source.
 
-### 0.2. Thứ tự truy cập
+### 0.2. Query/check quyền
 
-- Không chạy Q1 hoặc Q2 trước khi authorization thành công.
-- Không để caller trái quyền phân biệt user tồn tại hay không.
+| Target table/API | Column/Field | Condition/Value | Remarks |
+|---|---|---|---|
+| Shared auth guard | Authorization | Bearer JWT và role ADMIN | Không query user trước khi guard pass. |
 
-<a id="step-1-validate-data-input"></a>
+### 0.3. Check kết quả
+
+- Guard lỗi: trả response lỗi nguyên trạng; không truy cập DB.
+- Guard thành công: tiếp tục parse path.
 
 ## 1. Validate data input
 
-### 1.1. user_id
-
-- Nhận path user_id theo int64 bắt buộc như catalog.
-- Không thêm minimum, body field hoặc query parameter.
-- Catalog có 422 DESIGN_VALIDATION_ERROR; exact malformed/overflow mapping cần theo contract và route parser được duyệt.
-
-<a id="step-2-get-thong-tin"></a>
+- `user_id_value`: lấy raw string từ `request.path_params["user_id"]`.
+- Parse signed int64; malformed hoặc overflow trả 422 `DESIGN_VALIDATION_ERROR`.
+- Không có body hoặc query parameter.
 
 ## 2. Get thông tin
 
-### 2.1. Q1 — candidate existence lookup
+Không có SELECT riêng. UPDATE theo primary key vừa kiểm tra existence vừa thực hiện soft-delete atomically.
 
-Legacy users là candidate theo DDL artifact; live relation/schema chưa được xác minh. Query này không được coi là runtime SQL đã duyệt.
+## 3. Insert/Update thông tin
+
+### 3.1. Target table
+
+- Target: legacy candidate `users`.
+- Không dùng V1-PILOT UUID identity/profile relations.
+- Không hard-delete row hoặc mutate relation phụ thuộc.
+
+### 3.2. Conditions
+
+- `users.id = :user_id`.
+- `users.status IS DISTINCT FROM 'DELETED'`.
+
+### 3.3. Items update/insert
+
+- `users.status = 'DELETED'`.
+- `users.updated_at = CURRENT_TIMESTAMP`.
+- Soft-delete giữ nguyên `courses`, `enrollments`, `progress`, `submissions`, `discussions`, `notifications`, `payments`, `refresh_tokens` và các FK row khác.
+
+### 3.4. Parameters
+
+| Param | Giá trị | Remarks |
+|---|---|---|
+| `user_id` | Parsed path ID | Bind parameter; signed int64. |
+
+SQL constant:
 
 ~~~sql
-SELECT u.id
-FROM users AS u
-WHERE u.id = :user_id
-LIMIT 1
+UPDATE users
+SET
+    status = 'DELETED',
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = :user_id
+  AND status IS DISTINCT FROM 'DELETED'
+RETURNING id, updated_at AS deleted_at
 ~~~
 
-- Bind :user_id từ path; không ghép chuỗi SQL.
-- Chỉ đọc định danh tối thiểu.
-- Không đọc password_hash, email, phone hoặc profile nếu policy không yêu cầu.
-- Không nối V1-PILOT UUID identity/profile tables.
+## 4. Check kết quả execute query
 
-### 2.2. Candidate result branch
+### 4.1. Thành công
 
-- Một row: tiếp tục Q2 theo dependency/policy đã được duyệt.
-- Không có row: 404 DESIGN_RESOURCE_NOT_FOUND là candidate branch theo detail-resource semantics; code/status trực tiếp theo catalog.
-- Query/mapping failure: 500 DESIGN_INTERNAL_ERROR theo catalog.
+- Một row hợp lệ: `data.id = returned.id`.
+- `data.status = "deleted"`.
+- `data.deleted_at = returned.updated_at`, được SQL alias thành `deleted_at`.
+- Validate `id` khớp requested ID và `deleted_at` là datetime trước COMMIT.
+- Commit rồi trả 200 `DESIGN_RESOURCE_DELETED`.
 
-## 3. Check dependency và thực hiện policy
+### 4.2. Lỗi hệ thống
 
-<a id="step-3-check-dependency-va-thuc-hien-policy"></a>
+- Query, projection, model mapping hoặc commit lỗi: rollback và trả 500 `DESIGN_INTERNAL_ERROR`.
+- Không đưa SQL/exception detail ra response.
 
-### 3.1. Dependency check
+### 4.3. Validate lỗi
 
-AC-31 yêu cầu kiểm tra ràng buộc nhưng không chỉ ra quan hệ, predicate hoặc kết quả khi có liên kết. Legacy DDL artifact có các candidate references sau:
+- Raw path không phải signed int64: 422 `DESIGN_VALIDATION_ERROR`; không query.
+- Access không hợp lệ: 401/403; không query.
 
-| Relation/column candidate | Ý nghĩa được mô tả trong DDL | Trạng thái |
-|---|---|---|
-| courses.mentor_id | Mentor gắn với khóa học | Candidate relation; live FK/policy chưa xác minh. |
-| enrollments.user_id | User tham gia khóa học | Candidate relation; retention/block rule chưa có. |
-| lesson_progress.user_id | User có dữ liệu tiến độ | Candidate relation; retention/block rule chưa có. |
-| quiz_attempts.user_id | User có lịch sử làm bài | Candidate relation; retention/block rule chưa có. |
-| assignment_submissions.user_id | User có bài nộp | Candidate relation; retention/block rule chưa có. |
-| discussions.user_id | User là tác giả nội dung | Candidate relation; retention/anonymization rule chưa có. |
-| notifications.user_id / sender_id | User là người nhận/người gửi | Candidate relation; retention rule chưa có. |
-| payments.user_id | User có giao dịch thanh toán | Candidate relation; retention/anonymization rule chưa có. |
-| refresh_tokens.user_id | Refresh credentials của user | DDL artifact có ON DELETE CASCADE; không áp dụng cascade vì flow này không hard-delete. |
+### 4.4. Ngoài trường hợp trên
 
-Danh sách trên chỉ giúp policy owner xem xét phạm vi; không tạo Q2 SQL hoặc điều kiện chặn tự động. Live foreign keys và transaction behavior chưa được kiểm tra trên database.
-
-### 3.2. Policy action
-
-- AC-31 yêu cầu soft delete/anonymize theo policy; phải chọn policy và physical mapping trước khi implementation.
-- Không hard-delete users hoặc bảng liên quan làm fallback.
-- Không tự gán status DELETION_PENDING/ANONYMIZED vào legacy users; các giá trị đó chỉ xuất hiện trong enum của mô hình V1-PILOT UUID.
-- Không tự xóa/cascade refresh tokens, payments, enrollments, submissions, discussions hoặc lịch sử.
-- Bảng/cột mutation, PII transformation, audit record, deleted_at source, transaction và rollback đều SOURCE_REQUIRED.
-- Nếu policy chặn thao tác, catalog có code 422 nhưng điều kiện và mapping phải được contract owner chốt; không định nghĩa business rule tại đây.
-
-## 4. Check kết quả
-
-<a id="step-4-check-ket-qua"></a>
-
-- Target không tồn tại theo Q1: candidate 404 DESIGN_RESOURCE_NOT_FOUND.
-- Policy cho phép và mutation đã được thực hiện theo schema/policy được duyệt: tiếp tục map response.
-- Policy phát hiện ràng buộc: giữ ở status/code catalog phù hợp sau khi được xác nhận; 422 là code có trong catalog nhưng branch cụ thể SOURCE_REQUIRED.
-- Input validation failure: 422 DESIGN_VALIDATION_ERROR theo catalog; chi tiết parse/path mapping chưa được xác nhận.
-- Database, policy-service, mutation, commit hoặc response-source failure: 500 DESIGN_INTERNAL_ERROR.
-- Không có code 409 trong contract; không thêm 409.
-- Idempotency khi user đã soft-delete/anonymized chưa được xác định; không tự chọn success, 404 hoặc 422.
-
-## 5. Map response
-
-<a id="step-5-map-response"></a>
-
-### 5.1. Thành công
-
-Theo reusable DeleteResult:
-
-- data.id: id của user target đã được xử lý thành công; nguồn cuối cùng phụ thuộc policy/schema.
-- data.status: literal deleted theo catalog.
-- data.deleted_at: timestamp theo nguồn được policy/schema phê duyệt. Legacy users hiện không có column này; không dùng giờ hệ thống làm giá trị persistable khi chưa có thiết kế.
-- businessCode: DESIGN_RESOURCE_DELETED.
-- meta: {} candidate.
-- traceId: current request trace convention.
-
-Không thể xác định đầy đủ success projection cho đến khi có nguồn deleted_at và mutation policy.
-
-### 5.2. Lỗi
-
-Giữ exact catalog status/code: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 422 DESIGN_VALIDATION_ERROR, 500 DESIGN_INTERNAL_ERROR. Error payload data null là guideline; current helper mặc định {}.
-
-## Request Usage Matrix
-
-| Request item | Nguồn | Mapping step | Query/mutation use | Branch/response use | Gap |
-|---|---|---|---|---|---|
-| Authorization | Catalog + AC-31 DIRECT | 0.1 | Không đưa vào SQL | 401/403 | Admin guard/claim/policy chưa có source. |
-| user_id | Catalog DIRECT | 1.1/Q1 | Q1 candidate WHERE id=:user_id | data.id candidate; no-row candidate 404 | Legacy id relation và malformed path mapping chưa xác minh. |
-| Request body | Không khai báo | N/A | None | None | DIRECT absence from catalog. |
-| Query | Không khai báo | N/A | None | None | DIRECT absence from catalog. |
-
-## Query Matrix
-
-| Query ID | Type | Candidate source | Columns/condition | Result/branch | Evidence |
-|---|---|---|---|---|---|
-| Q1 | SELECT | Legacy users AS u | u.id; u.id=:user_id; LIMIT 1 | One row → policy review; no row → candidate 404 | Legacy DDL artifact; live schema unknown. |
-| Q2 | SOURCE_REQUIRED | No approved dependency relation set | No SQL/predicate specified | Must not infer a blanket block/cascade rule | AC-31 says check constraints; detail absent. |
-| Q3 | SOURCE_REQUIRED mutation | No approved physical soft-delete/anonymization target | No table/column specified | Required before success response | No legacy deleted_at; pilot schema is a different UUID model. |
-
-## Mutation Matrix
-
-| Mutation ID | Operation | Target table | Condition | Fields | Transaction/failure | Status |
-|---|---|---|---|---|---|---|
-| M1 | Soft-delete or anonymize according to approved policy | SOURCE_REQUIRED | Approved dependency and retention conditions | No fields specified | Boundary/rollback SOURCE_REQUIRED | Logical intent DIRECT; physical mutation SOURCE_REQUIRED. |
-| Hard delete | Not specified and excluded from candidate | N/A | N/A | N/A | N/A | Must not be inferred from HTTP DELETE or DDL cascade. |
-
-## Response Source Matrix
-
-| Response field | Type | Source type | Table/column or generator | Transform/null rule | Gap/status |
-|---|---|---|---|---|---|
-| success | boolean | Envelope | Response branch | true on success; false on error | DIRECT envelope. |
-| businessCode | string | Catalog | DESIGN_RESOURCE_DELETED or exact error code | Exact catalog code only | DIRECT. |
-| message | string | Envelope | Safe localized message | Exact text unspecified | DERIVED. |
-| data.id | int64 | DeleteResult | Successfully processed target ID | Required on success | Policy target/source needs approval. |
-| data.status | literal "deleted" | DeleteResult schema | Constant | Exact lowercase literal | DIRECT. |
-| data.deleted_at | date-time | DeleteResult schema | Approved deletion timestamp source | Required; no inferred fallback | SOURCE_REQUIRED; legacy schema has no source. |
-| meta | object | Envelope | Empty object candidate | {} | Candidate; no pagination. |
-| traceId | uuid | Middleware | Request trace | Validated/generated | Current shared convention; endpoint unwired. |
-| error data | null by scope guideline | Error envelope | Current helper defaults to {} | Must reconcile before route wiring | DISCREPANCY. |
+- Không có RETURNING row: 404 `DESIGN_RESOURCE_NOT_FOUND`; áp dụng cho user không tồn tại hoặc status đã `DELETED`.
+- Đây là fallback repeat behavior; không thêm 409.
+- Đây là soft-delete fallback: không anonymize PII, không kiểm tra/block từng relation và không xóa/cascade dữ liệu. Nếu policy yêu cầu các nhánh đó, cần owner approval.
+- `deleted_at` chỉ là response alias từ `updated_at` của mutation hiện tại; schema không lưu deletion time riêng.
+- API #03 chặn login/refresh mới do `status != ACTIVE`; existing access JWT có thể còn dùng tới expiry.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

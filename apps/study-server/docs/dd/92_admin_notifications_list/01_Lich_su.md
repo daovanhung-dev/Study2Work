@@ -13,6 +13,7 @@ status: "Draft — Needs Confirmation"
 | Phiên bản | Ngày | Người cập nhật | Nội dung thay đổi | Trạng thái |
 |---|---|---|---|---|
 | 0.1 | 2026-10-24 | Codex | Tạo DD theo catalog #92, AC-36, schema notification và DD liên quan #43/#63/#64. | Draft — Needs Confirmation |
+| 0.2 | 2026-10-26 | Codex | Ghi nhận source-backed local implementation và tách Page/schema/error fallbacks khỏi contract trực tiếp. | Draft — Needs Confirmation |
 
 ## Quy tắc cập nhật
 

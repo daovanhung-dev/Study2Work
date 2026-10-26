@@ -16,24 +16,23 @@ status: "Draft — Needs Confirmation"
 | HTTP method | PATCH |
 | URI | /api/v1/admin/users/{user_id}/status |
 | Character encoding | UTF-8 |
-| Content-Type | SOURCE_REQUIRED — catalog/diagram chưa đặc tả body; `application/json` chỉ là candidate. |
+| Content-Type | `application/json` theo implementation; body là DERIVED vì catalog/diagram bỏ trống. |
 | Authentication | Bearer JWT |
-| Role | Admin; AC-31 precondition còn yêu cầu quyền user management. |
+| Role | Shared JWT role `ADMIN`; dedicated user-management permission chưa có source. |
 | Direct input | `path{user_id:int64!}` |
+| Implemented additional input | Required body `{status}` — DERIVED fallback. |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Principal cần Admin role và user-management permission; policy chưa có trong Study source. | 0.1 |
-
-Catalog không khai báo header nghiệp vụ khác. Trace ID được shared middleware tạo/propagate; không thêm thành input field #71.
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Shared ADMIN role guard; tenant/MFA/user-management permission source chưa có. | 0.1 |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | User ID | user_id | int64 | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | Số nguyên 64-bit | SOURCE_REQUIRED | Không có | ID user cần đổi trạng thái; catalog xác nhận type/required. | 1.1 |
+| 1 | User ID | user_id | int64 | Yes | Signed-int64 minimum | Signed-int64 maximum | Decimal signed integer | `-2^63..2^63-1`; malformed/overflow → 422 DERIVED | Không có | ID user cần đổi trạng thái. | 1.1 |
 
 ## Query parameters
 
@@ -41,19 +40,17 @@ N/A — catalog không khai báo query parameter.
 
 ## Request body
 
-**Direct contract:** Catalog và AC-31 diagram không khai báo body schema. Không thể kết luận body bị cấm hoặc tự coi `UserStatus` members đã được định nghĩa.
+**Direct contract:** Catalog row #71 và AC-31 diagram không nêu body schema.
 
-**Candidate body — DERIVED, cần owner xác nhận:**
+**Implemented candidate — DERIVED:** strict JSON body chỉ có required `status`, extra fields bị từ chối.
 
-| No | Location | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
-|---:|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | body | Account status | status | UserStatus | Yes — DERIVED | N/A | N/A | Named type | Candidate `ACTIVE` or `SUSPENDED`; `UserStatus` members SOURCE_REQUIRED | Không có | Target status; suy ra từ `/status` và “khóa/mở khóa”. Pilot enum là gợi ý, không phải legacy contract. | 1.2 |
+| No | Location | Logical name | Physical name | Type | Required | Valid values | Description | Data Mapping reference |
+|---:|---|---|---|---|---:|---|---|---|
+| 1 | body | Account status | status | string | Yes | `ACTIVE` hoặc `SUSPENDED` | Target state: ACTIVE mở khóa; SUSPENDED khóa. Chỉ là allowlist của endpoint, không khẳng định toàn bộ UserStatus. | 1.2 |
 
-Candidate transition: `SUSPENDED` = khóa; `ACTIVE` = mở khóa. Không nhận profile/role fields của #70, delete flags của #72 hoặc pilot lifecycle values `DELETION_PENDING`/`ANONYMIZED`. Same-status/no-op behavior chưa được nguồn xác định.
+Existing user state cũng phải là ACTIVE hoặc SUSPENDED. Trạng thái hiện tại thuộc verification/deletion lifecycle khác trả 422 `DESIGN_VALIDATION_ERROR`; API không đổi các trạng thái của API #72.
 
 ## Ví dụ Request data
-
-Ví dụ JSON chỉ minh họa candidate `status`; `SUSPENDED` là giá trị DERIVED, chưa phải enum contract đã duyệt.
 
 ~~~http
 PATCH /api/v1/admin/users/1001/status
@@ -65,13 +62,15 @@ Content-Type: application/json
 }
 ~~~
 
-## Quy tắc input đang mở
+`SUSPENDED` và body shape là DERIVED, không phải field/enum được catalog duyệt.
 
-- `user_id:int64!` là input trực tiếp; minimum, malformed/overflow behavior chưa được nêu.
-- Body `{status}` là candidate inference; `UserStatus` legal members cần được xác nhận.
-- Catalog khai báo 422 `DESIGN_VALIDATION_ERROR`; invalid status có thể dùng 422 nếu contract owner xác nhận mapping, nhưng không thêm error code.
-- `ACTIVE`/`SUSPENDED` lấy từ V1-PILOT `account_status` enum và khớp current login guard check `ACTIVE`; schema model này không chứng minh legacy `users.status` chỉ cho hai giá trị đó.
-- Không cho phép status transition sang DELETION_PENDING/ANONYMIZED qua endpoint khóa/mở khóa nếu chưa có contract riêng cho #72.
+## Validation behavior hiện tại
+
+- Shared ADMIN auth được kiểm tra trong view trước mọi DB access. Framework parse body trước khi gọi view; body sai schema nhận 422.
+- Raw `user_id` phải là signed int64; malformed hoặc vượt miền trả 422 `DESIGN_VALIDATION_ERROR`.
+- Request `status` phải đúng literal ACTIVE/SUSPENDED; null, thiếu field, lowercase và field thừa trả 422.
+- Existing `users.status` phải là ACTIVE/SUSPENDED; status khác bị từ chối 422 để không kích hoạt verification/deletion state.
+- Chỉ nhận target status; không nhận profile/role fields của #70 hoặc deletion controls của #72.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

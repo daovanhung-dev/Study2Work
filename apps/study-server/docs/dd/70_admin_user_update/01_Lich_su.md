@@ -14,13 +14,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-25 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD theo catalog API #70, AC-31, API #14 precedent và source/schema hiện có. | Draft — Needs Confirmation; body, Admin policy và live schema chưa được xác nhận. |
+| 1.1 | 2026-10-25 | Codex | Ghi runtime API #70 và fallback body/validation/schema đã triển khai; cập nhật verification, giữ ranh giới #71/#72. | Draft — Needs Confirmation; contract body, role policy, live schema, audit/PII và token effect còn mở. |
 
 ## Tài liệu tham chiếu
 
@@ -30,13 +31,13 @@ status: "Draft — Needs Confirmation"
 - [DB table guide](../../diagrams/DB_UNICA_TABLES.md) và [DB ERD](../../diagrams/DB_UNICA_ERD.drawio) — legacy users candidate, design-only.
 - [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — candidate BIGINT users, không chứng minh live schema.
 - [API #14 model](../../../app/modules/guest/api_14_users_me_profile/models.py), [validator](../../../app/modules/guest/api_14_users_me_profile/validate.py), [query](../../../app/modules/guest/api_14_users_me_profile/query.py) và [view](../../../app/modules/guest/api_14_users_me_profile/view.py) — profile mutation precedent hiện tại.
-- [Current auth helper](../../../app/utils/auth.py) — guard hiện tại yêu cầu Student; chưa có Admin guard.
+- [Current auth helper](../../../app/utils/auth.py) — shared guard nhận role tường minh; API #68–#70 hiện yêu cầu `ADMIN`.
 - [API #68 DD](../68_admin_users_list/02_Overview.md) và [API #69 DD](../69_admin_user_detail/02_Overview.md) — AC-31 context; macro-review được ghi nhận pending tại thời điểm tạo #70; document-level review hoàn tất sau khi tạo #72.
 - [Worklog API #70](../../../../../.agents/worklog/2026-10-24/create-study-api70-dd.md) — preflight, plan và matrices trước khi author.
 
 ## Ranh giới
 
-Không sửa router, schema, catalog hoặc diagram. Không invent enum members, validation rules, audit behavior hoặc session policy. Không coi candidate body/query là contract trực tiếp. Tại thời điểm tạo #70, macro-review còn chờ DD #71–#72; document-level review đã hoàn tất sau khi tạo #72.
+Runtime dùng full-replacement body và ba role hiện có như fallback `DERIVED`, không phải contract được catalog/diagram đặc tả. Không sửa schema, catalog hoặc diagram. Không thêm status, delete, audit hoặc token side effect; macro-review #68–#72 đã hoàn tất ở mức tài liệu.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

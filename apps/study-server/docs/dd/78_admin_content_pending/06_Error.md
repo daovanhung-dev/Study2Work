@@ -13,32 +13,38 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-- Giữ đúng 401/403/500 status và business codes của API catalog #78.
-- Endpoint chưa có route/Admin guard; các hàng dưới là expected design branches, không phải runtime evidence.
-- Catalog #78 không khai báo 404 hoặc 422; không thêm code/status cho queue rỗng hoặc invalid query.
-- Query cardinality/page semantics và Content persistence vẫn là open questions; không ánh xạ chúng thành lỗi mới.
+- Direct catalog #78 khai báo 401/403/500; runtime giữ nguyên các code này.
+- Runtime thêm 422 `DESIGN_VALIDATION_ERROR` cho `course`/`page` sai kiểu hoặc ngoài miền. Đây là fallback DERIVED theo API #73; catalog chưa được cập nhật.
+- Queue rỗng hoặc page ngoài phạm vi trả 200 empty Page theo list semantics, không dùng 404.
+- Query/mapping errors trả 500 an toàn; không lộ SQL, payload internals hoặc stack trace.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu, sai hoặc hết hạn | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#0-check-quyen) | No | Status/code DIRECT; route/auth chưa wire. |
-| 2 | Authorization | Admin role | Principal role | Principal hợp lệ nhưng không có role Admin | 403 | `DESIGN_ACCESS_DENIED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#0-check-quyen) | No | Code DIRECT; Admin claim/guard SOURCE_REQUIRED. |
-| 3 | System error | Query/map response | Pending queue read | DB/query/content mapping failure | 500 | `DESIGN_INTERNAL_ERROR` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#2-get-thong-tin) | No mutation | Code/status DIRECT; physical source/mapping chưa có. |
+| 1 | Authentication | Shared Bearer/JWT guard | Authorization | Token thiếu, sai hoặc hết hạn | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No query | Direct catalog; shared guard local. |
+| 2 | Authorization | Shared role guard | `ADMIN` role | Principal hợp lệ nhưng thiếu role Admin | 403 | `DESIGN_ACCESS_DENIED` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No query | Role guard current source; finer permission open. |
+| 3 | Query validation | Raw query parser | `course` | Not signed-int64 or overflows | 422 | `DESIGN_VALIDATION_ERROR` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-1-validate-data-input) | No DB | DERIVED; direct catalog omits 422. |
+| 4 | Query validation | Raw query parser | `page` | Not positive int32 | 422 | `DESIGN_VALIDATION_ERROR` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-1-validate-data-input) | No DB | DERIVED from Admin list convention. |
+| 5 | System error | Count/list/map | Pending Content page | DB error, malformed count, invalid row/payload projection | 500 | `DESIGN_INTERNAL_ERROR` | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-2-get-thong-tin) | Rollback | Safe response; no mutation. |
 
-## Unresolved query parsing and result shape
+## Empty result and invalid filters
 
-- Unknown `type`, malformed/overflow `course`, `page<=0`, int32 overflow và empty queue behavior chưa được catalog quy định.
-- API #78 không có 422/404; không tự ánh xạ những trường hợp này sang business code chưa khai báo.
-- Catalog list/page mismatch phải được giải quyết trước khi chốt parser, pagination hoặc empty-result behavior.
-- Candidate Page response có thể trả 200 với `items=[]`; candidate này là `DERIVED` và cần contract correction.
+- Empty queue/no matching `type`/`course`, and page beyond the last page return 200 `DESIGN_RESOURCE_RETRIEVED` with `items=[]`.
+- Unknown `type` is not an enum-validation error; it uses exact match and may return an empty Page.
+- Invalid numeric `course`/`page` returns local derived 422; contract owner should add it to API #78's error row or choose another rule.
+- No 404 is added because the endpoint is a queue, not a single resource lookup.
 
-## Error envelope discrepancy
+## Error envelope
 
-- API guideline yêu cầu error `data:null` và `meta.fieldErrors` cho validation error.
-- Current `error_response()` đổi `data=None` thành `{}`.
-- `DESIGN_CONTRACT_PATHS` hiện không có `/api/v1/admin/content/pending`; request-validation/unhandled-error fallback cho path chưa đăng ký dùng `VALIDATION_ERROR`/`INTERNAL_SERVER_ERROR`, không khớp catalog.
-- API #78 chưa wired; đây là conditional future-wiring discrepancy, không phải endpoint runtime behavior.
+- `error_response()` currently returns the canonical six-key envelope with `data:null` by default, plus trace ID and `X-Trace-Id`.
+- `/api/v1/admin/content/pending` is registered in `DESIGN_CONTRACT_PATHS`, so framework errors for the route use DESIGN business-code integration.
+- Local HTTP tests verify the helper envelope and codes; fake DB sessions do not verify PostgreSQL behavior.
+
+## Linked API boundary
+
+- #78 does not return detail/version/author metadata from #79.
+- #78 does not approve/reject, change status, store a reason or append audit; those effects belong to #80/#81.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

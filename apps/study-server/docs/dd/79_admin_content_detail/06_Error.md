@@ -13,33 +13,33 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
+- API #79 hiện wire tại `GET /api/v1/admin/content/{content_id}` và dùng shared ADMIN guard.
 - Giữ đúng HTTP 401/403/404/500 và business codes API catalog #79.
-- API #79 chưa có route/Admin guard; các cases là expected design, không phải runtime evidence.
-- 404 cho Content không tồn tại là mapping candidate theo detail resource; status/version mismatch chưa được quy định thành error.
-- Catalog không khai báo 409 hoặc 422; không thêm code/status cho stale queue item, revision conflict hoặc path parse.
+- 404 áp dụng cho malformed/out-of-range int64 path theo fallback #69 và cho ID không có active row; malformed-path mapping là DERIVED.
+- Query, projection hoặc payload-shape failure trả safe 500, không lộ chi tiết DB.
+- Catalog không khai báo 409/422; không thêm code/status cho stale queue item, revision conflict hoặc path parse.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu, sai hoặc hết hạn | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#0-check-quyen) | No | Status/code DIRECT; route/auth chưa wire. |
-| 2 | Authorization | Admin role | Principal role | Principal hợp lệ nhưng không có role Admin | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#0-check-quyen) | No | Code DIRECT; Admin claim/guard SOURCE_REQUIRED. |
-| 3 | Resource not found | Content lookup | content_id | Q1 không có logical Content tương ứng | 404 | DESIGN_RESOURCE_NOT_FOUND | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#2-get-thong-tin) | No mutation | Catalog code DIRECT; missing-row mapping DERIVED. |
-| 4 | System error | Query/map response | Content/version/author read | Query hoặc mapping failure | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#2-get-thong-tin) | No mutation | Code/status DIRECT; physical source/mapping chưa có. |
+| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu, sai hoặc hết hạn | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No query | Direct catalog; guard runs before path parse/DB. |
+| 2 | Authorization | Admin role | Principal role | Principal hợp lệ nhưng không có role Admin | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No query | Direct catalog; shared ADMIN guard. |
+| 3 | Resource not found | Parse/Content lookup | content_id | Malformed/out-of-range ID, no row, or soft-deleted row | 404 | DESIGN_RESOURCE_NOT_FOUND | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-1-validate-data-input) | Only if lookup started | Missing/deleted is derived; signed-int64 path fallback follows #69. |
+| 4 | System error | Query/map response | Current Content projection | SQL, row identity, or Content payload projection fails | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-2-get-thong-tin) | Rollback | Safe error envelope; no raw database details. |
 
-## Unresolved path and review-state behavior
+## Unresolved review-state behavior
 
-- Malformed/overflow content_id và framework path parsing không được catalog #79 đặc tả.
-- AC-33 queue #78 lọc PENDING_REVIEW; diagram không quy định #79 có trả 404 khi item đã đổi trạng thái hay trả Content với status hiện tại.
-- Version selector hoặc stale review không có catalog error 409/422; không ánh xạ sang code chưa khai báo.
-- Chưa xác định concealment policy khi Admin có quyền nhưng Content bị giới hạn scope.
+- #78 queue filters `PENDING_REVIEW`; #79 returns current row status without re-filtering.
+- Diagram does not define behavior if status changes between queue and detail. Catalog has no conflict code.
+- Version selector or stale review has no catalog error 409/422; do not invent one.
+- Moderation-specific permission and Content scope/concealment policy are not defined beyond shared ADMIN role.
 
-## Error envelope discrepancy
+## Error envelope
 
-- API guideline yêu cầu error data:null.
-- Current error_response() dùng {} khi caller không truyền data.
-- DESIGN_CONTRACT_PATHS hiện không có /api/v1/admin/content/{content_id}; route #79 chưa wired. Future request-validation/unhandled-error fallback có thể dùng VALIDATION_ERROR/INTERNAL_SERVER_ERROR, lệch catalog.
-- Đây là discrepancy tích hợp có điều kiện, không phải runtime behavior endpoint #79.
+- Current `error_response()` default error `data` is JSON `null`, aligned with API guidelines.
+- `/api/v1/admin/content/{content_id}` is registered in `DESIGN_CONTRACT_PATHS`, so shared contract middleware recognizes the dynamic route.
+- Endpoint responses use the catalog business codes; generic framework fallback behavior remains governed by shared middleware.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

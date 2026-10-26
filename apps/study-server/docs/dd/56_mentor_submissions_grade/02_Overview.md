@@ -19,72 +19,62 @@ status: "Draft — Needs Confirmation"
 | Module | Mentor / submissions |
 | Method | POST |
 | Endpoint | /api/v1/mentor/submissions/{submission_id}/grade |
-| Purpose | Lưu điểm submission và đặt trạng thái GRADED theo AC-23 |
+| Purpose | Lưu score và đặt status GRADED theo AC-23 |
 | Consumer/Actor | Mentor |
-| Authentication | Bearer JWT |
-| Authorization | Catalog yêu cầu role Mentor; quyền theo course là precondition AC-23 |
-| Basis | API method/path/field/error contract DIRECT; AC-23 mutation DIRECT; DB mapping là candidate DESIGN_ONLY |
-| Status | Draft — Needs Confirmation |
-| Transaction | SOURCE_REQUIRED; current DB helpers do not commit, and no API #56 transaction rule exists |
-| Side effects | Candidate update submission score/status; rubric persistence unresolved; feedback belongs to API #57 |
+| Authentication | Bearer JWT, explicit MENTOR role |
+| Authorization | Direct course owner qua courses.mentor_id; DERIVED fallback |
+| Basis | Catalog method/path/body/response/error DIRECT; AC-23 mutation DIRECT; DB mapping và score range DERIVED theo DDL legacy |
+| Status | Runtime source và TestClient test có mặt; schema live chưa xác minh; rubric persistence còn gap |
+| Transaction | Handler khóa submission, kiểm tra quyền, cập nhật, dựng response rồi commit; rollback trước commit khi lỗi |
+| Side effects | Chỉ assignment_submissions.score/status; feedback được giữ; API #57 vẫn là mutation riêng |
 
 ## Sources
 
-- [API catalog](../../../../../docs/lists/list_api.md) — API #56 and reusable Submission/Assignment/UploadAsset schemas.
-- [AC/API index](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — AC-23 actor, precondition and postcondition.
-- [AC-23 activity diagram](../../diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio) — call order and grade/status action.
-- [Submission table guide](../../diagrams/DB_UNICA_TABLES.md) — design-only candidate columns.
-- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — candidate BIGINT-era tables.
-- [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — separate UUID assessment rubric model.
-- [API Guidelines](../../../../../contracts/api-guidelines/README.md) — shared error envelope contract.
-- [Current response helper](../../../app/core/responses.py) — current error data serialization.
-- [Current middleware](../../../app/core/middleware.py) — validation/system business-code path mapping.
-- [API #55 detail DD](../55_mentor_submissions_detail/02_Overview.md) — access, files and rubric gaps.
-- [Open Questions](./OPEN_QUESTIONS.md) — unresolved contract and schema decisions.
+- API catalog và reusable Submission/Assignment/UploadAsset schemas.
+- AC-23 index/activity diagram: #54 → #55 → grade input → #56 → #57 feedback.
+- DB table guide, legacy Study DDL và V1-PILOT DDL.
+- API Guidelines, current response helper và middleware.
+- API #54/#55 DD và source: shared Submission response, direct-owner policy, constrained upload lookup.
+- API #56 source: app/modules/mentor/api_56_mentor_submissions_grade/.
+- API #56 TestClient tests.
 
 ## Tables read
 
-- Candidate: assignment_submissions.
-- Candidate: assignments.
-- Candidate: courses.
-- Rubric tables: not selected; the pilot rubric model has no approved relation to assignment_submissions.
+- assignment_submissions, assignments, courses.
+- uploads only when file_url is non-null, for the constrained Submission.files projection.
+- No UUID assessment/rubric table is joined to the legacy BIGINT submission.
 
 ## Tables write
 
-- Candidate only: assignment_submissions.score and assignment_submissions.status.
-- No rubric table is approved for this endpoint.
-- No feedback write; API #57 is a separate call.
+- assignment_submissions.score and assignment_submissions.status only.
+- No rubric persistence target is supported by the checked-in legacy schema.
+- feedback is not changed; API #57 owns the separate feedback step.
 
 ## Mục chú ý
 
-- Preserve the exact catalog success and error business codes.
-- Catalog body field rubric items is required string, but its wire-key spelling and value schema are unresolved.
-- Request score is int32 while response score is optional decimal-string and assignment max_score is decimal(6,2); range and conversion are unconfirmed.
-- Response files[] is required by Submission, but legacy DDL has only one file_url column and no approved asset resolver.
-- API Guidelines expects error data=null; current error_response() serializes {} when data is None. The API #56 route does not exist yet.
-- Middleware uses exact path equality for its design-code allowlist; the dynamic API #56 path is not present, so generic validation/system fallbacks would not emit the catalog DESIGN_* codes.
-- The AC-23 group review #54–#57 remains pending until API #57 DD exists.
+- Request uses required strict int32 score and required strict string rubric_items. The wire spelling rubric_items is a DERIVED fallback for catalog descriptor “rubric items”.
+- rubric_items is accepted for request compatibility but is not persisted or returned. No schema relation or approved target exists; this remains an implementation gap for contract-owner confirmation.
+- Integer score is stored in legacy candidate NUMERIC(6,2). DERIVED validation requires 0 <= score <= assignments.max_score; an out-of-range value maps to catalog 422.
+- The source permits grading from any current status because catalog declares no 409 and no source-backed prior-state restriction.
+- Submission.files reuses API #54/#55 lookup: exact file_url, submission owner, SUBMISSION purpose, course; deterministic first asset by id. No match yields files=[].
+- API #35 producer compatibility remains unresolved; local fake-DB tests do not prove file_url association in a live database.
+- The dynamic route is registered in DESIGN_CONTRACT_PATHS. Current error_response(None) emits data=null, matching the API Guidelines shape.
+- API #56 preserves the exact catalog success and error business codes.
 
-## Assumptions
+## Assumptions and conflicts
 
-- Direct ownership through courses.mentor_id is a DERIVED access candidate only; it does not establish assigned Mentor support or JWT subject mapping.
-- The API #56 update is limited to score and status GRADED because that is the mutation shown by AC-23. No rubric persistence is implied.
-
-## Conflicts
-
-- Request score:int32 differs from response Submission.score:decimal-string?.
-- rubric items:string! has no field spelling/item encoding or assignment-rubric storage contract.
-- AC-23 requests rubric in #55, but Submission schema has no rubric field.
-- API #54 is singular in catalog although AC-23 uses it as a submission list.
-- Error-envelope expected data=null differs from the current helper output {}; the API #56 dynamic route is also absent from the middleware design-code allowlist.
+- Direct ownership through courses.mentor_id and numeric JWT subject mapping follow the implemented API #54/#55 fallback; assigned-Mentor access remains unverified.
+- The score range [0, assignments.max_score] is a DERIVED fallback based on available columns, not an approved business rule.
+- rubric_items remains required on the wire but has no persistence owner. The endpoint cannot truthfully claim durable rubric storage.
+- AC-23 says grade/status update; the legacy DDL is only a checked-in candidate and does not establish deployed availability.
 
 ## Security note
 
-Do not serialize candidate Submission fields until the authenticated Mentor access check succeeds. Current Study auth helper exposes a Student guard only; a Mentor guard and principal mapping are not implemented.
+The explicit MENTOR guard runs before parsing the path or reading data. The view checks direct course ownership before returning submission fields and repeats the ownership predicate in UPDATE. SQL/exception details are not returned.
 
 ## Performance note
 
-The endpoint is unwired and live schema is unverified. No query plan, lock strategy or load claim is made.
+The submission row is selected by ID and locked FOR UPDATE. The upload lookup is limited to one matching row. No live query plan or deployment behavior is claimed.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

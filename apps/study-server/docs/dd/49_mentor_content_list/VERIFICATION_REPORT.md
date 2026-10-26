@@ -1,50 +1,49 @@
 # Verification Report — API #49 Lấy cây nội dung course
 
-## Phạm vi
+## Scope
 
-Kiểm tra tĩnh bộ DD Markdown API #49, catalog/AC-22, legacy và pilot schema boundary, route/module/test presence và template compliance. Không thay đổi Study runtime, DB schema, catalog hoặc diagram. Không chạy application tests.
+Review source/API contract, implement route and module, add the legacy Content DDL artifact and migration, update catalog/AC-22/ERD/DD/context, run API and Study Server verification, and macro-review related DD #50–#53. No live database or deployment action was performed.
 
 ## Deliverable manifest
 
-| File | Vai trò | Trạng thái |
+| Area | Files/evidence | Status |
 |---|---|---|
-| `00_Cover.md` | Cover | PASS |
-| `01_Lich_su.md` | Lịch sử | PASS |
-| `02_Overview.md` | Overview | PASS |
-| `03_Request.md` | Request | PASS |
-| `04_Response.md` | Response | PASS |
-| `05_Data_Mapping.md` | Flow và ma trận | PASS |
-| `06_Error.md` | Error cases | PASS |
-| `07_table.md` | Read-only mapping/N/A mutation | PASS |
-| `PLAN_RESULT.md` | Plan và pre-authoring matrices | PASS |
-| `OPEN_QUESTIONS.md` | Gaps/blockers | PASS |
-| `VERIFICATION_REPORT.md` | Verification record | PASS |
+| Runtime | `app/api/v1.py`, middleware allowlist, `mentor/api_49_mentor_content_list/` | PASS — route and view source-backed locally |
+| API tests | `tests/modules/mentor/api_49_mentor_content_list/test_mentor_content_list.py` | PASS — 20 focused TestClient cases |
+| Database artifacts | Legacy `DB.sql`, migration `006_contents.sql`, `DB_UNICA_TABLES.md`, `DB_UNICA_ERD.drawio` | PASS — checked-in artifact only; live schema not verified |
+| Contract/workflow | API catalog #49 and AC-22 diagram | PASS — both show `ApiEnvelope<Content[]>` |
+| API #49 DD | 8 sheets plus plan/open questions/verification report | PASS — current source and unresolved decisions separated |
+| Context | server-study pages and `context-manifest.json` | PASS for API #49 entries; project validator has repository-level blockers below |
+| Related DD #50–#53 | Base `contents` persistence notes updated | PASS_WITH_OPEN_QUESTIONS |
 
-## Contract/source checks
+## Contract and source checks
 
-| Check | Kết quả | Trạng thái |
+| Check | Result | Status |
 |---|---|---|
-| Worklog preflight | Selector `docs` chọn #48, #41, #42; cả ba đã được đọc. | VERIFIED |
-| API catalog #49 | GET/path/auth/response/status/exact errors match the row; no body/query. | PASS |
-| AC-22 diagram | Parsed page AC22 nodes/edges: GET → read sections/lessons/content → CRUD/publish branch. | PASS |
-| Current Study source | No #49 route/module/test; middleware allowlist excludes path #49, so future validation/unhandled fallback differs from catalog unless wired explicitly. | VERIFIED_WITH_DISCREPANCY |
-| Schema boundary | Legacy ERD lacks generic Content; pilot hierarchy is UUID/versioned and separate; live DB unknown. | PASS_WITH_OPEN_QUESTIONS |
-| Response mapping | All 8 Content fields listed; unresolved fields remain SOURCE_REQUIRED. | PASS_WITH_SOURCE_REQUIRED |
-| Static Markdown validation | 11 files; 8 front matters and template appendix suffixes match; JSON parses; local links, table widths, fences and whitespace pass; exact catalog/error set and field coverage pass. | PASS |
-| Error helper | Read current `responses.py` and `middleware.py`: default error data is `{}`; path #49 is outside contract allowlist; generic validation/internal fallbacks are conditional future behavior. | VERIFIED_STATIC_ONLY |
-| Runtime tests | Not run; docs-only, API #49 unwired. | NOT_RUN |
-| AC-22/AC-33 macro review #49–#53 | Linked DDs #49–#53 reconciled; open questions retained. | VERIFIED_WITH_OPEN_QUESTIONS |
+| Worklog preflight | Selector found 43 coding worklogs; #34/#47/#48 logs were read before source edits. | VERIFIED |
+| Route/OpenAPI | API #49 appears in the router, design-code allowlist and signed-int64 OpenAPI schema. | VERIFIED_BY_FOCUSED_TESTS |
+| Auth/access | Shared Mentor guard; direct `courses.mentor_id` check; owner mismatch → 403. | SOURCE_BACKED; assigned-course access remains out of scope/open |
+| Content query | `contents`, `deleted_at IS NULL`, all status values, stable parent/order/id ordering. | SOURCE_BACKED |
+| Response/error behavior | Flat `Content[]`; roots omit null `parent_id`; empty tree → 200 `[]`; malformed/out-of-range ID and missing course → 404; catalog error set retained. | VERIFIED_BY_FOCUSED_TESTS |
+| Tree mapping | Duplicate ID, missing parent, wrong-course row and cycle fail safely with 500; no partial response. | VERIFIED_BY_FOCUSED_TESTS |
+| DDL boundary | BIGINT legacy `contents` table and migration 006 are checked in; V1-PILOT UUID model remains separate. | VERIFIED_STATIC_ONLY; live schema/deployment unknown |
+| AC-22/AC-33 macro review | #49–#53 reviewed; base fields and soft-delete marker are available in DDL; version history, status lifecycle/readiness and audit remain open. | VERIFIED_WITH_OPEN_QUESTIONS |
 
-## AC-22/AC-33 Macro-review #49–#53
+## Commands
 
-**Status:** VERIFIED_WITH_OPEN_QUESTIONS.
+| Command | Result | Status |
+|---|---|---|
+| `uv run pytest tests/modules/mentor/api_49_mentor_content_list/test_mentor_content_list.py -q` | 20 passed, 1 upstream Starlette/httpx deprecation warning. | PASS |
+| `uv run pytest -q` | 356 passed, 1 upstream Starlette/httpx deprecation warning. | PASS |
+| `uv run ruff check app tests` | All checks passed. | PASS |
+| `git diff --check` | No whitespace errors at initial post-edit verification. | PASS |
+| Drawio XML parse | `DB_UNICA_ERD.drawio` and `AC_03_MENTOR_TEACHING.drawio` parse; API #49 AC-22 output is `Content[]`. | PASS |
+| `node scripts/validate-agent-context.mjs` | Fails on repository baseline: missing `.agents/db-admin` context/source, plus context drift in existing dirty scopes. | BLOCKED_BY_EXISTING_REPO_STATE |
+| `node scripts/validate-agent-context.mjs --skip-drift` | Still fails on missing DB Admin context/source; no server-study structural error was reported. | BLOCKED_BY_EXISTING_REPO_STATE |
 
-- Đã rà soát chuỗi AC-22: #49 đọc → #50 tạo → #51 cập nhật Content + version → #52 publish/unpublish → #53 soft delete; mỗi mutation reload tree theo diagram.
-- #50/#51 cùng đề xuất PENDING_REVIEW cho Content/revision mới; đây vẫn là DERIVED.
-- #52 sở hữu publication-status update; proposal #53 yêu cầu unpublish PUBLISHED qua #52 trước khi delete, không tự đổi Content.status.
-- #53 dùng parent_id làm dependency trực tiếp duy nhất có thể suy ra; child hiện hữu chặn bằng 422 proposal; không cascade/reparent. Soft delete bảo toàn history theo proposal.
-- AC-33 approve node ghi APPROVED/PUBLISHED + audit nên chưa thể xác định approval có tự publish hay không.
-- #49 trả singular Content dù purpose là tree. Cách loại soft-deleted items khỏi #49, public views và AC-33 queue cần xác nhận.
-- Generic Content persistence/version schema, Mentor principal/assignment, payload/enums, readiness, dependency set, soft-delete/audit fields và middleware mapping đều còn SOURCE_REQUIRED.
-- Không chạy application tests; DD/source review không chứng minh API runtime hoặc live schema.
+## Remaining boundaries
 
+- Do not infer live DB availability or migration 006 deployment from checked-in SQL or fake-session tests.
+- Confirm whether array response, direct-owner-only access, empty-array semantics and current error branches match product intent.
+- `ContentType`/`ContentStatus` values, subtype payload schemas, version selection/history, publish readiness and soft-delete child policy remain open.
+- API #50–#53 remain separate endpoints; their implementation status is not inferred from this API #49 work.

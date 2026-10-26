@@ -13,9 +13,9 @@ status: "Draft — Needs Confirmation"
 
 | Response field | Contract type | Candidate source | Mapping/null rule | Evidence |
 |---|---|---|---|---|
-| success | boolean | Envelope success branch | true trên success; false trên error | Schema/convention; endpoint UNWIRED. |
+| success | boolean | Envelope success branch | true trên success; false trên error | Shared envelope; local HTTP tests. |
 | businessCode | string | Catalog | Success literal DESIGN_RESOURCE_RETRIEVED | DIRECT. |
-| message | string | Application message | Exact text chưa được quy định | SOURCE_REQUIRED. |
+| message | string | Application message | `Course progress retrieved.` hoặc `No students found.` | Local runtime; message wording is not direct catalog data. |
 | data.items[] | Course[] | Catalog reusable Course | Giữ nguyên kiểu trực tiếp | DIRECT; lệch intent AC-26. |
 | items[].id | int64 | Legacy candidate courses.id | Course ID, không phải learner ID | Candidate only; live schema chưa xác minh. |
 | items[].title | string | Legacy candidate courses.name | name → title | Candidate mapping; chưa giải quyết progress. |
@@ -26,38 +26,40 @@ status: "Draft — Needs Confirmation"
 | items[].mentor | UserSummary | Course owner relation | id, full_name, avatar_url? | Candidate; JWT/mentor identity mapping unresolved. |
 | items[].category | Category? | Không có relation được phê duyệt | Không tự thêm join hay fabricate object | SOURCE_REQUIRED. |
 | data.pagination | PageMeta | Request/roster query | page, size, total, total_pages | Schema direct; API không khai báo pagination inputs. |
-| meta | object | Envelope | Empty object chỉ là candidate convention | Current response helper cần kiểm chứng khi wired. |
-| traceId | uuid | Request trace context | Propagate current trace | Shared convention; endpoint absent. |
+| meta | object | Envelope | Empty object từ shared success helper | Local HTTP tests. |
+| traceId | uuid | Request trace context | Propagate current trace | Shared convention; local HTTP test. |
 
 ## Query Matrix — candidate legacy mapping
 
-Các query dưới đây là sơ đồ đọc đề xuất, không phải SQL đã triển khai hay live-schema contract.
+`query.py` hiện có hai SQL constants. Đây là local legacy BIGINT mapping; checked-in DDL không chứng minh live schema.
 
 | Query | Type | Candidate relation/columns | Predicate/join | Group/order | Evidence/status |
 |---|---|---|---|---|---|
-| Q1 | SELECT | courses.id, courses.mentor_id | id=:course_id; candidate owner mentor_id=:mentor_id | N/A | Legacy schema candidate; access rule DERIVED. |
-| Q2 | SELECT | enrollments.course_id, enrollments.user_id | course_id=:course_id; no status filter | One distinct learner per user ID | AC-26 says enrollment aggregate; enrollment status and duplicate policy SOURCE_REQUIRED. |
-| Q3 | SELECT | users.id, users.full_name, users.avatar_url | Join user by enrollment user ID | Candidate stable order by name, then ID | UserSummary mapping candidate; role/deleted-row policy unresolved. |
-| Q4 | SELECT | lessons.id, lessons.course_id, lessons.status | Course match; candidate status PUBLISHED | Count published lessons | DERIVED from API #9; denominator policy needs approval. |
-| Q5 | SELECT | lesson_progress.user_id, lesson_id, status, progress_percent | Left join by learner and lesson | Aggregate once per learner | Legacy DDL candidate; uniqueness/enums/live state unverified. |
+| Q1 | SELECT | courses.id, courses.mentor_id | id=:course_id | One owner row | Local direct-owner check uses API #62 pattern; DERIVED. |
+| Q2 | SELECT | enrollments.course_id, enrollments.user_id, users.id/full_name/avatar_url/role | Join course and user; course_id=:course_id, mentor_id=:mentor_id, status ACTIVE, role STUDENT | DISTINCT user; order by user ID | Local SQL; active/role/owner mapping DERIVED from API #62. |
+| Q3 | SELECT | lessons.id, lessons.course_id, lessons.status | Course match; status PUBLISHED | Denominator count | Local SQL; DERIVED from API #9. |
+| Q4 | SELECT | lesson_progress.id, user_id, lesson_id, status, progress_percent, last_accessed_at | Join only to Q3 published lessons | DISTINCT ON pair; latest last_accessed_at DESC NULLS LAST, id DESC | Local SQL; duplicate resolution DERIVED because DDL has no unique pair. |
+| Q5 | SELECT | progress status/percent by student | One chosen row per learner/published lesson; missing row becomes zero | completed count, percent sum, invalid status/range count | Local SQL/view; invalid state returns safe 500. |
 
-## Candidate aggregation — DERIVED
+## Local aggregation — DERIVED
 
-- Learner set: unique enrollment user_id values for the requested course; no status filter until approved.
+- Learner set: distinct user IDs reached through `ACTIVE` enrollments for the requested course where `users.role='STUDENT'`.
 - total_lessons: count of course lessons with status='PUBLISHED'.
-- completed_lessons: count in that lesson set whose progress row has status='COMPLETED'.
-- progress_percent: floor of sum of each lesson progress percent, treating missing progress as zero, divided by total_lessons; if there are no published lessons, return zero.
-- A course with no learners returns an empty items list. The single-page metadata proposal uses page=1, size=0, total=0, total_pages=0.
-- These are DERIVED proposals; table names, enum values, null policy and formula require confirmation against the selected live schema and business owner.
+- For duplicate progress rows, select the latest by `last_accessed_at DESC NULLS LAST`, then `id DESC`.
+- completed_lessons: count selected rows with status `COMPLETED` within the published denominator.
+- progress_percent: floor of sum of each selected progress percent, treating missing row/NULL percent as zero, divided by total_lessons; if there are no published lessons, return zero.
+- Selected status outside `NOT_STARTED`, `IN_PROGRESS`, `COMPLETED`, or non-NULL percent outside 0..100 is treated as invalid stored projection and returns safe 500. Legacy DDL does not enforce these checks.
+- A course with no learners returns an empty items list. The one-page metadata uses page=1, size=total=items count, total_pages=1 when nonempty and 0 when empty.
+- These are local DERIVED fallbacks. Legacy DDL is candidate only; live schema, enum policy and business approval remain unverified.
 
-## Candidate response mapping — not the catalog contract
+## Local response mapping — not the catalog contract
 
 | Candidate field | Type | Candidate source/transform | Status |
 |---|---|---|---|
-| student | UserSummary | users reached through enrollment | DERIVED; direct Course schema has no student member. |
-| completed_lessons | int32 | Count completed lesson progress within denominator | DERIVED; status rule unapproved. |
+| student | UserSummary | users reached through active Student enrollment | DERIVED from API #62; direct Course schema has no student member. |
+| completed_lessons | int32 | Count latest selected COMPLETED rows within denominator | DERIVED local status rule. |
 | total_lessons | int32 | Published lesson count | DERIVED from API #9 visibility. |
-| progress_percent | int32 | Floor average across denominator | DERIVED; formula unapproved. |
+| progress_percent | int32 | floor(progress_sum / total_lessons), bounded 0..100 | DERIVED local formula; 0 for empty denominator. |
 
 ## Mutation Matrix
 

@@ -17,17 +17,18 @@ status: "Draft — Needs Confirmation"
 | Endpoint | `GET /api/v1/admin/courses` |
 | Tài liệu | Draft — Needs Confirmation |
 | Ngày tạo | 2026-10-24 |
-| Runtime | `UNWIRED / NOT_FOUND` |
+| Runtime | `SOURCE_BACKED_LOCAL; LIVE_STATUS_NOT_VERIFIED` |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày | Người cập nhật | Nội dung | Trạng thái |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD theo catalog và AC-32; tách contract trực tiếp khỏi proposal pagination/filter; ghi category relation và Admin guard là gap nguồn. | Draft — Needs Confirmation |
+| 1.1 | 2026-10-26 | Codex | Đồng bộ DD với implementation cục bộ API #73; ghi shared ADMIN guard, truy vấn legacy candidate, category 422 fallback DERIVED, error data null và giới hạn kiểm chứng fake DB. | Draft — Needs Confirmation |
 
 ## Ghi chú
 
-- Không thay đổi source, schema, migration, catalog hoặc diagram.
+- API #73 có source và focused tests cục bộ; không thay đổi schema, migration, catalog hoặc diagram.
 - Không tạo ZIP; Study API DD chỉ bàn giao Markdown.
 - AC-32 macro-review #73–#77 còn pending đến khi các DD liên quan có mặt.
 

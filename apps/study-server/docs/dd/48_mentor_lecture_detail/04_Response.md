@@ -28,30 +28,30 @@ status: "Draft — Needs Confirmation"
 | 2 | success | Success flag | success | boolean | No | N/A | N/A | 4 | true on success; false on error | N/A | ApiEnvelope. |
 | 3 | businessCode | Business code | businessCode | string | No | N/A | N/A | 4 | DESIGN_RESOURCE_RETRIEVED | N/A | Catalog direct. |
 | 4 | message | Message | message | string | No | N/A | N/A | 4 | Safe localized message | Exact text unspecified | No internal detail. |
-| 5 | data | Lecture | data | object | No | lessons candidate | Q1 projection | 3 | Map required Lecture fields | Required | assets source remains unresolved. |
-| 5.1 | data.id | Lecture ID | id | int64 | No | lessons candidate | id | 3 | Direct candidate | Required | BIGSERIAL is legacy only. |
-| 5.2 | data.course_id | Course ID | course_id | int64 | No | lessons candidate | course_id | 3 | Direct candidate | Required; null source is integrity gap | Legacy DDL nullable conflicts with guide. |
-| 5.3 | data.title | Title | title | string | No | lessons candidate | name | 3 | Alias name to title | Required | Legacy candidate, matching API #9. |
-| 5.4 | data.content | Content | content | string | Yes | lessons candidate | content | 3 | Preserve stored text | NULL may be omitted or returned as null; confirm | Contract marks content optional. |
-| 5.5 | data.assets | Assets | assets | UploadAsset[] | No | N/A | N/A | Pending | No approved source/resolver | Cannot fabricate [] or asset values | Required contract field; SOURCE_REQUIRED blocks full success mapping. |
-| 5.5.1 | data.assets[].id | Asset ID | id | int64 | No | N/A | N/A | Pending | No source or generator | N/A | API #34 persistence/lookup unresolved. |
-| 5.5.2 | data.assets[].name | Asset name | name | string | No | N/A | N/A | Pending | No persistent metadata source | N/A | Source unresolved. |
-| 5.5.3 | data.assets[].url | Asset URL | url | uri | No | N/A | N/A | Pending | No approved URL source | N/A | Do not trust arbitrary request URL. |
-| 5.5.4 | data.assets[].content_type | Content type | content_type | string | No | N/A | N/A | Pending | No metadata source | N/A | Legacy resources has no matching column. |
-| 5.5.5 | data.assets[].size_bytes | Asset size | size_bytes | int64 | No | N/A | N/A | Pending | No metadata source | N/A | Legacy resources has no matching column. |
-| 5.5.6 | data.assets[].status | Asset status | status | UploadStatus | No | N/A | N/A | Pending | No enum/persistence source | N/A | UploadStatus members unresolved. |
-| 5.6 | data.order | Lecture order | order | int32 | No | lessons candidate | sort_order | 3 | Alias sort_order to order | Required | Legacy candidate. |
-| 5.7 | data.status | Lesson status | status | LessonStatus | No | lessons candidate | status | 3 | Return stored value without status filter | Required | Enum members unresolved; draft remains readable in AC-21 candidate flow. |
+| 5 | data | Lecture | data | object | No | lessons/uploads | Q1 and Q2 projection | 3 | Map required Lecture fields | Required | Checked-in legacy schema candidate; live schema not verified. |
+| 5.1 | data.id | Lecture ID | id | int64 | No | lessons | id | 3 | Direct | Required | Legacy BIGSERIAL artifact; live schema not verified. |
+| 5.2 | data.course_id | Course ID | course_id | int64 | No | lessons | course_id | 3 | Direct | Required; null source returns 500 | Legacy DDL nullable conflicts with DB guide. |
+| 5.3 | data.title | Title | title | string | No | lessons | name | 3 | Alias name to title | Required | Legacy candidate, matching API #9. |
+| 5.4 | data.content | Content | content | string | Yes | lessons | content | 3 | Preserve stored text | SQL NULL serializes as JSON null | Shared Lecture model reflects nullable legacy column. |
+| 5.5 | data.assets | Assets | assets | UploadAsset[] | No | lesson_uploads/uploads | Q2 ordered projection | 3 | Resolve persisted upload metadata | `[]` when no links exist | Link written by #47; live migration state unverified. |
+| 5.5.1 | data.assets[].id | Asset ID | id | int64 | No | uploads | id | 3 | Direct | Required per item | Linked through lesson_uploads.upload_id. |
+| 5.5.2 | data.assets[].name | Asset name | name | string | No | uploads | file_name | 3 | Alias file_name to name | Required per item | Do not trust request metadata. |
+| 5.5.3 | data.assets[].url | Asset URL | url | uri | No | uploads | url | 3 | Direct | Required per item | Metadata persisted by API #34. |
+| 5.5.4 | data.assets[].content_type | Content type | content_type | string | No | uploads | content_type | 3 | Direct | Required per item | Metadata persisted by API #34. |
+| 5.5.5 | data.assets[].size_bytes | Asset size | size_bytes | int64 | No | uploads | size_bytes | 3 | Direct | Required per item | Metadata persisted by API #34. |
+| 5.5.6 | data.assets[].status | Asset status | status | UploadStatus | No | uploads | status | 3 | Return stored value | Required per item | Runtime model is string; catalog enum members remain unspecified. |
+| 5.6 | data.order | Lecture order | order | int32 | No | lessons | sort_order | 3 | Alias sort_order to order | Required | Legacy candidate. |
+| 5.7 | data.status | Lesson status | status | LessonStatus | No | lessons | status | 3 | Return stored value for a non-DELETED Lesson | Required | Runtime model is string; catalog enum members remain unspecified. |
 | 6 | meta | Metadata | meta | object | No | N/A | N/A | 4 | Empty object candidate | {} | Exact error metadata remains convention-based. |
 | 7 | traceId | Trace ID | traceId | uuid | No | Request context | Trace helper | 4 | Propagate request trace | Required | API guideline convention. |
 
 ## Ví dụ thành công
 
-Chưa thể cung cấp ví dụ thành công có payload đúng schema mà không tự tạo assets. Contract yêu cầu assets là UploadAsset[]; API #34 chưa có nguồn ID, metadata persistence hoặc lookup. Không dùng mảng rỗng hay dữ liệu minh họa để che gap này.
+Chưa ghi ví dụ thành công cụ thể để tránh đưa ID/URL minh họa vào contract. Source cho phép `assets: []` khi lesson không có liên kết; các item có liên kết lấy nguyên metadata từ `uploads`.
 
 ## Ví dụ lỗi
 
-Ví dụ dưới đây minh họa nhánh 404 theo contract và envelope kỳ vọng của API Guidelines. Current error_response() có default data là object rỗng; API #48 chưa có runtime để xác nhận biểu diễn thực tế.
+Ví dụ dưới đây minh họa nhánh 404 theo contract. Current `error_response()` mặc định `data: null`, khớp với envelope guideline.
 
 ~~~json
 {

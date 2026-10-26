@@ -3,116 +3,108 @@
 **Trạng thái DD:** Draft — Needs Confirmation
 **Endpoint:** `PUT /api/v1/mentor/content/{content_id}`
 
-## Q-51-01 — PUT có body nào và field nào được sửa?
+## Q-51-01 — Request body có field nào và semantics gì?
 
 **Bằng chứng**
 
-- Catalog row #51 và AC-22 PUT node chỉ khai báo `path{content_id:int64!}`.
-- AC-22 lại yêu cầu `UPDATE Content + version`.
-- API #50 create body có `course_id`, `content_type`, `title`, `payload`; reusable Content còn có `status`, `parent_id?`, `order`.
-
-**Đề xuất cần xác nhận**
-
-- PUT nhận full replacement `{content_type:ContentType!, title:string!, payload:object!}`.
-- `content_id` lấy từ path; `course_id` lấy và giữ từ stored Content.
-- `status`, `parent_id`, `order`, `id` là server-managed và không nằm trong request body.
-
-**Ảnh hưởng:** Chặn request model, validation, OpenAPI contract và khả năng implementation đúng semantics PUT.
-
-## Q-51-02 — “Content + version” dùng mô hình version nào?
-
-**Bằng chứng**
-
-- AC-22 ghi “UPDATE Content + version”.
-- AC-33 đọc `content/version/author` khi Admin review.
-- Catalog Content không có version field. Legacy DDL thiếu Content/version; V1-PILOT `content_blocks.row_version` thuộc UUID/lesson model khác.
-
-**Đề xuất cần xác nhận**
-
-- Mỗi PUT tạo revision mới; giữ bản cũ để audit/review; cùng transaction cập nhật current revision.
-- Không coi `row_version` của pilot hoặc một cột `version_no` chưa tồn tại là mapping đã duyệt.
-
-**Ảnh hưởng:** Chặn SQL, transaction, concurrency, revision response và rollback design.
-
-## Q-51-03 — Revision mới có cần review lại không?
-
-**Bằng chứng**
-
-- AC-33 moderation queue lọc `status=PENDING_REVIEW` và Admin đọc content/version/author.
-- AC-22 update node không nêu status transition.
-- API #50 DD đề xuất cùng trạng thái ban đầu `PENDING_REVIEW` nhưng chưa được xác nhận.
-
-**Đề xuất cần xác nhận**
-
-- Revision mới vào `PENDING_REVIEW`; bản published trước đó vẫn phục vụ đến khi revision mới được duyệt và publish.
-- Chốt status ở Content hay version, và status response đại diện bản nào.
-
-**Ảnh hưởng:** Có thể thay đổi nội dung công khai, moderator queue và phối hợp API #52.
-
-## Q-51-04 — Mentor identity và quyền course được kiểm tra ra sao?
-
-**Bằng chứng**
-
-- Catalog yêu cầu Bearer JWT role Mentor; AC-22 yêu cầu quyền quản lý course.
-- Study hiện có Student auth guard; không có Mentor identity/assignment relation source.
-- Legacy `courses.mentor_id` chỉ là candidate direct owner.
+- Catalog #51 và AC-22 PUT node chỉ khai báo `path{content_id:int64!}`.
+- API #51 local runtime dùng strict full replacement `{content_type, title, payload}`, tái sử dụng API #50.
 
 **Cần xác nhận**
 
-- JWT claim nào map tới Mentor?
-- Có cho phép co-owner/assigned Mentor không?
-- Thứ tự 404 Content với 403 access và thông điệp chống ID enumeration là gì?
+- Ba field này có phải contract chính thức và đều bắt buộc không?
+- `content_type` có enum members nào; có cho đổi type của Content không?
+- `title` có trim/length constraints; payload có subtype schemas nào?
 
-**Ảnh hưởng:** Chặn executable authorization query; error code 403/404 vẫn giữ theo catalog.
+**Ảnh hưởng:** Request/OpenAPI validation hiện là `DERIVED`; cần cập nhật catalog sau khi xác nhận.
 
-## Q-51-05 — Content/version lưu ở schema nào?
+## Q-51-02 — Snapshot schema và version numbering có được duyệt không?
 
 **Bằng chứng**
 
-- Legacy DB có `courses`/`lessons`, không generic Content/version.
-- V1-PILOT có UUID `content_blocks`, gắn `lesson_id`, khác BIGINT Content/`course_id`.
-- Live schema chưa được xác minh.
+- AC-22 yêu cầu `UPDATE Content + version`; migration 007 thêm `content_versions` dạng legacy BIGINT snapshot.
+- Snapshot trước update được ghi với `version_no=MAX+1`; current `contents` row được xem là version kế tiếp implicit.
+- Live schema và migration deployment chưa được probe.
 
 **Cần xác nhận**
 
-- Bảng/model và migration đã duyệt; khóa/field mapping; cách đọc current version; giữ lịch sử; audit fields; ID strategy; projection `ApiEnvelope<Content>`.
+- `content_versions` có phải physical model chuẩn; current version có cần row/pointer rõ ràng không?
+- Có cần backfill lịch sử hoặc khởi tạo version khi API #50 tạo Content không?
+- Snapshot cần retention, immutable policy, khóa/index bổ sung nào không?
 
-**Ảnh hưởng:** Chặn physical Query/Mutation Mapping và implementation.
+**Ảnh hưởng:** Migration 007 và query/API #51 là `DERIVED` fallback; không chứng minh production schema.
 
-## Q-51-06 — Validation và concurrency policy là gì?
+## Q-51-03 — Update có luôn đưa Content vào `PENDING_REVIEW` không?
 
 **Bằng chứng**
 
-- Catalog khai báo 422 `DESIGN_VALIDATION_ERROR` nhưng body rỗng.
-- Không có 409 trong API #51.
+- AC-33 queue đọc `PENDING_REVIEW`; API #50 cũng khởi tạo state đó.
+- API #51 local runtime đặt current `contents.status=PENDING_REVIEW` sau mỗi PUT.
+- AC-22 không định nghĩa transition và API #52 sở hữu publish/unpublish.
 
 **Cần xác nhận**
 
-- Enum `ContentType`, payload schema, title constraints và content-state eligibility.
-- Hai PUT đồng thời được serialize, reject hay last-write-wins? Nếu cần conflict response, contract phải được cập nhật thay vì tự thêm 409 vào DD.
+- Update khi Content đang `PUBLISHED` có được thay current projection ngay không?
+- Có cần giữ bản published làm active pointer đến khi Admin duyệt không?
+- Admin approval `APPROVED/PUBLISHED` có tự publish hay phải gọi API #52?
 
-**Ảnh hưởng:** Chặn validation, optimistic/pessimistic locking và error mapping.
+**Ảnh hưởng:** Snapshot giữ dữ liệu cũ nhưng API #51 không bảo đảm public reader tiếp tục serve bản published cũ; #52/AC-33 chưa có revision selector.
 
-## Q-51-07 — Publish và approval tương tác thế nào?
+## Q-51-04 — Ai là tác giả của revision và dữ liệu lịch sử cũ?
 
 **Bằng chứng**
 
-- AC-22 có API #52 riêng publish/unpublish.
-- AC-33 approve node ghi `APPROVED/PUBLISHED`; reject ghi `REJECTED`.
-- API #51 update có version side effect.
+- AC-33 reviewer đọc author; legacy `contents` không có author/created_by field.
+- Migration 007 có `archived_by`, là Mentor thực hiện update kế tiếp, không phải tác giả gốc.
 
-**Cần xác nhận trong macro-review #50–#53 + AC-33**
+**Cần xác nhận**
 
-- Approve tự publish hay chỉ chấp thuận revision?
-- API #52 publish Content hay revision cụ thể?
-- Revision mới pending có giữ published revision cũ phục vụ không?
+- Cần lưu `authored_by` cho revision mới ở đâu?
+- Với Content cũ không có author, cho phép unknown/null hay cần backfill từ nguồn khác?
+- `archived_at` ghi thời điểm snapshot, không phải thời điểm version ban đầu được tạo.
 
-**Ảnh hưởng:** Trạng thái response, danh sách public, rollback và review audit.
+**Ảnh hưởng:** Không dùng `archived_by` để thỏa yêu cầu author của AC-33.
 
-## Q-51-08 — Middleware allowlist có được cập nhật khi route được wire?
+## Q-51-05 — Authorization dùng direct owner hay assigned Mentor?
 
-API #51 hiện chưa có route và path không nằm trong `DESIGN_CONTRACT_PATHS`. Khi implementation, cập nhật allowlist hoặc xác nhận cơ chế khác để validation/internal exceptions phát `DESIGN_VALIDATION_ERROR`/`DESIGN_INTERNAL_ERROR` đúng catalog.
+**Bằng chứng**
 
-## Q-51-08 — Xóa Content ảnh hưởng các revision thế nào?
+- Catalog yêu cầu role Mentor; AC-22 yêu cầu quyền quản lý course.
+- API #49 và API #51 current source dùng numeric JWT subject so với `courses.mentor_id`.
 
-API #51 đề xuất tạo revision mới và giữ revision đã publish trong lúc review. API #53 đề xuất soft-delete logical Content và bảo toàn version/review history. Cần xác nhận deletion ẩn toàn bộ revision hay chỉ current projection, và cách bảo toàn published revision/history.
+**Cần xác nhận**
+
+- Có hỗ trợ co-owner/assigned Mentor không?
+- JWT subject và `courses.mentor_id` có chung identity namespace không?
+- 404/403 enumeration policy có cần đổi không?
+
+**Ảnh hưởng:** Direct-owner là fallback từ API #49, không bao quát assignment.
+
+## Q-51-06 — No-op update, concurrency và revision policy là gì?
+
+**Bằng chứng**
+
+- API #51 khóa row Content trong transaction nên các PUT qua endpoint này được serialize.
+- Mỗi PUT hiện tạo snapshot dù body có giống dữ liệu hiện tại; catalog không có 409 hoặc version token.
+
+**Cần xác nhận**
+
+- Body không đổi có cần tạo snapshot và đẩy `PENDING_REVIEW` không?
+- Có cần optimistic concurrency/version precondition không?
+- API #52 và Admin review có phải khóa cùng row/revision theo cùng thứ tự không?
+
+**Ảnh hưởng:** Không thêm 409; hiện chưa quy định chống lost update giữa #51 với các thao tác lifecycle khác.
+
+## Q-51-07 — Lịch sử Content khi soft delete được giữ thế nào?
+
+**Bằng chứng**
+
+- API #53 DD đề xuất soft delete qua `contents.deleted_at`; migration 007 không cascade snapshot history.
+- #53 retention/history policy còn Draft.
+
+**Cần xác nhận**
+
+- Snapshot có được giữ vĩnh viễn sau soft delete không?
+- Có cần xóa/anonymize khi xóa user hoặc course không?
+
+**Ảnh hưởng:** Foreign keys hiện ngăn hard-delete referenced Content/Course/User nếu snapshot còn tồn tại.

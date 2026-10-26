@@ -51,7 +51,7 @@ status: "Draft — Needs Confirmation"
 
 ## Query-only note
 
-- Candidate Q1 reads quizzes.id, quizzes.passing_score, quiz_attempts.id/quiz_id/submitted_at/score.
+- Runtime Q1 reads quizzes.id/passing_score and quiz_attempts.id/quiz_id/submitted_at/score using one aggregate query.
 - Legacy names are design candidates, not live schema proof.
 - Không map quiz_answers vì metric đề xuất dùng score cấp attempt.
 ---

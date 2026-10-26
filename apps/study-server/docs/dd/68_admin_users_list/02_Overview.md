@@ -20,33 +20,34 @@ status: "Draft — Needs Confirmation"
 | Purpose | Lấy danh sách user để Admin tra cứu và chọn user hoặc thao tác quản trị. |
 | Consumer/Actor | Admin |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin và quyền user management theo catalog/AC-31; current Study chưa có Admin guard. |
-| Basis | Method/path/auth/query/status/response/errors DIRECT; filter, pagination và Page response proposal DERIVED. |
+| Authorization | Shared role-aware guard yêu cầu claim ADMIN trước query; không có permission relation riêng trong checked-in DDL. |
+| Success response | ApiEnvelope<Page<UserProfile>>; đồng bộ với list + pagination trong AC-31. |
+| Direct errors | 401, 403, 422, 500 theo catalog đã đồng bộ; 422 dùng cho page sai. |
+| Basis | Method/path/auth/query/status/success/errors DIRECT; filter normalization, page default/size, order và ADMIN-claim-to-user-management mapping DERIVED. |
 | Status | Draft — Needs Confirmation |
-| Current runtime state | UNWIRED / NOT_FOUND — không có route, module hoặc test API #68. |
-| Transaction | N/A — chỉ đọc. |
-| Side effects | Không ghi dữ liệu; không đọc password_hash. |
+| Current runtime state | SOURCE_BACKED_WITH_DERIVED_CONTRACT — route/module/test được wire; query dùng legacy users candidate; live schema chưa xác minh. |
+| Transaction | Read-only; view không commit. |
+| Side effects | Không ghi dữ liệu; không đọc password_hash hoặc token credentials. |
 
 ## Sources
 
-- [Catalog và reusable schemas](../../../../../docs/lists/list_api.md) — API #68, ApiEnvelope, UserProfile, Page, PageMeta.
+- [Catalog và reusable schemas](../../../../../docs/lists/list_api.md) — API #68, UserProfile, Page và PageMeta.
 - [AC/API index, AC-31](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — Admin có quyền user management; APIs #68–#72.
 - [AC-31 activity diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — danh sách, query + pagination, chọn user, nhánh thao tác rồi reload.
-- [DB table guide](../../diagrams/DB_UNICA_TABLES.md) — legacy users fields và trạng thái DESIGN_ONLY.
-- [DB ERD](../../diagrams/DB_UNICA_ERD.drawio) — users fields, BIGSERIAL ID và quan hệ user_id 1:N.
-- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — candidate BIGINT users; không chứng minh live schema.
-- [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — identity_projections, learner_profiles và service role tables dùng UUID; khác model legacy.
-- [API #4 source query](../../../app/modules/guest/api_04_users_me/query.py) và [model](../../../app/modules/guest/api_04_users_me/models.py) — projection profile an toàn hiện có.
-- [API #14 source query](../../../app/modules/guest/api_14_users_me_profile/query.py) — cùng projection sau cập nhật profile.
-- [API #07 source](../../../app/modules/guest/api_07_courses_search/view.py) — page size cố định 20 và PageMeta là source precedent, không phải contract #68.
+- [DB table guide](../../diagrams/DB_UNICA_TABLES.md) và [DB ERD](../../diagrams/DB_UNICA_ERD.drawio) — legacy users fields ở trạng thái design-only.
+- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — BIGINT users query candidate; không chứng minh live schema.
+- [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — identity/profile/role UUID model khác legacy.
+- [API #4 profile query/model](../../../app/modules/guest/api_04_users_me/query.py) và [model](../../../app/modules/guest/api_04_users_me/models.py) — safe projection và nullable fields hiện có.
+- [API #07 source](../../../app/modules/guest/api_07_courses_search/view.py) — size 20, PageMeta và page validation precedent.
+- [API #68 module](../../../app/modules/admin/api_68_admin_users_list/view.py) và [HTTP tests](../../../tests/modules/admin/api_68_admin_users_list/test_admin_users_list.py) — current source/test evidence.
 
 ## Tables read
 
-| Relation | Fields candidate | Basis/status |
+| Relation | Fields | Basis/status |
 |---|---|---|
-| Legacy users | id, full_name, email, role, avatar_url, phone, status, created_at, updated_at | Candidate theo DB.sql, DB table guide và API #4/#14; live schema chưa xác minh. |
-| V1-PILOT identity_projections | UUID subject, account_status, email_verified, display_name | Schema khác; không map trực tiếp vào UserProfile int64. |
-| V1-PILOT learner_profiles | UUID subject, full_name, avatar_file_id, headline, bio, visibility, deleted_at | Schema khác; chưa có email/role trong profile row. |
+| Legacy users | id, full_name, email, role, avatar_url, phone, status, created_at, updated_at | Runtime query candidate from checked-in DB.sql; live schema unknown. |
+| V1-PILOT identity_projections | UUID subject, account_status, email_verified, display_name | Different identity model; not joined to int64 users. |
+| V1-PILOT learner_profiles | UUID subject, full_name, avatar_file_id, headline, bio, visibility, deleted_at | Different profile model; not joined to legacy users. |
 
 ## Tables write
 
@@ -54,38 +55,44 @@ Không có — API GET chỉ đọc.
 
 ## Mục chú ý
 
-- Diagram mô tả danh sách và phân trang nhưng contract trực tiếp là ApiEnvelope<UserProfile>, không có items hoặc PageMeta.
-- Query có page nhưng không có size/default/minimum. Page<UserProfile>, default page 1 và size 20 chỉ là proposal DERIVED.
-- UserProfile có bio?; legacy users và current API #4 model không có bio source.
-- Reusable UserProfile dùng UserRole/UserStatus nhưng catalog không liệt kê enum members; current API #4 model dùng str.
-- Role/status value set và quy tắc xóa/ẩn user chưa được định nghĩa.
+- Response Page<UserProfile> khớp list/pagination trong AC-31; catalog và node diagram API #68 hiện khai báo collection.
+- Query nhận role/status/keyword/page; không thêm size hoặc sort input.
+- Page mặc định 1, size cố định 20 theo precedent API #07; order ổn định users.id ASC.
+- Role/status dùng exact equality, không whitelist enum vì UserRole/UserStatus chưa có member list.
+- Keyword được trim/lowercase; POSITION tìm substring literal trên full_name hoặc email, không diễn giải %/_ thành wildcard.
+- API #04 UserProfile là source model: bao gồm email/phone nullable, không có bio; không chọn password_hash.
+- Empty result là items=[] và total=0 với HTTP 200. Page không hợp lệ trả 422 DESIGN_VALIDATION_ERROR theo precedent API #07.
+- API #69 detail và #70/#71/#72 mutations giữ boundary riêng; #68 không đọc detail relation hoặc thực hiện thay đổi account.
 
 ## Assumptions
 
-- Q1/Q2 trên legacy users chỉ là query candidate, không phải runtime SQL đã duyệt.
-- Candidate keyword tìm không phân biệt hoa thường trên full_name hoặc email; role/status dùng exact equality.
-- Candidate page mặc định 1, size cố định 20 như precedent API #07; cần cập nhật catalog/response trước khi implement.
+- Role ADMIN trong JWT được dùng làm quyền user-management vì AC-31 không cung cấp bảng permission/tenant trong checked-in source. Đây là fallback DERIVED.
+- Legacy BIGINT users là query target phù hợp path/profile hiện tại; không khẳng định relation đang tồn tại live.
+- Không có deletion column trong legacy users candidate, nên query không tự thêm deleted predicate; status filter là tùy chọn.
+- PII email/phone được trả bởi reusable UserProfile sau ADMIN guard. Audit/visibility policy vẫn cần xác nhận.
 
 ## Conflicts
 
-- Catalog và diagram ghi response UserProfile trong khi AC-31 action là list/pagination.
-- Legacy BIGINT users và V1-PILOT UUID identity/profile/role model không tương đương.
-- Current Study profile model không có bio dù reusable UserProfile khai báo optional bio.
-- Reusable schema dùng UserRole/UserStatus nhưng enum members chưa có; API #4 current model serialize strings.
-- Catalog không liệt kê 422 cho page không hợp lệ; không tự thêm code/status.
+- Catalog trước đó ghi ApiEnvelope<UserProfile> dù diagram step nói query danh sách + pagination; catalog response đã được đồng bộ thành ApiEnvelope<Page<UserProfile>>.
+- Catalog trước đó thiếu 422 cho page int32 invalid; 422 DESIGN_VALIDATION_ERROR đã được thêm dựa trên API #07.
+- Legacy BIGINT users và V1-PILOT UUID identity/profile model khác nhau; live schema chưa xác minh.
+- Catalog UserRole/UserStatus không liệt kê enum members; current API #04 model dùng string.
+- UserProfile có bio optional nhưng current legacy/API #04 projection không có nguồn bio; API #68 bỏ field đó.
+- Không có Admin permission relation hoặc deletion lifecycle column trong legacy users candidate.
 
 ## Security note
 
-- Chỉ Admin đã xác thực và được cấp quyền user management mới được xem danh sách.
-- Email và phone là PII trong UserProfile; cần xác nhận phạm vi hiển thị/audit theo chính sách Admin.
-- Chỉ SELECT allowlist profile fields; tuyệt đối không lấy password_hash, refresh token, token hash hoặc credential.
-- Admin identity/role guard hiện chưa có source trong Study.
+- Shared role-aware JWT guard yêu cầu ADMIN trước query count/page.
+- Role claim là Admin permission fallback; separate user-management permission, tenant boundary và access audit chưa có source.
+- Email và phone là PII trong reusable UserProfile; chỉ trả qua API Admin này.
+- SQL chỉ lấy allowlist profile fields; không chọn password_hash, refresh_tokens hoặc token_hash.
+- Logs và lỗi 500 không chứa query parameters hay profile data.
 
 ## Performance note
 
-- Candidate count và data query phải dùng cùng predicates.
-- Keyword hai cột có thể cần index khi triển khai; không đề xuất migration/index khi chưa có workload/schema owner.
-- Page size 20 và order id ASC là đề xuất DERIVED; không được xem là SLA hoặc catalog contract.
+- Count và page dùng cùng filter predicates; list order là users.id ASC và size cố định 20.
+- Keyword dùng LOWER + POSITION trên full_name/email; không đề xuất index/migration khi chưa có workload/schema owner.
+- Hai SELECT chạy trong transaction do Session sở hữu; test không chứng minh live concurrency, schema hoặc query plan.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

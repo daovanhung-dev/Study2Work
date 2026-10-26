@@ -12,24 +12,24 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ~~~text
-1. Nhận Authorization và path submission_id
-2. Giải mã Bearer JWT theo cấu hình Study; yêu cầu role MENTOR (catalog DIRECT; Mentor guard riêng chưa wired)
-3. Candidate Q1 đọc Submission ID và relation assignment/course
-4. Không có submission -> 404; relation lỗi integrity -> candidate 500; course không thuộc Mentor -> 403
-5. Chỉ sau khi access check đạt mới map các field Submission từ kết quả Q1
-6. Files: UploadAsset[] cần resolver/persistence chưa có (SOURCE_REQUIRED)
+1. Nhận Authorization và raw path `submission_id`
+2. Gọi shared guard `validate_current_user_request(..., role="MENTOR")` để xác thực Bearer/JWT và numeric subject
+3. Parse path signed-int64; malformed/overflow -> 404 `DESIGN_RESOURCE_NOT_FOUND`
+4. Q1 đọc Submission, LEFT JOIN assignment/course và LATERAL lookup UploadAsset theo URL/owner/purpose/course
+5. Không có submission -> 404; quan hệ required null/orphan -> 500; course không thuộc Mentor -> 403
+6. Chỉ sau khi direct-owner check đạt mới map các field reusable `Submission`
 7. Rubric theo AC-23 không có field trong Submission schema và không có relation assignment được duyệt (DISCREPANCY)
-8. Trả ApiEnvelope<Submission>; UI tiếp tục gọi #56 grade và #57 feedback
+8. Trả `ApiEnvelope<Submission>`; UI tiếp tục gọi #56 grade và #57 feedback
 ~~~
 
-API #55 chưa có runtime implementation. Bảng/SQL dưới đây là candidate từ design artifact; không phải query đã được xác minh chạy trên live DB.
+API #55 đã có route/module và TestClient coverage. Query dùng legacy DDL làm candidate target; tests thay DB bằng fake rows nên không xác minh live schema hoặc query execution trên PostgreSQL.
 
 ## Request Usage Matrix
 
 | Request field | Source | Step | Validation | Query/response use | Gap |
 |---|---|---:|---|---|---|
-| Authorization | Header | 0.1 | Bearer access JWT hợp lệ; yêu cầu Mentor | `sub` dùng làm candidate Mentor ID | Current shared guard chỉ chấp nhận Student |
-| `submission_id` | Path | 1.1 / 2.1 | Required int64; không có min/max trong catalog | `s.id`; map sang `data.id` | Invalid/overflow path không có business code xác định |
+| Authorization | Header | 0.1 | Bearer access JWT hợp lệ; yêu cầu Mentor | Numeric subject được so với `courses.mentor_id` | Shared guard is source-backed; direct-owner policy remains DERIVED |
+| `submission_id` | Path | 1.1 / 2.1 | Required signed int64; không có minimum trong catalog | `s.id`; map sang `data.id` | Current raw-path parser maps malformed/overflow to catalog 404 as DERIVED fallback |
 | Request body | N/A | N/A | N/A | N/A | Catalog không khai báo body |
 | Query parameters | N/A | N/A | N/A | N/A | Catalog không khai báo query |
 
@@ -40,7 +40,7 @@ API #55 chưa có runtime implementation. Bảng/SQL dưới đây là candidate
 - Trích Bearer token từ `Authorization`.
 - Giải mã access JWT bằng `decode_access_token`; current token contract có `sub` và `roles`.
 - Chuẩn hóa `sub` thành numeric user ID theo `validate_access_claims`.
-- Yêu cầu `MENTOR` có trong roles theo catalog; đây là Mentor guard cần thiết nhưng current shared request guard chỉ cho `STUDENT`.
+- Yêu cầu `MENTOR` có trong roles theo catalog; current shared request guard hỗ trợ role tường minh.
 - Nếu token thiếu/sai/hết hạn hoặc claim không hợp lệ, trả HTTP 401 `DESIGN_AUTHENTICATION_REQUIRED`.
 - Nếu token hợp lệ nhưng không có role Mentor, trả HTTP 403 `DESIGN_ACCESS_DENIED`.
 
@@ -59,19 +59,19 @@ API #55 chưa có runtime implementation. Bảng/SQL dưới đây là candidate
 - Nếu `assignment_id`, assignment hoặc course không tồn tại trong quan hệ candidate, coi là integrity failure và trả 500 `DESIGN_INTERNAL_ERROR` theo đề xuất DERIVED; xác nhận trạng thái required/live schema còn thiếu.
 - Nếu course không thuộc `mentor_id` hiện tại, candidate trả 403 `DESIGN_ACCESS_DENIED`; quy tắc mask resource tồn tại bằng 404 chưa được chốt.
 - Nếu relation/ownership hợp lệ, chỉ lúc đó mới serialize field Submission cho response.
-- Nếu course được phân công nhưng `courses.mentor_id` khác Mentor hiện tại, candidate sẽ từ chối; assigned-course policy cần được bổ sung nguồn.
+- Nếu course được phân công nhưng `courses.mentor_id` khác Mentor hiện tại, current fallback từ chối; assigned-course policy cần được bổ sung nguồn.
 
 ## 1. Validate data input
 
 - `submission_id`: nhận một giá trị path có thể biểu diễn bằng int64 theo catalog.
 - Catalog không nêu ID dương/minimum/maximum hoặc behavior cho path không parse được.
 - Không thêm HTTP 400/422 hoặc business code ngoài catalog.
-- Đề xuất candidate: int64 hợp lệ nhưng không có row → 404; path malformed/overflow cần được router map thống nhất với 404 catalog hoặc cập nhật contract trước implementation.
-- FastAPI validation hiện hành không phải current behavior API #55 vì route chưa được đăng ký.
+- Current source accepts signed int64 raw path; int64 hợp lệ nhưng không có row → 404.
+- Current source maps malformed/overflow path to 404 `DESIGN_RESOURCE_NOT_FOUND` following API #48; this status mapping is DERIVED because the catalog does not specify it.
 
 ## 2. Get thông tin
 
-### 2.1. Candidate Q1 — đọc submission và scope quyền
+### 2.1. Q1 — đọc submission, scope quyền và file metadata
 
 Q1 đọc record theo `submission_id`, giữ left join để còn quan sát submission có FK null/orphan trong legacy DDL. Kết quả chỉ được dùng để dựng response sau khi Mentor access check đạt.
 
@@ -81,7 +81,7 @@ Q1 đọc record theo `submission_id`, giữ left join để còn quan sát subm
 | `↑` | `s.assignment_id` | Assignment ID | Required trong logical contract; DDL nullable. |
 | `↑` | `s.user_id` | Student ID | Required trong logical contract; DDL nullable. |
 | `↑` | `s.content` | Text bài làm | Nullable candidate. |
-| `↑` | `s.file_url` | Legacy single file URL | Không map một URL thành `UploadAsset[]`. |
+| `↑` | `s.file_url` | Legacy single file URL | DERIVED: match exact URL to `uploads.url` with owner, purpose and course constraints; at most one asset. |
 | `↑` | `s.submitted_at` | Thời điểm nộp | TIMESTAMP; timezone chưa rõ. |
 | `↑` | `s.score` | Điểm đã lưu | NUMERIC(6,2) candidate; map decimal-string chưa xác nhận format. |
 | `↑` | `s.feedback` | Feedback đã lưu | Nullable candidate; Student disclosure không thuộc API Mentor này. |
@@ -92,40 +92,46 @@ Q1 đọc record theo `submission_id`, giữ left join để còn quan sát subm
 | `↑` | `c.mentor_id` | Candidate direct owner | So sánh với numeric Mentor `sub`; DERIVED. |
 
 ~~~sql
-SELECT s.id,
-       s.assignment_id,
-       s.user_id,
-       s.content,
-       s.file_url,
-       s.submitted_at,
-       s.score,
-       s.feedback,
-       s.status,
-       a.id AS matched_assignment_id,
-       a.course_id,
-       c.id AS matched_course_id,
-       c.mentor_id
+SELECT s.id, s.assignment_id, s.user_id, s.content, s.status,
+       s.submitted_at, s.score, s.feedback,
+       a.id AS matched_assignment_id, a.course_id,
+       c.id AS matched_course_id, c.mentor_id,
+       asset.id AS file_id, asset.name AS file_name, asset.url AS file_url,
+       asset.content_type AS file_content_type,
+       asset.size_bytes AS file_size_bytes, asset.status AS file_status
 FROM assignment_submissions AS s
 LEFT JOIN assignments AS a ON a.id = s.assignment_id
 LEFT JOIN courses AS c ON c.id = a.course_id
-WHERE s.id = :submission_id;
+LEFT JOIN LATERAL (
+    SELECT u.id, u.file_name AS name, u.url, u.content_type, u.size_bytes, u.status
+    FROM uploads AS u
+    WHERE u.url = s.file_url
+      AND u.owner_id = s.user_id
+      AND u.purpose = 'SUBMISSION'
+      AND u.course_id = a.course_id
+    ORDER BY u.id ASC
+    LIMIT 1
+) AS asset ON TRUE
+WHERE s.id = :submission_id
+LIMIT 1;
 ~~~
 
-> SQL là candidate trên legacy DDL. Live schema, query execution và Mentor assignment relation chưa được xác minh.
+> This matches `FIND_MENTOR_SUBMISSION` in current source. It targets the checked-in legacy DDL candidate; fake DB tests do not verify live PostgreSQL schema or execution.
 
 ### 2.2. JOIN
 
 | Target table | Join condition | Join type |
 |---|---|---|
-| `assignment_submissions AS s` | N/A | BASE candidate |
-| `assignments AS a` | `a.id = s.assignment_id` | LEFT JOIN candidate; DDL cho phép `s.assignment_id IS NULL` |
-| `courses AS c` | `c.id = a.course_id` | LEFT JOIN candidate; DDL cho phép `a.course_id IS NULL` |
+| `assignment_submissions AS s` | N/A | BASE relation in current Q1 |
+| `assignments AS a` | `a.id = s.assignment_id` | LEFT JOIN; retains null/orphan evidence |
+| `courses AS c` | `c.id = a.course_id` | LEFT JOIN; retains null/orphan evidence |
+| `uploads AS u` | constrained by exact URL, owner, purpose and course | LATERAL subquery; zero or one match |
 
 ### 2.3. WHERE
 
 - `s.id = :submission_id` dùng parameter binding.
 - Không đưa `user_id` từ query/body; student identity chỉ là dữ liệu của submission.
-- Direct owner comparison `c.mentor_id = :mentor_id` được kiểm tra sau khi record được tìm thấy; đây là DERIVED candidate theo API #46 và API #54.
+- Direct owner comparison `c.mentor_id = :mentor_id` được thực hiện trong view sau khi record được tìm thấy; đây là DERIVED fallback theo API #46 và API #54.
 - Không thêm predicate `status = 'SUBMITTED'`; AC-23 không giới hạn API #55 ở submission chưa chấm và #56/#57 cần đọc bản ghi theo flow chấm.
 - Không filter theo status hoặc course publication state; catalog/diagram không khai báo điều kiện này.
 
@@ -137,17 +143,16 @@ N/A — Tra một submission bằng primary key candidate; không có collection
 
 | Query ID | Purpose | Type | Base table/view | Alias | Columns | JOIN | WHERE | ORDER/pagination | Result/branch | Status |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Q1 | Đọc submission và khóa quan hệ để kiểm tra Mentor access | SELECT | `assignment_submissions` | `s` | Các cột trong mục 2.1 | LEFT JOIN `assignments a`, `courses c` | `s.id = :submission_id` | N/A | Không có row→404; access pass→map response | Candidate; legacy DDL only |
-| Q2 | Tra UploadAsset metadata/association | SELECT | Chưa có relation được duyệt | N/A | N/A | N/A | N/A | N/A | Không dựng asset object | `SOURCE_REQUIRED` |
-| Q3 | Tra rubric/criteria cho assignment | SELECT | Không có assignment-rubric relation được duyệt | N/A | N/A | N/A | N/A | N/A | Không thêm field rubric vào `Submission` | `SOURCE_REQUIRED / DISCREPANCY` |
+| Q1 | Đọc submission, kiểm tra parent/owner và lấy tối đa một asset | SELECT | `assignment_submissions` | `s` | Submission fields, join IDs/owner và UploadAsset metadata | LEFT JOIN `assignments a`, `courses c`; LATERAL `uploads u` | `s.id = :submission_id`; constrained asset predicates | `u.id ASC LIMIT 1`; no page | No row→404; broken parent→500; owner mismatch→403; otherwise map response | Wired source; legacy DDL target candidate; live DB unverified |
+| Q2 | Rubric/criteria cho assignment | N/A | Không có assignment-rubric relation được duyệt | N/A | N/A | N/A | N/A | N/A | Không query hoặc thêm field rubric vào `Submission` | `SOURCE_REQUIRED / DISCREPANCY` |
 
 ### 2.5. Xử lý access và integrity
 
 - Nếu record không tồn tại, trả lỗi theo [06_Error.md](./06_Error.md).
-- Nếu `s.assignment_id`, matched assignment, `a.course_id`, matched course hoặc direct-owner ID NULL/missing, không trả dữ liệu; 500 là candidate integrity branch theo error set.
-- Nếu khóa quan hệ hợp lệ nhưng Mentor không khớp direct owner, candidate trả 403.
+- Nếu required relation ID/owner null, sai kiểu hoặc LEFT JOIN không khớp, current source trả 500 `DESIGN_INTERNAL_ERROR` as DERIVED integrity handling.
+- Nếu khóa quan hệ hợp lệ nhưng Mentor không khớp direct owner, current source trả 403 `DESIGN_ACCESS_DENIED`.
 - Access check diễn ra trước response mapping; không phát lộ content/file URL cho caller bị từ chối.
-- 403/404 masking, assigned Mentor access và orphan policy vẫn là `Draft — Needs Confirmation`.
+- 403/404 masking, assigned Mentor access và orphan policy remain `Draft — Needs Confirmation`; current source uses direct 403 and 500 integrity fallbacks.
 
 ## 3. Insert/Update thông tin
 
@@ -173,18 +178,19 @@ N/A — Không có mutation.
 
 ### 4.1. Thành công
 
-- Q1 trả một record hợp lệ và access candidate đạt thì map `ApiEnvelope<Submission>`.
-- `files[]` và rubric chỉ được đưa ra khi có approved resolver/schema; DD hiện chưa khẳng định response hoàn chỉnh ở hai phần này.
+- Q1 trả một record hợp lệ và direct-owner check đạt thì map `ApiEnvelope<Submission>`.
+- `files[]` uses the same DERIVED constrained lookup as API #54; no match returns `[]`.
+- Rubric remains SOURCE_REQUIRED because the legacy Assignment model has no approved rubric relation.
 
 ### 4.2. Lỗi hệ thống
 
 - Query exception/mapping exception → HTTP 500 `DESIGN_INTERNAL_ERROR` theo catalog.
-- Orphan/null required relation hoặc required field không thỏa logical schema → đề xuất HTTP 500 cùng code; đây là DERIVED handling, chưa phải runtime behavior.
+- Orphan/null required relation hoặc required field không thỏa logical schema → current source returns HTTP 500 with the catalog code as DERIVED integrity handling.
 
 ### 4.3. Validate lỗi
 
 - JWT sai/thiếu → HTTP 401 `DESIGN_AUTHENTICATION_REQUIRED`.
-- Không có role Mentor/course permission → HTTP 403 `DESIGN_ACCESS_DENIED` theo candidate policy.
+- Không có role Mentor hoặc course owner không khớp → HTTP 403 `DESIGN_ACCESS_DENIED`.
 - Catalog không khai báo 422; không thêm error branch đó.
 
 ### 4.4. Ngoài trường hợp trên
@@ -199,25 +205,25 @@ N/A — Không có mutation.
 | `success` | boolean | Envelope | Branch result | 5 | `true` success; `false` error | Always present | Shared convention |
 | `businessCode` | string | Catalog | Exact catalog literal | 5 | Fixed per branch | Always present | DIRECT |
 | `message` | string | Application message | Safe localized message | 5 | Branch-specific | Always present | Exact text unspecified |
-| `data.id` | int64 | Candidate DB | `s.id` | 4 | Direct | Required | Live schema unknown |
-| `data.assignment_id` | int64 | Candidate DB | `s.assignment_id` | 4 | Direct | Required; null is integrity issue | DDL nullable conflict |
-| `data.user_id` | int64 | Candidate DB | `s.user_id` | 4 | Direct | Required; null is integrity issue | DDL nullable conflict |
-| `data.content` | string? | Candidate DB | `s.content` | 4 | Preserve | Null vs omit unresolved | Optional contract field |
-| `data.files[]` | UploadAsset[] | No approved source | N/A | Q2 | None approved | No fabricated empty array | `SOURCE_REQUIRED` |
-| `data.files[].id` | int64 | No approved source | N/A | Q2 | None | N/A | `SOURCE_REQUIRED` |
-| `data.files[].name` | string | No approved source | N/A | Q2 | None | N/A | `SOURCE_REQUIRED` |
-| `data.files[].url` | uri | Legacy candidate only | `s.file_url` | Q1 | No one-to-many mapping approved | URL policy unknown | `SOURCE_REQUIRED` |
-| `data.files[].content_type` | string | No approved source | N/A | Q2 | None | N/A | `SOURCE_REQUIRED` |
-| `data.files[].size_bytes` | int64 | No approved source | N/A | Q2 | None | N/A | `SOURCE_REQUIRED` |
-| `data.files[].status` | UploadStatus | No approved source | N/A | Q2 | None | N/A | `SOURCE_REQUIRED` |
-| `data.status` | SubmissionStatus | Candidate DB | `s.status` | 4 | Preserve candidate value | Required; null integrity issue | Enum incomplete |
-| `data.submitted_at` | date-time | Candidate DB | `s.submitted_at` | 4 | Serialize ISO-8601 | Required | Zone/precision unresolved |
-| `data.score` | decimal-string? | Candidate DB | `s.score` | 4 | NUMERIC(6,2) to decimal-string candidate | Optional; null/omit policy unresolved | #56 uses `int32` |
-| `data.feedback` | string? | Candidate DB | `s.feedback` | 4 | Preserve candidate value | Optional; null/omit unresolved | Student disclosure policy unresolved |
-| `meta` | object | Envelope | `success_response` convention | 5 | Empty object candidate | `{}` when no metadata | Runtime helper source |
-| `traceId` | uuid | Request trace | Current trace helper | 5 | Propagate request trace | Always present | Runtime path absent |
+| `data.id` | int64 | Legacy DDL candidate | `s.id` | 4 | Direct | Required | Live schema unknown |
+| `data.assignment_id` | int64 | Legacy DDL candidate | `s.assignment_id` | 4 | Direct | Required; null is integrity issue | DDL nullable conflict |
+| `data.user_id` | int64 | Legacy DDL candidate | `s.user_id` | 4 | Direct | Required; null is integrity issue | DDL nullable conflict |
+| `data.content` | string? | Legacy DDL candidate | `s.content` | 4 | Preserve | Current source omits null | Contract null/omit policy open |
+| `data.files[]` | UploadAsset[] | DERIVED API #54 fallback | Matched `uploads` row | Q1 | Return at most one asset | `[]` when no match | API #35 URL storage not verified |
+| `data.files[].id` | int64 | Legacy DDL candidate | `uploads.id` | Q1 | Direct | Present only with match | No FK/API #35 guarantee |
+| `data.files[].name` | string | Legacy DDL candidate | `uploads.file_name` | Q1 | Alias to name | Present only with match | No FK/API #35 guarantee |
+| `data.files[].url` | uri | Legacy DDL candidate | `uploads.url` | Q1 | Exact match to `s.file_url` | Present only with match | No FK/API #35 guarantee |
+| `data.files[].content_type` | string | Legacy DDL candidate | `uploads.content_type` | Q1 | Direct | Present only with match | No FK/API #35 guarantee |
+| `data.files[].size_bytes` | int64 | Legacy DDL candidate | `uploads.size_bytes` | Q1 | Direct | Present only with match | No FK/API #35 guarantee |
+| `data.files[].status` | UploadStatus | Legacy DDL candidate | `uploads.status` | Q1 | Direct | Present only with match | No FK/API #35 guarantee |
+| `data.status` | SubmissionStatus | Legacy DDL candidate | `s.status` | 4 | Preserve stored value | Required; null integrity issue | Enum incomplete |
+| `data.submitted_at` | date-time | Legacy DDL candidate | `s.submitted_at` | 4 | Pydantic JSON serialization | Required | Zone/precision unresolved |
+| `data.score` | decimal-string? | Legacy DDL candidate | `s.score` | 4 | `str(score)` | Current source omits null | #56 uses `int32`; alignment unresolved |
+| `data.feedback` | string? | Legacy DDL candidate | `s.feedback` | 4 | Preserve stored value | Current source omits null | Student disclosure policy unresolved |
+| `meta` | object | Envelope | `success_response` | 5 | Empty object | `{}` when no metadata | Current source behavior |
+| `traceId` | uuid | Request trace | Current trace helper | 5 | Propagate request trace | Always present | Current source behavior |
 
-**Rubric:** Not a reusable `Submission` field. No response mapping is authorized until catalog/diagram/schema are reconciled.
+**Rubric:** Not a reusable `Submission` field. Current source does not query or return rubric until the catalog/diagram/schema discrepancy is reconciled.
 
 ## Mutation Matrix
 

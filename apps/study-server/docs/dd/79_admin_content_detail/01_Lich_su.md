@@ -16,13 +16,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-26 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD từ catalog, AC-33 và nguồn Study hiện có | Draft — Needs Confirmation; metadata response và physical Content source còn mở |
+| 1.1 | 2026-10-26 | Codex | Cập nhật DD theo API #79 runtime, legacy `contents` candidate và Content projection dùng chung | Version/author metadata vẫn là discrepancy; live schema chưa xác minh |
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

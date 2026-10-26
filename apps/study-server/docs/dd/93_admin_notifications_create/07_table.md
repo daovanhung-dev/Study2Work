@@ -14,42 +14,28 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table | notifications — legacy candidate only |
-| Logical table | Admin Notification; grain unresolved |
-| Operation | INSERT proposal; not executable |
-| Data Mapping step | [Step 3](./05_Data_Mapping.md#step-3-create-notification) |
-
-## Candidate legacy columns
-
-These rows describe checked-in legacy schema only; it is not an approved API #93 target.
-
-| No | Physical column | Type/constraint | Candidate source | Status/remarks |
-|---:|---|---|---|---|
-| 1 | id | BIGSERIAL PRIMARY KEY | Selected store | SOURCE_REQUIRED; allocator not verified |
-| 2 | user_id | BIGINT NULL FK users.id | One recipient candidate | Does not define campaign relation |
-| 3 | sender_id | BIGINT NULL FK users.id | Admin principal candidate | Principal mapping unknown |
-| 4 | title | VARCHAR(200) NOT NULL | Request title | Candidate; DDL length not approved validation |
-| 5 | content | TEXT NOT NULL | Request content | Candidate; target not approved |
-| 6 | type | VARCHAR(30) NULL | None | Do not map NotificationChannel |
-| 7 | is_read | BOOLEAN DEFAULT FALSE | None | Not NotificationStatus or read_at |
-| 8 | created_at | TIMESTAMP NOT NULL | Persistence clock | DDL has no default; source unknown |
+| Physical table | `notifications` — checked-in legacy candidate |
+| Logical table | Notification row cho một recipient; Admin campaign grain chưa được duyệt |
+| Operation | INSERT local fallback; không phải schema/API approval |
+| Data Mapping step | [Step 3](./05_Data_Mapping.md#step-3-create-notification-and-delivery-rows) |
 
 ## Insert mapping
 
 **Áp dụng khi**
 
-- Only if an owner later selects this legacy model; this DD does not authorize it.
+- Local runtime fallback ghi một hàng cho mỗi recipient vào legacy BIGINT table. DDL tồn tại trong `infra/postgres/study-server/DB.sql`; migration 009 bổ sung `operation_id`. Live schema chưa xác minh.
 
-| No | Candidate field | Logical value | Setting/source | Step | Remarks |
-|---:|---|---|---|---|---|
-| 1 | title | Notification title | Request title | 3 | Candidate only |
-| 2 | content | Notification content | Request content | 3 | Candidate only |
-| 3 | user_id | Recipient | Request ID if one row per recipient is approved | 2, 3 | Grain unresolved |
-| 4 | sender_id | Admin sender | Principal if mapping approved | 0, 3 | SOURCE_REQUIRED |
-| 5 | id | Notification ID | Selected store generation | 3 | SOURCE_REQUIRED |
-| 6 | type | Channel/type | No approved mapping | 3 | Do not infer |
-| 7 | is_read | Read state | No approved Admin mapping | 3 | Do not infer |
-| 8 | created_at | Creation time | No approved source | 3 | SOURCE_REQUIRED |
+| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
+|---:|---|---|---|---:|---:|---:|---:|---|---|---|---|
+| 1 | `id` | Notification ID | BIGSERIAL | N/A | N/A | Y | ● | Database generated | `RETURNING id` | 3 | Candidate allocator; int64 response |
+| 2 | `user_id` | Recipient ID | BIGINT FK | N/A | N/A | N |  | One row per request recipient | `recipients[]` | 2, 3 | DDL allows NULL; runtime supplies ID |
+| 3 | `sender_id` | Admin sender ID | BIGINT FK | N/A | N/A | N |  | Authenticated ADMIN principal ID | Shared auth `sub`/user ID | 0, 3 | Claim-to-users mapping is runtime convention; live identity not checked |
+| 4 | `title` | Notification title | VARCHAR | 200 | N/A | Y |  | Preserve request value | `title` | 1, 3 | Runtime rejects blank and length > 200; limit is candidate-derived |
+| 5 | `content` | Notification content | TEXT | Unspecified | N/A | Y |  | Preserve request value | `content` | 1, 3 | Runtime rejects blank; no max added |
+| 6 | `type` | Legacy type | VARCHAR | 30 | N/A | N |  | `NULL` | No direct channel mapping | 3 | `NotificationChannel` is stored in delivery table |
+| 7 | `is_read` | Read flag | BOOLEAN | N/A | N/A | N |  | `FALSE` | Fixed | 3 | Does not represent delivery status |
+| 8 | `created_at` | Creation time | TIMESTAMP | N/A | N/A | Y |  | `CURRENT_TIMESTAMP` | Database clock | 3 | Returned for the first response item |
+| 9 | `operation_id` | Batch grouping ID | UUID | N/A | N/A | N |  | One app-generated UUID shared by all recipient rows | App UUID | 3 | Added by migration 009 candidate; not an Operation-store record |
 
 ## Update mapping
 
@@ -61,9 +47,10 @@ N/A — API #93 does not declare DELETE.
 
 ## Physical mapping boundary
 
-- Legacy schema is a checked-in candidate, not verified live schema or approved campaign target.
-- V1-PILOT UUID learner notification schema is a different model.
-- No executable INSERT or physical target is approved.
+- This is the implementation's local fallback against a checked-in legacy schema candidate, not an approved Admin campaign model or verified live database schema.
+- The model creates one Notification row per recipient; it has no separate campaign-to-recipient association table.
+- V1-PILOT UUID learner notification schema remains a separate model.
+- The app commits all candidate Notification and delivery rows in one transaction before returning 202.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

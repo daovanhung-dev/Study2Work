@@ -13,146 +13,89 @@ status: "Draft — Needs Confirmation"
 
 ## Flow xử lý data
 
-0. Xác thực Bearer JWT và yêu cầu Admin role theo catalog.
-1. Đọc content_id từ path; catalog không khai báo body hoặc query.
-2. Đọc logical Content và trạng thái/revision cần review. Không có physical Content relation được chọn.
-3. Đối chiếu eligibility với AC-33 pending-review precondition; kiểm tra status/revision cụ thể là proposal cần xác nhận.
-4. Chọn đúng revision đã hiển thị trong #79. Catalog #80 không truyền revision ID hoặc expected row version nên selector/lock chưa thể xác định.
-5. Thực hiện logical status update theo approve branch. AC-33 ghi APPROVED/PUBLISHED, nhưng không tách ý nghĩa hai trạng thái.
-6. Ghi logical approval audit theo AC-33. Physical audit relation, fields và transaction atomicity chưa được xác nhận.
-7. Trả HTTP 200 DESIGN_RESOURCE_UPDATED với một ApiEnvelope<Content> theo catalog; không thêm version/author fields.
+0. Xác thực Bearer JWT và role `ADMIN` qua shared guard.
+1. Đọc raw `content_id` từ path; catalog không khai báo body hoặc query.
+2. Parse signed-int64 sau auth; malformed/out-of-range trả catalog 422 trước DB.
+3. Khóa active legacy `contents` row theo ID; thiếu/soft-deleted trả 404.
+4. Yêu cầu current status `PENDING_REVIEW`; state khác trả catalog 422.
+5. Update status thành `APPROVED`, lấy đúng tám Content fields từ `RETURNING`.
+6. Append audit row với actor numeric JWT `sub`, trạng thái cũ/mới và `reason=NULL` trong cùng transaction.
+7. Validate response projection, commit sau cùng rồi trả HTTP 200 `DESIGN_RESOURCE_UPDATED` với `ApiEnvelope<Content>`.
 
-<a id="step-0-check-quyen"></a>
 ## 0. Check quyền
 
-### 0.1. Thực hiện check quyền
+- Dùng `validate_current_user_request(..., role="ADMIN")` trước path parsing và DB access.
+- Shared guard trả numeric JWT `sub`; actor audit không đến từ request.
+- Role `ADMIN` là local fallback cho catalog Admin requirement. Dedicated moderation permission chưa được xác minh.
+- Thiếu/sai Bearer → 401; role không đạt → 403.
 
-- Bearer JWT là yêu cầu direct từ catalog.
-- Role Admin là yêu cầu direct từ catalog.
-- Admin claim, identity key và scope policy là SOURCE_REQUIRED.
-- Current shared Study guard chỉ xác thực Student; API #80 không có guard source.
-
-### 0.2. Query/check quyền
-
-| Target table/API | Column/Field | Condition/Value | Remarks |
-|---|---|---|---|
-| JWT principal | roles | Phải có Admin role | Logical requirement direct; claim parser/role spelling chưa có source cho Admin. |
-| Content review target | content_id | Chỉ đọc/ghi sau Admin authorization | Physical Content relation và scope rule SOURCE_REQUIRED. |
-
-### 0.3. Check kết quả
-
-- Nếu Bearer và Admin authorization hợp lệ, tiếp tục.
-- Nếu thiếu hoặc token không hợp lệ, catalog code là 401 DESIGN_AUTHENTICATION_REQUIRED.
-- Nếu role hoặc access policy không đạt, catalog code là 403 DESIGN_ACCESS_DENIED.
-- Thứ tự lookup so với authorization và concealment 403/404 chưa được xác nhận; xem [06_Error.md](./06_Error.md).
-
-<a id="step-1-validate"></a>
 ## 1. Validate data input
 
-- content_id là path parameter int64! theo [03_Request.md](./03_Request.md).
-- Catalog không khai báo body hoặc query; không có request action/status/version field.
-- Parse range, overflow và framework mapping cho path ID chưa được xác nhận.
-- Catalog khai báo 422 DESIGN_VALIDATION_ERROR, nhưng không chỉ định điều kiện; không tự gắn code này với validation rule cụ thể.
+- `content_id` là required signed-int64 path theo catalog; endpoint không nhận body/query.
+- Dùng raw path string để parse có kiểm soát sau auth.
+- Malformed/out-of-range → 422 `DESIGN_VALIDATION_ERROR` với field `content_id`; không chạm DB.
+- Signed-int64 hợp lệ nhưng không khớp active row → 404 theo catalog.
 
 <a id="step-2-get-thong-tin"></a>
-## 2. Get thông tin
+## 2. Get và khóa Content
 
-### 2.1. Query
+`LOCK_ADMIN_CONTENT_FOR_APPROVAL` đọc `id,status` từ legacy candidate `contents`, điều kiện `id=:content_id AND deleted_at IS NULL`, `FOR UPDATE`.
 
-| Target table | Column get | Chú thích | Remarks |
-|---|---|---|---|
-| Logical Content | id | Chọn item theo content_id | Logical query; physical table/key SOURCE_REQUIRED. |
-| Logical Content | course_id | Course scope của item | Physical relation SOURCE_REQUIRED. |
-| Logical Content | content_type | Response projection | Enum and storage SOURCE_REQUIRED. |
-| Logical Content | title | Response projection | Physical source SOURCE_REQUIRED. |
-| Logical Content | payload | Response projection | Schema/storage SOURCE_REQUIRED. |
-| Logical Content | status | Kiểm tra trạng thái hiện hành và response | Enum/transition SOURCE_REQUIRED. |
-| Logical Content | parent_id | Response projection | Relation/null behavior SOURCE_REQUIRED. |
-| Logical Content | order | Response projection | Physical source SOURCE_REQUIRED. |
-| Logical Content revision | revision identity | Giữ cùng revision được Admin review | No identifier in #80 contract; SOURCE_REQUIRED. |
-| Admin principal | admin identity | Authorization/audit actor | JWT claim mapping SOURCE_REQUIRED. |
+- Không tìm thấy row active → 404 `DESIGN_RESOURCE_NOT_FOUND`.
+- Sai shape/identity/status projection → safe 500.
+- Khóa chỉ bảo vệ row hiện tại ở thời điểm #80; request không mang revision ID/expected row version, nên không chứng minh đây là đúng revision mà Admin đã xem ở #79.
 
-### 2.2. JOIN
+## 3. Eligibility và status update
 
-| Target table | Join condition | Join type |
-|---|---|---|
-| Logical Content | N/A — relation/key chưa được chọn | SOURCE_REQUIRED |
-| Logical Content revision | N/A — revision relation/key chưa được chọn | SOURCE_REQUIRED |
+- AC-33 precondition và API #78 queue dùng `PENDING_REVIEW`; API #80 dùng điều kiện này như fallback DERIVED.
+- Status hiện tại khác `PENDING_REVIEW` → 422 `DESIGN_VALIDATION_ERROR`; không ghi audit.
+- `APPROVE_ADMIN_CONTENT` đổi active row sang `APPROVED`, lặp `deleted_at IS NULL` và `status='PENDING_REVIEW'` trong UPDATE predicate.
+- API #52 có transition riêng giữa `APPROVED` và `PUBLISHED`; #80 chọn `APPROVED` làm trạng thái sau review. Lựa chọn này là DERIVED, không phải state policy được owner duyệt.
+- `RETURNING` trả `id`, `course_id`, `content_type`, `title`, `payload`, `status`, `parent_id`, `content_order AS order`.
 
-Không viết SQL hoặc JOIN theo Content/version tables chưa được chọn.
+## 4. Append review audit
 
-### 2.3. WHERE
+`INSERT_ADMIN_CONTENT_REVIEW_AUDIT` ghi:
 
-- Logical Content identity bằng content_id từ path; physical predicate/column SOURCE_REQUIRED.
-- AC-33 queue precondition là status=PENDING_REVIEW; áp dụng lại như guard của #80 là DERIVED cần xác nhận.
-- Nếu item đã rời pending hoặc revision đã đổi sau #79, branch/error mapping chưa được định nghĩa.
+| Binding | Giá trị |
+|---|---|
+| `content_id` | ID từ path đã parse |
+| `actor_user_id` | Numeric JWT `sub` đã xác thực |
+| `previous_status` | `PENDING_REVIEW` |
+| `new_status` | `APPROVED` |
+| `reason` | `NULL` cho approve không có body |
 
-### 2.4. ORDER BY
+Audit table `content_review_audit_logs` và migration 011 là physical fallback DERIVED theo legacy BIGINT ID. API #81 hiện được wire locally và dùng cùng relation để lưu reason trong một decision row; đây là lựa chọn DERIVED theo candidate schema, vẫn chờ contract owner xác nhận và chưa được kiểm chứng trên DB live.
 
-- N/A cho một Content được chọn theo ID.
-- Không chọn latest version hoặc current version khi chưa có rule.
+## 5. Map response
 
-<a id="step-3-mutation"></a>
-## 3. Insert/Update thông tin
+- Reuse API #49 `ContentResponse`, giữ đúng tám field catalog.
+- `payload` phải là JSON object; identity/status phải khớp update result; malformed projection → 500 và rollback.
+- `content_order` map sang response `order`.
+- `parent_id=NULL` bị omit bởi route serialization convention.
+- Không trả actor, reason, audit ID, version, author hoặc row-version metadata.
 
-### 3.1. Target table
+## 6. Transaction và response
 
-- Logical Content review/publication state — physical relation/column SOURCE_REQUIRED.
-- Logical approval audit/decision record — physical relation/columns SOURCE_REQUIRED.
-- V1-PILOT content_review_decisions là schema artifact UUID-based, không phải mapping được chọn cho Content ID int64.
+- Lock, update, audit insert và response validation dùng cùng caller-owned transaction.
+- Chỉ commit sau khi cả Content projection và audit insert thành công.
+- Query, projection, audit hoặc commit failure → rollback và safe 500 `DESIGN_INTERNAL_ERROR`.
+- Success dùng `DESIGN_RESOURCE_UPDATED`, `data` là Content trực tiếp, `meta={}`, trace ID trong body/header.
 
-### 3.2. Conditions
+## 7. Schema/status boundary
 
-- AC-33 approve branch là nguồn direct cho status update và audit.
-- Exact eligible state, transition target và version-lock condition cần xác nhận.
-- Không tự quyết định approve có publish luôn hay chỉ đặt APPROVED.
+- Runtime query nhắm checked-in legacy BIGINT `contents`; không dùng V1-PILOT UUID `content_review_decisions`.
+- Migration 011 và `DB.sql` chỉ là source candidate. Test fake session không xác nhận live tables, FK/indexes, grants hoặc migration deployment.
+- API #80 không ghi `content_versions`, không publish notifications và không suy ra original author.
 
-### 3.3. Items update/insert
+## Liên kết nguồn
 
-- Logical status update và audit gap register: [07_table.md](./07_table.md).
-
-### 3.4. Parameters
-
-| Param | Giá trị | Remarks |
-|---|---|---|
-| content_id | Path content_id | Direct input; physical bind key SOURCE_REQUIRED. |
-| admin_actor | Authenticated Admin | Actor identity source/claim mapping SOURCE_REQUIRED. |
-| reviewed_revision | Revision shown by #79 | No revision ID in request; selector SOURCE_REQUIRED. |
-| target_status | AC-33 text APPROVED/PUBLISHED | Exact target unresolved; do not persist as a fixed value yet. |
-| trace_id | Request trace | Envelope/security convention; audit column mapping SOURCE_REQUIRED. |
-
-<a id="step-4-result"></a>
-## 4. Check kết quả execute query
-
-### 4.1. Thành công
-
-- HTTP status 200.
-- businessCode = DESIGN_RESOURCE_UPDATED.
-- Trả một Content object với đúng tám field catalog khai báo theo [04_Response.md](./04_Response.md).
-- Không thêm version, author, reviewer, reason hoặc audit fields vào response.
-
-### 4.2. Lỗi hệ thống
-
-- Query/update/audit failure có thể map tới HTTP 500 DESIGN_INTERNAL_ERROR theo catalog.
-- Rollback/atomicity giữa status write và audit append là TBD; xem [07_table.md](./07_table.md).
-
-### 4.3. Validate lỗi
-
-- Catalog cho phép HTTP 422 DESIGN_VALIDATION_ERROR.
-- Trigger và field-level error projection chưa được định nghĩa; không tự tạo state-transition rule hoặc meta.fieldErrors cụ thể.
-
-### 4.4. Ngoài trường hợp trên
-
-- Không trả business code ngoài contract.
-- Error envelope theo API guideline dùng data:null; current helper mặc định {} khi caller không truyền data; endpoint chưa được wire.
-
-## Liên kết nguồn và điểm còn mở
-
+- [API catalog #80](../../../../../docs/lists/list_api.md)
 - [AC-33 diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio)
-- [AC-22 API #52 Overview](../52_mentor_content_publish/02_Overview.md)
-- [API #79 version/author questions](../79_admin_content_detail/OPEN_QUESTIONS.md)
-- [Open questions #80](./OPEN_QUESTIONS.md)
----
+- [API #52 separate publication flow](../52_mentor_content_publish/02_Overview.md)
+- [API #79 revision questions](../79_admin_content_detail/OPEN_QUESTIONS.md)
+- [API #81 shared reason boundary](../81_admin_content_reject/OPEN_QUESTIONS.md)
+- [Legacy audit migration](../../../../../infra/postgres/study-server/migrations/011_content_review_audit_logs.sql)
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `3. Data mapping`

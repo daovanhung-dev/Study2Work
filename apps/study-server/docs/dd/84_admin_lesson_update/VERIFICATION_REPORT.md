@@ -1,47 +1,33 @@
-# Báo cáo kiểm chứng — API #84
+# Verification Report — API #84 Cập nhật lesson
 
-## Phạm vi
+## Scope
 
-- Kiểm chứng tĩnh nội dung Markdown API #84.
-- Không đổi source code, schema, catalog hoặc diagram.
-- Không chạy application tests; route/module/test API #84 hiện không tồn tại.
+- Updated the 11-file Markdown DD package to reflect the local API #84 implementation and its DERIVED request/schema choices.
+- Added the Study Server route/module and focused HTTP tests; updated server-study context registry and runtime/test pages.
+- Catalog, AC-34 diagram, DDL/migrations and deployment were not changed.
+- DD status remains Draft — Needs Confirmation because the body is absent from direct catalog/diagram evidence and live schema/permissions are unverified.
 
-## Template fingerprint
+## Results
 
-SHA-256 baseline của bộ template registry createDD-markdown:
+- API #84 focused tests: 23 passed.
+- Linked #09/#47/#48/#82–#84 regression: 104 passed.
+- Full Study Server suite: 1050 passed.
+- Ruff across all Study `app` and `tests`: passed.
+- OpenAPI: 49 unique `/api/v1` route templates / 55 operations; PUT shares GET #83's `/admin/lessons/{lesson_id}` template and exposes the required DERIVED JSON body.
+- DD package: exact 11 Markdown files; all 8 sheet appendix suffixes match the registered templates byte-for-byte.
+- Static Markdown checks across the package: 32 tables / 385 data rows with consistent widths; 14 balanced fence markers; 4 JSON examples parse; all 40 local Markdown path references resolve; final newline and no trailing whitespace.
+- `git diff --check`: passed. Repo-wide context validator did not pass because the existing DB Admin context/source tree is missing and the recorded baseline commit `9a70eb6764a6587093a92d3bd7e4cc0bea1651c4` is unavailable; `--skip-drift` still reports only the missing DB Admin scope. It reported no API #84/server-study path omission.
 
-| File | SHA-256 |
-|---|---|
-| 00_Cover.md | fd5f568c5329d3069fbaff617a6f4ed3b5ffaf050e042c95b7c9100a05f79e63 |
-| 01_Lich_su.md | d1cec6573433a9551812bf47552f8a44d7c533d790341941047c410e1d57771e |
-| 02_Overview.md | c2879c2f0e007395558dfee4167484786c5aadb3fdd63ab135ca111e7c5f8aa6 |
-| 03_Request.md | 37aaa1e9d7f3e83329e81ab38d922c9dff959284d5b7b3ae353878798dd4b7aa |
-| 04_Response.md | 5bcb43ba5eb487302dd5d5efde4383b9f452f9fed2149f55315d64ff78a19ab8 |
-| 05_Data_Mapping.md | 11bc77bc0522d3af27b9499114991c8819046ac32bde5c1efdc841be088dcc5b |
-| 06_Error.md | e0160ea07fdbc74f2cafebd6ed3b21e60029662d28d67f5f6a0b4d95ba72be9b |
-| 07_table.md | 4c9a0e037872333210aaf44ba9fbf00a0e63343a69d55250e537d2c3c5e2d356 |
+## Findings and limits
 
-## Checks
-
-| Check | Result | Status |
-|---|---|---|
-| Catalog and AC-34 contract | PUT path, Admin/Bearer, path ID, Lesson envelope, 200 and exact success/error set preserved; body absent in both sources. | Static pass |
-| Current source | No Admin lesson route/view/test; Admin guard absent; middleware allowlist excludes path. | Static pass; runtime not verified |
-| Schema mapping | Legacy BIGINT and V1-PILOT UUID/versioned kept distinct; live schema unverified. | Static pass with open questions |
-| Exact package | 8 template sheets + PLAN_RESULT, OPEN_QUESTIONS, VERIFICATION_REPORT (11 files total). | Pass |
-| Appendix parity | All 8 sheet appendices byte-match their registered template suffixes. | 8/8 pass |
-| Contract/JSON | Catalog success code plus all five error codes match; four JSON examples parse. | Pass |
-| Markdown tables/fences/links/whitespace | Across all 11 files: 34 tables / 401 data rows have consistent widths, 14 fences balance, 38 local links/anchors resolve, no trailing whitespace. | PASS |
-| `git diff --check` | No diagnostics. | Pass |
-| Application tests | Not run; documentation task. | Not run |
-| Context validator | No context page/registry change planned. | Not applicable |
-
-## Limits
-
-Static documentation checks do not establish API implementation, SQL executability, live-schema compatibility, or approval of the Admin policy/body proposal.
+- The direct catalog and AC-34 diagram specify only `lesson_id`; request body fields and update-column mapping remain DERIVED implementation choices.
+- Runtime targets the checked-in legacy BIGINT `lessons` candidate. The V1-PILOT UUID/versioned lesson model is separate, and no live database metadata/migration application was checked.
+- API #84 enforces the shared JWT `ADMIN` role. AC-34's fine-grained lesson-management permission has no separate policy in current Study source.
+- A legacy row with null `course_id` cannot satisfy reusable API #09 `Lesson`; API #84 safely rolls back and returns 500 instead of inventing a value.
+- Tests use fake DB sessions. They verify local HTTP validation, binding, transaction and response behavior, not live PostgreSQL compatibility or deployment.
 
 ## AC-34 macro-review
 
-- Status: `VERIFIED_WITH_OPEN_QUESTIONS`; document-level review only, not owner approval or runtime verification.
-- API #84 remains a metadata update proposal; status/audit belong to #85 and delete/reference policy belongs to #86. AC-34 reloads through #82 after success, whose response cardinality and `type` filter remain unresolved.
+- Status: `VERIFIED_WITH_OPEN_QUESTIONS`; source/document consistency review is not owner approval or live runtime verification.
+- API #84 changes metadata only; #85 owns status, #86 owns delete/reference behavior, and AC-34 reloads through #82.
 - See the [consolidated review matrix](../86_admin_lesson_delete/VERIFICATION_REPORT.md#ac-34-macro-review).

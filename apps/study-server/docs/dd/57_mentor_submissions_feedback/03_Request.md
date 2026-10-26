@@ -16,7 +16,7 @@ status: "Draft — Needs Confirmation"
 | HTTP method | POST |
 | URI | /api/v1/mentor/submissions/{submission_id}/feedback |
 | Character encoding | UTF-8 |
-| Content-Type | application/json; DERIVED từ request body JSON, chưa có route runtime. |
+| Content-Type | application/json; route hiện nhận JSON body. |
 
 ## Request header
 
@@ -30,7 +30,7 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Submission ID | submission_id | int64 | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | Số nguyên 64-bit | SOURCE_REQUIRED | N/A | Định danh submission cần lưu feedback. | 1, 2 |
+| 1 | Submission ID | submission_id | int64 | Yes | -9223372036854775808 | 9223372036854775807 | Số nguyên 64-bit có dấu | Decimal integer | N/A | Định danh submission cần lưu feedback; path sai format/overflow trả 422, ID không có trong DB trả 404. | 1, 2 |
 
 ## Query parameters
 
@@ -40,19 +40,19 @@ N/A — Catalog không khai báo query parameter.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Feedback text | feedback text | string | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | Chuỗi | SOURCE_REQUIRED | SOURCE_REQUIRED | N/A | Giữ nguyên descriptor có dấu cách trong catalog; chưa xác nhận đây là key JSON thật hay tên mô tả. | 1, 3 |
-| 2 | Attachments | attachments | string | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | Chuỗi | SOURCE_REQUIRED | SOURCE_REQUIRED | N/A | Chuỗi bắt buộc; encoding, cấu trúc, ID/URL và quy tắc rỗng chưa được định nghĩa. | 1, 3 |
+| 1 | Feedback text | feedback_text | string | Yes | 0 | SOURCE_REQUIRED | Chuỗi | JSON string | SOURCE_REQUIRED | N/A | Wire key `feedback_text` là fallback DERIVED từ descriptor `feedback text`; không trim/giới hạn độ dài/ép non-empty. | 1, 3 |
+| 2 | Attachments | attachments | string | Yes | 0 | SOURCE_REQUIRED | Chuỗi | JSON string | Opaque string | N/A | Nhận chuỗi bắt buộc nhưng không parse, lưu, echo hoặc ánh xạ vì chưa có encoding/target được duyệt. | 1, 3 |
 
-> Mỗi descriptor được giữ đúng như catalog. Không tự đổi feedback text thành feedback hoặc suy ra cấu trúc của attachments.
+> Catalog descriptor được giữ nguyên. Wire key `feedback_text` là fallback DERIVED; không suy ra cấu trúc của `attachments`.
 
 ## Ví dụ Request data
 
-Ví dụ dưới đây minh họa hai descriptor hiện có. Key feedback text và giá trị attachments chỉ là placeholder bám theo catalog; chúng chưa xác nhận wire contract có thể gọi được.
+Ví dụ dưới đây minh họa wire key fallback. `attachments` được truyền như chuỗi opaque và hiện không được lưu.
 
 ~~~json
 {
-  "feedback text": "Nhận xét minh họa theo bài nộp.",
-  "attachments": "<chuỗi theo định dạng cần xác nhận>"
+  "feedback_text": "Nhận xét minh họa theo bài nộp.",
+  "attachments": "opaque-descriptor"
 }
 ~~~
 

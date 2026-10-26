@@ -3,9 +3,9 @@
 ## Kết quả
 
 - DD status: `Draft — Needs Confirmation`.
-- Tài liệu: `VERIFIED_STATIC_ONLY`; nhóm AC-24 #58–#61 `VERIFIED_WITH_OPEN_QUESTIONS`.
-- Runtime API #61: `UNWIRED / NOT_FOUND`; không khẳng định runtime behavior.
-- Scope: Markdown DD, worklog và macro-review reports; không sửa source, tests, schema, catalog, diagram hoặc context pages.
+- Local runtime: `SOURCE_BACKED_WITH_DERIVED_CHOICES`; route, module and HTTP tests are present.
+- Live schema/deployment: `NOT_VERIFIED`; only checked-in migration/DDL and fake DB tests were inspected.
+- Scope: API #61 route/module/tests, its DD package, direct server-study context/manifest and worklog. Existing unrelated worktree changes remain untouched.
 
 ## Deliverable manifest
 
@@ -19,25 +19,24 @@
 
 | Check | Kết quả | Trạng thái |
 |---|---|---|
-| Skill/template registry | `createDD-markdown` được wire cho `server-study`; 8 template Markdown và hash registry đã đối chiếu. | PASS |
-| Template appendix | Appendix của 8 sheet trùng template tương ứng byte-for-byte. | PASS |
-| Front matter | Tám sheets có `dd_id: "61"` và `Draft — Needs Confirmation`. | PASS |
-| API contract | PATCH path, Mentor Bearer, int64 path, no body/query, 200 updated, SupportRequest và exact 401/403/404/422/500 khớp catalog. | PASS |
-| AC-24 boundary | #60 INSERT SupportMessage; YES gọi #61 để resolve; NO giữ OPEN; #61 không sửa messages. | PASS |
-| Response coverage | Ma trận ghi đủ SupportRequest, UserSummary, SupportMessage và UploadAsset fields; unresolved physical projection được đánh dấu SOURCE_REQUIRED. | PASS |
-| JSON/examples | JSON examples parse; error set và response fields đối chiếu catalog. | PASS |
-| Markdown | Local links/anchors, table widths, code fences và whitespace đạt. | PASS |
-| AC-24 macro-review | #58–#61 review đủ flow, mutation ownership, catalog discrepancy và shared blockers. | VERIFIED_WITH_OPEN_QUESTIONS |
-| Runtime tests | Không chạy; docs-only và endpoint chưa wired. | NOT_RUN |
-| Agent context validator | Không chạy; context pages không thay đổi. | NOT_APPLICABLE |
+| Source precedence | AC-24 diagram → migration 008/`DB.sql` → API catalog reviewed; V1-PILOT UUID conflict recorded. | PASS |
+| Local fallback | BIGINT request, course owner, active-state set, retry and DB timestamp are labeled DERIVED. | PASS |
+| Template appendix | All eight sheet appendices match the registered template appendix byte-for-byte. | PASS |
+| API contract | PATCH path, Mentor Bearer, int64, no body/query, 200 updated, singleton SupportRequest and exact 401/403/404/422/500 retained. | PASS |
+| Focused regression | #59, #60, #61: `47 passed`, one upstream Starlette/httpx deprecation warning. | PASS |
+| Full Study suite | `597 passed`, one upstream Starlette/httpx TestClient deprecation warning. | PASS |
+| Ruff | API #61 module/tests, router and middleware: all checks passed. | PASS |
+| OpenAPI composition | 31 `/api/v1` path templates, 32 operations; #61 is PATCH, signed-int64 path and no request body. | PASS |
+| Context manifest paths | Six #61 runtime/test paths are registered and exist. | PASS |
+| Context validator | Node is unavailable. Deno `--skip-drift` reports only pre-existing missing DB Admin context/source; full Deno run also reports broad source drift in the already dirty workspace. | BASELINE_FAILURE_OUT_OF_SCOPE |
+| DD links/JSON/markdown | Eight sheets, 28 local file links and two JSON examples checked; no errors or unclosed fences. | PASS |
+| `git diff --check` | No whitespace errors. | PASS |
 
-## Blockers còn mở
+## Remaining boundaries
 
-- #58 plural/list flow nhưng catalog giữ singleton `ApiEnvelope<SupportRequest>`.
-- Support persistence, UUID/int64 mapping và course relation chưa được phê duyệt.
-- Mentor principal, assignment scope và 403/404 privacy order chưa rõ.
-- SupportStatus, transition rules, message visibility/order/bounds và attachment resolver chưa rõ.
-- Response projection cho student/messages/assets chưa có source mapping tương thích.
-- Support error routes chưa wired; helper `data={}` khác guideline `data:null`.
+- `OPEN`, `IN_PROGRESS`, `WAITING_LEARNER` transition, resolved retry behavior, `CANCELLED` 422 and `resolved_at` timestamp are DERIVED choices, not business-owner approval.
+- Migration 008 is not evidence of live schema or deployment.
+- Fake-DB tests do not prove live PostgreSQL locking/concurrency or storage URL reachability.
+- #58 collection-versus-singleton catalog discrepancy remains open and unchanged.
 
-Xem [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md), [PLAN_RESULT.md](./PLAN_RESULT.md#macro-review-ac-24-58-61) và các report #58–#60.
+See [OPEN_QUESTIONS.md](./OPEN_QUESTIONS.md) and [PLAN_RESULT.md](./PLAN_RESULT.md#macro-review-ac-24-58-61).

@@ -12,10 +12,10 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ~~~text
-Admin Bearer principal -> authenticate/authorize role Admin + user-management policy -> nhận path user_id và candidate body status -> validate status theo contract được duyệt -> UPDATE candidate legacy users.status WHERE id=:user_id RETURNING safe UserProfile -> nếu chuyển sang SUSPENDED và policy yêu cầu thì revoke các refresh_tokens còn hiệu lực trong cùng transaction -> map UserProfile -> commit -> 200 DESIGN_RESOURCE_UPDATED; lỗi theo catalog
+Admin Bearer principal -> shared ADMIN JWT guard -> parse signed-int64 path/body -> SELECT users.status FOR UPDATE -> no row: 404; unsupported current state: 422 -> UPDATE legacy candidate users.status/updated_at RETURNING safe UserProfile -> nếu target SUSPENDED: revoke refresh_tokens chưa revoke và chưa hết hạn -> validate profile -> commit -> 200 DESIGN_RESOURCE_UPDATED; bất kỳ lỗi DB/mapping/commit nào rollback và map 500
 ~~~
 
-# Mục lục
+## Mục lục
 
 - [0. Check quyền](#step-0-check-quyen)
 - [1. Validate data input](#step-1-validate-data-input)
@@ -34,66 +34,58 @@ Admin Bearer principal -> authenticate/authorize role Admin + user-management po
 
 ### 0.1. Xác thực và authorization
 
-- Xác thực Bearer JWT trước khi đọc/cập nhật account.
-- Token thiếu/sai/không hợp lệ map theo catalog sang 401 `DESIGN_AUTHENTICATION_REQUIRED`.
-- Principal không có Admin role hoặc quyền user-management map theo catalog sang 403 `DESIGN_ACCESS_DENIED`.
-- AC-31 yêu cầu Admin đăng nhập và có quyền user management; JWT claim, permission source, scope/tenant rule chưa có source.
-- Current `validate_current_user_request` chỉ cho Student; không tái sử dụng nó làm Admin guard.
-- Authentication/authorization phải hoàn tất trước lookup để không tiết lộ user existence.
+- Shared `validate_current_user_request(..., role="ADMIN")` xác thực Bearer/JWT và role trước DB access.
+- Thiếu/sai token trả 401 `DESIGN_AUTHENTICATION_REQUIRED`; role mismatch trả 403 `DESIGN_ACCESS_DENIED`.
+- `ADMIN` claim là mapping DERIVED theo API #68–#70; dedicated user-management permission, tenant/MFA policy không có source.
+- Không tra user existence trước authentication để tránh lộ tài nguyên.
 
-### 0.2. Thứ tự truy cập
+### 0.2. Transaction ownership
 
-- Status mutation và conditional session action chỉ bắt đầu sau khi Admin được authorize.
-- Không ghi audit/self-lock/last-admin logic vì chưa có contract hoặc schema source.
+View API #71 sở hữu user row lock, status update, conditional refresh-token revoke và commit/rollback. Core `execute_query`/`query_one` không commit.
 
 <a id="step-1-validate-data-input"></a>
 
 ## 1. Validate data input
 
-### 1.1. user_id
+### 1.1. `user_id`
 
-- Nhận path `user_id:int64!` theo catalog.
-- Minimum, malformed/overflow behavior và domain constraint chưa được nêu; không invent rule.
+- Route nhận raw path và khai báo `user_id:int64` trong OpenAPI.
+- Parser chỉ chấp nhận signed-int64; malformed/overflow trả 422 `DESIGN_VALIDATION_ERROR` theo fallback dùng code trực tiếp có trong catalog.
 
-### 1.2. Candidate status body
+### 1.2. Candidate body/status
 
-- Body `{status:UserStatus!}` là `DERIVED`; catalog/diagram chưa khai báo request body.
-- Candidate values là `ACTIVE` (mở khóa) và `SUSPENDED` (khóa), dựa trên operation và V1-PILOT account_status; không tuyên bố đây là đầy đủ UserStatus enum.
-- Legacy `users.status` là VARCHAR; legal value constraint không có trong DDL.
-- Catalog khai báo 422 `DESIGN_VALIDATION_ERROR`; invalid/missing status conditions và error details cần được khóa từ contract.
-- Không nhận profile/role fields thuộc #70 hoặc delete/anonymize controls thuộc #72.
+- Direct catalog/diagram không có body schema. Runtime yêu cầu strict `{status}`; đây là `DERIVED`.
+- Allowlist target là `ACTIVE` và `SUSPENDED`: suy ra từ operation lock/unlock, diagram STATUS, API #3 ACTIVE check và pilot enum gợi ý; không khẳng định complete UserStatus enum cho legacy users.
+- Current row chỉ được đổi khi status là ACTIVE/SUSPENDED. Current state khác trả 422 để giữ verification/deletion lifecycle ngoài endpoint.
+- Body thiếu/null/extra field/literal khác trả framework 422 qua middleware `DESIGN_CONTRACT_PATHS`.
+- Không nhận role/profile fields của #70 hoặc deletion state/control của #72.
 
 <a id="step-2-get-thong-tin"></a>
 
 ## 2. Get thông tin
 
-### 2.1. Update result
+### 2.1. Q0 — khóa và đọc trạng thái hiện tại
 
-Không có direct SELECT contract. Candidate `UPDATE ... RETURNING` theo `user_id` vừa thực hiện mutation và trả safe UserProfile projection; legacy `users` chỉ là schema candidate.
+Q0 chạy sau auth/path/body validation, bind `user_id` vào legacy users candidate và dùng `FOR UPDATE` để status hiện tại không đổi giữa transition check và update.
 
-### 2.2. Session rows
+~~~sql
+SELECT status
+FROM users
+WHERE id = :user_id
+FOR UPDATE
+~~~
 
-API #3 hiện có `refresh_tokens` với `revoked_at`; refresh flow chỉ nhận token chưa revoke, chưa hết hạn và account status ACTIVE. Nếu policy yêu cầu revoke khi khóa, candidate Q2 cập nhật những token rows chưa revoke của user. Không trả token/hash trong response.
+Không có row trả 404. Projection status sai kiểu là lỗi dữ liệu nội bộ 500. Status hiện tại ngoài ACTIVE/SUSPENDED trả 422; row lock được rollback trước khi response.
 
-### 2.3. JOIN
+### 2.2. Schema boundary
 
-Candidate query không cần JOIN để map UserProfile hoặc revoke refresh tokens. Không nối legacy BIGINT users với UUID V1-PILOT identity projections.
+`users` và `refresh_tokens` là checked-in legacy BIGINT candidates. V1-PILOT identity projection dùng UUID, không JOIN hoặc ghi thay thế các candidate này. Live metadata/deployment chưa xác minh.
 
 <a id="step-3-insertupdate-thong-tin"></a>
 
 ## 3. Insert/Update thông tin
 
-### 3.1. Target table
-
-Legacy `users` là candidate table theo `infra/postgres/study-server/DB.sql`; `refresh_tokens` là conditional candidate. Live schema chưa xác minh.
-
-### 3.2. Conditions
-
-Candidate status update dùng `users.id = :user_id`. Chỉ chạy Q2 sau khi Q1 trả user row và target status được xác nhận là `SUSPENDED`.
-
-### 3.3. Items update/insert
-
-Q1 — status update candidate:
+### 3.1. Q1 — đổi account status
 
 ~~~sql
 UPDATE users
@@ -103,7 +95,9 @@ WHERE id = :user_id
 RETURNING id, full_name, email, role, avatar_url, phone, status, created_at, updated_at
 ~~~
 
-Q2 — chỉ là candidate khi owner xác nhận cần revoke refresh sessions lúc khóa:
+Q1 chỉ cập nhật status/time; email, role, profile fields, password, lifecycle metadata không bị sửa. Same-status request vẫn trả 200 và cập nhật timestamp theo fallback DERIVED.
+
+### 3.2. Q2 — thu hồi refresh sessions khi khóa
 
 ~~~sql
 UPDATE refresh_tokens
@@ -113,24 +107,22 @@ WHERE user_id = :user_id
   AND expires_at > CURRENT_TIMESTAMP
 ~~~
 
-Hai câu SQL trên là `DERIVED CANDIDATE`, không phải current API #71 source. Nếu Q2 được duyệt, chạy cùng transaction với Q1 để không commit status suspend mà bỏ sót refresh-token revoke. Q2 chỉ revoke refresh credentials; existing access JWT vẫn có thể được chấp nhận bởi current stateless JWT guard đến expiry. Không update/restore token rows khi mở khóa.
+Q2 chạy cùng transaction khi target status SUSPENDED, kể cả khi current status đã SUSPENDED. Khi target ACTIVE, Q2 không chạy và API không khôi phục token rows đã revoke. Revoke lỗi làm rollback cả Q1. Token hashes không được đọc hoặc trả.
 
-### 3.4. Parameters
+### 3.3. Access JWT boundary
 
-| Parameter | Candidate source | Gap |
-|---|---|---|
-| `:user_id` | Path `user_id:int64!` (DIRECT) | Malformed/domain rule và live id mapping chưa xác minh. |
-| `:status` | Candidate body `status` (DERIVED) | UserStatus members, requiredness/nullability and transition policy SOURCE_REQUIRED. |
+API #3 login/refresh kiểm tra account status ACTIVE; Q2 thu hồi refresh credentials. Shared access-token guard chỉ xác thực claims/roles, không tra user status/revocation. Existing access JWT có thể dùng tới expiry; không có denylist/version mechanism trong phạm vi này.
 
 <a id="step-4-check-ket-qua-query"></a>
 
 ## 4. Check kết quả execute query
 
-- Q1 trả một row: map response `UserProfile`; Q2 chỉ chạy theo conditional policy đã duyệt; commit candidate transaction rồi trả 200 `DESIGN_RESOURCE_UPDATED`.
-- Q1 không trả row: 404 `DESIGN_RESOURCE_NOT_FOUND`; HTTP/code direct, no-row mapping DERIVED.
-- Status body sai theo contract được duyệt: 422 `DESIGN_VALIDATION_ERROR`; exact validation fields/details chưa được nguồn nêu.
-- DB/query/mapping/commit failure: rollback candidate transaction rồi trả 500 `DESIGN_INTERNAL_ERROR`; không trả raw SQL/stack trace.
-- Không có 409 trong catalog; same-status transition behavior cần xác nhận mà không tự thêm conflict response.
+- Q0 no-row → 404 `DESIGN_RESOURCE_NOT_FOUND`.
+- Q0 status không phải string là projection failure → rollback/500; status string ngoài ACTIVE/SUSPENDED → rollback/422 `DESIGN_VALIDATION_ERROR`.
+- Q1 no-row → rollback/404; response mapping sai → rollback/500.
+- Q2 chỉ chạy với target SUSPENDED; query/revoke/commit failure rollback user mutation và trả safe 500 `DESIGN_INTERNAL_ERROR`.
+- Q1/Q2 hoàn tất và safe profile hợp lệ → commit rồi trả 200 `DESIGN_RESOURCE_UPDATED`.
+- Không thêm 409 hoặc business code ngoài catalog.
 
 <a id="step-5-map-response"></a>
 
@@ -138,54 +130,53 @@ Hai câu SQL trên là `DERIVED CANDIDATE`, không phải current API #71 source
 
 ### 5.1. Thành công
 
-Map safe fields `id`, `full_name`, `email`, `role`, `avatar_url`, `phone`, `status`, `created_at`, `updated_at` sang `UserProfile`; `status` lấy từ row sau mutation. `bio` không có legacy users/API #4 source; null/omit cần chốt. Không trả password_hash, token hash hoặc refresh token.
+Map `id`, `full_name`, `email`, `role`, nullable `avatar_url`, nullable `phone`, `status`, `created_at`, `updated_at` qua API #04 `UserProfile`. `bio` không có source mapping/model field nên omit. Không trả `password_hash`, `token_hash` hoặc token.
 
-### 5.2. Lỗi
+### 5.2. Error envelope
 
-Giữ exact catalog codes: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 422 `DESIGN_VALIDATION_ERROR`, 500 `DESIGN_INTERNAL_ERROR`. Error envelope `data:null` theo guideline đang khác helper hiện tại `{}`.
+Dùng `error_response(...)`: `data:null`, `meta.fieldErrors` nếu có, và `X-Trace-Id` khớp `traceId`. #71 route template được đăng ký trong middleware.
 
 ## Request Usage Matrix
 
-| Request field | Nguồn | Data Mapping step | Validate | SQL/Mutation usage | Branch/Loop | Response usage | Gap |
-|---|---|---|---|---|---|---|---|
-| Authorization | Catalog DIRECT | 0.1 | Bearer/JWT + Admin policy | Authorize before DB | 401/403 | None | Admin guard/policy absent. |
-| user_id | Catalog DIRECT | 1.1, 3.2 | int64 required; other rules SOURCE_REQUIRED | Q1 `WHERE id=:user_id`; Q2 user_id candidate | row/no-row branch | data.id | Live schema/parse behavior open. |
-| status | DERIVED from `/status` + AC-31 | 1.2, 3.3 | Candidate ACTIVE/SUSPENDED only; enum contract SOURCE_REQUIRED | Q1 `SET status=:status` | SUSPENDED may trigger Q2 | data.status | Body, legal values and transitions need approval. |
-| Request query | Catalog | N/A | None | None | None | None | No query parameters declared. |
+| Input | Source | Rule | Query/bind | Branch | Status |
+|---|---|---|---|---|---|
+| Authorization | Header (DIRECT) | Shared ADMIN guard | No DB bind | auth/role error early return | 401/403 direct |
+| `user_id` | Path (DIRECT) | signed int64; malformed/overflow → 422 | Q0/Q1 `:user_id` | no row → 404 | bounds/error mapping DERIVED |
+| `status` | JSON body (DERIVED) | required ACTIVE/SUSPENDED only | Q1 `:status` | SUSPENDED → Q2; ACTIVE does not revoke/restore | contract approval open |
+| Current status | Q0 result | Must be ACTIVE/SUSPENDED | `users.status` | unknown lifecycle state → 422 | DERIVED guard |
 
 ## Query Matrix
 
-| Query ID | Mục đích | Type | Base table/view | Alias | Columns | JOIN | WHERE | GROUP/HAVING | ORDER | Pagination | Result variable | Branch |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Q1 | Update account status and return user profile | `UPDATE ... RETURNING` candidate | Legacy `users` candidate | N/A | SET status/updated_at; return safe UserProfile fields | None | `id=:user_id` | N/A | N/A | N/A | updated user row | one row success; zero row → candidate 404; DB/mapping error → 500. |
-| Q2 | Revoke active refresh credentials after suspend if policy requires | `UPDATE` conditional candidate | Legacy `refresh_tokens` | N/A | `revoked_at` | None | `user_id=:user_id AND revoked_at IS NULL AND expires_at>CURRENT_TIMESTAMP` | N/A | N/A | N/A | affected refresh-token rows | only after Q1 row and status SUSPENDED; not access JWT revocation. |
+| Query ID | Mục đích | Type | Base relation | Columns | JOIN | WHERE | Result | Branch |
+|---|---|---|---|---|---|---|---|---|
+| Q0 | Lock/read current state | `SELECT ... FOR UPDATE` | Legacy `users` | `status` | None | `id=:user_id` | current user state | no row 404; invalid state 422 |
+| Q1 | Update status and return safe profile | `UPDATE ... RETURNING` | Legacy `users` | `status`, `updated_at`, UserProfile allowlist | None | `id=:user_id` | updated row | 404/no row; mapping error 500 |
+| Q2 | Revoke active refresh credentials | Conditional `UPDATE` | Legacy `refresh_tokens` | `revoked_at` | None | `user_id=:user_id`, unrevoked, unexpired | affected rows | only target SUSPENDED; failure rolls back |
 
 ## Mutation Matrix
 
-| Mutation ID | Operation | Target table | Record condition | Fields | Value sources | Audit | Mapping file | Transaction | Failure behavior |
-|---|---|---|---|---|---|---|---|---|---|
-| M1 | UPDATE status candidate | Legacy `users` (unverified) | `id=:user_id` | status, updated_at | Request candidate `status`; server timestamp candidate | Not specified; do not invent | This DD; no generated mapping | Caller-owned transaction candidate | Zero row → 404 candidate; invalid status → 422; system failure → 500. |
-| M2 | Conditional UPDATE/revoke | Legacy `refresh_tokens` (unverified) | `user_id=:user_id AND revoked_at IS NULL` | revoked_at | Server timestamp; only on suspend if owner approves | Not specified | This DD; no generated mapping | Same transaction as M1 if selected | Failure → rollback/500 candidate; has no effect on existing access JWTs. |
+| Mutation ID | Operation | Target | Condition | Fields | Transaction | Failure |
+|---|---|---|---|---|---|---|
+| M1 | Update account status | legacy `users` candidate | locked row status ACTIVE/SUSPENDED | `status`, `updated_at` | caller-owned view transaction | 422 unsupported current state; 404 absent; 500 DB/mapping |
+| M2 | Revoke refresh credentials | legacy `refresh_tokens` candidate | target SUSPENDED; `revoked_at IS NULL`; not expired | `revoked_at` | atomic with M1 | rollback M1 and safe 500 |
 
 ## Response Source Matrix
 
-| Response field | Type | Source type | Table/column or generator | Data Mapping step | Transform | Null/empty rule | Gap |
-|---|---|---|---|---|---|---|---|
-| success | boolean | Direct envelope | Envelope generator | 5.1/5.2 | true/false by outcome | Required | Runtime helper behavior separate. |
-| businessCode | string | Direct catalog | Catalog code | 5.1/5.2 | Exact branch code | Required | No extra code. |
-| message | string | Envelope | Message generator | 5.1/5.2 | Safe text | SOURCE_REQUIRED | Exact messages unspecified. |
-| data.id | int64 | UserProfile direct type; candidate source | `users.id` | 5.1 | Direct mapping candidate | Required on success | Live schema unverified. |
-| data.full_name | string | UserProfile direct type; candidate source | `users.full_name` | 5.1 | Preserve existing value | Required | Safe projection candidate. |
-| data.email | email | UserProfile direct type; candidate source | `users.email` | 5.1 | Preserve existing value | Required | PII/Admin policy open. |
-| data.role | UserRole | UserProfile direct type; candidate source | `users.role` | 5.1 | Preserve existing value | Required | Enum members open; not mutated here. |
-| data.avatar_url | uri? | UserProfile direct type; candidate source | `users.avatar_url` | 5.1 | Preserve | Null/omit open | Nullable candidate. |
-| data.bio | string? | UserProfile optional field | SOURCE_REQUIRED | 5.1 | Do not fabricate | Null/omit open | No source column/query mapping. |
-| data.phone | string? | UserProfile direct type; candidate source | `users.phone` | 5.1 | Preserve | Null/omit open | PII/null semantics open. |
-| data.status | UserStatus | UserProfile direct type; candidate source | `users.status` | 5.1 | Updated account status | Required | UserStatus enum and values unconfirmed. |
-| data.created_at | date-time | UserProfile direct type; candidate source | `users.created_at` | 5.1 | ISO-8601 candidate | Required | Live schema/timezone open. |
-| data.updated_at | date-time | UserProfile direct type; candidate source | `users.updated_at` | 5.1 | Candidate server timestamp | Required | API #71 runtime unimplemented. |
-| meta | object | Envelope | Envelope generator | 5.1/5.2 | `{}` candidate | Required | Error null/empty rule discrepancy. |
-| traceId | uuid | Envelope/middleware | Request trace generator | 5.1/5.2 | Current correlation ID | Required | Exact integration when wired. |
+| Field | Type | Source | Transform | Null/omit rule | Evidence boundary |
+|---|---|---|---|---|---|
+| `success` | boolean | ApiEnvelope | true on commit | Required | direct envelope |
+| `businessCode` | string | Catalog | `DESIGN_RESOURCE_UPDATED` | Required | direct contract |
+| `data.id` | int64 | `users.id` | preserve | Required | legacy candidate |
+| `data.full_name` | string | `users.full_name` | preserve | Required | API #04 safe model |
+| `data.email` | email | `users.email` | preserve | Required | PII policy open |
+| `data.role` | string | `users.role` | preserve | Required | not changed by #71 |
+| `data.avatar_url` | string? | `users.avatar_url` | preserve | null preserved | API #04 safe model |
+| `data.phone` | string? | `users.phone` | preserve | null preserved | API #04 safe model |
+| `data.status` | string/UserStatus | `users.status` | target ACTIVE/SUSPENDED | Required | allowlist DERIVED |
+| `data.created_at` | date-time | `users.created_at` | ISO serialization | Required | legacy candidate |
+| `data.updated_at` | date-time | `users.updated_at` | server timestamp | Required | updated on each accepted call |
+| `meta` | object | envelope | `{}` | Empty object | current success helper |
+| `traceId` | uuid | middleware | propagate | Required; response header too | current runtime |
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -4,7 +4,7 @@ order: 5
 dd_id: "34"
 api_name: "Upload file"
 source_sheet: "3. Data mapping"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 
 # Data Mapping
@@ -12,171 +12,82 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ~~~text
-Bearer JWT -> check Student/Mentor role -> parse multipart fields
--> validate only catalog-required shape -> send file to Object Storage
--> map storage/upload result to UploadAsset -> ApiEnvelope success/error
+0. Validate Bearer JWT; require Student or Mentor role.
+1. FastAPI parses required file/purpose and optional int64 course_id.
+2. Match SUBMISSION to Student or LECTURE to Mentor; check ACTIVE enrollment or direct course owner.
+3. Measure actual bytes and choose filename/content-type fallbacks.
+4. Generate uploads/<UUID>; stream file to S3-compatible Object Storage and construct public URL.
+5. INSERT uploads metadata, read BIGSERIAL id and commit.
+6. Return UploadAsset; on DB failure rollback and best-effort delete the object.
 ~~~
-
-API #34 is design-only. The sequence below records contract-backed steps and keeps unspecified checks or mappings open.
 
 ## Request Usage Matrix
 
-| Request field | Source | Data Mapping step | Validate | Storage/mutation usage | Branch/Loop | Response usage | Gap |
-|---|---|---|---|---|---|---|---|
-| Authorization | header Authorization | 0.1-0.3 | Bearer JWT per catalog | Principal/role scope | 0.3 | No direct response mapping | Exact API #34 auth guard is not wired. |
-| Content-Type | header Content-Type | 1.1 | multipart/form-data | Select multipart parser | 1.2 | No direct response mapping | Boundary/parser behavior is not documented for API #34. |
-| file | multipart part file | 1.2, 3.1 | Required binary part per catalog | Object Storage write | 3.1-3.2 | Candidate input to name/content_type/size_bytes | MIME, size, filename and byte-inspection policies SOURCE_REQUIRED. |
-| purpose | multipart part purpose | 1.2, 2.1 | Required UploadPurpose field | Purpose-specific scope/metadata is not specified | 2.1 | No direct response mapping | Enum values and role mapping SOURCE_REQUIRED. |
-| course_id | multipart part course_id | 1.2, 2.1 | Optional int64 per catalog | Course association/authorization is not specified | 2.1 | No direct response mapping | Existence, ownership and role-specific requirement SOURCE_REQUIRED. |
-
-## Query Matrix
-
-| Query ID | Mục đích | Type | Base table/view | Alias | Columns | JOIN | WHERE | GROUP/HAVING | ORDER | Pagination | Result variable | Branch |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| N/A | No DB query is specified by API #34 contract or AC-17/AC-21. | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | Any course ownership lookup remains SOURCE_REQUIRED; no query is invented. |
-
-## Mutation Matrix
-
-| Mutation ID | Operation | Target table/API | Record condition | Fields | Value sources | Audit | Mapping file | Transaction | Failure behavior |
-|---|---|---|---|---|---|---|---|---|---|
-| M1 | Upload binary object | External Object Storage | Object key and overwrite policy SOURCE_REQUIRED | File bytes and storage metadata | Required multipart file; exact metadata source open | Not specified | N/A — not a database table | No DB transaction specified; cleanup policy SOURCE_REQUIRED | 503/500 codes exist in catalog; provider condition mapping needs confirmation. |
-
-## Response Source Matrix
-
-| Response field | Type | Source type | Table/column hoặc generator | Data Mapping step | Transform | Null/empty rule | Gap |
-|---|---|---|---|---|---|---|---|
-| data.id | int64 | SOURCE_REQUIRED | No table or ID generator found | 4.1 | SOURCE_REQUIRED | Required by UploadAsset | Asset identity source is undefined. |
-| data.name | string | Request/storage candidate | Original filename or storage result not selected | 4.1 | SOURCE_REQUIRED | Required by UploadAsset | Filename normalization/retention is undefined. |
-| data.url | uri | External result candidate | Object Storage upload result | 3.2/4.1 | Return storage URL; public/signed policy unresolved | Required by UploadAsset | URL shape, access and expiry are undefined. |
-| data.content_type | string | Request/storage candidate | Multipart part or detected content not selected | 3.1/4.1 | SOURCE_REQUIRED | Required by UploadAsset | Trust/detection and supported values are undefined. |
-| data.size_bytes | int64 | Uploaded binary candidate | Byte count source unspecified | 3.1/4.1 | SOURCE_REQUIRED | Required by UploadAsset | Measurement and maximum size are undefined. |
-| data.status | UploadStatus | SOURCE_REQUIRED | No enum or metadata source found | 4.1 | SOURCE_REQUIRED | Required by UploadAsset | Values and lifecycle are undefined. |
-| success | boolean | Envelope constant | Branch result | 5.1-5.5 | true on success; false on error | Always present | Shared envelope. |
-| businessCode | string | Branch constant | API catalog | 5.1-5.5 | Catalog code for branch | Always present | Preserve API #34 code set. |
-| message | string | Branch message | Application policy | 5.1-5.5 | Safe message | Always present | Exact text/localization undefined. |
-| meta | object | Envelope default | N/A | 5.1-5.5 | {} unless supported error details | Always present | No upload-specific metadata schema. |
-| traceId | uuid | Correlation generator | Shared middleware/API Guidelines | 5.1-5.5 | Request correlation UUID | Always present | API #34 runtime not verified. |
+| Request field | Source | Validate | Query/mutation usage | Response usage | Gap |
+|---|---|---|---|---|---|
+| Authorization | Header | Valid Bearer JWT with STUDENT or MENTOR | Principal ID is owner/enrollment query parameter | Not returned | Token/role claims are validated by shared auth helper. |
+| file | Multipart file part | Required; any bytes accepted | Stream to provider; count bytes from received spool | name, content_type, size_bytes | No MIME allowlist or application size cap. |
+| purpose | Multipart field | Enum SUBMISSION or LECTURE; role must match | Persist purpose | status of intended asset lifecycle | SUBMISSION is Student-only; LECTURE is Mentor-only. |
+| course_id | Multipart field | Optional int64; required for LECTURE | ACTIVE enrollment for Student; direct owner lookup for Mentor | Persist nullable course_id | No positive-only constraint. |
 
 ## 0. Check quyền
 
-### 0.1. Get authorization header
-
-- Read Authorization from the request header.
-- Do not accept user_id or object key from the client.
-- Parse multipart Content-Type and its boundary according to the selected server framework; API #34 parser is not implemented.
-
-### 0.2. Validate Bearer JWT
-
-- Require a valid Bearer JWT per API catalog.
-- Current Study auth utilities expose a Student-only request guard for existing routes; no API #34 guard exists.
-- The current access-claim parser normalizes role claims to uppercase; this is current helper behavior, not proof that API #34 supports Mentor.
-
-### 0.3. Check allowed role
-
-- Continue for a role allowed by the catalog: Student or Mentor.
-- If authentication is absent/invalid, refer to [06_Error.md](./06_Error.md), case 1.
-- If authenticated principal lacks an allowed role, refer to [06_Error.md](./06_Error.md), case 2.
-- Purpose/course authorization rules are SOURCE_REQUIRED; do not infer them from the surrounding client flow.
+- Shared `validate_current_user_request` accepts `role=("STUDENT", "MENTOR")`; existing single-role callers retain their behavior.
+- Purpose policy is checked before any DB query or Object Storage side effect.
+- Student SUBMISSION with no course_id requires no enrollment lookup.
+- Student SUBMISSION with course_id queries `enrollments.user_id`, `course_id`, and `status = 'ACTIVE'`.
+- Mentor LECTURE requires course_id and queries `courses.id` plus `courses.mentor_id = principal_id`.
+- A missing matching enrollment/course-owner row returns 403; API #34 catalog does not declare 404.
 
 ## 1. Validate request
 
-### 1.1. Check transport shape
+- Missing or malformed multipart field maps to 422 DESIGN_VALIDATION_ERROR.
+- Unknown purpose maps to 422; valid purpose used by wrong role maps to 403 DESIGN_ACCESS_DENIED.
+- Missing course_id for LECTURE maps to 422.
+- course_id outside signed int64 range maps to 422; no extra positive-only rule is imposed.
+- The route does not validate MIME, file extension, content signature, size cap or filename path.
+- Filename uses `file.filename or "upload"`; Content-Type uses `file.content_type or "application/octet-stream"`.
+- The size is measured by seeking to end of the received spool, reading its byte position, and rewinding it before storage.
 
-- The API catalog declares multipart fields.
-- The contract does not specify accepted part media type, maximum request size, or extra-field behavior.
-- Do not apply API #13 JSON Data URL parsing to this endpoint.
+## 2. Permission queries
 
-### 1.2. Read multipart fields
+| Query ID | Purpose | Base table | Predicate | Result | Failure |
+|---|---|---|---|---|---|
+| Q1 | Student course enrollment | enrollments | `user_id = :student_id AND course_id = :course_id AND status = 'ACTIVE'` | One matching row | No row → 403; DB error → 500. |
+| Q2 | Mentor direct owner | courses | `id = :course_id AND mentor_id = :mentor_id` | One matching row | No row → 403; DB error → 500. |
 
-- file: required binary part.
-- purpose: required UploadPurpose part.
-- course_id: optional int64 part.
-- Rejecting or normalizing additional multipart fields is not specified.
+## 3. Object Storage mutation
 
-### 1.3. Validate declared field shape
+| Step | Operation | Target | Values | Failure behavior |
+|---|---|---|---|---|
+| 3.1 | Generate key | Server | `uploads/{uuid4()}` | Key is not accepted from request. |
+| 3.2 | Upload stream | S3-compatible bucket | File stream and `ContentType` | 503 DESIGN_DEPENDENCY_UNAVAILABLE; rollback and best-effort delete. |
+| 3.3 | Construct URL | Application | `OBJECT_STORAGE_PUBLIC_BASE_URL.rstrip('/') + '/' + storage_key` | Invalid/missing storage config maps to 503. |
 
-- If required file or purpose is absent, map to the catalog's 422 validation family; exact field error details are SOURCE_REQUIRED.
-- If course_id is present, parse it as int64; positive range and resource-existence rules are SOURCE_REQUIRED.
-- Do not invent supported purposes, MIME allowlist, file-size limit, filename policy, malware scan, or signature rules.
+## 4. Metadata mutation
 
-## 2. Resolve purpose and course scope
+| Mutation ID | Operation | Table | Fields | Source | Transaction and failure |
+|---|---|---|---|---|---|
+| M1 | INSERT | uploads | owner_id | JWT subject | Same transaction as other metadata. |
+| M1 | INSERT | uploads | purpose | Validated purpose enum | Fixed values SUBMISSION/LECTURE. |
+| M1 | INSERT | uploads | course_id | Multipart field or NULL | Student may omit; Mentor may not. |
+| M1 | INSERT | uploads | storage_key | Server-generated UUID key | Unique key also identifies object cleanup. |
+| M1 | INSERT | uploads | file_name | Multipart filename or `upload` | Stored as received; never used as object key. |
+| M1 | INSERT | uploads | url | Public URL from storage configuration | Stored and returned. |
+| M1 | INSERT | uploads | content_type | Part Content-Type or octet-stream fallback | No allowlist/sniffing. |
+| M1 | INSERT | uploads | size_bytes | Measured received bytes | Zero is allowed. |
+| M1 | INSERT | uploads | status | Constant `UPLOADED` | DB default and CHECK agree with the only current status. |
+| M1 | INSERT | uploads | id | BIGSERIAL | Returned from INSERT; commit failure rolls back and triggers best-effort object delete. |
 
-### 2.1. Check role-purpose relationship
+## 5. Error and response mapping
 
-- Catalog allows Student and Mentor roles.
-- AC-17 uses the upload in a Student assignment-submission flow.
-- AC-21 uses the upload in a Mentor lecture/media flow.
-- The UploadPurpose values and allowed role-purpose pairs are not defined; retain SOURCE_REQUIRED.
+- Storage write/configuration failure returns 503 DESIGN_DEPENDENCY_UNAVAILABLE.
+- Course access/purpose authorization failure returns 403 DESIGN_ACCESS_DENIED.
+- Multipart/type/int64 validation failure returns 422 DESIGN_VALIDATION_ERROR.
+- DB query, INSERT, or commit failure returns 500 DESIGN_INTERNAL_ERROR after rollback and best-effort object deletion when an object key was attempted.
+- Success returns the committed ID and persisted UploadAsset metadata with 201 DESIGN_RESOURCE_CREATED.
+- API #47 later resolves IDs from uploads and must filter same Mentor, purpose LECTURE, and same course; no API #47 runtime is wired by this task.
 
-### 2.2. Check course context
-
-- course_id is optional in the catalog.
-- AC-21 shows a selected course before upload; it does not define whether course_id is required for that purpose or how ownership is verified.
-- AC-17 does not define whether the assignment's course must be sent or how it is bound to the uploaded file.
-- Do not add a course lookup or claim an ownership check absent an approved rule.
-
-## 3. Upload to Object Storage
-
-### 3.1. Send binary object
-
-- AC-17 describes Object Storage saving the submission file.
-- AC-21 describes Object Storage saving media.
-- Send the uploaded file to Object Storage as the external side effect required by those flows.
-- Object key, bucket, metadata tags, overwrite behavior, streaming/buffering and retry policy are SOURCE_REQUIRED.
-- No uploads DB table or physical metadata mapping is specified by the current ERD/table notes.
-
-### 3.2. Check external result
-
-- A successful upload must provide the information needed to form the required UploadAsset response.
-- Whether the storage provider returns or the application generates id, url, name, content_type, size_bytes and status is SOURCE_REQUIRED.
-- Public versus signed URL and expiry policy are SOURCE_REQUIRED.
-- Map dependency-unavailable and unexpected failures only to the catalog error set; exact provider condition mapping is open.
-- API #13 uses a separate avatar provider and its fixed key/error behavior is not reused.
-
-## 4. Map UploadAsset response
-
-### 4.1. Map required fields
-
-- Map data.id as int64; source/generator is SOURCE_REQUIRED.
-- Map data.name as string; original-versus-normalized filename is SOURCE_REQUIRED.
-- Map data.url as URI; access/expiry policy is SOURCE_REQUIRED.
-- Map data.content_type as string; request-versus-detected source is SOURCE_REQUIRED.
-- Map data.size_bytes as int64; byte-count rule is SOURCE_REQUIRED.
-- Map data.status as UploadStatus; enum values/lifecycle are SOURCE_REQUIRED.
-- Do not add storage key, bucket name, or upload token to the response.
-
-## 5. Return response
-
-### 5.1. Success
-
-- HTTPStatus = 201.
-- success = true.
-- businessCode = DESIGN_RESOURCE_CREATED.
-- Return ApiEnvelope<UploadAsset> using only the catalog fields.
-- meta = {} unless a separately approved envelope field applies.
-- traceId follows the shared API Guidelines.
-
-### 5.2. Authentication error
-
-- Return HTTP 401 and DESIGN_AUTHENTICATION_REQUIRED.
-- Set success = false and data = null.
-
-### 5.3. Authorization error
-
-- Return HTTP 403 and DESIGN_ACCESS_DENIED.
-- Set success = false and data = null.
-
-### 5.4. Validation error
-
-- Return HTTP 422 and DESIGN_VALIDATION_ERROR.
-- Set success = false and data = null.
-- Keep field-level details safe and place them under the shared error metadata convention.
-
-### 5.5. Dependency/internal error
-
-- Use HTTP 503 with DESIGN_DEPENDENCY_UNAVAILABLE for a dependency-unavailable branch, or HTTP 500 with DESIGN_INTERNAL_ERROR for an unexpected internal branch.
-- Exact provider failure classification remains open; do not copy API #13's 500-only behavior.
-- Set success = false and data = null for either branch.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

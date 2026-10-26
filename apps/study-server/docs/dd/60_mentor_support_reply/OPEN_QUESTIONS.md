@@ -1,24 +1,22 @@
 # OPEN_QUESTIONS — Study API #60
 
-Status: `Draft — Needs Confirmation`. Proposal hỗ trợ triển khai được đánh dấu `DERIVED`; contract và nguồn vật lý chưa được sửa/khẳng định.
+Status: `Draft — Needs Confirmation`. Runtime uses the documented local fallback; each choice remains DERIVED until the API/data owners approve it.
 
-| ID | Câu hỏi cần xác nhận | Bằng chứng và ảnh hưởng | Khuyến nghị đơn giản | Mức độ |
-|---|---|---|---|---|
-| Q-60-01 | `attachment refs` có wire key `attachment_refs` và encoding comma-separated `UploadAsset.id` int64 không? | #60/#35/#47 dùng string ref labels; #47 đề xuất wire key `asset_refs` nhưng encoding opaque; #34 chưa có confirmed ID registry. | Dùng một convention chung: snake_case `*_refs`, comma-separated UploadAsset IDs, empty string nghĩa none; chốt đồng thời #35/#47/#60. | BLOCKING — shared contract |
-| Q-60-02 | API #34 lưu asset metadata/identity ở đâu và xác thực ownership/purpose/status bằng cách nào? | #34 DD không chỉ định DB write; V1-PILOT `file_objects` dùng UUID; UploadAsset cần int64 id/url/status. | Chọn registry/resolver và ID mapping trước khi reply chấp nhận refs; không dùng raw URL/storage key. | BLOCKING — security/data |
-| Q-60-03 | Support model nào được duyệt và API ID dùng int64 hay UUID? | Legacy DB thiếu support tables; pilot support_tickets/support_messages dùng UUID; API #60/SupportRequest dùng int64. | Chọn một canonical schema/ID contract cho #58–#61 trước implementation. | BLOCKING — data model |
-| Q-60-04 | Mentor principal map sang `author_subject_id` nào và có được assigned request không? | AC-24 scope Mentor; current Study guard Student-only; pilot assigned_to_subject_id nullable UUID. | Duyệt identity mapping/predicate chung cho #58–#61; không chỉ dựa trên request_id. | BLOCKING — authorization |
-| Q-60-05 | Mentor reply có dùng `author_type=STAFF` và luôn learner-visible (`is_internal=false`) không? | Pilot enum LEARNER/STAFF và default is_internal=false; diagram chỉ nói Mentor nhập phản hồi, không có internal note mode. | Coi Mentor là STAFF và reply learner-visible; xác nhận với owner. | BLOCKING — message policy |
-| Q-60-06 | `message` có bắt buộc nonblank không; có giới hạn độ dài/format nào? | Catalog chỉ khai string required và 422; không có limits. | Reject whitespace-only, giữ nguyên text, chưa đặt min/max; confirm proposal. | NEEDS CONFIRMATION — validation |
-| Q-60-07 | Empty `attachment_refs` có hợp lệ khi không đính kèm không; duplicate/malformed token xử lý ra sao? | Field required string nhưng no encoding/empty/duplicate rules. | Cho phép `""` là no attachments; 422 nếu token không phải UploadAsset ID hợp lệ; chốt duplicate policy. | BLOCKING — request contract |
-| Q-60-08 | Reply được gửi khi request đã RESOLVED/CANCELLED không? Nếu được, có reopen hay giữ nguyên trạng thái? | AC-24 đưa resolve qua #61; không nêu post-resolve behavior; catalog #60 không có 409. | Không tự reopen hoặc update status; chốt nếu reply cần bị từ chối bằng 422 đã khai báo. | BLOCKING — lifecycle |
-| Q-60-09 | Response rehydrate có trả toàn bộ thread, thứ tự và giới hạn nào? | Success trả SupportRequest; #59 đọc conversation; catalog không định nghĩa order/limit. | Trả thread theo một stable order được duyệt, có bound; bảo đảm message vừa gửi xuất hiện. | BLOCKING — response/performance |
-| Q-60-10 | Nếu insert thành công nhưng response mapping/asset resolver lỗi, transaction có rollback không? | Current DB helper giao transaction caller; AC-24 không nêu rollback. | Giữ insert và reload trong một transaction, commit khi full response sẵn sàng; confirm với implementation owner. | NEEDS CONFIRMATION — transaction |
-| Q-60-11 | Catalog body wire media type là JSON? | Body là string fields nhưng catalog không khai Content-Type. | Dùng application/json làm DERIVED candidate; xác nhận nếu gateway/API standard yêu cầu. | NEEDS CONFIRMATION — transport |
+| ID | Câu hỏi còn mở | Quyết định hiện tại cho local implementation | Còn cần xác nhận |
+|---|---|---|---|
+| Q-60-01 | `attachment refs` có wire key `attachment_refs` và JSON array string của UploadAsset int64 IDs không? | Dùng `attachment_refs` dạng chuỗi JSON array, thứ tự được giữ, `[]` nghĩa không đính kèm; cùng pattern đang có trong API #47 source. | Thống nhất catalog/API #35/#47/#60 khi macro-review; wire key/encoding vẫn DERIVED. |
+| Q-60-02 | Upload registry và điều kiện file có thể gắn vào reply? | Dùng bảng `uploads` local; yêu cầu cùng Mentor, request course, purpose `LECTURE`, status `UPLOADED`; asset thiếu/ngoài scope trả 404 chung. | DDL/source local không chứng minh live registry hoặc storage URL còn hoạt động. |
+| Q-60-03 | Support model/IDs được phê duyệt chính thức? | Dùng BIGINT `support_requests`, `support_messages`, `support_message_uploads` trong migration 008 như local fallback của #58/#59. | Cần data owner phê duyệt schema; live schema/deployment chưa xác minh. |
+| Q-60-04 | Mentor principal và request assignment scope? | Dùng numeric JWT `sub` làm `users.id`, shared MENTOR guard và trực tiếp `courses.mentor_id`. | Chưa có quan hệ assigned Mentor được nguồn xác nhận; owner policy là DERIVED. |
+| Q-60-05 | Message có nonblank/length/visibility rule nào? | Từ chối whitespace-only, lưu nguyên text; không đặt length cap. Dùng message thread chung vì local schema không có internal flag. | Business owner cần xác nhận blank/length và visibility policy. |
+| Q-60-06 | Có cho reply sau RESOLVED/CANCELLED không? | Không chặn theo status và không reopen; giữ status hiện tại vì #61 sở hữu resolve và #60 không khai báo 409. | Post-resolve/cancel behavior cần xác nhận. |
+| Q-60-07 | Response cần giới hạn/thread pagination không? | Rehydrate toàn bộ thread theo API #59: message `created_at ASC, id ASC`, assets theo `asset_position ASC`. | Giới hạn thread/performance và response size chưa được contract định nghĩa. |
+| Q-60-08 | Transaction có rollback nếu insert/link/read-back/commit lỗi không? | Khóa request, ghi message và links, hydrate response, validate rồi commit một lần; failure rollback và trả 500 an toàn. | Local convention/test xác minh code path với fake DB; chưa xác minh concurrency/live DB. |
+| Q-60-09 | Content-Type của request? | Dùng `application/json` cho strict body model. | DERIVED transport choice do catalog không ghi media type. |
 
-## Quy tắc giữ nguyên trong DD hiện tại
+## Giới hạn giữ nguyên
 
-- Không sửa catalog fields/status/error codes; không thêm 409, 503, notification hoặc status mutation.
-- Candidate V1-PILOT `support_messages` không phải runtime/live schema; không cast UUID sang int64.
-- `attachment_refs` CSV, blank-message validation, STAFF, `is_internal=false` và transaction boundary vẫn là proposal DERIVED.
-- Sau DD #61, macro-review AC-24 #58–#61 và đối chiếu ref convention với #34/#35/#47 trước khi gọi nhóm này implementation-ready.
+- Không đổi catalog, API #35/#47, API #61, diagram hoặc DB schema trong task #60.
+- Không thêm status mutation, notification, 409 hay 503.
+- Migration 008 và các TestClient fake-DB checks là source evidence; không xác nhận live schema, deployment hoặc storage behavior.
+- AC-24 macro-review #58–#61 vẫn cần rà soát sau khi API #61 được implement.

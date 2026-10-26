@@ -51,7 +51,7 @@ status: "Draft — Needs Confirmation"
 - API catalog là APPROVED_DESIGN_CONTRACT, chưa runtime-verified. Contract khai báo HTTP 200 DESIGN_RESOURCE_RETRIEVED, 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND và 500 DESIGN_INTERNAL_ERROR.
 - Logical Quiz gồm id, course_id, title, duration_minutes?, passing_score và questions. QuizQuestion gồm id, text, type và choices; catalog dùng QuizChoice[] nhưng không định nghĩa schema QuizChoice.
 - AC-16 activity diagram đặt bước đọc Quiz/rule/question set trước bước kiểm tra quyền làm bài; nhánh sơ đồ nêu 403/409 cho trường hợp không đủ điều kiện/hết lượt/hết hạn. API #28 catalog không liệt kê 409.
-- DB design có quizzes.name, description, passing_score, time_limit_minutes và status; quiz_questions có question_text, sort_order và score; quiz_choices có choice_text và is_correct. Các field không có trong logical Quiz/QuizQuestion chưa được thêm vào response.
+- DB design có quizzes.name, description, passing_score, time_limit_minutes và status; quiz_questions có question_text, sort_order và score. API #88 migration 013 locally adds nullable `question_type` and `quiz_choices.sort_order`; these are DERIVED candidates, not live-schema facts. Các field không có trong logical Quiz/QuizQuestion chưa được thêm vào Student response.
 - Không trả quiz_choices.is_correct trong response Student theo yêu cầu hiện tại. Đây là thông tin đáp án, không phải field được phép suy ra từ QuizChoice[].
 - DB_UNICA_TABLES.md mô tả các foreign key quiz/course/question là bắt buộc; checked-in DDL không đặt NOT NULL cho các foreign key này. Live schema chưa được xác minh.
 - Source scan hiện tại không tìm thấy route, module hoặc test quiz trong Study Server.
@@ -67,7 +67,7 @@ status: "Draft — Needs Confirmation"
 
 - DISCREPANCY: AC-16 diagram gắn nhánh eligibility/hết lượt/hết hạn với 403/409; catalog API #28 chỉ khai báo 403 và không có 409. DD giữ nguyên business-code set của catalog.
 - SOURCE_REQUIRED: AC-16 nói quiz đang mở và Student có quyền làm quiz nhưng không định nghĩa enrollment, trạng thái quiz được phép, giới hạn lượt hoặc deadline.
-- SOURCE_REQUIRED: QuestionType chưa có enum values hoặc cột vật lý; QuizChoice chưa có logical field definition.
+- SOURCE_REQUIRED: Catalog chưa phê duyệt QuestionType values hoặc QuizChoice fields. API #88 migration 013 adds local DERIVED `question_type`/choice order; its Admin `{id,text,is_correct}` projection does not authorize Student answer-key exposure.
 - DISCREPANCY: Logical Quiz.course_id là required; checked-in DDL cho quizzes.course_id nullable. DB table design mô tả quan hệ bắt buộc. Live schema chưa được xác minh.
 - UNWIRED / NOT_FOUND: Không tìm thấy API #28 trong Study router, module hoặc tests hiện tại.
 

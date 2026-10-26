@@ -16,13 +16,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-26 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | `1.0` | 2026-10-24 | Codex | Tạo DD draft theo catalog và AC-32; giữ dependency/persistence chưa có nguồn trong open questions. | Chưa implementation-ready. |
+| `1.1` | 2026-10-26 | Codex | Ghi fallback runtime `status=DELETED`, timestamp từ `updated_at`, dependency gate và kiểm thử local. | DERIVED; vẫn Draft, live schema/policy chưa xác nhận. |
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

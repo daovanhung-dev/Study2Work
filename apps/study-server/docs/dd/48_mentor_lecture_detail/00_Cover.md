@@ -28,7 +28,7 @@ status: "Draft — Needs Confirmation"
 | Reviewed by | Chưa xác nhận |
 | Approved by | Chưa xác nhận |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-25 |
 
 ## Tên hiển thị
 
@@ -39,9 +39,9 @@ Tải lại lecture vừa tạo
 
 ## Phạm vi và giới hạn
 
-DD này mô tả bước đọc lại lecture sau khi API #47 tạo lecture trong luồng AC-21. API #48 hiện chưa có route hoặc module trong Study Server. Candidate truy vấn legacy lessons chỉ là bằng chứng thiết kế; live schema chưa xác minh.
+DD này mô tả bước đọc lại lecture sau khi API #47 tạo lecture trong luồng AC-21. Local route/module hiện được wired; checked-in source đọc ordered asset links từ `lesson_uploads` và metadata từ `uploads`. Legacy DDL/migrations chưa được xác minh trên live database.
 
-Trường assets bắt buộc trong Lecture chưa có nguồn lookup đầy đủ. Không dùng DD này làm xác nhận implementation-ready cho payload thành công trước khi API #34/#47 có nguồn asset đã được duyệt.
+Asset lookup is source-backed locally through API #34/#47 and migration 005. Keep this DD in Draft — Needs Confirmation until the live schema/migration state, assigned-course rules, identity mapping and remaining open contract decisions are confirmed.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

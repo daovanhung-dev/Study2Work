@@ -16,44 +16,36 @@ status: "Draft — Needs Confirmation"
 - HTTP status: `200`
 - Business code: `DESIGN_RESOURCE_RETRIEVED`
 - Body: `ApiEnvelope<Page<Discussion>>`
-- Response fields bên dưới theo reusable schema trong API catalog. Candidate physical mapping và các giá trị pagination chưa được xác nhận.
+- Response fields bên dưới theo reusable schema trong API catalog. Các phần chưa có trong legacy DDL được đánh dấu `DERIVED`; migration là candidate và không chứng minh live schema.
 
 | Field | Type | Required | Candidate source / mapping | Null / status |
 |---|---|---:|---|---|
 | `success` | boolean | Yes | Envelope success branch | DIRECT envelope convention |
 | `businessCode` | string | Yes | Catalog literal | `DESIGN_RESOURCE_RETRIEVED` |
 | `message` | string | Yes | Application safe message | Exact wording unspecified |
-| `data` | `Page<Discussion>` | Yes | Logical queue result | Report relation/grain `SOURCE_REQUIRED` |
-| `data.items` | `Discussion[]` | Yes | Logical queue result | Report relation/grain `SOURCE_REQUIRED` |
-| `data.items[].id` | int64 | Yes | Candidate `discussions.id` | Legacy artifact only |
-| `data.items[].course_id` | int64 | Yes | Candidate `discussions.course_id` | Legacy DDL allows NULL; required logical field mismatch |
-| `data.items[].title` | string | Yes | No approved legacy source | `SOURCE_REQUIRED`; do not derive from content |
-| `data.items[].content` | string | Yes | Candidate `discussions.content` | Legacy column is TEXT NOT NULL |
-| `data.items[].author` | `UserSummary` | Yes | Candidate join to `users` | Required author; nullable legacy FK makes missing-author policy open |
-| `data.items[].author.id` | int64 | Yes | Candidate `users.id` | Physical/live mapping unverified |
-| `data.items[].author.full_name` | string | Yes | Candidate `users.full_name` | Physical/live mapping unverified |
-| `data.items[].author.avatar_url` | uri? | No | Candidate `users.avatar_url` | Omit when null; candidate only |
-| `data.items[].status` | `DiscussionStatus` | Yes | Candidate `discussions.status` | Enum members and queue eligibility unresolved |
-| `data.items[].comments` | `DiscussionComment[]` | Yes | Candidate child discussion rows | Summary extent/order/status filter `SOURCE_REQUIRED` |
-| `data.items[].comments[].id` | int64 | Yes | Candidate child `discussions.id` | Candidate only |
-| `data.items[].comments[].discussion_id` | int64 | Yes | Candidate child `parent_id` | Legacy column nullable; child-parent mapping candidate |
-| `data.items[].comments[].content` | string | Yes | Candidate child `discussions.content` | Candidate only |
-| `data.items[].comments[].author` | `UserSummary` | Yes | Candidate `users` join | Missing author behavior unresolved |
-| `data.items[].comments[].author.id` | int64 | Yes | Candidate child `user_id` → `users.id` | Physical/live mapping unverified |
-| `data.items[].comments[].author.full_name` | string | Yes | Candidate `users.full_name` | Physical/live mapping unverified |
-| `data.items[].comments[].author.avatar_url` | uri? | No | Candidate `users.avatar_url` | Omit when null; candidate only |
-| `data.items[].comments[].created_at` | date-time | Yes | Candidate child `discussions.created_at` | DDL has timestamp without timezone |
-| `data.pagination` | `PageMeta` | Yes | Page metadata | Values/default unresolved |
-| `data.pagination.page` | int32 | Yes | Page metadata | Value/default unresolved |
-| `data.pagination.size` | int32 | Yes | Page metadata | No request size; value unresolved |
-| `data.pagination.total` | int64 | Yes | Count of logical queue items | Whether count is discussion or report grain unresolved |
-| `data.pagination.total_pages` | int32 | Yes | Page metadata | Calculation/default unresolved |
+| `data` | `Page<Discussion>` | Yes | Queue result | One unique discussion per active-report group; `DERIVED` |
+| `data.items` | `Discussion[]` | Yes | Discussion rows linked by `discussion_reports.discussion_id` | Empty when no active report matches |
+| `data.items[].id` | int64 | Yes | `discussions.id` | Legacy Study candidate |
+| `data.items[].course_id` | int64 | Yes | `discussions.course_id` | Required; NULL mapping returns 500 |
+| `data.items[].title` | string | Yes | Normalized `discussions.content` | First 120 characters; `DERIVED` |
+| `data.items[].content` | string | Yes | `discussions.content` | Direct candidate |
+| `data.items[].author` | `UserSummary` | Yes | `users` joined by `discussions.user_id` | Required; missing author returns 500 |
+| `data.items[].author.id` | int64 | Yes | `users.id` | Legacy Study candidate |
+| `data.items[].author.full_name` | string | Yes | `users.full_name` | Legacy Study candidate |
+| `data.items[].author.avatar_url` | uri? | No | `users.avatar_url` | Omit when NULL |
+| `data.items[].status` | `DiscussionStatus` | Yes | `discussions.status` | Returned as stored string |
+| `data.items[].comments` | `DiscussionComment[]` | Yes | Queue summary | Always `[]`; full thread belongs to #98 (`DERIVED`) |
+| `data.pagination` | `PageMeta` | Yes | Page metadata | Fixed size and derived page rules |
+| `data.pagination.page` | int32 | Yes | Request or default | Default 1 |
+| `data.pagination.size` | int32 | Yes | Local constant | 20 |
+| `data.pagination.total` | int64 | Yes | `COUNT(DISTINCT discussions.id)` | Same active-report filters |
+| `data.pagination.total_pages` | int32 | Yes | `ceil(total / 20)` | 0 when total is 0 |
 | `meta` | object | Yes | Envelope | Endpoint-specific members unspecified |
 | `traceId` | uuid | Yes | Request trace | Shared envelope convention |
 
 ## Example
 
-Ví dụ sau minh họa cấu trúc typed. Số pagination và field marker không phải default, business rule hoặc schema approval.
+Ví dụ sau minh họa implementation fallback `DERIVED`; report values và Discussion projection không phải runtime/live-schema verification.
 
 ```json
 {
@@ -65,10 +57,10 @@ Ví dụ sau minh họa cấu trúc typed. Số pagination và field marker khô
       {
         "id": 101,
         "course_id": 55,
-        "title": "SOURCE_REQUIRED: discussion title source",
+        "title": "Example discussion content",
         "content": "Example discussion content",
         "author": {"id": 8, "full_name": "Example author"},
-        "status": "SOURCE_REQUIRED: DiscussionStatus",
+        "status": "ACTIVE",
         "comments": []
       }
     ],
@@ -79,7 +71,7 @@ Ví dụ sau minh họa cấu trúc typed. Số pagination và field marker khô
 }
 ```
 
-Report reason/severity không có field trong response schema `Discussion`; không tự thêm. Example pagination là hình minh họa kiểu dữ liệu, chưa định nghĩa behavior.
+Report reason/severity không có field trong response schema `Discussion`; không tự thêm. Page values minh họa fallback `DERIVED` đã nêu ở phần mapping.
 
 ## Error contract
 
@@ -87,9 +79,10 @@ Report reason/severity không có field trong response schema `Discussion`; khô
 |---:|---|---|
 | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Bearer/JWT authentication failure |
 | 403 | `DESIGN_ACCESS_DENIED` | Authenticated caller lacks Admin authorization |
+| 422 | `DESIGN_VALIDATION_ERROR` | Invalid/non-positive/out-of-int32 page; `DERIVED`, absent from catalog |
 | 500 | `DESIGN_INTERNAL_ERROR` | Internal query/data mapping failure |
 
-Catalog #97 không khai báo 404 hoặc 422. Error `data` theo API guideline là `null`; current `error_response(...)` chuyển absent/None data thành `{}` (`DISCREPANCY`).
+Catalog #97 không khai báo 404 hoặc 422. 422 là local `DERIVED` page validation fallback. `error_response(...)` currently serializes absent data as JSON `null`, matching the API guideline.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

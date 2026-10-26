@@ -28,13 +28,13 @@ status: "Draft — Needs Confirmation"
 | 1 | HTTP status | HTTP status | N/A | integer | No | Catalog | N/A | Branch 5 | 200 success; 401/403/404/422/500 errors | N/A | Giữ exact status set. |
 | 2 | `success` | Success flag | `success` | boolean | No | Envelope | N/A | Branch 5 | true success; false error | Required | ApiEnvelope field. |
 | 3 | `businessCode` | Business code | `businessCode` | string | No | Catalog | N/A | Branch 5 | Exact code theo branch | Required | Không tạo code mới. |
-| 4 | `message` | Message | `message` | string | No | Application | N/A | Branch 5 | Message an toàn, tiếng Việt | Exact wording chưa đặc tả | Không trả raw DB error. |
+| 4 | `message` | Message | `message` | string | No | API #90 view | N/A | Branch 5 | `Quiz deleted.` | Runtime text; catalog không cố định wording | Không trả raw DB error. |
 | 5 | `data` | Delete result | `data` | object | No | Completed delete operation | N/A | Branch 5.1 | Một `DeleteResult` | Required on success | Physical source phụ thuộc nhánh. |
 | 5.1 | `data.id` | Quiz ID | `id` | int64 | No | Legacy `quizzes` candidate | `id` | Q1 / branch 5.1 | Target quiz ID | Required | Candidate BIGINT mapping; live schema chưa xác minh. |
 | 5.2 | `data.status` | Delete status | `status` | literal `"deleted"` | No | Reusable `DeleteResult` | N/A | Branch 5.1 | Constant lowercase literal | Required | DIRECT schema. |
-| 5.3 | `data.deleted_at` | Deletion timestamp | `deleted_at` | date-time | No | SOURCE_REQUIRED | SOURCE_REQUIRED | Branch 5.1 | Candidate: `quizzes.updated_at` sau soft update; hard-delete branch cần operation timestamp | Required | Legacy DDL không có `deleted_at`; generator/timezone/persistence chưa được chốt. |
+| 5.3 | `data.deleted_at` | Deletion timestamp | `deleted_at` | date-time | No | Legacy `quizzes` candidate / database clock | `updated_at` hoặc `CURRENT_TIMESTAMP` | Branch 5.1 | Soft/repeat: `updated_at`; hard delete: `CURRENT_TIMESTAMP` returned by DELETE | Required | Runtime mapping là local source; legacy `TIMESTAMP` candidate không lưu timezone nên offset/RFC3339 normalization vẫn chưa chốt. |
 | 6 | `meta` | Metadata | `meta` | object | No | Envelope convention | N/A | Branch 5 | Empty object candidate | `{}` candidate | Không có pagination/dependency payload. |
-| 7 | `traceId` | Trace ID | `traceId` | uuid | No | Current trace middleware | `X-Trace-Id` hoặc generated | Branch 5 | Propagate hoặc generate UUID | Required | API #90 chưa có route. |
+| 7 | `traceId` | Trace ID | `traceId` | uuid | No | Current trace middleware | `X-Trace-Id` hoặc generated | Branch 5 | Propagate hoặc generate UUID | Required | Route #90 dùng trace middleware hiện hành. |
 
 ## Ví dụ thành công — HTTP 200
 
@@ -42,18 +42,18 @@ status: "Draft — Needs Confirmation"
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_DELETED",
-  "message": "Đã xóa quiz.",
+  "message": "Quiz deleted.",
   "data": {
     "id": 501,
     "status": "deleted",
-    "deleted_at": "2026-10-24T10:30:00Z"
+    "deleted_at": "2026-10-24T10:30:00"
   },
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000090"
 }
 ```
 
-Timestamp chỉ minh họa kiểu `date-time`; nguồn timestamp persisted cho soft delete và generator cho hard delete chưa được xác nhận.
+Timestamp minh họa local runtime serialization. Runtime dùng DB `updated_at` cho nhánh soft/repeat và `CURRENT_TIMESTAMP` từ hard-delete statement. Legacy DDL dùng `TIMESTAMP` không có timezone; chuẩn hóa offset theo `date-time` contract chưa được xác minh.
 
 ## Ví dụ lỗi — HTTP 404
 
@@ -61,14 +61,14 @@ Timestamp chỉ minh họa kiểu `date-time`; nguồn timestamp persisted cho s
 {
   "success": false,
   "businessCode": "DESIGN_RESOURCE_NOT_FOUND",
-  "message": "Không tìm thấy quiz.",
+  "message": "Quiz not found.",
   "data": null,
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000090"
 }
 ```
 
-API Guidelines yêu cầu error `data:null`; current `error_response` serialize `data=None` thành `{}`. API #90 chưa được wire nên đây là expected/current discrepancy.
+Error response của API #90 dùng `data:null` theo `error_response`; focused HTTP tests kiểm tra trường này.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

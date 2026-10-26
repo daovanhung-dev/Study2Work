@@ -7,44 +7,29 @@ source_sheet: "3. Data mapping — supplementary logical mutation"
 status: "Draft — Needs Confirmation"
 ---
 
-# Recipient association — logical UPDATE mapping
+# Recipient association — update boundary
 
 ## Mapping metadata
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Logical operation | Replace notification recipient association |
-| Trigger | Request body proposal DERIVED; not present in direct catalog contract |
+| Logical operation | No recipient association mutation in current API #94 fallback |
+| Trigger | Catalog/diagram do not declare recipients or segment in PUT body |
 | Candidate target | No approved Admin campaign-recipient table found |
-| Status | Logical mapping only; SOURCE_REQUIRED for persistence |
+| Runtime behavior | Body accepts only title/content; recipients and segment are rejected as extra fields |
+| Status | Physical audience replacement remains SOURCE_REQUIRED |
 | Related API | [#93 create notification](../93_admin_notifications_create/08_notification_recipients_insert.md) |
 
-## Logical input mapping
+## Preserved association
 
-| Logical field | Type | Proposed use | Validation/source status |
-|---|---|---|---|
-| notification_id | int64 | Identify the existing notification whose audience is changed | Direct path; physical target unresolved |
-| recipients | int64[] | Explicit audience candidate | Reused from #93; XOR/empty/duplicate/eligibility rules DERIVED or SOURCE_REQUIRED |
-| segment | AudienceSegment | Segment audience candidate | Reused from #93; token set and expansion predicate SOURCE_REQUIRED |
-| channels[] | NotificationChannel[] | Delivery channels are part of the proposed request, not a recipient relation key unless approved | Enum/storage mapping SOURCE_REQUIRED |
+- The checked-in legacy `notifications.user_id` represents one nullable recipient per row. API #94 addresses that row by `notification_id` and does not change `user_id`.
+- Existing `notification_deliveries` rows and their channel/status are locked and preserved.
+- V1-PILOT UUID learner relations are not used as an Admin association mapping.
+- API #94 adds no insert/delete of recipient rows and does not modify delivery history.
 
-## Proposed mutation semantics — DERIVED
+## Future owner decisions
 
-- Require exactly one audience selector: explicit recipients or segment.
-- Treat the selected audience as a full replacement only if the request body proposal is approved.
-- Do not infer a physical DELETE followed by INSERT; delivery history and idempotency behavior are unknown.
-- Do not modify or delete already-created delivery records without an approved lifecycle policy.
-- Use the same transaction as Notification metadata update only if the owner selects a persistence model and defines transaction ownership.
-
-## Candidate evidence
-
-| Source | Evidence | Why it is not a direct mapping |
-|---|---|---|
-| Legacy notifications | One nullable user_id per row; sender_id may identify sender | Does not establish campaign grain or a separate recipient relation |
-| V1-PILOT notification_deliveries | UUID notification ID and delivery-level channel/status | Learner/delivery model differs from Admin BIGINT Notification contract |
-| AC-36/#93 | Logical Notification + recipient flow and optional recipients/segment request fields | Does not define a physical relation, audience predicate, replacement semantics or delivery-history behavior |
-
-No physical table, column, SQL statement, new error code or runtime behavior is invented in this mapping.
+If recipient replacement is required, the owner must select the Admin campaign grain, recipient relation, segment predicate, validation/deduplication rules, delivery-history behavior, and transaction boundary. No physical mutation is specified here.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

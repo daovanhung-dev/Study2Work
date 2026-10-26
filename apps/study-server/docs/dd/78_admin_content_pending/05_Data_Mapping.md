@@ -14,7 +14,7 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ~~~text
-Admin Bearer principal -> authorize role Admin -> parse optional type/course/page -> Q1 logical Content read where status=PENDING_REVIEW and apply approved filters -> reconcile list cardinality with ApiEnvelope<Content> -> map only Content contract -> 200 DESIGN_RESOURCE_RETRIEVED; auth failures 401/403; query/mapping failures 500
+GET /api/v1/admin/content/pending -> shared ADMIN JWT guard -> parse raw type/course/page -> COUNT + page SELECT active contents with status=PENDING_REVIEW and identical exact filters -> map reusable Content -> return DERIVED Page<Content> in DESIGN_RESOURCE_RETRIEVED envelope; validation is derived 422; query/mapping failure is safe 500; no writes
 ~~~
 
 ## Mục lục
@@ -31,130 +31,113 @@ Admin Bearer principal -> authorize role Admin -> parse optional type/course/pag
 
 <a id="step-0-check-quyen"></a>
 
+<a id="0-check-quyen"></a><a id="step-0-check-quyen"></a>
 ## 0. Check quyền
 
 ### 0.1. Xác thực Admin
 
-- Đọc Authorization Bearer JWT theo catalog.
-- Xác thực token trước khi truy cập pending queue.
-- Principal cần role Admin theo catalog.
-- Current `validate_current_user_request` chỉ chấp nhận role `STUDENT`; không dùng guard này cho API #78.
-- Admin claims/guard/policy chưa có source hiện tại; API #78 chưa được wire.
+- Dùng `validate_current_user_request(..., role="ADMIN")` từ shared auth helper.
+- Xác thực Bearer/JWT và role trước khi parse `course`/`page` hoặc query.
+- Thiếu/sai token trả 401 `DESIGN_AUTHENTICATION_REQUIRED`; thiếu role trả 403 `DESIGN_ACCESS_DENIED`.
+- Shared guard hiện xác minh role ADMIN; permission `content-moderation` riêng chưa có source.
 
 ### 0.2. Thứ tự truy cập
 
-- Không chạy Q1 hoặc Q2 trước khi xác thực và authorize Admin thành công.
-- Không lộ payload/content IDs cho principal không có role Admin.
-
-### 0.3. Kết quả authorization
-
-- Thiếu/sai Bearer hoặc token không hợp lệ: 401 `DESIGN_AUTHENTICATION_REQUIRED` theo catalog.
-- Principal đã xác thực nhưng thiếu role Admin: 403 `DESIGN_ACCESS_DENIED` theo catalog.
-- Không thêm permission riêng, tenant rule hoặc physical admin table khi chưa có source.
+- Không chạy count/list query trước khi authorization và numeric query validation thành công.
+- Không để principal trái quyền suy luận số lượng hoặc đọc payload pending.
 
 <a id="step-1-validate-data-input"></a>
 
+<a id="step-1-validate-data-input"></a>
 ## 1. Validate data input
 
 ### 1.1. `type`
 
-- Nhận query `type` dạng string tùy chọn theo catalog.
-- Proposal `DERIVED`: khi có giá trị, lọc exact match trên logical `Content.content_type`.
-- ContentType members, casing, trimming và unknown-value behavior chưa được xác nhận.
+- Query string tùy chọn; giữ nguyên giá trị và exact-match `contents.content_type`.
+- Không trim, đổi case hoặc thêm whitelist vì ContentType members chưa có nguồn.
+- Chuỗi lạ hợp lệ về kiểu và thường trả page rỗng.
 
 ### 1.2. `course`
 
-- Nhận query `course` dạng int64 tùy chọn theo catalog.
-- Proposal `DERIVED`: khi có giá trị, lọc exact match trên logical `Content.course_id`.
-- Course existence rule và invalid/overflow mapping chưa được catalog xác định.
+- Parse raw query thành signed int64; không áp đặt positive-only rule ngoài contract.
+- Khi có giá trị, exact-match `contents.course_id`.
+- Sai format hoặc overflow trả 422 `DESIGN_VALIDATION_ERROR` theo fallback DERIVED; không truy cập DB.
 
 ### 1.3. `page`
 
-- Nhận query `page` dạng int32 tùy chọn theo catalog.
-- Catalog không nêu default/min/max/page size; response schema hiện cũng không có pagination.
-- Candidate nếu collection contract được duyệt: 1-based, default 1, fixed size 20, `id ASC`; toàn bộ là `DERIVED` theo precedent #68/#73, chưa áp dụng direct.
-- Không thêm `size` hoặc `sort` vào request.
+- Parse raw query thành positive int32; omitted mặc định 1.
+- Fixed page size là 20, theo Admin list #73; không thêm query `size` hoặc `sort`.
+- Sai format, `page < 1` hoặc vượt int32 trả 422 `DESIGN_VALIDATION_ERROR` theo fallback DERIVED.
+- `offset = (page - 1) * 20`; page nằm ngoài phạm vi dữ liệu vẫn trả 200 với items rỗng.
 
-### 1.4. Input parsing boundary
+### 1.4. Cardinality discrepancy
 
-- API #78 chỉ liệt kê error 401/403/500; không liệt kê 422.
-- Invalid enum, page <= 0, int overflow và framework query parsing cần contract/integration confirmation.
-- Middleware hiện trả 422 `VALIDATION_ERROR` cho path không thuộc `DESIGN_CONTRACT_PATHS`; route #78 hiện absent.
+- Direct catalog `ApiEnvelope<Content>` không khớp AC-33 queue/page flow.
+- Runtime chọn `ApiEnvelope<Page<Content>>` là DERIVED để biểu diễn nhiều rows và queue rỗng. Cần owner/catalog correction; không sửa catalog trong task này.
 
 <a id="step-2-get-thong-tin"></a>
 
+<a id="step-2-get-thong-tin"></a>
 ## 2. Get thông tin
 
-### 2.1. Q1 — logical pending queue read
+### 2.1. Q1 — count active pending Content
 
-AC-33 node n3 trực tiếp ghi “Đọc content status = PENDING_REVIEW”. Q1 chỉ được mô tả ở mức logical vì không có physical Content relation phù hợp đã được duyệt.
+`COUNT_ADMIN_PENDING_CONTENTS` đếm `contents` rows với predicates:
 
-| Logical field | Value/source | Rule/status |
+| Column | Predicate | Basis |
 |---|---|---|
-| `status` | `PENDING_REVIEW` | Direct fixed predicate từ AC-33. |
-| `content_type` | Query `type` khi được gửi | Exact-match candidate; enum/casing/source unresolved. |
-| `course_id` | Query `course` khi được gửi | Exact-match candidate; physical course relation unresolved. |
-| `id` | Content identifier | Không có Content BIGINT table đã được xác nhận. |
-| Content payload fields | Reusable Content schema | Field list direct; physical columns/serialization SOURCE_REQUIRED. |
+| `status` | `= 'PENDING_REVIEW'` | Direct AC-33 queue step n3. |
+| `deleted_at` | `IS NULL` | DERIVED active-row policy, aligned with current APIs #49/#53. |
+| `content_type` | Optional `= :content_type` | DERIVED exact mapping from query `type`. |
+| `course_id` | Optional `= :course_id` | DERIVED exact mapping from query `course`. |
 
-Do không có approved table/column, không viết SQL giả định như `contents`, `content_versions` hoặc đổi `content_blocks` thành Content. V1-PILOT `content_review_decisions` là decision log, không phải queue source.
+### 2.2. Q2 — read bounded page
 
-### 2.2. Pagination and ordering candidate
+`LIST_ADMIN_PENDING_CONTENTS` selects the same predicates and columns needed for reusable Content: `id`, `course_id`, `content_type`, `title`, `payload`, `status`, `parent_id`, `content_order AS order`. It orders by `id ASC`, with fixed `LIMIT 20` and computed `OFFSET`.
 
-- Nếu catalog response được cập nhật thành `ApiEnvelope<Page<Content>>`, dùng Q1 filter set thống nhất cho item query và count query.
-- Candidate: page omitted → 1; fixed size → 20; `offset = (page - 1) * 20`; stable order → `id ASC`.
-- Các candidate trên là `DERIVED`. Chưa có cột thời gian queue hoặc owner policy cho FIFO; `id ASC` chỉ là thứ tự ổn định đề xuất.
-- Khi giữ direct `ApiEnvelope<Content>`, không có mapping đã xác định để trả một page hoặc biểu diễn queue rỗng.
+Count and list share identical filter SQL and bound parameters. No `content_versions`, author, reviewer or decision-history join is performed. API #50 creates a current `contents` row as `PENDING_REVIEW`; API #51 snapshots the previous row and updates the current logical row to `PENDING_REVIEW`. Which revision the later #79–#81 operation should bind remains unresolved.
 
-### 2.3. Q2 — count candidate
+### 2.3. Kết quả query
 
-- Chỉ cần Q2 nếu response contract được chuyển sang Page có `PageMeta`.
-- Q2 phải dùng cùng `PENDING_REVIEW`, `type` và `course` predicates với Q1.
-- Content schema/table chưa có source; Q2 là logical requirement, không phải SQL được duyệt.
-
-### 2.4. Kết quả query
-
-- Query/storage/mapping failure: 500 `DESIGN_INTERNAL_ERROR` theo catalog.
-- Không có pending rows: candidate Page response là HTTP 200 với `items=[]`; empty behavior chưa áp dụng được cho direct `Content` đơn.
-- Không trả 404 cho queue rỗng vì catalog #78 không liệt kê 404.
-- Không select/version-join, review author hoặc decision record trong #78; AC-33 giao content/version/author detail cho #79.
-- Deleted/stale revision filtering và producer selection chưa được AC-33 quy định; giữ `SOURCE_REQUIRED`.
+- Query, malformed count, invalid page row, or invalid Content projection returns safe 500 `DESIGN_INTERNAL_ERROR` and rolls back the read transaction.
+- Empty queue and page beyond last page return 200 with `items=[]`, total preserved, and `total_pages=0` only when total is zero.
+- Soft-deleted rows are not returned under the local DERIVED active-row filter.
+- No query mutation, commit, audit or status transition occurs.
 
 <a id="step-3-map-response"></a>
 
+<a id="step-3-map-response"></a>
 ## 3. Map response
 
-### 3.1. Direct catalog contract
+### 3.1. Content item
 
-- Success code là 200 `DESIGN_RESOURCE_RETRIEVED` với `ApiEnvelope<Content>`.
-- Nếu Content row/cardinality được xác định, map đúng tám reusable fields tại `04_Response.md`.
-- `data.status` của item thuộc queue phải phản ánh `PENDING_REVIEW` theo predicate AC-33.
-- Không thêm `author`, `version`, `review_reason`, `reviewer`, decision history, `items` hoặc `pagination` vào direct response.
-- Vì response là một Content nhưng endpoint là queue có `page`, mapping cardinality chưa implementation-ready.
+- Reuse API #49 `ContentResponse`: `id`, `course_id`, `content_type`, `title`, object `payload`, `status`, nullable `parent_id`, `order`.
+- `status` must equal `PENDING_REVIEW`; returned filter values must match requested `type`/`course` when supplied.
+- `order` maps from `content_order`; it is not used as queue priority.
+- Do not add `author`, `version`, `review_reason`, `reviewer`, `items` or `pagination` to the Content item itself.
 
-### 3.2. Candidate collection contract — cần catalog correction
+### 3.2. Page envelope
 
-- Proposal `DERIVED`: `ApiEnvelope<Page<Content>>` với `items[]` và `pagination`.
-- Chỉ dùng proposal sau khi contract owner cập nhật catalog; không xem example candidate là runtime response.
-- Q1 row count, PageMeta và empty `items=[]` khi queue rỗng cần đồng bộ với API #68/#73 conventions.
+- Local DERIVED `data` is `{items: Content[], pagination: PageMeta}`.
+- `page` is the validated request/default; `size=20`; `total` is the count query; `total_pages=ceil(total/20)`, or 0 when total is 0.
+- Catalog's direct `data:Content` remains a documented discrepancy.
 
 ### Request Usage Matrix
 
 | Request item | Source | Mapping step | Query use | Branch/response use | Gap |
 |---|---|---|---|---|---|
-| Authorization | Catalog Bearer/Admin | 0.1 | Không bind query; authorize trước Q1 | 401/403 | Admin guard/claim SOURCE_REQUIRED. |
-| `type` | Catalog string | 1.1 | Candidate `content_type = :type` | Không echo request | Exact match/enum members SOURCE_REQUIRED. |
-| `course` | Catalog int64 | 1.2 | Candidate `course_id = :course` | Không echo request | Physical relation SOURCE_REQUIRED. |
-| `page` | Catalog int32 | 1.3 | Candidate LIMIT/OFFSET if Page | PageMeta only under revised contract | Current singular response conflicts. |
+| Authorization | Catalog Bearer/Admin | 0.1 | Authorize before query | 401/403 | Dedicated moderation permission remains open. |
+| `type` | Catalog string | 1.1 | Optional exact `content_type` | Not echoed | Enum values/casing not defined. |
+| `course` | Catalog int64 | 1.2 | Optional exact `course_id` | Not echoed | Malformed/overflow 422 is DERIVED. |
+| `page` | Catalog int32 | 1.3 | `LIMIT/OFFSET` | Page metadata | Default/size/order/422 are DERIVED. |
 | Body | Not declared | N/A | None | None | DIRECT absence. |
 
 ### Query Matrix
 
-| Query ID | Type | Candidate source | Logical fields/conditions | Result/branch | Evidence/status |
+| Query ID | Type | Source | Conditions | Result/branch | Evidence/status |
 |---|---|---|---|---|---|
-| Q1 | SELECT list, logical | Content source `SOURCE_REQUIRED` | `status=PENDING_REVIEW`; optional `content_type=:type`; optional `course_id=:course` | Queue rows; 500 on query/mapping failure | Status predicate DIRECT; table/columns SOURCE_REQUIRED. |
-| Q1-PAGE | LIMIT/OFFSET candidate | Same Q1 logical set | Candidate page 1/size 20/order id ASC | Page items only if catalog changes to Page | DERIVED; not current direct contract. |
-| Q2 | COUNT candidate | Same logical Content source | Exactly Q1 predicates | `PageMeta.total` candidate | Only if Page response approved; no physical SQL source. |
+| Q1 | COUNT | Legacy `contents` candidate | PENDING_REVIEW, active row, optional exact type/course | total | Status DIRECT; physical/filter/deleted mapping local candidate/DERIVED; live DB unknown. |
+| Q2 | SELECT page | Legacy `contents` candidate | Same Q1 filters, `id ASC`, LIMIT 20/OFFSET | current Content rows | Schema and API #49–#53 source; pagination/order DERIVED. |
 
 ### Mutation Matrix
 
@@ -164,40 +147,37 @@ Do không có approved table/column, không viết SQL giả định như `conte
 
 ## Response Source Matrix
 
-| Response field | Contract type | Source type | Table/column or generator | Transform/null rule | Gap/status |
-|---|---|---|---|---|---|
-| `success` | boolean | Envelope | Branch | true on success; false on error | Envelope convention. |
-| `businessCode` | string | Catalog | Branch literal | Exact listed code only | DIRECT. |
-| `message` | string | Application | Safe localized message | Exact wording unspecified | DERIVED. |
-| `data` | `Content` | Logical pending row | Queue result | Catalog says singular; list/page cardinality unresolved | DIRECT / DISCREPANCY. |
-| `data.id` | int64 | Content source | Logical Content identifier | Required | Physical mapping SOURCE_REQUIRED. |
-| `data.course_id` | int64 | Content source | Logical owning course | Required | Physical mapping SOURCE_REQUIRED. |
-| `data.content_type` | ContentType | Content source | Logical type | Preserve approved enum serialization | Enum/physical mapping SOURCE_REQUIRED. |
-| `data.title` | string | Content source | Logical title | Preserve approved stored value | Physical mapping SOURCE_REQUIRED. |
-| `data.payload` | object | Content source | Logical subtype payload | Do not invent keys/default | Schema/storage SOURCE_REQUIRED. |
-| `data.status` | ContentStatus | AC-33 predicate + Content source | Logical status | Must satisfy `PENDING_REVIEW` filter | Predicate DIRECT; serialization/storage SOURCE_REQUIRED. |
-| `data.parent_id` | int64? | Content source | Logical parent relation | Optional null/omit rule unresolved | SOURCE_REQUIRED. |
-| `data.order` | int32 | Content source | Logical sibling position | Does not determine queue sort | SOURCE_REQUIRED. |
-| `data.items[]` | `Content[]` | Q1 row set | Candidate Page wrapper | Not in direct schema | DERIVED; catalog update required. |
-| `data.pagination.page` | int32 | Query/default candidate | Page selection | Candidate page | DERIVED; wrapper not direct. |
-| `data.pagination.size` | int32 | Fixed-size candidate | Candidate 20 | No `size` query | DERIVED; wrapper not direct. |
-| `data.pagination.total` | int64 | Q2 candidate | Count with Q1 filters | 0 when no rows under candidate | DERIVED; no source query. |
-| `data.pagination.total_pages` | int32 | Formula candidate | `ceil(total/size)` | 0 when total=0 | DERIVED; wrapper not direct. |
-| `meta` | object | Envelope | `{}` candidate | No approved page metadata under direct contract | Candidate convention. |
-| `traceId` | uuid | Middleware | Current request trace | Propagate/generate | Current convention; endpoint unwired. |
-| Error `data` | null by guideline | Helper current behavior | `error_response()` default | Current helper emits `{}` | DISCREPANCY. |
+| Response field | Contract type | Source/generator | Transform/null rule | Status |
+|---|---|---|---|---|
+| `success` | boolean | Shared envelope | true on success | Runtime convention. |
+| `businessCode` | string | Catalog/helper | `DESIGN_RESOURCE_RETRIEVED` or exact error code | Success direct; 422 branch derived. |
+| `message` | string | Application | Safe localized message | Text not specified. |
+| `data.items[]` | Content[] | Query Q2 / `contents` | Map via API #49 reusable Content model | Page cardinality DERIVED. |
+| `data.items[].id` | int64 | `contents.id` | Preserve BIGINT value | Checked-in candidate; live source unknown. |
+| `data.items[].course_id` | int64 | `contents.course_id` | Preserve | Exact filter mapping DERIVED. |
+| `data.items[].content_type` | ContentType | `contents.content_type` | Preserve exact string | Enum not confirmed. |
+| `data.items[].title` | string | `contents.title` | Preserve | Legacy candidate. |
+| `data.items[].payload` | object | `contents.payload` | JSONB object to JSON mapping | No payload keys invented. |
+| `data.items[].status` | ContentStatus | `contents.status` | Selected row must be `PENDING_REVIEW` | Predicate direct; enum open. |
+| `data.items[].parent_id` | int64? | `contents.parent_id` | Preserve null | Optional reusable field. |
+| `data.items[].order` | int32 | `contents.content_order` | Alias to `order` | Checked-in candidate. |
+| `data.pagination` | PageMeta | Request + count | Page/default, 20, total, ceil(total/20) | DERIVED. |
+| `meta` | object | Shared envelope | `{}` | Current convention. |
+| `traceId` | uuid | Trace middleware | Propagate/generate | Current source. |
+| Error `data` | null | `error_response()` | JSON null by default | Current source; old DD `{}` claim corrected. |
 
 <a id="step-4-tra-response-hoac-loi"></a>
 
+<a id="step-4-tra-response-hoac-loi"></a>
 ## 4. Trả response hoặc lỗi
 
-1. Authenticate Bearer and require Admin before reading queue.
+1. Authenticate shared Bearer JWT and require role ADMIN before parsing/querying.
 2. Parse only catalog query keys `type`, `course`, `page`; do not add `size`/`sort`.
-3. Q1 selects logical items whose status is `PENDING_REVIEW` and applies approved optional filters.
-4. Return HTTP 200 `DESIGN_RESOURCE_RETRIEVED` using catalog `ApiEnvelope<Content>` only after cardinality is resolved; candidate collection response requires catalog correction.
-5. Thiếu/sai Bearer hoặc token không hợp lệ trả 401; principal thiếu role Admin trả 403 theo catalog.
-6. Query/mapping failure maps to 500 `DESIGN_INTERNAL_ERROR`; do not expose SQL, payload internals or stack trace.
-7. Detail/version/author lookup and approve/reject/audit effects remain in #79–#81.
+3. Count and select active rows whose status is `PENDING_REVIEW`; filters/order/page are documented above.
+4. Return HTTP 200 `DESIGN_RESOURCE_RETRIEVED` with DERIVED `Page<Content>`; queue empty is a valid empty page.
+5. Invalid numeric course/page returns derived 422 `DESIGN_VALIDATION_ERROR`; catalog correction remains open.
+6. Query/count/projection failure returns safe 500 `DESIGN_INTERNAL_ERROR` and rolls back; no commit/mutation.
+7. Detail/version/author and approve/reject/audit effects stay in #79–#81.
 
 Chi tiết error: [06_Error.md](./06_Error.md). Response fields: [04_Response.md](./04_Response.md).
 

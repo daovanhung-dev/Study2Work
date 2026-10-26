@@ -6,13 +6,13 @@
 |---|---|
 | Exact catalog contract | Giữ GET `/api/v1/mentor/courses/{course_id}/students/{student_id}/progress`, Bearer JWT/Mentor, hai path int64 bắt buộc, không query/body, `ApiEnvelope<Page<Course>>`, HTTP 200 và lỗi đúng 401/403/404/500. |
 | AC-26 trace | Đã đọc AC-26 index và full diagram: #65 class progress → #66 learning events → chọn Student → #67 đọc Student progress. Không tạo API-to-API call. |
-| Related DD review | Đã đọc #65/#66 và đối chiếu #21/#25/#37/#62; dùng #65 làm candidate consistency boundary, không lấy #37 làm direct contract cho #67. |
-| Current source | #67 không có route/module/focused test; Mentor guard absent; path chưa allowlist. API #9 current source lọc course/lesson PUBLISHED và sort theo `sort_order,id`. |
+| Related DD review | Đã đọc #65/#66 và đối chiếu #21/#25/#37/#62; dùng #65 làm consistency boundary cho fallback, không lấy #37 làm direct contract cho #67. |
+| Current source | #67 route/module/focused HTTP tests đã được wire; shared Mentor guard và middleware allowlist đều có. API #9 source lọc course/lesson PUBLISHED và sort theo `sort_order,id`. |
 | Database evidence | Legacy BIGINT progress rows là candidate, nullable và không có unique user/lesson; V1-PILOT dùng UUID facts/snapshot và không có per-lesson percent tương đương. Live schema chưa xác minh. |
-| Direct vs derived | Giữ Course/PageMeta direct schema. `StudentCourseProgress`, per-lesson detail, eligibility, missing-row rule và formula đều đánh dấu DERIVED/SOURCE_REQUIRED. |
-| AC-26 macro-review | #65 class summary, #66 event analytics, #67 one-Student detail; common lesson denominator/formula boundary documented. Contract mismatch/pagination/auth/schema questions remain open. |
-| Deliverables | 8 template sheets + 3 reports trong folder Markdown; `07_table.md` N/A — READ-ONLY API; không tạo ZIP/runtime/schema/catalog/diagram/context changes. |
-| Verification | Static checks ghi trong VERIFICATION_REPORT; không chạy application tests. |
+| Direct vs derived | Diagram/catalog trực tiếp vẫn là Page<Course>; runtime implement singular `StudentCourseProgress` để đáp ứng AC-26. Shape, roster/owner fallback, missing-row rule, duplicate selection và formula đều DERIVED; DD giữ Draft. |
+| AC-26 macro-review | #65 class summary, #66 event analytics, #67 one-Student detail; no API-to-API call. HTTP/source checks pass. Response mismatch and schema/business-policy choices remain DERIVED/open. |
+| Deliverables | 8 template sheets + 3 reports trong folder Markdown; `07_table.md` N/A — READ-ONLY API; runtime route/module/test/middleware đã thêm; catalog/diagram/schema không đổi. |
+| Verification | API #67: 25 HTTP tests; #65/#66 regression: 38; full Study suite: 723; Ruff and OpenAPI: PASS; DD static and diff check: PASS. Context validator has existing db-admin baseline failures; see VERIFICATION_REPORT. |
 
 ## API Requirement Matrix
 
@@ -25,10 +25,10 @@
 | Nhóm | Kết quả |
 |---|---|
 | Request Usage | Bearer Mentor scopes the course; `student_id` is not authorization by itself; no pagination/filter input. |
-| Query | Q1 course scope; Q2 roster membership; Q3 published lessons; Q4 student lesson state; all physical mapping remains schema candidate, not approved SQL. |
+| Query | Q1 direct owner; Q2 active Student roster; Q3 PUBLISHED lesson/current progress. Runtime SQL constants dùng legacy candidate; live schema chưa xác minh. |
 | Mutation | N/A — READ-ONLY API. |
-| Response Source | Direct contract Course/PageMeta is preserved but does not carry progress; candidate single `StudentCourseProgress` object is DERIVED. |
-| Shared candidate formula | #65/#67 both use PUBLISHED lesson denominator, completed status, floor average and zero for empty denominator. Each rule still requires approval. |
+| Response Source | Direct diagram/catalog Course/PageMeta does not carry progress; runtime singular `StudentCourseProgress` is DERIVED and remains a contract discrepancy. |
+| Shared fallback formula | #65/#67 both use PUBLISHED lesson denominator, completed status, floor average and zero for empty denominator. These rules remain subject to approval. |
 | Separation | #66 reads a learning-event source not found; #67 reads current progress state and does not count events. |
 
 ## Fingerprints — registered template SHA-256

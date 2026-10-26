@@ -1,65 +1,42 @@
 # Câu hỏi còn mở — API #78 Lấy pending content
 
-Trạng thái: `Draft — Needs Confirmation`. Catalog/diagram đã xác nhận queue predicate và endpoint sequence; contract response, Content persistence và Admin wiring chưa đủ để implementation.
+Trạng thái: `Draft — Needs Confirmation`. API #78 đã được wire dựa trên current legacy `contents` source và fallback Page; các mismatch catalog/policy/live DB vẫn cần owner review.
 
-## Q-78-01 — Queue trả một Content hay một danh sách?
+## Q-78-01 — Catalog có đổi response thành Page không?
 
-**Bằng chứng**
+Catalog #78 và AC-33 ghi `ApiEnvelope<Content>` đơn, trong khi endpoint mở queue và có query `page`. Runtime hiện trả `ApiEnvelope<Page<Content>>` để biểu diễn nhiều item và empty queue. Cần owner xác nhận và đồng bộ `docs/lists/list_api.md`/reusable response; không sửa catalog tự động.
 
-- Tên API là “Lấy pending content”; AC-33 mở hàng đợi và có query `page`.
-- Catalog success response là `ApiEnvelope<Content>` đơn, không phải `Page<Content>` hoặc collection.
-- API #68 có mismatch tương tự; #73 khai báo `Page<Course>` trực tiếp.
+## Q-78-02 — Pagination, default và ordering
 
-**Cần xác nhận**
+Runtime dùng page 1-based/default 1, fixed size 20, `id ASC`, count cùng filters và 200 cho empty/out-of-range Page theo API #73. Catalog không có size/order và không xác định pagination behavior. Cần phê duyệt page bounds, size và thứ tự review (FIFO hiện không được chứng minh bởi id).
 
-1. Giữ `ApiEnvelope<Content>` và giải thích page/cardinality nghĩa gì, hay sửa catalog/reusable response thành `ApiEnvelope<Page<Content>>`?
-2. Nếu là Page, có thêm `PageMeta` chuẩn và trả `items=[]` khi queue rỗng không?
+## Q-78-03 — Live schema/migration
 
-**Ảnh hưởng:** Chặn xác định Q1 row cardinality, response JSON, count query, empty behavior và dùng thực tế của `page`.
+Checked-in legacy DDL/migrations 006/007 và current APIs #49–#53 xác nhận local candidate `contents`/`content_versions`; fake-session tests không chứng minh migration đã apply hoặc live columns/constraints. Cần xác nhận database runtime thật.
 
-## Q-78-02 — Pagination, default và ordering là gì?
+## Q-78-04 — ContentType members/casing
 
-Catalog chỉ có `page?:int32`, không có `size` hoặc `sort`; không có Page response hiện hành. Nếu contract đổi sang Page, đề xuất đơn giản là page 1-based/default 1, size cố định 20, thứ tự `id ASC`. Cần xác nhận page <= 0/overflow và thứ tự ưu tiên review; `id ASC` không chứng minh FIFO.
+Runtime giữ raw `type` string và exact-match `contents.content_type`, không whitelist/normalize. Cần owner định nghĩa enum nếu client cần validate trước request.
 
-## Q-78-03 — Content được lưu ở đâu và row nào đại diện queue item?
+## Q-78-05 — Queue row và revision cho #79–#81
 
-Legacy DDL/ERD không có generic Content/version relation. V1-PILOT `content_blocks` dùng UUID + `lesson_id`; `content_review_decisions` là append-only decision log theo UUID `resource_version_id`. Chúng không khớp Content BIGINT response. Cần model/table/columns/PK/version schema và live migration đã duyệt.
+API #50 tạo logical row với `PENDING_REVIEW`; #51 lưu state cũ vào `content_versions` rồi đổi current row về `PENDING_REVIEW`. API #78 chỉ trả current `contents` row, không version metadata. Cần xác nhận version/revision mà detail #79 và quyết định #80/#81 sẽ đọc/ghi, cùng cách xử lý stale queue.
 
-## Q-78-04 — `type` filter khớp field/enum nào?
+## Q-78-06 — Deleted/stale visibility
 
-Catalog nhận `type:string`, response dùng `Content.content_type:ContentType`. Cần xác nhận equality/case, allowed values và cách xử lý unknown/blank. Không tự dựng ContentType whitelist.
+Runtime loại `deleted_at IS NOT NULL` theo fallback DERIVED phù hợp active views #49/#53. AC-33 không nói item bị soft-delete hoặc revision cũ có còn trong queue không; cần owner xác nhận cùng lifecycle #51/#53.
 
-## Q-78-05 — Queue chọn version hiện hành nào?
+## Q-78-07 — Admin moderation permission
 
-AC-33 node #79 đọc `content/version/author`, nhưng #78 response Content không có version metadata. Cần xác nhận queue chứa logical Content hay từng pending revision, revision nào hiển thị khi có bản PUBLISHED cũ và revision mới đang chờ review.
+Runtime dùng shared role `ADMIN` trước parse/query. Source hiện tại không chứng minh permission moderation riêng; cần xác nhận nếu AC-33 yêu cầu scope hẹp hơn role Admin.
 
-## Q-78-06 — Producer nào đưa item vào `PENDING_REVIEW`?
+## Q-78-08 — Error contract
 
-AC-33 trực tiếp lọc `status=PENDING_REVIEW`; #50 create và #51 update/version chỉ đề xuất trạng thái này trong các DD liên quan. Cần xác nhận trạng thái khởi tạo/chuyển revision, cập nhật nội dung khi đang review và ai có quyền rút pending item.
+Catalog chỉ liệt kê 401/403/500. Runtime thêm 422 `DESIGN_VALIDATION_ERROR` cho numeric query parse/range theo API #73; cần cập nhật catalog hoặc xác nhận behavior khác. Empty queue vẫn trả Page 200.
 
-## Q-78-07 — Deleted/stale content có nằm trong queue không?
+## Ranh giới đã triển khai
 
-AC-33 không chỉ rõ filter deleted/revision-stale. #53 đề xuất soft-delete và ẩn khỏi active views/queue nhưng marker và policy chưa được duyệt. Cần xác nhận queue có loại item đã xóa, revision superseded hoặc Content bị xóa trong lúc Admin review không.
-
-## Q-78-08 — Admin guard và query scope được xác định ra sao?
-
-Catalog yêu cầu role Admin; current shared Study guard chỉ chấp nhận Student. Cần claim/guard/Admin scope source và cách bảo đảm request chỉ đọc moderation queue. Không tái dùng Student guard hoặc tạo permission table.
-
-## Q-78-09 — Empty queue và invalid query dùng behavior nào?
-
-Catalog chỉ có lỗi 401/403/500, không có 404/422. Cần xác nhận empty queue, invalid `type`, `course` âm/overflow và `page` ngoài range mà không phát sinh code ngoài contract.
-
-## Q-78-10 — AC-33 approval/rejection có giữ cùng version với queue item không?
-
-Diagram đưa #80 approve sang `APPROVED/PUBLISHED` + audit và #81 reject sang `REJECTED` + reason. Cần chọn revision/row identity mà queue #78 và detail #79 truyền tiếp, đồng thời giữ audit/state transitions thống nhất khi #80/#81 được thiết kế.
-
-## Q-78-11 — Current error integration được đồng bộ thế nào?
-
-`DESIGN_CONTRACT_PATHS` chưa có `/api/v1/admin/content/pending`; framework fallback có thể trả 422/500 `VALIDATION_ERROR`/`INTERNAL_SERVER_ERROR`. API guideline yêu cầu error `data:null`, còn helper hiện trả `{}` khi không truyền data. Xác nhận allowlist/path handling và envelope khi wire route.
-
-## Ranh giới proposal
-
-- `status=PENDING_REVIEW` là direct queue predicate từ AC-33.
-- Exact `type`/`course` filter, page 1/default 1, size cố định 20, `id ASC` và empty Page 200 đều là `DERIVED`.
-- `ApiEnvelope<Page<Content>>` là đề xuất response shape cần catalog correction; DD vẫn ghi `ApiEnvelope<Content>` là direct contract.
-- Không thêm Content/version/review fields, status, business code, SQL table/column, audit write hoặc Admin claim bằng suy đoán.
+- Direct predicate `status=PENDING_REVIEW`; local source mapping `contents` và active-row filter `deleted_at IS NULL`.
+- Exact `type`/`course` filters; page default 1, size 20, `id ASC`; collection response Page; query validation 422. Các lựa chọn ngoài predicate direct đều là `DERIVED`.
+- API #78 chỉ đọc current Content fields; không thêm author/version/review metadata và không thực hiện #79–#81 decisions/audit.
+- Local tests/OpenAPI xác nhận route code hiện hành; không xác minh live DB, migration deployment hoặc policy approval.

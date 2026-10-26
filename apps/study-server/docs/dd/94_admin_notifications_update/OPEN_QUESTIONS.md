@@ -1,69 +1,66 @@
 # Câu hỏi còn mở — Study API #94 Admin cập nhật notification
 
-**Trạng thái DD:** Draft — Needs Confirmation. Giữ contract catalog trực tiếp; body/state và persistence proposal chưa được duyệt.
+**Trạng thái DD:** Draft — Needs Confirmation. Runtime có body và editability fallback DERIVED; catalog/diagram chưa khai báo body và owner chưa duyệt persistence/policy.
 
 <a id="q-94-01-request-body"></a>
 ## Q-94-01 — Request body của PUT
-**Evidence:** Catalog #94 chỉ khai báo path notification_id:int64!; AC-36 chỉ nói UPDATE Notification. DD #93 có recipients, segment, title, content, channels; Notification schema có optional scheduled_at.
-**Đề xuất DERIVED:** Full replacement gồm đúng một audience selector, title, content, channels, scheduled_at.
-**Cần xác nhận:** API #94 có nhận body không? Field nào được sửa? Có field nào partial/optional hay body phải full replacement?
+**Evidence:** Catalog #94 chỉ khai báo path `notification_id:int64!`; AC-36 chỉ nói UPDATE Notification. Runtime hiện nhận strict `{title, content}` vì legacy candidate có đúng hai cột text có thể cập nhật.
+**Cần xác nhận:** Có duyệt body này không? Cần partial update hay full replacement? Có field nào khác được phép sửa?
 
 <a id="q-94-02-audience-update"></a>
 ## Q-94-02 — Có cho thay audience không?
-**Evidence:** #93 hỗ trợ explicit recipients hoặc segment; #94 diagram không nhắc recipient mutation. Legacy table chỉ có một user_id; campaign-recipient relation chưa được xác nhận.
-**Đề xuất DERIVED:** Nếu body được duyệt, đúng một trong recipients hoặc segment thay thế audience hiện tại.
-**Cần xác nhận:** Có cho đổi audience không? Empty/duplicate recipient xử lý thế nào? Segment gồm predicate/token nào? Điều gì xảy ra với deliveries đã tạo?
+**Evidence:** Legacy `notifications.user_id` lưu một recipient trên mỗi row; không có campaign-recipient relation. Runtime giữ nguyên recipient và từ chối `recipients`/`segment` như field ngoài schema.
+**Cần xác nhận:** Có cần thay audience không? Nếu có, relation/predicate, empty/duplicate policy và ảnh hưởng đến delivery history là gì?
 
 <a id="q-94-03-field-validation"></a>
 ## Q-94-03 — Validation của title/content/channels
-**Evidence:** #93 required title/content/channels nhưng không nêu blank, length, enum tokens, empty hay duplicate rules. Legacy title VARCHAR(200) chỉ là candidate.
-**Cần xác nhận:** Trim/nonblank/length limits; NotificationChannel tokens; min/max số channel và duplicate policy.
+**Evidence:** Runtime fallback yêu cầu title/content nonblank; title tối đa 200 theo legacy DDL candidate. Channels không nhận trong body và chỉ được đọc từ delivery rows.
+**Cần xác nhận:** Duyệt giới hạn 200 và nonblank? Có yêu cầu trim? Có cần hỗ trợ đổi channels, token nào và quy tắc duplicate/empty ra sao?
 
 <a id="q-94-04-schedule-body"></a>
 ## Q-94-04 — scheduled_at và draft/scheduled state
-**Evidence:** Catalog mô tả cập nhật draft/scheduled conditionally; reusable Notification có optional scheduled_at; #94 body, enum state và queue behavior chưa được định nghĩa.
-**Đề xuất DERIVED:** scheduled_at:null nghĩa là Draft; future timestamp nghĩa là Scheduled; request là full replacement. Đây là logical proposal, không xác nhận enum hoặc scheduler action.
-**Cần xác nhận:** Null/omit semantics, past timestamp, timezone, precision, transition table và liệu reschedule có update/cancel queue hay không?
+**Evidence:** Legacy BIGINT schema không có scheduled_at hoặc scheduler; runtime không đổi lịch và không dispatch/cancel queue.
+**Cần xác nhận:** Có cần cập nhật lịch không? Nếu có, định nghĩa timezone, past timestamp, state transitions và coordination với scheduled jobs.
 
 <a id="q-94-05-editability"></a>
 ## Q-94-05 — Trạng thái nào được sửa?
-**Evidence:** Catalog purpose gợi ý draft/scheduled; không có enum values, state transition hoặc diagram guard chi tiết.
-**Đề xuất DERIVED:** Chỉ cho cập nhật conceptual Draft/Scheduled; dispatched/cancelled trả 422 bằng code hiện có.
-**Cần xác nhận:** Các state/token chính thức nào editable? Có cho sửa sau dispatch hoặc khi delivery đang chạy không? Missing/deleted target dùng 404 hay state conflict?
+**Evidence:** Catalog prose gợi ý draft/scheduled nhưng không định nghĩa trạng thái. Runtime fallback chỉ sửa khi có ít nhất một outbox row và mọi row `QUEUED`; trạng thái này không được gọi là Draft/Scheduled.
+**Cần xác nhận:** Duyệt điều kiện QUEUED này hay cung cấp lifecycle model/state transition chính thức? Xử lý row không có delivery, failed, canceled hoặc đang dispatch thế nào?
 
 <a id="q-94-06-persistence"></a>
-## Q-94-06 — Admin schema, recipient relation và transaction
-**Evidence:** Legacy BIGINT notifications thiếu channels/status/scheduled_at và campaign recipient relation. V1-PILOT dùng UUID learner/delivery model riêng.
-**Cần xác nhận:** Model nào là baseline? Cột/bảng nào lưu audience/channels/status/schedule? Update Notification và recipients có cùng transaction không? Audit/updated_at/locking/rollback do layer nào sở hữu?
+## Q-94-06 — Admin schema và transaction
+**Evidence:** Runtime dùng checked-in legacy BIGINT candidate; V1-PILOT dùng UUID learner model khác. Fake-session tests không xác minh PostgreSQL/live schema.
+**Cần xác nhận:** Legacy schema có phải Admin baseline không? Có cần migration/audit/updated_at hoặc campaign grain? Transaction/locking owner nào chịu trách nhiệm?
 
 <a id="q-94-07-admin-permission"></a>
 ## Q-94-07 — Admin permission
-**Evidence:** Catalog role Admin; AC-36 yêu cầu notification-management permission; Study Admin guard/policy chưa được xác minh.
+**Evidence:** Catalog role Admin; AC-36 yêu cầu notification-management permission; runtime chỉ dùng shared ADMIN role guard.
 **Cần xác nhận:** Claim/permission key, actor mapping, global/tenant scope và thứ tự 401/403/404?
 
 <a id="q-94-08-response-projection"></a>
 ## Q-94-08 — Notification response projection
-**Evidence:** Direct response ApiEnvelope<Notification>. Logical fields include channels/status/created_at and optional read_at/scheduled_at; compatible Admin persistence projection chưa được tìm thấy.
-**Cần xác nhận:** Enum/status source, omit-vs-null rules, channel persistence/projection và updated schedule projection. Không đổi cardinality hoặc thêm Operation fields trong DD này.
+**Evidence:** Catalog yêu cầu `ApiEnvelope<Notification>`. Runtime tái dùng response #92; channels/status lấy từ outbox và read_at/scheduled_at bị omit do candidate schema không có mapping.
+**Cần xác nhận:** Có duyệt projection recipient-level và QUEUED không? Cần `read_at`/`scheduled_at` hay campaign-level aggregate không? Không thêm Operation fields tự động.
 
 <a id="q-94-09-error-behavior"></a>
 ## Q-94-09 — Error triggers
-**Evidence:** Direct codes 401/403/404/422/500; field rules, target lookup, state guard và transaction failure mapping chưa được đặc tả.
-**Cần xác nhận:** 404 lookup/authorization precedence; body/state 422 triggers; rollback và error envelope behavior. Không thêm 409/503 khi chưa có contract.
+**Evidence:** Direct codes 401/403/404/422/500. Runtime dùng 422 cho validation và target không có/không còn QUEUED deliveries.
+**Cần xác nhận:** Duyệt các trigger 422 và thứ tự lookup/authorization? Có tombstone/deleted behavior nào?
 
 <a id="q-94-10-ac36-macro"></a>
 ## Q-94-10 — Macro-review AC-36 và #93 Operation ID
-**Evidence:** #92–#96 form notification management flow. #93 catalog/diagram response Notification conflicts with Operation tracking summary; Notification ID int64 and Operation ID UUID/int64 mismatch.
-**Cần xác nhận:** Owner cần chốt #93 response/ID bridge, request action/schedule handoff, #94 edit scope, #95 cancel/delete semantics and #96 status grain before closing group review.
+**Evidence:** #92–#96 tạo management flow; #93 Notification-vs-Operation response và ID bridge vẫn chưa được giải quyết. API #95 is now wired locally; #96 remains unwired. Xem macro-review để đọc trạng thái hiện tại.
+**Cần xác nhận:** Owner chốt #93 response/ID bridge, #94 edit scope, #95 cancel/delete semantics, #96 status grain và shared Admin policy trước khi đóng review.
 
 ## Ranh giới proposal
-- DIRECT: method/path/auth role/path type/no direct body or query/response/status/errors; diagram UPDATE Notification and reload intent.
-- DERIVED: body fields, full replacement, audience XOR, conceptual Draft/Scheduled guard and null/future schedule interpretation.
-- SOURCE_REQUIRED: physical schema, enums, permission policy, scheduler, transaction/audit, response field mapping.
-- DISCREPANCY: UPDATE intent without body; logical campaign model versus current candidate schemas.
+
+- DIRECT: method/path/auth role/path type/response/status/errors; diagram UPDATE Notification/reload.
+- WIRED DERIVED fallback: body `{title, content}`, validation local, target row grain, all-QUEUED eligibility, response projection từ outbox.
+- PRESERVED: audience, channels, schedule, read state, delivery rows và `created_at`.
+- SOURCE_REQUIRED: owner approval, live Admin schema, fine-grained permission, campaign/scheduler/lifecycle policy.
 
 ## AC-36 macro-review result
 
 - Status: `VERIFIED_WITH_OPEN_QUESTIONS` at document level; this API remains `Draft — Needs Confirmation`.
 - Group findings and owner decisions: [AC-36 macro-review #92–#96](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
-- No runtime, live-schema, deployment, or owner approval is implied.
+- Local tests do not imply live-schema, deployment, provider or owner approval.

@@ -1,27 +1,25 @@
 # Câu hỏi còn mở — API #86
 
-Trạng thái: Draft — Needs Confirmation. API contract và DeleteResult là trực tiếp; policy dependency và persistence dưới đây còn cần owner xác nhận.
+Trạng thái: Draft — Needs Confirmation. API contract là trực tiếp; cục bộ đã chọn fallback từ schema legacy và API #77. Owner approval và live-schema verification vẫn còn mở.
 
-1. **Delete policy:** Xác nhận soft-delete là policy mặc định hay cho phép hard delete? Proposal hiện ưu tiên soft-delete để giữ lịch sử.
-2. **Dependency set:** Ngoài resources và lesson_progress trong legacy DDL, relation/reference nào cần kiểm tra?
-3. **Blocker semantics:** Có reference/progress thì có chặn xóa và trả 422 DESIGN_VALIDATION_ERROR không? Trạng thái progress nào tính là blocker?
-4. **Persistence:** Marker soft-delete được lưu ở relation/column nào? Legacy và V1-PILOT Lesson hiện không có marker.
-5. **DeleteResult.deleted_at:** Timestamp lấy từ đâu, timezone/precision nào? Response yêu cầu field này nhưng chưa có persistence source.
-6. **Selected/live schema:** Runtime dùng legacy BIGINT lessons hay V1-PILOT UUID/versioned model? Live migration/FK metadata đã được xác nhận chưa?
-7. **Visibility:** Sau soft-delete, API #82 list và #83 detail ẩn lesson thế nào? #84 update/#85 status với lesson đã xóa trả gì?
-8. **Repeated DELETE:** Xóa lại trả success, 404 hay 422? Catalog không quy định idempotency/replay behavior.
-9. **Transaction/concurrency:** Q1/Q2 và soft-delete có cần một transaction/lock strategy nào để tránh reference xuất hiện giữa check và mutation?
-10. **Admin authorization:** JWT claim, lesson-management permission và scope boundary nào được duyệt?
-11. **Error integration:** Khi wire route, middleware path mapping và error data:null-vs-{} được đồng bộ ra sao?
-12. **Audit boundary:** AC-34 yêu cầu audit cho #85 status branch; xác nhận #86 delete không thêm audit nếu không có policy riêng.
+1. **Delete policy approval:** Cục bộ dùng status tombstone `lessons.status='DELETED'`; cần owner xác nhận policy này.
+2. **Dependency completeness:** Cục bộ chặn `lesson_progress`, `resources`, `lesson_uploads`; owner xác nhận set này đã đủ quan hệ cần bảo vệ.
+3. **Blocker semantics:** Cục bộ coi mọi progress row là blocker, không lọc status; cần owner xác nhận.
+4. **Selected/live schema:** Code dùng legacy BIGINT candidate. Live table/column/FK metadata và migration deployment chưa được xác nhận; V1-PILOT UUID model vẫn tách biệt.
+5. **Timestamp mapping:** Cục bộ trả DB `updated_at` từ mutation làm `deleted_at`, theo API #77; owner xác nhận ý nghĩa/precision nếu cần contract riêng.
+6. **Visibility:** Source ẩn tombstone trong Admin #82/#83/#84/#85 và Mentor/resource #48/#12; live behavior chưa được kiểm chứng.
+7. **Repeated DELETE:** Cục bộ trả 404 khi Lesson đã `DELETED`; catalog không định nghĩa idempotency.
+8. **Concurrency:** View khóa row, kiểm tra blockers và update trong một transaction; live FK lock behavior chưa được kiểm chứng.
+9. **Admin authorization:** Shared ADMIN role được thực thi; AC-34 lesson-management permission chưa có policy source.
+10. **Audit boundary:** #86 không thêm audit; các row audit hiện có của #85 được giữ.
 
 ## Ranh giới proposal
 
 - DIRECT: method/path/auth/role/input/output/status/error set; DeleteResult fields; AC-34 delete-policy/reload intent.
-- DERIVED: prefer soft-delete; block with 422 if approved progress/reference exists; atomic checks/mutation; candidate legacy dependency EXISTS checks.
-- SOURCE_REQUIRED: complete dependency graph, active schema/live DB, soft-delete marker, persisted deleted_at, visibility, Admin guard, transaction and repeat-delete semantics.
+- DERIVED local behavior: status tombstone, timestamp alias, progress/reference blocker set, 422 blocker response, active visibility, repeat-delete 404 and view-owned transaction.
+- SOURCE_REQUIRED/unverified: owner approval, complete live dependency graph, deployed schema/FKs, and fine-grained lesson-management permission.
 
 ## Kết quả macro-review AC-34
 
-- Status: `VERIFIED_WITH_OPEN_QUESTIONS` — đã đối chiếu tài liệu #82–#86; đây không phải owner approval hoặc runtime verification.
+- Status: `SOURCE_BACKED_WITH_OPEN_QUESTIONS` — đã đối chiếu diagram/catalog/schema và local runtime #82–#86; đây không phải owner approval hoặc live DB verification.
 - Bảng cross-API, các discrepancy và open question còn lại nằm trong [báo cáo macro-review](./VERIFICATION_REPORT.md#ac-34-macro-review).

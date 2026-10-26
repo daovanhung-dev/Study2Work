@@ -20,13 +20,13 @@ status: "Draft — Needs Confirmation"
 | Character encoding | UTF-8 |
 | Content-Type | N/A — catalog không khai báo request body. |
 | Authentication | Bearer JWT |
-| Role | Admin; AC-32 còn yêu cầu quyền course management. |
+| Role | Shared role `ADMIN`; AC-32 course-management permission riêng chưa có policy source. |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | `Authorization` | Yes | Bearer JWT | Xác thực Admin và quyền course management trước khi truy cập course. Claim/guard hiện chưa có source. | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) |
+| 1 | Authorization | `Authorization` | Yes | Bearer JWT | Shared guard yêu cầu role `ADMIN` trước path parsing/DB; quyền course-management riêng chưa được xác nhận. | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) |
 | 2 | Trace ID | `X-Trace-Id` | No | UUID | Shared middleware validate hoặc tạo correlation ID; không phải field nghiệp vụ. | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) |
 
 `Idempotency-Key` không có trong contract trực tiếp; chỉ xem xét nếu owner xác định DELETE này cần retry idempotency.
@@ -35,7 +35,7 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | Course ID | `course_id` | int64 | Yes | Chưa đặc tả | Chưa đặc tả | Số nguyên 64-bit | Chưa đặc tả | Không có | Khóa học Admin yêu cầu xóa theo policy. | [Data Mapping](./05_Data_Mapping.md#step-1-validate-data-input) |
+| 1 | Course ID | `course_id` | int64 | Yes | Chưa đặc tả | Chưa đặc tả | Signed 64-bit integer | Signed 64-bit integer; malformed/overflow → 422 | Không có | Course ID Admin yêu cầu xóa theo policy. Missing/already deleted → 404. | [Data Mapping](./05_Data_Mapping.md#step-1-validate-data-input) |
 
 ## Query parameters
 
@@ -54,10 +54,11 @@ Authorization: Bearer <admin-access-token>
 
 Ví dụ chỉ thể hiện method/path và Bearer authentication. Không gửi body hoặc query.
 
-## Quy tắc input đang mở
+## Quy tắc input và mapping
 
-- `course_id:int64!` là direct input; minimum/positive range và malformed/overflow mapping chưa được catalog đặc tả.
-- Catalog có 422 `DESIGN_VALIDATION_ERROR`; exact path parser behavior phải được xác nhận khi wire route.
+- `course_id:int64!` là direct input; malformed hoặc signed-int64 overflow trả 422 theo implementation fallback.
+- Signed-int64 path hợp lệ nhưng không match course candidate, kể cả course đã `DELETED`, trả 404.
+- Shared role `ADMIN` là fallback; permission course-management riêng vẫn cần owner xác nhận.
 - Không dùng query flag để chọn hard delete, cascade, anonymization hoặc bỏ qua dependency checks.
 - Dependency policy không phải request field; client không được tự khai báo lý do hoặc timestamp xóa.
 

@@ -47,7 +47,7 @@ GET /api/v1/mentor/lectures/48001
 Authorization: Bearer <JWT của Mentor>
 ~~~
 
-48001 chỉ minh họa một path ID int64, không xác nhận lecture hoặc record này tồn tại. Catalog không khai báo lỗi 422; cách xử lý giá trị path sai định dạng hoặc vượt int64 cần được xác nhận, không tự thêm business code.
+48001 chỉ minh họa một path ID int64, không xác nhận lecture hoặc record này tồn tại. Catalog không khai báo lỗi 422; runtime hiện maps malformed/out-of-range path values to 404 DESIGN_RESOURCE_NOT_FOUND as an implementation decision, still awaiting contract-owner confirmation.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

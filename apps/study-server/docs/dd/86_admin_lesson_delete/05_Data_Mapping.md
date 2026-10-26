@@ -31,10 +31,10 @@ status: "Draft — Needs Confirmation"
 
 - Xác thực Bearer JWT theo catalog.
 - Yêu cầu role Admin theo catalog.
-- Yêu cầu lesson-management permission theo AC-34.
+- Shared guard yêu cầu role ADMIN; AC-34 fine-grained lesson-management permission chưa có policy source.
 - Credential thiếu/sai/hết hạn → HTTP 401 DESIGN_AUTHENTICATION_REQUIRED.
 - Thiếu role/permission → HTTP 403 DESIGN_ACCESS_DENIED.
-- Current helper chỉ có Student guard; Admin claim, permission provider và guard chưa có.
+- `validate_current_user_request(..., role="ADMIN")` là guard dùng chung hiện tại.
 - Hoàn tất authorize trước mọi query để không làm lộ lesson existence hoặc dependency.
 
 ### 0.2. Quyền truy cập
@@ -42,8 +42,8 @@ status: "Draft — Needs Confirmation"
 | Target/API | Claim/policy | Condition | Status |
 |---|---|---|---|
 | Authorization header | Bearer JWT | Token hợp lệ | DIRECT requirement; route chưa có. |
-| Principal | Admin role | Principal có role Admin | DIRECT requirement; claim mapping SOURCE_REQUIRED. |
-| AC-34 policy | lesson-management permission | Principal được phép quản lý lesson | DIRECT precondition; policy implementation SOURCE_REQUIRED. |
+| Principal | ADMIN role | Principal có role ADMIN | DIRECT requirement; shared guard is wired. |
+| AC-34 policy | lesson-management permission | Principal được phép quản lý lesson | DIRECT precondition; dedicated policy implementation SOURCE_REQUIRED. |
 
 <a id="step-1-nhan-request"></a>
 
@@ -53,7 +53,7 @@ status: "Draft — Needs Confirmation"
 - Không thêm positive/minimum constraint chưa có nguồn.
 - Catalog và diagram không khai báo body hoặc query.
 - X-Trace-Id theo current middleware convention; không phải field nghiệp vụ.
-- Path parse/range error có thể map 422 DESIGN_VALIDATION_ERROR vì code có trong catalog; exact parser behavior cần xác nhận.
+- Raw signed-int64 parser maps format/range errors to 422 DESIGN_VALIDATION_ERROR.
 
 <a id="step-2-tim-lesson"></a>
 
@@ -61,19 +61,20 @@ status: "Draft — Needs Confirmation"
 
 ### 2.1. Q1 — Candidate existence lookup
 
-Câu query chỉ là legacy BIGINT schema candidate; chưa chạy và không chứng minh live schema.
+Câu query khóa một row legacy BIGINT chưa có tombstone; đây là DDL candidate, không chứng minh live schema.
 
 ```sql
-SELECT l.id
+SELECT l.id, l.status
 FROM lessons AS l
 WHERE l.id = :lesson_id
-LIMIT 1
+  AND l.status IS DISTINCT FROM 'DELETED'
+FOR UPDATE
 ```
 
 - Bind :lesson_id từ path bằng parameter binding.
-- Chỉ lấy định danh; DeleteResult không trả Lesson metadata.
-- Có row → tiếp tục Q2.
-- Không có row → candidate HTTP 404 DESIGN_RESOURCE_NOT_FOUND sau authorization.
+- Lấy ID/status để xác nhận target; `FOR UPDATE` tuần tự hóa blocker check và mutation.
+- Có row → tiếp tục Q2 trong cùng transaction.
+- Không có row hoặc status đã là `DELETED` → HTTP 404 DESIGN_RESOURCE_NOT_FOUND.
 - Query/mapping failure → 500 DESIGN_INTERNAL_ERROR.
 
 <a id="step-3-check-dependency-va-policy"></a>
@@ -92,7 +93,7 @@ SELECT EXISTS (
 )
 ```
 
-Legacy resources.lesson_id có FK tới lessons.id. Live FK và điều kiện references nào chặn thao tác cần xác nhận.
+Legacy `resources.lesson_id` tham chiếu `lessons.id`. Bất kỳ row nào là blocker cục bộ; live FK/policy chưa xác minh.
 
 ### 3.2. Q2b — Lesson progress
 
@@ -104,38 +105,51 @@ SELECT EXISTS (
 )
 ```
 
-Legacy lesson_progress.lesson_id có FK tới lessons.id. DDL không xác định progress status nào được giữ, xóa hoặc block; không lọc theo status khi chưa có policy.
+Legacy `lesson_progress.lesson_id` tham chiếu `lessons.id`. Bất kỳ row nào là blocker cục bộ; không lọc status và không đọc dữ liệu người học.
+
+### 3.3. Q2c — Attached upload references
+
+```sql
+SELECT EXISTS (
+    SELECT 1
+    FROM lesson_uploads
+    WHERE lesson_id = :lesson_id
+)
+```
+
+Legacy `lesson_uploads.lesson_id` tham chiếu Lesson và giữ thứ tự UploadAsset. Bất kỳ link nào là blocker; không xóa link hoặc upload.
 
 ### 3.3. Candidate branch
 
-- DERIVED recommendation: nếu Q2a hoặc Q2b trả true, dừng trước mutation và trả HTTP 422 DESIGN_VALIDATION_ERROR.
-- Không xóa, sửa hoặc cascade resource/progress rows.
-- Nếu không có reference/progress, tiếp tục soft-delete theo physical policy/schema đã được duyệt.
-- Blocker set và 422 condition cần owner xác nhận; catalog chỉ xác nhận status/code có trong error set.
+- Nếu Q2a, Q2b hoặc Q2c trả true, dừng trước mutation và trả HTTP 422 DESIGN_VALIDATION_ERROR.
+- Không xóa, sửa hoặc cascade resource/progress/upload rows.
+- Status audit rows từ API #85 được giữ làm lịch sử; chúng không cản logical tombstone.
+- Nếu không có dependency, tiếp tục M1 trong transaction đang giữ row lock.
+- Relation/blocker mapping là DERIVED từ legacy DDL và catalog intent; live constraints chưa được xác nhận.
 - Không suy ra enrollment/content moderation, completion, publication, parent course hoặc quiz policy ngoài quan hệ có evidence.
 
 <a id="step-4-soft-delete-theo-policy"></a>
 
 ## 4. Soft-delete theo policy
 
-### 4.1. M1 — Logical soft-delete recommendation
+### 4.1. M1 — Legacy status tombstone
 
 - AC-34 node n12 cho phép “Soft delete / delete theo policy”.
-- DERIVED recommendation: ưu tiên soft-delete để giữ lịch sử lesson và tránh phá references.
-- Legacy lessons không có deleted_at, is_deleted, archived_at hoặc soft-delete status contract.
+- DERIVED fallback: set `lessons.status='DELETED'` to preserve history, following API #77's legacy soft-delete marker.
+- Legacy lessons have no `deleted_at`; set `updated_at=CURRENT_TIMESTAMP` and use its DB-returned value as `DeleteResult.deleted_at`.
 - V1-PILOT lessons dùng UUID và cũng không có deletion marker; không dùng archived_at của course thay cho lesson deletion.
-- Do đó không viết UPDATE/DELETE SQL, không tạo cột/table và không hard-delete/cascade như fallback.
-- Physical relation, marker, timestamp source, visibility predicate và affected-row semantics là SOURCE_REQUIRED.
-- DERIVED transaction recommendation: dependency check và approved soft-delete atomic; transaction caller/locking/isolation cần xác nhận.
+- Không tạo column/table, không hard-delete và không cascade.
+- Active Admin list/detail/update/status and Mentor/resource reads exclude `DELETED` rows.
+- UPDATE target still requires `status IS DISTINCT FROM 'DELETED'`; a concurrent/repeated delete with no returned row maps to 404.
+- `FOR UPDATE`, dependency checks and update share the view-owned transaction; live lock/FK behavior is unverified.
 - API #86 không có audit step trong AC-34; không sao chép audit của API #85.
 
 ### 4.2. Mutation Matrix
 
 | Mutation | Target/effect | Condition | Fields/effect | Status |
 |---|---|---|---|---|
-| M1 | Logical lesson soft-delete | Q1 exists; approved dependency policy permits | Mark lesson deleted; physical fields unknown | DIRECT policy option; soft-delete choice DERIVED; physical mapping SOURCE_REQUIRED |
-| M1 | Legacy lessons | No approved marker | No SQL or column is specified | SOURCE_REQUIRED |
-| Dependency rows | resources, lesson_progress | Any row candidate blocks | No child delete/update/cascade | DERIVED block proposal; no child mutation |
+| M1 | Legacy lessons | Q1 exists; Q2a/Q2b/Q2c are false | Set `status='DELETED'`, `updated_at=CURRENT_TIMESTAMP` | DERIVED local fallback |
+| Dependency rows | resources, lesson_progress, lesson_uploads | Any row blocks with 422 | No child delete/update/cascade | DERIVED local policy |
 | Audit | None in #86 flow | N/A | Do not copy #85 status audit | No direct requirement |
 
 <a id="step-5-map-deleteresult"></a>
@@ -146,18 +160,18 @@ Legacy lesson_progress.lesson_id có FK tới lessons.id. DDL không xác địn
 
 - data.id = approved lesson target ID after delete policy completes.
 - data.status = literal "deleted" from reusable DeleteResult schema.
-- data.deleted_at = persisted timestamp from the approved soft-delete source.
+- data.deleted_at = DB-returned `lessons.updated_at` from the tombstone UPDATE.
 - Do not use request time or an unpersisted application clock as deleted_at.
-- DeleteResult field/type is DIRECT; target persistence and timestamp mapping remain SOURCE_REQUIRED.
+- DeleteResult field/type is DIRECT; `updated_at` timestamp mapping is DERIVED from API #77 precedent.
 - Do not return Lesson fields, dependency details or audit data.
 
 ### 5.2. Result/error branches
 
-- No lesson from Q1 → candidate 404 DESIGN_RESOURCE_NOT_FOUND.
-- Reference/progress blocker under proposed policy → candidate 422 DESIGN_VALIDATION_ERROR.
+- No active lesson from Q1, including repeat delete → 404 DESIGN_RESOURCE_NOT_FOUND.
+- Any progress/resource/upload blocker → 422 DESIGN_VALIDATION_ERROR.
 - Query, persistence, timestamp mapping, response mapping or commit failure → 500 DESIGN_INTERNAL_ERROR.
 - Do not return raw SQL, stack trace, dependency identifiers or learner information.
-- Repeated delete/idempotency behavior is unresolved; do not silently return success/404/422 on a prior deletion.
+- Repeated delete returns 404 locally because Q1 excludes rows marked `DELETED`; this is DERIVED because catalog does not define idempotency.
 
 <a id="step-6-tra-response-hoac-loi"></a>
 
@@ -166,20 +180,20 @@ Legacy lesson_progress.lesson_id có FK tới lessons.id. DDL không xác địn
 1. Authorize Admin before Q1.
 2. Parse required path ID according to int64 contract.
 3. Q1 checks target existence; no row uses candidate 404.
-4. Q2a/Q2b check approved reference/progress scope.
+4. Q2a/Q2b/Q2c check progress, resources and attached upload links.
 5. Candidate blocker maps to catalog 422 and makes no mutation.
-6. Approved logical soft-delete runs only with a selected physical marker and timestamp source.
+6. With no blockers, UPDATE the legacy status marker and persisted timestamp.
 7. Map full DeleteResult, including persisted deleted_at, then return HTTP 200 DESIGN_RESOURCE_DELETED.
 8. Preserve exact 401/403/404/422/500 catalog errors; no new code/status.
 9. Return only after the approved transaction completes.
-10. Theo AC-34, sau success client gọi API #82 để reload danh sách; kết quả còn phụ thuộc cardinality/filter contract của #82 và visibility policy soft-delete chưa được duyệt.
+10. Theo AC-34, sau success client gọi API #82 để reload danh sách; #82 excludes `DELETED` rows in this local implementation.
 
 ## Request Usage Matrix
 
 | Request item | Source/use | Query/mutation use | Response/error use | Status |
 |---|---|---|---|---|
-| Authorization | Header Bearer JWT | Admin/lesson permission before Q1 | 401/403; no dependency leakage | DIRECT; Admin claims SOURCE_REQUIRED |
-| lesson_id | Required path int64 | Q1, Q2a, Q2b, approved M1 target | data.id after successful operation; no-row 404 | DIRECT type; legacy BIGINT candidate |
+| Authorization | Header Bearer JWT | Shared ADMIN guard before Q1 | 401/403; no dependency leakage | DIRECT role; dedicated permission SOURCE_REQUIRED |
+| lesson_id | Required path int64 | Q1, Q2a/Q2b/Q2c, M1 target | data.id after success; absent/repeated delete 404 | DIRECT type; legacy BIGINT candidate |
 | Body/query | None | None | None | DIRECT absence |
 | X-Trace-Id | Shared middleware | No SQL binding | traceId/header correlation | Current-source convention |
 
@@ -187,11 +201,12 @@ Legacy lesson_progress.lesson_id có FK tới lessons.id. DDL không xác địn
 
 | Query | Type | Source/target | Predicate/result | Status |
 |---|---|---|---|---|
-| Q1 | SELECT | Legacy lessons candidate | id = :lesson_id | DERIVED existence query; live schema unknown |
-| Q2a | EXISTS | Legacy resources candidate | lesson_id = :lesson_id | DIRECT dependency category; physical relation/policy candidate |
-| Q2b | EXISTS | Legacy lesson_progress candidate | lesson_id = :lesson_id | DIRECT progress category; status/block semantics SOURCE_REQUIRED |
-| Q2 result | Branch | Q2a/Q2b | Any candidate reference → no mutation, 422 proposal | DERIVED; owner confirmation required |
-| M1 | Logical soft-delete | No approved physical source | Persist deleted state and timestamp | AC-34 option DIRECT; recommendation DERIVED; physical mapping SOURCE_REQUIRED |
+| Q1 | SELECT FOR UPDATE | Legacy lessons candidate | id = :lesson_id and status distinct from DELETED | DERIVED target/lock query; live schema unknown |
+| Q2a | EXISTS | Legacy resources candidate | lesson_id = :lesson_id | DERIVED reference blocker |
+| Q2b | EXISTS | Legacy lesson_progress candidate | lesson_id = :lesson_id | DERIVED progress blocker, any status |
+| Q2c | EXISTS | Legacy lesson_uploads candidate | lesson_id = :lesson_id | DERIVED attached-file reference blocker |
+| Q2 result | Branch | Q2a/Q2b/Q2c | Any reference → no mutation, catalog 422 | DERIVED local policy |
+| M1 | UPDATE | Legacy lessons candidate | status DELETED, updated_at CURRENT_TIMESTAMP | DERIVED from API #77; live schema unknown |
 
 ## Response Source Matrix
 
@@ -200,12 +215,12 @@ Legacy lesson_progress.lesson_id có FK tới lessons.id. DDL không xác địn
 | success | ApiEnvelope<T> | true on success; false on error | DIRECT envelope field |
 | businessCode | Catalog | Exact success/error code | DIRECT; no additional code |
 | message | Application | Safe localized message | Exact wording DERIVED |
-| data.id | DeleteResult / approved target | Lesson ID after operation | DIRECT field; physical source candidate |
+| data.id | DeleteResult / lessons.id | Lesson ID after operation | DIRECT field; legacy BIGINT candidate |
 | data.status | DeleteResult | Literal deleted | DIRECT exact value |
-| data.deleted_at | DeleteResult | Approved persisted deletion timestamp | DIRECT type; physical mapping SOURCE_REQUIRED |
+| data.deleted_at | DeleteResult / lessons.updated_at | DB timestamp written by M1 | DIRECT type; DERIVED mapping |
 | meta | Envelope | Empty object candidate | No dependency metadata in contract |
 | traceId | Current middleware | Propagate/generate UUID | Current-source convention |
-| Error data | API guideline/current helper | Guideline null; current helper defaults {} | DISCREPANCY before runtime wiring |
+| Error data | Current response helper and API #86 tests | `null` for errors | Current source behavior verified locally |
 
 ---
 

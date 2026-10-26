@@ -26,7 +26,7 @@ status: "Draft — Needs Confirmation"
 | No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
 |---:|---|---|---|---|---:|---|---|---:|---|---|---|
 | 1 | HTTP status | HTTP status | N/A | integer | No | N/A | N/A | 5 | Fixed by result branch | N/A | Success 200; catalog errors 401/403/404/422/500. |
-| 2 | success | Success flag | success | boolean | No | Envelope | success | 5 | true on success | Never omitted | Study helper convention; endpoint absent. |
+| 2 | success | Success flag | success | boolean | No | Envelope | success | 5 | true on success | Never omitted | Local route uses Study helper convention; fake DB tests pass. |
 | 3 | businessCode | Business code | businessCode | string | No | Catalog | N/A | 5 | DESIGN_RESOURCE_UPDATED | Never omitted | DIRECT. |
 | 4 | message | Message | message | string | No | Application | N/A | 5 | Safe localized message | Exact wording unspecified | DERIVED wording. |
 | 5 | data | Content | data | object | No | Logical Content | N/A | 5 | Project target Content | Required by schema | Physical projection SOURCE_REQUIRED. |
@@ -39,7 +39,7 @@ status: "Draft — Needs Confirmation"
 | 5.7 | data.parent_id | Parent identifier | parent_id | int64 | Yes/optional | Content relation | SOURCE_REQUIRED | 2 | Return stored value | Null versus omission SOURCE_REQUIRED | Optional in reusable schema. |
 | 5.8 | data.order | Sibling order | order | int32 | No | Content relation | SOURCE_REQUIRED | 2 | Return stored value | No default declared | Physical mapping SOURCE_REQUIRED. |
 | 6 | meta | Metadata | meta | object | No | Envelope | meta | 5 | Empty object candidate | Serialization must match Study helper | No pagination contract. |
-| 7 | traceId | Request trace | traceId | uuid | No | Request trace | N/A | 5 | Propagate trace ID | Required by envelope | Current endpoint absent. |
+| 7 | traceId | Request trace | traceId | uuid | No | Request trace | N/A | 5 | Propagate trace ID | Required by envelope | Local route uses Study trace helper; live deployment unverified. |
 
 ## Thành công — illustrative JSON
 

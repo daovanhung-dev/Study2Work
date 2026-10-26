@@ -26,7 +26,7 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|
-| 1 | Authorization | `Authorization` | Yes | Bearer JWT | Xác thực principal Admin trước khi đọc queue; claim/guard chưa có source. | [Data Mapping](./05_Data_Mapping.md#0-check-quyen) |
+| 1 | Authorization | `Authorization` | Yes | Bearer JWT | Shared `validate_current_user_request(..., role="ADMIN")` xác thực principal trước khi parse query hoặc đọc queue. | [Data Mapping](./05_Data_Mapping.md#0-check-quyen) |
 | 2 | Trace ID | `X-Trace-Id` | No | UUID | Shared middleware validate hoặc tạo correlation ID; không phải field nghiệp vụ. | [Data Mapping](./05_Data_Mapping.md#0-check-quyen) |
 
 ## Path parameters
@@ -37,9 +37,9 @@ N/A — catalog không khai báo path parameter.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Content type | `type` | string | No | Chưa đặc tả | Chưa đặc tả | Query string | ContentType values chưa có nguồn | Không có | Candidate exact filter trên logical `Content.content_type`; casing và enum chưa chốt. | [Data Mapping](./05_Data_Mapping.md#1-validate-data-input) |
-| 2 | Course ID | `course` | int64 | No | Chưa đặc tả | Chưa đặc tả | Số nguyên 64-bit | Chưa đặc tả | Không có | Candidate filter trên logical `Content.course_id`. | [Data Mapping](./05_Data_Mapping.md#1-validate-data-input) |
-| 3 | Page | `page` | int32 | No | Chưa đặc tả | Chưa đặc tả | Số nguyên 32-bit | Chưa đặc tả | Không có | Catalog khai báo page nhưng không khai báo size hoặc collection response. | [Data Mapping](./05_Data_Mapping.md#1-validate-data-input) |
+| 1 | Content type | `type` | string | No | Không áp dụng | Không áp dụng | Query string | Mọi chuỗi; exact match | Không có | Exact filter trên `contents.content_type`; không whitelist enum hoặc normalize. | [Data Mapping](./05_Data_Mapping.md#1-validate-data-input) |
+| 2 | Course ID | `course` | int64 | No | -2^63 | 2^63-1 | Signed 64-bit integer | Mọi signed-int64 | Không có | Exact filter trên `contents.course_id`; sai format/range trả derived 422. | [Data Mapping](./05_Data_Mapping.md#1-validate-data-input) |
+| 3 | Page | `page` | int32 | No | 1 | 2^31-1 | Số nguyên 32-bit | Positive int32 | 1 — DERIVED | Page 1-based; fixed size 20, `id ASC`; sai format/range trả derived 422. | [Data Mapping](./05_Data_Mapping.md#1-validate-data-input) |
 
 Catalog không khai báo `size` hoặc `sort`; không thêm hai query này vào contract.
 
@@ -54,15 +54,15 @@ GET /api/v1/admin/content/pending?type=SOURCE_REQUIRED&course=501&page=1
 Authorization: Bearer <admin-access-token>
 ```
 
-`type=SOURCE_REQUIRED` chỉ là placeholder chuỗi để minh họa tên query, không phải ContentType member hợp lệ. Ví dụ không xác nhận page default, filter matching hoặc response cardinality.
+`type=QUIZ` minh họa một exact string filter từ current test fixture, không xác nhận bộ ContentType enum. Page default/range là fallback DERIVED; response runtime dùng Page trong khi catalog còn khai báo Content đơn.
 
 ## Quy tắc input đang mở
 
-- `type` là string direct; allowed ContentType values và exact casing cần source/owner xác nhận.
-- `course` là int64 optional; minimum/positive range và malformed/overflow behavior chưa có contract.
-- `page` là int32 optional; default, minimum, fixed page size và behavior khi ngoài range chưa được catalog đặc tả.
-- Catalog #78 không khai báo HTTP 422; không tự thêm validation error code cho query parsing.
-- Nếu response được đổi thành Page, candidate page 1-based/default 1 và fixed size 20 là `DERIVED`; cần cập nhật catalog/reusable response đồng bộ.
+- `type` giữ nguyên chuỗi và exact-match `content_type`; enum members/casing vẫn chưa được owner xác nhận.
+- `course` phải parse thành signed int64; không áp đặt positive-only rule; malformed/overflow trả derived 422.
+- `page` là positive int32; default 1, size cố định 20 và page ngoài range trả derived 422 theo convention API #73.
+- Catalog #78 không liệt kê HTTP 422; runtime dùng 422 `DESIGN_VALIDATION_ERROR` như derived fallback cho numeric query validation. Cần owner đồng bộ catalog.
+- Runtime đã chọn `Page<Content>` DERIVED để biểu diễn queue; giữ catalog trực tiếp như cũ và yêu cầu owner đồng bộ cardinality/pagination.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -30,7 +30,7 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | Content ID | content_id | int64 | Yes | Not specified | Not specified | Integer | Integer range chưa được catalog ghi | N/A | Định danh Content cần duyệt. | [Step 1](./05_Data_Mapping.md#1-validate-data-input) |
+| 1 | Content ID | content_id | int64 | Yes | Not specified | Not specified | Signed integer | Signed-int64 parser; malformed/out-of-range maps to 422 | N/A | Định danh Content cần duyệt. | [Step 1](./05_Data_Mapping.md#1-validate-data-input) |
 
 ## Query parameters
 

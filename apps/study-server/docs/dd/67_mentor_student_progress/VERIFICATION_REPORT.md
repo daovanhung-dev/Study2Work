@@ -2,47 +2,45 @@
 
 ## Kết quả
 
-- DD status: Draft — Needs Confirmation; response-shape, authorization and schema decisions remain open.
-- Deliverables: đúng 8 template sheets và 3 reports, tổng cộng 11 Markdown files.
-- Runtime API #67: UNWIRED / NOT_FOUND; không có route/module/focused test.
-- AC-26 macro-review #65–#67: `VERIFIED_WITH_OPEN_QUESTIONS` ở mức tài liệu/source tĩnh.
-- Runtime tests: không chạy; docs-only.
+- DD status: Draft — Needs Confirmation. Contract response, roster/privacy mapping, progress schema, duplicate handling and summary formula include DERIVED runtime decisions and still need product/schema approval.
+- Runtime: GET /api/v1/mentor/courses/{course_id}/students/{student_id}/progress is wired through the Mentor route and middleware contract allowlist. It authenticates before database access, checks direct course ownership and ACTIVE Student roster eligibility, and performs read-only lesson progress mapping.
+- Runtime response: the singular StudentCourseProgress detail follows AC-26's selected-Student purpose. The diagram/catalog still declare ApiEnvelope<Page<Course>>; this remains an explicit discrepancy, not a catalog change.
+- Deliverables: 8 canonical sheets plus OPEN_QUESTIONS, PLAN_RESULT and this report (11 Markdown files).
+- AC-26 macro-review: source and HTTP behavior for #65–#67 was reviewed together; the #67 response/schema and business-policy choices remain DERIVED.
 
 ## Kiểm tra
 
 | Check | Kết quả | Trạng thái |
 |---|---|---|
-| Worklog preflight | Deno selector chọn #48/#49/#50; cả ba worklog đã đọc đầy đủ; không thiếu. | PASS |
-| Plan-before-authoring | Requirement, current behavior, source trace, plan và năm ma trận được ghi trong worklog trước khi tạo DD folder. | PASS |
-| Catalog/diagram | Exact contract #67 và thứ tự AC-26 #65 → #66 → chọn Student → #67 đã đối chiếu. | PASS — STATIC |
-| Source/schema | #65–#67 đều không có route/module/focused test; API #9 source lọc PUBLISHED course/lesson và sort `sort_order,id`; legacy và V1-PILOT progress schema vẫn khác nhau. | PASS — STATIC SOURCE REVIEW |
-| Manifest/front matter | Exact 11-file set; cả 8 sheet có dd_id 67 và Draft — Needs Confirmation. | PASS |
-| Contract/error set | GET path, Bearer JWT/Mentor, hai path int64, no query/body, `ApiEnvelope<Page<Course>>`, HTTP 200; đúng 4 direct errors 401/403/404/500. | PASS |
-| Direct/candidate response | Course/PageMeta/envelope fields được liệt kê; `StudentCourseProgress` và mọi progress fields/formula tách riêng, gắn DERIVED. | PASS |
-| Template appendix | 8/8 output appendix suffix trùng registered template byte-for-byte. | PASS |
-| JSON/Markdown | JSON parse; relative links/anchors resolve; table widths nhất quán; fences cân bằng; không trailing whitespace. | PASS |
-| AC-26 macro-review | Tách class progress (#65), event analytics (#66), detail hiện trạng theo Student (#67); xác nhận shared #65/#67 candidate formula, response/page gaps, access/schema/error blockers. | VERIFIED_WITH_OPEN_QUESTIONS |
-| `git diff --check` | Chạy sau khi cập nhật reports và worklogs. | PASS |
-| Runtime tests | Không chạy; docs-only và endpoint chưa wired. | NOT_RUN |
-| Context validator | Không áp dụng; không thay đổi context page hoặc manifest. | NOT_APPLICABLE |
+| Worklog preflight | Deno selector selected 3 coding worklogs (#34, #47, #48); all were read; no shortage. | PASS |
+| Plan before coding | Requirement, source trace, discrepancies and eight-step implementation plan were recorded before implementation. | PASS |
+| API #67 HTTP suite | 25 passed; includes auth-before-DB, int64 paths, ownership/roster, ordered lessons, missing progress, aggregate, invalid rows, DB errors, read-only behavior and OpenAPI. | PASS |
+| Linked #65/#66 regression | 38 passed. | PASS |
+| Full Study suite | 723 passed; one upstream Starlette/httpx TestClient deprecation warning. | PASS |
+| Ruff | Full app/tests lint passed. | PASS |
+| OpenAPI | API #67 path present; 37 unique /api/v1 paths and 38 operations. | PASS |
+| DD static check | 11 Markdown files; JSON blocks, relative file links, code fences, trailing whitespace and exact template appendix suffixes checked. | PASS |
+| Template appendix | All 8 canonical sheets preserve their registered template appendix suffix byte-for-byte. | PASS |
+| git diff --check | Passed after implementation and DD/context updates. | PASS |
+| Context validator | Deno execution works. With --skip-drift it reports pre-existing missing db-admin context/source paths and links; default run also reports broad dirty-tree source drift. No db-admin changes were made. | BASELINE INVALID |
+| Live DB/deployment | Fake-session HTTP tests do not prove deployed schema, database state or deployment behavior. | NOT VERIFIED |
 
 ## Output fingerprints — SHA-256
 
 | Sheet | SHA-256 |
 |---|---|
-| 00_Cover.md | 346e49bcdef381bca0cb5020e19533f860884f07caacdeacce891075a41a4869 |
-| 01_Lich_su.md | 05c87e96b29c7aeaf275facc5b65f5430a010e1c2ae4c1a4413a0c7f5bde873d |
-| 02_Overview.md | 77d4aa51846a0507039c4a77d50264f982165d8c6d87586bb74375d4ae94be0a |
-| 03_Request.md | 29ccbb954c36036388a9ae46edb4907707db68b58dabd885f679f0dfd0170b51 |
-| 04_Response.md | 9c832cf62ab9dc2228261e2d55db7153b08b85749942e6d0c0caf9a16a870206 |
-| 05_Data_Mapping.md | 6f6cd598dc7d70946619219211eea3fd5e061331ca6696ee80ccdc38a7c40b0c |
-| 06_Error.md | 5dd4b00989e47490ddb230e0258ecb88a4fec53cac6ec1f730d9cf34a73d6b20 |
-| 07_table.md | 31a24ccdfc0464423abfc4a21303f420d31780ba90a23f78afed0aa9ca4b3262 |
+| 00_Cover.md | 37adce5d9618145f1fa65f53638eef3dbe97a4bb486ca4c81a70a81a5d5193b5 |
+| 01_Lich_su.md | 99543dcae3b06cbd6e541387c444df172b4ef75ac7c9a633f5c7690200933e1a |
+| 02_Overview.md | 5ef559f09748188857e78626031034dadc3d74cacd55a857f273d5d134d177cd |
+| 03_Request.md | 62d765634481aa44dd2d62678e8de4f8535b177027bb3dc23087e58dc3adc8dc |
+| 04_Response.md | 3d00de7d06ce66cddfbdc869b9ce53908cfac0c0d94dd3167915606dab5bc9ad |
+| 05_Data_Mapping.md | 6380a7957e518dd51e722b2015be63a1284351fffacfe66693e23be6d259b303 |
+| 06_Error.md | ba3be04b09a6317e489d44b1a4fbcf3d4ea9cc4096d6060bba50a25f2a7ef604 |
+| 07_table.md | 9c868924b33f358e9a1f2d05706752c2667cadc3179bf9dc58483a2193893c30 |
 
-## Macro-review findings
+## AC-26 macro-review
 
-- AC-26 sequence is UI orchestration; no server-to-server request is specified.
-- #65 is class roster progress, #66 is course-wide learning-event analytics, and #67 is current lesson progress for one selected Student.
-- #65 and #67 candidate calculations share the PUBLISHED lesson set and floor-average formula. Both are still DERIVED. #66 `students_with_learning_events` is distinct from #65 enrollment count; progress state and `last_accessed_at` are not an approved event source.
-- All three direct responses are `Page<Course>` with no page/size request; they do not express the AC-26 data and provide no paging policy.
-- Mentor course access, Student roster eligibility, live schema, duplicate progress rows, formula/empty rules, error envelope and middleware allowlist remain unresolved.
+- #65 reports course roster progress; #66 reports course-wide learning-event analytics; #67 returns current lesson progress for one selected Student. The diagram describes UI orchestration and no server-to-server API call.
+- #65 and #67 share a source-consistent candidate lesson denominator and floor-average calculation. #66 event counts remain a separate measure; current progress rows are not treated as event evidence.
+- The catalog/diagram Page<Course> response and the singular AC-26 detail response do not agree. The runtime follows the DD's DERIVED drill-down proposal while keeping the DD Draft and recording the discrepancy.
+- Checked-in legacy BIGINT tables support the local SQL candidate; the separate UUID V1-PILOT schema does not map directly to this int64 API. No live schema or deployed behavior was verified.

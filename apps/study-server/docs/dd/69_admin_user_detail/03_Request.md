@@ -24,14 +24,14 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Principal phải có role Admin và quyền user management. Current guard/policy chưa có trong Study source. | 0.1 |
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Shared guard yêu cầu claim ADMIN trước database query; coi claim này là quyền user-management fallback DERIVED theo API #68. Policy riêng chưa được source xác nhận. | 0.1 |
 | 2 | Trace ID | X-Trace-Id | No | UUID | Correlation header theo middleware hiện tại; không phải filter nghiệp vụ. | 0.1 |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | User ID | user_id | int64 | Yes | Chưa đặc tả | Chưa đặc tả | Số nguyên 64-bit | Chưa đặc tả | Không có | ID của user cần đọc; catalog chỉ định kiểu và tính bắt buộc. | 1.1 |
+| 1 | User ID | user_id | int64 | Yes | -9223372036854775808 | 9223372036854775807 | Signed integer 64-bit | Signed int64 | Không có | Raw path được parse thành signed int64; malformed/out-of-range → 404 DESIGN_RESOURCE_NOT_FOUND theo catalog, không thêm 422. | 1.1 |
 
 ## Query parameters
 
@@ -48,12 +48,13 @@ GET /api/v1/admin/users/1001
 Authorization: Bearer <admin-access-token>
 ~~~
 
-Ví dụ dùng ID minh họa. Token phải được xác thực theo Admin policy đã được phê duyệt trước khi implementation.
+ID chỉ mang tính minh họa. Runtime xác thực Bearer JWT với claim ADMIN trước khi parse path hoặc đọc user row; permission relation riêng chưa có source.
 
-## Quy tắc input đang mở
+## Quy tắc input đã chọn cho local implementation
 
-- Catalog yêu cầu user_id:int64; chưa quy định minimum, giá trị hợp lệ chi tiết hoặc cách xử lý ID âm.
-- Catalog không liệt kê HTTP 422. Không thêm 422/business code cho malformed hoặc overflow path trước khi cập nhật contract.
+- Catalog yêu cầu user_id:int64; runtime parse signed int64, không thêm minimum nghiệp vụ ngoài miền kiểu.
+- Malformed/out-of-range path trả 404 DESIGN_RESOURCE_NOT_FOUND để giữ exact catalog error set; đây là fallback DERIVED theo API #48.
+- Catalog không liệt kê HTTP 422; route nhận raw path string và OpenAPI khai báo int64 để tránh framework tự phát sinh 422.
 - Không nhận role, status, keyword, page hoặc size qua query; các filter của API #68 không thuộc API #69.
 
 ## Phụ lục đối chiếu nguồn Excel

@@ -11,29 +11,25 @@ status: "Draft — Needs Confirmation"
 
 ## Table mapping
 
-N/A — READ-ONLY API. API #68 không INSERT, UPDATE hoặc DELETE.
+N/A — READ-ONLY API. API #68 chỉ SELECT, không INSERT, UPDATE hoặc DELETE.
 
-## Candidate read source — legacy users
+## Runtime query source — legacy users candidate
 
 | Logical role | Relation | Column | Mapping | Basis/status |
 |---|---|---|---|---|
-| User ID | Legacy users | id | UserProfile.id | BIGSERIAL candidate; live schema unknown. |
-| Full name | Legacy users | full_name | UserProfile.full_name | Source candidate and API #4/#14 precedent. |
-| Email | Legacy users | email | UserProfile.email | PII; Admin-only. |
-| Role | Legacy users | role | UserProfile.role: UserRole and optional filter | VARCHAR(20); enum members not specified. |
-| Avatar | Legacy users | avatar_url | UserProfile.avatar_url | Nullable candidate. |
-| Phone | Legacy users | phone | UserProfile.phone | Nullable PII candidate. |
-| Status | Legacy users | status | UserProfile.status: UserStatus and optional filter | VARCHAR(20); enum members/deletion policy unresolved. |
-| Created time | Legacy users | created_at | UserProfile.created_at | Timestamp candidate. |
-| Updated time | Legacy users | updated_at | UserProfile.updated_at | Timestamp candidate. |
-| Credential | Legacy users | password_hash | Excluded | Never select or return. |
-| Biography | No legacy users column | N/A | UserProfile.bio unresolved | SOURCE_REQUIRED. |
+| User ID | users | id | UserProfile.id | BIGSERIAL candidate; live schema unknown. |
+| Full name | users | full_name | UserProfile.full_name | Legacy DDL and API #04 model. |
+| Email | users | email | UserProfile.email | PII; ADMIN guard; legacy candidate. |
+| Role | users | role | UserProfile.role | VARCHAR(20); runtime model string; no enum whitelist. |
+| Avatar | users | avatar_url | UserProfile.avatar_url | Nullable candidate; current API #04 serializes null. |
+| Phone | users | phone | UserProfile.phone | Nullable PII candidate; current API #04 serializes null. |
+| Status | users | status | UserProfile.status | VARCHAR(20); stored string; exact optional filter. |
+| Created time | users | created_at | UserProfile.created_at | Timestamp candidate. |
+| Updated time | users | updated_at | UserProfile.updated_at | Timestamp candidate. |
+| Credential | users | password_hash | Excluded | SQL does not select; never return. |
+| Biography | No legacy users column | N/A | Omitted | Reusable field optional; no current API #04 source. |
 
-## Alternate V1-PILOT source boundary
-
-V1-PILOT defines UUID identity_projections and learner_profiles with service-role assignments. It does not define one legacy-compatible users row containing email, role, phone and int64 ID. Do not join those relations or claim they are live.
-
-No table, column, index, audit record, role enum or status enum is created by this DD.
+No query JOIN, schema change or migration is added. The V1-PILOT UUID identity/profile model is not joined to legacy BIGINT user IDs. Checked-in DDL and fake-session tests do not establish deployed schema.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

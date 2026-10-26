@@ -19,14 +19,14 @@ status: "Draft — Needs Confirmation"
 | Phương thức | PUT |
 | Endpoint | /api/v1/admin/notifications/{notification_id} |
 | Trạng thái DD | Draft — Needs Confirmation |
-| Trạng thái source | UNWIRED / NOT_FOUND trong Study server |
-| Phạm vi | Phân tích contract, request/response và mapping; không thay đổi runtime |
+| Trạng thái source | Wired; local fake-DB HTTP tests pass; live schema/deployment unverified |
+| Phạm vi | Contract trực tiếp và fallback triển khai DERIVED trên legacy BIGINT candidate |
 
 ## Tên hiển thị
 
-**Cập nhật notification draft hoặc scheduled bởi Admin**
+**Admin cập nhật title/content của notification còn QUEUED**
 
-Catalog chỉ khai báo path parameter, response và error codes. AC-36 mô tả nhánh UPDATE, nhưng không đưa body, field rules hay scheduler behavior. Mọi body và editability rule trong DD này được ghi riêng là DERIVED, cần owner xác nhận trước khi dùng làm implementation contract.
+Catalog và AC-36 chỉ xác định path, response, errors và ý định UPDATE. Runtime dùng fallback hẹp: body strict `{title, content}`, chỉ sửa notification có ít nhất một delivery và mọi delivery đang `QUEUED`. Fallback này dựa trên các cột legacy hiện có; chưa được owner duyệt và không biểu thị trạng thái Draft/Scheduled.
 
 ## Tài liệu liên quan
 
@@ -34,6 +34,7 @@ Catalog chỉ khai báo path parameter, response và error codes. AC-36 mô tả
 - [AC-36 diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio)
 - [DD #92 — Admin notification list](../92_admin_notifications_list/02_Overview.md)
 - [DD #93 — Admin tạo/phát notification](../93_admin_notifications_create/02_Overview.md)
+- [AC-36 macro-review](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md)
 - [Study declared routes](../../../../../.agents/server-study/apis/declared-routes.md)
 
 ## Phụ lục đối chiếu nguồn Excel

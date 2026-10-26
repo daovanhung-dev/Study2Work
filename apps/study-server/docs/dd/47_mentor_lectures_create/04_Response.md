@@ -22,27 +22,27 @@ status: "Draft — Needs Confirmation"
 ## Response fields
 
 | No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
-|---:|---|---|---|---|---:|---|---|---|---|---|---|
-| 1 | HTTPStatus | HTTP Status | HTTPStatus | integer | No | N/A | N/A | 6 | 201 on success | N/A | Catalog direct: DESIGN_RESOURCE_CREATED. |
+|---:|---|---|---|---|---:|---|---|---:|---|---|---|
+| 1 | HTTPStatus | HTTP Status | HTTPStatus | integer | No | N/A | N/A | 6 | 201 on success | N/A | Catalog direct. |
 | 2 | success | Success | success | boolean | No | N/A | N/A | 6 | true on success | N/A | Standard envelope. |
 | 3 | businessCode | Business code | businessCode | string | No | N/A | N/A | 6 | DESIGN_RESOURCE_CREATED | N/A | Catalog direct. |
-| 4 | message | Message | message | string | No | N/A | N/A | 6 | Safe Vietnamese message | N/A | Exact message text is not specified. |
-| 5 | data | Lecture | data | object | No | lessons candidate | Returned row | 5 | Map Lecture fields | Must contain required Lecture fields | assets projection remains unresolved. |
-| 6 | data.id | ID | id | int64 | No | lessons candidate | id | 5 | Direct generated identifier | N/A | BIGSERIAL is legacy candidate only. |
-| 7 | data.course_id | Course ID | course_id | int64 | No | lessons candidate | course_id | 5 | Direct | N/A | Legacy candidate. |
-| 8 | data.title | Title | title | string | No | lessons candidate | name | 5 | name → title | N/A | Physical/logical name alias. |
-| 9 | data.content | Content | content | string | Yes | lessons candidate | content | 5 | Candidate decimal string from request int64 | Omit when stored value is NULL; exact null/omit semantics need confirmation | Request and response types conflict. |
-| 10 | data.assets | Assets | assets | UploadAsset[] | No | N/A | N/A | Pending | Resolve every reference to full UploadAsset | No safe empty/null rule is specified | SOURCE_REQUIRED; blocks complete response mapping. |
-| 11 | data.assets[].id | Asset ID | id | int64 | No | N/A | N/A | Pending | N/A | N/A | API #34 ID generation and lookup are unresolved. |
-| 12 | data.assets[].name | Asset name | name | string | No | N/A | N/A | Pending | N/A | N/A | No persistent metadata source in legacy schema. |
-| 13 | data.assets[].url | Asset URL | url | uri | No | N/A | N/A | Pending | N/A | N/A | URL policy/source is unresolved; never trust an arbitrary request URL. |
-| 14 | data.assets[].content_type | Content type | content_type | string | No | N/A | N/A | Pending | N/A | N/A | MIME source is unresolved. |
-| 15 | data.assets[].size_bytes | Size | size_bytes | int64 | No | N/A | N/A | Pending | N/A | N/A | Metadata source is unresolved. |
-| 16 | data.assets[].status | Asset status | status | UploadStatus | No | N/A | N/A | Pending | N/A | N/A | UploadStatus members and persistence are unresolved. |
-| 17 | data.order | Order | order | int32 | No | lessons candidate | sort_order | 5 | sort_order → order | N/A | Legacy candidate. |
-| 18 | data.status | Lesson status | status | LessonStatus | No | lessons candidate | status | 5 | Read inserted row; candidate default DRAFT | N/A | Enum members are not defined in catalog. |
-| 19 | meta | Metadata | meta | object | No | N/A | N/A | 6 | Empty object unless supported metadata is approved | {} | API envelope. |
-| 20 | traceId | Trace ID | traceId | uuid | No | Request context | Trace helper | 6 | Propagate request trace | Always present | API guideline; API #47 has no current route. |
+| 4 | message | Message | message | string | No | N/A | N/A | 6 | Safe application message | Always present | Exact text is not specified. |
+| 5 | data | Lecture | data | object | No | lessons | Returned row | 5 | Map Lecture fields | Required fields present | Local runtime source-backed; live schema remains unverified. |
+| 5.1 | data.id | ID | id | int64 | No | lessons candidate | id | 5 | Direct generated identifier | Required | Legacy BIGSERIAL candidate. |
+| 5.2 | data.course_id | Course ID | course_id | int64 | No | lessons candidate | course_id | 5 | Direct | Required | Legacy candidate. |
+| 5.3 | data.title | Title | title | string | No | lessons candidate | name | 5 | name → title | Required | Legacy candidate. |
+| 5.4 | data.content | Content | content | string | No | lessons | content | 5 | Return the persisted base-10 representation of request int64 | Required string, including values such as `"0"` | Null cannot occur through this required request path. |
+| 5.5 | data.assets | Assets | assets | UploadAsset[] | No | uploads | matched metadata rows | 4 | Resolve IDs using same Mentor, LECTURE and request course; restore input order | Empty input returns `[]` | IDs not resolved within scope return generic 404. |
+| 5.5.1 | data.assets[].id | Asset ID | id | int64 | No | uploads | id | 4 | Direct | Required | ID created by API #34. |
+| 5.5.2 | data.assets[].name | Asset name | name | string | No | uploads | file_name | 4 | file_name → name | Required | Persisted API #34 metadata. |
+| 5.5.3 | data.assets[].url | Asset URL | url | uri | No | uploads | url | 4 | Direct public URL | Required | Do not accept URL from #47 request. |
+| 5.5.4 | data.assets[].content_type | Content type | content_type | string | No | uploads | content_type | 4 | Direct | Required | Persisted API #34 metadata. |
+| 5.5.5 | data.assets[].size_bytes | Size | size_bytes | int64 | No | uploads | size_bytes | 4 | Direct | Required | Persisted API #34 metadata. |
+| 5.5.6 | data.assets[].status | Asset status | status | UploadStatus | No | uploads | status | 4 | Direct | Required | Current value is `UPLOADED`. |
+| 5.6 | data.order | Order | order | int32 | No | lessons candidate | sort_order | 5 | sort_order → order | Required | Legacy candidate. |
+| 5.7 | data.status | Lesson status | status | status | No | lessons | status | 5 | Explicitly insert and return `PUBLISHED` | Required | Value fixed by user decision. |
+| 6 | meta | Metadata | meta | object | No | N/A | N/A | 6 | Empty object unless supported metadata exists | `{}` | Envelope. |
+| 7 | traceId | Trace ID | traceId | uuid | No | Request context | Trace helper | 6 | Propagate request trace | Always present | API guidelines. |
 
 ## Ví dụ thành công
 
@@ -59,22 +59,22 @@ status: "Draft — Needs Confirmation"
     "assets": [
       {
         "id": 34001,
-        "name": "SOURCE_REQUIRED",
-        "url": "https://example.invalid/SOURCE_REQUIRED",
-        "content_type": "SOURCE_REQUIRED",
-        "size_bytes": 1,
-        "status": "SOURCE_REQUIRED"
+        "name": "slide.pdf",
+        "url": "https://cdn.example.test/uploads/123e4567-e89b-12d3-a456-426614174000",
+        "content_type": "application/pdf",
+        "size_bytes": 1024,
+        "status": "UPLOADED"
       }
     ],
     "order": 1,
-    "status": "DRAFT"
+    "status": "PUBLISHED"
   },
   "meta": {},
   "traceId": "00000000-0000-4000-8000-000000000047"
 }
 ~~~
 
-Payload trên chỉ minh họa shape. Asset values SOURCE_REQUIRED không phải giá trị hợp lệ đã xác nhận; content và status cũng dùng candidate. Không coi đây là ví dụ runnable hoặc bằng chứng API có thể trả thành công khi chưa có asset resolver.
+Response `content` là chuỗi thập phân được tạo từ request integer; `status` là `PUBLISHED`. Asset fields theo metadata API #34; `assets: []` là response hợp lệ khi request gửi `asset_refs: "[]"`.
 
 ## Ví dụ lỗi
 
@@ -89,7 +89,7 @@ Payload trên chỉ minh họa shape. Asset values SOURCE_REQUIRED không phải
 }
 ~~~
 
-Ví dụ lỗi dùng data:null theo API guidelines. Current Study error helper mặc định data:{}; API #47 chưa có runtime nên hai biểu diễn này vẫn là discrepancy.
+Ví dụ lỗi dùng current Study error helper với `data: null`.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

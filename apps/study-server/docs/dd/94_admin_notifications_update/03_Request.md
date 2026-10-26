@@ -17,67 +17,53 @@ status: "Draft — Needs Confirmation"
 | URI | /api/v1/admin/notifications/{notification_id} |
 | Character encoding | UTF-8 |
 | Authentication | Bearer JWT |
-| Role | Admin; AC-36 yêu cầu notification-management permission. |
-| Content-Type | Catalog không khai báo body. application/json chỉ áp dụng nếu owner duyệt body proposal DERIVED. |
+| Role | Admin theo catalog; runtime dùng shared ADMIN guard. Finer permission chưa xác minh. |
+| Content-Type | Catalog không khai báo body; runtime fallback nhận application/json. |
 
 ## Request header
 
-| No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
-|---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer <token> | Direct auth contract; Admin permission theo AC-36. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-permission) |
-| 2 | Content type | Content-Type | DERIVED | application/json | Chỉ cần nếu body proposal được duyệt; catalog không khai báo request body. | [Step 1](./05_Data_Mapping.md#step-1-read-request) |
-| 3 | Trace ID | X-Trace-Id | No | UUID | Correlation theo convention hiện tại; không phải filter nghiệp vụ. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-permission) |
+| No | Logical name | Field name | Required | Value/Format | Description |
+|---:|---|---|---:|---|---|
+| 1 | Authorization | Authorization | Yes | Bearer <token> | Direct auth contract; role guard chạy trước parse path/body. |
+| 2 | Content type | Content-Type | DERIVED | application/json | Cần cho body fallback; không phải body được catalog duyệt. |
+| 3 | Trace ID | X-Trace-Id | No | UUID | Correlation theo shared Study convention. |
 
 ## Path parameters
 
-| No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
-|---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | Notification ID | notification_id | int64 | Yes | N/A | N/A | Integer | N/A | N/A | Direct path parameter; physical ID model for Admin resource is unresolved. | [Step 1](./05_Data_Mapping.md#step-1-read-request) |
-
-Catalog does not define positivity/range beyond int64 or a path parse-error rule.
+| No | Logical name | Physical name | Type | Required | Runtime rule | Status |
+|---:|---|---|---|---:|---|---|
+| 1 | Notification ID | notification_id | int64 | Yes | Số nguyên dương trong miền int64. | Type DIRECT; positivity/runtime parse DERIVED. |
 
 ## Query parameters
 
-Không khai báo query parameter trong catalog hoặc AC-36 diagram.
+Không có query parameter trong catalog hoặc AC-36 diagram.
 
 ## Request body
 
-**Direct contract:** Catalog #94 and AC-36 diagram declare no request body. The fields below are a proposal DERIVED from the UPDATE intent and #93 create request. They are not an approved request contract.
+**Direct contract:** Catalog #94 và AC-36 diagram không khai báo request body. Runtime dùng fallback DERIVED `{title, content}` vì đây là hai cột text có thể cập nhật trên legacy BIGINT candidate. Unknown fields bị từ chối; body không đổi recipients, channels hoặc schedule.
 
-| No | Logical name | Physical name | Type | Required | Basis | Description | Data Mapping reference |
-|---:|---|---|---|---|---|---|---|
-| 1 | Explicit recipients | recipients | int64[] | Exactly one audience selector, proposal | Reuse of #93 request | Replace audience with explicit recipient IDs. Empty/duplicate rules are unresolved. | [Recipient mapping](./08_notification_recipients_update.md) |
-| 2 | Audience segment | segment | AudienceSegment | Exactly one audience selector, proposal | Reuse of #93 request | Replace audience using a segment; enum and expansion predicate are unresolved. | [Recipient mapping](./08_notification_recipients_update.md) |
-| 3 | Title | title | string | Yes, proposal | Reuse of #93 request | Full replacement candidate; blank/length rules not sourced. | [07 table mapping](./07_table.md) |
-| 4 | Content | content | string | Yes, proposal | Reuse of #93 request | Full replacement candidate; blank/length rules not sourced. | [07 table mapping](./07_table.md) |
-| 5 | Channels | channels | NotificationChannel[] | Yes, proposal | Reuse of #93 request | Full replacement candidate; token set and empty/duplicate rules unknown. | [07 table mapping](./07_table.md) |
-| 6 | Scheduled time | scheduled_at | date-time or null | Yes, proposal | Reusable Notification schema plus draft/scheduled purpose | Null is proposed to clear scheduling; a future timestamp is proposed to schedule. No scheduler effect is specified. | [07 table mapping](./07_table.md) |
+| Field | Type | Required | Runtime rule | Status |
+|---|---|---:|---|---|
+| title | string | Yes | Strict string, nonblank sau kiểm tra `strip()`, tối đa 200 ký tự; giá trị gốc được giữ nguyên. | DERIVED từ legacy `VARCHAR(200)`. |
+| content | string | Yes | Strict string, nonblank sau kiểm tra `strip()`; giá trị gốc được giữ nguyên. | DERIVED từ legacy `TEXT`. |
+| recipients/segment/channels/scheduled_at | N/A | No | Không được gửi; field ngoài schema trả 422. | Không có physical mapping/scheduler được duyệt. |
 
-> Full replacement, requiredness, exactly-one audience selection, null behavior, date-time timezone policy and lifecycle guard are all DERIVED. They require owner confirmation. No action, status, read state, sender ID or query field is added.
-
-## Ví dụ Request data — proposal DERIVED
-
-Illustrative JSON only. NotificationChannel and AudienceSegment placeholder values are not approved enum tokens.
+### Ví dụ body runtime fallback — DERIVED
 
 ~~~json
 {
-  "recipients": [12345],
   "title": "Lịch học đã cập nhật",
-  "content": "Thời gian học đã được điều chỉnh.",
-  "channels": ["<approved-NotificationChannel>"],
-  "scheduled_at": "2026-10-25T09:00:00+07:00"
+  "content": "Thời gian học đã được điều chỉnh."
 }
 ~~~
 
-## Quy tắc input đang mở
+## Thứ tự xử lý và lỗi input
 
-- Catalog direct contract has no body. If body is approved, validation failure maps to the existing 422 code; field-level rules are not direct.
-- notification_id lookup, positive range and 404 precedence relative to permission are unresolved.
-- Audience selector, segment tokens, recipient eligibility, duplicate policy and whether previous deliveries can change are unresolved.
-- Title/content trim and length limits are unresolved; legacy title VARCHAR(200) is only a schema candidate.
-- Channel tokens and delivery constraints are unresolved.
-- scheduled_at null/past/future behavior, timezone, precision and effect on existing queued work are unresolved.
-- Whether a notification is editable after dispatch/cancel is unresolved; any Draft/Scheduled guard remains a proposal.
+1. Shared ADMIN guard chạy trước khi parse path/body hoặc query database.
+2. Path không phải số dương trong int64 hoặc body JSON sai/thiếu/thừa field trả 422 `DESIGN_VALIDATION_ERROR`.
+3. `title`/`content` rỗng hoặc chỉ whitespace trả 422; whitespace quanh giá trị hợp lệ không bị trim khi lưu.
+4. Body hợp lệ mới bắt đầu transaction và khóa target.
+5. Quy tắc trên là runtime fallback DERIVED; catalog/diagram chưa được cập nhật để khai báo body.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

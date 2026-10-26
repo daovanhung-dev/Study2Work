@@ -20,20 +20,20 @@ status: "Draft — Needs Confirmation"
 | API name | Gửi phản hồi |
 | HTTP method | POST |
 | Endpoint | /api/v1/mentor/support/{request_id}/reply |
-| Version | 1.0 — design contract |
+| Version | 1.1 — local implementation choices are DERIVED |
 | Status | Draft — Needs Confirmation |
 | Created by | Codex |
 | Reviewed by | Chưa rà soát |
 | Approved by | Chưa phê duyệt |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-25 |
 
 ## Tên hiển thị
 
-```text
+~~~text
 Study2Work API design
 Gửi phản hồi
-```
+~~~
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

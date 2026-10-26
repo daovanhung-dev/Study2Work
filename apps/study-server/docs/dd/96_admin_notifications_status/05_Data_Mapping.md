@@ -11,31 +11,31 @@ status: "Draft — Needs Confirmation"
 
 # Data Mapping
 
-## Luồng xử lý thiết kế
+## Luồng hiện tại và contract boundary
 
-1. Xác thực Bearer JWT và yêu cầu Admin cùng notification-management permission theo AC-36.
-2. Đọc `notification_id:int64` từ path.
-3. Tìm logical Admin Notification theo ID — physical relation/query chưa có nguồn được duyệt.
-4. Đọc delivery aggregate theo diagram — relation, grain, status, count rules và consistency chưa được xác định.
-5. Ánh xạ đúng các field hiện có của `Notification`; không thêm `NotificationDelivery` fields.
-6. Trả 200 `DESIGN_RESOURCE_RETRIEVED` hoặc lỗi thuộc đúng catalog 401/403/404/500.
+1. Route chuyển raw `Authorization` và `notification_id` tới view; view gọi shared `validate_current_user_request(..., role="ADMIN")` trước path parse hoặc DB.
+2. Validator chấp nhận số nguyên dương trong miền signed-int64. Path sai/overflow trả catalog 404 theo fallback `DERIVED` vì #96 không khai báo 422.
+3. Một SQL query đọc legacy candidate `notifications` theo ID và aggregate delivery rows từ `notification_deliveries` trong cùng query.
+4. Map `channels/status` theo cùng projection của API #92; `id/title/content/created_at` đến từ notification row. `read_at` và `scheduled_at` không có trong candidate columns nên field optional bị lược bỏ.
+5. Notification không tồn tại hoặc không có delivery rows cho query result rỗng và trả 404; schema-invalid aggregate trả safe 500.
+6. Success trả đúng catalog `ApiEnvelope<Notification>`; không thêm counts/per-channel results và không gọi provider.
 
-> Đây là luồng thiết kế; API #96 hiện `UNWIRED / NOT_FOUND`, không phải current runtime trace.
+> Current source is wired and locally HTTP-tested. Physical relation, projection, enum values, invalid-ID mapping and no-delivery 404 are `DERIVED` from APIs #92/#64 and checked-in candidate DDL; this is not owner approval or live-schema evidence.
 
 ## 0. Xác thực và quyền
 
 | Check | Nguồn | Rule | Status |
 |---|---|---|---|
-| Bearer JWT | Catalog | Request phải có Bearer JWT hợp lệ. | DIRECT contract; Study Admin guard chưa có. |
-| Role Admin | Catalog | Actor là Admin. | DIRECT contract; claim mapping chưa có. |
-| Notification-management permission | AC-36 precondition | Chỉ truy cập khi có permission phù hợp. | DIRECT requirement; permission key/scope/policy `SOURCE_REQUIRED`. |
-| Thứ tự check | Chưa có source | Không đọc record/aggregate trước authorization. | Security proposal `DERIVED`; 403/404 precedence cần owner xác nhận. |
+| Bearer JWT | Catalog + `app/utils/auth.py` | Request phải có Bearer JWT hợp lệ. | DIRECT contract; local shared guard is source-backed. |
+| Role Admin | Catalog + `validate_current_user_request` | `role="ADMIN"` | DIRECT contract; local guard runs first. |
+| Notification-management permission | AC-36 precondition | Fine-grained permission key/scope is not defined in Study source. | `SOURCE_REQUIRED`; role-only ADMIN is the local fallback, not equivalent proof. |
+| Check ordering | API #96 view | Auth before path parsing and query. | Local current behavior; avoids resource lookup before authorization. |
 
 ## 1. Nhận request
 
 | Field | Type | Use | Rule/status |
 |---|---|---|---|
-| `notification_id` | int64! path | Khóa logic để chọn Notification. | DIRECT type; physical key và parse-error mapping chưa có. |
+| `notification_id` | int64! path | Chọn candidate notification. | DIRECT type; local positive signed-int64 parser and 404 malformed mapping are `DERIVED`. |
 | Body | Không khai báo | Không dùng. | DIRECT — N/A. |
 | Query | Không khai báo | Không dùng filter/pagination. | DIRECT — N/A. |
 
@@ -45,22 +45,20 @@ status: "Draft — Needs Confirmation"
 
 | Query | Operation | Relation/source | Field hoặc predicate | Mục đích | Status |
 |---|---|---|---|---|---|
-| Q1 | SELECT | Chưa có Admin Notification relation được duyệt | Candidate key `id = :notification_id` | Nạp Notification | `SOURCE_REQUIRED`; không phát hành SQL giả định. |
-| Q1a | SELECT candidate only | Legacy `notifications` | `id` | BIGINT key candidate | `DERIVED`; legacy row không xác nhận Admin resource grain. |
-| Q1b | SELECT candidate only | Legacy `notifications` | `title` | Candidate `data.title` | `DERIVED`; Admin projection chưa được duyệt. |
-| Q1c | SELECT candidate only | Legacy `notifications` | `content` | Candidate `data.content` | `DERIVED`; Admin projection chưa được duyệt. |
-| Q1d | SELECT candidate only | Legacy `notifications` | `created_at` | Candidate `data.created_at` | `DERIVED`; row ownership/grain chưa được xác nhận. |
-| Q2 | SELECT / aggregate | Chưa có Admin delivery relation được duyệt | Relation, join key, group grain, filter status và count expressions chưa xác định | Bước diagram “Đọc delivery aggregate” | `SOURCE_REQUIRED`. |
-| Q2 schema reference | Logical schema only | Catalog `NotificationDelivery` | `notification_id`, `status`, `queued`, `sent`, `failed` | Phác thảo aggregate contract tồn tại trong catalog | Không đồng nghĩa với physical table hay response của #96. |
-| Q2 pilot candidate | DDL riêng | V1-PILOT `notification_deliveries` | UUID notification ID; delivery `channel`/`status` | Tham khảo schema khác | `DISCREPANCY`; không map sang Admin int64. |
-| Q3 | Permission check | Chưa có Admin policy/relation | Principal-to-scope predicate chưa được xác định | Enforce AC-36 permission | `SOURCE_REQUIRED`; không tự dùng `sender_id`. |
+| Q1 | SELECT + aggregate | Candidate legacy `notifications` join `notification_deliveries` | `n.id = :notification_id`; group delivery rows by notification ID | Nạp một Notification và delivery summary | `DERIVED` from local #92 pattern and migration 009; not live-schema proof. |
+| Q1 fields | SELECT | `notifications` | `id`, `title`, `content`, `created_at` | Base Notification projection | `DERIVED`; legacy schema does not establish approved Admin grain. |
+| Q1 channels | `ARRAY_AGG` | `notification_deliveries.channel` | Ordered by channel; candidate DDL restricts `PUSH`/`EMAIL` and unique notification/channel | `data.channels` | `DERIVED` from #92; duplicates/invalid values cause mapping 500. |
+| Q1 status counts | `COUNT FILTER` | `notification_deliveries.status` | Count `QUEUED`, `SENT`, `FAILED` rows | Map to `data.status` | `DERIVED` from #92 precedence; attempt/retry grain remains unknown. |
+| Q1 filter | INNER JOIN | Notification plus aggregate | Target notification ID; aggregate must contain one or more deliveries | Missing/no-delivery result becomes 404 | `DERIVED` status-resource interpretation; owner semantics remain open. |
+| Q2 schema reference | Logical schema only | Catalog `NotificationDelivery` | `notification_id`, `status`, `queued`, `sent`, `failed` | Reusable catalog type | Does not establish a physical table or #96 response type. |
+| Q3 pilot candidate | Separate DDL | V1-PILOT `notification_deliveries` | UUID notification ID; distinct learner/pilot grain | Candidate excluded from query | `DISCREPANCY`; do not map UUID to Admin int64. |
 
 ### 2.2 Join/filter/order
 
-- Join giữa Notification và deliveries chưa có physical source hoặc cardinality được duyệt.
-- Catalog `NotificationDelivery` không có channel field; không thể suy per-channel counts từ schema này.
-- Không có `ORDER BY`, pagination, snapshot isolation hoặc cache contract cho #96.
-- Nếu ID không tồn tại, catalog cho phép 404; precedence so với permission check chưa xác định.
+- Query uses one grouped delivery aggregate joined by candidate `notification_id`; SQL text is in `app/modules/admin/api_96_admin_notifications_status/query.py`.
+- Local projection orders channel names and computes `QUEUED` if any queued row exists, else `FAILED` if any failed row exists, else `SENT` if all rows are sent. This reuses #92; catalog does not define this precedence or retry grain.
+- There is no pagination, mutation, cache contract or provider call. Database snapshot behavior follows the one-query local implementation only.
+- Auth runs before lookup. The catalog permits 403/404; local ADMIN guard and 404 fallback order is wired, while fine-grained permission policy remains open.
 
 ## 3. Mutation
 
@@ -78,22 +76,22 @@ status: "Draft — Needs Confirmation"
 | `success` | boolean | ApiEnvelope | true khi success branch | DIRECT envelope schema. |
 | `businessCode` | string | Catalog | `DESIGN_RESOURCE_RETRIEVED` | DIRECT. |
 | `message` | string | Application | Safe message | Wording unspecified; SOURCE_REQUIRED. |
-| `data.id` | int64 | No approved Admin relation; legacy `notifications.id` candidate | Preserve integer | SOURCE_REQUIRED / legacy candidate only. |
-| `data.title` | string | Legacy `notifications.title` candidate | Preserve text | SOURCE_REQUIRED / legacy candidate only. |
-| `data.content` | string | Legacy `notifications.content` candidate | Preserve text | SOURCE_REQUIRED / legacy candidate only. |
-| `data.channels[]` | NotificationChannel[] | No approved Admin source; legacy `type` is not equivalent | Preserve exact tokens only after enum decision | SOURCE_REQUIRED. |
-| `data.status` | NotificationStatus | No approved Admin lifecycle/aggregate projection | Do not infer from is_read or OperationStatus | SOURCE_REQUIRED; aggregate-to-status proposal is DERIVED only. |
-| `data.read_at` | date-time? | No approved Admin source; legacy has boolean `is_read` | No timestamp can be reconstructed from boolean | SOURCE_REQUIRED. |
-| `data.scheduled_at` | date-time? | No approved Admin source | Do not map pilot `expires_at` | SOURCE_REQUIRED. |
-| `data.created_at` | date-time | Legacy `notifications.created_at` candidate | ISO-8601 serialization | SOURCE_REQUIRED / legacy candidate only. |
+| `data.id` | int64 | Candidate `notifications.id` | Preserve positive int64 | Local mapping `DERIVED`; Admin grain is unapproved. |
+| `data.title` | string | Candidate `notifications.title` | Preserve text | Local #92 model mapping `DERIVED`. |
+| `data.content` | string | Candidate `notifications.content` | Preserve text | Local #92 model mapping `DERIVED`. |
+| `data.channels[]` | NotificationChannel[] | Aggregate `notification_deliveries.channel` | Sorted names, validate allowed response tokens and no duplicate | `DERIVED` from #92/local candidate DDL. |
+| `data.status` | NotificationStatus | Delivery status aggregate | `QUEUED` > `FAILED` > all-`SENT` | `DERIVED` from #92; enum/priority/attempt grain need approval. |
+| `data.read_at` | date-time? | Not selected; legacy has boolean `is_read` only | Omit; do not convert boolean to timestamp | Optional schema field; source absent. |
+| `data.scheduled_at` | date-time? | Not selected; no candidate column | Omit | Optional schema field; source absent. |
+| `data.created_at` | date-time | Candidate `notifications.created_at` | ISO-8601 serialization | Local mapping `DERIVED`; live schema unverified. |
 | `meta` | object | ApiEnvelope | No pagination keys defined | DIRECT type; contents unspecified. |
 | `traceId` | uuid | Request context | Propagate request trace | Envelope convention; route absent. |
 
 ## 5. Return/error handling
 
 - Success shape remains `ApiEnvelope<Notification>`; no delivery counts or per-channel records are appended.
-- Map only catalog errors: 401, 403, 404 and 500 with exact `DESIGN_*` codes.
-- API Guidelines error `data:null` conflicts with current helper default `{}` when omitted; #96 runtime is absent, so record this as conditional integration discrepancy.
+- Map only catalog errors: 401, 403, 404 and 500 with exact `DESIGN_*` codes. Local `error_response` uses `data:null`.
+- SQL/projection errors return safe 500 and rollback; no 503 is added. Missing notification/no-delivery and invalid path return 404 under the documented local fallback.
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `3. Data mapping`

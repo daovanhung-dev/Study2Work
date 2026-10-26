@@ -19,15 +19,15 @@ status: "Draft — Needs Confirmation"
 
 | Header | Required | Type | Mục đích | Basis/status |
 |---|---:|---|---|---|
-| `Authorization` | Yes | `Bearer <JWT>` | Xác thực principal; role Admin theo contract | DIRECT; Study Admin guard/claim mapping `SOURCE_REQUIRED` |
+| `Authorization` | Yes | `Bearer <JWT>` | Xác thực principal; role Admin theo contract | DIRECT; shared ADMIN guard runs before query parsing |
 
 ## Query parameters
 
 | Name | Required | Type | Default | Description/use | Validation / unresolved |
 |---|---:|---|---|---|---|
-| `reason` | No | string | Không nêu | Filter reported discussions theo reason trong report source | Giá trị, enum, trim, casing, match và empty-string behavior `SOURCE_REQUIRED` |
-| `severity` | No | string | Không nêu | Filter theo severity trong report source | Taxonomy, thứ tự mức độ, match và empty-string behavior `SOURCE_REQUIRED` |
-| `page` | No | int32 | Không nêu | Chọn trang của `Page<Discussion>` | Min/max, default, page size và invalid parse behavior `SOURCE_REQUIRED` |
+| `reason` | No | string | Không nêu | Exact-match filter trên `discussion_reports.reason_code` | Không normalize; taxonomy `DERIVED` free-form string |
+| `severity` | No | string | Không nêu | Exact-match filter trên `discussion_reports.severity` | Không normalize; taxonomy `DERIVED` free-form string |
+| `page` | No | int32 | `1` | Chọn trang của `Page<Discussion>` | Phải là số nguyên dương int32; fixed size 20 (`DERIVED`) |
 
 ## Request không khai báo
 
@@ -38,11 +38,11 @@ status: "Draft — Needs Confirmation"
 ## Query example
 
 ```text
-GET /api/v1/admin/discussions/reported?reason=SOURCE_REQUIRED&severity=SOURCE_REQUIRED&page=1
+GET /api/v1/admin/discussions/reported?reason=SPAM&severity=HIGH&page=1
 Authorization: Bearer <JWT>
 ```
 
-`reason`, `severity`, `page` trong ví dụ chỉ minh họa tên và kiểu query; không xác lập enum, default hay filter policy. API catalog chỉ khai báo 401/403/500; không thêm 422 cho parse/range errors.
+`reason` và `severity` được so sánh chính xác, kết hợp AND trên cùng report đang ở trạng thái `OPEN` hoặc `IN_REVIEW`. API catalog không nêu 422; implementation dùng 422 `DESIGN_VALIDATION_ERROR` cho page sai như một fallback `DERIVED` theo convention list API.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

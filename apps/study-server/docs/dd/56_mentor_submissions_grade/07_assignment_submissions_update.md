@@ -17,61 +17,61 @@ status: "Draft — Needs Confirmation"
 |---|---|
 | Physical table | assignment_submissions |
 | Logical table | Submission |
-| Operation | UPDATE candidate |
-| Data Mapping step | 3.3 |
-| Evidence | Legacy DDL and table guide are design artifacts; live schema unverified |
+| Operation | UPDATE |
+| Data Mapping step | 3 |
+| Evidence | Checked-in legacy DDL candidate; live schema unverified |
 
 ## Update mapping
 
-**Áp dụng khi**
+Applied after the submission row is locked, direct-owner check succeeds, and the DERIVED score range passes. The row can be graded again under the current fallback; no prior-status condition is enforced.
 
-- Candidate submission is located and Mentor access check has passed.
-- Repeated-grading/status eligibility is still SOURCE_REQUIRED.
+| No | Column | Item name | Type | Length | Scale | Setting content | Source | Remarks |
+|---:|---|---|---|---:|---:|---|---|---|
+| 1 | id | Submission ID | BIGSERIAL candidate | N/A | N/A | Predicate only | Path submission_id | Not updated |
+| 2 | score | Graded score | NUMERIC | 6 | 2 | :score cast to NUMERIC(6,2) | Body score:int32 | Strict integer; DERIVED 0 <= score <= assignments.max_score |
+| 3 | status | Submission status | VARCHAR | 20 | N/A | GRADED | AC-23 grade/status node | Only score and status are written |
+| 4 | feedback | Existing feedback | TEXT | N/A | N/A | Preserved | Locked current row | Not changed; API #57 owns feedback mutation |
 
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---:|---|---|---|---:|---:|---|---|---|---|---|---|
-| 1 | id | Submission ID | BIGSERIAL candidate | N/A | N/A | Yes in logical contract | Yes, predicate only | N/A; WHERE id = :submission_id | Path submission_id | 3.2 | Not updated; DDL primary key |
-| 2 | score | Graded score | NUMERIC | 6 | 2 | Request required; DB column nullable | No | :score | Body score:int32 | 3.3 | Input-to-decimal conversion, fit, range and scale are SOURCE_REQUIRED |
-| 3 | status | Submission status | VARCHAR | 20 | N/A | Contract response required; DDL does not declare NOT NULL | No | GRADED | AC-23 node “UPDATE grade + status = GRADED” | 3.3 | Target value DIRECT; full enum/constraint and allowed prior states unresolved |
-
-### Candidate SQL shape
+### Implemented SQL shape
 
 ~~~sql
-UPDATE assignment_submissions
-SET score = :score,
+UPDATE assignment_submissions AS s
+SET
+    score = CAST(:score AS NUMERIC(6,2)),
     status = 'GRADED'
-WHERE id = :submission_id
-RETURNING id, assignment_id, user_id, content, file_url, submitted_at, score, feedback, status;
+WHERE s.id = :submission_id
+  AND s.assignment_id = :assignment_id
+  AND EXISTS (
+      SELECT 1
+      FROM assignments AS a
+      JOIN courses AS c ON c.id = a.course_id
+      WHERE a.id = s.assignment_id
+        AND c.mentor_id = :mentor_id
+  )
+RETURNING
+    s.id, s.assignment_id, s.user_id, s.content, s.file_url,
+    s.submitted_at, s.score, s.feedback, s.status;
 ~~~
 
-This is a design candidate only. It does not persist rubric items and has not been run against a database. Authorization, transaction boundary, score conversion, concurrent deletion and returned files mapping still need approved behavior.
+The application holds the submission row lock through authorization, score validation, UPDATE and response projection. It commits after projection validation and rolls back failures. SQL is source-verified but has not been run against a live database.
+
+## Rubric scope
+
+The request requires rubric_items as a string under a DERIVED wire key, but there is no approved persistence table, column or relation. It is currently accepted and discarded. No rubric mutation is claimed.
 
 ## Insert mapping
 
-**Áp dụng khi**
-
-- N/A — API #56 is an update flow; no insert branch is defined.
-
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---:|---|---|---|---:|---:|---|---|---|---|---|---|
-| N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | No INSERT is specified |
+N/A — API #56 updates an existing submission.
 
 ## Delete mapping
 
-**Áp dụng khi**
-
-- N/A — API #56 does not delete a submission.
-
-| No | Target column | Operator | Value source | Data Mapping step | Remarks |
-|---:|---|---|---|---:|---|
-| N/A | N/A | N/A | N/A | N/A | No DELETE is specified |
+N/A — API #56 does not delete a submission.
 
 ## Scope exclusions
 
-- Rubric items: no approved assignment rubric table or submission rubric detail relation; V1-PILOT assessment rubric tables are a different UUID model.
-- Feedback: not updated by this API; API #57 owns the later feedback mutation.
-- updated_at: no such column is present in this legacy candidate table.
-- Audit/history/version columns: no approved source.
+- No rubric table or UUID assessment join.
+- No feedback write; API #57 remains separate.
+- No updated_at or audit/history column is inferred.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -19,7 +19,8 @@ Các câu hỏi dưới đây ngăn chốt implementation contract hoặc persis
 
 - Catalog row #56 ghi body descriptor rubric items:string!.
 - Descriptor có khoảng trắng và không nêu JSON property spelling thay thế.
-- Không có item schema, serialization, escaping hay validation rule.
+- Runtime dùng fallback rubric_items và nhận chuỗi opaque; key/value semantics vẫn cần contract owner xác nhận.
+- Không có item schema, serialization, escaping hay semantic validation rule.
 
 **Cần xác nhận**
 
@@ -27,7 +28,7 @@ Các câu hỏi dưới đây ngăn chốt implementation contract hoặc persis
 2. Chuỗi chứa JSON, text hiển thị, hay định dạng có version?
 3. Các item và điểm thành phần có field, ID, thứ tự và validation rule nào?
 
-**Ảnh hưởng:** Request validation, client compatibility và cách dữ liệu có thể được kiểm tra.
+**Ảnh hưởng:** Client compatibility và cách rubric có thể được kiểm tra. Runtime hiện chỉ kiểm tra kiểu string.
 
 ## Q-56-02 — Nơi lưu rubric items
 
@@ -43,7 +44,9 @@ Các câu hỏi dưới đây ngăn chốt implementation contract hoặc persis
 2. Nếu có, bảng/khóa/column nào là canonical, và rubric snapshot hay rubric definition được lưu?
 3. Rubric ghi cùng transaction với score/status hay qua một endpoint khác?
 
-**Ảnh hưởng:** Không thể hoàn thành persistence cho field bắt buộc nếu chưa có target/schema.
+**Trạng thái hiện tại:** Runtime chấp nhận rubric_items nhưng không persist hoặc echo. Không có target/schema để ghi an toàn.
+
+**Ảnh hưởng:** Rubric chưa được lưu dù request field bắt buộc; cần contract/schema owner xác nhận target trước khi đóng gap.
 
 ## Q-56-03 — Score bounds, scale và chuyển kiểu
 
@@ -68,7 +71,7 @@ Các câu hỏi dưới đây ngăn chốt implementation contract hoặc persis
 **Evidence**
 
 - Catalog yêu cầu role Mentor; AC-23 yêu cầu Mentor có quyền chấm submission của course.
-- Shared Study guard hiện hành chỉ hỗ trợ Student.
+- Shared Study guard hiện hành hỗ trợ explicit MENTOR role và trả numeric subject.
 - Legacy courses.mentor_id là direct-owner candidate; không có bằng chứng rằng Mentor được phân công cũng được phép chấm.
 - JWT subject-to-numeric Study user mapping cho Mentor chưa được source xác nhận.
 
@@ -103,7 +106,7 @@ Các câu hỏi dưới đây ngăn chốt implementation contract hoặc persis
 
 - Submission schema yêu cầu files:UploadAsset[].
 - Legacy assignment_submissions chỉ có một file_url.
-- API #55 đã ghi unresolved asset ID/name/content_type/size/status source.
+- API #54–#56 currently reuse a DERIVED lookup over the legacy file_url and uploads metadata; API #35 producer compatibility remains unverified.
 
 **Cần xác nhận**
 
@@ -119,36 +122,36 @@ Các câu hỏi dưới đây ngăn chốt implementation contract hoặc persis
 
 - AC-23 gọi #56 grade/status rồi #57 feedback.
 - Candidate legacy row có feedback nullable.
-- Current DB query helper không tự commit; không có transaction rule của API #56.
+- DB query helper không tự commit; API #56 currently owns the transaction, locks the row, and commits only after validating the response projection.
 
 **Cần xác nhận**
 
 1. #56 có giữ nguyên feedback hiện có hay grading mới xóa feedback cũ?
 2. Quy tắc Student nhận kết quả áp dụng sau #56 hay sau #57?
-3. Authorization check, UPDATE và response read cần transaction/locking/isolation nào?
+3. Contract owner có chấp nhận fallback transaction/locking hiện tại: row lock, owner-scoped UPDATE và commit sau response validation không?
 4. Behavior khi submission bị xóa giữa check và UPDATE là gì?
 
-**Ảnh hưởng:** Mutation isolation, response disclosure và retry/concurrency.
+**Ảnh hưởng:** Xác nhận transaction/isolation fallback; behavior khi row bị xóa hoặc quyền đổi được xử lý qua rollback/owner predicate.
 
 ## Q-56-08 — Error envelope và middleware contract mapping
 
 **Evidence**
 
 - API Guidelines requires error data=null and safe field details under meta.fieldErrors.
-- Current apps/study-server/app/core/responses.py serializes data as {} when error_response(data=None) is used.
-- Current apps/study-server/app/core/middleware.py only emits DESIGN_VALIDATION_ERROR and DESIGN_INTERNAL_ERROR for paths in DESIGN_CONTRACT_PATHS; API #56 is absent and its path contains a dynamic submission_id.
-- API #56 has no current route, so this is a future wiring discrepancy, not current endpoint behavior.
+- Current apps/study-server/app/core/responses.py serializes data as null when error_response(data=None) is used.
+- Runtime route #56 hiện đã được đăng ký trong DESIGN_CONTRACT_PATHS theo FastAPI route template có submission_id động.
+- Current error_response(None) emits data=null, consistent with API Guidelines.
 
 **Cần xác nhận**
 
-1. Should the shared error helper change to emit data=null for contract errors, or should API #56 use a different explicit response path?
-2. How will validation and unhandled errors on dynamic Mentor routes retain the catalog DESIGN_* business codes?
+1. Contract owner có cần xác nhận middleware route-template mapping là cách chuẩn cho path động không?
+2. Có cần bổ sung error case ngoài catalog hiện tại không? Runtime hiện giữ đúng các mã catalog 401/403/404/422/500.
 
-**Ảnh hưởng:** Error envelope shape and exact business codes can drift when the route is implemented.
+**Ảnh hưởng:** Xác nhận convention route-template mapping; runtime hiện trả error envelope data=null và dùng đúng mã catalog.
 
 ## Trạng thái
 
-Giữ **Draft — Needs Confirmation**. Không tự tạo cột/table, wire field, score rule, error code hoặc quyền assigned-Mentor để đóng các câu hỏi này.
+Giữ **Draft — Needs Confirmation**. Runtime đã áp dụng fallback có nhãn DERIVED cho rubric_items wire key, score range, direct-owner access và file lookup. Rubric persistence, item format, assigned-Mentor access, status lifecycle và live schema vẫn cần xác nhận. Không tạo cột/table hoặc business code mới.
 
 
 Macro-review AC-23 #54–#57 đã hoàn tất ở mức tài liệu. API #57 giữ mutation feedback riêng sau #56; các gap về rubric, assets, quyền truy cập, schema và error mapping vẫn mở.

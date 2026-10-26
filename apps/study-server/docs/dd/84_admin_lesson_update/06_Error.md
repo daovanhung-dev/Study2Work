@@ -13,23 +13,23 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Giữ nguyên error set và mã từ catalog #84. Request conditions cụ thể chưa được phê duyệt.
+Giữ nguyên error set và mã từ catalog #84. Runtime validation áp dụng body fallback DERIVED nêu tại [Request](./03_Request.md).
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
 | 1 | Authentication | Bearer/JWT | Authorization | Credential thiếu, sai hoặc hết hạn | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | DIRECT business code; Study contract không có message ID riêng. |
-| 2 | Authorization | Admin role/permission | Principal | Không có Admin role hoặc lesson-management permission | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | DIRECT requirement; policy implementation SOURCE_REQUIRED. |
-| 3 | Not found | UPDATE RETURNING | lesson_id | Không có row lesson được cập nhật | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | [Step 4](./05_Data_Mapping.md#step-4-check-ket-qua-va-map-response) | Rollback nếu transaction bắt đầu | No-row -> 404 là candidate branch. |
-| 4 | Validation | Request validation | Path/body candidate | Request sai schema/rules sau khi được duyệt | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) / [Step 2](./05_Data_Mapping.md#step-2-check-body-proposal) | N/A trước mutation | Status/code DIRECT; exact fields/conditions SOURCE_REQUIRED. |
-| 5 | System error | DB/update/response mapping | N/A | Database hoặc mapping failure không xử lý được | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 4](./05_Data_Mapping.md#step-4-check-ket-qua-va-map-response) | Rollback theo transaction owner | DIRECT business code; Study contract không có message ID riêng. |
+| 2 | Authorization | Admin role/permission | Principal | Không có role `ADMIN`; AC-34 permission riêng chưa có policy source | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | Shared ADMIN guard đang chạy; fine-grained permission chưa được xác minh. |
+| 3 | Not found | UPDATE RETURNING | lesson_id | Không có row lesson được cập nhật | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | [Step 4](./05_Data_Mapping.md#step-4-check-ket-qua-va-map-response) | Rollback | No-row path được test với fake session. |
+| 4 | Validation | Request validation | Path/body | Path sai int64 hoặc body thiếu/thừa/sai type/vượt giới hạn | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) / [Step 2](./05_Data_Mapping.md#step-2-check-body-proposal) | N/A trước mutation | Status/code DIRECT; validation details là DERIVED. |
+| 5 | System error | DB/update/response mapping/commit | N/A | Database, mapping hoặc commit failure | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 4](./05_Data_Mapping.md#step-4-check-ket-qua-va-map-response) | Rollback | Safe message; query/mapping/commit paths được test với fake session. |
 
 ## Error envelope
 
 - API guidelines quy định top-level data:null; field-level details nằm trong meta.fieldErrors.
-- Current error_response(...) chuyển absent data=None thành {}.
-- API #84 chưa có route, nên chưa có endpoint runtime behavior.
+- Current `error_response(...)` trả `data:null` khi không truyền data.
+- API #84 route tests xác minh error envelope và null data với fake session; live DB chưa được kiểm tra.
 - Không có business code mới cho API #84.
 
 ## Error response example — 404

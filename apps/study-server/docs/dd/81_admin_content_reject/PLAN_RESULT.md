@@ -1,81 +1,46 @@
 # PLAN_RESULT — API #81 Từ chối nội dung
 
-## Kết quả plan trước authoring
+## Kết quả
 
-- Status: PARTIALLY COMPLETED — NEEDS CONFIRMATION.
-- Output folder: apps/study-server/docs/dd/81_admin_content_reject/.
-- Scope: documentation-only, server-study; no runtime/schema/catalog/diagram edits; no ZIP.
-- Exact catalog contract retained: PATCH /api/v1/admin/content/{content_id}/reject, Bearer JWT/Admin, required content_id:int64! and body reason:string!, no query, ApiEnvelope<Content>, HTTP 200 DESIGN_RESOURCE_UPDATED, errors 401/403/404/422/500 with catalog codes.
-- AC-33 directly says reject branch passes reason and updates status REJECTED plus review reason, then reloads #78.
-- Response remains Content with eight fields and no reason/reviewer/version metadata.
-- Generic Content/review persistence is not selected. Legacy DDL lacks it; V1-PILOT content_review_decisions uses UUID revision identity and is not a direct Content int64 mapping.
-- API #81 remains UNWIRED / NOT_FOUND.
+- Status: `IMPLEMENTED_LOCALLY — DERIVED FALLBACKS; Draft — Needs Confirmation`.
+- Scope: API #81 module/route/middleware, focused HTTP tests, API #81 DD synchronization, related Study context and this worklog. No schema or diagram change was made; migration 011 from #80 is reused as a candidate only.
+- Direct contract retained: `PATCH /api/v1/admin/content/{content_id}/reject`, Bearer JWT/Admin, required signed-int64 path and required body `{reason:string}`, no query, HTTP 200 `DESIGN_RESOURCE_UPDATED`, `ApiEnvelope<Content>`, exact 401/403/404/422/500 catalog codes.
+- AC-33 direct logical effect: set status `REJECTED` with review reason, then reload queue #78. Response remains the eight-field reusable Content projection with status `REJECTED`; reason is not returned.
 
-## Source manifest
+## Source precedence and trace
 
-| Source | Unit reviewed | Use | Status |
-|---|---|---|---|
-| docs/lists/list_api.md | #81 row and Content schema | Exact contract and response fields | DIRECT |
-| 00_AC_API_INDEX.md | AC-33 | Actor, pending precondition and endpoint sequence | DIRECT |
-| AC_04_ADMIN_MANAGEMENT.drawio | Full AC-33 page nodes and edges | Reject reason → REJECTED/review reason → reload queue | DIRECT logical effect |
-| DD #78/#79/#80 | Queue, detail and approval pages/open questions | Pending predicate, revision identity and audit relationship | Related draft evidence; unresolved points retained |
-| DD #52/#53 | Lifecycle questions | Separate publish/delete interactions | Related proposals, not approval |
-| Legacy and V1-PILOT DDL | Generic Content/review artifacts | Physical mapping boundary | Static artifacts; live schema unverified |
-| Study router/auth/middleware/responses/test context | Current route and guard state | API #81 absence/integration boundary | Current source/context |
-| Registered template pack | Eight sheets and appendices | Markdown structure | Registry-wired; fingerprint verified |
-| Worklog preflight | Selected #48/#49/#50 docs worklogs | Carry-forward | Read; no shortage |
+1. AC-33 Admin diagram/index: pending queue → detail → reject with reason → `REJECTED` + review reason → reload queue.
+2. Legacy schema: BIGINT `contents` has status/deleted_at but no reason column; migration 011 has BIGINT `content_review_audit_logs` with nullable reason. V1-PILOT decision rows use incompatible UUID revision keys.
+3. Catalog row #81: required reason string, int64 Content ID, direct Content response and exact errors.
+4. Current #78/#79/#80 and #51/#52: queue uses `PENDING_REVIEW`; #79 has no revision token; #80 uses a lock/update/audit transaction; #51 creates the pending state; #52 owns separate publication transitions.
 
-## API Requirement Matrix
+```text
+PATCH → typed reason body → shared ADMIN guard → raw signed-int64 path
+→ lock active Content → require PENDING_REVIEW (DERIVED)
+→ conditional status update to REJECTED → insert one reason-bearing decision row
+→ validate Content response → commit → return direct Content envelope
+```
 
-| Requirement | Source | DD coverage | Status |
-|---|---|---|---|
-| PATCH path, Bearer/Admin, path content_id | Catalog #81 | Cover/Overview/Request/Mapping | DIRECT; route absent |
-| Body reason:string! | Catalog #81 and AC-33 node n10 | Request/Mapping/Error | DIRECT required string; additional constraints absent |
-| No query | Catalog #81 | Request/Mapping | DIRECT omission |
-| Content response/status/errors | Catalog #81 | Response/Error | Direct schema and exact codes retained |
-| Set REJECTED and save reason | AC-33 node n11 | Overview/Mapping/logical write register | Logical effect DIRECT; physical mapping SOURCE_REQUIRED |
-| Queue reload after rejection | AC-33 edge n11 → n12 and #78 predicate | Overview/Mapping | Resulting exclusion from PENDING_REVIEW is a direct-flow inference |
-| Audit parity with #80 | #80 says + audit; #81 does not | Open Questions | SOURCE_REQUIRED; no extra append assumed |
+## Chosen implementation fallbacks
 
-## Pre-authoring matrices
-
-### Request Usage Matrix
-
-| Input | Use | Status/gap |
+| Gap | Local choice | Status |
 |---|---|---|
-| Authorization | Admin authentication and moderation permission | Admin claim/guard SOURCE_REQUIRED |
-| content_id | Load Content and response identity | Physical key/revision SOURCE_REQUIRED |
-| reason | Persist logical review reason | Required string direct; validation/storage rules open |
-| Query | None | DIRECT omission |
+| Physical reason storage | Store request reason in the same `content_review_audit_logs` row that records actor and old/new status. No new schema or second audit append. | DERIVED; live unverified |
+| Eligible state | Require current active status `PENDING_REVIEW`; other state → catalog 422. | DERIVED from AC-33 precondition/#78 queue |
+| Reason validation | Strict string, body required, unknown fields forbidden; no trim/length/blank rule. Empty string is preserved. | Type direct; remaining rules intentionally unspecified |
+| Actor | Shared ADMIN guard's numeric JWT `sub`; never from request. | Current helper + DERIVED BIGINT mapping |
+| Transaction | Lock, conditional update, reason-bearing insert, response validation and final commit; rollback failures. | DERIVED from #80/#76 pattern |
+| Revision | Act on active row at #81 call time; no revision identity claim. | OPEN / SOURCE_REQUIRED |
+| Response | Exact reusable eight-field Content with `REJECTED`; omit null parent ID per current route serialization. | Direct schema/status intent |
 
-### Query Matrix
+## Files and scope
 
-| Query | Purpose | Logical items | Physical mapping/status |
-|---|---|---|---|
-| Q1 | Load target Content | Eight response fields/current state | SOURCE_REQUIRED; no generic Content relation |
-| Q2 | Check pending eligibility and same revision as #79 | Current state/revision identity | Pending precondition direct; check/selector SOURCE_REQUIRED |
-| Q3 | Resolve Admin reviewer | Role and actor identity | SOURCE_REQUIRED; no Admin guard/claim mapping |
+- Added API #81 `models.py`, SQL-only `query.py`, `validate.py`, `view.py`, route and middleware path entry.
+- Added focused HTTP tests; no migration/schema/diagram change.
+- Updated API #81 mapping, error, response, table and open-question documents while preserving Draft status and template appendices.
+- Updated directly affected API #80 notes that previously described #81 as unwired, plus Study Server context and manifest.
+- No ZIP, staging or commit.
 
-### Mutation Matrix
+## Remaining confirmation boundaries
 
-| ID | Logical operation | Direct evidence | Physical status |
-|---|---|---|---|
-| M1 | Set Content status to REJECTED | AC-33 node n11 | Physical relation/column SOURCE_REQUIRED |
-| M2 | Store rejection reason | Catalog body and AC-33 node n11 | Physical field/relation SOURCE_REQUIRED |
-| M3 | Separate audit append | Not stated in reject node | Do not infer; confirm parity with #80 |
-
-### Response Source Matrix
-
-| Field group | Contract | Source/gap |
-|---|---|---|
-| Envelope | success, businessCode, message, data, meta, traceId | Common envelope; route absent |
-| data | One Content | Direct catalog shape |
-| Content fields | id, course_id, content_type, title, payload, status, parent_id, order | All retained; physical mapping SOURCE_REQUIRED; logical status REJECTED |
-
-## Verification plan
-
-- Verify exact 11-file package and 8/8 appendix parity.
-- Check catalog input/response/error set, Content fields, JSON, local links/anchors, tables/fences and whitespace.
-- Recount DD folder/full-package and route/view totals after #81.
-- Application tests remain NOT_RUN; API #81 has no route.
-- AC-33 document-level macro-review #78–#81 is complete. The queue/detail/decision sequence is traceable, while response cardinality, version identity, state naming, audit parity, Admin guard, persistence and lifecycle questions remain open; see [VERIFICATION_REPORT.md](./VERIFICATION_REPORT.md).
+Live schema/deployment/FKs, dedicated moderation permission, reason retention/visibility/blank policy, exact revision continuity with #79, and rejected-content publish/delete/resubmission policy remain open. Fake DB tests do not prove these boundaries.

@@ -24,40 +24,38 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|
-| 1 | Content type | Content-Type | Yes | application/json | Request body is JSON | 1.1 |
-| 2 | Authorization | Authorization | Yes | Bearer JWT | Authenticated Mentor; role required by catalog | 0.1 |
+| 1 | Content type | Content-Type | Yes | application/json | Request body is JSON | 1 |
+| 2 | Authorization | Authorization | Yes | Bearer JWT | Authenticated Mentor; explicit MENTOR role is enforced | 0 |
 
 ## Path parameters
 
-| No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
-|---:|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Submission ID | submission_id | int64 | Yes | Unspecified | Unspecified | Base-10 integer path value | int64 | None | Submission selected from the Mentor submissions flow | 2.1 |
+| No | Logical name | Physical name | Type | Required | Format | Description | Data Mapping reference |
+|---:|---|---|---|---|---|---|---|
+| 1 | Submission ID | submission_id | int64 | Yes | Signed base-10 integer | Submission selected from the Mentor submissions flow | 2 |
 
 ## Query parameters
 
-| No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
-|---:|---|---|---|---|---|---|---|---|---|---|---|
-| N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | Catalog defines no query parameters | N/A |
+None. API catalog defines no query parameters.
 
 ## Request body
 
-| No | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Default | Description | Data Mapping reference |
-|---:|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Score | score | int32 | Yes | Unspecified | Unspecified | N/A | JSON integer | int32 | None | Score to save; lower/upper business bounds and relation to assignment max_score are not defined | 1.2 |
-| 2 | Rubric items | rubric items | string | Yes | Unspecified | Unspecified | Unicode string | JSON string | Not specified | None | Literal catalog descriptor; actual wire-key spelling, item encoding and persistence are SOURCE_REQUIRED | 1.3 |
+| No | Logical name | Physical name | Type | Required | Format | Description | Data Mapping reference |
+|---:|---|---|---|---|---|---|---|
+| 1 | Score | score | int32 | Yes | JSON integer | Strict signed int32; DERIVED business range is zero through assignment max_score inclusive | 1 |
+| 2 | Rubric items | rubric_items | string | Yes | JSON string | DERIVED wire-key spelling for the catalog descriptor “rubric items”; opaque required text, not persisted or echoed because no target exists | 1 |
 
-> Each request field has its own row. The rubric items label is copied from the catalog; this DD does not confirm that a JSON property containing a space is the intended wire name.
+Undeclared body fields are rejected. The rubric key/value representation and storage remain open for contract-owner confirmation. The request model only enforces that rubric_items is a string.
 
 ## Ví dụ Request data
 
 ~~~json
 {
   "score": 8,
-  "rubric items": "<Illustrative placeholder: required string encoding is not defined>"
+  "rubric_items": "opaque rubric payload"
 }
 ~~~
 
-> The example is valid JSON and uses the catalog descriptor literally for traceability. Confirm the actual wire key and rubric string format before implementation.
+The key spelling and opaque string handling are a simple implementation fallback. The server currently accepts this value without interpreting or persisting it.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

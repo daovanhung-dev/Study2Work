@@ -10,7 +10,7 @@ status: "Draft — Needs Confirmation"
 
 ## Trạng thái kế hoạch
 
-**Plan được ghi trước khi tạo sheets; việc soạn tài liệu và kiểm tra tĩnh đã hoàn tất.** DD giữ trạng thái `Draft — Needs Confirmation` vì wire key của `feedback text`, định dạng/lưu attachments và một số mapping response chưa có nguồn xác nhận.
+**Plan được ghi trước khi tạo sheets và runtime code.** DD giữ trạng thái `Draft — Needs Confirmation`; runtime chọn các fallback DERIVED bên dưới, nhưng contract owner chưa xác nhận wire key, attachments, history hoặc identity mapping.
 
 ## Hợp đồng giữ nguyên
 
@@ -20,7 +20,7 @@ status: "Draft — Needs Confirmation"
 | Method/path | `POST /api/v1/mentor/submissions/{submission_id}/feedback` | Catalog + AC-23; DIRECT |
 | Actor/auth | Bearer JWT; role `Mentor` | Catalog + AC-23; DIRECT |
 | Path | `submission_id:int64!` | Catalog; DIRECT |
-| Body field 1 | `feedback text:string!` | Catalog descriptor nguyên văn; wire key chưa rõ |
+| Body field 1 | `feedback text:string!` | Catalog descriptor; runtime dùng `feedback_text` làm wire key DERIVED |
 | Body field 2 | `attachments:string!` | Catalog; định dạng và persistence chưa rõ |
 | Success | HTTP `200`, `DESIGN_RESOURCE_UPDATED`, `ApiEnvelope<Submission>` | Catalog + AC-23; DIRECT |
 | Errors | `401 DESIGN_AUTHENTICATION_REQUIRED`; `403 DESIGN_ACCESS_DENIED`; `404 DESIGN_RESOURCE_NOT_FOUND`; `422 DESIGN_VALIDATION_ERROR`; `500 DESIGN_INTERNAL_ERROR` | Catalog + diagram; DIRECT |
@@ -36,13 +36,13 @@ Flow trên chỉ mô tả thứ tự UI. Không biến `status=GRADED` thành đ
 ## Cách thiết kế
 
 1. Đọc feedback từ `assignment_submissions.feedback TEXT` như candidate hiện có; đề xuất cập nhật field đó cho submission được chọn, gắn nhãn `DERIVED`.
-2. Không tạo bảng feedback history, không chọn semantics ghi đè/lưu phiên bản như dữ kiện; diagram ghi `INSERT/UPDATE`, nên semantics lần ghi lại vẫn là câu hỏi mở.
-3. Không ánh xạ `attachments` sang `assignment_submissions.file_url` hoặc `Submission.files`; file đó là file học viên nộp. Không chọn JSON array, chuỗi JSON, URL hay asset ID làm format attachments.
+2. Runtime dùng UPDATE ghi đè một field feedback; đây là fallback DERIVED vì diagram cũng ghi `INSERT/UPDATE` nhưng không có history relation. Cần contract owner xác nhận semantics.
+3. Runtime nhận `attachments` như strict opaque string nhưng không parse, lưu hoặc echo; không ánh xạ sang `assignment_submissions.file_url` hoặc student `Submission.files`. Format và persistence target vẫn chưa có nguồn.
 4. Không nối bảng rubric assessment dùng UUID của V1-PILOT vào submission BIGINT legacy.
-5. Giữ `Submission.files: UploadAsset[]` và toàn bộ metadata asset là `SOURCE_REQUIRED`; output catalog không có field riêng cho feedback attachments.
-6. Dùng candidate direct-owner `courses.mentor_id` thống nhất với #54–#56, chỉ ở mức `DERIVED`. Mentor principal mapping, assigned-Mentor và null/orphan relation chưa được xác nhận.
-7. Giữ status sau #56 và candidate feedback trong response; mapping `files[]` chưa đủ để tạo một `Submission` hoàn chỉnh.
-8. Ghi mismatch error envelope (`data=null` theo API Guidelines, `{}` theo helper hiện tại) và dynamic-route middleware allowlist như vấn đề tích hợp tương lai.
+5. Reuse API #54's DERIVED constrained UploadAsset lookup for student `Submission.files`; API #35 URL persistence and separate feedback attachment handling remain unresolved.
+6. Dùng candidate direct-owner `courses.mentor_id` thống nhất với #54–#56, chỉ ở mức `DERIVED`. Shared guard cung cấp numeric subject; assigned-Mentor và null/orphan relation chưa được xác nhận.
+7. Giữ status sau #56 và candidate feedback trong response; `files[]` follows the API #54 fallback, with API #35 compatibility unresolved.
+8. API Guidelines and the current helper both emit error `data=null`; the dynamic #57 route template is registered in middleware and maps validation/internal errors to `DESIGN_*`.
 
 ## Nguồn được đọc
 
@@ -63,8 +63,8 @@ Flow trên chỉ mô tả thứ tự UI. Không biến `status=GRADED` thành đ
 |---|---|
 | Request usage | Authorization, path ID, descriptor feedback text và attachments; không có query/body field bổ sung |
 | Query | Đọc submission và course scope theo candidate; giữ nhánh null/orphan/access unresolved |
-| Mutation | Candidate UPDATE assignment_submissions.feedback; attachment persistence SOURCE_REQUIRED |
-| Response source | Mọi field envelope, Submission và nested UploadAsset; giữ score/status; ghi rõ thiếu asset resolver |
+| Mutation | Runtime UPDATE assignment_submissions.feedback as DERIVED overwrite; attachment persistence SOURCE_REQUIRED |
+| Response source | Mọi field envelope, Submission và nested UploadAsset; giữ score/status; note DERIVED API #54 file lookup and unresolved producer compatibility |
 | Error | Chính xác 401/403/404/422/500 theo catalog |
 | Deliverables | 8 template sheets + 1 mapping table candidate + 3 report; chỉ Markdown |
 
@@ -76,11 +76,18 @@ Flow trên chỉ mô tả thứ tự UI. Không biến `status=GRADED` thành đ
 - Mutation candidate chỉ chạm feedback column hiện có; không tạo persistence cho attachment/rubric.
 - JSON, relative links/anchors, độ rộng bảng, code fence, metadata và whitespace đã được kiểm tra.
 - Macro-review #54–#57 được ghi trong report và worklog liên quan.
-- Runtime tests giữ NOT_RUN; task không tạo source API.
+- DD lúc tạo ghi runtime tests NOT_RUN; implementation kết quả được ghi ở phần dưới.
 
 ## Kết quả sau soạn
 
 - Đã tạo đủ 8 sheet theo template, một mapping candidate assignment_submissions.feedback và ba report; tổng cộng 11 file.
 - Contract, error set, độ phủ field, template appendix, JSON, liên kết/anchor, bảng, code fence và whitespace đã được kiểm tra.
-- Macro-review #54–#57 hoàn tất ở mức tài liệu; cardinality, rubric, assets, quyền Mentor, feedback attachments và error wiring vẫn còn câu hỏi.
-- API #57 hiện UNWIRED / NOT_FOUND; application tests chưa chạy, live schema và flow runtime AC-23 chưa được xác minh.
+- Macro-review #54–#57 hoàn tất ở mức tài liệu; #54 cardinality/file lookup are DERIVED, while rubric, producer compatibility, assigned-Mentor access and feedback attachments remain open.
+- At DD authoring time API #57 was UNWIRED; the current route/module/tests are recorded below.
+
+## Kết quả implementation
+
+- Added the route, request/response models, signed-int64 validator, SQL constants, view orchestration and middleware template registration.
+- Runtime updates only the legacy `assignment_submissions.feedback` candidate with direct-owner predicate; score/status remain unchanged. Required `attachments` is accepted opaquely and not persisted or returned.
+- The response reuses API #54 `SubmissionResponse` and constrained student-file lookup. Fallback choices remain DERIVED/SOURCE_REQUIRED; DD remains Draft — Needs Confirmation.
+- Focused API #57 suite: 28 passed; full Study Server suite: 538 passed; Ruff and OpenAPI route checks pass. Tests use fake DB results. Live schema, migrations, deployment and AC-23 end-to-end remain NOT_VERIFIED.

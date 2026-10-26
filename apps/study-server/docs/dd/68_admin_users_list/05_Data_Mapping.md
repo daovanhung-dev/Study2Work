@@ -12,7 +12,7 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ~~~text
-Admin Bearer principal -> xác thực role/quyền user management -> nhận filter và page -> chuẩn hóa keyword theo proposal -> Q1 đọc safe user fields, Q2 count cùng predicates -> map Page<UserProfile> candidate -> direct catalog hiện chỉ cho phép ApiEnvelope<UserProfile> -> trả 200 hoặc exact catalog errors
+Admin Bearer principal -> shared ADMIN JWT guard -> validate role/status/keyword/page -> COUNT và SELECT cùng predicates trên legacy users candidate -> map API #04 UserProfile safe fields -> PageMeta -> DESIGN_RESOURCE_RETRIEVED envelope
 ~~~
 
 # Mục lục
@@ -33,26 +33,25 @@ Admin Bearer principal -> xác thực role/quyền user management -> nhận fil
 
 ### 0.1. Xác thực principal
 
-- Đọc Authorization Bearer JWT theo requirement catalog.
-- Kiểm tra role Admin và quyền user management trước khi đọc danh sách.
-- Current Study guard chỉ hỗ trợ Student; không dùng lại guard đó cho API này.
-- JWT claim-to-Admin identity/policy chưa có current source; cần owner xác nhận.
+- Đọc Authorization Bearer JWT bằng shared validate_current_user_request.
+- Yêu cầu role ADMIN; guard kiểm tra JWT/subject/roles trước mọi database query.
+- AC-31 nói Admin có quyền user management. Checked-in schema không có permission relation; dùng claim ADMIN làm fallback permission boundary DERIVED.
+- Không query user rows trước khi authorization thành công.
 
 ### 0.2. Query/check quyền
 
 | Target table/API | Column/Field | Condition/Value | Remarks |
 |---|---|---|---|
-| Authorization header | Bearer credential | Token hợp lệ, chưa hết hạn | DIRECT requirement; endpoint chưa wired. |
-| JWT claims | roles | Chứa Admin theo catalog | DIRECT role; current helper/policy chưa hỗ trợ. |
-| Admin policy | user-management permission | Admin được phép quản lý user | AC-31 precondition; implementation source absent. |
-
-Không query user rows trước khi hoàn tất Admin authorization.
+| Authorization header | Bearer credential | Token hợp lệ, chưa hết hạn | DIRECT; shared guard. |
+| JWT claims | roles | Có ADMIN sau khi normalize chữ hoa | Role requirement DIRECT; mapping permission theo claim là DERIVED. |
+| Admin policy | user-management permission | ADMIN claim đại diện quyền list | DERIVED; chưa có permission table, tenant scope hoặc access audit source. |
 
 ### 0.3. Check kết quả
 
-- Thiếu hoặc sai Bearer credential: catalog 401 DESIGN_AUTHENTICATION_REQUIRED.
-- Principal không có role/quyền Admin: catalog 403 DESIGN_ACCESS_DENIED.
-- Không tự ánh xạ Admin role thành một bảng hay enum vật lý chưa có source.
+- Thiếu/sai Bearer/JWT: 401 DESIGN_AUTHENTICATION_REQUIRED.
+- Principal không có ADMIN role: 403 DESIGN_ACCESS_DENIED.
+- Lỗi query/mapping: 500 DESIGN_INTERNAL_ERROR.
+- Page invalid: 422 DESIGN_VALIDATION_ERROR theo catalog đã đồng bộ.
 
 <a id="step-1-validate-data-input"></a>
 
@@ -60,35 +59,36 @@ Không query user rows trước khi hoàn tất Admin authorization.
 
 ### 1.1. role
 
-- Nhận query role dạng string tùy chọn theo catalog.
-- Candidate dùng equality trên users.role khi parameter hiện diện.
-- Không tạo whitelist role; tập role hợp lệ chưa được xác định.
+- Nhận query role dạng string tùy chọn.
+- Khi có mặt, dùng equality users.role = :role.
+- Không whitelist role vì UserRole enum members chưa được định nghĩa. Unknown value cho empty result.
 
 ### 1.2. status
 
-- Nhận query status dạng string tùy chọn theo catalog.
-- Candidate dùng equality trên users.status khi parameter hiện diện.
-- Không tạo whitelist status hoặc mặc định ACTIVE.
+- Nhận query status dạng string tùy chọn.
+- Khi có mặt, dùng equality users.status = :status.
+- Không whitelist status hoặc mặc định ACTIVE. Unknown value cho empty result.
 
 ### 1.3. keyword
 
-- Nhận query keyword dạng string tùy chọn theo catalog.
-- Proposal DERIVED: trim, chuyển lowercase, tìm substring trên full_name hoặc email.
-- Cần xác nhận ký tự wildcard và hành vi keyword rỗng; không trả dữ liệu nhập trong lỗi.
+- Dùng normalize_search_query từ app/utils/validate.py: trim, lowercase và coi blank là absent.
+- Tìm substring literal trong LOWER(full_name) hoặc LOWER(email) bằng POSITION.
+- Các ký tự % và _ là literal, không phải SQL pattern wildcard.
 
 ### 1.4. page
 
-- Nhận int32 tùy chọn theo catalog.
-- Proposal DERIVED: page 1-based, omitted dùng 1, fixed size 20 theo API #07.
-- Catalog không ghi minimum/default và không khai báo 422; không chốt HTTP behavior cho page <= 0 trước khi contract owner xác nhận.
+- Nhận raw query value và parse integer bằng shared parse_integer.
+- Omitted page mặc định 1.
+- Chỉ chấp nhận 1..2147483647; sai kiểu, <1 hoặc >int32 max trả 422 DESIGN_VALIDATION_ERROR.
+- Fixed page size 20 theo API #07 precedent; không nhận size query.
 
 <a id="step-2-get-thong-tin"></a>
 
 ## 2. Get thông tin
 
-### 2.1. Query candidate — legacy users
+### 2.1. Q1 — paginated user projection
 
-Các truy vấn dưới đây chỉ là proposal trên legacy BIGINT schema; không khẳng định quan hệ đó là live schema.
+Legacy users là checked-in query candidate khớp path int64 và profile API #04; live schema chưa xác minh.
 
 ~~~sql
 SELECT
@@ -105,19 +105,19 @@ FROM users AS u
 WHERE (:role IS NULL OR u.role = :role)
   AND (:status IS NULL OR u.status = :status)
   AND (
-      :keyword_pattern IS NULL
-      OR LOWER(u.full_name) LIKE :keyword_pattern
-      OR LOWER(u.email) LIKE :keyword_pattern
+      :keyword IS NULL
+      OR POSITION(:keyword IN LOWER(u.full_name)) > 0
+      OR POSITION(:keyword IN LOWER(u.email)) > 0
   )
 ORDER BY u.id ASC
 LIMIT :limit OFFSET :offset
 ~~~
 
-- Không chọn password_hash.
-- Không join identity_projections/learner_profiles từ V1-PILOT.
-- keyword_pattern candidate là % + lower(keyword sau trim) + %; escaping wildcard cần được quyết định.
+- Query source hiện tại chọn safe fields; không có password_hash.
+- OFFSET = (page - 1) * 20; limit = 20.
+- Không join V1-PILOT UUID identity/profile/role tables.
 
-### 2.2. Query candidate — count
+### 2.2. Q2 — count
 
 ~~~sql
 SELECT COUNT(*) AS total
@@ -125,40 +125,39 @@ FROM users AS u
 WHERE (:role IS NULL OR u.role = :role)
   AND (:status IS NULL OR u.status = :status)
   AND (
-      :keyword_pattern IS NULL
-      OR LOWER(u.full_name) LIKE :keyword_pattern
-      OR LOWER(u.email) LIKE :keyword_pattern
+      :keyword IS NULL
+      OR POSITION(:keyword IN LOWER(u.full_name)) > 0
+      OR POSITION(:keyword IN LOWER(u.email)) > 0
   )
 ~~~
 
-Q2 dùng cùng filter với Q1. Chỉ dùng total trong candidate PageMeta; direct response hiện chưa có pagination.
+Q2 dùng cùng exact predicates với Q1; result total tạo PageMeta. Hai SELECT do view gọi bằng cùng Session. Local fake DB tests không chứng minh live transaction snapshot hoặc query plan.
 
 ### 2.3. JOIN
 
-Không có JOIN trong candidate legacy query. Profile fields đều thuộc users. V1-PILOT cần mô hình identity/profile khác và không được nối bằng ID giả định.
+Không có JOIN; profile projection thuộc users candidate.
 
 ### 2.4. WHERE
 
-| Điều kiện | Candidate predicate | Trạng thái |
+| Điều kiện | Predicate | Trạng thái |
 |---|---|---|
-| Có role | users.role = :role | DERIVED exact match. |
-| Có status | users.status = :status | DERIVED exact match. |
-| Có keyword | LOWER(full_name) hoặc LOWER(email) chứa keyword | DERIVED; escaping/collation chưa chốt. |
-| Không có filter | Không lọc theo các query trên | DERIVED; deletion visibility vẫn mở. |
+| role có giá trị | users.role = :role | Query key DIRECT; exact equality DERIVED. |
+| status có giá trị | users.status = :status | Query key DIRECT; exact equality DERIVED. |
+| keyword sau trim không rỗng | POSITION(:keyword IN LOWER(full_name/email)) > 0 | DERIVED literal substring. |
+| không có filter | Không thêm predicate tương ứng | DERIVED; không thêm deletion predicate vì schema source thiếu field. |
 
 ### 2.5. ORDER BY và phân trang
 
-- Candidate order users.id ASC để có thứ tự ổn định; catalog không có sort input.
-- Candidate page mặc định 1; size cố định 20 theo API #07 precedent.
-- offset = (page - 1) * 20 khi page hợp lệ.
-- total_pages = ceil(total / 20); total=0 thì 0.
-- Page<=0 và integer overflow behavior là SOURCE_REQUIRED vì catalog không nêu rule/422.
+- Thứ tự users.id ASC để giữ thứ tự ổn định; không có sort query.
+- Page mặc định 1, fixed size 20 theo API #07 precedent.
+- Offset=(page-1)*20; total_pages=ceil(total/20), total=0 thì 0.
+- Page int32 invalid trả 422; không thêm error code khác.
 
 <a id="step-3-insertupdate-thong-tin"></a>
 
 ## 3. Insert/Update thông tin
 
-API #68 là GET/read-only. Không có INSERT, UPDATE, DELETE, transaction mutation hoặc rollback.
+API #68 là GET/read-only. Không INSERT, UPDATE, DELETE, không commit Session.
 
 <a id="step-4-check-ket-qua-execute-query"></a>
 
@@ -166,43 +165,45 @@ API #68 là GET/read-only. Không có INSERT, UPDATE, DELETE, transaction mutati
 
 ### 4.1. Thành công
 
-- Candidate query hợp lệ: map từng row theo safe UserProfile projection.
-- Theo proposal list, không có user phù hợp trả items=[] và total=0 với HTTP 200; cần contract correction vì response trực tiếp là một UserProfile.
-- Omit bio nếu chưa có source và schema decision; không gán chuỗi rỗng.
+- Count projection phải là số nguyên không âm trong int64.
+- Mỗi row phải map được vào API #04 UserProfile; id là positive int64; full_name/email/role/status là string; avatar_url/phone có thể null; timestamp cần hợp lệ.
+- Response dùng Page<UserProfile>. Không có user khớp trả items=[]/total=0 HTTP 200.
+- bio được omit vì không có field trong current API #04/legacy users source.
 
 ### 4.2. Lỗi hệ thống
 
-- Query DB hoặc mapping profile lỗi: catalog 500 DESIGN_INTERNAL_ERROR.
-- Không ghi log/response raw SQL, password, credential hoặc dữ liệu PII không cần thiết.
+- SQLAlchemyError, count/profile/page mapping sai trả 500 DESIGN_INTERNAL_ERROR.
+- View rollback transaction lỗi và không gửi SQL, stack trace, token, password_hash hoặc profile data ra client.
 
 ### 4.3. Validate lỗi
 
-- Catalog #68 không khai báo 422.
-- Invalid page, unknown role/status và invalid filter handling cần contract owner quyết định; không thêm code/status trong DD direct.
+- Page không phải integer, nhỏ hơn 1 hoặc lớn hơn int32 max trả 422 DESIGN_VALIDATION_ERROR.
+- Role/status values không whitelist; khi không match, empty page là kết quả hợp lệ.
 
 ### 4.4. Ngoài trường hợp trên
 
-- Giữ exact error set 401/403/500.
-- Không dùng 404 cho empty list; candidate empty collection là 200 nhưng direct response chưa có list shape.
+- Error set direct hiện hành: 401/403/422/500.
+- Không dùng 404 cho empty list.
 
 ## Request Usage Matrix
 
-| Request field | Source | Mapping step | Candidate query use | Response use | Basis/gap |
+| Request field | Source | Mapping step | Query use | Response use | Basis/status |
 |---|---|---|---|---|---|
-| Authorization | Header Bearer | 0.1/0.2 | Không đưa vào SQL | Không map | Admin policy source absent. |
-| role | Query string | 1.1 | Q1/Q2 exact predicate | Không map | Filter DIRECT; semantics DERIVED. |
-| status | Query string | 1.2 | Q1/Q2 exact predicate | Không map | Filter DIRECT; values/deleted policy open. |
-| keyword | Query string | 1.3 | Q1/Q2 normalized pattern | Không map | Fields/normalization DERIVED. |
-| page | Query int32 | 1.4 | Q1 limit/offset | Candidate pagination.page | Default/size DERIVED; invalid input unresolved. |
+| Authorization | Bearer header | 0.1/0.2 | Không đưa vào SQL | Không map | Admin guard source-backed; permission interpretation DERIVED. |
+| role | Query string | 1.1 | Q1/Q2 exact predicate | Không map | Query key DIRECT. |
+| status | Query string | 1.2 | Q1/Q2 exact predicate | Không map | Query key DIRECT. |
+| keyword | Query string | 1.3 | Q1/Q2 normalized substring | Không map | Query key DIRECT; semantics DERIVED. |
+| page | Query int32 | 1.4 | Q1 limit/offset | pagination.page | Default/range/size derived from API #07. |
 | Body | None | N/A | None | None | DIRECT. |
+| size/sort | Not declared | N/A | None | None | Không thêm vào request. |
 
 ## Query Matrix
 
 | Query ID | Type | Source | Columns | Filter/order/page | Result/status |
 |---|---|---|---|---|---|
-| Q1 | SELECT | Legacy users AS u | Safe UserProfile fields, excluding password_hash | Optional filters; id ASC; candidate limit 20 | DERIVED legacy candidate; live schema unresolved. |
-| Q2 | COUNT | Legacy users AS u | COUNT(*) | Same filters as Q1 | DERIVED; used only by candidate Page response. |
-| JOIN | N/A | N/A | None | No joins | No mapping between legacy BIGINT and pilot UUID. |
+| Q1 | SELECT | Legacy users AS u | API #04 safe UserProfile fields | Optional filters; id ASC; limit 20 | Current source; live schema unknown. |
+| Q2 | COUNT | Legacy users AS u | COUNT(*) | Same predicates as Q1 | Current source; live schema unknown. |
+| JOIN | N/A | N/A | None | No joins | V1-PILOT UUID rows are not used. |
 
 ## Mutation Matrix
 
@@ -212,26 +213,17 @@ API #68 là GET/read-only. Không có INSERT, UPDATE, DELETE, transaction mutati
 
 ## Response Source Matrix
 
-| Response field/group | Type | Candidate source | Mapping/null rule | Evidence/status |
+| Response field/group | Type | Source | Mapping/null rule | Evidence/status |
 |---|---|---|---|---|
-| success | boolean | Envelope branch | true success / false error | DIRECT reusable envelope. |
-| businessCode | string | Catalog | Exact code per branch | DIRECT. |
-| message | string | Application message | Safe localized text | Exact text not specified. |
-| data.id | int64 | users.id | Direct candidate | Legacy schema candidate. |
-| data.full_name | string | users.full_name | Direct candidate | API #4/#14 precedent. |
-| data.email | email | users.email | Direct candidate; Admin only | PII. |
-| data.role | UserRole | users.role | Direct candidate | Enum members are not listed in catalog. |
-| data.avatar_url | uri? | users.avatar_url | API #4 model serializes null in current source | Optional/null contract semantics open. |
-| data.bio | string? | No current source | Do not synthesize; omit only after approval | SOURCE_REQUIRED. |
-| data.phone | string? | users.phone | API #4 model serializes null in current source | PII; optional/null semantics open. |
-| data.status | UserStatus | users.status | Direct candidate | Enum members and deletion policy are open. |
-| data.created_at | date-time | users.created_at | ISO-8601 | Legacy candidate. |
-| data.updated_at | date-time | users.updated_at | ISO-8601 | Legacy candidate. |
-| Candidate data.items[] | UserProfile[] | Q1 | Map safe profile per row | DERIVED; response contract mismatch. |
-| Candidate data.pagination | PageMeta | Q1/Q2 | page, size=20, total, total_pages | DERIVED; approval required. |
-| meta | object | Envelope helper | {} candidate | Error guideline says data null; helper uses {}. |
-| traceId | uuid | Current middleware | Validated or generated | Source-backed convention. |
-| password_hash | Excluded | Legacy users.password_hash | Never select/serialize | Security boundary. |
+| success/businessCode/message/meta/traceId | Envelope | Shared response/middleware | success=true; DESIGN_RESOURCE_RETRIEVED; empty meta; trace header retained | Current helper source. |
+| data.items[] | UserProfile[] | Q1 users | API #04 model; optional avatar/phone serialize null; omit bio | Runtime mapped; schema candidate. |
+| data.pagination.page | int32 | Validated query | Default 1 | Runtime; derived. |
+| data.pagination.size | int32 | API #07 precedent | Constant 20 | Runtime; derived. |
+| data.pagination.total | int64 | Q2 COUNT | Same predicates as Q1 | Runtime; legacy candidate. |
+| data.pagination.total_pages | int32 | Q2 + size | Ceil; 0 for zero results | Runtime; derived. |
+| email/phone | string | users.email/phone | Returned only after ADMIN guard | Reusable UserProfile; PII policy still needs owner review. |
+| role/status | string | users.role/status | Stored value; exact filter; no enum whitelist | Current API #04 model uses strings; catalog enum members absent. |
+| password_hash | Excluded | users.password_hash | Never selected/serialized | Verified from SQL/model source. |
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

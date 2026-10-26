@@ -11,16 +11,30 @@ status: "Draft — Needs Confirmation"
 
 ## Table mapping
 
-N/A — READ-ONLY API. API #66 không ghi, sửa hoặc xóa dữ liệu nên không có mutation table mapping.
+API chỉ đọc; không có mutation table mapping.
 
-## Candidate read source boundary
+## Read mapping — local runtime
 
-| Logical role | Relation | Dữ liệu cần có | Trạng thái |
-|---|---|---|---|
-| Course scope/access | Legacy candidate courses | Course ID và owner relation | DESIGN_ONLY; identity/assignment predicate DERIVED/SOURCE_REQUIRED. |
-| Learning-event source | Chưa được xác định | Event thuộc course, actor Student, occurrence time, dedup identity | SOURCE_REQUIRED; không tạo tên bảng/cột. |
+| Thứ tự | Relation | Column | Vai trò | Bằng chứng/trạng thái |
+|---:|---|---|---|---|
+| 1 | courses | id | Tìm course theo required path | Legacy DDL; live schema chưa xác minh. |
+| 1 | courses | mentor_id | Kiểm tra direct owner theo JWT sub | Legacy DDL; DERIVED access rule. |
+| 2 | lessons | id | Nối lesson_progress.lesson_id | Legacy DDL. |
+| 2 | lessons | course_id | Giới hạn lesson trong course | Legacy DDL. |
+| 2 | lessons | status | Chỉ lấy PUBLISHED lesson | Legacy DDL; cùng convention #65. |
+| 3 | users | id | Nối lesson_progress.user_id | Legacy DDL. |
+| 3 | users | role | Chỉ đếm Student actor | Legacy DDL; giá trị STUDENT theo source #65. |
+| 4 | lesson_progress | user_id | Một phần khóa cặp hoạt động | Legacy DDL. |
+| 4 | lesson_progress | lesson_id | Một phần khóa cặp hoạt động | Legacy DDL. |
+| 4 | lesson_progress | last_accessed_at | Dấu truy cập gần nhất còn lưu | Legacy DDL current state; không phải event history. |
 
-Legacy lesson_progress và V1-PILOT progress facts/snapshots lưu trạng thái/fact tổng hợp, không phải event history. Generic audit/outbox relations không được xem là learner event source nếu chưa có domain mapping được phê duyệt.
+## Logical aggregate
+
+- Một record analytics proxy ứng với một cặp user_id/lesson_id phân biệt có timestamp truy cập.
+- Duplicate progress rows cùng cặp được gộp bằng GROUP BY; timestamp cặp là MAX(last_accessed_at).
+- Trả tracked_lesson_accesses = số cặp, students_with_activity = số user Student phân biệt, last_activity_at = timestamp lớn nhất.
+- V1-PILOT block_progress_facts.last_event_id, lesson_progress_facts, progress_snapshots, audit_events và outbox_events không được truy vấn.
+- Không có bảng/cột learning-event ledger trong các DDL đã rà soát; không thể khôi phục số lần truy cập từ state hiện có.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -17,7 +17,7 @@ status: "Draft — Needs Confirmation"
 
 - [0. Check quyền](#step-0-check-quyen)
 - [1. Nhận request](#step-1-nhan-request)
-- [2. Check body proposal](#step-2-check-body-proposal)
+- [2. Validate body fallback](#step-2-check-body-proposal)
 - [3. Update lesson](#step-3-update-lesson)
 - [4. Check kết quả và map response](#step-4-check-ket-qua-va-map-response)
 - [5. Trả response](#step-5-tra-response)
@@ -33,16 +33,16 @@ status: "Draft — Needs Confirmation"
 - Yêu cầu lesson-management permission theo AC-34.
 - Credential thiếu/sai/hết hạn -> HTTP 401 DESIGN_AUTHENTICATION_REQUIRED.
 - Thiếu role/permission -> HTTP 403 DESIGN_ACCESS_DENIED.
-- Current auth helper chỉ có Student guard; Admin claim, policy và guard chưa có.
+- Shared auth helper hiện yêu cầu role `ADMIN`; AC-34 lesson-management permission chưa có policy riêng trong Study source.
 - Authorize trước khi chạy UPDATE.
 
 ### 0.2. Quyền truy cập
 
 | Target table/API | Column/Field | Condition/Value | Remarks |
 |---|---|---|---|
-| Authorization header | Bearer credential | Token hợp lệ | DIRECT requirement; route chưa có. |
-| Principal policy | Admin role | Principal có role Admin | DIRECT requirement; claim source chưa có. |
-| AC-34 policy | lesson-management permission | Principal được phép quản lý lesson | DIRECT precondition; implementation SOURCE_REQUIRED. |
+| Authorization header | Bearer credential | Token hợp lệ | DIRECT requirement; shared guard đang chạy. |
+| Principal policy | Admin role | Principal có role Admin | DIRECT requirement; shared guard kiểm tra role. |
+| AC-34 policy | lesson-management permission | Principal được phép quản lý lesson | DIRECT precondition; fine-grained policy chưa có trong current source. |
 
 <a id="step-1-nhan-request"></a>
 
@@ -52,26 +52,26 @@ status: "Draft — Needs Confirmation"
 
 - lesson_id lấy từ path và có kiểu int64 theo catalog.
 - Không thêm positive/minimum rule vì catalog không nêu.
-- Path không parse được/out-of-range có thể map 422 DESIGN_VALIDATION_ERROR theo error set; chi tiết cần xác nhận.
+- Path không parse được/out-of-range trả 422 DESIGN_VALIDATION_ERROR theo catalog PUT #84.
 
 ### 1.2. Header và body
 
 - Authorization lấy từ request header.
 - X-Trace-Id được current middleware truyền hoặc khởi tạo; không phải input nghiệp vụ.
-- JSON body và Content-Type chỉ là DERIVED proposal; catalog/diagram không xác nhận.
+- JSON body là DERIVED runtime fallback; catalog/diagram chỉ xác nhận path. Content-Type là `application/json`.
 
 <a id="step-2-check-body-proposal"></a>
 
-## 2. Check body proposal
+## 2. Validate body fallback
 
 ### 2.1. Candidate full replacement
 
-- title là candidate field; blank/trim/length rules chưa có nguồn.
-- content là candidate field; null-to-clear và omission semantics cần xác nhận.
-- video_url là candidate field; URI scheme/host/nullable rules cần xác nhận.
-- order là candidate field; numeric bounds/order uniqueness rules cần xác nhận.
-- HTTP 422 DESIGN_VALIDATION_ERROR là DIRECT code; exact validation conditions chưa được định nghĩa.
-- Không sửa status trong body proposal; state change thuộc API #85.
+- `title` là strict string tối đa 200 ký tự theo legacy `VARCHAR(200)` và API #47 precedent; chuỗi rỗng được phép, không trim.
+- `content` là required member kiểu string hoặc null; null ghi NULL, omission bị từ chối.
+- `video_url` là required member kiểu string hoặc null; null ghi NULL, không có URI/scheme/host validator.
+- `order` là strict signed int32; không áp positivity, uniqueness hoặc reorder rule.
+- JSON model từ chối member thiếu/sai type/thừa; lỗi trả 422 DESIGN_VALIDATION_ERROR trước UPDATE.
+- Không sửa status trong body; state change thuộc API #85.
 - Không sửa course_id; chuyển lesson giữa course chưa có contract.
 - ID lấy từ path, không duplicate trong body.
 
@@ -79,9 +79,9 @@ status: "Draft — Needs Confirmation"
 
 ## 3. Update lesson
 
-### 3.1. Q1 — Candidate UPDATE theo lesson ID
+### 3.1. Q1 — Implemented DERIVED UPDATE theo lesson ID
 
-SQL dưới đây là proposal trên legacy DDL, chưa chạy và không chứng minh live schema.
+SQL dưới đây là implementation DERIVED trên legacy DDL candidate; fake-session tests xác minh binding/flow nhưng không chứng minh live schema.
 
 ```sql
 UPDATE lessons AS l
@@ -93,36 +93,37 @@ SET
     updated_at = CURRENT_TIMESTAMP
 WHERE l.id = :lesson_id
 RETURNING
-    id,
-    course_id,
-    name,
-    content,
-    video_url,
-    sort_order,
-    status
+    l.id,
+    l.course_id,
+    l.name AS title,
+    l.content,
+    l.video_url,
+    l.sort_order AS "order",
+    l.status
 ```
 
 - :lesson_id bind từ path.
-- :title bind từ body title proposal.
-- :content bind từ body content proposal.
-- :video_url bind từ body video_url proposal.
-- :order bind từ body order proposal.
-- CURRENT_TIMESTAMP cho updated_at là DERIVED; cần xác nhận DB trigger/owner khác không quản lý timestamp.
+- :title bind từ body `title`.
+- :content bind từ body `content`, gồm NULL khi request truyền null.
+- :video_url bind từ body `video_url`, gồm NULL khi request truyền null.
+- :order bind từ body `order`.
+- `updated_at = CURRENT_TIMESTAMP` là DERIVED theo legacy DDL và API #75 precedent; không có lesson trigger trong DDL/migrations đã rà soát.
 - WHERE chỉ dùng candidate id; Admin permission phải hoàn tất trước query.
 - Không JOIN/sửa courses, resources, progress, audit hoặc bảng khác.
 - Không SET status; status transition thuộc #85.
-- RETURNING cung cấp candidate response row, không cần pre-read.
-- Transaction/commit boundary chưa xác nhận; helper convention giao transaction cho business caller.
+- RETURNING cung cấp response projection, không cần pre-read hoặc query thứ hai.
+- View commit sau khi projection Lesson hợp lệ; rollback trên no-row, query/mapping/commit failure.
 
 ### 3.2. Query Matrix
 
 | Query | Type | Table | Conditions | Result/status |
 |---|---|---|---|---|
-| Q1 | UPDATE RETURNING | Legacy lessons AS l | l.id = :lesson_id | Candidate one-row update; live schema unknown. |
+| Q1 | UPDATE RETURNING | Legacy lessons AS l | l.id = :lesson_id | Implemented DERIVED one-row update; live schema unknown. |
 | Q1 | SET | Legacy lessons AS l | name=:title | DERIVED body-to-column mapping. |
 | Q1 | SET | Legacy lessons AS l | content=:content | DERIVED body-to-column mapping. |
 | Q1 | SET | Legacy lessons AS l | video_url=:video_url | DERIVED body-to-column mapping. |
 | Q1 | SET | Legacy lessons AS l | sort_order=:order | DERIVED body-to-column mapping. |
+| Q1 | SET | Legacy lessons AS l | updated_at=CURRENT_TIMESTAMP | DERIVED server timestamp; no trigger found in checked DDL/migrations. |
 | Q1 | RETURNING | Legacy lessons AS l | id | Candidate response source. |
 | Q1 | RETURNING | Legacy lessons AS l | course_id | Candidate response source; nullable discrepancy. |
 | Q1 | RETURNING | Legacy lessons AS l | name | Candidate response source for data.title. |
@@ -130,17 +131,17 @@ RETURNING
 | Q1 | RETURNING | Legacy lessons AS l | video_url | Candidate response source. |
 | Q1 | RETURNING | Legacy lessons AS l | sort_order | Candidate response source for data.order. |
 | Q1 | RETURNING | Legacy lessons AS l | status | Candidate unchanged status response source. |
-| Q1 no row | Result branch | UPDATE RETURNING | No returned row | Candidate 404 DESIGN_RESOURCE_NOT_FOUND. |
+| Q1 no row | Result branch | UPDATE RETURNING | No returned row | Implemented 404 DESIGN_RESOURCE_NOT_FOUND; rollback. |
 
 ### 3.3. Mutation Matrix
 
 | Mutation | Target | Field | Value source | Status |
 |---|---|---|---|---|
 | M1 UPDATE | lessons candidate | name | Body title | DERIVED; legacy DDL only. |
-| M1 UPDATE | lessons candidate | content | Body content | DERIVED; null semantics open. |
-| M1 UPDATE | lessons candidate | video_url | Body video_url | DERIVED; URI/null semantics open. |
-| M1 UPDATE | lessons candidate | sort_order | Body order | DERIVED; range/uniqueness open. |
-| M1 UPDATE | lessons candidate | updated_at | Server current timestamp | DERIVED; trigger/owner SOURCE_REQUIRED. |
+| M1 UPDATE | lessons candidate | content | Body content | DERIVED; null writes SQL NULL. |
+| M1 UPDATE | lessons candidate | video_url | Body video_url | DERIVED; null writes SQL NULL; no URI validation. |
+| M1 UPDATE | lessons candidate | sort_order | Body order | DERIVED strict int32; no positivity/uniqueness rule. |
+| M1 UPDATE | lessons candidate | updated_at | Server current timestamp | DERIVED; no trigger found in checked repository DDL/migrations. |
 | Not updated | lessons candidate | id, course_id, status, created_at | N/A | Not candidate writable fields; status is API #85. |
 
 <a id="step-4-check-ket-qua-va-map-response"></a>
@@ -157,20 +158,20 @@ RETURNING
 - data.video_url = row.video_url.
 - data.order = row.sort_order.
 - data.status = row.status; #84 không thay đổi status.
-- Legacy course_id có thể NULL nhưng response yêu cầu int64; không thay NULL bằng 0.
-- Nếu response mapping lỗi sau UPDATE, transaction cần rollback; transaction owner chưa xác nhận.
+- Legacy `course_id` có thể NULL nhưng response yêu cầu int64; mapping lỗi trả 500 an toàn, rollback; không thay NULL bằng 0.
+- View commit sau khi response Lesson được map; mapping failure không lưu thay đổi.
 
 ### 4.2. Không có row
 
-- Không có row từ Q1 -> candidate HTTP 404 DESIGN_RESOURCE_NOT_FOUND.
+- Không có row từ Q1 -> HTTP 404 DESIGN_RESOURCE_NOT_FOUND; view rollback.
 - Soft-delete visibility chưa có policy/marker chung.
 - Không đọc resource trước authorization.
 
-### 4.3. Database hoặc mapping failure
+### 4.3. Database, mapping hoặc commit failure
 
 - Không trả raw SQL hoặc stack trace.
 - Trả 500 DESIGN_INTERNAL_ERROR theo catalog.
-- Rollback behavior cần khớp transaction owner tương lai.
+- View rollback an toàn trên query, no-row, mapping hoặc commit failure.
 
 ### 4.4. Response Source Matrix
 
@@ -178,23 +179,23 @@ RETURNING
 |---|---|---|---|
 | success | Envelope branch | true success / false error | DIRECT shape |
 | businessCode | Catalog | Exact code per branch | DIRECT |
-| message | Application | Safe text; exact text unspecified | DERIVED wording |
-| data.id | Q1 returned id | Copy | Legacy candidate |
-| data.course_id | Q1 returned course_id | Copy; null conflicts with required int64 | Legacy discrepancy |
-| data.title | Q1 returned name | Alias name -> title | Legacy candidate; API #09 precedent |
-| data.content | Q1 returned content | Copy; null/omit unresolved | Nullable candidate |
-| data.video_url | Q1 returned video_url | Copy; URI/null/omit unresolved | TEXT candidate |
-| data.order | Q1 returned sort_order | Alias sort_order -> order | Legacy candidate; API #09 precedent |
+| message | Application | `Lesson updated.` on success; safe messages on errors | DERIVED wording |
+| data.id | Q1 returned id | Copy | Legacy DDL candidate |
+| data.course_id | Q1 returned course_id | Copy; null conflicts with required int64 | Legacy discrepancy; null mapping returns safe 500 |
+| data.title | Q1 returned title alias | `name AS title` | API #09 mapping precedent |
+| data.content | Q1 returned content | Copy; null preserved as JSON null | Nullable legacy field |
+| data.video_url | Q1 returned video_url | Copy; null preserved as JSON null | TEXT/reusable Lesson field; no URI validator |
+| data.order | Q1 returned order alias | `sort_order AS "order"` | API #09 mapping precedent |
 | data.status | Q1 returned status | Copy unchanged | Enum/casing unresolved |
 | meta | Envelope convention | Empty object candidate on success | No API-specific data |
 | traceId | Current trace middleware | Propagate or generate UUID | Current-source convention |
 
 ### 4.5. Schema boundary
 
-- Catalog body schema absent; candidate SQL/body không phải implementation contract.
+- Catalog/diagram body schema absent; current request/SQL are DERIVED implementation fallback.
 - Legacy DDL chỉ là candidate; V1-PILOT dùng UUID/versioned lesson khác biệt.
 - Live database/migration state chưa xác minh.
-- Không có successful runtime mapping claim vì route/module/test #84 chưa tồn tại.
+- Focused endpoint tests exercise route and fake-session mapping; live database behavior remains unverified.
 
 <a id="step-5-tra-response"></a>
 
@@ -202,7 +203,7 @@ RETURNING
 
 ### 5.1. Thành công
 
-- Trả HTTP 200 DESIGN_RESOURCE_UPDATED khi mutation và mapping thành công.
+- Trả HTTP 200 DESIGN_RESOURCE_UPDATED khi mutation, mapping và commit thành công.
 - Dùng ApiEnvelope<Lesson> trực tiếp theo catalog.
 - Không đổi sang Page/array và không thêm audit/dependency fields.
 - Theo AC-34, sau success client gọi API #82 để reload danh sách; cardinality và filter `type` của #82 vẫn cần xác nhận.
@@ -211,30 +212,30 @@ RETURNING
 
 - 401 DESIGN_AUTHENTICATION_REQUIRED cho authentication failure.
 - 403 DESIGN_ACCESS_DENIED cho role/permission denial.
-- 404 DESIGN_RESOURCE_NOT_FOUND cho row không tồn tại theo candidate.
-- 422 DESIGN_VALIDATION_ERROR theo contract; rules cụ thể SOURCE_REQUIRED.
-- 500 DESIGN_INTERNAL_ERROR cho DB/mapping failure.
-- API guideline yêu cầu error data:null; helper hiện defaults data:{}; cần xử lý khi wire. Xem [06_Error.md](./06_Error.md).
+- 404 DESIGN_RESOURCE_NOT_FOUND cho row không tồn tại theo UPDATE.
+- 422 DESIGN_VALIDATION_ERROR cho raw path sai và body sai/thiếu/thừa field theo runtime model.
+- 500 DESIGN_INTERNAL_ERROR cho DB/mapping/commit failure.
+- Current helper trả `data:null` cho error. Xem [06_Error.md](./06_Error.md).
 
 ### Request Usage Matrix
 
 | Input | Step/use | Query/mutation/response use | Status |
 |---|---|---|---|
-| Authorization | 0 | Authenticate/authorize before mutation | DIRECT; implementation SOURCE_REQUIRED |
-| lesson_id | 1.1/3.1 | Q1 WHERE; data.id | Type DIRECT; invalid mapping open |
-| title | 2.1 | Q1 name; data.title | DERIVED |
-| content | 2.1 | Q1 content; data.content | DERIVED; null/omit open |
-| video_url | 2.1 | Q1 video_url; data.video_url | DERIVED; URI/null open |
-| order | 2.1 | Q1 sort_order; data.order | DERIVED; bounds open |
+| Authorization | 0 | Authenticate/authorize before custom path parse and DB | DIRECT; shared ADMIN role guard |
+| lesson_id | 1.1/3.1 | Q1 WHERE; data.id | Type DIRECT; invalid path -> 422 |
+| title | 2.1 | Q1 name; data.title | DERIVED, required string <=200 |
+| content | 2.1 | Q1 content; data.content | DERIVED, required nullable string |
+| video_url | 2.1 | Q1 video_url; data.video_url | DERIVED, required nullable string; no URI check |
+| order | 2.1 | Q1 sort_order; data.order | DERIVED, required strict int32 |
 | Query parameters | — | None declared | DIRECT absence |
-| course_id body | — | Not changed | Excluded; confirmation required |
+| course_id body | — | Not changed | Excluded; course relation is preserved |
 | status body | — | Not changed | Separate API #85 |
 
 ### Mục tiêu transaction
 
-- Candidate mutation là một UPDATE statement với RETURNING.
-- Transaction owner, commit point và mapping-failure rollback cần được xác nhận trước implementation.
-- Study DB helper không tự commit; business caller sở hữu transaction.
+- Mutation là một UPDATE statement với RETURNING.
+- View sở hữu commit point: commit sau projection hợp lệ; rollback khi lỗi trước hoặc trong commit.
+- `query_one` không tự commit; API view sở hữu transaction boundary.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

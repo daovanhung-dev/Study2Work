@@ -15,27 +15,29 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table | `SOURCE_REQUIRED` — chưa chọn schema/persistence target. |
+| Physical table | Legacy candidate `courses`; live schema chưa xác nhận. |
 | Logical table | Course |
-| Operation | Soft delete (logical intent; physical UPDATE chưa được xác định). |
-| Data Mapping step | `3.4` |
+| Operation | `UPDATE` status marker and timestamp (`DERIVED`). |
+| Data Mapping step | `3.3` |
 
 ## Update mapping
 
 **Áp dụng khi**
 
-- M1 được policy/schema owner duyệt và soft-delete target được xác định.
+- Q1 finds a course not already `DELETED` and Q2 finds no blocking dependency.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---:|---|---|---|---|
+| 1 | `status` | Course lifecycle status | `VARCHAR` | 20 | N/A | Yes in candidate flow | No | Set to `DELETED` | `DERIVED` API #72 precedent; legacy DDL | 3.3 | No dedicated delete marker; live schema unknown. |
+| 2 | `updated_at` | Last update/deletion time | `TIMESTAMP` | N/A | N/A | Yes | No | Set by `CURRENT_TIMESTAMP`; return as `deleted_at` | Legacy DDL + API #72 precedent | 3.3/5.1 | DB timestamp returned by UPDATE; no dedicated deleted_at column. |
 
-Không thêm row physical column khi nguồn hiện tại không xác định marker hoặc timestamp. Legacy `courses` không có `deleted_at`; V1-PILOT `archived_at` không được map ngầm sang delete.
+No `deleted_at` column or migration is added. V1-PILOT `archived_at` is not mapped to this legacy DELETE.
 
 ## Insert mapping
 
 **Áp dụng khi**
 
-- N/A — AC-32 không yêu cầu tạo relation mới trong API #77; không có audit event requirement cho nhánh DELETE.
+- N/A — API #77 creates no relation; AC-32 does not specify an audit event for this DELETE branch.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---:|---|---|---|---|
@@ -44,12 +46,12 @@ Không thêm row physical column khi nguồn hiện tại không xác định ma
 
 **Áp dụng khi**
 
-- N/A — HTTP DELETE không chứng minh physical DELETE. Diagram yêu cầu soft-delete theo policy; không viết `DELETE FROM` hoặc cascade.
+- N/A — HTTP method is DELETE but runtime mutation is an UPDATE marker; no physical `DELETE FROM` or cascade.
 
 | No | Target column | Operator | Value source | Data Mapping step | Remarks |
 |---:|---|---|---|---|---|
 
-Physical mutation, affected-row semantics, transaction owner và rollback chỉ được điền sau khi policy/schema được duyệt.
+The view owns the transaction. It locks the course, checks dependencies, performs the UPDATE, validates RETURNING, then commits. Any failure rolls back.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

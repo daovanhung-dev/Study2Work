@@ -15,11 +15,11 @@ status: "Draft — Needs Confirmation"
 
 | Query | Source/relation | Candidate fields | Condition / join | Purpose | Status |
 |---|---|---|---|---|---|
-| Q1 | Logical report source | Report identity, discussion key, reason, severity, report state and timestamps are not defined | AC-37 says read reports + discussion summary | Select moderation queue | `SOURCE_REQUIRED`; do not name/create a physical table |
-| Q1a | Legacy `discussions` | `id`, `course_id`, `user_id`, `parent_id`, `content`, `status`, `created_at`, `updated_at` | Candidate row read; report predicate unavailable | Discussion projection candidate | Legacy DDL only; live schema unverified |
-| Q1b | Legacy `users` | `id`, `full_name`, `avatar_url` | Candidate `users.id = discussions.user_id` | `UserSummary` author candidate | Join/null semantics unresolved |
-| Q1c | Legacy `discussions` child alias | `id`, `parent_id`, `user_id`, `content`, `created_at` | Candidate child-to-parent self-reference | `DiscussionComment[]` candidate | Queue comment extent unresolved |
-| Q2 | Logical count source | Queue item count | Same report filters and dedup rule as Q1, not specified | `PageMeta.total` | `SOURCE_REQUIRED` |
+| Q1 | `discussion_reports` | `id`, `discussion_id`, `reason_code`, `severity`, `status`, `created_at` | `status IN ('OPEN','IN_REVIEW')`; exact optional filters; latest active report | Select unique Discussion queue | Migration 014 `DERIVED`; deployment/writer unverified |
+| Q1a | Legacy `discussions` | `id`, `course_id`, `user_id`, `content`, `status` | Join `discussion_reports.discussion_id = discussions.id`; supports root or reply targets | Discussion summary | Legacy DDL candidate; nullable required fields fail mapping |
+| Q1b | Legacy `users` | `id`, `full_name`, `avatar_url` | `users.id = discussions.user_id` | `UserSummary` author | Legacy candidate; missing author returns 500 |
+| Q1c | Legacy `discussions` child alias | Not queried | Queue summary does not expand thread | `comments=[]` | `DERIVED`; full thread belongs to #98 |
+| Q2 | `discussion_reports` + `discussions` | `COUNT(DISTINCT discussions.id)` | Same status/reason/severity predicates as Q1 | `PageMeta.total` | `DERIVED`; queue grain is Discussion |
 
 ## Write mapping
 
@@ -31,11 +31,11 @@ status: "Draft — Needs Confirmation"
 
 ## Schema boundary
 
-- `infra/postgres/study-server/DB.sql` is a legacy checked-in schema artifact, not live schema verification.
-- It defines `discussions(id, course_id, user_id, parent_id, content, status, created_at, updated_at)`; `course_id`, `user_id`, `parent_id` are nullable as declared in the DDL.
-- No discussion report relation or `reason`/`severity` columns are declared in that DDL.
-- The logical response requires `Discussion.title`; no title column exists in the legacy guide/DDL. Do not derive it from `content`.
-- No schema changes or SQL are part of this DD.
+- `infra/postgres/study-server/DB.sql` is a checked-in legacy schema artifact, not live schema verification.
+- Migration `014_discussion_reports.sql` adds `discussion_reports` with BIGINT FK to `discussions.id` (`ON DELETE RESTRICT`), BIGINT reporter FK to `users.id` (`ON DELETE RESTRICT`), free-form reason/severity, report state and timestamp. This is a local `DERIVED` candidate that preserves report evidence; API #100 must account for the FK before any hard-delete behavior.
+- Queue-active states are `OPEN` and `IN_REVIEW`; terminal tokens are `RESOLVED` and `DISMISSED`. The status set follows the generic Work DDL as a design precedent, not a runtime dependency.
+- `Discussion.title` is absent in legacy DDL and is derived from normalized content (120 chars). `comments[]` is empty in the list projection; #98 loads thread detail.
+- The API does not create reports. Migration availability and any external report writer are unverified.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

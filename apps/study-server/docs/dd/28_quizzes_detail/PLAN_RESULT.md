@@ -38,7 +38,7 @@ Nguồn: docs/lists/list_api.md, API #28.
 - AC-16 ghi Student có quyền làm quiz và quiz đang mở; diagram đọc Quiz/rules/question set và có nhánh 403/409 khi hết lượt/hết hạn.
 - Catalog API #28 không có 409. DD giữ contract catalog và ghi lệch với diagram trong OPEN_QUESTIONS.md.
 - quizzes, quiz_questions và quiz_choices là candidate reads từ DB design/DDL; live schema/query chưa xác minh.
-- Response không đưa quiz_choices.is_correct cho Student. QuizChoice shape và QuestionType values chưa có trong catalog.
+- Response không đưa quiz_choices.is_correct cho Student. API #88 migration 013 adds local type/order candidates, but QuizChoice fields and QuestionType values remain unapproved in catalog.
 - Search current Study router/modules/tests không tìm thấy API #28; DD không tuyên bố runtime implementation.
 
 ## Assumption

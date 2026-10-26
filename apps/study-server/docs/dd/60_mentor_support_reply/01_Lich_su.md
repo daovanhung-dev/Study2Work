@@ -14,13 +14,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-25 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD API #60 theo catalog, AC-24 và các DD upload/support liên quan | Draft — Needs Confirmation; attachment reference format và source schema còn mở |
+| 1.1 | 2026-10-25 | Codex | Reconcile fallback local với API #58/#59 và source API #34/#47; ghi mapping message/link cùng transaction | Các lựa chọn local là DERIVED; live schema và business approval còn mở |
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

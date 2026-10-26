@@ -11,19 +11,19 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Các nhánh bên dưới giữ nguyên HTTP status và business code của catalog #75. Điều kiện chi tiết cho body, authorization policy và database vẫn cần được chủ sở hữu contract xác nhận.
+Các nhánh giữ HTTP status/business code của catalog #75. Runtime hiện kiểm tra shared role `ADMIN`; permission course-management riêng chưa có policy source. Body, field bounds và schema mapping được áp dụng như fallback `DERIVED`, vẫn cần owner xác nhận.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Authentication | Yes | Authorization | Bearer JWT thiếu/sai hoặc không xác thực được | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | N/A — catalog chỉ định business code | [05_Data_Mapping.md](./05_Data_Mapping.md) | No transaction | Direct code; auth behavior by current source is absent for Admin. |
-| 2 | Authorization | Yes | Admin permission | Principal không có role Admin hoặc course-management permission | 403 | `DESIGN_ACCESS_DENIED` | N/A — catalog chỉ định business code | [05_Data_Mapping.md](./05_Data_Mapping.md) | No transaction | Permission policy `SOURCE_REQUIRED`. |
+| 1 | Authentication | Yes | Authorization | Bearer JWT thiếu/sai hoặc không xác thực được | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | N/A — catalog chỉ định business code | [05_Data_Mapping.md](./05_Data_Mapping.md) | No transaction | Shared JWT guard đang được runtime dùng. |
+| 2 | Authorization | Yes | Admin permission | Principal không có role `ADMIN` | 403 | `DESIGN_ACCESS_DENIED` | N/A — catalog chỉ định business code | [05_Data_Mapping.md](./05_Data_Mapping.md) | No transaction | Runtime checks shared role only; finer permission policy remains `SOURCE_REQUIRED`. |
 | 3 | Not found | Yes | `course_id` | Không có course row sau Q1 update predicate | 404 | `DESIGN_RESOURCE_NOT_FOUND` | N/A — catalog chỉ định business code | [05_Data_Mapping.md](./05_Data_Mapping.md) | Rollback candidate transaction | Condition is `DERIVED` from update-by-ID. |
-| 4 | Validation | Yes | Path/body | Path parse hoặc body field không hợp lệ theo rules đã được duyệt | 422 | `DESIGN_VALIDATION_ERROR` | N/A — catalog chỉ định business code | [05_Data_Mapping.md](./05_Data_Mapping.md) | No transaction | Field-level constraints not defined by catalog. |
+| 4 | Validation | Yes | Path/body | Malformed/out-of-range signed-int64 path, missing/extra/typed body field, title >200, or price not fitting candidate `NUMERIC(12,2)` | 422 | `DESIGN_VALIDATION_ERROR` | N/A — catalog chỉ định business code | [05_Data_Mapping.md](./05_Data_Mapping.md) | No transaction | Body/title/price constraints are `DERIVED`. |
 | 5 | System error | Yes | Database/response mapping | Query, required mentor mapping or commit fails | 500 | `DESIGN_INTERNAL_ERROR` | N/A — catalog chỉ định business code | [05_Data_Mapping.md](./05_Data_Mapping.md) | Rollback if transaction started | Internal details must not leak. |
 
-> Current middleware emits `VALIDATION_ERROR`/`INTERNAL_SERVER_ERROR` for paths outside `DESIGN_CONTRACT_PATHS`; API #75 is absent from that allowlist. Current `error_response` uses `data:{}` when omitted, while API guidelines specify `data:null`. These are current-source discrepancies for future wiring.
+> API #75 reuses the already registered FastAPI template `/api/v1/admin/courses/{course_id}` in middleware; request-validation errors therefore use `DESIGN_VALIDATION_ERROR`. Current `error_response` returns `data:null` when no data is supplied.
 
 ## Liên kết
 

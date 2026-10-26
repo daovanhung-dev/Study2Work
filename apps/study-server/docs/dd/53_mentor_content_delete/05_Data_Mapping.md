@@ -13,7 +13,7 @@ status: "Draft — Needs Confirmation"
 
 ## Flow xử lý data
 
-> Contract/diagram evidence và đề xuất suy dẫn được tách biệt. Logical Content không đồng nghĩa với physical table đã xác nhận.
+> Contract/diagram evidence and local behavior remain separate from DERIVED guards. Migration 006 defines local `contents`; live availability is not verified.
 
 ## 0. Check quyền
 
@@ -28,8 +28,8 @@ status: "Draft — Needs Confirmation"
 
 | Target table/API | Column/Field | Condition/Value | Remarks |
 |---|---|---|---|
-| Logical Content | course_id | Course chứa target Content | Physical relation SOURCE_REQUIRED. |
-| Logical Course | id / owner or assignment | Mentor được phép quản lý course | Legacy courses.mentor_id chỉ là candidate DERIVED; không khẳng định assignment support. |
+| `contents` | `course_id` | Course chứa target Content | Local BIGINT FK → `courses.id`; live schema unverified. |
+| `courses` | `id` / `mentor_id` | Direct-owner access candidate | Current API #49 uses direct owner; assignment support remains unconfirmed. |
 
 ### 0.3. Check kết quả
 
@@ -41,7 +41,7 @@ status: "Draft — Needs Confirmation"
 
 - Parse path content_id theo kiểu int64 như catalog khai báo.
 - Không thêm giới hạn số dương do nguồn không xác nhận.
-- Path sai kiểu hoặc ngoài miền int64 có thể dùng 422 DESIGN_VALIDATION_ERROR; middleware mapping hiện chưa được wire cho endpoint.
+- Raw path sai format hoặc ngoài miền signed-int64 trả 404 DESIGN_RESOURCE_NOT_FOUND theo convention hiện hành của Content APIs. Route template đã nằm trong `DESIGN_CONTRACT_PATHS` qua API #51.
 - Không có request body hoặc query parameter.
 
 ## 2. Get thông tin
@@ -49,52 +49,52 @@ status: "Draft — Needs Confirmation"
 ### 2.1. Load Content target — Q1
 
 - Đọc Content theo content_id để lấy id, course_id, status và parent context cho access/dependency checks.
-- Không chỉ định SQL, bảng hoặc cột vật lý vì chưa có generic Content schema tương thích.
-- Không có target khả dụng: 404 DESIGN_RESOURCE_NOT_FOUND là mapping candidate; repeat-delete behavior cần xác nhận.
+- Q1 reads `contents.id/course_id/status` and joins `courses`; the local query locks both rows.
+- Không có active target, gồm ID đã soft-delete: runtime trả 404 DESIGN_RESOURCE_NOT_FOUND. Repeat-delete semantics vẫn là DERIVED.
 
 ### 2.2. Kiểm tra dependency trực tiếp — Q2
 
 - Reusable Content chỉ khai báo parent_id làm quan hệ parent-child.
-- Tìm logical child Content có parent_id bằng target.id.
-- Proposal chỉ xét child chưa soft-delete; marker và predicate vật lý SOURCE_REQUIRED.
+- Query local SQL tìm child cùng course với `parent_id = target.id`. API #50 khóa cùng Course trước insert; API #53 dùng lại khóa đó.
+- Proposal chỉ xét child chưa soft-delete; local active predicate is `deleted_at IS NULL`.
 - Không tự duyệt payload object, progress, asset, enrollment hoặc bảng khác để kết luận dependency.
 
 ### 2.3. Query matrix
 
 | Query | Mục đích | Type | Logical source | Điều kiện | Kết quả/nhánh |
 |---|---|---|---|---|---|
-| Q1 | Load target and course context | SELECT logical | Content + owning Course chưa xác định | Content.id = content_id | Không có target → 404 candidate; không đủ quyền → 403. Physical mapping SOURCE_REQUIRED. |
-| Q2 | Check direct children | EXISTS logical | Content chưa xác định | child.parent_id = target.id và child chưa soft-delete | Có child → 422 candidate, không mutation. Physical query SOURCE_REQUIRED. |
+| Q1 | Load target and course context | SELECT ... FOR UPDATE | `contents` joined to `courses` | `content.id = content_id AND deleted_at IS NULL` | Không có active target → 404; non-owner → 403. Local source-backed mapping; live schema unverified. |
+| Q2 | Check direct children | SELECT EXISTS | `contents` | same `course_id`, `parent_id = target.id`, `deleted_at IS NULL` | Có child → 422 theo DERIVED guard; không mutation. |
 
 ## 3. Check business condition
 
 1. Nếu Content.status là PUBLISHED, proposal trả 422; Mentor gọi API #52 để unpublish trước.
 2. Nếu Q2 tìm thấy direct child còn hiệu lực, trả 422 DESIGN_VALIDATION_ERROR; không cascade và không reparent.
-3. Content không PUBLISHED và không có direct child được soft-delete theo proposal.
+3. Content không PUBLISHED và không có direct child được soft-delete theo fallback DERIVED; status PENDING_REVIEW/APPROVED/REJECTED hiện được phép.
 4. Xóa PENDING_REVIEW/APPROVED/REJECTED là DERIVED; không đổi Content.status và cần xác nhận tác động lên review queue.
 5. Dependency ngoài parent_id và repeat-delete policy còn mở.
 
 ## 4. Soft-delete Content — M1
 
 - AC-22 xác nhận logical action DELETE/soft delete Content.
-- Ghi tombstone theo storage model được duyệt; không chỉ định deleted_at column, boolean, ContentStatus=DELETED hoặc physical DELETE.
+- Runtime cập nhật local `contents.deleted_at = CURRENT_TIMESTAMP` và đọc lại timestamp bằng `RETURNING`; migration deployment vẫn chưa được xác minh.
 - Giữ nguyên Content payload, version và moderation history theo proposal.
 - Không cascade sang child Content hay resource khác.
-- Transaction/audit do schema/API owner xác nhận; DD không tạo mutation SQL.
+- View sở hữu transaction, validate DeleteResult rồi commit; lỗi query/mapping/commit rollback. Không ghi audit row hoặc xóa history trong implementation này.
 - Logical mapping: [07_content_soft_delete.md](./07_content_soft_delete.md).
 
 ## 5. Map response
 
 | Response field | Mapping | Rule/status |
 |---|---|---|
-| data.id | ID target Content | Giữ nguyên ID; physical source SOURCE_REQUIRED. |
+| data.id | ID target Content | Giữ nguyên ID từ `contents.id`; local mapping verified. |
 | data.status | Literal deleted | DIRECT từ DeleteResult. |
-| data.deleted_at | Thời điểm soft-delete thành công | Field DIRECT; time source/storage chưa xác nhận. |
+| data.deleted_at | Thời điểm soft-delete thành công | Trả `contents.deleted_at` do database `CURRENT_TIMESTAMP` ghi; timezone semantics remain open. |
 | success | true | Envelope convention. |
 | businessCode | DESIGN_RESOURCE_DELETED | DIRECT từ catalog. |
 | message | Thông báo an toàn bằng tiếng Việt | Message cụ thể DERIVED. |
-| meta | Empty object candidate | Không có metadata riêng trong contract. |
-| traceId | Request trace | Envelope convention; route chưa tồn tại. |
+| meta | Empty object | `success_response` default; covered by current source. |
+| traceId | Request trace | Envelope convention; covered by local HTTP tests. |
 
 ## 6. Trả về response
 

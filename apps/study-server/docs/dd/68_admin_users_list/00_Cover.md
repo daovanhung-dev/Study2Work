@@ -26,7 +26,7 @@ status: "Draft — Needs Confirmation"
 | Reviewed by | Chờ xác nhận |
 | Approved by | Chờ xác nhận |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-25 |
 
 ## Tên hiển thị
 
@@ -36,7 +36,7 @@ GET /api/v1/admin/users — Lấy danh sách user
 
 ## Phạm vi và trạng thái
 
-DD tiếng Việt cho danh sách người dùng trong AC-31. Catalog khai báo response đơn UserProfile; diagram yêu cầu query danh sách có phân trang. Giữ contract catalog trực tiếp và ghi Page<UserProfile> là đề xuất DERIVED chờ chủ contract xác nhận.
+API đọc danh sách user theo AC-31, hỗ trợ filter và phân trang. Contract response được đồng bộ thành ApiEnvelope<Page<UserProfile>> để khớp bước “Query users + pagination”; page mặc định 1, kích thước cố định 20 theo precedent API #07. Role/status exact match; keyword tìm literal substring không phân biệt hoa thường trong full_name/email. Các semantics chưa được catalog/diagram nêu đầy đủ là DERIVED. Query dùng legacy users làm schema candidate; live schema, quyền Admin riêng và policy PII vẫn cần xác nhận nên DD giữ Draft.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -16,17 +16,17 @@ status: "Draft — Needs Confirmation"
 |---:|---|---:|---|---|---|
 | E1 | Bearer token thiếu/sai theo Admin auth policy | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Thông điệp xác thực an toàn | Code DIRECT; trigger detail SOURCE_REQUIRED |
 | E2 | Token hợp lệ nhưng không có Admin role/quiz-management permission | 403 | `DESIGN_ACCESS_DENIED` | Không có quyền xem thống kê quiz | Code DIRECT; Admin policy SOURCE_REQUIRED |
-| E3 | Không có quiz row; proposal cũng áp dụng khi hard-delete | 404 | `DESIGN_RESOURCE_NOT_FOUND` | Không tìm thấy quiz | Code DIRECT; hard-delete interpretation DERIVED |
-| E4 | Query/database/mapping lỗi không dự kiến | 500 | `DESIGN_INTERNAL_ERROR` | Đã xảy ra lỗi nội bộ hệ thống. | Code DIRECT; route chưa được wire |
+| E3 | Không có quiz row hoặc raw ID malformed/overflow | 404 | `DESIGN_RESOURCE_NOT_FOUND` | Không tìm thấy quiz | Code DIRECT; invalid-path mapping và hard-delete interpretation DERIVED |
+| E4 | Query/database/mapping lỗi không dự kiến | 500 | `DESIGN_INTERNAL_ERROR` | Đã xảy ra lỗi nội bộ hệ thống. | Code DIRECT; current local runtime rolls back and hides DB details |
 
 ## Nguyên tắc lỗi
 
 - Direct error set chỉ gồm 401, 403, 404 và 500; không thêm 400/409/422/503.
-- Malformed/overflow quiz_id chưa được catalog quy định.
+- Malformed/overflow quiz_id được map về 404 để giữ đúng direct error set; mapping là DERIVED.
 - Quiz không có attempt trả success counts=0 theo proposal, không trả 404.
 - Quiz soft-delete còn row/history vẫn có thể xem statistics theo macro proposal; hard-delete/no-row dùng E3.
-- API Guidelines yêu cầu error data=null; current error_response chuẩn hóa None thành {}.
-- DESIGN_CONTRACT_PATHS chưa có dynamic Admin quiz path. Cần tích hợp middleware khi implement để giữ exact codes; đây chưa phải endpoint behavior hiện tại.
+- API Guidelines và current `error_response` trả error `data:null`.
+- Shared `/api/v1/admin/quizzes/{quiz_id}` template và exact statistics suffix đã được đăng ký trong middleware.
 
 ## Ví dụ lỗi — 404
 

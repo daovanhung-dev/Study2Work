@@ -13,28 +13,26 @@ status: "Draft — Needs Confirmation"
 
 ~~~text
 Mentor Bearer JWT
--> nhận submission_id, feedback text và attachments theo descriptor catalog
--> xác thực Mentor và quyền course (identity/policy chưa có source)
--> kiểm tra submission tồn tại và đọc course scope theo candidate assignment_submissions -> assignments -> courses
--> kiểm tra kiểu của hai field string bắt buộc; rule nội dung/encoding chưa xác nhận
--> candidate cập nhật assignment_submissions.feedback; attachments chưa có persistence mapping
--> đọc/mapping Submission response; files[] vẫn SOURCE_REQUIRED
--> trả 200 DESIGN_RESOURCE_UPDATED hoặc lỗi theo 06_Error.md
+-> nhận submission_id, feedback_text và attachments theo wire fallback
+-> shared MENTOR guard, sau đó khóa submission và kiểm tra direct course owner
+-> UPDATE chỉ assignment_submissions.feedback; attachments nhận opaque nhưng không lưu/echo
+-> resolve files[] bằng API #54 DERIVED lookup, validate Submission response rồi commit
+-> lỗi query/quyền/mapping/commit rollback; trả 200 DESIGN_RESOURCE_UPDATED hoặc lỗi catalog trong 06_Error.md
 -> AC-23 UI báo lưu feedback thành công
 ~~~
 
-API #57 chưa có runtime implementation. Ma trận SQL dưới đây là đề xuất candidate theo legacy DDL; không phải câu lệnh đang được gọi và không xác nhận live schema.
+API #57 có runtime source và TestClient coverage. Các bảng/cột trong ma trận vẫn là legacy DDL candidates; source/test không xác nhận live schema hoặc migration.
 
 ## Request Usage Matrix
 
 | Request field | Source | Step | Validation/use | Query or response use | Gap/status |
 |---|---|---:|---|---|---|
-| Authorization | Header Authorization | 0.1 | Bearer JWT và role Mentor theo catalog | Chủ thể cho phép kiểm tra quyền course | Mentor guard/claim mapping SOURCE_REQUIRED |
-| submission_id | Path | 1, 2.1 | Required int64 theo catalog | Khóa candidate assignment_submissions.id | Malformed/overflow mapping và live schema chưa xác nhận |
-| feedback text | Body descriptor nguyên văn | 1, 3.1 | Required string; không tự đặt length/non-empty rule | Candidate value cho assignment_submissions.feedback | JSON wire key SOURCE_REQUIRED |
-| attachments | Body | 1, 3.1 | Required string; không chọn encoding hoặc validation rule | Chưa có approved persistence target | SOURCE_REQUIRED |
-| Content-Type | Header | 1 | application/json là quy ước DERIVED cho body | Body parser | Route hiện chưa được đăng ký |
-| X-Trace-Id | Header theo API Guidelines | 0, 5 | Optional UUID propagation | Envelope traceId và response header | Shared convention; route hiện chưa được đăng ký |
+| Authorization | Header Authorization | 0.1 | Bearer JWT và role Mentor theo catalog | Numeric subject for direct-owner candidate | Shared MENTOR guard is source-backed; direct-owner policy remains DERIVED |
+| submission_id | Path | 1, 2.1 | Required signed int64; malformed/overflow => 422 | Khóa candidate assignment_submissions.id | Runtime checked; schema live chưa xác minh |
+| feedback_text | Body fallback | 1, 3.1 | Required strict string; no trim/length/non-empty rule | `assignment_submissions.feedback` | Wire spelling DERIVED from catalog descriptor |
+| attachments | Body | 1, 3.1 | Required strict string; opaque, unparsed | Không dùng trong SQL/response | Target/format remain SOURCE_REQUIRED |
+| Content-Type | Header | 1 | application/json | Body parser | Route được đăng ký |
+| X-Trace-Id | Header theo API Guidelines | 0, 5 | Optional UUID propagation | Envelope traceId và response header | Shared convention; route được đăng ký |
 | Request body extras | Body | 1 | Không có field bổ sung trong catalog | N/A | Không thêm field |
 
 ## 0. Check quyền
@@ -43,8 +41,8 @@ API #57 chưa có runtime implementation. Ma trận SQL dưới đây là đề 
 
 - Catalog yêu cầu Bearer JWT và role Mentor.
 - AC-23 precondition yêu cầu Mentor có quyền chấm submission thuộc course.
-- Study helper hiện chỉ có Student guard; không có source ánh xạ claim Mentor sang Study user ID.
-- Candidate direct-owner rule là courses.mentor_id = authenticated Mentor ID; đây là DERIVED, không chứng minh support cho Mentor được phân công.
+- Shared Study guard requires explicit MENTOR role and returns the numeric subject before database access.
+- Runtime direct-owner rule is `courses.mentor_id = authenticated Mentor ID`; this remains DERIVED and does not prove assigned-Mentor support.
 - Không thêm rule submission phải có status GRADED khi API được gọi trực tiếp; diagram chỉ đặt #57 sau #56 trong UI flow.
 
 ### 0.2. Query/check quyền
@@ -59,16 +57,16 @@ API #57 chưa có runtime implementation. Ma trận SQL dưới đây là đề 
 ### 0.3. Check kết quả
 
 - Bearer thiếu/không hợp lệ: theo catalog 401 DESIGN_AUTHENTICATION_REQUIRED.
-- Actor không phải Mentor hoặc không có quyền trên course: theo catalog 403 DESIGN_ACCESS_DENIED; exact guard/predicate chưa có source.
+- Actor không phải Mentor hoặc không có quyền trên course: 403 DESIGN_ACCESS_DENIED.
 - Không tìm thấy submission: candidate 404 DESIGN_RESOURCE_NOT_FOUND.
-- Submission tồn tại nhưng course relation null/orphan: cách phân biệt 403/404 chưa được xác nhận; không trả dữ liệu ngoài quyền.
-- Không áp dụng policy mask 403 thành 404 khi chưa có nguồn.
+- Submission tồn tại nhưng required assignment/course/owner relation null/orphan: safe 500 DESIGN_INTERNAL_ERROR.
+- Submission thuộc course của Mentor khác: 403; không áp dụng mask thành 404.
 
 ## 1. Validate data input
 
-- submission_id phải đáp ứng descriptor int64 bắt buộc; malformed/overflow response chỉ dùng error code catalog 422.
+- submission_id phải đáp ứng signed int64; malformed/overflow trả 422 DESIGN_VALIDATION_ERROR, ID không tìm thấy trả 404.
 - feedback text phải là string theo catalog; không tự đặt giới hạn, trim, non-empty hay định dạng.
-- attachments phải là string theo catalog; encoding và rule nội dung SOURCE_REQUIRED.
+- attachments phải là string theo catalog; nhận opaque string nhưng không parse/lưu/echo; encoding và storage target SOURCE_REQUIRED.
 - Catalog không định nghĩa field-level error codes, độ dài, mảng asset hay format URL; không thêm các quy tắc đó.
 
 ## 2. Get thông tin
@@ -81,7 +79,7 @@ API #57 chưa có runtime implementation. Ma trận SQL dưới đây là đề 
 | ↑ | s.assignment_id | Assignment relation | Nullable trong DDL; ERD/table guide thể hiện required. |
 | ↑ | s.user_id | Student ID | Cần cho Submission response; không lấy từ request. |
 | ↑ | s.content | Nội dung bài làm | Nullable candidate. |
-| ↑ | s.file_url | URL file học viên nộp | Một URL không đủ tạo UploadAsset[]. |
+| ↑ | s.file_url | URL file học viên nộp | API #54 uses a DERIVED constrained lookup; API #35 must persist the matching URL. |
 | ↑ | s.submitted_at | Thời điểm nộp | TIMESTAMP candidate; timezone policy mở. |
 | ↑ | s.score | Điểm do #56 lưu | NUMERIC(6,2) candidate; giữ giá trị, không tính lại. |
 | ↑ | s.feedback | Feedback hiện tại | Nullable candidate; dùng để phản hồi sau mutation. |
@@ -129,43 +127,43 @@ DDL nullable references differ from required relationships in the guide/ERD. Joi
 
 - Candidate row key: assignment_submissions.id = :submission_id.
 - Candidate authorization scope: the submission resolves through assignment to a course whose courses.mentor_id equals the authenticated Mentor ID.
-- Candidate scope must be applied with the update; transaction/locking and null/orphan handling remain open.
+- View locks the row; UPDATE repeats the direct-owner predicate. Broken parent/owner projections return safe 500; live relation integrity remains unverified.
 
 ### 3.3. Items update/insert
 
-- Candidate UPDATE changes assignment_submissions.feedback only; see [07_assignment_submissions_feedback_update.md](./07_assignment_submissions_feedback_update.md).
+- Runtime UPDATE changes assignment_submissions.feedback only; see [07_assignment_submissions_feedback_update.md](./07_assignment_submissions_feedback_update.md). Repeated calls overwrite the single nullable field as a DERIVED fallback.
 - attachments has no approved target column/table/relation; do not claim it is saved.
-- Diagram says INSERT/UPDATE feedback; a separate history INSERT is not specified because no target relation is source-backed.
+- Diagram also says INSERT/UPDATE; no history INSERT is implemented because no history target/relation is source-backed.
 
 ### 3.4. Parameters
 
 | Param | Giá trị | Remarks |
 |---|---|---|
 | submission_id | Path submission_id | Required int64 descriptor. |
-| mentor_id | Authenticated Mentor ID | Mapping from JWT to Study user ID SOURCE_REQUIRED; direct-owner check is DERIVED. |
-| feedback_value | Request descriptor feedback text | Value is usable only after the actual wire key is confirmed. |
-| attachments_value | Request attachments | Required string; no persistence binding approved. |
+| mentor_id | Numeric subject from shared MENTOR guard | Direct-owner check is DERIVED; assigned-Mentor policy remains SOURCE_REQUIRED. |
+| feedback_text | Required request wire fallback | Maps to feedback as DERIVED; exact wire key still needs owner approval. |
+| attachments | Request attachments | Required strict string; accepted opaquely and unused because no persistence binding is approved. |
 
 ### Mutation Matrix
 
 | Mutation ID | Operation | Target | Condition | Fields | Status |
 |---|---|---|---|---|---|
-| M1 | UPDATE candidate | assignment_submissions | Selected row and approved Mentor scope | feedback = feedback_value | DERIVED candidate only; live schema and authorization mapping unresolved |
-| M2 | Store feedback attachments | SOURCE_REQUIRED | No approved attachment relation | N/A | SOURCE_REQUIRED; no table or column invented |
-| M3 | INSERT feedback history | SOURCE_REQUIRED | Diagram permits insert/update but no history relation exists | N/A | SOURCE_REQUIRED; semantics unresolved |
+| M1 | UPDATE fallback | assignment_submissions | Locked row and direct-owner predicate | feedback = feedback_text | Implemented; mutation is DERIVED; live schema/owner approval unresolved |
+| M2 | Store feedback attachments | Not used | No approved attachment relation | N/A | No table or column invented; input is accepted but not persisted |
+| M3 | INSERT feedback history | Not used | No history relation exists | N/A | Repeated call overwrites one field as DERIVED fallback |
 
 ## 4. Check kết quả execute query
 
 ### 4.1. Thành công
 
-- Candidate update affects the authorized submission feedback row.
+- UPDATE affects the locked submission after direct-owner check, and repeats owner predicate in SQL.
 - Read/map the Submission envelope according to [04_Response.md](./04_Response.md).
 - Preserve score and status established by earlier workflow; API #57 does not update them.
-- Full success projection is still blocked by unresolved files:UploadAsset[] lookup and attachment handling.
+- Full success projection uses API #54's DERIVED files lookup; API #35 URL compatibility and feedback attachment handling remain unresolved.
 
 ### 4.2. Lỗi hệ thống
 
-- Query/provider failure maps only to 500 DESIGN_INTERNAL_ERROR.
+- Query/mapping/commit failure maps only to 500 DESIGN_INTERNAL_ERROR and rolls back the caller-owned transaction.
 - Do not expose SQL, tokens, attachment URLs, raw provider responses or stack traces.
 
 ### 4.3. Validate lỗi
@@ -184,13 +182,13 @@ DDL nullable references differ from required relationships in the guide/ERD. Joi
 | data.assignment_id | int64 | assignment_submissions.assignment_id | Direct candidate | Nullable DDL discrepancy |
 | data.user_id | int64 | assignment_submissions.user_id | Direct candidate | Nullable DDL discrepancy |
 | data.content | string? | assignment_submissions.content | Preserve optional stored value | Nullable candidate; null/omit unresolved |
-| data.files[] | UploadAsset[] | No approved asset resolver | Do not synthesize from file_url or feedback attachments | SOURCE_REQUIRED; blocks complete projection |
-| data.files[].id | int64 | No approved source | No asset relation | SOURCE_REQUIRED |
-| data.files[].name | string | No approved source | No asset metadata source | SOURCE_REQUIRED |
-| data.files[].url | uri | No approved source | No URL policy/association | SOURCE_REQUIRED |
-| data.files[].content_type | string | No approved source | No asset metadata source | SOURCE_REQUIRED |
-| data.files[].size_bytes | int64 | No approved source | No asset metadata source | SOURCE_REQUIRED |
-| data.files[].status | UploadStatus | No approved source | Enum/lifecycle unresolved | SOURCE_REQUIRED |
+| data.files[] | UploadAsset[] | API #54 constrained uploads lookup (DERIVED) | Match file_url by URL, owner, purpose and course; keep feedback attachments separate | API #35 URL persistence and reusable resolver remain open |
+| data.files[].id | int64 | uploads candidate via API #54 (DERIVED) | Match by URL, owner, purpose and course | API #35 compatibility remains open |
+| data.files[].name | string | uploads metadata via API #54 (DERIVED) | Use matched UploadAsset metadata | API #35 compatibility remains open |
+| data.files[].url | uri | uploads.url via API #54 (DERIVED) | Exact match to file_url with owner/purpose/course checks | API #35 compatibility remains open |
+| data.files[].content_type | string | uploads metadata via API #54 (DERIVED) | Use matched UploadAsset metadata | API #35 compatibility remains open |
+| data.files[].size_bytes | int64 | uploads metadata via API #54 (DERIVED) | Use matched UploadAsset metadata | API #35 compatibility remains open |
+| data.files[].status | UploadStatus | uploads.status via API #54 (DERIVED) | Preserve matched status | Enum/lifecycle unresolved |
 | data.status | SubmissionStatus | assignment_submissions.status | Preserve stored value, including prior #56 candidate GRADED | Candidate; enum members unresolved |
 | data.submitted_at | date-time | assignment_submissions.submitted_at | Serialize timestamp | Candidate; timezone behavior unresolved |
 | data.score | decimal-string? | assignment_submissions.score | Preserve prior score value; no recalc | NUMERIC-to-string conversion needs #56 decision |
@@ -206,7 +204,7 @@ DDL nullable references differ from required relationships in the guide/ERD. Joi
 - businessCode = DESIGN_RESOURCE_UPDATED.
 - Return ApiEnvelope<Submission> exactly; do not add feedback attachments, rubric or pagination fields.
 - Populate data.feedback from the saved value when the candidate mapping is approved; other Submission fields follow their candidate sources.
-- Keep error data null per API Guidelines in design examples; current helper discrepancy is recorded in Overview.
+- Keep error data null per API Guidelines and current helper behavior.
 
 ### 5.2. Business error
 

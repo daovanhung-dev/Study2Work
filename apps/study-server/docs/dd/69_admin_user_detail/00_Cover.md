@@ -26,7 +26,7 @@ status: "Draft — Needs Confirmation"
 | Reviewed by | Chờ xác nhận |
 | Approved by | Chờ xác nhận |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-25 |
 
 ## Tên hiển thị
 
@@ -38,7 +38,7 @@ GET /api/v1/admin/users/{user_id} — Lấy chi tiết user
 
 DD mô tả bước Admin đọc một hồ sơ user trong AC-31. Contract trực tiếp là ApiEnvelope<UserProfile>; path user_id là int64 bắt buộc. AC-31 nối bước này sau khi Admin chọn một user từ danh sách #68.
 
-Current Study Server chưa có route, module hoặc test cho API #69. Truy vấn users trong tài liệu chỉ là candidate theo legacy DDL; live schema và Admin authorization chưa được xác minh.
+Runtime hiện có route, module và focused HTTP tests cho API #69. Query đọc legacy BIGINT users candidate, shared JWT guard yêu cầu role ADMIN; mapping này là fallback DERIVED theo API #68 và live schema/chính sách Admin chưa được xác minh. DD vẫn Draft.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -20,24 +20,24 @@ status: "Draft — Needs Confirmation"
 | Endpoint | `POST /api/v1/mentor/content` |
 | Actor | Mentor |
 | Authentication | Bearer JWT |
-| Authorization | Mentor cần quyền quản lý course theo AC-22; principal-to-course check chưa có implementation source. |
+| Authorization | Shared Bearer/JWT guard yêu cầu role `MENTOR`; current implementation yêu cầu `courses.mentor_id` bằng numeric JWT `sub`. Assigned-course access chưa được source-backed. |
 | Success | HTTP 201 `DESIGN_RESOURCE_CREATED`; `ApiEnvelope<Content>`. |
 | Errors | Đúng catalog: 401, 403, 422, 500 với `DESIGN_*` tương ứng. |
-| Runtime | Chưa có route/module/test API #50 (`UNWIRED` / `NOT_FOUND`). |
+| Runtime | Route/module và TestClient tests source-backed locally; fake DB tests không xác minh live schema/deployment. |
 
 ## Mục tiêu và ranh giới
 
 Tạo một logical Content gắn với `course_id` trong request. Không đặc tả thay API #49 (đọc cây), #51 (cập nhật), #52 (publish/unpublish), hoặc #53 (xóa). AC-22 mô tả POST → `INSERT Content` → reload cây nội dung.
 
-AC-33 có precondition là đã có content `PENDING_REVIEW` trong hàng đợi duyệt. Vì vậy DD ghi `PENDING_REVIEW` là trạng thái ban đầu đề xuất (`DERIVED`); AC-33 không chỉ ra physical schema. Quy tắc root placement và order được ghi là `DERIVED` đề xuất vì request không có `parent_id`/`order`.
+AC-33 queue đọc content `PENDING_REVIEW`. API #50 hiện gán trạng thái này làm lựa chọn `DERIVED` để content mới vào moderation queue. Vì request không có `parent_id`/`order`, implementation tạo root (`parent_id=NULL`) và gán order tiếp theo trong active root siblings, bắt đầu từ 0; course row được khóa trong transaction để tuần tự hóa việc cấp order. Các default này chưa được diagram/catalog xác nhận trực tiếp.
 
 ## Luồng mức cao
 
-1. Đọc Bearer JWT và body theo catalog.
-2. Yêu cầu principal có role Mentor; kiểm tra quyền quản lý course theo AC-22. Binding principal và quan hệ assignment chưa được source xác nhận.
-3. Validate kiểu/required fields theo contract. Chi tiết enum `ContentType` và schema `payload` cần nguồn.
-4. Tạo logical Content ở trạng thái `PENDING_REVIEW`. Candidate đơn giản: `parent_id=null`, `order` nối tiếp trong nhóm root của course; cả hai là `DERIVED`, chưa được approved.
-5. Persist một Content và trả HTTP 201 `ApiEnvelope<Content>` theo đúng business code.
+1. FastAPI parse bốn field bắt buộc; strict signed-int64/string/object types và undeclared fields are rejected.
+2. Shared guard yêu cầu Bearer JWT + role Mentor; view khóa course row và dùng `courses.mentor_id` để kiểm tra direct owner.
+3. Course không tồn tại hoặc không thuộc Mentor cùng trả 403 `DESIGN_ACCESS_DENIED`; API #50 không thêm 404.
+4. Lấy order kế tiếp từ active root siblings (first order 0), insert root Content ở `PENDING_REVIEW` và lưu object payload dưới JSONB.
+5. Validate INSERT/RETURNING projection, commit transaction rồi trả HTTP 201 `ApiEnvelope<Content>` với `DESIGN_RESOURCE_CREATED`.
 6. AC-22 mô tả reload cây; đó là bước consumer sau create, không phải response thứ hai của API này.
 
 ## Quy ước bằng chứng
@@ -47,9 +47,9 @@ AC-33 có precondition là đã có content `PENDING_REVIEW` trong hàng đợi 
 - `SOURCE_REQUIRED`: thiếu schema hoặc quy tắc nguồn; không giả lập SQL.
 - `UNWIRED` / `NOT_FOUND`: chưa có route/module/test trong source hiện tại.
 
-## Discrepancy cần lưu ý khi implementation
+## Current source status
 
-Nếu route được nối mà chưa được thêm vào `DESIGN_CONTRACT_PATHS`, middleware hiện có thể phát `VALIDATION_ERROR` hoặc `INTERNAL_SERVER_ERROR` thay cho business code `DESIGN_*` mà catalog yêu cầu. Đây là rủi ro tích hợp có điều kiện; API #50 hiện chưa có behavior runtime.
+Route `/api/v1/mentor/content` hiện nằm trong `DESIGN_CONTRACT_PATHS`, nên framework body errors và unhandled errors dùng `DESIGN_VALIDATION_ERROR`/`DESIGN_INTERNAL_ERROR`. Local route behavior được kiểm tra bằng TestClient; live DB và deployment chưa xác minh.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

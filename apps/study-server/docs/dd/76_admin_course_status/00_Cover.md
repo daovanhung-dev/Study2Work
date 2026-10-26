@@ -28,13 +28,13 @@ status: "Draft — Needs Confirmation"
 
 ## Mục đích
 
-Đổi trạng thái một khóa học theo thao tác Admin trong AC-32 và ghi audit event theo diagram. Request body, enum/casing, policy chuyển trạng thái, audit persistence và schema runtime chưa được xác nhận; proposal được gắn nhãn DERIVED hoặc SOURCE_REQUIRED trong các sheet.
+Đổi trạng thái khóa học và ghi audit event theo AC-32. Runtime local dùng fallback DERIVED cho body/status values và bảng audit legacy BIGINT; dedicated course-management permission, policy chuyển trạng thái và live schema vẫn chưa được xác nhận.
 
 ## Phạm vi
 
 - API #76 chỉ sở hữu thay đổi trạng thái khóa học.
 - API #75 sở hữu cập nhật metadata; API #77 sở hữu xóa theo enrollment/content policy.
-- Không tạo hoặc sửa source, database, schema, catalog, diagram hay runtime trong DD này.
+- DD mô tả implementation local cùng contract gaps; không chứng minh migration đã áp dụng hoặc live runtime/schema.
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `Cover`

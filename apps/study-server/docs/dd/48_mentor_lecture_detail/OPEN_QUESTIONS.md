@@ -5,31 +5,31 @@
 
 Các quyết định dưới đây chưa có nguồn đủ để chuyển candidate thành implementation contract. Giữ nguyên catalog; không tạo field, bảng, enum hoặc business code để lấp chỗ trống.
 
-## Q-48-01 — Nguồn assets và resolver
+## Q-48-01 — Migration assets trên môi trường chạy
 
 **Bằng chứng**
 
 - Lecture yêu cầu assets:UploadAsset[]; UploadAsset có id, name, url, content_type, size_bytes, status.
-- API #47 nhận asset refs:string! nhưng chưa định nghĩa wire key, định dạng hoặc lookup.
-- API #34 chưa xác định ID generation, metadata persistence hay lookup.
-- Legacy resources thiếu content_type, size_bytes và UploadStatus; V1-PILOT file_objects dùng UUID và mô hình khác.
+- Local API #47 parses `asset_refs` as an ordered JSON array of unique signed-int64 IDs and resolves them against API #34's `uploads` metadata.
+- API #47 writes each validated ID and zero-based position to `lesson_uploads`; API #48 reads that relation and returns ordered metadata from `uploads`.
+- `migrations/004_uploads.sql` and `migrations/005_lesson_uploads.sql` exist in the checkout. The live database has not been inspected.
+- Legacy `resources` and V1-PILOT `file_objects` are not used for the UploadAsset projection.
 
 **Cần xác nhận**
 
-1. Asset refs trong #47 tham chiếu ID nào và format ra sao?
-2. API #34 lưu metadata vào nguồn nào để #47/#48 resolve UploadAsset?
-3. Resource/UploadAsset có quan hệ vật lý nào; URL là public hay signed?
-4. Lecture không có asset thì biểu diễn assets=[] có được contract cho phép không?
+1. Has migration 005 been applied to every database environment that will run APIs #47/#48?
+2. Is the local ordered `lesson_uploads` relation accepted as the business association contract?
+3. Does the API owner confirm that a lecture without linked assets returns `assets: []`?
 
-**Ảnh hưởng:** Không thể dựng đầy đủ success response; đây là blocker cho response mapping của #48.
+**Ảnh hưởng:** Local success mapping is implemented and tested; deployment and business confirmation remain open, so keep the DD Draft.
 
 ## Q-48-02 — Course ownership, phân công và Mentor identity
 
 **Bằng chứng**
 
 - AC-21 cho phép Mentor sở hữu hoặc được phân công course.
-- #46/#47/#48 dùng candidate legacy courses.mentor_id; chưa có relation assignment trong artifacts legacy.
-- Current Study auth helper chỉ có Student guard; Mentor principal có thể khác numeric users.id theo V1-PILOT.
+- #46/#47/#48 currently compare legacy `courses.mentor_id` with a numeric JWT subject through the shared Mentor guard.
+- No assignment relation was found in inspected legacy artifacts; V1-PILOT uses a separate identity/schema model.
 
 **Cần xác nhận**
 
@@ -43,15 +43,14 @@ Các quyết định dưới đây chưa có nguồn đủ để chuyển candid
 
 **Bằng chứng**
 
-- Legacy DB.sql dùng BIGINT lessons/course_id và cho phép course_id NULL; DB table guide mô tả course_id bắt buộc.
+- Legacy DB.sql and migrations 004/005 use BIGINT courses/lessons/uploads; `lessons.course_id` is nullable while DB table guide describes it as required.
 - V1-PILOT dùng UUID lessons theo chapter/course_version, không có cùng projection course_id/name/sort_order/status.
 - Live schema chưa được xác minh.
 
 **Cần xác nhận**
 
-1. API #48 sẽ chạy trên legacy schema hay V1-PILOT schema?
-2. Quan hệ từ lecture đến course trong schema đích là gì?
-3. Nếu row lecture thiếu parent course hoặc course_id NULL, xử lý 500 hay 404?
+1. Does the target environment use the checked-in legacy BIGINT schema or V1-PILOT UUID schema?
+2. Is migration 005 deployed, and is a missing parent course correctly treated as an integrity error?
 
 **Ảnh hưởng:** Query, identifier type, parent authorization và projection course_id bắt buộc.
 
@@ -65,25 +64,25 @@ Các quyết định dưới đây chưa có nguồn đủ để chuyển candid
 
 **Cần xác nhận**
 
-1. Khi lessons.content NULL, JSON omit content hay trả content:null?
-2. content từ #47 là body text được biểu diễn số hay ID tham chiếu Content?
+1. Does the API owner confirm returning JSON `null` when `lessons.content` is SQL NULL?
+2. Is the existing #47 content-as-decimal-string behavior semantically correct for AC-21?
 
 **Ảnh hưởng:** Tính ổn định response và mapping create → reload.
 
-## Q-48-05 — LessonStatus và đọc DRAFT
+## Q-48-05 — LessonStatus values
 
 **Bằng chứng**
 
 - Legacy lessons.status có default DRAFT; catalog không liệt kê member của LessonStatus.
-- API #47 candidate dùng default DRAFT.
+- Current API #47 implementation explicitly inserts `PUBLISHED`; API #48 returns the stored value without a status filter.
 - AC-21 gọi #48 ngay sau #47; API #9 public curriculum lọc PUBLISHED nhưng khác role/workflow.
 
 **Cần xác nhận**
 
-1. LessonStatus có những member nào và DRAFT có hợp lệ cho Lecture không?
-2. Mentor được phép đọc Lecture DRAFT bằng #48 không?
+1. What are the approved LessonStatus members?
+2. Are stored statuses outside the current #47 `PUBLISHED` value allowed in Mentor detail responses?
 
-**Ảnh hưởng:** Enum serialization và khả năng hoàn tất AC-21 read-after-create.
+**Ảnh hưởng:** Runtime returns the stored status as a string; the catalog enum remains unspecified.
 
 ## Q-48-06 — Path parse failure
 
@@ -94,8 +93,8 @@ Các quyết định dưới đây chưa có nguồn đủ để chuyển candid
 
 **Cần xác nhận**
 
-1. Giá trị không phải int64 hoặc overflow được gateway/framework xử lý ra sao?
-2. Có cần cập nhật catalog nếu API muốn trả validation error không?
+1. Does the API owner confirm that malformed or out-of-range path values map to the existing 404 code?
+2. Should the catalog instead declare a validation response for those values?
 
 **Ảnh hưởng:** Không thể thêm 422 vào DD nếu chưa sửa contract nguồn.
 
@@ -104,16 +103,16 @@ Các quyết định dưới đây chưa có nguồn đủ để chuyển candid
 **Bằng chứng**
 
 - API Guidelines yêu cầu data:null ở error response.
-- Current app/core/responses.py dùng {} khi data=None.
-- API #48 chưa có runtime.
+- `app/core/responses.py` defaults error `data` to JSON null.
+- API #48 uses the shared error helper and returns that shape in its local implementation.
 
 **Cần xác nhận**
 
-1. Envelope expected cho endpoint mới theo guideline hay helper cần thay đổi?
-2. Việc sửa helper có nằm ngoài scope Study API #48 không?
+1. Does the API owner confirm the shared helper's `data: null` error envelope for this endpoint?
+2. No helper change is currently required; revisit only if the contract owner requests another shape.
 
 **Ảnh hưởng:** Expected contract và current helper representation khác nhau.
 
 ## Quyết định cần có trước khi DD chuyển Final
 
-Ưu tiên chốt asset persistence/resolver; Mentor identity và assignment; schema đích; content semantics/null behavior; LessonStatus/DRAFT policy; malformed path contract; error envelope. Đến khi có các nguồn này, giữ trạng thái Draft — Needs Confirmation.
+Ưu tiên xác nhận live legacy schema/migration 005, assigned-course and identity rules, content semantics, enum members, and malformed path mapping. Local source behavior and tests do not prove deployed DB compatibility or business approval. Keep status Draft — Needs Confirmation.

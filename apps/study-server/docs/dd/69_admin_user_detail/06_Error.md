@@ -13,8 +13,8 @@ status: "Draft — Needs Confirmation"
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu, sai hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT code/status; route chưa wired. |
-| 2 | Authorization | Role/policy | Admin user-management permission | Principal không có role/quyền Admin | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT code/status; Admin guard/policy SOURCE_REQUIRED. |
+| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu, sai hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT code/status; shared JWT guard is wired. |
+| 2 | Authorization | Role/policy | Admin user-management permission | Principal không có role/quyền Admin | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | No | DIRECT code/status; ADMIN claim mapping follows API #68 local fallback; separate policy SOURCE_REQUIRED. |
 | 3 | Not found | User lookup | user_id | Không tìm thấy user theo candidate lookup | 404 | DESIGN_RESOURCE_NOT_FOUND | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua-query) | No | Code/status DIRECT; điều kiện row-not-found là DERIVED. |
 | 4 | System error | Database/profile mapping | Query or projection | Database/query/mapping failure | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua-query) | No | DIRECT code/status; không trả raw SQL/stack trace. |
 
@@ -24,17 +24,16 @@ Không thêm HTTP 422 hoặc business code ngoài contract.
 
 | Condition | Candidate or question | Status |
 |---|---|---|
-| user_id không parse được hoặc vượt miền int64 | HTTP behavior chưa được contract xác nhận; catalog không có 422 | SOURCE_REQUIRED |
+| user_id malformed hoặc vượt miền int64 | 404 DESIGN_RESOURCE_NOT_FOUND trước query | DERIVED theo exact catalog error set và API #48 path precedent |
 | user_id là số hợp lệ nhưng không có row | 404 DESIGN_RESOURCE_NOT_FOUND | DERIVED theo detail resource semantics |
-| User tồn tại nhưng caller không có Admin permission | 403; authorization phải chạy trước row lookup | Code/status DIRECT; policy implementation SOURCE_REQUIRED |
+| Principal thiếu claim ADMIN | 403 trước row lookup theo shared guard | Code/status DIRECT; runtime guard SOURCE_BACKED, mapping permission riêng DERIVED |
 | Row bị xóa/ẩn/ẩn danh theo API #72 | Có trả 404, hồ sơ ẩn danh hay trạng thái khác | SOURCE_REQUIRED; policy còn mở sau document-level macro-review |
 
 ## Error envelope discrepancy
 
-- Current error_response helper đổi data vắng mặt thành {}.
-- API guideline yêu cầu data:null cho lỗi.
-- Current middleware DESIGN_CONTRACT_PATHS chưa có /api/v1/admin/users/{user_id}; nếu route được nối mà allowlist không được cập nhật, request validation/unhandled exception có thể dùng fallback VALIDATION_ERROR/INTERNAL_SERVER_ERROR thay vì DESIGN_*.
-- API #69 chưa wired; các điểm trên mô tả current infrastructure và conditional future integration, không phải endpoint runtime.
+- Current `error_response` helper đổi data vắng mặt thành JSON null.
+- Middleware nhận diện parameterized route template; `/api/v1/admin/users/{user_id}` đã được thêm vào `DESIGN_CONTRACT_PATHS`.
+- Route nhận raw path nên malformed/out-of-range được map trong view sang 404 catalog; không phát sinh framework 422.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -7,6 +7,7 @@ source_sheet: "2.Response"
 status: "Draft — Needs Confirmation"
 ---
 
+
 # Response
 
 ## Format
@@ -17,79 +18,72 @@ status: "Draft — Needs Confirmation"
 | Character encoding | UTF-8 |
 | Content-Type | `application/json` |
 | HTTP success | 200 `DESIGN_RESOURCE_RETRIEVED` |
-| Contract type | `ApiEnvelope<Operation>` |
+| Contract type | `ApiEnvelope<Operation>` — giữ nguyên catalog DIRECT |
 
-## Các trường response — reusable Operation schema trực tiếp
+## Response fields
 
-| Không | Path | Logical name | Physical name | Type | Nullable | Source | Transform / null rule | Remarks |
-|---:|---|---|---|---|---|---|---|---|
-| 1 | `HTTPStatus` | Mã HTTP | `HTTPStatus` | integer | Không | Catalog | Cố định 200 | `DESIGN_RESOURCE_RETRIEVED`. |
-| 2 | `success` | Cờ thành công | `success` | boolean | Không | Envelope | `true` khi đọc thành công | Không chứng minh delivery thành công. |
-| 3 | `businessCode` | Mã nghiệp vụ | `businessCode` | string | Không | Catalog | Giá trị cố định | `DESIGN_RESOURCE_RETRIEVED`. |
-| 4 | `message` | Thông điệp | `message` | string | Không | Ứng dụng | Nội dung an toàn | Câu chữ chưa được quy định. |
-| 5 | `data` | Operation | `data` | Operation | Không | Schema dùng chung | Ánh xạ theo schema | Query source và notification→Operation mapping chưa có. |
-| 5.1 | `data.id` | Operation ID | `id` | uuid | Không | Operation schema | UUID theo schema | Không đồng nhất với path `notification_id:int64`. |
-| 5.2 | `data.kind` | Operation kind | `kind` | OperationKind | Không | Operation schema | Giữ enum trực tiếp | Enum members chưa được định nghĩa. |
-| 5.3 | `data.status` | Operation status | `status` | OperationStatus | Không | Operation schema | Trạng thái Operation | Không được suy là delivery status. |
-| 5.4 | `data.owner_id` | Operation owner | `owner_id` | int64 | Không | Operation schema | Owner ID | Mapping Mentor principal chưa có. |
-| 5.5 | `data.submitted_at` | Thời điểm nhận | `submitted_at` | date-time | Không | Operation schema | ISO-8601 theo convention | Source/precision chưa xác nhận. |
-| 5.6 | `data.updated_at` | Thời điểm cập nhật | `updated_at` | date-time | Không | Operation schema | ISO-8601 theo convention | Lifecycle chưa xác nhận. |
-| 5.7 | `data.completed_at` | Thời điểm hoàn tất | `completed_at` | date-time? | Tùy chọn | Operation schema | Optional theo schema | Semantics chưa xác nhận. |
-| 5.8 | `data.result` | Operation result | `result` | Payment? | Tùy chọn | Operation schema | Giữ đúng schema | Payment không biểu diễn trạng thái gửi notification. |
-| 5.8.1 | `data.result.id` | Payment ID | `id` | int64 | Bắt buộc nếu có Payment | Payment schema | Field nested trực tiếp | Không có ý nghĩa delivery. |
-| 5.8.2 | `data.result.order_id` | Order ID | `order_id` | int64 | Bắt buộc nếu có Payment | Payment schema | Field nested trực tiếp | Không có ý nghĩa delivery. |
-| 5.8.3 | `data.result.provider` | Payment provider | `provider` | PaymentProvider | Bắt buộc nếu có Payment | Payment schema | Enum direct | Không có ý nghĩa delivery. |
-| 5.8.4 | `data.result.amount` | Payment amount | `amount` | decimal-string | Bắt buộc nếu có Payment | Payment schema | Serialize decimal thành string | Không có ý nghĩa delivery. |
-| 5.8.5 | `data.result.status` | Payment status | `status` | PaymentStatus | Bắt buộc nếu có Payment | Payment schema | Enum direct | Không có ý nghĩa delivery. |
-| 5.8.6 | `data.result.transaction_code` | Mã giao dịch | `transaction_code` | string? | Tùy chọn | Payment schema | Optional field | Không có ý nghĩa delivery. |
-| 5.8.7 | `data.result.paid_at` | Thời điểm thanh toán | `paid_at` | date-time? | Tùy chọn | Payment schema | ISO-8601 | Không có ý nghĩa delivery. |
-| 6 | `meta` | Metadata | `meta` | object | Không | Envelope | `{}` chỉ để minh họa | Field riêng API chưa khai báo. |
-| 7 | `traceId` | Trace ID | `traceId` | uuid | Không | Envelope convention | UUID trace của request | Route #64 chưa wired. |
+| No | Path | Logical name | Physical/local source | Type | Nullable | Transform/null rule | Remarks |
+|---:|---|---|---|---|---|---|---|
+| 1 | `HTTPStatus` | HTTP status | Route | integer | Không | Cố định 200 | `DESIGN_RESOURCE_RETRIEVED`. |
+| 2 | `success` | Cờ thành công | Envelope | boolean | Không | `true` khi đọc được status resource | Không khẳng định Push/Email đã gửi thành công. |
+| 3 | `businessCode` | Business code | Catalog | string | Không | `DESIGN_RESOURCE_RETRIEVED` | DIRECT. |
+| 4 | `message` | Message | Application | string | Không | Safe static message | Nội dung cụ thể chưa được contract quy định. |
+| 5 | `data` | Operation | Reconstructed from #63 local rows | Operation | Không | Mapped below | No Study Operation table. |
+| 5.1 | `data.id` | Operation ID | `notifications.operation_id` | uuid | Không | Preserve shared UUID from #63 | Different from path notification ID. |
+| 5.2 | `data.kind` | Operation kind | API #63 local response mapping | OperationKind | Không | `NOTIFICATION_DISPATCH` | DERIVED; kind enum members are not catalog-defined. |
+| 5.3 | `data.status` | Operation status | Aggregated `notification_deliveries.status` | OperationStatus | Không | `QUEUED`, `FAILED`, or `SENT` by local precedence | DERIVED; no partial-success enum or counts in direct response. |
+| 5.4 | `data.owner_id` | Operation owner | `notifications.sender_id` | int64 | Không | Preserve sender ID | Bound to JWT `sub` by API #63. |
+| 5.5 | `data.submitted_at` | Submit time | `notifications.created_at` | date-time | Không | ISO-8601 serialization | Local DB timestamp. |
+| 5.6 | `data.updated_at` | Last update time | `MAX(notification_deliveries.updated_at)` | date-time | Không | ISO-8601 serialization | Latest channel row update for this notification. |
+| 5.7 | `data.completed_at` | Completion time | No source | date-time? | Tùy chọn | Omitted | Retry/terminal completion semantics are unspecified. |
+| 5.8 | `data.result` | Operation result | No notification result source | Payment? | Tùy chọn | Omitted | Do not fabricate a Payment result. |
+| 6 | `meta` | Metadata | Envelope | object | Không | `{}` | No extra response field is added. |
+| 7 | `traceId` | Trace ID | Request trace | uuid | Không | Current trace UUID | Mirrored to `X-Trace-Id`. |
 
-## Khoảng trống so với mục tiêu delivery
+### Local status aggregation
 
-- AC-25 yêu cầu UI hiển thị delivery status theo `notification_id`; API row lại trả `Operation`.
-- `NotificationDelivery` reusable schema có `notification_id:int64`, `status:OperationStatus`, `queued:int32`, `sent:int32`, `failed:int32`, nhưng không được khai báo là response của #64.
-- Không có source để ánh xạ `notification_id:int64` sang `Operation.id:uuid`, hoặc lấy `Operation.result` (đang là `Payment?`).
-- Nếu contract đổi sang `NotificationDelivery`, cần xác nhận enum semantics, counts grain và status khi chưa có delivery record trước khi implementation.
+| Outbox aggregate | `data.status` | Meaning/limit |
+|---|---|---|
+| `queued_count > 0` | `QUEUED` | At least one channel remains queued. |
+| No queued row and `failed_count > 0` | `FAILED` | At least one channel failed; successful channels are not separately exposed. |
+| `sent_count = delivery_count > 0` | `SENT` | All channel rows for this notification are sent. |
+| Counts inconsistent or no supported status rows | Error mapping | 500 for inconsistent projection; 404 when no dispatch status resource exists. |
 
-## Ví dụ thành công — minh họa cấu trúc Operation
+The reusable `NotificationDelivery` has delivery counts, but #64's direct response is Operation. Counts remain internal to the aggregate and are not added to `data`/`meta`.
 
-Ví dụ chỉ minh họa schema direct. Enum placeholders không phải giá trị được duyệt; Operation ID không được suy ra từ path notification ID.
+## Ví dụ thành công — local queued status
 
 ```json
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "<SAFE_MESSAGE>",
+  "message": "Notification status was retrieved.",
   "data": {
-    "id": "00000000-0000-4000-8000-000000000064",
-    "kind": "<OperationKind_SOURCE_REQUIRED>",
-    "status": "<OperationStatus_SOURCE_REQUIRED>",
+    "id": "00000000-0000-4000-8000-000000000063",
+    "kind": "NOTIFICATION_DISPATCH",
+    "status": "QUEUED",
     "owner_id": 1001,
-    "submitted_at": "2026-10-24T00:00:00Z",
-    "updated_at": "2026-10-24T00:00:00Z"
+    "submitted_at": "2026-10-25T10:30:00Z",
+    "updated_at": "2026-10-25T10:30:00Z"
   },
   "meta": {},
-  "traceId": "00000000-0000-4000-8000-000000000065"
+  "traceId": "00000000-0000-4000-8000-000000000064"
 }
 ```
 
 ## Ví dụ lỗi — resource không tìm thấy
 
-API Guidelines dùng `data:null`; helper hiện tại mặc định `{}` nếu không truyền data. API #64 chưa wired nên đây chưa phải behavior runtime.
-
 ```json
 {
   "success": false,
   "businessCode": "DESIGN_RESOURCE_NOT_FOUND",
-  "message": "<SAFE_MESSAGE>",
+  "message": "Notification status was not found.",
   "data": null,
   "meta": {},
-  "traceId": "00000000-0000-4000-8000-000000000066"
+  "traceId": "00000000-0000-4000-8000-000000000065"
 }
 ```
----
+
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `2.Response`

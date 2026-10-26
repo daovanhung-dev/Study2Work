@@ -2,62 +2,50 @@
 
 ## Kết quả
 
-- Output: apps/study-server/docs/dd/88_admin_quizzes_create/
-- API: POST /api/v1/admin/quizzes
-- DD status: Draft — Needs Confirmation.
-- Scope: Một API DD; không sửa runtime, schema, catalog, diagram hoặc context pages.
-- Package: 10 Markdown sheets (7 shared sheets + 3 table INSERT mappings) và 3 reports; không tạo ZIP.
+- API: `POST /api/v1/admin/quizzes`.
+- Scope: `server-study`; implementation API #88, local legacy BIGINT schema support, tests, Draft DD và context pages liên quan.
+- Direct outer request/response contract giữ nguyên catalog; lựa chọn embedded schema và hai schema extensions được đánh dấu DERIVED.
+- DD remains `Draft — Needs Confirmation`; không tạo ZIP.
 
-## Contract được giữ
+## Plan gate
 
-Nguồn: docs/lists/list_api.md, API #88.
+- `primary_task_type`: `coding`; secondary: `test`, `docs`; scope: `server-study`.
+- Coding selector chọn 3/81 worklogs; đọc đủ `.agents/worklog/2026-10-26/implement-api74-admin-course-detail.md`, `implement-api75-admin-course-update.md`, và `implement-api76-admin-course-status.md`; shortage `none`.
+- Related source reviewed: API #87 (Admin quiz list), API #50 (transactional create pattern), API #28 (Student Quiz response boundary), API #89 (quiz update dependency).
+- Registered `createDD-markdown` template pack contains the ordered 8-sheet Markdown baseline; API #88 keeps its existing 10 sheets + 3 reports and Excel appendix tails.
+- Existing dirty worktree is preserved; no staging/commit/cleanup.
 
-- Actor/authentication: Admin, Bearer JWT; AC-35 yêu cầu quiz-management permission.
-- Direct body: config:string!, questions:string!.
-- Direct success: HTTP 201, DESIGN_RESOURCE_CREATED, ApiEnvelope<Quiz>.
-- Errors: 401 DESIGN_AUTHENTICATION_REQUIRED; 403 DESIGN_ACCESS_DENIED; 422 DESIGN_VALIDATION_ERROR; 500 DESIGN_INTERNAL_ERROR.
+## Source priority and choices
 
-## Plan trước khi authoring
+| Priority | Evidence | Finding / choice |
+|---|---|---|
+| 1. AC-35 diagram | Create branch calls API #88, “INSERT Quiz + Questions”; direct success/error contract and Admin actor. | Create parent and children in one transaction; insert choices follows `QuizQuestion.choices[]` and is DERIVED. |
+| 2. Infrastructure | Legacy BIGINT schema/ERD initially lacked question type and choice ordering; migration 013 and local DDL/diagram now add candidate columns. V1-PILOT uses incompatible UUID relations but lists three type labels. | Keep the additions as local DERIVED candidates on legacy child tables only. Reuse pilot labels as vocabulary, never mix IDs/tables. |
+| 3. Catalog | Body strings `config` and `questions`, `ApiEnvelope<Quiz>`, logical `QuizQuestion.type`; no nested schema or QuizChoice shape. | Keep outer body direct; derive embedded config/questions shape and local Admin choice projection from logical fields + physical columns. |
+| 4. Simplest fallback | No answer-count/course-lifecycle rule; no fine-grained permission source. | Enforce shared ADMIN only, check course existence, preserve order, default absent `is_correct=false`, avoid type-specific answer rules, use status DRAFT database default. |
 
-1. Đọc AC-35 index và diagram: #88 là nhánh CREATE sau #87; node ghi “INSERT Quiz + Questions”, rồi hiển thị kết quả.
-2. Giữ nguyên outer body là hai string bắt buộc; không đổi thành object/array ở contract.
-3. Đề xuất embedded JSON tối thiểu từ Quiz/QuizQuestion: config có course_id/title/duration_minutes?/passing_score; questions là array text/type/choices. Đánh dấu DERIVED.
-4. Đối chiếu legacy BIGINT quiz/question/choice tables, ERD quan hệ 1:N và Pilot UUID schema; không trộn chúng.
-5. Dựng ma trận Q0 course existence và M1/M2/M3 atomic inserts; ghi type storage gap, output QuizChoice gap, choice order và status lifecycle.
-6. Tạo ba file mapping insert riêng cho quizzes, quiz_questions, quiz_choices; reuse template table appendix byte-for-byte.
-7. Giữ API #87–#91 relationship và discrepancy #87 response/#89 body trong open questions; macro-review chờ #91.
-8. Static-check exact 13-file package, 10 template appendix tails, direct contract/errors, outer+nested JSON, tables, fences, links, anchors, whitespace và fingerprint.
+## Local implementation contract (DERIVED unless labeled DIRECT)
 
-## Sources
+- `config` JSON: `course_id`, `title`, optional `duration_minutes`, `passing_score` decimal-string.
+- `questions` JSON: ordered array of `text`, `type`, and `choices`.
+- QuestionType vocabulary: `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TRUE_FALSE`.
+- Choice input: `text`, optional `is_correct=false`.
+- Local Admin choice response: `{id,text,is_correct}`; Student API #28 must omit answer keys.
+- Migration 013 adds `quiz_questions.question_type` (nullable for old rows; API #88 always writes one of the allowed values) and `quiz_choices.sort_order` (zero-based request index).
+- Course absence returns 422 because API #88 catalog has no 404.
+- Atomic parent/question/choice insert; response mapping precedes commit; failures roll back the transaction.
 
-- API catalog row #88 và reusable Quiz/QuizQuestion.
-- AC-35 index và AC_04_ADMIN_MANAGEMENT.drawio nodes/edges.
-- DB_UNICA_TABLES.md, DB_UNICA_ERD.drawio, legacy DB.sql và V1-PILOT 02_study_db.sql.
-- API #28 Quiz detail DD và API #87 Admin quiz list DD.
-- Current app/api/v1.py, middleware.py, auth.py, responses.py và API Guidelines.
-- Registered createDD-markdown skill/template pack; Study workflow Markdown-only, không tạo ZIP.
+## Verification results
 
-## Candidate writes
+- API #88 focused HTTP suite: 21 passed. Combined #87/#88 quiz regression: 41 passed.
+- Full Study suite: 1134 passed; one upstream Starlette/httpx deprecation warning.
+- Ruff: `All checks passed!` across `app tests`.
+- Application OpenAPI: 51 `/api/v1` path templates and 59 operations; POST `/api/v1/admin/quizzes` is present.
+- Migration/bootstrap/table-guide parity and Draw.io XML parse: passed.
+- Ten source-sheet Markdown files: balanced code fences, consistent table widths, valid local links, and Excel appendix tails. Three authored reports are checked separately.
+- `git diff --check`: passed after removing trailing whitespace in the new DD header.
+- Deno context validation: no Study Server manifest/path finding; repository-wide validation still reports pre-existing missing DB Admin scope files/source paths, and default drift mode cannot find its pinned baseline commit. No DB Admin files are added in this task.
 
-- quizzes: parent configuration.
-- quiz_questions: question text and order.
-- quiz_choices: option text and answer-key candidate.
-- Courses: existence read only.
-- Persistence mappings are legacy candidates; live DB chưa xác minh.
+## Limits
 
-## Assumptions and conflicts
-
-- config/questions embedded JSON is a proposal, not part of direct catalog schema.
-- Legacy quiz_questions has no QuestionType column; V1-PILOT QuestionType belongs to UUID assessment model.
-- QuizChoice shape, choice order, answer validation and correct-answer exposure remain unresolved.
-- Atomic three-table write and course-not-found 422 are DERIVED proposals.
-- Legacy DRAFT default and timestamp requirements are candidate; quiz-open lifecycle unresolved.
-- AC-35 macro-review #87–#91 remains pending until #91 DD exists.
-
-## Verification
-
-Static checks and package fingerprint are in [VERIFICATION_REPORT.md](./VERIFICATION_REPORT.md).
-
-## Handoff
-
-API #88 is one DD session. Continue at API #89 next session; macro-review AC-35 after #91 exists.
+The fine-grained AC-35 permission, owner approval of DERIVED decisions, old-row question type backfill, live schema, applied migration, deployment and physical PostgreSQL behavior remain unverified until an authoritative runtime source is available.

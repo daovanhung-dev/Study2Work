@@ -23,7 +23,7 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|
-| 1 | Bearer token | `Authorization` | Yes | `Bearer <token>` | Xác thực Admin; AC-36 còn yêu cầu notification-management permission. | `05_Data_Mapping.md#step-0-authentication-and-authorization` |
+| 1 | Bearer token | `Authorization` | Yes | `Bearer <token>` | Xác thực Admin; AC-36 còn yêu cầu notification-management permission chưa được wire. | `05_Data_Mapping.md#step-0-authentication-and-authorization` |
 
 ## Path parameters
 
@@ -35,12 +35,12 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Lọc theo trạng thái | `status` | string | No | Chưa khai báo | Chưa khai báo | Chuỗi | Enum chưa có trong catalog | Không khai báo | Bộ lọc trực tiếp; mapping Notification-level status chưa có nguồn. | `05_Data_Mapping.md#step-1-validate-request` |
-| 2 | Lọc theo channel | `channel` | string | No | Chưa khai báo | Chưa khai báo | Chuỗi | `NotificationChannel` chưa có value set | Không khai báo | Không suy từ `notifications.type` hoặc delivery rows. | `05_Data_Mapping.md#step-1-validate-request` |
-| 3 | Số trang | `page` | int32 | No | Chưa khai báo | Chưa khai báo | Số nguyên 32-bit | Giá trị trong miền int32; page origin chưa chốt | Không khai báo | Catalog không khai báo `size` hoặc response PageMeta. | `05_Data_Mapping.md#step-1-validate-request` |
+| 1 | Lọc theo trạng thái | `status` | string | No | Chưa khai báo | Chưa khai báo | Chuỗi | Enum chưa có trong catalog; runtime so sánh exact với aggregate `QUEUED`/`FAILED`/`SENT` | Không khai báo | Bộ lọc trực tiếp; mapping aggregate là DERIVED. | `05_Data_Mapping.md#step-1-validate-request` |
+| 2 | Lọc theo channel | `channel` | string | No | Chưa khai báo | Chưa khai báo | Chuỗi | Catalog chưa có value set; legacy outbox check giới hạn `PUSH`/`EMAIL` | Không khai báo | Runtime match exact một channel trong delivery rows. | `05_Data_Mapping.md#step-1-validate-request` |
+| 3 | Số trang | `page` | int32 | No | 1 | 2147483647 | Số nguyên 32-bit | Miền dương; min/default/page size là DERIVED | 1 — DERIVED | Runtime dùng fixed size 20; trang ngoài miền trả 422 DERIVED. | `05_Data_Mapping.md#step-1-validate-request` |
 
-- Tên, kiểu và optionality trên đây là contract trực tiếp; enum, page origin, page size và validation mapping không được contract nêu.
-- `page` không đủ để dựng pagination contract khi response trực tiếp là một `Notification` và chưa có `PageMeta`.
+- Tên, kiểu và optionality là contract trực tiếp; enum, page origin, page size và validation mapping không được catalog nêu.
+- Runtime giữ `status`/`channel` nguyên văn, không trim/đổi case; giá trị không match trả Page rỗng thay vì validation error.
 
 ## Request body
 
@@ -50,12 +50,12 @@ status: "Draft — Needs Confirmation"
 
 ## Ví dụ Request data
 
-Ví dụ dưới đây chỉ minh họa cú pháp trực tiếp; `page=1` không xác lập default hay page origin.
-
 ~~~http
-GET /api/v1/admin/notifications?page=1
+GET /api/v1/admin/notifications?status=QUEUED&channel=PUSH&page=1
 Authorization: Bearer <token>
 ~~~
+
+---
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

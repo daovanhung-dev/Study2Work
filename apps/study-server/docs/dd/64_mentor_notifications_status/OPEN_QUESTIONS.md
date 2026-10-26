@@ -1,121 +1,106 @@
 # OPEN_QUESTIONS — Study API #64
 
-Trạng thái: `Draft — Needs Confirmation`. Contract trực tiếp giữ nguyên; các đề xuất dưới đây cần owner xác nhận trước khi DD chuyển Final hoặc implementation.
+DD status: `Draft — Needs Confirmation`. The direct catalog contract remains unchanged. The local implementation fallback below follows the user's conflict-resolution order and is not approved business policy or evidence of deployed schema.
 
 <a id="q-64-01-response-shape"></a>
 
-## Q-64-01 — Response Operation hay NotificationDelivery
+## Q-64-01 — Operation response versus delivery summary
 
-**Bằng chứng:** API catalog #64 trả `ApiEnvelope<Operation>`; AC-25 gọi #64 để đọc delivery status; reusable `NotificationDelivery` có status và counts.
+**Evidence:** Catalog #64 declares `ApiEnvelope<Operation>`; AC-25 describes delivery status; reusable `NotificationDelivery` has status and counts.
 
-**Ảnh hưởng:** Operation không có queued/sent/failed delivery counts; `result?:Payment` không đại diện notification.
+**Local fallback:** Preserve Operation in `data`. Reconstruct its identity/owner/timestamps from API #63's local notification row and map aggregate delivery state into `data.status`. Do not add counts to `meta` or replace the direct response type.
 
-**Đề xuất đơn giản:** Đổi #64 response sang `ApiEnvelope<NotificationDelivery>`; dùng API #18 riêng cho job Operation. Đây là thay đổi catalog/diagram, không phải contract hiện tại.
-
-**Cần xác nhận:** Contract owner có duyệt đổi response và bổ sung DeliveryStatus semantics không?
+**Remaining gap:** Delivery counts and channel-level partial success are not visible through Operation. The catalog response itself still disagrees with the activity's delivery-summary intent.
 
 <a id="q-64-02-id-handoff"></a>
 
-## Q-64-02 — notification_id và operation_id
+## Q-64-02 — `notification_id` and `operation_id`
 
-**Bằng chứng:** #64 path cần `notification_id:int64`; #63 hiện trả Operation UUID và không khai báo notification ID; API #18 theo dõi operation ID nhưng chính row #18 khai báo int64 trong khi schema/diagram dùng UUID.
+**Evidence:** API #64 path is int64; API #63 `data.id` is UUID but current local response includes `meta.notification_ids:int64[]`.
 
-**Ảnh hưởng:** Client không biết ID nào để gọi #64 sau khi POST #63 được accepted.
+**Local fallback:** Client takes each notification ID from #63 metadata for API #64. API #64 returns the stored operation UUID in `data.id`; it never substitutes one identifier for the other.
 
-**Đề xuất đơn giản:** #63 trả/đưa ra notification_id:int64 riêng; operation_id:uuid dùng cho #18. Không ép hai ID thành một.
-
-**Cần xác nhận:** Chốt mapping hoặc response contract #63/#64/#18 đồng bộ ra sao?
+**Remaining gap:** The metadata bridge is DERIVED and is not a first-class field in the catalog Operation schema. API #18's ID convention remains unresolved.
 
 <a id="q-64-03-storage"></a>
 
 ## Q-64-03 — Physical delivery source
 
-**Bằng chứng:** Legacy `notifications` dùng BIGINT nhưng chỉ có `is_read`; V1-PILOT `notifications`/`notification_deliveries` dùng UUID và delivery attempts; DB guide đánh dấu #63–#64 `DESIGN_ONLY`.
+**Evidence:** API #63 added local legacy BIGINT `notification_deliveries` and nullable `notifications.operation_id` in migration 009. The separate V1-PILOT UUID relation is incompatible with the int64 path.
 
-**Ảnh hưởng:** Chưa có query vật lý khớp path int64 và trạng thái gửi.
+**Local fallback:** Query the same checked-in legacy relations written by API #63. Do not read `is_read` as send status or join the UUID pilot schema.
 
-**Cần xác nhận:** Schema nào là Study target; bảng/khóa nào lưu delivery summary; live migration/schema status là gì?
+**Remaining gap:** Migration 009 has not been applied or live-verified.
 
 <a id="q-64-04-aggregate"></a>
 
-## Q-64-04 — Status và counts theo recipient/channel/retry
+## Q-64-04 — Status aggregation across channels
 
-**Bằng chứng:** `NotificationDelivery` khai báo `queued/sent/failed`; pilot delivery rows là append-only theo `(notification_id, channel, attempt_no)` và không có recipient ID.
+**Evidence:** API #63 writes one unique outbox row per notification/channel with states `QUEUED`, `SENT`, or `FAILED`; direct OperationStatus members and partial-success behavior are unspecified.
 
-**Ảnh hưởng:** Đếm row có thể đếm retry attempts thay cho người nhận; chưa biết tổng hợp nhiều channel hoặc partial success.
+**Local fallback:** If any channel is queued, report `QUEUED`; otherwise if any channel failed, report `FAILED`; otherwise report `SENT` when every channel row is sent. This uses only the current local outbox states.
 
-**Đề xuất đơn giản:** Định nghĩa counts theo recipient cuối cùng và chọn latest/terminal attempt theo một state machine được duyệt; không dùng số row thô.
-
-**Cần xác nhận:** Grain, retry selection, partial-success rule và status tổng hợp nào là chuẩn?
+**Remaining gap:** Mixed sent/failed is summarized as `FAILED` and channel counts are not exposed by the direct Operation response. Retry attempts, partial success and final-state semantics need contract-owner confirmation.
 
 <a id="q-64-05-authorization"></a>
 
-## Q-64-05 — Quyền Mentor xem status và lỗi 403/404
+## Q-64-05 — Mentor ownership and 403/404
 
-**Bằng chứng:** Catalog yêu cầu role Mentor và liệt kê cả 403/404; AC-25 precondition nói Mentor có quyền gửi cho học viên của course; `notification_id` không mang course scope.
+**Evidence:** Catalog requires Mentor and allows both 403/404. API #63 writes the authenticated numeric Mentor `sub` to `notifications.sender_id`.
 
-**Ảnh hưởng:** Không thể xác định notification thuộc sender/course nào hoặc thứ tự kiểm tra existence/access.
+**Local fallback:** A different sender receives 403; absent notification or absent dispatch status resource receives 404. The handler reads by notification ID before checking sender so it can preserve both catalog outcomes.
 
-**Đề xuất đơn giản:** Chỉ cho Mentor có quyền quản lý notification/course xem delivery; dùng 403 cho access denied và 404 cho resource absent nếu policy cho phép phân biệt.
-
-**Cần xác nhận:** Permission relation và privacy behavior cho notification của Mentor khác?
+**Remaining gap:** This derives access from the API #63 local write binding, not an approved global notification permission policy.
 
 <a id="q-64-06-pending"></a>
 
-## Q-64-06 — Notification có trước delivery record
+## Q-64-06 — Missing outbox/delivery state
 
-**Bằng chứng:** #63 chấp nhận xử lý async; #64 được gọi sau dispatch; pilot delivery table lưu trạng thái attempt nhưng chưa có trạng thái ban đầu hoặc quy tắc lúc chưa có row.
+**Evidence:** API #63 atomically inserts at least one outbox row before 202; older notification rows may have no Operation ID/outbox.
 
-**Ảnh hưởng:** Chưa biết trả pending/queued hay 404 khi notification đã tồn tại nhưng worker chưa ghi delivery.
+**Local fallback:** A notification without `operation_id` or delivery rows has no API #63 dispatch-status resource and returns 404. No status is inferred from `is_read`.
 
-**Cần xác nhận:** Accepted boundary và trạng thái hiển thị trước attempt đầu tiên là gì?
+**Remaining gap:** A future worker/retry implementation must preserve a durable row for every dispatch state.
 
 <a id="q-64-07-enums"></a>
 
-## Q-64-07 — DeliveryStatus và OperationStatus
+## Q-64-07 — Operation and delivery status values
 
-**Bằng chứng:** Reusable `NotificationDelivery.status` khai báo `OperationStatus`; pilot dùng `notification_status` với `QUEUED|SENT|DELIVERED|FAILED|SUPPRESSED`; Notification schema có `NotificationStatus`.
+**Evidence:** Catalog names `OperationStatus` but does not enumerate values. Migration 009 constrains the local outbox to `QUEUED|SENT|FAILED`; API #63 already returns `QUEUED` for Operation.
 
-**Ảnh hưởng:** Các lifecycle khác nhau có thể bị ép vào enum không đúng nghĩa.
+**Local fallback:** Reuse those outbox values in `Operation.status` using Q-64-04 precedence. Do not invent `PARTIAL`, `COMPLETED` or a Payment result.
 
-**Đề xuất đơn giản:** Định nghĩa một enum delivery riêng hoặc phê duyệt mapping rõ; không dùng OperationStatus chỉ vì tên type đang được khai báo.
-
-**Cần xác nhận:** Enum và chuyển trạng thái được duyệt cho delivery là gì?
+**Remaining gap:** Enum compatibility and terminal/retry semantics need confirmation.
 
 <a id="q-64-08-path-errors"></a>
 
-## Q-64-08 — Path không phải int64
+## Q-64-08 — Non-int64 path
 
-**Bằng chứng:** Catalog khai báo `notification_id:int64!` nhưng không liệt kê 400/422; middleware hiện chưa allowlist path #64.
+**Evidence:** Catalog lists only 401/403/404/500; framework path validation could otherwise emit 422.
 
-**Ảnh hưởng:** Framework validation khi wired có thể trả business code/status ngoài catalog.
-
-**Cần xác nhận:** Chọn HTTP/business mapping và cập nhật middleware contract allowlist trong task implementation; DD không thêm code mới.
+**Local fallback:** Keep the raw path string in the handler while declaring int64 in OpenAPI. Malformed or out-of-range values return 404 `DESIGN_RESOURCE_NOT_FOUND`; no new business code is added.
 
 <a id="q-64-09-operation-tracking"></a>
 
-## Q-64-09 — Macro flow API #18
+## Q-64-09 — API #18 generic Operation polling
 
-**Bằng chứng:** AC/API index liệt kê #18 cho operation tracking; node #18 trong diagram AC-25 đứng rời; API #18 Open Questions còn ID/owner/result/lifecycle conflict.
+**Evidence:** API #18 is not connected to an edge in AC-25; its path ID, owner, result and Study persistence remain unresolved.
 
-**Ảnh hưởng:** Chưa rõ UI theo dõi job bằng #18, delivery bằng #64 hay một response chung.
-
-**Đề xuất đơn giản:** Tách job acceptance/status khỏi per-notification delivery status và nối hai ID tường minh trong #63 response.
-
-**Cần xác nhận:** Sửa index/diagram/catalog/DD #18 theo hợp đồng liên kết đã thống nhất.
+**Scope:** API #64 returns Operation as direct schema but does not implement generic #18 polling, alter its contract or change the distinction between notification ID and Operation UUID.
 
 <a id="q-64-10-error-envelope"></a>
 
-## Q-64-10 — Error envelope khi wired
+## Q-64-10 — Error envelope and middleware
 
-**Bằng chứng:** API Guidelines dùng `data:null`; current helper mặc định `{}`; middleware `DESIGN_CONTRACT_PATHS` chưa có path #64.
+**Evidence:** Shared `error_response(...)` currently emits `data:null`; parameterized design route paths are recognized from `DESIGN_CONTRACT_PATHS`.
 
-**Ảnh hưởng:** Error body/business code future runtime có thể lệch contract.
+**Current local implementation:** The exact parameterized API #64 template is in `DESIGN_CONTRACT_PATHS`; the view uses only the catalog's four error codes and OpenAPI suppresses the framework-generated 422 for this raw-path endpoint.
 
-**Cần xác nhận:** Future implementation phải đồng bộ helper/allowlist; không đổi source trong task DD.
+**Remaining gap:** The middleware/error envelope and runtime outcomes are locally covered by tests, but this does not approve a changed global error policy or prove live deployment.
 
 ## Handoff AC-25
 
-- #62–#64 cần khóa roster projection/key → recipients/course scope → notification ID → delivery status/counts.
-- #63 `Operation` và #18 operation polling là job tracking; không được nhập với `notification_id` nếu chưa có mapping được duyệt.
-- Macro-review trong [VERIFICATION_REPORT.md](./VERIFICATION_REPORT.md) sau khi so sánh cả ba DD; giữ mọi unresolved contract/schema question mở.
+- #63 `meta.notification_ids` supplies int64 keys; #64 reads the corresponding per-recipient notification/outbox rows.
+- #63 Operation UUID remains in `notifications.operation_id`; API #64 maps it into Operation `data.id` and derives status from per-channel rows.
+- API #18 remains a separate unresolved operation-tracking contract.
+- DD stays Draft until response intent, status policy, ownership and live schema are confirmed. See [PLAN_RESULT.md](./PLAN_RESULT.md) and [VERIFICATION_REPORT.md](./VERIFICATION_REPORT.md).

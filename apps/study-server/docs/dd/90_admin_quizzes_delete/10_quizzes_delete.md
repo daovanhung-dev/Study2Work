@@ -19,13 +19,13 @@ status: "Draft — Needs Confirmation"
 | Logical table | Quiz |
 | Operation | DELETE |
 | Data Mapping step | [Step 4B.4 — xóa quiz](./05_Data_Mapping.md#step-4b-khong-co-attempts-candidate-hard-delete) |
-| Basis | No-attempt hard-delete branch là DERIVED; live DB behavior chưa xác minh. |
+| Basis | No-history hard-delete branch là DERIVED; live DB behavior chưa xác minh. |
 
 ## Delete mapping
 
 **Áp dụng khi**
 
-- Q2 không tìm thấy attempt nào cho quiz.
+- Q2 không tìm thấy attempt hoặc linked answer reference nào cho quiz.
 - M2 và M3 đã hoàn thành trong cùng transaction.
 
 | No | Target column | Operator | Value source | Data Mapping step | Remarks |
@@ -38,6 +38,7 @@ status: "Draft — Needs Confirmation"
 - Không dựa vào `ON DELETE CASCADE`; legacy DDL không khai báo cascade cho quiz relations.
 - Nếu bất kỳ child/parent mutation lỗi: rollback toàn bộ transaction.
 - Affected-row/repeat-delete semantics và concurrent API #29 creation cần xác nhận.
+- Runtime `DELETE RETURNING` dùng `CURRENT_TIMESTAMP` làm hard-delete `deleted_at`; row identity/timestamp phải hợp lệ trước commit.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

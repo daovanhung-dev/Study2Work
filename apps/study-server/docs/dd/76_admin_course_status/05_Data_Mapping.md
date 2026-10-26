@@ -13,12 +13,12 @@ status: "Draft — Needs Confirmation"
 
 ~~~text
 Admin Bearer principal
--> xác thực Admin + course-management permission
+-> validate Bearer JWT + shared ADMIN role; finer permission còn SOURCE_REQUIRED
 -> validate course_id và candidate body.status
 -> Q1 đọc/khóa course hiện hữu
 -> M1 cập nhật status + updated_at
--> M2 ghi logical audit event theo diagram
--> Q2 đọc Course/UserSummary projection
+-> M2 insert `course_status_audit_logs` với actor/old/new nếu status đổi
+-> Q2 đọc Course/UserSummary projection; same-status không UPDATE/audit
 -> commit transaction
 -> 200 Page<Course> singleton hoặc exact catalog errors
 -> UI reload course management
@@ -43,23 +43,23 @@ Admin Bearer principal
 
 ### 0.1. Xác thực và authorization
 
-- Authenticate Bearer JWT và yêu cầu Admin role cùng course-management permission trước mọi course lookup/write.
+- Runtime gọi `validate_current_user_request(..., role="ADMIN")`; đây là shared role fallback DERIVED, finer course-management permission chưa có policy source.
 - Thiếu/sai token trả 401 DESIGN_AUTHENTICATION_REQUIRED.
-- Principal không có Admin role hoặc permission trả 403 DESIGN_ACCESS_DENIED.
-- Claim shape, Admin guard, permission provider, tenant/scope boundary và principal ID mapping là SOURCE_REQUIRED.
+- Principal không có ADMIN role trả 403 DESIGN_ACCESS_DENIED; finer permission enforcement chưa được implement vì SOURCE_REQUIRED.
+- Shared helper kiểm tra Bearer/JWT và trả numeric user ID từ `sub`; actor mapping sang legacy users.id là DERIVED. Tenant/scope và finer permission vẫn SOURCE_REQUIRED.
 - Không dùng shared Student guard trong app/utils/auth.py.
 
 ### 0.2. Thứ tự kiểm tra
 
-- Authorization thành công trước khi đọc/khóa course row để không tiết lộ course tồn tại cho principal không hợp lệ.
+- Với body hợp lệ, view xác thực trước path parsing và mọi query; FastAPI body/schema validation có thể trả 422 trước khi gọi view.
 - Không dùng owner/mentor ID để thay thế Admin permission.
 
 ### 0.3. Query/check quyền
 
 | Target table/API | Column/field | Condition/value | Remarks |
 |---|---|---|---|
-| Authorization header | Bearer credential | Token hợp lệ/chưa hết hạn | DIRECT; route chưa wire. |
-| JWT claims/policy | Admin role | Principal có role Admin | DIRECT requirement; claim source SOURCE_REQUIRED. |
+| Authorization header | Bearer credential | Token hợp lệ/chưa hết hạn, shared role ADMIN | DIRECT auth requirement + current shared guard. |
+| JWT claims/policy | Admin role | Principal có role ADMIN | DIRECT role requirement; numeric sub comes from shared auth helper. |
 | Admin policy | course-management permission | Permission được cấp | AC-32 precondition DIRECT; policy source SOURCE_REQUIRED. |
 
 <a id="step-1-validate-data-input"></a>
@@ -76,10 +76,10 @@ Admin Bearer principal
 
 - Catalog/diagram không khai báo body; {status} là DERIVED vì PATCH phải chỉ định trạng thái đích.
 - Semantic target set theo catalog: draft, published, suspended.
-- Candidate JSON values là DRAFT, PUBLISHED, SUSPENDED, theo legacy default DRAFT và current API #06 filter PUBLISHED; exact enum/casing SOURCE_REQUIRED.
+- Runtime accepts `DRAFT`, `PUBLISHED`, `SUSPENDED`; this uppercase set is DERIVED from catalog labels + legacy/current convention, not an approved reusable enum.
 - Chỉ validate target membership theo candidate set; không áp transition matrix hoặc content-readiness rule chưa có nguồn.
-- Giá trị thiếu/sai có thể dùng 422 DESIGN_VALIDATION_ERROR; error code tồn tại trong catalog, field behavior cần owner duyệt.
-- Same-status/no-op và audit behavior khi retry cần owner duyệt.
+- Missing/unknown target and extra body fields map to 422 DESIGN_VALIDATION_ERROR through strict Pydantic request validation; field/body behavior is DERIVED.
+- Same-status request is a DERIVED no-op: return current Course without timestamp update or duplicate audit append.
 - Idempotency-Key chưa là direct header; API guideline retryable-mutation semantics cần quyết định.
 
 ### 1.3. Public visibility effect
@@ -95,19 +95,17 @@ Admin Bearer principal
 
 ### 2.1. Q1 — đọc và khóa course theo ID
 
-SQL candidate chỉ dựa trên legacy infra/postgres/study-server/DB.sql. Live schema chưa xác minh.
+SQL lấy từ API #76 source và legacy candidate DDL; live schema chưa xác minh.
 
 ~~~sql
-SELECT
-    c.id,
-    c.status
-FROM courses AS c
-WHERE c.id = :course_id
+SELECT status
+FROM courses
+WHERE id = :course_id
 FOR UPDATE
 ~~~
 
 - Nếu Q1 không có row: rollback và trả 404 DESIGN_RESOURCE_NOT_FOUND.
-- FOR UPDATE giữ trạng thái không đổi trong khi update/audit candidate cùng transaction.
+- FOR UPDATE giữ trạng thái không đổi trong khi update/audit cùng transaction.
 - Không lọc PUBLISHED; Admin quản lý mọi trạng thái.
 
 ### 2.2. Q2 — response projection sau update
@@ -143,7 +141,7 @@ WHERE c.id = :course_id
 
 ### 3.1. M1 — update trạng thái course
 
-Mutation candidate trên legacy courses; không phải runtime SQL đã được phê duyệt.
+SQL hiện trong source, target schema là legacy DDL candidate; live schema chưa xác minh.
 
 ~~~sql
 UPDATE courses
@@ -162,12 +160,11 @@ RETURNING id, status
 ### 3.2. M2 — audit event bắt buộc về mặt nghiệp vụ
 
 - AC-32 diagram trực tiếp yêu cầu ghi audit log cùng status update.
-- Legacy Study DDL/ERD 16-table model không có audit relation.
-- V1-PILOT có audit_events, nhưng actor_subject_id và resource_id là UUID; pilot courses.id cũng UUID, khác API #76 course_id:int64.
-- Do chưa chọn schema/runtime, không viết INSERT SQL, action name hoặc changes JSON giả định.
-- Chỉ hoàn tất thành công khi một audit event được ghi theo physical mapping và transaction đã được phê duyệt.
-- Nếu audit write thất bại sau M1, rollback status; candidate trả 500 DESIGN_INTERNAL_ERROR.
-- Actor ID, resource ID, old/new status, action, outcome, trace binding và retention/append-only policy cần schema owner xác nhận.
+- Legacy BIGINT IDs khớp API path và numeric JWT `sub`; V1-PILOT audit_events dùng UUID và không tương thích trực tiếp.
+- Runtime fallback ghi relation `course_status_audit_logs` trong migration 010 và legacy `DB.sql`; physical mapping gồm course_id, actor_user_id, previous_status, new_status, changed_at là DERIVED.
+- SQL: `INSERT INTO course_status_audit_logs(course_id, actor_user_id, previous_status, new_status) VALUES (:course_id, :actor_user_id, :previous_status, :new_status)`.
+- Audit insert nằm cùng transaction với status update; lỗi insert rollback toàn bộ và trả 500 DESIGN_INTERNAL_ERROR.
+- Relation/index/FK là candidate; live schema, retention and database-enforced append-only policy chưa xác minh.
 
 ### 3.3. Transaction candidate
 
@@ -175,12 +172,12 @@ RETURNING id, status
 BEGIN
   Q1 SELECT ... FOR UPDATE
   M1 UPDATE courses.status + updated_at
-  M2 append audit event (physical mapping SOURCE_REQUIRED)
+  M2 INSERT course_status_audit_logs(actor, old status, new status)
   Q2 SELECT updated Course + UserSummary
 COMMIT
 ~~~
 
-Nếu Q1 không có course thì rollback/404. Nếu update, audit, projection, mapping hoặc commit lỗi thì rollback và trả 500 candidate. Study DB helpers không commit; caller/use case sở hữu transaction.
+Nếu Q1 không có course thì rollback/404. Nếu update, audit insert, projection, mapping hoặc commit lỗi thì rollback và trả 500. Same-status request bỏ qua M1/M2 nhưng đọc projection rồi commit transaction để giải phóng row lock. Study DB helpers không commit; view sở hữu transaction.
 
 <a id="step-4-map-response"></a>
 
@@ -191,7 +188,7 @@ Nếu Q1 không có course thì rollback/404. Nếu update, audit, projection, m
 - Map mentor thành UserSummary id/full_name/avatar_url; orphan/missing mentor xử lý 500 candidate, cần owner duyệt.
 - Omit category do không có course-category relation source-backed.
 - Serialize price decimal chính xác dạng string; legacy DDL cho phép NULL trong khi Course yêu cầu giá trị.
-- Return status mà Q1/M1/Q2 xác nhận; enum/casing cần owner duyệt.
+- Return status đã được Q1/M1/Q2 xác nhận; candidate enum/casing vẫn DERIVED.
 - Không đưa audit event vào response vì catalog Course/Page không khai báo field đó.
 
 <a id="step-5-tra-ve-response"></a>
@@ -200,8 +197,7 @@ Nếu Q1 không có course thì rollback/404. Nếu update, audit, projection, m
 
 - Thành công: HTTP 200 DESIGN_RESOURCE_UPDATED, envelope ApiEnvelope&lt;Page&lt;Course&gt;&gt;.
 - Lỗi: giữ đúng 401/403/404/422/500 và business codes theo catalog.
-- Error guideline yêu cầu data:null; current helper mặc định {}. Khi wire route cần sửa/điều chỉnh integration theo guideline.
-- DESIGN_CONTRACT_PATHS chưa có Admin course status path. Middleware so sánh exact request.url.path; khi implement phải thêm route-aware/dynamic path match cho numeric course_id, không chỉ thêm template string có {course_id}.
+- Error helper mặc định `data:null`. Middleware có template riêng `/api/v1/admin/courses/{course_id}/status`; HTTP tests xác nhận validation envelope local.
 - Không thêm HTTP status hoặc business code ngoài tập API #76 khai báo.
 - Sau thành công, UI reload course management theo AC-32.
 
@@ -209,19 +205,19 @@ Nếu Q1 không có course thì rollback/404. Nếu update, audit, projection, m
 
 | Request item | Source/use | Query/response use | Rule/status |
 |---|---|---|---|
-| Authorization | Bearer JWT | Admin/course-management authorization and audit actor | DIRECT requirement; claim/policy/actor binding SOURCE_REQUIRED |
+| Authorization | Bearer JWT | Shared ADMIN guard and audit actor | DIRECT requirement; role guard source-backed; finer permission is SOURCE_REQUIRED; actor BIGINT mapping DERIVED |
 | Idempotency-Key | Not direct in catalog | No runtime/query use until approved; may deduplicate retry/audit effects | API guideline scope and endpoint retry semantics SOURCE_REQUIRED |
 | course_id | Path int64 required | Q1, M1 and Q2 predicates | DIRECT; physical legacy mapping candidate |
-| Body status | Candidate required CourseStatus | M1 target; returned in updated Course | DERIVED; members/casing unresolved |
+| Body status | Strict candidate enum | M1 target; returned in updated Course | DERIVED; runtime accepts DRAFT/PUBLISHED/SUSPENDED |
 | Query | None | None | DIRECT |
 
 ## Query Matrix
 
 | Step | Type | Source/target | Column/condition | Purpose/status |
 |---|---|---|---|---|
-| Q1 | SELECT FOR UPDATE | Legacy courses AS c | c.id, c.status; c.id = :course_id | Read/lock target; DERIVED candidate, live schema unknown |
+| Q1 | SELECT FOR UPDATE | Legacy courses | status; id = :course_id | Read/lock target; source-backed SQL against legacy candidate, live schema unknown |
 | M1 | UPDATE | Legacy courses | status=:status, updated_at=CURRENT_TIMESTAMP; id=:course_id | Set requested target; DERIVED candidate |
-| M2 | INSERT logical audit | No approved physical source | Status change + Admin actor | Direct diagram intent; physical relation SOURCE_REQUIRED; no guessed SQL |
+| M2 | INSERT | course_status_audit_logs | course_id, actor_user_id, previous_status, new_status | Append successful status change; physical mapping DERIVED, live schema unknown |
 | Q2 | SELECT + LEFT JOIN | Legacy courses AS c, users AS m | c.id=:course_id; m.id=c.mentor_id | Updated response projection, candidate follows #74/#75 |
 | None | COUNT / enrollment/content scan | N/A | N/A | Not in STATUS branch; do not add counter/policy query |
 
@@ -230,9 +226,9 @@ Nếu Q1 không có course thì rollback/404. Nếu update, audit, projection, m
 | Operation | Target | Condition | Fields/effect | Status |
 |---|---|---|---|---|
 | M1 UPDATE | Legacy courses candidate | id=:course_id | Set status; candidate set updated_at; preserve remaining course metadata | DERIVED; live schema unknown |
-| M2 audit append | Logical audit effect | After accepted status update | Record Admin/course status change; physical table, keys and field mapping unknown | Diagram intent DIRECT; physical mapping SOURCE_REQUIRED |
+| M2 audit append | course_status_audit_logs | After changed status | Record course, numeric Admin user ID, previous/new status, database timestamp | Diagram intent DIRECT; physical mapping DERIVED |
 | Enrollment/content mutation | None | No condition in branch | No writes or bulk updates | N/A; #77/policy sources separate |
-| Transaction | Caller-owned Study session | Q1→M1→M2→Q2 | Commit only when update and required audit/projection succeed | DERIVED; no API #76 runtime |
+| Transaction | Study Session | Q1→M1→M2→Q2; same-status Q1→Q2 | Commit after Course mapping; update and audit are atomic | Source implementation; fake DB tests only, live schema unknown |
 
 ## Response Source Matrix
 
@@ -258,7 +254,7 @@ Nếu Q1 không có course thì rollback/404. Nếu update, audit, projection, m
 | data.pagination.total_pages | int32 | Singleton Page | Fixed 1; DERIVED |
 | meta | object | Envelope | {} candidate; no counters in schema |
 | traceId | uuid | Request trace | Shared middleware; propagate/generate |
-| Error data | null by guideline | Current helper returns {} by default | DISCREPANCY; route absent |
+| Error data | null by guideline | Current helper returns null by default | MATCH; local HTTP tested |
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `3. Data mapping`

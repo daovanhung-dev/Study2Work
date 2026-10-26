@@ -9,58 +9,45 @@ status: "Draft — Needs Confirmation"
 
 # Data Mapping
 
-## Response Source Matrix — contract trực tiếp
+## Response Source Matrix — local runtime
 
-| Response field | Contract type | Candidate source | Mapping/null rule | Evidence |
+| Response field | Type | Runtime source | Mapping rule | Status |
 |---|---|---|---|---|
-| success | boolean | Envelope branch | true khi thành công; false khi lỗi | Reusable schema; endpoint UNWIRED. |
+| success | boolean | Envelope branch | true khi thành công; false khi lỗi | Shared runtime convention. |
 | businessCode | string | Catalog | Success literal DESIGN_RESOURCE_RETRIEVED | DIRECT. |
-| message | string | Application message | Exact text chưa được quy định | SOURCE_REQUIRED. |
-| data.items[] | Course[] | Catalog reusable Course | Giữ nguyên direct type | DIRECT; không chứa event metric. |
-| items[].id | int64 | Legacy candidate courses.id | Course ID scoped bởi path | Candidate; live schema chưa xác minh. |
-| items[].title | string | Legacy candidate courses.name | name sang title | Candidate mapping; không liên quan event measure. |
-| items[].description | string? | courses.description | Optional/null policy cần xác nhận | Legacy candidate. |
-| items[].thumbnail_url | uri? | courses.thumbnail_url | Optional/null policy cần xác nhận | Legacy candidate. |
-| items[].price | decimal-string | courses.price | Serialize dạng decimal string | Candidate; currency/precision không được API #66 nêu. |
-| items[].status | CourseStatus | courses.status | Trả enum đã lưu nếu schema được chọn | Enum members chưa xác nhận. |
-| items[].mentor | UserSummary | Candidate owner relation qua courses.mentor_id và users | id, full_name, avatar_url tùy chọn | Candidate; identity/owner join chưa được duyệt. |
-| items[].category | Category? | Không có relation được phê duyệt | Không tự thêm join/object | SOURCE_REQUIRED. |
-| data.pagination | PageMeta | Catalog reusable Page | page, size, total, total_pages | DIRECT schema; request không khai báo page/size. |
-| meta | object | Envelope convention | Empty object chỉ là ví dụ | Runtime behavior chưa xác minh cho #66. |
-| traceId | uuid | Request trace | Propagate request trace | Shared convention; route absent. |
+| message | string | View | Stable success message | Current API #66 source. |
+| data.tracked_lesson_accesses | int64 | SQL aggregate | Count mỗi cặp user_id/lesson_id duy nhất có last_accessed_at trên lesson PUBLISHED của course | DERIVED progress-state proxy, không phải event count. |
+| data.students_with_activity | int64 | SQL aggregate | Count distinct user_id trong các cặp proxy; users.role phải là STUDENT | DERIVED. |
+| data.last_activity_at | datetime? | SQL MAX | MAX last_accessed_at; null khi aggregate rỗng | DERIVED current-state timestamp. |
+| meta | object | Shared envelope | Empty object từ helper | Current source behavior. |
+| traceId | string | Request trace | Propagate trace ID | Shared runtime convention. |
 
 ## Query Matrix
 
 | Query ID | Operation | Relation/columns | Predicate/group | Result/branch | Status |
 |---|---|---|---|---|---|
-| Q1 | SELECT candidate | Legacy candidate courses.id, courses.mentor_id | Course ID match; direct owner candidate | Existing/missing/access branch | DERIVED; principal mapping and live schema unresolved. |
-| Q2 | Aggregate concept | No approved learning-event relation or columns | Conceptually scoped to course; no physical SQL specified | Candidate metrics only | SOURCE_REQUIRED; reviewed schemas do not provide a learning-event ledger. |
+| Q1 | SELECT course owner | courses.id, courses.mentor_id | id = course_id | Missing → 404; owner mismatch → 403 | Legacy DDL-backed local mapping; live schema unverified. |
+| Q2 | Aggregate activity proxy | lesson_progress.user_id, lesson_id, last_accessed_at; lessons.id, course_id, status; users.id, role; courses.id, mentor_id | Course owner; lesson PUBLISHED; user role STUDENT; timestamp non-null; GROUP BY user_id, lesson_id | Pair count, distinct Student count, MAX timestamp; empty yields zero/zero/null | DERIVED from checked-in legacy DDL; not learning-event history. |
 
-Do not use lesson_progress or progress_snapshots as event history. Do not use audit_events or outbox_events without an approved domain mapping.
+## Aggregate semantics
 
-## Candidate analytics mapping — DERIVED, not wire contract
-
-| Candidate field | Type | Logical source needed | Candidate rule | Gap |
-|---|---|---|---|---|
-| total_learning_events | int64 | Approved event record for course | Count qualifying learning events from start to current time | Relation, event definition, dedup key and retention SOURCE_REQUIRED. |
-| students_with_learning_events | int32 | Event actor linked to Student | Count distinct Student actors with at least one qualifying event | Actor identity/role and assignment mapping SOURCE_REQUIRED. |
-| last_activity_at | date-time? | Event occurrence timestamp | Maximum event time; null for zero events | Timestamp field and timezone/precision SOURCE_REQUIRED. |
-
-Candidate item definition is intentionally conceptual. No physical table name, column name, SQL, status enum or index is proposed.
-
-## Candidate aggregation decisions to review
-
-- Scope: all-time-to-date because API #66 declares no from/to query; DERIVED.
-- Empty event set: counts are zero and last_activity_at is null; DERIVED.
-- Duplicates/retries: deduplication rule is not defined; SOURCE_REQUIRED.
-- Event taxonomy: only approved learner activity may count; exact event names are SOURCE_REQUIRED.
-- Snapshot/cache and freshness are unspecified; do not infer either.
+- Duplicate progress rows for the same Student/lesson are collapsed by grouping the pair.
+- A pair is counted only when at least one current progress row has non-null last_accessed_at.
+- The latest available timestamp in the pair is MAX(last_accessed_at).
+- Only lessons whose status is PUBLISHED and users whose role is STUDENT are included.
+- No active-enrollment predicate is applied; the projection counts Student activity rows still present in progress state.
+- The aggregate is all-time over current stored markers; it cannot recover repeated access events overwritten by current-state updates.
+- Empty aggregate returns tracked_lesson_accesses=0, students_with_activity=0, last_activity_at=null.
 
 ## Mutation Matrix
 
 | Operation | Target | Condition | Fields | Status |
 |---|---|---|---|---|
 | None | N/A | GET is read-only | No INSERT/UPDATE/DELETE | N/A — READ-ONLY API |
+
+## Source boundary
+
+Legacy DDL provides the queried identifiers and last-access marker. V1-PILOT progress facts/snapshots and generic audit/outbox relations are not read. The API does not claim event-frequency, retry-deduplication, retention, or historical semantics.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

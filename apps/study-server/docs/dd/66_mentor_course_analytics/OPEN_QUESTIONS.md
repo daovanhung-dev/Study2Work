@@ -1,26 +1,33 @@
 # Open Questions — Study API #66
 
-Status: Draft — Needs Confirmation. Các câu hỏi sau cần được giải quyết trước khi endpoint có thể implementation-ready.
+Status: Draft — Needs Confirmation. Local runtime dùng activity proxy vì schema hiện có không lưu event history.
 
-1. **Response conflict:** Catalog trả Page<Course>, còn AC-26 yêu cầu aggregate learning events. Có sửa contract thành CourseLearningAnalytics không?
-2. **Metric set:** Có chấp nhận ba metric candidate total_learning_events, students_with_learning_events và last_activity_at không? Có cần breakdown theo event type, learner, ngày hoặc tỷ lệ không?
-3. **Event source:** Learning event được tạo/lưu ở đâu? Legacy DDL không có event history; V1-PILOT progress facts và audit/outbox chưa phải nguồn được xác nhận.
-4. **Event taxonomy:** Hành vi nào được tính là learning event? Có loại view/start/progress/completion khỏi event count không?
-5. **Dedup/retries:** Event có immutable ID nào để chống đếm trùng? Quy tắc xử lý retry và event đến trễ là gì?
-6. **Time window:** Request không có from/to; dùng all-time-to-date hay cần bổ sung bộ lọc thời gian?
-7. **Student identity:** Event actor được liên kết với Student và course enrollment bằng khóa nào? Có loại tài khoản/record đã xóa hoặc withdrawn không?
-8. **Freshness:** Aggregate tính trực tiếp, dùng snapshot hay cache? Freshness/SLA nào được yêu cầu?
-9. **Mentor authorization:** JWT principal map đến Mentor ID nào? Mentor được assign course có được xem không? 403/404 privacy order là gì?
-10. **Pagination:** Contract Page<Course> có PageMeta nhưng không có page/size request. Nếu giữ response này, semantics và giới hạn ra sao?
-11. **Empty course:** Candidate đề xuất count=0 và last_activity_at=null khi không có event; cần xác nhận cùng null serialization.
-12. **Group AC-26:** Macro-review #65–#67 đã hoàn tất ở mức tài liệu; xem [VERIFICATION_REPORT](./VERIFICATION_REPORT.md). Còn mở: contract Page<Course>, pagination, event source/metric definitions, shared Mentor authorization/schema/error policy và reconciliation với tiến độ #65/#67.
+## Quyết định DERIVED đang dùng cục bộ
 
-Không dùng generic audit events hoặc progress state để lấp event source cho tới khi domain owner xác nhận.
+1. Activity proxy lấy từ lesson_progress.last_accessed_at, trên lesson PUBLISHED và user.role=STUDENT.
+2. tracked_lesson_accesses đếm cặp user_id/lesson_id phân biệt có timestamp; không đếm số lần truy cập hoặc learning events.
+3. students_with_activity đếm Student phân biệt trong các cặp proxy.
+4. last_activity_at là MAX timestamp đang lưu; empty aggregate trả 0, 0, null.
+5. Course permission dùng direct courses.mentor_id so với JWT sub; course thiếu trả 404, course owner khác trả 403.
+6. Local response là summary object để phục vụ mục tiêu AC-26; catalog/diagram vẫn ghi ApiEnvelope<Page<Course>>.
+7. Request không khai báo page/size hoặc from/to; endpoint không thêm query params.
+8. DD và fallback vẫn Draft — Needs Confirmation; fake-DB test không chứng minh schema live/deployment.
 
-## Kết quả macro-review #65–#67
+## Cần product/domain owner xác nhận
 
-- #65 đếm progress của learner trong roster; #66 chỉ đếm learning event theo định nghĩa/source được duyệt; #67 trả current lesson state của Student được chọn. `students_with_learning_events` không phải enrollment count và `last_activity_at` không được lấy từ `lesson_progress.last_accessed_at` nếu chưa có domain mapping.
-- #65/#67 dùng cùng candidate PUBLISHED lesson set và formula; cả hai vẫn cần duyệt status, duplicate-row, missing-row, rounding và empty rules.
-- Tất cả direct response vẫn `Page<Course>` và thiếu request pagination inputs; không tự đổi contract.
-- Shared Mentor scope, live schema, error envelope `{}`/`null` và middleware allowlist còn cần xử lý trước implementation.
+1. Có chấp nhận activity proxy từ current progress state khi AC-26 yêu cầu learning events?
+2. Có event ledger khác hoặc event-producing source chưa nằm trong checked-in DDL không? Nếu có, cung cấp relation, taxonomy, actor mapping, event key/timestamp, retention và retry/dedup rule.
+3. Contract success có được đổi từ Page<Course> sang activity summary không? Nếu giữ Page<Course>, metrics sẽ được trả ở field/schema nào?
+4. Activity có cần giới hạn enrollment ACTIVE, lesson status, loại event hoặc khoảng thời gian không?
+5. Mentor access chỉ gồm direct owner hay còn course assignment? Xác nhận live identity/schema và 403/404 privacy order.
+6. Null/timezone/freshness/retention expectations cho last_activity_at là gì?
 
+## Macro-review AC-26 #65–#67
+
+- #65 trả roster progress; #66 hiện trả các dấu activity proxy; #67 trả progress của Student được chọn.
+- Không có server-to-server calls giữa ba API.
+- students_with_activity không phải enrollment count; tracked_lesson_accesses không phải learning-event count.
+- API #65/#67 và #66 có nguồn/schema khác nhau nhưng dùng cùng legacy course owner boundary cục bộ.
+- DD #67 vẫn mô tả Mentor guard chưa có và error helper mặc định data {}; hiện các mô tả này đã stale vì shared guard nhận MENTOR và error helper trả data null. API #67 vẫn UNWIRED; reconcile trong phiên triển khai #67.
+- Catalog/diagram đều vẫn khai báo Page<Course>, thiếu pagination inputs; #66 summary response là discrepancy DERIVED.
+- Runtime checks cho #66/#65 là fake-DB HTTP tests; live schema, migration và deployment chưa được xác nhận.

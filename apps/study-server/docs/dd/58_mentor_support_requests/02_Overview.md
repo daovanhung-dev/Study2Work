@@ -20,8 +20,8 @@ status: "Draft — Needs Confirmation"
 | Purpose | Đọc yêu cầu hỗ trợ trong phạm vi Mentor để chọn request và mở thread bằng API #59. |
 | Consumer/Actor | Mentor |
 | Authentication | Bearer JWT |
-| Authorization | Role Mentor; chỉ đọc request thuộc phạm vi phụ trách theo AC-24. Scope và identity binding chưa có source runtime. |
-| Basis | Catalog và AC-24 là DIRECT; quy tắc lọc/mapping vật lý còn DERIVED/SOURCE_REQUIRED. |
+| Authorization | Role Mentor; numeric JWT subject chỉ đọc request thuộc course có `courses.mentor_id` bằng subject. Fallback theo direct-owner pattern của Mentor API Study hiện có. |
+| Basis | Method/path/actor/filter fields là DIRECT. BIGINT support tables, direct-owner predicate, collection response và projection rules là `DERIVED` theo chỉ dẫn của user; live schema/deployment chưa xác minh. |
 | Status | Draft — Needs Confirmation |
 | Transaction | N/A — READ-ONLY API |
 | Side effects | Không có mutation được khai báo. |
@@ -44,8 +44,9 @@ status: "Draft — Needs Confirmation"
 
 ## Tables read
 
-- Chưa chốt physical table cho API #58.
-- V1-PILOT candidate: support_tickets, support_messages, learner_profiles, file_objects; model khác ID/quan hệ, không chứng minh runtime schema.
+- `support_requests`, `support_messages`, `support_message_uploads`, `courses`, `users`, `uploads`.
+- Support tables có DDL trong legacy BIGINT bootstrap và migration 008; chưa chứng minh đã áp dụng vào live DB.
+- V1-PILOT UUID support tables là model riêng, không được dùng trong query API #58.
 
 ## Tables write
 
@@ -53,44 +54,45 @@ status: "Draft — Needs Confirmation"
 
 ## Mục chú ý
 
-- Endpoint/name là danh sách nhưng catalog và diagram khai báo response đơn ApiEnvelope<SupportRequest>; chưa có Page, array wrapper, page hoặc sort.
-- Query course_id là optional nhưng support_tickets của V1-PILOT không có course_id hoặc quan hệ course.
-- Query status là string; catalog không định nghĩa SupportStatus values, default, casing hoặc xử lý chuỗi rỗng.
-- SupportRequest yêu cầu int64 IDs, course_id, Student/UserSummary, message IDs và UploadAsset[]; V1-PILOT dùng UUID và không có projection tương thích.
-- API #59 đọc thread riêng; chưa rõ #58 có tải toàn bộ messages[] của từng request hay không, dù schema response bắt buộc messages[].
-- Source Study hiện không có route, module hoặc test cho API #58.
+- Endpoint/path là danh sách; fallback chọn `ApiEnvelope<SupportRequest[]>`, empty result là `[]`; không thêm pagination vì catalog không khai báo page/size.
+- Query `course_id` và `status` kết hợp bằng AND; `status` là exact match. DDL cho phép `OPEN`, `IN_PROGRESS`, `WAITING_LEARNER`, `RESOLVED`, `CANCELLED`.
+- `support_requests.course_id` và `student_id` dùng BIGINT FK tới `courses`/`users`; Mentor scope nối qua `courses.mentor_id`.
+- Response list tải toàn bộ `messages[]` theo reusable schema; message order `created_at ASC, id ASC`; request order `created_at DESC, id DESC`.
+- Attachments dùng bảng nối có thứ tự và `uploads` metadata; resolver giới hạn cùng author, course, role-purpose và `UPLOADED`.
+- Query `course_id` parse/range errors trả 422 `DESIGN_VALIDATION_ERROR`; catalog/diagram được đồng bộ với shared validation handler.
 
 ## Assumptions
 
-- Nếu cả hai query filter được gửi, candidate áp dụng đồng thời bằng AND; DERIVED, cần xác nhận.
-- status candidate được so khớp nguyên giá trị được gửi; không trim, đổi casing hay gán default khi chưa có rule duyệt.
-- Không tự chọn bản ghi đầu tiên, cắt danh sách hoặc đổi response thành array/Page để che mâu thuẫn cardinality.
+- Nếu cả hai query filter được gửi, áp dụng AND; lựa chọn `DERIVED`.
+- `status` được so khớp chính xác; không trim hoặc đổi casing. Giá trị chưa biết trả danh sách rỗng.
+- Không phân trang hoặc cắt `messages[]`; collection trả đủ dữ liệu theo reusable schema.
+- Khi `resolved_at` là NULL, trường bị omit theo response serialization convention hiện tại.
 
 ## Conflicts
 
-- AC-24 mô tả mở danh sách và endpoint plural nhưng catalog/diagram trả singular SupportRequest.
-- Legacy ERD/DB.sql không có support tables; V1-PILOT có UUID support_tickets/support_messages nhưng thiếu course relation và khác projection.
-- API Guidelines yêu cầu error data null; current helper mặc định {}; API #58 chưa có trong DESIGN_CONTRACT_PATHS.
-- Query course_id yêu cầu lọc course nhưng schema hiện có không xác nhận relation.
+- Catalog/diagram ban đầu khai báo singleton; fallback collection đã được đồng bộ vào catalog, diagram và DD.
+- Legacy DB ban đầu không có support tables; DDL/migration 008 bổ sung BIGINT model theo Study runtime conventions. Live migration chưa xác minh.
+- V1-PILOT UUID support model không được dùng bởi API #58.
+- API #58 được thêm vào `DESIGN_CONTRACT_PATHS`; error envelope dùng shared helper, `data:null`.
 
 ## Security note
 
-- AC-24 giới hạn dữ liệu theo Mentor. Không trả request ngoài scope hoặc dùng course_id client gửi làm authorization.
-- Pilot assigned_to_subject_id là nullable UUID candidate; Mentor principal mapping và assignment semantics chưa xác nhận.
-- Shared current-user guard hiện chỉ chấp nhận STUDENT; không dùng như Mentor guard.
+- AC-24 giới hạn dữ liệu theo Mentor. Mọi list/message query nối `courses.mentor_id = :mentor_id`; query `course_id` chỉ là filter bổ sung.
+- Dùng shared role-aware guard với `role="MENTOR"`; caller subject là numeric user ID theo Study token contract hiện tại.
+- Upload chỉ trả khi link message rõ ràng và metadata khớp author, course, `SUBMISSION` cho Student hoặc `LECTURE` cho Mentor, cùng status `UPLOADED`.
 
 ## Performance note
 
-- Không có pagination, page size, thứ tự request hoặc giới hạn messages trong contract.
-- Nếu messages[] đầy đủ cho từng request, payload có thể lớn; cần xem lại sau khi cardinality/projection được xác nhận.
-- Không suy thứ tự API từ index của pilot schema.
+- Không có pagination hoặc message limit trong catalog; collection/thread response có thể lớn. Đây là residual risk của fallback.
+- API #59 vẫn tải thread riêng, nên #58 full messages có thể lặp dữ liệu nhưng khớp reusable `SupportRequest` schema.
+- Stable ordering được chọn từ timestamp/ID, không suy từ index của pilot schema.
 
 ## Trạng thái liên quan
 
-- [Plan và ma trận nguồn](./PLAN_RESULT.md).
+- [Plan, fallback decisions và ma trận nguồn](./PLAN_RESULT.md).
 - [Open Questions](./OPEN_QUESTIONS.md).
 - [Verification report](./VERIFICATION_REPORT.md).
-- Macro-review AC-24 #58–#61 chờ #59–#61; chưa đánh dấu hoàn tất.
+- Macro-review AC-24 #58–#61: APIs #59–#61 cần reuse support schema, direct-owner predicate và attachment resolver trong các phiên sau.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

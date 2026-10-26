@@ -2,10 +2,10 @@
 
 ## Phạm vi
 
-- Kiểm chứng tĩnh nội dung Markdown API #85.
-- Không đổi source code, schema, catalog hoặc diagram.
-- Không chạy application tests; route/module/test API #85 hiện không tồn tại.
-- Không tạo ZIP theo workflow của server-study.
+- API #85 locally wired at `PATCH /api/v1/admin/lessons/{lesson_id}/status`.
+- Added module, route-template middleware entry, migration source 012, focused HTTP tests, DD and Study Server context entries.
+- DD remains `Draft — Needs Confirmation`; live schema/migration deployment and dedicated AC-34 permission are not verified.
+- No ZIP created under the Study Server workflow.
 
 ## Template fingerprints
 
@@ -26,23 +26,25 @@ SHA-256 baseline của bộ template registry createDD-markdown:
 
 | Check | Result | Status |
 |---|---|---|
-| Catalog và AC-34 contract | PATCH path, Admin/Bearer, path ID, Lesson envelope, 200 và exact error set preserved; body absent in source. | Static pass |
-| Current source | Không có Admin lesson route/module/test; shared guard chỉ Student; live schema chưa xác minh. | Static pass; runtime not verified |
-| Schema mapping | Legacy BIGINT và V1-PILOT UUID/versioned được giữ riêng; audit intent direct nhưng physical mapping SOURCE_REQUIRED. | Static pass with open questions |
-| Exact package | Đúng 11 files: 8 template sheets và 3 reports. | Pass |
-| Appendix parity | Cả 8 suffix byte-match trực tiếp với registered `DD_API_Template_MD`. | 8/8 pass |
-| Contract/JSON | Success code và năm error codes khớp chính xác catalog; 4 JSON examples parse. | Pass |
-| Markdown tables/fences/links/whitespace | Across all 11 files: 39 tables / 410 data rows have consistent widths, 14 fences balance, 41 local links/anchors resolve, no trailing whitespace. | PASS |
-| git diff --check | Không có diagnostics. | Pass |
-| Application tests | Không chạy; docs task. | Not run |
-| Context validator | Không đổi context page/registry. | Not applicable |
+| Catalog and AC-34 | Direct method/path/auth/response/error set retained; body/status/audit physical mapping explicitly DERIVED. | Source review |
+| Runtime behavior | Shared ADMIN guard; signed-int64 path validation; lock/update/audit/map/commit flow. | HTTP tested |
+| Status semantics | `{status}` and `DRAFT/PUBLISHED/SUSPENDED` reuse API #76 candidate; no transition matrix; same-status no-op. | DERIVED; owner approval open |
+| Schema mapping | Legacy BIGINT Lesson + migration 012 audit; V1-PILOT UUID remains separate. | Local source only; deployment unverified |
+| Focused API #85 tests | 28 passed. | VERIFIED |
+| Linked #09/#47/#48/#82–#85 tests | 132 passed. | VERIFIED |
+| Full Study suite | 1078 passed; one upstream Starlette/httpx deprecation warning. | VERIFIED |
+| Ruff | `ruff check app tests` passes. | VERIFIED |
+| OpenAPI | 50 `/api/v1` paths / 56 operations; #85 body required; 401/403/404/422/500 declared. | VERIFIED |
+| DD package/appendix/static checks | 11 files; 8/8 appendix suffixes exact; 37 tables / 430 rows; 18 fence markers balanced; 4 JSON blocks parse; 40 local links resolve; no trailing whitespace. | PASS |
+| `git diff --check` | No diagnostics. | PASS |
+| Context validator | API #85 paths are present; validator fails only on pre-existing missing DB Admin context/source and unavailable baseline commit `9a70eb6764a6587093a92d3bd7e4cc0bea1651c4`. `--skip-drift` removes baseline findings but still fails on DB Admin scope. | PARTIAL |
 
 ## Limits
 
-Static documentation checks không chứng minh API implementation, SQL executability, live-schema compatibility, audit transaction behavior hoặc approval của status policy.
+Fake DB HTTP tests cannot prove SQL execution against live PostgreSQL, migration application, current production schema, fine-grained permission enforcement or owner approval of the status policy.
 
 ## AC-34 macro-review
 
-- Status: `VERIFIED_WITH_OPEN_QUESTIONS`; document-level review only, not owner approval or runtime verification.
-- API #85 is the sole status-plus-audit branch in this group. API #86 does not add audit by analogy; both mutation paths return to API #82 after success.
-- See the [consolidated review matrix](../86_admin_lesson_delete/VERIFICATION_REPORT.md#ac-34-macro-review) for cross-API findings and unresolved persistence/visibility questions.
+- API #85 owns status and audit; #84 remains metadata update; #86 remains delete; all successful branches return to API #82 list reload.
+- Macro-review remains `VERIFIED_WITH_OPEN_QUESTIONS`, not owner approval or deployed verification.
+- See the [consolidated review matrix](../86_admin_lesson_delete/VERIFICATION_REPORT.md#ac-34-macro-review).

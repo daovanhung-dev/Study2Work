@@ -1,26 +1,25 @@
 # OPEN_QUESTIONS — Study API #67
 
-Status: Draft — Needs Confirmation. Các câu hỏi cần được chốt trước khi biến candidate thành implementation contract.
+Status: Draft — Needs Confirmation. Runtime dùng fallback DERIVED dưới đây; business/contract owner cần phê duyệt hoặc thay đổi trước khi coi đây là contract chuẩn.
 
-1. **Response contract:** Catalog trả `Page<Course>`, còn AC-26 cần progress của một Student. Có sửa sang `StudentCourseProgress` không?
-2. **Progress scope:** #67 chỉ chi tiết lesson progress như candidate #65, hay cần gồm quiz/assignment như flow Student AC-18/API #37?
-3. **Enrollment eligibility:** Student phải có enrollment trạng thái nào để xuất hiện ở #65 và được xem ở #67? Có gồm completed/withdrawn/hidden account không?
-4. **Mentor authorization:** JWT principal ánh xạ tới Mentor ID nào? Quyền dựa trên owner, assignment hay cả hai? Cần cùng rule với các API AC-26.
-5. **403/404 privacy:** Course không tồn tại/ngoài scope và Student không tồn tại/không thuộc course được phân biệt thế nào?
-6. **Canonical schema:** Dùng legacy BIGINT hay V1-PILOT UUID? API path là int64 nhưng V1-PILOT progress facts dùng enrollment/lesson UUID.
-7. **Progress uniqueness:** Legacy DDL không có unique `(user_id, lesson_id)`. Nếu có nhiều row thì chọn current state nào hoặc cần constraint nào?
-8. **Lesson denominator:** Có dùng đúng tập lesson PUBLISHED và thứ tự của API #9 như candidate #65/#67 không?
-9. **Status/missing row:** Enum progress đầy đủ là gì? Không có progress row có được coi là NOT_STARTED/0 không?
-10. **Formula:** Chấp nhận `floor(sum(progress_percent)/total_published_lessons)` và zero khi denominator rỗng để #65/#67 thống nhất không?
-11. **Pagination/size:** Candidate trả toàn bộ lesson detail trong một response vì không có page/size input. Có giới hạn course hoặc cần đổi request/response contract không?
-12. **Student projection:** Có được trả `full_name` và `avatar_url` theo UserSummary cho Mentor không? Null/omit policy nào áp dụng?
-13. **Freshness:** Đọc trực tiếp current state hay dùng snapshot/cache? Nếu dùng snapshot thì freshness/version nào được đảm bảo?
-14. **Error envelope:** Khi wire route, đồng bộ API guideline `data:null`, response helper hiện `{}`, và middleware design-code allowlist như thế nào?
+1. **Response contract:** Diagram/catalog ghi `Page<Course>`, runtime theo mục tiêu AC-26 đang trả singular `StudentCourseProgress`. Có phê duyệt đổi response chuẩn và đồng bộ catalog/diagram không?
+2. **Progress scope:** Runtime chỉ chi tiết lesson progress như nhóm #65, hay cần gồm quiz/assignment như flow Student AC-18/API #37?
+3. **Enrollment eligibility:** Runtime dùng `enrollments.status='ACTIVE'` và `users.role='STUDENT'` như #65. Có bao gồm completed/withdrawn/hidden account theo policy khác không?
+4. **Mentor authorization:** Runtime dùng JWT numeric `sub` khớp `courses.mentor_id`; cần hỗ trợ Mentor assignment ngoài direct ownership không?
+5. **403/404 privacy:** Runtime trả 403 cho course của owner khác và 404 khi course/Student không nằm trong scope. Privacy policy chuẩn có cùng thứ tự không?
+6. **Canonical schema:** Live deployment dùng legacy BIGINT hay V1-PILOT UUID? API path là int64 nhưng pilot progress facts dùng enrollment/lesson UUID.
+7. **Progress uniqueness:** Legacy DDL không có unique `(user_id, lesson_id)`. Runtime chọn latest `last_accessed_at DESC NULLS LAST, id DESC` như #65; có cần canonical uniqueness/selection rule khác không?
+8. **Lesson denominator/order:** Có phê duyệt cùng PUBLISHED lesson set và `sort_order,id` của #9/#65 không?
+9. **Status/missing row:** Runtime cho phép `NOT_STARTED|IN_PROGRESS|COMPLETED`; absent row thành NOT_STARTED/0. Đây có phải state machine và default chuẩn không?
+10. **Formula:** Có phê duyệt `floor(sum(progress_percent)/total_published_lessons)` và zero khi denominator rỗng để #65/#67 thống nhất không?
+11. **Pagination/size:** Request không có page/size nên runtime trả tất cả lesson detail. Cần giới hạn course hoặc đổi request/response contract không?
+12. **Student projection:** Runtime trả `id`, `full_name`, `avatar_url` và giữ avatar null trong JSON. Projection/privacy/null policy này có được duyệt không?
+13. **Freshness:** Runtime đọc current `lesson_progress` rows; không dùng snapshot/cache. Có yêu cầu freshness/version khác không?
 
 ## Macro-review AC-26 #65–#67
 
-- Review hoàn tất ở mức tài liệu sau khi DD #67 được tạo; xem [VERIFICATION_REPORT](./VERIFICATION_REPORT.md).
-- Ranh giới candidate: #65 class roster summary; #66 course-wide learning-event aggregate; #67 lesson-level current progress của Student được chọn.
-- Ranh giới này không sửa contract catalog. Cả ba contract response `Page<Course>` vẫn lệch mục đích AC-26 và request không có pagination inputs.
-- #65/#67 dùng chung candidate PUBLISHED lesson denominator và formula; #66 không dùng lesson_progress hoặc snapshot thay learning events.
-- Authorization, enrollment eligibility, ID/schema model, formula approval và error policy vẫn là open questions.
+- Review AC-26 và implementation hoàn tất ở mức source/test cục bộ; xem [VERIFICATION_REPORT](./VERIFICATION_REPORT.md).
+- Ranh giới runtime: #65 class roster summary; #66 course-wide learning-activity proxy; #67 lesson-level current progress của Student được chọn.
+- Diagram/catalog vẫn khai báo `Page<Course>` cho cả ba API, khác với dữ liệu AC-26 cần; API #67 đã wire với singular DERIVED fallback.
+- #65/#67 dùng chung PUBLISHED lesson denominator, latest-progress rule và floor-average formula; #66 không dùng `lesson_progress` thay learning-event history.
+- Shared Mentor guard và error helper hiện là source facts; direct-owner mapping, enrollment/business approval, schema, formula/duplicate approval và pagination vẫn là open questions.

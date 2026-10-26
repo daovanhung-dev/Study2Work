@@ -95,3 +95,13 @@ API #63 không xác nhận delivery tại 202. AC/API index cũng liệt kê #18
 - Request/Query/Mutation/Response matrices lập trước authoring: PASS.
 - Contract conflicts, schema gaps và simple derived recommendations phân tách: PASS.
 - Macro-review AC-25 #62–#64 và API #18 đã hoàn tất ở mức tài liệu: `VERIFIED_WITH_OPEN_QUESTIONS`; unresolved decisions được ghi trong reports nhóm.
+
+## Reconciliation khi triển khai API #63
+
+- Giữ direct request fields/types, exact 202 response type và error set của catalog; không thêm `course_id` hoặc Idempotency-Key.
+- Dùng CSV positive Student `users.id` và CSV `PUSH`/`EMAIL` theo fallback `DERIVED`; toàn bộ recipient set phải cùng có mặt trong ít nhất một ACTIVE roster do Mentor trực tiếp sở hữu.
+- Giữ `content:int64` và lưu decimal text vào legacy Notification `content`; ý nghĩa free-form message còn là discrepancy cần contract owner xác nhận.
+- Chọn legacy BIGINT Notification rows và migration 009 delivery outbox vì phù hợp API #62 IDs và API #64 `notification_id:int64`; không ghép V1-PILOT UUID schema.
+- Một Notification row được ghi cho mỗi recipient; UUID Operation group được lưu trên các rows; response `meta.notification_ids` công bố IDs để gọi API #64.
+- Trả 202 sau khi toàn bộ rows commit với status `QUEUED`; worker/provider chưa có, nên endpoint chứng minh acceptance/outbox persistence trong local tests chứ không chứng minh Push/Email delivery.
+- Fallbacks là local implementation decisions, không đổi trạng thái DD `Draft — Needs Confirmation` hoặc xác nhận live schema.

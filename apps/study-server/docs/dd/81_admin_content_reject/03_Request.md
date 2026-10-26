@@ -24,14 +24,14 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|
-| 1 | Authentication | Authorization | Yes | Bearer token | Bearer JWT; principal phải có role Admin theo catalog. | [Step 0](./05_Data_Mapping.md#0-check-quyen) |
-| 2 | Request format | Content-Type | Yes | application/json | Body là JSON object theo input schema. | [Step 1](./05_Data_Mapping.md#1-validate-data-input) |
+| 1 | Authentication | Authorization | Yes | Bearer token | Bearer JWT; principal phải có role Admin theo catalog. | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) |
+| 2 | Request format | Content-Type | Yes | application/json | Body là JSON object theo input schema. | [Step 1](./05_Data_Mapping.md#step-1-validate) |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | Content ID | content_id | int64 | Yes | Not specified | Not specified | Integer | Integer range chưa được catalog ghi | N/A | Định danh Content cần từ chối. | [Step 1](./05_Data_Mapping.md#1-validate-data-input) |
+| 1 | Content ID | content_id | int64 | Yes | -2^63 | 2^63-1 | Signed integer | Signed-int64 range | N/A | Định danh Content cần từ chối; runtime parse raw path sau ADMIN auth và trả 422 nếu sai format/vượt miền. | [Step 1](./05_Data_Mapping.md#step-1-validate) |
 
 ## Query parameters
 
@@ -41,9 +41,9 @@ Catalog không khai báo query parameters cho API #81.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|---|
-| 1 | Rejection reason | reason | string | Yes | Not specified | Not specified | Unicode string | N/A | Free text; exact content rules chưa có nguồn | N/A | Lý do từ chối theo AC-33. | [Step 1](./05_Data_Mapping.md#1-validate-data-input) |
+| 1 | Rejection reason | reason | string | Yes | Not specified | Not specified | Unicode string | N/A | Free text; exact content rules chưa có nguồn | N/A | Lý do từ chối theo AC-33. | [Step 1](./05_Data_Mapping.md#step-1-validate) |
 
-Catalog không quy định giới hạn độ dài, trim, blank-only rule, format hoặc danh sách reason code. Không tự thêm các điều kiện đó.
+Catalog không quy định giới hạn độ dài, trim, blank-only rule, format hoặc danh sách reason code. Runtime dùng strict string, từ chối field thừa, giữ nguyên giá trị; empty string vẫn được nhận vì không có blank-only rule.
 
 ## Ví dụ Request data
 

@@ -3,7 +3,7 @@
 **Trạng thái DD:** Draft — Needs Confirmation
 **Endpoint:** `GET /api/v1/mentor/submissions/{submission_id}`
 
-Các đề xuất `DERIVED` dưới đây là hướng thiết kế đơn giản để tiến hành; chúng không thay đổi catalog hoặc chứng minh runtime. Các gap ảnh hưởng response, schema hay authorization vẫn cần owner xác nhận trước khi implementation.
+Các fallback `DERIVED` dưới đây được dùng trong source local để tiến hành theo catalog; chúng không xác nhận schema live hoặc business policy. Các gap ảnh hưởng response, schema hay authorization vẫn cần owner xác nhận.
 
 ## Q-55-01 — Rubric trong flow nhưng không có trong Submission response
 
@@ -32,12 +32,12 @@ Các đề xuất `DERIVED` dưới đây là hướng thiết kế đơn giản
 
 - Reusable `Submission.files` là array `UploadAsset[]` với id, name, url, content_type, size_bytes, status.
 - Legacy `assignment_submissions` chỉ có một nullable `file_url`.
-- API #34 upload chưa có relation được duyệt để tra asset metadata; API #35/#36 có cùng gap.
+- API #34 exposes uploads metadata. APIs #54 and #55 use a DERIVED exact URL/owner/purpose/course lookup, but API #35/#36 do not confirm that `file_url` stores this URL.
 
 **Đề xuất đơn giản (DERIVED)**
 
-- Không biến `file_url` thành asset giả và không ép `files: []` cho bản ghi thật.
-- Chốt association/metadata resolver dùng chung cho #35, #36, #54 và #55 trước khi triển khai mapping.
+- Reuse the API #54 DERIVED constrained lookup; return `files: []` only when no matching metadata row exists, without fabricating assets.
+- Confirm API #35 file reference persistence and whether #55 should reuse this DERIVED lookup or a future approved association.
 
 **Cần xác nhận**
 
@@ -66,7 +66,7 @@ Các đề xuất `DERIVED` dưới đây là hướng thiết kế đơn giản
 **Bằng chứng**
 
 - AC-23 precondition yêu cầu Mentor có quyền chấm submission của course.
-- Current JWT helper dùng `sub` numeric user ID và `roles`; shared request guard hiện chỉ cho Student.
+- Current JWT helper dùng `sub` numeric user ID và `roles`; shared request guard accepts an explicit MENTOR role; #55 now uses it, while direct-owner rule remains DERIVED.
 - Legacy DB có `courses.mentor_id`; không có assignment relation cho Mentor được phân công.
 - Catalog có cả 403 và 404; API #36 cũng giữ câu hỏi về access/masking.
 
@@ -93,7 +93,7 @@ Các đề xuất `DERIVED` dưới đây là hướng thiết kế đơn giản
 
 **Đề xuất đơn giản (DERIVED)**
 
-- Với candidate logic, row thiếu `assignment_id`, assignment/course hoặc `user_id` không được map thành `Submission`; dùng 500 integrity error đến khi owner chốt quy tắc.
+- Với candidate logic, row thiếu `assignment_id`, assignment/course hoặc `user_id` không được map thành `Submission`; current source uses 500 integrity error as a DERIVED fallback until the owner confirms the rule.
 
 **Cần xác nhận**
 
@@ -113,7 +113,7 @@ Các đề xuất `DERIVED` dưới đây là hướng thiết kế đơn giản
 
 **Đề xuất đơn giản (DERIVED)**
 
-- API #55 trả score/feedback hiện lưu nếu contract field có giá trị, nhưng chưa quy định null/omit; không tự suy ra publish/visibility transition.
+- API #55 returns stored score/feedback through the reusable Submission shape and omits null optional fields in current source; contract null/omit and Student visibility remain open.
 - Đồng bộ đơn vị/range/precision `score`, `max_score` và #56 body trước implementation.
 
 **Cần xác nhận**
@@ -129,11 +129,11 @@ Các đề xuất `DERIVED` dưới đây là hướng thiết kế đơn giản
 **Bằng chứng**
 
 - Catalog yêu cầu `submission_id:int64!` nhưng error set không có 400/422.
-- API #55 chưa có route; behavior parse path hiện tại chưa tồn tại.
+- API #55 parses a raw path string and maps malformed/overflow values to 404 following the existing API #48 pattern.
 
 **Đề xuất đơn giản (DERIVED)**
 
-- Int64 hợp lệ không tìm thấy row → 404. Path không parse được/overflow cần được map sang một trong các status catalog hoặc cập nhật catalog; không thêm 422 ngầm.
+- Int64 hợp lệ không tìm thấy row → 404. Malformed/overflow → 404 `DESIGN_RESOURCE_NOT_FOUND` as a DERIVED fallback; no 422 branch is added.
 
 **Ảnh hưởng:** Router validation và exact error set.
 
@@ -142,34 +142,33 @@ Các đề xuất `DERIVED` dưới đây là hướng thiết kế đơn giản
 **Bằng chứng**
 
 - API Guidelines yêu cầu `data:null` trên lỗi.
-- Current `error_response()` dùng `{}` khi `data=None`.
-- Middleware `DESIGN_CONTRACT_PATHS` hiện không có API #55.
+- Current `error_response()` serializes `data=None` as JSON null.
+- Middleware `DESIGN_CONTRACT_PATHS` now includes the API #55 FastAPI route template.
 
 **Đề xuất đơn giản (DERIVED)**
 
-- Giữ expected catalog code và guideline envelope trong DD; khi wiring, tích hợp path vào mapping middleware và quyết định cập nhật helper hay guideline để thống nhất `data`.
+- Keep the catalog code and guideline envelope; current `error_response()` emits `data:null`, and API #55 returns its responses through that helper. No helper change is needed for this endpoint.
 
 **Ảnh hưởng:** Client error parsing và implementation contract.
 
-## Q-55-09 — API #54 không có collection response cho bước chọn
+## Q-55-09 — API #54 collection fallback and client compatibility
 
 **Bằng chứng**
 
 - AC-23 nối #54 đọc danh sách → chọn một submission → gọi #55 bằng `submission_id`.
-- API #54 catalog response hiện là `ApiEnvelope<Submission>` đơn lẻ dù tên endpoint là danh sách; DD #54 đã ghi cardinality question.
-- API #55 chỉ nhận `submission_id` trên path và không có query/body để thay thế bước chọn.
+- API #54 implementation and updated catalog/diagram now use `ApiEnvelope<Page<Submission>>` as a DERIVED fallback for the AC-23 list/select flow.
+- API #55 accepts the selected `submission_id` on the path and has no query/body that replaces the list selection.
 
 **Đề xuất đơn giản (DERIVED)**
 
-- Nếu UI cần chọn từ danh sách, owner cần cập nhật catalog/schema API #54 sang collection response trong một contract change được duyệt.
-- Tới khi contract owner chốt thay đổi đó, DD #54/#55 giữ nguyên contract catalog hiện tại và tiếp tục ghi nhận mismatch; không tự đổi response shape.
-- Vì #54 có `page` query, owner nên chốt `Page<Submission>` cùng size/default/order/meta hoặc bỏ pagination contract đồng bộ; không giả định một quy ước trong DD #55.
+- Contract owner should confirm the DERIVED collection change and client compatibility. Current #54 fallback uses page 1, fixed size 20 and `submitted_at DESC, id DESC` order.
+- API #55 now reuses the API #54 constrained API #34 `uploads` match unless the API #35 producer contract specifies another asset key.
 
-**Ảnh hưởng:** AC-23 không thể chạy end-to-end nếu #54 không trả danh sách có ID để mở #55.
+**Ảnh hưởng:** API #55 can consume IDs from the current page, but final contract approval and API #35 file-reference compatibility remain open.
 
 ## Trạng thái
 
-Giữ `Draft — Needs Confirmation`. Contract method/path/auth/path type/success/error đã khóa theo catalog; handoff collection từ #54, rubric, asset mapping, Mentor access, schema/nullability, grade/status semantics và error serialization chưa đủ nguồn để coi DD là implementation-ready.
+Giữ `Draft — Needs Confirmation`. API #55 runtime implements the catalog Submission shape with DERIVED direct-owner/path/integrity/file fallbacks. Rubric mapping, assigned-Mentor policy, live schema/nullability, grade/status semantics and API #35 file-reference compatibility remain unresolved.
 
 
-Macro-review AC-23 #54–#57 đã hoàn tất ở mức tài liệu. Các mismatch và gap trong nhóm vẫn giữ mở; không có contract nào được tự thay đổi.
+Macro-review AC-23 #54–#57 was refreshed after #54/#55 local implementation. The collection/file/owner/path fallbacks remain DERIVED and await owner confirmation; rubric and grade/status gaps remain.

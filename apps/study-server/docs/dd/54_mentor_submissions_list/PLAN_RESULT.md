@@ -1,59 +1,35 @@
 # Plan Result — Study API #54 Lấy submissions Mentor
 
-**Status:** `PARTIALLY COMPLETED — Draft đã tạo; contract/source questions còn mở`
-**API:** `GET /api/v1/mentor/submissions`
-**Output folder:** `apps/study-server/docs/dd/54_mentor_submissions_list/`
-**Basis:** Catalog `DIRECT`; AC-23 flow `DIRECT`; physical query `DESIGN CANDIDATE`
-**Deliverable:** 8 Markdown sheets + 3 reports; Study workflow không tạo ZIP.
+**Kết quả:** Implemented with DERIVED fallback decisions; contract remains Draft — Needs Confirmation.
 
 ## Nguồn đã nạp
 
-- `docs/lists/list_api.md`: API #54, reusable `Submission`, `UploadAsset`, `ApiEnvelope` và business-code design-only.
-- `apps/study-server/docs/diagrams/AC_UNICA/00_AC_API_INDEX.md`: actor, precondition, postcondition và thứ tự gọi API AC-23.
-- `apps/study-server/docs/diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio`: đọc toàn bộ node/edge trang AC-23.
-- `apps/study-server/docs/diagrams/DB_UNICA_TABLES.md` và `DB_UNICA_ERD.drawio`: candidate `assignment_submissions → assignments → courses`, owner relation `users → courses`.
-- `infra/postgres/study-server/DB.sql`: checked-in V1-PILOT candidate columns; không chứng minh live schema.
-- `apps/study-server/docs/dd/35_assignments_submissions/`: related Submission contract/schema gaps.
-- Current Study router, auth helper, middleware, response helper, API Guidelines và scope context.
-- Registered Markdown templates: `.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/`.
+- API catalog #54 và reusable `ApiEnvelope`, `Page`, `Submission`, `UploadAsset`.
+- AC-23 index/diagram: mở danh sách, đọc theo quyền Mentor, chọn một bài, gọi #55 detail.
+- DB table guide, ERD, checked-in `DB.sql`, upload migration #004.
+- Related producer/reader APIs #34/#35/#36 and AC-23 consumers #55–#57.
+- Current route/auth/response sources and Mentor ownership/pagination patterns #46/#49.
+- Three coding worklogs selected by mandatory preflight and recorded in the active worklog.
 
-## Contract giữ nguyên
+## Contract giữ và fallback
 
-| Item | Giá trị |
-|---|---|
-| Method/path | `GET /api/v1/mentor/submissions` |
-| Auth | Bearer JWT; role `Mentor` |
-| Query | `course_id?:int64`, `status?:string`, `page?:int32` |
-| Body/path | Không khai báo |
-| Success | HTTP 200 `DESIGN_RESOURCE_RETRIEVED`; `ApiEnvelope<Submission>` |
-| Errors | 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 409 `DESIGN_STATE_CONFLICT`; 500 `DESIGN_INTERNAL_ERROR` |
+| Item | Selected behavior | Evidence/status |
+|---|---|---|
+| Method/path/filters | GET `/api/v1/mentor/submissions`; optional course_id, status, page | Direct catalog/diagram |
+| Response cardinality | `ApiEnvelope<Page<Submission>>` | DERIVED from AC-23 list/select; catalog/diagram were updated |
+| Pagination | page defaults 1; size fixed 20; submitted_at DESC, id DESC; PageMeta in data | DERIVED from shared #46 pattern |
+| Mentor scope | Numeric JWT subject equals direct `courses.mentor_id` | Existing #46/#49 pattern; assigned mentors unsupported |
+| Files | Match `file_url` to upload URL + owner + SUBMISSION purpose + course | DERIVED; no FK/live schema proof |
+| Empty result | 200 with empty items and zero totals | DERIVED collection behavior |
+| 409 | Retained in declared set, no trigger implemented | AC-23 gives no state conflict condition |
+| Query validation | Positive int64 course_id and int32 page; 422 | Added to catalog/diagram and route contract |
 
-## Plan và ranh giới
+## Implementation boundary
 
-1. Diagram xác nhận Mentor mở danh sách, backend đọc submissions theo quyền Mentor, chọn một submission rồi gọi API #55 để đọc details/files/rubric. API #54 không nhận rubric write hoặc feedback.
-2. Giữ response `Submission` đúng như catalog dù tên và flow là danh sách; không tự bọc `items`, `Page<T>` hay pagination trong `meta`.
-3. Optional `course_id` và `status` là filter candidates chỉ khi được gửi. Status enum/blank handling chưa có nguồn.
-4. `page` không có `size`, default, range, ordering hoặc response metadata; không suy ra `LIMIT/OFFSET` hoặc page size.
-5. Candidate tables là `assignment_submissions`, `assignments`, `courses`; join và quyền Mentor là design proposals, không phải SQL/runtime đã được xác nhận.
-6. Chỉ nêu `courses.mentor_id` làm direct-owner candidate DERIVED; Mentor claim identity và assigned-course access vẫn SOURCE_REQUIRED.
-7. Giữ toàn bộ fields của Submission; `files:UploadAsset[]` không map đủ từ `assignment_submissions.file_url` nên không tạo sample assets giả.
-8. Bảng #54 là read-only; `07_table.md` giữ template và ghi `N/A — READ-ONLY API`.
-9. Status DD `Draft — Needs Confirmation` vì cardinality, pagination, status, access và asset data chưa được nguồn chốt.
-10. AC-23 macro-review #54–#57 sẽ chờ đến khi các DD liên quan có mặt.
+- Read-only; no transaction commit or schema migration.
+- Orphan/null assignment/course/student relations are excluded through inner joins, matching required ERD relations while preserving the nullable DDL discrepancy.
+- API #55 owns selected-Submission detail and reuses the constrained file fallback; the diagram's rubric request remains unresolved. APIs #56/#57 retain their separate grade/feedback mutations.
 
-## Ma trận Query dự kiến
+## Verification
 
-| Query | Type | Candidate | Conditions | Gaps |
-|---|---|---|---|---|
-| Q1 | SELECT | `assignment_submissions` join `assignments`, candidate access via `courses` | Apply course/status filters only if supplied; scope to Mentor-authorized courses | Live schema, access mapping, nullable FKs, sort and pagination not verified |
-| Q2 | COUNT | Không được catalog/diagram yêu cầu | Không tạo query count | Page metadata absent |
-
-## Ma trận mutation dự kiến
-
-| Operation | Kết quả |
-|---|---|
-| INSERT/UPDATE/DELETE | `N/A — READ-ONLY API` |
-
-## Kết quả verification
-
-Được cập nhật sau authoring và static checks trong `VERIFICATION_REPORT.md`.
+See `VERIFICATION_REPORT.md`. Fake-session tests do not prove live PostgreSQL schema or upload-link data.

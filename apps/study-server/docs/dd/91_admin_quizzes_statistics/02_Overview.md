@@ -21,10 +21,10 @@ status: "Draft — Needs Confirmation"
 | Purpose | Admin xem số liệu tổng hợp từ các attempt của một quiz. |
 | Consumer/Actor | Admin có quiz-management permission |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin theo catalog; AC-35 yêu cầu quiz-management permission. Study chưa có Admin guard/policy. |
+| Authorization | Shared `ADMIN` role guard exists; AC-35 quiz-management permission has no source-backed policy. |
 | Basis | Endpoint/auth/input/direct response/status/errors DIRECT; metric và response thống kê DERIVED proposal. |
 | Status | Draft — Needs Confirmation |
-| Current implementation | UNWIRED / NOT_FOUND: không có route, module hoặc test API #91. |
+| Current implementation | SOURCE_BACKED locally: route, module and HTTP tests exist; runtime returns the separate DERIVED `QuizStatistics` projection. |
 | Transaction | N/A — API chỉ đọc. |
 | Side effects | Không ghi dữ liệu. |
 
@@ -78,11 +78,11 @@ Không có — GET chỉ đọc.
 - DISCREPANCY: DB guide nói quiz_attempts.quiz_id required; legacy DDL cho phép NULL.
 - DISCREPANCY: legacy BIGINT quiz model khác V1-PILOT UUID assessment model.
 - SOURCE_REQUIRED: Admin permission, active schema, metric rounding và threshold/null policy.
-- Middleware hiện chưa allowlist dynamic Admin quiz path; đây là conditional integration discrepancy, chưa phải behavior của route #91 vì route chưa tồn tại.
+- Shared detail path template `/api/v1/admin/quizzes/{quiz_id}` được allowlist bởi API #89; exact statistics suffix `/api/v1/admin/quizzes/{quiz_id}/statistics` cũng đã được đăng ký khi wire #91.
 
 ## Security note
 
-- Xác thực Bearer và authorize Admin cùng quiz-management permission trước khi đọc dữ liệu.
+- Runtime xác thực Bearer và role `ADMIN` trước khi parse path/đọc dữ liệu. Fine-grained quiz-management permission vẫn chưa có policy source-backed.
 - Không nhận user_id/role từ request.
 - Chỉ trả aggregate; không đọc/tiết lộ answer rows, answer key hoặc Student identifiers.
 - Không trả SQL, stack trace hoặc DB message.

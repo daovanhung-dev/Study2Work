@@ -28,6 +28,8 @@ Các câu hỏi dưới đây giữ contract ở trạng thái draft. Không câ
 
 **Ảnh hưởng:** Tương thích client, request validation và map sang feedback column.
 
+**Implementation fallback (DERIVED):** Runtime nhận `feedback_text` strict string, không trim/giới hạn độ dài/ép non-empty. Catalog owner vẫn cần xác nhận wire spelling.
+
 ## Q-57-02 — Định dạng và persistence của attachments
 
 **Bằng chứng**
@@ -44,6 +46,8 @@ Các câu hỏi dưới đây giữ contract ở trạng thái draft. Không câ
 4. API #57 phải trả các attachment này ở field nào nếu response hiện là Submission?
 
 **Ảnh hưởng:** Request contract, storage access control, transaction boundary và khả năng hoàn tất response.
+
+**Implementation fallback:** Runtime nhận `attachments` strict string nhưng không parse, persist, echo hoặc ánh xạ sang student `file_url`/`Submission.files`. Không có storage target nào được chọn.
 
 ## Q-57-03 — INSERT/UPDATE, ghi đè và lịch sử feedback
 
@@ -65,14 +69,16 @@ Các câu hỏi dưới đây giữ contract ở trạng thái draft. Không câ
 
 **Ảnh hưởng:** Mutation target, transaction, concurrency và audit.
 
+**Implementation fallback (DERIVED):** Runtime cập nhật duy nhất `assignment_submissions.feedback`; lần gọi sau ghi đè giá trị hiện có. Không tạo history row; schema/live behavior và approval vẫn chưa xác nhận.
+
 ## Q-57-04 — Submission response, rubric và hai loại file
 
 **Bằng chứng**
 
 - Catalog yêu cầu ApiEnvelope<Submission>; Submission có files:UploadAsset[] và feedback, nhưng không có rubric hoặc feedback attachments.
 - AC-23 API #55 node nói đọc Submission + files + rubric.
-- API #56 nhận rubric items nhưng không có schema/persistence được duyệt.
-- #54–#56 đã ghi cùng gap về asset resolver cho file học viên nộp.
+- API #56 nhận rubric_items theo fallback wire key nhưng không persist vì chưa có schema/persistence target được duyệt.
+- APIs #54–#56 use the same DERIVED constrained file lookup; API #35 producer compatibility remains open.
 
 **Cần xác nhận**
 
@@ -87,7 +93,7 @@ Các câu hỏi dưới đây giữ contract ở trạng thái draft. Không câ
 **Bằng chứng**
 
 - AC-23 yêu cầu Mentor có quyền chấm submission của course.
-- Study shared guard hiện tại là Student-only.
+- The shared Study guard supports explicit MENTOR role; #57 uses it before database access.
 - courses.mentor_id là direct-owner candidate; Mentor claim mapping và assignment relation chưa được xác nhận.
 - DDL cho phép assignment_submissions.assignment_id và assignments.course_id NULL, khác với guide/ERD yêu cầu quan hệ.
 
@@ -100,12 +106,14 @@ Các câu hỏi dưới đây giữ contract ở trạng thái draft. Không câ
 
 **Ảnh hưởng:** Bảo vệ dữ liệu học viên, predicate truy vấn và phân biệt 403/404.
 
+**Implementation fallback (DERIVED):** Runtime dùng numeric JWT subject với `courses.mentor_id`; trả 403 cho owner khác và 500 cho broken required relation. Assigned-Mentor support chưa có nguồn.
+
 ## Q-57-06 — Thời điểm status và Student visibility
 
 **Bằng chứng**
 
 - AC-23 UI flow gọi #56 rồi #57.
-- #56 candidate cập nhật score/status thành GRADED; #57 được mô tả là bước lưu feedback.
+- API #56 hiện cập nhật score/status thành GRADED rồi commit sau khi response projection hợp lệ; score range và direct-owner scope là DERIVED. API #57 được mô tả là bước lưu feedback.
 - AC-23 postcondition nói Student có thể nhận kết quả, nhưng không quy định thời điểm release.
 
 **Đề xuất đơn giản (DERIVED)**
@@ -119,22 +127,24 @@ Các câu hỏi dưới đây giữ contract ở trạng thái draft. Không câ
 
 **Ảnh hưởng:** API direct-call behavior và thời điểm công bố kết quả.
 
+**Implementation fallback (DERIVED):** Runtime không yêu cầu `status=GRADED` và chỉ cập nhật feedback; score/status được kiểm tra là không đổi.
+
 ## Q-57-07 — Error envelope và route mapping
 
 **Bằng chứng**
 
 - API Guidelines yêu cầu data=null trên error.
-- Current error_response(data=None) serializes data as {}.
-- Middleware DESIGN_CONTRACT_PATHS dùng exact path; chưa có dynamic Mentor submission/feedback path.
-- API #57 chưa có route runtime.
+- Current error_response(data=None) serializes data as null.
+- Middleware matches registered FastAPI route templates; #57's dynamic route is registered in DESIGN_CONTRACT_PATHS.
+- Current `error_response()` returns `data:null`; RequestValidationError maps to `DESIGN_VALIDATION_ERROR` on the registered route.
 
 **Cần xác nhận**
 
-1. Runtime wiring sẽ ánh xạ 422/500 cho path có submission_id sang DESIGN_* như catalog quy định bằng cách nào?
-2. Error helper/shared convention được cập nhật để data là null hay endpoint có response mapping riêng?
+1. Catalog owner có chấp thuận wire key và các fallback mapping hiện tại không?
+2. Có yêu cầu bổ sung nào về ErrorDetail field/code/message ngoài business code catalog không?
 
-**Ảnh hưởng:** Khớp business code và error envelope khi API được lập trình.
+**Ảnh hưởng:** Phê duyệt compatibility của wire contract và error details.
 
 ## Trạng thái
 
-Giữ Draft — Needs Confirmation. AC-23 macro-review #54–#57 đã hoàn tất ở mức tài liệu; các gap về cardinality, rubric, asset resolver, Mentor access, attachment storage và error mapping vẫn chờ nguồn/owner xác nhận.
+Giữ Draft — Needs Confirmation. AC-23 macro-review #54–#57 đã hoàn tất ở mức tài liệu; #54 Page<Submission>/pagination/file lookup và #56 rubric wire-key/score-range/direct-owner policy là DERIVED. Rubric persistence, API #35 producer compatibility, assigned-Mentor access và feedback attachment storage vẫn chờ nguồn/owner xác nhận.

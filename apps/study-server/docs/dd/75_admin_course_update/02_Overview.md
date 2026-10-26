@@ -20,16 +20,16 @@ status: "Draft — Needs Confirmation"
 | Purpose | Admin cập nhật metadata của khóa học đã chọn. |
 | Consumer/Actor | Admin có quyền course management |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin và quyền course management theo catalog/AC-32; Study source hiện chưa có Admin guard hoặc permission policy. |
+| Authorization | Runtime hiện gọi shared `validate_current_user_request(..., role="ADMIN")`; riêng permission course management chưa có policy source. |
 | Direct request | `path{course_id:int64!}`; catalog/diagram không khai báo body hoặc query. |
 | Proposed request | JSON full replacement gồm `title`, `description`, `thumbnail_url`, `price`; toàn bộ body là `DERIVED`. |
 | Direct response | `ApiEnvelope<Page<Course>>`; HTTP 200 `DESIGN_RESOURCE_UPDATED`. |
 | Direct errors | 401, 403, 404, 422, 500 với đúng `DESIGN_*` code trong catalog. |
 | Basis | Method/path/auth/path type/response/status/error set DIRECT; body, query/update projection, singleton Page và persistence là DERIVED hoặc SOURCE_REQUIRED. |
 | Status | `Draft — Needs Confirmation` |
-| Current runtime state | `UNWIRED / NOT_FOUND` — không có route, module hoặc test API #75. |
-| Transaction | Candidate transaction bao gồm UPDATE và response projection; cần xác nhận khi chọn schema/use case. |
-| Side effects | Candidate cập nhật metadata course và `updated_at`; không đổi status, owner hoặc ghi audit log trong #75 proposal. |
+| Current runtime state | Route/module/test được wire locally; 27 focused HTTP tests pass. Fake DB không xác minh live schema/deployment. |
+| Transaction | Current view UPDATE và SELECT projection trong cùng Session; commit sau khi mapping hợp lệ, rollback khi lỗi. Đây là fallback `DERIVED`. |
+| Side effects | Cập nhật candidate metadata và `updated_at`; giữ nguyên status/mentor và không ghi audit trong API #75. |
 
 ## Sources
 
@@ -42,7 +42,7 @@ status: "Draft — Needs Confirmation"
 - [API #70 Admin update](../70_admin_user_update/02_Overview.md) — precedent giữ body thiếu trong catalog thành proposal `DERIVED`.
 - [API #73 Admin list](../73_admin_courses_list/02_Overview.md) và [API #74 Admin detail](../74_admin_course_detail/02_Overview.md) — Course projection, response Page và AC-32 boundary.
 - [API #14 profile update source](../../../app/modules/guest/api_14_users_me_profile/) — transaction/update pattern; không phải Admin policy.
-- [Current router](../../../app/api/v1.py), [auth helper](../../../app/utils/auth.py), [middleware](../../../app/core/middleware.py) và [response helper](../../../app/core/responses.py) — current runtime boundary.
+- [Current router](../../../app/api/v1.py), [API #75 view](../../../app/modules/admin/api_75_admin_course_update/view.py), [auth helper](../../../app/utils/auth.py), [middleware](../../../app/core/middleware.py) và [response helper](../../../app/core/responses.py) — runtime implementation boundary.
 - [API guidelines](../../../../../contracts/api-guidelines/README.md) — error envelope guideline.
 
 ## Tables read
@@ -67,15 +67,15 @@ status: "Draft — Needs Confirmation"
 - `Course.category` optional nhưng không có quan hệ course-category được xác nhận; proposal omit field. Diagram #74 nhắc counters nhưng response không khai báo counter.
 - Direct output là `Page<Course>`; proposal trả một item và `PageMeta` 1/1/1/1 theo singleton pattern của #74.
 - Legacy BIGINT DDL và V1-PILOT UUID/versioned model là hai nguồn khác nhau; live database chưa xác minh.
-- Current Admin route, module, guard và tests không tồn tại; tài liệu không chứng minh runtime.
+- Current source wire API #75 với shared ADMIN role guard, strict body model, SQL-only update constant và transaction-owning view. HTTP tests dùng fake DB; chúng không chứng minh live schema/deployment.
 
 ## Assumptions
 
 - `title`, `description`, `thumbnail_url`, `price` là metadata editable candidate theo reusable `Course` và legacy columns; từng field là `DERIVED`.
-- PUT được đề xuất full replacement với đủ bốn key; `description` và `thumbnail_url` nhận null để xóa. Requiredness/null rules cần xác nhận.
+- Runtime hiện yêu cầu đủ bốn key (full replacement), từ chối field lạ; `description` và `thumbnail_url` nhận null để xóa. Đây là fallback `DERIVED`, chờ owner xác nhận.
 - Q1 candidate UPDATE theo `courses.id`, giữ nguyên `status`/`mentor_id`; Q2 candidate đọc updated Course + UserSummary.
 - Response Page có đúng một item; `category` bị omit khi không có nguồn. Null serialization và mentor integrity cần owner xác nhận.
-- Nếu UPDATE không tìm thấy row, proposal trả 404; transaction/commit chỉ là mapping design, không phải current implementation.
+- UPDATE không trả row thì runtime trả 404; projection Q2 thiếu/sai hoặc commit lỗi trả 500 và rollback. Đây là fallback `DERIVED`; live transaction behavior chưa được xác minh.
 
 ## Conflicts
 
@@ -83,7 +83,7 @@ status: "Draft — Needs Confirmation"
 - Legacy schema dùng BIGINT `courses.id`; V1-PILOT dùng UUID `courses.id` và `course_versions`; live schema chưa được xác minh.
 - Legacy DDL cho phép `mentor_id` và `price` NULL trong khi reusable `Course` yêu cầu mentor và price.
 - Direct `ApiEnvelope<Page<Course>>` không xác định cardinality cho PUT-by-ID; singleton Page là `DERIVED` theo #74.
-- Current Student-only guard và error middleware allowlist chưa hỗ trợ endpoint Admin; error helper dùng `data:{}` khi guideline yêu cầu `null`.
+- API #74 hiện có shared `ADMIN` guard và dynamic route-template mapping; dedicated course-management permission policy vẫn chưa có source. `error_response` hiện trả `data:null`.
 
 ## Security note
 
@@ -96,7 +96,7 @@ status: "Draft — Needs Confirmation"
 
 - Candidate UPDATE được giới hạn theo `courses.id`; dự kiến một row, nhưng live key/index/query plan chưa được xác minh.
 - Candidate response projection dùng một SELECT theo course ID với LEFT JOIN `users`; không thêm count/counter/category queries.
-- Không nêu được độ trễ hoặc transaction behavior runtime khi route chưa được wire.
+- Chưa có live query plan/latency evidence; local code dùng một UPDATE và một SELECT theo ID trong cùng transaction.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

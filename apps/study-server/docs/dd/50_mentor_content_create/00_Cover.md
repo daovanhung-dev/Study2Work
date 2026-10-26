@@ -22,17 +22,18 @@ status: "Draft — Needs Confirmation"
 | API name | Tạo nội dung mới Conditional |
 | HTTP method | POST |
 | Endpoint | `/api/v1/mentor/content` |
-| Phiên bản DD | 0.1 |
+| Phiên bản DD | 0.2 |
 | Trạng thái | Draft — Needs Confirmation |
 | Ngày lập | 2026-10-24 |
+| Implementation snapshot | 2026-10-25 — local source + TestClient; live DB not verified |
 
 ## Mục đích
 
-Đặc tả source-aware cho thao tác tạo một Content theo catalog và AC-22. Endpoint hiện chưa được nối vào Study Server runtime. Tài liệu chưa phải bằng chứng implementation hoặc live-schema mapping.
+Đặc tả source-aware cho thao tác tạo một Content theo catalog và AC-22. API #50 hiện đã được nối trong source Study Server và có HTTP tests với fake DB. Tài liệu và local tests không chứng minh migration/live schema đã được triển khai.
 
 ## Trạng thái xác nhận
 
-`PENDING_REVIEW` là trạng thái dự kiến ban đầu theo tiền điều kiện của AC-33. Bảng/column lưu Content, schema payload, enum members và một số quy tắc placement còn cần xác nhận.
+Implementation gán `PENDING_REVIEW`, tạo root node (`parent_id=NULL`) và cấp order kế tiếp từ 0 trong active root siblings; đây là các quyết định `DERIVED`, chưa được AC-22/catalog xác nhận trực tiếp. Local `contents` DDL/migration 006 có field mapping cần thiết. Enum members, payload subtype, assigned-course policy và live schema vẫn cần xác nhận.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

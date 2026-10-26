@@ -11,21 +11,21 @@ status: "Draft — Needs Confirmation"
 
 ## Error cases
 
-| No | HTTP | Business code | Direct trigger/source | Handling/status |
-|---:|---:|---|---|---|
-| 1 | 401 | DESIGN_AUTHENTICATION_REQUIRED | Missing, invalid or expired Bearer JWT per catalog code | Direct code; token validation source is shared auth policy |
-| 2 | 403 | DESIGN_ACCESS_DENIED | Authenticated caller lacks Admin/notification-management access | Admin permission requirement is direct in catalog/AC-36; claim and policy mapping SOURCE_REQUIRED |
-| 3 | 404 | DESIGN_RESOURCE_NOT_FOUND | Target notification does not exist | Direct error code; lookup model and precedence vs permission SOURCE_REQUIRED |
-| 4 | 422 | DESIGN_VALIDATION_ERROR | Catalog lists code; body field triggers are unspecified | Direct code; body validation and proposed ineligible-state handling are DERIVED, need owner approval |
-| 5 | 500 | DESIGN_INTERNAL_ERROR | Unexpected internal failure | Direct code; transaction rollback, logging and safe message source SOURCE_REQUIRED |
+| HTTP | Business code | Trigger | Status |
+|---:|---|---|---|
+| 401 | DESIGN_AUTHENTICATION_REQUIRED | Missing, invalid or expired Bearer JWT | Direct catalog code; shared guard. |
+| 403 | DESIGN_ACCESS_DENIED | Authenticated caller lacks ADMIN role | Direct catalog code; finer AC-36 permission remains unverified. |
+| 404 | DESIGN_RESOURCE_NOT_FOUND | No notification row for valid path ID | Direct code; lookup uses legacy candidate. |
+| 422 | DESIGN_VALIDATION_ERROR | Invalid path/body; blank text; no delivery rows; any delivery is not QUEUED | Code is direct; precise body/state triggers are DERIVED fallback. |
+| 500 | DESIGN_INTERNAL_ERROR | Query, projection or commit failure | Direct code; rollback and safe message implemented. |
 
 ## Error contract boundaries
 
-- Preserve the exact five catalog error codes and HTTP statuses; do not invent 409, 503 or a scheduler error.
-- Request body is absent from the direct catalog. A malformed proposal body maps to 422 only if the body proposal is approved and the shared contract confirms framework behavior.
-- Draft/Scheduled eligibility is not defined as a direct condition. A 422 for already-dispatched/cancelled resources is only a DERIVED proposal.
-- Error envelope data nullability follows API Guidelines/current helper boundary; this DD does not change shared serialization.
-- Do not expose recipient IDs, provider details, SQL or stack traces.
+- Preserve exactly the five catalog HTTP/business-code pairs; do not add 409/503 or scheduler errors.
+- Shared ADMIN authentication/role errors are returned before path/body validation or DB query.
+- 422 ineligible-state behavior is based on the candidate outbox; QUEUED is not treated as a Draft/Scheduled Notification enum.
+- Fake-session tests verify error envelope and rollback path; live PostgreSQL constraints and deployment are unverified.
+- Do not expose SQL, stack traces, recipient IDs, provider details, or queue internals.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

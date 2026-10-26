@@ -29,10 +29,10 @@ status: "Draft — Needs Confirmation"
 | 2 | success | Success flag | success | boolean | No | Envelope | N/A | Branch | true success; false error | Required | ApiEnvelope field. |
 | 3 | businessCode | Business code | businessCode | string | No | Catalog | N/A | Branch | Exact code per branch | Required | Không tạo code mới. |
 | 4 | message | Message | message | string | No | Application | N/A | Branch | Safe localized text | Exact wording chưa đặc tả | Không trả raw DB error. |
-| 5 | data | DeleteResult | data | object | No | Approved deletion operation | N/A | 5.1 | Một DeleteResult | Required on success | Physical mapping/source chưa được chọn. |
-| 5.1 | data.id | Lesson ID | id | int64 | No | Approved lesson target | id candidate | 5.1 | Target ID sau mutation thành công | Required | Path ID direct; persisted target mapping candidate. |
+| 5 | data | DeleteResult | data | object | No | lessons | N/A | 5.1 | Một DeleteResult | Required on success | Local mapping uses the legacy Lesson target. |
+| 5.1 | data.id | Lesson ID | id | int64 | No | lessons | id | 5.1 | Target ID sau mutation thành công | Required | Legacy BIGINT target candidate. |
 | 5.2 | data.status | Delete status | status | literal "deleted" | No | Reusable DeleteResult | N/A | 5.1 | Exact lowercase literal deleted | Required | DIRECT schema literal. |
-| 5.3 | data.deleted_at | Deletion timestamp | deleted_at | date-time | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 5.1 | Timestamp persisted by approved delete policy | Required | No legacy/V1 lesson marker; no inferred clock fallback. |
+| 5.3 | data.deleted_at | Deletion timestamp | deleted_at | date-time | No | lessons | updated_at | 5.1 | Database timestamp written by the tombstone UPDATE | Required | DERIVED mapping following API #77; live metadata remains unverified. |
 | 6 | meta | Metadata | meta | object | No | Envelope convention | N/A | Branch | Empty object candidate | {} candidate | No pagination/dependency payload. |
 | 7 | traceId | Trace ID | traceId | uuid | No | Current trace middleware | X-Trace-Id or generated | 0/Branch | Propagate or generate UUID | Required | Route absent. |
 
@@ -42,18 +42,18 @@ status: "Draft — Needs Confirmation"
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_DELETED",
-  "message": "Đã xóa lesson theo policy.",
+  "message": "Lesson deleted.",
   "data": {
     "id": 501,
     "status": "deleted",
-    "deleted_at": "2026-10-24T12:00:00Z"
+    "deleted_at": "2026-10-26T10:30:00"
   },
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000086"
 }
 ```
 
-Cấu trúc bám DeleteResult trực tiếp. Timestamp minh họa định dạng; nguồn persisted deleted_at chưa được chọn.
+Cấu trúc bám DeleteResult trực tiếp. `deleted_at` nhận giá trị DB trả về từ `lessons.updated_at` sau khi đặt marker.
 
 ## Ví dụ lỗi dependency — HTTP 422 — DERIVED
 
@@ -68,9 +68,9 @@ Cấu trúc bám DeleteResult trực tiếp. Timestamp minh họa định dạng
 }
 ```
 
-Đây là ví dụ candidate nếu policy được duyệt chặn xóa khi có progress/reference. Không trả dependency rows hoặc learner data.
+Đây là kết quả khi có progress, resource hoặc lesson-upload reference. Không trả dependency rows hoặc learner data.
 
-API guideline yêu cầu error data:null; current error helper mặc định absent data thành {}. API #86 chưa được wire nên behavior này chưa được kiểm chứng cho endpoint.
+Error helper hiện trả `data:null`; API #86 HTTP tests xác nhận response envelope này cho blocker.
 
 ---
 

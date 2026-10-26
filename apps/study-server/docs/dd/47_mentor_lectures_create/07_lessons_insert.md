@@ -17,7 +17,7 @@ status: "Draft — Needs Confirmation"
 |---|---|
 | Physical table | lessons |
 | Logical table | Lecture — legacy mapping candidate |
-| Operation | INSERT |
+| Operation | INSERT lessons plus optional asset-link rows |
 | Data Mapping step | 3.1–3.4, mutation M1 |
 
 ## Update mapping
@@ -34,19 +34,34 @@ status: "Draft — Needs Confirmation"
 
 **Áp dụng khi**
 
-- Q1 course tồn tại và candidate Mentor ownership check đạt; transaction M1 tạo một lessons row.
+- Course tồn tại và `courses.mentor_id` trùng Mentor hiện tại; transaction tạo một lessons row.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
 | 1 | id | Lecture ID | BIGSERIAL | N/A | N/A | Yes | ● | DB-generated sequence | DB | 3.3 | Legacy candidate; API response contract int64; pilot ID là UUID. |
 | 2 | course_id | Course ID | BIGINT | N/A | N/A | Yes for this request |  | Path course_id | Request path | 3.3 | Legacy FK candidate to courses.id; physical DDL allows nullable but API path is required. |
 | 3 | name | Lecture title | VARCHAR | 200 | N/A | Yes |  | Request title | Request body | 3.3 | Logical title → physical name; max 200 is DERIVED from candidate schema. |
-| 4 | content | Lecture content | TEXT | N/A | N/A | No in DB; required in API |  | Decimal-string representation candidate | Request content | 3.3 | DISCREPANCY: request int64 may be an ID; conversion is DERIVED and blocks confirmation. |
+| 4 | content | Lecture content | TEXT | N/A | N/A | No in DB; required in API |  | `str(request.content)` decimal representation | Request content | 3.3 | User decision: request remains signed int64; persisted/returned value is decimal string. |
 | 5 | video_url | Lecture video URL | TEXT | N/A | N/A | No |  | Omitted | N/A | 3.3 | No request field; nullable legacy column remains NULL. |
 | 6 | sort_order | Lecture order | INT | N/A | N/A | No in DB; required in API |  | Request order | Request body | 3.3 | Logical order → physical sort_order; no positivity rule inferred. |
-| 7 | status | Lesson status | VARCHAR | 20 | N/A | No in DB; default applies |  | Omit column; candidate default DRAFT | Legacy DDL | 3.3 | LessonStatus enum members are SOURCE_REQUIRED; pilot lifecycle differs. |
-| 8 | created_at | Creation time | TIMESTAMP | N/A | N/A | Yes |  | CURRENT_TIMESTAMP | Database clock | 3.3 | Legacy DDL has no default; timezone semantics unresolved. |
-| 9 | updated_at | Update time | TIMESTAMP | N/A | N/A | Yes |  | CURRENT_TIMESTAMP | Database clock | 3.3 | Same insert timestamp candidate; legacy DDL has no default. |
+| 7 | status | Lesson status | VARCHAR | 20 | N/A | No in DB; explicit value supplied |  | `PUBLISHED` | User decision | 3.3 | Explicit INSERT value; does not use legacy default DRAFT. |
+| 8 | created_at | Creation time | TIMESTAMP | N/A | N/A | Yes |  | `CURRENT_TIMESTAMP` | Database clock | 3.3 | Legacy DDL has no default; live timezone/schema behavior is not verified. |
+| 9 | updated_at | Update time | TIMESTAMP | N/A | N/A | Yes |  | `CURRENT_TIMESTAMP` | Database clock | 3.3 | Same database timestamp expression as created_at. |
+
+## Ordered asset association mapping — lesson_uploads
+
+**Áp dụng khi**
+
+- `asset_refs` contains one or more unique UploadAsset IDs that were resolved for the same Mentor, `LECTURE` purpose and course.
+- The association rows are inserted after the lesson row and before the transaction commits.
+
+| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
+|---:|---|---|---|---:|---:|---|---|---|---|---:|---|
+| 1 | lesson_id | Lecture ID | BIGINT | N/A | N/A | Yes | ● | ID returned by lessons INSERT | Database | 3.4 | FK to lessons.id; delete cascades with lesson. |
+| 2 | upload_id | UploadAsset ID | BIGINT | N/A | N/A | Yes | ● | Validated asset_refs ID | Request after scoped uploads lookup | 3.4 | FK to uploads.id; unique per lesson. |
+| 3 | asset_position | Asset position | BIGINT | N/A | N/A | Yes |  | Zero-based original array position | Request order | 3.4 | Nonnegative and unique per lesson; API #48 orders by this field. |
+
+The insert is skipped for an empty asset_refs array. Any incomplete relation insert rolls back the lesson and all links. Migration availability on the live database is not verified.
 
 ## Delete mapping
 

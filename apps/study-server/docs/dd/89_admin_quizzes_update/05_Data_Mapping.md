@@ -15,191 +15,176 @@ status: "Draft — Needs Confirmation"
 
 - [Step 0 — Authentication and authorization](#step-0-authentication-and-authorization)
 - [Step 1 — Validate request](#step-1-validate-request)
-- [Step 2 — Load target quiz](#step-2-load-target-quiz)
+- [Step 2 — Lock target quiz and children](#step-2-lock-target-quiz-and-children)
 - [Step 3 — Check attempt and answer history](#step-3-check-attempt-and-answer-history)
-- [Step 4 — Update quiz parent](#step-4-update-quiz-parent)
+- [Step 4 — Validate course and update quiz parent](#step-4-validate-course-and-update-quiz-parent)
 - [Step 5 — Delete old choices](#step-5-delete-old-choices)
 - [Step 6 — Delete old questions](#step-6-delete-old-questions)
 - [Step 7 — Insert replacement question set](#step-7-insert-replacement-question-set)
 - [Step 8 — Build response and commit](#step-8-build-response-and-commit)
 - [Step 9 — Return success or error](#step-9-return-success-or-error)
 
+<a id="step-0-authentication-and-authorization"></a>
 ## Step 0 — Authentication and authorization
 
-- Nhận Authorization Bearer JWT theo catalog.
-- Token thiếu/sai/hết hạn → HTTP 401 DESIGN_AUTHENTICATION_REQUIRED.
-- Principal không có Admin role hoặc quiz-management permission → HTTP 403 DESIGN_ACCESS_DENIED.
-- AC-35 xác nhận permission nghiệp vụ; Study chưa có policy/claim mapping tương ứng.
-- Hoàn tất authorization trước khi đọc Quiz, attempts hoặc answers.
-- Không dùng Student guard để thay thế Admin guard.
+- Route nhận raw path, body bytes và Authorization; không parse JSON ở FastAPI.
+- Shared `validate_current_user_request(..., role="ADMIN")` chạy trước path/body validation và mọi query.
+- Token thiếu/sai/hết hạn → HTTP 401 `DESIGN_AUTHENTICATION_REQUIRED`.
+- Principal không có role ADMIN → HTTP 403 `DESIGN_ACCESS_DENIED`.
+- AC-35 fine-grained quiz-management permission chưa có claim/policy source; code chỉ thực thi role ADMIN.
+- Dynamic path `/api/v1/admin/quizzes/{quiz_id}` đã được đăng ký trong `DESIGN_CONTRACT_PATHS`.
 
-| Item | Current evidence | Status |
-|---|---|---|
-| Admin Bearer guard | Current Study auth helper chỉ kiểm tra Student | NOT_FOUND |
-| Quiz-management permission | AC-35 precondition; source policy chưa có | SOURCE_REQUIRED |
-| API #89 route | Không có route/module/test | UNWIRED / NOT_FOUND |
-| Middleware path | Dynamic Admin quiz path chưa có trong DESIGN_CONTRACT_PATHS | Conditional future wiring gap |
-
+<a id="step-1-validate-request"></a>
 ## Step 1 — Validate request
 
-### Direct input
-
-| Field | Source | Rule | Status |
+| Input | Source | Runtime rule | Status |
 |---|---|---|---|
-| quiz_id | Required path | int64; min/max chưa có nguồn | DIRECT |
-| Query | Catalog/diagram | Không khai báo | DIRECT |
-| Body | Catalog | Không khai báo | DIRECT absence |
+| quiz_id | Required path `int64!` | Decimal digits; 1..9223372036854775807; invalid → 422 | Positive-only rule DERIVED |
+| config | Outer body `string!` | Strict JSON string; inner config object theo validator #88 | Reused DERIVED proposal |
+| questions | Outer body `string!` | Strict JSON string; inner array theo validator #88 | Reused DERIVED proposal |
+| Query | Catalog/diagram | Không khai báo | DIRECT absence |
 
-### Candidate body — chỉ sau khi được duyệt
+- Outer body chỉ nhận `config` và `questions`; field dư hoặc sai kiểu trả 422.
+- `config.course_id` là signed int64; `title` tối đa 200; `duration_minutes` optional/null và int32; `passing_score` là decimal-string biểu diễn chính xác trong `NUMERIC(5,2)`.
+- `questions[].type` theo ba giá trị validator #88: `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TRUE_FALSE`.
+- `choices[].is_correct` optional; khi thiếu, validator #88 mặc định `false`.
+- `questions=[]` và `choices=[]` được chấp nhận; không thêm answer-count rule.
+- Các body/nested rules là DERIVED vì catalog #89 không khai báo body.
 
-| Field | Candidate type | Candidate use | Status |
-|---|---|---|---|
-| config | string | Parse như #88 proposed JSON object | DERIVED |
-| questions | string | Parse như #88 proposed JSON array | DERIVED |
+<a id="step-2-lock-target-quiz-and-children"></a>
+## Step 2 — Lock target quiz and children
 
-- Nếu owner duyệt body proposal, kiểm tra field presence/type và parse trước khi mở transaction.
-- Embedded JSON sai cú pháp/shape theo proposal → candidate HTTP 422 DESIGN_VALIDATION_ERROR.
-- Candidate config fields: course_id, title, duration_minutes?, passing_score.
-- Candidate questions fields: text, type, choices[{text,is_correct}].
-- Không thêm status, description, question score, query hoặc request field khác.
-- Rule trim, length, answer-count, enum, numeric range và payload-size chưa có nguồn.
-- Inner rules tiếp tục là proposal cho tới khi được xác nhận.
+### Q1 — Lock active Quiz
 
-## Step 2 — Load target quiz
-
-### Q1 — Candidate target read
-
-| Target | Column | Predicate | Purpose | Status |
+| Target | Column | Predicate | Operation | Status |
 |---|---|---|---|---|
-| legacy quizzes AS q | q.id | q.id = :quiz_id | Kiểm tra Quiz tồn tại và nạp metadata hiện tại | DERIVED; live schema chưa xác minh |
-| legacy quizzes AS q | q.course_id | Cùng row | Candidate current course context | Legacy nullable discrepancy |
-| legacy quizzes AS q | q.status | Cùng row | Chỉ đọc để bảo toàn; không cập nhật | Enum/lifecycle SOURCE_REQUIRED |
+| legacy quizzes AS q | q.id, q.status | q.id = :quiz_id AND status IS DISTINCT FROM 'DELETED' | `SELECT ... FOR UPDATE` | DERIVED; live schema chưa xác minh |
 
-- Không có row → candidate HTTP 404 DESIGN_RESOURCE_NOT_FOUND theo code catalog.
-- Không lấy Quiz ID từ body; path parameter là key.
-- Transaction isolation/row-lock policy cần phối hợp API tạo attempt; source chưa xác nhận.
+- Không có active row hoặc row đã tombstone → HTTP 404 `DESIGN_RESOURCE_NOT_FOUND`.
+- Lock parent Quiz trước child rows để giữ thứ tự khóa thống nhất.
+- Không đọc hoặc thay đổi `status`, `description`, `created_at` ngoài điều kiện tombstone.
 
+### Q1.1 — Lock current Questions and Choices
+
+| Target | Column | Predicate | Operation | Status |
+|---|---|---|---|---|
+| quiz_questions AS question | question.id | question.quiz_id = :quiz_id | `SELECT ... ORDER BY id FOR UPDATE` | Legacy candidate |
+| quiz_choices AS choice | choice.id | choice.question_id = question.id AND question.quiz_id = :quiz_id | `SELECT ... ORDER BY id FOR UPDATE` | Legacy candidate |
+
+- Xác thực ID rows là số dương, duy nhất; projection sai → rollback và HTTP 500.
+- Lock child rows trước history check; sau DELETE, so sánh ID `RETURNING` với tập đã khóa.
+
+<a id="step-3-check-attempt-and-answer-history"></a>
 ## Step 3 — Check attempt and answer history
 
-### Q2 — Candidate attempt existence
+### Q2 — Check history
 
 | Target | Column | Predicate | Purpose | Status |
 |---|---|---|---|---|
-| legacy quiz_attempts AS qa | qa.id | qa.quiz_id = :quiz_id | Phát hiện attempt gắn với Quiz | DERIVED safety proposal |
+| quiz_attempts AS attempt | attempt.quiz_id | attempt.quiz_id = :quiz_id | Chặn mọi Quiz có attempt | DERIVED safety guard |
+| quiz_answers AS answer | answer.question_id | answer.question_id thuộc quiz_questions.quiz_id = :quiz_id | Giữ answer FK history | Legacy candidate |
+| quiz_answers AS answer | answer.choice_id | answer.choice_id thuộc quiz_choices của Quiz | Giữ choice FK history | Legacy candidate |
 
-### Q3 — Candidate answer references
+- Nếu `has_attempts=true` hoặc `has_answers=true`, trả 422 `DESIGN_VALIDATION_ERROR` trước mọi write.
+- Không xóa attempt/answer rows; API #89 không version hoặc snapshot câu hỏi cũ.
+- `FOR UPDATE` trên Quiz/Question/Choice là local locking proposal để ngăn candidate FK insert đồng thời; fake-session tests không xác minh PostgreSQL concurrency.
 
-| Target | Column | Predicate | Purpose | Status |
+<a id="step-4-validate-course-and-update-quiz-parent"></a>
+## Step 4 — Validate course and update quiz parent
+
+### Q3 — Lock target Course
+
+| Target | Column | Predicate | Operation | Status |
 |---|---|---|---|---|
-| legacy quiz_questions AS qq | qq.id | qq.quiz_id = :quiz_id | Khoanh vùng question cũ | Candidate relation |
-| legacy quiz_answers AS ans | ans.question_id | ans.question_id = qq.id | Tìm answer history theo question | DERIVED safety proposal |
-| legacy quiz_choices AS qc | qc.id | qc.question_id = qq.id | Khoanh vùng choice cũ | Candidate relation |
-| legacy quiz_answers AS ans | ans.choice_id | ans.choice_id = qc.id | Tìm answer history theo choice | DERIVED safety proposal |
+| courses AS course | course.id | course.id = :course_id | `SELECT ... FOR KEY SHARE` | Legacy BIGINT candidate |
 
-- Nếu Q2 hoặc Q3 có history, candidate dừng trước mutation và trả 422 DESIGN_VALIDATION_ERROR.
-- Proposal bảo vệ IDs mà APIs #29–#32/ERD dùng; policy chưa được duyệt.
-- Precheck không chứng minh race-safety. Lock/isolation phải thống nhất với API #29/#30 trước triển khai.
+- Course không tồn tại → rollback và HTTP 422 `DESIGN_VALIDATION_ERROR` tại `config.course_id`.
+- Cho phép chuyển Course sang một Course khác đang tồn tại; không kiểm tra status, enrollment hoặc publish state.
 
-## Step 4 — Update quiz parent
-
-### M1 — Candidate UPDATE legacy quizzes
+### M1 — Update quizzes
 
 | Input/logical field | Candidate column | Transform/setting | Status |
 |---|---|---|---|
 | path quiz_id | quizzes.id | WHERE id = :quiz_id; giữ PK | Direct path + candidate schema |
-| config.course_id | quizzes.course_id | Gán giá trị candidate | DERIVED; course-move policy open |
+| config.course_id | quizzes.course_id | Gán target ID | DERIVED |
 | config.title | quizzes.name | Alias title → name | DERIVED; VARCHAR(200) candidate |
-| config.passing_score | quizzes.passing_score | decimal-string → NUMERIC candidate | Scale/range open |
-| config.duration_minutes | quizzes.time_limit_minutes | Alias trực tiếp | Null/omission open |
-| Transaction timestamp | quizzes.updated_at | Candidate transaction time | DDL NOT NULL/no default; clock owner open |
-| N/A | quizzes.status | Không cập nhật | Không có status trong candidate body |
-| N/A | quizzes.description | Không cập nhật | Không có logical Quiz field |
+| config.passing_score | quizzes.passing_score | decimal-string → NUMERIC(5,2) | DERIVED |
+| config.duration_minutes | quizzes.time_limit_minutes | Giá trị hoặc NULL khi omit/null | DERIVED |
+| Request timestamp | quizzes.updated_at | `CURRENT_TIMESTAMP` | DERIVED; legacy column NOT NULL |
+| N/A | quizzes.status | Giữ nguyên | Not in request |
+| N/A | quizzes.description | Giữ nguyên | Not in request |
+| N/A | quizzes.created_at | Giữ nguyên | Not in request |
 
+- UPDATE phải trả đúng quiz_id/course_id/title/duration/score; sai projection → rollback và HTTP 500.
 - Tham chiếu [07_quizzes_update.md](./07_quizzes_update.md).
-- Q1 no-row sau SELECT nhưng UPDATE không thấy row là integrity/concurrency failure; candidate 500.
 
+<a id="step-5-delete-old-choices"></a>
 ## Step 5 — Delete old choices
 
-### M2 — Candidate DELETE legacy quiz_choices
+### M2 — Delete quiz_choices
 
-- Xóa choices thuộc questions hiện tại của Quiz.
-- Candidate scope: question_id thuộc quiz_questions có quiz_id = :quiz_id.
-- Xóa choices trước question rows để tôn trọng quan hệ 1:N.
-- Chỉ chạy sau Q2/Q3 không thấy history và proposal được duyệt.
+- Delete qua join `quiz_questions` bằng `question.quiz_id = :quiz_id`.
+- Xóa choices trước question rows để giữ thứ tự FK child-first.
+- `RETURNING choice.id` phải khớp chính xác tập choice IDs đã khóa; mismatch → rollback và HTTP 500.
 - Tham chiếu [08_quiz_choices_delete.md](./08_quiz_choices_delete.md).
-- FK/cascade behavior live chưa xác minh.
 
+<a id="step-6-delete-old-questions"></a>
 ## Step 6 — Delete old questions
 
-### M3 — Candidate DELETE legacy quiz_questions
+### M3 — Delete quiz_questions
 
-- Candidate predicate: quiz_questions.quiz_id = :quiz_id.
-- Xóa sau khi choices cũ được xử lý.
+- Delete theo `quiz_questions.quiz_id = :quiz_id` sau khi choices cũ đã xóa.
+- `RETURNING question.id` phải khớp tập question IDs đã khóa; mismatch → rollback và HTTP 500.
+- Không xóa history; history guard phải chạy trước M1–M3.
 - Tham chiếu [09_quiz_questions_delete.md](./09_quiz_questions_delete.md).
-- Không xóa history khi chưa có chính sách/version model.
 
+<a id="step-7-insert-replacement-question-set"></a>
 ## Step 7 — Insert replacement question set
 
-### M4 — Candidate INSERT legacy quiz_questions
+### M4 — Insert quiz_questions
 
-- Tạo một row cho mỗi phần tử questions[] theo request order.
-- Map text → question_text; index → sort_order zero-based là proposal từ #88.
-- Dùng score default 1 trong legacy DDL chỉ làm candidate; không thêm score vào contract.
-- Lấy generated question ID để gắn choices.
-- Legacy table không có type; không thể khẳng định QuestionType được lưu.
+- Tạo row cho mỗi `questions[i]` theo input order.
+- Map `questions[i].text` → `question_text`.
+- Map `questions[i].type` → local migration-013 `question_type` candidate.
+- Map `i` → `sort_order` zero-based.
+- Bỏ `score` để dùng DDL default 1; không thêm score vào contract.
 - Tham chiếu [10_quiz_questions_insert.md](./10_quiz_questions_insert.md).
 
-### M5 — Candidate INSERT legacy quiz_choices
+### M5 — Insert quiz_choices
 
-- Tạo choices dưới question ID mới từ M4.
-- Candidate map text → choice_text và is_correct → is_correct.
-- Legacy table không có choice order.
-- Không trả answer key is_correct theo suy luận.
+- Gắn choices bằng generated question ID từ M4.
+- Map `choices[j].text` → `choice_text`.
+- Map `choices[j].is_correct` → `is_correct`; absent được validator #88 chuẩn hóa thành false.
+- Map `j` → migration-013 `sort_order` zero-based.
 - Tham chiếu [11_quiz_choices_insert.md](./11_quiz_choices_insert.md).
 
+<a id="step-8-build-response-and-commit"></a>
 ## Step 8 — Build response and commit
 
-- Dựng ApiEnvelope<Quiz> từ parent và replacement rows theo logical response.
-- data.id lấy từ quizzes.id; data.title map từ quizzes.name.
-- course_id, duration_minutes, passing_score map theo updated row/candidate config.
-- data.questions[].id lấy generated question IDs; text map từ question_text.
-- data.questions[].type không có legacy column; QuizChoice output shape/order chưa chốt.
-- Không tuyên bố response đầy đủ nếu QuestionType/QuizChoice chưa được persistence.
-- Commit sau khi mutation và response mapping hợp lệ; lỗi trước commit rollback toàn transaction.
-- API Guidelines yêu cầu error data=null; current helper serialize data=None thành {}.
-- Dynamic path chưa có allowlist mapping; lỗi framework có thể dùng generic business code.
+- Dựng `ApiEnvelope<Quiz>` từ parent `UPDATE ... RETURNING` và replacement rows.
+- Map `data.id`, `course_id`, `title`, `duration_minutes`, `passing_score` từ row đã lưu.
+- Map mỗi question/choice từ generated ID và projection `INSERT ... RETURNING`; input order được giữ trong response arrays.
+- Admin choice response reuse #88 `{id,text,is_correct}`; Student API #28 không được trả `is_correct`.
+- Null `duration_minutes` bị omit bởi response model `response_model_exclude_none=True`.
+- Build và validate toàn response trước `db.commit()`; query, delete, insert, mapping hoặc commit failure đều rollback và trả 500.
+- Shared error helper trả `data:null` và `meta.fieldErrors` khi lỗi validation.
 
+<a id="step-9-return-success-or-error"></a>
 ## Step 9 — Return success or error
 
-### 9.1. Thành công
+| Condition | HTTP | Business code | Transaction |
+|---|---:|---|---|
+| Quiz cập nhật thành công | 200 | `DESIGN_RESOURCE_UPDATED` | Commit sau mapping |
+| Token không hợp lệ | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Chưa mở query |
+| Thiếu role ADMIN | 403 | `DESIGN_ACCESS_DENIED` | Chưa mở query |
+| Path/body lỗi, Course thiếu hoặc Quiz có history | 422 | `DESIGN_VALIDATION_ERROR` | Không có write; rollback nếu query đã chạy |
+| Quiz thiếu hoặc status=`DELETED` | 404 | `DESIGN_RESOURCE_NOT_FOUND` | Rollback nếu query đã chạy |
+| DB/query/projection/commit lỗi | 500 | `DESIGN_INTERNAL_ERROR` | Rollback toàn transaction |
 
-- HTTP 200.
-- businessCode = DESIGN_RESOURCE_UPDATED.
-- Direct response type = ApiEnvelope<Quiz>.
-- Không thêm status, description, question score hoặc answer key.
+- Không thêm 409 hoặc business code ngoài catalog.
+- Không trả SQL, stack trace, hoặc dữ liệu nội bộ trong message.
+- Request body, history guard, tombstone handling, Course move và lock semantics vẫn là DERIVED/open-owner choices.
 
-### 9.2. Authentication/authorization
-
-- Token thiếu/sai: HTTP 401 DESIGN_AUTHENTICATION_REQUIRED.
-- Admin/quiz-management permission bị từ chối: HTTP 403 DESIGN_ACCESS_DENIED.
-
-### 9.3. Resource not found
-
-- quiz_id không tồn tại → candidate HTTP 404 DESIGN_RESOURCE_NOT_FOUND.
-- Visibility sau soft delete phụ thuộc policy #90 chưa được chốt.
-
-### 9.4. Validation
-
-- Nếu body proposal được duyệt, schema lỗi → candidate 422 DESIGN_VALIDATION_ERROR.
-- Nếu owner duyệt history guard, Quiz có attempt/answer → candidate 422 DESIGN_VALIDATION_ERROR.
-- Không thêm 409, 400 hoặc business code khác.
-
-### 9.5. System error
-
-- Query/write/ID retrieval/mapping/commit failure → HTTP 500 DESIGN_INTERNAL_ERROR theo catalog.
-- Nếu route được wire mà middleware không nhận dynamic path, business code có thể lệch catalog.
-- Không trả raw SQL, stack trace hoặc answer key.
----
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `3. Data mapping`

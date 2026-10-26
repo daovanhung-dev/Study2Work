@@ -18,13 +18,13 @@ status: "Draft — Needs Confirmation"
 | Character encoding | UTF-8 |
 | Content-Type | N/A — GET không khai báo body. |
 | Authentication | Bearer JWT |
-| Role | Admin; permission course management theo AC-32 |
+| Role | Shared JWT role `ADMIN`; permission course management riêng chưa được kiểm tra |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Principal phải có role Admin và quyền course management; guard hiện chưa có trong Study. | 0.1 |
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Runtime yêu cầu shared JWT role `ADMIN`; course-management permission riêng chưa có source check. | 0.1 |
 | 2 | Trace ID | X-Trace-Id | No | UUID | Correlation header do middleware kiểm tra/tạo; không phải filter nghiệp vụ. | 0.1 |
 
 ## Path parameters
@@ -37,8 +37,8 @@ Không có path parameter.
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
 | 1 | Course status | status | string | No | Chưa đặc tả | Chưa đặc tả | Text | CourseStatus members chưa đầy đủ | Không có predicate khi vắng mặt | Exact-match proposal; không default `PUBLISHED`. | 1.1 |
 | 2 | Mentor ID | mentor | int64 | No | Chưa đặc tả | Chưa đặc tả | Số nguyên 64-bit | Không đặc tả | Không có predicate khi vắng mặt | Exact-match candidate trên `courses.mentor_id`. | 1.2 |
-| 3 | Category ID | category | int64 | No | Chưa đặc tả | Chưa đặc tả | Số nguyên 64-bit | Không đặc tả | Không có predicate khi vắng mặt | Filter có trong contract; relation vật lý `SOURCE_REQUIRED`. | 1.3 |
-| 4 | Page | page | int32 | No | 1 (DERIVED) | Chưa đặc tả | Số nguyên 32-bit | Số nguyên ≥ 1 (DERIVED) | 1 (DERIVED) | Page 1-based; size cố định 20, không có query size. | 1.4 |
+| 3 | Category ID | category | int64 | No | −2^63 (format bound) | 2^63−1 (format bound) | Signed 64-bit integer | Signed int64 | Không có predicate khi vắng mặt | Int64 hợp lệ trả 422 `DESIGN_VALIDATION_ERROR` trước DB vì relation chưa có; fallback `DERIVED`. | 1.3 |
+| 4 | Page | page | int32 | No | 1 (DERIVED) | 2147483647 (format bound) | Số nguyên 32-bit | Số nguyên ≥ 1 | 1 (DERIVED) | Page 1-based; size cố định 20, không có query size. | 1.4 |
 
 Không có query `size` hoặc `sort` trong catalog; không thêm vào request.
 
@@ -60,15 +60,15 @@ GET /api/v1/admin/courses?category=4
 Authorization: Bearer <admin-access-token>
 ```
 
-`category` là query field trực tiếp trong catalog. DDL hiện tại không cung cấp quan hệ course-category, nên query này chưa có physical mapping và chặn implementation cho request có category; DD không bịa JOIN hoặc behavior reject.
+`category` là query field trực tiếp trong catalog. DDL hiện tại không cung cấp quan hệ course-category. Runtime kiểm tra kiểu signed int64 rồi trả 422 `DESIGN_VALIDATION_ERROR` trước DB cho giá trị hợp lệ; đây là fallback `DERIVED` theo API #06, không phải contract đã được owner duyệt. Không bịa JOIN hoặc schema.
 
 ## Quy tắc input đang mở
 
-- Query type parse không hợp lệ dùng 422 `DESIGN_VALIDATION_ERROR` theo catalog; middleware hiện chưa allowlist admin path.
-- Page không truyền dùng 1; page nhỏ hơn 1 bị từ chối với 422 theo proposal `DERIVED`.
+- Query type parse không hợp lệ dùng 422 `DESIGN_VALIDATION_ERROR`; middleware hiện allowlist exact path API #73.
+- Page không truyền dùng 1; page ngoài miền positive int32 bị từ chối với 422 theo implementation `DERIVED`.
 - Status được dùng exact match; enum member/casing chưa đầy đủ, không tạo whitelist mới.
-- `mentor` và `category` chỉ được kiểm tra kiểu int64 theo contract; không thêm range/ownership rule chưa có nguồn.
-- Query `category` chưa thể được xử lý đúng cho tới khi có relation source-backed.
+- `mentor` và `category` được kiểm tra signed-int64 bounds; không thêm positive range/ownership rule.
+- `category` int64 hợp lệ bị từ chối trước DB vì chưa có relation source-backed; invalid category type/range trả field validation error.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

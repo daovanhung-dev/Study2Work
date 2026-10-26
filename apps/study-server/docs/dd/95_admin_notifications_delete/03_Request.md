@@ -27,7 +27,7 @@ status: "Draft — Needs Confirmation"
 | 1 | Authorization | Authorization | Yes | Bearer <token> | Xác thực Admin và notification-management permission trước khi đọc hoặc mutation. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-permission) |
 | 2 | Trace ID | X-Trace-Id | No | UUID | Correlation theo shared middleware convention; không phải field nghiệp vụ. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-permission) |
 
-Idempotency-Key không có trong contract trực tiếp. Quy tắc DELETE lặp lại là proposal DERIVED, cần owner xác nhận.
+Idempotency-Key không có trong contract trực tiếp. Local fallback hard-delete nên request lặp sau khi xóa trả 404 theo trạng thái target không còn; đây là hệ quả `DERIVED`, không phải idempotency contract được duyệt.
 
 ## Path parameters
 
@@ -35,7 +35,7 @@ Idempotency-Key không có trong contract trực tiếp. Quy tắc DELETE lặp 
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
 | 1 | Notification ID | notification_id | int64 | Yes | N/A | N/A | Integer | N/A | N/A | ID notification mà Admin yêu cầu xóa/hủy. | [Step 1](./05_Data_Mapping.md#step-1-read-request) |
 
-Catalog does not define positivity/range beyond int64 or malformed-path mapping.
+Catalog chỉ khai báo int64. Local implementation yêu cầu ID dương trong signed-int64; input khác trả 422 `DESIGN_VALIDATION_ERROR` theo fallback `DERIVED`.
 
 ## Query parameters
 
@@ -55,10 +55,10 @@ X-Trace-Id: 00000000-0000-0000-0000-000000000095
 
 ## Quy tắc input đang mở
 
-- notification_id is direct int64 path; positive range and parse-failure mapping are unspecified.
+- notification_id is direct int64 path; local parser accepts positive ASCII digits through 9223372036854775807.
 - No body flag selects delete versus cancel; the target's approved lifecycle state/policy must decide the behavior.
-- Authorization precedence relative to 404 must follow the shared Admin policy.
-- Repeated DELETE behavior is DERIVED only; catalog does not declare idempotency or tombstone lookup semantics.
+- Shared ADMIN auth runs before path parsing or resource lookup; fine-grained notification-management permission is not implemented by the shared guard.
+- Repeated DELETE after physical removal returns 404; catalog does not declare idempotency or tombstone lookup semantics.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

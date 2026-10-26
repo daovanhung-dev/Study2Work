@@ -4,31 +4,31 @@ order: 6
 dd_id: "34"
 api_name: "Upload file"
 source_sheet: "4.Error"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 
 # Error
 
 ## Giải thích
 
-Các cases dưới đây giữ nguyên error status/business-code set của API #34 trong catalog. Điều kiện validation chi tiết và cách phân loại lỗi Object Storage còn cần xác nhận.
+API #34 chỉ dùng status/business-code trong catalog. Error response không đưa raw exception hoặc thông tin cấu hình storage ra client.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Required | Authorization | Bearer JWT thiếu, sai format, invalid hoặc expired. | 401 | DESIGN_AUTHENTICATION_REQUIRED | SOURCE_REQUIRED | [05_Data_Mapping.md](./05_Data_Mapping.md#0-check-quyền) | N/A | Exact message and token failure detail are not defined in API #34 contract. |
-| 2 | Authorization | Required | Role / upload scope | Authenticated principal không thuộc Student/Mentor hoặc không có quyền theo policy được duyệt. | 403 | DESIGN_ACCESS_DENIED | SOURCE_REQUIRED | [05_Data_Mapping.md](./05_Data_Mapping.md#0-check-quyền) | N/A | Purpose/course ownership policy is SOURCE_REQUIRED. |
-| 3 | Validation | Required | file | Required binary part is missing or request cannot be parsed as the declared multipart shape. | 422 | DESIGN_VALIDATION_ERROR | SOURCE_REQUIRED | [05_Data_Mapping.md](./05_Data_Mapping.md#1-validate-request) | N/A | Exact parser errors, size and content checks are not specified. |
-| 4 | Validation | Required | purpose | Required purpose field is missing or fails the eventual UploadPurpose contract. | 422 | DESIGN_VALIDATION_ERROR | SOURCE_REQUIRED | [05_Data_Mapping.md](./05_Data_Mapping.md#1-validate-request) | N/A | Allowed values are not defined; do not invent them. |
-| 5 | Validation | Conditional | course_id | Supplied course_id cannot be parsed as int64 under the eventual parser contract. | 422 | DESIGN_VALIDATION_ERROR | SOURCE_REQUIRED | [05_Data_Mapping.md](./05_Data_Mapping.md#1-validate-request) | N/A | Positive range/existence semantics are not defined. |
-| 6 | Dependency unavailable | Conditional | Object Storage | Storage dependency is unavailable under the eventual provider-failure classification. | 503 | DESIGN_DEPENDENCY_UNAVAILABLE | SOURCE_REQUIRED | [05_Data_Mapping.md](./05_Data_Mapping.md#3-upload-to-object-storage) | N/A | Catalog permits 503; exact provider conditions and cleanup behavior are open. |
-| 7 | System error | Conditional | Upload processing | Unexpected internal failure occurs outside the dependency-unavailable branch. | 500 | DESIGN_INTERNAL_ERROR | SOURCE_REQUIRED | [05_Data_Mapping.md](./05_Data_Mapping.md#3-upload-to-object-storage) | N/A | Do not expose credentials, storage details, raw provider body or stack trace. |
+| 1 | Authentication | Required | Authorization | Bearer thiếu, sai format, token invalid hoặc expired. | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | [05_Data_Mapping.md](./05_Data_Mapping.md#0-check-quyền) | N/A | Shared auth helper. |
+| 2 | Authorization | Required | Role/purpose | Role không thuộc Student/Mentor hoặc Student dùng LECTURE/Mentor dùng SUBMISSION. | 403 | DESIGN_ACCESS_DENIED | N/A | [05_Data_Mapping.md](./05_Data_Mapping.md#0-check-quyền) | N/A | Chặn trước DB/storage. |
+| 3 | Authorization | Conditional | course_id | Student không có enrollment ACTIVE hoặc Mentor không phải direct owner theo courses.mentor_id. | 403 | DESIGN_ACCESS_DENIED | N/A | [05_Data_Mapping.md](./05_Data_Mapping.md#2-permission-queries) | Rollback read transaction | Không thêm 404 theo error set #34. |
+| 4 | Validation | Required/type | file | Thiếu binary part hoặc multipart không parse được. | 422 | DESIGN_VALIDATION_ERROR | N/A | [05_Data_Mapping.md](./05_Data_Mapping.md#1-validate-request) | N/A | Không đặt MIME/size allowlist. |
+| 5 | Validation | Required/enum | purpose | Thiếu purpose hoặc giá trị không phải SUBMISSION/LECTURE. | 422 | DESIGN_VALIDATION_ERROR | N/A | [05_Data_Mapping.md](./05_Data_Mapping.md#1-validate-request) | N/A | Valid purpose nhưng role không tương ứng là 403. |
+| 6 | Validation | Conditional | course_id | Không parse được int64, ngoài signed int64 range, hoặc thiếu với LECTURE. | 422 | DESIGN_VALIDATION_ERROR | N/A | [05_Data_Mapping.md](./05_Data_Mapping.md#1-validate-request) | N/A | Không thêm positive-only rule. |
+| 7 | Dependency unavailable | Conditional | Object Storage | Cấu hình thiếu/không hợp lệ hoặc S3 upload thất bại. | 503 | DESIGN_DEPENDENCY_UNAVAILABLE | N/A | [05_Data_Mapping.md](./05_Data_Mapping.md#3-object-storage-mutation) | Rollback; best-effort delete UUID key | Cleanup lỗi không đổi response 503. |
+| 8 | System error | Conditional | Database metadata | Query scope, INSERT, commit hoặc metadata mapping gặp lỗi. | 500 | DESIGN_INTERNAL_ERROR | N/A | [05_Data_Mapping.md](./05_Data_Mapping.md#4-metadata-mutation) | Rollback; best-effort delete nếu object đã upload | Raw DB/provider details không trả client. |
 
-- The catalog defines only 401, 403, 422, 503 and 500 for API #34; no additional HTTP status or business code is added.
-- API Guidelines require error data = null; safe field details, if approved, belong under meta.fieldErrors.
-- There is no DB transaction or rollback mapping. Whether a partial/failed upload needs object cleanup is SOURCE_REQUIRED.
-- API #13 maps its avatar-provider failures to 500; this separate endpoint does not establish API #34's 503/500 mapping.
+- Error envelope dùng `data: null`; `meta.fieldErrors` chứa lỗi field khi framework cung cấp validation details.
+- Migration là source artifact; lỗi live database không chứng minh migration đã deploy.
+
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

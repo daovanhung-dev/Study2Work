@@ -13,7 +13,7 @@ status: "Draft — Needs Confirmation"
 
 - Danh sách dưới đây giữ nguyên HTTP status và business code của API catalog #76.
 - Body/status validation mapping là candidate vì direct request schema bị bỏ trống.
-- Admin guard, audit storage và route chưa tồn tại; bảng lỗi là design, không phải runtime evidence.
+- Route/guard/error integration có trong local source; audit persistence dùng fallback DERIVED. Tests dùng fake DB, không phải live runtime evidence.
 - Không thêm HTTP status hoặc business code ngoài tập đã khai báo trong catalog.
 
 ## Error cases
@@ -29,17 +29,17 @@ status: "Draft — Needs Confirmation"
 
 ## Error envelope
 
-API guideline yêu cầu data:null, meta.fieldErrors cho lỗi field-level và X-Trace-Id. Current error_response() trả data:{} nếu không truyền data; đây là discrepancy tích hợp cần xử lý khi wire route.
+API guideline yêu cầu data:null, meta.fieldErrors cho lỗi field-level và X-Trace-Id. Current error_response() trả data:null nếu không truyền data; dynamic route template đã được nhận diện qua FastAPI route metadata.
 
-Request-validation và unhandled-exception handlers chỉ chọn DESIGN_VALIDATION_ERROR/DESIGN_INTERNAL_ERROR cho path nằm trong DESIGN_CONTRACT_PATHS. Admin course status hiện chưa nằm trong allowlist; middleware dùng exact path membership, nên future route wiring phải hỗ trợ dynamic course_id qua route-aware/path-pattern mapping, không chỉ thêm path template có {course_id}.
+Request-validation handler chọn DESIGN_* code khi route template nằm trong DESIGN_CONTRACT_PATHS. API #76 đăng ký riêng `/api/v1/admin/courses/{course_id}/status`; focused HTTP tests xác nhận body validation trả `DESIGN_VALIDATION_ERROR` và `data:null`. FastAPI có thể validate body trước khi view kiểm tra ADMIN; view kiểm tra role trước path parsing và DB access.
 
 ## Branch ordering
 
-1. Authentication và authorization trước mọi lookup.
-2. Path/body validation trước mutation.
+1. FastAPI body schema validation có thể trả 422 trước khi handler chạy; không truy vấn DB.
+2. Với body hợp lệ, view kiểm tra Bearer/ADMIN trước raw path validation và DB access.
 3. Q1 không thấy course → 404.
-4. Status update + audit append cùng transaction candidate.
-5. Audit/update/projection/commit lỗi → 500.
+4. Target khác status hiện tại: update + audit append trong cùng transaction; target bằng hiện tại: no-op.
+5. Lock/update/audit/projection/commit lỗi → rollback và 500.
 6. Thành công → 200 DESIGN_RESOURCE_UPDATED.
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

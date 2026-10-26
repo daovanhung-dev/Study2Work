@@ -14,13 +14,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-25 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | `0.1` | `2026-10-24` | `Codex` | Tạo draft theo catalog và AC-25; ghi response, pagination, enrollment schema và authorization gaps. | Chờ xác nhận; chưa implementation-ready. |
+| `0.2` | `2026-10-25` | `Codex` | Chọn fallback `UserSummary[]` không phân trang; triển khai legacy BIGINT/ACTIVE enrollment và direct course owner; đồng bộ catalog/diagram và wire API #62. | `DERIVED — Draft — Needs Confirmation`; live DB chưa xác minh. |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

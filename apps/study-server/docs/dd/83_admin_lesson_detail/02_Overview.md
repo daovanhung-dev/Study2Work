@@ -20,11 +20,11 @@ status: "Draft — Needs Confirmation"
 | Purpose | Admin đọc thông tin một lesson được chọn để tiếp tục quản lý. |
 | Consumer/Actor | Admin có lesson-management permission |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin theo catalog và lesson-management permission theo tiền điều kiện AC-34; guard/policy chưa có trong Study source. |
+| Authorization | Role `ADMIN` qua shared guard; fine-grained lesson-management permission của AC-34 chưa có source. |
 | Direct response | `ApiEnvelope<Lesson>` |
 | Basis | Method/path/auth/path/response/status/errors DIRECT; query/schema mapping candidate; invalid-ID mapping DERIVED. |
 | Status | Draft — Needs Confirmation |
-| Current implementation | `UNWIRED / NOT_FOUND` — current Study source không có route, module hoặc test API #83. |
+| Current implementation | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` locally — route/module/test wired; raw malformed ID -> 404 và legacy BIGINT lookup là local derived choices. Live schema/deployment chưa xác minh. |
 | Transaction | N/A — API chỉ đọc. |
 | Side effects | Không ghi dữ liệu; update/status/delete thuộc các API #84–#86. |
 
@@ -39,8 +39,8 @@ status: "Draft — Needs Confirmation"
 - [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — UUID/versioned lesson model khác response contract.
 - [API #09 Lesson model/query/view](../../../app/modules/guest/api_09_courses_curriculum/) and [focused test](../../../tests/modules/guest/api_09_courses_curriculum/test_courses_curriculum.py) — field alias/null handling and public-only filter precedent; Admin #83 does not inherit `PUBLISHED` predicate.
 - [API #74 Admin detail DD](../74_admin_course_detail/02_Overview.md) — Admin detail workflow, read-only mapping and derived invalid-path handling precedent.
-- [API #82 Admin lesson list DD](../82_admin_lessons_list/02_Overview.md) — same AC-34 permission, status/schema and error-envelope gaps.
-- [Auth helper](../../../app/utils/auth.py), [middleware](../../../app/core/middleware.py), [error helper](../../../app/core/responses.py) and [API guidelines](../../../../../contracts/api-guidelines/README.md) — current guard/error integration boundary.
+- [API #82 Admin lesson list DD](../82_admin_lessons_list/02_Overview.md) — shared AC-34 permission and active-schema questions.
+- [API #83 route](../../../app/api/v1.py), [module](../../../app/modules/admin/api_83_admin_lesson_detail/), [focused test](../../../tests/modules/admin/api_83_admin_lesson_detail/test_admin_lesson_detail.py), [Auth helper](../../../app/utils/auth.py), [middleware](../../../app/core/middleware.py) and [error helper](../../../app/core/responses.py) — current local implementation and integration.
 
 ## Tables read
 
@@ -62,15 +62,15 @@ Không có — GET chỉ đọc.
 - `resources` và `lesson_progress` là quan hệ tồn tại trong legacy artifacts. API #86 còn phải kiểm tra progress/reference tại thời điểm xóa; không dựa vào dữ liệu detail cũ để quyết định delete.
 - Admin detail không áp dụng `PUBLISHED` predicate từ API #09; AC-34 cần đọc lesson trước nhánh đổi trạng thái.
 - Legacy `course_id` nullable trong DDL trong khi reusable `Lesson.course_id` required; active schema/live metadata chưa xác minh.
-- `LessonStatus` members/casing chưa có danh sách chuẩn; không tự tạo enum hoặc filter.
-- API #86 có thể xóa mềm hoặc cứng theo policy; marker và việc #83 có ẩn lesson đã xóa chưa được định nghĩa.
+- `LessonStatus` members/casing chưa có danh sách chuẩn; không tự tạo enum ngoài policy tombstone.
+- API #86 chọn local DERIVED marker `status='DELETED'`; #83 trả 404 cho Lesson mang marker này.
 
 ## Assumptions
 
 - Q1 đọc một row theo `lessons.id = :lesson_id` từ legacy DDL candidate; không join course/resources/progress khi response không yêu cầu fields từ các bảng đó.
 - Nếu lesson không tồn tại, trả 404 `DESIGN_RESOURCE_NOT_FOUND` theo catalog.
-- Path value không chuyển được thành int64 được đề xuất ánh xạ 404 để giữ đúng error set catalog, tương tự proposal ở API #74; cần custom integration nếu framework mặc định 422.
-- Admin xem được lesson ở mọi status; không dùng public API #09 filter `PUBLISHED`. Đây là `DERIVED` từ AC-34 flow.
+- Path value không chuyển được thành int64 được ánh xạ 404 để giữ đúng error set catalog, theo pattern API #74. Đây là DERIVED và được xác minh bằng focused HTTP tests.
+- Admin xem được Lesson ở mọi status ngoại trừ tombstone `DELETED`; không dùng public API #09 filter `PUBLISHED`. Marker là `DERIVED` từ API #86/#77.
 - Optional `content` và `video_url` serialize `null` khi legacy column NULL theo API #09 model/test precedent; cần xác nhận nếu contract muốn omit.
 
 ## Conflicts
@@ -78,9 +78,8 @@ Không có — GET chỉ đọc.
 - AC-34 detail step yêu cầu đọc dependencies nhưng response/API contract không có trường phụ thuộc hoặc quy tắc query.
 - Legacy BIGINT lesson model và V1-PILOT UUID/versioned model không tương đương; live DB chưa kiểm chứng.
 - Legacy DDL cho phép `course_id` NULL nhưng Lesson schema yêu cầu int64.
-- Current Study auth chỉ có Student guard; Admin role/permission source chưa có.
-- Middleware allowlist không chứa API #83; malformed-path and unhandled errors would use generic codes unless future route integration changes it.
-- Error guideline yêu cầu `data:null`; `error_response` hiện default `data:{}` khi không truyền.
+- Shared guard hiện xác thực role `ADMIN`; fine-grained lesson-management permission của AC-34 chưa có source.
+- Middleware allowlist nhận route template API #83; `error_response` mặc định `data:null`.
 - Soft-delete visibility của #83 chưa có marker/policy được duyệt.
 
 ## Security note
@@ -99,8 +98,8 @@ Không có — GET chỉ đọc.
 ## Contract interpretation
 
 - DIRECT: method/path, Bearer JWT, role Admin, `lesson_id:int64!`, `ApiEnvelope<Lesson>`, HTTP 200 và đúng lỗi 401/403/404/500.
-- DERIVED: one-row legacy lookup, no public status filter, malformed path -> 404, optional NULL serialization.
-- SOURCE_REQUIRED: Admin permission implementation, active schema/live DB, dependency detail, status enum, soft-delete visibility and error middleware integration.
+- DERIVED: one-row legacy lookup, excludes only `DELETED`, malformed path -> 404, optional NULL serialization.
+- SOURCE_REQUIRED: fine-grained Admin permission, active schema/live DB, dependency detail, status enum and soft-delete visibility.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

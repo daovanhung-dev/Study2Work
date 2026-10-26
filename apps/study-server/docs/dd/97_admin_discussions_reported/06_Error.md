@@ -15,26 +15,29 @@ status: "Draft — Needs Confirmation"
 
 | HTTP | Business code | Meaning | Direct/conditional handling |
 |---:|---|---|---|
-| 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Missing, malformed or invalid Bearer/JWT | DIRECT code; Admin authentication implementation absent |
-| 403 | `DESIGN_ACCESS_DENIED` | Authenticated principal lacks Admin authorization | DIRECT code; Admin role guard/policy absent |
-| 500 | `DESIGN_INTERNAL_ERROR` | Internal read, query or required mapping failure | DIRECT code; route absent |
+| 401 | `DESIGN_AUTHENTICATION_REQUIRED` | Missing, malformed or invalid Bearer/JWT | DIRECT code; shared auth helper |
+| 403 | `DESIGN_ACCESS_DENIED` | Authenticated principal lacks Admin authorization | DIRECT code; shared `role="ADMIN"` guard |
+| 422 | `DESIGN_VALIDATION_ERROR` | Invalid/non-positive/out-of-int32 `page` | Local `DERIVED` fallback; not listed in catalog |
+| 500 | `DESIGN_INTERNAL_ERROR` | Internal read, query or required mapping failure | DIRECT code; wired locally |
 
-Success is HTTP 200 `DESIGN_RESOURCE_RETRIEVED`. Catalog #97 does not list 404 or 422; do not add them.
+Success is HTTP 200 `DESIGN_RESOURCE_RETRIEVED`. Catalog #97 does not list 404 or 422; implementation adds only the documented local 422 page-validation fallback.
 
 ## Error branches and open behavior
 
 | Branch | Expected contract | Current evidence / unresolved |
 |---|---|---|
-| Bearer/JWT failure | 401 | Study helper has a Student guard; Admin guard and Admin claim policy are `SOURCE_REQUIRED` |
-| Role/access failure | 403 | Admin authorization policy and access scope are `SOURCE_REQUIRED` |
-| Invalid `reason` / `severity` value | No code specified | Taxonomy and validation policy absent; do not invent 422 |
-| Invalid `page` parse/range | No code specified | Framework parse behavior vs catalog remains unresolved |
-| Missing report/discussion relation or mapping integrity failure | 500 candidate | Exact missing-row/empty-queue/error semantics not stated |
-| Internal exception | 500 `DESIGN_INTERNAL_ERROR` | Current generic middleware would use `INTERNAL_SERVER_ERROR` for a non-allowlisted path if wired without update |
+| Bearer/JWT failure | 401 | Shared helper validates before page parse and DB access |
+| Role/access failure | 403 | Shared `ADMIN` guard; fine-grained AC-37 permission remains unverified |
+| Invalid `reason` / `severity` value | No error | Free-form exact-match filters; no taxonomy validation |
+| Invalid `page` parse/range | 422 `DESIGN_VALIDATION_ERROR` | Local `DERIVED` fallback, with field detail |
+| No matching report | 200 empty Page | `total=0`, `total_pages=0` |
+| Missing required Discussion/author projection | 500 `DESIGN_INTERNAL_ERROR` | Does not fabricate required course/author/status fields |
+| SQLAlchemy query failure | 500 `DESIGN_INTERNAL_ERROR` | Read transaction rollback, safe message, trace ID |
+| Internal exception | 500 `DESIGN_INTERNAL_ERROR` | Route is in `DESIGN_CONTRACT_PATHS` |
 
 ## Envelope discrepancy
 
-Shared API guidelines expect `data: null` on error. Current `app/core/responses.py:error_response` converts `None` to `{}`. Record this as a current helper discrepancy; no API #97 endpoint currently executes it. Future integration must align the approved envelope and direct catalog business code.
+Shared API guidelines expect `data: null` on error. Current `app/core/responses.py:error_response` passes `None` through to JSON, so API #97 error responses contain `data: null`.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

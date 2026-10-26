@@ -14,13 +14,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-25 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD API #58 từ catalog, AC-24 và nguồn schema hiện có | Draft — Needs Confirmation; giữ nguyên source/schema gaps |
+| 1.1 | 2026-10-25 | Codex | Chọn fallback theo chỉ dẫn user: BIGINT legacy support model, direct Mentor owner, collection response và full thread | DERIVED; đồng bộ catalog/diagram; live schema chưa xác minh |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -19,14 +19,14 @@ status: "Draft — Needs Confirmation"
 | Method | GET |
 | Endpoint | `/api/v1/admin/notifications` |
 | Purpose | Admin tra cứu notification để chọn nhánh tạo/gửi, cập nhật, xóa/hủy hoặc xem delivery status. |
-| Consumer/Actor | Admin có notification-management permission |
+| Consumer/Actor | Admin có notification-management permission theo AC-36 |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin theo catalog; AC-36 yêu cầu notification-management permission. Study chưa có Admin guard/policy. |
-| Basis | Endpoint/query/response/status/errors DIRECT; list cardinality, filter mapping và pagination chưa được xác nhận. |
+| Authorization | Runtime dùng role `ADMIN`; permission chuyên biệt và visibility scope chưa được xác nhận. |
+| Basis | Endpoint/query/status/errors DIRECT; Page response, legacy/outbox projection và pagination DERIVED. |
 | Status | Draft — Needs Confirmation |
-| Current implementation | `UNWIRED / NOT_FOUND`: không có route, module hoặc test API #92 trong Study source. |
-| Transaction | N/A — GET chỉ đọc. |
-| Side effects | N/A — API không ghi DB hoặc gọi delivery provider theo diagram #92. |
+| Current implementation | `SOURCE_BACKED_WITH_DERIVED_PROJECTIONS`: route/module/test API #92 đã wired trong Study. |
+| Transaction | Read-only; không commit khi thành công; rollback khi query hoặc mapping lỗi. |
+| Side effects | Không ghi DB hoặc gọi delivery provider. |
 
 ## Sources
 
@@ -34,77 +34,76 @@ status: "Draft — Needs Confirmation"
 - [AC/API index, AC-36](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — Admin permission, postcondition và năm endpoint.
 - [AC-36 activity diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — #92 query notifications rồi rẽ nhánh Create/Update/Delete/Status.
 - [DB table guide](../../diagrams/DB_UNICA_TABLES.md) và [DB ERD](../../diagrams/DB_UNICA_ERD.drawio) — legacy notification row, recipient/sender relations và delivery-schema status.
-- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — BIGINT `notifications`; không chứng minh live schema.
-- [V1-PILOT DDL](../../../../../infra/postgres/02_study_db.sql) — UUID `notifications` và `notification_deliveries`; mô hình riêng, không gộp vào catalog BIGINT.
-- [API #43 Student notification list](../43_users_me_notifications/02_Overview.md), [API #63 Mentor create](../63_mentor_notifications_create/02_Overview.md), [API #64 Mentor status](../64_mentor_notifications_status/02_Overview.md) — precedent và các schema/ID discrepancy.
-- [AC-36 create/status rows #93/#96](../../../../../docs/lists/list_api.md) và reusable `Operation` — #93 response/tracking mismatch đã được rà trong macro-review; quyết định vẫn mở.
+- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) và migration 009 — BIGINT notifications/delivery outbox candidate; không chứng minh live schema.
+- [V1-PILOT DDL](../../../../../infra/postgres/02_study_db.sql) — UUID learner notification/delivery riêng, không gộp với legacy.
+- [API #43 Student notification list](../43_users_me_notifications/02_Overview.md), [API #63 Mentor create](../63_mentor_notifications_create/02_Overview.md), [API #64 Mentor status](../64_mentor_notifications_status/02_Overview.md) — precedent có giới hạn.
+- [AC-36 create/status rows #93/#96](../../../../../docs/lists/list_api.md) và [macro-review](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md) — các discrepancy response/schema/permission vẫn mở.
 - Current [Study router](../../../app/api/v1.py), [middleware](../../../app/core/middleware.py), [response helper](../../../app/core/responses.py), [API Guidelines](../../../../../contracts/api-guidelines/README.md).
-- [Canonical DD Markdown templates](../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/) — tám sheet; manifest hash trong [VERIFICATION_REPORT.md](./VERIFICATION_REPORT.md).
+- [Canonical DD Markdown templates](../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/) — tám sheet; appendix template được giữ nguyên.
 
-## Tables/entities đọc
+## Tables read
 
 | Relation | Candidate fields | Basis/status |
 |---|---|---|
-| Legacy `notifications` | `id`, `user_id`, `sender_id`, `title`, `content`, `type`, `is_read`, `created_at` | BIGINT design candidate; mỗi row không chứng minh campaign/group projection. |
-| V1-PILOT `notifications` | UUID `id`, `learner_id`, `category`, `title`, `body`, `read_at`, `created_at` | Mô hình learner-scoped; không phải nguồn runtime đã xác nhận cho Admin. |
-| V1-PILOT `notification_deliveries` | UUID `notification_id`, `channel`, delivery `status` | Channel/status thuộc từng delivery; ID và grain khác API #92. |
-| `NotificationRecipient` | Logical relation trong AC flow | Không có bảng legacy cùng tên được xác nhận. |
+| Legacy `notifications` | `id`, `title`, `content`, `created_at` | BIGINT design candidate; row grain là notification theo recipient, không phải campaign đã duyệt. |
+| Legacy `notification_deliveries` | `notification_id`, `channel`, `status`, `updated_at` | Migration 009/API #63 outbox candidate; mỗi row theo notification/channel. |
+| V1-PILOT `notifications` | UUID `id`, `learner_id`, `title`, `body`, `read_at`, `created_at` | Learner-scoped model; không dùng cho runtime fallback #92. |
+| V1-PILOT `notification_deliveries` | UUID notification FK, per-channel `status` | Mô hình delivery riêng, không tương thích BIGINT notification ID. |
 
-## Tables/entities ghi
+## Tables write
 
 Không có — API #92 là GET/read-only; không INSERT/UPDATE/DELETE và không gọi provider.
 
 ## Mục chú ý
 
-- Catalog response trực tiếp là `ApiEnvelope<Notification>` dạng một object, trong khi API name, query `page` và AC-36 intent là danh sách. Giữ nguyên contract và nêu `ApiEnvelope<Page<Notification>>` như proposal riêng.
-- `NotificationChannel` và `NotificationStatus` không có value set trong catalog. Không suy `notifications.type` thành `channels` hoặc `notification_deliveries.status` thành Notification-level `status`.
-- Legacy `is_read` là boolean, không ánh xạ thành `status` hoặc `read_at`; pilot `read_at` gắn learner notification, không mặc nhiên là trạng thái đọc của Admin campaign.
-- Không có `scheduled_at` trong hai DDL được rà soát. `expires_at` ở pilot không tương đương `scheduled_at`.
-- AC-36 #92 node chỉ nêu query; 503 là error code trực tiếp trong catalog/diagram nhưng trigger dependency chưa được chỉ rõ.
-- #93 row trả `Notification` ở HTTP 202, còn Operation tracking summary nói notification POST trả `Operation`; không giải quyết discrepancy trong #92.
+- Catalog response trực tiếp là `ApiEnvelope<Notification>`; runtime trả `ApiEnvelope<Page<Notification>>` theo list intent/query `page`. Đây là `DISCREPANCY / DERIVED`, không phải catalog approval.
+- Runtime chỉ liệt kê legacy notification có ít nhất một delivery row để đủ `channels` và `status`; mỗi item giữ grain một `notifications.id`.
+- `channels` lấy từ outbox; `status` aggregate dùng thứ tự ưu tiên của API #64: `QUEUED`, sau đó `FAILED`, rồi `SENT`. Mapping này là local fallback, chưa phải enum rule được duyệt cho Admin.
+- Bộ lọc status/channel so sánh exact với aggregate; không trim, đổi case hay áp enum allowlist.
+- Page bắt đầu từ 1, mặc định 1, fixed size 20, sort `created_at DESC, id DESC`; các lựa chọn này là `DERIVED`.
+- `read_at` và `scheduled_at` bị bỏ qua vì schema legacy không có hai timestamp này; không đổi `is_read` hoặc `expires_at` sang timestamp.
+- Actor/recipient IDs, legacy `type`, `is_read`, `operation_id` và provider data không được trả.
+- 503 chỉ áp dụng cho `OperationalError` hoặc connection-invalidated DB error; lỗi SQL/mapping khác trả 500. 422 cho page không hợp lệ là fallback ngoài error set trực tiếp.
 
 ## Assumptions
 
-- Nếu owner duyệt response Page, đề xuất page bắt đầu 1, fixed size 20, sort `created_at DESC, id DESC`, theo cách phân trang design-only của API #43. Không chuyển rule Student ownership của #43 sang Admin.
-- Nếu owner duyệt field mapping, status là exact match và channel là phần tử chính xác trong `channels[]`; enum/token/case/normalization vẫn cần xác nhận trước khi dùng.
-- Mọi assumption là `DERIVED`; không dùng làm contract đã duyệt.
+- API list được triển khai thành Page, không trả một Notification đầu tiên hoặc singleton giả.
+- Admin role hiện có được dùng làm local authorization fallback; permission code/tenant scope còn SOURCE_REQUIRED.
+- Legacy/outbox candidate được dùng chỉ vì BIGINT ID và field/channel/status có bằng chứng cục bộ trong #63/migration 009; live availability chưa xác nhận.
+- API #92 không giải quyết Notification-vs-Operation ID bridge của #93.
 
 ## Conflicts
 
 | Nguồn A | Nguồn B | Xung đột | Ảnh hưởng |
 |---|---|---|---|
-| Catalog #92 | API name/AC-36/page query | Response là `Notification` đơn nhưng endpoint có ý nghĩa list | Chưa có collection/pagination contract. |
-| `Notification` schema | Legacy `notifications` | Thiếu `channels`, `status`, `read_at`, `scheduled_at` | Không map đầy đủ từ legacy row. |
-| `Notification` schema | V1-PILOT notifications/deliveries | UUID, learner grain, `body`, delivery-level channel/status; không tương thích BIGINT contract | Không ghép thành schema runtime. |
-| AC-36 #93 | Operation tracking summary | POST response Notification so với Operation | Client flow/ID handoff remains open after document macro-review. |
-| Catalog 503 | AC-36 list flow | Code có nhưng diagram chỉ ghi query | Trigger chưa biết; giữ `SOURCE_REQUIRED`. |
-| API Guidelines | Current response helper | Guideline yêu cầu error `data:null`; helper mặc định `{}` | Conditional discrepancy nếu route được wire. |
+| Catalog #92 | API name/AC-36/page query | Response trực tiếp là `Notification` đơn nhưng endpoint có ý nghĩa list | Runtime `Page<Notification>` là fallback; cần owner/catalog quyết định. |
+| `Notification` schema | Legacy `notifications`/outbox | Legacy thiếu `read_at`/`scheduled_at`; channel/status nằm ở delivery grain | Runtime chỉ trả fields có projection hợp lệ; scheduled/read timestamps bị omit. |
+| AC-36 #93 | Operation tracking summary | #93 response Notification so với Operation | Để mở ở macro-review; #92 không suy ID bridge. |
+| Catalog 503 | AC-36 list flow | Catalog có 503 nhưng diagram chỉ ghi query | Runtime ánh xạ lỗi kết nối DB sang 503 theo tên code; trigger chưa được owner duyệt. |
 
 ## Security note
 
-- Xác thực Bearer JWT và authorize Admin cùng notification-management permission trước khi đọc dữ liệu.
-- Không nhận role, actor ID hoặc quyền từ query/body; API không có body.
-- Không expose recipient IDs, provider message IDs, raw provider error, SQL hoặc stack trace trong list.
-- Phạm vi Admin/tenant/recipient visibility chưa có policy source; không tự mở rộng thành mọi notification toàn hệ thống trong implementation.
+- Runtime xác thực Bearer/JWT và role `ADMIN` trước khi parse page hoặc query.
+- AC-36 permission chuyên biệt và global/tenant visibility chưa có policy source; dùng role ADMIN chỉ là `DERIVED` fallback.
+- Không nhận role/actor ID/quyền từ query/body; không trả recipient/sender IDs, provider IDs, raw SQL hoặc stack trace.
 
 ## Performance note
 
-- AC-36 không nêu sort, page size, total count, cache hoặc latency objective.
-- Q1 chưa đủ source để chọn query/grouping an toàn; không tạo index/SLA hoặc giới hạn batch khi chưa có nguồn.
-- Page-size 20 và sort trong proposal chỉ là `DERIVED`, không phải runtime fact.
+- Runtime chạy một count và một page query, dùng chung filter/predicate; page size cố định 20 và sort ổn định.
+- AC-36 không nêu latency/SLA/cache; không có claim về query plan/index/live performance.
 
 ## Contract interpretation
 
-- `DIRECT`: method/path, Admin Bearer, query names/types, `ApiEnvelope<Notification>`, HTTP 200 và đúng errors 401/403/503/500.
-- `DERIVED`: response Page thay thế, page=1/size=20, stable order và cách match filter sau khi schema được duyệt.
-- `SOURCE_REQUIRED`: active table/grain, enum values, field projection, Admin permission policy, 503 trigger và empty-result semantics.
-- `DISCREPANCY`: list intent so với singleton response; logical Notification so với legacy/pilot schemas; #93 response so với Operation tracking summary.
+- `DIRECT`: method/path, Admin Bearer, query names/types, HTTP 200 `DESIGN_RESOURCE_RETRIEVED`, catalog response type và exact errors 401/403/503/500.
+- `DERIVED`: Page cardinality, page defaults/size/order, legacy/outbox projection, status/channel mapping, empty result, 422 page validation và DB connection→503.
+- `SOURCE_REQUIRED`: Admin campaign grain, permission scope, Notification enum approval, scheduled/read semantics, live DB/migration state.
+- `DISCREPANCY`: list intent so với singleton response; Admin Notification fields so với legacy/pilot schemas; #93 Notification so với Operation.
 
 ## Tình trạng nhóm AC-36
 
-- Macro-review #92–#96 đã hoàn tất ở mức tài liệu với trạng thái `VERIFIED_WITH_OPEN_QUESTIONS`; xem [báo cáo nhóm](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md). Các quyết định về list cardinality, schema và #93 Operation bridge vẫn mở.
-- Flow trực tiếp: #92 query → #93 create/send → #94 update → #95 delete/cancel → #96 status. Operation polling xuất hiện riêng trong index/summary và chưa có bridge ID được xác nhận ở Admin #93.
-- Chưa dùng notification list để suy ra campaign schema, recipient grouping, delivery state hoặc operation result.
+- Macro-review #92–#96 là `VERIFIED_WITH_OPEN_QUESTIONS`; #92–#95 hiện wired/tested locally, #96 còn unwired, và các owner decisions của group chưa được giải quyết. Xem [báo cáo nhóm](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
+- Flow trực tiếp: #92 query → #93 create/send → #94 update → #95 delete/cancel → #96 status. Operation polling xuất hiện riêng và chưa có Admin #93 ID bridge.
+- Không dùng #92 để suy ra campaign schema, recipient grouping, delivery lifecycle hoặc operation result.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

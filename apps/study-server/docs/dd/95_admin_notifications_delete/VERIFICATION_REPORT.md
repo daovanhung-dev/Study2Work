@@ -1,52 +1,50 @@
 # Báo cáo kiểm chứng — API #95 Admin xóa hoặc hủy notification
 
 ## Phạm vi
-- DD folder: apps/study-server/docs/dd/95_admin_notifications_delete/.
+- DD folder: `apps/study-server/docs/dd/95_admin_notifications_delete/`.
 - Status: Draft — Needs Confirmation.
-- Current source: UNWIRED / NOT_FOUND by scoped static scan.
-- Application tests, runtime and live DB were not checked; docs-only task.
+- Runtime: API #95 route/module is wired locally and fake-DB tested; live DB/deployment is not verified.
 - AC-36 macro-review #92–#96: `VERIFIED_WITH_OPEN_QUESTIONS`; see [AC-36_MACRO_REVIEW.md](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
 
 ## Nguồn đã đối chiếu
 - Catalog #95/#96 and reusable DeleteResult/Notification schemas.
-- AC/API index and AC-36 diagram DELETE/mark cancelled branch.
-- DD #92–#94 and DELETE precedents #77/#90.
-- Legacy Study notifications DDL and separate V1-PILOT notification/delivery DDL.
-- Current Study route/middleware, API Guidelines, registered skill and template pack.
-- Selector worklogs #48–#50 and current #94 task worklog; all selected worklogs were read.
+- AC/API index and parsed AC-36 diagram DELETE/mark cancelled branch.
+- DD #92–#94, current #93/#94 code and Admin DELETE precedent #90.
+- Legacy Study notifications DDL and migration 009 cascade FK; separate V1-PILOT notification/delivery DDL.
+- Current Study router/middleware, shared ADMIN auth, API Guidelines, registered skill/template pack.
+- Selector coding worklogs #74/#75/#76 and API #94 worklog; all three selected coding worklogs were read.
 
 ## Template and package
-- Baseline: eight Markdown files in .agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/.
-- Template manifest SHA-256: 541b6ea0c36c5781c1b62574e1aba4e2fab5fde2f949a54129a123c63b78b9c2.
+- Baseline: eight Markdown files in `.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/`.
 - Study output: Markdown folder; no ZIP.
-- Package target: 12 files — 8 standard sheets, one supplementary logical delivery-cancellation mapping, 3 reports.
+- Package target: 12 files — 8 standard sheets, one supplementary delivery/scheduler mapping, 3 reports.
+- The 9 sheet appendix suffixes must remain byte-identical to the original template-backed #94 layout.
 
-## Static verification
+## Verification status
 
 | Check | Result | Status |
 |---|---|---|
-| Package file count | 12 Markdown files: 8 standard sheets, one supplementary mapping, and 3 reports | PASS |
-| Template appendix | 9/9 sheet appendix suffixes match template-backed #94 sheets byte-for-byte | PASS |
-| Front matter | 9/9 sheets have dd_id 95 and Draft — Needs Confirmation status | PASS |
-| Direct contract | Method/path/path type/no body/query/DeleteResult/status and five error codes preserved | PASS — static |
-| JSON examples | 1/1 JSON example parses | PASS |
-| Tables/fences | 32 tables have consistent row widths; all tilde fences balanced | PASS |
-| Links/anchors | 32 local links and anchors resolve | PASS |
+| Package file count | 12 Markdown files: 8 standard sheets, one supplementary mapping, 3 reports | PASS |
+| Template appendix | 9/9 appendix suffixes match canonical Markdown templates byte-for-byte | PASS |
+| Front matter | All 9 sheets retain dd_id 95 and Draft — Needs Confirmation | PASS |
+| Direct contract | Method/path/no body/query/DeleteResult/status and five catalog errors retained | PASS — source/docs review |
+| JSON examples | 1/1 fenced JSON example parses | PASS |
+| Tables/fences | Consistent table column counts; all fences balanced | PASS |
+| Links/anchors | 33 local Markdown links and anchors resolve | PASS |
 | Whitespace/newlines | No trailing whitespace; all files end with newline | PASS |
-| Mutation coverage | Logical notification delete and scheduler boundary have separate mapping files; no physical target invented | PASS — design boundary |
-| Source scan | No #95 route/module/test found in scoped Study source | STATIC ONLY |
-| Runtime/tests | Not run | NOT_RUN |
+| Source tests | API #95 focused: 21; linked #92–#95: 87; full Study suite: 1284 passed | PASS — fake DB |
+| Ruff/OpenAPI | `ruff check app tests`; scoped format check; 55 paths / 66 operations | PASS |
+| Runtime/live DB | No live environment verification | NOT_VERIFIED |
+| Context validation | Validator reports only existing missing db-admin context/source roots outside this task scope | PARTIAL — repository baseline |
 
 ## Preserved discrepancies
-- Catalog says delete draft/cancel conditionally; diagram says DELETE/mark cancelled without a state machine.
-- DeleteResult literal deleted does not distinguish cancellation.
-- Legacy BIGINT and V1-PILOT UUID notification/delivery schemas remain separate.
-- API #96 response lacks delivery aggregate fields needed by the proposed cancellation guard.
-- #93 Operation response and identifier bridge remain open after AC-36 macro-review.
+- Catalog says delete draft/cancel conditionally; diagram says DELETE/mark cancelled without lifecycle states.
+- Local queued-only hard-delete/cascade is DERIVED; it removes the selected notification's outbox rows.
+- DeleteResult literal `deleted` does not prove external cancellation.
+- Legacy BIGINT and V1-PILOT UUID notification/delivery models remain separate.
+- API #96 response lacks delivery aggregate; #93 Operation/ID bridge remains open.
+- Live schema, migration deployment, worker/scheduler/provider and dedicated permission are unverified.
 
 ## Kết quả
 
-- Catalog contains 103 endpoint IDs; DD folders #01–#95 contain all eight core sheet roles. Eight IDs (#96–#103) remain without DD.
-- 83/95 DD folders contain all three standard reports; legacy #01–#12 remain core-only.
-- Static route-plus-view count remains 12/103 (#01–#09, #12–#14); 91 lack the matching source pair. This is not runtime verification.
-- No application tests, runtime, deployment or live database checks were run.
+API #95 is wired and locally verified. This is source/test evidence only; it does not establish PostgreSQL locking/cascade, live deployment, scheduler behavior, provider delivery, fine-grained permission or owner approval. The context validator reports a pre-existing db-admin context/source gap outside Study; no Study Server error was reported.

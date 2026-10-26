@@ -29,11 +29,11 @@ status: "Draft — Needs Confirmation"
 | 2 | success | Thành công | success | boolean | No | N/A | N/A | 6. Trả response | true on success; false on error | N/A | Envelope convention. |
 | 3 | businessCode | Business code | businessCode | string | No | N/A | N/A | 6. Trả response | Exact catalog code per branch | N/A | Success DESIGN_RESOURCE_DELETED. |
 | 4 | message | Message | message | string | No | N/A | N/A | 6. Trả response | Localized safe message | N/A | Exact message text is unspecified. |
-| 5 | data.id | Content ID | id | int64 | No | Logical Content | Physical source unknown | 5. Map response | Preserve target ID | N/A | Physical mapping SOURCE_REQUIRED. |
+| 5 | data.id | Content ID | id | int64 | No | `contents` | `id` | 5. Map response | Preserve target ID | N/A | Local migration 006 mapping; live schema unverified. |
 | 6 | data.status | Delete status | status | string literal | No | N/A | N/A | 5. Map response | Constant deleted | N/A | Exact reusable DeleteResult literal. |
-| 7 | data.deleted_at | Deletion time | deleted_at | date-time | No | N/A | N/A | 5. Map response | Time of successful soft-delete | N/A | Generator and persistence need confirmation. |
-| 8 | meta | Metadata | meta | object | No | N/A | N/A | 6. Trả response | Empty object candidate | N/A | No deletion metadata is declared. |
-| 9 | traceId | Trace ID | traceId | uuid | No | Request context | N/A | 6. Trả response | Propagate request trace | N/A | Current route absent. |
+| 7 | data.deleted_at | Deletion time | deleted_at | date-time | No | `contents` | `deleted_at` | 5. Map response | Returned by database `CURRENT_TIMESTAMP` update | N/A | Local source-backed mapping; timestamp type/timezone and live schema remain unverified. |
+| 8 | meta | Metadata | meta | object | No | N/A | N/A | 6. Trả response | Empty object | N/A | `success_response` default; no deletion metadata is declared. |
+| 9 | traceId | Trace ID | traceId | uuid | No | Request context | N/A | 6. Trả response | Propagate request trace | N/A | Covered by local HTTP response envelope. |
 
 ## Ví dụ thành công
 
@@ -45,14 +45,14 @@ status: "Draft — Needs Confirmation"
   "data": {
     "id": 123,
     "status": "deleted",
-    "deleted_at": "2026-10-24T12:00:00+07:00"
+    "deleted_at": "2026-10-25T10:30:15"
   },
   "meta": {},
   "traceId": "123e4567-e89b-42d3-a456-426614174053"
 }
 ```
 
-ID, thời gian, message và traceId chỉ minh họa. Contract khóa kiểu và literal status, không khóa giá trị mẫu.
+ID, thời gian, message và traceId chỉ minh họa. Local DDL declares `deleted_at TIMESTAMP` without timezone; do not infer an offset from this example.
 
 ## Ví dụ lỗi
 
@@ -61,13 +61,13 @@ ID, thời gian, message và traceId chỉ minh họa. Contract khóa kiểu và
   "success": false,
   "businessCode": "DESIGN_VALIDATION_ERROR",
   "message": "Nội dung chưa thể xóa theo điều kiện hiện tại.",
-  "data": {},
+  "data": null,
   "meta": {},
   "traceId": "123e4567-e89b-42d3-a456-426614174053"
 }
 ```
 
-Ví dụ 422 minh họa proposal khi còn Content con trực tiếp. Helper hiện hành dùng data={} khi caller không truyền data; API #53 chưa có runtime response.
+Ví dụ 422 minh họa DERIVED guard khi còn Content con trực tiếp hoặc Content đang PUBLISHED. Helper hiện hành trả `data: null` khi caller không truyền data.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

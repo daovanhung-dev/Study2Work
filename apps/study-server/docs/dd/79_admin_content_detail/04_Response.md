@@ -20,7 +20,7 @@ status: "Draft — Needs Confirmation"
 | Content-Type | application/json |
 | Success HTTP status | 200 DESIGN_RESOURCE_RETRIEVED |
 | Direct response type | ApiEnvelope<Content> theo catalog. |
-| Runtime status | API #79 chưa được wire; example là expected design, không phải runtime output. |
+| Runtime status | API #79 đã được wire; example minh họa direct Content response đã được kiểm tra bằng fake DB HTTP test. |
 
 ## Direct contract fields
 
@@ -30,18 +30,18 @@ status: "Draft — Needs Confirmation"
 | 2 | success | Success flag | success | boolean | No | Envelope | N/A | Branch | true success; false error | N/A | Envelope convention. |
 | 3 | businessCode | Business code | businessCode | string | No | Catalog | N/A | Branch | DESIGN_RESOURCE_RETRIEVED hoặc exact catalog error code | N/A | Không thêm code. |
 | 4 | message | Message | message | string | No | Application | N/A | Branch | Safe localized message | Exact text chưa đặc tả | Không trả raw DB/auth details. |
-| 5 | data | Content | data | object | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Một Content theo catalog | Required on success | Không phải Page; physical mapping chưa có. |
-| 5.1 | data.id | Content ID | id | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Logical identifier của Content | Required | Catalog type BIGINT; schema tương thích chưa có. |
-| 5.2 | data.course_id | Course ID | course_id | int64 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Logical course owner | Required | Physical relation chưa xác nhận. |
-| 5.3 | data.content_type | Content type | content_type | ContentType | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Serialize approved enum | Required | Enum members/casing chưa được liệt kê. |
-| 5.4 | data.title | Content title | title | string | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Preserve approved stored value | Required | Không suy ra column. |
-| 5.5 | data.payload | Content payload | payload | object | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Preserve approved subtype object | Required object | Không tự thêm keys/defaults. |
-| 5.6 | data.status | Content status | status | ContentStatus | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Trả trạng thái Content đã đọc | Required | Enum/storage chưa xác nhận; stale/pending policy mở. |
-| 5.7 | data.parent_id | Parent Content ID | parent_id | int64? | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Optional field | Null/omit rule unresolved | Parent relation chưa xác nhận. |
-| 5.8 | data.order | Content order | order | int32 | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3.1 | Preserve sibling position | Required | Không dùng làm queue/review order. |
+| 5 | data | Content | data | object | No | `contents` | 8-field projection | 3.1 | Một Content theo catalog | Required on success | Không phải Page; current legacy candidate, live schema chưa xác nhận. |
+| 5.1 | data.id | Content ID | id | int64 | No | `contents` | `id` | 3.1 | Reuse current row ID | Required | BIGSERIAL candidate; malformed path/no row → 404. |
+| 5.2 | data.course_id | Course ID | course_id | int64 | No | `contents` | `course_id` | 3.1 | Stored course relationship | Required | No join to infer author. |
+| 5.3 | data.content_type | Content type | content_type | ContentType/string | No | `contents` | `content_type` | 3.1 | Return stored open string | Required | No enum whitelist is source-backed. |
+| 5.4 | data.title | Content title | title | string | No | `contents` | `title` | 3.1 | Preserve stored value | Required | Source column exists in migration 006. |
+| 5.5 | data.payload | Content payload | payload | object | No | `contents` | `payload` | 3.1 | Preserve JSON object | Required object | Invalid non-object projection → safe 500. |
+| 5.6 | data.status | Content status | status | ContentStatus/string | No | `contents` | `status` | 3.1 | Return current stored status | Required | No `PENDING_REVIEW` re-filter; stale-item policy open. |
+| 5.7 | data.parent_id | Parent Content ID | parent_id | int64? | Yes | `contents` | `parent_id` | 3.1 | Preserve nullable parent | Null serializes as null in API #79 | Composite same-course relation in migration 006 candidate. |
+| 5.8 | data.order | Content order | order | int32 | No | `contents` | `content_order` | 3.1 | Alias physical column | Required | Not review/version order. |
 | 6 | meta | Metadata | meta | object | No | Envelope | N/A | Branch | {} candidate | Empty object candidate | Không có pagination metadata. |
-| 7 | traceId | Trace ID | traceId | uuid | No | Shared trace | X-Trace-Id | Branch | Validate hoặc generate theo middleware | Required | Endpoint chưa wired. |
-| E1 | Error data | Error payload | data | null by guideline | N/A | N/A | N/A | Error branch | API guideline yêu cầu null | Current helper default {} | Conditional source/contract discrepancy. |
+| 7 | traceId | Trace ID | traceId | uuid | No | Shared trace | X-Trace-Id | Branch | Validate hoặc generate theo middleware | Required | Trace ID theo shared trace middleware hiện hành. |
+| E1 | Error data | Error payload | data | null | N/A | Shared helper | N/A | Error branch | Current `error_response()` default | JSON null | Matches current runtime and API guidelines. |
 
 ## Ví dụ success theo catalog — một Content
 
@@ -67,11 +67,11 @@ Các giá trị enum/ID/payload bên dưới chỉ minh họa kiểu dữ liệu
 }
 ~~~
 
-Example giữ đúng ApiEnvelope<Content>. Không có version/author vì reusable Content schema không khai báo; đây là discrepancy với AC-33 n6, không phải khẳng định backend không cần đọc các giá trị đó.
+Example giữ đúng `ApiEnvelope<Content>`. Không có version/author vì reusable Content schema không khai báo và current persistence không xác định Content author; đây là discrepancy với AC-33 n6, không phải khẳng định metadata không cần cho Admin UI.
 
 ## Ví dụ lỗi — HTTP 404
 
-data:null theo API guideline. Current helper trả {} nếu data bị bỏ trống; route #79 chưa wired nên chưa có runtime response để đối chiếu.
+`data:null` theo current shared helper và API guideline; route #79 đã wired.
 
 ~~~json
 {

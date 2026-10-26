@@ -14,13 +14,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-25 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | `1.0` | 2026-10-24 | Codex | Tạo bản DD Markdown từ catalog và AC-23 | Draft — Needs Confirmation; rubric, files và quyền Mentor còn gap nguồn |
+| `1.1` | 2026-10-25 | Codex | Implement API #55 local route/module/TestClient và cập nhật source mapping | Draft — Needs Confirmation; rubric, assigned Mentor và live schema còn gap nguồn |
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

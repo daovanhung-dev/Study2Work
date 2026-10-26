@@ -19,13 +19,13 @@ status: "Draft — Needs Confirmation"
 | Logical table | QuizQuestion |
 | Operation | DELETE |
 | Data Mapping step | [Step 4B.3 — xóa questions](./05_Data_Mapping.md#step-4b-khong-co-attempts-candidate-hard-delete) |
-| Basis | No-attempt hard-delete branch là DERIVED; relation lấy từ legacy DDL/ERD. |
+| Basis | No-history hard-delete branch là DERIVED; relation lấy từ legacy DDL/ERD. |
 
 ## Delete mapping
 
 **Áp dụng khi**
 
-- Q2 không tìm thấy attempt nào cho quiz.
+- Q2 không tìm thấy attempt hoặc linked answer reference nào cho quiz.
 - M2 đã xóa choices thuộc question set.
 
 | No | Target column | Operator | Value source | Data Mapping step | Remarks |
@@ -37,6 +37,7 @@ status: "Draft — Needs Confirmation"
 - Không xóa câu hỏi khi có attempt; giữ IDs để API #30–#32 tham chiếu lịch sử.
 - Xóa sau choices và trước quiz parent.
 - Không dùng pilot UUID `quiz_questions.assessment_id` cho API int64.
+- Runtime yêu cầu `DELETE RETURNING` khớp chính xác question ID set đã khóa; mismatch rollback trước khi xóa Quiz.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

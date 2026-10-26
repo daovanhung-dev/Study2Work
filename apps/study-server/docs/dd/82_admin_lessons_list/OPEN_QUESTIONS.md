@@ -1,27 +1,25 @@
 # Câu hỏi còn mở — API #82
 
-Trạng thái tài liệu: Draft — Needs Confirmation. Các câu hỏi này ảnh hưởng contract, query semantics hoặc khả năng triển khai.
+Trạng thái tài liệu: Draft — Needs Confirmation. Runtime có fallback cục bộ nhưng các điểm dưới đây cần owner/schema authority trước khi coi contract được duyệt.
 
-1. **Response cardinality:** Catalog #82 khai báo `ApiEnvelope<Lesson>` nhưng endpoint name và AC-34 mô tả danh sách. Có đổi reusable response thành `ApiEnvelope<Lesson[]>` không? Nếu đúng danh sách, empty result có trả `data: []` không?
-2. **Pagination/result limit:** API không khai báo `page`, `size`, `sort` hay maximum rows. Admin list cần giới hạn/ phân trang ở đâu? Không tự thêm query fields trong DD này.
-3. **`type` filter:** Lesson được phân loại type bằng field/relation nào, các giá trị hợp lệ là gì, và predicate chính xác ra sao? Reusable Lesson và hai schema artifacts đã kiểm tra không có Lesson `type` tương thích.
-4. **Storage model/live schema:** API dùng legacy BIGINT `lessons` hay V1-PILOT UUID lesson/chapter/course-version model? Live database/schema version chưa được xác nhận.
-5. **`course_id` nullability:** Legacy DDL cho phép NULL nhưng reusable Lesson bắt buộc int64. Row NULL phải được sửa dữ liệu, loại khỏi kết quả hay gây lỗi? DD không tự chọn.
-6. **Course/status filter behavior:** Xác nhận exact-match semantics; khi query vắng mặt có bỏ predicate để Admin xem mọi course/status không?
-7. **LessonStatus:** Danh sách giá trị, casing và quy tắc nhận status filter là gì? Không tạo whitelist từ `DRAFT`/`PUBLISHED` của các nguồn không đồng nhất.
-8. **Ordering:** Có chấp nhận `course_id ASC, sort_order ASC, id ASC` làm thứ tự mặc định ổn định không?
-9. **Admin access policy:** JWT Admin claim, lesson-management permission, policy source và cách phân biệt 401/403 được triển khai ở đâu? Study source hiện chỉ có Student auth helper.
-10. **Malformed query errors:** Catalog chỉ liệt kê 401/403/500; parse lỗi int64 thường cần validation response nhưng chưa có status/code được contract khai báo. Cần quyết định cách giữ catalog/error middleware nhất quán.
-11. **Envelope error data:** API guideline quy định `data:null`, trong khi helper hiện tại mặc định `{}` khi thiếu data. Chuẩn nào áp dụng khi thêm route Admin?
-12. **Deleted lesson visibility:** Nếu policy #86 chọn soft-delete, marker nào biểu thị lesson đã xóa và API #82 có loại lesson đó khỏi danh sách không? Schema hiện chưa có marker tương thích; không tự thêm filter.
+1. **Response cardinality:** Catalog #82 khai báo `ApiEnvelope<Lesson>`, còn endpoint/AC-34 thể hiện danh sách. Runtime trả `ApiEnvelope<Lesson[]>` theo fallback DERIVED; cần xác nhận catalog đổi sang array hay ý định thực sự là singleton.
+2. **Pagination/result limit:** API không khai báo `page`, `size`, `sort` hay maximum rows. Runtime hiện trả toàn bộ kết quả khớp filter; cần chốt có phân trang/giới hạn hay không.
+3. **`type` filter:** Legacy candidate không có type. Runtime trả 422 `DESIGN_VALIDATION_ERROR`/`UNSUPPORTED_FILTER` nếu query được gửi; cần xác nhận desired mapping/semantics hoặc bỏ query khỏi contract.
+4. **Storage model/live schema:** Runtime query dùng legacy BIGINT `lessons` candidate. Live database/schema version chưa được xác nhận; V1-PILOT UUID schema không tương đương.
+5. **Required projection nullability:** Legacy DDL cho phép `course_id`, `sort_order`, `status` NULL, còn reusable Lesson yêu cầu các giá trị này. Runtime trả 500 nếu row không map được; cần xác nhận dữ liệu/schema thực tế hoặc policy xử lý row.
+6. **LessonStatus:** Danh sách giá trị và casing chưa đầy đủ. Runtime dùng exact string match, không whitelist.
+7. **Ordering:** Runtime dùng `course_id ASC NULLS LAST, sort_order ASC NULLS LAST, id ASC`; default order chưa có trong catalog/diagram.
+8. **Admin access policy:** Runtime shared guard yêu cầu role `ADMIN`; AC-34 nêu thêm lesson-management permission nhưng chưa có policy source/executable check.
+9. **Deleted lesson visibility:** API #86 chưa chốt deletion marker/visibility. #82 không loại row theo deleted marker.
 
-## Ranh giới proposal
+## Ranh giới contract
 
-- DIRECT: method/path, Bearer JWT, role Admin, query field names/types, declared `ApiEnvelope<Lesson>`, HTTP 200, và lỗi 401/403/500.
-- DERIVED: equality filters, all-status khi vắng filter, collection response proposal, empty array và default ordering.
-- SOURCE_REQUIRED: `type`, active schema/live DB, Admin policy implementation, LessonStatus enum, malformed-query mapping và error envelope integration.
+- DIRECT: method/path, Bearer JWT, role Admin, query field names/types, catalog singleton `ApiEnvelope<Lesson>`, HTTP 200 và lỗi 401/403/500.
+- DERIVED/local fallback: array response, exact course/status filters, all-status default, empty array, stable order, 422 malformed `course`, 422 unsupported `type`.
+- SOURCE_REQUIRED: live schema, fine-grained Admin permission, LessonStatus enum, pagination/result cap, deleted lesson visibility và việc sửa catalog cardinality.
 
 ## Kết quả macro-review AC-34
 
-- Status: `VERIFIED_WITH_OPEN_QUESTIONS` — đã đối chiếu tài liệu #82–#86; đây không phải owner approval hoặc runtime verification.
-- Các điểm còn mở và ranh giới list/detail/update/status/delete được tổng hợp trong [báo cáo macro-review](./VERIFICATION_REPORT.md#ac-34-macro-review).
+- Status: `VERIFIED_WITH_OPEN_QUESTIONS` — đối chiếu tài liệu #82–#86; đây không phải owner approval hoặc runtime verification cho các API khác.
+- API #82 list/reload runtime đã wired và test cục bộ; #83–#86 vẫn có trạng thái riêng trong báo cáo macro-review.
+- Các ranh giới list/detail/update/status/delete tổng hợp tại [báo cáo macro-review](./VERIFICATION_REPORT.md#ac-34-macro-review).

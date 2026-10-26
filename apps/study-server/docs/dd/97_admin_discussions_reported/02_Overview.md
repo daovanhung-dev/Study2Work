@@ -22,12 +22,12 @@ status: "Draft — Needs Confirmation"
 | Purpose | Lấy hàng đợi discussion đã được báo cáo để Admin xem xét. |
 | Consumer/Actor | Admin |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin là DIRECT theo catalog; Admin guard/claim policy chưa có trong Study source. |
+| Authorization | Role Admin là DIRECT; runtime dùng shared `validate_current_user_request(..., role="ADMIN")`; finer-grained Admin policy chưa được xác minh. |
 | Direct request | Query `reason?:string`, `severity?:string`, `page?:int32`; không body. |
 | Direct response | HTTP 200 `ApiEnvelope<Page<Discussion>>`. |
 | Direct errors | 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 500 `DESIGN_INTERNAL_ERROR`. |
 | AC-37 step | Mở queue → đọc reports + discussion summary → mở API #98 detail. |
-| Runtime state | `UNWIRED / NOT_FOUND`; chưa có route/module/test #97. |
+| Runtime state | Wired locally; 15 focused HTTP tests pass. Report migration is a DERIVED candidate; live schema/deployment and report ingestion are unverified. |
 | Side effects | Read-only; không cập nhật discussion, report hoặc audit. |
 
 ## Sources
@@ -46,10 +46,10 @@ status: "Draft — Needs Confirmation"
 
 | Relation/source | Mục đích | Basis/status |
 |---|---|---|
-| Logical report record | Xác định reported state, reason/severity filter | AC-37 logical read; physical relation/key `SOURCE_REQUIRED`. |
-| `discussions` | Candidate Discussion summary | Legacy DDL artifact; not reported selector, title absent, live status unverified. |
-| `users` | Candidate author projection | Legacy schema candidate; required join/null behavior unresolved. |
-| `discussions` self-reference | Candidate comment rows | Physical candidate only; queue projection extent unresolved. |
+| `discussion_reports` | Xác định reported state, reason/severity filter và thứ tự queue | Study-local BIGINT migration fallback; report state/filter policy `DERIVED`; live deployment and writer are unverified. |
+| `discussions` | Discussion summary | Legacy DDL candidate; `title` is derived from normalized content; nullable course/user fields cause safe 500 projection failure. |
+| `users` | Author projection | Legacy join `users.id = discussions.user_id`; live schema unverified. |
+| `discussions` self-reference | Comments | Queue summary returns `comments=[]`; #98 owns full thread detail. |
 
 ## Tables write
 
@@ -57,11 +57,11 @@ status: "Draft — Needs Confirmation"
 
 ## Mục chú ý
 
-- `reason`, `severity` là optional string theo catalog; enum/taxonomy, matching và kết hợp filter chưa được đặc tả.
-- `PageMeta` yêu cầu `page`, `size`, `total`, `total_pages`, nhưng request chỉ nêu `page` optional và không có default/size/order.
+- `reason` và `severity` dùng exact-match AND trên cùng report đang `OPEN` hoặc `IN_REVIEW`; không giới hạn taxonomy.
+- `page` mặc định `1`, size cố định `20`, count theo Discussion duy nhất, sort theo report mới nhất rồi `discussion_id` giảm dần; các quy tắc này là `DERIVED`.
 - AC-37 diagram yêu cầu đọc report cùng summary, còn `Discussion` không có report fields. Không thêm trường response ngoài catalog.
-- Reusable `Discussion.title` là bắt buộc nhưng legacy DB guide/DDL không có cột `title`.
-- Không có query filter trạng thái/root/comment nào được suy ra trực tiếp từ AC-37.
+- Reusable `Discussion.title` được tạo từ nội dung đã gộp whitespace, tối đa 120 ký tự; comment không được nạp trong list summary.
+- `014_discussion_reports.sql` là schema fallback trong Study DB; chưa có endpoint ghi report trong phạm vi #97.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

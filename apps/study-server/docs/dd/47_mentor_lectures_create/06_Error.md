@@ -13,26 +13,27 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Bộ lỗi giữ đúng catalog API #47. Các điều kiện quyền và candidate mapping được đánh dấu DERIVED; API #47 hiện chưa có handler runtime.
+Bộ lỗi giữ đúng catalog API #47. Route source-backed trả lỗi asset thiếu hoặc ngoài owner/purpose/course scope bằng cùng một 404 `DESIGN_RESOURCE_NOT_FOUND`.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
-|---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Thiếu, sai định dạng hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | 0 | N/A | Catalog direct; Mentor guard chưa có trong current Study source. |
+|---:|---|---|---|---|---:|---|---|---|---|---|
+| 1 | Authentication | Bearer/JWT | Authorization | Thiếu, sai định dạng hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | 0 | N/A | Catalog direct. |
 | 2 | Authorization | Role | roles | Principal không có role Mentor | 403 | DESIGN_ACCESS_DENIED | N/A | 0 | N/A | Catalog direct. |
-| 3 | Authorization | Course access | course_id | Course tồn tại nhưng Mentor không có quyền theo candidate direct-owner rule | 403 | DESIGN_ACCESS_DENIED | N/A | 0.3 | N/A | DERIVED; assignment access chưa có source. |
-| 4 | Not found | Course lookup | course_id | Không có course theo path ID | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | 2.1 | N/A | Catalog direct; candidate legacy lookup. |
-| 5 | Validation | Required/type/length | title | Thiếu/sai string hoặc vượt 200 theo legacy candidate | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Max 200 là DERIVED; không tự đặt min. |
-| 6 | Validation | Required/type | content | Thiếu hoặc không parse thành int64 | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Catalog direct types. |
-| 7 | Validation | Required/type | asset refs | Thiếu hoặc không phải string | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Không định nghĩa lỗi format cho chuỗi refs chưa có schema. |
-| 8 | Validation | Required/type | order | Thiếu hoặc không parse thành int32 | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Không thêm rule không âm. |
-| 9 | Validation | Path type | course_id | Không parse thành int64 | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Error branch là DERIVED từ catalog 422. |
-| 10 | System error | DB/transaction | M1 | Lỗi truy vấn hoặc INSERT không xử lý được | 500 | DESIGN_INTERNAL_ERROR | N/A | 3–4 | Yes | Catalog direct; rollback candidate. |
+| 3 | Authorization | Course access | course_id | `courses.mentor_id` không bằng Mentor hiện tại | 403 | DESIGN_ACCESS_DENIED | N/A | 0.3 | Yes | Chỉ direct owner; mọi course status được nhận. |
+| 4 | Not found | Course lookup | course_id | Course không tồn tại | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | 2.1 | Yes | Direct query result. |
+| 5 | Not found | Asset resolution | asset_refs | Ít nhất một ID không resolve trong cùng Mentor, purpose LECTURE và course_id | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | 2.2 | Yes | Cùng response cho ID thiếu và ngoài scope. |
+| 6 | Validation | Required/type/length | title | Thiếu/sai string hoặc dài hơn 200 ký tự | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Max 200 theo legacy `lessons.name VARCHAR(200)`. |
+| 7 | Validation | Required/type/range | content | Thiếu, sai kiểu hoặc ngoài signed int64 | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Lưu/response bằng chuỗi thập phân. |
+| 8 | Validation | JSON/array/int64/duplicates | asset_refs | JSON sai, không phải array, ID sai kiểu/ngoài int64 hoặc bị trùng | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Empty array is valid. |
+| 9 | Validation | Required/type/range | order | Thiếu, sai kiểu hoặc ngoài signed int32 | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Không thêm rule không âm. |
+| 10 | Validation | Path type/range | course_id | Không parse được hoặc ngoài signed int64 | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Path validation trước query. |
+| 11 | System error | DB/transaction | Q1/Q2/M1 | Query, INSERT hoặc commit phát sinh SQLAlchemy error | 500 | DESIGN_INTERNAL_ERROR | N/A | 2–4 | Yes | Rollback; chi tiết DB không trả về client. |
 
-> Không thêm 409 hoặc 503: catalog API #47 không khai báo các status này. API #34 chịu trách nhiệm storage failure trước khi #47 được gọi.
+> Không thêm 409 hoặc 503: catalog API #47 không khai báo các status này. API #34 chịu trách nhiệm storage upload trước đó.
 >
-> API guidelines đặt data:null ở error envelope; current error_response() mặc định {} khi không truyền data. API #47 chưa chạy nên không có current API response để đối chiếu.
+> Với ID không tồn tại hoặc không thuộc cùng Mentor/purpose/course, resolver không trả metadata và dùng cùng 404 response.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

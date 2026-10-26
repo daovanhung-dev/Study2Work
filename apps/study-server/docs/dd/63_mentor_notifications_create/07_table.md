@@ -7,59 +7,76 @@ source_sheet: "table"
 status: "Draft — Needs Confirmation"
 ---
 
-# Định nghĩa table — Notification, recipients và Operation
+# Định nghĩa table — Notification và delivery outbox
 
 ## Thông tin mapping
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical target | `SOURCE_REQUIRED`; chưa chọn legacy BIGINT hay V1-PILOT UUID model. |
-| Logical entities | Notification, recipient association, Operation/delivery job. |
-| Operation | Logical INSERT Notification + recipients; create/queue Operation. |
-| Data Mapping step | 3–5 |
-| Evidence | AC-25 nodes n6/n7; catalog #63/#64; Notification/Operation schemas; DB guide/legacy/Pilot comparison. |
-| Runtime | API #63 `UNWIRED / NOT_FOUND`. |
+| Physical target | Local legacy BIGINT `notifications` plus migration 009 delivery outbox. |
+| Operation | Insert one notification per recipient and one delivery row per recipient/channel in one transaction. |
+| Data Mapping step | 2–4 |
+| Evidence | AC-25 requires Notification + recipients then Push/Email; API #62 returns legacy BIGINT Student IDs; legacy Study DDL has per-user `notifications`; API #64 requires int64 notification ID. |
+| Status | `DERIVED_LOCAL_DDL`; live schema/migration unverified; worker/provider absent. |
 
-## Mapping ghi logic — Notification
+## Existing table extended: `notifications`
 
-| STT | Field logic | Kiểu/yêu cầu | Nguồn giá trị | Mapping candidate | Bằng chứng/trạng thái |
-|---:|---|---|---|---|---|
-| 1 | Notification ID | Catalog domain int64 | Persistence | Legacy `BIGSERIAL`; pilot UUID | Conflict; no canonical ID source. |
-| 2 | Title | string! | Request `title` | Legacy/pilot title VARCHAR(200) | Field trực tiếp; giới hạn 200 chỉ là candidate. |
-| 3 | Content | int64! direct | Request `content` | Legacy TEXT / pilot body VARCHAR(4000) | DISCREPANCY; không tự ép kiểu hoặc tạo lookup. |
-| 4 | Sender | Mentor identity | Bearer principal | Legacy `sender_id BIGINT`; pilot has no sender field | Identity mapping/model conflict. |
-| 5 | Channels | string! direct | Request `channels` | Legacy không có channel; pilot delivery cho phép `IN_APP` hoặc `EMAIL` | Encoding/token và mapping Push là SOURCE_REQUIRED. |
-| 6 | Created time | Notification.created_at | Persistence clock | Legacy TIMESTAMP; pilot timestamptz | Timezone/clock policy SOURCE_REQUIRED. |
+| Column | Local definition | Mapping | State |
+|---|---|---|---|
+| `id` | `BIGSERIAL PRIMARY KEY` | Generated Notification ID; returned in `meta.notification_ids`. | Existing legacy DDL. |
+| `user_id` | `BIGINT NULL REFERENCES users(id)` | One selected Student per notification row. | Existing legacy DDL. |
+| `sender_id` | `BIGINT NULL REFERENCES users(id)` | Authenticated Mentor numeric JWT subject. | Existing legacy DDL. |
+| `title` | `VARCHAR(200) NOT NULL` | Request title, unchanged. | Existing legacy DDL; API validates max 200. |
+| `content` | `TEXT NOT NULL` | Request int64 rendered in base-10. | DERIVED type mapping; semantic conflict remains. |
+| `type` | `VARCHAR(30) NULL` | NULL; do not overload as channel. | Existing legacy DDL. |
+| `is_read` | `BOOLEAN DEFAULT FALSE` | Read-state only; not delivery status. | Existing legacy DDL. |
+| `created_at` | `TIMESTAMP NOT NULL` | DB timestamp used as initial Operation timestamps. | Existing legacy DDL. |
+| `operation_id` | `UUID NULL` | Shared group ID for all notification rows created by one accepted request. | Added by migration 009; DERIVED. |
 
-## Mapping ghi logic — recipients
+## New table: `notification_deliveries`
 
-| STT | Field logic | Kiểu/yêu cầu | Nguồn giá trị | Mapping candidate | Bằng chứng/trạng thái |
-|---:|---|---|---|---|---|
-| 1 | Recipient IDs | `recipients:string!` direct | Body | Đề xuất CSV Student ID int64 dạng thập phân | Chỉ là DERIVED; cần duyệt user/enrollment key và parser. |
-| 2 | Course association | Cần để kiểm tra quyền | Đề xuất `course_id:int64!` | Không có trong request trực tiếp | Đề xuất sửa contract, chưa phải input hiện tại. |
-| 3 | Recipient relation | Notification × từng Student được chọn | AC-25 select/insert | Legacy `notifications.user_id` lưu một recipient mỗi row; không có bảng recipient. | Chưa thể biểu diễn nhóm notification/status nếu thiếu relation được duyệt. |
-| 4 | Eligibility | Enrollment active trong course được cấp quyền | #62 roster + DB enrollment relation | Legacy/pilot schemas khác nhau | Server phải kiểm tra lại; status và identity mapping chính xác là SOURCE_REQUIRED. |
+| Column | Local definition | Mapping | State |
+|---|---|---|---|
+| `id` | `BIGSERIAL PRIMARY KEY` | Delivery outbox row key. | DERIVED migration 009. |
+| `notification_id` | `BIGINT NOT NULL REFERENCES notifications(id) ON DELETE CASCADE` | Recipient notification. | DERIVED; int64 aligns with legacy ID/API #64. |
+| `channel` | `VARCHAR(16) NOT NULL CHECK (channel IN ('PUSH','EMAIL'))` | One delivery target from request `channels`. | DERIVED from AC-25 labels. |
+| `status` | `VARCHAR(16) NOT NULL DEFAULT 'QUEUED' CHECK (status IN ('QUEUED','SENT','FAILED'))` | Initial durable outbox state; future worker updates it. | DERIVED state set; no worker in current Study runtime. |
+| `queued_at` | `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP` | Time the API persisted the delivery request. | DERIVED local DDL. |
+| `updated_at` | `TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP` | Initial update timestamp for worker lifecycle. | DERIVED local DDL. |
 
-## Mapping Operation logic và queue
+### Constraints/indexes
 
-| STT | Field logic/effect | Nguồn giá trị | Rule/trạng thái |
-|---:|---|---|---|
-| 1 | Operation ID | Async job layer | Reusable schema UUID; API #18 row type discrepancy remains. |
-| 2 | Operation owner | Authenticated Mentor | Reusable `owner_id:int64`; principal mapping SOURCE_REQUIRED. |
-| 3 | Initial status/kind | Job được API #63 chấp nhận | Enum và lifecycle chưa định nghĩa; không tự gán token. |
-| 4 | Notification ID handoff | Notification persistence | API #64 yêu cầu int64; Operation schema không có notification reference. SOURCE_REQUIRED. |
-| 5 | Queue/outbox record | Dispatch bất đồng bộ | Chưa có bảng/provider/transaction Study được duyệt; không tự tạo physical target. |
-| 6 | Phát ra bên ngoài | Push/Email provider | Diagram xác nhận ý định dùng channel; provider, retry và aggregation là SOURCE_REQUIRED. |
+- Unique `(notification_id, channel)` prevents duplicate delivery intent for the same channel on one Notification.
+- Index `(status, queued_at, id)` allows a future worker to claim queued records in stable order.
+- Migration 009 is a checked-in artifact only; it is not run against a live database in this task.
 
-## SQL mapping
+## Logical Operation projection
 
-Không có câu INSERT vật lý được duyệt. Legacy `notifications` và V1-PILOT `notifications`/`notification_deliveries` không tương thích về ID, recipient relation, sender, channels và delivery fields. Không viết SQL giả hoặc gộp hai schema.
+| Response field | Source | Rule | State |
+|---|---|---|---|
+| `id` | `notifications.operation_id` | UUID shared by all rows in the batch. | Reusable Operation UUID direct; persistence DERIVED. |
+| `kind` | Application constant | `NOTIFICATION_DISPATCH`. | DERIVED; enum is not defined in catalog. |
+| `status` | Delivery rows at acceptance | `QUEUED` after successful commit. | DERIVED. |
+| `owner_id` | `notifications.sender_id` | Numeric Mentor owner. | Local source pattern. |
+| `submitted_at` | First inserted `notifications.created_at` | DB timestamp from accepted batch. | DERIVED projection. |
+| `updated_at` | Same initial timestamp | No worker has advanced delivery state yet. | DERIVED projection. |
+| `completed_at` | None | Omit on an accepted queued job. | Optional schema field. |
+| `result` | None | Omit; do not place notification data in Payment schema. | Optional schema field. |
 
-## Tính nhất quán giữa các API
+## Handoff to API #64
 
-- #62 cần trả recipient key; response trực tiếp `Page<Course>` đang lệch với learner roster.
-- #63 cần course scope và phải trả notification ID để gọi #64; request/response hiện tại chưa cung cấp đủ dữ liệu.
-- API #18 theo dõi Operation nhưng không thay thế delivery status #64; hai ID/type cần phân biệt.
+- `meta.notification_ids` contains each per-recipient `notifications.id` in request order.
+- API #64 may use each numeric ID to read that recipient notification's channel delivery rows.
+- `Operation.id` is a UUID group key and is not substituted for any numeric notification ID.
+- API #18 tracking is not implemented; its catalog path type and Operation lifecycle remain unresolved.
+
+## Exclusions
+
+- No V1-PILOT UUID notification or `notification_deliveries` DDL is mixed into this legacy BIGINT schema.
+- `notifications.is_read` is not interpreted as send status.
+- No external Push/Email provider, worker, retry/backoff, partial-delivery aggregation or idempotency storage is introduced in this API session.
+- No migration is applied to a database; the live schema remains unverified.
+
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

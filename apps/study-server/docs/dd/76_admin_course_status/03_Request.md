@@ -16,9 +16,9 @@ status: "Draft — Needs Confirmation"
 | HTTP method | PATCH |
 | URI | /api/v1/admin/courses/{course_id}/status |
 | Character encoding | UTF-8 |
-| Content-Type | Catalog/diagram không khai báo body. Candidate application/json nếu owner duyệt body status. |
+| Content-Type | `application/json` cho body `{status}`; body là fallback DERIVED vì catalog/diagram không khai báo. |
 | Authentication | Bearer JWT |
-| Role | Admin; AC-32 còn yêu cầu course-management permission. |
+| Role | Runtime kiểm tra shared `ADMIN`; AC-32 còn yêu cầu finer course-management permission chưa có source. |
 | Direct input | path{course_id:int64!} |
 | Query | Không khai báo. |
 | Direct body | Không khai báo trong catalog/diagram. |
@@ -52,7 +52,7 @@ N/A — catalog không khai báo query parameters.
 |---:|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | body | Trạng thái đích | status | CourseStatus candidate | Yes — DERIVED | N/A | N/A | Enum candidate | DRAFT, PUBLISHED, SUSPENDED candidate; exact enum/casing needs confirmation | Không có | Target status; catalog nêu semantic draft/published/suspended nhưng không khai báo body hoặc enum members. | 1.2 |
 
-Candidate body chỉ có field status; không thêm metadata, mentor, category, audit reason hay delete flag. Giá trị uppercase khớp legacy courses.status default và current API #06 published filter; casing không phải contract được duyệt. Pilot course version enum thiếu SUSPENDED và không được dùng làm nguồn enum cho legacy model.
+Runtime body chỉ có field `status`, strict và cấm field lạ; không nhận metadata, mentor, category, audit reason hay delete flag. Giá trị uppercase khớp legacy `courses.status` default và current API #06 published filter; casing vẫn là fallback DERIVED, chưa được owner duyệt. Pilot course version enum thiếu SUSPENDED và không được dùng làm nguồn enum cho legacy model.
 
 ## Ví dụ Request data
 
@@ -76,9 +76,9 @@ Content-Type: application/json
 - Target ngoài tập candidate có thể map sang 422 DESIGN_VALIDATION_ERROR; catalog có code 422 nhưng không quy định field rule.
 - Không có transition matrix; không tự cấm DRAFT→PUBLISHED, PUBLISHED→SUSPENDED hoặc chiều khác.
 - Không suy ra readiness gate, enrollment restriction, content moderation hoặc audit reason.
-- Same-status/no-op behavior và audit event khi request lặp lại cần xác nhận.
+- Runtime same-status behavior là DERIVED no-op: không đổi `updated_at` và không thêm audit row.
 - Idempotency-Key cần được owner quyết định theo API guideline; chưa thêm thành required header.
-- Request body chưa được áp dụng vào runtime; không suy ra behavior từ Pydantic handler.
+- HTTP tests xác nhận body/status validation cục bộ; fake DB không xác nhận live schema.
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `1.Request`

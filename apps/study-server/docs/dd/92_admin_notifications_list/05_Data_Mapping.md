@@ -16,7 +16,7 @@ status: "Draft — Needs Confirmation"
 
 1. [Step 0 — Xác thực và phân quyền](#step-0-xác-thực-và-phân-quyền)
 2. [Step 1 — Kiểm tra request](#step-1-kiểm-tra-request)
-3. [Step 2 — Đọc notification](#step-2-đọc-notification)
+3. [Step 2 — Đọc Notification và delivery aggregate](#step-2-đọc-notification-và-delivery-aggregate)
 4. [Step 3 — Ánh xạ response](#step-3-ánh-xạ-response)
 5. [Step 4 — Trả kết quả hoặc lỗi](#step-4-trả-kết-quả-hoặc-lỗi)
 
@@ -26,13 +26,13 @@ status: "Draft — Needs Confirmation"
 
 | Check | Source | Rule | Basis/status |
 |---|---|---|---|
-| Bearer token | Catalog #92 | Request dùng Bearer JWT | DIRECT contract |
+| Bearer token | Catalog #92 | Request dùng Bearer JWT | DIRECT |
 | Role | Catalog #92 | Actor là Admin | DIRECT |
-| Notification permission | AC-36 | Admin có notification-management permission | DIRECT intent; claim/policy SOURCE_REQUIRED |
-| Current guard | Study auth/router | Chưa có Admin guard hoặc route #92 | CURRENT_BEHAVIOR: UNWIRED / NOT_FOUND |
+| Notification-management permission | AC-36 | Admin cần permission chuyên biệt | DIRECT intent; key/policy SOURCE_REQUIRED |
+| Runtime guard | `app/utils/auth.py` | `validate_current_user_request(..., role="ADMIN")` trước query | DERIVED fallback; không chứng minh permission riêng |
 
-- Xác thực và authorize trước khi đọc notification.
-- Không dùng Student guard thay Admin policy và không nhận role/actor ID từ query.
+- Không nhận role, actor ID hoặc permission từ query/body.
+- Nếu guard trả 401/403, dừng trước query và chuyển lỗi theo catalog.
 
 <a id="step-1-kiểm-tra-request"></a>
 
@@ -42,90 +42,99 @@ status: "Draft — Needs Confirmation"
 
 | Request item | Source/use | Query/response use | Rule/status |
 |---|---|---|---|
-| Authorization | Header | Authenticate Bearer; authorize Admin | Role DIRECT; permission mapping SOURCE_REQUIRED |
-| `status` | Optional query string | Intended filter over `Notification.status` | Enum and physical mapping SOURCE_REQUIRED |
-| `channel` | Optional query string | Intended filter over `Notification.channels[]` | Channel values and source grain SOURCE_REQUIRED |
-| `page` | Optional int32 | Intended list page | No direct size or response PageMeta; semantics unresolved |
+| Authorization | Header | Authenticate Bearer; authorize Admin | Role DIRECT; specialized permission SOURCE_REQUIRED |
+| `status` | Optional query string | Exact predicate trên aggregate status | String DIRECT; aggregate mapping DERIVED |
+| `channel` | Optional query string | Membership predicate trên channels array | String DIRECT; channel source DERIVED |
+| `page` | Optional int32 | Limit/offset và `pagination.page` | Page 1..INT32_MAX, default 1 DERIVED |
 | Body/path | None | None | DIRECT |
 
-- Không tự thêm `size`, date range, recipient ID, `sort`, 422 hoặc error code khác.
-- Parse/range behavior chưa có mapping trong contract; giữ câu hỏi thay vì tự gán 400/422.
+- Status/channel giữ nguyên text; không trim, lower/upper-case hoặc tự áp enum allowlist.
+- Page size cố định 20 và `offset = (page - 1) * 20` là DERIVED.
+- Invalid/non-positive/out-of-int32 page trả 422 `DESIGN_VALIDATION_ERROR`, ngoài error set catalog.
 
-<a id="step-2-đọc-notification"></a>
+<a id="step-2-đọc-notification-và-delivery-aggregate"></a>
 
-## Step 2 — Đọc notification
+## Step 2 — Đọc Notification và delivery aggregate
 
-### Q1 — Complete Admin list source
+### Q1 — Legacy notification page/count candidate
 
-`SOURCE_REQUIRED`: chưa có physical model được duyệt để đọc một Admin notification với toàn bộ field `Notification`, channel/status, recipient/campaign grain và page semantics. Vì vậy DD không ghi SQL có thể bị hiểu là executable query.
+`DERIVED`: dùng checked-in legacy BIGINT `notifications` cùng migration-009/API #63 `notification_deliveries`. Đây là candidate local, không xác nhận live relation/migration deployment hoặc Admin campaign grain.
 
-### Candidate source matrix
+### Query Matrix
 
-| Query | Type | Candidate source | Columns/items | Predicate/order | Purpose/status |
+| Query ID | Type | Source | Query item | Rule | Evidence status |
 |---|---|---|---|---|---|
-| Q1 | SELECT | Chưa chọn | Full Notification projection | Chưa xác định filter, join, grouping hoặc pagination | `SOURCE_REQUIRED` |
-| Q1-L | SELECT candidate | Legacy `notifications` | `id,title,content,created_at`; thêm `user_id,sender_id,type,is_read` chỉ là legacy columns | Không map `type`/`is_read` sang contract; notification grain chưa rõ | Candidate schema, không phải query đã duyệt |
-| Q1-P | SELECT candidate | V1-PILOT `notifications` + `notification_deliveries` | UUID notification/delivery, learner, body, read_at, channel/status | ID/grain/status khác API #92 | Discrepancy; không dùng như legacy query |
-| Q1-C | DERIVED proposal | Approved future list source | Exact status match; channel membership match | Chỉ áp dụng sau khi schema/enum/response được duyệt | Proposal, không phải DIRECT |
+| Q1-CTE | `GROUP BY` | `notification_deliveries AS d` | `notification_id`, `channel`, `status` | Aggregate distinct-by-DDL delivery rows per notification; channels order `channel ASC` | DERIVED from API #63/DDL |
+| Q1-CTE | `COUNT FILTER` | `notification_deliveries AS d` | `delivery_count`, `queued_count`, `failed_count`, `sent_count` | Count each stored state; reuse API #64 precedence | DERIVED |
+| Q1 | `JOIN` | `notifications AS n` + delivery summary | `n.id = d.notification_id` | Include only notifications with at least one delivery row | DERIVED; excludes rows without channel/status projection |
+| Q1 | `SELECT` | `notifications AS n` | `id`, `title`, `content`, `created_at` | Do not select recipient/sender/read/type/operation IDs | Candidate fields |
+| Q1 | `WHERE` | Notification result | `status` | Optional exact match to aggregate `QUEUED`/`FAILED`/`SENT` | DERIVED |
+| Q1 | `WHERE` | Notification result | `channel` | Optional exact membership in aggregate channels | DERIVED |
+| Q1 | `ORDER BY` | Notification result | `created_at DESC, id DESC` | Newest first with stable tie-breaker | DERIVED |
+| Q1 | `LIMIT` | N/A | 20 | Fixed page size | DERIVED |
+| Q1 | `OFFSET` | N/A | `(page - 1) * 20` | Page is 1-based | DERIVED |
+| Q2 | `COUNT` | Same notification result | `COUNT(*)` | Exact same status/channel predicates as Q1 | DERIVED |
 
-### Pagination proposal — chỉ khi contract Page được duyệt
+### Delivery aggregate status mapping
 
-- Page bắt đầu từ 1, fixed size 20 và stable order `created_at DESC, id DESC` là proposal `DERIVED`, tham khảo cách page design-only ở API #43.
-- Query count dùng cùng filter với item query chỉ khi response Page được duyệt và schema/grain đã chọn.
-- Không áp dụng predicate `user_id = principal_id` của API #43 cho Admin API.
-- Empty list trả 200 với `items: []` chỉ thuộc Page proposal; direct singleton contract chưa quy định empty behavior.
+- Nếu `queued_count > 0`, status = `QUEUED`.
+- Nếu không còn queued và `failed_count > 0`, status = `FAILED`.
+- Nếu `sent_count = delivery_count`, status = `SENT`.
+- Aggregate không thuộc các nhánh trên không tạo Notification projection hợp lệ; trả 500 an toàn.
+- Thứ tự trên lấy từ API #64 Operation status; ánh xạ sang Notification.status của Admin vẫn DERIVED.
 
-### Candidate row outcome
+### Query result handling
 
-| Outcome | Candidate behavior | Status |
+| Outcome | Runtime behavior | Status |
 |---|---|---|
-| Notification phù hợp | Trả object theo direct contract hoặc item trong Page nếu contract sửa | Direct type / Page DERIVED |
-| Không có record | Chưa chốt do response singleton/list conflict; catalog không có 404 | SOURCE_REQUIRED |
-| Query/database failure | Giữ error code 500 theo catalog | Code DIRECT; branch detail chưa có source |
-| Dependency unavailable | Giữ error code 503 theo catalog | Trigger chưa chỉ ra; SOURCE_REQUIRED |
+| Count hợp lệ, rows hợp lệ | Map Page | Local source-backed |
+| Không có row/page ngoài phạm vi | HTTP 200, `items: []` | DERIVED |
+| Row không có delivery | Không thuộc query result | DERIVED |
+| SQL connection unavailable | Rollback và 503 `DESIGN_DEPENDENCY_UNAVAILABLE` | DERIVED trigger for direct code |
+| SQL/mapping/projection failure khác | Rollback và 500 `DESIGN_INTERNAL_ERROR` | 500 code DIRECT; branch mapping current source |
 
 <a id="step-3-ánh-xạ-response"></a>
 
 ## Step 3 — Ánh xạ response
 
-### Direct `Notification` response source matrix
+### Response Source Matrix
 
-| Field | Type | Candidate source | Mapping/null rule | Status |
-|---|---|---|---|---|
-| `data.id` | int64 | Legacy `notifications.id` BIGSERIAL | Candidate numeric ID; Admin resource grain chưa chốt | SOURCE_REQUIRED |
-| `data.title` | string | Legacy/pilot `notifications.title` | Candidate theo schema được chọn | Candidate only |
-| `data.content` | string | Legacy `notifications.content` | Pilot `body` không tự đổi tên thành content | Legacy candidate |
-| `data.channels[]` | NotificationChannel[] | Pilot delivery `channel` | Không lấy legacy `type`; channel-level không đồng nghĩa campaign channels | SOURCE_REQUIRED |
-| `data.status` | NotificationStatus | Không có Notification-level source được duyệt | Không suy từ `is_read` hay delivery status | SOURCE_REQUIRED |
-| `data.read_at` | date-time? | Pilot learner notification | Không có trong legacy; Admin meaning chưa rõ | SOURCE_REQUIRED |
-| `data.scheduled_at` | date-time? | Không thấy field trong schema đã rà soát | Không map `expires_at` | SOURCE_REQUIRED |
-| `data.created_at` | date-time | Legacy/pilot `created_at` | Candidate; timezone and grain depend on selected model | SOURCE_REQUIRED |
+| Response field | Type | Candidate source | Data Mapping step | Transform / rule | Status |
+|---|---|---|---|---|---|
+| `data.items[].id` | int64 | `notifications.id` | 3.1 | Positive signed-int64 | Legacy candidate |
+| `data.items[].title` | string | `notifications.title` | 3.1 | Direct string | Legacy candidate |
+| `data.items[].content` | string | `notifications.content` | 3.1 | Direct string | Legacy candidate |
+| `data.items[].channels[]` | `NotificationChannel[]` | `notification_deliveries.channel` | 3.1 | Ordered array; only `EMAIL`/`PUSH` accepted | DERIVED from #63/DDL |
+| `data.items[].status` | `NotificationStatus` | Delivery counts | 3.1 | QUEUED → FAILED → SENT precedence | DERIVED from #64 |
+| `data.items[].read_at` | date-time? | None | 3.1 | Omit | SOURCE_REQUIRED if required later |
+| `data.items[].scheduled_at` | date-time? | None | 3.1 | Omit | SOURCE_REQUIRED if required later |
+| `data.items[].created_at` | date-time | `notifications.created_at` | 3.1 | Preserve DB datetime serialization | Legacy candidate; live type unverified |
+| `data.pagination.page` | int32 | validated query | 3.2 | Requested page; default 1 | DERIVED |
+| `data.pagination.size` | int32 | local constant | 3.2 | 20 | DERIVED |
+| `data.pagination.total` | int64 | Q2 | 3.2 | Exact Q1 predicates | DERIVED |
+| `data.pagination.total_pages` | int32 | Q2 + size | 3.2 | ceil(total/20), zero when total is zero | DERIVED |
 
-### Envelope fields
-
-| Field | Source | Rule |
-|---|---|---|
-| `success` | Envelope branch | true success / false error |
-| `businessCode` | Catalog | Exact direct business code |
-| `message` | Application | Safe text; exact message not defined |
-| `meta` | ApiEnvelope | Object; members not defined. Do not place PageMeta here without contract. |
-| `traceId` | Request context | Propagate according to shared convention; route not wired. |
-
-### Mutation matrix
-
-| Operation | Target | Condition | Fields | Status |
-|---|---|---|---|---|
-| None | N/A | API #92 is read-only | No INSERT/UPDATE/DELETE | `N/A — READ-ONLY API` |
+- Không map `notifications.type` thành `channels`.
+- Không map `notifications.is_read` thành status hoặc `read_at`.
+- Không map `notification_deliveries.status` thành `read_at` hoặc provider state.
+- Không trả `user_id`, `sender_id`, `operation_id`, provider message IDs hoặc raw error.
 
 <a id="step-4-trả-kết-quả-hoặc-lỗi"></a>
 
 ## Step 4 — Trả kết quả hoặc lỗi
 
-- Direct success: HTTP 200 `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<Notification>`.
-- Exact direct errors: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 503 `DESIGN_DEPENDENCY_UNAVAILABLE`, 500 `DESIGN_INTERNAL_ERROR`.
-- Catalog does not list 404 or 422 for #92; do not add them for empty list or query validation.
-- Current middleware does not allowlist `/api/v1/admin/notifications`; future route integration may otherwise use fallback codes. This is not current API #92 behavior because no route exists.
-- Do not return SQL, stack trace, provider details or unnecessary recipient personal data.
+- Success: HTTP 200 `DESIGN_RESOURCE_RETRIEVED`, runtime `ApiEnvelope<Page<Notification>>`.
+- Exact catalog errors: 401, 403, 503, 500 với business codes tương ứng.
+- Runtime-only fallback: invalid page trả 422; status/channel enum không match chỉ tạo empty result.
+- Empty result trả 200 với pagination; không có 404.
+- Query và response mapping hoàn tất trước khi trả; success không commit; lỗi query/projection gọi rollback.
+- Không gọi notification provider hoặc operation tracker.
+
+## Mutation matrix
+
+| Mutation ID | Operation | Target | Condition | Fields | Mapping / transaction |
+|---|---|---|---|---|---|
+| — | N/A — READ-ONLY API | N/A | N/A | Không INSERT/UPDATE/DELETE | Không commit; rollback khi lỗi |
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

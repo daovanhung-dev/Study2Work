@@ -16,38 +16,38 @@ status: "Draft — Needs Confirmation"
 | HTTP method | PUT |
 | URI | /api/v1/admin/quizzes/{quiz_id} |
 | Character encoding | UTF-8 |
-| Content-Type | application/json chỉ là DERIVED nếu body proposal được duyệt. |
+| Content-Type | application/json cho outer body DERIVED được triển khai cục bộ. |
 | Authentication | Bearer JWT |
-| Role | Admin; AC-35 yêu cầu thêm quiz-management permission. |
+| Role | Admin; implementation dùng shared `ADMIN`; AC-35 fine-grained quiz-management policy chưa có source. |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Principal cần Admin và quiz-management permission; Study chưa có guard/policy. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) |
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Shared ADMIN guard xác thực trước path/body parsing và DB; fine-grained quiz-management permission chưa có. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) |
 | 2 | Trace ID | X-Trace-Id | No | UUID | Correlation header theo current middleware/API Guidelines; không phải filter nghiệp vụ. | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) |
-| 3 | Content type | Content-Type | DERIVED | application/json | Chỉ dùng nếu body candidate được duyệt. | [Step 1](./05_Data_Mapping.md#step-1-validate-request) |
+| 3 | Content type | Content-Type | DERIVED | application/json | Outer body chứa hai JSON strings theo proposal #88. | [Step 1](./05_Data_Mapping.md#step-1-validate-request) |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | Quiz ID | quiz_id | int64 | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | Số nguyên 64-bit | SOURCE_REQUIRED | N/A | ID Quiz cần cập nhật. | [Step 1](./05_Data_Mapping.md#step-1-validate-request) |
+| 1 | Quiz ID | quiz_id | int64 | Yes | 1 | 9223372036854775807 | Số nguyên dương | Decimal digits | N/A | Local parser accepts positive IDs within signed int64. | [Step 1](./05_Data_Mapping.md#step-1-validate-request) |
 
-> Catalog xác nhận quiz_id:int64!; positivity/range và path parse-error mapping chưa được quy định.
+> Catalog xác nhận quiz_id:int64!; positive-only parsing và invalid path → 422 là fallback DERIVED.
 
 ## Query parameters
 
 N/A — catalog và AC-35 không khai báo query parameter.
 
-## Request body — contract trực tiếp và proposal
+## Request body — direct contract absence and local proposal
 
-Catalog row #89 chỉ khai báo path, không có body. Không coi các field dưới đây là direct contract.
+Catalog row #89 chỉ khai báo path, không có body. Runtime hiện nhận body dưới đây như DERIVED proposal; không coi đây là direct contract.
 
 | No | Logical name | Field name | Type | Required | Basis | Description | Data Mapping reference |
 |---:|---|---|---|---|---|---|---|
-| 1 | Quiz configuration | config | string | Yes, proposal | DERIVED từ body API #88 | Cập nhật cấu hình Quiz theo proposal. | [Step 1](./05_Data_Mapping.md#step-1-validate-request) |
-| 2 | Question set | questions | string | Yes, proposal | DERIVED từ #88 và AC-35 UPDATE | Full replacement candidate cho questions. | [Step 1](./05_Data_Mapping.md#step-1-validate-request) |
+| 1 | Quiz configuration | config | string | Yes | DERIVED reuse từ body API #88 | Cập nhật candidate config Quiz; không phải direct catalog body. | [Step 1](./05_Data_Mapping.md#step-1-validate-request) |
+| 2 | Question set | questions | string | Yes | DERIVED reuse từ #88 và AC-35 UPDATE | Full replacement candidate cho questions. | [Step 1](./05_Data_Mapping.md#step-1-validate-request) |
 
 ## JSON schema đề xuất bên trong các string — DERIVED
 
@@ -57,22 +57,22 @@ Outer body candidate vẫn giữ hai string như #88. Chỉ owner mới có th�
 
 | Embedded key | Type đề xuất | Required | Candidate use | Status |
 |---|---|---:|---|---|
-| course_id | int64 | Yes | Course chứa Quiz; có thể đổi course nếu policy cho phép. | DERIVED; policy open |
-| title | string | Yes | Candidate map sang quizzes.name. | DERIVED |
-| duration_minutes | int32 | No | Candidate map sang time_limit_minutes. | DERIVED; omission/null open |
-| passing_score | decimal-string | Yes | Candidate map sang passing_score. | DERIVED; precision open |
+| course_id | int64 | Yes | Course đích; đổi course được phép nếu target tồn tại. | DERIVED; no publication/enrollment gate |
+| title | string | Yes | Map sang quizzes.name; tối đa 200 ký tự từ DDL candidate. | DERIVED |
+| duration_minutes | int32 or null | No | Map sang time_limit_minutes; omit/null ghi NULL. | DERIVED |
+| passing_score | decimal-string | Yes | Map sang passing_score; tối đa NUMERIC(5,2), từ -999.99 đến 999.99. | DERIVED |
 
 ### questions[]
 
 | Embedded key | Type đề xuất | Required | Candidate use | Status |
 |---|---|---:|---|---|
 | text | string | Yes | Candidate map sang question_text. | DERIVED |
-| type | string / QuestionType | Yes | Required logical response; legacy storage absent. | SOURCE_REQUIRED / DISCREPANCY |
+| type | string / QuestionType | Yes | Required logical response; local legacy column comes from migration 013. | DERIVED / owner review open |
 | choices | array | Yes | Full child-set candidate; QuizChoice chưa định nghĩa. | DERIVED proposal |
 | choices[].text | string | Yes | Candidate map sang choice_text. | DERIVED |
-| choices[].is_correct | boolean | Yes | Candidate answer key input; không phải response field. | DERIVED |
+| choices[].is_correct | boolean | No | Candidate answer key input; khi thiếu validator mặc định false. | DERIVED |
 
-> Body candidate không có question/choice IDs. Do đó đề xuất thay toàn bộ child set thay vì ghép hàng cũ theo vị trí. Title limits, number of questions/choices, answer-count rules, enum values, score range, payload size và null/omission semantics chưa có nguồn.
+> Body candidate không có question/choice IDs; implementation thay toàn bộ child set. `questions=[]` và `choices=[]` được chấp nhận. Validator reuse #88: title ≤200, duration trong int32, passing_score là decimal-string NUMERIC(5,2), QuestionType theo ba giá trị #88; không thêm answer-count rule.
 
 ## Ví dụ Request — DERIVED proposal
 
@@ -88,14 +88,15 @@ X-Trace-Id: 00000000-0000-0000-0000-000000000089
 }
 ~~~
 
-Outer body đúng hai string theo proposal reuse từ #88. SINGLE_CHOICE chỉ minh họa từ V1-PILOT, không chốt enum cho API contract/legacy schema. Ví dụ không xác nhận body #89 đã được phê duyệt.
+Outer body đúng hai string theo proposal reuse từ #88. Request body, nested type và full replacement vẫn DERIVED; ví dụ không làm chúng thành direct catalog contract.
 
 ## Quy tắc input đang mở
 
-- quiz_id là path int64 bắt buộc; positivity và path parse-error policy chưa được catalog định nghĩa.
-- Thiếu/sai body chỉ map 422 nếu owner duyệt body proposal; catalog có DESIGN_VALIDATION_ERROR.
-- Body là full replacement candidate; chưa rõ omit giữ giá trị cũ, xóa field optional hay bị từ chối.
-- Course reference/move, quiz status và policy update sau khi có attempts cần xác nhận.
+- Runtime parser yêu cầu quiz_id dương trong signed-int64; sai path trả 422 theo catalog.
+- Body outer/nested sai trả 422 theo catalog; schema này là DERIVED.
+- Body là full replacement; duration omit/null được ghi NULL; arrays rỗng xóa toàn bộ child set.
+- Course đích phải tồn tại; đổi course được cho phép; không kiểm tra course status/enrollment.
+- Quiz có attempt hoặc answer history trả 422 trước mọi write; policy này DERIVED.
 - Không thêm status, description, question score, quiz_id trong body hoặc query field.
 ---
 ## Phụ lục đối chiếu nguồn Excel

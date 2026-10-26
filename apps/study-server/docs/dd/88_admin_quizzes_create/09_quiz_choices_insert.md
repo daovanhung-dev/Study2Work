@@ -14,10 +14,10 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Physical table | quiz_choices |
-| Logical table | QuizChoice chưa được định nghĩa đầy đủ |
+| Logical table | QuizChoice — local Admin projection is `{id,text,is_correct}` (DERIVED) |
 | Operation | INSERT |
 | Data Mapping step | [M3 — Step 4](./05_Data_Mapping.md#step-4-insert-question-and-choice-children) |
-| Source | Legacy infra/postgres/study-server/DB.sql candidate |
+| Source | Legacy DB.sql plus migration 013 candidate |
 | Live schema status | Chưa xác minh |
 
 ## Update mapping
@@ -34,29 +34,30 @@ status: "Draft — Needs Confirmation"
 
 **Áp dụng khi**
 
-- Một row cho mỗi choices[] trong mỗi question.
+- Một row cho mỗi choices[] item trong question.
 - question_id lấy từ question row trong cùng transaction.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | id | Choice ID | BIGSERIAL / int64 | N/A | N/A | Y | PK | Database generated | Legacy DB.sql | 4 | Output property chưa được QuizChoice định nghĩa. |
-| 2 | question_id | Parent question ID | BIGINT | 8 bytes | N/A | Y by API | FK | Generated quiz_questions.id | Legacy relation + M2 | 4 | DDL nullable; write supplies parent ID. |
-| 3 | choice_text | Choice text | TEXT | N/A | N/A | Y |  | choices[j].text | Derived QuizChoice input + legacy DDL | 4 | Logical input property is proposal. |
-| 4 | is_correct | Correct answer flag | BOOLEAN | 1 | N/A | Y by proposal |  | choices[j].is_correct | Legacy DB.sql answer-key column | 4 | Not in reusable QuizChoice output schema. |
+| 1 | id | Choice ID | BIGSERIAL / int64 | N/A | N/A | Y | PK | Database generated | Legacy DB.sql | 4 | Local Admin response includes ID. |
+| 2 | question_id | Parent question ID | BIGINT | 8 bytes | N/A | Y by API | FK | Generated quiz_questions.id | Legacy relation + M2 | 4 | DDL nullable; write supplies parent. |
+| 3 | choice_text | Choice text | TEXT | N/A | N/A | Y |  | choices[j].text | Derived input + legacy DDL | 4 | Alias text → choice_text. |
+| 4 | is_correct | Correct answer flag | BOOLEAN | 1 | N/A | Y in storage |  | choices[j].is_correct or false | Legacy DDL default FALSE | 4 | Local Admin projection returns it; Student reads must omit. |
+| 5 | sort_order | Choice order | INT | 4 | N/A | Y |  | Zero-based array index | Migration 013 | 4 | New column preserves order for later reads. |
 
 ## Delete mapping
 
 **Áp dụng khi**
 
-- N/A — API #88 không xóa choices hiện có.
+- N/A — API #88 không xóa choices; replacement belongs to API #89.
 
 | No | Target column | Operator | Value source | Data Mapping step | Remarks |
 |---:|---|---|---|---|---|
-| N/A | N/A | N/A | N/A | N/A | Existing-choice update/removal thuộc API #89. |
+| N/A | N/A | N/A | N/A | N/A | Existing-choice mutation thuộc API #89. |
 
-## Ordering gap
+## Ordering and visibility
 
-Legacy quiz_choices không có position/sort_order. Array order có thể dùng khi dựng create response; thứ tự truy vấn bền vững cho API #28/#87/#89 chưa được định nghĩa.
+`sort_order` preserves the supplied choice order for local reads. The exact reusable QuizChoice contract remains owner-reviewable; this Admin endpoint is the only projection that returns `is_correct`. Student API #28 must omit the answer key.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

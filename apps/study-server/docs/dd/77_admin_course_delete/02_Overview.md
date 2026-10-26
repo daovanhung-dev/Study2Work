@@ -20,18 +20,18 @@ status: "Draft — Needs Confirmation"
 | Method | DELETE |
 | Endpoint | `/api/v1/admin/courses/{course_id}` |
 | Purpose | Admin yêu cầu xóa khóa học theo policy sau khi kiểm tra enrollment/content. |
-| Consumer/Actor | Admin có quyền course management. |
+| Consumer/Actor | Admin; course-management permission riêng chưa có policy source. |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin và quyền course management theo catalog/AC-32; Study chưa có Admin guard. |
+| Authorization | Shared JWT role `ADMIN`; fallback cho permission riêng chưa được xác nhận. |
 | Direct request | `path{course_id:int64!}`; không khai báo body/query. |
 | Direct response | `ApiEnvelope<DeleteResult>`; 200 `DESIGN_RESOURCE_DELETED`. |
 | DeleteResult | `id:int64`, `status:"deleted"`, `deleted_at:date-time`. |
 | Direct errors | 401/403/404/422/500 với đúng mã trong catalog. |
-| Basis | Contract và soft-delete intent DIRECT; dependency policy/physical persistence SOURCE_REQUIRED. |
+| Basis | Contract/soft-delete intent DIRECT; blocker set, status marker and timestamp mapping DERIVED; live schema SOURCE_REQUIRED. |
 | Status | Draft — Needs Confirmation |
-| Current runtime state | `UNWIRED / NOT_FOUND` — không có route, module hoặc focused test API #77. |
-| Transaction | Đề xuất dependency check và soft-delete mutation cùng transaction; boundary/locking chưa được xác nhận. |
-| Side effects | Soft delete khóa học theo policy; không hard-delete hoặc cascade child rows. Physical effect chưa xác định. |
+| Current runtime state | `SOURCE_BACKED / LOCAL_TESTED` — route/module/focused HTTP tests tồn tại; tests dùng fake DB session. |
+| Transaction | `view.py` khóa course, kiểm tra dependency, cập nhật marker và commit trong một transaction; lỗi rollback. |
+| Side effects | Đặt `courses.status='DELETED'`, cập nhật `updated_at`; giữ nguyên enrollment/content, không hard-delete, cascade hoặc audit. |
 
 ## Sources
 
@@ -42,46 +42,45 @@ status: "Draft — Needs Confirmation"
 - [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — BIGINT `courses`, `enrollments`, `lessons` và các course-linked relations; không có course deletion timestamp.
 - [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — UUID `courses`, `archived_at`, versioned content/enrollment model và restrictive foreign keys; không tương thích trực tiếp với API int64.
 - [API #72 delete precedent](../72_admin_user_delete/02_Overview.md), [#73 list](../73_admin_courses_list/02_Overview.md), [#74 detail](../74_admin_course_detail/02_Overview.md), [#75 update](../75_admin_course_update/02_Overview.md), [#76 status](../76_admin_course_status/02_Overview.md) — ranh giới delete, visibility, metadata, status/audit và response.
-- [Current router](../../../app/api/v1.py), [auth helper](../../../app/utils/auth.py), [middleware](../../../app/core/middleware.py), [response helper](../../../app/core/responses.py) — source absence và error integration hiện hành.
+- [Current router](../../../app/api/v1.py), [auth helper](../../../app/utils/auth.py), [middleware](../../../app/core/middleware.py), [response helper](../../../app/core/responses.py) — route, shared ADMIN guard, route-template errors and response integration.
 - [API guidelines](../../../../../contracts/api-guidelines/README.md) — error envelope và hướng dẫn retryable mutation.
 
 ## Tables read
 
 | Relation | Candidate fields/relationship | Basis/status |
 |---|---|---|
-| Legacy `courses` | `id`, course identity | Candidate Q1 only; DDL artifact, live schema unknown. |
-| Legacy `enrollments` | `course_id`, `status` | Candidate dependency relation; exact blocker/status policy unknown. |
-| Legacy `lessons` | `course_id` | Possible course-content candidate; does not establish generic Content persistence. |
-| Legacy course-linked relations | `quizzes`, `assignments`, `discussions`, `payments` | Relationships in legacy DDL/guide; catalog names enrollment/content only, policy coverage unresolved. |
+| Legacy `courses` | `id`, `status`, `updated_at` | Candidate lock/soft-delete target; DDL artifact, live schema unknown. |
+| Legacy `enrollments` | `course_id` | Any matching enrollment blocks; status is not filtered. This policy is DERIVED. |
+| Legacy `contents` | `course_id`, `deleted_at` | Active generic Content rows block; soft-deleted rows do not. DERIVED from API #53 marker. |
+| Legacy `lessons`, `quizzes`, `assignments` | `course_id` | Any matching row blocks as course learning content; DERIVED conservative dependency set. |
 | V1-PILOT `courses` / `course_versions` | UUID IDs, `archived_at`, versioned course/content | Different model; do not map to the int64 `DeleteResult`. |
 
 ## Tables write
 
-Physical target/columns are `SOURCE_REQUIRED`. The AC requires a logical soft-delete effect, but neither the legacy course DDL nor the API contract selects a physical marker. Do not write a fabricated `UPDATE`, hard `DELETE`, or child-row cascade.
+The implementation updates the existing legacy candidate `courses.status` to `DELETED` and `updated_at` to the DB current timestamp. No new course column, table or migration is added. This mapping is `DERIVED` from API #72 and does not establish the live schema.
 
 ## Mục chú ý
 
-- Catalog title indicates conditional deletion after enrollment/content checks; AC-32 diagram says soft delete theo policy. Neither source specifies exact relations, active statuses, blocker semantics or error detail.
-- Conservative proposal `DERIVED`: if an approved check finds any blocking enrollment/content, return 422; otherwise apply the approved soft-delete policy. The owner must confirm the dependency set and whether any dependency can be retained.
-- `DeleteResult.deleted_at` is required by the reusable schema. Legacy `courses` has no deletion timestamp. V1-PILOT `archived_at` belongs to a UUID model and is not automatically equivalent to deletion.
-- No physical relation for generic `Content` exists in the legacy ERD/DDL. `lessons.course_id` is only a possible content candidate; do not treat it as the complete Content dependency model.
+- Catalog names enrollment/content checks and AC-32 says soft delete theo policy; neither source specifies exact relations or status semantics.
+- Runtime fallback `DERIVED`: any enrollment row, any lesson/quiz/assignment row, or any active generic Content row blocks with catalog 422; no child row is changed.
+- `DeleteResult.deleted_at` maps to persisted `courses.updated_at` returned by the soft-delete UPDATE, following API #72. V1-PILOT `archived_at` is unrelated to this legacy BIGINT model.
 - #76 explicitly requires status update plus audit; #77 diagram does not specify audit. Do not add an audit mutation to #77 by analogy.
-- After delete, hiding the course from #73 list and #74 detail is a group-level proposal; exact visibility/physical predicate remains open. #75/#76 behavior for a deleted target also needs confirmation.
-- Current Study has no Admin guard; do not reuse the shared Student guard.
-- Current middleware uses exact URL path membership; future dynamic `course_id` matching and error `data` shape need integration work.
+- APIs #73/#74 currently read status `DELETED` like other Admin-visible statuses. #75/#76 behavior on a deleted target is not changed by this one-API implementation; restore/visibility semantics remain open.
+- Shared Admin guard runs before path parsing/DB; dedicated course-management permission remains unresolved.
+- Middleware matches the shared FastAPI route template, and current `error_response()` emits `data:null`.
 
 ## Assumptions
 
-- A blocking dependency can map to catalog 422 `DESIGN_VALIDATION_ERROR`; this is `DERIVED`, not a new business code or a source-confirmed rule.
-- Dependency evaluation and soft-delete mutation should be atomic to avoid a check/write race; transaction owner/isolation remain unconfirmed.
-- Successful result status is the direct literal `"deleted"`; physical timestamp is not inferred from the system clock without an approved persistence source.
+- Existing enrollment/content dependencies block with catalog 422 `DESIGN_VALIDATION_ERROR`; blocker set is `DERIVED`, not owner-confirmed.
+- Dependency checks and marker update run in one request transaction after the course row is locked.
+- Successful `status="deleted"` is direct; `deleted_at` maps to the DB-returned `updated_at` alias, a `DERIVED` fallback.
 
 ## Conflicts
 
-- `DeleteResult.deleted_at` is required, while the legacy `courses` table has no delete marker/timestamp.
+- `DeleteResult.deleted_at` is required, while legacy `courses` has no dedicated deletion timestamp; runtime reuses `updated_at` by API #72 precedent.
 - V1-PILOT `courses.archived_at` is not a direct mapping for legacy BIGINT course deletion; its model and child references use UUID/versioned rows.
-- Catalog requires enrollment/content checks but does not define the dependency or block policy. Generic Content persistence is absent from the legacy model.
-- Admin authorization, error middleware path mapping and `data:null` guideline differ from current Study source behavior.
+- Catalog requires enrollment/content checks but does not define their policy; checked-in relations/blocker semantics are DERIVED.
+- Shared `ADMIN` role is the local guard; dedicated course-management permission remains unresolved. Route is wired; local tests do not verify live schema or DB policy.
 
 ## Security note
 
@@ -92,7 +91,7 @@ Physical target/columns are `SOURCE_REQUIRED`. The AC requires a logical soft-de
 
 ## Performance note
 
-- Q1 is a candidate primary-key existence read; Q2 should use bounded existence checks after the owner selects the dependency set.
+- Dependency checks use bounded `EXISTS` projections under the locked candidate course row.
 - Avoid loading full enrollment/content collections when an existence check is sufficient.
 - Exact indexes, query plan and schema availability are unknown; do not claim live performance.
 

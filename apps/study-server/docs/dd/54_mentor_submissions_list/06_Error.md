@@ -11,25 +11,26 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Bộ lỗi giữ nguyên chính xác theo API catalog #54. Điều kiện của 409 và cách xử lý input sai kiểu chưa được AC-23 định nghĩa.
+Error status/code set follows the API #54 artifacts, with 422 added for the implemented positive query constraints. Current `error_response()` serializes error data as JSON null.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Authentication | Yes | Authorization | Bearer token thiếu, sai định dạng hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | SOURCE_REQUIRED | 0.1 | No | Current API #54 route/guard absent. |
-| 2 | Authorization | Yes | Mentor course access | Actor không phải Mentor hoặc không có quyền chấm course | 403 | DESIGN_ACCESS_DENIED | SOURCE_REQUIRED | 0.3 | No | Role DIRECT; exact identity/assignment predicate SOURCE_REQUIRED. |
-| 3 | State conflict | SOURCE_REQUIRED | SOURCE_REQUIRED | Catalog khai báo 409 nhưng AC-23 không nêu điều kiện trigger | 409 | DESIGN_STATE_CONFLICT | SOURCE_REQUIRED | 4.2 | No | Do not derive from empty results, status filter or page. |
-| 4 | System error | Yes | Query/data mapping | Database, asset lookup or response mapping fails | 500 | DESIGN_INTERNAL_ERROR | SOURCE_REQUIRED | 4.3 | No | Safe message only; exact message text unspecified. |
+| 1 | Authentication | Yes | Authorization | Bearer token missing, malformed, invalid or claims invalid | 401 | DESIGN_AUTHENTICATION_REQUIRED | SOURCE_REQUIRED | 0.1 | No | Shared explicit MENTOR guard. |
+| 2 | Authorization | Yes | Mentor course access | Actor lacks MENTOR role or explicitly requested existing course belongs to another Mentor | 403 | DESIGN_ACCESS_DENIED | SOURCE_REQUIRED | 0.3 | Yes for course mismatch | Direct-owner policy follows #46/#49. |
+| 3 | State conflict | SOURCE_REQUIRED | SOURCE_REQUIRED | Catalog declares 409; AC-23 defines no trigger | 409 | DESIGN_STATE_CONFLICT | SOURCE_REQUIRED | 4.2 | No | Declared but currently unreachable; do not derive from empty results/status/page. |
+| 4 | Input validation | Yes | course_id/page | Non-integer, non-positive or outside declared integer range | 422 | DESIGN_VALIDATION_ERROR | SOURCE_REQUIRED | 1 | No | Added to catalog/diagram for route constraints. |
+| 5 | System error | Yes | Query/response mapping | Database error, count mismatch or malformed required projection | 500 | DESIGN_INTERNAL_ERROR | SOURCE_REQUIRED | 4.3 | Yes on read failure | Safe message only; no SQL or row data exposed. |
 
 ## Input validation and empty result
 
-- Catalog #54 does not include 422 DESIGN_VALIDATION_ERROR; malformed/overflow query handling is not defined.
-- Catalog #54 does not include 404; missing course or no matching submissions must not be mapped to 404 without a contract update.
-- Empty list/singular data behavior is unresolved because the endpoint is plural but response type is singular.
-- No error branch performs rollback because API #54 is read-only.
+- Status is an optional exact string; unknown values produce an empty page if none match, not a new validation code.
+- A missing course or a course with no submissions returns HTTP 200 with an empty Page; API #54 has no 404.
+- Invalid `page` or `course_id` returns 422 using the registered request validation handler and exact path contract mapping.
+- Error responses contain `data: null`; read-only requests never commit. Failed DB/mapping work is rolled back when a session transaction may be active.
 
-> Error message IDs are SOURCE_REQUIRED; the catalog defines business codes and HTTP statuses, not separate message identifiers.
+> Error message IDs are SOURCE_REQUIRED; the API catalog defines status/business codes, not message identifiers.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

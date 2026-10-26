@@ -2,7 +2,11 @@
 
 ## Phạm vi
 
-Kiểm tra tĩnh bộ DD Markdown API #50, catalog/AC-22/AC-33, schema boundary, route/helper wiring và template appendix. Chỉ thay đổi tài liệu trong `apps/study-server/docs/dd/50_mentor_content_create/` cùng worklog task. Không sửa runtime, DB, catalog, diagram hoặc client. Không chạy application tests vì task docs-only và endpoint chưa có implementation.
+Kiểm tra implementation local của `POST /api/v1/mentor/content`, bộ DD
+Markdown, các page context Study Server và manifest sau khi wire route. Runtime
+tests dùng fake DB; checked-in DDL/migration 006 không chứng minh live schema
+hoặc migration deployment. DD giữ trạng thái `Draft — Needs Confirmation` vì
+các quyết định DERIVED và lifecycle/schema production còn cần xác nhận.
 
 ## Deliverable manifest
 
@@ -13,9 +17,9 @@ Kiểm tra tĩnh bộ DD Markdown API #50, catalog/AC-22/AC-33, schema boundary,
 | `02_Overview.md` | Overview | PASS |
 | `03_Request.md` | Request + request usage | PASS |
 | `04_Response.md` | Response + Content projection | PASS |
-| `05_Data_Mapping.md` | Query, logical mutation, mapping matrices | PASS |
+| `05_Data_Mapping.md` | Query, mutation, mapping matrices | PASS |
 | `06_Error.md` | Exact catalog errors | PASS |
-| `07_table.md` | Logical insert mapping / physical gap | PASS |
+| `07_table.md` | Local `contents` mapping | PASS |
 | `PLAN_RESULT.md` | Plan and pre-authoring matrices | PASS |
 | `OPEN_QUESTIONS.md` | Source/approval gaps | PASS |
 | `VERIFICATION_REPORT.md` | Verification record | PASS |
@@ -24,41 +28,54 @@ Kiểm tra tĩnh bộ DD Markdown API #50, catalog/AC-22/AC-33, schema boundary,
 
 | Check | Result | Evidence level |
 |---|---|---|
-| API #50 request and response contract | Method/path, four required body fields, HTTP 201 and `DESIGN_RESOURCE_CREATED`, `ApiEnvelope<Content>` match catalog row #50 | PASS — DIRECT catalog |
-| Error set | Exactly 401/403/422/500 and matching `DESIGN_*` codes; no 404 added | PASS — DIRECT catalog |
-| Content response coverage | All eight fields `id`, `course_id`, `content_type`, `title`, `payload`, `status`, `parent_id`, `order` are mapped or explicitly marked unresolved/derived | PASS — static matrix check |
-| AC-22 flow | POST → logical `INSERT Content` → reload tree recorded; no physical SQL invented | PASS — diagram |
-| AC-33 state | Queue condition `status=PENDING_REVIEW` recorded; initial POST state labeled `DERIVED` and requires confirmation | PASS — diagram + evidence classification |
-| Physical schema | Legacy generic Content relation absent; pilot `content_blocks` differs from BIGINT Content contract; no live schema claim | PASS — DDL/design artifact comparison |
-| Runtime route/module/test | No API #50 route/module/test was found; endpoint remains `UNWIRED` / `NOT_FOUND` | PASS — current-source scan |
-| Middleware error integration | `DESIGN_CONTRACT_PATHS` excludes `/api/v1/mentor/content`; generic validation/unhandled fallbacks use non-catalog codes unless route is added | PASS — current helper; conditional future discrepancy |
+| Request/response | `POST /api/v1/mentor/content`, four required body fields, HTTP 201 `DESIGN_RESOURCE_CREATED`, `ApiEnvelope<Content>` | Catalog match; local route/model implemented |
+| Error set | 401/403/422/500 with declared `DESIGN_*` codes; no 404 added | Catalog match; TestClient-covered |
+| Authorization | Shared Mentor guard, numeric JWT subject, direct `courses.mentor_id` ownership | Current source; assigned-course policy remains open |
+| Mutation | Locks course, allocates non-negative next active-root order, inserts root Content as `PENDING_REVIEW`, validates RETURNING row, then commits | Local implementation; defaults marked DERIVED |
+| Middleware | `/api/v1/mentor/content` is in `DESIGN_CONTRACT_PATHS` | Current middleware; framework 422 TestClient-covered |
+| Local schema | Legacy `contents` table in `DB.sql` and migration 006 matches the local BIGINT/JSONB projection | Checked-in artifact only; live status unknown |
+| Macro-review | AC-22 #49–#53 sequence reviewed; unresolved lifecycle/version questions retained | `VERIFIED_WITH_OPEN_QUESTIONS` |
 
-## Document integrity checks
+## Verification results
 
-- 8 main sheet front matters use `dd_id: "50"` and `Draft — Needs Confirmation`.
-- All 8 template appendix tails byte-match the corresponding API #49/template appendix.
-- Request matrix covers Authorization and all four body fields; response matrix covers the complete catalog Content shape and envelope.
-- The request and response JSON examples parse syntactically; the request enum member is explicitly a non-executable placeholder.
-- Markdown code fences are balanced; no trailing whitespace in new DD files.
-- `git diff --check` returned no diagnostics for tracked changes. A separate static script checked whitespace in the untracked API #50 files.
-- Exact 11-file set was confirmed after report creation.
+| Check | Result | Status |
+|---|---|---|
+| Focused API #50 tests | `25 passed`; one upstream Starlette/httpx deprecation warning | VERIFIED |
+| Full Study Server suite | `381 passed`; same deprecation warning | VERIFIED |
+| Ruff | `uv run ruff check app tests` — all checks passed | VERIFIED |
+| Import/OpenAPI | 21 `/api/v1` paths; `/api/v1/mentor/content` present; request int64 schema covered by focused test | VERIFIED |
+| Context manifest | JSON parses and lists API #50 module/test source paths | VERIFIED_STATIC_ONLY |
+| `git diff --check` | No diagnostics | VERIFIED |
+| Context validator | Deno compatibility invocation fails on existing DB Admin context/source/link gaps; full mode also reports repository snapshot drift. `--skip-drift` reports the DB Admin baseline only and no API #50 missing source/page finding. | BLOCKED_BY_REPOSITORY_BASELINE |
 
-## Limitations and handoff
+## Limitations and open decisions
 
-- These checks verify document consistency only. They do not prove runtime behavior, DB migration, live schema, or API readiness.
-- Initial `PENDING_REVIEW`, root `parent_id=null`, and next-sibling order are design proposals requiring confirmation; physical Content persistence, payload/enum contracts, Mentor identity/assignment, missing-course error mapping and ID allocation remain open.
-- No application tests were run. Full AC-22/AC-33 macro-review of #49–#53 is complete with open questions; see the section below.
+- Fake DB tests verify route orchestration and response mapping, not PostgreSQL
+  locking, live schema, migration application, deployment or production data.
+- `PENDING_REVIEW`, root placement, zero-based order and 403 for absent courses
+  are implementation decisions derived from current diagram/catalog evidence;
+  they remain subject to product confirmation.
+- Content type members, payload subtype schema, assigned-course access,
+  versioning, moderation/audit behavior and live migration state remain open.
+- The repository context validator baseline is outside this Study Server task;
+  unrelated DB Admin context/source was left untouched.
 
 ## AC-22/AC-33 Macro-review #49–#53
 
 **Status:** VERIFIED_WITH_OPEN_QUESTIONS.
 
-- Đã rà soát chuỗi AC-22: #49 đọc → #50 tạo → #51 cập nhật Content + version → #52 publish/unpublish → #53 soft delete; mỗi mutation reload tree theo diagram.
-- #50/#51 cùng đề xuất PENDING_REVIEW cho Content/revision mới; đây vẫn là DERIVED.
-- #52 sở hữu publication-status update; proposal #53 yêu cầu unpublish PUBLISHED qua #52 trước khi delete, không tự đổi Content.status.
-- #53 dùng parent_id làm dependency trực tiếp duy nhất có thể suy ra; child hiện hữu chặn bằng 422 proposal; không cascade/reparent. Soft delete bảo toàn history theo proposal.
-- AC-33 approve node ghi APPROVED/PUBLISHED + audit nên chưa thể xác định approval có tự publish hay không.
-- #49 trả singular Content dù purpose là tree. Cách loại soft-deleted items khỏi #49, public views và AC-33 queue cần xác nhận.
-- Generic Content persistence/version schema, Mentor principal/assignment, payload/enums, readiness, dependency set, soft-delete/audit fields và middleware mapping đều còn SOURCE_REQUIRED.
-- Không chạy application tests; DD/source review không chứng minh API runtime hoặc live schema.
-
+- AC-22 flow: #49 reads the flat `Content[]` tree, #50 creates a root and the
+  client reloads the tree, #51 updates Content/version, #52 publishes/unpublishes,
+  and #53 soft-deletes. Mutation defaults and transitions remain subject to
+  their own source/approval evidence.
+- #50/#51 use `PENDING_REVIEW` as a DERIVED proposal for new Content/revisions;
+  AC-33's approve action mentions `APPROVED`/`PUBLISHED` plus audit, so automatic
+  publication behavior is unresolved.
+- #52 owns publication transitions. #53 proposal requires unpublishing a
+  `PUBLISHED` node through #52 first and does not mutate `Content.status`.
+- #53 proposal blocks deletion when direct children remain and does not
+  cascade/reparent. Soft-delete history, moderation queue filtering and audit
+  storage remain unconfirmed.
+- The local legacy `contents` base mapping and API #50 middleware route are now
+  implemented. Live schema, version persistence, assigned Mentor access,
+  payload/type enums, readiness rules and lifecycle/error contracts remain open.

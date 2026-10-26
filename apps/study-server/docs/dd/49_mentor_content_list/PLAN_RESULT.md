@@ -1,115 +1,60 @@
 # Plan Result — API #49 Lấy cây nội dung course
 
-## Kết quả plan trước authoring
+## Thực hiện theo plan coding
 
-- Task `docs`, scope `server-study`; worktree DD #39–#48 và worklogs được giữ nguyên.
-- Contract giữ nguyên `GET /api/v1/mentor/courses/{course_id}/content`, Bearer JWT Mentor, path `course_id:int64!`, no body/query, `ApiEnvelope<Content>`, HTTP 200 và đúng errors 401/403/404/500.
-- AC-22 sequence là GET → đọc sections/lessons/content → Mentor chọn nhánh CRUD/publish; #49 là read-only, thao tác còn lại thuộc #50–#53.
-- Response tree có discrepancy: purpose/diagram mô tả cây nhưng catalog trả một `Content`; không tự đổi thành collection/nested children.
-- Legacy `courses.mentor_id` chỉ là candidate direct-owner check theo #46/#47. Generic Content tree không có bảng trong legacy DB guide/ERD. Pilot DDL có UUID `chapters/lessons/content_blocks`, không gộp vào contract BIGINT.
-- Q2 content query, payload shape, enum members, tree cardinality/order/visibility, Mentor ID binding và empty-tree/404 behavior là `SOURCE_REQUIRED`.
-- Output là 8 sheet Markdown + 3 report. Study workflow cấm ZIP output. Không sửa runtime/schema/catalog/diagram.
+- Task: `coding`, scope `server-study`, secondary `test`/`docs`.
+- Giữ nguyên các thay đổi worktree có sẵn cho API #34/#47/#48 và các context/worklog khác.
+- Thêm API #49 route, Mentor direct-owner authorization, signed-int64 raw path mapping, Content response models, SQL constants, tree integrity mapping và API-level tests.
+- Thêm legacy BIGINT `contents` table vào `DB.sql` và migration artifact `006_contents.sql`; migration không được chạy trên DB live.
+- Chọn response phẳng `Content[]` với `parent_id`; đồng bộ API catalog và AC-22 diagram từ singular `Content` để biểu diễn nhiều node.
+- Empty course trả 200 với `data: []`; invalid/out-of-range ID và missing course trả 404; owner mismatch trả 403. Không filter `status`, filter `deleted_at IS NULL`.
+- DD API #49 cập nhật theo source hiện tại; vẫn giữ `Draft — Needs Confirmation` cho các quyết định response/persistence chưa được product/schema owner duyệt.
 
-## Source inventory and coverage
+## Source inventory and boundaries
 
-| Source | Kind | Evidence used | Status |
-|---|---|---|---|
-| `docs/lists/list_api.md` | Catalog contract | API #49 row; `Content` schema; exact success/errors | DIRECT |
-| `AC_UNICA/00_AC_API_INDEX.md` | AC flow | AC-22 actor/precondition and #49–#53 endpoint set | DIRECT |
-| `AC_03_MENTOR_TEACHING.drawio`, AC22 | Activity diagram | GET → read sections/lessons/content → branch CRUD/publish | DIRECT |
-| `DB_UNICA_TABLES.md` / `DB_UNICA_ERD.drawio` | Legacy DB design | 16 tables; courses/lessons; no generic Content/sections table | DESIGN_ONLY |
-| `infra/postgres/02_study_db.sql` | V1-PILOT DDL | UUID course_versions/chapters/lessons/content_blocks with different model | Pilot artifact, live DB unknown |
-| DD #46–#48 | Related DDs | Legacy direct-owner candidate; distinguish AC-21 Lecture from AC-22 Content | DERIVED / OPEN |
-| Current `app/api/v1.py`, modules, tests | Runtime source | No API #49 route/module/test | CURRENT: UNWIRED / NOT_FOUND |
-| `app/core/responses.py`, `app/core/middleware.py` | Envelope/error dispatch | `error_response` defaults missing data to `{}`; API #49 path is outside `DESIGN_CONTRACT_PATHS`, so generic validation/exception fallbacks apply if future route is wired without allowlist update | CURRENT helper behavior; conditional future discrepancy |
-| Registry + DD templates | Authoring | `createDD-markdown` wired to server-study; eight Markdown templates | WIRED |
+| Source | Evidence/status |
+|---|---|
+| `docs/lists/list_api.md` | `GET /api/v1/mentor/courses/{course_id}/content`; success/errors catalog giữ nguyên; response đồng bộ `ApiEnvelope<Content[]>`. |
+| AC-22 activity diagram | GET → đọc cây → CRUD/publish; output schema đồng bộ `Content[]`. |
+| `app/api/v1.py`, API #49 module, middleware | Route/source-backed locally; path có design error dispatch. |
+| `contents` DDL/migration 006 | Local checked-in BIGINT model; không chứng minh live migration/schema. |
+| V1-PILOT DDL | UUID/versioned `content_blocks` model khác; không dùng ở API #49. |
+| Related DD #50–#53 | Shared `contents` base model now available as source artifact; version history, lifecycle and approval rules remain open. |
 
-## API Requirement Matrix
+## Implementation mapping
 
-| API ID | Method | Endpoint | Auth/RBAC | Consumer | Purpose | Input/output baseline | Business rule | Tables/side effects | Folder/status |
-|---|---|---|---|---|---|---|---|---|---|
-| #49 | GET | `/api/v1/mentor/courses/{course_id}/content` | Bearer JWT; role Mentor | Mentor | Read course content before AC-22 mutation choice | path `course_id:int64!`; `ApiEnvelope<Content>`; HTTP 200 | Mentor must have management permission; exact access logic unresolved | Candidate SELECT legacy course; tree SELECT source-required; no mutation | `49_mentor_content_list`; Draft — Needs Confirmation |
+| Concern | Current implementation |
+|---|---|
+| Authentication | `validate_current_user_request(..., role="MENTOR")`, numeric principal from current Study JWT guard. |
+| Course access | `courses.id` lookup then direct `courses.mentor_id == principal_id`; assigned-course relation not checked. |
+| Content query | `contents` rows for course with `deleted_at IS NULL`; all statuses returned; sort `parent_id NULLS FIRST, content_order, id`. |
+| Tree projection | Flat response; strict typed fields; root `parent_id` omitted; rejects duplicate IDs, missing parents, cross-course rows and cycles. |
+| Errors | 401 auth; 403 role/owner; 404 malformed/out-of-range/missing course; 500 DB/mapping; catalog code set unchanged. |
+| Transactions | No commit; rollback on failed DB/mapping branches. |
 
-### Contract matrix
+## AC-22/AC-33 macro-review #49–#53
 
-| Item | Contract | Basis/status |
+**Kết quả:** `VERIFIED_WITH_OPEN_QUESTIONS` — các API đã được đối chiếu sau khi có base Content DDL.
+
+| Liên kết | Current source alignment | Open boundary |
 |---|---|---|
-| Request | `course_id:int64!`; no body/query | Catalog DIRECT |
-| Response | Content: `id:int64`, `course_id:int64`, `content_type:ContentType`, `title:string`, `payload:object`, `status:ContentStatus`, `parent_id?:int64`, `order:int32` | Catalog DIRECT; physical mapping SOURCE_REQUIRED |
-| Success | 200 `DESIGN_RESOURCE_RETRIEVED` | Catalog DIRECT |
-| Errors | 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 404 `DESIGN_RESOURCE_NOT_FOUND`; 500 `DESIGN_INTERNAL_ERROR` | Catalog DIRECT; detailed branches partly unresolved |
-| Envelope | `success`, `businessCode`, `message`, `data`, `meta`, `traceId` | Reusable schema DIRECT; current helper error `data` differs from guideline |
+| #49 read tree ↔ #50 create | `contents` provides course, type, title, payload, status, parent and order fields; #49 reads active rows. | Create root/order/status defaults, request validation and response contract remain DD owner decisions. |
+| #50 create ↔ #51 update/version | Same base row is available for current Content fields. | #51 requires immutable revision/history model absent from `contents`; state transition open. |
+| #51 update ↔ #52 publish | `status` column can store a state string. | Approval vs publish transitions, readiness and version selector remain open. |
+| #52 publish ↔ #53 delete | `status` and `deleted_at` columns exist in local DDL. | Publish gates and delete eligibility remain proposals. |
+| #49/#50/#51/#52 ↔ #53 hierarchy/delete | Same-course `parent_id` relation and `deleted_at` allow active-node filtering. | Policy for active child of deleted parent, cascade/blocking, audit/history remain open. |
+| Shared auth/schema | Current Study Mentor guard and direct-owner pattern are source-backed; legacy BIGINT table mapping exists locally. | Assigned-course permission, enum/payload schemas, version history, live deployment and AC-33 approval/audit wiring remain unverified/open. |
 
-## Request Usage Matrix
+No DD proposal is treated as approved business behavior. API #50–#53 remain unwired unless their current source proves otherwise.
 
-| Request field | Source | Data Mapping step | Validate | SQL/mutation usage | Branch/loop | Response use | Gap |
-|---|---|---:|---|---|---|---|---|
-| Authorization | Header | 1 | Bearer JWT and Mentor role per catalog | Principal for Q1 candidate access check | 401/403 | Not echoed | Mentor guard and numeric/UUID binding missing |
-| `course_id` | Path | 1–2 | Required int64 | Bind Q1; intended scope Q2 | course missing/access | Intended `Content.course_id` | DB ID type/content projection unresolved |
-| Body/query | None | N/A | None | None | None | None | DIRECT no input |
+## Remaining confirmation boundary
 
-## Query Matrix
+1. Confirm `Content[]` response vs original singular catalog design.
+2. Approve ContentType/ContentStatus values and payload subtype schemas.
+3. Decide whether direct owner alone is the policy and whether assigned Mentors are supported.
+4. Define #51 version history, #52 approval/publish state transitions, #53 dependency behavior, and AC-33 audit integration.
+5. Verify/apply migration 006 only through the authorized DB release process; this task does not claim live schema.
 
-| Query ID | Purpose | Type | Base source | Columns | Join | Where | Order/pagination | Result/branch |
-|---|---|---|---|---|---|---|---|---|
-| Q1 | Course existence and direct-owner candidate | SELECT | Legacy `courses AS c` | `c.id`, `c.mentor_id` | None | `c.id = :course_id` | N/A | Candidate; owner mismatch → 403 only as DERIVED |
-| Q2 | Read content hierarchy | SELECT | SOURCE_REQUIRED | SOURCE_REQUIRED | SOURCE_REQUIRED | course scope intended; exact predicates unknown | sibling order and visibility unknown; no pagination contract | Cannot map full Content/tree |
+## Verification
 
-Q1 candidate SQL only for legacy schema:
-
-```sql
-SELECT c.id, c.mentor_id
-FROM courses AS c
-WHERE c.id = :course_id;
-```
-
-No executable Q2 SQL is approved.
-
-## Mutation Matrix
-
-| Mutation ID | Operation | Target table | Record condition | Fields | Value sources | Audit | Mapping file | Transaction | Failure behavior |
-|---|---|---|---|---|---|---|---|---|---|
-| None | None | N/A | Read-only API | None | N/A | N/A | N/A | N/A | N/A — no mutation |
-
-## Response Source Matrix
-
-| Response field | Type | Source type/table/column | Mapping/transform | Null/empty rule | Gap/status |
-|---|---|---|---|---|---|
-| `success` | boolean | Envelope branch | true on success | N/A | Convention |
-| `businessCode` | string | Catalog literal | Exact per branch | Required | DIRECT |
-| `message` | string | Application | Safe localized message | Exact copy unspecified | DERIVED |
-| `data.id` | int64 | No generic Content source | None | Required | SOURCE_REQUIRED |
-| `data.course_id` | int64 | Path or stored node | Decision required | Required | SOURCE_REQUIRED |
-| `data.content_type` | ContentType | No source/enum values | None | Required | SOURCE_REQUIRED |
-| `data.title` | string | No generic Content source | None | Required | SOURCE_REQUIRED |
-| `data.payload` | object | No JSON schema | None | Required object | SOURCE_REQUIRED |
-| `data.status` | ContentStatus | No source/enum values | None | Required | SOURCE_REQUIRED |
-| `data.parent_id` | int64? | No generic parent relation | None | Optional null/omit unresolved | SOURCE_REQUIRED |
-| `data.order` | int32 | No approved generic order column | None | Required | SOURCE_REQUIRED |
-| `meta` | object | Envelope | No pagination fields | Empty/null helper behavior unresolved | Open |
-| `traceId` | uuid | Request trace | Propagate trace | Required | Runtime route absent |
-
-## Authoring/review decisions
-
-1. Keep expected contract and current source separate; mark API #49 `UNWIRED / NOT_FOUND`.
-2. Do not map pilot `content_blocks.content_json` to contract `payload` because IDs, version/parent relations and lifecycle differ.
-3. Do not infer `children[]`, root nodes, empty array or page metadata from `parent_id?`.
-4. Do not add `PUBLISHED` filter, sort order, validation code or mutation.
-5. Keep open questions actionable and block a final implementation-ready query until schema/contract owners decide.
-6. Record current middleware fallback: error data defaults to `{}`; unlisted paths use generic validation/internal codes. Add API #49 path to the design contract dispatch during future implementation if catalog codes must be preserved.
-6. API #53 has now been authored; the full AC-22/AC-33 macro-review is recorded below.
-
-## AC-22/AC-33 Macro-review #49–#53
-
-**Kết quả:** VERIFIED_WITH_OPEN_QUESTIONS — các API đã được đối chiếu liên kết; contract/schema owner vẫn cần chốt các câu hỏi bên dưới.
-
-| Liên kết | Kết quả rà soát | Trạng thái |
-|---|---|---|
-| #49 read tree ↔ #50 create | AC-22 gọi reload sau POST; #49 catalog vẫn trả một Content, chưa định nghĩa tree cardinality. #50 đề xuất node mới ở root/PENDING_REVIEW. | Shape/root/visibility cần xác nhận. |
-| #50 create ↔ #51 update/version | Cùng Content contract; create và revision mới cùng đề xuất PENDING_REVIEW; #51 giữ tree placement. | State transition và version storage DERIVED/SOURCE_REQUIRED. |
-| #51 update ↔ #52 publish | Version update và publication-status update là hai thao tác logic riêng; #52 proposal yêu cầu revision APPROVED + readiness trước publish. | AC-33 approve APPROVED/PUBLISHED còn mơ hồ; request body/version selector chưa được catalog khóa. |
-| #52 publish ↔ #53 delete | #53 đề xuất PUBLISHED phải unpublish qua #52 trước delete; #53 không đổi Content.status. | DERIVED; xác nhận sau khi chốt body/transition #52. |
-| #49/#50/#51/#52 ↔ #53 hierarchy/delete | #53 chặn khi còn direct child qua parent_id, không cascade/reparent; soft delete giữ history và loại item khỏi active views/queue theo proposal. | Dependency set, soft-delete storage và filtering chưa được xác nhận. |
-| Shared auth/schema/errors | Mentor course permission cần thiết; generic Content BIGINT model, enum/payload/version, principal binding và middleware path wiring chưa có source runtime. | SOURCE_REQUIRED; không DD nào là implementation-ready. |
-
-Không có thay đổi nào biến các proposal thành contract đã duyệt. API #53 và các DD #49–#52 vẫn ở trạng thái Draft — Needs Confirmation.
+Verification results are recorded in `VERIFICATION_REPORT.md` and the worklog. Live DB schema, migration deployment and service deployment were not probed.

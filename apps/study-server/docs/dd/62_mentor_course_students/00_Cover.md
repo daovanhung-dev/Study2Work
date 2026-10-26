@@ -26,7 +26,7 @@ status: "Draft — Needs Confirmation"
 | Reviewed by | Chưa xác nhận |
 | Approved by | Chưa xác nhận |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-25 |
 
 ## Tên hiển thị
 
@@ -37,7 +37,7 @@ Lấy tập người nhận
 
 ## Tóm tắt
 
-API #62 chuẩn bị roster cho Mentor chọn người nhận trong AC-25. Diagram mô tả đọc active enrollments, nhưng catalog trả `ApiEnvelope<Page<Course>>` và không khai báo pagination input. Giữ contract catalog; mở discrepancy Course/Student và đề xuất `Page<UserSummary>` chỉ ở trạng thái DERIVED.
+API #62 chuẩn bị roster cho Mentor chọn người nhận trong AC-25. Diagram/catalog ban đầu khai báo `Page<Course>`, trong khi flow đọc active enrollments và request không có pagination input. Fallback triển khai trả `ApiEnvelope<UserSummary[]>`, lọc Student có enrollment `ACTIVE`, và không thêm pagination. Đây là quyết định `DERIVED — Draft — Needs Confirmation`; live schema và cách #63 serialize `recipients` vẫn chưa được xác minh.
 
 ## Tài liệu liên quan
 

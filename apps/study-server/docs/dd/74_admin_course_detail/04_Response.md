@@ -27,7 +27,7 @@ status: "Draft — Needs Confirmation"
 | 2 | `success` | Success flag | `success` | boolean | No | N/A | N/A | 5.1/5.2 | true success; false error | N/A | Envelope field. |
 | 3 | `businessCode` | Business code | `businessCode` | string | No | Catalog | N/A | 5.1/5.2 | Exact code theo nhánh | N/A | Không tạo code mới. |
 | 4 | `message` | Message | `message` | string | No | Application | N/A | 5.1/5.2 | Safe localized branch text | Text cụ thể chưa chốt | Không trả raw DB detail. |
-| 5 | `data` | Page<Course> | `data` | object | No | `courses`/`users` candidate | N/A | 4.1 | Map singleton Page<Course> | Lỗi: guideline yêu cầu null; helper hiện tại mặc định `{}` | Direct success schema; conditional helper discrepancy. |
+| 5 | `data` | Page<Course> | `data` | object | No | `courses`/`users` candidate | N/A | 4.1 | Map singleton Page<Course> | Success: Page một item; lỗi: helper trả `null` | Direct success schema; cardinality DERIVED. |
 | 5.1 | `data.items` | Course items | `items` | array<Course> | No | Q1 result | N/A | 4.1 | Bọc đúng một course thành array | Một item khi thành công | Page contract; singleton behavior DERIVED. |
 | 5.1.1 | `data.items[0].id` | Course ID | `id` | int64 | No | `courses` | `id` | 4.1 | Copy | N/A | Legacy query candidate. |
 | 5.1.2 | `data.items[0].title` | Title | `title` | string | No | `courses` | `name` | 4.1 | `name → title` | N/A | Current #06/#08 mapping precedent. |
@@ -87,7 +87,7 @@ Giá trị minh họa cho response Page singleton; chưa phải output runtime c
 
 ## Ví dụ lỗi
 
-Theo API guideline. Current helper tạo `data:{}` khi không truyền data; #74 chưa wired nên đây là discrepancy tích hợp, không phải output hiện hành của endpoint.
+Ví dụ lỗi phù hợp với current `error_response`: `data:null`. Đây là shape của helper/source; chưa xác minh deployment.
 
 ```json
 {

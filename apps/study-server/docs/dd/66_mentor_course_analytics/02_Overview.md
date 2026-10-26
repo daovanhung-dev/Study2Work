@@ -17,91 +17,82 @@ status: "Draft — Needs Confirmation"
 | Module | MENTOR / TEACHING & SUPPORT — AC-26 |
 | Method | GET |
 | Endpoint | /api/v1/mentor/courses/{course_id}/analytics |
-| Purpose | Cung cấp analytics tổng hợp của learning events trong một course cho dashboard Mentor. |
+| Purpose | AC-26 yêu cầu tổng hợp hoạt động học của một course. Runtime cục bộ hiện tổng hợp dấu truy cập lesson từ trạng thái tiến độ legacy; đây là proxy, không phải event history. |
 | Consumer/Actor | Mentor |
-| Authentication | Bearer JWT |
-| Authorization | Role Mentor theo catalog; quyền xem course theo AC-26; Mentor identity và course assignment chưa có runtime source. |
-| Basis | Method/path/input/response/status/errors DIRECT từ catalog; mục tiêu aggregate learning events DIRECT từ AC-26; metric cụ thể DERIVED/SOURCE_REQUIRED. |
+| Authentication | Bearer JWT; shared guard yêu cầu role MENTOR. |
+| Authorization | Runtime cục bộ chỉ cho Mentor trực tiếp sở hữu course theo courses.mentor_id. Đây là fallback DERIVED từ legacy DDL, không xác nhận assignment hoặc schema live. |
+| Basis | Endpoint, actor, input, success/error set DIRECT từ diagram/catalog. Aggregate learning events DIRECT từ AC-26. Ba chỉ số proxy và response object DERIVED do không có learner event ledger. |
 | Status | Draft — Needs Confirmation |
-| Current runtime state | UNWIRED / NOT_FOUND — không có route, module hoặc focused test API #66 trong Study source. |
+| Current runtime state | SOURCE_BACKED locally; route, module và HTTP tests được thêm trong task hiện tại. Fake DB tests không xác minh schema live/deployment. |
 | Transaction | N/A — API chỉ đọc. |
-| Side effects | Không có mutation; API #66 không gọi #65/#67 server-to-server. |
+| Side effects | Không mutation và không gọi #65/#67 server-to-server. |
 
 ## Sources
 
-- [API catalog và reusable schemas](../../../../../docs/lists/list_api.md) — #65–#67, ApiEnvelope<T>, Page<T>, PageMeta, Course, UserSummary.
-- [AC/API index, AC-26](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — precondition Mentor có quyền xem course analytics; ba API của flow.
-- [AC-26 activity diagram](../../diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio) — #65 aggregate enrollment/progress → #66 aggregate learning events → chọn Student → #67 đọc progress.
-- [DB table guide](../../diagrams/DB_UNICA_TABLES.md) — có SELECT mapping design-only cho #65/#67 progress; không có event analytics mapping cho #66.
-- [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — có courses/enrollments/lessons/lesson_progress state; không có learning event history table.
-- [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — UUID/versioned progress facts/snapshots và event IDs; khác contract int64, không chứng minh có event log hoặc live schema.
-- [API #65 overview/response](../65_mentor_course_progress/02_Overview.md) / [response](../65_mentor_course_progress/04_Response.md) — class progress là API riêng và catalog Page<Course> cũng không biểu diễn progress.
-- [API #62 overview](../62_mentor_course_students/02_Overview.md) — Mentor course-scope và Page<Course> mismatch precedent.
-- [API #21 progress](../21_users_me_progress/02_Overview.md) và [API #25 lesson progress](../25_lessons_progress/02_Overview.md) — current-state progress không đồng nghĩa event history.
-- Current [Study router](../../../app/api/v1.py), [auth helper](../../../app/utils/auth.py), [response helper](../../../app/core/responses.py), [middleware](../../../app/core/middleware.py), [API guidelines](../../../../../contracts/api-guidelines/README.md).
-- [Canonical DD Markdown templates](../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/) — tám sheet; fingerprints ở [PLAN_RESULT](./PLAN_RESULT.md).
+- API catalog và reusable schemas — #65–#67, ApiEnvelope<T>, Page<T>, PageMeta và Course.
+- AC/API index và AC-26 activity diagram — thứ tự #65 progress roster → #66 Aggregate learning events → chọn Student → #67 progress detail.
+- DB table guide — lesson_progress là progress state; last_accessed_at là mốc truy cập gần nhất.
+- Legacy Study DDL — courses.mentor_id, lessons.course_id/status và lesson_progress.user_id/lesson_id/last_accessed_at.
+- V1-PILOT DDL — UUID progress facts/snapshots cùng last_event_id marker; không có event row history và khác key type với API int64.
+- API #65 — owner check và PUBLISHED lesson convention; #67 vẫn là endpoint drill-down riêng.
 
 ## Tables/entities đọc
 
-- courses — legacy candidate để tìm course và direct owner; dùng cùng boundary question của #65, chưa phải live mapping.
-- Không tìm thấy relation được phê duyệt lưu learning event history trong legacy Study DDL hoặc V1-PILOT.
-- lesson_progress và pilot progress facts/snapshots là state/fact snapshots; không mặc nhiên dùng chúng làm event ledger.
-- audit_events/outbox_events là cơ chế audit/integration tổng quát; không có evidence rằng chúng ghi learner learning events, nên không dùng làm nguồn analytics #66.
+- courses — tìm course và kiểm tra direct owner qua id, mentor_id.
+- lessons — nối lesson vào course và chỉ lấy status PUBLISHED.
+- users — xác nhận actor có role STUDENT.
+- lesson_progress — lấy cặp user_id/lesson_id cùng last_accessed_at hiện có.
+- Không có bảng learning-event ledger được xác nhận trong hai DDL đã rà soát.
+- Không dùng last_event_id, progress_snapshots, audit_events hoặc outbox_events làm event history.
 
 ## Tables/entities ghi
 
-N/A — READ-ONLY API. API #66 không tạo, sửa hoặc xóa dữ liệu.
+N/A — READ-ONLY API. Không có INSERT, UPDATE hoặc DELETE.
 
 ## Mục chú ý
 
-- Giữ response trực tiếp của catalog là ApiEnvelope<Page<Course>>. Course và PageMeta không chứa learning-event metrics; đây là DISCREPANCY với mục tiêu AC-26.
-- AC-26 tách riêng class progress (#65), learning-event analytics (#66) và progress một Student (#67). Không đưa progress measures của #65/#67 vào #66.
-- PageMeta có page/size nhưng request #66 không có query pagination. Không thêm paging parameters hoặc pagination default.
-- Current auth helper chỉ có Student guard; Mentor guard/identity mapping chưa có trong Study source.
-- Middleware design-code allowlist chưa có path #66; helper error response mặc định data thành {} khi không truyền giá trị, còn API guideline yêu cầu data:null. Đây là discrepancy có điều kiện cho lần wiring sau.
-- V1-PILOT có last_event_id trong progress facts nhưng không có event records để đếm; không suy diễn event history từ ID đó.
+- Diagram/catalog khai báo ApiEnvelope<Page<Course>>, nhưng Page<Course> không có analytics fields. Local runtime trả một summary object để thực hiện mục tiêu AC-26; đây là DISCREPANCY và DERIVED response, không thay catalog contract.
+- Diagram yêu cầu aggregate learning events; DDL không lưu các event rows. Runtime vì vậy trả tracked_lesson_accesses: số cặp Student/lesson phân biệt có last_accessed_at; không gọi chỉ số này là event count.
+- students_with_activity đếm Student phân biệt trong các cặp proxy có dấu truy cập; không phải enrollment count.
+- last_activity_at là MAX(last_accessed_at) của các cặp được chọn; đây là mốc gần nhất còn lưu trong progress state.
+- Request không có query hoặc page/size. Không thêm pagination hay time-window filter.
+- Owner scope dùng courses.mentor_id theo legacy DDL; assignment và live DB chưa xác nhận.
+- Middleware design path #66 được thêm cùng route. Shared auth helper có Mentor guard; shared error helper serializes missing error data as null.
 
-## Đề xuất DERIVED để review — không phải wire contract
+## Local DERIVED activity projection
 
-| Metric đề xuất | Định nghĩa khái niệm | Cơ sở và giới hạn |
+| Field | Định nghĩa runtime | Giới hạn |
 |---|---|---|
-| total_learning_events | Tổng số learning event của course từ đầu đến hiện tại | DERIVED từ “Aggregate learning events”; event taxonomy/source/dedup/retention chưa có. |
-| students_with_learning_events | Số Student duy nhất có ít nhất một learning event của course | DERIVED; event actor-to-Student mapping và eligibility SOURCE_REQUIRED. |
-| last_activity_at | Thời điểm lớn nhất của event thuộc course; null khi không có event | DERIVED; event timestamp/source SOURCE_REQUIRED. |
-| Time window | All-time-to-date vì request không có from/to | DERIVED đề xuất đơn giản; owner cần xác nhận nếu cần khoảng thời gian. |
-| Shape đề xuất | Một summary object CourseLearningAnalytics, không phải collection | DERIVED vì endpoint scoped một course và không có paging/filter; cần sửa contract nếu chấp nhận. |
+| tracked_lesson_accesses | COUNT của các cặp user_id/lesson_id phân biệt trên lesson PUBLISHED với last_accessed_at khác null. | Đếm cặp tiến độ có mốc truy cập, không đếm số lần truy cập hoặc learning events. |
+| students_with_activity | COUNT DISTINCT user_id trong các cặp trên, với users.role = STUDENT. | Không chứng minh Student còn enrollment ACTIVE. |
+| last_activity_at | MAX last_accessed_at trên các cặp trên; null khi không có cặp. | Chỉ là dấu thời gian gần nhất còn lưu ở current-state progress. |
+| Window | Toàn bộ dấu thời gian hiện lưu; request không có from/to. | DERIVED; không phải retention-bounded event history. |
+| Response shape | MentorCourseActivityAnalytics object trong ApiEnvelope. | DERIVED để đáp ứng mục tiêu AC; direct catalog vẫn Page<Course>. |
 
-## Candidate business behavior
+## Processing
 
-1. Xác thực Bearer JWT và role Mentor theo contract.
-2. Xác định course trong scope Mentor; predicate và identity mapping cần quyết định.
-3. Đọc nguồn learning-event đã được phê duyệt theo course.
-4. Tính các metric đã chốt; nếu không có event, trả count bằng 0 và last_activity_at null theo candidate.
-5. Trả response theo contract đã được duyệt; hiện catalog Page<Course> không chứa các metrics đề xuất.
-
-Các bước 2–5 chưa có implementation/API #66 source; đây là candidate flow, không phải current behavior.
+1. Xác thực Bearer JWT và role Mentor trước database.
+2. Parse raw course_id thành signed int64; giá trị không parse/range được trả catalog 404.
+3. Tìm course; trả 404 nếu không có, 403 nếu mentor_id không trùng JWT sub.
+4. Aggregate các cặp Student/lesson trên PUBLISHED lessons, có last_accessed_at, đồng thời lặp owner predicate trong SQL.
+5. Trả count 0 và timestamp null khi không có activity proxy; mapping/query lỗi trả safe 500.
+6. Không đọc/ghi event, audit, outbox hoặc progress snapshot.
 
 ## Conflicts
 
 | Nguồn A | Nguồn B | Xung đột | Ảnh hưởng |
 |---|---|---|---|
-| Catalog #66 | AC-26 | Catalog trả Page<Course>; AC yêu cầu aggregate learning events. | Direct contract không có event metrics. |
-| PageMeta | Request catalog #66 | PageMeta cần page/size nhưng request không khai báo pagination. | Không thể tuyên bố paging bounded hay có default. |
-| Legacy/V1-PILOT DB | AC-26 | Không có approved learning-event history relation trong reviewed schema artifacts. | Không thể viết physical event query hoặc mapping. |
-| API #65/#67 sequence | Catalog | Flow cần progress + analytics + drill-down, nhưng cả ba catalog response đều Page<Course>. | Cần macro-review/contract decision sau khi #67 DD tồn tại. |
-| API guidelines | Current helper | Error data:null khác với helper default {}; path #66 chưa thuộc allowlist. | Future wiring phải đồng bộ error mapping. |
+| AC-26 mục tiêu | DDL được rà soát | AC yêu cầu learning events; DDL chỉ có current progress/access state. | Runtime chỉ có thể cung cấp proxy và phải giữ discrepancy. |
+| Diagram/catalog response | Mục tiêu AC-26 | Page<Course> không biểu diễn analytics. | Local summary object là DERIVED; contract cần được owner xác nhận. |
+| PageMeta | Request #66 | Có metadata pagination nhưng không có page/size request. | Runtime summary không dùng pagination. |
+| Legacy DDL | V1-PILOT DDL | BIGINT relationships khác UUID/versioned facts. | API #66 dùng legacy source pattern cùng API #65; không kết hợp schema pilot. |
 
-## Security note
+## Reliability and security
 
-- Không trả analytics trước khi xác minh role Mentor và course scope.
-- Không suy diễn Mentor ID từ path; không trả event data ngoài quyền.
-- Không đưa raw event payload, learner identifier không cần thiết, SQL hoặc stack trace vào response.
-
-## Reliability note
-
-- Không có freshness, aggregation schedule, cache, retention, time-window hay latency contract.
-- All-time aggregate có thể tăng chi phí khi event volume lớn; cần source/index/snapshot decision trước khi chốt implementation.
-- Không tính audit/outbox/progress-state rows như learning events nếu chưa được domain owner chỉ định.
+- Tổng hợp theo toàn bộ dấu truy cập còn lưu; chưa có window, retention, cache hoặc freshness SLA.
+- Không suy luận tần suất truy cập, retry, event taxonomy hoặc lịch sử đã bị ghi đè.
+- Xác minh role và direct course owner trước khi trả aggregate.
+- Không trả raw learner identifiers, payload, SQL hoặc stack trace.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

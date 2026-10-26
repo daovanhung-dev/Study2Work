@@ -16,32 +16,34 @@ status: "Draft — Needs Confirmation"
 | Logical table | Quiz |
 | Physical table | legacy quizzes |
 | Operation | UPDATE |
-| Data Mapping step | [M1 — Step 4](./05_Data_Mapping.md#step-4-update-quiz-parent) |
+| Data Mapping step | [M1 — Step 4](./05_Data_Mapping.md#step-4-validate-course-and-update-quiz-parent) |
 | Basis | Candidate từ infra/postgres/study-server/DB.sql; live schema chưa xác minh. |
 
 ## Điều kiện cập nhật
 
 - quizzes.id = quiz_id từ path.
-- Q1 phải xác nhận row tồn tại trước mutation.
-- Chỉ cập nhật khi history guard Q2/Q3 cho phép theo proposal được duyệt.
+- `SELECT ... FOR UPDATE` khóa active Quiz trước child rows; `DELETED`/missing → 404.
+- Chỉ cập nhật sau khi khóa child rows và history guard không thấy attempts/answers.
 
 ## Column mapping
 
 | No | Physical column | Logical name | Type | Length | Scale | Required | PK | FK | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|---|
 | 1 | id | Quiz ID | BIGSERIAL | N/A | N/A | Yes | Yes | No | <No change> | Path quiz_id | Step 4 | Candidate key; không đổi. |
-| 2 | course_id | Course ID | BIGINT | N/A | N/A | DDL nullable | No | courses.id | config.course_id | Proposed request body | Step 4 | Course move rule/live FK cần xác nhận. |
-| 3 | name | Quiz title | VARCHAR | 200 | N/A | Yes | No | No | config.title | Proposed request body | Step 4 | Alias title → name; không chốt validation length. |
-| 4 | passing_score | Passing score | NUMERIC | 5 | 2 | DDL default 0 | No | No | config.passing_score | Proposed request body | Step 4 | Range/scale/rounding chưa xác nhận. |
-| 5 | time_limit_minutes | Duration | INT | N/A | N/A | Nullable | No | No | config.duration_minutes | Proposed request body | Step 4 | Omitted/null semantics open. |
-| 6 | updated_at | Update time | TIMESTAMP | N/A | N/A | Yes | No | No | Transaction timestamp candidate | System/transaction | Step 4 | DDL NOT NULL/no default; clock owner cần chốt. |
+| 2 | course_id | Course ID | BIGINT | N/A | N/A | DDL nullable | No | courses.id | config.course_id | DERIVED request body | Step 4 | Existing Course được khóa `FOR KEY SHARE`; move allowed. |
+| 3 | name | Quiz title | VARCHAR | 200 | N/A | Yes | No | No | config.title | DERIVED request body | Step 4 | Alias title → name; #88 validator giới hạn 200 ký tự. |
+| 4 | passing_score | Passing score | NUMERIC | 5 | 2 | DDL default 0 | No | No | config.passing_score | DERIVED request body | Step 4 | Validator #88 giới hạn exact decimal-string ±999.99. |
+| 5 | time_limit_minutes | Duration | INT | N/A | N/A | Nullable | No | No | config.duration_minutes | DERIVED request body | Step 4 | Omit/null được ghi NULL. |
+| 6 | updated_at | Update time | TIMESTAMP | N/A | N/A | Yes | No | No | CURRENT_TIMESTAMP | System/transaction | Step 4 | Legacy DDL NOT NULL/no default. |
 | 7 | status | Quiz status | VARCHAR | 20 | N/A | DDL default DRAFT | No | No | <No change> | Existing row | Step 4 | Không có status trong request/response contract. |
 | 8 | description | Description | TEXT | N/A | N/A | Nullable | No | No | <No change> | Existing row | Step 4 | Không có logical Quiz field. |
 
 ## Result handling
 
-- UPDATE condition candidate là id = quiz_id.
-- Q1 no-row trả candidate 404 trước mutation.
+- UPDATE condition là `id = :quiz_id AND status IS DISTINCT FROM 'DELETED'`.
+- Không set status, description hoặc created_at; không thay course status/enrollment state.
+- `RETURNING` projection được kiểm tra trước khi delete/insert children và commit.
+- Course target missing → 422; history found → 422 trước UPDATE.
 - Database/write failure map 500 DESIGN_INTERNAL_ERROR theo catalog.
 - Lỗi child-set operation hoặc response mapping rollback toàn transaction.
 ---

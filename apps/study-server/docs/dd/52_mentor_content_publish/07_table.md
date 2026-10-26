@@ -15,12 +15,12 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table/model | SOURCE_REQUIRED; chưa có generic Content relation tương thích được duyệt. |
+| Physical table/model | Legacy `contents` base relation in DDL/migration 006; live schema unverified. |
 | Logical table/entity | Content và publication/review state |
 | Operation | UPDATE publication status |
 | Data Mapping step | 3–4 |
 | Evidence | AC-22: PATCH → UPDATE publication status → reload tree. |
-| Runtime | API #52 UNWIRED / NOT_FOUND. |
+| Runtime | Local API #52 route/module/tests are source-backed; canonical contract and live DB remain unverified. |
 
 ## Update mapping
 
@@ -32,10 +32,10 @@ status: "Draft — Needs Confirmation"
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---:|---|---|---:|---|
-| 1 | SOURCE_REQUIRED | Publication/review status | ContentStatus | N/A | N/A | Yes | N/A | Proposed publish: APPROVED → PUBLISHED. | Desired state proposal + AC-22/AC-33 terms | 3–4 | Transition DERIVED; status column and full enum SOURCE_REQUIRED. |
-| 2 | SOURCE_REQUIRED | Content revision | Logical revision | N/A | N/A | N/A | N/A | No new revision proposed. | AC-22 publication-status-only step; #51 update/version step | 3–4 | Separation DERIVED; version/current pointer SOURCE_REQUIRED. |
-| 3 | SOURCE_REQUIRED | Content content_type/title/payload | Existing values | N/A | N/A | N/A | N/A | Preserve without content edit. | Reusable Content schema | 3–4 | Physical projection SOURCE_REQUIRED. |
-| 4 | SOURCE_REQUIRED | Content course_id/parent_id/order | Existing values | N/A | N/A | N/A | N/A | Preserve ownership and tree placement. | Reusable Content schema | 2–4 | Physical projection SOURCE_REQUIRED. |
+| 1 | `contents.status` | Publication/review status | TEXT | N/A | N/A | Yes | N/A | Proposed publish: APPROVED → PUBLISHED. | Local DDL/migration 006 | 3–4 | Column available locally; transition and full enum remain unresolved. |
+| 2 | N/A | Content revision | Logical revision | N/A | N/A | N/A | N/A | No new revision proposed. | AC-22 status-only step; #51 update/version step | 3–4 | `contents` has no version/current pointer. |
+| 3 | `contents.content_type/title/payload` | Content fields | TEXT/JSONB | N/A | N/A | N/A | N/A | Preserve without content edit. | Local DDL/migration 006 | 3–4 | Base projection present locally; subtype policy open. |
+| 4 | `contents.course_id/parent_id/content_order` | Course/tree fields | BIGINT/INTEGER | N/A | N/A | N/A | N/A | Preserve ownership and tree placement. | Local DDL/migration 006 | 2–4 | Base projection present locally; live schema unverified. |
 
 ## Insert mapping
 
@@ -58,11 +58,11 @@ AC-33's approval node says APPROVED/PUBLISHED + audit and does not identify whet
 
 ## Physical SQL
 
-No SQL is approved. Legacy DB has no generic Content/version table. V1-PILOT content_blocks uses UUID and lesson_id with content_json and is not the catalog Content BIGINT model. Do not substitute content_blocks.row_version for a publication state or semantic Content version.
+Local API #52 SQL locks active Content/Course and updates `contents.status` only. This is a DERIVED fallback, not approved canonical SQL; transitions/readiness remain unresolved. Local `contents` has no revision history. V1-PILOT content_blocks remains a separate UUID model; do not substitute its row_version.
 
 ## Transaction and audit
 
-A single publication-state write should commit atomically or not at all; this is a DERIVED recommendation. AC-33 mentions audit for Admin approval, but API #52 does not specify an audit record or fields. Table/column/transaction/audit mapping remains SOURCE_REQUIRED.
+The view commits the single status update after validating its response projection; fake Session tests cover commit/rollback only. This is DERIVED and does not establish live transaction behavior. AC-33 mentions audit for Admin approval, but API #52 does not specify an audit record or fields; audit mapping remains SOURCE_REQUIRED.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

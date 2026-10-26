@@ -13,25 +13,23 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Giữ đúng HTTP status/business code theo catalog API #53. Dependency, published-state và already-deleted branches là DERIVED, chưa phải runtime behavior.
+Giữ đúng HTTP status/business code theo catalog API #53. Active-child, published-state and already-deleted branches remain DERIVED policy; local runtime mappings are covered by HTTP tests.
 
 ## Error cases
 
 | ID | HTTP status | Business code | Điều kiện | Hành động | Basis |
 |---|---:|---|---|---|---|
 | E1 | 401 | DESIGN_AUTHENTICATION_REQUIRED | Thiếu hoặc Bearer JWT không hợp lệ | Không mutate Content; trả lỗi | Code DIRECT; auth condition theo convention |
-| E2 | 403 | DESIGN_ACCESS_DENIED | Sai role Mentor hoặc không có quyền quản lý course | Không mutate Content | Code/role DIRECT; permission mapping SOURCE_REQUIRED |
-| E3 | 404 | DESIGN_RESOURCE_NOT_FOUND | Không có Content khả dụng theo content_id | Không mutate; already-soft-deleted → 404 là DERIVED | Code DIRECT; repeat-delete semantics open |
-| E4 | 422 | DESIGN_VALIDATION_ERROR | Path không parse được int64, PUBLISHED theo proposal, hoặc còn direct child dependency | Không mutate; PUBLISHED phải qua #52; child không cascade | Code DIRECT; branches DERIVED |
-| E5 | 500 | DESIGN_INTERNAL_ERROR | Lookup hoặc soft-delete operation lỗi ngoài contract | Rollback logical operation nếu có transaction; không lộ chi tiết nội bộ | Code DIRECT; transaction SOURCE_REQUIRED |
+| E2 | 403 | DESIGN_ACCESS_DENIED | Sai role Mentor hoặc không có quyền quản lý course | Không mutate Content | Code/role DIRECT; numeric-sub/direct-owner mapping is current DERIVED fallback |
+| E3 | 404 | DESIGN_RESOURCE_NOT_FOUND | ID invalid/out-of-range hoặc không có active Content, kể cả đã soft-delete | Không mutate | Code DIRECT; invalid-ID/repeat mapping follows current Content API convention and is DERIVED |
+| E4 | 422 | DESIGN_VALIDATION_ERROR | Active direct child exists, or status is PUBLISHED under current fallback | Không mutate; PUBLISHED phải qua #52; child không cascade/reparent | Code DIRECT; guards DERIVED |
+| E5 | 500 | DESIGN_INTERNAL_ERROR | Lookup hoặc soft-delete operation lỗi ngoài contract | Rollback caller-owned transaction; không lộ chi tiết nội bộ | Code DIRECT; local transaction behavior source-backed |
 
 Không thêm mã 409, 423 hoặc Content status mới.
 
 ## Tích hợp error contract
 
-- Current DESIGN_CONTRACT_PATHS chưa có Mentor Content path vì route chưa được implement.
-- Nếu wire route mà thiếu integration mapping, middleware có thể trả fallback thay vì DESIGN_VALIDATION_ERROR/DESIGN_INTERNAL_ERROR.
-- Current error_response dùng data={} khi caller không truyền data; API #53 chưa được runtime xác minh.
+- Route shares existing `DESIGN_CONTRACT_PATHS` template `/api/v1/mentor/content/{content_id}` with API #51 PUT. The view parses the raw path; error responses emit `data: null` when omitted. Local HTTP tests verify catalog business codes for exercised branches.
 - Tham chiếu flow: [05_Data_Mapping.md](./05_Data_Mapping.md).
 
 ## Phụ lục đối chiếu nguồn Excel

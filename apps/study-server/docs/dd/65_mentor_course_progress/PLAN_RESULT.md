@@ -4,13 +4,13 @@
 
 | Plan item | Kết quả |
 |---|---|
-| Giữ exact catalog contract | Giữ GET /api/v1/mentor/courses/{course_id}/progress, Mentor Bearer JWT, course_id:int64!, không query/body, ApiEnvelope<Page<Course>>, HTTP 200 DESIGN_RESOURCE_RETRIEVED, đúng errors 401/403/404/500. |
+| Giữ direct catalog evidence | Giữ GET /api/v1/mentor/courses/{course_id}/progress, Mentor Bearer JWT, course_id:int64!, không query/body, direct ApiEnvelope<Page<Course>>, HTTP 200 DESIGN_RESOURCE_RETRIEVED, errors 401/403/404/500. Runtime Page<MentorStudentProgress> là local DERIVED discrepancy để đáp ứng AC-26, không phải catalog approval. |
 | Bám AC-26 | Tách API #65 class progress khỏi #66 learning-event analytics và #67 student detail. Không tạo server-to-server calls. |
-| Giữ source boundary | API #65 là UNWIRED / NOT_FOUND; DDL legacy và V1-PILOT được tách riêng; không claim live schema. |
-| Phân tách direct/derived | Contract response Page<Course> được giữ; learner progress response/formula/paging/access đều đánh dấu DERIVED hoặc SOURCE_REQUIRED. |
-| Read-only mapping | 07_table.md ghi rõ N/A — READ-ONLY API; query relations chỉ là candidate. |
-| Deliverables | Tám sheet template và ba reports Markdown; không tạo ZIP, code, test, schema, catalog, diagram hoặc context edits. |
-| Verification | Static-only check xác nhận manifest, template appendices, contract, JSON, links, tables, fences, whitespace và fingerprints; kết quả chi tiết ở VERIFICATION_REPORT.md. |
+| Giữ source boundary | Runtime dùng checked-in legacy BIGINT candidate; V1-PILOT UUID/versioned schema được tách riêng; không claim live schema. |
+| Phân tách direct/derived | Catalog response Page<Course> được giữ là direct evidence; local progress response, formula, paging, access, eligibility và latest-row policy đều ghi DERIVED. |
+| Read-only mapping | 07_table.md ghi N/A — READ-ONLY API; local SELECT relations và columns được liệt kê riêng, không thêm schema/migration. |
+| Deliverables | Tám sheet template và ba reports được reconcile; API module, route, middleware, HTTP tests và server-study context/manifest được cập nhật. |
+| Verification | 20 API #65 tests, 47 linked #65/#62/#9 tests, full Study suite 680 passed, Ruff pass; DD/context/static checks được ghi ở VERIFICATION_REPORT.md. |
 
 ## Template source fingerprints — SHA-256
 
@@ -31,5 +31,5 @@ The template files were fingerprinted before authoring. Verification compares ea
 
 ## Macro-review AC-26 after DD #67
 
-`VERIFIED_WITH_OPEN_QUESTIONS` at document level. #65 roster summary, #66 event aggregate and #67 selected-Student progress are separate responsibilities. The #65/#67 candidate lesson denominator and formula match; #66 event-active count is not enrollment count and must use an approved event source. Direct `Page<Course>` contracts and pagination gaps remain unchanged and require owner decision. Shared Mentor authorization, live schema, progress row uniqueness, empty behavior and error envelope remain open. See [API #67 report](../67_mentor_student_progress/VERIFICATION_REPORT.md).
+`VERIFIED_WITH_OPEN_QUESTIONS` after local API #65 wiring and review of DD #66/#67. #65 roster summary, #66 event aggregate and #67 selected-Student progress remain separate responsibilities; #66/#67 are still unwired. Runtime #65 uses the DERIVED PUBLISHED denominator/floor formula and latest-row policy. Direct `Page<Course>` contract and unbounded no-input pagination remain catalog/owner decisions. Local direct-owner auth, active enrollment, empty behavior, error envelope and middleware mapping are covered by HTTP tests. Live schema and business approval remain open. See [API #67 report](../67_mentor_student_progress/VERIFICATION_REPORT.md).
 

@@ -20,13 +20,13 @@ status: "Draft — Needs Confirmation"
 | API name | Lấy support requests |
 | HTTP method | GET |
 | Endpoint | /api/v1/mentor/support/requests |
-| Version | 1.0 — design contract |
+| Version | 1.1 — derived implementation fallback |
 | Status | Draft — Needs Confirmation |
 | Created by | Codex |
 | Reviewed by | Chưa rà soát |
 | Approved by | Chưa phê duyệt |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-25 |
 
 ## Tên hiển thị
 

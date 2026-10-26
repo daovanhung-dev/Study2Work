@@ -20,18 +20,18 @@ status: "Draft — Needs Confirmation"
 | Method | PUT |
 | Endpoint | `/api/v1/admin/lessons/{lesson_id}` |
 | Purpose | Admin cập nhật metadata của lesson được chọn. |
-| Consumer/Actor | Admin có lesson-management permission |
+| Consumer/Actor | Admin; AC-34 yêu cầu lesson-management permission nhưng code hiện chỉ có shared role guard. |
 | Authentication | Bearer JWT |
-| Authorization | Role Admin theo catalog và lesson-management permission theo AC-34; Study chưa có Admin guard/policy. |
+| Authorization | Shared `ADMIN` role guard theo catalog; chưa có policy lesson-management riêng trong Study source. |
 | Direct request | `path{lesson_id:int64!}`; catalog và diagram không khai báo body/query. |
-| Proposed request | JSON full-replacement candidate gồm `title`, `content`, `video_url`, `order`; tất cả DERIVED. |
+| Implemented DERIVED request | JSON full replacement gồm `title`, `content`, `video_url`, `order`; chi tiết tại [Request](./03_Request.md). |
 | Direct response | `ApiEnvelope<Lesson>`; HTTP 200 `DESIGN_RESOURCE_UPDATED`. |
 | Direct errors | 401/403/404/422/500 với mã `DESIGN_*` đúng catalog. |
 | Basis | Method/path/auth/path type/response/status/error set DIRECT; body, mutation fields, schema mapping và transaction DERIVED hoặc SOURCE_REQUIRED. |
 | Status | Draft — Needs Confirmation |
-| Current implementation | UNWIRED / NOT_FOUND — không có route/module/test API #84 trong Study source. |
-| Transaction | Candidate một UPDATE nguyên tử; caller sở hữu commit/rollback theo DB helper convention; API boundary chưa xác nhận. |
-| Side effects | Candidate cập nhật lesson metadata; không đổi course relation, status, audit hoặc dependency records. |
+| Current implementation | Wired trong `app/api/v1.py` và `api_84_admin_lesson_update`; focused HTTP tests xác minh fake-session behavior. |
+| Transaction | Một `UPDATE ... RETURNING`; view commit sau khi Lesson projection hợp lệ và rollback trên query/no-row/mapping/commit failure. |
+| Side effects | Cập nhật metadata cùng `updated_at`; giữ course relation, status, audit và dependency records. |
 
 ## Sources
 
@@ -57,33 +57,34 @@ status: "Draft — Needs Confirmation"
 
 | Relation | Candidate fields | Basis/status |
 |---|---|---|
-| Legacy lessons | name, content, video_url, sort_order, possibly updated_at | DERIVED từ body proposal/legacy DDL; live schema và timestamp owner chưa xác minh. |
+| Legacy lessons | name, content, video_url, sort_order, updated_at | DERIVED từ request fallback/legacy DDL và #75 precedent; live schema chưa xác minh. |
 
 ## Mục chú ý
 
 - #84 là nhánh UPDATE giữa detail #83 và reload; status transition/audit thuộc #85, delete/reference policy thuộc #86.
-- Catalog và diagram chỉ khai báo path; body fields, requiredness, null/omission và PUT semantics chưa được đặc tả.
-- Candidate body gồm title/content/video_url/order; status thuộc #85, lesson_id ở path, course_id không được đề xuất thay đổi.
+- Catalog và diagram chỉ khai báo path; body/runtime rules là DERIVED fallback, không phải direct contract.
+- Runtime body yêu cầu title/content/video_url/order; null content/video_url xóa giá trị. Status thuộc #85, lesson_id ở path, course_id không thay đổi.
 - Legacy course_id nullable trong khi response Lesson yêu cầu int64; V1-PILOT dùng schema khác; live DB chưa xác minh.
-- Admin auth helper chưa có; current helper chỉ có Student guard.
-- API guideline yêu cầu error data:null; current helper mặc định data:{}.
+- Shared Admin guard yêu cầu role `ADMIN`; policy lesson-management riêng chưa có trong Study source.
+- `error_response` hiện trả `data:null`; lỗi query/projection/mapping của #84 rollback và trả 500 an toàn.
 
 ## Assumptions
 
-- title/content/video_url/order là candidate metadata fields dựa trên Lesson response và legacy columns; cần xác nhận.
-- Candidate PUT dùng đủ bốn field; content/video_url có thể nhận null để clear chỉ là DERIVED.
-- Candidate một UPDATE theo lessons.id dùng RETURNING để dựng response; không query dependency hoặc bảng khác.
-- updated_at dùng server time chỉ khi không có trigger/owner khác.
+- title/content/video_url/order là metadata fallback dựa trên Lesson response, legacy DDL và #47 precedent; body yêu cầu đủ bốn field.
+- content và video_url nhận null để clear; video_url không có URI validator vì reusable Lesson model chỉ yêu cầu string nullable.
+- Một UPDATE theo lessons.id dùng RETURNING; không query dependency hoặc bảng khác.
+- updated_at dùng server time theo legacy DDL và #75 precedent; không có trigger lessons trong DDL/migrations đã rà soát.
 - Không thay đổi status, course_id, created_at, resource/progress records hoặc audit log.
+- API #86 dùng `status='DELETED'` làm local tombstone; update query loại tombstone nên Lesson đã xóa trả 404.
 
 ## Conflicts
 
-- Path-only catalog/diagram đối lập PUT/UPDATE intent; body là SOURCE_REQUIRED, candidate chưa phải contract.
+- Path-only catalog/diagram đối lập PUT/UPDATE intent; body runtime là DERIVED và DD giữ Draft.
 - Legacy BIGINT lessons và V1-PILOT UUID/versioned lessons khác nhau; live schema chưa xác minh.
 - course_id nullable trong legacy DDL nhưng required trong response Lesson.
 - LessonStatus members/casing chưa có danh sách chuẩn.
-- Current Student-only guard/middleware allowlist chưa hỗ trợ Admin route.
-- Error guideline data:null khác helper data:{}.
+- Shared guard kiểm tra `ADMIN` nhưng không chứng minh AC-34 permission riêng.
+- Error guideline và helper hiện cùng dùng `data:null`; nhận định helper `{}` trước đây đã lỗi thời.
 
 ## Security note
 

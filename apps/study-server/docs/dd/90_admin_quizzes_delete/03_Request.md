@@ -24,14 +24,14 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Bearer token | `Authorization` | Yes | `Bearer <token>` | Xác thực Admin và quiz-management permission trước khi đọc quiz/attempt data. | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) |
+| 1 | Bearer token | `Authorization` | Yes | `Bearer <token>` | Shared ADMIN role guard chạy trước path parsing và database access. Fine-grained quiz-management permission chưa có policy source. | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) |
 | 2 | Trace ID | `X-Trace-Id` | No | UUID | Theo current Study middleware convention; không phải field nghiệp vụ trong catalog. | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | Quiz ID | `quiz_id` | `int64` | Yes | Chưa đặc tả | Chưa đặc tả | Số nguyên 64-bit | Catalog chỉ xác nhận kiểu `int64` | N/A | Xác định quiz Admin yêu cầu xóa. | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) |
+| 1 | Quiz ID | `quiz_id` | `int64` | Yes | 1 | 9223372036854775807 | Positive signed-int64 | Số thập phân ASCII, không dấu `+`/`-` | N/A | Runtime parse raw path sau ADMIN; positivity và cách parse cụ thể là DERIVED để map lỗi catalog 422. | [Step 1](./05_Data_Mapping.md#step-1-nhan-request) |
 
 ## Query parameters
 
@@ -53,8 +53,8 @@ Ví dụ thể hiện method/path và Bearer authentication; không có body/que
 
 ## Quy tắc input đang mở
 
-- `quiz_id:int64!` là input trực tiếp; catalog chưa quy định giá trị tối thiểu hoặc positivity.
-- Catalog có 422 `DESIGN_VALIDATION_ERROR`, nhưng chưa nêu path parse rules hoặc field-level condition.
+- `quiz_id:int64!` là input trực tiếp. Runtime yêu cầu ID dương trong signed-int64; min=1 và chỉ chấp nhận chữ số ASCII là quy tắc DERIVED.
+- Path parse/overflow lỗi trả 422 `DESIGN_VALIDATION_ERROR` sau authentication, trước mọi truy vấn DB.
 - Không thêm input để chọn hard/soft delete, cascade, retention, lý do xóa hoặc deleted timestamp.
 - AC-35 yêu cầu soft delete nếu có attempts; không ánh xạ nhánh này thành lỗi 422.
 

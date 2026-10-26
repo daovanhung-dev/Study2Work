@@ -11,7 +11,7 @@ status: "Draft — Needs Confirmation"
 
 ## Phạm vi thao tác
 
-N/A — READ-ONLY API. API #87 chỉ đọc quiz và, nếu được xác nhận, question/choice projection. Không có INSERT/UPDATE/DELETE/UPSERT. Các mutation thuộc API #88–#90; aggregate thuộc #91.
+N/A — READ-ONLY API. Runtime hiện chỉ đọc Quiz metadata và không truy vấn question/choice child tables. Không có INSERT/UPDATE/DELETE/UPSERT. Các mutation thuộc API #88–#90; aggregate thuộc #91.
 
 ## Candidate read source — legacy quizzes
 

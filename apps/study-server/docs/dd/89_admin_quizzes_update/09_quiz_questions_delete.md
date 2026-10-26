@@ -23,13 +23,13 @@ status: "Draft — Needs Confirmation"
 
 - Xóa question rows có quiz_id = quiz_id.
 - Xóa sau khi choice rows cũ được xử lý.
-- Chỉ chạy khi Q2/Q3 không phát hiện attempt/answer history theo policy proposal.
+- Chỉ chạy khi Q2 không phát hiện attempt/answer history.
 
 ## Column mapping
 
 | No | Physical column | Logical name | Type | Length | Scale | Required | PK | FK | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|---|
-| 1 | id | Question ID | BIGSERIAL | N/A | N/A | Yes | Yes | No | Delete matching rows | Existing quiz_questions | Step 6 | ID cũ không dùng lại. |
+| 1 | id | Question ID | BIGSERIAL | N/A | N/A | Yes | Yes | No | DELETE ... RETURNING id | Existing quiz_questions | Step 6 | Returned ID set phải khớp tập đã khóa. |
 | 2 | quiz_id | Quiz ID | BIGINT | N/A | N/A | Nullable in DDL | No | quizzes.id | quiz_id | Path parameter | Step 6 | DDL nullable; ERD nói required. |
 | 3 | question_text | Question text | TEXT | N/A | N/A | Yes | No | No | Delete matching rows | Existing quiz_questions | Step 6 | Candidate full replacement. |
 | 4 | sort_order | Question order | INT | N/A | N/A | DDL default 0 | No | No | Delete matching rows | Existing quiz_questions | Step 6 | New order from array index proposal. |
@@ -37,10 +37,10 @@ status: "Draft — Needs Confirmation"
 
 ## Safety conditions
 
-- Candidate Q3 kiểm tra quiz_answers.question_id trỏ tới câu hỏi của Quiz.
-- Nếu có answer/attempt history, dừng trước delete; không làm mất historical results.
+- History query kiểm tra quiz_answers.question_id trỏ tới câu hỏi của Quiz.
+- Nếu có answer/attempt history, dừng trước delete và trả catalog 422; không làm mất historical results.
 - Legacy model không có version/audit field để lưu question set cũ.
-- FK/DB failure → rollback toàn transaction; không mặc định cascade.
+- DELETE chỉ chạy sau khi choices cũ được xóa; FK/DB failure → rollback toàn transaction.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

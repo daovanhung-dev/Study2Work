@@ -14,13 +14,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-26 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
 | 1.0 | 2026-10-24 | Codex | Tạo DD draft API #88 từ catalog, AC-35, các DD quiz hiện có và schema artifacts. | Cấu trúc JSON trong hai string, QuestionType, QuizChoice và schema vật lý cần xác nhận. |
+| 1.1 | 2026-10-26 | Codex | Chốt fallback DERIVED cho embedded JSON, thêm migration candidate cho question type/choice order và triển khai API #88. | DD vẫn Draft; fine-grained permission, business rules và live migration chưa xác nhận. |
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -20,10 +20,10 @@ status: "Draft — Needs Confirmation"
 | Purpose | Lưu feedback cho submission sau bước lưu điểm của API #56. |
 | Consumer/Actor | Mentor |
 | Authentication | Bearer JWT |
-| Authorization | Mentor có quyền chấm submission thuộc course; cách ánh xạ Mentor và predicate truy cập chưa được xác nhận. |
+| Authorization | Shared guard yêu cầu role MENTOR; direct `courses.mentor_id` ownership là fallback DERIVED, chưa được contract owner xác nhận. |
 | Basis | Catalog và AC-23 là DIRECT; mapping dữ liệu là candidate có nhãn DERIVED hoặc SOURCE_REQUIRED. |
 | Status | Draft — Needs Confirmation |
-| Transaction | Chưa có transaction contract được duyệt; cần bảo đảm cập nhật feedback không ghi nhầm submission. |
+| Transaction | View khóa submission, lặp lại owner predicate trong UPDATE, validate response rồi commit; lỗi rollback. Đây là runtime behavior, còn live DB chưa xác minh. |
 | Side effects | Candidate cập nhật assignment_submissions.feedback; nơi lưu attachments chưa được xác định. |
 
 ## Sources
@@ -55,38 +55,38 @@ status: "Draft — Needs Confirmation"
 ## Mục chú ý
 
 - AC-23 order is #54 list → #55 detail/files/rubric → #56 grade/status GRADED → #57 feedback → success.
-- Catalog descriptor is the literal text feedback text:string!; its JSON property spelling is unresolved.
+- Catalog descriptor is the literal text feedback text:string!; `feedback_text` is the required DERIVED wire-key fallback.
 - attachments:string! is required, but its encoding, storage, association and response field are not defined.
 - Submission.files is the student-submitted asset collection; it is not assumed to contain Mentor feedback attachments.
-- No API #57 route, view module or test exists in current Study source.
-- The complete Submission response remains blocked by the unresolved UploadAsset resolver.
+- API #57 now has a route, view module and TestClient coverage; this records current local source only, not deployment or live-schema verification.
+- API #54 provides a DERIVED constrained UploadAsset lookup; API #35 persistence compatibility remains unresolved, so #57 must retain that limitation.
 
 ## Assumptions
 
-- assignment_submissions.feedback TEXT is a schema-backed legacy candidate for feedback text; an UPDATE to this existing field is only a DERIVED proposal.
-- Repeated-call behavior is not chosen: diagram says INSERT/UPDATE, but there is no approved feedback history relation or overwrite rule.
+- assignment_submissions.feedback TEXT is a legacy DDL candidate; updating this existing field is DERIVED and overwrites the prior value. Live schema and approval remain unverified.
+- The required `attachments` value is accepted as an opaque strict string and is not stored, returned or mapped to student `file_url`/`Submission.files`, because no approved target or format exists.
 - The direct-owner check through courses.mentor_id is a DERIVED candidate consistent with #54–#56; assigned-Mentor access is not established.
 - AC-23 UI order does not by itself make status=GRADED a direct-call precondition for API #57.
 
 ## Conflicts
 
-- Request descriptor feedback text does not define a JSON wire key; response schema names the field feedback.
+- Request descriptor feedback text does not define a JSON wire key; `feedback_text` is the implementation fallback, not an approved catalog change.
 - Request requires attachments, but Submission has no feedback-attachments property and legacy candidate DDL has no attachment relation.
 - Diagram mentions INSERT/UPDATE feedback, while the simple legacy candidate is one nullable feedback column.
 - V1-PILOT assessment_reviews.feedback_markdown belongs to UUID assessment records and is not linked to legacy BIGINT assignment_submissions.
-- API Guidelines requires error data=null; current error_response() emits {} when data is omitted.
-- Current middleware uses an exact-path allowlist and does not list this dynamic Mentor path.
+- API Guidelines and current error_response() both use data=null when error data is omitted.
+- Middleware matches exact paths and registered FastAPI route templates; #57's route template is now registered for design-contract errors.
 
 ## Security note
 
 - Never return or mutate a submission outside the authenticated Mentor's approved course scope.
-- Current shared auth guard is Student-only; Mentor claim extraction and ID mapping are SOURCE_REQUIRED.
+- Shared auth guard supports explicit MENTOR role and returns the numeric subject; direct-owner access is implemented as DERIVED fallback.
 - Do not trust attachment URLs or identifiers until the upload/asset ownership contract is specified.
 
 ## Performance note
 
 - Candidate lookup and update should target one submission by ID and scope it to its course.
-- Attachment storage and Submission.files lookup costs cannot be determined until an approved asset relation/resolver exists.
+- Feedback attachment storage remains unresolved. Student `Submission.files` reuses the #54 URL/owner/purpose/course lookup as DERIVED; API #35 producer compatibility remains open.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

@@ -11,103 +11,51 @@ status: "Draft — Needs Confirmation"
 
 ## Contract trực tiếp từ catalog
 
-HTTP 200, business code DESIGN_RESOURCE_RETRIEVED, response ApiEnvelope<Page<Course>>. Bảng dưới đây giữ nguyên direct schema. Schema này không có các metric learning-event mà AC-26 yêu cầu hiển thị.
+HTTP 200, business code DESIGN_RESOURCE_RETRIEVED, response ApiEnvelope<Page<Course>>. Bảng giữ nguyên direct schema. Course/PageMeta không chứa metric analytics; đây là discrepancy với AC-26 và local runtime.
 
 | Field | Type | Required | Description |
 |---|---|---:|---|
 | success | boolean | Có | Kết quả envelope. |
 | businessCode | string | Có | DESIGN_RESOURCE_RETRIEVED khi thành công. |
-| message | string | Có | Thông điệp; text cụ thể chưa được catalog chốt. |
+| message | string | Có | Thông điệp response. |
 | data.items | Course[] | Có | Danh sách Course theo reusable schema. |
 | data.pagination.page | int32 | Có | Trang hiện tại theo PageMeta. |
-| data.pagination.size | int32 | Có | Kích thước trang theo PageMeta. |
+| data.pagination.size | int32 | Có | Kích thước trang. |
 | data.pagination.total | int64 | Có | Tổng số items. |
 | data.pagination.total_pages | int32 | Có | Tổng số trang. |
 | meta | object | Có | Metadata envelope. |
 | traceId | uuid | Có | Trace identifier. |
 
-### Reusable Course fields
+### Local runtime response — DERIVED
 
-| Field | Type | Required | Description |
+Runtime hiện trả một summary object vì catalog Page<Course> không thể biểu diễn mục tiêu AC-26. Không xem đây là contract đã được duyệt.
+
+| Field | Type | Required | Mô tả |
 |---|---|---:|---|
-| id | int64 | Có | Course ID. |
-| title | string | Có | Tiêu đề course. |
-| description | string | Không | Mô tả tùy chọn. |
-| thumbnail_url | uri | Không | Ảnh tùy chọn. |
-| price | decimal-string | Có | Giá theo decimal string. |
-| status | CourseStatus | Có | Enum members chưa được catalog định nghĩa. |
-| mentor | UserSummary | Có | Mentor summary: id, full_name, avatar_url tùy chọn. |
-| category | Category | Không | Category tùy chọn; quan hệ nguồn cho #66 chưa xác định. |
+| tracked_lesson_accesses | int64, >= 0 | Có | Số cặp Student/lesson phân biệt có last_accessed_at trên lesson PUBLISHED. Đây là proxy, không phải số event. |
+| students_with_activity | int64, >= 0 | Có | Số Student phân biệt trong các cặp proxy có activity. |
+| last_activity_at | datetime hoặc null | Có | MAX last_accessed_at; null khi không có cặp activity. |
 
-Category có id, name, slug và description tùy chọn.
+### Ví dụ local runtime
 
-## Example theo direct contract
-
-```json
 {
   "success": true,
   "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Course retrieved",
+  "message": "Course analytics retrieved.",
   "data": {
-    "items": [
-      {
-        "id": 321,
-        "title": "Example course",
-        "description": "Example description",
-        "thumbnail_url": "https://example.test/course.png",
-        "price": "0.00",
-        "status": "<CourseStatus>",
-        "mentor": {
-          "id": 22,
-          "full_name": "Mentor Name"
-        },
-        "category": {
-          "id": 5,
-          "name": "Science",
-          "slug": "science"
-        }
-      }
-    ],
-    "pagination": {
-      "page": 1,
-      "size": 1,
-      "total": 1,
-      "total_pages": 1
-    }
-  },
-  "meta": {},
-  "traceId": "00000000-0000-4000-8000-000000000001"
-}
-```
-
-Giá trị CourseStatus là placeholder, không xác nhận enum member. Đây chỉ là ví dụ schema shape; không có learning-event metric.
-
-## Candidate response để review — DERIVED, không phải contract
-
-Nếu owner muốn response phản ánh mục tiêu AC-26, đề xuất một aggregate cho đúng một course, không phải Page:
-
-```json
-{
-  "success": true,
-  "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Course analytics retrieved",
-  "data": {
-    "total_learning_events": 405,
-    "students_with_learning_events": 28,
-    "last_activity_at": "2026-10-24T09:15:00Z"
+    "tracked_lesson_accesses": 405,
+    "students_with_activity": 28,
+    "last_activity_at": "2026-10-25T09:15:00"
   },
   "meta": {},
   "traceId": "00000000-0000-4000-8000-000000000002"
 }
-```
 
-Các field, metric scope all-time-to-date và shape CourseLearningAnalytics là đề xuất DERIVED. Event source/taxonomy/dedup/retention chưa có nguồn; catalog tiếp tục là contract trực tiếp cho tới khi được sửa.
-
-Nếu không có event, phương án candidate trả total_learning_events=0, students_with_learning_events=0 và last_activity_at=null. Cần xác nhận cùng metric definition.
+405 là số cặp learner/lesson đang có dấu truy cập, không phải 405 lần truy cập. Khi không có dữ liệu, hai count là 0 và last_activity_at là null.
 
 ## Error response note
 
-Exact HTTP/business codes nằm trong [Error](./06_Error.md). API guideline mong data:null ở error; current helper mặc định absent data thành {}. API #66 chưa có route nên không có endpoint serialization để xác minh.
+HTTP/business code giữ direct set 401/403/404/500. Shared error helper serializes error data as null when no data is supplied. Trace ID được phản hồi trong envelope và X-Trace-Id.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

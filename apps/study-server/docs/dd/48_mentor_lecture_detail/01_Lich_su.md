@@ -18,7 +18,9 @@ status: "Draft — Needs Confirmation"
 | API ID | 48 |
 | API name | Tải lại lecture vừa tạo |
 | Endpoint | GET /api/v1/mentor/lectures/{lecture_id} |
-| Phiên bản DD | 0.1 |
+| Ngày tạo | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-25 |
+| Phiên bản DD | 0.2 |
 | Trạng thái | Draft — Needs Confirmation |
 
 ## Lịch sử thay đổi
@@ -26,6 +28,7 @@ status: "Draft — Needs Confirmation"
 | Phiên bản | Ngày | Người cập nhật | Nội dung | Trạng thái |
 |---|---|---|---|---|
 | 0.1 | 2026-10-24 | Codex | Tạo bản DD theo catalog và AC-21; ghi rõ candidate legacy mapping, gap assets, ownership/schema và kiểm tra nhóm #46–#48. | Draft — Needs Confirmation |
+| 0.2 | 2026-10-25 | Codex | Đồng bộ DD với route/module #48 và ordered asset links từ API #47; cập nhật response, error mapping, tests và remaining live-schema/authorization decisions. | Draft — Needs Confirmation |
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

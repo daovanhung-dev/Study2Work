@@ -7,6 +7,7 @@ source_sheet: "table"
 status: "Draft — Needs Confirmation"
 ---
 
+
 # Định nghĩa table — API read-only
 
 ## Thông tin mapping
@@ -16,16 +17,30 @@ status: "Draft — Needs Confirmation"
 | API | #64 `GET /api/v1/mentor/notifications/{notification_id}/status` |
 | Loại thao tác | `N/A — READ-ONLY API` |
 | Mutation | Không có INSERT/UPDATE/DELETE. |
-| Bảng đọc | Notification/delivery là logical targets; physical source `SOURCE_REQUIRED`. |
-| Candidate artifacts | Legacy `notifications` không có delivery state; V1-PILOT `notification_deliveries` dùng UUID và chưa được xác nhận live. |
+| Bảng đọc | Local #63 legacy `notifications` và `notification_deliveries`. |
+| Source status | `DB.sql` + migration 009 là checked-in artifacts; live deployment chưa xác minh. |
+
+## Read mapping
+
+| Table | Column | Purpose | Query use / response mapping | Status |
+|---|---|---|---|---|
+| `notifications` | `id` | Notification identity | Match path `notification_id:int64`. | Legacy BIGINT DDL. |
+| `notifications` | `operation_id` | Group to accepted dispatch | `Operation.id`; NULL means no dispatch status resource. | Added locally by migration 009. |
+| `notifications` | `sender_id` | Sending Mentor identity | Compare with numeric JWT `sub`; map to `Operation.owner_id`. | Existing legacy column; ownership use DERIVED from API #63 binding. |
+| `notifications` | `created_at` | Accepted notification time | Map to `Operation.submitted_at`. | Existing legacy column. |
+| `notification_deliveries` | `notification_id` | Delivery link | LEFT JOIN to the notification row. | Added locally by migration 009. |
+| `notification_deliveries` | `status` | Per-channel state | Aggregate `QUEUED`/`SENT`/`FAILED` to Operation.status. | Local constraint; aggregation DERIVED. |
+| `notification_deliveries` | `updated_at` | Last channel state timestamp | `MAX(updated_at)` → `Operation.updated_at`. | Added locally by migration 009. |
 
 ## Quy tắc
 
-- Không mô tả bảng write giả cho API GET.
-- Không dùng `notifications.is_read` thay delivery status.
-- Không chép V1-PILOT UUID delivery columns thành mapping executable cho path int64.
-- Xem [Data Mapping](./05_Data_Mapping.md#step-3-read-delivery) và các câu hỏi ở [OPEN_QUESTIONS](./OPEN_QUESTIONS.md).
----
+- API #64 does not mutate either table; this read-only prototype has no insert/update/delete columns.
+- Do not read `notifications.is_read` as a delivery state.
+- Do not join V1-PILOT UUID notification/delivery relations to legacy BIGINT keys.
+- The query's per-channel counts are internal to status aggregation; the direct Operation response does not expose `NotificationDelivery` counts.
+- See [Data Mapping](./05_Data_Mapping.md#step-3-read-delivery) and [Open Questions](./OPEN_QUESTIONS.md).
+
+
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `table`

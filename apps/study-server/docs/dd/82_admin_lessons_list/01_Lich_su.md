@@ -8,7 +8,6 @@ source_sheet: "Lịch sử"
 format: markdown
 status: "Draft — Needs Confirmation"
 ---
-
 # Lịch sử update
 
 ## Metadata
@@ -16,13 +15,14 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-24 |
-| Ngày update cuối cùng | 2026-10-24 |
+| Ngày update cuối cùng | 2026-10-26 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
-| `1.0` | `2026-10-24` | `Codex` | Tạo DD từ catalog API #82, AC-34 và các nguồn Study đã kiểm tra. | Draft — Needs Confirmation; giữ nguyên điểm contract/schema chưa được xác nhận. |
+| `1.0` | `2026-10-24` | `Codex` | Tạo DD từ catalog API #82, AC-34 và các nguồn Study đã kiểm tra. | Draft — Needs Confirmation. |
+| `1.1` | `2026-10-26` | `Codex` | Đồng bộ DD với API #82 đã wired cục bộ; ghi rõ list fallback, query behavior, unsupported `type`, lỗi projection và giới hạn verification. | Local HTTP tests; live DB/approval chưa xác minh. |
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

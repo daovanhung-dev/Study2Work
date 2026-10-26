@@ -13,21 +13,33 @@ status: "Draft — Needs Confirmation"
 
 | Table/Relation | Loại | Vai trò | Trạng thái |
 |---|---|---|---|
-| Physical target | Chưa xác định | Soft-delete/anonymize theo policy AC-31 | SOURCE_REQUIRED; không tạo SQL hoặc column giả. |
-| Legacy users | Candidate lookup only | Định danh BIGINT trong DDL artifact | Không có deleted_at/anonymized_at; live schema chưa xác minh. |
-| Legacy user-linked relations | Dependency context only | Các quan hệ được liệt kê trong 05_Data_Mapping.md | Không phải bảng bị xóa/cascade; policy/constraint chưa xác minh. |
-| V1-PILOT identity_projections/learner_profiles | Không dùng làm target | UUID identity/profile lifecycle khác legacy | Không có mapping approved sang user_id:int64. |
+| Legacy `users` | UPDATE target candidate | BIGINT user, existing `status` and `updated_at` fields | Checked-in DDL only; live schema chưa xác minh. |
+| Legacy user-linked relations | Preserved references | Courses, enrollments, progress, submissions, discussions, notifications, payments, refresh tokens | Không delete/cascade; relation policy chưa được duyệt. |
+| V1-PILOT identity/profile | Không dùng làm target | UUID account lifecycle | Không có approved mapping sang API `user_id:int64`. |
 
 ## Mapping fields
 
 | Logical field/operation | Physical relation | Column | Operation | Mapping/status |
 |---|---|---|---|---|
-| Target ID | Physical target chưa xác định | SOURCE_REQUIRED | Lookup/mutation | Không suy ra physical id mapping từ contract int64 một mình. |
-| Soft-delete/anonymization state | SOURCE_REQUIRED | SOURCE_REQUIRED | UPDATE candidate chỉ sau khi policy/schema được duyệt | Không dùng DELETE vật lý hoặc cột mới do DD tự tạo. |
-| Deletion timestamp | SOURCE_REQUIRED | SOURCE_REQUIRED | Source cho DeleteResult.deleted_at | Legacy users không có deletion timestamp. |
-| DeleteResult.status | Response constant | N/A | Response | Literal deleted theo catalog; không phải DB column. |
+| Target ID | Legacy `users` | `id` | WHERE | Bind `:user_id`; primary-key candidate. |
+| Soft-delete marker | Legacy `users` | `status` | UPDATE | Set literal `DELETED`; value DERIVED, VARCHAR(20) in checked-in legacy DDL. |
+| Mutation timestamp | Legacy `users` | `updated_at` | UPDATE/RETURNING | Set `CURRENT_TIMESTAMP`; return under alias `deleted_at` for this response. |
+| DeleteResult.status | Response constant | N/A | Response | Literal `deleted` from catalog; not a DB column. |
+| DeleteResult.deleted_at | Response alias | `users.updated_at` | RETURNING | Timestamp of this mutation only; not persisted separately as deletion time. |
 
-Không có DDL, migration hoặc index nào được tạo bởi DD này. DDL legacy/pilot chỉ được dẫn làm evidence của gap và dependency, không phải schema đã deploy.
+## Mutation mapping
+
+- Statement: one bound `UPDATE users`.
+- WHERE: `id = :user_id`.
+- WHERE: `status IS DISTINCT FROM 'DELETED'`.
+- Updated field: `status = 'DELETED'`.
+- Updated field: `updated_at = CURRENT_TIMESTAMP`.
+- Returned field: `id`.
+- Returned field: `updated_at AS deleted_at`.
+- Transaction: validate RETURNING projection, then commit; rollback query/mapping/commit failures.
+- No migration, new column, physical DELETE, anonymization, dependent-row mutation or cascade is included.
+
+Legacy FK declarations are evidence of local relationships only; soft-delete retains the user row so this mutation does not violate those references. Live FK/schema state remains unverified.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

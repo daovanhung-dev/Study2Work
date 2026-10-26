@@ -14,163 +14,89 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ~~~text
-1. Nhận Authorization Bearer và course_id:int64! theo catalog.
-2. Xác thực principal Mentor và kiểm tra quyền quản lý course; guard/identity binding chưa có trong Study source.
-3. Q1 candidate có thể đọc legacy courses.id/mentor_id để xác định course/direct owner; chỉ là DERIVED.
-4. Q2 đọc sections/lessons/content theo AC-22 nhưng chưa có approved table/model; dừng tại SOURCE_REQUIRED, không dựng SQL.
-5. Chỉ map ApiEnvelope<Content> sau khi response cardinality, Content source, payload, enums và empty-tree rule được xác nhận.
-6. Success/error code giữ nguyên API catalog; endpoint hiện UNWIRED / NOT_FOUND. Error middleware fallback khi API #49 path chưa thuộc allowlist là conditional integration discrepancy.
+1. Nhận Authorization Bearer và raw course_id theo path.
+2. Xác thực JWT/current user, yêu cầu role MENTOR và lấy numeric user ID.
+3. Parse signed-int64 course_id; parse/range lỗi trả 404 DESIGN_RESOURCE_NOT_FOUND.
+4. SELECT courses(id, mentor_id); thiếu course trả 404, owner khác principal trả 403.
+5. SELECT mọi contents của course có deleted_at IS NULL, gồm mọi status; sort parent_id NULLS FIRST, content_order, id.
+6. Validate projection, course scope, unique IDs, parent references và không cycle; lỗi query/mapping trả 500.
+7. Trả Content[] phẳng trong success envelope; empty tree là [] và không có mutation.
 ~~~
 
 ## 0. Check quyền
 
-### 0.1. Thực hiện check quyền
-
-- Yêu cầu Bearer JWT và role Mentor theo catalog.
-- AC-22 yêu cầu Mentor có quyền quản lý course.
-- Không nhận `mentor_id`/owner từ request; token-to-principal mapping chưa có source trong Study runtime.
-- Legacy `courses.mentor_id` là candidate direct-owner check theo DD #46/#47, không đại diện course được phân công.
-
-### 0.2. Query/check quyền
-
 | Target | Column/field | Condition/value | Remarks |
 |---|---|---|---|
-| JWT principal | role | Mentor | Contract DIRECT; runtime Mentor guard `NOT_FOUND`. |
-| Legacy `courses` candidate | id | bằng path `course_id` | Candidate BIGINT schema; live schema chưa xác minh. |
-| Legacy `courses` candidate | mentor_id | so với numeric Mentor principal | `DERIVED`; identity mapping và assignment relation chưa có. |
+| JWT principal | role / user ID | `MENTOR`, numeric authenticated user ID | Dùng `validate_current_user_request`; token không được echo. |
+| `courses` | `id` | bằng parsed path `course_id` | Chỉ course tồn tại mới tiếp tục. |
+| `courses` | `mentor_id` | bằng principal ID | Current implementation direct-owner rule; assigned-course access không được kiểm tra. |
 
-### 0.3. Check kết quả
+Kết quả: token thiếu/sai → 401; role sai hoặc owner mismatch → 403; course thiếu → 404; DB/mapping failure → 500. Ownership policy theo source implementation, chưa phải xác nhận cho assigned Mentor.
 
-- Token thiếu/không hợp lệ: 401 `DESIGN_AUTHENTICATION_REQUIRED`.
-- Role sai hoặc không có quyền quản lý course: 403 `DESIGN_ACCESS_DENIED`; ánh xạ principal/access cụ thể cần xác nhận.
-- Course không tồn tại: 404 `DESIGN_RESOURCE_NOT_FOUND` là candidate theo business code; kết quả với course tồn tại nhưng content tree rỗng chưa rõ.
-- Lỗi truy vấn/runtime: 500 `DESIGN_INTERNAL_ERROR`.
-
-## 1. Validate data input
-
-### Request Usage Matrix
+## 1. Validate input
 
 | Request field | Source | Validate/use | Query usage | Response usage | Gap |
 |---|---|---|---|---|---|
-| Authorization | Header | Bearer JWT; role Mentor | Principal cho course access check | Không echo JWT/claims | Mentor guard/identity mapping `SOURCE_REQUIRED`. |
-| `course_id` | Path | Required int64 theo catalog | Q1 candidate; intended scope Q2 | Candidate scope cho `Content.course_id` | Physical ID/schema unresolved; malformed path status chưa khai báo. |
-| Body | N/A | N/A | N/A | N/A | Catalog không khai báo body. |
-| Query | N/A | N/A | N/A | N/A | Không thêm pagination/filter/sort. |
-
-Catalog không khai báo HTTP 422; không thêm business error cho path parse failure. Current middleware trả 422 `VALIDATION_ERROR` cho path ngoài `DESIGN_CONTRACT_PATHS`; API #49 chưa có trong allowlist nên malformed-path behavior là discrepancy có điều kiện khi future wiring.
+| Authorization | Header | Bearer JWT; current Study guard; role Mentor | Xác định principal ID | Không echo | Assignment policy còn mở. |
+| `course_id` | Path | Raw signed integer; int64 bounds | Bind vào Q1 và Q2 | Mỗi `data[].course_id` lấy từ row | Invalid/out-of-range ánh xạ 404 theo implementation. |
+| Body/query | N/A | N/A | N/A | N/A | Không có. |
 
 ## 2. Get thông tin
 
-### 2.1. Query
-
-#### Query Matrix
-
-| Query | Type | Candidate source | Query item | Rule | Evidence/status |
-|---|---|---|---|---|---|
-| Q1 | SELECT | Legacy `courses AS c` | `c.id`, `c.mentor_id` | `c.id = :course_id`; compare owner with principal | Candidate legacy query; `DERIVED`, live schema/identity/assignment unresolved |
-| Q2 | SELECT | No approved Content/tree relation | Base table, fields, joins, visibility and ordering unknown | Intended read by course ID from AC-22 | `SOURCE_REQUIRED`; no executable query approved |
-
-Candidate Q1 for legacy schema only; do not treat as live query:
-
-~~~sql
-SELECT c.id, c.mentor_id
-FROM courses AS c
-WHERE c.id = :course_id;
-~~~
-
-Q2 cannot be expressed without selecting an approved schema and defining how `sections`, `lessons` and `Content` nodes relate. The V1-PILOT UUID tables are not substituted for the catalog BIGINT model.
-
-### 2.2. JOIN
-
-| Table | Join type | Join condition | Purpose | Evidence |
-|---|---|---|---|---|
-| No approved content join | N/A | N/A | Generic tree joins cannot be determined | `SOURCE_REQUIRED` |
-| `courses AS c` | No join in Q1 candidate | N/A | Candidate course/direct-owner lookup | Legacy ERD/DD #46–#47; `DERIVED` |
-
-### 2.3. WHERE
-
-| Condition | Value source | Purpose | Evidence/status |
-|---|---|---|---|
-| `c.id = :course_id` | Path parameter | Candidate course lookup | `DERIVED` against legacy BIGINT schema |
-| Content/course/version/status predicates | Not established | Scope and visibility of tree nodes | `SOURCE_REQUIRED`; no publish/draft filter invented |
-
-### 2.4. ORDER BY
-
-`SOURCE_REQUIRED` — catalog has no sort input, but ordering among sibling nodes and stable tie-breaker are not defined by source.
-
-### Request Usage Matrix
-
-| Request field | Nguồn | Data Mapping step | Validate | SQL/Mutation usage | Branch/Loop | Response usage | Gap |
-|---|---|---:|---|---|---|---|---|
-| Authorization | Header | 1 | Bearer + Mentor role | Principal in candidate Q1 access check | Access branch | No echo | Guard and identity mapping unresolved |
-| `course_id` | Path | 1–2 | int64 contract | Q1 bind; Q2 intended scope | Course missing/access branch | Intended `data.course_id` | Content projection/cardinality unresolved |
-
 ### Query Matrix
 
-| Query ID | Purpose | Type | Base table/view | Columns | JOIN | WHERE | ORDER/Pagination | Branch |
-|---|---|---|---|---|---|---|---|---|
-| Q1 | Candidate course existence/direct owner | SELECT | Legacy `courses` | `id`, `mentor_id` | None | `id = :course_id` | N/A | Course missing/owner mismatch; `DERIVED` |
-| Q2 | Read course content tree | SELECT | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | `SOURCE_REQUIRED` | Intended course scope; exact predicate unknown | `SOURCE_REQUIRED`; no pagination contract | Mapping blocked pending schema/shape |
+| Query | Type | Table | Columns | Rule | Result/branch |
+|---|---|---|---|---|---|
+| Q1 | SELECT | `courses` | `id`, `mentor_id` | `id = :course_id LIMIT 1` | Missing → 404; owner mismatch → 403. |
+| Q2 | SELECT | `contents` | `id`, `course_id`, `content_type`, `title`, `payload`, `status`, `parent_id`, `content_order AS order` | `course_id = :course_id AND deleted_at IS NULL` | Ordered flat node rows; empty → `[]`. |
 
-## 3. Insert/Update thông tin
+Q2 SQL:
 
-### 3.1. Target table
+~~~sql
+SELECT id, course_id, content_type, title, payload, status, parent_id,
+       content_order AS "order"
+FROM contents
+WHERE course_id = :course_id
+  AND deleted_at IS NULL
+ORDER BY parent_id NULLS FIRST, content_order ASC, id ASC;
+~~~
 
-N/A — read-only API.
+No version, status visibility or publication filter is applied. Rows with draft-like and published-like statuses are both returned. Query constants reside in `app/modules/mentor/api_49_mentor_content_list/query.py`.
 
-### 3.2. Conditions
+### Mapping and validation
 
-N/A — không có điều kiện ghi.
+| DB column | Response field | Mapping | Validation |
+|---|---|---|---|
+| `id` | `data[].id` | Direct | Strict signed int64; unique in response. |
+| `course_id` | `data[].course_id` | Direct | Must equal requested course. |
+| `content_type` | `data[].content_type` | Direct string | No closed enum validation. |
+| `title` | `data[].title` | Direct string | Required. |
+| `payload` | `data[].payload` | JSON object copy | Reject non-object/missing projection. |
+| `status` | `data[].status` | Direct string | No closed enum or visibility validation. |
+| `parent_id` | `data[].parent_id` | Direct nullable int64 | Null omitted; non-null parent must be present in result. |
+| `content_order` | `data[].order` | Alias to int32 | SQL stable tie-breaker uses `id`. |
 
-### 3.3. Items update/insert
+The view rejects duplicate IDs, missing parent references, cross-course rows and cycles as an internal mapping failure; it does not return a partial tree.
 
-N/A — không có INSERT/UPDATE/DELETE. API #50–#53 là các thao tác riêng trong AC-22.
+## 3. Mutation
 
-### 3.4. Parameters
+N/A — read-only. No `INSERT`, `UPDATE`, `DELETE`, `commit` or content mutation occurs.
 
-N/A — không có mutation parameters.
+## 4. Response and errors
 
-#### Mutation Matrix
+| Branch | HTTP | Business code | Data |
+|---|---:|---|---|
+| Read succeeds | 200 | `DESIGN_RESOURCE_RETRIEVED` | `Content[]`; may be empty. |
+| Authentication missing/invalid | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | `null` |
+| Role/owner denied | 403 | `DESIGN_ACCESS_DENIED` | `null` |
+| Invalid/out-of-range ID or missing course | 404 | `DESIGN_RESOURCE_NOT_FOUND` | `null` |
+| Query/projection/tree validation error | 500 | `DESIGN_INTERNAL_ERROR` | `null` |
 
-| Mutation | Target | Condition | Fields | Status |
-|---|---|---|---|---|
-| None | N/A | API #49 chỉ đọc | No INSERT/UPDATE/DELETE | `N/A — READ-ONLY API` |
+All errors use the shared envelope and current middleware contract route entry. DB exceptions are rolled back and logged with trace ID; SQL/stack details are not exposed.
 
-## Response Source Matrix
+## 5. Storage and status boundary
 
-| Response field | Contract type | Candidate source | Transform/null rule | Status |
-|---|---|---|---|---|
-| `success` | boolean | Envelope branch | true for success; false for error | Envelope convention |
-| `businessCode` | string | Catalog | Exact code by branch | DIRECT |
-| `message` | string | Application | Safe localized text; exact copy unspecified | DERIVED |
-| `data.id` | int64 | No approved Content table | No mapping | SOURCE_REQUIRED |
-| `data.course_id` | int64 | Path or stored content row | Whether echoed or read from each node unresolved | SOURCE_REQUIRED |
-| `data.content_type` | ContentType | No source/enum list | No transform | SOURCE_REQUIRED |
-| `data.title` | string | No generic Content source | No mapping | SOURCE_REQUIRED |
-| `data.payload` | object | No approved JSON schema | Do not invent members/default | SOURCE_REQUIRED |
-| `data.status` | ContentStatus | No source/enum list | No visibility/member mapping | SOURCE_REQUIRED |
-| `data.parent_id` | int64? | No generic parent relation | Optional field; null/omit policy unresolved | SOURCE_REQUIRED |
-| `data.order` | int32 | No generic order field | Sibling ordering/ties undefined | SOURCE_REQUIRED |
-| `meta` | object | Envelope | No pagination metadata defined | Null/empty serialization needs helper alignment |
-| `traceId` | uuid | Request trace | Propagate request trace | Runtime route absent |
-
-## 4. Check kết quả execute query
-
-### 4.1. Thành công
-
-Success is HTTP 200 `DESIGN_RESOURCE_RETRIEVED` with `ApiEnvelope<Content>` per catalog. A complete response cannot be mapped from current DB evidence. Do not publish an empty object, empty payload or empty tree as a fallback.
-
-### 4.2. Lỗi hệ thống
-
-DB/query/mapping failures map to 500 `DESIGN_INTERNAL_ERROR` in the catalog. Do not return SQL, schema names, stack traces or provider details.
-
-### 4.3. Validate lỗi
-
-HTTP 422 is not declared for API #49. The current validation handler returns 422 `VALIDATION_ERROR` for paths outside `DESIGN_CONTRACT_PATHS`; API #49 is not listed, so this is a conditional future-wiring discrepancy, not current API behavior.
-
-### 4.4. Ngoài trường hợp trên
-
-Do not add 409/503 or unlisted business codes. Semantics for 404 versus an existing course with no content are open questions.
+The checked-in legacy DDL and migration define `contents` with BIGINT course/parent relations, JSONB object payload, open string `content_type`/`status`, `content_order` and nullable `deleted_at`. Migration `006_contents.sql` is an artifact only; no live DB was probed or migrated. The separate UUID V1-PILOT `content_blocks` schema is not used.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

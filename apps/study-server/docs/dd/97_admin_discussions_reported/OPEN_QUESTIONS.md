@@ -3,74 +3,54 @@
 **Status:** Draft — Needs Confirmation
 **Endpoint:** `GET /api/v1/admin/discussions/reported`
 
-## Q-97-01 — Report persistence and join key
+Implementation uses the local `DERIVED` fallbacks below. These choices keep the
+catalog response shape and make the route testable; they are not proof of live
+schema, deployment, policy approval or report ingestion.
 
-**Evidence:** AC-37 diagram node n3 reads reports + discussion summary. Legacy Study DDL only defines `discussions`; it has no discussion-report relation or join key.
+## Resolved locally with `DERIVED` fallbacks
 
-**Impact:** The queue predicate and physical Q1 cannot be implemented without guessing a table or relationship.
+| Topic | Current fallback | Remaining verification |
+|---|---|---|
+| Report source and join | Study `discussion_reports`; `discussion_id BIGINT` references `discussions.id` with `ON DELETE RESTRICT` | Migration deployment and report writer are not verified; no report-ingest API is in #97 scope; API #100 must preserve/reconcile reports before hard delete |
+| Queue grain | One unique Discussion with at least one `OPEN`/`IN_REVIEW` report | Cross-endpoint moderation transition for #99 remains future work |
+| Query filters | Exact `reason_code` and `severity`; both combine with AND on the same report | Allowed values/taxonomy are free-form and remain unspecified |
+| Pagination | Page defaults to 1, size 20, latest matching report first then Discussion ID descending; total counts unique Discussions | Catalog omits defaults/order; this fallback needs product confirmation |
+| Discussion title | Normalized Discussion content clipped to 120 characters | No physical `title` column exists in legacy schema |
+| Comments | Queue summary returns `comments=[]`; #98 owns full thread | If Admin list requires previews, response contract/design must be revised |
+| Invalid page | 422 `DESIGN_VALIDATION_ERROR` | Catalog lists only 401/403/500; this is a local validation fallback |
+| Admin authorization | Shared `validate_current_user_request(..., role="ADMIN")` | Fine-grained AC-37 permission/tenant policy and live issuer remain unverified |
 
-**Decision needed:** Identify the approved report source, primary key, discussion foreign key, state, timestamps, uniqueness/grain and indexes.
+## Q-97-01 — Report ingestion and live persistence
 
-## Q-97-02 — Queue grain and duplicate reports
+**Evidence:** The local fallback migration adds `discussion_reports`, but Study
+has no report-create endpoint in the current catalog/runtime.
 
-**Evidence:** Catalog returns `Page<Discussion>` while the source diagram reads report records.
+**Impact:** The queue can read rows written by a future/approved producer, but
+this endpoint alone does not create reports. Checked-in DDL does not prove the
+table is present in a deployed database.
 
-**Impact:** It is unknown whether one queue item represents one report or one unique discussion when several users report the same discussion. `pagination.total` changes with that decision.
+**Follow-up:** Identify the approved report producer and verify migration/live
+schema before deployment.
 
-**Decision needed:** Confirm report-vs-discussion grain, deduplication rule and stable ordering.
+## Q-97-02 — Report details in the response
 
-## Q-97-03 — Report data in the response
+**Evidence:** AC-37 says the Admin reads reports, while catalog #97 returns
+`Page<Discussion>` without report reason, severity, count, reporter or report
+time fields.
 
-**Evidence:** AC-37 queue reads report information, but reusable `Discussion` has no report reason, severity, count, reporter or report timestamp fields.
+**Impact:** Filters work, but the list response does not expose the report
+metadata. #98 currently has the same reusable Discussion response shape.
 
-**Impact:** Admin cannot see the report data used to filter the queue in the current response contract.
+**Follow-up:** If the UI needs report metadata, revise the catalog/schema for
+#97/#98; implementation does not add unlisted fields.
 
-**Decision needed:** Keep `Page<Discussion>` and define a supported source/consumer for report summary, or approve a catalog schema change before implementation.
+## Q-97-03 — Legacy required-field integrity
 
-## Q-97-04 — `reason` and `severity` semantics
+**Evidence:** Legacy `discussions.course_id` and `user_id` are nullable although
+the reusable `Discussion` requires `course_id` and `author`.
 
-**Evidence:** Catalog only declares optional strings.
+**Impact:** A report linked to a Discussion with missing course/author/status
+returns 500 `DESIGN_INTERNAL_ERROR` instead of fabricating response values.
 
-**Impact:** Allowed values, normalization, comparison, unknown-value behavior and whether both filters combine with AND/OR are not defined.
-
-**Decision needed:** Approve taxonomy and matching/composition rules; do not infer enums from the query names.
-
-## Q-97-05 — Pagination and ordering
-
-**Evidence:** Request declares only `page?:int32`; `PageMeta` requires page, size, total and total_pages.
-
-**Impact:** Default, positive range, page size, out-of-range response, count grain and deterministic order are open.
-
-**Decision needed:** Confirm pagination contract. A page default of 1, fixed size 20 and `ceil(total/size)` are only DERIVED proposals from other Admin list DDs, not approved here.
-
-## Q-97-06 — `Discussion.title` and candidate columns
-
-**Evidence:** Reusable Discussion requires title; legacy `discussions` DDL has content but no title. Legacy course/user foreign keys are nullable although the response requires `course_id` and `author`.
-
-**Impact:** Candidate projection cannot populate every required response field or safely handle missing relations.
-
-**Decision needed:** Identify approved title and null-integrity policy; do not derive title from content.
-
-## Q-97-07 — Comment projection in a queue summary
-
-**Evidence:** Discussion schema requires `comments[]`; AC-37 calls the queue item a summary and API #98 separately reads full thread detail.
-
-**Impact:** Comment inclusion, preview size, nested depth, status filter, order and author-failure behavior are unknown.
-
-**Decision needed:** Confirm whether #97 returns no comments, a bounded summary, all direct children or another approved shape; update contract if needed.
-
-## Q-97-08 — Admin authentication and scope
-
-**Evidence:** Catalog requires Admin. Current Study shared guard only authorizes Student; no Admin guard, claim mapping or policy is source-backed.
-
-**Impact:** Authorization and 401/403 ordering cannot be implemented from current Study helper.
-
-**Decision needed:** Identify approved Admin credential/claims, role spelling and any scope/tenant rule.
-
-## Q-97-09 — Query parse and envelope mapping
-
-**Evidence:** Catalog omits 422. Current middleware allowlist excludes this path; generic fallback uses different business codes. Current error helper serializes absent data as `{}`, while API guidelines describe `null`.
-
-**Impact:** Future route wiring can produce unsupported validation/internal codes or an envelope shape mismatch.
-
-**Decision needed:** Resolve invalid query behavior and include #97 in approved error integration when implemented, without silently adding catalog codes.
+**Follow-up:** Confirm live FK integrity and decide whether these columns should
+be made non-null in the authoritative schema.

@@ -6,7 +6,6 @@ api_name: "Lấy danh sách lesson"
 source_sheet: "2.Response"
 status: "Draft — Needs Confirmation"
 ---
-
 # Response
 
 ## Format
@@ -17,52 +16,29 @@ status: "Draft — Needs Confirmation"
 | Character encoding | UTF-8 |
 | Content-Type | application/json |
 | Success HTTP status | 200 |
-| Direct response type | `ApiEnvelope<Lesson>` theo catalog #82. |
-| List proposal | `ApiEnvelope<Lesson[]>` để phản ánh AC-34; proposal chưa được duyệt và mâu thuẫn với direct schema. |
+| Direct response type | Catalog khai báo `ApiEnvelope<Lesson>`; giữ `DISCREPANCY` với list intent. |
+| Local response | `ApiEnvelope<Lesson[]>` — fallback DERIVED, DD vẫn Draft. |
 
-## Response fields — contract trực tiếp
+## Response fields
 
 | No | Path | Logical name | Physical name | Type | Nullable | Source table | Source column | Source step | Transform | Null/empty/omit rule | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|---|
-| 1 | HTTP status | HTTP status | N/A | integer | No | N/A | N/A | 5.1/5.2 | 200, 401, 403 hoặc 500 theo catalog | N/A | Không thêm HTTP status. |
+| 1 | HTTP status | HTTP status | N/A | integer | No | N/A | N/A | 5.1/5.2 | 200, 401, 403, 422 hoặc 500 | N/A | 422 là local DERIVED validation behavior; catalog chỉ khai báo 401/403/500. |
 | 2 | `success` | Success flag | `success` | boolean | No | Envelope | N/A | 5.1/5.2 | true khi thành công, false khi lỗi | Bắt buộc | ApiEnvelope field. |
-| 3 | `businessCode` | Business code | `businessCode` | string | No | Catalog | N/A | 5.1/5.2 | Exact code theo nhánh | Bắt buộc | Giữ code được catalog khai báo. |
-| 4 | `message` | Message | `message` | string | No | Application | N/A | 5.1/5.2 | Thông điệp an toàn | Nội dung chưa chuẩn hóa | Không lộ SQL/stack trace. |
-| 5 | `data` | Lesson | `data` | object | No | Candidate `lessons` | N/A | 4.1 | Map một reusable Lesson theo direct schema | Required theo catalog | Mâu thuẫn với danh sách; giữ như contract hiện tại. |
-| 5.1 | `data.id` | Lesson ID | `id` | int64 | No | Legacy `lessons` candidate | `id` | 4.1 | Direct candidate | Bắt buộc | BIGSERIAL candidate; live DB chưa xác minh. |
-| 5.2 | `data.course_id` | Course ID | `course_id` | int64 | No | Legacy `lessons` candidate | `course_id` | 4.1 | Direct candidate | Required trong contract | Legacy DDL nullable; NULL source không map được. |
-| 5.3 | `data.title` | Lesson title | `title` | string | No | Legacy `lessons` candidate | `name` | 4.1 | Alias `name -> title` | Bắt buộc | API #09 dùng cùng alias. |
-| 5.4 | `data.content` | Lesson content | `content` | string? | Yes | Legacy `lessons` candidate | `content` | 4.1 | Direct candidate | Optional; null/omit convention cần chốt | Không bịa nội dung. |
-| 5.5 | `data.video_url` | Video URL | `video_url` | uri? | Yes | Legacy `lessons` candidate | `video_url` | 4.1 | Direct candidate | Optional; null/omit convention cần chốt | URI validity convention chưa xác minh. |
-| 5.6 | `data.order` | Lesson order | `order` | int32 | No | Legacy `lessons` candidate | `sort_order` | 4.1 | Alias `sort_order -> order` | Bắt buộc | API #09 dùng cùng alias. |
-| 5.7 | `data.status` | Lesson status | `status` | LessonStatus | No | Legacy `lessons` candidate | `status` | 4.1 | Giữ source value | Bắt buộc | Enum members/casing chưa đầy đủ. |
-| 6 | `meta` | Metadata | `meta` | object | No | Envelope | N/A | 5.1/5.2 | Empty object candidate | `{}` candidate | API guideline envelope; current behavior chưa chứng minh cho #82. |
-| 7 | `traceId` | Trace ID | `traceId` | uuid | No | Middleware | `X-Trace-Id` or generated | 0/5 | Validate or create UUID theo middleware convention | Bắt buộc theo envelope schema | Route hiện không có. |
+| 3 | `businessCode` | Business code | `businessCode` | string | No | Catalog/runtime | N/A | 5.1/5.2 | `DESIGN_RESOURCE_RETRIEVED` hoặc nhánh lỗi | Bắt buộc | Lỗi validation dùng `DESIGN_VALIDATION_ERROR`. |
+| 4 | `message` | Message | `message` | string | No | Application | N/A | 5.1/5.2 | Thông điệp an toàn | Bắt buộc | Không lộ SQL/stack trace. |
+| 5 | `data` | Lesson collection | `data` | array of Lesson | No | Candidate `lessons` | N/A | 4.1 | Map từng row sang reusable Lesson | Rỗng là `[]` | Array là list-intent fallback; khác direct singleton catalog type. |
+| 5.1 | `data[].id` | Lesson ID | `id` | int64 | No | Legacy `lessons` candidate | `id` | 4.1 | Direct candidate | Bắt buộc | BIGSERIAL candidate; live DB chưa xác minh. |
+| 5.2 | `data[].course_id` | Course ID | `course_id` | int64 | No | Legacy `lessons` candidate | `course_id` | 4.1 | Direct candidate | NULL projection làm toàn request trả 500 | Nullable trong legacy DDL nhưng required trong reusable Lesson. |
+| 5.3 | `data[].title` | Lesson title | `title` | string | No | Legacy `lessons` candidate | `name` | 4.1 | Alias `name -> title` | Bắt buộc | API #09 dùng cùng alias. |
+| 5.4 | `data[].content` | Lesson content | `content` | string? | Yes | Legacy `lessons` candidate | `content` | 4.1 | Direct candidate | Giữ `null` nếu null | Không bịa nội dung. |
+| 5.5 | `data[].video_url` | Video URL | `video_url` | uri? | Yes | Legacy `lessons` candidate | `video_url` | 4.1 | Direct candidate | Giữ `null` nếu null | Reusable model là string field; không thêm URI validation ở API #82. |
+| 5.6 | `data[].order` | Lesson order | `order` | int32 | No | Legacy `lessons` candidate | `sort_order` | 4.1 | Alias `sort_order -> order` | NULL projection làm toàn request trả 500 | Nullable trong legacy DDL; API #09 dùng cùng alias. |
+| 5.7 | `data[].status` | Lesson status | `status` | LessonStatus/string | No | Legacy `lessons` candidate | `status` | 4.1 | Giữ source value | NULL projection làm toàn request trả 500 | Enum members/casing đầy đủ chưa xác minh. |
+| 6 | `meta` | Metadata | `meta` | object | No | Envelope | N/A | 5.1/5.2 | `{}` | `{}` | Shared success helper convention. |
+| 7 | `traceId` | Trace ID | `traceId` | uuid | No | Middleware | `X-Trace-Id` or generated | 0/5 | Validate or generate UUID per middleware | Bắt buộc | Route dùng request trace context. |
 
-## Ví dụ trực tiếp theo catalog — HTTP 200
-
-~~~json
-{
-  "success": true,
-  "businessCode": "DESIGN_RESOURCE_RETRIEVED",
-  "message": "Đã lấy thông tin lesson.",
-  "data": {
-    "id": 501,
-    "course_id": 42,
-    "title": "Giới thiệu khóa học",
-    "content": "Nội dung bài học",
-    "video_url": "https://cdn.example.test/lessons/501.mp4",
-    "order": 1,
-    "status": "DRAFT"
-  },
-  "meta": {},
-  "traceId": "00000000-0000-0000-0000-000000000001"
-}
-~~~
-
-Đây là ví dụ hình dạng singleton theo `ApiEnvelope<Lesson>`; không giải quyết được plural/list intent.
-
-## Phương án collection cần xác nhận
+## Ví dụ success — HTTP 200
 
 ~~~json
 {
@@ -81,15 +57,28 @@ status: "Draft — Needs Confirmation"
     }
   ],
   "meta": {},
+  "traceId": "00000000-0000-0000-0000-000000000001"
+}
+~~~
+
+List shape follows AC-34 intent and is a DERIVED fallback against catalog `ApiEnvelope<Lesson>`; no Page wrapper/count is returned.
+
+## Ví dụ danh sách rỗng — HTTP 200
+
+~~~json
+{
+  "success": true,
+  "businessCode": "DESIGN_RESOURCE_RETRIEVED",
+  "message": "Đã lấy danh sách lesson.",
+  "data": [],
+  "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000002"
 }
 ~~~
 
-Đây là đề xuất `ApiEnvelope<Lesson[]>`, không phải contract đã duyệt. Nếu chọn collection, cần quyết định empty result `data: []`, maximum response size và có cần đổi catalog hay không. Không đề xuất `Page<Lesson>` vì catalog không có page query hoặc Page response.
-
 ## Error response
 
-Catalog liệt kê đúng ba nhánh: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 500 `DESIGN_INTERNAL_ERROR`. Cấu trúc error envelope theo API guideline là `data:null`; helper hiện có default `{}` khi không truyền data. Route chưa tồn tại nên cách tích hợp phải xác nhận.
+Catalog trực tiếp liệt kê 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 500 `DESIGN_INTERNAL_ERROR`. Local route thêm 422 `DESIGN_VALIDATION_ERROR` cho `course` sai signed int64 và `type` không có mapping. Error envelope dùng `data: null`, `meta.fieldErrors` khi validation error.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -2,31 +2,29 @@
 
 ## Phạm vi
 
-Tạo DD Markdown cho GET /api/v1/admin/users/{user_id} theo catalog và AC-31. Chỉ tạo tài liệu; không sửa source, schema, catalog hoặc diagram; không tạo ZIP. Khi tạo #69, macro-review AC-31 chờ đủ DD; review document-level đã hoàn tất sau khi tạo #72.
+Triển khai `GET /api/v1/admin/users/{user_id}` theo catalog và AC-31, đồng bộ DD #69 và server-study context. Không sửa API #70–#72 runtime, không thêm migration, không đổi catalog/diagram, không stage/commit.
 
 ## Plan đã thực hiện
 
 | Bước | Kết quả |
 |---|---|
-| Phân loại task | docs; scope server-study; không có dependency cross-scope. |
-| Worklog preflight | Selector chọn #48/#49/#50; đọc đủ ba worklog trước khi inspect sâu. |
-| Context và skill | Đọc root/project router, context map, server-study entry/index/workflow, manifest registry và createDD-markdown; Study workflow yêu cầu Markdown, không ZIP. |
-| Catalog/diagram | Đối chiếu row #69, UserProfile schema, AC-31 index và toàn bộ nodes/edges của page AC-31. |
-| Source/schema | Không có route/module/test/Admin guard; so sánh API #4/#14 profile projection, legacy BIGINT users và V1-PILOT UUID relations. |
-| Plan-before-authoring | Requirement, Request Usage, Query, Mutation và Response Source matrices được ghi vào worklog trước khi tạo folder DD. |
-| Authoring | Tạo 8 template sheets và 3 reports; suy luận được đánh dấu DERIVED. |
-| Macro-review | Đã rà document-level nhóm #68–#72; các câu hỏi về policy/schema vẫn mở. |
+| Context/preflight | Đọc router/context map, scope server-study, manifest/registry và 3 worklog coding do selector chọn; đọc thêm worklog #68 và worklog thiết kế #69. |
+| Source trace | Đối chiếu AC-31, catalog #69, API #68 guard/list, API #04 UserProfile projection, API #48 raw-path fallback, current middleware/error helper và legacy/V1-PILOT schema. Plan được ghi trước code. |
+| Runtime | Thêm module detail với shared ADMIN guard, raw signed-int64 path, safe legacy users SELECT, 404 no-row/invalid-path, safe 500 projection/query và read-only response. |
+| Route/OpenAPI | Wire GET path với int64 metadata và đúng responses 200/401/403/404/500; thêm route template vào `DESIGN_CONTRACT_PATHS`. |
+| HTTP tests | Thêm TestClient coverage auth-before-query, successful profile/nulls, 404, invalid int64, SQL/projection failure, rollback, trace, read-only và OpenAPI. |
+| DD | Cập nhật 8 sheets và 3 reports theo runtime; sửa stale Student-only, UNWIRED, error-data claims; giữ nguyên appendix Excel của 8 sheets. |
+| AC-31 macro-review | Xác nhận #69 chỉ đọc; #68 list và #70/#71/#72 mutation boundary không overlap. Cập nhật report #72 về runtime #69; policy/schema/lifecycle gaps vẫn mở. |
+| Context | Cập nhật route/runtime/security/database/architecture/module/test/source-status và manifest với API #69 paths/counts. |
 
-## Quyết định tài liệu
+## Fallback runtime
 
-- Giữ direct response ApiEnvelope<UserProfile> và đúng set lỗi 401/403/404/500.
-- Query SELECT một user theo id chỉ là candidate legacy; không đọc password_hash.
-- No-row → 404 là DERIVED; không thêm 422 cho malformed path.
-- UserProfile.bio không có source hiện tại; không tạo giá trị hoặc nối pilot UUID profile.
-- UserRole/UserStatus giữ đúng type catalog; member values chưa được suy ra.
-- Admin authorization, live schema, optional null rules, PII policy và error data null-vs-empty còn mở.
-- 07_table.md là N/A — READ-ONLY API.
+- Dùng shared JWT guard với role `ADMIN` trước path parsing và DB access; quyền user-management mapping là DERIVED theo API #68.
+- Parse path thành signed int64; malformed/out-of-range và no-row trả `404 DESIGN_RESOURCE_NOT_FOUND`, không thêm 422 ngoài catalog.
+- Query checked-in legacy BIGINT `users` bằng `id`, chọn đúng API #04 safe profile fields; không join V1-PILOT UUID tables và không select `password_hash`.
+- Reuse API #04 `UserProfile`: avatar/phone null được serialize thành null; bio bị omit vì không có source.
+- Các quyết định trên là DERIVED local behavior; live schema, Admin policy, PII/audit và visibility sau #71/#72 chưa xác minh.
 
 ## Trạng thái
 
-Draft — Needs Confirmation. Chưa implementation-ready cho đến khi Admin guard, schema source, enum/bio/null semantics và malformed path behavior được chốt.
+DD vẫn `Draft — Needs Confirmation`. Runtime có source và HTTP tests local; fake DB không xác minh live schema/deployment hoặc policy owner.

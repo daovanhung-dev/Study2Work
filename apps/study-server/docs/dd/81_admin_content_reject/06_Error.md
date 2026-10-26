@@ -13,23 +13,23 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Các lỗi dưới đây giữ đúng HTTP status/business code catalog #81. Điều kiện được mô tả theo nguồn; behavior cho stale/non-pending Content còn mở.
+Các lỗi dưới đây giữ đúng HTTP status/business code catalog #81. State eligibility/path parsing are local DERIVED triggers because the catalog lists 422 but does not enumerate its conditions.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Authentication | SOURCE_REQUIRED | Authorization | Bearer thiếu hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | [Step 0](./05_Data_Mapping.md#0-check-quyen) | N/A | Auth contract direct; route absent. |
-| 2 | Authorization | SOURCE_REQUIRED | Admin role/access | Role hoặc moderation permission không đạt | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#0-check-quyen) | N/A | Guard/scope chưa có source. |
-| 3 | Resource lookup | SOURCE_REQUIRED | content_id | Content không tồn tại | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | [Step 2](./05_Data_Mapping.md#2-get-thong-tin) | N/A | Catalog code direct; physical lookup unresolved. |
-| 4 | Request validation | DIRECT required field | Body.reason | Body hoặc reason bắt buộc bị thiếu / request schema sai | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 1](./05_Data_Mapping.md#1-validate-data-input) | N/A | Blank, length and format rules not declared. |
-| 5 | System error | SOURCE_REQUIRED | Content status/reason update | Query, mutation, persistence or response mapping fails | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 4](./05_Data_Mapping.md#4-check-ket-qua-execute-query) | TBD | Transaction/rollback unresolved. |
+| 1 | Authentication | DIRECT | Authorization | Bearer thiếu, sai chữ ký hoặc token không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | Shared guard runs before path/DB. |
+| 2 | Authorization | DIRECT role / DERIVED guard | Admin role/access | Role `ADMIN` không đạt | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) | N/A | Dedicated moderation permission remains unverified. |
+| 3 | Path validation | DERIVED | content_id | Path không phải signed-int64 hoặc vượt miền | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 1](./05_Data_Mapping.md#step-1-validate) | N/A | No DB access. |
+| 4 | Request validation | DIRECT required field | Body.reason | Body thiếu/sai schema, thiếu reason, non-string or extra field | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 1](./05_Data_Mapping.md#step-1-validate) | N/A | Blank, length and format rules are not imposed. |
+| 5 | Resource lookup | DIRECT error set | content_id | Không có Content active; missing/deleted row | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | [Step 2](./05_Data_Mapping.md#step-2-get-thong-tin) | Yes | Transaction is rolled back after lock lookup. |
+| 6 | Review eligibility | DERIVED | `contents.status` | Current state khác `PENDING_REVIEW` | 422 | DESIGN_VALIDATION_ERROR | N/A | [Step 2](./05_Data_Mapping.md#step-2-get-thong-tin) | Yes | No status or decision row is written. |
+| 7 | System error | DIRECT error set | Status/reason transaction | Lock/update/decision insert/projection/commit fails | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 4](./05_Data_Mapping.md#step-4-result) | Yes | Roll back and do not expose raw DB/stack details. |
 
 > Error message ID không có trong Study API contract; dùng N/A, không sao chép mã từ template Excel.
 
 ## Error envelope
-
-Expected API guideline shape:
 
 ~~~json
 {
@@ -42,7 +42,7 @@ Expected API guideline shape:
 }
 ~~~
 
-Current helper defaults absent error data to {}; #81 route has not been integrated. See [02_Overview.md](./02_Overview.md#conflicts).
+`error_response()` hiện mặc định `data:null`. Route #81 nằm trong `DESIGN_CONTRACT_PATHS`, nên framework request-validation và unhandled errors dùng DESIGN business codes.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

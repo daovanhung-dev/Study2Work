@@ -19,14 +19,14 @@ status: "Draft — Needs Confirmation"
 | Phương thức | DELETE |
 | Endpoint | /api/v1/admin/notifications/{notification_id} |
 | Trạng thái DD | Draft — Needs Confirmation |
-| Trạng thái source | UNWIRED / NOT_FOUND trong Study server |
-| Phạm vi | Contract, lifecycle proposal và data-mapping boundary; không thay đổi runtime |
+| Trạng thái source | WIRED locally; tests use fake DB; live schema/deployment not verified |
+| Phạm vi | Contract, DERIVED queued-only hard-delete fallback và giới hạn scheduler; không đổi catalog/DDL/diagram |
 
 ## Tên hiển thị
 
 **Xóa draft hoặc hủy scheduled notification theo policy**
 
-Catalog yêu cầu DELETE draft hoặc cancel nếu policy cho phép. Diagram chỉ mô tả DELETE/mark cancelled. DD này giữ response DeleteResult trực tiếp và ghi rõ các policy nhánh là DERIVED, chưa phải runtime contract.
+Catalog yêu cầu DELETE draft hoặc cancel nếu policy cho phép. Diagram chỉ mô tả DELETE/mark cancelled rồi reload. Local fallback xóa đúng notification row khi có ít nhất một delivery và tất cả delivery đều `QUEUED`; legacy FK cascade xóa các outbox row cùng transaction. Đây là quy tắc `DERIVED`, chưa phải lifecycle được owner duyệt; không xác nhận scheduler/provider bên ngoài đã hủy gửi.
 
 ## Tài liệu liên quan
 

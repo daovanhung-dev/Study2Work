@@ -9,7 +9,7 @@ Các đề xuất bên dưới giữ nguyên catalog và AC-35; chúng chưa đ�
 
 **Evidence:** AC-35 node n10 yêu cầu soft delete khi có attempts. Legacy `quizzes` có `status VARCHAR(20)` và `updated_at`, nhưng không có `deleted_at` hoặc status enum canonical. DeleteResult yêu cầu `deleted_at:date-time`.
 
-**Đề xuất:** Dùng `status='DELETED'` làm tombstone và `updated_at` làm thời điểm xóa, rồi map timestamp đó vào `DeleteResult.deleted_at`. DELETE lặp lại là no-op 200, giữ nguyên timestamp. Đây là cách dùng lại cột hiện có, `DERIVED`.
+**Runtime hiện tại:** Nhánh có attempt/linked answer ghi `status='DELETED'`, cập nhật `updated_at` và map sang `DeleteResult.deleted_at`; DELETE lặp trên tombstone là no-op 200 giữ timestamp. Đây là triển khai cục bộ của proposal `DERIVED`, chưa phải owner approval.
 
 **Cần xác nhận:** Giá trị `DELETED` có được chấp nhận không; có thể dùng `updated_at` làm thời điểm xóa không; timestamp phải UTC/offset nào; quiz đã tombstone có bất biến không; DELETE lặp lại có trả 200 không?
 
@@ -17,7 +17,7 @@ Các đề xuất bên dưới giữ nguyên catalog và AC-35; chúng chưa đ�
 
 **Evidence:** AC-35 ghi soft-delete khi quiz đã có attempts nhưng không mô tả nhánh không có attempt. Legacy DDL có FK chain choices → questions → quiz, không ghi cascade.
 
-**Đề xuất:** Nếu không có bất kỳ attempt nào, hard delete choices → questions → quiz trong một transaction. Đây là `DERIVED` và chỉ dùng legacy relation làm candidate.
+**Runtime hiện tại:** Nếu không có attempt hoặc answer reference tới question/choice của quiz, xóa choices → questions → quiz trong một transaction. Đây là `DERIVED` và chỉ dùng legacy relation làm candidate.
 
 **Cần xác nhận:** Nhánh hard delete có được duyệt không; có thể còn dependency khác ngoài attempts/answers không; live FK có khớp legacy DDL không?
 
@@ -25,7 +25,7 @@ Các đề xuất bên dưới giữ nguyên catalog và AC-35; chúng chưa đ�
 
 **Evidence:** API #29 tạo `quiz_attempts` với trạng thái `IN_PROGRESS`; API #29 DD chưa chốt quiz-open state, concurrency hoặc locking.
 
-**Đề xuất:** #90 và #29 phải đồng bộ kiểm tra/trạng thái trong transaction để một attempt không được tạo sau tombstone. Không thêm HTTP 409 vì catalog #90 không khai báo.
+**Runtime hiện tại:** #90 khóa Quiz trước khi history check và mutation. API #29 chưa wired với policy tương thích; khóa của #90 không tự chứng minh race đã được giải quyết xuyên API. Không thêm HTTP 409 vì catalog #90 không khai báo.
 
 **Cần xác nhận:** Lock/isolation/recheck cụ thể và điều kiện API #29 từ chối quiz đã xóa.
 
@@ -39,11 +39,11 @@ Các đề xuất bên dưới giữ nguyên catalog và AC-35; chúng chưa đ�
 
 ## Q-90-05 — Admin authorization và error wiring
 
-**Evidence:** Catalog/AC-35 yêu cầu Admin và quiz-management permission; current Study auth helper chỉ có Student guard; API #90 path không nằm trong `DESIGN_CONTRACT_PATHS`.
+**Evidence:** Catalog/AC-35 yêu cầu Admin và quiz-management permission; API #90 dùng shared ADMIN role guard nhưng chưa có fine-grained policy source. Route DELETE đã được wire trên path template chung với API #89.
 
-**Đề xuất:** Tích hợp Admin + quiz-management authorization trước lookup; map exact catalog 401/403/404/422/500 codes.
+**Runtime hiện tại:** Shared ADMIN guard chạy trước raw path parsing và DB; role mismatch → 403. Route giữ exact catalog 401/403/404/422/500 codes. Fine-grained permission cần owner/policy source.
 
-**Cần xác nhận:** Admin claim/permission source và cách thêm dynamic path vào error-code selection.
+**Cần xác nhận:** Admin claim/permission source và soft-delete/hard-delete policy.
 
 ## Kết quả macro-review AC-35
 

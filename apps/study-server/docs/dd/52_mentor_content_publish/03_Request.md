@@ -64,6 +64,8 @@ Catalog row #52 và AC-22 PATCH node chỉ khai báo path content_id; body chưa
 
 The JSON example demonstrates only the proposed target-state field. It must not be treated as an approved request schema until the contract is updated.
 
+The local API #52 implementation uses this proposal as its request model and documents it in OpenAPI. This is source-backed local behavior and remains a discrepancy against the path-only catalog/AC-22 contract.
+
 ## Request Usage Matrix
 
 | Request item | Read/validate | Query or mutation use | Response use | Evidence/status |

@@ -24,7 +24,7 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Principal phải có role Admin và quyền user management. Mechanism chưa có trong Study source. | 0.1 |
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Shared guard yêu cầu claim ADMIN trước khi query. Claim ADMIN đại diện user-management permission theo fallback DERIVED; không có permission table trong source. | 0.1 |
 | 2 | Trace ID | X-Trace-Id | No | UUID | Correlation header do current middleware kiểm tra/tạo; không phải filter nghiệp vụ. | 0.1 |
 
 ## Path parameters
@@ -35,10 +35,10 @@ Không có path parameter.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | Role | role | string | No | Chưa đặc tả | Chưa đặc tả | Text | Chưa đặc tả | Không có | Filter theo role; exact match là proposal DERIVED. | 1.1 |
-| 2 | Status | status | string | No | Chưa đặc tả | Chưa đặc tả | Text | Chưa đặc tả | Không có | Filter theo status; exact match là proposal DERIVED. | 1.2 |
-| 3 | Keyword | keyword | string | No | Chưa đặc tả | Chưa đặc tả | Text | Chưa đặc tả | Không có | Candidate tìm substring trong full_name hoặc email, không phân biệt hoa thường. | 1.3 |
-| 4 | Page | page | int32 | No | Chưa đặc tả | Chưa đặc tả | Số nguyên 32-bit | Chưa đặc tả | Catalog chưa quy định; proposal là 1 | Page 1-based; default 1 và fixed size 20 chỉ là proposal DERIVED. | 1.4 |
+| 1 | Role | role | string | No | Chưa đặc tả | Chưa đặc tả | Text | Tùy giá trị lưu | Không có | Exact match với users.role; không whitelist enum. | 1.1 |
+| 2 | Status | status | string | No | Chưa đặc tả | Chưa đặc tả | Text | Tùy giá trị lưu | Không có | Exact match với users.status; không whitelist enum. | 1.2 |
+| 3 | Keyword | keyword | string | No | Chưa đặc tả | Chưa đặc tả | Text | Bất kỳ text | Không có | Trim/lowercase rồi tìm literal substring trong full_name hoặc email. | 1.3 |
+| 4 | Page | page | int32 | No | 1 | 2147483647 | Số nguyên 32-bit | 1..2147483647 | 1 | Page 1-based; size cố định 20, không nhận query size. Sai range/kiểu trả 422 DESIGN_VALIDATION_ERROR. | 1.4 |
 
 Không có query size hoặc sort trong contract. Không thêm chúng vào request.
 
@@ -49,18 +49,16 @@ N/A — catalog không khai báo request body.
 ## Ví dụ Request data
 
 ~~~text
-GET /api/v1/admin/users?role=STUDENT&status=ACTIVE&keyword=an&page=1
+GET /api/v1/admin/users?role=STUDENT&status=ACTIVE&keyword=ada&page=1
 Authorization: Bearer <admin-access-token>
 ~~~
 
-Ví dụ chỉ minh họa các query DIRECT; cách diễn giải filter và page là proposal DERIVED, chờ xác nhận.
+## Quy tắc input
 
-## Quy tắc input đang mở
-
-- Không có danh sách giá trị hợp lệ cho role/status.
-- Không có giới hạn, default hoặc hành vi khi page nhỏ hơn 1.
-- Catalog không có HTTP 422 cho query validation; không tự thêm business code.
-- Chuẩn hóa và escape ký tự wildcard trong keyword cần chốt trước khi đưa thành contract.
+- Role/status được bind dưới dạng exact string; unknown value hợp lệ về kiểu sẽ cho danh sách rỗng.
+- Keyword rỗng sau trim được coi như không có filter; %, _ là ký tự literal trong phép tìm substring.
+- Page vắng mặt dùng 1; page < 1 hoặc > int32 max trả 422 DESIGN_VALIDATION_ERROR.
+- Không có body, size, sort hoặc filter deletion riêng.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

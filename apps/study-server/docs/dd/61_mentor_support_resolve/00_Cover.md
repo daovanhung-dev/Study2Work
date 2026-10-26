@@ -26,7 +26,7 @@ status: "Draft — Needs Confirmation"
 | Reviewed by | Chưa xác nhận |
 | Approved by | Chưa xác nhận |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-25 |
 
 ## Tên hiển thị
 
@@ -37,7 +37,7 @@ Study2Work API design
 
 ## Tóm tắt
 
-API #61 được gọi ở nhánh YES của AC-24 sau khi Mentor gửi phản hồi bằng API #60. Hiệu ứng nghiệp vụ trực tiếp trong sơ đồ là chuyển trạng thái request sang `RESOLVED`. Cách lưu physical, Mentor identity/scope, enum và projection `SupportRequest` chưa được runtime xác nhận; các lựa chọn hỗ trợ triển khai được đánh dấu `DERIVED`.
+API #61 được gọi ở nhánh YES của AC-24 sau khi Mentor gửi reply bằng API #60. Diagram yêu cầu chuyển SupportRequest sang `RESOLVED`. Theo quyết định của người dùng về fallback hợp lý khi thiếu schema đã duyệt, implementation dùng local BIGINT `support_requests`, scope qua `courses.mentor_id = numeric JWT sub`, resolve các trạng thái active và giữ nguyên thời điểm khi gọi lại. Những lựa chọn physical/lifecycle/time vẫn được đánh dấu `DERIVED`; migration checked-in và fake-DB tests không xác nhận live schema.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

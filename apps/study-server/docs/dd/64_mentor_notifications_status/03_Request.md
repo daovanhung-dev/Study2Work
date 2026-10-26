@@ -7,6 +7,7 @@ source_sheet: "1.Request"
 status: "Draft — Needs Confirmation"
 ---
 
+
 # Request
 
 ## API endpoint
@@ -20,16 +21,16 @@ status: "Draft — Needs Confirmation"
 
 ## Request header
 
-| Không | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
+| No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | `Authorization` | Có | Bearer JWT | Catalog yêu cầu role Mentor; claim và mapping principal sang ID nguồn chưa có runtime. | 0.1 |
-| 2 | Trace ID | `X-Trace-Id` | Không | UUID nếu gửi | Header theo API Guidelines; endpoint hiện chưa có route. | 0.2 |
+| 1 | Authorization | `Authorization` | Có | Bearer JWT | Catalog yêu cầu Mentor; shared guard lấy principal numeric từ JWT. | 0.1 |
+| 2 | Trace ID | `X-Trace-Id` | Không | UUID nếu gửi | Trace header theo API Guidelines. | 0.2 |
 
 ## Path parameters
 
-| Không | Logical name | Field | Type | Required | Range/format | Rule từ catalog | Data Mapping reference | Gap |
+| No | Logical name | Field | Type | Required | Range/format | Rule | Data Mapping reference | Status |
 |---:|---|---|---|---:|---|---|---|---|
-| 1 | Notification ID | `notification_id` | int64 | Có | Integer path segment | Không có rule khác ngoài kiểu bắt buộc. | 1.2, 2.1 | ID physical model và delivery relation chưa được xác nhận. |
+| 1 | Notification ID | `notification_id` | int64 | Có | Signed decimal int64 | Kiểu DIRECT; malformed/out-of-range path trả catalog 404 theo local fallback; 0/negative được parse nhưng tự nhiên không match BIGINT identity. | 1.1, 2.1 | Parse rule DERIVED. |
 
 ## Query parameters
 
@@ -41,19 +42,21 @@ N/A — GET endpoint không có request body.
 
 ## Quy ước query/path
 
-- Không thêm `operation_id`, `course_id`, `sender_id`, `status`, `page` hoặc query filter vào contract trực tiếp.
-- Không suy thêm giới hạn `notification_id > 0`; range/business behavior ngoài `int64` chưa được khai báo.
-- Không dùng `notification_id` thay cho `operation_id:uuid` của API #18.
+- Không thêm `operation_id`, `course_id`, `sender_id`, `status`, page hoặc filter ngoài path.
+- Không lấy owner từ input; sender scope dùng principal JWT.
+- API #63 `meta.notification_ids` cung cấp path key cho notification vừa dispatch; Operation UUID không thay thế key này.
+- Dùng raw path string ở route để giữ lỗi parse trong catalog error set và khai báo OpenAPI schema là integer/int64.
 
-## Validation đề xuất — chưa phải rule trong catalog
+## Validation
 
-| Field/condition | Kiểm tra đề xuất | Trạng thái |
+| Field/condition | Check | Status |
 |---|---|---|
-| Bearer token | Xác thực token và yêu cầu role Mentor. | DIRECT role; claim/guard SOURCE_REQUIRED. |
-| `notification_id` | Parse đúng int64; không thêm business range khi chưa được duyệt. | Type DIRECT; malformed-path HTTP mapping chưa được catalog nêu. |
-| Quyền xem | Kiểm tra notification thuộc phạm vi Mentor được cấp trước khi trả dữ liệu. | DIRECT requirement về Mentor/access; predicate cụ thể SOURCE_REQUIRED. |
+| Bearer/JWT | Token hợp lệ và có role MENTOR trước DB access. | Auth/role DIRECT; shared helper current source. |
+| `notification_id` | Parse signed int64; overflow/non-decimal path trả 404 `DESIGN_RESOURCE_NOT_FOUND`. | int64 DIRECT; HTTP mapping DERIVED vì catalog không liệt kê 400/422. |
+| Notification sender | `sender_id` phải bằng numeric Mentor JWT `sub`; khác sender trả 403. | DERIVED từ API #63 insert binding và Mentor ownership pattern. |
+| Operation/outbox | Notification cần có UUID `operation_id` và tối thiểu một delivery row. | DERIVED local API #63 dispatch boundary; nếu thiếu, 404 status resource. |
 
-## Ví dụ request — minh họa route
+## Ví dụ request
 
 ```http
 GET /api/v1/mentor/notifications/123/status HTTP/1.1
@@ -61,8 +64,8 @@ Host: api.example.test
 Authorization: Bearer <token>
 ```
 
-`123` chỉ minh họa một path segment kiểu int64; ví dụ không khẳng định notification ID đó tồn tại hoặc caller có quyền xem.
----
+`123` chỉ minh họa int64 path; giá trị thực tế được lấy từ API #63 `meta.notification_ids[]`.
+
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
 - Sheet nguồn: `1.Request`

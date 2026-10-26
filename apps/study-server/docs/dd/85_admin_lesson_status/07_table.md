@@ -15,44 +15,45 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table | lessons (legacy candidate) |
+| Physical tables | `lessons` and `lesson_status_audit_logs` legacy candidates |
 | Logical table | Lesson |
-| Operation | UPDATE + logical audit intent |
+| Operation | SELECT FOR UPDATE + UPDATE + INSERT audit on change |
 | Data Mapping step | [3. Update và audit](./05_Data_Mapping.md#step-3-update-audit) |
-| Schema status | Legacy BIGINT DDL candidate; live schema chưa xác minh; V1-PILOT UUID/versioned Lesson khác. |
+| Schema status | Legacy BIGINT DDL/runtime candidate; migration 012 is DERIVED source only. Live schema/deployment chưa xác minh; V1-PILOT UUID/versioned Lesson khác. |
 
 ## Update mapping
 
 **Áp dụng khi**
 
-- Candidate lesson row có lessons.id = :lesson_id và Admin đã authorize.
+- Legacy candidate row `lessons.id = :lesson_id` được tìm thấy sau ADMIN auth.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---|---|---|---|---|---|
-| 1 | status | Lesson status | VARCHAR | 20 | N/A | Nullable/default DRAFT trong legacy DDL | No | :status | Body status proposal | 3.1 | Target values/transitions chưa được xác nhận. |
-| 2 | updated_at | Updated timestamp | TIMESTAMP | N/A | N/A | Required in legacy DDL | No | CURRENT_TIMESTAMP candidate | Server clock unless another owner/trigger applies | 3.1 | DERIVED; timestamp ownership unresolved. |
-| 3 | id | Lesson ID | BIGSERIAL | N/A | N/A | Primary key | Yes | :lesson_id predicate | Path lesson_id | 3.1 | Candidate WHERE key; live schema unknown. |
+| 1 | status | Lesson status | VARCHAR | 20 | N/A | Nullable/default DRAFT in legacy DDL | No | `:status` | Strict body enum `DRAFT/PUBLISHED/SUSPENDED` | 3.2 | Enum is DERIVED from API #76; no transition matrix. |
+| 2 | updated_at | Updated timestamp | TIMESTAMP | N/A | N/A | Required in legacy DDL | No | `CURRENT_TIMESTAMP` | Database clock | 3.2 | DERIVED, following adjacent legacy update APIs. |
+| 3 | id | Lesson ID | BIGSERIAL | N/A | N/A | Primary key | Yes | `:lesson_id` predicate | Path lesson_id | 3.1 | Runtime candidate key; live schema unknown. |
 
-## Audit mapping
+## Audit mapping — migration 012 DERIVED
 
 **Áp dụng khi**
 
-- AC-34 yêu cầu audit sau thao tác đổi trạng thái.
+- AC-34 status changes from its locked previous value.
 
-| Logical item | Physical source | Status |
-|---|---|---|
-| Actor/Admin subject | Chưa có mapping được duyệt | SOURCE_REQUIRED |
-| Lesson/resource ID | Legacy lesson ID BIGINT không map trực tiếp sang V1 audit_events.resource_id UUID | SOURCE_REQUIRED |
-| Action/status before-after | Không có payload schema được chọn | SOURCE_REQUIRED |
-| Trace/outcome | Chưa xác nhận relation và transaction policy | SOURCE_REQUIRED |
+| Logical item | Physical column | Type/relationship | Source/status |
+|---|---|---|---|
+| Lesson | `lesson_id` | BIGINT FK → `lessons.id` | Migration 012 DERIVED |
+| Admin actor | `actor_user_id` | BIGINT FK → `users.id` | Numeric JWT `sub` from current shared guard; legacy key DERIVED |
+| Previous status | `previous_status` | VARCHAR(20) NULL | DERIVED; allows legacy nullable source status |
+| New status | `new_status` | VARCHAR(20) NOT NULL | Validated request status |
+| Audit time | `changed_at` | TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP | DERIVED DB timestamp |
 
-Không viết INSERT mapping cho tới khi schema owner xác nhận physical relation, key types, action, payload và transaction behavior.
+Migration 012 declares indexes on `(lesson_id, changed_at DESC, id DESC)` and `(actor_user_id, changed_at DESC, id DESC)`. The checked-in migration does not prove it is applied to a live database. Same-status requests do not insert an audit row.
 
 ## Insert mapping
 
 **Áp dụng khi**
 
-- N/A — API #85 không tạo lesson.
+- N/A — API #85 does not create a lesson.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -62,7 +63,7 @@ Không viết INSERT mapping cho tới khi schema owner xác nhận physical rel
 
 **Áp dụng khi**
 
-- N/A — delete lesson thuộc API #86.
+- N/A — delete belongs to API #86.
 
 | No | Target column | Operator | Value source | Data Mapping step | Remarks |
 |---|---|---|---|---|---|
@@ -72,20 +73,19 @@ Không viết INSERT mapping cho tới khi schema owner xác nhận physical rel
 
 | No | Target column | Operator | Value source | Data Mapping step | Remarks |
 |---:|---|---|---|---|---|
-| 1 | lessons.id | = | Path lesson_id | 3.1 | Candidate primary-key predicate from legacy DDL. |
+| 1 | `lessons.id` | = | Path `lesson_id` | 3.1 | Candidate primary-key predicate from legacy DDL. |
 
 ## Response columns
 
 | No | Column/source | Response path | Transform/status |
 |---:|---|---|---|
-| 1 | id | data.id | Copy candidate. |
-| 2 | course_id | data.course_id | Required response vs nullable legacy DDL discrepancy. |
-| 3 | name | data.title | Alias name → title. |
-| 4 | content | data.content | Nullable source; null/omit unresolved. |
-| 5 | video_url | data.video_url | TEXT source candidate; URI/null handling unresolved. |
-| 6 | sort_order | data.order | Alias sort_order → order. |
-| 7 | status | data.status | Updated target candidate; enum/casing unresolved. |
-
+| 1 | id | data.id | Copy and validate identity. |
+| 2 | course_id | data.course_id | Copy; required Lesson vs nullable legacy DDL discrepancy. |
+| 3 | name | data.title | SQL alias; reusable API #09 mapping. |
+| 4 | content | data.content | Nullable source; JSON null preserved. |
+| 5 | video_url | data.video_url | Nullable text source; JSON null preserved. |
+| 6 | sort_order | data.order | SQL alias; reusable API #09 mapping. |
+| 7 | status | data.status | Updated/current value; response model validates string. |
 ---
 
 ## Phụ lục đối chiếu nguồn Excel

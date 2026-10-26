@@ -16,23 +16,22 @@ status: "Draft — Needs Confirmation"
 | HTTP method | DELETE |
 | URI | /api/v1/admin/users/{user_id} |
 | Character encoding | UTF-8 |
-| Content-Type | N/A — không có body được khai báo. |
+| Content-Type | N/A — không có request body. |
 | Authentication | Bearer JWT |
-| Role | Admin; AC-31 precondition yêu cầu quyền user management. |
+| Role | Shared JWT role `ADMIN`; dedicated user-management permission chưa có source. |
+| Direct input | `path{user_id:int64!}` |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Principal phải được xác thực và có quyền Admin/user management trước khi tra cứu hoặc thay đổi user. | 0.1 |
-
-Trace ID do middleware xử lý; không phải field nghiệp vụ của endpoint.
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Guard yêu cầu role ADMIN trước path parsing/database access. | 0.1 |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | User ID | user_id | int64 | Yes | Chưa đặc tả | Chưa đặc tả | Số nguyên 64-bit | Chưa đặc tả | Không có | Định danh user cần xử lý theo policy AC-31. | 1.1 |
+| 1 | User ID | user_id | int64 | Yes | -2^63 | 2^63-1 | Signed decimal integer | Signed-int64; malformed/overflow → 422 DERIVED | Không có | ID legacy user cần soft-delete. | 1.1 |
 
 ## Query parameters
 
@@ -40,7 +39,7 @@ N/A — catalog không khai báo query parameter.
 
 ## Request body
 
-N/A — catalog không khai báo request body. Không truyền policy flag, anonymization map, reason hoặc force-delete field qua body nếu chưa có contract được duyệt.
+N/A — catalog không khai báo body; endpoint runtime không nhận body parameter.
 
 ## Ví dụ Request data
 
@@ -49,14 +48,12 @@ DELETE /api/v1/admin/users/1001
 Authorization: Bearer <admin-access-token>
 ~~~
 
-1001 chỉ là giá trị minh họa cho path int64.
+## Validation behavior hiện tại
 
-## Quy tắc input đang mở
-
-- user_id:int64! là contract trực tiếp; minimum/domain constraint chưa được nêu.
-- Catalog liệt kê 422 DESIGN_VALIDATION_ERROR; path parsing/overflow mapping phải giữ code này nếu validation error được phát sinh.
-- Không có body hoặc query schema để quyết định hard delete, soft delete hay anonymization.
-- Không tự thêm rule chống tự xóa, bảo vệ Admin cuối cùng hoặc tenant boundary; nguồn chưa định nghĩa.
+- Shared ADMIN auth chạy trước path parse và DB access.
+- `user_id` được parse từ raw path thành signed int64; malformed/overflow trả 422 `DESIGN_VALIDATION_ERROR`.
+- ID int64 nhưng không có row phù hợp hoặc đã mang marker `DELETED` trả 404 `DESIGN_RESOURCE_NOT_FOUND` từ UPDATE không có RETURNING row.
+- Không có body/query validation.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

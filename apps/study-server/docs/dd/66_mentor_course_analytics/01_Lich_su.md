@@ -11,14 +11,16 @@ status: "Draft — Needs Confirmation"
 
 | Phiên bản | Ngày | Người cập nhật | Nội dung | Trạng thái |
 |---|---|---|---|---|
-| 1.0 | 2026-10-24 | Codex | Tạo DD theo catalog #66 và AC-26; bảo toàn contract Page<Course> và tách đề xuất event metrics DERIVED. | Draft — Needs Confirmation |
+| 1.0 | 2026-10-24 | Codex | Tạo DD theo catalog #66 và AC-26; ghi nhận response Page<Course> chưa có analytics fields. | Draft — Needs Confirmation |
+| 1.1 | 2026-10-25 | Codex | Wire API #66 với activity proxy từ lesson_progress.last_accessed_at; ghi rõ không phải event count và giữ discrepancy response. | Draft — Needs Confirmation |
 
 ## Nguồn thay đổi
 
 - [API catalog](../../../../../docs/lists/list_api.md) — method/path, actor, input, response và error codes.
 - [AC-26 index](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) và [activity diagram](../../diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio) — vị trí #66 giữa tổng hợp #65 và drill-down #67.
 - [DD API #65](../65_mentor_course_progress/02_Overview.md) — boundary enrollment/progress, course access gaps và response mismatch.
-- [Worklog tạo DD #66](../../../../../.agents/worklog/2026-10-24/create-study-api66-dd.md) — plan, matrices và evidence boundary.
+- [Worklog tạo DD #66](../../../../../.agents/worklog/2026-10-24/create-study-api66-dd.md) — DD ban đầu và evidence boundary.
+- [Worklog implement API #66](../../../../../.agents/worklog/2026-10-25/implement-api66-mentor-course-analytics.md) — source reconciliation, fallback, implementation và verification.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

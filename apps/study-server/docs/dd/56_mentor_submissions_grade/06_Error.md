@@ -13,22 +13,21 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Only the API catalog error set is permitted. Conditions below distinguish direct contract evidence from candidate interpretation and unresolved rules.
+Only the API catalog error set is used. Implemented branch conditions are identified separately from DERIVED fallbacks.
 
 ## Error cases
 
-| No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
-|---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Authentication | Bearer JWT check | Authorization | Missing, invalid or expired authentication | 401 | DESIGN_AUTHENTICATION_REQUIRED | Catalog code | 0.1 | N/A before mutation | Direct catalog case; exact token errors use shared auth mapping when implemented |
-| 2 | Authorization | Mentor role and course scope | Mentor access | Authenticated principal lacks Mentor role or course permission | 403 | DESIGN_ACCESS_DENIED | Catalog code | 0.3 | N/A before mutation | Mentor role is DIRECT; course predicate and inaccessible-row masking need confirmation |
-| 3 | Resource existence | Submission lookup | submission_id | No candidate submission row exists | 404 | DESIGN_RESOURCE_NOT_FOUND | Catalog code | 0.3 | N/A before mutation | Missing-resource mapping is catalog-backed |
-| 4 | Validation | Request parse/type | score | Required score is missing or is not an int32 value | 422 | DESIGN_VALIDATION_ERROR | Catalog code | 1 | N/A before mutation | Required field/type DIRECT; range rules unspecified |
-| 5 | Validation | Request parse/type | rubric items | Required string descriptor is absent or wrong type | 422 | DESIGN_VALIDATION_ERROR | Catalog code | 1 | N/A before mutation | Exact wire key spelling and semantic validation SOURCE_REQUIRED |
-| 6 | System | Persistence/mapping | Database or response mapping | Unexpected database or internal mapping failure | 500 | DESIGN_INTERNAL_ERROR | Catalog code | 4.2 | Transaction policy SOURCE_REQUIRED | Do not expose internal details; middleware allowlist does not include the dynamic API #56 route |
+| No | Category | Verify check | Item | Condition | HTTP status | Error code | Data Mapping reference | Rollback / remarks |
+|---:|---|---|---|---|---:|---|---|---|
+| 1 | Authentication | Bearer/JWT and role | Authorization | Missing/invalid auth or no MENTOR role | 401 | DESIGN_AUTHENTICATION_REQUIRED | 0 | Before DB mutation; shared guard |
+| 2 | Authorization | Direct course owner | Mentor access | Existing submission belongs to another course owner | 403 | DESIGN_ACCESS_DENIED | 0 | Rollback locked read; direct-owner policy DERIVED |
+| 3 | Resource | Path/row lookup | submission_id | Malformed/out-of-range path or no submission row | 404 | DESIGN_RESOURCE_NOT_FOUND | 1–2 | Rollback if transaction is open |
+| 4 | Validation | Strict request model | score / rubric_items | Missing or wrong JSON type; score not int32; undeclared extra body field | 422 | DESIGN_VALIDATION_ERROR | 1 | Framework/body validation before mutation |
+| 5 | Validation | Derived score bounds | score | score < 0 or score > assignment.max_score | 422 | DESIGN_VALIDATION_ERROR | 1 | DERIVED fallback; rollback locked read |
+| 6 | System | Persistence/projection | Database, relation or response mapping | SQL, broken required relation, invalid max_score projection, failed mapping or commit | 500 | DESIGN_INTERNAL_ERROR | 2–4 | Safe response; rollback attempted |
+| 7 | Success | Update | score/status | Valid owner and score; response projection succeeds | 200 | DESIGN_RESOURCE_UPDATED | 3–4 | Commit before success response |
 
-> No 409, 400, 503 or additional business code is added. Error messages are illustrative; exact text is not in the catalog.
-
-> Current-source discrepancy: generic validation/system handlers use fallback VALIDATION_ERROR/INTERNAL_SERVER_ERROR when the request path is not in DESIGN_CONTRACT_PATHS. API #56 is absent from the current allowlist. Current error_response() also emits data={} when no error data is passed, while API Guidelines specifies data=null. These are conditional integration gaps because the route is unwired.
+No 400, 409, 503 or extra business code is added. Current dynamic route template is present in DESIGN_CONTRACT_PATHS, and generic middleware validation/system errors can use the catalog DESIGN_* mapping. error_response(None) emits data=null.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

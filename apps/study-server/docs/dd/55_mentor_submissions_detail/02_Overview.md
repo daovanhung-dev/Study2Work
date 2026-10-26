@@ -46,7 +46,7 @@ status: "Draft — Needs Confirmation"
 - `assignment_submissions` — legacy design candidate cho các field Submission.
 - `assignments` — candidate relation lấy `course_id` từ `assignment_id`.
 - `courses` — candidate relation kiểm tra direct Mentor ownership.
-- Asset lookup — N/A cho tới khi có relation/metadata được duyệt.
+- Asset lookup — đọc `uploads` metadata theo fallback DERIVED URL/owner/purpose/course dùng ở API #54.
 - Rubric lookup — SOURCE_REQUIRED; không nối rubric V1-PILOT vào legacy Assignment.
 
 ## Tables write
@@ -56,41 +56,41 @@ status: "Draft — Needs Confirmation"
 ## Mục chú ý
 
 - AC-23 yêu cầu đọc `Submission + files + rubric`; reusable `Submission` trong catalog có `files:UploadAsset[]` nhưng không có field `rubric`.
-- AC-23 yêu cầu chọn một submission từ API #54, nhưng #54 catalog đang trả `ApiEnvelope<Submission>` đơn lẻ dù tên và flow là danh sách; UI chưa có collection contract để chọn ID.
-- Legacy candidate `assignment_submissions` chỉ có một `file_url` nullable; chưa có nguồn tạo đầy đủ `UploadAsset[]`.
+- API #54 hiện trả `ApiEnvelope<Page<Submission>>` theo fallback DERIVED để luồng AC-23 chọn một ID rồi gọi API #55.
+- API #54 resolve 0/1 `UploadAsset` bằng URL + owner + purpose + course; đây là fallback DERIVED, chưa có FK hoặc xác nhận từ API #35.
 - `infra/postgres/02_study_db.sql` có `rubrics` và `rubric_criteria` gắn vào `assessments.id` bằng UUID; không có relation với legacy `assignments` hoặc `assignment_submissions` BIGINT.
 - API #55 đứng giữa API #54 chọn submission và API #56/#57 ghi grade/feedback; API #55 không thực hiện mutation.
-- Không có route, module hoặc test API #55 trong Study Server hiện tại.
+- Runtime hiện có route, module và TestClient tests cho API #55; tests dùng fake DB, chưa xác minh query trên live schema.
 
 ## Assumptions
 
 - `submission_id` tra một submission theo khóa `assignment_submissions.id` là candidate từ contract/schema.
-- Guard tương lai dùng JWT chuẩn Study: `sub` là numeric user ID, `roles` chứa `MENTOR`; yêu cầu role trực tiếp từ catalog, cách tái dùng helper là DERIVED.
-- Direct-owner predicate `courses.mentor_id = :mentor_id` là candidate đơn giản nhất theo DB relation và các DD Mentor; đây chưa phải policy được phê duyệt và không bao phủ assigned Mentor.
+- Guard dùng JWT chuẩn Study: `sub` là numeric user ID, `roles` chứa `MENTOR`; current shared guard và các API #46–#55 dùng trực tiếp pattern này.
+- Direct-owner predicate `courses.mentor_id = :mentor_id` là policy hiện hành của các API Mentor được triển khai; vẫn không bao phủ assigned Mentor.
 - Tách submission không tồn tại → 404 và role/course không có quyền → 403 theo error set catalog; quy tắc che giấu sự tồn tại chưa được xác nhận.
-- Giữ nguyên `ApiEnvelope<Submission>`; chưa thêm `rubric` vào schema hoặc `meta`.
+- API #54 cung cấp Page<Submission>; #55 giữ `ApiEnvelope<Submission>` cho một item. Chưa thêm `rubric` vào Submission schema hoặc `meta`.
 
 ## Conflicts
 
 - Diagram yêu cầu rubric nhưng reusable `Submission` không có rubric field; V1-PILOT rubric model không nối được vào legacy assignment submission.
-- API #54 là list flow nhưng response contract hiện là singular `Submission`; API #55 cần một ID được chọn từ collection.
-- `Submission.files` là array `UploadAsset`; legacy DDL chỉ có một `file_url` và thiếu asset ID/metadata/status/association.
+- API #54 list response đã được chuyển sang Page<Submission> theo fallback AC-23; API #55 nhận ID của một item trong page.
+- `Submission.files` dùng DERIVED URL/owner/purpose/course lookup qua API #34; DDL không có FK, nên không đảm bảo file từ API #35 đã được lưu theo URL này.
 - DB table guide/ERD đánh dấu `assignment_id` và `user_id` bắt buộc; legacy DDL cho phép NULL.
 - `Submission.score` là optional `decimal-string`; API #56 nhận `score:int32`, còn `Assignment.max_score` là `decimal-string`.
-- API Guidelines yêu cầu error `data:null`; current helper chuyển giá trị thiếu thành `{}`. Middleware cũng chưa allow-list path #55.
+- API Guidelines and current `error_response()` both return `data:null`. API #55 route template is registered in middleware; direct view responses use the catalog 401/403/404/500 codes.
 
 ## Security note
 
 - Không nhận Student ID từ request; chỉ dùng định danh từ access JWT đã xác thực.
 - Đọc dữ liệu candidate nội bộ nhưng không serialize bất kỳ field submission nào trước khi quyền Mentor được kiểm tra.
-- Candidate direct owner không chứng minh quyền của Mentor được phân công; không dùng nó để tuyên bố đủ access coverage.
-- Quy tắc trả 403 hay mask bằng 404 khi resource thuộc course khác cần thống nhất với API #54.
+- Current direct-owner access không chứng minh quyền của Mentor được phân công.
+- Quy tắc trả 403 hay mask bằng 404 cho một submission thuộc course khác cần giữ nhất quán với API #54; #54 trả 403 cho course được chỉ định thuộc Mentor khác.
 
 ## Performance note
 
 - Candidate truy vấn lookup một `submission_id`; ID là primary key trong legacy DDL.
 - Các bảng/relationship chưa được xác nhận live; không có query plan hoặc latency target để tuyên bố hiệu năng.
-- Resolver cho file assets và rubric chưa có contract/schema nên không thể ước lượng số lần truy vấn hoặc kích thước response.
+- File lookup follows the DERIVED API #54 URL/owner/purpose/course fallback; rubric still lacks a relation/schema and no live query plan is available.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

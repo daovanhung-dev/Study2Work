@@ -20,13 +20,13 @@ status: "Draft — Needs Confirmation"
 | Character encoding | UTF-8 |
 | Content-Type | N/A — catalog không khai báo body. |
 | Authentication | Bearer JWT |
-| Role | Admin; AC-34 còn yêu cầu lesson-management permission. |
+| Role | Shared ADMIN role guard; AC-34 fine-grained lesson-management permission remains unsupported. |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer token | Xác thực Admin và lesson-management permission trước khi đọc lesson/dependencies. | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) |
+| 1 | Authorization | Authorization | Yes | Bearer token | Shared guard xác thực role ADMIN trước khi đọc lesson/dependencies. | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) |
 | 2 | Trace ID | X-Trace-Id | No | UUID | Current Study middleware convention; không phải input nghiệp vụ. | [Step 0](./05_Data_Mapping.md#step-0-check-quyen) |
 
 ## Path parameters
@@ -56,9 +56,10 @@ Ví dụ chỉ thể hiện method/path và Bearer authentication; không có bo
 ## Quy tắc input đang mở
 
 - lesson_id:int64! là input trực tiếp; minimum/positive constraint chưa được catalog đặc tả.
-- Catalog có 422 DESIGN_VALIDATION_ERROR nhưng chưa chỉ rõ path parse rules hoặc dependency policy.
+- Raw path parser chấp nhận signed-int64; format/range lỗi trả 422 DESIGN_VALIDATION_ERROR.
+- Dependency blocker cục bộ là bất kỳ `lesson_progress`, `resources` hoặc `lesson_uploads` row nào gắn với Lesson.
 - Không thêm request field để chọn hard delete, cascade, retention, reason hoặc deleted_at.
-- Mã 422 cho dependency blocker là proposal DERIVED; cần owner xác nhận điều kiện cụ thể.
+- Blocker set là DERIVED local fallback; live relation and policy need owner confirmation.
 
 ---
 

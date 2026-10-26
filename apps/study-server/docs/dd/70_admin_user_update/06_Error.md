@@ -13,31 +13,30 @@ status: "Draft — Needs Confirmation"
 
 | No | Category | Verify check | Item | Nội dung check | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
-| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu, sai hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | N/A | Status/code DIRECT; API #70 chưa wired. |
-| 2 | Authorization | Admin/user-management policy | Principal | Caller không có quyền Admin quản lý user | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | N/A | Status/code DIRECT; exact policy SOURCE_REQUIRED. |
-| 3 | Not found | Candidate update result | user_id | Không có user row được update | 404 | DESIGN_RESOURCE_NOT_FOUND | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua-query) | Candidate rollback/N/A | Code/status DIRECT; no-row condition DERIVED. |
-| 4 | Validation | Request validation | Path/body | Dữ liệu không hợp lệ theo schema được duyệt | 422 | DESIGN_VALIDATION_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-1-validate-data-input) | N/A | Status/code DIRECT; schema/rules chưa đặc tả. |
-| 5 | System error | Database/mapping/transaction | Update pipeline | Lỗi nội bộ không xác định | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua-query) | Candidate rollback | Status/code DIRECT; không trả stack/SQL detail. |
+| 1 | Authentication | Bearer/JWT | Authorization | Token thiếu, sai hoặc không hợp lệ | 401 | DESIGN_AUTHENTICATION_REQUIRED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | N/A | Direct status/code; shared ADMIN guard hiện wired. |
+| 2 | Authorization | ADMIN claim | Principal | Caller không có role ADMIN | 403 | DESIGN_ACCESS_DENIED | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-0-check-quyen) | N/A | Direct status/code; permission/tenant/MFA mapping riêng chưa xác minh. |
+| 3 | Not found | UPDATE RETURNING | user_id | Không có user row được cập nhật | 404 | DESIGN_RESOURCE_NOT_FOUND | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua-query) | Rollback | Direct code/status; zero-row mapping DERIVED. |
+| 4 | Validation | Path/body | Request input | Path sai int64 hoặc body vi phạm schema fallback | 422 | DESIGN_VALIDATION_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-1-validate-data-input) | N/A | Direct code/status; full-replacement body/rules DERIVED. |
+| 5 | System error | Database/mapping/transaction | Update pipeline | Query, projection hoặc commit thất bại | 500 | DESIGN_INTERNAL_ERROR | Chưa quy định | [Data Mapping](./05_Data_Mapping.md#step-4-check-ket-qua-query) | Rollback | Direct status/code; response không lộ SQL/stack. |
 
 Không thêm HTTP status, business code hoặc error-message ID ngoài catalog.
 
-## Candidate branch questions — không phải HTTP contract
+## Runtime branch mapping — một phần DERIVED
 
 | Condition | Candidate or question | Status |
 |---|---|---|
-| user_id malformed/overflow | Catalog khai báo 422 nhưng không định nghĩa chính xác parse/domain conditions. | SOURCE_REQUIRED |
-| Body thiếu field hoặc gửi null | Direct body schema không có; chưa biết PUT replacement/null policy. | SOURCE_REQUIRED |
-| User row không tồn tại | Có thể ánh xạ UPDATE RETURNING zero-row sang 404. | DERIVED |
-| Role change invalid/not allowed | 403 hay 422 chưa thể chọn nếu không có policy; không thêm branch/code. | SOURCE_REQUIRED |
-| Session token có role cũ sau update role | AC-31 không nêu revoke/refresh behavior cho #70; #71 có note revoke session nếu cần. | SOURCE_REQUIRED |
-| Error data null hay empty object | Shared guideline và current helper khác nhau. | DISCREPANCY |
+| user_id malformed/overflow | Trả 422 `DESIGN_VALIDATION_ERROR` trước query. | Runtime behavior; path mapping DERIVED. |
+| Body thiếu field/extra field/invalid role | Framework validation trả 422 `DESIGN_VALIDATION_ERROR`. | Runtime behavior; body schema/allowlist DERIVED. |
+| User row không tồn tại | UPDATE RETURNING không có row; rollback và trả 404. | Runtime behavior; no-row mapping DERIVED. |
+| Role ngoài allowlist | `STUDENT`, `MENTOR`, `ADMIN` là các role labels hiện có; giá trị khác trả 422. | Allowlist DERIVED; transition policy SOURCE_REQUIRED. |
+| Session token có role cũ sau update role | #70 không revoke refresh token; access JWT guard hiện kiểm tra role từ claim. | No side effect implemented; token policy SOURCE_REQUIRED. |
+| Error data null hay empty object | Current `error_response` serializes omitted data as JSON null. | Resolved by current source; no helper change. |
 
-## Error envelope discrepancy
+## Error envelope và middleware hiện hành
 
-- Shared API guideline định nghĩa `ApiEnvelope<T>` với `data:T`; error-side null/empty convention cần đối chiếu guideline chi tiết.
-- Current `error_response` helper thay data vắng mặt thành `{}`; API guideline trong scope context yêu cầu `data:null` cho lỗi.
-- Middleware `DESIGN_CONTRACT_PATHS` hiện chưa có `/api/v1/admin/users/{user_id}`; endpoint chưa wired nên chưa có runtime #70 behavior.
-- Các điểm trên là infrastructure observations, không phải current error response của API #70.
+- Current `error_response` serializes omitted error data as `null`; tests assert this behavior.
+- Middleware already matches `/api/v1/admin/users/{user_id}` from API #69 and maps API #70 framework validation failures to `DESIGN_VALIDATION_ERROR`.
+- Shared error helper/middleware were not changed for API #70.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

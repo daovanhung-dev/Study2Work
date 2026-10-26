@@ -13,49 +13,28 @@ status: "Draft — Needs Confirmation"
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table | `support_tickets` (V1-PILOT candidate; chưa được duyệt/live) |
+| Physical table | `support_requests` — local migration 008 / `DB.sql`; live schema chưa xác minh |
 | Logical table | SupportRequest |
-| Operation | Candidate M1: UPDATE |
-| Data Mapping step | [5.1–5.3](./05_Data_Mapping.md) |
-
-> Legacy Study DB.sql/ERD không có SupportRequest table. V1-PILOT ID là UUID, còn API contract yêu cầu int64; mapping dưới đây chỉ mô tả candidate DDL để làm lộ gap, không phải SQL triển khai.
+| Operation | UPDATE |
+| Data Mapping step | [4–5](./05_Data_Mapping.md) |
 
 ## Update mapping
 
-**Áp dụng khi**
+Áp dụng sau khi request row được `SELECT ... FOR UPDATE` và Mentor được xác thực là owner trực tiếp của course.
 
-- Candidate trạng thái hiện tại là `OPEN` và Mentor có quyền trên request.
-- Request đang `RESOLVED` thì theo DERIVED proposal không chạy UPDATE, trả success và giữ `resolved_at` ban đầu.
-- State khác `OPEN`/`RESOLVED` không UPDATE; 422 là DERIVED proposal, enum API cần được xác nhận.
+| No | Item ID / Column | Item name | Type | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
+|---:|---|---|---|---:|---|---|---|---|---|
+| 1 | `id` | Support request ID | BIGINT | Yes | PK | Match `request_id`; không thay đổi | Migration 008 | 3–4 | Catalog int64; numeric mapping DERIVED local fallback. |
+| 2 | `course_id` | Course ID | BIGINT | Yes | FK | Dùng nối sang `courses.id` và kiểm tra `mentor_id` | Migration 008 | 2, 4 | API không cập nhật. |
+| 3 | `status` | Request status | VARCHAR(24) | Yes | No | `OPEN`, `IN_PROGRESS`, `WAITING_LEARNER` → `RESOLVED` | AC-24 + migration 008 | 5.1 | Chuyển state là DIRECT; danh sách pre-state là DERIVED. |
+| 4 | `resolved_at` | Resolution time | TIMESTAMPTZ | No | No | `COALESCE(resolved_at, CURRENT_TIMESTAMP)` khi chuyển active state | Migration 008 + DERIVED | 5.2 | Giữ giá trị cũ khi đã RESOLVED; không null trong success response. |
 
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | `id` | Support request ID | uuid | N/A | N/A | Yes | PK | Candidate match với logical `request_id` | V1-PILOT DDL | 4.1 | API contract là int64; không cast UUID; WHERE predicate chưa thể chốt. |
-| 2 | `assigned_to_subject_id` | Mentor được gán | uuid? | N/A | N/A | No | No | Candidate đối chiếu với Mentor principal | V1-PILOT DDL | 2.2 | Cột nullable; JWT subject mapping và authorization policy chưa được duyệt. |
-| 3 | `status` | Request status | varchar(24) | 24 | N/A | Yes | No | `RESOLVED` khi status hiện tại là `OPEN` | AC-24 + V1-PILOT candidate | 5.1–5.2 | Giá trị RESOLVED có trong diagram/DDL; allowed transition API chưa được duyệt. |
-| 4 | `resolved_at` | Resolution time | timestamptz? | N/A | N/A | No | No | Server/database current timestamp khi chuyển OPEN → RESOLVED | V1-PILOT candidate + DERIVED | 5.2 | Sơ đồ không nêu timestamp; set time/null/omit policy cần xác nhận. |
-| 5 | `updated_at` | Record update time | timestamptz | N/A | N/A | Yes | No | Auto-set bởi candidate trigger `s2w_touch_entity()` | V1-PILOT DDL | 5.2 | Trigger body đặt `now()`; không phải API field. |
-| 6 | `row_version` | Record version | bigint | N/A | N/A | Yes | No | Auto-increment bởi candidate trigger | V1-PILOT DDL | 5.2 | Trigger tăng OLD.row_version + 1; live schema chưa xác nhận. |
+## Không ghi
 
-## Insert mapping
-
-**Áp dụng khi**
-
-- N/A — API #61 không INSERT. API #60 sở hữu logical `INSERT SupportMessage`.
-
-| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
-|---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | Không tạo message ở API #61. |
-
-## Delete mapping
-
-**Áp dụng khi**
-
-- N/A — API #61 không DELETE hoặc soft-delete request.
-
-| No | Target column | Operator | Value source | Data Mapping step | Remarks |
-|---:|---|---|---|---|---|
-| N/A | N/A | N/A | N/A | N/A | API #61 chỉ resolve status theo AC-24. |
+- `student_id`, `created_at` và request ID không thay đổi.
+- API #61 không INSERT/UPDATE/DELETE `support_messages` hoặc `support_message_uploads`.
+- Không có cột `updated_at`, `row_version`, `resolution_code` hoặc `cancelled_at` trong local migration 008; không ghi các cột này.
+- V1-PILOT `support_tickets` và trigger của nó không phải mapping cho implementation local.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

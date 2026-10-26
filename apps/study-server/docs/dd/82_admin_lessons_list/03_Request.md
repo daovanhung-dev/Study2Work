@@ -6,7 +6,6 @@ api_name: "Lấy danh sách lesson"
 source_sheet: "1.Request"
 status: "Draft — Needs Confirmation"
 ---
-
 # Request
 
 ## API endpoint
@@ -18,13 +17,13 @@ status: "Draft — Needs Confirmation"
 | Character encoding | UTF-8 |
 | Content-Type | N/A — không có request body. |
 | Authentication | Bearer JWT |
-| Role | Admin; lesson-management permission là tiền điều kiện AC-34. |
+| Role | `ADMIN`; fine-grained lesson-management permission theo AC-34 chưa có source executable. |
 
 ## Request header
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Principal phải có role Admin và quyền quản lý bài học; Admin guard hiện chưa có trong Study. | [Step 0](./05_Data_Mapping.md#0-check-quyen) |
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Shared guard yêu cầu token hợp lệ và role `ADMIN` trước validation/query. | [Step 0](./05_Data_Mapping.md#0-check-quyen) |
 | 2 | Trace ID | X-Trace-Id | No | UUID | Correlation header theo middleware convention; không phải filter nghiệp vụ. | [Step 0](./05_Data_Mapping.md#0-check-quyen) |
 
 ## Path parameters
@@ -35,11 +34,11 @@ Không có path parameter.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | Course ID | `course` | int64 | No | Chưa đặc tả | Chưa đặc tả | Số nguyên 64-bit | Chưa đặc tả | Không có predicate khi vắng mặt (DERIVED) | Filter exact match candidate tới logical `course_id`; physical legacy mapping chưa được xác nhận. | [Step 1](./05_Data_Mapping.md#1-validate-data-input) |
-| 2 | Lesson status | `status` | string | No | Chưa đặc tả | Chưa đặc tả | Text | LessonStatus members/casing chưa đầy đủ | Không có predicate khi vắng mặt (DERIVED) | Filter exact match proposal; không áp dụng mặc định `PUBLISHED`. | [Step 1](./05_Data_Mapping.md#1-validate-data-input) |
-| 3 | Lesson type | `type` | string | No | Chưa đặc tả | Chưa đặc tả | Text | Chưa có nguồn type cho Lesson | Chưa xác định | Query trực tiếp từ catalog; field/predicate `SOURCE_REQUIRED`, không bỏ qua khi được gửi. | [Step 1](./05_Data_Mapping.md#1-validate-data-input) |
+| 1 | Course ID | `course` | int64 | No | -2^63 | 2^63−1 | Signed integer | Tất cả giá trị signed int64 | Không predicate khi vắng mặt | Exact match với candidate `lessons.course_id`; mapping là DERIVED theo legacy DDL. | [Step 1](./05_Data_Mapping.md#1-validate-data-input) |
+| 2 | Lesson status | `status` | string | No | Chưa đặc tả | Chưa đặc tả | Text | Enum/casing chưa đầy đủ | Không predicate khi vắng mặt | Exact match với candidate `lessons.status`; không mặc định `PUBLISHED`. | [Step 1](./05_Data_Mapping.md#1-validate-data-input) |
+| 3 | Lesson type | `type` | string | No | Chưa đặc tả | Chưa đặc tả | Text | Không hỗ trợ với schema source hiện có | Không có | Tên query giữ theo catalog. Nếu được gửi, trả 422 `DESIGN_VALIDATION_ERROR`, field error `UNSUPPORTED_FILTER`; không query DB. | [Step 1](./05_Data_Mapping.md#1-validate-data-input) |
 
-Catalog không khai báo pagination, `size`, `sort` hay filter khác; không thêm vào request.
+Catalog không khai báo pagination, `size`, `sort` hay filter khác; API không định nghĩa chúng.
 
 ## Request body
 
@@ -52,21 +51,22 @@ GET /api/v1/admin/lessons?course=42&status=DRAFT
 Authorization: Bearer <admin-access-token>
 ~~~
 
-Ví dụ minh họa tên và kiểu query. `DRAFT` là giá trị có mặt trong legacy DDL, nhưng enum và casing hoàn chỉnh của API #82 chưa được xác nhận. Exact-match semantics là DERIVED.
+`DRAFT` được dùng như chuỗi exact-match minh họa, không đại diện whitelist đầy đủ.
 
 ~~~text
 GET /api/v1/admin/lessons?type=video
 Authorization: Bearer <admin-access-token>
 ~~~
 
-`type` có trong catalog; ví dụ này không khẳng định giá trị hợp lệ hay cách lưu. Không thể triển khai đúng filter đến khi có field/relation nguồn và rule được duyệt.
+Ví dụ này trả HTTP 422 `DESIGN_VALIDATION_ERROR` với `meta.fieldErrors` cho `type`; filter bị từ chối vì không có Lesson type mapping source-backed.
 
-## Quy tắc input đang mở
+## Quy tắc input
 
-- Catalog chỉ định kiểu `course:int64`, `status:string`, `type:string`; không cho biết giới hạn số, enum, trim/case normalization hoặc range.
-- Catalog chỉ liệt kê HTTP 401/403/500, không có mã validation 400/422. Quy tắc lỗi khi query parse sai cần được làm rõ khi thiết kế route.
-- Không gửi `course`, `status` hay `type` nghĩa là thiếu filter tương ứng theo proposal; behavior này cần owner xác nhận.
-- Query `type` không được bỏ qua hoặc ánh xạ sang loại content block nếu chưa có bằng chứng.
+- Shared guard chạy trước query validation; token thiếu/sai trả 401, principal không có role `ADMIN` trả 403.
+- `course` phải là signed int64. Sai format hoặc overflow trả 422 `DESIGN_VALIDATION_ERROR` với field `course`, code `INT_PARSING`.
+- `status` được giữ nguyên và truyền vào equality predicate; không trim, lowercase hoặc whitelist enum.
+- `type` được khai báo trong catalog nhưng chưa map được vào schema; nếu có mặt, trả 422 `UNSUPPORTED_FILTER` thay vì bỏ qua âm thầm.
+- Query parameters khác không được dùng bởi handler. Không có body, page, size hoặc sort.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

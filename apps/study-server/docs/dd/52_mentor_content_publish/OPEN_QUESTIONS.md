@@ -10,10 +10,10 @@
 - Catalog row #52 và AC-22 PATCH node chỉ khai báo path content_id.
 - Tên API có cả publish và unpublish, nhưng không có body/query/action field.
 
-**Đề xuất cần xác nhận**
+**Trạng thái hiện tại / cần xác nhận**
 
-- Body {published:boolean!} biểu diễn trạng thái đích một cách tường minh.
-- Đây là DERIVED proposal, chưa phải contract.
+- Local runtime dùng body {published:boolean!} để biểu diễn trạng thái đích một cách tường minh.
+- Đây vẫn là DERIVED proposal và chưa có trong catalog/AC-22; contract owner cần xác nhận hoặc thay thế.
 
 **Ảnh hưởng:** Nếu không có target input hoặc rule toggle được duyệt, client không thể chọn chiều mutation an toàn và retry có thể đảo trạng thái.
 
@@ -45,13 +45,13 @@
 
 Required fields per ContentType, asset readiness/ownership, title and payload constraints, course/version eligibility, and whether publication needs moderation approval.
 
-**Ảnh hưởng:** Chặn request validation, response state and implementation. Không suy ra bộ rule từ legacy lessons hay pilot content_blocks.
+**Ảnh hưởng:** Local fallback chỉ dùng APPROVED status gate; contract readiness đầy đủ vẫn chưa thể chốt. Không suy ra bộ rule từ legacy lessons hay pilot content_blocks.
 
 ## Q-52-04 — Content/version được lưu và chọn current revision thế nào?
 
 **Bằng chứng**
 
-- Legacy DDL không có generic Content/version relation.
+- Legacy DDL/migration 006 now defines base `contents`; it does not define version history or establish live deployment.
 - V1-PILOT content_blocks dùng UUID, lesson_id, block_type, content_json; không khớp BIGINT Content.
 - AC-22 chỉ nêu UPDATE publication status; #51 có update + version.
 
@@ -59,21 +59,21 @@ Required fields per ContentType, asset readiness/ownership, title and payload co
 
 Approved physical table/model, current revision selector, status column ownership, live migration and response projection.
 
-**Ảnh hưởng:** Chặn query/update SQL và trạng thái trả về.
+**Ảnh hưởng:** Local fallback uses `contents.status` and returns the API #49 Content projection; approved revision selection, canonical storage ownership, and live schema remain unresolved.
 
 ## Q-52-05 — Mentor principal và course permission được xác định ra sao?
 
 **Bằng chứng**
 
 - Catalog requires role Mentor; AC-22 requires permission to manage course.
-- Current Study auth is Student-oriented; Mentor claim/assignment relation is absent.
-- Legacy courses.mentor_id is only a direct-owner candidate.
+- Current Study shared guard validates role MENTOR; APIs #49 and #51–#52 compare numeric JWT `sub` to direct `courses.mentor_id`.
+- Assigned-Mentor/co-owner relation is absent from the inspected local schema/source; direct ownership remains a fallback, not approved policy.
 
 **Cần xác nhận**
 
 JWT claim/key mapping, direct owner versus assigned Mentor policy, and error ordering for missing versus inaccessible Content.
 
-**Ảnh hưởng:** Chặn executable access check and 403/404 behavior.
+**Ảnh hưởng:** Local direct-owner access fallback is implemented; identity namespace, assigned-Mentor policy, and canonical 403/404 ordering remain open.
 
 ## Q-52-06 — Publish/unpublish có idempotent và concurrency-safe không?
 
@@ -82,7 +82,7 @@ JWT claim/key mapping, direct owner versus assigned Mentor policy, and error ord
 - Proposed target-state body makes repeated identical requests a no-op.
 - Confirm stale revision/concurrent updates behavior. Catalog has no 409 code; do not add one without contract change.
 
-**Ảnh hưởng:** Chặn retry and concurrent mutation semantics.
+**Ảnh hưởng:** Local fallback is target-idempotent and serializes through row locks; canonical retry/concurrency policy and cross-endpoint locking remain unconfirmed.
 
 ## Q-52-07 — Content response phản ánh state/revision nào?
 
@@ -95,11 +95,11 @@ JWT claim/key mapping, direct owner versus assigned Mentor policy, and error ord
 
 Whether response contains current approved revision, newly published revision, or an aggregate Content projection; define parent_id null/omit and status serialization.
 
-**Ảnh hưởng:** Chặn response source mapping and consistency with #49 tree reload.
+**Ảnh hưởng:** Local fallback returns the locked current `contents` row; published-revision selection and consistency with Admin review/#49 reload remain unresolved.
 
 ## Q-52-08 — Middleware and validation codes are wired how?
 
-The current path is absent from DESIGN_CONTRACT_PATHS. When the route is implemented, confirm an integration path that emits the exact catalog codes DESIGN_VALIDATION_ERROR and DESIGN_INTERNAL_ERROR. Also confirm framework handling for malformed/overflowing content_id; do not add an undeclared error code.
+**Local status:** The route template is now present in `DESIGN_CONTRACT_PATHS`. Fake DB HTTP tests confirm body validation uses `DESIGN_VALIDATION_ERROR`, malformed/out-of-range path IDs map to catalog 404, and query/commit errors map to `DESIGN_INTERNAL_ERROR`. Live middleware/database behavior remains unverified. The request body itself remains a catalog discrepancy; do not add undeclared error codes.
 
 ## Q-52-09 — Delete PUBLISHED Content có yêu cầu unpublish trước không?
 

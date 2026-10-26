@@ -22,13 +22,13 @@ status: "Draft — Needs Confirmation"
 | API name | Cập nhật nội dung Mentor |
 | HTTP method | PUT |
 | Endpoint | `/api/v1/mentor/content/{content_id}` |
-| Version | 0.1 |
+| Version | 0.2 |
 | Status | Draft — Needs Confirmation |
 | Created by | Codex |
 | Reviewed by | Chưa xác nhận |
 | Approved by | Chưa xác nhận |
 | Created date | 2026-10-24 |
-| Updated date | 2026-10-24 |
+| Updated date | 2026-10-25 |
 
 ## Tên hiển thị
 
@@ -39,7 +39,7 @@ Cập nhật nội dung Mentor
 
 ## Phạm vi
 
-DD thiết kế cho thao tác cập nhật Content và version trong AC-22. Catalog/diagram chưa khai báo request body và schema persistence Content/version tương thích chưa được tìm thấy; body và lifecycle đề xuất được đánh dấu `DERIVED` để xác nhận.
+DD mô tả API #51 theo AC-22. Catalog/diagram chỉ khai báo path, response và error set; body 3 trường cùng bảng snapshot legacy là fallback `DERIVED` để triển khai, chưa được chủ hợp đồng xác nhận. Runtime local đã được wire; migration/live schema chưa được xác minh. Câu hỏi về tác giả revision và bản published được giữ mở.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

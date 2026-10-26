@@ -28,12 +28,13 @@ status: "Draft — Needs Confirmation"
 | 3 | question_text | Question text | TEXT | N/A | N/A | Yes | No | No | questions[i].text | Proposed request body | Step 7 | Alias text → question_text. |
 | 4 | sort_order | Question order | INT | N/A | N/A | DDL default 0 | No | No | i, zero-based | Request array index | Step 7 | DERIVED theo #88; tie policy open. |
 | 5 | score | Question score | NUMERIC | 5 | 2 | DDL default 1 | No | No | Omit; default candidate | Legacy DDL | Step 7 | Không thêm score vào contract. |
+| 6 | question_type | Question type | VARCHAR(24) | 24 | N/A | API requires value | No | No | questions[i].type | Migration 013 / #88 validator | Step 7 | Three-value DERIVED vocabulary; nullable for old rows. |
 
-## Unmapped response field
+## Question type mapping
 
-- Logical QuizQuestion.type không có column trong legacy table.
-- Không thêm column hoặc map Pilot UUID question_type vào legacy Quiz.
-- Schema owner cần chốt persistence trước khi response Quiz đầy đủ.
+- Migration 013 adds nullable legacy `question_type`; API #88 writes the local DERIVED vocabulary.
+- API #89 must not map question rows or IDs from V1-PILOT UUID tables.
+- Old rows with NULL type are deleted only after the history guard passes; replacement rows always receive the validated local type.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -1,22 +1,23 @@
 # OPEN_QUESTIONS — Study API #58
 
-Status: `Draft — Needs Confirmation`. Các câu hỏi dưới đây chặn chốt query/response để code; DD giữ nguyên contract trực tiếp và không tự sửa catalog.
+Status: `Draft — Needs Confirmation`. Theo chỉ dẫn mới nhất của user, các conflict được giải quyết bằng fallback đơn giản để triển khai local. Các lựa chọn dưới đây là `DERIVED`; chúng không chứng minh migration đã được áp dụng vào live database hoặc được contract owner phê duyệt lâu dài.
 
-| ID | Câu hỏi cần xác nhận | Bằng chứng và ảnh hưởng | Khuyến nghị đơn giản | Mức độ |
-|---|---|---|---|---|
-| Q-58-01 | Endpoint danh sách cần trả `SupportRequest` đơn, `SupportRequest[]` hay `Page<SupportRequest>`? | URI/name và AC-24 node n1 là danh sách; catalog/diagram node n2 trả `ApiEnvelope<SupportRequest>`. 0 hoặc nhiều record không thể biểu diễn bằng object đơn. | Xác nhận collection response; phương án đơn giản là `ApiEnvelope<SupportRequest[]>` với hai filter hiện có. Chỉ thêm pagination khi có requirement. | BLOCKING — contract |
-| Q-58-02 | Physical support model nào là nguồn được duyệt cho AC-24, và API ID dùng int64 hay UUID? | Legacy DB.sql/ERD không có support tables. Pilot có support_tickets/support_messages với UUID, khác ID int64 của SupportRequest/Message. | Chọn model/schema và ID contract trước khi chốt Q1/Q2; không map UUID sang int64 giả. | BLOCKING — data model |
-| Q-58-03 | Support request liên kết với course bằng quan hệ nào để hỗ trợ `course_id` filter và `data.course_id`? | Catalog khai báo cả query và response course_id; pilot support_tickets không có course_id/course_version_id. | Bổ sung/duyệt quan hệ domain hoặc bỏ course filter/field qua contract change; không nối suy đoán bằng enrollment. | BLOCKING — query/response |
-| Q-58-04 | Quyền Mentor dựa trên ticket được assigned trực tiếp, ownership của course, hay cả hai? JWT principal map sang khóa nào? | AC-24 yêu cầu request thuộc phạm vi Mentor; pilot assigned_to_subject_id nullable UUID; runtime guard hiện chỉ xác nhận STUDENT. | Dùng một predicate được duyệt và thống nhất với #59–#61; assignment candidate chỉ dùng sau khi identity binding được xác nhận. | BLOCKING — authorization |
-| Q-58-05 | Các giá trị hợp lệ của SupportStatus là gì và query status có exact match/case-insensitive behavior nào? | Catalog chỉ khai báo SupportStatus và query string. Pilot có OPEN, IN_PROGRESS, WAITING_LEARNER, RESOLVED, CANCELLED nhưng là schema khác. | Duyệt enum và filter rule; giữ pilot values là candidate, không áp dụng ngầm. | BLOCKING — validation |
-| Q-58-06 | List #58 phải tải toàn bộ `messages[]` cho mỗi request hay trả tóm tắt và để #59 tải thread? Quy tắc thứ tự và giới hạn? | SupportRequest bắt buộc messages[]; AC-24 có API #59 đọc nội dung/thread riêng; catalog không có pagination hoặc message limit. | Chốt projection list/detail; nếu giữ messages[], định nghĩa thứ tự và giới hạn trước khi triển khai. | BLOCKING — response/performance |
-| Q-58-07 | Làm sao map student/message author sang UserSummary và attachments sang UploadAsset, gồm URL ký và trạng thái quét? | Pilot dùng UUID subject/file IDs; file_objects lưu storage_key, không lưu public URL; author có LEARNER/STAFF; contract cần numeric IDs và đủ metadata. | Chọn identity projection và file resolver/provider; không trả storage_key hoặc bịa field. | BLOCKING — response/security |
-| Q-58-08 | Query sai kiểu/format xử lý bằng status/code nào, khi catalog không khai báo 422 cho #58? Error envelope data sẽ theo guideline null hay helper hiện hành {}? | FastAPI query parsing có thể phát validation error; #58 chưa được thêm DESIGN_CONTRACT_PATHS. API Guidelines và current helper khác nhau về data lỗi. | Chốt error contract và cập nhật allowlist/helper cùng task wiring; không thêm error row vào DD hiện tại. | BLOCKING — error contract |
-| Q-58-09 | Empty result, thứ tự request, page size và giới hạn response được xử lý thế nào? | Đây là endpoint list nhưng không có collection shape, pagination, sort hoặc empty-result contract. | Chốt cùng Q-58-01; tối thiểu collection rỗng trả thành công với mảng rỗng nếu chủ API phê duyệt. | BLOCKING — list behavior |
+| ID | Vấn đề | Quyết định triển khai | Basis/status |
+|---|---|---|---|
+| Q-58-01 | List response khai báo singleton ở catalog/diagram nhưng AC-24 là bước mở danh sách. | `data` là `SupportRequest[]`; không thêm pagination vì request không có page/size; empty result là `[]`. | `RESOLVED_FOR_IMPLEMENTATION — DERIVED` |
+| Q-58-02 | Không có support model trong legacy Study DDL; V1-PILOT dùng UUID và khác runtime convention. | Thêm legacy BIGINT `support_requests`, `support_messages`, `support_message_uploads` trong DB.sql và migration 008; giữ V1-PILOT riêng. | `RESOLVED_FOR_IMPLEMENTATION — USER-DIRECTED FALLBACK` |
+| Q-58-03 | `course_id` filter/response thiếu relation trong pilot ticket model. | `support_requests.course_id` FK tới legacy `courses.id`; `student_id` FK tới `users.id`. | `RESOLVED_FOR_IMPLEMENTATION — DERIVED` |
+| Q-58-04 | Mentor identity/predicate chưa được support schema cung cấp. | Dùng numeric JWT subject và direct `courses.mentor_id` ownership, nhất quán với API #46/#49/#54. Request tới course owner khác trả 403. | `RESOLVED_FOR_IMPLEMENTATION — DERIVED` |
+| Q-58-05 | `SupportStatus` chưa có enum trong catalog. | DDL check cho `OPEN`, `IN_PROGRESS`, `WAITING_LEARNER`, `RESOLVED`, `CANCELLED`; filter là exact string match; giá trị lạ trả list rỗng. | `RESOLVED_FOR_IMPLEMENTATION — DERIVED FROM PILOT VALUES` |
+| Q-58-06 | #58 có tải thread đầy đủ khi #59 cũng đọc conversation không? | Tải toàn bộ `messages[]` để giữ reusable `SupportRequest` shape; order `created_at ASC, id ASC`; không cắt dữ liệu. | `RESOLVED_FOR_IMPLEMENTATION — DERIVED`; payload size là residual risk. |
+| Q-58-07 | Identity/attachments không map được từ UUID pilot sang int64 runtime. | Dùng numeric `users` projection; thêm `support_message_uploads`; resolve legacy UploadAsset nếu owner, course, role-purpose và status `UPLOADED` khớp. | `RESOLVED_FOR_IMPLEMENTATION — DERIVED`; source #34 supplies URL metadata. |
+| Q-58-08 | Catalog ban đầu không khai báo 422 cho invalid `course_id`. | Đồng bộ thêm 422 `DESIGN_VALIDATION_ERROR` vào catalog/diagram; dùng shared validation handler. | `RESOLVED_FOR_IMPLEMENTATION — USER-DIRECTED FALLBACK` |
+| Q-58-09 | Empty result, ordering và page size chưa được quy định. | HTTP 200 với `data: []`; requests order `created_at DESC, id DESC`; không phân trang. | `RESOLVED_FOR_IMPLEMENTATION — DERIVED` |
+| Q-58-10 | Nullability của `resolved_at` và avatar URL. | Omit optional fields khi NULL theo response model `exclude_none=True`. | `RESOLVED_FOR_IMPLEMENTATION — EXISTING RUNTIME CONVENTION` |
+| Q-58-11 | Migration/live database availability. | Chưa xác minh live metadata hoặc migration state; chỉ kiểm chứng source và fake-session HTTP behavior. | `NOT_VERIFIED_HERE`; không cản local implementation |
 
-## Quy tắc giữ nguyên trong DD hiện tại
+## Macro-review AC-24 #58–#61
 
-- Không tự đổi catalog hay diagram để chọn một phương án.
-- Không chọn record đầu tiên, cắt kết quả, thêm status enum hoặc nối bảng ngoài nguồn.
-- Không xem V1-PILOT là schema runtime hoặc là model đã được chủ API duyệt.
-- Sau khi #59–#61 được tạo, macro-review toàn bộ AC-24 để kiểm tra scope Mentor, trạng thái, thread/messages, attachment và response envelope nhất quán.
+- #58 trả collection, #59 trả một SupportRequest/thread, #60 insert một reply message, #61 chỉ cập nhật trạng thái `RESOLVED`.
+- Các API #59–#61 chưa được code trong phiên #58; các phiên sau phải reuse BIGINT support tables, `courses.mentor_id` predicate và asset-link rules được chọn ở đây.
+- Những quyết định về trạng thái chuyển đổi, retry khi resolve và attachment request body của #60 vẫn thuộc phạm vi DD/API tương ứng; không được suy rộng từ API #58.

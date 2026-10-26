@@ -11,28 +11,28 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Các error code dưới đây giữ nguyên API catalog #55. Nhánh authorization/query là flow đề xuất; API #55 chưa có route để xác minh behavior. Xem [05_Data_Mapping.md](./05_Data_Mapping.md) để đối chiếu thứ tự xử lý.
+Các error code dưới đây giữ nguyên API catalog #55. HTTP tests xác minh các nhánh auth, owner, not-found, query và mapping của source hiện tại; direct-owner/path/integrity behavior vẫn là fallback DERIVED. Xem [05_Data_Mapping.md](./05_Data_Mapping.md) để đối chiếu thứ tự xử lý.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---|---|
 | 1 | Authentication | Token verification | Authorization | Header thiếu/sai Bearer, JWT invalid/expired hoặc claims không hợp lệ | 401 | `DESIGN_AUTHENTICATION_REQUIRED` | N/A — catalog không khai message ID | [05_Data_Mapping.md](./05_Data_Mapping.md) | N/A — no mutation | Catalog DIRECT; auth source pattern current Study |
-| 2 | Authorization | Role/course permission | Mentor access | JWT hợp lệ nhưng không có role Mentor hoặc candidate course owner không khớp | 403 | `DESIGN_ACCESS_DENIED` | N/A — catalog không khai message ID | [05_Data_Mapping.md](./05_Data_Mapping.md) | N/A — no mutation | Direct-owner predicate và 403/masking là DERIVED, cần xác nhận |
-| 3 | Check tồn tại | Submission lookup | `submission_id` | Không tìm thấy submission với ID hợp lệ | 404 | `DESIGN_RESOURCE_NOT_FOUND` | N/A — catalog không khai message ID | [05_Data_Mapping.md](./05_Data_Mapping.md) | N/A — no mutation | Catalog DIRECT; malformed path behavior chưa định nghĩa |
-| 4 | System error | Query/mapping/integrity | Database/result | DB/query lỗi hoặc required relation/field candidate bị hỏng | 500 | `DESIGN_INTERNAL_ERROR` | N/A — catalog không khai message ID | [05_Data_Mapping.md](./05_Data_Mapping.md) | N/A — no mutation | DB error DIRECT; orphan/null integrity branch là DERIVED |
+| 2 | Authorization | Role/course permission | Mentor access | JWT hợp lệ nhưng không có role Mentor hoặc direct course owner không khớp | 403 | `DESIGN_ACCESS_DENIED` | N/A — catalog không khai message ID | [05_Data_Mapping.md](./05_Data_Mapping.md) | N/A — no mutation | Shared role guard is source-backed; direct-owner predicate and 403/masking remain DERIVED |
+| 3 | Check tồn tại | Submission lookup | `submission_id` | Path malformed/overflow hoặc ID hợp lệ không tìm thấy submission | 404 | `DESIGN_RESOURCE_NOT_FOUND` | N/A — catalog không khai message ID | [05_Data_Mapping.md](./05_Data_Mapping.md) | N/A — no mutation | Missing row is catalog DIRECT; malformed mapping follows API #48 as DERIVED |
+| 4 | System error | Query/mapping/integrity | Database/result | DB/query lỗi hoặc required relation/field candidate bị hỏng | 500 | `DESIGN_INTERNAL_ERROR` | N/A — catalog không khai message ID | [05_Data_Mapping.md](./05_Data_Mapping.md) | N/A — no mutation | DB error DIRECT; orphan/null integrity branch is DERIVED and covered by fake-row tests |
 
 ## Error envelope discrepancy
 
 - API Guidelines kỳ vọng `data:null` và field errors trong `meta.fieldErrors`.
-- Current `error_response()` trả `{}` khi caller truyền `data=None`.
-- `DESIGN_CONTRACT_PATHS` chưa có API #55; nếu middleware xử lý validation/unhandled error trước khi path allowlist được cập nhật, code fallback có thể khác catalog.
+- Current `error_response()` trả `null` khi caller truyền `data=None`.
+- `DESIGN_CONTRACT_PATHS` now includes `/api/v1/mentor/submissions/{submission_id}`; raw path parse errors are mapped directly by the view rather than the framework validation handler.
 - Đây là current shared-source discrepancy, không phải kết quả runtime đã đo cho API #55.
 
 ## Không khai báo
 
 - Không thêm `400`, `409`, `422` hoặc business code ngoài catalog.
-- Rubric/file resolver chưa có source nên DD không tự tạo HTTP branch riêng cho chúng.
+- Rubric resolver chưa có source; file lookup is the DERIVED API #54 fallback and does not create a separate error branch.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

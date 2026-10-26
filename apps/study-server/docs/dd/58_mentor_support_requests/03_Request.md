@@ -22,8 +22,8 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Catalog yêu cầu role Mentor; route/guard chưa được wiring. | [1.1](./05_Data_Mapping.md#11-nhận-request-metadata) |
-| 2 | Trace ID | X-Trace-Id | No | UUID nếu được gửi | Theo API Guidelines; trace trả qua traceId/header khi endpoint được wiring. | [1.2](./05_Data_Mapping.md#12-nhận-trace-id) |
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Yêu cầu role Mentor; subject số được scope qua `courses.mentor_id`. | [1.1](./05_Data_Mapping.md#11-nhận-request-metadata) |
+| 2 | Trace ID | X-Trace-Id | No | UUID nếu được gửi | Theo API Guidelines; trả trong traceId và response header. | [1.2](./05_Data_Mapping.md#12-nhận-trace-id) |
 
 ## Path parameters
 
@@ -33,8 +33,8 @@ N/A — API không nhận path parameter.
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|
-| 1 | Course ID | course_id | int64 | No | Không quy định | Không quy định | Số nguyên 64-bit | SOURCE_REQUIRED | Không có | Candidate filter theo course; physical course relation chưa có schema tương thích. | [3.1](./05_Data_Mapping.md#31-đọc-course_id) |
-| 2 | Status | status | string | No | Không quy định | Không quy định | Chuỗi | SOURCE_REQUIRED | Không có | Candidate filter theo SupportStatus; enum, casing và chuỗi rỗng chưa xác nhận. | [3.2](./05_Data_Mapping.md#32-đọc-status) |
+| 1 | Course ID | course_id | int64 | No | 1 | 9223372036854775807 | Số nguyên 64-bit | Số nguyên dương trong miền BIGINT | Không có | Lọc theo course; course ngoài owner trả 403, course không tồn tại trả list rỗng. | [3.1](./05_Data_Mapping.md#31-đọc-course_id) |
+| 2 | Status | status | string | No | Không quy định | Không quy định | Chuỗi | OPEN, IN_PROGRESS, WAITING_LEARNER, RESOLVED, CANCELLED | Không có | Exact-match status filter; giá trị không biết trả list rỗng. | [3.2](./05_Data_Mapping.md#32-đọc-status) |
 
 ## Request body
 
@@ -46,9 +46,7 @@ N/A — API không nhận Request Body.
 GET /api/v1/mentor/support/requests?course_id=120&status=OPEN
 ```
 
-course_id=120 và status=OPEN chỉ minh họa cách gửi query. OPEN có trong V1-PILOT support_tickets nhưng chưa được xác nhận là giá trị enum của API.
-
-Query filter áp dụng độc lập; kết hợp AND nếu cả hai cùng có mặt là đề xuất DERIVED cần xác nhận. Không có page, page_size, sort hoặc request body.
+course_id=120 và status=OPEN minh họa query. Hai filter kết hợp bằng AND và status dùng exact match. course_id sai kiểu/ngoài miền positive BIGINT trả 422 DESIGN_VALIDATION_ERROR. Không có page, page_size, sort hoặc request body.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

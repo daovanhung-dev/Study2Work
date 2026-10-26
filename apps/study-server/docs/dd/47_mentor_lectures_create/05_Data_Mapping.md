@@ -14,222 +14,85 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ~~~text
-0. Xác thực Bearer JWT và role Mentor.
-1. Parse path/body; kiểm tra title tối đa 200 theo legacy candidate; giữ asset_refs opaque.
-2. Đọc course theo ID; kiểm tra candidate direct owner bằng principal Mentor.
-3. Bắt đầu transaction và INSERT một dòng lessons candidate.
-4. Đọc lại RETURNING row; asset resolver chưa có nên chưa thể tạo đầy đủ assets[].
-5. Chỉ commit/trả 201 khi mọi field Lecture bắt buộc có nguồn mapping đã được duyệt.
+0. Validate Mentor Bearer JWT.
+1. Validate path/body types and ranges; parse asset_refs JSON string into an ordered int64 ID array; allow [], reject duplicates and invalid values.
+2. Read course by path ID; return 404 if missing and 403 unless `courses.mentor_id` equals the authenticated Mentor. Do not filter course status.
+3. Resolve every non-empty asset ID from uploads where owner is the same Mentor, purpose is LECTURE and course_id matches path; any unresolved ID returns the same 404.
+4. Insert lessons with content as a decimal string, status `PUBLISHED` and database `CURRENT_TIMESTAMP` for both required timestamps.
+5. For non-empty asset refs, insert `lesson_uploads` rows in request order in the same transaction; commit and return assets in input order.
 ~~~
+
+The API route, module and HTTP tests are source-backed. Legacy BIGINT DDL and migration files remain checked-in artifacts; live schema and deployment are not verified.
 
 ## Request Usage Matrix
 
 | Request field | Source | Validate | Query/mutation usage | Response usage | Gap |
 |---|---|---|---|---|---|
-| Authorization | Header | Bearer JWT hợp lệ; role Mentor | Principal dùng cho candidate owner check; không nhận mentor ID từ client | Không trả token/claims | Mentor guard và identity mapping chưa có source |
-| course_id | Path | Parse int64; không thêm positive-only rule | Q1 c.id; M1 lessons.course_id | data.course_id | Legacy BIGINT/pilot UUID và live schema chưa chốt |
-| title | Body | Required string; max 200 là DERIVED từ legacy VARCHAR(200) | M1 lessons.name | data.title | Không suy ra min/trim |
-| content | Body | Required int64 | M1 lessons.content nhận decimal-string candidate | data.content:string? | DISCREPANCY về meaning/type |
-| asset refs | Body catalog label | Required string; không parse trước khi có format | Không có Q/M committed | data.assets[] | SOURCE_REQUIRED; provisional wire key asset_refs cần confirm |
-| order | Body | Required int32; không thêm range | M1 lessons.sort_order | data.order | Legacy INT candidate |
+| Authorization | Header | Valid Bearer JWT with Mentor role | Mentor principal is compared with `courses.mentor_id` and filters asset `owner_id` | Not echoed | Direct owner only; no assignment lookup. |
+| course_id | Path | Signed int64 | Q1 reads course; Q2 filters uploads; M1 sets lessons.course_id | data.course_id | Legacy BIGINT source; live schema not verified. |
+| title | Body | Required string; maximum 200 | M1 sets lessons.name | data.title | No minimum or trim rule. |
+| content | Body | Required signed int64 | M1 stores `str(content)` in lessons.content | data.content | Response is the decimal string; semantics are user-approved. |
+| asset_refs | Body | JSON text array of unique signed int64 IDs; empty array allowed | Q2 reads uploads with owner/purpose/course predicates | data.assets[] | Any ID not resolved in scope returns generic 404. |
+| order | Body | Required signed int32 | M1 sets lessons.sort_order | data.order | No positivity rule. |
 
 ## Query Matrix
 
-| Query ID | Mục đích | Type | Base table | Alias | Column | JOIN | WHERE | ORDER | Pagination | Result | Branch / status |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| Q1 | Tìm course theo path | SELECT | courses | c | c.id | N/A | c.id = :course_id | N/A | N/A | candidate_course | Không có row → candidate 404 |
-| Q1 | Đọc direct owner candidate | SELECT | courses | c | c.mentor_id | N/A | c.id = :course_id | N/A | N/A | candidate_course | So sánh với principal; assignment chưa thể xét |
-| Q2 | Resolve asset refs | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | N/A | Không có source ID/metadata lookup; SOURCE_REQUIRED |
+| Query ID | Mục đích | Type | Base table | Predicate | Order handling | Result / branch |
+|---|---|---|---|---|---|---|
+| Q1 | Course owner check | SELECT | courses | id = :course_id | N/A | Missing course→404; `mentor_id != current Mentor`→403; no course-status predicate. |
+| Q2 | Resolve asset metadata | SELECT | uploads | id in request; owner_id = Mentor; purpose = LECTURE; course_id = path | Rebuild result in original ID order | Empty ID list returns `[]` without query; unresolved IDs→generic 404. |
 
-Q1 candidate SQL, chỉ dùng nếu legacy schema được xác nhận:
-
-~~~sql
-SELECT c.id, c.mentor_id
-FROM courses AS c
-WHERE c.id = :course_id;
-~~~
-
-- Không thêm c.status = PUBLISHED: AC-21 là luồng Mentor tạo lecture.
-- Nếu Q1 không có course: candidate 404.
-- Nếu có course nhưng mentor_id khác principal: candidate 403.
-- Nếu course được phân công qua relation khác: chưa có nguồn; không giả lập quan hệ.
+Q2 must project `id`, `file_name`, `url`, `content_type`, `size_bytes` and `status` from uploads. It must not read client-supplied URL or metadata.
 
 ## Mutation Matrix
 
 | Mutation ID | Operation | Target table | Record condition | Target column | Value source | Mapping file | Transaction | Failure behavior |
 |---|---|---|---|---|---|---|---|---|
-| M1 | INSERT | lessons candidate | Q1 course tồn tại và direct-owner candidate check đạt | course_id | Path course_id | 07_lessons_insert.md | Cùng transaction với các field M1 | Rollback khi lỗi; catalog 500 cho lỗi hệ thống |
-| M1 | INSERT | lessons candidate | Q1 course tồn tại và direct-owner candidate check đạt | name | Request title | 07_lessons_insert.md | Cùng transaction với các field M1 | Title > 200 bị 422 theo giới hạn DB candidate |
-| M1 | INSERT | lessons candidate | Q1 course tồn tại và direct-owner candidate check đạt | content | Decimal string từ request content | 07_lessons_insert.md | Cùng transaction với các field M1 | Chỉ candidate DERIVED; meaning cần xác nhận |
-| M1 | INSERT | lessons candidate | Q1 course tồn tại và direct-owner candidate check đạt | sort_order | Request order | 07_lessons_insert.md | Cùng transaction với các field M1 | Không áp thêm quy tắc thứ tự |
-| M1 | INSERT | lessons candidate | Q1 course tồn tại và direct-owner candidate check đạt | created_at | CURRENT_TIMESTAMP | 07_lessons_insert.md | Cùng transaction với các field M1 | Legacy DDL không có default; live schema chưa xác minh |
-| M1 | INSERT | lessons candidate | Q1 course tồn tại và direct-owner candidate check đạt | updated_at | CURRENT_TIMESTAMP | 07_lessons_insert.md | Cùng transaction với các field M1 | Dùng cùng transaction timestamp candidate |
-| M1 | INSERT | lessons candidate | Q1 course tồn tại và direct-owner candidate check đạt | status | Bỏ khỏi INSERT để nhận default DRAFT | 07_lessons_insert.md | Cùng transaction với các field M1 | Default/enum là candidate; cần xác nhận |
-| M2 | Chưa xác định | N/A | Asset resolver/format không có | N/A | N/A | N/A | N/A | Không tạo resources/uploads mutation giả; SOURCE_REQUIRED |
-
-Candidate insert statement:
-
-~~~sql
-INSERT INTO lessons (
-    course_id,
-    name,
-    content,
-    sort_order,
-    created_at,
-    updated_at
-)
-VALUES (
-    :course_id,
-    :title,
-    :content_text_candidate,
-    :order,
-    CURRENT_TIMESTAMP,
-    CURRENT_TIMESTAMP
-)
-RETURNING id, course_id, name, content, sort_order, status, created_at, updated_at;
-~~~
-
-status được bỏ khỏi INSERT để nhận default DRAFT chỉ khi legacy DDL là schema được duyệt. INSERT chưa ghi asset reference vì contract format và metadata resolver chưa có nguồn.
+| M1 | INSERT | lessons | After auth, request validation, direct course ownership and full asset resolution | course_id, name, content, sort_order, status, created_at, updated_at | Path/request; `str(content)`; fixed `PUBLISHED`; `CURRENT_TIMESTAMP` | 07_lessons_insert.md | Caller-owned transaction; commit after response mapping; rollback on DB/insert/commit failure | Live target schema not verified. |
+| M2 | INSERT | lesson_uploads | After lesson row and asset scope checks; only for non-empty refs | lesson_id, upload_id, asset_position | Generated lesson ID; validated IDs and zero-based original order | migration 005 / API #47 view | Same transaction as M1; require every requested ID returned; rollback on mismatch/error | Live migration not verified. |
+| M3 | N/A | uploads/resources | API #47 does not mutate upload metadata or legacy resources | N/A | Resolved IDs are read-only | N/A | No asset mutation | Do not create resource rows. |
 
 ## Response Source Matrix
 
-| Response field | Type | Source type | Table/column or generator | Data Mapping step | Transform | Null/empty/omit rule | Gap |
-|---|---|---|---|---|---|---|---|
-| success | boolean | Branch constant | API outcome | 5 | true on success | N/A | Direct envelope convention |
-| businessCode | string | Contract constant | Catalog #47 | 5 | DESIGN_RESOURCE_CREATED | N/A | Direct |
-| message | string | Application | Application | 5 | Safe localized message | Text not specified | N/A |
-| data.id | int64 | INSERT result | lessons.id | 4 | Direct | N/A | Legacy candidate |
-| data.course_id | int64 | INSERT result | lessons.course_id | 4 | Direct | N/A | Legacy candidate |
-| data.title | string | INSERT result alias | lessons.name | 4 | name → title | N/A | Legacy candidate |
-| data.content | string? | INSERT result | lessons.content | 4 | Candidate decimal string | Omit if DB NULL only if optional omission is approved | Request/response type conflict |
-| data.assets[] | UploadAsset[] | Unresolved source | N/A | Pending | Resolve each ref to complete UploadAsset | No null/empty fallback defined | SOURCE_REQUIRED; required response field |
-| data.assets[].id | int64 | Unresolved source | N/A | Pending | N/A | N/A | API #34 ID generation/lookup unknown |
-| data.assets[].name | string | Unresolved source | N/A | Pending | N/A | N/A | No legacy metadata relation |
-| data.assets[].url | uri | Unresolved source | N/A | Pending | N/A | N/A | Storage URL policy unknown |
-| data.assets[].content_type | string | Unresolved source | N/A | Pending | N/A | N/A | MIME source unknown |
-| data.assets[].size_bytes | int64 | Unresolved source | N/A | Pending | N/A | N/A | Size metadata source unknown |
-| data.assets[].status | UploadStatus | Unresolved source | N/A | Pending | N/A | N/A | Enum/persistence unknown |
-| data.order | int32 | INSERT result alias | lessons.sort_order | 4 | sort_order → order | N/A | Legacy candidate |
-| data.status | LessonStatus | INSERT result/default | lessons.status | 4 | Candidate DRAFT default | N/A | Enum values unknown |
-| meta | object | Envelope default | N/A | 5 | {} | {} | API guidelines |
-| traceId | uuid | Request context | Trace helper | 5 | Propagate trace | Always present | API #47 route absent |
+| Response field | Type | Source type | Table/column or generator | Transform | Null/empty rule | Gap |
+|---|---|---|---|---|---|---|
+| data.assets[] | UploadAsset[] | Persisted API #34 metadata | uploads row | Resolve exact ID and rebuild in request order | Empty input → `[]` | Any unresolved ID maps to generic 404. |
+| data.assets[].id | int64 | Persisted | uploads.id | Direct | Required per item | API #34 BIGINT artifact; live schema unknown. |
+| data.assets[].name | string | Persisted | uploads.file_name | file_name → name | Required per item | API #34 fallback is `upload`. |
+| data.assets[].url | uri | Persisted | uploads.url | Direct | Required per item | Public URL from API #34. |
+| data.assets[].content_type | string | Persisted | uploads.content_type | Direct | Required per item | API #34 metadata. |
+| data.assets[].size_bytes | int64 | Persisted | uploads.size_bytes | Direct | Required per item | API #34 measured bytes. |
+| data.assets[].status | UploadStatus | Persisted | uploads.status | Current constant `UPLOADED` | Required per item | Catalog enum fixed for #34. |
 
 ## 0. Check quyền
 
-### 0.1. Thực hiện check quyền
-
-- Dùng Bearer JWT và guard Mentor được duyệt; current Study helper chỉ có Student guard.
-- Lấy principal từ token, không nhận owner ID từ request.
-- Candidate ownership chỉ kiểm tra direct owner theo API #46; assignment relation và identity mapping cần xác nhận.
-
-### 0.2. Query/check quyền
-
-| Target table/API | Column/Field | Condition/Value | Remarks |
-|---|---|---|---|
-| JWT principal | roles | Phải có Mentor role | Catalog direct; runtime Mentor guard chưa có |
-| courses AS c | c.id | Bằng path course_id | Legacy candidate |
-| courses AS c | c.mentor_id | Bằng numeric principal ID | Candidate DERIVED; không hỗ trợ assignment relation chưa có nguồn |
-
-### 0.3. Check kết quả
-
-- JWT thiếu/sai/không hợp lệ → 401 theo catalog.
-- Token không có role Mentor → 403 theo catalog.
-- Course không tồn tại → candidate 404.
-- Course tồn tại nhưng không khớp direct-owner candidate → candidate 403.
-- AC-21 cho phép course được phân công; nếu quyền đến từ assignment, cần relation đã duyệt, không suy diễn bảng.
+- Decode Mentor principal with `validate_current_user_request(..., role="MENTOR")` before DB access.
+- Read course by `courses.id`; require `courses.mentor_id` to match the numeric JWT subject. No assignment relation or course-status filter is used.
+- Asset lookup scopes every row by that Mentor principal; never accept owner_id from request.
+- Asset purpose must equal `LECTURE`.
+- Asset course_id must equal path course_id.
+- Preserve request order after lookup; database result order is not the contract.
 
 ## 1. Validate data input
 
-- Parse course_id thành int64; không thêm điều kiện dương.
-- title là string bắt buộc; giới hạn tối đa 200 ký tự là DERIVED từ legacy lessons.name VARCHAR(200). Không suy ra trim hoặc minimum length.
-- content là int64 bắt buộc; không suy ra giá trị dương.
-- asset refs là string bắt buộc; không parse, tách delimiter hay coi là URL trước khi có format được duyệt.
-- order là int32 bắt buộc; không thêm điều kiện không âm.
-- Lỗi parse/required/giới hạn candidate ánh xạ 422 theo catalog; chưa thêm business error code.
+- `asset_refs` is a required string containing JSON text whose top-level value is an array.
+- Every element must be a signed int64 UploadAsset ID.
+- Empty array is allowed and maps to empty `assets`.
+- Duplicate IDs are rejected before asset lookup.
+- `content:int64` is stored in `lessons.content` as `str(content)` and returned as that decimal string.
+- Invalid request types/ranges, malformed JSON, duplicate IDs and title over 200 return 422.
+- Missing or cross-scope assets must never be returned as UploadAsset values; all unresolved IDs map to generic 404.
 
-## 2. Get thông tin
+## 2. Check results and map response
 
-### 2.1. Query
-
-| Target table | Column get | Chú thích | Remarks |
-|---|---|---|---|
-| courses AS c | c.id | ID để xác định course | Q1 |
-| ↑ | c.mentor_id | Mentor owner candidate | Q1 |
-
-### 2.2. JOIN
-
-| Target table | Join condition | Join type |
-|---|---|---|
-| courses AS c | N/A | BASE |
-
-Không JOIN resources, contents hoặc file_objects vì chưa có reference format/asset lookup được xác nhận.
-
-### 2.3. WHERE
-
-- c.id = :course_id.
-- Không thêm c.status = PUBLISHED.
-- Không thêm assignment predicate nếu chưa có relation nguồn.
-
-### 2.4. ORDER BY
-
-- N/A — query chỉ tìm course theo primary ID.
-
-## 3. Insert/Update thông tin
-
-### 3.1. Target table
-
-- M1: legacy candidate lessons.
-- Không UPDATE lecture hiện có; API #47 là create.
-- Không INSERT resources/uploads/contents khi chưa có nguồn mapping đã xác nhận.
-
-### 3.2. Conditions
-
-- Q1 trả đúng course_id.
-- Principal có role Mentor.
-- Candidate direct owner: c.mentor_id = current numeric Mentor ID.
-- Thứ tự kiểm tra và 403/404 phân biệt là DERIVED theo error set; cần đối chiếu với API #46.
-
-### 3.3. Items update/insert
-
-- M1 chỉ insert một row lessons; tham chiếu [07_lessons_insert.md](./07_lessons_insert.md).
-- M2 asset association chưa xác định; không tạo mutation mapping.
-
-### 3.4. Parameters
-
-| Param | Giá trị | Remarks |
-|---|---|---|
-| course_id | Path course_id | int64; legacy candidate |
-| title | Request title | INSERT lessons.name |
-| content_text_candidate | Chuyển request int64 thành chuỗi thập phân | DERIVED; meaning cần xác nhận |
-| order | Request order | INSERT lessons.sort_order |
-| created_at | CURRENT_TIMESTAMP | Legacy DDL không có default |
-| updated_at | CURRENT_TIMESTAMP | Dùng cùng transaction timestamp candidate |
-| status | Omitted | Nhận legacy default DRAFT nếu schema được duyệt |
-
-## 4. Check kết quả execute query
-
-### 4.1. Thành công
-
-- INSERT trả về một row và transaction commit thành công.
-- Map Lecture.id/course_id/title/content/order/status từ row candidate.
-- Chỉ trả HTTP 201 khi mọi field bắt buộc trong Lecture, đặc biệt assets[], có nguồn mapping đã duyệt.
-- Nếu asset refs chưa thể resolve thì không giả lập thành công; contract chưa định nghĩa fallback hợp lệ.
-
-### 4.2. Lỗi hệ thống
-
-- Query/transaction lỗi không ánh xạ được an toàn → rollback và 500 DESIGN_INTERNAL_ERROR.
-- Không trả SQL, exception hoặc dữ liệu storage nội bộ.
-
-### 4.3. Validate lỗi
-
-- Field bắt buộc/type parse sai hoặc title vượt candidate 200 → 422 DESIGN_VALIDATION_ERROR.
-- Không phát sinh error code khác catalog.
-
-### 4.4. Ngoài trường hợp trên
-
-- Dùng 401/403/404/422/500 đúng catalog.
-- Không dùng 503 cho API #47; lỗi storage ở bước upload thuộc API #34 contract.
-- API guidelines yêu cầu data:null khi lỗi, nhưng current helper mặc định {}; discrepancy cần xử lý ở implementation contract chung.
+- Query uploads only when the parsed ID array is non-empty.
+- Require one eligible uploads row for each requested ID under the owner/purpose/course predicates.
+- Build an ID-to-row map and emit assets by iterating the original ID array, preserving its order.
+- Do not use resources rows for UploadAsset projection.
+- Insert each resolved asset ID into `lesson_uploads` with zero-based request position after the lesson INSERT; skip the relation INSERT for an empty array.
+- Insert lesson status as `PUBLISHED`; use database `CURRENT_TIMESTAMP` for both `created_at` and `updated_at`.
+- Commit lesson and asset links together only after response model construction; rollback if query, INSERT, relation mapping or commit fails.
+- Live schema/migration availability remains unverified and keeps this DD in Draft.
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

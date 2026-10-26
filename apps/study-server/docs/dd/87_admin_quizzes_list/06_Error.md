@@ -11,15 +11,15 @@ status: "Draft — Needs Confirmation"
 
 ## Giải thích
 
-Các nhánh dưới đây giữ nguyên bộ lỗi API #87 trong catalog: 401, 403 và 500. Không thêm 404 hoặc 422. Điều kiện parse query lỗi và error-envelope integration cần được thống nhất trước khi wire route.
+Catalog API #87 khai báo 401, 403 và 500. Runtime cục bộ giữ các lỗi đó, đồng thời có fallback 422 cho query `course`/`page` sai; 422 là discrepancy DERIVED, chưa được thêm vào catalog. Route đã được wire trong middleware allowlist.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Authentication | SOURCE_REQUIRED | Authorization | Bearer token thiếu, sai hoặc hết hạn | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) | N/A | Code/status DIRECT; Admin guard chưa có. |
-| 2 | Authorization | SOURCE_REQUIRED | Admin role/quiz-management permission | Principal không có role Admin hoặc permission | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) | N/A | Role DIRECT; AC-35 permission DIRECT; policy source chưa có. |
-| 3 | System error | SOURCE_REQUIRED | Quiz/question query or mapping | DB/query hoặc required response mapping lỗi | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 5](./05_Data_Mapping.md#step-5-return-success-or-error) | N/A | Candidate data/schema; không lộ lỗi nội bộ. |
+| 1 | Authentication | VERIFIED locally | Authorization | Bearer token thiếu, sai hoặc hết hạn | 401 | DESIGN_AUTHENTICATION_REQUIRED | N/A | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) | N/A | Shared ADMIN guard; focused HTTP tests pass. |
+| 2 | Authorization | VERIFIED locally / SOURCE_REQUIRED for fine permission | Admin role/quiz-management permission | Principal không có role Admin | 403 | DESIGN_ACCESS_DENIED | N/A | [Step 0](./05_Data_Mapping.md#step-0-authentication-and-authorization) | N/A | Role guard tested; AC-35 fine-grained permission policy remains absent. |
+| 3 | System error | VERIFIED locally with fake DB | Quiz query or required metadata mapping | DB/query/count/page/projection failure | 500 | DESIGN_INTERNAL_ERROR | N/A | [Step 5](./05_Data_Mapping.md#step-5-return-success-or-error) | N/A | Safe envelope and rollback; live DB unverified. |
 
 > Error message ID không có trong Study API contract; ghi N/A, không dùng mã từ template Excel.
 
@@ -27,11 +27,11 @@ Các nhánh dưới đây giữ nguyên bộ lỗi API #87 trong catalog: 401, 4
 
 | Item | Condition | HTTP status | Business code | Status |
 |---|---|---:|---|---|
-| course | Query không parse được int64 | Chưa xác định | Catalog không khai báo | SOURCE_REQUIRED |
-| page | Query không parse được int32 hoặc nhỏ hơn 1 theo proposal | Chưa xác định | Catalog không khai báo 400/422 | SOURCE_REQUIRED / DERIVED rule |
+| course | Query không parse được int64 hoặc ngoài signed-int64 | 422 | DESIGN_VALIDATION_ERROR | Local DERIVED behavior; not in catalog |
+| page | Query không parse được int32, ngoài range hoặc nhỏ hơn 1 | 422 | DESIGN_VALIDATION_ERROR | Local DERIVED behavior; not in catalog |
 | status | Giá trị ngoài enum nếu enum được bổ sung | Chưa xác định | Catalog không khai báo 422 | SOURCE_REQUIRED |
 
-Không tự gán HTTP 400/422 cho các nhánh trên.
+`status` hiện được so sánh nguyên văn; không có enum validator.
 
 ## Error envelope
 
@@ -48,7 +48,7 @@ API Guidelines quy định data=null khi lỗi:
 }
 ~~~
 
-Current error_response thay data=None bằng {}. API #87 chưa có route; mismatch hiện tại là integration discrepancy phải xử lý khi wire endpoint.
+Current `error_response` trả `data: null`; focused API #87 tests xác nhận envelope này. Live error handling sau triển khai chưa được kiểm tra.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -12,7 +12,7 @@ status: "Draft — Needs Confirmation"
 ## Flow xử lý data
 
 ```text
-Mentor Bearer principal -> xác thực role và course scope -> xác nhận student nằm trong learner set được phép của course -> đọc lesson PUBLISHED -> đọc current lesson progress của Student -> dựng summary và detail candidate -> trả contract trực tiếp hoặc contract đã được owner sửa.
+Mentor Bearer principal -> shared MENTOR guard -> direct course-owner check -> active Student-roster check -> đọc lesson PUBLISHED và latest current progress -> dựng summary/detail response fallback -> trả envelope.
 ```
 
 # Mục lục
@@ -33,26 +33,26 @@ Mentor Bearer principal -> xác thực role và course scope -> xác nhận stud
 
 ### 0.1. Thực hiện check quyền
 
-- Xác thực Bearer JWT và yêu cầu role Mentor theo catalog; Study hiện chưa có Mentor guard.
-- Kiểm tra quyền Mentor trên `course_id` trước khi truy vấn/serialize learner progress.
-- Kiểm tra `student_id` thuộc cùng enrollment/roster scope mà #65 dùng sau khi policy được phê duyệt.
+- Xác thực Bearer/JWT và role Mentor bằng `validate_current_user_request(..., role="MENTOR")` trước mọi query.
+- Kiểm tra `courses.mentor_id = principal sub` trước Student lookup theo local direct-owner pattern của #65/#66.
+- Kiểm tra `student_id` có `enrollments.status = 'ACTIVE'` và `users.role = 'STUDENT'` trong course đó như roster #65.
 - Không trả dữ liệu Student chỉ dựa trên hai ID trong path.
 
-### 0.2. Query/check quyền — candidate, chưa phải SQL được duyệt
+### 0.2. Query/check quyền — runtime SQL theo DERIVED fallback
 
 | Target table/API | Column/Field | Condition/Value | Remarks |
 |---|---|---|---|
-| JWT principal | `roles` | Phải có `MENTOR` | Role DIRECT; current helper chỉ yêu cầu STUDENT. |
-| Legacy candidate `courses` | `id` | Khớp `course_id` | DDL BIGINT candidate; live schema chưa xác nhận. |
-| Legacy candidate `courses` | `mentor_id` | So sánh principal Mentor khi identity mapping được duyệt | Candidate direct-owner; assignment chưa có mapping. |
-| Legacy candidate `enrollments` | `course_id`, `user_id` | Student phải thuộc learner set của course | Enrollment status/eligibility giống policy #65, hiện SOURCE_REQUIRED. |
-| Legacy candidate `users` | `id`, `role` | Xác minh learner là Student nếu schema được chọn | Candidate; role/identity projection chưa được duyệt. |
+| JWT principal | `roles`, `sub` | Phải có `MENTOR`; `sub` dùng làm Mentor ID | Shared MENTOR guard là current source; `sub → courses.mentor_id` là DERIVED theo #65/#66. |
+| Legacy `courses` | `id` | Khớp `course_id` | Current SQL source; live schema chưa xác nhận. |
+| Legacy `courses` | `mentor_id` | So sánh với numeric principal `sub` | Runtime fallback direct-owner theo #65/#66; business approval chưa xác nhận. |
+| Legacy `enrollments` | `course_id`, `user_id`, `status` | `course_id` và `user_id` khớp; `status = 'ACTIVE'` | Runtime dùng cùng roster predicate của #65; live schema chưa xác nhận. |
+| Legacy `users` | `id`, `role`, `full_name`, `avatar_url` | `role = 'STUDENT'`; trả identity tối thiểu | Runtime projection; `avatar_url` nullable; privacy approval chưa xác nhận. |
 
 ### 0.3. Check kết quả
 
 - Nếu thiếu/sai Bearer credential: dùng 401 `DESIGN_AUTHENTICATION_REQUIRED` theo catalog.
-- Nếu role hoặc course permission không hợp lệ: dùng 403 `DESIGN_ACCESS_DENIED` theo catalog; predicate cần xác nhận.
-- Nếu course hoặc Student/course membership không tồn tại theo policy: 404 là candidate; privacy-aware 403/404 order SOURCE_REQUIRED.
+- Nếu role sai hoặc Mentor không sở hữu course: trả 403 `DESIGN_ACCESS_DENIED` theo catalog.
+- Nếu course không tồn tại hoặc Student không có trong active roster: trả 404 `DESIGN_RESOURCE_NOT_FOUND` theo fallback privacy hiện implement.
 - Không đọc progress cho Student ngoài scope Mentor/course.
 
 <a id="step-1-validate-data-input"></a>
@@ -61,8 +61,8 @@ Mentor Bearer principal -> xác thực role và course scope -> xác nhận stud
 
 | Input | Validation trực tiếp | Candidate handling | Trạng thái |
 |---|---|---|---|
-| `course_id` | Required int64 path | Không thêm positivity/range constraint | DIRECT type; malformed-path behavior chưa xác định. |
-| `student_id` | Required int64 path | Không thêm positivity/range constraint | DIRECT type; malformed-path behavior chưa xác định. |
+| `course_id` | Required int64 path | Raw signed-int64 parse; lỗi parse → 404 | DIRECT type; mapping 404 là runtime fallback theo #65. |
+| `student_id` | Required int64 path | Raw signed-int64 parse; lỗi parse → 404 | DIRECT type; mapping 404 là runtime fallback theo #65/#66. |
 | Query/body | Không khai báo | Không nhận page, size, filter hoặc mutation fields | DIRECT. |
 
 Catalog không khai báo 422 cho API #67. Không tự thêm HTTP/business code cho path parse failure.
@@ -71,65 +71,65 @@ Catalog không khai báo 422 cho API #67. Không tự thêm HTTP/business code c
 
 ## 2. Get thông tin
 
-### 2.1. Query candidate
+### 2.1. Query source hiện implement
 
-Không có SQL runtime được duyệt. Bảng dưới chỉ nêu field hiện diện trong DDL/API #9; không chọn legacy DDL làm live schema.
+`query.py` có SQL constants dùng legacy BIGINT field set giống #65/#66. Đây là current runtime source nhưng không chứng minh live schema/deployment.
 
 | Target table | Column get | Chú thích | Remarks |
 |---|---|---|---|
-| Legacy `courses AS c` | `c.id` | Candidate course lookup | Course ID int64 trong legacy; pilot dùng UUID. |
-| Legacy `courses AS c` | `c.mentor_id` | Candidate direct-owner check | Mentor claim mapping/assignment SOURCE_REQUIRED. |
-| Legacy `enrollments AS e` | `e.course_id` | Candidate course membership scope | Status eligibility chưa được chọn. |
-| Legacy `enrollments AS e` | `e.user_id` | Candidate Student membership | Không có unique `(course_id,user_id)` trong DDL đã rà soát. |
-| Legacy `enrollments AS e` | `e.status` | Candidate membership state | Không tự lọc ACTIVE; cần cùng policy #65. |
-| Legacy `users AS u` | `u.id` | Candidate Student identity | Legacy candidate; schema khác pilot. |
-| Legacy `users AS u` | `u.full_name` | Candidate UserSummary field | Projection/privacy cần duyệt. |
-| Legacy `users AS u` | `u.avatar_url` | Candidate optional UserSummary field | Null/omit policy chưa xác định. |
-| API #9 source `lessons AS l` | `l.id` | Lesson ID | Current API #9 source, not #67 runtime. |
-| API #9 source `lessons AS l` | `l.course_id` | Course relation | Candidate scope. |
-| API #9 source `lessons AS l` | `l.name` | Map to candidate title | API #9 aliases name to title. |
-| API #9 source `lessons AS l` | `l.sort_order` | Map to candidate order | API #9 sorts by sort_order then id. |
-| API #9 source `lessons AS l` | `l.status` | Candidate PUBLISHED filter | Reuse to match #65 candidate denominator. |
-| Legacy `lesson_progress AS lp` | `lp.user_id` | Candidate Student key | DDL nullable; token/path binding unresolved. |
-| Legacy `lesson_progress AS lp` | `lp.lesson_id` | Candidate lesson key | DDL nullable; no declared unique user/lesson key. |
-| Legacy `lesson_progress AS lp` | `lp.status` | Candidate progress status | Default NOT_STARTED; exhaustive enum unknown. |
-| Legacy `lesson_progress AS lp` | `lp.progress_percent` | Candidate per-lesson percent | SMALLINT default 0; range/check not in DDL. |
-| Legacy `lesson_progress AS lp` | `lp.last_accessed_at` | Candidate last access timestamp | Nullable in legacy DDL. |
-| Legacy `lesson_progress AS lp` | `lp.completed_at` | Candidate completion timestamp | Nullable in legacy DDL. |
+| Legacy `courses AS c` | `c.id` | Course lookup | Course ID int64 trong legacy; pilot dùng UUID. |
+| Legacy `courses AS c` | `c.mentor_id` | Direct-owner check | Runtime so sánh numeric `sub`; mapping là DERIVED theo #65/#66. |
+| Legacy `enrollments AS e` | `e.course_id` | Student membership scope | Runtime lọc theo course; DDL không có unique `(course_id,user_id)`. |
+| Legacy `enrollments AS e` | `e.user_id` | Student membership | Runtime lọc theo `student_id` path. |
+| Legacy `enrollments AS e` | `e.status` | Chỉ chọn membership `ACTIVE` | Cùng predicate runtime #65. |
+| Legacy `users AS u` | `u.id` | Student identity | Legacy candidate; schema khác pilot. |
+| Legacy `users AS u` | `u.full_name` | UserSummary field | Runtime projection; privacy approval pending. |
+| Legacy `users AS u` | `u.avatar_url` | Optional UserSummary field | Runtime giữ JSON null; live privacy policy chưa xác nhận. |
+| Legacy `lessons AS l` | `l.id` | Lesson ID | Current API #67 SQL source; API #9 uses same relation. |
+| Legacy `lessons AS l` | `l.course_id` | Course relation | Runtime lesson scope. |
+| Legacy `lessons AS l` | `l.name` | Map to `title` | Same alias as current API #9 source. |
+| Legacy `lessons AS l` | `l.sort_order` | Map to `order` | API #67 orders by sort_order then id, as API #9. |
+| Legacy `lessons AS l` | `l.status` | PUBLISHED filter | Same lesson eligibility source as #9/#65. |
+| Legacy `lesson_progress AS lp` | `lp.user_id` | Lọc theo `student_id` path | Current query source; physical live schema unresolved. |
+| Legacy `lesson_progress AS lp` | `lp.lesson_id` | Nối với `lessons.id` | DDL không khai báo unique user/lesson. |
+| Legacy `lesson_progress AS lp` | `lp.status` | Trả current state; absent row thành `NOT_STARTED` | Enum được runtime giới hạn ở 3 trạng thái như #65. |
+| Legacy `lesson_progress AS lp` | `lp.progress_percent` | Trả per-lesson percent; absent row thành 0 | Runtime kiểm tra 0–100 như #65. |
+| Legacy `lesson_progress AS lp` | `lp.last_accessed_at` | Trả thời điểm truy cập cuối | Nullable; dùng tie-break row latest. |
+| Legacy `lesson_progress AS lp` | `lp.completed_at` | Trả thời điểm hoàn thành | Nullable; giữ JSON null. |
 
 ### 2.2. JOIN candidate
 
 | Target table | Join condition | Join type | Evidence/status |
 |---|---|---|---|
 | `courses AS c` | `c.id = :course_id` | BASE/lookup | Legacy candidate only. |
-| `enrollments AS e` | `e.course_id = c.id` | Candidate relation | Eligibility and status policy SOURCE_REQUIRED. |
-| `users AS u` | `u.id = e.user_id` | Candidate relation | User role/visibility policy SOURCE_REQUIRED. |
-| `lessons AS l` | `l.course_id = c.id AND l.status = 'PUBLISHED'` | Candidate lesson set | DIRECT in API #9 current source; DERIVED for #67/#65. |
-| `lesson_progress AS lp` | `lp.lesson_id = l.id AND lp.user_id = :student_id` | LEFT JOIN candidate | Legacy relation; duplicate rows, nullable keys and live schema unresolved. |
+| `enrollments AS e` | `e.course_id = c.id` | Runtime relation | `ACTIVE` plus requested user. |
+| `users AS u` | `u.id = e.user_id` | Runtime relation | `role='STUDENT'`; visibility policy beyond role is not modeled. |
+| `lessons AS l` | `l.course_id = c.id AND l.status = 'PUBLISHED'` | Runtime lesson set | Current API #9 source also filters PUBLISHED; reuse in #67 is DERIVED. |
+| `lesson_progress AS lp` | `lp.lesson_id = l.id AND lp.user_id = :student_id` | LEFT JOIN latest row | Runtime `DISTINCT ON`; sort timestamp desc nulls-last then ID desc, như #65. |
 
 V1-PILOT alternative uses UUID `course_enrollments` and `lesson_progress_facts`; it has no `progress_percent` in `lesson_progress_facts`. `progress_snapshots` stores aggregate facts but does not provide per-lesson detail. Do not mix these fields with legacy IDs.
 
 ### 2.3. WHERE / aggregate
 
-- Candidate course predicate: `course_id` must match the requested course; Mentor authorization must pass first.
-- Candidate Student predicate: `student_id` must match the requested learner and the same roster/eligibility policy selected for #65.
-- Candidate lesson predicate: `lessons.course_id = course_id` and `lessons.status = 'PUBLISHED'`, matching current API #9 curriculum source.
-- Candidate per-lesson progress predicate: `lesson_progress.user_id = student_id` and `lesson_progress.lesson_id = lessons.id`.
-- Candidate missing-progress rule: no progress row maps to `NOT_STARTED` and 0 percent; this is DERIVED, not a database default guarantee for absent rows.
-- Candidate duplicate-progress rule: SOURCE_REQUIRED; legacy DDL lacks a unique `(user_id, lesson_id)` constraint, so do not aggregate duplicate rows silently.
+- Course predicate: `courses.id = course_id`; direct owner check runs before roster/progress access.
+- Student predicate: requested user must have ACTIVE enrollment in the course and `users.role='STUDENT'`, following current #65.
+- Lesson predicate: `lessons.course_id = course_id` and `lessons.status = 'PUBLISHED'`.
+- Per-lesson progress predicate: `lesson_progress.user_id = student_id` and `lesson_progress.lesson_id = lessons.id`.
+- Missing-progress rule: no progress row maps to `NOT_STARTED` and 0 percent; this is implemented DERIVED behavior, not a database default guarantee.
+- Duplicate progress rule: choose latest `last_accessed_at DESC NULLS LAST`, then `id DESC`, matching the current #65 query; the DDL still lacks a unique `(user_id, lesson_id)` constraint.
 
 ### 2.4. ORDER BY
 
-- Candidate lesson order: `lessons.sort_order ASC, lessons.id ASC`, matching current API #9 source.
+- Runtime lesson order: `lessons.sort_order ASC, lessons.id ASC`, matching current API #9 source.
 - API #67 does not declare client sort parameters; do not add them.
 
-### 2.5. Summary formula — shared candidate with #65
+### 2.5. Summary formula — shared DERIVED fallback with #65
 
-- `total_lessons` = count of lessons in the PUBLISHED candidate lesson set.
-- `completed_lessons` = count of those lessons whose candidate progress status is `COMPLETED`.
+- `total_lessons` = count of returned PUBLISHED lessons.
+- `completed_lessons` = count of those lessons whose selected progress status is `COMPLETED`.
 - `progress_percent` = floor of sum of per-lesson percent values, treating absent progress as zero, divided by `total_lessons`.
-- If `total_lessons = 0`, candidate `completed_lessons = 0` and `progress_percent = 0`.
-- This formula matches #65's candidate proposal only; exact state mapping, duplicate handling, denominator and rounding require owner confirmation.
+- If `total_lessons = 0`, runtime returns `completed_lessons = 0` and `progress_percent = 0`.
+- Current #67 implementation matches current #65 source: COMPLETED count, per-lesson percent arithmetic mean, floor rounding and zero for an empty denominator. These remain DERIVED business rules pending owner approval.
 
 <a id="step-3-insertupdate-thong-tin"></a>
 
@@ -143,10 +143,10 @@ N/A — API #67 is GET/read-only. Không có INSERT/UPDATE/DELETE hoặc transac
 
 ### 4.1. Thành công
 
-- Direct response: HTTP 200 `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<Page<Course>>`.
-- Candidate response after contract approval: `StudentCourseProgress` with one summary and lesson detail list.
-- Với Student hợp lệ nhưng chưa có progress state, candidate trả lesson list với 0/NOT_STARTED; không coi trường hợp này là resource không tồn tại.
-- Map từng direct field ở [04_Response](./04_Response.md); candidate mapping chỉ áp dụng sau khi contract được sửa.
+- Direct diagram/catalog response: HTTP 200 `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<Page<Course>>`.
+- Current local fallback: `StudentCourseProgress` với identity, summary và ordered lesson detail.
+- Với Student hợp lệ nhưng chưa có progress row, runtime trả `NOT_STARTED`/0 và hai timestamp null; không coi trường hợp này là resource không tồn tại.
+- Map response theo [04_Response](./04_Response.md); singular shape là DERIVED và đang lệch direct diagram/catalog contract.
 
 ### 4.2. Lỗi hệ thống
 
@@ -155,27 +155,26 @@ N/A — API #67 is GET/read-only. Không có INSERT/UPDATE/DELETE hoặc transac
 
 ### 4.3. Authentication / authorization / not found
 
-- Giữ code 401/403/404 đúng catalog; trigger và privacy order cho course/student membership cần xác nhận tại [06_Error](./06_Error.md).
+- Giữ code 401/403/404 đúng catalog; fallback hiện trả 403 cho course khác owner và 404 cho course/Student không tìm thấy trong scope; xem [06_Error](./06_Error.md).
 - Không thêm 422/409/503.
 
 ## Request Usage Matrix
 
 | Request item | Source | Mapping step | Query use | Response use | Gap |
 |---|---|---|---|---|---|
-| Authorization | Bearer JWT | 0.1 | Mentor course permission | Không trả token/claims | Mentor guard và ID mapping SOURCE_REQUIRED. |
-| `course_id` | Path int64 | 1, 2.1–2.3 | Q1/Q2/Q3 | Candidate `course_id` | Live schema/key binding unresolved. |
-| `student_id` | Path int64 | 1, 2.1–2.3 | Q2/Q4 | Candidate `student.id` | Must be authorized within course roster. |
+| Authorization | Bearer JWT | 0.1 | Shared role guard and direct owner check | Không trả token/claims | `MENTOR` helper current; owner predicate DERIVED from #65/#66. |
+| `course_id` | Path int64 | 1, 2.1–2.3 | Q1/Q2/Q3 | Runtime `course_id` | Raw signed-int64; live schema unresolved. |
+| `student_id` | Path int64 | 1, 2.1–2.3 | Q2/Q3 | Runtime `student.id` | ACTIVE roster membership required; live schema unresolved. |
 | Query/body | N/A | N/A | None | None | Catalog không khai báo. |
 
 ## Query Matrix
 
 | Query ID | Mục đích | Type | Candidate source | Predicate/group/order | Status |
 |---|---|---|---|---|---|
-| Q1 | Kiểm tra course và Mentor scope | SELECT concept | Legacy `courses.id`, `mentor_id` | ID khớp path; owner/assignment rule chưa chốt | DERIVED candidate; live schema/identity SOURCE_REQUIRED. |
-| Q2 | Kiểm tra Student thuộc course | SELECT concept | Legacy `enrollments`, `users` | Course + Student; cùng enrollment eligibility với #65 | Status, duplicate, privacy policy SOURCE_REQUIRED. |
-| Q3 | Lấy curriculum làm denominator | SELECT concept | API #9 source `lessons` | Course + PUBLISHED; order `sort_order,id` | Current source for #9; DERIVED reuse in #65/#67. |
-| Q4 | Đọc progress hiện trạng từng lesson | SELECT concept | Legacy `lesson_progress` | Student + lesson; resolve duplicate state before aggregate | DDL candidate only; not an approved query. |
-| Q5 | Tính progress summary | Aggregate | Q3 + Q4 candidate rows | Count completed; floor average; zero on empty denominator | DERIVED, must match #65 if approved. |
+| Q1 | Kiểm tra course và Mentor scope | SELECT runtime | Legacy `courses.id`, `mentor_id` | Course ID bằng path; owner lookup trước roster | Current source; live schema/identity policy unverified. |
+| Q2 | Kiểm tra Student thuộc active roster | SELECT runtime | Legacy `enrollments`, `users` | Course + Student; ACTIVE + STUDENT | Current #65-compatible fallback; privacy approval pending. |
+| Q3 | Lấy lesson set và current state | SELECT runtime | Legacy `lessons`, `lesson_progress` | PUBLISHED; progress theo Student; `sort_order,id`; latest timestamp/id | Current source; schema live unverified. |
+| Q4 | Tính progress summary | Runtime aggregate in view | Q3 mapped lesson rows | Completed count; floor average; zero khi denominator rỗng | DERIVED; khớp #65 local source. |
 
 ## Mutation Matrix
 
@@ -187,25 +186,25 @@ N/A — API #67 is GET/read-only. Không có INSERT/UPDATE/DELETE hoặc transac
 
 | Response field | Contract/candidate type | Candidate source | Mapping rule | Evidence/status |
 |---|---|---|---|---|
-| `success` | boolean | ApiEnvelope<T> | Envelope success flag | DIRECT schema; endpoint unwired. |
+| `success` | boolean | ApiEnvelope<T> | Envelope success flag | DIRECT schema; route is wired. |
 | `businessCode` | string | Catalog | `DESIGN_RESOURCE_RETRIEVED` on success | DIRECT. |
-| `message` | string | Application message | Exact text unspecified | SOURCE_REQUIRED. |
-| `data.items[]` | Course[] | Catalog Course | Preserve direct type | DIRECT; no progress fields. |
-| `data.pagination` | PageMeta | Catalog | page, size, total, total_pages | DIRECT; request lacks pagination inputs. |
+| `message` | string | Application message | Runtime success: `Student progress retrieved.` | Direct catalog text unspecified; current local message is DERIVED. |
+| `data.items[]` | Course[] | Catalog Course | Preserve direct type | DIRECT contract; not the current local response. |
+| `data.pagination` | PageMeta | Catalog | page, size, total, total_pages | DIRECT contract; request lacks pagination inputs. |
 | `meta` | object | ApiEnvelope<T> | Metadata object | DIRECT; fields unspecified. |
-| `traceId` | uuid | Request trace | Per shared envelope contract | DIRECT schema; route absent. |
-| Candidate `course_id` | int64 | Path/course relation | Echo requested authorized course | DERIVED; candidate shape only. |
-| Candidate `student` | UserSummary | Enrolled Student row | Minimum identity fields only | DERIVED; projection/privacy SOURCE_REQUIRED. |
-| Candidate `summary.completed_lessons` | int32 | Progress status rows | Count COMPLETED in same published denominator as #65 | DERIVED; enum/schema unresolved. |
-| Candidate `summary.total_lessons` | int32 | PUBLISHED lesson rows | Count course curriculum rows | DERIVED from API #9 current source. |
-| Candidate `summary.progress_percent` | int32 | Per-lesson percent state | Same floor-average proposal as #65 | DERIVED; rounding/range unresolved. |
-| Candidate `lessons[].lesson_id` | int64 | Legacy `lessons.id` | One row per published lesson | Candidate; pilot UUID conflict. |
-| Candidate `lessons[].title` | string | Legacy `lessons.name` | `name → title` | Candidate from API #9 source. |
-| Candidate `lessons[].order` | int32 | Legacy `lessons.sort_order` | `sort_order → order` | Candidate from API #9 source. |
-| Candidate `lessons[].progress_status` | string | Legacy `lesson_progress.status` | Missing row → NOT_STARTED proposal | DERIVED; enum and missing-row behavior unresolved. |
-| Candidate `lessons[].progress_percent` | int32 | Legacy `lesson_progress.progress_percent` | Missing row → 0 proposal | DERIVED; DDL SMALLINT and no range check. |
-| Candidate `lessons[].last_accessed_at` | date-time? | Legacy `lesson_progress.last_accessed_at` | Null when absent | DDL candidate; serialization unresolved. |
-| Candidate `lessons[].completed_at` | date-time? | Legacy `lesson_progress.completed_at` | Null when absent | DDL candidate; serialization unresolved. |
+| `traceId` | uuid | Request trace | Per shared envelope contract | DIRECT schema; current route propagates trace ID. |
+| Runtime `course_id` | int64 | Path | Echo authorized course path | DERIVED response shape; current module source. |
+| Runtime `student` | UserSummary | Active Student row | id, full_name, nullable avatar_url | DERIVED projection; privacy approval pending. |
+| Runtime `summary.completed_lessons` | int32 | Mapped progress states | Count COMPLETED in published lesson set | DERIVED; same local rule as #65. |
+| Runtime `summary.total_lessons` | int32 | Published lesson rows | Number of returned lessons | DERIVED from API #9/current #65 source. |
+| Runtime `summary.progress_percent` | int32 | Per-lesson percentages | Floor arithmetic mean; zero if no lessons | DERIVED; same local rule as #65. |
+| Runtime `lessons[].lesson_id` | int64 | Legacy `lessons.id` | One row per PUBLISHED lesson | Current query source; live schema unverified. |
+| Runtime `lessons[].title` | string | Legacy `lessons.name` | `name → title` | Current API #9 alias pattern. |
+| Runtime `lessons[].order` | int | Legacy `lessons.sort_order` | `sort_order → order` | Current API #9 ordering field. |
+| Runtime `lessons[].progress_status` | enum string | Legacy `lesson_progress.status` | Missing row → NOT_STARTED | DERIVED; runtime allows 3 states used by #65. |
+| Runtime `lessons[].progress_percent` | int | Legacy `lesson_progress.progress_percent` | Missing row → 0; require 0–100 | DERIVED and checked by view. |
+| Runtime `lessons[].last_accessed_at` | date-time? | Legacy `lesson_progress.last_accessed_at` | Null when absent | Current serialization keeps null; live schema unverified. |
+| Runtime `lessons[].completed_at` | date-time? | Legacy `lesson_progress.completed_at` | Null when absent | Current serialization keeps null; live schema unverified. |
 
 ## Mapping tables and relations
 
@@ -217,7 +216,7 @@ N/A — API #67 is GET/read-only. Không có INSERT/UPDATE/DELETE hoặc transac
 | `enrollments` | `course_id`, `user_id`, `status` | Checked-in DDL candidate; eligibility/uniqueness unresolved. |
 | `users` | `id`, `full_name`, `avatar_url`, `role` | Checked-in DDL candidate; privacy/projection unresolved. |
 | `lessons` | `id`, `course_id`, `name`, `sort_order`, `status` | Checked-in DDL candidate; API #9 source filters PUBLISHED. |
-| `lesson_progress` | `user_id`, `lesson_id`, `status`, `progress_percent`, `last_accessed_at`, `completed_at` | Checked-in DDL candidate; no unique user/lesson key. |
+| `lesson_progress` | `id`, `user_id`, `lesson_id`, `status`, `progress_percent`, `last_accessed_at`, `completed_at` | Current query source; checked-in DDL has no unique user/lesson key; latest timestamp/id is selected as in #65. |
 
 ### V1-PILOT UUID alternative
 

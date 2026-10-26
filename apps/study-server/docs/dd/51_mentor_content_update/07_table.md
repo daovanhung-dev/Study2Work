@@ -9,50 +9,47 @@ api_name: "Cập nhật nội dung Mentor"
 status: "Draft — Needs Confirmation"
 ---
 
-# Định nghĩa table — Logical Content/version update, physical mapping SOURCE_REQUIRED
+# Định nghĩa table — `contents` update
 
 ## Table metadata
 
 | Thuộc tính | Giá trị |
 |---|---|
-| Physical table/model | `SOURCE_REQUIRED`; không có generic Content/version relation tương thích trong DDL hiện có. |
-| Logical entity | `Content` và revision/version state theo catalog + AC-22. |
-| Operation | Logical UPDATE Content + version. |
-| Data Mapping step | 4–8 |
-| Evidence | API #51 row; AC-22 PUT node `UPDATE Content + version`; AC-33 reads content/version/author. |
-| Runtime | Route/module/test chưa tìm thấy (`UNWIRED` / `NOT_FOUND`). |
+| Physical table | `contents` |
+| Logical table | Current Content projection |
+| Operation | UPDATE |
+| Data Mapping step | 5 |
+| Evidence | Legacy migration 006; API #51 DML is implemented locally. |
+| Status | DDL is checked in only; live schema/migration not verified. |
 
-## Update/version mapping
+## Update mapping
 
-| Logical value/field | Value source | Proposed action | Evidence/status |
-|---|---|---|---|
-| `id` | Path `content_id` | Chọn và giữ nguyên Content identity | Path DIRECT; physical column SOURCE_REQUIRED |
-| `course_id` | Current Content | Preserve; dùng để authorization | DERIVED immutable-scope rule; physical mapping SOURCE_REQUIRED |
-| `content_type` | Proposed body | Ghi vào revision mới | DERIVED; enum/type-change policy SOURCE_REQUIRED |
-| `title` | Proposed body | Ghi vào revision mới | DERIVED; schema/normalization SOURCE_REQUIRED |
-| `payload` | Proposed body | Ghi object thay thế vào revision mới | DERIVED; subtype schema/storage SOURCE_REQUIRED |
-| `status` | Review lifecycle | New revision candidate `PENDING_REVIEW` | DERIVED from AC-22 + AC-33; transition/storage SOURCE_REQUIRED |
-| `parent_id` | Current Content | Preserve | DERIVED proposal; parent schema SOURCE_REQUIRED |
-| `order` | Current Content | Preserve | DERIVED proposal; ordering schema SOURCE_REQUIRED |
-| Previous revision | Existing Content/version | Retain as historical snapshot | DERIVED proposal; version persistence SOURCE_REQUIRED |
-| New revision | Proposed complete body | Advance current logical version | AC-22 logical version effect DIRECT; revision representation SOURCE_REQUIRED |
-| `version_no`/`row_version` | Not in API contract | No concrete field or numeric rule assigned | SOURCE_REQUIRED; do not equate pilot `row_version` with content revision |
-| `updated_by`/timestamps/audit | Not in contract | No column/value assigned | SOURCE_REQUIRED |
+**Áp dụng khi**
+
+- API #51 has locked an active `contents` row and direct owner authorization passed.
+
+| No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
+|---:|---|---|---|---:|---:|---:|---|---|---|---|---|
+| 1 | `content_type` | Content type | TEXT | N/A | N/A | Y |  | Body `content_type` | Request | 5 | Full replacement; open string; DERIVED body field. |
+| 2 | `title` | Title | TEXT | N/A | N/A | Y |  | Body `title` | Request | 5 | Full replacement; no normalization/length rule added. |
+| 3 | `payload` | Content payload | JSONB object | N/A | N/A | Y |  | JSON serialization then `CAST(:payload AS JSONB)` | Request | 5 | Object check from migration 006. |
+| 4 | `status` | Review status | TEXT | N/A | N/A | Y |  | Fixed `PENDING_REVIEW` | Derived AC-33/#50 | 5 | Lifecycle remains unapproved. |
+| 5 | `id` | Content ID | BIGINT | N/A | N/A | Y | ● | `WHERE id = :content_id AND deleted_at IS NULL` | Path | 5 | No identity change. |
+| 6 | `course_id` | Course ID | BIGINT | N/A | N/A | Y |  | Preserve locked value | Locked Content | 5 | Used for owner scope. |
+| 7 | `parent_id` | Parent ID | BIGINT | N/A | N/A | N |  | Preserve locked value | Locked Content | 5 | Tree position unchanged. |
+| 8 | `content_order` | Content order | INTEGER | N/A | N/A | Y |  | Preserve locked value | Locked Content | 5 | Response alias `order`. |
+
+## Insert mapping
+
+- N/A — API #51 does not insert into `contents`; it updates the existing row.
+
+## Delete mapping
+
+- N/A — API #51 does not delete Content.
 
 ## SQL mapping
 
-Chưa duyệt câu SQL `UPDATE` hoặc `INSERT` version vật lý. Chưa xác định relation/cột, cách chọn current version, thời hạn giữ version cũ, uniqueness, khóa dòng, kiểu ID và projection trả về. Không dùng V1-PILOT `content_blocks`/`row_version` thay cho catalog Content.
-
-## Transaction proposal
-
-Vì AC-22 ghép update Content với thay đổi version, đề xuất xử lý nguyên tử: revision Content và version cùng commit hoặc cùng rollback. Đây là `DERIVED` cho tới khi chọn được persistence model và transaction owner.
-
-## Cross-API lifecycle
-
-- API #50 creates Content; its proposed initial state is `PENDING_REVIEW`.
-- API #51 proposes a new `PENDING_REVIEW` revision while retaining the previous published revision until review/publish completes.
-- API #52 publishes/unpublishes; API #53 deletes. Admin AC-33 approves/rejects and reads version/author metadata.
-- The exact compatibility between Admin approval `APPROVED/PUBLISHED` and Mentor publish #52 remains for AC-22 macro-review after #52/#53 DDs exist.
+`UPDATE contents SET content_type=:content_type, title=:title, payload=CAST(:payload AS JSONB), status='PENDING_REVIEW' WHERE id=:content_id AND deleted_at IS NULL RETURNING ...`. Course and tree fields are not updated.
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`
