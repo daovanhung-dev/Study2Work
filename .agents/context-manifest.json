@@ -931,6 +931,7 @@
           "pages": [
             ".agents/web-work/study/architecture.md",
             ".agents/web-work/study/api.md",
+          ".agents/web-study/design.md",
             ".agents/web-work/study/tests.md",
             ".agents/web-work/study/workflows/README.md"
           ],

@@ -67,6 +67,8 @@ Study2Work/
 │   ├── server-study/
 │   ├── server-work/
 │   ├── server-ai/
+│   ├── web-study/
+│   │   └── design.md                           ← mandatory Study Web UI/UX/FE guide
 │   ├── web-work/
 │   │   └── study/                              ← Study Web subcontext
 │   ├── mobile-work/
@@ -193,6 +195,8 @@ Study2Work/
 - Index: [`.agents/web-work/study/INDEX.md`](web-work/study/INDEX.md)
 - Stack: Vue 3 + Vite + Vue Router + Pinia + Vue Query + Zod.
 - Pages:
+  - [`.agents/web-study/design.md`](web-study/design.md) — mandatory Study Web
+    visual, interaction and accessibility target.
   - [`.agents/web-work/study/architecture.md`](web-work/study/architecture.md)
   - [`.agents/web-work/study/api.md`](web-work/study/api.md)
   - [`.agents/web-work/study/tests.md`](web-work/study/tests.md)
