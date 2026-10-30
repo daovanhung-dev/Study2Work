@@ -3,6 +3,8 @@ trợ."""
 
 from __future__ import annotations
 
+import re
+
 import bcrypt
 from argon2 import PasswordHasher
 from argon2.exceptions import (
@@ -15,6 +17,10 @@ _password_hasher = PasswordHasher(
     time_cost=3,
     memory_cost=64 * 1024,
     parallelism=1,
+)
+_BCRYPT_HASH_PATTERN = re.compile(
+    r"\$2[aby]\$(?:0[4-9]|[12][0-9]|3[01])\$"
+    r"[./A-Za-z0-9]{21}[.Oeu][./A-Za-z0-9]{30}[.CGKOSWaeimquy26]\Z"
 )
 
 
@@ -110,11 +116,19 @@ def _verify_bcrypt(
     hashed_password: str,
 ) -> bool:
     """Xác minh password với hash bcrypt bằng cách mã hóa hai chuỗi thành UTF-8 rồi gọi
-    bcrypt.checkpw. Trả False nếu hash hoặc kiểu dữ liệu gây ValueError hay TypeError."""
-    try:
-        return bcrypt.checkpw(
-            password.encode("utf-8"),
-            hashed_password.encode("utf-8"),
-        )
-    except (ValueError, TypeError):
+    bcrypt.checkpw. Hash sai định dạng, chuỗi không mã hóa được hoặc password quá dài trả False."""
+
+    if not isinstance(password, str) or not isinstance(hashed_password, str):
         return False
+    if not _BCRYPT_HASH_PATTERN.fullmatch(hashed_password):
+        return False
+
+    try:
+        password_bytes = password.encode("utf-8")
+        hash_bytes = hashed_password.encode("ascii")
+    except UnicodeEncodeError:
+        return False
+
+    if len(password_bytes) > 72:
+        return False
+    return bcrypt.checkpw(password_bytes, hash_bytes)

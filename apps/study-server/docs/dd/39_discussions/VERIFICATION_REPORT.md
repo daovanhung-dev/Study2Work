@@ -1,7 +1,7 @@
 # VERIFICATION_REPORT — Study API #39 DD
 
-**Status:** Static document checks passed.
-**Date:** 2026-10-12
+**Status:** VERIFIED — document structure, catalog contract and connected-group consistency checks only.
+**Date:** 2026-10-23
 
 ## Template baseline
 
@@ -32,10 +32,11 @@ Sheet order: 00_Cover, 01_Lich_su, 02_Overview, 03_Request, 04_Response, 05_Data
 | Catalog contract | GET, Student Bearer JWT, the three query fields, Page<Discussion>, and 200/401/403/500 codes match API #39. | PASS |
 | Error code set | Error sheet contains only DESIGN_AUTHENTICATION_REQUIRED, DESIGN_ACCESS_DENIED, and DESIGN_INTERNAL_ERROR; success code is documented in Response. | PASS |
 | Read-only mapping | UPDATE/INSERT/DELETE are marked N/A; candidate reads remain design-only. | PASS |
+| Connected API #39–#42 proposals | Root visibility/access, direct ACTIVE comments/order, content discrepancy and Page proposals are aligned; each proposal remains DERIVED pending confirmation. | PASS |
 | Runtime wiring scan | No discussion route/module/test reference found under Study Server app/tests. | PASS — UNWIRED / NOT_FOUND |
 | Archive scan | No in-scope archive files found under diagrams, API catalog, or canonical template roots. | PASS |
 | Whitespace/conflict scan | Inline scanner found no trailing whitespace or conflict markers in authored Markdown; git diff --check returned no tracked-diff errors. | PASS |
 | Runtime tests | Not run; docs-only scope and API #39 is not wired. | NOT_RUN |
 | Context validator | Not run; no context page or manifest changed. | NOT_REQUIRED |
 
-The final whole-package check included this report and the worklog; all checks above passed.
+The refreshed static check includes this report and the API #42 worklog; all checks above passed. Runtime tests remain unrun.

@@ -77,6 +77,13 @@ status: "Draft — Needs Confirmation"
 
 - Contract đọc một attempt theo path và không khai báo pagination, cache hay latency objective.
 - Số answer rows và ordering không được quy định; không tự thêm giới hạn, index hoặc thứ tự kết quả.
+
+## Phụ thuộc AC-35 — quiz tombstone proposal
+
+- API #32 đọc kết quả của attempt; AC-35 #90 đề xuất giữ attempt/answer history khi soft-delete quiz có attempt.
+- Đề xuất DERIVED: kết quả của attempt đã tồn tại vẫn đọc được khi quiz bị tombstone; API #91 tổng hợp cùng lịch sử còn lưu.
+- Quyền đọc, trạng thái attempt được phép xem và error mapping vẫn theo câu hỏi hiện hữu của AC-16.
+- Câu hỏi liên quan: [API #90](../90_admin_quizzes_delete/OPEN_QUESTIONS.md) và [API #91](../91_admin_quizzes_statistics/OPEN_QUESTIONS.md).
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

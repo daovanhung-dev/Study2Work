@@ -69,7 +69,7 @@ def test_settings_accept_legacy_constructor_aliases() -> None:
 
 def test_settings_reject_unsafe_database_schema() -> None:
     """Kiểm tra schema chứa ký tự không được phép bị từ chối bằng lỗi cấu hình an toàn."""
-    with pytest.raises(ValueError, match="Invalid application settings") as error:
+    with pytest.raises(RuntimeError, match="Invalid application settings") as error:
         Settings(
             db_host="localhost",
             db_name="study",
@@ -86,5 +86,5 @@ def test_settings_reject_unsafe_database_schema() -> None:
 def test_es256_requires_private_key() -> None:
     """Kiểm tra cấu hình ES256 thiếu private key bị từ chối thay vì tạo Settings không thể ký
     access token."""
-    with pytest.raises(ValueError, match="Invalid application settings"):
+    with pytest.raises(RuntimeError, match="Invalid application settings"):
         Settings(jwt_algorithm="ES256", jwt_private_key=None)

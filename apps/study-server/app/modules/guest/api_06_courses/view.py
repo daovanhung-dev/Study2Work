@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import logging
-from decimal import InvalidOperation
 from typing import Any
 
 from app.core.database import query_many, query_one
-from app.core.responses import success_response
+from app.core.responses import ErrorDetail, success_response
 from app.modules.guest._shared.course_catalog.helpers import (
     build_order_by,
     course_internal_error,
     map_course,
+    normalize_course_count,
 )
 from app.modules.guest._shared.course_catalog.models import CoursePage, Pagination
 from app.modules.guest.api_06_courses.models import CourseQuery
@@ -32,13 +32,16 @@ def find_published_courses(
     page: int,
     size: int,
     sort: str | None,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] | ErrorDetail:
     """Tính offset từ page và size, dựng ORDER BY bằng helper allowlist rồi truy vấn một trang khóa
     học PUBLISHED cùng mentor projection. Hàm bind status, limit và offset; không commit
     transaction."""
 
     offset = (page - 1) * size
-    query = LIST_PUBLISHED_COURSES.format(order_by=build_order_by(sort))
+    order_by = build_order_by(sort)
+    if isinstance(order_by, ErrorDetail):
+        return order_by
+    query = LIST_PUBLISHED_COURSES.format(order_by=order_by)
     return query_many(
         db,
         query,
@@ -79,7 +82,12 @@ def get_courses(
 
     try:
         count_row = count_published_courses(db)
-        if int(count_row.get("missing_mentor_count") or 0) > 0:
+        missing_mentor_count = normalize_course_count(count_row.get("missing_mentor_count"))
+        if isinstance(missing_mentor_count, ErrorDetail):
+            db.rollback()
+            logger.error("Course mentor count mapping failed; trace_id=%s", trace_id)
+            return course_internal_error(trace_id)
+        if missing_mentor_count > 0:
             db.rollback()
             return course_internal_error(trace_id)
         rows = find_published_courses(
@@ -93,9 +101,23 @@ def get_courses(
         logger.exception("Course lookup failed; trace_id=%s", trace_id)
         return course_internal_error(trace_id)
 
+    if isinstance(rows, ErrorDetail):
+        logger.error("Course sort mapping failed; trace_id=%s", trace_id)
+        return course_internal_error(trace_id)
+
     try:
-        items = [map_course(row) for row in rows]
-        total = int(count_row.get("total") or 0)
+        items = []
+        for row in rows:
+            item = map_course(row)
+            if isinstance(item, ErrorDetail):
+                logger.error("Course row mapping failed; trace_id=%s", trace_id)
+                return course_internal_error(trace_id)
+            items.append(item)
+        total = normalize_course_count(count_row.get("total"))
+        if isinstance(total, ErrorDetail):
+            db.rollback()
+            logger.error("Course total mapping failed; trace_id=%s", trace_id)
+            return course_internal_error(trace_id)
         total_pages = (total + course_query.size - 1) // course_query.size if total else 0
         page = CoursePage(
             items=items,
@@ -106,7 +128,7 @@ def get_courses(
                 total_pages=total_pages,
             ),
         )
-    except (InvalidOperation, TypeError, ValueError, ValidationError):
+    except (TypeError, ValidationError):
         logger.exception("Course mapping failed; trace_id=%s", trace_id)
         return course_internal_error(trace_id)
 

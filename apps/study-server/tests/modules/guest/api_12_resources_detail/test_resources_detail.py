@@ -250,6 +250,7 @@ def test_resource_queries_exclude_visibility_and_use_bound_parameters() -> None:
     assert "r.resource_type as type" in " ".join(RESOURCE_BY_ID.lower().split())
     assert ":lesson_id" in PUBLISHED_PARENT_COURSE
     assert "c.status = 'published'" in PUBLISHED_PARENT_COURSE.lower()
+    assert "l.status is distinct from 'deleted'" in PUBLISHED_PARENT_COURSE.lower()
 
 
 def test_resource_detail_openapi_keeps_int64_path_contract(client: TestClient) -> None:

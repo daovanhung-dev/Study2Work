@@ -76,6 +76,13 @@ status: "Draft — Needs Confirmation"
 
 - AC-16 mô tả autosave nhưng không đặt ngưỡng tần suất, batching, retry hoặc latency.
 - Không chọn chiến lược chống ghi đồng thời khi chưa có unique key hoặc concurrency policy.
+
+## Phụ thuộc AC-35 — quiz tombstone proposal
+
+- API #30 ghi answer cho attempt đã tồn tại; AC-35 #90 giữ attempt/answer history khi soft-delete quiz có attempt.
+- Đề xuất DERIVED: attempt IN_PROGRESS được tạo trước tombstone có thể tiếp tục autosave để không làm mất câu trả lời; owner cần xác nhận.
+- Chưa chốt phối hợp transaction/lock giữa autosave và API #90; không thêm status/error behavior ngoài catalog.
+- Câu hỏi liên quan: [API #90](../90_admin_quizzes_delete/OPEN_QUESTIONS.md) và [API #91](../91_admin_quizzes_statistics/OPEN_QUESTIONS.md).
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -1,25 +1,30 @@
 from __future__ import annotations
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from app.core.responses import error_response
+from app.core.responses import ErrorDetail, error_response
 from app.modules.guest._shared.course_catalog.constants import SORT_COLUMNS, SORT_DIRECTIONS
 from app.modules.guest._shared.course_catalog.models import Course, MentorSummary
+from app.utils.validate import parse_integer
+from pydantic import ValidationError
 from starlette.responses import JSONResponse
 
 
-def build_order_by(sort: str | None) -> str:
+def build_order_by(sort: str | None) -> str | ErrorDetail:
     """Chuyển sort đã kiểm tra thành biểu thức ORDER BY lấy cột từ allowlist tĩnh. Khi không truyền
-    sort, dùng thứ tự mặc định; với field khác id, thêm c.id làm khóa phụ ổn định. Dữ liệu sort
-    không hợp lệ phát sinh ValueError để caller ánh xạ an toàn."""
+    sort, dùng thứ tự mặc định; với field khác id, thêm c.id làm khóa phụ ổn định. Sort không hợp
+    lệ được trả dưới dạng ErrorDetail để caller ánh xạ an toàn."""
 
     if sort is None:
         return "c.created_at DESC, c.id ASC"
 
-    field, direction = sort.split(":")
+    parts = sort.split(":")
+    if len(parts) != 2:
+        return ErrorDetail(code="VALUE_ERROR", message="sort must use field:direction format.")
+    field, direction = parts
     if field not in SORT_COLUMNS or direction not in SORT_DIRECTIONS:
-        raise ValueError("sort field không được hỗ trợ.")
+        return ErrorDetail(code="VALUE_ERROR", message="sort field không được hỗ trợ.")
 
     column = SORT_COLUMNS[field]
     direction_sql = direction.upper()
@@ -28,38 +33,73 @@ def build_order_by(sort: str | None) -> str:
     return f"{column} {direction_sql}, c.id ASC"
 
 
-def map_course(row: dict[str, Any]) -> Course:
+def map_course(row: dict[str, Any]) -> Course | ErrorDetail:
     """Ánh xạ một hàng SQL đã join thành model Course công khai, bao gồm mentor projection và giá
-    được tuần tự hóa thành chuỗi thập phân. Thiếu mentor ID hoặc tên mentor phát sinh ValueError
-    để caller xử lý lỗi toàn vẹn dữ liệu."""
+    được tuần tự hóa thành chuỗi thập phân. Dữ liệu thiếu hoặc sai được trả thành ErrorDetail để
+    caller xử lý lỗi toàn vẹn."""
 
     mentor_id = row.get("mentor_id")
     mentor_name = row.get("mentor_full_name")
     if mentor_id is None or mentor_name is None:
-        raise ValueError("Course mentor information is incomplete.")
+        return ErrorDetail(
+            code="COURSE_MAPPING_ERROR",
+            message="Course mentor information is incomplete.",
+        )
 
-    return Course(
-        id=row.get("id"),
-        title=row.get("title"),
-        description=row.get("description"),
-        thumbnail_url=row.get("thumbnail_url"),
-        price=decimal_string(row.get("price")),
-        status=row.get("status"),
-        mentor=MentorSummary(
-            id=mentor_id,
-            full_name=mentor_name,
-            avatar_url=row.get("mentor_avatar_url"),
-        ),
-    )
+    price = decimal_string(row.get("price"))
+    if isinstance(price, ErrorDetail):
+        return price
+
+    try:
+        return Course(
+            id=row.get("id"),
+            title=row.get("title"),
+            description=row.get("description"),
+            thumbnail_url=row.get("thumbnail_url"),
+            price=price,
+            status=row.get("status"),
+            mentor=MentorSummary(
+                id=mentor_id,
+                full_name=mentor_name,
+                avatar_url=row.get("mentor_avatar_url"),
+            ),
+        )
+    except ValidationError:
+        return ErrorDetail(
+            code="COURSE_MAPPING_ERROR",
+            message="Course row is incomplete or invalid.",
+        )
 
 
-def decimal_string(value: Any) -> str:
-    """Chuyển giá khóa học sang chuỗi decimal mà không đưa qua phép tính floating point. Từ chối
-    giá trị None bằng ValueError và giữ dạng thập phân chính xác theo giá trị nguồn."""
+def decimal_string(value: Any) -> str | ErrorDetail:
+    """Chuyển giá sang chuỗi decimal chính xác hoặc trả ErrorDetail nếu giá thiếu/sai."""
 
     if value is None:
-        raise ValueError("Course price is missing.")
-    return format(Decimal(str(value)), "f")
+        return ErrorDetail(code="COURSE_MAPPING_ERROR", message="Course price is missing.")
+    try:
+        return format(Decimal(str(value)), "f")
+    except InvalidOperation:
+        return ErrorDetail(code="COURSE_MAPPING_ERROR", message="Course price is invalid.")
+
+
+def normalize_course_count(value: Any) -> int | ErrorDetail:
+    """Chuẩn hóa count từ hàng SQL thành số nguyên không âm hoặc ErrorDetail an toàn."""
+
+    if value is None:
+        return 0
+    if type(value) is int:
+        count = value
+    elif isinstance(value, str):
+        count = parse_integer(value)
+    else:
+        count = None
+
+    if count is None or count < 0:
+        return ErrorDetail(
+            code="COURSE_MAPPING_ERROR",
+            message="Course count is invalid.",
+        )
+    return count
 
 
 def course_internal_error(trace_id: str) -> JSONResponse:

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "sourceCommit": "9a70eb6764a6587093a92d3bd7e4cc0bea1651c4",
-  "generatedAt": "2026-09-19",
+  "generatedAt": "2026-10-26",
   "rootRouter": "AGENTS.md",
   "registry": ".agents/AGENTS.md",
   "contextMap": ".agents/context-map.md",
@@ -33,7 +33,10 @@
       "script": "scripts/select-worklogs.mjs",
       "typeField": "primary_task_type",
       "limit": 3,
-      "sort": ["date:desc", "path:asc"],
+      "sort": [
+        "date:desc",
+        "path:asc"
+      ],
       "shortagePolicy": "read_all_available_and_record_shortage"
     },
     "requiredFields": [
@@ -55,7 +58,10 @@
     "createDD-markdown": {
       "status": "SOURCE_BACKED",
       "target": "web-api-dd",
-      "excludes": ["mobile-module-dd", "web-ui-only-dd"],
+      "excludes": [
+        "mobile-module-dd",
+        "web-ui-only-dd"
+      ],
       "entry": ".agents/skills/create_dd_api/docs/dd/createDD_MARKDOWN_SKILL.md",
       "triggers": [
         "API detail design",
@@ -63,8 +69,16 @@
         "API contract conversion",
         "request/response/data mapping review"
       ],
-      "scopeRefs": ["server-study", "server-work", "server-ai", "web-work"],
-      "workflowRefs": ["docs-dd", "cross-scope-contract"],
+      "scopeRefs": [
+        "server-study",
+        "server-work",
+        "server-ai",
+        "web-work"
+      ],
+      "workflowRefs": [
+        "docs-dd",
+        "cross-scope-contract"
+      ],
       "resourcePaths": [
         ".agents/skills/create_dd_api/docs/dd/DD_API_Template_MD",
         ".agents/skills/create_dd_api/docs/dd/Examples/HOKAN_K00GetLabelInfo",
@@ -74,7 +88,11 @@
     "create-dd-from-bd-mobile": {
       "status": "SOURCE_BACKED",
       "target": "mobile-module-dd",
-      "excludes": ["web-api-dd", "web-ui-only-dd", "runtime-implementation"],
+      "excludes": [
+        "web-api-dd",
+        "web-ui-only-dd",
+        "runtime-implementation"
+      ],
       "entry": ".agents/skills/create-dd-mobile/SKILL.md",
       "triggers": [
         "mobile DD",
@@ -82,8 +100,12 @@
         "Flutter module documentation",
         "create DD mobile"
       ],
-      "scopeRefs": ["mobile-work"],
-      "workflowRefs": ["docs-dd-mobile"],
+      "scopeRefs": [
+        "mobile-work"
+      ],
+      "workflowRefs": [
+        "docs-dd-mobile"
+      ],
       "resourcePaths": [
         ".agents/skills/create-dd-mobile"
       ]
@@ -93,36 +115,80 @@
     "coding": {
       "status": "VERIFIED",
       "entry": ".agents/project/workflows.md",
-      "triggers": ["coding"],
-      "scopeRefs": ["all"],
-      "verificationCommands": ["scope-specific focused tests", "context validator"]
+      "triggers": [
+        "coding"
+      ],
+      "scopeRefs": [
+        "all"
+      ],
+      "verificationCommands": [
+        "scope-specific focused tests",
+        "context validator"
+      ]
     },
     "fix": {
       "status": "VERIFIED",
       "entry": ".agents/project/workflows.md",
-      "triggers": ["fix", "bug", "regression"],
-      "scopeRefs": ["all"],
-      "verificationCommands": ["reproduction or regression test", "context validator"]
+      "triggers": [
+        "fix",
+        "bug",
+        "regression"
+      ],
+      "scopeRefs": [
+        "all"
+      ],
+      "verificationCommands": [
+        "reproduction or regression test",
+        "context validator"
+      ]
     },
     "test": {
       "status": "VERIFIED",
       "entry": ".agents/project/workflows.md",
-      "triggers": ["test", "verification", "validation"],
-      "scopeRefs": ["all"],
-      "verificationCommands": ["focused test command", "scope test command"]
+      "triggers": [
+        "test",
+        "verification",
+        "validation"
+      ],
+      "scopeRefs": [
+        "all"
+      ],
+      "verificationCommands": [
+        "focused test command",
+        "scope test command"
+      ]
     },
     "docs-dd": {
       "status": "VERIFIED_WITH_BLOCKED_GENERATOR",
       "entry": ".agents/project/workflows.md",
-      "triggers": ["docs", "DD", "API documentation", "contract documentation"],
-      "scopeRefs": ["server-study", "server-work", "server-ai", "web-work"],
-      "verificationCommands": ["contract validator", "DD markup/link validation"]
+      "triggers": [
+        "docs",
+        "DD",
+        "API documentation",
+        "contract documentation"
+      ],
+      "scopeRefs": [
+        "server-study",
+        "server-work",
+        "server-ai",
+        "web-work"
+      ],
+      "verificationCommands": [
+        "contract validator",
+        "DD markup/link validation"
+      ]
     },
     "docs-dd-mobile": {
       "status": "VERIFIED",
       "entry": ".agents/project/workflows.md",
-      "triggers": ["mobile DD", "BD/BRD to mobile module DD", "Flutter module documentation"],
-      "scopeRefs": ["mobile-work"],
+      "triggers": [
+        "mobile DD",
+        "BD/BRD to mobile module DD",
+        "Flutter module documentation"
+      ],
+      "scopeRefs": [
+        "mobile-work"
+      ],
       "verificationCommands": [
         "python3 .agents/skills/create-dd-mobile/scripts/validate_dd_pack.py",
         "context validator",
@@ -132,54 +198,88 @@
     "cross-scope-contract": {
       "status": "VERIFIED",
       "entry": ".agents/project/workflows.md",
-      "triggers": ["shared contract", "Study to Work", "API boundary"],
-      "scopeRefs": ["all"],
-      "verificationCommands": ["contracts:validate", "context validator"]
+      "triggers": [
+        "shared contract",
+        "Study to Work",
+        "API boundary"
+      ],
+      "scopeRefs": [
+        "all"
+      ],
+      "verificationCommands": [
+        "contracts:validate",
+        "context validator"
+      ]
     },
     "worklog": {
       "status": "VERIFIED",
       "entry": ".agents/worklog/README.md",
-      "triggers": ["every task", "context update", "handoff"],
-      "scopeRefs": ["all"],
+      "triggers": [
+        "every task",
+        "context update",
+        "handoff"
+      ],
+      "scopeRefs": [
+        "all"
+      ],
       "preflight": "worklog.preflight",
-      "verificationCommands": ["required-field checklist", "context validator"]
+      "verificationCommands": [
+        "required-field checklist",
+        "context validator"
+      ]
     }
   },
   "contracts": {
     "api-guidelines": {
       "path": "contracts/api-guidelines/README.md",
       "producer": "repository API conventions",
-      "consumers": ["server-study", "server-work", "web-work"],
+      "consumers": [
+        "server-study",
+        "server-work",
+        "web-work"
+      ],
       "status": "VERIFIED"
     },
     "study-work-events": {
       "path": "contracts/events/study-work",
       "producer": "Study",
-      "consumers": ["Work"],
+      "consumers": [
+        "Work"
+      ],
       "status": "DECLARED_NOT_RUNNABLE"
     },
     "work-openapi": {
       "path": "contracts/openapi/work",
       "producer": "Work API contract files",
-      "consumers": ["server-work", "web-work"],
+      "consumers": [
+        "server-work",
+        "web-work"
+      ],
       "status": "DISCREPANCY"
     },
     "study-openapi": {
       "path": "contracts/openapi/study",
       "producer": "Study API",
-      "consumers": ["server-study", "study-web"],
+      "consumers": [
+        "server-study",
+        "study-web"
+      ],
       "status": "NOT_FOUND"
     },
     "skill-taxonomy": {
       "path": "contracts/skill-taxonomy",
       "producer": "repository skill taxonomy",
-      "consumers": ["future domain modules"],
+      "consumers": [
+        "future domain modules"
+      ],
       "status": "VERIFIED"
     },
     "db-admin-local": {
       "path": "apps/db-admin-server/app/core/contracts.py",
       "producer": "db-admin-server",
-      "consumers": ["db-admin-web"],
+      "consumers": [
+        "db-admin-web"
+      ],
       "status": "VERIFIED"
     }
   },
@@ -189,7 +289,9 @@
       "status": "SOURCE_BACKED",
       "entry": ".agents/server-study/AGENTS.md",
       "index": ".agents/server-study/INDEX.md",
-      "skillRefs": ["createDD-markdown"],
+      "skillRefs": [
+        "createDD-markdown"
+      ],
       "pages": [
         ".agents/server-study/architecture.md",
         ".agents/server-study/apis/declared-routes.md",
@@ -212,7 +314,111 @@
         "apps/study-server/uv.lock",
         "apps/study-server/.env.example",
         "apps/study-server/alembic.ini",
-        "apps/study-server/Dockerfile"
+        "apps/study-server/Dockerfile",
+        "infra/postgres/study-server",
+        "apps/study-server/app/modules/admin/api_82_admin_lessons_list/__init__.py",
+        "apps/study-server/app/modules/admin/api_82_admin_lessons_list/models.py",
+        "apps/study-server/app/modules/admin/api_82_admin_lessons_list/query.py",
+        "apps/study-server/app/modules/admin/api_82_admin_lessons_list/validate.py",
+        "apps/study-server/app/modules/admin/api_82_admin_lessons_list/view.py",
+        "apps/study-server/tests/modules/admin/api_82_admin_lessons_list/test_admin_lessons_list.py",
+        "apps/study-server/app/modules/admin/api_83_admin_lesson_detail/__init__.py",
+        "apps/study-server/app/modules/admin/api_83_admin_lesson_detail/models.py",
+        "apps/study-server/app/modules/admin/api_83_admin_lesson_detail/query.py",
+        "apps/study-server/app/modules/admin/api_83_admin_lesson_detail/validate.py",
+        "apps/study-server/app/modules/admin/api_83_admin_lesson_detail/view.py",
+        "apps/study-server/tests/modules/admin/api_83_admin_lesson_detail/test_admin_lesson_detail.py",
+        "apps/study-server/app/modules/admin/api_84_admin_lesson_update/__init__.py",
+        "apps/study-server/app/modules/admin/api_84_admin_lesson_update/models.py",
+        "apps/study-server/app/modules/admin/api_84_admin_lesson_update/query.py",
+        "apps/study-server/app/modules/admin/api_84_admin_lesson_update/validate.py",
+        "apps/study-server/app/modules/admin/api_84_admin_lesson_update/view.py",
+        "apps/study-server/tests/modules/admin/api_84_admin_lesson_update/test_admin_lesson_update.py",
+        "apps/study-server/app/modules/admin/api_85_admin_lesson_status/__init__.py",
+        "apps/study-server/app/modules/admin/api_85_admin_lesson_status/models.py",
+        "apps/study-server/app/modules/admin/api_85_admin_lesson_status/query.py",
+        "apps/study-server/app/modules/admin/api_85_admin_lesson_status/validate.py",
+        "apps/study-server/app/modules/admin/api_85_admin_lesson_status/view.py",
+        "apps/study-server/tests/modules/admin/api_85_admin_lesson_status/test_admin_lesson_status.py",
+        "apps/study-server/app/modules/guest/api_12_resources_detail/query.py",
+        "apps/study-server/tests/modules/guest/api_12_resources_detail/test_resources_detail.py",
+        "apps/study-server/app/modules/mentor/api_48_mentor_lecture_detail/query.py",
+        "apps/study-server/tests/modules/mentor/api_48_mentor_lecture_detail/test_mentor_lecture_detail.py",
+        "apps/study-server/app/modules/admin/api_86_admin_lesson_delete/__init__.py",
+        "apps/study-server/app/modules/admin/api_86_admin_lesson_delete/models.py",
+        "apps/study-server/app/modules/admin/api_86_admin_lesson_delete/query.py",
+        "apps/study-server/app/modules/admin/api_86_admin_lesson_delete/validate.py",
+        "apps/study-server/app/modules/admin/api_86_admin_lesson_delete/view.py",
+        "apps/study-server/tests/modules/admin/api_86_admin_lesson_delete/test_admin_lesson_delete.py",
+        "infra/postgres/study-server/migrations/012_lesson_status_audit_logs.sql",
+        "apps/study-server/app/modules/admin/api_87_admin_quizzes_list/__init__.py",
+        "apps/study-server/app/modules/admin/api_87_admin_quizzes_list/models.py",
+        "apps/study-server/app/modules/admin/api_87_admin_quizzes_list/query.py",
+        "apps/study-server/app/modules/admin/api_87_admin_quizzes_list/validate.py",
+        "apps/study-server/app/modules/admin/api_87_admin_quizzes_list/view.py",
+        "apps/study-server/tests/modules/admin/api_87_admin_quizzes_list/test_admin_quizzes_list.py",
+        "apps/study-server/app/modules/admin/api_88_admin_quizzes_create/__init__.py",
+        "apps/study-server/app/modules/admin/api_88_admin_quizzes_create/models.py",
+        "apps/study-server/app/modules/admin/api_88_admin_quizzes_create/query.py",
+        "apps/study-server/app/modules/admin/api_88_admin_quizzes_create/validate.py",
+        "apps/study-server/app/modules/admin/api_88_admin_quizzes_create/view.py",
+        "apps/study-server/tests/modules/admin/api_88_admin_quizzes_create/test_admin_quizzes_create.py",
+        "infra/postgres/study-server/migrations/013_quiz_question_type_and_choice_order.sql",
+        "apps/study-server/app/modules/admin/api_89_admin_quizzes_update/__init__.py",
+        "apps/study-server/app/modules/admin/api_89_admin_quizzes_update/models.py",
+        "apps/study-server/app/modules/admin/api_89_admin_quizzes_update/query.py",
+        "apps/study-server/app/modules/admin/api_89_admin_quizzes_update/validate.py",
+        "apps/study-server/app/modules/admin/api_89_admin_quizzes_update/view.py",
+        "apps/study-server/tests/modules/admin/api_89_admin_quizzes_update/test_admin_quizzes_update.py",
+        "apps/study-server/app/modules/admin/api_90_admin_quizzes_delete/__init__.py",
+        "apps/study-server/app/modules/admin/api_90_admin_quizzes_delete/models.py",
+        "apps/study-server/app/modules/admin/api_90_admin_quizzes_delete/query.py",
+        "apps/study-server/app/modules/admin/api_90_admin_quizzes_delete/validate.py",
+        "apps/study-server/app/modules/admin/api_90_admin_quizzes_delete/view.py",
+        "apps/study-server/tests/modules/admin/api_90_admin_quizzes_delete/test_admin_quizzes_delete.py",
+        "apps/study-server/app/modules/admin/api_91_admin_quizzes_statistics/__init__.py",
+        "apps/study-server/app/modules/admin/api_91_admin_quizzes_statistics/models.py",
+        "apps/study-server/app/modules/admin/api_91_admin_quizzes_statistics/query.py",
+        "apps/study-server/app/modules/admin/api_91_admin_quizzes_statistics/validate.py",
+        "apps/study-server/app/modules/admin/api_91_admin_quizzes_statistics/view.py",
+        "apps/study-server/tests/modules/admin/api_91_admin_quizzes_statistics/test_admin_quizzes_statistics.py",
+        "apps/study-server/app/modules/admin/api_92_admin_notifications_list/__init__.py",
+        "apps/study-server/app/modules/admin/api_92_admin_notifications_list/models.py",
+        "apps/study-server/app/modules/admin/api_92_admin_notifications_list/query.py",
+        "apps/study-server/app/modules/admin/api_92_admin_notifications_list/validate.py",
+        "apps/study-server/app/modules/admin/api_92_admin_notifications_list/view.py",
+        "apps/study-server/tests/modules/admin/api_92_admin_notifications_list/test_admin_notifications_list.py",
+        "apps/study-server/app/modules/admin/api_93_admin_notifications_create/__init__.py",
+        "apps/study-server/app/modules/admin/api_93_admin_notifications_create/models.py",
+        "apps/study-server/app/modules/admin/api_93_admin_notifications_create/query.py",
+        "apps/study-server/app/modules/admin/api_93_admin_notifications_create/validate.py",
+        "apps/study-server/app/modules/admin/api_93_admin_notifications_create/view.py",
+        "apps/study-server/tests/modules/admin/api_93_admin_notifications_create/test_admin_notifications_create.py",
+        "apps/study-server/app/modules/admin/api_94_admin_notifications_update/__init__.py",
+        "apps/study-server/app/modules/admin/api_94_admin_notifications_update/models.py",
+        "apps/study-server/app/modules/admin/api_94_admin_notifications_update/query.py",
+        "apps/study-server/app/modules/admin/api_94_admin_notifications_update/validate.py",
+        "apps/study-server/app/modules/admin/api_94_admin_notifications_update/view.py",
+        "apps/study-server/tests/modules/admin/api_94_admin_notifications_update/test_admin_notifications_update.py",
+        "apps/study-server/app/modules/admin/api_95_admin_notifications_delete/__init__.py",
+        "apps/study-server/app/modules/admin/api_95_admin_notifications_delete/models.py",
+        "apps/study-server/app/modules/admin/api_95_admin_notifications_delete/query.py",
+        "apps/study-server/app/modules/admin/api_95_admin_notifications_delete/validate.py",
+        "apps/study-server/app/modules/admin/api_95_admin_notifications_delete/view.py",
+        "apps/study-server/tests/modules/admin/api_95_admin_notifications_delete/test_admin_notifications_delete.py",
+        "apps/study-server/app/modules/admin/api_96_admin_notifications_status/__init__.py",
+        "apps/study-server/app/modules/admin/api_96_admin_notifications_status/models.py",
+        "apps/study-server/app/modules/admin/api_96_admin_notifications_status/query.py",
+        "apps/study-server/app/modules/admin/api_96_admin_notifications_status/validate.py",
+        "apps/study-server/app/modules/admin/api_96_admin_notifications_status/view.py",
+        "apps/study-server/tests/modules/admin/api_96_admin_notifications_status/test_admin_notification_status.py",
+        "apps/study-server/app/modules/admin/api_97_admin_discussions_reported/__init__.py",
+        "apps/study-server/app/modules/admin/api_97_admin_discussions_reported/models.py",
+        "apps/study-server/app/modules/admin/api_97_admin_discussions_reported/query.py",
+        "apps/study-server/app/modules/admin/api_97_admin_discussions_reported/validate.py",
+        "apps/study-server/app/modules/admin/api_97_admin_discussions_reported/view.py",
+        "apps/study-server/tests/modules/admin/api_97_admin_discussions_reported/test_admin_discussions_reported.py",
+        "infra/postgres/study-server/migrations/014_discussion_reports.sql"
       ],
       "requiredSourcePaths": [
         "apps/study-server/app/main.py",
@@ -263,13 +469,331 @@
         "apps/study-server/app/modules/guest/api_13_users_me_avatar/models.py",
         "apps/study-server/app/modules/guest/api_13_users_me_avatar/validate.py",
         "apps/study-server/app/modules/guest/api_13_users_me_avatar/view.py",
+        "apps/study-server/app/modules/mentor/__init__.py",
+        "apps/study-server/app/modules/mentor/api_46_mentor_courses/__init__.py",
+        "apps/study-server/app/modules/mentor/api_46_mentor_courses/models.py",
+        "apps/study-server/app/modules/mentor/api_46_mentor_courses/query.py",
+        "apps/study-server/app/modules/mentor/api_46_mentor_courses/validate.py",
+        "apps/study-server/app/modules/mentor/api_46_mentor_courses/view.py",
+        "apps/study-server/app/modules/mentor/api_47_mentor_lectures_create/__init__.py",
+        "apps/study-server/app/modules/mentor/api_47_mentor_lectures_create/models.py",
+        "apps/study-server/app/modules/mentor/api_47_mentor_lectures_create/query.py",
+        "apps/study-server/app/modules/mentor/api_47_mentor_lectures_create/validate.py",
+        "apps/study-server/app/modules/mentor/api_47_mentor_lectures_create/view.py",
+        "apps/study-server/app/modules/mentor/api_48_mentor_lecture_detail/__init__.py",
+        "apps/study-server/app/modules/mentor/api_48_mentor_lecture_detail/models.py",
+        "apps/study-server/app/modules/mentor/api_48_mentor_lecture_detail/query.py",
+        "apps/study-server/app/modules/mentor/api_48_mentor_lecture_detail/validate.py",
+        "apps/study-server/app/modules/mentor/api_48_mentor_lecture_detail/view.py",
         "apps/study-server/app/service/object_storage/avatar.py",
+        "apps/study-server/app/modules/student/__init__.py",
+        "apps/study-server/app/modules/student/api_34_uploads/__init__.py",
+        "apps/study-server/app/modules/student/api_34_uploads/models.py",
+        "apps/study-server/app/modules/student/api_34_uploads/query.py",
+        "apps/study-server/app/modules/student/api_34_uploads/validate.py",
+        "apps/study-server/app/modules/student/api_34_uploads/view.py",
+        "apps/study-server/app/service/object_storage/upload.py",
         "apps/study-server/tests/modules/guest/api_08_courses_detail/test_courses_detail.py",
         "apps/study-server/tests/modules/guest/api_09_courses_curriculum/test_courses_curriculum.py",
         "apps/study-server/tests/modules/guest/api_13_users_me_avatar/test_users_me_avatar.py",
+        "apps/study-server/tests/modules/mentor/api_46_mentor_courses/test_mentor_courses.py",
+        "apps/study-server/tests/modules/mentor/api_47_mentor_lectures_create/test_mentor_lectures_create.py",
+        "apps/study-server/tests/modules/mentor/api_48_mentor_lecture_detail/test_mentor_lecture_detail.py",
+        "apps/study-server/tests/modules/student/api_34_uploads/test_uploads.py",
+        "infra/postgres/study-server/DB.sql",
+        "infra/postgres/study-server/migrations/004_uploads.sql",
+        "infra/postgres/study-server/migrations/005_lesson_uploads.sql",
         "apps/study-server/app/modules/guest/_shared/course_catalog/constants.py",
         "apps/study-server/app/modules/guest/_shared/course_catalog/models.py",
-        "apps/study-server/app/modules/guest/_shared/course_catalog/helpers.py"
+        "apps/study-server/app/modules/guest/_shared/course_catalog/helpers.py",
+        "apps/study-server/app/modules/mentor/api_49_mentor_content_list/__init__.py",
+        "apps/study-server/app/modules/mentor/api_49_mentor_content_list/models.py",
+        "apps/study-server/app/modules/mentor/api_49_mentor_content_list/query.py",
+        "apps/study-server/app/modules/mentor/api_49_mentor_content_list/validate.py",
+        "apps/study-server/app/modules/mentor/api_49_mentor_content_list/view.py",
+        "apps/study-server/tests/modules/mentor/api_49_mentor_content_list/test_mentor_content_list.py",
+        "infra/postgres/study-server/migrations/006_contents.sql",
+        "apps/study-server/app/modules/mentor/api_50_mentor_content_create/__init__.py",
+        "apps/study-server/app/modules/mentor/api_50_mentor_content_create/models.py",
+        "apps/study-server/app/modules/mentor/api_50_mentor_content_create/query.py",
+        "apps/study-server/app/modules/mentor/api_50_mentor_content_create/view.py",
+        "apps/study-server/tests/modules/mentor/api_50_mentor_content_create/test_mentor_content_create.py",
+        "apps/study-server/app/modules/mentor/api_51_mentor_content_update/__init__.py",
+        "apps/study-server/app/modules/mentor/api_51_mentor_content_update/models.py",
+        "apps/study-server/app/modules/mentor/api_51_mentor_content_update/query.py",
+        "apps/study-server/app/modules/mentor/api_51_mentor_content_update/validate.py",
+        "apps/study-server/app/modules/mentor/api_51_mentor_content_update/view.py",
+        "apps/study-server/tests/modules/mentor/api_51_mentor_content_update/test_mentor_content_update.py",
+        "apps/study-server/app/modules/mentor/api_52_mentor_content_publish/__init__.py",
+        "apps/study-server/app/modules/mentor/api_52_mentor_content_publish/models.py",
+        "apps/study-server/app/modules/mentor/api_52_mentor_content_publish/query.py",
+        "apps/study-server/app/modules/mentor/api_52_mentor_content_publish/validate.py",
+        "apps/study-server/app/modules/mentor/api_52_mentor_content_publish/view.py",
+        "apps/study-server/tests/modules/mentor/api_52_mentor_content_publish/test_mentor_content_publish.py",
+        "apps/study-server/app/modules/mentor/api_53_mentor_content_delete/__init__.py",
+        "apps/study-server/app/modules/mentor/api_53_mentor_content_delete/models.py",
+        "apps/study-server/app/modules/mentor/api_53_mentor_content_delete/query.py",
+        "apps/study-server/app/modules/mentor/api_53_mentor_content_delete/validate.py",
+        "apps/study-server/app/modules/mentor/api_53_mentor_content_delete/view.py",
+        "apps/study-server/tests/modules/mentor/api_53_mentor_content_delete/test_mentor_content_delete.py",
+        "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/__init__.py",
+        "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/models.py",
+        "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/query.py",
+        "apps/study-server/app/modules/mentor/api_54_mentor_submissions_list/view.py",
+        "apps/study-server/tests/modules/mentor/api_54_mentor_submissions_list/test_mentor_submissions_list.py",
+        "apps/study-server/app/modules/mentor/api_55_mentor_submissions_detail/__init__.py",
+        "apps/study-server/app/modules/mentor/api_55_mentor_submissions_detail/models.py",
+        "apps/study-server/app/modules/mentor/api_55_mentor_submissions_detail/query.py",
+        "apps/study-server/app/modules/mentor/api_55_mentor_submissions_detail/validate.py",
+        "apps/study-server/app/modules/mentor/api_55_mentor_submissions_detail/view.py",
+        "apps/study-server/tests/modules/mentor/api_55_mentor_submissions_detail/test_mentor_submission_detail.py",
+        "infra/postgres/study-server/migrations/007_content_versions.sql",
+        "infra/postgres/study-server/migrations/008_support_requests.sql",
+        "apps/study-server/app/modules/mentor/api_56_mentor_submissions_grade/__init__.py",
+        "apps/study-server/app/modules/mentor/api_56_mentor_submissions_grade/models.py",
+        "apps/study-server/app/modules/mentor/api_56_mentor_submissions_grade/query.py",
+        "apps/study-server/app/modules/mentor/api_56_mentor_submissions_grade/validate.py",
+        "apps/study-server/app/modules/mentor/api_56_mentor_submissions_grade/view.py",
+        "apps/study-server/tests/modules/mentor/api_56_mentor_submissions_grade/test_mentor_submission_grade.py",
+        "apps/study-server/app/modules/mentor/api_57_mentor_submissions_feedback/__init__.py",
+        "apps/study-server/app/modules/mentor/api_57_mentor_submissions_feedback/models.py",
+        "apps/study-server/app/modules/mentor/api_57_mentor_submissions_feedback/query.py",
+        "apps/study-server/app/modules/mentor/api_57_mentor_submissions_feedback/validate.py",
+        "apps/study-server/app/modules/mentor/api_57_mentor_submissions_feedback/view.py",
+        "apps/study-server/tests/modules/mentor/api_57_mentor_submissions_feedback/test_mentor_submission_feedback.py",
+        "apps/study-server/app/modules/mentor/api_58_mentor_support_requests/__init__.py",
+        "apps/study-server/app/modules/mentor/api_58_mentor_support_requests/models.py",
+        "apps/study-server/app/modules/mentor/api_58_mentor_support_requests/query.py",
+        "apps/study-server/app/modules/mentor/api_58_mentor_support_requests/view.py",
+        "apps/study-server/tests/modules/mentor/api_58_mentor_support_requests/test_mentor_support_requests.py",
+        "apps/study-server/app/modules/mentor/api_59_mentor_support_request_detail/__init__.py",
+        "apps/study-server/app/modules/mentor/api_59_mentor_support_request_detail/models.py",
+        "apps/study-server/app/modules/mentor/api_59_mentor_support_request_detail/query.py",
+        "apps/study-server/app/modules/mentor/api_59_mentor_support_request_detail/validate.py",
+        "apps/study-server/app/modules/mentor/api_59_mentor_support_request_detail/view.py",
+        "apps/study-server/tests/modules/mentor/api_59_mentor_support_request_detail/test_mentor_support_request_detail.py",
+        "apps/study-server/app/modules/mentor/_shared/__init__.py",
+        "apps/study-server/app/modules/mentor/_shared/support_request_projection.py",
+        "apps/study-server/app/modules/mentor/api_60_mentor_support_reply/__init__.py",
+        "apps/study-server/app/modules/mentor/api_60_mentor_support_reply/models.py",
+        "apps/study-server/app/modules/mentor/api_60_mentor_support_reply/query.py",
+        "apps/study-server/app/modules/mentor/api_60_mentor_support_reply/validate.py",
+        "apps/study-server/app/modules/mentor/api_60_mentor_support_reply/view.py",
+        "apps/study-server/tests/modules/mentor/api_60_mentor_support_reply/test_mentor_support_reply.py",
+        "apps/study-server/app/modules/mentor/api_61_mentor_support_resolve/__init__.py",
+        "apps/study-server/app/modules/mentor/api_61_mentor_support_resolve/models.py",
+        "apps/study-server/app/modules/mentor/api_61_mentor_support_resolve/query.py",
+        "apps/study-server/app/modules/mentor/api_61_mentor_support_resolve/validate.py",
+        "apps/study-server/app/modules/mentor/api_61_mentor_support_resolve/view.py",
+        "apps/study-server/tests/modules/mentor/api_61_mentor_support_resolve/test_mentor_support_resolve.py",
+        "apps/study-server/app/modules/mentor/api_62_mentor_course_students/__init__.py",
+        "apps/study-server/app/modules/mentor/api_62_mentor_course_students/models.py",
+        "apps/study-server/app/modules/mentor/api_62_mentor_course_students/query.py",
+        "apps/study-server/app/modules/mentor/api_62_mentor_course_students/validate.py",
+        "apps/study-server/app/modules/mentor/api_62_mentor_course_students/view.py",
+        "apps/study-server/tests/modules/mentor/api_62_mentor_course_students/test_mentor_course_students.py",
+        "apps/study-server/app/modules/mentor/api_63_mentor_notifications_create/__init__.py",
+        "apps/study-server/app/modules/mentor/api_63_mentor_notifications_create/models.py",
+        "apps/study-server/app/modules/mentor/api_63_mentor_notifications_create/query.py",
+        "apps/study-server/app/modules/mentor/api_63_mentor_notifications_create/validate.py",
+        "apps/study-server/app/modules/mentor/api_63_mentor_notifications_create/view.py",
+        "apps/study-server/tests/modules/mentor/api_63_mentor_notifications_create/test_mentor_notifications_create.py",
+        "apps/study-server/app/modules/mentor/api_64_mentor_notification_status/__init__.py",
+        "apps/study-server/app/modules/mentor/api_64_mentor_notification_status/models.py",
+        "apps/study-server/app/modules/mentor/api_64_mentor_notification_status/query.py",
+        "apps/study-server/app/modules/mentor/api_64_mentor_notification_status/validate.py",
+        "apps/study-server/app/modules/mentor/api_64_mentor_notification_status/view.py",
+        "apps/study-server/tests/modules/mentor/api_64_mentor_notification_status/test_mentor_notification_status.py",
+        "apps/study-server/app/modules/mentor/api_65_mentor_course_progress/__init__.py",
+        "apps/study-server/app/modules/mentor/api_65_mentor_course_progress/models.py",
+        "apps/study-server/app/modules/mentor/api_65_mentor_course_progress/query.py",
+        "apps/study-server/app/modules/mentor/api_65_mentor_course_progress/validate.py",
+        "apps/study-server/app/modules/mentor/api_65_mentor_course_progress/view.py",
+        "apps/study-server/tests/modules/mentor/api_65_mentor_course_progress/test_mentor_course_progress.py",
+        "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/__init__.py",
+        "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/models.py",
+        "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/query.py",
+        "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/validate.py",
+        "apps/study-server/app/modules/mentor/api_66_mentor_course_analytics/view.py",
+        "apps/study-server/tests/modules/mentor/api_66_mentor_course_analytics/test_mentor_course_analytics.py",
+        "apps/study-server/app/modules/mentor/api_67_mentor_student_progress/__init__.py",
+        "apps/study-server/app/modules/mentor/api_67_mentor_student_progress/models.py",
+        "apps/study-server/app/modules/mentor/api_67_mentor_student_progress/query.py",
+        "apps/study-server/app/modules/mentor/api_67_mentor_student_progress/validate.py",
+        "apps/study-server/app/modules/mentor/api_67_mentor_student_progress/view.py",
+        "apps/study-server/tests/modules/mentor/api_67_mentor_student_progress/test_mentor_student_progress.py",
+        "apps/study-server/app/modules/admin/__init__.py",
+        "apps/study-server/app/modules/admin/api_68_admin_users_list/__init__.py",
+        "apps/study-server/app/modules/admin/api_68_admin_users_list/models.py",
+        "apps/study-server/app/modules/admin/api_68_admin_users_list/query.py",
+        "apps/study-server/app/modules/admin/api_68_admin_users_list/validate.py",
+        "apps/study-server/app/modules/admin/api_68_admin_users_list/view.py",
+        "apps/study-server/tests/modules/admin/api_68_admin_users_list/test_admin_users_list.py",
+        "apps/study-server/app/modules/admin/api_69_admin_user_detail/__init__.py",
+        "apps/study-server/app/modules/admin/api_69_admin_user_detail/models.py",
+        "apps/study-server/app/modules/admin/api_69_admin_user_detail/query.py",
+        "apps/study-server/app/modules/admin/api_69_admin_user_detail/validate.py",
+        "apps/study-server/app/modules/admin/api_69_admin_user_detail/view.py",
+        "apps/study-server/tests/modules/admin/api_69_admin_user_detail/test_admin_user_detail.py",
+        "apps/study-server/app/modules/admin/api_70_admin_user_update/__init__.py",
+        "apps/study-server/app/modules/admin/api_70_admin_user_update/models.py",
+        "apps/study-server/app/modules/admin/api_70_admin_user_update/query.py",
+        "apps/study-server/app/modules/admin/api_70_admin_user_update/validate.py",
+        "apps/study-server/app/modules/admin/api_70_admin_user_update/view.py",
+        "apps/study-server/tests/modules/admin/api_70_admin_user_update/test_admin_user_update.py",
+        "apps/study-server/app/modules/admin/api_71_admin_user_status/__init__.py",
+        "apps/study-server/app/modules/admin/api_71_admin_user_status/models.py",
+        "apps/study-server/app/modules/admin/api_71_admin_user_status/query.py",
+        "apps/study-server/app/modules/admin/api_71_admin_user_status/validate.py",
+        "apps/study-server/app/modules/admin/api_71_admin_user_status/view.py",
+        "apps/study-server/tests/modules/admin/api_71_admin_user_status/test_admin_user_status.py",
+        "apps/study-server/app/modules/admin/api_72_admin_user_delete/__init__.py",
+        "apps/study-server/app/modules/admin/api_72_admin_user_delete/models.py",
+        "apps/study-server/app/modules/admin/api_72_admin_user_delete/query.py",
+        "apps/study-server/app/modules/admin/api_72_admin_user_delete/validate.py",
+        "apps/study-server/app/modules/admin/api_72_admin_user_delete/view.py",
+        "apps/study-server/tests/modules/admin/api_72_admin_user_delete/test_admin_user_delete.py",
+        "apps/study-server/app/modules/admin/api_73_admin_courses_list/__init__.py",
+        "apps/study-server/app/modules/admin/api_73_admin_courses_list/models.py",
+        "apps/study-server/app/modules/admin/api_73_admin_courses_list/query.py",
+        "apps/study-server/app/modules/admin/api_73_admin_courses_list/validate.py",
+        "apps/study-server/app/modules/admin/api_73_admin_courses_list/view.py",
+        "apps/study-server/tests/modules/admin/api_73_admin_courses_list/test_admin_courses_list.py",
+        "apps/study-server/app/modules/admin/api_74_admin_course_detail/__init__.py",
+        "apps/study-server/app/modules/admin/api_74_admin_course_detail/models.py",
+        "apps/study-server/app/modules/admin/api_74_admin_course_detail/query.py",
+        "apps/study-server/app/modules/admin/api_74_admin_course_detail/validate.py",
+        "apps/study-server/app/modules/admin/api_74_admin_course_detail/view.py",
+        "apps/study-server/tests/modules/admin/api_74_admin_course_detail/test_admin_course_detail.py",
+        "apps/study-server/app/modules/admin/api_75_admin_course_update/__init__.py",
+        "apps/study-server/app/modules/admin/api_75_admin_course_update/models.py",
+        "apps/study-server/app/modules/admin/api_75_admin_course_update/query.py",
+        "apps/study-server/app/modules/admin/api_75_admin_course_update/validate.py",
+        "apps/study-server/app/modules/admin/api_75_admin_course_update/view.py",
+        "apps/study-server/tests/modules/admin/api_75_admin_course_update/test_admin_course_update.py",
+        "apps/study-server/app/modules/admin/api_76_admin_course_status/__init__.py",
+        "apps/study-server/app/modules/admin/api_76_admin_course_status/models.py",
+        "apps/study-server/app/modules/admin/api_76_admin_course_status/query.py",
+        "apps/study-server/app/modules/admin/api_76_admin_course_status/validate.py",
+        "apps/study-server/app/modules/admin/api_76_admin_course_status/view.py",
+        "apps/study-server/tests/modules/admin/api_76_admin_course_status/test_admin_course_status.py",
+        "infra/postgres/study-server/migrations/010_course_status_audit_logs.sql",
+        "apps/study-server/app/modules/admin/api_77_admin_course_delete/__init__.py",
+        "apps/study-server/app/modules/admin/api_77_admin_course_delete/models.py",
+        "apps/study-server/app/modules/admin/api_77_admin_course_delete/query.py",
+        "apps/study-server/app/modules/admin/api_77_admin_course_delete/validate.py",
+        "apps/study-server/app/modules/admin/api_77_admin_course_delete/view.py",
+        "apps/study-server/tests/modules/admin/api_77_admin_course_delete/test_admin_course_delete.py",
+        "apps/study-server/app/modules/admin/api_78_admin_content_pending/__init__.py",
+        "apps/study-server/app/modules/admin/api_78_admin_content_pending/models.py",
+        "apps/study-server/app/modules/admin/api_78_admin_content_pending/query.py",
+        "apps/study-server/app/modules/admin/api_78_admin_content_pending/validate.py",
+        "apps/study-server/app/modules/admin/api_78_admin_content_pending/view.py",
+        "apps/study-server/tests/modules/admin/api_78_admin_content_pending/test_admin_content_pending.py",
+        "apps/study-server/app/modules/admin/api_79_admin_content_detail/__init__.py",
+        "apps/study-server/app/modules/admin/api_79_admin_content_detail/models.py",
+        "apps/study-server/app/modules/admin/api_79_admin_content_detail/query.py",
+        "apps/study-server/app/modules/admin/api_79_admin_content_detail/validate.py",
+        "apps/study-server/app/modules/admin/api_79_admin_content_detail/view.py",
+        "apps/study-server/tests/modules/admin/api_79_admin_content_detail/test_admin_content_detail.py",
+        "apps/study-server/app/modules/admin/api_80_admin_content_approve/__init__.py",
+        "apps/study-server/app/modules/admin/api_80_admin_content_approve/models.py",
+        "apps/study-server/app/modules/admin/api_80_admin_content_approve/query.py",
+        "apps/study-server/app/modules/admin/api_80_admin_content_approve/validate.py",
+        "apps/study-server/app/modules/admin/api_80_admin_content_approve/view.py",
+        "apps/study-server/tests/modules/admin/api_80_admin_content_approve/test_admin_content_approve.py",
+        "infra/postgres/study-server/migrations/011_content_review_audit_logs.sql",
+        "apps/study-server/app/modules/admin/api_81_admin_content_reject/__init__.py",
+        "apps/study-server/app/modules/admin/api_81_admin_content_reject/models.py",
+        "apps/study-server/app/modules/admin/api_81_admin_content_reject/query.py",
+        "apps/study-server/app/modules/admin/api_81_admin_content_reject/validate.py",
+        "apps/study-server/app/modules/admin/api_81_admin_content_reject/view.py",
+        "apps/study-server/tests/modules/admin/api_81_admin_content_reject/test_admin_content_reject.py",
+        "apps/study-server/app/modules/admin/api_83_admin_lesson_detail/__init__.py",
+        "apps/study-server/app/modules/admin/api_83_admin_lesson_detail/models.py",
+        "apps/study-server/app/modules/admin/api_83_admin_lesson_detail/query.py",
+        "apps/study-server/app/modules/admin/api_83_admin_lesson_detail/validate.py",
+        "apps/study-server/app/modules/admin/api_83_admin_lesson_detail/view.py",
+        "apps/study-server/tests/modules/admin/api_83_admin_lesson_detail/test_admin_lesson_detail.py",
+        "apps/study-server/app/modules/admin/api_84_admin_lesson_update/__init__.py",
+        "apps/study-server/app/modules/admin/api_84_admin_lesson_update/models.py",
+        "apps/study-server/app/modules/admin/api_84_admin_lesson_update/query.py",
+        "apps/study-server/app/modules/admin/api_84_admin_lesson_update/validate.py",
+        "apps/study-server/app/modules/admin/api_84_admin_lesson_update/view.py",
+        "apps/study-server/tests/modules/admin/api_84_admin_lesson_update/test_admin_lesson_update.py",
+        "apps/study-server/app/modules/admin/api_85_admin_lesson_status/__init__.py",
+        "apps/study-server/app/modules/admin/api_85_admin_lesson_status/models.py",
+        "apps/study-server/app/modules/admin/api_85_admin_lesson_status/query.py",
+        "apps/study-server/app/modules/admin/api_85_admin_lesson_status/validate.py",
+        "apps/study-server/app/modules/admin/api_85_admin_lesson_status/view.py",
+        "apps/study-server/tests/modules/admin/api_85_admin_lesson_status/test_admin_lesson_status.py",
+        "apps/study-server/app/modules/guest/api_12_resources_detail/query.py",
+        "apps/study-server/tests/modules/guest/api_12_resources_detail/test_resources_detail.py",
+        "apps/study-server/app/modules/mentor/api_48_mentor_lecture_detail/query.py",
+        "apps/study-server/tests/modules/mentor/api_48_mentor_lecture_detail/test_mentor_lecture_detail.py",
+        "apps/study-server/app/modules/admin/api_86_admin_lesson_delete/__init__.py",
+        "apps/study-server/app/modules/admin/api_86_admin_lesson_delete/models.py",
+        "apps/study-server/app/modules/admin/api_86_admin_lesson_delete/query.py",
+        "apps/study-server/app/modules/admin/api_86_admin_lesson_delete/validate.py",
+        "apps/study-server/app/modules/admin/api_86_admin_lesson_delete/view.py",
+        "apps/study-server/tests/modules/admin/api_86_admin_lesson_delete/test_admin_lesson_delete.py",
+        "infra/postgres/study-server/migrations/012_lesson_status_audit_logs.sql",
+        "apps/study-server/app/modules/admin/api_87_admin_quizzes_list/__init__.py",
+        "apps/study-server/app/modules/admin/api_87_admin_quizzes_list/models.py",
+        "apps/study-server/app/modules/admin/api_87_admin_quizzes_list/query.py",
+        "apps/study-server/app/modules/admin/api_87_admin_quizzes_list/validate.py",
+        "apps/study-server/app/modules/admin/api_87_admin_quizzes_list/view.py",
+        "apps/study-server/tests/modules/admin/api_87_admin_quizzes_list/test_admin_quizzes_list.py",
+        "apps/study-server/app/modules/admin/api_88_admin_quizzes_create/__init__.py",
+        "apps/study-server/app/modules/admin/api_88_admin_quizzes_create/models.py",
+        "apps/study-server/app/modules/admin/api_88_admin_quizzes_create/query.py",
+        "apps/study-server/app/modules/admin/api_88_admin_quizzes_create/validate.py",
+        "apps/study-server/app/modules/admin/api_88_admin_quizzes_create/view.py",
+        "apps/study-server/tests/modules/admin/api_88_admin_quizzes_create/test_admin_quizzes_create.py",
+        "infra/postgres/study-server/migrations/013_quiz_question_type_and_choice_order.sql",
+        "apps/study-server/app/modules/admin/api_89_admin_quizzes_update/__init__.py",
+        "apps/study-server/app/modules/admin/api_89_admin_quizzes_update/models.py",
+        "apps/study-server/app/modules/admin/api_89_admin_quizzes_update/query.py",
+        "apps/study-server/app/modules/admin/api_89_admin_quizzes_update/validate.py",
+        "apps/study-server/app/modules/admin/api_89_admin_quizzes_update/view.py",
+        "apps/study-server/tests/modules/admin/api_89_admin_quizzes_update/test_admin_quizzes_update.py",
+        "apps/study-server/app/modules/admin/api_90_admin_quizzes_delete/__init__.py",
+        "apps/study-server/app/modules/admin/api_90_admin_quizzes_delete/models.py",
+        "apps/study-server/app/modules/admin/api_90_admin_quizzes_delete/query.py",
+        "apps/study-server/app/modules/admin/api_90_admin_quizzes_delete/validate.py",
+        "apps/study-server/app/modules/admin/api_90_admin_quizzes_delete/view.py",
+        "apps/study-server/tests/modules/admin/api_90_admin_quizzes_delete/test_admin_quizzes_delete.py",
+        "apps/study-server/app/modules/admin/api_91_admin_quizzes_statistics/__init__.py",
+        "apps/study-server/app/modules/admin/api_91_admin_quizzes_statistics/models.py",
+        "apps/study-server/app/modules/admin/api_91_admin_quizzes_statistics/query.py",
+        "apps/study-server/app/modules/admin/api_91_admin_quizzes_statistics/validate.py",
+        "apps/study-server/app/modules/admin/api_91_admin_quizzes_statistics/view.py",
+        "apps/study-server/tests/modules/admin/api_91_admin_quizzes_statistics/test_admin_quizzes_statistics.py",
+        "apps/study-server/app/modules/admin/api_92_admin_notifications_list/__init__.py",
+        "apps/study-server/app/modules/admin/api_92_admin_notifications_list/models.py",
+        "apps/study-server/app/modules/admin/api_92_admin_notifications_list/query.py",
+        "apps/study-server/app/modules/admin/api_92_admin_notifications_list/validate.py",
+        "apps/study-server/app/modules/admin/api_92_admin_notifications_list/view.py",
+        "apps/study-server/tests/modules/admin/api_92_admin_notifications_list/test_admin_notifications_list.py",
+        "apps/study-server/app/modules/admin/api_93_admin_notifications_create/__init__.py",
+        "apps/study-server/app/modules/admin/api_93_admin_notifications_create/models.py",
+        "apps/study-server/app/modules/admin/api_93_admin_notifications_create/query.py",
+        "apps/study-server/app/modules/admin/api_93_admin_notifications_create/validate.py",
+        "apps/study-server/app/modules/admin/api_93_admin_notifications_create/view.py",
+        "apps/study-server/tests/modules/admin/api_93_admin_notifications_create/test_admin_notifications_create.py",
+        "apps/study-server/app/modules/admin/api_96_admin_notifications_status/__init__.py",
+        "apps/study-server/app/modules/admin/api_96_admin_notifications_status/models.py",
+        "apps/study-server/app/modules/admin/api_96_admin_notifications_status/query.py",
+        "apps/study-server/app/modules/admin/api_96_admin_notifications_status/validate.py",
+        "apps/study-server/app/modules/admin/api_96_admin_notifications_status/view.py",
+        "apps/study-server/tests/modules/admin/api_96_admin_notifications_status/test_admin_notification_status.py",
+        "apps/study-server/app/modules/admin/api_97_admin_discussions_reported/__init__.py",
+        "apps/study-server/app/modules/admin/api_97_admin_discussions_reported/models.py",
+        "apps/study-server/app/modules/admin/api_97_admin_discussions_reported/query.py",
+        "apps/study-server/app/modules/admin/api_97_admin_discussions_reported/validate.py",
+        "apps/study-server/app/modules/admin/api_97_admin_discussions_reported/view.py",
+        "apps/study-server/tests/modules/admin/api_97_admin_discussions_reported/test_admin_discussions_reported.py",
+        "infra/postgres/study-server/migrations/014_discussion_reports.sql"
       ]
     },
     "server-work": {
@@ -277,7 +801,9 @@
       "status": "SOURCE_CHANGED",
       "entry": ".agents/server-work/AGENTS.md",
       "index": ".agents/server-work/INDEX.md",
-      "skillRefs": ["createDD-markdown"],
+      "skillRefs": [
+        "createDD-markdown"
+      ],
       "pages": [
         ".agents/server-work/architecture.md",
         ".agents/server-work/apis/foundation.md",
@@ -326,7 +852,9 @@
       "status": "VERIFIED_WITH_UNWIRED_COMPONENTS",
       "entry": ".agents/server-ai/AGENTS.md",
       "index": ".agents/server-ai/INDEX.md",
-      "skillRefs": ["createDD-markdown"],
+      "skillRefs": [
+        "createDD-markdown"
+      ],
       "pages": [
         ".agents/server-ai/architecture.md",
         ".agents/server-ai/apis/chat.md",
@@ -357,7 +885,9 @@
       "status": "VERIFIED_REACT_EXPRESS_SPLIT",
       "entry": ".agents/web-work/AGENTS.md",
       "index": ".agents/web-work/INDEX.md",
-      "skillRefs": ["createDD-markdown"],
+      "skillRefs": [
+        "createDD-markdown"
+      ],
       "pages": [
         ".agents/web-work/architecture.md",
         ".agents/web-work/conventions.md",
@@ -401,11 +931,19 @@
           "pages": [
             ".agents/web-work/study/architecture.md",
             ".agents/web-work/study/api.md",
+          ".agents/web-study/design.md",
             ".agents/web-work/study/tests.md",
             ".agents/web-work/study/workflows/README.md"
           ],
-          "sourceRoots": ["apps/study-client"],
-          "trackedRoots": ["apps/study-client/src", "apps/study-client/package.json", "apps/study-client/vite.config.ts", "apps/study-client/tsconfig.json"],
+          "sourceRoots": [
+            "apps/study-client"
+          ],
+          "trackedRoots": [
+            "apps/study-client/src",
+            "apps/study-client/package.json",
+            "apps/study-client/vite.config.ts",
+            "apps/study-client/tsconfig.json"
+          ],
           "requiredSourcePaths": [
             "apps/study-client/src/main.ts",
             "apps/study-client/src/App.vue",
@@ -431,8 +969,15 @@
             ".agents/web-work/modules/README.md",
             ".agents/web-work/workflows/README.md"
           ],
-          "sourceRoots": ["apps/work-client/web"],
-          "trackedRoots": ["apps/work-client/web/src", "apps/work-client/web/package.json", "apps/work-client/web/tsconfig.json", "apps/work-client/web/vite.config.ts"],
+          "sourceRoots": [
+            "apps/work-client/web"
+          ],
+          "trackedRoots": [
+            "apps/work-client/web/src",
+            "apps/work-client/web/package.json",
+            "apps/work-client/web/tsconfig.json",
+            "apps/work-client/web/vite.config.ts"
+          ],
           "requiredSourcePaths": [
             "apps/work-client/web/src/app/router.tsx",
             "apps/work-client/web/src/shared/api/work.ts",
@@ -448,7 +993,9 @@
       "status": "SOURCE_BACKED",
       "entry": ".agents/mobile-work/AGENTS.md",
       "index": ".agents/mobile-work/INDEX.md",
-      "skillRefs": ["create-dd-from-bd-mobile"],
+      "skillRefs": [
+        "create-dd-from-bd-mobile"
+      ],
       "pages": [
         ".agents/mobile-work/architecture.md",
         ".agents/mobile-work/dependencies.md",

@@ -68,7 +68,7 @@ status: "Draft — Needs Confirmation"
 | ↑ | qq.question_text | Candidate question text | Candidate alias question_text → QuizQuestion.text. |
 | ↑ | qq.sort_order | Candidate display order | DB design mô tả thứ tự câu hỏi; tie-break chưa xác nhận. |
 | ↑ | qq.score | Question score | Có trong DB design nhưng không có trong logical QuizQuestion response. |
-| ↑ | SOURCE_REQUIRED | QuestionType source | Không có type column hoặc mapping trong DB design/DDL. |
+| ↑ | qq.question_type | QuestionType source | Migration 013 adds nullable local candidate; allowed values are DERIVED from V1-PILOT vocabulary. |
 
 **Candidate relation and ordering**
 
@@ -89,7 +89,7 @@ status: "Draft — Needs Confirmation"
 
 - Không đọc hoặc trả qc.is_correct trong response Student theo yêu cầu hiện tại.
 - Catalog chưa định nghĩa QuizChoice fields; id/text chỉ là candidate mapping từ DB, chưa phải response contract đã duyệt.
-- DB design không có choice sort_order; thứ tự choices SOURCE_REQUIRED.
+- Migration 013 adds `quiz_choices.sort_order` as a local DERIVED ordering candidate; legacy rows receive default 0 and may not retain original order.
 
 ### 2.4. Read-result handling
 
@@ -115,7 +115,7 @@ status: "Draft — Needs Confirmation"
 | data.questions[].id | quiz_questions.id | Direct candidate mapping. | Design-only. |
 | data.questions[].text | quiz_questions.question_text | Candidate alias question_text → text. | Design-only. |
 | data.questions[].type | N/A | No source mapping. | SOURCE_REQUIRED; enum/column absent. |
-| data.questions[].choices[] | quiz_choices | Candidate relation via question_id. | QuizChoice shape chưa định nghĩa; không include is_correct. |
+| data.questions[].choices[] | quiz_choices | Candidate relation via question_id; order via sort_order. | Catalog shape remains undefined; never include `is_correct` in Student response. |
 | meta / traceId | ApiEnvelope<T> schema | Envelope fields. | Runtime serialization chưa xác minh. |
 
 - Không thêm quizzes.description, quizzes.status, created_at, updated_at hoặc quiz_questions.score vào response khi logical schema không khai báo chúng.
@@ -140,7 +140,7 @@ status: "Draft — Needs Confirmation"
 - HTTP 200.
 - businessCode = DESIGN_RESOURCE_RETRIEVED.
 - Return ApiEnvelope<Quiz> theo API catalog.
-- Response mẫu chỉ minh họa envelope; nested QuizChoice shape chưa được chốt.
+- Response mẫu chỉ minh họa envelope; local Admin `{id,text,is_correct}` from API #88 does not define the Student QuizChoice schema.
 
 ### 5.2. Authentication and access errors
 

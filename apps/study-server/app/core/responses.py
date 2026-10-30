@@ -1,4 +1,4 @@
-"""Định nghĩa kiểu chi tiết lỗi và các hàm dựng envelope phản hồi của Study API."""
+"""Cung cấp các hàm dựng envelope phản hồi chuẩn của Study API."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ def error_response(
     """Dựng và trả JSONResponse envelope lỗi chuẩn cùng HTTP status và trace header.
 
     Trace ID ưu tiên giá trị truyền vào, sau đó lấy từ ContextVar hoặc tạo UUID mới. Mapping được
-    sao chép; ErrorDetail được tuần tự hóa dưới meta.fieldErrors.
+    sao chép; ErrorDetail được tuần tự hóa dưới meta.fieldErrors. Data lỗi mặc định là JSON null.
     """
     resolved_trace_id = trace_id or get_current_trace_id() or create_trace_id()
     response_meta = dict(meta or {})
@@ -61,7 +61,7 @@ def error_response(
             "success": False,
             "businessCode": business_code,
             "message": message,
-            "data": data if data is not None else {},
+            "data": data,
             "meta": response_meta,
             "traceId": resolved_trace_id,
         }),

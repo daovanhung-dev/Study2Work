@@ -8,7 +8,7 @@ from typing import Any
 from uuid import uuid4
 
 import jwt
-from jwt.exceptions import InvalidTokenError
+from jwt.exceptions import PyJWTError
 from starlette.responses import JSONResponse
 
 from app.core.config import get_settings
@@ -75,13 +75,15 @@ def decode_access_token(
     token: str,
 ) -> dict[str, Any] | JSONResponse:
     """Giải mã và kiểm tra access JWT bằng khóa, thuật toán, issuer và audience hiện hành. Hàm yêu
-    cầu các claim bắt buộc, kiểm tra type là access và sub là chuỗi không rỗng; token sai hoặc
-    hết hạn được ánh xạ thành lỗi xác thực 401."""
+    cầu các claim bắt buộc, kiểm tra type là access và sub là chuỗi không rỗng. Lỗi xác minh do
+    PyJWT phát sinh được ánh xạ thành response xác thực 401."""
 
     settings = get_settings()
     verification_key = _get_verification_key()
     if isinstance(verification_key, JSONResponse):
         return verification_key
+    if not token.isascii():
+        return _invalid_access_token()
 
     try:
         payload = jwt.decode(
@@ -102,11 +104,7 @@ def decode_access_token(
                 ],
             },
         )
-    except (
-        InvalidTokenError,
-        TypeError,
-        ValueError,
-    ):
+    except PyJWTError:
         return _invalid_access_token()
 
     if payload.get("type") != ACCESS_TOKEN_TYPE:

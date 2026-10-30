@@ -1,6 +1,8 @@
 
 import app.core.security.access_token as access_token_module
 import app.core.security.refresh_token as refresh_token_module
+import app.utils.auth as auth_utils
+import jwt
 import pytest
 from app.core.config import Settings
 from app.core.security import (
@@ -65,6 +67,51 @@ def test_access_token_validates_signature_issuer_audience_and_type(
     error = decode_access_token(f"{token}tampered")
     assert isinstance(error, JSONResponse)
     assert error.status_code == 401
+
+
+def test_access_token_rejects_non_ascii_input(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Kiểm tra chuỗi token không phải ASCII nhận cùng response xác thực 401."""
+    settings = Settings()
+    monkeypatch.setattr(access_token_module, "get_settings", lambda: settings)
+
+    error = decode_access_token("\ud800")
+
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 401
+    assert error.headers["X-Trace-Id"]
+
+
+def test_access_token_maps_malformed_time_claim_type_to_unauthorized(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Kiểm tra TypeError từ claim thời gian sai kiểu vẫn được ánh xạ thành response 401."""
+    settings = Settings(
+        jwt_algorithm="HS256",
+        jwt_secret_key="test-secret-key-that-is-at-least-32-characters",
+    )
+    monkeypatch.setattr(access_token_module, "get_settings", lambda: settings)
+    token = jwt.encode(
+        {
+            "sub": "user-1",
+            "type": "access",
+            "roles": ["learner"],
+            "jti": "malformed-iat",
+            "iat": [1],
+            "exp": 4102444800,
+            "iss": settings.jwt_issuer,
+            "aud": settings.jwt_audience,
+        },
+        settings.jwt_secret_key.get_secret_value(),
+        algorithm="HS256",
+    )
+
+    error = auth_utils.decode_access_token(token)
+
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 401
+    assert error.headers["X-Trace-Id"]
 
 
 def test_opaque_refresh_token_is_random_and_hashable(

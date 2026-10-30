@@ -1,8 +1,8 @@
 # VERIFICATION_REPORT — Study API #40 DD
 
 **Status:** PASS — documentation checks complete; runtime tests not run
-**Date:** 2026-10-12
-**Scope:** `40_discussions_create` and its worklog only
+**Date:** 2026-10-23
+**Scope:** API #40 pack refreshed during the connected #39–#42 group review
 
 ## Contract reconciliation
 
@@ -17,8 +17,9 @@ Compared the draft with [`docs/lists/list_api.md`](../../../../../docs/lists/lis
 | Success | HTTP 201 `DESIGN_RESOURCE_CREATED` | Preserved |
 | Errors | 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 422 `DESIGN_VALIDATION_ERROR`; 500 `DESIGN_INTERNAL_ERROR` | Preserved; no additional status/code added |
 | Current route state | No discussion route/module found in current Study Server runtime | Marked `UNWIRED / NOT_FOUND` |
+| Connected API #39–#42 proposals | Root/access/status, content mapping, response page and comment projection use shared DERIVED proposals | Aligned; confirmation remains open |
 
-The request `content:int64` versus logical `Discussion.content:string` and physical `TEXT`, missing physical `title`, undefined `Page` pagination, course access, status/visibility, timestamp values, and FK nullability are listed as open questions. No conversion, column, access rule, default, or response pagination behavior was invented.
+The request `content:int64` versus logical `Discussion.content:string` and physical `TEXT`, missing physical `title`, course access, status/visibility, timestamp values, and FK nullability remain open questions. The DD now labels base-10 decimal-string conversion, ACTIVE enrollment/topic status, server timestamps, and a one-item response page as DERIVED proposals only; none is presented as approved runtime behavior.
 
 ## Template structure and fingerprints
 
@@ -46,6 +47,7 @@ All eight sheets use the canonical template layout and audit appendix, with `dd_
 | Field, condition, and error entries are individually tabulated | PASS |
 | Trailing whitespace and conflict markers | PASS |
 | Catalog request, response, success status, and error set | PASS |
+| Connected-group consistency | PASS — API #40 root creation, empty comments and API #42 reload match the #39/#41/#42 DERIVED proposals. |
 | `git diff --check` | PASS |
 
 Runtime tests were intentionally not run: API #40 is not wired, and this task changes documentation only.

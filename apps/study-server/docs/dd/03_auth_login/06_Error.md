@@ -10,7 +10,7 @@ format: markdown
 
 ## Giải thích
 
-Normative error cases của API theo `list_api.md`. Các nhánh `401/403` chỉ có trong AC-02 và được ghi riêng ở mục discrepancy.
+Normative error cases của API theo `list_api.md` chỉ gồm `422/500`. AC-02 và current source còn có `401/403`; giữ các nhánh này thành discrepancy, không thêm vào contract normative.
 
 ## Error cases
 
@@ -30,9 +30,10 @@ Normative error cases của API theo `list_api.md`. Các nhánh `401/403` chỉ 
 
 | No | Source branch | AC-02 status/code | list_api.md contract | Resolution |
 |---:|---|---|---|---|
-| D1 | Account không tồn tại hoặc sai mật khẩu | `401 DESIGN_AUTHENTICATION_REQUIRED` | Không khai báo cho API #3 | `DISCREPANCY/TBD`; không thêm normative error row |
-| D2 | Account bị khóa | `403 DESIGN_ACCESS_DENIED` | Không khai báo cho API #3 | `DISCREPANCY/TBD`; không thêm normative error row |
-| D3 | Login thành công | `200 DESIGN_RESOURCE_RETRIEVED` | `201 DESIGN_RESOURCE_CREATED` | Dùng list_api.md làm normative; AC status giữ discrepancy |
+| D1 | Account không tồn tại hoặc sai mật khẩu | AC-02 và current source: `401 DESIGN_AUTHENTICATION_REQUIRED` | Không khai báo cho API #3 | `DISCREPANCY/TBD`; không thêm normative error row |
+| D2 | Account có status khác `ACTIVE` | AC-02 mô tả locked account; current source: `403 DESIGN_ACCESS_DENIED` cho mọi non-`ACTIVE` status | Không khai báo cho API #3 | `DISCREPANCY/TBD`; chốt status policy trước khi đổi contract |
+| D3 | Login thành công | AC-02 và current source: `200 DESIGN_RESOURCE_RETRIEVED` | `201 DESIGN_RESOURCE_CREATED` | Dùng list_api.md làm normative; AC/source status giữ discrepancy |
+| D4 | Login thành công trả profile cộng token fields và ghi refresh-token hash | Current source response/persistence | Catalog chỉ khai báo `ApiEnvelope<UserProfile>`; persistence không đặc tả | `DISCREPANCY/TBD`; không mở rộng schema/error contract bằng suy đoán |
 
 > AC-02 cũng nói client nhận token; UserProfile response contract không khai báo token. DD không tự thêm `access_token`.
 

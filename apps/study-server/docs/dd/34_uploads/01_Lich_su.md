@@ -4,7 +4,7 @@ order: 1
 dd_id: "34"
 api_name: "Upload file"
 source_sheet: "Lịch sử"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 
 # Lịch sử update
@@ -14,13 +14,15 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-12 |
-| Ngày update cuối cùng | 2026-10-12 |
+| Ngày update cuối cùng | 2026-10-25 |
 
 ## Lịch sử thay đổi
 
 | Version | Ngày update | Người update | Nội dung update | Remarks |
 |---|---|---|---|---|
-| 0.1 | 2026-10-12 | Codex | Tạo DD draft theo API catalog #34, AC-17/AC-21 và nguồn Study hiện có. | Draft — Needs Confirmation; không suy diễn enum, giới hạn file, persistence hoặc policy storage còn thiếu nguồn. |
+| 0.1 | 2026-10-12 | Codex | Tạo DD draft theo API catalog #34, AC-17/AC-21 và nguồn Study hiện có. | Enum, persistence, authorization và storage policy khi đó chưa được chốt. |
+| 0.2 | 2026-10-25 | Codex | Chốt purpose/role, enrollment/owner checks, UploadAsset BIGINT persistence, S3 URL, fallback metadata và lỗi/cleanup theo lựa chọn người dùng; triển khai source API #34. | Draft — Ready for Review; live DB chưa áp dụng migration. |
+
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

@@ -9,7 +9,7 @@
 | Document status | `Draft — Needs Confirmation` |
 | Completion status | `PARTIALLY COMPLETED` |
 | Decision status | `NEEDS USER DECISION` |
-| Runtime implementation | `NOT_FOUND` — current Study router/module/test không có API #14 |
+| Current source status | `SOURCE_PRESENT` — router, matching module/view, và focused test source hiện có; macro-review này không chạy test/runtime verification |
 
 ## Template fingerprint
 
@@ -34,7 +34,10 @@
 | `apps/study-server/docs/diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio` | `Yes` | AC-11 sequence, update profile và reload profile |
 | `apps/study-server/docs/diagrams/AC_UNICA/00_AC_API_INDEX.md` | `Yes` | Actor, precondition, postcondition và API mapping |
 | `infra/postgres/study-server/DB.sql` | `Yes` | Current checked-in `users` schema |
-| `apps/study-server/app/api/v1.py` | `Yes` | Xác nhận API #14 chưa được route |
+| `apps/study-server/app/api/v1.py` | `Yes` | Xác nhận router khai báo `PUT /api/v1/users/me/profile` dưới API #14 |
+| `apps/study-server/app/modules/guest/api_14_users_me_profile/view.py` | `Yes` | View source hiện điều phối auth, UPDATE, rollback/commit và response |
+| `apps/study-server/app/modules/guest/api_14_users_me_profile/query.py` | `Yes` | SQL UPDATE/RETURNING current source |
+| `apps/study-server/tests/modules/guest/api_14_users_me_profile/test_users_me_profile.py` | `Present` | Focused test source tồn tại; chưa chạy trong macro-review này |
 | `apps/study-server/app/modules/guest/api_04_users_me/query.py` | `Yes` | Safe profile projection/current user lookup pattern |
 | `apps/study-server/app/modules/guest/api_04_users_me/view.py` | `Yes` | JWT/Student/error/rollback pattern |
 | `apps/study-server/tests/modules/guest/api_04_users_me/test_users_me.py` | `Yes` | Current response behavior và bio absence |
@@ -63,13 +66,13 @@
 - [x] One-field/one-variable/one-condition/error-row rules được áp dụng trong phần authoring.
 - [x] `bio`, `phone`, `avatar_url` gaps được giải thích trong `OPEN_QUESTIONS.md`.
 
-## Runtime checks
+## Current source checks — AC-11 macro-review
 
-- `[x]` `app/api/v1.py` không có route `PUT /api/v1/users/me/profile`.
-- `[x]` Không tìm thấy module/query/view/test runtime API #14.
-- `[x]` Current API #4 chỉ được dùng làm pattern và safe projection evidence.
-- `[x]` Current schema không có `users.bio`; không tạo mapping persistence giả.
-- `[N/A]` Runtime HTTP test API #14 — endpoint chưa wired.
+- `SOURCE_PRESENT` — `app/api/v1.py` khai báo `PUT /api/v1/users/me/profile` và chuyển request tới API #14 view.
+- `SOURCE_PRESENT` — model/query/view và focused test file API #14 tồn tại trong current checkout.
+- Current UPDATE ghi `full_name`, `phone`, `avatar_url`, `updated_at`; body `bio` bị model extra-ignore và không có trong SQL/response model.
+- Current API #04 vẫn là read-only safe projection; query/model không trả `bio`.
+- Test file hiện diện không chứng minh test pass; tests, runtime, live schema và deployment không được xác minh trong macro-review này.
 
 ## Verification executions
 

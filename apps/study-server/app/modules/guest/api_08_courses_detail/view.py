@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import logging
-from decimal import InvalidOperation
 from typing import Any
 
 from app.core.database import query_one
-from app.core.responses import error_response, success_response
+from app.core.responses import ErrorDetail, error_response, success_response
 from app.modules.guest._shared.course_catalog.helpers import (
     course_internal_error,
     map_course,
@@ -77,8 +76,11 @@ def get_course_detail(
         return _course_not_found_error(trace_id)
 
     # Ánh xạ các trường của khóa học và tạo response CoursePage singleton.
+    item = map_course(row)
+    if isinstance(item, ErrorDetail):
+        logger.error("Course detail mapping failed; trace_id=%s", trace_id)
+        return course_internal_error(trace_id)
     try:
-        item = map_course(row)
         page = CoursePage(
             items=[item],
             pagination=Pagination(
@@ -88,7 +90,7 @@ def get_course_detail(
                 total_pages=1,
             ),
         )
-    except (InvalidOperation, TypeError, ValueError, ValidationError):
+    except (TypeError, ValidationError):
         logger.exception("Course detail mapping failed; trace_id=%s", trace_id)
         return course_internal_error(trace_id)
 

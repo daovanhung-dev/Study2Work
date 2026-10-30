@@ -1,7 +1,9 @@
 import json
 
+import pytest
 from app.core.responses import INTERNAL_ERROR_MESSAGE, ErrorDetail, error_response, success_response
 from app.core.trace import reset_trace_id, set_trace_id
+from pydantic import ValidationError
 from starlette.responses import JSONResponse
 
 
@@ -53,7 +55,10 @@ def test_error_response_returns_json_response_with_canonical_envelope_and_field_
         trace_id="trace-id",
         data={"source": "query"},
         meta={"page": 1},
-        errors=[ErrorDetail(field="email", code="INVALID_EMAIL", message="Invalid email")],
+        errors=[
+            ErrorDetail(field="email", code="INVALID_EMAIL", message="Invalid email"),
+            ErrorDetail(code="INVALID_REQUEST", message="Invalid request"),
+        ],
     )
 
     assert isinstance(response, JSONResponse)
@@ -69,10 +74,17 @@ def test_error_response_returns_json_response_with_canonical_envelope_and_field_
             "page": 1,
             "fieldErrors": [
                 {"field": "email", "code": "INVALID_EMAIL", "message": "Invalid email"},
+                {"field": None, "code": "INVALID_REQUEST", "message": "Invalid request"},
             ],
         },
         "traceId": "trace-id",
     }
+
+
+def test_error_detail_rejects_extra_fields() -> None:
+    """Xác nhận ErrorDetail từ chối field ngoài schema để tránh leak dữ liệu ngoài contract."""
+    with pytest.raises(ValidationError):
+        ErrorDetail(code="INVALID_REQUEST", message="Invalid", private_value="secret")
 
 
 def test_error_response_preserves_http_headers_and_sets_trace_header() -> None:
@@ -87,7 +99,7 @@ def test_error_response_preserves_http_headers_and_sets_trace_header() -> None:
     assert response.status_code == 401
     assert response.headers["WWW-Authenticate"] == "Bearer"
     assert response.headers["X-Trace-Id"] == "trace-id"
-    assert json.loads(response.body)["data"] == {}
+    assert json.loads(response.body)["data"] is None
 
 
 def test_internal_error_response_uses_current_trace_and_safe_defaults() -> None:
@@ -105,7 +117,7 @@ def test_internal_error_response_uses_current_trace_and_safe_defaults() -> None:
         "success": False,
         "businessCode": "INTERNAL_SERVER_ERROR",
         "message": INTERNAL_ERROR_MESSAGE,
-        "data": {},
+        "data": None,
         "meta": {},
         "traceId": trace_id,
     }

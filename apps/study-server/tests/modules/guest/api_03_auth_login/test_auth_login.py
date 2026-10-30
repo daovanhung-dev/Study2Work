@@ -148,7 +148,7 @@ def test_login_returns_profile_and_tokens_and_commits(
     assert executed[0]["token_hash"] == "refresh-token-hash"
 
 
-@pytest.mark.parametrize("status", ["LOCKED", "DISABLED"])
+@pytest.mark.parametrize("status", ["LOCKED", "DISABLED", "DELETED"])
 def test_login_rejects_inactive_account(
     monkeypatch: pytest.MonkeyPatch,
     status: str,
@@ -278,6 +278,45 @@ def test_refresh_rotates_old_token_atomically(monkeypatch: pytest.MonkeyPatch) -
     assert executed[0][1] == {"refresh_token_id": 9}
     assert executed[1][1]["token_hash"] == "refresh-token-hash"
     assert response["data"]["refresh_token"] == "refresh-token"
+
+
+@pytest.mark.parametrize("status", ["SUSPENDED", "DELETED"])
+def test_refresh_rejects_inactive_account(
+    monkeypatch: pytest.MonkeyPatch,
+    status: str,
+) -> None:
+    """Từ chối refresh của user không ACTIVE trước khi phát hành hoặc rotate token."""
+
+    session = FakeSession()
+    inactive_user = make_user(status=status, include_password=False)
+    inactive_user["refresh_token_id"] = 9
+    executed: list[tuple[str, dict[str, Any]]] = []
+    issued: list[bool] = []
+
+    monkeypatch.setattr(auth_utils, "hash_refresh_token", lambda token: "old-token-hash")
+    monkeypatch.setattr(auth_view, "query_one", lambda db, query, params: inactive_user)
+    monkeypatch.setattr(auth_utils, "issue_tokens", lambda **kwargs: issued.append(True))
+
+    def execute(db, query, params):
+        """Ghi SQL nếu refresh đi nhầm vào nhánh revoke/insert token."""
+
+        executed.append((query, params))
+        return FakeResult((9,))
+
+    monkeypatch.setattr(auth_view, "execute_query", execute)
+
+    error = auth_view.refresh(
+        user_data=RefreshRequest(refresh_token="old-token"),
+        db=session,
+        trace_id="trace-id",
+    )
+
+    assert isinstance(error, JSONResponse)
+    assert error.status_code == 403
+    assert json.loads(error.body)["businessCode"] == "DESIGN_ACCESS_DENIED"
+    assert issued == []
+    assert executed == []
+    assert session.commit_count == 0
 
 
 def test_refresh_rejects_invalid_token(monkeypatch: pytest.MonkeyPatch) -> None:

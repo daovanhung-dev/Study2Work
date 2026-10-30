@@ -23,7 +23,7 @@ Tài liệu DD trong apps/study-server/docs/dd/29_quizzes_attempts/. Không ch�
 |---|---|
 | 00_Cover.md | fd5f568c5329d3069fbaff617a6f4ed3b5ffaf050e042c95b7c9100a05f79e63 |
 | 01_Lich_su.md | d1cec6573433a9551812bf47552f8a44d7c533d790341941047c410e1d57771e |
-| 02_Overview.md | c2879c2f0e007395558dfee4167484786c5aadb3fdd63ab135ca111e7c5f8aa6 |
+| 02_Overview.md | d17dbef29c4159a1c30b6dc67df41bce8377fba40836eaab5fafd289aa81bc54 |
 | 03_Request.md | 37aaa1e9d7f3e83329e81ab38d922c9dff959284d5b7b3ae353878798dd4b7aa |
 | 04_Response.md | 5bcb43ba5eb487302dd5d5efde4383b9f452f9fed2149f55315d64ff78a19ab8 |
 | 05_Data_Mapping.md | 11bc77bc0522d3af27b9499114991c8819046ac32bde5c1efdc841be088dcc5b |
@@ -61,3 +61,9 @@ Tài liệu DD trong apps/study-server/docs/dd/29_quizzes_attempts/. Không ch�
 ## Kết luận
 
 DD hoàn tất ở trạng thái Draft — Needs Confirmation. Chỉ chuyển DD sang Final sau khi các câu hỏi trong OPEN_QUESTIONS.md được giải quyết và canonical contract được cập nhật nếu cần.
+
+## Cross-AC review — AC-35 quiz tombstone
+
+- Review result: DERIVED proposal added after document-level AC-35 review; owner confirmation is still required.
+- Cross-reference: API #90 preserves history on soft-delete when attempts exist; API #91 reads retained history.
+- No runtime, catalog, diagram or schema behavior was changed or verified.

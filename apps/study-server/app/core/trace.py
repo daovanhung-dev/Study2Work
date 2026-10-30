@@ -1,12 +1,14 @@
 """Cung cấp các hàm tạo, kiểm tra và quản lý trace ID trong request cùng ContextVar của tiến
 trình."""
 
+import re
 from contextvars import ContextVar, Token
 from uuid import UUID, uuid4
 
 from fastapi import Request
 
 TRACE_HEADER = "X-Trace-Id"
+_UUID_HEX_PATTERN = re.compile(r"[0-9a-fA-F]{32}\Z")
 
 _current_trace_id: ContextVar[str | None] = ContextVar(
     "current_trace_id",
@@ -22,15 +24,20 @@ def create_trace_id() -> str:
 
 def validate_trace_id(trace_id: str | None) -> str | None:
     """Kiểm tra chuỗi đầu vào có phải UUID hợp lệ hay không và chuẩn hóa UUID về dạng chuỗi chuẩn.
-    Trả None khi giá trị vắng mặt hoặc không phân tích được."""
+    Trả None khi giá trị vắng mặt hoặc không khớp cú pháp UUID."""
 
-    if not trace_id:
+    if not isinstance(trace_id, str) or not trace_id:
         return None
 
-    try:
-        return str(UUID(trace_id))
-    except ValueError:
+    normalized = trace_id
+    if normalized.lower().startswith("urn:uuid:"):
+        normalized = normalized[9:]
+    if normalized.startswith("{") and normalized.endswith("}"):
+        normalized = normalized[1:-1]
+    compact = normalized.replace("-", "")
+    if not _UUID_HEX_PATTERN.fullmatch(compact):
         return None
+    return str(UUID(hex=compact))
 
 
 def get_trace_id(request: Request) -> str:

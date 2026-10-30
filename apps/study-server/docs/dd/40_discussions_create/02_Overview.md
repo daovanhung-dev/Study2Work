@@ -22,7 +22,7 @@ status: "Draft — Needs Confirmation"
 | Purpose | Tạo topic/câu hỏi mới trong discussion của một course. |
 | Consumer/Actor | Student |
 | Authentication | Bearer JWT |
-| Authorization | Role Student; điều kiện có quyền tham gia discussion của course theo AC-19, predicate cụ thể chưa được đặc tả. |
+| Authorization | Role Student; DERIVED proposal: yêu cầu enrollment ACTIVE cho course_id. Predicate và policy vẫn cần xác nhận. |
 | Basis | DIRECT — approved design contract và AC-19 |
 | Status | Draft — Needs Confirmation; design-only, runtime `UNWIRED / NOT_FOUND`. |
 | Transaction | TBD — transaction boundary và lỗi rollback chưa có source cho API #40. |
@@ -42,7 +42,7 @@ status: "Draft — Needs Confirmation"
 
 - `discussions` — candidate insert; schema evidence còn `DESIGN_ONLY`.
 - `users` — candidate author projection only; query và response lookup chưa được chốt.
-- Không có query access-to-course nào được phê duyệt cho API #40.
+- `enrollments` — DERIVED source cho access principal/course/status ACTIVE; cần xác nhận.
 
 ## Tables write
 
@@ -52,28 +52,28 @@ status: "Draft — Needs Confirmation"
 
 - Contract yêu cầu request `content:int64!`, trong khi reusable `Discussion.content` là `string` và DDL khai báo `discussions.content TEXT`.
 - Contract yêu cầu `title:string!`, nhưng ERD và checked-in DDL không có cột `discussions.title`.
-- Success contract là `ApiEnvelope<Page<Discussion>>` với HTTP 201; quy tắc tạo `PageMeta` cho response create chưa có nguồn.
-- AC-19 tách nhánh tạo topic khỏi nhánh reply; `parent_id = NULL` là candidate root mapping theo DB guide, chưa được xác nhận cho runtime.
+- Success contract là `ApiEnvelope<Page<Discussion>>` với HTTP 201; đề xuất DERIVED: một root item, metadata 1/1/1/1 và comments rỗng ngay sau khi tạo.
+- AC-19 tách nhánh tạo topic khỏi nhánh reply; `parent_id = NULL` là root mapping theo DB guide và được đề xuất DERIVED.
 - DDL cho phép `course_id` và `user_id` NULL, còn DB guide/ERD xem các quan hệ này là bắt buộc.
 
 ## Assumptions
 
 - Giữ nguyên approved catalog contract theo lựa chọn của người dùng; mọi mismatch được ghi thành open question, không sửa API catalog.
-- Các giá trị ví dụ là minh họa, không phải dữ liệu hoặc default được phê duyệt.
+- Đề xuất DERIVED: enrollment ACTIVE, root status ACTIVE, server timestamp, content int64 chuyển thành chuỗi thập phân và Page một item. Các đề xuất cần xác nhận.
 
 ## Conflicts
 
 - Request `content:int64` không khớp reusable response `Discussion.content:string` hoặc physical `TEXT`.
 - Required logical `Discussion.title` không có physical source column.
-- AC-19 precondition yêu cầu course participation nhưng không định nghĩa access predicate.
+- AC-19 precondition yêu cầu course participation nhưng không định nghĩa predicate; enrollment ACTIVE là đề xuất DERIVED.
 - Course/user FK nullability trong DB guide/ERD khác checked-in DDL.
-- Response `Page<Discussion>` của thao tác tạo mới chưa có pagination source.
+- Response `Page<Discussion>` chưa có pagination source; one-item page là đề xuất DERIVED.
 
 ## Security note
 
 - Contract chỉ nhận `course_id`, `title`, `content`; user identity phải đến từ authenticated Student principal, không nhận user ID từ body.
 - Current auth helper xác thực JWT subject và Student role cho các route đã wire; API #40 chưa gọi helper này.
-- Course participation rule phải được chốt trước implementation; không suy diễn enrollment hoặc ownership predicate.
+- Enrollment ACTIVE cho course_id là đề xuất DERIVED thống nhất với API #39/#41/#42; cần xác nhận trước implementation.
 
 ## Performance note
 

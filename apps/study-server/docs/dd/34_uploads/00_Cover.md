@@ -4,7 +4,7 @@ order: 0
 dd_id: "34"
 api_name: "Upload file"
 source_sheet: "Cover"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 
 # Study2Work — API Detail Design
@@ -21,14 +21,14 @@ status: "Draft — Needs Confirmation"
 | HTTP method | POST |
 | Endpoint | /api/v1/uploads |
 | Version | v1 |
-| Status | Draft — Needs Confirmation |
+| Status | Draft — Ready for Review |
 | Created by | Codex |
 | Reviewed by | TBD |
 | Approved by | TBD |
 | Created date | 2026-10-12 |
-| Updated date | 2026-10-12 |
+| Updated date | 2026-10-25 |
 
-> `TBD` ở mục Reviewed by / Approved by cho biết review và approval chưa được ghi nhận trong bản draft.
+> Implementation and local verification are recorded in the verification report. Review/approval and live schema/application status remain unclaimed.
 
 ## Tên hiển thị
 
@@ -36,6 +36,7 @@ status: "Draft — Needs Confirmation"
 Study2Work API design
 Upload file
 ~~~
+
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

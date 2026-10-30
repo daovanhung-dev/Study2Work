@@ -22,7 +22,7 @@ status: "Draft — Needs Confirmation"
 | Purpose | Lấy danh sách thread thảo luận theo contract API #39 và AC-19. |
 | Consumer/Actor | Student |
 | Authentication | Bearer JWT |
-| Authorization | Student role; quyền truy cập course/thread cần được xác nhận. |
+| Authorization | Student role; DERIVED: enrollment ACTIVE cho course của topic. Khi course_id vắng mặt, scope theo tất cả enrollment ACTIVE của principal. |
 | Basis | APPROVED_DESIGN_CONTRACT; AC-19; DB design evidence |
 | Status | Draft — Needs Confirmation |
 | Current runtime state | UNWIRED / NOT_FOUND — Study Server hiện chưa có route/module/test discussion. |
@@ -46,6 +46,7 @@ status: "Draft — Needs Confirmation"
 
 - discussions — candidate source cho thread gốc và reply theo parent_id.
 - users — candidate source cho Discussion.author và DiscussionComment.author.
+- enrollments — DERIVED source cho gate principal/course/status ACTIVE.
 
 ## Tables write
 
@@ -57,13 +58,15 @@ status: "Draft — Needs Confirmation"
 - AC-19 mô tả Student đã đăng nhập và có quyền tham gia discussion của course; điều kiện xác định quyền chưa được chỉ rõ.
 - PageMeta yêu cầu page, size, total, total_pages, trong khi request API #39 chỉ khai báo page, không có size.
 - Discussion.title là required trong catalog nhưng không có cột discussions.title trong ERD/checked-in DDL.
-- AC-19 tách API #39 list khỏi API #42 đọc topic + comments; schema Discussion lại có comments[], nên phạm vi comments trong list cần xác nhận.
+- API #39 trả root threads kèm direct comments ACTIVE theo đề xuất DERIVED; API #42 trả cùng cấu trúc cho một root.
 - DB guide xếp API #39–#42 là DESIGN_ONLY; current router/module/test scan không tìm thấy discussion implementation.
 
 ## Assumptions
 
 - Giữ nguyên contract API #39; DD này không sửa API catalog, AC diagrams, ERD, DDL hoặc runtime.
-- Dùng parent_id IS NULL chỉ như candidate để nhận diện thread gốc theo DB guide; predicate API chính thức cần được xác nhận.
+- Dùng parent_id IS NULL để nhận diện thread gốc theo DB guide.
+- Dùng status ACTIVE và enrollment ACTIVE làm visibility/access proposal DERIVED từ AC-19 và DDL defaults.
+- Page mặc định 1, size cố định 20; thread mới nhất trước nếu không truyền sort, theo precedent API #10.
 - Giữ Discussion.title trong logical response schema nhưng đánh dấu nguồn vật lý là chưa có; không map title từ content.
 - Trạng thái là Draft — Needs Confirmation; không tạo ZIP theo workflow Study Server.
 
@@ -72,21 +75,21 @@ status: "Draft — Needs Confirmation"
 - Discussion.title chưa có source vật lý.
 - discussions.course_id và discussions.user_id là nullable trong checked-in DDL nhưng DB guide/ERD mô tả required; live schema chưa xác minh.
 - Request có page nhưng không có size, trong khi response PageMeta yêu cầu size.
-- AC-19 mô tả đọc discussion public và quyền tham gia course nhưng không định nghĩa visibility/access predicates.
-- Response Discussion.comments[] chưa được phân định cho list API #39 hay detail API #42.
+- ACTIVE enrollment/topic visibility là đề xuất DERIVED, cần xác nhận.
+- Response Discussion.comments[] gồm direct child ACTIVE trong cả #39 và #42; #42 chỉ trả một root thread.
 
 ## Security note
 
 - Contract yêu cầu Bearer JWT và Student role.
 - Không nhận user ID từ query; principal thuộc token hiện hành.
-- Course participation/access predicate chưa được cung cấp; không suy ra chỉ từ course_id.
+- Dùng enrollment ACTIVE làm course participation predicate DERIVED; cần được xác nhận.
 - Không trả raw SQL, stack trace, credential hoặc cột credential từ users.
 
 ## Performance note
 
-- Response là Page<Discussion> nhưng page size, maximum size, total-count scope và index/query strategy chưa được đặc tả.
-- sort có mặt trong request nhưng allowlist, direction, default và tie-break chưa được xác nhận.
-- Không cam kết paging hoặc ordering cụ thể ngoài schema PageMeta.
+- Page size 20 theo precedent API #10; comments đầy đủ trên từng thread có thể làm response lớn.
+- sort đề xuất created_at_desc (default) hoặc created_at_asc; thread có id tie-break, cần xác nhận.
+- Invalid sort/page và page ngoài miền cần xác nhận vì catalog không khai báo 422.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

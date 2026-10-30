@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import logging
-from decimal import InvalidOperation
 from typing import Any
 
 from app.core.database import query_many, query_one
-from app.core.responses import success_response
+from app.core.responses import ErrorDetail, success_response
 from app.modules.guest._shared.course_catalog.constants import DEFAULT_SIZE
 from app.modules.guest._shared.course_catalog.helpers import (
     build_order_by,
     course_internal_error,
     map_course,
+    normalize_course_count,
 )
 from app.modules.guest._shared.course_catalog.models import CoursePage, Pagination
 from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
@@ -33,13 +33,16 @@ def find_published_courses_search(
     q: str | None,
     page: int,
     sort: str | None,
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] | ErrorDetail:
     """Tính offset theo page và kích thước cố định DEFAULT_SIZE, dựng ORDER BY qua allowlist rồi
     truy vấn các khóa học PUBLISHED khớp từ khóa tùy chọn. Giá trị tìm kiếm được bind thành
     q_pattern; không commit transaction."""
 
     offset = (page - 1) * DEFAULT_SIZE
-    query = LIST_SEARCHED_COURSES.format(order_by=build_order_by(sort))
+    order_by = build_order_by(sort)
+    if isinstance(order_by, ErrorDetail):
+        return order_by
+    query = LIST_SEARCHED_COURSES.format(order_by=order_by)
     return query_many(
         db,
         query,
@@ -88,7 +91,12 @@ def search_courses(
 
     try:
         count_row = count_published_courses_search(db, q=course_query.q)
-        if int(count_row.get("missing_mentor_count") or 0) > 0:
+        missing_mentor_count = normalize_course_count(count_row.get("missing_mentor_count"))
+        if isinstance(missing_mentor_count, ErrorDetail):
+            db.rollback()
+            logger.error("Course search mentor count mapping failed; trace_id=%s", trace_id)
+            return course_internal_error(trace_id)
+        if missing_mentor_count > 0:
             db.rollback()
             return course_internal_error(trace_id)
         rows = find_published_courses_search(
@@ -102,9 +110,24 @@ def search_courses(
         logger.exception("Course search failed; trace_id=%s", trace_id)
         return course_internal_error(trace_id)
 
+    if isinstance(rows, ErrorDetail):
+        logger.error("Course search sort mapping failed; trace_id=%s", trace_id)
+        return course_internal_error(trace_id)
+
     try:
-        items = [map_course(row) for row in rows]
-        total = int(count_row.get("total") or 0)
+        items = []
+        for row in rows:
+            item = map_course(row)
+            if isinstance(item, ErrorDetail):
+                db.rollback()
+                logger.error("Course search row mapping failed; trace_id=%s", trace_id)
+                return course_internal_error(trace_id)
+            items.append(item)
+        total = normalize_course_count(count_row.get("total"))
+        if isinstance(total, ErrorDetail):
+            db.rollback()
+            logger.error("Course search total mapping failed; trace_id=%s", trace_id)
+            return course_internal_error(trace_id)
         total_pages = (total + DEFAULT_SIZE - 1) // DEFAULT_SIZE if total else 0
         page = CoursePage(
             items=items,
@@ -115,7 +138,7 @@ def search_courses(
                 total_pages=total_pages,
             ),
         )
-    except (InvalidOperation, TypeError, ValueError, ValidationError):
+    except (TypeError, ValidationError):
         db.rollback()
         logger.exception("Course search mapping failed; trace_id=%s", trace_id)
         return course_internal_error(trace_id)

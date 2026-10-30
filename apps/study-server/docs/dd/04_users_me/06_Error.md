@@ -10,15 +10,17 @@ format: markdown
 
 ## Giải thích
 
-Các trường hợp lỗi normative của API theo `list_api.md`. User record không tồn tại sau khi JWT hợp lệ được xử lý như authentication inconsistency (`401`) theo assumption design-only vì contract không khai báo `404`.
+Contract API #04 liệt kê `401 DESIGN_AUTHENTICATION_REQUIRED`, `403 DESIGN_ACCESS_DENIED` và `500 DESIGN_INTERNAL_ERROR`. Các điều kiện bên dưới tách contract khỏi nhánh hiện có trong source. Source ánh xạ user row không tồn tại thành `401`; catalog chưa quy định riêng ngữ nghĩa này nên cần xác nhận.
 
 ## Error cases
 
 | No | Category | Verify check | Item | Condition | HTTP status | Error code | Error message ID | Data Mapping reference | Rollback | Remarks |
 |---:|---|---|---|---|---:|---|---|---|---:|---|
-| 1 | Authentication error | `Yes` | `Authorization/JWT` | Thiếu header, không phải Bearer JWT, token sai chữ ký/hết hạn, thiếu `user_id`/`role`, hoặc user record không tồn tại | `401` | `DESIGN_AUTHENTICATION_REQUIRED` | `N/A — envelope message` | [`0.1/0.2/2.3`](./05_Data_Mapping.md#01-get-request-header) | `No` | User-not-found mapping là assumption design-only; contract không có `404` |
-| 2 | Authorization error | `Yes` | `role` | JWT hợp lệ nhưng role khác `Student` | `403` | `DESIGN_ACCESS_DENIED` | `N/A — envelope message` | [`0.3`](./05_Data_Mapping.md#03-check-role) | `No` | Không tạo permission code riêng |
-| 3 | System error | `No` | `users` query | Lỗi nội bộ khi query hoặc map profile | `500` | `DESIGN_INTERNAL_ERROR` | `N/A — envelope message` | [`2.3/4.4`](./05_Data_Mapping.md#23-check-result) | `No` | Không trả raw SQL/stack trace/credential detail |
+| 1 | Authentication error | `Yes` | `Authorization/JWT` | Thiếu/sai Bearer header; JWT sai/hết hạn; thiếu/sai `sub` hoặc `roles`; hoặc current source không tìm thấy user theo JWT subject | `401` | `DESIGN_AUTHENTICATION_REQUIRED` | `N/A — envelope message` | [`0.1/0.2/2.3`](./05_Data_Mapping.md#01-get-request-header) | `No` | Không có `404` trong catalog; user-not-found là current-source mapping, semantics cần xác nhận |
+| 2 | Authorization error | `Yes` | JWT `roles` | Token hợp lệ nhưng `roles` không chứa `STUDENT` sau chuẩn hóa uppercase | `403` | `DESIGN_ACCESS_DENIED` | `N/A — envelope message` | [`0.3`](./05_Data_Mapping.md#03-check-role) | `No` | Source không so role trong token với `users.role` |
+| 3 | System error | `No` | JWT configuration | Decoder trả lỗi không phải `401`, ví dụ cấu hình verification key không dùng được; helper ánh xạ sang `500` | `500` | `DESIGN_INTERNAL_ERROR` | `N/A — envelope message` | [`0.2/4.4`](./05_Data_Mapping.md#02-decode-token) | `No` | Không trả detail cấu hình hoặc secret |
+| 4 | System error | `No` | `users` query | `SQLAlchemyError` khi đọc profile | `500` | `DESIGN_INTERNAL_ERROR` | `N/A — envelope message` | [`2.1/2.3/4.4`](./05_Data_Mapping.md#23-check-result) | `Yes — rollback Session` | Không trả SQL/stack trace/credential detail |
+| 5 | System error | `No` | `UserProfile` mapping | Hàng query không hợp lệ với model response, thiếu/sai trường bắt buộc | `500` | `DESIGN_INTERNAL_ERROR` | `N/A — envelope message` | [`3.1/4.4`](./05_Data_Mapping.md#31-map-userprofile) | `No` | Lỗi mapping được log theo trace ID; không có mutation cần rollback |
 
 > Mỗi error case và mỗi field validation phải nằm trên một row riêng.
 

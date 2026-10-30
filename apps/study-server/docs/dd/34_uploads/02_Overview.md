@@ -4,7 +4,7 @@ order: 2
 dd_id: "34"
 api_name: "Upload file"
 source_sheet: "Overview"
-status: "Draft — Needs Confirmation"
+status: "Draft — Ready for Review"
 ---
 
 # Overview
@@ -17,67 +17,66 @@ status: "Draft — Needs Confirmation"
 | Module | STUDENT / LEARNING & INTERACTION; MENTOR / TEACHING & SUPPORT |
 | Method | POST |
 | Endpoint | /api/v1/uploads |
-| Purpose | Nhận file từ Student hoặc Mentor và lưu file vào Object Storage để các API tiếp theo tham chiếu. |
-| Runtime status | UNWIRED / NOT_FOUND — chưa có route/module/test API #34 trong Study Server hiện tại. |
+| Purpose | Upload binary lên S3-compatible storage và lưu metadata UploadAsset có ID BIGINT để consumer tham chiếu. |
 | Consumer/Actor | Student; Mentor |
-| Authentication | Bearer JWT bắt buộc theo API catalog. |
-| Authorization | Role thuộc Student hoặc Mentor; quyền theo purpose/course chưa được định nghĩa. |
-| Basis | DIRECT — API catalog, AC-17 và AC-21; các chi tiết upload còn thiếu được giữ là SOURCE_REQUIRED. |
-| Status | Draft — Needs Confirmation |
-| Transaction | Không có DB transaction được xác định; Object Storage là side effect ngoài hệ thống. |
-| Side effects | AC-17/AC-21 mô tả lưu file vào Object Storage; không có mutation DB được chỉ định. |
+| Authentication | Bearer JWT bắt buộc. |
+| Authorization | Student chỉ dùng SUBMISSION; Mentor chỉ dùng LECTURE. Student gửi course_id thì cần enrollment ACTIVE; Mentor bắt buộc course_id và phải là courses.mentor_id trực tiếp. |
+| Basis | API catalog/AC-17/AC-21 và quyết định được người dùng duyệt ngày 2026-10-25. |
+| Status | Draft — Ready for Review |
+| Runtime status | SOURCE_BACKED — route, module, provider và HTTP tests có trong Study Server; migration mới được thêm vào source, live DB chưa xác minh/áp dụng. |
+| Transaction | Upload object trước; sau đó INSERT uploads và commit. Nếu DB ghi lỗi, rollback và best-effort delete object. |
+| Side effects | Tạo object key UUID dưới uploads/ và một row uploads trạng thái UPLOADED. |
 
 ## Sources
 
-- [API catalog](../../../../../docs/lists/list_api.md) — API #34, UploadAsset và error-code set.
-- [AC/API index](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — liên kết endpoint với AC-17 và AC-21.
-- [AC-17 submission flow](../../diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio) — Student chọn file, gọi upload, Object Storage lưu file submission.
-- [AC-21 lecture flow](../../diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio) — Mentor chọn course/file, gọi upload, Object Storage lưu media.
-- [DB table notes](../../diagrams/DB_UNICA_TABLES.md) và [DB ERD](../../diagrams/DB_UNICA_ERD.drawio) — không có bảng Uploads trong ERD V1; có ghi chú URL nhưng chưa có mapping vật lý.
-- [Checked-in DDL](../../../../../infra/postgres/study-server/DB.sql) — physical DDL evidence; không xác nhận live schema.
-- [API guidelines](../../../../../contracts/api-guidelines/README.md) — envelope, error data và trace ID.
-- [API #13 DD](../13_users_me_avatar/02_Overview.md) và [Object Storage adapter](../../../app/service/object_storage/avatar.py) — chỉ là implementation tham chiếu cho avatar, không phải contract của API #34.
-- [Current Study router](../../../app/api/v1.py), [auth helper](../../../app/utils/auth.py), route/module/test inventory — đối chiếu trạng thái runtime hiện tại.
+- [API catalog](../../../../../docs/lists/list_api.md) — method, path, roles, multipart shape, UploadAsset schema và error set.
+- [AC/API index](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — AC-17 và AC-21 sử dụng API upload.
+- [AC-17 submission flow](../../diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio) và [AC-21 lecture flow](../../diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio) — ngữ cảnh consumer.
+- [API #34 router](../../../app/api/v1.py), [view](../../../app/modules/student/api_34_uploads/view.py), [storage provider](../../../app/service/object_storage/upload.py) và [tests](../../../tests/modules/student/api_34_uploads/test_uploads.py) — current source/test.
+- [Legacy bootstrap DDL](../../../../../infra/postgres/study-server/DB.sql) và [migration 004](../../../../../infra/postgres/study-server/migrations/004_uploads.sql) — checked-in schema artifacts, chưa áp dụng lên live DB.
+- [API guidelines](../../../../../contracts/api-guidelines/README.md) — envelope, trace ID và error data.
 
 ## Tables read
 
-- Không có bảng DB read nào được catalog hoặc AC-17/AC-21 chỉ định.
-- Nếu cần đọc course để kiểm tra quyền theo course_id, bảng/query/predicate là SOURCE_REQUIRED.
+- courses — direct owner lookup dùng `courses.id` và `courses.mentor_id` cho LECTURE.
+- enrollments — Student SUBMISSION có `course_id` chỉ được tiếp tục khi `user_id`, `course_id` và `status = 'ACTIVE'` khớp.
 
 ## Tables write
 
-- Không có bảng DB write nào được catalog hoặc AC-17/AC-21 chỉ định.
-- Object Storage là external write theo hai flow AC; key, metadata và provider response chưa được xác định.
+- uploads — insert owner, purpose, nullable course, storage key, filename, URL, content type, byte size và `UPLOADED` status.
 
 ## Mục chú ý
 
-- Contract yêu cầu multipart với file binary bắt buộc, purpose UploadPurpose bắt buộc, course_id int64 tùy chọn; response là ApiEnvelope<UploadAsset>.
-- UploadAsset có id, name, url, content_type, size_bytes, status; UploadStatus chưa có định nghĩa giá trị.
-- Tên API trong catalog ghép nhiều nhãn hiển thị thành một chuỗi; DD dùng “Upload file” để định danh endpoint, không bổ sung điều kiện “nếu có”.
-- API #34 là upload độc lập; tạo submission hoặc lecture là các API tiếp theo trong AC, không thuộc endpoint này.
+- Purpose enum là `SUBMISSION` hoặc `LECTURE`; status trả về là `UPLOADED`.
+- Chấp nhận mọi loại bytes và MIME; không đặt allowlist hoặc giới hạn dung lượng trong ứng dụng.
+- Kích thước được đo từ stream đã nhận; object key là UUID do server tạo, không nhận từ client.
+- Thiếu filename dùng `upload`; thiếu part Content-Type dùng `application/octet-stream`.
+- URL là public URL dựng từ `OBJECT_STORAGE_PUBLIC_BASE_URL` và key.
+- Response ID là `uploads.id` BIGSERIAL; migration là source artifact, không chứng minh live schema.
 
 ## Assumptions
 
-- Giữ nguyên request fields, roles, success response và error codes của API catalog.
-- Không thêm giá trị enum, giới hạn MIME/size, object key, URL policy hoặc bảng uploads khi nguồn chưa xác định.
-- 07_table.md giữ cấu trúc template nhưng ghi N/A vì không có DB table mapping được xác nhận.
+- DDL target theo lựa chọn người dùng là legacy BIGINT `users`, `courses`, `enrollments`; không gộp V1-PILOT UUID schema.
+- Filename multipart được lưu như client gửi; fallback chỉ áp dụng khi filename thiếu/rỗng.
+- Content type lấy từ multipart header, không sniff hoặc kiểm tra allowlist.
+- Course không tồn tại hoặc không khớp enrollment/direct owner trả 403 theo error set API #34; không thêm 404.
 
 ## Conflicts
 
-- API catalog dùng UploadPurpose và UploadStatus nhưng không định nghĩa enum values.
-- DB ERD footer ghi “Uploads lưu URL” nhưng không có entity/table Uploads; DB table notes xác nhận uploads không nằm trong 16 bảng ERD V1.
-- Current Study runtime không có API #34; trạng thái hiện tại là UNWIRED / NOT_FOUND. API #13 là flow avatar riêng: JSON Data URL, Student-only, giới hạn 5 MiB, fixed object key và lỗi storage 500; không áp dụng các lựa chọn đó cho API #34, vốn khai báo multipart, Student/Mentor và thêm 503.
+- ERD V1 trước đây không có uploads table; quyết định hiện tại bổ sung bảng legacy BIGINT riêng và cập nhật checked-in DDL/migration. Live schema vẫn chưa xác minh.
+- API #47 vẫn UNWIRED cho đến khi người dùng chốt nghĩa `content:int64`; API #34 không phụ thuộc việc triển khai #47.
 
 ## Security note
 
-- Contract chỉ cho phép Bearer JWT; không nhận user_id hoặc object key từ request.
-- Vai trò hợp lệ là Student/Mentor theo catalog; quyền upload theo purpose, quan hệ với course và ownership chưa được đặc tả.
-- Quy tắc kiểm tra nội dung file, tên file và URL truy cập chưa có nguồn; cần được xác nhận trước khi DD chuyển Final hoặc API được triển khai.
+- Lấy owner ID và role từ access JWT đã xác thực; không nhận owner ID, bucket hoặc storage key từ request.
+- Object key UUID tách khỏi filename client, tránh dùng tên file làm đường dẫn storage.
+- Error response không trả raw provider/DB exception hoặc credential.
 
 ## Performance note
 
-- Upload truyền binary tới Object Storage nên phụ thuộc dung lượng file và độ trễ provider.
-- Kích thước tối đa, streaming/buffering, timeout, retry, concurrency và cleanup chưa được quy định.
+- Dùng `UploadFile` spool stream và boto3 `upload_fileobj`; không đọc toàn bộ file vào application bytes buffer.
+- Không có application size cap; proxy/framework infrastructure limits, nếu có, nằm ngoài contract/source này.
+
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

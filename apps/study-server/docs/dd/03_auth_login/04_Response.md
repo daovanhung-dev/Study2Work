@@ -43,6 +43,20 @@ format: markdown
 >
 > AC-02 nói client nhận token nhưng UserProfile contract không khai báo token; DD không thêm `access_token` hoặc field tương đương.
 
+## Current-source response — discrepancy với contract
+
+Route hiện tại trả HTTP `200` với `DESIGN_RESOURCE_RETRIEVED`. `data` gồm profile allowlist (`id`, `full_name`, `email`, `role`, `avatar_url`, `phone`, `status`, `created_at`, `updated_at`) và các field token dưới đây. Đây là mô tả source hiện tại, không phải schema normative của catalog:
+
+| Path | Type hiện tại | Nguồn/ý nghĩa source |
+|---|---|---|
+| `data.access_token` | `string` | Access JWT do auth utility phát hành. |
+| `data.refresh_token` | `string` | Opaque refresh token trả cho client; source chỉ lưu hash. |
+| `data.token_type` | `string` | Token type do auth utility trả về. |
+| `data.expires_in` | `integer` | Thời hạn access token theo config hiện hành. |
+| `data.refresh_expires_in` | `integer` | Thời hạn refresh token theo config hiện hành. |
+
+Source không trả `password_hash` hoặc `bio`. Tên field token được ghi nhận từ response builder hiện tại; catalog `ApiEnvelope<UserProfile>` chưa có các field này nên ví dụ thành công bên dưới vẫn giữ đúng contract catalog.
+
 ## Ví dụ thành công — HTTP 201
 
 ```json

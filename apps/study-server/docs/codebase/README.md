@@ -769,7 +769,7 @@ error_response tạo canonical error envelope cùng status/header HTTP:
   "success": false,
   "businessCode": "VALIDATION_ERROR",
   "message": "Dữ liệu đầu vào không hợp lệ.",
-  "data": {},
+  "data": null,
   "meta": {
     "fieldErrors": [
       {"field": "email", "code": "INVALID_EMAIL", "message": "Email không hợp lệ."}
@@ -783,7 +783,7 @@ Behavior chi tiết:
 
 - copy `meta` vào response metadata;
 - nếu `errors` không rỗng, serialize từng ErrorDetail vào `meta.fieldErrors`;
-- giữ `data`, hoặc dùng `{}` nếu data là None;
+- giữ `data`, hoặc dùng `null` nếu data là None;
 - đặt trace ID trong body và `X-Trace-Id` header;
 - không đặt errors ở top-level.
 
