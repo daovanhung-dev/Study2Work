@@ -152,7 +152,7 @@ def update_lesson_progress(
     # Truy vấn bài học theo lesson_id.
     try:
         lesson = find_lesson_by_id(db, lesson_id=validated_lesson_id)
-    except:
+    except Exception:
         db.rollback()
         logger.exception("Lesson lookup failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
@@ -168,7 +168,7 @@ def update_lesson_progress(
             user_id=user_id,
             course_id=lesson["course_id"],
         )
-    except:
+    except Exception:
         db.rollback()
         logger.exception("Enrollment check failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
@@ -207,7 +207,7 @@ def update_lesson_progress(
 
         data = LessonResponse.model_validate(lesson)
         db.commit()
-    except:
+    except Exception:
         db.rollback()
         logger.exception("Lesson progress update failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)

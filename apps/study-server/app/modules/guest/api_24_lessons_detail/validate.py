@@ -16,7 +16,9 @@ def validate_lesson_detail_request(
     """Xác thực token học viên và kiểm tra lesson_id nhận từ path parameter."""
     authentication = validate_current_user_request(
         authorization,
+        role="STUDENT",
         trace_id=trace_id,
+        internal_error_message="Lesson detail could not be retrieved.",
     )
     if isinstance(authentication, JSONResponse):
         return authentication
@@ -41,4 +43,3 @@ def _lesson_not_found(trace_id: str) -> JSONResponse:
         message="Lesson not found.",
         trace_id=trace_id,
     )
-

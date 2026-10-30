@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from app.core.database import execute_query, query_one
+from app.core.database import query_one
 from app.core.responses import error_response, success_response
 from app.modules.guest.api_23_lessons_start.models import LessonResponse
 from app.modules.guest.api_23_lessons_start.query import (
@@ -65,7 +65,9 @@ def insert_lesson_progress(
 def touch_lesson_progress(
     db: Session, *, progress_id: int
 ) -> dict[str, Any] | None:
-    """Cập nhật thời gian truy cập gần nhất và đảm bảo trạng thái IN_PROGRESS nếu chưa hoàn thành."""
+    """Cập nhật thời gian truy cập gần nhất và đảm bảo trạng thái IN_PROGRESS
+    nếu chưa hoàn thành.
+    """
     return query_one(
         db,
         TOUCH_LESSON_PROGRESS,
@@ -74,7 +76,6 @@ def touch_lesson_progress(
 
 
 def _not_found_error(trace_id: str) -> JSONResponse:
-    """Tạo phản hồi lỗi 404 khi không tìm thấy bài học."""
     return error_response(
         status_code=404,
         business_code="DESIGN_RESOURCE_NOT_FOUND",
@@ -84,7 +85,6 @@ def _not_found_error(trace_id: str) -> JSONResponse:
 
 
 def _access_denied_error(trace_id: str) -> JSONResponse:
-    """Tạo phản hồi lỗi 403 khi học viên chưa ghi danh vào khóa học."""
     return error_response(
         status_code=403,
         business_code="DESIGN_ACCESS_DENIED",
@@ -94,7 +94,6 @@ def _access_denied_error(trace_id: str) -> JSONResponse:
 
 
 def _internal_error(trace_id: str) -> JSONResponse:
-    """Tạo phản hồi lỗi 500 khi gặp lỗi hệ thống hoặc cơ sở dữ liệu."""
     return error_response(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",
@@ -125,7 +124,7 @@ def start_lesson(
     # Truy vấn bài học theo lesson_id.
     try:
         lesson = find_lesson_by_id(db, lesson_id=validated_lesson_id)
-    except:
+    except Exception:
         db.rollback()
         logger.exception("Lesson lookup failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
@@ -141,7 +140,7 @@ def start_lesson(
             user_id=user_id,
             course_id=lesson["course_id"],
         )
-    except:
+    except Exception:
         db.rollback()
         logger.exception("Enrollment check failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
@@ -171,12 +170,12 @@ def start_lesson(
 
         data = LessonResponse.model_validate(lesson)
         db.commit()
-    except:
+    except Exception:
         db.rollback()
         logger.exception("Lesson start persistence failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
 
-    # Trả về kết quả thành công HTTP 201 theo đặc tả.
+    # Trả về kết quả thành công HTTP 201
     return success_response(
         business_code="DESIGN_RESOURCE_CREATED",
         message="Lesson started.",

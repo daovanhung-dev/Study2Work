@@ -90,3 +90,4 @@ SELECT setval(pg_get_serial_sequence('lessons', 'id'), COALESCE(MAX(id), 1)) FRO
 SELECT setval(pg_get_serial_sequence('resources', 'id'), COALESCE(MAX(id), 1)) FROM resources;
 SELECT setval(pg_get_serial_sequence('enrollments', 'id'), COALESCE(MAX(id), 1)) FROM enrollments;
 SELECT setval(pg_get_serial_sequence('lesson_progress', 'id'), COALESCE(MAX(id), 1)) FROM lesson_progress;
+

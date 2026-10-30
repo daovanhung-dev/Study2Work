@@ -16,7 +16,9 @@ def validate_lesson_access_request(
     """Xác thực token học viên và kiểm tra lesson_id nhận từ path parameter."""
     authentication = validate_current_user_request(
         authorization,
+        role="STUDENT",
         trace_id=trace_id,
+        internal_error_message="Lesson access could not be retrieved.",
     )
     if isinstance(authentication, JSONResponse):
         return authentication
@@ -34,11 +36,9 @@ def validate_lesson_access_request(
 
 
 def _lesson_not_found(trace_id: str) -> JSONResponse:
-    """Tạo phản hồi 404 chuẩn khi không tìm thấy bài học."""
     return error_response(
         status_code=404,
         business_code="DESIGN_RESOURCE_NOT_FOUND",
         message="Lesson not found.",
         trace_id=trace_id,
     )
-

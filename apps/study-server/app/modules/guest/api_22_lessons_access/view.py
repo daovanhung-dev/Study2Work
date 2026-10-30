@@ -38,7 +38,6 @@ def find_active_enrollment(
 
 
 def _not_found_error(trace_id: str) -> JSONResponse:
-    """Tạo phản hồi lỗi 404 khi không tìm thấy bài học."""
     return error_response(
         status_code=404,
         business_code="DESIGN_RESOURCE_NOT_FOUND",
@@ -48,7 +47,6 @@ def _not_found_error(trace_id: str) -> JSONResponse:
 
 
 def _access_denied_error(trace_id: str) -> JSONResponse:
-    """Tạo phản hồi lỗi 403 khi học viên chưa ghi danh vào khóa học."""
     return error_response(
         status_code=403,
         business_code="DESIGN_ACCESS_DENIED",
@@ -58,7 +56,6 @@ def _access_denied_error(trace_id: str) -> JSONResponse:
 
 
 def _internal_error(trace_id: str) -> JSONResponse:
-    """Tạo phản hồi lỗi 500 khi gặp lỗi hệ thống hoặc cơ sở dữ liệu."""
     return error_response(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",
@@ -89,7 +86,7 @@ def check_lesson_access(
     # Truy vấn bài học theo lesson_id.
     try:
         lesson = find_lesson_by_id(db, lesson_id=validated_lesson_id)
-    except:
+    except Exception:
         db.rollback()
         logger.exception("Lesson lookup failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
@@ -105,7 +102,7 @@ def check_lesson_access(
             user_id=user_id,
             course_id=lesson["course_id"],
         )
-    except:
+    except Exception:
         db.rollback()
         logger.exception("Enrollment check failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
@@ -117,7 +114,7 @@ def check_lesson_access(
     # Ánh xạ thông tin bài học sang model response chuẩn.
     try:
         data = LessonResponse.model_validate(lesson)
-    except:
+    except Exception:
         logger.exception("Lesson response mapping failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
 

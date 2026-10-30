@@ -17,8 +17,6 @@ class ProgressQuery(BaseModel):
 
 
 class UserProfile(BaseModel):
-    """Mô hình hồ sơ trả về cho API #21 theo đúng schema catalog ApiEnvelope<UserProfile>."""
-
     model_config = ConfigDict(extra="ignore")
 
     id: int

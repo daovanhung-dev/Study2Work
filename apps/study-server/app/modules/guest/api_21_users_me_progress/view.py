@@ -22,7 +22,6 @@ def find_current_user(db: Session, *, user_id: int) -> dict[str, Any] | None:
 
 
 def _authentication_error(trace_id: str) -> JSONResponse:
-    """Tạo phản hồi lỗi 401 khi không tìm thấy người dùng tương ứng với token."""
     return error_response(
         status_code=401,
         business_code="DESIGN_AUTHENTICATION_REQUIRED",
@@ -32,7 +31,6 @@ def _authentication_error(trace_id: str) -> JSONResponse:
 
 
 def _internal_error(trace_id: str) -> JSONResponse:
-    """Tạo phản hồi lỗi 500 khi xử lý dữ liệu gặp lỗi nội bộ."""
     return error_response(
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",
@@ -60,7 +58,7 @@ def get_user_progress(
     # Truy vấn dữ liệu người dùng từ cơ sở dữ liệu.
     try:
         user = find_current_user(db, user_id=user_id)
-    except:
+    except Exception:
         db.rollback()
         logger.exception("User lookup failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
@@ -72,7 +70,7 @@ def get_user_progress(
     # Ánh xạ dữ liệu sang model phản hồi chuẩn.
     try:
         profile = UserProfile.model_validate(user)
-    except:
+    except Exception:
         logger.exception("User profile mapping failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
 

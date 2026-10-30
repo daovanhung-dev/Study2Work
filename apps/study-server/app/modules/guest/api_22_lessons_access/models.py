@@ -6,8 +6,6 @@ from pydantic import BaseModel, ConfigDict
 
 
 class LessonResponse(BaseModel):
-    """Thông tin bài học trả về khi kiểm tra quyền truy cập thành công."""
-
     model_config = ConfigDict(extra="ignore")
 
     id: int

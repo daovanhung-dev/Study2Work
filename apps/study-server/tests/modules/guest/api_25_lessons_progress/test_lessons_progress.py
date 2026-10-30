@@ -197,27 +197,28 @@ def test_lesson_progress_forbidden_role(
     assert payload["businessCode"] == "DESIGN_ACCESS_DENIED"
 
 
-def test_lesson_progress_validation_errors(
+def test_lesson_progress_does_not_apply_range_validation(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Kiểm tra validation lỗi trường position âm và percent > 100 trả về HTTP 422."""
+    """DD #25 không quy định range cho position/percent nên validate không trả HTTP 422."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(
+        view_module,
+        "find_lesson_by_id",
+        lambda db, *, lesson_id: None,
+    )
 
     response = client.patch(
         "/api/v1/lessons/101/progress",
         headers={"Authorization": "Bearer valid-token"},
         json={"position": -1, "percent": 150, "completed": False},
     )
-    assert response.status_code == 422
+    assert response.status_code == 404
     payload = response.json()
-    assert payload["success"] is False
-    assert payload["businessCode"] == "DESIGN_VALIDATION_ERROR"
-    fields = [err["field"] for err in payload["meta"]["fieldErrors"]]
-    assert "position" in fields
-    assert "percent" in fields
+    assert payload["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
 
 
 def test_lesson_progress_not_found(

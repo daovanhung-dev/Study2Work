@@ -11,14 +11,15 @@ def validate_progress_request(
     *,
     trace_id: str,
 ) -> int | JSONResponse:
-    """Xác thực token Bearer của học viên và trả về user_id hợp lệ."""
+    """Xác thực token Bearer và lấy user_id hợp lệ."""
     authentication = validate_current_user_request(
         authorization,
+        role="STUDENT",
         trace_id=trace_id,
+        internal_error_message="User progress could not be retrieved.",
     )
     if isinstance(authentication, JSONResponse):
         return authentication
 
     user_id, _roles = authentication
     return user_id
-

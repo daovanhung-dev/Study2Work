@@ -95,7 +95,7 @@ def get_lesson_detail(
     # Truy vấn bài học và kiểm tra sự tồn tại trong cơ sở dữ liệu.
     try:
         lesson = find_lesson_with_course(db, lesson_id=validated_lesson_id)
-    except:
+    except Exception:
         db.rollback()
         logger.exception("Lesson lookup failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
@@ -115,7 +115,7 @@ def get_lesson_detail(
             user_id=user_id,
             course_id=lesson["course_id"],
         )
-    except:
+    except Exception:
         db.rollback()
         logger.exception("Enrollment check failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
@@ -127,7 +127,7 @@ def get_lesson_detail(
     # Ánh xạ thông tin bài học sang model phản hồi chuẩn.
     try:
         data = LessonResponse.model_validate(lesson)
-    except:
+    except Exception:
         logger.exception("Lesson response mapping failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
 

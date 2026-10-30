@@ -39,16 +39,12 @@ INSERT_LESSON_PROGRESS = """
 INSERT INTO lesson_progress (
     user_id,
     lesson_id,
-    status,
-    progress_percent,
-    last_accessed_at
+    status
 )
 VALUES (
     :user_id,
     :lesson_id,
-    'IN_PROGRESS',
-    0,
-    CURRENT_TIMESTAMP
+    'IN_PROGRESS'
 )
 RETURNING id
 """
@@ -59,8 +55,7 @@ SET
     status = CASE
         WHEN status = 'COMPLETED' THEN status
         ELSE 'IN_PROGRESS'
-    END,
-    last_accessed_at = CURRENT_TIMESTAMP
+    END
 WHERE id = :progress_id
 RETURNING id
 """
