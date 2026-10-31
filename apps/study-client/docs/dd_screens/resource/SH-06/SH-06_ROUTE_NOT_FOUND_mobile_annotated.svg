@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img" aria-labelledby="title desc">
+<title id="title">SH-06 ROUTE_NOT_FOUND — annotated 390px mobile view</title>
+<desc id="desc">Study not-found state adapted for a narrow screen. All text and recovery actions remain visible.</desc>
+<defs>
+<filter id="haloShadow" x="-20%" y="-20%" width="140%" height="150%">
+<feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#17324D" flood-opacity="0.055"/>
+</filter>
+</defs>
+<rect width="390" height="844" fill="#F6FAFC"/>
+<rect width="100%" height="72" fill="#FFFFFF"/>
+<path d="M0 71.5H390" stroke="#D4E2E9" stroke-opacity="0.76"/>
+<g id="element-01-brand-mark" aria-hidden="true"><rect x="24" y="18" width="36" height="36" rx="10" fill="#0B5F8A"/>
+<path d="M35 26.5h10l5 5v13h-15z" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M45 26.8v4.8h4.8M38 37h8M38 41h8" fill="none" stroke="#FFFFFF" stroke-width="1.45" stroke-linecap="round"/>
+</g>
+<g id="element-02-wordmark" aria-hidden="true">
+<text x="72" y="43" fill="#073B57" font-family="Noto Sans, Arial, sans-serif" font-size="22px" font-weight="700" text-anchor="start">Study</text>
+</g>
+<g transform="translate(-419.80 401.10) scale(0.580)" aria-hidden="true">
+<g id="element-08-soft-halo" aria-hidden="true">
+<circle cx="1060" cy="455" r="190" fill="#E8F4FA" filter="url(#haloShadow)"/>
+<circle cx="1060" cy="455" r="153" fill="#FFFFFF" opacity="0.52"/>
+<circle cx="1060" cy="455" r="126" fill="none" stroke="#D4E2E9" stroke-opacity="0.42"/>
+</g>
+<g id="element-09-folded-page-illustration" aria-hidden="true">
+<image href="SH-06_paper-illustration.png" x="858" y="250" width="420" height="420" preserveAspectRatio="xMidYMid meet"/>
+</g>
+<g id="element-12-accent-dots" aria-hidden="true">
+<circle cx="900" cy="300" r="3.5" fill="#43A5C5"/>
+<circle cx="1240" cy="420" r="4" fill="#43A5C5" opacity="0.86"/>
+<circle cx="1204" cy="645" r="3" fill="#43A5C5" opacity="0.78"/>
+</g>
+<g id="element-10-dotted-route" aria-hidden="true">
+<path d="M817 696H930" fill="none" stroke="#43A5C5" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 9"/>
+</g>
+<g id="element-11-open-endpoint" aria-hidden="true">
+<circle cx="948" cy="696" r="14.5" fill="#FFFFFF" stroke="#0B5F8A" stroke-width="3"/>
+<circle cx="948" cy="696" r="4" fill="#43A5C5"/>
+</g>
+</g>
+<g id="element-03-state-eyebrow">
+<text x="24" y="116" fill="#0B5F8A" font-family="Noto Sans, Arial, sans-serif" font-size="12px" font-weight="700" text-anchor="start" letter-spacing="0.45px">TRANG KHÔNG KHẢ DỤNG</text>
+</g>
+<g id="element-04-page-heading">
+<text x="24" y="166" fill="#073B57" font-family="Noto Sans, Arial, sans-serif" font-size="32px" font-weight="700" text-anchor="start">Trang này không</text>
+<text x="24" y="204" fill="#073B57" font-family="Noto Sans, Arial, sans-serif" font-size="32px" font-weight="700" text-anchor="start">tồn tại</text>
+</g>
+<g id="element-05-supporting-copy">
+<text x="24" y="257" fill="#536A7A" font-family="Noto Sans, Arial, sans-serif" font-size="16px" font-weight="400" text-anchor="start">Địa chỉ có thể không chính xác.</text>
+<text x="24" y="282" fill="#536A7A" font-family="Noto Sans, Arial, sans-serif" font-size="16px" font-weight="400" text-anchor="start">Hãy tìm khóa học từ danh sách bên dưới.</text>
+</g>
+<g id="element-06-primary-action" aria-label="Primary action button">
+<rect x="24" y="328" width="342" height="54" rx="10" fill="#0B5F8A"/>
+<text x="195.0" y="362" fill="#FFFFFF" font-family="Noto Sans, Arial, sans-serif" font-size="16px" font-weight="600" text-anchor="middle">Tìm khóa học</text>
+</g>
+<g id="element-07-home-link" aria-label="Secondary home navigation link">
+<text x="24" y="420" fill="#0B5F8A" font-family="Noto Sans, Arial, sans-serif" font-size="15px" font-weight="600" text-anchor="start">Về trang chủ</text>
+<path d="M123 415h11m-4-4 4 4-4 4" fill="none" stroke="#0B5F8A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<g id="annotation-layer" aria-label="Element number markers">
+<g aria-hidden="true" class="element-marker element-marker-1"><path d="M 12 12 L 24 18" fill="none" stroke="#073B57" stroke-width="1.35" stroke-linecap="round" stroke-opacity="0.72"/><circle cx="12" cy="12" r="10.0" fill="#FFFFFF" opacity="0.96"/><circle cx="12" cy="12" r="8.4" fill="#073B57" stroke="#FFFFFF" stroke-width="1.2"/><text x="12" y="15.8" fill="#FFFFFF" font-family="Noto Sans, Arial, sans-serif" font-size="10.5px" font-weight="700" text-anchor="middle">1</text></g>
+<g aria-hidden="true" class="element-marker element-marker-2"><path d="M 144 12 L 125 26" fill="none" stroke="#073B57" stroke-width="1.35" stroke-linecap="round" stroke-opacity="0.72"/><circle cx="144" cy="12" r="10.0" fill="#FFFFFF" opacity="0.96"/><circle cx="144" cy="12" r="8.4" fill="#073B57" stroke="#FFFFFF" stroke-width="1.2"/><text x="144" y="15.8" fill="#FFFFFF" font-family="Noto Sans, Arial, sans-serif" font-size="10.5px" font-weight="700" text-anchor="middle">2</text></g>
+<g aria-hidden="true" class="element-marker element-marker-3"><path d="M 12 98 L 24 101" fill="none" stroke="#073B57" stroke-width="1.35" stroke-linecap="round" stroke-opacity="0.72"/><circle cx="12" cy="98" r="10.0" fill="#FFFFFF" opacity="0.96"/><circle cx="12" cy="98" r="8.4" fill="#073B57" stroke="#FFFFFF" stroke-width="1.2"/><text x="12" y="101.8" fill="#FFFFFF" font-family="Noto Sans, Arial, sans-serif" font-size="10.5px" font-weight="700" text-anchor="middle">3</text></g>
+<g aria-hidden="true" class="element-marker element-marker-4"><path d="M 12 151 L 24 137" fill="none" stroke="#073B57" stroke-width="1.35" stroke-linecap="round" stroke-opacity="0.72"/><circle cx="12" cy="151" r="10.0" fill="#FFFFFF" opacity="0.96"/><circle cx="12" cy="151" r="8.4" fill="#073B57" stroke="#FFFFFF" stroke-width="1.2"/><text x="12" y="154.8" fill="#FFFFFF" font-family="Noto Sans, Arial, sans-serif" font-size="10.5px" font-weight="700" text-anchor="middle">4</text></g>
+<g aria-hidden="true" class="element-marker element-marker-5"><path d="M 12 247 L 24 239" fill="none" stroke="#073B57" stroke-width="1.35" stroke-linecap="round" stroke-opacity="0.72"/><circle cx="12" cy="247" r="10.0" fill="#FFFFFF" opacity="0.96"/><circle cx="12" cy="247" r="8.4" fill="#073B57" stroke="#FFFFFF" stroke-width="1.2"/><text x="12" y="250.8" fill="#FFFFFF" font-family="Noto Sans, Arial, sans-serif" font-size="10.5px" font-weight="700" text-anchor="middle">5</text></g>
+<g aria-hidden="true" class="element-marker element-marker-6"><path d="M 12 309 L 24 323" fill="none" stroke="#073B57" stroke-width="1.35" stroke-linecap="round" stroke-opacity="0.72"/><circle cx="12" cy="309" r="10.0" fill="#FFFFFF" opacity="0.96"/><circle cx="12" cy="309" r="8.4" fill="#073B57" stroke="#FFFFFF" stroke-width="1.2"/><text x="12" y="312.8" fill="#FFFFFF" font-family="Noto Sans, Arial, sans-serif" font-size="10.5px" font-weight="700" text-anchor="middle">6</text></g>
+<g aria-hidden="true" class="element-marker element-marker-7"><path d="M 12 438 L 24 430" fill="none" stroke="#073B57" stroke-width="1.35" stroke-linecap="round" stroke-opacity="0.72"/><circle cx="12" cy="438" r="10.0" fill="#FFFFFF" opacity="0.96"/><circle cx="12" cy="438" r="8.4" fill="#073B57" stroke="#FFFFFF" stroke-width="1.2"/><text x="12" y="441.8" fill="#FFFFFF" font-family="Noto Sans, Arial, sans-serif" font-size="10.5px" font-weight="700" text-anchor="middle">7</text></g>
+<g aria-hidden="true" class="element-marker element-marker-8"><path d="M 42 548 L 84 555" fill="none" stroke="#073B57" stroke-width="1.35" stroke-linecap="round" stroke-opacity="0.72"/><circle cx="42" cy="548" r="10.0" fill="#FFFFFF" opacity="0.96"/><circle cx="42" cy="548" r="8.4" fill="#073B57" stroke="#FFFFFF" stroke-width="1.2"/><text x="42" y="551.8" fill="#FFFFFF" font-family="Noto Sans, Arial, sans-serif" font-size="10.5px" font-weight="700" text-anchor="middle">8</text></g>
+<g aria-hidden="true" class="element-marker element-marker-9"><path d="M 337 548 L 322 558" fill="none" stroke="#073B57" stroke-width="1.35" stroke-linecap="round" stroke-opacity="0.72"/><circle cx="337" cy="548" r="10.0" fill="#FFFFFF" opacity="0.96"/><circle cx="337" cy="548" r="8.4" fill="#073B57" stroke="#FFFFFF" stroke-width="1.2"/><text x="337" y="551.8" fill="#FFFFFF" font-family="Noto Sans, Arial, sans-serif" font-size="10.5px" font-weight="700" text-anchor="middle">9</text></g>
+<g aria-hidden="true" class="element-marker element-marker-10"><path d="M 32 776 L 54 805" fill="none" stroke="#073B57" stroke-width="1.35" stroke-linecap="round" stroke-opacity="0.72"/><circle cx="32" cy="776" r="10.0" fill="#FFFFFF" opacity="0.96"/><circle cx="32" cy="776" r="8.4" fill="#073B57" stroke="#FFFFFF" stroke-width="1.2"/><text x="32" y="779.8" fill="#FFFFFF" font-family="Noto Sans, Arial, sans-serif" font-size="10.5px" font-weight="700" text-anchor="middle">10</text></g>
+<g aria-hidden="true" class="element-marker element-marker-11"><path d="M 151 822 L 129 805" fill="none" stroke="#073B57" stroke-width="1.35" stroke-linecap="round" stroke-opacity="0.72"/><circle cx="151" cy="822" r="10.0" fill="#FFFFFF" opacity="0.96"/><circle cx="151" cy="822" r="8.4" fill="#073B57" stroke="#FFFFFF" stroke-width="1.2"/><text x="151" y="825.8" fill="#FFFFFF" font-family="Noto Sans, Arial, sans-serif" font-size="10.5px" font-weight="700" text-anchor="middle">11</text></g>
+<g aria-hidden="true" class="element-marker element-marker-12"><path d="M 337 735 L 278 775" fill="none" stroke="#073B57" stroke-width="1.35" stroke-linecap="round" stroke-opacity="0.72"/><circle cx="337" cy="735" r="10.0" fill="#FFFFFF" opacity="0.96"/><circle cx="337" cy="735" r="8.4" fill="#073B57" stroke="#FFFFFF" stroke-width="1.2"/><text x="337" y="738.8" fill="#FFFFFF" font-family="Noto Sans, Arial, sans-serif" font-size="10.5px" font-weight="700" text-anchor="middle">12</text></g>
+</g>
+</svg>

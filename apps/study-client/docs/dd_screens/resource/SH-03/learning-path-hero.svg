@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="470" height="313" viewBox="0 0 470 313">
+  <defs>
+    <linearGradient id="cover" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#147CA2"/><stop offset=".55" stop-color="#0B5F8A"/><stop offset="1" stop-color="#073B57"/></linearGradient>
+    <linearGradient id="pages" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#DDEEF4"/></linearGradient>
+    <linearGradient id="planeLight" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#D8EDF4"/></linearGradient>
+    <linearGradient id="planeBlue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#64BBD1"/><stop offset="1" stop-color="#0B5F8A"/></linearGradient>
+    <filter id="float" x="-35%" y="-45%" width="180%" height="200%"><feDropShadow dx="0" dy="9" stdDeviation="8" flood-color="#073B57" flood-opacity=".19"/></filter>
+    <filter id="soft" x="-50%" y="-80%" width="200%" height="260%"><feGaussianBlur stdDeviation="8"/></filter>
+  </defs>
+  <ellipse cx="247" cy="239" rx="139" ry="20" fill="#0B5F8A" opacity=".11" filter="url(#soft)"/>
+  <path d="M37 167C68 107 124 99 173 133c58 40 91 38 130-14 35-47 79-62 119-37" fill="none" stroke="#43A5C5" stroke-width="1.4" opacity=".44"/>
+  <path d="M56 82c32-30 77-37 111-13 31 22 43 42 68 41" fill="none" stroke="#0B5F8A" stroke-width="1" opacity=".23"/>
+  <path d="M313 63c46-36 99-22 120 18 13 24 8 48-8 69" fill="none" stroke="#43A5C5" stroke-width="1.1" opacity=".4"/>
+  <path d="M77 190c31 9 57 5 79-12" fill="none" stroke="#0B5F8A" stroke-width="1" opacity=".2"/>
+  <circle cx="91" cy="95" r="4.4" fill="#43A5C5"/><circle cx="91" cy="95" r="9" fill="#43A5C5" opacity=".12"/>
+  <circle cx="394" cy="112" r="4" fill="#E98C72"/><circle cx="394" cy="112" r="10" fill="#E98C72" opacity=".14"/>
+  <circle cx="347" cy="54" r="3" fill="#0B5F8A" opacity=".7"/><circle cx="131" cy="155" r="3.5" fill="#0B5F8A" opacity=".58"/>
+  <g transform="translate(82 83) rotate(-14 45 24)" filter="url(#float)">
+    <path d="M0 34 95 1 57 66 44 43 23 52 34 35Z" fill="url(#planeLight)"/>
+    <path d="M0 34 95 1 34 35Z" fill="#FFFFFF"/>
+    <path d="M34 35 95 1 57 66 44 43Z" fill="#B9DCE8"/>
+    <path d="M0 34 44 43 57 66Z" fill="#83C8D8"/>
+    <path d="M44 43 95 1" fill="none" stroke="#A9D5E2" stroke-width="1"/>
+  </g>
+  <g transform="translate(269 34) rotate(9 45 26)" filter="url(#float)">
+    <path d="M0 37 112 0 68 78 53 50 27 59 41 39Z" fill="url(#planeLight)"/>
+    <path d="M0 37 112 0 41 39Z" fill="#FFFFFF"/>
+    <path d="M41 39 112 0 68 78 53 50Z" fill="#C6E3EB"/>
+    <path d="M0 37 53 50 68 78Z" fill="url(#planeBlue)"/>
+    <path d="M53 50 112 0" fill="none" stroke="#9DCFDA" stroke-width="1"/>
+  </g>
+  <g transform="translate(308 126) rotate(-12 22 12) scale(.55)" opacity=".92">
+    <path d="M0 28 83 0 51 57 39 37 20 43 30 29Z" fill="url(#planeLight)"/>
+    <path d="M0 28 83 0 30 29Z" fill="#FFFFFF"/>
+    <path d="M30 29 83 0 51 57 39 37Z" fill="#B9DCE8"/>
+    <path d="M0 28 39 37 51 57Z" fill="#43A5C5"/>
+  </g>
+  <path d="M190 111c20 21 33 39 43 66" fill="none" stroke="#43A5C5" stroke-width="1.2" stroke-dasharray="2 6" opacity=".55"/>
+  <circle cx="232" cy="175" r="4" fill="#E98C72"/>
+  <g transform="translate(103 180) rotate(-6 132 29)" filter="url(#float)">
+    <path d="M8 21 245 0 265 16 32 50Z" fill="#073B57" opacity=".95"/>
+    <path d="M17 9 244 0 263 15 31 45Z" fill="url(#pages)" stroke="#C7E0E9" stroke-width="1"/>
+    <path d="m17 9 112 15 134-9-19-15Z" fill="#FFFFFF"/>
+    <path d="M129 24 31 45l-1 8 100-19 133-12v-7Z" fill="#D9EAF0"/>
+    <path d="m129 24 2 10 132-19-1-8Z" fill="#EEF7FA"/>
+    <path d="M31 45 30 53 267 19l-4-4Z" fill="url(#cover)"/>
+    <path d="M31 45 129 24l2 10-100 19Z" fill="#0B5F8A"/>
+    <path d="M126 25 131 25 134 33 130 35Z" fill="#43A5C5" opacity=".82"/>
+    <path d="M43 39 113 26M46 42 116 29M149 23l90-13M152 26l90-13" stroke="#B6D5E0" stroke-width=".8" opacity=".75"/>
+    <path d="M42 47 114 33" stroke="#43A5C5" stroke-width="1" opacity=".7"/>
+    <circle cx="240" cy="7" r="2" fill="#E98C72"/>
+  </g>
+  <path d="M221 213c23 7 39 6 59-2" fill="none" stroke="#FFFFFF" stroke-width="1.4" opacity=".8"/>
+  <circle cx="151" cy="67" r="2" fill="#FFFFFF" opacity=".9"/><circle cx="369" cy="155" r="2" fill="#FFFFFF" opacity=".8"/>
+</svg>

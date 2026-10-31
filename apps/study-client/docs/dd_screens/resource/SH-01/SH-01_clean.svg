@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1320" viewBox="0 0 1440 1320">
+<defs><filter id="shadow" x="-15%" y="-15%" width="130%" height="145%"><feDropShadow dx="0" dy="5" stdDeviation="12" flood-color="#073B57" flood-opacity=".045"/></filter></defs>
+<rect x="0" y="0" width="1440" height="1320" rx="0" fill="#F6FAFC" stroke="none" stroke-width="1" />
+<rect x="0" y="24" width="1440" height="72" rx="0" fill="#FFFFFF" stroke="none" stroke-width="1" />
+<path d="M0 96H1440" stroke="#D4E2E9" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="160" y="43" width="34" height="34" rx="9" fill="#0B5F8A" stroke="none" stroke-width="1" />
+<path d="M170 52H181L186 57V69H170Z" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M181 52V57H186" stroke="white" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M174 62H182 M174 66H180" stroke="white" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<text x="207" y="68" font-family="Inter,Arial,sans-serif" font-size="24" font-weight="700" fill="#073B57">Study</text>
+<text x="656" y="67" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600" fill="#0B5F8A">Trang chủ</text>
+<rect x="656" y="80" width="73" height="2" rx="1" fill="#0B5F8A" stroke="none" stroke-width="1" />
+<text x="780" y="67" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600" fill="#17324D">Khóa học</text>
+<text x="1002" y="67" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600" fill="#17324D">Đăng nhập</text>
+<rect x="1139" y="36" width="141" height="48" rx="10" fill="#0B5F8A" stroke="none" stroke-width="1" />
+<text x="1176" y="66" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600" fill="#FFFFFF">Đăng ký</text>
+<rect x="160" y="143" width="4" height="17" rx="2" fill="#43A5C5" stroke="none" stroke-width="1" />
+<text x="176" y="157" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600" fill="#0B5F8A" letter-spacing="0.7">HỌC ĐIỀU BẠN QUAN TÂM</text>
+<text x="160" y="226" font-family="Inter,Arial,sans-serif" font-size="48" font-weight="700" fill="#073B57">Bắt đầu hành trình</text>
+<text x="160" y="284" font-family="Inter,Arial,sans-serif" font-size="48" font-weight="700" fill="#073B57">học tập của bạn</text>
+<text x="160" y="334" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="400" fill="#536A7A">Khám phá các khóa học theo điều bạn quan tâm,</text>
+<text x="160" y="360" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="400" fill="#536A7A">và chọn một điểm khởi đầu phù hợp với mình.</text>
+<text x="160" y="408" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="600" fill="#17324D">Tìm kiếm khóa học</text>
+<rect x="160" y="422" width="401" height="56" rx="11" fill="#FFFFFF" stroke="#D4E2E9" stroke-width="1" />
+<circle cx="185" cy="449" r="7" fill="none" stroke="#536A7A" stroke-width="1.9"/>
+<path d="M190 454L196 460" stroke="#536A7A" stroke-width="1.9" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<text x="211" y="455" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="400" fill="#536A7A">Bạn muốn học điều gì?</text>
+<rect x="573" y="422" width="185" height="56" rx="11" fill="#0B5F8A" stroke="none" stroke-width="1" />
+<text x="605" y="456" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600" fill="#FFFFFF">Tìm khóa học</text>
+<rect x="802" y="135" width="478" height="347" rx="26" fill="#E8F4FA" stroke="none" stroke-width="1" />
+<path d="M827 175H861 M1220 450H1254" stroke="#43A5C5" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="1223" cy="179" r="33" fill="none" stroke="#B8D8E6" stroke-width="1.3"/>
+<circle cx="1223" cy="179" r="23" fill="none" stroke="#B8D8E6" stroke-width="1"/>
+<g transform="rotate(-11 1014 234)">
+<rect x="949" y="159" width="137" height="150" rx="10" fill="#FFFFFF" stroke="#C7DFE9" stroke-width="1" />
+<rect x="965" y="178" width="55" height="6" rx="3" fill="#B9D9E8" stroke="none" stroke-width="1" />
+<rect x="965" y="196" width="100" height="4" rx="2" fill="#D7E8EF" stroke="none" stroke-width="1" />
+<rect x="965" y="209" width="80" height="4" rx="2" fill="#D7E8EF" stroke="none" stroke-width="1" />
+<rect x="965" y="222" width="94" height="4" rx="2" fill="#D7E8EF" stroke="none" stroke-width="1" />
+<rect x="965" y="235" width="70" height="4" rx="2" fill="#D7E8EF" stroke="none" stroke-width="1" />
+<rect x="965" y="257" width="43" height="30" rx="5" fill="#E8F4FA" stroke="none" stroke-width="1" />
+<path d="M974 277L982 268L988 273L998 262" stroke="#43A5C5" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<rect x="865" y="202" width="327" height="208" rx="15" fill="#173D54" stroke="none" stroke-width="1" />
+<rect x="874" y="211" width="309" height="190" rx="9" fill="#FFFFFF" stroke="none" stroke-width="1" />
+<rect x="874" y="211" width="309" height="29" rx="9" fill="#F2F8FA" stroke="none" stroke-width="1" />
+<circle cx="891" cy="225" r="3" fill="#A5C9DA" stroke="none" stroke-width="1"/>
+<circle cx="902" cy="225" r="3" fill="#A5C9DA" stroke="none" stroke-width="1"/>
+<circle cx="913" cy="225" r="3" fill="#A5C9DA" stroke="none" stroke-width="1"/>
+<rect x="891" y="257" width="72" height="127" rx="6" fill="#E8F4FA" stroke="none" stroke-width="1" />
+<rect x="903" y="271" width="49" height="5" rx="2" fill="#BBD7E5" stroke="none" stroke-width="1" />
+<rect x="903" y="289" width="58" height="5" rx="2" fill="#BBD7E5" stroke="none" stroke-width="1" />
+<rect x="903" y="307" width="42" height="5" rx="2" fill="#BBD7E5" stroke="none" stroke-width="1" />
+<rect x="903" y="325" width="54" height="5" rx="2" fill="#BBD7E5" stroke="none" stroke-width="1" />
+<rect x="982" y="258" width="118" height="9" rx="4" fill="#0B5F8A" stroke="none" stroke-width="1" />
+<rect x="982" y="278" width="171" height="5" rx="2" fill="#C3DAE5" stroke="none" stroke-width="1" />
+<rect x="982" y="290" width="144" height="5" rx="2" fill="#D4E2E9" stroke="none" stroke-width="1" />
+<rect x="982" y="310" width="173" height="74" rx="7" fill="#F0F7FA" stroke="none" stroke-width="1" />
+<circle cx="1014" cy="348" r="16" fill="#C0DDEA" stroke="none" stroke-width="1"/>
+<circle cx="1066" cy="337" r="12" fill="#8FBFD3" stroke="none" stroke-width="1"/>
+<circle cx="1124" cy="354" r="18" fill="#D5E9F1" stroke="none" stroke-width="1"/>
+<path d="M1030 345L1054 338 M1078 342L1106 351" stroke="#0B5F8A" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M844 411H1210L1192 425H863Z" stroke="#6F9FB5" stroke-width="1" fill="#C4DFEA" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="951" y="413" width="147" height="4" rx="2" fill="#8DB5C8" stroke="none" stroke-width="1" />
+<g transform="rotate(7 1160 349)">
+<rect x="1135" y="290" width="103" height="111" rx="9" fill="#FFFFFF" stroke="#C7DFE9" stroke-width="1" filter="url(#shadow)"/>
+<rect x="1151" y="309" width="43" height="6" rx="3" fill="#43A5C5" stroke="none" stroke-width="1" />
+<rect x="1151" y="326" width="65" height="4" rx="2" fill="#D4E2E9" stroke="none" stroke-width="1" />
+<rect x="1151" y="339" width="53" height="4" rx="2" fill="#D4E2E9" stroke="none" stroke-width="1" />
+<path d="M1153 374L1169 356L1180 367L1198 348L1217 367" stroke="#0B5F8A" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+</g>
+<path d="M160 510H1280" stroke="#D4E2E9" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<text x="160" y="555" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="600" fill="#073B57">Khám phá theo chủ đề</text>
+<text x="160" y="586" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="400" fill="#536A7A">Một vài chủ đề để tham khảo khi khám phá nội dung học.</text>
+<rect x="172" y="616" width="2" height="16" rx="1" fill="#43A5C5" stroke="none" stroke-width="1" />
+<text x="184" y="631" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="500" fill="#17324D">Lập trình</text>
+<rect x="307" y="616" width="2" height="16" rx="1" fill="#43A5C5" stroke="none" stroke-width="1" />
+<text x="319" y="631" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="500" fill="#17324D">Thiết kế</text>
+<text x="160" y="720" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="600" fill="#073B57">Một số khóa học</text>
+<text x="1181" y="718" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600" fill="#0B5F8A">Xem tất cả</text>
+<path d="M1181 724H1258" stroke="#0B5F8A" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="160" y="753" width="357" height="369" rx="15" fill="#FFFFFF" stroke="#D4E2E9" stroke-width="1" filter="url(#shadow)"/>
+<rect x="176" y="769" width="325" height="169" rx="10" fill="#E7F2F7" stroke="none" stroke-width="1" />
+<rect x="202" y="789" width="232" height="131" rx="9" fill="#FFFFFF" stroke="#B8D5E3" stroke-width="1" />
+<rect x="202" y="789" width="232" height="24" rx="9" fill="#D5E8F0" stroke="none" stroke-width="1" />
+<circle cx="216" cy="801" r="3" fill="#7DAEC4" stroke="none" stroke-width="1"/>
+<circle cx="228" cy="801" r="3" fill="#7DAEC4" stroke="none" stroke-width="1"/>
+<circle cx="240" cy="801" r="3" fill="#7DAEC4" stroke="none" stroke-width="1"/>
+<rect x="216" y="825" width="53" height="82" rx="5" fill="#E8F4FA" stroke="none" stroke-width="1" />
+<rect x="226" y="836" width="31" height="4" rx="2" fill="#B3D3E2" stroke="none" stroke-width="1" />
+<rect x="226" y="849" width="31" height="4" rx="2" fill="#B3D3E2" stroke="none" stroke-width="1" />
+<rect x="226" y="862" width="31" height="4" rx="2" fill="#B3D3E2" stroke="none" stroke-width="1" />
+<rect x="226" y="875" width="31" height="4" rx="2" fill="#B3D3E2" stroke="none" stroke-width="1" />
+<rect x="284" y="827" width="90" height="5" rx="2" fill="#8BBBCF" stroke="none" stroke-width="1" />
+<rect x="284" y="842" width="70" height="5" rx="2" fill="#D0E4EC" stroke="none" stroke-width="1" />
+<rect x="284" y="857" width="106" height="5" rx="2" fill="#8BBBCF" stroke="none" stroke-width="1" />
+<rect x="284" y="872" width="58" height="5" rx="2" fill="#D0E4EC" stroke="none" stroke-width="1" />
+<rect x="284" y="887" width="83" height="5" rx="2" fill="#D0E4EC" stroke="none" stroke-width="1" />
+<rect x="400" y="835" width="73" height="64" rx="8" fill="#0B5F8A" stroke="none" stroke-width="1" />
+<rect x="411" y="848" width="51" height="6" rx="3" fill="#8FC7DC" stroke="none" stroke-width="1" />
+<rect x="411" y="862" width="38" height="5" rx="2" fill="#D4E2E9" stroke="none" stroke-width="1" />
+<rect x="411" y="874" width="46" height="5" rx="2" fill="#D4E2E9" stroke="none" stroke-width="1" />
+<text x="180" y="975" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#073B57">Xây dựng ứng dụng Web</text>
+<text x="180" y="1003" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="400" fill="#536A7A">Tìm hiểu cách tạo giao diện và</text>
+<text x="180" y="1024" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="400" fill="#536A7A">kết nối các phần của website.</text>
+<path d="M180 1045H497" stroke="#D4E2E9" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="199" cy="1082" r="19" fill="#E8F4FA" stroke="#D4E2E9" stroke-width="1"/>
+<circle cx="199" cy="1076" r="6" fill="#7FAEC3" stroke="none" stroke-width="1"/>
+<path d="M188 1090Q199 1077 210 1090" stroke="#7FAEC3" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<text x="229" y="1088" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="500" fill="#17324D">Nguyễn Minh Anh</text>
+<rect x="541" y="753" width="357" height="369" rx="15" fill="#FFFFFF" stroke="#D4E2E9" stroke-width="1" filter="url(#shadow)"/>
+<rect x="557" y="769" width="325" height="169" rx="10" fill="#EDF4F7" stroke="none" stroke-width="1" />
+<rect x="597" y="788" width="217" height="131" rx="8" fill="#FFFFFF" stroke="#C3DCE7" stroke-width="1" />
+<rect x="610" y="802" width="92" height="102" rx="4" fill="#0B5F8A" stroke="none" stroke-width="1" />
+<circle cx="658" cy="846" r="31" fill="#8EC3D8" stroke="none" stroke-width="1"/>
+<path d="M624 883L652 855L672 872L691 842" stroke="#FFFFFF" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="713" y="802" width="86" height="12" rx="3" fill="#A6CBDC" stroke="none" stroke-width="1" />
+<rect x="713" y="825" width="71" height="5" rx="2" fill="#D0E3EB" stroke="none" stroke-width="1" />
+<rect x="713" y="839" width="82" height="5" rx="2" fill="#D0E3EB" stroke="none" stroke-width="1" />
+<rect x="713" y="853" width="63" height="5" rx="2" fill="#D0E3EB" stroke="none" stroke-width="1" />
+<rect x="713" y="874" width="77" height="5" rx="2" fill="#D0E3EB" stroke="none" stroke-width="1" />
+<rect x="713" y="887" width="48" height="5" rx="2" fill="#D0E3EB" stroke="none" stroke-width="1" />
+<rect x="778" y="817" width="77" height="75" rx="7" fill="#F7FBFC" stroke="#BCD9E6" stroke-width="1" />
+<circle cx="816" cy="851" r="20" fill="none" stroke="#43A5C5" stroke-width="2"/>
+<path d="M799 868L832 835" stroke="#0B5F8A" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<text x="561" y="975" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#073B57">Thiết kế giao diện số</text>
+<text x="561" y="1003" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="400" fill="#536A7A">Làm quen với bố cục, màu sắc</text>
+<text x="561" y="1024" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="400" fill="#536A7A">và trải nghiệm người dùng.</text>
+<path d="M561 1045H878" stroke="#D4E2E9" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="580" cy="1082" r="19" fill="#E8F4FA" stroke="#D4E2E9" stroke-width="1"/>
+<circle cx="580" cy="1076" r="6" fill="#7FAEC3" stroke="none" stroke-width="1"/>
+<path d="M569 1090Q580 1077 591 1090" stroke="#7FAEC3" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<text x="610" y="1088" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="500" fill="#17324D">Trần Hải Nam</text>
+<rect x="922" y="753" width="357" height="369" rx="15" fill="#FFFFFF" stroke="#D4E2E9" stroke-width="1" filter="url(#shadow)"/>
+<rect x="938" y="769" width="325" height="169" rx="10" fill="#E6F1F5" stroke="none" stroke-width="1" />
+<rect x="962" y="788" width="253" height="132" rx="9" fill="#FFFFFF" stroke="#BEDAE7" stroke-width="1" />
+<rect x="962" y="788" width="253" height="25" rx="9" fill="#D5E8F0" stroke="none" stroke-width="1" />
+<circle cx="976" cy="801" r="3" fill="#7DAEC4" stroke="none" stroke-width="1"/>
+<circle cx="988" cy="801" r="3" fill="#7DAEC4" stroke="none" stroke-width="1"/>
+<circle cx="1000" cy="801" r="3" fill="#7DAEC4" stroke="none" stroke-width="1"/>
+<rect x="978" y="827" width="95" height="76" rx="6" fill="#E8F4FA" stroke="none" stroke-width="1" />
+<rect x="988" y="839" width="66" height="5" rx="2" fill="#8CBBD0" stroke="none" stroke-width="1" />
+<rect x="988" y="854" width="45" height="5" rx="2" fill="#C6DFE9" stroke="none" stroke-width="1" />
+<rect x="988" y="869" width="72" height="5" rx="2" fill="#8CBBD0" stroke="none" stroke-width="1" />
+<rect x="988" y="884" width="54" height="5" rx="2" fill="#C6DFE9" stroke="none" stroke-width="1" />
+<path d="M1096 892L1117 866L1138 876L1162 840L1193 854" stroke="#0B5F8A" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M1096 897H1195" stroke="#C0DCE7" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="1117" cy="866" r="4" fill="#43A5C5" stroke="none" stroke-width="1"/>
+<circle cx="1138" cy="876" r="4" fill="#43A5C5" stroke="none" stroke-width="1"/>
+<circle cx="1162" cy="840" r="4" fill="#43A5C5" stroke="none" stroke-width="1"/>
+<circle cx="1193" cy="854" r="4" fill="#43A5C5" stroke="none" stroke-width="1"/>
+<text x="942" y="975" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="600" fill="#073B57">Nhập môn Python</text>
+<text x="942" y="1003" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="400" fill="#536A7A">Bắt đầu với tư duy lập trình</text>
+<text x="942" y="1024" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="400" fill="#536A7A">qua những bài tập thực tế.</text>
+<path d="M942 1045H1259" stroke="#D4E2E9" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<circle cx="961" cy="1082" r="19" fill="#E8F4FA" stroke="#D4E2E9" stroke-width="1"/>
+<circle cx="961" cy="1076" r="6" fill="#7FAEC3" stroke="none" stroke-width="1"/>
+<path d="M950 1090Q961 1077 972 1090" stroke="#7FAEC3" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<text x="991" y="1088" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="500" fill="#17324D">Lê Thu Hà</text>
+<path d="M160 1177H1280" stroke="#D4E2E9" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="160" y="1200" width="29" height="29" rx="8" fill="#0B5F8A" stroke="none" stroke-width="1" />
+<path d="M169 1208H179L183 1212V1221H169Z" stroke="white" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<path d="M179 1208V1212H183" stroke="white" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+<text x="202" y="1223" font-family="Inter,Arial,sans-serif" font-size="20" font-weight="700" fill="#073B57">Study</text>
+<text x="160" y="1260" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="400" fill="#536A7A">Một không gian để khám phá và bắt đầu học tập.</text>
+<text x="989" y="1227" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="500" fill="#17324D">Khóa học</text>
+<text x="1091" y="1227" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="500" fill="#17324D">Đăng nhập</text>
+<text x="1207" y="1227" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="500" fill="#17324D">Đăng ký</text>
+</svg>
