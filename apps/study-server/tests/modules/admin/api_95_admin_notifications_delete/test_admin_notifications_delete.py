@@ -427,5 +427,5 @@ def test_delete_admin_notification_openapi_has_catalog_contract_and_no_body(
         for method in openapi["paths"][key]
         if method in {"get", "post", "put", "patch", "delete"}
     )
-    assert len(api_paths) == 57
-    assert operation_count == 68
+    assert len(api_paths) == 58
+    assert operation_count == 69

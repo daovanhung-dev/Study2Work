@@ -146,6 +146,12 @@ def test_get_admin_users_returns_page_profile_and_excludes_credentials(
         "limit": 20,
         "offset": 0,
     }
+    assert "CAST(:role AS VARCHAR) IS NULL" in captured[0][0]
+    assert "CAST(:status AS VARCHAR) IS NULL" in captured[0][0]
+    assert "CAST(:keyword AS TEXT) IS NULL" in captured[0][0]
+    assert captured[0][0].count("CAST(:keyword AS TEXT)") == captured[1][0].count(
+        "CAST(:keyword AS TEXT)"
+    )
     assert response.headers["X-Trace-Id"] == payload["traceId"]
     assert session.commit_count == 0
     assert session.rollback_count == 0
@@ -191,8 +197,10 @@ def test_get_admin_users_applies_exact_filters_and_literal_keyword(
         "limit": 20,
         "offset": 20,
     }
-    assert "POSITION(:keyword IN LOWER(u.full_name))" in captured[0][0]
-    assert "POSITION(:keyword IN LOWER(u.email))" in captured[0][0]
+    assert "POSITION(CAST(:keyword AS TEXT) IN LOWER(u.full_name))" in captured[0][0]
+    assert "POSITION(CAST(:keyword AS TEXT) IN LOWER(u.email))" in captured[0][0]
+    assert "POSITION(CAST(:keyword AS TEXT) IN LOWER(u.full_name))" in captured[1][0]
+    assert "POSITION(CAST(:keyword AS TEXT) IN LOWER(u.email))" in captured[1][0]
 
 
 def test_get_admin_users_returns_empty_page_when_no_rows_match(

@@ -435,8 +435,8 @@ def test_update_admin_notification_openapi_declares_path_body_and_catalog_errors
         for item in api_paths.values()
         for method in item
     )
-    assert len(api_paths) == 57
-    assert operation_count == 68
+    assert len(api_paths) == 58
+    assert operation_count == 69
 
     operation = paths["/api/v1/admin/notifications/{notification_id}"]["put"]
     assert {item["name"] for item in operation["parameters"]} == {

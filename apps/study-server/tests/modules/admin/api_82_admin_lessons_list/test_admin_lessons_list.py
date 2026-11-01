@@ -134,6 +134,8 @@ def test_get_admin_lessons_returns_lesson_collection_and_preserves_optional_null
     ]
     assert payload["traceId"] == response.headers["X-Trace-Id"]
     assert captured[0][1] == {"course_id": None, "status": None}
+    assert "CAST(:course_id AS BIGINT) IS NULL" in captured[0][0]
+    assert "CAST(:status AS VARCHAR) IS NULL" in captured[0][0]
     assert "PUBLISHED" not in captured[0][0]
     assert "l.status IS DISTINCT FROM 'DELETED'" in captured[0][0]
     assert session.commit_count == 0
@@ -156,8 +158,8 @@ def test_get_admin_lessons_applies_exact_course_and_status_filters(
     assert response.status_code == 200
     assert response.json()["data"][0]["status"] == "SUSPENDED"
     assert captured[0][1] == {"course_id": 42, "status": "SUSPENDED"}
-    assert "l.course_id = :course_id" in captured[0][0]
-    assert "l.status = :status" in captured[0][0]
+    assert "l.course_id = CAST(:course_id AS BIGINT)" in captured[0][0]
+    assert "l.status = CAST(:status AS VARCHAR)" in captured[0][0]
     assert "l.status IS DISTINCT FROM 'DELETED'" in captured[0][0]
     assert "PUBLISHED" not in captured[0][0]
     assert session.commit_count == 0

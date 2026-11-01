@@ -4,8 +4,8 @@ COUNT_ADMIN_QUIZZES = """
 SELECT COUNT(*) AS total
 FROM quizzes AS q
 WHERE q.status IS DISTINCT FROM 'DELETED'
-  AND (:course_id IS NULL OR q.course_id = :course_id)
-  AND (:status IS NULL OR q.status = :status)
+  AND (CAST(:course_id AS BIGINT) IS NULL OR q.course_id = CAST(:course_id AS BIGINT))
+  AND (CAST(:status AS VARCHAR) IS NULL OR q.status = CAST(:status AS VARCHAR))
 """
 
 LIST_ADMIN_QUIZZES = """
@@ -17,8 +17,8 @@ SELECT
     q.passing_score
 FROM quizzes AS q
 WHERE q.status IS DISTINCT FROM 'DELETED'
-  AND (:course_id IS NULL OR q.course_id = :course_id)
-  AND (:status IS NULL OR q.status = :status)
+  AND (CAST(:course_id AS BIGINT) IS NULL OR q.course_id = CAST(:course_id AS BIGINT))
+  AND (CAST(:status AS VARCHAR) IS NULL OR q.status = CAST(:status AS VARCHAR))
 ORDER BY q.id ASC
 LIMIT :limit OFFSET :offset
 """

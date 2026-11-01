@@ -12,7 +12,7 @@ SELECT
 FROM courses AS c
 LEFT JOIN users AS m ON m.id = c.mentor_id
 WHERE c.status = :status
-  AND (:q_pattern IS NULL OR LOWER(c.name) LIKE :q_pattern)
+  AND (CAST(:q_pattern AS TEXT) IS NULL OR LOWER(c.name) LIKE CAST(:q_pattern AS TEXT))
 ORDER BY {order_by}
 LIMIT :limit OFFSET :offset
 """
@@ -24,5 +24,5 @@ SELECT
 FROM courses AS c
 LEFT JOIN users AS m ON m.id = c.mentor_id
 WHERE c.status = :status
-  AND (:q_pattern IS NULL OR LOWER(c.name) LIKE :q_pattern)
+  AND (CAST(:q_pattern AS TEXT) IS NULL OR LOWER(c.name) LIKE CAST(:q_pattern AS TEXT))
 """

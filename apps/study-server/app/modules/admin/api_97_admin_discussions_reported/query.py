@@ -5,8 +5,8 @@ SELECT COUNT(DISTINCT d.id)::BIGINT AS total
 FROM discussions AS d
 JOIN discussion_reports AS r ON r.discussion_id = d.id
 WHERE r.status IN ('OPEN', 'IN_REVIEW')
-  AND (:reason IS NULL OR r.reason_code = :reason)
-  AND (:severity IS NULL OR r.severity = :severity)
+  AND (CAST(:reason AS VARCHAR) IS NULL OR r.reason_code = CAST(:reason AS VARCHAR))
+  AND (CAST(:severity AS VARCHAR) IS NULL OR r.severity = CAST(:severity AS VARCHAR))
 """
 
 LIST_ADMIN_REPORTED_DISCUSSIONS = """
@@ -16,8 +16,8 @@ WITH latest_matching_reports AS (
         r.created_at
     FROM discussion_reports AS r
     WHERE r.status IN ('OPEN', 'IN_REVIEW')
-      AND (:reason IS NULL OR r.reason_code = :reason)
-      AND (:severity IS NULL OR r.severity = :severity)
+      AND (CAST(:reason AS VARCHAR) IS NULL OR r.reason_code = CAST(:reason AS VARCHAR))
+      AND (CAST(:severity AS VARCHAR) IS NULL OR r.severity = CAST(:severity AS VARCHAR))
     ORDER BY r.discussion_id, r.created_at DESC, r.id DESC
 )
 SELECT

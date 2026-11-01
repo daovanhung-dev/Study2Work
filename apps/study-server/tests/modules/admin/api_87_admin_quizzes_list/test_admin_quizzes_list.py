@@ -153,6 +153,8 @@ def test_get_admin_quizzes_returns_default_page_and_is_read_only(
     }
     assert "q.status IS DISTINCT FROM 'DELETED'" in captured[0][0]
     assert "q.status IS DISTINCT FROM 'DELETED'" in captured[1][0]
+    assert "CAST(:course_id AS BIGINT) IS NULL" in captured[0][0]
+    assert "CAST(:status AS VARCHAR) IS NULL" in captured[0][0]
     assert "ORDER BY q.id ASC" in captured[1][0]
     assert "quiz_questions" not in captured[1][0]
     assert captured[0][0].count(":course_id") == captured[1][0].count(":course_id")
@@ -192,8 +194,16 @@ def test_get_admin_quizzes_applies_exact_filters_and_page_offset(
         "limit": 20,
         "offset": 20,
     }
-    assert "(:course_id IS NULL OR q.course_id = :course_id)" in captured[0][0]
-    assert "(:status IS NULL OR q.status = :status)" in captured[0][0]
+    assert (
+        "(CAST(:course_id AS BIGINT) IS NULL OR q.course_id = CAST(:course_id AS BIGINT))"
+        in captured[0][0]
+    )
+    assert (
+        "(CAST(:status AS VARCHAR) IS NULL OR q.status = CAST(:status AS VARCHAR))"
+        in captured[0][0]
+    )
+    assert "q.course_id = CAST(:course_id AS BIGINT)" in captured[1][0]
+    assert "q.status = CAST(:status AS VARCHAR)" in captured[1][0]
     assert captured[0][0].count(":course_id") == captured[1][0].count(":course_id")
     assert captured[0][0].count(":status") == captured[1][0].count(":status")
     assert session.commit_count == 0
