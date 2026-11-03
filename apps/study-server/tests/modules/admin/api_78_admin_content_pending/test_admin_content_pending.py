@@ -157,6 +157,8 @@ def test_get_admin_pending_contents_returns_default_page_and_is_read_only(
     }
     assert "status = 'PENDING_REVIEW'" in captured[0][0]
     assert "deleted_at IS NULL" in captured[0][0]
+    assert "CAST(:content_type AS TEXT) IS NULL" in captured[0][0]
+    assert "CAST(:course_id AS BIGINT) IS NULL" in captured[0][0]
     assert "ORDER BY id ASC" in captured[1][0]
     assert captured[0][0].count(":content_type") == captured[1][0].count(":content_type")
     assert captured[0][0].count(":course_id") == captured[1][0].count(":course_id")
@@ -194,8 +196,10 @@ def test_get_admin_pending_contents_applies_exact_filters_and_page_offset(
         "limit": 20,
         "offset": 20,
     }
-    assert "content_type = :content_type" in captured[0][0]
-    assert "course_id = :course_id" in captured[0][0]
+    assert "content_type = CAST(:content_type AS TEXT)" in captured[0][0]
+    assert "course_id = CAST(:course_id AS BIGINT)" in captured[0][0]
+    assert "content_type = CAST(:content_type AS TEXT)" in captured[1][0]
+    assert "course_id = CAST(:course_id AS BIGINT)" in captured[1][0]
 
 
 @pytest.mark.parametrize(

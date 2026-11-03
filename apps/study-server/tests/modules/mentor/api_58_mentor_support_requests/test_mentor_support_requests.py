@@ -330,10 +330,50 @@ def test_get_mentor_support_requests_combines_filters_and_uses_stable_order(
     assert response.status_code == 200
     assert captured[0][1] == {"mentor_id": 1001, "course_id": 120, "status": "OPEN"}
     assert "course.mentor_id = :mentor_id" in LIST_MENTOR_SUPPORT_REQUESTS
-    assert "request.course_id = :course_id" in LIST_MENTOR_SUPPORT_REQUESTS
-    assert "request.status = :status" in LIST_MENTOR_SUPPORT_REQUESTS
+    assert "request.course_id = CAST(:course_id AS BIGINT)" in LIST_MENTOR_SUPPORT_REQUESTS
+    assert "request.status = CAST(:status AS VARCHAR)" in LIST_MENTOR_SUPPORT_REQUESTS
+    assert "CAST(:course_id AS BIGINT) IS NULL" in LIST_MENTOR_SUPPORT_REQUESTS
+    assert "CAST(:status AS VARCHAR) IS NULL" in LIST_MENTOR_SUPPORT_REQUESTS
+    assert "CAST(:course_id AS BIGINT) IS NULL" in LIST_MENTOR_SUPPORT_MESSAGES
+    assert "CAST(:status AS VARCHAR) IS NULL" in LIST_MENTOR_SUPPORT_MESSAGES
     assert "ORDER BY request.created_at DESC, request.id DESC" in LIST_MENTOR_SUPPORT_REQUESTS
     assert "message.created_at ASC NULLS FIRST" in LIST_MENTOR_SUPPORT_MESSAGES
+
+
+def test_get_mentor_support_requests_casts_empty_filters_for_both_queries(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Kiểm tra filter NULL được bind nhất quán cho request và thread queries."""
+    session = FakeSession()
+    client.app.dependency_overrides[get_db] = override_db(session)
+    allow_mentor_token(monkeypatch)
+    captured: list[tuple[str, dict[str, Any]]] = []
+
+    def query_many(_db, query, params):
+        captured.append((query, params))
+        return [request_row()] if query == LIST_MENTOR_SUPPORT_REQUESTS else []
+
+    monkeypatch.setattr(support_view, "query_many", query_many)
+
+    response = get_requests(client)
+
+    assert response.status_code == 200
+    assert len(response.json()["data"]) == 1
+    assert captured == [
+        (
+            LIST_MENTOR_SUPPORT_REQUESTS,
+            {"mentor_id": 1001, "course_id": None, "status": None},
+        ),
+        (
+            LIST_MENTOR_SUPPORT_MESSAGES,
+            {"mentor_id": 1001, "course_id": None, "status": None},
+        ),
+    ]
+    assert "CAST(:course_id AS BIGINT) IS NULL" in captured[0][0]
+    assert "CAST(:status AS VARCHAR) IS NULL" in captured[0][0]
+    assert "CAST(:course_id AS BIGINT) IS NULL" in captured[1][0]
+    assert "CAST(:status AS VARCHAR) IS NULL" in captured[1][0]
 
 
 def test_get_mentor_support_requests_returns_safe_500_and_rolls_back_on_database_error(

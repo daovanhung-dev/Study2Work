@@ -6,8 +6,8 @@ SELECT
     COUNT(*) FILTER (WHERE m.id IS NULL) AS missing_mentor_count
 FROM courses AS c
 LEFT JOIN users AS m ON m.id = c.mentor_id
-WHERE (:status IS NULL OR c.status = :status)
-  AND (:mentor IS NULL OR c.mentor_id = :mentor)
+WHERE (CAST(:status AS VARCHAR) IS NULL OR c.status = CAST(:status AS VARCHAR))
+  AND (CAST(:mentor AS BIGINT) IS NULL OR c.mentor_id = CAST(:mentor AS BIGINT))
 """
 
 LIST_ADMIN_COURSES = """
@@ -23,8 +23,8 @@ SELECT
     m.avatar_url AS mentor_avatar_url
 FROM courses AS c
 LEFT JOIN users AS m ON m.id = c.mentor_id
-WHERE (:status IS NULL OR c.status = :status)
-  AND (:mentor IS NULL OR c.mentor_id = :mentor)
+WHERE (CAST(:status AS VARCHAR) IS NULL OR c.status = CAST(:status AS VARCHAR))
+  AND (CAST(:mentor AS BIGINT) IS NULL OR c.mentor_id = CAST(:mentor AS BIGINT))
 ORDER BY c.id ASC
 LIMIT :limit OFFSET :offset
 """

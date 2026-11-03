@@ -139,7 +139,7 @@ AC-33/request shape; focused tests use fake DB queries, so migration
 Shared course catalog boundary:
 `guest/_shared/course_catalog` contains only response models and pure helpers
 used by APIs #6–#8.
-| Other Study domain modules | `NOT_FOUND`/`UNWIRED` except individually indexed APIs through #97 | Require source/contract before implementation |
+| Other Study domain modules | `NOT_FOUND`/`UNWIRED` except individually indexed APIs through #98 | Require source/contract before implementation |
 
 
 ## API #51 Mentor Content update
@@ -466,3 +466,8 @@ empty comments are DERIVED to satisfy the current response shape. Focused HTTP
 tests cover filtering, ordering bindings, auth order, projection and failures;
 they use fake DB queries and do not prove migration deployment or report
 ingestion.
+
+
+## API #98 Admin discussion detail
+
+`admin/api_98_admin_discussions_detail` is wired at `GET /api/v1/admin/discussions/{discussion_id}` with the shared ADMIN auth guard and direct Discussion/comment reads. Current source derives the title from content and omits report records. The DD still says `UNWIRED` and leaves report/title semantics open; preserve that discrepancy. Dedicated tests characterize current source only; see the 2026-11-01 API report for branch-backed HTTP evidence.

@@ -158,6 +158,13 @@ def test_get_mentor_submissions_returns_page_and_linked_upload(
     assert "u.purpose = 'SUBMISSION'" in captured["list_sql"]
     assert "u.course_id = a.course_id" in captured["list_sql"]
     assert "ORDER BY s.submitted_at DESC, s.id DESC" in captured["list_sql"]
+    count_sql = next(
+        query for query, _params in captured["query_one"] if query == COUNT_MENTOR_SUBMISSIONS
+    )
+    assert "CAST(:course_id AS BIGINT) IS NULL" in count_sql
+    assert "CAST(:status AS VARCHAR) IS NULL" in count_sql
+    assert "CAST(:course_id AS BIGINT) IS NULL" in captured["list_sql"]
+    assert "CAST(:status AS VARCHAR) IS NULL" in captured["list_sql"]
     assert session.commit_count == 0
     assert session.rollback_count == 0
 
@@ -171,12 +178,18 @@ def test_get_mentor_submissions_returns_empty_page_without_asset(
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     allow_mentor_token(monkeypatch)
-    monkeypatch.setattr(
-        submissions_view,
-        "query_one",
-        lambda _db, _query, _params: {"total": 0},
-    )
-    monkeypatch.setattr(submissions_view, "query_many", lambda *_args: [])
+    captured: list[tuple[str, dict[str, Any]]] = []
+
+    def query_one(_db, query, params):
+        captured.append((query, params))
+        return {"total": 0}
+
+    def query_many(_db, query, params):
+        captured.append((query, params))
+        return []
+
+    monkeypatch.setattr(submissions_view, "query_one", query_one)
+    monkeypatch.setattr(submissions_view, "query_many", query_many)
 
     response = get_submissions(client)
 
@@ -186,6 +199,28 @@ def test_get_mentor_submissions_returns_empty_page_without_asset(
         "pagination": {"page": 1, "size": 20, "total": 0, "total_pages": 0},
     }
     assert response.json()["message"] == "No submissions found."
+    count_sql = next(
+        query for query, _params in captured if query == COUNT_MENTOR_SUBMISSIONS
+    )
+    list_sql = next(query for query, _params in captured if query != COUNT_MENTOR_SUBMISSIONS)
+    count_params = next(
+        params for query, params in captured if query == COUNT_MENTOR_SUBMISSIONS
+    )
+    list_params = next(
+        params for query, params in captured if query != COUNT_MENTOR_SUBMISSIONS
+    )
+    assert count_params == {"mentor_id": 1001, "course_id": None, "status": None}
+    assert list_params == {
+        "mentor_id": 1001,
+        "course_id": None,
+        "status": None,
+        "limit": 20,
+        "offset": 0,
+    }
+    assert "CAST(:course_id AS BIGINT) IS NULL" in count_sql
+    assert "CAST(:status AS VARCHAR) IS NULL" in count_sql
+    assert "CAST(:course_id AS BIGINT) IS NULL" in list_sql
+    assert "CAST(:status AS VARCHAR) IS NULL" in list_sql
     assert session.commit_count == 0
     assert session.rollback_count == 0
 

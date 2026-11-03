@@ -113,7 +113,8 @@ def test_find_published_courses_search_uses_parameterized_keyword_and_fixed_page
         "limit": 20,
         "offset": 20,
     }
-    assert "LOWER(c.name) LIKE :q_pattern" in captured["query"]
+    assert "LOWER(c.name) LIKE CAST(:q_pattern AS TEXT)" in captured["query"]
+    assert "CAST(:q_pattern AS TEXT) IS NULL" in captured["query"]
     assert "ORDER BY c.price ASC, c.id ASC" in captured["query"]
 
 
@@ -134,7 +135,45 @@ def test_count_published_courses_search_uses_same_keyword_predicate(
 
     assert result == {"total": 1, "missing_mentor_count": 0}
     assert captured["params"] == {"status": "PUBLISHED", "q_pattern": "%python%"}
-    assert "LOWER(c.name) LIKE :q_pattern" in captured["query"]
+    assert "LOWER(c.name) LIKE CAST(:q_pattern AS TEXT)" in captured["query"]
+    assert "CAST(:q_pattern AS TEXT) IS NULL" in captured["query"]
+
+
+def test_course_search_count_and_list_cast_null_keyword_filter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Kiểm tra count và list bind q_pattern rỗng với kiểu TEXT tường minh."""
+    captured: list[tuple[str, dict[str, Any]]] = []
+
+    def query_one(_db, query: str, params: dict[str, Any]):
+        captured.append((query, params))
+        return {"total": 1, "missing_mentor_count": 0}
+
+    def query_many(_db, query: str, params: dict[str, Any]):
+        captured.append((query, params))
+        return course_rows()
+
+    monkeypatch.setattr(courses_view, "query_one", query_one)
+    monkeypatch.setattr(courses_view, "query_many", query_many)
+
+    result_count = courses_view.count_published_courses_search(object(), q=None)  # type: ignore[arg-type]
+    result_rows = courses_view.find_published_courses_search(
+        object(), q=None, page=1, sort=None  # type: ignore[arg-type]
+    )
+
+    assert result_count == {"total": 1, "missing_mentor_count": 0}
+    assert result_rows == course_rows()
+    assert captured[0][1] == {"status": "PUBLISHED", "q_pattern": None}
+    assert captured[1][1] == {
+        "status": "PUBLISHED",
+        "q_pattern": None,
+        "limit": 20,
+        "offset": 0,
+    }
+    assert "CAST(:q_pattern AS TEXT) IS NULL" in captured[0][0]
+    assert "CAST(:q_pattern AS TEXT) IS NULL" in captured[1][0]
+    assert "LOWER(c.name) LIKE CAST(:q_pattern AS TEXT)" in captured[0][0]
+    assert "LOWER(c.name) LIKE CAST(:q_pattern AS TEXT)" in captured[1][0]
 
 
 def test_course_search_http_success_maps_result_and_trace(

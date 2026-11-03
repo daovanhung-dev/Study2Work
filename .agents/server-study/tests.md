@@ -2,7 +2,7 @@
 
 ```text
 TEST_SUITE_PRESENT: YES
-TEST_STATUS: VERIFIED (1315 tests passed in the current full Study suite)
+TEST_STATUS: VERIFIED (1326 tests passed in the current full Study suite; nullable-bind regression modules: 178 passed; ten repaired operations passed 20/20 branch-backed HTTP requests; details are in the 2026-11-01 report)
 ```
 
 Tests under `apps/study-server/tests/` cover config, DB helpers, responses and
@@ -10,7 +10,7 @@ exception handlers, security tokens, health/security behavior, API #1 register,
 API #2 verify-email dispatch, API #3 login/refresh, API #4 current-user profile
 access, API #12 resource detail, API #13 avatar upload, API #14 profile update,
 API #5 category retrieval, API #6 public course retrieval, API #7 course search,
-API #34 upload, Mentor APIs #46–#67, and Admin APIs #68–#97. APIs #4,
+API #34 upload, Mentor APIs #46–#67, and Admin APIs #68–#98. APIs #4,
 #13 and #14 share the auth guard in
 `app/utils/auth.py`; security primitive tests remain under `tests/core`.
 The API #08 course-detail and API #09 curriculum tests passed in the current
@@ -31,7 +31,7 @@ The API-specific tests are grouped under
 `admin/api_91_admin_quizzes_statistics`, `admin/api_92_admin_notifications_list`,
 `admin/api_93_admin_notifications_create`, `admin/api_94_admin_notifications_update`,
 `admin/api_95_admin_notifications_delete`,
-`admin/api_96_admin_notifications_status` and `student/api_34_uploads`; full
+`admin/api_96_admin_notifications_status`, `admin/api_98_admin_discussions_detail` and `student/api_34_uploads`; full
 collection is available.
 
 Important remaining scope boundaries include:
@@ -256,3 +256,12 @@ For a fix task:
 - Coverage includes ADMIN-before-page/DB, exact report filters, one Discussion per matching report group, latest-report ordering, page default/offset/empty result, invalid signed-int32 page, required author/course projection, safe query/projection failures and no commit.
 - `ruff check app tests` and scoped format check for all touched Python files pass. Repo-wide `ruff format --check app tests` reports 60 files outside this task's Python paths would be reformatted; no formatter was run over those files.
 - Fake DB rows do not verify PostgreSQL query execution, migration deployment, live schema or report ingestion. Queue schema and projection rules remain DERIVED; DD remains Draft.
+
+## Full Study API verification — 2026-11-01
+
+- Full local suite: `uv run pytest -q` → 1326 passed, 0 failed, one Starlette/httpx deprecation warning.
+- OpenAPI: 58 `/api/v1` path templates / 69 operations. The initial full HTTP run called all 67 numbered API-module operations and both utility operations; 59/69 returned PASS and ten nullable-filter list/search operations returned HTTP 500 on PostgreSQL.
+- Follow-up fix: explicit SQL casts for nullable binds in API #7, #54, #58, #68, #73, #78, #82, #87, #92 and #97. Their focused tests cover empty/value filters and count/list cast consistency where applicable: 178 passed. A post-fix Uvicorn run called each operation with empty filters and valid matching filters: 20/20 HTTP requests passed. The other 59 successful operations were not rerun after this SQL-only change.
+- API #98 now has `tests/modules/admin/api_98_admin_discussions_detail/` characterization coverage. Its DD remains `UNWIRED`; source route currently derives title from discussion content and omits report data, so keep the source/DD discrepancy explicit.
+- Branch-backed HTTP details, DD status per operation, initial baseline and post-fix results: [`api-test-report-2026-11-01.md`](../../apps/study-server/docs/testing/api-test-report-2026-11-01.md).
+- The follow-up used migrations 002–014 and isolated fixtures on a temporary Neon branch, then deleted it. Email/object storage used stubs. This is not production-schema, deployment or provider-integration verification.

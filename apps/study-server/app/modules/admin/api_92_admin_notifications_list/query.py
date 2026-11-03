@@ -31,8 +31,8 @@ notification_rows AS (
 )
 SELECT COUNT(*)::BIGINT AS total
 FROM notification_rows AS n
-WHERE (:status IS NULL OR n.status = :status)
-  AND (:channel IS NULL OR :channel = ANY(n.channels))
+WHERE (CAST(:status AS TEXT) IS NULL OR n.status = CAST(:status AS TEXT))
+  AND (CAST(:channel AS VARCHAR) IS NULL OR CAST(:channel AS VARCHAR) = ANY(n.channels))
 """
 
 LIST_ADMIN_NOTIFICATIONS = """
@@ -66,8 +66,8 @@ notification_rows AS (
 )
 SELECT n.id, n.title, n.content, n.channels, n.status, n.created_at
 FROM notification_rows AS n
-WHERE (:status IS NULL OR n.status = :status)
-  AND (:channel IS NULL OR :channel = ANY(n.channels))
+WHERE (CAST(:status AS TEXT) IS NULL OR n.status = CAST(:status AS TEXT))
+  AND (CAST(:channel AS VARCHAR) IS NULL OR CAST(:channel AS VARCHAR) = ANY(n.channels))
 ORDER BY n.created_at DESC, n.id DESC
 LIMIT :limit OFFSET :offset
 """
