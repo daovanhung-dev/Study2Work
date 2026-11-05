@@ -1,0 +1,44 @@
+[
+  {
+    "number": 1,
+    "label": "Logo S2W và nhận diện Study2Work",
+    "x": 425,
+    "y": 253
+  },
+  {
+    "number": 2,
+    "label": "Tiêu đề đăng ký và câu giới thiệu",
+    "x": 425,
+    "y": 312
+  },
+  {
+    "number": 3,
+    "label": "Trường họ và tên, ánh xạ tới full_name",
+    "x": 430,
+    "y": 460
+  },
+  {
+    "number": 4,
+    "label": "Trường email",
+    "x": 430,
+    "y": 547
+  },
+  {
+    "number": 5,
+    "label": "Trường mật khẩu",
+    "x": 430,
+    "y": 633
+  },
+  {
+    "number": 6,
+    "label": "Nút tạo tài khoản",
+    "x": 430,
+    "y": 701
+  },
+  {
+    "number": 7,
+    "label": "Liên kết đăng nhập tới SH-02",
+    "x": 430,
+    "y": 779
+  }
+]

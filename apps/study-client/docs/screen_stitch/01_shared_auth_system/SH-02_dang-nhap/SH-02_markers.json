@@ -1,0 +1,50 @@
+[
+  {
+    "number": 1,
+    "label": "Dấu thương hiệu và nhận diện Study2Work",
+    "x": 450,
+    "y": 313
+  },
+  {
+    "number": 2,
+    "label": "Tiêu đề đăng nhập và phần giải thích",
+    "x": 450,
+    "y": 379
+  },
+  {
+    "number": 3,
+    "label": "Vùng cảnh báo chung đang ẩn ban đầu",
+    "x": 450,
+    "y": 446
+  },
+  {
+    "number": 4,
+    "label": "Trường email",
+    "x": 450,
+    "y": 501
+  },
+  {
+    "number": 5,
+    "label": "Trường mật khẩu",
+    "x": 450,
+    "y": 584
+  },
+  {
+    "number": 6,
+    "label": "Điều khiển hiện/ẩn mật khẩu",
+    "x": 798,
+    "y": 584
+  },
+  {
+    "number": 7,
+    "label": "Nút gửi đăng nhập",
+    "x": 450,
+    "y": 644
+  },
+  {
+    "number": 8,
+    "label": "Liên kết đăng ký tới SH-03",
+    "x": 450,
+    "y": 721
+  }
+]

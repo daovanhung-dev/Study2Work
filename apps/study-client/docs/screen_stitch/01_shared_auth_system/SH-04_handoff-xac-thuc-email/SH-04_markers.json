@@ -1,0 +1,74 @@
+[
+  {
+    "number": 1,
+    "label": "Mã SH-04 và đường dẫn đề xuất",
+    "x": 700,
+    "y": 102
+  },
+  {
+    "number": 2,
+    "label": "Các trạng thái mô phỏng trong bản mẫu",
+    "x": 813,
+    "y": 103
+  },
+  {
+    "number": 3,
+    "label": "Biểu tượng và nhãn phản hồi API",
+    "x": 890,
+    "y": 218
+  },
+  {
+    "number": 4,
+    "label": "Tiêu đề và phần giải thích kết quả",
+    "x": 860,
+    "y": 323
+  },
+  {
+    "number": 5,
+    "label": "Giới hạn hiện tại: chưa có OTP, liên kết hoặc điểm cuối xác nhận",
+    "x": 850,
+    "y": 453
+  },
+  {
+    "number": 6,
+    "label": "Nút điều hướng quay lại SH-02",
+    "x": 417,
+    "y": 737
+  },
+  {
+    "number": 7,
+    "label": "Nút sao chép lệnh mẫu chưa đúng hợp đồng",
+    "x": 640,
+    "y": 735
+  },
+  {
+    "number": 8,
+    "label": "Thẻ tham chiếu hợp đồng API #02",
+    "x": 1510,
+    "y": 216
+  },
+  {
+    "number": 9,
+    "label": "Các hàng trạng thái giao thức và xác minh",
+    "x": 950,
+    "y": 280
+  },
+  {
+    "number": 10,
+    "label": "Khung JSON mô phỏng, không phải envelope thật",
+    "x": 1500,
+    "y": 576
+  },
+  {
+    "number": 11,
+    "label": "Ghi chú không giả lập đếm lùi hoặc ô nhập mã",
+    "x": 1545,
+    "y": 1045
+  },
+  {
+    "number": 12,
+    "label": "Chân trang mã màn hình và đường dẫn",
+    "x": 1560,
+    "y": 1195
+  }
+]

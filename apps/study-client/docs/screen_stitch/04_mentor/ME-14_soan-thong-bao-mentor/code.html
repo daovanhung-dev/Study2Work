@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><title>Study2Work LMS - Mentor Portal</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"on-primary-container":"#eeefff","surface-bright":"#f8f9ff","surface-container-low":"#eff4ff","outline-variant":"#c3c6d7","primary-fixed":"#dbe1ff","on-tertiary-container":"#ffeedd","outline":"#737686","on-surface-variant":"#434655","surface":"#f8f9ff","surface-container-highest":"#d3e4fe","on-tertiary-fixed-variant":"#653e00","on-background":"#0b1c30","inverse-on-surface":"#eaf1ff","surface-container":"#e5eeff","on-primary-fixed-variant":"#003ea8","secondary":"#006c49","on-secondary-container":"#00714d","on-error-container":"#93000a","error-container":"#ffdad6","on-tertiary":"#ffffff","primary-fixed-dim":"#b4c5ff","on-primary":"#ffffff","on-primary-fixed":"#00174b","on-secondary":"#ffffff","tertiary-fixed-dim":"#ffb95f","on-secondary-fixed-variant":"#005236","secondary-fixed-dim":"#4edea3","tertiary":"#784b00","surface-container-high":"#dce9ff","background":"#f8f9ff","surface-container-lowest":"#ffffff","tertiary-container":"#996100","secondary-fixed":"#6ffbbe","surface-dim":"#cbdbf5","secondary-container":"#6cf8bb","surface-variant":"#d3e4fe","error":"#ba1a1a","primary":"#004ac6","on-secondary-fixed":"#002113","surface-tint":"#0053db","on-surface":"#0b1c30","inverse-primary":"#b4c5ff","primary-container":"#2563eb","inverse-surface":"#213145","tertiary-fixed":"#ffddb8","on-tertiary-fixed":"#2a1700","on-error":"#ffffff"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-md":"1rem","space-sm":"0.5rem","space-xs":"0.25rem","gutter":"1.5rem","margin":"2rem","margin-mobile":"1rem","space-lg":"1.5rem","space-xl":"2rem","gutter-mobile":"1rem"},"fontFamily":{"display-lg-mobile":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"display-lg":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"label-lg":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"]},"fontSize":{"display-lg-mobile":["32px",{"lineHeight":"40px","letterSpacing":"-0.01em","fontWeight":"700"}],"body-md":["14px",{"lineHeight":"22px","fontWeight":"400"}],"display-lg":["40px",{"lineHeight":"48px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-lg":["30px",{"lineHeight":"38px","letterSpacing":"-0.015em","fontWeight":"700"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"700"}],"headline-md":["22px",{"lineHeight":"30px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"0.01em","fontWeight":"600"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"headline-sm":["18px",{"lineHeight":"26px","letterSpacing":"-0.005em","fontWeight":"600"}]}}}};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface min-h-screen"><header class="fixed top-0 left-0 right-0 w-full z-50 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 max-w-[1440px] mx-auto px-margin flex items-center justify-between"><div class="flex items-center gap-space-lg"><a class="flex items-center gap-space-sm focus:outline-none focus:ring-2 focus:ring-primary rounded-lg p-space-xs" data-path="tong-quan" href="#"><div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[22px]">school</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary leading-tight font-bold tracking-tight">Study2Work</span><span class="font-label-sm text-label-sm text-on-surface-variant font-bold uppercase tracking-wider">LMS Mentor</span></div></a><div class="h-6 w-px bg-surface-container-high hidden md:block"></div><nav class="hidden lg:flex items-center gap-space-xs" data-active-classes="bg-primary-container text-on-primary-container rounded-lg"><a class="px-space-md py-space-sm font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface rounded-lg transition-colors" data-path="tong-quan" href="#">Tổng quan</a><a class="px-space-md py-space-sm font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface rounded-lg transition-colors" data-path="khoa-hoc-phu-trach" href="#">Khóa học phụ trách</a><a class="px-space-md py-space-sm font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface rounded-lg transition-colors" data-path="cham-bai" href="#">Chấm bài</a><a class="px-space-md py-space-sm font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface rounded-lg transition-colors" data-path="hop-thu-ho-tro" href="#">Hộp thư hỗ trợ</a><a aria-current="page" class="px-space-md py-space-sm font-label-lg transition-colors bg-primary-container text-on-primary-container rounded-lg" data-path="thong-bao" href="#">Thông báo</a></nav></div><div class="flex items-center gap-space-md"><a class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors relative focus:outline-none focus:ring-2 focus:ring-primary" data-path="thong-bao" href="#"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-error"></span></a><div class="h-8 w-px bg-surface-container-high hidden sm:block"></div><div class="flex items-center gap-space-sm"><div class="flex flex-col text-right hidden sm:flex"><span class="font-label-lg text-label-lg text-on-surface leading-tight font-semibold">TS. Vũ Thành Đạt</span><span class="font-label-sm text-label-sm text-primary font-bold uppercase tracking-wider">Mentor / Giảng viên</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></div></header><main class="w-full pt-16 bg-surface"><div class="flex flex-col w-full">
+<!-- Subtle decorative ambient background (within container, no borders) -->
+<div class="relative w-full max-w-[1440px] mx-auto px-margin py-space-lg">
+<!-- Top Context & Stepper -->
+<div class="flex flex-col gap-space-sm mb-space-lg">
+<!-- Breadcrumb with semantic tokens -->
+<nav aria-label="Breadcrumb" class="flex items-center gap-space-xs text-on-surface-variant font-label-md text-label-md">
+<a class="hover:text-primary transition-colors flex items-center gap-1" data-path="thong-bao" href="#">
+<span class="material-symbols-outlined text-[16px]">campaign</span>
+<span>Thông báo</span>
+</a>
+<span class="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Soạn thông báo mới</a>
+<span class="material-symbols-outlined text-[14px] text-outline">chevron_right</span>
+<span class="text-primary font-semibold">Bước 2: Soạn thảo nội dung</span>
+</nav>
+<!-- Stepper Pill Progression -->
+<div class="flex items-center gap-space-md pt-space-xs">
+<div class="flex items-center gap-space-sm bg-surface-container-high px-space-md py-1.5 rounded-full">
+<span class="w-5 h-5 rounded-full bg-outline text-surface font-label-sm text-label-sm flex items-center justify-center font-bold">1</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Chọn người nhận</span>
+<span class="material-symbols-outlined text-outline text-[16px]">priority_high</span>
+</div>
+<div class="w-8 h-0.5 bg-primary rounded-full"></div>
+<div class="flex items-center gap-space-sm bg-primary text-on-primary px-space-md py-1.5 rounded-full shadow-sm">
+<span class="w-5 h-5 rounded-full bg-on-primary text-primary font-label-sm text-label-sm flex items-center justify-center font-bold">2</span>
+<span class="font-label-md text-label-md font-semibold">Soạn thảo nội dung</span>
+</div>
+<div class="w-8 h-0.5 bg-surface-container-high rounded-full"></div>
+<div class="flex items-center gap-space-sm bg-surface-container-low px-space-md py-1.5 rounded-full text-outline">
+<span class="w-5 h-5 rounded-full bg-surface-container-highest text-outline font-label-sm text-label-sm flex items-center justify-center">3</span>
+<span class="font-label-md text-label-md">Xác nhận &amp; Gửi</span>
+</div>
+</div>
+</div>
+<!-- Main Grid Workspace -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- Primary Editor Column (8 cols) -->
+<section class="lg:col-span-8 flex flex-col gap-space-lg">
+<!-- Header Card with High Impact Visual Contrast -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm relative overflow-hidden">
+<div class="absolute -right-8 -top-8 w-40 h-40 bg-surface-container rounded-full blur-2xl pointer-events-none opacity-60"></div>
+<div class="relative z-10">
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider mb-space-xs block">Phân hệ Giảng dạy &amp; Cố vấn</span>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Soạn và gửi thông báo tới học viên</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs max-w-2xl">
+              Tạo nội dung thông báo cập nhật lớp học, thông báo nộp đồ án hoặc phân bổ tài liệu trọng tâm. Hãy đảm bảo nội dung cô đọng và tuân thủ chuẩn truyền thông đào tạo.
+            </p>
+</div>
+<!-- Alert Context: Step 1 Missing Audience Notice -->
+<div class="mt-space-lg bg-surface-container-low rounded-lg p-space-md flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-tertiary-fixed text-[22px]">assignment_late</span>
+</div>
+<div class="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div>
+<span class="font-label-sm text-label-sm uppercase font-bold text-tertiary tracking-wider block">Trạng thái bước 1</span>
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-error-container text-on-error-container font-label-md text-label-md mt-1 font-semibold">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+                  Chưa xác định nhóm người nhận (Quay lại bước 1 để chọn)
+                </span>
+</div>
+<a class="h-11 px-space-md inline-flex items-center justify-center gap-2 rounded-lg bg-surface-container-lowest text-primary hover:bg-surface-container transition-all font-label-lg text-label-lg shadow-sm shrink-0" data-path="khoa-hoc-phu-trach" href="#">
+<span class="material-symbols-outlined text-[18px]">undo</span>
+<span>Chọn người nhận (ME-13)</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Form Drafting Area -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-lg">
+<!-- Field 1: Recipient Display Summary (WCAG compliant) -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-lg text-label-lg text-on-surface flex items-center gap-2">
+<span>Đối tượng nhận thông báo</span>
+<span aria-hidden="true" class="text-error font-bold">*</span>
+</label>
+<div class="w-full min-h-[44px] px-space-md py-space-sm bg-surface-container-low rounded-lg flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="px-2.5 py-1 rounded-md bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-outline">group_off</span>
+<span>Chưa xác thực danh sách</span>
+</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant italic">
+                  Chưa có khóa học hay nhóm học viên nào được kết nối cho thông báo này.
+                </span>
+</div>
+<span class="material-symbols-outlined text-outline text-[20px]">lock</span>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">
+              Khóa học và học viên đích cần được cấu hình qua Bộ lọc Lớp học ở màn hình ME-13.
+            </p>
+</div>
+<!-- Field 2: Subject Input -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-label-lg text-label-lg text-on-surface flex items-center gap-1" for="announcement-title">
+<span>Tiêu đề thông báo</span>
+<span aria-hidden="true" class="text-error font-bold">*</span>
+</label>
+<span class="font-label-sm text-label-sm text-outline" id="title-char-count">0 / 120 ký tự</span>
+</div>
+<div class="relative">
+<input class="w-full h-[44px] px-space-md rounded-lg bg-surface text-on-surface placeholder:text-outline text-body-md font-body-md outline-none focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_rgba(0,74,198,0.2)] transition-all" id="announcement-title" maxlength="120" placeholder="Nhập tiêu đề thông báo gửi học viên (ví dụ: Lịch nộp bài tập, cập nhật tài liệu)..." type="text"/>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant">
+              Tiêu đề ngắn gọn, rõ ràng giúp tăng tỷ lệ mở thông báo và phản hồi của học viên.
+            </p>
+</div>
+<!-- Field 3: Transmission Channels -->
+<div class="flex flex-col gap-space-sm">
+<label class="font-label-lg text-label-lg text-on-surface flex items-center gap-1">
+<span>Kênh truyền tin (Channels)</span>
+<span aria-hidden="true" class="text-error font-bold">*</span>
+</label>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<!-- Channel 1: In-App (Active) -->
+<label class="relative flex items-start gap-space-md p-space-md rounded-xl bg-surface hover:bg-surface-container-low transition-colors cursor-pointer min-h-[44px]">
+<div class="flex items-center h-6">
+<input checked="" class="w-[18px] h-[18px] text-primary rounded accent-primary cursor-pointer focus:outline-none" id="channel-inapp" type="checkbox"/>
+</div>
+<div class="flex flex-col">
+<span class="font-label-lg text-label-lg text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">notifications_active</span>
+                    Thông báo trong ứng dụng (In-app)
+                  </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                    Hiển thị trên thanh chuông thông báo và mục bảng tin khóa học của người học.
+                  </span>
+<span class="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    Sẵn sàng hoạt động
+                  </span>
+</div>
+</label>
+<!-- Channel 2: Email (Disabled) -->
+<div class="relative flex items-start gap-space-md p-space-md rounded-xl bg-surface-container-high/60 cursor-not-allowed min-h-[44px] opacity-75">
+<div class="flex items-center h-6">
+<input class="w-[18px] h-[18px] rounded cursor-not-allowed" disabled="" id="channel-email" type="checkbox"/>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-label-lg text-label-lg text-outline flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px]">mail</span>
+                      Email học viên
+                    </span>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-semibold">
+                      Chờ cấu hình
+                    </span>
+</div>
+<span class="font-body-sm text-body-sm text-outline mt-0.5">
+                    Disabled - đang chờ cấu hình dịch vụ gửi thư SMTP/SendGrid từ quản trị viên hệ thống.
+                  </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Field 4: Detailed Announcement Content -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-label-lg text-label-lg text-on-surface flex items-center gap-1" for="announcement-body">
+<span>Nội dung chi tiết thông báo</span>
+<span aria-hidden="true" class="text-error font-bold">*</span>
+</label>
+<!-- Simple Formatting Toolbar Simulation -->
+<div class="flex items-center gap-1 bg-surface-container-low px-2 py-1 rounded-md">
+<button aria-label="Đậm" class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">format_bold</span>
+</button>
+<button aria-label="Nghiêng" class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">format_italic</span>
+</button>
+<button aria-label="Danh sách" class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">format_list_bulleted</span>
+</button>
+<button aria-label="Đính kèm liên kết" class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">link</span>
+</button>
+</div>
+</div>
+<textarea class="w-full p-space-md rounded-lg bg-surface text-on-surface placeholder:text-outline text-body-md font-body-md outline-none focus:bg-surface-container-lowest focus:shadow-[0_0_0_2px_rgba(0,74,198,0.2)] transition-all resize-y leading-relaxed" id="announcement-body" placeholder="Soạn nội dung thông báo chi tiết, lưu ý học tập và hướng dẫn cần thiết..." rows="9"></textarea>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-1">
+<span>Hỗ trợ định dạng văn bản trực quan và liên kết tài liệu đào tạo.</span>
+<span class="text-outline" id="body-char-count">0 từ</span>
+</div>
+</div>
+<!-- Attachment Section (EdTech pedagogical standard) -->
+<div class="p-space-md rounded-xl bg-surface flex flex-col sm:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">attach_file</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Tài liệu đính kèm (Tùy chọn)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Đính kèm slide bài giảng, barem chấm hoặc hướng dẫn đồ án (PDF, DOCX, ZIP tối đa 25MB)</span>
+</div>
+</div>
+<button class="h-11 px-space-md rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-lg text-label-lg transition-colors shadow-sm shrink-0 flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]">cloud_upload</span>
+<span>Chọn tệp tin</span>
+</button>
+</div>
+<!-- Action Bar with Strict Validation State -->
+<div class="pt-space-md flex flex-col gap-space-md">
+<!-- Safety Disclaimer Alert -->
+<div class="p-space-md rounded-xl bg-error-container/40 flex items-start gap-space-md text-on-surface">
+<span class="material-symbols-outlined text-error text-[22px] shrink-0 mt-0.5">shield</span>
+<div class="flex flex-col gap-0.5">
+<span class="font-label-md text-label-md font-bold text-error">Chính sách bảo mật &amp; An toàn truyền thông</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                  Nút gửi tạm thời vô hiệu hóa do danh sách người nhận chưa được xác thực từ bước trước. Hệ thống yêu cầu chỉ định tập đối tượng hợp lệ để phòng tránh phát tán thông tin nhầm lẫn.
+                </p>
+</div>
+</div>
+<!-- Buttons: Controls >= 44px height -->
+<div class="flex flex-col-reverse sm:flex-row items-center justify-between gap-space-md pt-space-xs">
+<!-- Available Back Button -->
+<a class="w-full sm:w-auto h-[44px] px-space-lg rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-lg text-label-lg inline-flex items-center justify-center gap-2 transition-all focus:outline-none" data-path="khoa-hoc-phu-trach" href="#">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+<span>Quay lại chọn người nhận (ME-13)</span>
+</a>
+<!-- Secondary Draft + Disabled Submit -->
+<div class="w-full sm:w-auto flex items-center gap-space-sm">
+<button class="w-full sm:w-auto h-[44px] px-space-md rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant font-label-lg text-label-lg inline-flex items-center justify-center gap-2 transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">save</span>
+<span>Lưu bản nháp</span>
+</button>
+<!-- Disabled Send Button strictly height 44px -->
+<button aria-disabled="true" class="w-full sm:w-auto h-[44px] px-space-xl rounded-lg bg-surface-container-highest text-outline font-label-lg text-label-lg inline-flex items-center justify-center gap-2 cursor-not-allowed select-none transition-none shadow-none" disabled="" title="Vui lòng hoàn thành bước 1 trước khi gửi" type="button">
+<span class="material-symbols-outlined text-[18px]">send</span>
+<span>Gửi thông báo</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Sidebar Supporting Panels (4 cols) -->
+<aside class="lg:col-span-4 flex flex-col gap-space-lg">
+<!-- Live Preview Card (EdTech contextual fidelity) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Xem trước hiển thị</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+              In-app Feed
+            </span>
+</div>
+<!-- Phone mockup simulation card -->
+<div class="rounded-xl bg-surface-container-low p-space-md flex flex-col gap-space-sm relative overflow-hidden">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold text-xs shrink-0">
+                Đ
+              </div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface font-bold truncate">TS. Vũ Thành Đạt</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Vừa xong • Giảng viên phụ trách</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-lg p-space-sm shadow-sm flex flex-col gap-1">
+<h2 class="font-label-lg text-label-lg text-on-surface font-bold line-clamp-1 italic text-outline" id="preview-title">
+                (Chưa có tiêu đề)
+              </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-3 italic" id="preview-body">
+                Nội dung xem trước của thông báo sẽ hiển thị tại đây khi bạn tiến hành nhập liệu...
+              </p>
+</div>
+<div class="flex items-center justify-between pt-1 text-outline font-label-sm text-label-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">visibility</span>
+                Chế độ học viên
+              </span>
+<span class="flex items-center gap-1 text-primary font-semibold">
+                Study2Work Web &amp; Mobile
+              </span>
+</div>
+</div>
+<!-- Delivery Metric Sparkline Card -->
+<div class="p-space-md rounded-lg bg-surface flex flex-col gap-2">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Tỷ lệ tiếp cận dự kiến</span>
+<div class="flex items-center justify-between text-body-sm text-on-surface-variant">
+<span>Độ phản hồi trung bình 24h</span>
+<span class="font-bold text-primary">89.4%</span>
+</div>
+<!-- Progress Tracker Token-based -->
+<div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 89.4%"></div>
+</div>
+<p class="font-label-sm text-label-sm text-outline">Dựa trên dữ liệu tương tác từ 5 thông báo trước đó của mentor.</p>
+</div>
+</div>
+<!-- Pedagogical Guidelines Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed shrink-0">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Chuẩn mực thông điệp</span>
+</div>
+<ul class="space-y-space-sm text-body-sm text-on-surface-variant font-body-sm">
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span><strong>Mục tiêu rõ ràng:</strong> Đưa thông tin mốc hạn (Deadline) hoặc phòng học lên ngay đoạn mở đầu.</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span><strong>Tài nguyên đính kèm:</strong> Luôn cung cấp đường dẫn hoặc tệp mẫu thay vì chỉ mô tả bằng lời.</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span><strong>Kênh giải đáp:</strong> Hướng dẫn học viên đặt câu hỏi tại <em>Hộp thư hỗ trợ</em> nếu có vướng mắc kỹ thuật.</span>
+</li>
+</ul>
+<div class="pt-space-xs">
+<!-- Decorative Visual Token -->
+<div class="w-full h-28 rounded-lg bg-cover bg-center overflow-hidden relative shadow-sm" data-alt="A clean modern academic office workspace featuring study materials, laptop displaying educational portal interface, notebook, softly lit by daylight from a window, subtle blue and navy tones echoing study2work professional tone." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCR345nt0ZHuZVkUzeRzA-dTkN0mGce7h87elSn16jZPAKtGneMu4-iXsgCF9c3mFu9Q2W3zH-1fu_piAweNcxtrqi9PpXLDZ0ZlQsc0uAOcbn3Ebd4-Bh_D4jt6wP2iwZQP9MPfV0kNo9RtyTh2r9nlccLuMvr5-olcnHLUsEcfrgJO12sDCNYsEQxeXiWRebobUZk3lW4Oa5cVygoUeTl8f5_WJnlI5hYaFgUQAU')">
+<div class="absolute inset-0 bg-gradient-to-t from-on-background/80 via-on-background/30 to-transparent flex items-end p-space-sm">
+<span class="text-surface font-label-sm text-label-sm font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px]">school</span>
+                  Học viện Công nghệ Study2Work • 2025
+                </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Help & Policy Quick Reference -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">help_outline</span>
+<span class="font-label-md text-label-md text-on-surface">Cần trợ giúp soạn thông báo?</span>
+</div>
+<a class="font-label-sm text-label-sm text-primary font-bold hover:underline" href="#">
+            Xem hướng dẫn →
+          </a>
+</div>
+</aside>
+</div>
+</div>
+</div>
+<script>
+  // Simple micro-interaction for input synchronization with preview card
+  (function() {
+    const titleInput = document.getElementById('announcement-title');
+    const bodyInput = document.getElementById('announcement-body');
+    const previewTitle = document.getElementById('preview-title');
+    const previewBody = document.getElementById('preview-body');
+    const titleCount = document.getElementById('title-char-count');
+    const bodyCount = document.getElementById('body-char-count');
+
+    if (titleInput && previewTitle && titleCount) {
+      titleInput.addEventListener('input', function() {
+        const val = this.value.trim();
+        titleCount.textContent = this.value.length + ' / 120 ký tự';
+        if (val) {
+          previewTitle.textContent = val;
+          previewTitle.classList.remove('italic', 'text-outline');
+        } else {
+          previewTitle.textContent = '(Chưa có tiêu đề)';
+          previewTitle.classList.add('italic', 'text-outline');
+        }
+      });
+    }
+
+    if (bodyInput && previewBody && bodyCount) {
+      bodyInput.addEventListener('input', function() {
+        const val = this.value.trim();
+        const wordCount = val ? val.split(/\s+/).filter(Boolean).length : 0;
+        bodyCount.textContent = wordCount + ' từ';
+        if (val) {
+          previewBody.textContent = val;
+          previewBody.classList.remove('italic');
+        } else {
+          previewBody.textContent = 'Nội dung xem trước của thông báo sẽ hiển thị tại đây khi bạn tiến hành nhập liệu...';
+          previewBody.classList.add('italic');
+        }
+      });
+    }
+  })();
+</script></main><footer class="w-full bg-surface-container-low py-space-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="max-w-[1440px] mx-auto px-margin flex flex-col md:flex-row items-center justify-between gap-space-md text-on-surface-variant"><div class="flex items-center gap-space-sm"><div class="w-6 h-6 rounded-lg bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[14px]">school</span></div><p class="font-body-sm text-body-sm">© 2025 Study2Work LMS. Chuẩn kiểm định WCAG 2.1 AA. Cổng điều phối Đào tạo &amp; Mentor.</p></div><div class="flex items-center gap-space-lg font-label-md text-label-md"><a class="hover:text-on-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded p-space-xs" href="#">Quy chế Giảng viên</a><a class="hover:text-on-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded p-space-xs" href="#">Tiêu chuẩn đánh giá</a><a class="hover:text-on-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded p-space-xs" href="#">Hỗ trợ kỹ thuật</a></div></div></footer></body></html>

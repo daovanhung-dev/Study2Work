@@ -1,0 +1,80 @@
+[
+  {
+    "number": 1,
+    "label": "Đầu trang và điều hướng",
+    "x": 38,
+    "y": 16
+  },
+  {
+    "number": 2,
+    "label": "Nội dung mở đầu",
+    "x": 68,
+    "y": 72
+  },
+  {
+    "number": 3,
+    "label": "Ô tìm kiếm và nút thao tác",
+    "x": 119,
+    "y": 152
+  },
+  {
+    "number": 4,
+    "label": "Nút hành động phần mở đầu",
+    "x": 163,
+    "y": 183
+  },
+  {
+    "number": 5,
+    "label": "Chỉ số marketing",
+    "x": 25,
+    "y": 235
+  },
+  {
+    "number": 6,
+    "label": "Dải danh mục",
+    "x": 23,
+    "y": 283
+  },
+  {
+    "number": 7,
+    "label": "Tiêu đề và điều khiển khóa học nổi bật",
+    "x": 535,
+    "y": 385
+  },
+  {
+    "number": 8,
+    "label": "Thẻ khóa học nổi bật",
+    "x": 24,
+    "y": 438
+  },
+  {
+    "number": 9,
+    "label": "Thẻ lợi ích",
+    "x": 24,
+    "y": 856
+  },
+  {
+    "number": 10,
+    "label": "Lời chứng thực",
+    "x": 24,
+    "y": 1052
+  },
+  {
+    "number": 11,
+    "label": "Logo nhà tuyển dụng",
+    "x": 24,
+    "y": 1236
+  },
+  {
+    "number": 12,
+    "label": "Lời kêu gọi để lại email",
+    "x": 24,
+    "y": 1310
+  },
+  {
+    "number": 13,
+    "label": "Chân trang",
+    "x": 24,
+    "y": 1484
+  }
+]
