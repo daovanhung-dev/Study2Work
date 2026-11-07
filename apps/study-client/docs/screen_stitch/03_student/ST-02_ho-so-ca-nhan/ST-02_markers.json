@@ -1,0 +1,256 @@
+{
+  "screen_id": "ST-02",
+  "source_image": "screen_composite.png",
+  "original_image": "screen.png",
+  "source_html": "code.html",
+  "source_state": "Composite review preview: header/footer retained from original screen.png; body placed from the static code.html render screen_rendered.png. This is not a runtime capture.",
+  "render_provenance": {
+    "command": "firefox --headless --no-remote --profile <temporary-profile> --screenshot=/tmp/st02_render.png --window-size=1280,1078 file://<absolute-path>/code.html",
+    "output": "screen_rendered.png",
+    "viewport": "1280x1078",
+    "runtime_claim": false
+  },
+  "image_size": {
+    "width": 1280,
+    "height": 1078
+  },
+  "annotation": {
+    "scale": 2,
+    "canvas_size": {
+      "width": 2720,
+      "height": 2156
+    },
+    "source_offset_canvas_px": {
+      "x": 80,
+      "y": 0
+    },
+    "gutter_width_canvas_px": 80,
+    "marker_style": {
+      "shape": "circle",
+      "fill": "#0B5F8A",
+      "text": "#FFFFFF",
+      "stroke": "#FFFFFF",
+      "diameter_canvas_px": 40,
+      "font_weight": 700
+    },
+    "leader_style": {
+      "stroke": "#0B5F8A",
+      "stroke_width_canvas_px": 2,
+      "scope": "gutter only"
+    }
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST02-EL-01",
+      "target": "Header brand Study2Work link",
+      "target_center_source_px": {
+        "x": 95,
+        "y": 32
+      },
+      "side": "left",
+      "y_source": 32,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 64
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 64
+      }
+    },
+    {
+      "number": 2,
+      "element_id": "ST02-EL-02",
+      "target": "Primary navigation group: home, courses, my courses and profile",
+      "target_center_source_px": {
+        "x": 430,
+        "y": 32
+      },
+      "side": "left",
+      "y_source": 82,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 164
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 164
+      }
+    },
+    {
+      "number": 3,
+      "element_id": "ST02-EL-03",
+      "target": "Header login link",
+      "target_center_source_px": {
+        "x": 1175,
+        "y": 32
+      },
+      "side": "right",
+      "y_source": 32,
+      "marker_center_canvas_px": {
+        "x": 2692,
+        "y": 64
+      },
+      "leader_to_canvas_px": {
+        "x": 2640,
+        "y": 64
+      }
+    },
+    {
+      "number": 4,
+      "element_id": "ST02-EL-04",
+      "target": "Page title and supporting description",
+      "target_center_source_px": {
+        "x": 290,
+        "y": 121
+      },
+      "side": "left",
+      "y_source": 126,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 252
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 252
+      }
+    },
+    {
+      "number": 5,
+      "element_id": "ST02-EL-05",
+      "target": "Profile card surface and account icon",
+      "target_center_source_px": {
+        "x": 635,
+        "y": 295
+      },
+      "side": "left",
+      "y_source": 292,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 584
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 584
+      }
+    },
+    {
+      "number": 6,
+      "element_id": "ST02-EL-06",
+      "target": "Profile card heading and sign-in explanation",
+      "target_center_source_px": {
+        "x": 635,
+        "y": 392
+      },
+      "side": "right",
+      "y_source": 390,
+      "marker_center_canvas_px": {
+        "x": 2692,
+        "y": 780
+      },
+      "leader_to_canvas_px": {
+        "x": 2640,
+        "y": 780
+      }
+    },
+    {
+      "number": 7,
+      "element_id": "ST02-EL-07",
+      "target": "Profile card login call to action",
+      "target_center_source_px": {
+        "x": 500,
+        "y": 478
+      },
+      "side": "left",
+      "y_source": 478,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 956
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 956
+      }
+    },
+    {
+      "number": 8,
+      "element_id": "ST02-EL-08",
+      "target": "Disabled edit-profile button",
+      "target_center_source_px": {
+        "x": 722,
+        "y": 478
+      },
+      "side": "right",
+      "y_source": 478,
+      "marker_center_canvas_px": {
+        "x": 2692,
+        "y": 956
+      },
+      "leader_to_canvas_px": {
+        "x": 2640,
+        "y": 956
+      }
+    },
+    {
+      "number": 9,
+      "element_id": "ST02-EL-09",
+      "target": "Footer Study2Work brand link",
+      "target_center_source_px": {
+        "x": 90,
+        "y": 1034
+      },
+      "side": "left",
+      "y_source": 1034,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 2068
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 2068
+      }
+    },
+    {
+      "number": 10,
+      "element_id": "ST02-EL-10",
+      "target": "Footer navigation group",
+      "target_center_source_px": {
+        "x": 1005,
+        "y": 1034
+      },
+      "side": "right",
+      "y_source": 1034,
+      "marker_center_canvas_px": {
+        "x": 2692,
+        "y": 2068
+      },
+      "leader_to_canvas_px": {
+        "x": 2640,
+        "y": 2068
+      }
+    }
+  ],
+  "composition_provenance": {
+    "output": "screen_composite.png",
+    "base_image": "screen.png",
+    "body_source": "screen_rendered.png",
+    "body_crop_source_px": {
+      "x": 0,
+      "y": 64,
+      "width": 1280,
+      "height": 536
+    },
+    "body_placement_output_px": {
+      "x": 0,
+      "y": 64
+    },
+    "rationale": "The original PNG has a blank body but shows the full header/footer. The HTML render shows the body but its viewport-bound main min-height puts footer content outside the screenshot. The composite retains both source assets unchanged.",
+    "command": "magick screen.png \\( screen_rendered.png -crop 1280x536+0+64 +repage \\) -geometry +0+64 -compose over -composite screen_composite.png",
+    "input_sha256": {
+      "screen.png": "d708cf38575a9ef14352ea5937379e191448bdb62341f7b1fc90f5e50144f379",
+      "screen_rendered.png": "162a7647579ba911783cc8975c71bea57a1d54595ec4f5e2951e1187f7b56e43"
+    },
+    "output_sha256": "62b0f97f48582bf9941b352f7e98f4c33bdfaf774608204cc2978ee001060c7c"
+  }
+}

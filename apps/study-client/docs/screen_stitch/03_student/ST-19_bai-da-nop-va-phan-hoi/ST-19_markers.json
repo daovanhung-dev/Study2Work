@@ -1,0 +1,599 @@
+{
+  "screen_id": "ST-19",
+  "source": {
+    "image": "screen.png",
+    "width_px": 1241,
+    "height_px": 1600,
+    "coordinate_space": "source image pixels"
+  },
+  "annotation_canvas": {
+    "width_px": 1401,
+    "height_px": 1600,
+    "source_x_px": 80,
+    "source_y_px": 0,
+    "gutter_left_px": 80,
+    "gutter_right_px": 80
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST19-EL-01",
+      "label": "Study2Work logo and brand",
+      "x": 64,
+      "y": 20,
+      "badge_x": 24,
+      "badge_y": 20,
+      "side": "L"
+    },
+    {
+      "number": 2,
+      "element_id": "ST19-EL-02",
+      "label": "Course and skill search field",
+      "x": 230,
+      "y": 20,
+      "badge_x": 24,
+      "badge_y": 45,
+      "side": "L"
+    },
+    {
+      "number": 3,
+      "element_id": "ST19-EL-03",
+      "label": "Primary navigation links",
+      "x": 580,
+      "y": 20,
+      "badge_x": 24,
+      "badge_y": 70,
+      "side": "L"
+    },
+    {
+      "number": 4,
+      "element_id": "ST19-EL-04",
+      "label": "Notification bell and unread indicator",
+      "x": 1078,
+      "y": 20,
+      "badge_x": 1377,
+      "badge_y": 20,
+      "side": "R"
+    },
+    {
+      "number": 5,
+      "element_id": "ST19-EL-05",
+      "label": "Avatar, name, and profile menu",
+      "x": 1185,
+      "y": 20,
+      "badge_x": 1377,
+      "badge_y": 45,
+      "side": "R"
+    },
+    {
+      "number": 6,
+      "element_id": "ST19-EL-06",
+      "label": "Breadcrumb trail",
+      "x": 350,
+      "y": 82,
+      "badge_x": 24,
+      "badge_y": 107,
+      "side": "L"
+    },
+    {
+      "number": 7,
+      "element_id": "ST19-EL-07",
+      "label": "Submission ID chip",
+      "x": 1120,
+      "y": 82,
+      "badge_x": 1377,
+      "badge_y": 82,
+      "side": "R"
+    },
+    {
+      "number": 8,
+      "element_id": "ST19-EL-08",
+      "label": "Grading status badge “ĐÃ CHẤM ĐIỂM (GRADED)”",
+      "x": 105,
+      "y": 146,
+      "badge_x": 24,
+      "badge_y": 146,
+      "side": "L"
+    },
+    {
+      "number": 9,
+      "element_id": "ST19-EL-09",
+      "label": "Course chip “Khóa chuyên sâu Frontend Pro”",
+      "x": 325,
+      "y": 146,
+      "badge_x": 24,
+      "badge_y": 171,
+      "side": "L"
+    },
+    {
+      "number": 10,
+      "element_id": "ST19-EL-10",
+      "label": "Submission title",
+      "x": 440,
+      "y": 184,
+      "badge_x": 24,
+      "badge_y": 209,
+      "side": "L"
+    },
+    {
+      "number": 11,
+      "element_id": "ST19-EL-11",
+      "label": "Submission timestamp",
+      "x": 190,
+      "y": 247,
+      "badge_x": 24,
+      "badge_y": 247,
+      "side": "L"
+    },
+    {
+      "number": 12,
+      "element_id": "ST19-EL-12",
+      "label": "Grading timestamp",
+      "x": 425,
+      "y": 247,
+      "badge_x": 24,
+      "badge_y": 272,
+      "side": "L"
+    },
+    {
+      "number": 13,
+      "element_id": "ST19-EL-13",
+      "label": "Mentor attribution in submission summary",
+      "x": 685,
+      "y": 247,
+      "badge_x": 1377,
+      "badge_y": 247,
+      "side": "R"
+    },
+    {
+      "number": 14,
+      "element_id": "ST19-EL-14",
+      "label": "Overall result card label",
+      "x": 1117,
+      "y": 174,
+      "badge_x": 1377,
+      "badge_y": 274,
+      "side": "R"
+    },
+    {
+      "number": 15,
+      "element_id": "ST19-EL-15",
+      "label": "Overall result grade label",
+      "x": 1090,
+      "y": 204,
+      "badge_x": 1377,
+      "badge_y": 304,
+      "side": "R"
+    },
+    {
+      "number": 16,
+      "element_id": "ST19-EL-16",
+      "label": "Overall numeric score badge",
+      "x": 1183,
+      "y": 204,
+      "badge_x": 1377,
+      "badge_y": 329,
+      "side": "R"
+    },
+    {
+      "number": 17,
+      "element_id": "ST19-EL-17",
+      "label": "Rubric Assessment heading",
+      "x": 268,
+      "y": 364,
+      "badge_x": 24,
+      "badge_y": 364,
+      "side": "L"
+    },
+    {
+      "number": 18,
+      "element_id": "ST19-EL-18",
+      "label": "Course-weight badge",
+      "x": 594,
+      "y": 358,
+      "badge_x": 24,
+      "badge_y": 408,
+      "side": "L"
+    },
+    {
+      "number": 19,
+      "element_id": "ST19-EL-19",
+      "label": "Overall score ring",
+      "x": 106,
+      "y": 508,
+      "badge_x": 24,
+      "badge_y": 508,
+      "side": "L"
+    },
+    {
+      "number": 20,
+      "element_id": "ST19-EL-20",
+      "label": "Grade, skill level, and summary copy",
+      "x": 333,
+      "y": 508,
+      "badge_x": 24,
+      "badge_y": 533,
+      "side": "L"
+    },
+    {
+      "number": 21,
+      "element_id": "ST19-EL-21",
+      "label": "Average class score metric",
+      "x": 558,
+      "y": 487,
+      "badge_x": 24,
+      "badge_y": 562,
+      "side": "L"
+    },
+    {
+      "number": 22,
+      "element_id": "ST19-EL-22",
+      "label": "Class percentile metric",
+      "x": 558,
+      "y": 518,
+      "badge_x": 24,
+      "badge_y": 593,
+      "side": "L"
+    },
+    {
+      "number": 23,
+      "element_id": "ST19-EL-23",
+      "label": "Learning retention metric",
+      "x": 558,
+      "y": 548,
+      "badge_x": 24,
+      "badge_y": 623,
+      "side": "L"
+    },
+    {
+      "number": 24,
+      "element_id": "ST19-EL-24",
+      "label": "Rubric row 1 title, status, and points",
+      "x": 350,
+      "y": 629,
+      "badge_x": 24,
+      "badge_y": 654,
+      "side": "L"
+    },
+    {
+      "number": 25,
+      "element_id": "ST19-EL-25",
+      "label": "Rubric row 1 progress and helper text",
+      "x": 353,
+      "y": 685,
+      "badge_x": 24,
+      "badge_y": 685,
+      "side": "L"
+    },
+    {
+      "number": 26,
+      "element_id": "ST19-EL-26",
+      "label": "Rubric row 2 title, status, and points",
+      "x": 350,
+      "y": 761,
+      "badge_x": 24,
+      "badge_y": 761,
+      "side": "L"
+    },
+    {
+      "number": 27,
+      "element_id": "ST19-EL-27",
+      "label": "Rubric row 2 progress and helper text",
+      "x": 353,
+      "y": 818,
+      "badge_x": 24,
+      "badge_y": 818,
+      "side": "L"
+    },
+    {
+      "number": 28,
+      "element_id": "ST19-EL-28",
+      "label": "Rubric row 3 title, status, and points",
+      "x": 350,
+      "y": 891,
+      "badge_x": 24,
+      "badge_y": 891,
+      "side": "L"
+    },
+    {
+      "number": 29,
+      "element_id": "ST19-EL-29",
+      "label": "Rubric row 3 progress and helper text",
+      "x": 353,
+      "y": 949,
+      "badge_x": 24,
+      "badge_y": 949,
+      "side": "L"
+    },
+    {
+      "number": 30,
+      "element_id": "ST19-EL-30",
+      "label": "Rubric row 4 title, status, and points",
+      "x": 350,
+      "y": 1022,
+      "badge_x": 24,
+      "badge_y": 1022,
+      "side": "L"
+    },
+    {
+      "number": 31,
+      "element_id": "ST19-EL-31",
+      "label": "Rubric row 4 progress and helper text",
+      "x": 353,
+      "y": 1080,
+      "badge_x": 24,
+      "badge_y": 1080,
+      "side": "L"
+    },
+    {
+      "number": 32,
+      "element_id": "ST19-EL-32",
+      "label": "Mentor detailed review heading",
+      "x": 881,
+      "y": 312,
+      "badge_x": 1377,
+      "badge_y": 362,
+      "side": "R"
+    },
+    {
+      "number": 33,
+      "element_id": "ST19-EL-33",
+      "label": "Mentor review date",
+      "x": 1190,
+      "y": 330,
+      "badge_x": 1377,
+      "badge_y": 405,
+      "side": "R"
+    },
+    {
+      "number": 34,
+      "element_id": "ST19-EL-34",
+      "label": "Mentor avatar",
+      "x": 795,
+      "y": 384,
+      "badge_x": 1377,
+      "badge_y": 434,
+      "side": "R"
+    },
+    {
+      "number": 35,
+      "element_id": "ST19-EL-35",
+      "label": "Mentor name and verified badge",
+      "x": 1020,
+      "y": 384,
+      "badge_x": 1377,
+      "badge_y": 459,
+      "side": "R"
+    },
+    {
+      "number": 36,
+      "element_id": "ST19-EL-36",
+      "label": "Mentor role, organization, and credentials",
+      "x": 1030,
+      "y": 418,
+      "badge_x": 1377,
+      "badge_y": 493,
+      "side": "R"
+    },
+    {
+      "number": 37,
+      "element_id": "ST19-EL-37",
+      "label": "Detailed feedback quotation",
+      "x": 1010,
+      "y": 537,
+      "badge_x": 1377,
+      "badge_y": 537,
+      "side": "R"
+    },
+    {
+      "number": 38,
+      "element_id": "ST19-EL-38",
+      "label": "Line comments action",
+      "x": 910,
+      "y": 637,
+      "badge_x": 1377,
+      "badge_y": 637,
+      "side": "R"
+    },
+    {
+      "number": 39,
+      "element_id": "ST19-EL-39",
+      "label": "One-on-one meeting action",
+      "x": 1120,
+      "y": 637,
+      "badge_x": 1377,
+      "badge_y": 662,
+      "side": "R"
+    },
+    {
+      "number": 40,
+      "element_id": "ST19-EL-40",
+      "label": "Archived submission files heading",
+      "x": 930,
+      "y": 700,
+      "badge_x": 1377,
+      "badge_y": 700,
+      "side": "R"
+    },
+    {
+      "number": 41,
+      "element_id": "ST19-EL-41",
+      "label": "Submission version label",
+      "x": 1180,
+      "y": 700,
+      "badge_x": 1377,
+      "badge_y": 725,
+      "side": "R"
+    },
+    {
+      "number": 42,
+      "element_id": "ST19-EL-42",
+      "label": "GitHub repository row",
+      "x": 1010,
+      "y": 758,
+      "badge_x": 1377,
+      "badge_y": 758,
+      "side": "R"
+    },
+    {
+      "number": 43,
+      "element_id": "ST19-EL-43",
+      "label": "Open repository link action",
+      "x": 1190,
+      "y": 758,
+      "badge_x": 1377,
+      "badge_y": 783,
+      "side": "R"
+    },
+    {
+      "number": 44,
+      "element_id": "ST19-EL-44",
+      "label": "Cloud preview row",
+      "x": 1015,
+      "y": 817,
+      "badge_x": 1377,
+      "badge_y": 817,
+      "side": "R"
+    },
+    {
+      "number": 45,
+      "element_id": "ST19-EL-45",
+      "label": "Open demo action",
+      "x": 1190,
+      "y": 817,
+      "badge_x": 1377,
+      "badge_y": 842,
+      "side": "R"
+    },
+    {
+      "number": 46,
+      "element_id": "ST19-EL-46",
+      "label": "Technical report row and download action",
+      "x": 1012,
+      "y": 872,
+      "badge_x": 1377,
+      "badge_y": 872,
+      "side": "R"
+    },
+    {
+      "number": 47,
+      "element_id": "ST19-EL-47",
+      "label": "Submission preview image",
+      "x": 1010,
+      "y": 956,
+      "badge_x": 1377,
+      "badge_y": 956,
+      "side": "R"
+    },
+    {
+      "number": 48,
+      "element_id": "ST19-EL-48",
+      "label": "Skill index icon",
+      "x": 64,
+      "y": 1137,
+      "badge_x": 24,
+      "badge_y": 1137,
+      "side": "L"
+    },
+    {
+      "number": 49,
+      "element_id": "ST19-EL-49",
+      "label": "Skill index title and change summary",
+      "x": 332,
+      "y": 1137,
+      "badge_x": 24,
+      "badge_y": 1162,
+      "side": "L"
+    },
+    {
+      "number": 50,
+      "element_id": "ST19-EL-50",
+      "label": "Skill trend chart",
+      "x": 627,
+      "y": 1137,
+      "badge_x": 1377,
+      "badge_y": 1137,
+      "side": "R"
+    },
+    {
+      "number": 51,
+      "element_id": "ST19-EL-51",
+      "label": "Completion confirmation icon",
+      "x": 64,
+      "y": 1241,
+      "badge_x": 24,
+      "badge_y": 1241,
+      "side": "L"
+    },
+    {
+      "number": 52,
+      "element_id": "ST19-EL-52",
+      "label": "Completion title and supporting text",
+      "x": 270,
+      "y": 1241,
+      "badge_x": 24,
+      "badge_y": 1266,
+      "side": "L"
+    },
+    {
+      "number": 53,
+      "element_id": "ST19-EL-53",
+      "label": "Return to learning progress button",
+      "x": 690,
+      "y": 1248,
+      "badge_x": 1377,
+      "badge_y": 1248,
+      "side": "R"
+    },
+    {
+      "number": 54,
+      "element_id": "ST19-EL-54",
+      "label": "Next assignment button",
+      "x": 1020,
+      "y": 1248,
+      "badge_x": 1377,
+      "badge_y": 1273,
+      "side": "R"
+    },
+    {
+      "number": 55,
+      "element_id": "ST19-EL-55",
+      "label": "Footer brand and description",
+      "x": 170,
+      "y": 1392,
+      "badge_x": 24,
+      "badge_y": 1392,
+      "side": "L"
+    },
+    {
+      "number": 56,
+      "element_id": "ST19-EL-56",
+      "label": "Footer certification and trust badges",
+      "x": 230,
+      "y": 1464,
+      "badge_x": 24,
+      "badge_y": 1464,
+      "side": "L"
+    },
+    {
+      "number": 57,
+      "element_id": "ST19-EL-57",
+      "label": "Footer learning, community, and support link groups",
+      "x": 840,
+      "y": 1390,
+      "badge_x": 1377,
+      "badge_y": 1390,
+      "side": "R"
+    },
+    {
+      "number": 58,
+      "element_id": "ST19-EL-58",
+      "label": "Copyright and platform attribution",
+      "x": 1050,
+      "y": 1562,
+      "badge_x": 1377,
+      "badge_y": 1562,
+      "side": "R"
+    }
+  ]
+}

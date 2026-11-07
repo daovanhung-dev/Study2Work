@@ -925,37 +925,17 @@
       "subcontexts": {
         "study-web": {
           "mode": "DEEP",
-          "status": "SOURCE_BACKED_SKELETON",
+          "status": "UNWIRED",
           "entry": ".agents/web-work/study/AGENTS.md",
           "index": ".agents/web-work/study/INDEX.md",
           "pages": [
-            ".agents/web-work/study/architecture.md",
-            ".agents/web-work/study/api.md",
-          ".agents/web-study/design.md",
-            ".agents/web-work/study/tests.md",
-            ".agents/web-work/study/workflows/README.md"
+            ".agents/web-study/design.md"
           ],
           "sourceRoots": [
             "apps/study-client"
           ],
-          "trackedRoots": [
-            "apps/study-client/src",
-            "apps/study-client/package.json",
-            "apps/study-client/vite.config.ts",
-            "apps/study-client/tsconfig.json"
-          ],
-          "requiredSourcePaths": [
-            "apps/study-client/src/main.ts",
-            "apps/study-client/src/App.vue",
-            "apps/study-client/src/app/router/index.ts",
-            "apps/study-client/src/pages/HomePage.vue",
-            "apps/study-client/src/shared/api/http.ts",
-            "apps/study-client/src/shared/api/envelope.ts",
-            "apps/study-client/src/shared/api/envelope.test.ts",
-            "apps/study-client/src/styles/main.css",
-            "apps/study-client/package.json",
-            "apps/study-client/vite.config.ts"
-          ]
+          "trackedRoots": [],
+          "requiredSourcePaths": []
         },
         "work-web": {
           "mode": "DEEP",

@@ -1,0 +1,294 @@
+{
+  "screen_id": "AD-21",
+  "source_image": "screen.png",
+  "coordinate_space": {
+    "width": 1425,
+    "height": 1600,
+    "origin": "top-left",
+    "units": "source pixels"
+  },
+  "markers": [
+    {
+      "id": 1,
+      "label": "Study2Work / LMS / Admin Portal brand",
+      "x": 252,
+      "y": 35
+    },
+    {
+      "id": 2,
+      "label": "Shell navigation — Tổng quan",
+      "x": 306,
+      "y": 60
+    },
+    {
+      "id": 3,
+      "label": "Shell navigation — Người dùng",
+      "x": 427,
+      "y": 60
+    },
+    {
+      "id": 4,
+      "label": "Shell navigation — Khóa học & Nội dung",
+      "x": 610,
+      "y": 60
+    },
+    {
+      "id": 5,
+      "label": "Shell navigation — Kiểm duyệt",
+      "x": 781,
+      "y": 60
+    },
+    {
+      "id": 6,
+      "label": "Shell navigation — Báo cáo",
+      "x": 887,
+      "y": 60
+    },
+    {
+      "id": 7,
+      "label": "System Normal status badge",
+      "x": 1113,
+      "y": 60
+    },
+    {
+      "id": 8,
+      "label": "Header notification bell and unread dot",
+      "x": 1161,
+      "y": 60
+    },
+    {
+      "id": 9,
+      "label": "Admin identity / role / avatar",
+      "x": 1400,
+      "y": 60
+    },
+    {
+      "id": 10,
+      "label": "Global breadcrumb — Hệ thống / Quản trị trung tâm / Không gian làm việc",
+      "x": 19,
+      "y": 86
+    },
+    {
+      "id": 11,
+      "label": "RBAC assurance label",
+      "x": 1401,
+      "y": 86
+    },
+    {
+      "id": 12,
+      "label": "Local notification breadcrumb",
+      "x": 20,
+      "y": 149
+    },
+    {
+      "id": 13,
+      "label": "Return to list AD-19 anchor",
+      "x": 1402,
+      "y": 164
+    },
+    {
+      "id": 14,
+      "label": "Screen ID badge and candidate route",
+      "x": 608,
+      "y": 181
+    },
+    {
+      "id": 15,
+      "label": "Page heading",
+      "x": 858,
+      "y": 237
+    },
+    {
+      "id": 16,
+      "label": "Supporting description",
+      "x": 799,
+      "y": 281
+    },
+    {
+      "id": 17,
+      "label": "Admin permission environment badge",
+      "x": 1402,
+      "y": 271
+    },
+    {
+      "id": 18,
+      "label": "Technical identity panel heading/icon",
+      "x": 485,
+      "y": 355
+    },
+    {
+      "id": 19,
+      "label": "Active protection badge",
+      "x": 1375,
+      "y": 365
+    },
+    {
+      "id": 20,
+      "label": "Notification ID card",
+      "x": 472,
+      "y": 520
+    },
+    {
+      "id": 21,
+      "label": "Operation ID card",
+      "x": 914,
+      "y": 520
+    },
+    {
+      "id": 22,
+      "label": "Publishing status card",
+      "x": 1354,
+      "y": 520
+    },
+    {
+      "id": 23,
+      "label": "Missing-detail / locked-actions notice",
+      "x": 1370,
+      "y": 710
+    },
+    {
+      "id": 24,
+      "label": "Notification content panel heading/icon",
+      "x": 795,
+      "y": 822
+    },
+    {
+      "id": 25,
+      "label": "Static-view badge",
+      "x": 642,
+      "y": 804
+    },
+    {
+      "id": 26,
+      "label": "Notification title label and placeholder field",
+      "x": 778,
+      "y": 920
+    },
+    {
+      "id": 27,
+      "label": "Channel label / placeholder field",
+      "x": 807,
+      "y": 976
+    },
+    {
+      "id": 28,
+      "label": "In-App channel chip",
+      "x": 640,
+      "y": 1004
+    },
+    {
+      "id": 29,
+      "label": "Email channel chip",
+      "x": 800,
+      "y": 1004
+    },
+    {
+      "id": 30,
+      "label": "Content label and placeholder area",
+      "x": 778,
+      "y": 1088
+    },
+    {
+      "id": 31,
+      "label": "Locked-content safety note",
+      "x": 778,
+      "y": 1218
+    },
+    {
+      "id": 32,
+      "label": "Recipient label and placeholder field",
+      "x": 778,
+      "y": 1315
+    },
+    {
+      "id": 33,
+      "label": "Disabled Update draft button",
+      "x": 538,
+      "y": 1394
+    },
+    {
+      "id": 34,
+      "label": "Delivery progress panel heading/icon",
+      "x": 1372,
+      "y": 813
+    },
+    {
+      "id": 35,
+      "label": "In-App channel delivery card/status",
+      "x": 1356,
+      "y": 871
+    },
+    {
+      "id": 36,
+      "label": "In-App completion bar and 0/0 row",
+      "x": 872,
+      "y": 958
+    },
+    {
+      "id": 37,
+      "label": "Email channel delivery card/status",
+      "x": 1355,
+      "y": 1017
+    },
+    {
+      "id": 38,
+      "label": "Email queue bar/status row",
+      "x": 872,
+      "y": 1112
+    },
+    {
+      "id": 39,
+      "label": "Disabled Cancel release button",
+      "x": 1368,
+      "y": 1183
+    },
+    {
+      "id": 40,
+      "label": "Cancel action safety note",
+      "x": 1367,
+      "y": 1230
+    },
+    {
+      "id": 41,
+      "label": "SH-07 operation portal card heading/icon",
+      "x": 1367,
+      "y": 1323
+    },
+    {
+      "id": 42,
+      "label": "SH-07 handoff description",
+      "x": 1370,
+      "y": 1417
+    },
+    {
+      "id": 43,
+      "label": "Disabled SH-07 portal link",
+      "x": 1370,
+      "y": 1457
+    },
+    {
+      "id": 44,
+      "label": "Footer copyright and system label",
+      "x": 407,
+      "y": 1570
+    },
+    {
+      "id": 45,
+      "label": "Footer privacy policy link",
+      "x": 785,
+      "y": 1570
+    },
+    {
+      "id": 46,
+      "label": "Footer RBAC standards link",
+      "x": 987,
+      "y": 1570
+    },
+    {
+      "id": 47,
+      "label": "Footer technical support link",
+      "x": 1218,
+      "y": 1570
+    }
+  ]
+}

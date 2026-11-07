@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2704" height="3200" viewBox="0 0 2704 3200">
+<title>AD-24 numbered element markers</title>
+<desc>Transparent marker overlay at two times source-pixel coordinates.</desc>
+<g font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" text-anchor="middle" dominant-baseline="central">
+<g id="marker-1" aria-label="1: Study2Work brand / portal mark"><circle cx="32" cy="94" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="32" y="95" fill="#003b9e">1</text></g>
+<g id="marker-2" aria-label="2: Navigation: Tổng quan"><circle cx="676" cy="100" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="676" y="101" fill="#003b9e">2</text></g>
+<g id="marker-3" aria-label="3: Navigation: Người dùng"><circle cx="916" cy="100" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="916" y="101" fill="#003b9e">3</text></g>
+<g id="marker-4" aria-label="4: Navigation: Khóa học &amp; Nội dung"><circle cx="1270" cy="100" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1270" y="101" fill="#003b9e">4</text></g>
+<g id="marker-5" aria-label="5: Navigation: Kiểm duyệt"><circle cx="1508" cy="100" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1508" y="101" fill="#003b9e">5</text></g>
+<g id="marker-6" aria-label="6: Navigation: Báo cáo"><circle cx="1720" cy="100" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1720" y="101" fill="#003b9e">6</text></g>
+<g id="marker-7" aria-label="7: System Normal status badge"><circle cx="2096" cy="100" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2096" y="101" fill="#003b9e">7</text></g>
+<g id="marker-8" aria-label="8: Notifications bell"><circle cx="2216" cy="100" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2216" y="101" fill="#003b9e">8</text></g>
+<g id="marker-9" aria-label="9: Admin identity / avatar"><circle cx="2676" cy="98" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2676" y="99" fill="#003b9e">9</text></g>
+<g id="marker-10" aria-label="10: Global breadcrumb"><circle cx="32" cy="160" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="32" y="161" fill="#003b9e">10</text></g>
+<g id="marker-11" aria-label="11: RBAC verification badge"><circle cx="2672" cy="160" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2672" y="161" fill="#003b9e">11</text></g>
+<g id="marker-12" aria-label="12: Local report breadcrumb"><circle cx="36" cy="284" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="36" y="285" fill="#003b9e">12</text></g>
+<g id="marker-13" aria-label="13: Screen ID badge: AD-24"><circle cx="40" cy="348" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="40" y="349" fill="#003b9e">13</text></g>
+<g id="marker-14" aria-label="14: Data-contract status badge"><circle cx="882" cy="348" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="882" y="349" fill="#003b9e">14</text></g>
+<g id="marker-15" aria-label="15: Screen title"><circle cx="32" cy="414" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="32" y="415" fill="#003b9e">15</text></g>
+<g id="marker-16" aria-label="16: Screen description"><circle cx="1708" cy="572" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1708" y="573" fill="#003b9e">16</text></g>
+<g id="marker-17" aria-label="17: Export-to-AD-25 CTA"><circle cx="2668" cy="454" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2668" y="455" fill="#003b9e">17</text></g>
+<g id="marker-18" aria-label="18: From-date control"><circle cx="714" cy="852" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="714" y="853" fill="#003b9e">18</text></g>
+<g id="marker-19" aria-label="19: To-date control"><circle cx="1386" cy="852" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1386" y="853" fill="#003b9e">19</text></g>
+<g id="marker-20" aria-label="20: Learner-segment select"><circle cx="2056" cy="852" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2056" y="853" fill="#003b9e">20</text></g>
+<g id="marker-21" aria-label="21: Apply-filters button"><circle cx="2458" cy="852" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2458" y="853" fill="#003b9e">21</text></g>
+<g id="marker-22" aria-label="22: Reset-filters button"><circle cx="2548" cy="852" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2548" y="853" fill="#003b9e">22</text></g>
+<g id="marker-23" aria-label="23: Active-learners KPI card"><circle cx="654" cy="1320" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="654" y="1321" fill="#003b9e">23</text></g>
+<g id="marker-24" aria-label="24: Completion-rate KPI card"><circle cx="1306" cy="1320" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1306" y="1321" fill="#003b9e">24</text></g>
+<g id="marker-25" aria-label="25: Community-interaction-hours KPI card"><circle cx="1954" cy="1320" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1954" y="1321" fill="#003b9e">25</text></g>
+<g id="marker-26" aria-label="26: Overall-satisfaction KPI card"><circle cx="2604" cy="1320" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2604" y="1321" fill="#003b9e">26</text></g>
+<g id="marker-27" aria-label="27: Visualization / empty-chart panel"><circle cx="2604" cy="1440" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2604" y="1441" fill="#003b9e">27</text></g>
+<g id="marker-28" aria-label="28: Empty-chart icon"><circle cx="1452" cy="1676" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1452" y="1677" fill="#003b9e">28</text></g>
+<g id="marker-29" aria-label="29: Empty-chart title"><circle cx="1820" cy="1860" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1820" y="1861" fill="#003b9e">29</text></g>
+<g id="marker-30" aria-label="30: Empty-chart explanatory copy"><circle cx="2072" cy="2012" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2072" y="2013" fill="#003b9e">30</text></g>
+<g id="marker-31" aria-label="31: Refresh-query button"><circle cx="1342" cy="2220" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1342" y="2221" fill="#003b9e">31</text></g>
+<g id="marker-32" aria-label="32: Data-contract version badge"><circle cx="1744" cy="2220" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1744" y="2221" fill="#003b9e">32</text></g>
+<g id="marker-33" aria-label="33: Planned-metrics section heading/icon"><circle cx="880" cy="2504" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="880" y="2505" fill="#003b9e">33</text></g>
+<g id="marker-34" aria-label="34: Planned-metrics validation-count badge"><circle cx="2610" cy="2504" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2610" y="2505" fill="#003b9e">34</text></g>
+<g id="marker-35" aria-label="35: DAU/MAU specification card"><circle cx="1308" cy="2724" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1308" y="2725" fill="#003b9e">35</text></g>
+<g id="marker-36" aria-label="36: Mentor interaction-hours specification card"><circle cx="2552" cy="2724" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2552" y="2725" fill="#003b9e">36</text></g>
+<g id="marker-37" aria-label="37: Employment-readiness specification card"><circle cx="1308" cy="2940" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1308" y="2941" fill="#003b9e">37</text></g>
+<g id="marker-38" aria-label="38: Partner NPS specification card"><circle cx="2552" cy="2940" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2552" y="2941" fill="#003b9e">38</text></g>
+<g id="marker-39" aria-label="39: Footer copyright"><circle cx="760" cy="3114" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="760" y="3115" fill="#003b9e">39</text></g>
+<g id="marker-40" aria-label="40: Footer privacy link"><circle cx="1880" cy="3114" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="1880" y="3115" fill="#003b9e">40</text></g>
+<g id="marker-41" aria-label="41: Footer RBAC standards link"><circle cx="2302" cy="3114" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2302" y="3115" fill="#003b9e">41</text></g>
+<g id="marker-42" aria-label="42: Footer support link"><circle cx="2676" cy="3114" r="22" fill="#ffffff" fill-opacity="0.97" stroke="#004ac6" stroke-width="4"/><text x="2676" y="3115" fill="#003b9e">42</text></g>
+</g>
+</svg>

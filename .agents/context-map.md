@@ -189,18 +189,16 @@ Study2Work/
 
 #### `web-work/study-web` subcontext
 
-- Source root: `apps/study-client/`
-- Status: `SOURCE_BACKED_SKELETON`
+- Source root: `apps/study-client/` (documentation/assets plus ignored compiled `dist` with root `/` home route; editable app source/package manifest and Student routes absent)
+- Status: `UNWIRED`
 - Entry: [`.agents/web-work/study/AGENTS.md`](web-work/study/AGENTS.md)
 - Index: [`.agents/web-work/study/INDEX.md`](web-work/study/INDEX.md)
-- Stack: Vue 3 + Vite + Vue Router + Pinia + Vue Query + Zod.
 - Pages:
   - [`.agents/web-study/design.md`](web-study/design.md) — mandatory Study Web
     visual, interaction and accessibility target.
-  - [`.agents/web-work/study/architecture.md`](web-work/study/architecture.md)
-  - [`.agents/web-work/study/api.md`](web-work/study/api.md)
-  - [`.agents/web-work/study/tests.md`](web-work/study/tests.md)
-  - [`.agents/web-work/study/workflows/README.md`](web-work/study/workflows/README.md)
+
+Do not infer a framework or runtime behavior from missing app source. Recheck
+`apps/study-client/` when a task depends on implementation details.
 
 #### `web-work/work-web` subcontext
 
@@ -286,8 +284,8 @@ worklog contract which is implemented by [`.agents/worklog/README.md`](worklog/R
 Scope workflow pages refine the common workflow and side effects:
 
 - Mobile: [`mobile-work/workflows/README.md`](mobile-work/workflows/README.md)
-- Web: [`web-work/workflows/README.md`](web-work/workflows/README.md) and
-  [`web-work/study/workflows/README.md`](web-work/study/workflows/README.md)
+- Web: [`web-work/workflows/README.md`](web-work/workflows/README.md). Study Web
+  has no app-specific workflow page while its application source is absent.
 - Work Server: [`server-work/workflows/README.md`](server-work/workflows/README.md)
 - Study Server: [`server-study/workflows/README.md`](server-study/workflows/README.md)
 - AI Server: [`server-ai/workflows/README.md`](server-ai/workflows/README.md)

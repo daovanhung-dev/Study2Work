@@ -1,0 +1,398 @@
+{
+  "screen_id": "ST-16",
+  "source": {
+    "file": "screen.png",
+    "width": 846,
+    "height": 1600,
+    "sha256": "aa6a8e5326eab69ea6d224b45be4c7d3b880ecf0e55c9ac20647bd0baa15fcb7",
+    "canvas_offset_x": 81,
+    "canvas_offset_y": 0
+  },
+  "annotation_canvas": {
+    "width": 1008,
+    "height": 1600,
+    "scale": 2
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST16-EL-01",
+      "label": "Study2Work logo and portal brand",
+      "x": 38,
+      "y": 22,
+      "badge_x": 15,
+      "badge_y": 22,
+      "side": "L"
+    },
+    {
+      "number": 2,
+      "element_id": "ST16-EL-02",
+      "label": "Global search input",
+      "x": 235,
+      "y": 22,
+      "badge_x": 41,
+      "badge_y": 22,
+      "side": "L"
+    },
+    {
+      "number": 3,
+      "element_id": "ST16-EL-03",
+      "label": "Primary navigation links",
+      "x": 455,
+      "y": 22,
+      "badge_x": 942,
+      "badge_y": 22,
+      "side": "R"
+    },
+    {
+      "number": 4,
+      "element_id": "ST16-EL-04",
+      "label": "Notifications control",
+      "x": 724,
+      "y": 22,
+      "badge_x": 968,
+      "badge_y": 22,
+      "side": "R"
+    },
+    {
+      "number": 5,
+      "element_id": "ST16-EL-05",
+      "label": "Student profile control",
+      "x": 793,
+      "y": 22,
+      "badge_x": 994,
+      "badge_y": 22,
+      "side": "R"
+    },
+    {
+      "number": 6,
+      "element_id": "ST16-EL-06",
+      "label": "Breadcrumb trail",
+      "x": 145,
+      "y": 64,
+      "badge_x": 15,
+      "badge_y": 64,
+      "side": "L"
+    },
+    {
+      "number": 7,
+      "element_id": "ST16-EL-07",
+      "label": "Pass/result status badge",
+      "x": 150,
+      "y": 105,
+      "badge_x": 15,
+      "badge_y": 105,
+      "side": "L"
+    },
+    {
+      "number": 8,
+      "element_id": "ST16-EL-08",
+      "label": "Skill category eyebrow",
+      "x": 174,
+      "y": 157,
+      "badge_x": 15,
+      "badge_y": 157,
+      "side": "L"
+    },
+    {
+      "number": 9,
+      "element_id": "ST16-EL-09",
+      "label": "Quiz result title",
+      "x": 210,
+      "y": 184,
+      "badge_x": 942,
+      "badge_y": 184,
+      "side": "R"
+    },
+    {
+      "number": 10,
+      "element_id": "ST16-EL-10",
+      "label": "Duration, submission time and attempt ordinal",
+      "x": 184,
+      "y": 252,
+      "badge_x": 15,
+      "badge_y": 252,
+      "side": "L"
+    },
+    {
+      "number": 11,
+      "element_id": "ST16-EL-11",
+      "label": "Next-lesson unlock claim card",
+      "x": 209,
+      "y": 305,
+      "badge_x": 15,
+      "badge_y": 305,
+      "side": "L"
+    },
+    {
+      "number": 12,
+      "element_id": "ST16-EL-12",
+      "label": "Score gauge, percent and answered denominator",
+      "x": 690,
+      "y": 200,
+      "badge_x": 968,
+      "badge_y": 200,
+      "side": "R"
+    },
+    {
+      "number": 13,
+      "element_id": "ST16-EL-13",
+      "label": "Points score",
+      "x": 627,
+      "y": 279,
+      "badge_x": 942,
+      "badge_y": 279,
+      "side": "R"
+    },
+    {
+      "number": 14,
+      "element_id": "ST16-EL-14",
+      "label": "Grade/GPA label",
+      "x": 752,
+      "y": 279,
+      "badge_x": 968,
+      "badge_y": 279,
+      "side": "R"
+    },
+    {
+      "number": 15,
+      "element_id": "ST16-EL-15",
+      "label": "Skill analysis heading",
+      "x": 178,
+      "y": 360,
+      "badge_x": 15,
+      "badge_y": 360,
+      "side": "L"
+    },
+    {
+      "number": 16,
+      "element_id": "ST16-EL-16",
+      "label": "Skill framework/data note",
+      "x": 678,
+      "y": 360,
+      "badge_x": 942,
+      "badge_y": 360,
+      "side": "R"
+    },
+    {
+      "number": 17,
+      "element_id": "ST16-EL-17",
+      "label": "Hook Core skill card",
+      "x": 154,
+      "y": 459,
+      "badge_x": 15,
+      "badge_y": 459,
+      "side": "L"
+    },
+    {
+      "number": 18,
+      "element_id": "ST16-EL-18",
+      "label": "Performance and memory skill card",
+      "x": 427,
+      "y": 459,
+      "badge_x": 942,
+      "badge_y": 459,
+      "side": "R"
+    },
+    {
+      "number": 19,
+      "element_id": "ST16-EL-19",
+      "label": "Next-gen React skill card",
+      "x": 699,
+      "y": 459,
+      "badge_x": 968,
+      "badge_y": 459,
+      "side": "R"
+    },
+    {
+      "number": 20,
+      "element_id": "ST16-EL-20",
+      "label": "Answer review heading",
+      "x": 172,
+      "y": 600,
+      "badge_x": 15,
+      "badge_y": 600,
+      "side": "L"
+    },
+    {
+      "number": 21,
+      "element_id": "ST16-EL-21",
+      "label": "All questions filter",
+      "x": 548,
+      "y": 602,
+      "badge_x": 942,
+      "badge_y": 602,
+      "side": "R"
+    },
+    {
+      "number": 22,
+      "element_id": "ST16-EL-22",
+      "label": "Correct answers filter",
+      "x": 650,
+      "y": 602,
+      "badge_x": 41,
+      "badge_y": 602,
+      "side": "L"
+    },
+    {
+      "number": 23,
+      "element_id": "ST16-EL-23",
+      "label": "Needs review filter",
+      "x": 748,
+      "y": 602,
+      "badge_x": 968,
+      "badge_y": 602,
+      "side": "R"
+    },
+    {
+      "number": 24,
+      "element_id": "ST16-EL-24",
+      "label": "Question 14 status, topic and difficulty",
+      "x": 105,
+      "y": 661,
+      "badge_x": 15,
+      "badge_y": 661,
+      "side": "L"
+    },
+    {
+      "number": 25,
+      "element_id": "ST16-EL-25",
+      "label": "Question 14 prompt",
+      "x": 356,
+      "y": 701,
+      "badge_x": 942,
+      "badge_y": 701,
+      "side": "R"
+    },
+    {
+      "number": 26,
+      "element_id": "ST16-EL-26",
+      "label": "Question 14 answer options and selected/correct state",
+      "x": 408,
+      "y": 756,
+      "badge_x": 15,
+      "badge_y": 756,
+      "side": "L"
+    },
+    {
+      "number": 27,
+      "element_id": "ST16-EL-27",
+      "label": "Question 14 instructor explanation",
+      "x": 405,
+      "y": 858,
+      "badge_x": 942,
+      "badge_y": 858,
+      "side": "R"
+    },
+    {
+      "number": 28,
+      "element_id": "ST16-EL-28",
+      "label": "Question 19 status and topic",
+      "x": 110,
+      "y": 955,
+      "badge_x": 15,
+      "badge_y": 955,
+      "side": "L"
+    },
+    {
+      "number": 29,
+      "element_id": "ST16-EL-29",
+      "label": "Question 19 prompt",
+      "x": 340,
+      "y": 1005,
+      "badge_x": 942,
+      "badge_y": 1005,
+      "side": "R"
+    },
+    {
+      "number": 30,
+      "element_id": "ST16-EL-30",
+      "label": "Question 19 selected incorrect answer",
+      "x": 401,
+      "y": 1083,
+      "badge_x": 15,
+      "badge_y": 1083,
+      "side": "L"
+    },
+    {
+      "number": 31,
+      "element_id": "ST16-EL-31",
+      "label": "Question 19 correct answer and explanation",
+      "x": 401,
+      "y": 1142,
+      "badge_x": 942,
+      "badge_y": 1142,
+      "side": "R"
+    },
+    {
+      "number": 32,
+      "element_id": "ST16-EL-32",
+      "label": "Question 19 instructor feedback/video reference",
+      "x": 403,
+      "y": 1215,
+      "badge_x": 942,
+      "badge_y": 1215,
+      "side": "R"
+    },
+    {
+      "number": 33,
+      "element_id": "ST16-EL-33",
+      "label": "Next-module recommendation panel",
+      "x": 398,
+      "y": 1352,
+      "badge_x": 15,
+      "badge_y": 1352,
+      "side": "L"
+    },
+    {
+      "number": 34,
+      "element_id": "ST16-EL-34",
+      "label": "Download PDF action",
+      "x": 605,
+      "y": 1322,
+      "badge_x": 942,
+      "badge_y": 1322,
+      "side": "R"
+    },
+    {
+      "number": 35,
+      "element_id": "ST16-EL-35",
+      "label": "Review-course-outline action",
+      "x": 703,
+      "y": 1322,
+      "badge_x": 968,
+      "badge_y": 1322,
+      "side": "R"
+    },
+    {
+      "number": 36,
+      "element_id": "ST16-EL-36",
+      "label": "Continue to next lesson action",
+      "x": 728,
+      "y": 1370,
+      "badge_x": 942,
+      "badge_y": 1370,
+      "side": "R"
+    },
+    {
+      "number": 37,
+      "element_id": "ST16-EL-37",
+      "label": "Footer brand and certification badges",
+      "x": 166,
+      "y": 1478,
+      "badge_x": 15,
+      "badge_y": 1478,
+      "side": "L"
+    },
+    {
+      "number": 38,
+      "element_id": "ST16-EL-38",
+      "label": "Footer navigation and legal links",
+      "x": 660,
+      "y": 1477,
+      "badge_x": 942,
+      "badge_y": 1477,
+      "side": "R"
+    }
+  ]
+}

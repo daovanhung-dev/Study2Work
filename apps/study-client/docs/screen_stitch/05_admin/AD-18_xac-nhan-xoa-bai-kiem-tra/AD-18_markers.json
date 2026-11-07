@@ -1,0 +1,252 @@
+{
+  "screen_id": "AD-18",
+  "source_image": "screen.png",
+  "coordinate_space": {
+    "width": 1600,
+    "height": 1442,
+    "origin": "top-left",
+    "units": "source pixels"
+  },
+  "markers": [
+    {
+      "id": 1,
+      "label": "Study2Work LMS/Admin brand",
+      "x": 16,
+      "y": 36
+    },
+    {
+      "id": 2,
+      "label": "Shell navigation — Tổng quan",
+      "x": 355,
+      "y": 61
+    },
+    {
+      "id": 3,
+      "label": "Shell navigation — Người dùng",
+      "x": 490,
+      "y": 61
+    },
+    {
+      "id": 4,
+      "label": "Shell navigation — Khóa học & Nội dung",
+      "x": 660,
+      "y": 61
+    },
+    {
+      "id": 5,
+      "label": "Shell navigation — Kiểm duyệt",
+      "x": 856,
+      "y": 61
+    },
+    {
+      "id": 6,
+      "label": "Shell navigation — Báo cáo",
+      "x": 983,
+      "y": 61
+    },
+    {
+      "id": 7,
+      "label": "System Normal status copy (static)",
+      "x": 1152,
+      "y": 61
+    },
+    {
+      "id": 8,
+      "label": "Notifications button (no handler)",
+      "x": 1295,
+      "y": 60
+    },
+    {
+      "id": 9,
+      "label": "Admin identity and avatar (static)",
+      "x": 1584,
+      "y": 61
+    },
+    {
+      "id": 10,
+      "label": "Global breadcrumb",
+      "x": 18,
+      "y": 95
+    },
+    {
+      "id": 11,
+      "label": "RBAC assurance copy (static)",
+      "x": 1585,
+      "y": 95
+    },
+    {
+      "id": 12,
+      "label": "Local breadcrumb — Quản trị khảo thí",
+      "x": 130,
+      "y": 171
+    },
+    {
+      "id": 13,
+      "label": "Local breadcrumb — Danh sách bài kiểm tra",
+      "x": 333,
+      "y": 171
+    },
+    {
+      "id": 14,
+      "label": "Current local breadcrumb — Xóa bài kiểm tra",
+      "x": 508,
+      "y": 171
+    },
+    {
+      "id": 15,
+      "label": "Return to AD-15 link (href #)",
+      "x": 1547,
+      "y": 247
+    },
+    {
+      "id": 16,
+      "label": "Danger context warning icon",
+      "x": 346,
+      "y": 390
+    },
+    {
+      "id": 17,
+      "label": "Risk-of-learning-data-impact label",
+      "x": 880,
+      "y": 328
+    },
+    {
+      "id": 18,
+      "label": "Confirmation title",
+      "x": 985,
+      "y": 393
+    },
+    {
+      "id": 19,
+      "label": "Target record section heading",
+      "x": 390,
+      "y": 462
+    },
+    {
+      "id": 20,
+      "label": "Selected-record status pill (placeholder)",
+      "x": 1218,
+      "y": 462
+    },
+    {
+      "id": 21,
+      "label": "Quiz title field and placeholder value",
+      "x": 640,
+      "y": 606
+    },
+    {
+      "id": 22,
+      "label": "Quiz identifier field and placeholder value",
+      "x": 920,
+      "y": 606
+    },
+    {
+      "id": 23,
+      "label": "Linked course field and placeholder value",
+      "x": 1200,
+      "y": 606
+    },
+    {
+      "id": 24,
+      "label": "Attempt safety notice icon",
+      "x": 350,
+      "y": 770
+    },
+    {
+      "id": 25,
+      "label": "Safety policy heading",
+      "x": 900,
+      "y": 715
+    },
+    {
+      "id": 26,
+      "label": "Attempt/history warning paragraph (static claim)",
+      "x": 1215,
+      "y": 803
+    },
+    {
+      "id": 27,
+      "label": "Unresolved Attempts Policy copy",
+      "x": 760,
+      "y": 878
+    },
+    {
+      "id": 28,
+      "label": "Hard-lock Read-Only copy",
+      "x": 1160,
+      "y": 878
+    },
+    {
+      "id": 29,
+      "label": "Audit reason label",
+      "x": 625,
+      "y": 927
+    },
+    {
+      "id": 30,
+      "label": "ISO-27001 policy copy (static claim)",
+      "x": 1217,
+      "y": 927
+    },
+    {
+      "id": 31,
+      "label": "Disabled audit reason textarea",
+      "x": 380,
+      "y": 1066
+    },
+    {
+      "id": 32,
+      "label": "Disabled field hint",
+      "x": 1221,
+      "y": 1095
+    },
+    {
+      "id": 33,
+      "label": "Safe return link (href #)",
+      "x": 685,
+      "y": 1138
+    },
+    {
+      "id": 34,
+      "label": "Permanent delete button (disabled; no handler)",
+      "x": 1225,
+      "y": 1138
+    },
+    {
+      "id": 35,
+      "label": "Data-protection banner copy (static claim)",
+      "x": 735,
+      "y": 1252
+    },
+    {
+      "id": 36,
+      "label": "ED-TECH compliance badge (static claim)",
+      "x": 1254,
+      "y": 1252
+    },
+    {
+      "id": 37,
+      "label": "Copyright and system label",
+      "x": 468,
+      "y": 1390
+    },
+    {
+      "id": 38,
+      "label": "Privacy policy footer link (href #)",
+      "x": 1090,
+      "y": 1390
+    },
+    {
+      "id": 39,
+      "label": "RBAC standards footer link (href #)",
+      "x": 1368,
+      "y": 1390
+    },
+    {
+      "id": 40,
+      "label": "Technical support footer link (href #)",
+      "x": 1584,
+      "y": 1390
+    }
+  ]
+}

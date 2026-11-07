@@ -6,7 +6,7 @@ Top-level scope: `apps/study-client/`, `apps/work-client/web/`
 
 | App | Entry | Index |
 |---|---|---|
-| Study Web / Vue | `study/AGENTS.md` | `study/INDEX.md` |
+| Study Web / app source absent | `study/AGENTS.md` | `study/INDEX.md` |
 | Work Web / React | `AGENTS.md` | `INDEX.md` |
 
 | Task | Page |
@@ -18,6 +18,8 @@ Top-level scope: `apps/study-client/`, `apps/work-client/web/`
 | Coding/test workflow | `workflows/README.md` |
 | Web/API DD | `createDD-markdown` trong `context-manifest.json` |
 
-Keep Vue Study Web and React Work Web patterns separate; inspect the exact app
-entrypoint before editing shared-looking code. Study Web details are in the
-`study/` subcontext.
+Study Web has no editable application source or package manifest. The current
+ignored `dist` bundle contains only a compiled `/` home route; it does not
+establish Student screen routes or serving/deployment behavior. Inspect the
+exact app entrypoint before editing; its current documentation/design context
+is in the `study/` subcontext. Work Web uses React.

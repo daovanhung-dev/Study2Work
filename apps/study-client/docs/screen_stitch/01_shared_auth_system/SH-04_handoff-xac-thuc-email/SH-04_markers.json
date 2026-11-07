@@ -1,74 +1,146 @@
 [
   {
     "number": 1,
+    "screen_id": "SH-04",
+    "element_id": "SH04-EL-01",
     "label": "Mã SH-04 và đường dẫn đề xuất",
     "x": 700,
-    "y": 102
+    "y": 102,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1600, "height": 1280 }
   },
   {
     "number": 2,
-    "label": "Các trạng thái mô phỏng trong bản mẫu",
+    "screen_id": "SH-04",
+    "element_id": "SH04-EL-02",
+    "label": "Các trạng thái mô phỏng trong bản mẫu (QA-only)",
     "x": 813,
-    "y": 103
+    "y": 103,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1600, "height": 1280 }
   },
   {
     "number": 3,
+    "screen_id": "SH-04",
+    "element_id": "SH04-EL-03",
     "label": "Biểu tượng và nhãn phản hồi API",
     "x": 890,
-    "y": 218
+    "y": 218,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1600, "height": 1280 }
   },
   {
     "number": 4,
+    "screen_id": "SH-04",
+    "element_id": "SH04-EL-04",
     "label": "Tiêu đề và phần giải thích kết quả",
     "x": 860,
-    "y": 323
+    "y": 323,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1600, "height": 1280 }
   },
   {
     "number": 5,
-    "label": "Giới hạn hiện tại: chưa có OTP, liên kết hoặc điểm cuối xác nhận",
+    "screen_id": "SH-04",
+    "element_id": "SH04-EL-05",
+    "label": "Giới hạn xác minh: chưa có OTP/link/endpoint",
     "x": 850,
-    "y": 453
+    "y": 453,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1600, "height": 1280 }
   },
   {
     "number": 6,
-    "label": "Nút điều hướng quay lại SH-02",
+    "screen_id": "SH-04",
+    "element_id": "SH04-EL-06",
+    "label": "Điều hướng quay lại SH-02",
     "x": 417,
-    "y": 737
+    "y": 737,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1600, "height": 1280 }
   },
   {
     "number": 7,
-    "label": "Nút sao chép lệnh mẫu chưa đúng hợp đồng",
+    "screen_id": "SH-04",
+    "element_id": "SH04-EL-07",
+    "label": "Nút sao chép lệnh mẫu không đúng hợp đồng",
     "x": 640,
-    "y": 735
+    "y": 735,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1600, "height": 1280 }
   },
   {
     "number": 8,
+    "screen_id": "SH-04",
+    "element_id": "SH04-EL-08",
     "label": "Thẻ tham chiếu hợp đồng API #02",
     "x": 1510,
-    "y": 216
+    "y": 216,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1600, "height": 1280 }
   },
   {
     "number": 9,
+    "screen_id": "SH-04",
+    "element_id": "SH04-EL-09",
     "label": "Các hàng trạng thái giao thức và xác minh",
     "x": 950,
-    "y": 280
+    "y": 280,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1600, "height": 1280 }
   },
   {
     "number": 10,
-    "label": "Khung JSON mô phỏng, không phải envelope thật",
+    "screen_id": "SH-04",
+    "element_id": "SH04-EL-10",
+    "label": "Khung JSON mock, không phải response API",
     "x": 1500,
-    "y": 576
+    "y": 576,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1600, "height": 1280 }
   },
   {
     "number": 11,
-    "label": "Ghi chú không giả lập đếm lùi hoặc ô nhập mã",
+    "screen_id": "SH-04",
+    "element_id": "SH04-EL-11",
+    "label": "Ghi chú quy tắc thiết kế/WCAG chưa kiểm định",
     "x": 1545,
-    "y": 1045
+    "y": 1045,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1600, "height": 1280 }
   },
   {
     "number": 12,
+    "screen_id": "SH-04",
+    "element_id": "SH04-EL-12",
     "label": "Chân trang mã màn hình và đường dẫn",
     "x": 1560,
-    "y": 1195
+    "y": 1195,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1600, "height": 1280 }
   }
 ]

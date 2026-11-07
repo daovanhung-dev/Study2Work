@@ -1,0 +1,368 @@
+[
+  {
+    "number": 1,
+    "x": 16,
+    "y": 62,
+    "label": "Study2Work Admin brand"
+  },
+  {
+    "number": 2,
+    "x": 355,
+    "y": 62,
+    "label": "Admin navigation: Tổng quan"
+  },
+  {
+    "number": 3,
+    "x": 480,
+    "y": 62,
+    "label": "Admin navigation: Người dùng"
+  },
+  {
+    "number": 4,
+    "x": 680,
+    "y": 62,
+    "label": "Active Admin navigation: Khóa học và Nội dung"
+  },
+  {
+    "number": 5,
+    "x": 845,
+    "y": 62,
+    "label": "Admin navigation: Kiểm duyệt"
+  },
+  {
+    "number": 6,
+    "x": 965,
+    "y": 62,
+    "label": "Admin navigation: Báo cáo"
+  },
+  {
+    "number": 7,
+    "x": 1158,
+    "y": 62,
+    "label": "Static SYSTEM NORMAL badge"
+  },
+  {
+    "number": 8,
+    "x": 1280,
+    "y": 62,
+    "label": "Notification button without handler"
+  },
+  {
+    "number": 9,
+    "x": 1546,
+    "y": 62,
+    "label": "Static Admin identity and avatar"
+  },
+  {
+    "number": 10,
+    "x": 18,
+    "y": 107,
+    "label": "Global breadcrumb trail"
+  },
+  {
+    "number": 11,
+    "x": 1579,
+    "y": 107,
+    "label": "Static RBAC assurance copy"
+  },
+  {
+    "number": 12,
+    "x": 50,
+    "y": 140,
+    "label": "Local breadcrumb: Quản trị đào tạo"
+  },
+  {
+    "number": 13,
+    "x": 220,
+    "y": 140,
+    "label": "Local breadcrumb: Quản lý bài học"
+  },
+  {
+    "number": 14,
+    "x": 365,
+    "y": 140,
+    "label": "Current breadcrumb: Chi tiết bài học"
+  },
+  {
+    "number": 15,
+    "x": 18,
+    "y": 213,
+    "label": "Static API ENDPOINT #83 workspace kicker"
+  },
+  {
+    "number": 16,
+    "x": 1555,
+    "y": 213,
+    "label": "Back to AD-12 link without route handler"
+  },
+  {
+    "number": 17,
+    "x": 55,
+    "y": 292,
+    "label": "Static AD-13 screen badge"
+  },
+  {
+    "number": 18,
+    "x": 355,
+    "y": 292,
+    "label": "Static Admin permission-mode badge"
+  },
+  {
+    "number": 19,
+    "x": 580,
+    "y": 326,
+    "label": "Page title: Hồ sơ chi tiết bài học quản trị"
+  },
+  {
+    "number": 20,
+    "x": 70,
+    "y": 412,
+    "label": "Page subtitle describing lesson/resources/learning setup"
+  },
+  {
+    "number": 21,
+    "x": 1540,
+    "y": 332,
+    "label": "Static sync status card: Chờ chọn bản ghi"
+  },
+  {
+    "number": 22,
+    "x": 75,
+    "y": 531,
+    "label": "Lesson information card heading"
+  },
+  {
+    "number": 23,
+    "x": 1025,
+    "y": 531,
+    "label": "Static record counter 0/1"
+  },
+  {
+    "number": 24,
+    "x": 85,
+    "y": 582,
+    "label": "No-selection decorative play icon"
+  },
+  {
+    "number": 25,
+    "x": 165,
+    "y": 597,
+    "label": "No-lesson-selected heading"
+  },
+  {
+    "number": 26,
+    "x": 165,
+    "y": 646,
+    "label": "Instruction and automatic technical/media extraction claim"
+  },
+  {
+    "number": 27,
+    "x": 165,
+    "y": 690,
+    "label": "Open AD-12 inline link without route handler"
+  },
+  {
+    "number": 28,
+    "x": 54,
+    "y": 799,
+    "label": "Lesson title metadata card"
+  },
+  {
+    "number": 29,
+    "x": 530,
+    "y": 799,
+    "label": "Lesson identifier metadata card"
+  },
+  {
+    "number": 30,
+    "x": 54,
+    "y": 884,
+    "label": "Parent course metadata card"
+  },
+  {
+    "number": 31,
+    "x": 530,
+    "y": 884,
+    "label": "Content type metadata card"
+  },
+  {
+    "number": 32,
+    "x": 54,
+    "y": 999,
+    "label": "Chapter order metadata card"
+  },
+  {
+    "number": 33,
+    "x": 530,
+    "y": 999,
+    "label": "Publication status metadata card"
+  },
+  {
+    "number": 34,
+    "x": 70,
+    "y": 1211,
+    "label": "Linked resources and assignments card heading"
+  },
+  {
+    "number": 35,
+    "x": 1017,
+    "y": 1211,
+    "label": "Static Payload: Void badge"
+  },
+  {
+    "number": 36,
+    "x": 82,
+    "y": 1275,
+    "label": "Resources empty-state decorative icon"
+  },
+  {
+    "number": 37,
+    "x": 157,
+    "y": 1280,
+    "label": "Resources empty-state heading"
+  },
+  {
+    "number": 38,
+    "x": 157,
+    "y": 1322,
+    "label": "Resource/quiz/media extraction explanatory copy"
+  },
+  {
+    "number": 39,
+    "x": 55,
+    "y": 1427,
+    "label": "Quiz count summary card"
+  },
+  {
+    "number": 40,
+    "x": 370,
+    "y": 1427,
+    "label": "Attachment count summary card"
+  },
+  {
+    "number": 41,
+    "x": 690,
+    "y": 1427,
+    "label": "Discussion status summary card"
+  },
+  {
+    "number": 42,
+    "x": 1085,
+    "y": 531,
+    "label": "Admin actions card heading"
+  },
+  {
+    "number": 43,
+    "x": 1085,
+    "y": 577,
+    "label": "Static RBAC action explanation"
+  },
+  {
+    "number": 44,
+    "x": 1085,
+    "y": 642,
+    "label": "Disabled navigation/action button for AD-14"
+  },
+  {
+    "number": 45,
+    "x": 1085,
+    "y": 736,
+    "label": "Static content-admin permission and course-ownership notice"
+  },
+  {
+    "number": 46,
+    "x": 1085,
+    "y": 812,
+    "label": "Data protection section heading"
+  },
+  {
+    "number": 47,
+    "x": 1542,
+    "y": 850,
+    "label": "Static concurrent-write-lock row"
+  },
+  {
+    "number": 48,
+    "x": 1542,
+    "y": 888,
+    "label": "Static Audit Log Level 1 row"
+  },
+  {
+    "number": 49,
+    "x": 1085,
+    "y": 1023,
+    "label": "Engagement metrics card heading"
+  },
+  {
+    "number": 50,
+    "x": 1544,
+    "y": 1019,
+    "label": "Static metrics status dot"
+  },
+  {
+    "number": 51,
+    "x": 1085,
+    "y": 1080,
+    "label": "Static aggregate-metrics loading message"
+  },
+  {
+    "number": 52,
+    "x": 1085,
+    "y": 1161,
+    "label": "Active learners metric and bar"
+  },
+  {
+    "number": 53,
+    "x": 1085,
+    "y": 1203,
+    "label": "Assignment submission rate metric and bar"
+  },
+  {
+    "number": 54,
+    "x": 1085,
+    "y": 1250,
+    "label": "Average rating metric and bar"
+  },
+  {
+    "number": 55,
+    "x": 1085,
+    "y": 1306,
+    "label": "Static Realtime SSE and Disconnected row"
+  },
+  {
+    "number": 56,
+    "x": 1085,
+    "y": 1415,
+    "label": "Display standards section heading"
+  },
+  {
+    "number": 57,
+    "x": 1550,
+    "y": 1491,
+    "label": "Static learner-isolation and no-mock-data claim"
+  },
+  {
+    "number": 58,
+    "x": 17,
+    "y": 1583,
+    "label": "Footer copyright and system description"
+  },
+  {
+    "number": 59,
+    "x": 875,
+    "y": 1582,
+    "label": "Privacy policy footer link"
+  },
+  {
+    "number": 60,
+    "x": 1105,
+    "y": 1582,
+    "label": "RBAC standards footer link"
+  },
+  {
+    "number": 61,
+    "x": 1372,
+    "y": 1582,
+    "label": "Technical support footer link"
+  }
+]

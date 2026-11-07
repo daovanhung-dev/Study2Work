@@ -1,0 +1,474 @@
+{
+  "screen_id": "GS-06",
+  "source_image": "screen.png",
+  "original_image": "screen.png",
+  "source_state": "static hand-off prototype with gated/empty view; resource list and runtime handlers are absent",
+  "image_size": {
+    "width": 1486,
+    "height": 1600
+  },
+  "annotation": {
+    "scale": 2,
+    "canvas_size": {
+      "width": 3132,
+      "height": 3200
+    },
+    "source_offset_canvas_px": {
+      "x": 80,
+      "y": 0
+    },
+    "gutter_width_canvas_px": 80,
+    "marker_style": {
+      "shape": "circle",
+      "fill": "#0B5F8A",
+      "text": "#FFFFFF",
+      "stroke": "#FFFFFF",
+      "diameter_canvas_px": 40,
+      "font_weight": 700
+    },
+    "leader_style": {
+      "stroke": "#0B5F8A",
+      "stroke_width_canvas_px": 2,
+      "scope": "gutter only"
+    }
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "GS06-EL-01",
+      "target": "Header brand and primary navigation group",
+      "target_center_source_px": {
+        "x": 420,
+        "y": 38
+      },
+      "side": "left",
+      "y_source": 38,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 76
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 76
+      }
+    },
+    {
+      "number": 2,
+      "element_id": "GS06-EL-02",
+      "target": "Login, register and profile-icon group",
+      "target_center_source_px": {
+        "x": 1316,
+        "y": 38
+      },
+      "side": "right",
+      "y_source": 38,
+      "marker_center_canvas_px": {
+        "x": 3104,
+        "y": 76
+      },
+      "leader_to_canvas_px": {
+        "x": 3052,
+        "y": 76
+      }
+    },
+    {
+      "number": 3,
+      "element_id": "GS06-EL-03",
+      "target": "Course route, mock-data and contract-status badges",
+      "target_center_source_px": {
+        "x": 492,
+        "y": 115
+      },
+      "side": "left",
+      "y_source": 115,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 230
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 230
+      }
+    },
+    {
+      "number": 4,
+      "element_id": "GS06-EL-04",
+      "target": "Course title and course-code/mentor subtitle",
+      "target_center_source_px": {
+        "x": 500,
+        "y": 178
+      },
+      "side": "left",
+      "y_source": 157,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 314
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 314
+      }
+    },
+    {
+      "number": 5,
+      "element_id": "GS06-EL-05",
+      "target": "V1 gated-security badge",
+      "target_center_source_px": {
+        "x": 1306,
+        "y": 157
+      },
+      "side": "right",
+      "y_source": 178,
+      "marker_center_canvas_px": {
+        "x": 3104,
+        "y": 356
+      },
+      "leader_to_canvas_px": {
+        "x": 3052,
+        "y": 356
+      }
+    },
+    {
+      "number": 6,
+      "element_id": "GS06-EL-06",
+      "target": "Course tab-navigation group",
+      "target_center_source_px": {
+        "x": 742,
+        "y": 270
+      },
+      "side": "right",
+      "y_source": 270,
+      "marker_center_canvas_px": {
+        "x": 3104,
+        "y": 540
+      },
+      "leader_to_canvas_px": {
+        "x": 3052,
+        "y": 540
+      }
+    },
+    {
+      "number": 7,
+      "element_id": "GS06-EL-07",
+      "target": "Gated/empty resource-state panel: shield, state label, heading and explanation",
+      "target_center_source_px": {
+        "x": 500,
+        "y": 602
+      },
+      "side": "left",
+      "y_source": 410,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 820
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 820
+      }
+    },
+    {
+      "number": 8,
+      "element_id": "GS06-EL-08",
+      "target": "State-inventory heading, count and guidance text",
+      "target_center_source_px": {
+        "x": 1227,
+        "y": 438
+      },
+      "side": "right",
+      "y_source": 438,
+      "marker_center_canvas_px": {
+        "x": 3104,
+        "y": 876
+      },
+      "leader_to_canvas_px": {
+        "x": 3052,
+        "y": 876
+      }
+    },
+    {
+      "number": 9,
+      "element_id": "GS06-EL-09",
+      "target": "Empty-state inventory card",
+      "target_center_source_px": {
+        "x": 1228,
+        "y": 569
+      },
+      "side": "left",
+      "y_source": 569,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1138
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1138
+      }
+    },
+    {
+      "number": 10,
+      "element_id": "GS06-EL-10",
+      "target": "List-state inventory card",
+      "target_center_source_px": {
+        "x": 1228,
+        "y": 702
+      },
+      "side": "right",
+      "y_source": 702,
+      "marker_center_canvas_px": {
+        "x": 3104,
+        "y": 1404
+      },
+      "leader_to_canvas_px": {
+        "x": 3052,
+        "y": 1404
+      }
+    },
+    {
+      "number": 11,
+      "element_id": "GS06-EL-11",
+      "target": "Disabled download button",
+      "target_center_source_px": {
+        "x": 501,
+        "y": 728
+      },
+      "side": "left",
+      "y_source": 728,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1456
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1456
+      }
+    },
+    {
+      "number": 12,
+      "element_id": "GS06-EL-12",
+      "target": "View-document/integrated-API button",
+      "target_center_source_px": {
+        "x": 501,
+        "y": 797
+      },
+      "side": "right",
+      "y_source": 797,
+      "marker_center_canvas_px": {
+        "x": 3104,
+        "y": 1594
+      },
+      "leader_to_canvas_px": {
+        "x": 3052,
+        "y": 1594
+      }
+    },
+    {
+      "number": 13,
+      "element_id": "GS06-EL-13",
+      "target": "Forbidden-state inventory card",
+      "target_center_source_px": {
+        "x": 1227,
+        "y": 846
+      },
+      "side": "left",
+      "y_source": 846,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1692
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1692
+      }
+    },
+    {
+      "number": 14,
+      "element_id": "GS06-EL-14",
+      "target": "No-fake-data and data-integrity callout",
+      "target_center_source_px": {
+        "x": 500,
+        "y": 921
+      },
+      "side": "right",
+      "y_source": 921,
+      "marker_center_canvas_px": {
+        "x": 3104,
+        "y": 1842
+      },
+      "leader_to_canvas_px": {
+        "x": 3052,
+        "y": 1842
+      }
+    },
+    {
+      "number": 15,
+      "element_id": "GS06-EL-15",
+      "target": "Expired-link inventory card",
+      "target_center_source_px": {
+        "x": 1227,
+        "y": 989
+      },
+      "side": "left",
+      "y_source": 989,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1978
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1978
+      }
+    },
+    {
+      "number": 16,
+      "element_id": "GS06-EL-16",
+      "target": "Technical-contract section heading and version badge",
+      "target_center_source_px": {
+        "x": 500,
+        "y": 1097
+      },
+      "side": "right",
+      "y_source": 1097,
+      "marker_center_canvas_px": {
+        "x": 3104,
+        "y": 2194
+      },
+      "leader_to_canvas_px": {
+        "x": 3052,
+        "y": 2194
+      }
+    },
+    {
+      "number": 17,
+      "element_id": "GS06-EL-17",
+      "target": "Hand-off standards card: rhythm, control size, contrast and data integrity",
+      "target_center_source_px": {
+        "x": 1228,
+        "y": 1186
+      },
+      "side": "left",
+      "y_source": 1147,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 2294
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 2294
+      }
+    },
+    {
+      "number": 18,
+      "element_id": "GS06-EL-18",
+      "target": "API #11 reference card and blocker details",
+      "target_center_source_px": {
+        "x": 282,
+        "y": 1233
+      },
+      "side": "left",
+      "y_source": 1233,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 2466
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 2466
+      }
+    },
+    {
+      "number": 19,
+      "element_id": "GS06-EL-19",
+      "target": "API #12 reference card and blocker details",
+      "target_center_source_px": {
+        "x": 720,
+        "y": 1233
+      },
+      "side": "right",
+      "y_source": 1233,
+      "marker_center_canvas_px": {
+        "x": 3104,
+        "y": 2466
+      },
+      "leader_to_canvas_px": {
+        "x": 3052,
+        "y": 2466
+      }
+    },
+    {
+      "number": 20,
+      "element_id": "GS06-EL-20",
+      "target": "UI-unblock criteria panel below both API cards",
+      "target_center_source_px": {
+        "x": 501,
+        "y": 1411
+      },
+      "side": "right",
+      "y_source": 1411,
+      "marker_center_canvas_px": {
+        "x": 3104,
+        "y": 2822
+      },
+      "leader_to_canvas_px": {
+        "x": 3052,
+        "y": 2822
+      }
+    },
+    {
+      "number": 21,
+      "element_id": "GS06-EL-21",
+      "target": "Footer brand and product-description group",
+      "target_center_source_px": {
+        "x": 278,
+        "y": 1563
+      },
+      "side": "left",
+      "y_source": 1537,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 3074
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 3074
+      }
+    },
+    {
+      "number": 22,
+      "element_id": "GS06-EL-22",
+      "target": "Footer navigation links",
+      "target_center_source_px": {
+        "x": 773,
+        "y": 1563
+      },
+      "side": "right",
+      "y_source": 1563,
+      "marker_center_canvas_px": {
+        "x": 3104,
+        "y": 3126
+      },
+      "leader_to_canvas_px": {
+        "x": 3052,
+        "y": 3126
+      }
+    },
+    {
+      "number": 23,
+      "element_id": "GS06-EL-23",
+      "target": "Footer copyright notice",
+      "target_center_source_px": {
+        "x": 1315,
+        "y": 1563
+      },
+      "side": "right",
+      "y_source": 1586,
+      "marker_center_canvas_px": {
+        "x": 3104,
+        "y": 3172
+      },
+      "leader_to_canvas_px": {
+        "x": 3052,
+        "y": 3172
+      }
+    }
+  ]
+}

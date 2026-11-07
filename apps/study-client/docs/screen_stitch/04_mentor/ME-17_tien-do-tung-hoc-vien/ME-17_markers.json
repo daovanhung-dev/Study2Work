@@ -1,0 +1,368 @@
+{
+  "screen_id": "ME-17",
+  "source_image": "screen.png",
+  "image_width": 1280,
+  "image_height": 1266,
+  "coordinate_system": "pixel centers from top-left of screen.png",
+  "marker_style": {
+    "shape": "circle",
+    "radius": 13,
+    "fill": "#C2410C",
+    "stroke": "#FFFFFF",
+    "stroke_width": 2,
+    "text": "white bold sans-serif"
+  },
+  "elements": [
+    {
+      "id": 1,
+      "marker": "#1",
+      "name": "Study2Work brand and LMS Mentor label",
+      "type": "Anchor / brand",
+      "group": "Header",
+      "x": 20,
+      "y": 13
+    },
+    {
+      "id": 2,
+      "marker": "#2",
+      "name": "Tổng quan navigation",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 238,
+      "y": 13
+    },
+    {
+      "id": 3,
+      "marker": "#3",
+      "name": "Khóa học phụ trách navigation hiện hành",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 330,
+      "y": 13
+    },
+    {
+      "id": 4,
+      "marker": "#4",
+      "name": "Chấm bài navigation",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 510,
+      "y": 13
+    },
+    {
+      "id": 5,
+      "marker": "#5",
+      "name": "Hộp thư hỗ trợ navigation",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 608,
+      "y": 13
+    },
+    {
+      "id": 6,
+      "marker": "#6",
+      "name": "Thông báo navigation",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 744,
+      "y": 13
+    },
+    {
+      "id": 7,
+      "marker": "#7",
+      "name": "Notification bell and unread indicator",
+      "type": "Anchor / notification",
+      "group": "Header",
+      "x": 1002,
+      "y": 13
+    },
+    {
+      "id": 8,
+      "marker": "#8",
+      "name": "Mentor name, role and avatar profile",
+      "type": "Profile summary",
+      "group": "Header",
+      "x": 1059,
+      "y": 13
+    },
+    {
+      "id": 9,
+      "marker": "#9",
+      "name": "Breadcrumb link: Tiến độ lớp học",
+      "type": "Anchor / breadcrumb",
+      "group": "Breadcrumb",
+      "x": 20,
+      "y": 108
+    },
+    {
+      "id": 10,
+      "marker": "#10",
+      "name": "Current breadcrumb: Hồ sơ tiến độ cá nhân học viên",
+      "type": "Text / current breadcrumb",
+      "group": "Breadcrumb",
+      "x": 166,
+      "y": 108
+    },
+    {
+      "id": 11,
+      "marker": "#11",
+      "name": "Hệ thống giám sát trực tiếp eyebrow",
+      "type": "Label",
+      "group": "Page heading",
+      "x": 33,
+      "y": 160
+    },
+    {
+      "id": 12,
+      "marker": "#12",
+      "name": "Chi tiết lộ trình và tiến độ học viên page title",
+      "type": "Heading / H1",
+      "group": "Page heading",
+      "x": 20,
+      "y": 222
+    },
+    {
+      "id": 13,
+      "marker": "#13",
+      "name": "Làm mới kết nối button",
+      "type": "Button / refresh",
+      "group": "Page heading",
+      "x": 1065,
+      "y": 188
+    },
+    {
+      "id": 14,
+      "marker": "#14",
+      "name": "Student profile icon and sync heading",
+      "type": "Card / profile status",
+      "group": "Student summary",
+      "x": 43,
+      "y": 252
+    },
+    {
+      "id": 15,
+      "marker": "#15",
+      "name": "Mã học viên label and value",
+      "type": "Text / identifier",
+      "group": "Student summary",
+      "x": 118,
+      "y": 310
+    },
+    {
+      "id": 16,
+      "marker": "#16",
+      "name": "Đã xác nhận ghi danh badge",
+      "type": "Badge / enrollment status",
+      "group": "Student summary",
+      "x": 617,
+      "y": 280
+    },
+    {
+      "id": 17,
+      "marker": "#17",
+      "name": "Khóa học đăng ký title",
+      "type": "Text / course title",
+      "group": "Student summary",
+      "x": 53,
+      "y": 452
+    },
+    {
+      "id": 18,
+      "marker": "#18",
+      "name": "Mức độ hoàn thành percent and progress bar",
+      "type": "Metric / progress bar",
+      "group": "Student summary",
+      "x": 296,
+      "y": 458
+    },
+    {
+      "id": 19,
+      "marker": "#19",
+      "name": "Lần gửi dữ liệu cuối metric",
+      "type": "Metric / freshness",
+      "group": "Student summary",
+      "x": 545,
+      "y": 458
+    },
+    {
+      "id": 20,
+      "marker": "#20",
+      "name": "Chỉ số giám sát panel heading and tune icon",
+      "type": "Card heading",
+      "group": "Monitoring metrics",
+      "x": 864,
+      "y": 280
+    },
+    {
+      "id": 21,
+      "marker": "#21",
+      "name": "Bài nộp dự án metric row",
+      "type": "Metric row",
+      "group": "Monitoring metrics",
+      "x": 867,
+      "y": 326
+    },
+    {
+      "id": 22,
+      "marker": "#22",
+      "name": "Kiểm tra định kỳ metric row",
+      "type": "Metric row",
+      "group": "Monitoring metrics",
+      "x": 867,
+      "y": 370
+    },
+    {
+      "id": 23,
+      "marker": "#23",
+      "name": "Thời lượng tự học metric row",
+      "type": "Metric row",
+      "group": "Monitoring metrics",
+      "x": 867,
+      "y": 415
+    },
+    {
+      "id": 24,
+      "marker": "#24",
+      "name": "Monitoring data activation note",
+      "type": "Informational note",
+      "group": "Monitoring metrics",
+      "x": 882,
+      "y": 463
+    },
+    {
+      "id": 25,
+      "marker": "#25",
+      "name": "Dòng thời gian học tập (Learning Timeline) heading",
+      "type": "Card heading",
+      "group": "Learning timeline",
+      "x": 80,
+      "y": 590
+    },
+    {
+      "id": 26,
+      "marker": "#26",
+      "name": "Giai đoạn: Khởi tạo chương trình label",
+      "type": "Status label",
+      "group": "Learning timeline",
+      "x": 1009,
+      "y": 589
+    },
+    {
+      "id": 27,
+      "marker": "#27",
+      "name": "Empty timeline illustration",
+      "type": "Illustration",
+      "group": "Learning timeline empty state",
+      "x": 563,
+      "y": 652
+    },
+    {
+      "id": 28,
+      "marker": "#28",
+      "name": "Lock badge on empty timeline illustration",
+      "type": "Icon / badge",
+      "group": "Learning timeline empty state",
+      "x": 718,
+      "y": 657
+    },
+    {
+      "id": 29,
+      "marker": "#29",
+      "name": "Chưa có lịch sử học tập được đồng bộ heading",
+      "type": "Heading / empty state",
+      "group": "Learning timeline empty state",
+      "x": 422,
+      "y": 807
+    },
+    {
+      "id": 30,
+      "marker": "#30",
+      "name": "Empty timeline explanation",
+      "type": "Text / empty state",
+      "group": "Learning timeline empty state",
+      "x": 290,
+      "y": 852
+    },
+    {
+      "id": 31,
+      "marker": "#31",
+      "name": "Quay lại tiến độ toàn khóa button",
+      "type": "Anchor / back navigation",
+      "group": "Learning timeline empty state",
+      "x": 489,
+      "y": 948
+    },
+    {
+      "id": 32,
+      "marker": "#32",
+      "name": "Bài giảng & Video explanatory tile",
+      "type": "Card / information",
+      "group": "Learning timeline notes",
+      "x": 49,
+      "y": 1030
+    },
+    {
+      "id": 33,
+      "marker": "#33",
+      "name": "Nhận xét của Mentor explanatory tile",
+      "type": "Card / information",
+      "group": "Learning timeline notes",
+      "x": 440,
+      "y": 1030
+    },
+    {
+      "id": 34,
+      "marker": "#34",
+      "name": "Cột mốc Đồ án explanatory tile",
+      "type": "Card / information",
+      "group": "Learning timeline notes",
+      "x": 830,
+      "y": 1030
+    },
+    {
+      "id": 35,
+      "marker": "#35",
+      "name": "Study2Work footer mark",
+      "type": "Brand mark",
+      "group": "Footer",
+      "x": 16,
+      "y": 1207
+    },
+    {
+      "id": 36,
+      "marker": "#36",
+      "name": "Footer copyright and WCAG copy",
+      "type": "Text / footer copy",
+      "group": "Footer",
+      "x": 16,
+      "y": 1248
+    },
+    {
+      "id": 37,
+      "marker": "#37",
+      "name": "Quy chế Giảng viên footer link",
+      "type": "Anchor / footer",
+      "group": "Footer",
+      "x": 842,
+      "y": 1208
+    },
+    {
+      "id": 38,
+      "marker": "#38",
+      "name": "Tiêu chuẩn đánh giá footer link",
+      "type": "Anchor / footer",
+      "group": "Footer",
+      "x": 989,
+      "y": 1208
+    },
+    {
+      "id": 39,
+      "marker": "#39",
+      "name": "Hỗ trợ kỹ thuật footer link",
+      "type": "Anchor / footer",
+      "group": "Footer",
+      "x": 1137,
+      "y": 1208
+    }
+  ]
+}

@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="797" height="1648" viewBox="0 0 797 1648">
+<title>ST-25 transparent marker overlay; source image is composited pixel-for-pixel into the center canvas</title>
+<polyline points="37,39 94,39 109,39" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="39" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="39" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="43" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">1</text>
+<polyline points="37,65 94,65 109,40" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="40" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="65" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="69" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">2</text>
+<polyline points="760,41 703,41 688,41" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="688" cy="41" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="773" cy="41" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="773" y="45" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">3</text>
+<polyline points="760,67 703,67 688,41" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="688" cy="41" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="773" cy="67" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="773" y="71" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">4</text>
+<polyline points="760,93 703,93 688,41" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="688" cy="41" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="773" cy="93" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="773" y="97" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">5</text>
+<polyline points="760,119 703,119 688,75" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="688" cy="75" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="773" cy="119" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="773" y="123" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">6</text>
+<polyline points="37,93 94,93 109,93" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="93" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="93" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="97" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">7</text>
+<polyline points="760,145 703,145 688,94" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="688" cy="94" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="773" cy="145" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="773" y="149" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">8</text>
+<polyline points="760,171 703,171 688,94" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="688" cy="94" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="773" cy="171" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="773" y="175" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">9</text>
+<polyline points="37,121 94,121 109,121" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="121" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="121" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="125" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">10</text>
+<polyline points="37,147 94,147 109,122" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="122" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="147" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="151" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">11</text>
+<polyline points="37,173 94,173 109,153" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="153" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="173" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="177" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">12</text>
+<polyline points="760,197 703,197 688,157" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="688" cy="157" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="773" cy="197" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="773" y="201" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">13</text>
+<polyline points="37,208 94,208 109,208" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="208" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="208" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="212" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">14</text>
+<polyline points="760,262 703,262 688,262" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="688" cy="262" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="773" cy="262" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="773" y="266" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">15</text>
+<polyline points="37,234 94,234 109,208" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="208" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="234" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="238" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">16</text>
+<polyline points="37,329 94,329 109,329" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="329" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="329" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="333" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">17</text>
+<polyline points="760,369 703,369 688,369" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="688" cy="369" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="773" cy="369" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="773" y="373" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">18</text>
+<polyline points="37,450 94,450 109,450" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="450" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="450" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="454" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">19</text>
+<polyline points="760,530 703,530 688,530" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="688" cy="530" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="773" cy="530" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="773" y="534" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">20</text>
+<polyline points="37,540 94,540 109,540" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="540" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="540" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="544" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">21</text>
+<polyline points="37,592 94,592 109,592" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="592" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="592" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="596" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">22</text>
+<polyline points="760,592 703,592 688,592" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="688" cy="592" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="773" cy="592" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="773" y="596" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">23</text>
+<polyline points="37,632 94,632 109,632" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="632" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="632" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="636" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">24</text>
+<polyline points="37,679 94,679 109,679" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="679" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="679" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="683" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">25</text>
+<polyline points="37,795 94,795 109,795" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="795" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="795" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="799" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">26</text>
+<polyline points="37,946 94,946 109,946" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="946" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="946" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="950" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">27</text>
+<polyline points="37,1079 94,1079 109,1079" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="1079" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="1079" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="1083" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">28</text>
+<polyline points="37,1134 94,1134 109,1134" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="1134" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="1134" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="1138" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">29</text>
+<polyline points="37,1205 94,1205 109,1205" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="1205" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="1205" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="1209" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">30</text>
+<polyline points="37,1271 94,1271 109,1271" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="1271" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="1271" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="1275" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">31</text>
+<polyline points="37,1336 94,1336 109,1336" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="1336" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="1336" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="1340" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">32</text>
+<polyline points="37,1362 94,1362 109,1362" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="1362" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="1362" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="1366" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">33</text>
+<polyline points="37,1388 94,1388 109,1365" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="1365" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="1388" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="1392" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">34</text>
+<polyline points="37,1414 94,1414 109,1414" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="1414" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="1414" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="1418" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">35</text>
+<polyline points="37,1447 94,1447 109,1447" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="1447" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="1447" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="1451" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">36</text>
+<polyline points="760,1452 703,1452 688,1452" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="688" cy="1452" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="773" cy="1452" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="773" y="1456" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">37</text>
+<polyline points="37,1532 94,1532 109,1532" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="1532" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="1532" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="1536" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">38</text>
+<polyline points="760,1544 703,1544 688,1544" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="688" cy="1544" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="773" cy="1544" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="773" y="1548" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">39</text>
+<polyline points="37,1604 94,1604 109,1604" fill="none" stroke="#b42318" stroke-width="1.35" stroke-opacity="0.68"/>
+<circle cx="109" cy="1604" r="2.2" fill="#b42318" fill-opacity="0.78"/>
+<circle cx="24" cy="1604" r="13" fill="#b42318" stroke="#ffffff" stroke-width="2"/>
+<text x="24" y="1608" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#ffffff">40</text>
+</svg>

@@ -1,0 +1,47 @@
+{
+  "screen_id": "GS-04",
+  "source_image": "screen_rendered.png",
+  "original_image": "screen.png",
+  "source_state": "static Guest empty-curriculum state rendered from code.html; loaded lesson list is absent",
+  "image_size": {
+    "width": 1440,
+    "height": 1200
+  },
+  "annotation": {
+    "scale": 2,
+    "canvas_size": {
+      "width": 3040,
+      "height": 2400
+    },
+    "source_offset_canvas_px": {
+      "x": 80,
+      "y": 0
+    },
+    "gutter_width_canvas_px": 80,
+    "marker_style": {
+      "shape": "circle",
+      "fill": "#0B5F8A",
+      "text": "#FFFFFF",
+      "stroke": "#FFFFFF",
+      "diameter_canvas_px": 40,
+      "font_weight": 700
+    },
+    "leader_style": {
+      "stroke": "#0B5F8A",
+      "stroke_width_canvas_px": 2,
+      "scope": "gutter only"
+    }
+  },
+  "markers": [
+    {"number": 1, "element_id": "GS04-EL-01", "target": "Header brand and primary navigation group", "target_center_source_px": {"x": 214, "y": 32}, "side": "left", "y_source": 32, "marker_center_canvas_px": {"x": 28, "y": 64}, "leader_to_canvas_px": {"x": 80, "y": 64}},
+    {"number": 2, "element_id": "GS04-EL-02", "target": "Header login and register actions", "target_center_source_px": {"x": 1311, "y": 32}, "side": "right", "y_source": 32, "marker_center_canvas_px": {"x": 3012, "y": 64}, "leader_to_canvas_px": {"x": 2960, "y": 64}},
+    {"number": 3, "element_id": "GS04-EL-03", "target": "Breadcrumb from home and course list through course detail to curriculum", "target_center_source_px": {"x": 244, "y": 96}, "side": "left", "y_source": 96, "marker_center_canvas_px": {"x": 28, "y": 192}, "leader_to_canvas_px": {"x": 80, "y": 192}},
+    {"number": 4, "element_id": "GS04-EL-04", "target": "Curriculum page heading", "target_center_source_px": {"x": 165, "y": 140}, "side": "right", "y_source": 140, "marker_center_canvas_px": {"x": 3012, "y": 280}, "leader_to_canvas_px": {"x": 2960, "y": 280}},
+    {"number": 5, "element_id": "GS04-EL-05", "target": "Empty curriculum card icon", "target_center_source_px": {"x": 720, "y": 529}, "side": "left", "y_source": 529, "marker_center_canvas_px": {"x": 28, "y": 1058}, "leader_to_canvas_px": {"x": 80, "y": 1058}},
+    {"number": 6, "element_id": "GS04-EL-06", "target": "Empty curriculum heading", "target_center_source_px": {"x": 720, "y": 592}, "side": "right", "y_source": 592, "marker_center_canvas_px": {"x": 3012, "y": 1184}, "leader_to_canvas_px": {"x": 2960, "y": 1184}},
+    {"number": 7, "element_id": "GS04-EL-07", "target": "Empty curriculum explanatory text", "target_center_source_px": {"x": 720, "y": 623}, "side": "left", "y_source": 623, "marker_center_canvas_px": {"x": 28, "y": 1246}, "leader_to_canvas_px": {"x": 80, "y": 1246}},
+    {"number": 8, "element_id": "GS04-EL-08", "target": "Return to course detail link; source href is placeholder #", "target_center_source_px": {"x": 720, "y": 680}, "side": "right", "y_source": 680, "marker_center_canvas_px": {"x": 3012, "y": 1360}, "leader_to_canvas_px": {"x": 2960, "y": 1360}},
+    {"number": 9, "element_id": "GS04-EL-09", "target": "Footer brand", "target_center_source_px": {"x": 87, "y": 1112}, "side": "left", "y_source": 1112, "marker_center_canvas_px": {"x": 28, "y": 2224}, "leader_to_canvas_px": {"x": 80, "y": 2224}},
+    {"number": 10, "element_id": "GS04-EL-10", "target": "Footer navigation links", "target_center_source_px": {"x": 1268, "y": 1112}, "side": "right", "y_source": 1112, "marker_center_canvas_px": {"x": 3012, "y": 2224}, "leader_to_canvas_px": {"x": 2960, "y": 2224}}
+  ]
+}

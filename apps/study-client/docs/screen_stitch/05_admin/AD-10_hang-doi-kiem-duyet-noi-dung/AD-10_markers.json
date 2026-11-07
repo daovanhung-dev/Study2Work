@@ -1,0 +1,236 @@
+[
+  {
+    "number": 1,
+    "x": 12,
+    "y": 35,
+    "label": "Study2Work LMS Admin brand"
+  },
+  {
+    "number": 2,
+    "x": 322,
+    "y": 12,
+    "label": "Admin navigation: Tổng quan"
+  },
+  {
+    "number": 3,
+    "x": 460,
+    "y": 12,
+    "label": "Admin navigation: Người dùng"
+  },
+  {
+    "number": 4,
+    "x": 680,
+    "y": 12,
+    "label": "Admin navigation: Khóa học và Nội dung"
+  },
+  {
+    "number": 5,
+    "x": 851,
+    "y": 12,
+    "label": "Active Admin navigation: Kiểm duyệt"
+  },
+  {
+    "number": 6,
+    "x": 989,
+    "y": 12,
+    "label": "Admin navigation: Báo cáo"
+  },
+  {
+    "number": 7,
+    "x": 1144,
+    "y": 12,
+    "label": "Static SYSTEM NORMAL badge"
+  },
+  {
+    "number": 8,
+    "x": 1284,
+    "y": 12,
+    "label": "Notifications button without handler"
+  },
+  {
+    "number": 9,
+    "x": 1576,
+    "y": 12,
+    "label": "Static Admin identity and avatar"
+  },
+  {
+    "number": 10,
+    "x": 17,
+    "y": 96,
+    "label": "Global breadcrumb trail"
+  },
+  {
+    "number": 11,
+    "x": 1577,
+    "y": 96,
+    "label": "Static RBAC assurance badge"
+  },
+  {
+    "number": 12,
+    "x": 17,
+    "y": 169,
+    "label": "Local content moderation breadcrumb"
+  },
+  {
+    "number": 13,
+    "x": 588,
+    "y": 170,
+    "label": "Static API #78 ACTIVE badge"
+  },
+  {
+    "number": 14,
+    "x": 675,
+    "y": 260,
+    "label": "Pending Content queue page title"
+  },
+  {
+    "number": 15,
+    "x": 1000,
+    "y": 310,
+    "label": "Static description of moderation queue"
+  },
+  {
+    "number": 16,
+    "x": 1296,
+    "y": 295,
+    "label": "Static portal status card"
+  },
+  {
+    "number": 17,
+    "x": 1544,
+    "y": 302,
+    "label": "Static Admin RBAC tier card"
+  },
+  {
+    "number": 18,
+    "x": 593,
+    "y": 433,
+    "label": "Keyword input for title or lecturer; no handler"
+  },
+  {
+    "number": 19,
+    "x": 921,
+    "y": 401,
+    "label": "Content type select with synthetic values"
+  },
+  {
+    "number": 20,
+    "x": 1307,
+    "y": 401,
+    "label": "Course select with slug values, not int64 IDs"
+  },
+  {
+    "number": 21,
+    "x": 1546,
+    "y": 434,
+    "label": "Refresh button with local animation only"
+  },
+  {
+    "number": 22,
+    "x": 1577,
+    "y": 541,
+    "label": "Seven-column pending Content table header"
+  },
+  {
+    "number": 23,
+    "x": 725,
+    "y": 744,
+    "label": "Static empty-queue icon"
+  },
+  {
+    "number": 24,
+    "x": 1090,
+    "y": 857,
+    "label": "Static empty-queue heading"
+  },
+  {
+    "number": 25,
+    "x": 1085,
+    "y": 900,
+    "label": "Static empty-queue explanation"
+  },
+  {
+    "number": 26,
+    "x": 949,
+    "y": 990,
+    "label": "Disabled check-new-content button"
+  },
+  {
+    "number": 27,
+    "x": 950,
+    "y": 1041,
+    "label": "Static 30-second sync frequency claim"
+  },
+  {
+    "number": 28,
+    "x": 381,
+    "y": 1194,
+    "label": "Static shown/total Content count"
+  },
+  {
+    "number": 29,
+    "x": 1248,
+    "y": 1195,
+    "label": "Disabled previous-page button"
+  },
+  {
+    "number": 30,
+    "x": 1400,
+    "y": 1161,
+    "label": "Static current page number 1"
+  },
+  {
+    "number": 31,
+    "x": 1542,
+    "y": 1195,
+    "label": "Disabled next-page button"
+  },
+  {
+    "number": 32,
+    "x": 49,
+    "y": 1314,
+    "label": "Static moderation-policy notice icon"
+  },
+  {
+    "number": 33,
+    "x": 470,
+    "y": 1283,
+    "label": "Static Study2Work moderation standard heading"
+  },
+  {
+    "number": 34,
+    "x": 1041,
+    "y": 1325,
+    "label": "Static copyright and pedagogical standards copy"
+  },
+  {
+    "number": 35,
+    "x": 1543,
+    "y": 1317,
+    "label": "Rubric link with href hash"
+  },
+  {
+    "number": 36,
+    "x": 12,
+    "y": 1432,
+    "label": "Static footer copyright"
+  },
+  {
+    "number": 37,
+    "x": 1091,
+    "y": 1432,
+    "label": "Privacy policy footer link with href hash"
+  },
+  {
+    "number": 38,
+    "x": 1294,
+    "y": 1432,
+    "label": "RBAC standards footer link with href hash"
+  },
+  {
+    "number": 39,
+    "x": 1580,
+    "y": 1432,
+    "label": "Technical support footer link with href hash"
+  }
+]

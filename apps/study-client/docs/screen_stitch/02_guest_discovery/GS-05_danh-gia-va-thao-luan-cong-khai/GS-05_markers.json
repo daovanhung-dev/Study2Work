@@ -1,0 +1,208 @@
+{
+  "screen_id": "GS-05",
+  "source_image": "screen_rendered.png",
+  "original_image": "screen.png",
+  "source_state": "static Guest empty-review state rendered from code.html; loaded review/reply list is absent",
+  "image_size": {
+    "width": 1440,
+    "height": 1200
+  },
+  "annotation": {
+    "scale": 2,
+    "canvas_size": {
+      "width": 3040,
+      "height": 2400
+    },
+    "source_offset_canvas_px": {
+      "x": 80,
+      "y": 0
+    },
+    "gutter_width_canvas_px": 80,
+    "marker_style": {
+      "shape": "circle",
+      "fill": "#0B5F8A",
+      "text": "#FFFFFF",
+      "stroke": "#FFFFFF",
+      "diameter_canvas_px": 40,
+      "font_weight": 700
+    },
+    "leader_style": {
+      "stroke": "#0B5F8A",
+      "stroke_width_canvas_px": 2,
+      "scope": "gutter only"
+    }
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "GS05-EL-01",
+      "target": "Header brand and primary navigation group",
+      "target_center_source_px": {
+        "x": 186,
+        "y": 32
+      },
+      "side": "left",
+      "y_source": 32,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 64
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 64
+      }
+    },
+    {
+      "number": 2,
+      "element_id": "GS05-EL-02",
+      "target": "Header login and register links",
+      "target_center_source_px": {
+        "x": 1315,
+        "y": 32
+      },
+      "side": "right",
+      "y_source": 32,
+      "marker_center_canvas_px": {
+        "x": 3012,
+        "y": 64
+      },
+      "leader_to_canvas_px": {
+        "x": 2960,
+        "y": 64
+      }
+    },
+    {
+      "number": 3,
+      "element_id": "GS05-EL-03",
+      "target": "Breadcrumb from home through course detail to reviews",
+      "target_center_source_px": {
+        "x": 251,
+        "y": 88
+      },
+      "side": "left",
+      "y_source": 88,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 176
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 176
+      }
+    },
+    {
+      "number": 4,
+      "element_id": "GS05-EL-04",
+      "target": "Empty reviews card icon",
+      "target_center_source_px": {
+        "x": 720,
+        "y": 244
+      },
+      "side": "left",
+      "y_source": 244,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 488
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 488
+      }
+    },
+    {
+      "number": 5,
+      "element_id": "GS05-EL-05",
+      "target": "Reviews page heading",
+      "target_center_source_px": {
+        "x": 720,
+        "y": 312
+      },
+      "side": "right",
+      "y_source": 312,
+      "marker_center_canvas_px": {
+        "x": 3012,
+        "y": 624
+      },
+      "leader_to_canvas_px": {
+        "x": 2960,
+        "y": 624
+      }
+    },
+    {
+      "number": 6,
+      "element_id": "GS05-EL-06",
+      "target": "Empty reviews explanatory copy",
+      "target_center_source_px": {
+        "x": 718,
+        "y": 347
+      },
+      "side": "left",
+      "y_source": 347,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 694
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 694
+      }
+    },
+    {
+      "number": 7,
+      "element_id": "GS05-EL-07",
+      "target": "Return to course detail link; source href is placeholder #",
+      "target_center_source_px": {
+        "x": 719,
+        "y": 405
+      },
+      "side": "right",
+      "y_source": 405,
+      "marker_center_canvas_px": {
+        "x": 3012,
+        "y": 810
+      },
+      "leader_to_canvas_px": {
+        "x": 2960,
+        "y": 810
+      }
+    },
+    {
+      "number": 8,
+      "element_id": "GS05-EL-08",
+      "target": "Footer brand link",
+      "target_center_source_px": {
+        "x": 84,
+        "y": 1014
+      },
+      "side": "left",
+      "y_source": 1014,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 2028
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 2028
+      }
+    },
+    {
+      "number": 9,
+      "element_id": "GS05-EL-09",
+      "target": "Footer navigation links",
+      "target_center_source_px": {
+        "x": 1270,
+        "y": 1014
+      },
+      "side": "right",
+      "y_source": 1014,
+      "marker_center_canvas_px": {
+        "x": 3012,
+        "y": 2028
+      },
+      "leader_to_canvas_px": {
+        "x": 2960,
+        "y": 2028
+      }
+    }
+  ]
+}

@@ -1,44 +1,86 @@
 [
   {
     "number": 1,
+    "element_id": "SH03-EL-01",
+    "screen_id": "SH-03",
     "label": "Logo S2W và nhận diện Study2Work",
     "x": 425,
-    "y": 253
+    "y": 253,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1280, "height": 1056 }
   },
   {
     "number": 2,
+    "element_id": "SH03-EL-02",
+    "screen_id": "SH-03",
     "label": "Tiêu đề đăng ký và câu giới thiệu",
     "x": 425,
-    "y": 312
+    "y": 312,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1280, "height": 1056 }
   },
   {
     "number": 3,
+    "element_id": "SH03-EL-03",
+    "screen_id": "SH-03",
     "label": "Trường họ và tên, ánh xạ tới full_name",
     "x": 430,
-    "y": 460
+    "y": 460,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1280, "height": 1056 }
   },
   {
     "number": 4,
+    "element_id": "SH03-EL-04",
+    "screen_id": "SH-03",
     "label": "Trường email",
     "x": 430,
-    "y": 547
+    "y": 547,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1280, "height": 1056 }
   },
   {
     "number": 5,
+    "element_id": "SH03-EL-05",
+    "screen_id": "SH-03",
     "label": "Trường mật khẩu",
     "x": 430,
-    "y": 633
+    "y": 633,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1280, "height": 1056 }
   },
   {
     "number": 6,
+    "element_id": "SH03-EL-06",
+    "screen_id": "SH-03",
     "label": "Nút tạo tài khoản",
     "x": 430,
-    "y": 701
+    "y": 701,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1280, "height": 1056 }
   },
   {
     "number": 7,
+    "element_id": "SH03-EL-07",
+    "screen_id": "SH-03",
     "label": "Liên kết đăng nhập tới SH-02",
     "x": 430,
-    "y": 779
+    "y": 779,
+    "coordinate_space": "screen.png",
+    "coordinate_origin": "top-left",
+    "coordinate_unit": "pixel",
+    "image_size": { "width": 1280, "height": 1056 }
   }
 ]

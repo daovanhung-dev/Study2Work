@@ -1,0 +1,26 @@
+{
+  "screen_id": "SH-05",
+  "source_image": "screen.png",
+  "source_state": "403 Forbidden (default state shown in source image)",
+  "image_size": {"width": 1600, "height": 1280},
+  "coordinate_origin": "top-left; x/y are pixel centers in screen.png",
+  "marker_style": {
+    "shape": "circle",
+    "fill": "#0B5F8A",
+    "text": "white bold #n",
+    "leader_line": "#B42318"
+  },
+  "markers": [
+    {"number": 1, "element_id": "SH05-EL-01", "label": "Handoff metadata bar", "center": {"x": 58, "y": 140}, "target": {"x": 80, "y": 162}, "visible_in": "403"},
+    {"number": 2, "element_id": "SH05-EL-02", "label": "Select HTTP 403 preview state", "center": {"x": 866, "y": 163}, "target": {"x": 900, "y": 184}, "visible_in": "403 and 401 preview modes"},
+    {"number": 3, "element_id": "SH05-EL-03", "label": "Select HTTP 401 preview state", "center": {"x": 1520, "y": 158}, "target": {"x": 1534, "y": 188}, "visible_in": "403 and 401 preview modes"},
+    {"number": 4, "element_id": "SH05-EL-04", "label": "HTTP state summary", "center": {"x": 55, "y": 317}, "target": {"x": 80, "y": 326}, "visible_in": "403; content changes in 401"},
+    {"number": 5, "element_id": "SH05-EL-05", "label": "API #04 role boundary notice", "center": {"x": 58, "y": 486}, "target": {"x": 82, "y": 506}, "visible_in": "403"},
+    {"number": 6, "element_id": "SH05-EL-06", "label": "Routing diagnostics grid", "center": {"x": 58, "y": 664}, "target": {"x": 80, "y": 685}, "visible_in": "403; values change in 401"},
+    {"number": 7, "element_id": "SH05-EL-07", "label": "State-dependent recovery action area", "center": {"x": 58, "y": 950}, "target": {"x": 82, "y": 972}, "visible_in": "403; login and refresh controls replace action in 401"},
+    {"number": 8, "element_id": "SH05-EL-08", "label": "Copy support code button", "center": {"x": 505, "y": 944}, "target": {"x": 520, "y": 967}, "visible_in": "403"},
+    {"number": 9, "element_id": "SH05-EL-09", "label": "HTTP response and trace card", "center": {"x": 928, "y": 281}, "target": {"x": 943, "y": 298}, "visible_in": "403; content changes in 401"},
+    {"number": 10, "element_id": "SH05-EL-10", "label": "Copy Trace ID icon button", "center": {"x": 1574, "y": 370}, "target": {"x": 1535, "y": 390}, "visible_in": "403 and 401 preview modes"},
+    {"number": 11, "element_id": "SH05-EL-11", "label": "Engineering handoff policy card", "center": {"x": 928, "y": 754}, "target": {"x": 950, "y": 780}, "visible_in": "403 and 401 preview modes"}
+  ]
+}

@@ -9,15 +9,19 @@ scopes:
 
 Canonical page graph: `INDEX.md`.
 
-Study web dùng Vue và có subcontext riêng tại `study/`; Work web dùng React.
+Study Web has a separate `study/` context. In the current checkout it contains
+documentation/assets and an ignored compiled `dist` artifact with only a `/`
+home route; editable app source and package manifest are absent, and serving is
+unverified. Do not infer Student route/API behavior from that artifact. Work
+Web uses React.
 Work router giữ route catalog hiện có,
 `src/shared/api/work.ts` là ranh giới fetch/Zod của Work và backend tương ứng là
 `apps/work-server/src/routes/api_routes.ts`.
 
-Task cụ thể phải chọn đúng subcontext, không áp Vue pattern lên React hoặc
-ngược lại:
+Task cụ thể phải chọn đúng subcontext:
 
-- Study Web: `study/AGENTS.md` → `study/INDEX.md`.
+- Study Web: `study/AGENTS.md` → `study/INDEX.md`; no implementation pattern is
+  available until app source is present.
 - Work Web: các page trực tiếp trong scope này.
 
 Với task authoring hoặc review DD cho Web/API, load `createDD-markdown` từ skill

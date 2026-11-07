@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3200" height="2884" viewBox="0 0 1600 1442">
+<g font-family="Arial, sans-serif" font-weight="700" text-anchor="middle" dominant-baseline="central">
+<g aria-label="1: Study2Work LMS/Admin brand"><circle cx="16" cy="36" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="16" y="36.5" font-size="13" fill="#FFFFFF">1</text></g>
+<g aria-label="2: Shell navigation — Tổng quan"><circle cx="355" cy="61" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="355" y="61.5" font-size="13" fill="#FFFFFF">2</text></g>
+<g aria-label="3: Shell navigation — Người dùng"><circle cx="490" cy="61" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="490" y="61.5" font-size="13" fill="#FFFFFF">3</text></g>
+<g aria-label="4: Shell navigation — Khóa học &amp; Nội dung"><circle cx="660" cy="61" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="660" y="61.5" font-size="13" fill="#FFFFFF">4</text></g>
+<g aria-label="5: Shell navigation — Kiểm duyệt"><circle cx="856" cy="61" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="856" y="61.5" font-size="13" fill="#FFFFFF">5</text></g>
+<g aria-label="6: Shell navigation — Báo cáo"><circle cx="983" cy="61" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="983" y="61.5" font-size="13" fill="#FFFFFF">6</text></g>
+<g aria-label="7: System Normal status copy (static)"><circle cx="1152" cy="61" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1152" y="61.5" font-size="13" fill="#FFFFFF">7</text></g>
+<g aria-label="8: Notifications button (no handler)"><circle cx="1295" cy="60" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1295" y="60.5" font-size="13" fill="#FFFFFF">8</text></g>
+<g aria-label="9: Admin identity and avatar (static)"><circle cx="1584" cy="61" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1584" y="61.5" font-size="13" fill="#FFFFFF">9</text></g>
+<g aria-label="10: Global breadcrumb"><circle cx="18" cy="95" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="18" y="95.5" font-size="13" fill="#FFFFFF">10</text></g>
+<g aria-label="11: RBAC assurance copy (static)"><circle cx="1585" cy="95" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1585" y="95.5" font-size="13" fill="#FFFFFF">11</text></g>
+<g aria-label="12: Local breadcrumb — Quản trị khảo thí"><circle cx="130" cy="171" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="130" y="171.5" font-size="13" fill="#FFFFFF">12</text></g>
+<g aria-label="13: Local breadcrumb — Danh sách bài kiểm tra"><circle cx="333" cy="171" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="333" y="171.5" font-size="13" fill="#FFFFFF">13</text></g>
+<g aria-label="14: Current local breadcrumb — Xóa bài kiểm tra"><circle cx="508" cy="171" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="508" y="171.5" font-size="13" fill="#FFFFFF">14</text></g>
+<g aria-label="15: Return to AD-15 link (href #)"><circle cx="1547" cy="247" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1547" y="247.5" font-size="13" fill="#FFFFFF">15</text></g>
+<g aria-label="16: Danger context warning icon"><circle cx="346" cy="390" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="346" y="390.5" font-size="13" fill="#FFFFFF">16</text></g>
+<g aria-label="17: Risk-of-learning-data-impact label"><circle cx="880" cy="328" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="880" y="328.5" font-size="13" fill="#FFFFFF">17</text></g>
+<g aria-label="18: Confirmation title"><circle cx="985" cy="393" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="985" y="393.5" font-size="13" fill="#FFFFFF">18</text></g>
+<g aria-label="19: Target record section heading"><circle cx="390" cy="462" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="390" y="462.5" font-size="13" fill="#FFFFFF">19</text></g>
+<g aria-label="20: Selected-record status pill (placeholder)"><circle cx="1218" cy="462" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1218" y="462.5" font-size="13" fill="#FFFFFF">20</text></g>
+<g aria-label="21: Quiz title field and placeholder value"><circle cx="640" cy="606" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="640" y="606.5" font-size="13" fill="#FFFFFF">21</text></g>
+<g aria-label="22: Quiz identifier field and placeholder value"><circle cx="920" cy="606" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="920" y="606.5" font-size="13" fill="#FFFFFF">22</text></g>
+<g aria-label="23: Linked course field and placeholder value"><circle cx="1200" cy="606" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1200" y="606.5" font-size="13" fill="#FFFFFF">23</text></g>
+<g aria-label="24: Attempt safety notice icon"><circle cx="350" cy="770" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="350" y="770.5" font-size="13" fill="#FFFFFF">24</text></g>
+<g aria-label="25: Safety policy heading"><circle cx="900" cy="715" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="900" y="715.5" font-size="13" fill="#FFFFFF">25</text></g>
+<g aria-label="26: Attempt/history warning paragraph (static claim)"><circle cx="1215" cy="803" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1215" y="803.5" font-size="13" fill="#FFFFFF">26</text></g>
+<g aria-label="27: Unresolved Attempts Policy copy"><circle cx="760" cy="878" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="760" y="878.5" font-size="13" fill="#FFFFFF">27</text></g>
+<g aria-label="28: Hard-lock Read-Only copy"><circle cx="1160" cy="878" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1160" y="878.5" font-size="13" fill="#FFFFFF">28</text></g>
+<g aria-label="29: Audit reason label"><circle cx="625" cy="927" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="625" y="927.5" font-size="13" fill="#FFFFFF">29</text></g>
+<g aria-label="30: ISO-27001 policy copy (static claim)"><circle cx="1217" cy="927" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1217" y="927.5" font-size="13" fill="#FFFFFF">30</text></g>
+<g aria-label="31: Disabled audit reason textarea"><circle cx="380" cy="1066" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="380" y="1066.5" font-size="13" fill="#FFFFFF">31</text></g>
+<g aria-label="32: Disabled field hint"><circle cx="1221" cy="1095" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1221" y="1095.5" font-size="13" fill="#FFFFFF">32</text></g>
+<g aria-label="33: Safe return link (href #)"><circle cx="685" cy="1138" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="685" y="1138.5" font-size="13" fill="#FFFFFF">33</text></g>
+<g aria-label="34: Permanent delete button (disabled; no handler)"><circle cx="1225" cy="1138" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1225" y="1138.5" font-size="13" fill="#FFFFFF">34</text></g>
+<g aria-label="35: Data-protection banner copy (static claim)"><circle cx="735" cy="1252" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="735" y="1252.5" font-size="13" fill="#FFFFFF">35</text></g>
+<g aria-label="36: ED-TECH compliance badge (static claim)"><circle cx="1254" cy="1252" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1254" y="1252.5" font-size="13" fill="#FFFFFF">36</text></g>
+<g aria-label="37: Copyright and system label"><circle cx="468" cy="1390" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="468" y="1390.5" font-size="13" fill="#FFFFFF">37</text></g>
+<g aria-label="38: Privacy policy footer link (href #)"><circle cx="1090" cy="1390" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1090" y="1390.5" font-size="13" fill="#FFFFFF">38</text></g>
+<g aria-label="39: RBAC standards footer link (href #)"><circle cx="1368" cy="1390" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1368" y="1390.5" font-size="13" fill="#FFFFFF">39</text></g>
+<g aria-label="40: Technical support footer link (href #)"><circle cx="1584" cy="1390" r="13" fill="#0B1C30" stroke="#FFFFFF" stroke-width="3"/><text x="1584" y="1390.5" font-size="13" fill="#FFFFFF">40</text></g>
+</g>
+</svg>

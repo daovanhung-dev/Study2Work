@@ -1,16 +1,17 @@
 # Kế hoạch màn hình — SH-02 Đăng nhập
 
-> **Trạng thái:** KẾ_HOẠCH_ĐÃ_XONG / DD_ĐANG_SOẠN · **Phạm vi phiên:** chỉ SH-02 · **Đợt danh mục:** W0.
+> **Trạng thái kế hoạch:** PLAN REVIEWED / DD AND ARTIFACT AUDIT COMPLETE · **Ngày rà soát:** 2026-11-07 · **Phạm vi phiên:** chỉ SH-02 · **Đợt danh mục:** W0.
+> **Trạng thái sau rà soát nguồn:** DD BLOCKED · IMPLEMENTATION BLOCKED · RUNTIME NOT VERIFIED. Chặn DD bởi sai khác hợp đồng thành công #03 và chính sách phiên/vai trò chưa được duyệt; không coi đây là chức năng đã chạy.
 
 ## 1. Hợp đồng và bằng chứng nguồn
 
 - **Tác nhân / màn hình:** Khách mở trang đăng nhập công khai; Trang /login, AC-02, P0.
-- **Luồng trong danh mục:** POST #03 → chính sách token phiên → GET #04 chỉ khi vai trò trả về là STUDENT; người hướng dẫn/quản trị viên không có endpoint khởi tạo hồ sơ tương thích. Với #04 trả 401 trong tài nguyên cần bảo vệ, có thể thử R-X01 một lần theo quy tắc trạng thái dùng chung. Liên kết đăng ký đi tới SH-03.
+- **Luồng trong danh mục:** POST #03 → chính sách token phiên → GET #04 chỉ khi vai trò trả về là STUDENT; người hướng dẫn/quản trị viên không có endpoint khởi tạo hồ sơ tương thích. #04 hiện dùng 401 chung cho auth/claim không hợp lệ và không có profile; không thể tự xác định nguyên nhân để quyết định refresh. R-X01 chỉ được xem là nhánh khôi phục có điều kiện sau khi có policy/contract được duyệt. Liên kết đăng ký đi tới SH-03.
 - **Trạng thái nguồn:** Mã route/view của #03 và #04 tồn tại (RUNTIME_SOURCE). R-X01 /auth/refresh có trong mã nguồn hiện tại nhưng chưa có ID API trong danh mục (SOURCE_BACKED_UNCATALOGUED). Route/client/lưu phiên Study Web ở trạng thái UNWIRED vì apps/study-client/src không tồn tại.
 - **Ảnh nguồn hiện tại:** `screen.png` trong thư mục này, kích thước 1280×1024 và có vẻ trống. Giữ nguyên; SHA-256 hiện tại là 5c3cb8e59c1b645c4338ce527d5fd2c7a2288568fc04982481865d422ec4e323.
 - **HTML nguồn:** code.html mô tả thẻ đăng nhập căn giữa gồm thương hiệu, tiêu đề, vùng cảnh báo, trường email/mật khẩu, nút hiện mật khẩu, nút chính và liên kết đăng ký. Tệp tải Tailwind/font/icon từ CDN bên ngoài. Các bộ xử lý nội tuyến gọi handleLoginSubmit() và togglePasswordVisibility() nhưng HTML không định nghĩa hai hàm này. Giữ nguyên HTML; SHA-256 hiện tại là 6e848c7bbab66b13f0486eb397b9da8a0e2059f3d9b169287b8359b8c1aad595.
 - **Bản xem sạch phát sinh:** Dựng HTML thành screen_rendered.png bằng Chrome headless, cho phép tài nguyên Tailwind/font ngoài mà trang đang tham chiếu, khung nhìn 1280×1024, thời gian chụp 10 giây. Đây là bản xem từ nguồn thiết kế, không phải ảnh khi chạy. Chú thích lên bản dựng này thành screen_annotated.png; giữ screen.png trống làm bằng chứng nguồn.
-- **Đích chuẩn:** Có .agents/web-study/design.md nhưng thiếu entry/index của ngữ cảnh Study trong web-work dù context map khai báo. Dùng hướng dẫn hiện có và ghi sai khác context map; không tạo lại trang ngữ cảnh trong task này.
+- **Đích chuẩn:** `.agents/web-work/study/AGENTS.md` và `INDEX.md` hiện tồn tại, được khai báo trong context map và đăng ký trong manifest. Ngữ cảnh xác nhận Study Web vẫn UNWIRED vì thiếu editable source/package manifest; không coi trang context là bằng chứng runtime.
 - **Sai khác hợp đồng API:** DD/danh mục API #03 quy định 201 DESIGN_RESOURCE_CREATED, UserProfile không có trường token và lỗi 422/500. Mã nguồn hiện tại và AC-02 ghi 200 DESIGN_RESOURCE_RETRIEVED, hồ sơ cùng trường token truy cập/làm mới và lỗi 401/403/500. Giữ cả hai vế ở trạng thái DISCREPANCY; không tự chọn một vế trong DD màn hình.
 - **Điều kiện mở G-02:** #04 chỉ chấp nhận STUDENT; AC-02 còn đề cập permissions nhưng mô hình phản hồi hiện tại của #03/#04 không có trường này. Không suy diễn cách khởi tạo người hướng dẫn/quản trị viên.
 
@@ -22,7 +23,7 @@
 4. Phân nhánh theo nguồn hiện tại: #03 trả 422 → lỗi trường; 401 → lỗi thông tin đăng nhập chung; 403 → tài khoản không khả dụng; 500/mạng → quyết định thử lại an toàn và trace ID. Không tiết lộ tài khoản tồn tại từ 401, không gọi refresh khi 401 do thông tin đăng nhập.
 5. Khi nguồn hiện tại trả HTTP 200, phân tích envelope cùng trường token/hồ sơ thực tế và ghi nhận hợp đồng chuẩn khác biệt. Mã nguồn Study Web chưa quy định cách lưu/lifetime token; dừng ở điều kiện chờ duyệt chính sách phiên trước khi triển khai lưu trữ an toàn. Không tự chọn localStorage/cookie.
 6. Nếu chính sách lưu phiên được duyệt và data.role == STUDENT, gọi #04 với Authorization: Bearer <access_token>. #04 kiểm tra JWT/vai trò trước khi truy vấn DB và trả trường hồ sơ an toàn hiện có. Không trả permissions hoặc bio.
-7. Nếu #04 trả 401, luồng xác thực chung có thể gọi R-X01 đúng một lần, xoay token rồi thử lại #04 đúng một lần. 401 lần hai xóa trạng thái tạm và quay về đăng nhập, chỉ giữ returnTo an toàn. Không refresh sau 403 của #04.
+7. Với #04 trả 401, mã nguồn không phân biệt credential/claim không hợp lệ với không tìm thấy profile. Không tự kết luận 401 là token hết hạn. Chỉ gọi R-X01 tối đa một lần nếu hợp đồng nguồn cung cấp căn cứ phân loại hoặc policy xác thực dùng chung được duyệt cho phép refresh mọi 401; nếu không, dừng tại nhánh chờ quyết định. Không refresh sau 403.
 8. Nếu vai trò là MENTOR/ADMIN hoặc #04 từ chối vai trò, không gọi endpoint /users/me dành cho học viên và không chuyển tới /student. Chặn luồng cho tới khi đường dẫn/vỏ giao diện theo vai trò được duyệt.
 9. Khi hồ sơ học viên được xác minh, chuyển tới returnTo an toàn đã cho phép; nếu không có thì /student chỉ là đích mặc định đề xuất, chờ router/sản phẩm duyệt. Liên kết đăng ký → SH-03.
 
@@ -73,18 +74,20 @@ v1.current_user
 
 Tọa độ tính bằng pixel CSS trên bản dựng sạch 1280×1024 từ code.html. SH-02_markers.json điều khiển bộ dựng. Không chú thích ảnh screen.png trống như thể giao diện có trong ảnh.
 
-| # | Phần tử đích | Vùng trên ảnh | Sự kiện / nguồn dữ liệu |
-|---:|---|---|---|
-| 1 | Dấu thương hiệu và nhận diện Study2Work | Đầu thẻ đăng nhập | HTML không quy định liên kết/trang chủ; giữ bất hoạt nếu chưa duyệt |
-| 2 | Tiêu đề và phần giải thích | Khối tiêu đề thẻ | Nội dung tĩnh đã duyệt; không gọi API |
-| 3 | Vùng cảnh báo/lỗi chung | Giữa phần giới thiệu và biểu mẫu; ban đầu ẩn | Nhận lỗi API/truyền tải đã ánh xạ an toàn, không chứa chi tiết phía máy chủ thô |
-| 4 | Trường email | Ô nhập có nhãn đầu tiên | Đầu vào người dùng → #03 email; chuẩn hóa/kiểm tra theo nguồn hiện tại |
-| 5 | Trường mật khẩu | Ô nhập có nhãn thứ hai | Đầu vào người dùng → #03 password; giữ nguyên chuỗi |
-| 6 | Điều khiển hiện/ẩn mật khẩu | Nút mắt trong trường mật khẩu | Chỉ đổi kiểu hiển thị tại chỗ; togglePasswordVisibility() hiện chưa được định nghĩa |
-| 7 | Nút gửi đăng nhập | Nút toàn chiều rộng | Gửi #03 một lần; bận/vô hiệu hóa trong lúc chờ |
-| 8 | Liên kết đăng ký | Chân thẻ | Tới SH-03 /register; không gọi API tại đây |
+| # | Element ID | Phần tử đích | Vùng trên ảnh | Sự kiện / nguồn dữ liệu |
+|---:|---|---|---|---|
+| 1 | SH02-EL-01 | Dấu thương hiệu và nhận diện Study2Work | Đầu thẻ đăng nhập | HTML không quy định liên kết/trang chủ; giữ bất hoạt nếu chưa duyệt |
+| 2 | SH02-EL-02 | Tiêu đề và phần giải thích | Khối tiêu đề thẻ | Nội dung tĩnh đã duyệt; không gọi API |
+| 3 | SH02-EL-03 | Vùng cảnh báo/lỗi chung | Giữa phần giới thiệu và biểu mẫu; ban đầu ẩn | Nhận lỗi API/truyền tải đã ánh xạ an toàn, không chứa chi tiết phía máy chủ thô |
+| 4 | SH02-EL-04 | Trường email | Ô nhập có nhãn đầu tiên | Đầu vào người dùng → #03 email; chuẩn hóa/kiểm tra theo nguồn hiện tại |
+| 5 | SH02-EL-05 | Trường mật khẩu | Ô nhập có nhãn thứ hai | Đầu vào người dùng → #03 password; giữ nguyên chuỗi |
+| 6 | SH02-EL-06 | Điều khiển hiện/ẩn mật khẩu | Nút mắt trong trường mật khẩu | Chỉ đổi kiểu hiển thị tại chỗ; togglePasswordVisibility() hiện chưa được định nghĩa |
+| 7 | SH02-EL-07 | Nút gửi đăng nhập | Nút toàn chiều rộng | Gửi #03 một lần; bận/vô hiệu hóa trong lúc chờ |
+| 8 | SH02-EL-08 | Liên kết đăng ký | Chân thẻ | Tới SH-03 /register; không gọi API tại đây |
 
 ## 5. Kế hoạch trạng thái/sự kiện và nghiệm thu
+
+Các Event ID phải giữ ổn định trong DD và liên kết về Element ID ở bảng trên: SH02-EV-01 mở màn hình/kiểm tra returnTo; SH02-EV-02 nhập dữ liệu; SH02-EV-03 hiện/ẩn mật khẩu; SH02-EV-04 gửi #03; SH02-EV-05 ánh xạ 422; SH02-EV-06 ánh xạ 401; SH02-EV-07 ánh xạ 403; SH02-EV-08 ánh xạ 500/mạng/body sai; SH02-EV-09 xử lý đăng nhập thành công và vai trò; SH02-EV-10 tải hồ sơ #04; SH02-EV-11 đánh giá #04/401 và chỉ refresh R-X01 nếu policy/contract cho phép; SH02-EV-12 xử lý #04/403/500; SH02-EV-13 đi tới SH-03. Giữ đầy đủ điều kiện, input, thứ tự xử lý, API, output và ngoại lệ trong từng sự kiện DD.
 
 - Giữ riêng giá trị email/mật khẩu sau 422/401; không đưa mật khẩu vào cảnh báo/log.
 - Email có thể dùng kiểm tra gốc của trình duyệt. meta.fieldErrors phía máy chủ ánh xạ vào trợ giúp trường; envelope hiện đặt lỗi trường trong meta.fieldErrors, mỗi lỗi có thể gồm {field?,code,message}. Với 401, hiển thị một lỗi thông tin đăng nhập chung, không chỉ rõ trường sai.
@@ -105,11 +108,21 @@ Tọa độ tính bằng pixel CSS trên bản dựng sạch 1280×1024 từ cod
 6. Cung cấp ảnh SH-02 thật hoặc xác nhận PNG nguồn trống là không hợp lệ và bản dựng HTML là đầu vào hình ảnh được chấp nhận; chủ sở hữu tài sản screen-stitch.
 7. Triển khai/duyệt handler hiện mật khẩu và gửi biểu mẫu; HTML hiện gọi nhưng không định nghĩa cả hai; chủ sở hữu Design/Frontend.
 8. Quyết định câu chữ/ngôn ngữ lỗi; giữ riêng thông báo máy chủ và hợp đồng chuẩn cho tới khi được duyệt.
+9. #04 trả cùng 401 cho token/claim không hợp lệ và profile không tồn tại; xác nhận mã lỗi/metadata phân biệt hoặc policy có chủ đích refresh mọi 401 trước khi SH-02 tự động gọi R-X01.
 
 ## 7. Danh sách kiểm tra tĩnh
 
 - Hash screen.png và code.html do người dùng cung cấp không đổi.
 - screen_rendered.png là bản dựng HTML sạch, không đánh số, 1280×1024; đã ghi nguồn gốc và tài nguyên ngoài được dùng.
 - screen_annotated.png lấy bản dựng sạch ở tỉ lệ 2×, giữ nguyên tỉ lệ khung hình và có marker #1–#8.
-- DD SH-02 có đúng tám dòng marker tương ứng; mọi sự kiện ánh xạ tới nguồn/API hiện tại hoặc điều kiện chặn rõ ràng.
+- SH-02_markers.json và DD SH-02 có đúng tám dòng, ID SH02-EL-01..08 khớp một-một theo số marker; mọi sự kiện SH02-EV-01..13 ánh xạ tới nguồn/API hiện tại hoặc điều kiện chặn rõ ràng.
 - Liên kết cục bộ mở được; tài sản gốc không đổi; không chạy kiểm thử dự án trừ khi có yêu cầu.
+
+## 8. Re-audit ngày 2026-11-07
+
+- Xác nhận `.agents/web-work/study/AGENTS.md` và `INDEX.md` có mặt, được khai báo trong `.agents/context-map.md` và đăng ký trong `.agents/context-manifest.json`; sửa nhận định NOT_FOUND cũ. Trạng thái ứng dụng vẫn UNWIRED do thiếu source/package manifest.
+- Audit tĩnh xác nhận PNG gốc 1280×1024 và HTML gốc giữ nguyên hash đã ghi; bản dựng sạch 1280×1024; ảnh marker 2560×2048; JSON có 8 ID duy nhất khớp 8 hàng element; DD có đủ 13 Event ID; các liên kết Markdown cục bộ resolve.
+- Ảnh chú thích được xem trực quan: marker #1–#8 nằm trên các vùng thiết kế tương ứng; #3 chỉ đánh dấu vùng cảnh báo đang ẩn mặc định.
+- DD đã thêm crosswalk A–F, kết quả/ngoại lệ cho đủ 13 event, state `PROFILE_AUTH_FAILURE_UNCLASSIFIED`, blocker SH02-D09 và checklist nghiệm thu. Không tự động refresh #04/401 khi chưa có classifier hoặc policy cho phép.
+- Kiểm tra tĩnh sau cập nhật: 8 marker ID khớp đúng thứ tự với 8 element row; 13 event đều có trigger, precondition, input, API/output, bước xử lý và kết quả/ngoại lệ; 6 dòng crosswalk A–F; toàn bộ local Markdown links resolve; hash PNG/HTML vẫn khớp.
+- Ảnh chú thích đã xem trực quan. `git diff --check` theo phạm vi SH-02 đạt. Không chạy test ứng dụng, không xác minh runtime, DB hay deployment. Trạng thái cuối vẫn DD BLOCKED / IMPLEMENTATION BLOCKED / RUNTIME NOT VERIFIED.

@@ -1,0 +1,20 @@
+[
+  {"number":1,"element_id":"ST15-EL-01","label":"Header exit from quiz","x":45,"y":20},
+  {"number":2,"element_id":"ST15-EL-02","label":"Study2Work Exam brand","x":474,"y":40},
+  {"number":3,"element_id":"ST15-EL-03","label":"Header remaining-time pill","x":1198,"y":62},
+  {"number":4,"element_id":"ST15-EL-04","label":"Student profile","x":1580,"y":63},
+  {"number":5,"element_id":"ST15-EL-05","label":"Dimmed quiz backdrop","x":64,"y":111},
+  {"number":6,"element_id":"ST15-EL-06","label":"Confirmation dialog surface","x":1168,"y":308},
+  {"number":7,"element_id":"ST15-EL-07","label":"Quiz icon tile","x":474,"y":367},
+  {"number":8,"element_id":"ST15-EL-08","label":"Confirmation eyebrow","x":1133,"y":359},
+  {"number":9,"element_id":"ST15-EL-09","label":"Confirmation heading","x":1004,"y":394},
+  {"number":10,"element_id":"ST15-EL-10","label":"Submission explanation","x":1130,"y":475},
+  {"number":11,"element_id":"ST15-EL-11","label":"Answered count and progress","x":475,"y":523},
+  {"number":12,"element_id":"ST15-EL-12","label":"Unanswered count and question chips","x":689,"y":508},
+  {"number":13,"element_id":"ST15-EL-13","label":"Flagged count and question chip","x":1130,"y":506},
+  {"number":14,"element_id":"ST15-EL-14","label":"Remaining-time strip","x":475,"y":675},
+  {"number":15,"element_id":"ST15-EL-15","label":"Synced-answer status chip","x":1090,"y":698},
+  {"number":16,"element_id":"ST15-EL-16","label":"Exam rules and attempt text","x":1127,"y":806},
+  {"number":17,"element_id":"ST15-EL-17","label":"Continue test button","x":475,"y":995},
+  {"number":18,"element_id":"ST15-EL-18","label":"Submit now button","x":1126,"y":995}
+]

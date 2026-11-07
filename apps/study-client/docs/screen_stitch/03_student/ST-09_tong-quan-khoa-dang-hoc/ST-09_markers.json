@@ -1,0 +1,419 @@
+{
+  "screen_id": "ST-09",
+  "source_image": "screen.png",
+  "source_html": "code.html",
+  "source_state": "Complete static gated handoff design. The screenshot is used directly; no render replacement was needed. Static HTML links are placeholders (href=\"#\"); only the copy-route button has an inline clipboard call. Not a Study Web runtime capture.",
+  "source_image_sha256": "8b37e1c7dc459ab7a9ab87161f0990d259abf9291c7f3a85b4a05c3324ba7a7d",
+  "source_html_sha256": "554e2fdc52b3fe01cbaf560f7525dca1742a0413b889882569c3d865a699bc46",
+  "image_size": {
+    "width": 1397,
+    "height": 1600
+  },
+  "annotation": {
+    "scale": 2,
+    "canvas_size": {
+      "width": 2954,
+      "height": 3200
+    },
+    "source_offset_canvas_px": {
+      "x": 80,
+      "y": 0
+    },
+    "gutter_width_canvas_px": 80,
+    "marker_style": {
+      "shape": "circle",
+      "fill": "#0B5F8A",
+      "text": "#FFFFFF",
+      "stroke": "#FFFFFF",
+      "diameter_canvas_px": 40,
+      "font_weight": 700
+    },
+    "leader_style": {
+      "stroke": "#0B5F8A",
+      "stroke_width_canvas_px": 2,
+      "scope": "side gutter and image edge only"
+    }
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST09-EL-01",
+      "name": "Header brand",
+      "target": "Study2Work LMS brand and school icon",
+      "target_center_source_px": {
+        "x": 150,
+        "y": 36
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 72
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 72
+      }
+    },
+    {
+      "number": 2,
+      "element_id": "ST09-EL-02",
+      "name": "Primary navigation",
+      "target": "Trang chủ, Khóa học của tôi, Tiến độ, Thảo luận, Thông báo",
+      "target_center_source_px": {
+        "x": 565,
+        "y": 36
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2926,
+        "y": 72
+      },
+      "leader_to_canvas_px": {
+        "x": 2874,
+        "y": 72
+      }
+    },
+    {
+      "number": 3,
+      "element_id": "ST09-EL-03",
+      "name": "Student identity display",
+      "target": "Static Nguyễn Văn A / Học viên text and person icon",
+      "target_center_source_px": {
+        "x": 1295,
+        "y": 36
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2926,
+        "y": 140
+      },
+      "leader_to_canvas_px": {
+        "x": 2874,
+        "y": 72
+      }
+    },
+    {
+      "number": 4,
+      "element_id": "ST09-EL-04",
+      "name": "Screen, route and gated-state badges",
+      "target": "Mã màn hình ST-09; route /student/courses/:courseId; Trạng thái Gated / Unavailable",
+      "target_center_source_px": {
+        "x": 380,
+        "y": 141
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 282
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 282
+      }
+    },
+    {
+      "number": 5,
+      "element_id": "ST09-EL-05",
+      "name": "Page title and supporting text",
+      "target": "Tổng quan khóa đang học (Gated Hand-off View) and the static subtitle",
+      "target_center_source_px": {
+        "x": 470,
+        "y": 184
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 366
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 368
+      }
+    },
+    {
+      "number": 6,
+      "element_id": "ST09-EL-06",
+      "name": "API state panel",
+      "target": "API State badge listing #09 (D), #20 (D), #37 (D)",
+      "target_center_source_px": {
+        "x": 1210,
+        "y": 167
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2926,
+        "y": 334
+      },
+      "leader_to_canvas_px": {
+        "x": 2874,
+        "y": 334
+      }
+    },
+    {
+      "number": 7,
+      "element_id": "ST09-EL-07",
+      "name": "Gate warning pill",
+      "target": "Course-learning tree and enrollment entitlement warning",
+      "target_center_source_px": {
+        "x": 700,
+        "y": 460
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2926,
+        "y": 920
+      },
+      "leader_to_canvas_px": {
+        "x": 2874,
+        "y": 920
+      }
+    },
+    {
+      "number": 8,
+      "element_id": "ST09-EL-08",
+      "name": "Gated-state heading",
+      "target": "Khóa học chưa sẵn sàng nạp cây nội dung học tập",
+      "target_center_source_px": {
+        "x": 700,
+        "y": 510
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1020
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1020
+      }
+    },
+    {
+      "number": 9,
+      "element_id": "ST09-EL-09",
+      "name": "Gated-state explanatory copy",
+      "target": "Static copy explaining enrollment, progress and media remain gated",
+      "target_center_source_px": {
+        "x": 700,
+        "y": 605
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1210
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1210
+      }
+    },
+    {
+      "number": 10,
+      "element_id": "ST09-EL-10",
+      "name": "Mandatory access policy notice",
+      "target": "Policy icon, title/copy about APIs #09/#20/#37, and RESTRICTED_ACCESS badge",
+      "target_center_source_px": {
+        "x": 700,
+        "y": 725
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2926,
+        "y": 1450
+      },
+      "leader_to_canvas_px": {
+        "x": 2874,
+        "y": 1450
+      }
+    },
+    {
+      "number": 11,
+      "element_id": "ST09-EL-11",
+      "name": "Return to ST-08 link",
+      "target": "Quay lại Khóa học của tôi (ST-08)",
+      "target_center_source_px": {
+        "x": 540,
+        "y": 826
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1652
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1652
+      }
+    },
+    {
+      "number": 12,
+      "element_id": "ST09-EL-12",
+      "name": "Access-check CTA to ST-10",
+      "target": "Kiểm tra quyền học bài (ST-10)",
+      "target_center_source_px": {
+        "x": 840,
+        "y": 826
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2926,
+        "y": 1652
+      },
+      "leader_to_canvas_px": {
+        "x": 2874,
+        "y": 1652
+      }
+    },
+    {
+      "number": 13,
+      "element_id": "ST09-EL-13",
+      "name": "Developer handoff section heading",
+      "target": "Hồ sơ kỹ thuật bàn giao / Developer Hand-off Specification and v1.2 Draft Refined badge",
+      "target_center_source_px": {
+        "x": 700,
+        "y": 970
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1940
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1940
+      }
+    },
+    {
+      "number": 14,
+      "element_id": "ST09-EL-14",
+      "name": "Gatekeeper specification card",
+      "target": "Pre-condition, curriculum-integrity and progress-mapping statements",
+      "target_center_source_px": {
+        "x": 250,
+        "y": 1110
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 2220
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 2220
+      }
+    },
+    {
+      "number": 15,
+      "element_id": "ST09-EL-15",
+      "name": "Design token specification card",
+      "target": "Ocean Blue anchor, 4px spacing, elevation and layout-width rows",
+      "target_center_source_px": {
+        "x": 700,
+        "y": 1110
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2926,
+        "y": 2220
+      },
+      "leader_to_canvas_px": {
+        "x": 2874,
+        "y": 2220
+      }
+    },
+    {
+      "number": 16,
+      "element_id": "ST09-EL-16",
+      "name": "Accessibility specification card",
+      "target": "WCAG contrast, keyboard navigation and aria-live claims",
+      "target_center_source_px": {
+        "x": 1140,
+        "y": 1110
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2926,
+        "y": 2300
+      },
+      "leader_to_canvas_px": {
+        "x": 2874,
+        "y": 2220
+      }
+    },
+    {
+      "number": 17,
+      "element_id": "ST09-EL-17",
+      "name": "Frontend integration notice",
+      "target": "Static integration warning to keep ST-09 gated until release",
+      "target_center_source_px": {
+        "x": 550,
+        "y": 1395
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 2790
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 2790
+      }
+    },
+    {
+      "number": 18,
+      "element_id": "ST09-EL-18",
+      "name": "Copy route button",
+      "target": "Sao chép Route; inline clipboard action copies /student/courses/:courseId",
+      "target_center_source_px": {
+        "x": 1250,
+        "y": 1395
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2926,
+        "y": 2790
+      },
+      "leader_to_canvas_px": {
+        "x": 2874,
+        "y": 2790
+      }
+    },
+    {
+      "number": 19,
+      "element_id": "ST09-EL-19",
+      "name": "Footer copyright and compliance badge",
+      "target": "© 2025 Study2Work LMS and WCAG 2.1 AA Compliant chip",
+      "target_center_source_px": {
+        "x": 350,
+        "y": 1555
+      },
+      "side": "left",
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 3110
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 3110
+      }
+    },
+    {
+      "number": 20,
+      "element_id": "ST09-EL-20",
+      "name": "Footer legal/help navigation",
+      "target": "Điều khoản dịch vụ, Chính sách bảo mật, Trợ giúp",
+      "target_center_source_px": {
+        "x": 1190,
+        "y": 1555
+      },
+      "side": "right",
+      "marker_center_canvas_px": {
+        "x": 2926,
+        "y": 3110
+      },
+      "leader_to_canvas_px": {
+        "x": 2874,
+        "y": 3110
+      }
+    }
+  ]
+}

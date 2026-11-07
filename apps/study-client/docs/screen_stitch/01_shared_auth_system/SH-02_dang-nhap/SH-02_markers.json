@@ -3,48 +3,80 @@
     "number": 1,
     "label": "Dấu thương hiệu và nhận diện Study2Work",
     "x": 450,
-    "y": 313
+    "y": 313,
+    "element_id": "SH02-EL-01",
+    "screen_id": "SH-02",
+    "coordinate_basis": "CSS pixel centers on screen_rendered.png (1280x1024), derived from code.html",
+    "coordinate_origin": "top-left"
   },
   {
     "number": 2,
     "label": "Tiêu đề đăng nhập và phần giải thích",
     "x": 450,
-    "y": 379
+    "y": 379,
+    "element_id": "SH02-EL-02",
+    "screen_id": "SH-02",
+    "coordinate_basis": "CSS pixel centers on screen_rendered.png (1280x1024), derived from code.html",
+    "coordinate_origin": "top-left"
   },
   {
     "number": 3,
     "label": "Vùng cảnh báo chung đang ẩn ban đầu",
     "x": 450,
-    "y": 446
+    "y": 446,
+    "element_id": "SH02-EL-03",
+    "screen_id": "SH-02",
+    "coordinate_basis": "CSS pixel centers on screen_rendered.png (1280x1024), derived from code.html",
+    "coordinate_origin": "top-left"
   },
   {
     "number": 4,
     "label": "Trường email",
     "x": 450,
-    "y": 501
+    "y": 501,
+    "element_id": "SH02-EL-04",
+    "screen_id": "SH-02",
+    "coordinate_basis": "CSS pixel centers on screen_rendered.png (1280x1024), derived from code.html",
+    "coordinate_origin": "top-left"
   },
   {
     "number": 5,
     "label": "Trường mật khẩu",
     "x": 450,
-    "y": 584
+    "y": 584,
+    "element_id": "SH02-EL-05",
+    "screen_id": "SH-02",
+    "coordinate_basis": "CSS pixel centers on screen_rendered.png (1280x1024), derived from code.html",
+    "coordinate_origin": "top-left"
   },
   {
     "number": 6,
     "label": "Điều khiển hiện/ẩn mật khẩu",
     "x": 798,
-    "y": 584
+    "y": 584,
+    "element_id": "SH02-EL-06",
+    "screen_id": "SH-02",
+    "coordinate_basis": "CSS pixel centers on screen_rendered.png (1280x1024), derived from code.html",
+    "coordinate_origin": "top-left"
   },
   {
     "number": 7,
     "label": "Nút gửi đăng nhập",
     "x": 450,
-    "y": 644
+    "y": 644,
+    "element_id": "SH02-EL-07",
+    "screen_id": "SH-02",
+    "coordinate_basis": "CSS pixel centers on screen_rendered.png (1280x1024), derived from code.html",
+    "coordinate_origin": "top-left"
   },
   {
     "number": 8,
     "label": "Liên kết đăng ký tới SH-03",
     "x": 450,
-    "y": 721
+    "y": 721,
+    "element_id": "SH02-EL-08",
+    "screen_id": "SH-02",
+    "coordinate_basis": "CSS pixel centers on screen_rendered.png (1280x1024), derived from code.html",
+    "coordinate_origin": "top-left"
   }
 ]

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2134" height="3200" viewBox="0 0 2134 3200">
+  <g fill="none" stroke="#0B5F8A" stroke-width="2">
+    <line x1="48.0" y1="36" x2="80" y2="36"/>
+    <line x1="2054" y1="36" x2="2086.0" y2="36"/>
+    <line x1="48.0" y1="84" x2="80" y2="84"/>
+    <line x1="2054" y1="158" x2="2086.0" y2="158"/>
+    <line x1="48.0" y1="240" x2="80" y2="240"/>
+    <line x1="2054" y1="320" x2="2086.0" y2="320"/>
+    <line x1="48.0" y1="440" x2="80" y2="440"/>
+    <line x1="2054" y1="440" x2="2086.0" y2="440"/>
+    <line x1="48.0" y1="480" x2="80" y2="480"/>
+    <line x1="2054" y1="568" x2="2086.0" y2="568"/>
+    <line x1="48.0" y1="598" x2="80" y2="598"/>
+    <line x1="2054" y1="650" x2="2086.0" y2="650"/>
+    <line x1="48.0" y1="760" x2="80" y2="760"/>
+    <line x1="2054" y1="1030" x2="2086.0" y2="1030"/>
+    <line x1="48.0" y1="1260" x2="80" y2="1260"/>
+    <line x1="2054" y1="1490" x2="2086.0" y2="1490"/>
+    <line x1="48.0" y1="1720" x2="80" y2="1720"/>
+    <line x1="2054" y1="1900" x2="2086.0" y2="1900"/>
+    <line x1="48.0" y1="2270" x2="80" y2="2270"/>
+    <line x1="2054" y1="2340" x2="2086.0" y2="2340"/>
+    <line x1="48.0" y1="2340" x2="80" y2="2340"/>
+    <line x1="2054" y1="2610" x2="2086.0" y2="2610"/>
+    <line x1="48.0" y1="2610" x2="80" y2="2610"/>
+    <line x1="2054" y1="2920" x2="2086.0" y2="2920"/>
+    <line x1="48.0" y1="2920" x2="80" y2="2920"/>
+    <line x1="2054" y1="3140" x2="2086.0" y2="3140"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle" dominant-baseline="central">
+    <g><circle cx="28" cy="36" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="28" y="37" fill="#FFFFFF">1</text></g>
+    <g><circle cx="2106" cy="36" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="2106" y="37" fill="#FFFFFF">2</text></g>
+    <g><circle cx="28" cy="84" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="28" y="85" fill="#FFFFFF">3</text></g>
+    <g><circle cx="2106" cy="158" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="2106" y="159" fill="#FFFFFF">4</text></g>
+    <g><circle cx="28" cy="240" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="28" y="241" fill="#FFFFFF">5</text></g>
+    <g><circle cx="2106" cy="320" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="2106" y="321" fill="#FFFFFF">6</text></g>
+    <g><circle cx="28" cy="440" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="28" y="441" fill="#FFFFFF">7</text></g>
+    <g><circle cx="2106" cy="440" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="2106" y="441" fill="#FFFFFF">8</text></g>
+    <g><circle cx="28" cy="480" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="28" y="481" fill="#FFFFFF">9</text></g>
+    <g><circle cx="2106" cy="568" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="2106" y="569" fill="#FFFFFF">10</text></g>
+    <g><circle cx="28" cy="598" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="28" y="599" fill="#FFFFFF">11</text></g>
+    <g><circle cx="2106" cy="650" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="2106" y="651" fill="#FFFFFF">12</text></g>
+    <g><circle cx="28" cy="760" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="28" y="761" fill="#FFFFFF">13</text></g>
+    <g><circle cx="2106" cy="1030" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="2106" y="1031" fill="#FFFFFF">14</text></g>
+    <g><circle cx="28" cy="1260" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="28" y="1261" fill="#FFFFFF">15</text></g>
+    <g><circle cx="2106" cy="1490" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="2106" y="1491" fill="#FFFFFF">16</text></g>
+    <g><circle cx="28" cy="1720" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="28" y="1721" fill="#FFFFFF">17</text></g>
+    <g><circle cx="2106" cy="1900" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="2106" y="1901" fill="#FFFFFF">18</text></g>
+    <g><circle cx="28" cy="2270" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="28" y="2271" fill="#FFFFFF">19</text></g>
+    <g><circle cx="2106" cy="2340" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="2106" y="2341" fill="#FFFFFF">20</text></g>
+    <g><circle cx="28" cy="2340" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="28" y="2341" fill="#FFFFFF">21</text></g>
+    <g><circle cx="2106" cy="2610" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="2106" y="2611" fill="#FFFFFF">22</text></g>
+    <g><circle cx="28" cy="2610" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="28" y="2611" fill="#FFFFFF">23</text></g>
+    <g><circle cx="2106" cy="2920" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="2106" y="2921" fill="#FFFFFF">24</text></g>
+    <g><circle cx="28" cy="2920" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="28" y="2921" fill="#FFFFFF">25</text></g>
+    <g><circle cx="2106" cy="3140" r="20" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/><text x="2106" y="3141" fill="#FFFFFF">26</text></g>
+  </g>
+</svg>

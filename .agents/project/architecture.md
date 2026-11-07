@@ -4,7 +4,7 @@
 
 | Area | Path | Stack/role |
 |---|---|---|
-| Study web | `apps/study-client/` | Vue 3 + TypeScript + Vite |
+| Study Web | `apps/study-client/` | Documentation/assets and an ignored compiled `dist` bundle are present; the bundle has only a root `/` home route. Editable source/package manifest and Student routes are absent; serving/deployment is unverified. |
 | Study API | `apps/study-server/` | FastAPI + Python + sync SQLAlchemy core; current composition import được |
 | Work mobile | `apps/work-client/mobile/` | Hai Flutter app độc lập; direct Neon SQL + SQLite cache |
 | Work web | `apps/work-client/web/` | React + TypeScript + Vite |
@@ -29,7 +29,7 @@ business module chéo app.
 | Study server | `127.0.0.1:3003` |
 | DB Admin client | `127.0.0.2:3000` |
 | Work client | `127.0.0.2:3001` |
-| Study client | `127.0.0.2:3002` |
+| Study client | `127.0.0.2:3002` (declared local address; no client source/runtime verified in this checkout) |
 
 These are local application endpoints. PostgreSQL, Redis, Ollama and test
 fixture addresses are separate dependencies and retain their existing values.
@@ -37,7 +37,7 @@ fixture addresses are separate dependencies and retain their existing values.
 ## Boundary chính
 
 ```text
-Study web  -> Study API (contract chưa có OpenAPI hiện hành)
+Study web  -> Study API (intended boundary; Student route source absent, Study OpenAPI not found; ignored dist has only `/` home route)
 Work web   -> relative `/api/v1` -> Work Express JSON API
 Work mobile -> Neon PostgreSQL qua `postgres` + local SQLite cache
 Work mobile -> Gemini HTTP API cho `AIService`
