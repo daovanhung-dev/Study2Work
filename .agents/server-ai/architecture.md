@@ -25,8 +25,17 @@ There is no verified runtime registration for:
 
 Those files are documented separately as `UNWIRED` copied core.
 
-The local AI API is started at `127.0.0.1:3000`; its Ollama dependency remains
-at the separately configured `OLLAMA_BASE_URL` (normally `127.0.0.1:11434`).
+The `ai-server` project script in `src/ai_server/__init__.py` starts Uvicorn
+with `app.main:app` at `127.0.0.1:3000`. Run it from `apps/ai-server` with
+`uv run --env-file .env ai-server` to load local settings. The app itself reads
+process environment variables and does not load `.env` automatically. Its
+Ollama dependency remains at the separately configured `OLLAMA_BASE_URL`
+(normally `http://127.0.0.1:11434`).
+
+The script adds the checkout root to Python's import path because `app/` sits
+beside `src/` and is not included in the installed `ai_server` package. This
+startup command is verified for the local checkout; a standalone wheel layout
+would need a separate packaging decision.
 
 ## Packaging discrepancy
 
