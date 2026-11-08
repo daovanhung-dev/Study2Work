@@ -11,8 +11,9 @@ REQUIRED = [
     '07-test-cases.md'
 ]
 LINK = re.compile(r'(?<!!)\[[^\]]*\]\(([^)]+)\)')
-ID = re.compile(r'\b(SH-\d{2,3}-(?:EL|EV|API|BR|TC)-\d{3})\b')
-DECL = re.compile(r'^#{2,4}\s+(?:\d+\.\s+)?(SH-\d{2,3}-(?:EL|EV|API|BR|TC)-\d{3})\b', re.M)
+SCREEN = r'(?:SH|GS|ST|ME|AD)-\d{2,3}'
+ID = re.compile(rf'\b({SCREEN}-(?:EL|EV|API|BR|TC)-\d{{3}})\b')
+DECL = re.compile(rf'^#{{2,4}}\s+(?:\d+\.\s+)?({SCREEN}-(?:EL|EV|API|BR|TC)-\d{{3}})\b', re.M)
 
 
 def check(screen):
@@ -33,8 +34,8 @@ def check(screen):
     for filename in ('screen-clean.png','screen-numbered.png'):
         if not (screen / 'images' / filename).exists(): errors.append(f'Missing image: images/{filename}')
     overview = text.get('00-overview.md','')
-    found = re.search(r'^#\s+(SH-\d{2,3})\b', overview, re.M)
-    if not found: warns.append('No SH-XX heading in overview')
+    found = re.search(rf'^#\s+({SCREEN})\b', overview, re.M)
+    if not found: warns.append('No supported Screen ID heading in overview')
     elif not screen.name.startswith(found.group(1)): warns.append('Screen ID mismatch vs folder name')
     for filename, c in text.items():
         if not c.startswith('# '): warns.append(f'Missing top-level heading: {filename}')
@@ -43,7 +44,7 @@ def check(screen):
     for c in text.values(): decl |= set(DECL.findall(c))
     for prefix, filename in [('EL','01-ui-elements.md'), ('EV','02-events.md'), ('API','04-api-integration.md'), ('BR','05-business-rules.md'), ('TC','07-test-cases.md')]:
         body=text.get(filename,'')
-        if not re.search(r'SH-\d{2,3}-'+prefix+r'-\d{3}', body):
+        if not re.search(SCREEN+r'-'+prefix+r'-\d{3}', body):
             warns.append(f'No {prefix} IDs in owning document: {filename}')
     return errors, warns
 

@@ -12,13 +12,14 @@ SRC = ROOT / '01-TEMPLATES' / 'SCREEN_ID'
 
 def main():
     p = argparse.ArgumentParser(description='Create a DD screen skeleton')
-    p.add_argument('--id', required=True, help='Screen ID, e.g. SH-03')
+    p.add_argument('--id', required=True, help='Screen ID from the project inventory, e.g. SH-03, GS-01, ST-01, ME-01, AD-01')
     p.add_argument('--slug', required=True, help='PascalCase folder suffix, e.g. MyCourses')
     p.add_argument('--title', required=True, help='Vietnamese screen title')
     p.add_argument('--route', required=True, help='Route pattern, e.g. /my-courses')
     p.add_argument('--output', default='./MY-SCREENS', help='Destination root directory')
     a = p.parse_args()
-    if not re.fullmatch(r'SH-\d{2,3}', a.id): p.error('--id phải có dạng SH-03 hoặc SH-123')
+    if not re.fullmatch(r'(?:SH|GS|ST|ME|AD)-\d{2,3}', a.id):
+        p.error('--id phải có dạng SH-03, GS-01, ST-01, ME-01 hoặc AD-01')
     if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_-]*', a.slug): p.error('--slug phải là tên thư mục an toàn')
     dst = Path(a.output).expanduser().resolve() / f'{a.id}-{a.slug}'
     if dst.exists(): p.error(f'Đích đã tồn tại, sẽ không ghi đè: {dst}')

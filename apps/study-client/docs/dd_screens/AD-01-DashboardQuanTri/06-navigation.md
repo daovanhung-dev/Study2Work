@@ -1,0 +1,84 @@
+# AD-01 — Navigation
+
+## 1. Route definition
+- Current route in inventory: `/admin`
+- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
+- Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
+- Route guards: see source DD/API contract; do not create role policy.
+
+## 2. Điểm vào
+| From screen/route | Trigger | Params | Guard / fallback |
+|---|---|---|---|
+| Không khai báo trong cột điều hướng inventory. | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+
+## 3. Điểm ra
+| Destination | Trigger | Params | Điều kiện |
+|---|---|---|---|
+| [AD-02](../AD-02-DanhSachNguoiDung/00-overview.md), [AD-06](../AD-06-DanhSachKhoaHocQuanTri/00-overview.md), [AD-24](../AD-24-BaoCaoTacDongCongDong/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+
+## 4. Back / refresh / deep link
+- Back behavior: xem source DD; không mặc định browser history.
+- Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
+- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
+
+## 5. Diagram
+```mermaid
+flowchart LR
+  S0["AD-01 Dashboard quản trị"] --> S1["AD-02"]
+  S0["AD-01 Dashboard quản trị"] --> S2["AD-06"]
+  S0["AD-01 Dashboard quản trị"] --> S3["AD-24"]
+```
+
+## Source navigation and flow detail
+
+### Trích từ DD nguồn: E. Ma trận trạng thái và điều hướng
+
+### Screen states
+
+| State | Điều kiện | UI / chuyển tiếp | Trạng thái chứng cứ |
+|---|---|---|---|
+| `UNWIRED` | Current Study Web không có source/router; #101 không có runtime route. | Không có screen state runtime. | `CURRENT_BEHAVIOR`, `UNWIRED / NOT_FOUND`. |
+| `Loading` | Candidate khi route/API được wire và request #101 đang pending. | Cần thiết kế spinner/skeleton, timeout và disable duplicate; screenshot không có loading visual. | Inventory candidate; chưa implement/approved. |
+| `Ready` | 200 Report và field/card mapping được duyệt. | Hiển thị kỳ, metrics và generated time theo UI format đã duyệt. | Chưa đạt vì KPI mapping/formula chưa chốt. |
+| `Partial` | Inventory nêu state này. | API #101 không định nghĩa partial marker, metric-level status hoặc lỗi từng phần; không thể suy ra card nào hidden/failed. | `OPEN / BLOCKER`. |
+| `No data` | Candidate khi report không có metrics hoặc nguồn rỗng. | `--` trong ảnh là placeholder; API chưa quyết định empty list, zero, metric omission hay unavailable. | `OPEN / BLOCKER`. |
+| `Authentication required` | API expected trả 401 `DESIGN_AUTHENTICATION_REQUIRED`. | Login/session recovery screen và giữ lại route chưa có mapping trong Study Web. | Contract expected; UI unwired. |
+| `Access denied` | API expected trả 403 `DESIGN_ACCESS_DENIED`. | Không có forbidden state/client route trong source AD-01. | Contract expected; policy/report permission chưa chốt. |
+| `Error` | API expected trả 500 `DESIGN_INTERNAL_ERROR`; network/timeout còn chưa có contract UI. | Error copy/retry behavior chưa có thiết kế. Không báo dashboard “ready” khi lỗi. | Contract expected, handling unwired. |
+| `Refreshing` | Current refresh button animation đang chạy. | Icon xoay tối đa 700 ms; không có loading data hoặc request. | Current HTML local-only. |
+
+### Điều hướng và dữ liệu
+
+| Từ | Đến | Dữ liệu / điều kiện | Hiện trạng |
+|---|---|---|---|
+| Admin session → AD-01 | `/admin` | Admin JWT; report permission; current principal/profile mapping cần contract. | Inventory/AC expected; route và shell không có trong Study Web source. |
+| AD-01 → AD-02 | `/admin/users` | Không cần dashboard KPI để điều hướng; API #68 nằm ở screen đích. | Quick link HTML; route runtime chưa wire. |
+| AD-01 → AD-06 | `/admin/courses` | API #73 thuộc screen đích. | Quick link HTML; route runtime chưa wire. |
+| AD-01 → AD-10 | `/admin/content/pending` | API #78 thuộc screen đích. | Quick link HTML; route runtime chưa wire. |
+| AD-01 → AD-24 | `/admin/reports/community-impact` | Inventory liên kết; API #102 yêu cầu date/segment theo contract riêng. | Không có link tương ứng rõ trong quick cards; nav Báo cáo vẫn `href="#"`. |
+| AC-38 summary → #102 | `GET /api/v1/admin/reports/community-impact` | AC-38 đặt #102 sau #101; không tự nối segment/query hoặc gộp metric. | Diagram/contract expected; API #102 chưa runtime. |
+| AC-38 optional export → #103 / #18 | Endpoint #103, có thể theo dõi operation | Export là nhánh downstream; #103/#18 có discrepancy về operation/result contract. | Không khởi tạo từ AD-01 hiện tại. |
+
+### Trích từ DD nguồn: B. Luồng hoạt động tổng thể
+
+### Expected flow — chỉ triển khai sau khi blocker được xử lý
+
+1. Mở route `/admin` từ một shell/router Study Web đã đăng ký; kiểm tra phiên Admin theo policy đã duyệt. Handoff token/profile hiện không có Study Web source để xác định.
+2. Khởi tạo trạng thái tải cho kỳ đã được owner chốt. Các nhãn “Hôm nay”, “7 ngày qua”, “30 ngày qua” chưa đủ để suy ra `from`/`to`, timezone hoặc default; không lấy proposal 30 ngày làm mặc định đã duyệt.
+3. Gửi một request `GET /api/v1/admin/reports/summary` với Bearer JWT và query `from?:date`, `to?:date`, không body. Chỉ gửi khoảng ngày sau khi date semantics được xác nhận.
+4. Backend theo AC-38 phải xác thực Admin/report permission, kiểm tra kỳ và tổng hợp KPI. Hiện #101 không có route, query hoặc data source; API DD chưa chốt aggregate hay report snapshot.
+5. Với 200 `DESIGN_RESOURCE_RETRIEVED`, kiểm tra envelope và shape `Report.period`, `metrics[]`, `generated_at`. Mỗi `ImpactMetric.value` là decimal-string. Không thể gán vào bốn card cho đến khi `key`, label, formula, unit, population, empty/partial behavior và thứ tự được phê duyệt.
+6. Sau mapping được duyệt, hiển thị dữ liệu và kỳ server trả về; giữ query state chỉ theo router/cache policy được xác nhận. Không tự tính KPI ở client.
+7. Xử lý 401/403/500 theo business code; recovery/redirect, error copy, retry, timeout và cache chưa có contract. Invalid date hoặc `from > to` cũng chưa có error mapping; không tự thêm 400/422.
+8. Sau summary, AC-38 tiếp tục API #102 cho community impact; nhánh export #103 là optional. Đây là downstream flow, không đồng nghĩa dashboard phải tự gọi #102/#103 hoặc API #18.
+
+### Current HTML behavior
+
+- Document mở trực tiếp như prototype tĩnh; không có fetch/Axios/XHR, API handler, Study Web route hay state store.
+- Date controls và “Xem toàn bộ nhật ký kiểm toán” đang disabled.
+- Refresh chỉ thêm class `rotate-180` cho icon, bỏ class sau 700 ms và chặn click lặp trong khoảng timer; không làm mới số liệu.
+- Primary nav và footer anchors trỏ `#`; notification button không có listener. Ba quick links là native anchors tới path admin nhưng không có app router để xác nhận đích.
+- Các KPI/status/audit/identity trong ảnh không lấy từ API. `--` không được hiểu là 0 hoặc response no-data.

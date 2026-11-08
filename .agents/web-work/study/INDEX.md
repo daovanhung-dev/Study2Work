@@ -14,7 +14,11 @@ each task.
 | Topic | Page | Authority |
 |---|---|---|
 | Visual, interaction and accessibility target | [`../../web-study/design.md`](../../web-study/design.md) | Intended design only; not runtime evidence. |
+| Skill-formatted screen DD packages | [`../../../apps/study-client/docs/dd_screens/screen-index.md`](../../../apps/study-client/docs/dd_screens/screen-index.md) | 83 source-derived packages; route/API status stays per screen, and the packages do not prove runtime wiring. |
 
-Screen-specific design source is in `apps/study-client/docs/`. Use its inventory
-and screen assets as requirements/design evidence, then trace APIs to the
-current Study Server source when the screen has backend dependencies.
+Screen-specific design source is in `apps/study-client/docs/`. Use its
+[`list_screen.md`](../../../apps/study-client/docs/list_screen.md) inventory,
+[`screen_stitch/`](../../../apps/study-client/docs/screen_stitch/) source assets,
+and [`dd_screens/`](../../../apps/study-client/docs/dd_screens/screen-index.md)
+packages as requirements/design evidence. Trace APIs to current Study Server
+source when the screen has backend dependencies.

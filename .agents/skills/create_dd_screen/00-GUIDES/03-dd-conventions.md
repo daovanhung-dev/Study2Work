@@ -2,11 +2,12 @@
 
 ## 1. Đặt tên
 
-- Screen: `SH-01`, `SH-02`... duy nhất trong phạm vi dự án.
+- Screen ID phải lấy từ inventory/owner hiện hành và duy nhất trong phạm vi dự án. Inventory Study2Work hiện dùng các prefix `SH`, `GS`, `ST`, `ME`, `AD`; ví dụ `SH-01`, `GS-01`, `ST-01`, `ME-01`, `AD-01`.
 - Folder: `<SCREEN_ID>-<PascalCaseSlug>`; tên file cố định theo 8-file contract.
-- Element: `SH-01-EL-001`; Event: `SH-01-EV-001`; API use: `SH-01-API-001`; Business Rule: `SH-01-BR-001`; Test Case: `SH-01-TC-001`.
-- API chuẩn dùng chung dự án có thể có `API-CATALOG-COURSES-LIST`; `SH-01-API-001` chỉ mô tả cách screen này sử dụng contract.
-- Ảnh numbered dùng `#1`, `#2` trên chính UI; mapping ở UI Elements giữ `#1 → SH-01-EL-001`.
+- Element: `<SCREEN_ID>-EL-001`; Event: `<SCREEN_ID>-EV-001`; API use: `<SCREEN_ID>-API-001`; Business Rule: `<SCREEN_ID>-BR-001`; Test Case: `<SCREEN_ID>-TC-001`.
+- API chuẩn dùng chung dự án có thể có catalog ID; `<SCREEN_ID>-API-001` chỉ mô tả cách screen này sử dụng contract.
+- Khi chuyển DD có sẵn, giữ nguyên source IDs và ghi mapping alias tường minh sang dạng skill nếu cần; không âm thầm đổi ID nguồn.
+- Ảnh numbered dùng `#1`, `#2` trên chính UI; mapping ở UI Elements giữ `#1 → <SCREEN_ID>-EL-001` và nêu source Element ID nếu khác.
 
 ## 2. Nơi chịu trách nhiệm cho từng loại thông tin
 
