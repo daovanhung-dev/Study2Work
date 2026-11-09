@@ -71,21 +71,22 @@ class ChatAPITests(unittest.TestCase):
 
     def test_upstream_error_contract(self):
         cases = [
-            (httpx.PoolTimeout("SECRET_BODY"), 503, "AI_BUSY"),
-            (httpx.ConnectError("SECRET_BODY"), 503, "OLLAMA_UNAVAILABLE"),
-            (httpx.ConnectTimeout("SECRET_BODY"), 503, "OLLAMA_UNAVAILABLE"),
-            (httpx.ReadTimeout("SECRET_BODY"), 504, "OLLAMA_TIMEOUT"),
-            (httpx.Response(500, text="SECRET_BODY"), 502, "OLLAMA_BAD_RESPONSE"),
-            (httpx.Response(200, text="bad json SECRET_BODY"), 502, "OLLAMA_BAD_RESPONSE"),
-            (httpx.Response(200, json={"response": 5}), 502, "OLLAMA_BAD_RESPONSE"),
+            (httpx.PoolTimeout("SECRET_BODY"), 503, "AI_BUSY", "Dịch vụ AI đang bận, vui lòng thử lại"),
+            (httpx.ConnectError("SECRET_BODY"), 503, "OLLAMA_UNAVAILABLE", "Dịch vụ AI tạm thời không khả dụng"),
+            (httpx.ConnectTimeout("SECRET_BODY"), 503, "OLLAMA_UNAVAILABLE", "Dịch vụ AI tạm thời không khả dụng"),
+            (httpx.ReadTimeout("SECRET_BODY"), 504, "OLLAMA_TIMEOUT", "Dịch vụ AI phản hồi quá lâu"),
+            (httpx.Response(500, text="SECRET_BODY"), 502, "OLLAMA_BAD_RESPONSE", "Dịch vụ AI trả về phản hồi không hợp lệ"),
+            (httpx.Response(200, text="bad json SECRET_BODY"), 502, "OLLAMA_BAD_RESPONSE", "Dịch vụ AI trả về phản hồi không hợp lệ"),
+            (httpx.Response(200, json={"response": 5}), 502, "OLLAMA_BAD_RESPONSE", "Dịch vụ AI trả về phản hồi không hợp lệ"),
         ]
-        for reply, expected_status, code in cases:
+        for reply, expected_status, code, message in cases:
             with self.subTest(code=code, reply=type(reply).__name__):
                 self.reply = reply
                 response = self.client.post("/api/v1/chat_log_ai", json={"prompt": "SECRET_PROMPT"})
                 self.assertEqual(response.status_code, expected_status)
                 self.assertEqual(set(response.json()), {"error"})
                 self.assertEqual(response.json()["error"]["code"], code)
+                self.assertEqual(response.json()["error"]["message"], message)
                 self.assertEqual(set(response.json()["error"]), {"code", "message"})
                 self.assertNotIn("SECRET", response.text)
                 self.assertNotIn("11434", response.text)

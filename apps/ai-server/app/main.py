@@ -34,25 +34,25 @@ def _error_response(code: str, message: str, status: int) -> JSONResponse:
 @app.exception_handler(AIBusyError)
 async def busy_handler(request: Request, exc: AIBusyError) -> JSONResponse:
     logger.warning("AI client pool is busy")
-    return _error_response("AI_BUSY", "AI server đang bận, vui lòng thử lại.", 503)
+    return _error_response("AI_BUSY", "Dịch vụ AI đang bận, vui lòng thử lại", 503)
 
 
 @app.exception_handler(AIConnectionError)
 async def connection_handler(request: Request, exc: AIConnectionError) -> JSONResponse:
     logger.warning("Ollama is unavailable")
-    return _error_response("OLLAMA_UNAVAILABLE", "Không kết nối được dịch vụ AI.", 503)
+    return _error_response("OLLAMA_UNAVAILABLE", "Dịch vụ AI tạm thời không khả dụng", 503)
 
 
 @app.exception_handler(AITimeoutError)
 async def timeout_handler(request: Request, exc: AITimeoutError) -> JSONResponse:
     logger.warning("Ollama request timed out")
-    return _error_response("OLLAMA_TIMEOUT", "Dịch vụ AI phản hồi quá thời gian.", 504)
+    return _error_response("OLLAMA_TIMEOUT", "Dịch vụ AI phản hồi quá lâu", 504)
 
 
 @app.exception_handler(AIResponseError)
 async def response_handler(request: Request, exc: AIResponseError) -> JSONResponse:
     logger.warning("Ollama returned an invalid response")
-    return _error_response("OLLAMA_BAD_RESPONSE", "Dịch vụ AI trả về phản hồi không hợp lệ.", 502)
+    return _error_response("OLLAMA_BAD_RESPONSE", "Dịch vụ AI trả về phản hồi không hợp lệ", 502)
 
 
 @app.get("/")
