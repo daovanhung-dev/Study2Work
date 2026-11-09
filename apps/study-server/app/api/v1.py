@@ -33,6 +33,12 @@ from app.modules.guest.api_13_users_me_avatar.models import AvatarUploadRequest
 from app.modules.guest.api_13_users_me_avatar.view import upload_avatar
 from app.modules.guest.api_14_users_me_profile.models import ProfileUpdateRequest
 from app.modules.guest.api_14_users_me_profile.view import update_profile
+from app.modules.guest.api_26_lessons_resources.view import get_lesson_resources
+from app.modules.guest.api_27_lessons_next.view import get_next_lesson
+from app.modules.guest.api_28_quizzes_detail.view import get_quiz_detail
+from app.modules.guest.api_29_quizzes_attempts.view import create_quiz_attempt
+from app.modules.guest.api_30_attempts_answers.models import SaveAnswerRequest
+from app.modules.guest.api_30_attempts_answers.view import save_attempt_answer
 from app.service.email.provider import (
     VerificationEmailProvider,
     get_verification_email_provider,
@@ -511,6 +517,188 @@ def update_current_profile(
     return update_profile(
         authorization=authorization,
         user_data=user_data,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #26 lessons_resources
+@router.get(
+    "/lessons/{lesson_id}/resources",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "lesson_id",
+                "in": "path",
+                "required": True,
+                "schema": {"type": "integer", "format": "int64"},
+            }
+        ]
+    },
+)
+def lesson_resources(
+    request: Request,
+    lesson_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận lesson_id, Authorization, Session và trace ID rồi chuyển cho get_lesson_resources.
+    Route trả mã HTTP 200; kiểm tra Bearer Student, kiểm tra bài học, truy vấn tài nguyên
+    và dựng response do view đảm nhiệm."""
+    return get_lesson_resources(
+        authorization=authorization,
+        lesson_id_raw=lesson_id,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #27 lessons_next
+@router.get(
+    "/lessons/{lesson_id}/next",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "lesson_id",
+                "in": "path",
+                "required": True,
+                "schema": {"type": "integer", "format": "int64"},
+            }
+        ]
+    },
+)
+def next_lesson(
+    request: Request,
+    lesson_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận lesson_id, Authorization, Session và trace ID rồi chuyển cho get_next_lesson.
+    Route trả mã HTTP 200; kiểm tra Bearer Student, tìm bài học kế tiếp trong curriculum
+    và dựng response do view đảm nhiệm."""
+    return get_next_lesson(
+        authorization=authorization,
+        lesson_id_raw=lesson_id,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #28 quizzes_detail
+@router.get(
+    "/quizzes/{quiz_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "quiz_id",
+                "in": "path",
+                "required": True,
+                "schema": {"type": "integer", "format": "int64"},
+            }
+        ]
+    },
+)
+def quiz_detail(
+    request: Request,
+    quiz_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận quiz_id, Authorization, Session và trace ID rồi chuyển cho get_quiz_detail.
+    Route trả mã HTTP 200; kiểm tra Bearer Student, đọc metadata quiz và question set
+    và dựng response do view đảm nhiệm."""
+    return get_quiz_detail(
+        authorization=authorization,
+        quiz_id_raw=quiz_id,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #29 quizzes_attempts
+@router.post(
+    "/quizzes/{quiz_id}/attempts",
+    status_code=status.HTTP_201_CREATED,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "quiz_id",
+                "in": "path",
+                "required": True,
+                "schema": {"type": "integer", "format": "int64"},
+            }
+        ]
+    },
+)
+def quiz_attempt(
+    request: Request,
+    quiz_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận quiz_id, Authorization, Session và trace ID rồi chuyển cho create_quiz_attempt.
+    Route trả mã HTTP 201; kiểm tra Bearer Student, kiểm tra tính hợp lệ và conflict
+    rồi tạo bản ghi lượt làm bài do view đảm nhiệm."""
+    return create_quiz_attempt(
+        authorization=authorization,
+        quiz_id_raw=quiz_id,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #30 attempts_answers
+@router.put(
+    "/attempts/{attempt_id}/answers",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "attempt_id",
+                "in": "path",
+                "required": True,
+                "schema": {"type": "integer", "format": "int64"},
+            }
+        ],
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "required": ["question_id"],
+                        "properties": {
+                            "question_id": {"type": "integer", "format": "int64"},
+                            "answer(s)": {"type": "string"},
+                        },
+                    }
+                }
+            },
+        },
+    },
+)
+def attempt_answer(
+    payload: SaveAnswerRequest,
+    request: Request,
+    attempt_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận attempt_id, payload, Authorization, Session và trace ID rồi chuyển cho
+    save_attempt_answer. Route trả mã HTTP 200; kiểm tra Bearer Student, quyền sở hữu
+    attempt, lưu câu trả lời và dựng response do view đảm nhiệm."""
+    return save_attempt_answer(
+        authorization=authorization,
+        attempt_id_raw=attempt_id,
+        payload=payload,
         db=db,
         trace_id=get_trace_id(request),
     )
