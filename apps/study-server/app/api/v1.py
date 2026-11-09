@@ -1,7 +1,8 @@
 from typing import Any
 
 # Nhập các thành phần cần thiết từ FastAPI.
-from fastapi import APIRouter, Depends, Header, Path, Query, Request, status
+from fastapi import APIRouter, Depends, Header, Path, Query, Request, status, File, Form, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
@@ -35,6 +36,10 @@ from app.modules.guest.api_13_users_me_avatar.models import AvatarUploadRequest
 from app.modules.guest.api_13_users_me_avatar.view import upload_avatar
 from app.modules.guest.api_14_users_me_profile.models import ProfileUpdateRequest
 from app.modules.guest.api_14_users_me_profile.view import update_profile
+from app.modules.guest.api_32_attempts_result.view import get_attempt_result
+from app.modules.guest.api_33_assignments_detail.view import get_assignment_detail
+
+
 from app.service.email.provider import (
     VerificationEmailProvider,
     get_verification_email_provider,
@@ -549,3 +554,69 @@ def update_current_profile(
         db=db,
         trace_id=get_trace_id(request),
     )
+
+# API #32 attempts_result
+@router.get(
+    "/attempts/{attempt_id}/result",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "attempt_id",
+                "in": "path",
+                "required": True,
+                "schema": {"type": "integer", "format": "int64"},
+            }
+        ]
+    },
+)
+def attempt_result(
+    request: Request,
+    attempt_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận attempt_id, Authorization, Session và trace ID rồi chuyển việc đọc kết quả cho API #32.
+
+    Route trả HTTP 200 khi thành công; xác thực, kiểm tra và parse path, truy vấn dữ liệu và dựng response do
+    view đảm nhiệm.
+    """
+    return get_attempt_result(
+        authorization=authorization,
+        attempt_id_raw=attempt_id,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+# API #33 assignments_detail
+@router.get(
+    "/assignments/{assignment_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "assignment_id",
+                "in": "path",
+                "required": True,
+                "schema": {"type": "integer", "format": "int64"},
+            }
+        ]
+    },
+)
+def assignment_detail(
+    request: Request,
+    assignment_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Nhận assignment_id, Authorization, Session và trace ID rồi chuyển xử lý cho API #33."""
+
+    return get_assignment_detail(
+        assignment_id=assignment_id,
+        authorization=authorization,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
