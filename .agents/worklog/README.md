@@ -1,8 +1,8 @@
 # Agent worklog contract
 
-Every coding, fix, docs, or test task creates or updates a worklog entry under
-`.agents/worklog/YYYY-MM-DD/<task-id>.md`. The worklog is an audit trail; source
-code, tests and contracts remain the source of truth for behavior.
+Every coding, fix, docs, test, or review task creates or updates a worklog
+entry under `.agents/worklog/YYYY-MM-DD/<task-id>.md`. The worklog is an audit
+trail; source code, tests and contracts remain the source of truth for behavior.
 
 ## Mandatory preflight
 

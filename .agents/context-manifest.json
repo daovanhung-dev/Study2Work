@@ -109,6 +109,32 @@
       "resourcePaths": [
         ".agents/skills/create-dd-mobile"
       ]
+    },
+    "code-review": {
+      "status": "SOURCE_BACKED",
+      "target": "read-only-code-review",
+      "entry": ".agents/skills/code-review/SKILL.md",
+      "triggers": [
+        "code review",
+        "PR or diff review",
+        "code rule compliance review",
+        "security review",
+        "code path or module audit"
+      ],
+      "scopeRefs": [
+        "mobile-work",
+        "web-work",
+        "server-work",
+        "server-study",
+        "server-ai",
+        "db-admin"
+      ],
+      "workflowRefs": [
+        "code-review"
+      ],
+      "resourcePaths": [
+        ".agents/skills/code-review"
+      ]
     }
   },
   "workflows": {
@@ -156,6 +182,22 @@
       "verificationCommands": [
         "focused test command",
         "scope test command"
+      ]
+    },
+    "code-review": {
+      "status": "VERIFIED",
+      "entry": ".agents/project/workflows.md",
+      "triggers": [
+        "explicit code review request",
+        "PR or diff review",
+        "code path or module audit"
+      ],
+      "scopeRefs": [
+        "all"
+      ],
+      "verificationCommands": [
+        "read-only diff, source, contract and test-source evidence audit",
+        "worklog preflight and required-field checklist"
       ]
     },
     "docs-dd": {
@@ -290,7 +332,8 @@
       "entry": ".agents/server-study/AGENTS.md",
       "index": ".agents/server-study/INDEX.md",
       "skillRefs": [
-        "createDD-markdown"
+        "createDD-markdown",
+        "code-review"
       ],
       "pages": [
         ".agents/server-study/architecture.md",
@@ -802,7 +845,8 @@
       "entry": ".agents/server-work/AGENTS.md",
       "index": ".agents/server-work/INDEX.md",
       "skillRefs": [
-        "createDD-markdown"
+        "createDD-markdown",
+        "code-review"
       ],
       "pages": [
         ".agents/server-work/architecture.md",
@@ -853,7 +897,8 @@
       "entry": ".agents/server-ai/AGENTS.md",
       "index": ".agents/server-ai/INDEX.md",
       "skillRefs": [
-        "createDD-markdown"
+        "createDD-markdown",
+        "code-review"
       ],
       "pages": [
         ".agents/server-ai/architecture.md",
@@ -886,7 +931,8 @@
       "entry": ".agents/web-work/AGENTS.md",
       "index": ".agents/web-work/INDEX.md",
       "skillRefs": [
-        "createDD-markdown"
+        "createDD-markdown",
+        "code-review"
       ],
       "pages": [
         ".agents/web-work/architecture.md",
@@ -974,7 +1020,8 @@
       "entry": ".agents/mobile-work/AGENTS.md",
       "index": ".agents/mobile-work/INDEX.md",
       "skillRefs": [
-        "create-dd-from-bd-mobile"
+        "create-dd-from-bd-mobile",
+        "code-review"
       ],
       "pages": [
         ".agents/mobile-work/architecture.md",
@@ -1029,6 +1076,9 @@
       "status": "VERIFIED",
       "entry": ".agents/db-admin/AGENTS.md",
       "index": ".agents/db-admin/INDEX.md",
+      "skillRefs": [
+        "code-review"
+      ],
       "pages": [
         ".agents/db-admin/architecture.md",
         ".agents/db-admin/apis/README.md",

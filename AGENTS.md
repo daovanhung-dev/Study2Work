@@ -7,7 +7,7 @@
 Trước khi đọc sâu, ghi ngắn:
 
 ```text
-primary_task_type: coding | fix | docs | test
+primary_task_type: coding | fix | docs | test | review
 secondary_task_types:
   - <loại khác, nếu có>
 project_scopes:
@@ -20,6 +20,8 @@ cross_scope_dependencies:
 - `fix`: reproduce -> trace caller/callee/effect -> root cause -> smallest fix -> regression test.
 - `docs`: source -> verified tests/contracts -> tài liệu hiện có -> cập nhật.
 - `test`: requirement/contract -> implementation -> edge cases -> convention test.
+- `review`: yêu cầu -> diff hoặc path được nêu -> rule/contract/source/test
+  evidence của scope -> báo cáo chỉ đọc; không sửa code hoặc chạy test.
 
 Một task có thể có nhiều `project_scopes`. Không ép task cross-scope vào một scope duy nhất.
 
@@ -64,8 +66,10 @@ Skill, workflow và contract phải được tra trong machine-readable registry
 `.agents/context-manifest.json`; không coi file tồn tại là bằng chứng đã được
 wire. Task DD phải chọn skill theo boundary: `create-dd-from-bd-mobile` cho
 Mobile/Flutter module DD, `createDD-markdown` cho Web/API DD. Web UI-only DD
-chưa có skill canonical. Chỉ load skill tương ứng trước khi authoring hoặc
-review.
+chưa có skill canonical. Với yêu cầu review code/PR/diff hoặc audit path/module,
+chỉ kích hoạt theo yêu cầu của người dùng và load `code-review` cùng workflow
+tương ứng trước khi review; skill này áp dụng cho cả sáu code scope và không
+được sửa code, chạy test, đổi Git state hoặc đăng nhận xét lên PR.
 
 ## 3. Progressive loading
 

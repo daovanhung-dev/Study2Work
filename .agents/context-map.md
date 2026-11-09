@@ -58,6 +58,7 @@ Study2Work/
 │   │   └── workflows.md
 │   ├── skills/
 │   │   ├── INDEX.md
+│   │   ├── code-review/                        ← read-only review skill pack
 │   │   ├── create-dd-mobile/                   ← Mobile DD skill pack
 │   │   └── create_dd_api/                      ← Web/API DD skill pack
 │   ├── worklog/
@@ -263,6 +264,11 @@ Do not infer a framework or runtime behavior from missing app source. Recheck
   - Workflows ⇢ `docs-dd`, `cross-scope-contract`.
   - Template resource: [`.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD`](skills/create_dd_api/docs/dd/DD_API_Template_MD).
   - Example resources: [`.agents/skills/create_dd_api/docs/dd/Examples/HOKAN_K00GetLabelInfo`](skills/create_dd_api/docs/dd/Examples/HOKAN_K00GetLabelInfo), [`.agents/skills/create_dd_api/docs/dd/Examples/VQ2T_PARAM_I01SaveRemovalPart`](skills/create_dd_api/docs/dd/Examples/VQ2T_PARAM_I01SaveRemovalPart).
+- `code-review`
+  - Entry: [`.agents/skills/code-review/SKILL.md`](skills/code-review/SKILL.md)
+  - Scope ⇢ `mobile-work`, `web-work`, `server-work`, `server-study`, `server-ai`, `db-admin`.
+  - Workflow ⇢ `code-review`; explicit user requests only, read-only, with no test execution.
+  - Resources: [review checklist](skills/code-review/references/review-checklist.md) and [report format](skills/code-review/references/report-format.md).
 - Web UI-only DD has no canonical skill.
 
 ## Workflow graph
@@ -276,6 +282,7 @@ worklog contract which is implemented by [`.agents/worklog/README.md`](worklog/R
 | `coding` | coding task | `project/workflows.md` | scoped implementation + tests |
 | `fix` | bug/regression | `project/workflows.md` | reproduce → trace → smallest fix → regression test |
 | `test` | test/verification | `project/workflows.md` | focused then scope verification |
+| `code-review` | explicit code review request | `project/workflows.md` | read-only, evidence-backed review and findings report |
 | `docs-dd` | Web/API DD | `project/workflows.md` | source-backed API DD validation |
 | `docs-dd-mobile` | Mobile DD | `project/workflows.md` | Mobile DD validator + context validation |
 | `cross-scope-contract` | shared API/event boundary | `project/workflows.md` | producer/consumer/status verification |

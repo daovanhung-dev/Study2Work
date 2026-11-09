@@ -1,7 +1,7 @@
 ---
 task_id: "YYYY-MM-DD-short-name"
 date: "YYYY-MM-DD"
-primary_task_type: "coding | fix | docs | test"
+primary_task_type: "coding | fix | docs | test | review"
 secondary_task_types: []
 project_scopes: []
 cross_scope_dependencies: []
