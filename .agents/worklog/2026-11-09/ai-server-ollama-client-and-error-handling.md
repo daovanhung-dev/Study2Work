@@ -4,8 +4,8 @@ date: "2026-11-09"
 primary_task_type: "coding"
 secondary_task_types: ["docs", "test"]
 project_scopes: ["server-ai"]
-cross_scope_dependencies: ["AI Server -> Ollama HTTP API", "dev-superpowers output language across project scopes"]
-status: "IN_PROGRESS"
+cross_scope_dependencies: ["AI Server -> Ollama HTTP API"]
+status: "VERIFIED"
 ---
 
 # Worklog: AI Server Ollama client lifecycle and error handling
@@ -25,16 +25,17 @@ status: "IN_PROGRESS"
 
 ## EXPECTED_BEHAVIOR
 
-- Requirement: Run the `dev-superpowers` workflow for the supplied developer description. Keep `POST /api/v1/chat_log_ai` non-streaming and its success JSON stable; use one shared `httpx.AsyncClient` per AI Server process with an explicit `max_connections=100`; reject blank and eventually overlong prompts; map Ollama errors to safe API responses.
+- Requirement: Follow the approved staged workflow for the supplied developer description. Keep `POST /api/v1/chat_log_ai` non-streaming and its success JSON stable; use one shared `httpx.AsyncClient` per AI Server process with an explicit `max_connections=100`; reject blank and eventually overlong prompts; map Ollama errors to safe API responses.
 - Canonical contract/approved DD: No DD or BD supplied. The current success JSON is `{response: string}`. The developer approved the proposed scope and defaults on 2026-11-09 with `approve nhé`: 8,000-character maximum, 5-second pool wait with HTTP 503, safe Ollama error JSON, and existing FastAPI 422 body.
 
 ## APPROVAL_RECORD
 
 - Stage 1 intake: `APPROVED` by developer in this conversation on 2026-11-09 (`approve nhé`), covering the exact scope and options presented immediately before that message.
-- Stage 2 SPEC: `APPROVED` by developer on 2026-11-09 via `tôi approve nhé làm bước tiếp theo đii` for Vietnamese SPEC SHA256 `FF2FC393212178F7E55641857E0DEF2628768191AAA72C5CB19141E0F441E635`. Approval metadata produced SHA256 `59BA3D2E0C4D70CB53DEB03E614E5901CE1D03B043BDC4DA66C080F31EF6E708`; an editorial decision/verification ledger produced SHA256 `3FE37AE80BFB37B4F1B4797DD4E49426C6784B00A4BE95A136C89C4B82D0C4AE`. Removing Markdown trailing spaces and separating metadata paragraphs produced current SHA256 `01F1A9133C3732A71A826AFDC42E1D0BB3CBB2DFFBD356AB94962454730B5AD9`. These edits changed only presentation, not requirements, scope or acceptance criteria, so approval carries forward. The previous pending English draft had SHA256 `9B51782822BAE9D54FE2B47527D3557EF29C3F117321DD9EC1E755C091599659`.
-- Stage 3 PLAN: `APPROVED` on 2026-11-09. Developer selected `PLAN-D01` B (caller trực tiếp mở/đóng client tường minh), chose `PLAN-V01` A (đo trên host sau) and instructed “thực hiện tiếp đi”. The approved-choice PLAN SHA256 was `0DA0A745192D86D0844BDB38FF838B93DB7C5BE7C888E783320F18C4B1E85F3D`; removing Markdown trailing spaces and updating the SPEC formatting-only hash reference produced current SHA256 `EE99FAB7F91A965806E552B8D16B479CFCCE0B051EEB94DF242DB052FC4AF1A9`. The previous pending SHA256 was `486CB7E83A3E63B6A0C47477489FA38C0821786F70200ADC2BC7A1B629244987`. No requirement, choice, test case or scope changed; approval carries forward.
+- Stage 2 SPEC: `APPROVED` by developer on 2026-11-09 via `tôi approve nhé làm bước tiếp theo đii` for Vietnamese SPEC SHA256 `FF2FC393212178F7E55641857E0DEF2628768191AAA72C5CB19141E0F441E635`. Approval metadata produced SHA256 `59BA3D2E0C4D70CB53DEB03E614E5901CE1D03B043BDC4DA66C080F31EF6E708`; an editorial decision/verification ledger produced SHA256 `3FE37AE80BFB37B4F1B4797DD4E49426C6784B00A4BE95A136C89C4B82D0C4AE`. Removing Markdown trailing spaces and separating metadata paragraphs produced pre-cleanup SHA256 `01F1A9133C3732A71A826AFDC42E1D0BB3CBB2DFFBD356AB94962454730B5AD9`. These edits changed only presentation, not requirements, scope or acceptance criteria, so approval carries forward. The previous pending English draft had SHA256 `9B51782822BAE9D54FE2B47527D3557EF29C3F117321DD9EC1E755C091599659`.
+- Stage 3 PLAN: `APPROVED` on 2026-11-09. Developer selected `PLAN-D01` B (caller trực tiếp mở/đóng client tường minh), chose `PLAN-V01` A (đo trên host sau) and instructed “thực hiện tiếp đi”. The approved-choice PLAN SHA256 was `0DA0A745192D86D0844BDB38FF838B93DB7C5BE7C888E783320F18C4B1E85F3D`; removing Markdown trailing spaces and updating the SPEC formatting-only hash reference produced pre-cleanup SHA256 `EE99FAB7F91A965806E552B8D16B479CFCCE0B051EEB94DF242DB052FC4AF1A9`. The previous pending SHA256 was `486CB7E83A3E63B6A0C47477489FA38C0821786F70200ADC2BC7A1B629244987`. No requirement, choice, test case or scope changed; approval carries forward.
+- Editorial reference cleanup: Removed obsolete repo-skill pointers from SPEC and PLAN after the instructions moved to the personal Codex skills directory. Current SPEC SHA256 is `96E289DE167B0D50E1CEF1BD7229C0E4649C2BD914ADB49732277FF968258E37`; current PLAN SHA256 is `09A4205485793545D0067F7382BF6265A0A2984B32C6D209119ABD2A36D5B523`. Requirements and acceptance criteria are unchanged; approval carries forward.
 - Stage 4 code/tests: `APPROVED` by developer on 2026-11-09 via “ok nhưng ... commit rồi push ...”, in reply to the completed code/test summary. Eight focused mock tests passed; live Ollama throughput remains deferred per `PLAN-V01` A.
-- Stage 5 delivery: Developer explicitly requests a commit and push to `ducna_dev/featrure_AI_sever` and selected `feat(ai-server): reuse Ollama client and handle chat errors`. The provided GitHub URL is a Compare page (`/compare/develop...ducna_dev/featrure_AI_sever?expand=1`), not a numbered PR. The GitHub connection shows the remote branch at `fc980cd3` but no open PR in `daovanhung-dev/Study2Work` before push.
+- Stage 5 delivery: The developer requested updating `ducna_dev/featrure_AI_sever`. The supplied GitHub URL is a Compare page, not a numbered PR. The AI Server commit and later cleanup commit were pushed to the branch; no open PR was found.
 
 ## CURRENT_BEHAVIOR
 
@@ -63,9 +64,9 @@ uvicorn app.main:app -> POST /api/v1/chat_log_ai -> ChatLogRequest
 
 ## CHANGES
 
-- Files changed: Worklog, SPEC, PLAN and Vietnamese `dev-superpowers` skill files; `apps/ai-server/app/main.py`, `app/module/chat/model.py`, `app/service/ai/ollama_service.py`, `app/service/ai/__init__.py`, two README files, `tests/test_ollama_service.py`, `tests/test_chat_api.py`, and directly affected `.agents/server-ai` pages.
-- CONTEXT_UPDATES: The skill and skill index now default developer-facing scope, SPEC, PLAN, approval and handoff text to Vietnamese, preserving technical identifiers. The skill also requires stage-owned decision/verification records in SPEC or PLAN, concise chat summaries, multiple-choice options and a free-text alternative. For lifecycle choices it now requires exact creation, reuse, closure, error and caller effects.
-- Context pages changed: `.agents/skills/INDEX.md`, `.agents/server-ai/AGENTS.md`, `architecture.md`, `apis/chat.md`, `modules/chat.md`, `services/ollama.md`, `tests.md`.
+- Files changed: Worklog, SPEC, PLAN; `apps/ai-server/app/main.py`, `app/module/chat/model.py`, `app/service/ai/ollama_service.py`, `app/service/ai/__init__.py`, two README files, `tests/test_ollama_service.py`, `tests/test_chat_api.py`, and directly affected `.agents/server-ai` pages.
+- CONTEXT_UPDATES: AI Server context pages record the implemented runtime, request, and error behavior. Top-level agent registry entries were reverted in cleanup commit `e1a8d54e` after moving the workflow instructions to personal Codex skills.
+- Context pages changed: `.agents/server-ai/AGENTS.md`, `architecture.md`, `apis/chat.md`, `modules/chat.md`, `services/ollama.md`, `tests.md`.
 - Assumptions: The request begins the full staged workflow. HTTPX's 100 connection value is a pool cap, not Ollama inference capacity.
 
 ## IMPLEMENTATION_RESULT
@@ -89,13 +90,11 @@ uvicorn app.main:app -> POST /api/v1/chat_log_ai -> ChatLogRequest
 | Editorial SPEC ledger SHA256 | `3FE37AE80BFB37B4F1B4797DD4E49426C6784B00A4BE95A136C89C4B82D0C4AE`; records approved and unverified states without changing REQ or AC. | `APPROVAL_CARRIED_FORWARD` |
 | Revised PLAN ledger SHA256 | `C304B621646A91B7B04E15DFF80C9F280EE149FB0C19F025A101B07469E75E22`; `PLAN-D01` must be chosen before approval. | `NEEDS_DECISION` |
 | PLAN-D01 lifecycle explanation SHA256 | `486CB7E83A3E63B6A0C47477489FA38C0821786F70200ADC2BC7A1B629244987`; A/B now have explicit direct-call examples and closure responsibilities; no source code changed. | `NEEDS_DECISION` |
-| `quick_validate.py` for `dev-superpowers` with `PYTHONUTF8=1` | `Skill is valid!` using the Study Server virtual environment. | `PASS` |
-| `git diff --check -- .agents/skills/INDEX.md` | No whitespace errors in the tracked skill index change. | `PASS` |
 | `& .venv/Scripts/python.exe -m unittest discover -s tests -v` from `apps/ai-server` | 8 tests passed; mock transport covers TC-01 through TC-14. Initial run found two test-only assumptions about private HTTPX `_limits`; corrected tests to inspect constructor arguments, then reran successfully. | `PASS` |
 | `git diff --check` | No whitespace errors in tracked diff. | `PASS` |
 | `node scripts/validate-agent-context.mjs` after context edits | Exit 1; baseline manifest/context problems include missing DB Admin source, orphan AI Server context pages and widespread stale entries. The validator does not provide a scoped pass result for this task. | `BASELINE_FAILURE` |
 
 ## HANDOFF
 
-- Remaining blockers: Git push requires network access. Existing PR has not been located through the connected GitHub repository; the supplied URL is a Compare page. Live Ollama throughput and latency remain unverified and are scheduled for deployment-host measurement per `PLAN-V01` A.
-- Next owner/action: Stage only this AI Server workflow's agreed files, create the commit with the selected message and push the exact branch. Verify remote branch and report the PR status accurately. Preserve unrelated `uv.lock` and other existing worktree changes.
+- Remaining blockers: No numbered PR was found for this branch; the compare page reflects the pushed commits. Live Ollama throughput and latency remain unverified and are scheduled for deployment-host measurement per `PLAN-V01` A.
+- Next owner/action: The agreed AI Server changes and registry cleanup are pushed to `ducna_dev/featrure_AI_sever`. Open a pull request from the updated branch if one is needed; verify live Ollama performance at deployment time.

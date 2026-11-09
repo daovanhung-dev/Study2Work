@@ -101,7 +101,7 @@ Không có nhánh xác thực để test vì route hiện không có auth và SP
 | PLAN-V01 | Chưa có phép đo Ollama trên máy host sẽ triển khai; mock test chỉ xác minh ứng dụng. Liên kết `SPEC-V01`. | `DEFERRED`; không chặn code cục bộ | Developer chọn **A**: chạy test mock ở bước code; đo tải Ollama trên host khi triển khai. Không diễn giải mock test thành kết luận hiệu năng. |
 | PLAN-V02 | Tìm kiếm tập trung chưa thấy FE gọi route này; consumer bên ngoài chưa xác minh. | `NOT_FOUND`; không chặn theo scope đã duyệt | Giữ path và JSON thành công như REQ-01; nếu cần khảo sát consumer ngoài scope, mở quyết định scope mới trước khi sửa phần đó. |
 | PLAN-V03 | Validator context toàn repo hiện lỗi do thiếu cây DB Admin; chưa có lỗi nêu tên task này. | `BASELINE_FAILURE`; không chặn nếu kiểm tra task không phát sinh lỗi mới | Khi code xong, chạy lại và tách lỗi nền khỏi lỗi của task; không sửa DB Admin trong phạm vi này. |
-| PLAN-A01 | Developer đã chọn `PLAN-D01` B và `PLAN-V01` A, rồi yêu cầu “thực hiện tiếp đi” ngày 2026-11-09. | `APPROVED`; cho phép code/test | Lựa chọn B/A được áp dụng trong revision này. Nếu đổi hành vi hoặc contract, cập nhật artifact liên quan và xin duyệt lại theo skill. |
+| PLAN-A01 | Developer đã chọn `PLAN-D01` B và `PLAN-V01` A, rồi yêu cầu “thực hiện tiếp đi” ngày 2026-11-09. | `APPROVED`; cho phép code/test | Lựa chọn B/A được áp dụng trong revision này. Nếu đổi hành vi hoặc contract, cập nhật artifact liên quan và xin developer duyệt lại. |
 
 Những mục đã được duyệt trong SPEC không được hỏi lại khi yêu cầu và revision
 liên quan không đổi. Nếu developer nhập phương án riêng làm đổi hành vi hoặc
@@ -110,4 +110,4 @@ contract, đối chiếu lại SPEC trước khi tiếp tục.
 ## Phê duyệt
 
 - PLAN: `APPROVED` theo lựa chọn `PLAN-D01` B, `PLAN-V01` A và chỉ dẫn tiếp tục triển khai của developer ngày 2026-11-09. Revision này chỉ chốt các lựa chọn đã trình, không đổi yêu cầu SPEC.
-- Nếu implementation cần đổi hành vi hoặc contract, cập nhật artifact liên quan và xin duyệt lại theo `dev-superpowers`.
+- Nếu implementation cần đổi hành vi hoặc contract, cập nhật artifact liên quan và xin developer duyệt lại.

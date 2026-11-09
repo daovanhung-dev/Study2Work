@@ -109,4 +109,4 @@ Nguồn: Mục 3 trong mô tả của developer và quyết định về HTTP st
 
 Không còn quyết định bắt buộc về yêu cầu hoặc contract ở bước SPEC. Hash của
 file sau các cập nhật chỉ mang tính biên tập được ghi trong worklog và PLAN;
-nếu thay đổi REQ hoặc AC, phải duyệt lại SPEC theo skill.
+nếu thay đổi REQ hoặc AC, cần trình bày lại SPEC để developer duyệt.
