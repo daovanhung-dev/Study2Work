@@ -69,7 +69,8 @@ Study2Work/
 │   ├── server-work/
 │   ├── server-ai/
 │   ├── web-study/
-│   │   └── design.md                           ← mandatory Study Web UI/UX/FE guide
+│   │   ├── design.md                           ← mandatory Study Web visual and interaction guide
+│   │   └── frontend-rules.md                   ← mandatory Study Web layer and dependency rules
 │   ├── web-work/
 │   │   └── study/                              ← Study Web subcontext
 │   ├── mobile-work/
@@ -190,15 +191,18 @@ Study2Work/
 
 #### `web-work/study-web` subcontext
 
-- Source root: `apps/study-client/` (documentation/assets plus ignored compiled `dist` with root `/` home route; editable app source/package manifest and Student routes absent)
-- Status: `UNWIRED`
+- Source root: `apps/study-client/` (Angular 22 standalone SPA scaffold; Student feature routes and API calls are not wired)
+- Status: `SKELETON_ONLY`
 - Entry: [`.agents/web-work/study/AGENTS.md`](web-work/study/AGENTS.md)
 - Index: [`.agents/web-work/study/INDEX.md`](web-work/study/INDEX.md)
 - Pages:
   - [`.agents/web-study/design.md`](web-study/design.md) — mandatory Study Web
     visual, interaction and accessibility target.
+  - [`.agents/web-study/frontend-rules.md`](web-study/frontend-rules.md) —
+    mandatory UI/business/data-access boundaries and feature responsibilities.
 
-Do not infer a framework or runtime behavior from missing app source. Recheck
+Load the frontend rules for Study Web implementation and architecture work.
+Do not infer feature behavior from the scaffold or design documents. Recheck
 `apps/study-client/` when a task depends on implementation details.
 
 #### `web-work/work-web` subcontext

@@ -50,12 +50,10 @@ apps/db-admin-server/app/main.py
 - Work web uses a relative `/api/v1` base; Vite binds at `127.0.0.2:3001` and
   proxies `/api`, `/uploads`, and `/img` to the Express server at
   `127.0.0.1:3002` in development. Work API does not render browser views.
-- Study Web is an intended separate frontend boundary. The current checkout has
-  documentation/assets and an ignored compiled `dist` bundle with only the
-  root `/` home route; editable app source/package manifest and Student routes
-  are absent, and serving/deployment is unverified. Study API is a separate
-  server; its placeholder OpenAPI is not enough to infer the client/server
-  contract.
+- Study Web is an Angular 22 standalone SPA scaffold and an intended separate
+  frontend boundary. It has no business routes, auth, or API calls yet. Study
+  API is a separate server; its placeholder OpenAPI is not enough to infer the
+  client/server contract. Deployment remains unverified.
 - Work mobile apps use direct Neon SQL and are not HTTP consumers of Work server.
 
 ## Contract dependencies

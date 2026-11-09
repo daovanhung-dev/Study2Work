@@ -15,12 +15,12 @@ SCOPE: STUDY_WEB_ONLY
   work. Follow its tokens and interaction rules unless the user approves a
   specific exception.
 - This page defines intended design, not current runtime behavior. The current
-  checkout contains documentation and screen assets under
-  `apps/study-client/docs/` and an ignored compiled `apps/study-client/dist/`
-  artifact. That bundle has only a root `/` home route; editable application
-  source/package manifest and Student screen routes are absent, while serving
-  and deployment are unverified. Do not use this page or the bundle as evidence
-  that a Student screen, route, interaction or API integration exists.
+  checkout has an Angular SPA scaffold plus documentation and screen assets
+  under `apps/study-client/docs/`. Only a temporary root readiness message is
+  wired; Student screen routes, auth, API integration, serving outside the CLI
+  dev server, and deployment are unverified. Do not use this page or design
+  assets as evidence that a Student screen, route, interaction or API
+  integration exists.
 - `.agents/project/design.md` remains the design source for Work Web and Work
   Mobile. This Study Web guide defines a separate ocean-blue visual identity
   and must not be applied to those apps by default.
