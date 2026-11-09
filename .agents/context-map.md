@@ -250,12 +250,6 @@ Do not infer a framework or runtime behavior from missing app source. Recheck
 
 - [`.agents/skills/INDEX.md`](skills/INDEX.md) ⇢ skill registry and boundary
   rules.
-- `dev-superpowers`
-  - Entry: [`.agents/skills/dev-superpowers/SKILL.md`](skills/dev-superpowers/SKILL.md).
-  - Scope ⇢ the project scopes selected from supplied BD, DD, or developer description.
-  - Workflows ⇢ `coding`, `fix`, `cross-scope-contract`, `worklog`.
-  - Gates: developer approves scope, spec, plan, and code/test results in order.
-    Final handoff only reminds the developer to create a PR/MR.
 - `create-dd-from-bd-mobile`
   - Entry: [`.agents/skills/create-dd-mobile/SKILL.md`](skills/create-dd-mobile/SKILL.md)
   - Scope ⇢ `mobile-work`.
