@@ -1,10 +1,14 @@
 # AI tests
 
 ```text
-TEST_STATUS: NOT_FOUND
+TEST_STATUS: VERIFIED_MOCK_TESTS
 ```
 
-No AI-server test directory/files are present at tracked source snapshot.
+`apps/ai-server/tests/test_ollama_service.py` and `test_chat_api.py` run with
+`& .venv/Scripts/python.exe -m unittest discover -s tests -v` from `apps/ai-server`.
+They cover lifecycle, concurrent reuse, prompt boundaries, error mapping and
+the existing success JSON using HTTPX mock transport. They do not measure live
+Ollama throughput or deployment latency.
 
 For an AI coding task, validation should at minimum target the exact changed layer:
 - model validation for request changes;

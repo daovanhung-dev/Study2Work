@@ -1,4 +1,5 @@
 from .ollama_service import (
+    AIBusyError,
     AIConnectionError,
     AIResponseError,
     AITimeoutError,
@@ -7,6 +8,7 @@ from .ollama_service import (
 )
 
 __all__ = [
+    "AIBusyError",
     "AIConnectionError",
     "AIResponseError",
     "AITimeoutError",

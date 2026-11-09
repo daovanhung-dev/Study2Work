@@ -34,3 +34,14 @@ Invoke-RestMethod -Uri 'http://127.0.0.1:3000/api/v1/chat_log_ai' -Method Post -
 Expected response shape: `{"response":"..."}`. `GET http://127.0.0.1:3000/`
 checks only that FastAPI is running; the chat request also tests the connection
 to Ollama and the model. Stop the API with `Ctrl+C`.
+
+The app shares one HTTPX `AsyncClient` per process, with at most 100 outbound
+connections and a 5-second pool wait. A prompt must be a nonblank string of at
+most 8,000 characters. Invalid prompts receive FastAPI HTTP 422. Ollama
+connection, timeout, invalid response, and pool wait errors receive 503, 504,
+502, and 503 respectively, with `{"error":{"code":"...","message":"..."}}`.
+This pool limit does not determine how many generations Ollama can run at once.
+
+Run focused tests from `apps/ai-server` with
+`& .venv/Scripts/python.exe -m unittest discover -s tests -v` in PowerShell.
+The tests mock Ollama; measure latency and throughput on the deployment host.

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import os
+import logging
 from typing import Any, Literal
 
 import httpx
 
 MessageRole = Literal["system", "user", "assistant"]
+logger = logging.getLogger(__name__)
 
 
 class AIConnectionError(Exception):
@@ -18,6 +20,10 @@ class AITimeoutError(Exception):
 
 class AIResponseError(Exception):
     """Ollama trả về HTTP hoặc JSON không hợp lệ."""
+
+
+class AIBusyError(Exception):
+    """Không lấy được kết nối từ HTTP pool trong thời gian cho phép."""
 
 
 class OllamaService:
@@ -45,6 +51,21 @@ class OllamaService:
         )
 
         self.timeout = timeout if timeout is not None else float(os.getenv("OLLAMA_TIMEOUT", "180"))
+        self._client: httpx.AsyncClient | None = None
+
+    async def start(self) -> None:
+        """Mở một client cho vòng đời của service."""
+        if self._client is None:
+            self._client = httpx.AsyncClient(
+                limits=httpx.Limits(max_connections=100),
+                timeout=httpx.Timeout(self.timeout, pool=5.0),
+            )
+
+    async def close(self) -> None:
+        """Đóng client khi caller đã dùng xong service."""
+        if self._client is not None:
+            client, self._client = self._client, None
+            await client.aclose()
 
     async def generate(
         self,
@@ -73,6 +94,9 @@ class OllamaService:
             endpoint="/api/generate",
             json=payload,
         )
+
+        if not isinstance(data.get("response"), str):
+            raise AIResponseError("Ollama trả về response không hợp lệ.")
 
         return {
             "model": data.get("model", model or self.model),
@@ -105,7 +129,9 @@ class OllamaService:
             json=payload,
         )
 
-        message = data.get("message") or {}
+        message = data.get("message")
+        if not isinstance(message, dict) or not isinstance(message.get("content"), str):
+            raise AIResponseError("Ollama trả về message không hợp lệ.")
 
         return {
             "model": data.get("model", model or self.model),
@@ -122,6 +148,9 @@ class OllamaService:
             method="GET",
             endpoint="/api/tags",
         )
+
+        if not isinstance(data.get("models"), list):
+            raise AIResponseError("Ollama trả về models không hợp lệ.")
 
         return [
             item["name"]
@@ -148,15 +177,15 @@ class OllamaService:
         endpoint: str,
         json: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
+        if self._client is None:
+            raise RuntimeError("OllamaService chưa start(); hãy gọi start() trước khi sử dụng.")
+
         try:
-            async with httpx.AsyncClient(
-                timeout=self.timeout,
-            ) as client:
-                response = await client.request(
-                    method=method,
-                    url=f"{self.base_url}{endpoint}",
-                    json=json,
-                )
+            response = await self._client.request(
+                method=method,
+                url=f"{self.base_url}{endpoint}",
+                json=json,
+            )
 
             response.raise_for_status()
 
@@ -169,22 +198,34 @@ class OllamaService:
 
             return data
 
-        except httpx.ConnectError as exc:
+        except httpx.PoolTimeout as exc:
+            logger.warning("Ollama HTTP pool timeout")
+            raise AIBusyError("AI server đang bận.") from exc
+
+        except (httpx.ConnectTimeout, httpx.NetworkError) as exc:
+            logger.warning("Ollama connection failure: %s", type(exc).__name__)
             raise AIConnectionError(
-                f"Không kết nối được tới Ollama tại {self.base_url}.",
+                "Không kết nối được tới Ollama.",
             ) from exc
 
         except httpx.TimeoutException as exc:
+            logger.warning("Ollama request timeout: %s", type(exc).__name__)
             raise AITimeoutError(
-                f"Ollama không phản hồi trong {self.timeout} giây.",
+                "Ollama phản hồi quá thời gian.",
             ) from exc
 
         except httpx.HTTPStatusError as exc:
+            logger.warning("Ollama HTTP status: %s", exc.response.status_code)
             raise AIResponseError(
-                f"Ollama trả về HTTP {exc.response.status_code}: {exc.response.text}"
+                "Ollama trả về HTTP không hợp lệ."
             ) from exc
 
+        except (httpx.ProtocolError, httpx.DecodingError) as exc:
+            logger.warning("Ollama response failure: %s", type(exc).__name__)
+            raise AIResponseError("Ollama trả về phản hồi không hợp lệ.") from exc
+
         except ValueError as exc:
+            logger.warning("Ollama returned invalid JSON")
             raise AIResponseError(
                 "Ollama trả về JSON không hợp lệ.",
             ) from exc

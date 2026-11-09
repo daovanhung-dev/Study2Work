@@ -4,10 +4,10 @@
 Pydantic model with one required field:
 
 ```text
-prompt: str
+prompt: str (strict, tối đa 8.000 ký tự; không rỗng/toàn khoảng trắng)
 ```
 
-No explicit min/max length/content validator exists.
+Validator chỉ dùng `strip()` để kiểm tra rỗng, không thay đổi prompt hợp lệ.
 
 ## `chat.py`
 Re-exports `ChatLogRequest` and `chat_log_ai`; contains no orchestration itself.
@@ -18,7 +18,7 @@ Re-exports `ChatLogRequest` and `chat_log_ai`; contains no orchestration itself.
 - Reads returned `result["answer"]`.
 - Returns `{"response": answer}`.
 - No DB write/logging, auth, business code, trace ID or standard envelope.
-- Ollama adapter exceptions are not caught here.
+- Ollama adapter exceptions are mapped by handlers in `app/main.py`, not by the view.
 
 ## `query.py`
 `EMPTY_PLACEHOLDER` (zero-byte at snapshot).

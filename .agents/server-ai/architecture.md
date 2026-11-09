@@ -4,7 +4,7 @@
 
 ```text
 app/main.py
-  -> FastAPI()
+  -> FastAPI(lifespan=lifespan): mở/đóng ai_service AsyncClient
   -> GET /
   -> include app/api/v1.py:router
        -> POST /api/v1/chat_log_ai
@@ -13,6 +13,8 @@ app/main.py
           -> app/service/ai/ollama_service.py:ai_service.generate
           -> Ollama POST /api/generate
 ```
+
+`app/main.py` đăng ký handler cho lỗi Ollama/pool; chúng trả JSON `{error:{code,message}}`.
 
 There is no verified runtime registration for:
 

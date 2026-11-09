@@ -55,6 +55,37 @@
     ]
   },
   "skills": {
+    "dev-superpowers": {
+      "status": "SOURCE_BACKED",
+      "target": "approved-inputs-to-code-and-pr-reminder",
+      "excludes": [
+        "DD authoring",
+        "standalone code review"
+      ],
+      "entry": ".agents/skills/dev-superpowers/SKILL.md",
+      "triggers": [
+        "BD or DD to spec plan code",
+        "developer task description to approved code",
+        "staged development workflow with PR reminder"
+      ],
+      "scopeRefs": [
+        "mobile-work",
+        "web-work",
+        "server-work",
+        "server-study",
+        "server-ai",
+        "db-admin"
+      ],
+      "workflowRefs": [
+        "coding",
+        "fix",
+        "cross-scope-contract",
+        "worklog"
+      ],
+      "resourcePaths": [
+        ".agents/skills/dev-superpowers"
+      ]
+    },
     "createDD-markdown": {
       "status": "SOURCE_BACKED",
       "target": "web-api-dd",
