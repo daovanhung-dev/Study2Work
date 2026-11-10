@@ -25,8 +25,9 @@ list/detail/reply/resolve, API #62 reads the course-student roster, and API #63
 creates notifications with queued delivery outbox rows, API #64 reads
 notification delivery status, API #65 reads course progress, API #66 reads
 course activity from legacy progress-state timestamps, and API #67 reads
-selected-Student course progress, Admin APIs #68–#94 user/course/content,
-lesson, quiz management/statistics and notification list/create/update; all are wired locally.
+selected-Student course progress, Admin APIs #68–#96 user/course/content,
+lesson, quiz management/statistics and notification list/create/update/delete/status,
+API #97 reported-discussion queue and API #98 discussion detail; all routes are wired locally. The initial branch-backed HTTP run passed 59/69 operations; a follow-up after explicit nullable-bind casts passed all ten affected list/search operations with empty and valid filters. The other operations were not rerun after that SQL-only fix; see `tests.md`.
 The current full Study suite result is recorded in `tests.md`; routes
 without a current implementation remain unwired.
 
@@ -41,7 +42,7 @@ without a current implementation remain unwired.
   create, API #48 Mentor lecture detail, API #49 Mentor content list, API #50
   Mentor content create, API #51 update, API #52 publish/unpublish, API #53
   soft-delete, API #54 Mentor submissions list, API #55 Mentor submission detail and API
-  #56 Mentor submission grade, API #57 Mentor submission feedback, API #58 Mentor support-request list, API #59 Mentor support-request detail, API #60 Mentor support reply, API #61 Mentor support resolve, API #62 Mentor course-student roster, API #63 Mentor notification dispatch, API #64 notification status, API #65 course progress, API #66 course activity analytics API #67 selected-Student course progress, APIs #68–#91 Admin user/course/Content, lesson and quiz management, and API #92 notification list.
+  #56 Mentor submission grade, API #57 Mentor submission feedback, API #58 Mentor support-request list, API #59 Mentor support-request detail, API #60 Mentor support reply, API #61 Mentor support resolve, API #62 Mentor course-student roster, API #63 Mentor notification dispatch, API #64 notification status, API #65 course progress, API #66 course activity analytics API #67 selected-Student course progress, APIs #68–#91 Admin user/course/Content, lesson and quiz management, and APIs #92–#98 Admin notification and discussion flows.
 - `app/core/config.py`: typed settings backed by `app/core/constants.py`.
 - `app/core/database.py`: sync SQLAlchemy engine/session/query primitives.
 - `app/core/middleware.py`: trace middleware and shared FastAPI exception handlers.
@@ -372,4 +373,9 @@ API #93 shares `/api/v1/admin/notifications` with the #92 GET. The raw route del
 
 ## API #97 Admin reported discussions
 
-`app/modules/admin/api_97_admin_discussions_reported/` owns the read-only reported-discussion queue. The GET route uses shared ADMIN auth before page parsing and queries; the `query.py` module contains only count/list SQL. The local DERIVED migration candidate `discussion_reports` links to legacy BIGINT `discussions.id`; each queue item represents one Discussion with at least one OPEN/IN_REVIEW report. Optional `reason` and `severity` exact-match together on the same active report, and order follows latest matching report then discussion ID. Page defaults to 1/20; invalid page returns local DERIVED 422. The existing `Discussion` response requires a title, so the queue derives a 120-character normalized content snippet and returns `comments=[]`. Focused tests: 15; linked #92–#95/#97 regression: 102; full Study suite: 1315; Ruff check and scoped format pass; OpenAPI: 57 paths / 68 operations. Live schema, deployment, report ingestion and fine-grained permission remain unverified; DD stays Draft.
+`app/modules/admin/api_97_admin_discussions_reported/` owns the read-only reported-discussion queue. The GET route uses shared ADMIN auth before page parsing and queries; the `query.py` module contains only count/list SQL. The local DERIVED migration candidate `discussion_reports` links to legacy BIGINT `discussions.id`; each queue item represents one Discussion with at least one OPEN/IN_REVIEW report. Optional `reason` and `severity` exact-match together on the same active report, and order follows latest matching report then discussion ID. Page defaults to 1/20; invalid page returns local DERIVED 422. The existing `Discussion` response requires a title, so the queue derives a 120-character normalized content snippet and returns `comments=[]`. Focused tests: 15 at the feature checkpoint; follow-up nullable-bind regressions cover this module. OpenAPI now has 58 paths / 69 operations after #98. The initial branch-backed HTTP call for #97 failed with an ambiguous bind type; explicit VARCHAR casts now pass both unfiltered and reason/severity-filtered HTTP checks on a temporary branch. Migration 014 is applied only to a deleted temporary test branch; production schema/report ingestion remain unverified and DD stays Draft.
+
+
+## API #98 Admin discussion detail
+
+`app/modules/admin/api_98_admin_discussions_detail/` owns the wired detail route and direct Discussion/comment reads. The source derives a title from discussion content and does not read report records; the DD remains Draft/UNWIRED and expects report detail, so this remains a source/DD discrepancy. Current live test and characterization status are documented in `tests.md`.

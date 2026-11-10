@@ -1,0 +1,332 @@
+{
+  "screen_id": "ME-18",
+  "source_image": "screen.png",
+  "image_width": 1600,
+  "image_height": 1380,
+  "coordinate_system": "pixel centers from top-left of screen.png",
+  "marker_style": {
+    "shape": "circle",
+    "radius": 14,
+    "fill": "#C2410C",
+    "stroke": "#FFFFFF",
+    "stroke_width": 2,
+    "text": "white bold sans-serif"
+  },
+  "elements": [
+    {
+      "id": 1,
+      "marker": "#1",
+      "name": "Study2Work brand and LMS Mentor label",
+      "type": "Anchor / brand",
+      "group": "Header",
+      "x": 22,
+      "y": 15
+    },
+    {
+      "id": 2,
+      "marker": "#2",
+      "name": "Tổng quan navigation",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 290,
+      "y": 15
+    },
+    {
+      "id": 3,
+      "marker": "#3",
+      "name": "Khóa học phụ trách navigation hiện hành",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 406,
+      "y": 15
+    },
+    {
+      "id": 4,
+      "marker": "#4",
+      "name": "Chấm bài navigation",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 625,
+      "y": 15
+    },
+    {
+      "id": 5,
+      "marker": "#5",
+      "name": "Hộp thư hỗ trợ navigation",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 744,
+      "y": 15
+    },
+    {
+      "id": 6,
+      "marker": "#6",
+      "name": "Thông báo navigation",
+      "type": "Anchor / navigation",
+      "group": "Header",
+      "x": 911,
+      "y": 15
+    },
+    {
+      "id": 7,
+      "marker": "#7",
+      "name": "Notification bell and unread indicator",
+      "type": "Anchor / notification",
+      "group": "Header",
+      "x": 1248,
+      "y": 15
+    },
+    {
+      "id": 8,
+      "marker": "#8",
+      "name": "Mentor name, role and avatar profile",
+      "type": "Profile summary",
+      "group": "Header",
+      "x": 1328,
+      "y": 15
+    },
+    {
+      "id": 9,
+      "marker": "#9",
+      "name": "Breadcrumb link: Khóa học phụ trách",
+      "type": "Anchor / breadcrumb",
+      "group": "Breadcrumb",
+      "x": 25,
+      "y": 130
+    },
+    {
+      "id": 10,
+      "marker": "#10",
+      "name": "Breadcrumb course title and code: Kỹ thuật Lập trình Hệ thống Cao cấp (CS-402)",
+      "type": "Anchor / breadcrumb",
+      "group": "Breadcrumb",
+      "x": 230,
+      "y": 130
+    },
+    {
+      "id": 11,
+      "marker": "#11",
+      "name": "Current breadcrumb: Báo cáo & Phân tích chuyên sâu",
+      "type": "Text / current breadcrumb",
+      "group": "Breadcrumb",
+      "x": 608,
+      "y": 130
+    },
+    {
+      "id": 12,
+      "marker": "#12",
+      "name": "Học kỳ II • 2024-2025 semester badge",
+      "type": "Badge / term",
+      "group": "Course context",
+      "x": 25,
+      "y": 231
+    },
+    {
+      "id": 13,
+      "marker": "#13",
+      "name": "Chờ đồng bộ dữ liệu course status",
+      "type": "Status label",
+      "group": "Course context",
+      "x": 422,
+      "y": 231
+    },
+    {
+      "id": 14,
+      "marker": "#14",
+      "name": "Phân tích và thống kê hiệu quả khóa học page title",
+      "type": "Heading / H1",
+      "group": "Page heading",
+      "x": 25,
+      "y": 276
+    },
+    {
+      "id": 15,
+      "marker": "#15",
+      "name": "Analytics explanatory subtitle",
+      "type": "Text / page description",
+      "group": "Page heading",
+      "x": 25,
+      "y": 328
+    },
+    {
+      "id": 16,
+      "marker": "#16",
+      "name": "Khung thời gian phân tích label",
+      "type": "Label",
+      "group": "Analytics controls",
+      "x": 969,
+      "y": 184
+    },
+    {
+      "id": 17,
+      "marker": "#17",
+      "name": "Disabled timeframe selector, options and lock icon",
+      "type": "Select / disabled",
+      "group": "Analytics controls",
+      "x": 969,
+      "y": 230
+    },
+    {
+      "id": 18,
+      "marker": "#18",
+      "name": "Tác vụ báo cáo label",
+      "type": "Label",
+      "group": "Report controls",
+      "x": 969,
+      "y": 282
+    },
+    {
+      "id": 19,
+      "marker": "#19",
+      "name": "Disabled Xuất dữ liệu (.CSV) button",
+      "type": "Button / disabled export",
+      "group": "Report controls",
+      "x": 969,
+      "y": 327
+    },
+    {
+      "id": 20,
+      "marker": "#20",
+      "name": "Tỷ lệ hoàn thành KPI card",
+      "type": "Card / metric",
+      "group": "Analytics KPIs",
+      "x": 47,
+      "y": 408
+    },
+    {
+      "id": 21,
+      "marker": "#21",
+      "name": "Thời lượng trung bình KPI card",
+      "type": "Card / metric",
+      "group": "Analytics KPIs",
+      "x": 563,
+      "y": 408
+    },
+    {
+      "id": 22,
+      "marker": "#22",
+      "name": "Tương tác thảo luận KPI card",
+      "type": "Card / metric",
+      "group": "Analytics KPIs",
+      "x": 1082,
+      "y": 408
+    },
+    {
+      "id": 23,
+      "marker": "#23",
+      "name": "Empty analytics illustration",
+      "type": "Illustration",
+      "group": "Analytics empty state",
+      "x": 714,
+      "y": 672
+    },
+    {
+      "id": 24,
+      "marker": "#24",
+      "name": "Trạng thái phân tích: Chưa kích hoạt badge",
+      "type": "Badge / analysis status",
+      "group": "Analytics empty state",
+      "x": 602,
+      "y": 816
+    },
+    {
+      "id": 25,
+      "marker": "#25",
+      "name": "Chưa có số liệu phân tích thống kê heading",
+      "type": "Heading / empty state",
+      "group": "Analytics empty state",
+      "x": 488,
+      "y": 869
+    },
+    {
+      "id": 26,
+      "marker": "#26",
+      "name": "Analytics empty-state explanation",
+      "type": "Text / empty state",
+      "group": "Analytics empty state",
+      "x": 383,
+      "y": 923
+    },
+    {
+      "id": 27,
+      "marker": "#27",
+      "name": "Quay lại tiến độ toàn khóa (ME-16) anchor",
+      "type": "Anchor / back navigation",
+      "group": "Analytics empty state",
+      "x": 446,
+      "y": 1052
+    },
+    {
+      "id": 28,
+      "marker": "#28",
+      "name": "Kiểm tra đồng bộ lại button",
+      "type": "Button / sync check",
+      "group": "Analytics empty state",
+      "x": 863,
+      "y": 1052
+    },
+    {
+      "id": 29,
+      "marker": "#29",
+      "name": "WCAG 2.1 AA Compliant badge",
+      "type": "Claim / compliance",
+      "group": "Analytics empty state",
+      "x": 529,
+      "y": 1158
+    },
+    {
+      "id": 30,
+      "marker": "#30",
+      "name": "Schema v2.4 Analytical Ready badge",
+      "type": "Claim / schema readiness",
+      "group": "Analytics empty state",
+      "x": 798,
+      "y": 1158
+    },
+    {
+      "id": 31,
+      "marker": "#31",
+      "name": "Study2Work footer mark",
+      "type": "Brand mark",
+      "group": "Footer",
+      "x": 22,
+      "y": 1319
+    },
+    {
+      "id": 32,
+      "marker": "#32",
+      "name": "Footer copyright and standards copy",
+      "type": "Text / footer copy",
+      "group": "Footer",
+      "x": 80,
+      "y": 1302
+    },
+    {
+      "id": 33,
+      "marker": "#33",
+      "name": "Quy chế Giảng viên footer link",
+      "type": "Anchor / footer",
+      "group": "Footer",
+      "x": 1060,
+      "y": 1308
+    },
+    {
+      "id": 34,
+      "marker": "#34",
+      "name": "Tiêu chuẩn đánh giá footer link",
+      "type": "Anchor / footer",
+      "group": "Footer",
+      "x": 1244,
+      "y": 1308
+    },
+    {
+      "id": 35,
+      "marker": "#35",
+      "name": "Hỗ trợ kỹ thuật footer link",
+      "type": "Anchor / footer",
+      "group": "Footer",
+      "x": 1428,
+      "y": 1308
+    }
+  ]
+}

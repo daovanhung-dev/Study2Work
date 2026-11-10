@@ -1,0 +1,35 @@
+{
+  "screen_id": "GS-01",
+  "source_image": "screen.png",
+  "source_state": "empty catalog",
+  "image_size": {
+    "width": 1280,
+    "height": 1114
+  },
+  "marker_style": {
+    "shape": "circle",
+    "fill": "#0B5F8A",
+    "text": "#FFFFFF",
+    "stroke": "#FFFFFF",
+    "diameter_px": 32,
+    "font_weight": 700
+  },
+  "markers": [
+    {"number": 1, "element_id": "GS01-EL-01", "target": "Header nav item Khóa học (active)", "target_center": {"x": 355, "y": 32}, "center": {"x": 275, "y": 32}},
+    {"number": 2, "element_id": "GS01-EL-02", "target": "Header search input and search icon", "target_center": {"x": 726, "y": 32}, "center": {"x": 972, "y": 32}},
+    {"number": 3, "element_id": "GS01-EL-03", "target": "Header link Đăng nhập", "target_center": {"x": 1096, "y": 32}, "center": {"x": 1036, "y": 32}},
+    {"number": 4, "element_id": "GS01-EL-04", "target": "Header CTA Đăng ký", "target_center": {"x": 1204, "y": 32}, "center": {"x": 1258, "y": 72}},
+    {"number": 5, "element_id": "GS01-EL-05", "target": "Page title Danh sách khóa học", "target_center": {"x": 218, "y": 120}, "center": {"x": 20, "y": 82}},
+    {"number": 6, "element_id": "GS01-EL-06", "target": "Supporting description", "target_center": {"x": 300, "y": 161}, "center": {"x": 610, "y": 143}},
+    {"number": 7, "element_id": "GS01-EL-07", "target": "Main search input and search icon", "target_center": {"x": 350, "y": 224}, "center": {"x": 640, "y": 182}},
+    {"number": 8, "element_id": "GS01-EL-08", "target": "Button Tìm kiếm and arrow icon", "target_center": {"x": 727, "y": 222}, "center": {"x": 810, "y": 181}},
+    {"number": 9, "element_id": "GS01-EL-09", "target": "Empty-state book illustration", "target_center": {"x": 640, "y": 368}, "center": {"x": 640, "y": 303}},
+    {"number": 10, "element_id": "GS01-EL-10", "target": "Empty-state heading", "target_center": {"x": 640, "y": 441}, "center": {"x": 480, "y": 441}},
+    {"number": 11, "element_id": "GS01-EL-11", "target": "Empty-state explanatory copy", "target_center": {"x": 640, "y": 475}, "center": {"x": 878, "y": 475}},
+    {"number": 12, "element_id": "GS01-EL-12", "target": "Footer brand Study2Work", "target_center": {"x": 85, "y": 1054}, "center": {"x": 20, "y": 1019}},
+    {"number": 13, "element_id": "GS01-EL-13", "target": "Footer link Trang chủ", "target_center": {"x": 980, "y": 1054}, "center": {"x": 958, "y": 1017}},
+    {"number": 14, "element_id": "GS01-EL-14", "target": "Footer link Khóa học", "target_center": {"x": 1062, "y": 1054}, "center": {"x": 1041, "y": 1017}},
+    {"number": 15, "element_id": "GS01-EL-15", "target": "Footer link Đăng nhập", "target_center": {"x": 1145, "y": 1054}, "center": {"x": 1123, "y": 1017}},
+    {"number": 16, "element_id": "GS01-EL-16", "target": "Footer link Đăng ký", "target_center": {"x": 1218, "y": 1054}, "center": {"x": 1248, "y": 1017}}
+  ]
+}

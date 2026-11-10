@@ -27,6 +27,7 @@ load `.agents/context-map.md`
 | Coding | `coding` | requirement/contract → existing pattern → implementation → tests | scope checks + context validator |
 | Fix | `fix`, bug, regression | reproduce → trace → root cause → smallest fix → regression test | reproduction/regression test |
 | Test | test/verification request | inspect requirement, implementation, error paths and test convention | focused test then scope test |
+| Code review | explicit review request | load `code-review`; inspect the requested diff or named path/module against scope rules, contracts, source, call sites and test source; report only evidenced/actionable findings without editing or executing tests | read-only scope/evidence audit + worklog |
 | Docs/DD | Web/API DD/documentation | load `createDD-markdown`; preserve API template and mark source gaps; for `server-study`, follow its [Markdown-only deliverable rule](../server-study/workflows/README.md) | contract and DD validation |
 | Docs/DD Mobile | Mobile module DD/documentation | load `create-dd-from-bd-mobile`; follow BD evidence, module template and review gates | mobile DD validator + context validation |
 | Cross-scope contract | shared API/event/envelope | identify producer/consumer and status before changing either side | `contracts:validate` + context validator |

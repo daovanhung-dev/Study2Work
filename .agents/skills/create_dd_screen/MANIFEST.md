@@ -1,0 +1,42 @@
+# Manifest
+
+Tổng cộng **38 files trước MANIFEST**, gồm các guide, template, ví dụ, hình ảnh và script.
+
+- `00-GUIDES/01-quick-start.md`
+- `00-GUIDES/02-create-new-screen.md`
+- `00-GUIDES/03-dd-conventions.md`
+- `00-GUIDES/04-review-checklist.md`
+- `00-GUIDES/05-ai-agent-prompt.md`
+- `01-TEMPLATES/SCREEN_ID/00-overview.md`
+- `01-TEMPLATES/SCREEN_ID/01-ui-elements.md`
+- `01-TEMPLATES/SCREEN_ID/02-events.md`
+- `01-TEMPLATES/SCREEN_ID/03-data-flow.md`
+- `01-TEMPLATES/SCREEN_ID/04-api-integration.md`
+- `01-TEMPLATES/SCREEN_ID/05-business-rules.md`
+- `01-TEMPLATES/SCREEN_ID/06-navigation.md`
+- `01-TEMPLATES/SCREEN_ID/07-test-cases.md`
+- `01-TEMPLATES/SCREEN_ID/images/README.md`
+- `02-EXAMPLES/SH-01-CourseList/00-overview.md`
+- `02-EXAMPLES/SH-01-CourseList/01-ui-elements.md`
+- `02-EXAMPLES/SH-01-CourseList/02-events.md`
+- `02-EXAMPLES/SH-01-CourseList/03-data-flow.md`
+- `02-EXAMPLES/SH-01-CourseList/04-api-integration.md`
+- `02-EXAMPLES/SH-01-CourseList/05-business-rules.md`
+- `02-EXAMPLES/SH-01-CourseList/06-navigation.md`
+- `02-EXAMPLES/SH-01-CourseList/07-test-cases.md`
+- `02-EXAMPLES/SH-01-CourseList/images/screen-clean.png`
+- `02-EXAMPLES/SH-01-CourseList/images/screen-numbered.png`
+- `02-EXAMPLES/SH-02-CourseDetail/00-overview.md`
+- `02-EXAMPLES/SH-02-CourseDetail/01-ui-elements.md`
+- `02-EXAMPLES/SH-02-CourseDetail/02-events.md`
+- `02-EXAMPLES/SH-02-CourseDetail/03-data-flow.md`
+- `02-EXAMPLES/SH-02-CourseDetail/04-api-integration.md`
+- `02-EXAMPLES/SH-02-CourseDetail/05-business-rules.md`
+- `02-EXAMPLES/SH-02-CourseDetail/06-navigation.md`
+- `02-EXAMPLES/SH-02-CourseDetail/07-test-cases.md`
+- `02-EXAMPLES/SH-02-CourseDetail/images/screen-clean.png`
+- `02-EXAMPLES/SH-02-CourseDetail/images/screen-numbered.png`
+- `02-EXAMPLES/screen-index.md`
+- `03-TOOLS/create_screen.py`
+- `03-TOOLS/validate_dd.py`
+- `README.md`

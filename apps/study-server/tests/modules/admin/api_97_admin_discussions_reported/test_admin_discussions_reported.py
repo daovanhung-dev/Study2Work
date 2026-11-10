@@ -175,8 +175,10 @@ def test_get_admin_reported_discussions_returns_page_and_is_read_only(
     }
     assert "COUNT(DISTINCT d.id)" in captured[0][0]
     assert "r.status IN ('OPEN', 'IN_REVIEW')" in captured[0][0]
-    assert "r.reason_code = :reason" in captured[0][0]
-    assert "r.severity = :severity" in captured[0][0]
+    assert "r.reason_code = CAST(:reason AS VARCHAR)" in captured[0][0]
+    assert "r.severity = CAST(:severity AS VARCHAR)" in captured[0][0]
+    assert "r.reason_code = CAST(:reason AS VARCHAR)" in captured[1][0]
+    assert "r.severity = CAST(:severity AS VARCHAR)" in captured[1][0]
     assert "DISTINCT ON (r.discussion_id)" in captured[1][0]
     assert "ORDER BY r.created_at DESC, d.id DESC" in captured[1][0]
     assert response.headers["X-Trace-Id"] == payload["traceId"]
@@ -211,6 +213,10 @@ def test_get_admin_reported_discussions_uses_default_page_and_empty_page(
         "limit": 20,
         "offset": 0,
     }
+    assert "CAST(:reason AS VARCHAR) IS NULL" in captured[0][0]
+    assert "CAST(:severity AS VARCHAR) IS NULL" in captured[0][0]
+    assert "CAST(:reason AS VARCHAR) IS NULL" in captured[1][0]
+    assert "CAST(:severity AS VARCHAR) IS NULL" in captured[1][0]
 
 
 @pytest.mark.parametrize("page", ["abc", "0", "-1", "2147483648", "1.5"])

@@ -159,6 +159,8 @@ def test_get_admin_notifications_returns_page_and_is_read_only(
     }
     assert "FROM notification_deliveries AS d" in captured[0][0]
     assert "FROM notification_deliveries AS d" in captured[1][0]
+    assert "CAST(:status AS TEXT) IS NULL" in captured[0][0]
+    assert "CAST(:channel AS VARCHAR) IS NULL" in captured[0][0]
     assert "ORDER BY n.created_at DESC, n.id DESC" in captured[1][0]
     assert "n.user_id" not in captured[1][0]
     assert "n.sender_id" not in captured[1][0]
@@ -198,10 +200,10 @@ def test_get_admin_notifications_applies_exact_filters_and_page_offset(
         "limit": 20,
         "offset": 20,
     }
-    assert "n.status = :status" in captured[0][0]
-    assert "n.status = :status" in captured[1][0]
-    assert ":channel = ANY(n.channels)" in captured[0][0]
-    assert ":channel = ANY(n.channels)" in captured[1][0]
+    assert "n.status = CAST(:status AS TEXT)" in captured[0][0]
+    assert "n.status = CAST(:status AS TEXT)" in captured[1][0]
+    assert "CAST(:channel AS VARCHAR) = ANY(n.channels)" in captured[0][0]
+    assert "CAST(:channel AS VARCHAR) = ANY(n.channels)" in captured[1][0]
 
 
 @pytest.mark.parametrize(
@@ -413,8 +415,8 @@ def test_get_admin_notifications_openapi_declares_query_and_catalog_errors(
         for item in api_paths.values()
         for method in item
     )
-    assert len(api_paths) == 57
-    assert operation_count == 68
+    assert len(api_paths) == 58
+    assert operation_count == 69
 
     operation = paths["/api/v1/admin/notifications"]["get"]
     parameters = {parameter["name"]: parameter for parameter in operation["parameters"]}

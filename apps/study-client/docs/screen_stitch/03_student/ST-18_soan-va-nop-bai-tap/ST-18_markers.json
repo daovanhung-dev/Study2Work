@@ -1,0 +1,618 @@
+{
+  "screen_id": "ST-18",
+  "source": {
+    "file": "screen.png",
+    "width": 826,
+    "height": 1600,
+    "sha256": "be8b06a7f90dc5febab40aab9e50b3e3a81740fc599f26958c5d0fd433d5e940",
+    "canvas_offset_x": 96,
+    "canvas_offset_y": 0
+  },
+  "annotation_canvas": {
+    "width": 1018,
+    "height": 1600,
+    "scale": 2
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST18-EL-01",
+      "label": "Header Study2Work logo and brand",
+      "x": 64,
+      "y": 20,
+      "badge_x": 15,
+      "badge_y": 20,
+      "side": "L"
+    },
+    {
+      "number": 2,
+      "element_id": "ST18-EL-02",
+      "label": "Header course search field",
+      "x": 224,
+      "y": 20,
+      "badge_x": 41,
+      "badge_y": 20,
+      "side": "L"
+    },
+    {
+      "number": 3,
+      "element_id": "ST18-EL-03",
+      "label": "Primary navigation group: Home, Courses, My Courses, Progress, Community",
+      "x": 502,
+      "y": 20,
+      "badge_x": 943,
+      "badge_y": 20,
+      "side": "R"
+    },
+    {
+      "number": 4,
+      "element_id": "ST18-EL-04",
+      "label": "Notifications control and unread indicator",
+      "x": 726,
+      "y": 20,
+      "badge_x": 969,
+      "badge_y": 20,
+      "side": "R"
+    },
+    {
+      "number": 5,
+      "element_id": "ST18-EL-05",
+      "label": "Student avatar, name and profile control",
+      "x": 783,
+      "y": 20,
+      "badge_x": 995,
+      "badge_y": 20,
+      "side": "R"
+    },
+    {
+      "number": 6,
+      "element_id": "ST18-EL-06",
+      "label": "Breadcrumb trail and current screen",
+      "x": 319,
+      "y": 68,
+      "badge_x": 15,
+      "badge_y": 68,
+      "side": "L"
+    },
+    {
+      "number": 7,
+      "element_id": "ST18-EL-07",
+      "label": "Assignment identifier and draft-status chips",
+      "x": 153,
+      "y": 115,
+      "badge_x": 15,
+      "badge_y": 115,
+      "side": "L"
+    },
+    {
+      "number": 8,
+      "element_id": "ST18-EL-08",
+      "label": "Assignment title",
+      "x": 296,
+      "y": 140,
+      "badge_x": 15,
+      "badge_y": 140,
+      "side": "L"
+    },
+    {
+      "number": 9,
+      "element_id": "ST18-EL-09",
+      "label": "Assignment brief and supporting description",
+      "x": 277,
+      "y": 183,
+      "badge_x": 15,
+      "badge_y": 183,
+      "side": "L"
+    },
+    {
+      "number": 10,
+      "element_id": "ST18-EL-10",
+      "label": "Deadline countdown card and due timestamp",
+      "x": 690,
+      "y": 153,
+      "badge_x": 943,
+      "badge_y": 153,
+      "side": "R"
+    },
+    {
+      "number": 11,
+      "element_id": "ST18-EL-11",
+      "label": "Submission and appeal policy information banner",
+      "x": 301,
+      "y": 273,
+      "badge_x": 15,
+      "badge_y": 273,
+      "side": "L"
+    },
+    {
+      "number": 12,
+      "element_id": "ST18-EL-12",
+      "label": "Rubric version and readiness badge",
+      "x": 744,
+      "y": 265,
+      "badge_x": 943,
+      "badge_y": 265,
+      "side": "R"
+    },
+    {
+      "number": 13,
+      "element_id": "ST18-EL-13",
+      "label": "Section 01 heading and delivery requirements summary",
+      "x": 178,
+      "y": 348,
+      "badge_x": 15,
+      "badge_y": 348,
+      "side": "L"
+    },
+    {
+      "number": 14,
+      "element_id": "ST18-EL-14",
+      "label": "Required-field badge",
+      "x": 492,
+      "y": 364,
+      "badge_x": 943,
+      "badge_y": 364,
+      "side": "R"
+    },
+    {
+      "number": 15,
+      "element_id": "ST18-EL-15",
+      "label": "GitHub repository URL input",
+      "x": 275,
+      "y": 437,
+      "badge_x": 15,
+      "badge_y": 437,
+      "side": "L"
+    },
+    {
+      "number": 16,
+      "element_id": "ST18-EL-16",
+      "label": "GitHub repository validation status",
+      "x": 482,
+      "y": 406,
+      "badge_x": 943,
+      "badge_y": 406,
+      "side": "R"
+    },
+    {
+      "number": 17,
+      "element_id": "ST18-EL-17",
+      "label": "Repository visibility/collaborator helper note",
+      "x": 267,
+      "y": 464,
+      "badge_x": 15,
+      "badge_y": 464,
+      "side": "L"
+    },
+    {
+      "number": 18,
+      "element_id": "ST18-EL-18",
+      "label": "Live demo/deployment URL input",
+      "x": 272,
+      "y": 516,
+      "badge_x": 15,
+      "badge_y": 516,
+      "side": "L"
+    },
+    {
+      "number": 19,
+      "element_id": "ST18-EL-19",
+      "label": "Deployment availability/status indicator",
+      "x": 476,
+      "y": 487,
+      "badge_x": 943,
+      "badge_y": 487,
+      "side": "R"
+    },
+    {
+      "number": 20,
+      "element_id": "ST18-EL-20",
+      "label": "Deployment URL accessibility helper note",
+      "x": 257,
+      "y": 537,
+      "badge_x": 41,
+      "badge_y": 537,
+      "side": "L"
+    },
+    {
+      "number": 21,
+      "element_id": "ST18-EL-21",
+      "label": "Self-evaluation checklist heading and explanation",
+      "x": 677,
+      "y": 353,
+      "badge_x": 969,
+      "badge_y": 353,
+      "side": "R"
+    },
+    {
+      "number": 22,
+      "element_id": "ST18-EL-22",
+      "label": "Checklist row: Source Code Clean Architecture and score",
+      "x": 683,
+      "y": 422,
+      "badge_x": 969,
+      "badge_y": 422,
+      "side": "R"
+    },
+    {
+      "number": 23,
+      "element_id": "ST18-EL-23",
+      "label": "Checklist row: Deployment and HTTP status",
+      "x": 681,
+      "y": 460,
+      "badge_x": 943,
+      "badge_y": 460,
+      "side": "R"
+    },
+    {
+      "number": 24,
+      "element_id": "ST18-EL-24",
+      "label": "Checklist row: Vitest coverage and percentage",
+      "x": 682,
+      "y": 499,
+      "badge_x": 969,
+      "badge_y": 499,
+      "side": "R"
+    },
+    {
+      "number": 25,
+      "element_id": "ST18-EL-25",
+      "label": "Checklist row: Architecture PDF attachment and size",
+      "x": 684,
+      "y": 538,
+      "badge_x": 943,
+      "badge_y": 538,
+      "side": "R"
+    },
+    {
+      "number": 26,
+      "element_id": "ST18-EL-26",
+      "label": "Section 02 attachments heading and description",
+      "x": 201,
+      "y": 614,
+      "badge_x": 15,
+      "badge_y": 614,
+      "side": "L"
+    },
+    {
+      "number": 27,
+      "element_id": "ST18-EL-27",
+      "label": "Displayed maximum attachment size: 50 MB",
+      "x": 484,
+      "y": 614,
+      "badge_x": 943,
+      "badge_y": 614,
+      "side": "R"
+    },
+    {
+      "number": 28,
+      "element_id": "ST18-EL-28",
+      "label": "File drop zone and upload affordance",
+      "x": 265,
+      "y": 716,
+      "badge_x": 15,
+      "badge_y": 716,
+      "side": "L"
+    },
+    {
+      "number": 29,
+      "element_id": "ST18-EL-29",
+      "label": "Choose file from device button",
+      "x": 262,
+      "y": 779,
+      "badge_x": 15,
+      "badge_y": 779,
+      "side": "L"
+    },
+    {
+      "number": 30,
+      "element_id": "ST18-EL-30",
+      "label": "Advertised file-format support text",
+      "x": 317,
+      "y": 748,
+      "badge_x": 943,
+      "badge_y": 748,
+      "side": "R"
+    },
+    {
+      "number": 31,
+      "element_id": "ST18-EL-31",
+      "label": "Successfully uploaded files count",
+      "x": 112,
+      "y": 832,
+      "badge_x": 15,
+      "badge_y": 832,
+      "side": "L"
+    },
+    {
+      "number": 32,
+      "element_id": "ST18-EL-32",
+      "label": "Uploaded file row 1: name, type, size and 100% status",
+      "x": 276,
+      "y": 865,
+      "badge_x": 15,
+      "badge_y": 865,
+      "side": "L"
+    },
+    {
+      "number": 33,
+      "element_id": "ST18-EL-33",
+      "label": "Uploaded file 1 preview/open action",
+      "x": 465,
+      "y": 865,
+      "badge_x": 943,
+      "badge_y": 865,
+      "side": "R"
+    },
+    {
+      "number": 34,
+      "element_id": "ST18-EL-34",
+      "label": "Uploaded file 1 remove action",
+      "x": 495,
+      "y": 865,
+      "badge_x": 969,
+      "badge_y": 865,
+      "side": "R"
+    },
+    {
+      "number": 35,
+      "element_id": "ST18-EL-35",
+      "label": "Uploaded file row 2: name, type, size and 100% status",
+      "x": 280,
+      "y": 918,
+      "badge_x": 15,
+      "badge_y": 918,
+      "side": "L"
+    },
+    {
+      "number": 36,
+      "element_id": "ST18-EL-36",
+      "label": "Uploaded file 2 preview/open action",
+      "x": 465,
+      "y": 918,
+      "badge_x": 41,
+      "badge_y": 918,
+      "side": "L"
+    },
+    {
+      "number": 37,
+      "element_id": "ST18-EL-37",
+      "label": "Uploaded file 2 remove action",
+      "x": 495,
+      "y": 918,
+      "badge_x": 67,
+      "badge_y": 918,
+      "side": "L"
+    },
+    {
+      "number": 38,
+      "element_id": "ST18-EL-38",
+      "label": "Assigned mentor card heading",
+      "x": 686,
+      "y": 607,
+      "badge_x": 969,
+      "badge_y": 607,
+      "side": "R"
+    },
+    {
+      "number": 39,
+      "element_id": "ST18-EL-39",
+      "label": "Mentor avatar, name and role",
+      "x": 682,
+      "y": 650,
+      "badge_x": 943,
+      "badge_y": 650,
+      "side": "R"
+    },
+    {
+      "number": 40,
+      "element_id": "ST18-EL-40",
+      "label": "Mentor availability and response-time status",
+      "x": 694,
+      "y": 682,
+      "badge_x": 943,
+      "badge_y": 682,
+      "side": "R"
+    },
+    {
+      "number": 41,
+      "element_id": "ST18-EL-41",
+      "label": "Mentor evaluation process and numbered steps",
+      "x": 685,
+      "y": 739,
+      "badge_x": 969,
+      "badge_y": 739,
+      "side": "R"
+    },
+    {
+      "number": 42,
+      "element_id": "ST18-EL-42",
+      "label": "Draft version history heading",
+      "x": 681,
+      "y": 814,
+      "badge_x": 943,
+      "badge_y": 814,
+      "side": "R"
+    },
+    {
+      "number": 43,
+      "element_id": "ST18-EL-43",
+      "label": "Current draft entry, timestamp and autosave badge",
+      "x": 680,
+      "y": 859,
+      "badge_x": 995,
+      "badge_y": 859,
+      "side": "R"
+    },
+    {
+      "number": 44,
+      "element_id": "ST18-EL-44",
+      "label": "Previous draft entry, timestamp and restore action",
+      "x": 774,
+      "y": 921,
+      "badge_x": 943,
+      "badge_y": 921,
+      "side": "R"
+    },
+    {
+      "number": 45,
+      "element_id": "ST18-EL-45",
+      "label": "Section 03 reflection/editor heading and summary",
+      "x": 210,
+      "y": 1007,
+      "badge_x": 15,
+      "badge_y": 1007,
+      "side": "L"
+    },
+    {
+      "number": 46,
+      "element_id": "ST18-EL-46",
+      "label": "Formatting toolbar: bold, italic, code, lists, quote and link",
+      "x": 251,
+      "y": 1068,
+      "badge_x": 15,
+      "badge_y": 1068,
+      "side": "L"
+    },
+    {
+      "number": 47,
+      "element_id": "ST18-EL-47",
+      "label": "Submission reflection text editor",
+      "x": 270,
+      "y": 1139,
+      "badge_x": 15,
+      "badge_y": 1139,
+      "side": "L"
+    },
+    {
+      "number": 48,
+      "element_id": "ST18-EL-48",
+      "label": "Markdown support note",
+      "x": 182,
+      "y": 1218,
+      "badge_x": 15,
+      "badge_y": 1218,
+      "side": "L"
+    },
+    {
+      "number": 49,
+      "element_id": "ST18-EL-49",
+      "label": "Current reflection character count",
+      "x": 490,
+      "y": 1218,
+      "badge_x": 943,
+      "badge_y": 1218,
+      "side": "R"
+    },
+    {
+      "number": 50,
+      "element_id": "ST18-EL-50",
+      "label": "Academic-integrity commitment checkbox",
+      "x": 37,
+      "y": 1284,
+      "badge_x": 15,
+      "badge_y": 1284,
+      "side": "L"
+    },
+    {
+      "number": 51,
+      "element_id": "ST18-EL-51",
+      "label": "Academic-integrity statement and policy text",
+      "x": 285,
+      "y": 1305,
+      "badge_x": 943,
+      "badge_y": 1305,
+      "side": "R"
+    },
+    {
+      "number": 52,
+      "element_id": "ST18-EL-52",
+      "label": "Draft autosave status and last-saved timestamp strip",
+      "x": 128,
+      "y": 1391,
+      "badge_x": 15,
+      "badge_y": 1391,
+      "side": "L"
+    },
+    {
+      "number": 53,
+      "element_id": "ST18-EL-53",
+      "label": "Save draft button",
+      "x": 398,
+      "y": 1394,
+      "badge_x": 41,
+      "badge_y": 1394,
+      "side": "L"
+    },
+    {
+      "number": 54,
+      "element_id": "ST18-EL-54",
+      "label": "Cancel and return to assignment button",
+      "x": 530,
+      "y": 1394,
+      "badge_x": 943,
+      "badge_y": 1394,
+      "side": "R"
+    },
+    {
+      "number": 55,
+      "element_id": "ST18-EL-55",
+      "label": "Confirm assignment submission primary button",
+      "x": 690,
+      "y": 1394,
+      "badge_x": 969,
+      "badge_y": 1394,
+      "side": "R"
+    },
+    {
+      "number": 56,
+      "element_id": "ST18-EL-56",
+      "label": "Footer brand, description and certification badges",
+      "x": 187,
+      "y": 1481,
+      "badge_x": 15,
+      "badge_y": 1481,
+      "side": "L"
+    },
+    {
+      "number": 57,
+      "element_id": "ST18-EL-57",
+      "label": "Footer Study navigation group",
+      "x": 398,
+      "y": 1473,
+      "badge_x": 41,
+      "badge_y": 1473,
+      "side": "L"
+    },
+    {
+      "number": 58,
+      "element_id": "ST18-EL-58",
+      "label": "Footer community navigation group",
+      "x": 534,
+      "y": 1473,
+      "badge_x": 943,
+      "badge_y": 1473,
+      "side": "R"
+    },
+    {
+      "number": 59,
+      "element_id": "ST18-EL-59",
+      "label": "Footer support and legal navigation group",
+      "x": 710,
+      "y": 1473,
+      "badge_x": 969,
+      "badge_y": 1473,
+      "side": "R"
+    },
+    {
+      "number": 60,
+      "element_id": "ST18-EL-60",
+      "label": "Copyright notice",
+      "x": 242,
+      "y": 1545,
+      "badge_x": 15,
+      "badge_y": 1545,
+      "side": "L"
+    }
+  ]
+}

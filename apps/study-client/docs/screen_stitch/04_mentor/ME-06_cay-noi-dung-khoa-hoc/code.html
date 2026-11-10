@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"surface-container-low":"#eff4ff","tertiary-fixed-dim":"#ffb95f","outline-variant":"#c3c6d7","on-primary":"#ffffff","on-surface-variant":"#434655","surface-bright":"#f8f9ff","on-tertiary-fixed":"#2a1700","on-tertiary-fixed-variant":"#653e00","on-secondary-fixed-variant":"#005236","primary-container":"#2563eb","surface-container-lowest":"#ffffff","on-background":"#0b1c30","surface-variant":"#d3e4fe","on-secondary-container":"#00714d","surface-container-high":"#dce9ff","outline":"#737686","on-tertiary":"#ffffff","secondary-container":"#6cf8bb","on-surface":"#0b1c30","inverse-primary":"#b4c5ff","surface-dim":"#cbdbf5","surface":"#f8f9ff","on-secondary":"#ffffff","secondary-fixed":"#6ffbbe","background":"#f8f9ff","tertiary-container":"#996100","inverse-surface":"#213145","error":"#ba1a1a","on-error":"#ffffff","secondary-fixed-dim":"#4edea3","surface-container":"#e5eeff","tertiary-fixed":"#ffddb8","on-error-container":"#93000a","on-tertiary-container":"#ffeedd","on-primary-fixed":"#00174b","surface-tint":"#0053db","tertiary":"#784b00","on-primary-container":"#eeefff","primary":"#004ac6","primary-fixed":"#dbe1ff","surface-container-highest":"#d3e4fe","on-secondary-fixed":"#002113","error-container":"#ffdad6","on-primary-fixed-variant":"#003ea8","secondary":"#006c49","primary-fixed-dim":"#b4c5ff","inverse-on-surface":"#eaf1ff"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"margin-mobile":"1rem","margin":"2rem","space-lg":"1.5rem","gutter-mobile":"1rem","space-md":"1rem","gutter":"1.5rem","space-sm":"0.5rem","space-xl":"2rem","space-xs":"0.25rem"},"fontFamily":{"headline-sm":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"display-lg-mobile":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"label-lg":["Plus Jakarta Sans"],"display-lg":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"]},"fontSize":{"headline-sm":["18px",{"lineHeight":"26px","letterSpacing":"-0.005em","fontWeight":"600"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"headline-lg":["30px",{"lineHeight":"38px","letterSpacing":"-0.015em","fontWeight":"700"}],"display-lg-mobile":["32px",{"lineHeight":"40px","letterSpacing":"-0.01em","fontWeight":"700"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"22px","fontWeight":"400"}],"label-lg":["14px",{"lineHeight":"20px","letterSpacing":"0.01em","fontWeight":"600"}],"display-lg":["40px",{"lineHeight":"48px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-md":["22px",{"lineHeight":"30px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"700"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 w-full px-margin flex items-center justify-between gap-space-lg"><div class="flex items-center gap-space-xl flex-shrink-0"><a class="flex items-center gap-space-sm" href="#"><div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[22px]">school</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary leading-none">Study2Work</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mt-0.5">Mentor Portal</span></div></a><nav class="hidden xl:flex items-center gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-label-lg text-label-lg rounded-lg shadow-sm"><a class="px-space-md py-space-sm rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="dashboard" href="#">Dashboard</a><a class="px-space-md py-space-sm rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="khoa-hoc-phu-trach" href="#">Khóa học phụ trách</a><a class="px-space-md py-space-sm rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="cham-bai-va-do-an" href="#">Chấm bài &amp; Đồ án</a><a class="px-space-md py-space-sm rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="ho-tro-hoc-vien" href="#">Hỗ trợ học viên</a><a class="px-space-md py-space-sm rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="thong-bao" href="#">Thông báo</a></nav></div><div class="flex items-center gap-space-md flex-shrink-0"><div class="relative hidden md:block w-64"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span><input class="w-full pl-9 pr-4 py-2 bg-surface-container-low text-on-surface font-body-sm text-body-sm rounded-lg placeholder-outline focus:outline-none focus:bg-surface-container-lowest transition-colors" placeholder="Tìm kiếm học viên, bài tập..." type="text"/></div><div class="relative"><button class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors relative"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-error text-on-error font-label-sm text-[10px] flex items-center justify-center font-bold">3</span></button></div><div class="h-6 w-px bg-surface-container-high hidden sm:block"></div><div class="flex items-center gap-space-sm pl-space-xs"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="hidden lg:flex flex-col text-left"><span class="font-label-lg text-label-lg text-on-surface leading-tight">TS. Trần Hoàng Long</span><span class="font-label-sm text-label-sm text-on-surface-variant">Lead Mentor / Principal Architect</span></div></div></div></div></header><main class="w-full pt-16 bg-surface"><div class="flex flex-col w-full">
+<!-- Toast Notification Dynamic Mock -->
+<div class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-space-sm px-space-md py-space-sm rounded-lg bg-surface-container-lowest text-on-surface shadow-xl" id="saveToast">
+<span class="material-symbols-outlined text-secondary text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-label-lg text-label-lg" id="toastMessage">Đã lưu thứ tự cây nội dung thành công (API #52)!</span>
+</div>
+<!-- Breadcrumb & Top Bar Meta -->
+<div class="w-full px-margin pt-space-lg pb-space-sm flex flex-wrap items-center justify-between gap-space-md bg-surface">
+<div class="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant flex-wrap">
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[16px]">home</span> Portal Giảng viên
+      </a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Khóa học phụ trách</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface font-semibold">fe-react-enterprise</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-semibold">ME-06 Cây nội dung giáo trình</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+        Học kỳ Fall 2025 • Đang mở ghi danh
+      </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-full">
+        Mã ID: CRS-FE-9021
+      </span>
+</div>
+</div>
+<!-- Main View Container -->
+<div class="w-full px-margin pb-space-xl flex flex-col gap-space-lg">
+<!-- Page Header (Action Focused, No duplicate shell title) -->
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-space-md bg-surface-container-lowest p-space-lg rounded-xl shadow-sm">
+<div class="flex flex-col gap-space-xs max-w-3xl">
+<div class="flex items-center gap-space-sm">
+<span class="px-2 py-0.5 rounded font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed font-bold uppercase tracking-wider">
+            Curriculum Builder v3.4
+          </span>
+<span class="text-on-surface-variant font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">sync</span> Tự động đồng bộ LMS Cloud
+          </span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface leading-tight">
+          Chuyên gia Frontend React &amp; TypeScript Enterprise
+        </h1>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+          Cấu trúc khung học phần chuẩn Bloom-Tech Level 5. Điều phối mô-đun bài giảng, bài thực hành GitHub PR, thẩm định quiz và kích hoạt xuất bản bài học trực tiếp.
+        </p>
+</div>
+<!-- Action Cluster -->
+<div class="flex flex-wrap items-center gap-space-sm shrink-0">
+<button class="h-10 px-space-md rounded-lg bg-surface-container-low text-primary hover:bg-surface-container font-label-lg text-label-lg transition-all flex items-center gap-1.5 shadow-sm active:scale-95" id="btnSaveOrder">
+<span class="material-symbols-outlined text-[18px]">reorder</span>
+          Lưu thứ tự sắp xếp
+        </button>
+<button class="h-10 px-space-md rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-dim font-label-lg text-label-lg transition-all flex items-center gap-1.5 shadow-sm active:scale-95" id="btnOpenModuleModal">
+<span class="material-symbols-outlined text-[18px]">create_new_folder</span>
+          Thêm Chương mới
+        </button>
+<button class="h-10 px-space-md rounded-lg bg-primary text-on-primary hover:bg-primary/90 font-label-lg text-label-lg transition-all flex items-center gap-1.5 shadow-md hover:shadow-lg active:scale-95" id="btnAddLessonBtn">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+          Thêm Bài học mới (ME-04)
+        </button>
+</div>
+</div>
+<!-- Quick Metrics Banner (Bento Style Cards) -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-space-md">
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[26px]">folder_copy</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-display-lg text-headline-lg font-bold text-on-surface leading-none">08</span>
+<span class="font-label-md text-label-md text-on-surface-variant truncate mt-1">Chương học (Modules)</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[26px]">play_lesson</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-display-lg text-headline-lg font-bold text-on-surface leading-none">48</span>
+<span class="font-label-md text-label-md text-on-surface-variant truncate mt-1">Video bài giảng Full-HD</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[26px]">terminal</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-display-lg text-headline-lg font-bold text-on-surface leading-none">12</span>
+<span class="font-label-md text-label-md text-on-surface-variant truncate mt-1">Lab GitHub &amp; Quiz</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-surface-container text-on-surface flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[26px]">schedule</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-display-lg text-headline-lg font-bold text-on-surface leading-none">140<span class="text-headline-sm font-normal text-on-surface-variant ml-0.5">h</span></span>
+<span class="font-label-md text-label-md text-on-surface-variant truncate mt-1">Thời lượng tích lũy</span>
+</div>
+</div>
+</div>
+<!-- Main Workspace: Asymmetric 2-Column Split -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+<!-- LEFT: Curriculum Content Tree Interactive Area (8 Cols) -->
+<div class="xl:col-span-8 flex flex-col gap-space-md">
+<!-- Control Toolbar Strip -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<!-- Filter Tabs -->
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1 md:pb-0" id="filterStatusGroup">
+<button class="filter-tab active px-3 py-1.5 rounded-lg font-label-md text-label-md bg-primary text-on-primary font-semibold transition-colors shrink-0" data-filter="all">
+              Tất cả (68)
+            </button>
+<button class="filter-tab px-3 py-1.5 rounded-lg font-label-md text-label-md bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors shrink-0" data-filter="published">
+              Đã xuất bản (62)
+            </button>
+<button class="filter-tab px-3 py-1.5 rounded-lg font-label-md text-label-md bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors shrink-0" data-filter="draft">
+              Bản nháp (4)
+            </button>
+<button class="filter-tab px-3 py-1.5 rounded-lg font-label-md text-label-md bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors shrink-0" data-filter="hidden">
+              Đang ẩn (2)
+            </button>
+</div>
+<!-- Utility search & Expand/Collapse Switcher -->
+<div class="flex items-center gap-space-sm shrink-0">
+<div class="relative w-full md:w-56">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="w-full pl-8 pr-3 py-1.5 bg-surface-container text-on-surface font-body-sm text-body-sm rounded-lg placeholder-outline focus:outline-none focus:bg-surface-container-lowest transition-colors" id="lessonSearchInput" placeholder="Tìm theo tên bài học..." type="text"/>
+</div>
+<div class="flex items-center bg-surface-container-low rounded-lg p-0.5">
+<button class="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors" id="btnExpandAll" title="Mở rộng tất cả">
+<span class="material-symbols-outlined text-[20px]">unfold_more</span>
+</button>
+<button class="p-1.5 rounded text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest transition-colors" id="btnCollapseAll" title="Thu gọn tất cả">
+<span class="material-symbols-outlined text-[20px]">unfold_less</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Tree Nodes List -->
+<div class="flex flex-col gap-space-md" id="curriculumTreeList">
+<!-- MODULE 01 (COLLAPSED BY DEFAULT TO DEMONSTRATE HIERARCHY) -->
+<div class="module-card bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden transition-all duration-200" data-module-id="mod-1">
+<div class="module-header p-space-md flex items-center justify-between gap-space-sm bg-surface-container-low/60 hover:bg-surface-container-low transition-colors cursor-pointer select-none">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline cursor-grab hover:text-on-surface text-[20px]" title="Kéo thả đổi thứ tự module">drag_indicator</span>
+<button class="toggle-btn w-6 h-6 flex items-center justify-center rounded text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-[20px] transition-transform duration-200">chevron_right</span>
+</button>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm uppercase font-bold text-primary">Chương 01</span>
+<span class="px-2 py-0.2 rounded-full font-label-sm text-[10px] bg-secondary-fixed text-on-secondary-fixed font-bold">100% Đã xuất bản</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Nền tảng TypeScript nâng cao &amp; Tooling hiện đại</h3>
+</div>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<div class="hidden sm:flex items-center gap-space-sm font-label-sm text-label-sm text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">video_library</span> 6 bài</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">quiz</span> 1 quiz</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span>14h tổng</span>
+</div>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface" onclick="event.stopPropagation()">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Children collapsed initially -->
+<div class="module-body hidden p-space-md bg-surface-container-lowest flex flex-col gap-2">
+<div class="p-3 bg-surface-container-low rounded-lg text-on-surface-variant font-body-sm text-body-sm flex items-center justify-between">
+<span>Chương đã hoàn thiện và khoá cập nhật cơ bản. Có 6 bài giảng đã phát hành.</span>
+<span class="font-label-sm text-label-sm text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">check</span> Đã thẩm định
+                </span>
+</div>
+</div>
+</div>
+<!-- MODULE 02 (EXPANDED - CORE SHOWCASE) -->
+<div class="module-card bg-surface-container-lowest rounded-xl shadow-md overflow-hidden transition-all duration-200 ring-1 ring-primary/20" data-module-id="mod-2">
+<!-- Module Bar -->
+<div class="module-header p-space-md flex items-center justify-between gap-space-sm bg-surface-container-high/40 hover:bg-surface-container-high/70 transition-colors cursor-pointer select-none">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline cursor-grab hover:text-on-surface text-[20px]" title="Kéo thả đổi thứ tự module">drag_indicator</span>
+<button class="toggle-btn w-6 h-6 flex items-center justify-center rounded text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-[20px] transition-transform duration-200 rotate-90">chevron_right</span>
+</button>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm uppercase font-bold text-primary">Chương 02</span>
+<span class="px-2 py-0.2 rounded-full font-label-sm text-[10px] bg-primary-fixed text-on-primary-fixed font-bold">Đang giảng dạy</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Kiến trúc React 19 &amp; Modern Hooks Mastery</h3>
+</div>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<div class="hidden sm:flex items-center gap-space-sm font-label-sm text-label-sm text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">video_library</span> 8 bài học</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">terminal</span> 1 Lab PR</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span>22h tổng</span>
+</div>
+<div class="flex items-center gap-1" onclick="event.stopPropagation()">
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface hover:bg-surface-container-highest font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">add</span> Bài học
+                  </button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Lessons / Items List inside Module 02 -->
+<div class="module-body p-space-md bg-surface-container-lowest flex flex-col gap-2.5">
+<!-- Item 1: Bài 14 (Published Video) -->
+<div class="lesson-row group p-3 bg-surface rounded-lg hover:bg-surface-container-low transition-all flex items-center justify-between gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.03)]" data-status="published">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline/60 cursor-grab group-hover:text-on-surface text-[18px]">drag_indicator</span>
+<div class="w-9 h-9 rounded-lg bg-primary-fixed text-on-primary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">smart_display</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm font-bold text-on-surface-variant">BÀI 14</span>
+<span class="px-2 py-0.2 rounded-full font-label-sm text-[10px] bg-secondary-fixed text-on-secondary-fixed font-semibold">Đã xuất bản</span>
+<span class="hidden md:inline-flex items-center gap-1 text-[11px] font-label-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">visibility</span> 1,420 lượt xem
+                      </span>
+</div>
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">
+                      Tối ưu hóa Re-render với React Compiler &amp; useMemo
+                    </span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<span class="hidden sm:inline-block font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-1 rounded">52 phút</span>
+<a class="px-2.5 py-1.5 rounded-lg bg-surface-container-low text-primary hover:bg-surface-container font-label-sm text-label-sm flex items-center gap-1 transition-colors" href="#" title="Xem chi tiết nội dung (ME-05)">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+<span class="hidden md:inline">Xem ME-05</span>
+</a>
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container font-label-sm text-label-sm flex items-center gap-1 transition-colors" title="Chỉnh sửa nội dung">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+<span class="hidden md:inline">Sửa</span>
+</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Item 2: Bài 15 (Published Video) -->
+<div class="lesson-row group p-3 bg-surface rounded-lg hover:bg-surface-container-low transition-all flex items-center justify-between gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.03)]" data-status="published">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline/60 cursor-grab group-hover:text-on-surface text-[18px]">drag_indicator</span>
+<div class="w-9 h-9 rounded-lg bg-primary-fixed text-on-primary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">smart_display</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm font-bold text-on-surface-variant">BÀI 15</span>
+<span class="px-2 py-0.2 rounded-full font-label-sm text-[10px] bg-secondary-fixed text-on-secondary-fixed font-semibold">Đã xuất bản</span>
+</div>
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">
+                      Server Actions trong React 19 &amp; Tích hợp Optimistic UI Updates
+                    </span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<span class="hidden sm:inline-block font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-1 rounded">45 phút</span>
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container font-label-sm text-label-sm flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+<span class="hidden md:inline">Sửa</span>
+</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Item 3: Bài 16 (Published & Recently Added) -->
+<div class="lesson-row group p-3 bg-surface-container-low/50 rounded-lg hover:bg-surface-container-low transition-all flex items-center justify-between gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.03)]" data-status="published">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline/60 cursor-grab group-hover:text-on-surface text-[18px]">drag_indicator</span>
+<div class="w-9 h-9 rounded-lg bg-primary-fixed text-on-primary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">smart_display</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm font-bold text-on-surface-variant">BÀI 16</span>
+<span class="px-2 py-0.2 rounded-full font-label-sm text-[10px] bg-secondary-fixed text-on-secondary-fixed font-semibold">Đã xuất bản</span>
+<span class="px-2 py-0.2 rounded-full font-label-sm text-[10px] bg-primary-container text-on-primary font-bold">Mới thêm</span>
+</div>
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">
+                      Cơ chế Compiler Memoization &amp; useSyncExternalStore
+                    </span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<span class="hidden sm:inline-block font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-1 rounded">35 phút</span>
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container font-label-sm text-label-sm flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+<span class="hidden md:inline">Sửa</span>
+</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Item 4: Lab 14 (Hands-on GitHub Assignment) -->
+<div class="lesson-row group p-3 bg-secondary-fixed/20 rounded-lg hover:bg-secondary-fixed/40 transition-all flex items-center justify-between gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.03)]" data-status="published">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline/60 cursor-grab group-hover:text-on-surface text-[18px]">drag_indicator</span>
+<div class="w-9 h-9 rounded-lg bg-secondary text-on-secondary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm font-bold text-secondary">LAB 14 • GITHUB PR</span>
+<span class="px-2 py-0.2 rounded-full font-label-sm text-[10px] bg-secondary-fixed text-on-secondary-fixed font-semibold">Đã xuất bản</span>
+<span class="px-2 py-0.2 rounded-full font-label-sm text-[10px] bg-surface-container font-bold text-on-surface">Thang điểm 100</span>
+</div>
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">
+                      Refactor Profiler &amp; Phân tích Flamegraph React
+                    </span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<span class="hidden sm:inline-flex items-center gap-1 font-label-sm text-label-sm text-secondary bg-surface-container-lowest px-2 py-1 rounded">
+<span class="material-symbols-outlined text-[14px]">code</span> Auto-Grading Rubric
+                  </span>
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container font-label-sm text-label-sm flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+<span class="hidden md:inline">Cấu hình</span>
+</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Item 5: Quiz 02 (Assessment) -->
+<div class="lesson-row group p-3 bg-surface rounded-lg hover:bg-surface-container-low transition-all flex items-center justify-between gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.03)]" data-status="published">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline/60 cursor-grab group-hover:text-on-surface text-[18px]">drag_indicator</span>
+<div class="w-9 h-9 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">quiz</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm font-bold text-on-surface-variant">QUIZ 02</span>
+<span class="px-2 py-0.2 rounded-full font-label-sm text-[10px] bg-secondary-fixed text-on-secondary-fixed font-semibold">Đã xuất bản</span>
+<span class="font-label-sm text-[11px] text-on-surface-variant">20 câu hỏi trắc nghiệm</span>
+</div>
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">
+                      Thẩm định tư duy React Hooks &amp; Re-render
+                    </span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<span class="hidden sm:inline-block font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-2 py-1 rounded">25 phút</span>
+<button class="px-2.5 py-1.5 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container font-label-sm text-label-sm flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+<span class="hidden md:inline">Bộ đề</span>
+</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Item 6: Bài 17 (DRAFT with Direct Publish Callout ME-08) -->
+<div class="lesson-row group p-3 bg-surface-container-high/60 rounded-lg hover:bg-surface-container-high transition-all flex items-center justify-between gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.03)]" data-status="draft">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline/60 cursor-grab group-hover:text-on-surface text-[18px]">drag_indicator</span>
+<div class="w-9 h-9 rounded-lg bg-surface-dim text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px]">edit_document</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm font-bold text-on-surface-variant">BÀI 17</span>
+<span class="px-2 py-0.2 rounded-full font-label-sm text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold">Bản nháp (Draft)</span>
+<span class="text-[11px] font-label-sm text-on-surface-variant hidden lg:inline">Chưa công khai cho học viên</span>
+</div>
+<span class="font-body-md text-body-md font-semibold text-on-surface truncate">
+                      Tích hợp Streaming SSR với Suspense boundaries
+                    </span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<span class="hidden sm:inline-block font-label-sm text-label-sm text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded">40 phút</span>
+<button class="publish-btn px-3 py-1.5 rounded-lg bg-secondary text-on-secondary hover:bg-secondary/90 font-label-sm text-label-sm font-semibold flex items-center gap-1 shadow-sm active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[16px]">rocket_launch</span>
+<span>Xuất bản ngay (ME-08)</span>
+</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- MODULE 03 (COLLAPSED) -->
+<div class="module-card bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden transition-all duration-200" data-module-id="mod-3">
+<div class="module-header p-space-md flex items-center justify-between gap-space-sm bg-surface-container-low/60 hover:bg-surface-container-low transition-colors cursor-pointer select-none">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline cursor-grab hover:text-on-surface text-[20px]">drag_indicator</span>
+<button class="toggle-btn w-6 h-6 flex items-center justify-center rounded text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-[20px] transition-transform duration-200">chevron_right</span>
+</button>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm uppercase font-bold text-primary">Chương 03</span>
+<span class="px-2 py-0.2 rounded-full font-label-sm text-[10px] bg-secondary-fixed text-on-secondary-fixed font-bold">100% Đã xuất bản</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Quản lý State Quy mô lớn &amp; Caching (Zustand &amp; TanStack Query)</h3>
+</div>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<div class="hidden sm:flex items-center gap-space-sm font-label-sm text-label-sm text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">video_library</span> 6 bài</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">terminal</span> 1 Lab</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span>18h tổng</span>
+</div>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface" onclick="event.stopPropagation()">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<div class="module-body hidden p-space-md bg-surface-container-lowest flex flex-col gap-2">
+<div class="p-3 bg-surface-container-low rounded-lg text-on-surface-variant font-body-sm text-body-sm flex items-center justify-between">
+<span>Nội dung đã được biên soạn và kiểm duyệt bởi Mentor TS. Trần Hoàng Long.</span>
+</div>
+</div>
+</div>
+<!-- MODULE 04 (COLLAPSED) -->
+<div class="module-card bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden transition-all duration-200" data-module-id="mod-4">
+<div class="module-header p-space-md flex items-center justify-between gap-space-sm bg-surface-container-low/60 hover:bg-surface-container-low transition-colors cursor-pointer select-none">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="material-symbols-outlined text-outline cursor-grab hover:text-on-surface text-[20px]">drag_indicator</span>
+<button class="toggle-btn w-6 h-6 flex items-center justify-center rounded text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-[20px] transition-transform duration-200">chevron_right</span>
+</button>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm uppercase font-bold text-primary">Chương 04</span>
+<span class="px-2 py-0.2 rounded-full font-label-sm text-[10px] bg-tertiary-fixed text-on-tertiary-fixed font-bold">Capstone Project #01</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Xây dựng Enterprise Dashboard &amp; Đồ án Capstone #01</h3>
+</div>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<div class="hidden sm:flex items-center gap-space-sm font-label-sm text-label-sm text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">work</span> Dự án thực chiến</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span>40h hướng dẫn</span>
+</div>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface" onclick="event.stopPropagation()">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<div class="module-body hidden p-space-md bg-surface-container-lowest flex flex-col gap-2">
+<div class="p-3 bg-surface-container-low rounded-lg text-on-surface-variant font-body-sm text-body-sm flex items-center justify-between">
+<span>Dự án thực tế chuẩn doanh nghiệp mô phỏng nền tảng Analytics SaaS.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Add Chapter Quick Banner Placeholder -->
+<button class="w-full py-3.5 px-4 rounded-xl bg-surface-container-low hover:bg-surface-container text-primary font-label-lg text-label-lg flex items-center justify-center gap-2 transition-all active:scale-[0.99] border-none shadow-sm" id="btnQuickAddModule">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+          Thêm Chương học tiếp theo (Chương 05)
+        </button>
+</div>
+<!-- RIGHT: Standards Guidelines & Audit Log Panel (4 Cols) -->
+<div class="xl:col-span-4 flex flex-col gap-space-lg">
+<!-- Course Progression / Distribution Visualizer Card -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-lg text-label-lg font-bold text-on-surface">Phân bố cấu trúc nội dung</span>
+<span class="font-label-sm text-label-sm text-secondary font-bold">91% Hoàn thiện</span>
+</div>
+<!-- Mini Inline Bar Metric -->
+<div class="w-full h-3 bg-surface-container rounded-full overflow-hidden flex">
+<div class="h-full bg-primary" style="width: 70%" title="Video Bài giảng (70%)"></div>
+<div class="h-full bg-secondary" style="width: 18%" title="Lab Thực hành (18%)"></div>
+<div class="h-full bg-tertiary-fixed-dim" style="width: 12%" title="Quiz Đánh giá (12%)"></div>
+</div>
+<div class="grid grid-cols-3 gap-2 font-label-sm text-label-sm">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-sm bg-primary"></span>
+<span class="text-on-surface-variant">Video 70%</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-sm bg-secondary"></span>
+<span class="text-on-surface-variant">Lab 18%</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-sm bg-tertiary-fixed-dim"></span>
+<span class="text-on-surface-variant">Quiz 12%</span>
+</div>
+</div>
+</div>
+<!-- LMS Content Standards Guideline Card -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center gap-space-sm text-primary">
+<div class="w-8 h-8 rounded-lg bg-primary-fixed text-on-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">verified</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Quy chuẩn kiểm duyệt LMS</h3>
+</div>
+<div class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant">
+<div class="flex items-start gap-2.5 p-2.5 rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-primary text-[18px] mt-0.5 shrink-0">title</span>
+<div>
+<strong class="text-on-surface block font-label-sm text-label-sm">Đặt tên bài giảng chuẩn hóa:</strong>
+                Sử dụng cấu trúc: <code class="text-primary font-mono text-[11px]">[Hành động] + [Công nghệ] + [Mục tiêu giải quyết]</code>.
+              </div>
+</div>
+<div class="flex items-start gap-2.5 p-2.5 rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-secondary text-[18px] mt-0.5 shrink-0">timer</span>
+<div>
+<strong class="text-on-surface block font-label-sm text-label-sm">Thời lượng video tiêu chuẩn:</strong>
+                Tối ưu 15 - 45 phút cho mỗi bài học để tối đa hóa khả năng tập trung của học viên.
+              </div>
+</div>
+<div class="flex items-start gap-2.5 p-2.5 rounded-lg bg-surface-container-low">
+<span class="material-symbols-outlined text-tertiary-container text-[18px] mt-0.5 shrink-0">fact_check</span>
+<div>
+<strong class="text-on-surface block font-label-sm text-label-sm">Tiêu chuẩn Lab GitHub:</strong>
+                Mỗi bài Lab bắt buộc có repository template, file test tự động và rubric chấm điểm công khai.
+              </div>
+</div>
+</div>
+<a class="font-label-sm text-label-sm text-primary hover:underline flex items-center gap-1 mt-1" href="#">
+            Xem sổ tay kiểm duyệt EduTrust 2025
+            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+<!-- Recent Audit Log Panel -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">history</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Nhật ký thay đổi (Audit Log)</h3>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Gần đây</span>
+</div>
+<!-- Timeline items -->
+<div class="flex flex-col gap-space-md relative pl-4 before:content-[''] before:absolute before:left-1.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-surface-container-high">
+<!-- Log item 1 -->
+<div class="relative flex flex-col gap-1">
+<span class="absolute -left-4 top-1 w-2.5 h-2.5 rounded-full bg-primary ring-4 ring-surface-container-lowest"></span>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">TS. Trần Hoàng Long</span>
+<span class="text-[11px] font-label-sm text-on-surface-variant">10:15 hôm nay</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Đã thêm bài học mới: <span class="text-on-surface font-medium">Bài 16 (Compiler Memoization)</span> vào Chương 02.
+              </p>
+</div>
+<!-- Log item 2 -->
+<div class="relative flex flex-col gap-1">
+<span class="absolute -left-4 top-1 w-2.5 h-2.5 rounded-full bg-secondary ring-4 ring-surface-container-lowest"></span>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">TS. Trần Hoàng Long</span>
+<span class="text-[11px] font-label-sm text-on-surface-variant">08:30 hôm nay</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Cập nhật tiêu chí Rubric đánh giá <span class="text-on-surface font-medium">Lab 14 (Flamegraph React)</span>.
+              </p>
+</div>
+<!-- Log item 3 -->
+<div class="relative flex flex-col gap-1">
+<span class="absolute -left-4 top-1 w-2.5 h-2.5 rounded-full bg-outline ring-4 ring-surface-container-lowest"></span>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Hệ thống LMS QA</span>
+<span class="text-[11px] font-label-sm text-on-surface-variant">Hôm qua, 17:45</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Tự động kiểm tra liên kết video CDN Chương 01: 100% hợp lệ.
+              </p>
+</div>
+</div>
+<button class="w-full py-2 rounded-lg bg-surface-container-low text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-label-sm text-label-sm transition-colors text-center">
+            Xem toàn bộ 142 hoạt động sửa đổi
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive JavaScript Logic for Accordion, Filter, Toast & Publish Micro-Interactions -->
+<script>
+    (function initCurriculumTree() {
+      // Toggle Module Accordion
+      const moduleHeaders = document.querySelectorAll('.module-header');
+      moduleHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+          const card = header.closest('.module-card');
+          const body = card.querySelector('.module-body');
+          const chevron = header.querySelector('.toggle-btn span');
+          
+          if (body.classList.contains('hidden')) {
+            body.classList.remove('hidden');
+            chevron.classList.add('rotate-90');
+          } else {
+            body.classList.add('hidden');
+            chevron.classList.remove('rotate-90');
+          }
+        });
+      });
+
+      // Expand All Button
+      const btnExpandAll = document.getElementById('btnExpandAll');
+      btnExpandAll?.addEventListener('click', () => {
+        document.querySelectorAll('.module-card').forEach(card => {
+          const body = card.querySelector('.module-body');
+          const chevron = card.querySelector('.toggle-btn span');
+          body.classList.remove('hidden');
+          chevron.classList.add('rotate-90');
+        });
+        showToast('Đã mở rộng toàn bộ các Chương học.');
+      });
+
+      // Collapse All Button
+      const btnCollapseAll = document.getElementById('btnCollapseAll');
+      btnCollapseAll?.addEventListener('click', () => {
+        document.querySelectorAll('.module-card').forEach(card => {
+          const body = card.querySelector('.module-body');
+          const chevron = card.querySelector('.toggle-btn span');
+          body.classList.add('hidden');
+          chevron.classList.remove('rotate-90');
+        });
+        showToast('Đã thu gọn toàn bộ các Chương học.');
+      });
+
+      // Save Order Toast Trigger
+      const btnSaveOrder = document.getElementById('btnSaveOrder');
+      btnSaveOrder?.addEventListener('click', () => {
+        showToast('Đã cập nhật vị trí cây nội dung (API #52 PUT /mentor/courses/reorder).');
+      });
+
+      // Status Filter Switcher
+      const filterButtons = document.querySelectorAll('.filter-tab');
+      const lessonRows = document.querySelectorAll('.lesson-row');
+      
+      filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterButtons.forEach(b => {
+            b.classList.remove('bg-primary', 'text-on-primary', 'font-semibold');
+            b.classList.add('bg-surface-container-low', 'text-on-surface-variant');
+          });
+          btn.classList.add('bg-primary', 'text-on-primary', 'font-semibold');
+          btn.classList.remove('bg-surface-container-low', 'text-on-surface-variant');
+
+          const filterVal = btn.getAttribute('data-filter');
+          lessonRows.forEach(row => {
+            const status = row.getAttribute('data-status');
+            if (filterVal === 'all' || status === filterVal) {
+              row.style.display = 'flex';
+            } else {
+              row.style.display = 'none';
+            }
+          });
+        });
+      });
+
+      // Quick Search Filter
+      const searchInput = document.getElementById('lessonSearchInput');
+      searchInput?.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        lessonRows.forEach(row => {
+          const title = row.innerText.toLowerCase();
+          if (title.includes(query)) {
+            row.style.display = 'flex';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      });
+
+      // Publish Micro-interaction (ME-08 Action)
+      const publishBtns = document.querySelectorAll('.publish-btn');
+      publishBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const row = btn.closest('.lesson-row');
+          btn.innerHTML = `<span class="material-symbols-outlined text-[16px]">check</span> Đã xuất bản!`;
+          btn.classList.remove('bg-secondary', 'text-on-secondary');
+          btn.classList.add('bg-secondary-fixed', 'text-on-secondary-fixed');
+          row.setAttribute('data-status', 'published');
+          
+          showToast('Bài 17 đã được xuất bản trực tiếp lên hệ thống học viên!');
+        });
+      });
+
+      // Toast utility function
+      function showToast(msg) {
+        const toast = document.getElementById('saveToast');
+        const toastMsg = document.getElementById('toastMessage');
+        if (!toast || !toastMsg) return;
+        
+        toastMsg.textContent = msg;
+        toast.classList.remove('translate-y-24', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+
+        setTimeout(() => {
+          toast.classList.add('translate-y-24', 'opacity-0');
+          toast.classList.remove('translate-y-0', 'opacity-100');
+        }, 3200);
+      }
+    })();
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] mt-space-xl"><div class="w-full px-margin py-space-xl"><div class="grid grid-cols-1 md:grid-cols-4 gap-space-xl"><div class="flex flex-col gap-space-sm md:col-span-1"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">school</span></div><span class="font-headline-sm text-headline-sm text-primary">Study2Work LMS</span></div><p class="font-body-sm text-body-sm text-on-surface-variant mt-space-xs leading-relaxed">Hệ sinh thái đào tạo và kết nối nguồn nhân lực công nghệ tiêu chuẩn cao. Cổng điều phối chuyên môn dành cho Giảng viên &amp; Cố vấn doanh nghiệp.</p></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg text-on-surface font-bold uppercase tracking-wider">Tiêu chuẩn học thuật</span><ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-primary transition-colors cursor-pointer">Khung chuẩn năng lực Bloom-Tech</li><li class="hover:text-primary transition-colors cursor-pointer">Quy chuẩn đánh giá Rubrics &amp; QA</li><li class="hover:text-primary transition-colors cursor-pointer">Kiểm định chất lượng EduTrust</li><li class="hover:text-primary transition-colors cursor-pointer">Hội đồng khoa học &amp; Cố vấn công nghệ</li></ul></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg text-on-surface font-bold uppercase tracking-wider">Liên kết viện - trường</span><ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-primary transition-colors cursor-pointer">Mạng lưới Đối tác Doanh nghiệp</li><li class="hover:text-primary transition-colors cursor-pointer">Chương trình Học bổng Ươm mầm Tài năng</li><li class="hover:text-primary transition-colors cursor-pointer">Trung tâm Chuyển giao Đổi mới Sáng tạo</li><li class="hover:text-primary transition-colors cursor-pointer">Cổng xác thực văn bằng điện tử</li></ul></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg text-on-surface font-bold uppercase tracking-wider">Hỗ trợ giảng viên</span><ul class="flex flex-col gap-space-xs font-body-sm text-body-sm text-on-surface-variant"><li class="hover:text-primary transition-colors cursor-pointer">Hotline Ban Học vụ: 1900 6886</li><li class="hover:text-primary transition-colors cursor-pointer">academic-support@study2work.edu.vn</li><li class="hover:text-primary transition-colors cursor-pointer">Sổ tay hướng dẫn Cố vấn chuyên môn</li><li class="hover:text-primary transition-colors cursor-pointer">Quy tắc ứng xử học thuật văn minh</li></ul></div></div><div class="mt-space-xl pt-space-lg bg-surface-container-high/30 -mx-margin px-margin flex flex-col md:flex-row items-center justify-between gap-space-md"><span class="font-body-sm text-body-sm text-on-surface-variant">© 2025 Study2Work LMS Academic Alliance. Bảo lưu mọi bản quyền. Chứng nhận kiểm định quốc tế ISO 9001:2015 &amp; EduAccredited.</span><div class="flex items-center gap-space-lg font-label-sm text-label-sm text-on-surface-variant"><span class="hover:text-primary transition-colors cursor-pointer">Chính sách Liêm chính Học thuật</span><span class="hover:text-primary transition-colors cursor-pointer">Bảo mật Thông tin Học viên</span><span class="hover:text-primary transition-colors cursor-pointer">Điều khoản Cố vấn</span></div></div></div></footer></body></html>

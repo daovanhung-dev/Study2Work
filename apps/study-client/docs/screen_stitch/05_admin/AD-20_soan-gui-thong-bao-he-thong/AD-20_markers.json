@@ -1,0 +1,336 @@
+{
+  "screen_id": "AD-20",
+  "source_image": "screen.png",
+  "coordinate_space": {
+    "width": 1242,
+    "height": 1600,
+    "origin": "top-left",
+    "units": "source pixels"
+  },
+  "markers": [
+    {
+      "id": 1,
+      "label": "Brand / LMS / admin portal",
+      "x": 195,
+      "y": 45
+    },
+    {
+      "id": 2,
+      "label": "Shell navigation — Tổng quan",
+      "x": 277,
+      "y": 47
+    },
+    {
+      "id": 3,
+      "label": "Shell navigation — Người dùng",
+      "x": 365,
+      "y": 47
+    },
+    {
+      "id": 4,
+      "label": "Shell navigation — Khóa học & Nội dung",
+      "x": 514,
+      "y": 47
+    },
+    {
+      "id": 5,
+      "label": "Shell navigation — Kiểm duyệt",
+      "x": 658,
+      "y": 47
+    },
+    {
+      "id": 6,
+      "label": "Shell navigation — Báo cáo",
+      "x": 759,
+      "y": 47
+    },
+    {
+      "id": 7,
+      "label": "System Normal status label",
+      "x": 898,
+      "y": 47
+    },
+    {
+      "id": 8,
+      "label": "Header notification bell",
+      "x": 997,
+      "y": 47
+    },
+    {
+      "id": 9,
+      "label": "Admin identity/avatar",
+      "x": 1190,
+      "y": 47
+    },
+    {
+      "id": 10,
+      "label": "Global breadcrumb — Hệ thống / quản trị",
+      "x": 400,
+      "y": 74
+    },
+    {
+      "id": 11,
+      "label": "RBAC assurance label",
+      "x": 1048,
+      "y": 92
+    },
+    {
+      "id": 12,
+      "label": "Local breadcrumb — quản trị thông báo",
+      "x": 510,
+      "y": 145
+    },
+    {
+      "id": 13,
+      "label": "Return-to-list AD-19 button",
+      "x": 1226,
+      "y": 160
+    },
+    {
+      "id": 14,
+      "label": "Screen ID badge",
+      "x": 40,
+      "y": 183
+    },
+    {
+      "id": 15,
+      "label": "WCAG AA badge",
+      "x": 292,
+      "y": 183
+    },
+    {
+      "id": 16,
+      "label": "Screen title",
+      "x": 690,
+      "y": 238
+    },
+    {
+      "id": 17,
+      "label": "Introductory description",
+      "x": 820,
+      "y": 280
+    },
+    {
+      "id": 18,
+      "label": "Async information icon",
+      "x": 44,
+      "y": 424
+    },
+    {
+      "id": 19,
+      "label": "Async acceptance/delivery notice",
+      "x": 1193,
+      "y": 424
+    },
+    {
+      "id": 20,
+      "label": "Required notification title label/input/helper",
+      "x": 780,
+      "y": 533
+    },
+    {
+      "id": 21,
+      "label": "Recipient segment heading and instruction",
+      "x": 776,
+      "y": 610
+    },
+    {
+      "id": 22,
+      "label": "Audience card — all users",
+      "x": 55,
+      "y": 650
+    },
+    {
+      "id": 23,
+      "label": "Audience card — enrolled learners",
+      "x": 528,
+      "y": 650
+    },
+    {
+      "id": 24,
+      "label": "Audience card — instructors/assistants",
+      "x": 776,
+      "y": 650
+    },
+    {
+      "id": 25,
+      "label": "Static segment-filter technical note",
+      "x": 776,
+      "y": 810
+    },
+    {
+      "id": 26,
+      "label": "Delivery-channel heading",
+      "x": 777,
+      "y": 845
+    },
+    {
+      "id": 27,
+      "label": "In-app Feed checkbox/card",
+      "x": 397,
+      "y": 875
+    },
+    {
+      "id": 28,
+      "label": "Email disabled checkbox/card and SMTP note",
+      "x": 776,
+      "y": 930
+    },
+    {
+      "id": 29,
+      "label": "Required content heading / basic-format support label",
+      "x": 486,
+      "y": 983
+    },
+    {
+      "id": 30,
+      "label": "Rich-text toolbar — bold/italic/link/list",
+      "x": 240,
+      "y": 1023
+    },
+    {
+      "id": 31,
+      "label": "Notification body textarea",
+      "x": 770,
+      "y": 1228
+    },
+    {
+      "id": 32,
+      "label": "Priority heading",
+      "x": 777,
+      "y": 1282
+    },
+    {
+      "id": 33,
+      "label": "Priority card — normal",
+      "x": 391,
+      "y": 1310
+    },
+    {
+      "id": 34,
+      "label": "Priority card — urgent",
+      "x": 772,
+      "y": 1310
+    },
+    {
+      "id": 35,
+      "label": "Draft/send safety copy",
+      "x": 455,
+      "y": 1444
+    },
+    {
+      "id": 36,
+      "label": "Save draft button",
+      "x": 598,
+      "y": 1454
+    },
+    {
+      "id": 37,
+      "label": "Disabled Send now button",
+      "x": 778,
+      "y": 1454
+    },
+    {
+      "id": 38,
+      "label": "Preview panel heading",
+      "x": 842,
+      "y": 490
+    },
+    {
+      "id": 39,
+      "label": "In-app Feed preview badge",
+      "x": 1204,
+      "y": 480
+    },
+    {
+      "id": 40,
+      "label": "Preview notification source/time header",
+      "x": 1201,
+      "y": 526
+    },
+    {
+      "id": 41,
+      "label": "Preview title",
+      "x": 1203,
+      "y": 613
+    },
+    {
+      "id": 42,
+      "label": "Preview body snippet",
+      "x": 1203,
+      "y": 657
+    },
+    {
+      "id": 43,
+      "label": "Preview detail link",
+      "x": 840,
+      "y": 710
+    },
+    {
+      "id": 44,
+      "label": "Preview priority label",
+      "x": 1204,
+      "y": 711
+    },
+    {
+      "id": 45,
+      "label": "Preview auto-update note",
+      "x": 844,
+      "y": 778
+    },
+    {
+      "id": 46,
+      "label": "Technical workflow panel heading",
+      "x": 1194,
+      "y": 838
+    },
+    {
+      "id": 47,
+      "label": "Workflow step — Accepted",
+      "x": 840,
+      "y": 884
+    },
+    {
+      "id": 48,
+      "label": "Workflow step — Correlation",
+      "x": 840,
+      "y": 955
+    },
+    {
+      "id": 49,
+      "label": "Workflow step — Delivered",
+      "x": 840,
+      "y": 1044
+    },
+    {
+      "id": 50,
+      "label": "Static operation-tracking-code claim",
+      "x": 840,
+      "y": 1120
+    },
+    {
+      "id": 51,
+      "label": "Footer copyright/system label",
+      "x": 139,
+      "y": 1556
+    },
+    {
+      "id": 52,
+      "label": "Footer privacy policy link",
+      "x": 746,
+      "y": 1556
+    },
+    {
+      "id": 53,
+      "label": "Footer RBAC standards link",
+      "x": 919,
+      "y": 1556
+    },
+    {
+      "id": 54,
+      "label": "Footer technical support link",
+      "x": 1115,
+      "y": 1556
+    }
+  ]
+}

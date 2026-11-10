@@ -431,8 +431,8 @@ def test_create_admin_notification_openapi_declares_direct_contract_and_fallback
         for item in api_paths.values()
         for method in item
     )
-    assert len(api_paths) == 57
-    assert operation_count == 68
+    assert len(api_paths) == 58
+    assert operation_count == 69
 
     operation = paths["/api/v1/admin/notifications"]["post"]
     assert {item["name"] for item in operation["parameters"]} == {"Authorization"}

@@ -5,8 +5,8 @@ SELECT COUNT(*) AS total
 FROM contents
 WHERE status = 'PENDING_REVIEW'
   AND deleted_at IS NULL
-  AND (:content_type IS NULL OR content_type = :content_type)
-  AND (:course_id IS NULL OR course_id = :course_id)
+  AND (CAST(:content_type AS TEXT) IS NULL OR content_type = CAST(:content_type AS TEXT))
+  AND (CAST(:course_id AS BIGINT) IS NULL OR course_id = CAST(:course_id AS BIGINT))
 """
 
 LIST_ADMIN_PENDING_CONTENTS = """
@@ -22,8 +22,8 @@ SELECT
 FROM contents
 WHERE status = 'PENDING_REVIEW'
   AND deleted_at IS NULL
-  AND (:content_type IS NULL OR content_type = :content_type)
-  AND (:course_id IS NULL OR course_id = :course_id)
+  AND (CAST(:content_type AS TEXT) IS NULL OR content_type = CAST(:content_type AS TEXT))
+  AND (CAST(:course_id AS BIGINT) IS NULL OR course_id = CAST(:course_id AS BIGINT))
 ORDER BY id ASC
 LIMIT :limit OFFSET :offset
 """

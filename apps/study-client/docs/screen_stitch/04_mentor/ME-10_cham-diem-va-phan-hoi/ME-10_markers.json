@@ -1,0 +1,289 @@
+{
+  "screen_id": "ME-10",
+  "source_image": "screen.png",
+  "coordinate_space": "source pixels; origin top-left",
+  "source_dimensions": {
+    "width": 1600,
+    "height": 1556
+  },
+  "annotation_scale": 2,
+  "annotated_dimensions": {
+    "width": 3200,
+    "height": 3112
+  },
+  "markers": [
+    {
+      "number": 1,
+      "id": "ME10-EL-01",
+      "label": "Logo và thương hiệu Study2Work LMS Mentor",
+      "x": 45,
+      "y": 90
+    },
+    {
+      "number": 2,
+      "id": "ME10-EL-02",
+      "label": "Điều hướng Tổng quan",
+      "x": 361,
+      "y": 90
+    },
+    {
+      "number": 3,
+      "id": "ME10-EL-03",
+      "label": "Điều hướng Khóa học phụ trách",
+      "x": 530,
+      "y": 90
+    },
+    {
+      "number": 4,
+      "id": "ME10-EL-04",
+      "label": "Điều hướng Chấm bài đang chọn",
+      "x": 690,
+      "y": 90
+    },
+    {
+      "number": 5,
+      "id": "ME10-EL-05",
+      "label": "Điều hướng Hộp thư hỗ trợ",
+      "x": 832,
+      "y": 90
+    },
+    {
+      "number": 6,
+      "id": "ME10-EL-06",
+      "label": "Điều hướng Thông báo",
+      "x": 980,
+      "y": 90
+    },
+    {
+      "number": 7,
+      "id": "ME10-EL-07",
+      "label": "Chuông thông báo",
+      "x": 1268,
+      "y": 90
+    },
+    {
+      "number": 8,
+      "id": "ME10-EL-08",
+      "label": "Danh tính và avatar Mentor mẫu",
+      "x": 1550,
+      "y": 90
+    },
+    {
+      "number": 9,
+      "id": "ME10-EL-09",
+      "label": "Breadcrumb Chấm bài đến Chi tiết",
+      "x": 390,
+      "y": 119
+    },
+    {
+      "number": 10,
+      "id": "ME10-EL-10",
+      "label": "Badge mã phiên làm việc mẫu",
+      "x": 1215,
+      "y": 110
+    },
+    {
+      "number": 11,
+      "id": "ME10-EL-11",
+      "label": "Eyebrow hệ thống điều phối chấm điểm",
+      "x": 920,
+      "y": 158
+    },
+    {
+      "number": 12,
+      "id": "ME10-EL-12",
+      "label": "Tiêu đề Đánh giá bài tập và phản hồi học viên",
+      "x": 720,
+      "y": 198
+    },
+    {
+      "number": 13,
+      "id": "ME10-EL-13",
+      "label": "Mô tả màn hình",
+      "x": 865,
+      "y": 245
+    },
+    {
+      "number": 14,
+      "id": "ME10-EL-14",
+      "label": "Nút quay lại danh sách bài nộp phía trên",
+      "x": 1170,
+      "y": 224
+    },
+    {
+      "number": 15,
+      "id": "ME10-EL-15",
+      "label": "Tiêu đề panel Tập tin bài làm học viên",
+      "x": 80,
+      "y": 390
+    },
+    {
+      "number": 16,
+      "id": "ME10-EL-16",
+      "label": "Badge Đang đồng bộ",
+      "x": 900,
+      "y": 350
+    },
+    {
+      "number": 17,
+      "id": "ME10-EL-17",
+      "label": "Trạng thái đang chờ kết nối dữ liệu",
+      "x": 83,
+      "y": 415
+    },
+    {
+      "number": 18,
+      "id": "ME10-EL-18",
+      "label": "Mã nộp bài và tiến trình kiểm định mẫu",
+      "x": 201,
+      "y": 831
+    },
+    {
+      "number": 19,
+      "id": "ME10-EL-19",
+      "label": "Nút Làm mới kết nối",
+      "x": 234,
+      "y": 1018
+    },
+    {
+      "number": 20,
+      "id": "ME10-EL-20",
+      "label": "Nút Báo cáo sự cố tải file",
+      "x": 455,
+      "y": 1022
+    },
+    {
+      "number": 21,
+      "id": "ME10-EL-21",
+      "label": "Claim giao thức bảo mật AES-256",
+      "x": 81,
+      "y": 1224
+    },
+    {
+      "number": 22,
+      "id": "ME10-EL-22",
+      "label": "Claim khuôn khổ đánh giá WCAG 2.1 AA",
+      "x": 861,
+      "y": 1217
+    },
+    {
+      "number": 23,
+      "id": "ME10-EL-23",
+      "label": "Dải lưu ý nghiệp vụ về file đính kèm",
+      "x": 25,
+      "y": 1278
+    },
+    {
+      "number": 24,
+      "id": "ME10-EL-24",
+      "label": "Nhãn điểm đánh giá và khóa chỉnh sửa",
+      "x": 956,
+      "y": 348
+    },
+    {
+      "number": 25,
+      "id": "ME10-EL-25",
+      "label": "Input điểm disabled, thang /100 và gợi ý",
+      "x": 956,
+      "y": 380
+    },
+    {
+      "number": 26,
+      "id": "ME10-EL-26",
+      "label": "Tiêu đề rubric và bộ đếm tiêu chí 0/0",
+      "x": 956,
+      "y": 493
+    },
+    {
+      "number": 27,
+      "id": "ME10-EL-27",
+      "label": "Empty state Chưa có rubric tự động",
+      "x": 975,
+      "y": 521
+    },
+    {
+      "number": 28,
+      "id": "ME10-EL-28",
+      "label": "Nhãn nhận xét và bộ đếm ký tự",
+      "x": 956,
+      "y": 756
+    },
+    {
+      "number": 29,
+      "id": "ME10-EL-29",
+      "label": "Textarea nhận xét của giảng viên",
+      "x": 956,
+      "y": 783
+    },
+    {
+      "number": 30,
+      "id": "ME10-EL-30",
+      "label": "Gợi ý Markdown hỗ trợ",
+      "x": 956,
+      "y": 1010
+    },
+    {
+      "number": 31,
+      "id": "ME10-EL-31",
+      "label": "Cảnh báo an toàn dữ liệu",
+      "x": 956,
+      "y": 1078
+    },
+    {
+      "number": 32,
+      "id": "ME10-EL-32",
+      "label": "Nút Lưu điểm số và gửi nhận xét disabled",
+      "x": 956,
+      "y": 1220
+    },
+    {
+      "number": 33,
+      "id": "ME10-EL-33",
+      "label": "Nút quay lại danh sách bài nộp phía dưới",
+      "x": 975,
+      "y": 1287
+    },
+    {
+      "number": 34,
+      "id": "ME10-EL-34",
+      "label": "Trạng thái chữ ký số PENDING_AUTH",
+      "x": 950,
+      "y": 1420
+    },
+    {
+      "number": 35,
+      "id": "ME10-EL-35",
+      "label": "Version mẫu v2.4.1",
+      "x": 1552,
+      "y": 1428
+    },
+    {
+      "number": 36,
+      "id": "ME10-EL-36",
+      "label": "Logo và copyright footer",
+      "x": 72,
+      "y": 1478
+    },
+    {
+      "number": 37,
+      "id": "ME10-EL-37",
+      "label": "Link Quy chế Giảng viên",
+      "x": 1080,
+      "y": 1477
+    },
+    {
+      "number": 38,
+      "id": "ME10-EL-38",
+      "label": "Link Tiêu chuẩn đánh giá",
+      "x": 1258,
+      "y": 1477
+    },
+    {
+      "number": 39,
+      "id": "ME10-EL-39",
+      "label": "Link Hỗ trợ kỹ thuật",
+      "x": 1490,
+      "y": 1477
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_blank" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-tertiary-container":"#ffeedd","on-secondary-fixed-variant":"#005236","error-container":"#ffdad6","on-secondary":"#ffffff","surface":"#f8f9ff","surface-variant":"#d3e4fe","inverse-surface":"#213145","primary":"#004ac6","surface-bright":"#f8f9ff","on-primary-fixed":"#00174b","on-background":"#0b1c30","secondary-fixed-dim":"#4edea3","primary-fixed-dim":"#b4c5ff","tertiary-fixed-dim":"#ffb95f","tertiary":"#784b00","outline-variant":"#c3c6d7","on-primary-fixed-variant":"#003ea8","on-error":"#ffffff","secondary-container":"#6cf8bb","tertiary-container":"#996100","surface-container-high":"#dce9ff","secondary":"#006c49","on-secondary-container":"#00714d","on-tertiary-fixed":"#2a1700","secondary-fixed":"#6ffbbe","on-surface":"#0b1c30","surface-container-highest":"#d3e4fe","on-tertiary-fixed-variant":"#653e00","surface-tint":"#0053db","on-error-container":"#93000a","surface-container-low":"#eff4ff","primary-fixed":"#dbe1ff","tertiary-fixed":"#ffddb8","on-surface-variant":"#434655","primary-container":"#2563eb","inverse-primary":"#b4c5ff","background":"#f8f9ff","on-tertiary":"#ffffff","inverse-on-surface":"#eaf1ff","outline":"#737686","surface-container":"#e5eeff","on-secondary-fixed":"#002113","on-primary-container":"#eeefff","error":"#ba1a1a","surface-dim":"#cbdbf5","on-primary":"#ffffff"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-xl":"2rem","space-md":"1rem","gutter-mobile":"1rem","space-lg":"1.5rem",margin:"2rem",gutter:"1.5rem","space-xs":"0.25rem","margin-mobile":"1rem","space-sm":"0.5rem"},fontFamily:{"body-md":["Plus Jakarta Sans"],"display-lg-mobile":["Plus Jakarta Sans"],"display-lg":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"label-lg":["Plus Jakarta Sans"]},fontSize:{"body-md":["14px",{lineHeight:"22px",fontWeight:"400"}],"display-lg-mobile":["32px",{lineHeight:"40px",letterSpacing:"-0.01em",fontWeight:"700"}],"display-lg":["40px",{lineHeight:"48px",letterSpacing:"-0.02em",fontWeight:"700"}],"headline-lg-mobile":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"700"}],"headline-lg":["30px",{lineHeight:"38px",letterSpacing:"-0.015em",fontWeight:"700"}],"body-lg":["16px",{lineHeight:"24px",fontWeight:"400"}],"headline-sm":["18px",{lineHeight:"26px",letterSpacing:"-0.005em",fontWeight:"600"}],"headline-md":["22px",{lineHeight:"30px",letterSpacing:"-0.01em",fontWeight:"600"}],"body-sm":["13px",{lineHeight:"18px",fontWeight:"400"}],"label-md":["12px",{lineHeight:"16px",letterSpacing:"0.02em",fontWeight:"600"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.04em",fontWeight:"700"}],"label-lg":["14px",{lineHeight:"20px",letterSpacing:"0.01em",fontWeight:"600"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><main class="w-full min-h-screen bg-surface flex items-center justify-center p-margin-mobile"><div class="min-h-screen w-full flex flex-col justify-center items-center py-12 px-4 bg-[#F6FAFC]">
+  <div class="w-full max-w-md">
+    <!-- Top Brand Header -->
+    <div class="flex flex-col items-center mb-8 text-center">
+      <div class="inline-flex items-center gap-2.5 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-[#0B5F8A] text-white flex items-center justify-center font-bold text-xl shadow-sm">
+          S2W
+        </div>
+        <span class="text-2xl font-bold text-slate-900 tracking-tight">Study2Work</span>
+      </div>
+      <h1 class="text-2xl font-semibold text-slate-900 tracking-tight">Đăng ký tài khoản học viên</h1>
+      <p class="text-sm text-slate-600 mt-1.5">Nhập thông tin để tạo tài khoản mới trên hệ thống Study2Work</p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+      <!-- State simulation switch for QA / Spec verification -->
+      
+
+      <!-- Global 409 Conflict Alert -->
+      
+
+      <!-- Form (API #01 POST /auth/register) -->
+      <form class="space-y-4" id="registerForm" onsubmit="event.preventDefault();">
+        <!-- Full name -->
+        <div>
+          <label for="fullname" class="block text-sm font-medium text-slate-700 mb-1.5">Họ và tên</label>
+          <input type="text" id="fullname" name="fullname" placeholder="Nhập họ và tên" class="w-full h-11 px-3.5 rounded-lg border border-slate-300 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:border-[#0B5F8A] focus:ring-2 focus:ring-[#0B5F8A]/20 transition-all">
+          <p id="err-fullname" class="hidden mt-1.5 text-xs text-red-600 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">cancel</span> Họ và tên không được để trống
+          </p>
+        </div>
+
+        <!-- Email -->
+        <div>
+          <label for="email" class="block text-sm font-medium text-slate-700 mb-1.5">Địa chỉ email</label>
+          <input type="email" id="email" name="email" placeholder="example@domain.com" class="w-full h-11 px-3.5 rounded-lg border border-slate-300 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:border-[#0B5F8A] focus:ring-2 focus:ring-[#0B5F8A]/20 transition-all">
+          <p id="err-email" class="hidden mt-1.5 text-xs text-red-600 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">cancel</span> Định dạng email không hợp lệ
+          </p>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label for="password" class="block text-sm font-medium text-slate-700 mb-1.5">Mật khẩu</label>
+          <input type="password" id="password" name="password" placeholder="Nhập mật khẩu" class="w-full h-11 px-3.5 rounded-lg border border-slate-300 text-slate-900 placeholder:text-slate-400 text-sm focus:outline-none focus:border-[#0B5F8A] focus:ring-2 focus:ring-[#0B5F8A]/20 transition-all">
+          <p id="err-password" class="hidden mt-1.5 text-xs text-red-600 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[14px]">cancel</span> Mật khẩu phải có tối thiểu 8 ký tự
+          </p>
+        </div>
+
+        <!-- Primary CTA Button -->
+        <div class="pt-2">
+          <button type="submit" class="w-full h-11 bg-[#0B5F8A] hover:bg-[#084968] active:bg-[#073B57] text-white font-medium text-sm rounded-lg flex items-center justify-center gap-2 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#0B5F8A]/30">
+            Tạo tài khoản
+          </button>
+        </div>
+      </form>
+
+      <!-- Handoff Note (Honest API note) -->
+      
+
+      <!-- Switch to login -->
+      <div class="mt-6 pt-5 border-t border-slate-100 text-center"><p class="text-sm text-slate-600">Đã có tài khoản? <a href="/login" class="font-medium text-[#0B5F8A] hover:text-[#084968] hover:underline ml-1">Đăng nhập</a></p></div>
+    </div>
+
+    <!-- Tech Spec Metadata Footer -->
+    
+  </div>
+</div>
+
+<script>
+function setFormState(state) {
+  const alert409 = document.getElementById('alert-409');
+  const errName = document.getElementById('err-fullname');
+  const errEmail = document.getElementById('err-email');
+  const errPass = document.getElementById('err-password');
+  
+  const inputName = document.getElementById('fullname');
+  const inputEmail = document.getElementById('email');
+  const inputPass = document.getElementById('password');
+
+  const btnReady = document.getElementById('btn-state-ready');
+  const btn422 = document.getElementById('btn-state-422');
+  const btn409 = document.getElementById('btn-state-409');
+
+  // Reset state buttons style
+  [btnReady, btn422, btn409].forEach(btn => {
+    btn.className = 'px-2 py-1 rounded bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition';
+  });
+
+  // Reset field borders
+  [inputName, inputEmail, inputPass].forEach(input => {
+    input.classList.remove('border-red-500', 'focus:border-red-500');
+    input.classList.add('border-slate-300');
+  });
+  alert409.classList.add('hidden');
+  errName.classList.add('hidden');
+  errEmail.classList.add('hidden');
+  errPass.classList.add('hidden');
+
+  if (state === 'ready') {
+    btnReady.className = 'px-2 py-1 rounded bg-[#0B5F8A] text-white font-medium shadow-xs transition';
+  } else if (state === 'err422') {
+    btn422.className = 'px-2 py-1 rounded bg-red-600 text-white font-medium shadow-xs transition';
+    [inputName, inputEmail, inputPass].forEach(input => {
+      input.classList.remove('border-slate-300');
+      input.classList.add('border-red-500');
+    });
+    errName.classList.remove('hidden');
+    errEmail.classList.remove('hidden');
+    errPass.classList.remove('hidden');
+  } else if (state === 'err409') {
+    btn409.className = 'px-2 py-1 rounded bg-amber-600 text-white font-medium shadow-xs transition';
+    inputEmail.classList.remove('border-slate-300');
+    inputEmail.classList.add('border-red-500');
+    alert409.classList.remove('hidden');
+  }
+}
+</script></main>
+
+
+
+</body></html>

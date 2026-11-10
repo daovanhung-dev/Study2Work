@@ -1,0 +1,531 @@
+{
+  "screen_id": "GS-07",
+  "source_image": "screen.png",
+  "original_image": "screen.png",
+  "source_state": "static gated resource viewer hand-off prototype; no resource metadata, preview renderer, or API request",
+  "image_size": {
+    "width": 1588,
+    "height": 1600
+  },
+  "annotation": {
+    "scale": 2,
+    "canvas_size": {
+      "width": 3336,
+      "height": 3200
+    },
+    "source_offset_canvas_px": {
+      "x": 80,
+      "y": 0
+    },
+    "gutter_width_canvas_px": 80,
+    "marker_style": {
+      "shape": "circle",
+      "fill": "#0B5F8A",
+      "text": "#FFFFFF",
+      "stroke": "#FFFFFF",
+      "diameter_canvas_px": 40,
+      "font_weight": 700
+    },
+    "leader_style": {
+      "stroke": "#0B5F8A",
+      "stroke_width_canvas_px": 2,
+      "scope": "gutter only"
+    }
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "GS07-EL-01",
+      "target": "Header brand, primary navigation, authentication links and profile icon",
+      "target_center_source_px": {
+        "x": 794,
+        "y": 40
+      },
+      "side": "right",
+      "y_source": 40,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 80
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 80
+      }
+    },
+    {
+      "number": 2,
+      "element_id": "GS07-EL-02",
+      "target": "Breadcrumb links for resource list and GS-06",
+      "target_center_source_px": {
+        "x": 305,
+        "y": 115
+      },
+      "side": "left",
+      "y_source": 115,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 230
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 230
+      }
+    },
+    {
+      "number": 3,
+      "element_id": "GS07-EL-03",
+      "target": "API #12 blocked status badge",
+      "target_center_source_px": {
+        "x": 1360,
+        "y": 115
+      },
+      "side": "right",
+      "y_source": 115,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 230
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 230
+      }
+    },
+    {
+      "number": 4,
+      "element_id": "GS07-EL-04",
+      "target": "Resource identifier card, safe description and proposed route badge",
+      "target_center_source_px": {
+        "x": 520,
+        "y": 270
+      },
+      "side": "left",
+      "y_source": 270,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 540
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 540
+      }
+    },
+    {
+      "number": 5,
+      "element_id": "GS07-EL-05",
+      "target": "API #12 protocol reference card",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 330
+      },
+      "side": "right",
+      "y_source": 330,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 660
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 660
+      }
+    },
+    {
+      "number": 6,
+      "element_id": "GS07-EL-06",
+      "target": "Security hand-off standards list",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 560
+      },
+      "side": "right",
+      "y_source": 560,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 1120
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 1120
+      }
+    },
+    {
+      "number": 7,
+      "element_id": "GS07-EL-07",
+      "target": "Secure viewer toolbar and document label",
+      "target_center_source_px": {
+        "x": 340,
+        "y": 470
+      },
+      "side": "left",
+      "y_source": 470,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 940
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 940
+      }
+    },
+    {
+      "number": 8,
+      "element_id": "GS07-EL-08",
+      "target": "Disabled zoom-in control",
+      "target_center_source_px": {
+        "x": 860,
+        "y": 470
+      },
+      "side": "right",
+      "y_source": 442,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 884
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 884
+      }
+    },
+    {
+      "number": 9,
+      "element_id": "GS07-EL-09",
+      "target": "Disabled zoom-out control",
+      "target_center_source_px": {
+        "x": 907,
+        "y": 470
+      },
+      "side": "right",
+      "y_source": 470,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 940
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 940
+      }
+    },
+    {
+      "number": 10,
+      "element_id": "GS07-EL-10",
+      "target": "Disabled fullscreen control",
+      "target_center_source_px": {
+        "x": 954,
+        "y": 470
+      },
+      "side": "right",
+      "y_source": 498,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 996
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 996
+      }
+    },
+    {
+      "number": 11,
+      "element_id": "GS07-EL-11",
+      "target": "Gated empty preview panel and explanation",
+      "target_center_source_px": {
+        "x": 535,
+        "y": 650
+      },
+      "side": "left",
+      "y_source": 650,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1300
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1300
+      }
+    },
+    {
+      "number": 12,
+      "element_id": "GS07-EL-12",
+      "target": "Access unresolved status badge",
+      "target_center_source_px": {
+        "x": 535,
+        "y": 802
+      },
+      "side": "left",
+      "y_source": 802,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1604
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1604
+      }
+    },
+    {
+      "number": 13,
+      "element_id": "GS07-EL-13",
+      "target": "Viewer security rule and client scope strip",
+      "target_center_source_px": {
+        "x": 535,
+        "y": 901
+      },
+      "side": "left",
+      "y_source": 901,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 1802
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 1802
+      }
+    },
+    {
+      "number": 14,
+      "element_id": "GS07-EL-14",
+      "target": "Safe resource release information callout",
+      "target_center_source_px": {
+        "x": 520,
+        "y": 1065
+      },
+      "side": "left",
+      "y_source": 1065,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 2130
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 2130
+      }
+    },
+    {
+      "number": 15,
+      "element_id": "GS07-EL-15",
+      "target": "Disabled resource download button",
+      "target_center_source_px": {
+        "x": 326,
+        "y": 1176
+      },
+      "side": "left",
+      "y_source": 1176,
+      "marker_center_canvas_px": {
+        "x": 28,
+        "y": 2352
+      },
+      "leader_to_canvas_px": {
+        "x": 80,
+        "y": 2352
+      }
+    },
+    {
+      "number": 16,
+      "element_id": "GS07-EL-16",
+      "target": "Return to GS-06 resource list link",
+      "target_center_source_px": {
+        "x": 805,
+        "y": 1176
+      },
+      "side": "right",
+      "y_source": 1176,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 2352
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 2352
+      }
+    },
+    {
+      "number": 17,
+      "element_id": "GS07-EL-17",
+      "target": "Hand-off matrix heading and state guidance",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 745
+      },
+      "side": "right",
+      "y_source": 745,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 1490
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 1490
+      }
+    },
+    {
+      "number": 18,
+      "element_id": "GS07-EL-18",
+      "target": "Loading state simulator tab",
+      "target_center_source_px": {
+        "x": 1290,
+        "y": 871
+      },
+      "side": "right",
+      "y_source": 871,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 1742
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 1742
+      }
+    },
+    {
+      "number": 19,
+      "element_id": "GS07-EL-19",
+      "target": "Gated state simulator tab",
+      "target_center_source_px": {
+        "x": 1290,
+        "y": 915
+      },
+      "side": "right",
+      "y_source": 915,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 1830
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 1830
+      }
+    },
+    {
+      "number": 20,
+      "element_id": "GS07-EL-20",
+      "target": "Ready signed-URL simulator tab",
+      "target_center_source_px": {
+        "x": 1290,
+        "y": 959
+      },
+      "side": "right",
+      "y_source": 959,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 1918
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 1918
+      }
+    },
+    {
+      "number": 21,
+      "element_id": "GS07-EL-21",
+      "target": "403 forbidden simulator tab",
+      "target_center_source_px": {
+        "x": 1290,
+        "y": 1003
+      },
+      "side": "right",
+      "y_source": 1003,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 2006
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 2006
+      }
+    },
+    {
+      "number": 22,
+      "element_id": "GS07-EL-22",
+      "target": "404 not-found simulator tab",
+      "target_center_source_px": {
+        "x": 1290,
+        "y": 1047
+      },
+      "side": "right",
+      "y_source": 1047,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 2094
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 2094
+      }
+    },
+    {
+      "number": 23,
+      "element_id": "GS07-EL-23",
+      "target": "410 expired-link simulator tab",
+      "target_center_source_px": {
+        "x": 1290,
+        "y": 1091
+      },
+      "side": "right",
+      "y_source": 1091,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 2182
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 2182
+      }
+    },
+    {
+      "number": 24,
+      "element_id": "GS07-EL-24",
+      "target": "Selected hand-off state detail panel",
+      "target_center_source_px": {
+        "x": 1300,
+        "y": 1210
+      },
+      "side": "right",
+      "y_source": 1210,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 2420
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 2420
+      }
+    },
+    {
+      "number": 25,
+      "element_id": "GS07-EL-25",
+      "target": "Static WCAG and Ocean rhythm badge",
+      "target_center_source_px": {
+        "x": 1310,
+        "y": 1406
+      },
+      "side": "right",
+      "y_source": 1406,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 2812
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 2812
+      }
+    },
+    {
+      "number": 26,
+      "element_id": "GS07-EL-26",
+      "target": "Footer brand, navigation and copyright",
+      "target_center_source_px": {
+        "x": 794,
+        "y": 1546
+      },
+      "side": "right",
+      "y_source": 1546,
+      "marker_center_canvas_px": {
+        "x": 3308,
+        "y": 3092
+      },
+      "leader_to_canvas_px": {
+        "x": 3256,
+        "y": 3092
+      }
+    }
+  ]
+}

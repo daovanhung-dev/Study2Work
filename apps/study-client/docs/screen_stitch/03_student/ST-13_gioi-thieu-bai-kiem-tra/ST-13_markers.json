@@ -1,0 +1,212 @@
+[
+  {
+    "number": 1,
+    "element_id": "ST13-EL-01",
+    "label": "Brand and header",
+    "x": 24,
+    "y": 23
+  },
+  {
+    "number": 2,
+    "element_id": "ST13-EL-02",
+    "label": "Global search",
+    "x": 213,
+    "y": 22
+  },
+  {
+    "number": 3,
+    "element_id": "ST13-EL-03",
+    "label": "Primary navigation",
+    "x": 642,
+    "y": 26
+  },
+  {
+    "number": 4,
+    "element_id": "ST13-EL-04",
+    "label": "Notifications and account",
+    "x": 1176,
+    "y": 55
+  },
+  {
+    "number": 5,
+    "element_id": "ST13-EL-05",
+    "label": "Breadcrumb",
+    "x": 52,
+    "y": 120
+  },
+  {
+    "number": 6,
+    "element_id": "ST13-EL-06",
+    "label": "Quiz labels",
+    "x": 50,
+    "y": 152
+  },
+  {
+    "number": 7,
+    "element_id": "ST13-EL-07",
+    "label": "Quiz title",
+    "x": 45,
+    "y": 210
+  },
+  {
+    "number": 8,
+    "element_id": "ST13-EL-08",
+    "label": "Instructor card",
+    "x": 52,
+    "y": 304
+  },
+  {
+    "number": 9,
+    "element_id": "ST13-EL-09",
+    "label": "Quiz cover preview",
+    "x": 895,
+    "y": 150
+  },
+  {
+    "number": 10,
+    "element_id": "ST13-EL-10",
+    "label": "Quiz status and attempt badge",
+    "x": 1328,
+    "y": 376
+  },
+  {
+    "number": 11,
+    "element_id": "ST13-EL-11",
+    "label": "Passing goal panel",
+    "x": 1304,
+    "y": 435
+  },
+  {
+    "number": 12,
+    "element_id": "ST13-EL-12",
+    "label": "Question count metric",
+    "x": 38,
+    "y": 416
+  },
+  {
+    "number": 13,
+    "element_id": "ST13-EL-13",
+    "label": "Duration metric",
+    "x": 252,
+    "y": 414
+  },
+  {
+    "number": 14,
+    "element_id": "ST13-EL-14",
+    "label": "Passing score metric",
+    "x": 466,
+    "y": 414
+  },
+  {
+    "number": 15,
+    "element_id": "ST13-EL-15",
+    "label": "Available attempts metric",
+    "x": 681,
+    "y": 414
+  },
+  {
+    "number": 16,
+    "element_id": "ST13-EL-16",
+    "label": "Start attempt button",
+    "x": 1304,
+    "y": 516
+  },
+  {
+    "number": 17,
+    "element_id": "ST13-EL-17",
+    "label": "Review lesson CTA",
+    "x": 1304,
+    "y": 607
+  },
+  {
+    "number": 18,
+    "element_id": "ST13-EL-18",
+    "label": "Certification and validity note",
+    "x": 1301,
+    "y": 650
+  },
+  {
+    "number": 19,
+    "element_id": "ST13-EL-19",
+    "label": "Academic support card",
+    "x": 1296,
+    "y": 762
+  },
+  {
+    "number": 20,
+    "element_id": "ST13-EL-20",
+    "label": "Rules heading",
+    "x": 52,
+    "y": 646
+  },
+  {
+    "number": 21,
+    "element_id": "ST13-EL-21",
+    "label": "Proctoring and security notice",
+    "x": 52,
+    "y": 716
+  },
+  {
+    "number": 22,
+    "element_id": "ST13-EL-22",
+    "label": "Scoring rule card",
+    "x": 52,
+    "y": 842
+  },
+  {
+    "number": 23,
+    "element_id": "ST13-EL-23",
+    "label": "Automatic submission card",
+    "x": 315,
+    "y": 842
+  },
+  {
+    "number": 24,
+    "element_id": "ST13-EL-24",
+    "label": "Certificate card",
+    "x": 579,
+    "y": 842
+  },
+  {
+    "number": 25,
+    "element_id": "ST13-EL-25",
+    "label": "Attempt history heading and count",
+    "x": 50,
+    "y": 1087
+  },
+  {
+    "number": 26,
+    "element_id": "ST13-EL-26",
+    "label": "Previous attempt summary row",
+    "x": 51,
+    "y": 1157
+  },
+  {
+    "number": 27,
+    "element_id": "ST13-EL-27",
+    "label": "Review previous attempt button",
+    "x": 856,
+    "y": 1190
+  },
+  {
+    "number": 28,
+    "element_id": "ST13-EL-28",
+    "label": "Footer brand, description and badges",
+    "x": 20,
+    "y": 1360
+  },
+  {
+    "number": 29,
+    "element_id": "ST13-EL-29",
+    "label": "Footer navigation columns",
+    "x": 540,
+    "y": 1340
+  },
+  {
+    "number": 30,
+    "element_id": "ST13-EL-30",
+    "label": "Footer copyright and tagline",
+    "x": 1010,
+    "y": 1530
+  }
+]

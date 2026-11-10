@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_blank" name="shell-type"/><title>Study2Work LMS - Tài khoản</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "secondary-fixed-dim": "#4edea3", "inverse-on-surface": "#eaf1ff", "error": "#ba1a1a", "surface-dim": "#cbdbf5", "surface": "#f8f9ff", "tertiary-fixed": "#ffddb8", "on-tertiary-fixed": "#2a1700", "on-primary-fixed": "#00174b", "secondary": "#006c49", "tertiary-fixed-dim": "#ffb95f", "on-secondary-fixed": "#002113", "on-error-container": "#93000a", "on-primary": "#ffffff", "inverse-surface": "#213145", "primary": "#004ac6", "on-error": "#ffffff", "surface-variant": "#d3e4fe", "on-secondary": "#ffffff", "surface-bright": "#f8f9ff", "primary-container": "#2563eb", "tertiary-container": "#996100", "error-container": "#ffdad6", "outline-variant": "#c3c6d7", "surface-container-highest": "#d3e4fe", "surface-container-lowest": "#ffffff", "secondary-fixed": "#6ffbbe", "surface-container-low": "#eff4ff", "on-surface": "#0b1c30", "secondary-container": "#6cf8bb", "on-tertiary-container": "#ffeedd", "on-secondary-container": "#00714d", "on-primary-fixed-variant": "#003ea8", "outline": "#737686", "surface-tint": "#0053db", "primary-fixed": "#dbe1ff", "on-background": "#0b1c30", "tertiary": "#784b00", "on-surface-variant": "#434655", "background": "#f8f9ff", "primary-fixed-dim": "#b4c5ff", "inverse-primary": "#b4c5ff", "surface-container-high": "#dce9ff", "surface-container": "#e5eeff", "on-tertiary-fixed-variant": "#653e00", "on-tertiary": "#ffffff", "on-primary-container": "#eeefff", "on-secondary-fixed-variant": "#005236" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xl": "2rem", "margin": "2rem", "space-lg": "1.5rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "margin-mobile": "1rem", "gutter-mobile": "1rem", "gutter": "1.5rem", "space-md": "1rem" }, "fontFamily": { "body-lg": ["Plus Jakarta Sans"], "display-lg": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "display-lg-mobile": ["Plus Jakarta Sans"] }, "fontSize": { "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-lg": ["30px", { "lineHeight": "38px", "letterSpacing": "-0.015em", "fontWeight": "700" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "headline-sm": ["18px", { "lineHeight": "26px", "letterSpacing": "-0.005em", "fontWeight": "600" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "headline-md": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "display-lg-mobile": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }] } } } };</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><main class="w-full min-h-screen flex items-center justify-center bg-surface px-margin py-space-xl"><div class="flex flex-col w-full">
+<div class="w-full max-w-[1440px] mx-auto flex flex-col gap-space-xl">
+<!-- Hand-off Environment Controller & State Switcher -->
+<aside aria-label="Bộ điều khiển kiểm thử giao diện Hand-off" class="w-full bg-surface-container-low rounded-xl p-space-md shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm min-w-0">
+<span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface-variant text-primary shrink-0">
+<span aria-hidden="true" class="material-symbols-outlined text-[20px]">tune</span>
+</span>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">HAND-OFF SPEC</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface">Screen ID: SH-05</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-highest text-on-surface font-mono">Route: /forbidden</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">Trình mô phỏng trạng thái lỗi bảo mật API #04 (GET /users/me - Strict Role Validation)</span>
+</div>
+</div>
+<!-- Mode Selector Pills -->
+<nav aria-label="Chuyển đổi trạng thái mã lỗi" class="flex items-center bg-surface-container-highest p-1 rounded-xl shrink-0 self-stretch md:self-auto">
+<button class="flex-1 md:flex-initial h-11 min-h-[44px] px-space-md flex items-center justify-center gap-space-xs rounded-lg font-label-lg text-label-lg bg-surface-container-lowest text-primary shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2" id="btn-mode-403" onclick="switchState('403')" type="button">
+<span aria-hidden="true" class="material-symbols-outlined text-[18px]">gpp_maybe</span>
+<span>HTTP 403 Forbidden</span>
+<span class="ml-1 text-[11px] px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-mono">AUTHZ</span>
+</button>
+<button class="flex-1 md:flex-initial h-11 min-h-[44px] px-space-md flex items-center justify-center gap-space-xs rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2" id="btn-mode-401" onclick="switchState('401')" type="button">
+<span aria-hidden="true" class="material-symbols-outlined text-[18px]">history</span>
+<span>HTTP 401 Unauthorized</span>
+<span class="ml-1 text-[11px] px-1.5 py-0.5 rounded bg-surface-variant text-on-surface-variant font-mono">AUTHN</span>
+</button>
+</nav>
+</aside>
+<!-- Main Hand-off Canvas Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<!-- Primary Resolution Card (Left: 7 cols) -->
+<section class="lg:col-span-7 bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-lg">
+<!-- Status Indicator Header -->
+<div class="flex items-start gap-space-md">
+<div class="w-14 h-14 min-w-[56px] rounded-xl flex items-center justify-center bg-surface-container text-primary" id="icon-badge-box">
+<span class="material-symbols-outlined text-[32px]" id="state-icon" style="font-variation-settings: 'FILL' 1;">shield_lock</span>
+</div>
+<div class="flex flex-col min-w-0 flex-1">
+<div class="flex items-center gap-space-xs flex-wrap mb-1">
+<span class="font-label-sm text-label-sm px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-mono" id="badge-code">STATUS: 403 FORBIDDEN</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-mono" id="badge-target">TARGET: GET /users/me</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface" id="screen-title">Không đủ quyền truy cập hệ thống</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1" id="screen-desc">
+              Tài khoản hiện tại chưa được cấp quyền hạn cần thiết để truy xuất tài nguyên bảo mật này hoặc vai trò chưa nằm trong danh sách xác thực được định nghĩa.
+            </p>
+</div>
+</div>
+<!-- Technical Boundary Notice -->
+<div class="rounded-xl p-space-md bg-surface-container-low flex flex-col gap-space-xs" id="security-boundary-banner">
+<div class="flex items-center gap-space-xs text-primary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+<span>Ràng buộc phân quyền API #04 (Runtime Policy)</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed" id="security-boundary-text">
+            API <code class="font-mono text-on-surface bg-surface-container px-1 py-0.5 rounded">#04 GET /users/me</code> (<span class="font-mono text-[11px]">R - RUNTIME_SOURCE</span>) chỉ hỗ trợ kiểm tra vai trò <strong class="text-on-surface">STUDENT</strong>. Các vai trò <strong class="text-on-surface">MENTOR</strong> và <strong class="text-on-surface">ADMIN</strong> hiện chưa có cấu hình hồ sơ khả dụng và tuyệt đối không được tự ý gán quyền truy cập hoặc giả lập chuyển tiếp vào bảng điều khiển.
+          </p>
+</div>
+<!-- Dynamic Context Details -->
+<div class="rounded-xl bg-surface-container-low p-space-md flex flex-col gap-space-sm">
+<span class="font-label-md text-label-md uppercase tracking-wide text-on-surface-variant">Chi tiết chẩn đoán định tuyến</span>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-sm font-body-sm text-body-sm">
+<div class="p-space-sm rounded-lg bg-surface-container-lowest flex flex-col gap-0.5">
+<span class="text-on-surface-variant font-label-sm text-label-sm">Lý do từ chối (Reason)</span>
+<span class="text-on-surface font-semibold" id="detail-reason">ROLE_NOT_AUTHORIZED_FOR_STUDENT_SCOPE</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest flex flex-col gap-0.5">
+<span class="text-on-surface-variant font-label-sm text-label-sm">Cơ chế xử lý (Recovery Strategy)</span>
+<span class="text-on-surface font-semibold" id="detail-strategy">Chuyển hướng đến cổng công cộng an toàn (SH-01)</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest flex flex-col gap-0.5">
+<span class="text-on-surface-variant font-label-sm text-label-sm">Giới hạn phiên (Refresh Constraint)</span>
+<span class="text-on-surface font-semibold" id="detail-constraint">Không kích hoạt Refresh Token cho lỗi phân quyền</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest flex flex-col gap-0.5">
+<span class="text-on-surface-variant font-label-sm text-label-sm">Chính sách bảo mật (Policy Compliance)</span>
+<span class="text-on-surface font-semibold" id="detail-compliance">Zero-trust: Không lộ thông tin định danh nội bộ</span>
+</div>
+</div>
+</div>
+<!-- Action Buttons Container (Height >= 44px WCAG AA) -->
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-space-sm pt-space-xs">
+<!-- 403 Primary Action -->
+<a class="h-11 min-h-[44px] px-space-lg rounded-lg bg-primary text-on-primary font-label-lg text-label-lg flex items-center justify-center gap-space-xs transition-colors hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2" href="/sh-01-dashboard" id="btn-403-primary">
+<span aria-hidden="true" class="material-symbols-outlined text-[20px]">arrow_back</span>
+<span>Quay về trang an toàn (SH-01 / GS-01)</span>
+</a>
+<!-- 401 Primary Action (Hidden by default in 403 mode) -->
+<a class="hidden h-11 min-h-[44px] px-space-lg rounded-lg bg-primary text-on-primary font-label-lg text-label-lg items-center justify-center gap-space-xs transition-colors hover:bg-primary-container focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2" href="/sh-02-login" id="btn-401-login">
+<span aria-hidden="true" class="material-symbols-outlined text-[20px]">login</span>
+<span>Đăng nhập lại (SH-02)</span>
+</a>
+<!-- 401 Runtime Single-Attempt Refresh Action -->
+<button class="hidden h-11 min-h-[44px] px-space-md rounded-lg bg-surface-container text-on-surface font-label-lg text-label-lg items-center justify-center gap-space-xs transition-colors hover:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2" id="btn-401-refresh" onclick="executeRuntimeRefresh()" type="button">
+<span aria-hidden="true" class="material-symbols-outlined text-[20px]" id="refresh-icon">sync</span>
+<span id="refresh-text">Thử làm mới phiên (Refresh Token - R-X01)</span>
+</button>
+<!-- Support Contact / Secondary Navigation -->
+<button class="h-11 min-h-[44px] px-space-md rounded-lg bg-transparent text-on-surface-variant hover:text-on-surface font-label-lg text-label-lg flex items-center justify-center gap-space-xs transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2" onclick="copyTraceId()" type="button">
+<span aria-hidden="true" class="material-symbols-outlined text-[18px]">content_copy</span>
+<span>Sao chép mã phiên hỗ trợ</span>
+</button>
+</div>
+<!-- Dynamic feedback alert for Refresh execution -->
+<div class="hidden rounded-lg p-space-sm font-body-sm text-body-sm flex items-center gap-space-xs" id="refresh-alert"></div>
+</section>
+<!-- Technical Audit & Contract Sidebar (Right: 5 cols) -->
+<div class="lg:col-span-5 flex flex-col gap-space-md">
+<!-- Security Trace & Error Envelope Panel -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">terminal</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Mã phản hồi HTTP &amp; Trace</span>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-mono">SANITIZED</span>
+</div>
+<!-- Trace ID Box -->
+<div class="bg-surface-container-low rounded-lg p-space-sm flex items-center justify-between">
+<div class="flex flex-col min-w-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Trace Identifier</span>
+<span class="font-mono font-label-lg text-label-lg text-on-surface truncate" id="txt-trace-id">tr_403_sec_study</span>
+</div>
+<button aria-label="Sao chép Trace ID" class="w-10 h-10 min-w-[40px] rounded-lg flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors focus:outline-none focus:ring-2 focus:ring-primary" onclick="copyTraceId()" type="button">
+<span class="material-symbols-outlined text-[18px]">copy_all</span>
+</button>
+</div>
+<!-- Safe JSON Payload Envelope -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm">
+<span>Standard Response Contract</span>
+<span class="font-mono font-semibold text-error" id="response-status-badge">403 Forbidden</span>
+</div>
+<pre class="bg-surface-container-highest p-space-sm rounded-lg overflow-x-auto text-[12px] font-mono leading-relaxed text-on-surface border-0"><code id="code-envelope">{
+  "status": 403,
+  "businessCode": "AUTHZ_STUDENT_REQUIRED",
+  "message": "Access Denied: Role is not authorized for /users/me endpoint",
+  "traceId": "tr_403_sec_study",
+  "timestamp": "2025-05-18T08:30:14.291Z"
+}</code></pre>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">info</span>
+            Dữ liệu đã được lược bỏ stack trace và cấu trúc cơ sở dữ liệu nội bộ.
+          </span>
+</div>
+<!-- Implementation Rules Card for Engineering Hand-off -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center gap-space-xs text-on-surface font-headline-sm text-headline-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">rule</span>
+<span>Quy chuẩn kỹ thuật Hand-off</span>
+</div>
+<ul class="flex flex-col gap-space-sm font-body-sm text-body-sm text-on-surface-variant">
+<li class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<div>
+<strong class="text-on-surface">Đơn lần làm mới (Single Refresh Limit):</strong> Cơ chế R-X01 (<code class="font-mono text-[11px] bg-surface-container px-1 rounded">POST /auth/refresh</code>) chỉ được trigger duy nhất 1 lần khi gặp 401. Nếu refresh thất bại, xóa session cache và bắt buộc đưa về <code class="font-mono text-[11px]">SH-02 (Login)</code>; tuyệt đối không tạo vòng lặp refresh vô hạn.
+              </div>
+</li>
+<li class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<div>
+<strong class="text-on-surface">Phân định vai trò (Role Segregation):</strong> Không tự động chuyển hướng Mentor/Admin về <code class="font-mono text-[11px]">/users/me</code> khi chưa có API đặc thù được xác thực bởi backend team.
+              </div>
+</li>
+<li class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<div>
+<strong class="text-on-surface">Khả năng tiếp cận (Accessibility):</strong> Tất cả controls tương tác đảm bảo kích thước tối thiểu 44px, độ tương phản chuẩn WCAG AA và hiển thị rõ ràng cho screen reader.
+              </div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  let currentMode = '403';
+  let refreshAttempts = 0;
+
+  function switchState(mode) {
+    currentMode = mode;
+    refreshAttempts = 0;
+
+    const btn403 = document.getElementById('btn-mode-403');
+    const btn401 = document.getElementById('btn-mode-401');
+
+    const iconBadge = document.getElementById('icon-badge-box');
+    const stateIcon = document.getElementById('state-icon');
+    const badgeCode = document.getElementById('badge-code');
+    const badgeTarget = document.getElementById('badge-target');
+    const screenTitle = document.getElementById('screen-title');
+    const screenDesc = document.getElementById('screen-desc');
+
+    const detailReason = document.getElementById('detail-reason');
+    const detailStrategy = document.getElementById('detail-strategy');
+    const detailConstraint = document.getElementById('detail-constraint');
+
+    const btn403Primary = document.getElementById('btn-403-primary');
+    const btn401Login = document.getElementById('btn-401-login');
+    const btn401Refresh = document.getElementById('btn-401-refresh');
+    const refreshAlert = document.getElementById('refresh-alert');
+
+    const txtTraceId = document.getElementById('txt-trace-id');
+    const responseStatusBadge = document.getElementById('response-status-badge');
+    const codeEnvelope = document.getElementById('code-envelope');
+
+    refreshAlert.className = 'hidden';
+
+    if (mode === '403') {
+      // Tab styling
+      btn403.className = 'flex-1 md:flex-initial h-11 min-h-[44px] px-space-md flex items-center justify-center gap-space-xs rounded-lg font-label-lg text-label-lg bg-surface-container-lowest text-primary shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2';
+      btn401.className = 'flex-1 md:flex-initial h-11 min-h-[44px] px-space-md flex items-center justify-center gap-space-xs rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2';
+
+      // Visuals
+      stateIcon.textContent = 'shield_lock';
+      badgeCode.textContent = 'STATUS: 403 FORBIDDEN';
+      badgeCode.className = 'font-label-sm text-label-sm px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-mono';
+      screenTitle.textContent = 'Không đủ quyền truy cập hệ thống';
+      screenDesc.textContent = 'Tài khoản hiện tại chưa được cấp quyền hạn cần thiết để truy xuất tài nguyên bảo mật này hoặc vai trò chưa nằm trong danh sách xác thực được định nghĩa.';
+
+      detailReason.textContent = 'ROLE_NOT_AUTHORIZED_FOR_STUDENT_SCOPE';
+      detailStrategy.textContent = 'Chuyển hướng đến cổng công cộng an toàn (SH-01)';
+      detailConstraint.textContent = 'Không kích hoạt Refresh Token cho lỗi phân quyền';
+
+      // Actions
+      btn403Primary.classList.remove('hidden');
+      btn401Login.classList.add('hidden');
+      btn401Refresh.classList.add('hidden');
+
+      // Envelope
+      txtTraceId.textContent = 'tr_403_sec_study';
+      responseStatusBadge.textContent = '403 Forbidden';
+      codeEnvelope.textContent = JSON.stringify({
+        status: 403,
+        businessCode: "AUTHZ_STUDENT_REQUIRED",
+        message: "Access Denied: Role is not authorized for /users/me endpoint",
+        traceId: "tr_403_sec_study",
+        timestamp: new Date().toISOString()
+      }, null, 2);
+
+    } else {
+      // Tab styling
+      btn401.className = 'flex-1 md:flex-initial h-11 min-h-[44px] px-space-md flex items-center justify-center gap-space-xs rounded-lg font-label-lg text-label-lg bg-surface-container-lowest text-primary shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2';
+      btn403.className = 'flex-1 md:flex-initial h-11 min-h-[44px] px-space-md flex items-center justify-center gap-space-xs rounded-lg font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2';
+
+      // Visuals
+      stateIcon.textContent = 'timer_off';
+      badgeCode.textContent = 'STATUS: 401 UNAUTHORIZED';
+      badgeCode.className = 'font-label-sm text-label-sm px-2.5 py-0.5 rounded-full bg-surface-variant text-on-surface-variant font-mono';
+      screenTitle.textContent = 'Phiên làm việc đã hết hiệu lực';
+      screenDesc.textContent = 'Access token đã hết hạn hoặc không tìm thấy thông tin định danh hợp lệ trong tiêu đề yêu cầu (Authorization Header).';
+
+      detailReason.textContent = 'ACCESS_TOKEN_EXPIRED_OR_INVALID';
+      detailStrategy.textContent = 'Runtime R-X01 (POST /auth/refresh) tối đa 1 lần';
+      detailConstraint.textContent = 'Thực thi tối đa 1 lần - Tránh loop vô hạn';
+
+      // Actions
+      btn403Primary.classList.add('hidden');
+      btn401Login.classList.remove('hidden');
+      btn401Refresh.classList.remove('hidden');
+      btn401Refresh.classList.add('flex');
+
+      // Envelope
+      txtTraceId.textContent = 'tr_401_tok_study';
+      responseStatusBadge.textContent = '401 Unauthorized';
+      codeEnvelope.textContent = JSON.stringify({
+        status: 401,
+        businessCode: "AUTHN_TOKEN_EXPIRED",
+        message: "Session expired or missing JWT bearer token",
+        traceId: "tr_401_tok_study",
+        timestamp: new Date().toISOString()
+      }, null, 2);
+    }
+  }
+
+  function executeRuntimeRefresh() {
+    const refreshBtn = document.getElementById('btn-401-refresh');
+    const refreshIcon = document.getElementById('refresh-icon');
+    const refreshText = document.getElementById('refresh-text');
+    const alertBox = document.getElementById('refresh-alert');
+
+    if (refreshAttempts >= 1) {
+      alertBox.className = 'rounded-lg p-space-sm font-body-sm text-body-sm flex items-center gap-space-xs bg-error-container text-on-error-container';
+      alertBox.innerHTML = '<span class="material-symbols-outlined text-[18px]">block</span><span>Đã thực thi 1 lần thử (Max limit: 1). Không thể thử lại liên tục. Yêu cầu chuyển về trang Đăng nhập lại (SH-02).</span>';
+      return;
+    }
+
+    refreshAttempts++;
+    refreshBtn.disabled = true;
+    refreshIcon.classList.add('animate-spin');
+    refreshText.textContent = 'Đang gọi POST /auth/refresh (R-X01)...';
+
+    setTimeout(() => {
+      refreshIcon.classList.remove('animate-spin');
+      refreshBtn.disabled = false;
+      refreshText.textContent = 'Đã thử làm mới phiên (1/1)';
+
+      // Simulate refresh token expired scenario
+      alertBox.className = 'rounded-lg p-space-sm font-body-sm text-body-sm flex items-center gap-space-xs bg-surface-container text-on-surface';
+      alertBox.innerHTML = '<span class="material-symbols-outlined text-primary text-[18px]">info</span><span>Làm mới thất bại (Refresh Token hết hạn). Theo hợp đồng an toàn: Phiên hủy bỏ, vui lòng click "Đăng nhập lại (SH-02)".</span>';
+    }, 1200);
+  }
+
+  function copyTraceId() {
+    const traceId = document.getElementById('txt-trace-id').textContent;
+    navigator.clipboard.writeText(traceId).then(() => {
+      const alertBox = document.getElementById('refresh-alert');
+      alertBox.className = 'rounded-lg p-space-sm font-body-sm text-body-sm flex items-center gap-space-xs bg-surface-variant text-on-surface';
+      alertBox.innerHTML = '<span class="material-symbols-outlined text-secondary text-[18px]">check</span><span>Đã sao chép traceId: <strong>' + traceId + '</strong> vào bộ nhớ tạm.</span>';
+      setTimeout(() => {
+        if (alertBox.classList.contains('bg-surface-variant')) {
+          alertBox.className = 'hidden';
+        }
+      }, 3500);
+    });
+  }
+</script></main></body></html>

@@ -1,0 +1,206 @@
+[
+  {
+    "number": 1,
+    "x": 18,
+    "y": 35,
+    "label": "Study2Work / LMS / Admin Portal brand"
+  },
+  {
+    "number": 2,
+    "x": 700,
+    "y": 58,
+    "label": "Primary Admin navigation group"
+  },
+  {
+    "number": 3,
+    "x": 1115,
+    "y": 58,
+    "label": "System Normal badge"
+  },
+  {
+    "number": 4,
+    "x": 1304,
+    "y": 55,
+    "label": "Notifications button"
+  },
+  {
+    "number": 5,
+    "x": 1560,
+    "y": 55,
+    "label": "Admin identity and avatar"
+  },
+  {
+    "number": 6,
+    "x": 20,
+    "y": 95,
+    "label": "Global breadcrumb trail"
+  },
+  {
+    "number": 7,
+    "x": 1577,
+    "y": 115,
+    "label": "RBAC assurance badge"
+  },
+  {
+    "number": 8,
+    "x": 180,
+    "y": 154,
+    "label": "User management/list/action breadcrumb"
+  },
+  {
+    "number": 9,
+    "x": 1045,
+    "y": 186,
+    "label": "Back to AD-02 link"
+  },
+  {
+    "number": 10,
+    "x": 180,
+    "y": 230,
+    "label": "API #69/#71/#72 reference strip"
+  },
+  {
+    "number": 11,
+    "x": 1200,
+    "y": 323,
+    "label": "Page title"
+  },
+  {
+    "number": 12,
+    "x": 465,
+    "y": 347,
+    "label": "Security shield hero icon"
+  },
+  {
+    "number": 13,
+    "x": 1220,
+    "y": 407,
+    "label": "Page subtitle"
+  },
+  {
+    "number": 14,
+    "x": 380,
+    "y": 480,
+    "label": "Execution-context panel heading"
+  },
+  {
+    "number": 15,
+    "x": 1248,
+    "y": 492,
+    "label": "Read-Only protocol badge"
+  },
+  {
+    "number": 16,
+    "x": 650,
+    "y": 560,
+    "label": "Target account ID card"
+  },
+  {
+    "number": 17,
+    "x": 915,
+    "y": 560,
+    "label": "Current account status card"
+  },
+  {
+    "number": 18,
+    "x": 1188,
+    "y": 577,
+    "label": "Intervention permission card"
+  },
+  {
+    "number": 19,
+    "x": 1215,
+    "y": 628,
+    "label": "Predicted impact callout"
+  },
+  {
+    "number": 20,
+    "x": 700,
+    "y": 695,
+    "label": "Action method label"
+  },
+  {
+    "number": 21,
+    "x": 645,
+    "y": 774,
+    "label": "Lock-account tab"
+  },
+  {
+    "number": 22,
+    "x": 920,
+    "y": 774,
+    "label": "Unlock-account tab"
+  },
+  {
+    "number": 23,
+    "x": 1200,
+    "y": 774,
+    "label": "Permanent-delete tab"
+  },
+  {
+    "number": 24,
+    "x": 370,
+    "y": 823,
+    "label": "Admin reason label and required audit indicator"
+  },
+  {
+    "number": 25,
+    "x": 800,
+    "y": 915,
+    "label": "Disabled audit-reason textarea"
+  },
+  {
+    "number": 26,
+    "x": 1215,
+    "y": 972,
+    "label": "Disabled/inactive badge"
+  },
+  {
+    "number": 27,
+    "x": 380,
+    "y": 1008,
+    "label": "System-policy warning icon"
+  },
+  {
+    "number": 28,
+    "x": 1228,
+    "y": 1122,
+    "label": "Policy warning title and body"
+  },
+  {
+    "number": 29,
+    "x": 910,
+    "y": 1198,
+    "label": "Return-safe action"
+  },
+  {
+    "number": 30,
+    "x": 1193,
+    "y": 1198,
+    "label": "Confirm action button"
+  },
+  {
+    "number": 31,
+    "x": 1270,
+    "y": 1265,
+    "label": "API handlers and Enforced Gate footer claim"
+  },
+  {
+    "number": 32,
+    "x": 380,
+    "y": 1265,
+    "label": "Audit code and ISO compliance footer claim"
+  },
+  {
+    "number": 33,
+    "x": 18,
+    "y": 1368,
+    "label": "Copyright/system footer text"
+  },
+  {
+    "number": 34,
+    "x": 1580,
+    "y": 1368,
+    "label": "Privacy/RBAC/support footer links"
+  }
+]

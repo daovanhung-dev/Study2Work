@@ -9,15 +9,18 @@ scopes:
 
 Canonical page graph: `INDEX.md`.
 
-Study web dùng Vue và có subcontext riêng tại `study/`; Work web dùng React.
+Study Web has a separate `study/` context. It now has an Angular 22 standalone
+SPA scaffold; business screens, auth and Study API calls remain unwired. Do not
+infer Student route/API behavior from design assets or the root placeholder.
+Work Web uses React.
 Work router giữ route catalog hiện có,
 `src/shared/api/work.ts` là ranh giới fetch/Zod của Work và backend tương ứng là
 `apps/work-server/src/routes/api_routes.ts`.
 
-Task cụ thể phải chọn đúng subcontext, không áp Vue pattern lên React hoặc
-ngược lại:
+Task cụ thể phải chọn đúng subcontext:
 
-- Study Web: `study/AGENTS.md` → `study/INDEX.md`.
+- Study Web: `study/AGENTS.md` → `study/INDEX.md`; use its standalone Angular
+  pattern and `gui/architech.md` for the scaffold architecture.
 - Work Web: các page trực tiếp trong scope này.
 
 Với task authoring hoặc review DD cho Web/API, load `createDD-markdown` từ skill

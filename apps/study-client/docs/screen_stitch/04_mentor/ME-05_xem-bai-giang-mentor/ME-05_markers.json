@@ -1,0 +1,49 @@
+{
+  "screen_id": "ME-05",
+  "source_image": "screen.png",
+  "coordinate_space": "source pixels; origin top-left",
+  "source_dimensions": {
+    "width": 841,
+    "height": 1600
+  },
+  "annotation_scale": 2,
+  "annotated_dimensions": {
+    "width": 1682,
+    "height": 3200
+  },
+  "markers": [
+    {"number": 1, "id": "ME05-EL-01", "label": "Brand Study2Work Mentor Portal", "x": 26, "y": 18},
+    {"number": 2, "id": "ME05-EL-02", "label": "Điều hướng Mentor toàn cục", "x": 112, "y": 18},
+    {"number": 3, "id": "ME05-EL-03", "label": "Ô tìm kiếm header", "x": 526, "y": 18},
+    {"number": 4, "id": "ME05-EL-04", "label": "Thông báo và badge đếm mẫu", "x": 679, "y": 18},
+    {"number": 5, "id": "ME05-EL-05", "label": "Tài khoản Mentor hiển thị", "x": 756, "y": 18},
+    {"number": 6, "id": "ME05-EL-06", "label": "Breadcrumb về danh sách khóa học", "x": 18, "y": 49},
+    {"number": 7, "id": "ME05-EL-07", "label": "Breadcrumb Workspace course", "x": 228, "y": 49},
+    {"number": 8, "id": "ME05-EL-08", "label": "Badge trạng thái lecture", "x": 31, "y": 68},
+    {"number": 9, "id": "ME05-EL-09", "label": "Mã lecture mẫu", "x": 129, "y": 68},
+    {"number": 10, "id": "ME05-EL-10", "label": "Nhãn tác giả mẫu", "x": 327, "y": 68},
+    {"number": 11, "id": "ME05-EL-11", "label": "Tiêu đề lecture", "x": 230, "y": 151},
+    {"number": 12, "id": "ME05-EL-12", "label": "Action Sao chép liên kết", "x": 355, "y": 128},
+    {"number": 13, "id": "ME05-EL-13", "label": "Action Xem trước ST-11", "x": 447, "y": 128},
+    {"number": 14, "id": "ME05-EL-14", "label": "Action Đổi trạng thái", "x": 540, "y": 128},
+    {"number": 15, "id": "ME05-EL-15", "label": "Action Chỉnh sửa bài giảng", "x": 650, "y": 128},
+    {"number": 16, "id": "ME05-EL-16", "label": "Player video-looking và controls mẫu", "x": 25, "y": 170},
+    {"number": 17, "id": "ME05-EL-17", "label": "Dải mốc thời gian/chapter", "x": 25, "y": 449},
+    {"number": 18, "id": "ME05-EL-18", "label": "Ghi chú học thuật", "x": 25, "y": 520},
+    {"number": 19, "id": "ME05-EL-19", "label": "Action sao chép code mẫu", "x": 462, "y": 547},
+    {"number": 20, "id": "ME05-EL-20", "label": "Khối code mẫu", "x": 25, "y": 735},
+    {"number": 21, "id": "ME05-EL-21", "label": "Panel tài liệu đính kèm", "x": 25, "y": 1294},
+    {"number": 22, "id": "ME05-EL-22", "label": "Action Tải xuống PDF", "x": 78, "y": 1392},
+    {"number": 23, "id": "ME05-EL-23", "label": "Action Mở xem PDF", "x": 181, "y": 1392},
+    {"number": 24, "id": "ME05-EL-24", "label": "Link GitHub mẫu", "x": 369, "y": 1392},
+    {"number": 25, "id": "ME05-EL-25", "label": "Panel analytics mẫu", "x": 500, "y": 182},
+    {"number": 26, "id": "ME05-EL-26", "label": "Panel thảo luận bài học mẫu", "x": 500, "y": 500},
+    {"number": 27, "id": "ME05-EL-27", "label": "Action Trả lời ngay", "x": 657, "y": 612},
+    {"number": 28, "id": "ME05-EL-28", "label": "Link Xem tất cả thảo luận ST-25", "x": 700, "y": 736},
+    {"number": 29, "id": "ME05-EL-29", "label": "Panel cấu trúc khóa học", "x": 500, "y": 780},
+    {"number": 30, "id": "ME05-EL-30", "label": "Row bài học trước", "x": 696, "y": 858},
+    {"number": 31, "id": "ME05-EL-31", "label": "Row bài giảng đang chọn", "x": 696, "y": 915},
+    {"number": 32, "id": "ME05-EL-32", "label": "Row bài học tiếp theo", "x": 696, "y": 966},
+    {"number": 33, "id": "ME05-EL-33", "label": "Footer thông tin và liên kết", "x": 20, "y": 1438}
+  ]
+}

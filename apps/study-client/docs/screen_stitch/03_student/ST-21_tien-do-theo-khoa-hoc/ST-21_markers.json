@@ -1,0 +1,164 @@
+{
+  "screen_id": "ST-21",
+  "source": {
+    "image": "screen_rendered.png",
+    "width_px": 1280,
+    "height_px": 916,
+    "coordinate_space": "rendered HTML screenshot pixels",
+    "provenance": "Rendered from code.html with Google Chrome Stable headless and full-document CDP Page.captureScreenshot; static HTML/CSS only, no Study Web/API runtime."
+  },
+  "original_source": {
+    "image": "screen.png",
+    "width_px": 1280,
+    "height_px": 1024,
+    "sha256": "1bd43f7a29ad1b1591953a03846d57ce5736839e8fa6c47921d12a334056bf65",
+    "note": "Preserved unchanged; visually mostly blank with a dark bottom strip."
+  },
+  "html_source": {
+    "image": "code.html",
+    "sha256": "7eb0ba19f73bccf1b248205fdbac94eedf25ec059345f69c77175cfd2f3bcda6",
+    "note": "Preserved unchanged; static no-progress fallback, no script/API/auth/route binding."
+  },
+  "annotation_canvas": {
+    "width_px": 1376,
+    "height_px": 916,
+    "source_x_px": 48,
+    "source_y_px": 0,
+    "gutter_left_px": 48,
+    "gutter_right_px": 48
+  },
+  "markers": [
+    {
+      "number": 1,
+      "element_id": "ST21-EL-01",
+      "label": "Study2Work brand and home link",
+      "x": 110,
+      "y": 40,
+      "badge_x": 20,
+      "badge_y": 40,
+      "anchor_x": 80,
+      "anchor_y": 40,
+      "side": "L"
+    },
+    {
+      "number": 2,
+      "element_id": "ST21-EL-02",
+      "label": "Primary navigation group: overview, my courses, active progress",
+      "x": 390,
+      "y": 40,
+      "badge_x": 615,
+      "badge_y": 40,
+      "anchor_x": 603,
+      "anchor_y": 40,
+      "side": "R"
+    },
+    {
+      "number": 3,
+      "element_id": "ST21-EL-03",
+      "label": "Breadcrumb trail",
+      "x": 190,
+      "y": 97,
+      "badge_x": 392,
+      "badge_y": 97,
+      "anchor_x": 379,
+      "anchor_y": 97,
+      "side": "R"
+    },
+    {
+      "number": 4,
+      "element_id": "ST21-EL-04",
+      "label": "Page title “Tiến độ theo khóa học”",
+      "x": 170,
+      "y": 163,
+      "badge_x": 396,
+      "badge_y": 163,
+      "anchor_x": 384,
+      "anchor_y": 163,
+      "side": "R"
+    },
+    {
+      "number": 5,
+      "element_id": "ST21-EL-05",
+      "label": "Page summary description",
+      "x": 300,
+      "y": 201,
+      "badge_x": 613,
+      "badge_y": 201,
+      "anchor_x": 601,
+      "anchor_y": 201,
+      "side": "R"
+    },
+    {
+      "number": 6,
+      "element_id": "ST21-EL-06",
+      "label": "Empty-state progress icon",
+      "x": 640,
+      "y": 394,
+      "badge_x": 740,
+      "badge_y": 394,
+      "anchor_x": 729,
+      "anchor_y": 394,
+      "side": "R"
+    },
+    {
+      "number": 7,
+      "element_id": "ST21-EL-07",
+      "label": "Empty-state heading",
+      "x": 640,
+      "y": 469,
+      "badge_x": 914,
+      "badge_y": 469,
+      "anchor_x": 904,
+      "anchor_y": 469,
+      "side": "R"
+    },
+    {
+      "number": 8,
+      "element_id": "ST21-EL-08",
+      "label": "Empty-state explanatory copy",
+      "x": 640,
+      "y": 507,
+      "badge_x": 917,
+      "badge_y": 507,
+      "anchor_x": 905,
+      "anchor_y": 507,
+      "side": "R"
+    },
+    {
+      "number": 9,
+      "element_id": "ST21-EL-09",
+      "label": "Return-to-overview button",
+      "x": 640,
+      "y": 588,
+      "badge_x": 842,
+      "badge_y": 588,
+      "anchor_x": 824,
+      "anchor_y": 588,
+      "side": "R"
+    },
+    {
+      "number": 10,
+      "element_id": "ST21-EL-10",
+      "label": "Footer brand and LMS name",
+      "x": 135,
+      "y": 852,
+      "badge_x": 288,
+      "badge_y": 852,
+      "anchor_x": 264,
+      "anchor_y": 852,
+      "side": "R"
+    },
+    {
+      "number": 11,
+      "element_id": "ST21-EL-11",
+      "label": "Footer policy and support links group",
+      "x": 980,
+      "y": 852,
+      "badge_x": 1325,
+      "badge_y": 852,
+      "anchor_x": 1298,
+      "anchor_y": 852,
+      "side": "R"
+    }
+  ]
+}

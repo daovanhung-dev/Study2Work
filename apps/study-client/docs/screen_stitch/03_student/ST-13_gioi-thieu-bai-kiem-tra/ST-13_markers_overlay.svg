@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1349" height="1600" viewBox="0 0 1349 1600">
+<title>ST-13 marker overlay; transparent layer for screen.png</title>
+<g aria-label="1: Brand and header" transform="translate(24 23)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">1</text></g>
+<g aria-label="2: Global search" transform="translate(213 22)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">2</text></g>
+<g aria-label="3: Primary navigation" transform="translate(642 26)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">3</text></g>
+<g aria-label="4: Notifications and account" transform="translate(1176 55)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">4</text></g>
+<g aria-label="5: Breadcrumb" transform="translate(52 120)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">5</text></g>
+<g aria-label="6: Quiz labels" transform="translate(50 152)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">6</text></g>
+<g aria-label="7: Quiz title" transform="translate(45 210)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">7</text></g>
+<g aria-label="8: Instructor card" transform="translate(52 304)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">8</text></g>
+<g aria-label="9: Quiz cover preview" transform="translate(895 150)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">9</text></g>
+<g aria-label="10: Quiz status and attempt badge" transform="translate(1328 376)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">10</text></g>
+<g aria-label="11: Passing goal panel" transform="translate(1304 435)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">11</text></g>
+<g aria-label="12: Question count metric" transform="translate(38 416)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">12</text></g>
+<g aria-label="13: Duration metric" transform="translate(252 414)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">13</text></g>
+<g aria-label="14: Passing score metric" transform="translate(466 414)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">14</text></g>
+<g aria-label="15: Available attempts metric" transform="translate(681 414)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">15</text></g>
+<g aria-label="16: Start attempt button" transform="translate(1304 516)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">16</text></g>
+<g aria-label="17: Review lesson CTA" transform="translate(1304 607)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">17</text></g>
+<g aria-label="18: Certification and validity note" transform="translate(1301 650)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">18</text></g>
+<g aria-label="19: Academic support card" transform="translate(1296 762)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">19</text></g>
+<g aria-label="20: Rules heading" transform="translate(52 646)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">20</text></g>
+<g aria-label="21: Proctoring and security notice" transform="translate(52 716)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">21</text></g>
+<g aria-label="22: Scoring rule card" transform="translate(52 842)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">22</text></g>
+<g aria-label="23: Automatic submission card" transform="translate(315 842)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">23</text></g>
+<g aria-label="24: Certificate card" transform="translate(579 842)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">24</text></g>
+<g aria-label="25: Attempt history heading and count" transform="translate(50 1087)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">25</text></g>
+<g aria-label="26: Previous attempt summary row" transform="translate(51 1157)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">26</text></g>
+<g aria-label="27: Review previous attempt button" transform="translate(856 1190)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">27</text></g>
+<g aria-label="28: Footer brand, description and badges" transform="translate(20 1360)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">28</text></g>
+<g aria-label="29: Footer navigation columns" transform="translate(540 1340)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">29</text></g>
+<g aria-label="30: Footer copyright and tagline" transform="translate(1010 1530)">
+<circle r="13" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="3"/>
+<text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">30</text></g>
+</svg>

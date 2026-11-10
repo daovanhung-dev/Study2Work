@@ -34,7 +34,8 @@ Global index: `project/INDEX.md`.
 - `project/contracts.md`: producer/consumer/status của shared và local contracts.
 - `project/workflows.md`: workflow chung và verification order.
 - `skills/INDEX.md`: skill registry và resource của `create-dd-from-bd-mobile`
-  (Mobile module DD) và `createDD-markdown` (Web/API DD).
+  (Mobile module DD), `createDD-markdown` (Web/API DD), và `code-review`
+  (read-only review across all code scopes).
 - `worklog/README.md`: worklog contract và preflight đọc các worklog cùng type bắt buộc cho mọi task.
 - `db-admin/AGENTS.md`: ownership, API safety boundary và verified commands của Neon DB Admin.
 

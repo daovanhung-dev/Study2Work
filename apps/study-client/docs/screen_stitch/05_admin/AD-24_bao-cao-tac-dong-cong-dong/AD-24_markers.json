@@ -1,0 +1,306 @@
+{
+  "screen_id": "AD-24",
+  "source_image": "screen.png",
+  "coordinate_space": {
+    "width": 1352,
+    "height": 1600,
+    "origin": "top-left",
+    "units": "source pixels"
+  },
+  "markers": [
+    {
+      "id": 1,
+      "element_id": "AD24-EL-01",
+      "label": "Study2Work brand / portal mark",
+      "x": 16,
+      "y": 47
+    },
+    {
+      "id": 2,
+      "element_id": "AD24-EL-02",
+      "label": "Navigation: Tổng quan",
+      "x": 338,
+      "y": 50
+    },
+    {
+      "id": 3,
+      "element_id": "AD24-EL-03",
+      "label": "Navigation: Người dùng",
+      "x": 458,
+      "y": 50
+    },
+    {
+      "id": 4,
+      "element_id": "AD24-EL-04",
+      "label": "Navigation: Khóa học & Nội dung",
+      "x": 635,
+      "y": 50
+    },
+    {
+      "id": 5,
+      "element_id": "AD24-EL-05",
+      "label": "Navigation: Kiểm duyệt",
+      "x": 754,
+      "y": 50
+    },
+    {
+      "id": 6,
+      "element_id": "AD24-EL-06",
+      "label": "Navigation: Báo cáo",
+      "x": 860,
+      "y": 50
+    },
+    {
+      "id": 7,
+      "element_id": "AD24-EL-07",
+      "label": "System Normal status badge",
+      "x": 1048,
+      "y": 50
+    },
+    {
+      "id": 8,
+      "element_id": "AD24-EL-08",
+      "label": "Notifications bell",
+      "x": 1108,
+      "y": 50
+    },
+    {
+      "id": 9,
+      "element_id": "AD24-EL-09",
+      "label": "Admin identity / avatar",
+      "x": 1338,
+      "y": 49
+    },
+    {
+      "id": 10,
+      "element_id": "AD24-EL-10",
+      "label": "Global breadcrumb",
+      "x": 16,
+      "y": 80
+    },
+    {
+      "id": 11,
+      "element_id": "AD24-EL-11",
+      "label": "RBAC verification badge",
+      "x": 1336,
+      "y": 80
+    },
+    {
+      "id": 12,
+      "element_id": "AD24-EL-12",
+      "label": "Local report breadcrumb",
+      "x": 18,
+      "y": 142
+    },
+    {
+      "id": 13,
+      "element_id": "AD24-EL-13",
+      "label": "Screen ID badge: AD-24",
+      "x": 20,
+      "y": 174
+    },
+    {
+      "id": 14,
+      "element_id": "AD24-EL-14",
+      "label": "Data-contract status badge",
+      "x": 441,
+      "y": 174
+    },
+    {
+      "id": 15,
+      "element_id": "AD24-EL-15",
+      "label": "Screen title",
+      "x": 16,
+      "y": 207
+    },
+    {
+      "id": 16,
+      "element_id": "AD24-EL-16",
+      "label": "Screen description",
+      "x": 854,
+      "y": 286
+    },
+    {
+      "id": 17,
+      "element_id": "AD24-EL-17",
+      "label": "Export-to-AD-25 CTA",
+      "x": 1334,
+      "y": 227
+    },
+    {
+      "id": 18,
+      "element_id": "AD24-EL-18",
+      "label": "From-date control",
+      "x": 357,
+      "y": 426
+    },
+    {
+      "id": 19,
+      "element_id": "AD24-EL-19",
+      "label": "To-date control",
+      "x": 693,
+      "y": 426
+    },
+    {
+      "id": 20,
+      "element_id": "AD24-EL-20",
+      "label": "Learner-segment select",
+      "x": 1028,
+      "y": 426
+    },
+    {
+      "id": 21,
+      "element_id": "AD24-EL-21",
+      "label": "Apply-filters button",
+      "x": 1229,
+      "y": 426
+    },
+    {
+      "id": 22,
+      "element_id": "AD24-EL-22",
+      "label": "Reset-filters button",
+      "x": 1274,
+      "y": 426
+    },
+    {
+      "id": 23,
+      "element_id": "AD24-EL-23",
+      "label": "Active-learners KPI card",
+      "x": 327,
+      "y": 660
+    },
+    {
+      "id": 24,
+      "element_id": "AD24-EL-24",
+      "label": "Completion-rate KPI card",
+      "x": 653,
+      "y": 660
+    },
+    {
+      "id": 25,
+      "element_id": "AD24-EL-25",
+      "label": "Community-interaction-hours KPI card",
+      "x": 977,
+      "y": 660
+    },
+    {
+      "id": 26,
+      "element_id": "AD24-EL-26",
+      "label": "Overall-satisfaction KPI card",
+      "x": 1302,
+      "y": 660
+    },
+    {
+      "id": 27,
+      "element_id": "AD24-EL-27",
+      "label": "Visualization / empty-chart panel",
+      "x": 1302,
+      "y": 720
+    },
+    {
+      "id": 28,
+      "element_id": "AD24-EL-28",
+      "label": "Empty-chart icon",
+      "x": 726,
+      "y": 838
+    },
+    {
+      "id": 29,
+      "element_id": "AD24-EL-29",
+      "label": "Empty-chart title",
+      "x": 910,
+      "y": 930
+    },
+    {
+      "id": 30,
+      "element_id": "AD24-EL-30",
+      "label": "Empty-chart explanatory copy",
+      "x": 1036,
+      "y": 1006
+    },
+    {
+      "id": 31,
+      "element_id": "AD24-EL-31",
+      "label": "Refresh-query button",
+      "x": 671,
+      "y": 1110
+    },
+    {
+      "id": 32,
+      "element_id": "AD24-EL-32",
+      "label": "Data-contract version badge",
+      "x": 872,
+      "y": 1110
+    },
+    {
+      "id": 33,
+      "element_id": "AD24-EL-33",
+      "label": "Planned-metrics section heading/icon",
+      "x": 440,
+      "y": 1252
+    },
+    {
+      "id": 34,
+      "element_id": "AD24-EL-34",
+      "label": "Planned-metrics validation-count badge",
+      "x": 1305,
+      "y": 1252
+    },
+    {
+      "id": 35,
+      "element_id": "AD24-EL-35",
+      "label": "DAU/MAU specification card",
+      "x": 654,
+      "y": 1362
+    },
+    {
+      "id": 36,
+      "element_id": "AD24-EL-36",
+      "label": "Mentor interaction-hours specification card",
+      "x": 1276,
+      "y": 1362
+    },
+    {
+      "id": 37,
+      "element_id": "AD24-EL-37",
+      "label": "Employment-readiness specification card",
+      "x": 654,
+      "y": 1470
+    },
+    {
+      "id": 38,
+      "element_id": "AD24-EL-38",
+      "label": "Partner NPS specification card",
+      "x": 1276,
+      "y": 1470
+    },
+    {
+      "id": 39,
+      "element_id": "AD24-EL-39",
+      "label": "Footer copyright",
+      "x": 380,
+      "y": 1557
+    },
+    {
+      "id": 40,
+      "element_id": "AD24-EL-40",
+      "label": "Footer privacy link",
+      "x": 940,
+      "y": 1557
+    },
+    {
+      "id": 41,
+      "element_id": "AD24-EL-41",
+      "label": "Footer RBAC standards link",
+      "x": 1151,
+      "y": 1557
+    },
+    {
+      "id": 42,
+      "element_id": "AD24-EL-42",
+      "label": "Footer support link",
+      "x": 1338,
+      "y": 1557
+    }
+  ]
+}

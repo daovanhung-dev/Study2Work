@@ -58,6 +58,7 @@ Study2Work/
 │   │   └── workflows.md
 │   ├── skills/
 │   │   ├── INDEX.md
+│   │   ├── code-review/                        ← read-only review skill pack
 │   │   ├── create-dd-mobile/                   ← Mobile DD skill pack
 │   │   └── create_dd_api/                      ← Web/API DD skill pack
 │   ├── worklog/
@@ -68,7 +69,8 @@ Study2Work/
 │   ├── server-work/
 │   ├── server-ai/
 │   ├── web-study/
-│   │   └── design.md                           ← mandatory Study Web UI/UX/FE guide
+│   │   ├── design.md                           ← mandatory Study Web visual and interaction guide
+│   │   └── frontend-rules.md                   ← mandatory Study Web layer and dependency rules
 │   ├── web-work/
 │   │   └── study/                              ← Study Web subcontext
 │   ├── mobile-work/
@@ -189,18 +191,19 @@ Study2Work/
 
 #### `web-work/study-web` subcontext
 
-- Source root: `apps/study-client/`
-- Status: `SOURCE_BACKED_SKELETON`
+- Source root: `apps/study-client/` (Angular 22 standalone SPA scaffold; Student feature routes and API calls are not wired)
+- Status: `SKELETON_ONLY`
 - Entry: [`.agents/web-work/study/AGENTS.md`](web-work/study/AGENTS.md)
 - Index: [`.agents/web-work/study/INDEX.md`](web-work/study/INDEX.md)
-- Stack: Vue 3 + Vite + Vue Router + Pinia + Vue Query + Zod.
 - Pages:
   - [`.agents/web-study/design.md`](web-study/design.md) — mandatory Study Web
     visual, interaction and accessibility target.
-  - [`.agents/web-work/study/architecture.md`](web-work/study/architecture.md)
-  - [`.agents/web-work/study/api.md`](web-work/study/api.md)
-  - [`.agents/web-work/study/tests.md`](web-work/study/tests.md)
-  - [`.agents/web-work/study/workflows/README.md`](web-work/study/workflows/README.md)
+  - [`.agents/web-study/frontend-rules.md`](web-study/frontend-rules.md) —
+    mandatory UI/business/data-access boundaries and feature responsibilities.
+
+Load the frontend rules for Study Web implementation and architecture work.
+Do not infer feature behavior from the scaffold or design documents. Recheck
+`apps/study-client/` when a task depends on implementation details.
 
 #### `web-work/work-web` subcontext
 
@@ -265,6 +268,11 @@ Study2Work/
   - Workflows ⇢ `docs-dd`, `cross-scope-contract`.
   - Template resource: [`.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD`](skills/create_dd_api/docs/dd/DD_API_Template_MD).
   - Example resources: [`.agents/skills/create_dd_api/docs/dd/Examples/HOKAN_K00GetLabelInfo`](skills/create_dd_api/docs/dd/Examples/HOKAN_K00GetLabelInfo), [`.agents/skills/create_dd_api/docs/dd/Examples/VQ2T_PARAM_I01SaveRemovalPart`](skills/create_dd_api/docs/dd/Examples/VQ2T_PARAM_I01SaveRemovalPart).
+- `code-review`
+  - Entry: [`.agents/skills/code-review/SKILL.md`](skills/code-review/SKILL.md)
+  - Scope ⇢ `mobile-work`, `web-work`, `server-work`, `server-study`, `server-ai`, `db-admin`.
+  - Workflow ⇢ `code-review`; explicit user requests only, read-only, with no test execution.
+  - Resources: [review checklist](skills/code-review/references/review-checklist.md) and [report format](skills/code-review/references/report-format.md).
 - Web UI-only DD has no canonical skill.
 
 ## Workflow graph
@@ -278,6 +286,7 @@ worklog contract which is implemented by [`.agents/worklog/README.md`](worklog/R
 | `coding` | coding task | `project/workflows.md` | scoped implementation + tests |
 | `fix` | bug/regression | `project/workflows.md` | reproduce → trace → smallest fix → regression test |
 | `test` | test/verification | `project/workflows.md` | focused then scope verification |
+| `code-review` | explicit code review request | `project/workflows.md` | read-only, evidence-backed review and findings report |
 | `docs-dd` | Web/API DD | `project/workflows.md` | source-backed API DD validation |
 | `docs-dd-mobile` | Mobile DD | `project/workflows.md` | Mobile DD validator + context validation |
 | `cross-scope-contract` | shared API/event boundary | `project/workflows.md` | producer/consumer/status verification |
@@ -286,8 +295,8 @@ worklog contract which is implemented by [`.agents/worklog/README.md`](worklog/R
 Scope workflow pages refine the common workflow and side effects:
 
 - Mobile: [`mobile-work/workflows/README.md`](mobile-work/workflows/README.md)
-- Web: [`web-work/workflows/README.md`](web-work/workflows/README.md) and
-  [`web-work/study/workflows/README.md`](web-work/study/workflows/README.md)
+- Web: [`web-work/workflows/README.md`](web-work/workflows/README.md). Study Web
+  has no app-specific workflow page while its application source is absent.
 - Work Server: [`server-work/workflows/README.md`](server-work/workflows/README.md)
 - Study Server: [`server-study/workflows/README.md`](server-study/workflows/README.md)
 - AI Server: [`server-ai/workflows/README.md`](server-ai/workflows/README.md)

@@ -16,8 +16,8 @@ JOIN assignments AS a ON a.id = s.assignment_id
 JOIN courses AS c ON c.id = a.course_id
 JOIN users AS student ON student.id = s.user_id
 WHERE c.mentor_id = :mentor_id
-  AND (:course_id IS NULL OR a.course_id = :course_id)
-  AND (:status IS NULL OR s.status = :status)
+  AND (CAST(:course_id AS BIGINT) IS NULL OR a.course_id = CAST(:course_id AS BIGINT))
+  AND (CAST(:status AS VARCHAR) IS NULL OR s.status = CAST(:status AS VARCHAR))
 """
 
 LIST_MENTOR_SUBMISSIONS = """
@@ -57,8 +57,8 @@ LEFT JOIN LATERAL (
     LIMIT 1
 ) AS asset ON TRUE
 WHERE c.mentor_id = :mentor_id
-  AND (:course_id IS NULL OR a.course_id = :course_id)
-  AND (:status IS NULL OR s.status = :status)
+  AND (CAST(:course_id AS BIGINT) IS NULL OR a.course_id = CAST(:course_id AS BIGINT))
+  AND (CAST(:status AS VARCHAR) IS NULL OR s.status = CAST(:status AS VARCHAR))
 ORDER BY s.submitted_at DESC, s.id DESC
 LIMIT :limit OFFSET :offset
 """

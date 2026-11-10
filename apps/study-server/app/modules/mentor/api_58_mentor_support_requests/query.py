@@ -24,8 +24,8 @@ FROM support_requests AS request
 JOIN courses AS course ON course.id = request.course_id
 JOIN users AS student ON student.id = request.student_id
 WHERE course.mentor_id = :mentor_id
-  AND (:course_id IS NULL OR request.course_id = :course_id)
-  AND (:status IS NULL OR request.status = :status)
+  AND (CAST(:course_id AS BIGINT) IS NULL OR request.course_id = CAST(:course_id AS BIGINT))
+  AND (CAST(:status AS VARCHAR) IS NULL OR request.status = CAST(:status AS VARCHAR))
 ORDER BY request.created_at DESC, request.id DESC
 """
 
@@ -64,8 +64,8 @@ LEFT JOIN uploads AS upload
    END
    AND upload.status = 'UPLOADED'
 WHERE course.mentor_id = :mentor_id
-  AND (:course_id IS NULL OR request.course_id = :course_id)
-  AND (:status IS NULL OR request.status = :status)
+  AND (CAST(:course_id AS BIGINT) IS NULL OR request.course_id = CAST(:course_id AS BIGINT))
+  AND (CAST(:status AS VARCHAR) IS NULL OR request.status = CAST(:status AS VARCHAR))
 ORDER BY
     request.created_at DESC,
     request.id DESC,

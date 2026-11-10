@@ -1,0 +1,437 @@
+{
+  "screen_id": "ME-14",
+  "source_image": {
+    "path": "screen.png",
+    "width": 1267,
+    "height": 1600,
+    "sha256": "bc6d536347650aaa8ab357da960fe14753b4b261b5c77657af0e90072f9b2324"
+  },
+  "coordinate_system": "source_image_pixels_top_left_origin",
+  "annotated_image": {
+    "path": "screen_annotated.png",
+    "scale": 2,
+    "width": 2534,
+    "height": 3200
+  },
+  "marker_style": {
+    "shape": "circle",
+    "radius": 8,
+    "fill": "#1456D9",
+    "stroke": "#FFFFFF",
+    "stroke_width": 1.5,
+    "text_fill": "#FFFFFF",
+    "font_family": "DejaVu Sans",
+    "font_weight": "bold",
+    "font_size": 10
+  },
+  "markers": [
+    {
+      "id": 1,
+      "element": "Study2Work Mentor brand lockup",
+      "x": 47,
+      "y": 56
+    },
+    {
+      "id": 2,
+      "element": "Header navigation: Tổng quan",
+      "x": 278,
+      "y": 56
+    },
+    {
+      "id": 3,
+      "element": "Header navigation: Khóa học phụ trách",
+      "x": 412,
+      "y": 56
+    },
+    {
+      "id": 4,
+      "element": "Header navigation: Chấm bài",
+      "x": 543,
+      "y": 56
+    },
+    {
+      "id": 5,
+      "element": "Header navigation: Hộp thư hỗ trợ",
+      "x": 665,
+      "y": 56
+    },
+    {
+      "id": 6,
+      "element": "Active header navigation: Thông báo",
+      "x": 780,
+      "y": 56
+    },
+    {
+      "id": 7,
+      "element": "Header notification bell and unread dot",
+      "x": 1013,
+      "y": 56
+    },
+    {
+      "id": 8,
+      "element": "Mentor identity, role and avatar",
+      "x": 1160,
+      "y": 56
+    },
+    {
+      "id": 9,
+      "element": "Breadcrumb link: Thông báo",
+      "x": 72,
+      "y": 107
+    },
+    {
+      "id": 10,
+      "element": "Breadcrumb link: Soạn thông báo mới",
+      "x": 190,
+      "y": 107
+    },
+    {
+      "id": 11,
+      "element": "Current breadcrumb: Bước 2 soạn thảo nội dung",
+      "x": 353,
+      "y": 107
+    },
+    {
+      "id": 12,
+      "element": "Stepper: Bước 1 Chọn người nhận",
+      "x": 123,
+      "y": 117
+    },
+    {
+      "id": 13,
+      "element": "Stepper: active Bước 2 Soạn thảo nội dung",
+      "x": 371,
+      "y": 117
+    },
+    {
+      "id": 14,
+      "element": "Stepper: Bước 3 Xác nhận và Gửi",
+      "x": 588,
+      "y": 117
+    },
+    {
+      "id": 15,
+      "element": "Module eyebrow: Phân hệ Giảng dạy và Cố vấn",
+      "x": 48,
+      "y": 206
+    },
+    {
+      "id": 16,
+      "element": "Screen heading: Soạn và gửi thông báo tới học viên",
+      "x": 780,
+      "y": 241
+    },
+    {
+      "id": 17,
+      "element": "Screen introduction copy",
+      "x": 780,
+      "y": 292
+    },
+    {
+      "id": 18,
+      "element": "Step 1 warning icon and status heading",
+      "x": 78,
+      "y": 359
+    },
+    {
+      "id": 19,
+      "element": "Unverified recipient group status badge",
+      "x": 531,
+      "y": 393
+    },
+    {
+      "id": 20,
+      "element": "Choose recipients action linking to ME-13",
+      "x": 785,
+      "y": 370
+    },
+    {
+      "id": 21,
+      "element": "Required audience field label",
+      "x": 778,
+      "y": 502
+    },
+    {
+      "id": 22,
+      "element": "Locked, unverified recipient summary",
+      "x": 810,
+      "y": 539
+    },
+    {
+      "id": 23,
+      "element": "Recipient course and ME-13 helper copy",
+      "x": 778,
+      "y": 571
+    },
+    {
+      "id": 24,
+      "element": "Required notification title label",
+      "x": 80,
+      "y": 626
+    },
+    {
+      "id": 25,
+      "element": "Title character counter 0/120",
+      "x": 784,
+      "y": 626
+    },
+    {
+      "id": 26,
+      "element": "Notification title text input",
+      "x": 778,
+      "y": 649
+    },
+    {
+      "id": 27,
+      "element": "Title writing helper copy",
+      "x": 775,
+      "y": 686
+    },
+    {
+      "id": 28,
+      "element": "Required delivery channels heading",
+      "x": 780,
+      "y": 724
+    },
+    {
+      "id": 29,
+      "element": "In-app channel option, checked and marked active",
+      "x": 407,
+      "y": 839
+    },
+    {
+      "id": 30,
+      "element": "Email channel option, disabled pending configuration",
+      "x": 781,
+      "y": 839
+    },
+    {
+      "id": 31,
+      "element": "Required notification body label",
+      "x": 400,
+      "y": 900
+    },
+    {
+      "id": 32,
+      "element": "Formatting toolbar: bold button",
+      "x": 682,
+      "y": 871
+    },
+    {
+      "id": 33,
+      "element": "Formatting toolbar: italic button",
+      "x": 710,
+      "y": 871
+    },
+    {
+      "id": 34,
+      "element": "Formatting toolbar: bulleted list button",
+      "x": 737,
+      "y": 871
+    },
+    {
+      "id": 35,
+      "element": "Formatting toolbar: link button",
+      "x": 766,
+      "y": 871
+    },
+    {
+      "id": 36,
+      "element": "Notification body textarea",
+      "x": 394,
+      "y": 1038
+    },
+    {
+      "id": 37,
+      "element": "Body formatting and document-link helper copy",
+      "x": 430,
+      "y": 1186
+    },
+    {
+      "id": 38,
+      "element": "Body word counter",
+      "x": 780,
+      "y": 1186
+    },
+    {
+      "id": 39,
+      "element": "Attachment section icon",
+      "x": 70,
+      "y": 1245
+    },
+    {
+      "id": 40,
+      "element": "Attachment description and PDF/DOCX/ZIP 25 MB claim",
+      "x": 619,
+      "y": 1265
+    },
+    {
+      "id": 41,
+      "element": "Choose file button",
+      "x": 784,
+      "y": 1212
+    },
+    {
+      "id": 42,
+      "element": "Security and communication safety warning heading",
+      "x": 780,
+      "y": 1345
+    },
+    {
+      "id": 43,
+      "element": "Security warning copy about unverified audience",
+      "x": 780,
+      "y": 1397
+    },
+    {
+      "id": 44,
+      "element": "Back to recipient selection action",
+      "x": 213,
+      "y": 1420
+    },
+    {
+      "id": 45,
+      "element": "Save draft button",
+      "x": 531,
+      "y": 1420
+    },
+    {
+      "id": 46,
+      "element": "Disabled send notification button",
+      "x": 704,
+      "y": 1420
+    },
+    {
+      "id": 47,
+      "element": "Preview panel heading",
+      "x": 858,
+      "y": 200
+    },
+    {
+      "id": 48,
+      "element": "Preview channel badge: In-app Feed",
+      "x": 1237,
+      "y": 205
+    },
+    {
+      "id": 49,
+      "element": "Preview author avatar, name and role",
+      "x": 1205,
+      "y": 266
+    },
+    {
+      "id": 50,
+      "element": "Preview title placeholder",
+      "x": 1204,
+      "y": 310
+    },
+    {
+      "id": 51,
+      "element": "Preview body placeholder",
+      "x": 1204,
+      "y": 354
+    },
+    {
+      "id": 52,
+      "element": "Student visibility label",
+      "x": 858,
+      "y": 399
+    },
+    {
+      "id": 53,
+      "element": "Study2Work Web and Mobile surface claim",
+      "x": 1228,
+      "y": 399
+    },
+    {
+      "id": 54,
+      "element": "Estimated response-rate panel heading",
+      "x": 1215,
+      "y": 447
+    },
+    {
+      "id": 55,
+      "element": "Static 89.4 percent rate and progress bar",
+      "x": 1218,
+      "y": 478
+    },
+    {
+      "id": 56,
+      "element": "Response-rate basis copy: prior five notifications",
+      "x": 1218,
+      "y": 532
+    },
+    {
+      "id": 57,
+      "element": "Message standards panel heading",
+      "x": 1215,
+      "y": 637
+    },
+    {
+      "id": 58,
+      "element": "Guideline: state deadline or room first",
+      "x": 1218,
+      "y": 678
+    },
+    {
+      "id": 59,
+      "element": "Guideline: provide a resource or template",
+      "x": 1218,
+      "y": 722
+    },
+    {
+      "id": 60,
+      "element": "Guideline: direct questions to support inbox",
+      "x": 1218,
+      "y": 765
+    },
+    {
+      "id": 61,
+      "element": "Decorative academic workspace image and 2025 label",
+      "x": 1218,
+      "y": 923
+    },
+    {
+      "id": 62,
+      "element": "Help prompt: Cần trợ giúp soạn thông báo",
+      "x": 858,
+      "y": 993
+    },
+    {
+      "id": 63,
+      "element": "Help guide link",
+      "x": 1228,
+      "y": 1009
+    },
+    {
+      "id": 64,
+      "element": "Footer brand icon",
+      "x": 43,
+      "y": 1536
+    },
+    {
+      "id": 65,
+      "element": "Footer copyright and WCAG 2.1 AA claim",
+      "x": 374,
+      "y": 1536
+    },
+    {
+      "id": 66,
+      "element": "Footer link: Quy chế Giảng viên",
+      "x": 901,
+      "y": 1536
+    },
+    {
+      "id": 67,
+      "element": "Footer link: Tiêu chuẩn đánh giá",
+      "x": 1037,
+      "y": 1536
+    },
+    {
+      "id": 68,
+      "element": "Footer link: Hỗ trợ kỹ thuật",
+      "x": 1172,
+      "y": 1536
+    }
+  ]
+}

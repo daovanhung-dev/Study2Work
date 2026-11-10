@@ -1,0 +1,50 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.scaffold {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 32px;
+}
+
+.scaffold__card {
+  width: min(100%, 720px);
+  padding: 40px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.scaffold__eyebrow {
+  margin: 0 0 12px;
+  color: var(--ocean-primary);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+h1 {
+  margin: 0;
+  color: var(--ocean-deep);
+  font-size: clamp(28px, 4vw, 36px);
+  line-height: 1.2;
+}
+
+.scaffold__card p:last-child {
+  max-width: 60ch;
+  margin: 16px 0 0;
+  color: var(--text-muted);
+}
+
+@media (max-width: 767px) {
+  .scaffold {
+    padding: 16px;
+  }
+
+  .scaffold__card {
+    padding: 24px;
+  }
+}

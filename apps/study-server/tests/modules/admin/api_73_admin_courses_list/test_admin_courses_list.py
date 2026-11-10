@@ -142,6 +142,8 @@ def test_get_admin_courses_returns_default_page_and_uses_read_only_queries(
         "limit": 20,
         "offset": 0,
     }
+    assert "CAST(:status AS VARCHAR) IS NULL" in captured[0][0]
+    assert "CAST(:mentor AS BIGINT) IS NULL" in captured[0][0]
     assert "ORDER BY c.id ASC" in captured[1][0]
     assert response.headers["X-Trace-Id"] == payload["traceId"]
     assert session.commit_count == 0
@@ -177,8 +179,16 @@ def test_get_admin_courses_applies_exact_status_and_mentor_filters(
         "limit": 20,
         "offset": 20,
     }
-    assert "(:status IS NULL OR c.status = :status)" in captured[0][0]
-    assert "(:mentor IS NULL OR c.mentor_id = :mentor)" in captured[0][0]
+    assert (
+        "(CAST(:status AS VARCHAR) IS NULL OR c.status = CAST(:status AS VARCHAR))"
+        in captured[0][0]
+    )
+    assert (
+        "(CAST(:mentor AS BIGINT) IS NULL OR c.mentor_id = CAST(:mentor AS BIGINT))"
+        in captured[0][0]
+    )
+    assert "c.status = CAST(:status AS VARCHAR)" in captured[1][0]
+    assert "c.mentor_id = CAST(:mentor AS BIGINT)" in captured[1][0]
     assert captured[0][0].count(":status") == captured[1][0].count(":status")
     assert captured[0][0].count(":mentor") == captured[1][0].count(":mentor")
 

@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="859" height="1600" viewBox="0 0 859 1600">
+<title>ST-17 numbered element map over the original assignment screen</title>
+<rect x="0" y="0" width="859" height="1600" fill="#ffffff"/>
+<image href="screen.png" x="96" y="0" width="667" height="1600" preserveAspectRatio="none"/>
+<path d="M 27.75 22 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="1: Header Study2Work logo and brand" transform="translate(15 22)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">1</text></g>
+<path d="M 791.25 20 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="2: Primary navigation links" transform="translate(804 20)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">2</text></g>
+<path d="M 765.25 17 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="3: Notifications control" transform="translate(778 17)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">3</text></g>
+<path d="M 817.25 21 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="4: Student avatar and profile control" transform="translate(830 21)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">4</text></g>
+<path d="M 27.75 50 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="5: Breadcrumb trail" transform="translate(15 50)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">5</text></g>
+<path d="M 27.75 83 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="6: Assignment status, code and project-category chips" transform="translate(15 83)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">6</text></g>
+<path d="M 53.75 105 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="7: Assignment title" transform="translate(41 105)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">7</text></g>
+<path d="M 27.75 149 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="8: Assignment summary and description" transform="translate(15 149)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">8</text></g>
+<path d="M 765.25 108 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="9: Progress and maximum-score summary" transform="translate(778 108)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">9</text></g>
+<path d="M 27.75 202 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="10: Due-date summary" transform="translate(15 202)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">10</text></g>
+<path d="M 53.75 202 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="11: Time-remaining summary" transform="translate(41 202)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">11</text></g>
+<path d="M 765.25 202 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="12: Assigned mentor summary" transform="translate(778 202)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">12</text></g>
+<path d="M 791.25 202 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="13: Grading SLA summary" transform="translate(804 202)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">13</text></g>
+<path d="M 27.75 326 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="14: Video preview card" transform="translate(15 326)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">14</text></g>
+<path d="M 27.75 443 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="15: Core objectives heading and introduction" transform="translate(15 443)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">15</text></g>
+<path d="M 27.75 509 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="16: Objective card: Virtualization and Rendering" transform="translate(15 509)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">16</text></g>
+<path d="M 53.75 509 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="17: Objective card: server-side filtering and debounce" transform="translate(41 509)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">17</text></g>
+<path d="M 27.75 574 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="18: Objective card: dynamic RBAC" transform="translate(15 574)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">18</text></g>
+<path d="M 53.75 574 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="19: Objective card: dynamic interface behavior" transform="translate(41 574)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">19</text></g>
+<path d="M 27.75 662 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="20: Rubric heading and score summary" transform="translate(15 662)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">20</text></g>
+<path d="M 27.75 725 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="21: Rubric criterion A: React architecture and TypeScript" transform="translate(15 725)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">21</text></g>
+<path d="M 27.75 795 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="22: Rubric criterion B: state and query-cache engine" transform="translate(15 795)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">22</text></g>
+<path d="M 27.75 866 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="23: Rubric criterion C: Lighthouse performance and Core Web Vitals" transform="translate(15 866)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">23</text></g>
+<path d="M 27.75 936 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="24: Rubric criterion D: automated testing and Playwright E2E" transform="translate(15 936)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">24</text></g>
+<path d="M 27.75 1008 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="25: Attached resources heading and introduction" transform="translate(15 1008)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">25</text></g>
+<path d="M 27.75 1082 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="26: Starter Kit resource and download action" transform="translate(15 1082)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">26</text></g>
+<path d="M 27.75 1142 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="27: Figma specification resource and action" transform="translate(15 1142)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">27</text></g>
+<path d="M 27.75 1200 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="28: API mock-data resource and action" transform="translate(15 1200)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">28</text></g>
+<path d="M 27.75 1260 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="29: Submission requirements heading and introduction" transform="translate(15 1260)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">29</text></g>
+<path d="M 27.75 1324 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="30: GitHub repository delivery requirement" transform="translate(15 1324)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">30</text></g>
+<path d="M 53.75 1324 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="31: Vercel live-preview delivery requirement" transform="translate(41 1324)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">31</text></g>
+<path d="M 765.25 1324 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="32: Technical PDF report delivery requirement" transform="translate(778 1324)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">32</text></g>
+<path d="M 27.75 1407 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="33: Late-submission penalty notice" transform="translate(15 1407)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">33</text></g>
+<path d="M 765.25 274 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="34: Submission status card" transform="translate(778 274)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">34</text></g>
+<path d="M 765.25 335 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="35: Deadline countdown and displayed deadline" transform="translate(778 335)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">35</text></g>
+<path d="M 765.25 405 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="36: Compose and submit assignment action" transform="translate(778 405)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">36</text></g>
+<path d="M 765.25 459 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="37: Pre-submit checklist heading and completion count" transform="translate(778 459)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">37</text></g>
+<path d="M 791.25 481 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="38: Checklist item 1: responsive dashboard/report" transform="translate(804 481)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">38</text></g>
+<path d="M 765.25 505 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="39: Checklist item 2: virtualization and test data" transform="translate(778 505)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">39</text></g>
+<path d="M 791.25 529 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="40: Checklist item 3: Lighthouse score" transform="translate(804 529)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">40</text></g>
+<path d="M 765.25 553 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="41: Checklist item 4: technical PDF" transform="translate(778 553)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">41</text></g>
+<path d="M 765.25 592 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="42: Academic-integrity commitment note" transform="translate(778 592)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">42</text></g>
+<path d="M 765.25 653 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="43: Mentor portrait, name and role" transform="translate(778 653)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">43</text></g>
+<path d="M 765.25 691 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="44: Mentor biography" transform="translate(778 691)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">44</text></g>
+<path d="M 765.25 729 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="45: Discord support action" transform="translate(778 729)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">45</text></g>
+<path d="M 765.25 758 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="46: Office-hours scheduling action" transform="translate(778 758)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">46</text></g>
+<path d="M 765.25 796 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="47: Submission history summary" transform="translate(778 796)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">47</text></g>
+<path d="M 27.75 1511 H 96" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="48: Footer brand, description and certifications" transform="translate(15 1511)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">48</text></g>
+<path d="M 765.25 1510 H 763" stroke="#0B5F8A" stroke-width="1.5"/>
+<g aria-label="49: Footer navigation and legal links" transform="translate(778 1510)"><circle r="11.5" fill="#0B5F8A" stroke="#FFFFFF" stroke-width="2.5"/><text text-anchor="middle" dominant-baseline="central" y=".5" font-family="Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">49</text></g>
+</svg>
