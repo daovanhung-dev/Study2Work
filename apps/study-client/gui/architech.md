@@ -6,7 +6,7 @@
 
 ## Mục đích và ranh giới hiện tại
 
-Tài liệu này mô tả bộ khung Angular của Study Web và cấu trúc sẽ dùng khi triển khai các màn hình. Ứng dụng hiện chỉ hiển thị thông báo tạm thời cho biết bộ khung đã sẵn sàng. Chưa triển khai SH-01 hay màn hình nghiệp vụ nào khác, xác thực, lời gọi Study API, lưu trữ dữ liệu hoặc hành vi phát hành ứng dụng.
+Tài liệu này mô tả bộ khung Angular của Study Web và cấu trúc sẽ dùng khi triển khai các màn hình. Ứng dụng hiện chỉ hiển thị thông báo tạm thời cho biết bộ khung đã sẵn sàng. Chưa triển khai SH-01 hay màn hình nghiệp vụ, luồng xác thực, lời gọi API theo feature, lưu trữ dữ liệu hoặc hành vi phát hành ứng dụng. `core/http/StudyApiService` cung cấp transport generic tới `/api/v1`; Angular dev server proxy chuyển tiếp local request tới Study API `127.0.0.1:3003`. Transport này không xác nhận endpoint nghiệp vụ hoặc deployment đã được nối.
 
 83 gói màn hình và các tài nguyên trong screen_stitch dưới docs/ là bằng chứng về yêu cầu và thiết kế. Các tuyến được đề xuất trong đó không chứng minh rằng tuyến đã được đăng ký khi ứng dụng chạy. Trước khi triển khai màn hình, hãy đối chiếu DD và các tham chiếu API với mã nguồn Study Server hiện tại cùng các hợp đồng có thể kiểm chứng. Ghi rõ những hành vi chưa được xác nhận.
 
@@ -15,7 +15,8 @@ Quy tắc bắt buộc về ranh giới giao diện, nghiệp vụ và truy cậ
 ## Cấu trúc dự án
 
     apps/study-client/
-    ├── angular.json                 # Cấu hình biên dịch, máy chủ phát triển, tài nguyên và kiểm thử của Angular CLI
+    ├── angular.json                 # Cấu hình biên dịch, máy chủ phát triển và tài nguyên Angular CLI
+    ├── proxy.conf.json              # Proxy local /api/v1 tới Study API
     ├── package.json                 # Các lệnh npm và gói phụ thuộc trực tiếp
     ├── package-lock.json            # Khóa cây gói phụ thuộc để các lần cài npm có kết quả nhất quán
     ├── tsconfig.json                # Tùy chọn TypeScript nghiêm ngặt dùng chung
@@ -38,6 +39,9 @@ Quy tắc bắt buộc về ranh giới giao diện, nghiệp vụ và truy cậ
             ├── app.config.ts        # Provider Angular dùng chung toàn ứng dụng
             ├── app.routes.ts        # Tuyến cấp cao nhất; hiện để trống có chủ đích
             ├── core/                # Hạ tầng toàn ứng dụng, dịch vụ dùng chung và phần liên miền
+            │   └── http/
+            │       ├── api-envelope.ts       # Kiểu envelope Study API dùng chung
+            │       └── study-api.service.ts  # HTTP transport generic cho /api/v1
             ├── layouts/             # Khung giao diện dùng chung cho một nhóm trang
             ├── shared/              # Thành phần trình bày dùng lại, không chứa quy tắc nghiệp vụ
             └── features/            # Năng lực nghiệp vụ, tách theo miền màn hình Study
@@ -68,9 +72,9 @@ Các tệp .gitkeep trong những thư mục kiến trúc còn trống chỉ gi�
 ### Ranh giới trong src/app/
 
 - app.ts, app.html và app.css ghép thành phần gốc của ứng dụng. Thông báo sẵn sàng chỉ là tạm thời, không phải màn hình SH-01.
-- app.config.ts đăng ký provider Angular dùng toàn ứng dụng. Chỉ thêm provider tại đây khi toàn ứng dụng cần dùng.
+- app.config.ts đăng ký provider Angular dùng toàn ứng dụng, gồm `provideHttpClient()` cho API transport. Chỉ thêm provider tại đây khi toàn ứng dụng cần dùng.
 - app.routes.ts là danh sách đăng ký tuyến gốc. Hiện tệp này để trống; chỉ thêm tuyến cho màn hình đã triển khai và có bằng chứng từ mã nguồn. Khi bổ sung nhóm tính năng, nạp tệp tuyến của nhóm đó theo cách tải trễ.
-- core/ quản lý hạ tầng toàn ứng dụng như cấu hình HTTP, tích hợp xác thực đã được xác minh, xử lý lỗi toàn cục và bộ chặn tuyến. Không đặt truy vấn hay chính sách riêng của nhóm tính năng trong core/. Bộ khung này chưa tạo tích hợp xác thực hoặc HTTP.
+- core/ quản lý hạ tầng toàn ứng dụng như cấu hình HTTP, transport API generic, tích hợp xác thực đã được xác minh, xử lý lỗi toàn cục và bộ chặn tuyến. Không đặt truy vấn hay chính sách riêng của nhóm tính năng trong core/. Hiện chưa có token store hoặc tích hợp xác thực Study Web.
 - layouts/ quản lý khung giao diện dùng chung cho các tuyến, chẳng hạn khung công khai, đã xác thực, student, mentor hoặc admin. Khung giao diện sắp xếp điều hướng và vùng hiển thị trang; không sở hữu quy tắc nghiệp vụ hay truy cập dữ liệu của nhóm tính năng.
 - shared/ quản lý thành phần trình bày tổng quát, chỉ thị, bộ biến đổi và tiện ích định dạng được nhiều miền dùng lại. Không được phụ thuộc vào nhóm tính năng, gọi API nghiệp vụ hoặc chứa quy tắc nghiệp vụ Study.
 - features/ quản lý các năng lực Study. Đặt trang theo tuyến, giao diện miền, logic nghiệp vụ, truy cập dữ liệu và mô hình dữ liệu bên trong ranh giới của nhóm tính năng tương ứng.
@@ -94,9 +98,9 @@ Dùng cấu trúc sau khi triển khai một nhóm màn hình; chỉ tạo nhữ
 
     main.ts -> app.config.ts -> app.routes.ts -> trang feature -> ui của feature
                                                          -> domain (khi feature có quy tắc nghiệp vụ)
-                                                         -> data-access -> hạ tầng HTTP trong core -> Study API
+                                                         -> data-access -> StudyApiService -> HttpClient -> /api/v1 -> Study API
 
-Hai bước cuối là cấu trúc dự kiến trong tương lai, chưa được nối vào ứng dụng hiện tại. Với từng màn hình, trước tiên xác minh tuyến Study Server hiện tại, cấu trúc yêu cầu/phản hồi, xác thực, mã lỗi và các kiểm thử liên quan. Không suy ra hành vi điểm cuối API từ bản phác giao diện, cũng không tự tạo trường dữ liệu hoặc tuyến API để lấp chỗ trống. Giữ mô hình dữ liệu bên trong nhóm tính năng đó, trừ khi có hợp đồng đã xác minh thực sự được dùng chung.
+`StudyApiService`, `HttpClient` và proxy local đã được cấu hình; chưa có feature `data-access` nào gọi endpoint. Proxy chỉ áp dụng cho `ng serve`; production cần định tuyến cùng origin `/api/v1`, hiện chưa được xác minh. Với từng màn hình, trước tiên xác minh tuyến Study Server hiện tại, cấu trúc yêu cầu/phản hồi, xác thực, mã lỗi và các kiểm thử liên quan. Không suy ra hành vi điểm cuối API từ bản phác giao diện, cũng không tự tạo trường dữ liệu hoặc tuyến API để lấp chỗ trống. Giữ mô hình dữ liệu bên trong nhóm tính năng đó, trừ khi có hợp đồng đã xác minh thực sự được dùng chung.
 
 Dùng Angular Signals cho trạng thái giao diện đồng bộ tại chỗ và RxJS cho luồng bất đồng bộ khi đã bổ sung tích hợp API có căn cứ. Chưa thêm thư viện quản lý trạng thái toàn cục nếu chưa có nhu cầu cụ thể giữa nhiều nhóm tính năng. Bộ chặn tuyến phía trình duyệt chỉ phục vụ trải nghiệm điều hướng; quyền truy cập do máy chủ quyết định.
 

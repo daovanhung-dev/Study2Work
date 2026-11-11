@@ -16,10 +16,11 @@ guide when folder or file organization is involved.
 The current checkout has a runnable Angular 22 standalone client-side SPA
 scaffold plus Study Web documentation and screen assets under
 `apps/study-client/docs/`. The root component renders a temporary readiness
-message and `app.routes.ts` has no business routes. No auth or Study API calls
-are wired; serving on the CLI dev server does not verify deployment. Recheck
-the source tree for each task and do not infer feature behavior from design
-files or older snapshots.
+message and `app.routes.ts` has no business routes. A generic `StudyApiService`
+and local `/api/v1` dev proxy provide HTTP transport, but no feature endpoint,
+auth flow, or token storage is wired; serving on the CLI dev server does not
+verify deployment. Recheck the source tree for each task and do not infer
+feature behavior from design files or older snapshots.
 
 [`../../web-study/design.md`](../../web-study/design.md) is the intended visual,
 interaction and accessibility target. The app architecture is documented in

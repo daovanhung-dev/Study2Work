@@ -191,7 +191,7 @@ Study2Work/
 
 #### `web-work/study-web` subcontext
 
-- Source root: `apps/study-client/` (Angular 22 standalone SPA scaffold; Student feature routes and API calls are not wired)
+- Source root: `apps/study-client/` (Angular 22 standalone SPA scaffold; generic `/api/v1` transport and local proxy exist, Student feature routes/API calls are not wired)
 - Status: `SKELETON_ONLY`
 - Entry: [`.agents/web-work/study/AGENTS.md`](web-work/study/AGENTS.md)
 - Index: [`.agents/web-work/study/INDEX.md`](web-work/study/INDEX.md)
@@ -201,9 +201,11 @@ Study2Work/
   - [`.agents/web-study/frontend-rules.md`](web-study/frontend-rules.md) —
     mandatory UI/business/data-access boundaries and feature responsibilities.
 
-Load the frontend rules for Study Web implementation and architecture work.
-Do not infer feature behavior from the scaffold or design documents. Recheck
-`apps/study-client/` when a task depends on implementation details.
+The generic HTTP transport lives in `apps/study-client/src/app/core/http/`;
+feature-specific API calls remain unwired. Load the frontend rules for Study Web
+implementation and architecture work. Do not infer feature behavior from the
+scaffold or design documents. Recheck `apps/study-client/` when a task depends
+on implementation details.
 
 #### `web-work/work-web` subcontext
 
@@ -296,7 +298,7 @@ Scope workflow pages refine the common workflow and side effects:
 
 - Mobile: [`mobile-work/workflows/README.md`](mobile-work/workflows/README.md)
 - Web: [`web-work/workflows/README.md`](web-work/workflows/README.md). Study Web
-  has no app-specific workflow page while its application source is absent.
+  reuses the parent workflow and has no app-specific workflow page.
 - Work Server: [`server-work/workflows/README.md`](server-work/workflows/README.md)
 - Study Server: [`server-study/workflows/README.md`](server-study/workflows/README.md)
 - AI Server: [`server-ai/workflows/README.md`](server-ai/workflows/README.md)

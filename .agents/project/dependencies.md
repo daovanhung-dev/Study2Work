@@ -51,9 +51,11 @@ apps/db-admin-server/app/main.py
   proxies `/api`, `/uploads`, and `/img` to the Express server at
   `127.0.0.1:3002` in development. Work API does not render browser views.
 - Study Web is an Angular 22 standalone SPA scaffold and an intended separate
-  frontend boundary. It has no business routes, auth, or API calls yet. Study
-  API is a separate server; its placeholder OpenAPI is not enough to infer the
-  client/server contract. Deployment remains unverified.
+  frontend boundary. It has a generic `StudyApiService` and Angular dev proxy
+  from relative `/api/v1` to `127.0.0.1:3003`; business routes, feature-specific
+  API calls, auth, and token storage remain unwired. Study API is a separate
+  server; its placeholder OpenAPI is not enough to infer feature contracts.
+  Production routing remains unverified.
 - Work mobile apps use direct Neon SQL and are not HTTP consumers of Work server.
 
 ## Contract dependencies

@@ -9,9 +9,10 @@ scopes:
 
 Canonical page graph: `INDEX.md`.
 
-Study Web has a separate `study/` context. It now has an Angular 22 standalone
-SPA scaffold; business screens, auth and Study API calls remain unwired. Do not
-infer Student route/API behavior from design assets or the root placeholder.
+Study Web has a separate `study/` context. It has an Angular 22 standalone SPA
+scaffold and generic HTTP transport; business screens, auth and feature-specific
+Study API calls remain unwired. Do not infer Student route/API behavior from
+design assets or the root placeholder.
 Work Web uses React.
 Work router giữ route catalog hiện có,
 `src/shared/api/work.ts` là ranh giới fetch/Zod của Work và backend tương ứng là
