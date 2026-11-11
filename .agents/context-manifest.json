@@ -46,6 +46,7 @@
       "project_scopes",
       "cross_scope_dependencies",
       "expected_behavior",
+      "milestones",
       "current_behavior",
       "prior_worklogs_reviewed",
       "source_trace",

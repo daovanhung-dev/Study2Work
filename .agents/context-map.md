@@ -23,12 +23,15 @@ agent đi từ router tới context page, source, contract, test và worklog.
   → [.agents/AGENTS.md]
   → [.agents/context-map.md]
   → classify primary_task_type + project_scopes
+  → publish task-specific milestone objectives/weights and 0% progress in chat
   → worklog preflight: select/read up to 3 same-type worklogs
+  → after each coherent read batch, report paths/sources and findings in chat
   → [.agents/project/INDEX.md] when cross-scope/boundary context is needed
   → [.agents/<scope>/AGENTS.md]
   → [.agents/<scope>/INDEX.md] or subcontext/INDEX.md
   → page đúng task
   → exact source + contract/config/test
+  → report grouped action/results and cumulative progress when milestones complete
   → update context/worklog
   → focused verification + context validator
 ```

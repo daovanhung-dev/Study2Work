@@ -42,6 +42,24 @@ Global index: `project/INDEX.md`.
 Mỗi scope có `INDEX.md` làm page graph. Không tạo context agent trong `apps/`;
 root router luôn trỏ về các entry dưới `.agents/`.
 
+## Quy tắc chat và tiến độ (mọi task)
+
+Đây là yêu cầu bắt buộc cho coding, fix, docs, test, review và cả task chỉ đọc.
+Ở đầu task, trước khi inspect sâu, công bố trong chat phân loại task và các
+milestone task-specific. Phải có ít nhất hai milestone; mỗi mốc nêu mục tiêu,
+tiêu chí hoàn thành và trọng số phần trăm, tổng trọng số bằng 100%. Nêu tiến độ
+ban đầu là 0% và lưu các mốc trong mục `MILESTONES` của worklog.
+
+Sau mỗi nhóm đọc, gửi ngay danh sách đường dẫn/nguồn đã đọc cùng tóm tắt điều
+đã xác minh hoặc hiểu được. Sau mỗi nhóm thao tác có ý nghĩa, gửi hành động và
+kết quả. Chỉ cộng trọng số khi tiêu chí của mốc đã đạt, rồi báo phần trăm tích
+lũy trong chat. Nếu task bị chặn, báo phần trăm của các mốc đã đạt và blocker;
+không báo 100% cho task chưa hoàn tất. Cập nhật theo nhóm công việc có ý nghĩa,
+không cần gửi riêng từng lệnh shell nếu chúng thuộc cùng một nhóm.
+
+`.agents/project/workflows.md` mô tả điểm chèn các cập nhật trong common flow;
+`.agents/worklog/README.md` và `TEMPLATE.md` quy định cách ghi các mốc.
+
 ## Nhãn trạng thái
 
 - `VERIFIED`: đọc trực tiếp từ source hiện tại và wiring có bằng chứng.

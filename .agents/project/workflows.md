@@ -5,17 +5,35 @@ classification, and worklog preflight. The selected same-type worklogs must be
 read before deep source inspection. The active worklog is updated before source
 edits, after source tracing, and after verification.
 
+## Chat progress and read/action updates
+
+For every task, including read-only tasks, publish the task classification and
+at least two task-specific milestones before deep work. Each milestone has an
+objective/acceptance criterion and a percentage weight; weights total 100%.
+Record the milestones in the active worklog and start reported progress at 0%.
+
+After each coherent reading batch, immediately report the paths/sources read
+and the main findings or understanding. After each meaningful action batch,
+report what was done and its result. When a milestone's acceptance criterion is
+met, report the cumulative percentage (sum of completed weights) in chat. If
+blocked, report the achieved percentage and blocker; reserve 100% for completed
+tasks. Group related reads/actions into legible updates rather than narrating
+each shell command.
+
 ## Common flow
 
 ```text
 load `.agents/context-map.md`
 -> classify task
+-> publish task-specific milestones and 0% starting progress in chat
 -> select/read up to 3 nearest worklogs with the same primary_task_type
+-> report each coherent reading batch with paths and findings
 -> load exact scope/subcontext
 -> load skill/contract registry entries required by the task
 -> separate EXPECTED_BEHAVIOR from CURRENT_BEHAVIOR
 -> trace caller -> callee -> DB/external side effect -> response -> tests
 -> make the smallest scoped change
+-> report meaningful action batches and completed-milestone percentages
 -> run focused verification and status every blocked command
 -> update context and worklog
 ```

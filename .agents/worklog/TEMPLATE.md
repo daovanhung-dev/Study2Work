@@ -24,6 +24,18 @@ status: "PLANNED | IN_PROGRESS | VERIFIED | PARTIAL | BLOCKED"
 - Requirement:
 - Canonical contract/approved DD:
 
+## MILESTONES
+
+Define at least two task-specific milestones with objective/acceptance
+criteria. Weights must total 100%; cumulative progress is the sum of completed
+weights. Start at 0% and report progress only when a milestone is achieved.
+Use `PENDING`, `DONE`, or `BLOCKED` for milestone status.
+
+| Weight | Cumulative progress when achieved | Objective / acceptance criterion | Status |
+|---:|---:|---|---|
+| `<weight>%` | `<cumulative>%` | `<milestone objective>` | `PENDING` |
+| `<weight>%` | `100%` | `<final acceptance>` | `PENDING` |
+
 ## CURRENT_BEHAVIOR
 
 - Source/config:
