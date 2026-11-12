@@ -5,7 +5,7 @@ primary_task_type: "docs"
 secondary_task_types: ["review"]
 project_scopes: ["web-work"]
 cross_scope_dependencies: []
-status: "IN_PROGRESS"
+status: "VERIFIED"
 ---
 
 # Worklog: Cải thiện agent từ phiên AD-01/routes
@@ -35,7 +35,7 @@ status: "IN_PROGRESS"
 |---:|---:|---|---|
 | 25% | 25% | Hoàn tất classification, worklog preflight, đọc đủ ba prior worklog và các trang đích; chạy validator baseline. | `DONE` |
 | 50% | 75% | Cập nhật đúng ba trang agent hiện có theo nội dung đã duyệt, không sửa runtime hoặc thêm workflow. | `DONE` |
-| 25% | 100% | Chạy validator sau sửa, so sánh baseline/findings mới, kiểm tra diff và hoàn tất worklog. | `PENDING` |
+| 25% | 100% | Chạy validator sau sửa, so sánh baseline/findings mới, kiểm tra diff và hoàn tất worklog. | `DONE` |
 
 ## CURRENT_BEHAVIOR
 
@@ -69,9 +69,14 @@ approved proposal -> three existing .agents pages -> context validator before/af
 | Worklog selector and selected prior logs | `READY`; đọc đủ 3 worklog được chọn cùng loại `docs`. | `VERIFIED` |
 | Root instructions, `.agents/AGENTS.md`, context map, worklog contract/template và ba trang đích | Đã kiểm tra load order, vị trí và nội dung hiện có; xác nhận thay đổi có thể nằm trong đúng ba trang đã duyệt. | `VERIFIED_STATIC_ONLY` |
 | `node scripts/validate-agent-context.mjs` trước sửa | Exit 1, 83 findings baseline; toàn bộ output lưu tại `/tmp/agent-improvements-validator-before.log`. | `BASELINE_INVALID` |
-| Patch ba trang đích | Thêm đúng các mục trong kế hoạch đã duyệt; chưa chạy validator sau sửa. | `IMPLEMENTED_PENDING_VERIFICATION` |
+| Patch ba trang đích | Thêm đúng các mục trong kế hoạch đã duyệt; validator sau sửa đã chạy. | `IMPLEMENTED` |
+| `node scripts/validate-agent-context.mjs` sau sửa | Exit 1, vẫn 83 findings top-level; so sánh cho thấy 0 finding mới và 0 finding được xử lý; không finding nào nhắc ba trang đích. Diff chi tiết tại `/tmp/agent-improvements-validator-after.log`; danh sách source lồng trong `CONTEXT_STALE web-work/study-web` cập nhật các file AD-01/routes trong worktree. | `BASELINE_INVALID; NO_NEW_FINDINGS` |
+| `node scripts/validate-agent-context.mjs` sau cập nhật worklog | Exit 1; so sánh baseline vẫn 83 findings, 0 finding mới/đã xử lý, không nhắc ba trang đích. Output lưu ở `/tmp/agent-improvements-validator-after-worklog.log`. | `BASELINE_INVALID; NO_NEW_FINDINGS` |
+| `git diff --check` và review diff ba trang | Không có whitespace error; diff chỉ có ba nội dung agent đã duyệt. | `VERIFIED` |
+| Git state/content audit | `HEAD` là `7b3e1b3b`; nội dung ba trang có mặt trong `HEAD` và không còn diff ở các trang này. `git status --short` trong phạm vi chỉ liệt kê worklog task. Không chạy stage/commit. | `VERIFIED` |
+| Application tests/build | Không chạy; task chỉ cập nhật agent docs và không đổi runtime. | `NOT_APPLICABLE` |
 
 ## HANDOFF
 
-- Remaining blockers: Chưa có.
-- Next owner/action: Review diff, chạy validator sau sửa và phân loại mọi finding mới so với baseline.
+- Remaining blockers: Validator repository-wide tiếp tục không hợp lệ do 83 findings baseline ngoài scope; không có finding mới do task.
+- Next owner/action: Không còn việc trong phạm vi được duyệt; xử lý validator baseline là công việc riêng nếu được yêu cầu.
