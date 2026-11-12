@@ -14,6 +14,7 @@
   "project": {
     "index": ".agents/project/INDEX.md",
     "pages": [
+      ".agents/project/agent-control.md",
       ".agents/project/architecture.md",
       ".agents/project/business-code.md",
       ".agents/project/conventions.md",
@@ -46,6 +47,7 @@
       "project_scopes",
       "cross_scope_dependencies",
       "expected_behavior",
+      "milestones",
       "current_behavior",
       "prior_worklogs_reviewed",
       "source_trace",
@@ -138,6 +140,23 @@
     }
   },
   "workflows": {
+    "agent-control": {
+      "status": "VERIFIED",
+      "entry": ".agents/project/agent-control.md",
+      "triggers": [
+        "every task",
+        "every tool call",
+        "agent execution visibility"
+      ],
+      "scopeRefs": [
+        "all"
+      ],
+      "verificationCommands": [
+        "Task/Step/Action/Event receipt consistency",
+        "verified progress matches worklog milestones",
+        "context validator"
+      ]
+    },
     "coding": {
       "status": "VERIFIED",
       "entry": ".agents/project/workflows.md",
@@ -149,6 +168,22 @@
       ],
       "verificationCommands": [
         "scope-specific focused tests",
+        "context validator"
+      ]
+    },
+    "study-web-screen-coding": {
+      "status": "VERIFIED",
+      "entry": ".agents/web-work/study/workflows/screen-implementation.md",
+      "triggers": [
+        "Study Web screen coding",
+        "Study Web screen demo"
+      ],
+      "scopeRefs": [
+        "web-work"
+      ],
+      "verificationCommands": [
+        "focused Angular tests for DD screen cases",
+        "local browser demo and fake-data cleanup verification",
         "context validator"
       ]
     },
@@ -971,51 +1006,62 @@
       "subcontexts": {
         "study-web": {
           "mode": "DEEP",
-      "status": "SKELETON_ONLY",
+          "status": "VERIFIED_WITH_UNWIRED_COMPONENTS",
           "entry": ".agents/web-work/study/AGENTS.md",
           "index": ".agents/web-work/study/INDEX.md",
           "pages": [
             ".agents/web-study/design.md",
-            ".agents/web-study/frontend-rules.md"
+            ".agents/web-study/frontend-rules.md",
+            ".agents/web-work/study/workflows/screen-implementation.md"
           ],
           "sourceRoots": [
             "apps/study-client"
           ],
-      "trackedRoots": [
-        "apps/study-client/src",
-        "apps/study-client/public",
-        "apps/study-client/gui",
-        "apps/study-client/angular.json",
-        "apps/study-client/package.json",
-        "apps/study-client/package-lock.json",
-        "apps/study-client/tsconfig.json",
-        "apps/study-client/tsconfig.app.json"
-      ],
-      "requiredSourcePaths": [
-        "apps/study-client/angular.json",
-        "apps/study-client/package.json",
-        "apps/study-client/package-lock.json",
-        "apps/study-client/tsconfig.json",
-        "apps/study-client/tsconfig.app.json",
-        "apps/study-client/src/index.html",
-        "apps/study-client/src/main.ts",
-        "apps/study-client/src/styles.css",
-        "apps/study-client/src/app/app.ts",
-        "apps/study-client/src/app/app.html",
-        "apps/study-client/src/app/app.css",
-        "apps/study-client/src/app/app.config.ts",
-        "apps/study-client/src/app/app.routes.ts",
-        "apps/study-client/src/app/core/.gitkeep",
-        "apps/study-client/src/app/layouts/.gitkeep",
-        "apps/study-client/src/app/shared/.gitkeep",
-        "apps/study-client/src/app/features/auth/.gitkeep",
-        "apps/study-client/src/app/features/guest/.gitkeep",
-        "apps/study-client/src/app/features/system/.gitkeep",
-        "apps/study-client/src/app/features/student/.gitkeep",
-        "apps/study-client/src/app/features/mentor/.gitkeep",
-        "apps/study-client/src/app/features/admin/.gitkeep",
-        "apps/study-client/gui/architech.md"
-      ]
+          "trackedRoots": [
+            "apps/study-client/src",
+            "apps/study-client/public",
+            "apps/study-client/gui",
+            "apps/study-client/angular.json",
+            "apps/study-client/proxy.conf.json",
+            "apps/study-client/package.json",
+            "apps/study-client/package-lock.json",
+            "apps/study-client/tsconfig.json",
+            "apps/study-client/tsconfig.app.json"
+          ],
+          "requiredSourcePaths": [
+            "apps/study-client/angular.json",
+            "apps/study-client/proxy.conf.json",
+            "apps/study-client/package.json",
+            "apps/study-client/package-lock.json",
+            "apps/study-client/tsconfig.json",
+            "apps/study-client/tsconfig.app.json",
+            "apps/study-client/src/index.html",
+            "apps/study-client/src/main.ts",
+            "apps/study-client/src/styles.css",
+            "apps/study-client/src/app/app.ts",
+            "apps/study-client/src/app/app.html",
+            "apps/study-client/src/app/app.css",
+            "apps/study-client/src/app/app.config.ts",
+            "apps/study-client/src/app/app.routes.ts",
+            "apps/study-client/src/app/app.routes.spec.ts",
+            "apps/study-client/src/app/core/http/api-envelope.ts",
+            "apps/study-client/src/app/core/http/study-api.service.ts",
+            "apps/study-client/src/app/layouts/admin/admin-layout.ts",
+            "apps/study-client/src/app/layouts/admin/admin-layout.html",
+            "apps/study-client/src/app/layouts/system/system-layout.ts",
+            "apps/study-client/src/app/layouts/system/system-layout.html",
+            "apps/study-client/src/app/shared/.gitkeep",
+            "apps/study-client/src/app/features/auth/.gitkeep",
+            "apps/study-client/src/app/features/guest/.gitkeep",
+            "apps/study-client/src/app/features/system/system.routes.ts",
+            "apps/study-client/src/app/features/system/pages/system-readiness-page.ts",
+            "apps/study-client/src/app/features/system/pages/system-readiness-page.html",
+            "apps/study-client/src/app/features/system/pages/system-readiness-page.css",
+            "apps/study-client/src/app/features/student/.gitkeep",
+            "apps/study-client/src/app/features/mentor/.gitkeep",
+            "apps/study-client/src/app/features/admin/admin.routes.ts",
+            "apps/study-client/gui/architech.md"
+          ]
         },
         "work-web": {
           "mode": "DEEP",

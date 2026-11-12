@@ -1,0 +1,55 @@
+<div class="dashboard-shell">
+  <study-ad01-header />
+
+  <main class="page-width main-content">
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow">Hệ thống quản trị tổng thể</p>
+        <h1 id="page-title">Bảng điều khiển quản trị hệ thống</h1>
+        <p class="hero-description">
+          Màn hình tổng quan quản trị. Dữ liệu báo cáo và thông tin phiên chưa được kết nối.
+        </p>
+      </div>
+
+      <div class="hero-controls">
+        <div class="period-control" role="group" aria-label="Khoảng thời gian báo cáo">
+          @for (period of periods; track period) {
+            <button type="button" disabled aria-describedby="period-unavailable">
+              {{ period }}
+            </button>
+          }
+        </div>
+        <p class="visually-hidden" id="period-unavailable">
+          Kỳ báo cáo chưa khả dụng vì contract ngày chưa được xác nhận.
+        </p>
+        <button
+          class="refresh-button"
+          type="button"
+          disabled
+          aria-describedby="refresh-unavailable"
+        >
+          <study-ad01-icon name="refresh" />
+          <span>Làm mới số liệu</span>
+        </button>
+        <p class="visually-hidden" id="refresh-unavailable">
+          Chức năng làm mới chưa khả dụng vì chưa có nguồn báo cáo được kết nối.
+        </p>
+      </div>
+    </section>
+
+    <study-ad01-metrics />
+    <study-ad01-overview />
+    <study-ad01-shortcuts />
+  </main>
+
+  <footer class="page-footer">
+    <div class="page-width footer-content">
+      <p>© Study2Work LMS <span aria-hidden="true">·</span> Hệ thống quản trị trung tâm</p>
+      <nav aria-label="Thông tin hỗ trợ chưa khả dụng">
+        <span aria-disabled="true">Chính sách dữ liệu</span>
+        <span aria-disabled="true">Tiêu chuẩn phân quyền</span>
+        <span aria-disabled="true">Hỗ trợ kỹ thuật</span>
+      </nav>
+    </div>
+  </footer>
+</div>

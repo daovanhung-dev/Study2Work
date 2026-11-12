@@ -24,6 +24,12 @@ choosing a scope or subcontext.
 
 Global index: `project/INDEX.md`.
 
+**Agent Control bắt buộc cho mọi scope:** đọc và áp dụng
+[`project/agent-control.md`](project/agent-control.md) trước mọi thao tác tool.
+Thông báo START trước và ghi nhận END sau từng tool call theo Task/Step/Action/Event.
+Quy tắc này bổ sung khả năng quan sát, không vượt quyền system/developer/tool,
+bảo mật hoặc các ràng buộc bắt buộc khác trong repo.
+
 - `project/design.md`: nguồn chuẩn design system và UX cho Work Web/Mobile.
 - `project/source-status.md`: source/DD/schema/context status và blocker.
 - `project/architecture.md`: ownership/deployable boundaries.
@@ -33,6 +39,8 @@ Global index: `project/INDEX.md`.
 - `project/business-code.md`: cách tra business code/HTTP mapping.
 - `project/contracts.md`: producer/consumer/status của shared và local contracts.
 - `project/workflows.md`: workflow chung và verification order.
+- `project/agent-control.md`: protocol toàn cục về plan-first, event receipts,
+  verified progress và final report.
 - `skills/INDEX.md`: skill registry và resource của `create-dd-from-bd-mobile`
   (Mobile module DD), `createDD-markdown` (Web/API DD), và `code-review`
   (read-only review across all code scopes).
@@ -41,6 +49,26 @@ Global index: `project/INDEX.md`.
 
 Mỗi scope có `INDEX.md` làm page graph. Không tạo context agent trong `apps/`;
 root router luôn trỏ về các entry dưới `.agents/`.
+
+## Quy tắc chat và tiến độ (mọi task)
+
+Đây là yêu cầu bắt buộc cho coding, fix, docs, test, review và cả task chỉ đọc.
+Ở đầu task, trước khi inspect sâu, công bố trong chat phân loại task và các
+milestone task-specific. Phải có ít nhất hai milestone; mỗi mốc nêu mục tiêu,
+tiêu chí hoàn thành và trọng số phần trăm, tổng trọng số bằng 100%. Nêu tiến độ
+ban đầu là 0% và lưu các mốc trong mục `MILESTONES` của worklog.
+
+Mỗi tool call phải có Event ID và thông báo START trước, END ngay sau khi có
+kết quả; ghi rõ operation, target, kết quả thực và bằng chứng. Có thể dùng
+compact event mode và trình bày nhiều Event trong một bảng, nhưng không được
+gộp/bỏ Event hoặc trì hoãn receipt. Bản tin sau tool call phải cho biết Task,
+Step, Action, verified %, kết quả, Done/Running/Next và blocker nếu có. Dùng
+cùng một verified-progress calculation cho Task/Step/Action và worklog
+milestones; bootstrap discovery không được tính hai lần. Nếu task bị chặn,
+báo phần trăm đã đạt và blocker; chỉ báo 100% khi mọi DoD bắt buộc hoàn tất.
+
+`.agents/project/workflows.md` mô tả điểm chèn các cập nhật trong common flow;
+`.agents/worklog/README.md` và `TEMPLATE.md` quy định cách ghi các mốc.
 
 ## Nhãn trạng thái
 

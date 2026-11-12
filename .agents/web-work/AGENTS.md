@@ -9,9 +9,10 @@ scopes:
 
 Canonical page graph: `INDEX.md`.
 
-Study Web has a separate `study/` context. It now has an Angular 22 standalone
-SPA scaffold; business screens, auth and Study API calls remain unwired. Do not
-infer Student route/API behavior from design assets or the root placeholder.
+Study Web has a separate `study/` context. It has an Angular 22 standalone SPA
+scaffold and generic HTTP transport; business screens, auth and feature-specific
+Study API calls remain unwired. Do not infer Student route/API behavior from
+design assets or the root placeholder.
 Work Web uses React.
 Work router giữ route catalog hiện có,
 `src/shared/api/work.ts` là ranh giới fetch/Zod của Work và backend tương ứng là
@@ -35,7 +36,7 @@ Task cụ thể chỉ đọc đúng web app:
 2. `package.json`, router/entrypoint và feature files liên quan.
 3. Shared API/auth/UI dependency và tests trực tiếp.
 
-Không trộn Vue pattern với React pattern.
+Không trộn Angular pattern của Study Web với React pattern của Work Web.
 
 Work web dùng React Query cho server state và Zod để parse response. JWT được
 lưu với key `access_token` ở localStorage; client decode payload để dựng role

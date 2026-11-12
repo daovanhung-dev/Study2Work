@@ -1,12 +1,12 @@
 # Kiến trúc Study Web
 
-    STATUS: SKELETON_ONLY
+    STATUS: ROOT_READINESS_AND_ROUTED_AD01_UI
     FRAMEWORK: ANGULAR 22
     RENDERING: CLIENT-SIDE SPA
 
 ## Mục đích và ranh giới hiện tại
 
-Tài liệu này mô tả bộ khung Angular của Study Web và cấu trúc sẽ dùng khi triển khai các màn hình. Ứng dụng hiện chỉ hiển thị thông báo tạm thời cho biết bộ khung đã sẵn sàng. Chưa triển khai SH-01 hay màn hình nghiệp vụ nào khác, xác thực, lời gọi Study API, lưu trữ dữ liệu hoặc hành vi phát hành ứng dụng.
+Tài liệu này mô tả bộ khung Angular của Study Web và cấu trúc triển khai màn hình. App root chỉ chứa `RouterOutlet`; `/` lazy-load route readiness scaffold trong `features/system`, còn `/admin` lazy-load AD-01. AD-01 vẫn presentation-only: chưa có API/report data, phiên Admin, auth guard hoặc quyền report được xác minh; truy cập `/admin` không phải access control. System root scaffold không phải SH-01. Chưa triển khai luồng xác thực, lưu trữ dữ liệu hoặc hành vi phát hành ứng dụng. `core/http/StudyApiService` cung cấp transport generic tới `/api/v1`; Angular dev server proxy chuyển tiếp local request tới Study API `127.0.0.1:3003`. Transport này không xác nhận endpoint nghiệp vụ hoặc deployment đã được nối.
 
 83 gói màn hình và các tài nguyên trong screen_stitch dưới docs/ là bằng chứng về yêu cầu và thiết kế. Các tuyến được đề xuất trong đó không chứng minh rằng tuyến đã được đăng ký khi ứng dụng chạy. Trước khi triển khai màn hình, hãy đối chiếu DD và các tham chiếu API với mã nguồn Study Server hiện tại cùng các hợp đồng có thể kiểm chứng. Ghi rõ những hành vi chưa được xác nhận.
 
@@ -15,7 +15,8 @@ Quy tắc bắt buộc về ranh giới giao diện, nghiệp vụ và truy cậ
 ## Cấu trúc dự án
 
     apps/study-client/
-    ├── angular.json                 # Cấu hình biên dịch, máy chủ phát triển, tài nguyên và kiểm thử của Angular CLI
+    ├── angular.json                 # Cấu hình biên dịch, máy chủ phát triển và tài nguyên Angular CLI
+    ├── proxy.conf.json              # Proxy local /api/v1 tới Study API
     ├── package.json                 # Các lệnh npm và gói phụ thuộc trực tiếp
     ├── package-lock.json            # Khóa cây gói phụ thuộc để các lần cài npm có kết quả nhất quán
     ├── tsconfig.json                # Tùy chọn TypeScript nghiêm ngặt dùng chung
@@ -33,20 +34,29 @@ Quy tắc bắt buộc về ranh giới giao diện, nghiệp vụ và truy cậ
         ├── styles.css               # Token thiết kế Study, kiểu cơ sở và quy tắc nhận focus toàn cục
         └── app/
             ├── app.ts               # Thành phần gốc; nơi ghép vùng hiển thị của bộ định tuyến
-            ├── app.html             # Thông báo bộ khung tạm thời và vùng hiển thị của bộ định tuyến
+            ├── app.html             # Chỉ chứa vùng hiển thị của bộ định tuyến
             ├── app.css              # Chỉ chứa kiểu của thành phần gốc
             ├── app.config.ts        # Provider Angular dùng chung toàn ứng dụng
-            ├── app.routes.ts        # Tuyến cấp cao nhất; hiện để trống có chủ đích
+            ├── app.routes.ts        # Lazy-load route groups system và admin
             ├── core/                # Hạ tầng toàn ứng dụng, dịch vụ dùng chung và phần liên miền
+            │   └── http/
+            │       ├── api-envelope.ts       # Kiểu envelope Study API dùng chung
+            │       └── study-api.service.ts  # HTTP transport generic cho /api/v1
             ├── layouts/             # Khung giao diện dùng chung cho một nhóm trang
+            │   ├── admin/           # Outlet shell cho các route Admin
+            │   └── system/          # Outlet shell cho route readiness ở /
             ├── shared/              # Thành phần trình bày dùng lại, không chứa quy tắc nghiệp vụ
-            └── features/            # Năng lực nghiệp vụ, tách theo miền màn hình Study
-                ├── auth/            # SH-02…SH-04
-                ├── guest/           # SH-01 và GS-01…GS-07
-                ├── system/          # SH-05…SH-07
-                ├── student/         # ST-01…ST-26
-                ├── mentor/          # ME-01…ME-18
-                └── admin/           # AD-01…AD-25
+            └── features/            # Nhóm màn hình Study
+                ├── shared/          # SH-* / Auth / System screens theo inventory
+                ├── guest/           # GS-*
+                ├── student/         # ST-*
+                ├── mentor/          # ME-*
+                ├── system/          # Route readiness tại /; không đại diện SH-01
+                │   ├── system.routes.ts
+                │   └── pages/system-readiness-page.*
+                └── admin/           # AD-*
+                    ├── admin.routes.ts
+                    └── AD01/        # data-access/, models/, pages/, ui/
 
 Các tệp .gitkeep trong những thư mục kiến trúc còn trống chỉ giúp Git giữ lại cấu trúc dự kiến. Xóa từng tệp giữ chỗ khi thêm mã nguồn thật. Chỉ tạo thư mục con cho một tính năng khi bắt đầu triển khai năng lực tương ứng; không tạo module rỗng hoặc tệp API chỉ dựa trên suy đoán.
 
@@ -67,36 +77,35 @@ Các tệp .gitkeep trong những thư mục kiến trúc còn trống chỉ gi�
 
 ### Ranh giới trong src/app/
 
-- app.ts, app.html và app.css ghép thành phần gốc của ứng dụng. Thông báo sẵn sàng chỉ là tạm thời, không phải màn hình SH-01.
-- app.config.ts đăng ký provider Angular dùng toàn ứng dụng. Chỉ thêm provider tại đây khi toàn ứng dụng cần dùng.
-- app.routes.ts là danh sách đăng ký tuyến gốc. Hiện tệp này để trống; chỉ thêm tuyến cho màn hình đã triển khai và có bằng chứng từ mã nguồn. Khi bổ sung nhóm tính năng, nạp tệp tuyến của nhóm đó theo cách tải trễ.
-- core/ quản lý hạ tầng toàn ứng dụng như cấu hình HTTP, tích hợp xác thực đã được xác minh, xử lý lỗi toàn cục và bộ chặn tuyến. Không đặt truy vấn hay chính sách riêng của nhóm tính năng trong core/. Bộ khung này chưa tạo tích hợp xác thực hoặc HTTP.
+- app.ts, app.html và app.css ghép thành phần gốc của ứng dụng. App root chỉ render `RouterOutlet`; readiness page được route riêng tại `/`, không phải màn hình SH-01.
+- app.config.ts đăng ký provider Angular dùng toàn ứng dụng, gồm `provideHttpClient()` cho API transport. Chỉ thêm provider tại đây khi toàn ứng dụng cần dùng.
+- app.routes.ts lazy-load `system.routes.ts` cho `/` và `admin.routes.ts` cho `/admin`. Không có wildcard, route SH-05/SH-06, auth guard hoặc API route.
+- core/ quản lý hạ tầng toàn ứng dụng như cấu hình HTTP, transport API generic, tích hợp xác thực đã được xác minh, xử lý lỗi toàn cục và bộ chặn tuyến. Không đặt truy vấn hay chính sách riêng của nhóm tính năng trong core/. Hiện chưa có token store hoặc tích hợp xác thực Study Web.
 - layouts/ quản lý khung giao diện dùng chung cho các tuyến, chẳng hạn khung công khai, đã xác thực, student, mentor hoặc admin. Khung giao diện sắp xếp điều hướng và vùng hiển thị trang; không sở hữu quy tắc nghiệp vụ hay truy cập dữ liệu của nhóm tính năng.
 - shared/ quản lý thành phần trình bày tổng quát, chỉ thị, bộ biến đổi và tiện ích định dạng được nhiều miền dùng lại. Không được phụ thuộc vào nhóm tính năng, gọi API nghiệp vụ hoặc chứa quy tắc nghiệp vụ Study.
-- features/ quản lý các năng lực Study. Đặt trang theo tuyến, giao diện miền, logic nghiệp vụ, truy cập dữ liệu và mô hình dữ liệu bên trong ranh giới của nhóm tính năng tương ứng.
-- features/&lt;domain&gt;/&lt;capability&gt;/domain/ chỉ được tạo khi nhóm tính năng có quy tắc nghiệp vụ thuần cần tách khỏi giao diện và truy cập dữ liệu.
+- features/ quản lý screen theo nhóm `shared`, `guest`, `student`, `mentor` và `admin`. `features/system` chỉ giữ route readiness root được yêu cầu cho scaffold; các SH-* screen vẫn thuộc group `shared`. Mỗi screen có đúng bốn thư mục con trực tiếp: `data-access/`, `models/`, `pages/` và `ui/`.
+- pages/ chứa page component; ui/ chứa widget riêng của screen; data-access/ chỉ chứa I/O theo API đã xác minh; models/ chứa kiểu/chuyển đổi bám theo contract đã xác minh. Không tạo `domain/` hoặc folder thứ năm trong screen.
+- Mỗi nhóm có một route file và một layout. Theo yêu cầu cụ thể của task, route files ở đây dùng tên `admin.routes.ts` và `system.routes.ts`; các tên SH-* khác vẫn theo cấu trúc canonical. `/admin` nạp AD01Page trực tiếp qua AdminLayout; không có guard nên route không xác thực quyền.
 
 ### Mẫu cấu trúc feature
 
 Dùng cấu trúc sau khi triển khai một nhóm màn hình; chỉ tạo những thư mục mà nhóm tính năng thực sự cần:
 
-    features/<domain>/<capability>/
-    ├── pages/          # Thành phần trang độc lập gắn với tuyến
-    ├── ui/             # Thành phần trình bày riêng của miền nghiệp vụ
-    ├── domain/         # Quy tắc nghiệp vụ thuần; chỉ tạo khi feature cần
-    ├── data-access/    # Lời gọi API và trạng thái dữ liệu từ server
-    ├── models/         # Kiểu dữ liệu suy ra từ hợp đồng feature đã xác minh
-    └── <capability>.routes.ts
+    features/<group>/<SCREEN_ID>/
+    ├── data-access/    # I/O theo contract hiện hành; có thể chưa cần khi chưa có API
+    ├── models/         # Kiểu/chuyển đổi theo contract đã xác minh
+    ├── pages/          # Component trang chính và stylesheet/template cạnh nó
+    └── ui/             # Component UI chỉ dùng trong screen
 
-Ánh xạ nhóm màn hình theo danh mục hiện tại: auth dành cho đăng ký và xác minh; guest dành cho Study công khai và khám phá nội dung; system dành cho trạng thái quyền truy cập, lỗi và vận hành; tiếp theo là student, mentor và admin. Chỉ tách miền thành các năng lực như courses, lessons, submissions hoặc reports khi bắt đầu công việc DD tương ứng. Tuyến xuất hiện trong danh mục vẫn chỉ là đề xuất cho đến khi phần triển khai và các gói phụ thuộc được xác minh.
+Tên thư mục screen dùng mã compact như `AD01` cho screen ID `AD-01`. Tuyến trong catalog/DD vẫn là đề xuất cho đến khi requirements, dependencies và runtime behavior được xác minh. Không tạo service/model/API riêng cho màn hình chỉ để lấp contract gap.
 
 ## Luồng dữ liệu và cách ứng dụng vận hành
 
-    main.ts -> app.config.ts -> app.routes.ts -> trang feature -> ui của feature
-                                                         -> domain (khi feature có quy tắc nghiệp vụ)
-                                                         -> data-access -> hạ tầng HTTP trong core -> Study API
+    main.ts -> app.config.ts -> app.routes.ts -> layout/group route -> page -> ui
+                                                                   -> models (nếu có contract)
+                                                                   -> data-access -> StudyApiService -> HttpClient -> /api/v1 -> Study API
 
-Hai bước cuối là cấu trúc dự kiến trong tương lai, chưa được nối vào ứng dụng hiện tại. Với từng màn hình, trước tiên xác minh tuyến Study Server hiện tại, cấu trúc yêu cầu/phản hồi, xác thực, mã lỗi và các kiểm thử liên quan. Không suy ra hành vi điểm cuối API từ bản phác giao diện, cũng không tự tạo trường dữ liệu hoặc tuyến API để lấp chỗ trống. Giữ mô hình dữ liệu bên trong nhóm tính năng đó, trừ khi có hợp đồng đã xác minh thực sự được dùng chung.
+`StudyApiService`, `HttpClient` và proxy local đã được cấu hình; AD-01 hiện chưa có feature `data-access` hoặc API call. API #101 chưa có current route/module/query/model/test; không ánh xạ KPI draft thành card. Proxy chỉ áp dụng cho `ng serve`; production cần định tuyến cùng origin `/api/v1`, hiện chưa được xác minh. Với từng màn hình, trước tiên xác minh tuyến Study Server hiện tại, cấu trúc yêu cầu/phản hồi, xác thực, mã lỗi và các kiểm thử liên quan. Không suy ra hành vi điểm cuối API từ bản phác giao diện, cũng không tự tạo trường dữ liệu hoặc tuyến API để lấp chỗ trống.
 
 Dùng Angular Signals cho trạng thái giao diện đồng bộ tại chỗ và RxJS cho luồng bất đồng bộ khi đã bổ sung tích hợp API có căn cứ. Chưa thêm thư viện quản lý trạng thái toàn cục nếu chưa có nhu cầu cụ thể giữa nhiều nhóm tính năng. Bộ chặn tuyến phía trình duyệt chỉ phục vụ trải nghiệm điều hướng; quyền truy cập do máy chủ quyết định.
 
@@ -126,5 +135,5 @@ Lấy giao diện sáng làm nền tảng. Chỉ dùng Inter nếu font này đ�
 
 - Tạo thành phần và tuyến độc lập theo quy ước tên tệp Angular ngắn gọn năm 2025: thing.ts, thing.html, thing.css.
 - Đặt kiểu của thành phần cạnh mã thành phần; chỉ dùng kiểu toàn cục cho token và hành vi thực sự áp dụng toàn ứng dụng.
-- Khi công việc có phạm vi kiểm thử, cấu hình mục tiêu kiểm thử Angular và đặt các tệp *.spec.ts tập trung cạnh mã nguồn. Bộ khung này cố ý chưa có mục tiêu kiểm thử, tệp đặc tả kiểm thử hoặc nghiệp vụ.
+- Angular `@angular/build:unit-test` với Vitest được cấu hình cho `ng test`; test `*.spec.ts` đặt cạnh code được kiểm tra. Đây là test runner của frontend, không xác minh API/runtime backend.
 - Dùng npm start để chạy môi trường phát triển cục bộ và npm run build để biên dịch bản phát hành. Đầu ra Angular trong dist/ là sản phẩm được tạo tự động, không phải mã nguồn.

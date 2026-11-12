@@ -15,60 +15,67 @@ Luôn phân biệt yêu cầu với hiện trạng: DD, ảnh thiết kế và `
 | Phần | Trách nhiệm bắt buộc | Không được đặt tại đây |
 |---|---|---|
 | `app.ts`, `app.html`, `app.css` | Ghép khung gốc và vùng hiển thị tuyến; giữ thông báo scaffold cho đến khi có yêu cầu màn hình đã xác minh. | Quy tắc nghiệp vụ, truy vấn dữ liệu hoặc logic riêng của feature. |
-| `app.routes.ts`, `<capability>.routes.ts` | Khai báo tuyến; nạp route của feature theo cách tải trễ khi phù hợp. Chỉ đăng ký màn hình đã được xác nhận đủ yêu cầu và dependency. | Xử lý nghiệp vụ, gọi API trực tiếp hoặc quyết định quyền truy cập thay server. |
+| `app.routes.ts`, `<group>.route.ts` | `app.routes.ts` ghép route theo group/layout; mỗi group có đúng một `<group>.route.ts` khai báo các màn hình thuộc group đó. Chỉ đăng ký route đã được xác nhận đủ yêu cầu và dependency. | Xử lý nghiệp vụ, gọi API trực tiếp hoặc quyết định quyền truy cập thay server. |
 | `layouts/` | Tạo khung giao diện, điều hướng và vùng chứa trang cho nhóm tuyến. | Quy tắc nghiệp vụ, truy vấn riêng màn hình hoặc sở hữu trạng thái dữ liệu của feature. |
-| `features/<domain>/<capability>/pages/` | Nhận tham số tuyến, ghép các thành phần UI, điều phối tương tác và trạng thái hiển thị của trang; chuyển thao tác sang `domain/` hoặc `data-access/`. | Tự viết quyết định nghiệp vụ, tính toán chính sách, gọi HTTP hoặc chứa toàn bộ giao diện của một màn hình lớn. |
-| `features/<domain>/<capability>/ui/` | Hiển thị dữ liệu nhận vào, giữ trạng thái trình bày cục bộ và phát sự kiện người dùng để page xử lý. | Gọi API, phụ thuộc router/data-access, quyết định nghiệp vụ hoặc truy cập feature khác. |
-| `features/<domain>/<capability>/domain/` | Khi có nhu cầu, chứa quy tắc nghiệp vụ thuần như tính toán, chính sách, validation nghiệp vụ và chuyển trạng thái. Giữ logic có thể kiểm thử độc lập. | HTTP, database, router, DOM, trạng thái Angular hoặc side effect bên ngoài. Không tạo thư mục này khi feature chưa có quy tắc nghiệp vụ cần tách. |
-| `features/<domain>/<capability>/data-access/` | Thực hiện truy cập API của feature qua hạ tầng `core/`, điều phối tác vụ bất đồng bộ, quản lý trạng thái dữ liệu từ server và chuyển đổi DTO theo contract đã xác minh. | Thành phần giao diện, thao tác DOM hoặc quyết định chính sách nghiệp vụ. |
-| `features/<domain>/<capability>/models/` | Khai báo kiểu dữ liệu dựa trên API contract hoặc DD đã được xác nhận. Tách kiểu truyền tải khỏi kiểu miền nếu hình dạng khác nhau. | Field, trạng thái, mã lỗi hoặc ý nghĩa nghiệp vụ được suy đoán. |
+| `features/<group>/<SCREEN_ID>/pages/` | Chứa component trang chính của screen, nhận tham số, điều phối event/luồng hiển thị và trạng thái của screen; gọi `data-access/` qua component/page boundary. | Gọi HTTP trực tiếp, chứa widget nhỏ dùng riêng lẻ hoặc tự quyết định policy chưa có trong DD/contract. |
+| `features/<group>/<SCREEN_ID>/ui/` | Chứa UI nhỏ thuộc riêng screen như popup/dialog, hiển thị input và phát event cho page xử lý. | Gọi API, phụ thuộc router/data-access hoặc import screen khác. |
+| `features/<group>/<SCREEN_ID>/data-access/` | Chứa `*.service.ts` lấy/gửi dữ liệu bên ngoài qua `core/` theo API/contract đã xác minh; giữ nguyên raw response tại ranh giới này. | Component UI, thao tác DOM, field/API tự suy đoán hoặc quy tắc quyền do client tự quyết. |
+| `features/<group>/<SCREEN_ID>/models/` | Chứa kiểu dữ liệu của screen và logic lọc/chuyển đổi dữ liệu nhận từ `data-access/` theo contract đã xác minh; thường dùng `*.models.ts`. | Field, trạng thái, enum, lỗi hoặc ý nghĩa nghiệp vụ chưa có nguồn xác nhận. |
 | `core/` | Cung cấp hạ tầng kỹ thuật dùng xuyên feature như cấu hình HTTP, xử lý lỗi dùng chung và tích hợp auth đã được xác minh. | API client, model, policy hoặc trạng thái riêng một feature. |
-| `shared/` | Cung cấp UI primitive và tiện ích trung lập được ít nhất hai miền dùng chung. Giữ thành phần trình bày độc lập với nghiệp vụ Study. | Import feature, API nghiệp vụ, model miền hoặc logic theo vai trò người dùng. |
+| `src/app/shared/` | Cung cấp component/tiện ích trung lập được nhiều screen tái sử dụng; kiểm tra và dùng lại nơi đây trước khi tạo bản sao. | Import screen/feature, API nghiệp vụ, model riêng một screen hoặc logic theo vai trò người dùng. |
 
-Kiểm tra dữ liệu biểu mẫu ở `ui/` chỉ được phục vụ cách nhập và cách hiển thị lỗi. Validation quyết định một thao tác nghiệp vụ có hợp lệ hay không thuộc `domain/`, dựa trên yêu cầu đã xác minh.
+Trong mỗi `features/<group>/<SCREEN_ID>/` phải có đúng bốn thư mục con trực tiếp: `data-access/`, `models/`, `pages/`, `ui/`. Không tạo thêm `domain/`, `components/`, `services/` hay folder thứ năm trong screen. Đặt file TypeScript component chính cùng template `.html` và stylesheet `.css` trong `pages/`, đặt tên nhất quán theo screen ID. Nếu yêu cầu không thể triển khai đúng trong bốn trách nhiệm này, ghi rõ design gap trong plan trước khi code; không tự mở rộng cấu trúc.
 
-## 3. Chiều phụ thuộc
+## 3. Nhóm screen, route và layout
+
+Nhóm mã theo inventory Study Web hiện tại:
+
+- `features/shared/`: nhóm Shared / Auth / System, gồm các screen mã `SH-*`.
+- `features/guest/`: Guest / Discovery, gồm `GS-*`.
+- `features/student/`: học viên, gồm `ST-*`.
+- `features/mentor/`: mentor, gồm `ME-*`.
+- `features/admin/`: quản trị, gồm `AD-*`.
+
+Tên folder screen dùng mã compact như `SH02`, tương ứng screen ID `SH-02` trong catalog/DD. Trong từng group, mỗi screen có folder riêng theo mã này.
+
+Mỗi group có một route file duy nhất đặt tại `features/<group>/<group>.route.ts` (đuôi `.route.ts` số ít), khai báo route của tất cả screen trong group. Mỗi group cũng có một layout riêng tại `layouts/<group>/`; layout là shell chung có vùng `RouterOutlet`, và các screen được nạp bên trong layout qua group route. `app.routes.ts` chỉ ghép các group layout/route đã được xác nhận.
+
+Screen-local popup/component nằm trong folder `ui/` của screen. Component thật sự dùng lại giữa nhiều screen đặt tại `src/app/shared/`; trước khi tạo component mới phải tìm component có sẵn và nêu kết quả reuse trong implementation plan. Layout không sở hữu data-access hoặc business state riêng từng screen.
+
+## 4. Chiều phụ thuộc
 
 Tuân theo luồng sau; không đảo chiều để tiện triển khai:
 
-    app.routes.ts -> feature routes -> pages -> ui
-                                      ├──> domain -> kiểu miền trong models
-                                      └──> data-access -> core HTTP -> API đã xác minh
+    app.routes.ts -> layouts/<group>/ -> features/<group>/<group>.route.ts
+                                      -> features/<group>/<SCREEN_ID>/pages/
+                                         ├──> ui/ -> event về page
+                                         ├──> models/ -> kiểu/lọc/chuyển đổi dữ liệu
+                                         └──> data-access/ -> core HTTP -> API đã xác minh
 
-- `pages/` được dùng các lớp trong cùng capability và UI dùng chung từ `shared/`; page không gọi HTTP trực tiếp.
-- `ui/` chỉ nhận dữ liệu và phát sự kiện; không phụ thuộc `domain/`, `data-access/`, `core/` hoặc router.
-- `domain/` chỉ phụ thuộc kiểu miền trung lập và mã TypeScript thuần; không phụ thuộc Angular hay I/O.
-- `data-access/` được dùng hạ tầng `core/` và các kiểu contract của feature; chuyển đổi dữ liệu tại ranh giới API khi cần.
-- `layouts/`, `core/` và `shared/` không import mã nội bộ từ `features/`. Một feature không import trực tiếp implementation của feature khác.
-- Chỉ chuyển phần dùng chung ra khỏi feature khi có nhu cầu thật và ranh giới trung lập đã được xác định; không dùng `shared/` làm nơi chứa nghiệp vụ chung cho tiện.
-
-## 4. Trách nhiệm các feature Study
-
-Các thư mục dưới đây nhóm phạm vi theo inventory DD hiện tại. Đây là ranh giới tổ chức mã, không xác nhận tính năng đã được triển khai hoặc route đã hoạt động.
-
-| Feature | Phạm vi dự kiến theo inventory |
-|---|---|
-| `auth/` | Đăng ký và xác minh, tham chiếu SH-02…SH-04. |
-| `guest/` | Study công khai và khám phá nội dung, tham chiếu SH-01, GS-01…GS-07. |
-| `system/` | Trạng thái truy cập, lỗi và vận hành, tham chiếu SH-05…SH-07. |
-| `student/` | Năng lực dành cho học viên, tham chiếu ST-01…ST-26. |
-| `mentor/` | Năng lực dành cho mentor, tham chiếu ME-01…ME-18. |
-| `admin/` | Năng lực dành cho quản trị viên, tham chiếu AD-01…AD-25. |
-
-Chỉ tạo capability con khi bắt đầu triển khai DD tương ứng. Giữ page, UI, domain, data access và models trong cùng feature; không gom chúng thành một thư mục toàn cục theo loại màn hình.
+- `pages/` có thể dùng `ui/`, `models/` và `data-access/` trong cùng screen; page không gọi HTTP trực tiếp.
+- `ui/` chỉ trình bày dữ liệu và phát event; không phụ thuộc router, `data-access/`, `core/` hoặc screen khác.
+- `data-access/` dùng hạ tầng `core/` và contract đã xác minh; `models/` chuyển đổi/filter dữ liệu theo contract.
+- `layouts/`, `core/` và `src/app/shared/` không import mã nội bộ của feature/screen. Một screen không import trực tiếp implementation của screen khác.
+- DD route là thiết kế. Chỉ đăng ký route khi yêu cầu, dependency và behavior cần thiết đã được xác minh; không xem route trong catalog là runtime route.
 
 ## 5. Quy tắc trước khi nối hành vi
 
-1. Xác định feature, capability và DD liên quan; kiểm tra source hiện tại trước khi sửa.
-2. Với route/API, truy dấu Study Server source và contract để xác minh method, path, request/response, auth và mã lỗi. Nếu thiếu bằng chứng, ghi `SOURCE_REQUIRED` hoặc `UNWIRED` và dừng ở placeholder phù hợp.
-3. Đặt UI theo đúng lớp; đặt quy tắc nghiệp vụ trong `domain/` và I/O trong `data-access/`. Không để component quyết định policy.
-4. Bổ sung kiểm thử phù hợp khi thay đổi logic nghiệp vụ hoặc chuyển đổi dữ liệu API trong phạm vi có thể kiểm thử. Hiện scaffold chưa có test target; không tuyên bố đã kiểm thử nếu chưa có cấu hình chạy được.
-5. Cập nhật `gui/architech.md` và context liên quan trong cùng task nếu thay đổi ranh giới kiến trúc hoặc cách tổ chức thư mục.
+1. Xác định screen/group/API scope; đọc source hiện tại, DD và design guide trước khi sửa.
+2. Với route/API, truy dấu Study Server source/test và contract để xác minh method, path, request/response, auth, permission và mã lỗi. Nếu thiếu bằng chứng, ghi `SOURCE_REQUIRED`, `UNWIRED` hoặc `DISCREPANCY`; không lấp gap bằng giả định.
+3. Screen orchestration thuộc `pages/`; child UI thuộc `ui/`; I/O thuộc `data-access/`; typing, filtering và data mapping thuộc `models/`. Không tạo folder thứ năm cho screen.
+4. Đưa component dùng lại giữa nhiều screen vào `src/app/shared/`; không chuyển một component screen-local sang shared chỉ vì nó có thể được tổng quát hóa trong tương lai.
+5. Viết/chạy kiểm thử theo DD khi coding screen. Nếu Angular test target chưa có, thêm cấu hình test phù hợp trong implementation scope hoặc ghi `DECLARED_NOT_RUNNABLE`; không tuyên bố đã test.
+6. Cập nhật `gui/architech.md` và context liên quan trong task triển khai khi source thực sự áp dụng cấu trúc mới.
 
-## 6. Điều kiện chấp nhận khi review
+## 6. Workflow coding screen
 
-- Component trình bày không gọi API, router hoặc service nghiệp vụ.
-- Page chỉ điều phối màn hình; quyết định nghiệp vụ nằm trong `domain/`, I/O nằm trong `data-access/`.
-- Không có dependency từ `shared/`, `core/` hoặc `layouts/` vào feature.
+Trước mọi coding/fix/test/demo theo một screen, agent phải làm theo workflow đã đăng ký `study-web-screen-coding`: [quy trình implement screen Study Web](../web-work/study/workflows/screen-implementation.md). Quy trình đó quy định việc đọc DD 8 phần và ảnh, đối chiếu HTML tham khảo, viết plan, kiểm tra reuse, xác minh event/API/data flow, chạy test/demo và dọn fixture.
+
+## 7. Điều kiện chấp nhận khi review
+
+- Mỗi screen chỉ có bốn folder con trực tiếp: `data-access/`, `models/`, `pages/`, `ui/`.
+- Group route và layout được khai báo riêng cho `shared`, `guest`, `student`, `mentor`, `admin`; `shared` bao gồm Shared/Auth/System.
+- Component UI không gọi API hoặc router; page điều phối event và gọi data-access qua ranh giới đã nêu.
+- Không có dependency từ `src/app/shared/`, `core/` hoặc `layouts/` vào feature/screen.
 - Các kiểu dữ liệu và hành vi API truy ngược được tới contract/source đã xác minh; nội dung DD/mockup vẫn được đánh dấu là yêu cầu khi runtime chưa có.
-- Mỗi thư mục mới có trách nhiệm cụ thể; không tạo thư mục hoặc module rỗng ngoài nhu cầu đã xác định.
+- Test case và demo của DD có bằng chứng; fixture database chỉ được tạo trong DB local/test cô lập và đã được dọn/xác minh sau demo.

@@ -20,15 +20,21 @@ agent đi từ router tới context page, source, contract, test và worklog.
 
 ```text
 [AGENTS.md]
+  → publish Bootstrap Plan and announce the first Event before tool calls
   → [.agents/AGENTS.md]
-  → [.agents/context-map.md]
-  → classify primary_task_type + project_scopes
+  → classify primary_task_type
+  → [.agents/project/agent-control.md] (mandatory global event protocol)
+  → [.agents/context-map.md] before final scope/subcontext selection
+  → choose project_scopes
+  → publish task-specific milestone objectives/weights and 0% progress in chat
   → worklog preflight: select/read up to 3 same-type worklogs
+  → after each coherent read batch, report paths/sources and findings in chat
   → [.agents/project/INDEX.md] when cross-scope/boundary context is needed
   → [.agents/<scope>/AGENTS.md]
   → [.agents/<scope>/INDEX.md] or subcontext/INDEX.md
   → page đúng task
   → exact source + contract/config/test
+  → report grouped action/results and cumulative progress when milestones complete
   → update context/worklog
   → focused verification + context validator
 ```
@@ -47,6 +53,7 @@ Study2Work/
 │   ├── context-manifest.json                  ← machine-readable registry
 │   ├── project/
 │   │   ├── INDEX.md
+│   │   ├── agent-control.md
 │   │   ├── architecture.md
 │   │   ├── business-code.md
 │   │   ├── conventions.md
@@ -73,6 +80,9 @@ Study2Work/
 │   │   └── frontend-rules.md                   ← mandatory Study Web layer and dependency rules
 │   ├── web-work/
 │   │   └── study/                              ← Study Web subcontext
+│   │       ├── AGENTS.md
+│   │       ├── INDEX.md
+│   │       └── workflows/screen-implementation.md
 │   ├── mobile-work/
 │   └── db-admin/
 └── scripts/
@@ -86,6 +96,8 @@ Study2Work/
   routing, expected/current behavior rules and mandatory verification.
 - [`.agents/AGENTS.md`](AGENTS.md) ⇢ global context index, status vocabulary,
   maintenance rules and canonical page graph boundary.
+- [`.agents/project/agent-control.md`](project/agent-control.md) ⇢ mandatory
+  all-scope plan-first and per-tool Event protocol, verified progress and report.
 - [`.agents/context-manifest.json`](context-manifest.json) ⇢ machine registry
   for project pages, scopes, subcontexts, skills, workflows, contracts and
   worklog preflight.
@@ -119,6 +131,8 @@ Study2Work/
     consumer and status of shared/local contracts.
   - [`.agents/project/workflows.md`](project/workflows.md) — workflow registry
     and verification order.
+  - [`.agents/project/agent-control.md`](project/agent-control.md) — required
+    Task/Step/Action/Event receipts and verified progress for every scope.
 
 ## Scope context trees
 
@@ -191,7 +205,7 @@ Study2Work/
 
 #### `web-work/study-web` subcontext
 
-- Source root: `apps/study-client/` (Angular 22 standalone SPA scaffold; Student feature routes and API calls are not wired)
+- Source root: `apps/study-client/` (Angular 22 standalone SPA scaffold; generic `/api/v1` transport and local proxy exist, Student feature routes/API calls are not wired)
 - Status: `SKELETON_ONLY`
 - Entry: [`.agents/web-work/study/AGENTS.md`](web-work/study/AGENTS.md)
 - Index: [`.agents/web-work/study/INDEX.md`](web-work/study/INDEX.md)
@@ -199,11 +213,15 @@ Study2Work/
   - [`.agents/web-study/design.md`](web-study/design.md) — mandatory Study Web
     visual, interaction and accessibility target.
   - [`.agents/web-study/frontend-rules.md`](web-study/frontend-rules.md) —
-    mandatory UI/business/data-access boundaries and feature responsibilities.
+    mandatory screen groups, four-folder layout, routes/layouts and frontend
+    layer rules.
+  - [`.agents/web-work/study/workflows/screen-implementation.md`](web-work/study/workflows/screen-implementation.md) — registered DD/image analysis, coding, test/demo and fixture-cleanup workflow.
 
-Load the frontend rules for Study Web implementation and architecture work.
-Do not infer feature behavior from the scaffold or design documents. Recheck
-`apps/study-client/` when a task depends on implementation details.
+The generic HTTP transport lives in `apps/study-client/src/app/core/http/`;
+feature-specific API calls remain unwired. Load the frontend rules for Study Web
+implementation and architecture work. Do not infer feature behavior from the
+scaffold or design documents. Recheck `apps/study-client/` when a task depends
+on implementation details.
 
 #### `web-work/work-web` subcontext
 
@@ -212,7 +230,7 @@ Do not infer feature behavior from the scaffold or design documents. Recheck
 - Entry/index/pages reuse the parent Web graph:
   [`.agents/web-work/AGENTS.md`](web-work/AGENTS.md),
   [`.agents/web-work/INDEX.md`](web-work/INDEX.md), and the parent pages above.
-- Stack: React + React Query + Zod; do not apply Study Vue patterns.
+- Stack: React + React Query + Zod; do not apply Study Angular patterns.
 
 ### `mobile-work`
 
@@ -277,13 +295,16 @@ Do not infer feature behavior from the scaffold or design documents. Recheck
 
 ## Workflow graph
 
-All workflow keys below are registered in the manifest. Their implementation
-entry is [`.agents/project/workflows.md`](project/workflows.md), except the
-worklog contract which is implemented by [`.agents/worklog/README.md`](worklog/README.md).
+All workflow keys below are registered in the manifest. Common workflow entries
+are in [`.agents/project/workflows.md`](project/workflows.md); the Study Web
+screen workflow has its subcontext entry, and the worklog contract is
+implemented by [`.agents/worklog/README.md`](worklog/README.md).
 
 | Workflow key | Trigger/boundary | Entry | Main result |
 |---|---|---|---|
+| `agent-control` | every task and tool call, all scopes | `project/agent-control.md` | visible Task/Step/Action/Event receipts and verified progress |
 | `coding` | coding task | `project/workflows.md` | scoped implementation + tests |
+| `study-web-screen-coding` | implement/fix/test/demo an individual Study Web screen | `web-work/study/workflows/screen-implementation.md` | DD-backed screen, tested local demo and verified fixture cleanup |
 | `fix` | bug/regression | `project/workflows.md` | reproduce → trace → smallest fix → regression test |
 | `test` | test/verification | `project/workflows.md` | focused then scope verification |
 | `code-review` | explicit code review request | `project/workflows.md` | read-only, evidence-backed review and findings report |
@@ -295,8 +316,9 @@ worklog contract which is implemented by [`.agents/worklog/README.md`](worklog/R
 Scope workflow pages refine the common workflow and side effects:
 
 - Mobile: [`mobile-work/workflows/README.md`](mobile-work/workflows/README.md)
-- Web: [`web-work/workflows/README.md`](web-work/workflows/README.md). Study Web
-  has no app-specific workflow page while its application source is absent.
+- Web: [`web-work/workflows/README.md`](web-work/workflows/README.md) covers the
+  parent Web scope; Study Web screen work uses its dedicated registered
+  [`web-work/study/workflows/screen-implementation.md`](web-work/study/workflows/screen-implementation.md).
 - Work Server: [`server-work/workflows/README.md`](server-work/workflows/README.md)
 - Study Server: [`server-study/workflows/README.md`](server-study/workflows/README.md)
 - AI Server: [`server-ai/workflows/README.md`](server-ai/workflows/README.md)

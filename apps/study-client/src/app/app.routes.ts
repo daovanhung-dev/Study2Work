@@ -1,5 +1,13 @@
 import { Routes } from '@angular/router';
 
-// Add only DD-backed feature routes whose behavior and API dependencies have
-// been traced to current sources.
-export const routes: Routes = [];
+export const routes: Routes = [
+  {
+    path: 'admin',
+    loadChildren: () => import('./features/admin/admin.routes').then((m) => m.adminRoutes),
+  },
+  {
+    path: '',
+    pathMatch: 'full',
+    loadChildren: () => import('./features/system/system.routes').then((m) => m.systemRoutes),
+  },
+];

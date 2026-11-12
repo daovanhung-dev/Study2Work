@@ -25,6 +25,20 @@ cross_scope_dependencies:
 
 Một task có thể có nhiều `project_scopes`. Không ép task cross-scope vào một scope duy nhất.
 
+## 1.1. Cập nhật chat và milestone (mọi task)
+
+Áp dụng cho mọi task, kể cả task chỉ đọc hoặc trả lời thông tin. Trước khi đọc
+sâu, gửi vào chat phân loại task và kế hoạch milestone theo task: ít nhất hai
+mốc, mỗi mốc có mục tiêu/tiêu chí hoàn thành và trọng số phần trăm; tổng trọng
+số bằng 100%. Ghi nhận bắt đầu ở 0%.
+
+Sau mỗi nhóm đọc, báo ngay đường dẫn/nguồn đã đọc cùng điều rút ra. Sau mỗi nhóm
+thao tác có ý nghĩa, báo việc đã làm và kết quả. Khi đạt một milestone, cập
+nhật phần trăm tích lũy bằng tổng trọng số các mốc đã hoàn tất. Nếu bị chặn,
+báo phần trăm đã đạt và blocker; chỉ báo 100% khi task hoàn thành. Ghi kế hoạch
+và trạng thái mốc trong worklog `MILESTONES`; hướng dẫn chi tiết nằm trong
+`.agents/AGENTS.md` và `.agents/project/workflows.md`.
+
 ## 2. Định tuyến scope
 
 | Scope | Source chính | Đọc tiếp |

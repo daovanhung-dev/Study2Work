@@ -2,24 +2,38 @@
 
 ## Current source status
 
-`apps/study-client/` now contains an Angular 22 standalone SPA scaffold plus
-documentation/assets. Only the root readiness placeholder is implemented;
-business screens, auth, Study API calls, and deployment remain unwired or
-unverified. Student screen behavior must be checked against current source for
-each task.
+`apps/study-client/` contains an Angular 22 standalone SPA with a readiness
+page at `/` and a presentation-only AD-01 page at `/admin`; both are registered
+through lazy-loaded route groups. The readiness route is a root scaffold, not
+SH-01. AD-01 has no auth guard, report API, or live Admin data. Other business
+screens, auth, feature-specific Study API calls, and deployment remain unwired
+or unverified. The generic `StudyApiService` in `src/app/core/http/` and local
+`/api/v1` proxy are transport infrastructure only. Check current source for each
+screen task.
 
 ## Pages
 
 | Topic | Page | Authority |
 |---|---|---|
+| Shared HTTP transport and Study API envelope | `src/app/core/http/study-api.service.ts`, `src/app/core/http/api-envelope.ts`, `proxy.conf.json` | Generic transport only; no feature endpoint or production host. |
+| Study screen inventory and screen/API traceability | [`list_screen.md`](../../../apps/study-client/docs/list_screen.md) | Screen IDs, routes, API references and design/gate context; not proof of implemented UI. |
+| Study endpoint catalog | [`list_endpoint.md`](../../../apps/study-client/docs/list_endpoint.md) | API IDs, method/path and design I/O for 103 endpoints; not proof of runtime wiring. |
 | Mandatory frontend layer, UI/business, and dependency rules | [`../../web-study/frontend-rules.md`](../../web-study/frontend-rules.md) | Required for Study Web coding/fix/test/review and architecture-document tasks. |
+| Screen folder, route and layout structure | [`../../web-study/frontend-rules.md`](../../web-study/frontend-rules.md) | Target structure: shared/auth/system, guest, student, mentor, admin groups; four direct folders per screen. |
+| Screen implementation, DD analysis, demo and fixture cleanup | [`workflows/screen-implementation.md`](workflows/screen-implementation.md) | Registered workflow `study-web-screen-coding`; required for individual screen coding/fix/test/demo. |
 | Visual, interaction and accessibility target | [`../../web-study/design.md`](../../web-study/design.md) | Intended design only; not runtime evidence. |
 | Angular folders, file responsibilities, and boundaries | [`../../../apps/study-client/gui/architech.md`](../../../apps/study-client/gui/architech.md) | Current scaffold and planned feature structure; no business behavior. |
 | Skill-formatted screen DD packages | [`../../../apps/study-client/docs/dd_screens/screen-index.md`](../../../apps/study-client/docs/dd_screens/screen-index.md) | 83 source-derived packages; route/API status stays per screen, and the packages do not prove runtime wiring. |
 
-Screen-specific design source is in `apps/study-client/docs/`. Use its
-[`list_screen.md`](../../../apps/study-client/docs/list_screen.md) inventory,
-[`screen_stitch/`](../../../apps/study-client/docs/screen_stitch/) source assets,
-and [`dd_screens/`](../../../apps/study-client/docs/dd_screens/screen-index.md)
-packages as requirements/design evidence. Trace APIs to current Study Server
-source when the screen has backend dependencies.
+For every Study FE task, follow the mandatory scope preflight in
+[`AGENTS.md`](AGENTS.md): read both catalogs, identify the affected screen/API
+IDs, and record them in the task worklog. Use `screen-index.md` to locate
+relevant screen DD packages and each endpoint row's Overview link to locate
+Study API DD. Treat catalogs, screen DDs, and API DDs as design evidence; check
+current source when describing runtime behavior. Screen assets in
+[`screen_stitch/`](../../../apps/study-client/docs/screen_stitch/) are visual
+references and do not establish runtime behavior.
+
+The structure in `frontend-rules.md` is the intended next implementation
+structure. The current placeholder directories do not yet prove that those
+groups, layouts, routes or screen modules are implemented.

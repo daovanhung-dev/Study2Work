@@ -4,7 +4,7 @@
 
 | Area | Path | Stack/role |
 |---|---|---|
-| Study Web | `apps/study-client/` | Angular 22 standalone client-side SPA scaffold; business screens, auth, Study API wiring, and deployment are not implemented/verified. |
+| Study Web | `apps/study-client/` | Angular 22 standalone SPA scaffold with generic `/api/v1` HTTP transport and local dev proxy; business screens, auth, feature endpoint calls, and deployment are not implemented/verified. |
 | Study API | `apps/study-server/` | FastAPI + Python + sync SQLAlchemy core; current composition import được |
 | Work mobile | `apps/work-client/mobile/` | Hai Flutter app độc lập; direct Neon SQL + SQLite cache |
 | Work web | `apps/work-client/web/` | React + TypeScript + Vite |
@@ -37,7 +37,8 @@ fixture addresses are separate dependencies and retain their existing values.
 ## Boundary chính
 
 ```text
-Study web  -> Study API (intended boundary; Student route source absent, Study OpenAPI not found; current checkout has docs/assets only)
+Study web  -> generic `StudyApiService` -> relative `/api/v1` -> Study API
+             (local Angular dev proxy targets `127.0.0.1:3003`; feature routes/calls absent, Study OpenAPI placeholder, production routing unverified)
 Work web   -> relative `/api/v1` -> Work Express JSON API
 Work mobile -> Neon PostgreSQL qua `postgres` + local SQLite cache
 Work mobile -> Gemini HTTP API cho `AIService`

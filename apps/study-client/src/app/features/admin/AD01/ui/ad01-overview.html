@@ -1,0 +1,59 @@
+<div class="overview-grid">
+  <section class="panel activity-panel" aria-labelledby="activity-title">
+    <div class="panel-heading">
+      <div class="panel-title">
+        <study-ad01-icon name="activity" />
+        <h2 id="activity-title">Hoạt động hệ thống gần đây</h2>
+      </div>
+      <span class="state-label state-label--compact">Chưa khả dụng</span>
+    </div>
+
+    <div class="empty-state" role="note">
+      <span class="empty-state-icon"><study-ad01-icon name="file" /></span>
+      <h3>Nguồn nhật ký chưa được kết nối</h3>
+      <p>Không thể xác nhận hoạt động đã ghi nhận khi chưa có nguồn nhật ký được xác minh.</p>
+    </div>
+
+    <div class="panel-footer">
+      <span>Dữ liệu hoạt động chưa có nguồn tích hợp.</span>
+      <button class="secondary-button" type="button" disabled aria-describedby="audit-unavailable">
+        <span>Xem nhật ký kiểm toán</span>
+        <study-ad01-icon name="lock" />
+      </button>
+      <span class="visually-hidden" id="audit-unavailable">
+        Nhật ký kiểm toán chưa khả dụng vì chưa có contract nguồn dữ liệu.
+      </span>
+    </div>
+  </section>
+
+  <section class="panel services-panel" aria-labelledby="services-title">
+    <div class="panel-heading">
+      <div class="panel-title">
+        <study-ad01-icon name="server" />
+        <h2 id="services-title">Thông báo vận hành máy chủ</h2>
+      </div>
+      <span class="state-label state-label--compact">Chưa có dữ liệu</span>
+    </div>
+
+    <ul class="service-list">
+      @for (service of services; track service.title) {
+        <li class="service-row">
+          <span class="service-icon"><study-ad01-icon [name]="service.icon" /></span>
+          <span class="service-copy">
+            <span class="service-name">{{ service.title }}</span>
+            <span class="service-detail">Chưa có nguồn trạng thái được kết nối</span>
+          </span>
+          <span class="service-state">Chưa khả dụng</span>
+        </li>
+      }
+    </ul>
+
+    <aside class="access-note" aria-label="Thông tin quyền truy cập">
+      <study-ad01-icon name="shield" />
+      <span>
+        <strong>Thông tin quyền truy cập</strong>
+        <span>Study Web chưa có phiên Admin hoặc quyền xem báo cáo được xác minh.</span>
+      </span>
+    </aside>
+  </section>
+</div>
