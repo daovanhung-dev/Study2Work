@@ -4,10 +4,12 @@ Trước mọi task, xác định `primary_task_type`, chạy
 `scripts/select-worklogs.mjs --type <primary_task_type> --limit 3`, đọc các log
 được chọn và ghi `PRIOR_WORKLOG_REVIEW` trước khi inspect sâu.
 
-Task web phải đọc `.agents/project/design.md`, chọn Vue hoặc React app, rồi trace `route -> page/layout ->
-React Query/local state -> apiRequest -> Express route -> response envelope`.
-Không dùng server layer order cho frontend và không trộn Vue patterns từ Study
-web.
+Task web phải đọc `.agents/project/design.md`, chọn Study Angular hoặc Work
+React app và nạp đúng subcontext. Với Work Web, trace
+`route -> page/layout -> React Query/local state -> apiRequest -> Express route
+-> response envelope`; Study Web screen tasks theo workflow riêng đã đăng ký
+`study-web-screen-coding`. Không dùng server layer order cho frontend và không
+trộn Angular pattern của Study Web vào Work Web.
 
 Với route mới hoặc API change, kiểm tra `router.tsx`, page component,
 `shared/api/work.ts`, role guard và legacy-web OpenAPI. Chạy `npm run typecheck`
@@ -20,6 +22,6 @@ focus, text overflow, contrast, loading/error/empty state và
 `prefers-reduced-motion`. Không đổi route, API, auth, navigation semantics hay
 thêm persistence cho placeholder.
 
-Mọi task phải chọn đúng Study Vue hoặc Work React subcontext, dùng
+Mọi task phải chọn đúng Study Angular hoặc Work React subcontext, dùng
 `.agents/worklog/TEMPLATE.md` và ghi command không chạy được là
 `DECLARED_NOT_RUNNABLE`.

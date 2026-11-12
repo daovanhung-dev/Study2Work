@@ -43,6 +43,7 @@ load `.agents/context-map.md`
 | Workflow | Trigger | Required behavior | Verification |
 |---|---|---|---|
 | Coding | `coding` | requirement/contract → existing pattern → implementation → tests | scope checks + context validator |
+| Study Web screen coding | implement/fix/test/demo one `apps/study-client` screen | load the registered `study-web-screen-coding` workflow; read full DD/images, plan, implement in the Study Web structure, then test/demo and clean isolated fixtures | focused Angular tests + local demo + fixture cleanup + context validator |
 | Fix | `fix`, bug, regression | reproduce → trace → root cause → smallest fix → regression test | reproduction/regression test |
 | Test | test/verification request | inspect requirement, implementation, error paths and test convention | focused test then scope test |
 | Code review | explicit review request | load `code-review`; inspect the requested diff or named path/module against scope rules, contracts, source, call sites and test source; report only evidenced/actionable findings without editing or executing tests | read-only scope/evidence audit + worklog |

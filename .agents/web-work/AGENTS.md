@@ -36,7 +36,7 @@ Task cụ thể chỉ đọc đúng web app:
 2. `package.json`, router/entrypoint và feature files liên quan.
 3. Shared API/auth/UI dependency và tests trực tiếp.
 
-Không trộn Vue pattern với React pattern.
+Không trộn Angular pattern của Study Web với React pattern của Work Web.
 
 Work web dùng React Query cho server state và Zod để parse response. JWT được
 lưu với key `access_token` ở localStorage; client decode payload để dựng role

@@ -153,6 +153,22 @@
         "context validator"
       ]
     },
+    "study-web-screen-coding": {
+      "status": "VERIFIED",
+      "entry": ".agents/web-work/study/workflows/screen-implementation.md",
+      "triggers": [
+        "Study Web screen coding",
+        "Study Web screen demo"
+      ],
+      "scopeRefs": [
+        "web-work"
+      ],
+      "verificationCommands": [
+        "focused Angular tests for DD screen cases",
+        "local browser demo and fake-data cleanup verification",
+        "context validator"
+      ]
+    },
     "fix": {
       "status": "VERIFIED",
       "entry": ".agents/project/workflows.md",
@@ -972,54 +988,55 @@
       "subcontexts": {
         "study-web": {
           "mode": "DEEP",
-      "status": "SKELETON_ONLY",
+          "status": "SKELETON_ONLY",
           "entry": ".agents/web-work/study/AGENTS.md",
           "index": ".agents/web-work/study/INDEX.md",
           "pages": [
             ".agents/web-study/design.md",
-            ".agents/web-study/frontend-rules.md"
+            ".agents/web-study/frontend-rules.md",
+            ".agents/web-work/study/workflows/screen-implementation.md"
           ],
           "sourceRoots": [
             "apps/study-client"
           ],
-      "trackedRoots": [
-        "apps/study-client/src",
-        "apps/study-client/public",
-        "apps/study-client/gui",
-        "apps/study-client/angular.json",
-        "apps/study-client/proxy.conf.json",
-        "apps/study-client/package.json",
-        "apps/study-client/package-lock.json",
-        "apps/study-client/tsconfig.json",
-        "apps/study-client/tsconfig.app.json"
-      ],
-      "requiredSourcePaths": [
-        "apps/study-client/angular.json",
-        "apps/study-client/proxy.conf.json",
-        "apps/study-client/package.json",
-        "apps/study-client/package-lock.json",
-        "apps/study-client/tsconfig.json",
-        "apps/study-client/tsconfig.app.json",
-        "apps/study-client/src/index.html",
-        "apps/study-client/src/main.ts",
-        "apps/study-client/src/styles.css",
-        "apps/study-client/src/app/app.ts",
-        "apps/study-client/src/app/app.html",
-        "apps/study-client/src/app/app.css",
-        "apps/study-client/src/app/app.config.ts",
-        "apps/study-client/src/app/app.routes.ts",
-        "apps/study-client/src/app/core/http/api-envelope.ts",
-        "apps/study-client/src/app/core/http/study-api.service.ts",
-        "apps/study-client/src/app/layouts/.gitkeep",
-        "apps/study-client/src/app/shared/.gitkeep",
-        "apps/study-client/src/app/features/auth/.gitkeep",
-        "apps/study-client/src/app/features/guest/.gitkeep",
-        "apps/study-client/src/app/features/system/.gitkeep",
-        "apps/study-client/src/app/features/student/.gitkeep",
-        "apps/study-client/src/app/features/mentor/.gitkeep",
-        "apps/study-client/src/app/features/admin/.gitkeep",
-        "apps/study-client/gui/architech.md"
-      ]
+          "trackedRoots": [
+            "apps/study-client/src",
+            "apps/study-client/public",
+            "apps/study-client/gui",
+            "apps/study-client/angular.json",
+            "apps/study-client/proxy.conf.json",
+            "apps/study-client/package.json",
+            "apps/study-client/package-lock.json",
+            "apps/study-client/tsconfig.json",
+            "apps/study-client/tsconfig.app.json"
+          ],
+          "requiredSourcePaths": [
+            "apps/study-client/angular.json",
+            "apps/study-client/proxy.conf.json",
+            "apps/study-client/package.json",
+            "apps/study-client/package-lock.json",
+            "apps/study-client/tsconfig.json",
+            "apps/study-client/tsconfig.app.json",
+            "apps/study-client/src/index.html",
+            "apps/study-client/src/main.ts",
+            "apps/study-client/src/styles.css",
+            "apps/study-client/src/app/app.ts",
+            "apps/study-client/src/app/app.html",
+            "apps/study-client/src/app/app.css",
+            "apps/study-client/src/app/app.config.ts",
+            "apps/study-client/src/app/app.routes.ts",
+            "apps/study-client/src/app/core/http/api-envelope.ts",
+            "apps/study-client/src/app/core/http/study-api.service.ts",
+            "apps/study-client/src/app/layouts/.gitkeep",
+            "apps/study-client/src/app/shared/.gitkeep",
+            "apps/study-client/src/app/features/auth/.gitkeep",
+            "apps/study-client/src/app/features/guest/.gitkeep",
+            "apps/study-client/src/app/features/system/.gitkeep",
+            "apps/study-client/src/app/features/student/.gitkeep",
+            "apps/study-client/src/app/features/mentor/.gitkeep",
+            "apps/study-client/src/app/features/admin/.gitkeep",
+            "apps/study-client/gui/architech.md"
+          ]
         },
         "work-web": {
           "mode": "DEEP",

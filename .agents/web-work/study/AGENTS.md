@@ -37,6 +37,13 @@ before source work. Its layer responsibilities and dependency boundaries are
 mandatory. Also read the design guide for UI/UX changes and the app architecture
 guide when folder or file organization is involved.
 
+For work implementing or fixing an individual screen, also follow the
+registered `study-web-screen-coding` workflow at
+[`workflows/screen-implementation.md`](workflows/screen-implementation.md).
+It requires reading the full screen DD/image package, analyzing the referenced
+HTML, writing a plan before coding, verifying event/API/data-flow behavior, and
+testing/demoing with immediate cleanup of isolated fake DB fixtures.
+
 The current checkout has a runnable Angular 22 standalone client-side SPA
 scaffold plus Study Web documentation and screen assets under
 `apps/study-client/docs/`. The root component renders a temporary readiness

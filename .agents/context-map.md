@@ -76,6 +76,9 @@ Study2Work/
 │   │   └── frontend-rules.md                   ← mandatory Study Web layer and dependency rules
 │   ├── web-work/
 │   │   └── study/                              ← Study Web subcontext
+│   │       ├── AGENTS.md
+│   │       ├── INDEX.md
+│   │       └── workflows/screen-implementation.md
 │   ├── mobile-work/
 │   └── db-admin/
 └── scripts/
@@ -202,7 +205,9 @@ Study2Work/
   - [`.agents/web-study/design.md`](web-study/design.md) — mandatory Study Web
     visual, interaction and accessibility target.
   - [`.agents/web-study/frontend-rules.md`](web-study/frontend-rules.md) —
-    mandatory UI/business/data-access boundaries and feature responsibilities.
+    mandatory screen groups, four-folder layout, routes/layouts and frontend
+    layer rules.
+  - [`.agents/web-work/study/workflows/screen-implementation.md`](web-work/study/workflows/screen-implementation.md) — registered DD/image analysis, coding, test/demo and fixture-cleanup workflow.
 
 The generic HTTP transport lives in `apps/study-client/src/app/core/http/`;
 feature-specific API calls remain unwired. Load the frontend rules for Study Web
@@ -217,7 +222,7 @@ on implementation details.
 - Entry/index/pages reuse the parent Web graph:
   [`.agents/web-work/AGENTS.md`](web-work/AGENTS.md),
   [`.agents/web-work/INDEX.md`](web-work/INDEX.md), and the parent pages above.
-- Stack: React + React Query + Zod; do not apply Study Vue patterns.
+- Stack: React + React Query + Zod; do not apply Study Angular patterns.
 
 ### `mobile-work`
 
@@ -282,13 +287,15 @@ on implementation details.
 
 ## Workflow graph
 
-All workflow keys below are registered in the manifest. Their implementation
-entry is [`.agents/project/workflows.md`](project/workflows.md), except the
-worklog contract which is implemented by [`.agents/worklog/README.md`](worklog/README.md).
+All workflow keys below are registered in the manifest. Common workflow entries
+are in [`.agents/project/workflows.md`](project/workflows.md); the Study Web
+screen workflow has its subcontext entry, and the worklog contract is
+implemented by [`.agents/worklog/README.md`](worklog/README.md).
 
 | Workflow key | Trigger/boundary | Entry | Main result |
 |---|---|---|---|
 | `coding` | coding task | `project/workflows.md` | scoped implementation + tests |
+| `study-web-screen-coding` | implement/fix/test/demo an individual Study Web screen | `web-work/study/workflows/screen-implementation.md` | DD-backed screen, tested local demo and verified fixture cleanup |
 | `fix` | bug/regression | `project/workflows.md` | reproduce → trace → smallest fix → regression test |
 | `test` | test/verification | `project/workflows.md` | focused then scope verification |
 | `code-review` | explicit code review request | `project/workflows.md` | read-only, evidence-backed review and findings report |
@@ -300,8 +307,9 @@ worklog contract which is implemented by [`.agents/worklog/README.md`](worklog/R
 Scope workflow pages refine the common workflow and side effects:
 
 - Mobile: [`mobile-work/workflows/README.md`](mobile-work/workflows/README.md)
-- Web: [`web-work/workflows/README.md`](web-work/workflows/README.md). Study Web
-  reuses the parent workflow and has no app-specific workflow page.
+- Web: [`web-work/workflows/README.md`](web-work/workflows/README.md) covers the
+  parent Web scope; Study Web screen work uses its dedicated registered
+  [`web-work/study/workflows/screen-implementation.md`](web-work/study/workflows/screen-implementation.md).
 - Work Server: [`server-work/workflows/README.md`](server-work/workflows/README.md)
 - Study Server: [`server-study/workflows/README.md`](server-study/workflows/README.md)
 - AI Server: [`server-ai/workflows/README.md`](server-ai/workflows/README.md)
