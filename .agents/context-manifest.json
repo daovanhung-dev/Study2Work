@@ -14,6 +14,7 @@
   "project": {
     "index": ".agents/project/INDEX.md",
     "pages": [
+      ".agents/project/agent-control.md",
       ".agents/project/architecture.md",
       ".agents/project/business-code.md",
       ".agents/project/conventions.md",
@@ -139,6 +140,23 @@
     }
   },
   "workflows": {
+    "agent-control": {
+      "status": "VERIFIED",
+      "entry": ".agents/project/agent-control.md",
+      "triggers": [
+        "every task",
+        "every tool call",
+        "agent execution visibility"
+      ],
+      "scopeRefs": [
+        "all"
+      ],
+      "verificationCommands": [
+        "Task/Step/Action/Event receipt consistency",
+        "verified progress matches worklog milestones",
+        "context validator"
+      ]
+    },
     "coding": {
       "status": "VERIFIED",
       "entry": ".agents/project/workflows.md",

@@ -5,6 +5,13 @@ updates a worklog entry under
 `.agents/worklog/YYYY-MM-DD/<task-id>.md`. The worklog is an audit trail;
 source code, tests and contracts remain the source of truth for behavior.
 
+For chat/tool visibility, every tool call must use the Event protocol in
+[`../project/agent-control.md`](../project/agent-control.md): announce the Event
+before the call and record its actual result immediately afterward. Keep the
+same Task/Step/Action/Event identifiers and verified progress in chat and the
+worklog; the worklog's `MILESTONES` weights are the progress source, and
+bootstrap discovery is not counted again.
+
 ## Milestones and chat receipts
 
 Before deep work, publish the task classification and at least two task-specific
@@ -12,13 +19,12 @@ milestones in chat. Each milestone must name its objective/acceptance criterion
 and weight; milestone weights must total 100%. Start reported progress at 0%,
 and record the plan and each milestone status under `MILESTONES` in the worklog.
 
-After each coherent reading batch, immediately post the paths/sources read and
-the main findings or understanding. After each meaningful action batch, post
-the action and result. When a milestone is complete, report the cumulative
-percentage based only on completed milestone weights. If blocked, report the
-achieved percentage and blocker; report 100% only when the task is complete.
-Batch related reads/actions into clear updates rather than narrating each shell
-command.
+After every tool call, post its Event result. Also summarize paths/sources and
+findings after each coherent reading batch. Compact formatting may place
+multiple Event receipts in one table, but must not omit or delay an Event.
+Report cumulative progress based only on verified milestone weights. If
+blocked, report achieved progress and blocker; report 100% only when the task
+is complete.
 
 ## Mandatory preflight
 
