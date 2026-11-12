@@ -1,0 +1,60 @@
+<section class="roster-card" aria-label="Bảng tiến độ học viên từ API #65">
+  <div class="roster-header">
+    <div>
+      <h2>Danh sách tiến độ học viên (`MentorStudentProgress[]` — API #65)</h2>
+      <p>
+        Hiển thị các trường đã xác minh: `student.id`, `student.full_name`, `completed_lessons`,
+        `total_lessons`, `progress_percent`. Các trường `email`, `last_activity`, `attendance` chưa có
+        trong API #65.
+      </p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="roster-table">
+      <thead>
+        <tr>
+          <th scope="col">Mã học viên (`student.id`)</th>
+          <th scope="col">Họ và tên (`student.full_name`)</th>
+          <th scope="col">Bài đã hoàn thành (`completed / total`)</th>
+          <th scope="col">Tỷ lệ hoàn thành (`progress_percent`)</th>
+          <th scope="col">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of items; track row.student.id) {
+          <tr>
+            <td><strong>#{{ row.student.id }}</strong></td>
+            <td>{{ row.student.full_name }}</td>
+            <td>{{ row.completed_lessons }} / {{ row.total_lessons }} bài</td>
+            <td>
+              <div class="progress-cell">
+                <div class="progress-track" aria-hidden="true">
+                  <div class="progress-fill" [style.width.%]="row.progress_percent"></div>
+                </div>
+                <strong>{{ row.progress_percent }}%</strong>
+              </div>
+            </td>
+            <td class="actions-cell">
+              <button
+                class="btn-detail"
+                type="button"
+                (click)="openStudentProgress.emit(row.student.id)"
+              >
+                Chi tiết tiến độ (ME-17)
+              </button>
+              <button
+                class="btn-disabled"
+                type="button"
+                disabled
+                title="Chưa có API gửi nhắc nhở trực tiếp từ bảng roster ME-16"
+              >
+                Nhắc nhở (Chưa có API)
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

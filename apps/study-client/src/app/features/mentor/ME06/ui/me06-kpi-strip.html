@@ -1,0 +1,25 @@
+<section class="kpi-grid" aria-label="Thống kê cấu trúc nội dung khóa học">
+  <article class="kpi-card">
+    <p class="kpi-label">Số mục gốc (Chương)</p>
+    <p class="kpi-value">{{ dataLoaded ? summary.rootSectionsCount : '—' }}</p>
+    <p class="kpi-note">Tính từ các node có parent_id rỗng trong API #49</p>
+  </article>
+
+  <article class="kpi-card">
+    <p class="kpi-label">Nội dung đã xuất bản</p>
+    <p class="kpi-value">{{ dataLoaded ? summary.publishedCount : '—' }}</p>
+    <p class="kpi-note">Trạng thái PUBLISHED trên tổng {{ dataLoaded ? summary.totalNodesCount : '—' }} mục</p>
+  </article>
+
+  <article class="kpi-card">
+    <p class="kpi-label">Bản nháp / Chờ duyệt</p>
+    <p class="kpi-value">{{ dataLoaded ? summary.draftOrPendingCount : '—' }}</p>
+    <p class="kpi-note">Gồm DRAFT, PENDING_REVIEW và APPROVED chưa xuất bản</p>
+  </article>
+
+  <article class="kpi-card kpi-card--unavailable" aria-label="Thời lượng tích lũy: chưa khả dụng">
+    <p class="kpi-label">Thời lượng tích lũy</p>
+    <p class="kpi-value">—</p>
+    <p class="kpi-note">Chưa có trường thời lượng chuẩn trong contract API #49</p>
+  </article>
+</section>

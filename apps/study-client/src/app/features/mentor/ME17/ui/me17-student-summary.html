@@ -1,0 +1,44 @@
+<section class="me17-summary-card" aria-label="Hồ sơ học viên">
+  <div class="me17-summary-card__top">
+    <div class="me17-student-block">
+      <div class="me17-avatar" aria-hidden="true">👤</div>
+      <div>
+        <span class="me17-card-eyebrow">HỒ SƠ HỌC VIÊN</span>
+        <h2 class="me17-student-name">
+          {{ progressData?.student?.full_name || 'Đang đồng bộ hồ sơ...' }}
+        </h2>
+        <p class="me17-student-meta">
+          Mã học viên: <strong>{{ progressData ? '#' + progressData.student.id : 'Chưa tải' }}</strong>
+          · Nhóm lớp: <strong>Chính quy / Học kỳ Hiện tại</strong>
+        </p>
+      </div>
+    </div>
+    <span class="me17-enroll-badge">✔ Đã xác nhận ghi danh</span>
+  </div>
+
+  <div class="me17-summary-strip">
+    <div class="me17-strip-item">
+      <span>KHÓA HỌC ĐĂNG KÝ</span>
+      <strong>
+        @if (progressData) {
+          Khóa học #{{ progressData.course_id }} ({{ progressData.summary.completed_lessons }}/{{ progressData.summary.total_lessons }} bài)
+        } @else {
+          Đang tải thông tin khóa học
+        }
+      </strong>
+    </div>
+    <div class="me17-strip-item">
+      <span>MỨC ĐỘ HOÀN THÀNH</span>
+      <div class="me17-progress-inline">
+        <strong>{{ progressData ? progressData.summary.progress_percent + '%' : '0%' }}</strong>
+        <div class="me17-progress-track">
+          <div class="me17-progress-fill" [style.width.%]="progressData?.summary?.progress_percent ?? 0"></div>
+        </div>
+      </div>
+    </div>
+    <div class="me17-strip-item">
+      <span>LẦN GỬI DỮ LIỆU CUỐI</span>
+      <strong>{{ progressData ? 'Đã đồng bộ' : 'Chưa ghi nhận' }}</strong>
+    </div>
+  </div>
+</section>

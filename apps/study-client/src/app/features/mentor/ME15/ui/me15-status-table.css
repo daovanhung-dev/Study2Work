@@ -1,0 +1,135 @@
+:host {
+  display: block;
+}
+
+.me15-table-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  overflow: hidden;
+}
+
+.me15-table-card__head {
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.me15-table-card__title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.me15-table-card__note {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.me15-raw-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+.me15-table-card__empty {
+  padding: 2.75rem 1.5rem;
+  text-align: center;
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+.me15-empty-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  margin: 0 auto 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.me15-table-card__empty strong {
+  display: block;
+  font-size: 0.92rem;
+  color: #0f172a;
+  margin-bottom: 0.35rem;
+}
+
+.me15-table-card__empty p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.me15-table-wrap {
+  overflow-x: auto;
+}
+
+.me15-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.me15-table th,
+.me15-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: left;
+}
+
+.me15-table th {
+  background: #f8fafc;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.me15-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.me15-badge--sent {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.me15-badge--queued {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.me15-badge--failed {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.me15-muted {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.me15-retry-btn {
+  padding: 0.3rem 0.65rem;
+  border-radius: 0.4rem;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #94a3b8;
+  font-size: 0.74rem;
+}

@@ -1,0 +1,55 @@
+<section class="target-panel" aria-labelledby="target-heading">
+  <div class="target-top">
+    <h2 id="target-heading">NỘI DUNG MỤC TIÊU</h2>
+    <span class="safe-badge">● Trạng thái an toàn</span>
+  </div>
+
+  @if (inspection) {
+    <div class="target-main-box">
+      <span class="doc-icon" aria-hidden="true">📄</span>
+      <div>
+        <span class="target-sub">Tên nội dung thao tác</span>
+        <strong class="target-name">{{ inspection.node.title }}</strong>
+        <p class="target-desc">
+          Mã định danh: #{{ inspection.node.id }} · Course #{{ inspection.node.course_id }} · Loại:
+          {{ inspection.node.content_type }} · Thứ tự: {{ inspection.node.order }}
+        </p>
+      </div>
+    </div>
+
+    <div class="target-subgrid">
+      <div class="sub-box">
+        <span class="sub-box__label">Trạng thái phát hành hiện tại</span>
+        <span class="status-pill">{{ inspection.node.status }}</span>
+      </div>
+      <div class="sub-box">
+        <span class="sub-box__label">Mức độ tác động cấu trúc</span>
+        <strong class="impact-level">
+          {{ inspection.activeChildCount > 0 ? inspection.activeChildCount + ' mục con trực tiếp' : 'Cấp độ thấp (0 mục con)' }}
+        </strong>
+      </div>
+    </div>
+  } @else {
+    <div class="target-main-box">
+      <span class="doc-icon" aria-hidden="true">📄</span>
+      <div>
+        <span class="target-sub">Tên nội dung thao tác</span>
+        <strong class="target-name">Chưa chọn hoặc đang nạp nội dung thao tác (#{{ contentId ?? '—' }})</strong>
+        <p class="target-desc">
+          Chọn một bài giảng, bài tập trắc nghiệm hoặc học liệu từ cây phân cấp bài học (ME-06) để kích hoạt phiên làm việc.
+        </p>
+      </div>
+    </div>
+
+    <div class="target-subgrid">
+      <div class="sub-box">
+        <span class="sub-box__label">Trạng thái phát hành hiện tại</span>
+        <span class="status-pill">Bản nháp (Chưa xuất bản)</span>
+      </div>
+      <div class="sub-box">
+        <span class="sub-box__label">Mức độ tác động cấu trúc</span>
+        <strong class="impact-level">Cấp độ thấp</strong>
+      </div>
+    </div>
+  }
+</section>

@@ -1,0 +1,62 @@
+<div class="me10-shell">
+  <main class="page-width main-content">
+    <div class="breadcrumb-row">
+      <nav class="breadcrumb-nav" aria-label="Đường dẫn điều hướng">
+        <a routerLink="/mentor/submissions">Chấm bài</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">Chi tiết bài làm và phản hồi #{{ submissionId() ?? '—' }}</span>
+      </nav>
+      <span class="session-pill">● MÃ PHIÊN LÀM VIỆC: SES-ME10-SYNC</span>
+    </div>
+
+    <section class="hero-row" aria-labelledby="me10-title">
+      <div>
+        <p class="eyebrow">☑ HỆ THỐNG ĐIỀU PHỐI CHẤM ĐIỂM LMS · AC-23</p>
+        <h1 id="me10-title">Đánh giá bài tập và phản hồi học viên</h1>
+        <p class="hero-desc">
+          Giao diện chuẩn hóa kiểm định đánh giá năng lực học viên theo thang điểm khung năng lực tiêu chuẩn (API #55, #56, #57).
+        </p>
+      </div>
+
+      <button class="btn-back" type="button" (click)="backToSubmissionsList()">
+        ← Quay lại danh sách bài nộp (ME-09)
+      </button>
+    </section>
+
+    @if (isStale()) {
+      <section class="stale-banner" role="status">
+        Dữ liệu hiển thị có thể chưa đồng bộ mới nhất do bước revalidate GET #55 gặp lỗi mạng.
+      </section>
+    }
+
+    @if (screenState() === 'invalid-param' || screenState() === 'unauthorized' || screenState() === 'forbidden' || screenState() === 'not-found' || screenState() === 'error') {
+      <section class="state-banner state-banner--error" role="alert">
+        <div>
+          <strong>Cảnh báo kết nối API #55 ({{ screenState() }}):</strong> {{ errorMessage() }}
+        </div>
+        <button class="btn-retry" type="button" (click)="refreshSubmission()">Thử lại</button>
+      </section>
+    }
+
+    <div class="workspace-grid">
+      <study-me10-submission-panel
+        [submission]="submission()"
+        [refreshing]="refreshingDetail() || screenState() === 'loading'"
+        (refreshDetail)="refreshSubmission()"
+      />
+
+      <study-me10-evaluation-panel
+        [scoreDraft]="scoreDraft()"
+        [feedbackDraft]="feedbackDraft()"
+        [gradeStatus]="gradeStatus()"
+        [feedbackStatus]="feedbackStatus()"
+        [gradeMessage]="gradeMessage()"
+        [feedbackMessage]="feedbackMessage()"
+        (scoreInputChange)="onScoreInput($event)"
+        (feedbackInputChange)="onFeedbackInput($event)"
+        (submitGrade)="submitGrade()"
+        (submitFeedback)="submitFeedback()"
+      />
+    </div>
+  </main>
+</div>

@@ -1,0 +1,59 @@
+<aside class="aside-stack" aria-label="Quy chuẩn dữ liệu và giới hạn API">
+  <section class="aside-card">
+    <h2 class="aside-title">🛡 Quy chuẩn dữ liệu</h2>
+    <div class="security-box">
+      <strong>✔ Bảo mật hệ thống</strong>
+      <p>
+        Dữ liệu biên tập chỉ được lưu trữ khi tài khoản giảng viên được cấp quyền quản lý khóa học hợp lệ.
+      </p>
+    </div>
+    <ul class="rule-list">
+      <li>Tiêu đề nội dung nên ngắn gọn, phản ánh rõ ràng mục tiêu đầu ra của bài học.</li>
+      <li>Lựa chọn loại tài nguyên tương ứng để người học nhận diện đúng định dạng bài tập.</li>
+      <li>Thứ tự hiển thị xác định vị trí tương đối trong cây phân cấp của chương mục.</li>
+    </ul>
+  </section>
+
+  <section class="aside-card">
+    <div class="aside-head">
+      <h2 class="aside-title">Trạng thái xác thực phiên</h2>
+      <span class="status-chip" [class.status-chip--dirty]="isDirty">
+        {{ isDirty ? 'Đang chỉnh sửa' : 'Đang đối soát' }}
+      </span>
+    </div>
+    <div class="progress-track" aria-hidden="true">
+      <span class="progress-fill"></span>
+    </div>
+    <p class="aside-desc">
+      Khung quyền hạn của Giảng viên được phân quyền qua danh mục đào tạo. Hệ thống sẽ cấp phép lưu trữ
+      qua API #50 / #51 sau khi đối soát thành công.
+    </p>
+
+    @if (mode === 'edit' && currentNode) {
+      <dl class="meta-list">
+        <div>
+          <dt>Mã nội dung</dt>
+          <dd>#{{ currentNode.id }}</dd>
+        </div>
+        <div>
+          <dt>Trạng thái</dt>
+          <dd>{{ currentNode.status }}</dd>
+        </div>
+        <div>
+          <dt>Thứ tự (order)</dt>
+          <dd>{{ currentNode.order }}</dd>
+        </div>
+      </dl>
+    }
+  </section>
+
+  <section class="aside-card aside-card--pedagogy">
+    <div class="pedagogy-banner" aria-hidden="true">
+      <span>STUDIO BIÊN SOẠN SỐ STUDY2WORK</span>
+    </div>
+    <div class="pedagogy-body">
+      <span class="pedagogy-eyebrow">KHÔNG GIAN SƯ PHẠM</span>
+      <strong>Chuẩn hóa quy trình biên soạn trực quan &amp; trải nghiệm học tập nhất quán.</strong>
+    </div>
+  </section>
+</aside>

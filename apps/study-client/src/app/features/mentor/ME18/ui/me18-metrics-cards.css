@@ -1,0 +1,70 @@
+:host {
+  display: block;
+}
+
+.me18-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.me18-metrics__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.me18-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  padding: 1.15rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.me18-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.me18-card__label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.me18-card__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.45rem;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.me18-card__value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.me18-card__value--muted {
+  font-size: 1.15rem;
+  color: #94a3b8;
+}
+
+.me18-card__value--date {
+  font-size: 1.05rem;
+}
+
+.me18-card__hint {
+  margin: 0;
+  font-size: 0.76rem;
+  color: #94a3b8;
+}

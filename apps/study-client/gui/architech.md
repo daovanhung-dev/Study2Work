@@ -44,6 +44,7 @@ Quy tắc bắt buộc về ranh giới giao diện, nghiệp vụ và truy cậ
             │       └── study-api.service.ts  # HTTP transport generic cho /api/v1
             ├── layouts/             # Khung giao diện dùng chung cho một nhóm trang
             │   ├── admin/           # Outlet shell cho các route Admin
+            │   ├── mentor/          # Outlet shell cho các route Mentor (ME-06..ME-18)
             │   └── system/          # Outlet shell cho route readiness ở /
             ├── shared/              # Thành phần trình bày dùng lại, không chứa quy tắc nghiệp vụ
             └── features/            # Nhóm màn hình Study
@@ -51,6 +52,20 @@ Quy tắc bắt buộc về ranh giới giao diện, nghiệp vụ và truy cậ
                 ├── guest/           # GS-*
                 ├── student/         # ST-*
                 ├── mentor/          # ME-*
+                │   ├── mentor.route.ts
+                │   ├── ME06/        # data-access/, models/, pages/, ui/ (API #49)
+                │   ├── ME07/        # data-access/, models/, pages/, ui/ (API #49, #50, #51)
+                │   ├── ME08/        # data-access/, models/, pages/, ui/ (API #49, #52, #53)
+                │   ├── ME09/        # data-access/, models/, pages/, ui/ (API #46, #54)
+                │   ├── ME10/        # data-access/, models/, pages/, ui/ (API #55, #56, #57)
+                │   ├── ME11/        # data-access/, models/, pages/, ui/ (API #46, #58)
+                │   ├── ME12/        # data-access/, models/, pages/, ui/ (API #59, #60, #61)
+                │   ├── ME13/        # data-access/, models/, pages/, ui/ (API #46, #62)
+                │   ├── ME14/        # data-access/, models/, pages/, ui/ (API #49, #63)
+                │   ├── ME15/        # data-access/, models/, pages/, ui/ (API #64)
+                │   ├── ME16/        # data-access/, models/, pages/, ui/ (API #65)
+                │   ├── ME17/        # data-access/, models/, pages/, ui/ (API #67)
+                │   └── ME18/        # data-access/, models/, pages/, ui/ (API #66)
                 ├── system/          # Route readiness tại /; không đại diện SH-01
                 │   ├── system.routes.ts
                 │   └── pages/system-readiness-page.*

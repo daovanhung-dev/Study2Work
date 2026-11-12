@@ -1,0 +1,21 @@
+<div class="me07-breadcrumb-strip">
+  <div class="page-width breadcrumb-bar">
+    <nav aria-label="Đường dẫn trang">
+      <ol class="breadcrumbs">
+        <li>Khóa học phụ trách</li>
+        <li aria-hidden="true">›</li>
+        <li>Chi tiết khóa học #{{ courseId ?? '—' }}</li>
+        <li aria-hidden="true">›</li>
+        <li>Quản lý nội dung</li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Biên tập nội dung</li>
+      </ol>
+    </nav>
+
+    <div class="header-right">
+      <button class="back-btn" type="button" (click)="backToTree.emit()">
+        ← Quay về cây nội dung (ME-06)
+      </button>
+    </div>
+  </div>
+</div>

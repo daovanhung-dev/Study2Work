@@ -1,0 +1,86 @@
+<section class="list-card" aria-label="Danh sách bài nộp từ API #54">
+  <div class="list-header">
+    <div>
+      <h2>Danh sách bài nộp (API #54 `data.items`)</h2>
+      <p class="list-sub">
+        Hiển thị đúng các trường `SubmissionResponse`: `id`, `assignment_id`, `user_id`, `status`,
+        `submitted_at`, `score`, `files`. Các trường `deadline`, `student_name`, `assignment_title`
+        chưa có trong response của `#54`.
+      </p>
+    </div>
+    <span class="page-summary">
+      Trang {{ pagination.page }} / {{ pagination.total_pages || 1 }} · Tổng {{ pagination.total }} bài nộp
+    </span>
+  </div>
+
+  <div class="table-wrap">
+    <table class="submissions-table">
+      <thead>
+        <tr>
+          <th scope="col">Mã bài nộp (`id`)</th>
+          <th scope="col">Bài tập (`assignment_id`)</th>
+          <th scope="col">Học viên (`user_id`)</th>
+          <th scope="col">Trạng thái (`status`)</th>
+          <th scope="col">Thời điểm nộp (`submitted_at`)</th>
+          <th scope="col">Điểm (`score`)</th>
+          <th scope="col">Tệp đính kèm (`files`)</th>
+          <th scope="col">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items; track item.id) {
+          <tr>
+            <td><strong>#{{ item.id }}</strong></td>
+            <td>Assignment #{{ item.assignment_id }}</td>
+            <td>User #{{ item.user_id }}</td>
+            <td>
+              <span
+                class="status-pill"
+                [class.status-pill--graded]="isGraded(item.status)"
+                [class.status-pill--pending]="!isGraded(item.status)"
+              >
+                {{ statusLabel(item.status) }}
+              </span>
+            </td>
+            <td>{{ item.submitted_at }}</td>
+            <td>{{ item.score ?? 'Chưa chấm' }}</td>
+            <td>{{ item.files.length }} tệp</td>
+            <td>
+              <button
+                class="open-btn"
+                type="button"
+                (click)="openSubmission.emit(item.id)"
+              >
+                Mở chấm bài (ME-10)
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (pagination.total_pages > 1) {
+    <nav class="pagination-bar" aria-label="Phân trang danh sách bài nộp">
+      <button
+        class="page-btn"
+        type="button"
+        [disabled]="pagination.page <= 1"
+        (click)="pageChange.emit(pagination.page - 1)"
+      >
+        ← Trang trước
+      </button>
+      <span class="page-indicator">
+        Trang {{ pagination.page }} / {{ pagination.total_pages }} (cố định {{ pagination.size }} mục/trang)
+      </span>
+      <button
+        class="page-btn"
+        type="button"
+        [disabled]="pagination.page >= pagination.total_pages"
+        (click)="pageChange.emit(pagination.page + 1)"
+      >
+        Trang sau →
+      </button>
+    </nav>
+  }
+</section>

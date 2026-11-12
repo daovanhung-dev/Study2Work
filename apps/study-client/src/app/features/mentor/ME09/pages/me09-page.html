@@ -1,0 +1,68 @@
+<div class="me09-shell">
+  <study-me09-header [selectedCourseId]="selectedCourseId()" />
+
+  <main class="page-width main-content">
+    <section class="hero-block" aria-labelledby="me09-title">
+      <h1 id="me09-title">Danh sách bài nộp cần chấm điểm</h1>
+      <p class="hero-desc">
+        Hệ thống điều phối bài kiểm tra định kỳ, đồ án tốt nghiệp và phản hồi năng lực học viên Study2Work (API #54).
+      </p>
+    </section>
+
+    <study-me09-filter-bar
+      [courses]="courses()"
+      [coursesLoading]="coursesLoading()"
+      [selectedCourseId]="selectedCourseId()"
+      [selectedStatus]="selectedStatus()"
+      [loading]="screenState() === 'loading'"
+      (courseChange)="onCourseFilterChange($event)"
+      (statusChange)="onStatusFilterChange($event)"
+      (resetFilters)="resetFilters()"
+      (refreshList)="refreshList()"
+    />
+
+    @if (screenState() === 'unauthorized' || screenState() === 'forbidden' || screenState() === 'validation-error' || screenState() === 'error') {
+      <section class="state-banner state-banner--error" role="alert">
+        <div>
+          <strong>Trạng thái kết nối API #54:</strong> {{ errorMessage() }}
+          @if (traceId()) {
+            <span> · Trace ID: {{ traceId() }}</span>
+          }
+        </div>
+        <button class="btn-retry" type="button" (click)="refreshList()">Thử lại</button>
+      </section>
+    }
+
+    @if (screenState() === 'ready' && items().length > 0) {
+      <study-me09-submission-list
+        [items]="items()"
+        [pagination]="pagination()"
+        (openSubmission)="openSubmissionDetail($event)"
+        (pageChange)="onPageChange($event)"
+      />
+    } @else {
+      <section class="empty-showcase" aria-labelledby="empty-title">
+        <div class="empty-illustration" aria-hidden="true">
+          <span class="empty-circle">📋</span>
+        </div>
+
+        <h2 id="empty-title">
+          {{ screenState() === 'loading' ? 'Đang tải danh sách bài nộp...' : 'Chưa có bài tập nào cần chấm điểm' }}
+        </h2>
+        <p class="empty-copy">
+          Hiện tại không có bài tập nào của học viên đang ở trạng thái chờ chấm hoặc bạn chưa được phân công chấm bài cho khóa học này. Khi có học viên nộp bài mới, danh sách sẽ tự động hiển thị tại đây.
+        </p>
+
+        <button class="reload-btn" type="button" (click)="refreshList()">
+          ↻ Tải lại danh sách
+        </button>
+
+        <div class="trust-badges">
+          <span>✔ Tuân thủ hạn nộp 48h của Mentor</span>
+          <span>↻ Hệ thống chấm theo bộ tiêu chí Rubric chuẩn</span>
+          <span>? Cần hỗ trợ chuyên môn? Liên hệ Ban Đào Tạo</span>
+        </div>
+      </section>
+    }
+  </main>
+</div>

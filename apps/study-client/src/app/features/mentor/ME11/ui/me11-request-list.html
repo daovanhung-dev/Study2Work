@@ -1,0 +1,49 @@
+<section class="inbox-card" aria-label="Danh sách yêu cầu hỗ trợ từ API #58">
+  <div class="inbox-header">
+    <h2>Danh sách yêu cầu hỗ trợ (`SupportRequestResponse[]` — API #58)</h2>
+    <p>
+      Chọn một yêu cầu để mở chi tiết luồng hội thoại và phản hồi học viên trên màn hình ME-12.
+    </p>
+  </div>
+
+  <div class="request-list">
+    @for (req of items; track req.id) {
+      <article class="request-row">
+        <div class="request-main">
+          <div class="request-top">
+            <strong class="request-id">Yêu cầu #{{ req.id }}</strong>
+            <span class="course-tag">Course #{{ req.course_id }}</span>
+            <span
+              class="status-chip"
+              [class.status-chip--resolved]="isResolved(req.status)"
+              [class.status-chip--open]="!isResolved(req.status)"
+            >
+              {{ req.status }}
+            </span>
+          </div>
+
+          <p class="student-line">
+            Học viên: <strong>{{ req.student.full_name }}</strong> (ID #{{ req.student.id }}) ·
+            Tạo lúc: {{ req.created_at }}
+            @if (req.resolved_at) {
+              · Đóng lúc: {{ req.resolved_at }}
+            }
+          </p>
+
+          <p class="message-preview">{{ latestPreview(req) }}</p>
+        </div>
+
+        <div class="request-side">
+          <span class="msg-count">{{ req.messages.length }} tin nhắn</span>
+          <button
+            class="open-btn"
+            type="button"
+            (click)="selectRequest.emit(req.id)"
+          >
+            Mở trao đổi (ME-12)
+          </button>
+        </div>
+      </article>
+    }
+  </div>
+</section>

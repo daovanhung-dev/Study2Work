@@ -1,0 +1,48 @@
+<section class="filter-panel" aria-label="Bộ lọc hộp thư hỗ trợ">
+  <div class="tabs-row" role="tablist" aria-label="Lọc theo trạng thái yêu cầu">
+    @for (tab of statusTabs; track tab.value) {
+      <button
+        class="tab-btn"
+        type="button"
+        role="tab"
+        [attr.aria-selected]="selectedStatus === tab.value"
+        [class.tab-btn--active]="selectedStatus === tab.value"
+        [disabled]="loading"
+        (click)="statusChange.emit(tab.value)"
+      >
+        <span>{{ tab.label }}</span>
+        <span class="tab-count">
+          {{ tab.value === '' ? counts.total : tab.value === 'RESOLVED' ? counts.resolvedCount : counts.openCount }}
+        </span>
+      </button>
+    }
+  </div>
+
+  <div class="controls-row">
+    <div class="course-field">
+      <label class="field-label" for="course-filter">Khóa học:</label>
+      <select
+        id="course-filter"
+        class="course-select"
+        [value]="selectedCourseId ?? ''"
+        [disabled]="loading || coursesLoading"
+        (change)="onCourseSelect($event)"
+      >
+        <option value="">Tất cả khóa học phụ trách</option>
+        @for (course of courses; track course.id) {
+          <option [value]="course.id">#{{ course.id }} — {{ course.title }}</option>
+        }
+      </select>
+    </div>
+
+    <button
+      id="btn-refresh-inbox"
+      class="btn-refresh"
+      type="button"
+      [disabled]="loading"
+      (click)="refreshInbox.emit()"
+    >
+      {{ loading ? 'Đang tải...' : '↻ Làm mới (#58)' }}
+    </button>
+  </div>
+</section>

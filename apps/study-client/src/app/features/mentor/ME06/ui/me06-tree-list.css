@@ -1,0 +1,119 @@
+.tree-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tree-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.tree-row--root {
+  border-left: 4px solid var(--ocean-primary);
+}
+
+.tree-row-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.collapse-btn {
+  min-width: 36px;
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--page-background);
+  color: var(--ocean-deep);
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.leaf-bullet {
+  display: inline-flex;
+  width: 24px;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.type-pill {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--ocean-soft);
+  color: var(--ocean-primary);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.node-title {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.node-meta {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.tree-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.status-badge--published {
+  background: #e6f4ee;
+  color: var(--success);
+}
+
+.status-badge--draft {
+  background: #fef4e6;
+  color: var(--warning);
+}
+
+.action-btn {
+  min-height: 40px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ocean-primary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.action-btn--danger {
+  color: var(--danger);
+}
+
+.action-btn:disabled {
+  background: var(--page-background);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.tree-children {
+  margin-top: 8px;
+  padding-left: 24px;
+  border-left: 2px dashed var(--border);
+}

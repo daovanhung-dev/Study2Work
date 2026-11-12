@@ -1,0 +1,192 @@
+<div class="me07-shell">
+  <study-me07-header
+    [courseId]="courseId()"
+    [contentId]="contentId()"
+    [mode]="mode()"
+    (backToTree)="requestCancelOrBack()"
+  />
+
+  <main class="page-width main-container">
+    <section class="title-row" aria-labelledby="me07-title">
+      <div>
+        <p class="eyebrow">📄 HỆ THỐNG PHÂN PHỐI GIÁO TRÌNH SỐ · AC-22</p>
+        <h1 id="me07-title">
+          {{ mode() === 'create' ? 'Tạo nội dung khóa học mới' : 'Chỉnh sửa nội dung #' + contentId() }}
+        </h1>
+      </div>
+      <span class="mode-badge">● Chế độ kiểm duyệt: Khóa học chuẩn hóa</span>
+    </section>
+
+    <div class="main-grid">
+      <section class="editor-column">
+        @if (screenState() === 'invalid-param' || screenState() === 'not-found' || screenState() === 'forbidden' || screenState() === 'unauthorized' || screenState() === 'error') {
+          <section class="state-card state-card--error" role="alert">
+            <strong>Cảnh báo đồng bộ ({{ screenState() }}):</strong> {{ statusMessage() }}
+            @if (screenState() === 'not-found') {
+              <button class="btn" type="button" (click)="navigateToTree()">
+                Quay về cây nội dung (ME-06)
+              </button>
+            }
+          </section>
+        }
+
+        <form class="form-card" (submit)="$event.preventDefault(); submitForm()">
+          @if (validationError()) {
+            <div class="alert alert--error" role="alert">
+              {{ validationError() }}
+            </div>
+          }
+
+          @if (statusMessage() && screenState() !== 'error') {
+            <div class="alert alert--success" role="status">
+              {{ statusMessage() }}
+            </div>
+          }
+
+          <div class="field-group">
+            <div class="label-row">
+              <label for="me07-title-input">Tiêu đề nội dung <span class="req">*</span></label>
+              <span class="label-hint">Bắt buộc</span>
+            </div>
+            <input
+              id="me07-title-input"
+              class="text-input"
+              type="text"
+              required
+              placeholder="Nhập tiêu đề phần hoặc bài học..."
+              [value]="currentDraft().title"
+              (input)="onTitleInput($event)"
+            />
+          </div>
+
+          <div class="field-row">
+            <div class="field-group">
+              <label for="me07-type-select">Loại nội dung <span class="req">*</span></label>
+              <select
+                id="me07-type-select"
+                class="select-input"
+                [value]="currentDraft().contentType"
+                (change)="onContentTypeChange($event)"
+              >
+                @for (opt of contentTypes; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="field-group">
+              <div class="label-row">
+                <label for="me07-order-readonly">Thứ tự hiển thị</label>
+                <span class="label-hint">Số nguyên dương</span>
+              </div>
+              <input
+                id="me07-order-readonly"
+                class="text-input"
+                type="text"
+                disabled
+                [value]="currentNode() ? currentNode()!.order : 'Thứ tự trong chương (tự động cấp)'"
+              />
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label for="me07-summary-input">Tóm tắt học liệu (payload.summary)</label>
+            <input
+              id="me07-summary-input"
+              class="text-input"
+              type="text"
+              placeholder="Mô tả ngắn gọn mục tiêu bài học..."
+              [value]="currentDraft().summaryText"
+              (input)="onSummaryInput($event)"
+            />
+          </div>
+
+          <div class="field-group">
+            <div class="label-row">
+              <label for="me07-body-input">Nội dung chi tiết</label>
+              <span class="sync-hint">↻ Đang đồng bộ định dạng JSON payload</span>
+            </div>
+            <div class="deep-editor-box">
+              <div class="deep-editor-head">
+                <span class="deep-icon" aria-hidden="true">☁</span>
+                <strong>Trình soạn thảo chuyên sâu</strong>
+                <p>
+                  Trình biên tập nội dung chuyên sâu được đồng bộ định dạng dữ liệu với máy chủ qua
+                  <code>payload.body</code>.
+                </p>
+              </div>
+              <textarea
+                id="me07-body-input"
+                class="textarea-input"
+                rows="5"
+                placeholder="Nhập nội dung chi tiết bài học / hướng dẫn..."
+                [value]="currentDraft().bodyText"
+                (input)="onBodyInput($event)"
+              ></textarea>
+              <p class="locked-media-note">
+                🔒 Khối nhập tài nguyên đa phương tiện trực tiếp tạm thời được khóa an toàn (API #50/#51 chỉ nhận JSON payload)
+              </p>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              class="btn btn--ghost"
+              type="button"
+              (click)="requestCancelOrBack()"
+            >
+              ← Hủy thay đổi
+            </button>
+
+            <div class="form-actions__right">
+              @if (currentNode() || contentId() !== null) {
+                <button
+                  class="btn"
+                  type="button"
+                  (click)="openPublishOrDeleteActions()"
+                >
+                  Kiểm soát xuất bản / xóa (ME-08)
+                </button>
+              }
+
+              <button
+                class="btn btn--primary"
+                type="submit"
+                [disabled]="screenState() === 'saving'"
+              >
+                {{
+                  screenState() === 'saving'
+                    ? 'Đang lưu...'
+                    : mode() === 'create'
+                      ? 'Lưu bản nháp (#50)'
+                      : 'Lưu cập nhật (#51)'
+                }}
+              </button>
+            </div>
+          </div>
+        </form>
+
+        @if (showCancelConfirm()) {
+          <section class="confirm-dialog" role="alertdialog" aria-labelledby="discard-title">
+            <h2 id="discard-title">Hủy các thay đổi chưa lưu?</h2>
+            <p>Bạn đang có thay đổi chưa lưu trên biểu mẫu. Nếu rời trang, nội dung vừa nhập sẽ bị hủy.</p>
+            <div class="form-actions">
+              <button class="btn btn--danger" type="button" (click)="confirmDiscardAndLeave()">
+                Đồng ý hủy và rời trang
+              </button>
+              <button class="btn" type="button" (click)="dismissCancelDialog()">
+                Tiếp tục chỉnh sửa
+              </button>
+            </div>
+          </section>
+        }
+      </section>
+
+      <study-me07-guidelines-aside
+        [mode]="mode()"
+        [currentNode]="currentNode()"
+        [isDirty]="isDirty()"
+      />
+    </div>
+  </main>
+</div>

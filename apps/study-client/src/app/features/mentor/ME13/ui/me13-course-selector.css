@@ -1,0 +1,138 @@
+:host {
+  display: block;
+}
+
+.me13-selector {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.me13-selector__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.me13-selector__head h2 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.me13-req-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+
+.me13-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.me13-field__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.me13-field__control {
+  height: 2.4rem;
+  padding: 0 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  font-size: 0.84rem;
+  color: #0f172a;
+}
+
+.me13-smart-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.me13-radio-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.6rem;
+  background: #ffffff;
+}
+
+.me13-radio-card--active {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.me13-radio-card--disabled {
+  opacity: 0.65;
+  background: #f8fafc;
+}
+
+.me13-radio-dot {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 999px;
+  border: 4px solid #2563eb;
+  background: #ffffff;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.me13-radio-circle {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 999px;
+  border: 2px solid #cbd5e1;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+.me13-radio-card strong {
+  display: block;
+  font-size: 0.82rem;
+  color: #0f172a;
+}
+
+.me13-radio-card p {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.me13-policy-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.65rem;
+  padding: 0.85rem;
+}
+
+.me13-policy-box strong {
+  display: block;
+  font-size: 0.8rem;
+  color: #1e40af;
+  margin-bottom: 0.25rem;
+}
+
+.me13-policy-box p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #1e3a8a;
+  line-height: 1.45;
+}

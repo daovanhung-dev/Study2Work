@@ -1,0 +1,144 @@
+:host {
+  display: block;
+}
+
+.me17-lesson-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  overflow: hidden;
+}
+
+.me17-lesson-card__header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.me17-lesson-card__title {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.me17-lesson-card__title h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.me17-lesson-card__title p {
+  margin: 0.15rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.me17-stage-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+}
+
+.me17-empty-timeline {
+  padding: 2.75rem 1.5rem 1.75rem;
+  text-align: center;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.me17-empty-timeline__icon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 0.75rem;
+  border-radius: 0.75rem;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.me17-empty-timeline h4 {
+  margin: 0 0 0.4rem;
+  font-size: 1.02rem;
+  color: #0f172a;
+}
+
+.me17-empty-timeline p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.me17-table-wrap {
+  overflow-x: auto;
+}
+
+.me17-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.me17-table th,
+.me17-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: left;
+}
+
+.me17-table th {
+  background: #f8fafc;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.me17-lesson-title {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.me17-lesson-id {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.me17-status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.me17-progress-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.me17-progress-track {
+  width: 5rem;
+  height: 0.4rem;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.me17-progress-fill {
+  height: 100%;
+  background: #2563eb;
+}

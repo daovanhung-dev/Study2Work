@@ -1,0 +1,53 @@
+<section class="me14-recipients" aria-label="Danh sách người nhận thông báo">
+  <div class="me14-recipients__head">
+    <div>
+      <span class="me14-step1-eyebrow">TRẠNG THÁI BƯỚC 1</span>
+      <h2 class="me14-recipients__title">
+        Đối tượng nhận thông báo ({{ validIds().length }} học viên hợp lệ)
+      </h2>
+      <p class="me14-recipients__hint">
+        Danh sách người nhận được đồng bộ từ bước chọn lớp (ME-13) hoặc nhập trực tiếp chuỗi CSV ID học viên.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      class="me14-btn-reselect"
+      (click)="backToSelect.emit()"
+      data-testid="back-to-me13-btn"
+    >
+      ↺ Chọn người nhận (ME-13)
+    </button>
+  </div>
+
+  <div class="me14-recipients__field">
+    <label for="me14-recipients-input" class="me14-recipients__label">
+      Danh sách ID học viên nhận thông báo (CSV) *
+    </label>
+    <input
+      id="me14-recipients-input"
+      type="text"
+      class="me14-recipients__input"
+      placeholder="Ví dụ: 501, 502, 503"
+      [ngModel]="recipientsCsv()"
+      (ngModelChange)="recipientsCsvChange.emit($event)"
+      data-testid="recipients-csv-input"
+    />
+  </div>
+
+  @if (invalidTokens().length > 0) {
+    <p class="me14-recipients__error" data-testid="invalid-recipients-msg">
+      Mã học viên không hợp lệ (cần số nguyên dương): {{ invalidTokens().join(', ') }}
+    </p>
+  }
+
+  @if (knownRecipients().length > 0) {
+    <div class="me14-recipients__chips" aria-label="Học viên đã chọn từ ME-13">
+      @for (item of knownRecipients(); track item.id) {
+        <span class="me14-chip">
+          #{{ item.id }} @if (item.full_name) { · {{ item.full_name }} }
+        </span>
+      }
+    </div>
+  }
+</section>

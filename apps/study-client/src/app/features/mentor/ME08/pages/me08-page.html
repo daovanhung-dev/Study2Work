@@ -1,0 +1,123 @@
+<div class="me08-shell" [class.me08-shell--dialog]="isDialogMode()">
+  <div class="page-width">
+    <div class="breadcrumb-row">
+      <nav aria-label="Đường dẫn trang">
+        <ol class="breadcrumbs">
+          <li>Khóa học phụ trách</li>
+          <li aria-hidden="true">›</li>
+          <li>Cấu trúc cây nội dung</li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page">ME-08 Điều phối trạng thái</li>
+        </ol>
+      </nav>
+      <span class="shield-pill">● HỆ THỐNG BẢO VỆ DỮ LIỆU HOẠT ĐỘNG</span>
+    </div>
+
+    <div
+      class="master-card"
+      [attr.role]="isDialogMode() ? 'dialog' : null"
+      [attr.aria-modal]="isDialogMode() ? 'true' : null"
+      aria-labelledby="me08-title"
+    >
+      <header class="hero-bar">
+        <div class="hero-left">
+          <span class="hero-icon" aria-hidden="true">↻</span>
+          <div>
+            <div class="badge-row">
+              <span class="tag-pill">BẢNG ĐIỀU PHỐI MENTOR</span>
+              <span class="tag-pill">Quy chuẩn WCAG 2.1 AA</span>
+            </div>
+            <h1 id="me08-title">Kiểm soát xuất bản và gỡ bỏ nội dung</h1>
+            <p class="subtitle">
+              Quản lý vòng đời phát hành bài học (#52) và gỡ bỏ an toàn (#53). Mọi thay đổi đều được giám sát để đảm bảo tiến độ học tập ổn định của học viên.
+            </p>
+          </div>
+        </div>
+
+        <button class="policy-btn" type="button" disabled title="Sổ tay chính sách chưa được kết nối">
+          ? Sổ tay chính sách
+        </button>
+      </header>
+
+      @if (outcomeMessage()) {
+        <div class="alert alert--success" role="status">
+          {{ outcomeMessage() }}
+        </div>
+      }
+
+      @if (errorMessage()) {
+        <div class="alert alert--error" role="alert">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      @if (deleteReceipt()) {
+        <section class="receipt-card" aria-label="Biên nhận xóa nội dung">
+          <strong>Kết quả xóa mềm (DeleteResult · API #53):</strong>
+          Mã #{{ deleteReceipt()!.id }} · Trạng thái: <code>{{ deleteReceipt()!.status }}</code> · Thời điểm:
+          <code>{{ deleteReceipt()!.deleted_at }}</code>
+        </section>
+      }
+
+      <div class="two-col-grid">
+        <div class="col-left">
+          <study-me08-target-summary
+            [inspection]="inspection()"
+            [contentId]="contentId()"
+            [courseId]="courseId()"
+          />
+
+          <section class="impact-card" aria-label="Tác động đối với học viên">
+            <h3>🎯 Tác động đối với học viên</h3>
+            <p>
+              Việc thay đổi trạng thái hoặc gỡ bỏ nội dung có thể ảnh hưởng đến lộ trình học tập của các học viên đang tham gia khóa học.
+            </p>
+            <ul>
+              <li>✔ Tỷ lệ hoàn thành chứng chỉ được cập nhật tự động theo các mục đã công bố.</li>
+              <li>✔ Điểm danh học phần và bài nộp đã nộp trước đó sẽ được lưu trữ an toàn.</li>
+            </ul>
+          </section>
+
+          <section class="audit-strip">
+            <div>
+              <strong>Nhật ký điều phối gần nhất</strong>
+              <p>⟳ Khởi tạo cấu trúc khóa học chuẩn</p>
+            </div>
+            <div class="audit-strip__right">
+              <span>Lưu vết tự động</span>
+              <span>Hôm nay, 08:30</span>
+            </div>
+          </section>
+        </div>
+
+        <div class="col-right">
+          <study-me08-action-cards
+            [inspection]="inspection()"
+            [activeIntent]="activeIntent()"
+            [processing]="screenState() === 'processing'"
+            (confirmPublish)="executePublishState(true)"
+            (confirmUnpublish)="executePublishState(false)"
+            (confirmDelete)="executeDelete()"
+          />
+
+          <button class="back-tree-btn" type="button" (click)="returnToTree()">
+            ← Quay lại cây nội dung (ME-06)
+          </button>
+
+          <section class="guard-card">
+            <span class="guard-icon" aria-hidden="true">🛡</span>
+            <div>
+              <strong>Cơ chế bảo vệ dữ liệu tự động</strong>
+              <p>Không thể xóa bài khi đang ở trạng thái PUBLISHED hoặc còn mục con trực tiếp hoạt động.</p>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <footer class="card-status-bar">
+        <span>● Môi trường: Sản xuất chuẩn hóa · Phân vùng: Khu vực Châu Á - Thái Bình Dương</span>
+        <span>Khóa điều phối: Chế độ an toàn (Safe Mode)</span>
+      </footer>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,82 @@
+<main class="me17-main" aria-label="Tiến độ từng học viên (ME-17)">
+  <nav class="me17-breadcrumb" aria-label="Breadcrumb">
+    <a [routerLink]="['/mentor/courses', courseId() ?? 101, 'progress']">Tiến độ lớp học</a>
+    <span>›</span>
+    <strong>Hồ sơ tiến độ cá nhân học viên</strong>
+  </nav>
+
+  <section class="me17-hero">
+    <div>
+      <span class="me17-eyebrow">● HỆ THỐNG GIÁM SÁT TRỰC TIẾP</span>
+      <h1 class="me17-title">Tiến độ từng học viên</h1>
+      <p class="me17-subtitle">
+        Theo dõi mức độ hoàn thành học liệu, thời lượng tương tác và kết quả đánh giá định kỳ của từng cá nhân trong khóa học.
+      </p>
+    </div>
+    <div class="me17-hero__actions">
+      <button class="me17-btn me17-btn--outline" type="button" (click)="reload()">
+        ↻ Làm mới kết nối
+      </button>
+    </div>
+  </section>
+
+  @if (errorMessage()) {
+    <section class="me17-alert-banner" role="alert">
+      <div>
+        <strong>Trạng thái đồng bộ ({{ screenState() }}):</strong> {{ errorMessage() }}
+        @if (traceId()) { <span> · Trace ID: <code>{{ traceId() }}</code></span> }
+      </div>
+      <button class="me17-btn me17-btn--outline" type="button" (click)="reload()">Thử lại</button>
+    </section>
+  }
+
+  <div class="me17-top-grid">
+    <study-me17-student-summary [progressData]="progressData()" />
+
+    <aside class="me17-monitor-card" aria-label="Chỉ số giám sát">
+      <div class="me17-monitor-card__head">
+        <h3>Chỉ số giám sát</h3>
+        <span class="me17-pill">Tự động cập nhật</span>
+      </div>
+      <div class="me17-monitor-list">
+        <div class="me17-monitor-row">
+          <span>☑ Bài nộp dự án</span>
+          <strong>-- / --</strong>
+        </div>
+        <div class="me17-monitor-row">
+          <span>📋 Kiểm tra định kỳ</span>
+          <strong>-- / --</strong>
+        </div>
+        <div class="me17-monitor-row">
+          <span>🕒 Thời lượng tự học</span>
+          <strong>0 giờ</strong>
+        </div>
+      </div>
+      <p class="me17-monitor-note">ℹ Dữ liệu thống kê sẽ kích hoạt ngay sau buổi học đầu tiên.</p>
+    </aside>
+  </div>
+
+  <div class="me17-timeline-wrapper">
+    <study-me17-lesson-list [lessons]="progressData()?.lessons ?? []" />
+    <div class="me17-back-bar">
+      <button class="me17-btn me17-btn--primary" type="button" (click)="backToCourseProgress()">
+        ← Quay lại tiến độ toàn khóa
+      </button>
+    </div>
+  </div>
+
+  <section class="me17-bottom-cards" aria-label="Thông tin cấu trúc đánh giá">
+    <article class="me17-info-card">
+      <strong>📖 Bài giảng &amp; Video</strong>
+      <p>Hệ thống tự động ghi nhận hoàn thành khi học viên xem tối thiểu 85% thời lượng mỗi bài giảng.</p>
+    </article>
+    <article class="me17-info-card">
+      <strong>💬 Nhận xét của Mentor</strong>
+      <p>Lịch sử đánh giá bài tập và phản hồi chuyên môn 1-1 sẽ được tổng hợp trực tiếp tại dòng thời gian này.</p>
+    </article>
+    <article class="me17-info-card">
+      <strong>🚩 Cột mốc Đồ án</strong>
+      <p>Cảnh báo sớm rủi ro chậm tiến độ nếu học viên không phát sinh tương tác trong vòng 7 ngày liên tiếp.</p>
+    </article>
+  </section>
+</main>

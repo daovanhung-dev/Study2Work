@@ -1,0 +1,103 @@
+<section class="me18-page" aria-labelledby="me18-title">
+  <nav class="me18-breadcrumb" aria-label="Breadcrumb">
+    <span>Khóa học phụ trách</span>
+    <span>›</span>
+    <span>Kỹ thuật Lập trình Hệ thống @if (courseId()) { (#{{ courseId() }}) }</span>
+    <span>›</span>
+    <strong>Báo cáo &amp; Phân tích chuyên sâu</strong>
+  </nav>
+
+  <header class="me18-page__header">
+    <div class="me18-page__hero-left">
+      <div class="me18-badges">
+        <span class="me18-badge me18-badge--term">HỌC KỲ II • 2024–2025</span>
+        <span class="me18-badge me18-badge--sync">● {{ analytics() ? 'Đã đồng bộ API #66' : 'Chờ đồng bộ dữ liệu' }}</span>
+      </div>
+      <h1 id="me18-title" class="me18-page__title">
+        Analytics hoạt động khóa học @if (courseId()) { <span>#{{ courseId() }}</span> }
+      </h1>
+      <p class="me18-page__subtitle">
+        Theo dõi toàn diện mức độ tương tác học liệu, tỷ lệ hoàn thành từng chương và hiệu suất giải quyết bài tập thực hành của học viên theo thời gian thực.
+      </p>
+    </div>
+
+    <div class="me18-page__toolbar">
+      <label class="me18-filter-box" title="API #66 không hỗ trợ tham số lọc khoảng thời gian">
+        <span class="me18-filter-box__label">KHUNG THỜI GIAN PHÂN TÍCH</span>
+        <select disabled aria-label="Khoảng thời gian (chưa hỗ trợ)">
+          <option>📅 7 ngày gần đây (Chưa có dữ liệu) 🔒</option>
+        </select>
+      </label>
+
+      <div class="me18-filter-box">
+        <span class="me18-filter-box__label">TÁC VỤ BÁO CÁO</span>
+        <button
+          type="button"
+          class="me18-btn me18-btn--disabled"
+          disabled
+          title="Backend chưa có endpoint xuất báo cáo CSV cho analytics khóa học"
+          data-testid="export-csv-btn"
+        >
+          ⤓ Xuất dữ liệu (.CSV)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  @if (errorMessage(); as errMsg) {
+    <div class="me18-alert me18-alert--error" role="alert" data-testid="error-banner">
+      <div>
+        <strong>Lỗi ({{ errorCode() }}):</strong> {{ errMsg }}
+      </div>
+      @if (courseId()) {
+        <button type="button" class="me18-btn me18-btn--secondary" (click)="loadAnalytics()">
+          Thử lại
+        </button>
+      }
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="me18-state-card" role="status" data-testid="loading-state">
+      Đang tải số liệu analytics khóa học...
+    </div>
+  }
+
+  <app-me18-metrics-cards [analytics]="analytics()" />
+
+  <section class="me18-showcase-card" data-testid="zero-activity-banner">
+    <div class="me18-showcase-card__icon" aria-hidden="true">📉</div>
+    <span class="me18-showcase-card__pill">
+      TRẠNG THÁI PHÂN TÍCH: {{ hasActivity() ? 'ĐÃ GHI NHẬN HOẠT ĐỘNG' : 'CHƯA KÍCH HOẠT' }}
+    </span>
+    <h2 class="me18-showcase-card__title">
+      {{ hasActivity() ? 'Báo cáo tổng hợp hoạt động học viên' : 'Chưa có số liệu phân tích thống kê' }}
+    </h2>
+    <p class="me18-showcase-card__desc">
+      Hệ thống phân tích học tập (Learning Analytics) chưa ghi nhận đủ dữ liệu hoạt động cho khóa học này.
+      Các biểu đồ chuyên sâu về phân bổ điểm số, xu hướng chuyên cần và cảnh báo học viên có nguy cơ tụt hậu sẽ tự động hiển thị ngay khi học viên bắt đầu tương tác với bài giảng.
+    </p>
+    <div class="me18-showcase-card__actions">
+      <button
+        type="button"
+        class="me18-btn me18-btn--primary"
+        (click)="backToProgress()"
+        data-testid="back-progress-btn"
+      >
+        ← Quay lại tiến độ toàn khóa (ME-16)
+      </button>
+      <button
+        type="button"
+        class="me18-btn me18-btn--soft"
+        [disabled]="loading() || !courseId()"
+        (click)="loadAnalytics()"
+        data-testid="refresh-analytics-btn"
+      >
+        ↻ Kiểm tra đồng bộ lại
+      </button>
+    </div>
+    <div class="me18-showcase-card__foot">
+      ✔ WCAG 2.1 AA Compliant • 🗄 Schema v2.4 Analytical Ready
+    </div>
+  </section>
+</section>

@@ -1,0 +1,65 @@
+<section class="me15-table-card" aria-label="Báo cáo phân phối chi tiết">
+  <div class="me15-table-card__head">
+    <div>
+      <h2 class="me15-table-card__title">Báo cáo phân phối chi tiết</h2>
+      <p class="me15-table-card__note">
+        Danh sách kết quả phát hành tới từng định danh người nhận cụ thể từ API #64
+      </p>
+    </div>
+    <span class="me15-raw-badge">Dữ liệu gốc</span>
+  </div>
+
+  @if (items().length === 0) {
+    <div class="me15-table-card__empty" data-testid="empty-status-table">
+      <div class="me15-empty-icon" aria-hidden="true">📋</div>
+      <strong>Chưa có báo cáo phân phối chi tiết cho từng người nhận.</strong>
+      <p>
+        Hệ thống hiện chỉ cung cấp trạng thái điều phối tổng thể của yêu cầu gửi thông báo hoặc đang chờ bạn nhập mã thông báo (<code>notification_id</code>) để tra cứu.
+      </p>
+    </div>
+  } @else {
+    <div class="me15-table-wrap">
+      <table class="me15-table">
+        <thead>
+          <tr>
+            <th scope="col">Mã thông báo</th>
+            <th scope="col">Operation ID</th>
+            <th scope="col">Trạng thái phát hành</th>
+            <th scope="col">Người nhận / Kênh gửi</th>
+            <th scope="col">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of items(); track row.notificationId) {
+            <tr data-testid="status-row">
+              <td><strong>#{{ row.notificationId }}</strong></td>
+              <td><code>{{ row.operationId }}</code></td>
+              <td>
+                <span
+                  class="me15-badge"
+                  [class.me15-badge--sent]="row.status === 'SENT'"
+                  [class.me15-badge--queued]="row.status === 'QUEUED'"
+                  [class.me15-badge--failed]="row.status === 'FAILED'"
+                  [attr.data-testid]="'status-badge-' + row.notificationId"
+                >
+                  {{ getStatusLabel(row.status) }}
+                </span>
+              </td>
+              <td class="me15-muted">Đồng bộ qua hàng đợi trung tâm</td>
+              <td>
+                <button
+                  type="button"
+                  class="me15-retry-btn"
+                  disabled
+                  title="Backend chưa cung cấp endpoint gửi lại (retry) thông báo"
+                >
+                  Gửi lại (Chưa có API)
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

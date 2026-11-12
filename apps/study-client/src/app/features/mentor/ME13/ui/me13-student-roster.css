@@ -1,0 +1,199 @@
+:host {
+  display: block;
+}
+
+.me13-roster {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+.me13-roster__head {
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.me13-roster__head h2 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.me13-roster__head p {
+  margin: 0.2rem 0 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.me13-roster__badges {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.me13-count-pill,
+.me13-sec-pill {
+  font-size: 0.74rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.me13-roster__toolbar {
+  padding: 0.65rem 1.25rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.me13-roster__actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.me13-link-btn {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.me13-link-btn:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.me13-roster__empty {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  max-width: 540px;
+  margin: auto;
+}
+
+.me13-empty-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  margin: 0 auto 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+}
+
+.me13-roster__empty h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.me13-roster__empty p {
+  margin: 0 0 1.25rem;
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.me13-empty-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  text-align: left;
+}
+
+.me13-empty-steps span {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.74rem;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.me13-roster__list {
+  list-style: none;
+  margin: 0;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.me13-student-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.85rem;
+}
+
+.me13-student-item--selected {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.me13-student-item__label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.me13-student-item__avatar {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.me13-student-item__info {
+  display: flex;
+  flex-direction: column;
+}
+
+.me13-student-item__name {
+  font-size: 0.86rem;
+  color: #0f172a;
+}
+
+.me13-student-item__meta {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.me13-roster__foot {
+  padding: 0.75rem 1.25rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  color: #64748b;
+}

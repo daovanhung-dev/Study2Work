@@ -1,0 +1,21 @@
+<section class="me15-summary" aria-label="Tổng hợp tiến độ gửi thông báo">
+  <article class="me15-kpi" data-testid="kpi-total">
+    <span class="me15-kpi__label">Tổng bản ghi thông báo</span>
+    <strong class="me15-kpi__value">{{ summary().total }}</strong>
+  </article>
+
+  <article class="me15-kpi me15-kpi--sent" data-testid="kpi-sent">
+    <span class="me15-kpi__label">Đã gửi thành công (SENT)</span>
+    <strong class="me15-kpi__value">{{ summary().sent }}</strong>
+  </article>
+
+  <article class="me15-kpi me15-kpi--queued" data-testid="kpi-queued">
+    <span class="me15-kpi__label">Đang xếp hàng xử lý (QUEUED)</span>
+    <strong class="me15-kpi__value">{{ summary().queued }}</strong>
+  </article>
+
+  <article class="me15-kpi me15-kpi--failed" data-testid="kpi-failed">
+    <span class="me15-kpi__label">Gửi thất bại (FAILED)</span>
+    <strong class="me15-kpi__value">{{ summary().failed }}</strong>
+  </article>
+</section>

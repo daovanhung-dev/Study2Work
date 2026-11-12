@@ -1,0 +1,90 @@
+<div class="me11-shell">
+  <main class="page-width main-content">
+    <section class="hero-row" aria-labelledby="me11-title">
+      <div>
+        <p class="eyebrow">🎧 CỔNG GIẢI ĐÁP &amp; ĐỒNG HÀNH 1-ON-1 · AC-24</p>
+        <h1 id="me11-title">Hộp thư hỗ trợ và giải đáp thắc mắc học viên</h1>
+        <p class="hero-desc">
+          Quản lý, phân loại và phản hồi trực tiếp các yêu cầu học thuật hoặc khó khăn kỹ thuật từ học viên theo đúng cam kết chuẩn đầu ra (API #58).
+        </p>
+      </div>
+
+      <div class="sla-pills">
+        <span class="sla-pill sla-pill--green">● SLA phản hồi: &lt; 4 giờ</span>
+        <span class="sla-pill">🕒 Vừa cập nhật tức thì</span>
+      </div>
+    </section>
+
+    <study-me11-filter-bar
+      [courses]="courses()"
+      [coursesLoading]="coursesLoading()"
+      [selectedCourseId]="selectedCourseId()"
+      [selectedStatus]="selectedStatus()"
+      [counts]="counts()"
+      [loading]="screenState() === 'loading'"
+      (statusChange)="onStatusChange($event)"
+      (courseChange)="onCourseChange($event)"
+      (refreshInbox)="refreshInbox()"
+    />
+
+    @if (screenState() === 'unauthorized' || screenState() === 'forbidden' || screenState() === 'validation-error' || screenState() === 'error') {
+      <section class="state-banner state-banner--error" role="alert">
+        <div>
+          <strong>Trạng thái kết nối API #58 ({{ screenState() }}):</strong> {{ errorMessage() }}
+        </div>
+        <button class="btn-retry" type="button" (click)="refreshInbox()">Thử lại</button>
+      </section>
+    }
+
+    @if (screenState() === 'ready' && requests().length > 0) {
+      <study-me11-request-list
+        [items]="requests()"
+        (selectRequest)="openSupportThread($event)"
+      />
+    } @else {
+      <section class="empty-inbox-card" aria-labelledby="me11-empty-title">
+        <div class="mail-icon-box" aria-hidden="true">✉</div>
+        <h2 id="me11-empty-title">
+          {{ screenState() === 'loading' ? 'Đang tải hộp thư hỗ trợ...' : 'Không có yêu cầu hỗ trợ nào đang chờ xử lý' }}
+        </h2>
+        <p class="empty-copy">
+          Hộp thư hỗ trợ của bạn hiện không có câu hỏi hoặc yêu cầu trợ giúp nào từ học viên trong các khóa học bạn phụ trách. Các thắc mắc mới trong quá trình học sẽ được gửi trực tiếp về đây.
+        </p>
+
+        <button class="btn-reload" type="button" (click)="refreshInbox()">
+          ↻ Làm mới hộp thư
+        </button>
+
+        <p class="auto-notify-note">
+          ✔ Hệ thống tự động kích hoạt thông báo tức thời ngay khi có tin nhắn mới
+        </p>
+      </section>
+    }
+
+    <section class="info-cards-grid" aria-label="Thông tin hỗ trợ Giảng viên">
+      <article class="info-card">
+        <span class="info-icon" aria-hidden="true">⏱</span>
+        <div>
+          <h3>Thời hạn cam kết SLA</h3>
+          <p>Mỗi câu hỏi từ học viên đều được tính mốc ưu tiên 4h vào ngày làm việc để duy trì nhịp học ổn định.</p>
+        </div>
+      </article>
+
+      <article class="info-card">
+        <span class="info-icon" aria-hidden="true">💬</span>
+        <div>
+          <h3>Kho giải đáp chuẩn</h3>
+          <p>Sử dụng mẫu giải đáp sẵn cho các lỗi môi trường Git, Docker hay cấu hình thư viện phổ biến.</p>
+        </div>
+      </article>
+
+      <article class="info-card">
+        <span class="info-icon" aria-hidden="true">🎥</span>
+        <div>
+          <h3>Hẹn gặp trực tiếp 1:1</h3>
+          <p>Nếu vấn đề phức tạp, bạn có thể gửi hướng dẫn chi tiết ngay trong khung trả lời để giải thích trực quan.</p>
+        </div>
+      </article>
+    </section>
+  </main>
+</div>
