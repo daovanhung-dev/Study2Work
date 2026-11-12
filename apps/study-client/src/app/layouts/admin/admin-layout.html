@@ -1,1 +1,103 @@
-<router-outlet />
+<div class="admin-shell">
+  <header class="app-header">
+    <div class="header-main page-width">
+      <div class="brand" aria-label="Study2Work LMS, cổng quản trị">
+        <span class="brand-mark"><study-icon name="brand" /></span>
+        <span class="brand-copy">
+          <span class="brand-name">Study2Work</span>
+          <span class="brand-product">Learning management system</span>
+        </span>
+        <span class="brand-divider" aria-hidden="true"></span>
+        <span class="brand-portal">Admin portal</span>
+      </div>
+
+      <nav class="primary-nav" aria-label="Điều hướng quản trị">
+        <ul>
+          <li>
+            <a
+              class="nav-item"
+              routerLink="/admin"
+              [class.nav-item--current]="isAdminHome"
+              [attr.aria-current]="isAdminHome ? 'page' : null"
+            >
+              <study-icon name="dashboard" />
+              <span>Tổng quan</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="nav-item"
+              routerLink="/admin/users"
+              [class.nav-item--current]="isUsersRoute"
+              [attr.aria-current]="isUsersRoute ? 'page' : null"
+            >
+              <study-icon name="users" />
+              <span>Người dùng</span>
+            </a>
+          </li>
+          <li>
+            <span class="nav-item nav-item--disabled" aria-disabled="true" title="Chưa khả dụng">
+              <study-icon name="book" />
+              <span>Khóa học &amp; nội dung</span>
+            </span>
+          </li>
+          <li>
+            <span class="nav-item nav-item--disabled" aria-disabled="true" title="Chưa khả dụng">
+              <study-icon name="checklist" />
+              <span>Kiểm duyệt</span>
+            </span>
+          </li>
+          <li>
+            <span class="nav-item nav-item--disabled" aria-disabled="true" title="Chưa khả dụng">
+              <study-icon name="chart" />
+              <span>Báo cáo</span>
+            </span>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="header-tools">
+        <button
+          class="icon-button"
+          type="button"
+          aria-label="Thông báo chưa khả dụng"
+          title="Thông báo chưa được tích hợp"
+          disabled
+        >
+          <study-icon name="bell" />
+        </button>
+        <span class="profile-placeholder" aria-label="Thông tin phiên chưa được tích hợp">
+          <span class="profile-avatar"><study-icon name="person" /></span>
+          <span class="profile-copy">
+            <span>Thông tin phiên</span>
+            <span>Chưa được tích hợp</span>
+          </span>
+        </span>
+      </div>
+    </div>
+
+    <div class="breadcrumb-row page-width">
+      <nav aria-label="Đường dẫn trang">
+        <ol class="breadcrumbs">
+          <li>Hệ thống</li>
+          <li aria-hidden="true"><study-icon name="chevron" /></li>
+          <li>Quản trị trung tâm</li>
+          <li aria-hidden="true"><study-icon name="chevron" /></li>
+          <li aria-current="page">{{ isUsersRoute ? 'Danh sách người dùng' : 'Không gian làm việc' }}</li>
+        </ol>
+      </nav>
+      <span class="breadcrumb-status">
+        <study-icon name="info" />
+        <span>Màn hình chưa kết nối dữ liệu</span>
+      </span>
+    </div>
+  </header>
+
+  <router-outlet />
+
+  <footer class="page-footer">
+    <div class="page-width footer-content">
+      <p>© Study2Work LMS <span aria-hidden="true">·</span> Hệ thống quản trị trung tâm</p>
+    </div>
+  </footer>
+</div>

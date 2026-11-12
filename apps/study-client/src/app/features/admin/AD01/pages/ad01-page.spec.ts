@@ -33,7 +33,6 @@ describe('AD01Page', () => {
     expect(text).toContain('Chưa có dữ liệu tích hợp');
     expect(text).toContain('Nguồn nhật ký chưa được kết nối');
     expect(text).toContain('Chưa có nguồn trạng thái được kết nối');
-    expect(text).toContain('Thông tin phiên');
     expect(text).not.toMatch(/System Normal|Trực tuyến|Sẵn sàng|Quản Trị Viên|ISO\/IEC 27001/);
     expect(
       Array.from(root.querySelectorAll('.service-state')).every(
@@ -49,7 +48,7 @@ describe('AD01Page', () => {
     const root = fixture.nativeElement as HTMLElement;
     const buttons = Array.from(root.querySelectorAll('button'));
 
-    expect(buttons).toHaveLength(9);
+    expect(buttons).toHaveLength(8);
     expect(buttons.every((button) => button.disabled)).toBe(true);
     expect(root.querySelectorAll('a[href]')).toHaveLength(0);
   });

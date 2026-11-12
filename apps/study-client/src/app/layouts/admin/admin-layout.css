@@ -1,14 +1,20 @@
-:host {
+:host,
+.admin-shell {
   display: block;
+  min-height: 100vh;
+  background: var(--page-background);
 }
+
 .page-width {
   width: min(100% - 64px, 1200px);
   margin-inline: auto;
 }
+
 .app-header {
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
+
 .header-main,
 .header-tools,
 .brand,
@@ -18,15 +24,18 @@
   display: flex;
   align-items: center;
 }
+
 .header-main {
   min-height: 76px;
   gap: 18px;
 }
+
 .brand {
   flex: 0 0 auto;
   gap: 9px;
   min-width: 230px;
 }
+
 .brand-mark,
 .profile-avatar {
   display: grid;
@@ -34,33 +43,39 @@
   place-items: center;
   border-radius: 12px;
 }
+
 .brand-mark {
   width: 40px;
   height: 40px;
   color: #fff;
   background: var(--ocean-primary);
 }
+
 .brand-copy,
 .profile-copy {
   display: flex;
   min-width: 0;
   flex-direction: column;
 }
+
 .brand-name {
   color: var(--ocean-deep);
   font-size: 15px;
   font-weight: 700;
 }
+
 .brand-product,
 .profile-copy span:last-child {
   color: var(--text-muted);
   font-size: 10px;
 }
+
 .brand-divider {
   width: 1px;
   height: 30px;
   background: var(--border);
 }
+
 .brand-portal {
   color: var(--ocean-primary);
   font-size: 10px;
@@ -68,47 +83,64 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
 .primary-nav {
   min-width: 0;
   flex: 1 1 auto;
 }
+
 .primary-nav ul {
   gap: 3px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
+
 .nav-item {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
   gap: 7px;
   padding: 7px 9px;
+  border: 0;
   border-radius: 9px;
   color: var(--text-muted);
+  background: transparent;
+  font: inherit;
   font-size: 11px;
   font-weight: 600;
+  text-decoration: none;
   white-space: nowrap;
 }
+
 .nav-item--current {
   color: var(--ocean-deep);
   background: var(--ocean-soft);
 }
-.nav-item[aria-disabled='true'] {
+
+.nav-item--disabled {
   opacity: 0.72;
 }
+
+.nav-item:focus-visible,
+.icon-button:focus-visible {
+  outline: 3px solid var(--ocean-primary);
+  outline-offset: 2px;
+}
+
 .header-tools {
   flex: 0 0 auto;
   gap: 10px;
 }
+
 .breadcrumb-status {
   display: inline-flex;
-  align-items: center;
   gap: 6px;
   color: var(--text-muted);
   font-size: 10px;
   font-weight: 650;
 }
+
 .icon-button {
   display: grid;
   flex: 0 0 auto;
@@ -120,15 +152,18 @@
   color: var(--text-muted);
   background: var(--surface);
 }
+
 .icon-button:disabled {
   cursor: not-allowed;
   opacity: 0.72;
 }
+
 .profile-placeholder {
   gap: 8px;
   padding-left: 10px;
   border-left: 1px solid var(--border);
 }
+
 .profile-avatar {
   width: 36px;
   height: 36px;
@@ -136,12 +171,14 @@
   color: var(--ocean-primary);
   background: var(--ocean-soft);
 }
+
 .profile-copy {
   gap: 3px;
   font-size: 11px;
   font-weight: 650;
   white-space: nowrap;
 }
+
 .breadcrumb-row {
   display: flex;
   min-height: 48px;
@@ -150,6 +187,7 @@
   gap: 12px;
   border-top: 1px solid var(--border);
 }
+
 .breadcrumbs {
   display: flex;
   flex-wrap: wrap;
@@ -161,50 +199,81 @@
   font-size: 11px;
   list-style: none;
 }
+
 .breadcrumbs li:last-child {
   color: var(--text-primary);
   font-weight: 650;
 }
+
 .breadcrumb-status {
   text-align: right;
 }
+
+.page-footer {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.footer-content {
+  display: flex;
+  min-height: 66px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  color: var(--text-muted);
+  font-size: 9px;
+}
+
+.footer-content p {
+  margin: 0;
+}
+
 @media (max-width: 1199px) {
   .header-main {
     flex-wrap: wrap;
     gap: 8px 14px;
     padding-block: 12px;
   }
+
   .brand {
     min-width: 215px;
   }
+
   .primary-nav {
     order: 3;
     flex-basis: 100%;
     overflow-x: auto;
   }
+
   .primary-nav ul {
     width: max-content;
   }
+
   .header-tools {
     margin-left: auto;
   }
 }
+
 @media (max-width: 767px) {
   .page-width {
     width: calc(100% - 32px);
   }
+
   .brand {
     min-width: 0;
   }
+
   .brand-product,
   .brand-divider,
   .brand-portal,
   .profile-copy {
     display: none;
   }
+
   .header-tools {
     gap: 8px;
   }
+
   .breadcrumb-row {
     min-height: 54px;
     align-items: flex-start;
@@ -213,10 +282,12 @@
     gap: 4px;
     padding-block: 8px;
   }
+
   .breadcrumbs {
     gap: 5px;
     font-size: 10px;
   }
+
   .breadcrumb-status {
     font-size: 9px;
   }

@@ -3,13 +3,15 @@
 ## Current source status
 
 `apps/study-client/` contains an Angular 22 standalone SPA with a readiness
-page at `/` and a presentation-only AD-01 page at `/admin`; both are registered
-through lazy-loaded route groups. The readiness route is a root scaffold, not
-SH-01. AD-01 has no auth guard, report API, or live Admin data. Other business
-screens, auth, feature-specific Study API calls, and deployment remain unwired
-or unverified. The generic `StudyApiService` in `src/app/core/http/` and local
-`/api/v1` proxy are transport infrastructure only. Check current source for each
-screen task.
+page at `/`, AD-01 at `/admin`, and presentation-only AD-02 at `/admin/users`;
+the routes use lazy-loaded groups and share `AdminLayout`. The readiness route
+is a root scaffold, not SH-01. AD-02 has an honest disconnected empty state and
+disabled search/filter/pagination controls; it has no user records, API call or
+auth guard. DD/API #68 remains blocked for functional implementation, and the
+unguarded Admin routes provide navigation only. Other business screens, auth,
+feature-specific Study API calls, and deployment remain unwired or unverified.
+The generic `StudyApiService` in `src/app/core/http/` and local `/api/v1` proxy
+are transport infrastructure only. Check current source for each screen task.
 
 ## Pages
 
@@ -23,6 +25,7 @@ screen task.
 | Screen implementation, DD analysis, demo and fixture cleanup | [`workflows/screen-implementation.md`](workflows/screen-implementation.md) | Registered workflow `study-web-screen-coding`; required for individual screen coding/fix/test/demo. |
 | Visual, interaction and accessibility target | [`../../web-study/design.md`](../../web-study/design.md) | Intended design only; not runtime evidence. |
 | Angular folders, file responsibilities, and boundaries | [`../../../apps/study-client/gui/architech.md`](../../../apps/study-client/gui/architech.md) | Current scaffold and planned feature structure; no business behavior. |
+| Admin presentation routes and shared shell | `src/app/features/admin/admin.routes.ts`, `src/app/layouts/admin/`, `src/app/features/admin/AD02/` | `/admin` renders AD-01 and `/admin/users` renders presentation-only AD-02; API #68, auth and user data remain unwired/blocked. |
 | Skill-formatted screen DD packages | [`../../../apps/study-client/docs/dd_screens/screen-index.md`](../../../apps/study-client/docs/dd_screens/screen-index.md) | 83 source-derived packages; route/API status stays per screen, and the packages do not prove runtime wiring. |
 
 For every Study FE task, follow the mandatory scope preflight in

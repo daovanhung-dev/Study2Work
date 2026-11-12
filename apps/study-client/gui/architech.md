@@ -1,12 +1,12 @@
 # Kiến trúc Study Web
 
-    STATUS: ROOT_READINESS_AND_ROUTED_AD01_UI
+    STATUS: ROOT_READINESS_AND_ROUTED_ADMIN_PRESENTATION_UI
     FRAMEWORK: ANGULAR 22
     RENDERING: CLIENT-SIDE SPA
 
 ## Mục đích và ranh giới hiện tại
 
-Tài liệu này mô tả bộ khung Angular của Study Web và cấu trúc triển khai màn hình. App root chỉ chứa `RouterOutlet`; `/` lazy-load route readiness scaffold trong `features/system`, còn `/admin` lazy-load AD-01. AD-01 vẫn presentation-only: chưa có API/report data, phiên Admin, auth guard hoặc quyền report được xác minh; truy cập `/admin` không phải access control. System root scaffold không phải SH-01. Chưa triển khai luồng xác thực, lưu trữ dữ liệu hoặc hành vi phát hành ứng dụng. `core/http/StudyApiService` cung cấp transport generic tới `/api/v1`; Angular dev server proxy chuyển tiếp local request tới Study API `127.0.0.1:3003`. Transport này không xác nhận endpoint nghiệp vụ hoặc deployment đã được nối.
+Tài liệu này mô tả bộ khung Angular của Study Web và cấu trúc triển khai màn hình. App root chỉ chứa `RouterOutlet`; `/` lazy-load route readiness scaffold trong `features/system`, còn `/admin` và `/admin/users` dùng chung `AdminLayout` lần lượt hiển thị AD-01 và AD-02. Cả hai trang Admin đều presentation-only; AD-02 có bảng rỗng và điều khiển tìm kiếm/lọc/phân trang disabled. API #68, dữ liệu người dùng, enum role/status, auth guard và quyền Admin chưa được nối hoặc xác minh; DD/API #68 vẫn blocked. Điều hướng UI không phải access control. System root scaffold không phải SH-01. Chưa triển khai luồng xác thực, lưu trữ dữ liệu hoặc hành vi phát hành ứng dụng. `core/http/StudyApiService` cung cấp transport generic tới `/api/v1`; Angular dev server proxy chuyển tiếp local request tới Study API `127.0.0.1:3003`. Transport này không xác nhận endpoint nghiệp vụ hoặc deployment đã được nối.
 
 83 gói màn hình và các tài nguyên trong screen_stitch dưới docs/ là bằng chứng về yêu cầu và thiết kế. Các tuyến được đề xuất trong đó không chứng minh rằng tuyến đã được đăng ký khi ứng dụng chạy. Trước khi triển khai màn hình, hãy đối chiếu DD và các tham chiếu API với mã nguồn Study Server hiện tại cùng các hợp đồng có thể kiểm chứng. Ghi rõ những hành vi chưa được xác nhận.
 
@@ -46,6 +46,7 @@ Quy tắc bắt buộc về ranh giới giao diện, nghiệp vụ và truy cậ
             │   ├── admin/           # Outlet shell cho các route Admin
             │   └── system/          # Outlet shell cho route readiness ở /
             ├── shared/              # Thành phần trình bày dùng lại, không chứa quy tắc nghiệp vụ
+            │   └── ui/study-icon.*  # Icon trung lập dùng trong Admin shell và AD-02
             └── features/            # Nhóm màn hình Study
                 ├── shared/          # SH-* / Auth / System screens theo inventory
                 ├── guest/           # GS-*
@@ -56,7 +57,8 @@ Quy tắc bắt buộc về ranh giới giao diện, nghiệp vụ và truy cậ
                 │   └── pages/system-readiness-page.*
                 └── admin/           # AD-*
                     ├── admin.routes.ts
-                    └── AD01/        # data-access/, models/, pages/, ui/
+                    ├── AD01/        # data-access/, models/, pages/, ui/
+                    └── AD02/        # data-access/, models/, pages/, ui/; presentation-only
 
 Các tệp .gitkeep trong những thư mục kiến trúc còn trống chỉ giúp Git giữ lại cấu trúc dự kiến. Xóa từng tệp giữ chỗ khi thêm mã nguồn thật. Chỉ tạo thư mục con cho một tính năng khi bắt đầu triển khai năng lực tương ứng; không tạo module rỗng hoặc tệp API chỉ dựa trên suy đoán.
 
@@ -79,13 +81,13 @@ Các tệp .gitkeep trong những thư mục kiến trúc còn trống chỉ gi�
 
 - app.ts, app.html và app.css ghép thành phần gốc của ứng dụng. App root chỉ render `RouterOutlet`; readiness page được route riêng tại `/`, không phải màn hình SH-01.
 - app.config.ts đăng ký provider Angular dùng toàn ứng dụng, gồm `provideHttpClient()` cho API transport. Chỉ thêm provider tại đây khi toàn ứng dụng cần dùng.
-- app.routes.ts lazy-load `system.routes.ts` cho `/` và `admin.routes.ts` cho `/admin`. Không có wildcard, route SH-05/SH-06, auth guard hoặc API route.
+- app.routes.ts lazy-load `system.routes.ts` cho `/` và `admin.routes.ts` cho `/admin`; `admin.routes.ts` hiển thị AD-01 ở `/admin` và AD-02 ở `/admin/users`. Không có wildcard, route SH-05/SH-06, auth guard hoặc API route.
 - core/ quản lý hạ tầng toàn ứng dụng như cấu hình HTTP, transport API generic, tích hợp xác thực đã được xác minh, xử lý lỗi toàn cục và bộ chặn tuyến. Không đặt truy vấn hay chính sách riêng của nhóm tính năng trong core/. Hiện chưa có token store hoặc tích hợp xác thực Study Web.
 - layouts/ quản lý khung giao diện dùng chung cho các tuyến, chẳng hạn khung công khai, đã xác thực, student, mentor hoặc admin. Khung giao diện sắp xếp điều hướng và vùng hiển thị trang; không sở hữu quy tắc nghiệp vụ hay truy cập dữ liệu của nhóm tính năng.
 - shared/ quản lý thành phần trình bày tổng quát, chỉ thị, bộ biến đổi và tiện ích định dạng được nhiều miền dùng lại. Không được phụ thuộc vào nhóm tính năng, gọi API nghiệp vụ hoặc chứa quy tắc nghiệp vụ Study.
 - features/ quản lý screen theo nhóm `shared`, `guest`, `student`, `mentor` và `admin`. `features/system` chỉ giữ route readiness root được yêu cầu cho scaffold; các SH-* screen vẫn thuộc group `shared`. Mỗi screen có đúng bốn thư mục con trực tiếp: `data-access/`, `models/`, `pages/` và `ui/`.
 - pages/ chứa page component; ui/ chứa widget riêng của screen; data-access/ chỉ chứa I/O theo API đã xác minh; models/ chứa kiểu/chuyển đổi bám theo contract đã xác minh. Không tạo `domain/` hoặc folder thứ năm trong screen.
-- Mỗi nhóm có một route file và một layout. Theo yêu cầu cụ thể của task, route files ở đây dùng tên `admin.routes.ts` và `system.routes.ts`; các tên SH-* khác vẫn theo cấu trúc canonical. `/admin` nạp AD01Page trực tiếp qua AdminLayout; không có guard nên route không xác thực quyền.
+- Mỗi nhóm có một route file và một layout. Theo yêu cầu cụ thể của task, route files ở đây dùng tên `admin.routes.ts` và `system.routes.ts`; các tên SH-* khác vẫn theo cấu trúc canonical. `AdminLayout` sở hữu header, điều hướng, breadcrumb, footer và outlet cho AD01Page/AD02Page. `/admin/users` là route presentation-only: không gọi API #68, không có bản ghi hoặc enum lọc, không thêm auth; route không xác thực quyền.
 
 ### Mẫu cấu trúc feature
 
@@ -105,7 +107,7 @@ Tên thư mục screen dùng mã compact như `AD01` cho screen ID `AD-01`. Tuy�
                                                                    -> models (nếu có contract)
                                                                    -> data-access -> StudyApiService -> HttpClient -> /api/v1 -> Study API
 
-`StudyApiService`, `HttpClient` và proxy local đã được cấu hình; AD-01 hiện chưa có feature `data-access` hoặc API call. API #101 chưa có current route/module/query/model/test; không ánh xạ KPI draft thành card. Proxy chỉ áp dụng cho `ng serve`; production cần định tuyến cùng origin `/api/v1`, hiện chưa được xác minh. Với từng màn hình, trước tiên xác minh tuyến Study Server hiện tại, cấu trúc yêu cầu/phản hồi, xác thực, mã lỗi và các kiểm thử liên quan. Không suy ra hành vi điểm cuối API từ bản phác giao diện, cũng không tự tạo trường dữ liệu hoặc tuyến API để lấp chỗ trống.
+`StudyApiService`, `HttpClient` và proxy local đã được cấu hình; AD-01 và AD-02 không có feature API call. AD-02 chỉ trình bày trạng thái dữ liệu chưa kết nối; API #68 và functional DD vẫn blocked, không tạo service/model để lấp contract gap. API #101 chưa có current route/module/query/model/test; không ánh xạ KPI draft thành card. Proxy chỉ áp dụng cho `ng serve`; production cần định tuyến cùng origin `/api/v1`, hiện chưa được xác minh. Với từng màn hình, trước tiên xác minh tuyến Study Server hiện tại, cấu trúc yêu cầu/phản hồi, xác thực, mã lỗi và các kiểm thử liên quan. Không suy ra hành vi điểm cuối API từ bản phác giao diện, cũng không tự tạo trường dữ liệu hoặc tuyến API để lấp chỗ trống.
 
 Dùng Angular Signals cho trạng thái giao diện đồng bộ tại chỗ và RxJS cho luồng bất đồng bộ khi đã bổ sung tích hợp API có căn cứ. Chưa thêm thư viện quản lý trạng thái toàn cục nếu chưa có nhu cầu cụ thể giữa nhiều nhóm tính năng. Bộ chặn tuyến phía trình duyệt chỉ phục vụ trải nghiệm điều hướng; quyền truy cập do máy chủ quyết định.
 

@@ -1,5 +1,4 @@
-:host,
-.dashboard-shell {
+:host {
   display: block;
   min-height: 100vh;
   background: var(--page-background);
@@ -130,31 +129,6 @@ h1 {
   white-space: nowrap;
 }
 
-.page-footer {
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.footer-content {
-  display: flex;
-  min-height: 66px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  color: var(--text-muted);
-  font-size: 9px;
-}
-
-.footer-content p {
-  margin: 0;
-}
-
-.footer-content nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
 @media (max-width: 1023px) {
   .page-width {
     width: min(100% - 48px, 880px);
@@ -204,14 +178,4 @@ h1 {
     flex: 1 1 100%;
   }
 
-  .footer-content {
-    align-items: flex-start;
-    flex-direction: column;
-    justify-content: center;
-    padding-block: 15px;
-  }
-
-  .footer-content nav {
-    gap: 8px 13px;
-  }
 }

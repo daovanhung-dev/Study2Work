@@ -36,6 +36,20 @@ describe('Study app routes', () => {
     expect(routedText).not.toContain('Khung ứng dụng đã sẵn sàng');
   });
 
+  it('renders AD-02 at /admin/users and marks its navigation link current', async () => {
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/admin/users', AdminLayout);
+
+    const routedRoot = harness.routeNativeElement as HTMLElement;
+    expect(routedRoot.querySelector('h1')?.textContent).toContain('Danh sách người dùng');
+    expect(routedRoot.querySelector('a[routerLink="/admin/users"]')?.getAttribute('aria-current')).toBe(
+      'page',
+    );
+    expect(routedRoot.querySelector('a[routerLink="/admin"]')?.getAttribute('aria-current')).toBeNull();
+    expect(routedRoot.querySelectorAll('tbody .user-record')).toHaveLength(0);
+  });
+
   it('keeps the root component as a router outlet only', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();

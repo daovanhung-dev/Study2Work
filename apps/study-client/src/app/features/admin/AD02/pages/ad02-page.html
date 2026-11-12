@@ -1,0 +1,97 @@
+<main class="page-width user-page">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Quản trị người dùng</p>
+      <h1>Danh sách người dùng</h1>
+      <p class="page-description">
+        Danh sách tài khoản sẽ hiển thị khi nguồn dữ liệu được kết nối.
+      </p>
+    </div>
+  </header>
+
+  <section class="list-panel" aria-labelledby="list-title">
+    <div class="panel-heading">
+      <div>
+        <h2 id="list-title">Danh sách tài khoản</h2>
+        <p class="connection-note">
+          <study-icon name="info" />
+          <span>Dữ liệu người dùng chưa được kết nối</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="filters" role="group" aria-label="Bộ lọc danh sách người dùng">
+      <div class="filter-field search-field">
+        <label for="user-search">Tìm kiếm</label>
+        <div class="input-wrap">
+          <study-icon name="search" />
+          <input
+            id="user-search"
+            type="search"
+            placeholder="Họ tên hoặc email"
+            disabled
+            aria-describedby="controls-unavailable"
+          />
+        </div>
+      </div>
+
+      <div class="filter-field">
+        <label for="role-filter">Vai trò</label>
+        <select id="role-filter" disabled aria-describedby="controls-unavailable">
+          <option value="" selected>Tất cả vai trò</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label for="status-filter">Trạng thái</label>
+        <select id="status-filter" disabled aria-describedby="controls-unavailable">
+          <option value="" selected>Tất cả trạng thái</option>
+        </select>
+      </div>
+
+      <button class="reset-button" type="button" disabled aria-describedby="controls-unavailable">
+        Xóa bộ lọc
+      </button>
+    </div>
+
+    <p class="controls-note" id="controls-unavailable">
+      Tìm kiếm, bộ lọc và phân trang chưa khả dụng.
+    </p>
+
+    <div class="table-scroller" role="region" aria-label="Bảng người dùng" tabindex="0">
+      <table>
+        <caption class="visually-hidden">Danh sách người dùng</caption>
+        <thead>
+          <tr>
+            <th scope="col">Mã người dùng</th>
+            <th scope="col">Họ và tên</th>
+            <th scope="col">Email</th>
+            <th scope="col">Vai trò</th>
+            <th scope="col">Trạng thái</th>
+            <th scope="col">Ngày tạo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="empty-row">
+            <td colspan="6">
+              <div class="empty-state">
+                <span class="empty-icon"><study-icon name="users" /></span>
+                <p>Dữ liệu người dùng chưa được kết nối</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <nav class="pagination" aria-label="Phân trang danh sách người dùng">
+      <button class="page-button" type="button" disabled aria-label="Trang trước">
+        <study-icon name="chevron" />
+      </button>
+      <span>Phân trang chưa khả dụng</span>
+      <button class="page-button next-button" type="button" disabled aria-label="Trang sau">
+        <study-icon name="chevron" />
+      </button>
+    </nav>
+  </section>
+</main>
