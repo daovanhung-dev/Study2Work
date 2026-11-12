@@ -1,0 +1,40 @@
+<mxfile host="65bd71144e">
+    <diagram id="uc-unica" name="Use Case Diagram - Online Learning System">
+        <mxGraphModel dx="722" dy="593" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" background="#FFFFFF" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="ZEE-q4JSuUCzRBx5umBV-12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="" vertex="1">
+                    <mxGeometry height="250" width="380" x="450" y="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="ZEE-q4JSuUCzRBx5umBV-14" edge="1" parent="1" source="ZEE-q4JSuUCzRBx5umBV-13" style="edgeStyle=none;html=1;" target="ZEE-q4JSuUCzRBx5umBV-12">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ZEE-q4JSuUCzRBx5umBV-13" parent="1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;" value="" vertex="1">
+                    <mxGeometry height="80" width="120" x="260" y="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="ZEE-q4JSuUCzRBx5umBV-15" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="1.1.1.1" vertex="1">
+                    <mxGeometry height="30" width="60" x="390" y="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="ZEE-q4JSuUCzRBx5umBV-16" parent="1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;aspect=fixed;" value="ai" vertex="1">
+                    <mxGeometry height="40" width="40" x="480" y="270" as="geometry"/>
+                </mxCell>
+                <mxCell id="ZEE-q4JSuUCzRBx5umBV-17" parent="1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;aspect=fixed;" value="web1" vertex="1">
+                    <mxGeometry height="50" width="50" x="615" y="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="ZEE-q4JSuUCzRBx5umBV-19" parent="1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;aspect=fixed;" value="w2" vertex="1">
+                    <mxGeometry height="50" width="50" x="700" y="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="ZEE-q4JSuUCzRBx5umBV-20" parent="1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;aspect=fixed;" value="s2" vertex="1">
+                    <mxGeometry height="50" width="50" x="650" y="360" as="geometry"/>
+                </mxCell>
+                <mxCell id="ZEE-q4JSuUCzRBx5umBV-21" parent="1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;aspect=fixed;" value="server1" vertex="1">
+                    <mxGeometry height="50" width="50" x="550" y="310" as="geometry"/>
+                </mxCell>
+                <mxCell id="ZEE-q4JSuUCzRBx5umBV-22" parent="1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;aspect=fixed;" value="" vertex="1">
+                    <mxGeometry height="50" width="50" x="720" y="310" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
