@@ -2,12 +2,14 @@
 
 ## Current source status
 
-`apps/study-client/` now contains an Angular 22 standalone SPA scaffold plus
-documentation/assets. Only the root readiness placeholder is implemented;
-business screens, auth, feature-specific Study API calls, and deployment remain
-unwired or unverified. The generic `StudyApiService` in `src/app/core/http/` and
-the local `/api/v1` proxy are transport infrastructure only. Student screen
-behavior must be checked against current source for each task.
+`apps/study-client/` contains an Angular 22 standalone SPA with a readiness
+page at `/` and a presentation-only AD-01 page at `/admin`; both are registered
+through lazy-loaded route groups. The readiness route is a root scaffold, not
+SH-01. AD-01 has no auth guard, report API, or live Admin data. Other business
+screens, auth, feature-specific Study API calls, and deployment remain unwired
+or unverified. The generic `StudyApiService` in `src/app/core/http/` and local
+`/api/v1` proxy are transport infrastructure only. Check current source for each
+screen task.
 
 ## Pages
 

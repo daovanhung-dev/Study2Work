@@ -1,8 +1,8 @@
 # Study Web context router
 
 ```text
-CONTEXT_STATUS: SKELETON_ONLY
-SOURCE_STATUS: Angular 22 standalone SPA scaffold exists; business routes, auth, API integration and deployment are not verified
+CONTEXT_STATUS: VERIFIED_WITH_UNWIRED_COMPONENTS
+SOURCE_STATUS: Angular 22 SPA routes `/` to readiness scaffold and `/admin` to presentation-only AD-01; auth, feature APIs and deployment are not verified
 ```
 
 Canonical page graph: `INDEX.md`.
@@ -46,12 +46,15 @@ testing/demoing with immediate cleanup of isolated fake DB fixtures.
 
 The current checkout has a runnable Angular 22 standalone client-side SPA
 scaffold plus Study Web documentation and screen assets under
-`apps/study-client/docs/`. The root component renders a temporary readiness
-message and `app.routes.ts` has no business routes. A generic `StudyApiService`
-and local `/api/v1` dev proxy provide HTTP transport, but no feature endpoint,
-auth flow, or token storage is wired; serving on the CLI dev server does not
-verify deployment. Recheck the source tree for each task and do not infer
-feature behavior from design files or older snapshots.
+`apps/study-client/docs/`. `app.routes.ts` lazy-loads the root readiness page
+from `features/system` and the presentation-only AD-01 page at `/admin`.
+`features/system` here is only the requested root scaffold route; it does not
+move SH-* screens out of the canonical `shared` group or implement SH-01. The
+Admin route has no client auth guard and no report API. A generic
+`StudyApiService` and local `/api/v1` dev proxy provide HTTP transport, but no
+feature endpoint, auth flow, or token storage is wired; serving on the CLI dev
+server does not verify deployment. Recheck the source tree for each task and
+do not infer feature behavior from design files or older snapshots.
 
 [`../../web-study/design.md`](../../web-study/design.md) is the intended visual,
 interaction and accessibility target. The app architecture is documented in

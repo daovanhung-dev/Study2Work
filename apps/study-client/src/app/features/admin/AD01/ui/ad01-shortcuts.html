@@ -1,0 +1,27 @@
+<section class="shortcuts-section" aria-labelledby="shortcuts-title">
+  <div class="section-heading">
+    <div>
+      <h2 id="shortcuts-title">Lối tắt quản lý trực tiếp</h2>
+      <p>Các đích quản trị chưa được kết nối trong router.</p>
+    </div>
+  </div>
+
+  <div class="shortcuts-grid">
+    @for (shortcut of shortcuts; track shortcut.title) {
+      <button
+        class="shortcut-card"
+        type="button"
+        disabled
+        [attr.aria-label]="shortcut.title + ': chưa được kết nối'"
+      >
+        <span class="shortcut-icon"><study-ad01-icon [name]="shortcut.icon" /></span>
+        <span class="shortcut-copy">
+          <strong>{{ shortcut.title }}</strong>
+          <span>{{ shortcut.description }}</span>
+          <span class="shortcut-state">Chưa được kết nối</span>
+        </span>
+        <study-ad01-icon name="arrow" />
+      </button>
+    }
+  </div>
+</section>

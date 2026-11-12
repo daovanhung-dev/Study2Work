@@ -44,6 +44,25 @@ publish Bootstrap Plan and announce the first Event before tool calls
 -> update context and worklog
 ```
 
+## Context validator baseline
+
+When a task changes `.agents` pages, the context manifest, or registered
+workflow/skill/contract wiring, establish a validator baseline before the first
+context edit and run the validator again after all context and worklog edits:
+
+```bash
+node scripts/validate-agent-context.mjs
+```
+
+Capture the exit status and findings for both runs, then compare findings by
+their identity and target rather than by the total count alone. Record which
+findings were already present, which were resolved, and which were introduced
+by the task. Fix findings caused by the task. If unchanged baseline findings
+remain, report `BASELINE_INVALID` with their categories and affected scope; do
+not call that a pass and do not expand into unrelated scopes unless the user
+requested that work. Run the final comparison after updating the active
+worklog, since it is also part of agent context.
+
 ## Task routing
 
 | Workflow | Trigger | Required behavior | Verification |

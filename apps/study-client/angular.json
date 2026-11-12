@@ -2,7 +2,8 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
-    "packageManager": "npm"
+    "packageManager": "npm",
+    "analytics": "c10cf1b3-43e4-4863-8b7f-30b9b2f8a9cc"
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -49,9 +50,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.css"
-            ]
+            "styles": ["src/styles.css"]
           },
           "configurations": {
             "production": {
@@ -91,6 +90,16 @@
             }
           },
           "defaultConfiguration": "development"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "buildTarget": "study-client:build:development",
+            "tsConfig": "tsconfig.spec.json",
+            "runner": "vitest",
+            "include": ["**/*.spec.ts", "**/*.test.ts"],
+            "watch": false
+          }
         }
       }
     }

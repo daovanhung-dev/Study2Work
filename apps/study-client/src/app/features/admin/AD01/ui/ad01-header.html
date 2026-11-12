@@ -1,0 +1,67 @@
+<header class="app-header">
+  <div class="header-main page-width">
+    <div class="brand" aria-label="Study2Work LMS, cổng quản trị">
+      <span class="brand-mark"><study-ad01-icon name="brand" /></span>
+      <span class="brand-copy">
+        <span class="brand-name">Study2Work</span>
+        <span class="brand-product">Learning management system</span>
+      </span>
+      <span class="brand-divider" aria-hidden="true"></span>
+      <span class="brand-portal">Admin portal</span>
+    </div>
+
+    <nav class="primary-nav" aria-label="Điều hướng quản trị">
+      <ul>
+        @for (item of navigation; track item.label) {
+          <li>
+            <span
+              class="nav-item"
+              [class.nav-item--current]="item.current"
+              [attr.aria-current]="item.current ? 'page' : null"
+              [attr.aria-disabled]="item.current ? null : 'true'"
+              [title]="item.current ? null : 'Điều hướng chưa được kết nối'"
+            >
+              <study-ad01-icon [name]="item.icon" />
+              <span>{{ item.label }}</span>
+            </span>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="header-tools">
+      <button
+        class="icon-button"
+        type="button"
+        aria-label="Thông báo chưa khả dụng"
+        title="Thông báo chưa được tích hợp"
+        disabled
+      >
+        <study-ad01-icon name="bell" />
+      </button>
+      <span class="profile-placeholder" aria-label="Thông tin phiên chưa được tích hợp">
+        <span class="profile-avatar"><study-ad01-icon name="person" /></span>
+        <span class="profile-copy">
+          <span>Thông tin phiên</span>
+          <span>Chưa được tích hợp</span>
+        </span>
+      </span>
+    </div>
+  </div>
+
+  <div class="breadcrumb-row page-width">
+    <nav aria-label="Đường dẫn trang">
+      <ol class="breadcrumbs">
+        <li>Hệ thống</li>
+        <li aria-hidden="true"><study-ad01-icon name="chevron" /></li>
+        <li>Quản trị trung tâm</li>
+        <li aria-hidden="true"><study-ad01-icon name="chevron" /></li>
+        <li aria-current="page">Không gian làm việc</li>
+      </ol>
+    </nav>
+    <span class="breadcrumb-status">
+      <study-ad01-icon name="info" />
+      <span>Màn hình chưa kết nối dữ liệu</span>
+    </span>
+  </div>
+</header>

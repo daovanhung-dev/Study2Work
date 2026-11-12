@@ -122,6 +122,25 @@ outlet. `app.routes.ts` composes only the group layouts and group route files
 whose requirements and dependencies have been verified. A route from the DD
 remains a design candidate until it is wired in source.
 
+Before connecting or reorganizing routes, use this checklist:
+
+1. Inspect the root component/template and shared layouts for content rendered
+   outside a `RouterOutlet`. Static scaffold placed beside the outlet remains
+   visible on every child URL; put route-specific content inside its page or
+   layout instead of leaving it at the app root.
+2. Record the intended behavior for `/` and the feature URL. Distinguish a root
+   readiness/system page from the Shared (`SH-*`) screen group and from a
+   fallback route. If “system route” or another route label leaves those
+   behaviors ambiguous and the choice changes navigation, resolve that meaning
+   before wiring routes. Do not add an unspecified wildcard or fallback.
+3. Inspect the existing route graph and guard/auth configuration. Preserve
+   verified guards; do not infer a role or access policy from a route name. An
+   unguarded route provides navigation only and does not control access.
+4. Add or update route tests that open `/` and the feature URL directly, assert
+   the expected page at each URL, and verify root-only scaffold is absent from
+   the feature route. Include both URLs in the browser demo when both are in
+   scope.
+
 ## 5. Test and demonstrate the screen
 
 1. Add or update focused Angular tests for the DD test cases, events, data

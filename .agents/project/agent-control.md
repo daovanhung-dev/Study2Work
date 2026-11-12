@@ -109,7 +109,15 @@ Một Action được phép gồm nhiều Event liên quan cùng một kết qu�
 
 B0 là **bước chính thức trong lifecycle**, không lấy nội dung khảo sát làm thành tích hai lần. Kết quả đọc source có thể dùng làm bằng chứng hoàn thành những Action khảo sát tương ứng trong Plan V1. Với việc rất nhỏ vẫn cần plan rút gọn và ID cho từng thao tác.
 
-### 3.3. Ví dụ Execution Plan dành cho Study Web
+### 3.3. Gate duyệt khi đề xuất thay đổi agent/context
+
+Khi người dùng chỉ yêu cầu phân tích, khảo sát hoặc đề xuất thay đổi agent/context:
+
+1. Chỉ đọc và trình bày file/đoạn dự kiến sửa, nội dung thay đổi, lý do và ảnh hưởng tới workflow, scope hoặc registry liên quan.
+2. Chưa chỉnh file cho đến khi người dùng duyệt rõ đề xuất. Yêu cầu phân tích hay hỏi “cần bổ sung gì” tự nó không phải ủy quyền sửa.
+3. Khi người dùng đã yêu cầu triển khai trực tiếp hoặc đã duyệt đề xuất cụ thể, tiếp tục theo scope được duyệt; không xin duyệt lại cùng nội dung.
+
+### 3.4. Ví dụ Execution Plan dành cho Study Web
 
 | ID | Step | Weight | Deliverable | Gate |
 |---|---|---:|---|---|

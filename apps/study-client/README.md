@@ -19,6 +19,12 @@ message; it is not the SH-01 product screen.
 npm run build
 ```
 
+## Test
+
+```bash
+npm test
+```
+
 ## Architecture
 
 See [`gui/architech.md`](gui/architech.md) for folder responsibilities, feature

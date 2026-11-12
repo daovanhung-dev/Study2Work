@@ -1006,7 +1006,7 @@
       "subcontexts": {
         "study-web": {
           "mode": "DEEP",
-          "status": "SKELETON_ONLY",
+          "status": "VERIFIED_WITH_UNWIRED_COMPONENTS",
           "entry": ".agents/web-work/study/AGENTS.md",
           "index": ".agents/web-work/study/INDEX.md",
           "pages": [
@@ -1043,16 +1043,23 @@
             "apps/study-client/src/app/app.css",
             "apps/study-client/src/app/app.config.ts",
             "apps/study-client/src/app/app.routes.ts",
+            "apps/study-client/src/app/app.routes.spec.ts",
             "apps/study-client/src/app/core/http/api-envelope.ts",
             "apps/study-client/src/app/core/http/study-api.service.ts",
-            "apps/study-client/src/app/layouts/.gitkeep",
+            "apps/study-client/src/app/layouts/admin/admin-layout.ts",
+            "apps/study-client/src/app/layouts/admin/admin-layout.html",
+            "apps/study-client/src/app/layouts/system/system-layout.ts",
+            "apps/study-client/src/app/layouts/system/system-layout.html",
             "apps/study-client/src/app/shared/.gitkeep",
             "apps/study-client/src/app/features/auth/.gitkeep",
             "apps/study-client/src/app/features/guest/.gitkeep",
-            "apps/study-client/src/app/features/system/.gitkeep",
+            "apps/study-client/src/app/features/system/system.routes.ts",
+            "apps/study-client/src/app/features/system/pages/system-readiness-page.ts",
+            "apps/study-client/src/app/features/system/pages/system-readiness-page.html",
+            "apps/study-client/src/app/features/system/pages/system-readiness-page.css",
             "apps/study-client/src/app/features/student/.gitkeep",
             "apps/study-client/src/app/features/mentor/.gitkeep",
-            "apps/study-client/src/app/features/admin/.gitkeep",
+            "apps/study-client/src/app/features/admin/admin.routes.ts",
             "apps/study-client/gui/architech.md"
           ]
         },
