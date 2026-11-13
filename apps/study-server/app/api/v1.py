@@ -137,35 +137,11 @@ from app.modules.guest.api_08_courses_detail.view import get_course_detail
 from app.modules.guest.api_09_courses_curriculum.view import get_course_curriculum
 from app.modules.guest.api_10_courses_reviews.models import CourseReviewsQuery
 from app.modules.guest.api_10_courses_reviews.view import get_course_reviews
-from app.modules.guest.api_11_courses_resources.view import (
-    get_course_resources as get_course_resources_view,
-)
 from app.modules.guest.api_12_resources_detail.view import get_resource_detail
 from app.modules.guest.api_13_users_me_avatar.models import AvatarUploadRequest
 from app.modules.guest.api_13_users_me_avatar.view import upload_avatar
 from app.modules.guest.api_14_users_me_profile.models import ProfileUpdateRequest
 from app.modules.guest.api_14_users_me_profile.view import update_profile
-from app.modules.guest.api_15_courses_enrollment_status.view import (
-    get_enrollment_status as get_enrollment_status_view,
-)
-from app.modules.guest.api_21_users_me_progress.view import (
-    get_user_progress as get_user_progress_view,
-)
-from app.modules.guest.api_22_lessons_access.view import (
-    check_lesson_access as check_lesson_access_view,
-)
-from app.modules.guest.api_23_lessons_start.view import (
-    start_lesson as start_lesson_view,
-)
-from app.modules.guest.api_24_lessons_detail.view import (
-    get_lesson_detail as get_lesson_detail_view,
-)
-from app.modules.guest.api_25_lessons_progress.models import (
-    LessonProgressUpdateRequest,
-)
-from app.modules.guest.api_25_lessons_progress.view import (
-    update_lesson_progress as update_lesson_progress_view,
-)
 from app.modules.guest.api_26_lessons_resources.view import get_lesson_resources
 from app.modules.guest.api_27_lessons_next.view import get_next_lesson
 from app.modules.guest.api_28_quizzes_detail.view import get_quiz_detail
@@ -685,24 +661,6 @@ def current_user(
     )
 
 
-# API #11 courses_resources
-@router.get(
-    "/courses/{course_id}/resources",
-    status_code=status.HTTP_200_OK,
-    response_model=dict[str, Any],
-)
-def course_resources(
-    course_id: int,
-    request: Request,
-    db: Session = db_dependency,
-) -> dict[str, Any] | JSONResponse:
-    return get_course_resources_view(
-        course_id=course_id,
-        db=db,
-        trace_id=get_trace_id(request),
-    )
-
-
 # API #12 resources_detail
 @router.get(
     "/resources/{resource_id}",
@@ -859,137 +817,6 @@ def update_current_profile(
         db=db,
         trace_id=get_trace_id(request),
     )
-
-
-
-# API #15 courses_enrollment_status
-@router.get(
-    "/courses/{course_id}/enrollment-status",
-    status_code=status.HTTP_200_OK,
-    response_model=dict[str, Any],
-)
-def course_enrollment_status(
-    course_id: int,
-    request: Request,
-    authorization: str | None = Header(default=None, alias="Authorization"),
-    db: Session = db_dependency,
-) -> dict[str, Any] | JSONResponse:
-    return get_enrollment_status_view(
-        course_id=course_id,
-        authorization=authorization,
-        db=db,
-        trace_id=get_trace_id(request),
-    )
-
-
-# API #21 users_me_progress
-@router.get(
-    "/users/me/progress",
-    status_code=status.HTTP_200_OK,
-    response_model=dict[str, Any],
-)
-def user_progress(
-    request: Request,
-    course_id: str | None = Query(default=None),
-    aggregate: str | None = Query(default=None),
-    authorization: str | None = Header(default=None, alias="Authorization"),
-    db: Session = db_dependency,
-) -> dict[str, Any] | JSONResponse:
-    """Nhận query, Header Authorization, Session và trace ID rồi chuyển cho get_user_progress."""
-    return get_user_progress_view(
-        authorization=authorization,
-        course_id=course_id,
-        aggregate=aggregate,
-        db=db,
-        trace_id=get_trace_id(request),
-    )
-
-
-# API #22 lessons_access
-@router.get(
-    "/lessons/{lesson_id}/access",
-    status_code=status.HTTP_200_OK,
-    response_model=dict[str, Any],
-)
-def lesson_access(
-    lesson_id: int,
-    request: Request,
-    authorization: str | None = Header(default=None, alias="Authorization"),
-    db: Session = db_dependency,
-) -> dict[str, Any] | JSONResponse:
-    """Nhận lesson_id, Header Authorization, Session và trace ID rồi chuyển cho check_lesson_access."""
-    return check_lesson_access_view(
-        lesson_id=lesson_id,
-        authorization=authorization,
-        db=db,
-        trace_id=get_trace_id(request),
-    )
-
-
-# API #23 lessons_start
-@router.post(
-    "/lessons/{lesson_id}/start",
-    status_code=status.HTTP_201_CREATED,
-    response_model=dict[str, Any],
-)
-def lesson_start(
-    lesson_id: int,
-    request: Request,
-    authorization: str | None = Header(default=None, alias="Authorization"),
-    db: Session = db_dependency,
-) -> dict[str, Any] | JSONResponse:
-    """Nhận lesson_id, Header Authorization, Session và trace ID rồi chuyển cho start_lesson."""
-    return start_lesson_view(
-        lesson_id=lesson_id,
-        authorization=authorization,
-        db=db,
-        trace_id=get_trace_id(request),
-    )
-
-
-# API #24 lessons_detail
-@router.get(
-    "/lessons/{lesson_id}",
-    status_code=status.HTTP_200_OK,
-    response_model=dict[str, Any],
-)
-def lesson_detail(
-    lesson_id: int,
-    request: Request,
-    authorization: str | None = Header(default=None, alias="Authorization"),
-    db: Session = db_dependency,
-) -> dict[str, Any] | JSONResponse:
-    """Nhận lesson_id, Header Authorization, Session và trace ID rồi chuyển cho get_lesson_detail."""
-    return get_lesson_detail_view(
-        lesson_id=lesson_id,
-        authorization=authorization,
-        db=db,
-        trace_id=get_trace_id(request),
-    )
-
-
-# API #25 lessons_progress
-@router.patch(
-    "/lessons/{lesson_id}/progress",
-    status_code=status.HTTP_200_OK,
-    response_model=dict[str, Any],
-)
-def lesson_progress(
-    lesson_id: int,
-    progress_data: LessonProgressUpdateRequest,
-    request: Request,
-    authorization: str | None = Header(default=None, alias="Authorization"),
-    db: Session = db_dependency,
-) -> dict[str, Any] | JSONResponse:
-    """Nhận lesson_id, body tiến độ, Header Authorization, Session và trace ID rồi chuyển cho update_lesson_progress."""
-    return update_lesson_progress_view(
-        lesson_id=lesson_id,
-        progress_data=progress_data,
-        authorization=authorization,
-        db=db,
-        trace_id=get_trace_id(request),
-    )
-
 
 # API #26 lessons_resources
 @router.get(
