@@ -135,6 +135,8 @@ from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
 from app.modules.guest.api_07_courses_search.view import search_courses as search_courses_view
 from app.modules.guest.api_08_courses_detail.view import get_course_detail
 from app.modules.guest.api_09_courses_curriculum.view import get_course_curriculum
+from app.modules.guest.api_10_courses_reviews.models import CourseReviewsQuery
+from app.modules.guest.api_10_courses_reviews.view import get_course_reviews
 from app.modules.guest.api_11_courses_resources.view import (
     get_course_resources as get_course_resources_view,
 )
@@ -164,6 +166,8 @@ from app.modules.guest.api_25_lessons_progress.models import (
 from app.modules.guest.api_25_lessons_progress.view import (
     update_lesson_progress as update_lesson_progress_view,
 )
+from app.modules.guest.api_32_attempts_result.view import get_attempt_result
+from app.modules.guest.api_33_assignments_detail.view import get_assignment_detail
 from app.modules.mentor.api_46_mentor_courses.models import MentorCourseQuery
 from app.modules.mentor.api_46_mentor_courses.view import get_mentor_courses
 from app.modules.mentor.api_47_mentor_lectures_create.models import (
@@ -338,6 +342,20 @@ def parse_course_search_query(
 
 
 course_search_query_dependency = Depends(parse_course_search_query)
+
+
+def parse_course_reviews_query(
+    page: int = Query(default=1, json_schema_extra={"minimum": 1}),
+    rating: str | None = Query(default=None),
+) -> CourseReviewsQuery:
+    """Chuyển query đánh giá khóa học đã parse thành model dữ liệu.
+
+    Rule runtime được áp dụng trong validator của API.
+    """
+    return CourseReviewsQuery(page=page, rating=rating)
+
+
+course_reviews_query_dependency = Depends(parse_course_reviews_query)
 
 
 @router.get("/hello")
@@ -614,6 +632,27 @@ def course_curriculum(
     nhiệm."""
     return get_course_curriculum(
         course_id_raw=course_id,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #10 courses_reviews
+@router.get(
+    "/courses/{course_id}/reviews",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+)
+def course_reviews(
+    course_id: str,
+    request: Request,
+    course_query: CourseReviewsQuery = course_reviews_query_dependency,
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Chuyển ID khóa học, bộ lọc review và trace ID cho API #10."""
+    return get_course_reviews(
+        course_id=course_id,
+        course_query=course_query,
         db=db,
         trace_id=get_trace_id(request),
     )
@@ -940,6 +979,68 @@ def lesson_progress(
     return update_lesson_progress_view(
         lesson_id=lesson_id,
         progress_data=progress_data,
+        authorization=authorization,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #32 attempts_result
+@router.get(
+    "/attempts/{attempt_id}/result",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "attempt_id",
+                "in": "path",
+                "required": True,
+                "schema": {"type": "integer", "format": "int64"},
+            }
+        ]
+    },
+)
+def attempt_result(
+    request: Request,
+    attempt_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Chuyển attempt ID, Authorization, Session và trace ID cho API #32."""
+    return get_attempt_result(
+        authorization=authorization,
+        attempt_id_raw=attempt_id,
+        db=db,
+        trace_id=get_trace_id(request),
+    )
+
+
+# API #33 assignments_detail
+@router.get(
+    "/assignments/{assignment_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={
+        "parameters": [
+            {
+                "name": "assignment_id",
+                "in": "path",
+                "required": True,
+                "schema": {"type": "integer", "format": "int64"},
+            }
+        ]
+    },
+)
+def assignment_detail(
+    request: Request,
+    assignment_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    """Chuyển assignment ID, Authorization, Session và trace ID cho API #33."""
+    return get_assignment_detail(
+        assignment_id=assignment_id,
         authorization=authorization,
         db=db,
         trace_id=get_trace_id(request),
