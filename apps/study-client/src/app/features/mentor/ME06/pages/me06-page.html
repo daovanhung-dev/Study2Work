@@ -1,0 +1,230 @@
+<div class="me06-shell">
+  <study-me06-header [courseId]="courseId()" />
+
+  <main class="page-width main-content">
+    <section class="hero-card" aria-labelledby="me06-title">
+      <div class="hero-copy">
+        <div class="eyebrow-row">
+          <span class="eyebrow-badge">CURRICULUM BUILDER V3.4</span>
+          <span class="eyebrow-sync">↻ Tự động đồng bộ LMS Cloud · API #49</span>
+        </div>
+        <h1 id="me06-title">Cây nội dung khóa học</h1>
+        <p class="hero-desc">
+          Cấu trúc khung học phần chuẩn Study2Work. Điều phối mô-đun bài giảng, bài thực hành, thẩm định
+          quiz và kích hoạt xuất bản bài học trực tiếp từ dữ liệu API #49.
+        </p>
+      </div>
+
+      <div class="hero-actions">
+        <button
+          class="btn"
+          type="button"
+          disabled
+          aria-describedby="reorder-unavailable"
+        >
+          ☰ Lưu thứ tự sắp xếp
+        </button>
+        <span class="visually-hidden" id="reorder-unavailable">
+          Chưa có API lưu lại thứ tự cây nội dung trong Study Server.
+        </span>
+
+        <button
+          class="btn"
+          type="button"
+          [disabled]="courseId() === null || screenState() === 'loading'"
+          (click)="reloadTree()"
+        >
+          ↻ Làm mới (#49)
+        </button>
+
+        <button
+          class="btn btn--primary"
+          type="button"
+          [disabled]="courseId() === null"
+          (click)="openCreateContent()"
+        >
+          + Tạo nội dung mới (ME-07)
+        </button>
+      </div>
+    </section>
+
+    <study-me06-kpi-strip
+      [summary]="kpiSummary()"
+      [dataLoaded]="screenState() === 'ready' || screenState() === 'empty'"
+    />
+
+    <div class="workspace-grid">
+      <div class="workspace-left">
+        <section class="toolbar-card" aria-label="Bộ lọc và điều khiển cây nội dung">
+          <div class="filter-tabs" role="group" aria-label="Lọc theo trạng thái xuất bản">
+            <button
+              class="tab-btn"
+              type="button"
+              [class.tab-btn--active]="statusFilter() === 'ALL'"
+              (click)="setStatusFilter('ALL')"
+            >
+              Tất cả ({{ kpiSummary().totalNodesCount }})
+            </button>
+            <button
+              class="tab-btn"
+              type="button"
+              [class.tab-btn--active]="statusFilter() === 'PUBLISHED'"
+              (click)="setStatusFilter('PUBLISHED')"
+            >
+              Đã xuất bản ({{ kpiSummary().publishedCount }})
+            </button>
+            <button
+              class="tab-btn"
+              type="button"
+              [class.tab-btn--active]="statusFilter() === 'DRAFT_OR_PENDING'"
+              (click)="setStatusFilter('DRAFT_OR_PENDING')"
+            >
+              Nháp / Chờ duyệt ({{ kpiSummary().draftOrPendingCount }})
+            </button>
+          </div>
+
+          <div class="toolbar-right">
+            <input
+              id="me06-search-input"
+              class="search-input"
+              type="search"
+              aria-label="Tìm theo tên bài học"
+              placeholder="Tìm theo tên bài học..."
+              [value]="searchKeyword()"
+              (input)="onSearchInput($event)"
+            />
+            <button class="icon-btn" type="button" title="Mở rộng tất cả" (click)="expandAll()">↕</button>
+            <button class="icon-btn" type="button" title="Thu gọn tất cả" (click)="collapseAll()">⇕</button>
+          </div>
+        </section>
+
+        @switch (screenState()) {
+          @case ('loading') {
+            <section class="state-card" role="status" aria-live="polite">
+              <h2>Đang tải cây nội dung khóa học...</h2>
+              <p>Đang truy vấn dữ liệu từ GET /api/v1/mentor/courses/{{ courseId() }}/content (#49).</p>
+            </section>
+          }
+          @case ('invalid-param') {
+            <section class="state-card state-card--error" role="alert">
+              <h2>Tham số khóa học không hợp lệ</h2>
+              <p>{{ errorMessage() }}</p>
+            </section>
+          }
+          @case ('unauthorized') {
+            <section class="state-card state-card--error" role="alert">
+              <h2>Yêu cầu xác thực giảng viên (401)</h2>
+              <p>{{ errorMessage() }}</p>
+            </section>
+          }
+          @case ('forbidden') {
+            <section class="state-card state-card--error" role="alert">
+              <h2>Truy cập bị từ chối (403)</h2>
+              <p>{{ errorMessage() }}</p>
+            </section>
+          }
+          @case ('not-found') {
+            <section class="state-card state-card--error" role="alert">
+              <h2>Không tìm thấy khóa học (404)</h2>
+              <p>{{ errorMessage() }}</p>
+            </section>
+          }
+          @case ('error') {
+            <section class="state-card state-card--error" role="alert">
+              <h2>Không thể tải cây nội dung</h2>
+              <p>{{ errorMessage() }}</p>
+              @if (traceId()) {
+                <p class="trace-meta">Trace ID: {{ traceId() }}</p>
+              }
+              <button class="btn" type="button" (click)="reloadTree()">Thử lại</button>
+            </section>
+          }
+          @case ('empty') {
+            <section class="state-card">
+              <h2>Khóa học chưa có nội dung nào</h2>
+              <p>Bạn có thể bắt đầu thêm mục nội dung gốc đầu tiên qua màn hình ME-07 (API #50).</p>
+              <button class="btn btn--primary" type="button" (click)="openCreateContent()">
+                + Tạo nội dung đầu tiên (ME-07)
+              </button>
+            </section>
+          }
+          @case ('ready') {
+            @if (visibleTree().length === 0) {
+              <section class="state-card">
+                <h2>Không có mục nào khớp bộ lọc</h2>
+                <p>Hãy thử đổi tab trạng thái hoặc xóa từ khóa tìm kiếm.</p>
+              </section>
+            } @else {
+              <study-me06-tree-list
+                [items]="visibleTree()"
+                [collapsedIds]="collapsedIds()"
+                (toggleCollapse)="onToggleNodeCollapse($event)"
+                (nodeAction)="onNodeAction($event)"
+              />
+            }
+          }
+        }
+      </div>
+
+      <aside class="workspace-right" aria-label="Bảng thông tin kiểm duyệt và nhật ký">
+        <section class="side-card">
+          <div class="side-card__head">
+            <h3>Phân bổ cấu trúc nội dung</h3>
+            <span class="side-card__tag">
+              {{ kpiSummary().totalNodesCount > 0 ? kpiSummary().publishedCount + '/' + kpiSummary().totalNodesCount + ' Xuất bản' : 'Chờ đồng bộ' }}
+            </span>
+          </div>
+          <div class="dist-bar" aria-hidden="true">
+            <span class="dist-bar__seg dist-bar__seg--blue" style="width: 65%"></span>
+            <span class="dist-bar__seg dist-bar__seg--green" style="width: 20%"></span>
+            <span class="dist-bar__seg dist-bar__seg--amber" style="width: 15%"></span>
+          </div>
+          <div class="dist-legend">
+            <span><i class="dot dot--blue"></i> Bài giảng</span>
+            <span><i class="dot dot--green"></i> Đã xuất bản ({{ kpiSummary().publishedCount }})</span>
+            <span><i class="dot dot--amber"></i> Nháp ({{ kpiSummary().draftOrPendingCount }})</span>
+          </div>
+        </section>
+
+        <section class="side-card">
+          <h3>Quy chuẩn kiểm duyệt LMS</h3>
+          <div class="rule-box">
+            <strong>Đặt tên bài giảng chuẩn hóa:</strong>
+            <p>Sử dụng cấu trúc rõ ràng theo mục tiêu đầu ra của từng chương học.</p>
+          </div>
+          <div class="rule-box">
+            <strong>Thời lượng &amp; Trạng thái (#49–#52):</strong>
+            <p>Nội dung tạo/sửa qua #50/#51 nhận trạng thái <code>PENDING_REVIEW</code> trước khi xuất bản.</p>
+          </div>
+          <div class="rule-box">
+            <strong>Tiêu chuẩn xuất bản &amp; xóa (#52–#53):</strong>
+            <p>Chỉ xóa mềm nội dung chưa xuất bản và không còn mục con trực tiếp hoạt động.</p>
+          </div>
+        </section>
+
+        <section class="side-card">
+          <div class="side-card__head">
+            <h3>Nhật ký thay đổi (Audit Log)</h3>
+            <span class="side-card__muted">Gần đây</span>
+          </div>
+          <ul class="audit-list">
+            <li>
+              <span class="audit-dot audit-dot--blue"></span>
+              <div>
+                <strong>Đồng bộ cây nội dung (#49)</strong>
+                <p>Khóa học #{{ courseId() ?? '—' }} · Tổng số mục: {{ kpiSummary().totalNodesCount }}</p>
+              </div>
+            </li>
+            <li>
+              <span class="audit-dot audit-dot--gray"></span>
+              <div>
+                <strong>Lịch sử chỉnh sửa chi tiết</strong>
+                <p>API #49 chưa trả luồng sự kiện audit log riêng cho từng bài học.</p>
+              </div>
+            </li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </main>
+</div>

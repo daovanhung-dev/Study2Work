@@ -1,0 +1,70 @@
+<section class="thread-card" aria-labelledby="thread-heading">
+  <div class="thread-header">
+    <div class="thread-title-group">
+      <span class="chat-icon" aria-hidden="true">💬</span>
+      <h2 id="thread-heading">Luồng hội thoại hỗ trợ</h2>
+    </div>
+
+    <div class="thread-header-right">
+      <span class="sync-note">↻ Kênh đồng bộ hóa bảo mật Study2Work</span>
+      <button
+        class="btn-outline"
+        type="button"
+        [disabled]="refreshing"
+        (click)="refreshThread.emit()"
+      >
+        {{ refreshing ? 'Đang tải...' : 'Làm mới (#59)' }}
+      </button>
+    </div>
+  </div>
+
+  @if (requestDetail; as detail) {
+    <div class="meta-strip">
+      <span>Khóa học: <strong>#{{ detail.course_id }}</strong></span>
+      <span>Học viên: <strong>{{ detail.student.full_name }}</strong> (#{{ detail.student.id }})</span>
+      <span>Tạo lúc: {{ detail.created_at }}</span>
+      @if (detail.resolved_at) {
+        <span>Giải quyết lúc: {{ detail.resolved_at }}</span>
+      }
+    </div>
+
+    @if (detail.messages.length === 0) {
+      <div class="empty-thread" role="status">
+        <div class="circle-icon" aria-hidden="true">💬</div>
+        <h3>Chưa có dữ liệu hội thoại hiển thị</h3>
+        <p>Yêu cầu hỗ trợ hợp lệ nhưng hiện chưa có tin nhắn nào (messages = []).</p>
+      </div>
+    } @else {
+      <ol class="message-list">
+        @for (msg of detail.messages; track msg.id) {
+          <li class="message-item">
+            <div class="msg-head">
+              <strong>{{ msg.author.full_name }} (User #{{ msg.author.id }})</strong>
+              <span class="msg-time">#{{ msg.id }} · {{ msg.created_at }}</span>
+            </div>
+            <p class="msg-body">{{ msg.content }}</p>
+
+            @if (msg.attachments.length > 0) {
+              <ul class="attachment-list">
+                @for (att of msg.attachments; track att.id) {
+                  <li>
+                    Tệp đính kèm #{{ att.id }}: <strong>{{ att.name }}</strong> ({{ att.content_type }})
+                  </li>
+                }
+              </ul>
+            }
+          </li>
+        }
+      </ol>
+    }
+  } @else {
+    <div class="empty-thread" role="status">
+      <div class="circle-icon" aria-hidden="true">💬</div>
+      <h3>Chưa có dữ liệu hội thoại hiển thị</h3>
+      <p>
+        Lịch sử tin nhắn trao đổi đang chờ đồng bộ từ máy chủ hỗ trợ (API #59). Vui lòng giữ phiên đăng nhập để tiếp tục phản hồi.
+      </p>
+      <span class="socket-pill">● Đang duy trì kết nối an toàn (TLS 1.3)</span>
+    </div>
+  }
+</section>

@@ -1,0 +1,173 @@
+<section class="me15-page" aria-labelledby="me15-title">
+  <nav class="me15-breadcrumb" aria-label="Breadcrumb">
+    <span>Thông báo</span>
+    <span>›</span>
+    <strong>Trạng thái phát hành thông báo</strong>
+  </nav>
+
+  <header class="me15-page__header">
+    <div>
+      <div class="me15-badges">
+        <span class="me15-badge-pill">GIÁM SÁT PHÂN PHỐI</span>
+        <span class="me15-listen-pill">● Máy chủ đang lắng nghe</span>
+      </div>
+      <h1 id="me15-title" class="me15-page__title">Trạng thái gửi thông báo</h1>
+      <p class="me15-page__subtitle">
+        Theo dõi tiến độ xử lý và kết quả điều phối luồng thông báo học tập tới người nhận trên hệ thống Study2Work.
+      </p>
+    </div>
+
+    <div class="me15-page__actions">
+      <button
+        type="button"
+        class="me15-btn me15-btn--secondary"
+        (click)="startNewNotification()"
+        data-testid="new-notification-btn"
+      >
+        ← Quay về hộp thông báo
+      </button>
+
+      <button
+        type="button"
+        class="me15-btn me15-btn--primary"
+        [disabled]="loading() || trackedIds().length === 0"
+        (click)="refreshStatuses()"
+        data-testid="refresh-status-btn"
+      >
+        ↻ Tải lại trạng thái
+      </button>
+    </div>
+  </header>
+
+  @if (errorMessage(); as errMsg) {
+    <div class="me15-alert me15-alert--error" role="alert" data-testid="error-banner">
+      <div>
+        <strong>Lỗi ({{ errorCode() }}):</strong> {{ errMsg }}
+      </div>
+      @if (trackedIds().length > 0) {
+        <button type="button" class="me15-btn me15-btn--secondary" (click)="refreshStatuses()">
+          Thử lại
+        </button>
+      }
+    </div>
+  }
+
+  <div class="me15-workspace">
+    <div class="me15-workspace__main">
+      <section class="me15-pipeline-card" aria-label="Mã định danh hệ thống và Quy trình điều phối">
+        <div class="me15-pipeline-card__top">
+          <div>
+            <span class="me15-eyebrow">MÃ ĐỊNH DANH HỆ THỐNG</span>
+            <div class="me15-lookup__row">
+              <input
+                id="me15-lookup-input"
+                type="text"
+                class="me15-lookup__input"
+                placeholder="Nhập ID thông báo (ví dụ: 900, 901)"
+                [ngModel]="lookupInput()"
+                (ngModelChange)="lookupInput.set($event)"
+                data-testid="lookup-id-input"
+              />
+              <button
+                type="button"
+                class="me15-btn me15-btn--primary"
+                [disabled]="loading()"
+                (click)="onLookupSubmit()"
+                data-testid="lookup-submit-btn"
+              >
+                Tra cứu (#64)
+              </button>
+            </div>
+          </div>
+
+          <div class="me15-queue-status">
+            <small>Trạng thái điều phối</small>
+            <span class="me15-queue-pill">● Đã tiếp nhận vào hàng đợi xử lý</span>
+          </div>
+        </div>
+
+        <div class="me15-stream-box">
+          <div class="me15-stream-box__head">
+            <strong>Tiến trình truyền tải luồng thông điệp</strong>
+            <span>Đang đồng bộ trạng thái từ dịch vụ gửi...</span>
+          </div>
+          <div class="me15-stream-bar"><div class="me15-stream-bar__fill"></div></div>
+        </div>
+
+        <div class="me15-steps-grid">
+          <div class="me15-step-box me15-step-box--done">
+            <small>✔ BƯỚC 1</small>
+            <strong>Ghi nhận thông điệp</strong>
+            <p>Đã xác thực nội dung và quyền phát hành của Mentor.</p>
+          </div>
+          <div class="me15-step-box me15-step-box--active">
+            <small>● BƯỚC 2</small>
+            <strong>Phân giải danh sách nhận</strong>
+            <p>Hệ thống đang đối chiếu nhóm học viên mục tiêu.</p>
+          </div>
+          <div class="me15-step-box">
+            <small>○ BƯỚC 3</small>
+            <strong>Phát hành đa kênh</strong>
+            <p>Chờ kết quả phản hồi từ cổng In-app và Email.</p>
+          </div>
+        </div>
+
+        <app-me15-status-summary [summary]="summary()" />
+      </section>
+
+      @if (loading()) {
+        <div class="me15-state-card" role="status" data-testid="loading-state">
+          Đang truy vấn trạng thái thông báo từ API #64...
+        </div>
+      } @else {
+        <app-me15-status-table [items]="items()" />
+      }
+    </div>
+
+    <aside class="me15-workspace__aside" aria-label="Kênh tiếp nhận đăng ký và Hỗ trợ kỹ thuật">
+      <section class="me15-aside-card">
+        <h2>Kênh tiếp nhận đăng ký</h2>
+        <p class="me15-aside-sub">Trạng thái kết nối tới các dịch vụ đầu cuối</p>
+        <div class="me15-channel-list">
+          <div class="me15-channel-item">
+            <div>
+              <strong>🔔 Ứng dụng LMS Portal</strong>
+              <small>Thông báo đẩy nội bộ</small>
+            </div>
+            <span class="me15-ch-tag me15-ch-tag--ready">Sẵn sàng</span>
+          </div>
+          <div class="me15-channel-item">
+            <div>
+              <strong>✉ Email đồng bộ</strong>
+              <small>SMTP Relay Service</small>
+            </div>
+            <span class="me15-ch-tag">Hàng đợi</span>
+          </div>
+          <div class="me15-channel-item">
+            <div>
+              <strong>💬 Kênh thảo luận môn</strong>
+              <small>Ghim bảng tin lớp học</small>
+            </div>
+            <span class="me15-ch-tag">Hàng đợi</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="me15-aside-card me15-aside-card--honest">
+        <strong>ℹ Nguyên tắc hiển thị trung thực</strong>
+        <p>
+          Màn hình này chỉ hiển thị các chỉ số phân phối thực tế được trả về từ máy chủ (<code>operation_id</code>, <code>status</code>). Các số liệu thống kê tỷ lệ mở thư sẽ không được suy đoán khi dịch vụ chưa phản hồi.
+        </p>
+        <small>Phiên bản đồng bộ: <code>SyncEngine v4.2.1-prod</code></small>
+      </section>
+
+      <section class="me15-aside-card">
+        <span class="me15-eyebrow">HỖ TRỢ KỸ THUẬT ĐÀO TẠO</span>
+        <h3>Cần can thiệp hàng đợi gửi khẩn cấp?</h3>
+        <p class="me15-aside-sub">
+          Nếu trạng thái giữ nguyên ở bước xử lý quá 15 phút, vui lòng cung cấp Mã định danh hệ thống cho bộ phận vận hành LMS.
+        </p>
+      </section>
+    </aside>
+  </div>
+</section>

@@ -1,0 +1,23 @@
+<section class="kpi-grid" aria-label="Tổng hợp tiến độ lớp học từ API #65">
+  <article class="kpi-card">
+    <span class="kpi-label">Tổng học viên đủ điều kiện (`pagination.total`)</span>
+    <strong class="kpi-val">{{ dataLoaded ? kpi.totalStudents : '—' }}</strong>
+  </article>
+
+  <article class="kpi-card">
+    <span class="kpi-label">Tiến độ trung bình toàn lớp</span>
+    <strong class="kpi-val">{{ dataLoaded ? kpi.averagePercent + '%' : '—' }}</strong>
+  </article>
+
+  <article class="kpi-card">
+    <span class="kpi-label">Đã hoàn thành 100%</span>
+    <strong class="kpi-val kpi-val--ok">{{ dataLoaded ? kpi.completedAllCount : '—' }}</strong>
+  </article>
+
+  <article class="kpi-card">
+    <span class="kpi-label">Đang học / Chưa bắt đầu</span>
+    <strong class="kpi-val">
+      {{ dataLoaded ? kpi.inProgressCount + ' / ' + kpi.notStartedCount : '—' }}
+    </strong>
+  </article>
+</section>

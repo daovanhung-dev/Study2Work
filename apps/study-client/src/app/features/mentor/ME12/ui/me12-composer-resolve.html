@@ -1,0 +1,113 @@
+<div class="composer-resolve-grid">
+  <section class="action-card" aria-labelledby="reply-heading">
+    <div class="section-head">
+      <h2 id="reply-heading">✎ Khung phản hồi của giảng viên</h2>
+      <span class="char-pill">{{ replyDraft.length }} / 2000 ký tự</span>
+    </div>
+
+    <label class="visually-hidden" for="instructor-response-textarea">
+      Nội dung câu trả lời
+    </label>
+    <textarea
+      id="instructor-response-textarea"
+      class="reply-textarea"
+      rows="4"
+      placeholder="Nhập nội dung giải đáp cho học viên..."
+      [value]="replyDraft"
+      [disabled]="replyStatus === 'saving'"
+      (input)="onTextareaInput($event)"
+    ></textarea>
+
+    <div class="reply-footer">
+      <div class="lock-hint">
+        🔒 Phản hồi được gửi qua API #60 (POST /api/v1/mentor/support/:requestId/reply).
+      </div>
+
+      <button
+        id="btn-send-reply"
+        class="btn btn--primary"
+        type="button"
+        [disabled]="replyStatus === 'saving' || replyDraft.trim().length === 0"
+        (click)="submitReply.emit()"
+      >
+        {{ replyStatus === 'saving' ? 'Đang gửi...' : '➤ Gửi câu trả lời' }}
+      </button>
+    </div>
+
+    @if (replyMessage) {
+      <p
+        class="status-banner"
+        [class.status-banner--error]="replyStatus === 'error'"
+        [class.status-banner--ok]="replyStatus === 'saved'"
+        role="status"
+      >
+        {{ replyMessage }}
+      </p>
+    }
+  </section>
+
+  <aside class="right-aside">
+    <section class="action-card" aria-labelledby="resolve-heading">
+      <h2 id="resolve-heading">✔ Tùy chọn đóng yêu cầu</h2>
+      <p class="field-hint">
+        Xác nhận khi học viên đã thỏa mãn với các phản hồi chuyên môn và tiến trình trao đổi hoàn tất hợp lệ (API #61).
+      </p>
+
+      <div class="resolve-meta-box">
+        <div>
+          <span>Quy trình nghiệm thu:</span>
+          <strong>Tự động kết toán</strong>
+        </div>
+        <div>
+          <span>Khảo sát hài lòng:</span>
+          <strong>Sẽ gửi sau khi đóng</strong>
+        </div>
+      </div>
+
+      <label class="checkbox-row">
+        <input
+          id="confirm-resolve-checkbox"
+          type="checkbox"
+          [checked]="confirmResolvedChecked"
+          [disabled]="!canResolve || resolveStatus === 'saving'"
+          (change)="onConfirmToggle($event)"
+        />
+        <span>Tôi xác nhận đã giải đáp thắc mắc và đủ điều kiện đóng yêu cầu này.</span>
+      </label>
+
+      <button
+        id="btn-resolve-request"
+        class="btn btn--resolve"
+        type="button"
+        [disabled]="!canResolve || !confirmResolvedChecked || resolveStatus === 'saving'"
+        (click)="submitResolve.emit()"
+      >
+        {{
+          resolveStatus === 'saving'
+            ? 'Đang đóng yêu cầu...'
+            : '✔ Đánh dấu đã giải quyết và đóng yêu cầu'
+        }}
+      </button>
+
+      @if (resolveMessage) {
+        <p
+          class="status-banner"
+          [class.status-banner--error]="resolveStatus === 'error'"
+          [class.status-banner--ok]="resolveStatus === 'saved'"
+          role="status"
+        >
+          {{ resolveMessage }}
+        </p>
+      }
+    </section>
+
+    <section class="standards-card">
+      <h3>🛡 TIÊU CHUẨN CỐ VẤN STUDY2WORK</h3>
+      <ol>
+        <li>Tuân thủ quy chuẩn phản hồi trong tối đa 24 giờ kể từ thời điểm tiếp nhận.</li>
+        <li>Cung cấp mã nguồn tham chiếu và tài liệu chính thống kèm theo giải đáp.</li>
+        <li>Giữ bảo mật thông tin mã nguồn học tập theo thỏa thuận dữ liệu hệ thống.</li>
+      </ol>
+    </section>
+  </aside>
+</div>

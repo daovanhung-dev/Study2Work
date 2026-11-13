@@ -1,0 +1,63 @@
+<section class="me18-metrics" aria-label="Chỉ số Analytics khóa học">
+  <div class="me18-metrics__grid">
+    <article class="me18-card" data-testid="metric-completion-rate">
+      <div class="me18-card__top">
+        <span class="me18-card__label">TỶ LỆ HOÀN THÀNH</span>
+        <span class="me18-card__icon" aria-hidden="true">✔</span>
+      </div>
+      <strong class="me18-card__value me18-card__value--muted">Chưa có dữ liệu</strong>
+      <p class="me18-card__hint">Cần ghi nhận tối thiểu 1 bài học hoàn tất</p>
+    </article>
+
+    <article class="me18-card" data-testid="metric-avg-duration">
+      <div class="me18-card__top">
+        <span class="me18-card__label">THỜI LƯỢNG TRUNG BÌNH</span>
+        <span class="me18-card__icon" aria-hidden="true">🕒</span>
+      </div>
+      <strong class="me18-card__value me18-card__value--muted">Chưa có dữ liệu</strong>
+      <p class="me18-card__hint">Tính theo số giờ hoạt động trên hệ thống</p>
+    </article>
+
+    <article class="me18-card" data-testid="metric-discussion-count">
+      <div class="me18-card__top">
+        <span class="me18-card__label">TƯƠNG TÁC THẢO LUẬN</span>
+        <span class="me18-card__icon" aria-hidden="true">💬</span>
+      </div>
+      <strong class="me18-card__value me18-card__value--muted">Chưa có dữ liệu</strong>
+      <p class="me18-card__hint">Tổng số câu hỏi và phản hồi diễn đàn</p>
+    </article>
+  </div>
+
+  <div class="me18-metrics__grid me18-metrics__grid--verified">
+    <article class="me18-card" data-testid="metric-tracked-accesses">
+      <div class="me18-card__top">
+        <span class="me18-card__label">TỔNG LƯỢT TRUY CẬP BÀI HỌC (API #66)</span>
+        <span class="me18-card__icon" aria-hidden="true">📊</span>
+      </div>
+      <strong class="me18-card__value">{{ analytics()?.tracked_lesson_accesses ?? 0 }}</strong>
+      <p class="me18-card__hint">Số bản ghi tiến độ có tương tác thực tế</p>
+    </article>
+
+    <article class="me18-card" data-testid="metric-active-students">
+      <div class="me18-card__top">
+        <span class="me18-card__label">HỌC VIÊN CÓ HOẠT ĐỘNG (API #66)</span>
+        <span class="me18-card__icon" aria-hidden="true">👥</span>
+      </div>
+      <strong class="me18-card__value">{{ analytics()?.students_with_activity ?? 0 }}</strong>
+      <p class="me18-card__hint">Số học viên đã mở bài học ít nhất 1 lần</p>
+    </article>
+
+    <article class="me18-card" data-testid="metric-last-activity">
+      <div class="me18-card__top">
+        <span class="me18-card__label">HOẠT ĐỘNG GẦN NHẤT (API #66)</span>
+        <span class="me18-card__icon" aria-hidden="true">⚡</span>
+      </div>
+      @if (analytics()?.last_activity_at; as lastAt) {
+        <strong class="me18-card__value me18-card__value--date">{{ lastAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
+      } @else {
+        <strong class="me18-card__value me18-card__value--muted">Chưa có hoạt động</strong>
+      }
+      <p class="me18-card__hint">Thời điểm truy cập gần nhất trong khóa học</p>
+    </article>
+  </div>
+</section>

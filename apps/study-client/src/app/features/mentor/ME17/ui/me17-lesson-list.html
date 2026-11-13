@@ -1,0 +1,64 @@
+<section class="me17-lesson-card" aria-label="Dòng thời gian học tập (Learning Timeline)">
+  <header class="me17-lesson-card__header">
+    <div class="me17-lesson-card__title">
+      <span aria-hidden="true">📈</span>
+      <div>
+        <h3>Dòng thời gian học tập (Learning Timeline)</h3>
+        <p>Chi tiết lịch sử truy cập từng chương mục, bài giảng video và kết quả bài tập thực hành</p>
+      </div>
+    </div>
+    <span class="me17-stage-pill">● Giai đoạn: Khởi tạo chương trình ({{ lessons.length }} bài học)</span>
+  </header>
+
+  @if (lessons.length === 0) {
+    <div class="me17-empty-timeline">
+      <div class="me17-empty-timeline__icon" aria-hidden="true">🗂️</div>
+      <h4>Chưa có lịch sử học tập được đồng bộ</h4>
+      <p>
+        Hệ thống hiện chưa ghi nhận dữ liệu tương tác bài giảng hoặc kết quả bài tập của học viên này.
+        Dữ liệu chi tiết sẽ tự động hiển thị ngay khi học viên bắt đầu truy cập học liệu đầu tiên.
+      </p>
+    </div>
+  } @else {
+    <div class="me17-table-wrap">
+      <table class="me17-table">
+        <thead>
+          <tr>
+            <th>Thứ tự</th>
+            <th>Bài học</th>
+            <th>Trạng thái</th>
+            <th>Tiến độ</th>
+            <th>Truy cập gần nhất</th>
+            <th>Hoàn thành lúc</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (lesson of lessons; track lesson.lesson_id) {
+            <tr>
+              <td>#{{ lesson.order }}</td>
+              <td>
+                <div class="me17-lesson-title">{{ lesson.title }}</div>
+                <div class="me17-lesson-id">Mã bài học: #{{ lesson.lesson_id }}</div>
+              </td>
+              <td>
+                <span class="me17-status-badge" [attr.data-status]="lesson.progress_status">
+                  {{ statusLabel(lesson.progress_status) }}
+                </span>
+              </td>
+              <td>
+                <div class="me17-progress-cell">
+                  <div class="me17-progress-track">
+                    <div class="me17-progress-fill" [style.width.%]="lesson.progress_percent"></div>
+                  </div>
+                  <strong>{{ lesson.progress_percent }}%</strong>
+                </div>
+              </td>
+              <td>{{ lesson.last_accessed_at || 'Chưa truy cập' }}</td>
+              <td>{{ lesson.completed_at || '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

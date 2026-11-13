@@ -1,0 +1,67 @@
+<div class="me12-shell">
+  <main class="page-width main-content">
+    <div class="breadcrumb-row">
+      <nav class="breadcrumb-nav" aria-label="Đường dẫn điều hướng">
+        <a routerLink="/mentor/support">Hộp thư hỗ trợ</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">Chi tiết yêu cầu trao đổi #{{ requestId() ?? '—' }}</span>
+      </nav>
+
+      <button class="btn-back" type="button" (click)="backToInbox()">
+        ← Quay lại danh sách yêu cầu (ME-11)
+      </button>
+    </div>
+
+    <section class="hero-card" aria-labelledby="me12-title">
+      <div>
+        <span class="eyebrow-pill">💬 MÃ TIẾN TRÌNH: ME-12</span>
+        <h1 id="me12-title">Trao đổi và đóng yêu cầu hỗ trợ học viên</h1>
+        <p class="hero-desc">
+          Không gian giao tiếp học vụ chính thức và xử lý thắc mắc chuyên môn kỹ thuật giữa Mentor và Học viên (API #59, #60, #61).
+        </p>
+      </div>
+
+      <div class="hero-status-box">
+        <div class="status-col">
+          <span>MÃ YÊU CẦU</span>
+          <strong>#{{ requestDetail()?.id ?? requestId() ?? 'Đang nạp...' }}</strong>
+        </div>
+        <div class="status-col">
+          <span>TRẠNG THÁI</span>
+          <strong class="status-open">● {{ requestDetail()?.status ?? 'Đang mở' }}</strong>
+        </div>
+      </div>
+    </section>
+
+    @if (screenState() === 'invalid-param' || screenState() === 'unauthorized' || screenState() === 'forbidden' || screenState() === 'not-found' || screenState() === 'error') {
+      <section class="state-banner state-banner--error" role="alert">
+        <div>
+          <strong>Trạng thái kết nối API #59 ({{ screenState() }}):</strong> {{ errorMessage() }}
+        </div>
+        <button class="btn-retry" type="button" (click)="refreshThread()">Thử lại</button>
+      </section>
+    }
+
+    <div class="workspace-grid">
+      <study-me12-thread-panel
+        [requestDetail]="requestDetail()"
+        [refreshing]="refreshingThread() || screenState() === 'loading'"
+        (refreshThread)="refreshThread()"
+      />
+
+      <study-me12-composer-resolve
+        [requestStatus]="requestDetail()?.status ?? 'OPEN'"
+        [replyDraft]="replyDraft()"
+        [replyStatus]="replyStatus()"
+        [replyMessage]="replyMessage()"
+        [confirmResolvedChecked]="confirmResolvedChecked()"
+        [resolveStatus]="resolveStatus()"
+        [resolveMessage]="resolveMessage()"
+        (replyDraftChange)="onReplyDraftChange($event)"
+        (submitReply)="submitReply()"
+        (confirmResolveChange)="onConfirmResolveChange($event)"
+        (submitResolve)="submitResolve()"
+      />
+    </div>
+  </main>
+</div>

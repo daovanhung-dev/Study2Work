@@ -1,0 +1,120 @@
+.inbox-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.inbox-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #0f172a;
+}
+
+.inbox-header p {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.request-row {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.request-main {
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.request-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.request-id {
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.course-tag {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #e2e8f0;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.status-chip {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.status-chip--open {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-chip--resolved {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.student-line {
+  margin: 0;
+  font-size: 0.83rem;
+  color: #475569;
+}
+
+.message-preview {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #1e293b;
+}
+
+.request-side {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.msg-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.open-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #1d4ed8;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}

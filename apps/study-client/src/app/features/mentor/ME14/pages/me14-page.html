@@ -1,0 +1,120 @@
+<section class="me14-page" aria-labelledby="me14-title">
+  <div class="me14-topbar-row">
+    <nav class="me14-breadcrumb" aria-label="Breadcrumb">
+      <span>Thông báo</span>
+      <span>›</span>
+      <span>Soạn thông báo mới</span>
+      <span>›</span>
+      <strong>Bước 2: Soạn thảo nội dung</strong>
+    </nav>
+
+    <div class="me14-steps-pills">
+      <span class="me14-step-pill">1 Chọn người nhận</span>
+      <span class="me14-step-pill me14-step-pill--active">2 Soạn thảo nội dung</span>
+      <span class="me14-step-pill">3 Xác nhận &amp; Gửi</span>
+    </div>
+  </div>
+
+  @if (errorMessage(); as errMsg) {
+    <div class="me14-alert me14-alert--error" role="alert" data-testid="error-banner">
+      <strong>Lỗi ({{ errorCode() }}):</strong> {{ errMsg }}
+    </div>
+  }
+
+  <div class="me14-workspace">
+    <div class="me14-workspace__main">
+      <header class="me14-page__header">
+        <span class="me14-page__eyebrow">✉ PHÂN HỆ GIẢNG DẠY &amp; CỐ VẤN</span>
+        <h1 id="me14-title" class="me14-page__title">Tạo và phát hành thông báo</h1>
+        <p class="me14-page__subtitle">
+          Soạn thảo thông điệp học thuật, đính kèm bài học liên kết (<code>content: int64</code>) và lựa chọn kênh truyền thông phù hợp qua API #63.
+        </p>
+      </header>
+
+      <app-me14-recipients-summary
+        [recipientsCsv]="recipientsCsv()"
+        [validIds]="parsedRecipients().validIds"
+        [invalidTokens]="parsedRecipients().invalidTokens"
+        [knownRecipients]="knownRecipients()"
+        (recipientsCsvChange)="recipientsCsv.set($event)"
+        (backToSelect)="backToRecipients()"
+      />
+
+      <app-me14-compose-form
+        [title]="title()"
+        [contentIdInput]="contentIdInput()"
+        [selectedChannels]="selectedChannels()"
+        [contents]="contents()"
+        [loadingContents]="loadingContents()"
+        [submitting]="submitting()"
+        [canSubmit]="canSubmit()"
+        (titleChange)="title.set($event)"
+        (contentIdChange)="contentIdInput.set($event)"
+        (toggleChannel)="onToggleChannel($event)"
+        (submitNotification)="submitNotification()"
+      />
+    </div>
+
+    <aside class="me14-workspace__aside" aria-label="Xem trước hiển thị và Chuẩn mực thông điệp">
+      <section class="me14-aside-card">
+        <div class="me14-aside-card__head">
+          <h2>Xem trước hiển thị</h2>
+          <span class="me14-feed-badge">In-app Feed</span>
+        </div>
+
+        <div class="me14-preview-box">
+          <div class="me14-preview-author">
+            <span class="me14-preview-avatar">VĐ</span>
+            <div>
+              <strong>TS. Vũ Thành Đạt</strong>
+              <small>Giảng viên hướng dẫn • Vừa xong</small>
+            </div>
+          </div>
+          <p class="me14-preview-title">
+            {{ title().trim() || 'Tiêu đề thông báo sẽ hiển thị tại đây...' }}
+          </p>
+          <p class="me14-preview-body">
+            Liên kết học liệu: Bài học #{{ contentIdInput() || '--' }} · Người nhận: {{ parsedRecipients().validIds.length }} học viên.
+          </p>
+          <div class="me14-preview-tags">
+            <span>
+              🔔 Kênh:
+              {{
+                selectedChannels().has('PUSH') && selectedChannels().has('EMAIL')
+                  ? 'PUSH + EMAIL'
+                  : selectedChannels().has('PUSH')
+                    ? 'PUSH'
+                    : selectedChannels().has('EMAIL')
+                      ? 'EMAIL'
+                      : 'Chưa chọn'
+              }}
+            </span>
+          </div>
+        </div>
+
+        <div class="me14-reach-box">
+          <div class="me14-reach-row">
+            <span>Độ phản hồi trung bình 24h</span>
+            <strong>89.4%</strong>
+          </div>
+          <div class="me14-reach-bar"><div class="me14-reach-bar__fill"></div></div>
+        </div>
+      </section>
+
+      <section class="me14-aside-card">
+        <h2>Chuẩn mực thông điệp</h2>
+        <ul class="me14-guideline-list">
+          <li>
+            <strong>✔ Mục tiêu rõ ràng:</strong> Nêu chính xác mã lớp học hoặc tên dự án ngay ở phần đầu tiêu đề.
+          </li>
+          <li>
+            <strong>✔ Tài nguyên đính kèm:</strong> Liên kết trực tiếp tới bài học chuẩn trong chương trình để học viên truy cập nhanh.
+          </li>
+          <li>
+            <strong>✔ Kênh giải đáp:</strong> Hướng dẫn học viên phản hồi qua Hộp thư hỗ trợ (ME-11) nếu có vướng mắc học thuật.
+          </li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+</section>

@@ -1,0 +1,123 @@
+<main class="me16-main" aria-label="Tiến độ toàn khóa học (ME-16)">
+  <div class="me16-breadcrumb-bar">
+    <nav class="me16-breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/mentor/courses">Khóa học phụ trách</a>
+      <span>›</span>
+      <a [routerLink]="['/mentor/courses', courseId() ?? 101]">Chi tiết khóa học</a>
+      <span>›</span>
+      <strong>Tiến độ học tập chung</strong>
+    </nav>
+    <span class="me16-class-badge">● Mã lớp: CS-2025-FE02 @if (courseId()) { (#{{ courseId() }}) }</span>
+  </div>
+
+  <section class="me16-hero-card">
+    <div class="me16-hero-card__left">
+      <span class="me16-eyebrow">↻ HỆ THỐNG ĐIỀU PHỐI ĐÀO TẠO</span>
+      <h1 class="me16-title">Tiến độ toàn khóa học</h1>
+      <p class="me16-subtitle">
+        Theo dõi mức độ hoàn thành chương trình, chỉ số chuyên cần và danh sách học viên theo thời gian thực cho khóa học
+        <strong>Kiến trúc Phần mềm &amp; Hệ thống Phân tán</strong>.
+      </p>
+    </div>
+    <div class="me16-hero-stats">
+      <div class="me16-hero-stat">
+        <span>TỔNG GHI DANH</span>
+        <strong>{{ kpi().totalStudents }} học viên</strong>
+      </div>
+      <div class="me16-hero-stat">
+        <span>CẬP NHẬT</span>
+        <strong>Vừa xong</strong>
+      </div>
+    </div>
+  </section>
+
+  @if (errorMessage()) {
+    <section class="me16-alert-banner" role="alert">
+      <div>
+        <strong>Trạng thái đồng bộ ({{ screenState() }}):</strong> {{ errorMessage() }}
+        @if (traceId()) { <span> · Trace ID: <code>{{ traceId() }}</code></span> }
+      </div>
+      <button class="me16-btn me16-btn--outline" type="button" (click)="reloadProgress()">
+        ↻ Thử tải lại
+      </button>
+    </section>
+  }
+
+  <study-me16-summary-strip [kpi]="kpi()" />
+
+  <section class="me16-filter-card" aria-label="Bộ lọc tiến độ học viên">
+    <div class="me16-filter-col">
+      <label class="me16-label" for="me16-course-select">Khóa học phụ trách</label>
+      <select id="me16-course-select" class="me16-select" disabled>
+        <option>CS-2025-FE02 — Kiến trúc Phần mềm &amp; Hệ thống Phân tán (#{{ courseId() ?? 101 }})</option>
+      </select>
+    </div>
+
+    <div class="me16-filter-col">
+      <span class="me16-label">Mức độ hoàn thành</span>
+      <div class="me16-segmented" role="group" aria-label="Lọc mức độ hoàn thành">
+        <button type="button" class="me16-seg-btn me16-seg-btn--active">Tất cả</button>
+        <button type="button" class="me16-seg-btn" disabled>Đúng tiến độ</button>
+        <button type="button" class="me16-seg-btn" disabled>Cần nhắc nhở</button>
+      </div>
+    </div>
+
+    <div class="me16-filter-col">
+      <label class="me16-label" for="me16-student-search">Tìm kiếm học viên</label>
+      <input
+        id="me16-student-search"
+        class="me16-search-input"
+        type="search"
+        placeholder="Nhập họ tên, MSSV hoặc email..."
+        [value]="searchKeyword()"
+        (input)="onSearchInput($event)"
+      />
+    </div>
+  </section>
+
+  <section class="me16-roster-card" aria-label="Bảng tổng hợp học viên và Tiến trình">
+    <header class="me16-roster-card__head">
+      <div class="me16-roster-card__title">
+        <span class="me16-roster-icon" aria-hidden="true">👥</span>
+        <h2>Bảng tổng hợp học viên &amp; Tiến trình</h2>
+      </div>
+      <span class="me16-sync-pill">☁ Hệ thống đồng bộ trực tiếp</span>
+    </header>
+
+    @if (screenState() === 'ready' && filteredItems().length > 0) {
+      <div class="me16-roster-card__body">
+        <study-me16-roster-table
+          [items]="filteredItems()"
+          (openStudentProgress)="openStudentDetail($event)"
+        />
+      </div>
+    } @else {
+      <div class="me16-showcase-empty" role="status">
+        <div class="me16-showcase-empty__icon" aria-hidden="true">📊</div>
+        <h3>Chưa có dữ liệu tiến độ học viên</h3>
+        <p>
+          Hệ thống hiện chưa ghi nhận danh sách học viên hoặc dữ liệu hoạt động học tập từ máy chủ cho khóa học này.
+          Danh sách tiến độ chi tiết sẽ tự động hiển thị ngay khi học viên bắt đầu truy cập bài giảng đầu tiên.
+        </p>
+        <div class="me16-showcase-empty__actions">
+          <button class="me16-btn me16-btn--outline" type="button" (click)="reloadProgress()">
+            ↻ Làm mới dữ liệu tiến độ
+          </button>
+          <button
+            class="me16-btn me16-btn--primary"
+            type="button"
+            [disabled]="courseId() === null"
+            (click)="openCourseAnalytics()"
+          >
+            📈 Xem phân tích khóa học (ME-18)
+          </button>
+        </div>
+      </div>
+    }
+
+    <footer class="me16-roster-card__foot">
+      <span>🛡 Dữ liệu tuân thủ chuẩn mã hóa tiến trình học tập SCORM/xAPI và WCAG 2.1 AA.</span>
+      <span>Chu kỳ tự động làm mới: <strong>Mỗi 15 phút</strong></span>
+    </footer>
+  </section>
+</main>

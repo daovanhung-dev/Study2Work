@@ -1,0 +1,76 @@
+<section class="me13-selector" aria-label="Thiết lập phạm vi gửi">
+  <header class="me13-selector__head">
+    <h2>Thiết lập phạm vi gửi</h2>
+    <span class="me13-req-badge">* Bắt buộc</span>
+  </header>
+
+  <div class="me13-field">
+    <label for="me13-course-select" class="me13-field__label">Khóa học phụ trách (API #46)</label>
+    <select
+      id="me13-course-select"
+      class="me13-field__control"
+      [disabled]="loadingCourses()"
+      [ngModel]="selectedCourseId() ?? ''"
+      (ngModelChange)="onSelectCourse($event)"
+      data-testid="course-select"
+    >
+      <option value="" disabled>-- Chọn khóa học để tải danh sách học viên --</option>
+      @for (course of courses(); track course.id) {
+        <option [value]="course.id">
+          #{{ course.id }} — {{ course.title }} ({{ course.status }})
+        </option>
+      }
+    </select>
+  </div>
+
+  <div class="me13-field">
+    <label for="me13-search-input" class="me13-field__label">Tìm kiếm học viên</label>
+    <input
+      id="me13-search-input"
+      type="search"
+      class="me13-field__control"
+      placeholder="Nhập họ tên hoặc #ID học viên..."
+      [ngModel]="searchKeyword()"
+      (ngModelChange)="searchChange.emit($event)"
+      data-testid="student-search-input"
+    />
+  </div>
+
+  <div class="me13-smart-groups" aria-label="Phân loại đối tượng nhận">
+    <span class="me13-field__label">Phân loại đối tượng nhận</span>
+
+    <div class="me13-radio-card me13-radio-card--active">
+      <div class="me13-radio-dot"></div>
+      <div>
+        <strong>Tất cả học viên trong khóa (#62)</strong>
+        <p>Gửi thông báo đồng loạt tới toàn bộ danh sách lớp đã chọn</p>
+      </div>
+    </div>
+
+    <div
+      class="me13-radio-card me13-radio-card--disabled"
+      title="API #62 chưa trả trạng thái tiến độ hoặc bài nộp để lọc nhóm tự động"
+    >
+      <div class="me13-radio-circle"></div>
+      <div>
+        <strong>Nhóm học viên cần hỗ trợ</strong>
+        <p>Lọc theo tiến độ hoàn thành dưới 50% hoặc trễ hạn bài tập (Chưa có trong API #62)</p>
+      </div>
+    </div>
+
+    <div class="me13-radio-card">
+      <div class="me13-radio-circle"></div>
+      <div>
+        <strong>Học viên cụ thể</strong>
+        <p>Tích chọn thủ công từng cá nhân trong bảng danh sách bên phải</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="me13-policy-box">
+    <strong>ℹ Quy định gửi thông báo</strong>
+    <p>
+      Hệ thống chỉ cho phép gửi thông báo học vụ tới các học viên đã hoàn tất thủ tục ghi danh chính thức trong khóa học do bạn phụ trách.
+    </p>
+  </div>
+</section>

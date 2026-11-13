@@ -1,0 +1,71 @@
+<section class="filter-card" aria-label="Bộ lọc bài nộp cần chấm">
+  <div class="filter-grid">
+    <div class="field-group">
+      <label class="field-label" for="filter-course">KHÓA HỌC PHỤ TRÁCH</label>
+      <select
+        id="filter-course"
+        class="field-control"
+        [value]="selectedCourseId ?? ''"
+        [disabled]="loading || coursesLoading"
+        (change)="onCourseSelect($event)"
+      >
+        <option value="">Tất cả khóa học phụ trách</option>
+        @for (course of courses; track course.id) {
+          <option [value]="course.id">#{{ course.id }} — {{ course.title }} ({{ course.status }})</option>
+        }
+      </select>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="filter-status">TRẠNG THÁI BÀI NỘP</label>
+      <select
+        id="filter-status"
+        class="field-control"
+        [value]="selectedStatus"
+        [disabled]="loading"
+        (change)="onStatusSelect($event)"
+      >
+        @for (opt of statusOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="search-keyword">TÌM KIẾM BÀI TẬP</label>
+      <input
+        id="search-keyword"
+        class="field-control"
+        type="text"
+        disabled
+        aria-describedby="search-disabled-note"
+        placeholder="Nhập tên chuyên đề, đồ án hoặc mã bài tập... (Chưa hỗ trợ trong API #54)"
+      />
+      <span class="visually-hidden" id="search-disabled-note">
+        MentorSubmissionsQuery (#54) chỉ nhận course_id, status, page.
+      </span>
+    </div>
+
+    <div class="filter-actions">
+      <button
+        id="btn-filter-reset"
+        class="btn-reset"
+        type="button"
+        [disabled]="loading"
+        (click)="resetFilters.emit()"
+      >
+        ⧗ Thiết lập lại
+      </button>
+
+      <button
+        id="btn-refresh"
+        class="btn-refresh"
+        type="button"
+        [disabled]="loading"
+        (click)="refreshList.emit()"
+      >
+        {{ loading ? 'Đang tải...' : '↻ Tải lại (#54)' }}
+      </button>
+    </div>
+  </div>
+</section>

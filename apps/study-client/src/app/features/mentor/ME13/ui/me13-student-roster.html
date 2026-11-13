@@ -1,0 +1,89 @@
+<section class="me13-roster" aria-label="Danh sách học viên mục tiêu">
+  <header class="me13-roster__head">
+    <div>
+      <h2>Danh sách học viên mục tiêu</h2>
+      <p>Hiển thị danh sách học viên thuộc phạm vi khóa học đã chọn ({{ students().length }} học viên)</p>
+    </div>
+
+    <div class="me13-roster__badges">
+      <span class="me13-count-pill">
+        <strong data-testid="selected-count">{{ selectedIds().size }}</strong> Đã chọn
+      </span>
+      <span class="me13-sec-pill">🔒 Chế độ bảo mật danh tính</span>
+    </div>
+  </header>
+
+  <div class="me13-roster__toolbar">
+    <span class="me13-roster__hint">Tích chọn học viên để đưa vào danh sách người nhận ở bước 2</span>
+    <div class="me13-roster__actions">
+      <button
+        type="button"
+        class="me13-link-btn"
+        [disabled]="students().length === 0 || allVisibleSelected()"
+        (click)="selectAllVisible.emit()"
+        data-testid="select-all-btn"
+      >
+        Chọn tất cả đang hiển thị
+      </button>
+      <button
+        type="button"
+        class="me13-link-btn me13-link-btn--muted"
+        [disabled]="selectedIds().size === 0"
+        (click)="clearSelection.emit()"
+        data-testid="clear-selection-btn"
+      >
+        Bỏ chọn tất cả
+      </button>
+    </div>
+  </div>
+
+  @if (students().length === 0) {
+    <div class="me13-roster__empty" data-testid="empty-roster">
+      <div class="me13-empty-icon" aria-hidden="true">👥</div>
+      <h3>Chưa có danh sách học viên khả dụng</h3>
+      <p>
+        Hệ thống chưa ghi nhận dữ liệu khóa học được chọn hoặc dịch vụ danh sách lớp đang tạm ngắt kết nối.
+        Vui lòng chọn một khóa học ở bảng điều khiển bên trái để tải danh sách người nhận.
+      </p>
+      <div class="me13-empty-steps">
+        <span><strong>1</strong> Chọn khóa học phụ trách</span>
+        <span><strong>2</strong> Lọc nhóm học viên mục tiêu</span>
+        <span><strong>3</strong> Xác nhận &amp; Soạn nội dung</span>
+      </div>
+    </div>
+  } @else {
+    <ul class="me13-roster__list">
+      @for (student of students(); track student.id) {
+        <li
+          class="me13-student-item"
+          [class.me13-student-item--selected]="isSelected(student.id)"
+          data-testid="student-row"
+        >
+          <label class="me13-student-item__label">
+            <input
+              type="checkbox"
+              class="me13-student-item__checkbox"
+              [checked]="isSelected(student.id)"
+              (change)="toggleStudent.emit(student.id)"
+              [attr.data-testid]="'student-checkbox-' + student.id"
+            />
+            <span class="me13-student-item__avatar" aria-hidden="true">
+              {{ getInitials(student.full_name) }}
+            </span>
+            <span class="me13-student-item__info">
+              <strong class="me13-student-item__name">{{ student.full_name }}</strong>
+              <span class="me13-student-item__meta">
+                Mã học viên: #{{ student.id }} · Trạng thái: Đã ghi danh chính thức
+              </span>
+            </span>
+          </label>
+        </li>
+      }
+    </ul>
+  }
+
+  <footer class="me13-roster__foot">
+    <span>ℹ Tổng số người nhận dự kiến: <strong>{{ selectedIds().size }} học viên</strong></span>
+    <span>Cần chọn tối thiểu <strong>01 người nhận</strong> để mở khóa bước tiếp theo</span>
+  </footer>
+</section>

@@ -1,0 +1,71 @@
+<section class="actions-panel" aria-label="Bảng tác vụ phát hành và gỡ bỏ nội dung">
+  <div class="actions-head">
+    <span class="actions-eyebrow">BẢNG TÁC VỤ CHÍNH</span>
+    <h3>Cơ chế phát hành và loại bỏ</h3>
+  </div>
+
+  <article
+    class="action-card"
+    [class.action-card--highlighted]="activeIntent === 'publish' || activeIntent === 'unpublish'"
+  >
+    <div class="action-card__title">
+      <span class="action-icon action-icon--blue" aria-hidden="true">☁</span>
+      <div>
+        <strong>Phát hành công khai (API #52)</strong>
+        <span>Hiển thị cho tất cả học viên</span>
+      </div>
+    </div>
+
+    <div class="btn-stack">
+      <button
+        class="action-btn action-btn--publish"
+        type="button"
+        [disabled]="processing || !inspection || !inspection.canPublish"
+        (click)="confirmPublish.emit()"
+      >
+        🔓 Xuất bản bài học (published: true)
+      </button>
+
+      @if (inspection?.canUnpublish) {
+        <button
+          class="action-btn"
+          type="button"
+          [disabled]="processing"
+          (click)="confirmUnpublish.emit()"
+        >
+          Gỡ xuất bản về APPROVED (published: false)
+        </button>
+      }
+    </div>
+
+    <div class="action-note action-note--neutral">
+      ℹ {{ inspection ? inspection.publishGuardNote : 'Quy trình kiểm duyệt xuất bản đang chờ xác nhận quyền sở hữu khóa học.' }}
+    </div>
+  </article>
+
+  <article
+    class="action-card"
+    [class.action-card--highlighted]="activeIntent === 'delete'"
+  >
+    <div class="action-card__title">
+      <span class="action-icon action-icon--red" aria-hidden="true">🗑</span>
+      <div>
+        <strong>Gỡ bỏ khỏi khóa học (API #53)</strong>
+        <span>Bảo vệ tính toàn vẹn học liệu</span>
+      </div>
+    </div>
+
+    <button
+      class="action-btn action-btn--delete"
+      type="button"
+      [disabled]="processing || !inspection || !inspection.canDelete"
+      (click)="confirmDelete.emit()"
+    >
+      ⊘ Xóa nội dung (#53)
+    </button>
+
+    <div class="action-note action-note--danger">
+      ⚠ {{ inspection ? inspection.deleteGuardNote : 'Thao tác gỡ bỏ nội dung tạm thời bị khóa để bảo toàn dữ liệu tiến độ.' }}
+    </div>
+  </article>
+</section>

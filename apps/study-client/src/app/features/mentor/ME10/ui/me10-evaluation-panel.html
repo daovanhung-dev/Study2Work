@@ -1,0 +1,124 @@
+<div class="eval-column">
+  <section class="eval-card" aria-labelledby="eval-panel-title">
+    <h2 id="eval-panel-title" class="visually-hidden">Chấm điểm (#56) &amp; Gửi nhận xét (#57)</h2>
+
+    <div class="mutation-section">
+      <div class="section-head">
+        <label class="field-label" for="grade-input">🏁 Điểm số đánh giá (0 - 100)</label>
+        <span class="status-tag">TRẠNG THÁI #56: {{ gradeStatus }}</span>
+      </div>
+
+      <div class="score-box">
+        <input
+          id="grade-input"
+          class="score-input"
+          type="number"
+          step="1"
+          placeholder="--"
+          [value]="scoreDraft"
+          [disabled]="gradeStatus === 'saving'"
+          (input)="onScoreInput($event)"
+        />
+        <span class="score-max">/ 100</span>
+        <button
+          id="btn-save-grade"
+          class="btn-inline"
+          type="button"
+          [disabled]="gradeStatus === 'saving'"
+          (click)="submitGrade.emit()"
+        >
+          {{ gradeStatus === 'saving' ? 'Đang lưu...' : 'Lưu điểm (#56)' }}
+        </button>
+      </div>
+
+      <p class="field-hint">ℹ Thang điểm chuẩn theo tiêu chí đánh giá đang được thiết lập.</p>
+
+      @if (gradeMessage) {
+        <p
+          class="feedback-banner"
+          [class.feedback-banner--error]="gradeStatus === 'error'"
+          [class.feedback-banner--ok]="gradeStatus === 'saved'"
+          role="status"
+        >
+          {{ gradeMessage }}
+        </p>
+      }
+    </div>
+
+    <div class="mutation-section">
+      <div class="section-head">
+        <strong class="field-label">☑ Tiêu chí đánh giá (Rubric)</strong>
+        <span class="status-tag">0 / 0 Tiêu chí</span>
+      </div>
+
+      <div class="rubric-box" aria-label="Trạng thái Rubric">
+        <span class="rubric-icon" aria-hidden="true">📋</span>
+        <strong>Chưa có rubric tự động</strong>
+        <p>Hệ thống tiêu chí chấm điểm tự động tạm thời chưa áp dụng cho bài tập này.</p>
+      </div>
+    </div>
+
+    <div class="mutation-section">
+      <div class="section-head">
+        <label class="field-label" for="mentor-comments">💬 Nhận xét của giảng viên</label>
+        <span class="status-tag" id="char-counter">{{ feedbackDraft.length }} ký tự</span>
+      </div>
+
+      <textarea
+        id="mentor-comments"
+        class="feedback-textarea"
+        rows="4"
+        placeholder="Nhập nhận xét chi tiết, góp ý xây dựng cho bài làm của học viên..."
+        [value]="feedbackDraft"
+        [disabled]="feedbackStatus === 'saving'"
+        (input)="onFeedbackInput($event)"
+      ></textarea>
+
+      <div class="feedback-subrow">
+        <span>💡 Khuyến khích đưa ra dẫn chứng cụ thể và hướng cải thiện.</span>
+        <button
+          id="btn-save-feedback"
+          class="btn-inline"
+          type="button"
+          [disabled]="feedbackStatus === 'saving'"
+          (click)="submitFeedback.emit()"
+        >
+          {{ feedbackStatus === 'saving' ? 'Đang gửi...' : 'Gửi nhận xét (#57)' }}
+        </button>
+      </div>
+
+      @if (feedbackMessage) {
+        <p
+          class="feedback-banner"
+          [class.feedback-banner--error]="feedbackStatus === 'error'"
+          [class.feedback-banner--ok]="feedbackStatus === 'saved'"
+          role="status"
+        >
+          {{ feedbackMessage }}
+        </p>
+      }
+    </div>
+
+    <div class="safety-alert">
+      <strong>🔒 Cảnh báo an toàn dữ liệu:</strong>
+      <p>
+        API #56 (lưu điểm) và API #57 (gửi nhận xét) vận hành độc lập. Nút gộp bên dưới được khóa để tránh ghi lệch giao dịch.
+      </p>
+    </div>
+
+    <button
+      id="btn-combined-disabled"
+      class="btn-combined-disabled"
+      type="button"
+      disabled
+      aria-disabled="true"
+    >
+      ➤ Lưu điểm số và gửi nhận xét
+    </button>
+  </section>
+
+  <div class="signature-strip">
+    <span>🛡 Chữ ký số xác nhận: PENDING_AUTH</span>
+    <span>v2.4.1</span>
+  </div>
+</div>

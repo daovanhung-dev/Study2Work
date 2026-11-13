@@ -1,0 +1,125 @@
+<div class="sub-column">
+  <section class="panel-card" aria-labelledby="sub-panel-title">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <span class="doc-badge" aria-hidden="true">📄</span>
+        <div>
+          <h2 id="sub-panel-title">Tập tin bài làm học viên</h2>
+          <p class="panel-sub">Trạng thái kết nối kho lưu trữ học liệu (API #55)</p>
+        </div>
+      </div>
+
+      <span class="sync-chip">↻ {{ refreshing ? 'Đang tải...' : 'Đang đồng bộ' }}</span>
+    </div>
+
+    @if (submission; as item) {
+      <div class="loaded-body">
+        <dl class="meta-grid">
+          <div class="meta-box">
+            <dt>Mã bài nộp (id)</dt>
+            <dd>#{{ item.id }}</dd>
+          </div>
+          <div class="meta-box">
+            <dt>Mã bài tập (assignment_id)</dt>
+            <dd>#{{ item.assignment_id }}</dd>
+          </div>
+          <div class="meta-box">
+            <dt>Mã học viên (user_id)</dt>
+            <dd>#{{ item.user_id }}</dd>
+          </div>
+          <div class="meta-box">
+            <dt>Trạng thái (status)</dt>
+            <dd><strong>{{ item.status }}</strong></dd>
+          </div>
+          <div class="meta-box">
+            <dt>Thời gian nộp</dt>
+            <dd>{{ item.submitted_at }}</dd>
+          </div>
+          <div class="meta-box">
+            <dt>Điểm đang lưu</dt>
+            <dd>{{ item.score ?? 'Chưa có điểm' }}</dd>
+          </div>
+        </dl>
+
+        <div class="content-block">
+          <h3>Nội dung văn bản bài nộp (content)</h3>
+          @if (item.content) {
+            <pre class="submission-text">{{ item.content }}</pre>
+          } @else {
+            <p class="empty-note">Học viên không gửi nội dung văn bản (content = null).</p>
+          }
+        </div>
+
+        <div class="content-block">
+          <h3>Tập tin đính kèm (files[])</h3>
+          @if (item.files.length === 0) {
+            <p class="empty-note">Không có tập tin đính kèm nào trong bảng uploads.</p>
+          } @else {
+            <ul class="file-list">
+              @for (file of item.files; track file.id) {
+                <li class="file-item">
+                  <div>
+                    <strong>{{ file.name }}</strong>
+                    <span class="file-meta">
+                      #{{ file.id }} · {{ file.content_type }} · {{ formatSize(file.size_bytes) }} · {{ file.status }}
+                    </span>
+                  </div>
+                  <span class="file-url-note">URL: {{ file.url }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="sync-actions">
+          <button class="btn-outline" type="button" [disabled]="refreshing" (click)="refreshDetail.emit()">
+            ↻ Làm mới kết nối (#55)
+          </button>
+          <button class="btn-disabled" type="button" disabled>
+            ? Báo cáo sự cố tải file
+          </button>
+        </div>
+      </div>
+    } @else {
+      <div class="waiting-canvas">
+        <div class="dashed-ring">
+          <span class="cloud-icon" aria-hidden="true">☁</span>
+          <h3>Đang chờ kết nối dữ liệu</h3>
+          <p>
+            Dữ liệu bài làm của học viên đang được đồng bộ từ kho lưu trữ. Vui lòng kiểm tra lại liên kết bài tập hoặc quyền truy cập tài liệu nộp.
+          </p>
+
+          <div class="progress-card">
+            <span class="progress-title">⏳ Tiến trình nạp tệp: Phân giải định danh đối tượng</span>
+            <div class="progress-bar"><span class="progress-fill"></span></div>
+            <div class="progress-meta">
+              <span>Mã nộp bài: SUB-VERIFYING</span>
+              <span>Cổng kiểm định: Tự động</span>
+            </div>
+          </div>
+
+          <div class="sync-actions">
+            <button class="btn-outline" type="button" [disabled]="refreshing" (click)="refreshDetail.emit()">
+              ↻ Làm mới kết nối
+            </button>
+            <button class="btn-disabled" type="button" disabled>
+              ? Báo cáo sự cố tải file
+            </button>
+          </div>
+        </div>
+
+        <div class="canvas-footer">
+          <span>🔒 Giao thức bảo mật AES-256</span>
+          <span>Khuôn khổ đánh giá: WCAG 2.1 AA</span>
+        </div>
+      </div>
+    }
+  </section>
+
+  <div class="business-note">
+    <span>ℹ</span>
+    <p>
+      Lưu ý nghiệp vụ: Hệ thống chỉ hiển thị các tệp đính kèm đã vượt qua quy trình quét phần mềm độc hại và được liên kết xác thực danh tính từ tài khoản học viên chính thức.
+    </p>
+  </div>
+</div>

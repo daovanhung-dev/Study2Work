@@ -1,0 +1,125 @@
+<section class="me14-form" aria-label="Biểu mẫu tạo thông báo">
+  <div class="me14-form__field">
+    <div class="me14-form__label-row">
+      <label for="me14-title-input" class="me14-form__label">Tiêu đề thông báo *</label>
+      <span class="me14-form__counter">{{ title().trim().length }}/200 ký tự</span>
+    </div>
+    <input
+      id="me14-title-input"
+      type="text"
+      maxlength="200"
+      class="me14-form__control"
+      placeholder="Ví dụ: Lịch bảo vệ đồ án giữa kỳ &amp; Hướng dẫn nộp báo cáo..."
+      [ngModel]="title()"
+      (ngModelChange)="titleChange.emit($event)"
+      data-testid="title-input"
+    />
+  </div>
+
+  <div class="me14-form__grid">
+    <div class="me14-form__field">
+      <label for="me14-content-select" class="me14-form__label">
+        Chọn bài học liên kết (API #49 → <code>content: int64</code>)
+      </label>
+      <select
+        id="me14-content-select"
+        class="me14-form__control"
+        [disabled]="loadingContents() || contents().length === 0"
+        [ngModel]="contentIdInput()"
+        (ngModelChange)="contentIdChange.emit($event)"
+        data-testid="content-select"
+      >
+        <option value="">-- Chọn bài học từ khóa học --</option>
+        @for (item of contents(); track item.id) {
+          <option [value]="item.id">
+            #{{ item.id }} — {{ item.title }} ({{ item.content_type }})
+          </option>
+        }
+      </select>
+    </div>
+
+    <div class="me14-form__field">
+      <label for="me14-content-id-input" class="me14-form__label">
+        Mã nội dung khóa học (<code>content: int64</code>) *
+      </label>
+      <input
+        id="me14-content-id-input"
+        type="number"
+        min="1"
+        class="me14-form__control"
+        placeholder="Nhập ID nội dung nguyên dương (ví dụ: 10)"
+        [ngModel]="contentIdInput()"
+        (ngModelChange)="onContentIdChange($event)"
+        data-testid="content-id-input"
+      />
+    </div>
+  </div>
+
+  <fieldset class="me14-form__channels">
+    <legend class="me14-form__label">Kênh truyền tin (Channels) *</legend>
+    <div class="me14-form__channel-row">
+      <label class="me14-channel-card" [class.me14-channel-card--active]="hasChannel('PUSH')">
+        <input
+          type="checkbox"
+          [checked]="hasChannel('PUSH')"
+          (change)="toggleChannel.emit('PUSH')"
+          data-testid="channel-push"
+        />
+        <div>
+          <strong>Thông báo trong ứng dụng (PUSH)</strong>
+          <p>Hiển thị tức thời tại chuông thông báo trên Web &amp; Mobile App của học viên.</p>
+        </div>
+      </label>
+
+      <label class="me14-channel-card" [class.me14-channel-card--active]="hasChannel('EMAIL')">
+        <input
+          type="checkbox"
+          [checked]="hasChannel('EMAIL')"
+          (change)="toggleChannel.emit('EMAIL')"
+          data-testid="channel-email"
+        />
+        <div>
+          <strong>Email học viên (EMAIL)</strong>
+          <p>Gửi bản sao thông báo tới hộp thư điện tử cá nhân đã đăng ký của học viên.</p>
+        </div>
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="me14-form__unsupported" aria-label="Nội dung chi tiết và Tài liệu đính kèm">
+    <div class="me14-form__label-row">
+      <span class="me14-form__label">Nội dung chi tiết thông báo &amp; Tài liệu đính kèm (Tùy chọn)</span>
+      <span class="me14-badge-missing">Liên kết theo bài học #{{ contentIdInput() || '--' }}</span>
+    </div>
+    <textarea
+      rows="3"
+      disabled
+      class="me14-form__control me14-form__control--disabled"
+      placeholder="Nhập nội dung thông báo rõ ràng, nêu cụ thể mục tiêu học tập, thời hạn hoàn thành..."
+    ></textarea>
+  </div>
+
+  <div class="me14-security-alert">
+    <strong>🛡 Chính sách bảo mật &amp; An toàn truyền thông</strong>
+    <p>
+      Thông báo sau khi phát hành sẽ được ghi nhận vào nhật ký giảng dạy và không thể thu hồi đối với kênh Email.
+    </p>
+  </div>
+
+  <div class="me14-form__footer">
+    <button type="button" class="me14-draft-btn" disabled>Lưu bản nháp</button>
+    <button
+      type="button"
+      class="me14-submit-btn"
+      [disabled]="!canSubmit() || submitting()"
+      (click)="submitNotification.emit()"
+      data-testid="submit-notification-btn"
+    >
+      @if (submitting()) {
+        Đang xếp hàng gửi thông báo...
+      } @else {
+        ➤ Gửi thông báo
+      }
+    </button>
+  </div>
+</section>

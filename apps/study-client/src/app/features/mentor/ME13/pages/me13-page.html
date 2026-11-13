@@ -1,0 +1,99 @@
+<section class="me13-page" aria-labelledby="me13-title">
+  <nav class="me13-breadcrumb" aria-label="Breadcrumb">
+    <span>Thông báo</span>
+    <span>›</span>
+    <span>Soạn thông báo mới</span>
+    <span>›</span>
+    <strong>Bước 1: Chọn người nhận</strong>
+  </nav>
+
+  <header class="me13-page__header">
+    <div>
+      <span class="me13-page__eyebrow">HỆ THỐNG THÔNG BÁO HỌC VỤ • Mã quy trình: ME-13</span>
+      <h1 id="me13-title" class="me13-page__title">Chọn người nhận thông báo</h1>
+      <p class="me13-page__subtitle">
+        Xác định phạm vi khóa học và danh sách học viên mục tiêu trước khi soạn thảo nội dung thông báo học tập hoặc nhắc nhở tiến độ.
+      </p>
+    </div>
+
+    <span class="me13-role-pill">🛡 Phân quyền: Điều phối viên &amp; Mentor phụ trách</span>
+  </header>
+
+  <section class="me13-stepper-card" aria-label="Tiến trình tạo thông báo">
+    <div class="me13-step me13-step--active">
+      <span class="me13-step__num">1</span>
+      <div>
+        <small>BƯỚC HIỆN TẠI</small>
+        <strong>Chọn phạm vi người nhận</strong>
+      </div>
+    </div>
+    <div class="me13-step-line"><div class="me13-step-line__fill"></div></div>
+    <div class="me13-step">
+      <span class="me13-step__num">2</span>
+      <div>
+        <small>KẾ TIẾP (ME-14)</small>
+        <strong>Soạn thảo nội dung thông báo</strong>
+      </div>
+    </div>
+  </section>
+
+  @if (errorMessage(); as errMsg) {
+    <div class="me13-alert me13-alert--error" role="alert" data-testid="error-banner">
+      <div>
+        <strong>Lỗi ({{ errorCode() }}):</strong> {{ errMsg }}
+      </div>
+      @if (selectedCourseId(); as cid) {
+        <button type="button" class="me13-btn me13-btn--secondary" (click)="loadStudentsForCourse(cid)">
+          Thử lại
+        </button>
+      }
+    </div>
+  }
+
+  <div class="me13-workspace">
+    <app-me13-course-selector
+      [courses]="courses()"
+      [selectedCourseId]="selectedCourseId()"
+      [searchKeyword]="searchKeyword()"
+      [loadingCourses]="loadingCourses()"
+      (courseChange)="onCourseChange($event)"
+      (searchChange)="searchKeyword.set($event)"
+    />
+
+    <div>
+      @if (loadingStudents()) {
+        <div class="me13-state-card" role="status" data-testid="loading-students">
+          Đang tải danh sách học viên ghi danh từ API #62...
+        </div>
+      } @else {
+        <app-me13-student-roster
+          [students]="filteredStudents()"
+          [selectedIds]="selectedIds()"
+          (toggleStudent)="onToggleStudent($event)"
+          (selectAllVisible)="onSelectAllVisible()"
+          (clearSelection)="onClearSelection()"
+        />
+      }
+    </div>
+  </div>
+
+  <footer class="me13-bottom-bar">
+    <button type="button" class="me13-btn me13-btn--secondary" (click)="onClearSelection()">
+      ✕ Hủy bỏ
+    </button>
+    <div class="me13-bottom-bar__right">
+      <span class="me13-bottom-bar__hint">
+        {{ selectedIds().size === 0 ? 'Yêu cầu xác định khóa học và người nhận trước khi tiếp tục' : 'Đã sẵn sàng chuyển sang Bước 2 (ME-14)' }}
+      </span>
+      <button
+        type="button"
+        class="me13-btn me13-btn--primary"
+        [disabled]="selectedIds().size === 0"
+        (click)="proceedToCompose()"
+        data-testid="proceed-compose-btn"
+      >
+        Tiếp tục soạn nội dung (ME-14) ({{ selectedIds().size }}) →
+      </button>
+    </div>
+  </footer>
+</section>

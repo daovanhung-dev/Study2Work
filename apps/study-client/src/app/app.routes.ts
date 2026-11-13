@@ -6,6 +6,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/admin/admin.routes').then((m) => m.adminRoutes),
   },
   {
+    path: 'mentor',
+    loadChildren: () => import('./features/mentor/mentor.route').then((m) => m.mentorRoutes),
+  },
+  {
     path: '',
     pathMatch: 'full',
     loadChildren: () => import('./features/system/system.routes').then((m) => m.systemRoutes),

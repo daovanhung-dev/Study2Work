@@ -1,0 +1,102 @@
+<div class="tree-container" role="tree" aria-label="Cây nội dung khóa học">
+  @for (item of items; track item.node.id) {
+    <div
+      class="tree-branch"
+      role="treeitem"
+      [attr.aria-expanded]="item.children.length > 0 ? !isCollapsed(item.node.id) : null"
+    >
+      <div class="tree-row" [class.tree-row--root]="item.depth === 0">
+        <div class="tree-row-main">
+          @if (item.children.length > 0) {
+            <button
+              class="collapse-btn"
+              type="button"
+              (click)="onToggle(item.node.id)"
+              [attr.aria-label]="isCollapsed(item.node.id) ? 'Mở rộng mục ' + item.node.title : 'Thu gọn mục ' + item.node.title"
+            >
+              {{ isCollapsed(item.node.id) ? '+' : '−' }}
+            </button>
+          } @else {
+            <span class="leaf-bullet" aria-hidden="true">•</span>
+          }
+
+          <span class="type-pill">{{ item.node.content_type }}</span>
+          <strong class="node-title">{{ item.node.title }}</strong>
+          <span class="node-meta">#{{ item.node.id }} · Thứ tự {{ item.node.order }}</span>
+        </div>
+
+        <div class="tree-row-actions">
+          <span
+            class="status-badge"
+            [class.status-badge--published]="isPublished(item.node.status)"
+            [class.status-badge--draft]="!isPublished(item.node.status)"
+          >
+            {{ statusLabel(item.node.status) }}
+          </span>
+
+          <button
+            class="action-btn"
+            type="button"
+            (click)="onAction(item.node, 'edit')"
+          >
+            Sửa (ME-07)
+          </button>
+
+          @if (isPublished(item.node.status)) {
+            <button
+              class="action-btn"
+              type="button"
+              (click)="onAction(item.node, 'unpublish')"
+            >
+              Gỡ xuất bản (ME-08)
+            </button>
+          } @else {
+            <button
+              class="action-btn"
+              type="button"
+              (click)="onAction(item.node, 'publish')"
+            >
+              Xuất bản (ME-08)
+            </button>
+          }
+
+          <button
+            class="action-btn action-btn--danger"
+            type="button"
+            (click)="onAction(item.node, 'delete')"
+          >
+            Xóa (ME-08)
+          </button>
+
+          <button
+            class="action-btn"
+            type="button"
+            (click)="onAction(item.node, 'quick-dialog')"
+          >
+            Hộp thoại nhanh
+          </button>
+
+          <button
+            class="action-btn"
+            type="button"
+            disabled
+            title="Màn hình xem bài giảng ME-05 và cấu hình Rubric/Bộ đề chưa thuộc phạm vi kết nối"
+          >
+            Xem ME-05 / Rubric
+          </button>
+        </div>
+      </div>
+
+      @if (item.children.length > 0 && !isCollapsed(item.node.id)) {
+        <div class="tree-children" role="group">
+          <study-me06-tree-list
+            [items]="item.children"
+            [collapsedIds]="collapsedIds"
+            (toggleCollapse)="onToggle($event)"
+            (nodeAction)="nodeAction.emit($event)"
+          />
+        </div>
+      }
+    </div>
+  }
+</div>

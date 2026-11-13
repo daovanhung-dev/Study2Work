@@ -1,0 +1,98 @@
+<div class="mentor-shell">
+  <header class="mentor-topbar" role="banner">
+    <div class="mentor-topbar__inner">
+      <a class="mentor-brand" routerLink="/mentor/courses/101/content" aria-label="Study2Work LMS Mentor">
+        <span class="mentor-brand__logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 3L2 8l10 5 10-5-10-5z" />
+            <path d="M6 10.5V16c0 1.7 2.7 3 6 3s6-1.3 6-3v-5.5" />
+          </svg>
+        </span>
+        <span class="mentor-brand__text">
+          <strong class="mentor-brand__title">Study2Work</strong>
+          <span class="mentor-brand__sub">LMS MENTOR</span>
+        </span>
+      </a>
+
+      <nav class="mentor-nav" aria-label="Điều hướng cổng Giảng viên">
+        <span class="mentor-nav__link mentor-nav__link--disabled" title="Màn hình ME-01 chưa nằm trong phạm vi route">
+          Tổng quan
+        </span>
+        <a
+          class="mentor-nav__link"
+          [class.mentor-nav__link--active]="isSectionActive('courses')"
+          routerLink="/mentor/courses/101/content"
+        >
+          Khóa học phụ trách
+        </a>
+        <a
+          class="mentor-nav__link"
+          [class.mentor-nav__link--active]="isSectionActive('submissions')"
+          routerLink="/mentor/submissions"
+        >
+          Chấm bài
+        </a>
+        <a
+          class="mentor-nav__link"
+          [class.mentor-nav__link--active]="isSectionActive('support')"
+          routerLink="/mentor/support"
+        >
+          Hộp thư hỗ trợ
+        </a>
+        <a
+          class="mentor-nav__link"
+          [class.mentor-nav__link--active]="isSectionActive('notifications')"
+          routerLink="/mentor/notifications/recipients"
+        >
+          Thông báo
+        </a>
+      </nav>
+
+      <div class="mentor-tools">
+        <button
+          type="button"
+          class="mentor-bell-btn"
+          aria-label="Thông báo hệ thống"
+          routerLink="/mentor/notifications/status"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          <span class="mentor-bell-btn__dot" aria-hidden="true"></span>
+        </button>
+
+        <div class="mentor-profile" aria-label="Thông tin Giảng viên">
+          <div class="mentor-profile__copy">
+            <strong class="mentor-profile__name">TS. Vũ Thành Đạt</strong>
+            <span class="mentor-profile__role">MENTOR / GIẢNG VIÊN</span>
+          </div>
+          <span class="mentor-profile__avatar" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5" />
+            </svg>
+          </span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="mentor-shell__main">
+    <router-outlet />
+  </div>
+
+  <footer class="mentor-footer" role="contentinfo">
+    <div class="mentor-footer__inner">
+      <div class="mentor-footer__left">
+        <span class="mentor-footer__badge" aria-hidden="true">S2W</span>
+        <span>© 2025 Study2Work LMS. Chuẩn kiểm định WCAG 2.1 AA. Cổng điều phối Đào tạo &amp; Mentor.</span>
+      </div>
+      <div class="mentor-footer__links">
+        <span>Quy chế Giảng viên</span>
+        <span>Tiêu chuẩn đánh giá</span>
+        <span>Hỗ trợ kỹ thuật</span>
+      </div>
+    </div>
+  </footer>
+</div>
