@@ -8,6 +8,8 @@
 
 Tài liệu này mô tả bộ khung Angular của Study Web và cấu trúc triển khai màn hình. App root chỉ chứa `RouterOutlet`; `/` lazy-load route readiness scaffold trong `features/system`, còn `/admin` và `/admin/users` dùng chung `AdminLayout` lần lượt hiển thị AD-01 và AD-02. Cả hai trang Admin đều presentation-only; AD-02 có bảng rỗng và điều khiển tìm kiếm/lọc/phân trang disabled. API #68, dữ liệu người dùng, enum role/status, auth guard và quyền Admin chưa được nối hoặc xác minh; DD/API #68 vẫn blocked. Điều hướng UI không phải access control. System root scaffold không phải SH-01. Chưa triển khai luồng xác thực, lưu trữ dữ liệu hoặc hành vi phát hành ứng dụng. `core/http/StudyApiService` cung cấp transport generic tới `/api/v1`; Angular dev server proxy chuyển tiếp local request tới Study API `127.0.0.1:3003`. Transport này không xác nhận endpoint nghiệp vụ hoặc deployment đã được nối.
 
+`core/constant/api.constants.ts` chứa registry descriptor Study API theo catalog; `core/http/StudyApiService` dùng registry này để gửi request generic tới `/api/v1`. Registry ghi trạng thái đối chiếu source hiện tại, không tự chứng minh feature callsite hoặc deployment đã được nối.
+
 83 gói màn hình và các tài nguyên trong screen_stitch dưới docs/ là bằng chứng về yêu cầu và thiết kế. Các tuyến được đề xuất trong đó không chứng minh rằng tuyến đã được đăng ký khi ứng dụng chạy. Trước khi triển khai màn hình, hãy đối chiếu DD và các tham chiếu API với mã nguồn Study Server hiện tại cùng các hợp đồng có thể kiểm chứng. Ghi rõ những hành vi chưa được xác nhận.
 
 Quy tắc bắt buộc về ranh giới giao diện, nghiệp vụ và truy cập dữ liệu nằm trong [agent context Study Web](../../../.agents/web-study/frontend-rules.md). Tài liệu này mô tả cấu trúc; rule trong agent context quy định cách triển khai và chiều phụ thuộc.
@@ -39,6 +41,8 @@ Quy tắc bắt buộc về ranh giới giao diện, nghiệp vụ và truy cậ
             ├── app.config.ts        # Provider Angular dùng chung toàn ứng dụng
             ├── app.routes.ts        # Lazy-load route groups system và admin
             ├── core/                # Hạ tầng toàn ứng dụng, dịch vụ dùng chung và phần liên miền
+            │   ├── constant/
+            │   │   └── api.constants.ts      # Registry descriptor Study API
             │   └── http/
             │       ├── api-envelope.ts       # Kiểu envelope Study API dùng chung
             │       └── study-api.service.ts  # HTTP transport generic cho /api/v1
@@ -82,7 +86,7 @@ Các tệp .gitkeep trong những thư mục kiến trúc còn trống chỉ gi�
 - app.ts, app.html và app.css ghép thành phần gốc của ứng dụng. App root chỉ render `RouterOutlet`; readiness page được route riêng tại `/`, không phải màn hình SH-01.
 - app.config.ts đăng ký provider Angular dùng toàn ứng dụng, gồm `provideHttpClient()` cho API transport. Chỉ thêm provider tại đây khi toàn ứng dụng cần dùng.
 - app.routes.ts lazy-load `system.routes.ts` cho `/` và `admin.routes.ts` cho `/admin`; `admin.routes.ts` hiển thị AD-01 ở `/admin` và AD-02 ở `/admin/users`. Không có wildcard, route SH-05/SH-06, auth guard hoặc API route.
-- core/ quản lý hạ tầng toàn ứng dụng như cấu hình HTTP, transport API generic, tích hợp xác thực đã được xác minh, xử lý lỗi toàn cục và bộ chặn tuyến. Không đặt truy vấn hay chính sách riêng của nhóm tính năng trong core/. Hiện chưa có token store hoặc tích hợp xác thực Study Web.
+- core/ quản lý hạ tầng toàn ứng dụng như registry descriptor trong `constant/api.constants.ts`, cấu hình HTTP, transport API generic trong `http/`, tích hợp xác thực đã được xác minh, xử lý lỗi toàn cục và bộ chặn tuyến. Không đặt truy vấn hay chính sách riêng của nhóm tính năng trong core/. Hiện chưa có token store hoặc tích hợp xác thực Study Web.
 - layouts/ quản lý khung giao diện dùng chung cho các tuyến, chẳng hạn khung công khai, đã xác thực, student, mentor hoặc admin. Khung giao diện sắp xếp điều hướng và vùng hiển thị trang; không sở hữu quy tắc nghiệp vụ hay truy cập dữ liệu của nhóm tính năng.
 - shared/ quản lý thành phần trình bày tổng quát, chỉ thị, bộ biến đổi và tiện ích định dạng được nhiều miền dùng lại. Không được phụ thuộc vào nhóm tính năng, gọi API nghiệp vụ hoặc chứa quy tắc nghiệp vụ Study.
 - features/ quản lý screen theo nhóm `shared`, `guest`, `student`, `mentor` và `admin`. `features/system` chỉ giữ route readiness root được yêu cầu cho scaffold; các SH-* screen vẫn thuộc group `shared`. Mỗi screen có đúng bốn thư mục con trực tiếp: `data-access/`, `models/`, `pages/` và `ui/`.
@@ -106,6 +110,7 @@ Tên thư mục screen dùng mã compact như `AD01` cho screen ID `AD-01`. Tuy�
     main.ts -> app.config.ts -> app.routes.ts -> layout/group route -> page -> ui
                                                                    -> models (nếu có contract)
                                                                    -> data-access -> StudyApiService -> HttpClient -> /api/v1 -> Study API
+    StudyApiService nhận descriptor từ core/constant/api.constants.ts
 
 `StudyApiService`, `HttpClient` và proxy local đã được cấu hình; AD-01 và AD-02 không có feature API call. AD-02 chỉ trình bày trạng thái dữ liệu chưa kết nối; API #68 và functional DD vẫn blocked, không tạo service/model để lấp contract gap. API #101 chưa có current route/module/query/model/test; không ánh xạ KPI draft thành card. Proxy chỉ áp dụng cho `ng serve`; production cần định tuyến cùng origin `/api/v1`, hiện chưa được xác minh. Với từng màn hình, trước tiên xác minh tuyến Study Server hiện tại, cấu trúc yêu cầu/phản hồi, xác thực, mã lỗi và các kiểm thử liên quan. Không suy ra hành vi điểm cuối API từ bản phác giao diện, cũng không tự tạo trường dữ liệu hoặc tuyến API để lấp chỗ trống.
 

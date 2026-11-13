@@ -55,11 +55,16 @@ for functional implementation; API, authentication and access-control behavior
 are not verified, and the unguarded route provides navigation only.
 `features/system` here is only the requested root scaffold route; it does not
 move SH-* screens out of the canonical `shared` group or implement SH-01. The
-Admin route has no client auth guard and no report API. A generic
-`StudyApiService` and local `/api/v1` dev proxy provide HTTP transport, but no
-feature endpoint, auth flow, or token storage is wired; serving on the CLI dev
-server does not verify deployment. Recheck the source tree for each task and
-do not infer feature behavior from design files or older snapshots.
+Admin route has no client auth guard and no report API. The shared registry in
+`src/app/core/constant/api.constants.ts` defines API IDs #1–#103 from the
+endpoint catalog and source-only refresh route R-X01. `StudyApiService`
+consumes these typed descriptors through the local `/api/v1` transport and rejects entries marked
+`UNWIRED`; `WIRED` means an exact current server route source match, not a
+deployment check. API #2 is marked `STUB` because its default provider accepts
+requests without sending email. Feature-specific API calls, auth flow, token
+storage and deployment remain unwired or unverified. Recheck the source tree
+for each task and do not infer feature behavior from design files or older
+snapshots.
 
 [`../../web-study/design.md`](../../web-study/design.md) is the intended visual,
 interaction and accessibility target. The app architecture is documented in

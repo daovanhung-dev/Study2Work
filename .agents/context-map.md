@@ -205,8 +205,8 @@ Study2Work/
 
 #### `web-work/study-web` subcontext
 
-- Source root: `apps/study-client/` (Angular 22 standalone SPA scaffold; generic `/api/v1` transport and local proxy exist, Student feature routes/API calls are not wired)
-- Status: `SKELETON_ONLY`
+- Source root: `apps/study-client/` (Angular 22 standalone SPA with readiness/Admin routes, a typed `/api/v1` registry for 103 catalog APIs plus source-only R-X01, and no feature API callers)
+- Status: `VERIFIED_WITH_UNWIRED_COMPONENTS`
 - Entry: [`.agents/web-work/study/AGENTS.md`](web-work/study/AGENTS.md)
 - Index: [`.agents/web-work/study/INDEX.md`](web-work/study/INDEX.md)
 - Pages:
