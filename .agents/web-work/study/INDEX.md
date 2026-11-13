@@ -17,11 +17,16 @@ proxy and rejects `UNWIRED` entries. `WIRED` records an exact route-source
 match and does not verify deployment; API #2 is an email-delivery stub. Check
 current source for each screen task.
 
+`src/app/core/localStorage/local-storage.service.ts` provides generic JSON
+read/write operations for browser `localStorage`; it has no feature caller and
+does not integrate auth tokens.
+
 ## Pages
 
 | Topic | Page | Authority |
 |---|---|---|
 | Shared Study API registry, HTTP transport and envelope | `src/app/core/constant/api.constants.ts`, `src/app/core/http/study-api.service.ts`, `src/app/core/http/api-envelope.ts`, `proxy.conf.json` | 103 catalog descriptors plus source-only R-X01; transport rejects `UNWIRED`; feature callsites and production routing remain unverified. |
+| Generic browser storage | `src/app/core/localStorage/local-storage.service.ts` | JSON set/get utility; no feature caller or auth token integration. |
 | Study screen inventory and screen/API traceability | [`list_screen.md`](../../../apps/study-client/docs/list_screen.md) | Screen IDs, routes, API references and design/gate context; not proof of implemented UI. |
 | Study endpoint catalog | [`list_endpoint.md`](../../../apps/study-client/docs/list_endpoint.md) | API IDs, method/path and design I/O for 103 endpoints; not proof of runtime wiring. |
 | Mandatory frontend layer, UI/business, and dependency rules | [`../../web-study/frontend-rules.md`](../../web-study/frontend-rules.md) | Required for Study Web coding/fix/test/review and architecture-document tasks. |

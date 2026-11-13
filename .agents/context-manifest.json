@@ -1048,6 +1048,7 @@
             "apps/study-client/src/app/core/http/api-envelope.ts",
             "apps/study-client/src/app/core/http/study-api.service.ts",
             "apps/study-client/src/app/core/http/study-api.service.spec.ts",
+            "apps/study-client/src/app/core/localStorage/local-storage.service.ts",
             "apps/study-client/src/app/layouts/admin/admin-layout.ts",
             "apps/study-client/src/app/layouts/admin/admin-layout.html",
             "apps/study-client/src/app/layouts/admin/admin-layout.css",
