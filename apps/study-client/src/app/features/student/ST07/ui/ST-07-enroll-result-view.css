@@ -1,0 +1,69 @@
+:host {
+  display: block;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #0f172a;
+}
+
+.checkout-page { min-height: 0; background: var(--page-background); display: flex; flex-direction: column; }
+.container { max-width: 1280px; width: 100%; margin: 0 auto; padding: 0 24px; box-sizing: border-box; }
+.site-header { background: #ffffff; border-bottom: 1px solid #e2e8f0; height: 64px; display: flex; align-items: center; }
+.header-inner { display: flex; justify-content: space-between; align-items: center; }
+.header-left { display: flex; align-items: center; gap: 32px; }
+.brand-lockup { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.brand-icon { width: 32px; height: 32px; border-radius: 8px; background: #065a82; color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.brand-name { font-size: 16px; font-weight: 800; color: #065a82; }
+.nav-links { display: flex; gap: 24px; }
+.nav-item { font-size: 12px; font-weight: 600; color: #475569; text-decoration: none; }
+.auth-actions { display: flex; align-items: center; gap: 12px; }
+.btn-text { font-size: 12px; font-weight: 700; color: #065a82; text-decoration: none; }
+.btn-signup { padding: 8px 16px; border-radius: 8px; background: #065a82; color: #ffffff; font-size: 12px; font-weight: 700; text-decoration: none; }
+
+.main-wrap { flex: 1; display: flex; flex-direction: column; padding: 28px 24px; }
+.crumb-row { display: flex; gap: 8px; font-size: 12px; color: #64748b; margin-bottom: 12px; }
+.crumb-row a { color: #64748b; text-decoration: none; }
+.crumb-active { font-weight: 700; color: #0f172a; }
+.page-heading { font-size: 24px; font-weight: 800; margin: 0 0 32px; }
+
+.center-area { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding-top: 16px; }
+.gate-card { width: 100%; max-width: 660px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 56px 32px; text-align: center; box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04); }
+.icon-circle { width: 64px; height: 64px; border-radius: 9999px; background: #e6eef6; color: #065a82; font-size: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+.gate-card h2 { font-size: 18px; font-weight: 800; margin: 0 0 10px; }
+.gate-card p { font-size: 13px; color: #64748b; max-width: 440px; margin: 0 auto 28px; line-height: 1.6; }
+.btn-primary { display: inline-flex; padding: 12px 24px; border-radius: 10px; background: #065a82; color: #ffffff; font-size: 12px; font-weight: 700; text-decoration: none; }
+
+.site-footer { background: #f0f5fa; border-top: 1px solid #e2e8f0; padding: 20px 0; }
+.footer-inner { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+.footer-brand { font-weight: 800; color: #065a82; }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a { color: #64748b; text-decoration: none; }
+
+@media (max-width: 767px) {
+  .nav-links, .portal-nav, .lms-nav-links { display: none; }
+  .container, .portal-container, .forbidden-container, .operations-container { width: min(100%, 100%); padding-inline: 16px; }
+  .content-grid, .edit-grid, .access-grid, .forbidden-grid, .operations-grid, .spec-grid { grid-template-columns: minmax(0, 1fr); }
+  .header-inner, .nav-inner, .navbar-inner { gap: 12px; }
+  .actions-row, .action-row, .bottom-actions, .error-cta-row { flex-wrap: wrap; }
+}
+@media (max-width: 420px) {
+  .panel-card, .card, .empty-card, .profile-gate-card { min-width: 0; }
+  pre, code { overflow-wrap: anywhere; white-space: pre-wrap; }
+}
+
+@media (max-width: 767px) {
+  .site-header, .portal-header, .site-nav, .lms-navbar { height: auto; }
+  .header-inner, .navbar-inner, .nav-inner { flex-wrap: wrap; min-height: 64px; padding-block: 8px; }
+  .header-left, .nav-left { flex-wrap: wrap; min-width: 0; }
+  .nav-links, .portal-nav, .lms-nav-links {
+    display: flex; order: 3; width: 100%; min-width: 0; overflow-x: auto;
+    gap: 8px; white-space: nowrap; padding-block: 4px;
+  }
+  .nav-links a, .portal-nav a, .lms-nav-links a { flex: 0 0 auto; }
+  .nav-right, .auth-actions { flex-wrap: wrap; }
+  .user-chip { white-space: nowrap; }
+  .gate-card, .empty-card, .profile-gate-card { padding: 32px 20px; }
+}
+@media (max-width: 360px) {
+  .nav-register-btn, .btn-signup { padding-inline: 10px; }
+  .user-circle-btn { display: none; }
+  .status-badge-red, .gate-pill, .spec-pill { overflow-wrap: anywhere; white-space: normal; }
+}

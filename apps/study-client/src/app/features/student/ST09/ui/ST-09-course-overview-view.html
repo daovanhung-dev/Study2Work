@@ -1,0 +1,121 @@
+<div class="course-overview-page" [attr.data-state]="state.kind">
+  <main class="portal-container main-body">
+    <section class="hero-banner">
+      <div>
+        <div class="badge-row">
+          <span class="badge-gray">MÃ MÀN HÌNH: ST-09</span>
+          <span class="badge-blue">Route: /student/courses/:courseId</span>
+          <span class="badge-red">🔒 Trạng thái: Gated / Unavailable</span>
+        </div>
+        <h1>Tổng quan khóa đang học (Chưa khả dụng)</h1>
+        <p>{{ state.message }}</p>
+      </div>
+      <div class="api-state-box">
+        <div class="api-state-label">API State</div>
+        <div class="api-state-value">#09 công khai • #20/#37 chưa sẵn sàng</div>
+      </div>
+    </section>
+
+    <section class="gated-center-card">
+      <div class="hero-icon">↻</div>
+      <div class="gate-pill">
+        Cổng kiểm soát học tập Course-learning tree &amp; enrollment entitlement chưa runtime
+      </div>
+      <h2>{{ state.title }}</h2>
+      <p class="gate-desc">
+        Cần backend chứng thực quyền ghi danh và sơ đồ tiến độ bài học hợp lệ trước khi hiển thị
+        trình phát. Mọi số liệu chương bài, giáo trình hoặc luồng phát trực tuyến đều bị khóa theo
+        đặc tả ST-09.
+      </p>
+
+      <div class="policy-box">
+        <div>
+          <strong>Tiêu chuẩn kiểm soát bắt buộc</strong>
+          <p>
+            API #20 và #37 chưa có hợp đồng runtime đủ để xác minh quyền học. Không phát sinh mockup
+            bài giảng giả.
+          </p>
+        </div>
+        <span class="badge-red">RESTRICTED_ACCESS</span>
+      </div>
+
+      <div class="action-row">
+        <a href="/student/courses" class="btn-soft">← Quay lại Khóa học của tôi (ST-08)</a>
+        <span class="btn-primary" aria-disabled="true">Chưa có bài học được xác minh</span>
+      </div>
+    </section>
+
+    <section class="spec-section">
+      <div class="spec-head">
+        <div>
+          <div class="spec-kicker">HỒ SƠ KỸ THUẬT BÀN GIAO</div>
+          <h3>Developer Hand-off Specification</h3>
+        </div>
+        <span class="draft-pill">v1.2 Draft Refined</span>
+      </div>
+
+      <div class="spec-grid">
+        <div class="spec-card">
+          <h4>1. Quy chuẩn kiểm tra quyền (Gatekeeper)</h4>
+          <ul>
+            <li>
+              <strong>Pre-condition:</strong> Tuyệt đối không mount media player khi payload API #20
+              trả về trạng thái chưa ghi danh.
+            </li>
+            <li>
+              <strong>Curriculum Integrity:</strong> API #09 phải trả về cây danh mục hợp lệ trước
+              khi render danh sách bài học.
+            </li>
+            <li>
+              <strong>Progress Mapping:</strong> API #37 nạp tiến độ sau cùng. Nếu không có dữ liệu,
+              mặc định chặn tại màn hình ST-09 này.
+            </li>
+          </ul>
+        </div>
+        <div class="spec-card">
+          <h4>2. Màu sắc &amp; Không gian (Tokens)</h4>
+          <div class="token-row">
+            <span>Ocean Blue Brand Anchor:</span><code>#0B5F8A / Primary</code>
+          </div>
+          <div class="token-row">
+            <span>Grid Spacing:</span><strong>Bội số 4px (space-*)</strong>
+          </div>
+          <div class="token-row">
+            <span>Elevation:</span><strong>Shadow Level 1-2, No Border</strong>
+          </div>
+          <div class="token-row"><span>Layout Width:</span><strong>Max 1440px desktop</strong></div>
+        </div>
+        <div class="spec-card">
+          <h4>3. Tiêu chuẩn WCAG 2.1 AA</h4>
+          <ul>
+            <li>
+              <strong>Contrast Ratio:</strong> Tỷ lệ tương phản tối thiểu 4.5:1 đối với body copy và
+              3:1 đối với headline.
+            </li>
+            <li>
+              <strong>Keyboard Navigation:</strong> Các nút điều hướng ST-08 và ST-10 hỗ trợ đầy đủ
+              phím Tab và focus ring.
+            </li>
+            <li>
+              <strong>Aria Live:</strong> Khối cảnh báo thiết lập role="alert" và
+              aria-live="polite".
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="route-note-bar">
+        <div class="route-note-left">
+          <span class="curly-badge">{{ '{' }}{{ '}' }}</span>
+          <div>
+            <strong>Lưu ý tích hợp Frontend Engine</strong>
+            <p>
+              Không tự ý giải nén mock data khi API chưa triển khai runtime endpoint. Giữ nguyên màn
+              hình cổng chặn ST-09 cho tới khi có thông báo release sprint tiếp theo.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>

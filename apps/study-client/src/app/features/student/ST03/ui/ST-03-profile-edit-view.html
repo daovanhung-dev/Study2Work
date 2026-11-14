@@ -1,0 +1,205 @@
+<div class="edit-page">
+  <main class="portal-container main-body">
+    <div class="top-row">
+      <div class="breadcrumb">
+        <a href="/student">Tổng quan</a>
+        <span>›</span>
+        <a href="/student/profile">Hồ sơ cá nhân (ST-02)</a>
+        <span>›</span>
+        <span class="crumb-current">Chỉnh sửa hồ sơ (ST-03)</span>
+      </div>
+      <span class="gate-pill">● GATE G-03: BLOCKED (SCHEMA CONFLICT)</span>
+    </div>
+
+    <div class="alert-banner">
+      <div class="alert-left">
+        <div class="alert-icon">🔒</div>
+        <div>
+          <h2>Chặn kỹ thuật Gate G-03 (API #13 &amp; #14)</h2>
+          <p>
+            Chức năng cập nhật avatar và lưu hồ sơ đang tạm dừng. Nút lưu dữ liệu và tải ảnh bị vô
+            hiệu hóa để bảo toàn tính toàn vẹn cơ sở dữ liệu.
+          </p>
+        </div>
+      </div>
+      <a href="/student/profile" class="btn-back-white">← Quay lại Hồ sơ cá nhân (ST-02)</a>
+    </div>
+
+    <div class="edit-grid">
+      <!-- Left Column -->
+      <div class="left-col">
+        <div class="card center-card">
+          <div class="avatar-gated">
+            <span class="lock-symbol">🔒</span>
+            <span class="gated-stamp">GATED / UPLOAD<br />UNAVAILABLE</span>
+          </div>
+          <h3>Tài khoản Sinh viên</h3>
+          <p class="source-note">Nguồn dữ liệu: API #04 GET /users/me (Runtime Only)</p>
+
+          <div class="pipeline-box">
+            <div class="pipeline-head">
+              <strong>Avatar Asset Pipeline</strong>
+              <span class="halted-tag">API #13 Halted</span>
+            </div>
+            <p>
+              Không hỗ trợ chọn tệp. Form upload vật lý bị chặn nhằm ngăn chặn lỗi mismatch
+              binary/URL.
+            </p>
+          </div>
+
+          <button type="button" disabled class="btn-upload-disabled">
+            Tải ảnh lên (Vô hiệu hóa)
+          </button>
+        </div>
+
+        <div class="card">
+          <h4 class="safe-title">✓ Chế độ an toàn ST-03</h4>
+          <p class="safe-desc">
+            Hệ thống hiển thị đúng cấu trúc runtime, tuân thủ nguyên tắc không tạo danh tính ảo (No
+            prefilled fake identity). Chỉ hiển thị dữ liệu hồ sơ sau khi có phiên đăng nhập và phản
+            hồi hợp lệ từ API #04.
+          </p>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="right-col">
+        <div class="card">
+          <h2 class="form-title">Thông tin hồ sơ học viên</h2>
+          <div role="status" aria-live="polite">
+            @switch (state) {
+              @case ('loading') {
+                <p>Đang tải hồ sơ…</p>
+              }
+              @case ('unauthorized') {
+                <p>Vui lòng đăng nhập để xem hồ sơ.</p>
+              }
+              @case ('forbidden') {
+                <p>Tài khoản không có quyền xem hồ sơ học viên.</p>
+              }
+              @case ('error') {
+                <p>
+                  Không thể tải hồ sơ. <button type="button" (click)="retry.emit()">Thử lại</button>
+                </p>
+              }
+            }
+          </div>
+          <p class="form-sub">
+            Cập nhật thông tin nhận diện tài khoản. Các trường có xung đột schema backend đã được
+            khóa an toàn.
+          </p>
+
+          <div class="field-block">
+            <div class="label-row">
+              <label>Họ và tên <span class="req">*</span></label>
+              <span class="badge-green">Hỗ trợ bởi API #04</span>
+            </div>
+            <input
+              type="text"
+              disabled
+              [value]="profile?.full_name ?? ''"
+              placeholder="Nhập họ và tên sinh viên..."
+              class="input-field"
+            />
+            <p class="helper-text">Dữ liệu họ và tên đồng bộ với bảng người dùng.</p>
+          </div>
+
+          <div class="field-block">
+            <div class="label-row">
+              <label>Địa chỉ Email</label>
+              <span class="badge-gray">Chỉ đọc (Read-only)</span>
+            </div>
+            <input
+              type="email"
+              readonly
+              disabled
+              [value]="profile?.email ?? ''"
+              placeholder="Chỉ hiển thị sau khi đăng nhập"
+              class="input-field readonly"
+            />
+            <p class="helper-text">
+              Email sinh viên do phòng đào tạo quản lý, không thể tự sửa đổi tại client.
+            </p>
+          </div>
+
+          <div class="field-block">
+            <div class="label-row">
+              <label class="label-blocked">✕ Số điện thoại (Phone)</label>
+              <span class="badge-red">Disabled: Nullable conflict</span>
+            </div>
+            <input
+              type="text"
+              disabled
+              value="Quy tắc lưu chưa khóa (API #14 Blocked)"
+              class="input-field readonly"
+            />
+            <p class="warn-text">
+              ▲ Cảnh báo schema: Thuộc tính Phone nullable chưa khóa quy tắc validate tại DDL. Tạm
+              thời vô hiệu hóa form control.
+            </p>
+          </div>
+
+          <div class="field-block">
+            <div class="label-row">
+              <label class="label-blocked">✕ Tiểu sử (Bio)</label>
+              <span class="badge-red">Disabled: Schema missing</span>
+            </div>
+            <textarea rows="3" disabled class="input-textarea">
+Cột bio không có trong DDL hiện tại...</textarea>
+            <p class="warn-text">ⓘ Cảnh báo schema: Trường Bio vắng mặt trong DDL hiện hành.</p>
+          </div>
+
+          <div class="form-actions">
+            <a href="/student/profile" class="btn-soft">← Quay lại Hồ sơ cá nhân (ST-02)</a>
+            <button type="button" disabled class="btn-save-disabled">
+              Lưu thay đổi (Disabled)
+            </button>
+          </div>
+          <div class="save-note">
+            API #14 PUT /users/me/profile chưa chốt body mapping. Nút lưu bị khóa cứng.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="diag-head">
+            <h3>Developer Hand-off Diagnostic</h3>
+            <span class="badge-gray">Technical Gate G-03</span>
+          </div>
+          <p class="diag-sub">
+            Tài liệu chẩn đoán dành cho Backend Core &amp; Database Admin về các blocker trên Route
+            <code>/student/profile/edit</code>:
+          </p>
+
+          <div class="diag-grid">
+            <div class="diag-box">
+              <div class="diag-box-head">
+                <strong>1. API #13 POST /users/me/avatar</strong>
+                <span class="badge-red">Asset Mismatch</span>
+              </div>
+              <p>
+                API #13 nhận JSON chứa image Data URL và trả avatar_url sau khi ghi object storage.
+                Cần thống nhất tham chiếu avatar, quyền truy cập ảnh và luồng lưu qua API #14 trước
+                khi mở upload.
+              </p>
+            </div>
+            <div class="diag-box">
+              <div class="diag-box-head">
+                <strong>2. API #14 PUT /users/me/profile</strong>
+                <span class="badge-red">DDL Missing Fields</span>
+              </div>
+              <p>
+                Trường <code>bio</code> không có trong DDL hiện tại. Cột <code>phone</code> có trạng
+                thái nullable nhưng thiếu validation regex và quy tắc lưu đồng bộ.
+              </p>
+            </div>
+          </div>
+
+          <div class="solution-bar">
+            ✓ <strong>Bước tiếp theo:</strong> Chờ xác nhận hợp đồng API #13 và #14 trước khi mở
+            chức năng chỉnh sửa hồ sơ.
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

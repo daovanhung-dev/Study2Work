@@ -10,6 +10,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/system/system.route').then((m) => m.systemRoutes),
   },
   {
+    path: 'student',
+    loadChildren: () => import('./features/student/student.route').then((m) => m.studentRoutes),
+  },
+  {
     path: '',
     loadChildren: () => import('./features/shared/shared.route').then((m) => m.sharedRoutes),
   },

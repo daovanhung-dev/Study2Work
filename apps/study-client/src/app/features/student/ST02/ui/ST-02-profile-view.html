@@ -1,0 +1,55 @@
+<div class="profile-page">
+  <main class="container main-section">
+    <div class="page-head">
+      <h1>Hồ sơ cá nhân</h1>
+      <p>Xem và quản lý thông tin tài khoản học viên, tiến độ đào tạo và chứng nhận năng lực.</p>
+    </div>
+
+    <div class="center-wrap">
+      <div class="profile-gate-card">
+        <div class="avatar-circle">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            width="28"
+            height="28"
+          >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        </div>
+        <h2>Thông tin hồ sơ học viên</h2>
+        <div role="status" aria-live="polite">
+          @switch (state) {
+            @case ('loading') {
+              <p>Đang tải hồ sơ…</p>
+            }
+            @case ('unauthorized') {
+              <p>Vui lòng đăng nhập để xem hồ sơ.</p>
+            }
+            @case ('forbidden') {
+              <p>Tài khoản không có quyền xem hồ sơ học viên.</p>
+            }
+            @case ('error') {
+              <p>
+                Không thể tải hồ sơ. <button type="button" (click)="retry.emit()">Thử lại</button>
+              </p>
+            }
+          }
+        </div>
+        @if (profile; as user) {
+          <h3>{{ user.full_name }}</h3>
+          <p>{{ user.email }}</p>
+          <p>{{ user.role }} · {{ user.status }}</p>
+        }
+
+        <div class="action-row">
+          <a href="/" class="btn-primary">← Về trang khách</a>
+          <span class="btn-muted" aria-disabled="true">Chỉnh sửa hồ sơ (Tạm khóa)</span>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
