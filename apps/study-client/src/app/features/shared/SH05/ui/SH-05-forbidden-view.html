@@ -1,0 +1,128 @@
+<main class="forbidden-page">
+  <div class="forbidden-container">
+    <header class="spec-topbar">
+      <div class="spec-left">
+        <span class="spec-icon-box" aria-hidden="true"
+          ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 6h16M4 12h16M4 18h16M8 3v6M16 9v6M10 15v6" /></svg
+        ></span>
+        <div>
+          <div class="spec-badges-row">
+            <span class="spec-kicker">HAND-OFF SPEC</span
+            ><span class="spec-pill">Screen ID: SH-05</span
+            ><span class="spec-pill">Route: /forbidden</span>
+          </div>
+          <p class="spec-subtitle">Trạng thái truy cập API #04 (GET /users/me)</p>
+        </div>
+      </div>
+      <span class="context-pill">{{
+        state.status === null ? 'Chưa có phản hồi xác thực' : 'HTTP ' + state.status
+      }}</span>
+    </header>
+    <div class="forbidden-grid">
+      <section class="panel-card left-main-card" aria-labelledby="access-title">
+        <div class="headline-header-row">
+          <span class="shield-box" aria-hidden="true"
+            ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <rect x="9" y="10" width="6" height="5" rx="1" />
+              <path d="M10 10V8a2 2 0 1 1 4 0v2" /></svg
+          ></span>
+          <div class="headline-content">
+            <div class="status-tags-row">
+              <span class="status-badge-red">{{
+                state.status === null ? 'CHƯA XÁC ĐỊNH TRẠNG THÁI PHIÊN' : 'HTTP ' + state.status
+              }}</span>
+            </div>
+            <h1 id="access-title" class="main-title">{{ state.title }}</h1>
+            <p class="main-desc">{{ state.description }}</p>
+          </div>
+        </div>
+        <div class="policy-callout">
+          <div class="policy-title"><strong>Bảo vệ quyền truy cập</strong></div>
+          <p class="policy-text">
+            Hệ thống chỉ hiển thị lý do 401 hoặc 403 khi máy chủ trả kết quả tương ứng. Chưa có
+            phiên hợp lệ thì không tải dữ liệu học viên.
+          </p>
+        </div>
+        <div class="diagnostic-container" aria-label="Thông tin trạng thái">
+          <div class="diagnostic-heading">CHI TIẾT CHẨN ĐOÁN ĐỊNH TUYẾN</div>
+          <div class="diagnostic-grid">
+            <div class="diag-cell">
+              <span class="diag-label">Mã trạng thái HTTP</span
+              ><span class="diag-value">{{ state.status ?? 'Chưa có phản hồi' }}</span>
+            </div>
+            <div class="diag-cell">
+              <span class="diag-label">Lý do từ máy chủ</span
+              ><span class="diag-value">{{
+                state.status === 403
+                  ? 'Không đủ quyền'
+                  : state.status === 401
+                    ? 'Yêu cầu chưa xác thực'
+                    : 'Chưa xác định'
+              }}</span>
+            </div>
+            <div class="diag-cell">
+              <span class="diag-label">Trạng thái phiên</span
+              ><span class="diag-value">{{
+                state.status === 401 ? 'Cần đăng nhập lại' : 'Không suy ra từ mã lỗi'
+              }}</span>
+            </div>
+            <div class="diag-cell">
+              <span class="diag-label">Bước tiếp theo</span
+              ><span class="diag-value">Đăng nhập hoặc về trang công khai</span>
+            </div>
+          </div>
+        </div>
+        <div class="actions-row">
+          <a href="/login" class="btn-safe-home">Đến trang đăng nhập</a
+          ><a href="/" class="btn-copy-trace">Về trang chủ</a>
+        </div>
+      </section>
+      <aside class="right-column" aria-label="Thông tin hỗ trợ">
+        <div class="panel-card trace-card">
+          <div class="trace-header">
+            <h2 class="trace-title">Mã phản hồi HTTP &amp; Trace</h2>
+            <span class="sanitized-badge">SANITIZED</span>
+          </div>
+          <div class="trace-id-box">
+            <div>
+              <div class="trace-id-label">Trace Identifier</div>
+              <div class="trace-id-value">{{ state.traceId ?? 'Chưa có' }}</div>
+            </div>
+          </div>
+          <div class="contract-sub-row">
+            <span>Standard Response Contract</span
+            ><span>{{ state.status === null ? 'Chưa có dữ liệu' : 'HTTP ' + state.status }}</span>
+          </div>
+          <div class="light-json-box">
+            Mở trang trực tiếp không tạo yêu cầu xác thực. Thông tin lỗi chỉ hiển thị sau khi nhận
+            phản hồi thật từ máy chủ.
+          </div>
+          <p class="sanitized-note">Không tạo mã lỗi hoặc Trace ID mẫu cho phiên truy cập này.</p>
+        </div>
+        <div class="panel-card rules-card">
+          <h2 class="rules-heading">Bạn có thể làm gì?</h2>
+          <ul class="rules-list">
+            <li>
+              <span class="rule-check" aria-hidden="true">✓</span>
+              <div>Đăng nhập bằng tài khoản học viên để thử lại.</div>
+            </li>
+            <li>
+              <span class="rule-check" aria-hidden="true">✓</span>
+              <div>
+                Nếu đã đăng nhập mà vẫn không mở được nội dung, hãy quay về trang công khai.
+              </div>
+            </li>
+            <li>
+              <span class="rule-check" aria-hidden="true">✓</span>
+              <div>
+                Chỉ chia sẻ Trace ID với bộ phận hỗ trợ khi hệ thống thực sự cung cấp mã này.
+              </div>
+            </li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>

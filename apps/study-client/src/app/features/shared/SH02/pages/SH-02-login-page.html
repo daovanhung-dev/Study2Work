@@ -1,0 +1,7 @@
+<study-login-view
+  [submitting]="submitting()"
+  [alert]="alert()"
+  [fieldErrors]="fieldErrors()"
+  (login)="submit($event)"
+  (edit)="clearErrors()"
+/>

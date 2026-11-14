@@ -136,6 +136,35 @@ describe('StudyApiService', () => {
     httpTestingController.expectNone((request) => request.url.startsWith('/api/v1'));
   });
 
+  it('returns HTTP status for the registered verification API', async () => {
+    const body = { user_id: 12, email: 'student@example.com' };
+    const response = firstValueFrom(
+      api.requestResponse<{ status: string }>(STUDY_SERVER_APIS.API_002, { body }),
+    );
+
+    const request = httpTestingController.expectOne('/api/v1/auth/verify-email/send');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(body);
+    request.flush(
+      {
+        success: true,
+        businessCode: 'DESIGN_OPERATION_ACCEPTED',
+        message: 'Accepted',
+        data: { status: 'accepted' },
+        meta: {},
+        traceId: 'trace-verify',
+      },
+      { status: 202, statusText: 'Accepted' },
+    );
+
+    await expect(response).resolves.toMatchObject({ status: 202, body: { success: true } });
+  });
+
+  it('rejects an unwired response request before sending HTTP', () => {
+    expect(() => api.requestResponse(STUDY_SERVER_APIS.API_010)).toThrow(/UNWIRED/);
+    httpTestingController.expectNone((request) => request.url.startsWith('/api/v1'));
+  });
+
   it('allows the source-only refresh route through the descriptor', async () => {
     const body = { refresh_token: 'opaque-test-token' };
     const expected: ApiEnvelope<{ access_token: string }> = {

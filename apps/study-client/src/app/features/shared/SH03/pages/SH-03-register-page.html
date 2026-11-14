@@ -1,0 +1,8 @@
+<study-register-view
+  [submitting]="submitting()"
+  [created]="created()"
+  [alert]="alert()"
+  [fieldErrors]="fieldErrors()"
+  (register)="submit($event)"
+  (edit)="clearField($event)"
+/>

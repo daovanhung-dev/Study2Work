@@ -1,0 +1,291 @@
+<main class="verification-screen">
+  <div class="verification-layout">
+    <header class="screen-bar">
+      <span class="screen-label">HAND-OFF SH-04</span>
+      <span class="route-caption">Route:</span>
+      <span class="screen-route">/register/verification</span>
+      <span class="screen-note"
+        >TRẠNG THÁI API #02
+        <strong>{{
+          state === 'accepted' ? 'Accepted' : state === 'pending' ? 'Pending' : 'Chưa xác nhận'
+        }}</strong></span
+      >
+    </header>
+
+    <div class="content-grid">
+      <section class="message-card" aria-labelledby="verification-title">
+        <div class="message-top">
+          <span class="message-icon" aria-hidden="true">
+            <svg
+              viewBox="0 0 32 32"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M4 7h24v16H4z" />
+              <path d="m5 8 11 9 11-9" />
+              <path d="m19 24 4 4 7-8" />
+            </svg>
+          </span>
+          <div class="response-status">
+            <span>TRẠNG THÁI PHẢN HỒI</span>
+            <strong
+              [class.status-accepted]="state === 'accepted'"
+              [class.status-pending]="state === 'pending'"
+            >
+              @switch (state) {
+                @case ('accepted') {
+                  ● 202 Accepted (Stub)
+                }
+                @case ('pending') {
+                  Đang tiếp nhận
+                }
+                @case ('missing') {
+                  Thiếu dữ liệu bàn giao
+                }
+                @case ('invalid') {
+                  Dữ liệu không hợp lệ
+                }
+                @case ('provider-error') {
+                  Không thể xử lý
+                }
+                @case ('unmapped') {
+                  Trạng thái chưa xác định
+                }
+                @default {
+                  Chưa rõ kết quả
+                }
+              }
+            </strong>
+          </div>
+        </div>
+
+        <div class="message-copy" role="status" aria-live="polite">
+          <h1 id="verification-title">
+            @switch (state) {
+              @case ('accepted') {
+                Yêu cầu kích hoạt đã tiếp nhận
+              }
+              @case ('pending') {
+                Đang chuyển yêu cầu xác thực
+              }
+              @case ('missing') {
+                Chưa có thông tin đăng ký để tiếp tục
+              }
+              @case ('invalid') {
+                Dữ liệu bàn giao không hợp lệ
+              }
+              @case ('provider-error') {
+                Chưa thể tiếp nhận yêu cầu
+              }
+              @case ('unmapped') {
+                Chưa xác định được trạng thái yêu cầu
+              }
+              @default {
+                Chưa rõ kết quả yêu cầu
+              }
+            }
+          </h1>
+          <p>
+            @switch (state) {
+              @case ('accepted') {
+                Yêu cầu kích hoạt tài khoản đã được API #02 tiếp nhận. Cổng gửi email hiện ở trạng
+                thái <strong>Stub kiểm thử</strong>; hệ thống chưa gửi thư thực tế hoặc xác minh tài
+                khoản.
+              }
+              @case ('pending') {
+                Hệ thống đang gửi một yêu cầu tới API #02. Vui lòng chờ kết quả phản hồi.
+              }
+              @case ('missing') {
+                Trang này cần được mở sau khi tạo tài khoản thành công. Không có yêu cầu nào được
+                gửi khi thiếu dữ liệu bàn giao.
+              }
+              @case ('invalid') {
+                Hệ thống đã từ chối dữ liệu bàn giao. Không có yêu cầu nào được xác nhận là đã tiếp
+                nhận.
+              }
+              @case ('provider-error') {
+                Bộ xử lý chưa thể tiếp nhận yêu cầu. Chưa có bằng chứng email đã được gửi.
+              }
+              @case ('unmapped') {
+                Bộ xử lý trả trạng thái chưa được hỗ trợ. Không thể kết luận email đã được gửi hoặc
+                tài khoản đã xác minh.
+              }
+              @default {
+                Không nhận được kết quả đáng tin cậy. Yêu cầu có thể đã được tiếp nhận; hệ thống sẽ
+                không tự gửi lại.
+              }
+            }
+          </p>
+        </div>
+
+        <div class="limits-panel">
+          <div class="limits-title">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 11v6M12 7h.01" />
+            </svg>
+            <strong>MINH BẠCH KIẾN TRÚC &amp; PHẠM VI BÀN GIAO</strong>
+          </div>
+          <ul>
+            <li>
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="m8 12 2.5 2.5L16 9" /></svg
+              ><span
+                ><strong>Không có mã OTP:</strong> Hệ thống chưa cấu hình module sinh mã hoặc xác
+                thực qua OTP.</span
+              >
+            </li>
+            <li>
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="m8 12 2.5 2.5L16 9" /></svg
+              ><span
+                ><strong>Không có link xác nhận:</strong> Không tạo liên kết hay token xác thực trực
+                tiếp qua email.</span
+              >
+            </li>
+            <li>
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="m8 12 2.5 2.5L16 9" /></svg
+              ><span
+                ><strong>Chưa có confirm endpoint:</strong> Backend chưa mở điểm cuối xử lý xác thực
+                người dùng.</span
+              >
+            </li>
+          </ul>
+        </div>
+
+        <a class="back-link" href="/login">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 12H4m7-7-7 7 7 7" />
+          </svg>
+          <span class="back-label-full">Quay lại Đăng nhập (SH-02)</span>
+          <span class="back-label-short">Quay lại Đăng nhập</span>
+        </a>
+      </section>
+
+      <aside class="details-column" aria-label="Thông tin trạng thái API">
+        <section class="details-card">
+          <div class="details-heading">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="2.5" y="4" width="19" height="16" rx="1" />
+              <path d="m7 9 3 3-3 3m6 0h5" />
+            </svg>
+            <strong>HANDOFF CONTRACT STATUS</strong>
+            <small>REF: API #02</small>
+          </div>
+          <dl>
+            <div>
+              <dt>HTTP Protocol Status</dt>
+              <dd>
+                {{
+                  httpStatus === 202 && state === 'accepted'
+                    ? '202 Accepted (Stub)'
+                    : (httpStatus ?? (state === 'pending' ? 'Đang chờ' : 'Không có'))
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt>Delivery Pipeline</dt>
+              <dd>Unconfirmed / Pending</dd>
+            </div>
+            <div>
+              <dt>Auth Validation Type</dt>
+              <dd>No OTP / No Link</dd>
+            </div>
+            <div>
+              <dt>Confirmation Gateway</dt>
+              <dd>Endpoint Pending</dd>
+            </div>
+          </dl>
+          <div class="contract-note">
+            <div class="contract-note-heading">
+              <span>ENDPOINT CONTRACT</span><code>POST /api/v1/auth/verify-email/send</code>
+            </div>
+            <div class="contract-body">
+              <span>API #02 · Hợp đồng hiện tại</span>
+              <code
+                >user_id: integer<br />email: string<br />HTTP 202 · DESIGN_OPERATION_ACCEPTED<br />data.status:
+                accepted</code
+              >
+              <p>
+                202 chỉ xác nhận yêu cầu được stub tiếp nhận. Không có bằng chứng gửi thư hoặc xác
+                minh tài khoản.
+              </p>
+            </div>
+          </div>
+        </section>
+        <div class="details-footnote">
+          <span class="footnote-icon" aria-hidden="true"
+            ><svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M3 6h10m-10 6h10m-10 6h10m14-12 2 2 3-4M17 15l5 5m0-5-5 5" /></svg></span
+          ><span><strong>Design Rule SH-04</strong><br />Không giả lập đếm lùi hoặc input giả</span>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="screen-footer">
+      <span>Study2Work LMS · SH-04</span>
+      <span>Screen ID: SH-04 &nbsp; Route: /register/verification</span>
+    </footer>
+  </div>
+</main>
