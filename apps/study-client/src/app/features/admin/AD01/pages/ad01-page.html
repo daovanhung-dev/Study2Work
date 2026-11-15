@@ -1,4 +1,15 @@
-<main class="page-width main-content">
+<main class="page-width main-content" [attr.data-screen-id]="screenModel.id">
+    <div class="screen-context">
+      <nav aria-label="Đường dẫn bảng điều khiển">
+        <ol class="breadcrumbs">
+          <li>Bảng điều khiển quản trị</li>
+          <li aria-hidden="true">›</li>
+          <li aria-current="page">Tổng quan hệ thống</li>
+        </ol>
+      </nav>
+      <span class="context-status">Số liệu tổng quan chưa khả dụng</span>
+    </div>
+
     <section class="hero" aria-labelledby="page-title">
       <div class="hero-copy">
         <p class="eyebrow">Hệ thống quản trị tổng thể</p>

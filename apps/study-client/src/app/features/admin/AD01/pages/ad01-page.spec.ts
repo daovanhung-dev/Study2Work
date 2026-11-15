@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { AD01Page } from './ad01-page';
 
 describe('AD01Page', () => {
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [AD01Page] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [AD01Page], providers: [provideRouter([])] }).compileComponents();
   });
 
   it('renders the dashboard sections and four KPI cards', () => {
@@ -29,7 +30,7 @@ describe('AD01Page', () => {
     const values = Array.from(root.querySelectorAll('.metric-value'));
 
     expect(values).toHaveLength(4);
-    expect(values.every((value) => value.textContent?.trim() === '—')).toBe(true);
+    expect(values.every((value) => value.textContent?.trim() === '— —')).toBe(true);
     expect(text).toContain('Chưa có dữ liệu tích hợp');
     expect(text).toContain('Nguồn nhật ký chưa được kết nối');
     expect(text).toContain('Chưa có nguồn trạng thái được kết nối');
@@ -41,15 +42,21 @@ describe('AD01Page', () => {
     ).toBe(true);
   });
 
-  it('keeps controls and shortcut destinations unavailable', () => {
+  it('keeps data controls unavailable and links to safe screen routes', () => {
     const fixture = TestBed.createComponent(AD01Page);
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
     const buttons = Array.from(root.querySelectorAll('button'));
 
-    expect(buttons).toHaveLength(8);
+    expect(buttons).toHaveLength(5);
     expect(buttons.every((button) => button.disabled)).toBe(true);
-    expect(root.querySelectorAll('a[href]')).toHaveLength(0);
+    const shortcuts = Array.from(root.querySelectorAll<HTMLAnchorElement>('.shortcut-card[href]'));
+    expect(shortcuts).toHaveLength(3);
+    expect(shortcuts.map((link) => link.getAttribute('href'))).toEqual([
+      '/admin/users',
+      '/admin/courses',
+      '/admin/content/pending',
+    ]);
   });
 });

@@ -1,0 +1,75 @@
+<main class="quiz-statistics page-width" data-screen-id="AD17">
+  <div class="statistics-breadcrumbs">
+    <nav aria-label="Đường dẫn thống kê bài kiểm tra">
+      <ol>
+        <li>Quản lý khảo thí</li>
+        <li aria-hidden="true">›</li>
+        <li><a routerLink="/admin/quizzes">Danh sách bài kiểm tra</a></li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Báo cáo thống kê</li>
+      </ol>
+    </nav>
+    <span class="api-badge">API #91 · Chỉ đọc</span>
+  </div>
+
+  <header class="statistics-heading">
+    <div>
+      <p class="statistics-eyebrow">QUIZ STATISTICS</p>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+    </div>
+    <a class="back-link" routerLink="/admin/quizzes">
+      <study-icon name="chevron" />
+      Danh sách bài kiểm tra
+    </a>
+  </header>
+
+  @if (viewState().status === 'loading') {
+    <section class="statistics-state" role="status" aria-live="polite">
+      <span class="state-icon"><study-icon name="refresh" /></span>
+      <strong>Đang tải thống kê</strong>
+      <span>Đang chờ phản hồi từ Study Server.</span>
+    </section>
+  } @else if (viewState().status === 'error') {
+    <section class="statistics-state statistics-state--error" role="alert">
+      <span class="state-icon"><study-icon name="info" /></span>
+      <strong>Không thể tải thống kê</strong>
+      <span>{{ viewState().message }}</span>
+      <a routerLink="/admin/quizzes">Quay về danh sách bài kiểm tra</a>
+    </section>
+  } @else {
+    <section class="statistics-card" aria-labelledby="statistics-card-heading">
+      <div class="statistics-card-heading">
+        <div>
+          <p class="statistics-eyebrow">QUIZ ĐƯỢC TRẢ VỀ</p>
+          <h2 id="statistics-card-heading">Mã bài kiểm tra <span>{{ quizId }}</span></h2>
+        </div>
+        <span class="projection-badge">Projection hiện tại của Study Server</span>
+      </div>
+
+      <div class="metric-grid">
+        @for (metric of metricCards; track metric.label) {
+          <article class="metric-card">
+            <span>{{ metric.label }}</span>
+            <strong>{{ metric.value }}</strong>
+          </article>
+        }
+      </div>
+
+      <p class="metric-footnote">Dấu “—” hiển thị giá trị null trong response. Công thức và ý nghĩa business của các metric chưa được phê duyệt.</p>
+    </section>
+  }
+
+  <aside class="contract-note" aria-labelledby="contract-note-heading">
+    <span class="contract-icon"><study-icon name="shield" /></span>
+    <div>
+      <strong id="contract-note-heading">Giới hạn contract của API #91</strong>
+      <p>Study Server hiện trả DTO thống kê riêng. API catalog vẫn ghi response là <code>ApiEnvelope&lt;Quiz&gt;</code>; schema, công thức metric, NULL/rounding và quyền quiz-management chưa được thống nhất. Màn hình chỉ trình bày projection từ source hiện tại, không khẳng định metric đã được duyệt.</p>
+    </div>
+  </aside>
+
+  <div class="statistics-footer">
+    <a class="return-link" routerLink="/admin/quizzes"><study-icon name="chevron" /> Trở về danh sách bài kiểm tra</a>
+    <span class="source-note"><study-icon name="database" /> Nguồn: GET /api/v1/admin/quizzes/&#123;quiz_id&#125;/statistics · API #91</span>
+  </div>
+</main>

@@ -1,0 +1,151 @@
+<main class="lesson-editor page-width" data-screen-id="AD14">
+  @let state = pageState();
+
+  <nav class="editor-toolbar" aria-label="Đường dẫn chỉnh sửa bài học">
+    <ol>
+      <li>Quản trị đào tạo</li>
+      <li aria-hidden="true">›</li>
+      <li><a routerLink="/admin/lessons">Quản lý bài học</a></li>
+      <li aria-hidden="true">›</li>
+      <li aria-current="page">Chỉnh sửa bài học</li>
+    </ol>
+    <a class="back-link" routerLink="/admin/lessons"><study-icon name="chevron" /> Quay lại danh sách bài học (AD-12)</a>
+  </nav>
+
+  <header class="editor-heading">
+    <div>
+      <div class="heading-tags"><span>HỒ SƠ BIÊN TẬP</span><span>API #83 · Lesson ID: <code>{{ lessonId() || '—' }}</code></span></div>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+    </div>
+  </header>
+
+  <aside class="source-policy-note" aria-labelledby="source-policy-heading">
+    <span class="note-icon"><study-icon name="info" /></span>
+    <div>
+      <strong id="source-policy-heading">Giới hạn chỉnh sửa và bảo toàn dữ liệu</strong>
+      <p>Thông tin được nạp từ API #83. Các thay đổi bên dưới chỉ là bản nháp trong trang; #84–#86 chưa được bật vì body, trạng thái và chính sách dependency còn cần xác nhận.</p>
+    </div>
+  </aside>
+
+  @if (state.status === 'loading') {
+    <section class="editor-state" role="status" aria-live="polite">
+      <span class="state-icon"><study-icon name="refresh" /></span>
+      <strong>Đang tải bài học</strong>
+      <span>Đang chờ phản hồi từ Study Server.</span>
+    </section>
+  } @else if (state.status === 'error') {
+    <section class="editor-state editor-state--error" role="alert">
+      <span class="state-icon"><study-icon name="info" /></span>
+      <strong>Không thể tải bài học</strong>
+      <span>{{ state.message }}</span>
+      <a routerLink="/admin/lessons">Quay lại danh sách bài học</a>
+    </section>
+  } @else {
+    @let lesson = state.lesson;
+    <div class="editor-grid">
+      <div class="editor-main-column">
+        <section class="editor-card lesson-fields" aria-labelledby="lesson-fields-heading">
+          <header class="section-heading">
+            <div><span class="section-icon" aria-hidden="true">≡</span><div><h2 id="lesson-fields-heading">Thuộc tính bài giảng</h2><p>Các giá trị ban đầu lấy trực tiếp từ #83</p></div></div>
+            <span class="load-badge"><span aria-hidden="true">●</span> Đã tải dữ liệu bài học</span>
+          </header>
+
+          <label class="field-group" for="lesson-title">
+            <span>Tiêu đề bài học</span>
+            <input id="lesson-title" name="title" type="text" autocomplete="off" [value]="draft()?.title ?? ''" (input)="updateDraft('title', $event)" />
+            <small>Bản nháp cục bộ; #84 chưa có body được chốt trong catalog.</small>
+          </label>
+
+          <div class="field-grid">
+            <label class="field-group" for="lesson-course">
+              <span>Khóa học trực thuộc</span>
+              <input id="lesson-course" type="text" [value]="displayCourseId(lesson.course_id)" readonly />
+              <small>#84 không cập nhật course_id.</small>
+            </label>
+            <label class="field-group" for="lesson-content-type">
+              <span>Loại nội dung</span>
+              <input id="lesson-content-type" type="text" value="Chưa có trường trong projection #83" disabled />
+              <small>Không có content type trong Lesson response.</small>
+            </label>
+          </div>
+
+          <div class="field-grid">
+            <label class="field-group" for="lesson-order">
+              <span>Thứ tự hiển thị trong chương</span>
+              <input id="lesson-order" name="order" type="number" step="1" inputmode="numeric" [value]="draft()?.order ?? ''" (input)="updateDraft('order', $event)" />
+              <small>Giá trị chỉ được sửa trong bộ nhớ trang này.</small>
+            </label>
+            <div class="field-group">
+              <span>Trạng thái hiện tại</span>
+              <output class="status-value">{{ lesson.status }}</output>
+              <small>Giá trị raw trả về; không khẳng định trạng thái nào được phép chuyển.</small>
+            </div>
+          </div>
+
+          <label class="field-group" for="lesson-content">
+            <span>Mô tả bài học &amp; yêu cầu chuẩn bị</span>
+            <textarea id="lesson-content" name="content" rows="6" [value]="draft()?.content ?? ''" (input)="updateDraft('content', $event)"></textarea>
+            <small>Hiển thị và sửa dưới dạng văn bản; không diễn giải nội dung như HTML.</small>
+          </label>
+
+          <section class="source-projection" aria-labelledby="source-projection-heading">
+            <h3 id="source-projection-heading">Thông tin khác từ API #83</h3>
+            <dl>
+              <div><dt>URL video</dt><dd>{{ lesson.video_url ?? '—' }}</dd></div>
+              <div><dt>Course ID</dt><dd>{{ displayCourseId(lesson.course_id) }}</dd></div>
+            </dl>
+            <p>Mockup không có trường video URL. Màn hình không nhúng video hoặc tự chọn giá trị cho body full-replacement của #84.</p>
+          </section>
+
+          <footer class="form-actions">
+            <a class="button button--quiet" routerLink="/admin/lessons">Hủy và quay lại</a>
+            <button class="button button--primary" type="button" disabled><span aria-hidden="true">▣</span> Lưu thay đổi thông tin</button>
+          </footer>
+        </section>
+
+        <section class="standards-note" aria-labelledby="standards-heading">
+          <span class="standards-icon"><study-icon name="shield" /></span>
+          <div>
+            <h2 id="standards-heading">Contract thao tác hiện tại</h2>
+            <p>Study Server source dùng chung role ADMIN. Fine-grained lesson-management permission và trạng thái schema triển khai chưa được xác minh.</p>
+          </div>
+        </section>
+      </div>
+
+      <aside class="actions-column" aria-labelledby="actions-heading">
+        <section class="editor-card action-panel">
+          <header class="section-heading section-heading--actions">
+            <div><span class="danger-icon"><study-icon name="info" /></span><div><h2 id="actions-heading">Điều phối hành động</h2><p>Thao tác thay đổi dữ liệu đang khóa</p></div></div>
+          </header>
+          <p class="action-intro">API #84–#86 hiện là source local/Draft. Các nút không gửi request và không đánh giá permission hoặc trạng thái dữ liệu.</p>
+
+          <article class="action-card">
+            <div class="action-card-heading"><h3>Cập nhật thông tin</h3><span>Đang khóa</span></div>
+            <p>#84 catalog không mô tả body; local handler yêu cầu full replacement gồm title, content, video_url và order.</p>
+            <button class="button button--action" type="button" disabled><span aria-hidden="true">▣</span> Lưu thay đổi thông tin</button>
+          </article>
+
+          <article class="action-card">
+            <div class="action-card-heading"><h3>Trạng thái phát hành</h3><span>Đang khóa</span></div>
+            <p>Prototype có giá trị ARCHIVED; local #85 dùng enum DERIVED DRAFT/PUBLISHED/SUSPENDED. Chưa có mapping/transition được duyệt.</p>
+            <button class="button button--action" type="button" disabled>Thay đổi trạng thái</button>
+          </article>
+
+          <article class="action-card action-card--danger">
+            <div class="action-card-heading"><h3>Xóa bài học</h3><span>Tạm khóa</span></div>
+            <p>Local #86 kiểm tra lesson_progress, resources và lesson_uploads rồi mới soft-delete. Response không trả dependency counts.</p>
+            <button class="button button--action" type="button" disabled><study-icon name="info" /> Xóa bài học khỏi hệ thống</button>
+          </article>
+
+          <p class="dependency-note">Không có API preview dependency hoặc cách đếm quan hệ. Trạng thái sẵn sàng xóa chưa thể hiển thị.</p>
+        </section>
+      </aside>
+    </div>
+  }
+
+  <footer class="editor-footer">
+    <a routerLink="/admin/lessons">Quay lại danh sách bài học (AD-12)</a>
+    <span><study-icon name="database" /> Nguồn đọc: GET /api/v1/admin/lessons/&#123;lesson_id&#125; · API #83</span>
+  </footer>
+</main>

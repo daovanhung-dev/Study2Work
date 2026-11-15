@@ -1,0 +1,129 @@
+<main class="notification-compose page-width" data-screen-id="AD20">
+  <div class="compose-breadcrumbs">
+    <nav aria-label="Đường dẫn soạn thông báo">
+      <ol>
+        <li>Quản trị truyền thông</li>
+        <li aria-hidden="true">›</li>
+        <li><a routerLink="/admin/notifications">Thông báo hệ thống</a></li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Soạn thông báo mới</li>
+      </ol>
+    </nav>
+    <a class="back-link" routerLink="/admin/notifications"><study-icon name="chevron" /> Danh sách thông báo</a>
+  </div>
+
+  <header class="compose-heading">
+    <p class="compose-eyebrow">AD-20 · NOTIFICATION COMPOSER</p>
+    <h1>{{ definition.title }}</h1>
+    <p>{{ definition.description }}</p>
+  </header>
+
+  <aside class="accepted-note" aria-labelledby="accepted-note-heading">
+    <span class="note-icon"><study-icon name="info" /></span>
+    <div>
+      <strong id="accepted-note-heading">Tiếp nhận yêu cầu không đồng nghĩa đã giao thông báo</strong>
+      <p>Local API #93 ghi notification và delivery row ở trạng thái QUEUED rồi trả 202; view hiện tại không gọi provider hoặc worker gửi thông báo.</p>
+    </div>
+  </aside>
+
+  <div class="compose-layout">
+    <section class="compose-form-panel" aria-labelledby="compose-form-heading">
+      <h2 id="compose-form-heading" class="visually-hidden">Nội dung thông báo</h2>
+
+      <div class="form-field">
+        <label for="notice-title">Tiêu đề thông báo <span aria-hidden="true">*</span></label>
+        <input
+          id="notice-title"
+          type="text"
+          [value]="title()"
+          (input)="updateTitle($event)"
+          aria-describedby="title-preview-help"
+          placeholder="Nhập tiêu đề để xem bản xem trước…"
+        />
+        <p id="title-preview-help">Nội dung chỉ tồn tại trong component và được phản chiếu vào bản xem trước.</p>
+      </div>
+
+      <fieldset class="recipient-field" disabled aria-describedby="recipient-help">
+        <legend>Người nhận <span aria-hidden="true">*</span></legend>
+        <p class="field-intro">Không có bộ chọn người dùng hoặc predicate audience đã được xác nhận.</p>
+        <label for="recipient-ids">Danh sách recipient ID</label>
+        <textarea id="recipient-ids" rows="3" placeholder="Chưa có dữ liệu người nhận"></textarea>
+        <p id="recipient-help">#93 hiện yêu cầu danh sách ID int64 tường minh và từ chối `segment`; màn hình chưa có nguồn chọn hoặc xác minh ID đủ điều kiện.</p>
+      </fieldset>
+
+      <fieldset class="channel-field" disabled>
+        <legend>Kênh gửi</legend>
+        <p class="field-intro">Token local source — chưa xác nhận mapping từ lựa chọn sản phẩm.</p>
+        <div class="channel-options">
+          <label><input type="checkbox" value="PUSH" /><span><strong>PUSH</strong><small>Mapping thiết bị/ứng dụng chưa được xác nhận.</small></span></label>
+          <label><input type="checkbox" value="EMAIL" /><span><strong>EMAIL</strong><small>Provider gửi và trạng thái dịch vụ chưa được xác nhận.</small></span></label>
+        </div>
+      </fieldset>
+
+      <div class="form-field content-field">
+        <label for="notice-content">Nội dung chi tiết <span aria-hidden="true">*</span></label>
+        <textarea
+          id="notice-content"
+          rows="8"
+          [value]="content()"
+          (input)="updateContent($event)"
+          aria-describedby="content-preview-help"
+          placeholder="Nhập nội dung để xem bản xem trước…"
+        ></textarea>
+        <p id="content-preview-help">Bản xem trước là text thường; toolbar rich-text của mockup chưa có contract.</p>
+      </div>
+
+      <fieldset class="priority-field" disabled>
+        <legend>Mức độ ưu tiên</legend>
+        <div class="priority-options">
+          <label><input type="radio" name="priority" value="normal" /><span>Bình thường</span></label>
+          <label><input type="radio" name="priority" value="urgent" /><span>Khẩn cấp</span></label>
+        </div>
+        <p>#93 không nhận trường priority.</p>
+      </fieldset>
+
+      <div class="compose-actions">
+        @for (action of definition.actions ?? []; track action.label) {
+          <div class="compose-action">
+            <button type="button" disabled>{{ action.label }}</button>
+            <p>{{ action.reason }}</p>
+          </div>
+        }
+      </div>
+    </section>
+
+    <aside class="preview-column">
+      <section class="preview-panel" aria-labelledby="preview-heading">
+        <div class="side-heading">
+          <h2 id="preview-heading"><study-icon name="info" /> Xem trước cục bộ</h2>
+          <span class="local-badge">Không gửi</span>
+        </div>
+        <article class="notification-preview">
+          <p class="preview-source">● STUDY2WORK · BẢN NHÁP TẠI CHỖ</p>
+          <h3>{{ title() || 'Chưa nhập tiêu đề' }}</h3>
+          <p class="preview-content">{{ content() || 'Nội dung xem trước sẽ hiển thị tại đây.' }}</p>
+          <span class="preview-meta">Chỉ là preview · không có notification ID</span>
+        </article>
+        <p class="preview-help">Thay đổi tiêu đề và nội dung chỉ cập nhật panel này; đóng hoặc tải lại trang sẽ xóa chúng.</p>
+      </section>
+
+      <section class="workflow-panel" aria-labelledby="workflow-heading">
+        <div class="side-heading">
+          <h2 id="workflow-heading">Ranh giới xử lý hiện tại</h2>
+          <span class="source-badge">API #93</span>
+        </div>
+        <ol class="workflow-list">
+          <li><span class="step-index">1</span><div><strong>Audience</strong><p>Local source yêu cầu recipient IDs tường minh; UI chưa có resolver.</p></div></li>
+          <li><span class="step-index">2</span><div><strong>Queued</strong><p>202 chỉ xác nhận batch/outbox đã được ghi theo source hiện tại.</p></div></li>
+          <li><span class="step-index">3</span><div><strong>Delivered</strong><p>Provider/worker không nằm trong API #93 hiện tại; delivery chưa được xác nhận.</p></div></li>
+        </ol>
+        <div class="operation-note"><study-icon name="shield" /><span>#93 trả metadata operation UUID-derived; API #18 hiện không có local route để poll trạng thái.</span></div>
+      </section>
+    </aside>
+  </div>
+
+  <div class="compose-footer">
+    <a class="return-link" routerLink="/admin/notifications"><study-icon name="chevron" /> Quay lại danh sách thông báo</a>
+    <span class="source-note"><study-icon name="database" /> #93: POST /api/v1/admin/notifications · chưa được gọi từ màn hình này</span>
+  </div>
+</main>
