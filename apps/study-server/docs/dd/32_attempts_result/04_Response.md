@@ -31,6 +31,7 @@ status: "Draft — Needs Confirmation"
 | 8 | data.started_at | Start time | started_at | date-time | No | quiz_attempts | started_at | 4 | Candidate timestamp projection. | N/A | Serialization and timezone policy not defined. |
 | 9 | data.submitted_at | Submission time | submitted_at | date-time | Yes | quiz_attempts | submitted_at | 4 | Candidate timestamp projection. | Omit/null policy SOURCE_REQUIRED. | Nullable in DB design. |
 | 10 | data.score | Attempt score | score | decimal-string | Yes | quiz_attempts | score | 3 | Candidate aggregate score for a graded result. | Omit/null/partial policy for PENDING_GRADE SOURCE_REQUIRED. | AC-16 says read score; formula is owned by grading flow/API #31. |
+| 10.1 | data.passed | Pass outcome | passed | boolean | Yes | Derived from quiz_attempts.score, quizzes.passing_score and quiz_questions.score | N/A | 3 | Exact decimal comparison `earned_points * 100 >= possible_points * passing_score`. | Present only when status is GRADED; omit while pending. | Separate outcome, not an AttemptStatus. Quiz config is immutable after attempt history under #89. |
 | 11 | data.answers[] | Answers | answers | QuizAnswer[] | No | quiz_answers | N/A | 4 | Candidate collection for the attempt. | Empty array or populated collection; exact projection SOURCE_REQUIRED. | Required by reusable QuizAttempt schema. |
 | 12 | data.answers[].question_id | Question ID | question_id | int64 | No | quiz_answers | question_id | 4 | Candidate projection per answer. | N/A | Logical QuizAnswer field. |
 | 13 | data.answers[].choice_ids[] | Selected choice IDs | choice_ids | int64[] | Yes | quiz_answers | choice_id | 4 | No approved conversion from physical one-choice rows to logical array. | SOURCE_REQUIRED | Logical schema versus physical design discrepancy. |
@@ -54,6 +55,7 @@ status: "Draft — Needs Confirmation"
     "started_at": "2026-10-12T08:30:00Z",
     "submitted_at": "2026-10-12T09:00:00Z",
     "score": "8.50",
+    "passed": true,
     "answers": [
       {
         "question_id": 301
@@ -89,7 +91,7 @@ status: "Draft — Needs Confirmation"
 }
 ~~~
 
-The examples show the documented status branches and required envelope/QuizAttempt fields only. They do not settle whether score, correctness, per-answer score, selected answer values or feedback are returned while grading is pending or complete.
+The examples show the status branches. The GRADED branch includes the derived `passed` outcome; PENDING_GRADE omits it. Other score and answer disclosure rules remain open.
 
 ## Ví dụ lỗi
 

@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import Any
 
 import app.modules.guest.api_32_attempts_result.view as attempt_view
+import app.utils.auth as auth_utils
 import pytest
 from app.modules.guest.api_32_attempts_result.query import (
     ATTEMPT_ANSWERS_BY_ID,
@@ -40,6 +41,8 @@ def attempt_row(**overrides: Any) -> dict[str, Any]:
         "started_at": datetime(2026, 10, 1, 9, 0, tzinfo=UTC),
         "submitted_at": datetime(2026, 10, 1, 9, 30, tzinfo=UTC),
         "score": Decimal("87.50"),
+        "passing_score": Decimal("70"),
+        "possible_points": Decimal("100"),
     }
     row.update(overrides)
     return row
@@ -103,6 +106,7 @@ def test_build_attempt_result_only_exposes_question_id_and_graded_score() -> Non
     assert result.started_at == attempt_row()["started_at"]
     assert result.submitted_at == attempt_row()["submitted_at"]
     assert str(result.score) == "87.50"
+    assert result.passed is True
     assert [answer.question_id for answer in result.answers] == [11, 12]
 
     # Kiểm tra projection JSON thực tế sau khi bỏ các field có giá trị None.
@@ -128,7 +132,7 @@ def test_build_attempt_result_omits_none_optional_fields_when_serialized() -> No
     """Kiểm tra field optional có giá trị None bị lược khỏi projection JSON."""
 
     result = attempt_view._build_attempt_result(
-        attempt_row(status="GRADED", submitted_at=None, score=None),
+        attempt_row(status="PENDING_GRADE", submitted_at=None, score=None),
         [],
     )
 
@@ -140,6 +144,30 @@ def test_build_attempt_result_omits_none_optional_fields_when_serialized() -> No
     assert "submitted_at" not in serialized
     assert "score" not in serialized
     assert serialized["answers"] == []
+
+
+def test_validate_attempt_result_request_accepts_student_role(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Kiểm tra API #32 truyền role STUDENT vào shared auth guard trước khi tra DB."""
+
+    from app.modules.guest.api_32_attempts_result.validate import (
+        validate_attempt_result_request,
+    )
+
+    monkeypatch.setattr(
+        auth_utils,
+        "decode_access_token",
+        lambda token: {"sub": "501", "roles": ["STUDENT"]},
+    )
+
+    result = validate_attempt_result_request(
+        "Bearer student-token",
+        "3201",
+        trace_id="test-trace",
+    )
+
+    assert result == (501, 3201)
 
 
 def test_get_attempt_result_returns_validator_error_without_query(
@@ -239,6 +267,7 @@ def test_get_attempt_result_success_returns_safe_envelope(
     assert response["businessCode"] == "DESIGN_RESOURCE_RETRIEVED"
     assert response["traceId"] == "test-trace"
     assert response["data"]["score"] == "87.50"
+    assert response["data"]["passed"] is True
     assert response["data"]["answers"] == [
         {"question_id": 11},
         {"question_id": 12},

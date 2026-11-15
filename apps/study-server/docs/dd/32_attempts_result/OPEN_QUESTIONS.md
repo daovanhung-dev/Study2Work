@@ -89,3 +89,7 @@ Giữ Draft — Needs Confirmation cho tới khi owner chốt quyền sở hữu
 - Đề xuất DERIVED: kết quả của attempt đã tồn tại vẫn đọc được khi quiz bị tombstone; API #91 tổng hợp cùng lịch sử còn lưu.
 - Quyền đọc, trạng thái attempt được phép xem và error mapping vẫn theo câu hỏi hiện hữu của AC-16.
 - Câu hỏi liên quan: [API #90](../90_admin_quizzes_delete/OPEN_QUESTIONS.md) và [API #91](../91_admin_quizzes_statistics/OPEN_QUESTIONS.md).
+
+## Resolved pass-outcome decision (2026-11-15)
+
+For GRADED attempts, #32 returns passed as a separate boolean derived from raw score, total possible question points, and percentage passing_score (inclusive 0..100), using exact decimal comparison without intermediate rounding. The field is omitted while PENDING_GRADE. Remaining questions below remain open.

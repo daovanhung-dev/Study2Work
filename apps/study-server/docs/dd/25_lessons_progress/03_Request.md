@@ -2,7 +2,7 @@
 title: "Request"
 order: 3
 dd_id: "25"
-api_name: "Lưu vị trí và trạng thái"
+api_name: "Lưu trạng thái tiến độ"
 source_sheet: "1.Request"
 status: "Draft — Needs Confirmation"
 ---
@@ -41,9 +41,8 @@ status: "Draft — Needs Confirmation"
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---|---|---|---|---|---|---|---|
-| 1 | Vị trí học | `position` | int32 | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | Number | Integer | SOURCE_REQUIRED | N/A | Vị trí cần lưu; đơn vị và mapping vật lý chưa được xác nhận. | [05_Data_Mapping.md](./05_Data_Mapping.md#1-request-validation) |
-| 2 | Phần trăm tiến độ | `percent` | int32 | Yes | SOURCE_REQUIRED | SOURCE_REQUIRED | Number | Integer | SOURCE_REQUIRED | N/A | Phần trăm tiến độ theo field contract; range và mapping vật lý chưa được xác nhận. | [05_Data_Mapping.md](./05_Data_Mapping.md#1-request-validation) |
-| 3 | Hoàn thành | `completed` | boolean | Yes | N/A | N/A | Boolean | JSON boolean | `true` / `false` | N/A | Cờ hoàn thành theo contract; mapping trạng thái/timestamp cần xác nhận. | [05_Data_Mapping.md](./05_Data_Mapping.md#3-update-lesson-progress-and-aggregate) |
+| 1 | Percent progress | `percent` | int32 | Yes | 0 | 100 | Number | Integer | 0..100 | N/A | Validated and stored as sent, independent from `completed`. | [05_Data_Mapping.md](./05_Data_Mapping.md#1-request-validation) |
+| 2 | Completion flag | `completed` | boolean | Yes | N/A | N/A | Boolean | JSON boolean | `true` / `false` | N/A | `true` sets `COMPLETED`; `false` sets `IN_PROGRESS` and clears `completed_at`. | [05_Data_Mapping.md](./05_Data_Mapping.md#3-update-lesson-progress-and-aggregate) |
 
 ## Ví dụ Request data
 
@@ -53,13 +52,12 @@ Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "position": 120,
   "percent": 45,
   "completed": false
 }
 ~~~
 
-> Ví dụ chỉ minh họa tên field và kiểu dữ liệu. `120` không xác định đơn vị `position`; `45` không chốt range/rounding của `percent`; các giá trị không tạo validation rule mới.
+> `position` is not part of the request; the API does not persist playback position. `percent` must be 0..100.
 
 > `<token>` là placeholder minh họa header Bearer; format/claim ngoài yêu cầu Bearer JWT của catalog không được đặc tả ở đây.
 

@@ -8,8 +8,10 @@ SELECT
     l.content,
     l.video_url,
     l.sort_order AS "order",
-    l.status
+    l.status,
+    c.status AS course_status
 FROM lessons AS l
+INNER JOIN courses AS c ON c.id = l.course_id
 WHERE l.id = :lesson_id
 LIMIT 1
 """

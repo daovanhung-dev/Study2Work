@@ -110,6 +110,13 @@ N/A — API #31 returns one attempt; ordering of answer rows in QuizAttempt.answ
 
 ### 4. Grade submitted answers
 
+#### Approved scoring amendment (2026-11-15)
+
+- This implementation scope grades objective `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, and `TRUE_FALSE` questions only. The selected choice set must exactly equal the correct choice set to earn that question's `quiz_questions.score`; unanswered or incorrect answers earn zero.
+- `quiz_attempts.score` and `quiz_answers.score_received` store raw points. `passed` is derived with exact decimal arithmetic: `earned_points * 100 >= possible_points * quizzes.passing_score`; `passing_score` is a percentage from 0 through 100, inclusive. No intermediate rounding is applied.
+- A quiz with no questions or non-positive total possible points cannot be finalized by #31. `passed` is a separate response field; `status` remains `GRADED` and does not become `PASSED`/`FAILED`.
+- Quiz question scores use the existing `quiz_questions.score` default; this amendment adds no database field or migration.
+
 #### 4.1. AC-16 grading branches
 
 - AC-16 states that automatic grading occurs after submit.

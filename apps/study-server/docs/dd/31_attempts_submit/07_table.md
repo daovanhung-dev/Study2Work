@@ -27,9 +27,9 @@ status: "Draft — Needs Confirmation"
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---:|---|---|---:|---|
 | 1 | id | Attempt ID | BIGSERIAL | N/A | N/A | Yes | ● | Candidate row identifier from path attempt_id. | API catalog / DB_UNICA_TABLES.md / DB.sql | 3 | Used to select target row; no update to primary key. |
-| 2 | status | Attempt status | VARCHAR | 20 | N/A | DDL permits null |  | SUBMITTED per AC-16. | AC-16 / DB_UNICA_TABLES.md / DB.sql | 3 | Other accepted/terminal states and conditional update predicate are unresolved. |
+| 2 | status | Attempt status | VARCHAR | 20 | N/A | DDL permits null |  | `GRADED` for the supported objective-only scope. | Approved scoring amendment / DB_UNICA_TABLES.md / DB.sql | 3-4 | `passed` is a separate outcome and does not replace lifecycle status. |
 | 3 | submitted_at | Submission time | TIMESTAMP | N/A | N/A | No; nullable in DDL |  | Candidate timestamp set at submit. | AC-16 / DB_UNICA_TABLES.md / DB.sql | 3 | Clock, timezone, precision and repeat-submit behavior SOURCE_REQUIRED. |
-| 4 | score | Aggregate score | NUMERIC | 6 | 2 | No; nullable in DDL |  | Candidate aggregate after automatic grading. | DB_UNICA_TABLES.md / DB.sql | 4 | Formula, scale, rounding and PENDING_GRADE behavior SOURCE_REQUIRED. |
+| 4 | score | Aggregate score | NUMERIC | 6 | 2 | No; nullable in DDL |  | Raw earned points from correct objective answers. | Approved scoring amendment / DB_UNICA_TABLES.md / DB.sql | 4 | Exact decimal points; no rounding before pass comparison. |
 
 **Candidate WHERE**
 

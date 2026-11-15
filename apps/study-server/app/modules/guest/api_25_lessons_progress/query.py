@@ -65,7 +65,7 @@ SET
     last_accessed_at = CURRENT_TIMESTAMP,
     completed_at = CASE
         WHEN :completed THEN COALESCE(completed_at, CURRENT_TIMESTAMP)
-        ELSE completed_at
+        ELSE NULL
     END
 WHERE id = :progress_id
 RETURNING id

@@ -31,4 +31,5 @@ class QuizAttempt(BaseModel):
     started_at: datetime
     submitted_at: datetime | None = None
     score: Decimal | None = None
+    passed: bool | None = None
     answers: list[QuizAnswer]

@@ -85,6 +85,34 @@ def test_lesson_detail_success(
     assert payload["data"]["content"] == "Noi dung bai hoc chi tiet"
 
 
+def test_lesson_detail_completed_enrollment_is_allowed(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Kiểm tra enrollment COMPLETED vẫn xem được bài đã công bố."""
+    session = FakeSession()
+    client.app.dependency_overrides[get_db] = override_db(session)
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(
+        view_module,
+        "find_lesson_with_course",
+        lambda db, *, lesson_id: make_lesson(),
+    )
+    monkeypatch.setattr(
+        view_module,
+        "find_active_enrollment",
+        lambda db, *, user_id, course_id: {"id": 1, "status": "COMPLETED"},
+    )
+
+    response = client.get(
+        "/api/v1/lessons/101",
+        headers={"Authorization": "Bearer valid-token"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["id"] == 101
+
+
 def test_lesson_detail_missing_auth(client: TestClient) -> None:
     """Kiểm tra khi thiếu Authorization header trả về HTTP 401."""
     response = client.get("/api/v1/lessons/101")

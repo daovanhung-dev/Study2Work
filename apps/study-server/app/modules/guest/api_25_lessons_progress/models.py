@@ -1,4 +1,4 @@
-"""Mô hình dữ liệu cho API #25 lưu vị trí và trạng thái tiến độ bài học."""
+"""Mô hình dữ liệu cho API #25 lưu tiến độ bài học."""
 
 from __future__ import annotations
 
@@ -6,11 +6,10 @@ from pydantic import BaseModel, ConfigDict
 
 
 class LessonProgressUpdateRequest(BaseModel):
-    """Dữ liệu yêu cầu cập nhật vị trí và phần trăm hoàn thành bài học."""
+    """Dữ liệu yêu cầu cập nhật phần trăm và trạng thái hoàn thành."""
 
     model_config = ConfigDict(extra="ignore")
 
-    position: int
     percent: int
     completed: bool
 

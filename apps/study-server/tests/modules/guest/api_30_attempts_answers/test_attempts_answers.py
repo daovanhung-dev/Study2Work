@@ -271,10 +271,10 @@ def test_save_attempt_answer_db_error(monkeypatch: pytest.MonkeyPatch) -> None:
         lambda db, question_id: sample_question_row(),
     )
 
-    def raise_error(db, attempt_id, question_id, choice_id):
+    def raise_error(db, query, params):
         raise SQLAlchemyError("Database error")
 
-    monkeypatch.setattr(attempts_answers_view, "upsert_answer", raise_error)
+    monkeypatch.setattr(attempts_answers_view, "query_many", raise_error)
 
     payload = SaveAnswerRequest(question_id=301, answer="10")
     res = save_attempt_answer(
@@ -308,8 +308,8 @@ def test_save_attempt_answer_success(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     monkeypatch.setattr(
         attempts_answers_view,
-        "find_existing_answer",
-        lambda db, attempt_id, question_id: None,
+        "query_many",
+        lambda db, query, params: [{"id": 10}],
     )
     monkeypatch.setattr(
         attempts_answers_view,
@@ -392,8 +392,8 @@ def test_attempt_answer_route_via_client(
         )
         monkeypatch.setattr(
             attempts_answers_view,
-            "find_existing_answer",
-            lambda db, attempt_id, question_id: None,
+            "query_many",
+            lambda db, query, params: [{"id": 10}],
         )
         monkeypatch.setattr(
             attempts_answers_view,

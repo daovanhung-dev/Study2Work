@@ -25,6 +25,7 @@ def validate_attempt_result_request(
     # Xác thực Bearer/JWT và quyền Student bằng helper dùng chung.
     authentication = validate_current_user_request(
         authorization,
+        role="STUDENT",
         trace_id=trace_id,
     )
     if isinstance(authentication, JSONResponse):

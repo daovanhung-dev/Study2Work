@@ -8,6 +8,7 @@ import app.modules.guest.api_25_lessons_progress.view as view_module
 import app.utils.auth as auth_utils
 import pytest
 from app.core.database import get_db
+from app.modules.guest.api_25_lessons_progress.query import UPDATE_LESSON_PROGRESS_STATE
 from fastapi.testclient import TestClient
 
 
@@ -52,9 +53,11 @@ def valid_claims() -> dict[str, Any]:
     return {"sub": "1001", "roles": ["STUDENT"]}
 
 
+@pytest.mark.parametrize("percent", [0, 45, 100])
 def test_lesson_progress_new_progress_success(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
+    percent: int,
 ) -> None:
     """Kiểm tra trường hợp bài học chưa có bản ghi: chèn mới với trạng thái IN_PROGRESS."""
     session = FakeSession()
@@ -94,7 +97,7 @@ def test_lesson_progress_new_progress_success(
     response = client.patch(
         "/api/v1/lessons/101/progress",
         headers={"Authorization": "Bearer valid-token"},
-        json={"position": 120, "percent": 45, "completed": False},
+        json={"percent": percent, "completed": False},
     )
 
     assert response.status_code == 200
@@ -103,7 +106,7 @@ def test_lesson_progress_new_progress_success(
     assert payload["businessCode"] == "DESIGN_RESOURCE_UPDATED"
     assert payload["data"]["id"] == 101
     assert inserted_data["status"] == "IN_PROGRESS"
-    assert inserted_data["percent"] == 45
+    assert inserted_data["percent"] == percent
     assert session.commit_count == 1
     assert session.rollback_count == 0
 
@@ -149,7 +152,7 @@ def test_lesson_progress_existing_completed_success(
     response = client.patch(
         "/api/v1/lessons/101/progress",
         headers={"Authorization": "Bearer valid-token"},
-        json={"position": 300, "percent": 100, "completed": True},
+        json={"percent": 100, "completed": True},
     )
 
     assert response.status_code == 200
@@ -161,11 +164,61 @@ def test_lesson_progress_existing_completed_success(
     assert session.commit_count == 1
 
 
+def test_lesson_progress_completed_can_return_to_in_progress(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Kiểm tra request mới có completed=false reset trạng thái bài."""
+    session = FakeSession()
+    client.app.dependency_overrides[get_db] = override_db(session)
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(view_module, "find_lesson_by_id", lambda db, *, lesson_id: make_lesson())
+    monkeypatch.setattr(
+        view_module,
+        "find_active_enrollment",
+        lambda db, *, user_id, course_id: {"id": 1},
+    )
+    monkeypatch.setattr(
+        view_module,
+        "find_lesson_progress",
+        lambda db, *, user_id, lesson_id: {
+            "id": 77,
+            "status": "COMPLETED",
+            "progress_percent": 100,
+            "completed_at": "2026-11-15T00:00:00",
+        },
+    )
+    updated_data = {}
+
+    def fake_update(db, *, progress_id, status, progress_percent, completed):
+        updated_data.update(
+            progress_id=progress_id,
+            status=status,
+            progress_percent=progress_percent,
+            completed=completed,
+        )
+        return {"id": progress_id}
+
+    monkeypatch.setattr(view_module, "update_lesson_progress_state", fake_update)
+
+    response = client.patch(
+        "/api/v1/lessons/101/progress",
+        headers={"Authorization": "Bearer valid-token"},
+        json={"percent": 25, "completed": False},
+    )
+
+    assert response.status_code == 200
+    assert updated_data["status"] == "IN_PROGRESS"
+    assert updated_data["progress_percent"] == 25
+    assert updated_data["completed"] is False
+    assert "ELSE NULL" in " ".join(UPDATE_LESSON_PROGRESS_STATE.split())
+
+
 def test_lesson_progress_missing_auth(client: TestClient) -> None:
     """Kiểm tra khi thiếu Authorization header trả về HTTP 401."""
     response = client.patch(
         "/api/v1/lessons/101/progress",
-        json={"position": 10, "percent": 20, "completed": False},
+        json={"percent": 20, "completed": False},
     )
     assert response.status_code == 401
     payload = response.json()
@@ -189,7 +242,7 @@ def test_lesson_progress_forbidden_role(
     response = client.patch(
         "/api/v1/lessons/101/progress",
         headers={"Authorization": "Bearer admin-token"},
-        json={"position": 10, "percent": 20, "completed": False},
+        json={"percent": 20, "completed": False},
     )
     assert response.status_code == 403
     payload = response.json()
@@ -197,28 +250,26 @@ def test_lesson_progress_forbidden_role(
     assert payload["businessCode"] == "DESIGN_ACCESS_DENIED"
 
 
-def test_lesson_progress_does_not_apply_range_validation(
+@pytest.mark.parametrize("percent", [-1, 101])
+def test_lesson_progress_rejects_percent_outside_range(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
+    percent: int,
 ) -> None:
-    """DD #25 không quy định range cho position/percent nên validate không trả HTTP 422."""
+    """Kiểm tra percent ngoài 0..100 bị từ chối trước khi ghi DB."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
-    monkeypatch.setattr(
-        view_module,
-        "find_lesson_by_id",
-        lambda db, *, lesson_id: None,
-    )
 
     response = client.patch(
         "/api/v1/lessons/101/progress",
         headers={"Authorization": "Bearer valid-token"},
-        json={"position": -1, "percent": 150, "completed": False},
+        json={"percent": percent, "completed": False},
     )
-    assert response.status_code == 404
-    payload = response.json()
-    assert payload["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
+
+    assert response.status_code == 422
+    assert response.json()["businessCode"] == "DESIGN_VALIDATION_ERROR"
+    assert session.commit_count == 0
 
 
 def test_lesson_progress_not_found(
@@ -238,7 +289,7 @@ def test_lesson_progress_not_found(
     response = client.patch(
         "/api/v1/lessons/999/progress",
         headers={"Authorization": "Bearer valid-token"},
-        json={"position": 10, "percent": 20, "completed": False},
+        json={"percent": 20, "completed": False},
     )
     assert response.status_code == 404
     payload = response.json()
@@ -268,7 +319,7 @@ def test_lesson_progress_not_enrolled(
     response = client.patch(
         "/api/v1/lessons/101/progress",
         headers={"Authorization": "Bearer valid-token"},
-        json={"position": 10, "percent": 20, "completed": False},
+        json={"percent": 20, "completed": False},
     )
     assert response.status_code == 403
     payload = response.json()
@@ -293,7 +344,7 @@ def test_lesson_progress_db_failure(
     response = client.patch(
         "/api/v1/lessons/101/progress",
         headers={"Authorization": "Bearer valid-token"},
-        json={"position": 10, "percent": 20, "completed": False},
+        json={"percent": 20, "completed": False},
     )
     assert response.status_code == 500
     payload = response.json()

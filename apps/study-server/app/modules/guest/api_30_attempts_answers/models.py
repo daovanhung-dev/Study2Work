@@ -11,6 +11,7 @@ class SaveAnswerRequest(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
     question_id: int
+    choice_ids: list[int] | None = None
     answer: str = Field(
         default="",
         validation_alias=AliasChoices("answer(s)", "answer", "choice_id"),
@@ -23,7 +24,7 @@ class QuizAnswerItem(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     question_id: int
-    choice_ids: list[int] = []
+    choice_ids: list[int] = Field(default_factory=list)
     text_answer: str | None = None
 
 
@@ -38,5 +39,5 @@ class QuizAttemptDetail(BaseModel):
     started_at: str
     submitted_at: str | None = None
     score: str | None = None
-    answers: list[QuizAnswerItem] = []
+    answers: list[QuizAnswerItem] = Field(default_factory=list)
 

@@ -471,3 +471,39 @@ ingestion.
 ## API #98 Admin discussion detail
 
 `admin/api_98_admin_discussions_detail` is wired at `GET /api/v1/admin/discussions/{discussion_id}` with the shared ADMIN auth guard and direct Discussion/comment reads. Current source derives the title from content and omits report records. The DD still says `UNWIRED` and leaves report/title semantics open; preserve that discrepancy. Dedicated tests characterize current source only; see the 2026-11-01 API report for branch-backed HTTP evidence.
+
+## APIs #16-20, #31, #35-45 implementation source (2026-11-15)
+
+- #16 `guest/api_16_orders`: creates a PENDING Order from a PUBLISHED Course
+  price snapshot in VND. Migration 015 adds schema-qualified `orders`.
+- #17 `guest/api_17_payments`: validates Student and request, then returns 503
+  because no gateway adapter/protocol is configured. No DB reads/writes occur.
+- #18 `guest/api_18_operations`: reads the owner's notification operation and
+  delivery aggregate by UUID. Status projection is QUEUED, FAILED, or SENT;
+  `kind` is `NOTIFICATION_DISPATCH`. Other operation kinds are not queried.
+- #19 `guest/api_19_courses_enrollments`: locks a PUBLISHED Course, rejects an
+  active duplicate, requires a PAID Order for a paid Course, and atomically
+  inserts Enrollment plus initial published-lesson progress.
+- #20 `guest/api_20_users_me_courses`: returns the current Student's paged
+  course summary projection.
+- #31 `guest/api_31_attempts_submit`: owner-scoped IN_PROGRESS attempt lock; objective choices use exact selected/correct set equality, unanswered questions score zero, and the attempt finalizes as GRADED. Raw points are stored in the existing score columns; response `passed` is derived from exact decimal percentage comparison against `passing_score`. #30/#32 group selected choices and results by question.
+- #35-36 `student/api_35_assignments_submissions` and
+  `api_36_submissions_detail`: create and owner-read submissions using upload
+  metadata scoped by owner, course and SUBMISSION purpose. Migration 016 adds
+  the schema-qualified uploads relation compatible with #34 metadata fields.
+- #37 `guest/api_37_users_me_progress_course`: derives lesson completion and
+  percentage for the current Student; it does not claim activity-time totals.
+- #38 `guest/api_38_users_me_achievements`: reads explicit user award rows;
+  no award-producing rule/writer is wired.
+- #39-42 `student/api_39_discussions` through `api_42_discussions_detail`:
+  enrollment-scoped active roots/comments, stored title and direct comments.
+  Existing title-less rows are backfilled to empty string by migration 018 per
+  user decision; title is never derived from body.
+- #43-45 `student/api_43_users_me_notifications` through
+  `api_45_notifications_read_all`: per-user recipient/read state and a legacy
+  StudentNotification projection. Unsupported channel/status/schedule fields
+  are omitted. Migration 016 extends only `nguyen_anh_duc`.
+
+These modules and routes are source-backed, but tests were not run and no
+migration was applied. See `apis/declared-routes.md` and the dated worklog for
+decisions and verification boundaries.

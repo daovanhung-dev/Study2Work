@@ -12,6 +12,7 @@ SELECT
 FROM quiz_attempts AS qa
 WHERE qa.id = :attempt_id
 LIMIT 1
+FOR UPDATE
 """
 
 FIND_QUESTION_BY_ID = """
@@ -23,22 +24,9 @@ WHERE qq.id = :question_id
 LIMIT 1
 """
 
-FIND_EXISTING_ANSWER = """
-SELECT
-    id,
-    attempt_id,
-    question_id,
-    choice_id
-FROM quiz_answers
-WHERE attempt_id = :attempt_id
-  AND question_id = :question_id
-LIMIT 1
-"""
-
-UPDATE_ANSWER = """
-UPDATE quiz_answers
-SET choice_id = :choice_id
-WHERE id = :answer_id
+DELETE_QUESTION_ANSWERS = """
+DELETE FROM quiz_answers
+WHERE attempt_id = :attempt_id AND question_id = :question_id
 """
 
 INSERT_ANSWER = """
@@ -64,6 +52,12 @@ SELECT
     choice_id
 FROM quiz_answers
 WHERE attempt_id = :attempt_id
-ORDER BY id ASC
+ORDER BY question_id ASC, id ASC
+"""
+
+FIND_CHOICES_BY_IDS = """
+SELECT id
+FROM quiz_choices
+WHERE question_id = :question_id AND id = ANY(:choice_ids)
 """
 

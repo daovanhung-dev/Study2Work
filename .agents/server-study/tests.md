@@ -2,25 +2,32 @@
 
 ```text
 TEST_SUITE_PRESENT: YES
-TEST_STATUS: VERIFIED (1326 tests passed in the current full Study suite; nullable-bind regression modules: 178 passed; ten repaired operations passed 20/20 branch-backed HTTP requests; details are in the 2026-11-01 report)
+TEST_STATUS: PRE_MERGE_BASELINE_VERIFIED (1326 tests passed before the 2026-11-13 merges; post-revert suite not run; retained API #10, #26-30, #32-33 tests not run after revert; nullable-bind regression modules: 178 passed; ten repaired operations passed 20/20 branch-backed HTTP requests; details are in the 2026-11-01 report)
 ```
 
+The 2026-11-13 merges and subsequent revert leave test source for APIs #10,
+#26–#30, #32 and #33 in the current branch. These tests have not been run after
+the revert. Prior verification counts below are dated baselines, not current
+post-revert results.
+
 Tests under `apps/study-server/tests/` cover config, DB helpers, responses and
-exception handlers, security tokens, health/security behavior, API #1 register,
-API #2 verify-email dispatch, API #3 login/refresh, API #4 current-user profile
-access, API #12 resource detail, API #13 avatar upload, API #14 profile update,
-API #5 category retrieval, API #6 public course retrieval, API #7 course search,
-API #34 upload, Mentor APIs #46–#67, and Admin APIs #68–#98. APIs #4,
+exception handlers, security tokens, health/security behavior, APIs #1–#10,
+#12–#14, #26–#30, #32–#34, Mentor APIs #46–#67, and Admin APIs #68–#98. APIs #4,
 #13 and #14 share the auth guard in
 `app/utils/auth.py`; security primitive tests remain under `tests/core`.
-The API #08 course-detail and API #09 curriculum tests passed in the current
-full suite after merge.
+The API #08 course-detail and API #09 curriculum tests passed in the
+pre-merge baseline suite; they were not rerun after the 2026-11-13 merge.
 The API-specific tests are grouped under
 `api_01_auth_register`, `api_02_auth_verify_email_send`, `api_03_auth_login`,
 `api_04_users_me`, `api_05_categories`, `api_06_courses`,
 `api_07_courses_search`, `api_08_courses_detail`,
-`api_09_courses_curriculum`, `api_12_resources_detail`,
+`api_09_courses_curriculum`, `api_10_courses_reviews`,
+`api_12_resources_detail`,
 `api_13_users_me_avatar`, `api_14_users_me_profile`,
+`api_26_lessons_resources`, `api_27_lessons_next`,
+`api_28_quizzes_detail`, `api_29_quizzes_attempts`,
+`api_30_attempts_answers`, `api_32_attempts_result`,
+`api_33_assignments_detail`,
 `mentor/api_46_mentor_courses`, `mentor/api_47_mentor_lectures_create`,
 `mentor/api_48_mentor_lecture_detail`, `mentor/api_49_mentor_content_list`,
 `mentor/api_50_mentor_content_create`, `mentor/api_51_mentor_content_update`,

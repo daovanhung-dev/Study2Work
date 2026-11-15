@@ -31,6 +31,7 @@ def make_lesson() -> dict[str, Any]:
         "video_url": "https://example.com/video.mp4",
         "order": 1,
         "status": "PUBLISHED",
+        "course_status": "PUBLISHED",
     }
 
 
@@ -78,6 +79,53 @@ def test_lesson_access_success(
     assert payload["data"]["id"] == 101
     assert payload["data"]["course_id"] == 10
     assert payload["data"]["title"] == "Bai hoc so 1"
+
+
+def test_lesson_access_unpublished_course_returns_not_found(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Kiểm tra khóa học chưa công bố bị từ chối."""
+    session = FakeSession()
+    client.app.dependency_overrides[get_db] = override_db(session)
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(
+        view_module,
+        "find_lesson_by_id",
+        lambda db, *, lesson_id: {**make_lesson(), "course_status": "DRAFT"},
+    )
+
+    response = client.get(
+        "/api/v1/lessons/101/access",
+        headers={"Authorization": "Bearer valid-token"},
+    )
+
+    assert response.status_code == 404
+    assert response.json()["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
+
+
+def test_lesson_access_completed_enrollment_is_allowed(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Kiểm tra enrollment COMPLETED vẫn xem được bài trong khóa PUBLISHED."""
+    session = FakeSession()
+    client.app.dependency_overrides[get_db] = override_db(session)
+    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
+    monkeypatch.setattr(view_module, "find_lesson_by_id", lambda db, *, lesson_id: make_lesson())
+    monkeypatch.setattr(
+        view_module,
+        "find_active_enrollment",
+        lambda db, *, user_id, course_id: {"id": 1, "status": "COMPLETED"},
+    )
+
+    response = client.get(
+        "/api/v1/lessons/101/access",
+        headers={"Authorization": "Bearer valid-token"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["id"] == 101
 
 
 def test_lesson_access_missing_auth(client: TestClient) -> None:

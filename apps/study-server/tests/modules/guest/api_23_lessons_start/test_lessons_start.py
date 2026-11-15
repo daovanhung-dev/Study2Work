@@ -8,6 +8,7 @@ import app.modules.guest.api_23_lessons_start.view as view_module
 import app.utils.auth as auth_utils
 import pytest
 from app.core.database import get_db
+from app.modules.guest.api_23_lessons_start.query import UPSERT_LESSON_PROGRESS
 from fastapi.testclient import TestClient
 
 
@@ -52,38 +53,27 @@ def valid_claims() -> dict[str, Any]:
     return {"sub": "1001", "roles": ["STUDENT"]}
 
 
-def test_lesson_start_new_progress_success(
+def test_lesson_start_uses_upsert_and_commits(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Kiểm tra trường hợp bài học chưa có tiến độ: chèn mới và commit thành công."""
+    """Kiểm tra API ghi tiến độ qua UPSERT và commit."""
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
     monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
-    monkeypatch.setattr(
-        view_module,
-        "find_lesson_by_id",
-        lambda db, *, lesson_id: make_lesson(),
-    )
+    monkeypatch.setattr(view_module, "find_lesson_by_id", lambda db, *, lesson_id: make_lesson())
     monkeypatch.setattr(
         view_module,
         "find_active_enrollment",
         lambda db, *, user_id, course_id: {"id": 1},
     )
-    monkeypatch.setattr(
-        view_module,
-        "find_lesson_progress",
-        lambda db, *, user_id, lesson_id: None,
-    )
+    upserted = {}
 
-    inserted = False
-
-    def fake_insert(db, *, user_id, lesson_id):
-        nonlocal inserted
-        inserted = True
+    def fake_upsert(db, *, user_id, lesson_id):
+        upserted.update(user_id=user_id, lesson_id=lesson_id)
         return {"id": 501}
 
-    monkeypatch.setattr(view_module, "insert_lesson_progress", fake_insert)
+    monkeypatch.setattr(view_module, "upsert_lesson_progress", fake_upsert)
 
     response = client.post(
         "/api/v1/lessons/101/start",
@@ -91,59 +81,19 @@ def test_lesson_start_new_progress_success(
     )
 
     assert response.status_code == 201
-    payload = response.json()
-    assert payload["success"] is True
-    assert payload["businessCode"] == "DESIGN_RESOURCE_CREATED"
-    assert payload["data"]["id"] == 101
-    assert inserted is True
+    assert response.json()["businessCode"] == "DESIGN_RESOURCE_CREATED"
+    assert response.json()["data"]["id"] == 101
+    assert upserted == {"user_id": 1001, "lesson_id": 101}
     assert session.commit_count == 1
     assert session.rollback_count == 0
 
 
-def test_lesson_start_existing_progress_success(
-    client: TestClient,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Kiểm tra trường hợp bài học đã có tiến độ: cập nhật bản ghi cũ và commit."""
-    session = FakeSession()
-    client.app.dependency_overrides[get_db] = override_db(session)
-    monkeypatch.setattr(auth_utils, "decode_access_token", lambda token: valid_claims())
-    monkeypatch.setattr(
-        view_module,
-        "find_lesson_by_id",
-        lambda db, *, lesson_id: make_lesson(),
-    )
-    monkeypatch.setattr(
-        view_module,
-        "find_active_enrollment",
-        lambda db, *, user_id, course_id: {"id": 1},
-    )
-    monkeypatch.setattr(
-        view_module,
-        "find_lesson_progress",
-        lambda db, *, user_id, lesson_id: {"id": 501, "status": "IN_PROGRESS"},
-    )
+def test_lesson_start_upsert_preserves_completed_state() -> None:
+    """Kiểm tra SQL conflict không hạ bậc progress COMPLETED."""
+    sql = " ".join(UPSERT_LESSON_PROGRESS.split())
 
-    touched = False
-
-    def fake_touch(db, *, progress_id):
-        nonlocal touched
-        touched = True
-        return {"id": progress_id}
-
-    monkeypatch.setattr(view_module, "touch_lesson_progress", fake_touch)
-
-    response = client.post(
-        "/api/v1/lessons/101/start",
-        headers={"Authorization": "Bearer valid-token"},
-    )
-
-    assert response.status_code == 201
-    payload = response.json()
-    assert payload["success"] is True
-    assert payload["businessCode"] == "DESIGN_RESOURCE_CREATED"
-    assert touched is True
-    assert session.commit_count == 1
+    assert "ON CONFLICT (user_id, lesson_id) DO UPDATE" in sql
+    assert "WHEN lesson_progress.status = 'COMPLETED' THEN lesson_progress.status" in sql
 
 
 def test_lesson_start_missing_auth(client: TestClient) -> None:

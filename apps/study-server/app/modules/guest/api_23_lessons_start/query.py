@@ -24,18 +24,7 @@ WHERE e.user_id = :user_id
 LIMIT 1
 """
 
-FIND_LESSON_PROGRESS = """
-SELECT
-    lp.id,
-    lp.status
-FROM lesson_progress AS lp
-WHERE lp.user_id = :user_id
-  AND lp.lesson_id = :lesson_id
-ORDER BY lp.id DESC
-LIMIT 1
-"""
-
-INSERT_LESSON_PROGRESS = """
+UPSERT_LESSON_PROGRESS = """
 INSERT INTO lesson_progress (
     user_id,
     lesson_id,
@@ -46,17 +35,11 @@ VALUES (
     :lesson_id,
     'IN_PROGRESS'
 )
-RETURNING id
-"""
-
-TOUCH_LESSON_PROGRESS = """
-UPDATE lesson_progress
-SET
-    status = CASE
-        WHEN status = 'COMPLETED' THEN status
-        ELSE 'IN_PROGRESS'
-    END
-WHERE id = :progress_id
+ON CONFLICT (user_id, lesson_id) DO UPDATE
+SET status = CASE
+    WHEN lesson_progress.status = 'COMPLETED' THEN lesson_progress.status
+    ELSE 'IN_PROGRESS'
+END
 RETURNING id
 """
 

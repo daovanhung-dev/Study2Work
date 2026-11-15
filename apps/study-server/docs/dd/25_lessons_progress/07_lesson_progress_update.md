@@ -9,6 +9,13 @@ status: "Draft — Needs Confirmation"
 
 # Định nghĩa table
 
+## Approved implementation decisions (2026-11-15)
+
+- API #25 does not accept or persist `position`; no column is added.
+- `percent` maps to `lesson_progress.progress_percent` after validation in 0..100.
+- Each update sets status from the latest `completed` value; false clears `completed_at`, while true preserves an existing timestamp or sets one.
+- Row identity is `(user_id, lesson_id)` using the unique constraint source added for API #23. The migration has not been applied; remaining schema notes are design evidence.
+
 ## Table metadata
 
 | Thuộc tính | Giá trị |

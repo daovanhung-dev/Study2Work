@@ -144,6 +144,14 @@ from app.modules.guest.api_11_courses_resources.view import (
 from app.modules.guest.api_15_courses_enrollment_status.view import (
     get_enrollment_status as get_enrollment_status_view,
 )
+from app.modules.guest.api_16_orders.models import CreateOrderRequest
+from app.modules.guest.api_16_orders.view import create_order
+from app.modules.guest.api_17_payments.models import CreatePaymentRequest
+from app.modules.guest.api_17_payments.view import create_payment
+from app.modules.guest.api_18_operations.view import get_operation
+from app.modules.guest.api_19_courses_enrollments.models import CreateEnrollmentRequest
+from app.modules.guest.api_19_courses_enrollments.view import create_enrollment
+from app.modules.guest.api_20_users_me_courses.view import get_user_courses
 
 from app.modules.guest.api_21_users_me_progress.view import (
     get_user_progress as get_user_progress_view,
@@ -175,6 +183,7 @@ from app.modules.guest.api_28_quizzes_detail.view import get_quiz_detail
 from app.modules.guest.api_29_quizzes_attempts.view import create_quiz_attempt
 from app.modules.guest.api_30_attempts_answers.models import SaveAnswerRequest
 from app.modules.guest.api_30_attempts_answers.view import save_attempt_answer
+from app.modules.guest.api_31_attempts_submit.view import submit_attempt
 from app.modules.guest.api_32_attempts_result.view import get_attempt_result
 from app.modules.guest.api_33_assignments_detail.view import get_assignment_detail
 from app.modules.mentor.api_46_mentor_courses.models import MentorCourseQuery
@@ -291,6 +300,20 @@ from app.modules.mentor.api_67_mentor_student_progress.view import (
 )
 from app.modules.student.api_34_uploads.models import UploadPurpose
 from app.modules.student.api_34_uploads.view import create_upload
+from app.modules.student.api_35_assignments_submissions.models import CreateSubmissionRequest
+from app.modules.student.api_35_assignments_submissions.view import create_submission
+from app.modules.student.api_36_submissions_detail.view import get_submission_detail
+from app.modules.guest.api_37_users_me_progress_course.view import get_course_progress
+from app.modules.guest.api_38_users_me_achievements.view import get_achievements
+from app.modules.student.api_39_discussions.view import get_discussions
+from app.modules.student.api_40_discussions_create.models import CreateDiscussionRequest
+from app.modules.student.api_40_discussions_create.view import create_discussion
+from app.modules.student.api_41_discussions_comment.models import CreateDiscussionCommentRequest
+from app.modules.student.api_41_discussions_comment.view import add_discussion_comment
+from app.modules.student.api_42_discussions_detail.view import get_discussion_detail
+from app.modules.student.api_43_users_me_notifications.view import get_notifications
+from app.modules.student.api_44_notifications_mark_read.view import mark_notification_read
+from app.modules.student.api_45_notifications_read_all.view import mark_all_notifications_read
 from app.service.email.provider import (
     VerificationEmailProvider,
     get_verification_email_provider,
@@ -3548,3 +3571,239 @@ def update_admin_lesson_status_endpoint(
         db=db,
         trace_id=get_trace_id(request),
     )
+
+
+# API #16 orders
+@router.post("/orders", status_code=status.HTTP_201_CREATED, response_model=dict[str, Any])
+def create_order_endpoint(
+    payload: CreateOrderRequest,
+    request: Request,
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return create_order(authorization=request.headers.get("Authorization"), payload=payload, db=db, trace_id=get_trace_id(request))
+
+
+# API #17 payments — 202 when accepted; currently fail-closed with 503 before persistence.
+@router.post("/payments", status_code=status.HTTP_202_ACCEPTED, response_model=dict[str, Any])
+def create_payment_endpoint(
+    payload: CreatePaymentRequest,
+    request: Request,
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return create_payment(authorization=request.headers.get("Authorization"), payload=payload, db=db, trace_id=get_trace_id(request))
+
+
+# API #18 operations
+@router.get(
+    "/operations/{operation_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={"parameters": [{"name": "operation_id", "in": "path", "required": True, "schema": {"type": "string", "format": "uuid"}}]},
+)
+def operation_detail(
+    request: Request,
+    operation_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return get_operation(authorization=authorization, operation_id_raw=operation_id, db=db, trace_id=get_trace_id(request))
+
+
+# API #19 course enrollment
+@router.post(
+    "/courses/{course_id}/enrollments",
+    status_code=status.HTTP_201_CREATED,
+    response_model=dict[str, Any],
+    openapi_extra={"parameters": [{"name": "course_id", "in": "path", "required": True, "schema": {"type": "integer", "format": "int64"}}]},
+)
+def create_enrollment_endpoint(
+    payload: CreateEnrollmentRequest,
+    request: Request,
+    course_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return create_enrollment(authorization=authorization, course_id_raw=course_id, payload=payload, db=db, trace_id=get_trace_id(request))
+
+
+# API #20 current user's courses
+@router.get("/users/me/courses", status_code=status.HTTP_200_OK, response_model=dict[str, Any])
+def user_courses(
+    request: Request,
+    status_filter: str | None = Query(default=None, alias="status"),
+    page: str | None = Query(default=None),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return get_user_courses(authorization=authorization, page_raw=page, status_filter=status_filter, db=db, trace_id=get_trace_id(request))
+
+
+# API #31 submit and grade an objective quiz attempt
+@router.post(
+    "/attempts/{attempt_id}/submit",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={"parameters": [{"name": "attempt_id", "in": "path", "required": True, "schema": {"type": "integer", "format": "int64"}}]},
+)
+def submit_quiz_attempt(
+    request: Request,
+    attempt_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return submit_attempt(authorization=authorization, attempt_id_raw=attempt_id, db=db, trace_id=get_trace_id(request))
+
+
+# API #35 assignment submission
+@router.post(
+    "/assignments/{assignment_id}/submissions",
+    status_code=status.HTTP_201_CREATED,
+    response_model=dict[str, Any],
+    openapi_extra={"parameters": [{"name": "assignment_id", "in": "path", "required": True, "schema": {"type": "integer", "format": "int64"}}]},
+)
+def assignment_submission(
+    payload: CreateSubmissionRequest,
+    request: Request,
+    assignment_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return create_submission(authorization=authorization, assignment_id_raw=assignment_id, payload=payload, db=db, trace_id=get_trace_id(request))
+
+
+# API #36 Student submission detail
+@router.get(
+    "/submissions/{submission_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={"parameters": [{"name": "submission_id", "in": "path", "required": True, "schema": {"type": "integer", "format": "int64"}}]},
+)
+def student_submission_detail(
+    request: Request,
+    submission_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return get_submission_detail(authorization=authorization, submission_id_raw=submission_id, db=db, trace_id=get_trace_id(request))
+
+
+# API #37 course-specific lesson progress
+@router.get(
+    "/users/me/progress/{course_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={"parameters": [{"name": "course_id", "in": "path", "required": True, "schema": {"type": "integer", "format": "int64"}}]},
+)
+def course_progress_detail(
+    request: Request,
+    course_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return get_course_progress(authorization=authorization, course_id_raw=course_id, db=db, trace_id=get_trace_id(request))
+
+
+# API #38 recorded achievements
+@router.get("/users/me/achievements", status_code=status.HTTP_200_OK, response_model=dict[str, Any])
+def user_achievements(
+    request: Request,
+    course_id: str | None = Query(default=None),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return get_achievements(authorization=authorization, course_id_raw=course_id, db=db, trace_id=get_trace_id(request))
+
+
+# API #39 discussion list
+@router.get("/discussions", status_code=status.HTTP_200_OK, response_model=dict[str, Any])
+def discussion_list(
+    request: Request,
+    course_id: str | None = Query(default=None),
+    page: str | None = Query(default=None),
+    sort: str | None = Query(default=None),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return get_discussions(authorization=authorization, course_id_raw=course_id, page_raw=page, sort_raw=sort, db=db, trace_id=get_trace_id(request))
+
+
+# API #40 create root discussion
+@router.post("/discussions", status_code=status.HTTP_201_CREATED, response_model=dict[str, Any])
+def create_student_discussion(
+    payload: CreateDiscussionRequest,
+    request: Request,
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return create_discussion(authorization=authorization, payload=payload, db=db, trace_id=get_trace_id(request))
+
+
+# API #41 add direct comment
+@router.post(
+    "/discussions/{discussion_id}/comments",
+    status_code=status.HTTP_201_CREATED,
+    response_model=dict[str, Any],
+    openapi_extra={"parameters": [{"name": "discussion_id", "in": "path", "required": True, "schema": {"type": "integer", "format": "int64"}}]},
+)
+def create_student_discussion_comment(
+    payload: CreateDiscussionCommentRequest,
+    request: Request,
+    discussion_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return add_discussion_comment(authorization=authorization, discussion_id_raw=discussion_id, payload=payload, db=db, trace_id=get_trace_id(request))
+
+
+# API #42 reload discussion thread
+@router.get(
+    "/discussions/{discussion_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={"parameters": [{"name": "discussion_id", "in": "path", "required": True, "schema": {"type": "integer", "format": "int64"}}]},
+)
+def student_discussion_detail(
+    request: Request,
+    discussion_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return get_discussion_detail(authorization=authorization, discussion_id_raw=discussion_id, db=db, trace_id=get_trace_id(request))
+
+
+# API #43 list Student notifications
+@router.get("/users/me/notifications", status_code=status.HTTP_200_OK, response_model=dict[str, Any])
+def student_notifications(
+    request: Request,
+    unread_only: bool = Query(default=False),
+    page: str | None = Query(default=None),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return get_notifications(authorization=authorization, unread_only=unread_only, page_raw=page, db=db, trace_id=get_trace_id(request))
+
+
+# API #44 mark one Student notification read
+@router.patch(
+    "/notifications/{notification_id}/read",
+    status_code=status.HTTP_200_OK,
+    response_model=dict[str, Any],
+    openapi_extra={"parameters": [{"name": "notification_id", "in": "path", "required": True, "schema": {"type": "integer", "format": "int64"}}]},
+)
+def mark_student_notification_read(
+    request: Request,
+    notification_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return mark_notification_read(authorization=authorization, notification_id_raw=notification_id, db=db, trace_id=get_trace_id(request))
+
+
+# API #45 mark all current Student notifications read
+@router.patch("/notifications/read-all", status_code=status.HTTP_200_OK, response_model=dict[str, Any])
+def mark_all_student_notifications_read(
+    request: Request,
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    db: Session = db_dependency,
+) -> dict[str, Any] | JSONResponse:
+    return mark_all_notifications_read(authorization=authorization, db=db, trace_id=get_trace_id(request))

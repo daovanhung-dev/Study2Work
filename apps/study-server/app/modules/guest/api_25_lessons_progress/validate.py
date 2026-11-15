@@ -34,6 +34,14 @@ def validate_lesson_progress_request(
     except (TypeError, ValueError):
         return _lesson_not_found(trace_id)
 
+    if not 0 <= user_data.percent <= 100:
+        return error_response(
+            status_code=422,
+            business_code="DESIGN_VALIDATION_ERROR",
+            message="Percent must be between 0 and 100.",
+            trace_id=trace_id,
+        )
+
     return user_id, lesson_id, user_data
 
 

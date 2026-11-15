@@ -45,7 +45,7 @@
 | `Order`                | id:int64, course_id:int64, user_id:int64, amount:decimal-string, currency:string, status:OrderStatus, created_at:date-time                                                   |
 | `Payment`              | id:int64, order_id:int64, provider:PaymentProvider, amount:decimal-string, status:PaymentStatus, transaction_code?:string, paid_at?:date-time                                |
 | `Quiz`                 | id:int64, course_id:int64, title:string, duration_minutes?:int32, passing_score:decimal-string, questions:QuizQuestion[]                                                     |
-| `QuizAttempt`          | id:int64, quiz_id:int64, status:AttemptStatus, started_at:date-time, submitted_at?:date-time, score?:decimal-string, answers:QuizAnswer[]                                    |
+| `QuizAttempt`          | id:int64, quiz_id:int64, status:AttemptStatus, started_at:date-time, submitted_at?:date-time, score?:decimal-string, passed?:boolean (when GRADED), answers:QuizAnswer[]       |
 | `Assignment`           | id:int64, course_id:int64, title:string, description?:string, due_at?:date-time, max_score:decimal-string                                                                    |
 | `Submission`           | id:int64, assignment_id:int64, user_id:int64, content?:string, files:UploadAsset[], status:SubmissionStatus, submitted_at:date-time, score?:decimal-string, feedback?:string |
 | `Discussion`           | id:int64, course_id:int64, title:string, content:string, author:UserSummary, status:DiscussionStatus, comments:DiscussionComment[]                                           |

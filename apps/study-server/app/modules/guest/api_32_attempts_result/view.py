@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from app.core.database import query_many, query_one
@@ -16,6 +17,7 @@ from app.modules.guest.api_32_attempts_result.validate import (
     attempt_not_found,
     validate_attempt_result_request,
 )
+from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
@@ -68,13 +70,33 @@ def _internal_error(trace_id: str) -> JSONResponse:
 def _build_attempt_result(
     attempt_row: dict[str, Any],
     answer_rows: list[dict[str, Any]],
-) -> QuizAttempt:
+) -> QuizAttempt | None:
     """Ánh xạ dữ liệu sang model response, chỉ gồm field có căn cứ an toàn hiện tại."""
 
     raw_status = attempt_row["status"]
     status_value = getattr(raw_status, "value", raw_status)
     status_text = str(status_value)
 
+    graded = status_text.upper() == "GRADED"
+    passed: bool | None = None
+    if graded:
+        # Derive the pass outcome from finalized raw points and immutable Quiz configuration.
+        try:
+            earned_points = Decimal(str(attempt_row.get("score")))
+            possible_points = Decimal(str(attempt_row.get("possible_points")))
+            passing_score = Decimal(str(attempt_row.get("passing_score")))
+        except (InvalidOperation, TypeError):
+            return None
+        if (
+            not earned_points.is_finite()
+            or not possible_points.is_finite()
+            or not passing_score.is_finite()
+            or possible_points <= 0
+            or not Decimal("0") <= passing_score <= Decimal("100")
+        ):
+            return None
+        passed = earned_points * Decimal("100") >= possible_points * passing_score
+    # Chỉ trả question_id vì DD chưa chốt quyền lộ lựa chọn, đúng/sai hoặc điểm từng câu.
     answers = [
         QuizAnswer(question_id=answer_row["question_id"])
         for answer_row in answer_rows
@@ -84,7 +106,7 @@ def _build_attempt_result(
     # chính sách score cho các trạng thái khác vẫn cần được xác nhận.
     score = (
         attempt_row.get("score")
-        if status_text.upper() == "GRADED"
+        if graded
         else None
     )
 
@@ -95,6 +117,7 @@ def _build_attempt_result(
         started_at=attempt_row["started_at"],
         submitted_at=attempt_row.get("submitted_at"),
         score=score,
+        passed=passed,
         answers=answers,
     )
 
@@ -140,11 +163,12 @@ def get_attempt_result(
         logger.exception("Attempt result query failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
 
-    # Mỗi answer row hiện được ánh xạ thành một phần tử có question_id.
-    # Quy tắc gom nhiều row theo question và thứ tự answers chưa được DD chốt.
+    # Query trả đúng một row cho mỗi câu hỏi, kể cả câu chưa có lựa chọn.
     try:
         attempt = _build_attempt_result(attempt_row, answer_rows)
-    except:
+        if attempt is None:
+            return _internal_error(trace_id)
+    except (ValidationError, TypeError, KeyError):
         logger.exception("Attempt result mapping failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
 

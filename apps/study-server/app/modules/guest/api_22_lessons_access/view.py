@@ -92,7 +92,11 @@ def check_lesson_access(
         return _internal_error(trace_id)
 
     # Trả về 404 nếu bài học không tồn tại hoặc không gắn với khóa học.
-    if lesson is None or lesson.get("course_id") is None:
+    if (
+        lesson is None
+        or lesson.get("course_id") is None
+        or lesson.get("course_status") != "PUBLISHED"
+    ):
         return _not_found_error(trace_id)
 
     # Kiểm tra xem học viên đã ghi danh vào khóa học này chưa.

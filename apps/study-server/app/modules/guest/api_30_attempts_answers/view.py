@@ -14,12 +14,12 @@ from app.modules.guest.api_30_attempts_answers.models import (
     SaveAnswerRequest,
 )
 from app.modules.guest.api_30_attempts_answers.query import (
+    DELETE_QUESTION_ANSWERS,
     FIND_ATTEMPT_ANSWERS,
     FIND_ATTEMPT_BY_ID,
-    FIND_EXISTING_ANSWER,
+    FIND_CHOICES_BY_IDS,
     FIND_QUESTION_BY_ID,
     INSERT_ANSWER,
-    UPDATE_ANSWER,
 )
 from app.modules.guest.api_30_attempts_answers.validate import (
     access_denied,
@@ -65,35 +65,16 @@ def find_question(db: Session, *, question_id: int) -> dict[str, Any] | None:
     return query_one(db, FIND_QUESTION_BY_ID, {"question_id": question_id})
 
 
-def find_existing_answer(
-    db: Session,
-    *,
-    attempt_id: int,
-    question_id: int,
-) -> dict[str, Any] | None:
-    """Truy vấn kiểm tra xem câu hỏi đã có câu trả lời nào được lưu trước đó hay chưa."""
-    return query_one(
-        db,
-        FIND_EXISTING_ANSWER,
-        {"attempt_id": attempt_id, "question_id": question_id},
-    )
-
-
 def upsert_answer(
     db: Session,
     *,
     attempt_id: int,
     question_id: int,
-    choice_id: int | None,
+    choice_ids: list[int],
 ) -> None:
-    """Cập nhật câu trả lời nếu đã tồn tại hoặc tạo mới nếu chưa có (UPSERT)."""
-    existing = find_existing_answer(db, attempt_id=attempt_id, question_id=question_id)
-    if existing is not None:
-        db.execute(
-            text(UPDATE_ANSWER),
-            {"choice_id": choice_id, "answer_id": existing["id"]},
-        )
-    else:
+    """Thay toàn bộ lựa chọn của một câu hỏi bằng các answer row đã chọn."""
+    db.execute(text(DELETE_QUESTION_ANSWERS), {"attempt_id": attempt_id, "question_id": question_id})
+    for choice_id in choice_ids:
         db.execute(
             text(INSERT_ANSWER),
             {
@@ -156,12 +137,39 @@ def save_attempt_answer(
             )
 
         # Trích xuất choice_id và thực hiện ghi hoặc cập nhật (UPSERT)
-        choice_id = parse_choice_id(payload.answer)
+        if payload.choice_ids is None:
+            parsed_choice_id = parse_choice_id(payload.answer)
+            choice_ids = [parsed_choice_id] if parsed_choice_id is not None else []
+        else:
+            choice_ids = payload.choice_ids
+            if (
+                any(type(choice_id) is not int or choice_id <= 0 for choice_id in choice_ids)
+                or len(choice_ids) != len(set(choice_ids))
+            ):
+                return error_response(
+                    status_code=422,
+                    business_code="DESIGN_VALIDATION_ERROR",
+                    message="Invalid choice_ids.",
+                    trace_id=trace_id,
+                )
+
+        choices = (
+            query_many(
+                db,
+                FIND_CHOICES_BY_IDS,
+                {"question_id": question_id, "choice_ids": choice_ids},
+            )
+            if choice_ids
+            else []
+        )
+        if len(choices) != len(choice_ids):
+            return resource_not_found(trace_id, message="Choice not found in question")
+
         upsert_answer(
             db,
             attempt_id=attempt_id,
             question_id=question_id,
-            choice_id=choice_id,
+            choice_ids=choice_ids,
         )
 
         # Xác nhận transaction ghi dữ liệu
@@ -170,16 +178,11 @@ def save_attempt_answer(
         # Truy vấn danh sách toàn bộ câu trả lời hiện có của attempt để trả về cho client
         answer_rows = find_attempt_answers(db, attempt_id=attempt_id)
         answers: list[QuizAnswerItem] = []
+        grouped_answers: dict[int, list[int]] = {}
         for row in answer_rows:
-            c_id = row.get("choice_id")
-            choice_ids = [c_id] if c_id is not None else []
-            answers.append(
-                QuizAnswerItem(
-                    question_id=row["question_id"],
-                    choice_ids=choice_ids,
-                    text_answer=None,
-                )
-            )
+            grouped_answers.setdefault(row["question_id"], []).append(row["choice_id"])
+        for answer_question_id, selected_ids in grouped_answers.items():
+            answers.append(QuizAnswerItem(question_id=answer_question_id, choice_ids=selected_ids, text_answer=None))
 
         # Ánh xạ thành model QuizAttemptDetail theo contract
         attempt_detail = QuizAttemptDetail(

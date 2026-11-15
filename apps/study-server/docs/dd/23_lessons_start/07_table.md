@@ -9,6 +9,11 @@ status: "Draft — Needs Confirmation"
 
 # Định nghĩa table
 
+## Approved implementation decisions (2026-11-15)
+
+- API #23 uses PostgreSQL UPSERT on `(user_id, lesson_id)` and preserves `COMPLETED` on repeated starts.
+- Migration source `019_lesson_progress_user_lesson_unique.sql` adds the pair constraint only in schema `nguyen_anh_duc`; it has not been applied.
+
 ## Table metadata
 
 | Thuộc tính | Giá trị |

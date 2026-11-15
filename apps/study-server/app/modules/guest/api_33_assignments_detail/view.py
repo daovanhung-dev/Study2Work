@@ -61,6 +61,7 @@ def get_assignment_detail(
     # 1. Xác thực Bearer JWT và role Student trước khi truy cập database.
     auth_result = validate_current_user_request(
         authorization,
+        role="STUDENT",
         trace_id=trace_id,
     )
     if isinstance(auth_result, JSONResponse):

@@ -11,9 +11,7 @@ from app.modules.guest.api_23_lessons_start.models import LessonResponse
 from app.modules.guest.api_23_lessons_start.query import (
     FIND_ACTIVE_ENROLLMENT,
     FIND_LESSON_BY_ID,
-    FIND_LESSON_PROGRESS,
-    INSERT_LESSON_PROGRESS,
-    TOUCH_LESSON_PROGRESS,
+    UPSERT_LESSON_PROGRESS,
 )
 from app.modules.guest.api_23_lessons_start.validate import (
     validate_lesson_start_request,
@@ -40,40 +38,15 @@ def find_active_enrollment(
     )
 
 
-def find_lesson_progress(
+def upsert_lesson_progress(
     db: Session, *, user_id: int, lesson_id: int
 ) -> dict[str, Any] | None:
-    """Truy vấn tiến độ bài học hiện có của học viên."""
+    """Tạo hoặc cập nhật tiến độ theo cặp học viên và bài học."""
     return query_one(
         db,
-        FIND_LESSON_PROGRESS,
+        UPSERT_LESSON_PROGRESS,
         {"user_id": user_id, "lesson_id": lesson_id},
     )
-
-
-def insert_lesson_progress(
-    db: Session, *, user_id: int, lesson_id: int
-) -> dict[str, Any] | None:
-    """Tạo mới bản ghi tiến độ bài học ở trạng thái IN_PROGRESS."""
-    return query_one(
-        db,
-        INSERT_LESSON_PROGRESS,
-        {"user_id": user_id, "lesson_id": lesson_id},
-    )
-
-
-def touch_lesson_progress(
-    db: Session, *, progress_id: int
-) -> dict[str, Any] | None:
-    """Cập nhật thời gian truy cập gần nhất và đảm bảo trạng thái IN_PROGRESS
-    nếu chưa hoàn thành.
-    """
-    return query_one(
-        db,
-        TOUCH_LESSON_PROGRESS,
-        {"progress_id": progress_id},
-    )
-
 
 def _not_found_error(trace_id: str) -> JSONResponse:
     return error_response(
@@ -151,23 +124,11 @@ def start_lesson(
 
     # Khởi tạo hoặc cập nhật tiến độ bài học trong transaction.
     try:
-        existing_progress = find_lesson_progress(
+        upsert_lesson_progress(
             db,
             user_id=user_id,
             lesson_id=validated_lesson_id,
         )
-        if existing_progress is None:
-            insert_lesson_progress(
-                db,
-                user_id=user_id,
-                lesson_id=validated_lesson_id,
-            )
-        else:
-            touch_lesson_progress(
-                db,
-                progress_id=existing_progress["id"],
-            )
-
         data = LessonResponse.model_validate(lesson)
         db.commit()
     except Exception:

@@ -29,7 +29,11 @@ def validate_create_attempt_request(
     trace_id: str,
 ) -> tuple[int, int] | JSONResponse:
     """Xác thực Bearer token Student và kiểm tra tính hợp lệ của path quiz_id."""
-    auth_result = validate_current_user_request(authorization, trace_id=trace_id)
+    auth_result = validate_current_user_request(
+        authorization,
+        role="STUDENT",
+        trace_id=trace_id,
+    )
     if isinstance(auth_result, JSONResponse):
         return auth_result
     user_id, _ = auth_result
