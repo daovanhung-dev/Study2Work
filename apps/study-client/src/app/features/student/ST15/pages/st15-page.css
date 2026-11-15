@@ -1,0 +1,30 @@
+.static-page.st15-page { position: relative; display: flex; min-height: 100vh; flex-direction: column; overflow: hidden; background: #e9edf4; }
+.st15-page .exam-header { position: relative; z-index: 1; }
+.exam-header { display: flex; min-height: 80px; align-items: center; gap: 28px; padding: 12px clamp(16px, 3vw, 48px); background: #fff; }
+.exam-header > span:first-child { margin-right: auto; }
+.exam-header strong { color: #1852c1; font-size: 21px; }
+.exam-time { padding: 9px 15px; border-radius: 999px; background: #e8efff; color: #1852c1; font-weight: 750; }
+.exam-user i { color: #1ab57e; font-style: normal; }
+.quiz-backdrop { position: absolute; inset: 66px 0 0; background: rgb(28 42 64 / 48%); }
+.confirm-dialog { position: relative; z-index: 2; width: min(92%, 700px); margin: auto; padding: 40px; box-shadow: 0 22px 65px rgb(10 24 44 / 25%); }
+.dialog-title { display: grid; grid-template-columns: 76px 1fr; gap: 18px; align-items: start; }
+.dialog-icon { display: grid; width: 66px; height: 66px; place-items: center; border-radius: 15px; background: #e9efff; color: #1855c9; font-size: 30px; }
+.dialog-title h1 { margin: 9px 0; font-size: clamp(24px, 3vw, 32px); }
+.dialog-title p { color: #68778a; }
+.confirm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
+.confirm-stats article { display: flex; flex-direction: column; gap: 5px; padding: 14px; border-radius: 10px; background: #eaf1ff; }
+.confirm-stats small { font-weight: 700; }
+.confirm-stats strong { color: #13724e; font-size: 25px; }
+.confirm-stats b,.confirm-stats span { font-size: 12px; }
+.confirm-stats .unanswered { background: #fff0ef; color: #b32922; }
+.confirm-stats .unanswered strong { color: #b32922; }
+.confirm-stats .flag-count { background: #fff3e3; color: #865512; }
+.confirm-stats .flag-count strong { color: #865512; }
+.time-strip { display: flex; justify-content: space-between; gap: 10px; padding: 15px; border-radius: 10px; background: #eaf0ff; color: #174fb5; }
+.time-strip b { display: block; margin-top: 4px; }
+.time-strip > span:last-child { align-self: center; color: #117651; font-weight: 750; }
+.exam-rule { margin-top: 14px; padding: 16px; border-radius: 10px; background: #edf2ff; }
+.exam-rule p { margin: 8px 0 0; color: #596a81; }
+.dialog-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; }
+.dialog-actions .sample-button { flex: 1; min-height: 50px; }
+@media (max-width: 600px) { .confirm-dialog { padding: 18px; } .dialog-title { grid-template-columns: 1fr; } .confirm-stats { grid-template-columns: 1fr; } .time-strip,.dialog-actions { flex-direction: column; } }

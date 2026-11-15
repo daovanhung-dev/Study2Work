@@ -1,0 +1,48 @@
+.st13-page { padding-bottom: 25px; }
+.quiz-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(290px, .95fr); gap: 30px; align-items: start; }
+.quiz-content,.quiz-sidebar { display: grid; gap: 20px; align-content: start; }
+.intro-main { display: flex; min-height: 245px; flex-direction: column; justify-content: center; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 17px; }
+.intro-main h1 { max-width: 780px; font-size: clamp(26px, 3.6vw, 42px); }
+.instructor { display: flex; width: fit-content; max-width: 100%; align-items: center; gap: 12px; margin-top: 18px; padding: 8px; border-radius: 12px; background: #eef3ff; }
+.instructor small { display: block; margin-top: 3px; color: #68778a; }
+.intro-aside { display: flex; flex-direction: column; gap: 12px; }
+.cover-placeholder { position: relative; display: flex; min-height: 190px; align-items: end; justify-content: center; overflow: hidden; padding: 15px; border-radius: 11px; background: radial-gradient(circle at 55% 35%,#246886,#0c253d 75%); color: #fff; font-weight: 750; }
+.cover-placeholder::before { position: absolute; inset: 0; background: repeating-linear-gradient(90deg,transparent 0 24px,rgb(99 205 229 / 9%) 25px 26px); content: ''; }
+.cover-screen { position: absolute; top: 15px; left: 50%; width: 68%; height: 135px; transform: translateX(-50%) rotate(-2deg); border: 4px solid #183347; border-radius: 8px; background: #e7f0f8; box-shadow: 0 5px 20px #07192d; color: #192d40; }
+.cover-screen header { height: 23px; padding: 6px; background: #fff; font-size: 7px; }
+.cover-code { display: grid; gap: 3px; margin: 7px; padding: 7px; background: #172337; color: #86e5ce; font: 7px/1.25 monospace; }
+.cover-code span { color: #e3eaf5; font-weight: 700; }
+.cover-code i { font-style: normal; }
+.cover-progress { display: flex; justify-content: space-between; padding: 0 8px; color: #617790; font-size: 6px; }
+.cover-placeholder>span { position: relative; z-index: 1; width: 100%; padding: 8px 10px; background: rgb(9 27 47 / 70%); border-radius: 4px; font-size: 11px; }
+.intro-aside .eyebrow { margin: 2px 0 -7px; }
+.goal { padding: 14px; border-radius: 10px; background: #eef3ff; font-size: 12px; }
+.goal b { display: flex; justify-content: space-between; gap: 8px; }
+.goal span,.goal small { color: #1854c9; }
+.goal .progress-track { margin: 8px 0; }
+.intro-aside .sample-button { width: 100%; }
+.iso-note { margin-top: 4px; color: #14815b; font-size: 12px; font-weight: 700; text-align: center; }
+.quiz-stats { margin: 0; }
+.quiz-stats.stat-grid { grid-template-columns: repeat(4, minmax(0,1fr)); }
+.quiz-stats .stat-card { min-height: 162px; padding: 16px; }
+.quiz-stats .stat-card strong { margin: 2px 0; }
+.rule-card { margin: 12px 0; padding: 15px; border-radius: 10px; background: #eef3ff; }
+.rule-card p { margin: 6px 0 0; color: #64728a; font-size: 12px; }
+.rules-panel { padding: 32px !important; }
+.rules-panel .rule-grid { gap: 16px; margin-top: 22px; }
+.rules-panel .rule-grid .rule-card { min-height: 172px; margin: 0; }
+.rule-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.history small { color: #68778a; }
+.history-title { display: flex; align-items: center; justify-content: space-between; }
+.history { padding: 32px !important; }
+.history .sample-row { gap: 15px; }
+.history .sample-row>b { padding: 10px; border-radius: 9px; background: #ffe1dd; color: #a13a32; text-align: center; }
+.history .sample-row>span:nth-child(2) { flex: 1; }
+.history .sample-row em { padding: 3px 7px; border-radius: 6px; background: #ffe1dd; color: #b23a36; font-size: 10px; font-style: normal; }
+.history .sample-row small { display: block; margin-top: 5px; }
+.quiz-help { display: flex; align-items: center; gap: 15px; background: #fff; }
+.quiz-help p { margin: 8px 0 0; color: #1854c9; }
+.iso-note small { display: block; margin-top: 8px; color: #65758a; font-size: 11px; font-weight: 400; line-height: 1.5; }
+@media (max-width: 900px) { .quiz-layout { grid-template-columns: 1fr; } }
+@media (max-width: 650px) { .quiz-stats.stat-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .rule-grid { grid-template-columns: 1fr; } }
