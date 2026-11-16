@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { STUDY_SERVER_APIS } from '../../../../core/constant/api.constants';
 import { type ApiEnvelope } from '../../../../core/http/api-envelope';
 import { StudyApiService } from '../../../../core/http/study-api.service';
 import { type StudentCourseProgressDto } from '../models/me17-student-progress.models';
@@ -16,11 +17,8 @@ export class Me17StudentProgressService {
     courseId: number,
     studentId: number,
   ): Observable<ApiEnvelope<StudentCourseProgressDto>> {
-    return this.api.request<StudentCourseProgressDto>(
-      `mentor/courses/${courseId}/students/${studentId}/progress`,
-      {
-        method: 'GET',
-      },
-    );
+    return this.api.request<StudentCourseProgressDto>(STUDY_SERVER_APIS.API_067, {
+      pathParams: { course_id: courseId, student_id: studentId },
+    });
   }
 }

@@ -1,0 +1,61 @@
+study-ad18-page { display: block; }
+study-ad18-page .quiz-delete { width: min(calc(100% - 64px), 1180px); display: grid; gap: 20px; margin-inline: auto; padding-block: 20px 36px; }
+study-ad18-page .delete-breadcrumbs { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #52617a; font-size: 13px; }
+study-ad18-page .delete-breadcrumbs ol { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
+study-ad18-page .delete-breadcrumbs a { color: #1556d7; text-decoration: none; }
+study-ad18-page .back-link, study-ad18-page .cancel-link { display: inline-flex; min-height: 44px; flex: 0 0 auto; align-items: center; justify-content: center; gap: 8px; padding: 9px 14px; border: 1px solid #cbd8ee; border-radius: 9px; color: #244b99; background: #fff; font-size: 12px; font-weight: 700; text-decoration: none; }
+study-ad18-page .back-link study-icon, study-ad18-page .cancel-link study-icon { transform: rotate(180deg); }
+study-ad18-page a:focus-visible { outline: 3px solid #90b5ff; outline-offset: 3px; }
+study-ad18-page .delete-heading { display: grid; gap: 6px; }
+study-ad18-page .delete-heading h1 { margin: 0; color: #101c32; font-size: clamp(27px, 3vw, 36px); line-height: 1.2; }
+study-ad18-page .delete-heading > p:last-child { max-width: 850px; margin: 0; color: #58677e; line-height: 1.55; }
+study-ad18-page .delete-eyebrow { margin: 0 0 5px; color: #1556d7; font-size: 10px; font-weight: 750; letter-spacing: .09em; }
+study-ad18-page .delete-panel { width: min(100%, 768px); margin-inline: auto; overflow: hidden; border: 1px solid #e4eaf3; border-radius: 17px; background: #fff; box-shadow: 0 2px 8px rgb(15 23 42 / 5%); }
+study-ad18-page .warning-heading { display: flex; align-items: center; gap: 17px; padding: clamp(20px, 3.5vw, 34px); border-bottom: 1px solid #f3d8d5; background: #fff3f2; }
+study-ad18-page .warning-icon { display: grid; width: 52px; height: 52px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #a83830; background: #ffe0dd; }
+study-ad18-page .warning-eyebrow { margin: 0 0 5px; color: #a83830; font-size: 10px; font-weight: 800; letter-spacing: .075em; }
+study-ad18-page .warning-heading h2 { margin: 0; color: #17243a; font-size: clamp(20px, 2.5vw, 28px); }
+study-ad18-page .warning-heading p:last-child { margin: 7px 0 0; color: #65728a; font-size: 13px; line-height: 1.5; }
+study-ad18-page .target-card { margin: 24px clamp(18px, 3.5vw, 34px) 18px; padding: 22px; border: 1px solid #e2e9f5; border-radius: 14px; background: #f5f7ff; }
+study-ad18-page .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 13px; margin-bottom: 17px; }
+study-ad18-page .section-heading h2 { margin: 0; color: #1a2942; font-size: 18px; overflow-wrap: anywhere; }
+study-ad18-page .section-heading h2 span { color: #244b99; font-variant-numeric: tabular-nums; }
+study-ad18-page .status-badge, study-ad18-page .api-badge { padding: 6px 10px; border-radius: 999px; color: #4e5f78; background: #e7ebf3; font-size: 11px; font-weight: 750; white-space: nowrap; }
+study-ad18-page .target-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; }
+study-ad18-page .target-grid > div { min-width: 0; min-height: 100px; padding: 16px; border: 1px solid #e8edf5; border-radius: 11px; background: #fff; }
+study-ad18-page .target-grid dt { color: #5f6d83; font-size: 11px; font-weight: 700; }
+study-ad18-page .target-grid dd { margin: 9px 0 0; color: #263751; font-size: 13px; font-weight: 650; line-height: 1.45; overflow-wrap: anywhere; }
+study-ad18-page .policy-card { display: flex; align-items: flex-start; gap: 13px; margin: 0 clamp(18px, 3.5vw, 34px); padding: 18px; border: 1px solid #f0d6d3; border-radius: 13px; background: #fff8f7; }
+study-ad18-page .policy-icon { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border-radius: 11px; color: #9d3e37; background: #ffe9e7; }
+study-ad18-page .policy-card h2 { margin: 1px 0 0; color: #2b3548; font-size: 14px; }
+study-ad18-page .policy-card p { margin: 6px 0 0; color: #5e6575; font-size: 12px; line-height: 1.65; }
+study-ad18-page .policy-card code { color: #9d3e37; font-size: 11px; }
+study-ad18-page .reason-field { display: grid; gap: 7px; margin: 8px clamp(18px, 3.5vw, 34px) 0; }
+study-ad18-page .reason-field label { color: #27364e; font-size: 13px; font-weight: 700; }
+study-ad18-page .reason-field > span { color: #68758c; font-size: 11px; }
+study-ad18-page .reason-field textarea { width: 100%; min-height: 98px; resize: vertical; padding: 13px 15px; border: 1px solid #dbe2ee; border-radius: 10px; color: #5d6c83; background: #f1f4f9; font: inherit; font-size: 12px; }
+study-ad18-page .reason-field textarea:disabled { cursor: not-allowed; opacity: 1; }
+study-ad18-page .reason-field textarea::placeholder { color: #7c8799; opacity: 1; }
+study-ad18-page .reason-field p { margin: 0; color: #647087; font-size: 11px; }
+study-ad18-page .delete-actions { display: flex; align-items: flex-start; justify-content: flex-end; gap: 14px; margin: 20px clamp(18px, 3.5vw, 34px) 26px; }
+study-ad18-page .confirm-action { display: grid; gap: 6px; max-width: 300px; }
+study-ad18-page .confirm-action button { min-height: 46px; padding: 10px 18px; border: 1px solid #e5b8b4; border-radius: 9px; color: #fff; background: #cf7772; font: inherit; font-size: 12px; font-weight: 750; cursor: not-allowed; opacity: .65; }
+study-ad18-page .confirm-action p { margin: 0; color: #8d4a45; font-size: 10px; line-height: 1.45; text-align: right; }
+study-ad18-page .source-boundary { display: flex; align-items: center; gap: 13px; padding: 15px 17px; border: 1px solid #dce7fa; border-radius: 13px; background: #f5f8ff; }
+study-ad18-page .boundary-icon { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border-radius: 11px; color: #1556d7; background: #e4ecff; }
+study-ad18-page .source-boundary > div { flex: 1 1 auto; }
+study-ad18-page .source-boundary strong { color: #203552; font-size: 12px; }
+study-ad18-page .source-boundary p { margin: 4px 0 0; color: #5d6c83; font-size: 12px; line-height: 1.5; }
+study-ad18-page .source-boundary > .api-badge { flex: 0 0 auto; }
+@media (max-width: 720px) {
+  study-ad18-page .quiz-delete { width: calc(100% - 32px); gap: 15px; padding-block: 15px 28px; }
+  study-ad18-page .delete-breadcrumbs { align-items: flex-start; flex-direction: column; }
+  study-ad18-page .target-grid { grid-template-columns: minmax(0, 1fr); }
+  study-ad18-page .target-grid > div { min-height: 84px; }
+  study-ad18-page .delete-actions { align-items: stretch; flex-direction: column-reverse; }
+  study-ad18-page .confirm-action { max-width: none; }
+  study-ad18-page .confirm-action p { text-align: left; }
+  study-ad18-page .cancel-link { align-self: flex-start; }
+  study-ad18-page .source-boundary { align-items: flex-start; padding: 13px; }
+  study-ad18-page .source-boundary > .api-badge { display: none; }
+}

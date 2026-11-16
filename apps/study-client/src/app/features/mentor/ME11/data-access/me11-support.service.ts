@@ -2,6 +2,7 @@ import { HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { STUDY_SERVER_APIS } from '../../../../core/constant/api.constants';
 import { type ApiEnvelope } from '../../../../core/http/api-envelope';
 import { StudyApiService } from '../../../../core/http/study-api.service';
 import {
@@ -19,8 +20,7 @@ export class Me11SupportService {
    */
   getMentorCourses(page = 1, size = 50): Observable<ApiEnvelope<Me11CoursePageDto>> {
     const params = new HttpParams().set('page', String(page)).set('size', String(size));
-    return this.api.request<Me11CoursePageDto>('mentor/courses', {
-      method: 'GET',
+    return this.api.request<Me11CoursePageDto>(STUDY_SERVER_APIS.API_046, {
       params,
     });
   }
@@ -42,8 +42,7 @@ export class Me11SupportService {
       params = params.set('status', query.status.trim());
     }
 
-    return this.api.request<SupportRequestItemDto[]>('mentor/support/requests', {
-      method: 'GET',
+    return this.api.request<SupportRequestItemDto[]>(STUDY_SERVER_APIS.API_058, {
       params,
     });
   }

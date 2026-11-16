@@ -1,0 +1,110 @@
+<main class="course-catalog page-width" data-screen-id="AD06">
+  <div class="catalog-breadcrumbs">
+    <nav aria-label="Đường dẫn khóa học">
+      <ol>
+        <li>Quản trị đào tạo</li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Danh sách khóa học</li>
+      </ol>
+    </nav>
+    <span class="api-badge">API #73</span>
+  </div>
+
+  <header class="catalog-heading">
+    <div>
+      <div class="catalog-title-row"><h1>{{ definition.title }}</h1><span class="catalog-version">DỮ LIỆU QUẢN TRỊ</span></div>
+      <p>{{ definition.description }}</p>
+    </div>
+    <div class="catalog-actions" aria-describedby="catalog-actions-note">
+      <button type="button" disabled><study-icon name="file" /> Xuất báo cáo</button>
+      <button type="button" disabled><study-icon name="book" /> Thêm khóa học mới</button>
+    </div>
+  </header>
+  <p class="control-note" id="catalog-actions-note"><study-icon name="info" /> API hiện tại không cung cấp tạo khóa học hoặc xuất danh mục.</p>
+
+  <section class="summary-grid" aria-label="Thông tin phân trang từ API #73" aria-live="polite">
+    <article class="summary-card"><span>TỔNG KẾT QUẢ</span><strong>{{ totalCount }}</strong><p>Theo phản hồi hiện tại</p><span class="summary-icon"><study-icon name="book" /></span></article>
+    <article class="summary-card"><span>BẢN GHI TRANG NÀY</span><strong>{{ currentResultCount }}</strong><p>Items trong trang hiện tại</p><span class="summary-icon summary-icon--warm"><study-icon name="database" /></span></article>
+    <article class="summary-card"><span>TRANG HIỆN TẠI</span><strong>{{ pageCount }}</strong><p>Pagination từ API #73</p><span class="summary-icon summary-icon--green"><study-icon name="layers" /></span></article>
+    <article class="summary-card"><span>KÍCH THƯỚC TRANG</span><strong>{{ pageSize }}</strong><p>Giá trị do server trả về</p><span class="summary-icon summary-icon--slate"><study-icon name="activity" /></span></article>
+  </section>
+
+  <section class="filter-panel" aria-labelledby="filters-heading">
+    <div class="filter-grid">
+      <label class="filter-field filter-field--locked" for="course-search">
+        <span>Tìm kiếm khóa học</span>
+        <span class="input-wrap"><study-icon name="search" /><input id="course-search" type="search" placeholder="API #73 chưa hỗ trợ tìm kiếm" disabled /></span>
+      </label>
+      <label class="filter-field" for="course-status">
+        <span>Trạng thái chính xác</span>
+        <input id="course-status" type="text" placeholder="Chờ từ điển trạng thái được duyệt" disabled />
+      </label>
+      <label class="filter-field" for="course-mentor">
+        <span>Mã mentor</span>
+        <input id="course-mentor" type="text" inputmode="numeric" placeholder="Chưa có nguồn chọn mentor" disabled />
+      </label>
+      <div class="locked-category" aria-disabled="true"><study-icon name="lock" /><span>Bộ lọc danh mục chưa được hỗ trợ</span></div>
+    </div>
+    <div class="filter-footer">
+      <div class="filter-status">
+        <p id="filters-heading"><strong>Bộ lọc chưa được bật</strong><span>Status và mentor cần giá trị được duyệt; category hiện trả lỗi 422.</span></p>
+        <p class="filter-summary" aria-label="Tiêu chí lọc đang áp dụng">
+          <span>Tiêu chí lọc đang áp dụng:</span>
+          <strong>Không có bộ lọc nào được gửi cùng yêu cầu API #73.</strong>
+        </p>
+      </div>
+      <div class="filter-actions">
+        <button type="button" disabled>Áp dụng bộ lọc</button>
+        <button type="button" disabled><study-icon name="refresh" /> Khôi phục mặc định</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="catalog-table-panel" aria-label="Danh sách khóa học">
+    <div class="table-scroll">
+      <table>
+        <caption class="visually-hidden">Danh sách khóa học quản trị từ API #73</caption>
+        <thead>
+          <tr><th scope="col">Mã định danh</th><th scope="col">Tên khóa học</th><th scope="col">Giảng viên hướng dẫn</th><th scope="col">Học phí</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr>
+        </thead>
+        <tbody>
+          @if (viewState().status === 'loading') {
+            <tr><td class="table-state" colspan="6" role="status"><span class="state-mark"><study-icon name="refresh" /></span><strong>Đang tải danh sách khóa học…</strong><span>Đang chờ phản hồi từ Study Server.</span></td></tr>
+          } @else if (viewState().status === 'error') {
+            <tr><td class="table-state table-state--error" colspan="6" role="alert"><span class="state-mark"><study-icon name="info" /></span><strong>Không thể tải danh sách khóa học</strong><span>{{ viewState().message }}</span></td></tr>
+          } @else if (isOutOfRange) {
+            <tr><td class="table-state" colspan="6"><span class="state-mark"><study-icon name="search" /></span><strong>Trang này không có bản ghi</strong><span>API trả về tổng số khóa học lớn hơn 0; trang hiện tại nằm ngoài phạm vi.</span><button class="state-action" type="button" (click)="changePage(1)">Về trang đầu</button></td></tr>
+          } @else if (isEmpty) {
+            <tr><td class="table-state" colspan="6"><span class="state-mark"><study-icon name="book" /></span><strong>Không tìm thấy khóa học</strong><span>API #73 trả về danh sách rỗng cho trang hiện tại.</span></td></tr>
+          } @else {
+            @for (row of viewState().rows ?? []; track row.values[0]) {
+              <tr>
+                <td class="course-id">{{ row.values[0] }}</td>
+                <td class="course-title"><strong>{{ row.values[1] }}</strong>@if (row.values[2] !== '—') { <span>{{ row.values[2] }}</span> }</td>
+                <td>{{ row.values[3] }}</td>
+                <td>{{ row.values[4] }}</td>
+                <td><span class="status-badge">{{ row.values[5] }}</span></td>
+                <td><a class="row-action" [routerLink]="row.route ?? '/admin/courses'"><span>Xem chi tiết</span><study-icon name="chevron" /></a></td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="source-note"><study-icon name="database" /><span>Nguồn dữ liệu: GET /api/v1/admin/courses · API #73 · thứ tự ID tăng dần</span></div>
+    <div class="pagination-bar">
+      <p>
+        @if (viewState().status === 'loaded') {
+          Hiển thị <strong>{{ currentResultCount }}</strong> trên <strong>{{ totalCount }}</strong> khóa học.
+        } @else {
+          Số lượng chỉ hiển thị sau khi API tải thành công.
+        }
+      </p>
+      <div class="pagination-controls" aria-label="Phân trang khóa học">
+        <button type="button" [disabled]="previousDisabled" (click)="changePage((viewState().pagination?.page ?? 1) - 1)"><study-icon name="chevron" /> Trang trước</button>
+        <span aria-live="polite">{{ pageCount }}</span>
+        <button type="button" [disabled]="nextDisabled" (click)="changePage((viewState().pagination?.page ?? 0) + 1)">Trang sau <study-icon name="chevron" /></button>
+      </div>
+    </div>
+  </section>
+</main>

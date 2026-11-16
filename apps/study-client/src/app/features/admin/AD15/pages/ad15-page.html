@@ -1,0 +1,103 @@
+<main class="quiz-catalog page-width" data-screen-id="AD15">
+  <div class="catalog-breadcrumbs">
+    <nav aria-label="Đường dẫn bài kiểm tra">
+      <ol><li>Quản trị đào tạo</li><li aria-hidden="true">›</li><li aria-current="page">Quản lý bài kiểm tra</li></ol>
+    </nav>
+    <span class="api-badge">API #87</span>
+  </div>
+
+  <header class="catalog-heading">
+    <div>
+      <p class="catalog-eyebrow">QUIZ MANAGEMENT</p>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+    </div>
+    <a class="create-link" routerLink="/admin/quizzes/new"><span class="plus-mark" aria-hidden="true">+</span> Tạo bài kiểm tra</a>
+  </header>
+
+  <section class="filter-panel" aria-labelledby="filter-heading">
+    <div class="filter-panel-heading">
+      <h2 id="filter-heading"><study-icon name="filter" /> Bộ lọc danh sách</h2>
+      <span class="source-badge">Metadata Quiz</span>
+    </div>
+    <form class="filter-grid" aria-label="Bộ lọc bài kiểm tra" (submit)="submitFilters($event)">
+      <label for="quiz-course">
+        <span>Mã khóa học</span>
+        <input id="quiz-course" type="text" inputmode="numeric" placeholder="ID khóa học (int64)" [value]="filterCourse()" (input)="setFilterCourse($any($event.target).value)" [disabled]="viewState().status === 'loading'" />
+      </label>
+      <label for="quiz-status">
+        <span>Trạng thái chính xác</span>
+        <input id="quiz-status" type="text" placeholder="Giá trị status của server" [value]="filterStatus()" (input)="setFilterStatus($any($event.target).value)" [disabled]="viewState().status === 'loading'" />
+      </label>
+      <div class="filter-actions">
+        <button class="apply-button" type="submit" [disabled]="viewState().status === 'loading'"><study-icon name="search" /> Áp dụng</button>
+        <button class="clear-button" type="button" (click)="clearFilters()" [disabled]="viewState().status === 'loading'">Xóa lọc</button>
+      </div>
+    </form>
+    <p class="filter-note"><study-icon name="info" /> Bộ lọc gửi chính xác `course` và `status`; không có bộ lọc tìm kiếm theo từ khóa.</p>
+  </section>
+
+  <section class="quiz-table-panel" aria-label="Danh sách bài kiểm tra">
+    <div class="table-scroll" role="region" aria-label="Bảng metadata bài kiểm tra" tabindex="0">
+      <table>
+        <caption class="visually-hidden">Metadata bài kiểm tra trả về từ API #87</caption>
+        <thead><tr><th scope="col">Mã bài kiểm tra</th><th scope="col">Tên bài kiểm tra</th><th scope="col">Mã khóa học</th><th scope="col">Thời lượng (phút)</th><th scope="col">Điểm đạt</th><th scope="col">Thống kê</th></tr></thead>
+        <tbody>
+          @if (viewState().status === 'loading') {
+            <tr><td class="table-state" colspan="6" role="status"><span class="state-mark"><study-icon name="refresh" /></span><strong>Đang tải danh sách bài kiểm tra…</strong><span>Đang chờ phản hồi từ Study Server.</span></td></tr>
+          } @else if (viewState().status === 'error') {
+            <tr><td class="table-state table-state--error" colspan="6" role="alert"><span class="state-mark"><study-icon name="info" /></span><strong>Không thể tải danh sách bài kiểm tra</strong><span>{{ viewState().message }}</span></td></tr>
+          } @else if ((viewState().rows?.length ?? 0) === 0) {
+            <tr><td class="table-state" colspan="6"><span class="state-mark"><study-icon name="book" /></span><strong>Không có bài kiểm tra phù hợp</strong><span>API #87 trả về trang rỗng cho bộ lọc hiện tại.</span></td></tr>
+          } @else {
+            @for (row of viewState().rows ?? []; track row.values[0]) {
+              <tr>
+                <td class="quiz-id">{{ row.values[0] }}</td>
+                <td class="quiz-title"><strong>{{ row.values[1] }}</strong></td>
+                <td class="quiz-id">{{ row.values[2] }}</td>
+                <td>{{ row.values[3] }}</td>
+                <td>{{ row.values[4] }}</td>
+                <td>
+                  @if (row.route) {
+                    <a class="row-action" [routerLink]="row.route">Thống kê <study-icon name="chevron" /></a>
+                  } @else {
+                    <button class="row-action" type="button" disabled aria-label="Không thể mở thống kê do mã bài kiểm tra vượt khả năng biểu diễn an toàn"><span>Không thể mở</span></button>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (viewState().status === 'loaded') {
+      <div class="pagination-bar">
+        <p>
+          @if (viewState().pagination; as pagination) {
+            <strong>{{ pagination.total }}</strong> bài kiểm tra phù hợp
+            @if (pagination.totalPages > 0) { · Trang <strong>{{ pagination.page }} / {{ pagination.totalPages }}</strong> }
+          } @else {
+            Response không có metadata phân trang.
+          }
+        </p>
+        @if (viewState().pagination; as pagination) {
+          @if (pagination.totalPages > 0) {
+            <div class="pagination-controls" aria-label="Phân trang bài kiểm tra">
+              <button type="button" (click)="changePage(pagination.page - 1)" [disabled]="pagination.page <= 1"><study-icon name="chevron" /> Trước</button>
+              <span>Trang {{ pagination.page }}</span>
+              <button type="button" (click)="changePage(pagination.page + 1)" [disabled]="pagination.page >= pagination.totalPages">Sau <study-icon name="chevron" /></button>
+            </div>
+          }
+        }
+      </div>
+    }
+    <div class="source-note"><study-icon name="database" /><span>Nguồn: GET /api/v1/admin/quizzes · #87 · page size 20</span></div>
+  </section>
+
+  <aside class="data-boundary">
+    <span class="boundary-icon"><study-icon name="shield" /></span>
+    <div><strong>Metadata danh sách hiện có</strong><p>API trả ID, tiêu đề, mã khóa học, thời lượng và điểm đạt. API không trả trạng thái Quiz hoặc danh sách câu hỏi thực tế; mảng `questions` rỗng không phải số câu hỏi.</p></div>
+    <span class="source-badge">Page&lt;Quiz&gt;</span>
+  </aside>
+</main>

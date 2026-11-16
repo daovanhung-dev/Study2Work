@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { STUDY_SERVER_APIS } from '../../../../core/constant/api.constants';
 import { type ApiEnvelope } from '../../../../core/http/api-envelope';
 import { StudyApiService } from '../../../../core/http/study-api.service';
 import {
@@ -16,8 +17,8 @@ export class Me12ThreadService {
    * API #59 — GET /api/v1/mentor/support/{request_id}
    */
   getSupportRequestDetail(requestId: number): Observable<ApiEnvelope<SupportRequestDetailDto>> {
-    return this.api.request<SupportRequestDetailDto>(`mentor/support/${requestId}`, {
-      method: 'GET',
+    return this.api.request<SupportRequestDetailDto>(STUDY_SERVER_APIS.API_059, {
+      pathParams: { request_id: requestId },
     });
   }
 
@@ -28,8 +29,8 @@ export class Me12ThreadService {
     requestId: number,
     payload: ReplySupportRequestDto,
   ): Observable<ApiEnvelope<SupportRequestDetailDto>> {
-    return this.api.request<SupportRequestDetailDto>(`mentor/support/${requestId}/reply`, {
-      method: 'POST',
+    return this.api.request<SupportRequestDetailDto>(STUDY_SERVER_APIS.API_060, {
+      pathParams: { request_id: requestId },
       body: payload,
     });
   }
@@ -38,8 +39,8 @@ export class Me12ThreadService {
    * API #61 — PATCH /api/v1/mentor/support/{request_id}/resolve
    */
   resolveRequest(requestId: number): Observable<ApiEnvelope<SupportRequestDetailDto>> {
-    return this.api.request<SupportRequestDetailDto>(`mentor/support/${requestId}/resolve`, {
-      method: 'PATCH',
+    return this.api.request<SupportRequestDetailDto>(STUDY_SERVER_APIS.API_061, {
+      pathParams: { request_id: requestId },
     });
   }
 }

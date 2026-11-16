@@ -1,0 +1,170 @@
+<main class="quiz-builder page-width" data-screen-id="AD16">
+  <nav class="builder-breadcrumbs" aria-label="Đường dẫn thiết lập bài kiểm tra">
+    <ol>
+      <li>Quản lý khảo thí</li>
+      <li aria-hidden="true">›</li>
+      <li><a routerLink="/admin/quizzes">Danh sách bài kiểm tra</a></li>
+      <li aria-hidden="true">›</li>
+      <li aria-current="page">{{ isEditMode ? 'Chỉnh sửa bài kiểm tra' : 'Thiết lập bài kiểm tra' }}</li>
+    </ol>
+    <span class="source-badge">API #88 / #89 · Chưa gửi dữ liệu</span>
+  </nav>
+
+  <header class="builder-heading">
+    <div>
+      <p class="builder-eyebrow">QUIZ BUILDER</p>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+      @if (isEditMode) {
+        <p class="route-id">Quiz ID từ đường dẫn: <code>{{ quizId }}</code></p>
+      }
+    </div>
+    <a class="back-link" routerLink="/admin/quizzes">
+      <study-icon name="chevron" />
+      Danh sách bài kiểm tra (AD-15)
+    </a>
+  </header>
+
+  <aside class="builder-notice" aria-labelledby="builder-notice-heading">
+    <span class="notice-icon"><study-icon name="info" /></span>
+    <div>
+      <strong id="builder-notice-heading">Biểu mẫu ở chế độ nháp trong trang</strong>
+      <p>Giá trị nhập ở chế độ tạo mới chỉ nằm trong bộ nhớ của trang hiện tại. Chưa có autosave hoặc thao tác lưu tới Study Server.</p>
+    </div>
+    <span class="notice-tag">LOCAL ONLY</span>
+  </aside>
+
+  @if (isEditMode) {
+    <section class="edit-blocker" role="status" aria-live="polite">
+      <span class="notice-icon"><study-icon name="info" /></span>
+      <div>
+        <strong>Chưa thể nạp dữ liệu để chỉnh sửa Quiz này</strong>
+        <p>Study Server chưa có API GET chi tiết gồm cấu hình, câu hỏi và đáp án. Các trường bên dưới được khóa để tránh thay thế dữ liệu hiện hữu bằng biểu mẫu trống.</p>
+      </div>
+    </section>
+  }
+
+  <div class="builder-grid">
+    <section class="builder-card config-card" aria-labelledby="config-heading">
+      <div class="section-heading">
+        <div class="section-title">
+          <span class="heading-icon" aria-hidden="true">≡</span>
+          <h2 id="config-heading">Cấu hình chung bài thi</h2>
+        </div>
+        <span class="section-part">PHẦN 1 / 2</span>
+      </div>
+
+      <div class="field-stack">
+        <label class="field-group" for="quiz-title">
+          <span class="field-label">Tên bài kiểm tra <span class="required-mark" aria-hidden="true">*</span></span>
+          <input
+            id="quiz-title"
+            name="title"
+            type="text"
+            autocomplete="off"
+            placeholder="Nhập tên bài thi trắc nghiệm..."
+            [value]="titleDraft"
+            [disabled]="isEditMode"
+            (input)="updateDraft('titleDraft', $event)" />
+          <span class="field-help">{{ isEditMode ? 'Đang khóa vì chưa có nguồn nạp dữ liệu chỉnh sửa.' : 'Bản nháp chỉ tồn tại trong trang này; chưa có quy tắc kiểm tra được phê duyệt.' }}</span>
+        </label>
+
+        <label class="field-group" for="quiz-course">
+          <span class="field-label">Khóa học áp dụng <span class="required-mark" aria-hidden="true">*</span></span>
+          <select id="quiz-course" name="course" disabled>
+            <option value="">Danh sách khóa học chưa có nguồn xác nhận</option>
+          </select>
+          <span class="field-help">Không có API danh mục khóa học được xác nhận cho màn hình này.</span>
+        </label>
+
+        <div class="number-fields">
+          <label class="field-group" for="quiz-duration">
+            <span class="field-label">Thời gian làm bài (phút)</span>
+            <span class="input-suffix">
+              <input
+                id="quiz-duration"
+                name="duration"
+                type="number"
+                step="1"
+                inputmode="numeric"
+                placeholder="--"
+                [value]="durationDraft"
+                [disabled]="isEditMode"
+                (input)="updateDraft('durationDraft', $event)" />
+              <span aria-hidden="true">phút</span>
+            </span>
+            <span class="field-help">Để trống nếu không giới hạn; giá trị chưa được lưu hoặc kiểm tra.</span>
+          </label>
+
+          <label class="field-group" for="quiz-passing-score">
+            <span class="field-label">Điểm đạt yêu cầu (%)</span>
+            <span class="input-suffix">
+              <input
+                id="quiz-passing-score"
+                name="passingScore"
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                placeholder="--"
+                [value]="passingScoreDraft"
+                [disabled]="isEditMode"
+                (input)="updateDraft('passingScoreDraft', $event)" />
+              <span aria-hidden="true">%</span>
+            </span>
+            <span class="field-help">Chưa có miền giá trị business được xác nhận.</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="draft-note">
+        <span class="draft-mark" aria-hidden="true">✓</span>
+        <div>
+          <strong>Bản nháp cục bộ</strong>
+          <p>Không có cơ chế tự động lưu. Rời trang sẽ xóa các giá trị vừa nhập.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="builder-card questions-card" aria-labelledby="questions-heading">
+      <div class="section-heading">
+        <div class="section-title">
+          <span class="heading-icon" aria-hidden="true">□</span>
+          <h2 id="questions-heading">Ngân hàng câu hỏi &amp; Đáp án</h2>
+        </div>
+        <span class="section-part">PHẦN 2 / 2</span>
+      </div>
+
+      <div class="schema-note">
+        <study-icon name="info" />
+        <p>Contract hiện chưa xác nhận cấu trúc câu hỏi, lựa chọn và thang điểm chi tiết.</p>
+      </div>
+
+      <div class="questions-empty">
+        <span class="empty-icon" aria-hidden="true">▤</span>
+        <h3>Chưa có câu hỏi nào được thêm vào bài kiểm tra</h3>
+        <p>Chưa có Question Builder để tạo câu hỏi và đáp án phù hợp với payload được duyệt.</p>
+        <button class="button button--add" type="button" disabled>
+          <span aria-hidden="true">＋</span>
+          Thêm câu hỏi
+          <span class="locked-tag">Chưa khả dụng</span>
+        </button>
+      </div>
+
+      <div class="builder-gate">
+        <study-icon name="info" />
+        <p>#88 cần hai chuỗi JSON; cấu trúc lồng hiện có trong server là fallback DERIVED. #89 không có body trong catalog, trong khi local handler thay thế toàn bộ câu hỏi và từ chối Quiz có lịch sử làm bài.</p>
+      </div>
+    </section>
+  </div>
+
+  <footer class="builder-actions">
+    <p><study-icon name="info" /> Lưu và thêm câu hỏi đang khóa cho tới khi contract và nguồn dữ liệu chỉnh sửa được chốt.</p>
+    <div class="action-buttons">
+      <a class="button button--quiet" routerLink="/admin/quizzes">Hủy bỏ</a>
+      <button class="button button--primary" type="button" disabled>
+        <span aria-hidden="true">▣</span>
+        Lưu bài kiểm tra
+      </button>
+    </div>
+  </footer>
+</main>

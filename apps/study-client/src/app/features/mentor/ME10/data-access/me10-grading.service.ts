@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { STUDY_SERVER_APIS } from '../../../../core/constant/api.constants';
 import { type ApiEnvelope } from '../../../../core/http/api-envelope';
 import { StudyApiService } from '../../../../core/http/study-api.service';
 import {
@@ -17,8 +18,8 @@ export class Me10GradingService {
    * API #55 — GET /api/v1/mentor/submissions/{submission_id}
    */
   getSubmissionDetail(submissionId: number): Observable<ApiEnvelope<SubmissionDetailDto>> {
-    return this.api.request<SubmissionDetailDto>(`mentor/submissions/${submissionId}`, {
-      method: 'GET',
+    return this.api.request<SubmissionDetailDto>(STUDY_SERVER_APIS.API_055, {
+      pathParams: { submission_id: submissionId },
     });
   }
 
@@ -29,8 +30,8 @@ export class Me10GradingService {
     submissionId: number,
     payload: GradeSubmissionRequestDto,
   ): Observable<ApiEnvelope<SubmissionDetailDto>> {
-    return this.api.request<SubmissionDetailDto>(`mentor/submissions/${submissionId}/grade`, {
-      method: 'POST',
+    return this.api.request<SubmissionDetailDto>(STUDY_SERVER_APIS.API_056, {
+      pathParams: { submission_id: submissionId },
       body: payload,
     });
   }
@@ -42,8 +43,8 @@ export class Me10GradingService {
     submissionId: number,
     payload: FeedbackSubmissionRequestDto,
   ): Observable<ApiEnvelope<SubmissionDetailDto>> {
-    return this.api.request<SubmissionDetailDto>(`mentor/submissions/${submissionId}/feedback`, {
-      method: 'POST',
+    return this.api.request<SubmissionDetailDto>(STUDY_SERVER_APIS.API_057, {
+      pathParams: { submission_id: submissionId },
       body: payload,
     });
   }

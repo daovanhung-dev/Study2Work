@@ -1,20 +1,50 @@
-:host,
-.dashboard-shell {
+:host {
   display: block;
   min-height: 100vh;
   background: var(--page-background);
 }
 
-.page-width {
-  width: min(100% - 64px, 1200px);
-  margin-inline: auto;
-}
-
 .main-content {
   display: flex;
   flex-direction: column;
-  gap: 26px;
-  padding-block: 26px 40px;
+  gap: 38px;
+  padding-block: 35px 40px;
+}
+
+.screen-context {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  list-style: none;
+}
+
+.breadcrumbs li:last-child {
+  color: var(--text-primary);
+  font-weight: 650;
+}
+
+.context-status {
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: var(--text-muted);
+  background: var(--ocean-soft);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
 .hero {
@@ -22,7 +52,8 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  padding: 26px;
+  min-height: 163px;
+  padding: 27px 30px;
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--surface);
@@ -36,7 +67,7 @@
 .eyebrow {
   margin: 0 0 8px;
   color: var(--ocean-primary);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -50,7 +81,7 @@ p {
 h1 {
   margin: 0;
   color: var(--ocean-deep);
-  font-size: clamp(26px, 3vw, 34px);
+  font-size: clamp(28px, 3vw, 38px);
   font-weight: 720;
   letter-spacing: -0.035em;
   line-height: 1.2;
@@ -59,7 +90,7 @@ h1 {
 .hero-description {
   margin: 10px 0 0;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .hero-controls {
@@ -73,7 +104,7 @@ h1 {
 
 .period-control {
   display: flex;
-  min-height: 44px;
+  min-height: 56px;
   align-items: center;
   gap: 2px;
   padding: 3px;
@@ -84,19 +115,19 @@ h1 {
 
 .period-control button,
 .refresh-button {
-  min-height: 44px;
+  min-height: 52px;
   border: 1px solid transparent;
   border-radius: 8px;
   color: var(--text-muted);
   background: transparent;
   font: inherit;
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 650;
   white-space: nowrap;
 }
 
 .period-control button {
-  padding: 8px 9px;
+  padding: 8px 12px;
 }
 
 .period-control button:disabled {
@@ -109,7 +140,7 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  padding: 8px 12px;
+  padding: 8px 15px;
   border-color: var(--border);
   color: var(--ocean-primary);
   background: var(--surface);
@@ -130,39 +161,12 @@ h1 {
   white-space: nowrap;
 }
 
-.page-footer {
-  border-top: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.footer-content {
-  display: flex;
-  min-height: 66px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  color: var(--text-muted);
-  font-size: 9px;
-}
-
-.footer-content p {
-  margin: 0;
-}
-
-.footer-content nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
 @media (max-width: 1023px) {
-  .page-width {
-    width: min(100% - 48px, 880px);
-  }
-
   .hero {
     align-items: flex-start;
     flex-direction: column;
+    min-height: 0;
+    padding: 17px;
   }
 
   .hero-controls {
@@ -171,18 +175,28 @@ h1 {
 }
 
 @media (max-width: 767px) {
-  .page-width {
-    width: calc(100% - 32px);
-  }
-
   .main-content {
     gap: 21px;
     padding-block: 20px 32px;
   }
 
+  .screen-context {
+    align-items: flex-start;
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+
+  .breadcrumbs {
+    gap: 7px;
+    font-size: 12px;
+  }
+
+  .context-status {
+    font-size: 11px;
+  }
+
   .hero {
     align-items: flex-start;
-    padding: 17px;
   }
 
   .hero-controls,
@@ -204,14 +218,4 @@ h1 {
     flex: 1 1 100%;
   }
 
-  .footer-content {
-    align-items: flex-start;
-    flex-direction: column;
-    justify-content: center;
-    padding-block: 15px;
-  }
-
-  .footer-content nav {
-    gap: 8px 13px;
-  }
 }

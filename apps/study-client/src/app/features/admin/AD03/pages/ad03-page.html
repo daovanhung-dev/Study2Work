@@ -1,0 +1,84 @@
+<main class="page-width user-detail-page" data-screen-id="AD03">
+  <div class="detail-toolbar">
+    <nav aria-label="Đường dẫn người dùng">
+      <ol>
+        <li>Quản trị người dùng</li>
+        <li aria-hidden="true">›</li>
+        <li>Danh sách tài khoản</li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Chi tiết tài khoản</li>
+      </ol>
+    </nav>
+    <span class="api-state">API #69 · {{ viewState().status === 'loaded' ? 'Đã tải' : 'Chưa sẵn sàng' }}</span>
+  </div>
+
+  <a class="back-link" routerLink="/admin/users">
+    <study-icon name="chevron" />
+    <span>Quay lại danh sách người dùng (AD-02)</span>
+  </a>
+
+  <header class="detail-hero">
+    <span class="hero-icon"><study-icon name="users" /></span>
+    <div>
+      <h1>Hồ sơ chi tiết tài khoản</h1>
+      <p>Xem thông tin định danh, vai trò và trạng thái tài khoản từ API quản trị.</p>
+    </div>
+    <span class="screen-id">Mã màn hình: AD-03</span>
+  </header>
+
+  <div class="detail-grid">
+    <section class="panel identity-panel" aria-labelledby="identity-heading">
+      <header class="panel-heading">
+        <h2 id="identity-heading"><study-icon name="person" /> Thông tin định danh và liên hệ</h2>
+        <span class="sync-badge">API #69</span>
+      </header>
+
+      @if (viewState().status === 'loading') {
+        <p class="state-notice" role="status">Đang tải hồ sơ người dùng…</p>
+      } @else if (viewState().status === 'error') {
+        <p class="state-notice" role="alert">{{ viewState().message }}</p>
+      }
+
+      @if (viewState().status === 'loaded') {
+        <dl class="identity-list">
+          @for (field of identityFields; track field.label) {
+            <div class="identity-row">
+              <dt>{{ field.label }}</dt>
+              <dd>{{ field.value }}</dd>
+            </div>
+          }
+        </dl>
+      } @else {
+        <div class="identity-list identity-list--unavailable" aria-label="Thông tin chưa tải">
+          @for (field of identityFields; track field.label) {
+            <div class="identity-row"><dt>{{ field.label }}</dt><dd>—</dd></div>
+          }
+        </div>
+      }
+      <p class="source-note">Nguồn hiện không cung cấp nhật ký kiểm toán, lịch sử phiên hoặc trạng thái đồng bộ.</p>
+    </section>
+
+    <div class="detail-side-column">
+      <section class="panel admin-actions" aria-labelledby="admin-actions-heading">
+        <header class="panel-heading"><h2 id="admin-actions-heading"><study-icon name="shield" /> Hành động quản trị</h2></header>
+        @if (userId) {
+          <a class="action-link" [routerLink]="['/admin/users', userId, 'edit']">Chỉnh sửa thông tin (AD-04)</a>
+          <a class="action-link action-link--muted" [routerLink]="['/admin/users', userId, 'actions']">Khóa hoặc thay đổi trạng thái (AD-05)</a>
+        } @else {
+          <button class="action-link" type="button" disabled>Chỉnh sửa thông tin (AD-04)</button>
+          <button class="action-link action-link--muted" type="button" disabled>Khóa hoặc thay đổi trạng thái (AD-05)</button>
+        }
+        <p class="action-note">Các thay đổi chỉ được thực hiện qua contract và quyền đã xác nhận ở màn hình tương ứng.</p>
+      </section>
+
+      <section class="panel activity-panel" aria-labelledby="activity-heading">
+        <header class="panel-heading"><h2 id="activity-heading"><study-icon name="info" /> Hoạt động gần đây</h2></header>
+        <div class="activity-empty" role="status">
+          <span class="activity-icon"><study-icon name="info" /></span>
+          <strong>Không có nguồn lịch sử hoạt động</strong>
+          <p>API #69 chỉ trả hồ sơ người dùng; không có API nhật ký trong contract hiện tại.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>

@@ -1,0 +1,92 @@
+<main class="discussion-detail page-width" data-screen-id="AD23">
+  <div class="detail-breadcrumbs">
+    <nav aria-label="Đường dẫn kiểm duyệt thảo luận">
+      <ol><li>Kiểm duyệt cộng đồng</li><li aria-hidden="true">›</li><li><a routerLink="/admin/discussions/reported">Thảo luận được báo cáo</a></li><li aria-hidden="true">›</li><li aria-current="page">Chi tiết</li></ol>
+    </nav>
+    <span class="api-badge">API #98</span>
+  </div>
+
+  <header class="detail-heading">
+    <div>
+      <p class="detail-eyebrow">DISCUSSION REVIEW</p>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+    </div>
+    <a class="back-link" routerLink="/admin/discussions/reported"><study-icon name="chevron" /> Hàng đợi báo cáo</a>
+  </header>
+
+  @if (viewState().status === 'loading') {
+    <section class="detail-state" role="status" aria-live="polite">
+      <span class="state-icon"><study-icon name="refresh" /></span>
+      <strong>Đang tải thảo luận…</strong>
+      <span>Đang chờ phản hồi từ Study Server.</span>
+    </section>
+  } @else if (viewState().status === 'error') {
+    <section class="detail-state detail-state--error" role="alert">
+      <span class="state-icon"><study-icon name="info" /></span>
+      <strong>Không thể tải thảo luận</strong>
+      <span>{{ viewState().message }}</span>
+      <a routerLink="/admin/discussions/reported">Quay về hàng đợi</a>
+    </section>
+  } @else {
+    <article class="discussion-card">
+      <div class="discussion-card-heading">
+        <span class="discussion-id">Mã {{ valueFor('Mã thảo luận') }}</span>
+        <span class="discussion-status">{{ valueFor('Trạng thái') }}</span>
+      </div>
+      <p class="title-source">Tiêu đề được dựng từ nội dung</p>
+      <h2>{{ valueFor('Tiêu đề') }}</h2>
+      <p class="discussion-content">{{ valueFor('Nội dung') }}</p>
+
+      <dl class="discussion-metadata">
+        <div><dt>Tác giả</dt><dd>{{ valueFor('Tác giả') }}</dd></div>
+        <div><dt>Mã khóa học</dt><dd>{{ valueFor('Mã khóa học') }}</dd></div>
+      </dl>
+    </article>
+
+    <section class="comments-panel" aria-labelledby="comments-heading">
+      <div class="section-heading">
+        <div>
+          <p class="detail-eyebrow">DIRECT REPLIES</p>
+          <h2 id="comments-heading">Bình luận trực tiếp <span>{{ comments.length }}</span></h2>
+        </div>
+        <span class="source-badge">API #98</span>
+      </div>
+      @if (comments.length === 0) {
+        <div class="comments-empty"><study-icon name="info" /><span>API #98 không trả bình luận trực tiếp cho thảo luận này.</span></div>
+      } @else {
+        <ol class="comment-list">
+          @for (comment of comments; track $index) {
+            <li><p>{{ comment }}</p></li>
+          }
+        </ol>
+      }
+    </section>
+
+    <section class="action-panel" aria-labelledby="actions-heading">
+      <div class="section-heading">
+        <div>
+          <p class="detail-eyebrow">MODERATION ACTIONS</p>
+          <h2 id="actions-heading">Tác vụ kiểm duyệt</h2>
+        </div>
+        <span class="source-badge">Chưa mở</span>
+      </div>
+      <div class="action-list">
+        @for (action of definition.actions ?? []; track action.label) {
+          <div class="action-item" [class.action-item--destructive]="action.destructive">
+            <button type="button" disabled>{{ action.label }}</button>
+            <p>{{ action.reason }}</p>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <aside class="data-boundary">
+    <span class="boundary-icon"><study-icon name="shield" /></span>
+    <div><strong>Giới hạn của API #98</strong><p>Response có Discussion và các bình luận con trực tiếp. Không có report relation, report reason/severity/reporter, audit context hoặc policy action. Các nút kiểm duyệt vẫn bị khóa.</p></div>
+    <span class="source-badge">Chỉ đọc</span>
+  </aside>
+
+  <div class="source-note"><study-icon name="database" /><span>Nguồn: GET /api/v1/admin/discussions/&#123;discussion_id&#125; · API #98 · Page một phần tử</span></div>
+</main>

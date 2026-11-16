@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { forkJoin, map, Observable, of } from 'rxjs';
+import { STUDY_SERVER_APIS } from '../../../../core/constant/api.constants';
 import { StudyApiService } from '../../../../core/http/study-api.service';
 import {
   NotificationStatusItemVm,
@@ -11,12 +12,12 @@ export class Me15NotificationStatusService {
   private readonly api = inject(StudyApiService);
 
   /**
-   * API #64: GET /api/v1/mentor/notifications/:notificationId/status
+   * API #64: GET /api/v1/mentor/notifications/{notification_id}/status
    */
   getNotificationStatus(notificationId: number): Observable<NotificationStatusOperationDto> {
     return this.api
-      .request<NotificationStatusOperationDto>(`mentor/notifications/${notificationId}/status`, {
-        method: 'GET',
+      .request<NotificationStatusOperationDto>(STUDY_SERVER_APIS.API_064, {
+        pathParams: { notification_id: notificationId },
       })
       .pipe(map((envelope) => envelope.data));
   }

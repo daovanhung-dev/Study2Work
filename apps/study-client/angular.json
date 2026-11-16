@@ -50,7 +50,31 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.css"]
+            "styles": [
+              "src/styles.css",
+              "src/app/shared/ui/admin-screen-surface.css",
+              "src/app/shared/ui/admin-detail-page.css",
+              "src/app/features/admin/AD04/pages/ad04-page.css",
+              "src/app/features/admin/AD05/pages/ad05-page.css",
+              "src/app/features/admin/AD06/pages/ad06-page.css",
+              "src/app/features/admin/AD08/pages/ad08-page.css",
+              "src/app/features/admin/AD09/pages/ad09-page.css",
+              "src/app/features/admin/AD10/pages/ad10-page.css",
+              "src/app/features/admin/AD12/pages/ad12-page.css",
+              "src/app/features/admin/AD14/pages/ad14-page.css",
+              "src/app/features/admin/AD15/pages/ad15-page.css",
+              "src/app/features/admin/AD16/pages/ad16-page.css",
+              "src/app/features/admin/AD17/pages/ad17-page.css",
+              "src/app/features/admin/AD18/pages/ad18-page.css",
+              "src/app/features/admin/AD19/pages/ad19-page.css",
+              "src/app/features/admin/AD20/pages/ad20-page.css",
+              "src/app/features/admin/AD21/pages/ad21-page.css",
+              "src/app/features/admin/AD22/pages/ad22-page.css",
+              "src/app/features/admin/AD23/pages/ad23-page.css",
+              "src/app/features/admin/AD24/pages/ad24-page.css",
+              "src/app/features/admin/AD11/pages/ad11-page.css",
+              "src/app/features/admin/AD25/pages/ad25-page.css"
+            ]
           },
           "configurations": {
             "production": {

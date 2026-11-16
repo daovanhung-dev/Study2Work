@@ -1,0 +1,99 @@
+<main class="admin-detail-page course-detail-page page-width" data-screen-id="AD07">
+  <div class="detail-toolbar">
+    <nav aria-label="Đường dẫn khóa học">
+      <ol>
+        <li>Quản trị đào tạo</li>
+        <li aria-hidden="true">›</li>
+        <li><a routerLink="/admin/courses">Danh sách khóa học</a></li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Chi tiết khóa học</li>
+      </ol>
+    </nav>
+    <a class="back-link" routerLink="/admin/courses">
+      <study-icon name="chevron" />
+      <span>Quay lại danh sách khóa học (AD-06)</span>
+    </a>
+  </div>
+
+  <header class="detail-hero">
+    <div class="hero-copy">
+      <div class="hero-tags"><span>API #74</span><span>Screen ID: AD-07</span></div>
+      <h1>Hồ sơ chi tiết khóa học quản trị</h1>
+      <p>Thông tin khóa học và giảng viên phụ trách theo dữ liệu Study Server.</p>
+    </div>
+    <span class="sync-status" role="status" aria-live="polite">
+      <span class="status-dot" aria-hidden="true"></span>
+      @if (viewState().status === 'loading') {
+        Đang tải khóa học
+      } @else if (viewState().status === 'loaded') {
+        Đã tải dữ liệu khóa học
+      } @else {
+        Chưa tải được dữ liệu
+      }
+    </span>
+  </header>
+
+  <div class="detail-columns">
+    <div class="detail-main-column">
+      <section class="panel" aria-labelledby="course-overview-heading">
+        <header class="panel-heading">
+          <div class="heading-title"><span class="heading-icon"><study-icon name="book" /></span><div><h2 id="course-overview-heading">Thông tin tổng quan khóa học</h2><p>Các trường được ánh xạ trực tiếp từ API #74</p></div></div>
+          <span class="panel-badge">METADATA</span>
+        </header>
+
+        @if (viewState().status === 'loading') {
+          <p class="state-notice" role="status">Đang tải hồ sơ khóa học…</p>
+        } @else if (viewState().status === 'error') {
+          <p class="state-notice state-notice--error" role="alert">{{ viewState().message }}</p>
+          <div class="empty-state">
+            <span class="empty-icon"><study-icon name="book" /></span>
+            <div><strong>Chưa có hồ sơ khóa học để hiển thị</strong><p>Kiểm tra lại mã khóa học hoặc quay về danh sách để chọn một bản ghi.</p></div>
+            <a class="primary-link" routerLink="/admin/courses">Mở danh sách AD-06</a>
+          </div>
+        } @else {
+          <dl class="field-grid">
+            @for (field of courseFields; track field.label) {
+              <div class="field-card" [class.field-card--wide]="field.label === 'Tên khóa học' || field.label === 'URL ảnh bìa'">
+                <dt>{{ field.label }}</dt>
+                <dd [class.status-value]="field.label === 'Trạng thái phát hành'">{{ field.value }}</dd>
+              </div>
+            }
+            <div class="field-card field-card--wide description-card">
+              <dt>Mô tả</dt>
+              <dd>{{ description }}</dd>
+            </div>
+          </dl>
+        }
+      </section>
+
+      <section class="panel" aria-labelledby="curriculum-heading">
+        <header class="panel-heading">
+          <div class="heading-title"><span class="heading-icon"><study-icon name="layers" /></span><div><h2 id="curriculum-heading">Cấu trúc chương trình &amp; bài giảng</h2><p>Nội dung cấu trúc chưa có trong phản hồi của API #74</p></div></div>
+          <span class="panel-badge panel-badge--muted">CHƯA CÓ NGUỒN</span>
+        </header>
+        <div class="unavailable-panel" role="status">
+          <span class="empty-icon"><study-icon name="database" /></span>
+          <div><strong>Chưa có dữ liệu chương và bài giảng</strong><p>API #74 chỉ trả thông tin khóa học cùng giảng viên. Màn hình này chưa gửi yêu cầu khác để tải curriculum.</p></div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="detail-side-column">
+      <section class="panel" aria-labelledby="course-actions-heading">
+        <header class="panel-heading panel-heading--compact"><div class="heading-title"><span class="heading-icon"><study-icon name="checklist" /></span><h2 id="course-actions-heading">Thao tác quản trị khóa học</h2></div></header>
+        <div class="action-list">
+          <button type="button" disabled><study-icon name="file" /> Chỉnh sửa thông tin khóa học (AD-08)</button>
+          <button type="button" disabled><study-icon name="refresh" /> Quản lý trạng thái hoặc xóa khóa học (AD-09)</button>
+          <button type="button" disabled><study-icon name="layers" /> Xem danh sách bài học (AD-12)</button>
+        </div>
+        <p class="panel-note"><study-icon name="info" /> Thao tác bị khóa cho đến khi quyền quản lý khóa học và luồng ghi được xác nhận.</p>
+      </section>
+
+      <section class="panel coverage-panel" aria-labelledby="course-coverage-heading">
+        <header class="panel-heading panel-heading--compact"><div class="heading-title"><span class="heading-icon"><study-icon name="shield" /></span><h2 id="course-coverage-heading">Phạm vi dữ liệu</h2></div></header>
+        <div class="coverage-item"><span class="coverage-mark coverage-mark--available" aria-hidden="true">✓</span><div><strong>API #74 cung cấp</strong><p>ID, tiêu đề, mô tả, ảnh bìa, giá, trạng thái và giảng viên.</p></div></div>
+        <div class="coverage-item"><span class="coverage-mark" aria-hidden="true">—</span><div><strong>Chưa có nguồn ở màn hình này</strong><p>Số đăng ký, chuyển đổi, chương học, chuẩn kiểm định và kết quả đầu ra.</p></div></div>
+      </section>
+    </aside>
+  </div>
+</main>

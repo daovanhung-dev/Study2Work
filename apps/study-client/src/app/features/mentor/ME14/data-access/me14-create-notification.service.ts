@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
+import { STUDY_SERVER_APIS } from '../../../../core/constant/api.constants';
 import { StudyApiService } from '../../../../core/http/study-api.service';
 import {
   CourseContentSummaryDto,
@@ -13,12 +14,12 @@ export class Me14CreateNotificationService {
   private readonly api = inject(StudyApiService);
 
   /**
-   * API #49: GET /api/v1/mentor/courses/:courseId/contents
+   * API #49: GET /api/v1/mentor/courses/{course_id}/content
    */
   getCourseContents(courseId: number): Observable<CourseContentSummaryDto[]> {
     return this.api
-      .request<CourseContentSummaryDto[]>(`mentor/courses/${courseId}/contents`, {
-        method: 'GET',
+      .request<CourseContentSummaryDto[]>(STUDY_SERVER_APIS.API_049, {
+        pathParams: { course_id: courseId },
       })
       .pipe(map((envelope) => envelope.data ?? []));
   }
@@ -30,8 +31,7 @@ export class Me14CreateNotificationService {
     payload: CreateNotificationRequestDto,
   ): Observable<CreateNotificationResultDto> {
     return this.api
-      .request<OperationResponseDto>('mentor/notifications', {
-        method: 'POST',
+      .request<OperationResponseDto>(STUDY_SERVER_APIS.API_063, {
         body: payload,
       })
       .pipe(

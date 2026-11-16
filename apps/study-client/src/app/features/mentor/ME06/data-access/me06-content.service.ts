@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { STUDY_SERVER_APIS } from '../../../../core/constant/api.constants';
 import type { ApiEnvelope } from '../../../../core/http/api-envelope';
 import { StudyApiService } from '../../../../core/http/study-api.service';
 import type { ContentNodeDto } from '../models/me06-content.models';
@@ -14,8 +15,8 @@ export class Me06ContentService {
    * Giữ nguyên raw ApiEnvelope<ContentNodeDto[]> tại ranh giới data-access.
    */
   getCourseContents(courseId: number): Observable<ApiEnvelope<ContentNodeDto[]>> {
-    return this.api.request<ContentNodeDto[]>(`mentor/courses/${courseId}/content`, {
-      method: 'GET',
+    return this.api.request<ContentNodeDto[]>(STUDY_SERVER_APIS.API_049, {
+      pathParams: { course_id: courseId },
     });
   }
 }

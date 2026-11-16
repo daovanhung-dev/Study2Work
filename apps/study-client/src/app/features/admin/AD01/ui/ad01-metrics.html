@@ -1,11 +1,5 @@
 <section class="metrics-section" aria-labelledby="metrics-title">
-  <div class="section-heading">
-    <div>
-      <h2 id="metrics-title">Các chỉ số tổng quan</h2>
-      <p>Giá trị sẽ xuất hiện khi nguồn báo cáo được xác minh.</p>
-    </div>
-    <span class="state-label"><study-ad01-icon name="info" /> Chưa khả dụng</span>
-  </div>
+  <h2 id="metrics-title" class="visually-hidden">Các chỉ số tổng quan</h2>
 
   <div class="metrics-grid">
     @for (metric of metrics; track metric.title) {
@@ -14,7 +8,7 @@
           <h3>{{ metric.title }}</h3>
           <span class="metric-icon"><study-ad01-icon [name]="metric.icon" /></span>
         </div>
-        <p class="metric-value" aria-label="Chưa khả dụng">—</p>
+        <p class="metric-value" aria-label="Chưa khả dụng">— —</p>
         <p class="metric-description">{{ metric.description }}</p>
         <div class="metric-availability">
           <study-ad01-icon name="info" />

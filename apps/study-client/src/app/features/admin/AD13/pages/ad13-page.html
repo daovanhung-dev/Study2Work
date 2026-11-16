@@ -1,0 +1,104 @@
+<main class="admin-detail-page lesson-detail-page page-width" data-screen-id="AD13">
+  <div class="detail-toolbar">
+    <nav aria-label="Đường dẫn bài học">
+      <ol>
+        <li>Quản trị đào tạo</li>
+        <li aria-hidden="true">›</li>
+        <li><a routerLink="/admin/lessons">Quản lý bài học</a></li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Chi tiết bài học</li>
+      </ol>
+    </nav>
+    <a class="back-link" routerLink="/admin/lessons">
+      <study-icon name="chevron" />
+      <span>Quay lại danh sách bài học (AD-12)</span>
+    </a>
+  </div>
+
+  <header class="detail-hero">
+    <div class="hero-copy">
+      <div class="hero-tags"><span>API #83</span><span>Screen ID: AD-13</span></div>
+      <h1>Hồ sơ chi tiết bài học quản trị</h1>
+      <p>Nội dung bài học theo projection của Study Server. Tài nguyên và chỉ số phụ cần nguồn riêng.</p>
+    </div>
+    <span class="sync-status" role="status" aria-live="polite">
+      <span class="status-dot" aria-hidden="true"></span>
+      @if (viewState().status === 'loading') {
+        Đang tải bài học
+      } @else if (viewState().status === 'loaded') {
+        Đã tải dữ liệu bài học
+      } @else {
+        Chưa tải được dữ liệu
+      }
+    </span>
+  </header>
+
+  <div class="detail-columns">
+    <div class="detail-main-column">
+      <section class="panel" aria-labelledby="lesson-overview-heading">
+        <header class="panel-heading">
+          <div class="heading-title"><span class="heading-icon"><study-icon name="book" /></span><div><h2 id="lesson-overview-heading">Thông tin nội dung bài học</h2><p>Các trường được ánh xạ trực tiếp từ API #83</p></div></div>
+          <span class="panel-badge">API #83 · DETAIL</span>
+        </header>
+
+        @if (viewState().status === 'loading') {
+          <p class="state-notice" role="status">Đang tải hồ sơ bài học…</p>
+        } @else if (viewState().status === 'error') {
+          <p class="state-notice state-notice--error" role="alert">{{ viewState().message }}</p>
+          <div class="empty-state">
+            <span class="empty-icon"><study-icon name="file" /></span>
+            <div><strong>Chưa có hồ sơ bài học để hiển thị</strong><p>Kiểm tra mã bài học hoặc quay lại danh sách để chọn một bản ghi.</p></div>
+            <a class="primary-link" routerLink="/admin/lessons">Mở danh sách AD-12</a>
+          </div>
+        } @else {
+          <dl class="field-grid">
+            @for (field of lessonFields; track field.label) {
+              <div class="field-card" [class.field-card--wide]="field.label === 'Tiêu đề bài học' || field.label === 'URL video (metadata)'">
+                <dt>{{ field.label }}</dt>
+                <dd [class.status-value]="field.label === 'Trạng thái phát hành'">{{ field.value }}</dd>
+              </div>
+            }
+          </dl>
+          <section class="content-panel" aria-labelledby="lesson-content-heading">
+            <h3 id="lesson-content-heading">Nội dung bài học</h3>
+            <pre>{{ lessonContent }}</pre>
+            <p>Nội dung được hiển thị dưới dạng văn bản; API #83 không định nghĩa quy tắc render HTML.</p>
+          </section>
+        }
+      </section>
+
+      <section class="panel" aria-labelledby="resources-heading">
+        <header class="panel-heading">
+          <div class="heading-title"><span class="heading-icon"><study-icon name="file" /></span><div><h2 id="resources-heading">Tài nguyên và bài tập liên kết</h2><p>Chưa có API phụ thuộc được gọi từ AD-13</p></div></div>
+          <span class="panel-badge panel-badge--muted">CHƯA CÓ NGUỒN</span>
+        </header>
+        <div class="unavailable-panel" role="status">
+          <span class="empty-icon"><study-icon name="database" /></span>
+          <div><strong>Không có kết quả truy vấn tài nguyên</strong><p>API #83 chỉ trả thông tin bài học. Màn hình không hiển thị số lượng quiz, tệp đính kèm hoặc thảo luận khi chưa có nguồn dữ liệu.</p></div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="detail-side-column">
+      <section class="panel" aria-labelledby="lesson-actions-heading">
+        <header class="panel-heading panel-heading--compact"><div class="heading-title"><span class="heading-icon"><study-icon name="shield" /></span><h2 id="lesson-actions-heading">Hành động quản trị</h2></div></header>
+        <p class="side-intro">Các thao tác chỉnh sửa, đổi trạng thái và xóa vẫn khóa trên màn hình chi tiết.</p>
+        <button class="locked-action" type="button" disabled><study-icon name="lock" /> Chỉnh sửa hoặc quản lý bài học (AD-14)</button>
+        <p class="panel-note"><study-icon name="info" /> API #83 chỉ đọc; quyền chi tiết và quy tắc ghi cần được xác nhận trước khi mở thao tác.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="lesson-metrics-heading">
+        <header class="panel-heading panel-heading--compact"><div class="heading-title"><span class="heading-icon"><study-icon name="chart" /></span><h2 id="lesson-metrics-heading">Chỉ số tương tác</h2></div><span class="panel-badge panel-badge--muted">CHƯA CÓ NGUỒN</span></header>
+        <div class="unavailable-panel unavailable-panel--side" role="status">
+          <span class="empty-icon"><study-icon name="database" /></span>
+          <div><strong>Chưa có số liệu tổng hợp</strong><p>Lượt học, tỷ lệ hoàn thành, nộp bài, đánh giá và kết nối realtime không nằm trong response #83.</p></div>
+        </div>
+      </section>
+
+      <section class="scope-note" aria-label="Phạm vi nội dung API">
+        <span class="heading-icon"><study-icon name="info" /></span>
+        <p>URL video chỉ được hiển thị như metadata. Không tự nhúng hoặc tải media từ giá trị này.</p>
+      </section>
+    </aside>
+  </div>
+</main>

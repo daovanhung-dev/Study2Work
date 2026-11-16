@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { STUDY_SERVER_APIS } from '../../../../core/constant/api.constants';
 import type { ApiEnvelope } from '../../../../core/http/api-envelope';
 import { StudyApiService } from '../../../../core/http/study-api.service';
 import type {
@@ -18,8 +19,8 @@ export class Me07EditorService {
    * Dùng để nạp node hiện hữu khi mở ME-07 ở chế độ chỉnh sửa.
    */
   getCourseContents(courseId: number): Observable<ApiEnvelope<Me07ContentNodeDto[]>> {
-    return this.api.request<Me07ContentNodeDto[]>(`mentor/courses/${courseId}/content`, {
-      method: 'GET',
+    return this.api.request<Me07ContentNodeDto[]>(STUDY_SERVER_APIS.API_049, {
+      pathParams: { course_id: courseId },
     });
   }
 
@@ -28,8 +29,7 @@ export class Me07EditorService {
    * Tạo node Content mới ở trạng thái PENDING_REVIEW.
    */
   createContent(body: CreateContentRequestDto): Observable<ApiEnvelope<Me07ContentNodeDto>> {
-    return this.api.request<Me07ContentNodeDto>('mentor/content', {
-      method: 'POST',
+    return this.api.request<Me07ContentNodeDto>(STUDY_SERVER_APIS.API_050, {
       body,
     });
   }
@@ -42,8 +42,8 @@ export class Me07EditorService {
     contentId: number,
     body: UpdateContentRequestDto,
   ): Observable<ApiEnvelope<Me07ContentNodeDto>> {
-    return this.api.request<Me07ContentNodeDto>(`mentor/content/${contentId}`, {
-      method: 'PUT',
+    return this.api.request<Me07ContentNodeDto>(STUDY_SERVER_APIS.API_051, {
+      pathParams: { content_id: contentId },
       body,
     });
   }

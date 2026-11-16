@@ -1,0 +1,105 @@
+<main class="review-queue page-width" data-screen-id="AD10">
+  <div class="queue-breadcrumbs">
+    <nav aria-label="Đường dẫn kiểm duyệt">
+      <ol><li>Quản trị đào tạo</li><li aria-hidden="true">›</li><li aria-current="page">Kiểm duyệt nội dung</li></ol>
+    </nav>
+    <span class="api-badge">API #78</span>
+  </div>
+
+  <header class="queue-heading">
+    <div>
+      <p class="queue-eyebrow">HÀNG ĐỢI QUẢN TRỊ</p>
+      <h1>{{ definition.title }}</h1>
+      <p>{{ definition.description }}</p>
+    </div>
+  </header>
+
+  <section class="filter-panel" aria-labelledby="filter-heading">
+    <div class="filter-panel-heading">
+      <h2 id="filter-heading"><study-icon name="filter" /> Lọc hàng đợi</h2>
+      <span class="source-badge">PENDING_REVIEW</span>
+    </div>
+    <form class="filter-grid" aria-label="Bộ lọc nội dung chờ kiểm duyệt" (submit)="submitFilters($event)">
+      <label for="content-type">
+        <span>Loại nội dung</span>
+        <input id="content-type" type="text" placeholder="Giá trị type chính xác" [value]="filterType()" (input)="setFilterType($any($event.target).value)" [disabled]="viewState().status === 'loading'" />
+      </label>
+      <label for="course-id">
+        <span>Mã khóa học</span>
+        <input id="course-id" type="text" inputmode="numeric" placeholder="ID khóa học (int64)" [value]="filterCourse()" (input)="setFilterCourse($any($event.target).value)" [disabled]="viewState().status === 'loading'" />
+      </label>
+      <div class="filter-actions">
+        <button class="apply-button" type="submit" [disabled]="viewState().status === 'loading'"><study-icon name="search" /> Áp dụng</button>
+        <button class="clear-button" type="button" (click)="clearFilters()" [disabled]="viewState().status === 'loading'">Xóa lọc</button>
+      </div>
+    </form>
+    <p class="filter-note"><study-icon name="info" /> Bộ lọc dùng query `type` và `course`; mã khóa học được giữ dạng văn bản để không làm tròn int64.</p>
+  </section>
+
+  <section class="content-table-panel" aria-label="Danh sách nội dung chờ kiểm duyệt">
+    <div class="table-scroll" role="region" aria-label="Bảng hàng đợi nội dung" tabindex="0">
+      <table>
+        <caption class="visually-hidden">Nội dung đang ở trạng thái chờ kiểm duyệt</caption>
+        <thead>
+          <tr><th scope="col">Mã nội dung</th><th scope="col">Tiêu đề</th><th scope="col">Mã khóa học</th><th scope="col">Loại nội dung</th><th scope="col">Thứ tự</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr>
+        </thead>
+        <tbody>
+          @if (viewState().status === 'loading') {
+            <tr><td class="table-state" colspan="7" role="status"><span class="state-mark"><study-icon name="refresh" /></span><strong>Đang tải hàng đợi kiểm duyệt…</strong><span>Đang chờ phản hồi từ Study Server.</span></td></tr>
+          } @else if (viewState().status === 'error') {
+            <tr><td class="table-state table-state--error" colspan="7" role="alert"><span class="state-mark"><study-icon name="info" /></span><strong>Không thể tải hàng đợi</strong><span>{{ viewState().message }}</span></td></tr>
+          } @else if ((viewState().rows?.length ?? 0) === 0) {
+            <tr><td class="table-state" colspan="7"><span class="state-mark"><study-icon name="book" /></span><strong>Không có nội dung phù hợp</strong><span>API #78 trả về trang rỗng cho bộ lọc hiện tại.</span></td></tr>
+          } @else {
+            @for (row of viewState().rows ?? []; track row.values[0]) {
+              <tr>
+                <td class="content-id">{{ row.values[0] }}</td>
+                <td class="content-title"><strong>{{ row.values[1] }}</strong></td>
+                <td class="content-id">{{ row.values[2] }}</td>
+                <td>{{ row.values[3] }}</td>
+                <td>{{ row.values[4] }}</td>
+                <td><span class="status-badge">{{ row.values[5] }}</span></td>
+                <td>
+                  @if (row.route) {
+                    <a class="row-action" [routerLink]="row.route">Xem nội dung <study-icon name="chevron" /></a>
+                  } @else {
+                    <button class="row-action" type="button" disabled aria-label="Không thể mở nội dung do mã vượt khả năng biểu diễn an toàn"><span>Không thể mở</span></button>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (viewState().status === 'loaded') {
+      <div class="pagination-bar">
+        <p>
+          @if (viewState().pagination; as pagination) {
+            <strong>{{ pagination.total }}</strong> nội dung phù hợp
+            @if (pagination.totalPages > 0) { · Trang <strong>{{ pagination.page }} / {{ pagination.totalPages }}</strong> }
+          } @else {
+            Response không có metadata phân trang.
+          }
+        </p>
+        @if (viewState().pagination; as pagination) {
+          @if (pagination.totalPages > 0) {
+            <div class="pagination-controls" aria-label="Phân trang hàng đợi">
+              <button type="button" (click)="changePage(pagination.page - 1)" [disabled]="pagination.page <= 1"><study-icon name="chevron" /> Trước</button>
+              <span>Trang {{ pagination.page }}</span>
+              <button type="button" (click)="changePage(pagination.page + 1)" [disabled]="pagination.page >= pagination.totalPages">Sau <study-icon name="chevron" /></button>
+            </div>
+          }
+        }
+      </div>
+    }
+    <div class="source-note"><study-icon name="database" /><span>Nguồn: GET /api/v1/admin/content/pending · #78 · status=PENDING_REVIEW</span></div>
+  </section>
+
+  <aside class="data-boundary">
+    <span class="boundary-icon"><study-icon name="shield" /></span>
+    <div><strong>Trường dữ liệu hiện có</strong><p>Danh sách chỉ hiển thị ID, tiêu đề, mã khóa học, loại nội dung, thứ tự và trạng thái. API không trả người gửi, thời điểm gửi hoặc phiên bản review.</p></div>
+    <span class="source-badge">Page&lt;Content&gt;</span>
+  </aside>
+</main>

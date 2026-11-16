@@ -1,0 +1,135 @@
+<main class="page-width user-page" [attr.data-screen-id]="screenModel.id">
+  <div class="screen-context">
+    <nav aria-label="Đường dẫn danh sách người dùng">
+      <ol class="breadcrumbs">
+        <li>Quản trị người dùng</li>
+        <li aria-hidden="true">›</li>
+        <li aria-current="page">Danh sách tài khoản</li>
+      </ol>
+    </nav>
+    <span class="source-badge">API #68</span>
+  </div>
+
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">Quản trị người dùng</p>
+      <h1>Danh sách người dùng</h1>
+      <p class="page-description">Danh sách tài khoản theo các bộ lọc được API #68 hỗ trợ.</p>
+    </div>
+  </header>
+
+  <section class="filter-panel" aria-label="Bộ lọc danh sách người dùng">
+    <form class="filters" aria-label="Bộ lọc danh sách người dùng" (submit)="applyFilters($event)">
+      <div class="filter-field search-field">
+        <label for="user-search">Tìm kiếm</label>
+        <div class="input-wrap">
+          <study-icon name="search" />
+          <input
+            id="user-search"
+            type="search"
+            placeholder="Họ tên hoặc email"
+            [value]="filters().keyword"
+            (input)="setFilter('keyword', $any($event.target).value)"
+            [disabled]="viewState().status === 'loading'"
+          />
+        </div>
+      </div>
+
+      <div class="filter-field">
+        <label for="role-filter">Vai trò</label>
+        <input id="role-filter" type="text" placeholder="Vai trò chính xác" [value]="filters().role" (input)="setFilter('role', $any($event.target).value)" [disabled]="viewState().status === 'loading'" />
+      </div>
+
+      <div class="filter-field">
+        <label for="status-filter">Trạng thái</label>
+        <input id="status-filter" type="text" placeholder="Trạng thái chính xác" [value]="filters().status" (input)="setFilter('status', $any($event.target).value)" [disabled]="viewState().status === 'loading'" />
+      </div>
+
+      <div class="filter-buttons">
+        <button class="reset-button" type="submit" [disabled]="viewState().status === 'loading'">Áp dụng</button>
+        <button class="reset-button" type="button" (click)="clearFilters()" [disabled]="viewState().status === 'loading'">Xóa lọc</button>
+      </div>
+    </form>
+
+    <p class="controls-note">
+      Họ tên/email dùng tìm kiếm contains; vai trò và trạng thái là chuỗi chính xác do API #68 xử lý.
+    </p>
+
+    <div class="active-filter-summary" aria-live="polite" aria-label="Bộ lọc đang áp dụng">
+      <strong>Bộ lọc đang áp dụng</strong>
+      @if (activeFilters().length) {
+        <ul>
+          @for (filter of activeFilters(); track filter.label) {
+            <li><span>{{ filter.label }}</span><b>{{ filter.value }}</b></li>
+          }
+        </ul>
+      } @else {
+        <span class="no-active-filters">Chưa có bộ lọc nào được áp dụng.</span>
+      }
+    </div>
+  </section>
+
+  <section class="list-panel" aria-labelledby="list-title">
+    <h2 id="list-title" class="visually-hidden">Danh sách tài khoản</h2>
+    <div class="table-scroller" role="region" aria-label="Bảng người dùng" tabindex="0">
+      <table [class.table-empty]="!viewState().rows?.length">
+        <caption class="visually-hidden">Danh sách người dùng</caption>
+        <thead>
+          <tr>@for (column of columns; track column) { <th scope="col">{{ column }}</th> }</tr>
+        </thead>
+        <tbody>
+          @if (viewState().status === 'loaded' && viewState().rows?.length) {
+            @for (row of viewState().rows; track $index) {
+              <tr>
+                @for (value of row.values; track $index) {
+                  <td>
+                    @if ($first && row.route) { <a [routerLink]="row.route">{{ value }}</a> }
+                    @else { {{ value }} }
+                  </td>
+                }
+              </tr>
+            }
+          } @else {
+            <tr class="empty-row">
+              <td [attr.colspan]="columns.length">
+                <div class="empty-state">
+                  <span class="empty-icon"><study-icon name="users" /></span>
+                  @if (viewState().status === 'loaded') {
+                    <p class="empty-title">Chưa có dữ liệu tài khoản người dùng</p>
+                    <p class="empty-description">Không tìm thấy tài khoản phù hợp với điều kiện hiện tại.</p>
+                    <div class="empty-state-actions">
+                      <button class="refresh-button" type="button" (click)="refreshList()">
+                        <study-icon name="refresh" />
+                        <span>Làm mới danh sách</span>
+                      </button>
+                    </div>
+                  } @else {
+                    <p class="empty-title">{{ viewState().message ?? connectionMessage }}</p>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="list-footer">
+      <p class="result-count">
+        @if (viewState().status === 'loaded' && viewState().pagination) {
+          Hiển thị {{ viewState().rows?.length ?? 0 }} trên {{ viewState().pagination!.total }} tài khoản
+        } @else {
+          {{ connectionMessage }}
+        }
+      </p>
+
+      @if (viewState().status === 'loaded' && viewState().pagination) {
+      <nav class="pagination" aria-label="Phân trang danh sách người dùng">
+        <button class="page-button previous-button" type="button" (click)="changePage(viewState().pagination!.page - 1)" [disabled]="viewState().pagination!.page <= 1" aria-label="Trang trước"><study-icon name="chevron" /></button>
+        <span>{{ viewState().pagination!.totalPages === 0 ? 0 : viewState().pagination!.page }} / {{ viewState().pagination!.totalPages }}</span>
+        <button class="page-button next-button" type="button" (click)="changePage(viewState().pagination!.page + 1)" [disabled]="viewState().pagination!.page >= viewState().pagination!.totalPages" aria-label="Trang sau"><study-icon name="chevron" /></button>
+      </nav>
+      }
+    </div>
+  </section>
+</main>

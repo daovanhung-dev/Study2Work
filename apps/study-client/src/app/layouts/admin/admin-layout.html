@@ -1,1 +1,160 @@
-<router-outlet />
+@if (session.isAuthenticated()) {
+<div class="admin-shell">
+  <header class="app-header">
+    <div class="header-main page-width">
+      <div class="brand" aria-label="Study2Work LMS, cổng quản trị">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span class="brand-copy">
+          <span class="brand-topline">
+            <span class="brand-name">Study2Work</span>
+            <span class="brand-lms">LMS</span>
+          </span>
+          <span class="brand-product">ADMIN PORTAL</span>
+        </span>
+      </div>
+
+      <nav class="primary-nav" aria-label="Điều hướng quản trị">
+        <ul>
+          <li>
+            <a
+              class="nav-item"
+              routerLink="/admin"
+              [class.nav-item--current]="isAdminHome"
+              [attr.aria-current]="isAdminHome ? 'page' : null"
+            >
+              <span>Tổng quan</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="nav-item"
+              routerLink="/admin/users"
+              [class.nav-item--current]="isUsersRoute"
+              [attr.aria-current]="isUsersRoute ? 'page' : null"
+            >
+              <span>Người dùng</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="nav-item"
+              routerLink="/admin/courses"
+              [class.nav-item--current]="isCoursesRoute"
+              [attr.aria-current]="isCoursesRoute ? 'page' : null"
+            >
+              <span>Khóa học &amp; Nội dung</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="nav-item"
+              routerLink="/admin/content/pending"
+              [class.nav-item--current]="isModerationRoute"
+              [attr.aria-current]="isModerationRoute ? 'page' : null"
+            >
+              <span>Kiểm duyệt</span>
+            </a>
+          </li>
+          <li>
+            <a
+              class="nav-item"
+              routerLink="/admin/reports/community-impact"
+              [class.nav-item--current]="isReportsRoute"
+              [attr.aria-current]="isReportsRoute ? 'page' : null"
+            >
+              <span>Báo cáo</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="header-tools">
+        <a
+          class="icon-button"
+          [class.icon-button--current]="isNotificationsRoute"
+          routerLink="/admin/notifications"
+          aria-label="Mở danh sách thông báo"
+          title="Thông báo"
+          [attr.aria-current]="isNotificationsRoute ? 'page' : null"
+        >
+          <study-icon name="bell" />
+        </a>
+        <span class="profile-placeholder" aria-label="Phiên Admin đang hoạt động">
+          <span class="profile-avatar"><study-icon name="person" /></span>
+          <span class="profile-copy">
+            <span>{{ session.profile()?.full_name }}</span>
+            <span>{{ session.profile()?.role }} / QUẢN TRỊ VIÊN</span>
+          </span>
+        </span>
+        <button class="session-exit" type="button" (click)="signOut()" aria-label="Thoát phiên Admin trên thiết bị này">
+          Thoát
+        </button>
+      </div>
+    </div>
+
+    <div class="breadcrumb-row page-width">
+      <nav aria-label="Đường dẫn trang">
+        <ol class="breadcrumbs">
+          <li>Hệ thống</li>
+          <li aria-hidden="true"><study-icon name="chevron" /></li>
+          <li>Quản trị trung tâm</li>
+          <li aria-hidden="true"><study-icon name="chevron" /></li>
+          <li aria-current="page">Không gian làm việc</li>
+        </ol>
+      </nav>
+      <span class="breadcrumb-status">
+        <study-icon name="info" />
+        <span>Phiên Admin đã xác thực</span>
+      </span>
+    </div>
+  </header>
+
+  <router-outlet />
+
+  <footer class="page-footer">
+    <div class="page-width footer-content">
+      <p>© Study2Work LMS <span aria-hidden="true">·</span> Hệ thống quản trị trung tâm</p>
+    </div>
+  </footer>
+</div>
+} @else {
+  <main class="admin-access-shell">
+    <section class="admin-access-card" aria-labelledby="admin-access-title">
+      <div class="admin-access-brand" aria-hidden="true"><study-icon name="brand" /></div>
+      <p class="admin-access-eyebrow">Study2Work · Admin portal</p>
+      <h1 id="admin-access-title">Đăng nhập quản trị</h1>
+      <p class="admin-access-description">Dùng tài khoản Admin để mở khu vực quản trị.</p>
+
+      <form class="admin-access-form" (submit)="signIn($event, adminEmail.value, adminPassword.value)">
+        <label for="admin-email">Email</label>
+        <input
+          #adminEmail
+          id="admin-email"
+          type="email"
+          autocomplete="username"
+          required
+          [disabled]="isSigningIn()"
+        />
+
+        <label for="admin-password">Mật khẩu</label>
+        <input
+          #adminPassword
+          id="admin-password"
+          type="password"
+          autocomplete="current-password"
+          required
+          [disabled]="isSigningIn()"
+        />
+
+        @if (signInError()) {
+          <p class="admin-access-error" role="alert">{{ signInError() }}</p>
+        }
+
+        <button class="admin-access-submit" type="submit" [disabled]="isSigningIn()">
+          {{ isSigningIn() ? 'Đang xác thực…' : 'Đăng nhập' }}
+        </button>
+      </form>
+      <p class="admin-access-note">Phiên chỉ được giữ trong bộ nhớ của tab này. Đóng hoặc tải lại trang sẽ yêu cầu đăng nhập lại.</p>
+    </section>
+  </main>
+}
