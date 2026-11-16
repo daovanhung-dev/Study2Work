@@ -9,6 +9,10 @@ status: "Draft — Needs Confirmation"
 
 # Data Mapping
 
+## Approved implementation decisions (2026-11-15)
+
+API #22 returns the existing not-found response unless the parent Course is `PUBLISHED`; enrollment `ACTIVE` and `COMPLETED` are accepted. No prerequisite predicate is implemented because the schema has no prerequisite relationship. The candidate analysis below is historical DD evidence; these selected rules are resolved while other DD questions remain open.
+
 ## Flow xử lý data
 
 ~~~text

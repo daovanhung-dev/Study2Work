@@ -1,10 +1,16 @@
 # OPEN_QUESTIONS
 
+## Developer decisions (2026-11-15)
+
+- Resolved for implementation: one `lesson_progress` row per `(user_id, lesson_id)`, enforced by a unique constraint and PostgreSQL UPSERT.
+- Repeated start preserves `COMPLETED`; otherwise the row remains `IN_PROGRESS`. Response stays HTTP 201 with the existing envelope.
+- Migration source targets only `nguyen_anh_duc` and has not been applied. The read-only duplicate-pair count was 0; migration aborts if duplicates exist when applied. Other DD questions below remain open.
+
 Các quyết định dưới đây cần được xác nhận trước khi chuyển DD sang Ready/Final hoặc dùng làm implementation contract. Bản Draft giữ nguyên contract hiện có và không tự chọn câu trả lời.
 
 <a id="q-23-01"></a>
 
-## Q-23-01 — UPSERT identity, conflict key và uniqueness
+## Q-23-01 ? UPSERT identity (resolved)
 
 **Bằng chứng**
 
@@ -25,7 +31,7 @@ Các quyết định dưới đây cần được xác nhận trước khi chuy�
 
 <a id="q-23-02"></a>
 
-## Q-23-02 — Field updates và state preservation
+## Q-23-02 ? State preservation (resolved)
 
 **Bằng chứng**
 
@@ -46,7 +52,7 @@ Các quyết định dưới đây cần được xác nhận trước khi chuy�
 
 <a id="q-23-03"></a>
 
-## Q-23-03 — Repeated start, idempotency và HTTP 201
+## Q-23-03 ? Repeated start (resolved)
 
 **Bằng chứng**
 

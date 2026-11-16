@@ -31,11 +31,10 @@ status: "Draft — Needs Confirmation"
 | 5.3 | data.email | Email | email | email | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3/4.1 | Per reusable UserProfile schema | Required by schema | No API #21 mapping established. |
 | 5.4 | data.role | User role | role | UserRole | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3/4.1 | Per reusable UserProfile schema | Required by schema | UserRole values are not enumerated in the reusable schema row. |
 | 5.5 | data.avatar_url | Avatar URL | avatar_url | uri | Optional | SOURCE_REQUIRED | SOURCE_REQUIRED | 3/4.1 | Per reusable UserProfile schema | Null/omit behavior unspecified | No API #21 mapping established. |
-| 5.6 | data.bio | Biography | bio | string | Optional | SOURCE_REQUIRED | SOURCE_REQUIRED | 3/4.1 | Per reusable UserProfile schema | Null/omit behavior unspecified | No API #21 mapping established. |
-| 5.7 | data.phone | Phone | phone | string | Optional | SOURCE_REQUIRED | SOURCE_REQUIRED | 3/4.1 | Per reusable UserProfile schema | Null/omit behavior unspecified | No API #21 mapping established. |
-| 5.8 | data.status | User status | status | UserStatus | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3/4.1 | Per reusable UserProfile schema | Required by schema | UserStatus values are not enumerated in the reusable schema row. |
-| 5.9 | data.created_at | Created time | created_at | date-time | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3/4.1 | ISO-8601 per schema | Required by schema | No API #21 mapping established. |
-| 5.10 | data.updated_at | Updated time | updated_at | date-time | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3/4.1 | ISO-8601 per schema | Required by schema | No API #21 mapping established. |
+| 5.6 | data.phone | Phone | phone | string | Optional | SOURCE_REQUIRED | SOURCE_REQUIRED | 3/4.1 | Per reusable UserProfile schema | Null/omit behavior unspecified | No API #21 mapping established. |
+| 5.7 | data.status | User status | status | UserStatus | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3/4.1 | Per reusable UserProfile schema | Required by schema | UserStatus values are not enumerated in the reusable schema row. |
+| 5.8 | data.created_at | Created time | created_at | date-time | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3/4.1 | ISO-8601 per schema | Required by schema | No API #21 mapping established. |
+| 5.9 | data.updated_at | Updated time | updated_at | date-time | No | SOURCE_REQUIRED | SOURCE_REQUIRED | 3/4.1 | ISO-8601 per schema | Required by schema | No API #21 mapping established. |
 | 6 | meta | Metadata | meta | object | No | N/A | N/A | 4.1/4.2/4.3 | ApiEnvelope metadata | Object fields unspecified | No pagination or aggregation metadata is declared. |
 | 7 | traceId | Trace ID | traceId | uuid | No | N/A | N/A | 4.1/4.2/4.3 | ApiEnvelope trace ID | Required by schema | Runtime API #21 trace behavior is not verified. |
 

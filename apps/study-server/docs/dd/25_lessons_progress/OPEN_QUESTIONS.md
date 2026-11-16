@@ -1,10 +1,17 @@
 # OPEN_QUESTIONS
 
+## Developer decisions (2026-11-15)
+
+- Resolved for implementation: remove `position`; do not add a database column or resume-position behavior.
+- `percent` must be an integer in 0..100, stored as sent and independent of `completed`.
+- Latest update controls state: `completed=true` sets `COMPLETED` and preserves/sets `completed_at`; `false` sets `IN_PROGRESS` and clears `completed_at`.
+- Reuse the unique `(user_id, lesson_id)` key introduced for #23. Remaining questions below stay open and the DD remains Draft.
+
 Các quyết định dưới đây cần được xác nhận trước khi chuyển DD sang Ready/Final hoặc dùng làm implementation contract. Bản Draft giữ contract hiện có và không tự chọn câu trả lời.
 
 <a id="q-25-01"></a>
 
-## Q-25-01 — Ý nghĩa và nơi lưu `position`
+## Q-25-01 ? Position (resolved)
 
 **Bằng chứng**
 
@@ -25,7 +32,7 @@ Các quyết định dưới đây cần được xác nhận trước khi chuy�
 
 <a id="q-25-02"></a>
 
-## Q-25-02 — Range và quan hệ giữa `percent` với `position`
+## Q-25-02 ? Percent range (resolved)
 
 **Bằng chứng**
 
@@ -46,7 +53,7 @@ Các quyết định dưới đây cần được xác nhận trước khi chuy�
 
 <a id="q-25-03"></a>
 
-## Q-25-03 — State transition và timestamps
+## Q-25-03 ? State transition (resolved)
 
 **Bằng chứng**
 
@@ -67,7 +74,7 @@ Các quyết định dưới đây cần được xác nhận trước khi chuy�
 
 <a id="q-25-04"></a>
 
-## Q-25-04 — Upsert identity, uniqueness và repeated/out-of-order requests
+## Q-25-04 ? Row identity (partially resolved)
 
 **Bằng chứng**
 

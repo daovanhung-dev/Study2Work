@@ -85,6 +85,12 @@ status: "Draft — Needs Confirmation"
 
 ### 3. Interpret grading status
 
+#### Approved pass-outcome amendment (2026-11-15)
+
+- For a GRADED attempt, derive `passed` from the stored raw `quiz_attempts.score`, `quizzes.passing_score`, and the sum of `quiz_questions.score` for that quiz.
+- Compare exact decimal values with `earned_points * 100 >= possible_points * passing_score`; `passing_score` is an inclusive 0..100 percentage and no intermediate rounding is allowed.
+- Omit `passed` unless status is GRADED. The field is distinct from `status`; it is not persisted because API #89 prevents changing quiz configuration after attempt history exists.
+
 - AC-16 activity diagram routes both AUTO GRADED and PENDING GRADE branches to API #32.
 - AC-16 labels the following action “Đọc score + feedback/status” and displays either a score or a pending-grade state.
 - For GRADED, quiz_attempts.score is a candidate source for QuizAttempt.score.

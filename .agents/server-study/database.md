@@ -351,3 +351,23 @@ predicate and count distinct Discussion IDs. The status set, report grain,
 legacy FK targets and required Discussion title/comments projection are local
 fallbacks. Checked-in DDL/migration and fake-session tests do not establish
 live schema, deployment or a producer that inserts reports.
+
+## API #16-45 schema additions (2026-11-15 source only)
+
+Migrations `015_orders.sql` through `018_discussions_achievements.sql` use an
+explicit guard for schema `nguyen_anh_duc` and schema-qualified relation,
+constraint and index references. They add Orders; #34-compatible Uploads,
+notification Operation UUID and per-user read/delivery state; objective quiz
+question type; Discussion title; and explicit user achievement records. The
+Discussion title column has `NOT NULL DEFAULT ''`, preserving existing rows
+without deriving a title from content. These SQL files are migration source
+only: none was applied, and no live schema was re-read after their creation.
+Do not infer deployment or runtime availability from the checked-in DDL.
+
+## Quiz pass outcome amendment (2026-11-15)
+
+APIs #31/#32 derive `passed` from existing `quiz_attempts.score`,
+`quizzes.passing_score`, and `quiz_questions.score`. Passing uses exact decimal
+comparison against the inclusive 0..100 percentage threshold. No column or
+migration is required for this projection. The approved task did not apply any
+migration or write database rows; live schema/deployment remains unverified.

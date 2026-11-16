@@ -1,8 +1,29 @@
 # Study declared API surface
 
-Global status: current route source is `SOURCE_BACKED`; `app.main` import and
-the full Study test suite cover current `guest`, `mentor` and `admin` modules (58 route templates / 69 operations after API #98). The initial dated branch-backed HTTP run had 59 PASS / 10 SQL-query FAIL; a follow-up verified all ten repaired operations with empty and valid filters (20/20 HTTP requests passed). The other operations were not rerun after this SQL-only fix; see `tests.md`. Current
-auth login/refresh, verify-email dispatch, current-user,
+Global status: route source is `SOURCE_BACKED`; the pre-merge verified baseline
+had 58 route templates / 69 operations through API #98. After reverting the
+`hoang_xuan_long_dev` merge, the current branch retains source routes for APIs
+#10, #26–#30, #32 and #33 from the merged branch history. APIs #11, #15, and
+#21–#25 from that merge are no longer present. Post-revert OpenAPI cardinality,
+application startup and tests have not been reverified; see `tests.md`. The
+initial dated branch-backed HTTP run had 59 PASS / 10
+SQL-query FAIL; a follow-up verified ten repaired operations with empty and
+valid filters (20/20 HTTP requests passed). The other operations were not
+rerun after that SQL-only fix.
+
+Source-backed declarations retained in the current merged branch:
+
+- API #10: `GET /api/v1/courses/{course_id}/reviews`
+- API #26: `GET /api/v1/lessons/{lesson_id}/resources`
+- API #27: `GET /api/v1/lessons/{lesson_id}/next`
+- API #28: `GET /api/v1/quizzes/{quiz_id}`
+- API #29: `POST /api/v1/quizzes/{quiz_id}/attempts`
+- API #30: `PUT /api/v1/attempts/{attempt_id}/answers`
+- API #32: `GET /api/v1/attempts/{attempt_id}/result`
+- API #33: `GET /api/v1/assignments/{assignment_id}`
+
+The corresponding module test files exist, but were not run after the revert.
+Other source-backed routes include auth login/refresh, verify-email dispatch, current-user,
 category, course, course-search, course-detail, curriculum, resource-detail,
 avatar-upload, upload-metadata, profile-update, API #46 Mentor course, API #47
 Mentor lecture, #48 lecture detail, #49–#53 Content routes, #54 Mentor
@@ -586,3 +607,33 @@ Adds one path and operation (OpenAPI: 57 paths / 68 operations at the time this 
 ### `GET /api/v1/admin/discussions/{discussion_id}` — API #98
 
 Adds a separate path and operation; current OpenAPI has 58 `/api/v1` paths / 69 operations. The source route is wired and uses the ADMIN guard. Its current response includes the discussion thread/comments, derives `title` from content, and does not query or return report records. The DD remains `Draft — Needs Confirmation` and labels the runtime `UNWIRED`, while requiring thread + report detail and leaving title/report/status decisions open. The HTTP success, role/auth, malformed ID, not-found and query failure/rollback behaviors are characterized in the added tests; do not treat source behavior as an approved DD resolution. Live PostgreSQL HTTP details are in the dated test report.
+
+## APIs #16-20, #31, #35-45 added on 2026-11-15
+
+The current source wires the requested routes through `app/api/v1.py`; source
+route declarations are not evidence that migrations are deployed or handlers
+have passed tests. APIs #16, #18-20 and #31 use guest modules; #35-36 and
+#39-45 use student modules; #37-38 use guest modules. API #17 is intentionally
+fail-closed: it returns 503 before any Payment/Operation read or write until a
+payment provider is configured. API #18 uses UUID Operation IDs to match
+producers #63/#64/#93.
+
+API #19 creates an Enrollment and initial lesson progress in one transaction;
+paid courses require a PAID Order. API #31 grades supported objective question
+types only and updates the attempt to GRADED; #30 stores multiple selected
+choices and #32 groups them per question. API #38 reads explicit award records;
+there is no award producer in this implementation. APIs #43-45 project
+StudentNotification from supported legacy columns and per-user read state,
+without channels/status/scheduled_at. No tests were run and migrations 015-018
+were not applied.
+
+### API #31 passing outcome amendment (2026-11-15)
+
+API #31 returns raw earned points and a separate `passed` boolean for the
+supported objective question types. It compares exact decimals using
+`earned_points * 100 >= possible_points * passing_score`, where
+`passing_score` is an inclusive 0..100 percentage; status remains `GRADED`.
+API #32 derives the same outcome from existing score/question/config columns.
+No new database column or migration was added for `passed`. This is source
+state only; the amended behavior has not been tested and migrations remain
+unapplied.

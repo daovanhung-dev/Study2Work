@@ -22,15 +22,15 @@ status: "Draft — Needs Confirmation"
 
 **Áp dụng khi**
 
-- An answer belongs to the accepted attempt and an approved automatic-grading rule defines its result; exact selection and grading predicates remain SOURCE_REQUIRED.
+- An answer belongs to the accepted attempt and is graded as an objective question: the selected choice set must exactly match the correct choice set to earn `quiz_questions.score`; otherwise it earns zero. The earned question points are assigned to one answer row and remaining rows stay at zero.
 
 | No | Item ID / Column | Item name | Type | Length | Scale | Required | Main key | Setting content | Source | Data Mapping step | Remarks |
 |---:|---|---|---|---:|---:|---:|---:|---|---|---:|---|
 | 1 | id | Answer row ID | BIGSERIAL | N/A | N/A | Yes | ● | Candidate target row identity. | DB_UNICA_TABLES.md / DB.sql | 4 | API #31 does not define answer-row lookup key in the catalog. |
 | 2 | attempt_id | Attempt ID | BIGINT | N/A | N/A | Design: Yes; DDL: nullable |  | Candidate association to submitted attempt. | DB_UNICA_TABLES.md / DB.sql | 4 | FK to quiz_attempts.id; live constraint not verified. |
 | 3 | question_id | Question ID | BIGINT | N/A | N/A | Design: Yes; DDL: nullable |  | Candidate association to question being graded. | DB_UNICA_TABLES.md / DB.sql | 4 | FK to quiz_questions.id; answer completeness policy unresolved. |
-| 4 | is_correct | Correctness | BOOLEAN | N/A | N/A | DDL: Yes, NOT NULL |  | Candidate automatic-grading result. | AC-16 / DB_UNICA_TABLES.md / DB.sql | 4 | API #30 does not define its pre-submit value; manual-grade questions have no approved value. |
-| 5 | score_received | Per-answer score | NUMERIC | 5 | 2 | No; DDL default 0 |  | Candidate score derived from question/answer grading. | DB_UNICA_TABLES.md / DB.sql | 4 | Formula, partial credit, scale and rounding SOURCE_REQUIRED. |
+| 4 | is_correct | Correctness | BOOLEAN | N/A | N/A | DDL: Yes, NOT NULL |  | Exact selected/correct choice-set equality. | Approved scoring amendment / DB_UNICA_TABLES.md / DB.sql | 4 | Objective question types only; unanswered and incorrect answers are false when answer rows exist. |
+| 5 | score_received | Per-answer score | NUMERIC | 5 | 2 | No; DDL default 0 |  | Raw question points on one answer row when correct; zero otherwise. | Approved scoring amendment / DB_UNICA_TABLES.md / DB.sql | 4 | Raw points; no partial credit or rounding is applied. |
 
 **Candidate WHERE**
 
