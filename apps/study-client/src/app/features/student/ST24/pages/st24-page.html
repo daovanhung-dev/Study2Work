@@ -1,0 +1,13 @@
+<main class="static-page st24-page">
+  <nav class="crumbs">▣ Diễn đàn &amp; Thảo luận　›　 Tạo chủ đề mới <span>● Đội ngũ Mentor Tech Lead đang online (8 người trực)</span></nav>
+  <section class="question-hero"><div><small>HỖ TRỢ HỌC THUẬT 1-ON-1　• Chuẩn code review công nghiệp</small><h1>Tạo câu hỏi &amp; Thảo luận kỹ thuật</h1><p>Đặt câu hỏi chi tiết, đính kèm đoạn mã nguồn tối giản (MRE) và nhật ký log console để nhận phản hồi, phản biện chuyên sâu từ Mentor &amp; Giảng viên chuyên trách.</p></div><aside>◷　SLA Phản hồi trung bình<strong>&lt; 45 Phút</strong><small>Trong giờ hành chính &amp; ca tối</small></aside></section>
+  <section class="question-card"><h2><span>01</span> Khóa học &amp; Ngữ cảnh bài giảng <small>* Bắt buộc</small></h2><div class="question-fields"><label>Khóa học liên quan<div class="field-box">Chuyên gia Frontend React &amp; TypeScript Enterprise　⌄</div></label><label>Module / Bài học liên quan<div class="field-box">Bài 14: Tối ưu hóa Re-render với React Compiler　⌄</div></label></div><label>Tiêu đề câu hỏi thảo luận<div class="field-box title-box">Lỗi Memory leak khi dùng WebSocket với TanStack Query trong Next.js 19 App Router</div></label><label>Nhãn công nghệ / Tags định danh<div class="field-box tags"><span>React 19　×</span><span>WebSocket　×</span><span>TanStack Query　×</span><span>Next.js　×</span><span>Performance　×</span> + Thêm thẻ tag (nhấn Enter)...</div></label><p>Gợi ý tag phổ biến: #TypeScript, #TailwindCSS, #SSR, #Zustand, #Turbopack</p></section>
+  <section class="question-card"><h2><span>02</span> Nội dung chi tiết &amp; Đoạn mã lỗi <small>Soạn thảo　　 Xem trước</small></h2><div class="question-toolbar">B　𝑰　│　T　❞　〈〉　🔗　☷　☰　│　▧ Ảnh chụp log <span>Hỗ trợ GFM</span></div><pre class="question-editor">### Mô tả sự cố kỹ thuật
+Em đang tích hợp tính năng cập nhật giá giao dịch theo thời gian thực (Real-time Order Book)
+sử dụng WebSocket kết hợp TanStack Query v5 `useQuery` và `queryClient.setQueryData`.
+
+Khi chuyển đổi tab nhanh hoặc route qua lại trong Next.js 19 App Router, connection
+WebSocket vẫn còn trigger listener và memory heap tăng đột biến từ 45MB lên hơn 320MB sau 3 phút.
+
+Em đã thử cleanup bằng useEffect nhưng vẫn gặp lỗi khi component unmount.</pre></section>
+</main>

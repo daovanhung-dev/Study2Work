@@ -125,6 +125,15 @@ Tên thư mục screen dùng mã compact như `AD01` cho screen ID `AD-01`. Tuy�
 
 Dùng Angular Signals cho trạng thái giao diện đồng bộ tại chỗ và RxJS cho luồng bất đồng bộ khi đã bổ sung tích hợp API có căn cứ. Chưa thêm thư viện quản lý trạng thái toàn cục nếu chưa có nhu cầu cụ thể giữa nhiều nhóm tính năng. Bộ chặn tuyến phía trình duyệt chỉ phục vụ trải nghiệm điều hướng; quyền truy cập do máy chủ quyết định.
 
+## Trạng thái source ST-11
+
+Route `/student/lessons/:lessonId` hiện được đăng ký qua `app.routes.ts` và
+`features/student/student.route.ts`, dùng `StudentLayout` cùng trang
+`features/student/ST11/pages/`. Trang chỉ trình bày trạng thái fallback theo
+ảnh ST-11; không đọc `lessonId`, gọi API, phát media hay lưu tiến độ. Các link
+Student khác vẫn là href tĩnh và route đích chưa được xác minh. DD chức năng
+Lesson Player tiếp tục blocked.
+
 ## Quy tắc giao diện và khả năng tiếp cận của Study Web
 
 Dùng [hướng dẫn thiết kế Study Web](../../../.agents/web-study/design.md) làm nguồn chuẩn. Bộ token toàn cục:
