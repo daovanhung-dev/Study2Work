@@ -38,4 +38,16 @@
 
 - Source snapshot SHA-256 over the 9 sorted ST-14/ST-26 source and test files: `D9AD2340716D5985291DED5DD06A2D0ABCA66F2BC0950313A8AA3D8A092EE099`.
 - User approved source snapshot SHA-256 `D9AD2340716D5985291DED5DD06A2D0ABCA66F2BC0950313A8AA3D8A092EE099` on 2026-11-17.
-- No commit or push is part of this task.
+- At the time this implementation task was completed, commit/push was outside its scope. A later branch-delivery request is recorded below.
+
+## Follow-up: branch delivery (2026-11-17)
+
+| Weight | Cumulative | Milestone | Status |
+|---:|---:|---|---|
+| 40% | 40% | Inspect branch, remote ancestry, and classify existing changes | COMPLETE |
+| 60% | 100% | Commit scoped FE work, push the branch, and verify the remote SHA | COMPLETE |
+
+- FE source commit: `4a5f460cf1fea3ca3d87be6de99ac9a7aec3bd3d` (`feat(study-client): wire ST-11–ST-26 screens and interactions`).
+- Push verification: local and `origin/ducna_dev/featrure_coding_FE` both resolved to `4a5f460cf1fea3ca3d87be6de99ac9a7aec3bd3d`; ahead/behind count `0/0`.
+- Staged whitespace check: `git diff --cached --check` PASS. Automated tests were not run for this Git delivery task.
+- Preserved outside the commit: 10 unrelated Study Server #88/#89 tracked edits and 1,400 untracked paths (including preview and Playwright artifacts).
