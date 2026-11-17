@@ -1,0 +1,62 @@
+<div class="ops-page" [attr.data-state]="state.kind">
+  <header class="lms-navbar">
+    <div class="container navbar-inner">
+      <a href="/" class="lms-brand"
+        ><span class="lms-brand-icon" aria-hidden="true">S2W</span
+        ><span class="lms-brand-name">Study2Work LMS</span></a
+      >
+      <nav class="lms-nav-links" aria-label="Điều hướng chính">
+        <a href="/">Trang chủ</a><a href="/login">Đăng nhập</a>
+      </nav>
+    </div>
+  </header>
+  <main class="ops-main container">
+    <div class="gate-alert-banner" role="status">
+      <div class="gate-alert-left">
+        <span class="gate-question-icon" aria-hidden="true">?</span>
+        <div>
+          <div class="gate-title-row">
+            <strong class="gate-title">{{ state.title }}</strong
+            ><span class="gate-pill-red">SH-07</span>
+          </div>
+          <p class="gate-desc">{{ state.message }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="ops-header-row">
+      <div>
+        <div class="breadcrumb-line"><a href="/">Trang chủ</a><span>/</span><span>SH-07</span></div>
+        <h1 class="ops-page-title">Theo dõi tác vụ bất đồng bộ</h1>
+        <p class="ops-page-sub">
+          Trạng thái tác vụ chỉ được hiển thị sau khi backend xác nhận Operation ID và quyền truy
+          cập.
+        </p>
+      </div>
+    </div>
+    <div class="ops-grid">
+      <section class="ops-card" aria-labelledby="operation-gate-title">
+        <div class="op-id-header">
+          <div class="op-id-left">
+            <span class="hourglass-box" aria-hidden="true">⌛</span>
+            <div>
+              <span class="op-kicker">TRẠNG THÁI HIỆN TẠI</span>
+              <h2 id="operation-gate-title">Chờ hợp đồng API #18</h2>
+            </div>
+          </div>
+        </div>
+        <p class="gated-subtext">
+          Đường dẫn có thể chứa một mã tác vụ, nhưng riêng mã trên URL không chứng minh tác vụ tồn
+          tại hay thuộc về tài khoản hiện tại.
+        </p>
+        <div class="anti-faking-box">
+          <strong class="af-title">Không giả lập tiến trình</strong>
+          <p class="af-desc">
+            Không có phần trăm, đồng hồ đếm ngược, kết quả tải xuống hoặc trạng thái thành công cho
+            đến khi dữ liệu thật được xác minh.
+          </p>
+        </div>
+        <div class="ops-actions-row"><a href="/" class="btn-ops-primary">Về trang chủ</a></div>
+      </section>
+    </div>
+  </main>
+</div>

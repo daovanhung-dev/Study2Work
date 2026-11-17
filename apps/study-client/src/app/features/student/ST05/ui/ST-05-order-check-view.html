@@ -1,0 +1,36 @@
+<div class="checkout-page">
+  <main class="container main-wrap">
+    <div class="crumb-row">
+      <a href="/student">Tổng quan</a>
+      <span>›</span>
+      <span>Kiểm tra khóa học</span>
+      <span>›</span>
+      <a [href]="backToEnrollUrl">Kiểm tra ghi danh</a>
+      <span>›</span>
+      <span class="crumb-active">Kiểm tra đơn hàng</span>
+    </div>
+
+    <div class="center-area">
+      <div class="gate-card">
+        <div class="icon-circle" aria-hidden="true">🛒</div>
+        <h1>Kiểm tra đơn hàng</h1>
+        @if (loadState === 'loading') {
+          <h2>Đang kiểm tra thông tin khóa học.</h2>
+        } @else if (loadState === 'ready' && course) {
+          <h2>{{ course.title }}</h2>
+          <p>{{ course.description }}</p>
+          <p>
+            Chưa thể tạo đơn hàng vì điều kiện ghi danh và hợp đồng tạo đơn hàng chưa được xác nhận.
+          </p>
+        } @else if (loadState === 'missing') {
+          <h2>Không tìm thấy khóa học.</h2>
+          <p>Khóa học này không còn hiển thị công khai hoặc đường dẫn không hợp lệ.</p>
+        } @else {
+          <h2>Chưa thể tải thông tin khóa học.</h2>
+          <p>Vui lòng thử lại sau.</p>
+        }
+        <a [href]="backToEnrollUrl" class="btn-primary">← Quay lại kiểm tra ghi danh</a>
+      </div>
+    </div>
+  </main>
+</div>

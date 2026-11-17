@@ -3,7 +3,10 @@ import type { HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { STUDY_API_BASE_PATH, type StudyApiDescriptor } from '../constant/api.constants';
+import {
+  STUDY_API_BASE_PATH,
+  type StudyApiDescriptor,
+} from '../constant/api.constants';
 import type { ApiEnvelope } from './api-envelope';
 
 export type { StudyApiMethod } from '../constant/api.constants';
@@ -35,6 +38,25 @@ export class StudyApiService {
       headers: options.headers,
       params: options.params,
     });
+  }
+
+  /** Returns the HTTP status as well as the response envelope. */
+  requestResponse<T>(api: StudyApiDescriptor, options: StudyApiRequestOptions = {}) {
+    if (api.status === 'UNWIRED') {
+      throw new Error(`Study API #${api.id} is marked UNWIRED and cannot be requested.`);
+    }
+
+    const path = resolveApiPath(api, options.pathParams);
+    return this.http.request<ApiEnvelope<T>>(
+      api.method,
+      `${STUDY_API_BASE_PATH}${path}`,
+      {
+        body: options.body,
+        headers: options.headers,
+        params: options.params,
+        observe: 'response',
+      },
+    );
   }
 }
 

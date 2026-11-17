@@ -1,0 +1,25 @@
+<div class="checkout-page" [attr.data-state]="state.kind">
+  <main class="container main-wrap">
+    <div class="crumb-row">
+      <a href="/student">Tổng quan</a>
+      <span>›</span>
+      <span>Kiểm tra khóa học</span>
+      <span>›</span>
+      <span>Kiểm tra ghi danh</span>
+      <span>›</span>
+      <span class="crumb-active">Thực hiện thanh toán</span>
+    </div>
+
+    <h1 class="page-heading">Thực hiện thanh toán</h1>
+
+    <div class="center-area">
+      <div class="gate-card">
+        <div class="icon-circle">💳</div>
+        <h2>Thực hiện thanh toán</h2>
+        <h3>{{ state.title }}</h3>
+        <p>{{ state.message }}</p>
+        <a href="/student/courses" class="btn-primary">← Về khóa học của tôi</a>
+      </div>
+    </div>
+  </main>
+</div>

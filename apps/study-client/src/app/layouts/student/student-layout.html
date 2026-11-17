@@ -1,5 +1,44 @@
-<div class="student-shell" [class.portal-shell]="shellMode === 'portal'" [class.exam-shell]="shellMode === 'exam'" [class.blank-shell]="shellMode === 'blank'">
-  @if (shellMode === 'legacy') {
+<div class="student-layout student-shell" [class.portal-shell]="shellMode === 'portal'" [class.exam-shell]="shellMode === 'exam'" [class.blank-shell]="shellMode === 'blank'">
+  @if (section() !== null) {
+    <header class="feature-student-header">
+      <div class="shell-container header-inner">
+        <a class="feature-brand" routerLink="/student" aria-label="Study2Work LMS — trang chủ học viên">
+          <span class="brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m2 9 10-5 10 5-10 5L2 9Z" />
+              <path d="M6 11v5c3.5 2.8 8.5 2.8 12 0v-5" />
+              <path d="M22 9v7" />
+            </svg>
+          </span>
+          <span class="brand-copy"><strong>Study2Work</strong><small>LMS PLATFORM</small></span>
+        </a>
+
+        <nav id="student-primary-nav" class="student-nav" [class.open]="mobileNavOpen" aria-label="Điều hướng học viên">
+          <a routerLink="/student" [class.active]="section() === 'overview'" [attr.aria-current]="section() === 'overview' ? 'page' : null" (click)="closeMenu()">Trang chủ</a>
+          <a routerLink="/student/courses" [class.active]="section() === 'myCourses'" [attr.aria-current]="section() === 'myCourses' ? 'page' : null" (click)="closeMenu()">Khóa học của tôi</a>
+          <a routerLink="/student/progress" (click)="closeMenu()">Tiến độ</a>
+          <a routerLink="/student/discussions" (click)="closeMenu()">Thảo luận</a>
+          <a routerLink="/student/notifications" (click)="closeMenu()">Thông báo</a>
+        </nav>
+
+        <div class="header-actions">
+          <button type="button" class="menu-toggle" aria-controls="student-primary-nav" [attr.aria-expanded]="mobileNavOpen" [attr.aria-label]="mobileNavOpen ? 'Đóng menu học viên' : 'Mở menu học viên'" (click)="mobileNavOpen = !mobileNavOpen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              @if (mobileNavOpen) { <path d="M5 5 19 19M19 5 5 19" /> } @else { <path d="M4 6h16M4 12h16M4 18h16" /> }
+            </svg>
+          </button>
+          <a class="student-account" routerLink="/student/profile" [class.active]="section() === 'profile'" [attr.aria-current]="section() === 'profile' ? 'page' : null" aria-label="Hồ sơ học viên">
+            <span class="account-copy"><strong>Hồ sơ</strong><small>HỌC VIÊN</small></span>
+            <span class="account-avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3" /><path d="M5 19c.6-3.1 3.2-5 7-5s6.4 1.9 7 5" /></svg>
+            </span>
+          </a>
+        </div>
+      </div>
+    </header>
+  }
+
+  @if (section() === null && shellMode === 'legacy') {
     <header class="student-header">
       <div class="header-content">
         <a class="brand" href="/student/courses" aria-label="Study2Work">
@@ -16,7 +55,7 @@
     </header>
   }
 
-  @if (shellMode === 'portal') {
+  @if (section() === null && shellMode === 'portal') {
     <header class="portal-header">
       <div class="portal-header-content">
         <div class="portal-brand" aria-label="Study2Work LMS">
@@ -34,13 +73,34 @@
     </header>
   }
 
-  @if (shellMode === 'blank') { <header class="blank-header"></header> }
+  @if (section() === null && shellMode === 'blank') { <header class="blank-header"></header> }
 
-  <main class="student-main" [class.portal-main]="shellMode === 'portal'" [class.exam-main]="shellMode === 'exam'" [class.blank-main]="shellMode === 'blank'">
-    <router-outlet (activate)="setShellMode()" />
-  </main>
+  @if (section() !== null) {
+    <div class="student-content"><router-outlet (activate)="setShellMode()" /></div>
+  } @else {
+    <main class="student-main" [class.portal-main]="shellMode === 'portal'" [class.exam-main]="shellMode === 'exam'" [class.blank-main]="shellMode === 'blank'">
+      <router-outlet (activate)="setShellMode()" />
+    </main>
+  }
 
-  @if (shellMode === 'legacy') {
+  @if (section() !== null) {
+    <footer class="feature-student-footer">
+      <div class="shell-container footer-inner">
+        <div class="footer-meta">
+          <small>© {{ currentYear }} Study2Work LMS. All rights reserved.</small>
+          <span class="footer-separator" aria-hidden="true">•</span>
+          <span class="accessibility-note"><span aria-hidden="true">◎</span> Hỗ trợ tiếp cận</span>
+        </div>
+        <nav class="footer-nav" aria-label="Thông tin và hỗ trợ">
+          <span aria-disabled="true">Điều khoản dịch vụ</span>
+          <span aria-disabled="true">Chính sách bảo mật</span>
+          <span aria-disabled="true">Trợ giúp</span>
+        </nav>
+      </div>
+    </footer>
+  }
+
+  @if (section() === null && shellMode === 'legacy') {
     <footer class="student-footer">
       <div class="footer-content">
         <div class="footer-brand">Study2Work</div>
@@ -53,7 +113,7 @@
     </footer>
   }
 
-  @if (shellMode === 'portal') {
+  @if (section() === null && shellMode === 'portal') {
     <footer class="portal-footer">
       <div class="portal-footer-content">
         <div><strong>Study2Work LMS</strong><p>Hệ sinh thái đào tạo trực tuyến chuẩn hóa kết nối học tập với việc làm thực tế, nâng tầm sự nghiệp thế hệ trẻ cùng chuyên gia cố vấn công nghệ &amp; doanh nghiệp.</p><div class="portal-trust"><span>◉ ISO/IEC 27001</span><span>◉ ISO 21001 EdTech</span><span>♜ Chứng nhận Bộ GD&amp;ĐT</span></div></div>
@@ -64,5 +124,5 @@
       <div class="portal-copyright">© 2025 Study2Work LMS. Bản quyền thuộc về Tổ chức Giáo dục &amp; Việc làm Study2Work. <span>Nền tảng Học tập &amp; Khảo thí Số Thế hệ Mới</span></div>
     </footer>
   }
-  @if (shellMode === 'blank') { <footer class="blank-footer"></footer> }
+  @if (section() === null && shellMode === 'blank') { <footer class="blank-footer"></footer> }
 </div>

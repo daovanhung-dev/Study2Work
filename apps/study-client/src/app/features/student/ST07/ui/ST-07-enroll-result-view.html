@@ -1,0 +1,22 @@
+<div class="checkout-page" [attr.data-state]="state.kind">
+  <main class="container main-wrap">
+    <div class="crumb-row">
+      <a href="/student">Tổng quan</a>
+      <span>›</span>
+      <span>Kiểm tra khóa học</span>
+      <span>›</span>
+      <span class="crumb-active">Kết quả đăng ký khóa học</span>
+    </div>
+
+    <h1 class="page-heading">Kết quả đăng ký khóa học</h1>
+
+    <div class="center-area">
+      <div class="gate-card">
+        <div class="icon-circle">☑</div>
+        <h2>{{ state.title }}</h2>
+        <p>{{ state.message }}</p>
+        <a href="/student/courses" class="btn-primary">Về khóa học của tôi</a>
+      </div>
+    </div>
+  </main>
+</div>

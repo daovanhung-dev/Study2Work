@@ -1,0 +1,137 @@
+<div class="portal-page" [attr.data-state]="state.kind">
+  <!-- Gate Banner -->
+  <div class="gate-strip">
+    <div class="portal-container gate-inner">
+      <div class="gate-left">
+        <span class="gate-dot">!</span>
+        <span>SPECIFICATION GATE ACTIVE • API #20, #21, #38, #43 DESIGN_ONLY (D)</span>
+      </div>
+      <div class="gate-right">
+        <span>Giao diện kiểm thử Hand-off ST-01</span>
+        <span>•</span>
+        <span class="gate-policy">Zero Synthetic Data Policy</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main class="portal-container main-body">
+    <div class="breadcrumb">
+      <a href="/student">Study2Work LMS</a>
+      <span>›</span>
+      <span class="crumb-current">ST-01 Tổng quan học viên (/student)</span>
+    </div>
+
+    <!-- Hero Summary Card -->
+    <section class="hero-card">
+      <div class="hero-info">
+        <div class="badge-row">
+          <span class="badge-blue">MÃ MÀN HÌNH: ST-01</span>
+          <span class="badge-gray">TIÊU CHUẨN DESIGN_ONLY</span>
+        </div>
+        <h1 class="page-title">Tổng quan học tập</h1>
+        <p class="page-desc">
+          Không gian hiển thị tổng quan tiến trình đào tạo nghề nghiệp cá nhân. Hiện tại, toàn bộ
+          dịch vụ dữ liệu học viên (học phần, thống kê hoàn thành, danh hiệu và bản tin) đang trong
+          giai đoạn hoàn thiện hợp đồng giao tiếp API với backend. Trạng thái kiểm thử tuân thủ
+          nghiêm ngặt nguyên tắc cổng kiểm soát, không phát sinh số liệu nhân tạo.
+        </p>
+      </div>
+      <div class="status-pill-card">
+        <div class="status-icon">✓</div>
+        <div>
+          <div class="status-label">TRẠNG THÁI CỔNG</div>
+          <div class="status-value">{{ state.title }}</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2-Column Grid -->
+    <div class="content-grid">
+      <div class="modules-col">
+        <!-- Module 1 -->
+        <section class="module-card">
+          <div class="module-header">
+            <div>
+              <h2 class="module-title">Khóa học đang học</h2>
+              <p class="module-sub">Cổng kết nối: API #20 (Khóa học của tôi)</p>
+            </div>
+            <span class="badge-gray">DESIGN_ONLY</span>
+          </div>
+          <div class="gated-empty-box">
+            <div class="empty-icon">🔒</div>
+            <h3>Chưa nạp được danh sách khóa học</h3>
+            <p>
+              Endpoint API #20 đang trong quy trình đặc tả cấu trúc dữ liệu JSON Schema. Danh sách
+              sẽ chỉ xuất hiện khi API #20 trả dữ liệu ghi danh hợp lệ.
+            </p>
+            <a href="/student/courses" class="btn-primary">Đi đến Khóa học của tôi (ST-08) →</a>
+          </div>
+        </section>
+
+        <!-- Module 2 -->
+        <section class="module-card">
+          <div class="module-header">
+            <div>
+              <h2 class="module-title">Tiến độ tổng quan</h2>
+              <p class="module-sub">Cổng kết nối: API #21 (Tiến độ tổng hợp)</p>
+            </div>
+            <span class="badge-gray">DESIGN_ONLY</span>
+          </div>
+          <div class="gated-empty-box">
+            <div class="empty-icon">📈</div>
+            <h3>Không có dữ liệu tiến độ thực tế</h3>
+            <p>
+              Không hiển thị biểu đồ, chỉ số KPI hoặc thanh tỷ lệ % giả định. Tiến độ chỉ xuất hiện
+              sau khi API #21 có dữ liệu được xác minh.
+            </p>
+            <a href="/student/courses" class="btn-secondary">Về khóa học của tôi</a>
+          </div>
+        </section>
+
+        <!-- Module 3 -->
+        <section class="module-card">
+          <div class="module-header">
+            <div>
+              <h2 class="module-title">Thành tích &amp; Chứng nhận</h2>
+              <p class="module-sub">Cổng kết nối: API #38 (Thành tích)</p>
+            </div>
+            <span class="badge-gray">DESIGN_ONLY</span>
+          </div>
+          <div class="gated-empty-box">
+            <div class="empty-icon">🏅</div>
+            <h3>Kho chứng chỉ &amp; huy hiệu chưa khả dụng</h3>
+            <p>
+              Hệ thống tuân thủ cam kết không tự cấp chứng chỉ hoặc hiển thị phù hiệu ngẫu nhiên.
+              Mọi minh chứng đánh giá năng lực nghề nghiệp đều cần chữ ký kiểm định từ hệ thống chấm
+              điểm ST-22.
+            </p>
+            <strong class="wait-caption">Chờ kích hoạt cổng xác thực chứng chỉ doanh nghiệp</strong>
+          </div>
+        </section>
+
+        <!-- Module 4 -->
+        <section class="module-card">
+          <div class="module-header">
+            <div>
+              <h2 class="module-title">Thông báo mới nhất</h2>
+              <p class="module-sub">Cổng kết nối: API #43 (Thông báo)</p>
+            </div>
+            <span class="badge-gray">DESIGN_ONLY</span>
+          </div>
+          <div class="gated-empty-box">
+            <div class="empty-icon">✉️</div>
+            <h3>Gateway thông báo đang tạm khóa</h3>
+            <p>
+              Chưa kích hoạt gateway sự kiện thời gian thực (SSE/Webhook). Hộp thư thông báo học tập
+              không ghi nhận tin nhắn rác hoặc thông tin nhắc lịch chưa xác thực.
+            </p>
+            <span class="btn-secondary" aria-disabled="true">Thông báo chưa khả dụng</span>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right Sidebar Matrix -->
+    </div>
+  </main>
+</div>

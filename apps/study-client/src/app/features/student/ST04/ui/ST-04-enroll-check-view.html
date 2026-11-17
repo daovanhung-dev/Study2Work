@@ -1,0 +1,35 @@
+<div class="checkout-page">
+  <div class="breadcrumb-bar">
+    <div class="container crumb-inner">
+      <a href="/student">Tổng quan</a>
+      <span>›</span>
+      <span>Kiểm tra khóa học</span>
+      <span>›</span>
+      <span class="crumb-current">Kiểm tra ghi danh</span>
+    </div>
+  </div>
+
+  <main class="main-center">
+    <div class="gate-card">
+      <div class="icon-circle" aria-hidden="true">✓</div>
+      <h1>Kiểm tra ghi danh</h1>
+      @if (loadState === 'loading') {
+        <h2>Đang tải thông tin khóa học.</h2>
+      } @else if (loadState === 'ready' && course) {
+        <h2>{{ course.title }}</h2>
+        <p>{{ course.description }}</p>
+        <p>
+          Chưa thể xác nhận điều kiện ghi danh. Vui lòng đăng nhập và thử lại khi dịch vụ kiểm tra
+          ghi danh sẵn sàng.
+        </p>
+      } @else if (loadState === 'missing') {
+        <h2>Không tìm thấy khóa học.</h2>
+        <p>Khóa học này không còn hiển thị công khai hoặc đường dẫn không hợp lệ.</p>
+      } @else {
+        <h2>Chưa thể tải thông tin khóa học.</h2>
+        <p>Vui lòng thử lại sau.</p>
+      }
+      <a href="/student" class="btn-primary">← Về tổng quan học viên</a>
+    </div>
+  </main>
+</div>

@@ -1,0 +1,608 @@
+<!-- 1. HEADER BAR -->
+<header class="site-header">
+  <div class="container header-container">
+    <!-- Logo & Nav Links -->
+    <div class="logo-nav-group">
+      <a href="#" class="brand-lockup">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">Study2Work</span>
+          <span class="brand-sub">LEARNING MANAGEMENT</span>
+        </div>
+      </a>
+
+      <nav class="main-nav" [class.main-nav--open]="mobileNavOpen" aria-label="Điều hướng chính">
+        <button type="button" class="nav-btn nav-btn-active" aria-current="page">Trang chủ</button>
+        <button type="button" class="nav-btn">Khóa học</button>
+        <button type="button" class="nav-btn">Lộ trình học</button>
+        <button type="button" class="nav-btn">Diễn đàn</button>
+      </nav>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <button
+        type="button"
+        class="mobile-nav-toggle"
+        [attr.aria-expanded]="mobileNavOpen"
+        aria-label="Mở hoặc đóng menu"
+        (click)="mobileNavOpen = !mobileNavOpen"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <!-- Search Input -->
+      <div class="search-input-wrapper">
+        <svg
+          class="search-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          name="headerSearch"
+          placeholder="Tìm kiếm khóa học, kỹ năng, tài liệu..."
+          class="header-search-field"
+        />
+        <button *ngIf="searchQuery" type="button" class="clear-search-btn">&times;</button>
+      </div>
+
+      <nav class="guest-auth-actions" aria-label="Tài khoản khách">
+        <a href="/login" class="guest-auth-link">Đăng nhập</a>
+        <a href="/register" class="guest-auth-link guest-auth-link-primary">Đăng ký</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<!-- 2 & 3. HERO SECTION -->
+<section class="hero-section">
+  <div class="hero-bg-glow"></div>
+
+  <div class="container hero-container text-center">
+    <!-- 2. Announcement Pill -->
+    <div class="announcement-pill">
+      <span class="pulsing-green-dot"></span>
+      <span class="pill-bold">TUYỂN SINH Q2/2025</span>
+      <span class="divider">|</span>
+      <span class="pill-desc">Học bổng tài năng công nghệ lên tới 70%</span>
+      <span class="arrow-right">➔</span>
+    </div>
+
+    <!-- 3. Headline -->
+    <h1 class="hero-headline">
+      Học thực chiến — Làm thực tế — Kết nối việc làm
+      <br />
+      cùng
+      <span class="highlight-brand">Study2Work<span class="brand-curve-underline"></span></span>
+    </h1>
+
+    <p class="hero-subtitle">
+      Chương trình đào tạo chuyển đổi nghề nghiệp chuẩn hóa doanh nghiệp với sự đồng hành 1-on-1 từ
+      Senior Engineer & Tech Lead tại các tập đoàn hàng đầu.
+    </p>
+
+    <!-- 4 & 5. Large Search Bar -->
+    <form (submit)="onHeroSearch($event)" class="hero-search-card">
+      <svg
+        class="search-large-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        name="headerSearch"
+        name="heroSearch"
+        placeholder="Tìm công nghệ, vị trí mục tiêu (React, Go, AI Engineer, UI/UX...)"
+        class="hero-search-input"
+      />
+      <button type="submit" class="btn-primary btn-search-submit">
+        <span>Tìm khóa học</span>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          class="btn-arrow-icon"
+        >
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </button>
+    </form>
+
+    <!-- 6. Action Buttons -->
+    <div class="hero-cta-group">
+      <button type="button" class="btn-primary btn-lg">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          class="btn-icon"
+        >
+          <path d="M2 10 12 5l10 5-10 5L2 10Z"></path>
+          <path d="M6 12v5c3.7 2.7 8.3 2.7 12 0v-5"></path>
+          <path d="M22 10v6"></path>
+        </svg>
+        <span>Khám phá khóa học</span>
+      </button>
+      <button type="button" class="btn-outline btn-lg">
+        <span>Đăng ký nhận lộ trình</span>
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          class="btn-icon-sm"
+        >
+          <line x1="7" y1="17" x2="17" y2="7"></line>
+          <polyline points="7 7 17 7 17 17"></polyline>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- 7. STATS CARDS -->
+<section class="stats-section">
+  <div class="container">
+    <div class="stats-grid">
+      <!-- Stat 1 -->
+      <div class="stat-card">
+        <div class="stat-icon-box bg-blue-tint text-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <h3 class="stat-number">10,000+</h3>
+          <p class="stat-label">Học viên tốt nghiệp thành công</p>
+        </div>
+      </div>
+
+      <!-- Stat 2 -->
+      <div class="stat-card">
+        <div class="stat-icon-box bg-emerald-tint text-emerald">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+            <line x1="7" y1="2" x2="7" y2="22"></line>
+            <line x1="17" y1="2" x2="17" y2="22"></line>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <line x1="2" y1="7" x2="7" y2="7"></line>
+            <line x1="2" y1="17" x2="7" y2="17"></line>
+            <line x1="17" y1="17" x2="22" y2="17"></line>
+            <line x1="17" y1="7" x2="22" y2="7"></line>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <h3 class="stat-number">120+</h3>
+          <p class="stat-label">Khóa học công nghệ chuyên sâu</p>
+        </div>
+      </div>
+
+      <!-- Stat 3 -->
+      <div class="stat-card">
+        <div class="stat-icon-box bg-amber-tint text-amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+          </svg>
+        </div>
+        <div class="stat-info">
+          <div class="flex-align">
+            <h3 class="stat-number">94%</h3>
+            <span class="badge-tag-success">Đạt chuẩn</span>
+          </div>
+          <p class="stat-label">Có việc làm trong vòng 6 tháng</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8, 9, 10. CAREER CATEGORIES SECTION -->
+<section class="categories-section">
+  <div class="container">
+    <div class="section-title-bar">
+      <div>
+        <p class="section-kicker">HỆ SINH THÁI KỸ NĂNG</p>
+        <h2 class="section-heading">Khám phá theo danh mục nghề nghiệp</h2>
+      </div>
+    </div>
+
+    <div class="categories-scroll-list" *ngIf="categoryState === 'ready'">
+      <div class="category-card" *ngFor="let cat of categories; trackBy: trackCategory">
+        <span class="category-title">{{ cat.name }}</span>
+      </div>
+    </div>
+    <div class="inline-state" *ngIf="categoryState === 'loading'">Đang tải danh mục...</div>
+    <div class="inline-state" *ngIf="categoryState === 'empty'">
+      Hiện chưa có danh mục để hiển thị.
+    </div>
+    <div class="inline-state" *ngIf="categoryState === 'error'">
+      Chưa tải được danh mục.
+      <button type="button" (click)="retryCategories.emit()">Thử lại</button>
+    </div>
+  </div>
+</section>
+<!-- 11, 12, 13. FEATURED COURSES SECTION -->
+<section id="featured-courses-section" class="featured-courses-section">
+  <div class="container">
+    <div class="courses-header-row">
+      <div>
+        <p class="section-kicker">CHƯƠNG TRÌNH TUYỂN CHỌN</p>
+        <h2 class="section-heading">Khóa học nổi bật &amp; sẵn sàng việc làm</h2>
+        <p class="section-subtext">
+          Nắm vững kỹ năng thực tiễn thông qua các đồ án sản phẩm quy chuẩn công nghiệp.
+        </p>
+      </div>
+      <div class="filter-tabs-row">
+        <span class="filter-tab-btn tab-active">Tất cả</span
+        ><span class="filter-tab-btn">Bán chạy nhất</span
+        ><span class="filter-tab-btn">Mới ra mắt</span
+        ><span class="view-all-link">Xem toàn bộ ➔</span>
+      </div>
+    </div>
+    <div class="courses-grid" *ngIf="courseState === 'ready'">
+      <article
+        class="course-card-item"
+        *ngFor="let course of filteredCourses; trackBy: trackCourse"
+      >
+        <div class="course-thumbnail-box">
+          <img
+            *ngIf="course.thumbnail_url"
+            [src]="course.thumbnail_url"
+            [alt]="course.title"
+            class="course-thumb-img"
+          />
+          <div *ngIf="!course.thumbnail_url" class="thumbnail-fallback">Study2Work</div>
+          <span class="course-badge badge-blue">Khóa học</span>
+        </div>
+        <div class="course-card-content">
+          <div class="course-duration-line">Khóa học thực chiến</div>
+          <h3 class="course-card-title">{{ course.title }}</h3>
+          <p class="course-card-desc" *ngIf="course.description">{{ course.description }}</p>
+          <div class="course-card-footer">
+            <div class="instructor-lockup">
+              <img
+                *ngIf="course.mentor.avatar_url"
+                [src]="course.mentor.avatar_url"
+                [alt]="course.mentor.full_name"
+                class="inst-avatar"
+              />
+              <div *ngIf="!course.mentor.avatar_url" class="inst-avatar-initials">
+                {{ course.mentor.full_name.charAt(0) }}
+              </div>
+              <div class="inst-text">
+                <p class="inst-name">{{ course.mentor.full_name }}</p>
+                <p class="inst-role">Giảng viên</p>
+              </div>
+            </div>
+            <div class="price-lockup">
+              <span class="price-current">{{ course.price }}</span>
+            </div>
+          </div>
+        </div>
+      </article>
+      <div class="inline-state" *ngIf="filteredCourses.length === 0">
+        Không có khóa học khớp từ khóa trong danh sách đang hiển thị.
+      </div>
+    </div>
+    <div class="inline-state" *ngIf="courseState === 'loading'">Đang tải khóa học...</div>
+    <div class="inline-state" *ngIf="courseState === 'empty'">
+      Hiện chưa có khóa học để giới thiệu.
+    </div>
+    <div class="inline-state" *ngIf="courseState === 'error'">
+      Chưa tải được khóa học. <button type="button" (click)="retryCourses.emit()">Thử lại</button>
+    </div>
+  </div>
+</section>
+
+<!-- 14 & 15. REASONS SECTION -->
+<section class="reasons-section">
+  <div class="container text-center">
+    <p class="section-kicker">GIÁ TRỊ VƯỢT TRỘI</p>
+    <h2 class="section-heading">Vì sao chọn Study2Work để chuyển đổi sự nghiệp?</h2>
+    <p class="section-subtext centered-sub">
+      Chúng tôi xóa bỏ khoảng cách giữa giảng đường lý thuyết và nhu cầu thực tế của các doanh
+      nghiệp công nghệ hàng đầu.
+    </p>
+
+    <div class="reasons-grid text-left">
+      <!-- Card 1 -->
+      <div class="reason-card-box">
+        <div class="reason-icon-square bg-blue-dark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <h3 class="reason-title">Lộ trình bám sát dự án thực tế</h3>
+        <p class="reason-desc">
+          Học viên không làm bài tập ví dụ đơn giản mà trực tiếp phát triển các module cho hệ thống
+          thực tiễn: fintech, e-commerce và micro-services với tiêu chuẩn code clean.
+        </p>
+        <div class="reason-footer-link text-blue"><span>Portfolio 3+ dự án hoàn chỉnh</span> ✓</div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="reason-card-box">
+        <div class="reason-icon-square bg-emerald-dark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="18" r="3"></circle>
+            <circle cx="6" cy="6" r="3"></circle>
+            <path d="M13 6h3a2 2 0 0 1 2 2v7"></path>
+            <line x1="6" y1="9" x2="6" y2="21"></line>
+          </svg>
+        </div>
+        <h3 class="reason-title">1-on-1 Code Review & Mentor hỗ trợ</h3>
+        <p class="reason-desc">
+          Mỗi pull request nộp lên đều được Senior Mentor kiểm duyệt từng dòng code, hướng dẫn
+          refactor tối ưu hiệu năng và sửa lỗi logic trực tiếp hàng tuần.
+        </p>
+        <div class="reason-footer-link text-emerald">
+          <span>Phản hồi chi tiết trong 24 giờ</span> 🕒
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="reason-card-box">
+        <div class="reason-icon-square bg-amber-dark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="8" r="7"></circle>
+            <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+          </svg>
+        </div>
+        <h3 class="reason-title">Cam kết chuẩn bị CV & kết nối doanh nghiệp</h3>
+        <p class="reason-desc">
+          Huấn luyện phỏng vấn kỹ thuật (Mock Interview), chuẩn hóa hồ sơ năng lực LinkedIn, GitHub
+          và kết nối phỏng vấn trực tiếp tới mạng lưới 80+ đối tác tuyển dụng.
+        </p>
+        <div class="reason-footer-link text-amber">
+          <span>Bảo chứng việc làm theo hợp đồng đào tạo</span> 📄
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 16, 17, 18. TESTIMONIALS & PARTNERS -->
+<section class="testimonials-section">
+  <div class="container">
+    <div class="section-title-bar">
+      <div>
+        <p class="section-kicker">CÂU CHUYỆN THÀNH CÔNG</p>
+        <h2 class="section-heading">Từ học viên đến kỹ sư tại các tập đoàn công nghệ</h2>
+      </div>
+      <p class="text-muted">Hơn 9.000 học viên đã tin tưởng và bứt phá sự nghiệp</p>
+    </div>
+
+    <!-- 3 Testimonial Cards -->
+    <div class="testimonials-grid">
+      <div class="testimonial-card-box">
+        <div class="gold-stars">★★★★★</div>
+        <p class="testi-quote">
+          "Trước khi học tại Study2Work, tôi tốt nghiệp ngành Tài chính và tự học code rất mông
+          lung. Khóa Full-stack với mentor review code đã giúp tôi hiểu cặn kẽ kiến trúc backend.
+          Chỉ sau 4 tháng, tôi đã nhận offer Software Engineer tại VNG."
+        </p>
+        <div class="testi-author-row">
+          <img
+            src="/assets/images/avatar_software_engineer_1794501769585.jpg"
+            alt="Nguyễn Văn Bình"
+            class="testi-avatar"
+          />
+          <div>
+            <h4 class="testi-author-name">Nguyễn Văn Bình</h4>
+            <p class="testi-role">Software Engineer • VNG Corporation</p>
+            <p class="testi-batch">Cựu học viên K14</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card-box">
+        <div class="gold-stars">★★★★★</div>
+        <p class="testi-quote">
+          "Khóa học DevOps đã thay đổi hoàn toàn tư duy vận hành của tôi. Từ một SysAdmin truyền
+          thống, tôi đã làm chủ Kubernetes, CI/CD Pipeline và Terraform. Phòng Hỗ trợ việc làm của
+          Study2Work kết nối phỏng vấn rất chu đáo."
+        </p>
+        <div class="testi-author-row">
+          <div class="testi-avatar-initials bg-emerald-light">LM</div>
+          <div>
+            <h4 class="testi-author-name">Lê Minh Hoàng</h4>
+            <p class="testi-role">DevOps Specialist • Techcombank</p>
+            <p class="testi-batch">Cựu học viên K18</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial-card-box">
+        <div class="gold-stars">★★★★★</div>
+        <p class="testi-quote">
+          "Mentor không chỉ dạy Figma mà dạy tư duy thiết kế lấy người dùng làm trọng tâm và cách
+          giao tiếp với lập trình viên. Đồ án tốt nghiệp của tôi được các nhà tuyển dụng tại Shopee
+          đánh giá rất cao về tính khả thi."
+        </p>
+        <div class="testi-author-row">
+          <div class="testi-avatar-initials bg-purple-light">TH</div>
+          <div>
+            <h4 class="testi-author-name">Trần Thu Hà</h4>
+            <p class="testi-role">Product UI/UX Designer • Shopee</p>
+            <p class="testi-batch">Cựu học viên K21</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 18. Partner Strip -->
+    <div class="partners-strip">
+      <span class="partners-label">HỌC VIÊN ĐANG LÀM VIỆC TẠI:</span>
+      <div class="partners-logos">
+        <span *ngFor="let p of partners">{{ p }}</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 19, 20, 21. BLUE CTA BANNER -->
+<section class="cta-banner-section">
+  <div class="container">
+    <div class="blue-cta-box text-center">
+      <div class="cta-pill-tag">KHỞI ĐẦU SỰ NGHIỆP LẬP TRÌNH HÔM NAY</div>
+      <h2 class="cta-heading">Sẵn sàng chuyển hóa kỹ năng để bứt phá thu nhập?</h2>
+      <p class="cta-subtext">
+        Để lại thông tin để nhận buổi tư vấn 1-on-1 đánh giá năng lực hiện tại và lộ trình học nghề
+        công nghệ chi tiết từ Chuyên gia Hướng nghiệp Study2Work.
+      </p>
+
+      <form class="cta-form-row">
+        <input
+          type="text"
+          name="consultEmailOrPhone"
+          placeholder="Nhập email hoặc số điện thoại của bạn..."
+          disabled
+          class="cta-input-field"
+        />
+        <button type="button" disabled class="btn-dark-navy">Nhận tư vấn miễn phí</button>
+      </form>
+
+      <div class="cta-guarantees-row">
+        <span
+          ><svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="m8 12 2.5 2.5 5-5"></path></svg
+          >Không yêu cầu kiến thức đầu vào</span
+        >
+        <span
+          ><svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 14v-3a9 9 0 0 1 18 0v3"></path>
+            <rect x="2" y="13" width="4" height="7" rx="2"></rect>
+            <rect x="18" y="13" width="4" height="7" rx="2"></rect></svg
+          >Hỗ trợ tài chính &amp; trả góp 0%</span
+        >
+        <span
+          ><svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3Z"></path>
+            <path d="m9 12 2 2 4-4"></path></svg
+          >Cam kết bảo mật thông tin</span
+        >
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 22, 23, 24, 25, 26. FOOTER -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-columns-grid">
+      <div class="footer-col-main">
+        <div class="brand-lockup mb-3">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+            </svg>
+          </div>
+          <span class="brand-name">Study2Work</span>
+        </div>
+        <p class="footer-brand-desc">
+          Hệ thống đào tạo và nâng cao kỹ năng nghề nghiệp thực chiến, kết nối nguồn nhân lực học
+          thuật chất lượng cao tới doanh nghiệp tiên phong.
+        </p>
+        <div class="accreditation-badges">
+          <span class="badge-accredited">Accredited LMS EdTech</span>
+          <span class="badge-iso">ISO 9001:2015</span>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h4 class="footer-col-title">Học tập</h4>
+        <ul class="footer-links">
+          <li><a>Tất cả khóa học</a></li>
+          <li><a>Lộ trình theo ngành</a></li>
+          <li><a>Hỏi đáp cộng đồng</a></li>
+          <li><a>Trung tâm chứng chỉ</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4 class="footer-col-title">Về Study2Work</h4>
+        <ul class="footer-links">
+          <li><a>Giới thiệu tổ chức</a></li>
+          <li><a>Đối tác doanh nghiệp</a></li>
+          <li><a>Đội ngũ chuyên gia</a></li>
+          <li><a>Cơ hội nghề nghiệp</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4 class="footer-col-title">Hỗ trợ & Pháp lý</h4>
+        <ul class="footer-links">
+          <li><a>Điều khoản sử dụng</a></li>
+          <li><a>Chính sách bảo mật</a></li>
+          <li><a>Trung tâm hỗ trợ</a></li>
+          <li><a>Liên hệ góp ý</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom-bar">
+      <p>© 2025 Study2Work LMS. Toàn bộ quyền được bảo lưu.</p>
+      <p>Nền tảng kỹ năng số chuẩn doanh nghiệp</p>
+    </div>
+  </div>
+</footer>

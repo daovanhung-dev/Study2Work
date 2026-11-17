@@ -1,0 +1,112 @@
+<div class="access-page" [attr.data-state]="state.kind">
+  <main class="portal-container main-body">
+    <div class="top-row">
+      <div class="breadcrumb">
+        <a href="/student/courses">Khóa học của tôi</a>
+        <span>/</span>
+        <span>Khóa học đang học</span>
+        <span>/</span>
+        <span class="crumb-current">ST-10: Cổng xác thực bài học</span>
+      </div>
+      <span class="gate-pill">● ENTITLEMENT GATE: ACTIVE</span>
+    </div>
+
+    <div class="access-grid">
+      <!-- Left Column -->
+      <div class="left-col">
+        <div class="card">
+          <div class="module-top">
+            <div>
+              <div class="kicker">HAND-OFF TRANSITION MODULE</div>
+              <h1>{{ state.title }}</h1>
+            </div>
+            <span class="badge-red">🔒 SECURITY_GATE_ENFORCED</span>
+          </div>
+
+          <div class="progress-box">
+            <div class="progress-head">
+              <strong>↻ Tiến trình cổng bảo vệ (Entitlement Gate)</strong>
+              <code>CHƯA KIỂM TRA</code>
+            </div>
+            <div class="progress-track"><div class="progress-fill"></div></div>
+            <p>{{ state.message }}</p>
+          </div>
+        </div>
+
+        <div class="protected-placeholder">
+          <div class="pen-circle">✎</div>
+          <h2>Nội dung bài học được bảo vệ tuyệt đối</h2>
+          <p>
+            Player và tài liệu bài giảng bị vô hiệu hóa. Quyền phát media chỉ mở khi nhận payload
+            phân quyền kỹ thuật số cấp từ API #22 (GET /lessons/:id/access).
+          </p>
+          <span class="stream-pill">🔒 Chặn tự động stream - Chờ xác minh quyền từ máy chủ</span>
+        </div>
+
+        <div class="card">
+          <h3>Giải thích kỹ thuật bảo mật (Technical Security Contract)</h3>
+          <p class="contract-copy">
+            Client <strong>tuyệt đối không được tự ý tải dữ liệu bài học</strong> khi server chưa
+            trả cờ cấp quyền hợp lệ từ <code>API #22 (GET /lessons/:id/access)</code> nhằm ngăn chặn
+            lộ nội dung bảo mật, lọt tài liệu độc quyền và xâm phạm lộ trình học có điều kiện. Các
+            yêu cầu <code>API #23</code> và <code>API #24</code> vẫn đang ở chế độ định nghĩa giao
+            diện (DESIGN_ONLY).
+          </p>
+        </div>
+
+        <div class="bottom-actions">
+          <a href="/student/courses" class="btn-white">← Về Khóa học của tôi (ST-08)</a>
+          <button type="button" disabled class="btn-locked">Bắt đầu học — chưa khả dụng</button>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <aside class="right-col">
+        <div class="card">
+          <div class="fsm-head">
+            <h3>Máy trạng thái Hand-off</h3>
+            <span class="badge-gray">FSM</span>
+          </div>
+          <p class="fsm-sub">
+            Lifecycle chuỗi trạng thái bắt buộc của tiến trình Hand-off ST-10 trước khi người học
+            được phép chuyển tới không gian bài học.
+          </p>
+
+          <div class="fsm-step">
+            <div class="step-head">
+              <strong>1. checking</strong><span class="tag-muted">TẠM DỪNG</span>
+            </div>
+            <p>API #22 chưa có hợp đồng runtime xác minh quyền; nội dung học vẫn bị khóa.</p>
+          </div>
+          <div class="fsm-step">
+            <div class="step-head">
+              <strong>2. denied</strong><span class="tag-muted">FALLBACK</span>
+            </div>
+            <p>
+              Quyền bài học bị từ chối hoặc chưa hoàn thành điều kiện tiên quyết. Khóa chuyển tiếp
+              ST-11.
+            </p>
+          </div>
+          <div class="fsm-step">
+            <div class="step-head">
+              <strong>3. started</strong><span class="tag-muted">TARGET ST-11</span>
+            </div>
+            <p>
+              API #23 ghi nhận bắt đầu thành công, chuyển hướng học viên sang ST-11 và giải phóng
+              media.
+            </p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="api-title">Trạng thái API Backend</h3>
+          <div class="api-rows">API #22–#24 chưa sẵn sàng.</div>
+          <p class="api-footnote">
+            Mọi tín hiệu điều hướng đều tuân thủ nguyên tắc không mock bypass, bảo đảm kiểm tra bảo
+            mật đúng hợp đồng kỹ thuật ST-10.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>

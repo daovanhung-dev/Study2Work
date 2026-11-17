@@ -1,0 +1,151 @@
+:host { display: block; min-height: 100vh; }
+.verification-screen {
+  min-height: 100vh;
+  padding: 28px 24px 40px;
+  background: #f7f8fd;
+  color: #172238;
+}
+.verification-layout { width: min(100%, 1120px); margin: 0 auto; }
+.screen-bar {
+  display: flex; align-items: center; gap: 12px;
+  min-height: 68px; padding: 10px 20px; border-radius: 16px;
+  background: #eef2ff; color: #252c3b;
+}
+.screen-label {
+  padding: 6px 12px; border-radius: 999px; background: #064cc8;
+  color: #fff; font-size: 16px; font-weight: 500; white-space: nowrap;
+}
+.route-caption { white-space: nowrap; }
+.screen-route {
+  padding: 6px 10px; border-radius: 5px; background: #d6e6ff;
+  color: #0644bc; font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 16px; overflow-wrap: anywhere;
+}
+.screen-note { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; padding: 6px 10px; border-radius: 10px; background: #d6e6ff; color: #303a4a; font-size: 14px; white-space: nowrap; }
+.screen-note strong { padding: 5px 10px; border-radius: 5px; background: #064cc8; color: white; font-weight: 600; }
+.content-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px; align-items: start; margin-top: 24px; }
+.message-card, .details-card {
+  border: 1px solid #edf0f6; border-radius: 16px; background: #fff;
+  box-shadow: 0 3px 6px rgba(15, 23, 42, .10);
+}
+.message-card { min-height: 656px; padding: 28px; display: flex; flex-direction: column; }
+.message-top { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; }
+.message-icon {
+  width: 80px; height: 80px; display: grid; place-items: center;
+  border-radius: 16px; background: #eef2ff; color: #064cc8;
+}
+.message-icon svg { width: 38px; height: 38px; }
+.response-status { display: grid; gap: 7px; justify-items: end; padding-top: 4px; text-align: right; }
+.response-status > span { font-size: 15px; color: #303a4a; }
+.response-status strong {
+  display: inline-block; max-width: 230px; padding: 8px 12px;
+  border-radius: 999px; background: #e4edff; color: #475569; font-size: 16px; font-weight: 500;
+}
+.response-status strong.status-accepted { background: #e1ebff; color: #0644bc; }
+.response-status strong.status-pending { background: #fff4d9; color: #8a4b08; }
+.message-copy { margin-top: 32px; }
+h1 { margin: 0; color: #172238; font-size: 20px; font-weight: 500; line-height: 1.35; }
+.message-copy p { margin: 14px 0 0; color: #303a4a; font-size: 16px; line-height: 1.75; }
+.message-copy p strong { color: #172238; font-weight: 700; }
+.limits-panel { min-height: 232px; margin-top: 28px; padding: 20px; border-radius: 14px; background: #eef2ff; }
+.limits-title { display: flex; align-items: center; gap: 12px; color: #064cc8; }
+.limits-title svg { width: 28px; height: 28px; flex: 0 0 auto; }
+.limits-title strong { font-size: 15px; letter-spacing: .01em; font-weight: 500; }
+.limits-panel ul { display: grid; gap: 12px; margin: 14px 0 0; padding: 0; list-style: none; }
+.limits-panel li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.55; }
+.limits-panel li svg { width: 18px; height: 18px; flex: 0 0 18px; margin-top: 3px; color: #064cc8; }
+.back-link {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  align-self: flex-start;
+  min-width: min(312px, 100%); min-height: 52px; margin-top: auto; padding: 12px 22px; border-radius: 10px;
+  background: #064cc8; color: #fff; font-size: 15px; font-weight: 500;
+  text-decoration: none;
+}
+.back-link:hover { background: #073b9e; }
+.back-link svg { width: 22px; height: 22px; }
+.back-label-short { display: none; }
+.back-link:focus-visible { outline: 3px solid #064cc8; outline-offset: 3px; }
+.details-column { display: grid; gap: 20px; }
+.details-card { padding: 20px; }
+.details-heading {
+  display: flex; align-items: center; gap: 10px;
+  min-height: 52px; padding: 10px 14px; border-radius: 10px;
+  background: #eef2ff; color: #172238; font-size: 15px;
+}
+.details-heading svg { width: 23px; height: 23px; color: #064cc8; flex: 0 0 auto; }
+.details-heading strong { font-weight: 500; }
+.details-heading small { margin-left: auto; color: #0644bc; font: 700 15px ui-monospace, SFMono-Regular, Consolas, monospace; white-space: nowrap; }
+dl { display: grid; gap: 12px; margin: 18px 0 0; }
+dl > div {
+  display: flex; justify-content: space-between; align-items: center; gap: 20px;
+  min-height: 52px; padding: 10px 12px; border-radius: 9px; background: #f7f8fd;
+}
+dt { color: #303a4a; font-size: 15px; }
+dd {
+  margin: 0; padding: 4px 8px; border-radius: 6px; background: #e1ebff;
+  color: #283446; font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 14px; text-align: right;
+}
+.contract-note { margin-top: 24px; }
+.contract-note-heading { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 8px; color: #303a4a; font-size: 14px; }
+.contract-note-heading code { font-size: 13px; overflow-wrap: anywhere; text-align: right; }
+.contract-body { min-height: 400px; padding: 20px; border-radius: 9px; background: #203149; color: #eaf1ff; }
+.contract-body > span { display: block; margin-bottom: 18px; color: #bed1ef; font-size: 14px; }
+.contract-body code { display: block; color: #fff; font: 14px/1.9 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; }
+.contract-body p { margin: 20px 0 0; color: #d2dff1; font-size: 13px; line-height: 1.6; }
+.details-footnote { display: flex; align-items: center; gap: 12px; margin: 0; padding: 18px 20px; border-radius: 14px; background: #eef2ff; color: #303a4a; font-size: 15px; line-height: 1.5; }
+.details-footnote strong { font-weight: 500; }
+.footnote-icon { display: grid; place-items: center; width: 48px; height: 48px; flex: 0 0 48px; border-radius: 10px; background: #e1ebff; color: #064cc8; }
+.footnote-icon svg { width: 24px; height: 24px; }
+.screen-footer { display: flex; justify-content: space-between; gap: 24px; margin-top: 42px; color: #303a4a; font-size: 14px; }
+@media (min-width: 1024px) {
+  .screen-footer { margin-top: 76px; }
+}
+@media (max-width: 1023px) {
+  .content-grid { grid-template-columns: 1fr; }
+  .message-card { min-height: 0; }
+  .back-link { margin-top: 40px; align-self: flex-start; }
+  .screen-bar { flex-wrap: wrap; }
+  .screen-route { white-space: nowrap; }
+  .screen-note { width: 100%; margin-left: 0; }
+  .contract-body { min-height: 0; }
+  .screen-footer { flex-wrap: wrap; }
+}
+@media (max-width: 600px) {
+  .verification-screen { padding: 20px 16px 28px; }
+  .screen-bar { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; padding: 16px; }
+  .route-caption { justify-self: start; }
+  .screen-route { grid-column: 1 / -1; width: max-content; max-width: 100%; font-size: 14px; }
+  .screen-note { grid-column: 1 / -1; width: 100%; margin-left: 0; white-space: normal; }
+  .message-card { padding: 24px 20px; }
+  .message-top { flex-direction: column; gap: 18px; }
+  .message-icon { width: 60px; height: 60px; }
+  .message-icon svg { width: 30px; height: 30px; }
+  .response-status { justify-items: start; text-align: left; }
+  .response-status strong { max-width: 100%; text-align: left; }
+  .limits-panel { min-height: 0; padding: 18px; }
+  .details-card { padding: 20px; }
+  .details-heading { flex-wrap: wrap; }
+  .details-heading small { width: 100%; margin-left: 0; padding-left: 32px; }
+  .contract-note-heading { align-items: flex-start; flex-direction: column; }
+  dl > div { align-items: flex-start; flex-direction: column; gap: 8px; }
+  dd { text-align: left; }
+  .screen-footer { flex-direction: column; gap: 6px; }
+  .back-label-full { display: none; }
+  .back-label-short { display: inline; }
+}
+
+@media (max-width: 420px) {
+  .screen-bar { grid-template-columns: minmax(0, 1fr); }
+  .screen-label, .route-caption, .screen-route, .screen-note { grid-column: 1; }
+  .message-card { padding: 22px 16px; }
+  .limits-panel { padding: 16px; }
+  .details-card { padding: 18px 14px; }
+  .details-heading small { padding-left: 0; }
+  .details-footnote { padding: 16px; }
+  .back-link { width: 100%; min-width: 0; }
+}
+
+@media (max-width: 360px) {
+  .screen-note { display: grid; justify-items: start; gap: 4px; }
+}
