@@ -1006,7 +1006,7 @@
       "subcontexts": {
         "study-web": {
           "mode": "DEEP",
-          "status": "VERIFIED_WITH_UNWIRED_COMPONENTS",
+          "status": "SOURCE_BACKED",
           "entry": ".agents/web-work/study/AGENTS.md",
           "index": ".agents/web-work/study/INDEX.md",
           "pages": [

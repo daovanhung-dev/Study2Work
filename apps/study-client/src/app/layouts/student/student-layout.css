@@ -84,6 +84,7 @@
   font-weight: 800;
 }
 .portal-mark svg { width: 26px; height: 26px; }
+.portal-avatar svg { display: block; width: 18px; height: 18px; }
 
 .portal-brand-copy,
 .portal-account-copy {
@@ -118,9 +119,12 @@
   font-size: 12px;
 }
 
-.portal-search > span:first-child {
+.portal-search > svg {
+  display: block;
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
   color: var(--ocean-primary);
-  font-size: 22px;
 }
 
 .portal-navigation {
@@ -142,8 +146,8 @@
 .portal-notice {
   margin-right: 4px;
   color: var(--ocean-deep);
-  font-size: 20px;
 }
+.portal-notice svg { display: block; width: 18px; height: 18px; }
 
 .portal-avatar {
   width: 32px;
@@ -198,6 +202,7 @@
 }
 .portal-trust { display: flex; flex-wrap: wrap; gap: 5px; }
 .portal-trust span { padding: 4px 7px; border-radius: 5px; background: #e2ebff; color: #174d9d; font-size: 9px; white-space: nowrap; }
+.portal-trust svg { display: inline-block; margin-right: 2px; vertical-align: -2px; }
 
 .portal-copyright {
   width: min(calc(100% - 32px), 1368px);

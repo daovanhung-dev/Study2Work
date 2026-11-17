@@ -1,4 +1,4 @@
-.st14-page { min-height: 100vh; background: #f7f9ff; }
+﻿.st14-page { min-height: 100vh; background: #f7f9ff; }
 .exam-header { display: flex; min-height: 66px; align-items: center; gap: 28px; padding: 12px clamp(14px, 3vw, 48px); border-bottom: 1px solid #e7ebf4; background: #fff; }
 .exam-header strong { color: #1852c1; font-size: 20px; }
 .exam-header > span:first-child { margin-right: auto; }
@@ -33,7 +33,8 @@
 .answer-summary small { color: #68778a; font-weight: 500; }
 .number-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 16px 0; }
 .number-grid span { display: grid; min-height: 42px; place-items: center; border-radius: 8px; background: #f0f3fa; color: #46536a; font-size: 13px; }
-.number-grid .done { background: #dfeaff; color: #1c50bd; }
+.number-grid .done { position: relative; background: #dfeaff; color: #1c50bd; }
+.number-grid .done .student-inline-icon { position: absolute; top: 3px; right: 4px; width: 10px; height: 10px; }
 .number-grid .current { background: #1252ca; color: white; }
 .number-grid .flagged { background: #fff0d8; color: #88560a; }
 .question-nav > .sample-button { width: 100%; }
@@ -42,3 +43,6 @@
 .keyboard-note span { float: right; }
 @media (max-width: 980px) { .exam-subhead { grid-template-columns: 1fr 1fr; } .exam-columns { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .exam-header { gap: 10px; flex-wrap: wrap; } .exam-header strong { font-size: 16px; } .exam-subhead { grid-template-columns: 1fr; } .exam-subhead > div:first-child { flex-wrap: wrap; } .question-panel { padding: 16px; } .keyboard-note span { float: none; display: block; margin-top: 6px; } }
+
+/* ICON AUDIT */
+.exam-header>strong{display:flex;align-items:center;gap:8px}.exam-brand-icon{display:grid;width:34px;height:34px;place-items:center;border-radius:6px;background:#0d4fc6;color:#fff}.exam-brand-icon .student-inline-icon{color:#fff}.exam-user{display:flex;align-items:center;gap:8px}.exam-user>.student-inline-icon{box-sizing:content-box;width:18px;height:18px;padding:7px;border-radius:50%;background:#0d4fc6;color:#fff}

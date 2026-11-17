@@ -40,3 +40,7 @@
 .mentor-panel { background: #f4f6fb; }
 @media(max-width:900px){.assignment-hero,.assignment-layout{grid-template-columns:1fr}.assignment-facts{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:500px){.assignment-facts,.objective-grid{grid-template-columns:1fr}.grade-weight{flex-direction:row;flex-wrap:wrap}}
+
+/* ICON AUDIT */
+.assignment-facts>span>svg{box-sizing:content-box;width:16px;height:16px;padding:7px;margin-right:5px;border-radius:7px;background:#dce8ff;color:#245bd1;vertical-align:middle}.rubric-row>b{display:flex;align-items:center;gap:8px}.rubric-grade{display:grid;width:22px;height:22px;flex:none;place-items:center;border-radius:50%;background:#dce8ff;color:#1553ce;font-size:11px}.sample-list .sample-row>span:first-child>svg{box-sizing:content-box;width:16px;height:16px;padding:8px;margin-right:8px;border-radius:8px;vertical-align:middle}.sample-list .sample-row:nth-child(1)>span:first-child>svg{background:#dfe9ff;color:#1755cc}.sample-list .sample-row:nth-child(2)>span:first-child>svg{background:#ffead6;color:#a25b16}.sample-list .sample-row:nth-child(3)>span:first-child>svg{background:#d9faed;color:#0a805b}
+.handoff-card{position:relative;padding-top:38px}.handoff-number{position:absolute;top:10px;left:12px;display:grid;width:20px;height:20px;place-items:center;border-radius:50%;background:#dce8ff;color:#1553ce;font-size:10px;font-weight:700}

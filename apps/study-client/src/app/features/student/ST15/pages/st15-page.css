@@ -28,3 +28,6 @@
 .dialog-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; }
 .dialog-actions .sample-button { flex: 1; min-height: 50px; }
 @media (max-width: 600px) { .confirm-dialog { padding: 18px; } .dialog-title { grid-template-columns: 1fr; } .confirm-stats { grid-template-columns: 1fr; } .time-strip,.dialog-actions { flex-direction: column; } }
+
+/* ICON AUDIT */
+.exam-header>strong{display:flex;align-items:center;gap:8px}.exam-brand-icon{display:grid;width:34px;height:34px;place-items:center;border-radius:6px;background:#0d4fc6;color:#fff}.exam-brand-icon .student-inline-icon{color:#fff}.exam-user{display:flex;align-items:center;gap:8px}.exam-user>.student-inline-icon{box-sizing:content-box;width:18px;height:18px;padding:7px;border-radius:50%;background:#0d4fc6;color:#fff}

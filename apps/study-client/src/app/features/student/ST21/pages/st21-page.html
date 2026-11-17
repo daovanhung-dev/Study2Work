@@ -1,0 +1,10 @@
+<main class="static-page api-screen">
+  <nav class="crumbs"><a href="/student">Trang chủ</a><span>/</span><a href="/student/progress">Tổng quan tiến độ</a><span>/</span><span>Khóa học {{ courseId }}</span></nav>
+  <h1>Tiến độ theo khóa học</h1>
+  @if (!courseId) { <p class="api-state error" role="alert">Thiếu courseId trên đường dẫn.</p> }
+  @if (progress.status() === 'loading') { <p class="api-state" role="status">Đang tải tiến độ khóa học…</p> }
+  @if (progress.status() === 'error') { <p class="api-state error" role="alert">{{ progress.error() }}</p> }
+  @if (progress.status() === 'ready') {
+    <section class="api-card"><h2>Khóa học #{{ courseId }}</h2><p class="api-muted">Phản hồi API hiện chưa khai báo các chỉ số tiến độ theo khóa học để hiển thị.</p></section>
+  }
+</main>

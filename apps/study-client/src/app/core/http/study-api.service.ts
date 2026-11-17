@@ -31,6 +31,21 @@ export class StudyApiService {
       throw new Error(`Study API #${api.id} is marked UNWIRED and cannot be requested.`);
     }
 
+    return this.send<T>(api, options);
+  }
+
+  /** Gửi request theo contract DD dù backend chưa wire route; chỉ dùng khi FE đã chủ động tích hợp endpoint đó. */
+  requestDeclared<T>(
+    api: StudyApiDescriptor,
+    options: StudyApiRequestOptions = {},
+  ): Observable<ApiEnvelope<T>> {
+    return this.send<T>(api, options);
+  }
+
+  private send<T>(
+    api: StudyApiDescriptor,
+    options: StudyApiRequestOptions,
+  ): Observable<ApiEnvelope<T>> {
     const path = resolveApiPath(api, options.pathParams);
 
     return this.http.request<ApiEnvelope<T>>(api.method, `${STUDY_API_BASE_PATH}${path}`, {

@@ -1,0 +1,16 @@
+<main class="static-page api-screen">
+  <nav class="crumbs"><a href="/student">Trang chủ</a><span>/</span><span>Thảo luận</span></nav>
+  <header class="api-actions"><h1>Danh sách thảo luận</h1><a class="api-button" href="/student/discussions/new">Tạo câu hỏi</a></header>
+  @if (discussions.status() === 'loading') { <p class="api-state" role="status">Đang tải chủ đề…</p> }
+  @if (discussions.status() === 'error') { <p class="api-state error" role="alert">{{ discussions.error() }}</p> }
+  @if (discussions.data(); as page) {
+    @if (page.items.length === 0) { <p class="api-state">API chưa trả chủ đề thảo luận nào.</p> }
+    <ul class="api-list">@for (topic of page.items; track topic.id) {
+      <li class="api-row"><h2><a [href]="'/student/discussions/' + topic.id">{{ topic.title }}</a></h2><p>{{ topic.content }}</p>
+        <p class="api-muted">{{ topic.author.full_name }} · Khóa học #{{ topic.course_id }} · {{ topic.status }}</p>
+        <a class="api-button secondary" [href]="'/student/discussions/' + topic.id">Mở thảo luận</a>
+      </li>
+    }</ul>
+    <p class="api-muted">Trang {{ page.pagination.page }} / {{ page.pagination.total_pages }} · {{ page.pagination.total }} chủ đề</p>
+  }
+</main>

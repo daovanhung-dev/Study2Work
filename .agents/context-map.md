@@ -205,8 +205,8 @@ Study2Work/
 
 #### `web-work/study-web` subcontext
 
-- Source root: `apps/study-client/` (Angular 22 standalone SPA with readiness/Admin routes, a typed `/api/v1` registry for 103 catalog APIs plus source-only R-X01, and no feature API callers)
-- Status: `VERIFIED_WITH_UNWIRED_COMPONENTS`
+- Source root: `apps/study-client/` (Angular 22 standalone SPA with readiness/Admin routes; the Mentor FE merge was reverted, so ME-06..ME-18 routes/screens are absent; typed `/api/v1` registry has 103 catalog APIs plus source-only R-X01)
+- Status: `SOURCE_BACKED`
 - Entry: [`.agents/web-work/study/AGENTS.md`](web-work/study/AGENTS.md)
 - Index: [`.agents/web-work/study/INDEX.md`](web-work/study/INDEX.md)
 - Pages:
@@ -217,11 +217,11 @@ Study2Work/
     layer rules.
   - [`.agents/web-work/study/workflows/screen-implementation.md`](web-work/study/workflows/screen-implementation.md) — registered DD/image analysis, coding, test/demo and fixture-cleanup workflow.
 
-The generic HTTP transport lives in `apps/study-client/src/app/core/http/`;
-feature-specific API calls remain unwired. Load the frontend rules for Study Web
-implementation and architecture work. Do not infer feature behavior from the
-scaffold or design documents. Recheck `apps/study-client/` when a task depends
-on implementation details.
+The generic HTTP transport lives in `apps/study-client/src/app/core/http/`.
+Route presence and service callsites do not prove live API, authentication, or
+deployment behavior. Load the frontend rules for Study Web implementation and
+architecture work. Recheck
+`apps/study-client/` when a task depends on implementation details.
 
 #### `web-work/work-web` subcontext
 

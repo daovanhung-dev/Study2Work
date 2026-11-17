@@ -1,11 +1,43 @@
-<div class="static-page st14-page">
-  <header class="exam-header"><span class="inert">← Thoát bài thi</span><strong>▣ Study2Work Exam</strong><span class="exam-time">◴ 45:20 còn lại</span><span class="exam-user"><i>•</i> Nguyen Hanh</span></header>
-  <div class="exam-subhead"><div><span class="exam-back">←</span><div><b>Quiz 02: React Hooks &amp; Re-render ...</b><small>● Kỳ thi sát hạch Frontend Engineering Q3</small></div><span class="pill">Attempt 2/3</span></div><div class="exam-sync"><b>18:39</b> THỜI GIAN <span>✓ Tự động lưu API #30: Đã đồng bộ 2 giây trước</span></div><div class="exam-progress">Tiến độ: <b>14/20</b> (70%)<div class="progress-track"><span style="width:70%"></span></div></div><span class="sample-button inert">▷ Nộp bài kiểm tra</span></div>
-  <div class="exam-columns"><section class="panel question-panel"><div class="question-meta"><span class="sample-button">Câu hỏi 14</span><b>/ 20 câu</b><span class="pill">Điểm: 1.0 điểm</span><span class="pill">‹ › Phân tích Code Snippet React 19</span></div><h1>Đoạn mã dưới đây sử dụng custom hook <code>useOptimistic</code> kết hợp cùng <code>useTransition</code>. Hành vi nào sau đây sẽ xảy ra khi hàm <code>updateTodoAction</code> gặp lỗi từ server?</h1><div class="code-window"><div class="code-toolbar"><span class="window-dots">? ? ?</span><span>TodoListOptimistic.tsx</span><small>REACT 19 RC / TS 5.4</small></div><pre class="code-card">const [optimisticTodos, setOptimisticTodos] = useOptimistic(
-  todos,
-  (state, update) =&gt; [...state, update]
-);
-const [isPending, startTransition] = useTransition();
-// Gọi async action bị ném lỗi từ network...</pre></div><div class="answer-list"><div class="answer selected"><b>A.</b> Giao diện lập tức tự rollback về trạng thái todos ban đầu khi Transition hoàn tất trong lỗi.</div><div class="answer"><b>B.</b> Cần phải gọi thủ công hàm rollbackOptimistic() trong catch block.</div><div class="answer"><b>C.</b> Trạng thái giữ nguyên và ném Unhandled Runtime Exception ra Error Boundary.</div><div class="answer"><b>D.</b> React sẽ chặn toàn bộ render pipeline tiếp theo.</div></div><div class="question-actions"><span class="sample-button secondary inert">← Câu trước</span><span class="sample-button secondary inert">⚑ Đánh dấu xem lại sau (Flag)</span><span class="sample-button inert">Câu tiếp theo →</span></div></section><aside class="panel question-nav"><h2>▦ Danh sách 20 câu hỏi</h2><span class="pill">Phần 1: Hooks</span><div class="answer-summary"><span>13<br><small>Đã trả lời</small></span><span>6<br><small>Chưa làm</small></span><span>1<br><small>Gắn cờ</small></span></div><div class="number-grid"><span class="done">01</span><span class="done">02</span><span class="done">03</span><span class="done">04</span><span class="done">05</span><span class="done">06</span><span class="done">07</span><span class="done">08</span><span class="done">09</span><span class="done">10</span><span class="done">11</span><span class="done">12</span><span class="done">13</span><span class="current">14</span><span class="flagged">15 ⚑</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span></div><span class="sample-button secondary inert">☷ Lọc câu chưa trả lời (6 câu)</span><div class="sample-row">Trạng thái mạng: Trực tuyến <b>WebSocket ping 18ms</b></div><div class="mentor-card">Giảng viên chấm điểm<br><b>TS. Trần Quang Hưng</b></div></aside></div>
-  <div class="keyboard-note">⌨ Phím tắt hỗ trợ: 1–4 để chọn đáp án, → chuyển câu, F gắn cờ. <span>v2.4-quiz-engine</span></div>
-</div>
+<main class="static-page st14-page api-screen">
+  <header class="exam-header"><a class="api-button secondary" [href]="'/student/quizzes/' + quizId">Thoát bài thi</a><strong>{{ quiz.data()?.title || 'Làm bài kiểm tra' }}</strong><span>Attempt #{{ attemptId }}</span></header>
+  @if (quiz.status() === 'loading') { <p class="api-state" role="status">Đang tải câu hỏi…</p> }
+  @if (quiz.status() === 'error') { <p class="api-state error" role="alert">{{ quiz.error() }}</p> }
+  @if (quiz.data(); as record) {
+    <section class="api-card">
+      <p class="api-muted">{{ record.questions.length }} câu hỏi · {{ record.duration_minutes }} phút</p>
+      @if (answerSave.status() === 'loading') { <p class="api-state" role="status">Đang lưu câu trả lời…</p> }
+      @if (answerSave.status() === 'error') { <p class="api-state error" role="alert">{{ answerSave.error() }}</p> }
+      @if (answerSave.status() === 'ready') { <p class="api-state success" role="status">API đã xác nhận lưu câu trả lời.</p> }
+      @if (record.questions.length === 0) { <p class="api-muted">API chưa trả câu hỏi cho bài kiểm tra này.</p> }
+      @if (currentQuestion; as question) {
+        <div class="question-workspace">
+          <article class="api-row question-panel" aria-live="polite">
+            <p class="api-muted">Câu {{ currentQuestionIndex + 1 }} / {{ record.questions.length }}</p>
+            <h2>{{ question.text }}</h2>
+            <div class="answer-list">
+              @for (choice of question.choices; track choice.id) {
+                <label class="api-choice"><input type="checkbox" [checked]="choiceSelected(question.id, choice.id)" (change)="toggleChoice(question.id, choice.id, $event)"> {{ choice.text }}</label>
+              }
+            </div>
+          </article>
+          <nav class="question-navigation" aria-label="Điều hướng câu hỏi">
+            <div class="question-step-actions">
+              <button class="api-button secondary" type="button" data-action="previous-question" (click)="previousQuestion()" [disabled]="currentQuestionIndex === 0">Câu trước</button>
+              <button class="api-button secondary" type="button" data-action="next-question" (click)="nextQuestion()" [disabled]="currentQuestionIndex === record.questions.length - 1">Câu tiếp</button>
+            </div>
+            <ol class="number-grid" aria-label="Chọn câu hỏi">
+              @for (item of record.questions; track item.id; let index = $index) {
+                <li>
+                  <button class="question-number" type="button" [class.current]="index === currentQuestionIndex" [attr.aria-current]="index === currentQuestionIndex ? 'step' : null" [attr.aria-label]="'Chọn câu ' + (index + 1)" [attr.data-question-index]="index" (click)="selectQuestion(index)">{{ index + 1 }}</button>
+                </li>
+              }
+            </ol>
+          </nav>
+        </div>
+      }
+      <div class="api-actions">
+        <button class="api-button" type="button" (click)="continueToSubmit()" [disabled]="!attemptId">Tiếp tục xác nhận nộp bài</button>
+      </div>
+    </section>
+  }
+</main>

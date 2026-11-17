@@ -1,8 +1,8 @@
 # Study Web context router
 
 ```text
-CONTEXT_STATUS: VERIFIED_WITH_UNWIRED_COMPONENTS
-SOURCE_STATUS: Angular 22 SPA routes `/` to readiness scaffold, `/admin` to AD-01, and `/admin/users` to presentation-only AD-02; API #68/auth/data and deployment are not verified
+CONTEXT_STATUS: SOURCE_BACKED
+SOURCE_STATUS: Angular 22 SPA routes `/` to readiness scaffold, `/admin` to AD-01, `/admin/users` to AD-02, and `/student/lessons/:lessonId` to the ST-11 static fallback; other Student screens, functional player behavior, API integration, auth, and deployment are not verified here; the Mentor FE merge was reverted, so ME-06..ME-18 routes/screens are absent
 ```
 
 Canonical page graph: `INDEX.md`.
@@ -44,15 +44,12 @@ It requires reading the full screen DD/image package, analyzing the referenced
 HTML, writing a plan before coding, verifying event/API/data-flow behavior, and
 testing/demoing with immediate cleanup of isolated fake DB fixtures.
 
-The current checkout has a runnable Angular 22 standalone client-side SPA
-scaffold plus Study Web documentation and screen assets under
-`apps/study-client/docs/`. `app.routes.ts` lazy-loads the root readiness page
-from `features/system` and the Admin route group. `admin.routes.ts` renders
-AD-01 at `/admin` and presentation-only AD-02 at `/admin/users` through the
-shared `AdminLayout`. AD-02 has no API call or user data; its search, role/status
-filters and pagination are disabled. The AD-02 DD and API #68 remain blocked
-for functional implementation; API, authentication and access-control behavior
-are not verified, and the unguarded route provides navigation only.
+The current checkout has an Angular 22 standalone SPA with routes in
+`app.routes.ts` for the root readiness page and the Admin route group.
+`admin.routes.ts` renders AD-01 at `/admin` and AD-02 at `/admin/users` through
+`AdminLayout`; AD-02 remains presentation-only. The Mentor FE merge was
+reverted; ME-06 through ME-18 screens and their route group are absent from
+current source. Recheck source for screen details.
 `features/system` here is only the requested root scaffold route; it does not
 move SH-* screens out of the canonical `shared` group or implement SH-01. The
 Admin route has no client auth guard and no report API. The shared registry in

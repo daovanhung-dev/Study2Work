@@ -3,13 +3,16 @@
 ## Current source status
 
 `apps/study-client/` contains an Angular 22 standalone SPA with a readiness
-page at `/`, AD-01 at `/admin`, and presentation-only AD-02 at `/admin/users`;
-the routes use lazy-loaded groups and share `AdminLayout`. The readiness route
-is a root scaffold, not SH-01. AD-02 has an honest disconnected empty state and
-disabled search/filter/pagination controls; it has no user records, API call or
-auth guard. DD/API #68 remains blocked for functional implementation, and the
-unguarded Admin routes provide navigation only. Other business screens, auth,
-feature-specific Study API calls, and deployment remain unwired or unverified.
+page at `/`, AD-01 at `/admin`, and presentation-only AD-02 at `/admin/users`.
+The Mentor FE merge was reverted; screens ME-06 through ME-18 and `/mentor`
+routes are absent from current source. The Admin routes use `AdminLayout`. The
+readiness route is a root scaffold, not SH-01. AD-02 has an honest disconnected
+empty state and disabled search/filter/pagination controls; it has no user
+records or auth guard. Auth, deployment and live API behavior remain
+unverified.
+ST-11 is now wired at `/student/lessons/:lessonId` as the documented static
+fallback through `StudentLayout`; lesson content, player behavior, API calls,
+other Student destinations and auth remain unwired or unverified.
 The typed registry in `src/app/core/constant/api.constants.ts` defines catalog
 APIs #1–#103 and source-only route R-X01. `StudyApiService` in
 `src/app/core/http/` consumes those descriptors through the local `/api/v1`

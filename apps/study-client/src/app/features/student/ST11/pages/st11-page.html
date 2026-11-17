@@ -1,31 +1,43 @@
-<nav class="breadcrumbs" aria-label="Vị trí hiện tại">
-  <a href="/student/courses">Khóa học của tôi</a>
-  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-    <path d="m7.5 4 6 6-6 6" />
-  </svg>
-  <span aria-current="page">Bài học</span>
-</nav>
-
-<section class="content-area" aria-labelledby="lesson-title">
-  <article class="unavailable-card">
-    <div class="lesson-icon" aria-hidden="true">
-      <svg viewBox="0 0 48 48" fill="none">
-        <path d="M14 8.5h18v25H14z" />
-        <path d="M18 14h10M18 18h8" />
-        <circle cx="31" cy="31" r="8" fill="var(--ocean-soft)" />
-        <path d="m29.5 27.5 5.5 3.5-5.5 3.5v-7Z" fill="currentColor" stroke="none" />
-      </svg>
-    </div>
-    <h1 id="lesson-title">Bài học</h1>
-    <p class="status-message">Nội dung bài học hiện chưa sẵn sàng.</p>
-    <p class="supporting-copy">
-      Vui lòng kiểm tra lại sau hoặc quay lại danh sách khóa học của bạn.
-    </p>
-    <a class="primary-link" href="/student/courses">
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M19 12H5m0 0 6 6m-6-6 6-6" />
-      </svg>
-      <span>Quay lại khóa học của tôi</span>
-    </a>
-  </article>
-</section>
+<main class="static-page api-screen">
+  <nav class="crumbs" aria-label="Vị trí hiện tại">
+    <a href="/student">Trang chủ</a><span aria-hidden="true">/</span>
+    <span>Bài học</span><span aria-hidden="true">/</span><span aria-current="page">{{ lessonId }}</span>
+  </nav>
+  <h1>Trình học bài</h1>
+  @if (lesson.status() === 'loading') { <p class="api-state" role="status">Đang tải bài học…</p> }
+  @if (lesson.status() === 'error') { <p class="api-state error" role="alert">{{ lesson.error() }}</p> }
+  @if (lesson.data(); as currentLesson) {
+    <section class="api-card">
+      <h2>{{ currentLesson.title }}</h2>
+      <p class="api-muted">Bài học #{{ currentLesson.id }} · Trạng thái: {{ currentLesson.status }}</p>
+      @if (currentLesson.video_url) {
+        <video [src]="currentLesson.video_url" controls preload="metadata" (pause)="saveProgress($event)" (ended)="saveProgress($event, true)">
+          Trình duyệt không hỗ trợ phát video.
+        </video>
+      }
+      @if (currentLesson.content) { <p>{{ currentLesson.content }}</p> }
+      @if (progress.status() === 'loading') { <p class="api-state" role="status">Đang lưu tiến độ…</p> }
+      @if (progress.status() === 'error') { <p class="api-state error" role="alert">{{ progress.error() }}</p> }
+      @if (progress.data()) { <p class="api-state success" role="status">Tiến độ đã được máy chủ xác nhận.</p> }
+      <div class="api-actions">
+        <a class="api-button secondary" [href]="'/student/lessons/' + lessonId + '/resources'">Tài liệu bài học</a>
+        <button class="api-button" type="button" (click)="loadNextLesson()" [disabled]="nextLesson.status() === 'loading'">
+          {{ nextLesson.status() === 'loading' ? 'Đang tìm bài tiếp theo…' : 'Bài tiếp theo' }}
+        </button>
+      </div>
+      @if (nextLesson.status() === 'error') { <p class="api-state error" role="alert">{{ nextLesson.error() }}</p> }
+      @if (nextLesson.status() === 'ready' && !nextLesson.data()) { <p class="api-state">Không có bài tiếp theo theo phản hồi của API.</p> }
+    </section>
+  }
+  @if (resources.status() === 'loading') { <p class="api-state" role="status">Đang tải tài liệu kèm bài…</p> }
+  @if (resources.status() === 'error') { <p class="api-state error" role="alert">{{ resources.error() }}</p> }
+  @if (resources.data(); as lessonResources) {
+    <section class="api-card">
+      <h2>Tài liệu kèm bài</h2>
+      @if (lessonResources.length === 0) { <p class="api-muted">API chưa trả tài liệu nào.</p> }
+      @for (resource of lessonResources; track resource.id) {
+        <article class="api-row"><h3>{{ resource.name }}</h3><p>{{ resource.type }}</p></article>
+      }
+    </section>
+  }
+</main>

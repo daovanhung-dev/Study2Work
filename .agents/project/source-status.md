@@ -52,20 +52,20 @@ Mọi project context phải nằm dưới `.agents/`; `apps/` không chứa `.a
 ## Study server
 
 ```text
-RUNTIME_STATUS: SOURCE_BACKED_API_01_09_12_14_34_46_97; 57_API_V1_PATHS_68_OPERATIONS
-TEST_STATUS: VERIFIED_1315_LOCAL_STUDY_TESTS
+RUNTIME_STATUS: PRE_MERGE_BASELINE_58_PATHS_69_OPERATIONS; after reverting hoang_xuan_long_dev, current branch retains APIs #10, #26-30, #32-33; post-revert OpenAPI/runtime not verified
+TEST_STATUS: PRE_MERGE_BASELINE_1326_TESTS_VERIFIED; post-revert suite not run
 BUSINESS_MODULE_STATUS: SOURCE_BACKED_GUEST_UPLOAD_MENTOR_CONTENT_SUBMISSIONS_SUPPORT_ROSTER_NOTIFICATION_PROGRESS_ANALYTICS_ADMIN_68_97
 DATABASE_SCHEMA_STATUS: PILOT_AND_LOCAL_MIGRATIONS_CHECKED_IN; LIVE_STATUS_NOT_VERIFIED_HERE
 ```
 
 Current evidence:
 
-- `apps/study-server/app/main.py` imports and composes `app.api.v1`; current
-  OpenAPI exposes 57 unique `/api/v1` path templates and 68 operations,
-  including Admin quiz list/create/update/delete/statistics APIs #87–#91,
-  notification list/create/update/delete/status #92–#96 and reported-discussion
-  queue #97. Local HTTP/source tests pass as part of the full Study suite
-  (`1315 passed`, one upstream Starlette/httpx warning).
+- Before the 2026-11-13 local branch merges, Study Server had a verified
+  baseline of 58 `/api/v1` path templates / 69 operations through API #98 and
+  1326 passing local tests. After reverting `hoang_xuan_long_dev`, the current
+  branch retains APIs #10 and #26–#30 from the other merged branches; APIs #11,
+  #15 and #21–#25 were removed with Hoang's contribution. Post-revert OpenAPI
+  cardinality, startup and tests have not been reverified.
 - `infra/postgres/` contains V1-PILOT schema artifacts and the local Study
   migrations. Checked-in SQL is not evidence of live schema or migration
   deployment.

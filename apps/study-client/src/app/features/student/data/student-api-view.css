@@ -1,0 +1,28 @@
+.api-screen { width: min(100%, 1120px); margin: 0 auto; padding: 24px 0 40px; color: var(--text-primary, #183348); }
+.api-screen h1 { margin: 12px 0 8px; font-size: clamp(24px, 3vw, 34px); }
+.api-screen h2 { margin: 0 0 10px; font-size: 20px; }
+.api-screen p { line-height: 1.6; }
+.api-card { margin-top: 16px; padding: 22px; border: 1px solid var(--border, #dce5eb); border-radius: 14px; background: var(--surface, #fff); box-shadow: 0 2px 8px rgb(21 49 68 / 5%); }
+.api-state { margin-top: 16px; padding: 14px 16px; border-radius: 10px; background: #edf4fa; color: #33536a; }
+.api-state.error { border: 1px solid #f0c8c8; background: #fff2f2; color: #9d3131; }
+.api-state.success { border: 1px solid #bfe4d3; background: #effaf4; color: #176844; }
+.api-muted { color: #657789; }
+.api-list { display: grid; gap: 12px; margin: 16px 0; padding: 0; list-style: none; }
+.api-row { padding: 16px; border: 1px solid #e0e8ed; border-radius: 10px; background: #fff; }
+.api-row h3 { margin: 0 0 6px; font-size: 17px; }
+.api-row p:last-child { margin-bottom: 0; }
+.api-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.api-button { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 8px; padding: 9px 16px; border: 0; border-radius: 8px; background: #145fc4; color: #fff; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }
+.api-button.secondary { border: 1px solid #cad7e1; background: #fff; color: #24475f; }
+.api-button:disabled { opacity: .55; cursor: not-allowed; }
+.api-field { display: grid; gap: 6px; margin: 14px 0; }
+.api-field input, .api-field textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #bdccd7; border-radius: 8px; color: inherit; font: inherit; }
+.api-field textarea { min-height: 132px; resize: vertical; }
+.api-field input:focus, .api-field textarea:focus { outline: 2px solid #8ab8ed; outline-offset: 1px; }
+.api-screen video { display: block; width: 100%; max-height: 560px; margin: 16px 0; border-radius: 12px; background: #101820; }
+.api-choice { display: flex; align-items: flex-start; gap: 10px; margin: 10px 0; padding: 12px; border: 1px solid #e0e8ed; border-radius: 8px; cursor: pointer; }
+.api-choice input { margin-top: 4px; }
+.api-definition { display: grid; grid-template-columns: minmax(120px, 180px) 1fr; gap: 8px 16px; margin: 14px 0 0; }
+.api-definition dt { color: #687b8b; }
+.api-definition dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 700px) { .api-screen { padding: 16px 0 28px; } .api-card { padding: 16px; } .api-definition { grid-template-columns: 1fr; gap: 4px; } }
