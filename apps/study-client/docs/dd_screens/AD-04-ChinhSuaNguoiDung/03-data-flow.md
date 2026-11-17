@@ -15,7 +15,7 @@
 
 ### Luồng dự kiến sau khi các blocker được duyệt
 
-1. **Nhận handoff:** AD-03 cung cấp numeric `user_id` từ item/profile #68/#69. Router của Study Web chưa có trong source; route `/admin/users/:userId/edit` mới là inventory proposal. Không đưa email/phone vào URL.
+1. **Nhận handoff:** AD-03 cung cấp numeric `user_id` từ item/profile #68/#69. Angular Admin router khai báo `/admin/users/:userId/edit`; AD04Page đọc route param. Runtime/deployment chưa xác minh. Không đưa email/phone vào URL.
 2. **Kiểm tra session/quyền:** client áp dụng auth/navigation policy đã được chốt. Local API catalog yêu cầu Bearer JWT/Admin; local source dùng claim `ADMIN`. Không coi nhãn RBAC trong screenshot là bằng chứng quyền. Permission mapping/tenant/MFA chưa được duyệt.
 3. **Tải profile:** gọi duy nhất `GET /api/v1/admin/users/{user_id}` (#69), không query/body. Chuyển page sang `loading`. Local #69 kiểm tra Bearer/claim trước parse ID/query; lỗi ID malformed/out-of-range của #69 có fallback 404. Không gọi API audit/sync.
 4. **Kiểm tra response và map:** chỉ chấp nhận HTTP 200 + `DESIGN_RESOURCE_RETRIEVED` và `data: UserProfile`. Lưu bản gốc làm baseline cho dirty compare; map field theo PII/role policy. `phone`/`avatar_url` có thể null. Nếu field thiếu/sai kiểu, xử lý như response không hợp lệ; API response contract không quy định fallback UI.
@@ -26,9 +26,11 @@
 
 ### Hiện trạng
 
+- Current Angular source declares the AD-04 route and page. AD04Page loads the profile through AD04ApiService → API #69, renders `loading/loaded/error`, and keeps form controls and Save disabled. There is no client PUT #70 call; runtime/deployment is not verified.
+
 - Trong HTML, full name, email, role, status, adminNotes và Save đều disabled. Cancel và Back là hai anchor có đích không nhất quán. “Tra cứu tài liệu API” và “Gửi yêu cầu” là button không handler.
 - Form `onsubmit` chỉ gọi `preventDefault()`; không có fetch/XHR/API client hoặc handler để đọc/ghi dữ liệu. Header, API reference, gate, audit, sync, SSO, compliance và RBAC claims đều hard-coded.
-- Study Web root không có editable source, package manifest, route hoặc API client; runtime screen là `NOT VERIFIED`.
+- Current source has the AD-04 route/page and GET #69 client call; it has no PUT #70 client call. Runtime/deployment and host fallback remain `NOT VERIFIED`.
 
 ### Response và lỗi API
 
@@ -61,7 +63,7 @@
 | Nguồn → đích | Handoff / API | Current discrepancy / rule |
 |---|---|---|
 | AD-02 → AD-03 | API #68 `items[].id` numeric. | Không dùng email hoặc mã `USR-*`. |
-| AD-03 → AD-04 | Cùng numeric `user_id` trên route `/admin/users/:userId/edit`; EV-01 gọi GET #69. | Route chỉ là inventory proposal; screenshot Back path dùng string ID và suffix `/details`. |
+| AD-03 → AD-04 | Cùng numeric `user_id` trên route `/admin/users/:userId/edit`; EV-01 gọi GET #69. | Angular route and GET #69 caller exist in source. Screenshot Back path uses a string ID and `/details` suffix; runtime and route fallback are not verified. |
 | AD-04 cancel/back → AD-03 | Cùng numeric ID; không có API. | Cancel hiện đi `/admin/users`; Back dùng `/details`. Dirty confirmation/cache policy chưa rõ. |
 | AD-04 save → GET #69 → AD-03 | PUT #70 success rồi revalidate profile bằng #69; same numeric ID. | GET failure sau PUT không làm PUT thất bại; không gửi mutation lần hai. |
 | AD-04 → AD-05 | Chỉ thông qua luồng quản lý riêng. | Không đổi status bằng #70; status/delete thuộc #71/#72 và AD-05. |

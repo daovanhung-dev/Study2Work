@@ -1,0 +1,25 @@
+<article class="course-card">
+  @if (course().thumbnail_url) {
+    <img
+      class="course-thumbnail"
+      [src]="course().thumbnail_url"
+      [alt]="course().title"
+      loading="lazy"
+      referrerpolicy="no-referrer"
+    />
+  } @else {
+    <div class="course-thumbnail course-thumbnail--empty" aria-hidden="true"></div>
+  }
+
+  <div class="course-content">
+    <h3>{{ course().title }}</h3>
+    @if (course().description) {
+      <p class="course-description">{{ course().description }}</p>
+    }
+  </div>
+
+  <footer class="course-mentor">
+    <span>Người hướng dẫn</span>
+    <strong>{{ course().mentor.full_name }}</strong>
+  </footer>
+</article>

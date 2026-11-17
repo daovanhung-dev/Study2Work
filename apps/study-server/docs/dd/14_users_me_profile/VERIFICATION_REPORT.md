@@ -35,12 +35,12 @@
 | `apps/study-server/docs/diagrams/AC_UNICA/00_AC_API_INDEX.md` | `Yes` | Actor, precondition, postcondition và API mapping |
 | `infra/postgres/study-server/DB.sql` | `Yes` | Current checked-in `users` schema |
 | `apps/study-server/app/api/v1.py` | `Yes` | Xác nhận router khai báo `PUT /api/v1/users/me/profile` dưới API #14 |
-| `apps/study-server/app/modules/guest/api_14_users_me_profile/view.py` | `Yes` | View source hiện điều phối auth, UPDATE, rollback/commit và response |
-| `apps/study-server/app/modules/guest/api_14_users_me_profile/query.py` | `Yes` | SQL UPDATE/RETURNING current source |
-| `apps/study-server/tests/modules/guest/api_14_users_me_profile/test_users_me_profile.py` | `Present` | Focused test source tồn tại; chưa chạy trong macro-review này |
-| `apps/study-server/app/modules/guest/api_04_users_me/query.py` | `Yes` | Safe profile projection/current user lookup pattern |
-| `apps/study-server/app/modules/guest/api_04_users_me/view.py` | `Yes` | JWT/Student/error/rollback pattern |
-| `apps/study-server/tests/modules/guest/api_04_users_me/test_users_me.py` | `Yes` | Current response behavior và bio absence |
+| `apps/study-server/app/modules/student/api_14_users_me_profile/view.py` | `Yes` | View source hiện điều phối auth, UPDATE, rollback/commit và response |
+| `apps/study-server/app/modules/student/api_14_users_me_profile/query.py` | `Yes` | SQL UPDATE/RETURNING current source |
+| `apps/study-server/tests/modules/student/api_14_users_me_profile/test_users_me_profile.py` | `Present` | Focused test source tồn tại; chưa chạy trong macro-review này |
+| `apps/study-server/app/modules/student/api_04_users_me/query.py` | `Yes` | Safe profile projection/current user lookup pattern |
+| `apps/study-server/app/modules/student/api_04_users_me/view.py` | `Yes` | JWT/Student/error/rollback pattern |
+| `apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py` | `Yes` | Current response behavior và bio absence |
 | `apps/study-server/docs/business_code/code_http.md` | `Yes` | `DESIGN_*` codes là proposal, chưa runtime |
 | `.agents/skills/create_dd_api/docs/dd/createDD_MARKDOWN_SKILL.md` | `Yes` | Authoring, traceability, one-line và delivery gates |
 | `.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/*` | `Yes` | 8-file template baseline |

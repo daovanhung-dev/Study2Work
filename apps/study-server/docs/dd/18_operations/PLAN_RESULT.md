@@ -7,7 +7,7 @@
 - Document status: Draft — Needs Confirmation.
 - Completion: PARTIALLY COMPLETED.
 - Decision status: NEEDS USER DECISION.
-- Runtime status: UNWIRED / NOT_FOUND — no Study route/module/query/test found.
+- Current source status (2026-11-16): route/module/query are source-wired; dedicated local HTTP tests pass. Live database/deployment remains NOT_VERIFIED. The original UNWIRED assessment below predates this source re-audit.
 - Output folder: apps/study-server/docs/dd/18_operations/.
 - Archive: apps/study-server/docs/dd/18_operations.zip.
 - Sheets: 00_Cover.md, 01_Lich_su.md, 02_Overview.md, 03_Request.md, 04_Response.md, 05_Data_Mapping.md, 06_Error.md, 07_table.md.
@@ -45,12 +45,12 @@
 
 - N/A — read-only API; no mutation mapping is applicable.
 
-## Assumptions
+## Original DD-authoring assumptions (historical)
 
 - Scope is documentation only for Study Server API #18.
 - Contract conflicts remain open; no int64/UUID or owner/Admin policy is selected.
 - Work Server operations table is non-authoritative for Study absent an approved cross-service contract.
-- No runtime, API catalog, database, migration, diagram or other scope files are changed.
+- No runtime, API catalog, database, migration, diagram or other scope files were changed by the original DD authoring. API #18 source was patched separately on 2026-11-16, as recorded below.
 
 ## Conflicts
 
@@ -64,4 +64,8 @@
 ## Verification result
 
 - DD structure, template order, front matter, source links, JSON syntax, Markdown tables, code fences and archive integrity: see VERIFICATION_REPORT.md.
-- Study application tests: NOT_RUN — API #18 is not wired and application tests were excluded by the approved plan.
+- Study application tests: Historical original-DD check was NOT_RUN before API #18 was wired. On 2026-11-16 the focused API #18 suite passed 8 tests and the full Study suite passed 1492 tests; live schema/deployment remain unverified.
+
+## Current source implementation note (2026-11-16)
+
+API #18 is routed in `app/api/v1.py` and implemented under `app/modules/shared/api_18_operations/`. Its current query projects notification operations only and binds the lookup to the authenticated owner ID. The required role argument is passed to the shared auth guard for `STUDENT`, `MENTOR`, and `ADMIN`, matching the AC diagrams without adding an Admin ownership bypass. The API DD remains Draft; the API row's int64 path, owner/Admin discrepancy, generic lifecycle/result and producer mappings remain open.

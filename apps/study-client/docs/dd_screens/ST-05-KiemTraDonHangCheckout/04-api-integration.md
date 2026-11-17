@@ -12,7 +12,7 @@
 
 - API refs trong inventory: #08, #16
 - Orchestration/data notes: Revalidate #8; POST #16 một lần theo action người dùng; lưu order_id từ response.
-- BE/source status và gate: **#08 R; #16 D; DD BLOCKED**; **BLOCK:** Order schema, provider/amount/currency policy và idempotency chưa source-backed; inventory revalidation lần hai chưa được AC-12 đặt thứ tự; Study Web UNWIRED; HTML chưa có confirm UI
+- BE/source status và gate: **#08 R + Study Web caller; #16 server route/module source exists but client descriptor remains UNWIRED; DD BLOCKED**; **BLOCK:** no checked-in `orders` table or focused API #16 tests; Student session/provider/amount/idempotency and live persistence remain unverified; Stitch has no confirmation UI
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API boundary
@@ -20,7 +20,7 @@
 | API | Request / quyền | Success | Error/current boundary | Tác động |
 |---|---|---|---|---|
 | #08 | `GET /api/v1/courses/{course_id}`; Public; `course_id:int64` | 200 `DESIGN_RESOURCE_RETRIEVED`; current envelope `Page<Course>` singleton | Catalog/current source: 404 `DESIGN_RESOURCE_NOT_FOUND`, 500 `DESIGN_INTERNAL_ERROR`; current code maps invalid ID or missing/unpublished course to 404; query/mapping error to 500 | Read-only; không sửa enrollment/order. Current SQL dùng `LEFT JOIN users`; Draft API #08 mô tả `INNER JOIN`, cần giữ discrepancy. |
-| #16 | `POST /api/v1/orders`; Bearer JWT; role Student; body `{course_id:int64!, payment_provider:PaymentProvider!}` | Contract: 201 `DESIGN_RESOURCE_CREATED`, `ApiEnvelope<Order>` | Catalog: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 422 `DESIGN_VALIDATION_ERROR`, 500 `DESIGN_INTERNAL_ERROR`; #16 chưa có runtime response | AC-12 chỉ yêu cầu tạo logical Order `PENDING` ở paid branch; physical write/transaction/idempotency chưa có nguồn. |
+| #16 | `POST /api/v1/orders`; current route validates Bearer Student and accepts nonempty `payment_provider` string | Contract: 201 `DESIGN_RESOURCE_CREATED`, `ApiEnvelope<Order>`; current code inserts `PENDING` | Current code derives amount from `courses.price`, hardcodes `VND`, and writes to `orders`; checked-in DDL has no `orders` table and no focused #16 tests were found | Client descriptor is `UNWIRED`; no ST-05 caller. Do not create Order until auth, provider, persistence and amount contract are verified. |
 
 ## 3. API không sử dụng
 - Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.

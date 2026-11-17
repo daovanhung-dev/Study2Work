@@ -62,6 +62,23 @@ format: markdown
 - `DISCREPANCY: AC-06 mô tả public hoặc user có quyền truy cập và diagram API #12 có nhánh 403, nhưng API #11 trong list_api.md chỉ khai báo 404/500 và là public.`
 - `RUNTIME_STATUS: chưa runtime/OpenAPI verified; tài liệu là design-only.`
 
+## T022 local source re-audit — 2026-11-17
+
+- Current local source exists at `app/api/v1.py` and
+  `app/modules/guest/api_11_courses_resources/{view,query,validate,models}.py`;
+  a focused TestClient suite exists at
+  `tests/modules/guest/api_11_courses_resources/test_courses_resources.py`.
+- The query selects all course resources ordered by `r.id ASC`. The view maps
+  only `rows[0]` into a singleton `ResourceItem`; an empty result returns 404.
+  The current view therefore conflicts with the Data Mapping instruction not
+  to select the first row when multiple rows exist.
+- The current model omits `visibility`; no resource-level access check exists.
+  This source note does not resolve collection cardinality, empty semantics or
+  AC-06 access requirements and does not promote this DD from Draft.
+- TestClient/fake-session results and local source do not verify live schema,
+  service deployment or production endpoint behavior. T022 records the
+  focused test run separately.
+
 ## Security note
 
 - `Chỉ đọc resource thuộc course PUBLISHED theo nguồn hiện có; không trả token, credential, raw SQL hoặc storage internals.`

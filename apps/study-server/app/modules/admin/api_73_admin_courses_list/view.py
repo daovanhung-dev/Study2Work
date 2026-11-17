@@ -19,8 +19,8 @@ from app.modules.admin.api_73_admin_courses_list.validate import (
     validate_admin_courses_query,
     validate_admin_request,
 )
-from app.modules.guest._shared.course_catalog.helpers import map_course, normalize_course_count
-from app.modules.guest._shared.course_catalog.models import CoursePage, Pagination
+from app.modules.shared.course_catalog.helpers import map_course, normalize_course_count
+from app.modules.shared.course_catalog.models import CoursePage, Pagination
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session

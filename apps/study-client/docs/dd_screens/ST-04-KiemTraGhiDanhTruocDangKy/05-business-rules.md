@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Xem giá, quyền học hiện có, nhánh khóa miễn phí/trả phí; không tự xác nhận đã ghi danh.
-- Gate/status (giữ nguyên): **#08 R; #15 D; DD BLOCKED**; **BLOCK:** #15 Public nhưng không xác định user; auth/free-paid/entitlement flow chưa chốt; Study Web UNWIRED
+- Gate/status: **#08 R and called; #15 route source exists but client descriptor is UNWIRED; DD BLOCKED**; **BLOCK:** absent/invalid Authorization can select any course enrollment; Student auth, identity/selection and free-paid/entitlement flow remain unresolved.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 > CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.

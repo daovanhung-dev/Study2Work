@@ -19,12 +19,12 @@
 ### EV-01 — Route entry và Student context
 
 - **Trigger / loại:** Mở route candidate `/student/checkout/:courseId`; page load/navigation.
-- **Điều kiện:** AC-12 yêu cầu Student đã đăng nhập và đã được chuyển từ nhánh paid của ST-04. Study Web chưa có route hoặc auth guard; route chưa thể khởi tạo ở runtime.
-- **Input:** Candidate `courseId` từ URL/ST-04. API #08/#16 cần `course_id:int64`. Chưa có client rule chuyển đổi/canonicalize hoặc return-state policy.
-- **Xử lý:** (1) Target client phải resolve session/role theo contract được duyệt. (2) Nếu Student context hợp lệ, chuẩn hóa route ID theo int64 contract. (3) Nếu thiếu/sai role, destination, 401/403 UI và safe return URL cần được xác nhận; không suy ra chỉ từ public shell. (4) Sau khi route/guard được triển khai, EV-02 mới có thể chạy.
+- **Điều kiện:** AC-12 yêu cầu Student đã đăng nhập và được chuyển từ nhánh paid của ST-04. Study Web hiện đăng ký route nhưng chưa có Student auth guard/session.
+- **Input:** `courseId` từ URL/ST-04. Page giữ route value dưới dạng string và truyền cho #08 theo GS-03 precedent; server parse `course_id`.
+- **Xử lý:** (1) Page gọi #08 khi có route ID. (2) Student role check, 401/403 view và safe return URL chưa được quyết định. (3) Không tạo Order khi page load hoặc khi #08 thành công.
 - **API / side effect:** Không có API riêng cho route/auth trong ST-05. #08 public; #16 yêu cầu Bearer Student. Không tạo Order ở bước load.
 - **Output / lỗi:** Current: mở file HTML thấy static state. Expected: Student checkout route. Route/auth errors và UI chưa được định nghĩa.
-- **Current status:** Study Web `UNWIRED`; runtime `NOT VERIFIED`.
+- **Current status:** ST-05 route/page and #08 caller exist; #16 remains gated. Runtime `NOT VERIFIED`.
 
 ### EV-02 — Revalidate course bằng API #08
 
@@ -35,7 +35,7 @@
 - **Mapping:** Có `id,title,description?,thumbnail_url?,price` decimal string, `status`, `mentor{id,full_name,avatar_url?}` theo current mapper. Không có currency, amount due, payment eligibility hoặc provider. #08 không có side effect.
 - **UI/output:** Khi success, UI chỉ được coi course published/đọc được. Amount display/payment terms vẫn bị chặn cho đến khi source rule được duyệt. 404/500 presentation cần quyết định; không đổi 500 thành “không tìm thấy”.
 - **Discrepancy/retry:** API #08 Draft DD mô tả `INNER JOIN`; source hiện tại là `LEFT JOIN` và mapper xử lý thiếu mentor như internal error. Không có retry/cache/freshness policy được xác nhận. Không diễn giải lần đọc này thành giá quote có hiệu lực nếu quote policy chưa có.
-- **Current status:** API route/module/query/test source tồn tại; test không chạy trong phiên này. Không có UI caller hiện hành.
+- **Current status:** ST-05 calls #08; focused tests cover published and 404 states. The response price is not displayed; no quote/amount rule is inferred.
 
 ### EV-03 — Student xác nhận order terms
 
@@ -46,7 +46,7 @@
 - **API / side effect:** Chưa gọi API trong bước consent. Không tự tạo checkbox, input hay provider list dựa trên mockup.
 - **Output / lỗi:** Expected transition sang `order-creating`; hiện không thể trigger. UI disabled/blocked treatment cần design decision.
 
-### EV-04 — Tạo Order bằng API #16 (DESIGN_ONLY)
+### EV-04 — Tạo Order bằng API #16 (BLOCKED)
 
 - **Trigger / loại:** Một thao tác xác nhận explicit từ EV-03; POST mutation. Hiện không có trigger element.
 - **Authentication/authorization:** Header `Authorization: Bearer <JWT>` bắt buộc; role Student. Không lấy `user_id` từ body; claim-to-user mapping thuộc backend contract và còn unresolved.
@@ -54,21 +54,21 @@
 - **Xử lý theo contract:** (1) Chỉ gọi sau explicit confirm, không gọi từ page load. (2) Gửi đúng hai field và Bearer Student. (3) Server dự kiến tạo logical Order `PENDING` trong paid branch theo AC-12. (4) Parse response envelope. (5) Success contract là 201 `DESIGN_RESOURCE_CREATED` với `data: Order`. (6) Không tiếp tục nếu response shape/mapping không được xác nhận. (7) Chỉ handoff tới ST-06 khi `data.id` được xác nhận là cùng định danh mà #17 yêu cầu dưới tên `order_id`.
 - **Response fields:** `id:int64`, `course_id:int64`, `user_id:int64`, `amount:decimal-string`, `currency:string`, `status:OrderStatus`, `created_at:date-time`. Order status ban đầu `PENDING` theo AC-12; allowed values khác và physical mapping chưa biết. Logical response contract không chứng minh physical persistence.
 - **Errors:** Chỉ catalog: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 422 `DESIGN_VALIDATION_ERROR`, 500 `DESIGN_INTERNAL_ERROR`. Không tự thêm 404/409/503. Chi tiết UI, field-level validation, network timeout, retry/duplicate/idempotency/rollback chưa được xác định.
-- **Side effect / current status:** AC-12 kỳ vọng tạo Order logical; physical table/schema/transaction chưa có. Không tìm thấy current route/module/query/model/test #16; hiện không thể gọi hoặc claim Order đã tạo.
+- **Side effect / current status:** Study Server has current route/module/model/query code. It validates Student Bearer auth and nonempty provider, derives amount from course price, hardcodes `VND`, then attempts `INSERT INTO orders` and commit. The checked-in DB has no `orders` table and no focused #16 tests were found; live DB is unverified. The FE descriptor remains `UNWIRED`, and ST-05 sends no request.
 
 ### EV-05 — Quay lại kiểm tra ghi danh
 
 - **Trigger / loại:** Click CTA #11.
 - **Input hiện tại:** Static `href="/courses"`; không có `courseId`, return URL, filter hay ST-04 path.
 - **Xử lý hiện tại:** (1) Browser/client xử lý anchor. (2) Điều hướng tới `/courses` nếu route tồn tại. (3) Không gọi API hoặc thực hiện mutation. (4) Không thể khôi phục ST-04 context từ markup.
-- **Kết quả / lỗi:** Label nói quay lại enrollment check nhưng đích là danh sách khóa học. Destination đúng và cách giữ course context cần được chốt. Study Web route hiện chưa có.
+- **Kết quả / lỗi:** Label says return to enrollment check while the prototype href is `/courses`; the current page preserves that prototype target. Destination correction and course-context policy remain unresolved.
 
 ### EV-06 — Điều hướng header, breadcrumb và footer
 
 - **Trigger / loại:** Click anchor ở #1–#5 hoặc #13; navigation. #12 là static brand group, không phải anchor.
 - **Input:** Các `href` literal trong HTML: `/`, `/courses`, `/student/courses`, `/student/progress`, `/login`, `/register`. Breadcrumb có thêm label “Kiểm tra đơn hàng” dạng text không clickable.
 - **Xử lý:** (1) Browser nhận static destination. (2) Chỉ điều hướng nếu route target có sẵn. (3) Không có API/mutation, auth-aware menu, course/order ID, query state hoặc redirect state trong markup. (4) Header nav có class `hidden md:flex`; không thấy menu thay thế ở viewport nhỏ.
-- **Kết quả / lỗi:** Current page prototype có các link trên; route availability không xác minh được vì Study Web `UNWIRED`. Không xem link Student hoặc Sign In/Sign Up là bằng chứng auth state.
+- **Kết quả / lỗi:** Current page exposes links from the prototype; route declaration does not prove auth. Student guard/session is still absent.
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)

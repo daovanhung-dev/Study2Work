@@ -13,15 +13,15 @@
 
 ### Trích từ DD nguồn: 2. Luồng hoạt động tổng thể
 
-1. **Route fallback:** Router tương lai nhận pathname không khớp và hiển thị `ROUTE_404`; SH-06 không gọi API. Không echo raw URL/query vào heading hoặc thông báo.
+1. **Explicit route:** Opening `/not-found` mounts the registered SH-06 page and displays `ROUTE_404`; the root app route now redirects unmatched paths to `/not-found` using a query-clearing UrlTree. SH-06 does not call an API. Do not echo raw URL/query into the heading or message.
 2. **Resource detail:** Từ GS-03, client gửi API #08 với `course_id`. Nếu API trả HTTP 200 `DESIGN_RESOURCE_RETRIEVED`, lấy `data.items[0]` và pagination đã validate rồi tiếp tục GS-03. Nếu trả 404 `DESIGN_RESOURCE_NOT_FOUND`, hiển thị cùng nội dung chung `RESOURCE_404`.
 3. **Không phân biệt private/draft:** API query chỉ trả course `PUBLISHED`; absent/unpublished có cùng status, business code và message. SH-06 không hiển thị course ID, draft status hoặc lý do nội bộ.
 4. **Phân nhánh lỗi:** API #08 500 `DESIGN_INTERNAL_ERROR`, network/timeout, JSON parse error hoặc envelope sai đi tới service-error handling riêng. Nếu response thực tế là 403, giữ access-denied state (SH-05); API #08 hiện không tạo nhánh này.
 5. **Render:** Badge/title/body chỉ phản ánh trạng thái không tìm thấy. Không hiển thị course detail, mentor, giá, thumbnail hoặc API payload ở SH-06. Safe Scope notice có thể nói hệ thống không công khai nội dung không khả dụng, nhưng không khẳng định toàn bộ sản phẩm có cơ chế ẩn draft ngoài source đã xác minh.
-6. **Điều hướng:** Primary action tới GS-01 `/courses`; secondary action/logo/home tới SH-01 `/`. Header link route là proposal theo inventory. Các card course/contact/footer links chỉ hoạt động sau khi có data ID/route/channel được duyệt; không điều hướng bằng href `#`.
+6. **Điều hướng:** Primary action tới registered GS-01 `/courses`; secondary action/logo/home tới registered SH-01 `/`. Header link behavior phải theo route hiện có và contract; không tự suy query defaults. Các card course/contact/footer links chỉ hoạt động sau khi có data ID/route/channel được duyệt; không điều hướng bằng href `#`.
 7. **Rời màn hình:** Tới GS-01 thì GS-01 sở hữu API #05/#06; tới SH-01 thì SH-01 sở hữu API #05/#06 theo inventory. SH-06 không gọi trước các API này để render fallback.
 
-Quan hệ hệ thống: SH-06 hỗ trợ GS-03 khi course không tồn tại/không public và làm route fallback cho toàn Study Web. Route fallback có thể được dùng từ mọi flow nhưng nội dung 404 không tiết lộ record/ownership. 403 là SH-05 và lỗi 500/mạng thuộc service-error handling; các trạng thái không thay thế nhau.
+Quan hệ hệ thống: SH-06 is the generic state for both explicit and unknown-route 404s; GS-03 #08 detail 404 now navigates there without course ID/body. The root wildcard clears the original path/query. Nội dung 404 không tiết lộ record/ownership. 403 là SH-05 và lỗi 500/mạng thuộc service-error handling; các trạng thái không thay thế nhau.
 
 ### Trích từ DD nguồn: 5. API #08 và nguồn dữ liệu
 
@@ -39,7 +39,7 @@ Quan hệ hệ thống: SH-06 hỗ trợ GS-03 khi course không tồn tại/kh�
 | Envelope / trace | Shared response envelope: `success`, `businessCode`, `message`, `data`, `meta`, `traceId`; response header `X-Trace-Id`. Không render `data` khi 404 hoặc error body thô trên SH-06. |
 | DB source | [`DB.sql`](../../../../../infra/postgres/study-server/DB.sql) có bảng `courses`/`users` và các cột query dùng; `courses.mentor_id` nullable trong DDL. `map_course` yêu cầu mentor id/name, nên thiếu mentor data thành 500, không thành 404. DDL không xác minh live schema. |
 
-Source trace: [`API route`](../../../../study-server/app/api/v1.py) → [`view.py`](../../../../study-server/app/modules/guest/api_08_courses_detail/view.py) → [`validate.py`](../../../../study-server/app/modules/guest/api_08_courses_detail/validate.py) → [`query.py`](../../../../study-server/app/modules/guest/api_08_courses_detail/query.py) → [`CoursePage/models.py`](../../../../study-server/app/modules/guest/_shared/course_catalog/models.py) + [`helpers.py`](../../../../study-server/app/modules/guest/_shared/course_catalog/helpers.py). Test source: [`test_courses_detail.py`](../../../../study-server/tests/modules/guest/api_08_courses_detail/test_courses_detail.py); test được đọc, không chạy trong phiên docs.
+Source trace: [`API route`](../../../../study-server/app/api/v1.py) → [`view.py`](../../../../study-server/app/modules/guest/api_08_courses_detail/view.py) → [`validate.py`](../../../../study-server/app/modules/guest/api_08_courses_detail/validate.py) → [`query.py`](../../../../study-server/app/modules/guest/api_08_courses_detail/query.py) → [`CoursePage/models.py`](../../../../study-server/app/modules/shared/course_catalog/models.py) + [`helpers.py`](../../../../study-server/app/modules/shared/course_catalog/helpers.py). Test source: [`test_courses_detail.py`](../../../../study-server/tests/modules/guest/api_08_courses_detail/test_courses_detail.py); test được đọc, không chạy trong phiên docs.
 
 ### 5.2 Design contract và source discrepancy
 

@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/student/profile/edit`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: route and G-03 gate page are declared in Study Web source; authenticated/runtime behavior remains unverified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,17 +10,17 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [ST-02](../ST-02-HoSoCaNhan/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [ST-02](../ST-02-HoSoCaNhan/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Route link đã source-wired; không kiểm tra session và không truyền PII |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [ST-02](../ST-02-HoSoCaNhan/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [ST-02](../ST-02-HoSoCaNhan/00-overview.md) | Source event/inventory navigation | Theo source DD | RouterLink đã source-wired; browser runtime chưa verify |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: route declaration có trong source; client session guard và authenticated data loading chưa có.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
@@ -49,8 +49,8 @@ flowchart LR
 
 ### Điều hướng
 
-- ST-02 → ST-03: inventory link/route đề xuất; không có route source. Không gửi user ID qua URL vì API dùng token subject.
-- ST-03 → ST-02: hai link trong mockup có data-path nhưng href="#"; route dự kiến /student/profile.
+- ST-02 → ST-03: route `/student/profile/edit` đã source-wired; ST-02 hiện giữ nút edit disabled nên chưa có điểm vào UI.
+- ST-03 → ST-02: hai RouterLink đi tới `/student/profile`; không truyền user ID hoặc PII qua URL.
 - SH-02/session handoff: phụ thuộc auth/session policy. API tự kiểm JWT; không có client auth store trong Study Web.
 - Header/footer destinations: chưa xác định từ app router. Không thêm route giả định.
 - Không xác nhận cache, back-stack, dirty-state confirmation, returnTo hoặc reload strategy.

@@ -1,0 +1,19 @@
+.me14-gate { display:grid; justify-items:center; gap:10px; padding:54px 20px; text-align:center; }
+.me14-gate h2 { margin:0; color:#17324b; font-size:18px; }
+.me14-gate p { max-width:52ch; color:#657b91; font-size:13px; line-height:1.55; }
+.me14-icon { display:grid; place-items:center; width:48px; height:48px; border-radius:50%; background:#eaf4fa; color:#0b668f; font-size:24px; }
+.me14-flow { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.me14-step { display:flex; align-items:center; gap:9px; min-height:50px; padding:6px 12px; border-radius:10px; background:#eaf4fa; color:#245b79; }
+.me14-step>span { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; background:#0b668f; color:white; font-size:11px; font-weight:800; }
+.me14-step>div { display:grid; gap:2px; }.me14-step strong{font-size:12px}.me14-step small{color:#6a7f94;font-size:10px}
+.me14-step--current { background:#0b5f8a; color:#fff; }.me14-step--current>span{background:#fff;color:#0b5f8a}.me14-step--current small{color:#dceef7}
+.me14-compose { display:grid; gap:10px; padding:22px; }
+.me14-compose h2 { margin:0 0 8px; color:#17324b; font-size:18px; }
+.me14-compose>label { margin-top:6px; color:#36516b; font-size:12px; font-weight:750; }
+.me14-compose>input,.me14-compose>textarea { width:100%; min-height:44px; padding:10px 12px; border:1px solid #d0dce7; border-radius:8px; color:#526a82; font:inherit; }
+.me14-compose fieldset { display:flex; gap:20px; padding:12px; border:1px solid #e2e9ef; border-radius:8px; }
+.me14-compose fieldset label { display:flex; align-items:center; gap:8px; font-size:12px; }
+.me14-compose textarea { resize:vertical; }
+.me14-recipient-list { padding-top:6px; }.me14-recipient-list h3{color:#36516b;font-size:13px}.me14-recipient-list ul{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0}.me14-recipient-list li{display:grid;gap:3px;padding:9px 11px;border:1px solid #e2e9ef;border-radius:8px;font-size:12px}
+.me14-actions { display:flex; justify-content:flex-end; gap:10px; padding-top:12px; border-top:1px solid #e8eef4; }
+@media(max-width:560px){.me14-compose{padding:17px}.me14-actions{flex-direction:column}.me14-actions>*{width:100%}.me14-flow{align-items:stretch;flex-direction:column}}

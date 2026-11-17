@@ -11,7 +11,7 @@
 
 - API refs trong inventory: #83
 - Orchestration/data notes: AD-12 numeric `Lesson.id` → GET #83 `ApiEnvelope<Lesson>`; local #83 trả 7 fields, loại `DELETED`, không đọc dependencies/metrics; API #86 tự kiểm tra progress/resources/uploads khi delete. Không gọi Student #24 thay API Admin.
-- BE/source status và gate: **R** local #83 route/module/query/model/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** AC dependencies chưa có output rule; course title/type/resource/progress/metrics/SSE fields thiếu; ADMIN vs lesson-management permission, legacy/V1-PILOT schema, nullable required fields/status enum và Study Web `UNWIRED` còn mở; **RUNTIME NOT VERIFIED**
+- BE/source status và gate: **R** local #83 route/module/query/model/test and Angular AD-12→AD-13 caller/page/spec; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** the contract-backed Lesson projection is wired; dependency output, course title/type/resource/progress/metrics/SSE fields, ADMIN vs lesson-management permission, legacy/V1-PILOT schema, nullable required fields and status enum remain open. Focused Angular and fake-session API #83 tests passed; browser/live DB remain `NOT VERIFIED`.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API #83 contract và local behavior

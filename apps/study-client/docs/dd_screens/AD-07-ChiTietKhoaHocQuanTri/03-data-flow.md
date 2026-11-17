@@ -26,7 +26,7 @@
   5. Returned ID must be a positive signed-int64 and match the requested ID. Shared `map_course` requires mentor ID/name and a valid non-null price; it maps nullable description, thumbnail and mentor avatar. A missing row returns 404; invalid/incomplete projection or SQL failure returns safe 500 with rollback.
   6. Local source wraps the mapped Course in `Page<Course>` with `items=[course]` and pagination `{page:1,size:1,total:1,total_pages:1}`. This singleton shape is source behavior, not owner-approved API DD.
   7. On local success, response uses HTTP 200, `businessCode=DESIGN_RESOURCE_RETRIEVED`, `message="Course retrieved."`, and read-only data. No commit or API-side cache update occurs.
-  8. A future wired client may map the returned item to visible fields only. It must not fill course code, counters, curriculum, lessons, conversion/enrollment values or quality badges from guessed data.
+  8. Current Angular `AD07Page` maps title, mentor, price, status, description and thumbnail URL, and displays the route value as “ID khóa học”. It must not fill course code, counters, curriculum, lessons, conversion/enrollment values or quality badges from guessed data.
 - **Success output:** Ready state with one Course under current local source. API catalog is generic `Page<Course>`; whether a successful empty/multi-item page is allowed for a detail contract remains open.
 - **Errors:** 401 authentication required; 403 access denied; 404 malformed/out-of-range path or missing row; 500 internal error. Catalog has no 422 for this endpoint. Network/timeout, retry and error-copy policy are not set by these sources.
 - **Session expiry:** A 401 is observable from API, but refresh/redirect/re-auth policy belongs to shared auth handling and is not specified here. Do not treat static “Chuẩn xác thực RBAC” badge as authorization result.
@@ -34,8 +34,8 @@
 ### EV-02 — Quay lại AD-06
 
 - **Trigger/type:** Click local breadcrumb link or “Quay lại danh mục khóa học (AD-06)” (#13/#15); click/navigation.
-- **Current behavior:** Both anchors have `href="#"`; no navigation listener exists.
-- **Target input/result:** Return to proposed AD-06 route `/admin/courses`. Current filter/page/scroll restoration is unspecified. No API mutation occurs. AD-06 may load its own #73 data after navigation; that behavior is defined by AD-06 and router lifecycle, not this link.
+- **Current behavior:** The prototype anchors have `href="#"` and no navigation listener. The Angular page has a RouterLink to AD-06 `/admin/courses`; browser behavior and list-state restoration are unverified.
+- **Target input/result:** Return to AD-06 `/admin/courses`. Current filter/page/scroll restoration is unspecified. No API mutation occurs. AD-06 may load its own #73 data after navigation; that behavior is defined by AD-06 and router lifecycle, not this link.
 - **Failure/edge:** If the session expired, destination access should be handled by the shared auth boundary; no redirect or list-state retention rule is established by AD-07 sources.
 
 ### EV-03 — Mở AD-08 để sửa khóa học
@@ -62,7 +62,7 @@
 ### EV-06 — Ánh xạ các trường Course
 
 - **Trigger/type:** Valid #74 response; internal render/state update.
-- **Input/output mapping:** Map `data.items[0].title` → course title (#26); `mentor.full_name` → owner (#28); `price` exact decimal string → price value (#29); `status` string → status value (#30). Retain `id` in route/screen state for actions. `description`, `thumbnail_url`, and `mentor.avatar_url` are nullable in model; no visible dedicated field/image mapping is evidenced in this screenshot. Do not format price with a currency symbol or locale rule unless separately approved.
+- **Input/output mapping:** Angular source maps `title`, `mentor.full_name`, exact `price`, `status`, `description` and `thumbnail_url` to page fields, and retains the route ID displayed as “ID khóa học”. The prototype screenshot has no corresponding description/thumbnail element. Do not format price with a currency symbol or locale rule unless separately approved.
 - **Unsupported prototype fields:** “Mã khóa học” (#27) has no Course field; do not substitute ID. Metrics (#31–33), curriculum/lessons (#34–38), and standards/manual claims (#44–52) have no #74 data and are not derived from it.
 - **Missing/null behavior:** Local mapper permits nullable description, thumbnail, avatar; mentor ID/name and price are required for its projection. A null optional value may be represented as no value in a future UI, but copy/placeholder is not defined. A required mapping failure is a 500 source behavior, not a successful blank field.
 
@@ -92,20 +92,21 @@
 | Errors | 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 404 `DESIGN_RESOURCE_NOT_FOUND`; 500 `DESIGN_INTERNAL_ERROR`. API catalog does not declare 422. Local malformed/out-of-range path → 404 before query; missing row → 404; query/mapping failure → safe 500 and rollback. |
 | Ordering | One #74 call per detail load in target; no dependent request is defined. AC-32 places #74 after #73 and before its #75/#76/#77 branches. |
 | Retry / timeout / cache | Not specified by API catalog/DD or UI source. Do not select a client policy in this DD. GET has no mutation/idempotency body; any cache freshness remains open. |
-| Test/runtime evidence | Local route/module/test source exists. Existing tests use fake session/query doubles. A historical verification report used a temporary schema; neither proves current live DB/deployment. No tests or runtime were run in this session. |
+| Test/runtime evidence | Local API route/module/test source exists; existing API tests use fake session/query doubles. A historical verification report used a temporary schema. The 2026-11-16 focused frontend spec passed (1 file, 2 tests) and production build passed with existing CSS-budget warnings; no live DB/deployment/browser runtime was verified. |
 
 ### Trích từ DD nguồn: E. Ma trận trạng thái và điều hướng
 
 | Trạng thái | Điều kiện vào | Hiển thị / xử lý | Chuyển tiếp và lưu ý |
 |---|---|---|---|
-| `UNWIRED` prototype | Current checkout has assets but no Study Web app/router. | Screenshot/HTML only; no request or actual screen state. | Becomes runtime states only after route/client implementation and separate verification. |
+| Prototype-only | `code.html` static artifact. | No request/state; prototype links and buttons remain inert/disabled. | Distinct from the Angular route/page source. |
+| Current Angular state | Declared route starts GET #74 through AD07Page. | Source states are `loading` / `loaded` / `error`. | Browser/deployment remains unverified; detailed HTTP outcomes below describe API/target behavior. |
 | `initial` | Proposed route matched; no request started yet. | No approved loading copy beyond static mockup. | EV-01 begins when a real client request is wired. |
 | `loading` | #74 request in flight. | Render a real request-bound loading state; static “waiting for courseId” is not evidence. | 200 → `ready`; API/network failure → matching error state. Cancellation/timeout handling unspecified. |
-| `ready` | #74 returns 200 and response validates. | Local source returns one Course; show only supported data. No success-empty behavior is established. | EV-02/03/04/05 navigation when routes/policies are confirmed. |
-| `not-found` | #74 returns 404 for malformed/out-of-range ID or missing row. | Dedicated unavailable-resource state; do not display the mockup's “no course selected” as equivalent. | Back to AD-06 may be offered after route behavior is wired. |
-| `unauthorized` | #74 returns 401. | Authentication required/session invalid state; static RBAC badge is not a substitute. | Refresh/re-auth/redirect policy is shared and unresolved. |
-| `forbidden` | #74 returns 403. | Access-denied state distinct from 404 and empty. | Permission display/remediation route unresolved. |
-| `service-error` | #74 returns 500. | Service failure state; do not render as empty course. | Retry and support copy are not specified. |
+| `loaded` | #74 returns 200 and response validates. | Current Angular source enters `loaded`; local API source returns one Course. No success-empty behavior is established. | EV-02/03/04/05 navigation when downstream routes/policies are confirmed. |
+| `not-found` | Target mapping when #74 returns 404 for malformed/out-of-range ID or missing row. | Current Angular source displays `error`; a distinct not-found state is not implemented. | Back to AD-06 is available as a RouterLink; runtime is unverified. |
+| `unauthorized` | Target mapping when #74 returns 401. | Current Angular source displays `error` with an auth message; a distinct state is not implemented. | Refresh/re-auth/redirect policy is shared and unresolved. |
+| `forbidden` | Target mapping when #74 returns 403. | Current Angular source displays `error` with an access message; a distinct state is not implemented. | Permission display/remediation route unresolved. |
+| `service-error` | Target mapping when #74 returns 500. | Current Angular source displays generic `error`; a distinct service-error state is not implemented. | Retry and support copy are not specified. |
 | `network-error` | Client cannot obtain an API response. | Future client state; current API catalog cannot define its UI. | Retry/backoff/timeout policy remains open. |
 | `route-param-missing` | Direct route has no usable `courseId`. | No API request can be formed; route fallback behavior is unspecified. | Router-level error or return navigation requires a shared route decision. |
 
@@ -113,7 +114,7 @@
 
 | Destination | Handoff | Current evidence and blocker |
 |---|---|---|
-| AD-06 `/admin/courses` | Back/list breadcrumb; retain current Course ID only as browser history if applicable. | Current anchors are inert; list state retention is not specified. |
+| AD-06 `/admin/courses` | Back/list breadcrumb; retain current Course ID only as browser history if applicable. | Angular RouterLink exists; prototype anchors are inert. Browser behavior and list-state retention are unverified or unspecified. |
 | AD-08 `/admin/courses/:courseId/edit` | Numeric `Course.id`; AC-32 #75 branch follows detail read. | Button disabled in prototype; update body and route behavior are AD-08 blockers. |
 | AD-09 `/admin/courses/:courseId/actions` | Numeric `Course.id`; choose #76 or #77 under approved policy. | Button disabled; status vocabulary, delete semantics and permission are open. |
 | AD-12 `/admin/lessons?course=<Course.id>` candidate | Pass numeric ID as catalog/source query `course:int64`; AD-12 would call #82. | Technically supported by #82 local query/view and catalog. Query route needs inventory/owner confirmation; #82 response cardinality still differs from catalog. |

@@ -24,7 +24,7 @@ describe('AD12Page', () => {
 
   afterEach(() => http.verify());
 
-  it('renders the API #82 lesson projection without unsupported columns or actions', async () => {
+  it('renders API #82 lessons and links safe numeric IDs to AD-13', async () => {
     await signIn();
     const fixture = TestBed.createComponent(AD12Page);
     fixture.detectChanges();
@@ -51,14 +51,33 @@ describe('AD12Page', () => {
     expect(text).toContain('DRAFT');
     expect(text).toContain('2 bài học được trả về trong response');
     expect(headers).toContain('Mã định danh');
-    expect(headers).toContain('Mã khóa học');
+    expect(headers).toContain('ID khóa học');
+    expect(headers).not.toContain('Mã khóa học');
     expect(headers).toContain('Thứ tự');
     expect(headers).not.toContain('Loại nội dung');
     expect(headers).not.toContain('Tổng');
     expect(text).not.toContain('Secret lesson body');
     expect(text).not.toContain('private-video.example.test');
-    expect(root.querySelector('a')).toBeNull();
+    expect(root.querySelector('a[href="/admin/lessons/73"]')).not.toBeNull();
+    expect(root.querySelector('a[href="/admin/lessons/74"]')).not.toBeNull();
     expect(Array.from(root.querySelectorAll<HTMLButtonElement>('button')).every((button) => button.disabled)).toBe(true);
+  });
+
+  it('does not link a lesson ID that JavaScript cannot represent safely', async () => {
+    await signIn();
+    const fixture = TestBed.createComponent(AD12Page);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    http.expectOne('/api/v1/admin/lessons').flush(successEnvelope([
+      lesson(Number.MAX_SAFE_INTEGER + 1, 42, 'Large ID lesson', 2, 'ACTIVE'),
+    ]));
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('a[href^="/admin/lessons/"]')).toBeNull();
+    expect(root.querySelector('.lesson-id')?.textContent).toContain('Không thể hiển thị chính xác');
+    expect(root.querySelector<HTMLButtonElement>('.row-action')?.disabled).toBe(true);
   });
 
   it('renders a successful empty response without claiming synchronization state', async () => {

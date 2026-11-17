@@ -23,10 +23,10 @@
   <p class="control-note" id="catalog-actions-note"><study-icon name="info" /> API hiện tại không cung cấp tạo khóa học hoặc xuất danh mục.</p>
 
   <section class="summary-grid" aria-label="Thông tin phân trang từ API #73" aria-live="polite">
-    <article class="summary-card"><span>TỔNG KẾT QUẢ</span><strong>{{ totalCount }}</strong><p>Theo phản hồi hiện tại</p><span class="summary-icon"><study-icon name="book" /></span></article>
-    <article class="summary-card"><span>BẢN GHI TRANG NÀY</span><strong>{{ currentResultCount }}</strong><p>Items trong trang hiện tại</p><span class="summary-icon summary-icon--warm"><study-icon name="database" /></span></article>
-    <article class="summary-card"><span>TRANG HIỆN TẠI</span><strong>{{ pageCount }}</strong><p>Pagination từ API #73</p><span class="summary-icon summary-icon--green"><study-icon name="layers" /></span></article>
-    <article class="summary-card"><span>KÍCH THƯỚC TRANG</span><strong>{{ pageSize }}</strong><p>Giá trị do server trả về</p><span class="summary-icon summary-icon--slate"><study-icon name="activity" /></span></article>
+    <article class="summary-card"><span>Tổng kết quả</span><strong>{{ totalCount }}</strong><p>Theo phản hồi hiện tại</p><span class="summary-icon"><study-icon name="book" /></span></article>
+    <article class="summary-card"><span>Bản ghi trang này</span><strong>{{ currentResultCount }}</strong><p>Items trong trang hiện tại</p><span class="summary-icon summary-icon--warm"><study-icon name="database" /></span></article>
+    <article class="summary-card"><span>Trang hiện tại</span><strong>{{ pageCount }}</strong><p>Pagination từ API #73</p><span class="summary-icon summary-icon--green"><study-icon name="layers" /></span></article>
+    <article class="summary-card"><span>Kích thước trang</span><strong>{{ pageSize }}</strong><p>Giá trị do server trả về</p><span class="summary-icon summary-icon--slate"><study-icon name="activity" /></span></article>
   </section>
 
   <section class="filter-panel" aria-labelledby="filters-heading">
@@ -84,7 +84,7 @@
                 <td>{{ row.values[3] }}</td>
                 <td>{{ row.values[4] }}</td>
                 <td><span class="status-badge">{{ row.values[5] }}</span></td>
-                <td><a class="row-action" [routerLink]="row.route ?? '/admin/courses'"><span>Xem chi tiết</span><study-icon name="chevron" /></a></td>
+                <td><a class="row-action" [routerLink]="row.route ?? '/admin/courses'" [attr.aria-label]="'Xem chi tiết ' + row.values[1]"><span>Xem chi tiết</span><study-icon name="chevron" /></a></td>
               </tr>
             }
           }

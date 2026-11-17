@@ -6,7 +6,7 @@
 | Module | Admin |
 | Route | `/admin/lessons/:lessonId` — route trong inventory, không phải xác nhận router runtime |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Detailed Design:** `DD BLOCKED` · **Implementation:** `IMPLEMENTATION BLOCKED` · **Study Web runtime:** `NOT VERIFIED` (`UNWIRED` trong checkout)<br> |
+| DD status | Draft (package được chuyển đổi); source status: **Detailed Design:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE` (AD-12 safe-ID link → AD-13 GET #83) · **Study Web runtime:** 6 Angular tests passed; browser `NOT VERIFIED`<br> |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [AD-13.md](../../screen_stitch/05_admin/AD-13_chi-tiet-bai-hoc-quan-tri/AD-13.md), [AD-13_PLAN.md](../../screen_stitch/05_admin/AD-13_chi-tiet-bai-hoc-quan-tri/AD-13_PLAN.md), [AD-13_markers.json](../../screen_stitch/05_admin/AD-13_chi-tiet-bai-hoc-quan-tri/AD-13_markers.json), [list_screen.md](../../list_screen.md) |
@@ -31,13 +31,13 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/ready/404/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current runtime | Angular AD-12/AD-13 routes, services and focused specs | `ROUTED / API-BACKED`; 6 Angular tests passed; browser `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-13 source screen.png](../../screen_stitch/05_admin/AD-13_chi-tiet-bai-hoc-quan-tri/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-13_chi-tiet-bai-hoc-quan-tri/screen_annotated.png))
 - Luồng: AD-12 numeric `Lesson.id` → GET #83 `ApiEnvelope<Lesson>`; local #83 trả 7 fields, loại `DELETED`, không đọc dependencies/metrics; API #86 tự kiểm tra progress/resources/uploads khi delete. Không gọi Student #24 thay API Admin.
-- Priority: P1; Gate/source status: **R** local #83 route/module/query/model/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** AC dependencies chưa có output rule; course title/type/resource/progress/metrics/SSE fields thiếu; ADMIN vs lesson-management permission, legacy/V1-PILOT schema, nullable required fields/status enum và Study Web `UNWIRED` còn mở; **RUNTIME NOT VERIFIED**
+- Priority: P1; Gate/source status: **R** local #83 route/module/query/model/test source and Angular AD-12→AD-13 caller/page/spec; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** supported Lesson fields and states are rendered; AC dependencies chưa có output rule; course title/type/resource/progress/metrics/SSE fields thiếu; ADMIN vs lesson-management permission, legacy/V1-PILOT schema, nullable required fields/status enum còn mở. 6 Angular tests and 15 API #83 tests passed; browser/live DB `NOT VERIFIED`.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -47,7 +47,7 @@
 
 # AD-13 — Chi tiết bài học quản trị
 
-> **Detailed Design:** `DD BLOCKED` · **Implementation:** `IMPLEMENTATION BLOCKED` · **Study Web runtime:** `NOT VERIFIED` (`UNWIRED` trong checkout)<br>
+> **Detailed Design:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE` · **Study Web verification:** focused Angular tests passed; browser `NOT VERIFIED`<br>
 > **Screen:** AD-13 · **Actor expected:** Admin có lesson-management permission theo AC-34 · **Route đề xuất:** `/admin/lessons/:lessonId` · **API:** #83 · **Trước:** AD-12/#82 · **Sau:** AD-14/#84–#86<br>
 > **Assets:** [screen nguồn](../../screen_stitch/05_admin/AD-13_chi-tiet-bai-hoc-quan-tri/screen.png) · [screen có marker](../../screen_stitch/05_admin/AD-13_chi-tiet-bai-hoc-quan-tri/screen_annotated.png) · [marker map](../../screen_stitch/05_admin/AD-13_chi-tiet-bai-hoc-quan-tri/AD-13_markers.json) · [kế hoạch](../../screen_stitch/05_admin/AD-13_chi-tiet-bai-hoc-quan-tri/AD-13_PLAN.md) · [inventory](../../list_screen.md)
 
@@ -63,7 +63,7 @@ AC-34 node n5 ghi “Đọc lesson + dependencies”, nhưng không xác định
 
 ### Current behavior đã xác minh
 
-- **Study Web:** thư mục hiện có `docs`, ignored `dist`, `node_modules` và `tsconfig.tsbuildinfo`; không có editable `src`, `package.json`, router hoặc API client. `code.html` không có route param/data binding, request, `EventSource`, WebSocket, timer hay listener. Anchors dùng `href="#"`; action tới AD-14 là button disabled. Study Web `UNWIRED`; không có runtime verification.
+- **Study Web:** Angular source registers `/admin/lessons/:lessonId` → `AD13Page`; AD-12 loads #82 and links a lesson to that route only when its JavaScript `number` ID is safe. AD-13 calls GET #83 with `lesson_id`, renders the seven Lesson fields as text, maps loading/loaded/error states, and keeps resource/metrics/SSE blocks unavailable and AD-14 actions disabled. The Stitch `code.html` remains a static prototype. Focused AD-12/AD-13 specs passed (6 tests); browser and live DB remain `NOT VERIFIED`.
 - **API #83:** local route `GET /api/v1/admin/lessons/{lesson_id}`, `GetAdminLessonEnvelope`, direct `Lesson` response. Bearer/JWT shared guard yêu cầu role `ADMIN` trước custom raw-path parsing và DB. AC-34 lesson-management permission chưa được enforce bởi route source đã rà soát.
 - `lesson_id` custom parser nhận signed int64 trong bounds; malformed, overflow hoặc raw path dài hơn 20 ký tự trả 404 `DESIGN_RESOURCE_NOT_FOUND` (local DERIVED choice để khớp error set; không gọi DB). Parser không tạo 422.
 - Bound query lấy tối đa một row từ candidate legacy `lessons` theo `id`, loại `status='DELETED'`; không áp dụng public `PUBLISHED` filter. Không join `courses`, không đọc `resources`/`lesson_progress`, không trả pagination/dependency data, không ghi hoặc commit.
@@ -74,7 +74,7 @@ AC-34 node n5 ghi “Đọc lesson + dependencies”, nhưng không xác định
 ### Tác nhân, điều kiện và quyền
 
 - **Actor expected:** Admin có lesson-management permission theo AC-34. **Current API:** chỉ shared role guard `ADMIN`; fine-grained permission và ownership scope chưa được source-backed cho #83.
-- **Entry condition:** AD-12 selection truyền numeric lesson ID vào `lessonId` route param; route/API client chưa được triển khai. Nếu thiếu param, client route behavior chưa được định nghĩa; API path bắt buộc.
+- **Entry condition:** AD-12 passes a safe numeric lesson ID into `lessonId`; the Angular route and #83 API client are registered. The shared route-state helper reports a missing parameter as an error; the backend validates direct/malformed path input.
 - **Postcondition:** render một Lesson response nếu #83 thành công; không thay đổi dữ liệu. AD-14 là nơi tiếp tục các mutation #84–#86.
 - Không dùng copy “Chế độ phân quyền Admin”, “RBAC”, “cách ly khỏi học viên”, “khóa ghi đồng thời” hoặc “Audit Log Level 1” làm bằng chứng runtime/access/audit guarantee.
 
@@ -101,4 +101,4 @@ AC-34 node n5 ghi “Đọc lesson + dependencies”, nhưng không xác định
 | Metrics/SSE | Mockup có learners, completion/submission/rating, progress bars, Realtime SSE. | #83 không có metrics, stream, counts, filter hay SSE. | `STATIC_ONLY / UNMAPPED`: không dùng endpoint khác nếu không có AC/contract handoff. |
 | Audit/concurrency/sync | Mockup tuyên bố auto lock, Audit Log Level 1, sync state. | #83 là GET read-only; không lock row, ghi audit hoặc lấy sync status. | `STATIC_ONLY`: không đưa ra guarantee hoặc trạng thái hoạt động. |
 | Authorization/schema/status | AC-34 lesson-management permission; screen status field. | Source chỉ check `ADMIN`; legacy schema nullable và khác V1-PILOT; status enum/casing mở. | `OPEN / BLOCKER`: cần policy, live schema/nullability và enum xác nhận. |
-| Study Web/design | Mockup cobalt/Plus Jakarta Sans/full-width; anchors/static button. | UI source absent; guide yêu cầu ocean tokens, Inter/system, content width khoảng 1120px. | `UNWIRED / DESIGN DISCREPANCY`: không coi asset là implementation; theo guide khi frontend tồn tại. |
+| Study Web/design | Stitch mockup uses cobalt/Plus Jakarta Sans/full-width and static anchors/buttons. | Angular AD-13 uses the shared host-scoped detail stylesheet, Admin semantic colors, route links and explicit loading/error states; it does not copy the static prototype. | `PARTIAL SOURCE / VISUAL RUNTIME NOT VERIFIED`; browser comparison remains outstanding. |

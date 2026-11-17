@@ -1,0 +1,179 @@
+<study-guest-site-layout>
+  <main class="detail-page" data-screen-id="GS03">
+    <nav class="breadcrumbs" aria-label="Đường dẫn">
+      <a routerLink="/courses">Khóa học</a>
+      <study-icon name="chevron" />
+      <span aria-current="page">Chi tiết khóa học</span>
+    </nav>
+
+    @let detail = state();
+    @if (detail.status === 'loading') {
+      <section class="loading-panel" role="status" aria-live="polite" aria-busy="true">
+        <span class="loading-icon"><study-icon name="book" /></span>
+        <h1>Đang tải khóa học…</h1>
+      </section>
+    } @else if (detail.status === 'not-found') {
+      <section class="state-panel" role="status">
+        <span class="state-icon"><study-icon name="book" /></span>
+        <h1>Không tìm thấy khóa học</h1>
+        <p>Khóa học này hiện không có sẵn.</p>
+        <a class="primary-button" routerLink="/courses">
+          <study-icon name="arrow" />
+          Quay lại danh sách khóa học
+        </a>
+      </section>
+    } @else if (detail.status === 'error') {
+      <section class="state-panel" role="alert">
+        <span class="state-icon"><study-icon name="info" /></span>
+        <h1>Chưa thể tải thông tin khóa học</h1>
+        <p>Vui lòng quay lại danh sách và thử lại sau.</p>
+        <a class="primary-button" routerLink="/courses">
+          <study-icon name="arrow" />
+          Quay lại danh sách khóa học
+        </a>
+      </section>
+    } @else if (detail.status === 'ready') {
+      <header class="detail-heading">
+        <p class="eyebrow">Chi tiết khóa học</p>
+        <h1>{{ detail.course.title }}</h1>
+      </header>
+
+      <nav class="detail-tabs" role="tablist" aria-label="Nội dung khóa học">
+        <button
+          #courseTab
+          id="gs03-tab-overview"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="selectedTab() === 'overview'"
+          [tabIndex]="selectedTab() === 'overview' ? 0 : -1"
+          aria-controls="gs03-overview"
+          (click)="selectTab('overview')"
+          (keydown)="onTabKeydown($event)"
+        >
+          <study-icon name="info" />
+          Tổng quan
+        </button>
+        <button
+          #courseTab
+          id="gs03-tab-curriculum"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="selectedTab() === 'curriculum'"
+          [tabIndex]="selectedTab() === 'curriculum' ? 0 : -1"
+          aria-controls="gs03-curriculum"
+          (click)="selectTab('curriculum')"
+          (keydown)="onTabKeydown($event)"
+        >
+          <study-icon name="book" />
+          Đề cương
+        </button>
+        <button
+          #courseTab
+          id="gs03-tab-reviews"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="selectedTab() === 'reviews'"
+          [tabIndex]="selectedTab() === 'reviews' ? 0 : -1"
+          aria-controls="gs03-reviews"
+          (click)="selectTab('reviews')"
+          (keydown)="onTabKeydown($event)"
+        >
+          <study-icon name="layers" />
+          Đánh giá
+        </button>
+        <button
+          #courseTab
+          id="gs03-tab-resources"
+          type="button"
+          role="tab"
+          [attr.aria-selected]="selectedTab() === 'resources'"
+          [tabIndex]="selectedTab() === 'resources' ? 0 : -1"
+          aria-controls="gs03-resources"
+          (click)="selectTab('resources')"
+          (keydown)="onTabKeydown($event)"
+        >
+          <study-icon name="layers" />
+          Tài nguyên
+        </button>
+      </nav>
+
+      @if (selectedTab() === 'overview') {
+        <section
+          id="gs03-overview"
+          class="overview-panel"
+          role="tabpanel"
+          aria-labelledby="gs03-tab-overview"
+        >
+          @if (detail.course.thumbnail_url) {
+            <img
+              class="course-image"
+              [src]="detail.course.thumbnail_url"
+              [alt]="'Ảnh khóa học ' + detail.course.title"
+            />
+          } @else {
+            <div class="course-image course-image--empty" aria-hidden="true">
+              <study-icon name="book" />
+            </div>
+          }
+
+          <div class="course-information">
+            <section class="description-section" aria-labelledby="gs03-description-heading">
+              <h2 id="gs03-description-heading">Về khóa học</h2>
+              @if (detail.course.description) {
+                <p>{{ detail.course.description }}</p>
+              } @else {
+                <p class="muted-copy">Khóa học chưa có mô tả.</p>
+              }
+            </section>
+
+            <section class="mentor-section" aria-labelledby="gs03-mentor-heading">
+              <h2 id="gs03-mentor-heading">Giảng viên</h2>
+              <div class="mentor-card">
+                @if (detail.course.mentor.avatar_url) {
+                  <img class="mentor-avatar" [src]="detail.course.mentor.avatar_url" alt="" />
+                } @else {
+                  <span class="mentor-avatar mentor-avatar--empty" aria-hidden="true">
+                    <study-icon name="person" />
+                  </span>
+                }
+                <span>{{ detail.course.mentor.full_name }}</span>
+              </div>
+            </section>
+
+            <a class="back-link" routerLink="/courses">
+              <study-icon name="arrow" />
+              Quay lại danh sách khóa học
+            </a>
+          </div>
+        </section>
+      } @else if (selectedTab() === 'curriculum') {
+        <section
+          id="gs03-curriculum"
+          class="curriculum-tab-panel"
+          role="tabpanel"
+          aria-labelledby="gs03-tab-curriculum"
+        >
+          <study-gs03-curriculum-panel [state]="curriculumState()" />
+        </section>
+      } @else if (selectedTab() === 'reviews') {
+        <section
+          id="gs03-reviews"
+          class="reviews-tab-panel"
+          role="tabpanel"
+          aria-labelledby="gs03-tab-reviews"
+        >
+          <study-gs05-page [courseId]="activeCourseId" />
+        </section>
+      } @else {
+        <section
+          id="gs03-resources"
+          class="resources-tab-panel"
+          role="tabpanel"
+          aria-labelledby="gs03-tab-resources"
+        >
+          <study-gs06-page />
+        </section>
+      }
+    }
+  </main>
+</study-guest-site-layout>

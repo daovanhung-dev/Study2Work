@@ -12,6 +12,8 @@
 
 > Event IDs trong package là alias để theo template; Source Event IDs, steps và API links giữ theo DD nguồn. Alias không chứng minh event runtime.
 
+> Current Angular source: AD04 route/page and GET #69 caller exist; page state is `loading/loaded/error`, and the Save button is disabled with no #70 call. HTTP 401/403/404 produce different messages within the same `error` state. Runtime is not verified.
+
 ## 2. Chi tiết event từ DD nguồn
 
 ### Trích từ DD nguồn: D. Đặc tả chi tiết từng sự kiện
@@ -32,7 +34,7 @@
 5. Map profile vào baseline: `id`, `full_name`, `email`, `role`, `status`, `phone`, `avatar_url`, timestamps. Field nào bị policy PII chặn thì không render. Organization, audit, SSO actor, sync và compliance không có trong response.
 6. Khi dữ liệu hợp lệ, chuyển `ready`; controls vẫn read-only cho đến khi body/permission/policy được duyệt. Không map trạng thái rỗng thành dữ liệu mặc định.
 7. 401 → `unauthenticated`; 403 → `forbidden`; 404 → `not-found`; 500/mạng/response không hợp lệ → `load-error`. Cho retry GET chỉ sau khi có UX/network policy; không tự động retry vô hạn.
-8. Khi rời page, truyền cùng numeric ID sang route được duyệt; route hiện tại chưa có implementation.
+8. Khi rời page, truyền cùng numeric ID sang route được duyệt. Angular template currently links to AD-03; deployment/host fallback and dirty-state behavior are not verified.
 
 ### EV-02 — Thay đổi trường form và tạo dirty state
 
@@ -72,7 +74,7 @@
 | Trigger / loại | Click Back (#9) hoặc Cancel (#35); hiện hai đích khác nhau. |
 | Preconditions | Có nguồn route/state để giữ numeric `user_id`. Unsaved-change confirmation policy cần được duyệt. |
 | Input / xử lý | Nếu chưa dirty: navigate về AD-03 cùng ID theo route đã chốt. Nếu dirty: hiển thị confirm/discard chỉ khi product quyết định nội dung và draft preservation; không tự thêm modal. Không gửi API. |
-| Kết quả | AD-03 tải hoặc giữ profile theo cache policy chưa được định nghĩa. Prototype hiện Back dùng string-code `/details`; Cancel mở `/admin/users`; cả hai cần sửa khi wire. |
+| Kết quả | Angular template has Back/Cancel router links to AD-03 with the current `userId`; the list breadcrumb/footer point to `/admin/users`. Prototype Back uses string-code `/details` and Cancel opens `/admin/users`; these are separate static references. Cache/dirty policy and runtime remain unverified. |
 
 ### EV-05 — API docs, gate và manual support request
 
@@ -88,7 +90,7 @@
 | Thuộc tính | Đặc tả |
 |---|---|
 | Trigger / loại | Click header navigation, notifications, breadcrumbs, brand/footer links hoặc render các badge/copy #1–#8, #12–#14, #18, #22, #24, #27, #29–#33, #39–#40. |
-| Preconditions | Route destinations và data source được định nghĩa. Hiện không có router/notification/health/audit/policy source trong Study Web hoặc API #69/#70. |
+| Preconditions | Route destinations và data source được định nghĩa. Angular router/page source exists, but notification/health/audit/policy source is not established by AD-04 or API #69/#70. |
 | Xử lý | Không coi `href="#"` là route. Không trình bày static `SYSTEM NORMAL`, verified API, 85% sync, audit/compliance/SSO/RBAC token, policy version là trạng thái runtime. Nếu UI được xây, render dữ liệu động chỉ từ source đã duyệt và kiểm soát PII. |
 | Kết quả | Hiện tại prototype không xử lý event; không gọi API và không thay đổi state. |
 

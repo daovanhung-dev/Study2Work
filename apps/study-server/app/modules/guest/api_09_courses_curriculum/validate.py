@@ -14,11 +14,12 @@ def validate_course_id(
 ) -> int | JSONResponse:
     """Kiểm tra và chuyển đổi course_id từ path parameter thành số nguyên.
 
-    Nếu giá trị không hợp lệ hoặc không thể chuyển đổi thành int, trả về error_response
-    với mã HTTP 404 và business code DESIGN_RESOURCE_NOT_FOUND theo DD #09.
+    Nếu giá trị không hợp lệ, không thể chuyển đổi thành int, hoặc nằm ngoài
+    signed int64, trả về error_response với mã HTTP 404 và business code
+    DESIGN_RESOURCE_NOT_FOUND theo DD #09.
     """
     parsed_course_id = parse_integer(course_id_raw)
-    if parsed_course_id is None:
+    if parsed_course_id is None or not (-(2**63) <= parsed_course_id <= 2**63 - 1):
         return _course_not_found_error(trace_id)
     return parsed_course_id
 

@@ -18,7 +18,7 @@
 - **Input/query:** server dùng parameter binding; % và _ được giữ theo ngữ nghĩa LIKE hiện có do source không escape. Không thêm max length, client-side validation hay escaping policy không có trong contract.
 - **Accessibility:** khi triển khai, input/select/checkbox/radio/button cần label và keyboard semantics tương ứng; trạng thái loading/error cần được công bố phù hợp. Source hiện tại không đủ để xác nhận WCAG/runtime implementation.
 - **Responsive/design system:** annotation giữ nguyên bố cục nguồn. Responsive behavior và token mapping cần đối chiếu với [Study web design guide](../../../../../.agents/web-study/design.md); không tuyên bố prototype này phù hợp guide khi source đang lệch.
-- **Runtime:** không có Study Web source/package/router/entrypoint. Chưa xác minh fetch, URL sync, debounce, cache, navigation, auth shell, responsive behavior hoặc accessibility khi chạy.
+- **Current source:** Guest `/courses/search`, GS-02 page and public #07 caller are wired for the bounded nonempty-q flow. Browser rendering remains unverified; debounce, #05 cache, other navigation, and screenshot account/header controls are not implemented.
 
 ### Trích từ DD nguồn: 8. Blockers và quyết định cần bổ sung
 
@@ -30,8 +30,8 @@
 | GS02-B04 | Page-size conflict | Screenshot 6/page; source cố định 20/page, không có size input. | Căn chỉnh design hoặc API contract/pagination. |
 | GS02-B05 | Course card fields thiếu | API không trả category, currency, rating, duration, tags, discount/old price. | Chốt data/API/schema và field formatting cho từng card. |
 | GS02-B06 | Empty-query semantics | AC có thể bỏ request khi rỗng; #07 blank q trả toàn bộ PUBLISHED. | Chọn prompt/no request hay browse-all. |
-| GS02-B07 | Cache/partial-load/orchestration policy | AC-04 diagram/API #05 DD thể hiện #05 → #07; inventory F02 cho phép chạy song song nếu độc lập và #05 cache-first. Study Web source/cache hiện không có. | Chốt thứ tự/cache-hit behavior, cache key, TTL, invalidation, fallback và behavior khi chỉ một API lỗi. |
-| GS02-B08 | Study Web UNWIRED | Không có frontend source/package/router/entrypoint trong checkout. | Có implementation surface và route wiring trước runtime verification. |
+| GS02-B07 | Cache/partial-load/orchestration policy | AC-04 diagram/API #05 DD thể hiện #05 → #07; inventory F02 cho phép chạy song song nếu độc lập và #05 cache-first. Current GS-02 caller only uses #07. | Chốt thứ tự/cache-hit behavior, cache key, TTL, invalidation, fallback và behavior khi chỉ một API lỗi. |
+| GS02-B08 | Study Web partial / runtime unverified | Guest feature, `/courses/search` route and nonempty-q #07 caller now exist. Browser rendering, debounce, GS-01/GS-03 navigation, and broader screen behavior remain unverified or unwired. | Complete the approved UI/route behavior and verify browser/runtime after upstream design/API decisions are closed. |
 | GS02-B09 | Extra destinations | Header account, learning path, advisor và footer không có route/service contract. | Map tới screen/service owner hoặc bỏ các control khỏi scope. |
 | GS02-B10 | API page range | Catalog khai báo page int32; route dùng Python int và chỉ kiểm tra ≥1, không có upper bound. | Chốt int32 upper bound hoặc nới contract; xác định hành vi khi page/offset vượt giới hạn trước khi frontend gửi giá trị tùy ý. |
 

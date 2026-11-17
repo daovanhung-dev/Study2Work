@@ -11,17 +11,17 @@
 
 - API refs trong inventory: #82
 - Orchestration/data notes: GET #82; catalog singleton `Lesson` khác local `Lesson[]`; course cần int64 nhưng mockup dùng slug, type trả 422, status exact raw string, không có pagination; CTA Add chưa có API.
-- BE/source status và gate: **R** local route/module/query/model/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** cardinality, filter mappings, page metadata, row projection/Add API, lesson-management permission, legacy nullability/live schema và Study Web `UNWIRED` còn mở; **RUNTIME NOT VERIFIED**
+- BE/source status và gate: **R** Angular route/page/GET #82 caller and API route/module/query/model/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE; FILTERS/ACTIONS BLOCKED:** cardinality, UI filter mapping, pagination, Add API, lesson-management permission, legacy nullability/live schema còn mở; **RUNTIME NOT VERIFIED**
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API và liên kết màn hình
 
 | API | Catalog contract | Local source behavior | Tình trạng |
 |---|---|---|---|
-| #82 `GET /api/v1/admin/lessons` | Bearer/Admin; query `course?:int64`, `status?:string`, `type?:string`; `ApiEnvelope<Lesson>`; catalog 401/403/500 | Role `ADMIN`; `course` signed int64; `type` unsupported→422; `status` exact; trả `ApiEnvelope<Lesson[]>`; DB/projection failures safe 500 | `R` source-backed locally; contract discrepancy; tests not run |
-| #83 `GET /api/v1/admin/lessons/{lesson_id}` | Handoff đến AD-13 theo AC-34; path ID là numeric int64 trong route hiện tại | Route được đăng ký; AD-13 source/response chưa được đặc tả trong phiên này | Handoff candidate; không suy diễn row action |
+| #82 `GET /api/v1/admin/lessons` | Bearer/Admin; query `course?:int64`, `status?:string`, `type?:string`; `ApiEnvelope<Lesson>`; catalog 401/403/500 | Role `ADMIN`; `course` signed int64; `type` unsupported→422; `status` exact; local `Lesson[]`; SQL excludes `DELETED`; DB/projection failures safe 500 | `R` source-backed locally; FE spec 3/3 and fake-DB API tests 15/15 passed 2026-11-16; contract discrepancy remains |
+| #83 `GET /api/v1/admin/lessons/{lesson_id}` | Handoff đến AD-13 theo AC-34; path ID là numeric int64 | AD-12 links safe integer `id` tới AD-13; page AD-13 gọi #83 và hiển thị Lesson projection. JS `number` không biểu diễn chính xác mọi int64 | Source flow có; API DD vẫn Draft, permission/schema gates và browser/runtime còn mở |
 
-Liên kết thiết kế: AD-01/Admin shell → AD-12 → AD-13 → AD-14; AD-14 thành công thì AC-34 dự kiến reload AD-12. Route, client navigation, filter preservation và reload chưa được triển khai/xác minh.
+Liên kết thiết kế: AD-01/Admin shell → AD-12 → AD-13/#83 → AD-14; AD-14 thành công thì AC-34 dự kiến reload AD-12. Angular source có route/page/GET #82 caller và safe-ID link từ AD-12 tới AD-13; chính AD-13 gọi #83. Filter preservation, post-AD-14 reload và browser/runtime chưa được xác minh.
 
 ### Trích từ DD nguồn: Data mapping khi owner chốt contract
 

@@ -32,7 +32,7 @@ from app.modules.mentor.api_60_mentor_support_reply.validate import (
     parse_support_request_id,
     validate_message,
 )
-from app.modules.student.api_34_uploads.models import UploadAssetResponse
+from app.modules.shared.api_34_uploads.models import UploadAssetResponse
 from app.utils.auth import validate_current_user_request
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError

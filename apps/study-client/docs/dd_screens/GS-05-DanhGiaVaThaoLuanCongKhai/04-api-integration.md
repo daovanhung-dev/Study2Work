@@ -2,6 +2,8 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
+> **Current implementation update (T021, 2026-11-17):** API #10 route/module/test and GS05 Web caller now exist in source. The client sends only `page`; its loaded panel renders source-backed author/content/replies and pagination. API #10 DD remains `Draft — Needs Confirmation`; T021's browser render used a temporary in-memory stub, not live API/DB/deployment.
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
@@ -12,7 +14,7 @@
 
 - API refs trong inventory: #08, #10
 - Orchestration/data notes: Tái dùng #8 → GET #10 phân trang; 404 course riêng với empty reviews.
-- BE/source status và gate: **D (#10 declared; no current route/module/test)**; **BLOCK:** #08 catalog `course_id:int64` lệch route `str`/parser không giới hạn signed int64; API #10 Draft yêu cầu `Discussion.title` nhưng không có source; không có course-rating/aggregate source, literal rating-filter key/semantics hoặc public root/reply visibility approval; legacy `discussions` thiếu title/rating và V1-PILOT assessment reviews là model khác; AC-05 aggregate/eager #08→#09→#10 lệch F02 lazy tab, inventory yêu cầu #08 cache reuse; loaded review/reply/page/loading/error UI thiếu; live schema và Study Web UNWIRED
+- BE/source status và gate: **#10 SOURCE_BACKED locally; Study Web caller WIRED; API DD Draft**; **BLOCK:** #08 catalog `course_id:int64` vs route `str`; API #10 Draft requires `Discussion.title` without source; no course-rating/aggregate source, rating query key/semantics, or approved public root/reply visibility; legacy/V1-PILOT schemas are not live-schema evidence; AC-05 aggregate/eager differs from F02 lazy; no client cache; loaded projection has no approved visual design; live DB/deployment unverified.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: F. API contract and source status
@@ -29,21 +31,21 @@
 | Evidence | `apps/study-server/app/modules/guest/api_08_courses_detail/{validate.py,query.py,view.py,models.py}` and `apps/study-server/tests/modules/guest/api_08_courses_detail/test_courses_detail.py`. Test source is read only; no tests run and no live schema/deployment verification. |
 | UI handoff | Inventory says reuse #08, but there is no Study Web cache. Direct entry, cache miss, freshness and revalidation behavior remain open. |
 
-### API #10 — public reviews (`DECLARED_NOT_RUNNABLE`)
+### API #10 — public reviews (`SOURCE_BACKED`; DD `Draft — Needs Confirmation`)
 
 | Thuộc tính | Declared/Draft evidence |
 |---|---|
-| Method/path | Catalog and Draft DD declare public `GET /api/v1/courses/{course_id}/reviews`. No matching route/module/test found under current `apps/study-server/app/` or `apps/study-server/tests/`. Current #97/#98 routes are `/admin/discussions/reported` and `/admin/discussions/{discussion_id}` with an `ADMIN` guard; these are moderation endpoints, not a public course-review replacement. |
-| Request | Required `course_id:int64`; optional `page:int32`; literal `rating filter?:string` has unresolved physical query key/semantics. Public/no Bearer/body. |
-| Response | `ApiEnvelope<Page<Discussion>>`; 200 `DESIGN_RESOURCE_RETRIEVED`; item fields and gaps are listed in `GS05-EV-03`. No rating or aggregate field. |
-| Draft data flow | Q1 checks PUBLISHED course; Q2 gets review roots; Q3 gets nested replies; Q4 counts roots. Draft suggests `parent_id IS NULL`, `status='ACTIVE'`, page size 20 and created-time/id sorting. These are not verified runtime behavior; visibility/order/pagination are marked assumptions/design-only in the DD. |
-| Errors | Catalog declares 404 `DESIGN_RESOURCE_NOT_FOUND` and 500 `DESIGN_INTERNAL_ERROR`. It does not declare 401/403/422. Malformed optional query semantics remain TBD in API DD. |
+| Method/path | Public `GET /api/v1/courses/{course_id}/reviews` is registered in `apps/study-server/app/api/v1.py`; implementation is in `app/modules/guest/api_10_courses_reviews/`, with focused tests under `apps/study-server/tests/modules/guest/api_10_courses_reviews/`. #97/#98 remain separate ADMIN moderation APIs. |
+| Request | Current route takes the path ID as text and query model includes optional `page` and `rating`; the GS05 client sends only `page` (default 1) and no Bearer/body. The rating key/semantics remain unresolved and source does not apply a rating filter. |
+| Response | Current source returns `ApiEnvelope<Page>` with root content/author, nested reply content/author, `title: null`, root `created_at`, status and page metadata. No rating/aggregate. This differs from the Draft-required title and response details. |
+| Current data flow | Source checks course `PUBLISHED`; reads root discussions with `parent_id IS NULL` and `status='ACTIVE'`, sorted by `created_at DESC, id DESC`, page size 20; reads ACTIVE replies for current roots without an explicit reply order; counts matching roots. These are current code behaviors, not approval of the public-visibility/business rules or proof of live schema. |
+| Errors | Source returns 404 `DESIGN_RESOURCE_NOT_FOUND` for no published course and 500 `DESIGN_INTERNAL_ERROR` for current query/mapping error paths. DD does not declare 401/403/422; malformed optional query semantics remain unresolved. |
 | Documents | `docs/lists/list_api.md` declares endpoint/shape; `apps/study-server/docs/dd/10_courses_reviews/00_Cover.md` status is `Draft — Needs Confirmation`; request/response/mapping/error/table pages retain title/rating/schema conflicts. |
-| Runtime | API #10 is `DECLARED_NOT_RUNNABLE`; no deployed behavior, live query, response, retry/cache policy or test result is claimed. |
+| Verification/runtime | Focused source-backed API suite: 22 passed using fake/overridden DB sessions. Study Web GS03+GS05 focused specs: 12/12; full Study Web suite: 153/153. Desktop/mobile headless Chrome rendered using a temporary in-memory local API stub. No live API request, DB schema, deployment, retry or cache behavior was verified. |
 
 ### Database and business-rule discrepancy
 
-- Current checked-in legacy candidate `infra/postgres/study-server/DB.sql` has `discussions(id, course_id, user_id, parent_id, content, status, created_at, updated_at)`; there is no `title`, rating value or course-rating aggregate source in that table. Its use as public reviews is an API #10 Draft mapping, not current runtime behavior. Existing #97/#98 source is Admin-only discussion moderation, not a Guest read path.
+- Current Study Server #10 source reads the `discussions` relation for public GET results. The checked-in legacy candidate `infra/postgres/study-server/DB.sql` has `discussions(id, course_id, user_id, parent_id, content, status, created_at, updated_at)` and no `title`, rating value or course-rating aggregate field; current query/source does not resolve whether the deployed schema/publication policy is approved. Existing #97/#98 are separate Admin moderation paths.
 - V1-PILOT `infra/postgres/02_study_db.sql` defines `assessment_reviews` and `assessment_review_scores` keyed to assessment attempts and rubric criteria, with grading decisions/scores/feedback. These are assessment-grading records, not a course-review relation or rating aggregate for #10. Neither checked-in DDL proves the live schema; `.agents/server-study/database.md` marks live status `NOT_VERIFIED_HERE`.
 - `apps/study-server/docs/dd/10_courses_reviews/02_Overview.md` itself says `Discussion.title` is required by contract but has no source; rating filter/aggregate has no schema or response field; `status='ACTIVE'` for roots/replies is an assumption needing confirmation.
 - AC-05 says “Đọc review + aggregate rating.” GS-05 inventory says do not show average stars without rating contract; G-06 also records missing #10 rating/title source. Preserve this discrepancy. Do not create a score or derive one from review text/count.
@@ -51,12 +53,12 @@
 
 ### Trích từ DD nguồn: C.1 Expected flow — cần contract/UI wiring
 
-1. Guest mở tab từ GS-03 với cùng `courseId` và route đề xuất `/courses/:courseId?tab=reviews`. Direct-entry không có GS-03/cache chưa có behavior được duyệt.
+1. Current GS03 owns `/courses/:courseId?tab=reviews`; direct entry requests #08, then mounts GS05/#10 after the published-course response. The #08 result is not stored in a shared client cache; cache/freshness policy remains undefined.
 2. Inventory GS-05 yêu cầu reuse #08. Cache key, freshness, invalidation, cache miss, stale course và fallback #08 chưa được định nghĩa. #08 current source có thể xác nhận course PUBLISHED nếu request được thực hiện; không suy ra client sẽ tự gọi lại khi cache vắng.
-3. Khi lấy reviews, F02 kỳ vọng lazy GET #10 khi chọn tab. AC-05 diagram mô tả #08 → #09 → #10 eager trước render; giữ hai yêu cầu như discrepancy, không tự chọn một luồng.
-4. API #10 hiện chỉ là declared contract. Nếu được nối theo contract đã duyệt, request là public GET với `course_id` và `page` tùy chọn. `rating filter` có tên physical/semantics chưa xác nhận; không gửi query filter và không dựng rating UI từ thông tin hiện có.
-5. Success 200 non-empty được kỳ vọng map review roots, authors và replies. Nhưng `title` là required trong Draft response mà thiếu data source; visibility `status='ACTIVE'` và parent/reply mapping là assumptions. Loaded card projection/design cần chốt trước implement.
-6. Success 200 empty phải hiện empty state riêng, không biến thành course 404 hoặc API error. Copy hiện tại không gắn với response.
+3. Current FE follows F02 lazy tab loading; AC-05 diagram still describes #08 → #09 → #10 eager before rendering/aggregate rating. The implementation records this as a discrepancy, not an approved resolution.
+4. Current GS05 sends public GET with route `course_id` and `page` only; it sends no rating filter and renders no rating UI. Rating key/semantics remain unresolved.
+5. Success 200 non-empty maps root/reply author name and content plus `page/total_pages`; title, IDs, status, timestamps, rating and aggregate are not rendered. This bounded projection and loaded card design are implementation choices without DD visual approval; visibility rules remain Draft.
+6. Success 200 empty is response-bound and shows a separate empty state; tests cover it.
 7. Course missing/unpublished 404 cần phân biệt với empty reviews. #10 Draft DD dự kiến tự gate PUBLISHED course; #08 current source cũng trả 404. No 403 contract is declared for #10.
 8. Review data là read-only trên GS-05. Không thêm create/reply/report/reaction action; không có API/action source trong screen contract này.
 

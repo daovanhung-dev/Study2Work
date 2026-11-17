@@ -57,6 +57,20 @@ def test_validate_course_id_invalid() -> None:
     assert payload["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
 
 
+def test_validate_course_id_signed_int64_boundaries() -> None:
+    for value in (-(2**63), 2**63 - 1):
+        assert validate_course_id(str(value), trace_id="test-trace") == value
+
+
+def test_validate_course_id_outside_signed_int64_returns_not_found() -> None:
+    for value in (-(2**63) - 1, 2**63):
+        result = validate_course_id(str(value), trace_id="test-trace")
+        assert isinstance(result, JSONResponse)
+        assert result.status_code == 404
+        payload = json.loads(result.body.decode())
+        assert payload["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
+
+
 def test_get_course_detail_invalid_id() -> None:
     session = FakeSession()
     response = get_course_detail(
@@ -136,5 +150,9 @@ def test_course_detail_route_via_client(monkeypatch: Any) -> None:
         data = res.json()
         assert data["success"] is True
         assert data["data"]["items"][0]["title"] == "Introduction to Programming"
+        for value in (-(2**63) - 1, 2**63):
+            overflow_response = client.get(f"/api/v1/courses/{value}")
+            assert overflow_response.status_code == 404
+            assert overflow_response.json()["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
     finally:
         app.dependency_overrides.clear()

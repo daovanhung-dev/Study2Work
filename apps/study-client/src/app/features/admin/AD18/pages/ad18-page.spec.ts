@@ -27,16 +27,18 @@ describe('AD18Page', () => {
 
   afterEach(() => http.verify());
 
-  it('shows the route ID and disables deletion and audit reason without requesting data', () => {
+  it('shows the route ID and keeps deletion and audit reason disabled without requesting data', () => {
     const fixture = TestBed.createComponent(AD18Page);
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
     expect(root.textContent).toContain('Mã bài kiểm tra 52');
-    expect(root.textContent).toContain('Không có dữ liệu đọc trên màn hình này');
-    expect(root.textContent).toContain('hard-delete Quiz');
+    expect(root.textContent).toContain('Chưa có dữ liệu xem trước');
+    expect(root.textContent).toContain('lượt làm bài và câu trả lời');
+    expect(root.textContent).toContain('Chưa có yêu cầu xóa nào được gửi');
     expect(root.querySelector('textarea')?.disabled).toBe(true);
     expect(root.querySelector<HTMLButtonElement>('.confirm-action button')?.disabled).toBe(true);
+    expect(root.querySelector<HTMLButtonElement>('.confirm-action button')?.getAttribute('aria-disabled')).toBe('true');
     expect(root.querySelector('a[href="/admin/quizzes"]')).not.toBeNull();
     http.expectNone((request) => request.method === 'DELETE' || request.url.includes('/admin/quizzes/'));
   });

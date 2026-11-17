@@ -59,8 +59,8 @@
           </label>
 
           <label class="field-group" for="course-id">
-            <span>Mã khóa học · chỉ đọc</span>
-            <input id="course-id" type="text" [value]="displayCourseId(course.id)" readonly />
+            <span>ID khóa học · chỉ đọc</span>
+            <input id="course-id" type="text" [value]="courseId()" readonly />
             <small>Route ID được giữ nguyên dạng chuỗi: {{ courseId() }}</small>
           </label>
 

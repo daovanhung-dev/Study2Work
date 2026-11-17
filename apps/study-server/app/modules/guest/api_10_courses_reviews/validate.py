@@ -13,11 +13,13 @@ def validate_course_reviews_request(
     course_query: CourseReviewsQuery,
     trace_id: str,
 ) -> tuple[int, int, str | None] | JSONResponse:
-    """Parse course_id và chuẩn hóa input đã được contract API #10 xác nhận."""
+    """Parse signed-int64 course_id và chuẩn hóa input đã được contract API #10 xác nhận."""
 
     try:
         parsed_course_id = int(course_id)
-    except:
+        if not (-(2**63) <= parsed_course_id <= 2**63 - 1):
+            raise ValueError("course_id outside signed int64")
+    except (TypeError, ValueError, OverflowError):
         return error_response(
             status_code=404,
             business_code="DESIGN_RESOURCE_NOT_FOUND",
@@ -30,7 +32,7 @@ def validate_course_reviews_request(
     else:
         try:
             effective_page = int(course_query.page)
-        except:
+        except (TypeError, ValueError, OverflowError):
             # Contract API #10 chưa xác định behavior cho malformed page.
             # Không tự thêm HTTP/business error branch tại đây.
             raise ValueError("Malformed page") from None

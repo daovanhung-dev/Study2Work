@@ -1,0 +1,11 @@
+.me07-editor { display:grid; gap:10px; padding:24px; }
+.me07-editor-top { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:8px; }
+.me07-editor label { color:#36516b; font-size:12px; font-weight:750; }
+.me07-editor input,.me07-editor textarea { width:100%; min-height:44px; padding:11px 12px; border:1px solid #d1dce7; border-radius:8px; background:#fff; color:#263f59; font:inherit; }
+.me07-editor textarea { resize:vertical; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; line-height:1.55; }
+.me07-payload-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:8px; }
+.mentor-alert,.mentor-success { margin:0; padding:12px 14px; border-radius:8px; font-size:12px; line-height:1.5; }
+.mentor-alert { border:1px solid #efcbd0; background:#fff5f6; color:#9b2935; }
+.mentor-success { border:1px solid #c9e7d4; background:#f2fbf5; color:#286344; }
+.me07-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:10px; margin-top:10px; }
+@media(max-width:560px){.me07-editor{padding:18px}.me07-payload-heading{align-items:flex-start;flex-direction:column}.me07-actions>*{width:100%}}

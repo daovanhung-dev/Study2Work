@@ -1,0 +1,91 @@
+<main class="login-shell">
+  <section class="login-card" aria-labelledby="login-title">
+    <header class="login-heading">
+      <div class="brand" aria-label="Study2Work, Study LMS">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m2.5 9 9.5-5 9.5 5-9.5 5-9.5-5Z" />
+            <path d="M6.5 11.2v5.2c3.7 2.7 7.3 2.7 11 0v-5.2M21.5 9v6" />
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <span class="brand-name">Study<span>2Work</span></span>
+          <span class="brand-caption">Study LMS</span>
+        </span>
+      </div>
+
+      <h1 id="login-title">Đăng nhập</h1>
+      <p>Nhập thông tin tài khoản để truy cập hệ thống học tập Study LMS</p>
+    </header>
+
+    <div class="alert-box" role="alert" hidden>
+      <strong></strong>
+      <span></span>
+    </div>
+
+    <form class="login-form" (submit)="preventSubmit($event)">
+      <div class="field-group">
+        <label for="login-email">Địa chỉ email <span aria-hidden="true">*</span></label>
+        <div class="field-control">
+          <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <path d="m4 7 8 6 8-6" />
+          </svg>
+          <input
+            id="login-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            placeholder="name@example.com"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="login-password">Mật khẩu <span aria-hidden="true">*</span></label>
+        <div class="field-control password-control">
+          <study-icon class="field-icon" name="lock" />
+          <input
+            id="login-password"
+            name="password"
+            [type]="passwordVisible() ? 'text' : 'password'"
+            autocomplete="current-password"
+            placeholder="Nhập mật khẩu"
+            required
+          />
+          <button
+            class="password-toggle"
+            type="button"
+            [attr.aria-label]="passwordVisible() ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'"
+            [attr.aria-pressed]="passwordVisible()"
+            (click)="togglePasswordVisibility()"
+          >
+            @if (passwordVisible()) {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 3 21 21" />
+                <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                <path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c5.5 0 9 7 9 7a16 16 0 0 1-3.1 3.8M6.2 6.2C4.1 7.7 3 12 3 12s3.5 7 9 7c1.1 0 2.1-.2 3-.6" />
+              </svg>
+            } @else {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z" />
+                <circle cx="12" cy="12" r="2.5" />
+              </svg>
+            }
+          </button>
+        </div>
+      </div>
+
+      <button class="submit-button" type="submit" disabled aria-describedby="login-unavailable">
+        Đăng nhập
+      </button>
+      <p class="availability-note" id="login-unavailable">Đăng nhập hiện chưa khả dụng.</p>
+    </form>
+
+    <footer class="registration-prompt">
+      <span>Chưa có tài khoản?</span>
+      <a href="/register">Đăng ký ngay</a>
+    </footer>
+  </section>
+</main>

@@ -1,0 +1,18 @@
+.me10-back { display:inline-flex; min-height:44px; align-items:center; margin:-8px 0 16px; color:#0b668f; font-size:12px; font-weight:750; text-decoration:none; }
+.me10-layout { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(300px,.8fr); align-items:start; gap:16px; }
+.me10-submission,.me10-form { padding:20px; }
+.me10-submission-top { display:grid; gap:8px; }
+.me10-submission h2 { margin:18px 0 4px; color:#17324b; font-size:18px; }
+.me10-answer { min-height:150px; padding:16px; margin-top:14px; border-radius:9px; background:#f7f9fb; color:#435a72; line-height:1.65; white-space:pre-wrap; }
+.me10-files { padding-top:16px; }
+.me10-files h3 { margin:0 0 8px; color:#36516b; font-size:13px; }
+.me10-file { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 0; border-top:1px solid #e8eef4; }
+.me10-file>div { display:grid; gap:5px; }
+.me10-file strong { color:#314a64; font-size:12px; }
+.me10-forms { display:grid; gap:14px; }
+.me10-form { display:grid; gap:10px; }
+.me10-form h2 { margin:0; color:#17324b; font-size:16px; }
+.me10-form label { color:#36516b; font-size:12px; font-weight:750; }
+.me10-form input,.me10-form textarea { width:100%; min-height:44px; padding:10px 12px; border:1px solid #d1dce7; border-radius:8px; font:inherit; }
+.me10-form textarea { resize:vertical; }
+@media(max-width:800px){.me10-layout{grid-template-columns:1fr}}

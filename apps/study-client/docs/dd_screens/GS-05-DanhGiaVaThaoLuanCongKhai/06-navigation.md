@@ -2,9 +2,9 @@
 
 ## 1. Route definition
 - Current route in inventory: `/courses/:courseId?tab=reviews`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: current GS03 route/query tab source-wired; GS05 is mounted as a child panel, not a separate route.
 - Route params/types: `courseId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
-- Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
+- Query params/defaults: GS03 maps `tab=reviews`; missing/other values default to overview. GS05 page starts at 1 and keeps later page selection local, not in the URL.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
@@ -20,8 +20,8 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: GS03 loads #08 first; after a published course is ready, GS05 requests #10. T021 verifies local routing with a stub, not live deployment.
+- Invalid/missing ID: GS03 #08 response controls course not-found; GS05 maps #10 HTTP 404 to not-found. No new client ID validation is added.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram
@@ -34,21 +34,21 @@ flowchart LR
 
 ### Trích từ DD nguồn: G. State và điều hướng
 
-| State | Trigger/guard | Current HTML? | Expected output/transition |
+| State | Current Angular implementation | Verification/source boundary |
 |---|---|---:|---|
-| Static empty-like | Browser opens `code.html` | Có | Copy tĩnh; không xác nhận response rỗng. |
-| Initial/loading | Route proposal opened; resolve course/cache and #10 timing | Không | Loading design and cache/direct-entry behavior needed. |
-| Ready | #10 expected 200 with non-empty items | Không | Review/reply card mapping blocked by title/visibility/API source gaps and missing visual design. |
-| Empty | #10 expected 200 with `items=[]` | Not API-bound | Show empty state separately from errors; existing text can be a copy reference only. |
-| Course not found | #08 current 404 or #10 Draft Q1 404 | Không | Distinguish missing/unpublished course from empty list; course error presentation not designed. |
-| Service error | #10 expected 500 or network error | Không | Error UX/retry/timeout policy unresolved; do not convert 500 to 404. |
-| Paginated page | User selects another page | Không | Draft page metadata only; page bounds/out-of-range and URL/cache policy unresolved. |
+| Loading | GS05 starts page request and displays a polite busy state. | GS05 component; Angular tests |
+| Ready | Response items map to root/reply author names and content. | GS05 component; Angular tests and local stub browser render |
+| Empty | Empty `items` maps to a response-bound empty state. | GS05 component; Angular test |
+| Course/reviews not found | HTTP 404 maps to not-found. | GS03/GS05 components; Angular tests |
+| Service error | Other HTTP/transport error maps to a safe alert; no retry control. | GS05 component; Angular test |
+| Paginated page | Previous/next use response `page/total_pages`; selected page is local. | GS05 component; Angular test |
+
 
 ### Navigation and data handoff
 
-- GS-03 → GS-05: preserve same `courseId`; tab route proposal is `/courses/:courseId?tab=reviews`. F02 says lazy by tab. AC-05 eagerly sequences #08/#09/#10 before rendering; unresolved.
-- GS-05 → GS-03: preserve `courseId`; current breadcrumb and CTA use `href="#"` only.
-- Header/footer destinations are all `#`; no route or authentication/session behavior is verified.
+- GS-03 → GS-05: current tab route is `/courses/:courseId?tab=reviews`; GS03 preserves the same string `courseId` and loads GS05 lazily after #08 success. AC-05 eager #08/#09/#10 + aggregate differs from F02 and current source; discrepancy remains.
+- GS05 is embedded within GS03; there is no separate return route/CTA from the review panel. Changing tabs remains within the same course route.
+- The original Stitch HTML header/footer use `#`; current Angular uses `GuestSiteLayout`. GS05 does not add authentication/session behavior.
 - GS-05 does not write reviews/replies and does not open a separate discussion screen under the current inventory/source evidence.
 
 ### Trích từ DD nguồn: C. Luồng màn hình
@@ -64,6 +64,6 @@ flowchart LR
 7. Course missing/unpublished 404 cần phân biệt với empty reviews. #10 Draft DD dự kiến tự gate PUBLISHED course; #08 current source cũng trả 404. No 403 contract is declared for #10.
 8. Review data là read-only trên GS-05. Không thêm create/reply/report/reaction action; không có API/action source trong screen contract này.
 
-### C.2 Current behavior có thể xác nhận
+### C.2 Current behavior có thể xác nhận (T021, 2026-11-17)
 
-`code.html` tĩnh render thành guest-facing header, breadcrumb, một empty review card, link quay lại và footer. Không có route parsing, state, review request, pagination control, click handler hoặc data binding. Mọi `href` trong HTML là `#`. `apps/study-client/dist/` có JS/CSS build output, nhưng string inspection không thấy `/courses` route hoặc `/api/v1` endpoint. Build output không cung cấp source-level GS-05 wiring evidence; Study Web subcontext vẫn `UNWIRED`. Browser render chỉ chứng minh document/CSS render được.
+The current Angular route is GS03 `/courses/:courseId`; the reviews query tab becomes selected for `?tab=reviews`. #08 resolves before GS05 mounts. GS05 calls source-backed #10 with `page` only; page transitions use response metadata. A temporary in-memory local API stub was used for the desktop/mobile Chrome render because backend port 3003 was not running. Live API, live DB and deployment remain unverified. The Stitch `code.html` and images remain unchanged and describe a static prototype.

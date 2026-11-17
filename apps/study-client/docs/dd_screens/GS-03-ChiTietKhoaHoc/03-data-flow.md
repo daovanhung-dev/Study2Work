@@ -13,7 +13,7 @@
 
 ### Trích từ DD nguồn: B. Luồng hoạt động tổng thể
 
-### Luồng expected — chưa được UI runtime triển khai
+### Luồng expected và current partial source
 
 1. User mở route đề xuất `/courses/:courseId` từ card/list ở GS-01 hoặc GS-02. Giá trị `courseId` phải giữ nguyên khi điều hướng sang detail và các tab liên quan.
 2. Client cần đọc, parse và kiểm tra path value. API #08 source hiện nhận raw string; shared `parse_integer` kiểm tra cú pháp integer, nhưng không enforce signed int64 hay positive range. `parse_integer` thất bại thì trả 404; giá trị vượt int64 có thể đi tới truy vấn DB và đường lỗi cần được xác nhận trước khi triển khai. Contract `course_id:int64` và validator hiện hành chưa thống nhất.
@@ -35,18 +35,18 @@
 | Static unavailable | Browser mở `code.html`; đây là state duy nhất có trong tài sản | Có | Tab Tổng quan active, curriculum/reviews disabled, unavailable copy và return link. Không phản ánh API response cụ thể. |
 | Initial/loading | Mở route `/courses/:courseId` và chờ #08 | Không | Inventory yêu cầu loading; cần thiết kế skeleton/feedback và request lifecycle. |
 | Detail ready | #08 trả 200 PUBLISHED | Không | Cần bổ sung layout course/mentor/price; không có hình source. Từ đây quyết định tab calls theo orchestration được duyệt. |
-| Course not found | #08 trả 404 | Không | Inventory gọi course-404; AC-05 còn nêu 403 nhưng current #08 dùng 404 cho invalid/missing/unpublished. Error page/content chưa chốt. |
+| Course not found | #08 trả 404 | Có (`/not-found`) | SH-06 renders the generic state; GS-03 does not forward course ID or response body. AC-05 still has a 403 discrepancy against current #08 404. |
 | Detail service/network error | #08 trả 500 hoặc network failure | Không | Cần UI state, retry/timeout policy; không có behavior source. |
-| Curriculum loading/ready | User chọn tab sau khi detail public, nếu lazy flow được duyệt | Không; tab disabled | #09 items map theo `order`. Không thể suy ra khả năng mở lesson. |
+| Curriculum loading/ready | Current GS03 user selects curriculum after #08 confirms public course | Yes | GS03 calls #09 and renders only title/order; this derived UI does not establish lesson-access permission. |
 | Curriculum empty | #09 trả 200, `items=[]`, total=0 | Không | Tách empty curriculum khỏi failure; visual copy/action chưa có source. |
 | Curriculum error | #09 404/500 | Không | Phân biệt stale course 404 và service error; UI fallback chưa được thiết kế. |
-| Reviews loading/ready/empty/error | Chỉ sau khi API #10 được wired/contract xong | Không; tab disabled | Hiện không thể tải, dựng review card, rating average hoặc rating filter. |
+| Reviews loading/ready/empty/error | GS05 child mounts after #08 returns a published course | Static Stitch tab is disabled; Angular tab is enabled | GS05 renders author/content/replies/page metadata and safe states; no title/rating/aggregate/filter is shown. |
 | Enrollment handoff | Sau khi CTA/auth/identity policy được duyệt | Không | ST-04 route đề xuất `/student/enroll/:courseId`; enrollment status #15 đang G-01 blocked. |
 
 ### Điều hướng và giữ dữ liệu
 
 - GS-01/GS-02 → GS-03: giữ `courseId` làm path segment; nguồn hiện tại không chứng minh card route/parameter mapping ở runtime.
-- GS-03 → GS-04/GS-05: `list_screen.md` đề xuất query `?tab=curriculum`/`?tab=reviews`; AC-05 và F02 khác về thời điểm gọi API. Chưa có URL sync/handler trong HTML.
+- GS-03 → GS-04/GS-05: current GS03Page syncs `?tab=curriculum|reviews`; it calls #09 or mounts GS05/#10 only after #08 returns ready. AC-05 and F02 still disagree on eager vs lazy API timing and aggregate expectations.
 - GS-03 → GS-06: tab tài nguyên liên quan theo inventory/AC-06, không có tab resources trong source HTML GS-03 hiện tại; không thêm marker hoặc event cho đến khi thiết kế được xác nhận.
 - GS-03 → ST-04: inventory đề xuất CTA enrollment và route ST-04 `/student/enroll/:courseId`; guest/auth transfer, return route, token behavior và #15 identity chưa chốt. Không khẳng định tự login/redirect.
 - Header/footer links: href literals liệt kê ở `GS03-EV-05`; actual route resolution chưa được kiểm chứng.

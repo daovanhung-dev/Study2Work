@@ -18,7 +18,7 @@
   2. Khi runtime/test implementation tồn tại, viết test riêng theo contract đã xác nhận.
 - **Expected UI/state:** Theo acceptance/state trong nguồn; chưa được xác minh trên runtime.
 - **Expected API/data:** Theo [API Integration](04-api-integration.md); không phát sinh request trong lần tạo tài liệu.
-- **Failure / edge assertion:** Không đánh dấu pass cho `UNWIRED`, `IMPLEMENTATION BLOCKED` hoặc `RUNTIME NOT VERIFIED`.
+- **Failure / edge assertion:** Không suy ra write-flow acceptance từ route/page/GET #69 source. #70 body/role, permission, PII/schema decisions remain open; runtime is not verified.
 - **References:** `AC-31`, [Events](02-events.md), [Business Rules](05-business-rules.md), [source DD](../../screen_stitch/05_admin/AD-04_chinh-sua-nguoi-dung/AD-04.md).
 
 ## 3. Source acceptance / test plan (not run)
@@ -29,12 +29,18 @@
 - [x] 40 marker tuần tự, unique và ánh xạ một-một đến 40 element rows; ảnh chú thích giữ nội dung gốc, render 2×.
 - [x] Có A–F, route/actor/preconditions, expected/current separation, element properties, events, API/error handling, states/navigation và acceptance checklist.
 - [x] #69/#70 được đối chiếu catalog, AC, API DD, route/model/validation/query/view/test source. Local body #70 được đánh dấu `DERIVED`, không coi là approved API contract.
-- [x] Mô tả rõ numeric-ID mismatch, role/status/body mismatch, field preservation, no-op UI controls, Study Web `UNWIRED`, auth/body ordering uncertainty và unsupported gate/audit/support claims.
+- [x] Mô tả rõ numeric-ID mismatch, role/status/body mismatch, field preservation, read-only UI source, auth/body ordering uncertainty và unsupported gate/audit/support claims.
 - [ ] Owner phê duyệt #70 body, role allowlist/mapping, permission, PII, lifecycle/token/audit policy, ID route, dirty navigation và support/gate actions.
 - [ ] API DD/catalog/AC body và request-validation/auth ordering được thống nhất; live schema/deployment được xác minh.
 - [ ] Study Web route/API client/UI implementation được nối và runtime được kiểm tra.
 
-**Kết luận:** `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`. Các checklist chưa hoàn tất là các dependency thật, không được thay bằng giả định. API #70 được ghi source-backed locally trong inventory; điều này không đồng nghĩa body đã được phê duyệt.
+**Kết luận:** route/page/GET #69 caller `SOURCE PRESENT`; Save/PUT #70 flow remains blocked; `DD BLOCKED`; `RUNTIME NOT VERIFIED`. Các checklist chưa hoàn tất là dependency thật; API #70 backend source không đồng nghĩa body đã được phê duyệt hoặc có client caller.
+
+### Current frontend test source (inspected, not run)
+
+- Source: [`ad04-page.spec.ts`](../../../src/app/features/admin/AD04/pages/ad04-page.spec.ts).
+- Coverage: preserves a large string route ID in the #69 URL; checks Bearer header and profile projection; verifies all profile inputs and Save stay disabled with no PUT/PATCH; covers #69 404 and a missing route ID.
+- Limitation: uses Angular HTTP test fixtures and does not verify backend deployment, live schema, browser runtime, or policy acceptance. This documentation update did not run the spec.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 
@@ -42,7 +48,7 @@
 
 | Nhóm | Nguồn | Kết luận cho AD-04 |
 |---|---|---|
-| Inventory / dependency | `list_screen.md` AD-03/AD-04/AD-05; global tracker | AD-03 chọn user → AD-04 edit → quay về AD-03; inventory mô tả `GET #69 → PUT #70 → GET #69`, dirty state/cancel và `loading/dirty/saving/validation-error`. Route là đề xuất; blocker cũ là body PUT #70 chưa đặc tả. |
+| Inventory / dependency | `list_screen.md` AD-03/AD-04/AD-05; global tracker | AD-03 chọn user → AD-04 edit → quay về AD-03; inventory mô tả `GET #69 → PUT #70 → GET #69`, dirty state/cancel và `loading/dirty/saving/validation-error`. Route/page/GET #69 caller source-present; current page has no PUT #70 caller; body remains unspecified in catalog. |
 | AC-31 | `AC_04_ADMIN_MANAGEMENT.drawio`, node chọn Update | Sau khi đọc user/profile/role, Admin chọn Update → PUT #70 → reload list/detail. Diagram không định nghĩa request body/field rules. |
 | API catalog | `docs/lists/list_api.md` #69/#70 | #69 GET detail: `user_id:int64!`, `ApiEnvelope<UserProfile>`, 200, 401/403/404/500. #70 PUT: cùng path int64, `ApiEnvelope<UserProfile>`, 200, 401/403/404/422/500. Catalog #70 không khai báo body, query hoặc writable fields. |
 | API #70 DD | `docs/dd/70_admin_user_update/{02_Overview,03_Request,04_Response,05_Data_Mapping,06_Error,OPEN_QUESTIONS}.md` | `Draft — Needs Confirmation`. Body hiện chạy là full-replacement **DERIVED**: required `full_name`, `phone`, `avatar_url`, `role`; `phone`/`avatar_url` nullable; roles `STUDENT/MENTOR/ADMIN`. Body/role/persistence/policy cần owner confirmation. |
@@ -52,7 +58,7 @@
 | API #69 handoff | API #69 catalog/source and prior AD-03 DD | #69 returns profile with signed-int64 `id`, `full_name`, `email`, `role`, nullable `avatar_url`/`phone`, `status`, `created_at`, `updated_at`; no `adminNotes` or audit fields. The route/user role permission fallback and live schema remain open. |
 | Focused tests/context | `tests/modules/admin/api_70_admin_user_update/test_admin_user_update.py`; `.agents/server-study/tests.md` | Context records 19 focused passing cases at a prior checkpoint; source covers auth before DB, normalization, body/path 422, no-row 404, safe projection and rollback. Tests were inspected, not run; fake DB sessions do not verify live schema. Auth with malformed body is not characterized. |
 | Visual source | `screen.png`, `code.html` | Locked static form. Name/email/role/status/admin notes and Save are disabled; top back and Cancel use inconsistent paths; “Gửi yêu cầu” and API-doc buttons have no handlers. Hard-coded record ID `USR-9281-VN`, lecturer/locked values, sync/RBAC/audit/legal/compliance assertions do not map to #69/#70. |
-| Web boundary/design | Study Web subcontext and `.agents/web-study/design.md`; current app root | Study Web remains `UNWIRED`, with no editable source/package/router/API client. Screenshot typography/palette/density differs from intended Study Web guide. |
+| Web boundary/design | Study Web subcontext and `.agents/web-study/design.md`; current Admin source | Route/page/GET #69 caller are present; Save is disabled and there is no client PUT #70 call. Runtime/deployment and visual acceptance are not verified; prototype typography/palette/density differs from the design guide. |
 
 ### Trích từ DD nguồn: 7. Execution and verification order
 

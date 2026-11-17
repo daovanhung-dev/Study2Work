@@ -4,9 +4,9 @@
 |---|---|
 | Screen ID | `GS-02` |
 | Module | Guest / Discovery |
-| Route | `/courses/search?q=` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/courses/search?q=` — Guest route now exists in Angular source; browser runtime remains unverified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: DD status: BLOCKED; Implementation status: IMPLEMENTATION BLOCKED; Runtime status: RUNTIME NOT VERIFIED |
+| DD status | `BLOCKED`; implementation status: `PARTIAL SOURCE` (nonempty-q #07 search subset); browser/API runtime: `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [GS-02.md](../../screen_stitch/02_guest_discovery/GS-02_tim-kiem-khoa-hoc/GS-02.md), [GS-02_PLAN.md](../../screen_stitch/02_guest_discovery/GS-02_tim-kiem-khoa-hoc/GS-02_PLAN.md), [GS-02_markers.json](../../screen_stitch/02_guest_discovery/GS-02_tim-kiem-khoa-hoc/GS-02_markers.json), [list_screen.md](../../list_screen.md) |
@@ -14,7 +14,7 @@
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Tìm theo q, đồng bộ URL, debounce và reset page khi query đổi.
 - In-scope: GET #5 cache-first song song #7 nếu độc lập; q được trim phía UI; #7 cố định 20/page; không gửi category. **DISCREPANCY:** AC-04/API #05 DD mô tả #05 → #07; cần chốt thứ tự/cache behavior.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Xem gate bên dưới; source wiring của search subset không đóng contract hoặc runtime gates.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,7 +31,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | typing/loading/no-result/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Worklog/context Study Web | `PARTIAL SOURCE` / browser and API runtime `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [GS-02 source screen.png](../../screen_stitch/02_guest_discovery/GS-02_tim-kiem-khoa-hoc/screen.png))
@@ -48,7 +48,7 @@
 # GS-02 — Tìm kiếm khóa học
 
 > DD status: BLOCKED  
-> Implementation status: IMPLEMENTATION BLOCKED  
+> Implementation status: PARTIAL SOURCE; full DD implementation remains blocked
 > Runtime status: RUNTIME NOT VERIFIED  
 > Session scope: GS-02 only. Source trace and screen plan were completed before this DD and its annotation assets.
 
@@ -62,8 +62,8 @@
 | Tên | Tìm kiếm khóa học |
 | Mục tiêu | Cho phép khách tìm khóa học theo từ khóa, xem kết quả và mở GS-03. Các bộ lọc, sort và phân trang hiển thị trong ảnh chỉ được triển khai khi contract tương ứng được xác nhận. |
 | Actor dự kiến | Guest theo inventory và AC-04. |
-| Quyền truy cập | API #05 và #07 là public; chưa có Study Web router/middleware để xác minh quyền ở client. |
-| Route dự kiến | /courses/search?q= theo list_screen.md. Đây là route proposal, chưa được nối vào ứng dụng web trong checkout hiện tại. |
+| Quyền truy cập | API #05 và #07 là public. Guest `/courses/search` route now exists; no client-side permission middleware is added for this public screen. |
+| Route dự kiến | `/courses/search?q=` theo list_screen.md; the route is registered in Angular source, with browser runtime still unverified. |
 | Điều kiện trước | Có thể truy cập trang public; q có thể được truyền qua URL. Cách xử lý q rỗng còn mở. |
 | Kết quả sau | Một trong các trạng thái prompt/typing, loading, có kết quả, không kết quả hoặc lỗi; khi người dùng mở course, truyền course ID nguồn từ API tới GS-03. |
 | Màn hình liên kết | GS-01 → GS-02; GS-02 → GS-01 hoặc GS-03. Các route và chuyển trang phía client chưa được xác minh. |
@@ -79,9 +79,16 @@
 
 - screen.png (987×1600; SHA-256 6bda913843a92873f4ebed72bc45be5792c31eb38f20b80a1acd681aec04e72f) là trạng thái có q “React”, sáu card, tổng 12 kết quả, sidebar nhiều filter, sort “Phù hợp nhất”, phân trang sáu phần tử/trang, khuyến nghị lộ trình và header có tiện ích tài khoản.
 - code.html (SHA-256 f1457fdb231b614cea31f2c0b9b2d42eb846ff80c333bd7dda30a5627e20c1da) là prototype Guest với header đăng nhập/đăng ký, GET form action=/courses/search, input name=q và thẻ trạng thái chưa có kết quả. HTML không có DOM của filter, card, suggestions hoặc pagination trong ảnh. Không có URL hydration, debounce, API call hay rendering kết quả. Các hàm JS rời tham chiếu ID/DOM không tồn tại hoặc không có call site.
-- Checkout hiện không có Study Web app source, package manifest, router hoặc entrypoint. Vì vậy ảnh và HTML là tài sản thiết kế/prototype; không phải bằng chứng runtime.
+- Study Web Angular app, package manifest, router và entrypoint hiện có. A bounded Guest group and GS-02 route/data-access caller now exist; the original image and HTML remain design/prototype assets, not runtime evidence.
 - Inventory/AC yêu cầu q được chuẩn hóa, debounce/URL sync và reset trang khi q đổi; API source tự chuẩn hóa q bằng trim/lowercase. Khoảng debounce và quy tắc giữ hoa/thường trong URL hoặc field chưa được phê duyệt.
-- **Expected orchestration discrepancy:** AC-04 diagram nối API #05 categories → API #07 search theo thứ tự; inventory F02 cho phép #07 chạy song song nếu độc lập, còn API #05 DD mô tả cache-first (cache hit thì bỏ request). Vì #07 không gửi category nên hai request có thể độc lập về dữ liệu, nhưng expected order/cache behavior chưa nhất quán. Current Study Web không có client orchestration source để xác nhận runtime.
+- **Expected orchestration discrepancy:** AC-04 diagram nối API #05 categories → API #07 search theo thứ tự; inventory F02 cho phép #07 chạy song song nếu độc lập, còn API #05 DD mô tả cache-first (cache hit thì bỏ request). Vì #07 không gửi category nên hai request có thể độc lập về dữ liệu, nhưng expected order/cache behavior chưa nhất quán. Current caller uses only #07; #05/cache/orchestration is not implemented.
 - **Page-bound discrepancy:** API catalog khai báo `page?:int32`; current route parses Python `int`, checks only `page >= 1`, and sets no upper bound. Không có bằng chứng source xử lý giới hạn int32 hoặc offset cực lớn; cần đồng bộ contract/validator trước implementation.
 - API catalog khai báo category là tùy chọn, nhưng source #07 từ chối category khác null bằng 422. G-05 trong inventory xác nhận giới hạn hiện tại; DDL được kiểm tra không có quan hệ khóa học–danh mục.
 - Screenshot mô tả sáu item/trang, còn API #07 dùng cố định 20 item/trang. Các nhãn “Phù hợp nhất”, skill, duration, rating, tuition và nhiều thuộc tính card không có API/query contract tương ứng.
+
+## Current source re-audit (2026-11-16)
+
+- Angular registers `/courses/search` under a Guest layout. The page hydrates `q`, treats blank `q` as a prompt, submits normalized nonempty `q`, and calls public API #07 with `q` and `page` only. It renders title, optional description/thumbnail, mentor name, server totals and server pagination; it omits price because the response has no currency.
+- Focused page/route tests cover prompt/no request, URL query normalization/synchronization, supported fields, API error, empty result, page reset/pagination and an out-of-range response. Study Web suite passes 127/127; production build passes with existing Student CSS budget warnings. Study Server suite passes 1,506/1,506; focused #05/#07 tests pass 29/29 using fake sessions.
+- Local dev server returned HTTP 200 for `/courses/search`; the browser extension could not inspect the page, and API proxy target `127.0.0.1:3003` had no listener. Browser rendering and live API/DB integration remain `NOT VERIFIED`.
+- `DD BLOCKED` remains in effect: source variant, facets, relevance sort, six-vs-twenty page size, card schema, empty-query approval, #05 cache/orchestration, navigation destinations and API page upper bound remain open. The prompt behavior for blank `q` is an implementation assumption pending B06, not a product decision.

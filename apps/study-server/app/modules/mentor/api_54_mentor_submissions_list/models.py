@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated, Any
 
-from app.modules.guest._shared.course_catalog.models import Pagination
-from app.modules.student.api_34_uploads.models import UploadAssetResponse
+from app.modules.shared.course_catalog.models import Pagination
+from app.modules.shared.api_34_uploads.models import UploadAssetResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 Int64 = Annotated[

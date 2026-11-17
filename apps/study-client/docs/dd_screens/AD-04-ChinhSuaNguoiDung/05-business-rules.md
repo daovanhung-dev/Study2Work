@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Chỉnh field/role chỉ sau khi API body, permission và field ownership được duyệt; dirty state + cancel về AD-03.
-- Gate/status (giữ nguyên): **R**; #70 source-backed locally nhưng body/role `DERIVED`; **DD BLOCKED; IMPLEMENTATION BLOCKED:** body approval, role/PII/permission/ID-route/gate policy và Study Web `UNWIRED`; **RUNTIME NOT VERIFIED**
+- Gate/status (giữ nguyên): **R**; #70 backend source-backed locally nhưng body/role `DERIVED`; AD04 route/page and GET #69 caller are present, Save is disabled and no client PUT #70 call exists; **DD BLOCKED; WRITE FLOW BLOCKED:** body approval, role/PII/permission/ID-route/gate policy; **RUNTIME NOT VERIFIED**
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 > CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.

@@ -22,7 +22,7 @@
     </div>
     <form class="filter-grid" aria-label="Bộ lọc bài kiểm tra" (submit)="submitFilters($event)">
       <label for="quiz-course">
-        <span>Mã khóa học</span>
+        <span>ID khóa học</span>
         <input id="quiz-course" type="text" inputmode="numeric" placeholder="ID khóa học (int64)" [value]="filterCourse()" (input)="setFilterCourse($any($event.target).value)" [disabled]="viewState().status === 'loading'" />
       </label>
       <label for="quiz-status">
@@ -41,7 +41,7 @@
     <div class="table-scroll" role="region" aria-label="Bảng metadata bài kiểm tra" tabindex="0">
       <table>
         <caption class="visually-hidden">Metadata bài kiểm tra trả về từ API #87</caption>
-        <thead><tr><th scope="col">Mã bài kiểm tra</th><th scope="col">Tên bài kiểm tra</th><th scope="col">Mã khóa học</th><th scope="col">Thời lượng (phút)</th><th scope="col">Điểm đạt</th><th scope="col">Thống kê</th></tr></thead>
+        <thead><tr><th scope="col">ID bài kiểm tra</th><th scope="col">Tên bài kiểm tra</th><th scope="col">ID khóa học</th><th scope="col">Thời lượng (phút)</th><th scope="col">Điểm đạt</th><th scope="col">Thao tác</th></tr></thead>
         <tbody>
           @if (viewState().status === 'loading') {
             <tr><td class="table-state" colspan="6" role="status"><span class="state-mark"><study-icon name="refresh" /></span><strong>Đang tải danh sách bài kiểm tra…</strong><span>Đang chờ phản hồi từ Study Server.</span></td></tr>
@@ -59,9 +59,14 @@
                 <td>{{ row.values[4] }}</td>
                 <td>
                   @if (row.route) {
-                    <a class="row-action" [routerLink]="row.route">Thống kê <study-icon name="chevron" /></a>
+                    <div class="row-actions">
+                      <a class="row-action" [routerLink]="row.route">Thống kê <study-icon name="chevron" /></a>
+                      @if (quizDeleteRoute(row.route); as deleteRoute) {
+                        <a class="row-action" [routerLink]="deleteRoute" [attr.aria-label]="'Xóa bài kiểm tra ' + row.values[0]">Xóa <study-icon name="chevron" /></a>
+                      }
+                    </div>
                   } @else {
-                    <button class="row-action" type="button" disabled aria-label="Không thể mở thống kê do mã bài kiểm tra vượt khả năng biểu diễn an toàn"><span>Không thể mở</span></button>
+                    <button class="row-action" type="button" disabled aria-label="Không thể mở thao tác do ID bài kiểm tra vượt khả năng biểu diễn an toàn"><span>Không thể mở</span></button>
                   }
                 </td>
               </tr>
@@ -97,7 +102,7 @@
 
   <aside class="data-boundary">
     <span class="boundary-icon"><study-icon name="shield" /></span>
-    <div><strong>Metadata danh sách hiện có</strong><p>API trả ID, tiêu đề, mã khóa học, thời lượng và điểm đạt. API không trả trạng thái Quiz hoặc danh sách câu hỏi thực tế; mảng `questions` rỗng không phải số câu hỏi.</p></div>
+    <div><strong>Metadata danh sách hiện có</strong><p>API trả ID bài kiểm tra, tiêu đề, ID khóa học, thời lượng và điểm đạt. API không trả trạng thái Quiz hoặc danh sách câu hỏi thực tế; mảng `questions` rỗng không phải số câu hỏi.</p></div>
     <span class="source-badge">Page&lt;Quiz&gt;</span>
   </aside>
 </main>

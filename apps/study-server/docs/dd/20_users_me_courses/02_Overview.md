@@ -37,7 +37,7 @@ format: markdown
 - [v1.py](../../../app/api/v1.py) — current route inventory; chưa có endpoint #20.
 - [auth.py](../../../app/utils/auth.py) — current reusable Bearer/JWT và Student guard.
 - [responses.py](../../../app/core/responses.py) — current Study response envelope implementation.
-- [API #4 UserProfile model](../../../app/modules/guest/api_04_users_me/models.py) — current profile model; API #20 remains unwired.
+- [API #4 UserProfile model](../../../app/modules/student/api_04_users_me/models.py) — current profile model; API #20 remains unwired.
 - [API #19 DD](../19_courses_enrollments/05_Data_Mapping.md) — enrollment create flow; không mở rộng mutation sang API #20.
 
 ## Tables read

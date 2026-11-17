@@ -7,7 +7,7 @@
 
 ## 2. State model
 
-> Không tạo DTO/ViewModel mới khi chưa có contract. State, DTO và mapping được trích nguyên ngữ cảnh từ DD nguồn bên dưới.
+> Current GS05 defines typed request/response and view models from executable #10 source; the screen maps only author/content/replies/page metadata. This does not approve the Draft API/UI contract or unresolved visibility rules.
 
 ## 3. API DTO → ViewModel mapping
 
@@ -24,13 +24,15 @@
 7. Course missing/unpublished 404 cần phân biệt với empty reviews. #10 Draft DD dự kiến tự gate PUBLISHED course; #08 current source cũng trả 404. No 403 contract is declared for #10.
 8. Review data là read-only trên GS-05. Không thêm create/reply/report/reaction action; không có API/action source trong screen contract này.
 
-### C.2 Current behavior có thể xác nhận
+### C.2 Current behavior có thể xác nhận (T021, 2026-11-17)
 
-`code.html` tĩnh render thành guest-facing header, breadcrumb, một empty review card, link quay lại và footer. Không có route parsing, state, review request, pagination control, click handler hoặc data binding. Mọi `href` trong HTML là `#`. `apps/study-client/dist/` có JS/CSS build output, nhưng string inspection không thấy `/courses` route hoặc `/api/v1` endpoint. Build output không cung cấp source-level GS-05 wiring evidence; Study Web subcontext vẫn `UNWIRED`. Browser render chỉ chứng minh document/CSS render được.
+GS03 reads the `tab` query value and loads #08 first. When #08 confirms a published course and `tab=reviews` is selected, GS03 mounts `GS05Page`; the child calls public GET #10 with the same text `courseId` and `page`. GS05 maps `items` into author name/content and nested reply name/content, and uses response `page/total_pages` for bounded local pagination. It has loading, response-bound empty, ready, 404 not-found and safe service-error states. No rating/title/aggregate/status/ID/timestamp is displayed; no mutation or retry is added. The current view is derived and has no DD visual approval.
+
+The original `code.html`, PNGs and marker map remain static design evidence: they do not contain Angular binding or loaded cards. Desktop/mobile headless Chrome was rendered with a temporary in-memory local API stub; Study Server tests use fake DB sessions. Neither proves live API, DB schema or deployment.
 
 ### Trích từ DD nguồn: G. State và điều hướng
 
-| State | Trigger/guard | Current HTML? | Expected output/transition |
+| State | Trigger/guard | Present in original Stitch HTML? | Current Angular output/transition |
 |---|---|---:|---|
 | Static empty-like | Browser opens `code.html` | Có | Copy tĩnh; không xác nhận response rỗng. |
 | Initial/loading | Route proposal opened; resolve course/cache and #10 timing | Không | Loading design and cache/direct-entry behavior needed. |
@@ -43,8 +45,8 @@
 ### Navigation and data handoff
 
 - GS-03 → GS-05: preserve same `courseId`; tab route proposal is `/courses/:courseId?tab=reviews`. F02 says lazy by tab. AC-05 eagerly sequences #08/#09/#10 before rendering; unresolved.
-- GS-05 → GS-03: preserve `courseId`; current breadcrumb and CTA use `href="#"` only.
-- Header/footer destinations are all `#`; no route or authentication/session behavior is verified.
+- GS05 is a child panel in GS03; there is no separate GS05-to-GS03 route. GS03 query navigation preserves the same `courseId`.
+- Original Stitch header/footer anchors remain `#`. Current Angular uses `GuestSiteLayout`; its destinations are separate from the static prototype. GS05 adds no auth/session behavior.
 - GS-05 does not write reviews/replies and does not open a separate discussion screen under the current inventory/source evidence.
 
 ## 4. Luồng đọc (Read)

@@ -1,5 +1,7 @@
 # AD-03 — Kế hoạch Detailed Design
 
+> **Lưu ý lịch sử:** Nội dung kế hoạch gốc bên dưới ghi nhận snapshot ngày 2026-11-08. Re-audit source hiện tại được bổ sung tại §9; không dùng kết luận snapshot làm trạng thái hiện tại.
+
 > **Screen ID:** AD-03 · **Tên:** Chi tiết người dùng · **Đợt/ưu tiên:** W4 / P1<br>
 > **Route đề xuất:** `/admin/users/:userId` · **AC:** AC-31 · **API chính:** #69<br>
 > **Trạng thái trước phiên:** `D` · **Kết quả dự kiến:** source API `R`; DD và implementation bị chặn bởi các quyết định còn mở; runtime chưa xác minh.
@@ -28,7 +30,7 @@
 | Visual source | `screen.png`, `code.html` | Static detail screen in a no-selected-user/“CHƯA ĐỒNG BỘ” empty state. Edit/status controls disabled. Audit panel and 180-day retention, “RBAC Strict Audit Active”, system-normal/sync claims and 204/NULL_PAYLOAD text have no evidence in API #69. HTML has placeholder links and no request/interaction code. |
 | Web boundary/design | `.agents/web-work/study/AGENTS.md`, `.agents/web-study/design.md`, current `apps/study-client/` root | Study Web is `UNWIRED`; root has `dist`, `docs`, `node_modules`, and `tsconfig.tsbuildinfo`, with no editable `src/`, package manifest, router or client. Prototype palette/typeface differs from the Study Web design guide. |
 
-## 3. Expected behavior and current behavior
+## 3. Expected behavior and current behavior at the original snapshot
 
 ### Expected flow from inventory/AC/API contract
 
@@ -132,6 +134,15 @@ Coordinates are on the unscaled `screen.png` (1600×1456). IDs follow top-to-bot
 7. [x] Verify original hashes unchanged; annotation dimensions 3200×2912; marker IDs unique/sequential/in-bounds; marker rows match DD; JSON/SVG/local links valid; 83 screen IDs/folders remain consistent; scoped diff passes whitespace checks.
 8. [x] Do not run application tests or runtime; mark source tests `INSPECTED_NOT_RUN` and runtime `NOT_VERIFIED`.
 
-## 8. Completion decision
+## 8. Completion decision in the original snapshot
 
 Expected outcome: API #69 source classification changes `D→R`; AD-03 DD remains `BLOCKED` because permission/PII/audit/schema decisions prevent a fully implementable design; implementation is `BLOCKED` by Study Web `UNWIRED` plus policy/schema; runtime remains `NOT VERIFIED`. No other Screen ID is started.
+
+## 9. Current-source re-audit (2026-11-16)
+
+- **Source status:** Angular Admin router declares `/admin/users/:userId`; `AD03Page` reads `userId` from `ActivatedRoute`, calls `AD03ApiService.getUser`, and the service calls registered `API_069` through `AdminApiService`. AD-02, AD-04, and AD-05 route declarations are also present.
+- **Page states:** `adminRouteState` emits `loading`, maps successful profile data to `loaded`, and maps failures to `error`. HTTP 401/403/404 receive different messages through `adminDataError`, but remain one `status:error` type. The page displays a loading notice, an alert on error, and profile fields when loaded.
+- **Handoffs:** The current template has router links back to `/admin/users` and to AD-04/AD-05 when a `userId` is available. Route presence does not establish permission or approved mutation flow. The static prototype remains separate evidence.
+- **Acceptance blockers:** The page currently displays email and phone while PII visibility/masking is undecided. ADMIN-to-user-management permission mapping, role/status values, audit source/retention, live schema/deployment, and visual acceptance remain unresolved. Keep `DD BLOCKED` and acceptance blocked.
+- **Test/runtime evidence:** A dedicated AD03 page spec is absent; route declarations are source evidence only. Runtime, host fallback, and deployment are `NOT VERIFIED`. No application tests or runtime checks were run for this documentation correction.
+- **Current status:** `ROUTE/PAGE/API CALLER SOURCE PRESENT`; `ACCEPTANCE BLOCKED`; `RUNTIME NOT VERIFIED`. This replaces the snapshot's `Study Web UNWIRED` statement as the current-source classification without changing the historical snapshot.

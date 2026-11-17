@@ -82,9 +82,6 @@ export class AD08Page {
     this.draft.set({ ...current, [field]: target.value });
   }
 
-  displayCourseId(value: number): string {
-    return Number.isSafeInteger(value) ? String(value) : 'Không thể hiển thị chính xác';
-  }
 }
 
 function toPageError(error: unknown): AD08PageState {

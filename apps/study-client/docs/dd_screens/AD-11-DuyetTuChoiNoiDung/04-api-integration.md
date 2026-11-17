@@ -13,10 +13,10 @@
 
 - API refs trong inventory: #79, #80, #81
 - Orchestration/data notes: Candidate `Content.id` từ AD-10 → GET #79 → PATCH #80 hoặc PATCH #81 với `{reason}` → reload #78. #80 local đặt `APPROVED`, không publish; #79 không trả author/version.
-- BE/source status và gate: **R** local route/module/test source #79–#81; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** AC `APPROVED/PUBLISHED` vs #80 `APPROVED`; reason required vs optional/disabled; author/version/media/rubric source thiếu; revision/stale policy, moderation permission, live schema/migration và Study Web `UNWIRED` còn mở; **RUNTIME NOT VERIFIED**
+- BE/FE source status và gate: **R** local route/module/test source #79–#81; Angular route/page/GET #79 caller exist, while #80/#81 have no Web caller and remain disabled; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE; DECISION FLOW BLOCKED:** AC `APPROVED/PUBLISHED` vs #80 `APPROVED`; reason required vs optional in prototype; author/version/media/rubric source thiếu; revision/stale policy, moderation permission và live schema/migration còn mở; **RUNTIME NOT VERIFIED**
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
-> CẦN_XÁC_NHẬN: API detail chưa có section riêng trong DD nguồn; xem API catalog/source references và giữ CẦN_XÁC_NHẬN.
+API #79 có DD riêng ở [Study Server API #79](../../../../study-server/docs/dd/79_admin_content_detail/02_Overview.md); status Draft — Needs Confirmation. Angular caller dùng direct `ApiEnvelope<Content>`; không có Web caller cho #80/#81.
 
 
 ## 3. API không sử dụng

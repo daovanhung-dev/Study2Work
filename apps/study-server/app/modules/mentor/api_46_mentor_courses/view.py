@@ -7,12 +7,12 @@ from typing import Any
 
 from app.core.database import query_many, query_one
 from app.core.responses import ErrorDetail, success_response
-from app.modules.guest._shared.course_catalog.helpers import (
+from app.modules.shared.course_catalog.helpers import (
     course_internal_error,
     map_course,
     normalize_course_count,
 )
-from app.modules.guest._shared.course_catalog.models import CoursePage, Pagination
+from app.modules.shared.course_catalog.models import CoursePage, Pagination
 from app.modules.mentor.api_46_mentor_courses.models import MentorCourseQuery
 from app.modules.mentor.api_46_mentor_courses.query import (
     COUNT_MENTOR_COURSES,

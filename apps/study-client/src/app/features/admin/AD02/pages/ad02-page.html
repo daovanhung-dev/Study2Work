@@ -37,22 +37,46 @@
 
       <div class="filter-field">
         <label for="role-filter">Vai trò</label>
-        <input id="role-filter" type="text" placeholder="Vai trò chính xác" [value]="filters().role" (input)="setFilter('role', $any($event.target).value)" [disabled]="viewState().status === 'loading'" />
+        <input
+          id="role-filter"
+          type="text"
+          placeholder="Vai trò chính xác"
+          [value]="filters().role"
+          (input)="setFilter('role', $any($event.target).value)"
+          [disabled]="viewState().status === 'loading'"
+        />
       </div>
 
       <div class="filter-field">
         <label for="status-filter">Trạng thái</label>
-        <input id="status-filter" type="text" placeholder="Trạng thái chính xác" [value]="filters().status" (input)="setFilter('status', $any($event.target).value)" [disabled]="viewState().status === 'loading'" />
+        <input
+          id="status-filter"
+          type="text"
+          placeholder="Trạng thái chính xác"
+          [value]="filters().status"
+          (input)="setFilter('status', $any($event.target).value)"
+          [disabled]="viewState().status === 'loading'"
+        />
       </div>
 
       <div class="filter-buttons">
-        <button class="reset-button" type="submit" [disabled]="viewState().status === 'loading'">Áp dụng</button>
-        <button class="reset-button" type="button" (click)="clearFilters()" [disabled]="viewState().status === 'loading'">Xóa lọc</button>
+        <button class="reset-button" type="submit" [disabled]="viewState().status === 'loading'">
+          Áp dụng
+        </button>
+        <button
+          class="reset-button"
+          type="button"
+          (click)="clearFilters()"
+          [disabled]="viewState().status === 'loading'"
+        >
+          Xóa lọc
+        </button>
       </div>
     </form>
 
     <p class="controls-note">
-      Họ tên/email dùng tìm kiếm contains; vai trò và trạng thái là chuỗi chính xác do API #68 xử lý.
+      Họ tên/email dùng tìm kiếm contains; vai trò và trạng thái là chuỗi chính xác do API #68 xử
+      lý.
     </p>
 
     <div class="active-filter-summary" aria-live="polite" aria-label="Bộ lọc đang áp dụng">
@@ -60,7 +84,10 @@
       @if (activeFilters().length) {
         <ul>
           @for (filter of activeFilters(); track filter.label) {
-            <li><span>{{ filter.label }}</span><b>{{ filter.value }}</b></li>
+            <li>
+              <span>{{ filter.label }}</span
+              ><b>{{ filter.value }}</b>
+            </li>
           }
         </ul>
       } @else {
@@ -69,13 +96,23 @@
     </div>
   </section>
 
-  <section class="list-panel" aria-labelledby="list-title">
+  <section
+    class="list-panel"
+    aria-labelledby="list-title"
+    [attr.aria-busy]="viewState().status === 'loading' ? 'true' : null"
+  >
     <h2 id="list-title" class="visually-hidden">Danh sách tài khoản</h2>
     <div class="table-scroller" role="region" aria-label="Bảng người dùng" tabindex="0">
-      <table [class.table-empty]="!viewState().rows?.length">
-        <caption class="visually-hidden">Danh sách người dùng</caption>
+      <table [class.table-empty]="viewState().status === 'loaded' && !viewState().rows?.length">
+        <caption class="visually-hidden">
+          Danh sách người dùng
+        </caption>
         <thead>
-          <tr>@for (column of columns; track column) { <th scope="col">{{ column }}</th> }</tr>
+          <tr>
+            @for (column of columns; track column) {
+              <th scope="col">{{ column }}</th>
+            }
+          </tr>
         </thead>
         <tbody>
           @if (viewState().status === 'loaded' && viewState().rows?.length) {
@@ -83,29 +120,58 @@
               <tr>
                 @for (value of row.values; track $index) {
                   <td>
-                    @if ($first && row.route) { <a [routerLink]="row.route">{{ value }}</a> }
-                    @else { {{ value }} }
+                    @if ($first && row.route) {
+                      <a [routerLink]="row.route">{{ value }}</a>
+                    } @else {
+                      {{ value }}
+                    }
                   </td>
                 }
               </tr>
             }
-          } @else {
+          } @else if (viewState().status === 'loaded') {
             <tr class="empty-row">
               <td [attr.colspan]="columns.length">
-                <div class="empty-state">
+                <div class="empty-state" role="status" aria-live="polite">
                   <span class="empty-icon"><study-icon name="users" /></span>
-                  @if (viewState().status === 'loaded') {
-                    <p class="empty-title">Chưa có dữ liệu tài khoản người dùng</p>
-                    <p class="empty-description">Không tìm thấy tài khoản phù hợp với điều kiện hiện tại.</p>
-                    <div class="empty-state-actions">
-                      <button class="refresh-button" type="button" (click)="refreshList()">
-                        <study-icon name="refresh" />
-                        <span>Làm mới danh sách</span>
+                  <p class="empty-title">Chưa có dữ liệu tài khoản người dùng</p>
+                  <p class="empty-description">
+                    Không tìm thấy tài khoản phù hợp với điều kiện hiện tại.
+                  </p>
+                  <div class="empty-state-actions">
+                    <button class="refresh-button" type="button" (click)="refreshList()">
+                      <study-icon name="refresh" />
+                      <span>Làm mới danh sách</span>
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          } @else if (viewState().status === 'loading') {
+            <tr class="query-state-row">
+              <td [attr.colspan]="columns.length">
+                <div class="query-state" role="status" aria-live="polite">
+                  {{ queryStateMessage }}
+                </div>
+              </td>
+            </tr>
+          } @else {
+            <tr class="query-state-row">
+              <td [attr.colspan]="columns.length">
+                <div class="query-state query-state--error" role="alert">
+                  <p class="query-state-message">{{ queryStateMessage }}</p>
+                  <div class="query-state-actions">
+                    @if (isFilterError()) {
+                      <button class="query-state-action" type="button" (click)="resetPageToFirst()">
+                        Về trang 1
                       </button>
-                    </div>
-                  } @else {
-                    <p class="empty-title">{{ viewState().message ?? connectionMessage }}</p>
-                  }
+                    }
+                    @if (viewState().retryable) {
+                      <button class="query-state-action" type="button" (click)="refreshList()">
+                        Thử lại
+                      </button>
+                    }
+                  </div>
                 </div>
               </td>
             </tr>
@@ -114,22 +180,38 @@
       </table>
     </div>
 
-    <div class="list-footer">
-      <p class="result-count">
-        @if (viewState().status === 'loaded' && viewState().pagination) {
-          Hiển thị {{ viewState().rows?.length ?? 0 }} trên {{ viewState().pagination!.total }} tài khoản
-        } @else {
-          {{ connectionMessage }}
-        }
-      </p>
+    @if (viewState().status === 'loaded' && viewState().pagination) {
+      <div class="list-footer">
+        <p class="result-count">
+          Hiển thị {{ viewState().rows?.length ?? 0 }} trên {{ viewState().pagination!.total }} tài
+          khoản
+        </p>
 
-      @if (viewState().status === 'loaded' && viewState().pagination) {
-      <nav class="pagination" aria-label="Phân trang danh sách người dùng">
-        <button class="page-button previous-button" type="button" (click)="changePage(viewState().pagination!.page - 1)" [disabled]="viewState().pagination!.page <= 1" aria-label="Trang trước"><study-icon name="chevron" /></button>
-        <span>{{ viewState().pagination!.totalPages === 0 ? 0 : viewState().pagination!.page }} / {{ viewState().pagination!.totalPages }}</span>
-        <button class="page-button next-button" type="button" (click)="changePage(viewState().pagination!.page + 1)" [disabled]="viewState().pagination!.page >= viewState().pagination!.totalPages" aria-label="Trang sau"><study-icon name="chevron" /></button>
-      </nav>
-      }
-    </div>
+        <nav class="pagination" aria-label="Phân trang danh sách người dùng">
+          <button
+            class="page-button previous-button"
+            type="button"
+            (click)="changePage(viewState().pagination!.page - 1)"
+            [disabled]="viewState().pagination!.page <= 1"
+            aria-label="Trang trước"
+          >
+            <study-icon name="chevron" />
+          </button>
+          <span
+            >{{ viewState().pagination!.totalPages === 0 ? 0 : viewState().pagination!.page }} /
+            {{ viewState().pagination!.totalPages }}</span
+          >
+          <button
+            class="page-button next-button"
+            type="button"
+            (click)="changePage(viewState().pagination!.page + 1)"
+            [disabled]="viewState().pagination!.page >= viewState().pagination!.totalPages"
+            aria-label="Trang sau"
+          >
+            <study-icon name="chevron" />
+          </button>
+        </nav>
+      </div>
+    }
   </section>
 </main>

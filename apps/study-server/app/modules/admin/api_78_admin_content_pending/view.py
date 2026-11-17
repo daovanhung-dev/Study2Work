@@ -20,7 +20,7 @@ from app.modules.admin.api_78_admin_content_pending.validate import (
     validate_admin_pending_query,
     validate_admin_request,
 )
-from app.modules.guest._shared.course_catalog.models import Pagination
+from app.modules.shared.course_catalog.models import Pagination
 from app.modules.mentor.api_49_mentor_content_list.models import ContentResponse
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError

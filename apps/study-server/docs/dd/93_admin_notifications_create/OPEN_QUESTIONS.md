@@ -10,7 +10,7 @@ Catalog #93 row and AC-36 node n5 say ApiEnvelope<Notification> at 202. Operatio
 
 **Runtime fallback:** `data` is the first per-recipient Notification; `meta.operation_id` is one shared UUID and `meta.notification_ids` lists all inserted int64 IDs.
 
-**Ảnh hưởng:** Response metadata is not part of the direct row and does not resolve #18 Operation storage/polling or API #96 handoff.
+**Ảnh hưởng:** Response metadata is not part of the direct row and does not resolve generic #18 Operation storage, the canonical #18 ID/owner contract, or API #96 handoff. Current #18 source provides only a notification-specific UUID/sender lookup.
 
 **Cần xác nhận:** Response chính thức là Notification hay Operation? Nếu Operation, field nào nối notification_id:int64 với operation_id:uuid?
 
@@ -68,9 +68,9 @@ AC-36 requires Notification + recipients. Runtime uses checked-in legacy BIGINT 
 
 ## Q-93-07 — 202 acceptance and Operation lifecycle
 
-Catalog returns 202; operation summary says Operation. No Study Operation store/queue producer was found. API Guidelines recommend Idempotency-Key for retryable mutations, but #93 does not declare it.
+Catalog returns 202; operation summary says Operation. No generic Study `operations` table/producer is defined. Current #18 source derives a notification-only Operation projection from the legacy notification/outbox rows; it does not define a generic queue producer. API Guidelines recommend Idempotency-Key for retryable mutations, but #93 does not declare it.
 
-**Runtime fallback:** 202 is returned only after all Notification/outbox rows and response projection commit. `meta.operation_id` is grouping metadata only; no Operation record is created. DB OperationalError/invalidated connection maps to 503; other persistence/projection failures map to 500.
+**Runtime fallback:** 202 is returned only after all Notification/outbox rows and response projection commit. `meta.operation_id` is grouping metadata only; no generic Operation record is created. The current #18 source can query those notification rows by UUID and sender, but its status projection is notification-specific. DB OperationalError/invalidated connection maps to 503; other persistence/projection failures map to 500.
 
 **Cần xác nhận:** Acceptance boundary, initial status, Operation storage, queue/retry policy and links to #18/#96? Có cần idempotency key không?
 

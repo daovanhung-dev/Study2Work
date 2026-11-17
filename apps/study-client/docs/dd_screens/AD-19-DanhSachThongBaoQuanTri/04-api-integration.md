@@ -2,6 +2,8 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
+> Current Study Web source update (2026-11-16): AD-19 route/page/service calls #92 and focused page/route specs pass 6/6. The test response uses the local Page<Notification> shape; this does not approve that shape over the direct catalog singleton response. Browser/live DB remain unverified.
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
@@ -11,7 +13,7 @@
 
 - API refs trong inventory: #92
 - Orchestration/data notes: Catalog #92 chỉ có status/channel/page và direct ApiEnvelope<Notification>; local #92 trả derived Page<Notification>, delivery-backed rows. No search, recipient/send-time fields or metrics mapping. AD-20 CTA path is /admin/notifications/create in HTML vs inventory /admin/notifications/new; guideline link unresolved.
-- BE/source status và gate: **R** local #92 route/validator/query/model/view/focused-test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** catalog singleton vs local Page; enum/search/metric and recipient/send-time mapping; AC-36 permission vs ADMIN; notification grain/live schema; CTA/guidelines destinations; Study Web UNWIRED; **RUNTIME NOT VERIFIED**
+- BE/source status và gate: **R** local #92 route/validator/query/model/view/focused tests; Angular route/page/caller specs pass 6/6; API fake-session tests pass 20/20. API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** catalog singleton vs local Page; enum/search/metric and recipient/send-time mapping; AC-36 permission vs ADMIN; notification grain/live schema; **RUNTIME NOT VERIFIED**.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API #92 — request/response và lỗi

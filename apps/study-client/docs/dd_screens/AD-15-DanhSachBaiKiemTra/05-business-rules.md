@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: List theo course/status; Create/Update → AD-16, Statistics → AD-17, Delete → AD-18 theo AC-35.
-- Gate/status (giữ nguyên): **R** local #87 route/module/query/model/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** response cardinality/projection, search/course/status mapping, AC-35 permission vs `ADMIN`, legacy BIGINT vs V1-PILOT UUID/live schema, Study Web UNWIRED; **RUNTIME NOT VERIFIED**
+- Gate/status (giữ nguyên): **R** local #87 route/module/query/model/test source and Angular caller/spec. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** response cardinality/projection, AC-35 permission vs `ADMIN`, legacy BIGINT vs V1-PILOT UUID/live schema remain open; **RUNTIME NOT VERIFIED**.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 > CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.

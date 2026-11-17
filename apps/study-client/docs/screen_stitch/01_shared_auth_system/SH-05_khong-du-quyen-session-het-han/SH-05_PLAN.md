@@ -1,6 +1,8 @@
 # SH-05 Plan — Không đủ quyền / phiên hết hạn
 
-> **Trạng thái kế hoạch:** `EXECUTED / RE-AUDITED / STATIC_REVIEWED` · **Phiên:** chỉ xử lý SH-05 · **Route trong inventory:** `/forbidden` (đề xuất; chưa có Study Web router trong checkout).
+> **Trạng thái kế hoạch:** `EXECUTED / RE-AUDITED / STATIC_REVIEWED` · **Phiên:** chỉ xử lý SH-05 · **Route trong inventory:** `/forbidden` (đề xuất; route chưa được wire trong app).
+
+> **Cập nhật 2026-11-16:** Re-audit tại §10 supersedes the 2026-11-07 “source absent” baseline below. Angular Study Web source now exists; SH-05's route, error-context bridge and Shared/Student auth integration remain absent.
 
 ## 0.1. Re-audit plan — 2026-11-07
 
@@ -13,19 +15,19 @@
 
 - Mô tả state view cho lỗi xác thực `401` và lỗi phân quyền `403`; không hiển thị dữ liệu bảo vệ và không tự gán quyền.
 - Nguồn dự kiến: dòng SH-05 trong `../../../list_screen.md`; `screen.png` (1600×1280, trạng thái mặc định 403); `code.html` (prototype có bộ chuyển 401/403); AC-02, AC-11; API #04 và runtime refresh R-X01; `.agents/web-study/design.md`.
-- `screen.png` và `code.html` là tài sản thiết kế. `apps/study-client/src/` không có trong checkout, nên route, auth interceptor, storage và hành vi UI hiện tại đều `NOT_FOUND`.
+- `screen.png` và `code.html` là tài sản thiết kế. At the 2026-11-07 baseline, `apps/study-client/src/` was absent; this statement is historical and superseded by §10.
 - `code.html` mô phỏng state bằng JavaScript cục bộ. Hàm refresh chỉ dùng `setTimeout`, không gửi HTTP; JSON, reason code và trace ID trong mock không phải response backend.
 
 ## 2. Expected behavior và current behavior
 
 | Hạng mục | Expected behavior theo inventory/AC | Current source evidence |
 |---|---|---|
-| Route | `/forbidden` là route đề xuất; nhận 401/403 hoặc direct navigation an toàn. | Chưa có frontend source/router để xác minh. HTML ghi `/forbidden`; không chứng minh route chạy được. |
+| Route | `/forbidden` là route đề xuất; nhận 401/403 hoặc direct navigation an toàn. | Current Angular router exists, but `/forbidden` and error-context entry are not wired. HTML route label alone does not prove runtime. |
 | 401 | Phân biệt 401 với 403; theo shared auth rule, tối đa một refresh/retry cho flow 401 và single-flight cho request đồng thời; không suy mọi 401 là token hết hạn. | API #04 trả `401 DESIGN_AUTHENTICATION_REQUIRED` cho thiếu/sai Bearer/JWT hoặc claims không hợp lệ, đồng thời cũng map profile không tồn tại thành 401. Response không phân biệt nguyên nhân. Client chưa có code để thực hiện/kiểm chứng single-flight hoặc retry. |
 | 403 | Hiển thị quyền bị từ chối; không gọi refresh để đổi role; không tiết lộ dữ liệu/role nội bộ; đưa ra đường lui an toàn. | API #04 yêu cầu role `STUDENT`; role khác trả `403 DESIGN_ACCESS_DENIED`. |
 | Refresh | Chỉ dùng opaque `refresh_token` còn hợp lệ; shared auth rule yêu cầu tối đa một refresh/retry mỗi flow 401, single-flight cho request đồng thời và không refresh sau 403. | R-X01 `POST /api/v1/auth/refresh` tồn tại trong `app/api/v1.py`; lookup, revoke token cũ + insert hash token mới trong một transaction. Source/test không chứng minh client single-flight, replay hay xử lý timeout; client integration chưa có. |
 | Error details | Dùng HTTP status, `businessCode`, message an toàn, `traceId` thật từ body/header; không tự sinh reason/timestamp. | Backend envelope là `{success,businessCode,message,data,meta,traceId}` và header `X-Trace-Id`. Mock hiện dùng `{status,businessCode,message,traceId,timestamp}` cùng mã giả. |
-| Điều hướng | Login theo SH-02; sau 403 chỉ quay về route nội bộ an toàn theo allowlist; fallback khi direct-entry phải được xác nhận. | HTML dùng `/sh-02-login` và `/sh-01-dashboard`; list_screen đề xuất `/login` và `/`. Study Web router chưa có để xác minh route, `returnTo` hay fallback. |
+| Điều hướng | Login theo SH-02; sau 403 chỉ quay về route nội bộ an toàn theo allowlist; fallback khi direct-entry phải được xác nhận. | HTML dùng `/sh-02-login` và `/sh-01-dashboard`; list_screen đề xuất `/login` và `/`. Current `/login` is wired, but SH-05 `returnTo` and safe fallback remain unselected. |
 
 **DISCREPANCY quan trọng:** API #04 không cung cấp reason code phân biệt access token hết hạn với profile không tồn tại. Inventory cho phép refresh sau 401, nhưng chưa có client policy cho trường hợp refresh thành công rồi request #04 vẫn trả 401; không suy rằng refresh sẽ sửa profile thiếu.
 
@@ -78,8 +80,8 @@
 
 ## 6. Blocker và điểm cần quyết định
 
-1. **`BLOCKER: CLIENT_SOURCE_NOT_FOUND`** — không có Study Web router, auth interceptor, session storage hoặc UI runtime để xác minh route/event; `dist`/`node_modules` không chứng minh source runtime.
-2. **`BLOCKER: CLIENT_SESSION_IMPLEMENTATION`** — inventory đã quy định single-flight và tối đa một lần refresh/retry; Study Web source không có để implement/verify quy tắc này. Token persistence, CSRF/XSS mitigation, safe replay eligibility, timeout/ambiguous rotation outcome handling và session cleanup vẫn cần owner decision.
+1. **`BLOCKER: SH05_ROUTE_AND_ERROR_CONTEXT`** — current Angular source exists, but `/forbidden`, SH-05 error-context transport and Shared/Student auth integration do not.
+2. **`BLOCKER: CLIENT_SESSION_IMPLEMENTATION`** — only the Admin session service has single-flight refresh; no Shared/Student manager uses it for API #04. Token persistence, CSRF/XSS mitigation, safe replay eligibility, timeout/ambiguous rotation outcome handling and session cleanup still need owner decisions.
 3. **`BLOCKER: 401_CAUSE_AND_RECOVERY`** — API #04 map missing profile và invalid/expired auth thành cùng 401/code/message; policy sau refresh thành công nhưng #04 tiếp tục 401 chưa có.
 4. **`BLOCKER: USER_FACING_CONTENT_AND_FALLBACK`** — ảnh/code gồm preview toggles, technical diagnostics, raw JSON và handoff rules; chưa có quyết định phần nào là UI người dùng. `/login`, `/`, previous-safe-route và direct-entry fallback chưa được router/product xác nhận.
 5. **`DISCREPANCY: MOCK_ERROR_ENVELOPE`** — code.html dùng `AUTHZ_STUDENT_REQUIRED`, `AUTHN_TOKEN_EXPIRED`, `status`, `timestamp`; backend trả `DESIGN_ACCESS_DENIED` / `DESIGN_AUTHENTICATION_REQUIRED` theo envelope `success`, `businessCode`, `message`, `data`, `meta`, `traceId`.
@@ -96,7 +98,7 @@
 - DD tách riêng 401/403, prototype/current source/target behavior; mọi API field, business code, route và response bám source hoặc đánh dấu blocker/discrepancy.
 - Có input → validation/permission → API/nội bộ → response mapping → state update → outcome/exceptions cho từng event; không coi HTML timer là API call.
 - Có ma trận state/loading/error/refresh failure/offline/copy failure và điều kiện điều hướng; mọi `returnTo` an toàn.
-- `DD BLOCKED` đến khi chốt production content/state mapping, 401 recovery policy (kể cả profile-missing/repeated 401), token persistence/refresh outcome, safe-route fallback và SH-02/G-14 login handoff; `IMPLEMENTATION BLOCKED` do thiếu Study Web source và các quyết định trên; `RUNTIME NOT VERIFIED`.
+- `DD BLOCKED` đến khi chốt production content/state mapping, 401 recovery policy (kể cả profile-missing/repeated 401), token persistence/refresh outcome, safe-route fallback và SH-02/G-14 login handoff; `IMPLEMENTATION BLOCKED` do SH-05 route/error-context integration chưa có và các quyết định trên; `RUNTIME NOT VERIFIED`.
 
 ## 8. Kết quả phiên SH-05
 
@@ -108,8 +110,14 @@
 
 ## 9. Kết quả re-audit — 2026-11-07
 
-- Cập nhật DD để phản ánh `list_screen.md` §1.2: single-flight cho request đồng thời và tối đa một refresh/retry mỗi flow 401 là expected behavior; Study Web client vẫn `UNWIRED`, không phải đã xác minh.
+- Cập nhật DD để phản ánh `list_screen.md` §1.2: single-flight cho request đồng thời và tối đa một refresh/retry mỗi flow 401 là expected behavior; Shared/Student Study Web client vẫn `UNWIRED`, không phải đã xác minh.
 - Thêm ma trận A–F; giữ blockers về nguyên nhân 401/profile thiếu, session persistence/security, ambiguous rotation outcome, safe-return fallback, production UI composition và SH-02/G-14.
 - Static audit pass: 11 marker theo thứ tự, ID duy nhất, 11/11 map với element rows; center/target đều trong bounds; hai PNG khớp kích thước JSON; 7 events có trigger/input/precondition/process/outcome/exception; A–F và local links đầy đủ; visual annotation đã xem.
 - SHA-256 giữ nguyên: `screen.png` `f13f4da1e7717ccafbf93155af94e526e8a5f865d63e207c21165118c16cd23f`; `code.html` `cd0f2cb849d8a39aae842c08f5602fc24718b2d34e9f446d56041c1017b8ad7a`.
 - Không chạy application tests, Study Web runtime, deployment hoặc live DB checks. Kết quả SH-05: `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`. SH-06 là ứng viên cho phiên riêng.
+
+## 10. Re-audit after Study Web source was added — 2026-11-16
+
+- Current source now includes an Angular 22 app, the Shared `/login` and `/register` routes, `StudyApiService`, and Admin-only `AdminSessionService`/`AdminApiService`. The 2026-11-07 statements that all `apps/study-client/src/` was missing are historical and no longer describe the current checkout.
+- Rechecked `app.routes.ts`, `shared.route.ts`, Admin auth/HTTP services, Study Server API #04/auth source, and the SH-05 clean/annotated images plus prototype HTML. `/forbidden` and SH-05 error-context entry are still absent. Admin session handling is not reusable for Shared/Student: it requires ADMIN and owns a separate policy.
+- No SH-05 UI/route or auth flow is added in this re-audit. The DD remains `DD BLOCKED` / `IMPLEMENTATION BLOCKED` / `RUNTIME NOT VERIFIED` because production copy/composition, error-context transport, 401 cause/recovery after repeated #04 401, token policy/security, safe-return fallback and SH-02 handoff remain unresolved. This narrows the source blocker; it does not resolve the product/security gates.

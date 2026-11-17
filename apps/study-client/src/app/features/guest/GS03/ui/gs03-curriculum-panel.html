@@ -1,0 +1,35 @@
+<section class="curriculum-panel" data-screen-id="GS04" aria-labelledby="gs04-heading">
+  <h2 id="gs04-heading">Đề cương khóa học</h2>
+
+  @if (state.status === 'loading') {
+    <div class="state-card" role="status" aria-live="polite" aria-busy="true">
+      <span class="state-icon"><study-icon name="book" /></span>
+      <p>Đang tải đề cương khóa học…</p>
+    </div>
+  } @else if (state.status === 'not-found') {
+    <div class="state-card" role="status">
+      <span class="state-icon"><study-icon name="book" /></span>
+      <p>Không tìm thấy đề cương khóa học này.</p>
+    </div>
+  } @else if (state.status === 'error') {
+    <div class="state-card" role="alert">
+      <span class="state-icon"><study-icon name="info" /></span>
+      <p>Chưa thể tải đề cương. Vui lòng thử lại sau.</p>
+    </div>
+  } @else if (state.status === 'empty') {
+    <div class="empty-card" role="status">
+      <span class="empty-icon"><study-icon name="layers" /></span>
+      <h3>Đề cương khóa học</h3>
+      <p>Chưa có nội dung đề cương để hiển thị.</p>
+    </div>
+  } @else if (state.status === 'ready') {
+    <ol class="lesson-list" aria-label="Danh sách bài học">
+      @for (lesson of state.lessons; track $index) {
+        <li class="lesson-row">
+          <span class="lesson-order" aria-hidden="true">{{ lesson.order }}</span>
+          <span class="lesson-title">{{ lesson.title }}</span>
+        </li>
+      }
+    </ol>
+  }
+</section>

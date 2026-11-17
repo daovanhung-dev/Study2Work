@@ -70,6 +70,8 @@ describe('AD21Page', () => {
     expect(actions[2].querySelector('.operation-label')?.textContent?.replace(/\s+/g, ' ').trim())
       .toBe('Theo dõi qua cổng tác vụ bất đồng bộ (SH-07)');
     expect(actions[2].querySelector('.operation-status')?.textContent?.trim()).toBe('Đang khóa');
+    expect(root.querySelector('.operation-note')?.textContent)
+      .toContain('API #18 backend route đã có nhưng client chưa wired handoff/poller cho SH-07');
     expect(actions.every((button) => button.disabled)).toBe(true);
     expect(http.match((candidate) => ['POST', 'PUT', 'PATCH', 'DELETE'].includes(candidate.method))).toHaveLength(0);
   });

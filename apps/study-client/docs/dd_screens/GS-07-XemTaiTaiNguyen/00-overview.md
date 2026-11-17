@@ -4,9 +4,9 @@
 |---|---|
 | Screen ID | `GS-07` |
 | Module | Guest / Discovery |
-| Route | `/resources/:resourceId` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/resources/:resourceId` — Study Web source hiện mount direct route tới contract-blocked gate; không tiêu thụ `resourceId`; runtime/deployment chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: Source status is described in the source DD. |
+| DD status | Draft (package được chuyển đổi); current source status: `SOURCE-WIRED GATE ONLY`; full resource behavior remains `DD BLOCKED / RUNTIME NOT VERIFIED`. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [GS-07.md](../../screen_stitch/02_guest_discovery/GS-07_xem-tai-tai-nguyen/GS-07.md), [GS-07_PLAN.md](../../screen_stitch/02_guest_discovery/GS-07_xem-tai-tai-nguyen/GS-07_PLAN.md), [GS-07_markers.json](../../screen_stitch/02_guest_discovery/GS-07_xem-tai-tai-nguyen/GS-07_markers.json), [list_screen.md](../../list_screen.md) |
@@ -14,7 +14,7 @@
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Preview metadata/media hỗ trợ; fallback download khi URL hợp lệ và được phép.
 - In-scope: GET #12 tại thời điểm mở; không cache signed URL vô hạn hoặc lộ internal storage key.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Current implementation boundary: chỉ render thông báo contract-blocked; không đọc ID, metadata/URL hoặc gọi #12. Preview, download và access decision vẫn bị chặn.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,17 +31,18 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/ready/403-unclear/404/link-expired |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source/runtime | Worklog/context Study Web | `SOURCE-WIRED GATE ONLY`; resource detail `IMPLEMENTATION PARTIAL / DD BLOCKED`; `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [GS-07 source screen.png](../../screen_stitch/02_guest_discovery/GS-07_xem-tai-tai-nguyen/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/02_guest_discovery/GS-07_xem-tai-tai-nguyen/screen_annotated.png))
 - Luồng: GET #12 tại thời điểm mở; không cache signed URL vô hạn hoặc lộ internal storage key.
-- Priority: P2; Gate/source status: **R (#12 source-backed locally; API DD Draft)**; **BLOCK:** current public/no-auth direct URL lacks AC-06 access check/signer; preview/MIME/URL policy, 403/404/expiry mapping, GS-06/ST-12 return context and Study Web route UNWIRED; live schema unknown; prototype differs from Study design guide and WCAG unmeasured
+- Priority: P2; **SOURCE-WIRED GATE ONLY**; **BLOCK:** current public/no-auth direct URL lacks AC-06 access check/signer; preview/MIME/URL policy, 403/404/expiry mapping, GS-06/ST-12 return context and resource-detail implementation remain unresolved; live schema unknown; prototype differs from Study design guide and WCAG unmeasured
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-17 — T023 wires `/resources/:resourceId` to a contract-blocked presentation only; no resource ID/API #12/actions. Full resource flow remains blocked; runtime not verified.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -72,7 +73,7 @@
 
 | Chủ đề | Expected theo inventory/AC-06 | Current evidence |
 |---|---|---|
-| Mở màn hình | Route `/resources/:resourceId`; nhận ID từ GS-06, có thể từ ST-12; lấy metadata. | Study Web không có app source/router/API client trong checkout. `code.html` là prototype tĩnh, hiển thị chuỗi `:resourceId` và không gửi request. `UNWIRED`. |
+| Mở màn hình | Expected: route `/resources/:resourceId`; nhận ID từ GS-06, có thể từ ST-12; lấy metadata sau khi contract được duyệt. | Study Web source hiện mount direct route và contract-blocked gate; route param không được tiêu thụ, không gọi API/hiển thị ID. `code.html` vẫn là prototype tĩnh riêng. Route runtime/deployment chưa xác minh. |
 | API #12 | Catalog: public GET, no Bearer, `int64` path, `ApiEnvelope<Resource>`, 200/404/500. AC-06 yêu cầu resource public hoặc user có quyền; thiếu quyền có nhánh 403 và private file cần signed URL qua Object Storage. | Route hiện tại được register, không có auth dependency; query lấy direct `resources.url`; model trả `id/name/type/url/lesson_id`; không visibility, enrollment/access check hoặc signer. |
 | API DD status | API DD #12 là `Draft — Needs Confirmation`; internal `RUNTIME_STATUS` ghi `DECLARED_NOT_RUNNABLE`. | Local `v1.py` compose route #12 và test source tồn tại, nên nhãn runtime trong API DD không khớp current local source composition. Đây chưa phải production/deployment/runtime verification. |
 | Trạng thái | Loading, ready, 403-unclear, 404 và expired-link trong inventory; preview khi hỗ trợ, fallback download. | 6 state tab chỉ thay nội dung mô tả/code sample bằng JavaScript local; toolbar/download vẫn disabled, không có viewer hay request. API hiện chỉ xác nhận 200/404/500. |

@@ -1,0 +1,17 @@
+.me17-back { display:inline-flex; min-height:44px; align-items:center; margin:-8px 0 16px; color:#0b668f; font-size:12px; font-weight:750; text-decoration:none; }
+.me17-summary { padding:22px; }
+.me17-student { display:flex; align-items:center; gap:12px; }
+.me17-student h2 { margin:0 0 4px; color:#17324b; font-size:19px; }
+.me17-avatar { display:grid; place-items:center; width:48px; height:48px; border-radius:50%; background:#e5f1f8; color:#0b668f; font-size:18px; font-weight:850; }
+.me17-metrics { display:flex; flex-wrap:wrap; gap:12px; margin:20px 0; }
+.me17-metrics>div { display:grid; gap:5px; min-width:180px; padding:15px; border:1px solid #e5edf3; border-radius:10px; background:#f9fbfc; }
+.me17-metrics strong { color:#0b668f; font-size:22px; }
+.me17-metrics span { color:#72849a; font-size:11px; }
+.me17-summary h3 { margin:24px 0 10px; color:#29445f; font-size:14px; }
+.me17-lessons { list-style:none; padding:0; margin:0; }
+.me17-lessons li { display:grid; grid-template-columns:34px minmax(150px,1.4fr) auto 110px 44px minmax(140px,auto); align-items:center; gap:12px; min-height:70px; padding:10px 0; border-top:1px solid #e9eef4; }
+.me17-lesson-order { display:grid; place-items:center; width:28px; height:28px; border-radius:8px; background:#eef5f9; color:#47637d; font-size:11px; font-weight:800; }
+.me17-lesson-title { display:grid; gap:4px; }.me17-lesson-title strong{color:#2d4660;font-size:12px}
+.me17-progress { height:7px; overflow:hidden; border-radius:999px; background:#e7edf3; }.me17-progress span{display:block;height:100%;border-radius:inherit;background:#1680a9}
+@media(max-width:820px){.me17-lessons li{grid-template-columns:30px 1fr auto}.me17-progress{grid-column:2}.me17-lessons li>strong,.me17-lessons time{grid-column:2}}
+@media(max-width:520px){.me17-summary{padding:17px}.me17-metrics>div{min-width:140px;flex:1}.me17-lessons li{gap:8px}.me17-lessons .mentor-status{font-size:9px}}

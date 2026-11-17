@@ -44,7 +44,7 @@
 4. `GS01-B04 PARTIAL_LOAD_AND_CACHE_POLICY`: inventory says cache-first #05 then #06; there is no client cache source/TTL or failure policy when one request fails. Do not invent behavior.
 5. `GS01-B05 COURSE_SHAPE_DISCREPANCY`: reusable catalog Course includes optional category; current #06 response omits it. Currency and rating/duration fields are also absent from source.
 6. `GS01-B06 EMPTY_PAGE_AND_ERROR_COPY`: API #06 can return empty `items` for both zero total and out-of-range page, while screenshot copy conflates empty and updating. Define separate error/empty-page recovery/copy before implementation.
-7. `GS01-B07 STUDY_WEB_UNWIRED`: current checkout has no app source/router/package/entrypoint; no route, cache or interaction is runtime verified.
+7. `GS01-B07 STUDY_WEB_UNWIRED`: Study Web app and Angular router exist, but Guest `/courses` route and GS-01 API caller are not wired; no GS-01 route, cache or interaction is runtime verified.
 8. `GS01-B08 SOURCE_VARIANT_MISMATCH`: screenshot header omits the Study2Work brand visible in HTML; HTML has duplicate brand/nav markup and broken orphan filter script. Keep screenshot source intact; product must choose/correct source of truth.
 
 - [x] Screen source image and HTML hashes/dimensions inventoried; originals must remain unchanged.

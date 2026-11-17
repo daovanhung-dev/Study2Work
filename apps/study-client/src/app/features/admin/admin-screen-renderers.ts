@@ -95,12 +95,12 @@ function displayInt64(value: number | null): string {
 
 export function renderContentFields(content: AdminContent): readonly AdminScreenField[] {
   return [
-    { label: 'Mã nội dung', value: displayValue(content.id) },
+    { label: 'Mã nội dung', value: displayInt64(content.id) },
     { label: 'Tiêu đề', value: content.title },
     { label: 'Loại nội dung', value: content.content_type },
     { label: 'Trạng thái', value: content.status },
-    { label: 'Mã khóa học', value: displayValue(content.course_id) },
-    { label: 'Mã nội dung cha', value: displayValue(content.parent_id) },
+    { label: 'Mã khóa học', value: displayInt64(content.course_id) },
+    { label: 'Mã nội dung cha', value: displayInt64(content.parent_id) },
     { label: 'Thứ tự', value: displayValue(content.order) },
     { label: 'Payload', value: JSON.stringify(content.payload, null, 2) },
   ];
@@ -109,13 +109,15 @@ export function renderContentFields(content: AdminContent): readonly AdminScreen
 export function renderLessonRow(lesson: AdminLesson): AdminScreenRow {
   return {
     values: [
-      displayValue(lesson.id),
+      displayInt64(lesson.id),
       lesson.title,
       displayValue(lesson.course_id),
       displayValue(lesson.order),
       lesson.status,
     ],
-    route: `/admin/lessons/${encodeURIComponent(String(lesson.id))}`,
+    ...(Number.isSafeInteger(lesson.id)
+      ? { route: `/admin/lessons/${encodeURIComponent(String(lesson.id))}` }
+      : {}),
   };
 }
 
@@ -125,7 +127,7 @@ export function renderLessonFields(lesson: AdminLesson): readonly AdminScreenFie
     { label: 'Tiêu đề', value: lesson.title },
     { label: 'Nội dung', value: displayValue(lesson.content) },
     { label: 'Nội dung bài học', value: displayValue(lesson.content) },
-    { label: 'Mã khóa học', value: displayValue(lesson.course_id) },
+    { label: 'ID khóa học', value: displayValue(lesson.course_id) },
     { label: 'Trạng thái', value: lesson.status },
     { label: 'URL video', value: displayValue(lesson.video_url) },
     { label: 'Thứ tự hiển thị', value: displayValue(lesson.order) },

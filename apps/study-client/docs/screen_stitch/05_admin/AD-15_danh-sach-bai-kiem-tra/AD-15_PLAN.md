@@ -79,3 +79,9 @@ Gộp icon trang trí vào control tương ứng; không đánh số nền/card/
 6. [x] Cập nhật inventory/API #087 reverse index, global AD-15 checkpoint/core artifact count và worklog; giữ API #87 DD Draft.
 7. [x] Audit source hashes, dimensions, JSON/XML, links, 83 folders/IDs, core artifact count, whitespace và `git diff --check`; không chạy application tests/runtime.
 8. [x] Chốt AD-15 only; trạng thái màn hình `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, `RUNTIME NOT VERIFIED`; dừng trước AD-16.
+
+## 8. Dated continuation — current source reconciliation (2026-11-16)
+
+- Preserve sections 1–7 as the original 2026-11-08 planning snapshot. Current source now registers AD-15 and calls local API #87; `list_screen.md` and the AD-15 screen DD record that source while retaining the Draft contract discrepancy.
+- Bounded UI fix: label numeric quiz/course values as IDs and assert the labels. Do not alter the API, query parameters, projection, navigation, historical screenshot, HTML prototype, marker JSON/SVG or PNGs.
+- Keep `DD BLOCKED`, `IMPLEMENTATION PARTIAL SOURCE`, `RUNTIME NOT VERIFIED`. Verification completed 2026-11-16: focused Angular spec 5/5 passed; API #87 focused fake-session tests 20/20 passed with one upstream Starlette/httpx deprecation warning; Study Web production build passed with three Student CSS budget warnings. Chrome bridge failed with `timeoutMs` undefined and the in-app browser was unavailable; browser UI and live DB remain unverified.

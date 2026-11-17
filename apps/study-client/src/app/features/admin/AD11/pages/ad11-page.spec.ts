@@ -53,6 +53,8 @@ describe('AD11Page', () => {
     const root = fixture.nativeElement as HTMLElement;
     const metadata = root.querySelector('dl.metadata-grid');
     expect(root.textContent).toContain('Nội dung bài học');
+    expect(root.querySelector('nav[aria-label="Đường dẫn kiểm duyệt"]')?.textContent).toContain('Hàng đợi chờ duyệt');
+    expect(root.querySelector('nav[aria-label="Đường dẫn kiểm duyệt"]')?.textContent).not.toContain('Hàng chờ chờ duyệt');
     expect(metadata?.textContent).toContain('Mã nội dung');
     expect(metadata?.textContent).toContain('DRAFT');
     expect(metadata?.textContent).not.toContain('Payload');
@@ -76,8 +78,45 @@ describe('AD11Page', () => {
     expect(reason?.placeholder).toContain('gửi cho giảng viên');
     expect(buttons).toHaveLength(2);
     expect(buttons.every((button) => button.disabled)).toBe(true);
+    expect(buttons[0]?.textContent).toContain('Phê duyệt nội dung');
+    expect(buttons[0]?.textContent).not.toContain('xuất bản');
     expect(root.textContent).toContain('trường này đang bị khóa');
     http.expectNone((candidate) => candidate.method === 'PATCH');
+  });
+
+  it('preserves a signed-int64 route ID and does not display rounded Content IDs', async () => {
+    await signIn();
+    const largeContentId = '9223372036854775807';
+    const unsafeNumber = Number(largeContentId);
+    routeParams.next(convertToParamMap({ contentId: largeContentId }));
+
+    const fixture = TestBed.createComponent(AD11Page);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const request = http.expectOne(`/api/v1/admin/content/${largeContentId}`);
+    expect(request.request.method).toBe('GET');
+    request.flush(
+      successEnvelope(
+        content({
+          id: unsafeNumber,
+          course_id: unsafeNumber,
+          parent_id: unsafeNumber,
+        }),
+      ),
+    );
+    fixture.detectChanges();
+
+    const fields = [...(fixture.nativeElement as HTMLElement).querySelectorAll('.metadata-item')];
+    const valueFor = (label: string) =>
+      fields
+        .find((field) => field.querySelector('dt')?.textContent?.trim() === label)
+        ?.querySelector('dd')
+        ?.textContent?.trim();
+
+    expect(valueFor('Mã nội dung')).toBe('Không thể hiển thị chính xác');
+    expect(valueFor('Mã khóa học')).toBe('Không thể hiển thị chính xác');
+    expect(valueFor('Mã nội dung cha')).toBe('Không thể hiển thị chính xác');
   });
 
   it('shows the not-found error when #79 returns 404', async () => {

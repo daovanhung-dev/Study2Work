@@ -40,14 +40,14 @@
 
 | State | Điều kiện vào | UI/behavior yêu cầu | Bằng chứng hiện tại |
 |---|---|---|---|
-| `loading` | Route hợp lệ; GET #69 đang chờ. | Skeleton/loader và chặn thao tác phụ thuộc dữ liệu; thiết kế hiển thị cụ thể chưa có trong screenshot. | Không có loading implementation. |
-| `ready` | HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, `data` là UserProfile hợp lệ. | Map field profile vào element; PII/masking và enum labels vẫn cần policy. | API source-backed cục bộ; Study Web chưa wire. |
-| `unauthenticated` | HTTP 401 hoặc token/session thiếu/sai. | Dùng auth shell/session UX đã được duyệt; không hiển thị placeholder như thành công. | API error trực tiếp; Study Web shell chưa có. |
-| `forbidden` | HTTP 403. | Báo không có quyền; không retry tự động bằng role khác. | API error trực tiếp; mapping `ADMIN` ↔ permission AC-31 còn DERIVED. |
-| `not-found` | HTTP 404 cho path ID sai/out-of-range hoặc user không tồn tại theo local source. | Hiển thị not-found và điều hướng về AD-02 theo contract. | Catalog status/code trực tiếp; phân loại path/no-row là local DERIVED mapping. |
+| `loading` | Route hợp lệ; GET #69 đang chờ. | Skeleton/loader và chặn thao tác phụ thuộc dữ liệu; thiết kế cụ thể chưa có trong screenshot. | AD03Page hiển thị text notice và placeholder rows; skeleton chưa có. |
+| `ready` | HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, `data` là UserProfile hợp lệ. | Map field profile vào element; PII/masking và enum labels vẫn cần policy. | Route/page/API #69 caller có trong source; page dùng `adminRouteState`/`loadedFields`; runtime chưa xác minh. |
+| `unauthenticated` | HTTP 401 hoặc token/session thiếu/sai. | Dùng auth shell/session UX đã được duyệt; không hiển thị placeholder như thành công. | Shared helper trả `status: error` với message phiên hết hạn; không có state type riêng tại AD03. |
+| `forbidden` | HTTP 403. | Báo không có quyền; không retry tự động bằng role khác. | Shared helper trả `status: error` với message từ chối; mapping `ADMIN` ↔ permission AC-31 còn DERIVED. |
+| `not-found` | HTTP 404 cho path ID sai/out-of-range hoặc user không tồn tại theo local source. | Hiển thị not-found và điều hướng về AD-02 theo contract. | Shared helper hiện trả `status: error` với not-found message; chưa có state type riêng. |
 | `error` | HTTP 500 hoặc network failure. | Thông báo an toàn; retry chỉ khi shared client convention xác định. Không lộ DB/PII. | 500 source-backed; network UI/retry chưa được định nghĩa. |
 | `audit-blocked` | Không có audit source/policy. | Không hiển thị count/empty history/retention như dữ liệu thực. | Current prototype có static empty state và retention; #69 không hỗ trợ. |
-| `actions-disabled` | Chưa đủ permission/contract/route cho AD-04/AD-05. | Giữ #15/#17 disabled và không gửi mutation. | Đúng với HTML hiện tại. |
+| `actions-gated` | Chưa đủ permission/contract approval cho AD-04/AD-05. | Chỉ tiếp tục theo DD/API của màn hình đích; không gửi mutation từ AD-03. | Angular source có router links tới AD-04/AD-05 khi có ID; prototype controls disabled. Runtime/acceptance chưa xác minh. |
 | `empty` | Không có successful empty response trong #69. | Không dùng `204`, `NULL_PAYLOAD` hoặc “đang đồng bộ” làm empty success. 404 là not-found. | API route trả 200 UserProfile hoặc error; prototype empty state không khớp. |
 
 ### Điều hướng / handoff data
@@ -55,9 +55,9 @@
 | Từ | Đến | Dữ liệu truyền | Ranh giới |
 |---|---|---|---|
 | AD-02 | AD-03 | `items[].id` từ #68 → `user_id` path của #69. | Chỉ truyền ID; không đưa email/phone vào URL. Role/permission policy còn mở. |
-| AD-03 back/breadcrumb | AD-02 | Không yêu cầu dữ liệu; giữ filter/page nếu shared navigation contract quy định. | Link prototype là fragment; route thực chưa có. |
-| AD-03 edit | AD-04 | `userId` path. | #15 đang disabled; #70 body và field rules chưa được xử lý tại màn này. |
-| AD-03 status/delete | AD-05 | `userId` path. | #17 đang disabled; #71/#72 policy và confirmation là màn hình đích. |
+| AD-03 back link | AD-02 | Không yêu cầu dữ liệu; giữ filter/page nếu shared navigation contract quy định. | Angular template dùng `routerLink="/admin/users"`; filter/page handoff chưa được xác định. Runtime chưa xác minh. |
+| AD-03 edit link | AD-04 | `userId` path. | Angular template có link khi có ID; #70 body/field rules và permission cần được chốt. Runtime chưa xác minh. Prototype #15 đang disabled. |
+| AD-03 status/action link | AD-05 | `userId` path. | Angular template có link khi có ID; #71/#72 policy và confirmation thuộc màn hình đích. Runtime chưa xác minh. Prototype #17 đang disabled. |
 | Header/footer | Các trang admin/policy/support | Không có handoff data đã xác nhận. | `href="#"`; không suy ra route hoặc API. |
 
 ### Bảo mật và dữ liệu

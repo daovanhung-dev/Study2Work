@@ -4,7 +4,7 @@
 |---|---|
 | Screen ID | `ST-07` |
 | Module | Student |
-| Route | `/student/enroll/result/:courseId` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student/enroll/result/:courseId` — route/page gate có trong Angular; runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: **Trạng thái thiết kế:** `DD BLOCKED` · **Trạng thái triển khai:** `IMPLEMENTATION BLOCKED` · **Runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
@@ -31,7 +31,8 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | awaiting-confirmation/enrolled/conflict/failure |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Worklog/context Study Web | Route maps #18/#19/#20 and renders unavailable result state; no API request or success claim. |
+| Runtime | Worklog/context Study Web | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-07 source screen.png](../../screen_stitch/03_student/ST-07_ket-qua-dang-ky-khoa-hoc/screen.png))
@@ -44,6 +45,11 @@
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 
 ## Trạng thái và ranh giới bằng chứng
+
+## Current implementation update — 2026-11-17
+
+- `/student/enroll/result/:courseId` now mounts ST-07 and maps #18/#19/#20. The page preserves the Stitch “Chưa thể xác nhận” result state; it does not call the enrollment or payment APIs.
+- Current #19 route/module source creates Enrollment only with a PAID Order for paid courses, but checked-in DDL has no `orders` table and no focused #19 test package was found. #20 returns CourseSummary without focused tests; #18 is notification-only. Student auth, paid proof and result reload remain blocked.
 
 # ST-07 — Kết quả đăng ký khóa học
 

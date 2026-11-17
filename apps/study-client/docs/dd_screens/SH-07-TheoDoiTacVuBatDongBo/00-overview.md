@@ -4,9 +4,10 @@
 |---|---|
 | Screen ID | `SH-07` |
 | Module | Shared / Auth / System |
-| Route | `/operations/:operationId` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/operations/:operationId` — Shared route đã wire; page chỉ render gate unavailable, không đọc/hiện path ID và không gọi API #18 |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: **DD status:** `BLOCKED` — bộ mô tả và ảnh chú thích đã lập, nhưng contract API #18 và các producer chưa đủ nhất quán để lập trình luồng theo dõi.; **Implementation status:** `IMPLEMENTATION BLOCKED` · **Runtime status:** `RUNTIME NOT VERIFIED`. |
+| Current implementation | Gate route/page is wired and covered by a focused route test; generic operation data/status remain blocked and unverified. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [SH-07.md](../../screen_stitch/01_shared_auth_system/SH-07_theo-doi-tac-vu-bat-dong-bo/SH-07.md), [SH-07_PLAN.md](../../screen_stitch/01_shared_auth_system/SH-07_theo-doi-tac-vu-bat-dong-bo/SH-07_PLAN.md), [SH-07_markers.json](../../screen_stitch/01_shared_auth_system/SH-07_theo-doi-tac-vu-bat-dong-bo/SH-07_markers.json), [list_screen.md](../../list_screen.md) |
@@ -14,7 +15,7 @@
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Dùng lại trạng thái job thanh toán/gửi thông báo/export theo ownership.
 - In-scope: Chỉ GET #18 nếu đã có operation_id do BE xác nhận; không tự sinh ID, stop theo terminal state.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Không gọi API #18 hoặc hiển thị operation ID/status/result; không thêm polling/retry hoặc producer handoff trước khi contract được duyệt.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,7 +32,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | queued/running/succeeded/failed/expired |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current runtime | Worklog/context Study Web | Gate route wired; operation tracking remains blocked and not runtime-verified. |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [SH-07 source screen.png](../../screen_stitch/01_shared_auth_system/SH-07_theo-doi-tac-vu-bat-dong-bo/screen.png))
@@ -60,9 +61,9 @@
 | Loại surface | Panel dùng chung, theo inventory. HTML hiện dựng thành một trang dài; đây là design artifact. |
 | Mục tiêu | Hiển thị trạng thái do backend xác nhận cho một operation đã được chấp nhận. SH-07 không tạo operation, không suy ra kết quả từ thời gian chờ và không khẳng định giao dịch/gửi/xuất đã xong khi chưa có response tương ứng. |
 | Actor dự kiến | Student, Mentor hoặc Admin chỉ trong phạm vi operation được phép xem. AC diagrams nói owner-only; operation-tracking summary nói owner hoặc Admin. Role và owner policy chưa thống nhất. |
-| Route đề xuất | `/operations/:operationId`; hiện không có Study Web router/source để xác nhận route. API design dùng `/api/v1/operations/{operation_id}`. |
-| Input | Operation ID phải do producer/backend trả về. Không tự sinh ID, không dùng UUID minh họa/fallback. Kiểu path chưa thể validate vì API #18 row khai báo int64, còn convention/schema/AC và producer source có UUID. |
-| API | API #18 là thiết kế `D`; `GET /api/v1/operations/{operation_id}` chưa có route/module/query/test trong Study Server hiện tại. Notification-specific #64/#96 không thay thế endpoint generic. |
+| Route đề xuất | `/operations/:operationId`; Study Web app/router hiện có nhưng chưa đăng ký route hoặc SH-07 caller. API design dùng `/api/v1/operations/{operation_id}`. |
+| Input | Operation ID phải do producer/backend trả về. Không tự sinh ID, không dùng UUID minh họa/fallback. API #18 implementation dùng UUID; catalog row vẫn khai báo int64, còn convention/schema/AC và producer source dùng UUID. |
+| API | API #18 DD còn Draft; Study Server có route/module/query và 8 source-level HTTP tests. Current query chỉ đọc notification operations theo owner; client `API_018` descriptor còn `UNWIRED`, không có SH-07 caller. Notification-specific #64/#96 không thay thế endpoint generic. |
 | Màn hình liên kết | ST-07, ME-15, AD-21, AD-25 là các caller/consumer trong inventory. HTML prototype lại đưa CTA về GS-01 và SH-01; safe-return context chưa có contract. |
 | Side effect | Đọc trạng thái operation theo contract; không sửa operation hoặc tạo side effect nghiệp vụ. Hiện prototype không gọi API. |
 | Trạng thái tài liệu | Các element, event, state gate và blocker được ghi dưới đây; không tuyên bố DD READY do identifier, owner policy, enum/lifecycle và producer mapping còn chặn luồng cốt lõi. |

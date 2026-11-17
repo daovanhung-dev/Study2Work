@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/operations/:operationId`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: `/operations/:operationId` is wired in the Shared route group; it renders the unavailable gate only. There is no caller handoff, route guard or API #18 request.
 - Route params/types: `operationId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,7 +10,7 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [ST-06](../ST-06-ThucHienThanhToan/00-overview.md), [ME-15](../ME-15-TheoDoiGuiThongBao/00-overview.md), [AD-20](../AD-20-SoanGuiThongBaoHeThong/00-overview.md), [AD-21](../AD-21-SuaKiemSoatDoTrangThaiThongBao/00-overview.md), [AD-25](../AD-25-XuatBaoCaoVaTheoDoiTienTrinh/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [ST-06](../ST-06-ThucHienThanhToan/00-overview.md), [ME-15](../ME-15-TheoDoiGuiThongBao/00-overview.md), [AD-20](../AD-20-SoanGuiThongBaoHeThong/00-overview.md), [AD-21](../AD-21-SuaKiemSoatDoTrangThaiThongBao/00-overview.md), [AD-25](../AD-25-XuatBaoCaoVaTheoDoiTienTrinh/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Route mở trực tiếp được; producer/caller handoff chưa wired |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
@@ -20,8 +20,8 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: SH-07 route resolves to the same unavailable gate; no operation data is read or exposed.
+- Invalid/missing ID: a path segment is not parsed or echoed; missing path does not match the route. Do not add UUID/int64 validation before the canonical type is approved.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram
@@ -39,7 +39,7 @@ flowchart LR
 
 | State | Điều kiện | UI/data | Chuyển tiếp hoặc route |
 |---|---|---|---|
-| `DESIGN_GATE` | Current prototype / API #18 chưa wired | Banner `Gated/Unavailable`; không status fetch/poll; lifecycle cards chỉ là reference. | Modal/clipboard CTA; recovery targets còn proposal. |
+| `DESIGN_GATE` | Current Angular route/page is gate-only; API #18 client descriptor remains `UNWIRED` | Static unavailable notice; no ID/status fetch, poll, fake lifecycle cards or API request. | Header links use existing routes; no caller-specific recovery CTA. |
 | `INITIAL` | Route vào, ID chưa resolve | Không hiển thị UUID fallback. Caller provenance phải được xác định. | `DESIGN_GATE` nếu API chưa sẵn; nếu đủ contract thì `LOADING`. |
 | `LOADING` | Chỉ sau khi #18 source + canonical ID/owner/status contract được duyệt | Loading state; không fake progress. | `RESPONSE_READY`, `AUTHENTICATION_REQUIRED`, `ACCESS_DENIED`, `OPERATION_NOT_FOUND`, `SERVICE_ERROR`; exact UI mapping awaits shared route policy. |
 | `RESPONSE_READY` | HTTP 200 envelope hợp lệ và status/kind đã được chuẩn hóa | Bind fields chỉ theo final schema; hiện không có mapping final. | Approved lifecycle state; stop/refresh rule unresolved. |
@@ -67,7 +67,7 @@ Không có state nào được `RUNTIME VERIFIED`. Ngay cả các state dự ki�
 1. Caller (ST-06/ME-14/AD-20/AD-25 theo contract tương ứng) nhận một ID từ backend. Client chỉ điều hướng tới SH-07 sau khi ID field/path và producer response được thống nhất; không tự tạo ID và không suy từ notification ID sang operation ID.
 2. Router xác thực format theo kiểu ID đã được contract owner chốt. Hiện không có quyết định giữa UUID và int64; do đó chưa thể viết validator/canonicalizer.
 3. Backend phải thực thi Bearer authentication, role/ownership policy và lookup operation. SH-07 không tự xác thực quyền bằng `owner_id` trên client.
-4. Khi API #18 route/module/response được triển khai và contract đã chốt, client gửi một GET ban đầu. Không gửi query/body; không gọi API #18 hiện tại vì route chưa tồn tại.
+4. Backend route/module/query API #18 hiện tồn tại, nhưng client descriptor `API_018` vẫn `UNWIRED` và contract còn mở. Chỉ sau khi ID/producer/response contract được duyệt, client mới gửi GET ban đầu; không gửi query/body.
 5. Client kiểm tra HTTP status, business code, envelope, field types và Operation status/kind theo canonical schema. Hiện các enum/result/ownership field mapping còn SOURCE_REQUIRED.
 6. Chỉ khi mapping status được phê duyệt mới render status thật, timestamp và hành động được phép. Không dựng %, countdown, kết quả thanh toán, sent count hoặc download URL nếu API không trả field được contract định nghĩa.
 7. Polling/SSE, cache, retry/backoff, interval, visibility/reconnect và điểm dừng phải được quyết định trước. HTML gợi ý hai cách nhưng không tạo contract.

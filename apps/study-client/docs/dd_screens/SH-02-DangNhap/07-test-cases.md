@@ -62,3 +62,10 @@ Mã nguồn kiểm thử liên quan gồm test_login_returns_profile_and_tokens_
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Không chạy app test trong task chuyển đổi tài liệu.
+
+## 4. Current implementation verification (2026-11-16)
+
+- `npm test -- --include=src/app/features/shared/SH02/pages/sh02-page.spec.ts`: 1 file, 3 tests passed for required fields, disabled submit, password visibility, and native submit prevention.
+- `npm test -- --include=src/app/app.routes.spec.ts`: 1 file, 6 tests passed, including `/login` route rendering with no #03, R-X01, or #04 request.
+- `npm run build`: production build passed with existing CSS budget warnings in Student stylesheets.
+- These checks cover the presentation and route source only. They do not verify API login, session storage/recovery, browser runtime, or deployment.

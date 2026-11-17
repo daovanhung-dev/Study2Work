@@ -1,5 +1,7 @@
 # GS-03 — Kế hoạch chi tiết
 
+> **Current implementation snapshot (T021, 2026-11-17):** GS03/#08, GS04/#09 and GS05/#10 are source-wired locally; #09/#10 load lazily after #08 confirms a published course. Focused GS03+GS05 Angular tests pass 12/12; full Study Web suite passes 153/153. Local desktop/mobile Chrome render used a temporary in-memory API stub. Live API/DB/deployment remain unverified; API #10 DD and AC-05/F02 gates remain open. The re-audit below is historical design/source evidence.
+
 > Ngày rà soát: 2026-11-07  
 > Trạng thái: `AUDIT COMPLETE`; `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, `RUNTIME NOT VERIFIED`.  
 > Phạm vi phiên: chỉ GS-03; chưa bắt đầu GS-04.
@@ -14,7 +16,7 @@
 
 ## 1. Phạm vi và bằng chứng
 
-- Screen ID/tên: **GS-03 — Chi tiết khóa học (Page)**; actor dự kiến `Guest`; route `/courses/:courseId` là route đề xuất trong `list_screen.md`, chưa được Study Web thực thi.
+- Screen ID/tên: **GS-03 — Chi tiết khóa học (Page)**; actor dự kiến `Guest`; route `/courses/:courseId` là route đề xuất trong `list_screen.md`, chưa được wire trong Study Web.
 - Expected: `list_screen.md` yêu cầu course detail, mentor, giá, tabs đề cương/đánh giá, CTA ghi danh; liên kết GS-04/GS-05/GS-06/ST-04. F02 yêu cầu #08 xác định khóa học `PUBLISHED`, #09/#10 tải lười theo tab.
 - Asset baseline: `screen.png` 1280×1024, SHA-256 `94360a8b1b1a9bbe0cdc110f6c243ce5aaabd8b6923331c5667421cb1c37d34d`, entropy 0.35757, 20 màu; ảnh gần như trắng, không dùng được để đọc UI. `code.html` SHA-256 `d4f4bfdb56324b7c96589af75362903a491a3f565c97152b63634573c9d69619`; đây là HTML tĩnh Guest, không có course data, route binding, API calls hay tab handlers. Bundle hiện có thêm các derivative `screen_rendered.png`, `screen_annotated.png`, marker JSON/SVG, plan và DD; không ghi đè hai asset nguồn.
 - Kế hoạch hình ảnh: giữ nguyên `screen.png` và `code.html`; Firefox đã render `code.html` nguyên trạng ra `screen_rendered.png` kích thước 1440×1200 (2113 màu). Bố cục header, breadcrumb, title, tabs, empty state và footer đều hiển thị đầy đủ. Dùng ảnh render riêng này làm nền cho `screen_annotated.png`; không thay thế/xóa ảnh gốc. Đây là ảnh tĩnh của HTML nguồn, không phải ảnh runtime.
@@ -26,10 +28,10 @@
 |---|---|---|---|
 | #08 detail | Catalog/AC-05: `GET /api/v1/courses/{course_id}`, Public; 200/404/500. Catalog contract ghi `course_id:int64`; AC cho nhánh không public 404/403. | Route trong `apps/study-server/app/api/v1.py` khai báo path là `str`; module validator dùng shared `parse_integer`, chỉ kiểm tra cú pháp integer Python, không enforce signed int64/positive range. Query chỉ lấy `PUBLISHED` course và `LEFT JOIN` mentor. Response `ApiEnvelope` với `data.items` singleton `CoursePage`, pagination page/size/total/total_pages = 1. Course gồm id/title/description?/thumbnail_url?/price/status/mentor{id/full_name/avatar_url?}. Mapper yêu cầu mentor id/name; thiếu sẽ thành mapping error rồi HTTP 500. Có test source nhưng không chạy. | API #08 **SOURCE_BACKED** trong backend checkout; API DD vẫn Draft; contract `int64` khác validator raw-string hiện tại; source `LEFT JOIN` khác API DD `INNER JOIN`; AC 404/403 khác current 404. Không suy ra route UI đã hoạt động. |
 | #09 curriculum | Catalog/AC-05: `GET /api/v1/courses/{course_id}/curriculum`, Public; `course_id:int64`; 200/404/500. F02 quy định lazy theo tab. | Route khai báo `str`; module validator dùng cùng `parse_integer`, không có kiểm tra signed int64 hoặc dương. View kiểm tra PUBLISHED course rồi lấy lesson PUBLISHED, thứ tự `sort_order ASC, id ASC`. Lesson: id/course_id/title/content?/video_url?/order/status. Empty curriculum trả 200, items=[], total=0, total_pages=0; missing/unpublished trả 404; DB/mapping failure trả 500. Có test source nhưng không chạy. | API #09 **SOURCE_BACKED**; API DD còn Draft và contract `int64` khác validator raw-string hiện tại; lesson preview/access policy chưa được xác nhận. |
-| #10 reviews | Catalog và `apps/study-server/docs/dd/10_courses_reviews/` khai báo public `GET /api/v1/courses/{course_id}/reviews`, page và rating filter; AC-05 có bước đọc reviews + aggregate rating. | Không có route `/courses/{course_id}/reviews`, module API #10 hoặc test API #10 trong source hiện tại. Checked-in DDL `discussions` không có `title`/rating column và không có rating table. API DD ghi `Draft — Needs Confirmation`; không có aggregate rating source và `Discussion.title` bắt buộc không có nguồn. | API #10 **DECLARED_NOT_RUNNABLE**; không gọi hoặc khẳng định rating/review UI chạy được. |
+| #10 reviews | Catalog and API DD declare public GET, page and rating filter; AC-05 includes aggregate rating. | Current route/module/tests exist; response has `title: null`, no rating/aggregate, and ignores `rating`; GS05 Web caller/API_010 is wired locally. API DD remains `Draft — Needs Confirmation`. | Backend **SOURCE_BACKED; DD DRAFT**; Web **PARTIAL SOURCE-WIRED**. No rating/aggregate is rendered; live runtime is unverified. |
 | Orchestration | `list_screen.md` F02: #08 trước; #09/#10 lazy theo tab. | AC-05 mô tả ba API calls tuần tự: #08 → #09 → #10, rồi render. | **DISCREPANCY** về thời điểm gọi; không tự chọn một luồng như thể đã được duyệt. Tab lazy là expected inventory hiện hành cho DD; cần Product/BE xác nhận với AC. |
 | Enrollment CTA | Inventory liệt kê CTA và liên kết ST-04. F03 yêu cầu #15 identity contract được sửa trước khi xác nhận trạng thái ghi danh; #15 public chỉ nhận course_id nhưng trả Enrollment có user_id. | `code.html` không có CTA; không có enrollment action trong GS-03 source. API #15 không phải API đã được xác nhận ở backend runtime. | Chỉ ghi CTA là expected/missing. Không tạo event/API enrollment tại GS-03. Guest→Student/login handoff và course_id transport cần chốt; G-01 blocker chi phối ST-04. |
-| Study Web | Route/UI được nêu trong inventory và HTML tĩnh. | Registered `.agents/web-work/study/INDEX.md` ghi `UNWIRED`; `apps/study-client/` hiện có docs/assets và ignored `dist`, không có editable app source hoặc package manifest. | Route trong DD vẫn là đề xuất; `RUNTIME NOT VERIFIED`. |
+| Study Web | Route/UI được nêu trong inventory và HTML tĩnh. | Angular source/package/router tồn tại; Guest feature, `/courses/:courseId` route và GS-03 caller chưa được wire. | Route trong DD vẫn là đề xuất; `RUNTIME NOT VERIFIED`. |
 
 ## 3. Sơ đồ marker dự kiến
 
@@ -56,7 +58,7 @@ Không có marker cho course title/data, mentor, price, enrollment CTA, curricul
 - **Tab curriculum:** khi được bật theo expected lazy flow, gọi #09 với đúng course ID sau khi #08 xác nhận public; map danh sách bài học theo `order`. Empty success khác lỗi API. Chưa có quy tắc preview/access cho lesson.
 - **Tab reviews:** #10 chỉ là contract design; không thực hiện request cho tới khi route/module/model được wired và rating/title conflict được giải quyết. Không tính average rating từ `discussions`.
 - **Enrollment CTA:** đang thiếu trong HTML; inventory liên kết ST-04, nhưng guest/auth handoff và chính sách login chưa có contract. Ghi event blocked, không invent request #15 hoặc thông báo thành công.
-- **Navigation:** mô tả các href hiện có trong HTML (`/`, `/courses`, `/login`, `/register`) như thuộc tính static source; không khẳng định Study Web router thực thi chúng. Link CTA quay lại list không truyền dữ liệu.
+- **Navigation:** mô tả các href hiện có trong HTML (`/`, `/courses`, `/login`, `/register`) như thuộc tính static source; không khẳng định Study Web router thực thi chúng. Guest routes `/courses` và `/courses/:courseId` chưa được wire. Link CTA quay lại list không truyền dữ liệu.
 - **States:** source HTML hiện có = empty/unavailable + tab disabled; expected states = loading, course-not-found, partial-tab-error; các state này chưa được triển khai. Tách `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, `RUNTIME NOT VERIFIED`.
 
 ## 5. Thứ tự thực hiện và acceptance checklist
@@ -66,7 +68,7 @@ Không có marker cho course title/data, mentor, price, enrollment CTA, curricul
 3. [x] Tạo `GS-03_markers.json`, SVG overlay và `screen_annotated.png` theo 10 nhóm trên; marker đúng vùng, thứ tự liên tục, không che nội dung.
 4. [x] Viết `GS-03.md` tiếng Việt theo các phần: tổng quan; luồng; 10 element; từng event với đầu vào/xử lý/đầu ra và API status; state/navigation matrix; blocker; acceptance checklist và trace links.
 5. [x] Static audit: JSON parse; marker IDs/số thứ tự khớp bảng DD; link tương đối tồn tại; hash `screen.png`/`code.html` không đổi; 83 inventory/tracker/folder IDs match; `git diff --check`. Không chạy test hay runtime.
-6. [x] Cập nhật dòng GS-03 trong `dd_screens/PLAN.md` và worklog. Kết quả `DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED`, vì loaded state/CTA/tab orchestration/#10 contract/UI router chưa đủ căn cứ.
+6. [x] Cập nhật dòng GS-03 trong `dd_screens/PLAN.md` và worklog. Kết quả `DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED`, vì loaded state/CTA/tab orchestration/#10 contract/Guest routes chưa đủ căn cứ.
 
 ### Kết quả static audit
 
@@ -80,9 +82,9 @@ Không có marker cho course title/data, mentor, price, enrollment CTA, curricul
 
 - Chưa có visual contract cho loaded course detail, mentor/price blocks, curriculum/review states hoặc enrollment CTA.
 - AC-05 và inventory khác nhau về thứ tự eager/lazy API calls.
-- API #10 chưa có runtime source; rating/title thiếu source/schema.
+- API #10 backend source exists, but current deployment is not runtime-verified; review `title` is null and rating/aggregate are not sourced.
 - Guest CTA sang ST-04 cần policy identity/authentication/route handoff giải quyết.
-- Study Web/router chưa được nối.
+- Study Web Angular app/router exists, but Guest routes and GS-03 caller are not wired.
 
 ## Re-audit result — 2026-11-07
 
@@ -93,3 +95,8 @@ Không có marker cho course title/data, mentor, price, enrollment CTA, curricul
 - GS-02 passes `course.id` as the expected GS-03 route input; GS-04/GS-05 expect the same `courseId`; ST-04 proposes the same route parameter but still has the Student/#15 identity blocker. These are design handoffs, not wired navigation.
 - Static re-audit: source hashes unchanged; PNG dimensions 1280×1024, 1440×1200 and 3040×2400; 10 ordered unique marker IDs map to 10 DD element rows, with 10 SVG circles/labels; all 6 event sections have input/process/outcome or an explicit blocked outcome; 11 local DD links resolve; 83 inventory IDs match tracker IDs and screen folders.
 - Tests, Study Web runtime and live database were not run or verified. Keep `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`. GS-04 remains the next Screen ID for a separate session.
+
+## Current-source re-audit (2026-11-16)
+
+- Study Web Angular app/package/router exists; Guest `/courses` and `/courses/:courseId` routes plus GS-03 API caller remain unwired. Root `/` is the system readiness page.
+- Historical audit status (2026-11-07): Web `API_010` was `UNWIRED`; T021 later wired GS05/#10 and its tests. Current response still sets `title` to `null`, has no rating/aggregate and ignores `rating`. Keep API/schema, loaded-design, AC-05/F02, live runtime and enrollment blockers; T021 changed only the bounded review/tab behavior.

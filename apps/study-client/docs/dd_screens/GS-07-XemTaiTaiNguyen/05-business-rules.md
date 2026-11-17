@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Preview metadata/media hỗ trợ; fallback download khi URL hợp lệ và được phép.
-- Gate/status (giữ nguyên): **R (#12 source-backed locally; API DD Draft)**; **BLOCK:** current public/no-auth direct URL lacks AC-06 access check/signer; preview/MIME/URL policy, 403/404/expiry mapping, GS-06/ST-12 return context and Study Web route UNWIRED; live schema unknown; prototype differs from Study design guide and WCAG unmeasured
+- Gate/status (giữ nguyên): **SOURCE-WIRED GATE ONLY**; #12 is source-backed locally and its API DD is Draft. **BLOCK:** current public/no-auth direct URL lacks AC-06 access check/signer; preview/MIME/URL policy, 403/404/expiry mapping, GS-06/ST-12 return context and full resource-detail implementation unresolved; live schema unknown; prototype differs from Study design guide and WCAG unmeasured.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: F. Quyết định còn mở và điều kiện chặn
@@ -19,8 +19,8 @@
 | `Resource` visibility/MIME/type/capability schema and preview allowlist. | Chặn renderer/fallback behavior; current response lacks visibility and capability. | `BLOCKER` |
 | URL null handling, external origin safety, download headers and private bucket exposure. | Chặn việc hiển thị/mở URL an toàn. | `BLOCKER` |
 | 403/404/410/500 mapping, inline vs SH-06, copy/retry. | Chặn error-state composition and navigation. | `BLOCKER` |
-| Entry/return contract for GS-06 and ST-12 including course/lesson context. | Chặn route/history behavior. | `UNWIRED` / `BLOCKER` |
-| Study Web app/router/API client. | Chặn implementation and runtime verification. | `UNWIRED` |
+| Entry/return contract for GS-06 and ST-12 including course/lesson context. | Chặn source transition/history restoration; standalone gate route exists. | `RETURN CONTEXT UNWIRED` / `BLOCKER` |
+| Resource detail behavior, API #12 client, and verified runtime. | Current source contains only a gate route/page; access and URL contracts block resource implementation, and deployment/runtime is unverified. | `PARTIAL SOURCE / DD BLOCKED / RUNTIME NOT VERIFIED` |
 | Prototype/design-system alignment and measured accessibility. | Prototype uses remote fonts/Tailwind, Plus Jakarta Sans/cobalt/1440px, 32×32 toolbar controls and hides nav below `md`; current guide has different tokens/layout and requires ≥44px controls/reflow/focus/reduced-motion. | `DESIGN DISCREPANCY` / `NOT VERIFIED` |
 | API DD #12 and live schema approval. | Visibility/URL/database fields remain unconfirmed. | `Draft — Needs Confirmation`; live schema `NOT_VERIFIED` |
 

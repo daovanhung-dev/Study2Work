@@ -8,8 +8,10 @@
 | Output | apps/study-server/docs/dd/18_operations/ |
 | Document status | Draft — Needs Confirmation |
 | Completion | PARTIALLY COMPLETED |
-| Current runtime | UNWIRED / NOT_FOUND |
+| Current runtime | SOURCE_WIRED; local source tests pass; live schema/deployment NOT_VERIFIED |
 | Archive | apps/study-server/docs/dd/18_operations.zip |
+
+The source scan, runtime checks, test status and fingerprints below record the original DD audit before API #18 was wired into the current route tree. See the dated current-source addendum at the end for the 2026-11-16 implementation and test evidence.
 
 ## Template fingerprint
 
@@ -37,8 +39,8 @@ Baseline files are the eight files in .agents/skills/create_dd_api/docs/dd/DD_AP
 | AC_04_ADMIN_MANAGEMENT.drawio | Yes | AC-36/AC-38 tracking references and UUID/owner-only contract text |
 | DB_UNICA_TABLES.md and DB_UNICA_ERD.drawio | Yes | Study design schema; no Operation table |
 | infra/postgres/study-server/DB.sql | Yes | Checked-in Study schema; no operations table; live metadata not verified |
-| apps/study-server/app/api/v1.py and .agents/server-study/apis/declared-routes.md | Yes | API #18 route absent |
-| apps/study-server/tests and .agents/server-study/tests.md | Yes | API #18 test absent |
+| apps/study-server/app/api/v1.py and .agents/server-study/apis/declared-routes.md | Yes | Historical scan: API #18 route absent |
+| apps/study-server/tests and .agents/server-study/tests.md | Yes | Historical scan: API #18 test absent |
 | infra/postgres/work-server/schema.sql | Yes | Same-named Work table references work_users; no Study mapping established |
 | apps/study-server/docs/dd/17_payments/OPEN_QUESTIONS.md | Yes | Operation persistence/lifecycle and ID conflict carried forward |
 | createDD_MARKDOWN_SKILL.md and DD_API_Template_MD/* | Yes | Required authoring rules and eight-sheet baseline |
@@ -53,7 +55,7 @@ Baseline files are the eight files in .agents/skills/create_dd_api/docs/dd/DD_AP
 - [x] 403/404 exist as catalog codes; wrong-owner privacy semantics remain open.
 - [x] No Work Server table is mapped to Study API #18.
 - [x] Current runtime/test/schema state is separated from expected design.
-- [x] No runtime, catalog, schema, migration or diagram was changed.
+- [x] Original DD authoring changed no runtime, catalog, schema, migration or diagram. API #18 source was later patched separately on 2026-11-16; see the current source addendum.
 
 ## Structural checks
 
@@ -75,21 +77,21 @@ SHA-256 values for the eight sheets and three support documents will be recorded
 |---|---|
 | 00_Cover.md | 83fcb277fd4afb823450de79d4fdf5e224c177d1918026534514aabb36d31328 |
 | 01_Lich_su.md | 2330d08b6c2a3efb9c40f04f30ae1ea7ce3567abb8c9e5b89b0ec332fcda2ba1 |
-| 02_Overview.md | 56c9350e1abfffb9f7e731976657b4d606b5e79334330f6118d5cf9f3e4dd74c |
+| 02_Overview.md | f94039938cd9332a111b98a5241b555c25c958c77fb45f645a99467cb5f9800a |
 | 03_Request.md | c7388c9399fee80045e5b6e7fe9c54a54846e6a0a651d10dab5ea25f835b545c |
 | 04_Response.md | 625114af4306689a1876fd9424fd9c7d089d2ea0b694d1329e03bc6f1de2a758 |
-| 05_Data_Mapping.md | 554aaaf31cd10e00246ab669157fce6cb56c98c7b644c9fcdf1941bb9d916465 |
+| 05_Data_Mapping.md | 7e2ca5ad413e37dd02ae3343304a3537a981d2500457447ed05f2f55709cab4f |
 | 06_Error.md | 1c7154db3a4c54f622f546ed65e38d7b2951e4b2ccba37cb65fc4ea2a2b0016a |
 | 07_table.md | 9f6a9526fcf762f908913dc6f12c80f4fea4dc77b91c657389dcbfc619503478 |
-| OPEN_QUESTIONS.md | 3be7f28f6587ef37b49f810ba2d368e2a434daaf0437143ce583787e5a690249 |
-| PLAN_RESULT.md | 341954bf79bd62cfcb15de286610293a0055d7b808359537008c2c13cbf7d997 |
+| OPEN_QUESTIONS.md | b614ad114d0bfad118325034afbb169dc3956eff56249cd92841a6f1f01e4868 |
+| PLAN_RESULT.md | 722a32150e151dc178286f937ef543d09ae3dda817f675b113bae2658227caf8 |
 
 ## Runtime checks
 
 | Check | Result |
 |---|---|
-| API #18 route/module/query/test scan | UNWIRED / NOT_FOUND |
-| Study application tests | NOT_RUN — excluded by plan; endpoint is not wired |
+| API #18 route/module/query/test scan | Historical result: UNWIRED / NOT_FOUND; current route/module/query/test are source-wired |
+| Study application tests | Historical result: NOT_RUN; current full suite passed 1492 tests |
 
 ## Known gaps retained
 
@@ -100,15 +102,27 @@ SHA-256 values for the eight sheets and three support documents will be recorded
 - Producer success response mismatch for API #93/API #103.
 - 403/404 wrong-owner/missing-resource semantics.
 
-## Verification executions
+## Historical verification executions (original DD audit)
 
 | Command/check | Result |
 |---|---|
 | Inline Python structural validator | PASS — 11 expected Markdown files; 8 sheet front matters/orders and headings checked; 2 JSON examples parsed; 28 tables checked; 28 relative links resolved; no fence, table, or trailing-whitespace issues. |
-| Source scan of Study app, tests and infra/postgres/study-server/DB.sql | No API #18 route/operation query/test or Study operations table found; expected UNWIRED / NOT_FOUND evidence. |
+| Source scan of Study app, tests and infra/postgres/study-server/DB.sql | Historical scan found no API #18 route/operation query/test or Study operations table. |
 | unzip -t apps/study-server/docs/dd/17_payments.zip | PASS — prior related archive read and integrity-checked. |
 | git diff --check | PASS for tracked diff; new untracked Markdown files also passed the structural validator trailing-whitespace check. |
-| Study application tests | NOT_RUN — API #18 is not wired and application tests were excluded by the approved plan. |
+| Study application tests | NOT_RUN in the original DD audit; API #18 source tests were added and run later. |
+
+## Current source/test verification (2026-11-16)
+
+| Check | Result |
+|---|---|
+| API #18 current route/module/query scan | `GET /api/v1/operations/{operation_id}` is registered; Shared handler validates UUID, uses the diagram-listed role guard and filters by authenticated owner ID. Query and response remain notification-specific. |
+| Focused API #18 suite | 8 passed; includes Student/Mentor/Admin access, disallowed role, missing bearer, malformed UUID, owner binding, not-found and safe 500/rollback. |
+| Full Study suite | 1492 passed, 0 failed; one upstream Starlette/httpx deprecation warning. |
+| Ruff | Passed for the API #18 validator and dedicated tests. |
+| Runtime boundary | Local HTTP tests use fake DB/session; live schema, deployment and production API acceptance are not verified. API DD remains Draft with Q-18-01..05 open. |
+
+The existing ZIP remains the original DD snapshot; the Study Server workflow does not require creating a new ZIP for DD updates.
 
 ## Final assessment
 

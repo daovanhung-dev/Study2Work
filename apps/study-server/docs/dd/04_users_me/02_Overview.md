@@ -31,7 +31,7 @@ format: markdown
 - [`AC-02 Đăng nhập`](../../../docs/diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio) — sau khi phát hành token, client nạp profile.
 - [`AC-11 Quản lý hồ sơ cá nhân`](../../../docs/diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio) — Student mở hồ sơ và đọc user/profile.
 - [`DB_UNICA_ERD.drawio`](../../../docs/diagrams/DB_UNICA_ERD.drawio) — bảng `users` và column-level design V1.
-- [`API #04 route`](../../../app/api/v1.py), [view](../../../app/modules/guest/api_04_users_me/view.py), [query](../../../app/modules/guest/api_04_users_me/query.py), [model](../../../app/modules/guest/api_04_users_me/models.py), [auth helper](../../../app/utils/auth.py), [test source](../../../tests/modules/guest/api_04_users_me/test_users_me.py).
+- [`API #04 route`](../../../app/api/v1.py), [view](../../../app/modules/student/api_04_users_me/view.py), [query](../../../app/modules/student/api_04_users_me/query.py), [model](../../../app/modules/student/api_04_users_me/models.py), [auth helper](../../../app/utils/auth.py), [test source](../../../tests/modules/student/api_04_users_me/test_users_me.py).
 - [`createDD-markdown template`](../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/) — cấu trúc 8 file DD.
 - [`DB.sql candidate`](../../../../../infra/postgres/study-server/DB.sql) — DDL artifact, không xác nhận live schema.
 

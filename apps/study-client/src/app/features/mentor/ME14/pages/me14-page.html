@@ -1,0 +1,12 @@
+<main class="mentor-page me14-page">
+  <study-mentor-page-header title="Soạn thông báo Mentor" description="Người nhận được truyền từ bước ME-13 trong tab state." apiLabel="#62 · #63" />
+  @if (!courseId() || !recipients().length) { <section class="mentor-card me14-gate"><span class="me14-icon" aria-hidden="true">✉</span><h2>Chọn người nhận trước</h2><p>Course và danh sách Student chưa có trong trạng thái điều hướng hiện tại.</p><a class="mentor-button" routerLink="/mentor/notifications/new/recipients">Quay lại chọn người nhận</a></section> }
+  @else {
+    <section class="me14-flow"><div class="me14-step me14-step--done"><span>1</span><div><strong>Người nhận</strong><small>{{ recipients().length }} học viên · Course #{{ courseId() }}</small></div></div><div class="me14-step me14-step--current"><span>2</span><div><strong>Nội dung</strong><small>Soạn thông báo</small></div></div></section>
+    <form class="mentor-card me14-compose" (submit)="$event.preventDefault()"><h2>Nội dung thông báo</h2><label for="me14-title">Tiêu đề</label><input id="me14-title" type="text" maxlength="200" disabled placeholder="Soạn tiêu đề" /><label for="me14-channels">Kênh gửi</label><fieldset id="me14-channels" disabled><label><input type="checkbox" /> PUSH</label><label><input type="checkbox" /> EMAIL</label></fieldset><label for="me14-content">Nội dung</label><textarea id="me14-content" rows="7" disabled placeholder="Thông báo văn bản"></textarea>
+      <div class="mentor-notice" role="note"><strong>Chưa thể gửi thông báo.</strong><span>API #63 hiện yêu cầu `content` là int64, trong khi DD/Stitch yêu cầu nội dung văn bản. Chưa có mapping được duyệt cho content ID và carrier lưu draft; nút gửi được giữ khóa. API không nhận `course_id`; server tự kiểm tra recipient IDs có chung course ACTIVE do Mentor sở hữu.</span></div>
+      <div class="me14-recipient-list"><h3>Người nhận</h3><ul>@for (recipient of recipients(); track $index) { <li><span>{{ recipient.full_name }}</span><small class="mentor-meta">Student #{{ recipient.id }}</small></li> }</ul></div>
+      <div class="me14-actions"><a class="mentor-button mentor-button--light" routerLink="/mentor/notifications/new/recipients">Sửa người nhận</a><button class="mentor-button" type="submit" disabled>Gửi thông báo</button></div>
+    </form>
+  }
+</main>

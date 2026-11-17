@@ -19,7 +19,7 @@ from app.modules.admin.api_87_admin_quizzes_list.query import (
     LIST_ADMIN_QUIZZES,
 )
 from app.modules.admin.api_87_admin_quizzes_list.validate import validate_admin_quizzes_request
-from app.modules.guest._shared.course_catalog.models import Pagination
+from app.modules.shared.course_catalog.models import Pagination
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session

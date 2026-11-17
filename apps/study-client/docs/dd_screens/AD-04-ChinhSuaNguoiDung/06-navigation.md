@@ -1,8 +1,8 @@
 # AD-04 — Navigation
 
 ## 1. Route definition
-- Current route in inventory: `/admin/users/:userId/edit`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Route in inventory/source: `/admin/users/:userId/edit`
+- Source status: declared in `admin.routes.ts` and renders `AD04Page`; deployment/runtime remains `NOT VERIFIED`.
 - Route params/types: `userId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,17 +10,17 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [AD-02](../AD-02-DanhSachNguoiDung/00-overview.md), [AD-03](../AD-03-ChiTietNguoiDung/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [AD-02](../AD-02-DanhSachNguoiDung/00-overview.md), [AD-03](../AD-03-ChiTietNguoiDung/00-overview.md) | Theo DD nguồn/inventory | `userId` path | Route declaration and AD04 page exist in source; host runtime and permission approval are not verified |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [AD-03](../AD-03-ChiTietNguoiDung/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [AD-03](../AD-03-ChiTietNguoiDung/00-overview.md) | Source event/inventory navigation | `userId` path | Angular template has return links; route exists in source; runtime and dirty-state policy are not verified |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: Angular route exists in source; host fallback/deployment and browser runtime are not verified.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
@@ -36,9 +36,11 @@ flowchart LR
 
 ### Trạng thái màn hình
 
+Current Angular source separately has `loading/loaded/error` page states for GET #69; fields are read-only, Save is disabled, and there is no client PUT #70 call. The lifecycle states below describe target behavior, not the current page state model.
+
 | State | Điều kiện vào | UI/action | Chuyển tiếp |
 |---|---|---|---|
-| `locked-prototype` | Trạng thái hiện tại của HTML/screenshot. | Controls và Save disabled; static badges không đáng tin như runtime. | Chỉ chuyển sang implementation states khi Study Web, contract và policy sẵn sàng. |
+| `locked-prototype` | Static HTML/screenshot reference. | Prototype controls and Save are disabled; static badges are not runtime evidence. | Prototype source only; current Angular page status is described above. |
 | `loading` | EV-01 bắt đầu GET #69. | Loading shell; không edit/save. | 200 valid → `ready`; 401/403/404 → state tương ứng; 500/network/invalid response → `load-error`. |
 | `ready` | GET #69 success, actor permission/field policy cho phép xem. | Hiển thị allowed profile; edit có thể vẫn disabled nếu mutation blocker chưa giải quyết. | Change hợp lệ → `dirty`; route leave → EV-04. |
 | `dirty` | Draft khác baseline. | Có thay đổi chưa lưu; Save chỉ khả dụng khi body/policy đã duyệt. | Invalid → `validation-error`; submit hợp lệ → `saving`; cancel → EV-04. |
@@ -56,7 +58,7 @@ flowchart LR
 | Nguồn → đích | Handoff / API | Current discrepancy / rule |
 |---|---|---|
 | AD-02 → AD-03 | API #68 `items[].id` numeric. | Không dùng email hoặc mã `USR-*`. |
-| AD-03 → AD-04 | Cùng numeric `user_id` trên route `/admin/users/:userId/edit`; EV-01 gọi GET #69. | Route chỉ là inventory proposal; screenshot Back path dùng string ID và suffix `/details`. |
+| AD-03 → AD-04 | Cùng numeric `user_id` trên route `/admin/users/:userId/edit`; EV-01 gọi GET #69. | Angular route and GET #69 caller exist in source. Screenshot Back path uses a string ID and `/details` suffix; runtime and route fallback are not verified. |
 | AD-04 cancel/back → AD-03 | Cùng numeric ID; không có API. | Cancel hiện đi `/admin/users`; Back dùng `/details`. Dirty confirmation/cache policy chưa rõ. |
 | AD-04 save → GET #69 → AD-03 | PUT #70 success rồi revalidate profile bằng #69; same numeric ID. | GET failure sau PUT không làm PUT thất bại; không gửi mutation lần hai. |
 | AD-04 → AD-05 | Chỉ thông qua luồng quản lý riêng. | Không đổi status bằng #70; status/delete thuộc #71/#72 và AD-05. |
@@ -74,7 +76,7 @@ flowchart LR
 
 ### Luồng dự kiến sau khi các blocker được duyệt
 
-1. **Nhận handoff:** AD-03 cung cấp numeric `user_id` từ item/profile #68/#69. Router của Study Web chưa có trong source; route `/admin/users/:userId/edit` mới là inventory proposal. Không đưa email/phone vào URL.
+1. **Nhận handoff:** AD-03 cung cấp numeric `user_id` từ item/profile #68/#69. Angular Admin router declares `/admin/users/:userId/edit`; AD04Page reads the route param. Runtime/deployment is not verified. Không đưa email/phone vào URL.
 2. **Kiểm tra session/quyền:** client áp dụng auth/navigation policy đã được chốt. Local API catalog yêu cầu Bearer JWT/Admin; local source dùng claim `ADMIN`. Không coi nhãn RBAC trong screenshot là bằng chứng quyền. Permission mapping/tenant/MFA chưa được duyệt.
 3. **Tải profile:** gọi duy nhất `GET /api/v1/admin/users/{user_id}` (#69), không query/body. Chuyển page sang `loading`. Local #69 kiểm tra Bearer/claim trước parse ID/query; lỗi ID malformed/out-of-range của #69 có fallback 404. Không gọi API audit/sync.
 4. **Kiểm tra response và map:** chỉ chấp nhận HTTP 200 + `DESIGN_RESOURCE_RETRIEVED` và `data: UserProfile`. Lưu bản gốc làm baseline cho dirty compare; map field theo PII/role policy. `phone`/`avatar_url` có thể null. Nếu field thiếu/sai kiểu, xử lý như response không hợp lệ; API response contract không quy định fallback UI.
@@ -87,7 +89,7 @@ flowchart LR
 
 - Trong HTML, full name, email, role, status, adminNotes và Save đều disabled. Cancel và Back là hai anchor có đích không nhất quán. “Tra cứu tài liệu API” và “Gửi yêu cầu” là button không handler.
 - Form `onsubmit` chỉ gọi `preventDefault()`; không có fetch/XHR/API client hoặc handler để đọc/ghi dữ liệu. Header, API reference, gate, audit, sync, SSO, compliance và RBAC claims đều hard-coded.
-- Study Web root không có editable source, package manifest, route hoặc API client; runtime screen là `NOT VERIFIED`.
+- Angular route/page and GET #69 client caller are present; no PUT #70 client caller exists. Runtime screen and host fallback are `NOT VERIFIED`.
 
 ### Response và lỗi API
 

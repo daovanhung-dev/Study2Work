@@ -4,17 +4,17 @@
 |---|---|
 | Screen ID | `AD-05` |
 | Module | Admin |
-| Route | `/admin/users/:userId/actions` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/admin/users/:userId/actions` — route đã khai báo trong Angular Admin router; runtime/deployment chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `BLOCKED — status, deletion, permission, session and audit policies need approval`; **Implementation:** `BLOCKED — Study Web route/client are UNWIRED and product decisions remain open` · **Runtime:** `NOT VERIFIED` |
+| DD status | Draft (package được chuyển đổi); **DD:** `BLOCKED — status, deletion, permission, session and audit policies need approval`; **Implementation:** `PARTIAL SOURCE — route/page and GET #69 caller exist; #71/#72 client calls and action flow are absent; product decisions remain open` · **Runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.1 / 2026-11-16 (current-source status sync) |
 | Nguồn đối chiếu | [AD-05.md](../../screen_stitch/05_admin/AD-05_khoa-mo-khoa-xoa-tai-khoan/AD-05.md), [AD-05_PLAN.md](../../screen_stitch/05_admin/AD-05_khoa-mo-khoa-xoa-tai-khoan/AD-05_PLAN.md), [AD-05_markers.json](../../screen_stitch/05_admin/AD-05_khoa-mo-khoa-xoa-tai-khoan/AD-05_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Xem trạng thái user và chỉ cho action theo policy đã duyệt; không mặc định session revoke, audit hoặc hard delete.
 - In-scope: GET #69 → PATCH #71 hoặc DELETE #72 → refresh #68/#69 theo AC-31; #71 body/status và #72 delete policy cần duyệt; không tự giả định token effect.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Xem gate bên dưới; không suy ra #71/#72 mutation flow đã wired hoặc runtime/deployment đã được xác minh.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,17 +31,18 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | no-selection/loading/ready-read-only/mode-selected/submitting/unauthenticated/forbidden/not-found/validation-error/success/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Angular Admin route/page and API service | Route/page and GET #69 caller exist; page states are `loading/loaded/error`; #71/#72 mutation callers are absent and action/reason controls are disabled. Runtime/deployment: `NOT VERIFIED`. |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-05 source screen.png](../../screen_stitch/05_admin/AD-05_khoa-mo-khoa-xoa-tai-khoan/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-05_khoa-mo-khoa-xoa-tai-khoan/screen_annotated.png))
 - Luồng: GET #69 → PATCH #71 hoặc DELETE #72 → refresh #68/#69 theo AC-31; #71 body/status và #72 delete policy cần duyệt; không tự giả định token effect.
-- Priority: P2; Gate/source status: **R**; **DD BLOCKED; IMPLEMENTATION BLOCKED:** #71 body/status/session, #72 delete/visibility/retention, Admin permission/audit/safeguards và Study Web UNWIRED còn mở; RUNTIME NOT VERIFIED
+- Priority: P2; Gate/source status: **R**; **DD BLOCKED; IMPLEMENTATION BLOCKED:** #71 body/status/session, #72 delete/visibility/retention, Admin permission/audit/safeguards and action-flow decisions remain open; current source is partial; RUNTIME NOT VERIFIED
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-16 — Đồng bộ trạng thái source: route/page và GET #69 caller tồn tại; mutation #71/#72 vẫn chưa được gọi; acceptance và runtime vẫn mở.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -49,7 +50,7 @@
 
 > **Screen ID:** AD-05 · **Surface:** Dialog / action page · **Priority:** P2
 > **DD status:** `BLOCKED — status, deletion, permission, session and audit policies need approval`
-> **Implementation:** `BLOCKED — Study Web route/client are UNWIRED and product decisions remain open` · **Runtime:** `NOT VERIFIED`
+> **Implementation:** `PARTIAL SOURCE — Angular route/page and GET #69 caller exist; #71/#72 callers are absent and product decisions remain open` · **Runtime:** `NOT VERIFIED`
 
 ## Trích đoạn tổng quan từ DD nguồn
 
@@ -61,11 +62,11 @@
 |---|---|
 | Mục tiêu | Cho Admin có quyền theo AC-31 xem trạng thái tài khoản đã chọn và thực hiện hành động trạng thái hoặc xóa chỉ khi các chính sách tương ứng được duyệt. |
 | Actor / quyền | Admin đã xác thực và được cấp quyền quản lý người dùng theo AC-31. API catalog ghi Bearer JWT/Admin; local source kiểm tra claim `ADMIN`. Mapping claim đó sang quyền AC-31, tenant/scope, MFA/step-up, self-lock và last-Admin safeguards chưa được xác nhận. |
-| Route | `/admin/users/:userId/actions` là route đề xuất trong inventory, chưa tồn tại trong Study Web source. Path param phải là numeric `user_id` signed-int64; không dùng ID hiển thị kiểu `USR-*`, email hoặc phone. |
+| Route | `/admin/users/:userId/actions` is declared in the current Angular Admin router. Path param is numeric `user_id` signed-int64; do not use display IDs such as `USR-*`, email or phone. Runtime/deployment is not verified. |
 | Điều kiện vào | Handoff từ AD-02 hoặc AD-03 có `user_id`; session và permission policy hợp lệ; #69 trả profile được phép hiển thị. Direct entry, thiếu ID hoặc ID sai định dạng phải có trạng thái lỗi theo policy/router còn cần chốt. |
 | Điều kiện thực hiện mutation | Chỉ khi request body/status transition của #71 hoặc semantics/retention của #72 được duyệt; phải có permission và safeguard rõ ràng. Lý do kiểm toán chỉ được thu thập/lưu nếu có contract lưu trữ được duyệt. |
 | API | #69 `GET /api/v1/admin/users/{user_id}` để đọc hồ sơ. #71 `PATCH /api/v1/admin/users/{user_id}/status` để đổi trạng thái. #72 `DELETE /api/v1/admin/users/{user_id}` để xóa theo contract. #71 catalog/AC không khai báo body; #72 không có body/query. |
-| Liên kết | AD-02 danh sách → AD-03 chi tiết → AD-05 action; AC-31 mô tả load lại list/detail sau action. Chuyển tiếp và quay lại phải giữ numeric `user_id` khi policy/route yêu cầu. Hiện prototype back links cùng trỏ `/admin/users`, chưa có router. |
+| Liên kết | AD-02 danh sách → AD-03 chi tiết → AD-05 action; AC-31 mô tả load lại list/detail sau action. AD-05 app page links to AD-03 and the user list; selected-user handoff/retention and post-action destination remain open. Prototype back links both point to `/admin/users`. |
 | Hậu điều kiện | Chỉ coi mutation thành công khi HTTP/business code và payload đúng contract. Inventory đề nghị refresh #68/#69; đích sau #72, visibility của `DELETED` và selected-user context còn phải được duyệt. |
 
 ### Expected behavior và current behavior
@@ -78,7 +79,7 @@
 | #72 delete | AC-31 mô tả logical delete/anonymize theo policy; catalog không có body. | Local source chỉ đặt `users.status='DELETED'`, cập nhật `updated_at`; giữ profile/quan hệ/refresh-token rows, không anonymize, không ghi audit, không kiểm tra dependency. `deleted_at` response là alias của `updated_at`, không phải cột xóa riêng. |
 | Sau xóa | Visibility/retention/điều hướng phải theo policy được duyệt. | #68/#69 local query không loại `DELETED`; bản ghi vẫn hiển thị. #72 lặp lại hoặc không tìm thấy đều 404. #03 login/refresh yêu cầu `ACTIVE`; access JWT đang phát hành có thể vẫn còn hiệu lực. |
 | Audit reason | Chỉ yêu cầu khi API/persistence/audit contract xác định được. | Prototype đánh dấu reason bắt buộc, nhưng textarea disabled; #71 không nhận reason và #72 không có body. Không API nào trong flow ghi audit. |
-| Client/runtime | Route, auth, API client và UI phải được implement để dùng màn hình. | AD-05 là HTML tĩnh. Không có user ID, fetch/XHR, handler, Study Web route/client/package manifest hoặc editable app source. Study Web hiện `UNWIRED`. |
+| Client/runtime | Route, auth, API client và UI phải được implemented to use the screen. | Angular route/page exists and calls GET #69 through AD05ApiService/AdminApiService. Page state is `loading/loaded/error`; status/delete buttons and reason input are disabled, with no #71/#72 client call. Runtime/deployment is not verified. |
 | Mockup claims | Health, RBAC, read-only gate, audit/ISO và session impact chỉ hiển thị khi có nguồn. | Những claim này là copy tĩnh; không được #69/#71/#72 xác minh. Hai back links là `/admin/users`; nav/footer links `#`; action tabs không có listener; confirm và reason disabled. |
 
 ### Nguồn truy vết

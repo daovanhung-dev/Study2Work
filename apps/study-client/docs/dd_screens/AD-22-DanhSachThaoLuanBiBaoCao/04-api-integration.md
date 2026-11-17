@@ -11,7 +11,7 @@
 
 - API refs trong inventory: #97
 - Orchestration/data notes: GET #97 → detail AD-23; không tự giả lập endpoint report discussion.
-- BE/source status và gate: **R** local #97 route/module/query/validator/model source; API DD Draft. **BLOCK:** Chưa tìm thấy report writer hoặc xác minh live schema; #97 không trả count/reason/severity/reporter/time cho cột UI; search/status/pending priority/AC permission vs `ADMIN` chưa chốt; Study Web UNWIRED
+- BE/source status và gate: **R** local #97 route/module/query/validator/model and AD-22 route/page/#97 caller source; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** Chưa tìm thấy report writer hoặc xác minh live schema; #97 không trả count/reason/severity/reporter/time cho cột UI; search/status/pending priority/AC permission vs `ADMIN` chưa chốt; AD-23/#98 report detail remains unresolved.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: B.1. Expected flow — khi có route/client và contract được xác nhận
@@ -34,6 +34,10 @@ Không có contract cho debounce, cache, timeout, retry, request cancellation, r
 | #98 detail (handoff) | `GET /api/v1/admin/discussions/{discussion_id}`; Bearer JWT, role Admin; path int64; `ApiEnvelope<Page<Discussion>>`; 200, 401/403/404/500. | Current route/module tồn tại, nhận int64 và trả Discussion detail projection; không query `discussion_reports`. API #98 DD vẫn ghi `UNWIRED / NOT_FOUND`, xung đột với source. | Discussion ID có thể định danh candidate route; AC-37 reports/comments handoff chưa đáp ứng. Không mở AD-23 như đã source-verified. |
 
 `Page<Discussion>` local response chứa `items` và `pagination{page,size,total,total_pages}`. Đây là response hiện tại của code; không khẳng định đây là toàn bộ direct schema chỉ từ UI prototype. Catalog không cung cấp fields `report_count`, `reason`, `severity`, `reporter`, `reported_at`, queue status hay metric. `discussion_reports` chỉ có trong candidate DDL/migration 014 và query #97; live schema/migration deployment và writer chưa xác minh. Không thấy `INSERT INTO discussion_reports` hoặc report creation endpoint trong Study app/tests hiện tại.
+
+### Current Angular caller
+
+`AD22Page` calls `AD22ApiService.getReportedDiscussions()` with `reason`, `severity` and `page`. The service uses the `API_097` `WIRED` descriptor through `AdminApiService`, which adds the in-memory Admin Bearer token, then the relative `/api/v1` Study transport. The page maps only returned Discussion fields and pagination metadata. The source is wired; authenticated browser runtime and live data remain unverified.
 
 ## 3. API không sử dụng
 - Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.

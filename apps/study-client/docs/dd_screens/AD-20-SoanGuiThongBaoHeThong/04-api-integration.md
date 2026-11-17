@@ -1,5 +1,7 @@
 # AD-20 — API Integration
 
+> **Current Angular source (2026-11-16):** Route/page and local preview exist; the page has no API #93 caller. Local API #18 has a UUID notification-only handler, but AD-20 does not call it; canonical response/ID/permission/audience decisions remain open.
+
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
 ## 1. API usage matrix
@@ -11,7 +13,7 @@
 
 - API refs trong inventory: #93
 - Orchestration/data notes: POST #93; chỉ sang SH-07 nếu operation response field/type và #18 mapping được duyệt. Catalog/AC-36 trả Notification; tracking prose nói Operation; local source trả Notification đầu tiên và derived `meta.operation_id:UUID`.
-- BE/source status và gate: **R** local #93 route/module/model/validator/query/view/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** response Notification vs Operation; #18 int64 vs UUID/no Study handler/store; local source requires explicit recipients but UI only supplies unresolved segments; app→PUSH/channel, audience predicate/eligibility/grain, permission vs ADMIN, draft/send/priority, legacy live schema and provider delivery unresolved; Study Web UNWIRED; **RUNTIME NOT VERIFIED**
+- BE/source status và gate: **R** local #93 route/module/model/validator/query/view/test source; API DD Draft. AD-20 Angular route/page and preview source exist; API caller absent. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE / SEND FLOW BLOCKED:** response Notification vs Operation; #18 catalog int64 vs local UUID and owner policy; local #93 requires explicit recipients while UI has no resolver; app→PUSH/channel, audience predicate/eligibility/grain, permission vs ADMIN, draft/send/priority, live schema and provider delivery remain unresolved; **RUNTIME NOT VERIFIED**.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API #93 và discrepancy
@@ -21,7 +23,7 @@
 | API catalog #93 và AC-36 n5 | `POST /api/v1/admin/notifications`; Bearer JWT/Admin; body có recipients? hoặc segment?, title/content/channels; HTTP 202 với `ApiEnvelope<Notification>`. | Expected direct contract; API DD vẫn Draft. |
 | Phần operation tracking tổng quát trong `list_api.md` | Nói POST #93 trả `data: Operation` ở 202 và client poll #18. | `DISCREPANCY` với row #93 và AC-36 n5. |
 | Current local #93 source | Trả `data` là Notification đầu tiên, thêm `meta.operation_id: UUID` và `meta.notification_ids`; `businessCode=DESIGN_OPERATION_ACCEPTED`. UUID metadata là derived fallback, không tạo Operation row. | `CURRENT_SOURCE`; chưa được owner duyệt làm contract. |
-| API #18 / SH-07 | API #18 row khai báo path `operation_id:int64`; reusable `Operation.id`, AC diagrams, #93 UUID metadata và SH-07 dùng UUID. Không tìm thấy Study #18 route/query/store. | `DISCREPANCY / BLOCKER`; không thể poll hoặc xác nhận route param. |
+| API #18 / SH-07 | API #18 catalog row declares `operation_id:int64`; reusable `Operation.id`, AC diagrams, local OpenAPI/source and #93 UUID metadata use UUID. Current Shared handler queries notification rows by UUID and authenticated sender; there is no generic Study `operations` table. | `DISCREPANCY / BLOCKER`; local notification polling source exists, but canonical ID/owner policy and generic Operation mapping remain unresolved. |
 
 ### Trích từ DD nguồn: Local #93 fallback (không thay thế contract)
 

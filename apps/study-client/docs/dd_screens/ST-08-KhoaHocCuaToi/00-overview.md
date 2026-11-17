@@ -4,7 +4,7 @@
 |---|---|
 | Screen ID | `ST-08` |
 | Module | Student |
-| Route | `/student/courses` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student/courses` — route/page gate có trong Angular; runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: **DD status:** `BLOCKED` · **Implementation:** `BLOCKED` · **Runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
@@ -31,7 +31,8 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/empty/partial-progress/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Worklog/context Study Web | Route maps #20/#21 and displays an unconfirmed empty/session state; no private request. |
+| Runtime | Worklog/context Study Web | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-08 source screen.png](../../screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/screen.png))
@@ -44,6 +45,11 @@
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 
 ## Trạng thái và ranh giới bằng chứng
+
+## Current implementation update — 2026-11-17
+
+- `/student/courses` mounts ST-08 behind `StudentLayout` and calls paged #20 for the signed-in Student's courses. The page renders returned course/enrollment fields with loading, error, empty, and pagination states; only ACTIVE courses link to ST-09.
+- Current #20 returns a `CourseSummaryPage` from `enrollments`/`courses` queries, with no focused #20 test package. #21 returns `UserProfile` rather than course progress and is not used by this page. Deployed API behavior has not been verified.
 
 # ST-08 — Khóa học của tôi
 

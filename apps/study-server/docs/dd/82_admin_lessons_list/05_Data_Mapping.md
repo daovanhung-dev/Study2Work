@@ -84,7 +84,7 @@ ORDER BY l.course_id ASC NULLS LAST,
 
 - Legacy `lessons` BIGINT DDL là candidate read source; V1-PILOT UUID schema không được trộn vào query.
 - Filter exact equality và order là DERIVED. Khi filter absent, query không loại theo course/status.
-- Không join, count, pagination, page limit, deleted predicate hoặc mutation.
+- Local SQL có predicate `l.status IS DISTINCT FROM 'DELETED'`. Đây là behavior source hiện tại, không tự chốt policy/marker visibility theo AC-34/#86. Không join, count, pagination, page limit hoặc mutation.
 - SQL parameters được bind; query text không nối input.
 
 ### 2.2. Query parameters

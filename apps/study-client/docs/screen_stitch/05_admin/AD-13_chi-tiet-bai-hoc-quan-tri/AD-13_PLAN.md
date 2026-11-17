@@ -83,3 +83,9 @@ Tạo `AD-13_markers.svg` cùng số/tọa độ/nhãn với JSON. Render overla
 6. [x] Cập nhật AD-13 inventory/API #083 reverse index D→R per local route/module/test source; update global checkpoint/worklog; giữ API DD Draft và không sửa AD-14.
 7. [x] Static audit: source hashes/dimensions; JSON/XML; marker sequence/coordinates/stroke bounds; 1:1 C rows; local links; 83 IDs/folders/core artifact count; image review; `git diff --check`. Không chạy application tests/runtime.
 8. [x] Kết thúc AD-13; giữ blocker statuses rõ ràng và dừng trước AD-14.
+
+## Continuation — source implementation audit (2026-11-16)
+
+- Current checkout now has the Angular AD-13 route/page/service and GET #83 caller; AD-12 links only Lesson IDs that JavaScript can represent safely. This updates the earlier 2026-11-08 `UNWIRED` snapshot; the Stitch HTML and screenshots remain static design assets.
+- AD-13 renders only the seven Lesson fields from #83, keeps video as text, labels numeric `course_id` as “ID khóa học”, and does not fabricate dependency or metric values. AD-14 mutations remain disabled.
+- Focused AD-12/AD-13 Angular tests and API #83 fake-session tests passed on 2026-11-16. Browser/live database verification remains outstanding. DD and API #83 remain Draft/blocked on dependency output, permission, schema/nullability and status policy.

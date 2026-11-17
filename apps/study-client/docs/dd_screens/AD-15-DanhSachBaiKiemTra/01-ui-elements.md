@@ -1,5 +1,7 @@
 # AD-15 — UI Elements
 
+> Marker descriptions below map the static Stitch screenshot/prototype, not the current Angular DOM. The prototype is historical design evidence; current route/API behavior is recorded in [Overview](00-overview.md#current-source-addendum--2026-11-16).
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.

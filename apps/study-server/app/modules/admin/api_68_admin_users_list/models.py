@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any
 
-from app.modules.guest.api_04_users_me.models import UserProfile
+from app.modules.student.api_04_users_me.models import UserProfile
 from pydantic import BaseModel, ConfigDict, Field
 
 

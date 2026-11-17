@@ -1,68 +1,167 @@
-<div class="student-shell" [class.portal-shell]="shellMode === 'portal'" [class.exam-shell]="shellMode === 'exam'" [class.blank-shell]="shellMode === 'blank'">
-  @if (shellMode === 'legacy') {
-    <header class="student-header">
-      <div class="header-content">
-        <a class="brand" href="/student/courses" aria-label="Study2Work">
-          <span>Study2Work</span>
-        </a>
-
-        <a class="back-link" href="/student/courses">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M19 12H5m0 0 6 6m-6-6 6-6" />
-          </svg>
-          <span>Quay lại khóa học của tôi</span>
-        </a>
-      </div>
-    </header>
-  }
-
-  @if (shellMode === 'portal') {
-    <header class="portal-header">
-      <div class="portal-header-content">
-        <div class="portal-brand" aria-label="Study2Work LMS">
-          <span class="portal-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M3 12.5 16 6l13 6.5L16 19 3 12.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 17v6c3 3 11 3 14 0v-6M28 14v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          <span class="portal-brand-copy"><strong>Study2Work</strong><small>LMS PORTAL</small></span>
+<div
+  class="student-shell"
+  [class.portal-shell]="shellMode === 'portal'"
+  [class.exam-shell]="shellMode === 'exam'"
+  [class.blank-shell]="shellMode === 'blank'"
+>
+  @if (!session.isAuthenticated()) {
+    <main class="student-auth" aria-labelledby="student-auth-title">
+      <section class="student-auth-card">
+        <a class="student-auth-brand" routerLink="/">Study2Work</a>
+        <p class="student-auth-eyebrow">KHU VỰC HỌC VIÊN</p>
+        <h1 id="student-auth-title">Đăng nhập để tiếp tục học</h1>
+        <p class="student-auth-copy">
+          Study Server xác nhận quyền Học viên trước khi trả dữ liệu cá nhân. Phiên chỉ được giữ
+          trong bộ nhớ tab.
+        </p>
+        <form (ngSubmit)="login()">
+          <label for="student-email">Email</label>
+          <input
+            id="student-email"
+            name="email"
+            type="email"
+            autocomplete="username"
+            [(ngModel)]="email"
+            required
+          />
+          <label for="student-password">Mật khẩu</label>
+          <input
+            id="student-password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            [(ngModel)]="password"
+            required
+          />
+          @if (loginError()) {
+            <p class="student-auth-error" role="alert">{{ loginError() }}</p>
+          }
+          <button type="submit" [disabled]="loginBusy() || !email.trim() || !password">
+            {{ loginBusy() ? 'Đang xác thực…' : 'Đăng nhập' }}
+          </button>
+        </form>
+        <small>API #03 · vai trò Student · token chỉ lưu trong tab</small>
+      </section>
+    </main>
+  } @else {
+    @if (shellMode === 'legacy') {
+      <header class="student-header">
+        <div class="header-content">
+          <a class="brand" routerLink="/student" aria-label="Study2Work">Study2Work</a>
+          <a class="back-link" routerLink="/student/courses">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M19 12H5m0 0 6 6m-6-6 6-6" />
+            </svg>
+            <span>Quay lại khóa học của bạn</span>
+          </a>
+          <button class="student-logout" type="button" (click)="logout()">Đăng xuất</button>
         </div>
-        <div class="portal-search" aria-label="Tìm khóa học, kỹ năng, bài thi">
-          <span aria-hidden="true">⌕</span><span>Tìm khóa học, kỹ năng, bài thi...</span>
+      </header>
+    }
+
+    @if (shellMode === 'portal') {
+      <header class="portal-header">
+        <div class="portal-header-content">
+          <a class="portal-brand" routerLink="/student" aria-label="Study2Work LMS">
+            <span class="portal-mark" aria-hidden="true"
+              ><svg viewBox="0 0 32 32" fill="none">
+                <path
+                  d="M3 12.5 16 6l13 6.5L16 19 3 12.5Z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M9 17v6c3 3 11 3 14 0v-6M28 14v8"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                /></svg
+            ></span>
+            <span class="portal-brand-copy"
+              ><strong>Study2Work</strong><small>LMS PORTAL</small></span
+            >
+          </a>
+          <div class="portal-search" aria-label="Tìm khóa học, kỹ năng, bài thi">
+            <span aria-hidden="true">⌕</span><span>Tìm khóa học, kỹ năng, bài thi...</span>
+          </div>
+          <nav class="portal-navigation" aria-label="Điều hướng học viên">
+            <a routerLink="/student">Trang chủ</a>
+            <a routerLink="/courses">Khóa học</a>
+            <a routerLink="/student/courses">Khóa học của tôi</a>
+            <a routerLink="/student/progress">Lộ trình học</a>
+            <a routerLink="/student/discussions">Diễn đàn</a>
+          </nav>
+          <div class="portal-account">
+            <a class="portal-notice" routerLink="/student/notifications" aria-label="Thông báo"
+              >♧</a
+            >
+            <span class="portal-avatar" aria-hidden="true">{{
+              session.profile()?.full_name?.slice(0, 1) || 'H'
+            }}</span>
+            <span class="portal-account-copy"
+              ><strong>{{ session.profile()?.full_name }}</strong
+              ><small>{{ session.profile()?.email }}</small></span
+            >
+            <button class="student-logout" type="button" (click)="logout()">Đăng xuất</button>
+          </div>
         </div>
-        <nav class="portal-navigation" aria-label="Điều hướng học viên">
-          <span>Trang chủ</span><span>Khóa học</span><span>Khóa học của tôi</span><span>Lộ trình học</span><span>Diễn đàn</span>
-        </nav>
-        <div class="portal-account"><span class="portal-notice" aria-hidden="true">♧</span><span class="portal-avatar" aria-hidden="true">♙</span><span class="portal-account-copy"><strong>Nguyen Hanh</strong><small>Học viên</small></span></div>
-      </div>
-    </header>
+      </header>
+    }
+
+    @if (shellMode === 'blank') {
+      <header class="blank-header"></header>
+    }
+
+    <main
+      class="student-main"
+      [class.portal-main]="shellMode === 'portal'"
+      [class.exam-main]="shellMode === 'exam'"
+      [class.blank-main]="shellMode === 'blank'"
+      [class.custom-main]="shellMode === 'custom'"
+    >
+      <router-outlet (activate)="setShellMode()" />
+    </main>
+
+    @if (shellMode === 'legacy') {
+      <footer class="student-footer">
+        <div class="footer-content">
+          <div class="footer-brand">Study2Work</div>
+          <nav aria-label="Điều hướng cuối trang">
+            <a routerLink="/student">Tổng quan</a>
+            <a routerLink="/student/courses">Khóa học của tôi</a>
+            <a routerLink="/student/progress">Tiến độ</a>
+          </nav>
+        </div>
+      </footer>
+    }
+
+    @if (shellMode === 'portal') {
+      <footer class="portal-footer">
+        <div class="portal-footer-content">
+          <div>
+            <strong>Study2Work LMS</strong>
+            <p>Học tập theo tiến độ của bạn, với dữ liệu được tải từ Study Server.</p>
+          </div>
+          <div>
+            <strong>Học tập</strong><a routerLink="/courses">Danh mục khóa học</a
+            ><a routerLink="/student/courses">Khóa học của tôi</a>
+          </div>
+          <div>
+            <strong>Cộng đồng</strong><a routerLink="/student/discussions">Diễn đàn trao đổi</a
+            ><a routerLink="/student/notifications">Thông báo</a>
+          </div>
+          <div>
+            <strong>Tài khoản</strong><a routerLink="/student/profile">Hồ sơ cá nhân</a
+            ><button type="button" (click)="logout()">Đăng xuất</button>
+          </div>
+        </div>
+        <div class="portal-copyright">© Study2Work <span>Học viên</span></div>
+      </footer>
+    }
+    @if (shellMode === 'blank') {
+      <footer class="blank-footer"></footer>
+    }
   }
-
-  @if (shellMode === 'blank') { <header class="blank-header"></header> }
-
-  <main class="student-main" [class.portal-main]="shellMode === 'portal'" [class.exam-main]="shellMode === 'exam'" [class.blank-main]="shellMode === 'blank'">
-    <router-outlet (activate)="setShellMode()" />
-  </main>
-
-  @if (shellMode === 'legacy') {
-    <footer class="student-footer">
-      <div class="footer-content">
-        <div class="footer-brand">Study2Work</div>
-        <nav aria-label="Điều hướng cuối trang">
-          <a href="/student">Tổng quan</a>
-          <a href="/student/courses">Khóa học của tôi</a>
-          <a href="/student/progress">Tiến độ</a>
-        </nav>
-      </div>
-    </footer>
-  }
-
-  @if (shellMode === 'portal') {
-    <footer class="portal-footer">
-      <div class="portal-footer-content">
-        <div><strong>Study2Work LMS</strong><p>Hệ sinh thái đào tạo trực tuyến chuẩn hóa kết nối học tập với việc làm thực tế, nâng tầm sự nghiệp thế hệ trẻ cùng chuyên gia cố vấn công nghệ &amp; doanh nghiệp.</p><div class="portal-trust"><span>◉ ISO/IEC 27001</span><span>◉ ISO 21001 EdTech</span><span>♜ Chứng nhận Bộ GD&amp;ĐT</span></div></div>
-        <div><strong>Học tập</strong><span>Danh mục khóa học</span><span>Lộ trình sự nghiệp</span><span>Kỳ thi chuẩn hóa</span><span>Học bổng &amp; Tài trợ</span></div>
-        <div><strong>Cộng đồng</strong><span>Diễn đàn trao đổi</span><span>Mạng lưới Mentor</span><span>Nhóm học tập 24/7</span><span>Sự kiện kết nối tuyển dụng</span></div>
-        <div><strong>Hỗ trợ &amp; Pháp lý</strong><span>Trung tâm trợ giúp</span><span>Chính sách bảo mật</span><span>Điều khoản sử dụng</span><span>Quy chế thi trực tuyến</span></div>
-      </div>
-      <div class="portal-copyright">© 2025 Study2Work LMS. Bản quyền thuộc về Tổ chức Giáo dục &amp; Việc làm Study2Work. <span>Nền tảng Học tập &amp; Khảo thí Số Thế hệ Mới</span></div>
-    </footer>
-  }
-  @if (shellMode === 'blank') { <footer class="blank-footer"></footer> }
 </div>

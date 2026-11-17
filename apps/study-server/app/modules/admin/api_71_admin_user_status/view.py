@@ -18,7 +18,7 @@ from app.modules.admin.api_71_admin_user_status.query import (
 from app.modules.admin.api_71_admin_user_status.validate import (
     validate_admin_user_status_request,
 )
-from app.modules.guest.api_04_users_me.models import UserProfile
+from app.modules.student.api_04_users_me.models import UserProfile
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session

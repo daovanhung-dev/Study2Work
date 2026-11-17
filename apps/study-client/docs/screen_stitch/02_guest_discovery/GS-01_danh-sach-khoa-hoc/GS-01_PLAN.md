@@ -9,7 +9,7 @@
 - Inventory: route đề xuất `/courses`; AC-03; API #05/#06; links GS-02 và GS-03; Guest/public; W0/P0; grid/list, sort, paging, result count và course-detail navigation. Inventory yêu cầu #05 cache-first theo locale rồi #06 page 1/size 20; không gửi category khi #06 chưa hỗ trợ.
 - AC-03: Guest; điều kiện có khóa học public; hậu điều kiện là danh sách theo filter/pagination. F02 nối SH-01 → GS-01/GS-02 → GS-03; tìm kiếm riêng dùng GS-02/#07; click course dự kiến tới GS-03.
 - Assets hiện có trước phiên: `screen.png` (1280×1114, SHA-256 `3ad9b03ef8862cc09e8879c3009318b097a6d7217b86f9144201ef10bb6251c7`) và `code.html` (SHA-256 `d354d54db1ff21f8df8dd71fbf57c4836e751a0b021d76461d0c855968038fe5`). Thư mục chưa có plan/DD/annotated image/marker map. Giữ nguyên bytes của ảnh và HTML.
-- Current checkout có `apps/study-client/docs`, `dist`, `node_modules` và `tsconfig.tsbuildinfo`, nhưng không có Study app source, `package.json`, router hoặc entrypoint. Không dùng `dist` hay HTML prototype làm runtime evidence. `.agents/web-work/study/AGENTS.md` và `INDEX.md` hiện tồn tại, được manifest đăng ký là `study-web: UNWIRED`; chúng mô tả đúng việc thiếu app source và không chứng minh route/runtime. Study OpenAPI chỉ là README placeholder (`NOT_FOUND`).
+- Original source snapshot recorded when this plan was authored described a checkout without Study app source/router/entrypoint. That snapshot is superseded by the current 2026-11-16 audit in §10. Do not use the old snapshot as current runtime evidence. Do not use `dist` or the HTML prototype as runtime evidence. Study OpenAPI remains a README placeholder (`NOT_FOUND`).
 - Skill registry xác nhận Web UI-only DD không có skill canonical; `createDD-markdown` loại trừ `web-ui-only-dd`. Không áp template API DD cho màn hình này.
 
 ## 2. Expected behavior và current evidence
@@ -87,7 +87,7 @@ No active category filter, reset action, card click, result counter or paginatio
 4. `GS01-B04 PARTIAL_LOAD_AND_CACHE_POLICY`: inventory says cache-first #05 then #06; there is no client cache source/TTL or failure policy when one request fails. Do not invent behavior.
 5. `GS01-B05 COURSE_SHAPE_DISCREPANCY`: reusable catalog Course includes optional category; current #06 response omits it. Currency and rating/duration fields are also absent from source.
 6. `GS01-B06 EMPTY_PAGE_AND_ERROR_COPY`: API #06 can return empty `items` for both zero total and out-of-range page, while screenshot copy conflates empty and updating. Define separate error/empty-page recovery/copy before implementation.
-7. `GS01-B07 STUDY_WEB_UNWIRED`: current checkout has no app source/router/package/entrypoint; no route, cache or interaction is runtime verified.
+7. `GS01-B07 STUDY_WEB_UNWIRED`: Study Web app and Angular router exist, but Guest `/courses` route and GS-01 API caller are not wired; no GS-01 route, cache or interaction is runtime verified.
 8. `GS01-B08 SOURCE_VARIANT_MISMATCH`: screenshot header omits the Study2Work brand visible in HTML; HTML has duplicate brand/nav markup and broken orphan filter script. Keep screenshot source intact; product must choose/correct source of truth.
 
 - [x] Screen source image and HTML hashes/dimensions inventoried; originals must remain unchanged.
@@ -111,3 +111,10 @@ No active category filter, reset action, card click, result counter or paginatio
 - Confirmed seven GS-01 artifacts remain present. Original `screen.png` is 1280×1114 (SHA-256 `3ad9b03ef8862cc09e8879c3009318b097a6d7217b86f9144201ef10bb6251c7`); `code.html` SHA-256 `d354d54db1ff21f8df8dd71fbf57c4836e751a0b021d76461d0c855968038fe5`. Existing JSON/SVG have 16 sequential labels; the annotated image was viewed and markers remain clear of text. No marker/image edit is planned.
 - Plan update precedes the DD/source-reference and event-detail corrections in this re-audit. Preserve `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, and `RUNTIME NOT VERIFIED` while the existing product/API blockers remain open.
 - Final audit: 16 ordered markers map 16/16 DD elements, all coordinates are in bounds, SVG labels are 1–16, 11 event sections each document input/process/output or error, 32 local DD/plan links resolve, and A–F are present. Original image/HTML hashes and 1280×1114 dimensions are unchanged; annotation was viewed. Global inventory/tracker remains 83/83. No application tests, runtime, or live schema checks were run.
+
+## 10. Re-audit trạng thái Study Web (2026-11-16)
+
+- Current source: `apps/study-client/src/app/app.routes.ts` wires readiness root, Shared, Student and Admin route groups. `features/shared/shared.route.ts` currently exposes only `/login` and `/register`; there is no Guest route or `/courses` screen.
+- `StudyApiService` is a generic transport that issues requests using `StudyApiDescriptor`; `API_005` and `API_006` descriptors are marked `WIRED`, but no GS-01 route/page calls them. Descriptor availability is not screen-level wiring evidence.
+- Keep blocker `GS01-B07` scoped to the absent Guest route/caller and unverified GS-01 runtime. The original source snapshot above and the 2026-11-07 audit note describe their historical checkout state; they do not describe current app availability.
+- Status remains `DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED`. No GS-01 UI/API behavior was implemented in this re-audit.

@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Hiển thị đúng Lesson fields từ #83; linked progress/resources/metrics chỉ sau khi có contract riêng. Mở AD-14 bằng cùng numeric `Lesson.id`.
-- Gate/status (giữ nguyên): **R** local #83 route/module/query/model/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** AC dependencies chưa có output rule; course title/type/resource/progress/metrics/SSE fields thiếu; ADMIN vs lesson-management permission, legacy/V1-PILOT schema, nullable required fields/status enum và Study Web `UNWIRED` còn mở; **RUNTIME NOT VERIFIED**
+- Gate/status (giữ nguyên): **R** local #83 route/module/query/model/test and Angular AD-12→AD-13 caller/page/spec; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** unsupported dependency, course title/type/resource/progress/metrics/SSE fields remain absent from #83; ADMIN vs lesson-management permission, legacy/V1-PILOT schema, nullable required fields and status enum remain open. Browser/live DB are `NOT VERIFIED`.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 > CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.

@@ -1,53 +1,11 @@
 # Study Web context router
 
+Companion screen and API map: [INDEX.md](INDEX.md).
+
 ```text
 CONTEXT_STATUS: VERIFIED_WITH_UNWIRED_COMPONENTS
-SOURCE_STATUS: Angular 22 SPA has AD-01 through AD-25 routes; 19 screen callers use 14 source-backed Admin GET APIs through an in-memory login session; deployment/runtime are not verified
-```
-
-Canonical page graph: `INDEX.md`.
-
-## Mandatory Study screen/API scope preflight
-
-For **every task** that touches `apps/study-client`—coding, fixes, tests,
-reviews, documentation, or configuration—before detailed inspection or changes:
-
-1. Read [`list_screen.md`](../../../apps/study-client/docs/list_screen.md) and
-   [`list_endpoint.md`](../../../apps/study-client/docs/list_endpoint.md).
-2. Identify the affected screen IDs/names/routes and Study API IDs from those
-   catalogs. Record `Study FE scope: screens=<...>; APIs=<...>` in the task
-   worklog. For either dimension outside the task scope, record `none` and why.
-3. For each affected screen, use
-   [`dd_screens/screen-index.md`](../../../apps/study-client/docs/dd_screens/screen-index.md)
-   to find and read the DD sections relevant to the task. Read the matching
-   Study API DD under `apps/study-server/docs/dd/` when the task depends on that
-   API's request/response contract or business behavior; the endpoint catalog
-   links to each API's Overview.
-4. If a relevant DD is missing, record `NOT_FOUND`. If DD, catalog, or current
-   source disagree, record `DISCREPANCY` and keep design behavior separate from
-   current runtime behavior. Catalogs and DDs do not prove runtime wiring.
-
-This preflight applies even when a task is expected to have no screen/API
-impact; in that case, read both catalogs and record
-`Study FE scope: screens=none; APIs=none` with the reason before proceeding.
-
-For every coding, fix, test, review, or architecture-document task in
-`apps/study-client/`, read [`frontend-rules.md`](../../web-study/frontend-rules.md)
-before source work. Its layer responsibilities and dependency boundaries are
-mandatory. Also read the design guide for UI/UX changes and the app architecture
-guide when folder or file organization is involved.
-
-For work implementing or fixing an individual screen, also follow the
-registered `study-web-screen-coding` workflow at
-[`workflows/screen-implementation.md`](workflows/screen-implementation.md).
-It requires reading the full screen DD/image package, analyzing the referenced
-HTML, writing a plan before coding, verifying event/API/data-flow behavior, and
-testing/demoing with immediate cleanup of isolated fake DB fixtures.
-
-The current checkout has a runnable Angular 22 standalone client-side SPA
-scaffold plus Study Web documentation and screen assets under
-`apps/study-client/docs/`. `app.routes.ts` lazy-loads the root readiness page
-from `features/system` and the Admin route group. `admin.routes.ts` maps AD-01
+GS07_SOURCE_STATUS: Root `/resources/:resourceId` route mounts a contract-blocked gate only; the route ID is not consumed, API #12 has no Study Web caller, and resource actions remain blocked. Browser/deployment runtime is unverified.
+SOURCE_STATUS: Angular 22 SPA routes `/` to Shared SH-01 with independent API #05/#06 callers and search handoff, SH-02 presentation at /login, SH-03 API #01 registration caller at /register, partial Guest GS-01–GS-03 at /courses, /courses/search and /courses/:courseId (#05–#08 callers); GS03 owns the `?tab=curriculum|reviews|resources` panels. The app root wildcard redirects unknown routes to SH-06 and clears the original path/query; GS-03 #08 detail 404 also routes to SH-06, while #08 500 and #09 curriculum 404 stay separate. #09 and #10 load lazily after #08 succeeds; GS06 currently renders a contract-blocked panel and intentionally makes no #11/#12 call. API #11 route/module/query/tests exist locally but return only the first resource as a singleton; #11/#12 DDs and access/cardinality policy remain Draft/open. AD-01 through AD-25 and ST-11 through ST-26; Mentor remains unwired, SH-01/GS-01 loaded catalog states and GS-03/GS05/GS06 presentations are partial or derived because their DD assets do not fully specify runtime states. Enrollment remains open. Focused Study Web tests and local stub-backed browser renders are recorded per continuation; live API/DB runtime remains unverified. `admin.routes.ts` maps AD-01
 through AD-25 beneath `AdminLayout`. Nineteen screen-level data-access callers
 use fourteen distinct source-backed Admin GET APIs through `AdminApiService`.
 `AdminSessionService` authenticates with API #3, refreshes through source-only
@@ -56,8 +14,10 @@ route R-X01, keeps credentials in tab memory only, and accepts only the
 Bearer credentials and clears the local session on protected 401 responses.
 The server-side Admin guard remains authoritative; this client wiring does not
 prove deployment or API acceptance. AD-01 and AD-24/25 have no current report
-sources, and #99–#103 and #18 export/operation behavior are absent or
-incomplete. Mutation controls remain disabled where request, permission,
+sources; APIs #99–#103 are absent. API #18 has a backend route but only
+notification-specific operation handling; the client descriptor remains
+`UNWIRED` and generic lifecycle/result behavior is incomplete. Mutation
+controls remain disabled where request, permission,
 transition, deletion, moderation, delivery, report or export policy is open.
 AD-01 and AD-02 also have page-specific layouts: AD-01 has no dashboard data
 source because API #101 is absent; AD-02 reads users through API #68 and maps
@@ -73,8 +33,12 @@ The shared `AdminLayout` shell follows the Admin DD's five primary navigation gr
 The shared breadcrumb stays at `Hệ thống > Quản trị trung tâm > Không gian làm việc`; each routed screen owns its page breadcrumb. AD-01/02 provide their own page-level breadcrumb in addition to the shell path. AD-02 may refresh its current source-supported API #68 GET query; its available filters remain keyword, role, status and page.
 Recheck each screen's worklog and current server source before adding a caller
 or enabling an action.
-`features/system` here is only the requested root scaffold route; it does not
-move SH-* screens out of the canonical `shared` group or implement SH-01. The
+`features/system` retains the readiness component source but it is not mounted
+in the route table; `/` is SH-01 in the canonical `shared` group. SH-01 uses
+independent #05/#06 requests and forwards trimmed search text to GS-02 without
+calling #07 from the landing page. Its local browser route rendered on desktop
+and mobile; the development API proxy returned 502 for both data regions, so
+live API/DB and published-data states remain unverified. The
 Admin route has no router guard; `AdminLayout` gates screen content on its
 in-memory session and the API wrapper requires a token before protected reads.
 The shared registry in
@@ -85,9 +49,18 @@ consumes these typed descriptors through the local `/api/v1` transport and rejec
 deployment check. API #2 is marked `STUB` because its default provider accepts
 requests without sending email. Admin login/read callsites are implemented for
 the source-backed subset; Admin refresh is source-only R-X01, and no token is
-persisted. Other feature auth, production routing and deployment remain
-unverified. Recheck the source tree for each task and do not infer feature
-behavior from design files or older snapshots.
+persisted. Shared/Auth currently includes SH01 at `/`, SH02 at `/login`, SH03
+at `/register`, and static SH04 at `/register/verification`. SH-02
+submit/session remains disabled. SH-03 calls API #01 through
+`StudyApiService`; its user-initiated SH04 link carries no ID/email and does
+not call API #02. SH05 is not wired; route/error-context, Shared/Student
+session/recovery, safe-return and production UI decisions remain blocked. SH06
+is the explicit generic `/not-found` page plus unknown-route and #08 detail-404
+handoffs; 500 and #09 curriculum-404 remain separate. SH07 exposes the
+`/operations/:operationId` gate without calling API #18. Focused SH-01/route,
+SH-03 and SH-04 tests and a production build pass; browser production
+routing/deployment remain unverified. Recheck the source tree for each task
+and do not infer feature behavior from design files or older snapshots.
 
 [`../../web-study/design.md`](../../web-study/design.md) is the intended visual,
 interaction and accessibility target. The app architecture is documented in

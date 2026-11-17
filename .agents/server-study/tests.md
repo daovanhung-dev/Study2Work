@@ -2,44 +2,36 @@
 
 ```text
 TEST_SUITE_PRESENT: YES
-TEST_STATUS: PRE_MERGE_BASELINE_VERIFIED (1326 tests passed before the 2026-11-13 merges; post-revert suite not run; retained API #10, #26-30, #32-33 tests not run after revert; nullable-bind regression modules: 178 passed; ten repaired operations passed 20/20 branch-backed HTTP requests; details are in the 2026-11-01 report)
+TEST_STATUS: VERIFIED_API_18_FIX (2026-11-16 full Study suite before API #08/#09/#10/#12 path-validation fixes: 1492 passed, 0 failed, 1 Starlette/httpx deprecation warning)
 ```
 
-The 2026-11-13 merges and subsequent revert leave test source for APIs #10,
-#26–#30, #32 and #33 in the current branch. These tests have not been run after
-the revert. Prior verification counts below are dated baselines, not current
-post-revert results.
+## Latest focused verification — 2026-11-17
 
-Tests under `apps/study-server/tests/` cover config, DB helpers, responses and
-exception handlers, security tokens, health/security behavior, APIs #1–#10,
-#12–#14, #26–#30, #32–#34, Mentor APIs #46–#67, and Admin APIs #68–#98. APIs #4,
-#13 and #14 share the auth guard in
-`app/utils/auth.py`; security primitive tests remain under `tests/core`.
-The API #08 course-detail and API #09 curriculum tests passed in the
-pre-merge baseline suite; they were not rerun after the 2026-11-13 merge.
-The API-specific tests are grouped under
-`api_01_auth_register`, `api_02_auth_verify_email_send`, `api_03_auth_login`,
-`api_04_users_me`, `api_05_categories`, `api_06_courses`,
-`api_07_courses_search`, `api_08_courses_detail`,
-`api_09_courses_curriculum`, `api_10_courses_reviews`,
-`api_12_resources_detail`,
-`api_13_users_me_avatar`, `api_14_users_me_profile`,
-`api_26_lessons_resources`, `api_27_lessons_next`,
-`api_28_quizzes_detail`, `api_29_quizzes_attempts`,
-`api_30_attempts_answers`, `api_32_attempts_result`,
-`api_33_assignments_detail`,
-`mentor/api_46_mentor_courses`, `mentor/api_47_mentor_lectures_create`,
-`mentor/api_48_mentor_lecture_detail`, `mentor/api_49_mentor_content_list`,
-`mentor/api_50_mentor_content_create`, `mentor/api_51_mentor_content_update`,
-`mentor/api_52_mentor_content_publish`,
-`mentor/api_53_mentor_content_delete`, `mentor/api_54_mentor_submissions_list`,
-`mentor/api_55_mentor_submissions_detail`, `mentor/api_56_mentor_submissions_grade`, `mentor/api_57_mentor_submissions_feedback`, `mentor/api_58_mentor_support_requests`, `mentor/api_59_mentor_support_request_detail`, `mentor/api_60_mentor_support_reply`, `mentor/api_61_mentor_support_resolve`, `mentor/api_62_mentor_course_students`, `mentor/api_63_mentor_notifications_create`, `mentor/api_64_mentor_notification_status`, `mentor/api_65_mentor_course_progress`, `mentor/api_66_mentor_course_analytics`, `mentor/api_67_mentor_student_progress`, `admin/api_68_admin_users_list`, `admin/api_69_admin_user_detail`, `admin/api_70_admin_user_update`, `admin/api_71_admin_user_status`, `admin/api_72_admin_user_delete`, `admin/api_73_admin_courses_list`, `admin/api_74_admin_course_detail`, `admin/api_75_admin_course_update`, `admin/api_76_admin_course_status`, `admin/api_77_admin_course_delete`, `admin/api_78_admin_content_pending`, `admin/api_79_admin_content_detail`, `admin/api_80_admin_content_approve`, `admin/api_81_admin_content_reject`, `admin/api_82_admin_lessons_list`, `admin/api_83_admin_lesson_detail`, `admin/api_84_admin_lesson_update`, `admin/api_85_admin_lesson_status`, `admin/api_86_admin_lesson_delete`, `admin/api_87_admin_quizzes_list`, `admin/api_88_admin_quizzes_create`,
-`admin/api_89_admin_quizzes_update`, `admin/api_90_admin_quizzes_delete`,
-`admin/api_91_admin_quizzes_statistics`, `admin/api_92_admin_notifications_list`,
-`admin/api_93_admin_notifications_create`, `admin/api_94_admin_notifications_update`,
-`admin/api_95_admin_notifications_delete`,
-`admin/api_96_admin_notifications_status`, `admin/api_98_admin_discussions_detail` and `student/api_34_uploads`; full
-collection is available.
+- API #11 and #12 focused source tests: `uv run pytest -q tests/modules/guest/api_11_courses_resources/test_courses_resources.py tests/modules/guest/api_12_resources_detail/test_resources_detail.py` — 24 passed, 0 failed, one upstream Starlette/httpx `TestClient` deprecation warning.
+- These suites use fake DB/session overrides. API #11 tests cover its empty-404 and singleton success branches but not a multi-row result; current source maps only `rows[0]`, which conflicts with the Draft DD mapping rule. No live schema/deployment or production API verification is claimed.
+
+## Current verification — 2026-11-16
+
+- `uv run pytest -q` after the role package move and API #18 auth fix, before the API #08/#09/#10/#12 path-validation fixes: 1492 passed, 0 failed, one upstream Starlette/httpx `TestClient` deprecation warning.
+- API #18 focused suite: `uv run pytest -q tests/modules/shared/api_18_operations/test_operations.py` — 8 passed. It covers all three AC-listed roles, rejection before DB access, UUID validation, owner binding, not-found, safe 500 and rollback.
+- API #18 Ruff check passes for the validator and its dedicated tests.
+- API #08 focused suite after signed-int64 path validation: `uv run pytest -q tests/modules/guest/api_08_courses_detail/test_courses_detail.py` — 9 passed. Added coverage accepts both boundaries and verifies out-of-range IDs map to 404 through the HTTP route.
+- API #08 Ruff check passes for its validator and focused tests. The focused run reports one upstream Starlette/httpx `TestClient` deprecation warning.
+- API #09 focused suite after signed-int64 path validation: `uv run pytest -q tests/modules/guest/api_09_courses_curriculum/test_courses_curriculum.py` — 11 passed. Added coverage accepts both signed-int64 boundaries and maps values beyond either boundary to the existing 404 business code.
+- API #09 Ruff check passes for its validator and focused tests. The focused run reports one upstream Starlette/httpx `TestClient` deprecation warning.
+- API #10 focused suite after signed-int64 path validation: `uv run pytest -q tests/modules/guest/api_10_courses_reviews/test_courses_reviews.py` — 22 passed. Added coverage accepts both signed-int64 boundaries and maps malformed/overflow IDs to the existing 404 over both direct validation and HTTP.
+- API #10 Ruff check passes for its validator and focused tests. The focused run reports one upstream Starlette/httpx `TestClient` deprecation warning.
+- API #12 focused suite after signed-int64 contract alignment: `uv run pytest -q tests/modules/guest/api_12_resources_detail/test_resources_detail.py` — 17 passed. Coverage confirms malformed/out-of-range paths return 404 before DB, while zero, negative and signed-int64 boundary values reach the read lookup.
+- API #12 Ruff check passes for its validator and focused tests. The focused run reports one upstream Starlette/httpx `TestClient` deprecation warning.
+- API #10 test expectations were aligned to its current source/DD response projection; API #92–#95 tests now assert their own OpenAPI operations without stale app-wide path totals.
+- Existing API test packages are grouped under Guest (#01–#03, #05–#12, #15), Student (#04, #13–#14, #21–#30, #32–#33), Shared (#18, #34), Mentor (#46–#67) and Admin (#68–#98).
+- Module-specific test packages are absent for APIs #16–#17, #19–#20, #31 and #35–#45. A passing full suite does not imply those APIs have dedicated behavioral coverage.
+- DB and external service behavior is generally exercised through fakes/overrides; this suite does not prove production schema, deployment or provider integration.
+- Historical counts and branch-backed HTTP results below remain dated evidence, not current post-move counts.
+
+Tests under `apps/study-server/tests/` also cover config, DB helpers, responses,
+exception handlers, security tokens and health/security behavior. See the current
+verification summary above for the role-grouped API test inventory.
 
 Important remaining scope boundaries include:
 - health tests expect standard envelope and trace header;

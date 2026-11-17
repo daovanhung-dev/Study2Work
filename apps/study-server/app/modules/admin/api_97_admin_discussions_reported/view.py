@@ -22,7 +22,7 @@ from app.modules.admin.api_97_admin_discussions_reported.query import (
 from app.modules.admin.api_97_admin_discussions_reported.validate import (
     validate_admin_reported_discussions_request,
 )
-from app.modules.guest._shared.course_catalog.models import Pagination
+from app.modules.shared.course_catalog.models import Pagination
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session

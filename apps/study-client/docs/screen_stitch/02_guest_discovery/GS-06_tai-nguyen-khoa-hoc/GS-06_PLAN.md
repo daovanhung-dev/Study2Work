@@ -1,8 +1,41 @@
 # GS-06 — Kế hoạch chi tiết
 
 > Kế hoạch ban đầu: 2026-11-06; rà soát nguồn và tài sản: 2026-11-07  
-> Trạng thái: `RE-AUDIT PLAN COMPLETE; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED`  
+> Trạng thái: `RE-AUDIT V2 COMPLETE; DD BLOCKED; IMPLEMENTATION PARTIAL PRESENTATION; LIVE RUNTIME NOT VERIFIED`
 > Phạm vi phiên: chỉ GS-06; không bắt đầu GS-07.
+
+## T022 current-source re-audit (2026-11-17)
+
+This update supersedes earlier “no source” findings below where they conflict.
+The API/UI design contract remains blocked and this note does not promote an
+API DD or claim deployed runtime.
+
+- Study Web now has an Angular source tree. GS03 owns the source-wired
+  `/courses/:courseId?tab=resources` tab. After API #08 confirms a published
+  course, GS03 mounts GS06, which renders a neutral contract-blocked status.
+  It sends no #11/#12 request and exposes no list/open/download action.
+- API #11 route, view, query, validator, model and test source exist locally.
+  The query reads linked resource rows ordered by `r.id ASC`, but the view
+  serializes only `rows[0]` as singleton `ResourceItem`; no rows returns 404.
+  This conflicts with API #11 DD Data Mapping, which forbids selecting one row
+  when multiple rows are returned. The API DD remains `Draft — Needs
+  Confirmation`; no collection/empty/order/pagination semantics are approved.
+- API #12 remains a local public route that returns `resources.url` directly,
+  without resource visibility/enrollment checks or a storage signer. Its
+  parent-course check is conditional on non-null `lesson_id`. This does not
+  satisfy the AC-06 private-resource/403/signed-URL branch.
+- Legacy DDL has `resources` without `visibility`; V1-PILOT has no resources
+  table; live schema/deployment remains unknown.
+- The focused GS03+GS06 Angular specs pass 10/10 for direct query entry,
+  published-course sequencing, the unavailable status, no resource API calls
+  and End-key navigation. Full Study Web passes 155/155; production build
+  passes with three existing Student CSS budget warnings; API #11/#12 fake-DB
+  suites pass 24/24 with one upstream Starlette/httpx deprecation warning.
+- Firefox headless local demo passed at 1440×1000 and 390×844. Both viewports
+  rendered the selected resources tab and status with zero resource actions;
+  browser performance entries showed only `/api/v1/courses/42`. No DB rows were
+  created. The local app/fixture were stopped and ports 4200/9929 confirmed
+  closed. Live API/DB/deployment remain unverified.
 
 ## 0. Kế hoạch rà soát lại (2026-11-07; hoàn tất static audit 2026-11-08)
 
@@ -17,19 +50,19 @@ Thứ tự công việc trong phiên này:
 
 ### Bằng chứng hiện tại được xác nhận trước khi sửa DD/marker/tracker
 
-- API #11 vẫn là declaration/Draft: catalog khai báo public GET với `ApiEnvelope<Resource>` đơn, không query/body; tìm kiếm current Study Server `app/` và `tests/` không thấy route/module/test #11. Cardinality, list-empty, thứ tự/pagination và `visibility` chưa có nguồn runtime.
+- API #11 contract remains Draft: catalog declares public GET with `ApiEnvelope<Resource>` singleton, no query/body. Current local route/module/query/model/test now exist; view returns only the first resource row and maps no rows to 404. Cardinality, list-empty, order/pagination and `visibility` remain unresolved; see T022 source re-audit above.
 - API #12 có route/module/query/validator/model trong current Study Server và route được compose ở `/api/v1/resources/{resource_id}`. Route không nhận/kiểm tra Authorization; validator chỉ chấp nhận positive signed-int64 và map path sai thành 404; view đọc `resources.url` trực tiếp, conditional gate parent lesson/course chỉ chạy khi `lesson_id` khác null, và không gọi storage signer hoặc kiểm tra enrollment/visibility. Test source xác nhận các nhánh này nhưng không được chạy trong phiên.
 - AC-06 yêu cầu resource public hoặc có quyền truy cập, có nhánh 403, và signed URL cho object private; API catalog #11/#12 chỉ public và 404/500. Đây là `DISCREPANCY`, chưa được phép hợp nhất bằng suy đoán.
 - Schema candidate legacy `infra/postgres/study-server/DB.sql` khai báo `resources(id, lesson_id, name, resource_type, url, created_at)` và không có `visibility`; V1-PILOT `infra/postgres/02_study_db.sql` hiện không khai báo bảng `resources`. Live production schema/deployment không được xác minh.
-- `apps/study-client/` hiện không có editable app source, package manifest hoặc screen router; chỉ có docs/assets, ignored `dist/` và build metadata. Study Web vẫn `UNWIRED`; asset tĩnh không chứng minh route/runtime.
+- The earlier audit found no Study Web source at that time. Current Study Web now has GS03/GS06 source as detailed in the T022 update above; the local browser demo and deployed runtime status remain separate.
 - PNG gốc hiện là 1486×1600, SHA-256 `b90795438d5369466bb101e8f6730265667f8ecc45c0d047d66495410da87dcd`; HTML gốc SHA-256 `6843e2cc0f01a24e1db8100b8fec49d88e1f3fe39859b102bb9828d4905a8c31`. Giữ nguyên cả hai.
 - Trước khi chỉnh DD/marker/tracker, thư mục đã có 23 markers, annotation và DD từ phiên 2026-11-06. Phiên này sẽ xác minh lại một-một, bounds, SVG/image consistency, event completeness và các liên kết thay vì mặc định chúng hợp lệ.
 
 ### Definition of completion riêng cho lần rà soát này
 
 - Ghi đầy đủ 23 element và các tương tác hiện có; mỗi event có loại/trigger, precondition, input, processing, output và error/exception, tách rõ hành vi HTML tĩnh với luồng expected chưa runnable.
-- Ghi API #11 `DECLARED_NOT_RUNNABLE`, #12 `SOURCE-BACKED LOCALLY`, Draft status, #12 direct-URL behavior, schema discrepancy, AC-06 conflict, `UNWIRED` Study Web và live-schema limitation.
-- Chỉ giữ `DD BLOCKED`/`IMPLEMENTATION BLOCKED`/`RUNTIME NOT VERIFIED` khi các blockers còn đúng; không nâng `DD READY` hay `RUNTIME VERIFIED` bằng việc chỉ có file/test source.
+- Ghi API #11 local source/test status plus singleton/cardinality discrepancy, #12 source behavior, Draft statuses, schema discrepancy, AC-06 conflict, partial GS06 presentation and live-schema limitation.
+- Giữ `DD BLOCKED`, `IMPLEMENTATION PARTIAL`, `RESOURCE FLOW BLOCKED` và `LIVE RUNTIME NOT VERIFIED` riêng; không nâng `DD READY` hay live runtime status bằng file/test source alone.
 - Xác minh `screen.png`/`code.html` hashes, ảnh chú thích, marker IDs/tọa độ/mapping, local links, tracker IDs/folders và whitespace.
 
 ## 1. Phạm vi và nguồn
@@ -45,8 +78,8 @@ Thứ tự công việc trong phiên này:
 
 | Hạng mục | Expected/design source | Current evidence | Tác động |
 |---|---|---|---|
-| Route và UI | Guest mở tab tài nguyên của cùng `courseId`; chọn item sang GS-07; ST-12 cũng tham chiếu resource flow. | Study Web hiện `UNWIRED`; chỉ có asset tĩnh, không có route/client source để xác minh. | Route là đề xuất; direct entry, back behavior, tab state, auth/session và cache chưa được xác nhận. |
-| API #11 | Public `GET /api/v1/courses/{course_id}/resources`; catalog/DD khai báo `ApiEnvelope<Resource>`, không query/pagination. | Không có route, module, query hay test tương ứng trong Study Server `app/` và `tests/`; chỉ có catalog và DD. | `DECLARED_NOT_RUNNABLE`; `Resource` singleton mâu thuẫn với tên/list relationship 1:N. Không tự đổi sang array/Page hoặc dùng `{ items, total }` từ HTML. |
+| Route và UI | Expected: Guest opens the resource tab for the same `courseId`; select to GS-07; ST-12 also references resource flow. | GS03 now source-wires the query tab and GS06 contract-blocked presentation after #08 success; direct query entry is tested. | GS07 handoff/open, auth/session policy and resource caching remain unimplemented/unconfirmed. |
+| API #11 | Public `GET /api/v1/courses/{course_id}/resources`; catalog/DD declares `ApiEnvelope<Resource>`, no query/pagination. | Local route/module/query/model/test exist; current view maps only `rows[0]` to singleton and no rows to 404. | `SOURCE-BACKED LOCALLY; CONTRACT DISCREPANCY`; do not change to array/Page or use `{ items, total }` from HTML without approval. |
 | API #11 fields/access | Contract draft nêu `id`, `name`, `type`, `url`, `visibility`, `lesson_id`; contract ghi Public/PUBLISHED. | Checked-in legacy DDL `resources` có `id`, `lesson_id`, `name`, `resource_type`, `url`, `created_at`; không có `visibility`. Live schema chưa xác minh. | Visibility và response shape chưa đủ nguồn để quyết định list/render/access. |
 | API #12 declaration | Public `GET /api/v1/resources/{resource_id}`, `ApiEnvelope<Resource>`, catalog 200/404/500. | Route/view/query/validator/model tồn tại và được register trong `app/api/v1.py`; không có auth dependency ở route. View trả `id/name/type/url/lesson_id`, dùng direct `url`, bỏ field extra như `visibility`. | API #12 `SOURCE_BACKED` ở source hiện tại; không đồng nghĩa policy private/signed URL của AC-06 đã chạy. |
 | API #12 parent check | AC-06 đòi access decision; API DD mô tả parent course PUBLISHED và signer cho private resource như derived/TBD. | View kiểm tra parent PUBLISHED nếu resource có `lesson_id`; `lesson_id=null` vẫn trả success, không lookup parent. Không gọi signer hay kiểm tra enrollment/visibility. Lỗi path/resource/unpublished là 404; query/mapping lỗi là 500. | Public direct URL + thiếu resource-level permission là security blocker; không tự bật open/download. |
@@ -66,18 +99,18 @@ Thứ tự công việc trong phiên này:
 - Inventory/F02/G-07/API index: `apps/study-client/docs/list_screen.md` (GS-06 row, F02, G-07, API #11/#12 rows).
 - Activity flow: `apps/study-server/docs/diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio` (AC-06 nodes `n1`–`n10`, access decision and error edge).
 - Current design assets: `screen.png`, `code.html` in this directory. Checksum the original again after output creation.
-- API #11 declaration: `docs/lists/list_api.md`; `apps/study-server/docs/dd/11_courses_resources/` overview/request/response/data mapping/error; search current app and tests for absent route/module.
+- API #11 design/source: `docs/lists/list_api.md`; `apps/study-server/docs/dd/11_courses_resources/`; local `app/api/v1.py`, `app/modules/guest/api_11_courses_resources/` and `tests/modules/guest/api_11_courses_resources/` (see T022 current-source re-audit).
 - API #12 current chain: `apps/study-server/app/api/v1.py` route; `app/modules/guest/api_12_resources_detail/{view,query,validate,models}.py`; `tests/modules/guest/api_12_resources_detail/test_resources_detail.py`; API DD `docs/dd/12_resources_detail/`.
 - DDL candidate: `infra/postgres/study-server/DB.sql` courses/lessons/resources; DDL is checked-in design/source, not live schema.
-- Study Web status and design target: `.agents/web-work/study/` and `.agents/web-study/design.md`; current Study Web remains `UNWIRED`.
+- Study Web status and design target: `.agents/web-work/study/` and `.agents/web-study/design.md`; GS03 query tab/GS06 blocked presentation now source-wired, browser/live runtime recorded separately.
 
 ## 4. Planned output and acceptance
 
 - Keep `screen.png` and `code.html` byte-identical.
 - Create `GS-06_markers.json`, a vector overlay and `screen_annotated.png`; keep markers ordered and unique, align them to visible grouped elements and avoid covering primary copy or controls.
 - Create `GS-06.md` with overview, expected/current flow, element table, sequential event procedures, #11/#12 request/response/status trace, state matrix, navigation/data handoff, acceptance checklist, source links and explicit blockers.
-- Update `list_screen.md` and `dd_screens/PLAN.md` with API #12 source status, GS-06 blockers and a dated checkpoint. Current file inventory has all six core artifacts for 83/83 IDs; this is file-presence evidence only, not proof that all 83 DDs passed quality review. Keep GS-07 as the next separate-session screen and keep `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, `RUNTIME NOT VERIFIED` separate.
-- Create this session worklog with prior-worklog review, source trace, discrepancy register and static audit. Read but do not run backend tests or claim runtime verification.
+- Update `list_screen.md` and `dd_screens/PLAN.md` with current API #11/#12 source status, GS-06 blockers and a dated checkpoint. Current file inventory has all six core artifacts for 83/83 IDs; this is file-presence evidence only, not proof that all 83 DDs passed quality review. Keep GS-07 as the next separate-session screen and distinguish `DD BLOCKED`, `IMPLEMENTATION PARTIAL`, `RESOURCE FLOW BLOCKED` and `LIVE RUNTIME NOT VERIFIED`.
+- T022 worklog records the source trace, discrepancy register, tests, local browser demo and fixture-process cleanup; no DB rows were created and no live API/DB behavior is claimed.
 
 ### Acceptance checklist
 
@@ -85,13 +118,13 @@ Thứ tự công việc trong phiên này:
 - [x] Original PNG/HTML hashes unchanged; original image is valid and the annotated image was visually inspected.
 - [x] Every marker is unique, ordered, within canvas bounds and maps 1:1 to one DD element row.
 - [x] All visible static controls/cards/states are documented; each actionable element and conditional tooltip state has a sequential event or explicit disabled/unknown behavior, with type/trigger/precondition/input/process/output/error.
-- [x] #11 absence, singleton/list discrepancy and missing visibility source are explicit.
-- [x] #12 current direct URL/public behavior, conditional parent check, response fields and errors are source-backed; API DD's stale `DECLARED_NOT_RUNNABLE` note and temporary-branch report are separated from production verification; tests are not described as run.
+- [x] #11 route/module/query/test source exists locally; singleton/first-row versus collection discrepancy and missing visibility source are explicit.
+- [x] #12 current direct URL/public behavior, conditional parent check, response fields and errors are source-backed; API DD's stale `DECLARED_NOT_RUNNABLE` note and temporary-branch report are separated from production verification.
 - [x] AC-06 vs API catalog/backend mismatch and unsupported 403/410/signer claims remain explicit blockers.
 - [x] Overall tracker counts/status and next screen are updated; static diff and artifact checks pass.
 
 ## 5. Initial classification
 
-- `DD BLOCKED`: #11 is not runnable and cardinality/visibility contract is unresolved; AC-06's authorization and signer flow is not implemented by current #12.
-- `IMPLEMENTATION BLOCKED`: security/access decision, collection schema, 403/410 and signed-URL behavior, route/client wiring, loaded/list/error state designs remain unapproved or unwired.
-- `RUNTIME NOT VERIFIED`: static prototype and source/test files do not establish deployed browser/API behavior.
+- `DD BLOCKED`: #11/#12 DDs remain Draft; #11 cardinality/visibility contract is unresolved and AC-06 authorization/signer flow is not implemented by current #12.
+- `IMPLEMENTATION PARTIAL`: GS03 query-tab/GS06 contract-blocked presentation are wired and locally verified. Resource list/open, GS07 handoff, 403/410 and signed-URL behavior remain unapproved or unwired.
+- `LIVE RUNTIME NOT VERIFIED`: local browser route used an #08 stub; source tests do not establish deployed API, DB or service behavior.

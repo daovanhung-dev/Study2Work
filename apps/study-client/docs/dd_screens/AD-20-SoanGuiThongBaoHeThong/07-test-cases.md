@@ -31,7 +31,7 @@
 - [x] API #93 body/response/errors và local guard/validator/DB side effects được mô tả; không chạy application tests/runtime trong phiên này.
 - [x] Handoff AD-20→SH-07 và các mâu thuẫn Notification/Operation, UUID/int64 được ghi rõ.
 - [ ] DD READY: chưa đạt; audience, channel, permission, draft/send, physical model, response/operation bridge và UI route còn blocker.
-- [ ] IMPLEMENTATION READY: chưa đạt; Study Web route/API client absent, nút chính không hoạt động, request UI không cung cấp explicit recipients.
+- [ ] IMPLEMENTATION READY: chưa đạt; Angular route/page and local preview are source-wired, but no API #93 caller exists; draft/send are disabled and the UI has no explicit recipient resolver.
 - [ ] RUNTIME VERIFIED: chưa đạt; không chạy Study Web hoặc live DB/provider.
 
 #### Kế hoạch kiểm chứng từ source PLAN
@@ -41,7 +41,7 @@
 1. Read list_screen row 78, API reverse index #093, flow F13 and G-12 in `apps/study-client/docs/list_screen.md`; read global row/checkpoint in `dd_screens/PLAN.md`.
 2. Compare AC-36 create/send branch, direct API catalog #93, reusable Notification/Operation schemas and generic operation-tracking prose.
 3. Read API #93 DD, Q-93-01…10 and verification report; preserve Draft/open-question status.
-4. Trace current route → shared ADMIN guard → validator → recipients query → notification/delivery inserts → response/commit/errors; inspect tests without running them. Treat checked-in DDL/migration only as candidates.
+4. Trace current route → shared ADMIN guard → validator → recipients query → notification/delivery inserts → response/commit/errors. T009 ran the focused Angular/API source suites; fake DB and checked-in DDL/migration remain candidates, not live-schema proof.
 5. Check API #18 design/current registration and SH-07 handoff. Preserve Notification-vs-Operation and UUID-vs-int64 discrepancies; do not assert a valid operation poll.
 6. Recheck Study Web source tree and inspect exact HTML/screenshot; compare the intended style only with `.agents/web-study/design.md`.
 7. The source review and status were recorded in `.agents/worklog/2026-11-07/design-study-screen-ad20.md`. This plan is saved before marker JSON/SVG, annotated PNG or AD-20.md.

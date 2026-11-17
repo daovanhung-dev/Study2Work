@@ -1,5 +1,13 @@
 # AD-06 — Events (đặc tả xử lý)
 
+## Current Study Web source (2026-11-17)
+
+- EV-01 is wired through the Admin bearer API client to GET #73; page/loading/error/empty/out-of-range/loaded states are present.
+- EV-02/EV-03/EV-04 controls stay disabled because search/filter/reset semantics are not approved. EV-05 changes pages within returned API bounds. EV-06 links a returned course row to AD-07 using `Course.id`.
+- Export/create/sync/manual/policy controls remain disabled or absent. API #73 remains read-only. Focused Angular spec passes 5/5; authenticated browser runtime is not verified.
+
+
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

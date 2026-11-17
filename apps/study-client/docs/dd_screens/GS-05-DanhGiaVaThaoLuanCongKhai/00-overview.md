@@ -4,17 +4,17 @@
 |---|---|
 | Screen ID | `GS-05` |
 | Module | Guest / Discovery |
-| Route | `/courses/:courseId?tab=reviews` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/courses/:courseId?tab=reviews` — GS03 route/query tab đã wired; GS05 là child panel, không phải route độc lập |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `DD BLOCKED` — API #10 has no executable source; review title, rating/aggregate and public-visibility contract remain unresolved.; **Implementation status:** `IMPLEMENTATION BLOCKED` — Study Web is unwired and loaded/error/pagination UI has no approved design.; **Runtime status:** `RUNTIME NOT VERIFIED` — HTML render is a static asset preview, not an application runtime. |
+| DD / implementation / runtime status | `DD BLOCKED` — API #10 remains Draft; title/rating/aggregate/query-key/public-visibility rules remain unresolved. `PARTIAL SOURCE-WIRED` — GS03 query tab mounts GS05, which reads source-backed #10. `STUB-BROWSER-VERIFIED` — local in-memory API fixture only; live API/DB/deployment remain `NOT VERIFIED`. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-17 |
 | Nguồn đối chiếu | [GS-05.md](../../screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05.md), [GS-05_PLAN.md](../../screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_PLAN.md), [GS-05_markers.json](../../screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/GS-05_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Danh sách review/reply; không hiển thị sao trung bình khi không có rating contract.
 - In-scope: Tái dùng #8 → GET #10 phân trang; 404 course riêng với empty reviews.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Không kết luận API #10 Draft đã được duyệt, không thêm title/rating/aggregate/filter hoặc mutation, không xem local stub demo là live API/DB/deployment verification.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,26 +31,27 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/empty/ready/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source/runtime | GS03/GS05 Angular source, tests and T021 demo | `PARTIAL SOURCE-WIRED`; tests/build pass; browser was checked against an in-memory local stub; live API/DB/deployment `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [GS-05 source screen.png](../../screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/02_guest_discovery/GS-05_danh-gia-va-thao-luan-cong-khai/screen_annotated.png))
 - Luồng: Tái dùng #8 → GET #10 phân trang; 404 course riêng với empty reviews.
-- Priority: P2; Gate/source status: **D (#10 declared; no current route/module/test)**; **BLOCK:** #08 catalog `course_id:int64` lệch route `str`/parser không giới hạn signed int64; API #10 Draft yêu cầu `Discussion.title` nhưng không có source; không có course-rating/aggregate source, literal rating-filter key/semantics hoặc public root/reply visibility approval; legacy `discussions` thiếu title/rating và V1-PILOT assessment reviews là model khác; AC-05 aggregate/eager #08→#09→#10 lệch F02 lazy tab, inventory yêu cầu #08 cache reuse; loaded review/reply/page/loading/error UI thiếu; live schema và Study Web UNWIRED
+- Priority: P2; Gate/source status: **#10 SOURCE_BACKED LOCALLY; Web caller WIRED; API DD Draft**; **BLOCK:** API #10 Draft vẫn yêu cầu `Discussion.title` không có source; không có course-rating/aggregate source, literal rating-filter key/semantics hoặc public root/reply visibility approval; legacy `discussions` thiếu title/rating và V1-PILOT assessment reviews là model khác; AC-05 aggregate/eager #08→#09→#10 lệch F02 lazy tab; no client cache; loaded projection chưa được DD duyệt; live schema/deployment chưa xác minh.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-17 — T021 wired GS05 to source-backed #10 and added focused tests; desktop/mobile browser screenshots used a temporary in-memory API stub. API DD and live DB/deployment gates remain open.
 
 ## Trạng thái và ranh giới bằng chứng
 
 # GS-05 — Đánh giá và thảo luận công khai
 
-> **DD status:** `DD BLOCKED` — API #10 has no executable source; review title, rating/aggregate and public-visibility contract remain unresolved.
-> **Implementation status:** `IMPLEMENTATION BLOCKED` — Study Web is unwired and loaded/error/pagination UI has no approved design.
-> **Runtime status:** `RUNTIME NOT VERIFIED` — HTML render is a static asset preview, not an application runtime.
-> **Phạm vi phiên:** chỉ GS-05; chưa xử lý GS-06.
+> **DD status:** `DD BLOCKED` — API #10 remains Draft; title, rating/aggregate, query-key and public-visibility contract remain unresolved.
+> **Implementation status:** `PARTIAL SOURCE-WIRED` — GS03 exposes the reviews query tab and mounts GS05 only after #08 confirms a published course; GS05 calls #10 with the page parameter and renders source-backed author/content/replies/pagination.
+> **Runtime status:** `STUB-BROWSER-VERIFIED` — desktop/mobile Chrome render used a temporary in-memory local API stub. Live API, DB schema and deployment remain `NOT VERIFIED`.
+> **Phạm vi cập nhật:** T021, 2026-11-17; do not treat static Stitch HTML as Angular runtime.
 
 ## Trích đoạn tổng quan từ DD nguồn
 
@@ -61,18 +62,18 @@
 | Screen ID / tên | GS-05 — Đánh giá và thảo luận công khai (tab) |
 | Mục tiêu expected | Guest đọc review và reply công khai của một khóa học. Inventory yêu cầu phân trang, tách lỗi khóa học 404 khỏi reviews rỗng, và không hiển thị sao trung bình khi chưa có rating contract. |
 | Actor | `Guest`; API catalog và API #10 Draft DD đều mô tả endpoint public. Không có auth/session logic trong HTML. |
-| Route đề xuất | `/courses/:courseId?tab=reviews` theo `apps/study-client/docs/list_screen.md`; chưa có Study Web route đã xác minh. `courseId` được truyền từ GS-03 theo proposal. |
-| API liên quan | #08 `GET /api/v1/courses/{course_id}` — current route/module source `SOURCE_BACKED`; #10 `GET /api/v1/courses/{course_id}/reviews` — catalog/Draft DD only, `DECLARED_NOT_RUNNABLE`. |
+| Route đề xuất | `/courses/:courseId?tab=reviews` theo inventory; current GS03 route/query tab mounts GS05 as a child after #08 succeeds. `courseId` remains a route string. |
+| API liên quan | #08 `GET /api/v1/courses/{course_id}` is source-backed; #10 `GET /api/v1/courses/{course_id}/reviews` has current route/module/tests, while its DD remains Draft. |
 | Màn hình liên quan | GS-03 là course detail/tab owner và nguồn `courseId`; expected back/route handoff giữ nguyên ID. Không có luồng viết review/reply trong inventory hoặc HTML GS-05 hiện tại. |
-| Side effect | Expected read-only. #08 current source là GET/read-only. #10 Draft DD mô tả GET/read-only; chưa có executable #10 để xác minh. |
+| Side effect | Read-only GET requests; no review/reply mutation is wired. API #10 source locally returns review/reply content and pagination; deployment/live data remain unverified. |
 | Điều kiện course | F02 chỉ mở detail/tab khi #08 xác nhận course PUBLISHED. API #08 source hiện trả 404 cho invalid, missing hoặc unpublished course. API #10 Draft DD cũng dự kiến gate PUBLISHED. |
 
 ### Expected behavior và current behavior
 
 | Expected theo inventory/AC | Current evidence trong checkout |
 |---|---|
-| Hiển thị reviews/replies và pagination; loading/empty/ready/error; phân biệt course 404 với reviews rỗng. | HTML chỉ có empty-like copy “Chưa có nội dung để hiển thị.”; không có review item, reply, pagination, API call hoặc state binding. |
-| Reuse #08 course result rồi GET #10. F02 quy định lazy load theo tab. | Không có Study Web router, API client, cache hoặc handler. AC-05 diagram gọi #08, #09, #10 tuần tự trước khi render. Đây là discrepancy; timing chưa được chốt. |
-| Review list được trả bởi public #10. | #10 chỉ xuất hiện trong `docs/lists/list_api.md` và Draft API DD; không tìm thấy route/module/test trong current Study Server `app/` và `tests/`. |
+| Hiển thị reviews/replies và pagination; loading/empty/ready/error; phân biệt course 404 với reviews rỗng. | Current GS05 Angular panel maps loading, response-backed empty/ready, #10 404 and safe error states; tests cover each. |
+| Reuse #08 course result rồi GET #10. F02 quy định lazy load theo tab. | Current GS03 confirms the course with #08, then mounts GS05 only for `tab=reviews`; #10 is lazy. There is no cross-screen cache. AC-05 eager #08→#09→#10 + aggregate remains a discrepancy. |
+| Review list được trả bởi public #10. | Current Study Server route/module/test exist; FE #10 descriptor and GS05 caller are wired locally. Focused API suite passes with fake DB; no live DB/deployment evidence. |
 | Có title/rating/aggregate nếu được xác định bởi contract. | API #10 Draft DD yêu cầu `Discussion.title` nhưng ghi source missing; response không có rating/aggregate. DDL legacy `discussions` không có `title` hoặc rating field/table. AC-05 aggregate rating và GS-05/G-06 thiếu rating contract đang xung đột. |
 | Điều hướng về cùng course trong GS-03. | Breadcrumb detail, CTA và mọi header/footer anchors dùng `href="#"`; không chứa course ID. |

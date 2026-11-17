@@ -1,5 +1,7 @@
 # GS-06 — API Integration
 
+> **T022 current-source update (2026-11-17):** The GS06 tab currently calls neither API. #11 has local route/module/query/model/test source but returns only the first row as a singleton; #12 is not used because its public direct-URL behavior lacks the AC-06 resource access policy. API #11/#12 DDs remain Draft.
+
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
 ## 1. API usage matrix
@@ -12,7 +14,7 @@
 
 - API refs trong inventory: #11, #12
 - Orchestration/data notes: GET #11 → người dùng chọn id → GET #12 trước khi mở URL; không suy diễn visibility.
-- BE/source status và gate: **D (#11) / R (#12 source-backed locally; API DD Draft)**; **BLOCK:** #11 chưa có route/module/test và catalog trả `Resource` đơn, thiếu collection/empty/order/pagination contract; thiếu nguồn `visibility`; AC-06 public-or-authorized/403/private signed URL khác catalog và #12 hiện tại public/no-auth/direct URL, chỉ gate parent khi `lesson_id` có giá trị; không có 410/TTL/signer; legacy DDL có `resources` nhưng V1-PILOT không có bảng này; list/loaded/error UI và Study Web route UNWIRED; prototype lệch Study design target, WCAG chưa đo; live schema/deployment chưa xác minh
+- BE/source status và gate: **#11 route/module/query/test source-backed locally; API #11/#12 DD Draft; GS06 UI partial**; **BLOCK:** #11 query reads all rows but current view returns only `rows[0]`, while its DD disallows selecting a representative row; list/empty/order/pagination contract and `visibility` are unresolved. AC-06 public-or-authorized/403/private signed URL conflicts with #12 current public/no-auth/direct URL, conditional parent check only when `lesson_id` is non-null; no 410/TTL/signer. Legacy DDL has `resources`, V1-PILOT does not; live schema/deployment unknown. GS06 currently sends no resource request and offers no open/download action.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Luồng dự kiến theo contract đã xác nhận được
@@ -29,7 +31,7 @@
 
 | API | Request | Current/design response | Auth/access | Status và giới hạn |
 |---|---|---|---|---|
-| #11 | `GET /api/v1/courses/{course_id}/resources`; `course_id:int64`; no body/query; public/no Bearer. | Catalog/API DD `ApiEnvelope<Resource>` đơn: `id`, `name`, `type`, `url`, `visibility`, `lesson_id`; `visibility` không có source. Không có current route/module/query/test. | Catalog nói public; AC-06 yêu cầu public-or-authorized. Chưa thống nhất. | Declared 200/404/500; không có list cardinality, pagination/order hoặc empty semantics. `DECLARED_NOT_RUNNABLE`; API DD Draft. |
+| #11 | `GET /api/v1/courses/{course_id}/resources`; `course_id:int64`; no body/query; public/no Bearer. | Draft declares singleton `Resource`; `visibility` has no source. Current route/module/query/model/tests exist. Query reads rows ordered by ID, but view serializes only `rows[0]`; no rows returns 404. | Catalog says public; AC-06 requires public-or-authorized. Unresolved. | Declared 200/404/500; collection cardinality, pagination/order and empty semantics unresolved. `SOURCE-BACKED LOCALLY; CONTRACT DISCREPANCY; API DD Draft`. |
 | #12 | `GET /api/v1/resources/{resource_id}`; catalog type `int64`; no body/query; public/no Bearer. Current router nhận raw path `str` rồi validator chấp nhận positive signed-int64. | Current response `data={id:int,name:string,type:string,url:string|null,lesson_id:int|null}` trong envelope; bỏ `visibility`; URL là `resources.url` trực tiếp. API DD vẫn Draft và câu `DECLARED_NOT_RUNNABLE` đã stale so với source/test/report. | Route không có Bearer dependency; conditional parent gate chỉ khi `lesson_id` non-null. Không có visibility/enrollment check hoặc signer; null `lesson_id` không bị parent-gate. | Current source: 200 `DESIGN_RESOURCE_RETRIEVED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 500 `DESIGN_INTERNAL_ERROR`; SQL error rollback; mapping error 500. Không có 403/410/TTL. |
 
 Đối với cả hai GET, retry, timeout, cache invalidation, de-duplication khi click liên tiếp, CORS/storage headers và download disposition chưa có client contract. Không tự đặt giá trị mặc định. Legacy `DB.sql` có `resources` nhưng thiếu `visibility`; V1-PILOT schema không có `resources`; live schema/deployment chưa được xác minh.

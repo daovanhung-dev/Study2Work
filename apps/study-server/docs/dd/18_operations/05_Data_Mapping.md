@@ -8,6 +8,10 @@ format: markdown
 
 # Data Mapping
 
+## Current source audit (2026-11-16)
+
+The Draft mapping below describes the logical generic Operation contract. Current Study source implements only a notification-specific lookup: `notifications.operation_id` joined to `notification_deliveries`, grouped by UUID and filtered by authenticated `sender_id`/owner. It returns `NOTIFICATION_DISPATCH` and local `QUEUED`/`FAILED`/`SENT` projections. There is no generic Study `operations` table. The handler has 8 dedicated source-level HTTP tests; this does not verify live schema/deployment or approve the generic mapping.
+
 ## Flow xử lý data
 
 1. Nhận Bearer JWT và path operation_id.
@@ -68,7 +72,7 @@ format: markdown
 | Target table/API | Column/Field | Condition/Value | Remarks |
 |---|---|---|---|
 | Operation logical resource | owner_id | Compare to authenticated caller only after the identity mapping is approved | Physical table, owner column and Admin policy are SOURCE_REQUIRED |
-| Bearer JWT | caller identity/role claims | Authentication required; exact claim names are not specified by API #18 contract | Current runtime behavior is not evidence for this unwired endpoint |
+| Bearer JWT | caller identity/role claims | Authentication required; exact claim names are not specified by API #18 contract | Current source uses the shared JWT guard, permits `STUDENT`/`MENTOR`/`ADMIN` per AC diagrams, and binds the query to authenticated owner ID; this does not resolve the contract's owner/Admin discrepancy |
 
 ### 0.3. Check kết quả
 

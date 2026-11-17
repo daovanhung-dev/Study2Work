@@ -67,4 +67,19 @@ export class AD15Page {
       this.query.update((query) => ({ ...query, page }));
     }
   }
+
+  quizDeleteRoute(statisticsRoute: string | undefined): string | null {
+    const match = /^\/admin\/quizzes\/([1-9][0-9]*)\/statistics$/.exec(statisticsRoute ?? '');
+    const quizId = match?.[1];
+    if (!quizId) {
+      return null;
+    }
+
+    const numericId = Number(quizId);
+    if (!Number.isSafeInteger(numericId) || numericId <= 0 || String(numericId) !== quizId) {
+      return null;
+    }
+
+    return `/admin/quizzes/${quizId}/delete`;
+  }
 }

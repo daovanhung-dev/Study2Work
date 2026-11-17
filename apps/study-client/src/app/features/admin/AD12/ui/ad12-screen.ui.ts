@@ -9,7 +9,7 @@ export const AD12_UI: Pick<AdminScreenDefinition, 'id' | 'title' | 'eyebrow' | '
   "columns": [
     "Mã bài học",
     "Tiêu đề",
-    "Mã khóa học",
+    "ID khóa học",
     "Thứ tự",
     "Trạng thái"
   ]

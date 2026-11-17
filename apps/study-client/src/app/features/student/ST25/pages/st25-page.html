@@ -1,7 +1,71 @@
-<main class="static-page st25-page">
-  <nav class="crumbs">⌂ Diễn đàn　›　 Frontend React &amp; TypeScript　›　 Thread #ST-25</nav>
-  <div class="thread-layout"><div class="thread-main">
-    <article class="thread-topic"><div class="thread-tags"><span>React 19</span><span>WebSocket</span><span>TanStack Query</span><span>Performance &amp; Optimization</span></div><h1>Xử lý tối ưu memory leak khi dùng WebSocket kết hợp TanStack Query trong Next.js 19</h1><div class="thread-author"><b>NH</b><div><strong>Nguyễn Hạnh</strong><small>Học viên tích cực • Lớp FE-Adv-04 • Lộ trình Fullstack Senior Transition</small></div><span>♧ 18</span></div><p>Chào Thầy cô và các bạn, mình đang hoàn thiện module đồ án Capstone <b>Real-time Crypto &amp; Stock Dashboard</b> sử dụng App Router trên Next.js 19 kết hợp TanStack Query v5 để đồng bộ state client-side.</p><p>Vấn đề xuất hiện khi người dùng chuyển đổi tab liên tục giữa các mã chứng khoán (các component biểu đồ unmount và remount tức thì). Mình phát hiện memory consumption trên Chrome DevTools Heap Snapshot tăng đột biến từ <b>42MB lên 280MB</b> chỉ sau 3 phút điều hướng.</p><p>Khi kiểm tra chi tiết, các WebSocket listeners vẫn còn bị giữ lại tham chiếu bởi closures trong React hooks, khiến instance của query observer không giải phóng:</p><div class="thread-code"><header>🔴 hook/useSocketQuery.ts (Đoạn mã gây lỗi) <span>▣ Sao chép</span></header><pre>export function useSocketPriceFeed(symbol: string) &#123;<br>  const queryClient = useQueryClient();<br>  useEffect(() =&gt; &#123; // ⚠ Bug: Socket instance bị capture trong closure<br>    const socket = getGlobalSocket();<br>    socket.on('ticker', (payload) =&gt; &#123;<br>      queryClient.setQueryData(['price', symbol], payload);<br>    &#125;);<br>    // TODO: cleanup listener khi unmount<br>  &#125;, [symbol]); // Missing cleanup function return<br>&#125;</pre></div><div class="thread-repo">▣ GitHub Repo tối thiểu tái hiện lỗi: <code>https://github.com/nguyenhanh/fe-next19-tanstack-websocket-leak-demo</code></div></article>
-    <h2>Câu trả lời &amp; Phản hồi chuyên môn <small>2</small></h2><article class="mentor-reply"><header>◉ ĐÁP ÁN ĐƯỢC CHẤP NHẬN BỞI TÁC GIẢ VÀ MENTOR <span>Verified Solution</span></header><div class="mentor-person"><b>TH</b><div><strong>TS. Trần Hoàng Long</strong><small>Mentor tuyển dụng • Principal Frontend Architect @ VNG</small></div></div><p>Chào em Hạnh, câu hỏi của em đào rất sâu vào bản chất của <b>React 19 Lifecycle</b> và cơ chế <b>Garbage Collection</b> trong môi trường Single Page Hydration của Next.js 19!</p><p>Lý do gây ra tình trạng Memory Leak nghiêm trọng này có 2 nguyên nhân cốt lõi: sự kiện đăng lại trong Bus Socket callback và đóng bộ hóa sai thời điểm với React State.</p><p>Giải pháp tối ưu chuẩn Senior: Sử dụng API mới <code>useSyncExternalStore</code> để React 18+ tự tiếp tục tối ưu hóa trên React 19.</p><div class="thread-code"><header>✓ hook/useOptimizedSocketFeed.ts (Refactored Solution) <span>▣ Sao chép Code</span></header><pre>import &#123; useSyncExternalStore &#125; from 'react';<br>import &#123; socketManager &#125; from './socketManager';<br>export function usePriceFeed(symbol: string) &#123;<br>  const subscribe = (callback: () =&gt; void) =&gt; &#123;<br>    return socketManager.subscribeToTicker(symbol, callback);<br>  &#125;;<br>  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);<br>&#125;</pre></div><footer>♡ Thả tim (15)　　↪ Phản hồi trực tiếp　　✓ Câu trả lời giải đáp hoàn chỉnh</footer></article><article class="peer-reply"><strong>Lê Bảo Trâm</strong><small>Học viên FE-Adv-04 • Phản hồi 13:10 hôm nay</small><p>Bên cạnh giải pháp kiến trúc dùng useSyncExternalStore của thầy Long, nếu bạn vẫn muốn giữ cache của query trong TanStack Query v5, bạn nên hủy các tiến trình GC đúng thời điểm.</p><pre>const queryClient = new QueryClient(&#123; defaultOptions: &#123; queries: &#123; gcTime: 1000 * 60 * 5 &#125; &#125; &#125;);</pre></article><section class="thread-compose"><h3>✎ Đóng góp ý kiến thảo luận của bạn</h3><div>B　𝑰　〈〉　🔗　☷　 Hỗ trợ Markdown hoàn chỉnh</div><p>Nhập câu trả lời hoặc thảo luận phản biện... Bạn có thể đính kèm giải pháp code hoặc liên kết GitHub để nhận phản hồi từ Mentor.</p><footer>◉ Quy tắc: Thảo luận chuyên môn học thuật &amp; tuân thủ Bản quyền mã nguồn. <b>Gửi câu trả lời</b></footer></section>
-  </div><aside class="thread-sidebar"><section><small>TRẠNG THÁI THẢO LUẬN</small><strong>◉ ĐÃ GIẢI QUYẾT</strong><p>Khởi tạo bởi: Nguyễn Hạnh</p><p>Thời gian phản hồi đầu: 1 giờ 25 phút</p><p>Tổng số đóng góp: 3 trao đổi</p><p>Độ khó chuyên môn: Advanced (Level 4/5)</p></section><section><small>KHÓA HỌC LIÊN KẾT</small><h3>Next.js 19 &amp; Enterprise Frontend Architecture</h3><p>Nội dung chuẩn bị thực tế cho phần Module 08: Realtime Streaming &amp; Websocket Optimization.</p><span>Xem bài giảng Module 08</span></section><section><h3>▣ Thảo luận cùng chủ đề</h3><p>● Cách handle reconnect token tự động khi WebSocket bị drop mạng?</p><p>● So sánh hiệu năng giữa Server-Sent Events (SSE) và WebSocket cho bảng giá thị trường...</p><p>● Tối ưu React 19 Action hooks kết hợp với Optimistic UI updates</p></section><section class="mentor-help"><h3>♧ Cần Mentor Review 1:1?</h3><p>Nếu đã có lời giải kỹ thuật trước lớp, hãy đặt lịch cố vấn để cùng Giảng viên trong khung giờ Office Hours nhé.</p><span>Đặt lịch Mentor Office Hour</span></section></aside></div>
+<main class="static-page api-screen st25-page">
+  <nav class="crumbs" aria-label="Vị trí hiện tại">
+    <a routerLink="/student/discussions">Diễn đàn</a><span>›</span><span>Chi tiết chủ đề</span>
+  </nav>
+  @if (loading()) {
+    <section class="api-message" role="status">
+      <strong>Đang tải chủ đề và phản hồi…</strong>
+    </section>
+  }
+  @if (error()) {
+    <section class="api-error" role="alert">{{ error() }}</section>
+  }
+  @if (!loading() && !error() && thread(); as item) {
+    <section class="api-thread">
+      <article class="api-card thread-topic">
+        <p class="api-meta">Khóa #{{ item.course_id }} · {{ item.status }}</p>
+        <h1>{{ item.title }}</h1>
+        <div class="thread-byline">
+          <strong>{{ item.author.full_name }}</strong
+          ><span>Chủ đề #{{ item.id }}</span>
+        </div>
+        <p class="thread-content">{{ item.content }}</p>
+      </article>
+      <section class="api-card">
+        <div class="api-heading">
+          <div>
+            <p class="api-eyebrow">API #42 · Nội dung thread</p>
+            <h2>Phản hồi ({{ item.comments.length }})</h2>
+          </div>
+        </div>
+        @if (!item.comments.length) {
+          <p class="api-muted">Chưa có phản hồi nào được trả về.</p>
+        }
+        @for (comment of item.comments; track comment.id) {
+          <article class="api-comment">
+            <div class="thread-byline">
+              <strong>{{ comment.author.full_name }}</strong
+              ><time>{{ comment.created_at | date: 'medium' }}</time>
+            </div>
+            <p>{{ comment.content }}</p>
+          </article>
+        }
+      </section>
+      <form class="api-card reply-composer" (ngSubmit)="sendReply()">
+        <p class="api-eyebrow">API #41 · Phản hồi</p>
+        <h2>Thêm ý kiến</h2>
+        <label class="api-field"
+          >Nội dung<textarea
+            name="replyContent"
+            [(ngModel)]="replyContent"
+            rows="6"
+            required
+            placeholder="Nhập phản hồi của bạn"
+          ></textarea>
+        </label>
+        <p class="api-muted">
+          API hiện nhận nội dung văn bản; gửi xong sẽ tải lại thread bằng API #42.
+        </p>
+        @if (replyError()) {
+          <p class="api-error" role="alert">{{ replyError() }}</p>
+        }
+        @if (replySent()) {
+          <p class="api-success" role="status">Phản hồi đã được gửi.</p>
+        }
+        <button class="api-button" type="submit" [disabled]="replyBusy()">
+          {{ replyBusy() ? 'Đang gửi…' : 'Gửi phản hồi' }}
+        </button>
+      </form>
+    </section>
+  }
 </main>

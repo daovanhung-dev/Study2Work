@@ -45,10 +45,10 @@
 4. PII email/phone, audit access, lifecycle/deleted visibility và null/omit policy còn mở trong API #68 Draft DD.
 5. Add-user, user export, guide target, server sync và audit/health claims không được #68/AC-31 hỗ trợ.
 6. Local #68 truy vấn legacy BIGINT `users`; live schema/migration/deployment chưa xác minh và V1-PILOT UUID model khác cấu trúc.
-7. Study Web editable source/package/router absent; `/admin/users` chưa wired. API tests có fake DB sessions và không xác minh frontend/runtime/deployment.
+7. Local Study Web route/page/#68 caller and focused Angular spec exist; browser reached the login gate only. API tests use fake DB sessions and do not verify authenticated frontend, live schema, or deployment.
 8. Screenshot palette/typeface khác Study Web guide; review/approval trước khi làm UI.
 
-**Kết quả:** `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`. API #68 local source/test tồn tại nhưng các blocker về contract/policy, schema và frontend vẫn mở.
+**Kết quả (2026-11-17):** `DD BLOCKED`; `IMPLEMENTATION PARTIAL SOURCE`; authenticated `RUNTIME NOT VERIFIED`. Local frontend/API source and focused tests exist, while contract/policy, schema, live API/DB and deployment blockers remain.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 
@@ -57,8 +57,8 @@
 - `screen.png` and `code.html` hashes unchanged; original plus annotated PNG present.
 - 38 ordered unique markers are in bounds and match exactly 38 DD element rows.
 - DD has A–F, source trace, events, API/error mapping, states/navigation, and unresolved decisions clearly separated from approved behavior.
-- Inventory/tracker/worklog agree on `R` for source-backed API #68 while screen result remains `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, `RUNTIME NOT VERIFIED` where blockers remain.
+- Inventory/tracker/worklog agree on `R` for source-backed API #68 while screen result remains `DD BLOCKED`, `IMPLEMENTATION PARTIAL SOURCE`, and authenticated `RUNTIME NOT VERIFIED`.
 - This session handles only AD-02; no other Screen ID is started.
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
-- Không chạy app test trong task chuyển đổi tài liệu.
+- Task T030 verification: focused Angular spec **8/8 passed**; Study Server API #68 fake-session tests **15 passed**; Study Web production build exit 0 with three existing Student CSS budget warnings and no AD-02 warning. Browser opened `/admin/users` and displayed the Admin login gate; authenticated list/live API/DB/deployment remain unverified.

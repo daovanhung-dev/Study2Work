@@ -37,8 +37,8 @@ status: "Draft — Needs Confirmation"
 - [AC-31 index](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) và [activity diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — Admin update user/profile, sau đó reload list/detail.
 - [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — BIGINT users candidate; không phải live-schema evidence.
 - [V1-PILOT DDL](../../../../../infra/postgres/02_study_db.sql) — UUID-oriented identity/profile/role relations khác legacy users.
-- [API #14 source](../../../app/modules/guest/api_14_users_me_profile/query.py) — hiện update full_name, phone, avatar_url, updated_at; không update role/bio.
-- [API #14 validation](../../../app/modules/guest/api_14_users_me_profile/validate.py) — Student guard và profile normalization hiện tại; không phải Admin policy.
+- [API #14 source](../../../app/modules/student/api_14_users_me_profile/query.py) — hiện update full_name, phone, avatar_url, updated_at; không update role/bio.
+- [API #14 validation](../../../app/modules/student/api_14_users_me_profile/validate.py) — Student guard và profile normalization hiện tại; không phải Admin policy.
 - [Current auth helper](../../../app/utils/auth.py) — `validate_current_user_request` hiện yêu cầu Student.
 - [API #68 Overview](../68_admin_users_list/02_Overview.md) và [API #69 Overview](../69_admin_user_detail/02_Overview.md) — cùng AC-31; #68 là list `Page<UserProfile>`, #69 là detail và #70 là mutation.
 

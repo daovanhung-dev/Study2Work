@@ -1,8 +1,10 @@
 # AD-20 — Navigation
 
+> **Current Angular source (2026-11-16):** `/admin/notifications/new` maps to `AD20Page`; in-page return links use `/admin/notifications`. A route/page declaration does not verify browser navigation or auth. No API caller or SH-07 handoff exists.
+
 ## 1. Route definition
-- Current route in inventory: `/admin/notifications/new` (candidate; Study Web route chưa wired)`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Current route in inventory: `/admin/notifications/new` (Angular route/page source-wired).
+- Status: route/page source exists; browser/runtime/auth behavior not verified; API caller absent.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,7 +12,7 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [AD-19](../AD-19-DanhSachThongBaoQuanTri/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [AD-19](../AD-19-DanhSachThongBaoQuanTri/00-overview.md) | Current Angular return links; source DD entry intent | No params | Route source exists; browser/runtime/auth behavior not verified |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
@@ -37,7 +39,7 @@ flowchart LR
 
 | State | Điều kiện / UI | Hành động và next state | Trạng thái evidence |
 |---|---|---|---|
-| `UNWIRED` | Study Web không có source/router; route chỉ candidate. | Chưa thể mở screen qua ứng dụng. FE route/auth integration cần được cung cấp. | Current |
+| `ROUTE_PAGE_SOURCE_WIRED` | Angular router maps `/admin/notifications/new` to `AD20Page`; no API caller. | Route/page exists in source; auth/browser runtime remains unverified. | Current source |
 | `INITIAL_STATIC` | Artifact render; `all`, `app`, `normal` checked; title/body rỗng; preview sample; Send disabled. | Input title/body → `PREVIEW_EDITING`; radio/checkbox đổi native DOM state. | Prototype current, không phải runtime |
 | `PREVIEW_EDITING` | Title/body listener chạy trong HTML. | Trim và thay preview text; blank → sample fallback; không gọi API. | Prototype current |
 | `AUDIENCE_OR_CHANNEL_SELECTED` | Browser native selection đổi. | Không có recipient resolution, enum validation, count hay server request. | Prototype current |
@@ -46,17 +48,17 @@ flowchart LR
 | `SUBMITTING` | Chỉ là state tương lai nếu #93 contract + UI được duyệt. | Chống double-submit, timeout, retry behavior chưa có nguồn; cần định nghĩa trước implementation. | Not implemented |
 | `ACCEPTED` | Chỉ khi API approved contract trả 202 và body parse hợp lệ. | Hiển thị accepted, giữ `delivered=false`; route tiếp phụ thuộc approved operation bridge. | Catalog expected; current UI không gọi |
 | `DELIVERED` | Cần delivery status response/provider evidence. | Không thể suy ra từ 202, `QUEUED` hay thời gian trôi qua. API #96/worker relationship cần xác nhận. | Not verified |
-| `VALIDATION_ERROR` | API #93 422 theo contract/fallback. | Map field errors và giữ form values theo client policy; mapping cụ thể chưa có trong UI. | API source response exists; UI absent |
-| `UNAUTHORIZED` / `FORBIDDEN` | API #93 401/403 hoặc future route guard. | Session/permission handling chưa có Study Web source; không tự chọn redirect/return URL. | API source; UI absent |
+| `VALIDATION_ERROR` | API #93 422 theo contract/fallback. | Client field-error mapping chưa implement; page không gọi #93. | API source response exists; caller/UI mapping absent |
+| `UNAUTHORIZED` / `FORBIDDEN` | API #93 401/403; route guard behavior not verified. | Client session/permission behavior chưa được xác minh; page không gọi #93. | API source; runtime not verified |
 | `DEPENDENCY_ERROR` / `SERVER_ERROR` | API #93 503/500. | Hiển thị retry/manual recovery chỉ theo approved policy; không auto retry mutation. | API source fallback; client policy absent |
 | `OPERATION_UNRESOLVED` | Response #93 shape/ID không thể map sang #18. | Không poll/route SH-07; giữ accepted result theo approved contract hoặc show blocked state. | Current design blocker |
 
 ### Navigation/data transfer
 
-- **AD-19 → AD-20:** Inventory định nghĩa entry/return. AD-19 prototype CTA path `/admin/notifications/create` khác candidate `/admin/notifications/new`; cả hai chưa wired. AD-20 return anchor `#`.
+- **AD-19 → AD-20:** Current AD-19 Angular CTA uses `/admin/notifications/new`; the route maps to `AD20Page`. The historical Stitch CTA uses `/admin/notifications/create`. Current AD-20 return links use `/admin/notifications`.
 - **AD-20 → AD-21:** Không mở AD-21 từ UUID metadata. API #94–#96 dùng notification-specific IDs/status contracts; direct notification ID field và response mapping cần được phê duyệt cho detail view.
-- **AD-20 → SH-07:** Chỉ sau khi response `operation_id`, UUID/int64 path type, #18 runtime, ownership policy và lifecycle mapping thống nhất. Hiện không truyền operation ID hoặc tự chuyển trang.
-- **Session/security:** Expected Admin permission từ AC-36; local #93 shared role `ADMIN`; route auth/session expiry behavior chưa được triển khai ở Study Web. Không trust role/owner từ client state.
+- **AD-20 → SH-07:** Chỉ sau khi response `operation_id`, catalog/local UUID-vs-int64 contract, ownership policy và lifecycle mapping thống nhất. Local #18 notification-only handler exists, but the page does not call it or pass an ID.
+- **Session/security:** Expected Admin permission từ AC-36; local #93 shared role `ADMIN`. Angular auth/session-expiry behavior has not been runtime-verified. Không trust role/owner từ client state.
 
 ### Trích từ DD nguồn: B. Luồng hoạt động tổng thể
 

@@ -1,5 +1,7 @@
 # AD-19 — Events (đặc tả xử lý)
 
+> Current Angular source update (2026-11-16): route load calls #92 with page=1; status/channel submit sends only exact source values; reset returns to page 1; pagination uses API metadata; keyword search remains disabled; CTA uses /admin/notifications/new; row status links render only for safe integer IDs. Focused page/route specs pass 6/6. The event details below describe the earlier Stitch prototype and do not resolve the #92 Draft contract.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

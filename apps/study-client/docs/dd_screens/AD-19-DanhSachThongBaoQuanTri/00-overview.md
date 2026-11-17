@@ -4,17 +4,21 @@
 |---|---|
 | Screen ID | `AD-19` |
 | Module | Admin |
-| Route | `/admin/notifications (candidate; Study Web route chưa wired)` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/admin/notifications` — Angular route/page/API caller source-wired; browser runtime not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: Source status is described in the source DD. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [AD-19.md](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/AD-19.md), [AD-19_PLAN.md](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/AD-19_PLAN.md), [AD-19_markers.json](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/AD-19_markers.json), [list_screen.md](../../list_screen.md) |
 
+## Current source update (2026-11-16)
+
+Angular admin routing registers /admin/notifications; AD19Page calls API #92 through its data-access service, uses /admin/notifications/new for the AD-20 CTA, and creates a status link only for safe integer IDs. Focused AD-19 page + route specs passed 6/6; API #92 fake-session tests passed 20/20 with one Starlette deprecation warning. This verifies local source and mocked/fake data only: browser runtime, live DB, migration deployment, and fine-grained permission remain unverified. The direct catalog singleton response still conflicts with local Page<Notification>; DD remains blocked and implementation is partial-source.
+
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Admin xem notification list; inventory mockup search/status/channel và draft/scheduled/sent là expected nhưng cần contract mapping.
-- In-scope: Catalog #92 chỉ có status/channel/page và direct ApiEnvelope<Notification>; local #92 trả derived Page<Notification>, delivery-backed rows. No search, recipient/send-time fields or metrics mapping. AD-20 CTA path is /admin/notifications/create in HTML vs inventory /admin/notifications/new; guideline link unresolved.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- In-scope: Catalog #92 khai báo status/channel/page và direct ApiEnvelope<Notification>; local #92 trả derived Page<Notification>, delivery-backed rows. Không có search, recipient/send-time fields hoặc metrics mapping. Prototype HTML CTA là /admin/notifications/create; current Angular CTA là /admin/notifications/new đúng route; guideline link unresolved.
+- Out-of-scope: Không suy ra browser/runtime/live DB/deployment hoặc fine-grained permission từ source/tests; xem contract gates bên dưới.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,17 +35,18 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | unwired/loading/empty/ready/unauthorized/forbidden/validation-error/dependency-error/server-error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current runtime | Current Angular source | SOURCE_WIRED (route/page/caller and focused specs); RUNTIME NOT VERIFIED |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-19 source screen.png](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/screen_annotated.png))
 - Luồng: Catalog #92 chỉ có status/channel/page và direct ApiEnvelope<Notification>; local #92 trả derived Page<Notification>, delivery-backed rows. No search, recipient/send-time fields or metrics mapping. AD-20 CTA path is /admin/notifications/create in HTML vs inventory /admin/notifications/new; guideline link unresolved.
-- Priority: P1; Gate/source status: **R** local #92 route/validator/query/model/view/focused-test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** catalog singleton vs local Page; enum/search/metric and recipient/send-time mapping; AC-36 permission vs ADMIN; notification grain/live schema; CTA/guidelines destinations; Study Web UNWIRED; **RUNTIME NOT VERIFIED**
+- Priority: P1; Gate/source status: **R** local #92 route/validator/query/model/view and focused tests; Angular AD-19 route/page/caller specs pass 6/6; API #92 fake-session tests pass 20/20. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** catalog singleton vs local Page; enum/search/metrics/recipient/send-time mapping; AC-36 permission vs ADMIN; notification grain/live schema; guideline destination unresolved; **RUNTIME NOT VERIFIED**.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
-- 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; source/runtime chưa được xác minh lúc đó.
+- 2026-11-16 — Xác minh Angular route/page/#92 caller và test source: FE 6/6, API fake-session 20/20; cập nhật current-source status, giữ DD blockers và runtime unverified.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -56,10 +61,10 @@
 | Screen ID / tên | AD-19 — Danh sách thông báo quản trị |
 | Mục tiêu | Cho Admin xem danh sách thông báo và chuyển sang soạn mới hoặc xử lý một thông báo đã chọn, theo inventory và AC-36. |
 | Actor | Admin. AC-36 yêu cầu quyền notification-management; catalog #92 ghi role Admin. |
-| Route | Candidate: /admin/notifications. Chưa có route Study Web được xác minh. |
+| Route | `/admin/notifications`; current Angular route/page/caller source-wired; runtime not verified. |
 | Màn hình liên quan | AD-20 soạn/gửi; AD-21 sửa/kiểm soát/trạng thái. SH-07 chỉ là operation monitor nếu contract #93 cung cấp operation_id. |
 | API liên quan | GET #92 là API đọc của màn hình. Các #93–#96 thuộc luồng màn hình kế tiếp; không gọi ngầm từ AD-19. |
-| Trạng thái tài liệu | DD BLOCKED bởi các contract chưa được duyệt bên dưới; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. |
+| Trạng thái tài liệu | DD BLOCKED by unresolved contracts; IMPLEMENTATION PARTIAL SOURCE; RUNTIME NOT VERIFIED. |
 | Tài sản | [Ảnh gốc](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/screen.png), [ảnh đánh số](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/screen_annotated.png), [marker JSON](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/AD-19_markers.json), [SVG overlay](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/AD-19_markers_overlay.svg), [kế hoạch](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/AD-19_PLAN.md), [HTML nguồn](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/code.html). |
 
 ### Nguồn và mức độ bằng chứng

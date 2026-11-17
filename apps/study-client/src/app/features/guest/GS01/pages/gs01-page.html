@@ -1,0 +1,118 @@
+<study-guest-site-layout [showSearch]="true">
+  <main class="catalog-page" data-screen-id="GS01">
+    <study-gs01-hero />
+
+    <section class="category-section" aria-labelledby="gs01-categories-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Khám phá</p>
+          <h2 id="gs01-categories-heading">Danh mục khóa học</h2>
+        </div>
+      </div>
+
+      @let categories = categoryState();
+      @if (categories.status === 'loading') {
+        <p class="category-message" role="status">Đang tải danh mục…</p>
+      } @else if (categories.status === 'error') {
+        <div class="category-message category-message--error" role="status">
+          <span>Danh mục chưa thể tải.</span>
+          <button type="button" (click)="retryAll()">Thử lại</button>
+        </div>
+      } @else if (categories.items.length > 0) {
+        <ul class="category-list" aria-label="Danh mục tham khảo">
+          @for (category of categories.items; track category.id) {
+            <li>{{ category.name }}</li>
+          }
+        </ul>
+      } @else {
+        <p class="category-message">Hiện chưa có danh mục.</p>
+      }
+    </section>
+
+    <section class="course-section" aria-labelledby="gs01-courses-heading">
+      @let catalog = catalogState();
+      <div class="section-heading course-heading">
+        <div>
+          <p class="eyebrow">Dành cho bạn</p>
+          <h2 id="gs01-courses-heading">Tất cả khóa học</h2>
+        </div>
+
+        @if (catalog.status === 'ready') {
+          <label class="sort-control">
+            <span>Sắp xếp</span>
+            <select [value]="selectedSort()" (change)="onSortChange($event)">
+              @for (option of sortOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </label>
+        }
+      </div>
+
+      @if (catalog.status === 'loading') {
+        <div class="catalog-loading" role="status" aria-live="polite" aria-busy="true">
+          <span>Đang tải khóa học…</span>
+        </div>
+      } @else if (catalog.status === 'error') {
+        <div class="state-panel state-panel--error" role="alert">
+          <span class="state-icon"><study-icon name="refresh" /></span>
+          <h3>Chưa thể tải danh sách khóa học</h3>
+          <p>Vui lòng thử lại sau.</p>
+          <button class="primary-button" type="button" (click)="retryCatalog()">Thử lại</button>
+        </div>
+      } @else if (catalog.status === 'empty') {
+        <div class="state-panel" aria-live="polite">
+          <span class="state-icon"><study-icon name="book" /></span>
+          <h3>Chưa có khóa học nào</h3>
+          <p>Các khóa học đã xuất bản sẽ xuất hiện tại đây.</p>
+          <a class="primary-button" routerLink="/courses/search">Tìm khóa học</a>
+        </div>
+      } @else if (catalog.status === 'out-of-range') {
+        <div class="state-panel" role="status">
+          <span class="state-icon"><study-icon name="info" /></span>
+          <h3>Trang {{ catalog.page }} không còn khóa học</h3>
+          <p>Danh sách hiện có {{ catalog.total }} khóa học trên {{ catalog.totalPages }} trang.</p>
+          <button class="primary-button" type="button" (click)="retryCatalog()">
+            Tải lại danh sách
+          </button>
+        </div>
+      } @else if (catalog.status === 'ready') {
+        <div class="results-summary" aria-live="polite">
+          <span>{{ catalog.result.pagination.total }} khóa học</span>
+          <span class="results-page">
+            Trang {{ catalog.result.pagination.page }} / {{ catalog.result.pagination.total_pages }}
+          </span>
+        </div>
+
+        <div class="course-grid">
+          @for (course of catalog.result.items; track course.id) {
+            <study-gs01-course-card [course]="course" />
+          }
+        </div>
+
+        @if (catalog.result.pagination.total_pages > 1) {
+          <nav class="pagination" aria-label="Phân trang khóa học">
+            <button
+              type="button"
+              [disabled]="catalog.result.pagination.page <= 1"
+              (click)="goToPage(catalog.result.pagination.page - 1)"
+            >
+              Trang trước
+            </button>
+            <span aria-current="page">
+              Trang {{ catalog.result.pagination.page }} /
+              {{ catalog.result.pagination.total_pages }}
+            </span>
+            <button
+              type="button"
+              [disabled]="catalog.result.pagination.page >= catalog.result.pagination.total_pages"
+              (click)="goToPage(catalog.result.pagination.page + 1)"
+            >
+              Trang sau
+            </button>
+          </nav>
+        }
+      }
+    </section>
+  </main>
+</study-guest-site-layout>

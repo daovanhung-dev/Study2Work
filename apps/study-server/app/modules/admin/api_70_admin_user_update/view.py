@@ -14,7 +14,7 @@ from app.modules.admin.api_70_admin_user_update.query import UPDATE_ADMIN_USER
 from app.modules.admin.api_70_admin_user_update.validate import (
     validate_admin_user_update_request,
 )
-from app.modules.guest.api_04_users_me.models import UserProfile
+from app.modules.student.api_04_users_me.models import UserProfile
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session

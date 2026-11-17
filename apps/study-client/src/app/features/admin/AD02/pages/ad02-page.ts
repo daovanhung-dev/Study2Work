@@ -41,15 +41,16 @@ export class AD02Page {
     this.query,
     (query) => this.api.getUsers(query),
     (page) =>
-      loadedRows(
-        page.items.map(renderUserRow),
-        {
-          page: page.pagination.page,
-          total: page.pagination.total,
-          totalPages: page.pagination.total_pages,
-        },
-      ),
+      loadedRows(page.items.map(renderUserRow), {
+        page: page.pagination.page,
+        total: page.pagination.total,
+        totalPages: page.pagination.total_pages,
+      }),
   );
+  readonly isFilterError = computed(() => {
+    const state = this.viewState();
+    return state.status === 'error' && state.httpStatus === 422;
+  });
 
   constructor() {
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
@@ -90,6 +91,10 @@ export class AD02Page {
     });
   }
 
+  resetPageToFirst(): void {
+    this.navigateQuery({ ...this.query(), page: 1 });
+  }
+
   private navigateQuery(query: AD02UsersQuery): void {
     this.router.navigate([], {
       relativeTo: this.route,
@@ -103,15 +108,18 @@ export class AD02Page {
     });
   }
 
-  get connectionMessage(): string {
+  get queryStateMessage(): string {
     const state = this.viewState();
     if (state.status === 'loading') {
-      return 'Đang tải danh sách từ API #68.';
+      return 'Đang tải danh sách người dùng.';
     }
     if (state.status === 'error') {
+      if (state.httpStatus === 422) {
+        return 'Tham số trang không hợp lệ. Hãy đưa danh sách về trang 1 để tiếp tục.';
+      }
       return state.message ?? 'Không thể tải danh sách người dùng.';
     }
-    return 'Danh sách được lọc theo keyword, role, status và page của API #68.';
+    return 'Danh sách người dùng đã được tải.';
   }
 }
 
@@ -129,8 +137,10 @@ function filtersFromQuery(query: AD02UsersQuery): Omit<AD02UsersQuery, 'page'> {
 }
 
 function sameQuery(first: AD02UsersQuery, second: AD02UsersQuery): boolean {
-  return first.keyword === second.keyword
-    && first.role === second.role
-    && first.status === second.status
-    && Object.is(first.page, second.page);
+  return (
+    first.keyword === second.keyword &&
+    first.role === second.role &&
+    first.status === second.status &&
+    Object.is(first.page, second.page)
+  );
 }

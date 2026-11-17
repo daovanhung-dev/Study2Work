@@ -15,7 +15,7 @@
 
 ### Luồng mục tiêu sau khi các policy và API contract được duyệt
 
-1. **Nhận handoff:** AD-02/AD-03 chuyển numeric `user_id` sang route AD-05. Route là đề xuất; không ánh xạ `USR-*`, email hoặc phone sang path ID.
+1. **Nhận handoff:** AD-05 route `/admin/users/:userId/actions` hiện được khai báo. AD-02/AD-03 handoff behavior and numeric-ID preservation remain to be approved; không ánh xạ `USR-*`, email hoặc phone sang path ID.
 2. **Kiểm tra đầu vào và phiên:** kiểm tra `userId` theo signed-int64 path contract trước khi gọi API. Client áp dụng auth/session/navigation policy đã duyệt. Không dùng các badge RBAC hoặc “Read-Only” trên ảnh làm bằng chứng quyền.
 3. **Tải hồ sơ:** gọi `GET /api/v1/admin/users/{user_id}` (#69), Bearer JWT/Admin, không body/query. Local #69 kiểm tra shared ADMIN guard, parse path và đọc safe UserProfile từ legacy `users` candidate. Chuyển UI sang loading rồi ready khi nhận HTTP 200 + `DESIGN_RESOURCE_RETRIEVED` và payload hợp lệ.
 4. **Ánh xạ dữ liệu:** map ID/status/profile chỉ theo API #69 và field/PII policy đã duyệt. `status` hiện là string; không đổi lowercase aliases thành API status hoặc tự tạo allowlist. `DELETED` hiện vẫn có thể xuất hiện trong #68/#69 local source.
@@ -33,7 +33,7 @@
 - Copy dự đoán dừng toàn bộ phiên và quyền đăng nhập không khớp với side effect local #71/#72.
 - Reason textarea và Confirm disabled. Các nhãn audit bắt buộc, policy, RBAC, `Read-Only protocol`, `Enforced Gate`, ISO và API handlers là static copy.
 - HTML có 10 anchors, 5 buttons và một textarea disabled; không có input/select/form hoặc request/listener. Nav/footer anchors trỏ `#`; hai back links trỏ `/admin/users`.
-- Study Web root không có editable source, package manifest, router hoặc API client: `UNWIRED`. Runtime không được xác minh.
+- Current Study Web source is Angular. AD-05 has a route/page and GET #69 caller; no client call exists for #71/#72. Status/delete buttons and reason input are disabled. The page spec was inspected, not run; runtime/deployment is `NOT VERIFIED`.
 
 ### Response/error xử lý ở mức màn hình
 
@@ -74,14 +74,14 @@ Các state dưới đây là states cần thiết cho DD/UI planning, không ph�
 
 | From → to | Data / guard | Current status |
 |---|---|---|
-| AD-02 → AD-05 | Selected numeric `user_id`; Admin user-management permission. | AC-31 and inventory relationship; client handoff/route not implemented. |
-| AD-03 → AD-05 | Same numeric `user_id`; profile status context may be refetched via #69. | AD-03 is linked in plan; no current route/client. |
+| AD-02 → AD-05 | Selected numeric `user_id`; Admin user-management permission. | AD-05 route exists; source does not establish AD-02 handoff or selected-user preservation. |
+| AD-03 → AD-05 | Same numeric `user_id`; profile status context may be refetched via #69. | AD-05 page links to AD-03; source does not establish AD-03 handoff or selected-user preservation. |
 | AD-05 → AD-02 | Return to list; preserve approved filter/page state if defined. | Screenshot has `/admin/users`; query/selection retention not defined. |
 | AD-05 → AD-03 | Return to same numeric user detail after cancel or status change if approved. | Route/navigation after action is not settled. |
 | After #71 success → AD-02/AD-03 | Refetch #68/#69 per AC-31/inventory; current profile can include new status. | Refresh is target behavior; exact destination and cache invalidation need approval. |
 | After #72 success → AD-02/AD-03 | Refresh or leave view according to deletion policy. | Blocked: #68/#69 continue to expose local DELETED row; no hide/redirect rule is approved. |
 
-Authentication expiry, refresh retry, route guard and selected-user context belong to the Study Web auth/router contract; that source is currently absent. Do not derive them from the static RBAC/read-only badges.
+The app has an Admin session service and router; AD-05-specific expiry/recovery and selected-user context are not established by this page. Do not derive them from the static RBAC/read-only badges.
 
 ## 4. Luồng đọc (Read)
 - Orchestration từ inventory: GET #69 → PATCH #71 hoặc DELETE #72 → refresh #68/#69 theo AC-31; #71 body/status và #72 delete policy cần duyệt; không tự giả định token effect.

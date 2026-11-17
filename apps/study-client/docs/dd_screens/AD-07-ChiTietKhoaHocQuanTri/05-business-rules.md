@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Xem Course metadata/owner/status fields returned by #74; do not show counters unless their contract is added.
-- Gate/status (giữ nguyên): **R** source/API #74 route/module/test; API DD `Draft — Needs Confirmation`; **DD BLOCKED; IMPLEMENTATION BLOCKED:** counter definition, AC-32 permission mapping, singleton Page/live schema, prototype-only course code/metrics/curriculum/quality claims, AD-12 query-route approval/#82 `Lesson` vs `Lesson[]` response, and Study Web `UNWIRED` remain open; **RUNTIME NOT VERIFIED**
+- Gate/status (giữ nguyên): **R** source/API #74 route/module/test; Angular route/page and GET #74 caller exist; API DD `Draft — Needs Confirmation`; **DD BLOCKED; WRITE FLOW BLOCKED:** counter definition, AC-32 permission mapping, singleton Page/live schema, prototype-only metrics/curriculum/quality claims, AD-12 query-route approval/#82 `Lesson` vs `Lesson[]` response remain open; **RUNTIME NOT VERIFIED**
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 > CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.

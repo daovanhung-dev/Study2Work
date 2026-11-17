@@ -1,7 +1,84 @@
-<div class="static-page st19-page">
-  <nav class="crumbs"><span>⌂ Khóa học của tôi</span><span>›</span><span>Capstone #01</span><span>›</span><span>Chi tiết bài nộp &amp; Kết quả chấm</span><span class="pill">ID: SUB-2026-9948</span></nav>
-  <section class="panel submission-summary"><div><span class="pill green">✓ ĐÃ CHẤM ĐIỂM (GRADED)</span> <span class="pill">Khóa chuyên sâu Frontend Pro</span><h1>Bài nộp: Đồ án Capstone #01 — Enterprise Data Dashboard</h1><p class="muted">◴ Ngày nộp: 25/10/2026 14:20　✓ Chấm điểm: 26/10/2026 09:15　♙ Mentor phụ trách: TS. Trần Hoàng Long</p></div><aside><small>KẾT QUẢ CHUNG</small><b>Xuất sắc (A+)</b><strong>95</strong></aside></section>
-  <div class="two-column submission-columns"><section class="panel rubric-panel"><div class="section-title"><div><span class="eyebrow">RUBRIC ASSESSMENT</span><h2>Bảng điểm đánh giá năng lực</h2></div><span class="pill green">Hệ số: 40% Tổng điểm khóa</span></div><div class="grade-overview"><strong>95<small>/100</small></strong><div><h3>Grade A+ ✧</h3><p>Vượt tiêu chuẩn chuyên môn đầu ra Senior Frontend. Đủ điều kiện cấp chứng chỉ xuất sắc.</p></div><span>Điểm trung bình lớp: 81.4 / 100<br>Xếp hạng đồ án: Top 3% Khóa học<br>Trạng thái lưu trữ: Verified On-chain</span></div><article class="rubric-score"><b>1. Kiến trúc React19 &amp; TypeScript Strict</b><strong>25 / 25</strong><div class="progress-track"><span style="width:100%"></span></div><p>Áp dụng chuẩn hóa Feature-sliced Design, quản lý props immutability triệt để.</p></article><article class="rubric-score"><b>2. Quản lý State &amp; Caching TanStack Query</b><strong>24 / 25</strong><div class="progress-track"><span style="width:96%"></span></div><p>Prefetching dữ liệu bùng nổ dữ liệu 10,000 rows mượt mà.</p></article><article class="rubric-score"><b>3. Performance Lighthouse</b><strong>23 / 25</strong><div class="progress-track"><span style="width:92%"></span></div><p>Lighthouse Desktop 98/100, Mobile cần tối ưu thêm ảnh.</p></article><article class="rubric-score"><b>4. Kiểm thử Vitest &amp; E2E Playwright</b><strong>23 / 25</strong><div class="progress-track"><span style="width:92%"></span></div><p>34 Unit Tests và 6 kịch bản E2E.</p></article><div class="skill-index"><b>Độ hoàn thiện kỹ năng (Skill Index)</b><span>Tăng +22% chỉ số xử lý kiến trúc phức tạp</span><div class="progress-track"><span style="width:82%"></span></div></div></section>
-    <aside class="submission-aside"><section class="panel"><div class="section-title"><b>♙ MENTOR DETAILED REVIEW</b><small>26/10/2026</small></div><div class="mentor-profile"><span class="avatar">TL</span><div><b>TS. Trần Hoàng Long</b><small>Lead Frontend Architect • 10+ năm kinh nghiệm</small></div></div><blockquote>“Chào Hanh, bài làm của em rất ấn tượng! Cách em tổ chức Custom Hook và phân tầng Component trong Clean Architecture rất chuẩn chỉ của một Senior Frontend Code.”</blockquote><div class="sample-button secondary inert">Xem 3 Line Comments (PR)</div><div class="sample-button inert">Đặt lịch 1-on-1</div></section><section class="panel"><h2>Hồ sơ bài nộp đã lưu trữ</h2><div class="sample-row">‹› Kho mã nguồn GitHub <span class="sample-button secondary inert">Mở liên kết ↗</span></div><div class="sample-row">◉ Triển khai Cloud Preview <span class="sample-button secondary inert">Mở Demo</span></div><div class="sample-row">▧ Tài liệu kiến trúc hệ thống (3.8 MB) <span class="sample-button secondary inert">Tải về</span></div><div class="image-preview" aria-label="Bản xem trước Enterprise Dashboard"><div class="mock-laptop"><div class="mock-screen"><header><i></i><span>Enterprise Analytics</span><small>Overview　 Reports　 Settings</small></header><div class="mock-metrics"><b>Revenue<br><strong>$12.8k</strong></b><b>Orders<br><strong>1,248</strong></b><b>Users<br><strong>8,462</strong></b></div><div class="mock-chart"><span style="height:40%"></span><span style="height:70%"></span><span style="height:53%"></span><span style="height:82%"></span><span style="height:62%"></span><span style="height:93%"></span><span style="height:75%"></span><span style="height:100%"></span><span style="height:65%"></span></div></div><div class="mock-base"></div></div></div></section></aside></div>
-  <div class="submission-bottom"><span>♧ Đã hoàn thành chuẩn đầu ra Capstone #01</span><span class="sample-button secondary inert">← Quay lại Bảng tiến độ học tập (ST-20)</span><span class="sample-button inert">Xem đồ án tiếp theo →</span></div>
-</div>
+<main class="static-page api-screen st19-page">
+  <nav class="crumbs" aria-label="Vị trí hiện tại">
+    <a routerLink="/student/courses">Khóa học của tôi</a><span>›</span
+    ><span>Bài đã nộp và phản hồi</span>
+  </nav>
+  <header class="api-heading">
+    <div>
+      <p class="api-eyebrow">ST-19 · Bài đã nộp</p>
+      <h1>Chi tiết bài nộp</h1>
+      <p>Biên nhận, tệp, điểm và phản hồi nếu API #36 trả về.</p>
+    </div>
+    @if (submission()) {
+      <span class="api-pill">{{ submission()?.status }}</span>
+    }
+  </header>
+  @if (loading()) {
+    <section class="api-message" role="status"><strong>Đang tải bài nộp…</strong></section>
+  }
+  @if (error()) {
+    <section class="api-error" role="alert">{{ error() }}</section>
+  }
+  @if (!loading() && !error() && submission(); as item) {
+    <section class="api-stack">
+      <article class="api-card">
+        <h2>Bài nộp #{{ item.id }}</h2>
+        <dl class="submission-meta">
+          <div>
+            <dt>Trạng thái</dt>
+            <dd>{{ item.status }}</dd>
+          </div>
+          <div>
+            <dt>Đã nộp</dt>
+            <dd>{{ item.submitted_at | date: 'medium' }}</dd>
+          </div>
+          <div>
+            <dt>Điểm</dt>
+            <dd>{{ item.score ?? 'Chưa có điểm' }}</dd>
+          </div>
+          <div>
+            <dt>Bài tập</dt>
+            <dd>#{{ item.assignment_id }}</dd>
+          </div>
+        </dl>
+      </article>
+      @if (item.content) {
+        <article class="api-card">
+          <h2>Nội dung đã nộp</h2>
+          <p class="submission-content">{{ item.content }}</p>
+        </article>
+      }
+      @if (item.files.length) {
+        <article class="api-card">
+          <h2>Tệp đính kèm</h2>
+          <ul class="api-list">
+            @for (file of item.files; track file.id) {
+              <li>
+                <strong>{{ file.name }}</strong>
+                <p class="api-meta">
+                  {{ file.content_type }} · {{ file.size_bytes }} bytes · {{ file.status }}
+                </p>
+              </li>
+            }
+          </ul>
+          <p class="api-muted">
+            URL không được mở trực tiếp vì policy truy cập tệp chưa được xác nhận.
+          </p>
+        </article>
+      }
+      @if (item.feedback) {
+        <article class="api-card">
+          <h2>Phản hồi</h2>
+          <p class="submission-content">{{ item.feedback }}</p>
+        </article>
+      }
+      @if (!item.content && !item.files.length && !item.feedback) {
+        <section class="api-message">
+          <div>
+            <strong>API #36 không trả nội dung, tệp hoặc phản hồi cho submission này.</strong>
+          </div>
+        </section>
+      }
+    </section>
+  }
+</main>

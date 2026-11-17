@@ -72,7 +72,7 @@ id, full_name, email, role, avatar_url, phone, status, created_at, updated_at
 
 Mật khẩu và `password_hash` không được đưa vào phản hồi. API không trả access token hoặc refresh token. SQL hiện gán `role='STUDENT'`, nhưng bỏ cột `status`; giá trị `status` phụ thuộc lược đồ thực tế. `DB.sql` có giá trị mặc định `ACTIVE`, song tệp này không xác nhận lược đồ cơ sở dữ liệu đang chạy.
 
-Để mở SH-04, luồng đích cần ánh xạ `data.id` thành `user_id` và dùng `data.email`. Danh mục yêu cầu hai giá trị này nhưng chưa khóa cơ chế truyền phía giao diện. Đây là hợp đồng dữ liệu bàn giao, chưa phải quyết định transport; không đưa email/ID vào query string hoặc lưu trữ bền vững khi chưa có policy. Mã giao diện/router vắng mặt nên không có pattern Vue được xác minh.
+Để mở SH-04, luồng đích cần ánh xạ `data.id` thành `user_id` và dùng `data.email`. Danh mục yêu cầu hai giá trị này nhưng chưa khóa cơ chế truyền phía giao diện. Đây là hợp đồng dữ liệu bàn giao, chưa phải quyết định transport; không đưa email/ID vào query string hoặc lưu trữ bền vững khi chưa có policy. Angular page/route và API #01 caller hiện đã có source; chưa có SH-04 handoff caller.
 
 ### 3.3. Lỗi API #01 và xử lý trên SH-03
 
@@ -86,7 +86,15 @@ Mật khẩu và `password_hash` không được đưa vào phản hồi. API kh
 
 Khung lỗi gồm `success=false`, `businessCode`, `message`, `data=null`, `meta` và `traceId`; lớp trung gian gắn `X-Trace-Id`. Không hiển thị thông tin cơ sở dữ liệu, dấu vết ngăn xếp hoặc nội dung mật khẩu.
 
-### 3.4. API #02 — Ranh giới tại SH-04
+### 3.4. Current Angular implementation (2026-11-16)
+
+- `SH03RegistrationService` gọi API_001 qua `StudyApiService`; gửi đúng `email`, `password`, `full_name`, không Bearer/role/status.
+- UI trim email/tên, giữ nguyên password; kiểm tra required sau trim và độ dài tên/email trước khi gửi. API tiếp tục kiểm tra định dạng và dữ liệu cuối cùng.
+- 409 gắn lỗi email; 422 ánh xạ field errors cho tên/email/password; lỗi 500 và lỗi khác dùng thông báo an toàn; status 0 báo kết quả chưa xác định. Không tự gửi lại POST.
+- 201 `DESIGN_RESOURCE_CREATED` hiển thị trạng thái tài khoản đã tạo, xóa password khỏi form và nêu email chưa được xác nhận gửi. UI chưa dùng response ID/email để chuyển SH-04, không gọi API #02.
+- Các hành vi trên được xác minh bằng Angular HTTP testing (`HttpTestingController`); không phải request đến server/database đang chạy.
+
+### 3.5. API #02 — Ranh giới tại SH-04
 
 SH-03 không gọi API này. Theo luồng F01, SH-04 mới gửi:
 
@@ -99,7 +107,7 @@ Content-Type: application/json
 
 API #02 hiện công khai, không phụ thuộc cơ sở dữ liệu và không kiểm tra sự tồn tại/sở hữu cặp `user_id`/`email`. Bộ gửi thư mặc định là `StubVerificationEmailProvider`, trả HTTP `202` với `businessCode="DESIGN_OPERATION_ACCEPTED"` và `data={"status":"accepted"}`; response từ provider khác có thể kèm `reason` tùy chọn. Điều này chỉ xác nhận bộ giả lập đã nhận yêu cầu; không có email thật, mã/liên kết xác minh, thời hạn, lần thử lại, thay đổi `users.status` hay đường dẫn hoàn tất xác minh. Nếu bộ gửi thư lỗi, API trả HTTP `500 DESIGN_INTERNAL_ERROR` an toàn.
 
-### 3.5. Liên kết truy vết nguồn
+### 3.6. Liên kết truy vết nguồn
 
 | Chủ đề | Nguồn được đối chiếu |
 |---|---|
@@ -118,16 +126,16 @@ API #02 hiện công khai, không phụ thuộc cơ sở dữ liệu và không 
 ### `SH03-EV-01` — Mở trang đăng ký
 
 - **Element / loại:** route trang công khai, các phần tử `SH03-EL-01..07` · Load/navigation.
-- **Điều kiện tiên quyết:** Khách mở `/register` theo luồng được duyệt; route là đề xuất và chưa có Study Web router trong bản làm việc.
+- **Điều kiện tiên quyết:** Khách mở route công khai `/register`; route/page hiện được khai báo trong Angular source và có app-route unit test.
 - **Đầu vào:** đường dẫn và nguồn điều hướng (nếu có); không có token, query dữ liệu biểu mẫu hoặc dữ liệu API ban đầu.
-- **Xử lý:** hiển thị trang và biểu mẫu rỗng theo thiết kế; không phát request.
+- **Xử lý:** hiển thị trang và biểu mẫu rỗng theo thiết kế; không phát request lúc tải trang.
 - **Đầu ra:** trạng thái ban đầu/idle. Không thể xác minh runtime hiện tại.
 
 1. Khách mở đường dẫn đề xuất `/register` từ SH-01, SH-02 hoặc liên kết được duyệt.
 2. Giao diện hiển thị các phần tử #1–#7 ở trạng thái ban đầu; không yêu cầu token và không nạp dữ liệu ban đầu.
-3. Đây là hành vi thiết kế. Hiện không có bộ định tuyến hoặc thành phần Study Web để xác nhận trang mở được.
+3. Current Angular source render form và wire submit tới API #01; unit tests xác nhận route/caller behavior, Chrome headless xác nhận direct route local ở desktop/mobile. Deployment chưa được xác minh.
 
-**Kết quả / ngoại lệ:** Kết quả: hiển thị form rỗng, không gọi API. Ngoại lệ: route `/register` chưa được đăng ký trong app source, nên hiện chỉ là luồng thiết kế.
+**Kết quả / ngoại lệ:** Kết quả: hiển thị form rỗng, không gọi API lúc tải trang. Current source cho phép submit tới API #01; local render không chứng minh live API hoặc deployment.
 
 ### `SH03-EV-02` — Nhập họ tên, email và mật khẩu
 
@@ -177,6 +185,8 @@ API #02 hiện công khai, không phụ thuộc cơ sở dữ liệu và không 
 
 **Kết quả / ngoại lệ:** Kết quả: chỉ 201 `DESIGN_RESOURCE_CREATED` với `data.id` và `data.email` mới đủ dữ liệu bàn giao sang SH-04. Ngoại lệ: thiếu/sai shape thì dừng an toàn; không tạo ID/email thay thế. Cơ chế truyền và xử lý mở trực tiếp/tải lại SH-04 vẫn cần quyết định.
 
+**Current source:** page kiểm tra response data là object có `id` nguyên dương và `email` không rỗng trước khi hiển thị trạng thái tạo tài khoản; sai shape giữ form và báo kết quả chưa xác định. Handoff, điều hướng và API #02 vẫn chưa được wire ở SH-03.
+
 ### `SH03-EV-05` — Email đã tồn tại
 
 - **Element / loại:** response từ `SH03-EV-03`, trường `SH03-EL-04` · API error mapping.
@@ -219,19 +229,21 @@ API #02 hiện công khai, không phụ thuộc cơ sở dữ liệu và không 
 
 **Kết quả / ngoại lệ:** Kết quả: lỗi an toàn hiển thị tại SH-03; không đi SH-04 nếu chưa xác nhận có đủ response data. Ngoại lệ: không retry tự động, vì response bị mất có thể xảy ra sau commit; response 2xx sai shape không được xem là thành công.
 
+**Current source:** HTTP 201 có envelope/code nhưng thiếu hoặc sai shape `data.id`/`data.email` hiển thị trạng thái chưa xác định, giữ password và không điều hướng/gọi API phụ.
+
 ### `SH03-EV-08` — Mở SH-02
 
 - **Element / loại:** `SH03-EL-07` · Click/navigation.
-- **Điều kiện tiên quyết:** link hiển thị và route SH-02 `/login` được đăng ký trong ứng dụng tương lai; route runtime hiện chưa xác minh.
+- **Điều kiện tiên quyết:** link hiển thị và route SH-02 `/login` đã được khai báo; route SH-03 local render đã kiểm tra, deployment chưa xác minh.
 - **Đầu vào:** không có dữ liệu biểu mẫu hoặc thông tin xác thực được truyền.
 - **Xử lý:** điều hướng nội bộ tới SH-02; không gọi API #01/#02 và không đưa giá trị trường vào URL/state.
-- **Đầu ra:** SH-02 theo route đề xuất `/login`; nếu route chưa đăng ký, xử lý theo router tương lai, chưa có bằng chứng hiện tại.
+- **Đầu ra:** SH-02 theo route `/login`; unit tests xác nhận route entries; browser smoke không kích hoạt link.
 
 1. Khi kích hoạt liên kết #7, điều hướng tới `/login` theo thiết kế.
 2. Không gửi API và không đưa nội dung biểu mẫu vào URL, trạng thái điều hướng hoặc dữ liệu đăng nhập.
-3. Đích `/login` chưa được xác nhận trong mã bộ định tuyến Study Web hiện có.
+3. `/login` được khai báo trong Shared route cùng SH-03; browser smoke trong lát cắt này chỉ xác minh direct route `/register`, chưa kích hoạt link.
 
-**Kết quả / ngoại lệ:** Kết quả: điều hướng dự kiến tới SH-02 `/login`, không gửi API và không chuyển dữ liệu biểu mẫu. Ngoại lệ: nếu router/route chưa có, không thể khẳng định điều hướng khi chạy.
+**Kết quả / ngoại lệ:** Kết quả: điều hướng tới route SH-02 `/login`, không gửi API và không chuyển dữ liệu biểu mẫu. Unit tests xác nhận route entries; browser smoke chỉ xác minh direct route `/register`, chưa kích hoạt link.
 
 ### Trích từ DD nguồn: 6. Ma trận trạng thái giao diện
 
@@ -252,10 +264,10 @@ Các mục dưới đây là tiêu chí kiểm thử trong tương lai. Trong ph
 
 | Nhóm | Trường hợp cần kiểm tra | Bằng chứng hiện có |
 |---|---|---|
-| Thành công API | JSON hợp lệ, HTTP 201, dữ liệu chỉ có hồ sơ công khai, giao dịch được xác nhận một lần. | Có trong `test_register.py`; chưa chạy kiểm thử trong phiên này. |
-| Chuẩn hóa/kiểm tra API | Cắt khoảng trắng email và `full_name`; email lỗi; họ tên rỗng/quá 150; mật khẩu rỗng/toàn khoảng trắng; HTTP 422. | Có trong `test_register.py`; chưa chạy kiểm thử trong phiên này. |
-| Trùng email API | Email tồn tại trước khi chèn và tranh chấp ràng buộc duy nhất đều thành HTTP 409; có gọi `rollback`. | Có trong `test_register.py`; chưa chạy kiểm thử trong phiên này. |
-| Lỗi API | Lỗi cơ sở dữ liệu/lỗi ngoài dự kiến trả 500 an toàn, không lộ chi tiết ngoại lệ. | Có trong `test_register.py`; chưa chạy kiểm thử trong phiên này. |
+| Thành công API | JSON hợp lệ, HTTP 201, dữ liệu chỉ có hồ sơ công khai, giao dịch được xác nhận một lần. | Focused `test_register.py`: 16 passed với fake DB sessions; không phải live DB verification. |
+| Chuẩn hóa/kiểm tra API | Cắt khoảng trắng email và `full_name`; email lỗi; họ tên rỗng/quá 150; mật khẩu rỗng/toàn khoảng trắng; HTTP 422. | Focused `test_register.py`: 16 passed với fake DB sessions. |
+| Trùng email API | Email tồn tại trước khi chèn và tranh chấp ràng buộc duy nhất đều thành HTTP 409; có gọi `rollback`. | Focused `test_register.py`: 16 passed với fake DB sessions. |
+| Lỗi API | Lỗi cơ sở dữ liệu/lỗi ngoài dự kiến trả 500 an toàn, không lộ chi tiết ngoại lệ. | Focused `test_register.py`: 16 passed với fake DB sessions. |
 | Giao diện gửi | JSON chỉ có `email`, `password`, `full_name`; không có Bearer; khóa gửi lặp; ánh xạ `fullname` đúng. | Chưa có mã giao diện hoặc kiểm tra giao diện trong bản làm việc. |
 | Giao diện lỗi | `meta.fieldErrors` nối đúng trường; 409 giữ biểu mẫu; 500/mạng không để lộ chi tiết và không tự gửi lại. | Chưa có mã giao diện hoặc kiểm tra giao diện trong bản làm việc. |
 | Chuyển tiếp | HTTP 201 đưa `data.id`/`data.email` tới SH-04; API #02 không bị gọi từ SH-03. | Luồng hiện chỉ có trong danh mục; phía giao diện chưa có. |

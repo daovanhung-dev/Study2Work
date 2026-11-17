@@ -29,7 +29,7 @@ export class AD07Page {
     const values = new Map((this.viewState().fields ?? []).map((field) => [field.label, field.value]));
     return [
       { label: 'Tên khóa học', value: values.get('Tên khóa học') ?? '—' },
-      { label: 'Mã khóa học', value: values.get('Mã khóa học') ?? '—' },
+      { label: 'ID khóa học', value: this.route.snapshot.paramMap.get('courseId') ?? '—' },
       { label: 'Giảng viên phụ trách', value: values.get('Chủ khóa học') ?? '—' },
       { label: 'Học phí', value: values.get('Giá') ?? '—' },
       { label: 'Trạng thái phát hành', value: values.get('Trạng thái') ?? '—' },

@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/resources/:resourceId`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: Study Web source mounts `/resources/:resourceId` to a contract-blocked gate only; no resource ID hydration/API caller. Return destination remains unresolved; route runtime/deployment is not verified.
 - Route params/types: `resourceId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.

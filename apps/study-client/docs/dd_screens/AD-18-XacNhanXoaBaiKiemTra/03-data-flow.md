@@ -42,26 +42,26 @@ Sơ đồ thể hiện expected flow và current blocker. Nét đứt biểu th�
 
 | State | Entry condition | UI/action rule | Exit/next | Evidence/status |
 |---|---|---|---|---|
-| `confirm` (inventory) | Target resolved, Admin permission and policy approved | Show correct target/impact; enable confirm only under approved rule | Confirm → `deleting`; cancel → AD-15/previous approved page | Inventory expected; current mockup has no selected target and confirm disabled. |
-| `deleting` (inventory) | One approved #90 request in flight | Prevent duplicate user submission; exact loading copy/button behavior not in source | Success/error response | Expected state only; no client handler. |
+| `confirm` (inventory) | Target resolved, Admin permission and policy approved | Show correct target/impact; enable confirm only under approved rule | Confirm → `deleting`; cancel → AD-15/previous approved page | Expected only; current page has route ID but no target detail and confirm remains disabled. |
+| `deleting` (inventory) | One approved #90 request in flight | Prevent duplicate user submission; exact loading copy/button behavior not in source | Success/error response | Expected state only; current page has no #90 caller or click handler. |
 | `conflict` (inventory) | Inventory says conflict keeps screen | No API #90 409 exists; #90 local history branches do not return conflict | Requires contract decision | Unsupported/discrepant; do not implement from current contract. |
 | `deleted` (inventory) | Valid HTTP 200 `DESIGN_RESOURCE_DELETED` and response ID matches | Show approved success result; invalidate/refetch #87 per inventory | Destination/cache behavior unresolved | Expected state; exact transition/copy not defined. |
-| `unauthenticated` | #90 returns 401 | Follow shared auth/session flow | Sign-in/session recovery | Catalog + local source; UI transition not wired. |
-| `forbidden` | #90 returns 403 | Show safe access denial | Remain/return per shared policy | Catalog + local role guard; fine-grained permission unresolved. |
+| `unauthenticated` | #90 returns 401 | Follow shared auth/session flow | Sign-in/session recovery | Catalog + local source; AD-18 UI transition not implemented. |
+| `forbidden` | #90 returns 403 | Show safe access denial | Remain/return per shared policy | Catalog + local role guard; fine-grained permission unresolved and AD-18 UI transition not implemented. |
 | `not-found` | #90 returns 404 for an absent/hard-deleted Quiz, or approved route lookup cannot resolve target | Avoid showing success; approved recovery link needed | AD-15 or safe page TBD | Catalog/local source. A tombstoned Quiz returns 200 on repeated DELETE in local code, but this is DERIVED. |
 | `validation-error` | #90 returns 422 | Present ID/path validation failure; never call it a history conflict | Correct route/selection | Current local 422 applies to invalid positive-int64 path. |
 | `service-error` | #90 returns 500 | Safe error; no raw database details | Remain/retry only under approved retry policy | Catalog/local safe error mapping; retry policy open. |
 | `unknown-outcome` | Network failure/timeout after possible request | Do not claim deleted/not deleted or automatically repeat | Reconciliation behavior needs owner decision | Not in catalog or inventory state list; design decision required before client implementation. |
-| `unwired` | Current checkout | Prototype only; disabled confirm, placeholder record, anchors `#` | No verified transition | Current Study Web status. |
+| `read-only` (current source) | Angular route opened | Show route ID and policy/data limitation; keep reason/delete controls disabled | AD-15 via return/cancel links | Source-wired; no request; browser runtime not verified. |
 
 ### Navigation/data matrix
 
 | From | Action | To | Data passed | Current evidence |
 |---|---|---|---|---|
-| AD-15 | Delete a Quiz | AD-18 candidate | `quizId` and preferably selected #87 item only after handoff schema is approved | AC-35/inventory relation; no Study Web route/client. |
-| AD-18 | Top return/list breadcrumb | AD-15 candidate | Preserve ID/filter/page only if approved | Static `href="#"`; no runtime navigation. |
-| AD-18 | Safe cancel | AD-15 or prior route (decision pending) | None required by API | Static `href="#"`; destination unresolved. |
-| AD-18 | Successful #90 | `deleted` then destination TBD | `DeleteResult`; invalidate #87 per inventory | Catalog response; no cache/router client. |
+| AD-15 | Delete a Quiz | AD-18 | Safe positive integer `quizId`; no row detail object is passed | Angular router link; target/detail/history source remains unavailable. |
+| AD-18 | Top return/list breadcrumb | AD-15 | No API data | Angular router link to `/admin/quizzes`; filter/page preservation unspecified; browser runtime unverified. |
+| AD-18 | Safe cancel | AD-15 | None required by API | Angular router link to `/admin/quizzes`; no mutation; browser runtime unverified. |
+| AD-18 | Successful #90 | `deleted` then destination TBD | `DeleteResult`; invalidate #87 per inventory | No #90 caller or success-state/cache invalidation/navigation is implemented. |
 | AD-18 | #90 401/403/404/422/500 | Error/recovery UI TBD | Error envelope / trace ID | Status set known; exact shared UI recovery is outside current source. |
 
 ### Authorization and data-handling controls

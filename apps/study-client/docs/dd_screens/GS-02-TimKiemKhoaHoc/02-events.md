@@ -43,7 +43,7 @@
   6. Kiểm tra HTTP status/business code/envelope; map items và pagination theo §4. Không biến 422/500 thành empty result.
   7. Cập nhật loading/ready/no-result/error; chỉ hiển thị field có trong response.
 - **API:** #05 và #07 như §4; #07 không gọi khi policy empty-q chưa cho phép.
-- **Kết quả/ngoại lệ:** partial error giữa #05/#07 chưa có policy. Runtime event chưa tồn tại trong Study Web checkout.
+- **Kết quả/ngoại lệ:** partial error giữa #05/#07 chưa có policy. Current GS-02 caller chỉ dùng #07; #05 chưa được gọi và browser/API runtime chưa được xác minh.
 
 ### GS02-EV-02 — Nhập hoặc thay đổi từ khóa
 
@@ -70,7 +70,7 @@
 - **Input:** q từ input.
 - **Xử lý:** đọc q → chuẩn hóa theo policy → xác định empty-q behavior → đặt page=1 → điều hướng GET/URL sync theo route proposal → gọi #07 theo EV-01/EV-02.
 - **Prototype evidence:** code.html có native GET form tới /courses/search với name=q; input không được hydrate từ URL. Native GET không chứng minh API call/results runtime.
-- **Kết quả/ngoại lệ:** route/API behavior bị chặn bởi thiếu Study Web source và empty-q decision. Không tạo endpoint frontend riêng.
+- **Kết quả/ngoại lệ:** bounded route/API flow cho nonempty q hiện có source; prompt khi q trống là giả định triển khai trong lúc B06 chưa chốt. Không tạo endpoint frontend riêng.
 
 ### GS02-EV-05 — Chọn suggestion chip
 
@@ -151,7 +151,7 @@
 - **Input:** course.id nguồn từ API.
 - **Xử lý:** lấy ID của item đã chọn → điều hướng tới route proposal /courses/:courseId của GS-03 → GS-03 dùng ID theo contract riêng. Không lấy ID từ title/thumbnail hoặc mock card.
 - **API:** không gọi #08 từ event này trừ khi GS-03 tự nạp detail; đó là flow của GS-03.
-- **Kết quả/ngoại lệ:** không có router/client navigation hiện tại; route proposal chưa runtime-verified.
+- **Kết quả/ngoại lệ:** GS-02 cards hiện không có detail link; route GS-03 chưa được wire từ GS-02 và browser navigation chưa được xác minh.
 
 ### GS02-EV-14 — Chuyển trang
 
@@ -169,7 +169,7 @@
 - **Input:** route label/link.
 - **Xử lý:** GS-01 là screen liên kết theo inventory; các route khác trong header/breadcrumb phải map tới screen/route được duyệt. Không suy ra destination từ text hoặc mock HTML href=#.
 - **API:** không gọi từ thao tác điều hướng.
-- **Kết quả/ngoại lệ:** current Study Web router absent; link behavior chưa runtime-verified.
+- **Kết quả/ngoại lệ:** `/courses/search` đã được wire; các Guest destination khác chưa được map và link behavior chưa runtime-verified.
 
 ### GS02-EV-16 — Dùng global header search
 
@@ -205,7 +205,7 @@
 - **Input:** link label.
 - **Xử lý:** điều hướng theo mapping được phê duyệt; không lấy href=# của prototype làm route thật. Footer brand/accreditation tại #24 và copyright #26 không tạo event điều hướng nếu không có anchor.
 - **API:** không gọi.
-- **Kết quả/ngoại lệ:** destinations chưa được trace/Study Web router chưa tồn tại.
+- **Kết quả/ngoại lệ:** destinations chưa được trace; router có GS-02 route nhưng các footer/Guest destinations chưa được wire.
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)

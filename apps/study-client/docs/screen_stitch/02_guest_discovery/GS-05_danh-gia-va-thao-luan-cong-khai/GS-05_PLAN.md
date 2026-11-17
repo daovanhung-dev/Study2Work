@@ -1,8 +1,16 @@
 # GS-05 — Kế hoạch chi tiết
 
 > Ngày lập ban đầu: 2026-11-06; re-audit: 2026-11-07<br>
-> Trạng thái: `AUDIT COMPLETE; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED`<br>
-> Phạm vi phiên: chỉ GS-05; chưa bắt đầu GS-06.
+> Trạng thái audit ban đầu (2026-11-07): `AUDIT COMPLETE; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED`<br>
+> Current implementation update (T021, 2026-11-17): `PARTIAL SOURCE-WIRED`; see current evidence below. API #10 DD remains Draft; live API/DB/deployment remain unverified.
+
+## Current implementation snapshot — 2026-11-17
+
+- GS03 owns `/courses/:courseId?tab=reviews`; after #08 confirms a published course, the enabled reviews tab mounts `GS05Page` and public GET #10 is called with `page` only.
+- Study Server #10 route/module and focused tests are source-backed; 22 API tests pass with fake DB sessions. API #10 Draft title/rating/aggregate/query-key/public-visibility rules are still unresolved.
+- Focused GS03+GS05 Angular tests pass 12/12; full Study Web suite passes 153/153; production build passes with existing Student CSS budget warnings.
+- Desktop/mobile headless Chrome renders used a temporary in-memory loopback API stub because the local Study Server was not running. No live DB/deployment was verified; no rows were seeded.
+- The original Stitch HTML/PNG and 2026-11-07 audit findings remain unchanged historical design evidence; current source wiring does not approve unresolved DD behavior.
 
 ## Re-audit plan — 2026-11-07
 
@@ -27,7 +35,7 @@
 |---|---|---|---|
 | Route/orchestration | GS-03 course ID → GS-05; inventory nói reuse #08 rồi #10 paginated. F02 nói lazy tab; AC-05 gọi #08/#09/#10 trước render. | Study Web source/router/cache không có; HTML links chỉ `#`. | Route, cache key/freshness/direct-entry/miss và eager-vs-lazy chưa giải quyết. |
 | Course gate | API #08 course PUBLISHED mới được hiển thị; GS-05 row yêu cầu course 404 khác reviews empty. | API #08 có route/view/query/validator/test source; GET current source lọt qua PUBLISHED course và trả 404 nếu malformed/missing/unpublished. | API source-backed nhưng không chứng minh client cache/navigation hoặc deployment. |
-| Reviews endpoint | Catalog: public GET `/api/v1/courses/{course_id}/reviews`, `page?:int32`, `rating filter?:string`, `ApiEnvelope<Page<Discussion>>`, 200/404/500. | Không tìm thấy API #10 route/module/test trong `apps/study-server/app` và `tests`. Current #97/#98 are ADMIN-only reported-discussion queue/detail routes, not a Guest review API. API #10 DD là `Draft — Needs Confirmation`. | #10 là `DECLARED_NOT_RUNNABLE`; không mô tả như hiện đang được gọi hoặc thay bằng endpoint moderation. |
+| Reviews endpoint | Catalog: public GET `/api/v1/courses/{course_id}/reviews`, `page?:int32`, `rating filter?:string`, `ApiEnvelope<Page<Discussion>>`, 200/404/500. | Current #10 route/module/test source exists; response has `title: null`, no rating/aggregate, and ignores rating. GS05 Web caller/API_010 is wired locally; API #10 DD remains `Draft — Needs Confirmation`. | API #10 `SOURCE_BACKED`; DD `DRAFT`; FE `PARTIAL SOURCE-WIRED`. Do not infer deployment or approval of unresolved contract rules. |
 | Review/reply model | API DD dự kiến root discussion + nested replies; public list; empty là HTTP 200; page size 20 trong DD là design-only. | Contract đòi `Discussion.title` nhưng không có source field; current legacy DDL `discussions` chỉ có id/course_id/user_id/parent_id/content/status/timestamps; không có title/rating field. V1-PILOT `assessment_reviews`/`assessment_review_scores` relate to assessment attempts and rubric scores, not course reviews. | Không tự sinh title, star/rating, aggregate, rating filter predicate hoặc public visibility rule; neither DDL proves live schema. |
 | Visibility | API DD dự kiến `status='ACTIVE'` cho roots/replies nhưng gọi đó là assumption. | Chưa có API runtime; current DDL không chứng minh public moderation policy hoặc live schema. | BE/Product cần chốt moderation/visibility trước khi implement list. |
 | Source UI | Expected list + replies and states. | Static HTML duy nhất là empty-like state; tất cả links `#`; không có data binding/JS. | Loaded/error/pagination designs chưa có nguồn. |

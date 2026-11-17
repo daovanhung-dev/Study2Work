@@ -55,7 +55,7 @@ id, full_name, email, role, avatar_url, phone, status, created_at, updated_at
 
 Mật khẩu và `password_hash` không được đưa vào phản hồi. API không trả access token hoặc refresh token. SQL hiện gán `role='STUDENT'`, nhưng bỏ cột `status`; giá trị `status` phụ thuộc lược đồ thực tế. `DB.sql` có giá trị mặc định `ACTIVE`, song tệp này không xác nhận lược đồ cơ sở dữ liệu đang chạy.
 
-Để mở SH-04, luồng đích cần ánh xạ `data.id` thành `user_id` và dùng `data.email`. Danh mục yêu cầu hai giá trị này nhưng chưa khóa cơ chế truyền phía giao diện. Đây là hợp đồng dữ liệu bàn giao, chưa phải quyết định transport; không đưa email/ID vào query string hoặc lưu trữ bền vững khi chưa có policy. Mã giao diện/router vắng mặt nên không có pattern Vue được xác minh.
+Để mở SH-04, luồng đích cần ánh xạ `data.id` thành `user_id` và dùng `data.email`. Danh mục yêu cầu hai giá trị này nhưng chưa khóa cơ chế truyền phía giao diện. Đây là hợp đồng dữ liệu bàn giao, chưa phải quyết định transport; không đưa email/ID vào query string hoặc lưu trữ bền vững khi chưa có policy. Angular route và API #01 caller đã có source; chưa có caller/transport handoff tới SH-04.
 
 ### 3.3. Lỗi API #01 và xử lý trên SH-03
 
@@ -91,7 +91,7 @@ API #02 hiện công khai, không phụ thuộc cơ sở dữ liệu và không 
 | API catalog và schema `UserProfile` | [Danh mục API](../../../../../docs/lists/list_api.md) |
 | Đăng ký: route/request/response | [Router API v1](../../../../study-server/app/api/v1.py), [models](../../../../study-server/app/modules/guest/api_01_auth_register/models.py), [validator](../../../../study-server/app/modules/guest/api_01_auth_register/validate.py), [view](../../../../study-server/app/modules/guest/api_01_auth_register/view.py), [SQL query](../../../../study-server/app/modules/guest/api_01_auth_register/query.py) |
 | Gửi email xác minh tại SH-04 | [API #02 validator](../../../../study-server/app/modules/guest/api_02_auth_verify_email_send/validate.py), [API #02 view](../../../../study-server/app/modules/guest/api_02_auth_verify_email_send/view.py), [provider mặc định](../../../../study-server/app/service/email/provider.py) |
-| Kiểm thử nguồn (đã đọc, không chạy trong phiên này) | [API #01 tests](../../../../study-server/tests/modules/guest/api_01_auth_register/test_register.py), [API #02 tests](../../../../study-server/tests/modules/guest/api_02_auth_verify_email_send/test_verify_email_send.py) |
+| Kiểm thử nguồn | [API #01 tests](../../../../study-server/tests/modules/guest/api_01_auth_register/test_register.py) — focused run 16 passed, fake-session tests; [API #02 tests](../../../../study-server/tests/modules/guest/api_02_auth_verify_email_send/test_verify_email_send.py) — read only, not run in this slice |
 | Hợp đồng và câu hỏi chưa chốt | [API #01 open questions](../../../../study-server/docs/dd/01_auth_register/OPEN_QUESTIONS.md), [API #02 open questions](../../../../study-server/docs/dd/02_auth_verify_email_send/OPEN_QUESTIONS.md) |
 | Khai báo DB trong repository; không phải live schema evidence | [Study Server DB.sql](../../../../../infra/postgres/study-server/DB.sql) |
 | Quy tắc giao diện Study đích | [Study Web design guide](../../../../../.agents/web-study/design.md) |
@@ -99,5 +99,15 @@ API #02 hiện công khai, không phụ thuộc cơ sở dữ liệu và không 
 ## 3. API không sử dụng
 - Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.
 
-## 4. References
+## 4. Current frontend caller and verification (2026-11-17)
+
+- Caller: `SH03RegistrationService` → `StudyApiService.request(..., STUDY_SERVER_APIS.API_001)` → `POST /api/v1/auth/register`.
+- Client validates required fields, trimmed email format and trimmed field lengths before POST; password is preserved. The API remains authoritative.
+- The service exposes response data as `unknown`; the page only enters created state for `success=true`, `DESIGN_RESOURCE_CREATED`, a positive integer `data.id` and a nonblank string `data.email`. A malformed 201 envelope retains the form/password and shows the unresolved-result message. No SH-04 navigation or API #02 call is wired.
+- API #01 focused tests: `16 passed` via fake DB sessions; no live database verification.
+- Angular SH-03 + root route + shared API client specs: `3 files, 27 tests passed`; includes invalid-email/no-request, padded-valid-email trim, malformed 201 payload, rejection of success-shaped HTTP 200, and existing 409/422/500/network cases. HTTP responses are mocked in `HttpTestingController`; no UI-to-server request was made.
+- Production `npm run build`: passed with three existing CSS budget warnings in `student-static-screen.css`, `student-layout.css`, and `st22-page.css`.
+- `GET /register` returned HTTP 200; Chrome headless rendered the hydrated direct route at desktop 1365×900 and mobile 390×844. No form submission; live API and deployed runtime remain `NOT VERIFIED`. API #02 remains out of this caller.
+
+## 5. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/01_shared_auth_system/SH-03_dang-ky-hoc-vien/SH-03.md)

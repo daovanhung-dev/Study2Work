@@ -69,7 +69,7 @@
 
 ### Trích từ DD nguồn: C. Đặc tả chi tiết từng element
 
-Marker IDs follow [AD-07_markers.json](../../screen_stitch/05_admin/AD-07_chi-tiet-khoa-hoc-quan-tri/AD-07_markers.json); each row is one-to-one with that numbered marker. “Current” describes the static prototype, not a wired app.
+Marker IDs follow [AD-07_markers.json](../../screen_stitch/05_admin/AD-07_chi-tiet-khoa-hoc-quan-tri/AD-07_markers.json); each row is one-to-one with that numbered marker. Rows distinguish static-prototype behavior from current Angular source; browser/runtime visual acceptance remains unverified.
 
 | ID | Tên / loại / vị trí | Thuộc tính, nguồn dữ liệu và trạng thái hiện tại | Sự kiện / ràng buộc |
 |---|---|---|---|
@@ -99,7 +99,7 @@ Marker IDs follow [AD-07_markers.json](../../screen_stitch/05_admin/AD-07_chi-ti
 | #24 | No-course-selected heading and explanation. | Static empty selection copy; not an API empty response state. | EV-01; don’t use for 404 or empty success without approved mapping. |
 | #25 | “Duyệt AD-06”; CTA anchor. | `href="#"`; visible/enabled but inert. | EV-02; target opens list, not an approval workflow. |
 | #26 | Course title; metadata card. | Target source `data.items[0].title` → visible title. Prototype shows `—`/“Trống”. No length/default rule in #74. | EV-06; readonly. |
-| #27 | Course code; metadata card. | Prototype label/value is blank; Course model/query has no code field. Do not map `id` here. | EV-06; unsupported field blocks faithful implementation. |
+| #27 | Course code; metadata card. | Prototype label/value is blank; Course model/query has no code field. Do not map `id` to a course-code field. Current Angular page labels the route value separately as `ID khóa học`. | Prototype course-code field remains unsupported; EV-06. |
 | #28 | Mentor owner; metadata card. | Target source `mentor.full_name`; required in local mapper with `mentor.id`; no display-name fallback specified. | EV-06; readonly. |
 | #29 | Course price; metadata card. | Target source `price:string` exact decimal. Prototype shows blank; currency/locale formatting is not defined. | EV-06; do not round/reformat without an approved rule. |
 | #30 | Publication status; metadata card. | Target source `status:string`; local query does not filter status. Enum, casing, badges and labels are unresolved. | EV-06; readonly; do not normalize or infer allowed transitions. |
@@ -130,10 +130,10 @@ Marker IDs follow [AD-07_markers.json](../../screen_stitch/05_admin/AD-07_chi-ti
 | #55 | RBAC standards footer link. | `href="#"`; no destination. | EV-08. |
 | #56 | Technical support footer link. | `href="#"`; no destination. | EV-08. |
 
-**Shared element note:** Admin shell elements #1–15 and footer #53–56 are prototype markup only. Apply the Study2Work shared design/accessibility system when the actual Study Web UI is wired; the screenshot uses a different palette/type style from the Study Web design guide and does not establish that system's runtime implementation.
+**Shared element note:** Admin shell elements #1–15 and footer #53–56 describe prototype markup only. The current Angular AD-07 page uses its own shared icon/layout components; browser/runtime visual acceptance remains unverified. The screenshot's palette/type style does not establish the app's runtime design system.
 
 ## 4. Conditional UI & state variations
-- States theo inventory: initial/loading/ready/404/unauthorized/forbidden/service-error
+- Angular source states: `loading/loaded/error`; API/target outcomes include 401/403/404/500. Inventory states remain a design reference, not evidence of runtime mapping.
 - Detail/conditional visibility: xem section elements/state của [DD nguồn](../../screen_stitch/05_admin/AD-07_chi-tiet-khoa-hoc-quan-tri/AD-07.md); không diễn giải ảnh tĩnh thành behavior runtime.
 
 ## 5. Link

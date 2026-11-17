@@ -36,7 +36,7 @@
 
 | Event ID | Tên / loại / trigger | Element | Điều kiện tiên quyết | Runtime status |
 |---|---|---|---|---|
-| `GS07-EV-01` | Direct entry / load resource — `Load` khi vào route detail hoặc mở trực tiếp URL | Route đề xuất `/resources/:resourceId`; không có DOM control tương ứng | Có `resourceId` từ caller; route/client và access contract phải được duyệt | Current HTML không hydrate ID hoặc gọi API; Study Web `UNWIRED`. API #12 có source cục bộ nhưng không kiểm tra resource access. |
+| `GS07-EV-01` | Direct entry / load resource — `Load` khi vào route detail hoặc mở trực tiếp URL | Route đề xuất `/resources/:resourceId`; không có DOM control tương ứng | Có `resourceId` từ caller; route/client và access contract phải được duyệt | T023 mounts the route to a contract-blocked gate; the route param is not consumed and no API is called. API #12 has local source but does not check resource access. |
 | `GS07-EV-02` | Thử zoom/fullscreen — `Click`/keyboard activation | #8–#10 | Không đạt: ba button mang `disabled` | Không đổi viewer; không có API hoặc Fullscreen API call. |
 | `GS07-EV-03` | Tải resource — `Click`/keyboard activation | #15 | Không đạt: button `disabled`/`aria-disabled`; chưa có URL/access/download policy | Không tải file; không gọi API. |
 | `GS07-EV-04` | Quay lại resource list — `Click/Anchor` | #16 | Anchor hiển thị; destination/context chưa wired | Native fragment `#`; không chuyển route hoặc giữ context. |

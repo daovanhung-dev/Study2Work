@@ -10,8 +10,8 @@
 - [Catalog API #04 và reusable schemas](../../../../../docs/lists/list_api.md): Bearer JWT, role Student, `ApiEnvelope<UserProfile>`, HTTP 200 `DESIGN_RESOURCE_RETRIEVED`, lỗi 401/403/500.
 - [AC-02 index](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) và [diagram AC-02](../../diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio): login phát hành token, sau đó client gọi API #04 để lấy hồ sơ/role/permissions.
 - [AC-11 index](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) và [diagram AC-11](../../diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio): đọc hồ sơ, upload avatar qua API #13, cập nhật profile qua API #14, rồi tải lại hồ sơ.
-- Current source: [router](../../../app/api/v1.py), [API #04 view](../../../app/modules/guest/api_04_users_me/view.py), [query](../../../app/modules/guest/api_04_users_me/query.py), [model](../../../app/modules/guest/api_04_users_me/models.py), [auth helper](../../../app/utils/auth.py), [trace helper](../../../app/core/trace.py), [response helpers](../../../app/core/responses.py).
-- Focused [API #04 test source](../../../tests/modules/guest/api_04_users_me/test_users_me.py) đã được đọc; tests không chạy trong task DD.
+- Current source: [router](../../../app/api/v1.py), [API #04 view](../../../app/modules/student/api_04_users_me/view.py), [query](../../../app/modules/student/api_04_users_me/query.py), [model](../../../app/modules/student/api_04_users_me/models.py), [auth helper](../../../app/utils/auth.py), [trace helper](../../../app/core/trace.py), [response helpers](../../../app/core/responses.py).
+- Focused [API #04 test source](../../../tests/modules/student/api_04_users_me/test_users_me.py) đã được đọc; tests không chạy trong task DD.
 - [DB.sql candidate](../../../../../infra/postgres/study-server/DB.sql) và [DB ERD](../../../docs/diagrams/DB_UNICA_ERD.drawio) là artifacts trong repo; live schema không được kiểm tra.
 - Template được manifest đăng ký qua `createDD-markdown`; Study workflow yêu cầu folder Markdown, không tạo ZIP mới.
 

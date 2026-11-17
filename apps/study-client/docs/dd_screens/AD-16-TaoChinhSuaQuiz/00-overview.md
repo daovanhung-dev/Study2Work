@@ -4,9 +4,9 @@
 |---|---|
 | Screen ID | `AD-16` |
 | Module | Admin |
-| Route | `/admin/quizzes/new hoặc /admin/quizzes/:quizId/edit` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/admin/quizzes/new` và `/admin/quizzes/:quizId/edit` đã đăng ký trong `admin.routes.ts`; `/admin` lazy-load route này. Runtime navigation chưa xác minh. |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** `DD BLOCKED` · `IMPLEMENTATION BLOCKED` · `RUNTIME NOT VERIFIED`<br> |
+| DD status | `DD BLOCKED` · `IMPLEMENTATION PARTIAL` (draft UI only; create/update mutations blocked) · `RUNTIME NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [AD-16.md](../../screen_stitch/05_admin/AD-16_tao-chinh-sua-quiz/AD-16.md), [AD-16_PLAN.md](../../screen_stitch/05_admin/AD-16_tao-chinh-sua-quiz/AD-16_PLAN.md), [AD-16_markers.json](../../screen_stitch/05_admin/AD-16_tao-chinh-sua-quiz/AD-16_markers.json), [list_screen.md](../../list_screen.md) |
@@ -14,7 +14,7 @@
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Builder create/update với dirty/draft-loss guard cần được chốt; AD-15 là entry, AD-17 là statistics handoff theo AC-35.
 - In-scope: POST #88 khi tạo; PUT #89 khi sửa. Không giả định GET admin quiz detail; #87 metadata-only và `questions=[]` local. #89 catalog không khai báo body; local fallback yêu cầu replacement body. Autosave copy trong prototype chưa có persistence source.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Không kết luận AC-35 create/update đã hoàn tất hoặc runtime đã chạy. Angular route và safe draft page hiện đã có trong source.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,17 +31,18 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | blank/draft/loading/ready/dirty/invalid/saving/created/updated/not-found/conflict/unauthorized/forbidden/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source/runtime | Angular route, page và page spec | Route/page wired; safe draft only; `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-16 source screen.png](../../screen_stitch/05_admin/AD-16_tao-chinh-sua-quiz/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-16_tao-chinh-sua-quiz/screen_annotated.png))
 - Luồng: POST #88 khi tạo; PUT #89 khi sửa. Không giả định GET admin quiz detail; #87 metadata-only và `questions=[]` local. #89 catalog không khai báo body; local fallback yêu cầu replacement body. Autosave copy trong prototype chưa có persistence source.
-- Priority: P1; Gate/source status: **R** local #88/#89 route/module/query/model/validator/test source; API DDs remain Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** thiếu GET detail/question set, #89 body discrepancy, question/choice editor và course option mapping; field/range rules, AC-35 permission vs `ADMIN`, legacy/V1-PILOT/live schema, autosave/navigation và Study Web `UNWIRED`; **RUNTIME NOT VERIFIED**
+- Priority: P1; Gate/source status: **R** local #88/#89 route/module/query/model/validator/test source; API DDs remain Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL:** Angular route và safe draft page tồn tại; thiếu GET detail/question set, #89 body discrepancy, question/choice editor và course option mapping; field/range rules, AC-35 permission vs `ADMIN`, legacy/V1-PILOT/live schema, autosave/navigation còn mở; page không gửi API request; **RUNTIME NOT VERIFIED**
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-16 — Đối chiếu Angular source: route AD-16 đã đăng ký; page chỉ giữ draft local, khóa edit/add/save và chưa gọi API. Runtime vẫn chưa xác minh.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -64,11 +65,11 @@
 | Screen ID / tên | `AD-16` — Tạo/chỉnh sửa quiz (Page); tiêu đề prototype “Thiết lập và biên tập bài kiểm tra trắc nghiệm”. |
 | Mục tiêu | Cung cấp luồng cấu hình Quiz và Question/Choice để thực hiện nhánh CREATE API #88 hoặc UPDATE API #89 theo AC-35. |
 | Actor | `EXPECTED`: Admin có `quiz management permission` theo AC-35. `CURRENT`: local endpoint dùng shared role guard `ADMIN`; mapping permission chi tiết chưa được xác nhận. |
-| Điều kiện vào | Create đi từ AD-15 qua nhánh #88. Edit đi từ AD-15 qua #89 với Quiz ID. ID local/API là int64, nhưng route UI và truyền ID chưa được wire/duyệt. Yêu cầu authentication/authorization theo catalog là Bearer JWT, role Admin. |
+| Điều kiện vào | Create đi từ AD-15 qua nhánh #88. Edit đi từ AD-15 qua #89 với Quiz ID. Angular route đã đăng ký và `AD16Page` đọc `quizId`; edit input vẫn khóa vì thiếu GET detail. API catalog yêu cầu Bearer JWT, role Admin. |
 | Điều kiện sau | AC-35 nêu Quiz được tạo/cập nhật. Nơi chuyển đến sau thành công, cách refetch AD-15, giữ filter/page, và điều kiện đi tiếp AD-17 chưa được định nghĩa. |
-| Route | Candidate inventory: `/admin/quizzes/new` hoặc `/admin/quizzes/:quizId/edit`. Không có Study Web router/source trong checkout để xác minh route hoạt động. |
+| Route | `/admin/quizzes/new` và `/admin/quizzes/:quizId/edit` đã đăng ký trong Angular source; runtime chưa xác minh. |
 | Quan hệ màn hình | AD-15 là entry point/list; AD-17 là statistics screen tiếp theo theo AC-35. Nút Hủy quay về hash `#/admin/quizzes` trong HTML nhưng runtime navigation chưa được xác minh. |
-| Triển khai UI | `UNWIRED`: folder Study Web hiện không có editable `src/`, package manifest, router hoặc API client. Screenshot/HTML chỉ là prototype tĩnh. |
+| Triển khai UI | `PARTIAL`: Angular route và safe draft page tồn tại; chưa gọi API. Screenshot/HTML Stitch vẫn là prototype tĩnh. |
 
 ### A.2. Contract API và current source
 

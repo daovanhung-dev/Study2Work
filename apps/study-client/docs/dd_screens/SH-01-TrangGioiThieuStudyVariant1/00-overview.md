@@ -4,9 +4,9 @@
 |---|---|
 | Screen ID | `SH-01` |
 | Module | Shared / Auth / System |
-| Route | `/` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/` — Shared route and SH01 page are source-wired; local browser route verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái DD:** DD BLOCKED · IMPLEMENTATION BLOCKED · RUNTIME NOT VERIFIED |
+| DD status | Draft (package được chuyển đổi); design gate remains **DD BLOCKED**; current source is a partial SH01 implementation; live API/DB and deployment are **NOT VERIFIED** |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [SH-01.md](../../screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01.md), [SH-01_PLAN.md](../../screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_PLAN.md), [SH-01_markers.json](../../screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json), [list_screen.md](../../list_screen.md) |
@@ -14,7 +14,7 @@
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Giới thiệu giá trị học tập, tìm khóa học và CTA đăng nhập/đăng ký.
 - In-scope: Có thể nạp một trang khóa học PUBLISHED; không tạo API hero/KPI mới.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Xem gate bên dưới; implementation chỉ là lát cắt UI/API source-backed, không khẳng định thiết kế đầy đủ đã được duyệt hoặc live API/DB đã chạy.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,7 +31,8 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | skeleton/list/empty/network-error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | `SH01Page`, `SH01CatalogService`, Shared route | Route `/` and #05/#06 callers are wired; independent loading/ready/empty/error/retry states are implemented. |
+| Local browser demo | Chrome headless, 2026-11-17 | Desktop/mobile route rendered; dev proxy returned HTTP 502 for #05/#06 and both regions showed their error/retry states. Live API/DB is not verified. |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [SH-01 source screen.png](../../screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/screen.png))
@@ -42,6 +43,7 @@
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-17 — SH-01 partial source implementation wired at `/`; focused tests/build and local browser route verified. DD/API design gates remain open; #05/#06 dev proxy returned 502, so live data remains unverified.
 
 ## Trạng thái và ranh giới bằng chứng
 

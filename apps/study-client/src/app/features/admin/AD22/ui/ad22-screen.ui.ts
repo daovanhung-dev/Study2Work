@@ -4,7 +4,7 @@ export const AD22_UI: Pick<AdminScreenDefinition, 'id' | 'title' | 'eyebrow' | '
   "id": "AD22",
   "title": "Thảo luận được báo cáo",
   "eyebrow": "Kiểm duyệt cộng đồng",
-  "description": "Hàng đợi thảo luận theo report còn mở hoặc đang xem xét. Mỗi discussion xuất hiện một lần.",
+  "description": "Kết quả từ API #97; mỗi thảo luận xuất hiện một lần. Response chưa có thông tin của từng report.",
   "mode": "list",
   "columns": [
     "Mã thảo luận",

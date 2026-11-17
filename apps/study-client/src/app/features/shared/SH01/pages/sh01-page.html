@@ -1,0 +1,116 @@
+<div class="landing-page" data-screen-id="SH01">
+  <header class="landing-header">
+    <div class="header-content">
+      <a class="brand" routerLink="/" aria-label="Study2Work - Trang chủ">Study2Work</a>
+
+      <nav class="primary-nav" aria-label="Điều hướng chính">
+        <a routerLink="/" aria-current="page">Trang chủ</a>
+        <a routerLink="/courses">Khóa học</a>
+        <a href="#sh01-search">Tìm kiếm</a>
+      </nav>
+
+      <nav class="account-nav" aria-label="Tài khoản">
+        <a class="login-link" routerLink="/login">Đăng nhập</a>
+        <a class="register-link" routerLink="/register">Đăng ký</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero-section" aria-labelledby="sh01-title">
+      <div class="content-width hero-content">
+        <p class="eyebrow">Study2Work</p>
+        <h1 id="sh01-title">Khám phá khóa học</h1>
+        <p class="hero-description">
+          Duyệt các khóa học đã xuất bản hoặc tìm kiếm theo từ khóa.
+        </p>
+
+        <form id="sh01-search" class="search-form" (ngSubmit)="submitSearch()">
+          <label class="visually-hidden" for="sh01-search-input">Tìm kiếm khóa học</label>
+          <input
+            id="sh01-search-input"
+            name="q"
+            type="search"
+            autocomplete="off"
+            placeholder="Tìm kiếm khóa học"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+          />
+          <button class="primary-button" type="submit" [disabled]="!searchQuery().trim()">
+            Tìm kiếm
+          </button>
+        </form>
+
+        <div class="hero-links">
+          <a class="primary-button" routerLink="/courses">Khám phá khóa học</a>
+          <a class="secondary-button" routerLink="/register">Đăng ký tài khoản</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-width category-section" aria-labelledby="sh01-categories-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Danh mục</p>
+          <h2 id="sh01-categories-title">Danh mục khóa học</h2>
+        </div>
+      </div>
+
+      @let categories = categoryState();
+      @if (categories.status === 'loading') {
+        <p class="region-status" role="status" aria-live="polite" aria-busy="true">
+          Đang tải danh mục…
+        </p>
+      } @else if (categories.status === 'error') {
+        <div class="region-status region-status--error" role="alert">
+          <span>Danh mục chưa thể tải.</span>
+          <button class="text-button" type="button" (click)="retryCategories()">
+            Thử lại
+          </button>
+        </div>
+      } @else if (categories.status === 'empty') {
+        <p class="region-status">Hiện chưa có danh mục.</p>
+      } @else {
+        <ul class="category-list" aria-label="Danh mục tham khảo">
+          @for (category of categories.items; track category.id) {
+            <li>{{ category.name }}</li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="courses-section" aria-labelledby="sh01-courses-title">
+      <div class="content-width">
+        <div class="section-heading course-heading">
+          <div>
+            <p class="eyebrow">Khóa học</p>
+            <h2 id="sh01-courses-title">Khóa học đã xuất bản</h2>
+          </div>
+          <a class="text-link" routerLink="/courses">Xem tất cả khóa học</a>
+        </div>
+
+        @let courses = courseState();
+        @if (courses.status === 'loading') {
+          <p class="region-status" role="status" aria-live="polite" aria-busy="true">
+            Đang tải khóa học…
+          </p>
+        } @else if (courses.status === 'error') {
+          <div class="region-status region-status--error" role="alert">
+            <span>Danh sách khóa học chưa thể tải.</span>
+            <button class="text-button" type="button" (click)="retryCourses()">
+              Thử lại
+            </button>
+          </div>
+        } @else if (courses.status === 'empty') {
+          <p class="region-status">Hiện chưa có khóa học đã xuất bản.</p>
+        } @else {
+          <div class="course-grid">
+            @for (course of courses.items; track course.id) {
+              <study-sh01-course-card [course]="course" />
+            }
+          </div>
+        }
+      </div>
+    </section>
+  </main>
+</div>

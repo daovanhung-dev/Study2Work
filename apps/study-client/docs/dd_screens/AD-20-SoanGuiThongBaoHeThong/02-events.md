@@ -1,5 +1,7 @@
 # AD-20 — Events (đặc tả xử lý)
 
+> **Current Angular source (2026-11-16):** `/admin/notifications/new` is route/page source-wired. Title/content inputs update component-local preview state; recipient/channel/priority controls and draft/send actions are disabled. There is no API #93 caller or #18 client handoff. Detailed events below are transcribed from the Stitch artifact reviewed on 2026-11-08 and describe that artifact, not the current Angular runtime. Browser/auth behavior remains unverified.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|
@@ -25,7 +27,7 @@
 ### EV-01 — Mở trang / khởi tạo
 
 - **Element/type:** Route entry `/admin/notifications/new`; `Load`.
-- **Precondition:** Expected: authenticated Admin có notification-management permission. Current: Study Web route/router/auth guard không có source.
+- **Precondition:** Expected: authenticated Admin có notification-management permission. At the 2026-11-08 source review the Angular route/page had not yet been audited; current working-tree source now declares the route/page, while auth/permission runtime behavior remains unverified.
 - **Input:** Candidate route; không có path/query/state/session data source được xác minh.
 - **Xử lý hiện tại:** Browser tải HTML prototype; không gọi API, không preload danh sách recipient hay thông tin SMTP.
 - **API:** Không có request hiện tại. Future #93 chỉ sau khi request/permission contract được duyệt; không gọi #92 mặc định vì inventory/AC không khai báo preload bắt buộc cho form.

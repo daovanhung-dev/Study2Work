@@ -39,13 +39,13 @@
 - [ ] Approve #72 soft delete vs anonymization/physical erase, retention, timestamp, dependent rows, repeat request and #68/#69 visibility.
 - [ ] Define audit reason persistence, actor/record model, endpoint/event, validation and retention before enabling reason input.
 - [ ] Decide no-selection/direct-entry, selected-ID handoff, return route and post-mutation refresh/redirect.
-- [ ] Wire Study Web route, API client, auth guard, error states and live-deployment/schema verification.
+- [ ] After policy approval, add the #71/#72 client calls and approved auth/error handling; verify deployment/schema before acceptance.
 - [ ] Reconcile screenshot wording/design with approved policies and Study Web design system.
 
 ### Completion decision
 
 - **DD READY:** No. The document is traceable and suitable for policy review, but required user/security decisions and API contract gaps still block implementation-ready action semantics.
-- **IMPLEMENTATION:** `BLOCKED`. Study Web app source/router/API client is `UNWIRED`, and permission, audit, status/session, deletion and navigation policies are unresolved.
+- **IMPLEMENTATION:** `PARTIAL SOURCE`; the route/page and GET #69 caller exist, but #71/#72 are not called and the action controls are disabled. Permission, audit, status/session, deletion and navigation policies remain unresolved.
 - **RUNTIME:** `NOT VERIFIED`. No browser app route, live database, deployed API or runtime action was exercised. API test sources were inspected but not run in this screen session.
 
 #### Kế hoạch kiểm chứng từ source PLAN
@@ -65,7 +65,7 @@
 | Downstream visibility | API #68 and #69 query | Neither read query filters DELETED; after #72 the record remains visible to Admin with status marker. #71 rejects current DELETED status (local 422). Visibility/hide/redirect owner policy remains open. |
 | Test/context evidence | focused #71/#72 test sources; `.agents/server-study/tests.md` | Context records 21 #71 and 11 #72 passing at prior checkpoints. Tests were inspected, not run; fake DB sessions do not verify live schema/deployment or authorization policy. Tests do not characterize invalid typed body + missing/invalid auth order. |
 | Visual/source HTML | `screen.png`, `code.html` | Static no-selection state, selected lock tab, disabled reason textarea/confirm, read-only/policy badges, “permanent delete”, compliance/audit/gate claims; anchors route to `/admin/users`, nav/footer `#`, no client requests/events. |
-| Study Web boundary/design | `.agents/web-work/study/*`, `.agents/web-study/design.md`, current app root | `UNWIRED`; root contains `dist`, docs, node_modules and tsbuildinfo but no editable source/package/router/API client. Design guide is intended target, not runtime evidence; screenshot visual system differs. |
+| Study Web boundary/design | `.agents/web-work/study/*`, `.agents/web-study/design.md`, `apps/study-client/src/app/features/admin/AD05/*` | Angular source has the AD-05 route/page and GET #69 caller; no #71/#72 caller. Page spec assertions cover route ID, Bearer GET, disabled controls/no mutation, 404 and missing ID. Spec was inspected, not run; runtime/deployment is unverified. |
 
 ### Trích từ DD nguồn: 7. Execution and verification order
 

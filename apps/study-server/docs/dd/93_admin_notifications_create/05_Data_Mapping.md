@@ -61,7 +61,7 @@ status: "Draft — Needs Confirmation"
 | ID | Purpose | Type/source | Columns/conditions | Pagination | Status |
 |---|---|---|---|---|---|
 | Q1 | Verify explicit recipient IDs exist | `users` legacy schema candidate | `id = ANY(:recipient_ids)` | N/A | Wired locally; candidate schema only |
-| Q2 | Read Operation if response uses it | No Study Operation store found | API #18 ID/owner conflict | N/A | SOURCE_REQUIRED |
+| Q2 | Read Operation if response uses it | No generic Study `operations` table; current #18 source queries notification/outbox rows by UUID and authenticated sender | API #18 catalog ID/owner conflict; notification-only local projection | N/A | DERIVED / SOURCE_REQUIRED |
 
 <a id="step-3-create-notification-and-delivery-rows"></a>
 
@@ -106,11 +106,11 @@ status: "Draft — Needs Confirmation"
 | data.status | Delivery outbox state | `QUEUED`; DERIVED Notification projection |
 | data.read_at/scheduled_at | No source/input | Omitted |
 | data.created_at | First row | Database-returned timestamp |
-| meta.operation_id | App-generated UUID | Persisted on each notification row; DERIVED handoff |
+| meta.operation_id | App-generated UUID | Persisted on each notification row; DERIVED handoff consumed by current notification-only #18 lookup, not an approved generic Operation contract |
 | meta.notification_ids[] | All created rows | int64 IDs in recipient request order; DERIVED batch metadata |
 | traceId | Request context | Propagated by response helper |
 
-- Operation tracking prose still conflicts with the direct Notification response. Local fallback retains Notification and adds derived batch metadata; owner decision remains open.
+- Operation tracking prose still conflicts with the direct Notification response. Local fallback retains Notification and adds derived batch metadata; current #18 can project matching notification/outbox rows for the same sender, but the generic Operation and canonical contract decision remain open.
 - `data` represents only the first recipient row. Consumers needing every created row must use `meta.notification_ids` while this DERIVED response remains in place.
 
 <a id="step-6-return-result-or-error"></a>

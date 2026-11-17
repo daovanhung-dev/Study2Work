@@ -24,7 +24,7 @@ from app.modules.admin.api_98_admin_discussions_detail.validate import (
     MAX_INT64,
     parse_admin_discussion_detail_id,
 )
-from app.modules.guest._shared.course_catalog.models import Pagination
+from app.modules.shared.course_catalog.models import Pagination
 from app.utils.auth import validate_current_user_request
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError

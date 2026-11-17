@@ -11,7 +11,7 @@
 
 - API refs trong inventory: #74
 - Orchestration/data notes: GET #74 with numeric `Course.id`; do not use public GET #8. AC-32 then branches to #75/#76/#77. API #82 supports `course?:int64`, making `/admin/lessons?course=<Course.id>` a handoff candidate pending route approval and #82 response-contract resolution.
-- BE/source status và gate: **R** source/API #74 route/module/test; API DD `Draft — Needs Confirmation`; **DD BLOCKED; IMPLEMENTATION BLOCKED:** counter definition, AC-32 permission mapping, singleton Page/live schema, prototype-only course code/metrics/curriculum/quality claims, AD-12 query-route approval/#82 `Lesson` vs `Lesson[]` response, and Study Web `UNWIRED` remain open; **RUNTIME NOT VERIFIED**
+- BE/source status và gate: **R** source/API #74 route/module/test; Angular route/page and GET #74 caller exist; API DD `Draft — Needs Confirmation`; **DD BLOCKED; WRITE FLOW BLOCKED:** counter definition, AC-32 permission mapping, singleton Page/live schema, prototype-only metrics/curriculum/quality claims, AD-12 query-route approval/#82 `Lesson` vs `Lesson[]` response remain open; **RUNTIME NOT VERIFIED**
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API request/response matrix
@@ -28,7 +28,7 @@
 | Errors | 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 404 `DESIGN_RESOURCE_NOT_FOUND`; 500 `DESIGN_INTERNAL_ERROR`. API catalog does not declare 422. Local malformed/out-of-range path → 404 before query; missing row → 404; query/mapping failure → safe 500 and rollback. |
 | Ordering | One #74 call per detail load in target; no dependent request is defined. AC-32 places #74 after #73 and before its #75/#76/#77 branches. |
 | Retry / timeout / cache | Not specified by API catalog/DD or UI source. Do not select a client policy in this DD. GET has no mutation/idempotency body; any cache freshness remains open. |
-| Test/runtime evidence | Local route/module/test source exists. Existing tests use fake session/query doubles. A historical verification report used a temporary schema; neither proves current live DB/deployment. No tests or runtime were run in this session. |
+| Test/runtime evidence | API #74 local tests use fake session/query doubles; a historical verification report used a temporary schema. The Angular `admin-detail-pages.spec.ts` was run after the ID label correction (1 file, 2 tests passed); production build passed with existing CSS budget warnings. No browser/runtime/live DB/deployment verification was performed. |
 
 ## 3. API không sử dụng
 - Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.

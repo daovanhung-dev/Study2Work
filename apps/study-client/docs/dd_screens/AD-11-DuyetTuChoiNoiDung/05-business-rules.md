@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Preview Content được chọn; metadata chỉ hiển thị field có contract; form reason theo #81 sau khi thống nhất validation.
-- Gate/status (giữ nguyên): **R** local route/module/test source #79–#81; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** AC `APPROVED/PUBLISHED` vs #80 `APPROVED`; reason required vs optional/disabled; author/version/media/rubric source thiếu; revision/stale policy, moderation permission, live schema/migration và Study Web `UNWIRED` còn mở; **RUNTIME NOT VERIFIED**
+- Gate/status (giữ nguyên): **R** local route/module/test source #79–#81 and Angular route/page/GET #79 caller; #80/#81 controls remain disabled. API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE; DECISION FLOW BLOCKED:** AC `APPROVED/PUBLISHED` vs #80 `APPROVED`; reason required vs optional in Stitch; author/version/media/rubric source thiếu; revision/stale policy, moderation permission and live schema/migration remain open; **RUNTIME NOT VERIFIED**
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu và blockers
@@ -27,7 +27,7 @@
 - [ ] Wire Study Web route/API/auth/UI; chốt loading/error/duplicate-submit/retry/success navigation và #78 refresh policy.
 - [ ] Reconcile queue/#79/#80/#81 identity và ensure displayed revision is decision revision, hoặc phê duyệt rõ current-logical-row semantics.
 
-**Trạng thái hiện tại:** `DD BLOCKED` · `IMPLEMENTATION BLOCKED` · `RUNTIME NOT VERIFIED`. Route/modules/test source của #79–#81 tồn tại local và được inventory đánh dấu `R`; API DD vẫn Draft. Test files được đọc làm source evidence nhưng không chạy trong phiên này. Fake DB tests không chứng minh live PostgreSQL/schema/deployment/authorization policy.
+**Trạng thái hiện tại:** `DD BLOCKED` · `IMPLEMENTATION PARTIAL SOURCE; DECISION FLOW BLOCKED` · `RUNTIME NOT VERIFIED`. Angular detail route/page/GET #79 caller and local #79–#81 route/module/tests exist; no Web caller invokes #80/#81. API DDs remain Draft. Fake DB tests do not prove live PostgreSQL/schema/deployment/authorization policy.
 
 ## 3. Quy tắc chưa xác nhận
 - `CẦN_XÁC_NHẬN`: các quyết định/blocker trong inventory và DD nguồn chưa được giải quyết.

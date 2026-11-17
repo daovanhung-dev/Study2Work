@@ -28,12 +28,12 @@
 - [x] Kế hoạch riêng được ghi trước DD/annotation và có trace expected/current.
 - [x] Asset nguồn không bị sửa; ảnh nguồn và HTML được ghi nhận bằng hash.
 - [x] 26 marker có ID duy nhất, theo thứ tự 1–26 và ánh xạ 1:1 tới 26 component group trong §3.
-- [x] API #05/#07 được đối chiếu với route, validator, query, mapper, response, tests source và checked-in DDL; tests không chạy.
+- [x] API #05/#07 được đối chiếu với route, validator, query, mapper, response, tests source và checked-in DDL; focused tests chạy 29/29 bằng fake sessions, full Study Server suite chạy 1,506/1,506.
 - [x] Expected behavior, current source, discrepancy, implementation blocker và runtime status được tách riêng.
 - [x] 19 event được nhận diện và mô tả input, precondition, xử lý, API/nội bộ, output/error hoặc lý do bị chặn.
 - [x] States, error mapping, pagination edge case, navigation, security and unresolved policies are documented.
 - [ ] DD READY: chưa đạt; cần giải quyết B01–B09 và kiểm tra lại implementability.
-- [ ] IMPLEMENTATION: chưa đạt; Study Web chưa có runtime source và các blocker nghiệp vụ/API còn mở.
+- [ ] IMPLEMENTATION COMPLETE: chưa đạt; bounded #07 search implementation tồn tại nhưng B01–B10 và phần còn lại của design vẫn chặn nghiệm thu toàn màn hình.
 - [ ] RUNTIME VERIFIED: chưa đạt; không có browser/app runtime verification.
 
 #### Kế hoạch kiểm chứng từ source PLAN
@@ -47,7 +47,7 @@
 5. `GS02-B05 COURSE_CARD_SCHEMA`: current API lacks category, tags, currency, duration, rating and discount/old-price fields displayed in screenshot. No derived/mock values may be presented as real.
 6. `GS02-B06 EMPTY_QUERY_SEMANTICS`: blank q makes API return all PUBLISHED courses, while AC/HTML may show a prompt. Decide if search route calls API for blank q and how URL/display case is normalized.
 7. `GS02-B07 CACHE_AND_PARTIAL_LOAD`: AC-04 models #05 → #07 in sequence, while inventory F02/API #05 DD describe cache-first and allow independent parallel search; client source is absent, and TTL/invalidation/fallback/partial-load policy is not approved.
-8. `GS02-B08 STUDY_WEB_UNWIRED`: no app source/router/package/entrypoint; no event, URL, debounce or navigation runtime is verified.
+8. `GS02-B08 STUDY_WEB_PARTIAL`: Guest route, GS-02 caller and nonempty-q URL/API #07 subset now exist and have unit/route test coverage. Debounce, #05 orchestration, other navigation and browser runtime remain unverified.
 9. `GS02-B09 EXTRA_DESTINATIONS`: account utilities, learning-path/advisor promos and footer destinations have no route/service contract.
 10. `GS02-B10 PAGE_RANGE_CONTRACT`: API catalog declares int32 but route uses unbounded Python int and checks only the lower bound; align contract/validation and oversized-offset behavior.
 
@@ -59,4 +59,11 @@
 - [ ] Do not mark DD READY until design/source variants, facet/sort/page/card contracts and empty-query policy are resolved.
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
-- Không chạy app test trong task chuyển đổi tài liệu.
+
+## Current verification (2026-11-16)
+
+- Study Web `npm test`: 31 test files, 127 tests passed, including GS-02 page and route tests for prompt/no request, normalized q, URL synchronization, supported card fields, API error, empty result, pagination, q-change page reset and out-of-range state.
+- Study Web `npm run build`: passed; existing CSS budget warnings are in Student styles, none in GS-02.
+- Study Server focused API #05/#07: 29 passed with fake sessions; full Study Server suite: 1,506 passed. These do not verify live DB.
+- `npm start` served `/courses/search` with HTTP 200, but Chrome extension could not inspect the rendered page and the API proxy target had no listener. Browser rendering and live API integration remain `NOT VERIFIED`.
+- The test-planning reference above is not a substitute for the newly added Angular specs; B01–B10 still gate full DD acceptance.

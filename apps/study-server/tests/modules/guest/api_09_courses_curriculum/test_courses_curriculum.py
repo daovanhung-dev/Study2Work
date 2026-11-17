@@ -65,6 +65,20 @@ def test_validate_course_id_invalid() -> None:
     assert payload["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
 
 
+def test_validate_course_id_signed_int64_boundaries() -> None:
+    for value in (-(2**63), 2**63 - 1):
+        assert validate_course_id(str(value), trace_id="test-trace") == value
+
+
+def test_validate_course_id_outside_signed_int64_returns_not_found() -> None:
+    for value in (-(2**63) - 1, 2**63):
+        result = validate_course_id(str(value), trace_id="test-trace")
+        assert isinstance(result, JSONResponse)
+        assert result.status_code == 404
+        payload = json.loads(result.body.decode())
+        assert payload["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
+
+
 def test_get_course_curriculum_invalid_id() -> None:
     session = FakeSession()
     response = get_course_curriculum(

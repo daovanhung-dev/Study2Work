@@ -1,5 +1,7 @@
 # GS-06 — Events (đặc tả xử lý)
 
+> **T022 current-source update (2026-11-17):** Only tab selection is implemented: GS03 updates `?tab=resources`, then mounts GS06 after #08 confirms the course is published. The screen shows a contract-blocked status and sends no #11/#12 request. Prototype open/download/nav events below remain design references, not current Angular behavior.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|
@@ -45,7 +47,7 @@
 - **Xử lý tuần tự:**
   1. Nếu screen được wired, nhận `courseId` từ route; không suy ra từ text prototype.
   2. Catalog #11 khai báo public GET `/api/v1/courses/{course_id}/resources`, không body/query và không yêu cầu Bearer.
-  3. **Current behavior:** Study Web không có route/client; Study Server không có #11 route/module/query/test, nên không gửi request.
+  3. **Current behavior:** GS03 has a source-wired resources query tab and mounts GS06 after #08 published-course success. GS06 renders a contract-blocked status and intentionally sends no #11/#12 request.
   4. Declared response là `ApiEnvelope<Resource>` đơn dù mục đích và quan hệ ERD là danh sách. Không map singleton thành collection, không dựng `{items,total}`, và không biểu diễn contract failure thành `empty`.
   5. Chỉ sau khi #11 có collection contract được duyệt mới xác định mapping item/empty/order/pagination; nguồn hiện tại không cho phép chốt các quyết định này.
 - **Output:** current output là prototype gated state; không có loading/list/empty response do API. Empty chỉ có thể được hiển thị sau successful collection response với zero items theo contract tương lai.
@@ -144,7 +146,7 @@
 
 | API | Request | Current/design response | Auth/access | Status và giới hạn |
 |---|---|---|---|---|
-| #11 | `GET /api/v1/courses/{course_id}/resources`; `course_id:int64`; no body/query; public/no Bearer. | Catalog/API DD `ApiEnvelope<Resource>` đơn: `id`, `name`, `type`, `url`, `visibility`, `lesson_id`; `visibility` không có source. Không có current route/module/query/test. | Catalog nói public; AC-06 yêu cầu public-or-authorized. Chưa thống nhất. | Declared 200/404/500; không có list cardinality, pagination/order hoặc empty semantics. `DECLARED_NOT_RUNNABLE`; API DD Draft. |
+| #11 | `GET /api/v1/courses/{course_id}/resources`; `course_id:int64`; no body/query; public/no Bearer. | Draft `ApiEnvelope<Resource>` fields are not a collection contract; `visibility` lacks source. Current local route/module/query/model/test exist; query reads all rows ordered by ID but view returns only `rows[0]` as singleton, with no-row -> 404. | Catalog says public; AC-06 requires public-or-authorized. Unresolved. | Declared 200/404/500; list cardinality, pagination/order and empty semantics unresolved. `SOURCE-BACKED LOCALLY; CONTRACT DISCREPANCY; API DD Draft`; no live deployment claim. |
 | #12 | `GET /api/v1/resources/{resource_id}`; catalog type `int64`; no body/query; public/no Bearer. Current router nhận raw path `str` rồi validator chấp nhận positive signed-int64. | Current response `data={id:int,name:string,type:string,url:string|null,lesson_id:int|null}` trong envelope; bỏ `visibility`; URL là `resources.url` trực tiếp. API DD vẫn Draft và câu `DECLARED_NOT_RUNNABLE` đã stale so với source/test/report. | Route không có Bearer dependency; conditional parent gate chỉ khi `lesson_id` non-null. Không có visibility/enrollment check hoặc signer; null `lesson_id` không bị parent-gate. | Current source: 200 `DESIGN_RESOURCE_RETRIEVED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 500 `DESIGN_INTERNAL_ERROR`; SQL error rollback; mapping error 500. Không có 403/410/TTL. |
 
 Đối với cả hai GET, retry, timeout, cache invalidation, de-duplication khi click liên tiếp, CORS/storage headers và download disposition chưa có client contract. Không tự đặt giá trị mặc định. Legacy `DB.sql` có `resources` nhưng thiếu `visibility`; V1-PILOT schema không có `resources`; live schema/deployment chưa được xác minh.

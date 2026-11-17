@@ -32,7 +32,7 @@ status: "Draft — Ready for Review"
 - [API catalog](../../../../../docs/lists/list_api.md) — method, path, roles, multipart shape, UploadAsset schema và error set.
 - [AC/API index](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — AC-17 và AC-21 sử dụng API upload.
 - [AC-17 submission flow](../../diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio) và [AC-21 lecture flow](../../diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio) — ngữ cảnh consumer.
-- [API #34 router](../../../app/api/v1.py), [view](../../../app/modules/student/api_34_uploads/view.py), [storage provider](../../../app/service/object_storage/upload.py) và [tests](../../../tests/modules/student/api_34_uploads/test_uploads.py) — current source/test.
+- [API #34 router](../../../app/api/v1.py), [view](../../../app/modules/shared/api_34_uploads/view.py), [storage provider](../../../app/service/object_storage/upload.py) và [tests](../../../tests/modules/shared/api_34_uploads/test_uploads.py) — current source/test.
 - [Legacy bootstrap DDL](../../../../../infra/postgres/study-server/DB.sql) và [migration 004](../../../../../infra/postgres/study-server/migrations/004_uploads.sql) — checked-in schema artifacts, chưa áp dụng lên live DB.
 - [API guidelines](../../../../../contracts/api-guidelines/README.md) — envelope, trace ID và error data.
 

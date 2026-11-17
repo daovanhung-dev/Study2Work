@@ -4,17 +4,17 @@
 |---|---|
 | Screen ID | `AD-15` |
 | Module | Admin |
-| Route | `/admin/quizzes` — route trong inventory, không phải xác nhận router runtime |
-| Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái màn hình:** `DD BLOCKED` · `IMPLEMENTATION BLOCKED` · `RUNTIME NOT VERIFIED` · **API source:** route/module/query/model/test source #87 có trong checkout; API DD còn Draft; live schema/deployment chưa xác minh.<br> |
+| Route | `/admin/quizzes` — registered in `features/admin/admin.routes.ts`; route spec covers `AD15Page` |
+| Actor/role | Admin session; local #87 requires `ADMIN`. AC-35 quiz-management permission remains unresolved. |
+| DD status | **DD BLOCKED** · **IMPLEMENTATION PARTIAL SOURCE** · **RUNTIME NOT VERIFIED** · Angular route/page/API caller/spec and local #87 route/module/query/model/tests exist; API DD remains Draft and live schema/deployment is unverified.<br> |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [AD-15.md](../../screen_stitch/05_admin/AD-15_danh-sach-bai-kiem-tra/AD-15.md), [AD-15_PLAN.md](../../screen_stitch/05_admin/AD-15_danh-sach-bai-kiem-tra/AD-15_PLAN.md), [AD-15_markers.json](../../screen_stitch/05_admin/AD-15_danh-sach-bai-kiem-tra/AD-15_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: List theo course/status; Create/Update → AD-16, Statistics → AD-17, Delete → AD-18 theo AC-35.
-- In-scope: Candidate GET #87; catalog `ApiEnvelope<Quiz>` khác local `ApiEnvelope<Page<Quiz>>`; local fields thiếu code/course title/question count/status, không có search, course cần int64, status exact raw.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- In-scope: Current Angular page calls GET #87 with `course`, `status`, and `page`; it renders only the local Page projection fields and exposes the safe-ID statistics handoff. Catalog `ApiEnvelope<Quiz>` still differs from local `ApiEnvelope<Page<Quiz>>`; code/course title/question count/status are absent, and search is not supported.
+- Out-of-scope: No API #88–#91 mutation/statistics request is issued from this list page; do not treat source/tests as live DB or browser verification.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,19 +31,31 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/empty/ready/error/unauthorized/forbidden/validation/service-error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Angular route/page/service/spec and local API source | `loading` / `loaded` (including empty rows) / `error`; API/browser/live-DB runtime remains `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-15 source screen.png](../../screen_stitch/05_admin/AD-15_danh-sach-bai-kiem-tra/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-15_danh-sach-bai-kiem-tra/screen_annotated.png))
-- Luồng: Candidate GET #87; catalog `ApiEnvelope<Quiz>` khác local `ApiEnvelope<Page<Quiz>>`; local fields thiếu code/course title/question count/status, không có search, course cần int64, status exact raw.
-- Priority: P1; Gate/source status: **R** local #87 route/module/query/model/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** response cardinality/projection, search/course/status mapping, AC-35 permission vs `ADMIN`, legacy BIGINT vs V1-PILOT UUID/live schema, Study Web UNWIRED; **RUNTIME NOT VERIFIED**
+- Luồng hiện tại: `/admin/quizzes` → `AD15Page` → `AD15ApiService` → Admin Bearer client → GET #87. The local client consumes `Page<Quiz>`; this remains a derived local shape, not an approved change to the catalog's singleton `Quiz` response.
+- Priority: P1; **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE; RUNTIME NOT VERIFIED:** response cardinality/projection, AC-35 permission vs `ADMIN`, legacy BIGINT vs V1-PILOT UUID/live schema, and live/browser behavior remain unresolved.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-16 — Reconcile current Angular route/page/API caller and focused specs; retain Draft API and live-runtime gates.
 
 ## Trạng thái và ranh giới bằng chứng
+
+### Current-source addendum — 2026-11-16
+
+- `/admin/quizzes` is registered to `AD15Page` in `apps/study-client/src/app/features/admin/admin.routes.ts`; `admin.routes.spec.ts` covers the route.
+- On entry the page requests #87 with default `page=1`; submitted filters use exact `course` and `status` text, and page controls use returned pagination. `AD15ApiService` calls `AdminApiService`, which attaches the Admin Bearer token. The local #87 implementation returns `Page<Quiz>`; the direct catalog/AC contract still says `Quiz`.
+- The page renders only `id`, `title`, `course_id`, nullable `duration_minutes`, and `passing_score`. It does not show quiz code, course title, question count, quiz status, or nested question content. It does not expose search, edit, or delete actions. Create and safe-ID statistics links are navigation only; the page sends no mutation/statistics request.
+- Current UI states are loading, loaded rows/empty rows, and error. Shared Admin error handling maps authentication, access, validation and connection errors; no retry/cache policy is declared here.
+- Numeric identifiers are labelled as IDs. The existing open questions remain: response cardinality, dedicated quiz-management permission, live schema, tombstone/status rules and local derived 422 behavior. Status: `DD BLOCKED`, `IMPLEMENTATION PARTIAL SOURCE`, `RUNTIME NOT VERIFIED`.
+- Verification on 2026-11-16: focused Angular spec 5/5 passed; focused API #87 tests 20 passed with fake DB sessions; Study Web production build passed with three existing Student CSS budget warnings. Browser UI and live DB remain `NOT VERIFIED`.
+
+> The source excerpt below preserves the 2026-11-08 prototype/DD snapshot. Its `UNWIRED` statements describe that historical snapshot and are superseded for current source status by this addendum.
 
 # AD-15 — Danh sách bài kiểm tra
 

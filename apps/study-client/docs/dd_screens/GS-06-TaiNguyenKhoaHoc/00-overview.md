@@ -1,10 +1,12 @@
 # GS-06 — Tài nguyên khóa học · Tổng quan
 
+> **T022 current-source update (2026-11-17):** GS03 now source-wires `?tab=resources` and mounts this screen only after API #08 confirms a published course. GS06 renders an accessible contract-blocked status and makes no #11/#12 request or resource action. This supersedes older statements that the Study Web tab/caller is absent. The resource-list/open flow remains DD BLOCKED; API #11/#12 DDs remain Draft; live API/DB and browser runtime are not established by source/tests.
+
 | Trường | Giá trị |
 |---|---|
 | Screen ID | `GS-06` |
 | Module | Guest / Discovery |
-| Route | `/courses/:courseId?tab=resources` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/courses/:courseId?tab=resources` — GS03 query tab is source-wired; API/runtime availability remains separate |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: Source status is described in the source DD. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
@@ -31,13 +33,14 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | empty/list/forbidden/expired-link |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | GS03 + GS06 | `?tab=resources` after #08 published-course response; accessible contract-blocked panel; no #11/#12 call |
+| Deployed runtime | Worklog/context Study Web | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [GS-06 source screen.png](../../screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/02_guest_discovery/GS-06_tai-nguyen-khoa-hoc/screen_annotated.png))
 - Luồng: GET #11 → người dùng chọn id → GET #12 trước khi mở URL; không suy diễn visibility.
-- Priority: P2; Gate/source status: **D (#11) / R (#12 source-backed locally; API DD Draft)**; **BLOCK:** #11 chưa có route/module/test và catalog trả `Resource` đơn, thiếu collection/empty/order/pagination contract; thiếu nguồn `visibility`; AC-06 public-or-authorized/403/private signed URL khác catalog và #12 hiện tại public/no-auth/direct URL, chỉ gate parent khi `lesson_id` có giá trị; không có 410/TTL/signer; legacy DDL có `resources` nhưng V1-PILOT không có bảng này; list/loaded/error UI và Study Web route UNWIRED; prototype lệch Study design target, WCAG chưa đo; live schema/deployment chưa xác minh
+- Priority: P2; Gate/source status: **GS06 PARTIAL PRESENTATION SOURCE; #11/#12 API DD Draft; resource flow BLOCKED**. #11 route/module/query/tests exist locally but current view returns only `rows[0]` as a singleton, contrary to the DD rule not to select a representative row; collection/empty/order/pagination remains unresolved. `visibility` has no source. AC-06 public-or-authorized/403/private signed URL conflicts with #12 current public/no-auth/direct URL and conditional parent check; no 410/TTL/signer. Legacy DDL has `resources`, V1-PILOT does not; live schema/deployment is unknown. GS06 has no list/open UI and intentionally makes no resource API calls. Prototype differs from Study design target; WCAG/layout measurement remains incomplete.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -60,7 +63,7 @@
 | Route đề xuất | `/courses/:courseId?tab=resources` — route trong inventory, chưa có Study Web router để xác minh. |
 | API dự kiến | #11 `GET /api/v1/courses/{course_id}/resources`; #12 `GET /api/v1/resources/{resource_id}`. |
 | Màn hình liên quan | GS-03 cung cấp `courseId`; GS-07 nhận `resourceId`; ST-12 cũng dùng resource flow cho bài học. Header/footer destinations khác chưa được ánh xạ thành route. |
-| Trạng thái | `DD BLOCKED` · `IMPLEMENTATION BLOCKED` · `RUNTIME NOT VERIFIED`. Ba trạng thái được theo dõi riêng. |
+| Trạng thái | `DD BLOCKED` · `IMPLEMENTATION PARTIAL (gated presentation)` · `RESOURCE FLOW BLOCKED` · `LIVE RUNTIME NOT VERIFIED`. Các trạng thái được theo dõi riêng. |
 
 ### Tiền điều kiện và hậu điều kiện
 
@@ -72,8 +75,8 @@
 
 | Chủ đề | Expected theo inventory/AC/design | Current evidence |
 |---|---|---|
-| UI và route | Tab resource trên cùng course detail; list resource; chọn item sang GS-07; empty/list/forbidden/expired-link. | `code.html` và PNG là prototype hand-off tĩnh. Không có binding, handler, router hoặc Study Web source hiện hành; Study Web `UNWIRED`. Ảnh hiện tại là gated/empty mock, không có resource row. |
-| API #11 | Public `GET /api/v1/courses/{course_id}/resources`, dùng để liệt kê resource theo course. | Có trong API catalog và API DD #11 `Draft — Needs Confirmation`; không tìm thấy route/module/query/test ở Study Server hiện tại. Contract ghi `ApiEnvelope<Resource>` đơn, không phải collection. `DECLARED_NOT_RUNNABLE`. |
+| UI và route | Expected: tab resource trên course detail; list resource; chọn item sang GS-07; empty/list/forbidden/expired-link. | Current source: GS03 owns the `resources` query tab; after #08 success it mounts GS06, which shows only an accessible contract-blocked status. There is no list, empty claim, resource action or #11/#12 request. Browser/runtime verification is recorded separately. |
+| API #11 | Public `GET /api/v1/courses/{course_id}/resources`, declared to return one `Resource`; collection use remains unresolved. | Route/module/query/model/test exist locally. Current query reads all linked rows ordered by ID; view returns 404 for no rows and maps only `rows[0]` to singleton `ResourceItem`. This is a source/DD cardinality discrepancy; `ApiEnvelope<Resource>` remains Draft and no visibility field exists. |
 | API #12 | Public `GET /api/v1/resources/{resource_id}`; AC-06 muốn kiểm tra access và có thể ký URL private. | Current router/view/query/validator/model và test source có mặt; API DD #12 vẫn `Draft — Needs Confirmation` nhưng câu `RUNTIME_STATUS: DECLARED_NOT_RUNNABLE` trong DD đã lỗi thời so với route/source/test/report hiện tại. Route không yêu cầu Bearer; trả direct `resources.url`, bỏ `visibility`, không gọi storage signer. Chỉ kiểm tra parent lesson/course khi `lesson_id` khác `NULL`. |
 | Schema resource | API #11/#12 cần dữ liệu resource và quan hệ lesson/course. | Legacy `infra/postgres/study-server/DB.sql` có bảng `resources` nhưng không có `visibility`; V1-PILOT `infra/postgres/02_study_db.sql` không khai báo bảng `resources`. Current API #12 query dùng tên bảng legacy. Live schema/deployment chưa xác minh. |
 | Authorization | AC-06 cho phép public resource hoặc user có quyền; thiếu quyền → 403. | Catalog ghi Public/no Bearer và 404/500; API #12 source không kiểm tra visibility/enrollment và không có nhánh 403. Resource không có `lesson_id` được trả success mà không kiểm tra course cha. |

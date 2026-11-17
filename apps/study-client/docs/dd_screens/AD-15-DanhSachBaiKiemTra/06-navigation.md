@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/admin/quizzes`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: registered in `admin.routes.ts`; route spec covers AD-15. Browser/runtime remains `NOT VERIFIED`.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,17 +10,19 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [AD-16](../AD-16-TaoChinhSuaQuiz/00-overview.md), [AD-17](../AD-17-ThongKeBaiKiemTra/00-overview.md), [AD-18](../AD-18-XacNhanXoaBaiKiemTra/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| Admin shell `/admin` | Open `/admin/quizzes` | None | Admin route tree; local #87 enforces `ADMIN`, while AC-35's finer permission is unresolved |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [AD-16](../AD-16-TaoChinhSuaQuiz/00-overview.md), [AD-17](../AD-17-ThongKeBaiKiemTra/00-overview.md), [AD-18](../AD-18-XacNhanXoaBaiKiemTra/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [AD-16](../AD-16-TaoChinhSuaQuiz/00-overview.md) | Create CTA | None | Route link only; save/API #88 belongs to AD-16 and remains contract-gated |
+| [AD-17](../AD-17-ThongKeBaiKiemTra/00-overview.md) | Statistics row action | Safe numeric quiz ID | Link is rendered only when `Number.isSafeInteger(id)`; #91 response discrepancy remains open |
+| AD-18 | Delete | None | No delete action is currently rendered in AD-15 |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: route is registered and initial source load calls #87; browser/runtime behavior remains unverified.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 

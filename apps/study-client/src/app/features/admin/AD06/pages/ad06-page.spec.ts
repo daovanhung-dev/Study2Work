@@ -48,7 +48,8 @@ describe('AD06Page', () => {
     expect(text).toContain('21');
     expect(text).toContain('1 / 2');
     expect(text).toContain('20');
-    expect(root.querySelector('a[href="/admin/courses/42"]')).not.toBeNull();
+    const detailLink = root.querySelector<HTMLAnchorElement>('a[href="/admin/courses/42"]');
+    expect(detailLink?.getAttribute('aria-label')).toBe('Xem chi tiết Biology Foundations');
     expect(text).not.toContain('Chờ kiểm duyệt');
     expect(text).not.toContain('Số bài học');
   });
@@ -77,6 +78,26 @@ describe('AD06Page', () => {
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('2 / 2');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Cell Biology');
+  });
+
+  it('announces access errors instead of rendering them as an empty result', async () => {
+    await signIn();
+    const fixture = TestBed.createComponent(AD06Page);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    http.expectOne('/api/v1/admin/courses?page=1').flush(
+      { success: false, businessCode: 'DESIGN_ACCESS_DENIED' },
+      { status: 403, statusText: 'Forbidden' },
+    );
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('[role="alert"]')?.textContent).toContain(
+      'Tài khoản không được phép xem dữ liệu này.',
+    );
+    expect(root.textContent).not.toContain('Không tìm thấy khóa học');
   });
 
   it('keeps unsupported search, filters, create and export disabled', async () => {

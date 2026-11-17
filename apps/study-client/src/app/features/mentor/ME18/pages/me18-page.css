@@ -1,0 +1,10 @@
+.me18-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:18px; }
+.me18-toolbar .mentor-status { margin-right:auto; }
+.me18-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.me18-metrics article { display:grid; align-content:start; gap:10px; padding:20px; }
+.me18-metrics strong { color:#0b668f; font-size:clamp(22px,3vw,30px); letter-spacing:-.03em; }
+.me18-metrics .me18-date { font-size:17px; line-height:1.4; }
+.me18-metrics p,.me18-limitation p { margin:0; color:#70849a; font-size:12px; line-height:1.55; }
+.me18-limitation { padding:20px; margin-top:16px; }
+.me18-limitation h2 { margin:0 0 8px; color:#29445f; font-size:14px; }
+@media(max-width:760px){.me18-metrics{grid-template-columns:1fr}.me18-toolbar .mentor-status{width:100%}.me18-toolbar>*{flex:1}}

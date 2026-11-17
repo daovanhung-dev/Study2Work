@@ -15,17 +15,17 @@
 
 ### EV-01 — Mở action route và tải target Course (#74)
 
-- **Trigger/type:** Route entry từ AD-06/AD-07 hoặc deep link; `Load`. Mục tiêu, chưa có Study Web handler.
-- **Preconditions:** Router/client được wire, numeric `courseId` và Bearer token tồn tại; AC-32 permission mapping được xác nhận.
+- **Trigger/type:** Current Angular route entry from AD-06/AD-07 or direct URL; `Load`.
+- **Preconditions:** Raw route `courseId` and a valid Admin session for the protected #74 request; AC-32 fine-grained permission mapping remains open.
 - **Inputs:** Path `:courseId` → API `course_id:int64`; không body/query. Candidate GET #74: `GET /api/v1/admin/courses/{course_id}`.
 - **Processing:** Client lấy Course/current status từ #74 theo AD-07 policy. Current #74 local query đọc course + mentor, không status-filter; không có counters. Kiểm tra success envelope/identity theo API contract cuối đã phê duyệt.
-- **Outcome/errors:** 200 → `ready` với target Course/current status; 401/403/404/500 → trạng thái tương ứng; lỗi mạng → client-side state chưa có policy. Không hiển thị placeholder như một Course đã được chọn.
-- **Current behavior:** Target card rỗng; không có GET call. Study Web runtime `UNWIRED`.
+- **Outcome/errors:** Current page exposes `loading/loaded/error`; on a successful non-empty #74 page it displays the first Course item's title/status/mentor/price and raw route ID. An empty result, unsuccessful envelope, or request error maps to `error`. No counters are present in the local projection.
+- **Current behavior:** `AD09Page` calls #74 through `AD09ApiService`; runtime/deployment is `NOT VERIFIED`.
 
 ### EV-02 — Chọn action radio
 
 - **Trigger/type:** Change trên radio group `course_action`; các giá trị HTML là `draft`, `archive`, `delete`.
-- **Input/current behavior:** `draft` được `checked` ban đầu; cùng tên group làm lựa chọn độc quyền theo native radio. Một `change` listener tồn tại nhưng body chỉ là comment; CSS `peer-checked` đổi trạng thái nhìn thấy. Listener không cập nhật context/status/reason và không gọi API.
+- **Input/current behavior:** In the Stitch prototype only, `draft` is checked by default; native radio selection and `peer-checked` styling work, but the listener is empty. Angular AD-09 has no radio group or selection state.
 - **Target interpretation:** AC-32 tách status (#76) và delete (#77). Lowercase radio values không phải request values: `draft` chưa được contract map thành `DRAFT`; `archive` không nằm trong local #76 candidate enum; `delete` có thể chỉ ra nhánh #77 sau khi policy duyệt. Không tự map archive sang SUSPENDED/DELETED hoặc chọn trạng thái đích thay user.
 - **Outcome:** Hiện chỉ selection visual trong prototype. Không có confirmation dialog, body generation hoặc side effect được wire.
 
@@ -44,7 +44,7 @@
   7. Commit sau khi response projection hợp lệ; commit error rollback/500.
   8. Thành công trả 200 `DESIGN_RESOURCE_UPDATED`, message `Course status updated.`, Course Page, meta và trace ID. Local response Page cardinality là DERIVED.
 - **Error/result:** Catalog/local statuses 401/403/404/422/500. Current source không trả 409 và không có transition gate. Target PUBLISHED có thể phù hợp public listing filter của API #06; enrollment access khi SUSPENDED và readiness khi publish chưa được #76 chốt. No enrollment/content mutation is performed by #76.
-- **Current result:** Không thể submit từ prototype; reason control disabled. No audit reason is sent.
+- **Current result:** Angular status control and reason textarea are disabled; there is no #76 browser caller. No request is sent.
 
 ### EV-04 — Xác nhận delete (#77)
 
@@ -61,12 +61,12 @@
   7. Map `DeleteResult {id, status:"deleted", deleted_at}`; commit sau khi result hợp lệ; update/map/commit failure rollback/safe 500.
   8. Thành công trả 200 `DESIGN_RESOURCE_DELETED`, `Course deleted.`, DeleteResult, meta, trace ID. Không xóa child records, không cascade, không audit.
 - **Error/result:** Catalog/local statuses 401/403/404/422/500. Repeated delete currently 404, not idempotent success. 422 is a validation-code fallback for dependencies, not 409. Catalog does not specify predicate/message.
-- **Current result:** Radio selection alone never calls #77. Copy “xóa vĩnh viễn” is contradicted by local soft marker and must not be used as confirmed product behavior.
+- **Current result:** Angular delete control is disabled and there is no #77 browser caller. In the Stitch prototype radio selection alone never calls #77. Copy “xóa vĩnh viễn” is contradicted by local soft marker and must not be used as confirmed product behavior.
 
 ### EV-05 — Cancel/back và reload sau mutation
 
 - **Trigger/type:** Click Back #14 or Cancel #32; click after successful mutation reloads or navigates per future client policy.
-- **Current:** Both anchors have `href="/admin/courses"`; Back copy says AD-07, actual route is proposed AD-06 list. No unsaved-state guard. No mutation on cancel.
+- **Current:** Stitch Back/Cancel both have `href="/admin/courses"` (AD-06); its Back copy says AD-07. Angular Back/footer return to AD-07 with raw route ID, and its error link returns to AD-06. No unsaved-state guard; cancel has no mutation.
 - **Expected candidate:** Return to AD-07 with same Course ID or AD-06 list according to approved navigation/history; inventory links both AD-06/AD-07. AC-32 says reload course management after a mutation. Exact GET #73/#74 order, list filter/page restore, whether to stay on route and status/delete success copy remain open.
 - **Important current result:** Local #73/#74 list/detail query does not filter `DELETED`, so refresh does not necessarily remove a soft-deleted Course from Admin data. #76 also has no deleted-target filter and can overwrite DELETED with DRAFT/PUBLISHED/SUSPENDED; whether that is an allowed restore path is unresolved.
 
@@ -80,11 +80,12 @@
 
 | State | Entry condition | Display/data behavior | Exit/navigation | Evidence/status |
 |---|---|---|---|---|
-| `UNWIRED` | Current checkout | Static page; radio selection only; Confirm/reason disabled; no API client/router. | No feature route can run. | Current status. |
-| `initial` | Proposed route before target load | No Course selected; do not imply a valid target. | Start EV-01 if route is wired. | Target state; prototype currently shows this. |
-| `loading` | #74 request pending | Show pending state only while the request is active. | 200 → `ready`; API/network errors → matching state. | Not implemented. |
-| `ready` | #74 returns target Course/current status | Show identity and status from response; no counters unless contract adds them. | Select action → `action_selected`; back/cancel via approved route. | Not implemented; #74 source-backed locally. |
-| `action_selected` | User selects one approved branch | Current prototype has draft/archive/delete, default draft; values are not approved request mappings. | Status target → `confirm_status`; delete target → `confirm_delete`; cancel → EV-05. | Only native radio selection works; listener no-op. |
+| `loading` | Angular route starts GET #74 | Show pending message. | Success → `loaded`; empty/error → `error`. | Current source; runtime not verified. |
+| `loaded` | GET #74 returns a non-empty page | Show first Course item, raw route ID; status/delete/reason remain disabled; no counters. | Back/footer → AD-07 with ID. | Current source; runtime not verified. |
+| `error` | Missing ID, unsuccessful/empty #74 response, or request failure | Show safe error state. | Link → AD-06 list. | Current source; runtime not verified. |
+| `initial` | Before a target Course is loaded | Do not imply a valid target. Angular proceeds to `loading`; the Stitch prototype displays an empty placeholder. | Start EV-01. | Prototype/design state; not a separate Angular state. |
+| `ready` | Target state after #74 | Design target for a loaded course; Angular uses `loaded` and leaves write actions disabled. | Write flow only after its policy is approved. | Target state; #74 is source-backed locally. |
+| `action_selected` | Stitch prototype radio changes | Prototype has draft/archive/delete; values are not approved request mappings. Angular has no selector state. | Prototype selection only; no API request. | Prototype behavior only. |
 | `confirm_status` | User is about to send approved #76 target | Confirm target state and impact using owner-approved language. No current confirmation copy/state beyond page form. | Confirm → `status_working`; cancel → ready. | Confirmation semantics not implemented/approved. |
 | `confirm_delete` | User is about to call #77 | State whether operation is a soft marker and disclose dependency blockers only after policy approval. Do not promise permanent delete. | Confirm → `delete_working`; cancel → ready. | Delete semantics/policy open. |
 | `status_working` | PATCH #76 pending | Prevent unintended repeated action only under approved UI policy; network retry/idempotency open. | 200 → `done`; 422/401/403/404/500/network → error state. | Target state. |

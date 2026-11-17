@@ -52,7 +52,7 @@ describe('AD20Page', () => {
     expect(actions).toHaveLength(2);
     expect([...actions].every((button) => button.disabled)).toBe(true);
     expect(root.textContent).toContain('Local API #93 ghi notification và delivery row ở trạng thái QUEUED rồi trả 202');
-    expect(root.textContent).toContain('API #18 hiện không có local route');
+    expect(root.textContent).toContain('client chưa wired API #18');
     expect(root.querySelector('a[href="/admin/notifications"]')).not.toBeNull();
     http.expectNone((request) => request.url === '/api/v1/admin/notifications');
   });

@@ -3,7 +3,7 @@
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.
-- Marker JSON nguồn: [AD-09_markers.json](../../screen_stitch/05_admin/AD-09_thay-doi-trang-thai-xoa-khoa/AD-09_markers.json).
+- Marker JSON nguồn: [AD-09_markers.json](../../screen_stitch/05_admin/AD-09_thay-doi-trang-thai-xoa-khoa/AD-09_markers.json). Bảng marker bên dưới mô tả Stitch prototype; nó không đại diện các element Angular hiện tại.
 
 ## 2. Danh sách phần tử
 | Marker | Element ID trong package | Source Element ID | Nhãn từ marker JSON |
@@ -102,3 +102,15 @@ Tọa độ marker theo `screen.png` 1538×1600. Static copy/value là current p
 
 ## 5. Link
 - [Events](02-events.md) · [Data Flow](03-data-flow.md) · [Tests](07-test-cases.md)
+
+
+## 6. Current Study Web source mapping — 2026-11-16
+
+| Source | Current behavior | Status |
+|---|---|---|
+| [`admin.routes.ts`](../../../src/app/features/admin/admin.routes.ts) | Route `courses/:courseId/actions` renders `AD09Page`. | Source-present; route test exists. |
+| [`AD09Page`](../../../src/app/features/admin/AD09/pages/ad09-page.ts) and [template](../../../src/app/features/admin/AD09/pages/ad09-page.html) | Reads raw route `courseId`, calls GET #74, exposes `loading/loaded/error`, and renders title/status/mentor/price plus the ID. | Source-present; runtime `NOT VERIFIED`. |
+| [`AD09ApiService`](../../../src/app/features/admin/AD09/data-access/ad09-api.service.ts) | Provides `getCourse()` for API #74 only. | No #76/#77 browser caller. |
+| Navigation | Angular Back/footer return to AD-07 using raw ID; load-error link returns to AD-06. Stitch prototype Back/Cancel both link to AD-06. | `DISCREPANCY`; post-write reload policy open. |
+| Status/delete/reason controls | Both write buttons and reason textarea remain disabled. | Write flow blocked pending approved contract/policy. |
+| ID display | Route value is shown raw and labeled “ID khóa học”. | Focused spec covers raw large int64 value and label. |

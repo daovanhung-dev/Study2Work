@@ -117,7 +117,7 @@ from app.modules.admin.api_98_admin_discussions_detail.models import (
     GetAdminDiscussionDetailEnvelope,
 )
 from app.modules.admin.api_98_admin_discussions_detail.view import get_admin_discussion_detail
-from app.modules.guest._shared.course_catalog.constants import DEFAULT_PAGE, DEFAULT_SIZE
+from app.modules.shared.course_catalog.constants import DEFAULT_PAGE, DEFAULT_SIZE
 from app.modules.guest.api_01_auth_register.models import RegisterRequest
 from app.modules.guest.api_01_auth_register.view import create_user
 from app.modules.guest.api_02_auth_verify_email_send.models import VerifyEmailSendRequest
@@ -126,7 +126,7 @@ from app.modules.guest.api_02_auth_verify_email_send.view import (
 )
 from app.modules.guest.api_03_auth_login.models import LoginRequest, RefreshRequest
 from app.modules.guest.api_03_auth_login.view import login, refresh
-from app.modules.guest.api_04_users_me.view import get_current_user
+from app.modules.student.api_04_users_me.view import get_current_user
 from app.modules.guest.api_05_categories.models import CategoryQuery
 from app.modules.guest.api_05_categories.view import get_categories
 from app.modules.guest.api_06_courses.models import CourseQuery
@@ -144,48 +144,48 @@ from app.modules.guest.api_11_courses_resources.view import (
 from app.modules.guest.api_15_courses_enrollment_status.view import (
     get_enrollment_status as get_enrollment_status_view,
 )
-from app.modules.guest.api_16_orders.models import CreateOrderRequest
-from app.modules.guest.api_16_orders.view import create_order
-from app.modules.guest.api_17_payments.models import CreatePaymentRequest
-from app.modules.guest.api_17_payments.view import create_payment
-from app.modules.guest.api_18_operations.view import get_operation
-from app.modules.guest.api_19_courses_enrollments.models import CreateEnrollmentRequest
-from app.modules.guest.api_19_courses_enrollments.view import create_enrollment
-from app.modules.guest.api_20_users_me_courses.view import get_user_courses
+from app.modules.student.api_16_orders.models import CreateOrderRequest
+from app.modules.student.api_16_orders.view import create_order
+from app.modules.student.api_17_payments.models import CreatePaymentRequest
+from app.modules.student.api_17_payments.view import create_payment
+from app.modules.shared.api_18_operations.view import get_operation
+from app.modules.student.api_19_courses_enrollments.models import CreateEnrollmentRequest
+from app.modules.student.api_19_courses_enrollments.view import create_enrollment
+from app.modules.student.api_20_users_me_courses.view import get_user_courses
 
-from app.modules.guest.api_21_users_me_progress.view import (
+from app.modules.student.api_21_users_me_progress.view import (
     get_user_progress as get_user_progress_view,
 )
-from app.modules.guest.api_22_lessons_access.view import (
+from app.modules.student.api_22_lessons_access.view import (
     check_lesson_access as check_lesson_access_view,
 )
-from app.modules.guest.api_23_lessons_start.view import (
+from app.modules.student.api_23_lessons_start.view import (
     start_lesson as start_lesson_view,
 )
-from app.modules.guest.api_24_lessons_detail.view import (
+from app.modules.student.api_24_lessons_detail.view import (
     get_lesson_detail as get_lesson_detail_view,
 )
-from app.modules.guest.api_25_lessons_progress.models import (
+from app.modules.student.api_25_lessons_progress.models import (
     LessonProgressUpdateRequest,
 )
-from app.modules.guest.api_25_lessons_progress.view import (
+from app.modules.student.api_25_lessons_progress.view import (
     update_lesson_progress as update_lesson_progress_view,
 )
 
 from app.modules.guest.api_12_resources_detail.view import get_resource_detail
-from app.modules.guest.api_13_users_me_avatar.models import AvatarUploadRequest
-from app.modules.guest.api_13_users_me_avatar.view import upload_avatar
-from app.modules.guest.api_14_users_me_profile.models import ProfileUpdateRequest
-from app.modules.guest.api_14_users_me_profile.view import update_profile
-from app.modules.guest.api_26_lessons_resources.view import get_lesson_resources
-from app.modules.guest.api_27_lessons_next.view import get_next_lesson
-from app.modules.guest.api_28_quizzes_detail.view import get_quiz_detail
-from app.modules.guest.api_29_quizzes_attempts.view import create_quiz_attempt
-from app.modules.guest.api_30_attempts_answers.models import SaveAnswerRequest
-from app.modules.guest.api_30_attempts_answers.view import save_attempt_answer
-from app.modules.guest.api_31_attempts_submit.view import submit_attempt
-from app.modules.guest.api_32_attempts_result.view import get_attempt_result
-from app.modules.guest.api_33_assignments_detail.view import get_assignment_detail
+from app.modules.student.api_13_users_me_avatar.models import AvatarUploadRequest
+from app.modules.student.api_13_users_me_avatar.view import upload_avatar
+from app.modules.student.api_14_users_me_profile.models import ProfileUpdateRequest
+from app.modules.student.api_14_users_me_profile.view import update_profile
+from app.modules.student.api_26_lessons_resources.view import get_lesson_resources
+from app.modules.student.api_27_lessons_next.view import get_next_lesson
+from app.modules.student.api_28_quizzes_detail.view import get_quiz_detail
+from app.modules.student.api_29_quizzes_attempts.view import create_quiz_attempt
+from app.modules.student.api_30_attempts_answers.models import SaveAnswerRequest
+from app.modules.student.api_30_attempts_answers.view import save_attempt_answer
+from app.modules.student.api_31_attempts_submit.view import submit_attempt
+from app.modules.student.api_32_attempts_result.view import get_attempt_result
+from app.modules.student.api_33_assignments_detail.view import get_assignment_detail
 from app.modules.mentor.api_46_mentor_courses.models import MentorCourseQuery
 from app.modules.mentor.api_46_mentor_courses.view import get_mentor_courses
 from app.modules.mentor.api_47_mentor_lectures_create.models import (
@@ -298,13 +298,13 @@ from app.modules.mentor.api_67_mentor_student_progress.models import (
 from app.modules.mentor.api_67_mentor_student_progress.view import (
     get_mentor_student_progress,
 )
-from app.modules.student.api_34_uploads.models import UploadPurpose
-from app.modules.student.api_34_uploads.view import create_upload
+from app.modules.shared.api_34_uploads.models import UploadPurpose
+from app.modules.shared.api_34_uploads.view import create_upload
 from app.modules.student.api_35_assignments_submissions.models import CreateSubmissionRequest
 from app.modules.student.api_35_assignments_submissions.view import create_submission
 from app.modules.student.api_36_submissions_detail.view import get_submission_detail
-from app.modules.guest.api_37_users_me_progress_course.view import get_course_progress
-from app.modules.guest.api_38_users_me_achievements.view import get_achievements
+from app.modules.student.api_37_users_me_progress_course.view import get_course_progress
+from app.modules.student.api_38_users_me_achievements.view import get_achievements
 from app.modules.student.api_39_discussions.view import get_discussions
 from app.modules.student.api_40_discussions_create.models import CreateDiscussionRequest
 from app.modules.student.api_40_discussions_create.view import create_discussion

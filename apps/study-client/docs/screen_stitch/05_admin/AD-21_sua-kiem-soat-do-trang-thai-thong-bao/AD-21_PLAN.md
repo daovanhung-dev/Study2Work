@@ -7,13 +7,13 @@ Hoàn thiện riêng AD-21 theo inventory row 79, AC-36, API #18/#94/#95/#96, m�
 | Thuộc tính | Expected / nguồn thiết kế | Current evidence |
 |---|---|---|
 | Actor / quyền | AC-36: Admin có notification-management permission. | API catalog ghi role=Admin; handlers #94–#96 dùng shared `ADMIN`. Fine-grained permission/scope chưa được xác minh. |
-| Route / điều hướng | Inventory candidate `/admin/notifications/:notificationId`; từ AD-19, liên quan SH-07; về AD-19 dự kiến. | Không có tracked Study Web `src/`, router, package manifest hoặc API client. Mọi prototype anchor là `#`; route chưa wired. |
+| Route / điều hướng | Inventory route `/admin/notifications/:notificationId`; từ AD-19, liên quan SH-07; về AD-19 dự kiến. | Angular Admin router registers AD21Page and its GET #96 caller; the Stitch HTML remains static and its anchors stay `#`. Browser runtime is not verified. |
 | Notification read | Inventory chỉ ra không có GET detail riêng; dùng #96 để đọc status khi có ID. | #96 source local trả `Notification` (id/title/content/channels/status/created_at) và aggregate trạng thái, không trả counts/per-channel status/recipient/schedule. Đây không phải deployment/live proof. |
 | #94 edit | Catalog/AC-36: PUT path-only, `ApiEnvelope<Notification>`, 200/401/403/404/422/500; conditional update. | Source local yêu cầu strict `{title, content}`, title ≤200, khóa row/deliveries, chỉ cập nhật khi ít nhất một delivery và tất cả `QUEUED`; body và eligibility là DERIVED; DD Draft. |
 | #95 delete/cancel | Catalog: DELETE path-only, `ApiEnvelope<DeleteResult>`, 200/401/403/404/422/500; AC-36 nói delete/mark cancelled theo policy. | Source local hard-deletes một row BIGINT nếu mọi delivery hiện có đều `QUEUED`; FK candidate cascade; trả `status:"deleted"`. Không dừng provider/worker; cancel-vs-delete và retention cần quyết định. |
 | #96 status | Catalog: GET path-only, `ApiEnvelope<Notification>`, 200/401/403/404/500. | Source local read-only, malformed/missing/no-delivery → 404; aggregate precedence `QUEUED` > `FAILED` > `SENT`. Channels ordered; no delivery counts/per-channel states. |
-| Operation / SH-07 | Inventory: chỉ sang SH-07/#18 nếu backend cung cấp operation_id hợp lệ. | #18 chưa có route/module/query/test/Study store; ID int64 trong API row nhưng UUID trong AC/reusable schema và #93 metadata. Handoff không thể xác minh. |
-| Prototype | Hiển thị identity cards, static notification fields, channel status, cancel/edit and SH-07 actions. | Status, IDs, counters, RBAC/pipeline claims are static. Edit/cancel/SH-07 controls disabled; no input/API/feature handler. |
+| Operation / SH-07 | Inventory: chỉ sang SH-07/#18 nếu backend cung cấp operation_id hợp lệ. | #18 route/module/query and local HTTP tests exist; backend uses UUID and owner-bound notification lookup while catalog path is int64. #96 returns no Operation ID; AD-21 client handoff/poller is absent. |
+| Prototype / Angular page | Stitch design shows identity cards, static notification fields, channel status and edit/cancel/SH-07 actions. | Stitch artifact remains static. Angular page loads #96 read-only fields with loading/loaded/error states; edit/cancel/SH-07 controls are disabled. |
 
 ## Source review và thứ tự
 
@@ -85,13 +85,13 @@ Hoàn thiện riêng AD-21 theo inventory row 79, AC-36, API #18/#94/#95/#96, m�
 
 ## Event plan
 
-- `EV-01` Initial route/load: candidate route only. No current Study Web router, auth gate, request, data hydration, timer, cache or status update exists.
+- `EV-01` Initial route/load: Angular route/page and GET #96 caller are source-wired. Stitch HTML remains static; no poller/cache or status mutation is implemented.
 - `EV-02` Shell/breadcrumb navigation: shell items and breadcrumb text are not functional routes; anchors have `href="#"`; current page identity does not carry a validated notification ID.
 - `EV-03` Header Notifications button: button has accessible label but no handler or destination; unread dot is static.
 - `EV-04` Return to AD-19: visible anchor has `href="#"`; expected return context/data contract is not implemented.
 - `EV-05` Update draft: button is disabled. If later enabled, contract must resolve #94's missing request body; local `{title,content}`/QUEUED-only behavior is DERIVED and does not establish draft or schedule editing.
 - `EV-06` Cancel release: button is disabled. #95 is documented as path-only DELETE; local source hard-deletes a queued legacy row and does not stop external dispatch. Do not describe this as cancellation.
-- `EV-07` SH-07 handoff: button is disabled. No compatible Operation ID/API #18 route exists; do not navigate or poll.
+- `EV-07` SH-07 handoff: button is disabled. API #18 route exists in Study source, but #96 returns no Operation ID and AD-21 has no client handoff/poller; do not navigate or poll.
 - `EV-08` Footer destinations: all three anchors are `#`; URLs/content destination contract absent.
 
 ## Acceptance and known blockers
@@ -99,6 +99,6 @@ Hoàn thiện riêng AD-21 theo inventory row 79, AC-36, API #18/#94/#95/#96, m�
 - Marker IDs #1–#47 must be unique, sequential, in image bounds, and map one-to-one to element rows in `AD-21.md`; JSON/SVG/image coordinates must match.
 - Source image/HTML hashes stay unchanged; annotated PNG is 2850×3200 and visually checked at full page.
 - Inventory/folders remain 83/83; core artifacts rise from 73/83 to 74/83 after the four required DD assets are added.
-- API reverse rows #094/#095/#096 become `R` for local registered source; API DD status stays Draft. #018 stays `D`/UNWIRED.
+- API reverse rows #018/#094/#095/#096 record local source wiring; API DD/catalog contracts remain Draft and unchanged. #18 UUID/int64 and owner/result decisions remain open.
 - Do not equate expected `draft/scheduled/sending/delivered/failed` with local `QUEUED/SENT/FAILED`; do not infer recipient/channel counts, delivery progress, notification cancellation, or Operation handoff.
-- DD state: `DD BLOCKED`; implementation: `IMPLEMENTATION BLOCKED`; runtime: `RUNTIME NOT VERIFIED` until permissions, lifecycle/model/schema, API #18 and Study Web source are resolved.
+- DD state: `DD BLOCKED`; implementation: `IMPLEMENTATION PARTIAL SOURCE`; runtime: `RUNTIME NOT VERIFIED`. Permission, lifecycle/model/schema and #18 client handoff decisions remain open.

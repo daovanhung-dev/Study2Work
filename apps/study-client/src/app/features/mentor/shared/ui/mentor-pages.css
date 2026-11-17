@@ -1,0 +1,35 @@
+.mentor-page { color:#17324b; }
+.mentor-page .mentor-card { border:1px solid #e0e8ef; border-radius:14px; background:#fff; box-shadow:0 4px 15px rgb(28 55 82 / 4%); }
+.mentor-page .mentor-panel-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:15px; }
+.mentor-page .mentor-panel-heading h2 { margin:0; color:#17324b; font-size:17px; letter-spacing:-.02em; }
+.mentor-page .mentor-panel-heading p { margin:6px 0 0; color:#6a7e94; font-size:12px; line-height:1.5; }
+.mentor-page .mentor-panel-heading a,.mentor-page .mentor-table a { color:#0b668f; font-size:12px; font-weight:750; text-decoration:none; white-space:nowrap; }
+.mentor-page .mentor-panel-heading a:hover,.mentor-page .mentor-table a:hover { text-decoration:underline; }
+.mentor-page .mentor-button { min-height:44px; display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:0 14px; border:1px solid #0b5f8a; border-radius:8px; background:#0b5f8a; color:#fff; font:inherit; font-size:12px; font-weight:750; text-decoration:none; cursor:pointer; }
+.mentor-page .mentor-button:hover { background:#084d70; }
+.mentor-page .mentor-button--light { border-color:#d0dce6; background:#fff; color:#35506a; }
+.mentor-page .mentor-button--light:hover { border-color:#0b5f8a; background:#f3f9fc; }
+.mentor-page .mentor-button--small { min-height:36px; padding:0 11px; font-size:11px; }
+.mentor-page .mentor-button:disabled { opacity:.55; cursor:not-allowed; }
+.mentor-page .mentor-button:focus-visible,.mentor-page a:focus-visible,.mentor-page select:focus-visible,.mentor-page input:focus-visible,.mentor-page textarea:focus-visible { outline:3px solid #6ec7e9; outline-offset:2px; }
+.mentor-page .mentor-state { min-height:112px; display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:12px; padding:22px; color:#677b92; text-align:center; font-size:13px; line-height:1.55; }
+.mentor-page .mentor-state--error { color:#a4323d; }
+.mentor-page .mentor-live-label,.mentor-page .mentor-status { display:inline-flex; align-items:center; min-height:28px; padding:4px 9px; border:1px solid #d5e8f2; border-radius:999px; background:#f3fafe; color:#2f6c88; font-size:11px; font-weight:750; }
+.mentor-page .mentor-api-label { display:inline-flex; align-items:center; min-height:28px; padding:4px 9px; border:1px solid #cfe4ef; border-radius:999px; background:#f4fbfe; color:#28657f; font-size:11px; font-weight:750; }
+.mentor-page .mentor-meta { color:#73859a; font-size:11px; line-height:1.5; }
+.mentor-page .mentor-preview { display:block; max-width:58ch; margin-top:6px; overflow:hidden; color:#526b83; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
+.mentor-page .mentor-list { list-style:none; padding:0; margin:0; }
+.mentor-page .mentor-list li { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:70px; padding:12px 0; border-top:1px solid #eaf0f5; }
+.mentor-page .mentor-list li:first-child { border-top:0; }
+.mentor-page .mentor-list li > div { display:grid; gap:4px; min-width:0; }
+.mentor-page .mentor-list strong { overflow-wrap:anywhere; color:#213b56; font-size:13px; }
+.mentor-page .mentor-table-wrap { width:100%; overflow:auto; }
+.mentor-page .mentor-table { width:100%; border-collapse:collapse; text-align:left; }
+.mentor-page .mentor-table th,.mentor-page .mentor-table td { padding:13px 12px; border-bottom:1px solid #e8eef4; color:#435d76; font-size:12px; vertical-align:middle; }
+.mentor-page .mentor-table th { color:#71849a; font-size:10px; letter-spacing:.07em; text-transform:uppercase; }
+.mentor-page .mentor-pagination { display:flex; align-items:center; justify-content:center; gap:14px; margin:20px 0; color:#657a91; font-size:12px; }
+@media(max-width:600px){.mentor-page .mentor-panel-heading{display:block}.mentor-page .mentor-panel-heading>a{display:inline-flex;margin-top:10px}.mentor-page .mentor-list li{align-items:flex-start;flex-direction:column}}
+
+.mentor-page .mentor-alert,.mentor-page .mentor-success { margin:0; padding:12px 14px; border-radius:8px; font-size:12px; line-height:1.5; }
+.mentor-page .mentor-alert { border:1px solid #efcbd0; background:#fff5f6; color:#9b2935; }
+.mentor-page .mentor-success { border:1px solid #c9e7d4; background:#f2fbf5; color:#286344; }

@@ -2,6 +2,7 @@
 
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
+- This marker table describes the separate Stitch HTML/screenshot prototype; it is not a pixel-level inventory of the current Angular `AD17Page`.
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.
 - Marker JSON nguồn: [AD-17_markers.json](../../screen_stitch/05_admin/AD-17_thong-ke-bai-kiem-tra/AD-17_markers.json).
 
@@ -85,7 +86,8 @@ Marker positions là tâm theo ảnh gốc `screen.png` 1600×1440. `screen_anno
 | 33 | (1450,1357) | Footer technical support link | `href="#"`; no destination. | Hover CSS; EV-08. |
 
 ## 4. Conditional UI & state variations
-- States theo inventory: unwired/loading/no-data/ready/unauthorized/forbidden/not-found/error
+- States theo inventory là design expectations: no-data/ready semantics remain blocked by the API contract.
+- Current Angular source states: `loading`, `loaded` (Quiz ID plus six values from the local projection), and `error`; shared error handling includes 401/403/404/network cases. Browser/runtime behavior is not verified.
 - Detail/conditional visibility: xem section elements/state của [DD nguồn](../../screen_stitch/05_admin/AD-17_thong-ke-bai-kiem-tra/AD-17.md); không diễn giải ảnh tĩnh thành behavior runtime.
 
 ## 5. Link

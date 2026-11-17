@@ -21,7 +21,7 @@ from app.modules.mentor.api_47_mentor_lectures_create.validate import (
     validate_asset_refs,
     validate_lecture_course_id,
 )
-from app.modules.student.api_34_uploads.models import UploadAssetResponse
+from app.modules.shared.api_34_uploads.models import UploadAssetResponse
 from app.utils.auth import validate_current_user_request
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError

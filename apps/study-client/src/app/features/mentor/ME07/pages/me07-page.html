@@ -1,0 +1,18 @@
+<main class="mentor-page me07-page">
+  <study-mentor-page-header [title]="contentId() ? 'Chỉnh sửa nội dung' : 'Tạo nội dung bài giảng'" description="Editor dùng đúng content_type, title và JSON payload mà API #50/#51 hiện nhận." apiLabel="#49 · #50 · #51" />
+  @if (invalidRoute()) { <section class="mentor-card mentor-state mentor-state--error" role="alert">Course ID không hợp lệ.</section> }
+  @else if (loading()) { <section class="mentor-card mentor-state">Đang tải nội dung…</section> }
+  @else {
+    <form class="mentor-card me07-editor" (submit)="save($event, title.value, contentType.value, payload.value)">
+      <div class="me07-editor-top"><span class="mentor-status">Course #{{ courseId() }}</span>@if (content(); as item) { <span class="mentor-meta">Content #{{ item.id }} · {{ item.status }}</span> }</div>
+      @if (error()) { <p class="mentor-alert" role="alert">{{ error() }}</p> }
+      @if (success()) { <p class="mentor-success" role="status">{{ success() }}</p> }
+      <label for="me07-title">Tiêu đề nội dung</label><input #title id="me07-title" type="text" required [value]="content()?.title ?? ''" [disabled]="saving()" />
+      <label for="me07-type">Loại nội dung</label><input #contentType id="me07-type" type="text" required [value]="content()?.content_type ?? ''" [disabled]="saving()" />
+      <div class="me07-payload-heading"><label for="me07-payload">Payload (JSON object)</label><span class="mentor-meta">Không áp đặt subtype chưa có trong API source.</span></div>
+      <textarea #payload id="me07-payload" rows="14" spellcheck="false" [value]="payloadValue()" [disabled]="saving()"></textarea>
+      <div class="mentor-notice"><strong>Mapping hiện hành</strong><span>API #50 nhận course_id/content_type/title/payload; #51 nhận content_type/title/payload. Trường order/version trong prototype không thuộc request hiện tại.</span></div>
+      <div class="me07-actions"><button class="mentor-button mentor-button--light" type="button" (click)="backToTree()">Quay lại cây nội dung</button><button class="mentor-button" type="submit" [disabled]="saving()">{{ saving() ? 'Đang lưu…' : 'Lưu nội dung' }}</button></div>
+    </form>
+  }
+</main>

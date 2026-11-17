@@ -5,5 +5,5 @@ export const AD12_API_BOUNDARY: AdminScreenApiBoundary = {
     "#82"
   ],
   "sourceState": "data-backed",
-  "sourceNote": "#82 trả Lesson[]; bộ lọc chính xác là course_id/status. Response không có phân trang."
+  "sourceNote": "#82 trả Lesson[]; query filter là course/status (course ánh xạ tới DB course_id). Response không có phân trang."
 };

@@ -21,7 +21,7 @@
 ### EV-01 — Load course detail
 
 - **Element/trigger:** Route entry (no numbered clickable control); `Load`.
-- **Preconditions:** Proposed route matched, `courseId` value available, and a session token is available for the target request. Current checkout has no route to execute these conditions.
+- **Preconditions:** Angular route `/admin/courses/:courseId` is declared; `courseId` is available as a path string. `AdminApiService` obtains the Admin token for the GET #74 request. Browser/deployment execution is not verified.
 - **Input:** `courseId` from AD-06 `Course.id` or direct URL. Target API path is an int64 string. There is no query/body; no course code, title or owner name may substitute.
 - **Processing:** Follow the target request and current API ordering in section B EV-01. Do not add frontend positive-only validation; current server parser accepts signed int64. API guard runs before path parsing/query. The independent course-management permission check is unresolved.
 - **Response handling:** 200 → validate envelope and `data.items`; local current source emits one item and pagination 1/1/1/1; map only source-backed Course fields in EV-06. 401 → authentication/session state; 403 → access-denied state; 404 → invalid/unavailable detail state; 500 → service-error state. Catalog has no 422. Network errors have no agreed client policy.
@@ -32,7 +32,7 @@
 
 - **Element/trigger:** #13 or #15; click.
 - **Input:** Current route and optional list-navigation state; no such state is presently stored by this prototype.
-- **Processing/result:** Current `href="#"` does not navigate. Target destination is proposed `/admin/courses`; exact back-stack behavior and list-state restoration are open. No API call is inherent in the anchor; AD-06 owns any subsequent #73 load.
+- **Processing/result:** In the HTML prototype, `href="#"` does not navigate. The current Angular page has a RouterLink to `/admin/courses`; back-stack behavior and list-state restoration remain open. No API call is inherent in the link; AD-06 owns any subsequent #73 load.
 - **Errors:** If access to the destination is denied or the session has expired, shared auth handling applies; no AD-07 redirect rule is established.
 
 ### EV-03 — Navigate to edit
@@ -55,10 +55,10 @@
 
 ### EV-06 — Map successful Course response
 
-- **Element/trigger:** #26–30, internal render after EV-01 success.
+- **Element/trigger:** Current Angular AD07Page renders after EV-01 success; prototype markers #26–30 cover related fields.
 - **Input:** `data.items[0]` per current local singleton source; fields exactly as in API matrix.
-- **Processing:** Preserve numeric `id` in route/controller state. Map title, mentor full name, exact price string, and raw status to their visible fields. Optional description/thumbnail/avatar are null-capable but have no corresponding element in this screenshot. No transformation rule is defined for currency text or status label.
-- **Output:** Read-only fields in `ready`. Course code #27 has no mapping and remains blocked; never set it equal to `id`. Required local projection failure is already converted to API 500.
+- **Processing:** Current page maps title, mentor full name, exact price string, status, thumbnail URL and description from the #74 result. It displays the route's `courseId` string under `ID khóa học`; it does not map `Course.id` to a course-code field. No transformation rule is defined for currency text or status label.
+- **Output:** Current page shows those read-only values in `loaded`; API code #74 projection failure is returned as 500. The original prototype's separate course-code field #27 remains unsupported.
 
 ### EV-07 — Handle mockup-only metrics, curriculum and standards
 
@@ -71,6 +71,12 @@
 - **Element/trigger:** #1–12, #51–56; click/hover/focus where markup allows.
 - **Input:** Static anchor/button only.
 - **Processing/result:** Anchors point to `#`; notification has no handler. No route, PDF resource, health check, permission result or API effect occurs. Keyboard/focus behavior beyond browser defaults is not implemented in the prototype; accessible behavior belongs to the wired Study Web component.
+
+### Current Study Web source
+
+- `admin.routes.ts` registers `/admin/courses/:courseId`; `AD07Page` calls GET #74 via AD07ApiService/AdminApiService and uses `loading/loaded/error` UI states.
+- The AD-07 page has a back RouterLink to AD-06. AD-08, AD-09 and AD-12 action buttons are disabled and have no callers from AD-07.
+- `admin-detail-pages.spec.ts` covers the AD-07 request/fields/actions; the focused spec passed 2 tests after the ID label correction. Runtime remains unverified.
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)

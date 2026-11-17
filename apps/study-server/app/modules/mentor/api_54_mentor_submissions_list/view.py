@@ -8,8 +8,8 @@ from typing import Any
 
 from app.core.database import query_many, query_one
 from app.core.responses import error_response, success_response
-from app.modules.guest._shared.course_catalog.constants import DEFAULT_SIZE
-from app.modules.guest._shared.course_catalog.models import Pagination
+from app.modules.shared.course_catalog.constants import DEFAULT_SIZE
+from app.modules.shared.course_catalog.models import Pagination
 from app.modules.mentor.api_54_mentor_submissions_list.models import (
     GetMentorSubmissionsEnvelope,
     MentorSubmissionsQuery,
@@ -21,7 +21,7 @@ from app.modules.mentor.api_54_mentor_submissions_list.query import (
     FIND_MENTOR_COURSE,
     LIST_MENTOR_SUBMISSIONS,
 )
-from app.modules.student.api_34_uploads.models import UploadAssetResponse
+from app.modules.shared.api_34_uploads.models import UploadAssetResponse
 from app.utils.auth import validate_current_user_request
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError

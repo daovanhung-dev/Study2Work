@@ -26,7 +26,7 @@
 
 | ID | Hạng mục | Evidence | Cần chốt / tác động |
 |---|---|---|---|
-| `SH07-B01` | API #18 runtime/store absent | Không route/module/query/test; Study DDL không có operations table. | BE cung cấp API #18 runtime, approved Study persistence/query, migration/deployment evidence hoặc đóng design. Không map Work table. |
+| `SH07-B01` | Generic operation contract/store incomplete | API #18 route/module/query/tests exist, but current query covers notification rows only; Study DDL has no generic `operations` table, lifecycle or per-kind result store. | Chốt persistence, lifecycle, producer mapping và result theo kind; không map Work table khi chưa có contract cross-service. |
 | `SH07-D01` | ID type | API #18 row int64 vs UUID convention/schema/AC/producer #63/#93. | Contract owner chọn một type và đồng bộ producer response/path/storage/client. |
 | `SH07-D02` | Kind/status enum + lifecycle | No enum values/transition/terminal list; #64 statuses notification-specific. | BE/Product cung cấp canonical registry, transitions, terminal states, expiry semantics. |
 | `SH07-D03` | Authorization and 403/404 | owner-only vs owner/Admin; owner claims/predicate absent. | Security/Product/BE chốt roles, owner mapping, Admin access, wrong-owner behavior. |
@@ -34,7 +34,7 @@
 | `SH07-B02` | Polling/TTL/retry | Không cadence, SSE route, backoff, polling stop/retention policy. | Product/BE chốt transport/frequency/reconnect/retry/retention trước khi bật status refresh. |
 | `SH07-B03` | Return navigation | Inventory links to four caller screens; prototype CTA uses GS-01/SH-01. | Product/FE chốt safe origin preservation/return target; không tự tạo query/state contract. |
 | `SH07-B04` | Prototype vs user surface | Visible developer diagnostics, mock environment/ID and architecture claims. | UX/Product quyết định developer panel có bị loại khỏi production screen hay có audience guard. |
-| `SH07-B05` | Study Web router/runtime absent | `apps/study-client/src/` và package manifest vắng; `.agents/web-work/study/` context tồn tại, registry status `UNWIRED`, xác nhận thiếu app source. | FE cung cấp current UI/router source và entrypoint để xác minh route/auth/404 integration; không gọi context page là runtime implementation. |
+| `SH07-B05` | SH-07 route/caller absent | Study Web app/router có thật nhưng chưa có `/operations/:operationId`, SH-07 feature caller hoặc wired API #18 descriptor. | Chỉ triển khai route/caller khi ID, status/result, ownership, producer và polling/return contracts được duyệt. |
 
 ## 3. Quy tắc chưa xác nhận
 - `CẦN_XÁC_NHẬN`: các quyết định/blocker trong inventory và DD nguồn chưa được giải quyết.

@@ -6,15 +6,15 @@
 | Module | Admin |
 | Route | `/admin/discussions/reported` — route trong inventory, không phải xác nhận router runtime |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `DD BLOCKED` · **Implementation status:** `IMPLEMENTATION BLOCKED` · **Runtime status:** `RUNTIME NOT VERIFIED` |
+| DD status | Draft (package được chuyển đổi); **DD status:** `DD BLOCKED` · **Implementation status:** `PARTIAL` (read-only #97 caller source-wired; full report workflow remains blocked) · **Runtime status:** `RUNTIME NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-17 |
 | Nguồn đối chiếu | [AD-22.md](../../screen_stitch/05_admin/AD-22_danh-sach-thao-luan-bi-bao-cao/AD-22.md), [AD-22_PLAN.md](../../screen_stitch/05_admin/AD-22_danh-sach-thao-luan-bi-bao-cao/AD-22_PLAN.md), [AD-22_markers.json](../../screen_stitch/05_admin/AD-22_danh-sach-thao-luan-bi-bao-cao/AD-22_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Queue theo severity/reason, pagination, ưu tiên pending.
 - In-scope: GET #97 → detail AD-23; không tự giả lập endpoint report discussion.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Xem gate bên dưới; source route/page/#97 caller đã wired nhưng không kết luận browser loaded-state hoặc production runtime đã chạy.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,23 +31,25 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/empty/ready/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | `admin.routes.ts`, AD-22 page/service/spec | Route/page/#97 caller source-wired; loading/empty/ready/error source states exist. |
+| Current runtime | Browser/demo | `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-22 source screen.png](../../screen_stitch/05_admin/AD-22_danh-sach-thao-luan-bi-bao-cao/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-22_danh-sach-thao-luan-bi-bao-cao/screen_annotated.png))
 - Luồng: GET #97 → detail AD-23; không tự giả lập endpoint report discussion.
-- Priority: P1; Gate/source status: **R** local #97 route/module/query/validator/model source; API DD Draft. **BLOCK:** Chưa tìm thấy report writer hoặc xác minh live schema; #97 không trả count/reason/severity/reporter/time cho cột UI; search/status/pending priority/AC permission vs `ADMIN` chưa chốt; Study Web UNWIRED
+- Priority: P1; Gate/source status: **R** local #97 route/module/query/validator/model and AD-22 route/page/#97 caller source; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** Chưa tìm thấy report writer hoặc xác minh live schema; #97 không trả count/reason/severity/reporter/time cho cột UI; search/status/pending priority/AC permission vs `ADMIN` chưa chốt; AD-23/#98 report detail remains unresolved.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-17 — Đối chiếu checkout hiện tại: AD-22 route/page/#97 client caller và focused spec tồn tại; cập nhật trạng thái current source, giữ DD/API/runtime gates.
 
 ## Trạng thái và ranh giới bằng chứng
 
 # AD-22 — Danh sách thảo luận bị báo cáo
 
-> **DD status:** `DD BLOCKED` · **Implementation status:** `IMPLEMENTATION BLOCKED` · **Runtime status:** `RUNTIME NOT VERIFIED`
+> **DD status:** `DD BLOCKED` · **Implementation status:** `PARTIAL` (read-only #97 caller source-wired; full report workflow remains blocked) · **Runtime status:** `RUNTIME NOT VERIFIED`
 > Đây là đặc tả cho Screen ID 80 trong inventory. `screen.png` là ảnh nguyên trạng; các con số trong [`screen_annotated.png`](../../screen_stitch/05_admin/AD-22_danh-sach-thao-luan-bi-bao-cao/screen_annotated.png) ánh xạ theo thứ tự tới §C và [`AD-22_markers.json`](../../screen_stitch/05_admin/AD-22_danh-sach-thao-luan-bi-bao-cao/AD-22_markers.json).
 
 ## Trích đoạn tổng quan từ DD nguồn
@@ -59,12 +61,12 @@
 | Screen ID / tên | `AD-22` — Danh sách thảo luận bị báo cáo; Page trong inventory. |
 | Mục tiêu dự kiến | Admin xem hàng đợi các thảo luận bị báo cáo, lọc danh sách theo các query được #97 hỗ trợ và mở một Discussion để điều tra tại AD-23. |
 | Actor / quyền | Expected actor là `Admin` theo AC-37 và catalog #97. Current #97 dùng shared guard `role="ADMIN"`. Chưa có bằng chứng hai chính sách này tương đương hoặc về tenant/fine-grained permission; không coi badge `RBAC` trong prototype là bằng chứng quyền đã kiểm tra. |
-| Route | Candidate `/admin/discussions/reported` theo inventory. Study Web không có tracked `src/`, router hoặc API client trong checkout; route chưa được wire. |
+| Route | Candidate `/admin/discussions/reported` theo inventory; current `admin.routes.ts` registers AD22Page and its API #97 caller. Browser loaded-state remains unverified. |
 | Điều kiện trước | Khi triển khai: phiên hợp lệ, backend xác thực quyền theo policy được phê duyệt; chỉ truyền query được contract cho phép. Report phải được ghi bởi một producer đã được duyệt và tồn tại trong schema đang chạy. Hai điều kiện cuối chưa được xác minh. |
 | Kết quả sau | Expected: hiển thị trang kết quả #97 hoặc state lỗi/rỗng đã định nghĩa; chọn một Discussion bằng ID hợp lệ để đi tới AD-23/#98. Current #97 không trả report metadata mà các cột trong prototype yêu cầu. |
 | Màn hình liên quan | AD-23 (`/admin/discussions/:discussionId/moderate`) là detail/handoff dự kiến; #98 nhận `discussion_id:int64`. #99/#100 và quyết định xử lý thuộc AD-23, không nằm trong AD-22. Header/footer destinations hiện không có route. |
 | API liên quan | #97 `GET /api/v1/admin/discussions/reported`; #98 chỉ tại handoff. #97 local route/module tồn tại; API DD #97 vẫn `Draft — Needs Confirmation`. |
-| UI state trong inventory | `loading / empty / ready / error`. Đây là expected checklist, không phải state machine được implement trong Study Web. |
+| UI state trong inventory | `loading / empty / ready / error`; current Angular page source has corresponding states, while browser/runtime behavior remains unverified. |
 | Ràng buộc chính | Không tạo Student report API; không suy diễn search/status/count/reason/time fields từ ảnh; không coi policy cards, số liệu, nhãn “SẠCH VI PHẠM” hay “System Normal” là backend state. |
 
 ### Traceability

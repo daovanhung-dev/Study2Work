@@ -1,5 +1,12 @@
 # AD-16 — Events (đặc tả xử lý)
 
+## Current Angular implementation snapshot (2026-11-16)
+
+- `/admin/quizzes/new` và `/admin/quizzes/:quizId/edit` được đăng ký trong `admin.routes.ts` và cùng render `AD16Page`; `/admin` lazy-load admin routes. `AdminLayout` điều khiển hiển thị shell theo phiên đăng nhập. Runtime navigation chưa được xác minh.
+- Ở create mode, page giữ `title`, `duration` và `passing score` trong component memory qua input handlers. Course select vẫn disabled. Ở edit mode, các input cấu hình bị khóa vì không có nguồn GET detail.
+- Question Builder, Add Question và Save đang disabled; page không gọi API #88/#89, không autosave và không có kiểm tra `quiz management permission` riêng. Catalog/body/schema blockers vẫn mở.
+- Prototype trong Stitch vẫn là ảnh/HTML tĩnh; mô tả prototype bên dưới chỉ áp dụng cho artifact đó, trừ khi ghi rõ Angular source.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|
@@ -22,9 +29,9 @@
 
 ### EV-01 — Khởi tạo mode tạo (Load)
 
-- **Element/kích hoạt:** Route candidate `/admin/quizzes/new`; hiện chưa có client route.
+- **Element/kích hoạt:** Route `/admin/quizzes/new` có trong Angular source; runtime chưa xác minh.
 - **Đầu vào:** URL, session/auth state và permission cần có theo AC-35; form values ban đầu không nhận từ màn trước ngoài mode create.
-- **Quy trình:** (1) Resolve route và mode; hiện không có router. (2) Kiểm tra Bearer/session và quiz-management permission; chưa có UI guard. (3) Nếu quyền hợp lệ, cần tải course options và defaults, nhưng không có API/source được chỉ định cho options/defaults. (4) Không gọi #87 để lấy course options trừ khi contract và mapping được duyệt. (5) Render blank config/questions như prototype chỉ làm trạng thái mẫu. (6) Chỉ enable builder/save sau khi schema/validation/permission/UI được duyệt.
+- **Quy trình:** (1) Angular router đăng ký create/edit route và resolve cùng `AD16Page`; runtime chưa xác minh. (2) `AdminLayout` xử lý trạng thái phiên; AD-16 chưa có kiểm tra `quiz management permission` riêng. (3) Course options/defaults chưa có nguồn được duyệt; không gọi #87 thay thế. (4) Create render draft rỗng; edit khóa input do thiếu GET detail. (5) Chỉ enable builder/save sau khi schema/validation/permission/UI được duyệt.
 - **API/output:** Không có request hiện tại. #88 chỉ chạy khi submit hợp lệ; create entry không tự POST. Destination sau create chưa xác định.
 - **Ngoại lệ/trạng thái:** Loading, unauthorized, forbidden, error và empty course option chưa có UI implementation. Không thể đánh dấu create `ready` từ screenshot.
 
@@ -38,10 +45,10 @@
 
 ### EV-03 — Thay đổi cấu hình chung (Input/Change)
 
-- **Element:** #17–#20. Hiện không có listener, local UI state, error rendering hoặc submit path.
+- **Element:** #17–#20. Stitch prototype không có listener. Angular create page có input handlers cho title/duration/score và giữ giá trị trong component memory; edit fields bị khóa. Validation/error rendering và submit path chưa có.
 - **Đầu vào:** `title` text; course selector hiện chỉ có placeholder; duration optional number; passing score number. Phía server local #88/#89 fallback nhận `course_id` strict int64, `title` strict string, `duration_minutes` optional strict int/null, `passing_score` strict string. Đây là local derived request shape.
 - **Quy trình:** (1) Nhận giá trị đã nhập. (2) Các native HTML `min/max` hiện hữu là hint prototype; không suy ra business validation. (3) Chưa có quy tắc normalize whitespace, required title, chọn course, decimal separator, rounding, bỏ trống duration hoặc đổi `%` thành request string. (4) Không gọi API khi field thay đổi. (5) Dirty/invalid state chưa implement; không claim autosave.
-- **Kết quả/ngoại lệ:** Không có state change observable ngoài HTML control. Cần owner chốt required/range/precision, course ID source và mapping trước khi lập trình validator. Local fallback hiện kiểm tra title max 200, duration int32, score numeric fit; các checks này không xác nhận UI business policy.
+- **Kết quả/ngoại lệ:** Angular create page cập nhật ba draft values trong component memory; không có persistence, error state hoặc submit. Cần owner chốt required/range/precision, course ID source và mapping trước khi lập trình validator. Local fallback hiện kiểm tra title max 200, duration int32, score numeric fit; các checks này không xác nhận UI business policy.
 
 ### EV-04 — Thêm câu hỏi (Click)
 
@@ -71,7 +78,7 @@
 ### EV-07 — Hủy/quay về AD-15 (Click)
 
 - **Element:** #13 và #30; anchors trỏ `#/admin/quizzes`. #13 ở header, #30 ở footer action.
-- **Đầu vào/quy trình:** (1) Browser xử lý anchor hash; HTML không khai báo router/listener. (2) Không gọi API. (3) Không có dirty-state check, draft restore hoặc query/page/filter preservation. (4) Destination AD-15 là expected handoff theo inventory, nhưng runtime chưa xác minh.
+- **Đầu vào/quy trình:** (1) Stitch HTML độc lập dùng anchor hash; Angular template dùng `RouterLink` về `/admin/quizzes`. (2) Không gọi API. (3) Không có dirty-state check, draft restore hoặc query/page/filter preservation. (4) Route đích có trong source; runtime navigation chưa xác minh.
 - **Kết quả/ngoại lệ:** Prototype hash đổi theo browser behavior; không khẳng định Study app render AD-15. Unsaved-change prompt và clear/preserve draft là open decision.
 
 ### EV-08 — Safe Mode, autosave, schema và builder gate copy
@@ -88,7 +95,7 @@
 
 ### EV-10 — Validation, auth và API failure states
 
-- **Nguồn:** API catalog #88/#89 và current local handlers; không có client runtime để map.
+- **Nguồn:** API catalog #88/#89 và current local handlers. Angular page hiện chưa có caller hoặc request mapping cho hai API.
 - **Quy trình response candidate:** (1) Nhận HTTP status + envelope/businessCode. (2) 401 yêu cầu xử lý phiên; refresh/login/redirect policy chưa được quy định. (3) 403 hiển thị access denied; detail/masking policy chưa có. (4) 422 hiển thị field/business validation theo error payload đã thống nhất; #89 local history refusal cũng là 422. (5) 404 ở #89 biểu thị Quiz không tồn tại theo catalog/local source, local source cũng trả 404 cho tombstone. (6) 500 hiển thị lỗi tổng quát/trace ID nếu contract xác nhận; không lộ SQL/body. (7) Không retry, replay hoặc giữ form/cache nếu policy chưa có.
 - **Current result:** Không có loading, inline field error, auth error, API error, success toast hoặc conflict view. Trạng thái này là thiết kế candidate, chưa implement.
 

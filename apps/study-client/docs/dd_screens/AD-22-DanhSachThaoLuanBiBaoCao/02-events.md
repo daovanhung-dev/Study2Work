@@ -20,17 +20,17 @@
 
 ### Trích từ DD nguồn: D. Đặc tả sự kiện
 
-Các event dưới đây phân biệt hành vi hiện có của HTML với luồng dự kiến khi frontend được wire. Không có retry/timeout/cache contract cho #97; không tự thêm các chính sách đó.
+Các event dưới đây giữ hành vi của HTML prototype và luồng kỳ vọng tách biệt. Current Angular source behavior được ghi riêng ở cuối trang. Không có retry/timeout/cache contract cho #97; không tự thêm các chính sách đó.
 
 ### `EV-01` — Khởi tạo hàng đợi
 
 - **Trigger / loại:** Screen load hoặc route entry; `Load` dự kiến.
-- **Điều kiện:** Candidate route được triển khai và auth/authorization policy đã được xác định. Current Study Web chưa có route/client.
+- **Điều kiện:** Candidate route/page/#97 caller hiện đã được đăng ký trong Angular source; authorization policy AC-37 ở mức finer-grained vẫn chưa được xác minh.
 - **Input:** Optional `reason:string`, `severity:string`, `page:int32` theo catalog. Nguồn lấy filter từ URL/state/cache chưa được xác định; không tự tạo default khác contract.
 - **Expected request:** `GET /api/v1/admin/discussions/reported` + Bearer JWT; no body. Catalog không nêu custom headers khác.
 - **Expected sequence:** (1) Kiểm tra session/policy theo shared client/backend rule đã duyệt. (2) Validate query theo contract; catalog không định nghĩa taxonomy hoặc sentinel `all`. (3) Gửi #97. (4) Kiểm tra HTTP/envelope/schema và business code. (5) Ánh xạ đúng Page<Discussion>; chỉ render các field response có. (6) Cập nhật state loading → ready hoặc empty/error theo response.
 - **Response/error:** 200 `DESIGN_RESOURCE_RETRIEVED`; 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 500 `DESIGN_INTERNAL_ERROR`. Local source còn trả 422 `DESIGN_VALIDATION_ERROR` cho page sai; đây là DERIVED và catalog chưa liệt kê. UX destination/message per error chưa được chốt.
-- **Current result:** HTML render empty state/0 values trực tiếp, không gọi API, không tạo state. Không có retry, timeout, cache hoặc polling.
+- **Prototype result:** HTML render empty state/0 values trực tiếp, không gọi API, không tạo state. Không có retry, timeout, cache hoặc polling.
 
 ### `EV-02` — Nhập từ khóa tìm kiếm
 
@@ -103,3 +103,11 @@ Các event dưới đây phân biệt hành vi hiện có của HTML với luồ
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)
+
+## Current Study Web source observed 2026-11-17
+
+- Route entry triggers GET #97 with `page=1` through the Admin Bearer-token wrapper; the browser loaded state has not been demonstrated.
+- Reason and severity are raw text inputs, applied on form submit as exact-match query parameters. Empty values are omitted. Search is disabled because #97 has no keyword parameter; no status parameter or unsupported `all` sentinel is sent.
+- The table renders only the returned Discussion ID, content-derived title, content, author, course ID and Discussion status. Report count/reason/severity/reporter/time and metrics remain unavailable.
+- Page navigation uses the returned pagination metadata. The screen creates an AD-23 link only for a safe integer Discussion ID; the linked #98 projection still has no report details.
+- Loading, error and empty states exist in the Angular page. No refresh, retry or polling action is currently wired.

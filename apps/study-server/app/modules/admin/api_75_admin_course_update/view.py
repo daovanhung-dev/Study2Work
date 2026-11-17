@@ -14,8 +14,8 @@ from app.modules.admin.api_75_admin_course_update.query import UPDATE_ADMIN_COUR
 from app.modules.admin.api_75_admin_course_update.validate import (
     validate_admin_course_update_request,
 )
-from app.modules.guest._shared.course_catalog.helpers import map_course
-from app.modules.guest._shared.course_catalog.models import Course, CoursePage, Pagination
+from app.modules.shared.course_catalog.helpers import map_course
+from app.modules.shared.course_catalog.models import Course, CoursePage, Pagination
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session

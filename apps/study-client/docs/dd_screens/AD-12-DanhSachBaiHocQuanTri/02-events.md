@@ -19,14 +19,14 @@
 
 ### Trích từ DD nguồn: D. Đặc tả chi tiết sự kiện
 
-Prototype chưa phát sinh các event dưới đây; đây là event design và source trace, không phải behavior đang chạy. Trình tự chỉ gồm bước được áp dụng; client-side retry/timeout/cache policy để mở vì không có client source.
+Prototype HTML chưa phát sinh các event dưới đây. Angular source hiện có route/page và GET #82 caller; đây là source trace, không phải browser/runtime evidence. Client-side retry/timeout/cache policy chưa được xác định trong source.
 
 ### EV-01 — Vào màn hình và tải danh sách
 
 - **Trigger / element:** route entry/reload AD-12; #14/#25–#34. **Type:** Load.
 - **Precondition:** expected authenticated Admin có lesson-management permission; hiện chỉ local role `ADMIN` evidence. Route `/admin/lessons` là đề xuất.
 - **Input:** optional query `course?:int64`, `status?:string`, `type?:string` theo catalog; no body. Mockup keyword/slug/status alias không được tự thêm vào request.
-- **Processing:** (1) UI target bắt đầu `loading`; không có client implementation hiện tại. (2) Gọi #82 với Bearer và query đã được duyệt. (3) Server kiểm tra JWT/role trước query parse/DB. (4) Parse `course` thành signed int64; supplied `type` bị validator từ chối 422, kể cả chuỗi rỗng. (5) Query active candidate legacy `lessons`, exact equality course/status, bỏ `DELETED`, order `course_id ASC NULLS LAST, sort_order ASC NULLS LAST, id ASC`. (6) Map row theo response `Lesson`; không pagination/count. (7) Local success trả `200 ApiEnvelope<Lesson[]>` `data` là array; catalog lại ghi singular. (8) UI target cần xử lý envelope/cardinality sau khi contract thống nhất.
+- **Processing:** (1) Angular page bắt đầu `loading` qua `adminQueryState`. (2) Gọi #82 bằng Bearer, ban đầu không có query; filter controls vẫn disabled. (3) Server kiểm tra JWT/role trước query parse/DB. (4) Parse `course` thành signed int64; supplied `type` bị validator từ chối 422, kể cả chuỗi rỗng. (5) Query active candidate legacy `lessons`, exact equality course/status, loại `DELETED`, order `course_id ASC NULLS LAST, sort_order ASC NULLS LAST, id ASC`. (6) Map row theo response `Lesson`; không pagination/count. (7) Local success trả `200 ApiEnvelope<Lesson[]>` `data` là array; catalog lại ghi singular. (8) UI source hiển thị loading/error/empty/loaded; runtime chưa xác minh.
 - **Output/state:** non-empty list có thể thành `ready`; empty `[]` thành `empty`; hiện screenshot luôn hiển thị static empty. Không suy ra “sync pending”.
 - **Errors:** 401/403; 422 malformed/overflow `course` hoặc any supplied `type`; safe 500 + rollback query/mapping/null projection failure. Catalog chưa liệt kê 422. #82 không có 404 path.
 - **API details:** `GET /api/v1/admin/lessons`, Bearer/Admin theo catalog; query như trên; no request body; expected response catalog `ApiEnvelope<Lesson>`, actual local `ApiEnvelope<Lesson[]>`; timeout/retry/dedup/cache chưa có policy.
@@ -70,8 +70,8 @@ Prototype chưa phát sinh các event dưới đây; đây là event design và 
 
 - **Trigger / element:** row/action dự kiến từ #25 khi response có row; screenshot chỉ có empty state, không có action row quan sát được.
 - **Input:** `Lesson.id` numeric từ response, ứng viên path `lesson_id:int64` cho AD-13/#83.
-- **Processing:** AC-34 dự kiến list → #83 detail. Chỉ điều hướng sau khi #83 contract, permission và route/client được chốt; không truyền `course_id` thay lesson ID, không dựa vào thứ tự row hoặc slug.
-- **Output:** target AD-13; back/reload filter preservation chưa xác định. Không mô tả edit/delete buttons tại AD-12; AC-34 để các mutation #84–#86 ở AD-14.
+- **Processing:** current Angular source tạo RouterLink từ `Lesson.id` chỉ khi đó là safe JS integer; ID ngoài range bị disable kèm cảnh báo precision. Link mở route AD-13, nơi page gọi #83. Backend hiện guard role `ADMIN`; fine-grained lesson permission và API DD còn mở. Không truyền `course_id` thay lesson ID, không dựa vào thứ tự row hoặc slug.
+- **Output:** điều hướng tới AD-13 cho safe ID; browser/runtime chưa xác minh. Back/reload filter preservation chưa xác định. Không mô tả edit/delete buttons tại AD-12; AC-34 để các mutation #84–#86 ở AD-14.
 
 ### EV-08 — Chọn “Thêm bài học mới”
 

@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Sửa metadata khóa, ảnh/giá nếu contract xác nhận.
-- Gate/status (giữ nguyên): **R**; #75 route/module/test source exists, API DD remains Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** catalog/AC omit PUT body; local four-field full-replacement body and rules are DERIVED; thumbnail upload contract absent; mentor edit mockup conflicts with #75; AC-32 permission vs `ADMIN`, legacy/live schema, response/revalidation and Study Web UNWIRED remain open; Back/Cancel currently point to AD-06; **RUNTIME NOT VERIFIED**
+- Gate/status (giữ nguyên): **R**; #75 route/module/test source exists, API DD remains Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE; WRITE FLOW BLOCKED:** catalog/AC omit PUT body; local four-field full-replacement body and rules are DERIVED; thumbnail upload contract absent; mentor edit mockup conflicts with #75; AC-32 permission vs `ADMIN`, legacy/live schema, and response/revalidation remain open. Angular Back/Cancel point to AD-07 with route ID; Stitch prototype links point to AD-06; **RUNTIME NOT VERIFIED**
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu và blocker
@@ -22,7 +22,8 @@
 - [x] States/navigation và expected/current discrepancy được ghi rõ.
 - [ ] API #75 body, validation, schema và permission mapping được owner xác nhận.
 - [ ] Thumbnail upload/storage contract và return/revalidation behavior được quyết định.
-- [ ] Study Web route/client/error handling được implement và runtime verified.
+- [x] Angular route, page, GET #74 caller, local draft and load/error states exist in source.
+- [ ] API #75 write contract/client handling được quyết định, implement và runtime verified.
 
 ### Blockers
 
@@ -31,9 +32,9 @@
 3. Mockup mô tả mentor edit nhưng #75 không sửa mentor; thumbnail upload/S3/multipart không có endpoint/contract trong module #75.
 4. Legacy BIGINT schema và V1-PILOT UUID/versioned schema khác nhau; live DB/deployment chưa được xác minh.
 5. Response singleton Page và yêu cầu revalidation thứ hai chưa được owner/client contract xác nhận.
-6. Study Web app source/router/client không có; Back/Cancel route sai so với copy/AD-07 intent; static preview/metrics/audit/RBAC claims thiếu nguồn.
+6. Angular route/read/local-draft source exists; there is no PUT #75 caller or dirty/persistence flow. Prototype Back/Cancel differ from Angular AD-07 links; static metrics/audit/RBAC claims lack source.
 
-**Completion decision:** Tài liệu mô tả đầy đủ evidence và điểm quyết định nhưng chưa đạt `DD READY` vì các blocker ảnh hưởng trực tiếp đến body, authorization, persistence, upload và route. Trạng thái cuối màn hình: **DD BLOCKED** · **IMPLEMENTATION BLOCKED** · **RUNTIME NOT VERIFIED**. API #75 reverse inventory có thể là `R` cho local route/module/test source; API DD vẫn Draft.
+**Completion decision:** Tài liệu mô tả evidence và các quyết định còn mở nhưng chưa đạt `DD READY` vì blocker ảnh hưởng đến body, authorization, persistence, upload và revalidation. Trạng thái màn hình: **DD BLOCKED** · **IMPLEMENTATION PARTIAL SOURCE; WRITE FLOW BLOCKED** · **RUNTIME NOT VERIFIED**. API #75 reverse inventory có thể là `R` cho local route/module/test source; API DD vẫn Draft.
 
 ## 3. Quy tắc chưa xác nhận
 - `CẦN_XÁC_NHẬN`: các quyết định/blocker trong inventory và DD nguồn chưa được giải quyết.

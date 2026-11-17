@@ -24,19 +24,19 @@
 
 | Event ID | Tên / loại | Element | Current behavior |
 |---|---|---|---|
-| ST03-EV-01 | Mở trang và tải profile — Load | Route ST-03 | Route/API call chưa có trong Study Web; expected gọi #04. |
+| ST03-EV-01 | Mở trang và tải profile — Load | Route ST-03 | `/student/profile/edit` renders the G-03 gate; route metadata assigns #04, but no request is sent. |
 | ST03-EV-02 | Thay đổi họ tên — Input/Change | #14 | Native input nhận text; không có dirty/validation handler. |
 | ST03-EV-03 | Tương tác email — Input/Focus | #15 | Read-only; không đổi dữ liệu. |
 | ST03-EV-04 | Phone/Bio bị khóa — Input/Change | #16, #17 | Disabled; browser không phát thao tác nhập. |
 | ST03-EV-05 | Tải avatar — Click/Upload | #11 | Button disabled; không mở file picker hoặc gọi #13. |
 | ST03-EV-06 | Lưu hồ sơ — Submit/Click | #19 | Button disabled, type button; không submit hoặc gọi #14. |
-| ST03-EV-07 | Quay về hồ sơ — Click/Anchor | #7, #18 | Fragment href="#"; expected ST-02, chưa có route binding. |
-| ST03-EV-08 | Header brand/navigation — Click/Anchor | #1, #2 | Fragment anchors, đích chưa map. |
-| ST03-EV-09 | Footer navigation — Click/Anchor | #26 | Fragment anchors, đích chưa map. |
+| ST03-EV-07 | Quay về hồ sơ — Click/Anchor | #7, #18 | Angular page uses RouterLink to ST-02 at `/student/profile`; browser runtime is unverified. |
+| ST03-EV-08 | Header brand/navigation — Click/Anchor | #1, #2 | Home, progress, discussions and notifications map to declared routes; “Khóa học của tôi” remains noninteractive because ST-08 has no route. |
+| ST03-EV-09 | Footer navigation — Click/Anchor | #26 | Legal/help destinations remain text because no route/content mapping is available. |
 
 ### ST03-EV-01 — Mở trang và tải profile
 
-- **Input:** Route đề xuất /student/profile/edit; không có path/query/body. Token dự kiến đọc từ auth/session theo SH-02; không có Study Web session source hiện tại.
+- **Input:** Route `/student/profile/edit`; không có path/query/body. Token dự kiến đọc từ auth/session theo SH-02; không có Study Web Student session source hiện tại.
 - **Tiền điều kiện:** App/router tồn tại và user có Student session. API #04, #13, #14 đều kiểm tra JWT Bearer và role STUDENT ở server; client guard chưa được xác minh.
 - **Quy trình dự kiến:**
   1. Resolve route và yêu cầu session theo auth contract đã duyệt.
@@ -46,12 +46,12 @@
   5. Chỉ map các field theo UI contract đã duyệt. Candidate mapping là full_name → #14, email → #15, phone → #16, avatar_url → #8; phone/avatar bị khóa bởi design và bio không có nguồn. Do đó không tự prefill/enable các control khi chưa có loaded-state design.
   6. Không có cache policy, duplicate request policy hoặc refresh-after-save policy được xác minh.
 - **Response/error:** 401 DESIGN_AUTHENTICATION_REQUIRED khi thiếu/sai Bearer hoặc user row không tồn tại; 403 DESIGN_ACCESS_DENIED nếu JWT thiếu role STUDENT; 500 DESIGN_INTERNAL_ERROR khi query/mapping/token configuration lỗi. API #04 không lọc DB status hoặc so DB role với JWT role.
-- **Kết quả UI:** Current HTML không gọi request; màn hình luôn là mockup Gate G-03. Cách hiển thị 401/403/500 và điều hướng SH-05 chưa được triển khai.
+- **Kết quả UI:** Current Angular page renders the G-03 gate from route metadata and does not call #04. Cách hiển thị 401/403/500 và điều hướng SH-05 chưa được triển khai.
 
 ### ST03-EV-02 — Thay đổi họ tên
 
 - **Input:** Chuỗi do người dùng nhập vào fullname; HTML hiện không đặt minlength/maxlength/required hoặc giá trị ban đầu.
-- **Current:** Browser cho phép nhập text, nhưng form onsubmit="return false" và không có listener. Không có dirty state, validation, debounce, API call hay persistence.
+- **Current:** Browser cho phép nhập text, nhưng Angular ngăn submit; không có dirty state, validation, debounce, API call hay persistence.
 - **Khi contract được chốt:** Giá trị cần được chuẩn hóa nhất quán với API #14: server trim khoảng trắng, từ chối chuỗi rỗng, giới hạn 150 ký tự. UI có thể hiển thị field error từ response; quy tắc thời điểm validate (on blur/on submit) và dirty indicator chưa có nguồn, cần quyết định.
 - **Output:** Hiện chỉ thay đổi giá trị DOM tạm thời. Không đổi cache/server và không có thông báo thành công/lỗi.
 
@@ -98,21 +98,21 @@
 
 ### ST03-EV-07 — Quay về ST-02
 
-- **Input:** Click #7 hoặc #18. Anchor hiện là href="#" với data-path="ho-so-ca-nhan".
-- **Current:** Fragment navigation trong tài liệu tĩnh; không chuyển tới /student/profile.
+- **Input:** Click #7 hoặc #18.
+- **Current:** Angular RouterLink chuyển tới `/student/profile`; không chuyển profile PII qua URL.
 - **Expected:** Inventory chỉ định quay về ST-02 (/student/profile); không có path/body/query contract. Không truyền profile PII qua URL. Việc giữ dirty data/cache hoặc reload ST-02 sau khi save thành công chưa được chốt.
 - **Output:** Không có route event hoặc API call hiện tại.
 
 ### ST03-EV-08 — Header brand/navigation
 
 - **Input:** Click #1 hoặc một mục #2.
-- **Current:** Các anchor có href="#" và data-path như trang-chu, khoa-hoc-cua-toi, tien-do, thao-luan, thong-bao; metadata không phải router.
-- **Expected output:** Destination Screen ID/route, session retention và active navigation state chưa được map trong inventory/source hiện có. Không tự gán destination hoặc request.
+- **Current:** Angular header links to source-declared home, progress, discussions and notifications routes. “Khóa học của tôi” is text because ST-08 remains unrouted.
+- **Expected output:** Session retention and active-navigation design remain unresolved; navigation does not trigger profile API requests.
 
 ### ST03-EV-09 — Footer navigation
 
 - **Input:** Click footer links Terms, Privacy, Help.
-- **Current:** href="#"; không có tài liệu/route đích hoặc handler.
+- **Current:** Footer destinations are static text because no destination routes/content are mapped.
 - **Output:** Không có navigation/API hiện tại. Cần route/content contract trước khi implementation; WCAG badge trong footer là static claim, chưa được audit accessibility.
 
 ## Trace links

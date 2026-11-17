@@ -34,7 +34,8 @@
 5. Nhận HTTP response và kiểm tra `success`, `businessCode`, `data`, `meta`, `traceId`. Success theo source là HTTP 200 + `DESIGN_RESOURCE_RETRIEVED` + profile object.
 6. Map `id`, `full_name`, `email`, `phone`, `role`, `status` vào #22, #19, #20, #24, #25, #26. Giữ nullable `phone` theo model; không tạo giá trị thay thế. `avatar_url`, `created_at`, `updated_at` không có slot trong screenshot. Không kỳ vọng `bio` từ runtime.
 7. Chuyển sang `ready` chỉ sau khi profile hợp lệ. Không render `0 audit records`, sync state hoặc retention từ response #69; không kết luận profile rỗng từ `data:null` trên lỗi.
-8. Ánh xạ lỗi: 401 → unauthenticated/auth shell; 403 → forbidden; 404 → not-found; 500/network → error state. Nội dung auth shell, retry/timeout policy và UI copy chưa có source/contract, cần dùng chuẩn frontend được duyệt.
+8. **Expected UI mapping:** 401 → unauthenticated/auth shell; 403 → forbidden; 404 → not-found; 500/network → error state. Nội dung auth shell, retry/timeout policy và UI copy chưa có contract.
+   **Current source mapping:** Angular helper emits `loading`, `loaded`, or `error`; HTTP 401/403/404 have different messages within the same `status:error` type. Runtime chưa xác minh.
 9. Không có mutation, cache invalidation, optimistic update, retry count hoặc timeout rule được định nghĩa cho AD-03. Đây là GET; nếu cần retry policy phải theo shared client contract, không tự đặt tại screen DD.
 
 **Kết quả / ngoại lệ**
@@ -53,14 +54,14 @@
 | Element / trigger | #10 và phần “Danh sách tài khoản” của #8. |
 | Input | Current user ID không cần gửi trong URL quay lại. Bộ lọc/page của AD-02 chỉ giữ nếu có navigation-state contract. |
 | Processing | Điều hướng đến route AD-02 đã phê duyệt; không gọi API từ nút back; nếu AD-02 tự tải lại thì xử lý trong DD AD-02/#68. |
-| Result / exception | Hiển thị list route. Route hiện là đề xuất; prototype dùng fragment và chưa có router. Không đưa PII vào URL/history state ngoài quy định được duyệt. |
+| Result / exception | AD03 back link trỏ tới `/admin/users`, route này có trong current Admin router. Prototype fragment không phải runtime evidence; direct-host fallback/deployment chưa xác minh. Không đưa PII vào URL/history state ngoài quy định được duyệt. |
 
 ### EV-03 — Chuyển sang AD-04 để chỉnh sửa
 
 | Thuộc tính | Đặc tả |
 |---|---|
 | Element / trigger | #15 — “Chỉnh sửa thông tin (AD-04)”. |
-| Current state | Button `disabled` và `aria-disabled=true`; prototype không có click handler. |
+| Current/source state | Prototype button `disabled` và không có click handler; Angular AD03 template có router link tới AD-04 khi có `userId`. Permission/contract gate vẫn giữ; runtime chưa xác minh. |
 | Gating | Giữ disabled đến khi Admin policy, AD-04 route, editable field rules và API #70 request body/role rules được xác nhận. |
 | Processing khi được wire | Điều hướng ID hiện tại sang AD-04; không PUT từ AD-03. AD-04 định nghĩa #70, validation, dirty state và lỗi. |
 | Result | Quay lại hoặc refresh AD-03 theo flow AD-04 đã chốt. Không tự suy ra API #70 body hoặc thành công chỉ từ AC branch. |
@@ -70,7 +71,7 @@
 | Thuộc tính | Đặc tả |
 |---|---|
 | Element / trigger | #17 — “Khóa hoặc thay đổi trạng thái (AD-05)”. |
-| Current state | Button `disabled` và `aria-disabled=true`; prototype không có handler. |
+| Current/source state | Prototype button `disabled` và không có handler; Angular AD03 template có router link tới AD-05 khi có `userId`. Permission/contract gate vẫn giữ; runtime chưa xác minh. |
 | Gating | Giữ disabled đến khi status/delete policy, confirmation, lifecycle, quyền và AD-05 contract được duyệt. |
 | Processing khi được wire | Chuyển ID sang AD-05. #71/#72 thuộc màn hình đích; AD-03 không PATCH/DELETE. Không mặc định session revoke hoặc token invalidation. |
 | Result | Thành công/refresh list/detail theo DD AD-05; conflict/404/validation handling phải theo source/contracts của màn hình đó. |

@@ -34,6 +34,7 @@ study-ad15-page tbody tr:hover { background: #fafbfe; }
 study-ad15-page .quiz-id { color: #58677e; font-variant-numeric: tabular-nums; white-space: nowrap; }
 study-ad15-page .quiz-title { min-width: 230px; }
 study-ad15-page .quiz-title strong { color: #17243a; font-size: 14px; }
+study-ad15-page .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0 12px; }
 study-ad15-page .row-action { display: inline-flex; min-height: 34px; align-items: center; gap: 5px; color: #1556d7; font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; }
 study-ad15-page .row-action study-icon { transform: rotate(180deg); }
 study-ad15-page button.row-action { border: 0; color: #69768b; background: #edf1f8; }

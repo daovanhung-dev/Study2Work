@@ -9,10 +9,21 @@ scopes:
 
 Canonical page graph: `INDEX.md`.
 
-Study Web has a separate `study/` context. It has an Angular 22 standalone SPA
-scaffold and generic HTTP transport; business screens, auth and feature-specific
-Study API calls remain unwired. Do not infer Student route/API behavior from
-design assets or the root placeholder.
+Study Web has a separate `study/` context. Its Angular 22 SPA has the shared
+root/auth routes, Guest GS-01–GS-07, Student ST-01–ST-26, Mentor ME-01–ME-18,
+and Admin AD-01–AD-25 route groups. Student and Mentor layouts authenticate
+through API #03, check the role, and keep tokens in tab memory; Admin uses its
+own session. Student ST-02/ST-03 remain profile gates; ST-04 calls #08 while
+#15 stays gated; ST-05 calls #08 while #16 stays gated; ST-06/ST-07 remain
+payment/result gates. ST-01 calls #20/#38, ST-08 calls #20, ST-09 calls #20/#37
+after ACTIVE enrollment, ST-10 calls #22 and explicit #23, and ST-11 calls
+#24 after handoff. ST-26 has no caller because #43–#45 are `SOURCE_ONLY`.
+Mentor routes have screen-local callers for supported APIs, with some actions
+still gated by request/contract gaps. Selected Admin GET callers use
+`AdminApiService`; `AdminSessionService` is Admin-only. Live schema, browser
+runtime, and deployment remain unverified. API descriptors do not prove a
+screen caller exists. Recheck the current route and source before inferring
+feature behavior.
 Work Web uses React.
 Work router giữ route catalog hiện có,
 `src/shared/api/work.ts` là ranh giới fetch/Zod của Work và backend tương ứng là

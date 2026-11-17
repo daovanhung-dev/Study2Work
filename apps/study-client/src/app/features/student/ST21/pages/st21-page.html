@@ -1,0 +1,57 @@
+<main class="static-page api-screen st21-page">
+  <nav class="crumbs" aria-label="Vị trí hiện tại">
+    <a routerLink="/student/progress">Tổng quan tiến độ</a><span>›</span
+    ><span>Tiến độ khóa #{{ courseId || '—' }}</span>
+  </nav>
+  <header class="api-heading">
+    <div>
+      <p class="api-eyebrow">ST-21 · Tiến độ theo khóa học</p>
+      <h1>Tiến độ khóa học</h1>
+      <p>
+        API #37 trả về tổng quan hoàn thành theo khóa, không phải danh sách lesson hoặc mốc thời
+        gian.
+      </p>
+    </div>
+  </header>
+  @if (loading()) {
+    <section class="api-message" role="status"><strong>Đang tải tiến độ…</strong></section>
+  }
+  @if (error()) {
+    <section class="api-error" role="alert">{{ error() }}</section>
+  }
+  @if (!loading() && !error() && progress(); as item) {
+    <section class="api-stack">
+      <article class="api-card">
+        <p class="api-eyebrow">Khóa học #{{ item.course_id }}</p>
+        <div class="progress-number">
+          <strong>{{ item.progress_percent }}%</strong
+          ><span>{{ item.completed_lessons }} / {{ item.total_lessons }} bài hoàn thành</span>
+        </div>
+        <div
+          class="api-progress"
+          role="progressbar"
+          aria-label="Tiến độ khóa học"
+          [attr.aria-valuenow]="percentWidth()"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <span [style.width.%]="percentWidth()"></span>
+        </div>
+        <p class="api-muted">
+          {{
+            item.has_content
+              ? 'Có bài học được công bố trong khóa.'
+              : 'API báo chưa có bài học để hiển thị.'
+          }}
+        </p>
+      </article>
+      <aside class="api-error">
+        <strong>Danh sách lesson và thời điểm học chưa có trong API #37.</strong>
+        <p>Không dựng timeline hoặc trạng thái từng bài từ số liệu tổng hợp.</p>
+      </aside>
+      <div class="api-actions">
+        <a class="api-button secondary" routerLink="/student/progress">Quay lại tổng quan</a>
+      </div>
+    </section>
+  }
+</main>

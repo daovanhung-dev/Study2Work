@@ -1,0 +1,25 @@
+<section class="catalog-hero" aria-labelledby="gs01-heading">
+  <div class="hero-copy">
+    <p class="eyebrow">Học theo cách của bạn</p>
+    <h1 id="gs01-heading">Khám phá khóa học</h1>
+    <p class="hero-intro">
+      Tìm hiểu các khóa học đang được mở và chọn nội dung phù hợp với mục tiêu của bạn.
+    </p>
+    <form class="hero-search" role="search" (submit)="submit($event)">
+      <label class="visually-hidden" for="gs01-course-search">Tìm khóa học</label>
+      <study-icon name="search" />
+      <input
+        id="gs01-course-search"
+        name="q"
+        type="search"
+        [value]="query()"
+        (input)="onInput($event)"
+        placeholder="Bạn muốn học gì?"
+      />
+      <button type="submit">Tìm khóa học</button>
+    </form>
+  </div>
+  <div class="hero-visual" aria-hidden="true">
+    <span class="visual-book"><study-icon name="book" /></span>
+  </div>
+</section>

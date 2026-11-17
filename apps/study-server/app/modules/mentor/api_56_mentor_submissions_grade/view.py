@@ -22,7 +22,7 @@ from app.modules.mentor.api_56_mentor_submissions_grade.validate import (
     parse_submission_id,
     score_is_within_assignment_max,
 )
-from app.modules.student.api_34_uploads.models import UploadAssetResponse
+from app.modules.shared.api_34_uploads.models import UploadAssetResponse
 from app.utils.auth import validate_current_user_request
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError

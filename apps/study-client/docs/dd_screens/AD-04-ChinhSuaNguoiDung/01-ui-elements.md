@@ -1,5 +1,7 @@
 # AD-04 — UI Elements
 
+> Re-audit source 2026-11-16: Angular route/page and GET #69 caller are present; this file maps static prototype elements and does not establish the current page appearance or runtime behavior. Save remains disabled in Angular source; no PUT #70 client call exists.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.

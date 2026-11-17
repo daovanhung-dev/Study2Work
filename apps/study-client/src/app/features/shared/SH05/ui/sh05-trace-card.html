@@ -1,0 +1,17 @@
+<section class="trace-card" aria-labelledby="sh05-trace-title">
+  <div class="trace-card__content">
+    <h2 id="sh05-trace-title">Trace ID</h2>
+    <code class="trace-card__value">{{ traceId }}</code>
+  </div>
+  <button class="trace-card__copy" type="button" (click)="copyTraceId()">Sao chép Trace ID</button>
+
+  @if (copyFeedback(); as feedback) {
+    <p class="trace-card__feedback" role="status" aria-live="polite">
+      @if (feedback === 'success') {
+        Đã sao chép Trace ID.
+      } @else {
+        Không thể sao chép Trace ID. Hãy chọn mã để sao chép thủ công.
+      }
+    </p>
+  }
+</section>

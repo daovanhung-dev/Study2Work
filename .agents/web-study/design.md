@@ -15,12 +15,21 @@ SCOPE: STUDY_WEB_ONLY
   work. Follow its tokens and interaction rules unless the user approves a
   specific exception.
 - This page defines intended design, not current runtime behavior. The current
-  checkout has an Angular SPA scaffold plus documentation and screen assets
-  under `apps/study-client/docs/`. Only a temporary root readiness message is
-  wired; Student screen routes, auth, API integration, serving outside the CLI
-  dev server, and deployment are unverified. Do not use this page or design
-  assets as evidence that a Student screen, route, interaction or API
-  integration exists.
+  checkout has an Angular SPA with SH-01 at `/` using #05/#06, SH-02
+  presentation at `/login`, SH-03 at `/register` using #01, and SH-04 at
+  `/register/verification` as a static information gate without a #02 caller.
+  SH-03 offers a user-controlled link to SH-04 after a validated 201; no ID or
+  email is passed to that route. Guest GS-01–GS-03 routes use #05–#08, and
+  GS04 curriculum/#09, GS05 reviews/#10 and a GS06 contract-blocked resources
+  panel owned by the GS03 `?tab=` view. Student
+  ST-11–ST-26 routes, and Admin AD-01–AD-25 routes. Selected Admin GET callers
+  use the source-backed Admin API wrapper; other Guest/Mentor routes,
+  Shared/Student session flows, production routing and deployment remain
+  absent or unverified. SH-01 desktop/mobile local route rendering is verified,
+  but its dev API proxy returned 502; live API/DB and GS-02 runtime remain
+  unverified. A route or API descriptor does not
+  establish behavior for another screen. Recheck current source and the
+  relevant contract for each feature.
 - `.agents/project/design.md` remains the design source for Work Web and Work
   Mobile. This Study Web guide defines a separate ocean-blue visual identity
   and must not be applied to those apps by default.

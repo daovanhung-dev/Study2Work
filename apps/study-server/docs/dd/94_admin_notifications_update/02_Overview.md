@@ -74,7 +74,7 @@ status: "Draft — Needs Confirmation"
 
 ## Tình trạng nhóm AC-36
 
-AC-36 macro-review remains `VERIFIED_WITH_OPEN_QUESTIONS`. APIs #92–#95 are locally wired and fake-DB tested; #96 remains unwired. Shared Admin model, lifecycle/retention, fine-grained permission and Operation decisions remain open. See [AC-36 macro-review](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
+AC-36 macro-review remains `VERIFIED_WITH_OPEN_QUESTIONS`. APIs #92–#96 are locally wired and have fake-DB test evidence. Shared Admin model, lifecycle/retention, fine-grained permission and Operation decisions remain open. See [AC-36 macro-review](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

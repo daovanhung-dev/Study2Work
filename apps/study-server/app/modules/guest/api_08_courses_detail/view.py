@@ -7,11 +7,11 @@ from typing import Any
 
 from app.core.database import query_one
 from app.core.responses import ErrorDetail, error_response, success_response
-from app.modules.guest._shared.course_catalog.helpers import (
+from app.modules.shared.course_catalog.helpers import (
     course_internal_error,
     map_course,
 )
-from app.modules.guest._shared.course_catalog.models import CoursePage, Pagination
+from app.modules.shared.course_catalog.models import CoursePage, Pagination
 from app.modules.guest.api_08_courses_detail.query import FIND_PUBLISHED_COURSE_DETAIL
 from app.modules.guest.api_08_courses_detail.validate import validate_course_id
 from pydantic import ValidationError

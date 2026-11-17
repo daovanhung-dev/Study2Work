@@ -4,17 +4,17 @@
 |---|---|
 | Screen ID | `AD-08` |
 | Module | Admin |
-| Route | `/admin/courses/:courseId/edit` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/admin/courses/:courseId/edit` — declared trong Angular Admin router; browser/deployment runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Detailed Design:** `DD BLOCKED` · **Implementation:** `IMPLEMENTATION BLOCKED` · **Study Web runtime:** `NOT VERIFIED` (`UNWIRED` in current checkout)<br> |
+| DD status | Draft (package được chuyển đổi); source status: **Detailed Design:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE` · **Study Web runtime:** `NOT VERIFIED`<br> |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-16 |
 | Nguồn đối chiếu | [AD-08.md](../../screen_stitch/05_admin/AD-08_chinh-sua-khoa-hoc/AD-08.md), [AD-08_PLAN.md](../../screen_stitch/05_admin/AD-08_chinh-sua-khoa-hoc/AD-08_PLAN.md), [AD-08_markers.json](../../screen_stitch/05_admin/AD-08_chinh-sua-khoa-hoc/AD-08_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Sửa metadata khóa, ảnh/giá nếu contract xác nhận.
-- In-scope: GET #74 → PUT #75 → revalidate #74; không có API create admin course ở V1. #75 locally returns an updated Course projection; whether the UI also re-fetches #74 is open.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- In-scope target: GET #74 → approved PUT #75 → response/revalidation policy; không có API create admin course ở V1. Current Angular source calls GET #74 only and keeps edits in a local draft; #75 locally returns an updated Course projection, but whether UI also refetches #74 is open.
+- Out-of-scope: Xem gate bên dưới; không kết luận browser/deployment runtime đã chạy.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -30,24 +30,26 @@
 ## 4. UI states
 | State | Nguồn | Giá trị |
 |---|---|---|
-| Inventory states | `list_screen.md` | loading/ready/dirty/saving/422/unauthorized/forbidden/not-found/service-error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Inventory states | `list_screen.md` | Target: loading/ready/dirty/saving/422/unauthorized/forbidden/not-found/service-error |
+| Current source | Angular Admin router / `AD08Page` | Route/page and GET #74 caller present; component state is `loading`/`loaded`/`error`; runtime not verified. |
+| Current draft/write | `AD08Page` / `AD08ApiService` | Title/description/price draft is local component memory; no dirty state or PUT #75 caller; Save/upload disabled. |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-08 source screen.png](../../screen_stitch/05_admin/AD-08_chinh-sua-khoa-hoc/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-08_chinh-sua-khoa-hoc/screen_annotated.png))
-- Luồng: GET #74 → PUT #75 → revalidate #74; không có API create admin course ở V1. #75 locally returns an updated Course projection; whether the UI also re-fetches #74 is open.
-- Priority: P1; Gate/source status: **R**; #75 route/module/test source exists, API DD remains Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** catalog/AC omit PUT body; local four-field full-replacement body and rules are DERIVED; thumbnail upload contract absent; mentor edit mockup conflicts with #75; AC-32 permission vs `ADMIN`, legacy/live schema, response/revalidation and Study Web UNWIRED remain open; Back/Cancel currently point to AD-06; **RUNTIME NOT VERIFIED**
+- Current Angular source: GET #74 → map fields/local draft; there is no PUT #75 caller. Target flow and response/revalidation choice remain open.
+- Priority: P1; Gate/source status: **R**; #75 route/module/test source exists, API DD remains Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE; WRITE FLOW BLOCKED:** catalog/AC omit PUT body; local four-field full-replacement body and rules are DERIVED; thumbnail upload contract absent; mentor edit mockup conflicts with #75; AC-32 permission vs `ADMIN`, legacy/live schema, and response/revalidation remain open. Angular Back/Cancel point to AD-07 with route ID; Stitch prototype links point to AD-06; **RUNTIME NOT VERIFIED**
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
-- 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-08 — Chuyển nội dung nguồn sang 8-file template.
+- 2026-11-16 — Re-audit Angular route/page/GET #74 and local draft; corrected Course ID label; write flow and runtime remain blocked/unverified.
 
 ## Trạng thái và ranh giới bằng chứng
 
 # AD-08 — Chỉnh sửa khóa học quản trị
 
-> **Detailed Design:** `DD BLOCKED` · **Implementation:** `IMPLEMENTATION BLOCKED` · **Study Web runtime:** `NOT VERIFIED` (`UNWIRED` in current checkout)<br>
+> **Detailed Design:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE` · **Study Web runtime:** `NOT VERIFIED`<br>
 > **Screen:** AD-08 · **Actor:** Admin có course-management permission theo AC-32 · **Route đề xuất:** `/admin/courses/:courseId/edit` · **AC:** AC-32 · **API:** #74, #75<br>
 > **Assets:** [screen nguyên trạng](../../screen_stitch/05_admin/AD-08_chinh-sua-khoa-hoc/screen.png) · [screen đánh số](../../screen_stitch/05_admin/AD-08_chinh-sua-khoa-hoc/screen_annotated.png) · [marker map](../../screen_stitch/05_admin/AD-08_chinh-sua-khoa-hoc/AD-08_markers.json) · [kế hoạch](../../screen_stitch/05_admin/AD-08_chinh-sua-khoa-hoc/AD-08_PLAN.md)
 
@@ -65,30 +67,30 @@ Catalog #75 khai báo `PUT /api/v1/admin/courses/{course_id}`, Bearer JWT/Admin,
 
 | Chủ đề | Expected / contract | Current source hoặc prototype | Trạng thái |
 |---|---|---|---|
-| Route/ID | Proposed `/admin/courses/:courseId/edit`, numeric `Course.id` từ AD-07. | Không có Study Web package, route, entrypoint hay API client source trong checkout; HTML không khai báo router. | `UNWIRED`; route chưa chạy được. |
-| Load/save | GET #74 → PUT #75 → revalidate #74 theo inventory. | HTML không gọi API. Local #75 tự đọc projection qua query #74 trong cùng transaction và trả projection đó trong response. | Client revalidation/cache policy `OPEN`; không kết luận phải gửi thêm GET. |
-| Form | Chỉ field được owner/API duyệt mới thành editable. | Title, code, mentor, price, description, thumbnail và Save hiện disabled. Không có handler/fetch/API client. | Prototype read-only; chưa có UI behavior được triển khai. |
+| Route/ID | `/admin/courses/:courseId/edit`, numeric `Course.id` từ AD-07. | Angular Admin router declares the route; `AD08Page` preserves the raw route ID and calls GET #74. Stitch HTML remains static. | Route/page/GET caller present; runtime unverified. |
+| Load/save | GET #74 → approved PUT #75 → response/revalidation per client/API decision. | Angular page calls GET #74 only; local #75 reads its projection in the same transaction and returns it. | Read/draft present; no PUT caller; response/revalidation policy `OPEN`. |
+| Form | Chỉ field được owner/API duyệt mới persist. | Angular title/description/price inputs update a local component-memory draft; ID and mentor are read-only, thumbnail selection and Save are disabled. | Draft source present; no dirty state, persistence, or PUT caller. |
 | Body #75 | Catalog/AC không nêu body. | Local strict model yêu cầu `title:string`, `description:string|null`, `thumbnail_url:string|null`, `price:string`; từ chối field thừa. | Body full replacement là `DERIVED`; API DD Draft. |
 | Validation | Chưa có body policy được duyệt. | Local source kiểm tra title dài tối đa 200 (không trim/không nonblank), decimal string cho price (không exponent, tối đa 2 số thập phân, 10 số nguyên; số âm được chấp nhận), nullable description/thumbnail; thumbnail không được kiểm tra URI. | Chỉ là current/DERIVED candidate; không áp làm product rule khi chưa duyệt. |
 | Thumbnail | Prototype gợi ý upload PNG/JPG và hiển thị `#75`. | Module #75 chỉ nhận `thumbnail_url`; không có multipart upload hay upload API trong route/module này. | Upload contract/constraints `NOT FOUND`; không được coi copy mockup là API behavior. |
 | Mentor | Prototype nói cập nhật mentor và có select. | #75 body/SQL không nhận hoặc cập nhật mentor; response #74 chỉ trả owner hiện tại. | `DISCREPANCY`; mentor mutation phải được xác nhận/tách API. |
 | Schema | Catalog dùng int64 Course ID. | Legacy candidate DDL có BIGINT và `name VARCHAR(200)`/`NUMERIC(12,2)`; V1-PILOT DDL mô tả Course UUID/versioned. Live schema không được chứng minh. | `OPEN`; không nâng candidate DDL thành live contract. |
 | Quyền | AC-32 yêu cầu Admin có course-management permission. | Local #75 dùng shared JWT role `ADMIN`; không có check permission riêng. | `OPEN`; role ADMIN không chứng minh fine-grained permission. |
-| Static preview/claims | Course data phải có nguồn từ API/config có contract. | Preview, Active, mã lô, mentor, 14 chương, 342 học viên, “Production Ready”, phiên bản, API paused/locked, RBAC, S3, audit/gateway/integrity đều là HTML tĩnh. | Không dùng làm dữ liệu hay trạng thái runtime. #74/#75 không xác nhận các chỉ số/claim này. |
-| Links | Back/cancel phải theo approved route/history. | “Quay lại chi tiết (AD-07)” và “Hủy bỏ” đều có `href="/admin/courses"` (AD-06 list); các shell/footer links dùng `#`. | `DISCREPANCY`; destination và list-state restore chưa được quyết định. |
+| Preview/claims | Course data phải có nguồn từ API/config có contract. | Angular preview binds the local title/description/price draft and #74 mentor/status; it does not load a thumbnail or show metrics. Stitch prototype claims/metrics remain static and unsupported by #74/#75. | Use only source-backed fields; prototype claims are not runtime evidence. |
+| Links | Back/cancel phải theo approved route/history. | Stitch prototype links target `/admin/courses`; Angular Back/Cancel RouterLinks target `/admin/courses/:courseId` with the raw route ID. | Prototype/source differ; Angular destination is present in source, runtime unverified. |
 
 ### Actor, điều kiện và liên kết
 
 - **Actor dự kiến:** Admin có quyền course management theo precondition AC-32. Catalog ghi Bearer JWT/Admin; current API source chỉ xác minh role `ADMIN`, chưa chứng minh AC permission mapping.
-- **Route parameter:** `courseId` dự kiến nhận numeric `Course.id` từ AD-07. Local #75 parse signed int64, chấp nhận giá trị âm nếu nằm trong miền; screen không tự áp positive-only rule khi chưa có contract.
-- **Trước khi vào:** Cần route/client được wire, session token và ID. Khi load thành công từ #74, candidate Course fields gồm `id`, `title`, nullable `description`, nullable `thumbnail_url`, decimal-string `price`, `status`, `mentor`. Không có `course_code`, category hoặc counter trong local projection được AD-07 kiểm tra.
+- **Route parameter:** `courseId` route string được giữ nguyên để gọi #74 và hiển thị; local #75 parse signed int64, chấp nhận giá trị âm nếu nằm trong miền. Screen không tự áp positive-only rule khi chưa có contract.
+- **Trước khi vào:** Angular route/page/GET caller có trong source; browser/deployment runtime chưa xác minh. Page cần Admin session và ID. Khi load thành công từ #74, Course fields gồm `id`, `title`, nullable `description`, nullable `thumbnail_url`, decimal-string `price`, `status`, `mentor`. Không có `course_code`, category hoặc counter trong local projection được AD-07 kiểm tra.
 - **Sau khi lưu thành công:** Local #75 trả Course projection trong singleton `Page<Course>` và cập nhật metadata cùng `updated_at`. Cách client áp dụng response, gọi GET #74 lần nữa hoặc invalidate cache chưa được quy định. Quay về AD-07 hay giữ lại form cũng chưa được chốt.
-- **Điều hướng liên quan:** AD-07 → AD-08 là handoff ID; AD-08 → AD-07 là return candidate; AD-06 là danh sách mà prototype hiện trỏ tới; AD-09 xử lý #76/#77. Không dùng API public #08 để thay GET #74.
+- **Điều hướng liên quan:** AD-07 → AD-08 handoff ID có trong source; Angular Back/Cancel về AD-07 với raw route ID; Stitch prototype links vẫn trỏ tới AD-06. AD-09 xử lý #76/#77. Không dùng API public #08 để thay GET #74.
 
 ### Nguồn truy vết
 
 - [Screen inventory](../../list_screen.md) · [Global screen plan](../../screen_stitch/dd_screens/PLAN.md) · [AC-32 admin flow](../../../../study-server/docs/diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio)
 - [API catalog](../../../../../docs/lists/list_api.md) · [API #75 route](../../../../study-server/app/api/v1.py) · [request model](../../../../study-server/app/modules/admin/api_75_admin_course_update/models.py) · [validator](../../../../study-server/app/modules/admin/api_75_admin_course_update/validate.py) · [view](../../../../study-server/app/modules/admin/api_75_admin_course_update/view.py) · [SQL](../../../../study-server/app/modules/admin/api_75_admin_course_update/query.py)
 - [API #75 open questions](../../../../study-server/docs/dd/75_admin_course_update/OPEN_QUESTIONS.md) · [API #75 verification report](../../../../study-server/docs/dd/75_admin_course_update/VERIFICATION_REPORT.md) · [API #75 tests](../../../../study-server/tests/modules/admin/api_75_admin_course_update/test_admin_course_update.py)
-- [API #74 detail source](../../../../study-server/app/modules/admin/api_74_admin_course_detail/query.py) · [Course response model](../../../../study-server/app/modules/guest/_shared/course_catalog/models.py) · [legacy schema candidate](../../../../../infra/postgres/study-server/DB.sql) · [V1-PILOT Course schema](../../../../../infra/postgres/02_study_db.sql)
+- [API #74 detail source](../../../../study-server/app/modules/admin/api_74_admin_course_detail/query.py) · [Course response model](../../../../study-server/app/modules/shared/course_catalog/models.py) · [legacy schema candidate](../../../../../infra/postgres/study-server/DB.sql) · [V1-PILOT Course schema](../../../../../infra/postgres/02_study_db.sql)
 - [Study Web design context](../../../../../.agents/web-study/design.md) · [Study Web scope index](../../../../../.agents/web-work/study/INDEX.md)

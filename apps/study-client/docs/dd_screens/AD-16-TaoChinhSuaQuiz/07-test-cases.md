@@ -18,7 +18,7 @@
   2. Khi runtime/test implementation tồn tại, viết test riêng theo contract đã xác nhận.
 - **Expected UI/state:** Theo acceptance/state trong nguồn; chưa được xác minh trên runtime.
 - **Expected API/data:** Theo [API Integration](04-api-integration.md); không phát sinh request trong lần tạo tài liệu.
-- **Failure / edge assertion:** Không đánh dấu pass cho `UNWIRED`, `IMPLEMENTATION BLOCKED` hoặc `RUNTIME NOT VERIFIED`.
+- **Failure / edge assertion:** Unit spec pass chỉ xác nhận assertion đã chạy; không dùng nó để kết luận implementation hoàn tất hoặc `RUNTIME VERIFIED`.
 - **References:** `AC-35`, [Events](02-events.md), [Business Rules](05-business-rules.md), [source DD](../../screen_stitch/05_admin/AD-16_tao-chinh-sua-quiz/AD-16.md).
 
 ## 3. Source acceptance / test plan (not run)

@@ -10,7 +10,7 @@ Trạng thái tài liệu: Draft — Needs Confirmation. Runtime có fallback c�
 6. **LessonStatus:** Danh sách giá trị và casing chưa đầy đủ. Runtime dùng exact string match, không whitelist.
 7. **Ordering:** Runtime dùng `course_id ASC NULLS LAST, sort_order ASC NULLS LAST, id ASC`; default order chưa có trong catalog/diagram.
 8. **Admin access policy:** Runtime shared guard yêu cầu role `ADMIN`; AC-34 nêu thêm lesson-management permission nhưng chưa có policy source/executable check.
-9. **Deleted lesson visibility:** API #86 chưa chốt deletion marker/visibility. #82 không loại row theo deleted marker.
+9. **Deleted lesson visibility:** API #86 chưa chốt deletion marker/visibility. Current #82 SQL loại row có `status='DELETED'`; cần xác nhận marker và visibility này phù hợp policy/production data.
 
 ## Ranh giới contract
 

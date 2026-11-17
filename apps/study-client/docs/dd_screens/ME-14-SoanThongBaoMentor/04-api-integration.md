@@ -23,7 +23,7 @@
 - #63 local source: `apps/study-server/app/api/v1.py`; `apps/study-server/app/modules/mentor/api_63_mentor_notifications_create/`; DD `apps/study-server/docs/dd/63_mentor_notifications_create/`; tests `apps/study-server/tests/modules/mentor/api_63_mentor_notifications_create/`.
 - #64 local source: `apps/study-server/app/api/v1.py`; `apps/study-server/app/modules/mentor/api_64_mentor_notification_status/`; DD `apps/study-server/docs/dd/64_mentor_notifications_status/`; tests `apps/study-server/tests/modules/mentor/api_64_mentor_notification_status/`.
 - #18 design/current-source status: `apps/study-server/docs/dd/18_operations/`; source route/module/test scan found no Study implementation.
-- #34 upload source: `apps/study-server/app/modules/student/api_34_uploads/`; DD `apps/study-server/docs/dd/34_uploads/`.
+- #34 upload source: `apps/study-server/app/modules/shared/api_34_uploads/`; DD `apps/study-server/docs/dd/34_uploads/`.
 - Screen prototype: `code.html`, `screen.png`; web status `UNWIRED` in `.agents/context-manifest.json` and `.agents/web-study/`.
 
 ## 3. API không sử dụng

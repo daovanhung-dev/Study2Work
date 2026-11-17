@@ -155,8 +155,8 @@ Plan acceptance: preserve both originals; 60 numbered markers match JSON/SVG/ima
 - Inventory/AC: [`list_screen.md` ME-04](../../../list_screen.md#L164), `../../../../../../apps/study-server/docs/diagrams/AC_UNICA/00_AC_API_INDEX.md` AC-21 and `AC_03_MENTOR_TEACHING.drawio`.
 - API catalog: `../../../../../../docs/lists/list_api.md` rows #34/#46/#47/#48 and upload decisions.
 - Routes: `../../../../../../apps/study-server/app/api/v1.py` (#34 around `upload_file`, #46, #47, #48).
-- Modules: `../../../../../../apps/study-server/app/modules/student/api_34_uploads/`; `../../../../../../apps/study-server/app/modules/mentor/api_46_mentor_courses/`, `api_47_mentor_lectures_create/`, `api_48_mentor_lecture_detail/`.
-- Tests: corresponding `../../../../../../apps/study-server/tests/modules/student/api_34_uploads/` and Mentor API #46–#48 test directories; source review only.
+- Modules: `../../../../../../apps/study-server/app/modules/shared/api_34_uploads/`; `../../../../../../apps/study-server/app/modules/mentor/api_46_mentor_courses/`, `api_47_mentor_lectures_create/`, `api_48_mentor_lecture_detail/`.
+- Tests: corresponding `../../../../../../apps/study-server/tests/modules/shared/api_34_uploads/` and Mentor API #46–#48 test directories; source review only.
 - API DD: `../../../../../../apps/study-server/docs/dd/34_uploads/`, `46_mentor_courses/`, `47_mentor_lectures_create/`, `48_mentor_lecture_detail/`; treat DD status separately from runtime source.
 - Persistence artifacts: `../../../../../../infra/postgres/study-server/DB.sql`, `migrations/004_uploads.sql`, `migrations/005_lesson_uploads.sql`.
 - Study UI target: `../../../../../../.agents/web-study/design.md`; ME-03 entry: `../ME-03_workspace-khoa-hoc-cua-mentor/ME-03.md`.

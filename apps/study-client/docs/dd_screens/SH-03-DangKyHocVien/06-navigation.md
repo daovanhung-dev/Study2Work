@@ -2,25 +2,25 @@
 
 ## 1. Route definition
 - Current route in inventory: `/register`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
+- Status: `/register` is declared in `features/shared/shared.route.ts`; Angular app-route unit test passes. Browser runtime remains unverified.
+- Route params/types: Không có route param được biểu diễn trong inventory string.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [SH-01](../SH-01-TrangGioiThieuStudyVariant1/00-overview.md), [SH-02](../SH-02-DangNhap/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [SH-01](../SH-01-TrangGioiThieuStudyVariant1/00-overview.md), [SH-02](../SH-02-DangNhap/00-overview.md) | Theo DD nguồn/inventory; SH-02 `/login` có route | Không truyền form values | Route presentation đã wire; browser runtime chưa xác minh |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [SH-04](../SH-04-HandoffXacThucEmail/00-overview.md), [SH-02](../SH-02-DangNhap/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [SH-04](../SH-04-HandoffXacThucEmail/00-overview.md), [SH-02](../SH-02-DangNhap/00-overview.md) | SH-04 theo luồng sau khi đăng ký; SH-02 qua link đăng nhập | Không đưa `id/email` vào URL; handoff transport chưa được duyệt | Link SH-02 hiện có; API #01 caller wired; SH-04 transition chưa được nối |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: unit test xác nhận cấu hình route; browser deep-link behavior chưa được xác minh.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
@@ -51,4 +51,4 @@ flowchart TD
     Form -->|Đã có tài khoản?| SH02[SH-02 /login đề xuất]
 ```
 
-Đường nối từ SH-03 sang SH-04 là luồng đích trong danh mục, không phải hành vi đã được nối ở phía giao diện. API #02 thuộc SH-04; không gọi API này trực tiếp từ SH-03 và không coi `accepted` là email đã gửi hoặc đã xác minh.
+Đường nối từ SH-03 sang SH-04 là luồng đích trong danh mục, chưa được nối ở phía giao diện. Submit hiện gọi API #01; response 201 giữ người dùng ở SH-03 với trạng thái tài khoản đã tạo. API #02 thuộc SH-04; không gọi API này trực tiếp từ SH-03 và không coi `accepted` là email đã gửi hoặc đã xác minh.

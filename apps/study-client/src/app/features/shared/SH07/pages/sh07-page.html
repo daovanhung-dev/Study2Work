@@ -1,0 +1,35 @@
+<div class="sh07-page" data-screen-id="SH-07">
+  <header class="sh07-header">
+    <a class="sh07-header__brand" routerLink="/" aria-label="Study2Work LMS — trang chủ">
+      <study-icon name="brand" aria-hidden="true" />
+      <span>Study2Work LMS</span>
+    </a>
+
+    <nav class="sh07-header__navigation" aria-label="Điều hướng chính">
+      <a routerLink="/">Trang chủ</a>
+      <a routerLink="/courses">Khóa học</a>
+      <a routerLink="/courses/search">Tìm kiếm</a>
+    </nav>
+
+    <nav class="sh07-header__account" aria-label="Tài khoản">
+      <a routerLink="/login">Đăng nhập</a>
+      <a class="sh07-header__register" routerLink="/register">Đăng ký</a>
+    </nav>
+  </header>
+
+  <main class="sh07-main">
+    <nav class="sh07-breadcrumb" aria-label="Đường dẫn">
+      <a routerLink="/">Trang chủ</a>
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">Theo dõi tác vụ</span>
+    </nav>
+
+    <section class="sh07-intro" aria-labelledby="sh07-title">
+      <p class="sh07-intro__eyebrow">Tác vụ đã gửi</p>
+      <h1 id="sh07-title">Theo dõi tác vụ bất đồng bộ</h1>
+      <p>Trang này hiển thị trạng thái tác vụ khi có dữ liệu đã được hệ thống xác nhận.</p>
+    </section>
+
+    <study-sh07-availability-notice />
+  </main>
+</div>

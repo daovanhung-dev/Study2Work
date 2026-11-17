@@ -22,23 +22,23 @@
 
 - **Trigger:** route entry bằng AD-10 selection hoặc browser reload; candidate route `/admin/content/:contentId/review`.
 - **Input:** numeric `Content.id` → `contentId` route param → path `content_id:int64!` cho #79. Không truyền author/version vì #78 không cung cấp; không tạo query/body ngoài catalog.
-- **Expected sequence:** Admin mở item từ queue; GET #79; nhận Content; sau một decision thành công AC-33 dự kiến refresh #78. Quy tắc giữ filter/page/back link chưa được duyệt.
+- **Expected/current sequence:** AD-10 link mở route AD-11; `AD11Page` gọi GET #79 và hiển thị response. Sau một decision thành công AC-33 dự kiến refresh #78, nhưng current UI không gửi #80/#81. Quy tắc giữ filter/page chưa được duyệt.
 - **Current #79 processing:** shared Bearer/JWT `ADMIN` validation chạy trước parse path và DB. Signed-int64 path invalid/overflow hiện map 404 (catalog mapping); query active row bằng bind parameter. Response mapping kiểm tra đúng requested ID và Content shape. Không filter `PENDING_REVIEW`; không đọc `content_versions`; không commit/mutate.
 - **Response:** 200 `ApiEnvelope<Content>` với direct `data`; các field đúng theo `ContentResponse`: `id`, `course_id`, `content_type`, `title`, object `payload`, `status`, nullable `parent_id`, `order`. Không `items`/pagination.
-- **Errors/current boundary:** 401 unauthenticated, 403 role denied, 404 invalid/missing/soft-deleted, 500 query/mapping failure (safe envelope + rollback). Network/timeout behavior chưa có client source. Route #78 static được đăng ký trước dynamic #79; local test source có coverage route precedence.
+- **Errors/current boundary:** 401 unauthenticated, 403 role denied, 404 invalid/missing/soft-deleted, 500 query/mapping failure (safe envelope + rollback). Angular page có loading/error state qua `adminRouteState`; browser/runtime behavior chưa xác minh. Route #78 static được đăng ký trước dynamic #79; local test source có coverage route precedence.
 - **State mapping:** valid response có thể cấp dữ liệu Content vào `ready`, nhưng không thể lấp metadata author/version hoặc preview. 404/malformed ID cần not-found/error state; exact UI copy/redirect chưa được định nghĩa.
 
 ### EV-02 — Render preview
 
 - **Trigger:** #79 success và `data.payload` có dữ liệu; marker #21–#26.
-- **Current behavior:** preview luôn ở empty-state prototype; không `<video>`, iframe, fetch, signed URL, file/object-storage endpoint, SCORM/PDF package parser hay route param binding.
+- **Current behavior:** Stitch prototype có empty state. Angular route gọi #79 và hiển thị object `payload` thành JSON trong `<pre>` dưới dạng text; không render HTML hoặc tạo `<video>`, iframe, signed URL, file/object-storage request hay SCORM/PDF decoder.
 - **API boundary:** #79 chỉ cam kết object `payload` qua Content response; không được suy ra schema media, asset locator, authorization, expiry, sandboxing, decoder hoặc Content-Disposition. Không render HTML trong payload như trusted content.
-- **Output:** current UI giữ placeholder; expected behavior phải có payload schema và secure preview contract trước implementation. Loading/failure/unsupported content states chưa được chốt.
+- **Output:** Angular hiện có data preview dạng JSON text; media/content renderer vẫn unavailable. Cần payload schema và secure preview contract trước khi diễn giải payload thành nội dung.
 
 ### EV-03 — Hiển thị metadata
 
 - **Trigger:** map `data` từ #79 vào preview metadata và field cards #28–#33.
-- **Mapping được hỗ trợ:** `data.id` → Content ID; `data.title` → title; `data.course_id` → numeric course ID; `data.content_type` → type nếu UI cần; `data.status` → current logical status; `data.payload`, `data.parent_id`, `data.order` thuộc Content model nhưng screenshot không có field rõ để trình bày.
+- **Mapping được hỗ trợ/current UI:** `data.id` → Content ID; `data.title` → title; `data.course_id` → numeric course ID; `data.content_type` → type; `data.status` → current logical status; `data.parent_id` → parent ID; `data.order` → order; `data.payload` → JSON text trong preview.
 - **Không mapping:** author/lecturer name, course title, submitted date, review version/revision, rubric status. Không dùng `archived_by` hoặc current user làm author; không lấy timestamp từ file hay audit candidate để giả submitted date.
 - **Empty/NULL:** screenshot text `NULL`/`N/A` là literal static; không đại diện null values từ API. Nullable `parent_id` không phải Content ID. API #79 đọc active row có thể trả status không pending; client chưa có status gate.
 
@@ -71,14 +71,14 @@
 ### EV-07 — Rubric evaluation
 
 - **Trigger:** view criteria #44–#47; no user-triggered interaction exists in HTML.
-- **Current UI:** three check icons appear selected, while progress says `0/3 tiêu chí được nạp`; bar is static. No rubric fetch, state model, score, checkbox semantics or handler.
+- **Stitch prototype:** three check icons appear selected, while progress says `0/3 tiêu chí được nạp`; bar is static. **Current Angular UI:** shows “Chưa có nguồn”; no rubric fetch, state model, score, checkbox semantics or handler.
 - **API boundary:** #79–#81 do not return rubric, criterion result or quality score. No evidence that these criteria are a required approval gate or that Full HD/stereo is an approved rule for every Content type.
 - **Outcome:** treat labels as prototype copy, not verified checks. Before implementation decide whether rubric is informational or decision-enforcing, source/version, criterion applicability by `content_type`, authoring/edit permissions and what progress means. Do not block/allow approval based on static ticks.
 
 ### EV-08 — Shell, status copy, back and footer navigation
 
 - **Trigger:** shell/breadcrumb/back/notification/footer link click, or display of status badges #7/#11/#16/#20.
-- **Current behavior:** five top nav links, back link and footer anchors use `href="#"`; notification has no handler. Breadcrumb/status/RBAC/portal copy is static; no monitoring/auth/rubric/support call.
+- **Stitch prototype:** five top nav links, back link and footer anchors use `href="#"`; notification has no handler. **Current Angular source:** `AdminLayout` owns the shared navigation/session shell; AD-11 breadcrumb and back link route to the pending queue. Static status/RBAC claims still do not prove monitoring or moderation permission. Runtime remains unverified.
 - **AC navigation:** AC-33 expects queue reload after successful decision, and inventory links AD-11 back to AD-10. Exact success route, history/back fallback, query preservation, focus return, refresh/cache behavior and browser refresh/deep-link behavior remain unspecified/unwired.
 - **Errors:** 401/403 route treatment (login vs access denied), session refresh, unauthorized button gating, network retry, trace display and return-to-queue timing have no Study Web source. Do not infer from visible RBAC badge.
 

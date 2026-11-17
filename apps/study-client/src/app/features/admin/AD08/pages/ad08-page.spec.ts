@@ -44,7 +44,9 @@ describe('AD08Page', () => {
 
     const root = fixture.nativeElement as HTMLElement;
     expect(root.textContent).toContain('Course ID từ đường dẫn: 9007199254740993');
-    expect(root.querySelector<HTMLInputElement>('#course-id')?.value).toBe('Không thể hiển thị chính xác');
+    expect(root.querySelector('label[for="course-id"]')?.textContent).toContain('ID khóa học');
+    expect(root.querySelector('label[for="course-id"]')?.textContent).not.toContain('Mã khóa học');
+    expect(root.querySelector<HTMLInputElement>('#course-id')?.value).toBe('9007199254740993');
     expect(root.querySelector<HTMLInputElement>('input[name="title"]')?.value).toBe('Course title');
     expect(root.querySelector<HTMLTextAreaElement>('textarea[name="description"]')?.value).toBe('Course description');
     expect(root.querySelector<HTMLInputElement>('input[name="price"]')?.value).toBe('4850000.00');

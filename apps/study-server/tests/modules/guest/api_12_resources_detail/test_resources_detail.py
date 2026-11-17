@@ -124,14 +124,14 @@ def test_resource_without_lesson_returns_success_without_parent_lookup(
 
 @pytest.mark.parametrize(
     "resource_id",
-    ["abc", "0", "-1", "9223372036854775808"],
+    ["abc", "-9223372036854775809", "9223372036854775808"],
 )
 def test_resource_detail_maps_invalid_path_to_not_found_before_database(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
     resource_id: str,
 ) -> None:
-    """Kiểm tra path không phải integer dương int64 trả 404 trước khi query."""
+    """Kiểm tra malformed/out-of-range path trả 404 trước khi query."""
 
     monkeypatch.setattr(
         resource_view,
@@ -146,6 +146,30 @@ def test_resource_detail_maps_invalid_path_to_not_found_before_database(
     assert response.status_code == 404
     assert response.json()["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
     assert response.json()["message"] == "Resource not found"
+
+
+@pytest.mark.parametrize(
+    "resource_id",
+    ["-9223372036854775808", "-1", "0", "1", "9223372036854775807"],
+)
+def test_resource_detail_allows_signed_int64_values_to_reach_lookup(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    resource_id: str,
+) -> None:
+    """In-range IDs, including zero/negative, are checked by the resource lookup."""
+    queried_ids: list[int] = []
+    monkeypatch.setattr(
+        resource_view,
+        "find_resource",
+        lambda db, *, resource_id: queried_ids.append(resource_id) or None,
+    )
+
+    response = client.get(f"/api/v1/resources/{resource_id}")
+
+    assert response.status_code == 404
+    assert response.json()["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
+    assert queried_ids == [int(resource_id)]
 
 
 def test_resource_detail_maps_missing_resource_to_not_found(

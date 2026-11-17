@@ -1,0 +1,13 @@
+@if (state(); as error) {
+  <main class="error-page" data-screen-id="SH-05">
+    <section class="error-card" aria-labelledby="sh05-title">
+      <p class="error-card__status">HTTP {{ error.status }}</p>
+      <h1 id="sh05-title">HTTP {{ error.status }}</h1>
+      <p class="error-card__message" role="status">{{ error.message }}</p>
+
+      @if (error.traceId) {
+        <study-sh05-trace-card [traceId]="error.traceId" />
+      }
+    </section>
+  </main>
+}

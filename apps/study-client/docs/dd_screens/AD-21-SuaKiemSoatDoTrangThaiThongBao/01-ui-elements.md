@@ -4,6 +4,7 @@
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.
 - Marker JSON nguồn: [AD-21_markers.json](../../screen_stitch/05_admin/AD-21_sua-kiem-soat-do-trang-thai-thong-bao/AD-21_markers.json).
+- Bảng 47 marker dưới đây mô tả Stitch artifact. Angular source hiện render một trang read-only theo response #96; xem [API Integration](04-api-integration.md) và [Data Flow](03-data-flow.md) để đối chiếu runtime-source implementation.
 
 ## 2. Danh sách phần tử
 | Marker | Element ID trong package | Source Element ID | Nhãn từ marker JSON |
@@ -106,7 +107,7 @@
 | **#40 `AD21-EL-40`** | Cancel safety note. | Static text says cancellation is disabled to preserve safety; does not establish scheduler/provider cancellation semantics. | Visible. | EV-06 |
 | **#41 `AD21-EL-41`** | “Cổng theo dõi tác vụ bất đồng bộ”; SH-07 panel heading/icon. | Static section heading. | Visible. | EV-07 |
 | **#42 `AD21-EL-42`** | SH-07 handoff description. | Says admin can follow large sends through SH-07 when a valid Operation ID exists; inventory/API #18 handoff is conditional and unresolved. | Visible; design claim with blocker. | EV-07 |
-| **#43 `AD21-EL-43`** | “Theo dõi qua cổng tác vụ bất đồng bộ (SH-07)”; disabled link/button. | Native disabled button. No route/ID; #18 is not registered in Study Server. | Disabled / “Đang khóa”. | EV-07 |
+| **#43 `AD21-EL-43`** | “Theo dõi qua cổng tác vụ bất đồng bộ (SH-07)”; disabled link/button. | Native disabled button. #18 backend route exists, but #96 returns no Operation ID and AD-21 has no client handoff/poller. | Disabled / “Đang khóa”. | EV-07 |
 | **#44 `AD21-EL-44`** | Footer copyright and system label. | Literal `© 2025 Study2Work LMS. Hệ thống quản trị trung tâm.` | Visible. | — |
 | **#45 `AD21-EL-45`** | Footer privacy policy link. | Anchor `href="#"`; no policy destination. | Enabled-looking; no destination. | EV-08 |
 | **#46 `AD21-EL-46`** | Footer RBAC standards link. | Anchor `href="#"`; no standards destination. | Enabled-looking; no destination. | EV-08 |

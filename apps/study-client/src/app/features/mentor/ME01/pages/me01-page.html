@@ -1,0 +1,27 @@
+<main class="mentor-page me01-page">
+  <study-mentor-page-header title="Tổng quan Mentor" description="Các khóa học, bài nộp và yêu cầu hỗ trợ được tải độc lập từ Study Server." apiLabel="#46 · #54 · #58" />
+  <div class="me01-toolbar"><span class="mentor-live-label">Dữ liệu theo phiên Mentor đang hoạt động</span><button type="button" class="mentor-button mentor-button--light" (click)="load()">Tải lại</button></div>
+  <section class="me01-grid" aria-label="Tổng quan công việc">
+    <article class="mentor-card me01-panel">
+      <div class="mentor-panel-heading"><div><h2>Khóa học phụ trách</h2><p>Danh sách từ API #46</p></div><a routerLink="/mentor/courses">Xem tất cả</a></div>
+      @if (courseLoading()) { <p class="mentor-state">Đang tải khóa học…</p> }
+      @else if (courseError()) { <p class="mentor-state mentor-state--error" role="alert">{{ courseError() }}</p> }
+      @else if (!courses().length) { <p class="mentor-state">Chưa có khóa học trong phạm vi hiện tại.</p> }
+      @else { <ul class="mentor-list">@for (course of courses(); track $index) { <li><div><strong>{{ course.title }}</strong><span class="mentor-meta">{{ course.status }} · #{{ course.id }}</span></div>@if (safeId(course.id); as id) { <a class="mentor-button mentor-button--small" [routerLink]="['/mentor/courses', id]">Mở workspace</a> }</li> }</ul> }
+    </article>
+    <article class="mentor-card me01-panel">
+      <div class="mentor-panel-heading"><div><h2>Bài nộp gần đây</h2><p>API #54 không định nghĩa trạng thái “quá hạn”.</p></div><a routerLink="/mentor/submissions">Mở danh sách</a></div>
+      @if (submissionLoading()) { <p class="mentor-state">Đang tải bài nộp…</p> }
+      @else if (submissionError()) { <p class="mentor-state mentor-state--error" role="alert">{{ submissionError() }}</p> }
+      @else if (!submissions().length) { <p class="mentor-state">Không có bài nộp trong trang hiện tại.</p> }
+      @else { <ul class="mentor-list">@for (submission of submissions(); track $index) { <li><div><strong>Bài nộp #{{ submission.id }}</strong><span class="mentor-meta">Học viên #{{ submission.user_id }} · {{ submission.status }} · {{ submission.submitted_at | date:'medium' }}</span></div>@if (safeId(submission.id); as id) { <a class="mentor-button mentor-button--small" [routerLink]="['/mentor/submissions', id]">Mở bài nộp</a> }</li> }</ul> }
+    </article>
+    <article class="mentor-card me01-panel me01-support">
+      <div class="mentor-panel-heading"><div><h2>Yêu cầu hỗ trợ</h2><p>API #58 trả về các yêu cầu và thread hiện có.</p></div><a routerLink="/mentor/support">Mở hộp thư</a></div>
+      @if (supportLoading()) { <p class="mentor-state">Đang tải yêu cầu hỗ trợ…</p> }
+      @else if (supportError()) { <p class="mentor-state mentor-state--error" role="alert">{{ supportError() }}</p> }
+      @else if (!supportRequests().length) { <p class="mentor-state">Chưa có yêu cầu hỗ trợ trong phạm vi hiện tại.</p> }
+      @else { <ul class="mentor-list">@for (request of supportRequests().slice(0, 4); track $index) { <li><div><strong>{{ request.student.full_name }}</strong><span class="mentor-meta">Yêu cầu #{{ request.id }} · {{ request.status }} · {{ request.created_at | date:'medium' }}</span><span class="mentor-preview">{{ lastMessage(request) }}</span></div>@if (safeId(request.id); as id) { <a class="mentor-button mentor-button--small" [routerLink]="['/mentor/support', id]">Mở trao đổi</a> }</li> }</ul> }
+    </article>
+  </section>
+</main>

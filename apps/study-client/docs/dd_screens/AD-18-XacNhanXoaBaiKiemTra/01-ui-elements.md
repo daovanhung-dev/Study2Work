@@ -100,13 +100,13 @@ Tọa độ marker được lưu bằng source pixels trong [AD-18_markers.json]
 
 ### Quy tắc dùng chung cho elements
 
-- Design source is the supplied static Admin prototype. No shared runtime component/theme behavior was found in Study Web source because app source is absent. Do not present prototype copy as Design System implementation.
+- Design source is the supplied static Admin prototype; its marker rows describe that artifact, not the current Angular page. Study Web now has a separate read-only AD-18 route/page. Do not present prototype copy as Design System implementation or as runtime behavior; browser rendering has not been verified.
 - Disabled confirm and textarea do not accept keyboard, pointer or pasted input in the current HTML. A future enablement requires explicit approved state/policy; do not infer enablement from a selected row.
 - Use semantic heading/labels and accessible disabled state when implementation is designed. Preserve a visible focus target and announce asynchronous result/errors; exact live regions/keyboard behavior are not defined by current source.
 - Responsive layout is present only through Tailwind classes in the mockup; it is not tested in a running client. Narrow-screen order and sticky-shell behavior remain unverified.
 
 ## 4. Conditional UI & state variations
-- States theo inventory: confirm/deleting/deleted/unauthorized/forbidden/not-found/validation-error/service-error/unknown-outcome/unwired; `conflict` unsupported
+- States theo inventory: confirm/deleting/deleted/unauthorized/forbidden/not-found/validation-error/service-error/unknown-outcome; current Angular source is read-only with disabled confirm/reason controls; `conflict` unsupported
 - Detail/conditional visibility: xem section elements/state của [DD nguồn](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/AD-18.md); không diễn giải ảnh tĩnh thành behavior runtime.
 
 ## 5. Link

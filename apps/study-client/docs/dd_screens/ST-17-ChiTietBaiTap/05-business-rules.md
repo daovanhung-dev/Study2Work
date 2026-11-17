@@ -45,7 +45,7 @@
 - [AC/API index](../../../../study-server/docs/diagrams/AC_UNICA/00_AC_API_INDEX.md), [AC-17 activity diagram](../../../../study-server/docs/diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio).
 - [Candidate assignment table design](../../../../study-server/docs/diagrams/DB_UNICA_TABLES.md), [legacy candidate DDL](../../../../../infra/postgres/study-server/DB.sql), [V1-PILOT schema artifact](../../../../../infra/postgres/02_study_db.sql).
 - [Current Study route inventory](../../../../../.agents/server-study/apis/declared-routes.md), [Study Web status](../../../../../.agents/web-work/study/INDEX.md), [Study Web design target](../../../../../.agents/web-study/design.md).
-- Current downstream upload source: [API #34 route](../../../../study-server/app/api/v1.py), [upload flow](../../../../study-server/app/modules/student/api_34_uploads/view.py). This does not establish current #35/#36 Student routes.
+- Current downstream upload source: [API #34 route](../../../../study-server/app/api/v1.py), [upload flow](../../../../study-server/app/modules/shared/api_34_uploads/view.py). This does not establish current #35/#36 Student routes.
 
 ## 3. Quy tắc chưa xác nhận
 - `CẦN_XÁC_NHẬN`: các quyết định/blocker trong inventory và DD nguồn chưa được giải quyết.

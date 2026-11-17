@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Chọn recipients/segment, channels, preview và xác nhận; accepted không có nghĩa đã delivered.
-- Gate/status (giữ nguyên): **R** local #93 route/module/model/validator/query/view/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** response Notification vs Operation; #18 int64 vs UUID/no Study handler/store; local source requires explicit recipients but UI only supplies unresolved segments; app→PUSH/channel, audience predicate/eligibility/grain, permission vs ADMIN, draft/send/priority, legacy live schema and provider delivery unresolved; Study Web UNWIRED; **RUNTIME NOT VERIFIED**
+- Gate/status (giữ nguyên): **R** local #93 route/module/model/validator/query/view/test source; API DD Draft. Angular AD-20 route/page and local preview are source-wired; API caller absent. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE / SEND FLOW BLOCKED:** response Notification vs Operation; catalog #18 int64 vs local UUID and owner policy; explicit recipient resolver, app→PUSH/channel, audience predicate/eligibility/grain, permission vs ADMIN, draft/send/priority, live schema and provider delivery unresolved; **RUNTIME NOT VERIFIED**.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 > CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.

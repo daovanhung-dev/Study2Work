@@ -1,5 +1,7 @@
 # AD-12 — Kế hoạch Detailed Design
 
+> Snapshot kế hoạch ngày 2026-11-08. Các câu trạng thái `UNWIRED` bên dưới phản ánh checkout tại thời điểm đó; xem continuation ngày 2026-11-16 ở cuối file để biết current source state.
+
 ## 1. Phạm vi và kết quả cần tạo
 
 - Phiên này chỉ hoàn thiện **AD-12 — Danh sách bài học quản trị**; không author AD-13.
@@ -86,3 +88,17 @@ DD mục C phải có chính xác một hàng cho từng marker #1–#42. Tạo 
 6. [x] Cập nhật inventory AD-12 và reverse API #082 từ D sang R theo route/module/test source; cập nhật global checkpoint/worklog. Giữ API DD Draft; không sửa AD-13.
 7. [x] Static audit: hash/dimensions nguồn; JSON/XML; marker order/unique IDs/coordinates/strokes; bijection C rows; links; 83 IDs/folders, core artifact count; image dimensions/readability; `git diff --check`. Không chạy application tests/runtime.
 8. [x] Kết thúc AD-12; ghi rõ DD/implementation/runtime states và dừng trước AD-13.
+
+## 8. Continuation — 2026-11-16
+
+- Current Angular source declares `/admin/lessons` → `AD12Page`, calls GET #82 on initial load with no query, and renders loading/error/empty/loaded states. Search/course/type/status, refresh/reset, Add and row-detail controls remain disabled; AD-12 has no #83 caller and no pagination. Browser/runtime remains `NOT VERIFIED`.
+- API #82 source currently excludes `status='DELETED'`; this local behavior conflicts with older #82 DD wording. Keep deleted visibility unresolved against API #86/approved policy.
+- Catalog cardinality (`Lesson` vs local `Lesson[]`), UI filter mapping, Add API, lesson-management permission, legacy nullability/live schema remain unresolved. DD remains `DD BLOCKED`; implementation is partial source, not end-to-end completion.
+- Verification: Angular focused spec 3/3; API #82 focused fake-DB tests 15/15; `npm run build` succeeded with three existing Student CSS budget warnings. One upstream Starlette/httpx deprecation warning. Browser/runtime/live DB not verified.
+
+## 9. Continuation — 2026-11-16 AD-12 → AD-13 safe-ID handoff
+
+- Current Angular source now renders a detail RouterLink for `Lesson.id` values within JavaScript's safe integer range. IDs outside that range stay non-navigable and show a precision warning. The link opens AD-13; AD-13 makes the #83 request. The earlier section 8 records the state before this continuation and remains a historical snapshot.
+- AD-13 source and API #83 were audited in the paired screen continuation. #83 remains Draft at the API DD/catalog boundary; fine-grained lesson permission, dependency output, live schema/nullability and status policy remain unresolved. The current server guard checks role `ADMIN`.
+- Search/course/type/status, refresh/reset, Add, pagination and AD-14 mutations remain gated. Browser/runtime, accessibility and live DB remain `NOT VERIFIED`.
+- Focused Study Web AD-12/AD-13 specs passed 6/6; API #83 fake-session tests passed 15/15; production build passed with existing Student CSS budget warnings. See the 2026-11-16 worklog for command details and repository-wide context validator findings.

@@ -36,7 +36,7 @@ format: markdown
 - [AC_04_ADMIN_MANAGEMENT.drawio](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — admin flow tracking references and UUID path declaration.
 - [DB_UNICA_TABLES.md](../../diagrams/DB_UNICA_TABLES.md) and [DB_UNICA_ERD.drawio](../../diagrams/DB_UNICA_ERD.drawio) — Study design tables; no Operation table is defined there.
 - [DB.sql](../../../../../infra/postgres/study-server/DB.sql) — checked-in Study schema/design artifact; it has no operations table. Live database metadata is not verified.
-- [v1.py](../../../app/api/v1.py), [declared-routes.md](../../../../../.agents/server-study/apis/declared-routes.md), and [tests.md](../../../../../.agents/server-study/tests.md) — current route/test coverage; API #18 is absent.
+- [v1.py](../../../app/api/v1.py), [declared-routes.md](../../../../../.agents/server-study/apis/declared-routes.md), and [tests.md](../../../../../.agents/server-study/tests.md) — current route/test coverage; API #18 is source-wired and has dedicated local HTTP tests.
 - [OPEN_QUESTIONS.md for API #17](../17_payments/OPEN_QUESTIONS.md) — carried-forward Operation persistence/lifecycle and API #18 ID conflict.
 - [Work Server schema](../../../../../infra/postgres/work-server/schema.sql) — contains a separate operations table tied to work_users; no shared Study contract was found, so it is not used as this API physical mapping.
 
@@ -55,7 +55,7 @@ format: markdown
 - The API row says operation owner; the operation-tracking summary says owner or Admin; diagrams list Student, Mentor and Admin with owner-only access.
 - OperationKind and OperationStatus values, persistence, lifecycle and per-kind result contents are unspecified.
 - The common Operation schema declares result?:Payment while tracking covers payment, notification and report-export jobs.
-- Study runtime and the checked-in Study schema do not define an API #18 handler or an operations lookup.
+- Study runtime has an API #18 handler, but the checked-in Study schema has no generic operations table; current lookup is notification-specific.
 
 ## Assumptions
 
@@ -70,8 +70,15 @@ format: markdown
 - DISCREPANCY: operation access is owner-only in the API row/diagrams but owner-or-Admin in the tracking summary.
 - DISCREPANCY: list_api.md producer rows for admin notification and report export do not both declare Operation as success data, while the tracking summary says all producers return Operation.
 - SOURCE_REQUIRED: Study physical persistence/query, enums, lifecycle, ownership source and result schema by operation kind.
-- UNWIRED / NOT_FOUND: No API #18 route/module/query/test was found in current Study Server source.
+- SOURCE-BACKED: API #18 route/module/query and dedicated tests exist; the query covers notification outbox rows only. No generic Study operations table is defined.
 - NOT_VERIFIED: Checked-in SQL does not prove live database metadata or deployment state.
+
+## Current source audit (2026-11-16)
+
+- `GET /api/v1/operations/{operation_id}` is registered in `app/api/v1.py`; OpenAPI declares a UUID path. The Shared validator passes `STUDENT`, `MENTOR`, and `ADMIN` to the shared JWT guard, then the query binds both UUID and authenticated owner ID.
+- The current view projects notification operations only, with `kind=NOTIFICATION_DISPATCH` and `QUEUED`/`FAILED`/`SENT` status mapping from notification delivery rows. It does not implement a generic operation store or payment/export lifecycle.
+- A missing required `role` argument in the auth call was corrected. The dedicated API #18 HTTP suite passes 8 tests; the full Study suite passes 1492 tests. These tests use local/fake DB behavior and do not verify live schema or deployment.
+- Current implementation is source evidence, not contract approval. The DD remains Draft while ID type, owner/Admin policy, generic storage/lifecycle, per-kind results, producer response and wrong-owner semantics stay open.
 
 ## Security note
 

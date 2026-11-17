@@ -4,7 +4,7 @@
 |---|---|
 | Screen ID | `ST-09` |
 | Module | Student |
-| Route | `/student/courses/:courseId` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student/courses/:courseId` — route/page gate có trong Angular; runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: **DD status:** BLOCKED · **Implementation:** BLOCKED · **Runtime:** NOT VERIFIED |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
@@ -31,7 +31,8 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | enrolled/not-enrolled/loading/no-lessons |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Worklog/context Study Web | Route maps #09/#20/#37 and renders entitlement gate; no lesson tree or media data. |
+| Runtime | Worklog/context Study Web | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-09 source screen.png](../../screen_stitch/03_student/ST-09_tong-quan-khoa-dang-hoc/screen.png))
@@ -48,6 +49,11 @@
 # ST-09 — Tổng quan khóa đang học
 
 > **DD status:** BLOCKED · **Implementation:** BLOCKED · **Runtime:** NOT VERIFIED
+
+## Current implementation update — 2026-11-17
+
+- `/student/courses/:courseId` mounts ST-09 behind `StudentLayout`. It paginates #20 with `status=ACTIVE` to confirm membership, then calls #37 for course-level lesson counts and percentage. The page does not use public #09 as an enrollment check or render sample lesson/media content.
+- Current #20 projects enrolled `CourseSummary` rows and #37 projects course-level progress totals; neither has a focused test package. #09 remains public curriculum. A full course tree, per-lesson progress, and a safe ST-10 lessonId handoff are still unresolved; deployed API behavior has not been verified.
 > **Phạm vi phiên:** ST-09. Tài liệu tách hành vi mong đợi khỏi bằng chứng hiện tại; asset tĩnh không xác nhận runtime.
 
 ## Trích đoạn tổng quan từ DD nguồn

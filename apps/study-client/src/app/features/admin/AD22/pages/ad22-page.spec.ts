@@ -48,7 +48,9 @@ describe('AD22Page', () => {
     expect(headers).toContain('Trạng thái thảo luận');
     expect(headers).not.toContain('Số report');
     expect(headers).not.toContain('Lý do báo cáo');
-    expect(text).toContain('1 thảo luận có report đang mở');
+    expect(text).toContain('1 thảo luận trong kết quả API #97');
+    expect(text).toContain('Response chưa có thông tin của từng report.');
+    expect(text).not.toContain('report đang mở');
     expect(root.querySelector('a[href="/admin/discussions/701/moderate"]')).not.toBeNull();
     expect(root.querySelector<HTMLInputElement>('#discussion-search')?.disabled).toBe(true);
   });
@@ -115,7 +117,7 @@ describe('AD22Page', () => {
 
     const root = fixture.nativeElement as HTMLElement;
     expect(root.textContent).toContain('Không có thảo luận phù hợp');
-    expect(root.textContent).toContain('0 thảo luận có report đang mở');
+    expect(root.textContent).toContain('0 thảo luận trong kết quả API #97');
     expect(root.querySelector('.pagination-controls')).toBeNull();
   });
 

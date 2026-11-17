@@ -1,0 +1,18 @@
+<main class="mentor-page me04-page">
+  <study-mentor-page-header title="Thêm bài giảng mới" description="Chọn course từ danh sách Mentor sở hữu trước khi chuẩn bị lecture." apiLabel="#46 · #34 · #47" />
+  <div class="mentor-breadcrumb"><a routerLink="/mentor/courses">Khóa học</a><span aria-hidden="true">/</span><a [routerLink]="['/mentor/courses', courseId()]">Workspace</a><span aria-hidden="true">/</span><span>Thêm bài giảng</span></div>
+  @if (loading()) { <section class="mentor-card mentor-state">Đang tải course context…</section> }
+  @else if (error()) { <section class="mentor-card mentor-state mentor-state--error" role="alert">{{ error() }} <button class="mentor-button mentor-button--light" type="button" (click)="load()">Tải lại</button></section> }
+  @else {
+    <section class="mentor-card me04-form-card">
+      <h2>Thông tin bài giảng</h2>
+      <p class="mentor-meta">API #46 chỉ liệt kê course do Mentor hiện tại sở hữu trực tiếp.</p>
+      <label for="me04-course">Khóa học</label><select id="me04-course" [value]="courseId()" (change)="selectCourse($any($event.target).value)"><option value="">Chọn khóa học</option>@for (course of courses(); track $index) { <option [value]="course.id">{{ course.title }}</option> }</select>
+      <label for="me04-title">Tiêu đề bài giảng</label><input id="me04-title" type="text" maxlength="200" disabled placeholder="Tiêu đề theo mô tả màn hình" />
+      <div class="me04-two"><div><label for="me04-order">Thứ tự</label><input id="me04-order" type="number" disabled /></div><div><label for="me04-asset">Tài liệu / media</label><input id="me04-asset" type="file" disabled /></div></div>
+      <label for="me04-content">Nội dung</label><textarea id="me04-content" rows="7" disabled placeholder="Rich-text / video content chưa có mapping với API hiện hành"></textarea>
+      <div class="mentor-notice" role="note"><strong>Chưa thể gửi bài giảng.</strong><span>API #47 hiện yêu cầu `content` là int64; DD mô tả nội dung học thuật/media và API #34 upload. Chưa có mapping được duyệt giữa rich-text, asset IDs và trường `content`, nên upload/tạo lecture được giữ khóa.</span></div>
+      <div class="me04-actions"><a class="mentor-button mentor-button--light" [routerLink]="['/mentor/courses', courseId()]">Quay lại workspace</a><button class="mentor-button" type="button" disabled>Gửi tạo bài giảng</button></div>
+    </section>
+  }
+</main>

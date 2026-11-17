@@ -1,0 +1,198 @@
+study-st01-page {
+  display: block;
+  min-height: 100vh;
+}
+
+study-st01-page .student-overview {
+  display: grid;
+  max-width: 1120px;
+  gap: 20px;
+  margin: 0 auto;
+}
+
+study-st01-page .student-overview__heading,
+study-st01-page .student-overview__widget-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+study-st01-page .student-overview__heading {
+  padding: 22px 24px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+study-st01-page .student-overview__eyebrow {
+  margin: 0 0 6px;
+  color: var(--ocean-primary);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+}
+
+study-st01-page h1,
+study-st01-page h2,
+study-st01-page p {
+  margin-top: 0;
+}
+
+study-st01-page h1 {
+  margin-bottom: 5px;
+  font-size: clamp(25px, 3vw, 34px);
+  letter-spacing: -0.03em;
+}
+
+study-st01-page .student-overview__session,
+study-st01-page .student-overview__status {
+  padding: 6px 9px;
+  border-radius: 999px;
+  color: var(--ocean-deep);
+  background: var(--ocean-soft);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+study-st01-page .student-overview__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(250px, 0.85fr);
+  align-items: start;
+  gap: 20px;
+}
+
+study-st01-page .student-overview__widgets {
+  display: grid;
+  gap: 16px;
+}
+
+study-st01-page .student-overview__widget,
+study-st01-page .student-overview__handoff {
+  padding: 20px;
+  border-radius: 14px;
+}
+
+study-st01-page .student-overview__widget-heading > a,
+study-st01-page .student-overview__message a,
+study-st01-page .student-overview__handoff nav a {
+  color: var(--ocean-primary);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+study-st01-page .student-overview__message {
+  margin-top: 15px;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+study-st01-page .student-overview__message p {
+  margin: 5px 0 9px;
+  color: var(--text-muted);
+}
+
+study-st01-page .student-overview__course-list,
+study-st01-page .student-overview__achievement-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+
+study-st01-page .student-overview__course-list li,
+study-st01-page .student-overview__achievement-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--ocean-soft) 55%, var(--surface));
+}
+
+study-st01-page .student-overview__course-list a {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+study-st01-page .student-overview__course-list p,
+study-st01-page .student-overview__achievement-list span {
+  display: block;
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+study-st01-page .student-overview__status--limited {
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 12%, var(--surface));
+}
+
+study-st01-page .student-overview__handoff dl {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+study-st01-page .student-overview__handoff dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ocean-soft) 62%, var(--surface));
+  font-size: 11px;
+}
+
+study-st01-page .student-overview__handoff dt {
+  color: var(--text-muted);
+}
+
+study-st01-page .student-overview__handoff dd {
+  margin: 0;
+  color: var(--ocean-deep);
+  font-weight: 800;
+  text-align: right;
+}
+
+study-st01-page .student-overview__handoff-note {
+  padding: 13px;
+  border-radius: 9px;
+  color: var(--ocean-deep);
+  background: var(--ocean-soft);
+  font-size: 12px;
+}
+
+study-st01-page .student-overview__handoff-note p {
+  margin: 5px 0 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+study-st01-page .student-overview__handoff nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+study-st01-page a:focus-visible {
+  outline: 3px solid var(--ocean-primary);
+  outline-offset: 3px;
+}
+
+@media (max-width: 760px) {
+  study-st01-page .student-overview__grid {
+    grid-template-columns: 1fr;
+  }
+
+  study-st01-page .student-overview__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,312 @@
+<div class="profile-edit-screen" data-screen-id="ST-03">
+  <header class="profile-edit-header">
+    <div class="profile-edit-header__content">
+      <a class="profile-edit-brand" routerLink="/" aria-label="Study2Work LMS — trang chủ">
+        <span class="profile-edit-brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="m2.5 9 9.5-5 9.5 5-9.5 5-9.5-5Z" />
+            <path d="M6.5 11.2v5.2c3.7 2.7 7.3 2.7 11 0v-5.2M21.5 9v6" />
+          </svg>
+        </span>
+        <span class="profile-edit-brand__copy"><strong>Study2Work</strong><small>LMS</small></span>
+      </a>
+
+      <nav class="profile-edit-navigation" aria-label="Điều hướng chính">
+        <a routerLink="/" routerLinkActive="profile-edit-navigation__link--active">Trang chủ</a>
+        <span aria-disabled="true">Khóa học của tôi</span>
+        <a routerLink="/student/progress" routerLinkActive="profile-edit-navigation__link--active">
+          Tiến độ
+        </a>
+        <a
+          routerLink="/student/discussions"
+          routerLinkActive="profile-edit-navigation__link--active"
+          >Thảo luận</a
+        >
+        <a
+          routerLink="/student/notifications"
+          routerLinkActive="profile-edit-navigation__link--active"
+          >Thông báo</a
+        >
+      </nav>
+
+      <div class="profile-edit-account" aria-label="Tài khoản học viên">
+        <span class="profile-edit-account__copy"
+          ><strong>Tài khoản</strong><small>Học viên</small></span
+        >
+        <span class="profile-edit-account__avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="8" r="3.5" />
+            <path d="M5 20c.6-3.4 3.1-5.2 7-5.2s6.4 1.8 7 5.2" />
+          </svg>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="profile-edit-main">
+    <div class="profile-edit-breadcrumb-row">
+      <nav class="profile-edit-breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/">Hệ thống</a>
+        <span aria-hidden="true">›</span>
+        <a routerLink="/student/profile">Hồ sơ cá nhân (ST-02)</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">Chỉnh sửa hồ sơ (ST-03)</span>
+      </nav>
+      <span class="profile-edit-gate-pill">
+        <span aria-hidden="true"></span>
+        Gate G-03: Blocked (Schema Conflict)
+      </span>
+    </div>
+
+    <section class="profile-edit-gate-banner" aria-labelledby="profile-edit-gate-title">
+      <span class="profile-edit-gate-banner__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect x="5" y="10" width="14" height="11" rx="2" />
+          <path d="M8 10V7a4 4 0 0 1 7.7-1.5M12 14v3m0-3a1.5 1.5 0 1 0 0 3" />
+        </svg>
+      </span>
+      <div class="profile-edit-gate-banner__copy">
+        <h1 id="profile-edit-gate-title">Chặn kỹ thuật Gate G-03 (API #13 &amp; #14)</h1>
+        <p>
+          Chức năng cập nhật avatar và lưu hồ sơ đang tạm dừng. Nút lưu dữ liệu và tải ảnh bị vô
+          hiệu hóa để tránh ghi dữ liệu khi contract chưa thống nhất.
+        </p>
+      </div>
+      <a class="profile-edit-button profile-edit-button--secondary" routerLink="/student/profile">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M19 12H5m0 0 6 6m-6-6 6-6" />
+        </svg>
+        Quay lại Hồ sơ cá nhân (ST-02)
+      </a>
+    </section>
+
+    <div class="profile-edit-columns">
+      <aside class="profile-edit-aside" aria-label="Trạng thái ảnh đại diện và bảo vệ dữ liệu">
+        <section class="profile-edit-card profile-edit-avatar-card">
+          <div class="profile-edit-avatar" role="img" aria-label="Ảnh đại diện đang bị khóa">
+            <svg
+              class="profile-edit-avatar__lock"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <rect x="5" y="10" width="14" height="11" rx="2" />
+              <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3" />
+            </svg>
+            <span>GATED<br />UPLOAD<br />UNAVAILABLE</span>
+          </div>
+          <h2>Tài khoản Sinh viên</h2>
+          <p class="profile-edit-caption">
+            Nguồn dự kiến: API #04 GET <code>/users/me</code>. Hiện chưa nạp dữ liệu hồ sơ.
+          </p>
+
+          <div class="profile-edit-asset-note">
+            <div class="profile-edit-note-heading">
+              <strong>Avatar Asset Pipeline</strong>
+              <span>API #13 chưa gọi</span>
+            </div>
+            <p>
+              API hiện nhận JSON Data URL, lưu object và trả <code>avatar_url</code>. Chính sách
+              chọn ảnh, preview và đồng bộ URL với #14 chưa được chốt.
+            </p>
+          </div>
+
+          <button class="profile-edit-button profile-edit-upload" type="button" disabled>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 4 20 20M10 6h4m-2 0v6m-6 7h12" />
+              <path d="M5 13v5a1 1 0 0 0 1 1h2" />
+            </svg>
+            Tải ảnh lên (Vô hiệu hóa)
+          </button>
+        </section>
+
+        <section class="profile-edit-card profile-edit-safe-note">
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 3 19 6v5c0 4.7-3 7.8-7 10-4-2.2-7-5.3-7-10V6l7-3Z" />
+              <path d="m9 12 2 2 4-4" />
+            </svg>
+            Chế độ an toàn ST-03
+          </h2>
+          <p>
+            Không hiển thị danh tính mẫu hoặc dữ liệu hồ sơ chưa tải. Cần có Student session ở
+            client trước khi gọi API #04; upload và lưu vẫn khóa trong lúc chờ contract.
+          </p>
+        </section>
+      </aside>
+
+      <div class="profile-edit-content">
+        <section
+          class="profile-edit-card profile-edit-form-card"
+          aria-labelledby="profile-edit-form-title"
+        >
+          <h2 id="profile-edit-form-title">Thông tin hồ sơ học viên</h2>
+          <p class="profile-edit-description">
+            Các trường có xung đột schema backend đang được khóa an toàn. Dữ liệu chưa được nạp từ
+            server.
+          </p>
+
+          <form class="profile-edit-form" (submit)="preventSubmit($event)">
+            <div class="profile-edit-field">
+              <div class="profile-edit-field__heading">
+                <label for="st03-full-name">Họ và tên <span aria-hidden="true">*</span></label>
+                <span class="profile-edit-badge profile-edit-badge--api">Hỗ trợ bởi API #04</span>
+              </div>
+              <input
+                id="st03-full-name"
+                name="full_name"
+                type="text"
+                autocomplete="name"
+                placeholder="Nhập họ và tên sinh viên..."
+                aria-describedby="st03-full-name-help"
+              />
+              <p class="profile-edit-help" id="st03-full-name-help">
+                API #14 trim khoảng trắng, yêu cầu không rỗng và giới hạn 150 ký tự.
+              </p>
+            </div>
+
+            <div class="profile-edit-field">
+              <div class="profile-edit-field__heading">
+                <label for="st03-email">Địa chỉ Email</label>
+                <span class="profile-edit-badge">Chỉ đọc (Read-only)</span>
+              </div>
+              <div class="profile-edit-input-wrap">
+                <input
+                  id="st03-email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  placeholder="Email từ API #04 sau khi có session"
+                  readonly
+                />
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="5" y="10" width="14" height="11" rx="2" />
+                  <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                </svg>
+              </div>
+              <p class="profile-edit-help">
+                Email dự kiến lấy từ API #04; màn hình này không cho phép chỉnh sửa email.
+              </p>
+            </div>
+
+            <div class="profile-edit-field profile-edit-field--blocked">
+              <div class="profile-edit-field__heading">
+                <label for="st03-phone">Số điện thoại (Phone)</label>
+                <span class="profile-edit-badge profile-edit-badge--danger"
+                  >Disabled: Nullable conflict</span
+                >
+              </div>
+              <input
+                id="st03-phone"
+                name="phone"
+                type="tel"
+                placeholder="Quy tắc lưu chưa khóa (API #14)"
+                disabled
+              />
+              <p class="profile-edit-warning">
+                <span aria-hidden="true">ⓘ</span>
+                API #14 hiện cho phép phone null; quy tắc nghiệp vụ chưa được chốt.
+              </p>
+            </div>
+
+            <div class="profile-edit-field profile-edit-field--blocked">
+              <div class="profile-edit-field__heading">
+                <label for="st03-bio">Tiểu sử (Bio)</label>
+                <span class="profile-edit-badge profile-edit-badge--danger"
+                  >Disabled: Schema missing</span
+                >
+              </div>
+              <textarea
+                id="st03-bio"
+                name="bio"
+                rows="3"
+                placeholder="API #04 không trả bio; API #14 hiện bỏ qua trường này."
+                disabled
+              ></textarea>
+              <p class="profile-edit-warning">
+                <span aria-hidden="true">ⓘ</span>
+                Chưa có contract lưu bio trong API/DB source hiện tại.
+              </p>
+            </div>
+
+            <div class="profile-edit-actions">
+              <a
+                class="profile-edit-button profile-edit-button--secondary"
+                routerLink="/student/profile"
+              >
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M19 12H5m0 0 6 6m-6-6 6-6" />
+                </svg>
+                Quay lại Hồ sơ cá nhân (ST-02)
+              </a>
+              <button
+                class="profile-edit-button profile-edit-save"
+                type="button"
+                disabled
+                aria-describedby="st03-save-note"
+              >
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M5 5h12l2 2v12H5zM8 5v6h8V5M8 19v-5h8v5" />
+                </svg>
+                Lưu thay đổi (Disabled)
+              </button>
+            </div>
+            <p class="profile-edit-save-note" id="st03-save-note">
+              API #14 PUT <code>/users/me/profile</code> chưa chốt body mapping và quy tắc đồng bộ.
+            </p>
+          </form>
+        </section>
+
+        <section class="profile-edit-diagnostic" aria-labelledby="profile-edit-diagnostic-title">
+          <div class="profile-edit-diagnostic__heading">
+            <h2 id="profile-edit-diagnostic-title">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 5h16v14H4zM7 9l3 3-3 3m5 0h5" />
+              </svg>
+              Developer Hand-off Diagnostic
+            </h2>
+            <span>Technical Gate G-03</span>
+          </div>
+          <p class="profile-edit-diagnostic__intro">
+            Các điểm cần chốt trước khi mở Route <code>/student/profile/edit</code>:
+          </p>
+          <div class="profile-edit-diagnostic__items">
+            <article>
+              <h3>1. API #13 POST <code>/users/me/avatar</code></h3>
+              <p>
+                Server nhận JSON Data URL và lưu object storage. Client chưa có policy
+                encode/preview, thay thế ảnh và xử lý lỗi upload.
+              </p>
+            </article>
+            <article>
+              <h3>2. API #14 PUT <code>/users/me/profile</code></h3>
+              <p>
+                Body hiện chỉ cập nhật <code>full_name</code>, <code>phone</code> và
+                <code>avatar_url</code>; <code>bio</code> không được lưu. Quy tắc phone/avatar chưa
+                thống nhất với yêu cầu màn hình.
+              </p>
+            </article>
+          </div>
+          <div class="profile-edit-diagnostic__next-step" role="note">
+            <span aria-hidden="true">✓</span>
+            <p>
+              Cần chốt API/DB contract, session Student và xử lý khi upload thành công nhưng cập
+              nhật profile thất bại trước khi mở tính năng.
+            </p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="profile-edit-footer">
+    <div class="profile-edit-footer__content">
+      <p>© 2025 Study2Work LMS. All rights reserved.</p>
+      <nav aria-label="Điều hướng cuối trang">
+        <span>Điều khoản dịch vụ</span>
+        <span>Chính sách bảo mật</span>
+        <span>Trợ giúp</span>
+      </nav>
+    </div>
+  </footer>
+</div>

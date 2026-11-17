@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/student/profile`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: source-wired route; current page renders only the sign-in gate. Route metadata assigns API #04, but no request/session guard is active.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.

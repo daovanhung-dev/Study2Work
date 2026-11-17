@@ -4,7 +4,7 @@
 |---|---|
 | Screen ID | `ST-06` |
 | Module | Student |
-| Route | `/student/pay/:orderId` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student/pay/:orderId` — route/page cục bộ đã được đăng ký; runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: **Trạng thái thiết kế:** `DD BLOCKED` · **Trạng thái triển khai:** `IMPLEMENTATION BLOCKED` · **Runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
@@ -31,13 +31,20 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | pending/running/failed/cancelled/succeeded |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Study Web route/page | Static unavailable state; API IDs #17/#18 assigned in route metadata; no payment or operation request. |
+| Runtime | Worklog/context Study Web | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-06 source screen.png](../../screen_stitch/03_student/ST-06_thuc-hien-thanh-toan/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-06_thuc-hien-thanh-toan/screen_annotated.png))
 - Luồng: POST #17 → nhận operation_id → GET #18 theo điều kiện chốt; client callback không phải bằng chứng đã paid.
-- Priority: P2; Gate/source status: **#17/#18 D; DD BLOCKED**; **BLOCK:** Order/provider handoff, gateway/payment verification, Operation UUID/int64 + owner policy/lifecycle/polling, retry/idempotency chưa chốt; Study Web và #17/#18 UNWIRED; prototype không có payment action, return link thiếu ID
+- Priority: P2; Gate/source status: **catalog/DD #17/#18 D; current #17 P (route fails closed with 503), #18 R (notification-only UUID lookup); DD BLOCKED**; **BLOCK:** Order/provider handoff, gateway/payment verification, Operation UUID/int64 + owner policy/lifecycle/polling, retry/idempotency chưa chốt; Study Web route/page maps #17/#18 but sends no request; prototype return link lacks a usable course ID
+
+## Current implementation update — 2026-11-17
+
+- Angular route `/student/pay/:orderId` maps API IDs #17/#18. The page renders the Stitch unavailable-payment state and sends neither request. No Student session/token provider exists; #17 currently returns 503 before persistence and #18 currently reads notification dispatch rows only.
+- The prototype's checkout breadcrumb and CTA do not carry a usable `courseId`. The implemented breadcrumb is noninteractive; the CTA returns to `/student/courses` so it does not construct an invalid checkout URL.
+- UI/API tests cover the static route and verify that no payment result is claimed. Authenticated payment flow, gateway and deployed runtime remain unverified and blocked.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -60,7 +67,7 @@
 | Screen ID / tên | ST-06 — Thực hiện thanh toán |
 | Mục tiêu dự kiến | Trong flow paid của AC-12, khởi tạo payment theo Order, theo dõi Operation nếu contract cho phép và chỉ chuyển sang kết quả ghi danh sau khi server/gateway xác minh thanh toán thành công. |
 | Actor / quyền | Student đã đăng nhập theo AC-12 và API #17. API #18 yêu cầu Bearer JWT; quyền owner-only hay owner/Admin chưa thống nhất. |
-| Route | `/student/pay/:orderId` là route đề xuất trong inventory; chưa có router Study Web để xác minh hoặc thực thi. |
+| Route | `/student/pay/:orderId` có route Angular cục bộ; production/runtime chưa được xác minh. |
 | Đầu vào | `orderId` từ ST-05 là route candidate. API #17 nhận body `order_id:int64`; API #18 nhận path `operation_id` nhưng kiểu `int64` trong API row mâu thuẫn UUID của reusable Operation schema và AC diagrams. |
 | Điều kiện trước | ST-05 phải có Order hợp lệ; Student session hợp lệ; Order ownership/eligibility, provider, gateway policy và Order ID mapping phải được chốt. API #16 hiện chưa wired nên không có Order runtime được xác minh. |
 | Kết quả sau | Payment confirmed bởi trusted server/gateway → chuyển ST-07 để tiếp tục kết quả enrollment theo AC-12. Failed/cancelled → dừng flow. HTTP 202 của #17 chỉ xác nhận Operation được accepted, không xác nhận paid. |

@@ -107,7 +107,7 @@ Local fallback executes `DELETE FROM notifications WHERE id = :notification_id R
 
 ## Tình trạng nhóm AC-36
 
-Macro-review #92–#96 remains `VERIFIED_WITH_OPEN_QUESTIONS`: #92–#95 are locally wired, while #96 remains unwired. The current fallbacks do not resolve catalog response/cardinality questions, shared schema, fine-grained permission, Operation bridge or live deployment. See [AC-36 macro-review](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
+Macro-review #92–#96 remains `VERIFIED_WITH_OPEN_QUESTIONS`: all five APIs have local route/source and fake-DB test evidence. The current fallbacks do not resolve catalog response/cardinality questions, shared schema, fine-grained permission, Operation bridge or live deployment. See [AC-36 macro-review](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
 
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

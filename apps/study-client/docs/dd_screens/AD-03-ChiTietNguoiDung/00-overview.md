@@ -4,9 +4,9 @@
 |---|---|
 | Screen ID | `AD-03` |
 | Module | Admin |
-| Route | `/admin/users/:userId` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/admin/users/:userId` — có khai báo trong Angular Admin router hiện tại; deployment/runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `BLOCKED — policy, audit source, and live-schema decisions remain open`<br>; **Implementation:** `BLOCKED — Study Web is UNWIRED` · **Runtime:** `NOT VERIFIED` |
+| DD status | Draft (package được chuyển đổi); **DD:** `BLOCKED — policy, audit source, and live-schema decisions remain open`; **Source wiring:** `PRESENT — route/page/API #69 caller`; **Acceptance:** `BLOCKED — permission, PII, audit, schema gates`; **Runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [AD-03.md](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/AD-03.md), [AD-03_PLAN.md](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/AD-03_PLAN.md), [AD-03_markers.json](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/AD-03_markers.json), [list_screen.md](../../list_screen.md) |
@@ -14,7 +14,7 @@
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Hiển thị profile/status/role theo #69; nhật ký chỉ khi có API audit được duyệt.
 - In-scope: Nhận `id` từ AD-02/#68 → GET #69; không đưa PII vào URL. #69 không trả audit/sync; không nhận diện `204/NULL_PAYLOAD` như success.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Xem gate bên dưới; không kết luận source đã được triển khai, policy đã được duyệt hoặc runtime đã được xác minh.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,13 +31,13 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/ready/unauthenticated/forbidden/not-found/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source/runtime | Angular Admin route, AD03Page và API #69 caller có trong source; page source states are `loading/loaded/error`; HTTP 401/403/404 map to messages within the same `error` type; deployment/browser runtime | `SOURCE WIRED` / `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-03 source screen.png](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/screen_annotated.png))
 - Luồng: Nhận `id` từ AD-02/#68 → GET #69; không đưa PII vào URL. #69 không trả audit/sync; không nhận diện `204/NULL_PAYLOAD` như success.
-- Priority: P1; Gate/source status: **R**; **DD BLOCKED; IMPLEMENTATION BLOCKED:** #69 source-backed locally, nhưng ADMIN permission mapping, legacy/live schema, PII/enum/lifecycle và audit/retention policy còn mở; Study Web UNWIRED; prototype 204/audit/sync claims không được API #69 hỗ trợ; RUNTIME NOT VERIFIED
+- Priority: P1; Gate/source status: **R**; **DD BLOCKED; ACCEPTANCE BLOCKED:** #69 source-backed locally; Admin route/page/caller có trong source, nhưng ADMIN permission mapping, legacy/live schema, PII/enum/lifecycle và audit/retention policy còn mở; prototype 204/audit/sync claims không được API #69 hỗ trợ; RUNTIME NOT VERIFIED
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -49,7 +49,7 @@
 
 > **Screen ID:** AD-03 · **Surface:** Page · **Priority:** P1<br>
 > **DD status:** `BLOCKED — policy, audit source, and live-schema decisions remain open`<br>
-> **Implementation:** `BLOCKED — Study Web is UNWIRED` · **Runtime:** `NOT VERIFIED`
+> **Source wiring:** `PRESENT — Admin route/page/API #69 caller` · **Acceptance:** `BLOCKED — policy/schema gates remain` · **Runtime:** `NOT VERIFIED`
 
 ## Trích đoạn tổng quan từ DD nguồn
 
@@ -59,7 +59,7 @@
 
 | Thuộc tính | Đặc tả |
 |---|---|
-| Route đề xuất | `/admin/users/:userId` theo inventory. Đây chưa phải route runtime. API dùng `/api/v1/admin/users/{user_id}`. |
+| Route | `/admin/users/:userId` theo inventory và đã được khai báo trong Angular Admin router source. Runtime/deployment chưa xác minh. API dùng `/api/v1/admin/users/{user_id}`. |
 | Actor / điều kiện | Admin đã xác thực và có quyền quản lý user theo AC-31. API catalog ghi Bearer JWT/Admin; source hiện kiểm tra claim `ADMIN`. Việc claim này đủ đại diện cho quyền user management là fallback `DERIVED`, chưa được owner xác nhận. |
 | Mục tiêu | Xem hồ sơ một user được chọn từ AD-02. Có thể chuyển sang AD-04 hoặc AD-05 sau khi các quyền, route và hợp đồng màn hình đích được xác nhận. |
 | Handoff vào | Chọn `items[].id` từ API #68 tại AD-02; truyền ID trong path sang AD-03/#69. Không đưa email hoặc phone vào URL. |
@@ -67,7 +67,7 @@
 | Success | HTTP 200, `businessCode=DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<UserProfile>`. |
 | Errors | Catalog/source: 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 500 `DESIGN_INTERNAL_ERROR`. Runtime error envelope dùng `data:null`. |
 | State tối thiểu | `loading`, `ready`, `unauthenticated`, `forbidden`, `not-found`, `error`. `204`/`NULL_PAYLOAD` không phải success state của #69. |
-| Screens liên quan | AD-02 (`/admin/users`) → AD-03 → AD-04 (`/admin/users/:userId/edit`) hoặc AD-05 (`/admin/users/:userId/actions`) theo AC-31. Các route đích vẫn là đề xuất. |
+| Screens liên quan | AD-02 (`/admin/users`) → AD-03 → AD-04 (`/admin/users/:userId/edit`) hoặc AD-05 (`/admin/users/:userId/actions`) theo AC-31. Các route này có trong source; business/API acceptance vẫn gated riêng. |
 
 ### UserProfile mapping khả dụng từ API #69
 
@@ -87,13 +87,13 @@
 
 | Chủ đề | Expected behavior | Current behavior / bằng chứng |
 |---|---|---|
-| Điều hướng và gọi API | Mở detail bằng ID từ AD-02 và đọc một `UserProfile` qua #69. | Study Web chưa có source/router/client; route trong inventory là đề xuất. HTML chỉ là prototype. |
+| Điều hướng và gọi API | Mở detail bằng ID từ AD-02 và đọc một `UserProfile` qua #69. | Current source có Admin route, AD03Page và API #69 caller qua AD03ApiService/AdminApiService. HTML prototype vẫn là static evidence; runtime/deployment chưa xác minh. |
 | Quyền truy cập | AC-31 yêu cầu Admin có quyền user management. | Runtime shared guard xác thực Bearer/JWT và claim `ADMIN` trước parse ID/query. Mapping claim này sang quyền AC-31 còn `DERIVED`; tenant/MFA/permission relation chưa có source. |
 | Dữ liệu profile | Hiển thị các trường được phép từ `data`. | API #69 SELECT allowlist từ checked-in legacy `users`; test dùng fake row. V1-PILOT UUID schema khác; live schema/deploy chưa xác minh. |
 | Empty state / response | User không tồn tại là 404; success có profile object. | Prototype hiển thị “CHƯA ĐỒNG BỘ”, không có user được chọn và ghi `204 / NULL_PAYLOAD`; điều này không khớp contract/source #69 (200 hoặc 401/403/404/500). |
 | Audit, sync, status badges | Chỉ render khi có endpoint, event schema và policy được duyệt. | #69 không trả audit, sync hoặc system-health data. “0 bản ghi”, lưu 180 ngày, tự động giám sát, RBAC audit và System Normal là static claims. |
-| Mutations | #69 chỉ đọc; cập nhật/trạng thái/xóa là luồng AD-04/AD-05. | Nút AD-04 và AD-05 đang disabled; không có handler hay request. |
-| Shell navigation | Dùng route/destination đã được xác định. | Nav/footer anchors dùng `href="#"`; breadcrumb dùng fragment; không có listener hay router. |
+| Mutations | #69 chỉ đọc; cập nhật/trạng thái/xóa là luồng AD-04/AD-05. | Angular template có router links AD-04/AD-05 khi có `userId`; route declarations có trong source. Permission/API acceptance và runtime chưa xác minh. Prototype riêng vẫn thể hiện controls disabled. |
+| Shell navigation | Dùng route/destination đã được xác định. | Angular AD03 template có router link về AD-02; prototype HTML riêng vẫn có anchors placeholder. Không dùng prototype làm bằng chứng runtime. |
 
 ### Nguồn truy vết
 

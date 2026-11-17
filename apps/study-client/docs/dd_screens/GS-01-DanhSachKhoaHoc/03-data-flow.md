@@ -13,7 +13,7 @@
 
 ### Trích từ DD nguồn: 2. Luồng màn hình tổng thể
 
-1. **Vào route đề xuất `/courses`.** Public Guest flow theo inventory/AC-03. Router chưa tồn tại trong checkout; không có current URL parsing, auth guard hoặc navigation history để đặc tả như chức năng đã chạy.
+1. **Vào route đề xuất `/courses`.** Public Guest flow theo inventory/AC-03. Study Web Angular router tồn tại, nhưng Guest route `/courses` chưa được đăng ký; không có current URL parsing, auth guard hoặc navigation history cho GS-01 để đặc tả như chức năng đã chạy.
 2. **Khởi tạo metadata danh mục.** Expected F02: xử lý #05 cache-first theo locale. Nếu client không gửi `locale`, server hiện mặc định `vi-VN`; locale được truyền được lọc chính xác, không tự chuẩn hóa. Cache key, TTL, invalidation, stale fallback và việc phải gọi mạng khi cache hit đều chưa có source.
 3. **Khởi tạo catalog.** Expected: gọi #06 với `page=1&size=20`, không có `category`. Mặc định server cũng là page 1/size 20. `sort` không có mặc định ở client; khi bỏ trống server dùng `created_at DESC, id ASC`. Chính sách chạy #06 nếu #05 lỗi chưa được quyết định.
 4. **Phân tích response.** Với API success, kiểm tra envelope và map `data.items` cùng `data.pagination`. Metadata count là tổng số row PUBLISHED; API không đưa currency, rating, duration, lesson count hoặc category vào model `Course` hiện tại. Quy tắc visual mapping/card chưa được duyệt.
@@ -143,7 +143,7 @@ Không có bằng chứng session-expired state cho API #05/#06 vì chúng publi
 
 - **DD:** `BLOCKED` — source/contract trace is complete, but loaded-state UI and decisions listed in §8 are missing.
 - **Implementation:** `IMPLEMENTATION BLOCKED` — category filtering, loaded view, cache/error policy, search handoff and Study Web app wiring remain unresolved.
-- **Runtime:** `RUNTIME NOT VERIFIED` — no Study Web source/runtime exists in this checkout; backend tests/runtime were not run.
+- **Runtime:** `RUNTIME NOT VERIFIED` — Study Web app exists, but Guest `/courses` route and GS-01 API caller are unwired; no GS-01 route, cache or interaction is runtime verified. Backend tests/runtime were not run in this screen audit.
 - **Next Screen ID:** GS-02, handled in a separate session.
 
 ## 4. Luồng đọc (Read)

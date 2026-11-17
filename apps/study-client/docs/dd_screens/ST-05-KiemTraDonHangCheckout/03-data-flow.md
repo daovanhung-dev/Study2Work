@@ -27,11 +27,11 @@
 
 ### Current behavior
 
-- Mở HTML trực tiếp luôn hiển thị trạng thái unavailable. Không có route state, gọi #08, #16, xác nhận, loading, validation, cache hoặc mutation.
+- Current route reads `courseId` and calls public #08. A PUBLISHED course displays the Stitch unavailable state; #08 404 and other errors render separate not-found/error states. No #16 request or order mutation occurs.
 - CTA #11 điều hướng theo HTML tới `/courses`; label nói quay lại kiểm tra ghi danh nhưng không truyền `courseId`.
-- Study Web không có editable app source/router/package manifest; `/student/checkout/:courseId` chưa được wire.
-- API #08 có route/module/query/mapper và test source hiện hành. Test source không được chạy trong phiên này và không chứng minh database/deployment live.
-- Không tìm thấy API #16 route/module/query/model/test trong Study Server. API #16 là contract design-only; không có order side effect hiện hành được xác minh.
+- Study Web now declares `/student/checkout/:courseId` with API metadata #08/#16; #08 is the only client caller. Order creation remains absent.
+- API #08 source is called and focused FE tests cover its published/not-found responses; this does not verify live DB/deployment.
+- API #16 has route/module/model/query source, but no dedicated tests were found and its `orders` table is absent from checked-in DDL. Live schema/write behavior remains unverified; client descriptor is `UNWIRED`.
 
 ### API boundary
 
@@ -44,18 +44,18 @@
 
 | State | Điều kiện / dữ liệu | Kết quả / chuyển tiếp | Tình trạng |
 |---|---|---|---|
-| `web-unwired` | Không có app source/router cho Study Web | Không có route UI ST-05 để thực thi | Current source status |
+| `web-unwired` | Mở source HTML tĩnh | Prototype always shows unavailable copy | Current HTML only |
 | `prototype-static-unavailable` | Mở `code.html` | Hiển thị #9/#10 và CTA #11; không gọi #08/#16 | Current HTML only |
 | `route-auth-pending` | Mở candidate `/student/checkout/:courseId` | Cần Student guard và ID mapping trước data flow | Expected; chưa wire |
-| `course-loading` | EV-02 GET #08 đang xử lý | Chờ 200/404/500; không tạo Order trong lúc này | Expected; UI chưa có |
+| `course-loading` | EV-02 GET #08 đang xử lý | Loading status; không tạo Order trong lúc này | Current FE source |
 | `course-ready-terms-blocked` | #08 200 với course PUBLISHED | Course read thành công; chờ approved amount/currency/provider/terms trước confirm | Expected; contract chưa đủ |
 | `confirming` | Terms và provider được phê duyệt, Student đang chờ explicit action | Confirm đưa sang `order-creating`; không auto-submit | Inventory expected; current confirm control absent |
-| `order-creating` | Một thao tác confirm hợp lệ, POST #16 đang chờ | Chờ response; no repeat/retry policy established | Inventory expected; #16 unwired |
-| `course-unavailable` | #08 404 | Hiện course unavailable state; không nhầm thành #16 error | API #08 current; UI chưa định nghĩa |
-| `course-read-error` | #08 500 | Hiện lỗi đọc/mapper; không chuyển thành 404 | API #08 current; UI chưa định nghĩa |
+| `order-creating` | Một thao tác confirm hợp lệ, POST #16 đang chờ | Chờ response; no repeat/retry policy established | Expected only; FE caller absent |
+| `course-unavailable` | #08 404 | Show not-found; không nhầm thành #16 error | Current FE source |
+| `course-read-error` | #08 non-404 error | Show generic course-read error | Current FE source |
 | `order-validation-error-422` | #16 trả 422 | Giữ lỗi theo response envelope; không tự tạo field messages | Catalog expected only; #16 unwired |
 | `order-error` | #16 trả 401/403/500 hoặc request không hoàn tất | Auth/permission/server/network presentation và retry policy chưa được phê duyệt | Inventory state name; API contract/current UI incomplete |
-| `order-created-handoff-blocked` | #16 contract success 201 | Candidate Order data được nhận; ST-06 chỉ sau khi `data.id` → `order_id` mapping và #17 flow được chốt | Expected design; #16/#17 unwired |
+| `order-created-handoff-blocked` | #16 contract success 201 | Candidate Order data được nhận; ST-06 chỉ sau khi `data.id` → `order_id` mapping và #17 flow được chốt | Expected only; ST-05 sends no #16 request |
 | `back-to-courses` | Click #11 | Current destination `/courses`; không giữ course context | Current HTML anchor |
 | `return-to-ST-04` | Desired return per inventory | Route/data contract chưa có; không phải behavior hiện hành | Expected; blocked |
 
@@ -63,7 +63,7 @@
 
 | Từ | Điều kiện | Đến | Dữ liệu chuyển | Tình trạng |
 |---|---|---|---|---|
-| ST-04 | Backend/AC xác nhận nhánh paid | ST-05 candidate route | `courseId` candidate; quy tắc `course_id:int64` ở client chưa chốt | Expected; route unwired |
+| ST-04 | Backend/AC xác nhận nhánh paid | ST-05 route `/student/checkout/:courseId` | Raw route `courseId` string | Route declared; upstream branch remains gated |
 | ST-05 | Revalidation + terms/provider được phê duyệt; explicit confirm; #16 success | ST-06 | Inventory gọi `order_id`; API #16 trả `data.id:int64`; equivalence cần confirm | Expected; ID handoff blocked |
 | ST-05 | CTA hiện tại | `/courses` | Không có ID hoặc return state | Current HTML only |
 | ST-05 | Desired return | ST-04 | Course ID và return-state semantics cần quyết định | Expected; blocked |

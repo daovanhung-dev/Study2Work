@@ -50,12 +50,18 @@ apps/db-admin-server/app/main.py
 - Work web uses a relative `/api/v1` base; Vite binds at `127.0.0.2:3001` and
   proxies `/api`, `/uploads`, and `/img` to the Express server at
   `127.0.0.1:3002` in development. Work API does not render browser views.
-- Study Web is an Angular 22 standalone SPA scaffold and an intended separate
-  frontend boundary. It has a generic `StudyApiService` and Angular dev proxy
-  from relative `/api/v1` to `127.0.0.1:3003`; business routes, feature-specific
-  API calls, auth, and token storage remain unwired. Study API is a separate
-  server; its placeholder OpenAPI is not enough to infer feature contracts.
-  Production routing remains unverified.
+- Study Web is an Angular 22 standalone SPA boundary with a readiness root,
+  SH-02/SH-03 presentation routes, Guest GS-01–GS-03 route group with #05–#08
+  callers, Student ST-11–ST-26 and Admin AD-01–AD-25 route groups. Selected
+  Admin GET callers use `AdminApiService`; Guest callers use the generic
+  `StudyApiService`. `GS03Page` calls #08 and owns the `?tab=curriculum` view;
+  after #08 succeeds it calls API #09 through GS03-local data-access and renders
+  only lesson title/order. Focused GS03 tests cover the tab; browser/live
+  API/DB runtime remains unverified. Mentor route group/callers remain absent.
+  `AdminSessionService` is Admin-only; Shared/Student/Mentor session flows are
+  not implemented. The Angular dev proxy forwards relative `/api/v1` to
+  `127.0.0.1:3003`. Study OpenAPI is a placeholder, and production routing
+  remains unverified.
 - Work mobile apps use direct Neon SQL and are not HTTP consumers of Work server.
 
 ## Contract dependencies

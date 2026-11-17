@@ -4,17 +4,25 @@
 |---|---|
 | Screen ID | `AD-02` |
 | Module | Admin |
-| Route | `/admin/users` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/admin/users` — route child `users` trong `admin.routes.ts`, trỏ tới `AD02Page` trong local Angular source |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `BLOCKED — decisions remain open` · **Implementation:** `BLOCKED — Study Web is UNWIRED` · **Runtime:** `NOT VERIFIED` |
+| DD status | `BLOCKED — decisions remain open`; local implementation: `PARTIAL SOURCE — route/page/#68 caller wired`; runtime: `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-17 |
 | Nguồn đối chiếu | [AD-02.md](../../screen_stitch/05_admin/AD-02_danh-sach-nguoi-dung/AD-02.md), [AD-02_PLAN.md](../../screen_stitch/05_admin/AD-02_danh-sach-nguoi-dung/AD-02_PLAN.md), [AD-02_markers.json](../../screen_stitch/05_admin/AD-02_danh-sach-nguoi-dung/AD-02_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Bảng users, keyword, status, role, pagination; chọn user để mở AD-03/AD-04; API #68 chỉ đọc.
 - In-scope: GET #68 với filter/page và giữ query URL; local source chỉ search name/email, exact-match role/status, fixed page 20. Không suy ra search ID hoặc tạo/export user từ mockup.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Không kết luận live API/DB, deployed route hoặc authenticated browser runtime đã chạy; giữ các quyết định permission/enum/PII/schema ở trạng thái mở.
+
+### Current source snapshot (2026-11-17, T030)
+
+- `admin.routes.ts` child `users` routes to `AD02Page`; the page calls `AD02ApiService` → `AdminApiService` / API_068 → `GET /api/v1/admin/users` and renders the source-backed list, filters, pagination, refresh, and AD-03 ID links.
+- Loading, loaded empty, service error, and API #68 page-422 recovery are separate in source. The 422 action resets `page=1` while retaining filters and unrelated query parameters.
+- Focused Angular spec: 8/8 passed; API #68 fake-session tests: 15 passed; Study Web production build: exit 0 with three existing Student CSS budget warnings and no AD-02 warning.
+- Local browser opened `/admin/users` and showed the Admin login gate. No authenticated session was available, so the AD-02 list itself, live API/DB, and deployment remain `NOT VERIFIED`.
+- This snapshot supersedes the conversion-time statements below that said the route/client did not exist. Static HTML observations still describe only the prototype. DD, permission, enum/PII/lifecycle, and live-schema decisions remain blocked.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,13 +39,13 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/empty/ready/filter-error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source/runtime | `admin.routes.ts`, `AD02Page`, local browser attempt | Route/page/client source wired; browser reached the login gate; authenticated AD-02, live API/DB, and deployment `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-02 source screen.png](../../screen_stitch/05_admin/AD-02_danh-sach-nguoi-dung/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-02_danh-sach-nguoi-dung/screen_annotated.png))
 - Luồng: GET #68 với filter/page và giữ query URL; local source chỉ search name/email, exact-match role/status, fixed page 20. Không suy ra search ID hoặc tạo/export user từ mockup.
-- Priority: P1; Gate/source status: **R**; **DD BLOCKED; IMPLEMENTATION BLOCKED:** Study Web UNWIRED; role/status options và ID-search mismatch; Add/export/audit/sync unsupported; Admin permission, PII/lifecycle, live schema còn mở; RUNTIME NOT VERIFIED
+- Priority: P1; Gate/source status: **R**; **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** route/page/#68 caller are wired locally; role/status options and ID-search mismatch; Add/export/audit/sync unsupported; Admin permission, PII/lifecycle, live schema remain open; authenticated runtime NOT VERIFIED
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -48,7 +56,7 @@
 # AD-02 — Danh sách người dùng
 
 > **Screen ID:** AD-02 · **Surface:** Page · **Priority:** P1
-> **DD status:** `BLOCKED — decisions remain open` · **Implementation:** `BLOCKED — Study Web is UNWIRED` · **Runtime:** `NOT VERIFIED`
+> **DD status:** `BLOCKED — decisions remain open` · **Implementation:** `PARTIAL SOURCE — local route/page/#68 caller wired` · **Runtime:** `NOT VERIFIED`
 
 ## Trích đoạn tổng quan từ DD nguồn
 
@@ -58,7 +66,7 @@
 
 | Thuộc tính | Đặc tả |
 |---|---|
-| Route đề xuất | `/admin/users` — inventory đề xuất; current Study Web chưa có route này. |
+| Route đề xuất | `/admin/users` — local Angular child route `users` in `admin.routes.ts` routes to `AD02Page`; deployed route not verified. |
 | Actor / precondition | Admin đã đăng nhập và có quyền quản lý user theo AC-31. API #68 hiện yêu cầu JWT claim `ADMIN`; việc claim này đại diện cho user-management permission là fallback `DERIVED`, chưa được owner xác nhận. |
 | Mục đích | Tra cứu danh sách tài khoản bằng keyword, role, status và page; chọn user để mở AD-03 hoặc AD-04. API #68 chỉ đọc danh sách. |
 | API chính | `GET /api/v1/admin/users` (#68), Bearer JWT; query `role?:string`, `status?:string`, `keyword?:string`, `page?:int32`; không có body, `size` hay `sort`. |
@@ -87,12 +95,12 @@ API #68 direct contract đã đồng bộ catalog/AC thành `ApiEnvelope<Page<Us
 
 | Chủ đề | Expected behavior | Current behavior / bằng chứng |
 |---|---|---|
-| Route và data | Mở `/admin/users`, gọi #68 và hiển thị Page theo filter/page được duyệt. | Study Web không có editable source, package manifest hay route. HTML là prototype tĩnh. |
+| Route và data | Mở `/admin/users`, gọi #68 và hiển thị Page theo filter/page được duyệt. | Local Angular source routes to `AD02Page` and calls #68 through `AD02ApiService`; browser attempt reached login gate, authenticated rows not verified. HTML remains a separate static prototype. |
 | Search/filter | Inventory yêu cầu keyword, role, status và giữ query URL. | HTML có input/select nhưng không request. Keyword copy còn nói tìm theo user ID; #68 chỉ tìm tên/email. UI values `student/instructor/admin` và `active/locked/pending`; #68 exact-match chuỗi và không khai báo enum list. |
 | Pagination | 1-based `page`; UI dùng `total/total_pages`; size do server cố định. | Nút trước/sau disabled; mockup hiển thị `0/0`. API empty Page trả `page=1,total_pages=0`, nên cách biểu diễn empty-page cần quyết định. |
 | Row actions | Chọn user đi tới #69; update/status/delete theo nhánh AC-31 và màn tương ứng. | Không có row vì prototype ở empty state; không có action handler. |
 | Create/export/audit | Chỉ enable khi có contract, route và quyền phù hợp. | Add user, Export, help, sync, security/RBAC và audit copy là static; #68 read-only và không trả audit/sync data. |
-| Runtime | Chỉ xác nhận sau khi Study Web route/client và serving được kiểm tra. | Study Web `UNWIRED`; API #68 có local source/test nhưng fake-DB tests không chứng minh live schema/deployment. |
+| Runtime | Chỉ xác nhận sau khi Study Web route/client and serving are checked. | Local route/client source exists and `/admin/users` served the login gate; authenticated screen, live API/DB, and deployment are not verified. Fake-session tests do not prove live schema/deployment. |
 
 ### Nguồn truy vết
 

@@ -1,8 +1,8 @@
 # ST-04 — Navigation
 
 ## 1. Route definition
-- Current route in inventory: `/student/enroll/:courseId`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Current route: `/student/enroll/:courseId`
+- Status: registered in Study Web; page calls #08 then shows a gated enrollment state. Student auth remains unresolved.
 - Route params/types: `courseId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,7 +10,7 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [GS-03](../GS-03-ChiTietKhoaHoc/00-overview.md), [ST-05](../ST-05-KiemTraDonHangCheckout/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [GS-03](../GS-03-ChiTietKhoaHoc/00-overview.md), [ST-05](../ST-05-KiemTraDonHangCheckout/00-overview.md) | Theo DD nguồn/inventory | `courseId` raw path value | GS-03 route is declared; ST-05 remains unregistered |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
@@ -38,16 +38,15 @@ flowchart LR
 
 | State | Điều kiện vào / nguồn | Hành vi và state kế tiếp | Tình trạng |
 |---|---|---|---|
-| `unwired` | Study Web không có app router/source cho ST-04 | Không có runtime transition để xác nhận | Current |
+| `course-loading` | Current route calls #08 | Loading status until course detail resolves | Current FE source |
 | `prototype-static-error` | Mở trực tiếp `code.html` | Luôn hiện #9/#10 và CTA #11; không gọi API | Current HTML only |
-| `route-input-pending` | Route candidate nhận `courseId` | Chờ quy tắc `courseId`→`course_id:int64` và Student guard | Expected, chưa implement |
-| `course-loading` | #08 được gọi | Chờ 200/404/500 từ #08 | Expected, chưa có UI |
-| `course-unavailable` | #08 trả 404 | Course không tồn tại, ID sai, hoặc chưa `PUBLISHED`; đích/wording riêng chưa có | Backend source-backed; UI decision missing |
-| `course-error` | #08 trả 500 | Không thể đọc/map course; hiện chưa có error UI contract | Backend source-backed; UI decision missing |
-| `enrollment-check-blocked` | #08 thành công nhưng #15 identity chưa chốt | Không gọi #15 theo selection suy đoán; không branch | Current design blocker |
+| `route-input-pending` | `/student/enroll/:courseId` receives `courseId` | Pass raw string to #08; Student guard remains absent | Current FE source |
+| `course-unavailable` | #08 returns 404 | Course does not exist, ID is invalid, or it is not `PUBLISHED`; show not-found | Current FE source |
+| `course-error` | #08 returns a non-404 HTTP/envelope error | Show generic course-load error | Current FE source |
+| `enrollment-check-blocked` | #08 succeeds but #15 auth/selection remains unsafe | Do not call #15 or branch; show enrollment gate | Current FE source |
 | `already-enrolled` | Backend xác định đúng enrollment thuộc Student | Nhánh Khóa học của tôi/ST-08 theo AC-12; payload/navigation chưa chốt | Expected only |
-| `free-enrollment` | Server xác nhận chưa ghi danh + free/eligible | #19; tiếp #20 rồi ST-08 | Expected only; APIs #19/#20 chưa source-backed |
-| `paid-checkout` | Server xác nhận nhánh trả phí | ST-05/#16 → ST-06/#17; payment proof server-side | Expected only; APIs #16–#18 chưa source-backed |
+| `free-enrollment` | Server confirms no enrollment and free/eligible | #19; then #20 and ST-08 | Expected only; routes #19/#20 exist, flow/contract still gated |
+| `paid-checkout` | Server confirms paid branch | ST-05/#16 → ST-06/#17; payment proof server-side | Expected only; routes #16–#18 exist, flow/contract still gated |
 | `session-expired-or-forbidden` | AC-12 Student precondition không còn hợp lệ | Redirect/401/403 destination và return path cần contract | Unspecified; #08/#15 hiện public trong catalog |
 | `back-to-courses` | Click #11 | `/courses`; không giữ query/context | Prototype link only |
 

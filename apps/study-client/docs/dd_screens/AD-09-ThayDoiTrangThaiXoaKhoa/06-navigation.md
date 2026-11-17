@@ -2,25 +2,25 @@
 
 ## 1. Route definition
 - Current route in inventory: `/admin/courses/:courseId/actions`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `courseId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: Angular route `courses/:courseId/actions` → `AD09Page` is source-present; page calls GET #74 only. #76/#77 actions remain unwired/gated; runtime is `NOT VERIFIED`.
+- Route params/types: Angular reads raw `courseId` as a string; it passes that value to #74 without client-side numeric conversion. Server path parsing is covered by the API source/DD.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [AD-07](../AD-07-ChiTietKhoaHocQuanTri/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [AD-07](../AD-07-ChiTietKhoaHocQuanTri/00-overview.md) | Angular route/page; GET #74 caller | Raw `courseId` from detail | Current source; route has no fine-grained course-management permission proof |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [AD-06](../AD-06-DanhSachKhoaHocQuanTri/00-overview.md), [AD-07](../AD-07-ChiTietKhoaHocQuanTri/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [AD-06](../AD-06-DanhSachKhoaHocQuanTri/00-overview.md), [AD-07](../AD-07-ChiTietKhoaHocQuanTri/00-overview.md) | Angular error link → AD-06; Back/footer → AD-07; Stitch Back/Cancel → AD-06 | AD-07 receives raw route `courseId` | Current Angular links are source-present; Stitch links are prototype evidence; post-write destination/reload is open |
 
 ## 4. Back / refresh / deep link
-- Back behavior: xem source DD; không mặc định browser history.
+- Back behavior: Stitch Back/Cancel target AD-06; Angular Back/footer target AD-07 with raw `courseId`; Angular load-error link targets AD-06. This does not establish post-write navigation.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: Angular route declaration exists and invokes GET #74; deployment/runtime remains `NOT VERIFIED`.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
@@ -37,11 +37,11 @@ flowchart LR
 
 | State | Entry condition | Display/data behavior | Exit/navigation | Evidence/status |
 |---|---|---|---|---|
-| `UNWIRED` | Current checkout | Static page; radio selection only; Confirm/reason disabled; no API client/router. | No feature route can run. | Current status. |
-| `initial` | Proposed route before target load | No Course selected; do not imply a valid target. | Start EV-01 if route is wired. | Target state; prototype currently shows this. |
-| `loading` | #74 request pending | Show pending state only while the request is active. | 200 → `ready`; API/network errors → matching state. | Not implemented. |
-| `ready` | #74 returns target Course/current status | Show identity and status from response; no counters unless contract adds them. | Select action → `action_selected`; back/cancel via approved route. | Not implemented; #74 source-backed locally. |
-| `action_selected` | User selects one approved branch | Current prototype has draft/archive/delete, default draft; values are not approved request mappings. | Status target → `confirm_status`; delete target → `confirm_delete`; cancel → EV-05. | Only native radio selection works; listener no-op. |
+| `initial` | Before a target Course is loaded | Do not imply a valid target. Angular proceeds to `loading`; the Stitch prototype displays an empty placeholder. | Start EV-01. | Prototype/design state; not a separate Angular state. |
+| `loading` | Angular starts GET #74 | Show the current pending message. | Non-empty response → `loaded`; empty/error → `error`. | Current source; runtime not verified. |
+| `loaded` | Non-empty #74 response | Angular displays Course title/status/mentor/price and raw route ID; no counters; write controls remain disabled. | Back/footer → AD-07 with ID. | Current source; runtime not verified. |
+| `error` | Missing ID, unsuccessful/empty #74 response, or request error | Angular shows its safe error state. | Error link → AD-06. | Current source; runtime not verified. |
+| `action_selected` | User selects one prototype radio | Stitch prototype has draft/archive/delete, default draft; values are not approved mappings. Angular has no selector state. | Prototype selection only; no API request. | Prototype behavior only. |
 | `confirm_status` | User is about to send approved #76 target | Confirm target state and impact using owner-approved language. No current confirmation copy/state beyond page form. | Confirm → `status_working`; cancel → ready. | Confirmation semantics not implemented/approved. |
 | `confirm_delete` | User is about to call #77 | State whether operation is a soft marker and disclose dependency blockers only after policy approval. Do not promise permanent delete. | Confirm → `delete_working`; cancel → ready. | Delete semantics/policy open. |
 | `status_working` | PATCH #76 pending | Prevent unintended repeated action only under approved UI policy; network retry/idempotency open. | 200 → `done`; 422/401/403/404/500/network → error state. | Target state. |
@@ -66,7 +66,7 @@ flowchart LR
 - **Inputs:** Path `:courseId` → API `course_id:int64`; không body/query. Candidate GET #74: `GET /api/v1/admin/courses/{course_id}`.
 - **Processing:** Client lấy Course/current status từ #74 theo AD-07 policy. Current #74 local query đọc course + mentor, không status-filter; không có counters. Kiểm tra success envelope/identity theo API contract cuối đã phê duyệt.
 - **Outcome/errors:** 200 → `ready` với target Course/current status; 401/403/404/500 → trạng thái tương ứng; lỗi mạng → client-side state chưa có policy. Không hiển thị placeholder như một Course đã được chọn.
-- **Current behavior:** Target card rỗng; không có GET call. Study Web runtime `UNWIRED`.
+- **Current behavior:** Angular calls GET #74 and exposes `loading/loaded/error`; Stitch remains a static prototype. Runtime is `NOT VERIFIED`.
 
 ### EV-02 — Chọn action radio
 

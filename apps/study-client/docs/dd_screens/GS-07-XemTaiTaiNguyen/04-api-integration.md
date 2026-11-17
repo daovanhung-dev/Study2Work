@@ -11,7 +11,7 @@
 
 - API refs trong inventory: #12
 - Orchestration/data notes: GET #12 tại thời điểm mở; không cache signed URL vô hạn hoặc lộ internal storage key.
-- BE/source status và gate: **R (#12 source-backed locally; API DD Draft)**; **BLOCK:** current public/no-auth direct URL lacks AC-06 access check/signer; preview/MIME/URL policy, 403/404/expiry mapping, GS-06/ST-12 return context and Study Web route UNWIRED; live schema unknown; prototype differs from Study design guide and WCAG unmeasured
+- BE/source status và gate: **R (#12 source-backed locally; API DD Draft)**; **BLOCK:** current public/no-auth direct URL lacks AC-06 access check/signer; preview/MIME/URL policy, 403/404/expiry mapping and GS-06/ST-12 return context unresolved. Study Web T023 wires only the root route and contract-blocked gate; there is no #12 caller or resource detail behavior. Live schema unknown; prototype differs from Study design guide and WCAG unmeasured.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Luồng dự kiến sau khi contract được chốt

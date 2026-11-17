@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.modules.guest._shared.course_catalog.constants import DEFAULT_PAGE, DEFAULT_SIZE
+from app.modules.shared.course_catalog.constants import DEFAULT_PAGE, DEFAULT_SIZE
 from pydantic import BaseModel
 
 

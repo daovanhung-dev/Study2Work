@@ -21,22 +21,31 @@
 - **Failure / edge assertion:** Không đánh dấu pass cho `UNWIRED`, `IMPLEMENTATION BLOCKED` hoặc `RUNTIME NOT VERIFIED`.
 - **References:** `AC-01`, [Events](02-events.md), [Business Rules](05-business-rules.md), [source DD](../../screen_stitch/01_shared_auth_system/SH-03_dang-ky-hoc-vien/SH-03.md).
 
-## 3. Source acceptance / test plan (not run)
+## 3. Source acceptance / API flow test plan
 
 ### Trích từ DD nguồn: 9. Ma trận kiểm tra cần có khi triển khai giao diện
 
-Các mục dưới đây là tiêu chí kiểm thử trong tương lai. Trong phiên soạn tài liệu này chỉ đọc mã kiểm thử, không chạy kiểm thử.
+Các mục dưới đây là tiêu chí kiểm thử cho API/form flow đầy đủ. API #01 source tests và phần submit/error cục bộ của SH-03 đã có focused tests. UI-to-live-server và SH-04 handoff chưa được xác minh.
 
 | Nhóm | Trường hợp cần kiểm tra | Bằng chứng hiện có |
 |---|---|---|
-| Thành công API | JSON hợp lệ, HTTP 201, dữ liệu chỉ có hồ sơ công khai, giao dịch được xác nhận một lần. | Có trong `test_register.py`; chưa chạy kiểm thử trong phiên này. |
-| Chuẩn hóa/kiểm tra API | Cắt khoảng trắng email và `full_name`; email lỗi; họ tên rỗng/quá 150; mật khẩu rỗng/toàn khoảng trắng; HTTP 422. | Có trong `test_register.py`; chưa chạy kiểm thử trong phiên này. |
-| Trùng email API | Email tồn tại trước khi chèn và tranh chấp ràng buộc duy nhất đều thành HTTP 409; có gọi `rollback`. | Có trong `test_register.py`; chưa chạy kiểm thử trong phiên này. |
-| Lỗi API | Lỗi cơ sở dữ liệu/lỗi ngoài dự kiến trả 500 an toàn, không lộ chi tiết ngoại lệ. | Có trong `test_register.py`; chưa chạy kiểm thử trong phiên này. |
-| Giao diện gửi | JSON chỉ có `email`, `password`, `full_name`; không có Bearer; khóa gửi lặp; ánh xạ `fullname` đúng. | Chưa có mã giao diện hoặc kiểm tra giao diện trong bản làm việc. |
-| Giao diện lỗi | `meta.fieldErrors` nối đúng trường; 409 giữ biểu mẫu; 500/mạng không để lộ chi tiết và không tự gửi lại. | Chưa có mã giao diện hoặc kiểm tra giao diện trong bản làm việc. |
-| Chuyển tiếp | HTTP 201 đưa `data.id`/`data.email` tới SH-04; API #02 không bị gọi từ SH-03. | Luồng hiện chỉ có trong danh mục; phía giao diện chưa có. |
-| Trợ năng/thích ứng | Bàn phím, tiêu điểm, vùng thông báo, chiều rộng 320px, phóng to, giảm chuyển động. | Chưa được kiểm tra bằng mã giao diện. |
+| Thành công API | JSON hợp lệ, HTTP 201, dữ liệu chỉ có hồ sơ công khai, giao dịch được xác nhận một lần. | Có trong `test_register.py`; được bao phủ bởi full Study Server suite (1484 passed). |
+| Chuẩn hóa/kiểm tra API | Cắt khoảng trắng email và `full_name`; email lỗi; họ tên rỗng/quá 150; mật khẩu rỗng/toàn khoảng trắng; HTTP 422. | Có trong `test_register.py`; được bao phủ bởi full Study Server suite (1484 passed). |
+| Trùng email API | Email tồn tại trước khi chèn và tranh chấp ràng buộc duy nhất đều thành HTTP 409; có gọi `rollback`. | Có trong `test_register.py`; được bao phủ bởi full Study Server suite (1484 passed). |
+| Lỗi API | Lỗi cơ sở dữ liệu/lỗi ngoài dự kiến trả 500 an toàn, không lộ chi tiết ngoại lệ. | Có trong `test_register.py`; được bao phủ bởi full Study Server suite (1484 passed). |
+| Giao diện gửi | JSON chỉ có `email`, `password`, `full_name`; không có Bearer; khóa gửi lặp; tên được ánh xạ; email sai định dạng không POST; email hợp lệ có khoảng trắng được trim. | Angular component spec xác minh qua `HttpTestingController`; không phải request live. |
+| Giao diện lỗi | `meta.fieldErrors` nối đúng trường; 409 giữ biểu mẫu; 500/mạng không để lộ chi tiết và không tự gửi lại. | Angular component spec xác minh 409/422/500/network error mapping và không retry. |
+| Kết quả tạo tài khoản | 201 `DESIGN_RESOURCE_CREATED` chỉ được chấp nhận với `data.id` nguyên dương và `data.email` không rỗng. | Angular spec xác minh payload chuẩn vào account-created state; thiếu `id` hoặc `email` giữ form/password và không gọi API #02. SH-04 transition vẫn chưa được triển khai. |
+| Trợ năng/thích ứng | Bàn phím, tiêu điểm, vùng thông báo, chiều rộng 320px, phóng to, giảm chuyển động. | Có label, required fields, visible focus, reduced-motion và layout responsive trong source; chưa có browser visual/responsive verification. |
+
+### 3.1. Current Angular test evidence (2026-11-17)
+
+| Command | Result | Scope |
+|---|---|---|
+| `npm test -- --include src/app/features/shared/SH03/pages/sh03-page.spec.ts --include src/app/app.routes.spec.ts --include src/app/core/http/study-api.service.spec.ts` | 3 files, 27 tests passed. | SH-03 body/trim/password preservation, invalid-email no-request, pending lock, valid/malformed 201, rejection of success-shaped HTTP 200, 409/422/500/network behavior, no API #02 call; `/register` route and response-aware API client. Uses mocked HTTP. |
+| `apps/study-server/.venv/bin/pytest -q tests/modules/guest/api_01_auth_register/test_register.py` | 16 passed; one Starlette/httpx deprecation warning. | API #01 tests use fake DB sessions; not live database verification. |
+| `npm run build` | Passed; three CSS budget warnings in `student-static-screen.css`, `student-layout.css`, `st22-page.css`. | Production Angular bundle; no SH-03 budget warning. |
+| `GET /register` + Chrome headless | HTTP 200; hydrated route rendered at desktop 1365×900 and mobile 390×844. | Local render only; no form submitted, live registration request or deployed runtime verification. |
 
 ### Trích từ DD nguồn: 11. Tiêu chí nghiệm thu tài liệu SH-03
 
@@ -45,8 +54,8 @@ Các mục dưới đây là tiêu chí kiểm thử trong tương lai. Trong ph
 - [x] Tài sản gốc giữ nguyên SHA-256; ảnh chú thích giữ đúng tỷ lệ 2×.
 - [x] API #01/#02 được đối chiếu với source/catalog/AC; sai khác và blocker được ghi rõ; không mô tả API #02 là gửi email thật.
 - [x] Có crosswalk A–F; đủ 8 event với trigger/type, điều kiện, input, xử lý, output và kết quả/ngoại lệ.
-- [x] Local links mở được; tracker/worklog phân biệt DD READY, IMPLEMENTATION BLOCKED và RUNTIME NOT VERIFIED.
-- [x] Không chạy kiểm thử dự án trong phiên này; test source được ghi nhận là đã đọc, chưa chạy.
+- [x] Local links mở được; tracker/worklog phân biệt DD READY, API #01 caller, SH-04 handoff blocker, verified local route render và unverified deployment.
+- [x] Focused Angular page/route specs và API #01 tests đã chạy; UI-to-live-server flow và SH-04 handoff chưa xác minh.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 
@@ -71,7 +80,7 @@ Các mục dưới đây là tiêu chí kiểm thử trong tương lai. Trong ph
 - DD nêu riêng HTTP 201/409/422/500 của API #01 và trạng thái mã nguồn/giao diện đích; không tuyên bố email được gửi hoặc đã xác minh.
 - Các liên kết tương đối mở đúng nguồn và không có phần tử giao diện được mô tả là tương tác nếu HTML không có bằng chứng.
 - Bảy marker map tới bảy Element ID ổn định `SH03-EL-01..07`; tám Event ID `SH03-EV-01..08` đều có trigger/type, precondition, input, xử lý và output/API mapping.
-- Giữ riêng `DD READY`, `IMPLEMENTATION BLOCKED`, `RUNTIME NOT VERIFIED`; không chạy application tests trong phiên tài liệu.
+- Giữ riêng `DD READY`, API #01 caller, SH-04 handoff blocker, local route render và live/deployed runtime chưa xác minh.
 
 ### Trích từ DD nguồn: 9. Kết quả rà soát tĩnh
 
@@ -79,7 +88,7 @@ Các mục dưới đây là tiêu chí kiểm thử trong tương lai. Trong ph
 - Tám sự kiện `SH03-EV-01..08` có element/loại, điều kiện tiên quyết, đầu vào, xử lý và đầu ra/API mapping trong DD.
 - Crosswalk A–F được thêm; từng event có kết quả/ngoại lệ riêng và ghi rõ fallback hoặc policy còn mở.
 - DD truy vết tới danh mục màn hình, AC-01, API catalog, route/module/query/provider/tests/open questions, DDL tham khảo và hướng dẫn Study Web.
-- Static checks và hash ảnh/HTML được ghi ở worklog. Application tests và runtime không chạy; `RUNTIME NOT VERIFIED`.
+- Static checks và test evidence được ghi ở worklog. Local direct-route render đã xác minh; form interaction, live API và deployed runtime vẫn `NOT VERIFIED`.
 
-- Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
-- Không chạy app test trong task chuyển đổi tài liệu.
+- Local direct-route render is verified; form interaction, live registration API and deployed runtime remain `NOT VERIFIED`.
+- SH-03 focused Angular specs pass; API #01 focused tests pass using fake DB sessions. No live registration API call was made from the UI.

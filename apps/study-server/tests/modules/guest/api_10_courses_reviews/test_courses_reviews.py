@@ -79,11 +79,14 @@ def test_validate_course_reviews_request_uses_default_page() -> None:
     assert result == (5, 1, None)
 
 
-@pytest.mark.parametrize("course_id", ["invalid", "1.5"])
+@pytest.mark.parametrize(
+    "course_id",
+    ["invalid", "1.5", str(-(2**63) - 1), str(2**63)],
+)
 def test_validate_course_reviews_request_returns_404_for_invalid_course_id(
     course_id: str,
 ) -> None:
-    """Kiểm tra course_id không parse được int64 trả 404 theo contract, không tự thêm 422."""
+    """Kiểm tra malformed/out-of-range course_id trả 404 theo contract, không tự thêm 422."""
     result = validate_course_reviews_request(
         course_id=course_id,
         course_query=CourseReviewsQuery(),
@@ -93,6 +96,19 @@ def test_validate_course_reviews_request_returns_404_for_invalid_course_id(
     assert isinstance(result, JSONResponse)
     assert result.status_code == 404
     assert b"DESIGN_RESOURCE_NOT_FOUND" in result.body
+
+
+@pytest.mark.parametrize("course_id", [str(-(2**63)), str(2**63 - 1)])
+def test_validate_course_reviews_request_accepts_signed_int64_boundaries(
+    course_id: str,
+) -> None:
+    result = validate_course_reviews_request(
+        course_id=course_id,
+        course_query=CourseReviewsQuery(),
+        trace_id="trace-id",
+    )
+
+    assert result == (int(course_id), 1, None)
 
 
 def test_course_reviews_returns_404_when_course_is_not_published(
@@ -180,23 +196,27 @@ def test_course_reviews_maps_review_and_replies(
     payload = response.json()
     item = payload["data"]["items"][0]
 
-    assert item["discussion_id"] == 101
+    assert item["id"] == 101
+    assert item["course_id"] == 5
     assert item["title"] is None
     assert item["content"] == "Review content"
-    assert item["user"] == {
+    assert item["author"] == {
         "id": 10,
         "full_name": "Nguyen Van A",
         "avatar_url": None,
     }
+    assert item["status"] == "ACTIVE"
+    assert item["created_at"] == "2026-09-15T10:00:00"
     assert item["comments"] == [
         {
-            "discussion_id": 201,
-            "user": {
+            "id": 201,
+            "discussion_id": 101,
+            "content": "Reply content",
+            "author": {
                 "id": 20,
                 "full_name": "Nguyen Van B",
                 "avatar_url": "avatar-b.png",
             },
-            "content": "Reply content",
             "created_at": "2026-09-15T11:00:00",
         }
     ]
@@ -395,11 +415,16 @@ def test_course_reviews_mapping_error_returns_500(
     assert session.rollback_count == 1
 
 
+@pytest.mark.parametrize(
+    "course_id",
+    ["not-an-int", str(-(2**63) - 1), str(2**63)],
+)
 def test_course_reviews_http_returns_404_for_invalid_course_id(
     client: TestClient,
+    course_id: str,
 ) -> None:
-    """Kiểm tra endpoint HTTP giữ contract 404 khi course_id không parse được."""
-    response = client.get("/api/v1/courses/not-an-int/reviews")
+    """Kiểm tra endpoint HTTP trả 404 cho malformed/out-of-range course_id."""
+    response = client.get(f"/api/v1/courses/{course_id}/reviews")
 
     assert response.status_code == 404
     assert response.json()["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"

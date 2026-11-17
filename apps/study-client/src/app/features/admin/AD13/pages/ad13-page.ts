@@ -28,7 +28,7 @@ export class AD13Page {
     return [
       { label: 'Tiêu đề bài học', value: values.get('Tiêu đề') ?? '—' },
       { label: 'Mã định danh bài học', value: values.get('Mã bài học') ?? '—' },
-      { label: 'Khóa học trực thuộc', value: values.get('Mã khóa học') ?? '—' },
+      { label: 'ID khóa học', value: values.get('ID khóa học') ?? '—' },
       { label: 'Thứ tự trong chương', value: values.get('Thứ tự hiển thị') ?? '—' },
       { label: 'Trạng thái phát hành', value: values.get('Trạng thái') ?? '—' },
       { label: 'URL video (metadata)', value: values.get('URL video') ?? '—' },

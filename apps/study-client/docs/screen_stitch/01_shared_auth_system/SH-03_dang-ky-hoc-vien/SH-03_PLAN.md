@@ -1,18 +1,18 @@
 # Kế hoạch màn hình — SH-03 Đăng ký học viên
 
-> **Trạng thái kế hoạch:** PLAN REVIEWED / RE-AUDIT COMPLETE · **Ngày rà soát:** 2026-11-07 · **Phạm vi phiên:** chỉ SH-03 · **Đợt:** W0 · **Ưu tiên:** P0.
-> **Kết quả:** DD READY; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. Việc gửi email thật, trạng thái kích hoạt tài khoản và Study Web runtime vẫn là phụ thuộc ngoài màn hình.
+> **Trạng thái kế hoạch:** PLAN REVIEWED / IMPLEMENTATION UPDATED · **Ngày cập nhật:** 2026-11-17 · **Phạm vi:** SH-03 · **Ưu tiên:** P0.
+> **Kết quả hiện tại:** DD READY; Angular presentation, route `/register` và API #01 caller đã wire; local direct-route render desktop/mobile verified; SH-04 handoff/account lifecycle BLOCKED; live API/deployment NOT VERIFIED. Việc gửi email thật, trạng thái kích hoạt tài khoản và transport SH-03→SH-04 vẫn là phụ thuộc.
 
 ## 1. Mục tiêu và nguồn căn cứ
 
 - **Mục tiêu:** cho Khách tạo tài khoản học viên bằng họ tên, email và mật khẩu, rồi chuyển sang SH-04 theo luồng F01.
-- **Định tuyến trong danh mục:** `/register` là đường dẫn đề xuất, chưa được xác nhận là đường dẫn đang hoạt động.
+- **Định tuyến:** `/register` được đăng ký trong `apps/study-client/src/app/features/shared/shared.route.ts`; app-route unit test pass và Chrome headless render direct route local ở desktop/mobile; deployment chưa xác minh.
 - **Tiêu chí liên quan:** AC-01. Danh mục yêu cầu POST API #01; sau thành công, SH-04 mới gửi yêu cầu API #02. Email/OTP/CAPTCHA không được tự thêm vào biểu mẫu.
 - **Mã nguồn API hiện tại:** `POST /api/v1/auth/register` được nối trong Study Server. API #01 kiểm tra dữ liệu, tìm email trùng, băm mật khẩu Argon2id, chèn tài khoản vai trò `STUDENT`, commit và trả hồ sơ công khai với HTTP 201. Đây là bằng chứng mã nguồn/mã kiểm thử cục bộ, không phải xác nhận triển khai hoặc lược đồ cơ sở dữ liệu đang chạy.
 - **Phản hồi/điều hướng đích:** Hợp đồng API #01 và mã nguồn đều trả HTTP 201 với `data.id`/`data.email`; luồng F01 chuyển hai giá trị này sang SH-04, nơi API #02 mới được gọi. SH-03 không gọi #02.
 - **Ranh giới hiện tại/đích:** Current #01 chỉ ghi `verification_dispatch_pending` sau commit, không gọi API #02. API #02 hiện trả 202 khi provider chấp nhận; provider mặc định là stub không gửi thư hoặc tạo token. AC-01 vẽ provider gửi và ghi log/retry, nên đây là `DISCREPANCY`, không phải behavior đang chạy.
 - **Trạng thái tài khoản:** `INSERT_USER` không ghi cột `status`. Tệp DDL đã commit có default `ACTIVE`; API #03 yêu cầu `ACTIVE` khi đăng nhập. Live schema, migration state và yêu cầu chờ xác minh email chưa được xác nhận.
-- **Mã nguồn giao diện hiện tại:** `apps/study-client/src` và trang bộ định tuyến Study Web không có trong bản làm việc. `code.html` là bản mẫu: biểu mẫu có `onsubmit` chặn gửi mặc định; không có lời gọi API. Không mô tả giao diện hoặc đường dẫn như đã được triển khai.
+- **Mã nguồn giao diện hiện tại:** Angular page `features/shared/SH03/pages/sh03-page.*` dùng `SH03RegistrationService` → `StudyApiService`/API_001 cho `POST /api/v1/auth/register`; link tới SH-02 vẫn là route nội bộ. Form trim tên/email, kiểm tra email trên giá trị đã trim, giữ nguyên password, khóa gửi lặp và ánh xạ 409/422/500/network. Chỉ envelope success/code với `data.id` nguyên dương và `data.email` không rỗng mới được coi là tạo thành công; response shape sai giữ form/password. API #02 và SH-04 transition chưa được nối. `code.html` vẫn chỉ là mẫu tĩnh. Live API/deployment chưa xác minh.
 - **Tài liệu thiết kế:** dùng ảnh và HTML SH-03 để ghi nhận bố cục hiện hữu; dùng `apps/study-client/docs/screen_stitch/90_reference/study2work-lms-design-system/DESIGN.md` làm tham khảo thị giác; tuân theo `.agents/web-study/design.md` làm đích chuẩn Study Web. Không thêm phông chữ hoặc tài nguyên CDN từ xa theo HTML mẫu.
 
 ## 2. Trạng thái nguồn và điểm sai khác
@@ -56,10 +56,10 @@ JSON yêu cầu chỉ có `{ "email": ..., "password": ..., "full_name": ... }`.
 
 ## 5. Chuỗi sự kiện dự kiến
 
-1. `SH03-EV-01`: Khách mở `/register` đề xuất; public route và form idle là thiết kế, router/client hiện không có.
+1. `SH03-EV-01`: Khách mở route công khai `/register`; source có route/page và app-route unit test pass, nhưng browser runtime chưa xác minh.
 2. `SH03-EV-02`: Khách nhập họ tên/email/mật khẩu. Giữ state cục bộ; không lưu mật khẩu vào URL, log hoặc dữ liệu điều hướng.
 3. `SH03-EV-03`: Submit #6; dựng `{email,password,full_name}`, map `fullname` → `full_name`, không gửi Bearer, gửi `POST /api/v1/auth/register` đúng một lần.
-4. `SH03-EV-04`: HTTP 201 `DESIGN_RESOURCE_CREATED`; chuyển `data.id`/`data.email` tạm sang SH-04 theo F01. API #02 không được gọi trong SH-03.
+4. `SH03-EV-04`: Expected: HTTP 201 `DESIGN_RESOURCE_CREATED` chuyển `data.id`/`data.email` tạm sang SH-04 theo F01. Current source chỉ hiện trạng thái tài khoản đã tạo tại SH-03; API #02 không được gọi trong SH-03.
 5. `SH03-EV-05`: HTTP 409 `DESIGN_STATE_CONFLICT`; giữ form, gắn lỗi email, cho sửa hoặc chuyển SH-02.
 6. `SH03-EV-06`: HTTP 422 `DESIGN_VALIDATION_ERROR`; map `meta.fieldErrors` vào đúng trường, giữ input an toàn, không áp mật khẩu tối thiểu 8 ký tự khi server chưa có rule.
 7. `SH03-EV-07`: HTTP 500, timeout/lỗi mạng hoặc response thành công thiếu shape; thông báo an toàn, không retry POST mù vì server có thể đã commit account.
@@ -71,18 +71,19 @@ JSON yêu cầu chỉ có `{ "email": ..., "password": ..., "full_name": ... }`.
 
 | Trạng thái giao diện | Vào trạng thái khi | Nội dung / thao tác |
 |---|---|---|
-| Ban đầu | Mở trang | Ba trường rỗng; nút khả dụng. |
+| Ban đầu theo thiết kế | Mở trang | Ba trường rỗng; nút khả dụng trong thiết kế. |
+| Hiện tại trong source | Mở `/register` | Ba trường rỗng và nút khả dụng; không phát request lúc tải trang. |
 | Đang kiểm tra | Khách gửi biểu mẫu | Kiểm tra bắt buộc, định dạng email, họ tên sau khi cắt khoảng trắng còn 1–150 ký tự; không thêm quy tắc mật khẩu chưa có hợp đồng. |
 | Đang gửi | Dữ liệu hợp lệ và yêu cầu đã bắt đầu | Nút báo đang xử lý và không nhận gửi lặp. |
 | Lỗi dữ liệu `422` | API từ chối dữ liệu | Lỗi chung và lỗi theo trường từ `meta.fieldErrors`; đưa tiêu điểm tới trường lỗi đầu tiên nếu có thể. |
 | Email đã dùng `409` | `DESIGN_STATE_CONFLICT` | Hiển thị cảnh báo cạnh email, giữ các trường đã nhập, cho phép sửa hoặc sang SH-02. |
 | Lỗi máy chủ `500` | `DESIGN_INTERNAL_ERROR` | Thông báo chung có thể thử lại sau; không lộ chi tiết cơ sở dữ liệu/bộ gửi thư. |
 | Kết quả mạng chưa rõ | Không nhận được phản hồi | Giữ dữ liệu, cảnh báo kết quả chưa xác định; yêu cầu người dùng kiểm tra trước khi gửi lại. |
-| Tạo thành công `201` | `DESIGN_RESOURCE_CREATED` | Chuyển sang SH-04 với ID/email trong trạng thái điều hướng tạm; không hiển thị trạng thái email đã xác minh. |
+| Tạo thành công `201` | `DESIGN_RESOURCE_CREATED` | Current source hiển thị tài khoản đã tạo tại SH-03 và xóa password khỏi form; handoff sang SH-04 chưa được nối. Không hiển thị trạng thái email đã xác minh. |
 
 ## 7. Điều kiện chặn và câu hỏi cần quyết định
 
-1. Chưa có bộ định tuyến Study Web, thành phần giao diện hoặc lớp gọi API; chỉ được hoàn thiện DD mục tiêu, không khẳng định giao diện đang hoạt động.
+1. API #01 submit đã wire. SH-04 transition còn blocked tới khi quyết định transport `data.id`/`data.email` và account lifecycle được chốt.
 2. Cần giải quyết chênh lệch giới hạn mật khẩu 8 ký tự trong HTML và validator API trước khi dùng câu trợ giúp lỗi.
 3. Cần duyệt kênh truyền `data.id`/`data.email` sang SH-04 sao cho không lộ dữ liệu trong URL và không phụ thuộc vào lưu trữ bền vững chưa được duyệt.
 4. Cần xác nhận vòng đời tài khoản: SQL API #01 không đặt `status`; tệp DDL `DB.sql` đặt mặc định `ACTIVE`; API #02 không xác minh email. Không được coi email là điều kiện kích hoạt hiện hữu.
@@ -96,7 +97,7 @@ JSON yêu cầu chỉ có `{ "email": ..., "password": ..., "full_name": ... }`.
 - DD nêu riêng HTTP 201/409/422/500 của API #01 và trạng thái mã nguồn/giao diện đích; không tuyên bố email được gửi hoặc đã xác minh.
 - Các liên kết tương đối mở đúng nguồn và không có phần tử giao diện được mô tả là tương tác nếu HTML không có bằng chứng.
 - Bảy marker map tới bảy Element ID ổn định `SH03-EL-01..07`; tám Event ID `SH03-EV-01..08` đều có trigger/type, precondition, input, xử lý và output/API mapping.
-- Giữ riêng `DD READY`, `IMPLEMENTATION BLOCKED`, `RUNTIME NOT VERIFIED`; không chạy application tests trong phiên tài liệu.
+- Giữ riêng DD READY, presentation/route source, submit/API blocker, route unit-test evidence và browser runtime; không suy luận deployment từ build/test.
 
 ## 9. Kết quả rà soát tĩnh
 
@@ -109,10 +110,25 @@ JSON yêu cầu chỉ có `{ "email": ..., "password": ..., "full_name": ... }`.
 ## 10. Kế hoạch và kết quả re-audit ngày 2026-11-07
 
 - **Phạm vi:** chỉ SH-03. Giữ nguyên `screen.png` và `code.html`; không sửa API, HTML mẫu, API #01/#02 contract hoặc màn hình SH-04.
-- **Bằng chứng hiện tại đã đọc lại:** inventory SH-03, AC-01, API catalog #01/#02, API DD/open questions, route/module/provider/test source, DB artifact và Study Web design/context. `apps/study-client/src`/router/package manifest vắng mặt; `.agents/web-work/study/AGENTS.md`/`INDEX.md` hiện tồn tại và được manifest đăng ký — dòng DD ghi context `NOT_FOUND` là stale.
+- **Bằng chứng đã đọc tại ngày 2026-11-07:** inventory SH-03, AC-01, API catalog #01/#02, API DD/open questions, route/module/provider/test source, DB artifact và Study Web design/context. `apps/study-client/src`/router/package manifest khi đó vắng mặt; đây là historical state, đã được thay thế bởi Angular source hiện tại.
 - **Ranh giới cần giữ:** #01 POST tạo user trả 201 theo source, insert không đặt `status`; #02 chỉ ở SH-04 theo F01 và default provider là stub. AC-01 đặt dispatch sau insert trong cùng diagram, còn F01 và source hiện tại không có #01→#02 call; giữ `DISCREPANCY`. Không áp ngưỡng mật khẩu 8 từ HTML vào API.
 - **Kiểm tra artifact:** xác minh lại hai hash nguồn, kích thước PNG, marker JSON ↔ element row và tọa độ trong bounds, đọc trực quan ảnh chú thích, kiểm tra event coverage và local links.
 - **Kết quả static audit trước DD edit:** `screen.png` 1280×1056 và `screen_annotated.png` 2560×2112; cả hai hash nguồn trong plan khớp hiện tại. Bảy marker JSON khớp thứ tự 7 element rows, tọa độ đều trong bounds; 8 event đều có trigger, precondition, input, processing, output và bước tuần tự; chưa có crosswalk A–F hay nhãn kết quả/ngoại lệ riêng từng event. Tất cả liên kết Markdown cục bộ resolve; cả hai ảnh đã được xem trực tiếp.
 - **Kế hoạch DD (đã ghi trước khi sửa DD):** sửa nhận định context lỗi thời; thêm crosswalk A–F; thêm kết quả/ngoại lệ cho 8 event; nêu điều kiện trước/sau. Không biến cơ chế truyền `id/email`, activation status, email delivery hoặc password policy chưa duyệt thành hành vi xác nhận.
-- **Kết quả DD:** nhận định context đã sửa; crosswalk A–F và 8 event kết quả/ngoại lệ đã thêm; event thành công hiện chỉ cam kết mapping `data.id`/`data.email` và route đích, còn transport tạm được giữ làm blocker cross-screen. DD vẫn `DD READY`; implementation còn bị chặn bởi route/source, handoff, email provider và account activation/schema.
-- **Verification gate:** scoped `git diff --check` và authored-text whitespace/link/marker/event audit; không chạy application tests hoặc runtime. Global tracker/worklog cập nhật riêng ba trạng thái DD, implementation và runtime.
+- **Kết quả DD tại ngày 2026-11-07:** nhận định context đã sửa; crosswalk A–F và 8 event kết quả/ngoại lệ đã thêm; event thành công chỉ cam kết mapping `data.id`/`data.email` và route đích, còn transport tạm là blocker cross-screen. Implementation khi đó bị chặn bởi route/source, handoff, email provider và account activation/schema.
+- **Verification gate tại ngày 2026-11-07:** scoped `git diff --check` và authored-text whitespace/link/marker/event audit; không chạy application tests hoặc runtime.
+
+## 11. Implementation và verification ngày 2026-11-16
+
+- **Nguồn vừa xác minh:** SH-03 DD 8 phần, ảnh DD clean/numbered và ảnh nguồn, Stitch HTML/plan/marker, Study Web workflow/rules/design, Shared routes và SH-02 source; API #01 DD/open questions, route/model/validator/query/view/test source.
+- **Đã làm:** SH-03 form gọi API #01 bằng đúng `{email, password, full_name}`; trim email/tên và giữ nguyên password; pending lock, 409/422 mapping, thông báo 500/network an toàn, không retry tự động. 201 hiển thị account-created state, xóa password và không gọi API #02/không chuyển SH-04.
+- **Focused verification:** Angular SH-03 + root route: 2 files, 14 tests passed. API #01: 16 tests passed bằng fake DB sessions; một Starlette/httpx deprecation warning. Không có live DB hoặc UI-to-server registration request.
+- **Build/browser:** `npm run build` passed với ba CSS budget warnings ở `student-static-screen.css`, `student-layout.css`, `st22-page.css`. (Bằng chứng ở §11 phản ánh lần chạy 2026-11-16.)
+- **Giới hạn còn mở tại lần ghi §11:** transport `data.id`/`data.email`, SH-04/API #02 trigger, email delivery, account activation/live schema và browser runtime chưa được xác nhận.
+
+## 12. Implementation và verification ngày 2026-11-17
+
+- **Đã làm:** client kiểm tra định dạng email sau trim bằng Angular validator; service giữ HTTP status và trả body dưới dạng `ApiEnvelope<unknown>`; page chỉ vào trạng thái tạo thành công khi HTTP 201, `success=true`, `DESIGN_RESOURCE_CREATED`, `data.id` nguyên dương và `data.email` không rỗng. Sai status hoặc response 201 sai shape giữ form/password, hiển thị kết quả chưa xác định, không điều hướng hoặc gọi API #02.
+- **Focused verification:** Angular SH-03 + root route + shared API client: 3 files, 27 tests passed; API #01: 16 tests passed bằng fake DB sessions (một cảnh báo Starlette/httpx deprecation). Không có live DB hoặc UI-to-server registration request.
+- **Build/browser:** production build pass với ba Student CSS budget warnings có sẵn. Dev route `/register` trả 200 và Chrome headless render sau hydration ở 1365×900 và 390×844; không submit form. Live API/deployment chưa xác minh.
+- **Giới hạn còn mở:** SH-04/API #02 trigger và transport `id/email`, email delivery, activation/live schema, UI-to-live-server và deployed runtime vẫn chưa được xác nhận.

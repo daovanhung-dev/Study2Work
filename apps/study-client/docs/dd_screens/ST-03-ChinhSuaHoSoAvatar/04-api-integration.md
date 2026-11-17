@@ -43,10 +43,10 @@ Success response hiện dùng các khóa success, businessCode, message, data, m
 - [AC-11 API index](../../../../study-server/docs/diagrams/AC_UNICA/00_AC_API_INDEX.md)
 - [AC student flow diagram](../../../../study-server/docs/diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio)
 - [Study API router](../../../../study-server/app/api/v1.py)
-- [API #04 models/view/query](../../../../study-server/app/modules/guest/api_04_users_me/models.py)
-- [API #13 request/validation/view](../../../../study-server/app/modules/guest/api_13_users_me_avatar/models.py)
+- [API #04 models/view/query](../../../../study-server/app/modules/student/api_04_users_me/models.py)
+- [API #13 request/validation/view](../../../../study-server/app/modules/student/api_13_users_me_avatar/models.py)
 - [API #13 storage provider](../../../../study-server/app/service/object_storage/avatar.py)
-- [API #14 models/validation/view/query](../../../../study-server/app/modules/guest/api_14_users_me_profile/models.py)
+- [API #14 models/validation/view/query](../../../../study-server/app/modules/student/api_14_users_me_profile/models.py)
 - [Shared auth guard](../../../../study-server/app/utils/auth.py)
 - [Shared response envelope](../../../../study-server/app/core/responses.py)
 - [Checked-in Study DDL](../../../../../infra/postgres/study-server/DB.sql)
@@ -58,3 +58,7 @@ Success response hiện dùng các khóa success, businessCode, message, data, m
 
 ## 4. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/03_student/ST-03_chinh-sua-ho-so-avatar/ST-03.md)
+
+## 5. Current Study Web source
+
+The `/student/profile/edit` route assigns API IDs #04/#13/#14 as trace metadata. It renders only the G-03 gate; no API caller exists because Student session/token support and the profile/avatar contract decisions remain unresolved. Do not count metadata as a request or an accepted API integration.

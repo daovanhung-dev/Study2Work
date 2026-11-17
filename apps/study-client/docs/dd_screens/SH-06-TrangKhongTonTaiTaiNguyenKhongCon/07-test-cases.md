@@ -34,9 +34,9 @@
 - [x] 10 event có đầu vào, điều kiện, thứ tự xử lý, API/hành động, output/ngoại lệ.
 - [ ] Product/UX đã chốt disposition recommendation/contact/footer/legal surfaces và từng destination. Đây là lý do DD vẫn `BLOCKED`.
 - [ ] AC-05/API #08 `404/403` discrepancy đã được owner giải quyết.
-- [ ] Study Web router/source tồn tại và route paths đã được xác nhận trong source; implementation vẫn `BLOCKED`.
+- [x] Study Web Angular app/router source exists. [x] Explicit `/not-found` and both destination routes are registered in source. [ ] Wildcard/static-host fallback and browser runtime remain unverified.
 - [x] Local links, marker map (22/22), image dimensions (1600×1425) và source hashes đã được kiểm tra tĩnh; `git diff --check` đạt.
-- [ ] Study Web implementation/runtime verification chưa đạt vì thiếu client source/router và dependency decisions.
+- [ ] Full Study Web implementation/runtime verification chưa đạt: GS-03 resource-404 handoff, product surface decisions and AC-05 status discrepancy remain unresolved; browser/runtime was not checked for this partial screen.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 
@@ -45,8 +45,9 @@
 1. `BLOCKER: SH06_PRODUCTION_SURFACE_UNDECIDED` — recommendation cards, help/contact strip, footer destinations và copyright/legal copy hiện có trong prototype nhưng chưa có content/route contract. Cần quyết định giữ/ẩn/bỏ từng surface và xác nhận dữ liệu/đích; không biến `href="#"` hoặc text mẫu thành production behavior.
 2. `BLOCKER: AC05_NOT_FOUND_STATUS_CONFLICT` — AC-05 vẽ `404/403` cho nhánh course không tồn tại/PUBLISHED; API catalog và handler #08 chỉ có 404 cho invalid/missing/unpublished, 500 cho internal failure. Cần chỉnh AC hoặc xác nhận ý nghĩa 403 trước khi chốt luồng giữa SH-06 và SH-05.
 3. `DISCREPANCY: API_08_STATUS_LABELS_VS_SOURCE` — dòng SH-06 trong screen inventory ghi BE `D`, API index ghi #008 `R`, root API contract là approved design nhưng chưa runtime-verified và API DD #08 vẫn Draft; route/module/test source hiện tồn tại. Deployment/live DB chưa verified. #08 success trả ApiEnvelope có `data: Page<Course>` singleton; không nhầm `Page<Course>` là toàn response.
-4. `IMPLEMENTATION_BLOCKER: STUDY_WEB_ROUTER_NOT_FOUND` — không có `src/`/package manifest; dist bundle cũ không chứng minh `/not-found` hoặc route actions.
-5. `DESIGN_SYSTEM_DRIFT` — HTML dùng remote Google Fonts/Tailwind CDN và max-width 1440px; Study guide chỉ định system/Inter local, content width khoảng 1120px, control 44px+, responsive reflow. Cần xác nhận có hiệu lực với prototype này hay không.
+4. `PARTIAL IMPLEMENTATION` — Angular wildcard and GS-03 #08 resource-404 handoff are source-wired and covered by focused tests; static-host fallback and production HTTP status remain unverified.
+5. `IMPLEMENTED SOURCE-WIRED` — GS-03 API #08 detail 404 navigates to SH-06 without forwarding course ID or error body; focused route/GS-03 tests pass. Live API/deployment remains unverified.
+6. `DESIGN_SYSTEM_DRIFT` — HTML dùng remote Google Fonts/Tailwind CDN và max-width 1440px; Study guide chỉ định system/Inter local, content width khoảng 1120px, control 44px+, responsive reflow. Cần xác nhận có hiệu lực với prototype này hay không.
 
 Kế hoạch sau source review: cập nhật SH-06 DD với expected/current tách biệt, 22 element, 10 event, mapping #08 có trace, và blockers không suy đoán. Không gọi màn hình `DD READY` khi các surface nhìn thấy chưa có quyết định triển khai hoặc AC-05 còn mâu thuẫn. Kiểm tra tĩnh marker→element, link, ảnh và hash sau khi cập nhật; không chạy tests/runtime trong phiên tài liệu.
 

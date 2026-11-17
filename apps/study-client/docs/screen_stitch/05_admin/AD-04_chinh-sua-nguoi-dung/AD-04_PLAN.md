@@ -1,5 +1,7 @@
 # AD-04 — Kế hoạch Detailed Design
 
+> **Lưu ý lịch sử:** Các phần 1–8 giữ nguyên kết quả của audit gốc; các kết luận về route/source phản ánh snapshot khi viết. Re-audit source hiện tại được bổ sung tại §9; dùng §9 cho trạng thái hiện hành.
+
 > **Screen ID:** AD-04 · **Tên:** Chỉnh sửa người dùng · **Đợt/ưu tiên:** W4 / P1<br>
 > **Route đề xuất:** `/admin/users/:userId/edit` · **AC:** AC-31 · **API:** #69, #70<br>
 > **Trạng thái trước phiên:** screen `D`; API #70 source-backed locally, body contract remains `DERIVED`/Draft.
@@ -13,7 +15,7 @@
 - Manifest/skill registry nói Web UI-only DD chưa có skill canonical; `createDD-markdown` dành cho Web/API DD nên không nạp skill đó cho screen UI-only.
 - Không chạy application tests/runtime. Đọc test source và thực hiện kiểm tra tĩnh tài liệu/asset sau khi hoàn tất.
 
-## 2. Bằng chứng đã rà soát
+## 2. Bằng chứng đã rà soát trong audit gốc
 
 | Nhóm | Nguồn | Kết luận cho AD-04 |
 |---|---|---|
@@ -29,7 +31,7 @@
 | Visual source | `screen.png`, `code.html` | Locked static form. Name/email/role/status/admin notes and Save are disabled; top back and Cancel use inconsistent paths; “Gửi yêu cầu” and API-doc buttons have no handlers. Hard-coded record ID `USR-9281-VN`, lecturer/locked values, sync/RBAC/audit/legal/compliance assertions do not map to #69/#70. |
 | Web boundary/design | Study Web subcontext and `.agents/web-study/design.md`; current app root | Study Web remains `UNWIRED`, with no editable source/package/router/API client. Screenshot typography/palette/density differs from intended Study Web guide. |
 
-## 3. Expected behavior and current behavior
+## 3. Expected behavior and current behavior in the original audit snapshot
 
 ### Expected behavior
 
@@ -148,6 +150,15 @@ Coordinates use original `screen.png` at 1280×1271. IDs are ordered top-to-bott
 7. [x] Verify source hashes unchanged, annotation dimensions 2560×2542, marker IDs/coordinates/order and 1:1 DD rows, JSON/SVG/local links, 83 inventory/folder match, core bundle count and scoped whitespace.
 8. [ ] Do not run app tests/runtime; mark test source inspected-not-run and runtime not verified.
 
-## 8. Completion decision
+## 8. Completion decision in the original audit snapshot
 
 Expected result: API #70 screen inventory source status changes `D→R` because current route/module/model/query/validation/test source is present; AD-04 DD remains blocked until body/schema/role/PII/navigation/gate decisions are approved; implementation remains blocked by those decisions and Study Web `UNWIRED`; runtime remains `NOT VERIFIED`. This session handles AD-04 only.
+
+## 9. Current-source re-audit (2026-11-16)
+
+- **Route/page/GET source:** Angular Admin router declares `/admin/users/:userId/edit` and renders `AD04Page`. The page reads `userId` from `ActivatedRoute`, calls `AD04ApiService.getUser`, and that service calls registered API #69 through `AdminApiService`.
+- **Current UI behavior:** `AD04Page` maps GET results to `loading`, `loaded`, and `error`. The template displays the returned profile in disabled controls, keeps Save disabled, and has router links to AD-03 and AD-02. It does not invoke PUT #70. The prototype's `USR-*` identifier and `/details` path remain separate static reference evidence.
+- **API #70 boundary:** Server route/model/validator/query/view and focused test source exist locally. Catalog/AC do not specify a request body; API DD remains Draft. The strict four-key full-replacement body and role allowlist are `DERIVED`, so there is no approved client payload or #70 caller. Typed request-body validation versus view-level auth order remains uncharacterized for malformed unauthenticated requests.
+- **Acceptance blockers:** User-management permission mapping, #70 body/role rules, PII visibility, live schema/deployment, audit/token lifecycle, ID policy, dirty navigation, support/gate copy, and visual review remain unresolved. Keep `DD BLOCKED` and the write flow blocked.
+- **Test/runtime evidence:** `ad04-page.spec.ts` exists and was inspected, not run. It covers exact large route-ID preservation, GET #69 with auth, read-only controls/disabled Save/no PUT, 404 state, and missing-ID handling using Angular HTTP test fixtures. This is source test evidence, not runtime/deployment/live-server evidence. Server tests use local/fake DB evidence and were not run for this documentation correction. Runtime/deployment/host fallback remain `NOT VERIFIED`.
+- **Current status:** `ROUTE/PAGE/GET #69 CALLER SOURCE PRESENT`; `SAVE/PUT #70 FLOW BLOCKED`; `ACCEPTANCE BLOCKED`; `RUNTIME NOT VERIFIED`. This supersedes the original snapshot's `Study Web UNWIRED` claim without rewriting that history.

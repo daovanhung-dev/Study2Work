@@ -31,7 +31,7 @@
   5. Map returned profile ID and status into #16/#17; do not infer role/status aliases or permission result. Set the page to ready-read-only until action policies are approved.
   6. On 401/403/404/500 or network/invalid-envelope response, map to unauthenticated/forbidden/not-found/error; do not show a fake profile or activate Confirm.
 - **Output / cache / navigation:** read-only target profile and source-backed status; cache key/invalidation policy follows shared client contract and remains unwired. No mutation or automatic navigation is defined.
-- **Current prototype:** no route param, selected user, request or handler.
+- **Current source:** Angular route supplies `userId`; the page calls GET #69 through AD05ApiService/AdminApiService and exposes `loading/loaded/error`. No #71/#72 call is made. The HTTP-fixture spec covers the GET path but was inspected, not run.
 
 ### EV-02 — Chọn lock/unlock/delete tab
 
@@ -88,7 +88,7 @@
   2. Preserve only route ID/query state approved for that target; do not add PII to URL.
   3. Navigate without calling #69/#71/#72 as a side effect of the link itself. Any list/detail refresh follows the explicit success/handoff policy.
 - **Output:** return to approved screen and retain context per route contract.
-- **Current prototype:** both hrefs are `/admin/users`, and no Study Web router is present; “Return safe” does not implement safety, selection retention or dirty-state confirmation.
+- **Current prototype:** both hrefs are `/admin/users`. The Angular app has the AD-05 route and page links to AD-03 and the user list, but AD-02/AD-03 handoff, selected-user retention and dirty-state confirmation are not established by those links.
 
 ### EV-06 — Reason, policy, shell and footer controls
 

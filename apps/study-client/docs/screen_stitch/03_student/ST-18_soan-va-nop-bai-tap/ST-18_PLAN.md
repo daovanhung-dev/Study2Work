@@ -97,7 +97,7 @@
 - [API catalog](../../../../../../docs/lists/list_api.md)
 - [AC-17 diagram](../../../../../../apps/study-server/docs/diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio)
 - [API #33 open questions](../../../../../../apps/study-server/docs/dd/33_assignments_detail/OPEN_QUESTIONS.md)
-- [API #34 route](../../../../../../apps/study-server/app/api/v1.py), [current view](../../../../../../apps/study-server/app/modules/student/api_34_uploads/view.py), [storage provider](../../../../../../apps/study-server/app/service/object_storage/upload.py), [test source](../../../../../../apps/study-server/tests/modules/student/api_34_uploads/test_uploads.py), [API #34 DD](../../../../../../apps/study-server/docs/dd/34_uploads/02_Overview.md)
+- [API #34 route](../../../../../../apps/study-server/app/api/v1.py), [current view](../../../../../../apps/study-server/app/modules/shared/api_34_uploads/view.py), [storage provider](../../../../../../apps/study-server/app/service/object_storage/upload.py), [test source](../../../../../../apps/study-server/tests/modules/shared/api_34_uploads/test_uploads.py), [API #34 DD](../../../../../../apps/study-server/docs/dd/34_uploads/02_Overview.md)
 - [API #35 open questions](../../../../../../apps/study-server/docs/dd/35_assignments_submissions/OPEN_QUESTIONS.md)
 - [Candidate DDL](../../../../../../infra/postgres/study-server/DB.sql), [Study Server route inventory](../../../../../../.agents/server-study/apis/declared-routes.md)
 - [Study Web design target](../../../../../../.agents/web-study/design.md)

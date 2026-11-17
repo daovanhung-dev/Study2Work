@@ -1,5 +1,7 @@
 # GS-03 — UI Elements
 
+> Bảng element mô tả prototype `code.html`; current Angular source enables the curriculum tab and mounts the GS04 panel. Prototype-only behavior below is not runtime evidence.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.
@@ -12,7 +14,7 @@
 | #2 | `GS-03-EL-002` | `GS03-EL-02` | Header login and register actions |
 | #3 | `GS-03-EL-003` | `GS03-EL-03` | Breadcrumb navigation |
 | #4 | `GS-03-EL-004` | `GS03-EL-04` | Course detail page heading |
-| #5 | `GS-03-EL-005` | `GS03-EL-05` | Overview, curriculum and reviews tab group; latter tabs disabled |
+| #5 | `GS-03-EL-005` | `GS03-EL-05` | Prototype `code.html` disables curriculum/reviews; current GS03 enables curriculum and keeps reviews disabled |
 | #6 | `GS-03-EL-006` | `GS03-EL-06` | Unavailable-state book icon |
 | #7 | `GS-03-EL-007` | `GS03-EL-07` | Unavailable-state heading and explanatory text |
 | #8 | `GS-03-EL-008` | `GS03-EL-08` | Return to course list link |

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from app.core.responses import ErrorDetail, error_response
-from app.modules.guest._shared.course_catalog.constants import (
+from app.modules.shared.course_catalog.constants import (
     MAX_SIZE,
     SORT_DIRECTIONS,
     SORT_FIELDS,

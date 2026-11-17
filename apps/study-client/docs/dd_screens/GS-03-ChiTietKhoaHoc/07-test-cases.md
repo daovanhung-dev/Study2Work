@@ -34,7 +34,8 @@
 - [x] Event có input, trình tự, API/code, output và ngoại lệ; hành vi không có source được đánh dấu expected/blocked.
 - [x] #08/#09 current source và #10 declared-only được phân biệt; AC/F02 order conflict, 404/403 conflict và G-01 được ghi rõ.
 - [ ] Loaded detail, tab active states, enrollment CTA, route/auth handoff và API #10 schema/orchestration được Product/BE xác nhận; điều kiện bắt buộc để chuyển DD sang READY.
-- [ ] UI runtime/router được nối và xác minh; điều kiện để xem xét `RUNTIME VERIFIED`.
+- [x] GS03 route and `?tab=curriculum` are source-wired and covered by focused Angular tests.
+- [ ] Browser/live API/DB runtime được xác minh; điều kiện để xem xét `RUNTIME VERIFIED`.
 
 ### Decision/blocker owner cần chốt
 
@@ -42,9 +43,9 @@
 |---|---|---|
 | Loaded course detail/CTA design còn thiếu | Vị trí và nội dung course/mentor/price, CTA; loading/error/empty states; price formatting/currency; responsive/focus behavior | Product + Web |
 | AC-05 call order khác F02 | Chọn eager #09/#10 trong AC hay lazy theo tab; cập nhật nguồn chuẩn sau duyệt | Product + Backend |
-| API #10 absent và schema conflict | Nối route/module; xác nhận review fields/title, rating source/aggregate, query key/filter, pagination, visibility, error semantics | Backend + Product |
+| API #10 source exists, contract/schema conflict remains | Reconcile current route/module/response with API DD; confirm review title, rating source/aggregate, query key/filter, pagination, visibility and error semantics | Backend + Product |
 | Guest enrollment handoff / G-01 | Identity semantics cho #15 hoặc thay contract; auth/login flow, idempotency/eligibility và course ID handoff | Product + Auth/Backend |
-| Study Web UNWIRED | Router/runtime/layout và link destinations | Web |
+| Browser/live runtime unverified | Exercise route against deployed API and approved loaded-state UI | Web + Backend + Product |
 
 #### Kế hoạch kiểm chứng từ source PLAN
 
@@ -69,9 +70,15 @@
 
 - Chưa có visual contract cho loaded course detail, mentor/price blocks, curriculum/review states hoặc enrollment CTA.
 - AC-05 và inventory khác nhau về thứ tự eager/lazy API calls.
-- API #10 chưa có runtime source; rating/title thiếu source/schema.
+- API #10 backend source exists, but current runtime deployment is not verified; review title is `null` and rating/aggregate is not sourced by the endpoint.
 - Guest CTA sang ST-04 cần policy identity/authentication/route handoff giải quyết.
-- Study Web/router chưa được nối.
+- Current source wires GS03/#08, GS04/#09 and GS05/#10; enrollment remains unwired. GS03+GS05 focused specs pass 12/12 and the full Study Web suite passes 153/153. Desktop/mobile browser render used a temporary stub; live API/DB/deployment remain unverified.
+
+### Current implementation evidence (T015)
+
+- GS03 focused Angular spec: **6/6 passed**, covering overview default, lazy tab selection, direct-entry order, large string ID, title/order-only output, empty, #09 404/500 and #08 errors.
+- Study Web production build passed. GS03 CSS is within budget; three existing Student CSS budget warnings remain.
+- Study Server #09 fake-session suite: **11 passed** in T014; T015 changed no server code.
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Không chạy app test trong task chuyển đổi tài liệu.

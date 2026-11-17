@@ -7,7 +7,7 @@
 - Input: developer request in chat to implement QA decisions for APIs #21–#25, followed by explicit decisions recorded in the conversation on 2026-11-15.
 - Related QA evidence: `.agents/worklog/2026-11-15/study-api-21-25-qa-verification.md`.
 - Live DB evidence: `.agents/worklog/2026-11-15/study-api-21-25-live-schema-audit.md`; schema `nguyen_anh_duc`; metadata query read-only; duplicate-pair aggregate query returned 0 non-NULL duplicate `(user_id, lesson_id)` pairs.
-- Current source and tests: `apps/study-server/app/modules/guest/api_21_users_me_progress` through `api_25_lessons_progress`, `apps/study-server/app/api/v1.py`, matching test modules, and `apps/study-server/docs/dd/21_*` through `25_*`.
+- Current source and tests: `apps/study-server/app/modules/student/api_21_users_me_progress` through `api_25_lessons_progress`, `apps/study-server/app/api/v1.py`, matching test modules, and `apps/study-server/docs/dd/21_*` through `25_*`.
 - Approval: `PENDING`; approver and exact SHA256 to be recorded after review.
 
 ## Scope and exclusions
@@ -94,12 +94,12 @@
 
 ## Impact map
 
-- Direct code: `app/modules/guest/api_21_users_me_progress` contract docs; `api_22_lessons_access/query.py`, `view.py`; `api_23_lessons_start/query.py`, `view.py`; `api_25_lessons_progress/models.py`, `validate.py`, `query.py`; `app/api/v1.py` only if route metadata must reflect the request change.
+- Direct code: `app/modules/student/api_21_users_me_progress` contract docs; `api_22_lessons_access/query.py`, `view.py`; `api_23_lessons_start/query.py`, `view.py`; `api_25_lessons_progress/models.py`, `validate.py`, `query.py`; `app/api/v1.py` only if route metadata must reflect the request change.
 - Schema artifact: new migration under `infra/postgres/study-server/migrations/`, explicitly schema-qualified to `nguyen_anh_duc`.
 - DD: narrowly update the affected response/request/data-mapping/table and open-question sections for #21–25.
 - Consumers: #22/#23/#24/#25 are routed through `app/api/v1.py`; update API #25 tests that send `position`; #23 focused tests must cover insert/conflict path via query contract or fake-session behavior.
 - Context: update stale Study Server route/module/database summaries only where they contradict current behavior.
-- Tests: focused existing modules are under `apps/study-server/tests/modules/guest/api_21_users_me_progress` through `api_25_lessons_progress`; planned cases belong in PLAN. Actual test edits/runs require the approved PLAN and remain pending at SPEC stage.
+- Tests: focused existing modules are under `apps/study-server/tests/modules/student/api_21_users_me_progress` through `api_25_lessons_progress`; planned cases belong in PLAN. Actual test edits/runs require the approved PLAN and remain pending at SPEC stage.
 
 ## Known limitations
 

@@ -24,17 +24,17 @@
 
 - **Kích hoạt / loại:** Router resolve URL hoặc người dùng mở `/not-found`; `Load/Route match`.
 - **Đầu vào:** `pathname`, route matcher result; không lấy ID từ text card/mock. Query/path không đưa nguyên văn vào UI.
-- **Điều kiện:** Router xác định route không tồn tại, hoặc explicit SH-06 route được gọi. Client router hiện chưa có source.
+- **Điều kiện:** User opens `/not-found` directly or the root Angular wildcard resolves an unmatched route to it. The wildcard clears the original path/query; static-host fallback is unverified.
 - **Xử lý:** (1) Nhận kết quả match từ router; (2) không gọi API; (3) chuyển state `ROUTE_404`; (4) render status 404, title/message chung, hai CTA đã có trong inventory; (5) bỏ các params không cần thiết và không echo raw URL.
 - **Kết quả:** SH-06 default state. Trực tiếp truy cập `/not-found` không làm lộ record cụ thể. Hành vi status HTTP của static host/SPA fallback chưa được source xác nhận.
-- **Ngoại lệ:** Nếu router chưa có fallback, lỗi có thể do server/host trả HTML hoặc plain 404; chưa có client source để mô tả cụ thể.
+- **Ngoại lệ:** An unmatched path has no source-backed client fallback; static-host/SPA response behavior is not established by the checked-in source.
 
 ### `SH06-EV-02` — Ánh xạ kết quả API #08 từ GS-03
 
 - **Kích hoạt / loại:** GS-03 nhận HTTP response từ `GET /api/v1/courses/{course_id}`; `Response/Navigation`.
 - **Đầu vào:** `course_id` từ route GS-03; HTTP status; JSON envelope; `businessCode`, `message`, `data`, `meta`, `traceId`; `X-Trace-Id` header.
 - **Điều kiện:** Request thuộc course detail, không phải request gợi ý khóa học từ SH-06. SH-06 không tự fetch #08 khi mount.
-- **Xử lý tuần tự:** (1) Route GS-03 parse ID theo route contract; (2) gọi GET #08; (3) parse response/envelope; (4) 200 + `DESIGN_RESOURCE_RETRIEVED`: validate Page singleton, lấy `items[0]` rồi tiếp tục GS-03; (5) 404 + `DESIGN_RESOURCE_NOT_FOUND`: không render course ID/status/reason, chuyển `RESOURCE_404` và hiển thị SH-06; (6) 403 nếu một guard ngoài #08 trả: giữ forbidden flow (SH-05), không coi là 404; (7) 500/network/timeout/invalid JSON: chuyển service-error handling riêng; (8) không cache 404 như resource truth vô thời hạn; cache TTL chưa có contract.
+- **Xử lý tuần tự:** (1) GS-03 parses the route ID; (2) calls GET #08; (3) parses response/envelope; (4) 200 + `DESIGN_RESOURCE_RETRIEVED`: validates the singleton Page and continues GS-03; (5) 404 + `DESIGN_RESOURCE_NOT_FOUND`: current GS-03 renders inline not-found, while handoff to SH-06 remains a DD target and is not wired; (6) 403 from an external guard remains on the forbidden flow (SH-05), not 404; (7) 500/network/timeout/invalid JSON remains separate service-error handling; (8) do not cache 404 as indefinite resource truth; cache TTL has no contract.
 - **API:** #08 method/path/auth/body/query/status như mục 5.1. API current source có read-only DB query, không side effect.
 - **Kết quả:** 404 state khi current business code/resource branch khớp. Không hiển thị error body thô; trace ID có thể dùng ở logging/support theo client policy nhưng prototype không có element trace display.
 - **Ngoại lệ:** HTTP/body code mismatch, envelope thiếu, 404 bất ngờ, mentor mapping error trả 500, API timeout. Không retry 404; retry read 5xx/mạng chỉ theo shared client policy, không giả là not-found.
@@ -44,7 +44,7 @@
 - **Kích hoạt / loại:** Click #10 primary CTA; `Click/Navigation`.
 - **Input:** Không có body/query; route đích `/courses` theo inventory.
 - **Xử lý:** Validate route nội bộ; điều hướng GS-01. SH-06 không gọi API #05/#06; GS-01 sở hữu việc tải danh sách/filters.
-- **Kết quả:** GS-01 loading/list/error theo DD của màn hình đó. Href hiện `#` nên target integration chưa tồn tại.
+- **Kết quả:** GS-01 loading/list/error theo DD của màn hình đó. `/courses` is registered in the Guest route group; browser runtime is unverified.
 - **Ngoại lệ:** Route chưa đăng ký thì giữ error state hoặc router fallback; không chuyển tới external URL.
 
 ### `SH06-EV-04` — Quay về trang chủ (SH-01)
@@ -52,7 +52,7 @@
 - **Kích hoạt / loại:** Click #11 hoặc brand/logo #1; `Click/Navigation`.
 - **Input:** Relative route `/` từ inventory.
 - **Xử lý:** Điều hướng home nội bộ; không truyền course ID, private query hoặc API response. SH-01 sở hữu API #05/#06 nếu dùng.
-- **Kết quả / ngoại lệ:** SH-01 route chưa được chứng minh runtime; nếu router không xác nhận path thì không giữ href `#` như action thật.
+- **Kết quả / ngoại lệ:** `/` is registered to SH-01 in the Shared route group; browser runtime is unverified.
 
 ### `SH06-EV-05` — Điều hướng header
 

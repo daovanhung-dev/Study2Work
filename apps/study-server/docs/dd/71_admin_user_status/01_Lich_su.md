@@ -32,7 +32,7 @@ status: "Draft — Needs Confirmation"
 - [V1-PILOT DDL](../../../../../infra/postgres/02_study_db.sql) — UUID identity projection có enum khác legacy model.
 - [API #3 token queries](../../../app/modules/guest/api_03_auth_login/query.py) và [flow](../../../app/modules/guest/api_03_auth_login/view.py) — login/refresh, ACTIVE check và token rotation.
 - [Current auth helper](../../../app/utils/auth.py) — access JWT claims/roles; không tra account status/session revocation.
-- [API #4 profile model](../../../app/modules/guest/api_04_users_me/models.py) — response allowlist hiện có.
+- [API #4 profile model](../../../app/modules/student/api_04_users_me/models.py) — response allowlist hiện có.
 - [API #68 overview](../68_admin_users_list/02_Overview.md), [#69 open questions](../69_admin_user_detail/OPEN_QUESTIONS.md), [#70 data mapping](../70_admin_user_update/05_Data_Mapping.md) — AC-31 boundaries.
 - [Implementation worklog](../../../../../.agents/worklog/2026-10-25/implement-api71-admin-user-status.md) — pre-code plan, source trace và verification.
 

@@ -1,6 +1,6 @@
 # Kế hoạch màn hình — SH-06 Trang không tồn tại / tài nguyên không còn
 
-> **Trạng thái kế hoạch:** `REVIEWED / SOURCE_TRACE_COMPLETE` · **Phiên:** chỉ xử lý SH-06 · **Quyết định DD sau khi rà soát nguồn:** `DD BLOCKED` cho tới khi các surface recommendation/contact/footer và sai khác AC-05 được chốt. **Route inventory:** `/not-found` (đề xuất; Study Web router/source chưa có).
+> **Trạng thái kế hoạch:** `REVIEWED / SOURCE_TRACE_COMPLETE`; implementation sau đó `PARTIAL` · **Phiên:** chỉ xử lý SH-06 · **Quyết định DD:** `DD BLOCKED` cho tới khi các surface recommendation/contact/footer và sai khác AC-05 được chốt. **Route inventory:** `/not-found` (explicit page route đã đăng ký; wildcard chưa có; xem §9).
 
 ## 1. Mục tiêu, phạm vi và nguồn
 
@@ -8,15 +8,15 @@
 - Dòng SH-06 trong `../../../list_screen.md`: route `/not-found`, AC-05, API #08, liên kết GS-01/SH-01, state `route-404/resource-404`; route đích trong inventory là GS-01 `/courses` và SH-01 `/`.
 - Nguồn hình: `screen.png` (1600×1425) và `code.html`. Ảnh có header, 404 hero, CTA, “Safe Scope” notice, ba course card, contact strip và footer; HTML dùng `href="#"`, dữ liệu khóa học/learner count viết cứng, không có handler/router/API trong file.
 - API #08 design contract nằm trong `../../../../../../docs/lists/list_api.md` và AC-05 trong `../../../../../study-server/docs/diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio`. Có sai khác nhãn trạng thái: dòng SH-06 trong `list_screen.md` ghi BE `D`, nhưng API index §5 cùng file ghi #008 `R`; root API contract được đánh dấu `APPROVED_DESIGN_CONTRACT` nhưng chưa runtime-verified, còn API DD #08 ghi `Draft — Needs Confirmation`. Current Study Server route, module và test source tồn tại; không coi source/test là runtime verification. AC-05 ghi `404/403` cho nhánh course không tồn tại/PUBLISHED; API contract chỉ đặc tả 404/500 và current handler trả 404 cho invalid/missing/unpublished, 500 cho lỗi nội bộ. Không tự sửa contract hoặc ánh xạ 403 của #08.
-- Current UI source: `apps/study-client/src/` và package manifest không có. `dist/` có một bundle build cũ/ignored; scan không thấy route `/not-found`, `/courses`, `/login`, 404 string hay Vue Router call. Bundle này không chứng minh SH-06 UI/routing.
+- Historical source snapshot from 2026-11-08: plan/DD chuyển đổi ghi `apps/study-client/src/` và package manifest chưa có. Snapshot đó đã được superseded; current Angular app/router state được ghi ở §8. A stale `dist/` bundle does not establish SH-06 UI/routing.
 - Nguồn target visual: `.agents/web-study/design.md`; nguồn current API/DB: `apps/study-server/app/api/v1.py`, module #08, shared course catalog model/helper, `infra/postgres/study-server/DB.sql`, test #08. Live database chưa được xác minh.
 
 ## 2. Expected behavior và current behavior
 
 | Hạng mục | Expected behavior theo inventory/AC/API design | Current source evidence |
 |---|---|---|
-| Route 404 | `/not-found` là route/state proposal; route lỗi không yêu cầu API. CTA đi GS-01 `/courses` hoặc SH-01 `/`. | Không có client source/router. `code.html` chứa `href="#"` cho mọi anchor và không có route handler. |
-| Resource 404 | API #08 `GET /api/v1/courses/{course_id}`; 404 không tiết lộ draft/private. Không gửi 500/mạng sang SH-06. | Route/module source có; query lọc `status='PUBLISHED'`; invalid ID hoặc không có dòng PUBLISHED trả 404 `DESIGN_RESOURCE_NOT_FOUND`; SQL/mapping error trả 500. |
+| Route 404 | `/not-found` là explicit page route; route lỗi không yêu cầu API. CTA đi GS-01 `/courses` hoặc SH-01 `/`. | Shared route table registers `/not-found`; the implemented page links to source-backed `/courses` and `/`. No wildcard/static-host fallback is established. |
+| Resource 404 | API #08 `GET /api/v1/courses/{course_id}`; 404 không tiết lộ draft/private. Không gửi 500/mạng sang SH-06. | API source returns 404 `DESIGN_RESOURCE_NOT_FOUND` for invalid/missing/unpublished and 500 for SQL/mapping errors. GS-03 calls #08 and currently renders 404 inline; no #08-to-SH-06 handoff exists. |
 | Thành công API #08 | Published course → GS-03/course detail theo route hợp lệ. | 200 `DESIGN_RESOURCE_RETRIEVED`; `data` là `Page<Course>` có đúng 1 item và pagination 1/1. `Course` có id, title, description?, thumbnail_url?, price dạng string, status và mentor summary. |
 | 403 | Không thay bằng 404 nếu API/authorization thực sự trả 403; giữ phân nhánh access denied. | API #08 hiện public, không có 403 branch; AC-05 diagram ghi `404/403` khi course không tồn tại/PUBLISHED. Đây là discrepancy; 403 từ auth/access guard thuộc SH-05, không khẳng định do #08. |
 | Gợi ý khóa học | Hiển thị dữ liệu công khai có nguồn thật hoặc bỏ khối dữ liệu mẫu. | Ba card, category tags, durations, learner counts và copy trong HTML là static content; không có API mapping/ID. API #06 là public list route nhưng chưa được khai báo như dependency SH-06. |
@@ -57,10 +57,10 @@
 
 | Event ID | Trigger / element | Input | Xử lý dự kiến / output |
 |---|---|---|---|
-| `SH06-EV-01` | Router resolve unknown path hoặc mở `/not-found` | URL pathname, route match result | Không gọi API; hiển thị `ROUTE_404` chung; không echo raw URL/query có thể chứa dữ liệu riêng. Router implementation chưa có. |
+| `SH06-EV-01` | Open explicit `/not-found` route | URL pathname, route match result | Không gọi API; hiển thị `ROUTE_404` chung; không echo raw URL/query có thể chứa dữ liệu riêng. Wildcard/static-host fallback remains unverified. |
 | `SH06-EV-02` | Nhận kết quả GET #08 từ GS-03 flow | course_id, HTTP status, businessCode, message, traceId | Parse ID theo route contract; 200 hợp lệ trả GS-03; 404 `DESIGN_RESOURCE_NOT_FOUND` → `RESOURCE_404`; 403 giữ forbidden flow; 500/network/invalid envelope → service error riêng, không dùng SH-06. Không đọc course detail từ status page thêm lần nữa. |
-| `SH06-EV-03` | Click CTA #10 | Không có payload; route target GS-01 | Điều hướng tới `/courses`; request/API thuộc GS-01, SH-06 không gọi API. Route runtime chưa xác minh. |
-| `SH06-EV-04` | Click CTA #11 hoặc logo #1 / Trang chủ trong nav | Route `/` theo SH-01 proposal | Điều hướng home; không gửi API từ SH-06. |
+| `SH06-EV-03` | Click CTA #10 | Không có payload; route target GS-01 | Điều hướng tới registered `/courses`; request/API thuộc GS-01, SH-06 không gọi API. Browser runtime chưa xác minh. |
+| `SH06-EV-04` | Click CTA #11 hoặc logo #1 / Trang chủ trong nav | Route `/` của SH-01 | Điều hướng home; không gửi API từ SH-06. Browser runtime chưa xác minh. |
 | `SH06-EV-05` | Click nav #2, login #3, register #4 | Chọn link key: `khoa-hoc`, `tim-kiem`, `dang-nhap`, `dang-ky` | Proposal mapping lần lượt `/courses`, `/courses/search`, `/login`, `/register`; validate router allowlist khi triển khai. HTML hiện `href="#"`; chưa chạy được. |
 | `SH06-EV-06` | Click “Xem tất cả” #14 | Không có payload; target GS-01 | Điều hướng `/courses`; không gọi API tại SH-06. |
 | `SH06-EV-07` | Click một trong card #15–#17 | Course object/ID phải đến từ nguồn public đã được duyệt | Prototype không có ID thật và href `#`. Không điều hướng bằng tên/mock. Nếu giữ cards, chỉ điều hướng GS-03 bằng ID từ nguồn đã xác nhận. |
@@ -83,8 +83,9 @@
 1. `BLOCKER: SH06_PRODUCTION_SURFACE_UNDECIDED` — recommendation cards, help/contact strip, footer destinations và copyright/legal copy hiện có trong prototype nhưng chưa có content/route contract. Cần quyết định giữ/ẩn/bỏ từng surface và xác nhận dữ liệu/đích; không biến `href="#"` hoặc text mẫu thành production behavior.
 2. `BLOCKER: AC05_NOT_FOUND_STATUS_CONFLICT` — AC-05 vẽ `404/403` cho nhánh course không tồn tại/PUBLISHED; API catalog và handler #08 chỉ có 404 cho invalid/missing/unpublished, 500 cho internal failure. Cần chỉnh AC hoặc xác nhận ý nghĩa 403 trước khi chốt luồng giữa SH-06 và SH-05.
 3. `DISCREPANCY: API_08_STATUS_LABELS_VS_SOURCE` — dòng SH-06 trong screen inventory ghi BE `D`, API index ghi #008 `R`, root API contract là approved design nhưng chưa runtime-verified và API DD #08 vẫn Draft; route/module/test source hiện tồn tại. Deployment/live DB chưa verified. #08 success trả ApiEnvelope có `data: Page<Course>` singleton; không nhầm `Page<Course>` là toàn response.
-4. `IMPLEMENTATION_BLOCKER: STUDY_WEB_ROUTER_NOT_FOUND` — không có `src/`/package manifest; dist bundle cũ không chứng minh `/not-found` hoặc route actions.
+4. `PARTIAL IMPLEMENTATION: UNMATCHED_ROUTE_FALLBACK_UNWIRED` — explicit `/not-found` page and destination routes are registered; wildcard and static-host fallback remain unverified.
 5. `DESIGN_SYSTEM_DRIFT` — HTML dùng remote Google Fonts/Tailwind CDN và max-width 1440px; Study guide chỉ định system/Inter local, content width khoảng 1120px, control 44px+, responsive reflow. Cần xác nhận có hiệu lực với prototype này hay không.
+6. `IMPLEMENTATION_BLOCKER: RESOURCE_404_HANDOFF_UNWIRED` — GS-03 route/page/API #08 caller exists and renders 404 inline; no route/state transport into SH-06 exists. Do not invent the handoff.
 
 Kế hoạch sau source review: cập nhật SH-06 DD với expected/current tách biệt, 22 element, 10 event, mapping #08 có trace, và blockers không suy đoán. Không gọi màn hình `DD READY` khi các surface nhìn thấy chưa có quyết định triển khai hoặc AC-05 còn mâu thuẫn. Kiểm tra tĩnh marker→element, link, ảnh và hash sau khi cập nhật; không chạy tests/runtime trong phiên tài liệu.
 
@@ -97,3 +98,17 @@ Kế hoạch sau source review: cập nhật SH-06 DD với expected/current tá
 - Trạng thái mục tiêu phiên: `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`. Tests/runtime không chạy; worklog `.agents/worklog/2026-11-06/design-study-screen-sh06.md` đã VERIFIED.
 - Re-audit 2026-11-07: làm rõ sai khác nhãn `D` ở dòng SH-06 và `R` ở API index #008; API contract/DD/source status được giữ riêng, không quy đổi thành runtime verification.
 - Phiên tiếp theo: SH-07, trong một phiên riêng. Không xử lý SH-07 trong phiên này.
+
+## 8. Historical source re-audit (2026-11-16)
+
+- `apps/study-client/src/app/app.routes.ts` wires readiness root, Shared, Student and Admin routes; there is no Guest group, `/not-found` route or wildcard. `app.html` is only a router outlet; `/` renders readiness, not SH-01. Shared `/login` and `/register` exist as presentation-only routes.
+- The generic `StudyApiService` and #08 descriptor exist, but `API_008` has no feature-level caller; only the descriptor and generic transport test reference it. No GS-03 route/page currently hands #08 404 into SH-06. The root app route does not prove static-host fallback behavior.
+- API #08 current source is public/read-only: invalid ID and missing/unpublished `PUBLISHED` row yield generic 404; query/mapping errors yield 500; there is no #08 403 branch. Source tests cover these mappings but were not rerun in this audit.
+- The original source-absent statement above describes the 2026-11-08 snapshot and is superseded. Recommendation/contact/footer disposition, AC-05 `404/403` conflict, status-label discrepancy, route fallback and resource handoff remain separate blockers.
+- Historical state at that audit: `DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED`; it was superseded by the implementation recorded in §9.
+
+## 9. Implementation result / current source audit (2026-11-17)
+
+- Implemented only the explicit Shared route `/not-found` and the generic SH-06 page. The page provides internal links to `/courses` and `/`, does not call an API, and does not render mock recommendation/contact/footer content.
+- No wildcard route or GS-03 #08 resource-404 handoff was added. GS-03 keeps its current inline 404; service errors and curriculum #09 404 remain separate.
+- DD blockers remain for recommendation/contact/footer decisions and AC-05's 403 discrepancy. Static-host fallback, browser/runtime, API deployment and live DB remain unverified.

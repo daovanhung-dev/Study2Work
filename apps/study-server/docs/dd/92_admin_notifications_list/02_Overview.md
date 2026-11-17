@@ -101,7 +101,7 @@ Không có — API #92 là GET/read-only; không INSERT/UPDATE/DELETE và không
 
 ## Tình trạng nhóm AC-36
 
-- Macro-review #92–#96 là `VERIFIED_WITH_OPEN_QUESTIONS`; #92–#95 hiện wired/tested locally, #96 còn unwired, và các owner decisions của group chưa được giải quyết. Xem [báo cáo nhóm](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
+- Macro-review #92–#96 là `VERIFIED_WITH_OPEN_QUESTIONS`; cả năm API hiện có route/source và local fake-DB test evidence, trong khi các owner decisions của group chưa được giải quyết. Xem [báo cáo nhóm](../96_admin_notifications_status/AC-36_MACRO_REVIEW.md).
 - Flow trực tiếp: #92 query → #93 create/send → #94 update → #95 delete/cancel → #96 status. Operation polling xuất hiện riêng và chưa có Admin #93 ID bridge.
 - Không dùng #92 để suy ra campaign schema, recipient grouping, delivery lifecycle hoặc operation result.
 

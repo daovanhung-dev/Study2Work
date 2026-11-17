@@ -4,7 +4,7 @@
 |---|---|
 | Screen ID | `ST-10` |
 | Module | Student |
-| Route | `/student/lessons/:lessonId/start` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student/lessons/:lessonId/start` — locked transition route/page có trong Angular; runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: **DD status:** BLOCKED · **Implementation:** BLOCKED · **Runtime:** NOT VERIFIED |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
@@ -31,7 +31,8 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | checking/denied/started/failure |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Worklog/context Study Web | Route maps #22/#23/#24; no request, player/media or start action is enabled without Student session. |
+| Runtime | Worklog/context Study Web | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-10 source screen.png](../../screen_stitch/03_student/ST-10_kiem-tra-quyen-va-bat-dau-hoc/screen.png))
@@ -48,6 +49,11 @@
 # ST-10 — Kiểm tra quyền và bắt đầu học
 
 > **DD status:** BLOCKED · **Implementation:** BLOCKED · **Runtime:** NOT VERIFIED
+
+## Current implementation update — 2026-11-17
+
+- `/student/lessons/:lessonId/start` mounts ST-10 behind `StudentLayout`. It calls #22 on entry and only enables explicit #23 start after the returned lesson matches the route ID and has `PUBLISHED` status; after a matching start response it navigates to ST-11, which calls #24. Lesson content and media stay out of the ST-10 preview.
+- Current #22 checks course publication and enrollment but does not filter lesson status; #23 does not independently check publication. The client gates the start action on #22's response, while the server discrepancy remains. A safe ST-09 lessonId handoff and deployed behavior remain unverified.
 > **Phạm vi phiên:** chỉ ST-10. Đây là đặc tả theo bằng chứng thiết kế/source hiện có; mockup và API Draft không xác nhận hành vi đang chạy.
 
 ## Trích đoạn tổng quan từ DD nguồn

@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/admin/users`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: local source route is wired; browser reached the Admin login gate, while authenticated AD-02 runtime is `NOT VERIFIED`.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -20,7 +20,7 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: Angular source defines `/admin/users`; direct browser request returned the app/login gate, not an authenticated AD-02 list.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
@@ -39,13 +39,13 @@ flowchart LR
 
 | State | Entry condition | Expected UI | Current evidence |
 |---|---|---|---|
-| `loading` | Route load hoặc query thay đổi; #68 pending. | Giữ filter context, báo đang tải và tránh submit lặp. | Prototype không có request/loading state. |
-| `ready` | HTTP 200, `items.length > 0`. | Render các row/metadata; actions điều hướng theo quyền/contract. | Không có row design/data. |
-| `empty` | HTTP 200, `items=[]`; có thể do chưa có user hoặc filter không match. | Nói rõ không có kết quả; không kết luận sync lỗi hoặc đang chạy. | Mockup static chờ sync; không phân biệt no-match và sync. |
-| `filter-error` | #68 trả 422 cho `page` parse/range. | Giữ filter; liên kết lỗi với page state; cho phép sửa/đặt lại. Filter role/status unknown hiện không gây 422. | Chưa có client validation/error state. |
-| `unauthenticated` | #68 trả 401. | Dùng auth shell/session handling đã được duyệt. | Route/auth shell chưa có trong Study Web source. |
-| `forbidden` | #68 trả 403 khi token không có ADMIN claim. | Hiển thị access denied theo shared auth UX; không render danh sách cũ như mới. | Không có role guard ở client. |
-| `error` | #68 trả 500 hoặc network không xác định. | Thông báo an toàn và nút thử lại khi khả dụng; không lộ query/PII/raw SQL. | Refresh disabled; chưa có error handler. |
+| `loading` | Route load hoặc query thay đổi; #68 pending. | Giữ filter context, báo đang tải và tránh submit lặp. | Local page renders separate `role=status`; panel exposes `aria-busy`. |
+| `ready` | HTTP 200, `items.length > 0`. | Render các row/metadata; actions điều hướng theo quyền/contract. | Local page renders response-backed rows and pagination; focused spec passes. |
+| `empty` | HTTP 200, `items=[]`; có thể do chưa có user hoặc filter không match. | Nói rõ không có kết quả; không kết luận sync lỗi hoặc đang chạy. | Local loaded-empty state is separate from loading/error; does not claim sync status. |
+| `filter-error` | #68 trả 422 cho `page` parse/range. | Giữ filter; liên kết lỗi với page state; cho phép sửa/đặt lại. Filter role/status unknown hiện không gây 422. | Local 422 alert offers page 1 recovery and preserves current filters/unrelated query; focused spec passes. |
+| `unauthenticated` | #68 trả 401. | Dùng auth shell/session handling đã được duyệt. | Existing Admin layout shows login gate without a session; shared 401 UX/API response not browser-tested. |
+| `forbidden` | #68 trả 403 khi token không có ADMIN claim. | Hiển thị access denied theo shared auth UX; không render danh sách cũ như mới. | API contract/source identifies 403; authenticated UI handling not verified. |
+| `error` | #68 trả 500 hoặc network không xác định. | Thông báo an toàn và nút thử lại khi khả dụng; không lộ query/PII/raw SQL. | Local safe alert offers retry for retryable errors; focused spec passes. |
 
 **Empty pagination:** API trả `page=1,size=20,total=0,total_pages=0`; mockup `0/0` chưa xác định có nghĩa current page hay record count. Chốt copy/UI representation trước implement.
 
@@ -78,7 +78,8 @@ flowchart LR
 ### Current server source trace
 
 ```text
-No Study Web caller/route → apps/study-server/app/api/v1.py:get_admin_users_endpoint
+admin.routes.ts users child → AD02Page → AD02ApiService → AdminApiService/API_068 → StudyApiService →
+GET /api/v1/admin/users → apps/study-server/app/api/v1.py:get_admin_users_endpoint
 → get_admin_users(raw Authorization/role/status/keyword/page, Session, trace)
 → shared validate_current_user_request(role="ADMIN") before DB
 → validate page + normalize keyword

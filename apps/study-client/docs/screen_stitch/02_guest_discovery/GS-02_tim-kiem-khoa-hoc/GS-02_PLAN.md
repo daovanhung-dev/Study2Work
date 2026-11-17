@@ -17,7 +17,7 @@
 - AC-04: actor Guest; tìm kiếm từ khu vực khám phá; input → debounce/normalize → category/search APIs → validation → query khóa học PUBLISHED → quyết định empty/results. Diagram ghi không gọi request khi keyword rỗng nếu không cần; diagram/catalog vẫn khai báo `category` nhưng current source từ chối.
 - Assets trước phiên: `screen.png` 987×1600, SHA-256 `6bda913843a92873f4ebed72bc45be5792c31eb38f20b80a1acd681aec04e72f`; `code.html` SHA-256 `f1457fdb231b614cea31f2c0b9b2d42eb846ff80c333bd7dda30a5627e20c1da`. Giữ nguyên bytes của cả hai.
 - Screenshot là populated state: q=`React`, filter sidebar, sáu course cards, count 12, “Phù hợp nhất”, 6 items/page, course recommendation CTA và logged-in-looking header. HTML là Guest header + GET form + no-result card; không có filter/card/result/pagination DOM. Tách discrepancy, không chọn source of truth bằng suy luận.
-- Study Web hiện không có app source/package/router/entrypoint; không coi prototype HTML, source API hay route inventory là UI runtime. Project context được cập nhật trong phiên để stack và runtime Study Web không còn bị khẳng định là Vue hiện hành.
+- Study Web Angular app/package/router/entrypoint exist. This plan's current-source re-audit below records the partial Guest/GS-02 route and #07 caller; prototype HTML, source API and route inventory are not by themselves UI runtime evidence.
 - Canonical API design `docs/lists/list_api.md` khai báo #07 optional q/category/page/sort và reusable `Course.category`; current #07 source trả 422 với category. `list_screen.md` G-05 xác nhận category filter #06/#07 chưa hoạt động. Checked-in Study DDL có categories và courses độc lập, không có course-category relation.
 
 ## 2. Expected behavior và current evidence
@@ -77,7 +77,7 @@
 | `GS02-EV-01` | Route load `/courses/search` | URL `q`, optional page/sort; locale/config if available | Restore URL state; read #05 cache-first and call #07 for non-empty normalized q; calls may be concurrent if category is not used. Empty-q state, cache miss/failure and partial rendering policy need confirmation. |
 | `GS02-EV-02` | Type/change query in #5 | string q | Expected debounce and URL sync; trim/lowercase per F02; reset page=1; interval and displayed-case policy unspecified. API independently trim/lowercases. |
 | `GS02-EV-03` | Clear query affordance #5 | current q | Expected clear/focus/query reset; empty-q behavior is open. Current HTML has no clear button; helper seeks absent input ID. |
-| `GS02-EV-04` | Submit search form / Enter #5 | q | HTML native GET to `/courses/search?q=...`; inventory also expects API #07. Current app does not exist. Do not submit blank q as search until browse-all vs prompt policy is settled. |
+| `GS02-EV-04` | Submit search form / Enter #5 | q | HTML native GET to `/courses/search?q=...`; inventory also expects API #07. Angular app exists, but the Guest route and search caller are not wired. Do not submit blank q as search until browse-all vs prompt policy is settled. |
 | `GS02-EV-05` | Click suggestion chip #6 | suggested string | Screenshot supplies example chip labels, but no approved preset/submit semantics; no current DOM/handler. |
 | `GS02-EV-06` | Change category checkbox group #13 | category ID/name | #05 can supply metadata, but #07 returns 422 for any category. Do not send request; requires BE/DB support. |
 | `GS02-EV-07` | Change skill/duration/rating/tuition groups #14–17 | selected options | API #07 has no parameters for these facets; local selected state is visible in screenshot only. No submission behavior can be implemented against current API. |
@@ -99,7 +99,7 @@
 - Inventory states: `typing`, `loading`, `no-result`, `error`. Screenshot additionally represents populated results. DD will separate initial/typing, loading, ready, no-result, query-error, category-metadata-error, and out-of-range page; exact empty-q and partial #05 policy are unresolved.
 - API #05: public `GET /api/v1/categories?locale=<optional>`, no body/path/auth; default `vi-VN`; exact locale + `ACTIVE` categories ordered by id; `200 DESIGN_RESOURCE_RETRIEVED`, `data.items` plus pagination, empty success; validation 422 and DB/model 500 `DESIGN_INTERNAL_ERROR`.
 - API #07: public `GET /api/v1/courses/search?q=<optional>&page=<int>&sort=<optional>`; catalog/model also declare optional `category`, but current source rejects every non-null category with `422 DESIGN_VALIDATION_ERROR`; no `size` input. Query default page=1. `q` trim/lowercase, blank means no q predicate. Sort format `field:direction`, fields `id/name/price/created_at`, direction `asc/desc`; default `created_at DESC,id ASC`. SQL binds parameters, searches `LOWER(c.name) LIKE %q%`, counts/pages only PUBLISHED courses, fixed `size=20`. Success is `ApiEnvelope<CoursePage>` with fields id, title, optional description/thumbnail_url, decimal-string price, status, mentor{id,full_name,avatar_url?}; no category/currency/rating/duration/tags/old price. Empty/out-of-range are HTTP 200; query/category validation 422; query/integrity/mapping errors 500 `DESIGN_INTERNAL_ERROR`.
-- #07 tests are fake-session source: they verify q normalization, fixed page size despite `size=5`, category 422 before DB, pagination/empty/error mapping. They were read but not run. DDL is checked-in only; no live database verification.
+- #07 tests use fake sessions: they verify q normalization, fixed page size despite `size=5`, category 422 before DB, pagination/empty/error mapping. The focused #05/#07 suites pass 29/29; the full Study Server suite passes 1,506/1,506. DDL is checked-in only; no live database verification.
 - Cross-screen targets: return to GS-01 and open GS-03 from a result item. `/courses/search?q=` and `/courses/:courseId` are route proposals; GS-03 #08 current backend source does not wire browser navigation.
 
 ## 6. Blockers and acceptance gates
@@ -111,7 +111,7 @@
 5. `GS02-B05 COURSE_CARD_SCHEMA`: current API lacks category, tags, currency, duration, rating and discount/old-price fields displayed in screenshot. No derived/mock values may be presented as real.
 6. `GS02-B06 EMPTY_QUERY_SEMANTICS`: blank q makes API return all PUBLISHED courses, while AC/HTML may show a prompt. Decide if search route calls API for blank q and how URL/display case is normalized.
 7. `GS02-B07 CACHE_AND_PARTIAL_LOAD`: AC-04 models #05 → #07 in sequence, while inventory F02/API #05 DD describe cache-first and allow independent parallel search; client source is absent, and TTL/invalidation/fallback/partial-load policy is not approved.
-8. `GS02-B08 STUDY_WEB_UNWIRED`: no app source/router/package/entrypoint; no event, URL, debounce or navigation runtime is verified.
+8. `GS02-B08 STUDY_WEB_PARTIAL`: Guest route, GS-02 caller and nonempty-q URL/API #07 subset are wired and tested. Debounce, #05 orchestration, GS-01/GS-03 navigation and browser runtime remain unverified or unwired.
 9. `GS02-B09 EXTRA_DESTINATIONS`: account utilities, learning-path/advisor promos and footer destinations have no route/service contract.
 10. `GS02-B10 PAGE_RANGE_CONTRACT`: API catalog declares int32 but route uses unbounded Python int and checks only the lower bound; align contract/validation and oversized-offset behavior.
 
@@ -124,6 +124,11 @@
 
 ## 7. Session result
 
-- Result: Source/API/AC trace complete; plan preceded DD and annotation. DD, ordered marker map, SVG overlay and annotated image are complete; source assets remain unchanged; static checks pass.
-- DD status: `DD BLOCKED`; implementation `IMPLEMENTATION BLOCKED`; runtime `RUNTIME NOT VERIFIED`.
+- Result: Source/API/AC trace complete; plan preceded DD and annotation. DD, ordered marker map, SVG overlay and annotated image remain intact. A separate bounded GS-02 #07 search implementation and Angular tests were added; source assets remain unchanged.
+- DD status: `DD BLOCKED`; implementation `PARTIAL SOURCE`; browser/API runtime `RUNTIME NOT VERIFIED`.
 - Next Screen ID after this session: GS-03 in a separate session. No other Screen ID is part of this session.
+
+## Current-source re-audit (2026-11-16)
+
+- Study Web Angular source, package, router and entrypoint exist. The root readiness, Shared, Student and Admin routes remain wired; this continuation added a Guest group, `/courses/search`, GS-02 page and public API #07 caller. Only #07 `q`/`page` is sent; #05 is not called. Study Web tests pass 127/127 and production build passes; local dev server returned HTTP 200 for the route shell.
+- Keep `DD BLOCKED`, implementation `PARTIAL SOURCE`, and browser/API runtime `NOT VERIFIED`. Chrome extension could not inspect the UI and proxy target `127.0.0.1:3003` had no listener. API ordering/cache/partial-error, empty-query approval, debounce, filters, sort/page-size, missing card fields and destinations remain unresolved. The blank-q prompt is a working assumption, not a DD decision.

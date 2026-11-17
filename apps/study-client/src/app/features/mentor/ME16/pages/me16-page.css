@@ -1,0 +1,11 @@
+.me16-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+.me16-toolbar .mentor-meta { margin-right:auto; }
+.me16-table { padding:8px 16px; }
+.me16-table td:first-child { display:grid; gap:4px; }
+.me16-progress { display:inline-block; width:120px; height:7px; margin-right:8px; overflow:hidden; border-radius:999px; background:#e7edf3; vertical-align:middle; }
+.me16-progress span { display:block; height:100%; border-radius:inherit; background:#1680a9; }
+.me16-empty { display:grid; justify-items:center; gap:10px; padding:54px 20px; text-align:center; }
+.me16-empty>span { color:#0b668f; font-size:26px; }
+.me16-empty h2 { margin:0; color:#17324b; font-size:18px; }
+.me16-empty p { max-width:58ch; color:#71849a; font-size:12px; line-height:1.5; }
+@media(max-width:600px){.me16-toolbar .mentor-meta{width:calc(100% - 120px)}.me16-toolbar>button{width:100%}.me16-progress{width:65px}}

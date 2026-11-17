@@ -13,7 +13,7 @@
 
 - API refs trong inventory: #74, #76, #77
 - Orchestration/data notes: PATCH #76 hoặc DELETE #77 sau khi policy được duyệt → reload #73/#74 theo điều hướng được chốt.
-- BE/source status và gate: **R** local source #76/#77 route/module/test; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** #76 body/enum/transition còn DERIVED; `archive` không có mapping; #77 local soft-delete trái copy permanent-delete, dependency/repeat/restore/audit policy chưa duyệt; AC-32 permission vs `ADMIN`, live schema và Study Web UNWIRED; back/cancel và reload còn mở. **RUNTIME NOT VERIFIED**
+- BE/source status và gate: **R** local source #74/#76/#77 route/module/test; Angular route/page chỉ có GET #74 caller; chưa có Web caller #76/#77. API DDs Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE; WRITE FLOW BLOCKED:** #76 body/enum/transition còn DERIVED; `archive` không có mapping; #77 local soft-delete, dependency/repeat/restore/audit policy và permission/schema còn mở; prototype navigation khác Angular; post-write reload chưa chốt. **RUNTIME NOT VERIFIED**
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API matrix — #74 / #76 / #77

@@ -14,10 +14,7 @@ export type AdminScreenMode =
   | 'export';
 
 export type AdminScreenSourceState =
-  | 'session-unavailable'
-  | 'contract-blocked'
-  | 'api-absent'
-  | 'data-backed';
+  'session-unavailable' | 'contract-blocked' | 'api-absent' | 'data-backed';
 
 export interface AdminScreenFilter {
   readonly key: string;
@@ -50,6 +47,8 @@ export interface AdminScreenSection {
 export interface AdminScreenViewState {
   readonly status: 'loading' | 'error' | 'loaded';
   readonly message?: string;
+  readonly httpStatus?: number;
+  readonly retryable?: boolean;
   readonly rows?: readonly AdminScreenRow[];
   readonly fields?: readonly AdminScreenField[];
   readonly metrics?: readonly AdminScreenMetric[];
@@ -96,4 +95,3 @@ export interface AdminScreenDefinition {
   readonly sections?: readonly { readonly title: string; readonly description: string }[];
   readonly filters?: readonly AdminScreenFilter[];
 }
-

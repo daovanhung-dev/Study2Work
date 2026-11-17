@@ -10,8 +10,8 @@
 
 - [Catalog API #04 và reusable schemas](../../../../../docs/lists/list_api.md).
 - [AC-02 diagram](../../diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio), [AC-11 diagram](../../diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio), và [AC/API index](../../diagrams/AC_UNICA/00_AC_API_INDEX.md).
-- Current [router](../../../app/api/v1.py), [API #04 view](../../../app/modules/guest/api_04_users_me/view.py), [query](../../../app/modules/guest/api_04_users_me/query.py), [model](../../../app/modules/guest/api_04_users_me/models.py), [auth](../../../app/utils/auth.py), [trace](../../../app/core/trace.py), và [response helpers](../../../app/core/responses.py).
-- [API #04 focused test source](../../../tests/modules/guest/api_04_users_me/test_users_me.py) được đọc, không chạy.
+- Current [router](../../../app/api/v1.py), [API #04 view](../../../app/modules/student/api_04_users_me/view.py), [query](../../../app/modules/student/api_04_users_me/query.py), [model](../../../app/modules/student/api_04_users_me/models.py), [auth](../../../app/utils/auth.py), [trace](../../../app/core/trace.py), và [response helpers](../../../app/core/responses.py).
+- [API #04 focused test source](../../../tests/modules/student/api_04_users_me/test_users_me.py) được đọc, không chạy.
 - API #03 connected [DD](../03_auth_login/PLAN_RESULT.md) và current login source được đối chiếu.
 - API #13 [DD](../13_users_me_avatar/PLAN_RESULT.md) cùng current upload view được đối chiếu.
 - API #14 [plan](../14_users_me_profile/PLAN_RESULT.md), [verification report](../14_users_me_profile/VERIFICATION_REPORT.md), route/module/query/model và test-file presence được đối chiếu; test không chạy.

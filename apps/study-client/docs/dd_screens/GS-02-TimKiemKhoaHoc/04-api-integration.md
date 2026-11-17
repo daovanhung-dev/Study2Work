@@ -61,3 +61,10 @@
 
 ## 4. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/02_guest_discovery/GS-02_tim-kiem-khoa-hoc/GS-02.md)
+
+## Current Study Web caller audit (2026-11-16)
+
+- `GS02SearchService` calls only `STUDY_SERVER_APIS.API_007` through `StudyApiService`; the request is GET `/api/v1/courses/search` with `q` and `page`. No Bearer header, `category`, `size`, or sort is sent.
+- API #05 is not called by this partial screen implementation. Its cache-first behavior, request ordering relative to #07, locale cache key, invalidation, and partial-load policy remain unresolved.
+- Component tests verify the request query, absence of authorization/unsupported params, response fields, empty/error/out-of-range states and pagination. Study Web: 127/127 tests. Study Server: 1,506/1,506; focused #05/#07 tests: 29/29 with fake sessions, not a live database.
+- `127.0.0.1:3003` had no listener during the browser demo attempt. Live API acceptance remains `NOT VERIFIED`; the DD remains blocked.

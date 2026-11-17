@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Admin xem attempt statistics theo fields trong response được duyệt; không tự dựng score distribution/completion/duration.
-- Gate/status (giữ nguyên): **R** local #91 route/module/query/model/validator/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** direct Quiz vs local derived statistics response, metric/NULL/rounding approval, AC-35 quiz-management permission vs shared `ADMIN`, legacy schema/live DB, Study Web UNWIRED; screenshot distribution/completion/duration/background/connectivity claims unsupported; **RUNTIME NOT VERIFIED**
+- Gate/status (giữ nguyên): **R** local #91 route/module/query/model/validator/test source and Angular route/page/API caller; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** direct Quiz vs local derived statistics response, metric/NULL/rounding approval, AC-35 quiz-management permission vs shared `ADMIN`, legacy schema/live DB; screenshot distribution/completion/duration/background/connectivity claims unsupported; **RUNTIME NOT VERIFIED**
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 > CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.

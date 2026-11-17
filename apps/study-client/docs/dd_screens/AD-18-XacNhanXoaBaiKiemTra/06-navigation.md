@@ -1,8 +1,8 @@
 # AD-18 — Navigation
 
 ## 1. Route definition
-- Current route in inventory: `/admin/quizzes/:quizId/delete` (candidate; Study Web chưa wired)`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Current route: `/admin/quizzes/:quizId/delete` (registered in `admin.routes.ts`).
+- Status: route/page and AD-15 entry/return links are source-wired; read-only, destructive flow blocked; browser runtime not verified.
 - Route params/types: `quizId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,17 +10,17 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [AD-15](../AD-15-DanhSachBaiKiemTra/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [AD-15](../AD-15-DanhSachBaiKiemTra/00-overview.md) | Delete row action | Positive safe integer `quizId` | Angular router link; does not pass list details; browser runtime unverified |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [AD-15](../AD-15-DanhSachBaiKiemTra/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [AD-15](../AD-15-DanhSachBaiKiemTra/00-overview.md) | Return/cancel link | `/admin/quizzes` | Angular router link; filter/page restoration unspecified; browser runtime unverified |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: Angular route is registered; browser deep-link behavior has not been verified.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
@@ -38,8 +38,8 @@ flowchart LR
 
 | State | Entry condition | UI/action rule | Exit/next | Evidence/status |
 |---|---|---|---|---|
-| `confirm` (inventory) | Target resolved, Admin permission and policy approved | Show correct target/impact; enable confirm only under approved rule | Confirm → `deleting`; cancel → AD-15/previous approved page | Inventory expected; current mockup has no selected target and confirm disabled. |
-| `deleting` (inventory) | One approved #90 request in flight | Prevent duplicate user submission; exact loading copy/button behavior not in source | Success/error response | Expected state only; no client handler. |
+| `confirm` (inventory) | Target resolved, Admin permission and policy approved | Show correct target/impact; enable confirm only under approved rule | Confirm → `deleting`; cancel → AD-15/previous approved page | Expected only; current page shows route ID but has no target detail; confirm disabled. |
+| `deleting` (inventory) | One approved #90 request in flight | Prevent duplicate user submission; exact loading copy/button behavior not in source | Success/error response | Expected state only; current page has no #90 caller or click handler. |
 | `conflict` (inventory) | Inventory says conflict keeps screen | No API #90 409 exists; #90 local history branches do not return conflict | Requires contract decision | Unsupported/discrepant; do not implement from current contract. |
 | `deleted` (inventory) | Valid HTTP 200 `DESIGN_RESOURCE_DELETED` and response ID matches | Show approved success result; invalidate/refetch #87 per inventory | Destination/cache behavior unresolved | Expected state; exact transition/copy not defined. |
 | `unauthenticated` | #90 returns 401 | Follow shared auth/session flow | Sign-in/session recovery | Catalog + local source; UI transition not wired. |
@@ -48,16 +48,16 @@ flowchart LR
 | `validation-error` | #90 returns 422 | Present ID/path validation failure; never call it a history conflict | Correct route/selection | Current local 422 applies to invalid positive-int64 path. |
 | `service-error` | #90 returns 500 | Safe error; no raw database details | Remain/retry only under approved retry policy | Catalog/local safe error mapping; retry policy open. |
 | `unknown-outcome` | Network failure/timeout after possible request | Do not claim deleted/not deleted or automatically repeat | Reconciliation behavior needs owner decision | Not in catalog or inventory state list; design decision required before client implementation. |
-| `unwired` | Current checkout | Prototype only; disabled confirm, placeholder record, anchors `#` | No verified transition | Current Study Web status. |
+| `read-only` (current source) | Angular route opened | Show route ID and policy/data limitation; keep reason/delete controls disabled | AD-15 via return/cancel links | Source-wired; no request; browser runtime not verified. |
 
 ### Navigation/data matrix
 
 | From | Action | To | Data passed | Current evidence |
 |---|---|---|---|---|
-| AD-15 | Delete a Quiz | AD-18 candidate | `quizId` and preferably selected #87 item only after handoff schema is approved | AC-35/inventory relation; no Study Web route/client. |
-| AD-18 | Top return/list breadcrumb | AD-15 candidate | Preserve ID/filter/page only if approved | Static `href="#"`; no runtime navigation. |
-| AD-18 | Safe cancel | AD-15 or prior route (decision pending) | None required by API | Static `href="#"`; destination unresolved. |
-| AD-18 | Successful #90 | `deleted` then destination TBD | `DeleteResult`; invalidate #87 per inventory | Catalog response; no cache/router client. |
+| AD-15 | Delete a Quiz | AD-18 | Positive safe integer `quizId`; no row detail object is passed | Angular router link; target/detail/history source remains unavailable. |
+| AD-18 | Top return/list breadcrumb | AD-15 | No API data | Angular router link to `/admin/quizzes`; filter/page preservation unspecified; browser runtime unverified. |
+| AD-18 | Safe cancel | AD-15 | None required by API | Angular router link to `/admin/quizzes`; no mutation; browser runtime unverified. |
+| AD-18 | Successful #90 | `deleted` then destination TBD | `DeleteResult`; invalidate #87 per inventory | No #90 caller or success-state/cache invalidation/navigation is implemented. |
 | AD-18 | #90 401/403/404/422/500 | Error/recovery UI TBD | Error envelope / trace ID | Status set known; exact shared UI recovery is outside current source. |
 
 ### Authorization and data-handling controls

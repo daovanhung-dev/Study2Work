@@ -2,6 +2,13 @@
 
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
+## 0. Verification record (2026-11-16)
+
+- Angular AD-19 page + Admin route specs: 2 test files, 6/6 tests passed.
+- Study Server API #92 focused suite: 20/20 passed; one Starlette deprecation warning from TestClient/httpx integration.
+- FE uses HTTP testing; BE uses fake session/query projections. Browser runtime, live schema, and deployment remain RUNTIME NOT VERIFIED.
+
+
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |
 |---|---|---|---|---|

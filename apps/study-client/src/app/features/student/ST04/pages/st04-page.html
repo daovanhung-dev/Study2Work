@@ -1,0 +1,89 @@
+<div class="enrollment-screen" data-screen-id="ST-04">
+  <header class="enrollment-header">
+    <div class="enrollment-header__content">
+      <a class="enrollment-brand" routerLink="/" aria-label="Study2Work — trang chủ">
+        Study2Work
+      </a>
+
+      <nav class="enrollment-navigation" aria-label="Điều hướng chính">
+        <a routerLink="/" routerLinkActive="enrollment-navigation__link--active">Trang chủ</a>
+        <a
+          routerLink="/courses"
+          routerLinkActive="enrollment-navigation__link--active"
+          aria-current="page"
+          >Khóa học</a
+        >
+        <span aria-disabled="true">Khóa học của tôi</span>
+        <a routerLink="/student/progress" routerLinkActive="enrollment-navigation__link--active">
+          Tiến độ
+        </a>
+      </nav>
+
+      <div class="enrollment-auth-links" aria-label="Tài khoản">
+        <a routerLink="/login">Đăng nhập</a>
+        <a class="enrollment-auth-links__register" routerLink="/register">Đăng ký</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="enrollment-main">
+    <div class="enrollment-breadcrumb-bar">
+      <nav class="enrollment-breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z" />
+          </svg>
+          <span>Trang chủ</span>
+        </a>
+        <span aria-hidden="true">›</span>
+        <a routerLink="/courses">Khóa học</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">Kiểm tra ghi danh</span>
+      </nav>
+    </div>
+
+    <section class="enrollment-status-card" role="status" aria-labelledby="enrollment-title">
+      <div class="enrollment-status-card__icon" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          <path d="M16 3 27 7v8c0 7.2-4.6 11.8-11 15C9.6 26.8 5 22.2 5 15V7l11-4Z" />
+          <path d="m11 16 3.4 3.4L21.5 12" />
+        </svg>
+      </div>
+      @if (state() === 'loading') {
+        <h1 id="enrollment-title">Kiểm tra ghi danh</h1>
+        <p aria-live="polite">Đang kiểm tra thông tin khóa học…</p>
+      } @else if (state() === 'not-found') {
+        <h1 id="enrollment-title">Không tìm thấy khóa học</h1>
+        <p>Khóa học không tồn tại hoặc hiện không được xuất bản.</p>
+      } @else if (state() === 'error') {
+        <h1 id="enrollment-title">Chưa thể tải thông tin khóa học</h1>
+        <p>Đã xảy ra lỗi khi kiểm tra khóa học. Vui lòng quay lại danh sách khóa học.</p>
+      } @else {
+        <h1 id="enrollment-title">Kiểm tra ghi danh</h1>
+        <h2>Chưa thể xác nhận thông tin ghi danh.</h2>
+        <p>
+          API #15 hiện chưa xác định enrollment thuộc Student nào khi thiếu thông tin xác thực hợp
+          lệ. Đây là trạng thái gate thiết kế; chưa có trạng thái ghi danh nào được xác nhận.
+        </p>
+      }
+      <a class="enrollment-return-button" routerLink="/courses">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M19 12H5m0 0 6 6m-6-6 6-6" />
+        </svg>
+        Quay lại danh sách khóa học
+      </a>
+    </section>
+  </main>
+
+  <footer class="enrollment-footer">
+    <div class="enrollment-footer__content">
+      <span class="enrollment-footer__brand">Study2Work</span>
+      <nav aria-label="Điều hướng cuối trang">
+        <a routerLink="/">Trang chủ</a>
+        <a routerLink="/courses">Khóa học</a>
+        <a routerLink="/login">Đăng nhập</a>
+        <a routerLink="/register">Đăng ký</a>
+      </nav>
+    </div>
+  </footer>
+</div>

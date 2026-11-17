@@ -29,8 +29,8 @@ status: "Draft — Needs Confirmation"
 - [AC-31 index](../../diagrams/AC_UNICA/00_AC_API_INDEX.md) — precondition và thứ tự API quản lý user.
 - [AC-31 activity diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — chọn user → đọc user/profile/role → thao tác quản trị.
 - [DB table guide](../../diagrams/DB_UNICA_TABLES.md) và [DB ERD](../../diagrams/DB_UNICA_ERD.drawio) — legacy users candidate, design-only.
-- [API #4 query/model](../../../app/modules/guest/api_04_users_me/query.py) — safe profile projection hiện có.
-- [API #14 query](../../../app/modules/guest/api_14_users_me_profile/query.py) — profile projection sau update hiện có.
+- [API #4 query/model](../../../app/modules/student/api_04_users_me/query.py) — safe profile projection hiện có.
+- [API #14 query](../../../app/modules/student/api_14_users_me_profile/query.py) — profile projection sau update hiện có.
 - [API #68 Overview](../68_admin_users_list/02_Overview.md) — cùng AC-31; API #68 list hiện dùng `Page<UserProfile>`, còn #69 là detail.
 - [Worklog API #69 design](../../../../../.agents/worklog/2026-10-24/create-study-api69-dd.md) — source review và plan authoring ban đầu.
 - [Implementation worklog](../../../../../.agents/worklog/2026-10-25/implement-api69-admin-user-detail.md) — coding plan, decisions và verification.

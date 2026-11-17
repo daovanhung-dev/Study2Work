@@ -28,7 +28,7 @@ Prototype không implement các event sau; đây là target flow và source trac
 - **Processing:** (1) Client target xác nhận path param có mặt; absent-route fallback chưa xác định. (2) Gửi GET #83 với ID đã chọn, không thay bằng course ID/slug. (3) Shared server guard xác thực Bearer/JWT/`ADMIN` trước parse/DB. (4) Custom parser chấp nhận signed int64 string có dấu/leading zeros trong bounds; invalid/overflow/length>20→404 catalog code, no query. (5) Bind numeric ID vào query. (6) Select một lesson từ legacy candidate, `status IS DISTINCT FROM 'DELETED'`; không public `PUBLISHED` filter/dependency joins. (7) Validate returned identity/required Lesson fields. (8) Trả 200 direct Lesson hoặc exact errors.
 - **Success:** `ApiEnvelope<Lesson>`; UI target nhận `data.id`, `course_id`, `title`, `content`, `video_url`, `order`, `status`. #83 không cập nhật DB/commit.
 - **Errors:** 401, 403, 404 invalid/missing/deleted, 500 safe query/projection. Query/mapping/missing branches rollback per source.
-- **UI state:** expected loading→ready; 404→not-found; 401→unauthorized; 403→forbidden; 500/network→service-error. These states have no client implementation.
+- **UI state:** Angular AD-13 implements `loading`→`loaded` and `error`; shared mapping distinguishes 401, 403 and 404 messages, while 500/network errors use a generic safe message. Focused page specs cover successful API field rendering and the AD-12 safe-ID handoff; browser runtime remains unverified.
 
 ### EV-02 — Ánh xạ và hiển thị Lesson
 
@@ -62,20 +62,20 @@ Prototype không implement các event sau; đây là target flow và source trac
 
 - **Trigger / element:** button #44, currently disabled.
 - **Expected handoff:** carry the same numeric `lessonId` to AD-14. AC-34 branches to PUT #84 update, PATCH #85 status, or DELETE #86; those APIs/screens have separate request and confirmation rules.
-- **Current behavior:** HTML button has `disabled` and `aria-disabled="true"`, no listener, href or target. AD-13 does not call a mutation. Do not enable the button or place mutation forms here based on its combined label.
+- **Current behavior:** Stitch and Angular AD-13 both show a disabled action button; the Angular button has no mutation handler. AD-13 does not call a mutation. Do not enable the button or place mutation forms here based on its combined label.
 - **Output/errors:** no navigation/action currently occurs. AD-14 route, access policy, editing state, confirmations, response refresh and `#86` dependency conflict UX belong to the separate AD-14 DD.
 
 ### EV-07 — Quay lại danh sách AD-12
 
 - **Trigger / element:** back CTA #16, inline link #27, breadcrumb #13.
-- **Current:** all links are anchors with `href="#"`; no Study Web router exists. No lesson ID/filter/current-page state is stored.
+- **Current:** the Stitch prototype still uses `href="#"`. Angular AD-12 now links safe numeric lesson IDs to `/admin/lessons/:lessonId`; AD-13 back links use `RouterLink` to `/admin/lessons`. AD-14 remains disabled; filter/query/current-page preservation is not implemented.
 - **Expected:** return to AD-12; the AC-34 workflow later reloads #82 after a successful downstream mutation. Whether normal back preserves filters/selection or refetches is not specified. Do not claim that the static links perform that navigation.
 
 ### EV-08 — Admin shell, status badges, standards and footer
 
 - **Trigger / element:** shell/nav/notification #1–#11, page labels #15/#17–#21, standards/footer #56–#61.
 - **Current:** static text and anchors; no Admin profile, health-check, notification, audit, sync, RBAC policy or compliance request. No active-page route source.
-- **Expected UX boundary:** when a real Study Web implementation exists, use `.agents/web-study/design.md` ocean semantic tokens, Inter/system typography, centered content width ~1120px, responsive reflow, 44px controls, keyboard/focus-visible, reduced-motion and AA contrast rules. Current mockup uses cobalt/Plus Jakarta Sans/full-width and does not prove those states/accessibility properties.
+- **Expected UX boundary:** current Angular uses the shared host-scoped detail stylesheet and semantic route links/loading/error states. Continue following `.agents/web-study/design.md` for ocean tokens, typography, responsive reflow, keyboard/focus-visible and contrast. Browser comparison and accessibility verification remain open; the static mockup does not prove runtime behavior.
 - **Output:** labels remain presentation-only; do not report a healthy endpoint, permission outcome, audit guarantee or student-isolation boundary from them.
 
 ## Trace links

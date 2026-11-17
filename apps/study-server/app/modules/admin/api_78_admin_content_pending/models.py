@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.modules.guest._shared.course_catalog.models import Pagination
+from app.modules.shared.course_catalog.models import Pagination
 from app.modules.mentor.api_49_mentor_content_list.models import ContentResponse
 from pydantic import BaseModel, ConfigDict
 

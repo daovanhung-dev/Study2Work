@@ -29,3 +29,9 @@ No client-originated callback or gateway redirect parameter is a trusted payment
 
 ## 4. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/03_student/ST-06_thuc-hien-thanh-toan/ST-06.md)
+
+## Current Study Server source update — 2026-11-17
+
+- API #17 has a registered `POST /api/v1/payments` route and Student module, but its current handler validates auth/request then returns 503 before Payment/Operation reads or writes because no provider is configured. No focused #17 tests were found.
+- API #18 has a registered UUID path and focused tests, but the current query is notification-only and owner-bound. It is not a generic payment-operation status endpoint.
+- The Study Client route/page records #17/#18 and intentionally sends no request. Keep this separate from catalog/DD target flow and do not interpret an accepted Operation, redirect or callback as payment success.

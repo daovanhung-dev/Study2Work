@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.modules.guest._shared.course_catalog.models import CoursePage
+from app.modules.shared.course_catalog.models import CoursePage
 from pydantic import BaseModel, ConfigDict
 
 

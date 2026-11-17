@@ -58,7 +58,7 @@ Không có contract cho debounce, cache, timeout, retry, request cancellation, r
 
 | State | Điều kiện / evidence | Hành vi được xác nhận |
 |---|---|---|
-| `UNWIRED` | Study Web tracked `src`/router/API client không có; candidate route chỉ trong inventory/prototype. | Không tuyên bố page runtime hoặc auth flow đã hoạt động. |
+| `SOURCE_WIRED_PARTIAL` | Current Angular source registers the route/page and #97 caller; focused specs exist. | API #97 returns only Discussion summary; report fields and approved AC-37 policy are unresolved. Browser loaded-state remains `RUNTIME NOT VERIFIED`. |
 | `PROTOTYPE_STATIC` | HTML tải độc lập; data, counts, policy copy và status đều literal. | Hiển thị mockup; controls không có filter/navigation/network effect trừ refresh icon animation. |
 | `LOADING` (expected) | Inventory state checklist; current UI không implement. | Loading component/skeleton, cancellation và retry chưa có design/contract. |
 | `READY` (expected) | Successful #97 response có items. | Chỉ render fields được response trả; report-specific columns đang thiếu field contract. |
@@ -74,9 +74,9 @@ Không có contract cho debounce, cache, timeout, retry, request cancellation, r
 
 | From | To / API | Data passed | Current status |
 |---|---|---|---|
-| Admin shell → AD-22 | Candidate `/admin/discussions/reported` | None defined beyond route. | Shell anchors are `#`; Study Web route absent. |
-| AD-22 load/filter → #97 | GET reported list | `reason?`, `severity?`, `page?`; Bearer JWT. No `q`, `status`, `size`, or body. | Study Server route wired locally; client not wired; report writer/live DB unverified. |
-| AD-22 row → AD-23 | `/admin/discussions/:discussionId/moderate`; then #98 | Candidate positive int64 Discussion ID from #97 item. No report ID in response. | Row action absent; #98 source exists but report lookup is absent and DD status conflicts. |
+| Admin route → AD-22 | `/admin/discussions/reported` | No route params; Admin page obtains a Bearer token through `AdminApiService`. | Angular route/page source-wired; authenticated browser loaded-state not verified. |
+| AD-22 load/filter → #97 | GET reported list | `reason?`, `severity?`, `page?`; Bearer JWT. No `q`, `status`, `size`, or body. | Study Server route and Angular caller source-wired; report writer/live DB unverified. |
+| AD-22 row → AD-23 | `/admin/discussions/:discussionId/moderate`; then #98 | Safe integer Discussion ID from a #97 item. No report ID in response. | Angular row link exists; #98 source has no report lookup and DD status conflicts. |
 | AD-23 → AD-22 refresh | #99/#100 then #97 | Action/reason or Discussion ID per later contracts; not specified in AD-22. | Out of scope; #99/#100 current source not registered per source boundary. |
 
 ## 4. Luồng đọc (Read)

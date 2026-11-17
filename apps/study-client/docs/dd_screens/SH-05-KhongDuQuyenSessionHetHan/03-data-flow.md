@@ -51,7 +51,7 @@ Quan hệ luồng: SH-05 có thể được gọi sau SH-02/API #04 hoặc bởi
 | Envelope / trace | Error: `{success:false,businessCode,message,data,meta,traceId}`; success dùng `success:true` cùng envelope. `X-Trace-Id` được trả ở response header. Không suy ra `meta` có field cụ thể nếu source không cung cấp. |
 | Side effect | Read-only `CURRENT_USER_PROFILE` query; không commit. SH-05 không render profile data. |
 
-Source path: [`app/api/v1.py`](../../../../study-server/app/api/v1.py) → [`api_04_users_me/view.py`](../../../../study-server/app/modules/guest/api_04_users_me/view.py) → [`models.py`](../../../../study-server/app/modules/guest/api_04_users_me/models.py), [`query.py`](../../../../study-server/app/modules/guest/api_04_users_me/query.py), và [`auth.py`](../../../../study-server/app/utils/auth.py). Test source: [`test_users_me.py`](../../../../study-server/tests/modules/guest/api_04_users_me/test_users_me.py); test đã được đọc nhưng không chạy trong phiên docs này.
+Source path: [`app/api/v1.py`](../../../../study-server/app/api/v1.py) → [`api_04_users_me/view.py`](../../../../study-server/app/modules/student/api_04_users_me/view.py) → [`models.py`](../../../../study-server/app/modules/student/api_04_users_me/models.py), [`query.py`](../../../../study-server/app/modules/student/api_04_users_me/query.py), và [`auth.py`](../../../../study-server/app/utils/auth.py). Test source: [`test_users_me.py`](../../../../study-server/tests/modules/student/api_04_users_me/test_users_me.py); test đã được đọc nhưng không chạy trong phiên docs này.
 
 ### 5.2 R-X01 — POST `/api/v1/auth/refresh`
 

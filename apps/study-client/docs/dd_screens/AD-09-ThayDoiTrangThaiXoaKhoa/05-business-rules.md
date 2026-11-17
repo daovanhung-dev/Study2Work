@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Confirmation đổi trạng thái và cảnh báo enrollment/content phụ thuộc.
-- Gate/status (giữ nguyên): **R** local source #76/#77 route/module/test; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** #76 body/enum/transition còn DERIVED; `archive` không có mapping; #77 local soft-delete trái copy permanent-delete, dependency/repeat/restore/audit policy chưa duyệt; AC-32 permission vs `ADMIN`, live schema và Study Web UNWIRED; back/cancel và reload còn mở. **RUNTIME NOT VERIFIED**
+- Gate/status: **R** local source #74/#76/#77 route/module/test; Angular route/page/#74 read caller exists and write actions remain gated. API DDs Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE; WRITE FLOW BLOCKED:** #76 body/enum/transition DERIVED; `archive` has no mapping; #77 dependency/repeat/restore/audit policy, AC-32 permission vs `ADMIN`, and live schema remain open; post-write reload is undecided. **RUNTIME NOT VERIFIED**
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu và blocker
@@ -30,10 +30,10 @@
 2. Local #77 soft-deletes while the mockup claims permanent irreversible deletion. Dependency set, repeat-delete 404, restore/visibility and delete audit remain open.
 3. Mockup reason/ISO-27001 requirement is not in #76/#77 body or local audit data model.
 4. AC-32 fine-grained course-management permission is not implemented by local shared `ADMIN` guard. Legacy BIGINT and V1-PILOT UUID/versioned schema differ; live DB/deployment unverified.
-5. No Study Web route/client. Target-course loading, correct AD-07 return, post-mutation GET/revalidation and API error/session states are not implemented.
+5. Angular route/page/#74 caller and loading/loaded/error states exist; status/delete/reason controls remain disabled and there is no #76/#77 Web caller. API error/session handling and post-mutation GET/revalidation remain gated/open.
 6. Mockup enrollment/RBAC/protection/lifetime-retention claims are static. #74 counters are absent; #77's dependency check does not define a complete owner-approved policy.
 
-**Completion decision:** The screen DD records the evidence and open decisions, but cannot be `DD READY` while body/enum, delete policy, permission, persistence and navigation decisions remain unresolved. Final screen status: **DD BLOCKED** · **IMPLEMENTATION BLOCKED** · **RUNTIME NOT VERIFIED**. Local API #76/#77 source status can be `R`; their API DDs remain Draft.
+**Completion decision:** The screen DD records the evidence and open decisions, but cannot be `DD READY` while body/enum, delete policy, permission, persistence and write-navigation decisions remain unresolved. Final screen status: **DD BLOCKED** · **IMPLEMENTATION PARTIAL SOURCE; WRITE FLOW BLOCKED** · **RUNTIME NOT VERIFIED**. Local API #76/#77 source status can be `R`; their API DDs remain Draft.
 
 ## 3. Quy tắc chưa xác nhận
 - `CẦN_XÁC_NHẬN`: các quyết định/blocker trong inventory và DD nguồn chưa được giải quyết.

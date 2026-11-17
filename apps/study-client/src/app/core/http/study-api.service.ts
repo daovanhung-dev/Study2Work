@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import type { HttpHeaders, HttpParams } from '@angular/common/http';
+import type { HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -24,9 +24,7 @@ export class StudyApiService {
     api: StudyApiDescriptor,
     options: StudyApiRequestOptions = {},
   ): Observable<ApiEnvelope<T>> {
-    if (api.status === 'UNWIRED') {
-      throw new Error(`Study API #${api.id} is marked UNWIRED and cannot be requested.`);
-    }
+    assertClientCallable(api);
 
     const path = resolveApiPath(api, options.pathParams);
 
@@ -35,6 +33,31 @@ export class StudyApiService {
       headers: options.headers,
       params: options.params,
     });
+  }
+
+  /** Gửi request theo descriptor và giữ HTTP status/header cùng response envelope. */
+  requestWithResponse<T>(
+    api: StudyApiDescriptor,
+    options: StudyApiRequestOptions = {},
+  ): Observable<HttpResponse<ApiEnvelope<T>>> {
+    assertClientCallable(api);
+
+    const path = resolveApiPath(api, options.pathParams);
+
+    return this.http.request<ApiEnvelope<T>>(api.method, `${STUDY_API_BASE_PATH}${path}`, {
+      body: options.body,
+      headers: options.headers,
+      params: options.params,
+      observe: 'response',
+    });
+  }
+}
+
+function assertClientCallable(api: StudyApiDescriptor): void {
+  if (api.status === 'UNWIRED' || (api.status === 'SOURCE_ONLY' && api.id !== 'R-X01')) {
+    throw new Error(
+      `Study API #${api.id} is marked ${api.status} and cannot be requested by a screen.`,
+    );
   }
 }
 

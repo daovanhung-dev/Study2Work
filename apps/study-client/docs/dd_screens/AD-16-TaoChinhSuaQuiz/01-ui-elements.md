@@ -5,6 +5,8 @@
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.
 - Marker JSON nguồn: [AD-16_markers.json](../../screen_stitch/05_admin/AD-16_tao-chinh-sua-quiz/AD-16_markers.json).
 
+> Bảng marker bên dưới mô tả ảnh và Stitch `code.html` tĩnh. Nó không đại diện cho Angular runtime; trạng thái route và tương tác trong source hiện tại được ghi tại [Events](02-events.md) và [Overview](00-overview.md).
+
 ## 2. Danh sách phần tử
 | Marker | Element ID trong package | Source Element ID | Nhãn từ marker JSON |
 |---|---|---|---|

@@ -1,0 +1,53 @@
+.availability-panel {
+  display: flex;
+  min-height: 132px;
+  align-items: center;
+  gap: 18px;
+  padding: clamp(18px, 4vw, 28px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--text-primary);
+  background: var(--surface);
+}
+
+.availability-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 13px;
+  color: var(--ocean-primary);
+  background: var(--ocean-soft);
+}
+
+.availability-icon study-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.availability-copy h2 {
+  margin: 0 0 8px;
+  color: var(--ocean-deep);
+  font-size: 20px;
+  line-height: 1.35;
+}
+
+.availability-copy p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 480px) {
+  .availability-panel {
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px 14px;
+  }
+
+  .availability-icon {
+    width: 42px;
+    height: 42px;
+  }
+}

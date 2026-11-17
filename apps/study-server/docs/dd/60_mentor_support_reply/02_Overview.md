@@ -38,7 +38,7 @@ status: "Draft — Needs Confirmation"
 - [API #59 thread projection](../59_mentor_support_request_detail/02_Overview.md).
 - [API #61 resolve boundary](../61_mentor_support_resolve/02_Overview.md).
 - [Checked-in support migration 008](../../../../../infra/postgres/study-server/migrations/008_support_requests.sql).
-- [Current API #34 upload query](../../../../../apps/study-server/app/modules/student/api_34_uploads/query.py).
+- [Current API #34 upload query](../../../../../apps/study-server/app/modules/shared/api_34_uploads/query.py).
 - [Current API #47 ref validator/query](../../../../../apps/study-server/app/modules/mentor/api_47_mentor_lectures_create/validate.py).
 - [Current API #58 response models](../../../../../apps/study-server/app/modules/mentor/api_58_mentor_support_requests/models.py).
 - [Current API #59 response/thread query](../../../../../apps/study-server/app/modules/mentor/api_59_mentor_support_request_detail/query.py).

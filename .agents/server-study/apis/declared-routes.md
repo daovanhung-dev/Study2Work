@@ -1,37 +1,22 @@
 # Study declared API surface
 
-Global status: route source is `SOURCE_BACKED`; the pre-merge verified baseline
-had 58 route templates / 69 operations through API #98. After reverting the
-`hoang_xuan_long_dev` merge, the current branch retains source routes for APIs
-#10, #26–#30, #32 and #33 from the merged branch history. APIs #11, #15, and
-#21–#25 from that merge are no longer present. Post-revert OpenAPI cardinality,
-application startup and tests have not been reverified; see `tests.md`. The
-initial dated branch-backed HTTP run had 59 PASS / 10
-SQL-query FAIL; a follow-up verified ten repaired operations with empty and
-valid filters (20/20 HTTP requests passed). The other operations were not
-rerun after that SQL-only fix.
+Global status: current source wires numbered API routes #01–#98 through
+`app/api/v1.py`; APIs #99–#103 have no current route/module. Current local full
+Study verification after the API #18 auth fix is 1492 passed, 0 failed; see
+`tests.md`. Older route-count and branch-backed HTTP sections below are dated
+historical checkpoints and are not current totals.
 
-Source-backed declarations retained in the current merged branch:
+Role module ownership follows the actor mapping: Guest #01–#03/#05–#12/#15;
+Student #04/#13–#14/#16–#17/#19–#33/#35–#45; Shared #18/#34; Mentor #46–#67;
+Admin #68–#98. API #18's ID and owner/Admin policy remain disputed in its DD;
+its package location does not resolve those contract questions. API #34 accepts
+both Student and Mentor. API #17 remains fail-closed with HTTP 503 until its
+payment provider is configured. APIs #99–#103 remain absent while their Draft
+DDs and authorization/schema decisions are unresolved.
 
-- API #10: `GET /api/v1/courses/{course_id}/reviews`
-- API #26: `GET /api/v1/lessons/{lesson_id}/resources`
-- API #27: `GET /api/v1/lessons/{lesson_id}/next`
-- API #28: `GET /api/v1/quizzes/{quiz_id}`
-- API #29: `POST /api/v1/quizzes/{quiz_id}/attempts`
-- API #30: `PUT /api/v1/attempts/{attempt_id}/answers`
-- API #32: `GET /api/v1/attempts/{attempt_id}/result`
-- API #33: `GET /api/v1/assignments/{assignment_id}`
-
-The corresponding module test files exist, but were not run after the revert.
-Other source-backed routes include auth login/refresh, verify-email dispatch, current-user,
-category, course, course-search, course-detail, curriculum, resource-detail,
-avatar-upload, upload-metadata, profile-update, API #46 Mentor course, API #47
-Mentor lecture, #48 lecture detail, #49–#53 Content routes, #54 Mentor
-submissions list, #55 submission detail, #56 grade, #57 feedback, #58–#61
-support-request flows, #62 Mentor course-student roster and #63–#64 Mentor
-notification dispatch/status, API #65 Mentor course progress, API #66 Mentor course activity analytics, API #67 Mentor Student progress, API #68 Admin user listing, API #69 Admin user detail, API #70 Admin user update, API #71 Admin user status, API #72 Admin user delete and API #73 Admin course listing, API #74 Admin course detail, API #75 Admin course update, API #76 Admin course status, API #77 Admin course delete, API #78–#81 Admin Content moderation and API #82–#86 Admin lesson list/detail/update/status/delete and API #87–#91 Admin quiz list/create/update/delete/statistics, API #92–#96 notification list/create/update/delete/status, API #97 reported-discussion queue and API #98 discussion detail route are wired; the AI route remains `UNWIRED`. API
-API #84 shares the existing lesson-detail route template; typed request-body validation runs in FastAPI before the endpoint's ADMIN guard. API #08/#09 route, import and HTTP
-behavior pass in the current full Study test run.
+API #98's current handler is wired but differs from its Draft DD: the response
+contains the discussion thread/comments, derives title from content, and does
+not read report records. Keep that source/DD discrepancy explicit.
 
 ## Composition-root routes
 
@@ -102,7 +87,7 @@ not returned or logged. No token/link/expiry/retry field, DB mutation or retry
 worker is currently implemented.
 
 ### `GET /api/v1/users/me`
-Implemented through `app.modules.guest.api_04_users_me.view.get_current_user(...)`.
+Implemented through `app.modules.student.api_04_users_me.view.get_current_user(...)`.
 The route requires one `Authorization: Bearer <jwt>` header and no request body,
 path parameter or query parameter. It decodes the current API#3 JWT shape
 (`sub` + `roles`), requires the normalized `STUDENT` role, then reads the
@@ -173,34 +158,64 @@ verification is claimed.
 Implemented through `app.modules.guest.api_08_courses_detail.view.get_course_detail(...)`.
 The route is public. It validates the path ID, selects one `PUBLISHED` course
 with the public mentor projection from `users`, and returns a singleton
-`CoursePage`. An invalid ID, missing course or unpublished course maps to
-`404 DESIGN_RESOURCE_NOT_FOUND`; query or mapping failures map to
-`500 DESIGN_INTERNAL_ERROR`. API #08 source and HTTP tests pass in the current
-full suite; no live schema check is claimed.
+`CoursePage`. The path ID must parse as signed int64. Malformed or out-of-range
+IDs and missing/unpublished courses map to `404 DESIGN_RESOURCE_NOT_FOUND`;
+query or mapping failures map to `500 DESIGN_INTERNAL_ERROR`. API #08 focused
+source and HTTP tests pass after signed-int64 validation; no live schema check
+is claimed.
 
 ### `GET /api/v1/courses/{course_id}/curriculum`
 
 Implemented through `app.modules.guest.api_09_courses_curriculum.view.get_course_curriculum(...)`.
 The route is public. It requires a `PUBLISHED` course, then reads its
 `PUBLISHED` lessons ordered by `sort_order` and `id`, returning a `LessonPage`.
-An invalid ID or missing/unpublished course maps to `404
-DESIGN_RESOURCE_NOT_FOUND`; query or mapping failures map to
-`500 DESIGN_INTERNAL_ERROR`. An empty result is a successful page with zero
-items. API #09 source and HTTP tests pass in the current full suite; no live
-schema check is claimed.
+The path ID must parse as signed int64. Malformed or out-of-range IDs and
+missing/unpublished courses map to `404 DESIGN_RESOURCE_NOT_FOUND`; query or
+mapping failures map to `500 DESIGN_INTERNAL_ERROR`. An empty result is a successful page with zero
+items. The focused source and HTTP tests pass after signed-int64 validation; no
+live schema check is claimed.
+
+### `GET /api/v1/courses/{course_id}/reviews` — API #10
+
+Implemented through `app.modules.guest.api_10_courses_reviews.view.get_course_reviews(...)`.
+The route is public. `course_id` must parse as signed int64; malformed or
+out-of-range values map to `404 DESIGN_RESOURCE_NOT_FOUND` before DB access.
+The view requires a published course, then reads active root reviews, active
+replies and the review count using a fixed page size of 20. SQL errors roll back
+and map to safe `500 DESIGN_INTERNAL_ERROR`. Current source returns `title: null`
+and does not apply the accepted `rating` query value; keep these source/DD
+questions explicit. API #10 focused tests pass after signed-int64 validation;
+live schema is not verified.
+
+### `GET /api/v1/courses/{course_id}/resources` — API #11
+
+Implemented through `app.modules.guest.api_11_courses_resources.view.get_course_resources(...)`.
+The route is public and validates `course_id` as a positive integer according
+to current source. It requires a published parent course, then queries linked
+resource rows ordered by `r.id ASC`. An empty result returns
+`404 DESIGN_RESOURCE_NOT_FOUND`; a nonempty result serializes only `rows[0]`
+as one `ResourceItem` (`id`, `name`, `type`, `url`, `lesson_id`). No resource
+visibility/access filtering is performed. This current singleton/first-row
+mapping conflicts with the API #11 Draft DD instruction not to choose one row
+when multiple resources exist. Its seven focused tests pass using fake DB
+overrides; multi-row, live schema and deployment behavior remain unverified.
 
 ### `GET /api/v1/resources/{resource_id}`
 
 Implemented through `app.modules.guest.api_12_resources_detail.view.get_resource_detail(...)`.
-The route is public and reads the resource metadata. If a resource has a lesson,
-the view also requires a published parent course; invalid, missing or
-unpublished-parent resources return `404 DESIGN_RESOURCE_NOT_FOUND`. Success is
+The route is public and accepts any signed-int64 `resource_id`; malformed or
+out-of-range values return `404 DESIGN_RESOURCE_NOT_FOUND` before DB access.
+In-range IDs, including zero and negative values, reach the resource lookup;
+missing resources return 404. If a resource has a lesson, the view also requires
+a published parent course; missing or unpublished-parent resources return 404. Success is
 `200 DESIGN_RESOURCE_RETRIEVED` with the source-backed resource fields, including
 the URL stored on the resource. The route does not inject a storage signer.
+API #12 focused tests and Ruff pass after removing the unsupported positive-only
+guard; live schema is not verified.
 
 ### `POST /api/v1/users/me/avatar`
 
-Implemented through `app.modules.guest.api_13_users_me_avatar.view.upload_avatar(...)`.
+Implemented through `app.modules.student.api_13_users_me_avatar.view.upload_avatar(...)`.
 The route has no database dependency and uses the shared Student Bearer guard.
 JSON `{image}` must contain a strict Base64 Data URL for PNG, JPEG or WebP; the
 decoded image is limited to 5 MiB and its signature must match the declared MIME.
@@ -222,10 +237,28 @@ tests; no remote storage call or credential check is claimed.
 
 ### `PUT /api/v1/users/me/profile`
 
-Implemented through `app.modules.guest.api_14_users_me_profile.view.update_profile(...)`.
+Implemented through `app.modules.student.api_14_users_me_profile.view.update_profile(...)`.
 The route requires Student Bearer auth and owns the profile database update.
 In AC-11 the client sends the URL returned by API #13 as `avatar_url` in this
 follow-up request.
+
+### Student enrollment/order source gates — APIs #15 and #16
+
+API #15 now has a route/module/query/model and focused tests. Its validator
+accepts an optional Authorization header: a valid Student token selects that
+user, but absent or invalid Authorization becomes `user_id=None`, and the query
+then returns the latest enrollment for any user in the course
+(`ORDER BY e.id DESC LIMIT 1`). The response includes `user_id`. This conflicts
+with its Draft Public/no-Bearer contract and is unsafe for a Student-specific
+decision; client descriptor #15 remains `UNWIRED` until identity and selection
+are corrected.
+
+API #16 now has route/module/model/query source, but no focused test package is
+present. It validates Student Bearer auth and a nonempty provider string,
+derives positive amount from `courses.price`, hardcodes currency `VND`, and
+attempts to insert into `orders` with `PENDING` status. The checked-in DDL has
+no `orders` table, so live persistence is not established. Client descriptor
+#16 remains `UNWIRED`; do not infer a usable Order endpoint from route presence.
 
 ### `GET /api/v1/mentor/courses`
 
@@ -395,7 +428,7 @@ The view checks the direct course owner, validates request/course/student parent
 
 ### `POST /api/v1/uploads`
 
-Implemented through `app.modules.student.api_34_uploads.view.create_upload(...)` and
+Implemented through `app.modules.shared.api_34_uploads.view.create_upload(...)` and
 uses an injectable provider from `app.service.object_storage.upload`. The
 multipart request requires `file` and purpose `SUBMISSION` or `LECTURE`; an
 optional `course_id` is accepted. The shared JWT guard accepts Student or
@@ -601,22 +634,24 @@ Adds one path and operation (OpenAPI: 56 `/api/v1` paths / 67 operations). The r
 
 ### `GET /api/v1/admin/discussions/reported` — API #97
 
-Adds one path and operation (OpenAPI: 57 paths / 68 operations at the time this route was added; current total after API #98 is 58 / 69). The route accepts optional `reason`, `severity`, and signed-int32 `page`; shared ADMIN JWT auth runs before custom page parsing or DB access. One COUNT and one paged SELECT query `discussions` with the local DERIVED `discussion_reports` relation, counting one Discussion per matching OPEN/IN_REVIEW report group. `reason` and `severity` are exact-match AND filters on the same active report; results sort by latest matching report then discussion ID descending. Page defaults to 1 with size 20; invalid/non-positive page returns a local DERIVED 422. `Discussion.title` is a normalized content snippet capped at 120 characters and `comments` is empty for this queue summary. Focused tests: 15 at the feature checkpoint; the later nullable-bind regression suite includes this module. The 2026-11-01 post-fix branch HTTP checks passed with both filters empty and populated. Migration 014 was applied only to the temporary branch; production schema and report ingestion remain unverified. DD remains Draft.
+Adds one path and operation (OpenAPI: 57 paths / 68 operations at the time this route was added; total after API #98 at that historical checkpoint was 58 / 69). The route accepts optional `reason`, `severity`, and signed-int32 `page`; shared ADMIN JWT auth runs before custom page parsing or DB access. One COUNT and one paged SELECT query `discussions` with the local DERIVED `discussion_reports` relation, counting one Discussion per matching OPEN/IN_REVIEW report group. `reason` and `severity` are exact-match AND filters on the same active report; results sort by latest matching report then discussion ID descending. Page defaults to 1 with size 20; invalid/non-positive page returns a local DERIVED 422. `Discussion.title` is a normalized content snippet capped at 120 characters and `comments` is empty for this queue summary. Focused tests: 15 at the feature checkpoint; the later nullable-bind regression suite includes this module. The 2026-11-01 post-fix branch HTTP checks passed with both filters empty and populated. Migration 014 was applied only to the temporary branch; production schema and report ingestion remain unverified. DD remains Draft.
 
 
 ### `GET /api/v1/admin/discussions/{discussion_id}` — API #98
 
-Adds a separate path and operation; current OpenAPI has 58 `/api/v1` paths / 69 operations. The source route is wired and uses the ADMIN guard. Its current response includes the discussion thread/comments, derives `title` from content, and does not query or return report records. The DD remains `Draft — Needs Confirmation` and labels the runtime `UNWIRED`, while requiring thread + report detail and leaving title/report/status decisions open. The HTTP success, role/auth, malformed ID, not-found and query failure/rollback behaviors are characterized in the added tests; do not treat source behavior as an approved DD resolution. Live PostgreSQL HTTP details are in the dated test report.
+Adds a separate path and operation; OpenAPI had 58 `/api/v1` paths / 69 operations at that historical checkpoint. The source route is wired and uses the ADMIN guard. Its current response includes the discussion thread/comments, derives `title` from content, and does not query or return report records. The DD remains `Draft — Needs Confirmation` and labels the runtime `UNWIRED`, while requiring thread + report detail and leaving title/report/status decisions open. The HTTP success, role/auth, malformed ID, not-found and query failure/rollback behaviors are characterized in the added tests; do not treat source behavior as an approved DD resolution. Live PostgreSQL HTTP details are in the dated test report.
 
 ## APIs #16-20, #31, #35-45 added on 2026-11-15
 
 The current source wires the requested routes through `app/api/v1.py`; source
 route declarations are not evidence that migrations are deployed or handlers
-have passed tests. APIs #16, #18-20 and #31 use guest modules; #35-36 and
-#39-45 use student modules; #37-38 use guest modules. API #17 is intentionally
+have passed tests. APIs #16–#17, #19–#20 and #31 use Student modules; #18 uses Shared;
+#35–#45 use Student modules. API #17 is intentionally
 fail-closed: it returns 503 before any Payment/Operation read or write until a
 payment provider is configured. API #18 uses UUID Operation IDs to match
-producers #63/#64/#93.
+producers #63/#64/#93. Its current query is notification-specific and
+owner-bound; the dedicated HTTP suite passes 8 tests. The catalog still declares
+int64, and generic owner/Admin, lifecycle and result contracts remain unresolved.
 
 API #19 creates an Enrollment and initial lesson progress in one transaction;
 paid courses require a PAID Order. API #31 grades supported objective question
@@ -624,8 +659,9 @@ types only and updates the attempt to GRADED; #30 stores multiple selected
 choices and #32 groups them per question. API #38 reads explicit award records;
 there is no award producer in this implementation. APIs #43-45 project
 StudentNotification from supported legacy columns and per-user read state,
-without channels/status/scheduled_at. No tests were run and migrations 015-018
-were not applied.
+without channels/status/scheduled_at. At the 2026-11-15 implementation checkpoint
+no tests were run and migrations 015-018 were not applied; API #18 verification
+on 2026-11-16 is recorded in `tests.md`.
 
 ### API #31 passing outcome amendment (2026-11-15)
 
@@ -637,3 +673,38 @@ API #32 derives the same outcome from existing score/question/config columns.
 No new database column or migration was added for `passed`. This is source
 state only; the amended behavior has not been tested and migrations remain
 unapplied.
+
+## Student learning-source update — 2026-11-17
+
+Current route/module source also includes APIs #20–#24, #37, #38 and #43; older
+screen/API DDs that label these routes `NOT_FOUND` are stale relative to this
+checkout. This is local source evidence, not live deployment or migration
+verification.
+
+- **#20 `GET /users/me/courses`** requires Student Bearer auth and queries the
+  current `enrollments`/`courses` relations. It returns a paged `CourseSummary`
+  projection (`course_id`, name/description/thumbnail/price, course and
+  enrollment status, enrolled_at). Its runtime shape conflicts with the
+  catalog's `UserProfile`; no focused #20 test package was found.
+- **#21 `GET /users/me/progress`** has focused route/module tests, but the
+  current handler returns the authenticated user's `UserProfile`; it does not
+  calculate progress. Do not use it as the ST-08 course-progress projection.
+- **#22 `GET /lessons/{lesson_id}/access`**, **#23
+  `POST /lessons/{lesson_id}/start`**, and **#24
+  `GET /lessons/{lesson_id}`** have current route/module/query/model and
+  focused test source. #22 checks a published course and ACTIVE or COMPLETED
+  enrollment but does not filter/check lesson status. #23 checks enrollment
+  and upserts lesson progress without its own lesson/course publication
+  predicate. #24 checks published lesson/course plus enrollment. ST-10 calls
+  #22 on entry and calls #23 only after an explicit action when #22 returns
+  `status=PUBLISHED`; ST-11 calls #24 after handoff. The catalog/DD remains
+  Draft. The #22/#23 publication discrepancy, DB schema/deployment and live
+  runtime remain separate limitations.
+- **#37 `GET /users/me/progress/{course_id}`** returns a current
+  `CourseProgress` aggregate from published lessons and completed lesson
+  progress for the authenticated Student. No focused #37 tests were found; it
+  is course-level only, not a lesson tree.
+- **#38 `GET /users/me/achievements`** returns a current `AchievementPage` from
+  recorded award rows; no award producer or focused #38 test package was
+  found. **#43 `GET /users/me/notifications`** has route/module/query source,
+  with no focused #43 tests found.

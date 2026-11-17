@@ -2,6 +2,13 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
+## Current caller status — 2026-11-17
+
+ST-17 calls #33 and renders only returned assignment fields. It does not
+infer submission eligibility, attached files or local deadline rules. The
+DD/API excerpt below is a design-time snapshot; see [the screen inventory](../../list_screen.md)
+and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
@@ -49,7 +56,7 @@
 - [AC/API index](../../../../study-server/docs/diagrams/AC_UNICA/00_AC_API_INDEX.md), [AC-17 activity diagram](../../../../study-server/docs/diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio).
 - [Candidate assignment table design](../../../../study-server/docs/diagrams/DB_UNICA_TABLES.md), [legacy candidate DDL](../../../../../infra/postgres/study-server/DB.sql), [V1-PILOT schema artifact](../../../../../infra/postgres/02_study_db.sql).
 - [Current Study route inventory](../../../../../.agents/server-study/apis/declared-routes.md), [Study Web status](../../../../../.agents/web-work/study/INDEX.md), [Study Web design target](../../../../../.agents/web-study/design.md).
-- Current downstream upload source: [API #34 route](../../../../study-server/app/api/v1.py), [upload flow](../../../../study-server/app/modules/student/api_34_uploads/view.py). This does not establish current #35/#36 Student routes.
+- Current downstream upload source: [API #34 route](../../../../study-server/app/api/v1.py), [upload flow](../../../../study-server/app/modules/shared/api_34_uploads/view.py). This does not establish current #35/#36 Student routes.
 
 ### Trích từ DD nguồn: A.4. API #33 contract và giới hạn
 

@@ -1,0 +1,87 @@
+<study-student-public-frame>
+  <main class="my-courses api-screen" data-screen-id="ST-08">
+    <header class="my-courses__heading api-heading">
+      <div>
+        <p class="my-courses__eyebrow">ST-08 · API #20</p>
+        <h1>Khóa học của tôi</h1>
+        <p>Danh sách ghi danh do Study Server trả về.</p>
+      </div>
+      <a class="my-courses__catalog-link api-button secondary" routerLink="/courses">Khám phá khóa học</a>
+    </header>
+
+    @if (loading()) {
+      <section class="my-courses__state api-card api-message" role="status">
+        <strong>Đang tải khóa học…</strong>
+      </section>
+    }
+
+    @if (error()) {
+      <section class="my-courses__state my-courses__state--error api-error" role="alert">
+        <h2>Không thể tải danh sách khóa học</h2>
+        <p>{{ error() }}</p>
+        <button class="api-button" type="button" (click)="load()">Thử tải lại</button>
+      </section>
+    }
+
+    @if (!loading() && !error() && courses().length === 0) {
+      <section class="my-courses__empty api-card" role="status" aria-labelledby="my-courses-empty-title">
+        <div class="my-courses__icon" aria-hidden="true">♧</div>
+        <h2 id="my-courses-empty-title">Chưa có khóa học để hiển thị.</h2>
+        <p>API #20 đã trả về danh sách ghi danh rỗng.</p>
+        <a class="api-button" routerLink="/student/progress">
+          <span aria-hidden="true">↗</span>
+          Xem tiến độ học tập
+        </a>
+      </section>
+    }
+
+    @if (!loading() && !error() && courses().length > 0) {
+      <section class="my-courses__results" aria-label="Danh sách khóa học đã ghi danh">
+        <p class="my-courses__result-count">{{ pagination()?.total }} khóa học trong danh sách</p>
+        <div class="my-courses__grid">
+          @for (course of courses(); track course.course_id) {
+            <article class="my-courses__card api-card" [attr.data-course-id]="course.course_id">
+              <div class="my-courses__card-top">
+                <span class="my-courses__book-icon" aria-hidden="true">▣</span>
+                <span class="my-courses__status">{{ course.enrollment_status }}</span>
+              </div>
+              <h2>{{ course.name }}</h2>
+              @if (course.description) {
+                <p class="my-courses__description">{{ course.description }}</p>
+              }
+              <dl>
+                <div><dt>Trạng thái khóa</dt><dd>{{ course.course_status || 'Chưa có dữ liệu' }}</dd></div>
+                <div><dt>Ngày ghi danh</dt><dd>{{ course.enrolled_at | date: 'mediumDate' }}</dd></div>
+              </dl>
+              @if (course.enrollment_status === 'ACTIVE' && safeCourseId(course.course_id); as courseId) {
+                <a class="my-courses__continue api-button" [routerLink]="['/student/courses', courseId]">
+                  Xem tổng quan khóa học <span aria-hidden="true">→</span>
+                </a>
+              } @else {
+                <span class="my-courses__unavailable">Chưa thể tiếp tục khóa học này</span>
+              }
+            </article>
+          }
+        </div>
+
+        @if (pagination(); as pageInfo) {
+          @if (pageInfo.total_pages > 1) {
+            <nav class="my-courses__pagination" aria-label="Phân trang khóa học">
+              <button type="button" [disabled]="page() <= 1 || loading()" (click)="changePage(-1)">
+                Trang trước
+              </button>
+              <span>Trang {{ pageInfo.page }} / {{ pageInfo.total_pages }}</span>
+              <button
+                type="button"
+                [disabled]="page() >= pageInfo.total_pages || loading()"
+                (click)="changePage(1)"
+              >
+                Trang sau
+              </button>
+            </nav>
+          }
+        }
+      </section>
+    }
+  </main>
+</study-student-public-frame>

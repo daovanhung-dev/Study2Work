@@ -18,7 +18,7 @@
   2. Khi runtime/test implementation tồn tại, viết test riêng theo contract đã xác nhận.
 - **Expected UI/state:** Theo acceptance/state trong nguồn; chưa được xác minh trên runtime.
 - **Expected API/data:** Theo [API Integration](04-api-integration.md); không phát sinh request trong lần tạo tài liệu.
-- **Failure / edge assertion:** Không đánh dấu pass cho `UNWIRED`, `IMPLEMENTATION BLOCKED` hoặc `RUNTIME NOT VERIFIED`.
+- **Failure / edge assertion:** Không suy ra acceptance chỉ từ việc route/page/caller có trong source. Permission, PII, audit, schema và visual review còn mở; runtime chưa xác minh.
 - **References:** `AC-31`, [Events](02-events.md), [Business Rules](05-business-rules.md), [source DD](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/AD-03.md).
 
 ## 3. Source acceptance / test plan (not run)
@@ -37,7 +37,8 @@
 - [ ] Live legacy schema/grants/deployment hoặc schema UUID target được xác định.
 - [ ] PII masking/visibility, enum labels và lifecycle status được duyệt.
 - [ ] Audit API/event source, empty/count semantics, retention và compliance claims được xác nhận hoặc loại bỏ khỏi thiết kế.
-- [ ] Study Web route/auth/client và visual design được wire theo `.agents/web-study/design.md`.
+- [x] Angular source có Admin route, AD03 page và API #69 caller; runtime/deployment chưa xác minh.
+- [ ] Permission, PII, schema/audit policy và visual design được duyệt; runtime acceptance được xác minh theo `.agents/web-study/design.md`.
 - [ ] Back/edit/action/footer destinations và disabled/enabled behavior được xác nhận xuyên AD-02/AD-04/AD-05.
 
 ### Open blockers
@@ -46,10 +47,10 @@
 2. **Schema:** local query nhắm legacy BIGINT `users`; live DB/deployment chưa xác minh, V1-PILOT dùng UUID model khác.
 3. **PII and lifecycle:** email/phone masking, role/status enum, deleted/anonymized user visibility và audit requirements chưa chốt.
 4. **Audit panel:** không có nguồn history/log/count/retention trong #69; các claim “0 bản ghi”, 180 ngày, automatic monitoring, RBAC Strict Audit và Nghị định cần nguồn/owner.
-5. **Frontend/runtime:** Study Web `UNWIRED`; không có editable source/router/client để implement hoặc runtime-verify route.
+5. **Frontend/runtime:** Route, page và API #69 caller có trong Angular source hiện tại. Host/deployment và runtime chưa được xác minh.
 6. **Visual consistency:** prototype dùng Plus Jakarta Sans/cobalt treatment; Study Web guide yêu cầu semantic ocean-blue tokens và Inter/system sans-serif. Cần design review khi wire.
 
-**Kết quả:** API #69 `SOURCE-BACKED LOCALLY (R)`; screen `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`. Chỉ xử lý AD-03 trong phiên này.
+**Kết quả:** API #69 `SOURCE-BACKED LOCALLY (R)`; route/page/API #69 caller `SOURCE PRESENT`; screen `DD BLOCKED` và acceptance còn bị chặn bởi permission, PII, audit, schema, cùng visual review; `RUNTIME NOT VERIFIED`. Phần đồng bộ này chỉ cập nhật trạng thái source cho AD-03.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 
@@ -57,7 +58,7 @@
 
 | Nhóm | Nguồn | Kết luận dùng cho AD-03 |
 |---|---|---|
-| Inventory và handoff | `list_screen.md` AD-03, AD-02, AD-04, AD-05 | AD-03 là chi tiết tài khoản; từ AD-02/#68 nhận user đã chọn; đích kế tiếp AD-04 hoặc AD-05. Route đề xuất, trạng thái cũ `D`. |
+| Inventory và handoff | `list_screen.md` AD-03, AD-02, AD-04, AD-05; Angular Admin router/page | AD-03 route/page và caller #69 có trong source hiện tại. AD-02, AD-04, AD-05 cũng có route declarations; permission, handoff behavior và runtime acceptance vẫn mở. |
 | Activity | `AC_04_ADMIN_MANAGEMENT.drawio`, lane AC-31 | Admin đăng nhập và có quyền user management; chọn user → GET detail #69 → đọc profile/role → nhánh update #70, status #71 hoặc delete #72. Đây là flow nghiệp vụ trong diagram, không chứng minh quyền/endpoint đã được phê duyệt live. |
 | API contract | `docs/lists/list_api.md` #69 | `GET /api/v1/admin/users/{user_id}`, Bearer JWT/Admin, path `user_id:int64!`, `ApiEnvelope<UserProfile>`, success 200; errors 401/403/404/500. Không có query/body/pagination. |
 | API runtime | `app/api/v1.py`; `modules/admin/api_69_admin_user_detail/{validate,query,view,models}.py`; shared auth/response helpers | Route wire tới view. Shared guard kiểm tra Bearer/JWT và claim `ADMIN` trước parse path/query; guard-to-user-management mapping còn DERIVED. Raw signed-int64 parse; malformed/out-of-range và row missing map 404; safe allowlisted legacy `users` projection; query/mapping errors map 500; response `DESIGN_RESOURCE_RETRIEVED`. |
@@ -66,7 +67,7 @@
 | DB/source basis | `infra/postgres/study-server/DB.sql`; API #69 query | Checked-in legacy `users` has BIGSERIAL `id` and candidate profile columns. Query selects only the response allowlist and omits password hash. V1-PILOT UUID identity model differs; live schema/grants/deployment not verified. |
 | Test evidence | `tests/modules/admin/api_69_admin_user_detail/test_admin_user_detail.py` | Source asserts safe field projection, auth before DB, malformed ID 404, no-row 404, query/mapping 500, no commit, OpenAPI int64/error set. Tests use fake sessions/rows and were inspected, not run. |
 | Visual source | `screen.png`, `code.html` | Static detail screen in a no-selected-user/“CHƯA ĐỒNG BỘ” empty state. Edit/status controls disabled. Audit panel and 180-day retention, “RBAC Strict Audit Active”, system-normal/sync claims and 204/NULL_PAYLOAD text have no evidence in API #69. HTML has placeholder links and no request/interaction code. |
-| Web boundary/design | `.agents/web-work/study/AGENTS.md`, `.agents/web-study/design.md`, current `apps/study-client/` root | Study Web is `UNWIRED`; root has `dist`, `docs`, `node_modules`, and `tsconfig.tsbuildinfo`, with no editable `src/`, package manifest, router or client. Prototype palette/typeface differs from the Study Web design guide. |
+| Web boundary/design | `.agents/web-work/study/AGENTS.md`, `.agents/web-study/design.md`, Angular Admin router/page/API service | Route, AD03 page and API #69 caller are present in source. Runtime/deployment and visual acceptance are not verified; prototype palette/typeface differs from the Study Web design guide. |
 
 ### Trích từ DD nguồn: 7. Execution and verification sequence
 

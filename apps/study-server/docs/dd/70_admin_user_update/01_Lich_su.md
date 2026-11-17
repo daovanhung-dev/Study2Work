@@ -30,7 +30,7 @@ status: "Draft — Needs Confirmation"
 - [AC-31 activity diagram](../../diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) — chọn Update/Status/Delete; #70 update user/profile.
 - [DB table guide](../../diagrams/DB_UNICA_TABLES.md) và [DB ERD](../../diagrams/DB_UNICA_ERD.drawio) — legacy users candidate, design-only.
 - [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — candidate BIGINT users, không chứng minh live schema.
-- [API #14 model](../../../app/modules/guest/api_14_users_me_profile/models.py), [validator](../../../app/modules/guest/api_14_users_me_profile/validate.py), [query](../../../app/modules/guest/api_14_users_me_profile/query.py) và [view](../../../app/modules/guest/api_14_users_me_profile/view.py) — profile mutation precedent hiện tại.
+- [API #14 model](../../../app/modules/student/api_14_users_me_profile/models.py), [validator](../../../app/modules/student/api_14_users_me_profile/validate.py), [query](../../../app/modules/student/api_14_users_me_profile/query.py) và [view](../../../app/modules/student/api_14_users_me_profile/view.py) — profile mutation precedent hiện tại.
 - [Current auth helper](../../../app/utils/auth.py) — shared guard nhận role tường minh; API #68–#70 hiện yêu cầu `ADMIN`.
 - [API #68 DD](../68_admin_users_list/02_Overview.md) và [API #69 DD](../69_admin_user_detail/02_Overview.md) — AC-31 context; macro-review được ghi nhận pending tại thời điểm tạo #70; document-level review hoàn tất sau khi tạo #72.
 - [Worklog API #70](../../../../../.agents/worklog/2026-10-24/create-study-api70-dd.md) — preflight, plan và matrices trước khi author.

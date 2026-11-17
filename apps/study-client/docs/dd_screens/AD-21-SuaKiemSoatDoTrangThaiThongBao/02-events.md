@@ -13,6 +13,8 @@
 | `AD-21-EV-008` | `Source heading` / `EV-08` — Footer policy/support links | See source event detail below |
 
 > Event IDs trong package là alias để theo template; Source Event IDs, steps và API links giữ theo DD nguồn. Alias không chứng minh event runtime.
+>
+> Các event dưới đây mô tả Stitch artifact trừ nơi có ghi rõ current Angular source. Current source route/page/#96 behavior được tóm tắt tại EV-01; HTML Stitch vẫn là static asset.
 
 ## 2. Chi tiết event từ DD nguồn
 
@@ -20,13 +22,14 @@
 
 ### `EV-01` — Initial route/load và status read
 
-- **Element / loại:** #14/#20/#22, route load; `Load` (future route behavior only).
-- **Điều kiện:** Candidate route phải được triển khai; phải có `notificationId` từ caller. Current prototype không có router và ID hợp lệ nên không gửi request.
+- **Element / loại:** #14/#20/#22, route load; `Load`.
+- **Điều kiện:** Angular route `/admin/notifications/:notificationId` đã đăng ký. Khi route param có giá trị, current page gọi #96; Stitch prototype tĩnh vẫn không có router hoặc ID hợp lệ.
 - **Input:** API catalog path `notification_id:int64!`; Bearer JWT. Không query/body. Không dùng `operation_id` thay `notification_id`.
 - **Quy trình:** (1) nhận route param; (2) không tự cấp ID; kiểm tra theo type đã được route contract chốt; (3) kiểm tra auth/authorization ở server, giữ khác biệt AC permission với local role `ADMIN`; (4) nếu source/contract được duyệt, gọi một lần `GET /api/v1/admin/notifications/{notification_id}/status` (#96); (5) parse status/envelope; direct success 200 `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<Notification>`; (6) validate `data` rồi map chỉ các field có trong response; (7) hiển thị trạng thái loading/success/error theo UI contract khi được chốt; (8) không poll #18 hoặc gọi provider.
 - **Current local #96:** auth guard `ADMIN` chạy trước path parsing; positive signed int64 lookup; malformed/out-of-range ID → 404. Query đọc `notifications` cùng aggregate `notification_deliveries`; no notification/no deliveries → 404. Status precedence local: any `QUEUED` → `QUEUED`; else any `FAILED` → `FAILED`; else all `SENT` → `SENT`. Response có id/title/content/channels/status/created_at, không có recipient/count/per-channel/scheduled_at/read_at. Read-only, không commit.
 - **Errors / giới hạn:** Catalog #96 chỉ có 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 500 `DESIGN_INTERNAL_ERROR`. Không thêm 422. UI/client error route mapping, retry/timeout/cache chưa có contract. Do not claim `SENT=delivered`.
-- **Kết quả:** Current page không đổi theo API vì không có API client; current display vẫn là static placeholders. Target mapping cần owner approval do inventory enum và local enum khác.
+- **Current Study Web source:** `AD21Page` đọc route param qua `adminRouteState`, gọi `AD21ApiService.getStatus` → GET #96, rồi map fields hiện có bằng `renderNotificationStatusFields`. UI có loading/loaded/error state; status giữ nguyên raw value. Missing/404/error đi qua shared Admin error mapper. #94/#95/SH-07 controls vẫn disabled; không poll #18.
+- **Kết quả:** Current page render các field có trong #96; recipient, delivery counts/per-channel status, schedule và Operation ID tiếp tục unavailable. Runtime/deployment chưa xác minh; target lifecycle mapping vẫn cần owner approval.
 
 ### `EV-02` — Shell navigation và breadcrumb
 
@@ -71,8 +74,8 @@
 - **Element / loại:** #21/#42/#43; `Click`/navigation được dự kiến.
 - **Điều kiện / input:** Nút disabled; Operation ID đang “Chưa liên kết”. Không suy Operation ID từ notification ID.
 - **Expected API #18:** `GET /api/v1/operations/{operation_id}`, Bearer JWT, catalog success 200 `DESIGN_OPERATION_RETRIEVED`, `ApiEnvelope<Operation>`, errors 401/403/404/500. Inventory yêu cầu chỉ gọi khi producer cấp ID và dừng theo approved terminal state.
-- **Current evidence:** Không có Study #18 route/module/query/test/operations store. API row khai báo `int64`, AC/reusable `Operation.id` khai báo UUID; AD-20 #93 local response có derived `meta.operation_id:UUID`, không tạo generic Operation row. Owner scope/status lifecycle và producer bridge chưa chốt.
-- **Kết quả:** Không navigate, không poll/timer/SSE. SH-07 vẫn blocked; #96 notification status không thay API #18.
+- **Current evidence:** Study #18 route/module/query and 8 fake-DB HTTP tests exist. Local handler parses UUID, permits STUDENT/MENTOR/ADMIN, owner-binds to sender and projects notification dispatch rows; API catalog path says `int64`, and generic Operation storage/lifecycle is unresolved. AD-20 #93 source emits derived UUID `meta.operation_id`; #96 returns no Operation ID.
+- **Kết quả:** AD-21 does not navigate or poll: its button is disabled and no client handoff/poller is wired. SH-07 remains blocked by the unresolved ID/owner/result/producer contract.
 
 ### `EV-08` — Footer policy/support links
 

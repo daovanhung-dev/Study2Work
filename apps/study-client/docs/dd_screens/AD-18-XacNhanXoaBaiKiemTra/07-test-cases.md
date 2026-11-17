@@ -2,6 +2,12 @@
 
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
+## 0. T007 implementation evidence
+
+- Focused Angular specs for AD-15 and AD-18: 2 files, 7 tests passed. They cover safe-ID entry, AD-18 route ID/read-only state, disabled destructive/reason controls, no delete request, and return navigation.
+- Study Server API #90 focused fake-session tests: 18 passed; they do not verify live PostgreSQL/schema behavior.
+- Angular production build passed with existing CSS budget warnings in unrelated student stylesheets. Browser rendering remains `RUNTIME NOT VERIFIED` because the browser control could not navigate to the local dev server.
+
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |
 |---|---|---|---|---|
@@ -18,7 +24,7 @@
   2. Khi runtime/test implementation tồn tại, viết test riêng theo contract đã xác nhận.
 - **Expected UI/state:** Theo acceptance/state trong nguồn; chưa được xác minh trên runtime.
 - **Expected API/data:** Theo [API Integration](04-api-integration.md); không phát sinh request trong lần tạo tài liệu.
-- **Failure / edge assertion:** Không đánh dấu pass cho `UNWIRED`, `IMPLEMENTATION BLOCKED` hoặc `RUNTIME NOT VERIFIED`.
+- **Failure / edge assertion:** Passing read-only route/navigation specs does not mark destructive-flow acceptance or browser runtime as verified.
 - **References:** `AC-35`, [Events](02-events.md), [Business Rules](05-business-rules.md), [source DD](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/AD-18.md).
 
 ## 3. Source acceptance / test plan (not run)
@@ -27,14 +33,14 @@
 
 - [x] Có ảnh nguồn nguyên trạng, HTML nguồn; original hashes được ghi trong worklog.
 - [x] Có 40 marker tuần tự trên ảnh đánh số; từng marker khớp một element row và marker JSON.
-- [x] Ghi rõ route/UI hiện `UNWIRED`, mockup disabled/static và không có request handler.
+- [x] Phân biệt mockup disabled/static với current Angular read-only route/navigation; không có request handler.
 - [x] Phân biệt AC-35/direct API catalog với local #90 branches; không coi local derived policy là approved.
 - [x] Mô tả API method/path/auth/params/body/response/status/business codes; không tạo 409.
 - [x] Ghi rõ target-data gap, permission gap, attempt race, lifecycle visibility và schema/runtime blockers.
 - [x] Có state/navigation matrix, error/unknown-outcome handling limits và liên kết AD-15.
-- [x] Giữ riêng trạng thái `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, `RUNTIME NOT VERIFIED`.
+- [x] Giữ riêng trạng thái `DD BLOCKED`, `IMPLEMENTATION PARTIAL`, `RUNTIME NOT VERIFIED`.
 - [ ] Owner duyệt no-attempt/answer-only/tombstone/race/permission/visibility policy; cần quyết định trước khi `DD READY`.
-- [ ] Study Web route, selected-Quiz data handoff, action/error/recovery UI và cache invalidation được thiết kế/wire.
+- [ ] Selected-Quiz data handoff, destructive action/error/recovery UI và cache invalidation được thiết kế/wire.
 - [ ] Live schema/deployment và API contract/DD được xác minh/cập nhật trước runtime claim.
 
 #### Kế hoạch kiểm chứng từ source PLAN

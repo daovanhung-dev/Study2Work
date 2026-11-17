@@ -1,0 +1,145 @@
+.api-screen .progress-number {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 14px 0;
+}
+.api-screen .progress-number strong {
+  color: #145a86;
+  font-size: clamp(34px, 7vw, 58px);
+  letter-spacing: -0.05em;
+}
+.api-screen .progress-number span {
+  color: #61778d;
+  font-size: 13px;
+}
+.api-screen .progress-api-gate {
+  margin-bottom: 18px;
+  background: #f7fbfd;
+}
+.api-screen .achievements-summary .api-heading {
+  margin: 0 0 15px;
+}
+.api-screen .achievements-summary .api-heading a {
+  color: var(--ocean-primary);
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+}
+.api-screen .achievement-list,
+.api-screen .discussion-list {
+  display: grid;
+  gap: 11px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.api-screen .achievement-list li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid #e6edf3;
+  border-radius: 10px;
+}
+.api-screen .achievement-list h2 {
+  margin: 0 0 5px;
+  font-size: 14px;
+}
+.api-screen .discussion-filter {
+  margin-bottom: 16px;
+}
+.api-screen .discussion-filter .api-field {
+  max-width: 480px;
+}
+.api-screen .discussion-list > li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 17px 0;
+  border-bottom: 1px solid #e8eef4;
+}
+.api-screen .discussion-copy {
+  min-width: 0;
+}
+.api-screen .discussion-copy h2 {
+  margin: 6px 0;
+  font-size: 17px;
+}
+.api-screen .discussion-copy p:not(.api-meta) {
+  display: -webkit-box;
+  max-width: 78ch;
+  margin: 0 0 8px;
+  overflow: hidden;
+  color: #50687f;
+  font-size: 12px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+.api-screen .api-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 18px;
+  color: #60758a;
+  font-size: 12px;
+}
+.api-screen .api-pagination .api-button {
+  min-height: 36px;
+}
+.api-screen .discussion-create-form {
+  max-width: 900px;
+}
+.api-screen .thread-byline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #476078;
+  font-size: 12px;
+}
+.api-screen .thread-byline time,
+.api-screen .thread-byline span {
+  color: #718399;
+  font-size: 10px;
+}
+.api-screen .thread-content {
+  margin: 18px 0 0;
+  color: #425d74;
+  white-space: pre-wrap;
+}
+.api-screen .notification-gate {
+  max-width: 820px;
+  margin: 30px auto;
+  padding: clamp(24px, 5vw, 45px);
+  text-align: center;
+}
+.api-screen .notification-gate .api-empty-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  font-size: 24px;
+}
+.api-screen .notification-gate p:not(.api-eyebrow) {
+  max-width: 72ch;
+  margin: 10px auto;
+  color: #5b7085;
+  font-size: 13px;
+}
+.api-screen .disabled-link {
+  opacity: 0.55;
+  pointer-events: none;
+}
+@media (max-width: 760px) {
+  .api-screen .discussion-list > li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .api-screen .discussion-list > li > a {
+    width: 100%;
+  }
+}

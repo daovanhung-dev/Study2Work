@@ -7,12 +7,12 @@ Hoàn thiện riêng màn hình AD-18 theo inventory row 76, AC-35 và API #90. 
 | Thuộc tính | Expected / nguồn thiết kế | Current evidence |
 |---|---|---|
 | Actor/permission | AC-35: Admin có quyền quản lý quiz. | Local #90 chỉ kiểm tra role `ADMIN`; fine-grained quiz-management policy chưa có nguồn. |
-| Route | Inventory: `/admin/quizzes/:quizId/delete`; AD-15 là entry point và màn quay lại. | Study Web không có source/router/API client; các anchor HTML đều `href="#"`. Route chỉ là candidate. |
+| Route | Inventory: `/admin/quizzes/:quizId/delete`; AD-15 là entry point và màn quay lại. | T007 adds an Angular route/page and safe-ID AD-15 entry/return links. The Stitch HTML anchors remain `href="#"`; browser runtime is not verified. |
 | Target record | Admin kiểm tra tác động tới attempts rồi xác nhận. | HTML/PNG hiện “Chưa chọn bản ghi”, `--`; #87 chỉ có ID, course_id, title, duration, passing score, `questions=[]`; không có GET quiz detail. Course title và history count không map được. |
 | Delete | AC-35 n10 yêu cầu soft delete nếu có attempts. Catalog #90: path-only DELETE, DeleteResult; 200/401/403/404/422/500. | Local #90 soft-deletes khi attempts hoặc answers tham chiếu tồn tại; hard-deletes child/quiz khi không có history. Đây là local `DERIVED`, chưa được owner duyệt. |
 | UI state | Inventory: `confirm/deleting/conflict/deleted`; #87 invalidate sau xóa. | Prototype confirm button và audit textarea disabled; không có listener/request. Catalog #90 không khai báo 409/conflict. |
 | Data/history | Giữ history nếu attempts tồn tại theo AC-35. | API #87 ẩn tombstone; #89 từ chối sửa quiz có history/tombstone; #91 vẫn tính thống kê quiz tombstone. Attempt-create #29 chưa có route/module local để chứng minh race safety. |
-| Runtime | — | `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`. |
+| Runtime | — | `DD BLOCKED`; `IMPLEMENTATION PARTIAL — read-only route/navigation wired; delete flow blocked`; `RUNTIME NOT VERIFIED`. |
 
 ## Nguồn và thứ tự xử lý
 
@@ -52,10 +52,10 @@ All markers will use integer source-pixel coordinates with origin at top-left. T
 
 ## Event/data plan
 
-1. **EV-01 — Open candidate route / identify target:** accept `quizId` from route candidate. No detail GET exists in inventory. AD-15 local #87 can provide only `id`, `course_id`, `title`, `duration_minutes`, `passing_score`; it cannot supply course display name or attempts/history. Do not invent a second API or claim the target is loaded. Check approved Admin permission before showing actionable content once a route guard exists.
-2. **EV-02 — Return to AD-15:** top back link and list breadcrumb indicate return, but HTML anchors are `#`. Route/history behavior and filter/page handoff are not wired. Specify intended return as AD-15 only as design expectation.
-3. **EV-03 — Safe cancel:** safe-return anchor is `#`; no handler. Candidate cancel returns to AD-15 or previous safe page after route owner selects a rule. No mutation.
-4. **EV-04 — Confirm deletion:** current button is disabled and has no handler. If policy/permission/data contract is approved and control is enabled: validate a positive signed-int64 `quizId` (local source behavior), send exactly one `DELETE /api/v1/admin/quizzes/{quiz_id}` with Bearer JWT, no query/body, map catalog success/error envelope. 200 `DESIGN_RESOURCE_DELETED` returns `{id,status:"deleted",deleted_at}`. 401/403/404/422/500 map to auth/access/not-found/invalid-ID/service-error. Do not create a 409 branch; inventory `conflict` state has no API support. On success, inventory expects #87 invalidation; exact success navigation and cache mechanism remain open because no client exists.
+1. **EV-01 — Open route / identify target:** accept `quizId` from the wired route. No detail GET exists in inventory. AD-15 local #87 can provide only `id`, `course_id`, `title`, `duration_minutes`, `passing_score`; it cannot supply course display name or attempts/history. Current Angular page displays the raw route ID only; do not invent a second API or claim the target is loaded. Permission policy remains unresolved.
+2. **EV-02 — Return to AD-15:** current Angular page has return links to `/admin/quizzes`; the original Stitch HTML anchors are `#`. Filter/page handoff and browser navigation remain unverified.
+3. **EV-03 — Safe cancel:** current Angular safe-return link targets AD-15; the original Stitch anchor is `#`. No mutation is sent.
+4. **EV-04 — Confirm deletion:** current Angular button is disabled and has no handler. If policy/permission/data contract is approved and control is enabled: validate a positive signed-int64 `quizId` (local source behavior), send exactly one `DELETE /api/v1/admin/quizzes/{quiz_id}` with Bearer JWT, no query/body, map catalog success/error envelope. 200 `DESIGN_RESOURCE_DELETED` returns `{id,status:"deleted",deleted_at}`. 401/403/404/422/500 map to auth/access/not-found/invalid-ID/service-error. Do not create a 409 branch; inventory `conflict` state has no API support. On success, inventory expects #87 invalidation; exact success navigation and cache mechanism remain open because there is no delete caller.
 5. **EV-05 — Audit reason field:** disabled in HTML; #90 catalog has no body and local route deliberately reads no body. Do not enable/send the text until a new approved request contract exists.
 6. **EV-06 — Shell notification/navigation controls:** prototype contains notification button without handler and `#` shell/footer anchors. Document them as static/no-op; do not infer destinations or data.
 
@@ -68,7 +68,7 @@ All markers will use integer source-pixel coordinates with origin at top-left. T
 - Resolve AC-35 quiz-management permission vs shared `ADMIN` role guard.
 - Decide how route receives target Quiz and course name; no detail API is present and #87 omits course title/history count.
 - Resolve inventory `conflict` state vs #90 catalog without 409; HTTP 422 means request validation in the current source, not dependency conflict.
-- Study Web runtime, live DB schema/deployment and client cache behavior are unverified.
+- Browser runtime, live DB schema/deployment and client cache behavior are unverified.
 
 ## Acceptance audit
 
@@ -78,4 +78,11 @@ All markers will use integer source-pixel coordinates with origin at top-left. T
 - [x] DD includes A–F, detailed EV-01…EV-06, API #90 direct catalog vs local source, route/data mapping, error/status matrix and blockers.
 - [x] Relative links resolve; screen inventory remains 83 IDs/folders; core artifact count increases by one (70/83 → 71/83).
 - [x] Reverse API index #090, G-11, global AD-18 status/checkpoint and worklog reflect current evidence.
-- [x] `git diff --check` and static artifact audit pass. App tests/runtime were not run for this documentation task.
+- [x] `git diff --check` and static artifact audit pass for the original documentation task; app tests/runtime were not run in that task.
+
+## T007 implementation checkpoint (2026-11-16)
+
+- Current Angular source has the `/admin/quizzes/:quizId/delete` route/page. AD-15 links only positive safe integer IDs; the page displays the raw route ID and returns to AD-15.
+- AD-18 remains read-only: no target/detail request, no #90 caller, and destructive/reason controls are disabled. API #90 DD remains Draft; policy, fine-grained permission, schema and lifecycle blockers remain open.
+- Verification: focused Angular AD-15/AD-18 specs 7/7; API #90 fake-session tests 18/18; production build passed with existing CSS budget warnings in unrelated student stylesheets.
+- Browser navigation/rendering is `RUNTIME NOT VERIFIED`; Chrome control could not navigate to the local dev server. This checkpoint does not claim live API/DB behavior.

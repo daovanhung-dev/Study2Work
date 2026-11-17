@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/admin/courses`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: Angular Admin route source includes `/admin/courses` and the AD-07 detail path; authenticated browser/navigation runtime is `NOT VERIFIED`.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -38,7 +38,7 @@ flowchart LR
 
 | State | Điều kiện vào | UI / element liên quan | Thoát state |
 |---|---|---|---|
-| `UNWIRED` | Current Study Web source/router/client vắng mặt; đây là status triển khai, không phải server response. | Prototype assets tĩnh; không gọi API. | Khi app route/client được triển khai và xác minh. |
+| `SOURCE_WIRED_RUNTIME_UNVERIFIED` | Checked-in Admin route/page/API caller exist; this is implementation evidence, not a server response. | AD-06 source calls #73; authenticated browser/navigation and live API/DB behavior remain unverified. | Verify in an approved authenticated browser/runtime. |
 | `INITIAL` | Entry target trước request. | Khởi tạo page=1, no filter theo contract; giữ controls không supported disabled. | Gửi #73 → `LOADING`. |
 | `LOADING` | #73 request đang chờ. | Skeleton/indicator cần theo approved design system; prototype pulse icon không phải loading contract. | 200 → `READY`/`EMPTY`; lỗi → state tương ứng. |
 | `READY` | HTTP 200, `items.length>0`, envelope/model hợp lệ. | Hiển thị row field có API mapping; pagination metadata từ response. | Filter/page change → `LOADING`; chọn row → AD-07. |

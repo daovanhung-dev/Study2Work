@@ -39,7 +39,7 @@ status: "Draft — Needs Confirmation"
 - [V1-PILOT DDL](../../../../../infra/postgres/02_study_db.sql) — UUID enum khác legacy users; không dùng làm target.
 - [API #3 query/view](../../../app/modules/guest/api_03_auth_login/query.py) — refresh eligibility and single-token rotation.
 - [Current auth helper](../../../app/utils/auth.py) — access guard parses JWT claims/roles without DB status checks.
-- [API #4 UserProfile](../../../app/modules/guest/api_04_users_me/models.py) — safe response fields.
+- [API #4 UserProfile](../../../app/modules/student/api_04_users_me/models.py) — safe response fields.
 - [API #68/#69/#70 DDs](../68_admin_users_list/02_Overview.md) — adjacent AC-31 list/detail/profile boundaries.
 
 ## Tables read/written

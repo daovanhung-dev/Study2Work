@@ -37,7 +37,7 @@ status: "Draft — Needs Confirmation"
 - [DB table guide](../../diagrams/DB_UNICA_TABLES.md) và [DB ERD](../../diagrams/DB_UNICA_ERD.drawio) — legacy users fields ở trạng thái design-only.
 - [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — BIGINT users query candidate; không chứng minh live schema.
 - [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — identity/profile/role UUID model khác legacy.
-- [API #4 profile query/model](../../../app/modules/guest/api_04_users_me/query.py) và [model](../../../app/modules/guest/api_04_users_me/models.py) — safe projection và nullable fields hiện có.
+- [API #4 profile query/model](../../../app/modules/student/api_04_users_me/query.py) và [model](../../../app/modules/student/api_04_users_me/models.py) — safe projection và nullable fields hiện có.
 - [API #07 source](../../../app/modules/guest/api_07_courses_search/view.py) — size 20, PageMeta và page validation precedent.
 - [API #68 module](../../../app/modules/admin/api_68_admin_users_list/view.py) và [HTTP tests](../../../tests/modules/admin/api_68_admin_users_list/test_admin_users_list.py) — current source/test evidence.
 

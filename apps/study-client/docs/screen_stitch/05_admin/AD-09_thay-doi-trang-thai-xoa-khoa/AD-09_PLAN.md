@@ -1,8 +1,8 @@
 # AD-09 — Kế hoạch Detailed Design
 
 > **Screen ID:** AD-09 · **Tên:** Thay đổi trạng thái/xóa khóa · **Đợt/ưu tiên:** W4 / P2<br>
-> **Route đề xuất:** `/admin/courses/:courseId/actions` · **AC:** AC-32 · **API:** #74, #76, #77<br>
-> **Trạng thái inventory trước phiên:** `D`; #76/#77 route/module/test sources exist locally, both API DDs remain `Draft — Needs Confirmation`; Study Web `UNWIRED`.
+> **Route trong inventory / Angular:** `/admin/courses/:courseId/actions` (route source-present; permission mapping open) · **AC:** AC-32 · **API:** #74, #76, #77<br>
+> **Trạng thái inventory tại lần lập plan ban đầu:** `D`; #76/#77 route/module/test sources exist locally, both API DDs remain `Draft — Needs Confirmation`; Study Web `UNWIRED` (historical snapshot; current re-audit in §8).
 
 ## 1. Phạm vi và nguyên tắc
 
@@ -13,15 +13,15 @@
 - API #76 catalog and AC-32 omit request body/enum members. Its strict `{status}` body and uppercase `DRAFT|PUBLISHED|SUSPENDED` are `DERIVED`; do not treat `archive` as a valid API status.
 - API #77 catalog/AC call delete/soft-delete conditional and return `DeleteResult`. Current local implementation soft-marks `DELETED`, checks a candidate dependency set and returns 422 on dependency; it does not hard-delete or cascade. These policy choices are still `DERIVED` and owner confirmation remains required.
 - Do not transmit the prototype's audit reason: #76 candidate body has only `status`, its audit row stores actor/old/new values, and #77 has no audit write. The ISO-27001 statement is unsupported by these API contracts.
-- Do not claim Study Web wiring, automatic RBAC, lifetime retention, enrollment access effects, reversibility/irreversibility, restore behavior, or production DB state from mockup copy.
-- No Study Web route/client exists in this checkout. No app tests/runtime will be run; historical API test-source/report evidence is not runtime proof.
+- Do not claim #76/#77 write-flow wiring, automatic RBAC, lifetime retention, enrollment access effects, reversibility/irreversibility, restore behavior, or production DB state from mockup copy.
+- Historical initial snapshot: no Study Web route/client was identified. Current 2026-11-16 source audit is recorded in §8. The original artifact-authoring pass did not run app tests/runtime; historical API test-source/report evidence is not runtime proof.
 - Context manifest has no canonical skill for `web-ui-only-dd`; `createDD-markdown` excludes this boundary. No unrelated skill will be loaded.
 
 ## 2. Evidence and design treatment
 
 | Topic | Expected / contract | Current source or prototype | Treatment in DD |
 |---|---|---|---|
-| Route/actor/ID | AC-32 Admin with course-management permission; AD-09 linked to AD-06/AD-07; numeric Course ID; proposed `/admin/courses/:courseId/actions`. | No Study Web app source/router/client; current prototype has no selected Course and links Back/Cancel to `/admin/courses`. | Route remains proposed; keep fine-grained permission mapping open; correct back destination needs a decision. |
+| Route/actor/ID | AC-32 Admin with course-management permission; AD-09 linked to AD-06/AD-07; numeric Course ID; `/admin/courses/:courseId/actions`. | Initial plan snapshot had no Study Web route/client. Current Angular route/page/#74 read caller exists; Stitch prototype has no selected Course and links Back/Cancel to `/admin/courses`. | Route/read flow source-present; fine-grained permission mapping open. Current Angular Back/footer target AD-07; write/reload destination remains open. |
 | Flow | AC-32: GET #73 → GET #74 with course/owner/counters → choose update/status/delete; #76 status + audit, #77 soft-delete per policy; reload course management. | Local #73/#74 are GET sources; #73/#74 do not exclude `DELETED`; #76/#77 local mutation handlers are present. | #74 context required. Do not promise counter values; reload #73/#74 destination/sequence is a UI decision. |
 | Status actions | Catalog semantic labels mention draft/published/suspended; PATCH #76 accepts `course_id:int64`, returns Page<Course>. | Catalog/diagram omit body; local strict candidate accepts `{status:DRAFT|PUBLISHED|SUSPENDED}`; no transition/readiness check; same status no-op; changed value writes audit atomically. | Radio choices must be treated as prototype only. `archive` does not map to a confirmed #76 status. Body/enum/transitions remain DERIVED/open. |
 | Delete action | DELETE #77 per policy; catalog `DeleteResult`; AC-32 says soft-delete by policy. | Local #77 blocks any enrollment and active generic Content/lesson/quiz/assignment; otherwise sets status `DELETED`; no child mutation, hard delete or audit. Repeat delete returns 404. | Do not present “permanent irreversible DB delete” as supported. Dependency set, deleted marker, repeat semantics and restore policy require approval. |
@@ -62,10 +62,10 @@
 3. Approve #77 dependency policy, soft-delete marker/timestamp mapping, repeat-delete behavior, visibility/restore policy, linked writer behavior and whether delete auditing is required.
 4. Decide whether audit reason is required; it is not present in #76/#77 contract/source.
 5. Confirm live schema/deployment and AC-32 permission versus shared role `ADMIN`.
-6. Implement Study Web route/client, target loading, confirm/error/session states, correct back/cancel path, and approved post-mutation reloading.
+6. Implement the approved #76/#77 write flow, permission/error/session handling, and post-mutation reloading. Current route/page/#74 read flow exists; mutation and reload policy remain open.
 7. Replace or source unsupported permanent-delete, ISO/audit-reason, RBAC, retention and learner-dependency claims.
 
-Target status after this session: produce an evidence-complete screen design, but mark **DD BLOCKED** and **IMPLEMENTATION BLOCKED** until status/delete and permission/schema decisions are approved. Runtime remains **NOT VERIFIED**.
+Target status recorded by the initial artifact-authoring pass (historical): an evidence-complete design with **DD BLOCKED** and **IMPLEMENTATION BLOCKED** pending status/delete and permission/schema decisions. Current implementation status is recorded in §8. Runtime remains **NOT VERIFIED**.
 
 ## 7. Execution and verification order
 
@@ -77,3 +77,23 @@ Target status after this session: produce an evidence-complete screen design, bu
 6. [x] Update AD-09 inventory and reverse API source status for #76/#77; update global tracker/checkpoint.
 7. [x] Static audit hashes/dimensions, JSON/XML, marker order/bounds and C-row bijection, links, screen ID/folder/core-artifact counts, whitespace and final image. Do not run application tests/runtime.
 8. [x] Finalize worklog; stop after AD-09.
+
+## 8. Current Study Web source re-audit — 2026-11-16
+
+This dated addendum supersedes only the “Study Web UNWIRED/no route-client” current-state statements above. The original Stitch and API evidence remains unchanged; the previous audit is retained as history.
+
+### 8.1 Current source facts
+
+- `admin.routes.ts` registers `courses/:courseId/actions` → `AD09Page`; the route spec covers the registration.
+- `AD09Page` reads the raw route `courseId`, calls `AD09ApiService.getCourse()` → GET #74, and exposes `loading/loaded/error` states. Loaded UI displays title, status, mentor, price and the exact raw route ID. The #74 projection has no counters.
+- Status, delete and reason controls remain disabled. AD09 has no #76/#77 browser caller; do not enable or invent these requests while API body/status/delete/permission policy remains open.
+- Current Angular Back/footer links return to AD-07 using the raw route ID; the load-error link returns to AD-06. The Stitch prototype Back/Cancel links both go to AD-06. Post-mutation reload policy remains unresolved.
+- The current ID display label correction is “ID khóa học”; it displays the route value without numeric conversion.
+- Current source `loading/loaded/error` does not prove deployed/runtime behavior: `RUNTIME NOT VERIFIED`.
+
+### 8.2 Re-audit disposition
+
+- Keep **DD BLOCKED** and all API #76/#77 body, enum, lifecycle, dependency, audit and permission blockers.
+- Update implementation status to **PARTIAL SOURCE; WRITE FLOW BLOCKED**. The read-only route and #74 caller exist; mutations do not.
+- Keep prototype artifact rows as evidence of the static Stitch HTML. Record their navigation separately from Angular behavior.
+- Focused spec/build, link/stale-claim scan and context validation are recorded in the active worklog after execution; they do not establish browser or production runtime.

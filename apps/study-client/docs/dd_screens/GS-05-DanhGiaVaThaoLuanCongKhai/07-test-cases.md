@@ -2,6 +2,8 @@
 
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
+> **Implementation verification update (T021, 2026-11-17):** The planning references below remain distinct from executable tests. Current Angular evidence: focused GS03+GS05 12/12 and full Study Web 153/153. Current API #10 focused suite: 22 passed with fake/overridden DB sessions. Desktop/mobile headless Chrome rendered via temporary in-memory local API stub; live API/DB/deployment remain unverified.
+
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |
 |---|---|---|---|---|
@@ -31,9 +33,9 @@
 | AC-05 aggregate-rating expectation and eager sequence | `apps/study-server/docs/diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio` | Expected activity flow; conflicts with GS-05 rating gate/F02 lazy flow |
 | Static visible elements | `code.html`, original PNG and separately rendered image | Current asset only |
 | Course public gate | #08 current route/module/query and test source | `SOURCE_BACKED`; tests not run; runtime/deployment unverified |
-| Reviews endpoint | API catalog + API #10 Draft DD; route/test search under current source; existing #97/#98 are ADMIN moderation routes | `DECLARED_NOT_RUNNABLE` |
+| Reviews endpoint | `apps/study-server/app/api/v1.py`, `modules/guest/api_10_courses_reviews/`, focused API #10 tests | `SOURCE_BACKED`; DD remains Draft; 22 tests use fake DB only |
 | Discussion title/rating/live database | Draft DD + legacy `discussions` DDL + V1-PILOT assessment-review DDL + database context | `DISCREPANCY`; live schema unverified |
-| Study Web | `.agents/web-work/study/AGENTS.md` and current app tree/dist review | `UNWIRED`; no GS-05 route/API wiring found |
+| Study Web | `GS03Page`, `GS05Page`, `GS05ReviewsService`, API_010 descriptor, focused/full specs | `PARTIAL SOURCE-WIRED`; 12 focused and 153 full suite tests pass; live API/DB/deployment unverified |
 
 ### Acceptance checklist
 
@@ -45,14 +47,15 @@
 - [x] DD documents expected/current flow, each current element's type/position, all eight events' trigger/type/precondition/input/process/output/error, route, API #08/#10 status, states, navigation and blockers.
 - [x] Reviews title/rating/aggregate, visibility, pagination and AC-05/F02 discrepancies remain explicit; no unsupported behavior was introduced.
 - [ ] API #10 implementation/contract, title source, rating source and public visibility approved; required for `DD READY`.
-- [ ] Loaded review/reply/pagination/loading/error design and cache/orchestration confirmed; required before implementation.
-- [ ] Study Web route/client integration and real runtime evidence captured; required for runtime verification.
+- [ ] Loaded review/reply/pagination/loading/error design and cache/orchestration are approved; current implementation is derived and does not close this gate.
+- [x] Study Web route/client integration and a local stub-backed browser render were captured.
+- [ ] Live API/DB/deployment runtime is verified.
 
 ### Final classification
 
-- `DD BLOCKED`: API #10 is not runnable; title/rating/public-visibility policy unresolved; loaded state has no design.
-- `IMPLEMENTATION BLOCKED`: missing API #10, cache/orchestration decisions, UI design and Study Web wiring.
-- `RUNTIME NOT VERIFIED`: static assets, API #08 source and API #10 declaration do not demonstrate an end-to-end deployed screen.
+- `DD BLOCKED`: API #10 DD remains Draft; title/rating/query-key/public-visibility rules and AC-05/F02/cache decisions remain unresolved.
+- `IMPLEMENTATION PARTIAL SOURCE-WIRED`: GS03/GS05/#10 current local source and tests are wired; loaded view is derived without DD visual approval; enrollment is not implemented.
+- `STUB-BROWSER-VERIFIED; LIVE RUNTIME NOT VERIFIED`: local desktop/mobile render used an in-memory stub; no live API, DB schema or deployment was checked.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 

@@ -4,7 +4,7 @@
 |---|---|
 | Screen ID | `ST-01` |
 | Module | Student |
-| Route | `/student` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student` — route/page gate có trong Angular; runtime chưa được xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`. Tài liệu truy vết được inventory, activity và API catalog hiện có; không thể chốt data mapping, orchestration hoặc xử lý rỗng do #20/#21/#38/#43 đều Draft và không có route Study runtime. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
@@ -31,7 +31,8 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | partial-widget/empty/loading/403 |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Worklog/context Study Web | Route maps #20/#21/#38/#43 and renders sign-in gate; no private request or sample metric. |
+| Runtime | Worklog/context Study Web | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-01 source screen.png](../../screen_stitch/03_student/ST-01_tong-quan-hoc-vien/screen.png))
@@ -44,6 +45,11 @@
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 
 ## Trạng thái và ranh giới bằng chứng
+
+## Current implementation update — 2026-11-17
+
+- `/student` now mounts ST-01 behind `StudentLayout`, which establishes a Student session through #03. ST-01 independently loads ACTIVE courses from #20 and recorded awards from #38, with separate loading/error/empty states. It does not call #21 because that endpoint returns `UserProfile`, or #43 because its source query depends on `notification_recipients`, absent from checked-in DDL.
+- The dashboard displays only fields returned by those APIs. Achievement production and focused #20/#38 tests are absent; the progress and notification widgets explain their source gates rather than showing synthetic values. Runtime against a deployed server has not been verified.
 
 # ST-01 — Tổng quan học viên
 

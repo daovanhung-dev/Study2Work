@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Hiển thị profile/status/role theo #69; nhật ký chỉ khi có API audit được duyệt.
-- Gate/status (giữ nguyên): **R**; **DD BLOCKED; IMPLEMENTATION BLOCKED:** #69 source-backed locally, nhưng ADMIN permission mapping, legacy/live schema, PII/enum/lifecycle và audit/retention policy còn mở; Study Web UNWIRED; prototype 204/audit/sync claims không được API #69 hỗ trợ; RUNTIME NOT VERIFIED
+- Gate/status (giữ nguyên): **R**; route/page/API #69 caller source-present; **DD/ACCEPTANCE BLOCKED** bởi ADMIN permission mapping, legacy/live schema, PII/enum/lifecycle và audit/retention policy còn mở; prototype 204/audit/sync claims không được API #69 hỗ trợ; **RUNTIME NOT VERIFIED**.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu và blockers
@@ -33,7 +33,7 @@
 2. **Schema:** local query nhắm legacy BIGINT `users`; live DB/deployment chưa xác minh, V1-PILOT dùng UUID model khác.
 3. **PII and lifecycle:** email/phone masking, role/status enum, deleted/anonymized user visibility và audit requirements chưa chốt.
 4. **Audit panel:** không có nguồn history/log/count/retention trong #69; các claim “0 bản ghi”, 180 ngày, automatic monitoring, RBAC Strict Audit và Nghị định cần nguồn/owner.
-5. **Frontend/runtime:** Study Web `UNWIRED`; không có editable source/router/client để implement hoặc runtime-verify route.
+5. **Frontend/runtime:** Admin route/page/API #69 caller hiện có trong source. Chưa xác minh deployment, direct-host fallback hoặc browser runtime; không có direct AD03 page spec trong feature package.
 6. **Visual consistency:** prototype dùng Plus Jakarta Sans/cobalt treatment; Study Web guide yêu cầu semantic ocean-blue tokens và Inter/system sans-serif. Cần design review khi wire.
 
 **Kết quả:** API #69 `SOURCE-BACKED LOCALLY (R)`; screen `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`. Chỉ xử lý AD-03 trong phiên này.

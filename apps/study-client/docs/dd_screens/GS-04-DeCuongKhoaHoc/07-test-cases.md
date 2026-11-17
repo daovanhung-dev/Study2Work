@@ -30,10 +30,10 @@
 | Guest curriculum tab, proposed route, AC-05, API #09, GS-03/ST-10 links | `apps/study-client/docs/list_screen.md` | Expected design source |
 | Static element/layout/hrefs | `code.html`, original and Firefox render | Current asset only; no app runtime |
 | #09 route/view/query/model and error/empty mapping | Study Server current source listed in §F | `SOURCE_BACKED`; deployment unverified |
-| #09 tests | `apps/study-server/tests/modules/guest/api_09_courses_curriculum/test_courses_curriculum.py` | Read; not run; fake DB only |
+| #09 tests | `apps/study-server/tests/modules/guest/api_09_courses_curriculum/test_courses_curriculum.py` | 11 passed on 2026-11-17; fake-session tests only |
 | Published visibility/response shape design status | API #09 Draft DD | `Draft — Needs Confirmation`; does not settle access |
 | Actual database schema in deployment | Two incompatible checked-in DDL artifacts; `.agents/server-study/database.md` marks live status unverified | `NOT VERIFIED` |
-| Study Web route/UI wiring | Registered subcontext `.agents/web-work/study/INDEX.md` and current checkout | `UNWIRED` |
+| Study Web route/UI wiring | `guest.route.ts`, GS03Page, GS03 focused spec and current checkout | GS03 query-tab mounts GS04 and calls #09 after #08 success; focused Angular suite 6/6; browser/live runtime unverified |
 
 ### Acceptance checklist
 
@@ -46,13 +46,14 @@
 - [x] Private lesson access, public `content`/`video_url`, API-DD assumption, DDL mismatch, cache and eager/lazy discrepancies are explicit.
 - [ ] Loaded lesson-list/preview/access/error designs and API projection policy approved; required for `DD READY`.
 - [ ] Cache and orchestration/direct-entry behavior confirmed; required before implementation.
-- [ ] Study Web route/client wired and real runtime evidence captured; required for implementation/runtime status.
+- [x] GS04 panel mounted under GS03 and focused tests/build pass.
+- [ ] Browser/live API/DB runtime evidence captured; access and loaded-design gates resolved.
 
 ### Final classification
 
 - `DD BLOCKED`: loaded list and its access/preview contract are unresolved; current API visibility assumption is not approved.
-- `IMPLEMENTATION BLOCKED`: UI runtime is unwired and policy/orchestration inputs remain unresolved.
-- `RUNTIME NOT VERIFIED`: static render and backend source do not demonstrate deployed end-to-end behavior.
+- `PARTIAL SOURCE / IMPLEMENTATION BLOCKED`: GS03 owns the source-wired tab/#09 caller; access/preview policy, cache/orchestration approval and loaded design remain unresolved.
+- `RUNTIME NOT VERIFIED`: browser reached the direct-entry route, but #08 failed because Study Server port 3003 had no listener; fake-session tests and source do not demonstrate deployed end-to-end behavior.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 
@@ -71,7 +72,7 @@
 - API #09 trả lesson content/video URL công khai nhưng không có preview/access field; status filter là assumption trong DD #09.
 - Hai checked-in DDL sources khác nhau; live schema chưa được xác minh.
 - #08 cache freshness/miss behavior và AC-05 eager vs F02 lazy orchestration chưa chốt.
-- Study Web/router chưa wired; route/back link hiện chỉ là proposal/`#` placeholder.
+- GS03 route and GS04 query-tab/#09 caller are source-wired. Static prototype back links remain `#`; Angular test/build do not verify browser or live API/DB runtime.
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Không chạy app test trong task chuyển đổi tài liệu.

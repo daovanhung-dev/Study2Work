@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/admin/lessons/:lessonId`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: Angular route is registered at `lessons/:lessonId`; AD-12 navigation is emitted only for IDs safe to represent as JavaScript numbers.
 - Route params/types: `lessonId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -36,9 +36,9 @@ flowchart LR
 
 | Trạng thái | Điều kiện vào | Dữ liệu/UI | Chuyển tiếp và giới hạn |
 |---|---|---|---|
-| `UNWIRED` | Current checkout lacks editable Study Web source/router/client | Static prototype only | Runtime remains `NOT VERIFIED`; current state is not API-driven. |
-| `loading` | Target client sends #83 | Loading state required for future UI | 200→`ready`; 404/401/403/500 map to explicit errors. |
-| `ready` | #83 returns valid `Lesson` | Seven API fields only; optional content/video may be null | AD-14 handoff uses same numeric `id`; no dependency/metric counts. |
+| `wired-source` | Current Angular router registers AD-13 and AD-12 passes safe IDs | AD-13 calls GET #83 and renders only the Lesson projection | Focused Angular tests pass; browser/live DB remain unverified. |
+| `loading` | AD13Page sends #83 | Loading notice shown | 200→`loaded`; HTTP failures enter `error`. |
+| `loaded` | #83 returns valid `Lesson` | Seven API fields only; optional content/video may be null | AD-14 action remains disabled; no dependency/metric counts. |
 | `selection-required` | Prototype no-selection state or absent route param | Static empty prompt | Route behavior for missing param is unresolved; a valid detail request requires `lesson_id`. |
 | `not-found` | Invalid/overflow/overlength ID, no matching row or `DELETED` tombstone | 404 `DESIGN_RESOURCE_NOT_FOUND` | Return-to-list behavior is a client policy; API does not redirect. |
 | `unauthorized` | Missing/invalid/expired Bearer token | 401 `DESIGN_AUTHENTICATION_REQUIRED` | Session recovery/login route is not defined for Study Web. |
@@ -47,13 +47,13 @@ flowchart LR
 | `dependencies-unknown` | #83 returns Lesson with no dependency projection | Do not infer 0 references | #86 performs its own current dependency check at delete time; 422 conflict maps in AD-14. |
 | `metrics-unavailable` | No #83 metrics/SSE payload | Screenshot values are static placeholders | No subscription/refresh transition exists. |
 
-**Navigation:** AD-12 row selection → `/admin/lessons/{numeric lessonId}` → GET #83 → AD-14 with the same ID → #84/#85/#86 branch → reload AD-12 per AC-34. Back to AD-12 is expected, but current links are placeholders. Browser history, filter preservation, stale detail, dependency refresh and route guard wiring remain open.
+**Navigation:** AD-12 safe numeric row ID → `/admin/lessons/{lessonId}` → GET #83 → AD-14 with the same ID only after its separate flow is approved. Angular back links return to AD-12. Browser history, filter preservation, stale detail, dependency refresh, route guard and #84/#85/#86 policy remain open.
 
-**Accessibility/design:** `.agents/web-study/design.md` is the intended design target, not runtime evidence. On implementation, controls need semantic links/buttons, keyboard operation, focus-visible, explicit disabled/loading/error semantics and responsive reflow. Current screenshot/code do not prove these properties.
+**Accessibility/design:** `.agents/web-study/design.md` remains the design target. Angular has semantic links/buttons and explicit disabled/loading/error states; keyboard/focus-visible behavior, responsive browser rendering and contrast have not been verified in a browser.
 
 ### Trích từ DD nguồn: B. Luồng hoạt động tổng thể
 
-1. **Đi vào từ AD-12:** expected flow chọn lesson trong AD-12 rồi truyền `Lesson.id` số nguyên vào `/admin/lessons/:lessonId`. Inventory và API #83 xác nhận path numeric; current AD-12 table/action chưa có row data và client route chưa tồn tại. Không truyền course slug/title thay lesson ID.
+1. **Đi vào từ AD-12:** current #82 rows pass `Lesson.id` into `/admin/lessons/:lessonId` only when it is a JavaScript safe integer. Unsafe IDs show a precision warning and have no detail link. The Angular route and AD-13 page are registered. Do not pass a course slug/title as the lesson ID.
 2. **Kiểm tra phiên/quyền:** target client cần session Admin. Request #83 hiện xác thực Bearer/JWT + claim `ADMIN` trước khi parse raw path hay truy vấn DB. AC-34 yêu cầu lesson-management permission riêng nhưng source chỉ có role guard; không để UI badge thay quyền server.
 3. **Chuẩn bị request:** tạo `GET /api/v1/admin/lessons/{lesson_id}` với Bearer token; không body/query. Giữ numeric ID; client không tự đặt positive constraint ngoài nguồn. API raw parser chấp nhận signed int64 text và leading zero trong giới hạn parser.
 4. **Lookup:** server bind ID vào `FIND_ADMIN_LESSON_DETAIL`; đọc một row từ candidate legacy `lessons`; loại `status='DELETED'`; không lọc `PUBLISHED`, không join course/resources/progress và không gọi metric API.

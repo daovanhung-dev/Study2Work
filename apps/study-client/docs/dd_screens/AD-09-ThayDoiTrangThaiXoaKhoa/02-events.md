@@ -18,17 +18,17 @@
 
 ### EV-01 — Load selected Course context
 
-- **Trigger/type:** Enter proposed action route; route/Load event.
-- **Preconditions:** Numeric `Course.id` from AD-06 or AD-07; approved Admin authorization; Study Web route/client exists.
+- **Trigger/type:** Enter the Angular action route; route/Load event.
+- **Preconditions:** Numeric `Course.id` from AD-06 or AD-07; approved Admin authorization. Current Angular route/page exists; fine-grained permission mapping remains open.
 - **Inputs:** Path `courseId`. Target GET #74 uses `GET /api/v1/admin/courses/{course_id}`, Bearer JWT, no body/query.
 - **Steps:** (1) Read numeric ID from route, never course code. (2) Request #74. (3) Validate API envelope/returned identity under confirmed contract. (4) Render only source-backed fields such as Course ID/title/current status; counters are not in local #74 projection. (5) On failure, select distinct 401/403/404/500/network state; do not show a blank placeholder as if the course loaded.
-- **Current result:** No API call, target Course is not selected, current status is static “Chưa xác định”. API #74 local query has no DELETED filter, so a deleted Course can still be returned.
+- **Current result:** Angular enters `loading`, requests GET #74 with the raw route ID, then shows title/status/mentor/price and the ID in `loaded`; an empty page or request failure shows `error`. The Stitch prototype remains static and makes no request. API #74 local query has no DELETED filter, so a deleted Course can still be returned.
 
 ### EV-02 — Select operation
 
 - **Trigger/type:** Native `change` on radio group #25–#27.
 - **Input:** Current HTML values `draft`, `archive`, `delete`; default `draft` checked.
-- **Current processing:** Browser updates the group's checked radio and `peer-checked` styling; change listener does nothing. No normalized state, request body, confirmation, error or API call is produced.
+- **Current processing:** This radio group exists only in the standalone Stitch prototype: browser updates the checked radio/`peer-checked` styling and the listener does nothing. Angular AD-09 has no radio selector or action-selection state. No request body or API call is produced.
 - **Target processing:** After owner approval, distinguish status branch #76 from delete branch #77. #76 body candidate uses uppercase `status`, not `course_action`; #77 is DELETE with no body. There is no confirmed mapping for `archive`. Do not combine status and delete in one request or choose an unselected operation by default.
 - **Outcome:** Selection alone has no server side effect. Confirm remains disabled in current artifact.
 
@@ -39,7 +39,7 @@
 - **Request:** `PATCH /api/v1/admin/courses/{course_id}/status`, `Authorization: Bearer <JWT>`. Catalog/AC omit body. Local strict candidate only: `Content-Type: application/json`, `{ "status": "DRAFT" | "PUBLISHED" | "SUSPENDED" }`; no reason, metadata, `archive` or delete flag.
 - **Server sequence:** (1) FastAPI parses strict body; invalid enum/extra key may produce 422 before view guard. (2) Shared role `ADMIN` guard → 401/403; dedicated AC permission is not checked. (3) Parse signed-int64 path → 422 if invalid. (4) Lock existing course status; query failure → safe 500, absent row → 404. (5) Same target → skip update/audit; otherwise update status/timestamp and append actor/old/new audit row in same transaction. No transition/readiness/enrollment gate. (6) Read Course projection through #74 query and build singleton Page. (7) Commit only after valid projection; all query/audit/mapping/commit failures rollback to safe 500. (8) Return 200 `DESIGN_RESOURCE_UPDATED` with Course page.
 - **UI result/errors:** Catalog errors 401/403/404/422/500. No 409 status-transition error is declared. Apply returned status and reload/navigate only according to approved UI policy; current API response Page is local singleton implementation. Same-status success may produce no audit row by current source.
-- **Current result:** No status request is made; audit reason is disabled and not part of the candidate API body.
+- **Current result:** Angular status control is disabled and no #76 web caller exists. No status request is made; audit reason is disabled and absent from the local candidate body.
 
 ### EV-04 — Confirm delete (#77)
 
@@ -49,13 +49,13 @@
 - **Server sequence:** (1) Shared ADMIN auth before raw path/DB → 401/403. (2) Parse signed int64 → 422 invalid path. (3) Lock course excluding status DELETED → 404 missing/already deleted. (4) Check any enrollment and candidate active Content/lesson/quiz/assignment dependencies. (5) Dependency query/projection failure → rollback/500; any dependency → rollback, no mutation, 422 `DESIGN_VALIDATION_ERROR`. (6) Otherwise set `courses.status='DELETED'`, update DB timestamp, construct DeleteResult from returned ID/timestamp, validate, commit. (7) Query/projection/commit failure rolls back to safe 500. (8) Success 200 `DESIGN_RESOURCE_DELETED`, data `{id,status:"deleted",deleted_at}`.
 - **Current side effects:** Local fallback is a soft marker; child rows are not changed/deleted; no audit row is written. Timestamp maps DB `updated_at` to `deleted_at`. The blocker set and timestamp/marker choices are `DERIVED`, not approved policy.
 - **UI result/errors:** 401/403/404/422/500. Dependency 422 is not a 409 and its predicate/message are local fallback. Repeat DELETE returns 404 currently. After success, GET #73/#74 visibility does not hide DELETED, so exact UI disposition is open.
-- **Current result:** Clicking the radio only changes selection; disabled Confirm sends no DELETE. “Permanent delete” text is not supported by local behavior.
+- **Current result:** Angular delete control is disabled and no #77 web caller exists. In the Stitch prototype, clicking the radio only changes selection and disabled Confirm sends no DELETE. “Permanent delete” text is not supported by local behavior.
 
 ### EV-05 — Cancel, Back and reload
 
 - **Trigger/type:** Click Back #14 or Cancel #32; route/reload event after success.
 - **Inputs:** Current route/history and numeric Course ID; possible selected action, but no reason draft exists because textarea disabled.
-- **Current behavior:** Both anchors navigate to `/admin/courses`. Back label implies AD-07, but that path is AD-06 list. No unsaved guard or state restoration.
+- **Current behavior:** Stitch Back/Cancel anchors both navigate to `/admin/courses` (AD-06), despite Back copy saying AD-07. Angular Back/footer return to AD-07 using the raw route ID; the load-error link returns to AD-06. No unsaved guard or state restoration.
 - **Target result:** Candidate return to AD-07 with same ID or AD-06 list; inventory links both and AC-32 says reload management. Decide route, whether reload #73 list or #74 detail (or both), filter/page restoration, success notice and whether to close/retain page. Cancel itself must not call mutation API.
 
 ### EV-06 — Shell, policy and footer affordances

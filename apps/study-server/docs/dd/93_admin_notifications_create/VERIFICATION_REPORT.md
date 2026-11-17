@@ -45,5 +45,5 @@ A repository-wide Ruff format check reports 60 other files in the existing workt
 - Request has no action/schedule field although diagram dispatches only when action is Send; immediate enqueue is DERIVED.
 - The implementation uses checked-in legacy BIGINT `notifications`/`notification_deliveries` candidates; neither is proven deployed or approved for Admin campaign use.
 - AudienceSegment expansion and fine-grained notification-management permission are not implemented.
-- Batch UUID/notification ID metadata is DERIVED and does not create an Operation record or settle API #18/#96 linkage.
+- Batch UUID/notification ID metadata is DERIVED and does not create a generic Operation record. Current #18 source can poll notification/outbox rows by UUID for their sender; canonical ID/owner semantics and API #96 linkage remain unresolved.
 - No provider/worker is invoked; HTTP 202 means the local transaction committed, not that a message was delivered.

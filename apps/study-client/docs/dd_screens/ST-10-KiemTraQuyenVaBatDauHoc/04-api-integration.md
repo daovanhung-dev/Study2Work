@@ -2,6 +2,17 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
+## Current caller status — 2026-11-17
+
+ST-10 calls #22 on entry and sends #23 only after an explicit user action when
+#22 returns the same lesson with `status=PUBLISHED`. It then navigates to
+ST-11, which calls #24. Current source discrepancy: #22 does not filter lesson
+status, and #23 does not independently check lesson/course publication. The
+client gate does not repair that server-side gap. See [the screen inventory](../../list_screen.md)
+and [T038 gap matrix](../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md)
+for current caller/source status; the excerpt below preserves design-time
+contracts.
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|

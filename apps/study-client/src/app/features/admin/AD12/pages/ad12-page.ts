@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { AD12ApiService } from '../data-access/ad12-api.service';
 import { StudyIcon } from '../../../../shared/ui/study-icon';
@@ -9,7 +10,7 @@ import { renderLessonRow } from '../../admin-screen-renderers';
 type AD12Query = Record<string, never>;
 
 @Component({
-  imports: [StudyIcon],
+  imports: [RouterLink, StudyIcon],
   selector: 'study-ad12-page',
   templateUrl: './ad12-page.html',
 })

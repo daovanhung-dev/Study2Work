@@ -5,13 +5,13 @@ from typing import Any
 
 from app.core.database import query_many, query_one
 from app.core.responses import ErrorDetail, success_response
-from app.modules.guest._shared.course_catalog.helpers import (
+from app.modules.shared.course_catalog.helpers import (
     build_order_by,
     course_internal_error,
     map_course,
     normalize_course_count,
 )
-from app.modules.guest._shared.course_catalog.models import CoursePage, Pagination
+from app.modules.shared.course_catalog.models import CoursePage, Pagination
 from app.modules.guest.api_06_courses.models import CourseQuery
 from app.modules.guest.api_06_courses.query import (
     COUNT_PUBLISHED_COURSES,

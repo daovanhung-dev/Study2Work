@@ -4,6 +4,8 @@
 > **Route đề xuất:** `/admin/courses/:courseId/edit` · **AC:** AC-32 · **API:** #74, #75<br>
 > **Trạng thái đầu phiên:** inventory `D`; local API #75 route/module/test source exists, API DD remains `Draft — Needs Confirmation`; Study Web `UNWIRED`.
 
+> **Historical planning snapshot — 2026-11-08.** Sections 1–7 preserve the source audit and planning state from that date. For the current checkout, use the dated re-audit in §8; do not treat historical “Study Web UNWIRED” statements as current source status.
+
 ## 1. Phạm vi và nguyên tắc
 
 - Hoàn thiện riêng AD-08 trong phiên này: đối chiếu prototype và API contract/source; lập plan này trước marker/DD; tạo marker map, overlay và annotated image; viết DD A–F; cập nhật inventory, reverse API index, global tracker và worklog. Không xử lý AD-09.
@@ -62,7 +64,7 @@
 5. Approve Study Web route, save/cancel return destination, error/session behavior, and implement the route/client.
 6. Remove or source static course code, mentor selector, chapter/enrollment metrics, Active status, multipart/S3 claim, Production Ready/version/audit/data-integrity statements.
 
-Target status after this session: complete the evidence-based design package, but mark **DD BLOCKED** and **IMPLEMENTATION BLOCKED** until the decisions above are resolved. Runtime remains **NOT VERIFIED**.
+Historical target status recorded on 2026-11-08: complete the evidence-based design package, mark **DD BLOCKED** and **IMPLEMENTATION BLOCKED** until the decisions above are resolved, and leave runtime **NOT VERIFIED**.
 
 ## 7. Execution and verification order
 
@@ -74,3 +76,12 @@ Target status after this session: complete the evidence-based design package, bu
 6. [x] Update AD-08 inventory and API #075 reverse source index; update global tracker/checkpoint.
 7. [x] Static audit source hashes/dimensions, marker sequence/uniqueness/bounds and C-table bijection, JSON/XML/links, inventory IDs/folders and core bundle count. Application tests/runtime not run.
 8. [x] Finalize worklog; do not process another Screen ID.
+
+## 8. Current source re-audit — 2026-11-16
+
+- Angular Admin router declares `/admin/courses/:courseId/edit` and loads `AD08Page`; the page passes the raw route string through GET #74 and exposes `loading` / `loaded` / `error` states. Browser/deployment runtime remains unverified.
+- On success, `AD08Page` maps title/description/price into a local component-memory draft, displays the raw route value as “ID khóa học”, and renders mentor/status as read-only context and thumbnail URL as text. Title/description/price edits update the draft and local preview only; there is no dirty indicator or persistence.
+- Save and thumbnail selection remain disabled; no PUT #75 caller or file input exists. Angular Back/Cancel links return to AD-07 with the raw route ID, while prototype links still target AD-06.
+- API #75 remains `Draft — Needs Confirmation`; body, validation, permission, live schema, upload, response/revalidation and mentor policy blockers from §§1–6 remain open.
+- Source correction made with this re-audit: identify the route value as Course ID rather than course code, preserving the exact raw path string so JavaScript number precision cannot alter large signed-int64 IDs.
+- `npm test -- --progress=false --include src/app/features/admin/AD08/pages/ad08-page.spec.ts`: 1 file, 4 tests passed. `npm run build`: production build succeeded with existing CSS budget warnings in student layout, shared Student static CSS and ST-22. Browser/deployment runtime remains unverified; exact command results are in the active worklog and DD test cases.

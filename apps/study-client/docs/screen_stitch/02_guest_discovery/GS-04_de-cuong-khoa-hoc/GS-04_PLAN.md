@@ -1,6 +1,6 @@
 # GS-04 — Kế hoạch chi tiết
 
-> Ngày rà soát: 2026-11-07 · Trạng thái: `AUDIT COMPLETE; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED`
+> Audit gốc: 2026-11-07 · Source-status re-audit: 2026-11-16 · Trạng thái: `AUDIT COMPLETE; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED`
 > Phạm vi phiên: chỉ GS-04; chưa bắt đầu GS-05.
 
 ## Re-audit plan — 2026-11-07
@@ -18,7 +18,7 @@
 - Current `screen.png`: 1280×1024, SHA-256 `4892375ec0fe6316e126b1eefe85ce05b0852079c6d666290e43c4a6f13b85c2`, entropy 0.134765, 1930 colors; chỉ còn nền gần trắng và footer, không đọc được phần header/body.
 - Current `code.html`: SHA-256 `cb500b6794bc3336167dfce639506b99f438e789d64055717cedc1849b5be22c`; static empty curriculum page: header, breadcrumb, H1, card/icon/copy “Chưa có nội dung đề cương để hiển thị.”, back-to-detail link `href="#"`, footer. Không có lesson rows, route binding, request/API handler hoặc click logic.
 - Kế hoạch ảnh: giữ nguyên `screen.png` và `code.html`; Firefox đã render HTML nguyên trạng thành `screen_rendered.png` 1440×1200, đầy đủ header, breadcrumb, title, empty panel và footer. Dùng ảnh render làm nền chú thích mà không sửa nguồn. Ghi rõ bản render không phải runtime.
-- Study Web subcontext là `UNWIRED`; không có app source/router/package/entrypoint. Route trong tài liệu vẫn là proposal.
+- Historical 2026-11-07 source snapshot: Study Web app source/router/package/entrypoint were reported absent; superseded by the 2026-11-16 re-audit below. GS-04 route trong tài liệu vẫn là proposal.
 
 ## 2. API #09 source trace và các discrepancy
 
@@ -77,7 +77,7 @@ Không có marker cho lesson item, private/preview indicator, play button, video
 - API #09 trả lesson content/video URL công khai nhưng không có preview/access field; status filter là assumption trong DD #09.
 - Hai checked-in DDL sources khác nhau; live schema chưa được xác minh.
 - #08 cache freshness/miss behavior và AC-05 eager vs F02 lazy orchestration chưa chốt.
-- Study Web/router chưa wired; route/back link hiện chỉ là proposal/`#` placeholder.
+- Guest group/GS-04 route chưa wired; route/back link hiện chỉ là proposal/`#` placeholder.
 
 ## Re-audit result — 2026-11-07
 
@@ -88,3 +88,16 @@ Không có marker cho lesson item, private/preview indicator, play button, video
 - F02 lazy-by-tab, AC-05 eager calls, and inventory #09 reuse of #08 cache remain distinct expected sources; cache key/freshness/miss/direct-entry behavior is absent. GS-03 handoff preserves the same courseId; ST-10 #22–#24 is a separate Student path and is not wired as a Guest action.
 - Visual review confirmed `screen.png` remains near blank and unchanged; its HTML-derived render is legible, and the 10 gutter markers are ordered and do not cover content. Final static audit passed: all eight bundle files are present; source hashes match; image dimensions are 1280×1024, 1440×1200 and 3040×2400; ten ordered unique markers map to ten DD rows and ten SVG labels and remain within the annotation canvas; the SVG embeds the exact rendered PNG; all six events specify input/trigger, processing and output; local links resolve; and 83 inventory IDs match tracker rows and screen folders. Scoped `git diff --check` passed.
 - Keep `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`. No tests, browser app runtime or live database were run.
+
+## Source-status re-audit — 2026-11-16
+
+- Current Study Web source has `app.routes.ts` and registers system, shared, student and admin route groups; shared routes expose `/login` and `/register`, and the Student route contains ST-11 through ST-26. Admin route/caller context remains as documented in `.agents/web-work/study/INDEX.md`.
+- No Guest feature files, Guest route group, `/courses/:courseId` route, or GS-04 caller exists in the current checkout. `API_009` is registered `WIRED` because a matching Study Server route exists; the descriptor does not establish a feature caller.
+- Angular app availability does not resolve GS-04's loaded-list design, #09 `course_id` range discrepancy, unapproved `PUBLISHED` visibility assumption, public `content`/`video_url` projection, cache/direct-entry policy or AC-05/F02 eager/lazy conflict.
+- Current status remains `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`. No Study Web or Study Server runtime code changed and no application tests were run.
+
+## Current-source follow-up — 2026-11-17
+
+- Guest source now declares GS-01–GS-03 at `/courses`, `/courses/search` and `/courses/:courseId`, with client callers for #05–#08. `GS04CurriculumService` and typed #09 response models now exist, but no page calls the service and the curriculum tab remains unwired.
+- Current #09 validator parses the route string and enforces signed-int64 bounds; the focused API suite includes lower/upper boundary and out-of-range assertions. `uv run pytest tests/modules/guest/api_09_courses_curriculum/test_courses_curriculum.py -q` passed 11 tests with one Starlette/httpx deprecation warning. Tests use fake sessions.
+- This follow-up supersedes earlier current-source notes about the Guest route group being absent and the #09 parser lacking a signed-int64 bound. It does not resolve the Draft API visibility assumption, public `content`/`video_url` projection, missing loaded/error design, cache/direct-entry policy, or AC-05/F02 eager/lazy conflict. Status remains `DD BLOCKED`; UI caller `UNWIRED`; runtime `NOT VERIFIED`.

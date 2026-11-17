@@ -1,8 +1,8 @@
 # AD-08 — Navigation
 
 ## 1. Route definition
-- Current route in inventory: `/admin/courses/:courseId/edit`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Current route: `/admin/courses/:courseId/edit` declared in Angular Admin router and loads `AD08Page`.
+- Status: route/page/GET #74 caller present in source; browser/deployment runtime `NOT VERIFIED`.
 - Route params/types: `courseId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,12 +10,12 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [AD-07](../AD-07-ChiTietKhoaHocQuanTri/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [AD-07](../AD-07-ChiTietKhoaHocQuanTri/00-overview.md) | Angular Back/Cancel RouterLinks; target detail handoff | Raw route `courseId` string | Present in source; browser runtime unverified |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [AD-07](../AD-07-ChiTietKhoaHocQuanTri/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [AD-07](../AD-07-ChiTietKhoaHocQuanTri/00-overview.md) | Angular Back/Cancel links | Same raw route `courseId` string | Present in source; no dirty guard; runtime unverified |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
@@ -36,10 +36,11 @@ flowchart LR
 
 | State | Entry condition | Display/data rule | Exit / navigation | Evidence/status |
 |---|---|---|---|---|
-| `UNWIRED` | Current checkout | Static prototype only; controls disabled and source app/router absent. | None available. | Current status. |
-| `initial` | Proposed route created before GET | No Course data; do not show static mock values as loaded data. | Start EV-01. | Target state, not implemented. |
-| `loading` | GET #74 pending | Show loading affordance only when request is active. | 200 → `ready`; API/network error → matching state. | No current behavior; loading copy static if present. |
-| `ready` | GET #74 validated | Render only mapped contract fields; candidate form disabled until field policy approved. | Approved field change → `dirty`; back → approved route. | Target state, not implemented. |
+| `Prototype-only` | Stitch HTML artifact | Static markup/values and prototype controls; not the Angular runtime. | Prototype anchors follow their literal destinations. | Prototype artifact. |
+| `initial` | Before the route request state is emitted | No Course data; do not show static mock values as loaded data. | Start EV-01. | No separate initial state in page model; loading is initial value. |
+| `loading` | Angular GET #74 pending | Current page shows an active loading state. | Response → `loaded` or `error`. | Present in source; runtime not verified. |
+| `loaded` | Angular GET #74 succeeds and contains a Course | Render mapped response data and local title/description/price draft; no dirty indicator. | Local input updates draft; Back/Cancel → AD-07. | Present in source; no persistence. |
+| `error` | Angular GET #74 fails or returns no Course | Show page-level error and list link. | List route. | Present in source; runtime not verified. |
 | `dirty` | At least one approved field differs from loaded value | Exact dirty comparison, draft retention and confirmation policy are unspecified. | Save → `saving`; cancel/back behavior needs decision. | `OPEN`; not in source. |
 | `saving` | Approved body submitted to #75 | Prevent duplicate UI submission only under approved interaction policy; request idempotency/retry is unspecified. | 200 → success/application policy; 422 → validation error; 401/403/404/500 → corresponding states. | Target state, not implemented. |
 | `validation_error` | Client-approved validation or API 422 | Show field/general errors only when message mapping is defined. Current source candidate has body/path/title/price validation. | User edit → candidate `dirty`; resubmit only after correction. | Local API 422 exists; UI copy/placement open. |
@@ -50,7 +51,7 @@ flowchart LR
 | `network_error` | Request cannot reach API | Distinct from 500; no retry, offline cache or stale-data policy specified. | User recovery policy open. | Client-side target state only. |
 | `save_success` | PUT #75 returns valid 200 | Use updated Course response, issue #74 re-read, or invalidate cache per approved decision. | Stay on form or go to AD-07 after route decision. | Response strategy open. |
 
-**Transition notes:** GET #74 is a read. PUT #75 current source mutates metadata, then internally reads its projection and returns it. Inventory's phrase “revalidate #74” may imply another request but local #75 response already contains data; these must not be reconciled by assumption. Back-to-detail candidate carries the same numeric ID. Current prototype's two relevant anchors point to AD-06 list instead. Session-expiry handling, route guards, list filter/page restoration, unsaved-change warning, cache lifetime, retry and timeout are not specified.
+**Transition notes:** GET #74 is a read. PUT #75 current source mutates metadata, then internally reads its projection and returns it, but the Angular page does not call it. Inventory's phrase “revalidate #74” may imply another request but local #75 response already contains data; do not reconcile by assumption. Angular Back/Cancel return to AD-07 with the raw route ID; Stitch prototype links point to AD-06. Session-expiry handling, route guards, list filter/page restoration, unsaved-change warning, cache lifetime, retry and timeout are not specified.
 
 ### Trích từ DD nguồn: B. Mô tả luồng hoạt động tổng thể
 

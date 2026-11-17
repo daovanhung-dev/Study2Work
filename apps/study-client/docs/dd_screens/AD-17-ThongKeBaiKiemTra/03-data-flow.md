@@ -17,10 +17,10 @@
 
 1. Từ AD-15, Admin chọn thao tác xem thống kê cho Quiz. Chỉ định danh Quiz nào được truyền sang route client vẫn cần đối chiếu ID thực tế; API #91 nhận `quiz_id:int64!`.
 2. Client kiểm tra trạng thái phiên và quyền màn hình theo policy được duyệt. AC-35 nêu quiz-management permission; API local chỉ có shared `ADMIN`. Không được xem route-level/Admin shell copy là authorization.
-3. Client lấy path `quizId`, chuẩn hóa theo contract numeric `int64`, sau đó gọi GET #91 với Bearer token. Direct catalog không khai báo body/query. Hiện không có router hoặc API caller trong Study Web.
+3. Current Angular route provides `quizId` as a string; `AD17ApiService` calls GET #91 through the shared Admin client with `quiz_id` as the path parameter and no body/query. The direct contract specifies numeric int64, but the client does not validate it locally.
 4. Backend current source xác thực shared `ADMIN`, parse ID, query aggregate read-only trên legacy Quiz/QuizAttempt candidate. API DD đánh dấu metric/formula là DERIVED. Live schema và policy chưa được xác minh.
-5. Với HTTP 200, direct response contract là `ApiEnvelope<Quiz>` nên client không có analytics fields được bảo đảm để ánh xạ. Không được tự tính analytics trên Quiz hoặc dùng local DTO như thể đã được duyệt. Chỉ sau khi response contract được owner chốt mới định nghĩa loading→no-data/ready và mapping.
-6. Với 401/403/404/500, hiển thị trạng thái phù hợp theo business code; phần UI/auth-expiry/ retry hiện chưa có implementation hoặc approved interaction. Local source dùng 404 cả cho path malformed và Quiz vắng mặt.
+5. Current Angular source renders loading, then maps the local `AdminQuizStatistics` response into Quiz ID plus six displayed metrics, or renders a shared error state. The direct response contract remains `ApiEnvelope<Quiz>` and does not approve those analytics fields; no client-side computation is done.
+6. Current shared error handling covers 401/403/404/network failures and a generic service error; local source uses 404 for malformed path and missing Quiz. Retry and the fine-grained permission flow are not specified.
 7. Người dùng có thể quay lại AD-15 qua breadcrumb hoặc một trong hai link quay lại; cả ba anchor hiện trỏ tới `/admin/quizzes`. Param cần giữ lại hoặc không phải là quyết định route chưa được đặc tả.
 8. Không có bằng chứng AD-17 được cập nhật push sau submit. AC-35 hiện mô tả GET aggregate; câu trong HTML nói tác vụ nền sau submit là static mockup copy.
 
@@ -37,11 +37,12 @@
 
 ```text
 AD-15 (Quiz ID cần xác minh)
-  → candidate route /admin/quizzes/:quizId/statistics
-  → GET #91 (Bearer JWT, path quiz_id:int64!, không body/query)
+  → registered Angular route/page /admin/quizzes/:quizId/statistics
+  → AD17ApiService → GET #91 (Bearer JWT, path quiz_id, không body/query)
   → DIRECT catalog: ApiEnvelope<Quiz> ── không có metric fields
   → LOCAL source: derived AdminQuizStatistics ── chưa được contract duyệt
-  → UI no-data/ready mapping: BLOCKED đến khi thống nhất schema và metrics
+  → current UI: loading → local projection/contract notice or error
+  → approved no-data/ready/business semantics: BLOCKED until schema and metrics are agreed
 ```
 
 ### Trích từ DD nguồn: E. Ma trận trạng thái và điều hướng
@@ -50,8 +51,10 @@ AD-15 (Quiz ID cần xác minh)
 
 | State | Điều kiện vào | UI/output | Trạng thái bằng chứng |
 |---|---|---|---|
-| `unwired-prototype` | Current checked-in HTML loaded | Placeholder Quiz, empty state và CTA tĩnh | Current source |
-| `loading` | Future valid route, auth và request #91 | Loading indicator; chưa có thiết kế/loading source cụ thể | Expected candidate; chưa implement |
+| `prototype-placeholder` | Separate checked-in Stitch HTML loaded | Placeholder Quiz, empty state và CTA tĩnh | Prototype source only |
+| `loading` | Angular route page begins request #91 | “Đang tải thống kê” state | Present in Angular source; runtime not verified |
+| `loaded` | Local response resolves | Quiz ID plus six metric values and contract notice | Present in Angular source; local DTO is not approved by catalog |
+| `error` | Missing route ID or request error | Shared error heading/message and return link | Present in Angular source; runtime not verified |
 | `no-data` | Approved response xác nhận zero attempts/metrics absent | Empty view với meaning phân biệt zero, unknown và unavailable | Blocked; semantics chưa có contract |
 | `ready` | Approved response có metric fields | Render các metric đã được chốt; không thêm distribution/time/completion nếu response không trả | Blocked; direct `ApiEnvelope<Quiz>` không có metrics |
 | `unauthorized` | 401 `DESIGN_AUTHENTICATION_REQUIRED` | Áp dụng auth/session flow chung | API code direct; UI flow chưa xác định |
@@ -66,8 +69,8 @@ AD-15 (Quiz ID cần xác minh)
 
 | Từ | Hành động | Đích / dữ liệu | Ghi chú |
 |---|---|---|---|
-| AD-15 | Chọn statistics cho Quiz | Candidate `/admin/quizzes/:quizId/statistics`; `quizId` cần map sang API `quiz_id:int64` | Inventory/AC-35 handoff; client route/row action chưa có source. |
-| AD-17 | Click breadcrumb, top return hoặc primary CTA | `/admin/quizzes` → AD-15 candidate | HTML target verified; router runtime chưa có. Query/filter/page state preservation chưa xác định. |
+| AD-15 | Chọn statistics cho Quiz | `/admin/quizzes/:quizId/statistics`; `quizId` maps to API `quiz_id` | Route and safe-ID link are present in Angular source; browser runtime not verified. |
+| AD-17 | Click breadcrumb, header return or footer return link | `/admin/quizzes` → AD-15 | Angular `RouterLink` target is present; browser runtime and query/filter/page preservation are not verified/specified. |
 | AD-17 | Click shell/footer placeholders | `#` hoặc no handler | Không có screen transition xác nhận. |
 
 Không có quyền xác nhận để truyền dữ liệu thống kê từ client sang AD-15; ID route cần được xác nhận từ AD-15 response/selection source. API #91 là GET read-only; không invalidate/write cache từ prototype. Cache duration, retry, polling, auto-refresh và back-stack policy chưa có contract.

@@ -15,7 +15,7 @@
 - **Mock/test data:** Nguồn không cung cấp fixture dùng để chạy test ở package này; không đưa dữ liệu thật.
 - **Steps:**
   1. Đối chiếu acceptance và event tương ứng trong DD nguồn.
-  2. Khi runtime/test implementation tồn tại, viết test riêng theo contract đã xác nhận.
+  2. Angular source now has a separate AD-22 spec for the #97 caller, filters, pagination, empty result and safe-ID navigation; planning reference `TC-001` itself is not a test result.
 - **Expected UI/state:** Theo acceptance/state trong nguồn; chưa được xác minh trên runtime.
 - **Expected API/data:** Theo [API Integration](04-api-integration.md); không phát sinh request trong lần tạo tài liệu.
 - **Failure / edge assertion:** Không đánh dấu pass cho `UNWIRED`, `IMPLEMENTATION BLOCKED` hoặc `RUNTIME NOT VERIFIED`.
@@ -31,15 +31,16 @@
 - [x] All visible component groups are mapped by 48 unique sequential marker IDs and §C rows.
 - [x] All recognized events EV-01…EV-10 include trigger, input, processing, API/current behavior and output or blocker.
 - [x] State and navigation matrices identify handoff and authorization/source gaps.
-- [x] Candidate report table/migration, report ingestion, live schema, API #97 response gaps, #98 discrepancy and Study Web UNWIRED status are explicit.
+- [x] Candidate report table/migration, report ingestion, live schema, API #97 response gaps, #98 discrepancy and partial source-wired Study Web status are explicit.
 - [ ] Confirm approved report writer and verify migration/live schema before claiming populated runtime queue.
 - [ ] Approve #97 fields needed for count/reason/severity/reporter/time or revise the visible columns.
 - [ ] Decide search, status semantics, taxonomy/sentinel mapping, pending priority, metrics, refresh cadence and report policy-card copy.
 - [ ] Confirm AC-37 fine-grained permission/tenant behavior and reconcile current #98 source with its DD/AC report-detail requirement.
-- [ ] Wire and verify Study Web route/client, loading/empty/ready/error mapping and AD-23 handoff.
+- [x] Angular route/page/#97 caller and source loading/empty/ready/error mapping exist; focused specs are present (test execution is recorded separately).
+- [ ] Verify authenticated browser loaded-state and resolve the AD-23 report-detail handoff.
 - [x] Static asset/marker/links/checksum/tracker audit completed for this session; no application tests/runtime claimed.
 
-**Acceptance status:** design artifact set is complete for review; `DD BLOCKED` until the unchecked contract/source decisions are resolved. `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`.
+**Acceptance status:** design artifact set is complete for review; `DD BLOCKED` until the unchecked contract/source decisions are resolved. Implementation is `PARTIAL` (read-only route/page/#97 caller exists); full report workflow and authenticated browser runtime remain unverified.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 

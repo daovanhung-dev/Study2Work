@@ -1,0 +1,13 @@
+:host {
+  display: block;
+}
+
+.resources-page {
+  margin-top: 24px;
+}
+
+@media (max-width: 767px) {
+  .resources-page {
+    margin-top: 18px;
+  }
+}

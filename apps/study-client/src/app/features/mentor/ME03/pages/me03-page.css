@@ -1,0 +1,8 @@
+.me03-actions { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin:0 0 18px; }
+.me03-panel { margin-top:18px; padding:20px; }
+.me03-content-list { list-style:none; padding:0; margin:0; }
+.me03-content-list li { min-height:62px; display:flex; align-items:center; justify-content:space-between; gap:16px; padding-top:10px; padding-bottom:10px; border-top:1px solid #e9eef4; }
+.me03-content-list li div { display:grid; gap:5px; }
+.mentor-progress { width:140px; height:7px; margin:0 8px 4px 0; display:inline-block; overflow:hidden; border-radius:999px; background:#e8eef4; vertical-align:middle; }
+.mentor-progress span { display:block; height:100%; border-radius:inherit; background:#1680a9; }
+@media(max-width:600px){.me03-panel{padding:16px}.me03-content-list li{align-items:flex-start;flex-direction:column}.mentor-progress{width:90px}}

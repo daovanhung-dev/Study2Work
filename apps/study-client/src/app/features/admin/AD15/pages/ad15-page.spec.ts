@@ -44,12 +44,15 @@ describe('AD15Page', () => {
     expect(text).toContain('42');
     expect(text).toContain('30');
     expect(text).toContain('70.00');
-    expect(headers).toContain('Mã bài kiểm tra');
+    expect(headers).toContain('ID bài kiểm tra');
+    expect(headers).toContain('ID khóa học');
+    expect(root.querySelector('label[for="quiz-course"]')?.textContent).toContain('ID khóa học');
     expect(headers).toContain('Điểm đạt');
     expect(headers).not.toContain('Số câu hỏi');
     expect(headers).not.toContain('Trạng thái');
     expect(text).not.toContain('0 câu hỏi');
     expect(root.querySelector('a[href="/admin/quizzes/88/statistics"]')).not.toBeNull();
+    expect(root.querySelector('a[href="/admin/quizzes/88/delete"]')?.textContent).toContain('Xóa');
     expect(root.querySelector('a[href="/admin/quizzes/new"]')).not.toBeNull();
   });
 
@@ -128,6 +131,7 @@ describe('AD15Page', () => {
 
     const root = fixture.nativeElement as HTMLElement;
     expect(root.querySelector('a[href^="/admin/quizzes/"][href$="/statistics"]')).toBeNull();
+    expect(root.querySelector('a[href^="/admin/quizzes/"][href$="/delete"]')).toBeNull();
     expect(root.textContent).toContain('Không thể hiển thị chính xác');
     expect(root.querySelector<HTMLButtonElement>('.row-action')?.disabled).toBe(true);
   });

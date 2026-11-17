@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Hiển thị khoản tiền, nhà cung cấp, xác nhận mua trước khi tạo Order.
-- Gate/status (giữ nguyên): **#08 R; #16 D; DD BLOCKED**; **BLOCK:** Order schema, provider/amount/currency policy và idempotency chưa source-backed; inventory revalidation lần hai chưa được AC-12 đặt thứ tự; Study Web UNWIRED; HTML chưa có confirm UI
+- Gate/status: **#08 R and called; #16 route/module source exists but client descriptor is UNWIRED; DD BLOCKED**; **BLOCK:** checked-in DDL has no `orders` table, no focused #16 tests were found, Student session/provider/amount/idempotency and live persistence remain unverified; Stitch has no confirmation UI.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 > CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.

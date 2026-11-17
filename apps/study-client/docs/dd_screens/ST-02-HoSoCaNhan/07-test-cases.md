@@ -40,8 +40,8 @@
 - AC sources: `apps/study-server/docs/diagrams/AC_UNICA/00_AC_API_INDEX.md` and `AC_02_STUDENT_LEARNING.drawio`.
 - Assets: same-directory `screen.png` (original), `code.html`, `screen_rendered.png` (Firefox headless HTML render; not runtime), `screen_composite.png` (original header/footer plus HTML-rendered body, provenance in marker JSON; not runtime), `ST-02_markers.json`, `ST-02_markers_overlay.svg`, and `screen_annotated.png`.
 - API declaration/DD: `docs/lists/list_api.md`; `apps/study-server/docs/dd/04_users_me/` including `OPEN_QUESTIONS.md`.
-- Current route/auth/response: `apps/study-server/app/api/v1.py`; `app/modules/guest/api_04_users_me/{view,query,models}.py`; `app/utils/auth.py`; `app/core/security/access_token.py`; `app/core/responses.py`; upstream `app/modules/guest/api_03_auth_login/view.py`.
-- Test source read only: `apps/study-server/tests/modules/guest/api_04_users_me/test_users_me.py`.
+- Current route/auth/response: `apps/study-server/app/api/v1.py`; `app/modules/student/api_04_users_me/{view,query,models}.py`; `app/utils/auth.py`; `app/core/security/access_token.py`; `app/core/responses.py`; upstream `app/modules/guest/api_03_auth_login/view.py`.
+- Test source read only: `apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py`.
 - Database candidate/status: `infra/postgres/study-server/DB.sql` and `.agents/server-study/database.md`; live schema `NOT_VERIFIED`.
 - Context/guide: `.agents/web-work/study/INDEX.md`, `.agents/web-study/design.md`; current app source absent.
 

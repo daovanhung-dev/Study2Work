@@ -13,7 +13,7 @@
 
 | Event | Trigger | Expected handling | API / error | Current prototype / trạng thái |
 |---|---|---|---|---|
-| EV-01 — Khởi tạo danh sách | Mở AD-02 hoặc URL query thay đổi | Xác nhận Admin session/policy; parse filter/page từ URL; gọi #68; map Page. Query URL behavior là inventory requirement, chưa có client source. | #68 Bearer JWT + `role/status/keyword/page`; 200 `Page<UserProfile>`. | Không có route/caller/API. |
+| EV-01 — Khởi tạo danh sách | Mở AD-02 hoặc URL query thay đổi | Xác nhận Admin session/policy; parse filter/page từ URL; gọi #68; map Page. Query URL behavior là inventory requirement, chưa có client source. | #68 Bearer JWT + `role/status/keyword/page`; 200 `Page<UserProfile>`. | Local `admin.routes.ts` → `AD02Page` → `AD02ApiService` calls #68; runtime authenticated screen not verified. |
 | EV-02 — Tìm kiếm keyword | Nhập keyword | Khi submit/debounce policy được duyệt, update URL và gọi #68. Tìm tên/email thôi; literal substring; không tìm ID. | `keyword?:string`; blank sau trim tương đương không filter. | Input chỉ nhận text, không handler. |
 | EV-03 — Lọc role/status | Thay select | Update URL/refetch theo exact string values trong contract; enum/value mapping chưa được duyệt. | `role/status?:string`; unknown string hiện không bị 422 và có thể cho empty 200. | Values lowercase; không listener/refetch. |
 | EV-04 — Đặt lại bộ lọc | Click Reset | Xóa `role/status/keyword` khỏi URL; page behavior (reset về 1 hay giữ) cần product decision trước khi wire. | Gọi lại #68 theo URL còn lại sau khi chốt. | Clear local inputs và focus search; URL/data không đổi. |
@@ -25,6 +25,10 @@
 | EV-10 — Refresh / guide | Click Refresh hoặc Guide | Refresh refetch #68; guide chỉ điều hướng tới nội dung đã xác định. | #68 GET; errors theo EV-01. | Refresh disabled; guide không handler. |
 | EV-11 — Header/footer navigation | Click nav, notification hoặc footer | Điều hướng theo inventory/route được duyệt; notification/privacy/RBAC/support target còn cần map. | Không thêm API call từ mockup. | 8 placeholder anchors; notification no-op. |
 | EV-12 — Hiển thị policy/system status | Tải screen | Render health/audit/sync/assurance chỉ khi có contract/source cho từng claim. | API #68 không có field hoặc side effect tương ứng. | Tất cả copy/badges là static; không dùng như dữ liệu live. |
+
+### Current source evidence (2026-11-17, T030)
+
+AD-02 currently wires keyword/role/status/page query changes, list refresh, pagination, and row-ID navigation in local Angular source. T030 adds distinct loading/empty/service-error states and page-422 recovery; the static `code.html` observations in the event table remain prototype-only. Focused Angular spec passed 8/8. Authenticated browser rendering remains `NOT VERIFIED`.
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)

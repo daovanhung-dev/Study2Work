@@ -1,17 +1,17 @@
 # Kế hoạch màn hình — SH-02 Đăng nhập
 
 > **Trạng thái kế hoạch:** PLAN REVIEWED / DD AND ARTIFACT AUDIT COMPLETE · **Ngày rà soát:** 2026-11-07 · **Phạm vi phiên:** chỉ SH-02 · **Đợt danh mục:** W0.
-> **Trạng thái sau rà soát nguồn:** DD BLOCKED · IMPLEMENTATION BLOCKED · RUNTIME NOT VERIFIED. Chặn DD bởi sai khác hợp đồng thành công #03 và chính sách phiên/vai trò chưa được duyệt; không coi đây là chức năng đã chạy.
+> **Trạng thái hiện tại (2026-11-16):** DD BLOCKED cho auth/session flow · SH-02 presentation và `/login` route đã implement · submit/API/session BLOCKED · browser runtime NOT VERIFIED. Contract #03 và chính sách phiên/vai trò vẫn chưa được duyệt.
 
 ## 1. Hợp đồng và bằng chứng nguồn
 
 - **Tác nhân / màn hình:** Khách mở trang đăng nhập công khai; Trang /login, AC-02, P0.
 - **Luồng trong danh mục:** POST #03 → chính sách token phiên → GET #04 chỉ khi vai trò trả về là STUDENT; người hướng dẫn/quản trị viên không có endpoint khởi tạo hồ sơ tương thích. #04 hiện dùng 401 chung cho auth/claim không hợp lệ và không có profile; không thể tự xác định nguyên nhân để quyết định refresh. R-X01 chỉ được xem là nhánh khôi phục có điều kiện sau khi có policy/contract được duyệt. Liên kết đăng ký đi tới SH-03.
-- **Trạng thái nguồn:** Mã route/view của #03 và #04 tồn tại (RUNTIME_SOURCE). R-X01 /auth/refresh có trong mã nguồn hiện tại nhưng chưa có ID API trong danh mục (SOURCE_BACKED_UNCATALOGUED). Route/client/lưu phiên Study Web ở trạng thái UNWIRED vì apps/study-client/src không tồn tại.
+- **Trạng thái nguồn:** Mã route/view của #03 và #04 tồn tại (RUNTIME_SOURCE). R-X01 /auth/refresh có trong mã nguồn hiện tại nhưng chưa có ID API trong danh mục (SOURCE_BACKED_UNCATALOGUED). Angular app/source/package manifest tồn tại; `/login` route render SH02Page, còn client API/session flow chưa wire và submit bị disabled.
 - **Ảnh nguồn hiện tại:** `screen.png` trong thư mục này, kích thước 1280×1024 và có vẻ trống. Giữ nguyên; SHA-256 hiện tại là 5c3cb8e59c1b645c4338ce527d5fd2c7a2288568fc04982481865d422ec4e323.
 - **HTML nguồn:** code.html mô tả thẻ đăng nhập căn giữa gồm thương hiệu, tiêu đề, vùng cảnh báo, trường email/mật khẩu, nút hiện mật khẩu, nút chính và liên kết đăng ký. Tệp tải Tailwind/font/icon từ CDN bên ngoài. Các bộ xử lý nội tuyến gọi handleLoginSubmit() và togglePasswordVisibility() nhưng HTML không định nghĩa hai hàm này. Giữ nguyên HTML; SHA-256 hiện tại là 6e848c7bbab66b13f0486eb397b9da8a0e2059f3d9b169287b8359b8c1aad595.
 - **Bản xem sạch phát sinh:** Dựng HTML thành screen_rendered.png bằng Chrome headless, cho phép tài nguyên Tailwind/font ngoài mà trang đang tham chiếu, khung nhìn 1280×1024, thời gian chụp 10 giây. Đây là bản xem từ nguồn thiết kế, không phải ảnh khi chạy. Chú thích lên bản dựng này thành screen_annotated.png; giữ screen.png trống làm bằng chứng nguồn.
-- **Đích chuẩn:** `.agents/web-work/study/AGENTS.md` và `INDEX.md` hiện tồn tại, được khai báo trong context map và đăng ký trong manifest. Ngữ cảnh xác nhận Study Web vẫn UNWIRED vì thiếu editable source/package manifest; không coi trang context là bằng chứng runtime.
+- **Đích chuẩn:** `.agents/web-work/study/AGENTS.md` và `INDEX.md` hiện tồn tại, được khai báo trong context map và đăng ký trong manifest. Current source now includes SH02 presentation and `/login`; deploy/browser runtime is not verified, and auth/session remains blocked.
 - **Sai khác hợp đồng API:** DD/danh mục API #03 quy định 201 DESIGN_RESOURCE_CREATED, UserProfile không có trường token và lỗi 422/500. Mã nguồn hiện tại và AC-02 ghi 200 DESIGN_RESOURCE_RETRIEVED, hồ sơ cùng trường token truy cập/làm mới và lỗi 401/403/500. Giữ cả hai vế ở trạng thái DISCREPANCY; không tự chọn một vế trong DD màn hình.
 - **Điều kiện mở G-02:** #04 chỉ chấp nhận STUDENT; AC-02 còn đề cập permissions nhưng mô hình phản hồi hiện tại của #03/#04 không có trường này. Không suy diễn cách khởi tạo người hướng dẫn/quản trị viên.
 
@@ -126,3 +126,10 @@ Các Event ID phải giữ ổn định trong DD và liên kết về Element ID
 - DD đã thêm crosswalk A–F, kết quả/ngoại lệ cho đủ 13 event, state `PROFILE_AUTH_FAILURE_UNCLASSIFIED`, blocker SH02-D09 và checklist nghiệm thu. Không tự động refresh #04/401 khi chưa có classifier hoặc policy cho phép.
 - Kiểm tra tĩnh sau cập nhật: 8 marker ID khớp đúng thứ tự với 8 element row; 13 event đều có trigger, precondition, input, API/output, bước xử lý và kết quả/ngoại lệ; 6 dòng crosswalk A–F; toàn bộ local Markdown links resolve; hash PNG/HTML vẫn khớp.
 - Ảnh chú thích đã xem trực quan. `git diff --check` theo phạm vi SH-02 đạt. Không chạy test ứng dụng, không xác minh runtime, DB hay deployment. Trạng thái cuối vẫn DD BLOCKED / IMPLEMENTATION BLOCKED / RUNTIME NOT VERIFIED.
+
+## 9. Implementation audit ngày 2026-11-16
+
+- Source hiện wire `app.routes.ts` tới `features/shared/shared.route.ts`, `SharedLayout` và `SH02Page` tại `/login`; route `/` vẫn hiển thị readiness scaffold.
+- SH02Page hiển thị form, validate qua required/type=email của browser và toggle password tại chỗ. Submit bị disabled; page không gọi #03/#04/R-X01, không lưu token, và không redirect theo role. `/register` vẫn chưa được wire.
+- `npm test -- --include=src/app/features/shared/SH02/pages/sh02-page.spec.ts`: 3/3 pass. `npm test -- --include=src/app/app.routes.spec.ts`: 6/6 pass. Production build pass; cảnh báo CSS budget có sẵn thuộc Student stylesheets. Browser runtime/deployment chưa xác minh.
+- Contract #03, session persistence/recovery, #04/401 classification, role bootstrap và returnTo policy tiếp tục là blocker; status DD vẫn BLOCKED.

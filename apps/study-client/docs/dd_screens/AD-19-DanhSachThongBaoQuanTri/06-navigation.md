@@ -1,8 +1,10 @@
 # AD-19 — Navigation
 
+> Current source update (2026-11-16): /admin/notifications is registered in Angular and the AD-19 page/API caller is tested. Current CTA uses the registered AD-20 route /admin/notifications/new; the original Stitch HTML /create path is prototype-only. Row links to AD-21 are source-wired, but browser runtime and destination contract remain unverified.
+
 ## 1. Route definition
-- Current route in inventory: `/admin/notifications (candidate; Study Web route chưa wired)`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Current route: `/admin/notifications`; Angular admin route/page/API caller source-wired.
+- Status: source-wired; DD contract blocked; browser runtime not verified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -20,7 +22,7 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: Angular route declaration exists; browser/runtime behavior has not been verified.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
@@ -48,7 +50,7 @@ flowchart LR
 | VALIDATION ERROR | Local source trả 422 cho page invalid/non-positive. | DERIVED local behavior; API catalog không liệt kê 422 cho #92. | Không retry cùng query; hiển thị field/query error sau khi error UX được duyệt. |
 | DEPENDENCY ERROR | Catalog 503; local source map một số DB connectivity failures. | Error state; không có auto-retry contract. | User retry chỉ sau khi refresh button thực sự gọi API. |
 | SERVER / MAPPING ERROR | Catalog 500 hoặc local SQL/projection failure. | Error state; không expose raw DB error. | Không tự retry; preserve trace ID for support if available. |
-| NAVIGATE AD-20 | CTA intent. | HTML target /create khác inventory /new; route chưa wire. | Block tới khi route owner reconcile; #93 chỉ ở AD-20. |
+| NAVIGATE AD-20 | CTA intent. | Current Angular CTA uses /admin/notifications/new and route is registered; original Stitch HTML /create path remains prototype evidence. | Navigation source-wired; browser runtime unverified. |
 | NAVIGATE AD-21 | Chọn row/action dự kiến. | Không có row/action trong HTML; detail contract chưa đủ. | Cần positive notificationId và quyết định GET detail vs #96 status; không tự tạo detail. |
 | NAVIGATE GUIDELINES | Policy link intent. | /admin/guidelines/notifications không có inventory/router target. | Block; không tạo screen/API ngoài phạm vi. |
 

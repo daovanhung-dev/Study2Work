@@ -1,5 +1,7 @@
 # AD-15 — Events (đặc tả xử lý)
 
+> The event details below preserve the 2026-11-08 prototype/target snapshot. Current implementation evidence: initial load calls #87; exact `course`/`status` filters and server pagination are wired; safe numeric IDs link to AD-17. Search, refresh, edit, and delete are not wired on this page. Create is navigation to AD-16 only. See [current-source addendum](00-overview.md#current-source-addendum--2026-11-16); no API/catalog gate is closed by these source events.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

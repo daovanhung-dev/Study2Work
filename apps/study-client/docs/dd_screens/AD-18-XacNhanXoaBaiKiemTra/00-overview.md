@@ -4,9 +4,9 @@
 |---|---|
 | Screen ID | `AD-18` |
 | Module | Admin |
-| Route | `/admin/quizzes/:quizId/delete` (candidate; Study Web chưa wired)` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/admin/quizzes/:quizId/delete` — Angular route/page được đăng ký; `quizId` chỉ được hiển thị, không nạp detail hay gọi API |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** `DD BLOCKED` · `IMPLEMENTATION BLOCKED` · `RUNTIME NOT VERIFIED` · **Study Web:** `UNWIRED` · **API #90:** route/module/query/model/validator/test source có trong Study Server; API DD vẫn `Draft — Needs Confirmation`; live schema/deployment chưa xác minh. |
+| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** `DD BLOCKED` · `IMPLEMENTATION PARTIAL — read-only route/navigation wired; delete flow blocked` · `RUNTIME NOT VERIFIED` · **API #90:** route/module/query/model/validator/test source có trong Study Server; API DD vẫn `Draft — Needs Confirmation`; live schema/deployment chưa xác minh. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [AD-18.md](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/AD-18.md), [AD-18_PLAN.md](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/AD-18_PLAN.md), [AD-18_markers.json](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/AD-18_markers.json), [list_screen.md](../../list_screen.md) |
@@ -14,7 +14,7 @@
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Admin xem Quiz/tác động history rồi xác nhận; AD-15 là entry và đường quay lại dự kiến.
 - In-scope: Candidate DELETE #90 path-only; on success invalidate/refetch #87 theo inventory. `conflict` không được #90 catalog khai báo (không có 409); 422 local là invalid `quiz_id`, không phải conflict.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Xem gate bên dưới; route/page và điều hướng nguồn đã wired, nhưng browser runtime và luồng xóa chưa được xác minh.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -30,14 +30,14 @@
 ## 4. UI states
 | State | Nguồn | Giá trị |
 |---|---|---|
-| Inventory states | `list_screen.md` | confirm/deleting/deleted/unauthorized/forbidden/not-found/validation-error/service-error/unknown-outcome/unwired; `conflict` unsupported |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Inventory states | `list_screen.md` | read-only current source; confirm/deleting/deleted/unauthorized/forbidden/not-found/validation-error/service-error/unknown-outcome are expected flow states; `conflict` unsupported |
+| Current runtime | Angular source + T007 verification | Route/page, AD-15 safe-ID entry và AD-18 return links wired; read-only, controls disabled; browser runtime `NOT VERIFIED`. |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-18 source screen.png](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/screen_annotated.png))
 - Luồng: Candidate DELETE #90 path-only; on success invalidate/refetch #87 theo inventory. `conflict` không được #90 catalog khai báo (không có 409); 422 local là invalid `quiz_id`, không phải conflict.
-- Priority: P2; Gate/source status: **R** local #90 route/module/query/model/validator/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** AC-35 chỉ yêu cầu soft-delete khi có attempts, no-attempt branch không xác định; local hard-delete/no-history và soft-delete on linked answer are DERIVED; tombstone/timestamp/repeat, #29 race, permission, #87/#89/#91 visibility, target data/detail API, live schema and Study Web UNWIRED remain open; **RUNTIME NOT VERIFIED**
+- Priority: P2; Gate/source status: **R** local #90 route/module/query/model/validator/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL:** read-only AD-18 route/navigation is wired; delete flow remains blocked. AC-35 chỉ yêu cầu soft-delete khi có attempts, no-attempt branch không xác định; local hard-delete/no-history và soft-delete on linked answer are DERIVED; tombstone/timestamp/repeat, #29 race, permission, #87/#89/#91 visibility, target data/detail API and live schema remain open; browser/API runtime **NOT VERIFIED**.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -48,25 +48,25 @@
 # AD-18 — Xác nhận xóa bài kiểm tra
 
 > **Screen:** AD-18 · **Actor theo AC-35:** Admin có quiz-management permission · **Route candidate:** `/admin/quizzes/:quizId/delete` · **API candidate:** #90 `DELETE /api/v1/admin/quizzes/{quiz_id}` · **Entry/handoff:** [AD-15](../../screen_stitch/05_admin/AD-15_danh-sach-bai-kiem-tra/AD-15.md).
-> **Trạng thái:** `DD BLOCKED` · `IMPLEMENTATION BLOCKED` · `RUNTIME NOT VERIFIED` · **Study Web:** `UNWIRED` · **API #90:** route/module/query/model/validator/test source có trong Study Server; API DD vẫn `Draft — Needs Confirmation`; live schema/deployment chưa xác minh.
+> **Trạng thái:** `DD BLOCKED` · `IMPLEMENTATION PARTIAL — read-only route/navigation wired; delete flow blocked` · `RUNTIME NOT VERIFIED` · **Study Web:** route/page source-wired, browser chưa xác minh · **API #90:** route/module/query/model/validator/test source có trong Study Server; API DD vẫn `Draft — Needs Confirmation`; live schema/deployment chưa xác minh.
 > **Tài sản:** [ảnh nguyên trạng](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/screen.png) · [ảnh đánh số](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/screen_annotated.png) · [bản đồ marker](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/AD-18_markers.json) · [SVG marker](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/AD-18_markers.svg) · [kế hoạch](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/AD-18_PLAN.md) · [inventory](../../list_screen.md).
 
 ## Trích đoạn tổng quan từ DD nguồn
 
 ### Trích từ DD nguồn: A. Tổng quan màn hình
 
-AD-18 là màn hình xác nhận thao tác xóa quiz được AC-35 nối từ danh sách AD-15. Màn hình cần cho Admin nhận diện đúng Quiz, hiểu tác động tới attempts/history và đưa ra xác nhận tường minh. Đây là mục tiêu thiết kế; giao diện web hiện chưa được triển khai. Mockup có record placeholder, cảnh báo chính sách, trường lý do audit bị khóa và nút xóa bị disabled.
+AD-18 là màn hình xác nhận thao tác xóa quiz được AC-35 nối từ danh sách AD-15. Màn hình cần cho Admin nhận diện đúng Quiz, hiểu tác động tới attempts/history và đưa ra xác nhận tường minh. Study Web hiện có route/page đọc-only, nhận diện `quizId`, và điều hướng an toàn về AD-15; không nạp detail hoặc gửi request. Mockup gốc có record placeholder, cảnh báo chính sách, trường lý do audit bị khóa và nút xóa bị disabled.
 
 | Thuộc tính | Expected behavior / nguồn | Current behavior / bằng chứng |
 |---|---|---|
 | Actor | AC-35 yêu cầu Admin có quyền quản lý quiz. | API #90 dùng shared `ADMIN` role guard; chưa có source cho fine-grained quiz-management permission. |
-| Điều kiện trước | Quiz được chọn từ AD-15 hoặc nhận `quizId` hợp lệ; người dùng đã xác thực và được phân quyền. | Inventory chỉ định URL candidate. Study Web checkout không có editable app source/router/API client; route chưa wire. Mockup hiện không chọn bản ghi. |
-| Route | `/admin/quizzes/:quizId/delete`. | Không tìm thấy frontend route/runtime. HTML link dùng `href="#"`. |
+| Điều kiện trước | Quiz được chọn từ AD-15 hoặc nhận `quizId` hợp lệ; người dùng đã xác thực và được phân quyền. | AD-15 tạo link cho ID số dương an toàn; AD-18 hiển thị raw route ID. Không có detail source/API; browser chưa xác minh. |
+| Route | `/admin/quizzes/:quizId/delete`. | Angular route/page được đăng ký; đây không phải bằng chứng browser runtime. Stitch HTML gốc dùng `href="#"`. |
 | Dữ liệu target | Tên, ID và course giúp xác nhận đúng Quiz; attempts/history impact theo chính sách được duyệt. | Không có GET admin detail. #87 local list trả `id`, `course_id`, `title`, `duration_minutes`, `passing_score`, `questions=[]`; không trả course title hoặc counts/history. Không thể dựng nội dung hiện trên mockup từ contract #87 hiện tại. |
-| Điều kiện sau | Inventory kỳ vọng #90 delete và invalidate #87; trạng thái `deleted` được liệt kê. | Cơ chế cache/navigation chưa có client. Exact success destination chưa được inventory/AC chốt. |
-| Điều hướng | AD-15 → AD-18; quay lại AD-15. | Hai anchor của mockup đều `href="#"`; route history, giữ filter/page và handoff chưa có runtime evidence. |
+| Điều kiện sau | Inventory kỳ vọng #90 delete và invalidate #87; trạng thái `deleted` được liệt kê. | Chưa có mutation/caching; action đang disabled. Exact success destination chưa được inventory/AC chốt. |
+| Điều hướng | AD-15 → AD-18; quay lại AD-15. | Angular có safe-ID link vào AD-18 và return/cancel link về AD-15; filter/page handoff và browser runtime chưa xác minh. Stitch anchors vẫn là `href="#"`. |
 | Bảo mật | Chỉ Admin có quyền nghiệp vụ; không gửi dữ liệu không có trong contract. | Local API kiểm tra role `ADMIN`, không body/query; authentication/authorization chạy trước parse path/DB. Role chưa chứng minh permission riêng. |
-| Trạng thái triển khai | DD đủ traceable nhưng blocker phải được quyết định trước implementation. | API route/module/test source hiện có; Study Web `UNWIRED`; API DD Draft; live DB/deployment và runtime không xác minh. |
+| Trạng thái triển khai | DD đủ traceable nhưng blocker phải được quyết định trước destructive-flow implementation. | Study Web read-only route/navigation source-wired; API #90 DD Draft; destructive flow, live DB/deployment và browser runtime chưa xác minh. |
 
 ### API #90 — direct contract và local source
 
@@ -89,4 +89,4 @@ AD-18 là màn hình xác nhận thao tác xóa quiz được AC-35 nối từ d
 6. **Visibility/lifecycle:** local #87 ẩn `status='DELETED'`; #89 từ chối sửa history/tombstone; #91 vẫn có thể trả thống kê từ Quiz/tombstone và attempt history. Cần duyệt hành vi sau xóa xuyên AC-35.
 7. **Target data:** không có GET quiz detail. #87 không có course title/attempt count/history summary; HTML hiện hiển thị placeholder. Không thêm API hoặc trường dữ liệu theo suy đoán.
 8. **Audit claim:** textarea/lý do kiểm toán bị disabled trong prototype; API #90 không nhận body. Không gửi reason hoặc khẳng định đã ghi audit event. Copy “ISO-27001”/“SAFE-GUARD” chỉ là nội dung mockup.
-9. **Runtime/schema:** Study Web chưa wired; API #90 DD Draft; local legacy schema candidate không chứng minh live deployment. API test report là bằng chứng của lần chạy 2026-11-01, không phải runtime của màn hình ở phiên này.
+9. **Runtime/schema:** Study Web read-only route/page and navigation are source-wired; browser rendering is not verified. API #90 DD remains Draft; local legacy schema candidate does not prove live deployment. API tests run in T007 use fake sessions and do not prove live DB/runtime.

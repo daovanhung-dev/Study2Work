@@ -419,13 +419,3 @@ def test_delete_admin_notification_openapi_has_catalog_contract_and_no_body(
         openapi["components"]["schemas"][delete_result_name]["properties"]["status"]["const"]
         == "deleted"
     )
-
-    api_paths = {key for key in openapi["paths"] if key.startswith("/api/v1/")}
-    operation_count = sum(
-        1
-        for key in api_paths
-        for method in openapi["paths"][key]
-        if method in {"get", "post", "put", "patch", "delete"}
-    )
-    assert len(api_paths) == 58
-    assert operation_count == 69

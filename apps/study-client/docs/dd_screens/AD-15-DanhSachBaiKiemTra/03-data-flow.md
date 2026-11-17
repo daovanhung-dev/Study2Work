@@ -1,5 +1,7 @@
 # AD-15 — Data Flow & State
 
+> **Current-source addendum (2026-11-16):** `/admin/quizzes` → `AD15Page` → `AD15ApiService.getQuizzes` → `AdminApiService` (Admin Bearer token) → GET #87. Initial query is `{page: 1}`; blank filters are omitted, submitted `course` and `status` values are passed as text, and page changes use server pagination. Local response is `Page<Quiz>` and is mapped to the five supported row values `id`, `title`, `course_id`, `duration_minutes`, and `passing_score`; only safe JS integer quiz IDs receive the AD-17 route. Catalog singleton-vs-page, permission, schema and live-runtime gates remain open. The detailed sections below retain the historical prototype flow where marked candidate/unwired.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

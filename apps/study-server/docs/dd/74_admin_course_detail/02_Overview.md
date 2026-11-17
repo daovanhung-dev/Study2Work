@@ -36,9 +36,9 @@ status: "Draft — Needs Confirmation"
 - [DB table guide](../../diagrams/DB_UNICA_TABLES.md) và [DB ERD](../../diagrams/DB_UNICA_ERD.drawio) — quan hệ legacy `courses`/`users`; mapping được ghi `DESIGN_ONLY`.
 - [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — candidate BIGINT `courses`/`users`; không chứng minh live schema.
 - [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — UUID `courses` và versioned `course_versions`, khác API contract BIGINT.
-- [API #08 query/view/model](../../../app/modules/guest/api_08_courses_detail/) và [shared Course mapping](../../../app/modules/guest/_shared/course_catalog/) — current single-course projection/Page precedent; API #08 chỉ public `PUBLISHED`.
+- [API #08 query/view/model](../../../app/modules/guest/api_08_courses_detail/) và [shared Course mapping](../../../app/modules/shared/course_catalog/) — current single-course projection/Page precedent; API #08 chỉ public `PUBLISHED`.
 - [API #08 tests](../../../tests/modules/guest/api_08_courses_detail/test_courses_detail.py) — current source precedent cho invalid/missing detail, query/mapping errors và singleton Page; không chạy trong task này.
-- [API #06 shared Course mapping](../../../app/modules/guest/_shared/course_catalog/helpers.py) — decimal-string price và required mentor mapping.
+- [API #06 shared Course mapping](../../../app/modules/shared/course_catalog/helpers.py) — decimal-string price và required mentor mapping.
 - [API #69 Admin detail DD](../69_admin_user_detail/02_Overview.md) và [API #73 Admin list DD](../73_admin_courses_list/02_Overview.md) — Admin authorization boundary, Course field mapping và AC-32 continuity.
 - [Current auth helper](../../../app/utils/auth.py), [middleware](../../../app/core/middleware.py), [error response](../../../app/core/responses.py) — shared role-aware JWT guard, FastAPI route-template allowlist matching và lỗi mặc định `data:null`.
 - [API guidelines](../../../../../contracts/api-guidelines/README.md) — chuẩn lỗi yêu cầu `data:null`.

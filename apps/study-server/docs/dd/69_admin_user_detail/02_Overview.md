@@ -36,8 +36,8 @@ status: "Draft — Needs Confirmation"
 - [DB table guide](../../diagrams/DB_UNICA_TABLES.md) và [DB ERD](../../diagrams/DB_UNICA_ERD.drawio) — legacy users fields, được đánh dấu design-only.
 - [Legacy Study DDL](../../../../../infra/postgres/study-server/DB.sql) — candidate BIGINT users; không chứng minh live schema.
 - [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — UUID identity/profile/role relations khác model legacy.
-- [API #4 profile query/model](../../../app/modules/guest/api_04_users_me/query.py) — safe projection hiện có; bio không được chọn.
-- [API #14 profile query](../../../app/modules/guest/api_14_users_me_profile/query.py) — fields trả về sau cập nhật profile.
+- [API #4 profile query/model](../../../app/modules/student/api_04_users_me/query.py) — safe projection hiện có; bio không được chọn.
+- [API #14 profile query](../../../app/modules/student/api_14_users_me_profile/query.py) — fields trả về sau cập nhật profile.
 - [Current auth helper](../../../app/utils/auth.py) — role-aware shared guard; API #68 dùng `role="ADMIN"` trước DB access.
 - [API #68 Overview/Response](../68_admin_users_list/02_Overview.md) và [Response](../68_admin_users_list/04_Response.md) — API #68 hiện trả `Page<UserProfile>`; API #69 vẫn là detail đơn.
 

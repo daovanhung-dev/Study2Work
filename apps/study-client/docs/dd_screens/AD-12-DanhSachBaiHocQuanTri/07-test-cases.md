@@ -1,6 +1,6 @@
 # AD-12 — Test Cases
 
-> Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
+> Các mã `TC` bên dưới là planning references; chúng không phải test suite. Angular focused spec pass 3/3 và API #82 fake-DB tests pass 15/15 ngày 2026-11-16. Test pass không chứng minh browser/live runtime.
 
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |
@@ -11,14 +11,14 @@
 
 ### AD-12-TC-001 — Acceptance planning reference (AC-34)
 - **Mục tiêu:** Giữ truy vết tới yêu cầu/acceptance đã ghi; đây là test planning reference, không phải test code hoặc kết quả chạy.
-- **Precondition:** Đọc nguồn [AD-12](../../screen_stitch/05_admin/AD-12_danh-sach-bai-hoc-quan-tri/AD-12.md) và gỡ blocker áp dụng trước khi implementation.
+- **Precondition:** Đọc nguồn [AD-12](../../screen_stitch/05_admin/AD-12_danh-sach-bai-hoc-quan-tri/AD-12.md); local Angular source/spec hiện có nhưng contract blockers vẫn giữ nguyên.
 - **Mock/test data:** Nguồn không cung cấp fixture dùng để chạy test ở package này; không đưa dữ liệu thật.
 - **Steps:**
   1. Đối chiếu acceptance và event tương ứng trong DD nguồn.
   2. Khi runtime/test implementation tồn tại, viết test riêng theo contract đã xác nhận.
 - **Expected UI/state:** Theo acceptance/state trong nguồn; chưa được xác minh trên runtime.
 - **Expected API/data:** Theo [API Integration](04-api-integration.md); không phát sinh request trong lần tạo tài liệu.
-- **Failure / edge assertion:** Không đánh dấu pass cho `UNWIRED`, `IMPLEMENTATION BLOCKED` hoặc `RUNTIME NOT VERIFIED`.
+- **Failure / edge assertion:** Component/API unit tests chỉ xác minh local source behavior; không đánh dấu browser/live runtime verified. Search/filters, Add, pagination và mutations vẫn bị gate; row-detail link chỉ dùng safe integer ID.
 - **References:** `AC-34`, [Events](02-events.md), [Business Rules](05-business-rules.md), [source DD](../../screen_stitch/05_admin/AD-12_danh-sach-bai-hoc-quan-tri/AD-12.md).
 
 ## 3. Source acceptance / test plan (not run)
@@ -28,11 +28,11 @@
 - [x] Giữ `screen.png` và `code.html` nguyên trạng; có ảnh chú thích riêng, 42 marker tuần tự và marker map.
 - [x] Mục C có đúng một hàng cho mỗi marker #1–#42.
 - [x] Mục D mô tả input, xử lý, API/source, output và ngoại lệ cho EV-01…EV-09; UI-only event được phân biệt với current behavior.
-- [x] Truy vết API #82 route/module/query/model/DDL/test source; phân biệt catalog singleton với local array response; test không được tuyên bố đã chạy.
+- [x] Truy vết API #82 route/module/query/model/DDL/test source; phân biệt catalog singleton với local array response; không nhầm fake-DB test với live runtime evidence.
 - [x] Ghi rõ access, current data fields, empty/error states, AD-13 handoff và AC-34 chain.
 - [x] Ghi blocker search/course/type/status/pagination/actions/Add, RBAC permission, nullability/live schema, UI wiring và copy/design discrepancy.
 - [ ] Mọi quyết định contract đủ để triển khai UI không còn mở. **Chưa đạt:** các blocker ở mục A/B/D còn cần owner/API/schema resolution.
-- [ ] `DD READY`. **Không đạt trong phiên này:** trạng thái `DD BLOCKED`; implementation blocked; runtime not verified.
+- [ ] `DD READY`. **Chưa đạt:** trạng thái `DD BLOCKED`; source chỉ partial và các filter/action bị khóa; runtime not verified.
 
 ### Sources
 

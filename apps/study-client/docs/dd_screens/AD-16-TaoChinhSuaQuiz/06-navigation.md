@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/admin/quizzes/new hoặc /admin/quizzes/:quizId/edit`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: `/admin/quizzes/new` và `/admin/quizzes/:quizId/edit` có trong Angular source; runtime chưa xác minh. `AD16Page` hiện chỉ hỗ trợ safe draft.
 - Route params/types: `quizId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -58,9 +58,9 @@ Không đồng nhất `conflict` trong inventory với HTTP 409: catalog #89 kh�
 
 | Từ | Điều kiện/event | Đích | Dữ liệu cần truyền | Trạng thái |
 |---|---|---|---|---|
-| AD-15 | Create action / #88 | AD-16 create candidate | Không có Quiz ID; course/filter state carry-over chưa quy định. | AC-35 expected; AD-15 CTA hiện disabled và Study route chưa wire. |
+| AD-15 | Create action / #88 | AD-16 create route | Không có Quiz ID; course/filter state carry-over chưa quy định. | AD-16 route có trong Angular source; AD-15 CTA vẫn disabled; runtime chưa xác minh. |
 | AD-15 row | Update action / #89 | AD-16 edit candidate | Quiz ID theo response đã duyệt; local/catalog candidate int64. | Detail GET/question set missing; không thể populate. |
-| AD-16 | Cancel/back #13/#30 | AD-15 candidate `#/admin/quizzes` | Không có form payload; dirty draft/filter/page retention chưa rõ. | Hash hiện có trong HTML, router chưa xác minh. |
+| AD-16 | Cancel/back #13/#30 | AD-15 route `/admin/quizzes` | Không có form payload; dirty draft/filter/page retention chưa rõ. | Angular template dùng `RouterLink`; runtime chưa xác minh. |
 | AD-16 create/update success | #88/#89 | Chưa xác định; có thể AD-15 theo quy trình list nhưng không được suy ra | `Quiz.id`/response nếu contract chuẩn hóa; update ID từ route. | Owner cần chốt success destination, refetch/cache và duplicate-submit policy. |
 | AD-15 | Statistics action | AD-17 | Quiz ID theo API/list response đã duyệt. | Không có nút đi AD-17 trực tiếp từ AD-16; API #91 thuộc AD-17. |
 
@@ -82,11 +82,11 @@ flowchart TD
   D --> M[Hủy → hash #/admin/quizzes; route chưa xác minh]
 ```
 
-1. **Entry:** AD-15 là luồng trước theo AC-35. Inventory đề xuất create/edit route; hiện không có Study Web route để resolve hoặc kiểm tra session.
-2. **Authentication/authorization:** API catalog yêu cầu Bearer JWT/Admin. AC-35 dùng `quiz management permission`; source local chỉ kiểm tra shared `ADMIN`. UI chưa có guard. Khi thiếu auth, catalog liệt kê 401; thiếu quyền, 403. Client response/navigation chưa được thiết kế.
-3. **Khởi tạo:** Screenshot hiện render config rỗng và Questions rỗng. Không có API options/load. Course select chỉ có placeholder. Create default ngoài dữ liệu rỗng chưa được xác định. Edit cần Quiz detail nhưng endpoint không tồn tại; không được dựng data từ URL hoặc #87.
-4. **Nhập liệu:** Các input không có event listener/validation. Question/Choice controls không tồn tại; Add Question và Save disabled. Giao diện không thể tạo request chứa Question set.
+1. **Entry:** AD-15 là luồng trước theo AC-35. Angular source đăng ký create/edit route dưới `/admin`; runtime chưa xác minh.
+2. **Authentication/authorization:** API catalog yêu cầu Bearer JWT/Admin. `AdminLayout` điều khiển shell theo phiên đăng nhập; `AD16Page` chưa kiểm tra `quiz management permission` riêng. AC-35 permission và server `ADMIN` chưa được reconcile. Client response/navigation cho 401/403 chưa được thiết kế.
+3. **Khởi tạo:** Angular create page render draft rỗng. Không có API options/load; Course select disabled. Edit cần Quiz detail nhưng endpoint không tồn tại; không được dựng data từ URL hoặc #87.
+4. **Nhập liệu:** Angular create page có input handlers cho title/duration/score và giữ draft trong component memory; không có validation. Question/Choice controls không tồn tại; Add Question và Save disabled. Giao diện không thể tạo request chứa Question set.
 5. **Mutation:** Khi contract và UI được duyệt, create dùng #88; update cần chốt request body trước khi dùng #89. Direct catalog và current local handler có khác biệt; xem EV-05/EV-06. Hiện không có request được gửi.
 6. **Response:** Catalog thành công trả `ApiEnvelope<Quiz>`. Local code sinh ID Quiz/Question/Choice và response Admin có `is_correct`; mapping frontend, cache, retry, idempotency, toast và route sau save chưa có. Không được gửi answer key qua Student API.
 7. **Lỗi và trạng thái:** Catalog #88/#89 nêu 401/403/422/500; #89 thêm 404. Local #89 dùng 422 cho history conflict. Prototype không thể biểu diễn loading, field errors, permission errors, save success hoặc conflict hiện hành.
-8. **Rời màn hình:** Hủy có hash `#/admin/quizzes`; hash đích không chứng minh route có runtime. AD-17 được mở từ nhánh statistics của AD-15, không có nút/điều hướng trực tiếp từ prototype AD-16. Bảo toàn draft/filter/page hoặc cảnh báo thay đổi chưa lưu không được xác nhận.
+8. **Rời màn hình:** Angular template có `RouterLink` về `/admin/quizzes`; runtime navigation chưa xác minh. AD-17 được mở từ nhánh statistics của AD-15, không có nút/điều hướng trực tiếp từ AD-16. Bảo toàn draft/filter/page hoặc cảnh báo thay đổi chưa lưu không được xác nhận.

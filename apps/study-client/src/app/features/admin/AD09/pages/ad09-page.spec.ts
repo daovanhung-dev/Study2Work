@@ -48,6 +48,9 @@ describe('AD09Page', () => {
     expect(root.textContent).toContain('PUBLISHED');
     expect(root.textContent).toContain('Mentor Example');
     expect(root.textContent).toContain('4850000.00');
+    expect(root.querySelector('.summary-meta div')?.textContent).toContain('ID khóa học');
+    expect(root.querySelector('.summary-meta div')?.textContent).toContain('9007199254740993');
+    expect(root.textContent).not.toContain('Mã khóa học trên đường dẫn');
     expect(root.textContent).toContain('Course ID từ đường dẫn: 9007199254740993');
     expect(root.querySelectorAll('a[href="/admin/courses/9007199254740993"]')).toHaveLength(2);
     expect(root.querySelector('img, picture, video, iframe')).toBeNull();

@@ -41,7 +41,7 @@ status: "Draft — Needs Confirmation"
 - [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — UUID `courses` và versioned `course_versions`, không tương đương API BIGINT.
 - [API #70 Admin update](../70_admin_user_update/02_Overview.md) — precedent giữ body thiếu trong catalog thành proposal `DERIVED`.
 - [API #73 Admin list](../73_admin_courses_list/02_Overview.md) và [API #74 Admin detail](../74_admin_course_detail/02_Overview.md) — Course projection, response Page và AC-32 boundary.
-- [API #14 profile update source](../../../app/modules/guest/api_14_users_me_profile/) — transaction/update pattern; không phải Admin policy.
+- [API #14 profile update source](../../../app/modules/student/api_14_users_me_profile/) — transaction/update pattern; không phải Admin policy.
 - [Current router](../../../app/api/v1.py), [API #75 view](../../../app/modules/admin/api_75_admin_course_update/view.py), [auth helper](../../../app/utils/auth.py), [middleware](../../../app/core/middleware.py) và [response helper](../../../app/core/responses.py) — runtime implementation boundary.
 - [API guidelines](../../../../../contracts/api-guidelines/README.md) — error envelope guideline.
 

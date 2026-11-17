@@ -2,6 +2,19 @@
 
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
+## Current Angular source tests
+
+- `ad21-page.spec.ts` covers the #96 status projection, safe handling of large route IDs, source 404 rendering, disabled actions and the missing client handoff/poller for #18.
+- `admin.routes.spec.ts` covers the registered `notifications/:notificationId` route.
+- These source tests do not prove a live backend, database schema or deployed browser runtime. Results for the current task are recorded after the focused test run below.
+
+### Current task verification
+
+- Frontend: `npm test -- --include='src/app/features/admin/AD21/pages/ad21-page.spec.ts' --include='src/app/features/admin/admin.routes.spec.ts'` — 2 files, 4 tests passed.
+- Backend: `uv run pytest -q tests/modules/shared/api_18_operations/test_operations.py tests/modules/admin/api_94_admin_notifications_update/test_admin_notifications_update.py tests/modules/admin/api_95_admin_notifications_delete/test_admin_notifications_delete.py tests/modules/admin/api_96_admin_notifications_status/test_admin_notification_status.py` — 65 passed, one upstream Starlette/httpx deprecation warning; fake DB only.
+- Build: `npm run build` passed. Three existing Student CSS budget warnings were reported; no AD-21 budget warning.
+- Browser: Firefox headless opened `/admin/notifications/901` and showed the Admin sign-in screen. No credentials were entered and GET #96 was not exercised; loaded-state browser runtime remains unverified.
+
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |
 |---|---|---|---|---|
@@ -34,7 +47,8 @@
 - [x] No unsupported recipient/channel metrics, cancellation result, Operation polling or live-schema claim is added.
 - [ ] Product/API owners approve notification model/grain, notification-management permission, lifecycle/status mapping, #94 body/edit gate, #95 cancel/delete/retention and dispatch coordination.
 - [ ] API #18 ID/owner/status/producer mapping and Study runtime route/store are implemented or explicitly scoped.
-- [ ] Study Web route/auth/API client and all navigation/error handling are implemented and verified.
+- [x] Study Web route/page and read-only #96 caller exist in source; current focused verification is recorded below.
+- [ ] #94/#95 mutations, #18 client handoff/poller, and all navigation/error handling are implemented and verified.
 - **Disposition:** `DD BLOCKED` · `IMPLEMENTATION BLOCKED` · `RUNTIME NOT VERIFIED`.
 
 #### Kế hoạch kiểm chứng từ source PLAN
@@ -55,9 +69,9 @@
 - Marker IDs #1–#47 must be unique, sequential, in image bounds, and map one-to-one to element rows in `AD-21.md`; JSON/SVG/image coordinates must match.
 - Source image/HTML hashes stay unchanged; annotated PNG is 2850×3200 and visually checked at full page.
 - Inventory/folders remain 83/83; core artifacts rise from 73/83 to 74/83 after the four required DD assets are added.
-- API reverse rows #094/#095/#096 become `R` for local registered source; API DD status stays Draft. #018 stays `D`/UNWIRED.
+- API reverse rows #094/#095/#096 and #018 record local registered source; API DDs remain Draft and catalog contracts stay unchanged.
 - Do not equate expected `draft/scheduled/sending/delivered/failed` with local `QUEUED/SENT/FAILED`; do not infer recipient/channel counts, delivery progress, notification cancellation, or Operation handoff.
-- DD state: `DD BLOCKED`; implementation: `IMPLEMENTATION BLOCKED`; runtime: `RUNTIME NOT VERIFIED` until permissions, lifecycle/model/schema, API #18 and Study Web source are resolved.
+- DD state: `DD BLOCKED`; implementation: `IMPLEMENTATION PARTIAL SOURCE`; runtime: `RUNTIME NOT VERIFIED`. Contract/permission/lifecycle/schema and SH-07 handoff remain unresolved.
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Không chạy app test trong task chuyển đổi tài liệu.

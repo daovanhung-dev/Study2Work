@@ -1,5 +1,7 @@
 # AD-11 — Kế hoạch Detailed Design
 
+> Kế hoạch này ghi nhận source snapshot lúc authoring ngày 2026-11-08. Source status được reconcile trong continuation note 2026-11-16 bên dưới.
+
 ## 1. Phạm vi và kết quả cần tạo
 
 - Chỉ hoàn thiện Screen ID **AD-11 — Duyệt/từ chối nội dung** trong phiên này.
@@ -17,7 +19,7 @@
 - API catalog: #79 `GET /api/v1/admin/content/{content_id}` path `int64`, response `ApiEnvelope<Content>`; #80 `PATCH /api/v1/admin/content/{content_id}/approve` path-only; #81 `PATCH /api/v1/admin/content/{content_id}/reject` path + JSON `{reason:string!}`. Cả ba yêu cầu Bearer/Admin; catalog errors 401/403/404/500 cho #79 và 401/403/404/422/500 cho #80/#81.
 - Rejection reason bắt buộc theo #81; screenshot lại ghi “Tùy chọn”. Mọi UI behavior vượt catalog/AC/source phải được nêu là cần quyết định.
 
-### Current behavior đã xác minh
+### Current behavior đã xác minh tại thời điểm authoring (2026-11-08)
 
 - Study Web editable source/router/package/API client chưa có trong checkout; prototype không wire request. Runtime `UNWIRED` / `NOT VERIFIED`.
 - HTML tĩnh: shell links `href="#"`; back-to-AD-10 link `href="#"`; notification không handler; approve/reject disabled; textarea `#review-comments` disabled; không có form/input/select/table/video/iframe hoặc fetch/XHR/API URL/timer/listener.
@@ -93,3 +95,9 @@
 6. [ ] Update inventory AD-11 and reverse API #079–#081 source status; update global tracker/checkpoint and worklog.
 7. [ ] Static audit: source hashes/dimensions, JSON/XML, order/coordinates/stroke bounds, C-row bijection, local links, 83 IDs/folders/core-artifact count, whitespace and annotated image. Do not run app tests/runtime.
 8. [ ] Finalize worklog and stop after AD-11; AD-12 remains a separate session.
+
+## Source-status continuation — 2026-11-16
+
+- Current Angular source registers `/admin/content/:contentId/review` → `AD11Page`; AD-10 links a safe `Content.id`; AD-11 calls GET #79 with the Admin session and renders the eight supported Content fields. `payload` is displayed as JSON text, not interpreted as HTML or media.
+- The Angular page and focused specs exist. The reason field and #80/#81 buttons remain disabled; no decision PATCH caller or post-decision #78 reload flow exists. The DD/API discrepancies and live-schema/permission/revision gates remain open.
+- Browser/runtime and deployment remain `NOT VERIFIED`. See the current-source sections in [AD-11](./AD-11.md) and [the screen overview](../../../dd_screens/AD-11-DuyetTuChoiNoiDung/00-overview.md).

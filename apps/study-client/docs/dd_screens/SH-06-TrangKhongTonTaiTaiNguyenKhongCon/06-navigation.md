@@ -2,25 +2,25 @@
 
 ## 1. Route definition
 - Current route in inventory: `/not-found`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
+- Status: explicit `/not-found` page and root Angular wildcard are source-wired; GS-03 #08 detail 404 also navigates here. Static-host fallback/HTTP status remains unverified. Browser/runtime remains unverified.
+- Route params/types: Không có route param được biểu diễn trong inventory string; explicit route source exists, route runtime chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| Không khai báo trong cột điều hướng inventory. | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| Explicit direct route `/not-found`; resource 404 handoff từ GS-03 chưa wire. | Direct navigation / future handoff | Không có param/query bắt buộc | Explicit route source exists; resource handoff và static-host fallback chưa có |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [GS-01](../GS-01-DanhSachKhoaHoc/00-overview.md), [SH-01](../SH-01-TrangGioiThieuStudyVariant1/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [GS-01](../GS-01-DanhSachKhoaHoc/00-overview.md), [SH-01](../SH-01-TrangGioiThieuStudyVariant1/00-overview.md) | CTA links | No params | Both target routes are registered in current source; browser runtime chưa verify |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: explicit `/not-found` exists in Angular source; static-host deep-link fallback and runtime remain unverified.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
@@ -67,3 +67,8 @@ flowchart LR
 7. **Rời màn hình:** Tới GS-01 thì GS-01 sở hữu API #05/#06; tới SH-01 thì SH-01 sở hữu API #05/#06 theo inventory. SH-06 không gọi trước các API này để render fallback.
 
 Quan hệ hệ thống: SH-06 hỗ trợ GS-03 khi course không tồn tại/không public và làm route fallback cho toàn Study Web. Route fallback có thể được dùng từ mọi flow nhưng nội dung 404 không tiết lộ record/ownership. 403 là SH-05 và lỗi 500/mạng thuộc service-error handling; các trạng thái không thay thế nhau.
+
+## Current source implementation audit (2026-11-17, T024)
+
+- Root app wildcard redirects unknown routes to `/not-found` through a query-clearing `UrlTree`. GS-03 API #08 detail 404 also navigates there with `replaceUrl`.
+- Neither path nor error body is displayed or forwarded. Service errors and curriculum 404 remain separate. See T024 for verification status.

@@ -11,13 +11,13 @@
 
 ### AD-11-TC-001 — Acceptance planning reference (AC-33)
 - **Mục tiêu:** Giữ truy vết tới yêu cầu/acceptance đã ghi; đây là test planning reference, không phải test code hoặc kết quả chạy.
-- **Precondition:** Đọc nguồn [AD-11](../../screen_stitch/05_admin/AD-11_duyet-tu-choi-noi-dung/AD-11.md) và gỡ blocker áp dụng trước khi implementation.
+- **Precondition:** Đọc source DD; route/page/GET #79 read path đã có Angular implementation, còn blockers cho decision writes vẫn mở.
 - **Mock/test data:** Nguồn không cung cấp fixture dùng để chạy test ở package này; không đưa dữ liệu thật.
 - **Steps:**
   1. Đối chiếu acceptance và event tương ứng trong DD nguồn.
   2. Khi runtime/test implementation tồn tại, viết test riêng theo contract đã xác nhận.
 - **Expected UI/state:** Theo acceptance/state trong nguồn; chưa được xác minh trên runtime.
-- **Expected API/data:** Theo [API Integration](04-api-integration.md); không phát sinh request trong lần tạo tài liệu.
+- **Expected API/data:** Theo [API Integration](04-api-integration.md); implementation tests riêng kiểm tra #79 read và không phát sinh #80/#81 PATCH.
 - **Failure / edge assertion:** Không đánh dấu pass cho `UNWIRED`, `IMPLEMENTATION BLOCKED` hoặc `RUNTIME NOT VERIFIED`.
 - **References:** `AC-33`, [Events](02-events.md), [Business Rules](05-business-rules.md), [source DD](../../screen_stitch/05_admin/AD-11_duyet-tu-choi-noi-dung/AD-11.md).
 
@@ -37,10 +37,11 @@
 - [ ] Quyết định source cho author, course title, submitted date, version/revision identity; xác định stale/deleted state và decision concurrency.
 - [ ] Quyết định moderation-specific permission; xác nhận live schema/migration 011, grants và retention/access.
 - [ ] Cung cấp Content payload/media preview contract và secure renderer nếu còn yêu cầu; xác nhận rubric source/version/applicability/result semantics.
-- [ ] Wire Study Web route/API/auth/UI; chốt loading/error/duplicate-submit/retry/success navigation và #78 refresh policy.
+- [x] Angular route/page/Admin session/GET #79, supported field/payload text presentation and focused specs exist.
+- [ ] Gỡ policy/contract gates trước khi wire #80/#81; chốt loading/error/duplicate-submit/retry/success navigation và #78 refresh policy.
 - [ ] Reconcile queue/#79/#80/#81 identity và ensure displayed revision is decision revision, hoặc phê duyệt rõ current-logical-row semantics.
 
-**Trạng thái hiện tại:** `DD BLOCKED` · `IMPLEMENTATION BLOCKED` · `RUNTIME NOT VERIFIED`. Route/modules/test source của #79–#81 tồn tại local và được inventory đánh dấu `R`; API DD vẫn Draft. Test files được đọc làm source evidence nhưng không chạy trong phiên này. Fake DB tests không chứng minh live PostgreSQL/schema/deployment/authorization policy.
+**Trạng thái hiện tại:** `DD BLOCKED` · `IMPLEMENTATION PARTIAL SOURCE; DECISION FLOW BLOCKED` · `RUNTIME NOT VERIFIED`. Angular route/page/GET #79 and frontend specs exist; #80/#81 remain without Web callers. API DDs remain Draft. Fake DB tests do not prove live PostgreSQL/schema/deployment/authorization policy.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 
@@ -55,5 +56,5 @@
 7. [ ] Static audit: source hashes/dimensions, JSON/XML, order/coordinates/stroke bounds, C-row bijection, local links, 83 IDs/folders/core-artifact count, whitespace and annotated image. Do not run app tests/runtime.
 8. [ ] Finalize worklog and stop after AD-11; AD-12 remains a separate session.
 
-- Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
+- Runtime status: `RUNTIME NOT VERIFIED`; source-level tests do not claim browser or deployment verification.
 - Không chạy app test trong task chuyển đổi tài liệu.

@@ -31,8 +31,8 @@ format: markdown
 - [`AC_02_STUDENT_LEARNING.drawio`](../../../docs/diagrams/AC_UNICA/AC_02_STUDENT_LEARNING.drawio) — AC-11 sequence và postcondition.
 - [`00_AC_API_INDEX.md`](../../../docs/diagrams/AC_UNICA/00_AC_API_INDEX.md) — Student precondition và API mapping.
 - [`DB.sql`](../../../../../infra/postgres/study-server/DB.sql) — `users` columns hiện có.
-- [`API #4 query.py`](../../../app/modules/guest/api_04_users_me/query.py) — safe profile projection hiện hành.
-- [`API #4 view.py`](../../../app/modules/guest/api_04_users_me/view.py) — JWT/Student/error mapping pattern hiện hành.
+- [`API #4 query.py`](../../../app/modules/student/api_04_users_me/query.py) — safe profile projection hiện hành.
+- [`API #4 view.py`](../../../app/modules/student/api_04_users_me/view.py) — JWT/Student/error mapping pattern hiện hành.
 - [`code_http.md`](../../business_code/code_http.md) — `DESIGN_RESOURCE_UPDATED` và `DESIGN_*` status design-only.
 
 ## Tables read

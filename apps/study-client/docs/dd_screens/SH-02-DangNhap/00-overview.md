@@ -4,17 +4,17 @@
 |---|---|
 | Screen ID | `SH-02` |
 | Module | Shared / Auth / System |
-| Route | `/login` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/login` — wired qua SharedLayout tới SH02Page; unit/router test pass, browser runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái DD:** DD BLOCKED · **Trạng thái triển khai:** IMPLEMENTATION BLOCKED · **Runtime:** RUNTIME NOT VERIFIED |
+| DD status | **DD BLOCKED** cho login/session flow; presentation page đã implement; submit/API còn blocked; browser runtime chưa xác minh |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-16 |
 | Nguồn đối chiếu | [SH-02.md](../../screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02.md), [SH-02_PLAN.md](../../screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02_PLAN.md), [SH-02_markers.json](../../screen_stitch/01_shared_auth_system/SH-02_dang-nhap/SH-02_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Email/password, lỗi tại trường, nhớ route đích, tách thông báo 401 và tài khoản bị chặn.
 - In-scope: POST #3 → lưu token ở client an toàn → #4 CHỈ cho Student; Mentor/Admin chưa có /me phù hợp.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Không triển khai submit, session, role bootstrap, returnTo hoặc gọi API khi gate bên dưới còn mở. Route `/login` và presentation UI hiện có source.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,7 +31,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | idle/validating/submitting/401/403/network-error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current runtime | SH02Page và app route source; test/build | `/login` và presentation được source/test xác nhận; login action `BLOCKED`; browser runtime chưa xác minh |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [SH-02 source screen.png](../../screen_stitch/01_shared_auth_system/SH-02_dang-nhap/screen.png))
@@ -42,14 +42,15 @@
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-16 — Thêm Shared `/login` route và SH02 presentation page; page spec 3/3, app route spec 6/6, production build pass. Không gọi #03/#04/R-X01; auth/session flow vẫn blocked.
 
 ## Trạng thái và ranh giới bằng chứng
 
 # Tài liệu thiết kế chi tiết màn hình — SH-02 Đăng nhập
 
-> **Trạng thái DD:** DD BLOCKED · **Trạng thái triển khai:** IMPLEMENTATION BLOCKED · **Runtime:** RUNTIME NOT VERIFIED
+> **Trạng thái DD:** DD BLOCKED cho auth/session flow · **Trạng thái triển khai:** presentation source có; submit/API/session vẫn BLOCKED · **Runtime:** route/page có test; browser runtime NOT VERIFIED
 > **Mã màn hình:** SH-02 · **Bề mặt:** Trang · **Tác nhân:** Khách
-> **Route đề xuất:** /login · **AC:** AC-02 · **Độ ưu tiên:** P0
+> **Route source hiện tại:** /login wired tới SH02Page · **AC:** AC-02 · **Độ ưu tiên:** P0
 > **Nhãn phía máy chủ trong danh mục:** R cho nguồn API #03/#04; màn hình Study Web và bộ quản lý phiên phía client không có trong bản làm việc này.
 
 ## Trích đoạn tổng quan từ DD nguồn
@@ -58,7 +59,7 @@
 
 SH-02 cho phép khách gửi email và mật khẩu, xử lý lỗi đăng nhập rồi tiếp tục tới route Study đã xác thực sau khi xác định vai trò/hồ sơ. Luồng đích trong danh mục là đăng nhập bằng API #03, sau đó gọi API #04 lấy người dùng hiện tại **chỉ cho học viên**. API #04 không phải endpoint hồ sơ dùng chung: nguồn hiện tại yêu cầu vai trò STUDENT; người hướng dẫn/quản trị viên bị chặn bởi G-02.
 
-**Điều kiện trước:** Người dùng mở route công khai `/login`; nếu được chuyển từ route cần bảo vệ, chỉ nhận `returnTo` sau khi chính sách allowlist/role được duyệt. Không cần token để hiển thị form. **Điều kiện sau:** lỗi thì ở lại SH-02 với trạng thái an toàn; thành công chỉ được coi là hoàn tất sau khi contract #03, session policy và role/profile flow được duyệt. Hiện chưa có client route/runtime để thực hiện chuyển tiếp.
+**Điều kiện trước:** Người dùng mở route công khai `/login`, hiện được wire tới SH02Page; nếu được chuyển từ route cần bảo vệ, chỉ nhận `returnTo` sau khi chính sách allowlist/role được duyệt. Không cần token để hiển thị form. **Điều kiện sau:** lỗi thì ở lại SH-02 với trạng thái an toàn; thành công chỉ được coi là hoàn tất sau khi contract #03, session policy và role/profile flow được duyệt. Submit hiện disabled và chưa có client auth/session flow.
 
 **Lý do DD BLOCKED:** hợp đồng thành công API #03 trong danh mục (201, chỉ UserProfile) khác AC-02/nguồn hiện tại (200, hồ sơ và token); chính sách lưu/refresh phiên và route theo vai trò cũng chưa được duyệt. Tài liệu giữ rõ các nhánh bằng chứng nhưng chưa thể làm hợp đồng triển khai duy nhất. Source API có mặt không chứng minh Study Web hoặc môi trường runtime đã nối.
 
@@ -72,8 +73,10 @@ DD này tách riêng ba loại bằng chứng:
 
 | Bằng chứng | Phát hiện hiện tại | Trạng thái |
 |---|---|---|
-| Mã Study Web, router, client API/phiên | Không có trong apps/study-client/ | UNWIRED / SOURCE_REQUIRED |
-| .agents/web-work/study/AGENTS.md và INDEX.md | Hai trang hiện có, được khai báo trong context map và đăng ký trong manifest; chúng xác nhận editable Study Web source/package manifest không có và runtime chưa xác minh | CONTEXT_VERIFIED; APP UNWIRED |
+| Angular Study Web source/package | Có Angular 22 app, package manifest và Admin/Student/System routes | SOURCE_PRESENT |
+| SH-02 route/page | `/login` qua SharedLayout tới SH02Page; unit spec 3/3 và app route spec 6/6 pass | SOURCE_WIRED; BROWSER_RUNTIME_NOT_VERIFIED |
+| SH-02 API/session | Submit button disabled; page không gọi #03, #04, R-X01 và không lưu token | BLOCKED_BY_CONTRACT_AND_SESSION_POLICY |
+| .agents/web-work/study/AGENTS.md và INDEX.md | Context pages hiện tại được khai báo trong context map/manifest; runtime deploy chưa xác minh | CONTEXT_VERIFIED; DEPLOYMENT_NOT_VERIFIED |
 | screen.png gốc | 1280×1024; nhìn thấy ảnh trống | PRESENT_BUT_BLANK |
 | code.html gốc | Có bố cục đăng nhập, biểu mẫu và điều khiển; tải Tailwind/Google assets từ xa | DESIGN_SOURCE_ONLY |
 | Bản dựng sạch | Dựng từ code.html hiện tại ở 1280×1024 | DERIVED_PREVIEW, không phải ảnh gốc/khi chạy |

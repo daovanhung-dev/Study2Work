@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from app.core.responses import ErrorDetail, error_response
-from app.modules.guest._shared.course_catalog.constants import SORT_DIRECTIONS, SORT_FIELDS
+from app.modules.shared.course_catalog.constants import SORT_DIRECTIONS, SORT_FIELDS
 from app.modules.guest.api_07_courses_search.models import CourseSearchQuery
 from app.utils.validate import normalize_search_query, normalize_sort
 from starlette.responses import JSONResponse

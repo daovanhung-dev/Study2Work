@@ -4,17 +4,18 @@
 |---|---|
 | Screen ID | `SH-04` |
 | Module | Shared / Auth / System |
-| Route | `/register/verification` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/register/verification` — route và static information page đã có trong Study Web source; browser runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái DD:** DD BLOCKED · **Trạng thái triển khai:** IMPLEMENTATION BLOCKED · **Runtime:** RUNTIME NOT VERIFIED · **Mã màn hình:** SH-04 · **Đường dẫn đề xuất:** `/register/verification` · **Tác nhân:** Khách · **Quyền gọi API:** Công khai, không cần `Authorization` · **Loại:** Trang · **Tiêu chí:** AC-01 · **Đợt:** W0 · **Ưu tiên:** P1 · **Tình trạng danh mục màn hình:** `S`. |
+| DD status | Draft (package được chuyển đổi); DD remains **BLOCKED**. Current source is **PARTIAL**: static information page and route exist; API #02 caller and registration data handoff remain unwired. Browser runtime is **NOT VERIFIED**. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [SH-04.md](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04.md), [SH-04_PLAN.md](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_PLAN.md), [SH-04_markers.json](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Hiển thị trạng thái yêu cầu gửi email; chưa có API xác nhận OTP/link.
-- In-scope: POST #2 với user_id/email sau đăng ký, chỉ xác nhận accepted (stub), không tuyên bố email đã gửi hoặc đã verify.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Target in-scope: POST #2 với user_id/email sau đăng ký, chỉ xác nhận accepted (stub), không tuyên bố email đã gửi hoặc đã verify.
+- Current source: static information notice with a user-controlled login link; it does not dispatch #02 or receive registration data.
+- Out-of-scope: Không khẳng định email đã được gửi/xác minh, hoặc route/page đã được kiểm chứng trên browser/deployment.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,23 +32,26 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | accepted/stub/no-delivery/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | `apps/study-client/src/app/features/shared/SH04/` and Shared routes | Static information page and route are source-wired; no #02 caller or ID/email handoff |
+| Browser runtime | Worklog/context Study Web | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [SH-04 source screen.png](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/screen_annotated.png))
-- Luồng: POST #2 với user_id/email sau đăng ký, chỉ xác nhận accepted (stub), không tuyên bố email đã gửi hoặc đã verify.
+- Current source flow: SH-03 may show a user-controlled link after validated #01 creation; SH-04 displays an unavailable notice and links to SH-02. It does not call #02.
+- Target flow: POST #2 with user_id/email after registration; accepted from the current stub does not prove delivery or verification.
 - Priority: P1; Gate/source status: **S**; **BLOCK:** Email provider mới là stub, chưa có confirm endpoint
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
+- 2026-11-17 — SH-04 static information route/page and optional SH-03 link added; API #02, data handoff and verification flow remain blocked/unwired.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 
 ## Trạng thái và ranh giới bằng chứng
 
 # Tài liệu thiết kế chi tiết màn hình — SH-04 Bàn giao xác thực thư điện tử
 
-> **Trạng thái DD:** DD BLOCKED · **Trạng thái triển khai:** IMPLEMENTATION BLOCKED · **Runtime:** RUNTIME NOT VERIFIED · **Mã màn hình:** SH-04 · **Đường dẫn đề xuất:** `/register/verification` · **Tác nhân:** Khách · **Quyền gọi API:** Công khai, không cần `Authorization` · **Loại:** Trang · **Tiêu chí:** AC-01 · **Đợt:** W0 · **Ưu tiên:** P1 · **Tình trạng danh mục màn hình:** `S`.
+> **Trạng thái DD:** DD BLOCKED · **Source implementation:** PARTIAL (static information gate; #02 caller and handoff unwired) · **Browser runtime:** NOT VERIFIED · **Mã màn hình:** SH-04 · **Đường dẫn:** `/register/verification` · **Tác nhân:** Khách · **Quyền gọi API theo inventory:** Công khai · **Loại:** Trang · **Tiêu chí:** AC-01 · **Đợt:** W0 · **Ưu tiên:** P1 · **Tình trạng danh mục màn hình:** `S`.
 
 ## Trích đoạn tổng quan từ DD nguồn
 
@@ -59,7 +63,7 @@ Tài liệu phân biệt ba loại căn cứ:
 
 1. `list_screen.md` là thiết kế đích: SH-04, đường dẫn đề xuất, AC-01, API #02, trình tự SH-03 → SH-04 → SH-02 và điều kiện chặn về thư điện tử.
 2. Mã nguồn Study Server hiện có khai báo API #02 cùng bộ gửi thư mặc định giả lập. Đây là bằng chứng hành vi mã nguồn, không chứng minh giao diện, dịch vụ gửi thư thật, cơ sở dữ liệu thật hoặc triển khai môi trường chính thức.
-3. `screen.png` và `code.html` là tài sản thiết kế. Bản làm việc không có mã nguồn Study Web để xác nhận đường dẫn trang, lời gọi API, điều hướng hay trạng thái trình duyệt.
+3. `screen.png` và `code.html` là tài sản thiết kế. Study Web source now has a static route/page, but it does not implement the expected email handoff; browser rendering, API acceptance and deployment remain unverified.
 
 **Lý do DD BLOCKED:** F01 đặt API #02 sau đăng ký, nhưng catalog chỉ mô tả gửi khi verification được bật và API DD chưa chốt feature gate, component sở hữu dispatch, trigger tự động hay thao tác rõ ràng, hoặc kênh chuyển `data.id`/`data.email` từ SH-03. API contract cũng để mở semantics của `ActionResult.status`/`reason` và miền `user_id:int64` chưa khớp validator. Nhánh kế tiếp SH-02 kiểm tra `status=ACTIVE`, trong khi API #01 bỏ qua `status`, DDL không xác nhận live schema và chưa có endpoint xác nhận email cập nhật trạng thái. Các điểm này ảnh hưởng flow và mapping nên không tự chọn trong DD. Luồng dự kiến và các response hiện có vẫn được ghi đầy đủ dưới đây.
 
@@ -67,17 +71,17 @@ Tài liệu phân biệt ba loại căn cứ:
 
 | Hạng mục | Phát hiện | Tình trạng |
 |---|---|---|
-| Mã nguồn Study Web và bộ định tuyến | `.agents/web-work/study/AGENTS.md` và `INDEX.md` hiện tồn tại, được khai báo trong manifest; nhưng không có `apps/study-client/src`, router, `package.json` hoặc kiểm thử giao diện. `dist`/`node_modules` không xác nhận source/runtime cho màn hình này. | Context `VERIFIED`; app `UNWIRED` |
-| Đường dẫn trang | `/register/verification` có trong danh mục màn hình và ảnh mẫu; chưa có bộ định tuyến để xác nhận hoạt động. | ĐƯỜNG_DẪN_ĐỀ_XUẤT |
+| Mã nguồn Study Web và bộ định tuyến | Study Web source includes SH04 page, Shared route and page/route tests; the tests and browser run must be reported separately from deployment evidence. | SOURCE-WIRED; runtime/deployment not established |
+| Đường dẫn trang | `/register/verification` is registered under Shared routes and renders the static SH04 information page in source. | SOURCE-VERIFIED; browser runtime NOT VERIFIED |
 | Ảnh mẫu | [Ảnh gốc](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/screen.png), 1600×1280, đang thể hiện nhánh mặc định `accepted`. | CHỈ_LÀ_THIẾT_KẾ |
 | HTML mẫu | [HTML gốc](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/code.html), gồm các nút đổi trạng thái cục bộ và nút sao chép lệnh. Không có `fetch` hay lời gọi API. | CHỈ_LÀ_THIẾT_KẾ |
 | API #02 | `POST /api/v1/auth/verify-email/send` có route/model/validator/view/provider/test. Public, không mở DB; validator yêu cầu raw JSON integer, chuẩn hóa email; view map `status` và `reason` tùy chọn. Catalog yêu cầu `user_id:int64`, nhưng source không kiểm tra miền int64. | SOURCE-BACKED LOCALLY; CONTRACT DISCREPANCY |
 | Bộ gửi thư mặc định | Bỏ qua `user_id`, `email`, `trace_id`; trả `status="accepted"` không kèm `reason`; không gửi thư, không xếp hàng và không tạo token. Các provider khác có thể trả status/reason tùy ý theo interface hiện tại; enum/semantics chưa được duyệt. | STUB SOURCE-VERIFIED; STATUS/REASON OPEN |
 | Chủ sở hữu/trigger API #02 | F01 đặt POST #02 tại SH-04 sau đăng ký, nhưng API DD Q-02-01 để mở dispatch owner/feature gate; design không chốt tự gọi khi vào trang hay thao tác riêng. | `DISCREPANCY` / `DD BLOCKED` |
-| Handoff SH-03 → SH-04 | API #01 source trả `data.id`/`data.email`; không có route-state/channel trong Study Web source. | `NOT_FOUND` / `IMPLEMENTATION BLOCKED` |
+| Handoff SH-03 → SH-04 | SH-03 shows an optional route link after valid #01 creation. It does not transfer `data.id`/`data.email`; SH04 does not call #02. | PARTIAL UI ROUTE; DATA HANDOFF / API #02 UNWIRED |
 | Xác nhận thư điện tử | Không thấy điểm cuối API xác nhận OTP/liên kết trong danh mục API hiện tại; API #02 chỉ nhận yêu cầu gửi. | `NOT_FOUND` |
 | Tài khoản và đăng nhập SH-02 | API #01 INSERT không gán `status`; checked-in DDL có default `ACTIVE`; API #03 từ chối login nếu `status != ACTIVE`. DDL không xác nhận live schema, và không có endpoint hiện tại nối verification với status. | `DISCREPANCY` / `POLICY OPEN` |
-| Mã kiểm thử | Đã đọc mã kiểm thử API #02, không chạy kiểm thử trong phiên này. Mã kiểm tra endpoint công khai, không resolve cơ sở dữ liệu, 202 khi provider chấp nhận, 422 khi request sai và 500 khi provider lỗi. | CHỈ_ĐỌC_MÃ_KIỂM_THỬ |
+| Mã kiểm thử | SH04/SH03/route specs 25/25; full Study Web suite 160/160; API #02 fake-provider suite 10/10. Firefox headless desktop/mobile route screenshots inspected. | LOCAL SOURCE TESTS PASS; LIVE DELIVERY/DB/DEPLOYMENT NOT VERIFIED |
 
 ### 1.2. Tài sản ảnh và quy tắc thị giác
 

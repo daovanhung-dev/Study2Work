@@ -57,25 +57,27 @@
 - **Failure / edge assertion:** Không đánh dấu pass cho `UNWIRED`, `IMPLEMENTATION BLOCKED` hoặc `RUNTIME NOT VERIFIED`.
 - **References:** `AC-38`, [Events](02-events.md), [Business Rules](05-business-rules.md), [source DD](../../screen_stitch/01_shared_auth_system/SH-07_theo-doi-tac-vu-bat-dong-bo/SH-07.md).
 
-## 3. Source acceptance / test plan (not run)
+## 3. SH-07 UI acceptance / test plan (not run)
+
+API #18 backend source tests are tracked separately below; they do not verify SH-07 UI/runtime.
 
 ### Trích từ DD nguồn: 11. Tiêu chí nghiệm thu
 
 - [x] Kế hoạch được tạo trước DD/marker/annotation.
 - [x] Giữ ảnh nguồn; có `screen_annotated.png` và marker JSON sau static audit.
 - [x] 35 marker mặc định ánh xạ đúng 35 visible Element IDs; hidden modal được mô tả riêng.
-- [x] Current API #18 route/module/query/test/store được đối chiếu; API #63/#64/#93/#96 producer/status-specific behavior được phân biệt.
+- [x] Current API #18 route/module/query/test được đối chiếu; its dedicated HTTP suite passes 8 tests. API #63/#64/#93/#96 producer/status-specific behavior được phân biệt.
 - [x] API contract, source runtime, test source, schema và prototype không bị trộn lẫn; discrepancies/blockers được ghi.
 - [x] DD mô tả 10 event, API #18 expected request/error shape, states/navigation/security/a11y/design drift và acceptance gaps.
 - [x] Không tạo API/field/enum/TTL/polling/SSE/result/download/route behavior chưa có nguồn.
 - [ ] DD READY — chưa đạt vì contract #18 và end-to-end ID/status mapping còn blocker; trạng thái giữ `DD BLOCKED`.
-- [ ] RUNTIME VERIFIED — chưa đạt; Study Web UI/router và API #18 runtime không có source hiện hành. Subcontext docs hiện có nhưng giữ status `UNWIRED`.
+- [ ] Operation tracking runtime verified — chưa đạt; chỉ có gate route/page, không có caller/API wiring/status behavior. API #18 backend tests dùng fake DB; live DB/deployment và visual browser runtime chưa xác minh.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 
 ### Trích từ DD nguồn: 6. Blockers and acceptance gate
 
-1. `SH07-B01 API18_UNWIRED`: no route/module/query/test or Study Operation table; operation tracking cannot be runtime verified.
+1. `SH07-B01 GENERIC_OPERATION_CONTRACT`: backend route/module/query/tests exist, but current query covers notification outbox only; no generic Study Operation table or lifecycle/result contract exists.
 2. `SH07-D01 OPERATION_ID_TYPE`: API #18 row int64 vs UUID convention/schema/AC and producer #63/#93 UUID.
 3. `SH07-D02 STATUS_AND_KIND`: enum/lifecycle/terminal states unresolved; notification-specific QUEUED/FAILED/SENT do not define generic status.
 4. `SH07-D03 AUTHORIZATION`: owner-only vs owner/Admin and wrong-owner 403/404 semantics unresolved.
@@ -94,7 +96,7 @@
 
 ### Trích từ DD nguồn: 7. Session result (fill after review)
 
-- Result: Current Study source and contract trace revalidated; marker #23 moved clear of the schema diagnostic; static audit passed with 83 inventory IDs matching 83 tracker rows, 35 ordered marker-to-element mappings, 10 unique events, resolving local links, unchanged source hashes, equal 1503×1600 image dimensions, and clean `git diff --check`. Tests and runtime were not run/verified.
+- Historical result (2026-11-07): Study source/contract and marker trace was revalidated; the original static audit passed. Application tests/runtime were not run at that checkpoint.
 - DD status: `DD BLOCKED` because API #18 and end-to-end operation ID/status/owner/producer contracts remain inconsistent or absent; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`.
 - Next Screen ID: GS-01, the first unstarted W0 screen in the tracker, for a separate session. No other Screen ID is part of this session.
 
@@ -103,6 +105,19 @@
 - Rechecked the Study Web context claim: `.agents/web-work/study/AGENTS.md` and `INDEX.md` exist and the manifest registers them as `study-web: UNWIRED`; editable app source and `package.json` remain absent. Corrected the DD, this plan and tracker to distinguish context docs from runtime evidence.
 - Static verification passed: 83 inventory IDs match 83 tracker rows; all 35 ordered markers map to 35 DD element rows, marker coordinates are in bounds, the SVG parses with labels 1–35, 10 unique event IDs are present, and all 23 local DD/plan links resolve. Original `screen.png` and `code.html` hashes are unchanged; both source and annotated images are 1503×1600. The annotation was viewed and marker #23 is clear of the diagnostic text.
 - Tests, browser/runtime, live database and deployment were not run or verified. Status remains `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`.
+
+### Current verification note (2026-11-16)
+
+- API #18 backend route/module/query are source-backed; dedicated HTTP suite: 8 passed; full Study Server suite: 1492 passed; Ruff passed. These checks do not verify SH-07 UI, browser runtime, live schema or deployment.
+- SH-07 remains `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, and `RUNTIME NOT VERIFIED` because no route/caller exists and ID/status/result/producer/ownership/polling contracts remain open.
+
+### Current source verification (2026-11-17)
+
+- Shared route `/operations/:operationId` renders the SH-07 unavailable gate directly. The page does not parse/display the path segment or issue an API request; `API_018` remains `UNWIRED`.
+- `npm test -- --include=src/app/app.routes.spec.ts`: 10 passed, including direct SH-07 route/no API request and existing `/` → SH-01 coverage.
+- `.venv/bin/python -m pytest tests/modules/shared/api_18_operations/test_operations.py -q`: 8 passed, 1 upstream Starlette/httpx deprecation warning. These are fake-session source tests; no live database check.
+- `npm run build`: pass with three existing Student CSS budget warnings; no SH-07 warning. Local HTTP deep-link smoke checks returned 200 for `/` and `/operations/preview-only`.
+- CUA had no connected browser and no local Chromium/Chrome/Playwright was installed, so visual browser behavior is not verified. `DD BLOCKED`; gate slice is implemented; generic operation tracking remains `IMPLEMENTATION BLOCKED` and `RUNTIME NOT VERIFIED`.
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Không chạy app test trong task chuyển đổi tài liệu.

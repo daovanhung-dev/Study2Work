@@ -2,9 +2,9 @@
 
 ## 1. Route definition
 - Current route in inventory: `/courses/:courseId?tab=curriculum`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `courseId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
-- Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
+- Status: `guest.route.ts` maps `/courses/:courseId` to GS03Page; `tab=curriculum` selects the GS04 panel. Source-wired; browser runtime unverified.
+- Route params/types: `courseId` remains a route string; API #09 backend validates the parsed integer against signed-int64 bounds.
+- Query params/defaults: `tab=curriculum` selects GS04; any other or absent value selects overview. Other query parameters are merged/preserved when changing tabs.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
@@ -20,7 +20,7 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: Angular Router test covers direct `?tab=curriculum` entry; browser/server runtime is not verified.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
@@ -47,17 +47,17 @@ flowchart LR
 
 ### Route/orchestration handoff
 
-- GS-03 → GS-04: giữ `courseId`; inventory ghi reuse #08 cache, nhưng key/freshness/miss policy vắng mặt.
-- Tab policy: F02 lazy-by-tab, AC-05 eager sequence; GS-04 inventory yêu cầu cache reuse rồi #09. Product/BE cần xác nhận source of truth và direct-entry behavior.
-- GS-04 → GS-03: intended same-course route; current href `#` không chứa ID.
+- GS-03 → GS-04: GS03Page preserves `courseId` and loads #09 after #08; inventory cache key/freshness/miss policy remain absent and no cache is implemented.
+- Tab policy: current source follows F02 lazy-by-tab; AC-05 eager sequence and inventory cache reuse still need Product/BE confirmation.
+- GS-04 → GS-03: select the Overview tab on the same route; static prototype href `#` remains nonfunctional evidence.
 - GS-04 → ST-10: không phải Guest navigation. Chỉ Student flow được inventory nêu qua #22 lesson access → #23 start → #24 content.
 
 ### Trích từ DD nguồn: C. Luồng màn hình
 
-### C.1 Expected flow — chưa được triển khai trong Study Web
+### C.1 Expected flow and partial current implementation
 
 1. Từ GS-03, mở route đề xuất `/courses/:courseId?tab=curriculum`, giữ nguyên `courseId`. Route direct-entry cũng cần có behavior, nhưng inventory chưa quy định cách lấy course detail khi không có cache.
-2. Inventory yêu cầu reuse #08 từ cache rồi gọi #09. Chưa có cache key, freshness, invalidation, cache-miss, stale course hoặc refetch policy. AC-05 gọi #09 eager cùng #08/#10; F02 gọi #09 khi user chọn tab. Giữ cả hai nguồn như discrepancy, không tự chọn thứ tự. Contract khai báo `course_id:int64`, nhưng current route nhận `str` và parser không enforce signed int64/positive range.
+2. Inventory yêu cầu reuse #08 từ cache rồi gọi #09. Chưa có cache key, freshness, invalidation, cache-miss, stale course hoặc refetch policy. AC-05 gọi #09 eager cùng #08/#10; F02 gọi #09 khi user chọn tab. Giữ cả hai nguồn như discrepancy, không tự chọn thứ tự. Client giữ `courseId` dạng string; #09 backend validator enforce signed-int64 bounds.
 3. #09 hiện là public GET không auth/body/query. Backend kiểm tra course PUBLISHED, sau đó trả danh sách lesson PUBLISHED theo `sort_order ASC, id ASC`. Client đọc common envelope và `data.items`.
 4. Với 200 có items, về mặt API dữ liệu có thể map theo `order`. Tuy nhiên không hiển thị/play `content` hay `video_url` cho Guest và không thêm preview badge/CTA cho tới khi Product/BE xác nhận public projection và access policy. Current response không có cờ để quyết định quyền xem.
 5. Với 200 rỗng (`items=[]`), hiển thị empty state riêng sau khi có thiết kế/approved copy. Card tĩnh hiện có thể dùng làm tham khảo trực quan nhưng không chứng minh API empty response đã xảy ra.
@@ -66,4 +66,4 @@ flowchart LR
 
 ### C.2 Current behavior có thể xác nhận
 
-`code.html` là document tĩnh. Nó hiển thị header, breadcrumb, heading, card rỗng, link quay lại có `href="#"`, footer. Không có JavaScript, router, route parameter, API, event handler, list item, loading/error state hay data binding. Đích của các anchor trong header/footer chỉ là literal href; browser render không chứng minh các route tồn tại. Study Web app source/router/entrypoint hiện `UNWIRED`.
+`code.html` remains a static asset whose anchors are literal `href="#"`. Current Angular Guest route maps the course detail path to GS03Page; query `tab=curriculum` mounts the GS04 panel and calls #09 after #08 succeeds. The panel renders title/order only. Focused tests/build pass; browser/live API/DB runtime remains unverified.

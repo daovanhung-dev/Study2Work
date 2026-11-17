@@ -58,20 +58,29 @@ The router remains thin and delegates the API flow to `view.py`.
 
 ## Current modules
 
+Current endpoint package inventory after the 2026-11-16 role reorganization:
+Guest #01–#03/#05–#12/#15 (12 packages); Student #04/#13–#14/#16–#17/
+#19–#33/#35–#45 (31); Shared #18/#34 (2); Mentor #46–#67 (22); Admin
+#68–#98 (31). `shared/course_catalog` contains pure course catalog contracts
+and helpers used by Guest, Mentor and Admin. Student and Mentor `_shared`
+folders remain role-local. Existing test package paths follow actor ownership.
+
 | Module | Status | Context |
 |---|---|---|
 | `guest/api_01_auth_register` | `SOURCE_BACKED` | `register-account.md` |
 | `guest/api_03_auth_login` | `SOURCE_BACKED` | Login and refresh-token flow in current source |
-| `guest/api_04_users_me` | `SOURCE_BACKED` | API #4 current Student profile read flow |
-| `guest/api_12_resources_detail` | `SOURCE_BACKED` | API #12 public resource metadata read with published-parent check; response returns stored URL |
-| `guest/api_13_users_me_avatar` | `SOURCE_BACKED` | Student JSON Data URL upload through injectable S3-compatible storage; no DB access |
-| `guest/api_14_users_me_profile` | `SOURCE_BACKED` | Student profile update; reuses `validate_current_user_request(..., role="STUDENT")` from `app/utils/auth.py` |
+| `student/api_04_users_me` | `SOURCE_BACKED` | API #4 current Student profile read flow |
+| `guest/api_12_resources_detail` | `SOURCE_BACKED` | API #12 public resource metadata read; signed-int64 path accepts zero/negative IDs; 17 focused tests and Ruff pass (2026-11-16) |
+| `student/api_13_users_me_avatar` | `SOURCE_BACKED` | Student JSON Data URL upload through injectable S3-compatible storage; no DB access |
+| `student/api_14_users_me_profile` | `SOURCE_BACKED` | Student profile update; reuses `validate_current_user_request(..., role="STUDENT")` from `app/utils/auth.py` |
 | `guest/api_05_categories` | `SOURCE_BACKED` | API #5 public active-category read flow |
 | `guest/api_02_auth_verify_email_send` | `SOURCE_BACKED` | API #2 public verification dispatch through injectable stub provider |
 | `guest/api_06_courses` | `SOURCE_BACKED` | API #6 public course list with pagination |
 | `guest/api_07_courses_search` | `SOURCE_BACKED` | API #7 public course search with pagination |
-| `guest/api_08_courses_detail` | `SOURCE_BACKED` | API #08 public published-course detail; composition and HTTP tests pass in the current full suite |
-| `guest/api_09_courses_curriculum` | `SOURCE_BACKED` | API #09 public published-course curriculum; composition and HTTP tests pass in the current full suite |
+| `guest/api_08_courses_detail` | `SOURCE_BACKED` | API #08 public published-course detail; signed-int64 path validation; 9 focused tests and Ruff pass (2026-11-16) |
+| `guest/api_09_courses_curriculum` | `SOURCE_BACKED` | API #09 public published-course curriculum; signed-int64 path validation; 11 focused tests and Ruff pass (2026-11-16) |
+| `guest/api_10_courses_reviews` | `SOURCE_BACKED` | API #10 public course reviews; signed-int64 path validation; 22 focused tests and Ruff pass (2026-11-16) |
+| `guest/api_11_courses_resources` | `SOURCE_BACKED_WITH_CONTRACT_DISCREPANCY` | API #11 public resources route/query/model/test source exists locally; view returns only the first ordered row as singleton and 404 when empty, conflicting with list use and DD mapping rule. Seven focused fake-session tests pass (2026-11-17); no live schema/deployment evidence. |
 | `mentor/api_46_mentor_courses` | `SOURCE_BACKED` | API #46 Mentor-owned course list with optional status and pagination; numeric `sub`/`MENTOR` authorization |
 | `mentor/api_47_mentor_lectures_create` | `SOURCE_BACKED` | API #47 Mentor direct-owner lecture creation; validates ordered uploads metadata, stores content as decimal text and inserts `PUBLISHED` lesson |
 | `mentor/api_48_mentor_lecture_detail` | `SOURCE_BACKED` | API #48 Mentor direct-owner lecture read; resolves ordered assets from `lesson_uploads` and `uploads`, preserves nullable content, and uses catalog errors |
@@ -107,7 +116,7 @@ The router remains thin and delegates the API flow to `view.py`.
 | `admin/api_95_admin_notifications_delete` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #95 Admin notification delete; shared ADMIN guard, queued-only legacy candidate deletion and DeleteResult timestamp mapping are DERIVED; live schema/cascade and provider cancellation unverified |
 | `admin/api_96_admin_notifications_status` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #96 Admin notification status; shared ADMIN guard, legacy BIGINT notification/outbox aggregate and status precedence are DERIVED; live schema/retry grain unverified |
 | `admin/api_97_admin_discussions_reported` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #97 read-only Admin report queue; shared ADMIN guard and Study-local `discussion_reports` BIGINT candidate; queue grain, filters, Page, title/comments and invalid-page 422 are DERIVED; live schema and report ingestion unverified |
-| `student/api_34_uploads` | `SOURCE_BACKED` | API #34 multipart Student/Mentor upload; purpose-bound role/course checks, S3-compatible UUID object key and legacy BIGINT `uploads` metadata transaction |
+| `shared/api_34_uploads` | `SOURCE_BACKED` | API #34 multipart Student/Mentor upload; purpose-bound role/course checks, S3-compatible UUID object key and legacy BIGINT `uploads` metadata transaction |
 
 API #34 uses the shared auth guard with accepted roles `STUDENT` and `MENTOR`,
 then validates Student→`SUBMISSION` and Mentor→`LECTURE`. A supplied Student
@@ -137,7 +146,7 @@ AC-33/request shape; focused tests use fake DB queries, so migration
 006/live-schema state is not verified.
 
 Shared course catalog boundary:
-`guest/_shared/course_catalog` contains only response models and pure helpers
+`shared/course_catalog` contains only response models and pure helpers
 used by APIs #6–#8.
 | Other Study domain modules | `NOT_FOUND`/`UNWIRED` except individually indexed APIs through #98 | Require source/contract before implementation |
 
@@ -474,26 +483,32 @@ ingestion.
 
 ## APIs #16-20, #31, #35-45 implementation source (2026-11-15)
 
-- #16 `guest/api_16_orders`: creates a PENDING Order from a PUBLISHED Course
+- #16 `student/api_16_orders`: creates a PENDING Order from a PUBLISHED Course
   price snapshot in VND. Migration 015 adds schema-qualified `orders`.
-- #17 `guest/api_17_payments`: validates Student and request, then returns 503
+- #17 `student/api_17_payments`: validates Student and request, then returns 503
   because no gateway adapter/protocol is configured. No DB reads/writes occur.
-- #18 `guest/api_18_operations`: reads the owner's notification operation and
+- #18 `shared/api_18_operations`: reads the owner's notification operation and
   delivery aggregate by UUID. Status projection is QUEUED, FAILED, or SENT;
   `kind` is `NOTIFICATION_DISPATCH`. Other operation kinds are not queried.
-- #19 `guest/api_19_courses_enrollments`: locks a PUBLISHED Course, rejects an
+  The auth guard accepts `STUDENT`, `MENTOR`, and `ADMIN` per AC diagrams while
+  the lookup remains owner-bound; missing/non-owned records currently return
+  404. A missing required role argument was fixed. Dedicated HTTP tests: 8;
+  full Study suite: 1492 passed. Fake DB tests do not verify live schema or
+  deployment; generic ID/lifecycle/result and owner/Admin contract questions
+  remain open.
+- #19 `student/api_19_courses_enrollments`: locks a PUBLISHED Course, rejects an
   active duplicate, requires a PAID Order for a paid Course, and atomically
   inserts Enrollment plus initial published-lesson progress.
-- #20 `guest/api_20_users_me_courses`: returns the current Student's paged
+- #20 `student/api_20_users_me_courses`: returns the current Student's paged
   course summary projection.
-- #31 `guest/api_31_attempts_submit`: owner-scoped IN_PROGRESS attempt lock; objective choices use exact selected/correct set equality, unanswered questions score zero, and the attempt finalizes as GRADED. Raw points are stored in the existing score columns; response `passed` is derived from exact decimal percentage comparison against `passing_score`. #30/#32 group selected choices and results by question.
+- #31 `student/api_31_attempts_submit`: owner-scoped IN_PROGRESS attempt lock; objective choices use exact selected/correct set equality, unanswered questions score zero, and the attempt finalizes as GRADED. Raw points are stored in the existing score columns; response `passed` is derived from exact decimal percentage comparison against `passing_score`. #30/#32 group selected choices and results by question.
 - #35-36 `student/api_35_assignments_submissions` and
   `api_36_submissions_detail`: create and owner-read submissions using upload
   metadata scoped by owner, course and SUBMISSION purpose. Migration 016 adds
   the schema-qualified uploads relation compatible with #34 metadata fields.
-- #37 `guest/api_37_users_me_progress_course`: derives lesson completion and
+- #37 `student/api_37_users_me_progress_course`: derives lesson completion and
   percentage for the current Student; it does not claim activity-time totals.
-- #38 `guest/api_38_users_me_achievements`: reads explicit user award rows;
+- #38 `student/api_38_users_me_achievements`: reads explicit user award rows;
   no award-producing rule/writer is wired.
 - #39-42 `student/api_39_discussions` through `api_42_discussions_detail`:
   enrollment-scoped active roots/comments, stored title and direct comments.

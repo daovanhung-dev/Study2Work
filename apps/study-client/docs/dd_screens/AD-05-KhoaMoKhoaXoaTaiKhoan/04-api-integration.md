@@ -13,7 +13,7 @@
 
 - API refs trong inventory: #69, #71, #72
 - Orchestration/data notes: GET #69 → PATCH #71 hoặc DELETE #72 → refresh #68/#69 theo AC-31; #71 body/status và #72 delete policy cần duyệt; không tự giả định token effect.
-- BE/source status và gate: **R**; **DD BLOCKED; IMPLEMENTATION BLOCKED:** #71 body/status/session, #72 delete/visibility/retention, Admin permission/audit/safeguards và Study Web UNWIRED còn mở; RUNTIME NOT VERIFIED
+- BE/source status và gate: **R**; **DD BLOCKED; IMPLEMENTATION BLOCKED:** route/page and GET #69 caller exist; #71/#72 client calls are absent; body/status/session, delete/visibility/retention, Admin permission/audit/safeguards remain open; RUNTIME NOT VERIFIED
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Nguồn truy vết
@@ -29,7 +29,7 @@
 
 ### Trích từ DD nguồn: Luồng mục tiêu sau khi các policy và API contract được duyệt
 
-1. **Nhận handoff:** AD-02/AD-03 chuyển numeric `user_id` sang route AD-05. Route là đề xuất; không ánh xạ `USR-*`, email hoặc phone sang path ID.
+1. **Nhận handoff:** AD-05 route `/admin/users/:userId/actions` is declared. AD-02/AD-03 handoff behavior and numeric-ID preservation remain to be approved; không ánh xạ `USR-*`, email hoặc phone sang path ID.
 2. **Kiểm tra đầu vào và phiên:** kiểm tra `userId` theo signed-int64 path contract trước khi gọi API. Client áp dụng auth/session/navigation policy đã duyệt. Không dùng các badge RBAC hoặc “Read-Only” trên ảnh làm bằng chứng quyền.
 3. **Tải hồ sơ:** gọi `GET /api/v1/admin/users/{user_id}` (#69), Bearer JWT/Admin, không body/query. Local #69 kiểm tra shared ADMIN guard, parse path và đọc safe UserProfile từ legacy `users` candidate. Chuyển UI sang loading rồi ready khi nhận HTTP 200 + `DESIGN_RESOURCE_RETRIEVED` và payload hợp lệ.
 4. **Ánh xạ dữ liệu:** map ID/status/profile chỉ theo API #69 và field/PII policy đã duyệt. `status` hiện là string; không đổi lowercase aliases thành API status hoặc tự tạo allowlist. `DELETED` hiện vẫn có thể xuất hiện trong #68/#69 local source.

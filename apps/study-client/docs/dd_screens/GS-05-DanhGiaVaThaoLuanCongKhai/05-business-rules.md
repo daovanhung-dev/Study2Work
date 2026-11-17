@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Danh sách review/reply; không hiển thị sao trung bình khi không có rating contract.
-- Gate/status (giữ nguyên): **D (#10 declared; no current route/module/test)**; **BLOCK:** #08 catalog `course_id:int64` lệch route `str`/parser không giới hạn signed int64; API #10 Draft yêu cầu `Discussion.title` nhưng không có source; không có course-rating/aggregate source, literal rating-filter key/semantics hoặc public root/reply visibility approval; legacy `discussions` thiếu title/rating và V1-PILOT assessment reviews là model khác; AC-05 aggregate/eager #08→#09→#10 lệch F02 lazy tab, inventory yêu cầu #08 cache reuse; loaded review/reply/page/loading/error UI thiếu; live schema và Study Web UNWIRED
+- Gate/status (T021, 2026-11-17): **#10 SOURCE_BACKED locally; GS05 caller WIRED; API DD remains Draft**. **BLOCK:** API #10 Draft requires `Discussion.title` with no source; course rating/aggregate, rating query key/semantics and public root/reply visibility/order lack approval; current implementation filters ACTIVE rows but that source behavior is not business-rule approval; AC-05 aggregate/eager #08→#09→#10 differs from F02 lazy; no client cache; loaded presentation is derived; live schema/deployment unverified.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: H. Traceability, blockers và acceptance
@@ -18,9 +18,9 @@
 | AC-05 aggregate-rating expectation and eager sequence | `apps/study-server/docs/diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio` | Expected activity flow; conflicts with GS-05 rating gate/F02 lazy flow |
 | Static visible elements | `code.html`, original PNG and separately rendered image | Current asset only |
 | Course public gate | #08 current route/module/query and test source | `SOURCE_BACKED`; tests not run; runtime/deployment unverified |
-| Reviews endpoint | API catalog + API #10 Draft DD; route/test search under current source; existing #97/#98 are ADMIN moderation routes | `DECLARED_NOT_RUNNABLE` |
+| Reviews endpoint | API #10 route/module/source tests under `apps/study-server`; separate from #97/#98 ADMIN moderation | `SOURCE_BACKED`; DD Draft; focused suite 22/22 fake DB |
 | Discussion title/rating/live database | Draft DD + legacy `discussions` DDL + V1-PILOT assessment-review DDL + database context | `DISCREPANCY`; live schema unverified |
-| Study Web | `.agents/web-work/study/AGENTS.md` and current app tree/dist review | `UNWIRED`; no GS-05 route/API wiring found |
+| Study Web | GS03/GS05 page, API_010 descriptor and Angular specs | `PARTIAL SOURCE-WIRED`; focused 12/12 and full 153/153 pass; live API/DB/deployment unverified |
 
 ### Acceptance checklist
 
@@ -32,14 +32,15 @@
 - [x] DD documents expected/current flow, each current element's type/position, all eight events' trigger/type/precondition/input/process/output/error, route, API #08/#10 status, states, navigation and blockers.
 - [x] Reviews title/rating/aggregate, visibility, pagination and AC-05/F02 discrepancies remain explicit; no unsupported behavior was introduced.
 - [ ] API #10 implementation/contract, title source, rating source and public visibility approved; required for `DD READY`.
-- [ ] Loaded review/reply/pagination/loading/error design and cache/orchestration confirmed; required before implementation.
-- [ ] Study Web route/client integration and real runtime evidence captured; required for runtime verification.
+- [ ] Loaded review/reply/pagination/loading/error design and cache/orchestration are approved; current implementation remains derived.
+- [x] Study Web route/client integration and local stub-backed browser render are captured.
+- [ ] Live API/DB/deployment runtime is verified.
 
 ### Final classification
 
-- `DD BLOCKED`: API #10 is not runnable; title/rating/public-visibility policy unresolved; loaded state has no design.
-- `IMPLEMENTATION BLOCKED`: missing API #10, cache/orchestration decisions, UI design and Study Web wiring.
-- `RUNTIME NOT VERIFIED`: static assets, API #08 source and API #10 declaration do not demonstrate an end-to-end deployed screen.
+- `DD BLOCKED`: API #10 DD remains Draft; title/rating/query-key/public-visibility rules and AC-05/F02/cache decisions remain unresolved.
+- `IMPLEMENTATION PARTIAL SOURCE-WIRED`: GS03/GS05/#10 are wired locally; loaded view is derived without DD visual approval; enrollment remains unimplemented.
+- `STUB-BROWSER-VERIFIED; LIVE RUNTIME NOT VERIFIED`: local desktop/mobile render used an in-memory stub; live API, DB schema and deployment were not checked.
 
 ## 3. Quy tắc chưa xác nhận
 - `CẦN_XÁC_NHẬN`: các quyết định/blocker trong inventory và DD nguồn chưa được giải quyết.

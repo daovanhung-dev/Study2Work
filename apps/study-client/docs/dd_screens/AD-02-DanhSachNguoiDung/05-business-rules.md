@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Bảng users, keyword, status, role, pagination; chọn user để mở AD-03/AD-04; API #68 chỉ đọc.
-- Gate/status (giữ nguyên): **R**; **DD BLOCKED; IMPLEMENTATION BLOCKED:** Study Web UNWIRED; role/status options và ID-search mismatch; Add/export/audit/sync unsupported; Admin permission, PII/lifecycle, live schema còn mở; RUNTIME NOT VERIFIED
+- Gate/status: **R**; **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** route/page/#68 caller wired locally; role/status options và ID-search mismatch; Add/export/audit/sync unsupported; Admin permission, PII/lifecycle, live schema còn mở; authenticated runtime NOT VERIFIED
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu và blocker
@@ -32,10 +32,10 @@
 4. PII email/phone, audit access, lifecycle/deleted visibility và null/omit policy còn mở trong API #68 Draft DD.
 5. Add-user, user export, guide target, server sync và audit/health claims không được #68/AC-31 hỗ trợ.
 6. Local #68 truy vấn legacy BIGINT `users`; live schema/migration/deployment chưa xác minh và V1-PILOT UUID model khác cấu trúc.
-7. Study Web editable source/package/router absent; `/admin/users` chưa wired. API tests có fake DB sessions và không xác minh frontend/runtime/deployment.
+7. Local Study Web route/page/#68 caller and focused Angular spec exist; browser reached the login gate only. API tests use fake DB sessions and do not verify authenticated frontend, live schema, or deployment.
 8. Screenshot palette/typeface khác Study Web guide; review/approval trước khi làm UI.
 
-**Kết quả:** `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`. API #68 local source/test tồn tại nhưng các blocker về contract/policy, schema và frontend vẫn mở.
+**Kết quả (2026-11-17):** `DD BLOCKED`; `IMPLEMENTATION PARTIAL SOURCE`; authenticated `RUNTIME NOT VERIFIED`. Local frontend/API source and focused tests exist, while contract/policy, schema, live API/DB and deployment blockers remain.
 
 ## 3. Quy tắc chưa xác nhận
 - `CẦN_XÁC_NHẬN`: các quyết định/blocker trong inventory và DD nguồn chưa được giải quyết.

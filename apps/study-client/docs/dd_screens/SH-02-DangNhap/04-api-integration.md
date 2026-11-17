@@ -10,6 +10,8 @@
 
 ## 2. Contract / source detail
 
+Current Web source status: SH02Page does not use a data-access service and sends no API request. The login action is disabled while the #03/session contract remains unresolved; the API matrix below records expected/source contracts, not current client calls.
+
 - API refs trong inventory: #03, #04
 - Orchestration/data notes: POST #3 → lưu token ở client an toàn → #4 CHỈ cho Student; Mentor/Admin chưa có /me phù hợp.
 - BE/source status và gate: **R**; **BLOCK:** Role bootstrapping Mentor/Admin chưa hoàn chỉnh
@@ -83,8 +85,8 @@ Authorization: Bearer <access_token>
 | [API catalog](../../../../../docs/lists/list_api.md) | Hợp đồng thiết kế chuẩn #03/#04; là một vế của discrepancy với nguồn hiện tại. |
 | [Router/API registration](../../../../study-server/app/api/v1.py) | Route/status/request metadata cho #03, #04 và R-X01. |
 | [Login view](../../../../study-server/app/modules/guest/api_03_auth_login/view.py), [validator](../../../../study-server/app/modules/guest/api_03_auth_login/validate.py), [models](../../../../study-server/app/modules/guest/api_03_auth_login/models.py), [queries](../../../../study-server/app/modules/guest/api_03_auth_login/query.py) | Kiểm tra đầu vào, xác thực, cấp token, transaction và xoay refresh token hiện tại. |
-| [Current-user view](../../../../study-server/app/modules/guest/api_04_users_me/view.py), [models](../../../../study-server/app/modules/guest/api_04_users_me/models.py), [queries](../../../../study-server/app/modules/guest/api_04_users_me/query.py), [auth utilities](../../../../study-server/app/utils/auth.py) | Guard Bearer/JWT/role, allowlist hồ sơ và payload token hiện tại. |
-| [Login source tests](../../../../study-server/tests/modules/guest/api_03_auth_login/test_auth_login.py), [current-user source tests](../../../../study-server/tests/modules/guest/api_04_users_me/test_users_me.py) | Các nhánh source được test bằng fixture/fake session; chưa chạy trong phiên và không xác nhận DB/deployment trực tiếp. |
+| [Current-user view](../../../../study-server/app/modules/student/api_04_users_me/view.py), [models](../../../../study-server/app/modules/student/api_04_users_me/models.py), [queries](../../../../study-server/app/modules/student/api_04_users_me/query.py), [auth utilities](../../../../study-server/app/utils/auth.py) | Guard Bearer/JWT/role, allowlist hồ sơ và payload token hiện tại. |
+| [Login source tests](../../../../study-server/tests/modules/guest/api_03_auth_login/test_auth_login.py), [current-user source tests](../../../../study-server/tests/modules/student/api_04_users_me/test_users_me.py) | Các nhánh source được test bằng fixture/fake session; chưa chạy trong phiên và không xác nhận DB/deployment trực tiếp. |
 | [Refresh-token migration](../../../../../infra/postgres/study-server/migrations/002_refresh_tokens.sql), [Study DB DDL](../../../../../infra/postgres/study-server/DB.sql) | Cấu trúc đã commit; không chứng minh schema đang triển khai/live. |
 | [Study Web design guide](../../../../../.agents/web-study/design.md) | Mục tiêu UI/accessibility/responsive; không phải bằng chứng runtime. |
 

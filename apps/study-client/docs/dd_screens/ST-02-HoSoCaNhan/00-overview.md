@@ -1,5 +1,7 @@
 # ST-02 — Hồ sơ cá nhân · Tổng quan
 
+> Current Study Web source (2026-11-17): `/student/profile` is routed to the documented static sign-in gate. The route records API #04 as its dependency, but no request is sent because there is no Student session/token provider and no approved authenticated profile-ready state. The edit action remains disabled; authenticated rendering is not verified.
+
 | Trường | Giá trị |
 |---|---|
 | Screen ID | `ST-02` |
@@ -31,7 +33,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/ready/401/403 |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current runtime | Study Web route/page source | Gate-only route with API #04 metadata; no request; authenticated runtime not verified |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-02 source screen.png](../../screen_stitch/03_student/ST-02_ho-so-ca-nhan/screen.png))
@@ -42,6 +44,7 @@
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-17 — Study Web route/page added for the source-backed sign-in gate; #04 remains assigned but uncalled pending Student session and profile-ready design decisions.
 
 ## Trạng thái và ranh giới bằng chứng
 

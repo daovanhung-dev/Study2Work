@@ -1,0 +1,9 @@
+.me15-status { max-width:760px; padding:24px; margin:0 auto; }
+.me15-status-top { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.me15-status h2 { margin:18px 0; color:#17324b; font-size:20px; }
+.me15-status dl { display:grid; grid-template-columns:1fr 1fr; gap:0 20px; margin:0 0 20px; }
+.me15-status dl>div { display:grid; gap:5px; padding:13px 0; border-bottom:1px solid #e8eef4; }
+.me15-status dt { color:#72849a; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+.me15-status dd { margin:0; color:#2d4660; font-size:13px; overflow-wrap:anywhere; }
+.me15-actions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:9px; margin-top:16px; }
+@media(max-width:560px){.me15-status{padding:18px}.me15-status dl{grid-template-columns:1fr}.me15-actions>*{width:100%}}

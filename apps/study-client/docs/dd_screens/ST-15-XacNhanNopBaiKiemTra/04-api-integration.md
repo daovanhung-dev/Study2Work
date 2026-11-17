@@ -2,6 +2,14 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
+## Current caller status — 2026-11-17
+
+ST-15 follows the saved-answer handoff and sends #31 only after explicit
+confirmation. An ambiguous transport outcome does not trigger automatic
+resubmission. Current source has no focused #31 server test package. The
+DD/API excerpt below is a design-time snapshot; see [the screen inventory](../../list_screen.md)
+and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|

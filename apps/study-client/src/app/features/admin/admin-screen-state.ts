@@ -51,7 +51,10 @@ export function adminRouteState<TResponse>(
       switchMap((params) => {
         const id = params.get(parameter);
         if (!id) {
-          return of<AdminScreenViewState>({ status: 'error', message: 'Thiếu mã tham chiếu trên đường dẫn.' });
+          return of<AdminScreenViewState>({
+            status: 'error',
+            message: 'Thiếu mã tham chiếu trên đường dẫn.',
+          });
         }
         return load(id).pipe(
           map((envelope): AdminScreenViewState =>
@@ -88,26 +91,65 @@ export function loadedMetrics(metrics: readonly AdminScreenMetric[]): AdminScree
 
 export function adminDataError(error: unknown): AdminScreenViewState {
   if (error instanceof AdminSessionError && error.code === 'LOGIN_REQUIRED') {
-    return { status: 'error', message: 'Phiên Admin không còn hiệu lực. Hãy đăng nhập lại.' };
+    return {
+      status: 'error',
+      message: 'Phiên Admin không còn hiệu lực. Hãy đăng nhập lại.',
+      retryable: false,
+    };
   }
   if (error instanceof HttpErrorResponse) {
     if (error.status === 401) {
-      return { status: 'error', message: 'Phiên Admin đã hết hiệu lực. Hãy đăng nhập lại.' };
+      return {
+        status: 'error',
+        message: 'Phiên Admin đã hết hiệu lực. Hãy đăng nhập lại.',
+        httpStatus: error.status,
+        retryable: false,
+      };
     }
     if (error.status === 403) {
-      return { status: 'error', message: 'Tài khoản không được phép xem dữ liệu này.' };
+      return {
+        status: 'error',
+        message: 'Tài khoản không được phép xem dữ liệu này.',
+        httpStatus: error.status,
+        retryable: false,
+      };
     }
     if (error.status === 404) {
-      return { status: 'error', message: 'Không tìm thấy dữ liệu được yêu cầu.' };
+      return {
+        status: 'error',
+        message: 'Không tìm thấy dữ liệu được yêu cầu.',
+        httpStatus: error.status,
+        retryable: false,
+      };
     }
     if (error.status === 422) {
-      return { status: 'error', message: 'Study Server từ chối một hoặc nhiều bộ lọc.' };
+      return {
+        status: 'error',
+        message: 'Study Server từ chối một hoặc nhiều bộ lọc.',
+        httpStatus: error.status,
+        retryable: false,
+      };
     }
     if (error.status === 0) {
-      return { status: 'error', message: 'Không thể kết nối tới Study Server.' };
+      return {
+        status: 'error',
+        message: 'Không thể kết nối tới Study Server.',
+        httpStatus: error.status,
+        retryable: true,
+      };
     }
+    return {
+      status: 'error',
+      message: 'Study Server không thể tải dữ liệu lúc này.',
+      httpStatus: error.status,
+      retryable: true,
+    };
   }
-  return { status: 'error', message: 'Study Server không thể tải dữ liệu lúc này.' };
+  return {
+    status: 'error',
+    message: 'Study Server không thể tải dữ liệu lúc này.',
+    retryable: true,
+  };
 }
 
 export function formatDate(value: string | null): string {

@@ -32,5 +32,5 @@
 ## AC-34 macro-review
 
 - Status: `VERIFIED_WITH_OPEN_QUESTIONS`; this is a document-level consistency review, not owner approval or runtime verification of sibling APIs.
-- API #82 list/reload is wired locally. Its direct `ApiEnvelope<Lesson>` catalog type remains discrepant with list intent; #86 deleted-row visibility remains unresolved and is not filtered by #82.
+- API #82 list/reload is wired locally. Its direct `ApiEnvelope<Lesson>` catalog type remains discrepant with list intent; current local SQL excludes `status='DELETED'`, while whether that matches API #86's approved visibility policy remains unresolved.
 - Sibling API status is maintained in the [consolidated review matrix](../86_admin_lesson_delete/VERIFICATION_REPORT.md#ac-34-macro-review).

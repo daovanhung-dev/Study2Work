@@ -11,7 +11,7 @@
 
 - API refs trong inventory: #68
 - Orchestration/data notes: GET #68 với filter/page và giữ query URL; local source chỉ search name/email, exact-match role/status, fixed page 20. Không suy ra search ID hoặc tạo/export user từ mockup.
-- BE/source status và gate: **R**; **DD BLOCKED; IMPLEMENTATION BLOCKED:** Study Web UNWIRED; role/status options và ID-search mismatch; Add/export/audit/sync unsupported; Admin permission, PII/lifecycle, live schema còn mở; RUNTIME NOT VERIFIED
+- BE/source status và gate: **R**; **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** local route/page/#68 caller wired; role/status options và ID-search mismatch; Add/export/audit/sync unsupported; Admin permission, PII/lifecycle, live schema còn mở; authenticated runtime NOT VERIFIED
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: UserProfile mapping có thể dùng từ API #68
@@ -42,13 +42,13 @@
 
 | State | Entry condition | Expected UI | Current evidence |
 |---|---|---|---|
-| `loading` | Route load hoặc query thay đổi; #68 pending. | Giữ filter context, báo đang tải và tránh submit lặp. | Prototype không có request/loading state. |
-| `ready` | HTTP 200, `items.length > 0`. | Render các row/metadata; actions điều hướng theo quyền/contract. | Không có row design/data. |
-| `empty` | HTTP 200, `items=[]`; có thể do chưa có user hoặc filter không match. | Nói rõ không có kết quả; không kết luận sync lỗi hoặc đang chạy. | Mockup static chờ sync; không phân biệt no-match và sync. |
-| `filter-error` | #68 trả 422 cho `page` parse/range. | Giữ filter; liên kết lỗi với page state; cho phép sửa/đặt lại. Filter role/status unknown hiện không gây 422. | Chưa có client validation/error state. |
-| `unauthenticated` | #68 trả 401. | Dùng auth shell/session handling đã được duyệt. | Route/auth shell chưa có trong Study Web source. |
-| `forbidden` | #68 trả 403 khi token không có ADMIN claim. | Hiển thị access denied theo shared auth UX; không render danh sách cũ như mới. | Không có role guard ở client. |
-| `error` | #68 trả 500 hoặc network không xác định. | Thông báo an toàn và nút thử lại khi khả dụng; không lộ query/PII/raw SQL. | Refresh disabled; chưa có error handler. |
+| `loading` | Route load hoặc query thay đổi; #68 pending. | Giữ filter context, báo đang tải và tránh submit lặp. | Local page renders separate `role=status`; panel exposes `aria-busy`. |
+| `ready` | HTTP 200, `items.length > 0`. | Render các row/metadata; actions điều hướng theo quyền/contract. | Local page renders response-backed rows and pagination; focused spec passes. |
+| `empty` | HTTP 200, `items=[]`; có thể do chưa có user hoặc filter không match. | Nói rõ không có kết quả; không kết luận sync lỗi hoặc đang chạy. | Local loaded-empty state is separate from loading/error; does not claim sync status. |
+| `filter-error` | #68 trả 422 cho `page` parse/range. | Giữ filter; liên kết lỗi với page state; cho phép sửa/đặt lại. Filter role/status unknown hiện không gây 422. | Local 422 alert offers page 1 recovery and preserves current filters/unrelated query; focused spec passes. |
+| `unauthenticated` | #68 trả 401. | Dùng auth shell/session handling đã được duyệt. | Existing Admin layout shows login gate without a session; shared 401 UX/API response not browser-tested. |
+| `forbidden` | #68 trả 403 khi token không có ADMIN claim. | Hiển thị access denied theo shared auth UX; không render danh sách cũ như mới. | API contract/source identifies 403; authenticated UI handling not verified. |
+| `error` | #68 trả 500 hoặc network không xác định. | Thông báo an toàn và nút thử lại khi khả dụng; không lộ query/PII/raw SQL. | Local safe alert offers retry for retryable errors; focused spec passes. |
 
 **Empty pagination:** API trả `page=1,size=20,total=0,total_pages=0`; mockup `0/0` chưa xác định có nghĩa current page hay record count. Chốt copy/UI representation trước implement.
 

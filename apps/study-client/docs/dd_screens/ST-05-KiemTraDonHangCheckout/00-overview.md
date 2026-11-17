@@ -4,9 +4,9 @@
 |---|---|
 | Screen ID | `ST-05` |
 | Module | Student |
-| Route | `/student/checkout/:courseId` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student/checkout/:courseId` — current Study Web route; authenticated guard is unresolved |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái thiết kế:** `DD BLOCKED` · **Trạng thái triển khai:** `IMPLEMENTATION BLOCKED` · **Runtime:** `NOT VERIFIED` |
+| DD status | Draft (package được chuyển đổi); source status: **Trạng thái thiết kế:** `DD BLOCKED` · **Trạng thái triển khai:** `PARTIAL / ORDER GATED` · **Runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [ST-05.md](../../screen_stitch/03_student/ST-05_kiem-tra-don-hang-checkout/ST-05.md), [ST-05_PLAN.md](../../screen_stitch/03_student/ST-05_kiem-tra-don-hang-checkout/ST-05_PLAN.md), [ST-05_markers.json](../../screen_stitch/03_student/ST-05_kiem-tra-don-hang-checkout/ST-05_markers.json), [list_screen.md](../../list_screen.md) |
@@ -31,7 +31,8 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | confirming/order-creating/422/order-error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current Study Web source | Route calls #08, then shows unavailable checkout state; #16 is not called | `PARTIAL`; Student auth/order contract and persistence remain gated |
+| Runtime | Worklog/context Study Web | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-05 source screen.png](../../screen_stitch/03_student/ST-05_kiem-tra-don-hang-checkout/screen.png))
@@ -47,7 +48,7 @@
 
 # ST-05 — Kiểm tra đơn hàng / checkout
 
-> **Trạng thái thiết kế:** `DD BLOCKED` · **Trạng thái triển khai:** `IMPLEMENTATION BLOCKED` · **Runtime:** `NOT VERIFIED`
+> **Trạng thái thiết kế:** `DD BLOCKED` · **Trạng thái triển khai:** `PARTIAL / ORDER GATED` · **Runtime:** `NOT VERIFIED`
 >
 > Phạm vi, thứ tự authoring, nguồn ảnh và blocker được ghi tại [ST-05_PLAN.md](../../screen_stitch/03_student/ST-05_kiem-tra-don-hang-checkout/ST-05_PLAN.md). `screen_annotated.png` được tạo từ [screen_rendered_from_html.png](../../screen_stitch/03_student/ST-05_kiem-tra-don-hang-checkout/screen_rendered_from_html.png), không phải từ ảnh nguyên trạng `screen.png`.
 
@@ -65,14 +66,14 @@
 | Điều kiện trước | AC-12 yêu cầu Student đăng nhập, course tồn tại và đi tới nhánh trả phí. Inventory yêu cầu đọc lại API #08 ở ST-05. Thứ tự revalidation thứ hai so với bước #15 trong AC-12 và chính sách khi giá thay đổi chưa được chốt. |
 | Kết quả sau | Theo inventory, sau xác nhận hợp lệ gọi #16 một lần cho mỗi thao tác người dùng và giữ `order_id`. Response #16 định nghĩa `data.id`; quan hệ `data.id` → `order_id` dùng cho #17 cần được xác nhận trước khi handoff ST-06. |
 | Màn hình liên quan | Trước: ST-04 nhánh paid. Sau: ST-06 để khởi tạo/theo dõi payment; quay lại ST-04 theo inventory. Prototype hiện lại dẫn CTA về `/courses` và không giữ course ID. |
-| API liên quan | #08 `GET /api/v1/courses/{course_id}` — source-backed, read-only. #16 `POST /api/v1/orders` — contract trong catalog/AC-12 và Draft DD, `DESIGN_ONLY`, chưa wired. API #17 là bước payment riêng thuộc ST-06. |
-| Hiện trạng | HTML là trang tĩnh báo không thể bắt đầu thanh toán. Không có dữ liệu course/order, xác nhận, API client hoặc event handler. `screen.png` gần như trống; ảnh render HTML được lưu riêng. |
+| API liên quan | #08 `GET /api/v1/courses/{course_id}` — source-backed and called by ST-05. #16 `POST /api/v1/orders` has current route/module code, but the client descriptor remains `UNWIRED`; the checked-in database has no `orders` table and no focused API #16 tests were found. |
+| Hiện trạng | Page revalidates the published course via #08, then renders the Stitch unavailable state. It does not create an order or show course price. `screen.png` is near-blank; HTML-derived render is kept separate. |
 
 ### Expected behavior và current behavior
 
 **Expected behavior — inventory/AC-12:** Student đi vào nhánh trả phí từ ST-04; #08 được revalidate; sau khi xem thông tin Order và các điều khoản đã được phê duyệt, Student xác nhận rõ ràng; UI gửi một request #16; chỉ sau response thành công mới nhận diện Order và chuyển tới ST-06 theo contract đã được xác nhận.
 
-**Current behavior — source/assets:** `code.html` hiển thị shell công khai, breadcrumb, card trạng thái thanh toán chưa thể bắt đầu, CTA và footer. Không có amount, currency, provider, course ID, order data, confirm control hoặc API call. HTML không có form/button/input, fetch/XHR hay event listener. `screen.png` 1280×1024 gần như chỉ có nền/dải màu; `screen_rendered_from_html.png` là ảnh dẫn xuất riêng từ HTML; hai ảnh nguồn không bị thay đổi.
+**Current behavior — source/assets:** `code.html` hiển thị shell công khai, breadcrumb, card trạng thái thanh toán chưa thể bắt đầu, CTA và footer. Current Study Web route calls #08 with the raw `courseId`; a published course displays the Stitch unavailable state, a 404 displays not-found, and other errors display a generic read error. No amount/provider/confirm UI or #16 request is added. Server #16 has route/module code that validates Student auth and nonempty provider, derives positive amount from course price, hardcodes currency `VND`, and attempts `INSERT INTO orders`; the checked-in database has no `orders` table, no dedicated tests were found, and live schema is not verified. The client keeps #16 `UNWIRED`.
 
 **DISCREPANCY:** Inventory đòi hỏi xác nhận trước POST #16 nhưng prototype chỉ hiển thị trạng thái unavailable. AC-12 yêu cầu Student đăng nhập trong khi prototype hiển thị Đăng nhập/Đăng ký. Inventory yêu cầu revalidate #08, nhưng AC-12 chỉ đặt #08 trước #15/nhánh paid-free, không mô tả lần gọi thứ hai hoặc stale-price behavior. Các khác biệt này vẫn mở.
 

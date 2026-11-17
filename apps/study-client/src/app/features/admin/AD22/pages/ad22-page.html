@@ -22,11 +22,11 @@
     <form class="filter-grid" aria-label="Bộ lọc báo cáo thảo luận" (submit)="submitFilters($event)">
       <label for="discussion-reason">
         <span>Lý do báo cáo · giá trị chính xác</span>
-        <input id="discussion-reason" type="text" placeholder="reason code từ source" [value]="filterReason()" (input)="setFilterReason($any($event.target).value)" [disabled]="viewState().status === 'loading'" />
+        <input id="discussion-reason" type="text" placeholder="Nhập mã lý do chính xác" [value]="filterReason()" (input)="setFilterReason($any($event.target).value)" [disabled]="viewState().status === 'loading'" />
       </label>
       <label for="discussion-severity">
         <span>Mức độ · giá trị chính xác</span>
-        <input id="discussion-severity" type="text" placeholder="severity từ source" [value]="filterSeverity()" (input)="setFilterSeverity($any($event.target).value)" [disabled]="viewState().status === 'loading'" />
+        <input id="discussion-severity" type="text" placeholder="Nhập giá trị mức độ chính xác" [value]="filterSeverity()" (input)="setFilterSeverity($any($event.target).value)" [disabled]="viewState().status === 'loading'" />
       </label>
       <label for="discussion-search">
         <span>Tìm thảo luận</span>
@@ -37,7 +37,7 @@
         <button class="clear-button" type="button" (click)="clearFilters()" [disabled]="viewState().status === 'loading'">Xóa lọc</button>
       </div>
     </form>
-    <p class="filter-note" id="search-note"><study-icon name="info" /> API áp dụng exact match cho reason/severity. API không nhận từ khóa và không trả metadata từng report.</p>
+    <p class="filter-note" id="search-note"><study-icon name="info" /> Lý do và mức độ được gửi nguyên văn để đối chiếu chính xác. API #97 không nhận từ khóa và không trả metadata của từng report.</p>
   </section>
 
   <section class="queue-table-panel" aria-label="Danh sách thảo luận được báo cáo">
@@ -79,7 +79,7 @@
       <div class="pagination-bar">
         <p>
           @if (viewState().pagination; as pagination) {
-            <strong>{{ pagination.total }}</strong> thảo luận có report đang mở
+            <strong>{{ pagination.total }}</strong> thảo luận trong kết quả API #97
             @if (pagination.totalPages > 0) { · Trang <strong>{{ pagination.page }} / {{ pagination.totalPages }}</strong> }
           } @else { Response không có metadata phân trang. }
         </p>
@@ -94,12 +94,12 @@
         }
       </div>
     }
-    <div class="source-note"><study-icon name="database" /><span>Nguồn: GET /api/v1/admin/discussions/reported · #97 · 20 dòng/trang · report OPEN/IN_REVIEW · report mới nhất trước</span></div>
+    <div class="source-note"><study-icon name="database" /><span>API #97 trả về Discussion summary; metadata của từng report không có trong response.</span></div>
   </section>
 
   <aside class="data-boundary">
     <span class="boundary-icon"><study-icon name="shield" /></span>
-    <div><strong>Projection của hàng đợi</strong><p>API trả Discussion summary và tác giả. Mỗi thảo luận chỉ xuất hiện một lần; report count, reason, severity, reporter và thời điểm report không có trong response. Tiêu đề được dựng từ content; `comments` rỗng là placeholder, không phải số bình luận.</p></div>
+    <div><strong>Dữ liệu hiện có</strong><p>API #97 trả về Discussion summary và tác giả. Mỗi thảo luận xuất hiện một lần. Response không có số lượng, lý do, mức độ, người gửi hay thời điểm của từng report. Tiêu đề được lấy từ nội dung; danh sách này không nạp comments.</p></div>
     <span class="source-badge">Page&lt;Discussion&gt;</span>
   </aside>
 </main>

@@ -31,7 +31,7 @@
     <div class="table-scroll">
       <table>
         <caption class="visually-hidden">Danh sách bài học từ response API #82</caption>
-        <thead><tr><th scope="col">Mã định danh</th><th scope="col">Tiêu đề bài học</th><th scope="col">Mã khóa học</th><th scope="col">Thứ tự</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr></thead>
+        <thead><tr><th scope="col">Mã định danh</th><th scope="col">Tiêu đề bài học</th><th scope="col">ID khóa học</th><th scope="col">Thứ tự</th><th scope="col">Trạng thái</th><th scope="col">Thao tác</th></tr></thead>
         <tbody>
           @if (viewState().status === 'loading') {
             <tr><td class="table-state" colspan="6" role="status"><span class="state-mark"><study-icon name="refresh" /></span><strong>Đang tải danh sách bài học…</strong><span>Đang chờ phản hồi từ Study Server.</span></td></tr>
@@ -40,14 +40,20 @@
           } @else if (isEmpty) {
             <tr><td class="table-state" colspan="6"><span class="state-mark"><study-icon name="book" /></span><strong>Chưa có bài học trong phản hồi</strong><span>API #82 trả về danh sách rỗng. Response không có trạng thái đồng bộ.</span></td></tr>
           } @else {
-            @for (row of viewState().rows ?? []; track row.values[0]) {
+            @for (row of viewState().rows ?? []; track $index) {
               <tr>
                 <td class="lesson-id">{{ row.values[0] }}</td>
                 <td class="lesson-title"><strong>{{ row.values[1] }}</strong></td>
                 <td>{{ row.values[2] }}</td>
                 <td>{{ row.values[3] }}</td>
                 <td><span class="status-badge">{{ row.values[4] }}</span></td>
-                <td><button class="row-action" type="button" disabled aria-label="Mở chi tiết bài học sau khi quyền và luồng AD-13 được xác nhận"><span>Chi tiết</span><study-icon name="chevron" /></button></td>
+                <td>
+                  @if (row.route) {
+                    <a class="row-action" [routerLink]="row.route" [attr.aria-label]="'Mở chi tiết bài học ' + row.values[0]"><span>Chi tiết</span><study-icon name="chevron" /></a>
+                  } @else {
+                    <button class="row-action" type="button" disabled aria-label="Không thể mở chi tiết vì ID bài học vượt quá độ chính xác an toàn của trình duyệt"><span>Chi tiết</span><study-icon name="chevron" /></button>
+                  }
+                </td>
               </tr>
             }
           }
@@ -67,5 +73,5 @@
     <div class="source-note"><study-icon name="database" /><span>Nguồn dữ liệu: GET /api/v1/admin/lessons · API #82 · loại `DELETED` theo query hiện hành</span></div>
   </section>
 
-  <aside class="data-boundary"><span class="boundary-icon"><study-icon name="shield" /></span><div><strong>Phạm vi dữ liệu hiện tại</strong><p>Response chỉ cung cấp ID, tiêu đề, mã khóa học, nội dung, URL video, thứ tự và trạng thái. Không suy ra loại nội dung, SCORM, xAPI, DRM hoặc số liệu liên kết.</p></div><span class="source-badge">Lesson[]</span></aside>
+  <aside class="data-boundary"><span class="boundary-icon"><study-icon name="shield" /></span><div><strong>Phạm vi dữ liệu hiện tại</strong><p>Response chỉ cung cấp ID, tiêu đề, ID khóa học, nội dung, URL video, thứ tự và trạng thái. Không suy ra loại nội dung, SCORM, xAPI, DRM hoặc số liệu liên kết.</p></div><span class="source-badge">Lesson[]</span></aside>
 </main>

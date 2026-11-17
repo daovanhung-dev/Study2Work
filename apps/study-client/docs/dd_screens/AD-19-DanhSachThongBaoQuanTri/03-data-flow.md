@@ -1,5 +1,7 @@
 # AD-19 — Data Flow & State
 
+> Current Angular source update (2026-11-16): AD19Page maps local Page<Notification> items and pagination into loading/loaded-empty/loaded-rows/error UI states. It sends status/channel/page only and renders fields returned by #92; search, metrics, recipient, and send-time fields remain unavailable. FE specs pass 6/6; API fake-session tests pass 20/20. This is not live DB/browser evidence; direct catalog response discrepancy remains.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

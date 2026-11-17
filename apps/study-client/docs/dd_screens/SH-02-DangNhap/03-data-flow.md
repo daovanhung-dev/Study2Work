@@ -32,7 +32,7 @@ HTML hiện chỉ có liên kết đăng ký trong các đích màn hình đư�
 
 | Liên kết / chuyển tiếp | Đích | Nguồn quy định đích | Trạng thái hiện tại |
 |---|---|---|---|
-| Liên kết đăng ký | SH-03 /register | href hiện tại trong HTML và danh mục | Route client đề xuất; chưa có router Study Web |
+| Liên kết đăng ký | SH-03 /register | href hiện tại trong HTML và danh mục | Local direct-route Chrome smoke rendered `SH03Page` and form; deployed runtime unverified |
 | Đăng nhập học viên thành công | returnTo an toàn; nếu không có thì /student đề xuất | §2.1 và §6.2 trong danh mục | Guard/đích mặc định chưa triển khai hoặc duyệt |
 | Đăng nhập người hướng dẫn/quản trị viên thành công | Chưa xác định | Điều kiện chặn vai trò G-02 | Dừng trước #04; không đoán vỏ giao diện theo vai trò |
 | Quên mật khẩu | Chưa có | Không có endpoint/màn hình trong danh mục hiện tại | Không tự thêm |
@@ -43,16 +43,16 @@ HTML hiện chỉ có liên kết đăng ký trong các đích màn hình đư�
 ### SH02-EV-01 — Mở SH-02 và kiểm tra đích quay lại
 
 - **Kích hoạt / loại:** Router điều hướng tới `/login` / Load.
-- **Điều kiện tiên quyết:** Route công khai SH-02 được cấu hình; hiện chưa có router Study Web để xác minh.
+- **Điều kiện tiên quyết:** Route công khai `/login` hiện được cấu hình trong Shared route group. Query/returnTo policy chưa được triển khai.
 - **Đầu vào:** Path `/login`, query hoặc route state do luồng bảo vệ cung cấp, gồm `returnTo` nếu có.
 - **API / đầu ra:** Không gọi API. Hiển thị form rỗng và chỉ giữ đích quay lại sau khi kiểm tra theo chính sách allowlist còn chờ duyệt.
 
-1. Router tương lai mở /login đề xuất. Router Study Web hiện không có, nên chưa xác nhận route chạy được.
+1. Angular router hiện mở `/login` và render SH02Page. Test route xác nhận việc này; browser runtime chưa xác minh.
 2. Nếu route cần bảo vệ chuyển tới đây, chỉ đọc returnTo từ router state đáng tin cậy hoặc query tương đối qua danh sách cho phép. Từ chối URL tuyệt đối/tương đối mạng và đích ngoài danh sách route an toàn của vai trò đã xác thực.
 3. Không sao chép token, mật khẩu hoặc email trong query vào route state. HTML gốc không có handler returnTo; đây là hành vi đích trong danh mục, không phải hành vi HTML hiện tại.
 4. Hiển thị biểu mẫu ở trạng thái rảnh. screen.png trống; chỉ dùng bản dựng HTML sạch làm bằng chứng thiết kế.
 
-**Kết quả / ngoại lệ:** Form rỗng được hiển thị; đích quay lại không có hoặc không qua allowlist thì bị bỏ và người dùng ở lại `/login`. Router hiện chưa có trong app source để xác minh.
+**Kết quả / ngoại lệ:** Form rỗng được hiển thị; SH02Page hiện không đọc hoặc giữ returnTo. Allowlist/role redirect vẫn blocked.
 
 ### SH02-EV-02 — Nhập email và mật khẩu
 
@@ -216,15 +216,15 @@ HTML hiện chỉ có liên kết đăng ký trong các đích màn hình đư�
 ### SH02-EV-13 — Chuyển tới đăng ký
 
 - **Kích hoạt / loại:** Người dùng chọn SH02-EL-08 / Click, Keyboard.
-- **Điều kiện tiên quyết:** Link SH-03 đang hiển thị và router Study tương lai đăng ký `/register`.
+- **Điều kiện tiên quyết:** Link SH-03 đang hiển thị; current Angular route maps `/register` to `SH03Page`; local direct-route Chrome smoke rendered the page and form, while deployed runtime is unverified.
 - **Đầu vào:** Không có dữ liệu form được gửi; đích route `/register` theo HTML/inventory.
-- **API / đầu ra:** Không gọi API. Điều hướng tới SH-03; #01 đăng ký thuộc màn hình đó. Route runtime hiện chưa có.
+- **API / đầu ra:** Không gọi API. Điều hướng tới SH-03; #01 đăng ký thuộc màn hình đó. Local route render đã xác minh; deployed runtime chưa được kiểm tra.
 
-1. Khi link được kích hoạt bằng pointer hoặc bàn phím, router tương lai nhận đích `/register` từ HTML/inventory.
+1. Khi link được kích hoạt bằng pointer hoặc bàn phím, browser nhận đích `/register` theo HTML/inventory; Angular source hiện wire route này tới `SH03Page` trong `shared.route.ts` (runtime chưa xác minh).
 2. Điều hướng tới SH-03; không chuyển email/mật khẩu hoặc token trong URL/state. SH-02 không gọi #01; đăng ký thuộc SH-03.
-3. Nếu router/route SH-03 chưa được nối, không khẳng định điều hướng runtime thành công; hiện source app chưa có router Study Web.
+3. Route source đã được nối; chưa có lần kiểm tra browser runtime trong bằng chứng hiện tại nên không khẳng định điều hướng đã chạy thành công.
 
-**Kết quả / ngoại lệ:** Điều hướng dự kiến tới SH-03 `/register` mà không gọi #01 hoặc mang theo credential. Router Study Web chưa có nên route chưa được xác minh.
+**Kết quả / ngoại lệ:** Điều hướng tới SH-03 `/register` theo Angular route source, mà không gọi #01 hoặc mang theo credential. Browser runtime chưa được xác minh.
 
 ### Trích từ DD nguồn: 6. Mô hình trạng thái
 

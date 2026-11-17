@@ -1,8 +1,8 @@
 # AD-03 — Navigation
 
 ## 1. Route definition
-- Current route in inventory: `/admin/users/:userId`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Route in inventory/source: `/admin/users/:userId`
+- Source status: declared in `admin.routes.ts` and renders `AD03Page`; deployment/runtime remains `NOT VERIFIED`.
 - Route params/types: `userId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,17 +10,17 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [AD-02](../AD-02-DanhSachNguoiDung/00-overview.md), [AD-04](../AD-04-ChinhSuaNguoiDung/00-overview.md), [AD-05](../AD-05-KhoaMoKhoaXoaTaiKhoan/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [AD-02](../AD-02-DanhSachNguoiDung/00-overview.md), [AD-04](../AD-04-ChinhSuaNguoiDung/00-overview.md), [AD-05](../AD-05-KhoaMoKhoaXoaTaiKhoan/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Route entries có trong current Admin router; runtime/deployment và policy approval chưa xác minh |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [AD-04](../AD-04-ChinhSuaNguoiDung/00-overview.md), [AD-05](../AD-05-KhoaMoKhoaXoaTaiKhoan/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [AD-04](../AD-04-ChinhSuaNguoiDung/00-overview.md), [AD-05](../AD-05-KhoaMoKhoaXoaTaiKhoan/00-overview.md) | Source event/inventory navigation | `userId` path | Router links and routes exist in source; product permission/mutation acceptance remains blocked |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: Angular route exists in source; host fallback/deployment and browser runtime are not verified.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
@@ -39,14 +39,14 @@ flowchart LR
 
 | State | Điều kiện vào | UI/behavior yêu cầu | Bằng chứng hiện tại |
 |---|---|---|---|
-| `loading` | Route hợp lệ; GET #69 đang chờ. | Skeleton/loader và chặn thao tác phụ thuộc dữ liệu; thiết kế hiển thị cụ thể chưa có trong screenshot. | Không có loading implementation. |
-| `ready` | HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, `data` là UserProfile hợp lệ. | Map field profile vào element; PII/masking và enum labels vẫn cần policy. | API source-backed cục bộ; Study Web chưa wire. |
-| `unauthenticated` | HTTP 401 hoặc token/session thiếu/sai. | Dùng auth shell/session UX đã được duyệt; không hiển thị placeholder như thành công. | API error trực tiếp; Study Web shell chưa có. |
-| `forbidden` | HTTP 403. | Báo không có quyền; không retry tự động bằng role khác. | API error trực tiếp; mapping `ADMIN` ↔ permission AC-31 còn DERIVED. |
-| `not-found` | HTTP 404 cho path ID sai/out-of-range hoặc user không tồn tại theo local source. | Hiển thị not-found và điều hướng về AD-02 theo contract. | Catalog status/code trực tiếp; phân loại path/no-row là local DERIVED mapping. |
-| `error` | HTTP 500 hoặc network failure. | Thông báo an toàn; retry chỉ khi shared client convention xác định. Không lộ DB/PII. | 500 source-backed; network UI/retry chưa được định nghĩa. |
+| `loading` | Route hợp lệ; GET #69 đang chờ. | Skeleton/loader và chặn thao tác phụ thuộc dữ liệu; thiết kế hiển thị cụ thể chưa có trong screenshot. | `adminRouteState` phát `loading`; page hiển thị thông báo tải. Runtime chưa xác minh. |
+| `ready` | HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, `data` là UserProfile hợp lệ. | Map field profile vào element; PII/masking và enum labels vẫn cần policy. | `loadedFields(renderUserFields(...))` map kết quả sang `loaded`; runtime chưa xác minh. |
+| `unauthenticated` | HTTP 401 hoặc token/session thiếu/sai. | Dùng auth shell/session UX đã được duyệt; không hiển thị placeholder như thành công. | Helper map lỗi 401 vào `status:error` với thông báo đăng nhập; không có state type riêng. Runtime chưa xác minh. |
+| `forbidden` | HTTP 403. | Báo không có quyền; không retry tự động bằng role khác. | Helper map lỗi 403 vào `status:error` với thông báo quyền; không có state type riêng. Mapping `ADMIN` ↔ permission AC-31 còn DERIVED. |
+| `not-found` | HTTP 404 cho path ID sai/out-of-range hoặc user không tồn tại theo local source. | Hiển thị not-found và điều hướng về AD-02 theo contract. | Helper map lỗi 404 vào `status:error` với thông báo không tìm thấy; không có state type riêng. Runtime chưa xác minh. |
+| `error` | HTTP 500 hoặc network failure. | Thông báo an toàn; retry chỉ khi shared client convention xác định. Không lộ DB/PII. | Helper trả `status:error`; 500/network không có state type riêng. Retry chưa được định nghĩa. Runtime chưa xác minh. |
 | `audit-blocked` | Không có audit source/policy. | Không hiển thị count/empty history/retention như dữ liệu thực. | Current prototype có static empty state và retention; #69 không hỗ trợ. |
-| `actions-disabled` | Chưa đủ permission/contract/route cho AD-04/AD-05. | Giữ #15/#17 disabled và không gửi mutation. | Đúng với HTML hiện tại. |
+| `actions-gated` | Chưa đủ permission/contract approval cho AD-04/AD-05. | Chỉ tiếp tục theo DD/API của màn hình đích; không gọi mutation từ AD-03. | Angular source có router links tới AD-04/AD-05 khi có ID; prototype controls disabled. Runtime/acceptance chưa xác minh. |
 | `empty` | Không có successful empty response trong #69. | Không dùng `204`, `NULL_PAYLOAD` hoặc “đang đồng bộ” làm empty success. 404 là not-found. | API route trả 200 UserProfile hoặc error; prototype empty state không khớp. |
 
 ### Điều hướng / handoff data
@@ -54,10 +54,10 @@ flowchart LR
 | Từ | Đến | Dữ liệu truyền | Ranh giới |
 |---|---|---|---|
 | AD-02 | AD-03 | `items[].id` từ #68 → `user_id` path của #69. | Chỉ truyền ID; không đưa email/phone vào URL. Role/permission policy còn mở. |
-| AD-03 back/breadcrumb | AD-02 | Không yêu cầu dữ liệu; giữ filter/page nếu shared navigation contract quy định. | Link prototype là fragment; route thực chưa có. |
-| AD-03 edit | AD-04 | `userId` path. | #15 đang disabled; #70 body và field rules chưa được xử lý tại màn này. |
-| AD-03 status/delete | AD-05 | `userId` path. | #17 đang disabled; #71/#72 policy và confirmation là màn hình đích. |
-| Header/footer | Các trang admin/policy/support | Không có handoff data đã xác nhận. | `href="#"`; không suy ra route hoặc API. |
+| AD-03 back link | AD-02 | Không yêu cầu dữ liệu; giữ filter/page nếu shared navigation contract quy định. | Current page `routerLink` targets registered `/admin/users`; prototype fragments remain static evidence only. |
+| AD-03 edit | AD-04 | `userId` path. | Current page has a router link and route; #70 body, permission and field rules remain gated. |
+| AD-03 status/delete | AD-05 | `userId` path. | Current page has a router link and route; #71/#72 policy and confirmation remain gated. |
+| Header/footer | Các trang admin/policy/support | Không có handoff data đã xác nhận. | Prototype dùng `href="#"`; không suy ra route hoặc API cho các trang đó. |
 
 ### Bảo mật và dữ liệu
 

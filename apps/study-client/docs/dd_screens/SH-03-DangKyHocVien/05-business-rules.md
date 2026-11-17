@@ -17,7 +17,7 @@
 - Không lưu token vì API #01 không cấp token. Không gửi `role`, `status`, `password_hash` hoặc trường không có trong hợp đồng yêu cầu.
 - API #01 kiểm tra email trùng rồi dựa thêm vào ràng buộc duy nhất; tranh chấp lúc ghi được trả thành HTTP 409. Lớp điều phối sở hữu `commit`/`rollback`.
 - API #02 không xác thực quyền sở hữu email và bộ gửi thư mặc định không gửi thư. Tệp `DB.sql` gợi ý trạng thái mặc định `ACTIVE`, còn API #03 cho phép đăng nhập tài khoản `ACTIVE`. Trước khi coi luồng email là biện pháp xác minh, nhóm Sản phẩm/Bảo mật/Máy chủ cần quyết định cách tạo tài khoản chưa xác minh và xác nhận trạng thái lược đồ thực tế.
-- Không đưa `user_id` hoặc email vào URL. SH-03→SH-04 cần kênh bàn giao tạm và quy tắc thời hạn/khôi phục được duyệt; hiện chưa có client source hoặc quyết định lưu trữ để xác nhận cơ chế đó.
+- Không đưa `user_id` hoặc email vào URL. SH-03→SH-04 cần kênh bàn giao tạm và quy tắc thời hạn/khôi phục được duyệt. Current source gửi API #01; chỉ transition/handoff còn chưa được nối. Không gọi API #02 từ SH-03.
 
 ### Trích từ DD nguồn: 10. Điểm cần quyết định trước khi phát hành
 

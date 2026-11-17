@@ -1,5 +1,8 @@
 # AD-06 — UI Elements
 
+> **Current Study Web source (2026-11-17):** `/admin/courses` renders AD06Page and calls #73. The screen uses API-backed ID/title/mentor/price/status fields plus a detail link; search, filters, create/export/sync remain disabled. The detail link has a course-specific accessible name. Focused Angular spec: 5/5; browser runtime not verified.
+
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.

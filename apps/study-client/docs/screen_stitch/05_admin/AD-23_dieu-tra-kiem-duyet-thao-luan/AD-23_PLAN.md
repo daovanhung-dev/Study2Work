@@ -6,7 +6,7 @@
 - Scope: document the static investigation/moderation placeholder, expected AC-37 flow, catalog APIs #98–#100, local #98 source behavior, current source gaps for #99/#100, and the AD-22/#97 return handoff.
 - Boundary: AD-23 only. Do not start AD-24. Do not define missing report, moderation, audit, permission, or delete rules.
 - Required order: source/contract review → this plan → markers/overlay and annotated image → A–F DD → inventory/API reverse index/global plan/worklog → static audit.
-- No application tests or runtime verification are planned.
+- At plan authoring, no application tests or runtime verification were planned for the static DD. T029 adds focused source tests/build checks; browser/deployed runtime remains unverified.
 
 ## 2. Evidence and source hashes
 
@@ -17,9 +17,9 @@
 | Inventory row 81 in [`list_screen.md`](../../../list_screen.md) | Candidate route, AC/API links, expected states, and current blocker. | Design requirement |
 | AC-37 in [`AC_04_ADMIN_MANAGEMENT.drawio`](../../../../../study-server/docs/diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio) | Expected queue → detail → moderation/audit → optional delete → queue flow. | Expected flow; open branch contract |
 | [`list_api.md`](../../../../../../docs/lists/list_api.md), #98–#100 | Direct catalog method, path/body, auth role, response and business codes. | Approved design catalog; not runtime by itself |
-| Study Server router and `api_98_admin_discussions_detail` module/tests | Local #98 route, `ADMIN` guard, validation, query, projection, side effects, errors, characterization tests. | Current local source; test source inspected, not run |
+| Study Server router and `api_98_admin_discussions_detail` module/tests | Local #98 route, `ADMIN` guard, validation, query, projection, side effects, errors, characterization tests. | T029 focused tests: 9 passed using fake DB; live DB/deployment not verified |
 | API DD #98–#100 and candidate migration/DDL | Existing status and unresolved action/audit/delete/report persistence mapping. | Draft/open questions; DDL is not live-schema proof |
-| [Study Web design context](../../../../../../.agents/web-study/design.md) and Study client tree | UI conventions and editable client/runtime availability. | Design context; Study Web is UNWIRED |
+| [Study Web design context](../../../../../../.agents/web-study/design.md) and Study client tree | UI conventions and editable client/runtime availability. | Angular route/page/#98 caller are source-wired; browser/deployed runtime is not verified |
 
 Original hashes captured before edits:
 
@@ -31,7 +31,7 @@ Original hashes captured before edits:
 - Expected: AD-22 supplies a valid Discussion ID; #98 returns thread and report context; an Admin evaluates the report; #99 applies an approved action and reason with audit; optional #100 soft-deletes while preserving audit; the queue is refreshed through #97 or AD-22 is revisited.
 - Current local #98: route/module/query/test source is registered. It checks local role `ADMIN`, validates positive int64 `discussion_id`, reads the Discussion and direct child comments, and returns a one-item `Page<Discussion>`. It does not query reports or mutate state. Its API DD still says `UNWIRED / NOT_FOUND`, a source/DD discrepancy.
 - Current #99/#100: catalog and Draft API DDs exist; no local route/module/query/model/test source was found. Their behavior is not runtime verified.
-- Current Study Web: no tracked editable `src` route/client exists; the HTML is a static placeholder, all moderation controls are disabled, and no handler/API call is present.
+- Current Study Web source: Angular route/page/#98 caller exist and render Discussion/direct comments; moderation controls are disabled. `code.html` remains a static placeholder with no handler/API call. Browser/deployed runtime is not verified.
 - AC-37 says “dismiss report” on the no-violation branch, but no dismissal endpoint is listed. The prototype’s permanent-delete choice sits in the #99 radio group even though AC separates optional deletion to #100 and describes soft delete with audit preservation.
 
 ## 4. Plan for element coverage and annotation
@@ -119,4 +119,4 @@ Create 45 sequential markers, each mapped one-to-one to a row in `AD-23.md` §C.
 - Discussion root/reply report target and thread visibility rules are unresolved.
 - AC/catalog Admin actor and permission mapping do not establish the local `ADMIN` authorization rule for #99/#100.
 - The prototype claims warning delivery, automatic audit logging and complete permanent deletion without source-backed behavior; delete radio also conflicts with the separate #100 flow.
-- Study Web route/client is UNWIRED; no runtime verification is available.
+- Study Web route/page/#98 caller are source-wired; report projection, #99/#100 actions and browser/deployed runtime remain unresolved or unverified.

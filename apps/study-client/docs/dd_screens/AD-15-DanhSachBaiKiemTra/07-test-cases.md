@@ -1,6 +1,6 @@
 # AD-15 — Test Cases
 
-> Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
+> Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite. Executable test/build evidence từ source hiện tại được ghi riêng tại §4; kết quả này không chứng minh browser UI hoặc live database.
 
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |
@@ -22,6 +22,8 @@
 - **References:** `AC-35`, [Events](02-events.md), [Business Rules](05-business-rules.md), [source DD](../../screen_stitch/05_admin/AD-15_danh-sach-bai-kiem-tra/AD-15.md).
 
 ## 3. Source acceptance / test plan (not run)
+
+> This is the 2026-11-08 planning snapshot quoted from the original source DD. Its “not run” and `IMPLEMENTATION BLOCKED` wording describes that snapshot; the 2026-11-16 checked-out source and verification are recorded in §4.
 
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu
 
@@ -61,3 +63,14 @@
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Không chạy app test trong task chuyển đổi tài liệu.
+
+## 4. Current-source verification (2026-11-16)
+
+| Verification | Command / source | Result | Limit |
+|---|---|---|---|
+| AD-15 component | `npm test -- --include src/app/features/admin/AD15/pages/ad15-page.spec.ts` | 1 file, 5 tests passed | Angular test environment; not browser UI verification |
+| Study Server API #87 | `.venv/bin/pytest -q tests/modules/admin/api_87_admin_quizzes_list/test_admin_quizzes_list.py` | 20 passed; one Starlette/httpx deprecation warning | Fake DB sessions; no live database verification |
+| Study Web production build | `npm run build` | Passed | Three CSS budget warnings in Student stylesheets: `student-static-screen.css`, `st22-page.css`, `student-layout.css` |
+| Browser route/UI | Chrome bridge and in-app browser attempt | Not verified | Chrome bridge failed with `timeoutMs` undefined; in-app browser was unavailable |
+
+The API DD remains Draft and its response/permission/schema discrepancies remain open. These checks verify the checked-out client and fake-session API behavior only.

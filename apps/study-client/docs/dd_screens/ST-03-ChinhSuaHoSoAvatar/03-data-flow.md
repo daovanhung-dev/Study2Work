@@ -29,8 +29,9 @@
 
 - screen.png là ảnh thiết kế tĩnh 1418×1600. SHA-256 trước/sau cần giữ nguyên: acd143a1a7d5dae4936f9bc8a3d51d015ba1fb501998a5434e96b57942d77fdc.
 - code.html là HTML trình bày tĩnh. Firefox headless render tạm ở cùng viewport đã được xem để so sánh layout/copy; render không phải runtime capture và không phải tài sản thay thế ảnh gốc.
-- Header/footer và các anchor dùng href="#". Brand/nav/footer không có router. Hai link quay về có data-path="ho-so-ca-nhan" nhưng vẫn là fragment anchor.
-- Form có onsubmit="return false". Full name là input text native có thể nhận ký tự nhưng không có validation/handler; email readonly; phone/bio disabled; upload/save disabled; không có file input hoặc handler nghiệp vụ; inline onsubmit chỉ return false; không có fetch/XHR/API client, cache hoặc session binding.
+- Các chi tiết `href="#"`, `data-path` và inline `onsubmit` trong hai bullet dưới đây mô tả Stitch `code.html`, không mô tả Angular runtime hiện tại.
+- Trong Angular source, `/student/profile/edit` render gate G-03; metadata gán API #04/#13/#14 nhưng không có HTTP caller. Hai link quay về dùng RouterLink tới ST-02; upload/save/phone/bio disabled, email readonly; full name chỉ nhận local text và submit bị chặn.
+- Header links tới các route đã khai báo; “Khóa học của tôi” và footer terms/privacy/help không tương tác vì chưa có route/content mapping. Không có Student session, API/cache binding hoặc server mutation.
 - Gate pill, warning banner, diagnostics và “API #13 Halted” là nội dung HTML tĩnh. Chúng không phản ánh trạng thái response của backend; backend hiện đăng ký source cho cả #13 và #14.
 
 ### Trích từ DD nguồn: E. Ma trận trạng thái và điều hướng
@@ -50,8 +51,8 @@
 
 ### Điều hướng
 
-- ST-02 → ST-03: inventory link/route đề xuất; không có route source. Không gửi user ID qua URL vì API dùng token subject.
-- ST-03 → ST-02: hai link trong mockup có data-path nhưng href="#"; route dự kiến /student/profile.
+- ST-02 → ST-03: route `/student/profile/edit` đã source-wired; ST-02 vẫn giữ nút edit disabled nên chưa có điểm vào UI.
+- ST-03 → ST-02: hai RouterLink đi tới `/student/profile`; không gửi user ID hoặc PII qua URL.
 - SH-02/session handoff: phụ thuộc auth/session policy. API tự kiểm JWT; không có client auth store trong Study Web.
 - Header/footer destinations: chưa xác định từ app router. Không thêm route giả định.
 - Không xác nhận cache, back-stack, dirty-state confirmation, returnTo hoặc reload strategy.

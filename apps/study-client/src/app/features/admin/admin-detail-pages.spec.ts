@@ -56,6 +56,11 @@ describe('Admin detail pages', () => {
 
     const root = fixture.nativeElement as HTMLElement;
     const text = root.textContent ?? '';
+    const courseIdField = Array.from(root.querySelectorAll<HTMLElement>('.field-card')).find(
+      (field) => field.querySelector('dt')?.textContent?.trim() === 'ID khóa học',
+    );
+    expect(courseIdField?.querySelector('dd')?.textContent?.trim()).toBe('42');
+    expect(text).not.toContain('Mã khóa học');
     expect(text).toContain('Biology Foundations');
     expect(text).toContain('A source-backed course description.');
     expect(text).toContain('An Nguyen');
@@ -89,6 +94,11 @@ describe('Admin detail pages', () => {
 
     const root = fixture.nativeElement as HTMLElement;
     const text = root.textContent ?? '';
+    const courseIdField = Array.from(root.querySelectorAll<HTMLElement>('.field-card')).find(
+      (field) => field.querySelector('dt')?.textContent?.trim() === 'ID khóa học',
+    );
+    expect(courseIdField?.querySelector('dd')?.textContent?.trim()).toBe('42');
+    expect(text).not.toContain('Mã khóa học');
     expect(text).toContain('Cell Structure');
     expect(text).toContain('<script>alert(1)</script>Read the lesson notes.');
     expect(text).toContain('https://media.example.test/cell.mp4');

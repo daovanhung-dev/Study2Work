@@ -32,7 +32,7 @@
 - [x] Ghi AD-12 numeric handoff, AD-14 mutation boundary và AC-34 dependency conflict.
 - [x] Đánh dấu resources/progress/metrics/SSE/audit/concurrency/media/permission/schema/UI claims không được #83 xác nhận.
 - [ ] Contract, live schema, permission và dependency/output rules đủ để triển khai đầy đủ mà không suy đoán. **Chưa đạt:** các owner/API/schema blockers còn mở.
-- [ ] `DD READY`. **Không đạt:** `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`.
+- [ ] `DD READY`. **Không đạt:** `DD BLOCKED` because dependency output, permission, live schema and status policy remain open. The implemented source-backed subset is `PARTIAL SOURCE`; browser/live DB remain `NOT VERIFIED`.
 
 ### Sources
 
@@ -56,3 +56,9 @@
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Không chạy app test trong task chuyển đổi tài liệu.
+
+## 4. Current executable test evidence (2026-11-16)
+
+- Angular AD-12/AD-13 focused specs: 2 files, 6 tests passed. Covers safe-ID navigation from the #82 list, rejecting unsafe JavaScript int64 IDs, #83 field rendering, escaped lesson content, no media embedding and no fabricated resource counts.
+- Study Server API #83 focused tests: 15 passed using fake database sessions. They verify local auth/path/query/envelope/error behavior, not live PostgreSQL, schema or deployment.
+- Browser runtime: `NOT VERIFIED`.

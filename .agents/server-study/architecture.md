@@ -12,37 +12,22 @@ app/main.py:create_app
   -> app/core/trace.py
 ```
 
-Current composition, API #1 register flow, API #2 verify-email dispatch stub,
-API #3 login/refresh flow, API #4 current-user flow, API #5 category flow,
-API #6 public course flow, API #7 course-search flow, API #08 course detail,
-API #09 curriculum, API #12 resource detail, API #13 avatar upload, API #14
-profile update, API #34 upload metadata, API #46 Mentor course list, API #47
-Mentor lecture create, API #48 Mentor lecture detail, API #49 Mentor content
-list, API #50 Mentor content create, API #51 Mentor content update, API #52
-Mentor Content publish/unpublish, API #53 Mentor Content delete, APIs #54–#57
-cover submissions list/detail/grade/feedback, APIs #58–#61 cover support-request
-list/detail/reply/resolve, API #62 reads the course-student roster, and API #63
-creates notifications with queued delivery outbox rows, API #64 reads
-notification delivery status, API #65 reads course progress, API #66 reads
-course activity from legacy progress-state timestamps, and API #67 reads
-selected-Student course progress, Admin APIs #68–#96 user/course/content,
-lesson, quiz management/statistics and notification list/create/update/delete/status,
-API #97 reported-discussion queue and API #98 discussion detail; all routes are wired locally. The initial branch-backed HTTP run passed 59/69 operations; a follow-up after explicit nullable-bind casts passed all ten affected list/search operations with empty and valid filters. The other operations were not rerun after that SQL-only fix; see `tests.md`.
-The current full Study suite result is recorded in `tests.md`; routes
-without a current implementation remain unwired.
+Current source wires numbered APIs #01–#98. Packages are grouped by actor:
+Guest #01–#03/#05–#12/#15; Student #04/#13–#14/#16–#17/#19–#33/#35–#45;
+Shared #18/#34; Mentor #46–#67; Admin #68–#98. API #18 ID/authorization
+semantics remain disputed; API #34 accepts Student and Mentor. APIs #99–#103
+have no Study route/module. The 2026-11-16 post-move full suite passed 1484
+tests; see `tests.md`. API #98 remains a wired-source/Draft-DD discrepancy:
+source derives its title from content and omits report records. Production
+schema/deployment and external provider integration are not proven by local
+fake-session tests.
 
 ## Verified ownership
 
 - `app/main.py`: FastAPI composition root, CORS, middleware/exception-handler registration, root/health routes.
-- `app/api/v1.py`: declared `/api/v1` routes; exposes health-adjacent utility
-  routes, API #1 register, API #2 verification dispatch, API #3 auth, API #4
-  current-user profile, API #5 categories, API #6 courses, API #7 course search,
-  API #12 resource detail, API #13 avatar upload, API #14 profile update,
-  API #34 upload metadata, API #46 Mentor course list, API #47 Mentor lecture
-  create, API #48 Mentor lecture detail, API #49 Mentor content list, API #50
-  Mentor content create, API #51 update, API #52 publish/unpublish, API #53
-  soft-delete, API #54 Mentor submissions list, API #55 Mentor submission detail and API
-  #56 Mentor submission grade, API #57 Mentor submission feedback, API #58 Mentor support-request list, API #59 Mentor support-request detail, API #60 Mentor support reply, API #61 Mentor support resolve, API #62 Mentor course-student roster, API #63 Mentor notification dispatch, API #64 notification status, API #65 course progress, API #66 course activity analytics API #67 selected-Student course progress, APIs #68–#91 Admin user/course/Content, lesson and quiz management, and APIs #92–#98 Admin notification and discussion flows.
+- `app/api/v1.py`: thin declared router for numbered APIs #01–#98. It imports
+  endpoint flows from actor-aligned `app.modules` packages and delegates to
+  their `view.py` handlers. APIs #99–#103 are not wired.
 - `app/core/config.py`: typed settings backed by `app/core/constants.py`.
 - `app/core/database.py`: sync SQLAlchemy engine/session/query primitives.
 - `app/core/middleware.py`: trace middleware and shared FastAPI exception handlers.
@@ -52,9 +37,9 @@ without a current implementation remain unwired.
 - `app/modules/guest/api_03_auth_login/models.py`: login and refresh request contracts.
 - `app/modules/guest/api_03_auth_login/query.py`: SQL constants for user lookup and refresh-token persistence.
 - `app/modules/guest/api_03_auth_login/view.py`: login credential flow, refresh rotation, transaction and response mapping.
-- `app/modules/guest/api_04_users_me/models.py`: safe current-user profile response model.
-- `app/modules/guest/api_04_users_me/query.py`: parameterized public profile lookup by user ID.
-- `app/modules/guest/api_04_users_me/view.py`: Student role check, profile lookup and canonical response/error mapping.
+- `app/modules/student/api_04_users_me/models.py`: safe current-user profile response model.
+- `app/modules/student/api_04_users_me/query.py`: parameterized public profile lookup by user ID.
+- `app/modules/student/api_04_users_me/view.py`: Student role check, profile lookup and canonical response/error mapping.
 - `app/modules/guest/api_05_categories/models.py`: API #5 query and public category page model classes.
 - `app/modules/guest/api_05_categories/query.py`: parameterized active-category lookup by exact locale.
 - `app/modules/guest/api_05_categories/view.py`: default-locale resolution, category mapping and canonical response/error mapping.
@@ -65,11 +50,11 @@ without a current implementation remain unwired.
 - `app/modules/guest/api_07_courses_search/query.py`: parameterized published-course search/count queries.
 - `app/modules/guest/api_07_courses_search/view.py`: public course search filtering and response mapping.
 - `app/modules/guest/api_12_resources_detail/view.py`: public resource metadata retrieval and published-parent check; current response returns the stored resource URL directly.
-- `app/modules/guest/api_13_users_me_avatar/models.py`: strict JSON Data URL request and `AvatarUploadResult` response model.
-- `app/modules/guest/api_13_users_me_avatar/validate.py`: Student Bearer guard plus strict Base64, MIME/signature and decoded-size validation.
-- `app/modules/guest/api_13_users_me_avatar/view.py`: upload orchestration and safe storage-failure mapping without database access.
+- `app/modules/student/api_13_users_me_avatar/models.py`: strict JSON Data URL request and `AvatarUploadResult` response model.
+- `app/modules/student/api_13_users_me_avatar/validate.py`: Student Bearer guard plus strict Base64, MIME/signature and decoded-size validation.
+- `app/modules/student/api_13_users_me_avatar/view.py`: upload orchestration and safe storage-failure mapping without database access.
 - `app/service/object_storage/avatar.py`: lazy, injectable S3-compatible avatar provider backed by process environment and public URL base.
-- `app/modules/guest/api_14_users_me_profile/view.py`: Student profile update; consumes `avatar_url` submitted in the follow-up request.
+- `app/modules/student/api_14_users_me_profile/view.py`: Student profile update; consumes `avatar_url` submitted in the follow-up request.
 - `app/modules/mentor/api_46_mentor_courses/`: API #46 Mentor query, role validation, direct-owner SQL and course-list response orchestration. It requires numeric JWT `sub` with role `MENTOR`; the query scopes `courses.mentor_id` to that subject and optionally filters `DRAFT`/`PUBLISHED`.
 - `app/modules/mentor/api_47_mentor_lectures_create/`: API #47 Mentor lecture creation; shared `MENTOR` JWT guard, direct `courses.mentor_id` ownership check without course-status filtering, scoped `uploads` metadata resolution, decimal-string content mapping, `PUBLISHED` insert and caller-owned transaction. Local tests cover the HTTP contract; live DB schema remains unverified.
 - `app/modules/mentor/api_48_mentor_lecture_detail/`: API #48 Mentor lecture detail; shared `MENTOR` JWT guard, direct course-owner check, nullable Lecture content mapping, ordered `lesson_uploads`/`uploads` projection and catalog 401/403/404/500 outcomes. Local tests cover the HTTP contract; live DB/migration state remains unverified.
@@ -84,10 +69,10 @@ without a current implementation remain unwired.
 - `app/modules/mentor/api_57_mentor_submissions_feedback/`: API #57 feedback mutation; shared MENTOR guard, locked direct-owner submission, feedback-only update, preserved score/status and constrained UploadAsset projection. `feedback_text` is a DERIVED wire key; required `attachments` is accepted opaquely but not persisted because no target is supported. Fake-DB tests and checked-in DDL do not verify live schema.
 - `app/modules/mentor/api_58_mentor_support_requests/`: API #58 read-only Mentor support-request collection; shared MENTOR guard, direct `courses.mentor_id` scope, no pagination, AND-combined exact filters, full chronological message threads and constrained linked UploadAsset projection. The legacy BIGINT schema/migration, collection cardinality and support detail projection are DERIVED fallbacks; focused HTTP tests use fake DB rows and do not verify live schema or deployment.
 - `app/modules/mentor/api_59_mentor_support_request_detail/`: API #59 read-only Mentor support-request detail; reuses API #58 response models, shared MENTOR auth, raw signed-int64 parsing, direct course-owner check, full ordered thread and constrained UploadAsset projection. The BIGINT support schema and detail policies are DERIVED from API #58; focused tests use fake DB rows and do not verify live schema or deployment.
-- `app/modules/student/api_34_uploads/`: API #34 role/purpose validation, ACTIVE-enrollment/direct-owner checks, S3 object upload, legacy `uploads` metadata INSERT and transaction orchestration for Student submissions and Mentor lectures.
+- `app/modules/shared/api_34_uploads/`: API #34 role/purpose validation, ACTIVE-enrollment/direct-owner checks, S3 object upload, legacy `uploads` metadata INSERT and transaction orchestration for Student submissions and Mentor lectures.
 - `app/service/object_storage/upload.py`: lazy injectable S3-compatible stream uploader and best-effort delete adapter for API #34; uses the existing Object Storage environment configuration.
-- `app/modules/guest/_shared/course_catalog/models.py`: shared course, mentor and pagination response contracts.
-- `app/modules/guest/_shared/course_catalog/helpers.py`: shared sort, course mapping and safe error helpers.
+- `app/modules/shared/course_catalog/models.py`: shared course, mentor and pagination response contracts.
+- `app/modules/shared/course_catalog/helpers.py`: shared sort, course mapping and safe error helpers.
 - `app/modules/guest/api_02_auth_verify_email_send/models.py`: strict public `user_id` and `email` request contract.
 - `app/modules/guest/api_02_auth_verify_email_send/view.py`: provider dispatch orchestration and canonical response/error mapping without DB access.
 - `app/service/email/provider.py`: injectable verification-email provider Protocol, result type and development stub.
@@ -108,13 +93,12 @@ No current source establishes:
 
 - chat log business flow;
 - real Email Provider delivery, verification token/link generation or retry worker;
-- catalog endpoints not listed in `apis/declared-routes.md`; this includes AC-16
-  quiz/attempt APIs #28–#32 and Admin APIs #93–#103. The route inventory is the
-  source of truth for exact unwired paths.
+- Admin moderation APIs #99–#100 or report APIs #101–#103. These endpoints are absent from the current router and their DDs remain Draft with unresolved contract/auth/schema questions;
+- an AI business route. The declared route inventory is the source of truth for exact unwired paths.
 
 ## Runtime compatibility repairs
 
-1. `app.api.v1` imports the existing `app.modules.guest` package.
+1. `app.api.v1` imports role-aligned `admin`, `guest`, `mentor`, `student` and `shared` packages for current numbered APIs #01–#98.
 2. `responses.py` exposes `success_response` and `error_response(...)`; the latter directly builds an error `JSONResponse`.
 3. `TraceIdMiddleware` uses the current trace helper names.
 

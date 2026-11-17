@@ -56,7 +56,7 @@
 - DD tách riêng 401/403, prototype/current source/target behavior; mọi API field, business code, route và response bám source hoặc đánh dấu blocker/discrepancy.
 - Có input → validation/permission → API/nội bộ → response mapping → state update → outcome/exceptions cho từng event; không coi HTML timer là API call.
 - Có ma trận state/loading/error/refresh failure/offline/copy failure và điều kiện điều hướng; mọi `returnTo` an toàn.
-- `DD BLOCKED` đến khi chốt production content/state mapping, 401 recovery policy (kể cả profile-missing/repeated 401), token persistence/refresh outcome, safe-route fallback và SH-02/G-14 login handoff; `IMPLEMENTATION BLOCKED` do thiếu Study Web source và các quyết định trên; `RUNTIME NOT VERIFIED`.
+- `DD BLOCKED` đến khi chốt production content/state mapping, 401 recovery policy (kể cả profile-missing/repeated 401), token persistence/refresh outcome, safe-route fallback và SH-02/G-14 login handoff; `IMPLEMENTATION BLOCKED` do SH-05 route/error-context integration chưa có và các quyết định trên; `RUNTIME NOT VERIFIED`.
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Không chạy app test trong task chuyển đổi tài liệu.

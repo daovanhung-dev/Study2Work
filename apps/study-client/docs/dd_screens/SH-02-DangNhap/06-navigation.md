@@ -2,8 +2,8 @@
 
 ## 1. Route definition
 - Current route in inventory: `/login`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
+- Status: `/login` is wired to SH02Page through the Shared layout; route test passes. Browser runtime is not verified.
+- Route params/types: Không có route param được biểu diễn trong inventory string; SH02Page hiện không đọc returnTo.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
@@ -54,7 +54,7 @@ HTML hiện chỉ có liên kết đăng ký trong các đích màn hình đư�
 
 | Liên kết / chuyển tiếp | Đích | Nguồn quy định đích | Trạng thái hiện tại |
 |---|---|---|---|
-| Liên kết đăng ký | SH-03 /register | href hiện tại trong HTML và danh mục | Route client đề xuất; chưa có router Study Web |
+| Liên kết đăng ký | SH-03 /register | href hiện tại trong HTML và danh mục | Local direct-route Chrome smoke rendered `SH03Page` and form; deployed runtime unverified |
 | Đăng nhập học viên thành công | returnTo an toàn; nếu không có thì /student đề xuất | §2.1 và §6.2 trong danh mục | Guard/đích mặc định chưa triển khai hoặc duyệt |
 | Đăng nhập người hướng dẫn/quản trị viên thành công | Chưa xác định | Điều kiện chặn vai trò G-02 | Dừng trước #04; không đoán vỏ giao diện theo vai trò |
 | Quên mật khẩu | Chưa có | Không có endpoint/màn hình trong danh mục hiện tại | Không tự thêm |
@@ -81,7 +81,7 @@ HTML hiện chỉ có liên kết đăng ký trong các đích màn hình đư�
 
 | Liên kết / chuyển tiếp | Đích | Nguồn quy định đích | Trạng thái hiện tại |
 |---|---|---|---|
-| Liên kết đăng ký | SH-03 /register | href hiện tại trong HTML và danh mục | Route client đề xuất; chưa có router Study Web |
+| Liên kết đăng ký | SH-03 /register | href hiện tại trong HTML và danh mục | Local direct-route Chrome smoke rendered `SH03Page` and form; deployed runtime unverified |
 | Đăng nhập học viên thành công | returnTo an toàn; nếu không có thì /student đề xuất | §2.1 và §6.2 trong danh mục | Guard/đích mặc định chưa triển khai hoặc duyệt |
 | Đăng nhập người hướng dẫn/quản trị viên thành công | Chưa xác định | Điều kiện chặn vai trò G-02 | Dừng trước #04; không đoán vỏ giao diện theo vai trò |
 | Quên mật khẩu | Chưa có | Không có endpoint/màn hình trong danh mục hiện tại | Không tự thêm |

@@ -1,5 +1,11 @@
 # AD-06 — Data Flow & State
 
+## Current Study Web source follow-up (2026-11-17)
+
+`admin.routes.ts` maps `/admin/courses` to AD06Page. AD06Page calls AD06ApiService → AdminApiService (Admin Bearer token) → GET #73 and maps the response into rows and pagination. Returned rows link to AD-07 by `Course.id`. Local dev-server route returned HTTP 200, but browser/authenticated screen and live API/DB behavior remain `NOT VERIFIED`.
+
+
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|
@@ -46,7 +52,7 @@ API #73 catalog không liệt kê 404. Không có mutation, idempotency key ho�
 
 | State | Điều kiện vào | UI / element liên quan | Thoát state |
 |---|---|---|---|
-| `UNWIRED` | Current Study Web source/router/client vắng mặt; đây là status triển khai, không phải server response. | Prototype assets tĩnh; không gọi API. | Khi app route/client được triển khai và xác minh. |
+| `SOURCE_WIRED_RUNTIME_UNVERIFIED` | Checked-in Admin route/page/API caller; this is implementation evidence, not a server response. | API-backed list UI; authenticated browser/live API/DB runtime not verified. | Verify through approved authenticated browser/runtime. |
 | `INITIAL` | Entry target trước request. | Khởi tạo page=1, no filter theo contract; giữ controls không supported disabled. | Gửi #73 → `LOADING`. |
 | `LOADING` | #73 request đang chờ. | Skeleton/indicator cần theo approved design system; prototype pulse icon không phải loading contract. | 200 → `READY`/`EMPTY`; lỗi → state tương ứng. |
 | `READY` | HTTP 200, `items.length>0`, envelope/model hợp lệ. | Hiển thị row field có API mapping; pagination metadata từ response. | Filter/page change → `LOADING`; chọn row → AD-07. |

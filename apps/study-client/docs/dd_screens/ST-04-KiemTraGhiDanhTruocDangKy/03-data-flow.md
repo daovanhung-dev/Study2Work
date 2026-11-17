@@ -15,36 +15,35 @@
 
 ### Luồng dự kiến theo AC-12
 
-1. Student đăng nhập rồi vào route đề xuất ST-04. Route và session guard chưa tồn tại trong Study Web; cách nhận dạng `courseId` cũng chưa được chốt.
+1. Student is expected to be logged in, then enters `/student/enroll/:courseId`. The route exists, but Study Web still has no Student session guard; `courseId` is passed as a path string.
 2. Sau khi có `course_id:int64` hợp lệ, gọi API #08 để đọc course công khai đã `PUBLISHED`. #08 không yêu cầu Bearer theo catalog.
 3. Nếu #08 trả thành công, lấy `data.items[0]`. Response singleton vẫn có `pagination`; category không được trả. `price` là decimal string; không tự đổi thành tiền hiển thị nếu chưa có currency/format rule.
-4. Chỉ sau khi có danh tính/selection contract đã được phê duyệt, gọi #15. Hợp đồng hiện tại chỉ định Public GET theo `course_id`; không đủ để quyết định enrollment nào thuộc Student hiện tại.
+4. Do not call #15 yet. Current Study Server source resolves a valid Student Bearer token but silently falls back to any enrollment when the token is absent or invalid, which conflicts with the Public contract and Student-specific decision.
 5. Khi backend xác định nhánh: enrollment đã tồn tại → điều hướng nhánh Khóa học của tôi; chưa có enrollment và rule miễn phí được xác nhận → POST #19; nhánh trả phí → ST-05 tạo Order qua #16, tiếp ST-06 tạo payment qua #17.
 6. Kết quả giao dịch cần được xác minh bởi server. AC-12 có node #18 operation-status nhưng node này không nối trong diagram; chưa thể chốt thứ tự/gating #18 so với #19.
-7. Chỉ sau khi entitlement/payment được xác nhận phía máy chủ mới tạo enrollment theo #19 và tải lại bằng #20 tới Khóa học của tôi (ST-08). #19/#20 hiện chưa có source thực thi trong Study Server.
+7. Only after server-side entitlement/payment confirmation may #19 create enrollment and #20 reload My Courses (ST-08). Study Server now has routes for #19/#20, but their current runtime responses and the approved flow are not yet established by ST-04.
 8. Với lỗi #08/#15, trạng thái hiển thị và điều hướng lỗi phải theo contract sau khi được chốt. Copy lỗi đang có trong HTML là nội dung tĩnh, không được ánh xạ thành lỗi API. Không có retry, timeout, cache, chống gửi trùng ở client hoặc chính sách phiên hết hạn hiện hành.
 
 ### Hành vi hiện tại
 
-1. Tệp HTML tĩnh hiển thị trang ngay khi mở, không đọc URL để lấy course ID và không kiểm tra authentication/authorization.
-2. Không khởi tạo API hoặc dữ liệu động; card báo “Chưa thể xác nhận thông tin ghi danh” luôn hiển thị trong prototype.
+1. Study Web reads `courseId` from the route and calls #08 through the existing Guest course-detail service.
+2. A published-course response leads to the enrollment gate; #08 404 maps to not-found; other errors map to a generic error. The page never calls #15 or infers enrollment state.
 3. Người dùng chỉ có các anchor trong shell/breadcrumb/footer và CTA quay lại `/courses`. Điều hướng client-side, giữ lại filter/course context, và route đích trong runtime chưa được xác minh.
-4. Study Web hiện không có mã nguồn route hoặc API #15. Vì vậy không có response, state, cache, session-expiry behavior hay enrollment result runtime để khẳng định.
+4. Study Server has current #15 source, but its unauthenticated/invalid-token fallback can return another user's enrollment. The client does not call it. Session-expiry behavior, identity selection and enrollment outcomes remain unverified.
 
 ### Trích từ DD nguồn: E. Ma trận trạng thái và điều hướng
 
 | State | Điều kiện vào / nguồn | Hành vi và state kế tiếp | Tình trạng |
 |---|---|---|---|
-| `unwired` | Study Web không có app router/source cho ST-04 | Không có runtime transition để xác nhận | Current |
+| `course-loading` | Route invokes #08 | Loading status while public course detail is requested | Current FE source |
 | `prototype-static-error` | Mở trực tiếp `code.html` | Luôn hiện #9/#10 và CTA #11; không gọi API | Current HTML only |
-| `route-input-pending` | Route candidate nhận `courseId` | Chờ quy tắc `courseId`→`course_id:int64` và Student guard | Expected, chưa implement |
-| `course-loading` | #08 được gọi | Chờ 200/404/500 từ #08 | Expected, chưa có UI |
-| `course-unavailable` | #08 trả 404 | Course không tồn tại, ID sai, hoặc chưa `PUBLISHED`; đích/wording riêng chưa có | Backend source-backed; UI decision missing |
-| `course-error` | #08 trả 500 | Không thể đọc/map course; hiện chưa có error UI contract | Backend source-backed; UI decision missing |
-| `enrollment-check-blocked` | #08 thành công nhưng #15 identity chưa chốt | Không gọi #15 theo selection suy đoán; không branch | Current design blocker |
+| `route-input-pending` | `/student/enroll/:courseId` receives `courseId` | Raw string is passed to #08; Student guard is still missing | Current FE source |
+| `course-unavailable` | #08 returns 404 | Course does not exist, ID is invalid, or it is not `PUBLISHED`; show not-found state | Current FE source |
+| `course-error` | #08 returns another HTTP/envelope error | Show generic course-load error | Current FE source |
+| `enrollment-check-blocked` | #08 succeeds but #15 identity contract is unsafe/unresolved | Do not call #15 or branch; show enrollment gate | Current FE source |
 | `already-enrolled` | Backend xác định đúng enrollment thuộc Student | Nhánh Khóa học của tôi/ST-08 theo AC-12; payload/navigation chưa chốt | Expected only |
-| `free-enrollment` | Server xác nhận chưa ghi danh + free/eligible | #19; tiếp #20 rồi ST-08 | Expected only; APIs #19/#20 chưa source-backed |
-| `paid-checkout` | Server xác nhận nhánh trả phí | ST-05/#16 → ST-06/#17; payment proof server-side | Expected only; APIs #16–#18 chưa source-backed |
+| `free-enrollment` | Server confirms no enrollment and free/eligible | #19; then #20 and ST-08 | Expected only; APIs #19/#20 routes exist but flow/contracts are not approved |
+| `paid-checkout` | Server xác nhận nhánh trả phí | ST-05/#16 → ST-06/#17; payment proof server-side | Expected only; routes #16–#18 exist but the flow remains gated |
 | `session-expired-or-forbidden` | AC-12 Student precondition không còn hợp lệ | Redirect/401/403 destination và return path cần contract | Unspecified; #08/#15 hiện public trong catalog |
 | `back-to-courses` | Click #11 | `/courses`; không giữ query/context | Prototype link only |
 

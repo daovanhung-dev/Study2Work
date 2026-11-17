@@ -1,5 +1,7 @@
 # AD-20 — Kế hoạch đặc tả soạn/gửi thông báo hệ thống
 
+> **Current source snapshot (2026-11-16):** Angular route/page `/admin/notifications/new` is source-wired and supports only a local title/content preview. There is no API #93 caller; audience/channel/priority and draft/send remain disabled. API #18 has a notification-only UUID/sender lookup, but the client does not call it and canonical ID/owner/response decisions remain open. Runtime, live DB and provider delivery are not verified. UI/event details below describe the Stitch artifact unless stated otherwise.
+
 ## Mục tiêu và phạm vi
 
 Hoàn thiện riêng AD-20 theo inventory row 78, AC-36 và API #93. Giữ nguyên ảnh/HTML nguồn; lập marker map cho mọi thành phần giao diện nhìn thấy; mô tả A–F, sự kiện, API, trạng thái và liên kết bằng cách tách expected contract khỏi current source. Không xử lý AD-21.
@@ -7,19 +9,19 @@ Hoàn thiện riêng AD-20 theo inventory row 78, AC-36 và API #93. Giữ nguy�
 | Thuộc tính | Expected / nguồn thiết kế | Current evidence |
 |---|---|---|
 | Actor / quyền | Inventory/AC-36: Admin có quyền notification-management. | #93 route dùng shared role guard `ADMIN`; không có fine-grained permission hoặc scope. Đây là fallback hiện hành, chưa chứng minh tương đương AC-36. |
-| Route / liên kết | Inventory candidate `/admin/notifications/new`; từ AD-19; liên quan AD-21 và SH-07. | Study Web không có app source/router/API client. Mockup links dùng `#`; AD-19 HTML CTA dùng `/admin/notifications/create`, cũng chưa wired. |
+| Route / liên kết | Inventory route `/admin/notifications/new`; từ AD-19; liên quan AD-21 và SH-07. | Angular route/page maps to `AD20Page`; no API client caller exists. Stitch mockup links use `#`; its historical AD-19 CTA uses `/admin/notifications/create`. |
 | API #93 | `POST /api/v1/admin/notifications`, Bearer JWT/Admin; recipients?:int64[], segment?:AudienceSegment, title/content/channels required; catalog response `ApiEnvelope<Notification>` at 202. | Local source requires explicit recipient IDs, rejects segment and non-unique/unsupported channels, uses `PUSH|EMAIL`, and returns first Notification plus derived `meta.operation_id:UUID`/`notification_ids`. API DD remains Draft — Needs Confirmation. |
-| Operation handoff | Inventory: conditionally open SH-07 only if an `operation_id` is returned; accepted is not delivered. | Catalog #93/AC-36 Notification response conflicts with operation-tracking prose. API #18 row path is int64 while reusable Operation/AC/producer metadata use UUID; #18 has no Study runtime handler/store. SH-07 blocks this handoff. |
+| Operation handoff | Inventory: conditionally open SH-07 only if an `operation_id` is returned; accepted is not delivered. | Catalog #93/AC-36 Notification response conflicts with operation-tracking prose. API #18 catalog path is int64 while reusable Operation/AC/current local source use UUID. A local notification-only #18 handler queries by UUID and authenticated sender; SH-07 client handoff remains blocked by canonical ID/owner/lifecycle decisions. |
 | Audience/channel/model | AC-36 shows recipients and conditional Push/Email delivery; inventory mockup shows all users/students/staff and app/email. | Segment predicate, role eligibility, in-app→channel mapping and approved Admin persistence/grain are unresolved. Local legacy BIGINT notification/outbox is a candidate only; no provider/worker call. |
-| UI prototype | Mockup depicts title, segment, channel, body, priority, draft/send, preview and accepted/correlation/delivered workflow. | Only title/body input listeners update preview text. Other fields are static browser controls; toolbar/buttons/links have no handlers; Send is disabled. Workflow/priority/permission/SMTP claims are static. |
-| Runtime | — | Study Web is UNWIRED; source image and HTML are design artifacts; no frontend/API runtime verification in this task. |
+| UI prototype | Mockup depicts title, segment, channel, body, priority, draft/send, preview and accepted/correlation/delivered workflow. | Current Angular page updates a local preview; recipient/channel/priority controls and draft/send actions are disabled. Stitch artifact's static workflow/priority/permission/SMTP claims are not runtime behavior. |
+| Runtime | — | Angular route/page source exists; browser/auth runtime, live DB, deployment and provider delivery are not verified. |
 
 ## Source review and order
 
 1. Read list_screen row 78, API reverse index #093, flow F13 and G-12 in `apps/study-client/docs/list_screen.md`; read global row/checkpoint in `dd_screens/PLAN.md`.
 2. Compare AC-36 create/send branch, direct API catalog #93, reusable Notification/Operation schemas and generic operation-tracking prose.
 3. Read API #93 DD, Q-93-01…10 and verification report; preserve Draft/open-question status.
-4. Trace current route → shared ADMIN guard → validator → recipients query → notification/delivery inserts → response/commit/errors; inspect tests without running them. Treat checked-in DDL/migration only as candidates.
+4. Trace current route → shared ADMIN guard → validator → recipients query → notification/delivery inserts → response/commit/errors. Focused source tests were run in T009 (AD-20 2/2; #93/#18 34/34); treat fake DB and checked-in DDL/migration only as source evidence, not live schema proof.
 5. Check API #18 design/current registration and SH-07 handoff. Preserve Notification-vs-Operation and UUID-vs-int64 discrepancies; do not assert a valid operation poll.
 6. Recheck Study Web source tree and inspect exact HTML/screenshot; compare the intended style only with `.agents/web-study/design.md`.
 7. The source review and status were recorded in `.agents/worklog/2026-11-07/design-study-screen-ad20.md`. This plan is saved before marker JSON/SVG, annotated PNG or AD-20.md.
@@ -87,8 +89,8 @@ Source coordinate space: 1242×1600 pixels, origin top-left. Markers describe 54
 
 ## Event và dữ liệu cần đặc tả trong DD
 
-1. EV-01 — Initial route/load: inventory route `/admin/notifications/new` is candidate only. There is no Study Web router/runtime. Do not claim an API call, auth gate or initial data request exists. A future implementation requires approved Admin permission and #93 mapping.
-2. EV-02 — Shell/breadcrumb/return/footer navigation: visible anchors use `href="#"`; no target route is wired. AD-19 is the expected predecessor, AD-21 is a related consumer, and SH-07 is blocked by the operation contract. Do not infer browser history, route params or transfer data.
+1. EV-01 — Initial route/load: current Angular source declares `/admin/notifications/new` → `AD20Page`; it has no initial API call. Auth/permission runtime is not verified. A future send implementation requires approved Admin permission and #93 mapping.
+2. EV-02 — Shell/breadcrumb/return/footer navigation: Stitch artifact anchors use `href="#"`; current Angular return links route to `/admin/notifications`. AD-19 is the expected predecessor, AD-21 is a related consumer, and SH-07 is blocked by the operation contract. Do not infer browser history or transfer data.
 3. EV-03 — Title input: native input; the only current effect is trimming for preview display and replacing preview title with fallback copy when blank. No submit validation or API request runs.
 4. EV-04 — Audience radio change: default `all` card is checked; the other cards are learner/staff. Selection changes only native control state; no IDs, enum token, predicate or role eligibility are resolved. #93 currently rejects any supplied `segment` and needs explicit recipient IDs; do not translate a card to a recipient list.
 5. EV-05 — Channel checkbox change: app/in-app is checked; Email is disabled with a mock SMTP notice. There is no handler. Catalog #93 does not enumerate channel tokens; local fallback accepts only `PUSH|EMAIL`, so `In-app Feed` cannot be mapped without approval.
@@ -103,12 +105,12 @@ Source coordinate space: 1242×1600 pixels, origin top-left. Markers describe 54
 ## Blocker cần giữ mở
 
 - Catalog/AC-36 #93 response is `Notification`; generic operation-tracking prose says `Operation`; local source uses first Notification plus derived UUID metadata. Preserve all three shapes as a discrepancy.
-- #18 `operation_id` row is int64; reusable schema, AC diagrams and #93 metadata use UUID. No generic Study Operation store/route exists. SH-07 cannot be opened based solely on the current metadata.
+- #18 `operation_id` catalog row is int64; reusable schema, AC diagrams and current local source use UUID. No generic Study `operations` table exists; the current #18 route/query is notification-only and sender-bound. SH-07 cannot be opened based solely on derived metadata.
 - AC-36 notification-management permission differs from the current shared `ADMIN` guard; no tenant/scope/eligibility rule exists.
 - Audience segment tokens/predicates, recipient eligibility, campaign-vs-recipient grain, selected channel set and app-to-PUSH mapping are unapproved. Current local validator/outbox rules are fallback only.
 - No request field chooses draft vs send or carries priority/schedule. Local #93 commits QUEUED rows but does not call a provider or worker; delivery is not verified.
 - API #93 direct Notification response contract, validation/error triggers, local legacy BIGINT target and live migration/schema approval remain open.
-- Study Web UI/router/API client is absent; screenshot controls and navigation are design-only. Static preview and technical claims are not runtime behavior.
+- Angular Study Web route/page and local preview source exist; no API caller is wired. Screenshot controls/navigation remain design references, and static preview/technical claims are not runtime behavior.
 
 ## Acceptance audit to perform
 

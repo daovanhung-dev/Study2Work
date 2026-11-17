@@ -12,23 +12,24 @@
 - API refs trong inventory: #18
 - Orchestration/data notes: Chỉ GET #18 nếu đã có operation_id do BE xác nhận; không tự sinh ID, stop theo terminal state.
 - BE/source status và gate: **D**; **BLOCK:** Operation status enum/ID mapping còn mâu thuẫn
+- Current Study Web source: SH-07 route/page renders an unavailable gate only; `API_018` remains `UNWIRED` and no API request is sent. The backend source remains notification-specific, not a generic payment/notification/export operation contract.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: 5. Đặc tả API #18 và database
 
 | Thuộc tính | Expected design | Current source |
 |---|---|---|
-| Method/endpoint | `GET /api/v1/operations/{operation_id}` | Không có route API #18 trong `apps/study-server/app/api/v1.py`. |
-| Authentication | Bearer JWT | Không có endpoint runtime để thực thi auth. |
-| Authorization | Catalog row: operation owner; tracking summary thêm Admin; diagrams ghi Student/Mentor/Admin owner-only. | Không có generic guard/predicate. API #64 chỉ chứng minh Mentor sender scope cho notification route riêng. |
+| Method/endpoint | `GET /api/v1/operations/{operation_id}` | Router wires API #18; OpenAPI declares UUID path. |
+| Authentication | Bearer JWT | Shared guard accepts `STUDENT`, `MENTOR`, `ADMIN` per AC diagrams; the missing required role argument was fixed and tested. |
+| Authorization | Catalog row: operation owner; tracking summary thêm Admin; diagrams ghi Student/Mentor/Admin owner-only. | Current query binds `operation_id` and authenticated `owner_id`; no Admin ownership bypass. Missing/non-owned rows map to 404 in current source. Contract discrepancy remains open. |
 | Path | Required `operation_id`; API row int64. | AC diagrams và reusable schema UUID; type conflict mở. Invalid-path status không thể chốt. |
-| Query/body | Không khai báo. | Không áp dụng khi endpoint chưa tồn tại. |
-| Success | 200 `DESIGN_OPERATION_RETRIEVED`; `ApiEnvelope<Operation>`. | Không có runtime response. #63 response là Operation-like; #93 response là Notification + meta operation id. |
+| Query/body | Không khai báo. | No query/body; current handler performs one owner-bound notification/outbox aggregate query. |
+| Success | 200 `DESIGN_OPERATION_RETRIEVED`; `ApiEnvelope<Operation>`. | Local source returns `NOTIFICATION_DISPATCH` with `QUEUED`/`FAILED`/`SENT`; this notification-only DTO does not resolve generic per-kind response shape. #93 still returns Notification + operation metadata. |
 | Response shape | `id`, `kind`, `status`, `owner_id`, `submitted_at`, `updated_at`, optional `completed_at`, optional `result?:Payment`. | Enum, physical mapping, optional field rules, result by operation kind và timestamp semantics chưa chốt. |
-| Errors | 401/403/404/500 với business code ở contract. | Không có runtime mapping #18. Wrong-owner 403 vs hidden 404 còn mở. 500/network không được đổi thành 404. |
+| Errors | 401/403/404/500 với business code ở contract. | Local tests cover 401/403/404/500. Missing/non-owned operation currently returns 404; catalog semantics and wrong-owner policy remain open. |
 | Caching/retry | Chưa có rule. GET không làm mutation; không tự thêm retry/idempotency/cache. | Không có client implementation. |
 | Polling | Inventory yêu cầu dừng theo terminal; cadence/retry/terminal enum chưa có. | Không poll. 3000ms/backoff và `/operations/{id}/stream` là HTML prototype only. |
-| Persistence | Study `Operation` là logical schema. | `DB.sql` không có `operations` table. Migration 009 thêm `notifications.operation_id UUID`/index cho outbox; Work Server `operations` table không phải Study backing store. Live DB chưa xác minh. |
+| Persistence | Study `Operation` là logical schema. | `DB.sql` không có generic `operations` table. Current query derives notification operations from `notifications` and `notification_deliveries`; migration 009 adds notification `operation_id UUID`. Work Server `operations` table is not used. Live DB chưa xác minh. |
 
 `API #18` DD hiện ở trạng thái Draft/Needs Confirmation. Các câu hỏi Q-18-01…Q-18-05 (ID, owner, storage/enums/lifecycle, per-kind result/producers, 403/404) phải được quyết định ở nguồn contract trước khi SH-07 chuyển sang DD READY.
 
@@ -49,7 +50,7 @@
 1. Caller (ST-06/ME-14/AD-20/AD-25 theo contract tương ứng) nhận một ID từ backend. Client chỉ điều hướng tới SH-07 sau khi ID field/path và producer response được thống nhất; không tự tạo ID và không suy từ notification ID sang operation ID.
 2. Router xác thực format theo kiểu ID đã được contract owner chốt. Hiện không có quyết định giữa UUID và int64; do đó chưa thể viết validator/canonicalizer.
 3. Backend phải thực thi Bearer authentication, role/ownership policy và lookup operation. SH-07 không tự xác thực quyền bằng `owner_id` trên client.
-4. Khi API #18 route/module/response được triển khai và contract đã chốt, client gửi một GET ban đầu. Không gửi query/body; không gọi API #18 hiện tại vì route chưa tồn tại.
+4. Backend route/module/query API #18 hiện tồn tại, nhưng client descriptor vẫn `UNWIRED` và contract còn mở. Chỉ sau khi ID/producer/response contract được duyệt, client mới gửi GET ban đầu; không gửi query/body.
 5. Client kiểm tra HTTP status, business code, envelope, field types và Operation status/kind theo canonical schema. Hiện các enum/result/ownership field mapping còn SOURCE_REQUIRED.
 6. Chỉ khi mapping status được phê duyệt mới render status thật, timestamp và hành động được phép. Không dựng %, countdown, kết quả thanh toán, sent count hoặc download URL nếu API không trả field được contract định nghĩa.
 7. Polling/SSE, cache, retry/backoff, interval, visibility/reconnect và điểm dừng phải được quyết định trước. HTML gợi ý hai cách nhưng không tạo contract.

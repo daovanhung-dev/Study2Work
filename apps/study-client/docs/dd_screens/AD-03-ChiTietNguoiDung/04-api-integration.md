@@ -11,7 +11,7 @@
 
 - API refs trong inventory: #69
 - Orchestration/data notes: Nhận `id` từ AD-02/#68 → GET #69; không đưa PII vào URL. #69 không trả audit/sync; không nhận diện `204/NULL_PAYLOAD` như success.
-- BE/source status và gate: **R**; **DD BLOCKED; IMPLEMENTATION BLOCKED:** #69 source-backed locally, nhưng ADMIN permission mapping, legacy/live schema, PII/enum/lifecycle và audit/retention policy còn mở; Study Web UNWIRED; prototype 204/audit/sync claims không được API #69 hỗ trợ; RUNTIME NOT VERIFIED
+- BE/source status và gate: **R**; route/page/API #69 caller có trong Study Web source; **DD/ACCEPTANCE BLOCKED** do ADMIN permission mapping, legacy/live schema, PII/enum/lifecycle và audit/retention policy còn mở. Prototype 204/audit/sync claims không được API #69 hỗ trợ; **RUNTIME NOT VERIFIED**.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: UserProfile mapping khả dụng từ API #69

@@ -4,9 +4,9 @@
 |---|---|
 | Screen ID | `AD-04` |
 | Module | Admin |
-| Route | `/admin/users/:userId/edit` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/admin/users/:userId/edit` — được khai báo trong Angular Admin router; deployment/runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `BLOCKED — API #70 body/role contract and user-management policies need approval`<br>; **Implementation:** `BLOCKED — Study Web is UNWIRED and product decisions remain open` · **Runtime:** `NOT VERIFIED` |
+| DD status | **DD:** `BLOCKED — API #70 body/role contract and user-management policies need approval`; **Source:** `PARTIAL — route/page/GET #69 present; no #70 client caller; save disabled`; **Acceptance:** `BLOCKED — body, role, permission, PII, schema and navigation decisions`; **Runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [AD-04.md](../../screen_stitch/05_admin/AD-04_chinh-sua-nguoi-dung/AD-04.md), [AD-04_PLAN.md](../../screen_stitch/05_admin/AD-04_chinh-sua-nguoi-dung/AD-04_PLAN.md), [AD-04_markers.json](../../screen_stitch/05_admin/AD-04_chinh-sua-nguoi-dung/AD-04_markers.json), [list_screen.md](../../list_screen.md) |
@@ -14,7 +14,7 @@
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Chỉnh field/role chỉ sau khi API body, permission và field ownership được duyệt; dirty state + cancel về AD-03.
 - In-scope: Numeric ID từ AD-03; GET #69 → PUT #70 → GET #69. Catalog/AC bỏ body; local strict body `full_name, phone, avatar_url, role` là `DERIVED`; không gửi email/status/adminNotes hoặc tự map `lecturer`.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Xem gate bên dưới; không suy ra source presence là production deployment, policy approval hoặc runtime verification.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,13 +31,13 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/ready/dirty/saving/validation-error/unauthenticated/forbidden/not-found/saved-refresh-error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source/runtime | Angular Admin route and AD04Page; GET #69 caller; page state `loading/loaded/error`; no PUT #70 caller; deployment/browser runtime | `PARTIAL SOURCE` / `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-04 source screen.png](../../screen_stitch/05_admin/AD-04_chinh-sua-nguoi-dung/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-04_chinh-sua-nguoi-dung/screen_annotated.png))
 - Luồng: Numeric ID từ AD-03; GET #69 → PUT #70 → GET #69. Catalog/AC bỏ body; local strict body `full_name, phone, avatar_url, role` là `DERIVED`; không gửi email/status/adminNotes hoặc tự map `lecturer`.
-- Priority: P1; Gate/source status: **R**; #70 source-backed locally nhưng body/role `DERIVED`; **DD BLOCKED; IMPLEMENTATION BLOCKED:** body approval, role/PII/permission/ID-route/gate policy và Study Web `UNWIRED`; **RUNTIME NOT VERIFIED**
+- Priority: P1; Gate/source status: **R**; #70 backend source-backed locally nhưng body/role `DERIVED`; **DD BLOCKED; PARTIAL SOURCE; WRITE FLOW BLOCKED:** AD04 route/page and GET #69 caller exist, no client PUT #70 call; body/role/PII/permission/ID-route/gate policy remain open; **RUNTIME NOT VERIFIED**
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -49,7 +49,8 @@
 
 > **Screen ID:** AD-04 · **Surface:** Page · **Priority:** P1<br>
 > **DD status:** `BLOCKED — API #70 body/role contract and user-management policies need approval`<br>
-> **Implementation:** `BLOCKED — Study Web is UNWIRED and product decisions remain open` · **Runtime:** `NOT VERIFIED`
+> **Source status:** `PARTIAL — route/page/GET #69 present; no PUT #70 caller; Save disabled`<br>
+> **Acceptance:** `BLOCKED — body, role, permission, PII, schema, and navigation decisions remain open` · **Runtime:** `NOT VERIFIED`
 
 ## Trích đoạn tổng quan từ DD nguồn
 
@@ -61,7 +62,7 @@
 |---|---|
 | Mục tiêu | Cho Admin chỉnh sửa các trường được hợp đồng và chính sách quản lý user cho phép. Inventory mô tả luồng `GET #69 → PUT #70 → GET #69`, dirty state và Cancel. |
 | Actor / quyền | Admin đã xác thực và có quyền quản lý user theo AC-31. Catalog ghi Bearer JWT/Admin; source cục bộ kiểm tra claim `ADMIN`. Việc claim này đáp ứng quyền AC-31 là fallback `DERIVED`, chưa được owner xác nhận. |
-| Route màn hình | `/admin/users/:userId/edit` theo inventory; đây là route đề xuất, chưa có Study Web router/client. API dùng `/api/v1/admin/users/{user_id}`. |
+| Route màn hình | `/admin/users/:userId/edit` theo inventory và được khai báo trong Angular Admin router. AD04Page đọc `userId` và tải profile qua API #69; API dùng `/api/v1/admin/users/{user_id}`. Runtime/deployment chưa xác minh. |
 | Điều kiện vào | AD-03 chuyển tiếp ID user số từ #68/#69. API #69 trả profile hợp lệ và các trường được phép hiển thị theo policy. Không dùng mã `USR-*`, email hoặc phone làm path. |
 | Điều kiện lưu | User-management policy, #70 request body, mapping role, PII và route/navigation được duyệt. Trong prototype hiện tại các trường và Save đều bị khóa. |
 | API | #69 `GET /api/v1/admin/users/{user_id}`; #70 `PUT /api/v1/admin/users/{user_id}`. Cả hai dùng Bearer JWT/Admin, path `user_id:int64!`, response `ApiEnvelope<UserProfile>`. #70 catalog/AC chưa khai báo body. |
@@ -87,7 +88,7 @@
 |---|---|---|
 | API #70 body | Body cần được catalog/API owner duyệt. | Catalog/AC bỏ trống body; model runtime có body strict bốn key (`full_name`, `phone`, `avatar_url`, `role`) và được ghi `DERIVED`; API DD còn Draft. |
 | Cập nhật | Chỉ sửa field/role được phê duyệt; không cập nhật email/status/notes nếu API không hỗ trợ. | Local query chỉ cập nhật `full_name`, `phone`, `avatar_url`, `role`, `updated_at`; không ghi audit và không thu hồi JWT role claim. |
-| UI | Chỉ bật edit/save khi có schema, permission, route và policy. | Prototype là HTML tĩnh; inputs/selects/textarea và Save disabled; không có client API call. Study Web hiện `UNWIRED`. |
+| UI | Chỉ bật edit/save khi có schema, permission, route và policy. | Current Angular AD04 page tải profile qua #69; các field controls và Save disabled, không có PUT #70 call. HTML prototype riêng không có client API call; runtime chưa xác minh. |
 | ID/điều hướng | Truyền numeric `user_id` từ AD-03 và quay về cùng user sau Cancel/success theo route được duyệt. | Ảnh dùng `USR-9281-VN`; Back đi `/admin/users/USR-9281-VN/details`; Cancel đi `/admin/users`. Không có ánh xạ ID hoặc router. |
 | Gate/audit/support | Chỉ hiển thị trạng thái có API/policy nguồn. | Gate, 85% sync, audit, SSO actor, compliance, RBAC-token, API verified và gửi yêu cầu đều là copy tĩnh, không có handler/endpoint #69/#70. |
 | Validation/auth order | Error behavior phải theo API contract được duyệt. | Typed body có thể bị FastAPI request validation từ chối trước khi view chạy auth guard; API DD/context nói auth trước body. Test source không phân định invalid body + auth lỗi; thứ tự chưa được xác minh. |

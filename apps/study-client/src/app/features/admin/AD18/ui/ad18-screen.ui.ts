@@ -4,7 +4,7 @@ export const AD18_UI: Pick<AdminScreenDefinition, 'id' | 'title' | 'eyebrow' | '
   "id": "AD18",
   "title": "Xóa bài kiểm tra",
   "eyebrow": "Quản lý bài kiểm tra",
-  "description": "Xem trạng thái cổng xác nhận. Màn hình chưa có dữ liệu đọc để đối chiếu Quiz hoặc lịch sử tác động.",
+  "description": "Chưa thể xác nhận thao tác vì chưa có dữ liệu Quiz, lịch sử liên quan và chính sách xóa được phê duyệt.",
   "mode": "delete",
   "actions": [
     {

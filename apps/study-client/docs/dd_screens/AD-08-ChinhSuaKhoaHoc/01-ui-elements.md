@@ -5,6 +5,8 @@
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.
 - Marker JSON nguồn: [AD-08_markers.json](../../screen_stitch/05_admin/AD-08_chinh-sua-khoa-hoc/AD-08_markers.json).
 
+> Marker labels and the element table below describe the numbered Stitch prototype. The current Angular implementation is separately traced here and in the source DD; prototype controls are not evidence of Angular behavior.
+
 ## 2. Danh sách phần tử
 | Marker | Element ID trong package | Source Element ID | Nhãn từ marker JSON |
 |---|---|---|---|
@@ -69,6 +71,14 @@
 | #59 | `AD-08-EL-059` | `not supplied in marker JSON` | Data privacy footer link |
 | #60 | `AD-08-EL-060` | `not supplied in marker JSON` | RBAC standards footer link |
 | #61 | `AD-08-EL-061` | `not supplied in marker JSON` | System technical support footer link |
+
+## 2.1 Current Angular source — 2026-11-16
+
+- Route: `/admin/courses/:courseId/edit` is declared in the Angular Admin router and loads `AD08Page`. The page preserves the route ID as a string, calls GET #74, and exposes `loading` / `loaded` / `error` states.
+- Identity/data: the route value appears as “ID khóa học”; GET #74 supplies title, nullable description, price, mentor, status, and nullable thumbnail URL. Mentor/status are read-only; the URL is text and is not loaded as an image.
+- Draft controls: title, description, and price update a component-memory draft and local preview. There is no dirty indicator or persistence. Thumbnail selection and Save are disabled; the page has no file input or PUT #75 caller.
+- Navigation: Angular Back/Cancel return to AD-07 with the raw route ID. The Stitch prototype's Back/Cancel links point to AD-06.
+- Runtime: browser/deployment behavior has not been verified.
 
 ## 3. Đặc tả từng element
 

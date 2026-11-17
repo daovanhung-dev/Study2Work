@@ -37,7 +37,7 @@ status: "Draft — Needs Confirmation"
 
 ## Tables read
 
-- Audience membership and Operation store — SOURCE_REQUIRED; no approved source found.
+- Audience membership — SOURCE_REQUIRED; no approved segment/eligibility source found. No generic Study `operations` table is defined; current local API #18 has a notification-only UUID lookup over `notifications.operation_id` and `notification_deliveries`, filtered by authenticated sender.
 
 ## Tables write
 
@@ -63,9 +63,9 @@ status: "Draft — Needs Confirmation"
 
 ## Conflicts
 
-- Notification vs Operation response and missing ID bridge: DISCREPANCY.
+- Notification vs Operation response and canonical ID/owner bridge: DISCREPANCY. A notification-specific local #18 query consumes the UUID written by #93, but this derived source behavior does not approve a generic Operation contract.
 - Conditional Send vs absent action field: DISCREPANCY.
-- API #18 operation_id is UUID in schema/diagram but int64 in its row.
+- API #18 catalog `operation_id` is int64 while schema/diagram and current route/OpenAPI use UUID; current owner-bound lookup remains notification-specific.
 
 ## Security note
 

@@ -1,5 +1,7 @@
 # GS-06 — Business Rules
 
+> **T022 current-source update (2026-11-17):** The only implemented rule is presentation gating: GS03 waits for #08 to confirm a published course, then renders a neutral unavailable status. No resource access or empty-list rule is inferred; no #11/#12 call or resource action is enabled.
+
 ## 1. Rule index
 | Rule ID (package alias) | Tên / source ID | Áp dụng | Thực thi | Tests |
 |---|---|---|---|---|
@@ -7,7 +9,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Tài nguyên public theo khóa học; thể hiện quyền mở/tải theo metadata từ BE.
-- Gate/status (giữ nguyên): **D (#11) / R (#12 source-backed locally; API DD Draft)**; **BLOCK:** #11 chưa có route/module/test và catalog trả `Resource` đơn, thiếu collection/empty/order/pagination contract; thiếu nguồn `visibility`; AC-06 public-or-authorized/403/private signed URL khác catalog và #12 hiện tại public/no-auth/direct URL, chỉ gate parent khi `lesson_id` có giá trị; không có 410/TTL/signer; legacy DDL có `resources` nhưng V1-PILOT không có bảng này; list/loaded/error UI và Study Web route UNWIRED; prototype lệch Study design target, WCAG chưa đo; live schema/deployment chưa xác minh
+- Gate/status (giữ nguyên): **GS06 PARTIAL PRESENTATION SOURCE; API #11/#12 DD Draft; resource flow BLOCKED.** #11 source exists locally but returns only the first row as singleton, contrary to DD mapping rule; `visibility`, collection/empty/order/pagination and access policy remain unresolved. #12 is public/no-auth/direct URL with conditional parent check only for non-null `lesson_id`; AC-06 403/private signer and 410/TTL are unsupported. Legacy DDL has `resources`, V1-PILOT does not; live schema/deployment unknown. No resource API request or action is enabled in GS06.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 > CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.

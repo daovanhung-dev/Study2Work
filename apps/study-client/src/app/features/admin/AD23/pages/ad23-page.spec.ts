@@ -38,11 +38,26 @@ describe('AD23Page', () => {
 
     const request = http.expectOne('/api/v1/admin/discussions/701');
     expect(request.request.headers.get('Authorization')).toBe('Bearer access-token-1');
-    request.flush(successEnvelope(page([
-      discussion(701, 'Nội dung thảo luận cần xem xét.', [
-        comment(702, 701, 'Trần Bình', 'Tôi xin bổ sung một chi tiết.', '2026-11-13T10:30:00Z'),
-      ]),
-    ], 1, 1, 1)));
+    request.flush(
+      successEnvelope(
+        page(
+          [
+            discussion(701, 'Nội dung thảo luận cần xem xét.', [
+              comment(
+                702,
+                701,
+                'Trần Bình',
+                'Tôi xin bổ sung một chi tiết.',
+                '2026-11-13T10:30:00Z',
+              ),
+            ]),
+          ],
+          1,
+          1,
+          1,
+        ),
+      ),
+    );
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
@@ -57,6 +72,15 @@ describe('AD23Page', () => {
     const actions = root.querySelectorAll<HTMLButtonElement>('.action-item button');
     expect(actions.length).toBe(3);
     expect([...actions].every((button) => button.disabled)).toBe(true);
+    for (const button of actions) {
+      const reasonId = button.getAttribute('aria-describedby');
+      const reason = reasonId ? root.querySelector<HTMLElement>(`#${reasonId}`) : null;
+
+      expect(reasonId).toBeTruthy();
+      expect(reason).not.toBeNull();
+      expect(button.closest('.action-item')?.contains(reason)).toBe(true);
+      expect(reason?.textContent?.trim()).not.toBe('');
+    }
   });
 
   it('preserves the int64 route ID as text and avoids displaying it inaccurately', async () => {
@@ -67,9 +91,9 @@ describe('AD23Page', () => {
     await fixture.whenStable();
 
     const request = http.expectOne('/api/v1/admin/discussions/9007199254740992');
-    request.flush(successEnvelope(page([
-      discussion(9007199254740992, 'Nội dung mã lớn', []),
-    ], 1, 1, 1)));
+    request.flush(
+      successEnvelope(page([discussion(9007199254740992, 'Nội dung mã lớn', [])], 1, 1, 1)),
+    );
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
@@ -83,7 +107,9 @@ describe('AD23Page', () => {
     fixture.detectChanges();
     await fixture.whenStable();
 
-    http.expectOne('/api/v1/admin/discussions/701').flush({}, { status: 404, statusText: 'Not Found' });
+    http
+      .expectOne('/api/v1/admin/discussions/701')
+      .flush({}, { status: 404, statusText: 'Not Found' });
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
@@ -96,21 +122,27 @@ describe('AD23Page', () => {
     const login = firstValueFrom(
       TestBed.inject(AdminSessionService).login('admin@example.test', 'password'),
     );
-    http.expectOne('/api/v1/auth/login').flush(successEnvelope({
-      full_name: 'Admin User',
-      email: 'admin@example.test',
-      role: 'ADMIN',
-      access_token: 'access-token-1',
-      refresh_token: 'refresh-token-1',
-      token_type: 'bearer',
-      expires_in: 60,
-      refresh_expires_in: 3600,
-    }));
+    http.expectOne('/api/v1/auth/login').flush(
+      successEnvelope({
+        full_name: 'Admin User',
+        email: 'admin@example.test',
+        role: 'ADMIN',
+        access_token: 'access-token-1',
+        refresh_token: 'refresh-token-1',
+        token_type: 'bearer',
+        expires_in: 60,
+        refresh_expires_in: 3600,
+      }),
+    );
     await login;
   }
 });
 
-function discussion(id: number, content: string, comments: readonly AdminDiscussionComment[]): AdminDiscussion {
+function discussion(
+  id: number,
+  content: string,
+  comments: readonly AdminDiscussionComment[],
+): AdminDiscussion {
   return {
     id,
     course_id: 55,
@@ -138,7 +170,12 @@ function comment(
   };
 }
 
-function page(items: readonly AdminDiscussion[], pageNumber: number, total: number, totalPages: number): AdminPage<AdminDiscussion> {
+function page(
+  items: readonly AdminDiscussion[],
+  pageNumber: number,
+  total: number,
+  totalPages: number,
+): AdminPage<AdminDiscussion> {
   return {
     items,
     pagination: { page: pageNumber, size: 1, total, total_pages: totalPages },

@@ -1,5 +1,7 @@
 # AD-05 — Kế hoạch Detailed Design
 
+> Historical plan snapshot from 2026-11-08. Statements below about Study Web source/route absence describe the source inspected at that time; see §9 for the 2026-11-16 re-audit.
+
 > **Screen ID:** AD-05 · **Tên:** Khóa/mở khóa/xóa tài khoản · **Đợt/ưu tiên:** W4 / P2<br>
 > **Route đề xuất:** `/admin/users/:userId/actions` · **AC:** AC-31 · **API:** #69, #71, #72<br>
 > **Trạng thái trước phiên:** screen `D`; #71/#72 có local route/module nhưng API DD/body/policy còn Draft/DERIVED.
@@ -143,3 +145,11 @@ Coordinates use original `screen.png` at 1600×1428. Marker IDs are ordered top-
 ## 8. Completion decision
 
 Expected result: API #71 and #72 reverse source status rows change `D→R` because route/module/model/validation/query/view/test source exists locally. Formal API DDs stay Draft; #71 body/status and #72 deletion behavior remain DERIVED. AD-05 DD remains blocked by action/session/permission/audit/lifecycle/navigation policy; implementation remains blocked by those decisions and Study Web `UNWIRED`; runtime is not verified. This session handles AD-05 only.
+
+## 9. Current-source re-audit — 2026-11-16
+
+- **Expected behavior / approvals:** AC-31 and the API catalog still do not approve #71 request body/status transitions, #72 deletion/retention/visibility, Admin permission mapping/safeguards, audit reason, session effects, selected-user handoff, return navigation or dirty-state behavior. Local backend source is evidence of implementation, not approval. API DDs #71/#72 remain Draft.
+- **Study Web current source:** `admin.routes.ts` declares `/admin/users/:userId/actions`; `AD05Page` reads the route ID and calls GET #69 via `AD05ApiService`/`AdminApiService`. Page states are `loading/loaded/error`; the page displays name, email, status and role. Status/delete buttons and reason input are disabled. There is no client PATCH #71 or DELETE #72 call.
+- **Navigation:** the page links to AD-03 and the user list. The source does not establish AD-02/AD-03 handoff or selected-user retention. The prototype HTML's anchors remain prototype evidence only.
+- **Test evidence:** `ad05-page.spec.ts` was inspected, not run; it covers large route-ID preservation, Bearer GET #69, disabled controls/no mutation calls, 404 and missing route ID using HTTP fixtures. This does not establish runtime/deployment or live DB behavior.
+- **Status:** `PARTIAL SOURCE`; `WRITE FLOW BLOCKED`; DD/action acceptance remains blocked by the approvals above; `RUNTIME NOT VERIFIED`. No app code/API behavior/test/runtime was changed in this documentation status sync.

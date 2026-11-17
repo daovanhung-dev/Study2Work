@@ -13,10 +13,10 @@
 
 ### Trích từ DD nguồn: 2. Luồng tổng thể
 
-1. Người dùng mở route proposal /courses/search hoặc quay từ GS-01. Client hiện chưa có router để thực thi route này.
+1. Người dùng mở route `/courses/search` trực tiếp; this Guest route exists. Entry navigation from GS-01 is still not wired.
 2. Client đọc q từ URL nếu có. Quy tắc trim/lowercase ở UI theo F02 là expected behavior; API cũng trim/lowercase độc lập. Cách giữ nguyên văn bản gõ để hiển thị cần quyết định.
 3. Nếu q rỗng, chưa gọi API #07 cho đến khi Product xác nhận hiển thị prompt hay browse toàn bộ. Đây là điểm quan trọng vì #07 với q rỗng bỏ điều kiện tên khóa học và trả tất cả course PUBLISHED.
-4. **Thứ tự API cần xác nhận:** inventory F02 nói #05 cache-first và cho phép #07 chạy song song nếu độc lập; AC-04 diagram lại nối #05 trước #07, và API #05 DD ghi cache hit thì bỏ request. #07 không phụ thuộc response #05 khi không gửi category, nhưng không có Study Web source để xác nhận thứ tự, cache hit/miss, TTL, invalidation, fallback hoặc partial-load. Không mô tả một phương án là runtime hiện hành.
+4. **Thứ tự API cần xác nhận:** inventory F02 nói #05 cache-first và cho phép #07 chạy song song nếu độc lập; AC-04 diagram lại nối #05 trước #07, và API #05 DD ghi cache hit thì bỏ request. #07 không phụ thuộc response #05 khi không gửi category, nhưng hiện không có GS-02 client caller để xác nhận thứ tự, cache hit/miss, TTL, invalidation, fallback hoặc partial-load. Không mô tả một phương án là runtime hiện hành.
 5. Khi gọi #07, client gửi q đã chuẩn hóa cùng page/sort được hỗ trợ. Không gửi category: #07 trả 422 với category khác null; không gửi tham số skill, duration, rating, tuition hoặc size vì source không hỗ trợ chúng.
 6. Client kiểm tra HTTP status, business code, envelope và pagination. HTTP 200 với items=[] là kết quả hợp lệ; nếu total=0 thì không có kết quả. Nếu total>0 nhưng trang hiện tại rỗng, đây là trang ngoài phạm vi chứ không phải danh mục rỗng.
 7. Dữ liệu card chỉ được ánh xạ từ response #07. Không tự điền rating, tag, duration, currency, giảm giá hoặc giá cũ từ mockup.
@@ -53,3 +53,12 @@
 
 ## 8. Trace
 [Events](02-events.md) · [API](04-api-integration.md) · [Rules](05-business-rules.md)
+
+## 9. Current implementation evidence (2026-11-16)
+
+- `GuestLayout` routes `/courses/search` to `GS02Page`. The page reads `q` from `queryParamMap`; blank or whitespace-only `q` stays at `prompt` and sends no request. This is a conservative implementation assumption while B06 remains open.
+- On form submit, the page trims/lowercases `q`, synchronizes the normalized value to the URL, resets the requested page to 1, and calls API #07. Pagination requests use the server's `total_pages`; page state is local and is not encoded in the URL. No debounce, sort, category, or cache is implemented.
+- `GS02SearchService` sends only `q` and `page` through `StudyApiService` and `STUDY_SERVER_APIS.API_007`. It does not call #05. `GS02CourseCard` renders response-backed title, optional description/thumbnail and mentor name; it does not render price because currency is absent.
+- State transitions implemented and tested: prompt, loading, ready, no-results (`total=0`), out-of-range (`requested page > response total_pages`), and error for API/envelope/network failures. Requests use a sequence guard so an older response cannot replace a newer one.
+- Study Web tests pass 127/127; Study Server tests pass 1,506/1,506 and focused #05/#07 tests pass 29/29 using fake sessions. Browser rendering and live API/DB integration remain `NOT VERIFIED`.
+- The DD's full design and policy requirements remain blocked; this audit records source behavior and does not close B01–B10.

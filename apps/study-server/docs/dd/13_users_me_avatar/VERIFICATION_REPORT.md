@@ -23,7 +23,7 @@
 | `.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/*` | `Yes` | Existing 8-file template baseline |
 | `app/api/v1.py`, `app/utils/auth.py`, `app/core/middleware.py` | `Yes` | Route, shared Student guard and error mapping |
 | `app/service/object_storage/avatar.py` | `Yes` | Injectable S3-compatible provider |
-| `tests/modules/guest/api_13_users_me_avatar/test_users_me_avatar.py` | `Yes` | Parser, route and adapter coverage |
+| `tests/modules/student/api_13_users_me_avatar/test_users_me_avatar.py` | `Yes` | Parser, route and adapter coverage |
 
 ## Contract checks
 
@@ -54,7 +54,7 @@
 - `uv run pytest -q` — `217 passed, 1 warning`; warning là Starlette deprecation khi dùng `httpx` qua TestClient.
 - `uv run ruff check app tests` — `All checks passed`.
 - `uv run ruff format --check` trên các file Python thuộc API #13 và route — `7 files already formatted`. Full-repository format check vẫn báo 19 file ngoài phạm vi chưa theo formatter hiện tại.
-- `uv run mypy app/modules/guest/api_13_users_me_avatar app/service/object_storage/avatar.py tests/modules/guest/api_13_users_me_avatar` — `Success: no issues found in 6 source files`.
+- `uv run mypy app/modules/student/api_13_users_me_avatar app/service/object_storage/avatar.py tests/modules/student/api_13_users_me_avatar` — `Success: no issues found in 6 source files`.
 - `uv run mypy app tests` — còn 124 lỗi ở 16 file ngoài phạm vi API #13; không còn lỗi ở module/test API #13.
 - Import/route/OpenAPI check — router có 13 route; `/api/v1/users/me/avatar` có trong router và OpenAPI.
 - DD link, JSON example và Markdown table-width check — `PASS`.

@@ -1,13 +1,82 @@
-<main class="static-page st24-page">
-  <nav class="crumbs">▣ Diễn đàn &amp; Thảo luận　›　 Tạo chủ đề mới <span>● Đội ngũ Mentor Tech Lead đang online (8 người trực)</span></nav>
-  <section class="question-hero"><div><small>HỖ TRỢ HỌC THUẬT 1-ON-1　• Chuẩn code review công nghiệp</small><h1>Tạo câu hỏi &amp; Thảo luận kỹ thuật</h1><p>Đặt câu hỏi chi tiết, đính kèm đoạn mã nguồn tối giản (MRE) và nhật ký log console để nhận phản hồi, phản biện chuyên sâu từ Mentor &amp; Giảng viên chuyên trách.</p></div><aside>◷　SLA Phản hồi trung bình<strong>&lt; 45 Phút</strong><small>Trong giờ hành chính &amp; ca tối</small></aside></section>
-  <section class="question-card"><h2><span>01</span> Khóa học &amp; Ngữ cảnh bài giảng <small>* Bắt buộc</small></h2><div class="question-fields"><label>Khóa học liên quan<div class="field-box">Chuyên gia Frontend React &amp; TypeScript Enterprise　⌄</div></label><label>Module / Bài học liên quan<div class="field-box">Bài 14: Tối ưu hóa Re-render với React Compiler　⌄</div></label></div><label>Tiêu đề câu hỏi thảo luận<div class="field-box title-box">Lỗi Memory leak khi dùng WebSocket với TanStack Query trong Next.js 19 App Router</div></label><label>Nhãn công nghệ / Tags định danh<div class="field-box tags"><span>React 19　×</span><span>WebSocket　×</span><span>TanStack Query　×</span><span>Next.js　×</span><span>Performance　×</span> + Thêm thẻ tag (nhấn Enter)...</div></label><p>Gợi ý tag phổ biến: #TypeScript, #TailwindCSS, #SSR, #Zustand, #Turbopack</p></section>
-  <section class="question-card"><h2><span>02</span> Nội dung chi tiết &amp; Đoạn mã lỗi <small>Soạn thảo　　 Xem trước</small></h2><div class="question-toolbar">B　𝑰　│　T　❞　〈〉　🔗　☷　☰　│　▧ Ảnh chụp log <span>Hỗ trợ GFM</span></div><pre class="question-editor">### Mô tả sự cố kỹ thuật
-Em đang tích hợp tính năng cập nhật giá giao dịch theo thời gian thực (Real-time Order Book)
-sử dụng WebSocket kết hợp TanStack Query v5 `useQuery` và `queryClient.setQueryData`.
-
-Khi chuyển đổi tab nhanh hoặc route qua lại trong Next.js 19 App Router, connection
-WebSocket vẫn còn trigger listener và memory heap tăng đột biến từ 45MB lên hơn 320MB sau 3 phút.
-
-Em đã thử cleanup bằng useEffect nhưng vẫn gặp lỗi khi component unmount.</pre></section>
+<main class="static-page api-screen st24-page">
+  <nav class="crumbs" aria-label="Vị trí hiện tại">
+    <a routerLink="/student/discussions">Diễn đàn &amp; thảo luận</a><span>›</span
+    ><span>Tạo chủ đề</span>
+  </nav>
+  <header class="api-heading">
+    <div>
+      <p class="api-eyebrow">ST-24 · Tạo câu hỏi / chủ đề</p>
+      <h1>Tạo chủ đề thảo luận</h1>
+      <p>
+        Khóa học được lấy từ API #20; #40 tạo chủ đề bằng title và nội dung văn bản theo request
+        model hiện tại.
+      </p>
+    </div>
+  </header>
+  @if (loadingCourses()) {
+    <section class="api-message" role="status">
+      <strong>Đang tải khóa học đang tham gia…</strong>
+    </section>
+  }
+  @if (error()) {
+    <section class="api-error" role="alert">{{ error() }}</section>
+  }
+  @if (creationAccepted()) {
+    <section class="api-success" role="status">
+      Chủ đề đã được tạo{{ createdIdForLink() ? ' · #' + createdIdForLink() : '' }}.
+    </section>
+  }
+  @if (refreshError()) {
+    <section class="api-error" role="alert">
+      Chủ đề đã được tạo nhưng danh sách chưa tải lại: {{ refreshError() }}
+    </section>
+  }
+  @if (!loadingCourses() && courses().length === 0 && !error()) {
+    <section class="api-message">
+      <div>
+        <strong>Không có khóa học để chọn.</strong>
+        <p>API #20 chưa trả khóa học đang tham gia cho tài khoản này.</p>
+      </div>
+    </section>
+  }
+  @if (courses().length) {
+    <form class="api-card discussion-create-form" (ngSubmit)="create()">
+      <label class="api-field"
+        >Khóa học liên quan<select
+          name="courseId"
+          [ngModel]="selectedCourseId()"
+          (ngModelChange)="selectedCourseId.set($event)"
+          required
+        >
+          <option value="">Chọn khóa học</option>
+          @for (course of courses(); track course.course_id) {
+            <option [value]="course.course_id">{{ course.name }} · #{{ course.course_id }}</option>
+          }
+        </select></label
+      >
+      <label class="api-field"
+        >Tiêu đề câu hỏi / chủ đề<input name="title" type="text" [(ngModel)]="title" required
+      /></label>
+      <label class="api-field"
+        >Nội dung<textarea
+          name="content"
+          [(ngModel)]="content"
+          rows="10"
+          required
+          placeholder="Mô tả câu hỏi hoặc chủ đề bạn muốn trao đổi"
+        ></textarea>
+      </label>
+      <p class="api-muted">
+        API #40 không nhận tags, lesson ID, tệp đính kèm hoặc mã người tạo. Quyền ghi danh được
+        server kiểm tra.
+      </p>
+      <div class="api-actions">
+        <button class="api-button secondary" type="button" (click)="backToList()">
+          Quay lại danh sách</button
+        ><button class="api-button" type="submit" [disabled]="creating() || creationAccepted()">
+          {{ creating() ? 'Đang tạo…' : 'Tạo chủ đề' }}
+        </button>
+      </div>
+    </form>
+  }
 </main>

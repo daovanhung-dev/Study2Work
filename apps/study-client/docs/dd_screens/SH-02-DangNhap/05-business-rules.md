@@ -29,8 +29,8 @@
 | SH02-D04 | Allowlist returnTo an toàn và route học viên mặc định | Sản phẩm / Frontend | Chỉ dùng route tương đối đề xuất; không mở chuyển hướng |
 | SH02-D05 | Mục đích gọi #04 sau khi #03 đã trả hồ sơ; nguồn có thẩm quyền cho vai trò/hồ sơ/permissions | BA / máy chủ | Theo danh mục chỉ với học viên sau khi duyệt chính sách phiên |
 | SH02-D06 | PNG nguồn trống: thay tài sản hay chấp nhận bản dựng HTML làm mốc giao diện | Quản lý tài sản screen-stitch | Giữ ảnh gốc trống; ghi nguồn gốc ảnh dựng |
-| SH02-D07 | Thiếu các hàm handleLoginSubmit / togglePasswordVisibility trong bản mẫu | Frontend / Design | Chưa xác minh tương tác UI nào |
-| SH02-D08 | Editable Study Web source/package manifest/feature route chưa có; context entry/index hiện đã được xác minh và đăng ký | Frontend | Không tuyên bố route hoặc runtime đã được nối |
+| SH02-D07 | `code.html` mẫu vẫn không định nghĩa handleLoginSubmit / togglePasswordVisibility; Study Web page có toggle cục bộ nhưng login submit bị khóa | Frontend / Design | Submit/API behavior vẫn blocked; toggle presentation is implemented |
+| SH02-D08 | Angular source/package manifest wire `/login` to `SH02Page` and `/register` to `SH03Page` | Frontend | Local direct-route Chrome smoke rendered both routes; deployed runtime unverified, không suy ra auth/session đã được nối |
 | SH02-D09 | #04 dùng cùng HTTP 401 `DESIGN_AUTHENTICATION_REQUIRED` cho auth/claim không hợp lệ và profile thiếu; xác nhận response discriminator hoặc policy refresh mọi #04/401 | API/Auth / Security / Product | Không tự động gọi R-X01 hoặc xóa phiên khi chưa có policy; giữ trạng thái lỗi chưa phân loại |
 
 **Điều kiện hoàn tất phiên tài liệu:** có kế hoạch SH-02, DD, bản xem sạch dựng từ HTML hiện tại, ảnh chú thích, bản đồ marker 1–8 khớp, liên kết đã kiểm tra và hash nguồn không đổi. DD vẫn BLOCKED; không coi các điều kiện API/phiên/vai trò còn mở là sẵn sàng triển khai.

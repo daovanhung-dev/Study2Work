@@ -10,7 +10,7 @@ from app.modules.mentor.api_58_mentor_support_requests.models import (
     SupportRequestResponse,
     UserSummaryResponse,
 )
-from app.modules.student.api_34_uploads.models import UploadAssetResponse
+from app.modules.shared.api_34_uploads.models import UploadAssetResponse
 from pydantic import ValidationError
 
 _MESSAGE_FIELDS = (

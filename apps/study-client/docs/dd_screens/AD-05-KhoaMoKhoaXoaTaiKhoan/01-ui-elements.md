@@ -59,7 +59,7 @@ ID phải trùng marker trên [annotated screenshot](../../screen_stitch/05_admi
 | #6 | Global breadcrumb trail; đầu vùng nội dung. | Label tĩnh, chưa có route-state binding. | Visible; destinations/click behavior chưa wired; EV-05/EV-06. |
 | #7 | “Chuẩn xác thực RBAC” badge; phải breadcrumb. | Claim tĩnh, không phải output của #69/#71/#72 hoặc permission evaluation result. | Visible nhưng không verified; không dùng làm authorization gate; EV-06. |
 | #8 | User management / account list / action breadcrumb; nội dung trên trái. | Static labels; không truyền numeric ID hay route state trong HTML. | Visible; navigation theo route cần duyệt; EV-05. |
-| #9 | “Quay lại danh sách người dùng (AD-02)” link; trên phải của breadcrumb. | Hiện `href="/admin/users"`; không có selected-user query/state. | Visible; click không được router xác minh; EV-05. |
+| #9 | “Quay lại danh sách người dùng (AD-02)” link; trên phải của breadcrumb. | Trong HTML prototype là `href="/admin/users"`; app page có router link về `/admin/users`, không giữ selected-user query/state. | App link hiện có; selected-user preservation chưa được định nghĩa; EV-05. |
 | #10 | API #69/#71/#72 reference strip; dưới breadcrumb. | Tên API tĩnh; không phải proof các API được gọi/wired. | Visible; no event/request state; EV-06. |
 | #11 | Page title “Kiểm soát trạng thái và quyền truy cập tài khoản”; hero heading. | Static copy. | Visible; no API source field; presentation only. |
 | #12 | Security shield hero icon; trái title. | Decorative icon, không biểu diễn policy evaluation hoặc permission result. | Visible; no event. |
@@ -79,9 +79,9 @@ ID phải trùng marker trên [annotated screenshot](../../screen_stitch/05_admi
 | #26 | “Vô hiệu hóa” badge; trong góc dưới phải textarea. | Static label; không có relation tới permission API hoặc current session. | Visible; prototype state only; EV-06. |
 | #27 | System-policy warning icon; trái warning panel. | Decorative shield icon; no policy API source. | Visible; no event. |
 | #28 | Policy warning title/body; warning panel dưới textarea. | Claims active data-integrity policy, enrollment/result protection, and temporary disablement are static. #72 local source does not enforce these dependencies. | Visible; copy requires owner source/policy; EV-06. |
-| #29 | “Quay lại an toàn” action; dưới panel trái. | Anchor `/admin/users`; does not retain selected user in current HTML. | Visible/enabled-looking, but router/handoff is unwired; EV-05. No mutation. |
-| #30 | “Xác nhận thực hiện” button; dưới panel phải. | Disabled button; no form submit/handler/request. | Disabled; only enable after selection, user/session state, authorization and policy checks are approved; EV-03/EV-04. |
-| #31 | API handlers / “Enforced Gate: Active” footer claim; right side of card footer. | Static labels; not API telemetry or actual enforced-gate state. #69/#71/#72 endpoints are local source-backed, but Study Web does not call them. | Visible, unverified; EV-06. |
+| #29 | “Quay lại an toàn” action; dưới panel trái. | Prototype anchor `/admin/users`; app page has a router link to the user list and does not retain selected-user state. | App link exists; approved return/selection policy remains open; EV-05. No mutation. |
+| #30 | “Xác nhận thực hiện” button; dưới panel phải. | Disabled in prototype and app page; no mutation handler/request. | Disabled; only enable after selection, user/session state, authorization and policy checks are approved; EV-03/EV-04. |
+| #31 | API handlers / “Enforced Gate: Active” footer claim; right side of card footer. | Static labels; not API telemetry or actual enforced-gate state. App page calls #69 only; it has no #71/#72 caller. | Visible, unverified; EV-06. |
 | #32 | Audit code `AD-05` / ISO/IEC 27001 compliance footer claim; left card footer. | Static audit/compliance assertion; no audit record, auditor, control evidence or compliance API in this screen flow. | Visible, unverified; EV-06. |
 | #33 | Copyright/system footer text; page bottom left. | Static text and year. | Visible; no action/data source. |
 | #34 | Privacy/RBAC/support footer links; page bottom right. | Anchor placeholders `#`; destination/content not defined in current source. | Visible; no verified navigation; EV-06. |

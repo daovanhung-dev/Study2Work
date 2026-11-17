@@ -2,6 +2,8 @@
 
 Các câu hỏi này chặn việc chuyển DD sang Final hoặc triển khai API #18. Bản Draft giữ các khai báo hiện có và không tự chọn câu trả lời.
 
+**Current source note (2026-11-16):** API #18 now has a routed Shared handler, notification-only owner-bound query and 8 passing source-level HTTP tests. This current implementation does not close the contract questions below; in particular, the catalog's int64 path, owner-or-Admin summary, generic operation lifecycle/result and producer response differences remain unresolved.
+
 ## Q-18-01 — Kiểu operation_id
 
 **Bằng chứng**
