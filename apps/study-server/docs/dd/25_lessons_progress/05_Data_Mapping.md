@@ -9,15 +9,19 @@ status: "Draft — Needs Confirmation"
 
 # Data Mapping
 
+## Approved implementation decisions (2026-11-15)
+
+API #25 does not accept or persist `position`; `percent` is validated and persisted in 0..100; the latest `completed` value sets `COMPLETED` or `IN_PROGRESS`, with `completed_at` set/preserved or cleared accordingly. These approved rules supersede older candidate statements below for these fields only. Other contract details remain unresolved.
+
 ## Flow xử lý data
 
 ~~~text
-0. Nhận Authorization Bearer JWT; catalog yêu cầu actor Student. API #25 chưa có runtime route/auth binding.
-1. Nhận path lesson_id:int64! và body position:int32!, percent:int32!, completed:boolean! theo catalog.
-2. Xác thực role/access theo contract; token identity binding và entitlement predicate khi gọi trực tiếp chưa được xác nhận.
-3. Đọc lesson/progress context nếu cần; bảng candidate là lessons và lesson_progress, nhưng query/projection chưa có trong source.
-4. AC-14 mô tả UPDATE lesson progress + course aggregate; lesson_progress là candidate target, aggregate source/target/formula chưa được chỉ định.
-5. AC-14 ghi completed=YES → mark COMPLETED; NO → giữ IN_PROGRESS. Cột lưu và các field/timestamp cập nhật chưa được chốt.
+0. API #25 is registered and requires a STUDENT access token; the authenticated user ID is used for progress ownership.
+1. API #25 request has path `lesson_id` and body `percent`, `completed`; `position` is not part of the request.
+2. Validate the STUDENT token and bind the authenticated user ID before querying progress.
+3. Read the lesson, verify enrollment, then load progress by authenticated user and lesson.
+4. Persist lesson progress only. AC-14 mentions a course aggregate, but no target/formula is specified and this API does not write one.
+5. The latest `completed` value sets status; false clears `completed_at`, while true preserves or sets it. `percent` is stored independently after 0..100 validation.
 6. Trả HTTP 200 DESIGN_RESOURCE_UPDATED với ApiEnvelope<Lesson> theo catalog; response assembly/query chưa được xác nhận.
 7. Giữ 401/403/404/422/500 theo catalog; trigger và error payload/message chưa được API #25 xác nhận.
 ~~~
@@ -28,9 +32,8 @@ status: "Draft — Needs Confirmation"
 |---|---|---|---|---|---|
 | Authorization | HTTP header `Authorization` | Bearer JWT; role Student theo catalog | Candidate identity/access check | Không trả trong response | Claim mapping và endpoint-specific access policy chưa xác nhận. |
 | `lesson_id` | Path parameter | Required int64 theo catalog | Candidate lesson/progress lookup | Lesson response identity | Range, parse-error mapping và lookup predicate chưa xác nhận. |
-| `position` | JSON body | Required int32 theo catalog | Intended progress input | Không có field trong Lesson response | Meaning/unit và physical mapping chưa xác nhận; ERD không có position column. |
-| `percent` | JSON body | Required int32 theo catalog | Candidate mapping sang `lesson_progress.progress_percent` | Không có field trong Lesson response | Range, rounding, conversion và update semantics chưa xác nhận. |
-| `completed` | JSON body | Required boolean theo catalog | AC-14 completion branch | Không có field trong Lesson response | Persisted status/timestamp mapping và transition semantics chưa xác nhận. |
+| `percent` | JSON body | Required int32 | Maps to `lesson_progress.progress_percent` | Not returned in Lesson | Integer 0..100; stored as sent, independent of `completed`. |
+| `completed` | JSON body | Required boolean | Sets progress state | Not returned in Lesson | true sets COMPLETED and sets/preserves completed_at; false sets IN_PROGRESS and clears completed_at. |
 | Query parameters | N/A | N/A | N/A | N/A | Catalog không khai báo query parameter. |
 
 <a id="0-authentication-and-authorization"></a>
@@ -67,11 +70,10 @@ status: "Draft — Needs Confirmation"
 |---|---|---|---|---|
 | Authorization | HTTP header | Bearer JWT; role Student | Authentication/authorization | Token policy, claim và direct-call entitlement chưa xác nhận. |
 | `lesson_id` | Path parameter | Required int64 | Candidate lesson/progress context | Min/max, positivity, parse failure và 422 mapping chưa quy định. |
-| `position` | Request body | Required int32 | Candidate progress position input | Unit, non-negative/range rule và 422 trigger chưa quy định. |
-| `percent` | Request body | Required int32 | Candidate progress percentage input | Min/max, rounding và 422 trigger chưa quy định. |
+| `percent` | Request body | Required int32 | Progress percentage | Integer 0..100; values outside the range return 422. |
 | `completed` | Request body | Required boolean | Completion branch per AC-14 | Missing/null handling beyond required marker and validation mapping chưa xác nhận. |
 
-> Không thêm rule `position >= 0`, `0 <= percent <= 100`, hay coupling giữa `percent` và `completed`; contract hiện không chốt các điều kiện này.
+> Approved validation: `percent` must be 0..100, is independent of `completed`, and `position` is omitted.
 
 <a id="2-read-progress-context"></a>
 
@@ -81,8 +83,8 @@ status: "Draft — Needs Confirmation"
 
 | Query ID | Mục đích | Type | Base table/view | Columns | JOIN/WHERE | Result variable | Status |
 |---|---|---|---|---|---|---|---|
-| Q1 | Resolve lesson context for progress update/response | SOURCE_REQUIRED | Candidate: `lessons` | SOURCE_REQUIRED | SOURCE_REQUIRED | `lesson_context` — logical placeholder | Không tìm thấy API #25 query trong current source. |
-| Q2 | Resolve existing Student lesson progress | SELECT candidate | Candidate: `lesson_progress` | SOURCE_REQUIRED | Identity/conflict predicate SOURCE_REQUIRED | `progress_context` — logical placeholder | Không có unique `(user_id, lesson_id)` key được khai báo trong checked-in DDL. |
+| Q1 | Resolve lesson context for progress update/response | SELECT | `lessons` | Current source query | `id=:lesson_id` | `lesson_context` | Current API query reads lesson data for the response. |
+| Q2 | Resolve existing Student lesson progress | SELECT | `lesson_progress` | Current source query | `(user_id, lesson_id)` | `progress_context` | Migration 019 defines target-schema uniqueness; not yet applied. |
 | Q3 | Resolve/update course aggregate | SOURCE_REQUIRED | SOURCE_REQUIRED | SOURCE_REQUIRED | Formula/scope SOURCE_REQUIRED | `course_aggregate` — logical placeholder | AC-14 nêu aggregate nhưng không chỉ định nguồn/đích/công thức. |
 
 ### 2.2. Candidate schema references
@@ -98,7 +100,7 @@ status: "Draft — Needs Confirmation"
 ### 2.3. Query rules
 
 - Exact lookup query, identity predicate, selected columns, locks and isolation are SOURCE_REQUIRED.
-- Checked-in DDL declares only `lesson_progress.id` as primary key and has no declared unique `(user_id, lesson_id)` constraint; do not choose an UPSERT conflict target.
+- Migration 019 defines the `(user_id, lesson_id)` conflict target for `nguyen_anh_duc`; it is not applied yet.
 - Candidate schema files are design evidence and do not prove the live schema.
 
 <a id="3-update-lesson-progress-and-aggregate"></a>
@@ -118,10 +120,10 @@ status: "Draft — Needs Confirmation"
 
 ### 3.3. Items update/insert
 
-- `position`: no physical column is present in the candidate `lesson_progress` ERD/DDL; storage mapping is SOURCE_REQUIRED.
-- `percent`: `progress_percent` is a candidate mapping by meaning; conversion, range and update behavior are SOURCE_REQUIRED.
-- `completed = true`: AC-14 says mark progress `COMPLETED`; exact persistence column and timestamp rule are SOURCE_REQUIRED.
-- `completed = false`: AC-14 says keep `IN_PROGRESS`; behavior for an existing `COMPLETED` row or out-of-order request is SOURCE_REQUIRED.
+- `position` is not an API #25 request field and is not persisted.
+- `percent` maps to `progress_percent` and is validated in 0..100 before persistence.
+- `completed = true` sets status to `COMPLETED` and preserves an existing `completed_at` or sets it.
+- `completed = false` sets status to `IN_PROGRESS` and clears `completed_at`.
 - `last_accessed_at`, `completed_at`, insert defaults and all other field preservation/reset rules are SOURCE_REQUIRED.
 - No SQL statement, conflict target, aggregate formula or transaction behavior is approved by available sources.
 
@@ -130,9 +132,8 @@ status: "Draft — Needs Confirmation"
 | Param | Giá trị | Remarks |
 |---|---|---|
 | `lesson_id` | Required int64 path parameter | Candidate lesson/progress identity; lookup predicate unresolved. |
-| `position` | Required int32 request body | Intended position input; unit and physical mapping unresolved. |
-| `percent` | Required int32 request body | Candidate mapping to `progress_percent`; range and conversion unresolved. |
-| `completed` | Required boolean request body | AC-14 maps true/false to completion branch; persistence details unresolved. |
+| `percent` | Required int32 request body | Maps to progress_percent; accepted range is 0..100 and value is stored as sent. |
+| `completed` | Required boolean request body | true sets COMPLETED; false sets IN_PROGRESS and clears completed_at. |
 | `user_id` | Authenticated identity candidate | JWT claim/binding and DB write behavior unresolved. |
 
 ### 3.5. Mutation Matrix
@@ -172,7 +173,7 @@ status: "Draft — Needs Confirmation"
 ### 4.3. Lỗi hệ thống
 
 - Catalog: HTTPStatus = 500; businessCode = `DESIGN_INTERNAL_ERROR`.
-- Exception mapping, error payload, transaction rollback and trace behavior are not verified because API #25 has no runtime route.
+- Error, transaction and response assembly are implemented in current source; remaining contract details are listed in OPEN_QUESTIONS.md.
 
 ### 4.4. Validate lỗi
 

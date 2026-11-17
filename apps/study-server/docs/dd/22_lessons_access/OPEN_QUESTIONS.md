@@ -1,10 +1,16 @@
 # OPEN_QUESTIONS
 
+## Developer decisions (2026-11-15)
+
+- Resolved for implementation: parent `courses.status` must be `PUBLISHED`.
+- Enrollment status `ACTIVE` or `COMPLETED` grants lesson access.
+- Prerequisite checks are omitted because the current schema has no prerequisite relationship. Other DD questions below remain open.
+
 Các quyết định dưới đây chặn việc chuyển DD sang Ready/Final hoặc dùng làm implementation contract. Bản Draft giữ nguyên contract đã có và không tự chọn câu trả lời.
 
 <a id="q-22-01"></a>
 
-## Q-22-01 — Access predicate, enrollment status và prerequisite
+## Q-22-01 ? Access rules (partially resolved)
 
 **Bằng chứng**
 

@@ -1,10 +1,15 @@
 # OPEN_QUESTIONS
 
+## Developer decisions (2026-11-15)
+
+- Resolved for implementation: both Lesson and parent Course must be `PUBLISHED`.
+- Enrollment `ACTIVE` or `COMPLETED` is accepted. Prerequisites are not checked because the current schema has no prerequisite relationship. Other DD questions below remain open.
+
 Các quyết định dưới đây cần xác nhận trước khi chuyển DD sang Ready/Final hoặc dùng làm implementation contract. Bản Draft giữ contract đã công bố và không tự chọn câu trả lời.
 
 <a id="q-24-01"></a>
 
-## Q-24-01 — Entitlement predicate và JWT identity
+## Q-24-01 ? Entitlement (partially resolved)
 
 **Bằng chứng**
 
@@ -30,7 +35,7 @@ Các quyết định dưới đây cần xác nhận trước khi chuyển DD sa
 
 <a id="q-24-02"></a>
 
-## Q-24-02 — Phạm vi trạng thái publish
+## Q-24-02 ? Publish status (resolved)
 
 **Bằng chứng**
 

@@ -31,6 +31,7 @@ status: "Draft — Needs Confirmation"
 | 8 | data.started_at | Start time | started_at | date-time | No | quiz_attempts | started_at | 4 | Candidate projection. | N/A | Timestamp serialization policy is not defined. |
 | 9 | data.submitted_at | Submission time | submitted_at | date-time | Yes | quiz_attempts | submitted_at | 3 | Candidate value set during submit. | Omit or null per approved response policy. | Logical field optional; timestamp source/precision unresolved. |
 | 10 | data.score | Attempt score | score | decimal-string | Yes | quiz_attempts | score | 4 | Candidate aggregate from grading. | Omit or null when no final score is available. | Formula, scale, rounding and pending-grade behavior are SOURCE_REQUIRED. |
+| 10.1 | data.passed | Pass outcome | passed | boolean | Yes | Derived from quiz_attempts.score, quizzes.passing_score and quiz_questions.score | N/A | 4 | `earned_points * 100 >= possible_points * passing_score`, exact decimal comparison. | Present when status is GRADED; absent while PENDING_GRADE. | Separate outcome; status remains the grading lifecycle value. |
 | 11 | data.answers[] | Answers | answers | QuizAnswer[] | No | quiz_answers | N/A | 4 | Candidate projection of attempt answers. | Exact projection SOURCE_REQUIRED. | Required by reusable QuizAttempt schema. |
 | 12 | data.answers[].question_id | Question ID | question_id | int64 | No | quiz_answers | question_id | 4 | Candidate projection. | N/A | Logical QuizAnswer field. |
 | 13 | data.answers[].choice_ids[] | Selected choice IDs | choice_ids | int64[] | Yes | quiz_answers | choice_id | 4 | No confirmed conversion from physical rows to logical array. | SOURCE_REQUIRED | Physical design stores one choice_id per row. |
@@ -50,9 +51,11 @@ status: "Draft — Needs Confirmation"
   "data": {
     "id": 9001,
     "quiz_id": 501,
-    "status": "PENDING_GRADE",
+    "status": "GRADED",
     "started_at": "2026-10-12T08:30:00Z",
     "submitted_at": "2026-10-12T09:00:00Z",
+    "score": "7.00",
+    "passed": true,
     "answers": [
       {
         "question_id": 301
@@ -64,7 +67,7 @@ status: "Draft — Needs Confirmation"
 }
 ~~~
 
-This illustrates one AC-16 branch where manual grading remains. Message text, answer projection, timestamps, and optional fields are illustrative; the example does not define the grading rules or final response policy.
+This example illustrates objective-question auto-grading. `passed` is returned only with a finalized score; it is not an AttemptStatus value.
 
 ## Ví dụ lỗi
 

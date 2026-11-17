@@ -75,3 +75,7 @@ Các câu hỏi dưới đây giữ lại những phần contract hoặc busines
 ---
 
 Cần product/API owner chốt các câu hỏi ảnh hưởng tới contract, quyền truy cập và dữ liệu trước khi đổi DD sang trạng thái approved/final hoặc triển khai API.
+
+## Approved scoring amendment (2026-11-15)
+
+passing_score is a percentage in the inclusive range 0..100. API #31/#32 compare raw earned points against raw possible points using exact decimal arithmetic, with no intermediate rounding. This resolves the unit and range only; unrelated questions below remain open.

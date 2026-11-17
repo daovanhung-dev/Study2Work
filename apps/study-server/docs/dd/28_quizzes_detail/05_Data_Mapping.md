@@ -111,7 +111,7 @@ status: "Draft — Needs Confirmation"
 | data.course_id | quizzes.course_id | Direct candidate mapping. | Logical field required; checked-in DDL nullable. |
 | data.title | quizzes.name | Candidate alias name → title. | Description/status không thuộc logical Quiz schema. |
 | data.duration_minutes | quizzes.time_limit_minutes | Candidate alias time_limit_minutes → duration_minutes. | Nullable/omit rule chưa xác nhận. |
-| data.passing_score | quizzes.passing_score | NUMERIC → decimal-string candidate. | Serialization scale/rounding chưa được chốt. |
+| data.passing_score | quizzes.passing_score | NUMERIC → decimal-string candidate, percentage inclusive 0..100. | Exact decimal value is used for pass comparison; no intermediate rounding. |
 | data.questions[].id | quiz_questions.id | Direct candidate mapping. | Design-only. |
 | data.questions[].text | quiz_questions.question_text | Candidate alias question_text → text. | Design-only. |
 | data.questions[].type | N/A | No source mapping. | SOURCE_REQUIRED; enum/column absent. |

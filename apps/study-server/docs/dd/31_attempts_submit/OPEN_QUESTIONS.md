@@ -96,3 +96,7 @@ Giữ Draft — Needs Confirmation đến khi owner chốt ownership/state, grad
 - Đề xuất DERIVED: attempt IN_PROGRESS được tạo trước tombstone có thể tiếp tục submit/chấm theo AC-16; owner cần xác nhận.
 - Chưa chốt race với DELETE, lock/isolation hoặc cách xử lý khi quiz bị tombstone trong lúc submit.
 - Câu hỏi liên quan: [API #90](../90_admin_quizzes_delete/OPEN_QUESTIONS.md) và [API #91](../91_admin_quizzes_statistics/OPEN_QUESTIONS.md).
+
+## Resolved scoring decision (2026-11-15)
+
+For this implementation scope, #31 grades objective question types only. Raw points remain persisted; the separate pass outcome uses exact decimal comparison earned_points * 100 >= possible_points * passing_score, with passing_score in inclusive range 0..100 and no intermediate rounding. A zero-point/empty quiz is rejected before grading writes. Manual/free-text grading remains out of scope; other questions below remain open.
