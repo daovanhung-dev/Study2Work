@@ -6,12 +6,12 @@
 .forbidden-page {
   min-height: 100vh;
   background-color: #f4f7fb;
-  padding: clamp(40px, 9.5vw, 152px) 40px 80px;
+  padding: 28px 24px 40px;
   color: #0f172a;
 }
 
 .forbidden-container {
-  max-width: 1520px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -466,6 +466,9 @@
   color: #1d4ed8;
 }
 
+.trace-copy { min-width: 44px; min-height: 44px; border: 1px solid #c7dcff; border-radius: 8px; background: #eff6ff; color: #1d4ed8; font: inherit; cursor: pointer; }
+.trace-copy:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+
 .rule-check {
   width: 16px;
   height: 16px;
@@ -481,7 +484,7 @@
 }
 
 @media (max-width: 960px) {
-  .forbidden-page { padding: 32px 24px 60px; }
+  .forbidden-page { padding: 28px 24px 40px; }
   .spec-topbar { min-height: 0; margin-bottom: 24px; }
   .forbidden-grid {
     grid-template-columns: 1fr;
@@ -493,7 +496,7 @@
 }
 
 @media (max-width: 767px) {
-  .forbidden-page { padding: 20px 16px 48px; }
+  .forbidden-page { padding: 20px 16px 28px; }
   .spec-topbar { align-items: flex-start; }
   .context-pill { padding: 9px 12px; font-size: 12px; }
   .headline-header-row { gap: 12px; }

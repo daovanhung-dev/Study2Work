@@ -99,3 +99,57 @@
   .user-circle-btn { display: none; }
   .status-badge-red, .gate-pill, .spec-pill { overflow-wrap: anywhere; white-space: normal; }
 }
+
+/* ST-09 design icons and accessible gated actions. */
+.inline-icon, .api-icon, .action-icon, .check-icon, .spec-icon svg, .policy-icon svg, .curly-badge svg, .hero-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.badge-red { display: inline-flex; align-items: center; gap: 5px; }
+.badge-red .inline-icon { width: 13px; height: 13px; }
+.api-state-box { display: flex; align-items: center; gap: 12px; }
+.api-icon { width: 24px; height: 24px; color: #0b5cd6; }
+.hero-icon { width: 80px; height: 80px; }
+.hero-icon svg { width: 44px; height: 44px; stroke-width: 3; }
+.gate-pill { display: inline-flex; align-items: center; justify-content: center; gap: 8px; line-height: 1.4; }
+.gate-pill .warning-icon { width: 18px; height: 18px; color: #8a4b08; }
+.policy-box { max-width: 720px; }
+.policy-icon, .spec-icon { display: inline-flex; align-items: center; justify-content: center; flex: none; background: #dbeafe; color: #0b5cd6; border-radius: 8px; }
+.policy-icon { width: 40px; height: 40px; }
+.policy-copy { flex: 1; min-width: 0; }
+.restricted-badge { background: #e8eef7; color: #8a4b08; border-radius: 6px; padding: 5px 8px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+.btn-soft, .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; box-sizing: border-box; border: 0; font-family: inherit; line-height: 1.4; }
+.btn-primary:disabled { opacity: 1; cursor: not-allowed; }
+.btn-soft:focus-visible, .btn-primary:focus-visible { outline: 3px solid #0b5f8a; outline-offset: 3px; }
+.action-icon { width: 18px; height: 18px; }
+.spec-card h4 { display: flex; align-items: center; gap: 8px; }
+.spec-icon { width: 30px; height: 30px; }
+.spec-icon svg { width: 18px; height: 18px; }
+.check-list { padding: 0 !important; list-style: none; }
+.check-list li { display: flex; align-items: flex-start; gap: 8px; }
+.check-icon { width: 16px; height: 16px; color: #0b5cd6; margin-top: 1px; }
+.green-checks .check-icon { color: #18794e; }
+.curly-badge svg { width: 26px; height: 26px; }
+.verified-course-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: clamp(24px, 4vw, 48px); }
+.verified-course-label { display: inline-block; color: #0b5f8a; font-size: 12px; font-weight: 800; margin-bottom: 8px; }
+.verified-course-card h2 { font-size: clamp(22px, 3vw, 30px); margin: 0 0 24px; }
+.verified-progress { max-width: 680px; margin-bottom: 32px; }
+.verified-progress-heading { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 700; }
+.verified-progress progress { display: block; width: 100%; height: 14px; accent-color: #0b5f8a; margin-top: 10px; }
+.verified-progress p, .verified-curriculum p { font-size: 13px; color: #475569; }
+.verified-curriculum { margin-bottom: 32px; }
+.verified-curriculum h3 { font-size: 18px; margin: 0 0 16px; }
+.verified-curriculum ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.verified-curriculum li { display: flex; justify-content: space-between; gap: 16px; align-items: center; background: #f4f7fb; border-radius: 10px; padding: 14px 16px; font-size: 14px; }
+.lesson-public-badge { flex: none; font-size: 11px; color: #475569; background: #e5edf8; padding: 4px 8px; border-radius: 999px; }
+@media (max-width: 767px) {
+  .policy-box { flex-wrap: wrap; }
+  .restricted-badge { margin-left: 48px; }
+  .action-row > * { width: 100%; }
+  .gate-pill { max-width: 100%; box-sizing: border-box; }
+}

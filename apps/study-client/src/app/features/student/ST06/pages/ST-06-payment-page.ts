@@ -6,6 +6,8 @@ import { ActivatedRoute } from '@angular/router';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { StudentPaymentView } from '../ui/ST-06-payment-view';
 
+const MAX_ORDER_ID = 9_223_372_036_854_775_807n;
+
 @Component({
   selector: 'study-student-payment-page',
   imports: [StudentPaymentView],
@@ -18,18 +20,24 @@ export class StudentPaymentPage {
   private readonly params = toSignal(this.route.paramMap, {
     initialValue: this.route.snapshot.paramMap,
   });
-  readonly state = computed<StudentPaymentState>(() =>
-    this.params().get('orderId')?.trim()
-      ? {
-          kind: this.source.status,
-          title: 'Chưa có thông tin thanh toán để hiển thị.',
-          message:
-            'Chưa thể truy vấn giao dịch hoặc xác nhận trạng thái thanh toán vì hợp đồng API liên quan chưa sẵn sàng.',
-        }
-      : {
-          kind: 'missing-context',
-          title: 'Thiếu thông tin trên đường dẫn',
-          message: 'Vui lòng mở lại màn hình từ chức năng trước đó.',
-        },
-  );
+
+  readonly state = computed<StudentPaymentState>(() => {
+    const orderId = this.params().get('orderId');
+    if (!isValidOrderId(orderId)) {
+      return {
+        kind: 'missing-context',
+        title: 'Mã đơn hàng không hợp lệ.',
+        message: 'Vui lòng mở lại màn hình từ luồng ghi danh.',
+      };
+    }
+    return {
+      kind: this.source.status,
+      title: 'Chưa có thông tin thanh toán để hiển thị.',
+      message: 'Cổng thanh toán hiện chưa được cấu hình. Chưa thể khởi tạo hoặc xác nhận giao dịch cho mã đơn trên đường dẫn.',
+    };
+  });
+}
+
+function isValidOrderId(value: string | null): boolean {
+  return value !== null && /^[1-9]\d*$/.test(value) && BigInt(value) <= MAX_ORDER_ID;
 }

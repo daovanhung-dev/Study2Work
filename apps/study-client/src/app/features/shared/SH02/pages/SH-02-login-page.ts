@@ -2,6 +2,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DestroyRef } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal, viewChild } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { AuthSessionService } from '../../../../core/auth/auth-session.service';
 
 import { LoginApi } from '../data-access/SH-02-login.service';
 import type { LoginAlert, LoginCredentials, LoginFieldErrors } from '../models/SH-02-login.models';
@@ -16,6 +18,9 @@ import { LoginView } from '../ui/SH-02-login-view';
 export class LoginPage {
   private readonly destroyRef = inject(DestroyRef);
   private readonly api = inject(LoginApi);
+  private readonly session = inject(AuthSessionService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly view = viewChild(LoginView);
 
   readonly submitting = signal(false);
@@ -37,8 +42,8 @@ export class LoginPage {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (response) => {
-          this.submitting.set(false);
           if (!response || response.success !== true || !response.data) {
+            this.submitting.set(false);
             this.alert.set({
               title: 'Không thể hoàn tất đăng nhập',
               description: 'Phản hồi từ hệ thống chưa đúng định dạng. Vui lòng thử lại sau.',
@@ -47,19 +52,48 @@ export class LoginPage {
             return;
           }
 
-          // SH-02 D01/D02: #03 và chính sách phiên chưa thống nhất; không lưu token hoặc điều hướng.
-          this.alert.set({
-            title: 'Chưa thể mở phiên đăng nhập',
-            description:
-              'Máy chủ đã phản hồi, nhưng hợp đồng đăng nhập và chính sách phiên chưa được thống nhất. Chưa thể chuyển vào hệ thống.',
-            kind: 'info',
-          });
+          if (!this.session.setSession(response.data)) {
+            this.submitting.set(false);
+            this.setGeneralError('Phản hồi đăng nhập thiếu thông tin phiên hợp lệ.');
+            return;
+          }
+
+          const role = this.session.role();
+          if (role === 'STUDENT') {
+            this.api.currentStudent().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+              next: (profile) => {
+                this.submitting.set(false);
+                if (!profile.success || !profile.data) {
+                  this.session.clear();
+                  this.setGeneralError('Không thể xác nhận hồ sơ học viên. Vui lòng đăng nhập lại.');
+                  return;
+                }
+                this.navigateAfterLogin('/student');
+              },
+              error: (error: unknown) => {
+                this.submitting.set(false);
+                if (error instanceof HttpErrorResponse && error.status === 403) return;
+                this.session.clear();
+                this.setGeneralError('Không thể xác nhận hồ sơ học viên. Vui lòng thử lại sau.');
+              },
+            });
+            return;
+          }
+          this.submitting.set(false);
+          this.navigateAfterLogin(role === 'ADMIN' ? '/admin' : '/forbidden');
         },
         error: (error: unknown) => {
           this.submitting.set(false);
           this.handleError(error);
         },
       });
+  }
+
+  private navigateAfterLogin(destination: string): void {
+    const requested = this.route.snapshot.queryParamMap.get('returnUrl');
+    const safeReturn = requested && requested.startsWith(destination) &&
+      (requested.length === destination.length || requested[destination.length] === '/' || requested[destination.length] === '?');
+    void this.router.navigateByUrl(safeReturn ? requested : destination);
   }
 
   private handleError(error: unknown): void {

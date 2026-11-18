@@ -16,4 +16,5 @@ export class StudentOrderCheckView {
   @Input() course: St05CourseSummary | null = null;
   @Input() loadState: St05CourseLoadState = 'loading';
   @Input() backToEnrollUrl = '/student';
+  @Input() backLabel = 'Về trang học viên';
 }

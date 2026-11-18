@@ -17,9 +17,9 @@ describe('Study Server API registry', () => {
     expect(catalogIds.sort((first, second) => first - second)).toEqual(
       Array.from({ length: 103 }, (_value, index) => index + 1),
     );
-    expect(entries.filter((api) => api.status === 'WIRED')).toHaveLength(65);
-    expect(entries.filter((api) => api.status === 'STUB')).toHaveLength(1);
-    expect(entries.filter((api) => api.status === 'UNWIRED')).toHaveLength(37);
+    expect(entries.filter((api) => api.status === 'WIRED')).toHaveLength(72);
+    expect(entries.filter((api) => api.status === 'STUB')).toHaveLength(2);
+    expect(entries.filter((api) => api.status === 'UNWIRED')).toHaveLength(29);
     expect(entries.filter((api) => api.status === 'SOURCE_ONLY')).toHaveLength(1);
 
     expect(STUDY_SERVER_APIS.API_002).toMatchObject({
@@ -37,7 +37,6 @@ describe('Study Server API registry', () => {
     });
   });
 });
-
 describe('StudyApiService', () => {
   let api: StudyApiService;
   let httpTestingController: HttpTestingController;

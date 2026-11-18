@@ -1,5 +1,7 @@
 # ST-01 — API Integration
 
+> Cập nhật runtime 2026-11-18: Study Server hiện có route `/users/me/courses` (#20), `/users/me/progress` (#21), `/users/me/achievements` (#38) và `/users/me/notifications` (#43) trong `app/api/v1.py`. ST-01 FE gọi riêng cả bốn route sau guard học viên. #20, #38, #43 trả danh sách `items`/`pagination`; #21 hiện trả `UserProfile`, chưa có projection tiến độ. Vì vậy widget #21 hiển thị khoảng trống contract, không dựng biểu đồ hoặc phần trăm. Các đoạn trạng thái `NOT_FOUND` dưới đây ghi lại mốc tài liệu nguồn 2026-11-08, không còn phản ánh sự tồn tại route hiện tại.
+
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
 ## 1. API usage matrix

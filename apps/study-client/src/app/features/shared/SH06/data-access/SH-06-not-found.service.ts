@@ -27,10 +27,10 @@ export class NotFoundService {
       context.status === 404;
     return {
       source: resource ? 'resource' : 'route',
-      statusLabel: resource ? 'HTTP 404 · Resource Not Found' : '404 · Không tìm thấy trang',
-      title: resource ? 'Không tìm thấy tài nguyên yêu cầu' : 'Không tìm thấy trang yêu cầu',
+      statusLabel: 'HTTP 404 · Resource Not Found',
+      title: 'Không tìm thấy trang hoặc tài nguyên yêu cầu',
       description:
-        'Trang hoặc tài nguyên bạn tìm kiếm không tồn tại. Vui lòng kiểm tra đường dẫn hoặc trở về trang chủ.',
+        'Trang hoặc tài nguyên bạn tìm kiếm không tồn tại hoặc không khả dụng. Vui lòng kiểm tra lại đường dẫn hoặc quay về danh sách khóa học công khai.',
     };
   }
 }

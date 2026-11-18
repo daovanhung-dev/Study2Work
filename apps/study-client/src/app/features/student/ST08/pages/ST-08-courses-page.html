@@ -1,1 +1,1 @@
-<study-student-courses-view [state]="state" />
+<study-student-courses-view [state]="state()" (pageRequested)="load($event)" (retryRequested)="retry()" />

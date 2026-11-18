@@ -6,6 +6,8 @@ import { ActivatedRoute } from '@angular/router';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { StudentEnrollResultView } from '../ui/ST-07-enroll-result-view';
 
+const MAX_COURSE_ID = 9_223_372_036_854_775_807n;
+
 @Component({
   selector: 'study-student-enroll-result-page',
   imports: [StudentEnrollResultView],
@@ -18,18 +20,32 @@ export class StudentEnrollResultPage {
   private readonly params = toSignal(this.route.paramMap, {
     initialValue: this.route.snapshot.paramMap,
   });
-  readonly state = computed<StudentEnrollResultState>(() =>
-    this.params().get('courseId')?.trim()
-      ? {
-          kind: this.source.status,
-          title: 'Chưa thể xác nhận kết quả đăng ký.',
-          message:
-            'Chưa thể truy vấn trạng thái ghi danh hoặc quyền học từ backend. Vui lòng kiểm tra lại sau.',
-        }
-      : {
-          kind: 'missing-context',
-          title: 'Thiếu thông tin trên đường dẫn',
-          message: 'Vui lòng mở lại màn hình từ chức năng trước đó.',
-        },
-  );
+
+  readonly state = computed<StudentEnrollResultState>(() => {
+    const courseId = this.params().get('courseId');
+    if (courseId === null || courseId.trim() === '') {
+      return {
+        kind: 'missing-context',
+        title: 'Thiếu thông tin trên đường dẫn',
+        message: 'Vui lòng mở lại màn hình từ chức năng trước đó.',
+      };
+    }
+    if (!isValidCourseId(courseId)) {
+      return {
+        kind: 'missing-context',
+        title: 'Mã khóa học không hợp lệ.',
+        message: 'Vui lòng mở lại màn hình từ luồng ghi danh.',
+      };
+    }
+    return {
+      kind: this.source.status,
+      title: 'Chưa thể xác nhận kết quả đăng ký.',
+      message:
+        'Chưa thể truy vấn trạng thái ghi danh hoặc quyền học từ backend. Vui lòng kiểm tra lại sau.',
+    };
+  });
+}
+
+function isValidCourseId(value: string): boolean {
+  return /^[1-9]\d*$/.test(value) && BigInt(value) <= MAX_COURSE_ID;
 }

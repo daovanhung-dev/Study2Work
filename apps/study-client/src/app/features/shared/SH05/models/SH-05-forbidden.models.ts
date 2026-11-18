@@ -3,4 +3,6 @@ export interface AccessFailureViewModel {
   readonly title: string;
   readonly description: string;
   readonly traceId: string | null;
+  readonly businessCode: string | null;
+  readonly returnUrl: string | null;
 }

@@ -10,7 +10,15 @@ import { CommonModule } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StudentProfileView {
+  avatarFailed = false;
+  private currentProfile: StudentProfileDto | null = null;
   @Input() state: StudentProfileState = 'loading';
-  @Input() profile: StudentProfileDto | null = null;
+  @Input() set profile(value: StudentProfileDto | null) {
+    if (value !== this.currentProfile) this.avatarFailed = false;
+    this.currentProfile = value;
+  }
+  get profile(): StudentProfileDto | null {
+    return this.currentProfile;
+  }
   @Output() readonly retry = new EventEmitter<void>();
 }

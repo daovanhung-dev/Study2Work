@@ -8,6 +8,10 @@ import type { LoginCredentials } from '../models/SH-02-login.models';
 export class LoginApi {
   private readonly api = inject(StudyApiService);
 
+  currentStudent() {
+    return this.api.request<unknown>(STUDY_SERVER_APIS.API_004);
+  }
+
   login(credentials: LoginCredentials) {
     return this.api.request<unknown>(STUDY_SERVER_APIS.API_003, {
       body: credentials,

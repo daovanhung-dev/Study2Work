@@ -1,1 +1,8 @@
-<study-student-overview-view [state]="state" />
+<study-student-overview-view
+  [courses]="courses()"
+  [progress]="progress()"
+  [achievements]="achievements()"
+  [notifications]="notifications()"
+  [statusLabel]="statusLabel()"
+  (retry)="load($event)"
+/>

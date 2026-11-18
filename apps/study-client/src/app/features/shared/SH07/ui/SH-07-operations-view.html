@@ -1,62 +1,84 @@
 <div class="ops-page" [attr.data-state]="state.kind">
   <header class="lms-navbar">
     <div class="container navbar-inner">
-      <a href="/" class="lms-brand"
-        ><span class="lms-brand-icon" aria-hidden="true">S2W</span
-        ><span class="lms-brand-name">Study2Work LMS</span></a
-      >
-      <nav class="lms-nav-links" aria-label="Điều hướng chính">
-        <a href="/">Trang chủ</a><a href="/login">Đăng nhập</a>
+      <a href="/" class="lms-brand" aria-label="Study2Work LMS — trang chủ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        <span>Study2Work LMS</span>
+      </a>
+      <nav id="sh07-nav" class="lms-nav-links" [class.is-open]="mobileNavOpen" aria-label="Điều hướng chính">
+        <a href="/">Trang chủ</a>
+        <a href="/#featured-courses-section">Khóa học</a>
+        <a href="/#featured-courses-section">Tìm kiếm</a>
+        <div class="mobile-auth"><a href="/login">Đăng nhập</a><a href="/register">Đăng ký</a></div>
       </nav>
+      <div class="nav-right">
+        <a href="/login" class="nav-login-link">Đăng nhập</a>
+        <a href="/register" class="nav-register-btn">Đăng ký</a>
+        <span class="user-circle" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/></svg></span>
+      </div>
+      <button type="button" class="mobile-toggle" aria-label="Mở hoặc đóng menu" aria-controls="sh07-nav" [attr.aria-expanded]="mobileNavOpen" (click)="mobileNavOpen = !mobileNavOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
     </div>
   </header>
+
   <main class="ops-main container">
-    <div class="gate-alert-banner" role="status">
-      <div class="gate-alert-left">
-        <span class="gate-question-icon" aria-hidden="true">?</span>
-        <div>
-          <div class="gate-title-row">
-            <strong class="gate-title">{{ state.title }}</strong
-            ><span class="gate-pill-red">SH-07</span>
-          </div>
-          <p class="gate-desc">{{ state.message }}</p>
-        </div>
+    <section class="gate-alert-banner" role="status">
+      <span class="gate-question-icon" aria-hidden="true">?</span>
+      <div class="gate-copy">
+        <div class="gate-title-row"><strong>{{ state.kind === 'ready' ? 'TRẠNG THÁI TÁC VỤ ĐÃ XÁC MINH' : state.title }}</strong><span class="gate-pill-red">{{ state.kind === 'ready' ? 'API #18 LIVE' : 'ĐANG KIỂM TRA API #18' }}</span></div>
+        <p>{{ state.message }}</p>
       </div>
-    </div>
-    <div class="ops-header-row">
+      <a class="spec-link" href="#contract-spec">Xem Contract Spec</a>
+    </section>
+
+    <div class="ops-heading">
       <div>
-        <div class="breadcrumb-line"><a href="/">Trang chủ</a><span>/</span><span>SH-07</span></div>
-        <h1 class="ops-page-title">Theo dõi tác vụ bất đồng bộ</h1>
-        <p class="ops-page-sub">
-          Trạng thái tác vụ chỉ được hiển thị sau khi backend xác nhận Operation ID và quyền truy
-          cập.
-        </p>
+        <div class="breadcrumb-line"><a href="/">SH-07</a><span>/</span><span>Hạ tầng bất đồng bộ</span><span>/</span><code>/operations/:operationId</code></div>
+        <h1>Theo dõi Tác vụ Bất đồng bộ</h1>
+        <p>Trạng thái tác vụ được lấy từ máy chủ sau khi xác minh mã và quyền truy cập.</p>
       </div>
+      <div class="system-badges"><span>HỆ THỐNG: <strong>{{ state.kind === 'ready' ? 'Đã kết nối' : state.title }}</strong></span><span>API #18: <strong>{{ state.kind === 'ready' ? 'Đã xác nhận' : 'Chưa có dữ liệu' }}</strong></span></div>
     </div>
+
     <div class="ops-grid">
-      <section class="ops-card" aria-labelledby="operation-gate-title">
-        <div class="op-id-header">
-          <div class="op-id-left">
-            <span class="hourglass-box" aria-hidden="true">⌛</span>
-            <div>
-              <span class="op-kicker">TRẠNG THÁI HIỆN TẠI</span>
-              <h2 id="operation-gate-title">Chờ hợp đồng API #18</h2>
-            </div>
+      <div class="ops-column">
+        <section class="ops-card">
+          <div class="operation-head">
+            <span class="hourglass-box" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h14M5 21h14M7 3v4l5 5-5 5v4m10-18v4l-5 5 5 5v4"/></svg></span>
+            <div class="operation-heading"><small>{{ state.kind === 'ready' ? 'OPERATION ID · ĐÃ XÁC MINH' : 'MÃ TÁC VỤ TRÊN ĐƯỜNG DẪN' }}</small><h2>{{ state.referenceId ?? 'Chưa có Operation ID' }}</h2></div>
+            <span class="blocked-pill">{{ state.operation?.status ?? state.title }}</span>
           </div>
-        </div>
-        <p class="gated-subtext">
-          Đường dẫn có thể chứa một mã tác vụ, nhưng riêng mã trên URL không chứng minh tác vụ tồn
-          tại hay thuộc về tài khoản hiện tại.
-        </p>
-        <div class="anti-faking-box">
-          <strong class="af-title">Không giả lập tiến trình</strong>
-          <p class="af-desc">
-            Không có phần trăm, đồng hồ đếm ngược, kết quả tải xuống hoặc trạng thái thành công cho
-            đến khi dữ liệu thật được xác minh.
-          </p>
-        </div>
-        <div class="ops-actions-row"><a href="/" class="btn-ops-primary">Về trang chủ</a></div>
-      </section>
+          <div class="metric-row">
+            <div><small>Loại tác vụ</small><strong>{{ state.operation?.kind === 'NOTIFICATION_DISPATCH' ? 'Gửi thông báo' : 'Chưa xác định' }}</strong><span>{{ state.operation ? 'Máy chủ đã xác nhận' : 'Chờ phản hồi hợp lệ' }}</span></div>
+            <div><small>Thời điểm tạo</small><strong>{{ state.operation?.submitted_at ? (state.operation.submitted_at | date:'dd/MM/yyyy HH:mm') : 'Chưa có' }}</strong><span>{{ state.operation ? 'Thời gian từ máy chủ' : 'Không tự tạo thời gian' }}</span></div>
+            <div><small>Trạng thái thực thi</small><strong>{{ state.operation?.status ?? 'Chưa xác định' }}</strong><span>{{ state.operation?.updated_at ? (state.operation.updated_at | date:'dd/MM/yyyy HH:mm') : 'Không có phần trăm giả' }}</span></div>
+          </div>
+          <div class="anti-faking-box"><strong>QUY TẮC HIỂN THỊ TRUNG THỰC</strong><p>{{ state.kind === 'ready' ? 'Thông tin trên được trả về từ API #18 và thuộc phạm vi tài khoản hiện tại.' : 'Operation ID trên đường dẫn chưa chứng minh tác vụ tồn tại hoặc thuộc về tài khoản này.' }}</p><div class="guardrails"><span>× &nbsp; Không thanh % ảo</span><span>× &nbsp; Không đếm ngược giả</span><span>× &nbsp; Không link tải giả lập</span></div></div>
+          <div class="ops-actions"><button type="button" class="primary-action" (click)="refresh.emit()" [disabled]="state.kind === 'loading'">Làm mới trạng thái</button><a href="/" class="secondary-action">Về trang chủ</a></div>
+        </section>
+
+        <section id="contract-spec" class="ops-card contract-card">
+          <div class="card-title"><h2>▣ &nbsp; Developer Hand-off &amp; Schema Diagnostic</h2><span>ENV: HANDOFF STRICT</span></div>
+          <p>API #18 hiện hỗ trợ tra cứu tác vụ gửi thông báo theo UUID và tài khoản sở hữu. Các loại tác vụ khác chưa được chứng minh bởi endpoint này.</p>
+          <div class="code-panel"><small>ENDPOINT ĐANG SỬ DỤNG</small><code>GET /api/v1/operations/&#123;operation_id&#125;<br />{{ state.kind === 'ready' ? 'DESIGN_OPERATION_RETRIEVED' : 'Không suy ra kết quả khi chưa có phản hồi hợp lệ.' }}</code></div>
+          <p *ngIf="state.traceId">Trace ID: <code>{{ state.traceId }}</code></p>
+        </section>
+      </div>
+
+      <div class="ops-column">
+        <section class="ops-card lifecycle-card">
+          <h2>Lifecycle Tác vụ</h2><p>API #18 hiện trả QUEUED, FAILED hoặc SENT cho tác vụ gửi thông báo. Các trạng thái khác là tham chiếu thiết kế.</p>
+          <div class="lifecycle-list">
+            <div><strong>● &nbsp; QUEUED</strong><span>Hàng đợi</span><p>Đang chờ hệ thống xử lý.</p></div>
+            <div><strong>● &nbsp; RUNNING</strong><span>Đang chạy</span><p>Đang thực thi tác vụ.</p></div>
+            <div><strong>● &nbsp; SENT</strong><span>Đã gửi</span><p>Máy chủ xác nhận hoàn tất gửi thông báo.</p></div>
+            <div><strong>● &nbsp; FAILED</strong><span>Thất bại</span><p>Chi tiết lỗi cần đến từ phản hồi được phép hiển thị.</p></div>
+            <div><strong>● &nbsp; EXPIRED</strong><span>Hết hạn</span><p>Thời hạn và quy tắc lưu giữ chưa được chốt.</p></div>
+          </div>
+        </section>
+        <section class="ops-card orchestration-card"><h2>Mô hình Điều phối Tác vụ</h2><div class="flow-diagram" aria-label="Sơ đồ tham chiếu: client, API, hàng đợi và worker"><span>Client Web</span><b>→</b><span>API Gateway</span><b>→</b><span>Queue / Worker</span></div><p>Sơ đồ tham chiếu thiết kế; kiến trúc triển khai và contract vẫn cần xác nhận.</p></section>
+      </div>
     </div>
   </main>
+
+  <footer class="lms-footer"><div class="container footer-inner"><div class="footer-brand"><span class="footer-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Study2Work LMS</span><span class="footer-dot">•</span><span>Nền tảng học tập &amp; Định hướng nghề nghiệp</span></div><nav class="footer-links" aria-label="Liên kết chân trang"><a href="/#featured-courses-section">Chương trình đào tạo</a><span>Tra cứu chứng chỉ</span><span>Quy chế học vụ</span><span>Hỗ trợ học viên</span></nav><span class="footer-copy">© 2025 Study2Work. All rights reserved.</span></div></footer>
 </div>

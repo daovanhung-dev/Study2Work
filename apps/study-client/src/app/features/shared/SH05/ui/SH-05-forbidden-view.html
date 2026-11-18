@@ -41,8 +41,8 @@
         <div class="policy-callout">
           <div class="policy-title"><strong>Bảo vệ quyền truy cập</strong></div>
           <p class="policy-text">
-            Hệ thống chỉ hiển thị lý do 401 hoặc 403 khi máy chủ trả kết quả tương ứng. Chưa có
-            phiên hợp lệ thì không tải dữ liệu học viên.
+            Hệ thống chỉ hiển thị mã 401 hoặc 403 khi máy chủ trả kết quả tương ứng. Nội dung được
+            bảo vệ không hiển thị trên trang này.
           </p>
         </div>
         <div class="diagnostic-container" aria-label="Thông tin trạng thái">
@@ -70,13 +70,13 @@
             </div>
             <div class="diag-cell">
               <span class="diag-label">Bước tiếp theo</span
-              ><span class="diag-value">Đăng nhập hoặc về trang công khai</span>
+              ><span class="diag-value">{{ state.status === 403 ? 'Về trang công khai' : 'Đăng nhập lại' }}</span>
             </div>
           </div>
         </div>
         <div class="actions-row">
-          <a href="/login" class="btn-safe-home">Đến trang đăng nhập</a
-          ><a href="/" class="btn-copy-trace">Về trang chủ</a>
+          <a *ngIf="state.status !== 403" [href]="loginHref()" class="btn-safe-home">Đến trang đăng nhập</a
+          ><a href="/" [class.btn-safe-home]="state.status === 403" [class.btn-copy-trace]="state.status !== 403">Về trang chủ</a>
         </div>
       </section>
       <aside class="right-column" aria-label="Thông tin hỗ trợ">
@@ -90,23 +90,26 @@
               <div class="trace-id-label">Trace Identifier</div>
               <div class="trace-id-value">{{ state.traceId ?? 'Chưa có' }}</div>
             </div>
+            <button *ngIf="state.traceId" type="button" class="trace-copy" (click)="copyTraceId()" aria-label="Sao chép Trace ID">Sao chép</button>
           </div>
+          <p aria-live="polite" class="sanitized-note">{{ copyFeedback() }}</p>
           <div class="contract-sub-row">
             <span>Standard Response Contract</span
             ><span>{{ state.status === null ? 'Chưa có dữ liệu' : 'HTTP ' + state.status }}</span>
           </div>
-          <div class="light-json-box">
+          <p *ngIf="state.businessCode" class="sanitized-note">Mã lỗi: {{ state.businessCode }}</p>
+          <div class="light-json-box" *ngIf="state.status === null">
             Mở trang trực tiếp không tạo yêu cầu xác thực. Thông tin lỗi chỉ hiển thị sau khi nhận
             phản hồi thật từ máy chủ.
           </div>
-          <p class="sanitized-note">Không tạo mã lỗi hoặc Trace ID mẫu cho phiên truy cập này.</p>
+          <p class="sanitized-note">{{ state.traceId ? 'Trace ID lấy từ phản hồi của máy chủ.' : 'Máy chủ không cung cấp Trace ID cho trạng thái này.' }}</p>
         </div>
         <div class="panel-card rules-card">
           <h2 class="rules-heading">Bạn có thể làm gì?</h2>
           <ul class="rules-list">
             <li>
               <span class="rule-check" aria-hidden="true">✓</span>
-              <div>Đăng nhập bằng tài khoản học viên để thử lại.</div>
+              <div>{{ state.status === 403 ? 'Quay về trang công khai an toàn.' : 'Đăng nhập bằng tài khoản học viên để thử lại.' }}</div>
             </li>
             <li>
               <span class="rule-check" aria-hidden="true">✓</span>

@@ -1,15 +1,15 @@
-<div class="portal-page" [attr.data-state]="state.kind">
+<div class="portal-page">
   <!-- Gate Banner -->
   <div class="gate-strip">
     <div class="portal-container gate-inner">
       <div class="gate-left">
         <span class="gate-dot">!</span>
-        <span>SPECIFICATION GATE ACTIVE • API #20, #21, #38, #43 DESIGN_ONLY (D)</span>
+        <span>API #20, #38, #43 ĐÃ KẾT NỐI • API #21 CHƯA TRẢ DỮ LIỆU TIẾN ĐỘ</span>
       </div>
       <div class="gate-right">
-        <span>Giao diện kiểm thử Hand-off ST-01</span>
+        <span>Tổng quan học viên ST-01</span>
         <span>•</span>
-        <span class="gate-policy">Zero Synthetic Data Policy</span>
+        <span class="gate-policy">Chỉ hiển thị dữ liệu từ máy chủ</span>
       </div>
     </div>
   </div>
@@ -27,21 +27,20 @@
       <div class="hero-info">
         <div class="badge-row">
           <span class="badge-blue">MÃ MÀN HÌNH: ST-01</span>
-          <span class="badge-gray">TIÊU CHUẨN DESIGN_ONLY</span>
+          <span class="badge-gray">DỮ LIỆU THEO TỪNG WIDGET</span>
         </div>
         <h1 class="page-title">Tổng quan học tập</h1>
         <p class="page-desc">
-          Không gian hiển thị tổng quan tiến trình đào tạo nghề nghiệp cá nhân. Hiện tại, toàn bộ
-          dịch vụ dữ liệu học viên (học phần, thống kê hoàn thành, danh hiệu và bản tin) đang trong
-          giai đoạn hoàn thiện hợp đồng giao tiếp API với backend. Trạng thái kiểm thử tuân thủ
-          nghiêm ngặt nguyên tắc cổng kiểm soát, không phát sinh số liệu nhân tạo.
+          Khóa học, thành tích và thông báo được tải từ tài khoản đang đăng nhập. Mỗi mục hiển thị
+          trạng thái riêng nếu máy chủ chưa có dữ liệu hoặc trả lỗi. Tiến độ sẽ xuất hiện khi API #21
+          cung cấp số liệu học tập thay vì hồ sơ người dùng.
         </p>
       </div>
       <div class="status-pill-card">
         <div class="status-icon">✓</div>
         <div>
           <div class="status-label">TRẠNG THÁI CỔNG</div>
-          <div class="status-value">{{ state.title }}</div>
+          <div class="status-value">{{ statusLabel }}</div>
         </div>
       </div>
     </section>
@@ -53,19 +52,30 @@
         <section class="module-card">
           <div class="module-header">
             <div>
-              <h2 class="module-title">Khóa học đang học</h2>
-              <p class="module-sub">Cổng kết nối: API #20 (Khóa học của tôi)</p>
+              <h2 class="module-title">Khóa học của tôi</h2>
+              <p class="module-sub">API #20 · Danh sách ghi danh của tài khoản hiện tại</p>
             </div>
-            <span class="badge-gray">DESIGN_ONLY</span>
+            <span class="badge-gray">{{ courses.kind === 'ready' ? courses.total + ' khóa' : courses.kind === 'loading' ? 'ĐANG TẢI' : 'API #20' }}</span>
           </div>
           <div class="gated-empty-box">
-            <div class="empty-icon">🔒</div>
-            <h3>Chưa nạp được danh sách khóa học</h3>
-            <p>
-              Endpoint API #20 đang trong quy trình đặc tả cấu trúc dữ liệu JSON Schema. Danh sách
-              sẽ chỉ xuất hiện khi API #20 trả dữ liệu ghi danh hợp lệ.
-            </p>
-            <a href="/student/courses" class="btn-primary">Đi đến Khóa học của tôi (ST-08) →</a>
+            @if (courses.kind === 'loading') {
+              <p role="status">Đang tải khóa học đã ghi danh…</p>
+            } @else if (courses.kind === 'ready') {
+              <ul class="record-list">
+                @for (course of courses.items.slice(0, 3); track course.course_id) {
+                  <li><strong>{{ course.name }}</strong><span>Trạng thái ghi danh: {{ course.enrollment_status }}</span></li>
+                }
+              </ul>
+              <p>Hiển thị {{ courses.items.length }} trong {{ courses.total }} khóa từ API #20.</p>
+            } @else if (courses.kind === 'empty') {
+              <h3>Chưa có khóa học được ghi danh</h3>
+              <p>API #20 đã trả danh sách rỗng cho tài khoản này.</p>
+            } @else if (courses.kind === 'error') {
+              <h3>Không tải được khóa học</h3><p>{{ courses.message }}</p>
+              @if (courses.traceId) { <small class="trace-note">Trace ID: {{ courses.traceId }}</small> }
+              <button type="button" class="btn-secondary" (click)="retry.emit('courses')">Thử lại</button>
+            }
+            <a href="/student/courses" class="btn-primary">Đến Khóa học của tôi (ST-08) →</a>
           </div>
         </section>
 
@@ -74,18 +84,21 @@
           <div class="module-header">
             <div>
               <h2 class="module-title">Tiến độ tổng quan</h2>
-              <p class="module-sub">Cổng kết nối: API #21 (Tiến độ tổng hợp)</p>
+              <p class="module-sub">API #21 · Tiến độ tổng hợp</p>
             </div>
-            <span class="badge-gray">DESIGN_ONLY</span>
+            <span class="badge-gray">{{ progress.kind === 'loading' ? 'ĐANG TẢI' : 'API #21' }}</span>
           </div>
           <div class="gated-empty-box">
-            <div class="empty-icon">📈</div>
-            <h3>Không có dữ liệu tiến độ thực tế</h3>
-            <p>
-              Không hiển thị biểu đồ, chỉ số KPI hoặc thanh tỷ lệ % giả định. Tiến độ chỉ xuất hiện
-              sau khi API #21 có dữ liệu được xác minh.
-            </p>
-            <a href="/student/courses" class="btn-secondary">Về khóa học của tôi</a>
+            @if (progress.kind === 'loading') {
+              <p role="status">Đang kiểm tra nguồn tiến độ…</p>
+            } @else if (progress.kind === 'contract-gap') {
+              <h3>Chưa có số liệu tiến độ</h3><p>{{ progress.message }}</p>
+            } @else if (progress.kind === 'error') {
+              <h3>Không tải được nguồn tiến độ</h3><p>{{ progress.message }}</p>
+              @if (progress.traceId) { <small class="trace-note">Trace ID: {{ progress.traceId }}</small> }
+              <button type="button" class="btn-secondary" (click)="retry.emit('progress')">Thử lại</button>
+            }
+            <a href="/student/progress" class="btn-secondary">Xem chi tiết tiến độ (ST-20) →</a>
           </div>
         </section>
 
@@ -94,19 +107,27 @@
           <div class="module-header">
             <div>
               <h2 class="module-title">Thành tích &amp; Chứng nhận</h2>
-              <p class="module-sub">Cổng kết nối: API #38 (Thành tích)</p>
+              <p class="module-sub">API #38 · Thành tích đã được ghi nhận</p>
             </div>
-            <span class="badge-gray">DESIGN_ONLY</span>
+            <span class="badge-gray">{{ achievements.kind === 'ready' ? achievements.total + ' thành tích' : achievements.kind === 'loading' ? 'ĐANG TẢI' : 'API #38' }}</span>
           </div>
           <div class="gated-empty-box">
-            <div class="empty-icon">🏅</div>
-            <h3>Kho chứng chỉ &amp; huy hiệu chưa khả dụng</h3>
-            <p>
-              Hệ thống tuân thủ cam kết không tự cấp chứng chỉ hoặc hiển thị phù hiệu ngẫu nhiên.
-              Mọi minh chứng đánh giá năng lực nghề nghiệp đều cần chữ ký kiểm định từ hệ thống chấm
-              điểm ST-22.
-            </p>
-            <strong class="wait-caption">Chờ kích hoạt cổng xác thực chứng chỉ doanh nghiệp</strong>
+            @if (achievements.kind === 'loading') {
+              <p role="status">Đang tải thành tích…</p>
+            } @else if (achievements.kind === 'ready') {
+              <ul class="record-list">
+                @for (achievement of achievements.items.slice(0, 3); track achievement.id) {
+                  <li><strong>{{ achievement.title }}</strong><span>Mã: {{ achievement.code }} · Ghi nhận {{ achievement.awarded_at | date:'dd/MM/yyyy' }}</span></li>
+                }
+              </ul>
+            } @else if (achievements.kind === 'empty') {
+              <h3>Chưa có thành tích được ghi nhận</h3><p>API #38 đã trả danh sách rỗng cho tài khoản này.</p>
+            } @else if (achievements.kind === 'error') {
+              <h3>Không tải được thành tích</h3><p>{{ achievements.message }}</p>
+              @if (achievements.traceId) { <small class="trace-note">Trace ID: {{ achievements.traceId }}</small> }
+              <button type="button" class="btn-secondary" (click)="retry.emit('achievements')">Thử lại</button>
+            }
+            <a href="/student/achievements" class="btn-secondary">Xem thành tích →</a>
           </div>
         </section>
 
@@ -115,23 +136,42 @@
           <div class="module-header">
             <div>
               <h2 class="module-title">Thông báo mới nhất</h2>
-              <p class="module-sub">Cổng kết nối: API #43 (Thông báo)</p>
+              <p class="module-sub">API #43 · Danh sách thông báo theo thời gian tạo</p>
             </div>
-            <span class="badge-gray">DESIGN_ONLY</span>
+            <span class="badge-gray">{{ notifications.kind === 'ready' ? notifications.total + ' thông báo' : notifications.kind === 'loading' ? 'ĐANG TẢI' : 'API #43' }}</span>
           </div>
           <div class="gated-empty-box">
-            <div class="empty-icon">✉️</div>
-            <h3>Gateway thông báo đang tạm khóa</h3>
-            <p>
-              Chưa kích hoạt gateway sự kiện thời gian thực (SSE/Webhook). Hộp thư thông báo học tập
-              không ghi nhận tin nhắn rác hoặc thông tin nhắc lịch chưa xác thực.
-            </p>
-            <span class="btn-secondary" aria-disabled="true">Thông báo chưa khả dụng</span>
+            @if (notifications.kind === 'loading') {
+              <p role="status">Đang tải thông báo…</p>
+            } @else if (notifications.kind === 'ready') {
+              <ul class="record-list">
+                @for (notification of notifications.items.slice(0, 3); track notification.id) {
+                  <li><strong>{{ notification.title }}</strong><span>{{ notification.content }}</span><small>{{ notification.created_at | date:'dd/MM/yyyy HH:mm' }}</small></li>
+                }
+              </ul>
+            } @else if (notifications.kind === 'empty') {
+              <h3>Chưa có thông báo</h3><p>API #43 đã trả danh sách rỗng cho tài khoản này.</p>
+            } @else if (notifications.kind === 'error') {
+              <h3>Không tải được thông báo</h3><p>{{ notifications.message }}</p>
+              @if (notifications.traceId) { <small class="trace-note">Trace ID: {{ notifications.traceId }}</small> }
+              <button type="button" class="btn-secondary" (click)="retry.emit('notifications')">Thử lại</button>
+            }
+            <a href="/student/notifications" class="btn-secondary">Mở hòm thư thông báo (ST-26) →</a>
           </div>
         </section>
       </div>
 
-      <!-- Right Sidebar Matrix -->
+      <aside class="matrix-card" aria-label="Trạng thái kết nối API">
+        <h2 class="matrix-title">Trạng thái dữ liệu học viên</h2>
+        <p class="matrix-desc">Mỗi mục được tải riêng từ API của tài khoản đang đăng nhập. Kết quả rỗng và lỗi được hiển thị khác nhau.</p>
+        <div class="api-list">
+          <div class="api-item"><div><strong class="api-code">#20 GET /users/me/courses</strong><div class="api-module">Khóa học của tôi</div></div><span class="badge-design">{{ statusText(courses) }}</span></div>
+          <div class="api-item"><div><strong class="api-code">#21 GET /users/me/progress</strong><div class="api-module">Chưa có dữ liệu tiến độ</div></div><span class="badge-design">{{ statusText(progress) }}</span></div>
+          <div class="api-item"><div><strong class="api-code">#38 GET /users/me/achievements</strong><div class="api-module">Thành tích đã ghi nhận</div></div><span class="badge-design">{{ statusText(achievements) }}</span></div>
+          <div class="api-item"><div><strong class="api-code">#43 GET /users/me/notifications</strong><div class="api-module">Thông báo của học viên</div></div><span class="badge-design">{{ statusText(notifications) }}</span></div>
+        </div>
+        <div class="nav-note-box"><strong class="nav-note-title">Điều hướng học tập</strong><p>Tiếp tục tại Khóa học của tôi, Tiến độ hoặc Thông báo. Các màn dùng cùng phiên đăng nhập hiện tại.</p></div>
+      </aside>
     </div>
   </main>
 </div>

@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import type { HttpHeaders, HttpParams } from '@angular/common/http';
+import type { HttpContext, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -16,6 +16,7 @@ export interface StudyApiRequestOptions {
   params?: HttpParams;
   body?: unknown;
   headers?: HttpHeaders;
+  context?: HttpContext;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -51,6 +52,7 @@ export class StudyApiService {
     return this.http.request<ApiEnvelope<T>>(api.method, `${STUDY_API_BASE_PATH}${path}`, {
       body: options.body,
       headers: options.headers,
+      context: options.context,
       params: options.params,
     });
   }
@@ -68,6 +70,7 @@ export class StudyApiService {
       {
         body: options.body,
         headers: options.headers,
+        context: options.context,
         params: options.params,
         observe: 'response',
       },

@@ -17,6 +17,6 @@ describe('SH-07 operations page', () => {
     fixture.detectChanges();
 
     expect(fixture.componentInstance.state().kind).toBe('missing-context');
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Thiếu thông tin');
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Thiếu mã tác vụ');
   });
 });

@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@ang
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
+import { AuthSessionService } from '../../core/auth/auth-session.service';
 
 type StudentSection = 'overview' | 'checkout' | 'myCourses' | 'profile';
 type StudentShellMode = 'legacy' | 'portal' | 'exam' | 'blank';
@@ -16,6 +17,7 @@ type StudentShellMode = 'legacy' | 'portal' | 'exam' | 'blank';
 export class StudentLayout implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  readonly session = inject(AuthSessionService);
 
   shellMode: StudentShellMode = 'legacy';
   readonly section = signal<StudentSection | null>(null);
@@ -33,6 +35,11 @@ export class StudentLayout implements OnInit {
 
   ngOnInit(): void {
     this.updateRouteState();
+  }
+
+  logout(): void {
+    this.session.clear();
+    void this.router.navigateByUrl('/login');
   }
 
   closeMenu(): void {

@@ -11,6 +11,8 @@ import {
 } from '../models/ST-05-checkout-course.models';
 import { StudentOrderCheckView } from '../ui/ST-05-order-check-view';
 
+const MAX_COURSE_ID = 9_223_372_036_854_775_807n;
+
 @Component({
   selector: 'study-student-order-check-page',
   imports: [StudentOrderCheckView],
@@ -24,14 +26,16 @@ export class StudentOrderCheckPage implements OnInit {
   readonly course = signal<St05CourseSummary | null>(null);
   readonly loadState = signal<St05CourseLoadState>('loading');
   backToEnrollUrl = '/student';
+  backLabel = 'Về trang học viên';
 
   ngOnInit(): void {
     const courseId = this.route.snapshot.paramMap.get('courseId');
-    if (!courseId) {
+    if (!isValidCourseId(courseId)) {
       this.loadState.set('missing');
       return;
     }
-    this.backToEnrollUrl = `/student/enroll/${encodeURIComponent(courseId)}`;
+    this.backToEnrollUrl = '/student/enroll/' + courseId;
+    this.backLabel = 'Quay lại kiểm tra ghi danh';
     this.api
       .getCourse(courseId)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -46,4 +50,8 @@ export class StudentOrderCheckPage implements OnInit {
           ),
       });
   }
+}
+
+function isValidCourseId(value: string | null): value is string {
+  return value !== null && /^[1-9]\d*$/.test(value) && BigInt(value) <= MAX_COURSE_ID;
 }

@@ -38,7 +38,7 @@
 
 .hero-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
 .hero-info { max-width: 780px; }
-.badge-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
 .badge-blue { background: #eff6ff; color: #0b5cd6; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; }
 .badge-gray { background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; }
 .page-title { font-size: 28px; font-weight: 800; margin: 0 0 8px; }
@@ -91,6 +91,19 @@
 .wcag-pill { background: #f1f5f9; color: #334155; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 9999px; }
 .footer-links { display: flex; gap: 20px; }
 .footer-links a { color: #475569; text-decoration: none; font-weight: 600; }
+
+.record-list { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 8px; text-align: left; }
+.record-list li { display: grid; gap: 4px; padding: 12px 14px; border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; min-width: 0; }
+.record-list strong { font-size: 13px; overflow-wrap: anywhere; }
+.record-list span, .record-list small { color: #475569; font-size: 12px; overflow-wrap: anywhere; }
+.gated-empty-box .btn-primary, .gated-empty-box .btn-secondary { margin: 4px; min-height: 40px; align-items: center; }
+.api-code { overflow-wrap: anywhere; }
+.badge-design { white-space: nowrap; }
+@media (max-width: 420px) { .badge-row > span { flex: 0 0 auto; } }
+.status-pill-card { background: #eff6ff; border-color: #bfdbfe; }
+.status-icon { background: #dbeafe; color: #1d4ed8; }
+.status-value { color: #1d4ed8; }
+.trace-note { display: block; margin: 0 0 8px; color: #64748b; overflow-wrap: anywhere; }
 
 @media (max-width: 960px) {
   .content-grid { grid-template-columns: 1fr; }

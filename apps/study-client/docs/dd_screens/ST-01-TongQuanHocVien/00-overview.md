@@ -1,5 +1,7 @@
 # ST-01 — Tổng quan học viên · Tổng quan
 
+> Runtime 2026-11-18: route `/student` và bốn API tham chiếu đã có source thực thi. ST-01 hiện tải #20, #21, #38, #43 độc lập; tài khoản QA đang mở nhận danh sách rỗng từ #20/#38/#43 và #21 trả hồ sơ thay vì tiến độ. Các nhãn `DD BLOCKED`/`NOT_FOUND` bên dưới là trạng thái của gói DD chuyển đổi ngày 2026-11-08; khoảng trống dữ liệu tiến độ vẫn chưa được backend giải quyết.
+
 | Trường | Giá trị |
 |---|---|
 | Screen ID | `ST-01` |

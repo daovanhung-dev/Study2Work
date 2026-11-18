@@ -52,3 +52,15 @@ references and do not establish runtime behavior.
 The structure in `frontend-rules.md` is the intended next implementation
 structure. The current placeholder directories do not yet prove that those
 groups, layouts, routes or screen modules are implemented.
+
+## Verified auth update (2026-11-18)
+
+SH-02 now consumes the current Study Server API #03 token payload, stores a tab-scoped session in `sessionStorage`, confirms STUDENT via API #04, and navigates by role. `core/auth/auth.interceptor.ts` sends Bearer tokens and refreshes through source-only R-X01; `student-auth.guard.ts` protects `/student`. `StudentLayout` clears the client session on logout. This source-based wiring follows the user's explicit implementation request; SH-02 DD still records its older API #03 contract discrepancy and is not proof of a successful live login. The currently connected backend database lacks `refresh_tokens`, so live API #03 returns 500 until that schema is corrected.
+
+## ST-09 read-only API update (2026-11-18)
+
+`/student/courses/:courseId` verifies ACTIVE membership by paging authenticated API #20 before reading course lesson progress from #37 and public lesson titles from #09. The page renders sourced course identity and lesson progress, or blocks the view on absent membership/invalid data. It discards #09 `content` and `video_url`; ST-10 access and playback remain gated. The ST-09 DD source audit predates current #20/#37 backend routes and does not settle full course tree, quiz/assignment aggregate, or lesson handoff. The API registry now marks #37 WIRED; that means route source exists, not that every deployment or account has data.
+
+## ST-10 visual and source audit (2026-11-18)
+
+`/student/lessons/:lessonId/start` renders a gated ST-10 handoff with SVG icons and no media. The frontend calls API #22 once per valid route lesson ID, handles 200/403/404/error locally, and retains only safe lesson ID/course ID/title metadata. The current #22 backend response includes `content` and `video_url` and does not check lesson `PUBLISHED` before returning them; this requires a backend contract fix for full protection. #23 start and #24 detail remain unwired until the trigger/retry rule, protected payload handling and ST-11 handoff are settled. The progress bar has no fabricated completion width.

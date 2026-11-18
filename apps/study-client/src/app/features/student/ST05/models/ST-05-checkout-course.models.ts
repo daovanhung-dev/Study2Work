@@ -17,3 +17,14 @@ export interface St05CoursePage {
 }
 
 export type St05CourseLoadState = 'loading' | 'ready' | 'missing' | 'error';
+
+/** Backend API #16 returns this Order only after explicit creation. */
+export interface St05Order {
+  id: number;
+  course_id: number;
+  user_id: number;
+  amount: string;
+  currency: 'VND';
+  status: string;
+  created_at: string;
+}

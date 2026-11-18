@@ -97,7 +97,8 @@ dd {
 .details-footnote strong { font-weight: 500; }
 .footnote-icon { display: grid; place-items: center; width: 48px; height: 48px; flex: 0 0 48px; border-radius: 10px; background: #e1ebff; color: #064cc8; }
 .footnote-icon svg { width: 24px; height: 24px; }
-.screen-footer { display: flex; justify-content: space-between; gap: 24px; margin-top: 42px; color: #303a4a; font-size: 14px; }
+.screen-footer { width: min(100%, 1120px); display: flex; justify-content: space-between; align-items: center; gap: 24px; margin: 42px auto 0; padding: 16px 0 4px; border-top: 1px solid #e3e8f2; color: #303a4a; font-size: 14px; }
+.screen-footer span:last-child { text-align: right; }
 @media (min-width: 1024px) {
   .screen-footer { margin-top: 76px; }
 }
@@ -130,7 +131,8 @@ dd {
   .contract-note-heading { align-items: flex-start; flex-direction: column; }
   dl > div { align-items: flex-start; flex-direction: column; gap: 8px; }
   dd { text-align: left; }
-  .screen-footer { flex-direction: column; gap: 6px; }
+  .screen-footer { flex-direction: column; align-items: flex-start; gap: 6px; font-size: 12px; }
+  .screen-footer span:last-child { text-align: left; }
   .back-label-full { display: none; }
   .back-label-short { display: inline; }
 }

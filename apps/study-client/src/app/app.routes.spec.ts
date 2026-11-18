@@ -69,7 +69,7 @@ describe('Study app routes', () => {
   it('opens the operations screen with its route context', async () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/operations/operation-1', SharedLayout);
-    expect(harness.routeNativeElement?.textContent).toContain('Theo dõi tác vụ chưa khả dụng');
+    expect(harness.routeNativeElement?.textContent).toContain('Không tìm thấy tác vụ');
   });
 
   it('keeps the root component as a router outlet only', () => {

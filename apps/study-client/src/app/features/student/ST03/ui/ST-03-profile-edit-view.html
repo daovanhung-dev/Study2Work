@@ -39,11 +39,11 @@
           <div class="pipeline-box">
             <div class="pipeline-head">
               <strong>Avatar Asset Pipeline</strong>
-              <span class="halted-tag">API #13 Halted</span>
+              <span class="halted-tag">Upload tạm khóa</span>
             </div>
             <p>
-              Không hỗ trợ chọn tệp. Form upload vật lý bị chặn nhằm ngăn chặn lỗi mismatch
-              binary/URL.
+              API #13 đã có endpoint nhận ảnh Data URL. Màn này chưa mở chọn tệp vì bước lưu avatar
+              qua API #14 vẫn thuộc Gate G-03.
             </p>
           </div>
 
@@ -91,28 +91,33 @@
 
           <div class="field-block">
             <div class="label-row">
-              <label>Họ và tên <span class="req">*</span></label>
+              <label for="st03-full-name">Họ và tên <span class="req">*</span></label>
               <span class="badge-green">Hỗ trợ bởi API #04</span>
             </div>
             <input
+              id="st03-full-name"
+              name="full_name"
               type="text"
-              disabled
+              [disabled]="state !== 'ready'"
               [value]="profile?.full_name ?? ''"
               placeholder="Nhập họ và tên sinh viên..."
               class="input-field"
             />
-            <p class="helper-text">Dữ liệu họ và tên đồng bộ với bảng người dùng.</p>
+            <p class="helper-text">
+              Họ tên ban đầu lấy từ hồ sơ. Thay đổi nháp chưa thể lưu khi Gate G-03 còn hiệu lực.
+            </p>
           </div>
 
           <div class="field-block">
             <div class="label-row">
-              <label>Địa chỉ Email</label>
+              <label for="st03-email">Địa chỉ Email</label>
               <span class="badge-gray">Chỉ đọc (Read-only)</span>
             </div>
             <input
+              id="st03-email"
               type="email"
               readonly
-              disabled
+              [disabled]="state !== 'ready'"
               [value]="profile?.email ?? ''"
               placeholder="Chỉ hiển thị sau khi đăng nhập"
               class="input-field readonly"
@@ -195,8 +200,8 @@ Cột bio không có trong DDL hiện tại...</textarea>
           </div>
 
           <div class="solution-bar">
-            ✓ <strong>Bước tiếp theo:</strong> Chờ xác nhận hợp đồng API #13 và #14 trước khi mở
-            chức năng chỉnh sửa hồ sơ.
+            ✓ <strong>Bước tiếp theo:</strong> Chờ chốt luồng lưu API #14 và đồng bộ hồ sơ trước khi
+            mở chức năng chỉnh sửa hồ sơ.
           </div>
         </div>
       </div>

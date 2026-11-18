@@ -8,23 +8,46 @@ import { StudentProfileEditPage } from './ST-03-profile-edit-page';
 
 describe('ST-03 profile edit page', () => {
   it('loads editable profile data from the API', async () => {
-    const profile = { id: 7, full_name: 'Mai Nguyen', email: 'mai@example.com', role: 'student', avatar_url: null, phone: null, status: 'active', created_at: '2026-01-01', updated_at: '2026-01-01' };
+    const profile = {
+      id: 7,
+      full_name: 'Mai Nguyen',
+      email: 'mai@example.com',
+      role: 'student',
+      avatar_url: null,
+      phone: null,
+      status: 'active',
+      created_at: '2026-01-01',
+      updated_at: '2026-01-01',
+    };
     await TestBed.configureTestingModule({
       imports: [StudentProfileEditPage],
-      providers: [{ provide: StudentProfileEditService, useValue: { getProfile: () => of(profile) } }],
+      providers: [
+        { provide: StudentProfileEditService, useValue: { getProfile: () => of(profile) } },
+      ],
     }).compileComponents();
     const fixture = TestBed.createComponent(StudentProfileEditPage);
     fixture.detectChanges();
 
     expect(fixture.componentInstance.state()).toBe('ready');
     expect(fixture.componentInstance.profile()).toEqual(profile);
+    const name = fixture.nativeElement.querySelector('#st03-full-name') as HTMLInputElement;
+    const email = fixture.nativeElement.querySelector('#st03-email') as HTMLInputElement;
+    expect(name.disabled).toBe(false);
+    expect(name.value).toBe(profile.full_name);
+    expect(email.readOnly).toBe(true);
+    expect(email.disabled).toBe(false);
+    expect(fixture.nativeElement.querySelector('.btn-upload-disabled').disabled).toBe(true);
+    expect(fixture.nativeElement.querySelector('.btn-save-disabled').disabled).toBe(true);
   });
 
   it('blocks editing when the profile API returns 403', async () => {
     await TestBed.configureTestingModule({
       imports: [StudentProfileEditPage],
       providers: [
-        { provide: StudentProfileEditService, useValue: { getProfile: () => throwError(() => new HttpErrorResponse({ status: 403 })) } },
+        {
+          provide: StudentProfileEditService,
+          useValue: { getProfile: () => throwError(() => new HttpErrorResponse({ status: 403 })) },
+        },
       ],
     }).compileComponents();
     const fixture = TestBed.createComponent(StudentProfileEditPage);

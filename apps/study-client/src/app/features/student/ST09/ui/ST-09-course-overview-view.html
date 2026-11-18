@@ -5,45 +5,88 @@
         <div class="badge-row">
           <span class="badge-gray">MÃ MÀN HÌNH: ST-09</span>
           <span class="badge-blue">Route: /student/courses/:courseId</span>
-          <span class="badge-red">🔒 Trạng thái: Gated / Unavailable</span>
+          <span class="badge-red">
+            <svg class="inline-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/><path d="M12 14v3"/></svg>
+            Trạng thái: {{ state.kind === 'ready' ? 'Đã xác minh ghi danh' : 'Gated / Unavailable' }}
+          </span>
         </div>
-        <h1>Tổng quan khóa đang học (Chưa khả dụng)</h1>
-        <p>{{ state.message }}</p>
+        <h1>Tổng quan khóa đang học</h1>
+        <p>Dữ liệu ghi danh và tiến độ được xác minh từ hệ thống.</p>
       </div>
       <div class="api-state-box">
-        <div class="api-state-label">API State</div>
-        <div class="api-state-value">#09 công khai • #20/#37 chưa sẵn sàng</div>
+        <svg class="api-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="4" width="19" height="16" rx="2"/><path d="m6.5 9 3 3-3 3M12.5 15h5"/></svg>
+        <div>
+          <div class="api-state-label">API State</div>
+          <div class="api-state-value">#20 ghi danh • #37 tiến độ • #09 đề cương công khai</div>
+        </div>
       </div>
     </section>
 
+    @if (state.kind === 'ready') {
+    <section class="verified-course-card" aria-labelledby="verified-course-title">
+      <span class="verified-course-label">Khóa học đã ghi danh</span>
+      <h2 id="verified-course-title">{{ state.data.name }}</h2>
+      <div class="verified-progress">
+        <div class="verified-progress-heading"><span>Tiến độ bài học từ API #37</span><strong>{{ state.data.progressPercent }}%</strong></div>
+        <progress [value]="state.data.progressPercent" max="100" [attr.aria-label]="'Tiến độ bài học ' + state.data.name"></progress>
+        <p>{{ state.data.completedLessons }} / {{ state.data.totalLessons }} bài học đã hoàn thành</p>
+      </div>
+      <div class="verified-curriculum">
+        <h3>Đề cương bài học công khai</h3>
+        @if (state.data.publicLessons.length) {
+          <ol>
+            @for (lesson of state.data.publicLessons; track lesson.id) {
+              <li><span>{{ lesson.title }}</span><span class="lesson-public-badge">Đề cương</span></li>
+            }
+          </ol>
+        } @else {
+          <p>Khóa học chưa công bố bài học.</p>
+        }
+      </div>
+      <div class="action-row">
+        <a href="/student/courses" class="btn-soft">Quay lại Khóa học của tôi (ST-08)</a>
+        <button type="button" class="btn-primary" disabled aria-label="Kiểm tra quyền học bài ST-10 chưa khả dụng vì chưa có bài học được xác minh">Kiểm tra quyền học bài (ST-10)</button>
+      </div>
+    </section>
+    } @else {
     <section class="gated-center-card">
-      <div class="hero-icon">↻</div>
-      <div class="gate-pill">
-        Cổng kiểm soát học tập Course-learning tree &amp; enrollment entitlement chưa runtime
+      <div class="hero-icon" aria-hidden="true">
+        <svg viewBox="0 0 64 64" fill="none">
+          <path d="M28 12a20 20 0 0 0-12 31" />
+          <path d="M12 34v11h11M36 12h11v11M47 23a20 20 0 0 0-4-6" />
+          <path d="M29 45h-5a7 7 0 0 1 1-14 11 11 0 0 1 20 4 6 6 0 0 1 0 12H31" />
+        </svg>
+      </div>
+      <div class="gate-pill" role="alert" aria-live="polite">
+        <svg class="inline-icon warning-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 22 21H2L12 3Z"/><path d="M12 9v5M12 18h.01"/></svg>
+        Cổng kiểm soát học tập và quyền ghi danh
       </div>
       <h2>{{ state.title }}</h2>
-      <p class="gate-desc">
-        Cần backend chứng thực quyền ghi danh và sơ đồ tiến độ bài học hợp lệ trước khi hiển thị
-        trình phát. Mọi số liệu chương bài, giáo trình hoặc luồng phát trực tuyến đều bị khóa theo
-        đặc tả ST-09.
-      </p>
+      <p class="gate-desc">{{ state.message }}</p>
 
       <div class="policy-box">
-        <div>
+        <span class="policy-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 20 5v6c0 5-3.2 8.6-8 11-4.8-2.4-8-6-8-11V5l8-3Z"/><circle cx="12" cy="11" r="3"/><path d="M15 11v2a1.5 1.5 0 0 0 3 0v-2a6 6 0 1 0-2 4.5"/></svg>
+        </span>
+        <div class="policy-copy">
           <strong>Tiêu chuẩn kiểm soát bắt buộc</strong>
-          <p>
-            API #20 và #37 chưa có hợp đồng runtime đủ để xác minh quyền học. Không phát sinh mockup
-            bài giảng giả.
-          </p>
+          <p>Chỉ mở nội dung học sau khi API #20 xác minh ghi danh và API #37 cung cấp tiến độ hợp lệ.</p>
         </div>
-        <span class="badge-red">RESTRICTED_ACCESS</span>
+        <span class="restricted-badge">RESTRICTED_ACCESS</span>
       </div>
 
       <div class="action-row">
-        <a href="/student/courses" class="btn-soft">← Quay lại Khóa học của tôi (ST-08)</a>
-        <span class="btn-primary" aria-disabled="true">Chưa có bài học được xác minh</span>
+        <a href="/student/courses" class="btn-soft">
+          <svg class="action-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 12H4m7-7-7 7 7 7"/></svg>
+          Quay lại Khóa học của tôi (ST-08)
+        </a>
+        <button type="button" class="btn-primary" disabled aria-label="Kiểm tra quyền học bài ST-10 chưa khả dụng vì chưa có bài học được xác minh">
+          <svg class="action-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2 20 5v6c0 5-3.2 8.6-8 11-4.8-2.4-8-6-8-11V5l8-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+          Kiểm tra quyền học bài (ST-10)
+        </button>
       </div>
     </section>
+    }
 
     <section class="spec-section">
       <div class="spec-head">
@@ -56,63 +99,36 @@
 
       <div class="spec-grid">
         <div class="spec-card">
-          <h4>1. Quy chuẩn kiểm tra quyền (Gatekeeper)</h4>
-          <ul>
-            <li>
-              <strong>Pre-condition:</strong> Tuyệt đối không mount media player khi payload API #20
-              trả về trạng thái chưa ghi danh.
-            </li>
-            <li>
-              <strong>Curriculum Integrity:</strong> API #09 phải trả về cây danh mục hợp lệ trước
-              khi render danh sách bài học.
-            </li>
-            <li>
-              <strong>Progress Mapping:</strong> API #37 nạp tiến độ sau cùng. Nếu không có dữ liệu,
-              mặc định chặn tại màn hình ST-09 này.
-            </li>
+          <h4><span class="spec-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2 20 5v6c0 5-3.2 8.6-8 11-4.8-2.4-8-6-8-11V5l8-3Z"/><path d="M12 3v17M5 8h7"/></svg></span>1. Quy chuẩn kiểm tra quyền (Gatekeeper)</h4>
+          <ul class="check-list">
+            <li><svg class="check-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><span><strong>Pre-condition:</strong> Tuyệt đối không mount media player khi payload API #20 trả về trạng thái chưa ghi danh.</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><span><strong>Curriculum Integrity:</strong> API #09 phải trả về cây danh mục hợp lệ trước khi render danh sách bài học.</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg><span><strong>Progress Mapping:</strong> Sau xác minh ghi danh, API #37 cung cấp tiến độ bài học. Nếu dữ liệu không hợp lệ, màn hình tiếp tục chặn nội dung học.</span></li>
           </ul>
         </div>
         <div class="spec-card">
-          <h4>2. Màu sắc &amp; Không gian (Tokens)</h4>
-          <div class="token-row">
-            <span>Ocean Blue Brand Anchor:</span><code>#0B5F8A / Primary</code>
-          </div>
-          <div class="token-row">
-            <span>Grid Spacing:</span><strong>Bội số 4px (space-*)</strong>
-          </div>
-          <div class="token-row">
-            <span>Elevation:</span><strong>Shadow Level 1-2, No Border</strong>
-          </div>
+          <h4><span class="spec-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 1.5-3.3 2 2 0 0 1 1.5-3.3H19a3 3 0 0 0 3-3A9 9 0 0 0 12 3Z"/><circle cx="7" cy="11" r="1"/><circle cx="10" cy="7" r="1"/><circle cx="16" cy="7" r="1"/></svg></span>2. Màu sắc &amp; Không gian (Tokens)</h4>
+          <div class="token-row"><span>Ocean Blue Brand Anchor:</span><code>#0B5F8A / Primary</code></div>
+          <div class="token-row"><span>Grid Spacing:</span><strong>Bội số 4px (space-*)</strong></div>
+          <div class="token-row"><span>Elevation:</span><strong>Shadow Level 1-2, No Border</strong></div>
           <div class="token-row"><span>Layout Width:</span><strong>Max 1440px desktop</strong></div>
         </div>
         <div class="spec-card">
-          <h4>3. Tiêu chuẩn WCAG 2.1 AA</h4>
-          <ul>
-            <li>
-              <strong>Contrast Ratio:</strong> Tỷ lệ tương phản tối thiểu 4.5:1 đối với body copy và
-              3:1 đối với headline.
-            </li>
-            <li>
-              <strong>Keyboard Navigation:</strong> Các nút điều hướng ST-08 và ST-10 hỗ trợ đầy đủ
-              phím Tab và focus ring.
-            </li>
-            <li>
-              <strong>Aria Live:</strong> Khối cảnh báo thiết lập role="alert" và
-              aria-live="polite".
-            </li>
+          <h4><span class="spec-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="4" r="2"/><path d="M3 9h18M12 7v14M7 21l5-7 5 7"/></svg></span>3. Tiêu chuẩn WCAG 2.1 AA</h4>
+          <ul class="check-list green-checks">
+            <li><svg class="check-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 12 5 5L20 6"/></svg><span><strong>Contrast Ratio:</strong> Tỷ lệ tương phản tối thiểu 4.5:1 đối với body copy và 3:1 đối với headline.</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 12 5 5L20 6"/></svg><span><strong>Keyboard Navigation:</strong> Các nút điều hướng ST-08 và ST-10 hỗ trợ đầy đủ phím Tab và focus ring.</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 12 5 5L20 6"/></svg><span><strong>Aria Live:</strong> Khối cảnh báo thiết lập role="alert" và aria-live="polite".</span></li>
           </ul>
         </div>
       </div>
 
       <div class="route-note-bar">
         <div class="route-note-left">
-          <span class="curly-badge">{{ '{' }}{{ '}' }}</span>
+          <span class="curly-badge" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M16 6H12a3 3 0 0 0-3 3v7a4 4 0 0 1-4 4 4 4 0 0 1 4 4v7a3 3 0 0 0 3 3h4M24 6h4a3 3 0 0 1 3 3v7a4 4 0 0 0 4 4 4 4 0 0 0-4 4v7a3 3 0 0 1-3 3h-4"/></svg></span>
           <div>
             <strong>Lưu ý tích hợp Frontend Engine</strong>
-            <p>
-              Không tự ý giải nén mock data khi API chưa triển khai runtime endpoint. Giữ nguyên màn
-              hình cổng chặn ST-09 cho tới khi có thông báo release sprint tiếp theo.
-            </p>
+            <p>Chỉ hiển thị nội dung học thật sau khi ST-09 xác minh quyền ghi danh và nhận dữ liệu tiến độ hợp lệ.</p>
           </div>
         </div>
       </div>

@@ -13,12 +13,29 @@
           <span class="lms-brand-name">Study2Work LMS</span>
         </a>
 
-        <nav class="lms-nav-links">
+        <nav id="sh06-mobile-nav" class="lms-nav-links" [class.lms-nav-links--open]="mobileNavOpen" aria-label="Điều hướng chính">
           <a href="/">Trang chủ</a>
           <a href="/#featured-courses-section">Khóa học</a>
           <a href="/#featured-courses-section">Tìm kiếm</a>
+          <div class="mobile-auth-links">
+            <a href="/login">Đăng nhập</a>
+            <a href="/register" class="mobile-register-link">Đăng ký</a>
+          </div>
         </nav>
       </div>
+
+      <button
+        type="button"
+        class="mobile-nav-toggle"
+        aria-label="Mở hoặc đóng menu"
+        aria-controls="sh06-mobile-nav"
+        [attr.aria-expanded]="mobileNavOpen"
+        (click)="mobileNavOpen = !mobileNavOpen"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
 
       <div class="nav-right">
         <a href="/login" class="nav-login-link">Đăng nhập</a>
@@ -69,7 +86,7 @@
             <circle cx="12" cy="12" r="10"></circle>
             <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
           </svg>
-          <span>Xem khóa học nổi bật</span>
+          <span>Về danh sách khóa học</span>
         </a>
         <a href="/" class="btn-white-outline">
           <svg
@@ -107,23 +124,66 @@
       </div>
     </div>
 
-    <!-- Available Courses Section -->
+    @if (state.source !== 'error') {
+      <section class="container available-courses-section" aria-labelledby="available-courses-title">
+        <div class="section-header-flex">
+          <div>
+            <h2 id="available-courses-title" class="section-title">Khám phá các khóa học khả dụng</h2>
+            <p class="section-subtitle">Khóa học đã xuất bản trên Study2Work</p>
+          </div>
+          <a href="/#featured-courses-section" class="see-all-link">Xem tất cả <span aria-hidden="true">→</span></a>
+        </div>
+
+        @if (courses === null) {
+          <p class="catalog-state" role="status">Đang tải khóa học…</p>
+        } @else if (courses.length === 0) {
+          <p class="catalog-state">Hiện chưa có khóa học công khai để gợi ý.</p>
+        } @else {
+          <div class="course-mini-grid">
+            @for (course of courses; track course.id) {
+              <article class="course-mini-card">
+                <div class="mini-card-top">
+                  <span class="mini-tag">Khóa học</span>
+                  <span class="mini-duration">{{ formatPrice(course.price) }}</span>
+                </div>
+                <h3 class="mini-title">{{ course.title }}</h3>
+                <p class="mini-desc">{{ course.description || 'Xem thông tin khóa học trên Study2Work.' }}</p>
+                <div class="mini-card-footer">
+                  <span class="mini-students">{{ course.mentor.full_name }}</span>
+                  <span class="mini-detail-link">Đã xuất bản</span>
+                </div>
+              </article>
+            }
+          </div>
+        }
+        <aside class="help-banner-strip">
+          <span class="help-left"><span class="help-icon" aria-hidden="true">?</span>Bạn cần trợ giúp truy cập tài khoản hoặc môn học đã đăng ký?</span>
+          <span class="help-link-btn">Kênh hỗ trợ đang cập nhật</span>
+        </aside>
+      </section>
+    }
   </main>
 
   <!-- Footer -->
   <footer class="lms-footer">
     <div class="container footer-inner">
       <div class="footer-brand">
-        <span class="footer-logo-text">📖 Study2Work LMS</span>
-        <span class="footer-sep">&bull;</span>
-        <span>Nền tảng học tập &amp; Định hướng nghề nghiệp</span>
+        <span class="footer-logo-text">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          Study2Work LMS
+        </span>
+        <span class="footer-sep" aria-hidden="true">&bull;</span>
+        <span class="footer-description">Nền tảng học tập &amp; Định hướng nghề nghiệp</span>
       </div>
-      <div class="footer-links">
+      <nav class="footer-links" aria-label="Liên kết chân trang">
         <a href="/#featured-courses-section">Chương trình đào tạo</a>
         <span>Tra cứu chứng chỉ</span>
         <span>Quy chế học vụ</span>
         <span>Hỗ trợ học viên</span>
-      </div>
+      </nav>
       <div class="footer-copy">&copy; 2025 Study2Work. All rights reserved.</div>
     </div>
   </footer>

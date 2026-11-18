@@ -1,25 +1,30 @@
 <div class="checkout-page" [attr.data-state]="state.kind">
   <main class="container main-wrap">
-    <div class="crumb-row">
-      <a href="/student">Tổng quan</a>
-      <span>›</span>
-      <span>Kiểm tra khóa học</span>
-      <span>›</span>
-      <span>Kiểm tra ghi danh</span>
-      <span>›</span>
-      <span class="crumb-active">Thực hiện thanh toán</span>
+    <div class="crumb-row" aria-label="Đường dẫn trang">
+      <a href="/">Trang chủ</a>
+      <span aria-hidden="true">›</span>
+      <span>Khóa học</span>
+      <span aria-hidden="true">›</span>
+      <span>Kiểm tra đơn hàng</span>
+      <span aria-hidden="true">›</span>
+      <span class="crumb-active" aria-current="page">Thực hiện thanh toán</span>
     </div>
 
     <h1 class="page-heading">Thực hiện thanh toán</h1>
 
     <div class="center-area">
-      <div class="gate-card">
-        <div class="icon-circle">💳</div>
+      <section class="gate-card" role="status">
+        <div class="icon-circle" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="8" width="24" height="16" rx="2" />
+            <path d="M4 13h24" />
+          </svg>
+        </div>
         <h2>Thực hiện thanh toán</h2>
         <h3>{{ state.title }}</h3>
         <p>{{ state.message }}</p>
         <a href="/student/courses" class="btn-primary">← Về khóa học của tôi</a>
-      </div>
+      </section>
     </div>
   </main>
 </div>

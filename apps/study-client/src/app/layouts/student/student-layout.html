@@ -1,4 +1,5 @@
 <div class="student-layout student-shell" [class.portal-shell]="shellMode === 'portal'" [class.exam-shell]="shellMode === 'exam'" [class.blank-shell]="shellMode === 'blank'">
+  <button type="button" class="session-logout" (click)="logout()" aria-label="Đăng xuất">Đăng xuất</button>
   <svg class="student-icon-sprite" aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
     <symbol id="student-icon-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-6h-4v6H4a1 1 0 0 1-1-1z"/><path d="M9 21v-6h6v6"/></symbol>
     <symbol id="student-icon-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></symbol>
@@ -166,7 +167,7 @@
         <nav class="portal-navigation" aria-label="Điều hướng học viên">
           <span>Trang chủ</span><span>Khóa học</span><span>Khóa học của tôi</span><span>Lộ trình học</span><span>Diễn đàn</span>
         </nav>
-        <div class="portal-account"><span class="portal-notice" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#student-icon-bell"></use></svg></span><span class="portal-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#student-icon-user"></use></svg></span><span class="portal-account-copy"><strong>Nguyen Hanh</strong><small>Học viên</small></span></div>
+        <div class="portal-account"><span class="portal-notice" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#student-icon-bell"></use></svg></span><span class="portal-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#student-icon-user"></use></svg></span><span class="portal-account-copy"><strong>{{ session.fullName() }}</strong><small>Học viên</small></span></div>
       </div>
     </header>
   }

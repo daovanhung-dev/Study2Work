@@ -1,6 +1,9 @@
-/** ST-10 DD 03-data-flow / 04-api-integration: unavailable is not empty or success. */
-export interface StudentLessonAccessState {
-  readonly kind: 'blocked' | 'missing-context';
+export interface VerifiedLessonAccess {
+  readonly lessonId: number;
+  readonly courseId: number;
   readonly title: string;
-  readonly message: string;
 }
+
+export type StudentLessonAccessState =
+  | { readonly kind: 'missing-context' | 'checking' | 'denied' | 'not-found' | 'blocked'; readonly title: string; readonly message: string }
+  | { readonly kind: 'allowed'; readonly title: string; readonly message: string; readonly lesson: VerifiedLessonAccess };

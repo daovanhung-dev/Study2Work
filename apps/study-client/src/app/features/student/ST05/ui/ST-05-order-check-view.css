@@ -21,17 +21,18 @@
 .btn-signup { padding: 8px 16px; border-radius: 8px; background: #065a82; color: #ffffff; font-size: 12px; font-weight: 700; text-decoration: none; }
 
 .main-wrap { flex: 1; display: flex; flex-direction: column; padding: 28px 24px; }
-.crumb-row { display: flex; gap: 8px; font-size: 12px; color: #64748b; margin-bottom: 40px; }
+.crumb-row { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; color: #64748b; margin-bottom: 40px; }
 .crumb-row a { color: #64748b; text-decoration: none; }
 .crumb-active { font-weight: 700; color: #065a82; }
 
 .center-area { flex: 1; display: flex; align-items: center; justify-content: center; padding-bottom: 40px; }
-.gate-card { width: 100%; max-width: 600px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 48px 32px; text-align: center; box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04); }
+.gate-card { box-sizing: border-box; width: 100%; max-width: 600px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 48px 32px; text-align: center; box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04); }
 .icon-circle { width: 64px; height: 64px; border-radius: 9999px; background: #e6eef6; color: #065a82; font-size: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+.icon-circle svg { width: 42px; height: 42px; }
 .gate-card h1 { font-size: 24px; font-weight: 800; margin: 0 0 8px; }
 .gate-card h2 { font-size: 16px; font-weight: 700; color: #1e293b; margin: 0 0 10px; }
 .gate-card p { font-size: 13px; color: #64748b; max-width: 420px; margin: 0 auto 28px; line-height: 1.6; }
-.btn-primary { display: inline-flex; padding: 12px 24px; border-radius: 10px; background: #065a82; color: #ffffff; font-size: 12px; font-weight: 700; text-decoration: none; }
+.btn-primary { box-sizing: border-box; min-height: 44px; align-items: center; justify-content: center; display: inline-flex; padding: 12px 24px; border-radius: 10px; background: #065a82; color: #ffffff; font-size: 12px; font-weight: 700; text-decoration: none; }
 
 .site-footer { background: #f0f5fa; border-top: 1px solid #e2e8f0; padding: 20px 0; }
 .footer-inner { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
@@ -69,3 +70,7 @@
   .user-circle-btn { display: none; }
   .status-badge-red, .gate-pill, .spec-pill { overflow-wrap: anywhere; white-space: normal; }
 }
+
+.gate-card .course-name { margin-bottom: 8px; font-weight: 600; color: #1e293b; }
+.gate-card .course-price { margin-bottom: 8px; font-weight: 700; color: #065a82; }
+.return-link { margin-top: 4px; }

@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { StudentLayout } from '../../layouts/student/student-layout';
+import { studentAuthGuard } from '../../core/auth/student-auth.guard';
 import { ST11Page } from './ST11/pages/st11-page';
 import { ST12Page } from './ST12/pages/st12-page';
 import { ST13Page } from './ST13/pages/st13-page';
@@ -22,6 +23,7 @@ export const studentRoutes: Routes = [
   {
     path: '',
     component: StudentLayout,
+    canActivate: [studentAuthGuard],
     children: [
       {
         path: 'profile/edit',

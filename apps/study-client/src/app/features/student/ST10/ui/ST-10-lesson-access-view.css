@@ -102,3 +102,77 @@
   .user-circle-btn { display: none; }
   .status-badge-red, .gate-pill, .spec-pill { overflow-wrap: anywhere; white-space: normal; }
 }
+
+/* ST-10 handoff illustration: keep the screen gated until a real access flow exists. */
+.icon { width: 20px; height: 20px; flex: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.main-body { gap: 24px; padding-block: 32px 56px; }
+.breadcrumb { align-items: center; flex-wrap: wrap; gap: 8px; }
+.crumb-icon { width: 18px; height: 18px; color: #475569; }
+.gate-pill { display: inline-flex; align-items: center; gap: 8px; background: #e9f0ff; border: 0; color: #b91c1c; letter-spacing: .04em; }
+.gate-dot { width: 9px; height: 9px; border-radius: 50%; background: #b91c1c; }
+.access-grid { grid-template-columns: minmax(0, 2fr) minmax(310px, 1fr); gap: 24px; }
+.left-col > .card { padding: 32px; display: flex; flex-direction: column; gap: 28px; }
+.module-top { align-items: center; justify-content: flex-start; gap: 16px; margin: 0; flex-wrap: wrap; min-height: 92px; }
+.shield-mark { width: 64px; height: 64px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; background: #e1ecff; color: #0b5cd6; flex: none; }
+.shield-mark .icon { width: 35px; height: 35px; stroke-width: 1.8; }
+.module-top > div { flex: 1 1 300px; min-width: 0; }
+.module-top h1 { font-size: clamp(24px, 2.5vw, 34px); line-height: 1.18; }
+.kicker { letter-spacing: .09em; font-size: 11px; }
+.badge-red { display: inline-flex; align-items: center; gap: 6px; background: #fff0f0; color: #b42318; white-space: nowrap; }
+.badge-red .icon { width: 15px; height: 15px; }
+.progress-box { background: #eef3fd; padding: 20px; }
+.progress-head { align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; }
+.progress-head strong { display: inline-flex; align-items: center; gap: 8px; }
+.progress-head .icon { color: #0b5cd6; }
+.progress-head code { font-size: 11px; }
+.progress-track { background: #d9e6fb; }
+.progress-fill { width: 0; }
+.protected-placeholder { min-height: 360px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 0; background: #dfeaff; padding: 40px 28px; }
+.pen-circle { width: 64px; height: 64px; background: #d6e6ff; color: #66758e; }
+.pen-circle .icon { width: 30px; height: 30px; stroke-width: 2.5; }
+.protected-placeholder h2 { font-size: 20px; }
+.protected-placeholder p { max-width: 520px; font-size: 13px; }
+.stream-pill { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 7px; line-height: 1.4; }
+.stream-pill .icon { width: 16px; height: 16px; color: #8a4b08; }
+.security-contract { background: #eef3fd; border-radius: 12px; padding: 24px; }
+.security-contract h3 { display: flex; align-items: center; gap: 8px; color: #8a4b08; font-size: 18px; margin: 0; }
+.security-contract .icon { width: 22px; height: 22px; }
+.contract-copy { font-size: 13px; }
+.contract-copy code { background: #e2eaf9; color: #0b5cd6; padding: 2px 4px; border-radius: 4px; overflow-wrap: anywhere; }
+.bottom-actions { gap: 12px; padding-top: 4px; }
+.btn-white, .btn-locked { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box; flex: 1 1 240px; }
+.btn-white { background: #dfeaff; border: 0; }
+.btn-white:focus-visible { outline: 3px solid #0b5f8a; outline-offset: 3px; }
+.btn-locked { cursor: not-allowed; }
+.right-col .card { padding: 24px; box-shadow: 0 4px 10px rgba(15, 23, 42, .06); }
+.fsm-head h3, .api-title { display: flex; align-items: center; gap: 8px; font-size: 18px; }
+.fsm-head h3 .icon { color: #0b5cd6; }
+.api-title .icon { color: #18794e; }
+.fsm-sub { font-size: 13px; margin: 24px 0; }
+.fsm-item { display: flex; align-items: flex-start; gap: 12px; }
+.fsm-icon { width: 36px; height: 36px; border-radius: 50%; background: #d8e6fb; color: #64748b; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.fsm-icon .icon { width: 20px; height: 20px; }
+.fsm-icon-active { background: #0b5cd6; color: #fff; }
+.fsm-step { flex: 1; min-width: 0; padding: 14px 16px; }
+.fsm-step.active { border: 0; }
+.fsm-step p { margin: 4px 0 0; line-height: 1.5; }
+.step-head { flex-wrap: wrap; align-items: center; gap: 6px; }
+.fsm-step.active .step-head strong { color: #0b5cd6; }
+.api-rows { font-family: inherit; }
+.api-row { gap: 8px; font-size: 12px; }
+.api-row code { font-family: ui-monospace, monospace; font-size: 12px; font-weight: 700; overflow-wrap: anywhere; }
+.tag-design { flex: none; background: #dbeafe; white-space: nowrap; }
+@media (max-width: 1023px) { .access-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 767px) {
+  .main-body { padding-block: 20px 40px; }
+  .left-col > .card, .right-col .card { padding: 20px; }
+  .module-top { align-items: flex-start; }
+  .shield-mark { width: 52px; height: 52px; }
+  .shield-mark .icon { width: 28px; height: 28px; }
+  .module-top > div { flex-basis: calc(100% - 68px); }
+  .badge-red { margin-left: 68px; white-space: normal; }
+  .protected-placeholder { min-height: 300px; padding: 36px 20px; }
+  .stream-pill { max-width: 100%; }
+  .security-contract { padding: 18px; }
+  .security-contract h3 { font-size: 16px; }
+}
