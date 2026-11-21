@@ -18,6 +18,25 @@ uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 3003
 - `GET /health/live`
 - `GET /health/ready`
 
+## Tạo tài khoản Admin
+
+Script bootstrap yêu cầu cấu hình đích tường minh; Study Server hiện không tự
+đọc `.env` hoặc biến môi trường trong `get_settings()`.
+
+```powershell
+$env:STUDY_ADMIN_DATABASE_URL = "<PostgreSQL URL>"
+$env:STUDY_ADMIN_DB_SCHEMA = "<schema đích>"
+$env:STUDY_ADMIN_APP_ENV = "local"
+uv run python scripts/create_admin.py
+```
+
+Script xác minh database/schema đang hoạt động, hiển thị host/database/schema
+không có credential và yêu cầu xác nhận. Họ tên/email được nhập tại prompt;
+mật khẩu được nhập ẩn hai lần. Email đã có tài khoản sẽ bị từ chối, không tự
+nâng quyền hoặc đặt lại mật khẩu. Với `STUDY_ADMIN_APP_ENV=production`, cần thêm
+`--allow-production` và xác nhận bằng cụm từ production riêng. Không lưu các
+biến cấu hình chứa bí mật vào source control.
+
 ## Core conventions
 
 - Tạo app bằng `create_app(Settings(...))` trong test hoặc môi trường cần
