@@ -1,5 +1,9 @@
 # ME-11 — Data Flow & State
 
+## Current source update — 2026-11-20
+
+ME11 sends only the #58 query fields `course_id` and `status`, cancels stale filter requests, and validates `DESIGN_RESOURCE_RETRIEVED`, request/student/message identities and timestamps, plus attachment metadata. It renders only supported thread fields and uses the validated request ID for ME-12. It does not add unread/SLA/pagination claims or open attachment URLs.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

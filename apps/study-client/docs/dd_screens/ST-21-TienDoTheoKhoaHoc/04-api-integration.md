@@ -2,12 +2,19 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-20
 
 ST-21 calls #37 and displays course-level completed/total lesson counts and
-the returned percentage. The response does not contain a lesson timeline or
-timestamps. The DD/API excerpt below is a design-time snapshot; see [the screen inventory](../../list_screen.md)
-and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+the returned percentage. Current source checks Student role and ACTIVE
+enrollment, counts PUBLISHED lessons and completed progress, and returns
+counts/percentage/`has_content`; it has no lesson timeline or timestamps.
+Current source is in `ST21/pages` and `ST21/data-access`, plus Study Server API
+#37. The design-time excerpts below predate that source.
+
+The client now shares a #37 projection guard with ST-09: it validates course
+identity, nonnegative counts, completed ≤ total, the exact source percentage
+formula and `has_content`. Route changes cancel stale requests. #37 still
+returns aggregate PUBLISHED-lesson counts only, without lesson timeline data.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -18,7 +25,7 @@ and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-
 
 - API refs trong inventory: #37
 - Orchestration/data notes: GET #37 theo course_id; liên kết lesson_id → ST-10/11 sau gate.
-- BE/source status và gate: **D**
+- BE/source status và gate: #37 `SOURCE_WIRED`; per-lesson state/timestamps and a populated Stitch target remain unavailable.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Nguồn truy vết

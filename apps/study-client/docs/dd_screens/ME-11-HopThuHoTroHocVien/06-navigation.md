@@ -1,5 +1,9 @@
 # ME-11 — Navigation
 
+## Current source update — 2026-11-20
+
+`/mentor/support` is registered to ME11Page. The page links a validated #58 `request.id` to `/mentor/support/:requestId`; the target's #59 data and authorization are checked by ME-12. Browser/runtime is not independently verified.
+
 ## 1. Route definition
 - Current route in inventory: `/mentor/support`
 - Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.

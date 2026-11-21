@@ -39,6 +39,32 @@ study-st08-page .my-courses__heading p:last-child {
   font-size: 13px;
 }
 
+study-st08-page .my-courses__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+study-st08-page .my-courses__filters button {
+  min-width: 96px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-primary);
+  background: var(--surface);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+study-st08-page .my-courses__filters button.active {
+  border-color: var(--ocean-primary);
+  color: var(--surface);
+  background: var(--ocean-primary);
+}
+
 study-st08-page .my-courses__catalog-link,
 study-st08-page .my-courses__empty a,
 study-st08-page .my-courses__pagination button {
@@ -78,6 +104,24 @@ study-st08-page .my-courses__book-icon {
   color: var(--ocean-primary);
   background: var(--ocean-soft);
   font-size: 26px;
+}
+
+study-st08-page .my-courses__icon svg {
+  width: 32px;
+  height: 32px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+study-st08-page .my-courses__book-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
 }
 
 study-st08-page .my-courses__empty h2,
@@ -220,6 +264,11 @@ study-st08-page .my-courses__pagination button {
 study-st08-page button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+study-st08-page .my-courses__filters button:hover:not(.active) {
+  border-color: var(--ocean-primary);
+  color: var(--ocean-primary);
 }
 
 study-st08-page a:focus-visible,

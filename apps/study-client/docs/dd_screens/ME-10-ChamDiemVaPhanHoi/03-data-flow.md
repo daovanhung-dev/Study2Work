@@ -1,5 +1,9 @@
 # ME-10 — Data Flow & State
 
+## Current source update — 2026-11-20
+
+ME10 calls #55 reactively from the current route ID, cancels stale reads and validates the exact success envelope/code, matching Submission ID, required fields, timestamp and returned file metadata. The current UI displays the server score/feedback read-only and only lists file metadata. It does not call #56/#57 or open raw URLs because their request attachments/rubric payloads and file access policy are unresolved.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

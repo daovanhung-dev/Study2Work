@@ -8,19 +8,29 @@
   </nav>
   <header class="api-heading">
     <div>
-      <p class="api-eyebrow">ST-18 · Soạn và nộp bài tập</p>
+      <p class="api-eyebrow">Soạn và nộp bài tập</p>
       <h1>{{ assignment()?.title || 'Bài nộp' }}</h1>
-      <p>
-        API #33 cung cấp đề bài; API #34 tải tối đa một tệp và API #35 nhận văn bản cùng một
-        `upload_id`.
-      </p>
+      <p>Viết nội dung bài nộp và đính kèm một tệp nếu cần.</p>
     </div>
   </header>
   @if (loading()) {
     <section class="api-message" role="status"><strong>Đang tải đề bài…</strong></section>
   }
   @if (error()) {
-    <section class="api-error" role="alert">{{ error() }}</section>
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      @if (!assignment()) {
+        <button class="api-button secondary" type="button" (click)="retryAssignment()">
+          Tải lại đề bài
+        </button>
+      }
+    </section>
+  }
+  @if (createdSubmission(); as receipt) {
+    <p class="api-success" role="status">
+      Bài nộp đã được tạo.
+      <a [routerLink]="['/student/submissions', receipt.submissionId]">Mở biên nhận</a>
+    </p>
   }
   @if (!loading() && assignment(); as item) {
     <section class="api-grid">
@@ -29,6 +39,7 @@
         <label class="api-field"
           >Bài viết / ghi chú<textarea
             name="content"
+            [disabled]="busy()"
             [ngModel]="content()"
             (ngModelChange)="content.set($event)"
             rows="9"
@@ -36,7 +47,11 @@
           ></textarea>
         </label>
         <label class="api-field"
-          >Đính kèm một tệp<input name="submission-file" type="file" (change)="selectFile($event)"
+          >Đính kèm một tệp<input
+            name="submission-file"
+            type="file"
+            [disabled]="busy()"
+            (change)="selectFile($event)"
         /></label>
         @if (file(); as selectedFile) {
           <p class="api-meta">
@@ -44,30 +59,35 @@
           </p>
         }
         @if (uploadedAsset(); as asset) {
-          <p class="api-success">Đã tải tệp {{ asset.name }} lên. Bấm nộp để tạo submission.</p>
+          <p class="api-success">Đã tải tệp {{ asset.name }} lên. Bấm nộp để gửi bài.</p>
         }
-        <p class="api-muted">
-          Server hiện nhận một `upload_id`; chưa bật nhiều tệp hoặc các giới hạn file không có trong
-          contract.
-        </p>
-        <button class="api-button" type="submit" [disabled]="busy() || outcomeUnknown()">
-          {{ busy() ? 'Đang tải/nộp…' : 'Nộp bài' }}
+        <p class="api-muted">Bạn có thể đính kèm một tệp cho bài nộp này.</p>
+        <button
+          class="api-button"
+          type="submit"
+          [disabled]="
+            busy() ||
+            !assignmentId() ||
+            outcomeUnknownAssignmentId() === assignmentId() ||
+            createdSubmission()?.assignmentId === assignmentId()
+          "
+        >
+          {{ busy() ? 'Đang tải tệp và gửi bài…' : 'Nộp bài' }}
         </button>
-        @if (outcomeUnknown()) {
+        @if (outcomeUnknownAssignmentId() === assignmentId()) {
           <p class="api-error">
-            Không xác định được server đã nhận yêu cầu hay chưa. Không gửi lại để tránh tạo
-            submission trùng.
+            Chưa thể xác nhận bài đã được gửi. Nút gửi đã khóa để tránh gửi trùng.
           </p>
         }
       </form>
       <aside class="api-stack">
         <section class="api-card">
           <h2>Đề bài</h2>
-          <p>{{ item.description || 'Server chưa cung cấp mô tả.' }}</p>
+          <p>{{ item.description || 'Chưa có mô tả cho bài tập này.' }}</p>
           <dl class="assignment-meta">
             <div>
               <dt>Hạn nộp</dt>
-              <dd>{{ item.due_at ? (item.due_at | date: 'medium') : 'Không được cung cấp' }}</dd>
+              <dd>{{ item.due_at ? (item.due_at | date: 'medium') : 'Chưa có thông tin' }}</dd>
             </div>
             <div>
               <dt>Điểm tối đa</dt>
@@ -75,13 +95,11 @@
             </div>
             <div>
               <dt>Khóa học</dt>
-              <dd>#{{ item.course_id }}</dd>
+              <dd>Khóa học liên quan</dd>
             </div>
           </dl>
         </section>
-        <p class="api-muted">
-          Deadline được kiểm tra ở server. Upload thành công chưa đồng nghĩa bài tập đã được nộp.
-        </p>
+        <p class="api-muted">Tệp đã tải lên chưa đồng nghĩa bài đã được gửi. Chọn “Nộp bài” để hoàn tất.</p>
       </aside>
     </section>
   }

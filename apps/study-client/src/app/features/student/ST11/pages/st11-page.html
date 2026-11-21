@@ -4,12 +4,12 @@
   </nav>
   <header class="api-heading">
     <div>
-      <p class="api-eyebrow">ST-11 · Trình học bài</p>
+      <p class="api-eyebrow">BÀI HỌC</p>
       <h1>{{ lesson()?.title || 'Bài học' }}</h1>
-      <p>Nội dung được tải từ Study Server sau khi kiểm tra phiên Học viên và quyền truy cập.</p>
+      <p>Nội dung của bài học trong khóa học bạn đã đăng ký.</p>
     </div>
-    @if (lesson()) {
-      <span class="api-pill">{{ lesson()?.status }}</span>
+    @if (lesson(); as item) {
+      <span class="api-pill">{{ lessonStatusLabel(item.status) }}</span>
     }
   </header>
   @if (loading()) {
@@ -18,23 +18,29 @@
     </section>
   }
   @if (error()) {
-    <section class="api-error" role="alert">{{ error() }}</section>
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      <button class="api-button secondary" type="button" (click)="retryLesson()">
+        Tải lại bài học
+      </button>
+    </section>
   }
   @if (!loading() && !error() && lesson(); as item) {
     <section class="api-stack">
       <article class="api-card lesson-player-card">
         <div class="lesson-player-placeholder">
           <span aria-hidden="true">▷</span
-          ><strong>Trình phát đang chờ nguồn phát được xác thực</strong>
+          ><strong>Video bài học hiện chưa khả dụng</strong>
           <p>
-            API #24 trả về thông tin bài học. URL video chưa có chính sách nguồn phát/signed URL
-            được xác nhận nên chưa nhúng vào player.
+            Bạn vẫn có thể xem phần nội dung và tài liệu đi kèm bên dưới.
           </p>
         </div>
         <div class="api-actions">
-          <a class="api-button secondary" [routerLink]="['/student/lessons', lessonId, 'resources']"
+          <a
+            class="api-button secondary"
+            [routerLink]="['/student/lessons', lessonId(), 'resources']"
             >Tài liệu kèm bài học</a
-          ><span class="api-meta">Bài học #{{ lessonId }} · Khóa #{{ item.course_id }}</span>
+          >
         </div>
       </article>
       <article class="api-card">
@@ -42,15 +48,12 @@
         @if (item.content) {
           <p class="lesson-content">{{ item.content }}</p>
         } @else {
-          <p class="api-muted">Server chưa cung cấp nội dung văn bản cho bài học này.</p>
+          <p class="api-muted">Bài học chưa có nội dung văn bản.</p>
         }
       </article>
-      <aside class="api-error lesson-progress-gate">
-        <strong>Tiến độ và bài tiếp theo đang bị khóa.</strong>
-        <p>
-          #25 chỉ nhận `percent`/`completed` và không lưu vị trí xem; #27 chưa có quy tắc cuối
-          curriculum được duyệt. Trang không tự đánh dấu hoàn thành.
-        </p>
+      <aside class="api-message lesson-progress-gate" role="status">
+        <strong>Theo dõi tiến độ và bài học tiếp theo hiện chưa khả dụng.</strong>
+        <p>Bài học sẽ không được tự đánh dấu hoàn thành.</p>
       </aside>
     </section>
   }

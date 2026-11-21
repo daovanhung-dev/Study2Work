@@ -15,7 +15,9 @@ export class ME01DashboardService {
   }
   submissions() {
     return this.api.request<MentorPage<MentorSubmission>>(STUDY_SERVER_APIS.API_054, {
-      params: new HttpParams().set('page', 1).set('size', 4),
+      // API #54 fixes its page size at 20 and rejects extra query parameters.
+      // The dashboard limits the rendered preview locally.
+      params: new HttpParams().set('page', 1),
     });
   }
   support() {

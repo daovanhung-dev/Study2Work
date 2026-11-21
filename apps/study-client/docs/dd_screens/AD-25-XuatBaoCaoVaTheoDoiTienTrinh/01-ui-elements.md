@@ -1,5 +1,11 @@
 # AD-25 — UI Elements
 
+### Current Study Client source — 2026-11-20
+
+- The registered `/admin/reports/export` route renders the current configuration and unavailable-export panels. Format, scope and period inputs update local component signals only; submit/download remain disabled.
+- The back link routes to AD-24 without query state; the SH-07 callout is not a link. No operation ID, progress value, artifact URL or API result is rendered.
+- `ad25-page.css` is loaded from `angular.json` and applies Ocean semantic tokens, responsive breakpoints and visible keyboard focus. The element table below remains a one-to-one description of the preserved Stitch screenshot, not proof that every mockup shell/footer element appears on this route.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.

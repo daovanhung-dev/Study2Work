@@ -116,6 +116,7 @@
 
 ## 4. Conditional UI & state variations
 - States theo inventory: loading/empty/ready/error
+- Current Angular source (2026-11-20): marker #22 toolbar and marker #33 empty-state refresh actions repeat GET #97 with the applied `reason/severity/page` query; the table shows loading during the request. Search/status and report-specific fields remain unavailable.
 - Detail/conditional visibility: xem section elements/state của [DD nguồn](../../screen_stitch/05_admin/AD-22_danh-sach-thao-luan-bi-bao-cao/AD-22.md); không diễn giải ảnh tĩnh thành behavior runtime.
 
 ## 5. Link

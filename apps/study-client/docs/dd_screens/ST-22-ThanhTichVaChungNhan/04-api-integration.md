@@ -2,12 +2,18 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-20
 
 ST-22 calls #38 and displays recorded award rows only. There is no award
 producer; certificates, GPA, competency and readiness claims are not derived
-from this response. The DD/API excerpt below is a design-time snapshot; see
-[the screen inventory](../../list_screen.md) and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+from this response. Current #38 returns the authenticated user's recorded
+awards with page 1, size `max(items.length, 1)`, and `total_pages` from the
+separate count query. The page validates exact response ordering/IDs and does
+not reject count/list mismatch in the shared page guard. ST-22 presents a
+mismatch as a stale snapshot, suppresses the total badge and false empty copy,
+keeps any returned items visible, and offers the existing retry. Current source
+is in `ST22/pages` and `ST22/data-access`, plus Study Server API #38. The
+design-time excerpts below predate that source.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -18,7 +24,7 @@ from this response. The DD/API excerpt below is a design-time snapshot; see
 
 - API refs trong inventory: #38
 - Orchestration/data notes: GET #38 (filter course_id optional); thành tích chỉ hiển thị khi backend xác nhận.
-- BE/source status và gate: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** API #38 Draft còn sáu câu hỏi mở về award criteria/projection, filter/access, page/order/empty và query validation; Student route/module/query/test NOT_FOUND; Study Web UNWIRED; populated PNG có certificate/proof/GPA/metrics/competency/readiness không thuộc schema `Achievement`, còn HTML là static empty fallback; ERD/DDL chỉ có khái niệm logical/derived, không có physical registry/award table hoặc live-schema proof; AC-18 tuần tự #21→#37→#38 lệch inventory ST-20 gọi #21/#38 độc lập nên chưa suy luận timing; asset dùng remote CDN/font, 1440px và royal-blue/gradient lệch Study Web target
+- BE/source status và gate: #38 `SOURCE_WIRED` for recorded rows, with page fixed to 1 and no certificate/metric projection. Award policy, filter/pagination contract, populated visual mapping and AC-18 ordering remain open.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: A.2. Expected behavior — contract và thiết kế

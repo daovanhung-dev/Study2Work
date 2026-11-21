@@ -1,5 +1,9 @@
 # ME-04 — Data Flow & State
 
+## Current source reconciliation — 2026-11-21
+- API #46 reads COUNT and LIST separately and derives pagination from COUNT. ME-04 accepts an item count that differs from `pagination.total` while still validating the requested page/size, item bound, total type/range, and `total_pages`; this preserves a source-valid concurrent-write snapshot.
+- `createLecture()` has an explicit in-flight guard in addition to the disabled submit button. API #47 has no idempotency key, so this prevents a second request while the first is pending.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|
@@ -69,20 +73,20 @@ sequenceDiagram
 | Field | Kiểu/constraint source | Current mapping |
 |---|---|---|
 | `title` | string required, tối đa 200 ký tự; không có min/trim rule | `lessons.name`; response `data.title` |
-| `content` | signed int64 required | Lưu `str(content)` vào `lessons.content`; response là chuỗi thập phân. Không phải rich-text body. |
+| `content` | required Markdown string | Lưu và trả nguyên văn trong `lessons.content`; renderer belongs to the client. |
 | `asset_refs` | string required chứa JSON array ordered unique signed-int64 IDs; `"[]"` hợp lệ | Resolve #34 uploads cùng owner, purpose `LECTURE`, course; response `assets` theo request order. |
 | `order` | signed int32 required; source không đặt positivity rule | `lessons.sort_order`; response `data.order` |
 
 - View: MENTOR JWT guard → path signed-int64 validation → parse `asset_refs` → SELECT course → check direct owner → resolve mọi asset → INSERT `lessons` với status `PUBLISHED` và `CURRENT_TIMESTAMP` → INSERT `lesson_uploads` theo thứ tự (nếu có) → commit → response `Lecture`.
 - Course status không bị lọc; API có thể tạo lecture trên course DRAFT nếu Mentor sở hữu. API không tạo `resources`, không mutate upload metadata.
 - Errors source-backed: 401; 403 course khác owner; 404 course thiếu hoặc asset ID thiếu/ngoài scope (asset dùng lỗi 404 chung); 422 sai path/body/range/title/asset_refs; 500 query/mapping/transaction. DB failure rollback phần #47.
-- API #47 local DD ghi `Draft — Needs Confirmation` do target live schema/migration chưa xác minh. Q1/Q2 ở API DD ghi local wire decision cho `content:int64` và `asset_refs`, nhưng không tạo mapping editor rich-text cho ME-04.
+- API #47 local DD remains `Draft — Needs Confirmation` because live schema/migration is unverified. T041 supersedes the previous int64 content decision and approves Markdown string plus ordered upload IDs.
 
 ### 2.4 Đọc sau khi tạo — API #48 / ME-05
 
 - ME-05 route đề xuất `/mentor/lectures/:lectureId` dùng `GET /api/v1/mentor/lectures/{lecture_id}`; source kiểm tra MENTOR role, parse ID, xác minh direct owner qua lecture→course, rồi đọc các UploadAsset liên kết theo `asset_position`.
 - Success 200 trả `Lecture` hiện lưu, có `status` và `assets`; errors 401/403/404/500. Đây là read-only; không thay thế kết quả POST #47.
-- Route điều hướng phía Study Web vẫn chưa có source. Không mô tả UI success giả lập trong HTML như API result.
+- Current Study Web route/navigation source is present. Do not treat the mockup's simulated success as an API result.
 
 ### Trích từ DD nguồn: 2. Luồng tổng thể và ranh giới dữ liệu
 
@@ -142,20 +146,20 @@ sequenceDiagram
 | Field | Kiểu/constraint source | Current mapping |
 |---|---|---|
 | `title` | string required, tối đa 200 ký tự; không có min/trim rule | `lessons.name`; response `data.title` |
-| `content` | signed int64 required | Lưu `str(content)` vào `lessons.content`; response là chuỗi thập phân. Không phải rich-text body. |
+| `content` | required Markdown string | Lưu và trả nguyên văn trong `lessons.content`; renderer belongs to the client. |
 | `asset_refs` | string required chứa JSON array ordered unique signed-int64 IDs; `"[]"` hợp lệ | Resolve #34 uploads cùng owner, purpose `LECTURE`, course; response `assets` theo request order. |
 | `order` | signed int32 required; source không đặt positivity rule | `lessons.sort_order`; response `data.order` |
 
 - View: MENTOR JWT guard → path signed-int64 validation → parse `asset_refs` → SELECT course → check direct owner → resolve mọi asset → INSERT `lessons` với status `PUBLISHED` và `CURRENT_TIMESTAMP` → INSERT `lesson_uploads` theo thứ tự (nếu có) → commit → response `Lecture`.
 - Course status không bị lọc; API có thể tạo lecture trên course DRAFT nếu Mentor sở hữu. API không tạo `resources`, không mutate upload metadata.
 - Errors source-backed: 401; 403 course khác owner; 404 course thiếu hoặc asset ID thiếu/ngoài scope (asset dùng lỗi 404 chung); 422 sai path/body/range/title/asset_refs; 500 query/mapping/transaction. DB failure rollback phần #47.
-- API #47 local DD ghi `Draft — Needs Confirmation` do target live schema/migration chưa xác minh. Q1/Q2 ở API DD ghi local wire decision cho `content:int64` và `asset_refs`, nhưng không tạo mapping editor rich-text cho ME-04.
+- API #47 local DD remains `Draft — Needs Confirmation` because live schema/migration is unverified. T041 supersedes the previous int64 content decision and approves Markdown string plus ordered upload IDs.
 
 ### 2.4 Đọc sau khi tạo — API #48 / ME-05
 
 - ME-05 route đề xuất `/mentor/lectures/:lectureId` dùng `GET /api/v1/mentor/lectures/{lecture_id}`; source kiểm tra MENTOR role, parse ID, xác minh direct owner qua lecture→course, rồi đọc các UploadAsset liên kết theo `asset_position`.
 - Success 200 trả `Lecture` hiện lưu, có `status` và `assets`; errors 401/403/404/500. Đây là read-only; không thay thế kết quả POST #47.
-- Route điều hướng phía Study Web vẫn chưa có source. Không mô tả UI success giả lập trong HTML như API result.
+- Current Study Web route/navigation source is present. Do not treat the mockup's simulated success as an API result.
 
 ### Trích từ DD nguồn: 3. Ma trận element
 
@@ -201,7 +205,7 @@ Sau visual review, marker #3 và #25 được chuyển khỏi vùng nhãn/marker
 | ME04-EL-34 | Markdown toggle | Mockup button only; no client state handler/editor library. | EV-09 |
 | ME04-EL-35 | WYSIWYG toggle | Mockup button only; no client state handler/editor library. | EV-09 |
 | ME04-EL-36 | Formatting toolbar composite | Child actions B/I/U/H2/H3/list/quote/code/image; grouped marker; HTML has buttons but no listeners. | EV-09 |
-| ME04-EL-37 | Rich-text/code content surface | Sample paragraphs/code; HTML has no textarea/contenteditable. #47 accepts `content:int64` then stores decimal string. | EV-03/09 |
+| ME04-EL-37 | Markdown content surface | Source mockup has sample paragraphs/code; current page provides a Markdown textarea/basic syntax insertion actions and sends `content:string` unchanged. | EV-03/09 |
 | ME04-EL-38 | Attachment section heading | Static label “Tài liệu đính kèm & Mã nguồn mẫu”. | EV-10 |
 | ME04-EL-39 | Add attachment control | No listener/file picker in HTML. Future upload must use #34 then retain asset ID. | EV-04/10 |
 | ME04-EL-40 | PDF attachment card | `name/size` sample; #47 can return linked UploadAsset once ID resolved. | EV-10 |
@@ -244,7 +248,7 @@ Sau visual review, marker #3 và #25 được chuyển khỏi vùng nhãn/marker
 | `created-published` | #47 returns 201 | Use returned ID and move to ME-05/#48. | API creates PUBLISHED; browser navigation unverified. |
 | `draft` | User chooses Save Draft | No transition is supportable with current API. | BLOCKED. |
 | `preview` | User chooses Preview | No unsaved preview contract/route. | BLOCKED. |
-| `session-expired` | API returns 401 | Use approved auth expiry flow; do not invent refresh/session behavior. | Study Web auth client is absent. |
+| `session-expired` | API returns 401 | Current MentorApiService ends the local Mentor session on 401; browser redirect behavior is unverified. |
 | `cancelled` | User leaves form | Preserve or discard local state only under approved policy; server uploads remain. | Confirmation and cleanup policy unresolved. |
 
 ### Trích từ DD nguồn: 6. Điều hướng, bảo mật và dữ liệu
@@ -257,7 +261,7 @@ Sau visual review, marker #3 và #25 được chuyển khỏi vùng nhãn/marker
 - **No synthetic values:** do not save sample module/order, duration, rating/QA, course code, encoding status, preview/prerequisite or Draft status until their source/contract exists.
 
 ## 4. Luồng đọc (Read)
-- Orchestration từ inventory: GET #46 xác minh course context → POST #34 cho asset → POST #47; không nhận content:int64 như rich-text nếu chưa chốt.
+- Current source orchestration: #46 page 1/size 100 → #34 file upload → #47 Markdown content and ordered asset IDs → ME-05/#48.
 - Chi tiết current/source mapping: xem [API Integration](04-api-integration.md) và DD nguồn.
 
 ## 5. Luồng ghi (Write)

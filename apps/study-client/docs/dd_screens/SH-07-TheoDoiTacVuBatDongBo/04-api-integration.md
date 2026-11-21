@@ -9,10 +9,17 @@
 
 ## 2. Contract / source detail
 
+### Current approved notification-only integration (2026-11-21)
+
+- API #18 is `GET /api/v1/operations/{operation_id}` with a UUID path. It permits Student, Mentor and Admin sessions; query ownership is bound to the authenticated caller. Missing and non-owner operations return 404; invalid role/auth and internal errors retain their source error behavior.
+- SH-07 validates the UUID before calling #18, accepts only `NOTIFICATION_DISPATCH` with `QUEUED`, `FAILED` or `SENT`, and renders validated timestamps. It fetches on route entry and only on explicit manual refresh; there is no polling.
+- ME-14/#63 submits explicit selected recipients and text `content`; AD-20 obtains explicit Admin recipient choices through #68 and submits them to #93. Both producer responses return an Operation UUID used for SH-07 navigation.
+- API #18's general payment/export/result contract remains broader than this screen and stays Draft. API #63/#93 acceptance does not prove provider delivery. Focused UI/API tests pass; live DB/deployment/browser are unverified.
+
 - API refs trong inventory: #18
 - Orchestration/data notes: Chỉ GET #18 nếu đã có operation_id do BE xác nhận; không tự sinh ID, stop theo terminal state.
 - BE/source status và gate: **D**; **BLOCK:** Operation status enum/ID mapping còn mâu thuẫn
-- Current Study Web source: SH-07 route/page renders an unavailable gate only; `API_018` remains `UNWIRED` and no API request is sent. The backend source remains notification-specific, not a generic payment/notification/export operation contract.
+- Current Study Web source (2026-11-21): `API_018` is `WIRED`; SH-07 calls it with an owner-scoped notification Operation UUID from #63 or #93. It displays only the source-backed notification fields/statuses and never presents a payment/export result.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: 5. Đặc tả API #18 và database
@@ -27,7 +34,7 @@
 | Success | 200 `DESIGN_OPERATION_RETRIEVED`; `ApiEnvelope<Operation>`. | Local source returns `NOTIFICATION_DISPATCH` with `QUEUED`/`FAILED`/`SENT`; this notification-only DTO does not resolve generic per-kind response shape. #93 still returns Notification + operation metadata. |
 | Response shape | `id`, `kind`, `status`, `owner_id`, `submitted_at`, `updated_at`, optional `completed_at`, optional `result?:Payment`. | Enum, physical mapping, optional field rules, result by operation kind và timestamp semantics chưa chốt. |
 | Errors | 401/403/404/500 với business code ở contract. | Local tests cover 401/403/404/500. Missing/non-owned operation currently returns 404; catalog semantics and wrong-owner policy remain open. |
-| Caching/retry | Chưa có rule. GET không làm mutation; không tự thêm retry/idempotency/cache. | Không có client implementation. |
+| Caching/retry | Chưa có rule. GET không làm mutation; không tự thêm retry/idempotency/cache. | Client performs entry/manual GET only; no polling, cache or automatic retry is wired. |
 | Polling | Inventory yêu cầu dừng theo terminal; cadence/retry/terminal enum chưa có. | Không poll. 3000ms/backoff và `/operations/{id}/stream` là HTML prototype only. |
 | Persistence | Study `Operation` là logical schema. | `DB.sql` không có generic `operations` table. Current query derives notification operations from `notifications` and `notification_deliveries`; migration 009 adds notification `operation_id UUID`. Work Server `operations` table is not used. Live DB chưa xác minh. |
 
@@ -50,7 +57,7 @@
 1. Caller (ST-06/ME-14/AD-20/AD-25 theo contract tương ứng) nhận một ID từ backend. Client chỉ điều hướng tới SH-07 sau khi ID field/path và producer response được thống nhất; không tự tạo ID và không suy từ notification ID sang operation ID.
 2. Router xác thực format theo kiểu ID đã được contract owner chốt. Hiện không có quyết định giữa UUID và int64; do đó chưa thể viết validator/canonicalizer.
 3. Backend phải thực thi Bearer authentication, role/ownership policy và lookup operation. SH-07 không tự xác thực quyền bằng `owner_id` trên client.
-4. Backend route/module/query API #18 hiện tồn tại, nhưng client descriptor vẫn `UNWIRED` và contract còn mở. Chỉ sau khi ID/producer/response contract được duyệt, client mới gửi GET ban đầu; không gửi query/body.
+4. The notification-only client/API mapping is now implemented: one GET on route entry and explicit manual refresh, with no query/body or polling. Generic ID/kind/result/producer contract questions remain open outside this screen slice.
 5. Client kiểm tra HTTP status, business code, envelope, field types và Operation status/kind theo canonical schema. Hiện các enum/result/ownership field mapping còn SOURCE_REQUIRED.
 6. Chỉ khi mapping status được phê duyệt mới render status thật, timestamp và hành động được phép. Không dựng %, countdown, kết quả thanh toán, sent count hoặc download URL nếu API không trả field được contract định nghĩa.
 7. Polling/SSE, cache, retry/backoff, interval, visibility/reconnect và điểm dừng phải được quyết định trước. HTML gợi ý hai cách nhưng không tạo contract.

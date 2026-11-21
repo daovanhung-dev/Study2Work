@@ -60,7 +60,12 @@ describe('AD12Page', () => {
     expect(text).not.toContain('private-video.example.test');
     expect(root.querySelector('a[href="/admin/lessons/73"]')).not.toBeNull();
     expect(root.querySelector('a[href="/admin/lessons/74"]')).not.toBeNull();
-    expect(Array.from(root.querySelectorAll<HTMLButtonElement>('button')).every((button) => button.disabled)).toBe(true);
+    expect(root.querySelector<HTMLButtonElement>('.add-lesson-button')?.disabled).toBe(true);
+    expect(root.querySelector<HTMLInputElement>('#lesson-search')?.disabled).toBe(true);
+    expect(root.querySelector<HTMLSelectElement>('#lesson-type')?.disabled).toBe(true);
+    expect(root.querySelector<HTMLInputElement>('#lesson-status')?.disabled).toBe(true);
+    expect(root.querySelector<HTMLInputElement>('#lesson-course')?.disabled).toBe(false);
+    expect(root.querySelector<HTMLButtonElement>('.filter-actions button[type="button"]')?.disabled).toBe(false);
   });
 
   it('does not link a lesson ID that JavaScript cannot represent safely', async () => {

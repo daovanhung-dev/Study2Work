@@ -1,10 +1,16 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "sourceCommit": "9a70eb6764a6587093a92d3bd7e4cc0bea1651c4",
   "generatedAt": "2026-10-26",
   "rootRouter": "AGENTS.md",
   "registry": ".agents/AGENTS.md",
   "contextMap": ".agents/context-map.md",
+  "targetTracker": {
+    "path": ".agents/target.md",
+    "columns": ["STT", "Tên target", "Tiến độ hoàn thiện"],
+    "mode": "active-targets-only",
+    "completionPolicy": "record-evidence-then-remove-at-100"
+  },
   "skillsIndex": ".agents/skills/INDEX.md",
   "legacyPathsMustNotExist": [
     "apps/study-server/.agent",
@@ -23,7 +29,8 @@
       ".agents/project/design.md",
       ".agents/project/source-status.md",
       ".agents/project/contracts.md",
-      ".agents/project/workflows.md"
+      ".agents/project/workflows.md",
+      ".agents/target.md"
     ]
   },
   "worklog": {
@@ -47,7 +54,7 @@
       "project_scopes",
       "cross_scope_dependencies",
       "expected_behavior",
-      "milestones",
+      "target_updates",
       "current_behavior",
       "prior_worklogs_reviewed",
       "source_trace",
@@ -145,15 +152,15 @@
       "entry": ".agents/project/agent-control.md",
       "triggers": [
         "every task",
-        "every tool call",
-        "agent execution visibility"
+        "target progress tracking",
+        "execution safety"
       ],
       "scopeRefs": [
         "all"
       ],
       "verificationCommands": [
-        "Task/Step/Action/Event receipt consistency",
-        "verified progress matches worklog milestones",
+        "registered three-column target table structure",
+        "target progress updates recorded in worklog evidence",
         "context validator"
       ]
     },
@@ -301,7 +308,8 @@
       ],
       "preflight": "worklog.preflight",
       "verificationCommands": [
-        "required-field checklist",
+        "required-field checklist including TARGET_UPDATES",
+        "active target table structure",
         "context validator"
       ]
     }
@@ -1093,14 +1101,12 @@
             "apps/study-client/src/app/features/auth/.gitkeep",
             "apps/study-client/src/app/features/guest/guest.route.ts",
             "apps/study-client/src/app/features/guest/GS07/data-access/README.md",
+            "apps/study-client/src/app/features/guest/GS07/data-access/gs07-resource.service.ts",
             "apps/study-client/src/app/features/guest/GS07/models/gs07-resource-screen-state.model.ts",
             "apps/study-client/src/app/features/guest/GS07/pages/gs07-page.ts",
             "apps/study-client/src/app/features/guest/GS07/pages/gs07-page.html",
             "apps/study-client/src/app/features/guest/GS07/pages/gs07-page.css",
             "apps/study-client/src/app/features/guest/GS07/pages/gs07-page.spec.ts",
-            "apps/study-client/src/app/features/guest/GS07/ui/gs07-unavailable-notice.ts",
-            "apps/study-client/src/app/features/guest/GS07/ui/gs07-unavailable-notice.html",
-            "apps/study-client/src/app/features/guest/GS07/ui/gs07-unavailable-notice.css",
             "apps/study-client/src/app/features/guest/shared/models/guest-course.models.ts",
             "apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.ts",
             "apps/study-client/src/app/features/guest/shared/ui/guest-site-layout.html",
@@ -1143,6 +1149,20 @@
             "apps/study-client/src/app/features/system/pages/system-readiness-page.html",
             "apps/study-client/src/app/features/system/pages/system-readiness-page.css",
             "apps/study-client/src/app/features/student/.gitkeep",
+            "apps/study-client/src/app/features/student/student.route.ts",
+            "apps/study-client/src/app/layouts/student/student-layout.ts",
+            "apps/study-client/src/app/layouts/student/student-layout.html",
+            "apps/study-client/src/app/core/auth/student-session.service.ts",
+            "apps/study-client/src/app/core/http/student-api.service.ts",
+            "apps/study-client/src/app/features/student/shared/models/student-api.models.ts",
+            "apps/study-client/src/app/features/student/ST02/data-access/st02-profile.service.ts",
+            "apps/study-client/src/app/features/student/ST02/pages/st02-page.ts",
+            "apps/study-client/src/app/features/student/ST02/pages/st02-page.html",
+            "apps/study-client/src/app/features/student/ST02/pages/st02-page.css",
+            "apps/study-client/src/app/features/student/ST03/data-access/st03-profile.service.ts",
+            "apps/study-client/src/app/features/student/ST03/pages/st03-page.ts",
+            "apps/study-client/src/app/features/student/ST03/pages/st03-page.html",
+            "apps/study-client/src/app/features/student/ST03/pages/st03-page.css",
             "apps/study-client/src/app/features/mentor/.gitkeep",
             "apps/study-client/src/app/features/admin/admin.routes.ts",
             "apps/study-client/src/app/features/admin/AD02/data-access/.gitkeep",
@@ -1230,6 +1250,7 @@
             "apps/study-client/src/app/features/admin/AD15/pages/ad15-page.html",
             "apps/study-client/src/app/features/admin/AD15/pages/ad15-page.css",
             "apps/study-client/src/app/features/admin/AD15/pages/ad15-page.spec.ts",
+            "apps/study-client/src/app/features/admin/AD16/data-access/ad16-api.service.ts",
             "apps/study-client/src/app/features/admin/AD16/pages/ad16-page.html",
             "apps/study-client/src/app/features/admin/AD16/pages/ad16-page.css",
             "apps/study-client/src/app/features/admin/AD16/pages/ad16-page.spec.ts",

@@ -1,7 +1,7 @@
 # ST-02 data access
 
-The screen is assigned to API #04 (`GET /api/v1/users/me`) in route metadata.
-It does not issue a request: the Angular client has no Student session/token
-provider, and the approved screen package has no authenticated profile-ready
-layout or error-state mapping. Keep the API call gated until those contracts are
-resolved.
+`ST02ProfileService` calls API #04 (`GET /api/v1/users/me`) through
+`StudentApiService`, which obtains the in-memory Student Bearer token and ends
+the local session on protected 401 responses. The page displays only the
+response-backed `full_name` and `email`; avatar URL rendering, role/status
+claims, bio, permissions and edit behavior are not inferred.

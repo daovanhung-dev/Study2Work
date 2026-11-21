@@ -2,12 +2,17 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-21
 
-ST-20 calls #38 for recorded achievements. Its #21 progress widget remains
-gated because the current #21 handler returns `UserProfile`, not progress
-data. The DD/API excerpt below is a design-time snapshot; see [the screen inventory](../../list_screen.md)
-and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+ST-20 calls #38 through the Student API wrapper and validates exact business
+code, page metadata, unique award IDs, fields, and `awarded_at DESC, id DESC`
+order using the shared #38 guard. Because #38 reads COUNT and LIST separately,
+the presentation layer compares item count to `total`; a mismatch preserves
+returned rows, suppresses false empty copy and offers the existing retry. This
+comparison is not part of the shared response guard. #21 remains gated because its
+handler returns `UserProfile`, not progress data. Current source is in
+`ST20/pages` and `ST20/data-access`, plus Study Server API #21/#38. Excerpts
+below predate the checked-in route/API source.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -19,7 +24,7 @@ and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-
 
 - API refs trong inventory: #21, #38
 - Orchestration/data notes: GET #21 và #38 độc lập; render từng widget theo trạng thái API riêng.
-- BE/source status và gate: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #21 catalog trả `UserProfile` nhưng query, progress DTO, aggregate/merge/empty semantics chưa chốt; #38 award policy/source, course filter, pagination/order/empty semantics chưa chốt; inventory độc lập #21/#38 mâu thuẫn AC-18 tuần tự #21→#37→#38; Student routes/modules/queries/tests #21/#38 NOT_FOUND; Study Web UNWIRED; PNG gốc trống phần body, HTML chỉ có static empty state; loaded dashboard chưa có nguồn thiết kế xác nhận; HTML prototype tải remote Tailwind/Plus Jakarta Sans, dùng 1440px và trộn primary token lệch Study Web guide
+- BE/source status và gate: #21 `SOURCE_PARTIAL` (handler returns `UserProfile`, so no progress projection); #38 `SOURCE_WIRED` for recorded rows (fixed page 1). AC-18 orchestration and populated dashboard target remain open.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Nguồn truy vết

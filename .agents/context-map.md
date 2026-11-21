@@ -20,21 +20,19 @@ agent đi từ router tới context page, source, contract, test và worklog.
 
 ```text
 [AGENTS.md]
-  → publish Bootstrap Plan and announce the first Event before tool calls
   → [.agents/AGENTS.md]
   → classify primary_task_type
-  → [.agents/project/agent-control.md] (mandatory global event protocol)
+  → [.agents/project/agent-control.md] (mandatory target and safety rules)
   → [.agents/context-map.md] before final scope/subcontext selection
   → choose project_scopes
-  → publish task-specific milestone objectives/weights and 0% progress in chat
+  → create/update the active target in [.agents/target.md]
   → worklog preflight: select/read up to 3 same-type worklogs
-  → after each coherent read batch, report paths/sources and findings in chat
   → [.agents/project/INDEX.md] when cross-scope/boundary context is needed
   → [.agents/<scope>/AGENTS.md]
   → [.agents/<scope>/INDEX.md] or subcontext/INDEX.md
   → page đúng task
   → exact source + contract/config/test
-  → report grouped action/results and cumulative progress when milestones complete
+  → update target only when verified progress changes; log its evidence
   → update context/worklog
   → focused verification + context validator
 ```
@@ -51,6 +49,7 @@ Study2Work/
 │   ├── AGENTS.md
 │   ├── context-map.md                         ← this map
 │   ├── context-manifest.json                  ← machine-readable registry
+│   ├── target.md                               ← active targets and live progress only
 │   ├── project/
 │   │   ├── INDEX.md
 │   │   ├── agent-control.md
@@ -97,7 +96,10 @@ Study2Work/
 - [`.agents/AGENTS.md`](AGENTS.md) ⇢ global context index, status vocabulary,
   maintenance rules and canonical page graph boundary.
 - [`.agents/project/agent-control.md`](project/agent-control.md) ⇢ mandatory
-  all-scope plan-first and per-tool Event protocol, verified progress and report.
+  all-scope target tracking, silent execution, source evidence and safety rules.
+- [`.agents/target.md`](target.md) ⇢ sole live tracker; exact columns are `STT`,
+  `Tên target`, `Tiến độ hoàn thiện`; completed rows are removed after evidence
+  is recorded in the worklog.
 - [`.agents/context-manifest.json`](context-manifest.json) ⇢ machine registry
   for project pages, scopes, subcontexts, skills, workflows, contracts and
   worklog preflight.
@@ -131,8 +133,8 @@ Study2Work/
     consumer and status of shared/local contracts.
   - [`.agents/project/workflows.md`](project/workflows.md) — workflow registry
     and verification order.
-  - [`.agents/project/agent-control.md`](project/agent-control.md) — required
-    Task/Step/Action/Event receipts and verified progress for every scope.
+  - [`.agents/project/agent-control.md`](project/agent-control.md) — target
+    tracking, evidence, execution and safety rules for every scope.
 
 ## Scope context trees
 
@@ -306,7 +308,7 @@ implemented by [`.agents/worklog/README.md`](worklog/README.md).
 
 | Workflow key | Trigger/boundary | Entry | Main result |
 |---|---|---|---|
-| `agent-control` | every task and tool call, all scopes | `project/agent-control.md` | visible Task/Step/Action/Event receipts and verified progress |
+| `agent-control` | every task, all scopes | `project/agent-control.md` | silent execution and target progress tracking |
 | `coding` | coding task | `project/workflows.md` | scoped implementation + tests |
 | `study-web-screen-coding` | implement/fix/test/demo an individual Study Web screen | `web-work/study/workflows/screen-implementation.md` | DD-backed screen, tested local demo and verified fixture cleanup |
 | `fix` | bug/regression | `project/workflows.md` | reproduce → trace → smallest fix → regression test |

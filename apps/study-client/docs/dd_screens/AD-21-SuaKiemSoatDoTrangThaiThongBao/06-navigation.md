@@ -3,7 +3,7 @@
 ## 1. Route definition
 - Current route: `/admin/notifications/:notificationId`, registered in `admin.routes.ts` and mapped to `AD21Page`.
 - Status: Angular route/page source-wired; browser runtime and deployment not verified.
-- Route params/types: `notificationId` is read as a string and passed to #96; catalog #96 declares `notification_id:int64`, while backend performs its own path validation.
+- Route params/types: `notificationId` is read as raw text and validated as full-string positive signed-int64 before #96; valid text is passed unchanged. The backend repeats its own path validation.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
@@ -21,7 +21,7 @@
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
 - Refresh/direct URL: Angular route is declared; browser runtime and refresh behavior are not verified.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Invalid/missing ID: current page shows a local route error and skips #96; valid IDs follow the #96 parser contract.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram

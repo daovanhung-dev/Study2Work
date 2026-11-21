@@ -3,7 +3,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AD07ApiService } from '../data-access/ad07-api.service';
 import { StudyIcon } from '../../../../shared/ui/study-icon';
-import { adminRouteState, loadedFields } from '../../admin-screen-state';
+import { isAdminCourseDetailPage } from '../../admin-api-guards';
+import { adminRouteState, isSignedInt64RouteId, loadedFields } from '../../admin-screen-state';
 import { renderCourseFields } from '../../admin-screen-renderers';
 import type { AdminScreenField } from '../../../../shared/ui/admin-screen.model';
 
@@ -20,9 +21,12 @@ export class AD07Page {
     this.route,
     'courseId',
     (courseId) => this.api.getCourse(courseId),
-    (page) => page.items[0]
+    (page) => isAdminCourseDetailPage(page)
       ? loadedFields(renderCourseFields(page.items[0]))
       : { status: 'error', message: 'API #74 không trả khóa học cho mã đã yêu cầu.' },
+    isSignedInt64RouteId,
+    'Mã khóa học phải là số nguyên signed 64-bit.',
+    'DESIGN_RESOURCE_RETRIEVED',
   );
 
   get courseFields(): readonly AdminScreenField[] {

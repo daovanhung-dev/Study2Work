@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/login`
-- Status: `/login` is wired to SH02Page through the Shared layout; route test passes. Browser runtime is not verified.
+- Status: `/login` is wired to SH02Page; submit dispatches roles to `/student`, `/mentor`, or `/admin` after matching source checks. Browser runtime is not verified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; SH02Page hiện không đọc returnTo.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -15,7 +15,7 @@
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [ST-01](../ST-01-TongQuanHocVien/00-overview.md), [SH-03](../SH-03-DangKyHocVien/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| `/student`, `/mentor`, `/admin`, [SH-03](../SH-03-DangKyHocVien/00-overview.md) | Successful role login or registration link | Role from #03 response; no `returnTo` | Role routes are wired; runtime unverified |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.

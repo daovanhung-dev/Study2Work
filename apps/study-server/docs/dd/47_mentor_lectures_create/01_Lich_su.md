@@ -16,7 +16,7 @@ status: "Draft — Needs Confirmation"
 | Thuộc tính | Giá trị |
 |---|---|
 | Ngày tạo | 2026-10-23 |
-| Ngày update cuối cùng | 2026-10-25 |
+| Ngày update cuối cùng | 2026-11-20 |
 
 ## Lịch sử thay đổi
 
@@ -25,6 +25,7 @@ status: "Draft — Needs Confirmation"
 | 1.0 | 2026-10-23 | Codex | Tạo DD API #47 từ catalog, AC-21, schema và các DD liên quan | Bản nháp; nhiều câu hỏi còn mở |
 | 1.1 | 2026-10-25 | Codex | Cập nhật phần asset theo quyết định API #34/#47: JSON ID array, duplicate/order behavior, uploads metadata và resolver scope. | API #47 vẫn UNWIRED; content:int64 chưa chốt. |
 | 1.2 | 2026-10-25 | Codex | Ghi nhận quyết định về content, direct ownership, course status, PUBLISHED và lỗi asset; đồng bộ DD với runtime API #47. | DD vẫn Draft vì live schema/migration chưa xác minh. |
+| 1.3 | 2026-11-20 | Codex | Áp dụng quyết định T041: API #47 nhận Markdown `content:string` và lưu/trả nguyên văn; client #34/#47/#48 được nối cho ME-04. | Thay thế decision `content:int64` ngày 2026-10-25; test source đã chỉnh nhưng chưa chạy theo yêu cầu hiện hành. |
 
 ---
 ## Phụ lục đối chiếu nguồn Excel

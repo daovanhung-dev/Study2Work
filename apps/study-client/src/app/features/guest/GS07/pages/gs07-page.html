@@ -1,7 +1,78 @@
 <study-guest-site-layout>
   <main class="resource-page" data-screen-id="GS07">
-    <div class="resource-page__content">
-      <study-gs07-unavailable-notice [state]="state" />
-    </div>
+    <nav class="resource-crumbs" aria-label="Vị trí hiện tại">
+      <a routerLink="/courses">Khóa học</a><span aria-hidden="true">›</span>
+      <a [routerLink]="returnPath()" [queryParams]="returnQueryParams()">Quay lại tài nguyên</a>
+    </nav>
+    <header class="resource-header">
+      <p class="resource-header__eyebrow">GS-07 · Tài nguyên khóa học</p>
+      <h1>Xem tài liệu</h1>
+      <p>Mở tệp sau khi hệ thống xác nhận quyền truy cập.</p>
+    </header>
+
+    @if (state(); as currentState) {
+      @if (currentState.status === 'loading') {
+        <section class="resource-state" role="status" aria-live="polite">
+          <span class="resource-spinner" aria-hidden="true"></span>Đang tải tài liệu…
+        </section>
+      } @else if (
+        currentState.status === 'invalid-resource' || currentState.status === 'not-found'
+      ) {
+        <section class="resource-state resource-state--error" role="alert">
+          <h2>Không tìm thấy tài liệu</h2>
+          <p>Tài liệu không tồn tại hoặc không còn được phép truy cập.</p>
+        </section>
+      } @else if (currentState.status === 'login-required') {
+        <section class="resource-state resource-state--info" role="alert">
+          <h2>Đăng nhập để xem tài liệu</h2>
+          <p>Tài liệu riêng tư chỉ dành cho học viên đã ghi danh khóa học.</p>
+          <a class="resource-action" routerLink="/login">Đăng nhập</a>
+        </section>
+      } @else if (currentState.status === 'forbidden') {
+        <section class="resource-state resource-state--error" role="alert">
+          <h2>Bạn chưa có quyền truy cập</h2>
+          <p>Chỉ học viên có ghi danh đang hoạt động mới mở được tài liệu riêng tư.</p>
+        </section>
+      } @else if (currentState.status === 'error') {
+        <section class="resource-state resource-state--error" role="alert">
+          <h2>Không thể tải tài liệu</h2>
+          <p>{{ currentState.message }}</p>
+          <button class="resource-action" type="button" (click)="loadResource()">
+            Thử tải lại
+          </button>
+        </section>
+      } @else if (currentState.status === 'ready') {
+        <section class="resource-card" aria-labelledby="resource-title">
+          <span class="resource-card__icon" aria-hidden="true">
+            <study-icon name="layers" />
+          </span>
+          <div class="resource-card__body">
+            <p class="resource-card__meta">
+              {{ currentState.resource.type }} ·
+              {{
+                currentState.resource.visibility === 'PRIVATE'
+                  ? 'Tài liệu riêng tư'
+                  : 'Tài liệu công khai'
+              }}
+            </p>
+            <h2 id="resource-title">{{ currentState.resource.name }}</h2>
+            @if (currentState.safeUrl) {
+              <a
+                class="resource-action"
+                [href]="currentState.safeUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Mở tài liệu
+              </a>
+            } @else {
+              <p class="resource-card__unavailable" role="status">
+                Đường dẫn tài liệu hiện chưa sẵn sàng.
+              </p>
+            }
+          </div>
+        </section>
+      }
+    }
   </main>
 </study-guest-site-layout>

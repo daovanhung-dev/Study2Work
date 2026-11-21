@@ -1,5 +1,9 @@
 # SH-06 — Test Cases
 
+## Current implementation verification — 2026-11-21
+
+The focused Study Web command covering SH-02–SH-07, ME-14, AD-20 and Student/Mentor API boundaries passed: 11 test files, 36 tests. SH-06 renders a generic 404 with working `/courses` and `/` links; #08 404 is distinct from #08 500. Browser/static-host runtime was not verified.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix

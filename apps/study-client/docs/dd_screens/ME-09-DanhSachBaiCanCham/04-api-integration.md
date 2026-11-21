@@ -2,6 +2,10 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
+## Current caller status — 2026-11-20
+
+ME09 calls #54 with only source-supported `course_id`, `status`, and `page`; page size 20 is fixed by the backend and the client does not send `size`. Query changes cancel the prior request; the page validates `DESIGN_RESOURCE_RETRIEVED`, Page metadata, Submission fields and file metadata. It does not invent search, deadlines, assignment/course titles or student display names. The Page response cardinality remains `DERIVED` in API DD; runtime is NOT VERIFIED.
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
@@ -10,8 +14,8 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #54
-- Orchestration/data notes: GET #54; click submission_id → ME-10; không khẳng định response Page khi contract chỉ Submission.
-- BE/source status và gate: **D**; **BLOCK:** Response cardinality #54 sai kiểu
+- Orchestration/data notes: GET #54 → validate `data.items`/`data.pagination` → open ME-10 with source `id` as the #55 path ID. Page cardinality is used because current route/model return a Page; API DD approval remains open.
+- BE/source status và gate: **R / SOURCE-WIRED**; focused server source/tests exist; page/API contract and runtime remain unverified.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Nguồn truy vết

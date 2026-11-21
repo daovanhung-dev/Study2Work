@@ -747,12 +747,14 @@ def current_user(
 def resource_detail(
     request: Request,
     resource_id: str = Path(include_in_schema=False),
+    authorization: str | None = Header(default=None, alias="Authorization"),
     db: Session = db_dependency,
 ) -> dict[str, Any] | JSONResponse:
-    """Nhận raw resource ID, Session và trace ID rồi chuyển luồng đọc resource cho API #12."""
+    """Chuyển resource ID, optional Student Bearer, Session và trace ID cho API #12."""
 
     return get_resource_detail(
         resource_id=resource_id,
+        authorization=authorization,
         db=db,
         trace_id=get_trace_id(request),
     )

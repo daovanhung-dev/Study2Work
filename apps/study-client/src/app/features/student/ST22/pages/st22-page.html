@@ -4,26 +4,46 @@
   </nav>
   <header class="api-heading">
     <div>
-      <p class="api-eyebrow">ST-22 · Thành tích và chứng nhận</p>
+      <p class="api-eyebrow">Thành tích và chứng nhận</p>
       <h1>Thành tích đã đạt</h1>
-      <p>Danh sách chỉ gồm award mà API #38 trả về; trang không tự cấp chứng nhận.</p>
+      <p>Các thành tích đã đạt của bạn.</p>
     </div>
     @if (pagination(); as page) {
-      <span class="api-pill">{{ page.total }} bản ghi</span>
+      @if (hasSnapshotCountMismatch()) {
+        <span class="api-pill">Số lượng đang đồng bộ</span>
+      } @else {
+        <span class="api-pill">{{ page.total }} thành tích</span>
+      }
     }
   </header>
   @if (loading()) {
     <section class="api-message" role="status"><strong>Đang tải thành tích…</strong></section>
   }
   @if (error()) {
-    <section class="api-error" role="alert">{{ error() }}</section>
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      <button class="api-button secondary" type="button" (click)="retry()">
+        Tải lại thành tích
+      </button>
+    </section>
   }
-  @if (!loading() && !error() && items().length === 0) {
+  @if (!loading() && !error() && hasSnapshotCountMismatch()) {
+    <section class="api-message achievement-snapshot-warning" role="status" aria-live="polite">
+      <div>
+        <strong>Danh sách và số tổng chưa cập nhật cùng lúc.</strong>
+        <p>Các mục bên dưới vẫn được giữ lại. Tải lại để đồng bộ danh sách.</p>
+      </div>
+      <button class="api-button secondary" type="button" (click)="retry()">
+        Tải lại thành tích
+      </button>
+    </section>
+  }
+  @if (!loading() && !error() && items().length === 0 && !hasSnapshotCountMismatch()) {
     <section class="api-message">
       <div>
         <span class="api-empty-icon" aria-hidden="true">◇</span
-        ><strong>Chưa có achievement được ghi nhận.</strong>
-        <p>Khi có bản ghi từ backend, danh sách sẽ hiển thị tại đây.</p>
+        ><strong>Chưa có thành tích được ghi nhận.</strong>
+        <p>Thành tích mới sẽ xuất hiện tại đây.</p>
       </div>
     </section>
   }
@@ -36,19 +56,13 @@
             <div>
               <h2>{{ achievement.title }}</h2>
               <p class="api-meta">
-                {{ achievement.code }} · {{ achievement.awarded_at | date: 'medium' }}
-                @if (achievement.course_id) {
-                  · Khóa #{{ achievement.course_id }}
-                }
+                {{ achievement.awarded_at | date: 'medium' }}
               </p>
             </div>
           </li>
         }
       </ul>
-      <p class="api-muted">
-        Không có trường ảnh, loại chứng nhận, URL tải hoặc trạng thái chưa mở khóa trong response
-        #38.
-      </p>
+      <p class="api-muted">Chứng nhận hiện chưa khả dụng.</p>
     </section>
   }
 </main>

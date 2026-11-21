@@ -1,12 +1,27 @@
 # ST-26 — Thông báo học viên · Tổng quan
 
+## Current source implementation — 2026-11-21
+
+- `/student/notifications` is registered under authenticated Student access and calls #43 for list/unread/page, #44 to mark one item, and #45 to mark all read; successful mutations reload #43.
+- Migration 016 creates `notification_recipients`; #43 returns `is_read`/`read_at`, #44 returns a one-item page, and #45 returns `updated_count`. The #45 summary differs from the catalog's `Page<Notification>` response and remains a discrepancy.
+- #43's current projection includes optional legacy `type`, but notification batch producers #63 and #93 write that column as `NULL`; no category taxonomy or mapping is established for the Stitch tabs.
+- The T041-approved Student notification channel is in-app only. The screenshot's Email/Web Push/SMS preference panel is superseded and is not a runtime feature in the accepted notification flow.
+- The header badge and unread tab count use `pagination.total` from the source #43 request with `unread_only=true`; the header badge stays hidden while that count is unknown.
+- The “Tất cả” tab count comes from `pagination.total` on a validated all-items #43 response. The currently loaded page is grouped by local calendar date from `created_at`, preserving server order; this does not claim weekly statistics.
+- The right rail presents the screenshot's weekly/support cards only as unavailable states: no sample counts are shown and the coordinator CTA has no destination or action until one is approved.
+- When #43 returns a valid page whose requested page is now beyond its returned `total_pages`, the client moves to the last available page (page 1 for an empty result) and repeats the same unread filter. This recovers from row-count changes between requests without changing query semantics.
+- Because #43 reads COUNT and LIST separately, an empty page with `total > 0` also triggers recovery: pages after 1 step back one page; a still-inconsistent page 1 shows a retryable error instead of a false empty state.
+- The page renders source-backed title/content/read state/time and retry/empty/pagination states. `created_at` is formatted with Vietnamese date/time conventions while the `<time datetime>` attribute preserves the source timestamp. These APIs do not provide typed deep links, category filtering, weekly statistics or support targets. T041's in-app-only decision supersedes the screenshot's channel-preference panel. Stitch's populated screenshot conflicts with its empty HTML companion and includes unsupported elements. Runtime is not verified.
+- The mark-all control stays disabled while the list or unread-count request is loading, while the unread count is unknown, and when the count is zero; `markAllRead()` rechecks those states before #45.
+- The list exposes its loading state through `aria-busy`; the unread count announces updates politely. If #45 reports `updated_count=0`, the page explains that no unread notification needed an update instead of reporting a zero-item success sentence.
+
 | Trường | Giá trị |
 |---|---|
 | Screen ID | `ST-26` |
 | Module | Student |
-| Route | `/student/notifications` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student/notifications` — current Student route is source-wired; runtime not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: Source status is described in the source DD. |
+| DD status | Draft; list/read actions are source-wired. Safe deep links, category filters, metrics and catalog #45 response alignment remain unresolved. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [ST-26.md](../../screen_stitch/03_student/ST-26_thong-bao-hoc-vien/ST-26.md), [ST-26_PLAN.md](../../screen_stitch/03_student/ST-26_thong-bao-hoc-vien/ST-26_PLAN.md), [ST-26_markers.json](../../screen_stitch/03_student/ST-26_thong-bao-hoc-vien/ST-26_markers.json), [list_screen.md](../../list_screen.md) |
@@ -31,7 +46,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | unread/read/empty/marking/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Study Web / Study Server | #43–#45 callers/routes are source-wired; runtime not verified |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-26 source screen.png](../../screen_stitch/03_student/ST-26_thong-bao-hoc-vien/screen.png))

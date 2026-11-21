@@ -1,5 +1,15 @@
 # ST-22 — Data Flow & State
 
+## Current-source reconciliation — 2026-11-21
+
+The current page calls #38 and validates the recorded-award response. The local
+handler reads COUNT and LIST separately, so a concurrent insert/delete can make
+`pagination.total` differ from `items.length`. ST-22 leaves the shared response
+guard unchanged, labels this as a stale snapshot, suppresses the total badge
+and empty-award copy, preserves returned rows, and offers the existing #38
+retry. A matching zero/zero result remains the empty state. This source behavior
+does not resolve award policy, certificate fields, or the Draft API contract.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

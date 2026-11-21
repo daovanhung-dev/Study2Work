@@ -1,5 +1,7 @@
 # SH-07 — Data Flow & State
 
+> **Current source (2026-11-21):** SH-07 reads an accepted UUID through API #18 on route entry and manual refresh only. The handler queries notification/outbox rows for the authenticated owner; no generic `operations` table, payment/export result or polling loop is used. See [API Integration](04-api-integration.md) for exact mapping.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|
@@ -10,6 +12,8 @@
 > Không tạo DTO/ViewModel mới khi chưa có contract. State, DTO và mapping được trích nguyên ngữ cảnh từ DD nguồn bên dưới.
 
 ## 3. API DTO → ViewModel mapping
+
+> The design excerpt below predates the approved notification-only SH-07 implementation. Current source behavior is summarized at the top of this file and in [API Integration](04-api-integration.md).
 
 ### Trích từ DD nguồn: 4. Luồng hoạt động tổng thể
 
@@ -25,7 +29,7 @@
 1. Caller (ST-06/ME-14/AD-20/AD-25 theo contract tương ứng) nhận một ID từ backend. Client chỉ điều hướng tới SH-07 sau khi ID field/path và producer response được thống nhất; không tự tạo ID và không suy từ notification ID sang operation ID.
 2. Router xác thực format theo kiểu ID đã được contract owner chốt. Hiện không có quyết định giữa UUID và int64; do đó chưa thể viết validator/canonicalizer.
 3. Backend phải thực thi Bearer authentication, role/ownership policy và lookup operation. SH-07 không tự xác thực quyền bằng `owner_id` trên client.
-4. Backend route/module/query API #18 hiện tồn tại và có source-level HTTP tests, nhưng client descriptor `API_018` vẫn `UNWIRED` và contract còn mở. Chỉ sau khi ID/producer/response contract được duyệt, client mới gửi GET ban đầu; không gửi query/body.
+4. Current source sends one GET to API #18 on route entry and on explicit manual refresh; it sends no query/body and has no polling loop. The current notification-only UUID/owner mapping is implemented; generic per-kind contract questions remain open.
 5. Client kiểm tra HTTP status, business code, envelope, field types và Operation status/kind theo canonical schema. Hiện các enum/result/ownership field mapping còn SOURCE_REQUIRED.
 6. Chỉ khi mapping status được phê duyệt mới render status thật, timestamp và hành động được phép. Không dựng %, countdown, kết quả thanh toán, sent count hoặc download URL nếu API không trả field được contract định nghĩa.
 7. Polling/SSE, cache, retry/backoff, interval, visibility/reconnect và điểm dừng phải được quyết định trước. HTML gợi ý hai cách nhưng không tạo contract.
@@ -65,7 +69,7 @@
 | `INVALID_OR_UNKNOWN_STATE` | ID, kind/status/result không parse theo approved schema | Không tự uppercase/lowercase, không suy status từ notification API. | Hold behind gate; contract owner fixes producer/consumer schema. |
 | Return navigation | User dùng CTA hoặc browser back | Inventory caller set ST-07/ME-15/AD-21/AD-25; HTML links GS-01/SH-01. | Safe-return source, history behavior và target route cần Product/FE decision. |
 
-Không có operation status/state nào được `RUNTIME VERIFIED`. Chỉ route gate được source-tested; states dự kiến từ API #18 chưa thể chuyển thành implementation-ready mapping do contract còn mở.
+Notification status mapping is source-tested for the notification-only slice. Browser/live API/DB/deployment are not runtime-verified; generic payment/export operation states remain outside this implementation.
 
 ## 4. Luồng đọc (Read)
 - Orchestration từ inventory: Chỉ GET #18 nếu đã có operation_id do BE xác nhận; không tự sinh ID, stop theo terminal state.

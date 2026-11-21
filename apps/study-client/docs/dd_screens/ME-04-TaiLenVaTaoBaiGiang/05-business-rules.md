@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Form lecture metadata, sắp xếp thứ tự, đính kèm media.
-- Gate/status (giữ nguyên): **D**; **BLOCK:** Schema lecture.content và asset refs còn ambiguity
+- Current status: partial implementation. Markdown `content:string` and ordered upload IDs are approved by T041; assigned-course access, publication lifecycle and unsupported fields remain open.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: 6. Điều hướng, bảo mật và dữ liệu
@@ -21,31 +21,33 @@
 
 ### Trích từ DD nguồn: 7. UI/accessibility target
 
-Use [`Study Web design guide`](../../../../../.agents/web-study/design.md) as intended UI target, not runtime evidence. Apply Ocean semantic tokens, Inter if already available or system sans-serif, responsive gutters/content width, visible focus, semantic controls, reduced-motion support and clear inline errors. The supplied mockup loads remote Plus Jakarta Sans/Tailwind and several toolbar/icon controls are 28–42 px, below the guide's 44 px minimum. The dense two-column form also needs mobile reflow, keyboard accessible file selection/drop fallback, announced upload progress/errors, and status copy that does not rely on color or a percent badge. These are implementation/design gaps; no frontend code was changed.
+Use [`Study Web design guide`](../../../../../.agents/web-study/design.md) as intended UI target, not runtime evidence. Apply Ocean semantic tokens, Inter if already available or system sans-serif, responsive gutters/content width, visible focus, semantic controls, reduced-motion support and clear inline errors. The supplied mockup loads remote Plus Jakarta Sans/Tailwind and several toolbar/icon controls are 28–42 px, below the guide's 44 px minimum. The dense two-column form also needs mobile reflow, keyboard accessible file selection/drop fallback, announced upload progress/errors, and status copy that does not rely on color or a percent badge. This was the implementation/design gap at DD creation; current Study Web source addresses the supported two-column form with responsive stack, basic Markdown insertion actions and 44 px toolbar controls while other gaps remain.
 
 ### Trích từ DD nguồn: 8. Blockers và quyết định còn mở
 
 | ID | Blocker | Evidence / quyết định cần có |
 |---|---|---|
-| ME04-B01 | Ownership/assignment | AC-21 allows assigned Mentor; #46/#34/#47 require direct owner. Product/API owner resolves allowed relation and permission. |
-| ME04-B02 | Course context | #46 pagination and no detail-by-ID; define direct-entry lookup and how to map numeric ID vs displayed code and module structure. |
-| ME04-B03 | Content editor contract | #47 `content:int64` is stored as decimal text; define rich-text/code serialization or a new approved API/data model. |
-| ME04-B04 | Lifecycle | UI Draft/review/Publish vs #47 immediate PUBLISHED. Define states, review gate and preview behavior. |
+| ME04-B01 | Ownership/assignment | AC-21 allows assigned Mentor; #46/#34/#47 require direct owner. The page relies on server authorization; assigned-course support remains open. |
+| ME04-B02 | Course context | #46 has pages up to 100 and no detail-by-ID. Current client loads the first 100; direct-entry owner resolution and module structure remain open. |
+| ME04-B03 | Content editor contract | T041 approves `content:string` Markdown stored/returned unchanged. The current page provides a textarea with basic Markdown insertion actions; WYSIWYG/preview remain unsupported. |
+| ME04-B04 | Lifecycle | #47 publishes immediately. The page states this before submit; draft/review/preview behavior has no API contract. |
 | ME04-B05 | Module/order | Define module hierarchy, order source, uniqueness/range/next-order behavior. |
 | ME04-B06 | Unsupported metadata | Define persistence for duration, lesson type, stream URL, guest preview, prerequisites and QA checks/results. |
 | ME04-B07 | Upload type/size | Reconcile mockup 2 GB/media allowlist with #34 arbitrary bytes/MIME and no app cap; define UI/storage limits and feedback. |
-| ME04-B08 | Asset lifecycle/idempotency | Define delete/cleanup of uploads, cancel/remove semantics, ambiguous #34/#47 retry and orphan retention. No delete route currently found. |
-| ME04-B09 | Study Web app | Editable source, route/auth/API client, responsive UI and runtime state wiring are absent. |
+| ME04-B08 | Asset lifecycle/idempotency | #34 upload commits separately and no delete route was found; removed/abandoned uploads may remain. Ambiguous writes are blocked from blind replay, and route departure is blocked while a write is pending. |
+| ME04-B09 | Study Web app | Route/page/API callers and responsive form are present. Screenshot fields and browser/runtime verification remain incomplete. |
 | ME04-B10 | Live database/storage | Verify target legacy schema and migrations 004/005, Object Storage configuration/access, and actual endpoint deployment. |
 | ME04-B11 | Visual/accessibility | Reconcile mockup font/control size and dense responsive form with Study design target; approve implementation layout. |
 
 ### Status gate
 
+The source excerpts above preserve the original screen-stitch evidence. This status gate and the current implementation note in `00-overview.md` supersede their preimplementation statements.
+
 | Status | Kết quả | Lý do |
 |---|---|---|
 | `DD READY` | **NO — `DD BLOCKED`** | Main content mapping, lifecycle, access, course structure and supported fields unresolved. Source-backed API behavior and blockers are recorded, but implementation decisions are still required. |
-| `IMPLEMENTATION BLOCKED` | **YES** | UI source absent and screen requirements cannot map to current #47 body/state semantics. |
-| `RUNTIME VERIFIED` | **NO — `RUNTIME NOT VERIFIED`** | No Study Web route/serving/runtime was available or run; API test source and prior local reports do not prove deployment. |
+| `IMPLEMENTATION BLOCKED` | **NO — PARTIAL** | Source route/page and #46/#34/#47 callers are present; unsupported design fields and policies remain gated. |
+| `RUNTIME VERIFIED` | **NO — `RUNTIME NOT VERIFIED`** | Route/page source is present, but browser, serving, live API/storage and database runtime were not run or verified. |
 
 ## 3. Quy tắc chưa xác nhận
 - `CẦN_XÁC_NHẬN`: các quyết định/blocker trong inventory và DD nguồn chưa được giải quyết.

@@ -1,8 +1,10 @@
 # GS-07 — Navigation
 
+> **T041/current-source update (2026-11-20):** `/resources/:resourceId` is source-wired to #12. GS-06 passes `courseId` and returns to `/courses/:courseId?tab=resources`; ST-12 passes `lessonId` and returns to `/student/lessons/:lessonId/resources`. If no context exists, return goes to `/courses`. Router/browser deployment remains unverified.
+
 ## 1. Route definition
 - Current route in inventory: `/resources/:resourceId`
-- Status: Study Web source mounts `/resources/:resourceId` to a contract-blocked gate only; no resource ID hydration/API caller. Return destination remains unresolved; route runtime/deployment is not verified.
+- Status: Study Web source consumes `resourceId` and calls #12; return destination uses optional `courseId` or `lessonId`. Runtime/deployment is not verified.
 - Route params/types: `resourceId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,18 +12,21 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [GS-06](../GS-06-TaiNguyenKhoaHoc/00-overview.md), [ST-12](../ST-12-TaiLieuKemBaiHoc/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [GS-06](../GS-06-TaiNguyenKhoaHoc/00-overview.md) | Select resource | `resourceId`, `from=course`, `courseId` | #12 verifies access; returns to `?tab=resources` |
+| [ST-12](../ST-12-TaiLieuKemBaiHoc/00-overview.md) | Open resource | `resourceId`, `from=lesson`, `lessonId` | #12 verifies access; returns to lesson resources |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [GS-06](../GS-06-TaiNguyenKhoaHoc/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [GS-06](../GS-06-TaiNguyenKhoaHoc/00-overview.md) | Activate return link when `courseId` exists | `courseId`, `tab=resources` | Preserve resource tab |
+| [ST-12](../ST-12-TaiLieuKemBaiHoc/00-overview.md) | Activate return link when `lessonId` exists | `lessonId` | Preserve lesson resource context |
+| `/courses` | Activate return link without source context | None | Safe fallback |
 
 ## 4. Back / refresh / deep link
-- Back behavior: xem source DD; không mặc định browser history.
+- Back behavior: explicit contextual return links; browser history fallback is not customized.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: route reads current path/query params; deployed runtime remains unverified.
+- Invalid/missing ID: current page shows a neutral invalid-resource state; #12 validates server-side path as signed-int64.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram

@@ -1,4 +1,5 @@
 <div class="landing-page" data-screen-id="SH01">
+  <a class="skip-link" href="#sh01-main">Bỏ qua điều hướng</a>
   <header class="landing-header">
     <div class="header-content">
       <a class="brand" routerLink="/" aria-label="Study2Work - Trang chủ">Study2Work</a>
@@ -16,7 +17,7 @@
     </div>
   </header>
 
-  <main>
+  <main id="sh01-main">
     <section class="hero-section" aria-labelledby="sh01-title">
       <div class="content-width hero-content">
         <p class="eyebrow">Study2Work</p>
@@ -25,7 +26,13 @@
           Duyệt các khóa học đã xuất bản hoặc tìm kiếm theo từ khóa.
         </p>
 
-        <form id="sh01-search" class="search-form" (ngSubmit)="submitSearch()">
+        <form
+          id="sh01-search"
+          class="search-form"
+          role="search"
+          aria-label="Tìm khóa học"
+          (ngSubmit)="submitSearch()"
+        >
           <label class="visually-hidden" for="sh01-search-input">Tìm kiếm khóa học</label>
           <input
             id="sh01-search-input"
@@ -58,9 +65,12 @@
 
       @let categories = categoryState();
       @if (categories.status === 'loading') {
-        <p class="region-status" role="status" aria-live="polite" aria-busy="true">
-          Đang tải danh mục…
-        </p>
+        <ul class="category-skeletons" role="status" aria-live="polite" aria-busy="true">
+          <li class="visually-hidden">Đang tải danh mục…</li>
+          @for (skeleton of categorySkeletons; track skeleton) {
+            <li class="category-skeleton" aria-hidden="true"></li>
+          }
+        </ul>
       } @else if (categories.status === 'error') {
         <div class="region-status region-status--error" role="alert">
           <span>Danh mục chưa thể tải.</span>
@@ -72,7 +82,7 @@
         <p class="region-status">Hiện chưa có danh mục.</p>
       } @else {
         <ul class="category-list" aria-label="Danh mục tham khảo">
-          @for (category of categories.items; track category.id) {
+          @for (category of categories.items; track $index) {
             <li>{{ category.name }}</li>
           }
         </ul>
@@ -91,9 +101,18 @@
 
         @let courses = courseState();
         @if (courses.status === 'loading') {
-          <p class="region-status" role="status" aria-live="polite" aria-busy="true">
-            Đang tải khóa học…
-          </p>
+          <div class="course-skeletons" role="status" aria-live="polite" aria-busy="true">
+            <span class="visually-hidden">Đang tải khóa học…</span>
+            @for (skeleton of courseSkeletons; track skeleton) {
+              <div class="course-skeleton" aria-hidden="true">
+                <div class="course-skeleton__image"></div>
+                <div class="course-skeleton__content">
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            }
+          </div>
         } @else if (courses.status === 'error') {
           <div class="region-status region-status--error" role="alert">
             <span>Danh sách khóa học chưa thể tải.</span>
@@ -105,7 +124,7 @@
           <p class="region-status">Hiện chưa có khóa học đã xuất bản.</p>
         } @else {
           <div class="course-grid">
-            @for (course of courses.items; track course.id) {
+            @for (course of courses.items; track $index) {
               <study-sh01-course-card [course]="course" />
             }
           </div>
@@ -113,4 +132,15 @@
       </div>
     </section>
   </main>
+
+  <footer class="landing-footer">
+    <div class="content-width footer-content">
+      <a class="brand" routerLink="/" aria-label="Study2Work - Trang chủ">Study2Work</a>
+      <nav aria-label="Điều hướng chân trang">
+        <a routerLink="/courses">Khóa học</a>
+        <a routerLink="/login">Đăng nhập</a>
+        <a routerLink="/register">Đăng ký</a>
+      </nav>
+    </div>
+  </footer>
 </div>

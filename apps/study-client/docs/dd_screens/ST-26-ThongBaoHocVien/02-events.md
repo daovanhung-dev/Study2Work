@@ -20,11 +20,19 @@
 
 > Event IDs trong package là alias để theo template; Source Event IDs, steps và API links giữ theo DD nguồn. Alias không chứng minh event runtime.
 
+## Current implementation status — 2026-11-21
+
+Implemented events: load/filter/page with #43; mark one with #44; mark all with #45; refresh list and unread total after either mutation. The title badge and unread tab use the `pagination.total` returned by #43 with `unread_only=true`. Category labels are visible but disabled; they issue no #43 request because category semantics are not contracted. A zero `updated_count` from #45 is reported as no unread notification needing an update. If a valid #43 response reports fewer pages than the requested page, the client retries at the last available page (page 1 when empty). If COUNT/LIST snapshots disagree and a page is empty while `total > 0`, later pages step back one page; a page-1 mismatch shows retryable error copy. Loading and unread-count changes use accessible busy/live-state signals. Deep links, weekly statistics, support CTA and footer destinations remain unavailable. T041 approves in-app-only notifications, so screenshot email/push/SMS preferences are not part of the runtime flow. Historical expected-event details below predate these callers; remaining catalog/source discrepancies are preserved.
+
+The “Tất cả” tab shows `pagination.total` from a validated all-items #43 response. Loaded items are grouped by local calendar date from `created_at`, preserving the server's newest-first order; this is presentation grouping and does not supply the separate weekly-statistics feature.
+
+The right rail keeps the screenshot's weekly summary and coordinator-help layout, but renders the summary as unavailable without sample values and leaves the contact CTA disabled with no route or external destination.
+
 ## 2. Chi tiết event từ DD nguồn
 
 ### Trích từ DD nguồn: D. Đặc tả chi tiết từng sự kiện
 
-Events below describe `EXPECTED` design handling only. No Student #43–#45 or Study Web UI flow is wired in current source. Keep `DERIVED`, `SOURCE_REQUIRED` and `NOT_FOUND` statuses visible.
+The event rows below preserve the original design snapshot and are not current runtime evidence. Current source behavior is summarized above; keep remaining `DERIVED`, `SOURCE_REQUIRED` and `NOT_FOUND` statuses visible.
 
 ### ST26-EV-01 — Mở màn hình và tải trang thông báo
 
@@ -109,7 +117,7 @@ Events below describe `EXPECTED` design handling only. No Student #43–#45 or S
 ### ST26-EV-09 — Đánh dấu tất cả đã đọc
 
 - **Element / loại:** ST26-EL-10; `Click`/`Submit`.
-- **Điều kiện:** Student activates mark-all after current unread set has been loaded; pending guard behavior is proposed, not implemented.
+- **Điều kiện:** Student activates mark-all after the #43 list and unread-count requests complete with a known nonzero unread total. The page disables the action while either request is loading or the count is unknown/zero, and the handler rechecks before #45.
 - **Input:** Student Bearer; catalog `body{}`; no path/query. API DD proposes `{}` but body requiredness/unknown-key rule is unresolved.
 - **Xử lý:** (1) Do not run on page load; user action is required; (2) use only approved request body semantics; (3) submit #45 once per active UI action; (4) parse success; (5) refetch #43 per inventory; (6) derive badge/list from approved refreshed response, not local decrement or returned sample count.
 - **API:** `PATCH /api/v1/notifications/read-all`; 200 `DESIGN_RESOURCE_UPDATED`, 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 422 `DESIGN_VALIDATION_ERROR`, 500 `DESIGN_INTERNAL_ERROR`. Candidate atomic bulk `is_read=TRUE` and all-changed rows Page are Draft/DERIVED.

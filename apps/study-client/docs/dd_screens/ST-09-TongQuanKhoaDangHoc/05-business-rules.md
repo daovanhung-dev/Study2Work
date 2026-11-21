@@ -1,5 +1,14 @@
 # ST-09 — Business Rules
 
+## Current-source reconciliation — 2026-11-20
+
+Current source verifies ACTIVE membership through #20 before calling #37.
+#37 itself binds to Student auth and an ACTIVE enrollment and counts only
+PUBLISHED lessons; it does not implement the AC-18 quiz/assignment aggregate.
+The page now cancels stale course-route requests and rejects mismatched or
+malformed #20/#37 projections. Public #09 remains unused for protected lesson
+access. Tree/selection and deployed runtime remain open.
+
 ## 1. Rule index
 | Rule ID (package alias) | Tên / source ID | Áp dụng | Thực thi | Tests |
 |---|---|---|---|---|

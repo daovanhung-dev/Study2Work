@@ -4,7 +4,7 @@
 |---|---|
 | Screen ID | `ME-16` |
 | Module | Mentor |
-| Route | `/mentor/courses/:courseId/progress` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/mentor/courses/:courseId/progress` — current source is registered in `mentor.route.ts`; browser/runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: Source status is described in the source DD. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
@@ -31,13 +31,13 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/empty/ready/denied |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source/runtime | Current Study Client source | `SOURCE-WIRED / PARTIAL` · `BROWSER RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ME-16 source screen.png](../../screen_stitch/04_mentor/ME-16_tien-do-toan-khoa-hoc/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/04_mentor/ME-16_tien-do-toan-khoa-hoc/screen_annotated.png))
 - Luồng: #65 local source trả derived student progress page nhưng catalog còn Page<Course>; numeric course_id cần mapping; chỉ handoff student_id sang ME-17/#67 khi có row; #66 thuộc ME-18, AC-26 ordering khác inventory.
-- Priority: P2; Gate/source status: **R**; #65 route/module/query/model/focused tests có local source. **DD READY; IMPLEMENTATION BLOCKED:** API DD Draft/DERIVED, response/catalog mismatch, slug→int64, roster bound, filter/search/reminder data, AC-26 ordering, live schema và Study Web UNWIRED; RUNTIME NOT VERIFIED
+- Priority: P2; Gate/source status: **R**; #65 route/module/query/model/focused tests and current Study Client caller exist. **SOURCE-WIRED / PARTIAL:** route-reactive read, strict Page/row validation, retry and ME-17 links. **OPEN:** API DD Draft/DERIVED, response/catalog mismatch, slug→int64 context, roster bound, filter/search/reminder data, AC-26 ordering, live schema/runtime.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -89,3 +89,10 @@
 7. **Source/schema:** API #65 DD còn Draft/Needs Confirmation; local SQL dùng legacy BIGINT schema, khác V1-PILOT UUID/versioned schema; live DB/deployment chưa verified.
 8. **Web app:** prototype anchors/controls chưa wired; Study Web không có route, client hay runtime để xác minh.
 9. **Visual claims:** class code, số `0`, “Vừa xong”, “đồng bộ trực tiếp”, “Mỗi 15 phút”, cohort diagnosis, SCORM/xAPI, WCAG, nộp bài và chuyên cần đều là static copy/data; không coi là runtime facts.
+
+### Current Study Client source (2026-11-21)
+
+- The Mentor router registers `/mentor/courses/:courseId/progress`; ME16 reacts to route parameter changes, cancels the previous #65 request, and exposes invalid-ID, loading, empty, error/retry and ready states.
+- It validates `DESIGN_RESOURCE_RETRIEVED`, exact source Page metadata (`page=1`, `size=total=items.length`, `total_pages=1` when nonempty and 0 when empty), unique safe Student IDs, progress counts and percentages before rendering.
+- #65's local backend checks direct course ownership and returns all ACTIVE-enrollment Students in one unpaginated snapshot over PUBLISHED lessons. The catalog's `Page<Course>` and this local `Page<MentorStudentProgress>` remain discrepant; no timeline/filter/risk fields are inferred.
+- Optional #65 Student avatars render only from HTTPS or same-origin HTTP with `no-referrer` and name-initial fallback on missing/unsafe/load-failed images. Validated Student IDs link to ME17. Runtime/live schema and tests remain unverified/not run.

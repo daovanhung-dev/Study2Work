@@ -4,17 +4,17 @@
 |---|---|
 | Screen ID | `ME-14` |
 | Module | Mentor |
-| Route | `/mentor/notifications/new` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/mentor/notifications/new` — hiện được đăng ký trong `mentor.route.ts`; browser/runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Tình trạng tài liệu:** `DD READY` — đã đặc tả đầy đủ source prototype, luồng API hiện có, phần chưa có handler và các quyết định đang chặn triển khai.; **Tình trạng triển khai:** `IMPLEMENTATION BLOCKED` — recipient/course handoff, nội dung `int64`, channel, upload và lưu nháp chưa có contract phù hợp.; **Tình trạng runtime:** `RUNTIME NOT VERIFIED` — Study Web chưa wired; không có kiểm tra trình duyệt hoặc môi trường triển khai. |
+| DD status | The approved producer slice is source-wired: ME-14 posts text, selected recipients and PUSH/EMAIL channels to API #63 and routes an accepted UUID to SH-07. The wider design remains Draft (course binding, provider delivery and live runtime are not established). |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [ME-14.md](../../screen_stitch/04_mentor/ME-14_soan-thong-bao-mentor/ME-14.md), [ME-14_PLAN.md](../../screen_stitch/04_mentor/ME-14_soan-thong-bao-mentor/ME-14_PLAN.md), [ME-14_markers.json](../../screen_stitch/04_mentor/ME-14_soan-thong-bao-mentor/ME-14_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Soạn title/content/channels và preview recipients đã chọn ở ME-13.
-- In-scope: ME-13 → giữ course + unique Student int64 IDs (carrier chưa chốt); POST #63 chỉ sau khi chốt scope/body/channel. #62 thuộc roster ME-13, không refetch ở ME-14. #63 trả Operation UUID và `meta.notification_ids[]`; #64 là status theo từng notification ID. Không gọi #18: Study route chưa wired, ID/lifecycle unresolved và AC-25 không có edge #18.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- In-scope: ME-13 → giữ course + unique Student int64 IDs (`history.state`); title/body preview; explicit PUSH/EMAIL selection; POST #63; accepted UUID routes to notification-only SH-07/#18. #62 belongs to ME-13; ME-14 does not refetch it. Delivery/provider behavior remains outside this implementation.
+- Out-of-scope: Xem gate bên dưới; không kết luận browser runtime đã chạy hoặc #63 send đã được tích hợp.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,13 +31,13 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | draft/validating/sending/accepted/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source/runtime | Current Study Client source | `SOURCE-WIRED` for #63 submit and SH-07 handoff; browser/live runtime not verified |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ME-14 source screen.png](../../screen_stitch/04_mentor/ME-14_soan-thong-bao-mentor/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/04_mentor/ME-14_soan-thong-bao-mentor/screen_annotated.png))
-- Luồng: ME-13 → giữ course + unique Student int64 IDs (carrier chưa chốt); POST #63 chỉ sau khi chốt scope/body/channel. #62 thuộc roster ME-13, không refetch ở ME-14. #63 trả Operation UUID và `meta.notification_ids[]`; #64 là status theo từng notification ID. Không gọi #18: Study route chưa wired, ID/lifecycle unresolved và AC-25 không có edge #18.
-- Priority: P2; Gate/source status: **R**; #63 route/module/model/query/test có local source; API DD Draft/DERIVED. **DD READY; IMPLEMENTATION BLOCKED:** ME-13 handoff/course binding, `content:int64` vs free text, title 120 vs 200, In-app↔PUSH/email-worker, attachment và draft persistence chưa có contract; Study Web UNWIRED; runtime chưa verified
+- Luồng hiện tại: ME-13 hands course + selected Student recipients to ME-14 via router history state. ME-14 validates IDs and selection, sends trimmed text and explicit `PUSH`/`EMAIL` values to #63, accepts only the expected 202 Operation envelope with UUID, then routes to SH-07. #63 does not receive `course_id`, so its server-side common ACTIVE roster check cannot bind the request to the exact course chosen in ME-13. Queue acceptance does not prove provider delivery.
+- Priority: P2; #63 source caller and SH-07 handoff are implemented and covered by focused tests. `content` is text per the accepted #63 contract update. Browser/live API, DB, worker/provider delivery and exact course binding remain unverified/out of scope.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -45,17 +45,21 @@
 
 ## Trạng thái và ranh giới bằng chứng
 
+Current-source update 2026-11-21: `/mentor/notifications/new` is registered. ME14 validates ME13's in-memory course/recipient handoff and removes those identifiers from the current history entry after reading them, so reload/back cannot replay the same handoff. It sends trimmed title/text and explicit `PUSH`/`EMAIL` channels through #63, accepts only the expected 202 queued response with UUID, locks editing after acceptance and routes that UUID to SH-07. A malformed success or ambiguous network outcome blocks another submit in the current page because #63 has no idempotency key; a confirmed error remains distinguishable. The #63 request has no `course_id`, so the API cannot bind recipients to the exact selected course; accepted does not prove provider delivery. Focused Mentor tests pass; browser/live API/DB/provider runtime is unverified. Draft persistence is not implemented.
+
 # ME-14 — Soạn thông báo mentor
 
 > **Tình trạng tài liệu:** `DD READY` — đã đặc tả đầy đủ source prototype, luồng API hiện có, phần chưa có handler và các quyết định đang chặn triển khai.
 >
-> **Tình trạng triển khai:** `IMPLEMENTATION BLOCKED` — recipient/course handoff, nội dung `int64`, channel, upload và lưu nháp chưa có contract phù hợp.
+> **Tình trạng triển khai tại lúc tạo DD (2026-11-08):** `IMPLEMENTATION BLOCKED` — recipient/course handoff, nội dung `int64`, channel, upload và lưu nháp chưa có contract phù hợp. Current source update 2026-11-21 is recorded below.
 >
-> **Tình trạng runtime:** `RUNTIME NOT VERIFIED` — Study Web chưa wired; không có kiểm tra trình duyệt hoặc môi trường triển khai.
+> **Tình trạng runtime:** `RUNTIME NOT VERIFIED` — Study Client route/component đã được wired theo source hiện tại; browser runtime và môi trường triển khai chưa được xác minh.
 
 Ảnh nguồn: [screen.png](../../screen_stitch/04_mentor/ME-14_soan-thong-bao-mentor/screen.png) · Ảnh đánh số: [screen_annotated.png](../../screen_stitch/04_mentor/ME-14_soan-thong-bao-mentor/screen_annotated.png) · Bản đồ marker: [ME-14_markers.json](../../screen_stitch/04_mentor/ME-14_soan-thong-bao-mentor/ME-14_markers.json) · Kế hoạch: [ME-14_PLAN.md](../../screen_stitch/04_mentor/ME-14_soan-thong-bao-mentor/ME-14_PLAN.md)
 
 ## Trích đoạn tổng quan từ DD nguồn
+
+> Nội dung bảng/rule bên dưới được ghi khi tạo DD ngày 2026-11-08. Các mô tả current/unwired và contract `content:int64` là snapshot lịch sử; phần trạng thái hiện tại ở trên là evidence mới hơn.
 
 ### Trích từ DD nguồn: A. Tổng quan màn hình
 
@@ -69,9 +73,9 @@
 | Màn hình trước/sau | ME-13 Chọn người nhận → ME-14 Soạn nội dung → ME-15 Theo dõi gửi. ME-15 chưa phải scope của phiên này. |
 | AC liên quan | AC-25, page trong `apps/study-server/docs/diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio`. |
 | API được inventory gắn | #62, #63. #62 phục vụ roster ở bước chọn người nhận ME-13; chưa có bằng chứng ME-14 cần gọi lại #62. #63 là API gửi theo thiết kế AC-25, nhưng chưa được gọi từ HTML/Study Web. |
-| Phụ thuộc status | API #64 đọc trạng thái theo từng `notification_id:int64`; API #18 generic operation hiện `UNWIRED` và chưa nối vào luồng AC-25. |
+| Phụ thuộc status | API #64 đọc trạng thái theo từng `notification_id:int64`; SH-07 hiện dùng notification-only #18 theo Operation UUID. Generic operation kinds và status từng notification/batch remain outside AC-25. |
 | Phụ thuộc upload | API #34 có purpose `SUBMISSION`/`LECTURE`; chưa có purpose hoặc quan hệ attachment cho notification. |
-| Study Web | `UNWIRED`. HTML nguồn chỉ là prototype tĩnh; không chứng minh route, session, API integration, lưu trữ hoặc trạng thái runtime. |
+| Study Web at DD generation | `UNWIRED`. HTML nguồn chỉ là prototype tĩnh; current source route/component evidence is recorded in the 2026-11-21 implementation note above; it does not prove browser runtime. |
 | Source assets | `screen.png` và `code.html` được giữ nguyên. Hash ban đầu và checklist được ghi trong [ME-14_PLAN.md](../../screen_stitch/04_mentor/ME-14_soan-thong-bao-mentor/ME-14_PLAN.md). |
 
 ### Điều kiện truy cập và sau xử lý

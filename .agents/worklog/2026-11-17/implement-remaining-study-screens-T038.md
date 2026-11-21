@@ -5,7 +5,7 @@ primary_task_type: "coding"
 secondary_task_types: ["docs", "test"]
 project_scopes: ["web-work (Study Web)", "server-study"]
 cross_scope_dependencies: ["83 Study screen IDs -> existing Study Server API IDs/source; design-only or unavailable endpoints remain gated"]
-status: "IN_PROGRESS"
+status: "DONE_WITH_LIMITATION"
 ---
 
 # Worklog: Implement the remaining Study screens — T038
@@ -32,14 +32,27 @@ status: "IN_PROGRESS"
 
 ## MILESTONES
 
+### Continuation milestones — 2026-11-17 resume
+
+| Weight | Cumulative progress when achieved | Objective / acceptance criterion | Status |
+|---:|---:|---|---|
+| 15% | 15% | Re-run coding preflight; read selected worklogs, scope rules/workflow; inspect actual status/routes and target DD/source. | `DONE` |
+| 40% | 55% | Wire read-only API #04 in ST-02/ST-03 through `StudentApiService`; render only source-backed fields, preserve ST-03 mutation gates. | `DONE` |
+| 30% | 85% | Reconcile stale ST-02/ST-03 and handoff/source-current documentation plus the 83-screen matrix against actual current callers. | `DONE` |
+| 15% | 100% | Run permitted build/diff/context verification and record exact results/limits in this worklog and `task_finish.md`. | `DONE_WITH_LIMITATION` |
+
+Continuation progress starts at 0%; it is tracked separately from the stale
+historical T038 checkpoint below. The broad implementation estimate is not a
+screen acceptance percentage.
+
 | Weight | Cumulative progress when achieved | Objective / acceptance criterion | Status |
 |---:|---:|---|---|
 | 10% | 10% | Complete coding preflight; read selected prior worklogs; inspect current continuation, task tracker and dirty-state baseline. | `DONE` |
 | 15% | 25% | Finish current T037/AD-12 verification and update its worklog/process row with actual results and runtime limits. | `DONE_WITH_LIMITATION` |
-| 60% | 85% | Build a source-backed gap crosswalk for all 83 IDs and implement each missing/partial screen through waves W0–W4; keep unsupported API-dependent behavior gated. | `IN_PROGRESS` |
-| 15% | 100% | Run scoped final verification; synchronize screen DD/index/context/process/worklogs; record remaining gates and runtime limits. | `PENDING` |
+| 60% | 85% | Build a source-backed gap crosswalk for all 83 IDs and implement each missing/partial screen through waves W0–W4; keep unsupported API-dependent behavior gated. | `DONE_WITH_LIMITATION` |
+| 15% | 100% | Run scoped final verification; synchronize screen DD/index/context/process/worklogs; record remaining gates and runtime limits. | `DONE_WITH_LIMITATION` |
 
-**Current T038 progress: 25%. Overall project objective: `20% ACTIVE` (coarse tracker estimate).**
+**Current T038 progress: 100% implementation/closeout. Overall project objective: `20% ACTIVE` (coarse tracker estimate). Remaining product/API gates and browser/live API/DB validation are outside the completed source-backed slice and remain explicitly unverified.**
 
 ## EVENT_LOG
 
@@ -102,19 +115,25 @@ status: "IN_PROGRESS"
 | S03.A04.E32 | TRACE #20/#22–#24 and frontend course DTO/service patterns | #20 is paged CourseSummary; Student course fields match the response subset; further route/query review needed. |
 | S03.A04.E33 | TRACE #22/#23/#24 route/module/model/view source | #22 is Student/auth + course/enrollment check; #23 is Student/auth + enrollment + progress upsert; #24 checks published lesson/course and enrollment. |
 | S03.A04.E34 | TRACE #22/#23 query predicates and UI styles | #22 query does not itself filter lesson status; #23 is an upsert but lacks its own publication check. Client must gate on #22's returned `status` before explicit Start; backend discrepancy remains noted. |
+| S05.A01.E35 | RE-RUN coding selector and READ selected logs | Selector `READY`, 149 available; T038/T011/T012 selected and read. No shortage. |
+| S05.A02.E36 | READ ST-02/ST-03 DD, Stitch images, FE session/transport and #04 source | Confirmed #04 allowlisted profile and Student Bearer path; implementation scope is read-only; preserve ST-03 mutation gate. |
+| S05.A03.E37 | IMPLEMENT ST-02/ST-03 #04 callers | Added screen services/shared DTO and loading/error/retry; rendered only `full_name`/`email`; ST-03 #13/#14 remain uncalled. |
+| S05.A04.E38 | UPDATE inventory, architecture, DD, context and matrix | Removed stale no-session/no-caller claims from current-source notes; expected DD and runtime blockers remain separate. |
+| S05.A05.E39 | RUN permitted final verification | Production build, source Prettier, and `git diff --check` pass with recorded bundle/CSS budget warnings; tests not run. |
+| S05.A06.E40 | RUN context validator and closeout | Standard and `--skip-drift` remain invalid on repository-wide baseline findings; no static Study Web/ST02/ST03 findings under `--skip-drift`. Updated progress to 100% implementation/closeout and recorded remaining gates in `task_finish.md`. |
 
 ## CURRENT_BEHAVIOR
 
 - Screen inventory: `apps/study-client/docs/list_screen.md` and `docs/dd_screens/screen-index.md` describe 83 screen surfaces; surfaces are not equivalent to independent routes. All 83 DD packages exist, but package existence does not establish implementation completeness.
 - Structural source gap matrix: [T038-screen-gap-matrix.md](T038-screen-gap-matrix.md) maps all 83 IDs to page/route structure, inventory API IDs, numbered server route-source status and feature-local FE callers. It shows 79 route/page surfaces, 3 parent tabs, 1 page-only component and 0 IDs without a page/route; these counts are structural, not acceptance.
-- StudentLayout now authenticates a Student through API #03, checks the role and retains tokens in tab memory. ST-02 remains a #04 profile gate because the authenticated profile-ready design is unresolved. The edit control is disabled.
-- ST-03 remains the G-03 schema/contract gate. Route metadata assigns API #04/#13/#14 but the page sends no request; API #13/#14 field/asset/reload discrepancies remain. Upload/save and phone/bio controls are disabled.
+- StudentLayout now authenticates a Student through API #03, checks the role and retains tokens in tab memory. ST-02 calls #04 read-only through `StudentApiService`, displays `full_name`/`email`, and retains disabled edit behavior.
+- ST-03 calls #04 read-only and binds `full_name`/`email` in readonly fields. It remains the G-03 write gate: #13/#14 have route metadata but no caller; upload/save and phone/bio are disabled. Avatar/bio/phone/reload discrepancies remain.
 - ST-04 is source-wired at `/student/enroll/:courseId`. It calls public #08 and maps published/not-found/error states; route metadata assigns #08/#15. It does not call #15 because current server code falls back to any course enrollment when Authorization is absent or invalid. Student auth and enrollment branching remain gated.
 - ST-05 is source-wired at `/student/checkout/:courseId`. It calls #08 then renders the Stitch unavailable checkout state; route metadata assigns #08/#16. It sends no #16 request because the client descriptor is UNWIRED, checked-in DDL lacks `orders`, no focused #16 tests were found, and Student/provider/amount/persistence behavior remains unverified.
 - Existing implementation footprint: 88 Angular `pages/*.ts` files were found before ST-02; route declarations and API callers vary. Current worktree is highly dirty, so page-file counts are not used as completion evidence.
 - Study Server: the project exposes a 103-ID API catalog, but some IDs are design-only or unresolved; #99–#103 currently have no local route source. Mentor routes exist for #46–#67. API ID references alone do not prove a screen caller or live runtime.
 - T037/AD-12: current source route/page/#82 caller exists; API DD/catalog cardinality, unsupported filters/paging, fine-grained permission and live schema remain gated. Angular 4/4, API #82 fake-session 15/15, production build passed with three pre-existing Student CSS budget warnings, and `/admin/lessons` returned HTTP 200. Authenticated visual/runtime and live DB were not verified.
-- T038 implemented source-supported callers for Student ST-11–ST-25 and Mentor ME-01–ME-18, with unsupported actions gated. ST-01/ST-08/ST-09/ST-10 call #20/#38, #20, #20/#37, and #22/#23; ST-11 calls #24 after ST-10 handoff. ST-04/ST-05 call public #08 while #15/#16 remain gated. No Study Server code/API/schema was changed in this task.
+- T038 implemented source-supported callers for Student ST-01–ST-25 and Mentor ME-01–ME-18, with unsupported actions gated. ST-02/ST-03 call #04 read-only; ST-04/ST-05 call public #08 while #15/#16 remain gated. No Study Server code/API/schema was changed in this task.
 
 ## SOURCE_TRACE
 
@@ -134,8 +153,8 @@ status: "IN_PROGRESS"
 | Screen count vs route count | Inventory has 83 Page/Tab/Dialog/Panel/Transition IDs; routes are only one possible implementation for a Page. | `VERIFIED_INVENTORY` | Build the gap matrix by stable screen ID, not by URL/page-file count. |
 | API catalog vs implementation | Some API IDs lack current route source; #99–#103 are absent; Mentor #46–#67 routes are present. | `DESIGN_ONLY / UNWIRED` | Do not create callers for missing APIs; keep dependent screens gated. |
 | API DD vs current source | Several screen/API DDs are Draft or disagree with local response/permission behavior. | `DISCREPANCY` | Use current source for current behavior; preserve expected behavior and gate unsupported actions. |
-| ST-02 API assignment vs caller | Current FE route metadata assigns #04 and renders the documented profile gate; Student auth exists but the authenticated profile-ready UI/fields remain unresolved. | `GATE_ONLY / PARTIAL SOURCE` | Keep the route and gate; do not render unsupported profile fields until the screen contract is resolved. |
-| ST-03 API assignment vs caller | Current FE route metadata assigns #04/#13/#14 and renders the G-03 gate. #14 ignores bio, phone/avatar are nullable, and #13/#14 upload/update consistency remains open. | `GATE_ONLY / PARTIAL SOURCE` | Keep route and API trace IDs; no caller or enabled mutation until data contract decisions are resolved. |
+| ST-02 API assignment vs caller | Current FE route metadata assigns #04; `ST02ProfileService` calls GET #04 and the page renders only `full_name`/`email` with loading/error/retry. | `PARTIAL SOURCE / READ_ONLY WIRED` | Edit stays disabled; no avatar, role/status authorization, bio or permissions are rendered. Visual acceptance beyond the supplied profile-safe fields remains limited by the blank clean design reference. |
+| ST-03 API assignment vs caller | Current FE route metadata assigns #04/#13/#14; `ST03ProfileService` calls GET #04 and binds only `full_name`/`email` as readonly. #14 ignores bio, phone/avatar are nullable, and #13/#14 upload/update consistency remains open. | `PARTIAL SOURCE / READ_ONLY WIRED` | #13/#14 remain uncalled; upload/save/phone/bio stay gated until data contract decisions are resolved. |
 | ST-04 API #15 route vs contract | Current Study Server has #15 route/module/query/model/test. Valid Student token binds user, but absent/invalid token falls back to latest course enrollment for any user; FE descriptor remains UNWIRED. | `DISCREPANCY / SECURITY GATE` | ST-04 calls only public #08; never branch from #15 until identity/selection is corrected and approved. |
 | ST-05 API #16 route vs persistence | Current Study Server has #16 route/module/query/model but no focused tests; code writes to `orders`, absent from checked-in DB DDL. FE descriptor remains UNWIRED. | `PARTIAL_SOURCE / SCHEMA GATE` | ST-05 revalidates with #08 and renders unavailable checkout; no order mutation until storage/auth/provider/amount contract is verified. |
 | ST-10 API #22/#23 publication checks | #22 verifies published course/enrollment but does not filter lesson status; #23 checks enrollment and upserts progress but has no publication predicate. | `DISCREPANCY / CLIENT GATE` | Client requires `status=PUBLISHED` from #22 before explicit #23; ST-11 revalidates through #24. This does not repair the server-side discrepancy. |
@@ -143,6 +162,37 @@ status: "IN_PROGRESS"
 | Runtime evidence | Tests use fake sessions for many APIs; CUA inventory currently has no browser surface; live schema/deployment is unverified. | `NOT_VERIFIED` | Do not claim deployed or authenticated visual behavior based on unit tests/local HTTP 200. |
 
 ## IMPLEMENTATION_PLAN
+
+### Continuation plan — read-only profile API slice and handoff reconciliation
+
+1. Keep the existing StudentLayout/API #03 session and use `StudentApiService`
+   for protected calls. Add typed #04 profile response access in ST-02 and
+   ST-03 screen-local data-access services; share only the response type under
+   Student shared models.
+2. ST-02 requests #04 at page entry and renders loading, service-error/retry,
+   and a read-only profile card using only `full_name` and `email`. Do not
+   render `avatar_url` as an image, `role`/`status` as authorization state,
+   `bio`, `permissions`, or sample identity. Keep the edit control disabled as
+   specified by the source screen asset.
+3. ST-03 requests #04 and binds `full_name`/`email` into read-only controls.
+   Keep #13 upload, #14 save, phone, bio and all G-03 diagnostic gates closed;
+   no profile write or avatar side effect is introduced.
+4. Update inaccurate current-source statements that claim there is no Student
+   session or no #04 caller, while retaining the DD's design/schema blockers and
+   distinguishing caller source from browser/live API runtime evidence.
+5. Reconcile the current handoff and screen/API matrix/docs. Run the Study Web
+   production build, `git diff --check`, and the context validator because
+   canonical context pages are expected to change. Do not run tests in this
+   continuation unless requested.
+
+### Reuse check
+
+- Reuse existing Student role/session and Bearer transport at
+  `core/auth/student-session.service.ts` and
+  `core/http/student-api.service.ts`.
+- No existing profile API screen caller or neutral profile presentation
+  component exists; keep request orchestration screen-local and share only the
+  exact API #04 response type.
 
 1. Enumerate all 83 stable IDs from the inventory/index and compare each against current route, page/component, data-access caller, API descriptor/source, DD, and prior worklog. Record `COMPLETE`, `PARTIAL`, `GATE_ONLY` or `NOT_STARTED` only from source-backed evidence; do not use the coarse 20% estimate as a count.
 2. Execute remaining items in the inventory's W0–W4 order. Within a wave, implement parent Page before its dependent Tab/Dialog/Panel/Transition, and skip screens that meet acceptance.
@@ -223,9 +273,9 @@ status: "IN_PROGRESS"
 ## CHANGES
 
 - T037: completed its existing AD-12 CSS slice verification; updated only its worklog and the T037/T038 rows in `docs/tasks/process.md`.
-- T038: generated the 83-ID structural matrix and implemented bounded ST-02 and ST-03 gate routes/pages, with their API IDs recorded as route metadata but no unauthenticated/private API calls.
+- T038: generated the 83-ID structural matrix and implemented ST-02/ST-03 pages; this continuation adds read-only API #04 callers and displays only `full_name`/`email` through StudentApiService. ST-03 mutation controls remain gated.
 - T038: implemented ST-04 and ST-05 partial routes/pages using public #08, while keeping unsafe/unverified #15/#16 behavior gated. Updated source status and cross-scope context.
-- Context/source docs updated: `.agents/web-work/AGENTS.md`, `.agents/web-work/study/INDEX.md`, `.agents/server-study/apis/declared-routes.md`, `apps/study-client/gui/architech.md`, `docs/list_screen.md`, `docs/dd_screens/screen-index.md`, ST-02–ST-05 DD/status and process tracker.
+- Context/source docs updated: `.agents/web-work/AGENTS.md`, `.agents/web-work/study/INDEX.md`, `.agents/context-manifest.json`, `apps/study-client/gui/architech.md`, `docs/list_screen.md`, `docs/dd_screens/screen-index.md`, ST-02–ST-05 DD/status and T038 matrix. No Study Server source changed.
 
 ## VERIFICATION
 
@@ -245,14 +295,20 @@ status: "IN_PROGRESS"
 | ST-03 production build | `npm run build` passed; only the three existing Student CSS budget warnings remain, with no new ST-03 warning. | `PASS_WITH_EXISTING_WARNINGS` |
 | ST-03 formatting/diff | Prettier on touched client files and scoped `git diff --check` passed. | `PASS` |
 | Study Agent Context validator | Same repository-wide baseline as T037; no ST-03/T038 findings. | `BASELINE_INVALID / NO_NEW_FINDING` |
-| ST-03 API/live visual | Route metadata assigns #04/#13/#14; no caller/request was added; authenticated Student/browser runtime is unavailable. | `GATED / NOT_VERIFIED` |
+| ST-03 API/live visual | #04 read-only caller is implemented; #13/#14 remain uncalled. Authenticated Student/browser runtime is unavailable. | `PARTIAL / NOT_VERIFIED` |
 | ST-04 focused Angular tests | Student routes + ST-04 page: 5 passed, including public #08 success, #08 404, and no #15 request. | `PASS` |
 | ST-04 production build | Passed; same three pre-existing Student CSS budget warnings, no new ST-04 budget warning. | `PASS_WITH_EXISTING_WARNINGS` |
 | ST-05 focused Angular tests | Student routes + ST-04/ST-05 pages: 8 passed, including #08 success/404 and no #16 request. | `PASS` |
 | ST-05 production build | Passed; same three pre-existing Student CSS budget warnings, no new ST-05 budget warning. | `PASS_WITH_EXISTING_WARNINGS` |
 | ST-04/ST-05 API/live UI | #08 callers are source-wired and tested with HTTP fakes; #15/#16 remain uncalled. Authenticated Student, live DB and deployed browser state are not verified. | `PARTIAL / NOT_VERIFIED` |
+| T038 continuation Angular tests | Not run in this continuation; no test execution was requested. | `NOT_RUN` |
+| T038 continuation production build | `npm run build` passed. Initial bundle 538.02 kB (38.02 kB above 500 kB); existing warnings: Student layout CSS +3.98 kB, Mentor shared CSS +17 B, Student static CSS +202 B, ST22 CSS +2.21 kB. No ST-02/ST-03 CSS budget warning. | `PASS_WITH_BUDGET_WARNINGS` |
+| T038 continuation formatting/diff | Prettier check passed for touched TypeScript/HTML/CSS/DTO files; `git diff --check` passed. Markdown-wide Prettier check flags 16 long DD/inventory documents, so no whole-document reformat was applied. | `PASS_WITH_DOC_FORMAT_LIMIT` |
+| Study Agent Context validator (standard) | Exit 1, 1,784 lines, SHA-256 `c6c5872c6bb77736ce9409bb5c99eab6a07b322f989765c993b4beb4488e4314`; `AGENT_CONTEXT_INVALID`, including pre-existing missing db-admin pages and `CONTEXT_STALE` scopes against old manifest sourceCommit. | `BASELINE_INVALID / DRIFT` |
+| Study Agent Context validator (`--skip-drift`) | Exit 1, 77 lines, SHA-256 `ea02781d98736eb3cdace354980ddd115272a4276a0294db25e99c819ef9e80e`; remaining static findings are db-admin missing pages/orphan resources; no `study-web`/ST-02/ST-03 finding. | `BASELINE_INVALID / NO_NEW_STUDY_FINDING` |
+| ST-02/ST-03 authenticated browser/live API | Not exercised; no browser session/live backend evidence. | `NOT_VERIFIED` |
 
 ## HANDOFF
 
 - Remaining T037 gates: API #82 cardinality/filter/pagination and fine-grained permission, live schema and authenticated visual/runtime verification.
-- T038 next action: continue the remaining Student screens (ST-01, ST-06–ST-10) and Mentor group, using current source/DD/Stitch evidence and leaving blocked actions gated. SH-05 route/error-context, Student auth/session, payment/enrollment contracts and Mentor session remain unresolved. Do not count a route or disabled gate as full acceptance.
+- T038 implementation/closeout is complete for this source-backed slice. Remaining product/API gates include ST-03 #13/#14, unsafe #15, order/payment/result, lesson/resource/notification contract gaps, absent #99–#103 and authenticated live API/DB/browser verification. Context validator remains invalid on repository-wide baseline findings; do not call it a pass. Do not count a route or disabled gate as full acceptance.

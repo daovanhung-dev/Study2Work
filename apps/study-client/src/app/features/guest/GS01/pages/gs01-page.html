@@ -77,12 +77,23 @@
           </button>
         </div>
       } @else if (catalog.status === 'ready') {
-        <div class="results-summary" aria-live="polite">
-          <span>{{ catalog.result.pagination.total }} khóa học</span>
-          <span class="results-page">
-            Trang {{ catalog.result.pagination.page }} / {{ catalog.result.pagination.total_pages }}
-          </span>
-        </div>
+        @if (catalogSnapshotMismatch()) {
+          <div class="state-panel" role="status" aria-live="polite">
+            <h3>Số khóa học và danh sách trang chưa đồng nhất</h3>
+            <p>Danh sách trả về vẫn được giữ lại; hãy tải lại trước khi dùng phân trang.</p>
+            <button class="primary-button" type="button" (click)="retryCatalog()">
+              Tải lại danh sách
+            </button>
+          </div>
+        }
+        @if (!catalogSnapshotMismatch()) {
+          <div class="results-summary" aria-live="polite">
+            <span>{{ catalog.result.pagination.total }} khóa học</span>
+            <span class="results-page">
+              Trang {{ catalog.result.pagination.page }} / {{ catalog.result.pagination.total_pages }}
+            </span>
+          </div>
+        }
 
         <div class="course-grid">
           @for (course of catalog.result.items; track course.id) {
@@ -90,7 +101,7 @@
           }
         </div>
 
-        @if (catalog.result.pagination.total_pages > 1) {
+        @if (catalog.result.pagination.total_pages > 1 && !catalogSnapshotMismatch()) {
           <nav class="pagination" aria-label="Phân trang khóa học">
             <button
               type="button"

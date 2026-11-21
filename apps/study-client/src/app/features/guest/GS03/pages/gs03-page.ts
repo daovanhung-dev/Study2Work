@@ -18,6 +18,10 @@ import type {
   GuestPublicCourse,
   GuestPublicCoursePage,
 } from '../../shared/models/guest-course.models';
+import {
+  isGuestPublicCoursePage,
+  isGuestResourceSuccessEnvelope,
+} from '../../shared/models/guest-course.models';
 import { GuestSiteLayout } from '../../shared/ui/guest-site-layout';
 import { GS03CurriculumService } from '../data-access/gs03-curriculum.service';
 import { GS03CourseDetailService } from '../data-access/gs03-course-detail.service';
@@ -50,6 +54,7 @@ export class GS03Page {
   private readonly router = inject(Router);
   private readonly detailService = inject(GS03CourseDetailService);
   private readonly curriculumService = inject(GS03CurriculumService);
+  private readonly detailCourseIds = new Subject<string | null>();
   private readonly curriculumCourseIds = new Subject<string | null>();
 
   @ViewChildren('courseTab') private readonly courseTabs!: QueryList<ElementRef<HTMLButtonElement>>;
@@ -60,6 +65,30 @@ export class GS03Page {
   private activeCourseId = '';
 
   constructor() {
+    this.detailCourseIds
+      .pipe(
+        tap(() => {
+          this.state.set({ status: 'loading' });
+          this.curriculumCourseIds.next(null);
+        }),
+        switchMap((courseId) => {
+          if (!courseId) return of<DetailState>({ status: 'not-found' });
+
+          return this.detailService.getCourse(courseId).pipe(
+            map((response) => this.mapResponse(response)),
+            catchError((error: unknown) => of(this.mapHttpError(error))),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((state) => {
+        this.state.set(state);
+        this.syncCurriculumRequest();
+        if (state.status === 'not-found') {
+          void this.router.navigateByUrl('/not-found', { replaceUrl: true });
+        }
+      });
+
     this.curriculumCourseIds
       .pipe(
         distinctUntilChanged(),
@@ -96,30 +125,24 @@ export class GS03Page {
 
     this.route.paramMap
       .pipe(
-        map((params) => params.get('courseId') ?? ''),
+        map((params) => toSafeCourseId(params.get('courseId'))),
         distinctUntilChanged(),
-        tap((courseId) => {
-          this.activeCourseId = courseId;
-          this.state.set({ status: 'loading' });
-          this.curriculumCourseIds.next(null);
-        }),
-        switchMap((courseId) => {
-          if (!courseId) return of<DetailState>({ status: 'not-found' });
-
-          return this.detailService.getCourse(courseId).pipe(
-            map((response) => this.mapResponse(response)),
-            catchError((error: unknown) => of(this.mapHttpError(error))),
-          );
-        }),
         takeUntilDestroyed(this.destroyRef),
       )
-      .subscribe((state) => {
-        this.state.set(state);
-        this.syncCurriculumRequest();
-        if (state.status === 'not-found') {
-          void this.router.navigateByUrl('/not-found', { replaceUrl: true });
-        }
+      .subscribe((courseId) => {
+        this.activeCourseId = courseId ?? '';
+        this.detailCourseIds.next(courseId);
       });
+  }
+
+  retryCourse(): void {
+    if (this.activeCourseId) this.detailCourseIds.next(this.activeCourseId);
+  }
+
+  retryCurriculum(): void {
+    if (this.state().status !== 'ready' || this.selectedTab() !== 'curriculum') return;
+    this.curriculumCourseIds.next(null);
+    this.syncCurriculumRequest();
   }
 
   selectTab(tab: CourseDetailTab): void {
@@ -173,12 +196,28 @@ export class GS03Page {
   }
 
   private mapResponse(response: ApiEnvelope<GuestPublicCoursePage>): DetailState {
-    if (!response.success || response.businessCode !== 'DESIGN_RESOURCE_RETRIEVED') {
+    const candidate: unknown = response;
+    if (
+      !isGuestResourceSuccessEnvelope(candidate) ||
+      candidate.businessCode !== 'DESIGN_RESOURCE_RETRIEVED' ||
+      !isGuestPublicCoursePage(candidate.data)
+    ) {
       return { status: 'error' };
     }
 
-    const course = response.data.items[0];
-    if (!course || course.status !== 'PUBLISHED') return { status: 'not-found' };
+    const result = candidate.data;
+    if (
+      result.items.length !== 1 ||
+      result.pagination.page !== 1 ||
+      result.pagination.size !== 1 ||
+      result.pagination.total !== 1 ||
+      result.pagination.total_pages !== 1
+    ) {
+      return { status: 'error' };
+    }
+
+    const course = result.items[0];
+    if (course.status !== 'PUBLISHED') return { status: 'not-found' };
 
     return { status: 'ready', course };
   }
@@ -192,11 +231,18 @@ export class GS03Page {
   private mapCurriculumResponse(
     response: ApiEnvelope<GuestCourseCurriculumPage>,
   ): GuestCurriculumState {
-    if (!response.success || response.businessCode !== 'DESIGN_RESOURCE_RETRIEVED') {
+    const candidate: unknown = response;
+    if (
+      !isGuestResourceSuccessEnvelope(candidate) ||
+      candidate.businessCode !== 'DESIGN_RESOURCE_RETRIEVED' ||
+      !isGuestCourseCurriculumPage(candidate.data)
+    ) {
       return { status: 'error' };
     }
 
-    const lessons = toGuestCurriculumLessonSummaries(response.data.items);
+    const lessons = toGuestCurriculumLessonSummaries(candidate.data.items).sort(
+      (left, right) => left.order - right.order,
+    );
     return lessons.length > 0 ? { status: 'ready', lessons } : { status: 'empty' };
   }
 
@@ -204,5 +250,70 @@ export class GS03Page {
     return error instanceof HttpErrorResponse && error.status === 404
       ? { status: 'not-found' }
       : { status: 'error' };
+  }
+}
+
+function isGuestCourseCurriculumPage(value: unknown): value is GuestCourseCurriculumPage {
+  if (!isRecord(value) || !Array.isArray(value['items']) || !isRecord(value['pagination'])) {
+    return false;
+  }
+
+  const items = value['items'];
+  const pagination = value['pagination'];
+  if (
+    !isPositiveInteger(pagination['page']) ||
+    !isNonnegativeInteger(pagination['size']) ||
+    !isNonnegativeInteger(pagination['total']) ||
+    !isNonnegativeInteger(pagination['total_pages'])
+  ) {
+    return false;
+  }
+
+  return (
+    items.every(isGuestCurriculumLesson) &&
+    pagination['page'] === 1 &&
+    pagination['size'] === items.length &&
+    pagination['total'] === items.length &&
+    pagination['total_pages'] === (items.length > 0 ? 1 : 0)
+  );
+}
+
+function isGuestCurriculumLesson(value: unknown): value is GuestCourseCurriculumPage['items'][number] {
+  if (!isRecord(value)) return false;
+  return (
+    isPositiveInteger(value['id']) &&
+    isPositiveInteger(value['course_id']) &&
+    typeof value['title'] === 'string' &&
+    isNullableString(value['content']) &&
+    isNullableString(value['video_url']) &&
+    typeof value['order'] === 'number' &&
+    Number.isInteger(value['order']) &&
+    value['status'] === 'PUBLISHED'
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0;
+}
+
+function isNonnegativeInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+function isNullableString(value: unknown): value is string | null {
+  return value === null || typeof value === 'string';
+}
+
+function toSafeCourseId(value: string | null): string | null {
+  if (!value || !/^\d+$/.test(value) || value.length > 19) return null;
+  try {
+    const id = BigInt(value);
+    return id > 0n && id <= 9_223_372_036_854_775_807n ? value : null;
+  } catch {
+    return null;
   }
 }

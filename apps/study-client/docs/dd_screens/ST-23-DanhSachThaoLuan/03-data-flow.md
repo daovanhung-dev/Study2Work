@@ -1,5 +1,15 @@
 # ST-23 — Data Flow & State
 
+## Current-source reconciliation — 2026-11-21
+
+The #39 COUNT and paged LIST reads are separate. For each accepted page,
+ST-23 compares `items.length` with
+`min(size, max(total - (page - 1) * size, 0))`. A mismatch preserves returned
+discussion rows, suppresses empty copy and count-based pagination, and offers
+the existing retry action. Empty pages remain valid only when the count-derived
+expected row count is also zero. The design-time flow below does not supersede
+this current caller behavior.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

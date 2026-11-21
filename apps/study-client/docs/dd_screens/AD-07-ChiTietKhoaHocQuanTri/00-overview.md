@@ -8,7 +8,7 @@
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); **DD:** `BLOCKED` · **Implementation:** `PARTIAL SOURCE — route/page and GET #74 caller exist; actions to #75/#76/#77 and AD-12 handoff remain unavailable` · **Study Web runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-16 (current-source sync and ID label correction) |
+| Version / last updated | 0.2 / 2026-11-20 (signed-int64 route guard) |
 | Nguồn đối chiếu | [AD-07.md](../../screen_stitch/05_admin/AD-07_chi-tiet-khoa-hoc-quan-tri/AD-07.md), [AD-07_PLAN.md](../../screen_stitch/05_admin/AD-07_chi-tiet-khoa-hoc-quan-tri/AD-07_PLAN.md), [AD-07_markers.json](../../screen_stitch/05_admin/AD-07_chi-tiet-khoa-hoc-quan-tri/AD-07_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -68,7 +68,7 @@ API catalog #74 khai báo `GET /api/v1/admin/courses/{course_id}` với Bearer J
 |---|---|---|---|
 | Route và entry | `/admin/courses/:courseId`, nhận numeric `Course.id` từ AD-06. | Angular router declares the route; AD07Page reads `courseId`, calls GET #74, and has a router link back to `/admin/courses`. The original HTML prototype back link remains `href="#"`. | Route/page/GET caller `PRESENT`; handoff/runtime remain unverified. |
 | Quyền | AC-32 yêu cầu Admin có quyền course management; catalog ghi Bearer JWT/Admin. | Local #74 kiểm tra shared JWT role `ADMIN`; không kiểm tra permission course-management riêng. | Permission mapping `OPEN`. |
-| Tải detail | GET #74 theo path `course_id:int64`. | Angular AD07Page calls GET #74 through AD07ApiService/AdminApiService with the route ID. | Client caller and API source present; API DD `Draft — Needs Confirmation`. |
+| Tải detail | GET #74 theo path `course_id:int64`. | Angular AD07Page validates the complete raw route value against signed-int64 bounds before GET #74; valid IDs are passed unchanged. | Client caller and API source present; malformed/missing/out-of-range IDs skip the request; API DD `Draft — Needs Confirmation`. |
 | Course fields | Catalog dùng `Page<Course>`. | Local #74 trả một Course trong singleton page; query chỉ lấy course và mentor. | Singleton shape `DERIVED`; cần xác nhận trong API DD. |
 | Counters | AC-32 diagram nói đọc course/owner/counters. | Không có counter field hoặc query trong catalog/model/query hiện hành. | `DISCREPANCY`; không render/tính counter. |
 | Prototype | Detail fields, actions, states. | `code.html` là HTML tĩnh, blank metadata, hard-coded zero metrics, empty curriculum, quality statements, links `#`, ba nút AD-08/09/12 disabled; không có fetch/navigation handler. | Design artifact, không phải runtime. |
@@ -79,7 +79,12 @@ API catalog #74 khai báo `GET /api/v1/admin/courses/{course_id}` với Bearer J
 - Angular route `/admin/courses/:courseId` loads `AD07Page`; the page calls GET #74 using the raw route string and exposes `loading/loaded/error` states. The current page renders the route value as `ID khóa học` (not a course-code field), title, mentor full name, price, status, thumbnail URL and description.
 - The curriculum/lesson panel states #74 has no such source; AD-08, AD-09 and AD-12 buttons remain disabled. The page has a RouterLink back to AD-06; no #75/#76/#77/#82 caller exists in AD-07.
 - `admin-detail-pages.spec.ts` covers GET #74, Bearer auth, fields, disabled actions and unsupported claims. Its AD-07 case was run after the ID-label correction: 1 file, 2 tests passed. Production build passed with existing CSS-budget warnings. Browser/runtime/deployment remains `NOT VERIFIED`.
-- API #74 local singleton-page behavior is `DERIVED`; API DD stays Draft. Counter, permission, schema, status, and AD-12 handoff decisions remain open.
+- The current local #74 view constructs a singleton `Page<Course>` with `page=1,size=1,total=1,total_pages=1`; AD-07 now validates that page plus the Course/mentor fields before rendering. API DD stays Draft, and counter, permission, live schema, status, and AD-12 handoff decisions remain open.
+
+### Current Study Web source re-audit — 2026-11-20
+
+- AD07Page validates the complete raw `courseId` against API #74's optional-sign signed-int64 path parser before requesting. It does not convert the ID through JavaScript `Number`; malformed, missing, or out-of-range IDs render a local error and skip GET #74. Valid raw IDs are unchanged.
+- API #74 projection/cardinality, permission, counters and downstream actions remain unresolved; AD-08/#75, AD-09/#76/#77 and AD-12/#82 actions remain unavailable. No runtime or test verification was performed in this continuation.
 
 ### Actor, điều kiện và liên kết
 

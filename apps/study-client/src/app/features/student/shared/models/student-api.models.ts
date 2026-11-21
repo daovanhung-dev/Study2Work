@@ -1,5 +1,17 @@
 export type StudyId = string;
 
+export interface StudentProfile {
+  id: number;
+  full_name: string;
+  email: string;
+  role: string;
+  avatar_url: string | null;
+  phone: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface StudentAuthor {
   id: number;
   full_name: string;
@@ -171,6 +183,10 @@ export interface StudentNotification {
   is_read: boolean;
   read_at?: string | null;
   created_at: string;
+}
+
+export interface StudentNotificationReadSummary {
+  updated_count: number;
 }
 
 export function toSafeStudyId(value: unknown): StudyId | null {

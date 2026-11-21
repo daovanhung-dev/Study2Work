@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/mentor/courses`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: source-wired at `apps/study-client/src/app/features/mentor/mentor.route.ts` beneath `MentorLayout`; runtime/deployment is not verified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -15,12 +15,12 @@
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [ME-03](../ME-03-WorkspaceKhoaHocCuaMentor/00-overview.md), [ME-04](../ME-04-TaiLenVaTaoBaiGiang/00-overview.md), [ME-16](../ME-16-TienDoToanKhoaHoc/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [ME-03](../ME-03-WorkspaceKhoaHocCuaMentor/00-overview.md), [ME-04](../ME-04-TaiLenVaTaoBaiGiang/00-overview.md), [ME-16](../ME-16-TienDoToanKhoaHoc/00-overview.md) | Source event/inventory navigation | ME-03 receives the validated numeric course ID through its route segment; ME-04/ME-16 destinations still require an approved course-specific action. | Workspace route exists; runtime not verified; direct-owner scope remains narrower than assigned-course expectations. |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: route registration is source-backed; browser/runtime behavior is not verified.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
@@ -39,7 +39,7 @@ flowchart LR
 | Origin | Proposed destination | Data | Gate |
 |---|---|---|---|
 | ME-01 “Tất cả lớp học” / header “Khóa học phụ trách” | ME-02 `/mentor/courses` | No route parameter. | Inventory proposal; app route/session absent. |
-| Each card Workspace CTA | ME-03 `/mentor/courses/:courseId` | Current #46 `Course.id`. | Inventory link; ensure server verifies exact access; direct-owner/assignment discrepancy remains. |
+| Each card Workspace CTA | ME-03 `/mentor/courses/:courseId` | Current #46 `Course.id`. | Current template links only a validated safe ID; ME-03/#49 verifies direct ownership. Assigned-course scope remains unsupported. |
 | Top “Tạo bài giảng mới” | ME-04 `/mentor/courses/:courseId/lectures/new` | Requires a course ID; current button supplies none. | Must choose a course or move action into a course card; product decision required. |
 | Card manage content action | Prototype ME-06 `/mentor/courses/:courseId/content` | Course ID. | Inventory ME-02 link row does not include ME-06; resolve direct vs ME-03 first. |
 | Card grading action | Prototype ME-09 `/mentor/submissions` | Potential course context, if destination supports it. | Not in ME-02 screen links; handoff query/route contract absent. |
@@ -49,7 +49,7 @@ flowchart LR
 
 ### Trích từ DD nguồn: 2. Luồng tổng thể
 
-1. Người dùng đi tới route đề xuất `/mentor/courses`. Route, token/session hydration và role-aware shell chưa tồn tại trong Study Web source hiện tại.
+1. Người dùng đi tới source-wired route `/mentor/courses` dưới `MentorLayout`. Session acquisition is source-backed; browser/runtime behavior is unverified.
 2. Khi client được triển khai, chỉ gửi Bearer access token theo auth boundary của app; không nhận `mentor_id` từ query hoặc form. Current #46 guard đọc và xác thực JWT claims, yêu cầu role `MENTOR`, rồi lấy numeric `sub` làm principal.
 3. Gọi `GET /api/v1/mentor/courses` với query đã được quyết định. Không gửi search/level/sort/semester/status label của mockup khi chưa có mapping. Query defaults current: `page=1`, `size=20`, không có status filter.
 4. #46 validate `status` thuộc `DRAFT|PUBLISHED`, page `>=1`, size `1..100` trước DB query. Nếu hợp lệ, count và page query cùng áp dụng owner/status predicate; SQL order cố định `courses.created_at DESC, courses.id ASC`; query chỉ đọc.

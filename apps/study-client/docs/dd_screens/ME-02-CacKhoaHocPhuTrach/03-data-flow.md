@@ -1,5 +1,7 @@
 # ME-02 — Data Flow & State
 
+> **Current source reconciliation (2026-11-21):** the route is registered under `MentorLayout`; the page calls #46 and validates the source envelope, code, requested page/size, pagination totals and Course fields. Superseded requests are canceled. Empty out-of-range pages retry at the last valid page, while legitimate empty pages remain success. Runtime is not verified; see `00-overview.md` for remaining contract gaps.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|
@@ -13,7 +15,7 @@
 
 ### Trích từ DD nguồn: 2. Luồng tổng thể
 
-1. Người dùng đi tới route đề xuất `/mentor/courses`. Route, token/session hydration và role-aware shell chưa tồn tại trong Study Web source hiện tại.
+1. Người dùng đi tới route source-wired `/mentor/courses` dưới `MentorLayout`. Mentor session acquisition is source-backed; runtime is not verified.
 2. Khi client được triển khai, chỉ gửi Bearer access token theo auth boundary của app; không nhận `mentor_id` từ query hoặc form. Current #46 guard đọc và xác thực JWT claims, yêu cầu role `MENTOR`, rồi lấy numeric `sub` làm principal.
 3. Gọi `GET /api/v1/mentor/courses` với query đã được quyết định. Không gửi search/level/sort/semester/status label của mockup khi chưa có mapping. Query defaults current: `page=1`, `size=20`, không có status filter.
 4. #46 validate `status` thuộc `DRAFT|PUBLISHED`, page `>=1`, size `1..100` trước DB query. Nếu hợp lệ, count và page query cùng áp dụng owner/status predicate; SQL order cố định `courses.created_at DESC, courses.id ASC`; query chỉ đọc.
@@ -51,14 +53,14 @@ GET /api/v1/mentor/courses
 
 | State | Condition | UI/data expectation | Evidence/status |
 |---|---|---|---|
-| `loading` | First #46 request pending. | Page/list loading indicator; exact skeleton/layout not present in source. | Expected state from ME-02 inventory; Study Web `UNWIRED`. |
+| `loading` | First/current #46 request pending. | Current page shows a loading state and marks the page/list busy. | Source-wired; route/runtime not verified. |
 | `ready` | #46 200 with non-empty `items`. | Render allowed Course fields and server pagination only. | API source-backed; sample KPI/card extras remain blocked. |
 | `empty` | #46 200 with `items=[]`, including no matching status/owner rows. | Distinguish empty from request error; empty copy/CTA not designed. | Current source returns success. |
-| `out-of-range-page` | 200 page request beyond result range. | Current response may contain empty `items` but positive `total`; whether to clamp/reset page is a client/product decision. | Test source inspected; no app policy. |
-| `unauthenticated` | Missing/invalid/expired token (as surfaced by current guard). | Login/session refresh/handoff not defined for Mentor Web. | #46 source returns 401. |
+| `out-of-range-page` | Valid #46 response has no items and requested page exceeds `max(total_pages, 1)`. | Client re-requests the same filter at the last valid page (page 1 when total is zero); it accepts valid empty pages within range and does not reject items based on COUNT/LIST cardinality. | Current source-wired recovery; runtime not verified. |
+| `unauthenticated` | Missing/invalid/expired token (as surfaced by current guard). | `MentorApiService`/layout provide the current session/sign-in path; the page shows a retryable session error. | #46 source returns 401; runtime not verified. |
 | `denied` | Valid JWT without `MENTOR`; or destination enforces course access. | Do not render course data after 403; access-denied UX/return path not defined. | #46 source returns 403 before query for wrong role. |
 | `validation-error` | Invalid `status`, `page`, or `size`. | Keep separate from empty state; field-specific UI errors require mapping contract. | #46 returns 422. |
-| `request-error` | #46 safe 500 or network failure. | Do not replace with empty or sample metrics. Trace ID/retry/persistence policy not designed. | API 500 source-backed; network UX not found. |
+| `request-error` | #46 safe 500 or network failure. | Do not replace with empty or sample metrics; current page displays the mapped error and retry action. | API 500 source-backed; retry is user-triggered; runtime not verified. |
 | `unsupported-metrics` | #46 succeeds, but mockup expects rating/progress/capstone/etc. | Hide those values or render an approved static/empty treatment only after design decision; never show sample values as live. | `NOT_FOUND` in #46 projection. |
 
 `partial` appears on ME-01, not ME-02 inventory. Do not introduce independent dashboard-style widgets here unless the screen contract adds independently loaded APIs and error states.

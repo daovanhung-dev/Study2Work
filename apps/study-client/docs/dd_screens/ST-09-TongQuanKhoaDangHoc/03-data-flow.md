@@ -1,5 +1,16 @@
 # ST-09 — Data Flow & State
 
+## Current-source reconciliation — 2026-11-21
+
+ST-09 reads paged ACTIVE-course data from #20 before requesting #37. For each
+accepted page, the UI compares returned row count with the expected row count
+derived from `page`, `size`, and COUNT's `total`. A matching ACTIVE row is
+sufficient to continue to #37 even if the counts differ. When the target is
+absent from a mismatched page, ST-09 preserves an unresolved state and offers
+retry; it does not infer that enrollment is absent from an inconsistent list.
+The design-time flow below does not override current caller evidence. The
+full course tree, lesson selection and AC-18 aggregate remain unresolved.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|
@@ -26,28 +37,28 @@
 
 ### Current behavior đã kiểm chứng
 
-- HTML chỉ vẽ gated/unavailable copy và static developer handoff cards; không nạp course, enrollment, curriculum hoặc progress.
-- HTML anchors trỏ #; các data-path không được nối router.
+- ST-09 route reacts to `courseId`; it validates the route ID before requesting ACTIVE membership pages from #20 and calls #37 only after an exact course match.
+- The page renders source-backed course/progress fields, loading, errors with retry, count/list unresolved state, and the not-enrolled result after scanning consistent pages. It does not call public #09 as an access check or render a course tree/media URL.
 - API #09 route hiện hành gọi get_course_curriculum. Path course_id được parse integer; invalid path trả 404. Query đầu tiên chỉ chấp nhận course PUBLISHED; query thứ hai chỉ lấy lesson PUBLISHED, sắp thứ tự sort_order rồi id. Response 200 envelope chứa Page<Lesson>, gồm id, course_id, title, nullable content, nullable video_url, order, status; page=1, size=count, total=count và total_pages là 1 nếu có lesson, ngược lại 0. Khi rỗng message là “No published lessons.” Lỗi query/mapping trả 500; lỗi SQL rollback. Endpoint không khai JWT/enrollment check.
 - Test source cho #09 tồn tại, nhưng test không được chạy trong task này.
-- Không có current source cho #20/#37/#22/#23/#24 trong Study Server app/tests. Không có Study Web route/runtime để xác nhận bất kỳ screen event nào.
+- Current #20 and #37 route/module/query/model sources and ST-09 callers are present. #22/#23/#24 are not found in current Study Server source. Deployed Study Web/API runtime remains unverified.
 
 ### Trích từ DD nguồn: E. Ma trận trạng thái và điều hướng
 
 | State | Điều kiện vào dự kiến | Màn hình / hành động | Current evidence |
 |---|---|---|---|
-| Route unavailable | Study Web route chưa được nối | Implementation gap | UNWIRED; dist chỉ có / |
-| Loading/auth pending | Route vào, session/course context đang xác minh | Loading treatment cần thiết kế | Không có UI state trong asset |
-| Invalid/missing course | Path invalid, course không tồn tại/không public | #09 source maps non-integer path, missing course and unpublished course to 404; signed-int64 range handling is not explicit | No client mapping |
-| Enrollment unconfirmed | #20 chưa trả membership decision | Gated/error state; không gọi private learning flow | #20 NOT_FOUND/schema mismatch |
-| Not enrolled | Membership contract xác nhận không thuộc Student | Deny/return state cần Product/API approval | No source-backed state |
-| Enrolled, loading | Enrollment verified, progress/curriculum loading | Loading layout cần thiết kế | Không có loaded/loading UI |
-| Enrolled, no lessons | #09 trả 200 empty public list | No-lessons content chỉ được hiển thị sau membership/access policy; không đồng nghĩa khóa có thể học | API #09 empty behavior current; UI missing |
-| Enrolled, loaded | #20 gate + #37/#09 valid payloads + approved projection | Course outline/progress UI cần bổ sung | Không có element/design/API contracts đủ |
-| Partial failure | Một trong #09/#37 thất bại | Partial/error state và retry semantics chưa chốt | No source/UI |
+| Route unavailable | Study Web route chưa được nối | Implementation gap | Current ST-09 route/page are source-wired; deployed runtime is unverified. |
+| Loading/auth pending | Route vào, session/course context đang xác minh | Loading treatment cần thiết kế | StudentLayout owns session setup; ST-09 shows loading while validating #20 membership and while loading #37. |
+| Invalid/missing course | Path invalid, course không tồn tại/không public | #09 source maps non-integer path, missing course and unpublished course to 404; signed-int64 range handling is not explicit | ST-09 rejects an invalid/unsafe route ID locally before calling #20. Missing/non-enrolled IDs resolve through the validated #20 membership scan. |
+| Enrollment unconfirmed | #20 chưa trả membership decision | Gated/error state; không gọi private learning flow | #20 projection and page are validated; request, response-shape and count/list mismatch states remain distinct and retryable. |
+| Not enrolled | Membership contract xác nhận không thuộc Student | Deny/return state cần Product/API approval | After all validated, cardinality-consistent #20 pages are scanned, ST-09 shows the not-enrolled gate when no ACTIVE row matches. |
+| Enrolled, loading | Enrollment verified, progress/curriculum loading | Loading layout cần thiết kế | A matching ACTIVE row triggers #37 and the page shows progress loading. |
+| Enrolled, no lessons | #09 trả 200 empty public list | No-lessons content chỉ được hiển thị sau membership/access policy; không đồng nghĩa khóa có thể học | Current #37 `has_content=false` state displays no published lessons in its progress projection; public #09 is not called. |
+| Enrolled, loaded | #20 gate + #37/#09 valid payloads + approved projection | Course outline/progress UI cần bổ sung | ST-09 renders validated #37 course-level totals/percentage; it has no course tree or lesson selection. |
+| Partial failure | Một trong #09/#37 thất bại | Partial/error state và retry semantics chưa chốt | #20/#37 errors are shown with the existing retry action; public #09 is not called. |
 | Session expired/forbidden | Auth/access layer trả 401/403 theo contract | Session/error handling cần thiết kế; không mặc định redirect | #20/#37 only declared codes |
 | Lesson chosen | Lesson item + lessonId exists | Access handoff to ST-10 | Lesson item absent; #22–#24 NOT_FOUND |
-| Progress detail requested | User selects ST-21 control | /student/progress/:courseId | Link/control absent; #37 unresolved |
+| Progress detail requested | User selects ST-21 control | /student/progress/:courseId | ST-09 links to the course progress route; destination design and #37 aggregate discrepancies remain open. |
 
 ### Điều hướng
 

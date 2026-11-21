@@ -9,6 +9,12 @@
 
 ## 2. Contract / source detail
 
+### Current implementation handoff (2026-11-21)
+
+- API #01 is a public POST. SH-03 accepts only HTTP 201 `DESIGN_RESOURCE_CREATED` with a valid positive JS-safe `data.id` and non-empty `data.email`.
+- The password is never carried into SH-04. A separate user action places only `id/email` into a one-use in-memory handoff. SH-03 does not call #02; SH-04 owns the explicit API #02 call.
+- The current focused spec covers request shape, local validation, duplicate submission, invalid success projections, 409, 422, 500 and network uncertainty.
+
 - API refs trong inventory: #01
 - Orchestration/data notes: POST #1 → nhận user_id,email → SH-04; 409 email trùng trở lại form.
 - BE/source status và gate: **R**
@@ -55,7 +61,7 @@ id, full_name, email, role, avatar_url, phone, status, created_at, updated_at
 
 Mật khẩu và `password_hash` không được đưa vào phản hồi. API không trả access token hoặc refresh token. SQL hiện gán `role='STUDENT'`, nhưng bỏ cột `status`; giá trị `status` phụ thuộc lược đồ thực tế. `DB.sql` có giá trị mặc định `ACTIVE`, song tệp này không xác nhận lược đồ cơ sở dữ liệu đang chạy.
 
-Để mở SH-04, luồng đích cần ánh xạ `data.id` thành `user_id` và dùng `data.email`. Danh mục yêu cầu hai giá trị này nhưng chưa khóa cơ chế truyền phía giao diện. Đây là hợp đồng dữ liệu bàn giao, chưa phải quyết định transport; không đưa email/ID vào query string hoặc lưu trữ bền vững khi chưa có policy. Angular route và API #01 caller đã có source; chưa có caller/transport handoff tới SH-04.
+Current source maps `data.id` to `userId` and `data.email` into a one-use in-memory handoff service before navigation. SH-03 has no API #02 caller; the request is owned by SH-04 and requires its explicit click. The client accepts only positive safe-integer IDs, which is narrower than catalog int64; no URL or persistent storage is used. The transport and refresh behavior remain a product decision.
 
 ### 3.3. Lỗi API #01 và xử lý trên SH-03
 

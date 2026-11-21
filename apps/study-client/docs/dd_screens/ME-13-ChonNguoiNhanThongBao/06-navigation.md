@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/mentor/notifications/new/recipients`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: registered in `apps/study-client/src/app/features/mentor/mentor.route.ts`; browser/runtime remains unverified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -51,9 +51,9 @@ flowchart LR
 
 ### Navigation/data handoff
 
-- Entry: inventory proposes /mentor/notifications/new/recipients; parent path and route registration are not found because Study Web is UNWIRED.
-- Next: ME-14 at proposed /mentor/notifications/new. Logical handoff requires selected student IDs; exact state carrier is a blocker. Do not pass names instead of IDs.
-- Back/cancel: no approved destination or restore semantics. Do not preserve in local/session storage by assumption.
+- Entry: `/mentor/notifications/new/recipients` is registered under the Mentor layout. Global session/role behavior is owned by that layout and has not been browser-verified here.
+- Next: ME-14 at `/mentor/notifications/new`. Current source navigates with selected course ID and recipient summaries in in-memory `history.state`; persistence and back/refresh restoration approval remain unresolved.
+- Back/cancel: browser back can return to ME-13, but router-state restore semantics are not verified; no local/session storage is used. Cancel destination remains unspecified.
 - #63 sends only in ME-14; #63 returns operation UUID and notification IDs, neither should be introduced as ME-13 selection state. #18 and #64 belong downstream to ME-15.
 - Session expiry and denied access must use approved global auth/error routes. No redirect target is specified here.
 

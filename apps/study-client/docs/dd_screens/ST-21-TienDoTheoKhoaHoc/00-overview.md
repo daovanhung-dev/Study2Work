@@ -1,12 +1,18 @@
 # ST-21 — Tiến độ theo khóa học · Tổng quan
 
+## Current source implementation — 2026-11-20
+
+- Route `/student/progress/:courseId` is registered under the authenticated Student route group. The page calls #37 reactively and validates the response code, route identity, counts, and 0–100 percentage.
+- Current #37 requires ACTIVE enrollment, counts PUBLISHED lessons and completed lesson progress, and returns aggregate counts/percentage plus `has_content`. The page displays these fields with retry; there is no per-lesson status or timestamp in the response, so the inventory timeline and ST-10/ST-11 lesson links remain unavailable.
+- The Stitch PNG body is blank. The loaded progress card is a source-backed projection, not a verified match to a populated design. The historical source snapshot below predates current route/API source.
+
 | Trường | Giá trị |
 |---|---|
 | Screen ID | `ST-21` |
 | Module | Student |
-| Route | `/student/progress/:courseId` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student/progress/:courseId` — current Student route is source-wired; runtime not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. API #37 chưa có Student route/module/query/test; `UserProfile` theo catalog không chứa dữ liệu tiến độ; quy tắc aggregate/access/empty state còn mở. |
+| DD status | Draft; current aggregate is source-backed, but the per-lesson timeline/timestamps requested by the inventory are absent from #37. Loaded-state visual target remains unspecified. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [ST-21.md](../../screen_stitch/03_student/ST-21_tien-do-theo-khoa-hoc/ST-21.md), [ST-21_PLAN.md](../../screen_stitch/03_student/ST-21_tien-do-theo-khoa-hoc/ST-21_PLAN.md), [ST-21_markers.json](../../screen_stitch/03_student/ST-21_tien-do-theo-khoa-hoc/ST-21_markers.json), [list_screen.md](../../list_screen.md) |

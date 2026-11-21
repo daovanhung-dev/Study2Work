@@ -21,13 +21,15 @@ export function adminQueryState<TQuery, TResponse>(
   query: Signal<TQuery>,
   load: (query: TQuery) => Observable<ApiEnvelope<TResponse>>,
   render: (response: TResponse) => AdminScreenViewState,
+  successBusinessCode?: string,
 ): Signal<AdminScreenViewState> {
   return toSignal(
     toObservable(query).pipe(
       switchMap((value) =>
         load(value).pipe(
           map((envelope): AdminScreenViewState =>
-            envelope.success
+            envelope.success === true
+              && (successBusinessCode === undefined || envelope.businessCode === successBusinessCode)
               ? render(envelope.data)
               : { status: 'error', message: 'Study Server không thể tải dữ liệu lúc này.' },
           ),
@@ -45,6 +47,9 @@ export function adminRouteState<TResponse>(
   parameter: string,
   load: (id: string) => Observable<ApiEnvelope<TResponse>>,
   render: (response: TResponse) => AdminScreenViewState,
+  validateId?: (id: string) => boolean,
+  invalidIdMessage = 'Mã tham chiếu trên đường dẫn không hợp lệ.',
+  successBusinessCode?: string,
 ): Signal<AdminScreenViewState> {
   return toSignal(
     route.paramMap.pipe(
@@ -56,12 +61,17 @@ export function adminRouteState<TResponse>(
             message: 'Thiếu mã tham chiếu trên đường dẫn.',
           });
         }
+        if (validateId && !validateId(id)) {
+          return of<AdminScreenViewState>({ status: 'error', message: invalidIdMessage });
+        }
         return load(id).pipe(
-          map((envelope): AdminScreenViewState =>
-            envelope.success
+          map((envelope): AdminScreenViewState => {
+            const hasExpectedSuccess = envelope.success === true
+              && (successBusinessCode === undefined || envelope.businessCode === successBusinessCode);
+            return hasExpectedSuccess
               ? render(envelope.data)
-              : { status: 'error', message: 'Study Server không thể tải dữ liệu lúc này.' },
-          ),
+              : { status: 'error', message: 'Study Server không thể tải dữ liệu lúc này.' };
+          }),
           startWith(ADMIN_LOADING_STATE),
           catchError((error: unknown) => of(adminDataError(error))),
         );
@@ -69,6 +79,19 @@ export function adminRouteState<TResponse>(
     ),
     { initialValue: ADMIN_LOADING_STATE },
   );
+}
+
+export function isSignedInt64RouteId(value: string): boolean {
+  const match = /^[+-]?[0-9]+$/.exec(value);
+  if (value.length > 20 || match?.[0] !== value) {
+    return false;
+  }
+
+  const negative = value.startsWith('-');
+  const digits = value.replace(/^[+-]/, '').replace(/^0+/, '') || '0';
+  const maxMagnitude = negative ? '9223372036854775808' : '9223372036854775807';
+  return digits.length < maxMagnitude.length
+    || (digits.length === maxMagnitude.length && digits <= maxMagnitude);
 }
 
 export function loadedRows(

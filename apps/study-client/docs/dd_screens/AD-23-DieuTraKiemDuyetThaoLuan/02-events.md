@@ -1,5 +1,7 @@
 # AD-23 — Events (đặc tả xử lý)
 
+> **T122 current-source update (2026-11-20):** AD-23 now applies the backend-matching positive signed-int64 route-ID guard before GET #98; the caller also validates the envelope, exact one-item response and comment parent identities before rendering. Report relation and moderation actions remain unavailable; completion is 62.5%. No tests/build/lint/browser checks were run for this update.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|
@@ -26,7 +28,7 @@
 - **Input:** candidate route parameter `discussionId` / API path `discussion_id:int64!`. No query or body is declared by catalog #98.
 - **Expected API contract:** `GET /api/v1/admin/discussions/{discussion_id}`, Bearer JWT, role Admin. Direct response `ApiEnvelope<Page<Discussion>>`; success `200 DESIGN_RESOURCE_RETRIEVED`; errors `401 DESIGN_AUTHENTICATION_REQUIRED`, `403 DESIGN_ACCESS_DENIED`, `404 DESIGN_RESOURCE_NOT_FOUND`, `500 DESIGN_INTERNAL_ERROR`.
 - **Current local source:** role `ADMIN` is checked before ID parsing/DB; invalid/non-positive/overflow ID returns 404; missing Discussion returns 404; current projection reads Discussion/author and direct child comments, sorts comments ascending by timestamp then ID, maps a content-derived title and returns a singleton page. Report data is not queried. Query/projection failure returns safe 500 and rolls back; success is read-only and does not commit.
-- **Processing and output:** current HTML performs no validation/request/mapping and stays on placeholders. A future UI cannot satisfy AC's report inspection from the current #98 projection. Do not populate report-specific fields from #97 or infer them from Discussion content.
+- **Processing and output:** the static Stitch HTML performs no validation/request/mapping and stays on placeholders. The current Angular caller performs a separate source-backed read described below. Neither it nor #98 can satisfy AC's report inspection from the current projection. Do not populate report-specific fields from #97 or infer them from Discussion content.
 - **Exceptions/state:** catalog describes the HTTP/business codes above. Local invalid ID is also 404 rather than a separately catalogued validation result. No frontend handling, timeout/retry/cache or session redirect behavior is implemented or approved. Do not invent one.
 
 ### EV-02 — Return from header
@@ -85,6 +87,14 @@
 - **Element / type:** #1–#6, #8, #10, #43–#45, click/anchor as applicable.
 - **Preconditions/input:** none in prototype.
 - **Processing/output:** anchors use `href="#"`; notification bell has no event handler. No route targets, data requests or navigation state are wired. The shell does not establish authentication, identity or RBAC despite its labels.
+
+## Current Study Web source observed 2026-11-20
+
+- Route `/admin/discussions/:discussionId/moderate` is registered to `AD23Page`. Missing or invalid IDs stop in the shared route state before HTTP; the validator matches #98's full-string 1–19 ASCII-digit positive signed-int64 parser and preserves valid raw text.
+- Valid IDs call GET #98 through the Admin Bearer-token client. The response validator checks the success envelope and business code, one-item Page metadata, exact safe-integer identity, Discussion/author fields, comment parent IDs and comment author/timestamp fields. A backend-valid ID above JavaScript's safe-integer range can pass the request guard but is rejected when validating the JSON numeric response; AD-22 only links safe IDs.
+- A loaded response renders the Discussion title/content/status/course/author plus direct comments. The API has no report fields; review context remains incomplete. If there are no direct comments, the list is empty. The local message uses “API #98 không trả bình luận trực tiếp”.
+- Header/breadcrumb links return to `/admin/discussions/reported`; no queue filter/page restoration or #97 refresh is triggered. #99/#100 action controls remain disabled and have no caller.
+- Loading and shared error states exist in Angular source. Browser/deployed runtime is not verified; no tests/build/lint/browser/API runtime checks were run for this continuation.
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)

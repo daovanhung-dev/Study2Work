@@ -1,6 +1,6 @@
 # GS-06 — Data Flow & State
 
-> **T022 current-source update (2026-11-17):** Current data flow is limited to GS03 `?tab=resources` state and the already verified #08 published-course gate. GS06 then renders `contract-blocked`; it does not read resource data or call #11/#12. Future resource-list/open flows below remain blocked by cardinality/access contract discrepancies.
+> **T041/current-source update (2026-11-20):** Current flow is #08 published-course success → GS-06 #11 → validate `Resource[]` and render empty/list/error → selected ID + course context → GS-07 #12 → validate exact response ID/projection and safe HTTP(S) URL → open link in a new tab. #11 returns PUBLIC rows ordered by ID and `200 []` for a valid empty course. #12 applies Student/ACTIVE enrollment and published-parent checks for PRIVATE, then requests a 300-second signed URL. Live DB/runtime and resource producer remain unverified; older gate-only descriptions below are historical.
 
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |

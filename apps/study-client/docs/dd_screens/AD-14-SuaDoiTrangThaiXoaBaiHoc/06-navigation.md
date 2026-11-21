@@ -2,8 +2,8 @@
 
 ## 1. Route definition
 - Current route in inventory: `/admin/lessons/:lessonId/edit`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `lessonId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: `/admin/lessons/:lessonId/edit` is registered in the Angular admin router and renders AD14Page; browser/runtime is not verified.
+- Route params/types: `lessonId` remains raw text; missing/malformed/out-of-range signed-int64 values stop before #83; valid strings are passed unchanged.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
@@ -20,8 +20,8 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: route/page source exists; runtime is not verified.
+- Invalid/missing ID: shared page logic shows a local error and skips #83; #84–#86 controls remain disabled.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram
@@ -37,9 +37,10 @@ flowchart LR
 
 | State | Entry condition | UI behavior / action | Status |
 |---|---|---|---|
-| `route-unresolved` | Study Web has no editable router and `lessonId` is only proposed. | Do not treat the screenshot as an implemented page. | Current `UNWIRED` |
-| `loading` | Future route calls #83 with a valid selected ID. | Show loading feedback without exposing static “system normal” as request status. | Expected; not implemented |
-| `ready` | #83 returns a Lesson and caller is authorized under approved policy. | Map only confirmed fields; disable unsupported course/type/dependency edits. | Expected; field/permission blockers remain |
+| `source-wired` | Angular router/page/#83 caller exist; route ID passes signed-int64 guard | Read #83 projection; mutation controls stay disabled | Browser/runtime not verified; permissions/contract remain open. |
+| `invalid-route-id` | Missing, malformed or out-of-range raw `lessonId` | Local error; no GET #83 | Back links return to AD-12/AD-13. |
+| `loading` | Valid ID passes guard and calls #83 | Show loading feedback without exposing static “system normal” as request status. | Source-present; runtime not verified. |
+| `ready` | #83 returns a Lesson | Map supported fields; keep unsupported course/type/dependency edits and all mutations disabled. | Dependency/permission blockers remain. |
 | `dirty` | An enabled, approved form field differs locally. | Keep unsaved values; cancel behavior requires confirmation policy. | Target only |
 | `saving` | #84 request in flight. | Prevent duplicate submission if that behavior is approved; no current client code. | Target only |
 | `status-changing` | #85 request in flight. | Separate from #84; status gate and confirmation unresolved. | Target only |

@@ -1,11 +1,82 @@
 <main class="mentor-page me06-page">
-  <study-mentor-page-header title="Cây nội dung khóa học" description="Danh sách Content từ API #49; parent_id và order được dùng để biểu diễn quan hệ hiện có." apiLabel="#49 · GET" />
-  @if (invalidId()) { <div class="mentor-card mentor-state mentor-state--error" role="alert">Course ID trên đường dẫn không phải số nguyên dương int64.</div> }
-  @else {
-    <div class="me06-toolbar"><span class="mentor-status">Course #{{ courseId() }}</span><a class="mentor-button" [routerLink]="['/mentor/courses', courseId(), 'content', 'new']">Thêm nội dung</a><a class="mentor-button mentor-button--light" [routerLink]="['/mentor/courses', courseId()]">Về workspace</a></div>
-    @if (loading()) { <section class="mentor-card mentor-state">Đang tải cây nội dung…</section> }
-    @else if (error()) { <section class="mentor-card mentor-state mentor-state--error" role="alert">{{ error() }} <button class="mentor-button mentor-button--light" type="button" (click)="load()">Thử lại</button></section> }
-    @else if (!content().length) { <section class="mentor-card me06-empty"><span aria-hidden="true">▧</span><h2>Chưa có nội dung</h2><p>API #49 trả về danh sách rỗng cho khóa học này.</p><a class="mentor-button" [routerLink]="['/mentor/courses', courseId(), 'content', 'new']">Tạo nội dung</a></section> }
-    @else { <section class="mentor-card me06-tree"><div class="me06-tree-heading"><div><h2>Nội dung khóa học</h2><p>{{ content().length }} mục do máy chủ trả về · trạng thái giữ nguyên</p></div><span class="mentor-api-label">#49</span></div><ul>@for (node of content(); track $index) { <li [style.padding-left.px]="depth(node) * 24"><span class="me06-node-mark" aria-hidden="true">{{ node.parent_id == null ? '▰' : '▱' }}</span><div class="me06-node-copy"><strong>{{ node.title }}</strong><span class="mentor-meta">{{ node.content_type }} · {{ node.status }} · thứ tự {{ node.order }}@if (node.parent_id != null) { · mục cha #{{ node.parent_id }} }</span></div><div class="me06-node-actions">@if (safeId(node.id); as id) { <a class="mentor-button mentor-button--small mentor-button--light" [routerLink]="['/mentor/courses', courseId(), 'content', id]">Sửa</a><a class="mentor-button mentor-button--small mentor-button--light" [routerLink]="['/mentor/content', id, 'actions']" [state]="{ courseId: courseId() }">Hành động</a> }</div></li> }</ul></section> }
+  <study-mentor-page-header
+    title="Cây nội dung khóa học"
+    description="Cấu trúc nội dung theo quan hệ cha-con và thứ tự từ máy chủ."
+    apiLabel="#49 · GET"
+  />
+
+  @if (invalidId()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Đường dẫn khóa học không hợp lệ</h2>
+      <p>Mã khóa học phải là số nguyên dương trong phạm vi hệ thống.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/courses">Về danh sách khóa học</a>
+    </section>
+  } @else if (loading()) {
+    <section class="mentor-card mentor-state" role="status" aria-live="polite">
+      Đang tải cây nội dung…
+    </section>
+  } @else if (notFound()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Không tìm thấy khóa học</h2>
+      <p>Khóa học không tồn tại hoặc không còn truy cập được.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/courses">Về danh sách khóa học</a>
+    </section>
+  } @else if (forbidden()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Không có quyền xem cây nội dung</h2>
+      <p>Chỉ Mentor được API xác nhận quyền sở hữu khóa học mới có thể tiếp tục.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/courses">Về danh sách khóa học</a>
+    </section>
+  } @else if (error()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Chưa thể tải cây nội dung</h2>
+      <p>{{ error() }}</p>
+      <button class="mentor-button mentor-button--light" type="button" (click)="load()">Thử tải lại</button>
+    </section>
+  } @else {
+    <div class="me06-toolbar">
+      <span class="mentor-status">Course #{{ courseId() }}</span>
+      <a class="mentor-button" [routerLink]="['/mentor/courses', courseId(), 'content', 'new']">Thêm nội dung</a>
+      <a class="mentor-button mentor-button--light" [routerLink]="['/mentor/courses', courseId()]">Về workspace</a>
+    </div>
+
+    @if (!content().length) {
+      <section class="mentor-card me06-empty" aria-labelledby="me06-empty-title">
+        <span aria-hidden="true">▧</span>
+        <h2 id="me06-empty-title">Chưa có nội dung</h2>
+        <p>Khóa học chưa có mục nội dung nào.</p>
+        <a class="mentor-button" [routerLink]="['/mentor/courses', courseId(), 'content', 'new']">Tạo nội dung</a>
+      </section>
+    } @else {
+      <section class="mentor-card me06-tree" aria-labelledby="me06-tree-title">
+        <div class="me06-tree-heading">
+          <div>
+            <h2 id="me06-tree-title">Nội dung khóa học</h2>
+            <p>{{ content().length }} mục do máy chủ trả về · trạng thái giữ nguyên</p>
+          </div>
+          <span class="mentor-api-label">#49</span>
+        </div>
+        <ul aria-label="Danh sách mục nội dung theo quan hệ cha-con">
+          @for (row of treeRows(); track row.node.id) {
+            <li [style.padding-left.px]="indent(row.depth)">
+              <span class="me06-node-mark" aria-hidden="true">{{ row.node.parent_id == null ? '▰' : '▱' }}</span>
+              <div class="me06-node-copy">
+                <strong>{{ row.node.title }}</strong>
+                <span class="mentor-meta">
+                  {{ row.node.content_type }} · {{ row.node.status }} · thứ tự {{ row.node.order }}
+                  @if (row.node.parent_id != null) { · mục cha #{{ row.node.parent_id }} }
+                </span>
+              </div>
+              <div class="me06-node-actions">
+                @if (safeId(row.node.id); as id) {
+                  <a class="mentor-button mentor-button--light" [routerLink]="['/mentor/courses', courseId(), 'content', id]">Sửa</a>
+                  <a class="mentor-button mentor-button--light" [routerLink]="['/mentor/content', id, 'actions']" [state]="{ courseId: courseId() }">Hành động</a>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      </section>
+    }
   }
 </main>

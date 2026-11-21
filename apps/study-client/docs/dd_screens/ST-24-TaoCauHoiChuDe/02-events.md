@@ -1,5 +1,15 @@
 # ST-24 — Events (đặc tả xử lý)
 
+## Current-source reconciliation — 2026-11-21
+
+ST-24 loads ACTIVE course options from paged #20 and applies the existing
+out-of-range page recovery. It compares each accepted page's item count with
+COUNT-derived expected rows. On mismatch it preserves returned options,
+suppresses empty and stale pagination claims, and offers retry; returned
+ACTIVE rows remain selectable because #40 checks membership again. Current
+#40/#39 create and refresh behavior is summarized in the overview and API
+notes; historical no-caller statements below are design-time evidence.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

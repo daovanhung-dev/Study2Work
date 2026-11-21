@@ -23,10 +23,10 @@
 
 - **Element / loại:** Angular route `/admin/quizzes/:quizId/statistics`; page entry/load; liên quan #12–#15, #18, #20–#21.
 - **Điều kiện:** Angular source registers the route and page. Browser deep-link/runtime behavior is not verified. AC-35 yêu cầu Admin có quiz-management permission.
-- **Đầu vào:** URL path segment `quizId`; direct API path yêu cầu `quiz_id:int64!`. Chuyển đổi camelCase route sang snake_case API là mapping cần implement. Catalog chỉ xác nhận required int64; positive/range/invalid→404 là local source behavior.
-- **Xử lý:** `AD17Page` reads `quizId` from `ActivatedRoute` and calls `AD17ApiService.getStatistics(quizId)`. No client numeric validation or fine-grained screen permission is implemented; local API parsing and shared `ADMIN` guard are separate current server behavior.
-- **Kết quả:** Angular source requests #91 and can render the local projection. The separate Stitch prototype still renders placeholders and makes no request. The direct catalog contract does not provide Quiz title or analytics fields.
-- **Ngoại lệ:** 401/403 theo EV-02; 404 cho Quiz/path theo direct catalog, nhưng phân loại invalid path so với missing resource trong UI chưa được duyệt.
+- **Đầu vào:** URL path segment `quizId`; direct API path yêu cầu `quiz_id:int64!`. Catalog xác nhận required int64; current #91 parser chỉ nhận toàn chuỗi 1–19 chữ số, giá trị dương trong signed-int64.
+- **Xử lý:** `AD17Page` validates the complete raw route value against the same positive signed-int64 range before calling `AD17ApiService.getStatistics(quizId)`. Invalid/missing IDs stop locally; valid raw text is preserved. Fine-grained screen permission remains unimplemented; local API parsing and shared `ADMIN` guard are separate server behavior.
+- **Kết quả:** Valid route IDs call #91 and can render the local projection. The separate Stitch prototype still renders placeholders and makes no request. The direct catalog contract does not provide Quiz title or analytics fields.
+- **Ngoại lệ:** Missing/malformed/zero/overflow IDs render a local route error without HTTP; 401/403 follow EV-02; 404 from #91 can still represent a missing Quiz.
 
 ### EV-02 — Xác thực và authorization
 

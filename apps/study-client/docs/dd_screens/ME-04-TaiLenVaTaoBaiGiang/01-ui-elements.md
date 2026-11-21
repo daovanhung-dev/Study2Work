@@ -115,7 +115,7 @@ Sau visual review, marker #3 và #25 được chuyển khỏi vùng nhãn/marker
 | ME04-EL-34 | Markdown toggle | Mockup button only; no client state handler/editor library. | EV-09 |
 | ME04-EL-35 | WYSIWYG toggle | Mockup button only; no client state handler/editor library. | EV-09 |
 | ME04-EL-36 | Formatting toolbar composite | Child actions B/I/U/H2/H3/list/quote/code/image; grouped marker; HTML has buttons but no listeners. | EV-09 |
-| ME04-EL-37 | Rich-text/code content surface | Sample paragraphs/code; HTML has no textarea/contenteditable. #47 accepts `content:int64` then stores decimal string. | EV-03/09 |
+| ME04-EL-37 | Markdown content surface | Source mockup includes sample paragraphs/code; current page provides a Markdown textarea and basic Markdown insertion actions, then sends `content:string` unchanged. WYSIWYG/preview remain unsupported. | EV-03/09 |
 | ME04-EL-38 | Attachment section heading | Static label “Tài liệu đính kèm & Mã nguồn mẫu”. | EV-10 |
 | ME04-EL-39 | Add attachment control | No listener/file picker in HTML. Future upload must use #34 then retain asset ID. | EV-04/10 |
 | ME04-EL-40 | PDF attachment card | `name/size` sample; #47 can return linked UploadAsset once ID resolved. | EV-10 |
@@ -139,6 +139,12 @@ Sau visual review, marker #3 và #25 được chuyển khỏi vùng nhãn/marker
 | ME04-EL-58 | Cancel button | Intended return ME-03; dirty-state confirmation/upload cleanup not specified. | EV-20 |
 | ME04-EL-59 | ISO/EduTrust/AC reference note | Static copy; not a validation/certification response. | — |
 | ME04-EL-60 | Footer links/content | Static `span`/copy and placeholder targets; route destinations not established. | EV-21 |
+
+## Current Study Web source mapping (2026-11-20)
+
+- The content editor is a plain Markdown textarea. Its keyboard-accessible controls insert bold, italic, H2/H3, unordered/ordered list, quote, inline code and fenced code syntax into the current selection or line.
+- Controls are at least 44px high and do not add HTML/WYSIWYG, image embedding, preview, autosave or unsupported API fields.
+- The original marker matrix above describes the supplied mockup; it is not a claim that its unsupported controls exist in the Angular page.
 
 ## 4. Conditional UI & state variations
 - States theo inventory: draft/uploading/creating/422/error

@@ -6,7 +6,7 @@
 - Scope: document this static export-manager prototype, its optional AC-38 export branch, API #103 and conditional SH-07/API #18 handoff. Do not author AD-24 or SH-07 in this session.
 - Required order: inspect sources/contracts → save this plan → marker JSON/SVG and annotated image → A–F AD-25 DD → inventory/reverse-index/global-plan/worklog updates → static audit.
 - Boundary: no export filter serialization, unsupported format behavior, API response selection, operation ID coercion, polling cadence, file URL/TTL, audit event, cleanup, queue/worker, or authorization policy is to be invented. Catalog/API DD open questions remain blockers.
-- No application tests or runtime verification are planned; this is a screen DD task and local UI/API implementation is absent.
+- No application tests or runtime verification are planned. At the original plan baseline, the screen implementation was absent; the current source state is recorded in §8 below.
 
 ## 2. Evidence register and original assets
 
@@ -14,12 +14,12 @@
 |---|---|---|
 | [`screen.png`](./screen.png), 1368×1600 | Original visual; retain unchanged. | Design asset |
 | [`code.html`](./code.html), 27,722 bytes | Labels, selected controls, disabled button, `onsubmit` behavior, inert links and static policy claims. | Static prototype only |
-| [Inventory row 83](../../../list_screen.md) and AD-24 row 82 | Candidate route, #103/#18, progress states, filter handoff and neighbor links. | Expected screen requirements |
+| [Inventory row 83](../../../list_screen.md) and AD-24 row 82 | Registered AD-25 route, #103/#18, progress states, filter handoff and neighbor links. | Expected screen requirements |
 | [AC-38 diagram](../../../../../study-server/docs/diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio), [AC/API index](../../../../../study-server/docs/diagrams/AC_UNICA/00_AC_API_INDEX.md) | Admin/report precondition, optional export decision, #103, generation, temporary storage and display/download. The diagram's #18 node is present without a connecting edge in this AC page. | Expected flow; edge is unresolved |
 | [API catalog](../../../../../../docs/lists/list_api.md), #103/#18, reusable schemas and Operation tracking | Declared method, query, role, response/error codes, Operation/ExportAsset schemas and ID convention. | Design catalog; contradictory response/ID details |
 | [API #103 DD](../../../../../study-server/docs/dd/103_admin_reports_community_impact_export/00_Cover.md), [request](../../../../../study-server/docs/dd/103_admin_reports_community_impact_export/03_Request.md), [response](../../../../../study-server/docs/dd/103_admin_reports_community_impact_export/04_Response.md), [mapping](../../../../../study-server/docs/dd/103_admin_reports_community_impact_export/05_Data_Mapping.md), [open questions](../../../../../study-server/docs/dd/103_admin_reports_community_impact_export/OPEN_QUESTIONS.md) | Keeps Report/Operation conflict, GET acceptance, filters/format, retries, storage, authorization and report consistency decisions open. | Draft only |
 | [API #18 DD](../../../../../study-server/docs/dd/18_operations/00_Cover.md), [overview](../../../../../study-server/docs/dd/18_operations/02_Overview.md), [open questions](../../../../../study-server/docs/dd/18_operations/OPEN_QUESTIONS.md) | Operation ID, owner rule, lifecycle/status/result/persistence gaps. | Draft only |
-| [Study Server router](../../../../../study-server/app/api/v1.py), [auth helper](../../../../../study-server/app/utils/auth.py), [route context](../../../../../../.agents/server-study/apis/declared-routes.md) | Current endpoint composition and shared Admin-capable guard boundary. | Source through #98; no #103/#18 route |
+| [Study Server router](../../../../../study-server/app/api/v1.py), [auth helper](../../../../../study-server/app/utils/auth.py), [route context](../../../../../../.agents/server-study/apis/declared-routes.md) | Current endpoint composition and shared Admin-capable guard boundary. | #18 route exists for notification Operations; #103 route/worker is absent |
 | [Legacy Study DDL](../../../../../../infra/postgres/study-server/DB.sql), [V1-PILOT DDL](../../../../../../infra/postgres/02_study_db.sql) | Check possible operation/file/report candidates without assigning an unapproved mapping. | Candidate schema artifacts; live DB not verified |
 | [AD-24 DD](../AD-24_bao-cao-tac-dong-cong-dong/AD-24.md), [SH-07 inventory row](../../../list_screen.md) | Filter-state handoff, conditional Operation ID and neighbor routes. | Cross-screen requirement with unresolved mapping |
 | [Study Web design guide](../../../../../../.agents/web-study/design.md) | Intended tokens, responsive layout, control/focus and accessibility behavior. | Design target, not runtime evidence |
@@ -36,7 +36,7 @@ Original hashes recorded before authoring:
 - Conditional polling: inventory expects #18 only if a confirmed `operation_id` is supplied. API #18 row takes `int64`; reusable `Operation.id` and AC diagrams use UUID. The row/AC diagram say owner-only while Operation tracking says owner/Admin. `OperationStatus`, storage, lifecycle, per-kind result and export artifact mapping are unresolved. AC-38 has an `operation_status` node but no edge connects it to its export path.
 - Current prototype: selected format is `csv`; `scope_course` and `scope_learner` are checked; `scope_impact` is not; `time_range=month` is selected, with `week` and `custom` alternatives and a static GMT+7 note. There are no custom date controls or approved mappings from these names to `filters:string`.
 - `onsubmit="event.preventDefault();"` cancels the only form submission; no handler/API call updates the progress panel. The download button is disabled. The SH-07 banner and back anchor are not wired. All progress/worker/security/retention statements are static copy.
-- Study Web has no tracked editable `src`, router, package manifest or client. Current Study Server has no #103/#18 route/module/query/model/test, export worker, or download-serving source. The current Admin router composes through #98. Pilot `file_objects`, `report_snapshots` and `evidence_export_requests` are distinct design artifacts and do not prove AC-38 export persistence or live schema.
+- At the original plan baseline, Study Web had no tracked editable source. Current source now has a registered AD-25 route/page; Study Server has no #103 route/worker/export/download path. Its #18 route is implemented for owner-scoped notification Operations only. Pilot `file_objects`, `report_snapshots` and `evidence_export_requests` remain distinct design artifacts and do not prove AC-38 export persistence or live schema.
 
 ## 4. Element marker plan
 
@@ -95,7 +95,7 @@ Coordinates are marker centers in source `screen.png` pixels. Use blue, high-con
 
 | Event | Trigger | Current behavior | Expected contract boundary / unresolved items |
 |---|---|---|---|
-| EV-01 Initial display | Page `Load` | HTML renders fixed controls, no-operation state and static policy copy; no data request. | Route, Admin/report guard and query-state initialization depend on absent Study Web source. |
+| EV-01 Initial display | Page `Load` | Prototype HTML renders fixed controls; current Angular page renders local selections and unavailable-export state; no data request. | Route/page/Admin session gate are source-wired; report permission, query-state initialization and runtime remain unverified. |
 | EV-02 Choose format | #19–#21 radio `change` | Native local radio selection only; default is lowercase `csv`. | #103 only says `format?:string`; values/casing/default/MIME are not approved. |
 | EV-03 Choose report scope | #23–#25 checkbox `change` | Native local checkbox state only; two scopes initially checked. | #103 only says `filters?:string`; filter structure and scope vocabulary have no mapping. |
 | EV-04 Choose period | #27–#29 radio `change` | Native local selection only; `month` selected; GMT+7 is static and `custom` has no date controls. | #102 date/segment semantics and #103 filters serialization are unresolved; do not add a date range. |
@@ -109,7 +109,7 @@ Coordinates are marker centers in source `screen.png` pixels. Use blue, high-con
 
 ```text
 Expected: AD-24 may open AD-25 → GET #103 with filters/format → 202 acceptance → optionally poll #18 if an approved operation ID exists → display/download only an approved completed artifact → return to reporting flow.
-Current: no Study Web caller/route/client, #103 handler/worker, #18 route/store/query, or download-serving source. Local HTML controls only change browser state; submit is prevented, download is disabled, and navigation/handoff links do not resolve.
+Current: Study Client route/page/Admin session gate are source-wired. Local choices change component state; submit/download remain disabled; back navigation returns to AD-24 without filters; SH-07 callout remains non-interactive. No #103/#18 client caller exists, #103 has no server handler/worker, #18 only returns notification Operations, and no export download source exists.
 ```
 
 - `#103`: response `Report` versus `Operation`; GET side-effect/retry semantics; query serialization and validation; allowed/default format; report-permission source; durable queue acceptance; worker failure; export asset/result; storage/download authorization and expiry; relation to approved #102 metric/filter logic.
@@ -123,5 +123,12 @@ Current: no Study Web caller/route/client, #103 handler/worker, #18 route/store/
 
 - Create marker JSON/overlay/annotated PNG from the exact coordinates above, then visually inspect the final image and adjust the plan first if any marker obscures content.
 - Write A–F DD with one row per marker, detailed EV-01…EV-09 behavior/API boundaries, state/navigation matrix, source register and explicit blockers.
-- Do not upgrade #103 or #18 from D; do not claim Study Web, API, export, poll or runtime behavior is implemented.
-- Planned outcome: `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED` until response, ID, permission, filters, storage and flow contracts are approved and code exists.
+- Do not upgrade #103/#18 catalog DD status; do not claim export API, export Operation mapping, polling, download or runtime behavior is implemented.
+- Current outcome: `DD BLOCKED`; `IMPLEMENTATION PARTIAL` (route/page/session gate and safe local selection UI exist; export flow remains blocked); `RUNTIME NOT VERIFIED` until response, ID, permission, filters, storage and flow contracts are approved and code exists.
+
+## 8. Current-source continuation (2026-11-20)
+
+- `/admin/reports/export` is registered as `AD25Page` under the AdminLayout session gate. `ad25-page.css` is already loaded by the Angular global styles list; it uses Ocean semantic tokens, responsive layout and visible focus styling, so no duplicate component stylesheet wiring was added.
+- Format/scope/period selections remain local-only. Submit and download are disabled; no #103/#18 caller, Operation ID, progress value, SH-07 link or artifact is fabricated. The back link returns to AD-24 without filters.
+- Study Server #103 has no route/worker. Current #18 validates UUID and reads owner-scoped notification delivery Operations only; it does not map export Operations. T041-approved CSV/XLSX/PDF, owner-only UUID statuses `PENDING|SUCCEEDED|FAILED`, and one-hour signed-link lifetime are policy only; result/storage/download implementation is absent.
+- `DD BLOCKED`; `IMPLEMENTATION PARTIAL`; `RUNTIME NOT VERIFIED`. AD-25 remains 25% in `screen_complete.md` because UI/UX/logic/API weighted axes did not cross a scoring threshold. Static source/document review only; no tests/build/lint/browser/API runtime.

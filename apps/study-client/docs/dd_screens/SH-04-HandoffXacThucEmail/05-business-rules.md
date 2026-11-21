@@ -1,5 +1,7 @@
 # SH-04 — Business Rules
 
+> **Current source (2026-11-20):** The implementation uses a user-initiated trigger and one-use in-memory handoff as a conservative client choice; this does not resolve the product-level dispatch-owner/feature-gate question. It never retries automatically. UI wording must distinguish the stub's accepted response from email delivery and account verification. No OTP/confirmation flow exists.
+
 ## 1. Rule index
 | Rule ID (package alias) | Tên / source ID | Áp dụng | Thực thi | Tests |
 |---|---|---|---|---|
@@ -7,7 +9,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Hiển thị trạng thái yêu cầu gửi email; chưa có API xác nhận OTP/link.
-- Gate/status (giữ nguyên): **S**; **BLOCK:** Email provider mới là stub, chưa có confirm endpoint
+- Gate/status (giữ nguyên): **S**; email delivery and account verification remain **BLOCKED** because the provider is a stub and no confirm endpoint exists. The #02 caller itself is source-wired.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: 9. Bảo mật, riêng tư và điều kiện tích hợp
@@ -23,8 +25,8 @@
 
 ### Trích từ DD nguồn: 12. Điểm cần quyết định trước khi triển khai
 
-1. API #02 được gọi tự động khi mở SH-04 hay sau một thao tác rõ ràng? Danh mục màn hình quy định trình tự sau đăng ký nhưng chưa nêu cách kích hoạt.
-2. Cơ chế nào chuyển `data.id`/`data.email` từ SH-03 sang SH-04 mà không đưa thông tin cá nhân vào URL? Cách xử lý tải lại hoặc mở đường dẫn trực tiếp là gì?
+1. Product owner must approve whether the current explicit-click trigger and in-memory handoff satisfy F01; current source uses these as conservative UI choices, not as an approved product rule.
+2. Confirm whether losing the handoff on refresh/direct entry is acceptable; current source fails closed and sends no request in those cases.
 3. Nhóm sản phẩm có chấp nhận màn hình chỉ thông báo bộ gửi thư giả lập đã tiếp nhận, hay cần ẩn thao tác gọi API tới khi dịch vụ gửi thư thật sẵn sàng?
 4. Cần triển khai dịch vụ gửi thư thật và điểm cuối xác nhận OTP/liên kết nào trước khi gọi đây là luồng xác minh thư điện tử hoàn chỉnh?
 5. Có nên loại thẻ trạng thái kỹ thuật, bộ chọn giả lập và nút sao chép lệnh khỏi giao diện Khách? Bản mẫu hiện trình bày dữ liệu nội bộ không khớp phản hồi thật.

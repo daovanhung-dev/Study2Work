@@ -26,9 +26,21 @@
 | EV-11 — Header/footer navigation | Click nav, notification hoặc footer | Điều hướng theo inventory/route được duyệt; notification/privacy/RBAC/support target còn cần map. | Không thêm API call từ mockup. | 8 placeholder anchors; notification no-op. |
 | EV-12 — Hiển thị policy/system status | Tải screen | Render health/audit/sync/assurance chỉ khi có contract/source cho từng claim. | API #68 không có field hoặc side effect tương ứng. | Tất cả copy/badges là static; không dùng như dữ liệu live. |
 
+### Current source update (2026-11-21)
+
+- EV-06: the exact-safe ID cell routes to AD-03; rows whose ID cannot be represented exactly have no route.
+- EV-07: the `Thao tác` cell routes to AD-04 edit and AD-05 account-action pages for exact-safe IDs. This performs navigation only; AD-02 still issues no #70/#71/#72 request, and destination mutation gates remain unchanged.
+- EV-08/09: Add and export controls render disabled with an explanation; no create/export API or request is introduced.
+- EV-10: refresh calls #68 with the current query; the help control remains disabled because no supported guide destination is registered.
+
 ### Current source evidence (2026-11-17, T030)
 
 AD-02 currently wires keyword/role/status/page query changes, list refresh, pagination, and row-ID navigation in local Angular source. T030 adds distinct loading/empty/service-error states and page-422 recovery; the static `code.html` observations in the event table remain prototype-only. Focused Angular spec passed 8/8. Authenticated browser rendering remains `NOT VERIFIED`.
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)
+
+### Current-source addendum — 2026-11-21
+
+- EV-01 and pagination now reject a #68 response with a wrong success code, malformed UserProfile/Page projection, mismatched requested-page echo, fixed-size mismatch or inconsistent safe total_pages.
+- A response that passes shape checks but has a COUNT/LIST row mismatch keeps returned users visible, suppresses stale result totals/page controls, and exposes same-query/page refresh. Empty out-of-range pages offer page-1 recovery, while matching zero-result pages retain the filtered-empty state.

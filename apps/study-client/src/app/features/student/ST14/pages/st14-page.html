@@ -1,28 +1,42 @@
 <main class="static-page api-screen st14-page">
   <header class="exam-topbar">
-    <a routerLink="/student" aria-label="Study2Work">Study2Work</a><span>Đang làm bài kiểm tra</span
-    ><span>Lượt #{{ attemptId() }}</span>
+    <a routerLink="/student" aria-label="Study2Work">Study2Work</a><span>Đang làm bài kiểm tra</span>
   </header>
   @if (loading()) {
     <section class="api-message" role="status"><strong>Đang tải đề thi…</strong></section>
   }
   @if (error()) {
-    <section class="api-error" role="alert">{{ error() }}</section>
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      <button class="api-button secondary" type="button" (click)="retryQuiz()">
+        Tải lại đề thi
+      </button>
+      @if (quizId()) {
+        <a class="api-button secondary" [routerLink]="['/student/quizzes', quizId()]">
+          Về giới thiệu bài kiểm tra
+        </a>
+      }
+    </section>
   }
   @if (!loading() && !error() && quiz(); as item) {
-    <section class="exam-layout">
+    @if (!item.questions.length) {
+      <section class="api-message">
+        <strong>Chưa có câu hỏi để hiển thị cho lượt làm này.</strong>
+        <a class="api-button secondary" [routerLink]="['/student/quizzes', quizId()]">
+          Về giới thiệu bài kiểm tra
+        </a>
+      </section>
+    } @else {
+      <section class="exam-layout">
       <div class="api-stack">
         <header class="api-heading">
           <div>
             <p class="api-eyebrow">{{ item.title }}</p>
             <h1>Câu hỏi {{ currentQuestion() + 1 }} / {{ item.questions.length }}</h1>
-            <p>
-              Đáp án được lưu ngay khi chọn. Tải lại trang không khôi phục câu trả lời vì API hiện
-              không có GET attempt answers.
-            </p>
+            <p>Chọn đáp án để lưu câu trả lời. Câu trả lời chưa thể khôi phục nếu bạn tải lại trang.</p>
           </div>
-          @if (item.duration_minutes) {
-            <span class="api-pill">Thời lượng đề: {{ item.duration_minutes }} phút</span>
+          @if (item.duration_minutes !== null && item.duration_minutes !== undefined) {
+            <span class="api-pill">Thời lượng dự kiến: {{ item.duration_minutes }} phút</span>
           }
         </header>
         @for (question of item.questions; track question.id; let index = $index) {
@@ -30,13 +44,12 @@
             <article class="api-question">
               <p class="api-eyebrow">Câu {{ index + 1 }}</p>
               <h2>{{ question.text }}</h2>
-              <p class="api-meta">Mã câu hỏi #{{ question.id }} · {{ question.type }}</p>
               @for (choice of question.choices; track choice.id) {
                 <label class="api-choice"
                   ><input
                     type="checkbox"
                     [checked]="isSelected(question.id, choice.id)"
-                    [disabled]="savingQuestionId() === question.id"
+                    [disabled]="savingQuestionId() !== null"
                     (change)="onChoiceChange(question.id, choice.id, $event)"
                   /><span>{{ choice.choice_text }}</span></label
                 >
@@ -48,7 +61,7 @@
           <p class="api-answer-state" role="status">Đang lưu câu trả lời…</p>
         }
         @if (saved()) {
-          <p class="api-success" role="status">Câu trả lời đã được lưu bởi Study Server.</p>
+          <p class="api-success" role="status">Câu trả lời đã được lưu.</p>
         }
         @if (saveError()) {
           <p class="api-error" role="alert">{{ saveError() }}</p>
@@ -89,15 +102,16 @@
               type="button"
               [class.current]="index === currentQuestion()"
               [class.answered]="(selected()[question.id]?.length ?? 0) > 0"
-              (click)="currentQuestion.set(index)"
+              (click)="selectQuestion(index)"
               aria-label="Câu hỏi {{ index + 1 }}"
             >
               {{ index + 1 }}
             </button>
           }
         </div>
-        <p class="api-muted">Chưa có API đọc lại câu trả lời của lượt làm này.</p>
+        <p class="api-muted">Câu đã trả lời được đánh dấu trong danh sách này.</p>
       </aside>
-    </section>
+      </section>
+    }
   }
 </main>

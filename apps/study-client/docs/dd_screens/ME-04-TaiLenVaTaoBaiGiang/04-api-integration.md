@@ -1,5 +1,9 @@
 # ME-04 — API Integration
 
+## Current caller reconciliation — 2026-11-21
+- The #46 response guard does not infer `items.length <= total`; the backend obtains `total` and the page items with separate statements. It still checks fixed page 1/size 100, response item types, and `total_pages` derived from the returned count.
+- The #47 caller now exits immediately when a create request is in flight. This is a local duplicate-submit guard; no server idempotency behavior is claimed.
+
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
 ## 1. API usage matrix
@@ -12,8 +16,8 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #46, #34, #47
-- Orchestration/data notes: GET #46 xác minh course context → POST #34 cho asset → POST #47; không nhận content:int64 như rich-text nếu chưa chốt.
-- BE/source status và gate: **D**; **BLOCK:** Schema lecture.content và asset refs còn ambiguity
+- Orchestration/data notes: GET #46 (`page=1,size=100`) → POST #34 (`purpose=LECTURE`, `course_id`) → POST #47 (`content:string` Markdown, ordered upload IDs) → ME-05/#48.
+- BE/source status and gate: #34/#46/#47 are source-backed; API #47 content and asset-reference shape follow T041. Direct-owner scope, immediate PUBLISHED lifecycle and mockup-only fields remain discrepancies.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: 2.1 Khởi tạo course context — API #46
@@ -42,14 +46,14 @@
 | Field | Kiểu/constraint source | Current mapping |
 |---|---|---|
 | `title` | string required, tối đa 200 ký tự; không có min/trim rule | `lessons.name`; response `data.title` |
-| `content` | signed int64 required | Lưu `str(content)` vào `lessons.content`; response là chuỗi thập phân. Không phải rich-text body. |
+| `content` | required Markdown string | Lưu và trả nguyên văn trong `lessons.content`. The API does not render Markdown. |
 | `asset_refs` | string required chứa JSON array ordered unique signed-int64 IDs; `"[]"` hợp lệ | Resolve #34 uploads cùng owner, purpose `LECTURE`, course; response `assets` theo request order. |
 | `order` | signed int32 required; source không đặt positivity rule | `lessons.sort_order`; response `data.order` |
 
 - View: MENTOR JWT guard → path signed-int64 validation → parse `asset_refs` → SELECT course → check direct owner → resolve mọi asset → INSERT `lessons` với status `PUBLISHED` và `CURRENT_TIMESTAMP` → INSERT `lesson_uploads` theo thứ tự (nếu có) → commit → response `Lecture`.
 - Course status không bị lọc; API có thể tạo lecture trên course DRAFT nếu Mentor sở hữu. API không tạo `resources`, không mutate upload metadata.
 - Errors source-backed: 401; 403 course khác owner; 404 course thiếu hoặc asset ID thiếu/ngoài scope (asset dùng lỗi 404 chung); 422 sai path/body/range/title/asset_refs; 500 query/mapping/transaction. DB failure rollback phần #47.
-- API #47 local DD ghi `Draft — Needs Confirmation` do target live schema/migration chưa xác minh. Q1/Q2 ở API DD ghi local wire decision cho `content:int64` và `asset_refs`, nhưng không tạo mapping editor rich-text cho ME-04.
+- API #47 local DD remains `Draft — Needs Confirmation` only because live schema/migration is unverified. T041 supersedes the older int64 content decision and approves Markdown string content; `asset_refs` remains an ordered JSON string of upload IDs.
 
 ## 3. API không sử dụng
 - Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.

@@ -1,5 +1,7 @@
 # GS-07 — Test Cases
 
+> **T041/current-source update (2026-11-20):** Current source calls #12 and implements access/error states, response validation, safe URL handling and return context. Existing GS-07/GS-03 specs still encode the former gate/no-call behavior; they are stale and were not run by user instruction. Historical results below do not verify this implementation. Live API/DB/runtime remains unverified.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix

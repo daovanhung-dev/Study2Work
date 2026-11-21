@@ -198,7 +198,7 @@ def create_lecture(
             {
                 "course_id": course_id,
                 "title": lecture_request.title,
-                "content": str(lecture_request.content),
+                "content": lecture_request.content,
                 "order": lecture_request.order,
             },
         )

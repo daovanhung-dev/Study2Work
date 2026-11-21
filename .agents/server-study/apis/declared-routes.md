@@ -8,8 +8,9 @@ historical checkpoints and are not current totals.
 
 Role module ownership follows the actor mapping: Guest #01–#03/#05–#12/#15;
 Student #04/#13–#14/#16–#17/#19–#33/#35–#45; Shared #18/#34; Mentor #46–#67;
-Admin #68–#98. API #18's ID and owner/Admin policy remain disputed in its DD;
-its package location does not resolve those contract questions. API #34 accepts
+Admin #68–#98. For SH-07 notification tracking, API #18 is reconciled to UUID
+and owner-only access for Student/Mentor/Admin; generic lifecycle/result remains
+unresolved. API #34 accepts
 both Student and Mentor. API #17 remains fail-closed with HTTP 503 until its
 payment provider is configured. APIs #99–#103 remain absent while their Draft
 DDs and authorization/schema decisions are unresolved.
@@ -192,26 +193,27 @@ live schema is not verified.
 Implemented through `app.modules.guest.api_11_courses_resources.view.get_course_resources(...)`.
 The route is public and validates `course_id` as a positive integer according
 to current source. It requires a published parent course, then queries linked
-resource rows ordered by `r.id ASC`. An empty result returns
-`404 DESIGN_RESOURCE_NOT_FOUND`; a nonempty result serializes only `rows[0]`
-as one `ResourceItem` (`id`, `name`, `type`, `url`, `lesson_id`). No resource
-visibility/access filtering is performed. This current singleton/first-row
-mapping conflicts with the API #11 Draft DD instruction not to choose one row
-when multiple resources exist. Its seven focused tests pass using fake DB
-overrides; multi-row, live schema and deployment behavior remain unverified.
+published-lesson resources with `visibility = 'PUBLIC'`, ordered by
+`r.id ASC`. It maps every row to `ResourceItem` (`id`, `name`, `type`, `url`,
+`visibility`, `lesson_id`) and returns `200 DESIGN_RESOURCE_RETRIEVED` with
+`Resource[]`; an empty collection returns `200 []`. Focused tests cover empty,
+single-row and multi-row collection behavior. They use fake DB overrides and do
+not verify live schema or deployment.
 
 ### `GET /api/v1/resources/{resource_id}`
 
 Implemented through `app.modules.guest.api_12_resources_detail.view.get_resource_detail(...)`.
-The route is public and accepts any signed-int64 `resource_id`; malformed or
-out-of-range values return `404 DESIGN_RESOURCE_NOT_FOUND` before DB access.
-In-range IDs, including zero and negative values, reach the resource lookup;
-missing resources return 404. If a resource has a lesson, the view also requires
-a published parent course; missing or unpublished-parent resources return 404. Success is
-`200 DESIGN_RESOURCE_RETRIEVED` with the source-backed resource fields, including
-the URL stored on the resource. The route does not inject a storage signer.
-API #12 focused tests and Ruff pass after removing the unsupported positive-only
-guard; live schema is not verified.
+The route accepts optional `Authorization` and any signed-int64 `resource_id`;
+malformed or out-of-range values return `404 DESIGN_RESOURCE_NOT_FOUND` before
+DB access. In-range IDs, including zero and negative values, reach the resource
+lookup. A missing resource or unpublished parent returns 404. PUBLIC resources
+require a valid direct HTTP(S) URL. PRIVATE resources require a Student Bearer,
+a published parent course and ACTIVE enrollment, then receive a signed storage
+URL with a 300-second TTL. Missing auth returns 401, missing enrollment returns
+403 and unavailable signing storage returns 503. Success is `200
+DESIGN_RESOURCE_RETRIEVED` and includes `visibility`. Focused fake-source tests
+cover public and private mapping, enrollment, signed URL TTL, validation and
+error handling; live DB, storage and deployment remain unverified.
 
 ### `POST /api/v1/users/me/avatar`
 
@@ -244,14 +246,15 @@ follow-up request.
 
 ### Student enrollment/order source gates — APIs #15 and #16
 
-API #15 now has a route/module/query/model and focused tests. Its validator
-accepts an optional Authorization header: a valid Student token selects that
-user, but absent or invalid Authorization becomes `user_id=None`, and the query
-then returns the latest enrollment for any user in the course
-(`ORDER BY e.id DESC LIMIT 1`). The response includes `user_id`. This conflicts
-with its Draft Public/no-Bearer contract and is unsafe for a Student-specific
-decision; client descriptor #15 remains `UNWIRED` until identity and selection
-are corrected.
+API #15 has a route/module/query/model and existing focused test source. The
+current validator requires a valid Student Bearer identity for the lookup; a
+missing or invalid identity returns the declared generic 404 response. The
+query selects only that Student's latest enrollment for the course
+(`ORDER BY e.id DESC LIMIT 1`); the course-wide fallback was removed. The
+response includes `user_id`. The approved AC-12 caller now sends Student Bearer
+auth, while the API catalog still declares Public/no-Bearer; preserve this as a
+contract discrepancy pending canonical update. Existing test source still
+describes anonymous behavior and is stale; no tests were run for this change.
 
 API #16 now has route/module/model/query source, but no focused test package is
 present. It validates Student Bearer auth and a nonempty provider string,
@@ -287,10 +290,9 @@ failures. No live schema or deployment verification is claimed.
 
 Implemented through `app.modules.mentor.api_47_mentor_lectures_create.view.create_lecture(...)`.
 The route requires a Mentor Bearer JWT and uses the shared role guard before DB
-access. `course_id` and body integers use signed 64-bit/32-bit bounds; `title`
-is limited to 200 characters from the legacy `lessons.name` column. Request
-`content` remains an integer and is converted to its decimal string for
-`lessons.content` and response `data.content`.
+access. `course_id` and `order` use signed 64-bit/32-bit bounds; `title` is
+limited to 200 characters from the legacy `lessons.name` column. Request
+`content` is a required Markdown string and is stored/returned unchanged.
 
 Course access requires direct ownership through `courses.mentor_id`; course
 status is not filtered. Missing course returns `404 DESIGN_RESOURCE_NOT_FOUND`,
@@ -304,12 +306,13 @@ Success is `201 DESIGN_RESOURCE_CREATED` with the Study envelope and
 `LectureResponse`; the insert explicitly sets status `PUBLISHED` and both
 required timestamp columns to `CURRENT_TIMESTAMP`. The view commits after
 mapping the response and rolls back query/insert/commit failures to
-`500 DESIGN_INTERNAL_ERROR`. Focused tests cover auth, integer/title validation,
+`500 DESIGN_INTERNAL_ERROR`. Existing tests cover auth, request validation,
 JSON asset references, course ownership, scoped resolution, order and
-transaction failures. Non-empty refs are inserted into `lesson_uploads` in the
-same transaction, with zero-based order; an incomplete relation insert rolls
-back the lesson. Tests use fake DB queries; checked-in migration 005 is not
-proof of live schema deployment.
+transaction failures; their assertions were updated for T041 but were not run
+after the contract change. Non-empty refs are inserted into `lesson_uploads`
+in the same transaction, with zero-based order; an incomplete relation insert
+rolls back the lesson. Tests use fake DB queries; checked-in migration 005 is
+not proof of live schema deployment.
 
 ### `GET /api/v1/mentor/lectures/{lecture_id}`
 
@@ -470,7 +473,7 @@ The route uses the shared MENTOR guard, raw signed-int64 path parsing and no req
 The route requires the shared MENTOR guard and a raw signed-int64 path. It checks `courses.id/mentor_id`, then reads distinct `users.id/full_name/avatar_url` through `ACTIVE` enrollments, filtered to `users.role='STUDENT'` and ordered by user ID. It returns `ApiEnvelope<UserSummary[]>` with no pagination; malformed/out-of-range path and missing course return 404, owner/role mismatch returns 403, and an empty roster returns 200 `data: []`. The array response, legacy BIGINT tables, ACTIVE predicate and direct-owner policy are DERIVED and remain `Draft — Needs Confirmation`; fake-DB tests do not prove live schema/deployment.
 
 ### `POST /api/v1/mentor/notifications` — API #63
-The route requires the shared MENTOR guard and preserves the catalog body fields `recipients:string`, `title:string`, `content:int64`, and `channels:string`. Local validation parses ordered CSV positive Student IDs and `PUSH`/`EMAIL` channels, collapsing duplicates. Since the body has no course ID, a DERIVED scope check requires every recipient to share an ACTIVE roster in at least one directly owned course. Within one transaction it inserts one legacy BIGINT notification per recipient and one `QUEUED` delivery-outbox row per channel; the response is HTTP 202 `ApiEnvelope<Operation>` with an Operation UUID and `meta.notification_ids`. The local mapping, CSV encoding, common-course rule and outbox are DERIVED and the DD remains Draft. HTTP tests use fake DB sessions; live migration/schema and worker/provider delivery are unverified.
+The route requires the shared MENTOR guard and accepts the reconciled body fields `recipients:string`, `title:string`, `content:string`, and `channels:string`. Content is stored as text without int64 conversion. Local validation parses ordered CSV positive Student IDs and `PUSH`/`EMAIL` channels, collapsing duplicates. Since the body has no course ID, a DERIVED scope check requires every recipient to share an ACTIVE roster in at least one directly owned course. Within one transaction it inserts one legacy BIGINT notification per recipient and one `QUEUED` delivery-outbox row per channel; the response is HTTP 202 `ApiEnvelope<Operation>` with an Operation UUID and `meta.notification_ids`. The CSV encoding, common-course rule and outbox remain DERIVED and the DD remains Draft overall. HTTP tests use fake DB sessions; live migration/schema and worker/provider delivery are unverified.
 
 ### `GET /api/v1/mentor/notifications/{notification_id}/status` — API #64
 The route requires the shared MENTOR guard, parses the raw path as signed
@@ -616,7 +619,7 @@ The route passes raw `status`, `channel`, `page`, and Authorization values so th
 
 ### `POST /api/v1/admin/notifications` — API #93
 
-The route receives raw JSON and Authorization so the shared `ADMIN` guard runs before parsing the body or querying recipients. It shares API #92's path template and therefore adds one operation without adding a path. OpenAPI declares HTTP 202, `ApiEnvelope<Notification>`, the required title/content/channels body fields, and catalog 401/403/422/500/503 errors. The local DERIVED fallback accepts only explicit existing positive unique recipient IDs, unique `PUSH`/`EMAIL`, and nonblank title/content with a 200-character title cap from the legacy DDL candidate. It inserts one legacy BIGINT notification per recipient plus one `QUEUED` outbox row per recipient/channel in one transaction, returning the first Notification and derived batch IDs/UUID in metadata. The view commits before 202 and does not invoke a provider. Focused tests: 26; linked #63/#64/#87/#92/#93: 111; full Study suite: 1243; Ruff passes; OpenAPI: 54 paths / 64 operations. Fake DB tests do not prove live schema, migration deployment, worker delivery, or fine-grained permission; DD remains Draft.
+The route receives raw JSON and Authorization so the shared `ADMIN` guard runs before parsing the body or querying recipients. It shares API #92's path template and therefore adds one operation without adding a path. OpenAPI declares HTTP 202, `ApiEnvelope<Notification>`, `meta.operation_id:uuid`, `meta.notification_ids:int64[]`, the required title/content/channels body fields, and catalog 401/403/422/500/503 errors. The local DERIVED fallback accepts only explicit existing positive unique recipient IDs, unique `PUSH`/`EMAIL`, and nonblank title/content with a 200-character title cap from the legacy DDL candidate. It inserts one legacy BIGINT notification per recipient plus one `QUEUED` outbox row per recipient/channel in one transaction, returning the first Notification and catalog-declared batch IDs/UUID in metadata. The view commits before 202 and does not invoke a provider. AD-20 routes the accepted UUID to notification-only API #18 through SH-07. Focused tests: 26; linked #63/#64/#87/#92/#93: 111; full Study suite: 1243; Ruff passes; OpenAPI: 54 paths / 64 operations. Fake DB tests do not prove live schema, migration deployment, worker delivery, or fine-grained permission; DD remains Draft.
 
 
 ### `PUT /api/v1/admin/notifications/{notification_id}` — API #94
@@ -650,8 +653,10 @@ have passed tests. APIs #16–#17, #19–#20 and #31 use Student modules; #18 us
 fail-closed: it returns 503 before any Payment/Operation read or write until a
 payment provider is configured. API #18 uses UUID Operation IDs to match
 producers #63/#64/#93. Its current query is notification-specific and
-owner-bound; the dedicated HTTP suite passes 8 tests. The catalog still declares
-int64, and generic owner/Admin, lifecycle and result contracts remain unresolved.
+owner-bound; the dedicated HTTP suite passes 8 tests. The catalog and selected
+SH-07 slice use owner-only access for Student/Mentor/Admin; wrong-role is 403,
+missing/non-owner is 404. Generic operation lifecycle, result and non-notification
+producer contracts remain unresolved.
 
 API #19 creates an Enrollment and initial lesson progress in one transaction;
 paid courses require a PAID Order. API #31 grades supported objective question

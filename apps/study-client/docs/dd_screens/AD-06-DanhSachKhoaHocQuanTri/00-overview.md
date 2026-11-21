@@ -6,9 +6,9 @@
 | Module | Admin |
 | Route | `/admin/courses` — current Admin route source; authenticated browser/runtime is not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft; **DD:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE` (route/page/#73 caller, list/pagination and detail links) · **Study Web runtime:** `NOT VERIFIED` |
+| DD status | Draft; **DD:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE` (route/page/#73 caller, list/pagination and precision-safe detail links) · **Study Web runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.2 / 2026-11-17 |
+| Version / last updated | 0.3 / 2026-11-20 |
 | Nguồn đối chiếu | [AD-06.md](../../screen_stitch/05_admin/AD-06_danh-sach-khoa-hoc-quan-tri/AD-06.md), [AD-06_PLAN.md](../../screen_stitch/05_admin/AD-06_danh-sach-khoa-hoc-quan-tri/AD-06_PLAN.md), [AD-06_markers.json](../../screen_stitch/05_admin/AD-06_danh-sach-khoa-hoc-quan-tri/AD-06_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -31,7 +31,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | initial/loading/ready/empty/out-of-range-empty/unauthorized/forbidden/validation-error/service-error |
-| Current source/runtime | `admin.routes.ts`, AD06Page và #73 caller đã có trong source; authenticated browser/live API/DB runtime `NOT VERIFIED` |
+| Current source/runtime | `admin.routes.ts`, AD06Page và #73 caller đã có trong source; ID hiển thị precision-safe và chỉ tạo link AD-07 cho ID dương, JavaScript safe integer; ID không biểu diễn chính xác không điều hướng. Authenticated browser/live API/DB runtime `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-06 source screen.png](../../screen_stitch/05_admin/AD-06_danh-sach-khoa-hoc-quan-tri/screen.png))
@@ -42,6 +42,7 @@
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Đồng bộ renderer row: ID course int64 vượt miền JavaScript safe integer không bị làm tròn khi hiển thị và không tạo link AD-07.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -106,3 +107,9 @@ Inventory đề xuất tìm kiếm theo tên/mã/giảng viên, filter mentor/st
 - Runtime source: [#73 route](../../../../study-server/app/api/v1.py), [#73 validation](../../../../study-server/app/modules/admin/api_73_admin_courses_list/validate.py), [#73 query](../../../../study-server/app/modules/admin/api_73_admin_courses_list/query.py), [#73 view](../../../../study-server/app/modules/admin/api_73_admin_courses_list/view.py), [shared response model](../../../../study-server/app/modules/shared/course_catalog/models.py), [#77 soft-delete query](../../../../study-server/app/modules/admin/api_77_admin_course_delete/query.py).
 - Test evidence (read only in this session): [#73 test module](../../../../study-server/tests/modules/admin/api_73_admin_courses_list/test_admin_courses_list.py) and [2026-11-01 API test report](../../../../study-server/docs/testing/api-test-report-2026-11-01.md).
 - Persistence/client boundary: [legacy candidate DB.sql](../../../../../infra/postgres/study-server/DB.sql), [Study Web design guide](../../../../../.agents/web-study/design.md), `.agents/web-work/study/` source-status context.
+
+### Current-source addendum — 2026-11-21
+
+- AD06Page now requires #73 DESIGN_RESOURCE_RETRIEVED and validates the local Course Page projection, fixed size 20, requested-page echo and safe total_pages arithmetic before mapping.
+- The separate COUNT/LIST reads can drift. AD-06 keeps returned Course rows visible on mismatch, hides the possibly stale total and page number, disables pagination and offers retry for the same page. An empty page beyond the returned last page has a page-1 recovery action, including when total and total_pages are both zero; matching zero-result responses remain the ordinary empty state.
+- Existing int64 display/route guards, exact decimal-string price display, and disabled search/status/mentor/category/create/export actions remain. The response discrepancy, course status/deleted visibility, permission, live schema and browser runtime remain unresolved. AD-06 stays at 50%; no full weighted axis was completed. No tests/build/lint/browser/API runtime were run.

@@ -25,9 +25,9 @@
 
 ### Luồng hiện tại có thể xác nhận
 
-- Study Web không có application source, package, router, entrypoint hoặc API client trong checkout.
+- Current Study Web has an Angular route/page and `ST02ProfileService`; protected #04 traffic goes through `StudentApiService` and StudentLayout's in-memory session.
 - `screen.png` là trang gần như trống: header/footer hiện diện, body không có profile/card. `code.html` có page heading và static sign-in card, dùng prompt “Vui lòng đăng nhập...”, login links `href="#"`, và edit button disabled.
-- HTML không có fetch/XHR/Axios, không có route binding, session read, data mapping, loading/error transition hay event handler. Header/footer `data-path` là metadata string, không phải điều hướng runtime.
+- The Stitch HTML itself has no fetch/XHR/Axios or Angular binding; current Angular source maps only `full_name`/`email` and renders loading/error/retry. Header/footer behavior is determined by Angular RouterLinks, not Stitch `data-path` strings.
 - API #04 có current source; test source hiện hữu được đọc nhưng không chạy. Không có UI/API end-to-end, browser production hay live-schema verification.
 
 ### Trích từ DD nguồn: D. Đặc tả sự kiện và xử lý dữ liệu
@@ -36,7 +36,7 @@
 
 | Event ID | Tên / loại | Phần tử kích hoạt | Hiện trạng |
 |---|---|---|---|
-| `ST02-EV-01` | Mở route và nạp profile — `Load` | `/student/profile` route, không có DOM handler | Expected GET #04; current Study Web không route/fetch. |
+| `ST02-EV-01` | Mở route và nạp profile — `Load` | `/student/profile` route | Current Angular source requests #04 via StudentApiService and displays only `full_name`/`email`. |
 | `ST02-EV-02` | Header brand/navigation — `Click/Anchor` | #1–#2 | `href="#"`; chỉ fragment navigation, không chuyển Screen ID. |
 | `ST02-EV-03` | Mở đăng nhập — `Click/Anchor` | #3 hoặc #7 | `href="#"`; không có SH-02 route/session state. |
 | `ST02-EV-04` | Chỉnh sửa hồ sơ — `Click` | #8 | Disabled; thao tác không được browser phát; ST-03 không được mở. |
@@ -52,7 +52,7 @@
 - **Success:** HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, message `Profile retrieved.`, `data=UserProfile`, `meta={}`, `traceId`; model dumps timestamps as JSON datetime strings. No server-side mutation. UI field mapping/ready layout is blocked because no authenticated design state exists.
 - **Errors:** missing/malformed Bearer, invalid/expired token, invalid claims, or missing user row → HTTP 401 `DESIGN_AUTHENTICATION_REQUIRED`; valid claims without `STUDENT` → 403 `DESIGN_ACCESS_DENIED`; JWT configuration/query/model mapping failure → 500 `DESIGN_INTERNAL_ERROR`. SQLAlchemy query error rolls back; missing row and model mapping failure do not run rollback. Error data uses common response helper defaults; no raw DB/token detail is exposed.
 - **Unsupported/contract gaps:** catalog/AC-02 claim wording `user_id`/`role` differs from source `sub`/`roles`; AC-02 permissions absent; optional `bio` absent; missing-user 401 current mapping is not separately explained by catalog; role/status DB freshness is not enforced. Do not create an alternate response mapping or UI fix here.
-- **Current UI result:** there is no request/event. Rendered HTML displays static sign-in card; source PNG contains a blank body. A login copy does not establish that the user is unauthenticated, and no 401/403 response is rendered.
+- **Current UI result:** the Angular page requests #04 and displays loading/error/retry or the source-backed name/email fields. Static Stitch sign-in/blank-body assets remain design provenance only; browser/API/DB runtime is unverified.
 
 ### `ST02-EV-02` — Header brand/navigation
 

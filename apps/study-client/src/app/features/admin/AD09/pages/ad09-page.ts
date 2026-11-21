@@ -4,8 +4,9 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 
 import { StudyIcon } from '../../../../shared/ui/study-icon';
+import { isAdminCourseDetailPage } from '../../admin-api-guards';
 import type { AdminCourse } from '../../admin-api.models';
-import { adminDataError } from '../../admin-screen-state';
+import { adminDataError, isSignedInt64RouteId } from '../../admin-screen-state';
 import { AD09ApiService } from '../data-access/ad09-api.service';
 import { AD09_SCREEN } from '../models/ad09-screen.model';
 
@@ -26,6 +27,7 @@ export class AD09Page {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(AD09ApiService);
   readonly courseId = signal('');
+  readonly isCourseIdValid = signal(false);
 
   readonly pageState = toSignal(
     this.route.paramMap.pipe(
@@ -34,17 +36,27 @@ export class AD09Page {
         this.courseId.set(courseId ?? '');
 
         if (!courseId) {
+          this.isCourseIdValid.set(false);
           return of<AD09PageState>({ status: 'error', message: 'Thiếu mã khóa học trên đường dẫn.' });
         }
 
+        if (!isSignedInt64RouteId(courseId)) {
+          this.isCourseIdValid.set(false);
+          return of<AD09PageState>({ status: 'error', message: 'Mã khóa học phải là số nguyên signed 64-bit.' });
+        }
+
+        this.isCourseIdValid.set(true);
         return this.api.getCourse(courseId).pipe(
           map((envelope): AD09PageState => {
-            if (!envelope.success) {
-              return { status: 'error', message: 'Study Server không thể tải dữ liệu lúc này.' };
+            if (
+              envelope.success !== true
+              || envelope.businessCode !== 'DESIGN_RESOURCE_RETRIEVED'
+            ) {
+              return { status: 'error', message: 'Study Server trả về dữ liệu khóa học không hợp lệ.' };
             }
-            const course = envelope.data.items[0];
-            return course
-              ? { status: 'loaded', course }
+            const page = envelope.data;
+            return isAdminCourseDetailPage(page)
+              ? { status: 'loaded', course: page.items[0] }
               : { status: 'error', message: 'API #74 không trả khóa học cho mã đã yêu cầu.' };
           }),
           startWith(LOADING_STATE),

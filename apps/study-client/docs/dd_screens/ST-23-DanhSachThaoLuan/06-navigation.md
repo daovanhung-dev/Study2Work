@@ -1,11 +1,15 @@
 # ST-23 — Navigation
 
+## Current source route and handoff — 2026-11-20
+
+`/student/discussions` is registered in `student.route.ts`. The optional `courseId` query filter and page state drive #39; list actions link to ST-24 and ST-25. Runtime navigation is not verified.
+
 ## 1. Route definition
 - Current route in inventory: `/student/discussions`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: current route is source-wired; runtime not verified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
-- Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
-- Route guards: see source DD/API contract; do not create role policy.
+- Query params/defaults: optional positive safe `courseId`; default page 1; page size is fixed at 20 by #39.
+- Route guards: authenticated Student route group; #39 independently checks ACTIVE enrollment.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |

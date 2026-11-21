@@ -1,5 +1,7 @@
 # ME-02 — Events (đặc tả xử lý)
 
+> **Current source reconciliation (2026-11-21):** ME-02 route/page and API #46 caller are wired in Study Client. The page validates the success envelope/business code/CoursePage projection, cancels superseded reads, and recovers an empty out-of-range page. Current status options are `DRAFT|PUBLISHED`; search, level, sort, semester and sample metrics remain unsupported. The source-event excerpts below preserve the original design-time behavior/gaps where they do not describe current wiring.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|
@@ -30,11 +32,11 @@
 
 - **Trigger / type:** Route enter / page load.
 - **Input:** Route `/mentor/courses`; active Mentor access token do app shell quản lý; optional `status`, `page`, `size` chỉ khi UI state được thống nhất.
-- **Precondition:** Mentor session hợp lệ. Current Study Web route/session `UNWIRED`.
+- **Precondition:** Mentor session hợp lệ. The route is registered under `MentorLayout`; `MentorApiService` obtains the Mentor token and API #46 remains authoritative for the `MENTOR` role. Runtime is not verified.
 - **API:** `GET /api/v1/mentor/courses`, `Authorization: Bearer <JWT>`, no body; default page=1,size=20, omit status.
 - **Steps:** (1) Router/auth shell phải kiểm role trước khi render; (2) gọi #46; (3) API guard xác thực JWT/`MENTOR` trước DB; (4) validate query; (5) count và page cùng owner/status predicates; (6) map CoursePage; (7) khi success, bind Course fields/pagination theo §6; (8) không render sample KPI như runtime data.
 - **Output:** 200 `DESIGN_RESOURCE_RETRIEVED`; `data.items` rỗng vẫn là success. Có thể giữ `partial` widget state chỉ khi sau này nhiều API được phê duyệt; hiện inventory ME-02 chỉ có #46.
-- **Errors:** 401 authentication, 403 role denial, 422 query validation, 500 safe internal error; network/timeout/cache/retry presentation chưa được thiết kế.
+- **Errors:** 401 authentication, 403 role denial, 422 query validation, 500 safe internal error; current page maps HTTP/session errors to a retryable error state. Runtime behavior is unverified.
 
 ### `ME02-EV-02` — Tìm tên/mã khóa học
 
@@ -46,7 +48,7 @@
 ### `ME02-EV-03` — Lọc status
 
 - **Trigger / type:** Change #16 hoặc remove status chip #19.
-- **Input:** UI values `all|active|upcoming|archived`.
+- **Input (prototype):** `all|active|upcoming|archived`. Current Study Web select uses `all|DRAFT|PUBLISHED` and displays the source enum as `Tất cả trạng thái|Bản nháp|Đã xuất bản`.
 - **Precondition:** Product/BE chốt mapping sang enum server.
 - **Steps:** `all` tương ứng omit status theo API; current source chỉ nhận exact `DRAFT|PUBLISHED`. Không tự map các label khác. Sau khi mapping được duyệt, gửi status, page và size hợp lệ; count/list của #46 cùng filter.
 - **Output/error:** 200 Page<Course> hoặc 422 `DESIGN_VALIDATION_ERROR`; hiện trạng UI chưa thể gửi 3 non-all values một cách có căn cứ.
@@ -83,14 +85,14 @@
 - **Input:** Page integer, size integer.
 - **API:** #46 accepts page `>=1`, size `1..100`; defaults `1/20`; screenshot exposes 10/20/50 (all within source bounds).
 - **Steps:** (1) Validate page/size; (2) preserve only approved filters; (3) request #46; (4) use response pagination for controls/summary; (5) render `items=[]` as success even for out-of-range page; (6) decide whether changing size resets page (not specified in current source/approved screen contract).
-- **Output/error:** 200 with current page metadata or 422 on invalid values; DB/projection issue maps 500. Request cancellation, stale response ordering, retry and cache rules chưa có FE source.
+- **Output/error:** 200 with current page metadata or 422 on invalid values; DB/projection issue maps 500. The current page cancels stale requests, validates page metadata, provides first/previous/next/last controls and retries an empty out-of-range page at the last available page. Page size stays 20; other sizes are not exposed.
 
 ### `ME02-EV-09` — Mở Workspace cho course
 
 - **Trigger / type:** Click #27/#33/#39.
 - **Input:** `Course.id` từ #46 item đang chọn; current Course id type là integer.
 - **Steps:** Không lấy ID từ title/code mẫu; chỉ enable destination khi item có ID và server-side route kiểm access. Route proposal ME-03 `/mentor/courses/:courseId`; destination API/source runtime phải tự validate authorization.
-- **Output:** Navigation proposal; client route chưa wired. Assignment-course discrepancy có thể làm direct-owner-only destination từ chối course mà AC-21 xem là assigned.
+- **Output:** Current Workspace CTA links to registered `/mentor/courses/:courseId`; ME-03 and #49/#65 still enforce direct ownership. The assignment-course discrepancy remains unresolved, so assigned courses are not provided by #46.
 
 ### `ME02-EV-10` — Mở quản lý nội dung
 

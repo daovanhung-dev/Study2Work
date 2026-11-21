@@ -52,7 +52,7 @@ export const studentRoutes: Routes = [
       {
         path: 'enroll/:courseId',
         component: ST04Page,
-        data: { apiIds: [8, 15], shell: 'custom' },
+        data: { apiIds: [8, 15, 19, 20], shell: 'custom' },
       },
       {
         path: 'checkout/:courseId',

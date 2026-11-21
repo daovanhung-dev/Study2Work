@@ -2,6 +2,8 @@
 
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
+Current source now includes the route, page and API callers. Tests/build/browser were not run in the active task; the historical planning references below are not verification results.
+
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |
 |---|---|---|---|---|

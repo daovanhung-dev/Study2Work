@@ -4,17 +4,25 @@
 |---|---|
 | Screen ID | `ST-11` |
 | Module | Student |
-| Route | `/student/lessons/:lessonId` — route trong inventory, không phải xác nhận router runtime |
-| Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** BLOCKED · **Implementation:** BLOCKED · **Runtime:** NOT VERIFIED<br> |
+| Route | `/student/lessons/:lessonId` — khai báo trong Study Client; live runtime chưa xác minh |
+| Actor/role | Student; client dùng Student Bearer service và API #24 kiểm tra role/enrollment |
+| DD status | Draft/contract còn mở; **Implementation:** PARTIAL · **Runtime:** NOT VERIFIED |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [ST-11.md](../../screen_stitch/03_student/ST-11_trinh-hoc-bai-lesson-player/ST-11.md), [ST-11_PLAN.md](../../screen_stitch/03_student/ST-11_trinh-hoc-bai-lesson-player/ST-11_PLAN.md), [ST-11_markers.json](../../screen_stitch/03_student/ST-11_trinh-hoc-bai-lesson-player/ST-11_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Video/nội dung, mục lục, nút complete, vị trí học, bài tiếp theo.
 - In-scope: GET #24; GET #26 lazy; PATCH #25 khi có biến cố progress hợp lệ; GET #27 sau completed.
 - Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+
+### Current implementation — 2026-11-20
+
+- Study Client có route và page ST-11. ST-10 truyền `lessonId`; ST-11 gọi API #24 bằng Student Bearer, hủy request cũ khi route đổi ID, kiểm tra business code, payload và ID trả về, rồi hiển thị nội dung văn bản.
+- Response guard chỉ chấp nhận lesson `PUBLISHED`; nhãn trạng thái hiển thị là “Đã xuất bản”, không phải raw enum.
+- ST-11 có loading, lỗi có thể thử lại, nội dung và liên kết sang ST-12. Player/video, progress (#25), bài kế tiếp (#27), mục lục và completed state chưa được triển khai vì nguồn phát và progress/terminal contract còn thiếu hoặc khác catalog.
+- Backend #24 kiểm tra lesson/course `PUBLISHED` và enrollment `ACTIVE` hoặc `COMPLETED`. #25, #26 và #27 có source route/module; ST-11 hiện không gọi #25/#27 và tải ST-12 theo thao tác người học.
+- Không chạy test hoặc xác minh browser/live runtime trong lần cập nhật này. Các đoạn source-DD bên dưới tiếp tục mô tả thiết kế gốc, không phải trạng thái runtime hiện hành.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,17 +39,18 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/playing/paused/progress-saving/finished |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Study Client ST-11 | `loading / error+retry / lesson text`; player/progress/next chưa có · runtime chưa xác minh |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-11 source screen.png](../../screen_stitch/03_student/ST-11_trinh-hoc-bai-lesson-player/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-11_trinh-hoc-bai-lesson-player/screen_annotated.png))
-- Luồng: GET #24; GET #26 lazy; PATCH #25 khi có biến cố progress hợp lệ; GET #27 sau completed.
-- Priority: P1; Gate/source status: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** asset hiện là fallback, không có player/progress/resource/next controls; #24–#27 chưa có Student route/module/query/test và API DD còn Draft; ST-10/ST-11 cùng gọi #24, ST-09 thiếu lessonId; #25 position/percent/state/storage/aggregate open; #26 `ApiEnvelope<Lesson>` vs Resource payload/visibility/URL open; #27 order/tie-break/no-next open; legacy BIGINT và V1-PILOT UUID DDL khác nhau; Study Web UNWIRED
+- Expected flow: GET #24; GET #26 lazy; PATCH #25 on an approved progress event; GET #27 after completion. Current screen flow calls #24 and links to ST-12; it does not call #25/#27.
+- Priority: P1; Gate/source status: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** Stitch player states and controls are not implemented; the #25 catalog asks for `position` while current request model only has `percent`/`completed`, aggregate and completion trigger remain open; #27 terminal behavior and enrollment check remain open; #26 is called by ST-12 and resource rows have no current producer; API DDs remain Draft; live DB/runtime not verified.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Cập nhật trạng thái source hiện tại: route/#24 đã wired; request route-reactive, có validation/retry; player/progress/next và runtime vẫn chưa xác minh.
 
 ## Trạng thái và ranh giới bằng chứng
 

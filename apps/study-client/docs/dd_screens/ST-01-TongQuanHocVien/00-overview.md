@@ -6,9 +6,9 @@
 | Module | Student |
 | Route | `/student` — route/page gate có trong Angular; runtime chưa được xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`. Tài liệu truy vết được inventory, activity và API catalog hiện có; không thể chốt data mapping, orchestration hoặc xử lý rỗng do #20/#21/#38/#43 đều Draft và không có route Study runtime. |
+| DD status | Draft; data mapping/orchestration vẫn `DD BLOCKED`. Current source status: `IMPLEMENTATION PARTIAL`; `/student`, #20 and #38 callers are present; #21/#43 remain unavailable to the dashboard; `RUNTIME NOT VERIFIED`. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.3 / 2026-11-21 |
 | Nguồn đối chiếu | [ST-01.md](../../screen_stitch/03_student/ST-01_tong-quan-hoc-vien/ST-01.md), [ST-01_PLAN.md](../../screen_stitch/03_student/ST-01_tong-quan-hoc-vien/ST-01_PLAN.md), [ST-01_markers.json](../../screen_stitch/03_student/ST-01_tong-quan-hoc-vien/ST-01_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -31,14 +31,14 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | partial-widget/empty/loading/403 |
-| Current source | Worklog/context Study Web | Route maps #20/#21/#38/#43 and renders sign-in gate; no private request or sample metric. |
+| Current source | Angular route/page, Study Web context and API callers | `/student` is behind `StudentLayout`; #20 and #38 load independently with per-widget loading/error/empty/retry states. Count/list cardinality mismatch on #20/#38 shows a reloadable status and suppresses false empty copy. #21/#43 are not called by ST-01. Runtime is unverified. |
 | Runtime | Worklog/context Study Web | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-01 source screen.png](../../screen_stitch/03_student/ST-01_tong-quan-hoc-vien/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-01_tong-quan-hoc-vien/screen_annotated.png))
 - Luồng: Chỉ sau role STUDENT hợp lệ; load #20/#21; thành tích #38, thông báo #43 lazy/parallel.
-- Priority: P1; Gate/source status: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #20/#21 Draft response UserProfile không biểu diễn Course/progress theo AC-13; nhánh EMPTY/HAS DATA cùng tới node render; #21 query/formula/merge, #38 award/projection/filter/page và #43 recipient/fields/order còn mở; API routes/modules/tests NOT_FOUND; AC-18 order lệch inventory widget độc lập; HTML endpoint paths sai, anchors chỉ là `#`; Study Web UNWIRED và visual target lệch design guide
+- Priority: P1; expected contract remains `DD BLOCKED`; current implementation is `PARTIAL`; `RUNTIME NOT VERIFIED`. #20/#38 callers are source-wired; #20's current list projection differs from catalog `UserProfile`; #21 has a route but returns `UserProfile`, not progress; #43 remains gated because its source query depends on `notification_recipients`, absent from checked-in DDL. AC-13 empty behavior, AC-18 ordering, #38 award rules, #43 recipient/order semantics, and visual fidelity remain unresolved. The no-route/UNWIRED statements in the original DD snapshot are historical and superseded by the current-source notes below.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -50,6 +50,11 @@
 
 - `/student` now mounts ST-01 behind `StudentLayout`, which establishes a Student session through #03. ST-01 independently loads ACTIVE courses from #20 and recorded awards from #38, with separate loading/error/empty states. It does not call #21 because that endpoint returns `UserProfile`, or #43 because its source query depends on `notification_recipients`, absent from checked-in DDL.
 - The dashboard displays only fields returned by those APIs. Achievement production and focused #20/#38 tests are absent; the progress and notification widgets explain their source gates rather than showing synthetic values. Runtime against a deployed server has not been verified.
+
+## Current implementation update — 2026-11-21
+
+- #20 is requested with `status=ACTIVE`; the client validates that every returned course has `enrollment_status === 'ACTIVE'` before rendering. The badge presents this validated value as “Đang hoạt động” while the API value remains unchanged for request/validation logic.
+- #20 and #38 remain independent reads with their own projection validation and retry. Both server handlers read COUNT and LIST separately; ST-01 suppresses empty copy on a count-derived page-length mismatch, keeps any returned rows visible, and offers the existing reload action. #21 and #43 remain gated for the response/schema reasons documented in the current-source reconciliation; no progress or notification values are inferred. This does not resolve the remaining widget/design gaps or change the 50% screen score.
 
 # ST-01 — Tổng quan học viên
 

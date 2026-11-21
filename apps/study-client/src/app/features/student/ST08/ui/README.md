@@ -1,4 +1,5 @@
 # ST-08 UI
 
-The empty-state card follows the Stitch course-list layout and avoids showing a
-false loaded state when the Student API cannot be called.
+The page displays source-backed #20 course summaries with loading, error/retry,
+empty, loaded and paginated states. It does not infer course progress because
+#21 currently returns a `UserProfile` projection.

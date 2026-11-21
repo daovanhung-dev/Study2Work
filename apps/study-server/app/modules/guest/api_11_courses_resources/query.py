@@ -14,9 +14,12 @@ SELECT
     r.lesson_id,
     r.name,
     r.resource_type,
-    r.url
+    r.url,
+    r.visibility
 FROM lessons AS l
 INNER JOIN resources AS r ON r.lesson_id = l.id
 WHERE l.course_id = :course_id
+  AND l.status = 'PUBLISHED'
+  AND r.visibility = 'PUBLIC'
 ORDER BY r.id ASC
 """

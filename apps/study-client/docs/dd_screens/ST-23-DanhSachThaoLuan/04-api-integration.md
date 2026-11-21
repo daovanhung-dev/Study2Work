@@ -2,12 +2,18 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-21
 
 ST-23 calls #39 using only source-backed query inputs and renders returned
 discussion rows. It does not add unsupported sort/rating filters or merge
-course reviews. The DD/API excerpt below is a design-time snapshot; see [the screen inventory](../../list_screen.md)
-and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+course reviews. Current #39 returns ACTIVE root discussions for courses with
+ACTIVE enrollment, uses page size 20 and created/id descending order; the
+source receives but ignores `sort`. Because COUNT and LIST are separate reads,
+ST-23 also checks whether each accepted page has the count-derived expected
+row count. On mismatch it preserves returned rows, suppresses empty/stale
+pagination claims, and offers retry. Current source is in `ST23/pages` and
+`ST23/data-access`, plus Study Server API #39. Excerpts below predate that
+source.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -18,7 +24,7 @@ and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-
 
 - API refs trong inventory: #39
 - Orchestration/data notes: GET #39 theo course_id/page; không tự gộp với public reviews #10 nếu chưa được chốt.
-- BE/source status và gate: **D**
+- BE/source status và gate: #39 `SOURCE_WIRED`; the UI omits unsupported sort and the populated Stitch target remains unavailable.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: A.2. Expected behavior — nguồn thiết kế/contract

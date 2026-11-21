@@ -2,7 +2,9 @@
 .me17-summary { padding:22px; }
 .me17-student { display:flex; align-items:center; gap:12px; }
 .me17-student h2 { margin:0 0 4px; color:#17324b; font-size:19px; }
-.me17-avatar { display:grid; place-items:center; width:48px; height:48px; border-radius:50%; background:#e5f1f8; color:#0b668f; font-size:18px; font-weight:850; }
+.me17-avatar { position:relative; display:grid; place-items:center; width:48px; height:48px; flex:none; overflow:hidden; border-radius:50%; background:#e5f1f8; color:#0b668f; font-size:14px; font-weight:850; }
+.me17-avatar img { position:absolute; z-index:1; inset:0; width:100%; height:100%; object-fit:cover; }
+.me17-avatar>span { position:relative; z-index:0; }
 .me17-metrics { display:flex; flex-wrap:wrap; gap:12px; margin:20px 0; }
 .me17-metrics>div { display:grid; gap:5px; min-width:180px; padding:15px; border:1px solid #e5edf3; border-radius:10px; background:#f9fbfc; }
 .me17-metrics strong { color:#0b668f; font-size:22px; }

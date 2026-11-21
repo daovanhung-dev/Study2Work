@@ -21,7 +21,7 @@
 - **Failure / edge assertion:** Không đánh dấu pass cho `UNWIRED`, `IMPLEMENTATION BLOCKED` hoặc `RUNTIME NOT VERIFIED`.
 - **References:** `AC-38`, [Events](02-events.md), [Business Rules](05-business-rules.md), [source DD](../../screen_stitch/05_admin/AD-25_xuat-bao-cao-va-theo-doi-tien-trinh/AD-25.md).
 
-## 3. Source acceptance / test plan (not run)
+## 3. Source acceptance / test plan (not run; historical snapshot 2026-11-08)
 
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu và quyết định còn mở
 
@@ -42,18 +42,18 @@
 | B01 | Chốt #103 202 response: `ApiEnvelope<Report>` hay `Operation`; field chứa ID/type and error mapping. | API/product contract owner; reconcile catalog endpoint row, Operation tracking prose, API #103 DD and AC-38. | Không parse pollable operation or show accepted job details. |
 | B02 | Chốt #103 GET side effect, idempotency, duplicate submit and retry/caching semantics. | API/security/product owners. | Không implement automatic retry or imply GET is safe/idempotent. |
 | B03 | Chốt filter serialization and relationship to #102 `from/to/segment`, AD-24 URL state, checkbox scopes and period presets. | Reporting/product and API #102/#103 owners. | Không construct `filters` or claim exported report matches dashboard filters. |
-| B04 | Chốt allowed format enum, case/default, MIME/extension and unsupported-format response. | Reporting/API owner; catalog currently only `string`. | UI options are prototype-only; no client validation/API mapping. |
+| B04 | Chốt format default/case, MIME/extension and unsupported-format response. | T041 approves CSV/XLSX/PDF; catalog still declares `format?:string`. | Do not infer default, MIME/extension mapping or validation response. |
 | B05 | Chốt report/analytics authorization policy, claims and consistency with Admin role. | Security/product/API owner; AC-38 precondition vs #103 row and current guard. | Do not treat Admin badge or generic ADMIN guard capability as authorization proof. |
 | B06 | Chốt AC-38 edge and whether/how #18 is used by export. | AC/API owners; diagram has unconnected status node while inventory implies conditional handoff. | No SH-07 navigation/polling. |
-| B07 | Chốt #18 ID type, ownership/access, status enum/lifecycle, terminal states, result/error schemas, persistence and retention. | API #18 owner; catalog row int64 vs UUID schema/AC; owner-only vs owner/Admin. | No operation ID coercion, poll loop or state mapping. |
-| B08 | Chốt export artifact ownership/schema/storage/download endpoint, URL policy, expiry, cache, checksum, audit and cleanup. | API/storage/security owners; inventory says download only with result URL; generic pilot tables are candidates only. | Download remains unavailable; static claims remain unsupported. |
-| B09 | Chốt actual Study Web route/shell, AD-24 return and filter-state continuity. | Web product/router owner; no current Study Web source. | Candidate route/link is not an implementation contract. |
-| B10 | Chốt visual source-of-truth between screenshot and Study Web design guide. | Design owner. | Preserve screenshot; use canonical guide only after design decision. |
+| B07 | Implement the T041-approved export Operation policy and producer/result mapping. | T041 resolves export UUID, owner-only access and `PENDING|SUCCEEDED|FAILED`; current #18 route is notification-only and catalog row says int64. | No export poll or SH-07 handoff until #103/#18 map the approved UUID/result. |
+| B08 | Implement artifact result/storage/download handling under the approved link lifetime. | T041 approves one-hour signed URLs; ExportAsset result field, storage service and download route are not implemented. | Keep Download disabled and do not claim mockup-only security controls. |
+| B09 | Define AD-24 filter transfer and restoration across existing routes. | AD-24/AD-25 routes are source-wired; current back link passes no filters. | Do not serialize or restore filters until approved. |
+| B10 | Apply the canonical Study Web visual guide. | `.agents/web-study/design.md` specifies Ocean tokens, system typography, responsive layout and visible focus. | Preserve the screenshot as a reference; do not use its cobalt palette or remote font. |
 
 ### F.3. Status
 
 - **DD:** `BLOCKED` — unresolved response, filters, formats, authorization, operation/result, storage and AC handoff decisions prevent an implementation-ready behavioral contract.
-- **Implementation:** `BLOCKED` — Study Web route/client and Study API #103/#18/export/download source are absent; worker/storage flow is not wired.
+- **Implementation:** `PARTIAL` — the AD-25 route/page and Admin session gate are source-wired; #103/export worker, report #18 mapping, artifact storage and download are absent.
 - **Runtime:** `NOT VERIFIED` — no browser route or API was exercised. Static artifact checks do not establish deployment or live DB state.
 - **Scope completed:** AD-25 only for this session; no subsequent Screen ID authored.
 
@@ -63,8 +63,8 @@
 
 - Create marker JSON/overlay/annotated PNG from the exact coordinates above, then visually inspect the final image and adjust the plan first if any marker obscures content.
 - Write A–F DD with one row per marker, detailed EV-01…EV-09 behavior/API boundaries, state/navigation matrix, source register and explicit blockers.
-- Do not upgrade #103 or #18 from D; do not claim Study Web, API, export, poll or runtime behavior is implemented.
-- Planned outcome: `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED` until response, ID, permission, filters, storage and flow contracts are approved and code exists.
+- Do not mark #103 or an export-specific #18 flow as wired; do not claim export submission, polling, artifact delivery or runtime behavior is implemented.
+- Current outcome: `DD BLOCKED`; `IMPLEMENTATION PARTIAL`; `RUNTIME NOT VERIFIED`. The route/page/session gate exist, while export submission, polling and artifact delivery remain unavailable until their contracts and source exist.
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Không chạy app test trong task chuyển đổi tài liệu.

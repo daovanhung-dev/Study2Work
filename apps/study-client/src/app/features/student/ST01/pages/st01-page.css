@@ -96,14 +96,16 @@ study-st01-page .student-overview__message p {
 }
 
 study-st01-page .student-overview__course-list,
-study-st01-page .student-overview__achievement-list {
+study-st01-page .student-overview__achievement-list,
+study-st01-page .student-overview__notification-list {
   display: grid;
   gap: 8px;
   margin: 14px 0 0;
 }
 
 study-st01-page .student-overview__course-list li,
-study-st01-page .student-overview__achievement-list li {
+study-st01-page .student-overview__achievement-list li,
+study-st01-page .student-overview__notification-list li {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -121,11 +123,32 @@ study-st01-page .student-overview__course-list a {
 }
 
 study-st01-page .student-overview__course-list p,
-study-st01-page .student-overview__achievement-list span {
+study-st01-page .student-overview__achievement-list span,
+study-st01-page .student-overview__notification-list p,
+study-st01-page .student-overview__notification-list time {
   display: block;
   margin: 4px 0 0;
   color: var(--text-muted);
   font-size: 11px;
+}
+
+study-st01-page .student-overview__notification-list li {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 5px;
+}
+
+study-st01-page .student-overview__notification-list strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+study-st01-page .student-overview__notification-list p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 study-st01-page .student-overview__status--limited {

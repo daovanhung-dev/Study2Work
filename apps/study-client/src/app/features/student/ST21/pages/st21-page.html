@@ -1,28 +1,32 @@
 <main class="static-page api-screen st21-page">
   <nav class="crumbs" aria-label="Vị trí hiện tại">
     <a routerLink="/student/progress">Tổng quan tiến độ</a><span>›</span
-    ><span>Tiến độ khóa #{{ courseId || '—' }}</span>
+    ><span>Tiến độ khóa học</span>
   </nav>
   <header class="api-heading">
     <div>
-      <p class="api-eyebrow">ST-21 · Tiến độ theo khóa học</p>
+      <p class="api-eyebrow">Tiến độ theo khóa học</p>
       <h1>Tiến độ khóa học</h1>
-      <p>
-        API #37 trả về tổng quan hoàn thành theo khóa, không phải danh sách lesson hoặc mốc thời
-        gian.
-      </p>
+      <p>Tổng quan số bài học đã hoàn thành trong khóa học.</p>
     </div>
   </header>
   @if (loading()) {
     <section class="api-message" role="status"><strong>Đang tải tiến độ…</strong></section>
   }
   @if (error()) {
-    <section class="api-error" role="alert">{{ error() }}</section>
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      @if (courseId()) {
+        <button class="api-button secondary" type="button" (click)="retryProgress()">
+          Tải lại tiến độ
+        </button>
+      }
+    </section>
   }
   @if (!loading() && !error() && progress(); as item) {
     <section class="api-stack">
       <article class="api-card">
-        <p class="api-eyebrow">Khóa học #{{ item.course_id }}</p>
+        <p class="api-eyebrow">Tổng quan khóa học</p>
         <div class="progress-number">
           <strong>{{ item.progress_percent }}%</strong
           ><span>{{ item.completed_lessons }} / {{ item.total_lessons }} bài hoàn thành</span>
@@ -41,13 +45,13 @@
           {{
             item.has_content
               ? 'Có bài học được công bố trong khóa.'
-              : 'API báo chưa có bài học để hiển thị.'
+              : 'Chưa có bài học được công bố trong khóa học này.'
           }}
         </p>
       </article>
-      <aside class="api-error">
-        <strong>Danh sách lesson và thời điểm học chưa có trong API #37.</strong>
-        <p>Không dựng timeline hoặc trạng thái từng bài từ số liệu tổng hợp.</p>
+      <aside class="api-message" role="status">
+        <strong>Chi tiết tiến độ từng bài học hiện chưa khả dụng.</strong>
+        <p>Bạn vẫn có thể xem tổng quan số bài đã hoàn thành ở trên.</p>
       </aside>
       <div class="api-actions">
         <a class="api-button secondary" routerLink="/student/progress">Quay lại tổng quan</a>

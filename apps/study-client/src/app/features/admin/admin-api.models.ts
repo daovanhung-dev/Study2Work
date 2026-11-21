@@ -45,7 +45,7 @@ export interface AdminContent {
   readonly title: string;
   readonly payload: Readonly<Record<string, unknown>>;
   readonly status: string;
-  readonly parent_id: number | null;
+  readonly parent_id?: number | null;
   readonly order: number;
 }
 
@@ -63,7 +63,7 @@ export interface AdminQuiz {
   readonly id: number;
   readonly course_id: number;
   readonly title: string;
-  readonly duration_minutes: number | null;
+  readonly duration_minutes?: number | null;
   readonly passing_score: string;
   readonly questions: readonly Readonly<Record<string, unknown>>[];
 }
@@ -93,7 +93,7 @@ export interface AdminNotification {
 export interface AdminDiscussionAuthor {
   readonly id: number;
   readonly full_name: string;
-  readonly avatar_url: string | null;
+  readonly avatar_url?: string | null;
 }
 
 export interface AdminDiscussionComment {

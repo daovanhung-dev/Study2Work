@@ -21,6 +21,9 @@ class UploadStorageProvider(Protocol):
     def delete(self, *, storage_key: str) -> None:
         """Xóa object theo key khi ghi metadata thất bại."""
 
+    def create_signed_url(self, *, storage_key: str, expires_in: int) -> str:
+        """Tạo URL đọc object có hạn dùng cho resource private."""
+
 
 class UploadStorageUnavailableError(RuntimeError):
     """Báo cấu hình hoặc thao tác storage lỗi mà không chứa thông tin nhạy cảm."""
@@ -71,6 +74,25 @@ class S3UploadStorageProvider:
             client.delete_object(Bucket=storage_config.bucket, Key=storage_key)
         except Exception:
             raise UploadStorageUnavailableError("Object Storage delete failed.") from None
+
+    def create_signed_url(self, *, storage_key: str, expires_in: int) -> str:
+        """Ký URL GET cho object private; không trả bucket/key trong lỗi."""
+
+        storage_config = _read_storage_configuration()
+        if not storage_key.strip() or not 1 <= expires_in <= 3600:
+            raise UploadStorageUnavailableError("Object Storage signing request is invalid.")
+        try:
+            client = self._create_client(storage_config)
+            signed_url = client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": storage_config.bucket, "Key": storage_key},
+                ExpiresIn=expires_in,
+            )
+        except Exception:
+            raise UploadStorageUnavailableError("Object Storage signing failed.") from None
+        if not isinstance(signed_url, str) or not signed_url.strip():
+            raise UploadStorageUnavailableError("Object Storage signing failed.")
+        return signed_url
 
     def _create_client(self, storage_config: S3UploadStorageConfiguration) -> Any:
         """Tạo client với timeout ngắn và một lần thử như adapter storage hiện có."""

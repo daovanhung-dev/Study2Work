@@ -4,7 +4,7 @@
 |---|---|
 | Screen ID | `GS-01` |
 | Module | Guest / Discovery |
-| Route | `/courses` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/courses` — Angular route is registered; browser runtime remains unverified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: **DD status:** `BLOCKED` — the supplied design covers only an empty catalog; the required loaded list, sort, count and paging surfaces have no approved layout. Category filtering and search handoff also conflict with current contracts.; **Implementation status:** `IMPLEMENTATION BLOCKED` · **Runtime status:** `RUNTIME NOT VERIFIED`. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
@@ -31,7 +31,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/empty/ready/query-error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Study Web Angular route/caller | `SOURCE-WIRED / PARTIAL`; browser/API runtime `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [GS-01 source screen.png](../../screen_stitch/02_guest_discovery/GS-01_danh-sach-khoa-hoc/screen.png))
@@ -44,6 +44,13 @@
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 
 ## Trạng thái và ranh giới bằng chứng
+
+### Current Study Web source re-audit (2026-11-21)
+
+- `/courses` is registered and GS-01 calls public #05 then #06. The page validates each accepted success envelope, the category/course projections, and requested page/fixed size 20; it cancels the previous catalog request when reloading, sorting or paging.
+- #06 returns its total from a COUNT query and its items from a separate paged LIST query. GS-01 compares returned row count with the count-derived expected page length. When they disagree it keeps any returned courses visible, suppresses the total/page controls, shows a retry action, and blocks pagination until a reload. The retry repeats the currently displayed page and sort.
+- A matching zero/zero response remains the empty state; an empty out-of-range response remains distinct. Category labels are informational because #06 rejects non-null category filters. The supplied Stitch asset still does not approve the loaded grid, sorting or pagination presentation; cache/partial-load/search handoff decisions and browser/live API/DB runtime remain open.
+- This addendum records current source and supersedes older package statements that the route/caller were absent. It does not change the original Stitch design or certify runtime.
 
 # GS-01 — Danh sách khóa học
 

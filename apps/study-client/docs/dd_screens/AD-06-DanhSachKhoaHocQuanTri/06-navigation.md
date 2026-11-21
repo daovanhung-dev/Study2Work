@@ -57,7 +57,7 @@ Không có mutation state ở AD-06. `REFRESHING` chưa có vì prototype refres
 | Từ | Hành động | Đích / dữ liệu truyền | Hiện trạng |
 |---|---|---|---|
 | AD-01/Admin shell | Mở mục Khóa học & Nội dung | AD-06, không có data ID. | Inventory link; route source không có. |
-| AD-06 | Chọn course row/action | AD-07 route `/admin/courses/:courseId`, `courseId = Course.id` (int64). | Không có rows/handler trong prototype; downstream API #74 thuộc AD-07. |
+| AD-06 | Chọn course row/action | AD-07 route `/admin/courses/:courseId`, `courseId = Course.id` (int64). | Angular source tạo link chỉ với ID dương, JavaScript safe integer; ID lớn hơn miền biểu diễn chính xác không điều hướng. Prototype không có rows/handler; downstream API #74 thuộc AD-07. |
 | AD-07 | Chỉnh sửa course | AD-08; ID giữ nguyên. #75 mutation/reload sau approval. | AC-32 target flow; không xử lý trong DD này. |
 | AD-07 | Đổi status/xóa | AD-09; ID giữ nguyên; #76/#77 theo confirmation/policy. | AC-32 target flow; reload #73 sau action theo policy; status/delete policy chưa khép kín. |
 | AD-06 | Quay lại từ AD-07 | Khôi phục filter/page query nếu routing policy yêu cầu. | Chưa có URL/cache/back-state contract; cần quyết định chung. |

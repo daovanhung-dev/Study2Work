@@ -30,35 +30,36 @@
 - screen.png là ảnh thiết kế tĩnh 1418×1600. SHA-256 trước/sau cần giữ nguyên: acd143a1a7d5dae4936f9bc8a3d51d015ba1fb501998a5434e96b57942d77fdc.
 - code.html là HTML trình bày tĩnh. Firefox headless render tạm ở cùng viewport đã được xem để so sánh layout/copy; render không phải runtime capture và không phải tài sản thay thế ảnh gốc.
 - Các chi tiết `href="#"`, `data-path` và inline `onsubmit` trong hai bullet dưới đây mô tả Stitch `code.html`, không mô tả Angular runtime hiện tại.
-- Trong Angular source, `/student/profile/edit` render gate G-03; metadata gán API #04/#13/#14 nhưng không có HTTP caller. Hai link quay về dùng RouterLink tới ST-02; upload/save/phone/bio disabled, email readonly; full name chỉ nhận local text và submit bị chặn.
-- Header links tới các route đã khai báo; “Khóa học của tôi” và footer terms/privacy/help không tương tác vì chưa có route/content mapping. Không có Student session, API/cache binding hoặc server mutation.
-- Gate pill, warning banner, diagnostics và “API #13 Halted” là nội dung HTML tĩnh. Chúng không phản ánh trạng thái response của backend; backend hiện đăng ký source cho cả #13 và #14.
+- In Angular source, `/student/profile/edit` calls #04 through StudentApiService and binds response-backed profile fields. Full name and phone are editable; email is read-only; Bio stays disabled because the source schema omits it.
+- Selecting an avatar reads a Data URL and checks MIME/size; the explicit upload action calls #13. A successful URL is held for the subsequent #14 update. The page then calls #04 and navigates to ST-02 only after that refresh succeeds.
+- StudentSessionService supplies the Bearer token for all three requests. The page uses separate loading, validation, upload, save, and saved-but-refresh-pending states; no client profile cache is added.
+- The remaining Bio note describes the API/DB source gap. Header/footer route gaps remain unchanged; live API/database/object-storage and browser runtime are not verified.
 
 ### Trích từ DD nguồn: E. Ma trận trạng thái và điều hướng
 
 | State | Điều kiện / evidence | UI outcome / ranh giới |
 |---|---|---|
-| Static gate | Trạng thái duy nhất trong screenshot/HTML hiện tại. | Banner và disabled controls hiển thị; không có runtime gate response. |
-| Loading | Cần thiết cho expected GET #04 sau khi app được nối; không có asset/loading design. | Cách hiển thị/chặn thao tác chưa được chốt. |
-| Profile loaded | Chỉ sau #04 success. | Mapping field và avatar preview chưa được duyệt; không coi mẫu tĩnh là dữ liệu. |
-| Dirty | Inventory liệt kê. | Chỉ full name có thể nhập trong prototype; dirty tracking chưa có. |
-| Uploading | Inventory liệt kê nếu đổi avatar. | #11 disabled; progress/cancel/reselect UI chưa được thiết kế. |
-| Saving | Inventory liệt kê. | #19 disabled; double-submit policy chưa có. |
-| Validation error / 422 | #13/#14 trả validation errors theo điều kiện ở trên. | Field error placement/focus/retention chưa được triển khai. |
-| Request error | 401/403/500/network failure; inventory có error. | Route tới SH-05/retry/message policy chưa được nối. |
-| Saved | #14 success; source trả updated UserProfile. | Inventory vẫn yêu cầu GET #04; chọn response mapping hay refetch còn BLOCKER. |
-| Return | User click link quay lại. | Expected ST-02; HTML fragment-only. Không có dữ liệu route params được xác nhận. |
+| Static gate | Screenshot/HTML source state. | Current page retains a concise Bio limitation note; other supported controls are active. |
+| Loading | GET #04 or saved-profile refresh is pending. | Status message; edit/upload/save actions are disabled while profile data is loading. |
+| Profile loaded | #04 success with a valid UserProfile envelope. | Bind profile data, show only a valid HTTP(S) avatar URL, and initialize editable values. |
+| Dirty | Supported profile value differs from loaded value or a new avatar was uploaded. | Enables Save after validation; unsupported Bio does not become dirty or enter the request. |
+| Uploading | File reading or POST #13 is active. | Status message; save is disabled until upload completes. |
+| Saving | PUT #14 is active. | Duplicate submit is blocked and editable controls are disabled. |
+| Validation error / 422 | Client field validation or API #13/#14 error. | Show an inline error; do not claim the profile changed. |
+| Request error | API #04/#13/#14 returns an error or cannot be reached. | Show retry for profile reads; never auto-repeat the profile mutation. |
+| Saved / refresh pending | #14 succeeds but follow-up #04 has not succeeded. | Keep returned profile data and expose a GET #04 retry; do not resend #14. |
+| Return | Follow-up #04 succeeds or user follows an ST-02 link. | Successful save routes to ST-02; route navigation does not include PII. |
 
 ### Điều hướng
 
-- ST-02 → ST-03: route `/student/profile/edit` đã source-wired; ST-02 vẫn giữ nút edit disabled nên chưa có điểm vào UI.
-- ST-03 → ST-02: hai RouterLink đi tới `/student/profile`; không gửi user ID hoặc PII qua URL.
-- SH-02/session handoff: phụ thuộc auth/session policy. API tự kiểm JWT; không có client auth store trong Study Web.
+- ST-02 → ST-03: route `/student/profile/edit` is source-wired; ST-02's current edit entry remains disabled.
+- ST-03 → ST-02: successful #14 followed by #04 navigates to `/student/profile`; visible return RouterLinks also lead there; no user ID or PII is included in the URL.
+- SH-02/session handoff: StudentLayout and StudentSessionService provide the current in-memory Student Bearer; API enforces the Student role. Live session persistence/refresh remains unverified.
 - Header/footer destinations: chưa xác định từ app router. Không thêm route giả định.
-- Không xác nhận cache, back-stack, dirty-state confirmation, returnTo hoặc reload strategy.
+- No profile cache, dirty-state confirmation, or returnTo behavior is added. Post-save refresh uses #04; a failed refresh can retry #04 without repeating #14.
 
 ## 4. Luồng đọc (Read)
-- Orchestration từ inventory: GET #4 → nếu đổi avatar thì POST #13 → nhận tham chiếu chưa xác định → PUT #14 → GET #4 để đồng bộ; chặn khi mapping chưa chốt.
+- Orchestration hiện tại: GET #04 → nếu đổi avatar thì POST #13 → PUT #14 với full_name/phone/avatar_url → GET #04 để đồng bộ → ST-02. Bio không được gửi; nếu upload thành công nhưng PUT lỗi thì object storage không rollback.
 - Chi tiết current/source mapping: xem [API Integration](04-api-integration.md) và DD nguồn.
 
 ## 5. Luồng ghi (Write)

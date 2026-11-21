@@ -9,9 +9,15 @@
 
 > Event IDs trong package là alias để theo template; Source Event IDs, steps và API links giữ theo DD nguồn. Alias không chứng minh event runtime.
 
+### Current Study Client source delta — 2026-11-20
+
+- The registered AD-25 route renders under the AdminLayout session gate. The current page updates format/scope/period signals locally; submit and download controls are disabled.
+- No #103/#18 request is made. The back link routes to AD-24 without filter query; the SH-07 callout remains non-interactive.
+- T041 approves the format set and target export Operation/artifact policy. #103 still lacks a handler; current #18 source handles notification Operations only.
+
 ## 2. Chi tiết event từ DD nguồn
 
-### Trích từ DD nguồn: D. Đặc tả xử lý sự kiện và API
+### Trích từ DD nguồn: D. Đặc tả xử lý sự kiện và API — historical prototype/source snapshot (2026-11-08)
 
 ### D.1. Quy tắc chung
 

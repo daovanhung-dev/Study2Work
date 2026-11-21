@@ -11,6 +11,12 @@
 
 ## 3. API DTO → ViewModel mapping
 
+### Current source mapping (2026-11-20)
+
+`StudentApiService` receives API #04 errors from the ST-02/ST-03 profile read services. The shared core parser accepts only `HttpErrorResponse` status 401 + `DESIGN_AUTHENTICATION_REQUIRED` or status 403 + `DESIGN_ACCESS_DENIED`, requires a nonblank message, and copies only `kind`, `status`, `message`, non-conflicting body/header trace ID, and a conflict flag. The serializable result is handed to `/forbidden` through router history state. `SH05Page` validates that state before rendering; invalid route state is not displayed. No protected profile payload, token, synthetic diagnostic, or arbitrary error field reaches the page.
+
+On 401, the Student API wrapper clears the local Student session before navigation. The session service may already have proactively refreshed based on local expiry before the request; the current wrapper does not perform refresh/replay after the server returns 401. On 403 it neither clears nor refreshes the session. No `returnTo` or safe-back route is passed.
+
 ### Trích từ DD nguồn: 2. Luồng hoạt động tổng thể
 
 1. **Khởi tạo / nhận context:** Router hoặc lớp gọi chung chuyển tới SH-05 sau khi request được bảo vệ nhận lỗi xác thực cuối cùng, hoặc direct navigation vào route. Hợp đồng truyền status/error/return route vào view chưa được triển khai; không gọi #04 chỉ để dựng SH-05 vì có thể lặp lỗi.

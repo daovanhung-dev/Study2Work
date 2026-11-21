@@ -2,12 +2,15 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-20
 
-ST-17 calls #33 and renders only returned assignment fields. It does not
-infer submission eligibility, attached files or local deadline rules. The
-DD/API excerpt below is a design-time snapshot; see [the screen inventory](../../list_screen.md)
-and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+ST-17 calls #33 with Student Bearer, follows assignment ID changes, cancels
+stale reads, validates the success code/ID/response shape and offers retry.
+The current #33 query reads by assignment ID after role authentication; it does
+not check enrollment/ownership, publication or deadline. The client renders
+only returned assignment fields and does not infer eligibility or attached
+files. Runtime and tests were not verified; source-DD tables below retain
+historical contract assumptions.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -17,9 +20,11 @@ and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-
 ## 2. Contract / source detail
 
 - API refs trong inventory: #33
-- Orchestration/data notes: GET #33 → server quyết định deadline/permission; không dùng clock UI làm nguồn quyền. CTA chỉ handoff `assignmentId` sang ST-18 khi eligibility contract được duyệt.
-- BE/source status và gate: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** API #33 Draft, Student route/module/test NOT_FOUND; access/deadline/submission-rule/403-vs-409 unresolved; Assignment response thiếu phần lớn loaded-screen fields; legacy BIGINT assignment tables vs V1-PILOT không có business assignment tables, adapter/live schema chưa xác minh; PNG/HTML actor-state mismatch và visual target mismatch; Study Web UNWIRED; #34 chỉ là upload source-backed, #35/#36 Student routes chưa có
+- Orchestration/data notes: GET #33 → render only its returned fields → link assignment ID to ST-18. #33 current source does not decide enrollment, visibility or deadline; #35 later checks ACTIVE enrollment and deadline during submission.
+- BE/source status and gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #33 route/view/query/model and caller exist; it authenticates Student but queries assignment by ID without ownership/enrollment/publication/deadline predicates. Response is limited to id/course/title/description/due/max score; attachment and loaded-screen detail are absent. Assignment access and eligibility policy, schema mapping, screenshot state and visual alignment remain unresolved.
 - Contract sources and discrepancies are preserved in the source excerpts below.
+
+> Source-DD excerpts below retain the earlier `UNWIRED`/`NOT_FOUND` snapshot; current source is summarized above.
 
 ### Trích từ DD nguồn: F. Acceptance checklist, blockers and source trace
 

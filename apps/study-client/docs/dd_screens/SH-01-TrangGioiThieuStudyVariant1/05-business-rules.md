@@ -1,5 +1,7 @@
 # SH-01 — Business Rules
 
+> **Current approved implementation scope (2026-11-21):** Public guest access; independent read-only #05/#06; only PUBLISHED #06 items; no category query; search q is trimmed and routed to GS-02; public 401/403 stays a scoped error; categories are informational; course cards do not navigate; “Xem tất cả” targets GS-01 and registration targets SH-03; price is hidden until currency is defined. No email lead is collected and no screenshot-only claim is presented as factual. These choices define the 100% screen-score scope for this task; unresolved live API/DB/deployment status remains separate.
+
 ## 1. Rule index
 | Rule ID (package alias) | Tên / source ID | Áp dụng | Thực thi | Tests |
 |---|---|---|---|---|

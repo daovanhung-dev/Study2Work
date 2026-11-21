@@ -1,5 +1,16 @@
 # ST-12 — Events (đặc tả xử lý)
 
+## Current-source reconciliation — 2026-11-20
+
+Current source supersedes the historical “no route/caller” statements in the
+snapshot below: ST-12 calls #26 on `lessonId` changes, cancels stale requests,
+validates the exact success code, lesson/resource identity, ascending resource
+IDs and `url=null`, and renders loading/error/retry/empty/list states. The
+resource action hands `resourceId` plus lesson return context to GS-07; GS-07
+owns #12 and its PUBLIC/PRIVATE URL access policy. #26 requires ACTIVE
+enrollment and a PUBLISHED lesson/course. Catalog response shape, resource
+producer/schema, runtime and design fidelity remain unresolved.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|
@@ -35,12 +46,12 @@
 |---|---|
 | Element / loại | Resource selection/`Click` dự kiến; không có resource row/card/control trong ST-12 asset hiện tại. |
 | Điều kiện tiên quyết | Chỉ có thể thực hiện sau khi API #26 trả Resource item theo contract đã duyệt, có `resource_id`, và owner xác định #12 có còn cần gọi hay không. Access/URL policy phải được phê duyệt trước khi expose hoặc mở URL. |
-| Input | `resource_id` từ Resource item được xác nhận. API #12 catalog: positive-format requirement chưa nêu, path `int64` required, public/no Bearer, không query/body. Current source thực thi positive signed-int64. |
+| Input | `resource_id` from a validated #26 row. #12 accepts a signed-int64 path; PUBLIC is unauthenticated, PRIVATE requires Student Bearer. |
 | Request hiện có | `GET /api/v1/resources/{resource_id}`. Route đăng ký trong `apps/study-server/app/api/v1.py`, gọi `get_resource_detail`, sau đó `validate_resource_id` → `find_resource` (Q1) → nếu `lesson_id != null`, `find_published_parent_course` (Q2). |
-| Current success mapping | 200 `DESIGN_RESOURCE_RETRIEVED`, message `Resource metadata retrieved`; `data` gồm `id`, `name`, `type` (alias từ `resource_type`), `url` (giá trị lưu trong DB, model cho phép null), `lesson_id`; `meta`/`traceId` theo response helper. Source không select/serialize `visibility`. |
-| Current access/publish behavior | Route không có auth guard. Nếu `lesson_id` có giá trị, source chỉ yêu cầu lesson không `DELETED` và course `PUBLISHED`; không kiểm tra Student enrollment/entitlement hoặc Resource visibility. Nếu `lesson_id=null`, bỏ qua parent check. |
-| Status/lỗi source | Invalid/non-positive/overflow ID hoặc resource/parent không thỏa điều kiện → 404 `DESIGN_RESOURCE_NOT_FOUND`; SQLAlchemy error rollback rồi trả 500 `DESIGN_INTERNAL_ERROR`; Pydantic mapping failure cũng trả 500. Current source không có 401/403/410, signer, expiry hoặc storage call. |
-| Bước tiếp theo | Không tự mở `data.url`, tạo `<iframe>`, tải tệp hoặc coi `url` là signed URL. Current API trả direct stored URL; behavior mở chỉ được thiết kế khi access, origin/scheme allowlist, MIME/preview/download và expiry policy được duyệt. Handoff GS-07/ST-12 còn cần giữ đúng entry context. |
+| Current success mapping | 200 `DESIGN_RESOURCE_RETRIEVED`; `data` includes `id/name/type/url/visibility/lesson_id`. PUBLIC URL is direct HTTP(S); PRIVATE URL is signed for 300 seconds. |
+| Current access/publish behavior | PUBLIC needs no token. PRIVATE requires Student auth, a non-deleted lesson, published parent course and ACTIVE enrollment; private resources without a valid parent are hidden as 404. |
+| Status/lỗi source | Invalid/missing/unpublished resource → 404; unauthenticated/invalid Student → 401; no ACTIVE enrollment → 403; query/mapping error → 500; signer unavailable → 503. |
+| Bước tiếp theo | ST-12 does not call #12 directly; it hands off ID/context to GS-07. GS-07 validates the response and opens an allowed URL only after a user action. MIME-specific preview and expiry recovery are not implemented. |
 | Kết quả/ngoại lệ | API #12 source-backed nhưng API DD `Draft — Needs Confirmation`; source tests được đọc, không chạy. Không có UI control để kích hoạt trong screenshot và không có e2e evidence. |
 
 ### ST12-EV-03 — Quay lại trình học bài (ST-11)

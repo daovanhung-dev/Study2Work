@@ -1,5 +1,9 @@
 # GS-07 — Events (đặc tả xử lý)
 
+> **T041/current-source update (2026-11-20):** Route entry consumes `resourceId` and calls #12. Success validates the exact requested ID and fields then presents a safe open link; 401/403/404 have separate states and other failures have retry. PUBLIC URL opens directly; PRIVATE access is authorized by the server using Student ACTIVE enrollment and a 300-second signed URL. Return context uses `courseId` or `lessonId`. Viewer zoom/fullscreen, MIME-specific preview and download lifecycle are not implemented. Stitch event details below are design references and older T023 no-call assertions are historical.
+
+> **T042 validation update (2026-11-20):** GS-07 validates the success envelope and expected business code before reading `data`; malformed payloads render the existing retryable error state. Completion remains 62.5% while preview/download and visual-fidelity criteria remain incomplete.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

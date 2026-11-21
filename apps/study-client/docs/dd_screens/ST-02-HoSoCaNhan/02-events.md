@@ -21,7 +21,7 @@
 
 | Event ID | Tên / loại | Phần tử kích hoạt | Hiện trạng |
 |---|---|---|---|
-| `ST02-EV-01` | Mở route và nạp profile — `Load` | `/student/profile` route, không có DOM handler | Expected GET #04; current Study Web không route/fetch. |
+| `ST02-EV-01` | Mở route và nạp profile — `Load` | `/student/profile` route | Current Angular source requests #04 via StudentApiService and displays only `full_name`/`email`. |
 | `ST02-EV-02` | Header brand/navigation — `Click/Anchor` | #1–#2 | `href="#"`; chỉ fragment navigation, không chuyển Screen ID. |
 | `ST02-EV-03` | Mở đăng nhập — `Click/Anchor` | #3 hoặc #7 | `href="#"`; không có SH-02 route/session state. |
 | `ST02-EV-04` | Chỉnh sửa hồ sơ — `Click` | #8 | Disabled; thao tác không được browser phát; ST-03 không được mở. |
@@ -30,14 +30,14 @@
 ### `ST02-EV-01` — Mở route và nạp profile
 
 - **Input:** không có request input từ user; expected `Authorization` header lấy từ auth/session state. Không có `userId` route/body/query; current page không có input control.
-- **Precondition:** route/client được triển khai và session có Student access token. Nếu chưa có token hoặc không phải Student, expected 401/403 handling theo catalog; Study Web session guard chưa tồn tại.
+- **Precondition:** route được host trong StudentLayout; StudentApiService lấy in-memory Student access token. Server #04 vẫn kiểm Bearer/JWT/role; request không có user ID.
 - **Xử lý phía client dự kiến:** resolve route → xác nhận session/role bằng contract đã duyệt → tạo GET #04 một lần theo cache policy đã chốt → chờ response → map approved fields và state. Inventory nói cache profile nhưng không cho TTL, nguồn invalidation hay xử lý duplicate call; không phát minh các giá trị này.
 - **Request:** `GET /api/v1/users/me`, header `Authorization: Bearer <jwt>`, không query/path/body. Catalog lặp notation auth nhưng current route nhận một header.
 - **Current server sequence:** shared decoder kiểm JWT theo configured algorithm/key, issuer/audience, expiration và required claims; helper kiểm `sub` là user ID số dương, `roles` là list string và role Student; role denial xảy ra trước DB. Query `CURRENT_USER_PROFILE` SELECT `users.id/full_name/email/role/avatar_url/phone/status/created_at/updated_at` theo `id=:user_id`, `LIMIT 1`. Không lấy password_hash; không filter `status` hoặc compare row role. `UserProfile` extra-ignore, `avatar_url`/`phone` nullable, `status` bắt buộc.
 - **Success:** HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, message `Profile retrieved.`, `data=UserProfile`, `meta={}`, `traceId`; model dumps timestamps as JSON datetime strings. No server-side mutation. UI field mapping/ready layout is blocked because no authenticated design state exists.
 - **Errors:** missing/malformed Bearer, invalid/expired token, invalid claims, or missing user row → HTTP 401 `DESIGN_AUTHENTICATION_REQUIRED`; valid claims without `STUDENT` → 403 `DESIGN_ACCESS_DENIED`; JWT configuration/query/model mapping failure → 500 `DESIGN_INTERNAL_ERROR`. SQLAlchemy query error rolls back; missing row and model mapping failure do not run rollback. Error data uses common response helper defaults; no raw DB/token detail is exposed.
 - **Unsupported/contract gaps:** catalog/AC-02 claim wording `user_id`/`role` differs from source `sub`/`roles`; AC-02 permissions absent; optional `bio` absent; missing-user 401 current mapping is not separately explained by catalog; role/status DB freshness is not enforced. Do not create an alternate response mapping or UI fix here.
-- **Current UI result:** there is no request/event. Rendered HTML displays static sign-in card; source PNG contains a blank body. A login copy does not establish that the user is unauthenticated, and no 401/403 response is rendered.
+- **Current UI result:** Angular sends #04 on page entry; loading/error/retry are rendered, and success displays only `full_name` and `email`. Stitch HTML/source PNG describe the original sign-in/blank-body design and are not runtime evidence. Browser/API/DB runtime remains unverified.
 
 ### `ST02-EV-02` — Header brand/navigation
 

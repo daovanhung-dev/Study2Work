@@ -4,24 +4,21 @@
   </nav>
   <header class="api-heading">
     <div>
-      <p class="api-eyebrow">ST-20 · Tiến độ học tập</p>
+      <p class="api-eyebrow">Tiến độ học tập</p>
       <h1>Tổng quan tiến độ</h1>
-      <p>Tổng hợp chỉ hiển thị các số liệu mà Study Server trả về.</p>
+      <p>Theo dõi các khóa học và thành tích đã được ghi nhận.</p>
     </div>
   </header>
   <section class="api-card progress-api-gate">
-    <p class="api-eyebrow">API #21 · Tiến độ tổng hợp</p>
-    <h2>Widget tiến độ chưa có dữ liệu tương thích</h2>
-    <p>
-      Route hiện tại của API #21 trả `UserProfile`, không trả số bài học hoặc tiến độ. Trang không
-      chuyển thông tin hồ sơ thành KPI học tập.
-    </p>
+    <p class="api-eyebrow">Tổng quan tiến độ</p>
+    <h2>Chưa có dữ liệu tiến độ</h2>
+    <p>Tiến độ tổng hợp hiện chưa khả dụng.</p>
     <a class="api-button secondary" routerLink="/student/courses">Khóa học của tôi</a>
   </section>
   <section class="api-card achievements-summary">
     <div class="api-heading">
       <div>
-        <p class="api-eyebrow">API #38 · Bản ghi achievement</p>
+        <p class="api-eyebrow">Thành tích</p>
         <h2>Thành tích đã được hệ thống ghi nhận</h2>
       </div>
       <a routerLink="/student/achievements">Xem danh sách</a>
@@ -30,13 +27,26 @@
       <section class="api-message" role="status"><strong>Đang tải thành tích…</strong></section>
     }
     @if (error()) {
-      <section class="api-error" role="alert">{{ error() }}</section>
+      <section class="api-error" role="alert">
+        <p>{{ error() }}</p>
+        <button class="api-button secondary" type="button" (click)="retryAchievements()">
+          Tải lại thành tích
+        </button>
+      </section>
     }
-    @if (!loading() && !error() && achievements().length === 0) {
+    @if (!loading() && !error() && snapshotMismatch()) {
+      <section class="api-message" role="status">
+        <p>Số lượng tổng và bản ghi thành tích chưa khớp ở lần tải này.</p>
+        <button class="api-button secondary" type="button" (click)="retryAchievements()">
+          Tải lại thành tích
+        </button>
+      </section>
+    }
+    @if (!loading() && !error() && !snapshotMismatch() && achievements().length === 0) {
       <section class="api-message">
         <div>
-          <strong>Chưa có achievement được trả về.</strong>
-          <p>API #38 đọc các bản ghi đã cấp; không tự cấp badge hoặc chứng nhận.</p>
+          <strong>Chưa có thành tích được ghi nhận.</strong>
+          <p>Các thành tích mới sẽ xuất hiện tại đây.</p>
         </div>
       </section>
     }
@@ -46,10 +56,7 @@
           <li>
             <strong>{{ achievement.title }}</strong>
             <p class="api-meta">
-              {{ achievement.code }} · {{ achievement.awarded_at | date: 'medium' }}
-              @if (achievement.course_id) {
-                · Khóa #{{ achievement.course_id }}
-              }
+              {{ achievement.awarded_at | date: 'medium' }}
             </p>
           </li>
         }

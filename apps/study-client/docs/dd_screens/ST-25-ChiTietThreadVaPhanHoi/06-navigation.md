@@ -1,11 +1,15 @@
 # ST-25 — Navigation
 
+## Current source route and handoff — 2026-11-20
+
+`/student/discussions/:discussionId` is registered in `student.route.ts`. The page follows route-ID changes and loads #42; replies call #41 and reload #42. Back navigation goes to ST-23 without preserving prior filter/page state. Runtime navigation is not verified.
+
 ## 1. Route definition
 - Current route in inventory: `/student/discussions/:discussionId`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `discussionId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: current route is source-wired; runtime not verified.
+- Route params/types: `discussionId`, restricted to a positive safe Study ID before #41/#42.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
-- Route guards: see source DD/API contract; do not create role policy.
+- Route guards: authenticated Student route group; #41/#42 independently check active enrollment.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |

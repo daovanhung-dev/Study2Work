@@ -2,13 +2,26 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-20
 
-ST-26 has route/API metadata but no HTTP caller. API #43–#45 remain
-`SOURCE_ONLY`; the current query depends on `notification_recipients`, absent
-from checked-in DDL. No inbox rows, unread counts, read actions or deep links
-are fabricated. The DD/API excerpt below is a design-time snapshot; see [the screen inventory](../../list_screen.md)
-and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+ST-26 calls #43 with `unread_only` and `page`, validates the notification page,
+and uses `pagination.total` from the unread-only response for its count. #44
+marks one notification and returns a one-item page; #45 marks all and returns
+`{updated_count}`. Both writes are followed by #43 list/count refresh. Migration
+016 provides `notification_recipients`. The #45 server response differs from
+the catalog's `Page<Notification>`; this client follows current server source
+and keeps that discrepancy open. If a valid #43 response shows the requested
+page is now beyond `total_pages`, the client retries at the last available page
+(page 1 for an empty result), preserving the same `unread_only` filter. No deep
+link is inferred because #43 has no typed destination field.
+The server runs COUNT and LIST as separate queries. The client therefore steps
+back one page when a valid response is empty but `total > 0`; if that
+inconsistency remains on page 1, it shows a retryable error instead of the
+valid-empty message. Although #43 selects optional `type`, current notification
+batch producers #63 and #93 persist it as `NULL`, so the client does not derive
+the screenshot categories from it. The valid ISO `created_at` value is displayed using the
+Vietnamese `vi-VN` locale; the `<time datetime>` retains the exact response
+string.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -21,7 +34,7 @@ and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-
 
 - API refs trong inventory: #43, #44, #45
 - Orchestration/data notes: GET #43 → khi user mở POST? Không, PATCH #44; PATCH #45 khi user bấm tất cả → refresh #43.
-- BE/source status và gate: **D**; **BLOCK:** Payload deep-link thông báo chưa định nghĩa
+- BE/source status và gate: #43/#44/#45 are source-wired in the current route/client; Student auth and recipient scoping are source-backed. #45 catalog response mismatch and missing deep-link field remain open.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: A.4. API DD status, data contract và blockers

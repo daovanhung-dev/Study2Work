@@ -9,8 +9,8 @@
       <li aria-hidden="true">›</li>
       <li aria-current="page">Chỉnh sửa hồ sơ</li>
     </ol>
-    <a class="back-link" [routerLink]="['/admin/users', userId()]">
-      <study-icon name="chevron" /> Quay lại hồ sơ (AD-03)
+    <a class="back-link" [routerLink]="isUserIdValid() ? ['/admin/users', userId()] : ['/admin/users']">
+      <study-icon name="chevron" /> {{ isUserIdValid() ? 'Quay lại hồ sơ (AD-03)' : 'Danh sách tài khoản (AD-02)' }}
     </a>
   </nav>
 
@@ -41,9 +41,13 @@
   } @else if (state.status === 'error') {
     <section class="user-state user-state--error" role="alert">
       <span class="state-icon"><study-icon name="info" /></span>
-      <strong>Không thể tải hồ sơ người dùng</strong>
+      <strong>{{ state.invalidRouteId ? 'Mã người dùng trên đường dẫn không hợp lệ' : 'Không thể tải hồ sơ người dùng' }}</strong>
       <span>{{ state.message }}</span>
-      <a [routerLink]="['/admin/users', userId()]">Quay lại chi tiết người dùng (AD-03)</a>
+      @if (state.invalidRouteId) {
+        <a routerLink="/admin/users">Quay lại danh sách tài khoản (AD-02)</a>
+      } @else {
+        <a [routerLink]="['/admin/users', userId()]">Quay lại chi tiết người dùng (AD-03)</a>
+      }
     </section>
   } @else {
     @let user = state.user;

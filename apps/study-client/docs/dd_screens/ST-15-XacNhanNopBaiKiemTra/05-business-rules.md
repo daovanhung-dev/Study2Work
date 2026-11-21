@@ -7,7 +7,8 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Xem số câu chưa làm, xác nhận nộp và khóa chỉnh sửa khi server chấp nhận.
-- Gate/status (giữ nguyên): **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #30 body/queue/upsert/order/outcome/retry và #31 ownership/state/repeat/deadline/concurrency/grading/transaction/response còn mở; ST-14 summary/dirty-queue handoff/direct entry chưa có contract; legacy BIGINT và V1-PILOT UUID/payload/lifecycle khác; PNG/HTML, timer/count/saved/attempt/instant-grading claims không thống nhất; Student #30–#32 route/module/test NOT_FOUND; Study Web UNWIRED; live schema chưa xác minh
+- Current implementation — 2026-11-20: API #31 validates Student ownership and `IN_PROGRESS`, grades supported question types and commits the attempt result. ST-15 validates the response and avoids blind repeat after a timeout or closed-attempt conflict. Its normal ST-14 entry is blocked during #30 save/error, but direct entry has no flush/queue protection. Keep the DD blocked because eligibility/deadline, idempotency and the `SUBMITTED`/`PENDING_GRADE` source-DD path do not match current source behavior; runtime is not verified.
+- Source-DD gate (historical snapshot): **DD BLOCKED:** #30 answer body/queue/ordering/idempotency and #31 deadline/concurrency/grading disclosures remain open; direct-entry handoff and the mockup's summary/timer claims remain unresolved. The original source DD's `UNWIRED`/`NOT_FOUND` labels describe its earlier scan, not current source.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu, blocker và nguồn

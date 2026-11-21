@@ -1,5 +1,9 @@
 # ME-03 — API Integration
 
+## Current source reconciliation — 2026-11-21
+
+- API #65's current `ProgressStudentSummary` includes optional `avatar_url`; its query reads `users.avatar_url` for each eligible ACTIVE Student. ME-03 now validates that field is absent, null, or a string and renders only HTTPS or same-origin HTTP avatars with `no-referrer` and an initials fallback. This display does not resolve the catalog `Page<Course>` versus local `Page<MentorStudentProgress>` discrepancy or approve the local progress formula.
+
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
 ## 1. API usage matrix

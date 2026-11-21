@@ -27,7 +27,7 @@ status: "Draft — Needs Confirmation"
 | `user_id` | `BIGINT NULL REFERENCES users(id)` | One selected Student per notification row. | Existing legacy DDL. |
 | `sender_id` | `BIGINT NULL REFERENCES users(id)` | Authenticated Mentor numeric JWT subject. | Existing legacy DDL. |
 | `title` | `VARCHAR(200) NOT NULL` | Request title, unchanged. | Existing legacy DDL; API validates max 200. |
-| `content` | `TEXT NOT NULL` | Request int64 rendered in base-10. | DERIVED type mapping; semantic conflict remains. |
+| `content` | `TEXT NOT NULL` | Request text stored directly. | Matches approved #63 string request and the text composer; live schema remains unverified. |
 | `type` | `VARCHAR(30) NULL` | NULL; do not overload as channel. | Existing legacy DDL. |
 | `is_read` | `BOOLEAN DEFAULT FALSE` | Read-state only; not delivery status. | Existing legacy DDL. |
 | `created_at` | `TIMESTAMP NOT NULL` | DB timestamp used as initial Operation timestamps. | Existing legacy DDL. |

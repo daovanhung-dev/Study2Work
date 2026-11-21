@@ -114,6 +114,45 @@ describe('GS01Page', () => {
     expect(root.textContent).toContain('Chưa có khóa học nào');
   });
 
+  it('keeps course rows and retries when the count and list snapshots disagree', async () => {
+    const harness = await RouterTestingHarness.create();
+    const page = await harness.navigateByUrl('/courses', GS01Page);
+    http.expectOne('/api/v1/categories').flush(successEnvelope(categoryPage([])));
+    http
+      .expectOne((request) => request.url === '/api/v1/courses')
+      .flush(
+        successEnvelope(
+          coursePage({
+            items: [course(101, 'React cơ bản')],
+            pagination: pagination({ page: 1, size: 20, total: 2, total_pages: 1 }),
+          }),
+        ),
+      );
+    harness.fixture.detectChanges();
+
+    const root = harness.routeNativeElement as HTMLElement;
+    expect(root.textContent).toContain('React cơ bản');
+    expect(root.textContent).toContain('Số khóa học và danh sách trang chưa đồng nhất');
+    expect(root.querySelector('.results-summary, .pagination')).toBeNull();
+    expect(page.catalogSnapshotMismatch()).toBe(true);
+    root.querySelector<HTMLButtonElement>('.primary-button')?.click();
+
+    http
+      .expectOne((request) => request.url === '/api/v1/courses' && request.params.get('page') === '1')
+      .flush(
+        successEnvelope(
+          coursePage({
+            items: [course(101, 'React cơ bản'), course(102, 'React nâng cao')],
+            pagination: pagination({ page: 1, size: 20, total: 2, total_pages: 1 }),
+          }),
+        ),
+      );
+    harness.fixture.detectChanges();
+
+    expect(page.catalogSnapshotMismatch()).toBe(false);
+    expect(root.textContent).toContain('2 khóa học');
+  });
+
   it('resets to page one when sorting and preserves the sort when paging', async () => {
     const harness = await RouterTestingHarness.create();
     const page = await harness.navigateByUrl('/courses', GS01Page);
@@ -124,7 +163,9 @@ describe('GS01Page', () => {
       .flush(
         successEnvelope(
           coursePage({
-            items: [course(101, 'React cơ bản')],
+            items: Array.from({ length: 20 }, (_, index) =>
+              course(100 + index, index === 0 ? 'React cơ bản' : `Khóa học ${index + 1}`),
+            ),
             pagination: pagination({ page: 1, size: 20, total: 21, total_pages: 2 }),
           }),
         ),
@@ -148,7 +189,9 @@ describe('GS01Page', () => {
     sortedPage.flush(
       successEnvelope(
         coursePage({
-          items: [course(101, 'React cơ bản')],
+          items: Array.from({ length: 20 }, (_, index) =>
+            course(100 + index, index === 0 ? 'React cơ bản' : `Khóa học ${index + 1}`),
+          ),
           pagination: pagination({ page: 1, size: 20, total: 21, total_pages: 2 }),
         }),
       ),

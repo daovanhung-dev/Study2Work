@@ -21,14 +21,14 @@ format: markdown
 
 | No | Logical name | Field name | Required | Value/Format | Description | Data Mapping reference |
 |---:|---|---|---:|---|---|---|
-| 1 | Authorization | Authorization | Yes | Bearer JWT | Catalog requires Bearer JWT; exact claim-to-owner mapping is unresolved. | 05_Data_Mapping.md, step 0 |
+| 1 | Authorization | Authorization | Yes | Bearer JWT | Current source requires Student, Mentor or Admin and binds lookup to the authenticated numeric subject. | 05_Data_Mapping.md, step 0 |
 | 2 | Content type | Content-Type | No | N/A — no request body | No JSON request body is sent. | 05_Data_Mapping.md, step 1 |
 
 ## Path parameters
 
 | No | Logical name | Physical name | Type | Required | Min | Max | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|
-| 1 | Operation ID | operation_id | DISCREPANCY: int64 in API row; UUID in shared convention, Operation.id and AC diagrams | Yes | N/A — not specified | N/A — not specified | Path segment; scalar format unresolved | N/A — type conflict | N/A | Identifies the Operation to retrieve. A canonical accepted type must be approved before implementation. | 05_Data_Mapping.md, steps 1.1–1.2 |
+| 1 | Operation ID | operation_id | UUID | Yes | N/A | N/A | UUID path segment | UUID | N/A | Identifies the owner-bound notification Operation to retrieve in the current Study implementation. | 05_Data_Mapping.md, steps 1.1–1.2 |
 
 ## Query parameters
 
@@ -52,7 +52,7 @@ Host: api.example.test
 Authorization: Bearer <token>
 ~~~
 
-The route placeholder is not a concrete ID example. Replace it only after the owner resolves the int64/UUID conflict.
+The route placeholder is not a concrete ID example. Current API #18 source and the reconciled catalog use UUID.
 
 ---
 ## Phụ lục đối chiếu template Markdown

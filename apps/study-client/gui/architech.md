@@ -165,23 +165,22 @@ Dùng Angular Signals cho trạng thái giao diện đồng bộ tại chỗ và
 
 ## Trạng thái source ST-02
 
-`/student/profile` is registered inside the Student route group and renders the
-ST-02 Stitch-derived sign-in gate through `StudentLayout`'s `custom` shell mode.
-Route metadata assigns API #04, but the page makes no request because there is
-no Student session/token provider and the authenticated profile-ready design is
-still blocked. The edit action remains disabled. The host-scoped page stylesheet
-is registered in `angular.json`; this does not add an auth guard or prove browser,
+`/student/profile` is registered inside the Student route group and uses
+`StudentLayout`'s `custom` shell mode. `ST02ProfileService` calls API #04 through
+the Student Bearer adapter; the page renders loading/error/retry and only the
+response-backed `full_name` and `email`. Avatar rendering, `role`/`status`
+authorization claims and edit behavior remain gated. The host-scoped page
+stylesheet is registered in `angular.json`; this does not prove browser, live
 API or database runtime.
 
 ## Trạng thái source ST-03
 
 `/student/profile/edit` is registered inside the Student route group and renders
-the G-03 gate. Route metadata assigns API #04/#13/#14, but no HTTP caller is
-enabled because Student session/token support and the profile/avatar contract
-remain unresolved. Upload/save and phone/bio controls stay disabled; the
-full-name field is local-only and form submission is prevented. The page uses
-host-scoped CSS registered in `angular.json`; route metadata does not establish
-an API request or authenticated browser runtime.
+the G-03 mutation gate. `ST03ProfileService` calls API #04 through the Student
+Bearer adapter and binds only `full_name`/`email` as read-only values. APIs #13
+and #14 have route metadata only; upload/save, phone/bio and form submission
+remain disabled. The page uses host-scoped CSS registered in `angular.json`;
+source wiring does not establish authenticated browser or live API runtime.
 
 ## Trạng thái source ST-04
 

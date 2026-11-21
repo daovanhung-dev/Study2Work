@@ -1,18 +1,111 @@
 <main class="mentor-page me07-page">
-  <study-mentor-page-header [title]="contentId() ? 'Chỉnh sửa nội dung' : 'Tạo nội dung bài giảng'" description="Editor dùng đúng content_type, title và JSON payload mà API #50/#51 hiện nhận." apiLabel="#49 · #50 · #51" />
-  @if (invalidRoute()) { <section class="mentor-card mentor-state mentor-state--error" role="alert">Course ID không hợp lệ.</section> }
-  @else if (loading()) { <section class="mentor-card mentor-state">Đang tải nội dung…</section> }
-  @else {
-    <form class="mentor-card me07-editor" (submit)="save($event, title.value, contentType.value, payload.value)">
-      <div class="me07-editor-top"><span class="mentor-status">Course #{{ courseId() }}</span>@if (content(); as item) { <span class="mentor-meta">Content #{{ item.id }} · {{ item.status }}</span> }</div>
-      @if (error()) { <p class="mentor-alert" role="alert">{{ error() }}</p> }
-      @if (success()) { <p class="mentor-success" role="status">{{ success() }}</p> }
-      <label for="me07-title">Tiêu đề nội dung</label><input #title id="me07-title" type="text" required [value]="content()?.title ?? ''" [disabled]="saving()" />
-      <label for="me07-type">Loại nội dung</label><input #contentType id="me07-type" type="text" required [value]="content()?.content_type ?? ''" [disabled]="saving()" />
-      <div class="me07-payload-heading"><label for="me07-payload">Payload (JSON object)</label><span class="mentor-meta">Không áp đặt subtype chưa có trong API source.</span></div>
-      <textarea #payload id="me07-payload" rows="14" spellcheck="false" [value]="payloadValue()" [disabled]="saving()"></textarea>
-      <div class="mentor-notice"><strong>Mapping hiện hành</strong><span>API #50 nhận course_id/content_type/title/payload; #51 nhận content_type/title/payload. Trường order/version trong prototype không thuộc request hiện tại.</span></div>
-      <div class="me07-actions"><button class="mentor-button mentor-button--light" type="button" (click)="backToTree()">Quay lại cây nội dung</button><button class="mentor-button" type="submit" [disabled]="saving()">{{ saving() ? 'Đang lưu…' : 'Lưu nội dung' }}</button></div>
-    </form>
+  <study-mentor-page-header
+    [title]="contentId() ? 'Tạo và chỉnh sửa nội dung bài giảng' : 'Tạo nội dung bài giảng'"
+    description="Nội dung hiện có được tải từ API #49. Các trường ghi vẫn khóa trong khi schema payload chưa được duyệt."
+    apiLabel="#49 · #50 · #51"
+  />
+
+  @if (invalidRoute()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Đường dẫn nội dung không hợp lệ</h2>
+      <p>Course ID và Content ID phải là số nguyên dương trong phạm vi hệ thống.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/courses">Về danh sách khóa học</a>
+    </section>
+  } @else if (loading()) {
+    <section class="mentor-card mentor-state" role="status" aria-live="polite">
+      Đang tải nội dung…
+    </section>
+  } @else if (notFound()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Không tìm thấy khóa học hoặc nội dung</h2>
+      <p>Đường dẫn không trỏ tới nội dung hiện có trong khóa học này.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/courses">Về danh sách khóa học</a>
+    </section>
+  } @else if (forbidden()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Không có quyền truy cập</h2>
+      <p>API #49 chỉ trả nội dung của khóa học Mentor trực tiếp sở hữu.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/courses">Về danh sách khóa học</a>
+    </section>
+  } @else if (error()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Chưa thể tải dữ liệu nội dung</h2>
+      <p>{{ error() }}</p>
+      <button class="mentor-button mentor-button--light" type="button" (click)="load()">Thử tải lại</button>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/courses">Về danh sách khóa học</a>
+    </section>
+  } @else {
+    <div class="me07-layout">
+      <form class="mentor-card me07-editor" (submit)="save($event)">
+        <div class="me07-editor-top">
+          <span class="mentor-status">Course #{{ courseId() }}</span>
+          @if (content(); as item) {
+            <span class="mentor-meta">Content #{{ item.id }} · {{ item.status }}</span>
+          }
+        </div>
+
+        @if (error()) {
+          <p class="mentor-alert" role="alert">{{ error() }}</p>
+        }
+
+        <label for="me07-title">Tiêu đề nội dung <span aria-hidden="true">*</span></label>
+        <input id="me07-title" type="text" required readonly [value]="content()?.title ?? ''" />
+
+        <div class="me07-fields">
+          <div class="me07-field">
+            <label for="me07-type">Loại nội dung <span aria-hidden="true">*</span></label>
+            <input id="me07-type" type="text" required readonly [value]="content()?.content_type ?? ''" />
+          </div>
+          @if (content(); as item) {
+            <div class="me07-field">
+              <label for="me07-order">Thứ tự hiển thị</label>
+              <input id="me07-order" type="number" readonly [value]="item.order" />
+            </div>
+          } @else {
+            <p class="mentor-meta">API #50 tự gán thứ tự cho mục gốc.</p>
+          }
+        </div>
+
+        <section class="me07-locked-editor" role="note" aria-labelledby="me07-editor-title">
+          <div class="me07-lock-icon" aria-hidden="true">↻</div>
+          <h2 id="me07-editor-title">Trình soạn thảo đang khóa</h2>
+          <p>Schema payload theo loại nội dung chưa được xác nhận. Khung soạn thảo và tài nguyên đa phương tiện chưa thể lưu.</p>
+          <span>Chỉ hiển thị các trường được API #49 trả về.</span>
+        </section>
+
+        <div class="mentor-notice" role="note">
+          <strong>Chưa thể lưu nội dung</strong>
+          <span>#50/#51 nhận `content_type`, `title` và `payload`. API #51 chưa có body được khai báo trong catalog; bản đồ payload/order/versioning vẫn cần được duyệt.</span>
+        </div>
+
+        <div class="me07-actions">
+          <button class="mentor-button mentor-button--light" type="button" (click)="backToTree()">Hủy thay đổi</button>
+          <button class="mentor-button" type="submit" disabled aria-disabled="true" title="Schema payload và request ghi chưa được duyệt">Lưu bản nháp</button>
+        </div>
+      </form>
+
+      <aside class="me07-sidebar" aria-label="Quy chuẩn dữ liệu và trạng thái API">
+        <section class="mentor-card me07-side-card">
+          <h2>Quy chuẩn dữ liệu</h2>
+          <div class="mentor-notice" role="note">
+            <strong>Quyền truy cập</strong>
+            <span>API #49 xác thực vai trò Mentor và quyền sở hữu khóa học trước khi trả dữ liệu.</span>
+          </div>
+          <ul>
+            <li>API #49 trả Content hiện có cùng `parent_id` và `order`.</li>
+            <li>API #50 tạo mục gốc ở trạng thái `PENDING_REVIEW` và tự gán thứ tự.</li>
+            <li>API #51 lưu snapshot rồi cập nhật `content_type`, `title`, `payload`; body chưa được catalog xác nhận.</li>
+          </ul>
+        </section>
+
+        <section class="mentor-card me07-side-card" aria-labelledby="me07-api-state">
+          <div class="me07-state-heading">
+            <h2 id="me07-api-state">Trạng thái tích hợp</h2>
+            <span class="mentor-status">Mutation đang khóa</span>
+          </div>
+          <p>#49 tải dữ liệu để xem và đối chiếu. Màn hình chưa gọi #50 hoặc #51.</p>
+        </section>
+      </aside>
+    </div>
   }
 </main>

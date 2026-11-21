@@ -5,28 +5,33 @@
   </nav>
   <header class="api-heading">
     <div>
-      <p class="api-eyebrow">ST-19 · Bài đã nộp</p>
+      <p class="api-eyebrow">Bài đã nộp</p>
       <h1>Chi tiết bài nộp</h1>
-      <p>Biên nhận, tệp, điểm và phản hồi nếu API #36 trả về.</p>
+      <p>Biên nhận và phản hồi cho bài tập của bạn.</p>
     </div>
-    @if (submission()) {
-      <span class="api-pill">{{ submission()?.status }}</span>
+    @if (submission(); as item) {
+      <span class="api-pill">{{ submissionStatusLabel(item.status) }}</span>
     }
   </header>
   @if (loading()) {
     <section class="api-message" role="status"><strong>Đang tải bài nộp…</strong></section>
   }
   @if (error()) {
-    <section class="api-error" role="alert">{{ error() }}</section>
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      <button class="api-button secondary" type="button" (click)="retrySubmission()">
+        Tải lại bài nộp
+      </button>
+    </section>
   }
   @if (!loading() && !error() && submission(); as item) {
     <section class="api-stack">
       <article class="api-card">
-        <h2>Bài nộp #{{ item.id }}</h2>
+        <h2>Biên nhận bài nộp</h2>
         <dl class="submission-meta">
           <div>
             <dt>Trạng thái</dt>
-            <dd>{{ item.status }}</dd>
+            <dd>{{ submissionStatusLabel(item.status) }}</dd>
           </div>
           <div>
             <dt>Đã nộp</dt>
@@ -34,14 +39,26 @@
           </div>
           <div>
             <dt>Điểm</dt>
-            <dd>{{ item.score ?? 'Chưa có điểm' }}</dd>
+            <dd>
+              @if (isGraded(item.status)) {
+                {{ item.score ?? 'Chưa có điểm cho bài nộp này' }}
+              } @else {
+                Chưa có điểm cho bài nộp này
+              }
+            </dd>
           </div>
           <div>
             <dt>Bài tập</dt>
-            <dd>#{{ item.assignment_id }}</dd>
+            <dd>Bài tập</dd>
           </div>
         </dl>
       </article>
+      @if (!isGraded(item.status)) {
+        <section class="api-message" role="status">
+          <strong>Trạng thái: {{ submissionStatusLabel(item.status) }}</strong>
+          <span>Điểm và phản hồi sẽ hiển thị sau khi bài được chấm.</span>
+        </section>
+      }
       @if (item.content) {
         <article class="api-card">
           <h2>Nội dung đã nộp</h2>
@@ -55,18 +72,13 @@
             @for (file of item.files; track file.id) {
               <li>
                 <strong>{{ file.name }}</strong>
-                <p class="api-meta">
-                  {{ file.content_type }} · {{ file.size_bytes }} bytes · {{ file.status }}
-                </p>
               </li>
             }
           </ul>
-          <p class="api-muted">
-            URL không được mở trực tiếp vì policy truy cập tệp chưa được xác nhận.
-          </p>
+          <p class="api-muted">Liên kết tải tệp hiện chưa khả dụng.</p>
         </article>
       }
-      @if (item.feedback) {
+      @if (isGraded(item.status) && item.feedback) {
         <article class="api-card">
           <h2>Phản hồi</h2>
           <p class="submission-content">{{ item.feedback }}</p>
@@ -75,10 +87,15 @@
       @if (!item.content && !item.files.length && !item.feedback) {
         <section class="api-message">
           <div>
-            <strong>API #36 không trả nội dung, tệp hoặc phản hồi cho submission này.</strong>
+            <strong>Chưa có nội dung, tệp hoặc nhận xét để hiển thị.</strong>
           </div>
         </section>
       }
+      <div class="api-actions">
+        <a class="api-button secondary" [routerLink]="['/student/assignments', item.assignment_id]">
+          Xem chi tiết bài tập
+        </a>
+      </div>
     </section>
   }
 </main>

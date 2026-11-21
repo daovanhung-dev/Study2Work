@@ -1,5 +1,7 @@
 # AD-01 — API Integration
 
+> **Current source (2026-11-20):** AD-01 has no API caller. The client descriptor marks API #101 `UNWIRED`; `AD01_API_BOUNDARY` keeps report metrics, date controls and refresh unavailable. Admin authentication is provided by the enclosing AdminLayout session via #03, but that does not establish report-specific authorization for #101.
+
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
 ## 1. API usage matrix
@@ -11,7 +13,7 @@
 
 - API refs trong inventory: #101
 - Orchestration/data notes: GET #101 với from/to; không tự bịa KPI từ bảng nếu BE chưa trả.
-- BE/source status và gate: **D**; **BLOCK:** #101 chưa có route/module/query/model/test; thiếu Admin self-profile endpoint; KPI/date semantics và status/audit sources chưa xác nhận; Study Web UNWIRED
+- BE/source status và gate: **D / UNWIRED**; #101 has no route/module/query/model/test. Admin identity is available from the #03 login response in tab memory, but report permission, KPI/date semantics and audit/service-status sources remain unconfirmed.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Contract API #101 — expected behavior

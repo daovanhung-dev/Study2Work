@@ -7,10 +7,11 @@ import {
   type ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { SH03RegistrationService } from '../data-access/sh03-registration.service';
+import { SH04RegistrationHandoffService } from '../../SH04/data-access/sh04-registration-handoff.service';
 import type {
   SH03RegistrationField,
   SH03RegistrationFieldErrors,
@@ -27,6 +28,8 @@ import type {
 export class SH03Page {
   private readonly registrationService = inject(SH03RegistrationService);
   private readonly element = inject(ElementRef<HTMLElement>);
+  private readonly router = inject(Router);
+  private readonly verificationHandoff = inject(SH04RegistrationHandoffService);
 
   readonly registrationForm = new FormGroup({
     fullName: new FormControl('', {
@@ -45,6 +48,9 @@ export class SH03Page {
 
   readonly isSubmitting = signal(false);
   readonly registrationCreated = signal(false);
+  readonly registrationResult = signal<SH03RegistrationResult | null>(null);
+  readonly verificationHandoffError = signal(false);
+  readonly isOpeningVerification = signal(false);
   readonly attemptedSubmit = signal(false);
   readonly generalError = signal<string | null>(null);
   readonly fieldErrors = signal<SH03RegistrationFieldErrors>({});
@@ -82,6 +88,7 @@ export class SH03Page {
             response.businessCode === 'DESIGN_RESOURCE_CREATED' &&
             isRegistrationResult(response.data)
           ) {
+            this.registrationResult.set(response.data);
             this.registrationCreated.set(true);
             this.registrationForm.controls.password.reset('');
             return;
@@ -126,6 +133,33 @@ export class SH03Page {
       return next;
     });
     this.generalError.set(null);
+  }
+
+  continueToVerification(): void {
+    const result = this.registrationResult();
+    if (!result || this.verificationHandoffError() || this.isOpeningVerification()) return;
+
+    const stored = this.verificationHandoff.set({ userId: result.id, email: result.email });
+    if (!stored) {
+      this.verificationHandoffError.set(true);
+      return;
+    }
+
+    this.isOpeningVerification.set(true);
+    void this.router
+      .navigateByUrl('/register/verification')
+      .then((navigated) => {
+        this.isOpeningVerification.set(false);
+        if (!navigated) {
+          this.verificationHandoff.clear();
+          this.verificationHandoffError.set(true);
+        }
+      })
+      .catch(() => {
+        this.isOpeningVerification.set(false);
+        this.verificationHandoff.clear();
+        this.verificationHandoffError.set(true);
+      });
   }
 
   private handleRequestError(error: unknown): void {
@@ -217,7 +251,7 @@ function isRegistrationResult(value: unknown): value is SH03RegistrationResult {
 
   return (
     typeof id === 'number' &&
-    Number.isInteger(id) &&
+    Number.isSafeInteger(id) &&
     id > 0 &&
     typeof email === 'string' &&
     email.trim().length > 0

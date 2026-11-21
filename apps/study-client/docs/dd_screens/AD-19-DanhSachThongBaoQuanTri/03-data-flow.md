@@ -1,6 +1,6 @@
 # AD-19 — Data Flow & State
 
-> Current Angular source update (2026-11-16): AD19Page maps local Page<Notification> items and pagination into loading/loaded-empty/loaded-rows/error UI states. It sends status/channel/page only and renders fields returned by #92; search, metrics, recipient, and send-time fields remain unavailable. FE specs pass 6/6; API fake-session tests pass 20/20. This is not live DB/browser evidence; direct catalog response discrepancy remains.
+> Current Angular source update (2026-11-20): AD19Page maps local Page<Notification> items and pagination into loading/loaded-empty/loaded-rows/error UI states. It sends status/channel/page only and renders fields returned by #92; search, metrics, recipient, and send-time fields remain unavailable. The loaded-empty state now repeats the applied `status/channel/page` query when its manual refresh button is activated, then displays the loading row. Earlier FE specs were recorded as 6/6 and API fake-session tests as 20/20. This is not live DB/browser evidence; direct catalog response discrepancy remains. No checks were run for this continuation.
 
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
@@ -46,7 +46,7 @@
 | Empty / page ngoài range | Không định nghĩa response cụ thể. | HTTP 200 Page rỗng; message “No notifications found.”, total_pages=0 khi total=0. |
 | Side effect | GET/read. | Hai read queries; không commit, không gọi delivery provider. |
 
-No application retry, request deduplication, local cache, timeout value or client-side refresh policy is present in the checked-in Study Web source. Do not add one based on the mockup.
+Current Angular source provides manual refresh in the loaded-empty state and repeats the applied `status/channel/page` query through #92. No automatic retry, request deduplication, local cache, or timeout value is present; the Stitch prototype's timer does not establish network behavior.
 
 ### Trích từ DD nguồn: E. Ma trận trạng thái và điều hướng
 
@@ -91,3 +91,8 @@ No application retry, request deduplication, local cache, timeout value or clien
 
 ## 8. Trace
 [Events](02-events.md) · [API](04-api-integration.md) · [Rules](05-business-rules.md)
+
+### Current-source addendum — 2026-11-21
+
+- The #92 Page guard validates response structure, query filters, page echo, fixed size 20 and safe total-page arithmetic without assuming COUNT and LIST are a single snapshot.
+- AD19Page computes expected returned rows from page/size/total. A mismatch preserves notification rows, shows the recovery notice, hides stale totals and pagination, and blocks page changes until refresh. Empty out-of-range pages retain a page-1 recovery action; matching empty pages remain empty.

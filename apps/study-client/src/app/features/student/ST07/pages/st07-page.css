@@ -31,8 +31,8 @@ study-st07-page .enrollment-result h1 {
 
 study-st07-page .enrollment-result__card {
   display: flex;
-  width: min(100%, 960px);
-  min-height: 500px;
+  width: min(100%, 672px);
+  min-height: 390px;
   align-items: center;
   flex-direction: column;
   justify-content: center;
@@ -54,8 +54,15 @@ study-st07-page .enrollment-result__icon {
   border-radius: 50%;
   color: var(--ocean-primary);
   background: var(--ocean-soft);
-  font-size: 44px;
-  font-weight: 700;
+}
+
+study-st07-page .enrollment-result__icon svg {
+  width: 44px;
+  height: 44px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
 }
 
 study-st07-page .enrollment-result__card h2 {

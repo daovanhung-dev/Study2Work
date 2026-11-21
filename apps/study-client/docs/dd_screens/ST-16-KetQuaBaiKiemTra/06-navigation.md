@@ -2,15 +2,15 @@
 
 ## 1. Route definition
 - Current route in inventory: `/student/attempts/:attemptId/result`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `attemptId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: current Study Client route/page; deployed runtime is not verified.
+- Route params/types: `attemptId` is parsed as a positive int64-compatible ID; invalid IDs show an error and do not issue #32.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [ST-15](../ST-15-XacNhanNopBaiKiemTra/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [ST-15](../ST-15-XacNhanNopBaiKiemTra/00-overview.md) | Accepted #31 response | Same `attemptId` | Current ST-15 navigates after validating the submitted attempt. |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
@@ -20,8 +20,8 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: current route load calls #32; reads cancel when the route ID changes.
+- Invalid/missing ID: the page shows a validation error and offers retry after read errors; #32 enforces owner-scoped lookup.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram

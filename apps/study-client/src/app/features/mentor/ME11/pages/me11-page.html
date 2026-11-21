@@ -2,8 +2,48 @@
   <study-mentor-page-header title="Hộp thư hỗ trợ học viên" description="API #58 trả request, thông tin Student và toàn bộ thread cho course được sở hữu trực tiếp." apiLabel="#58 · GET" />
   <form class="mentor-card me11-filters" (submit)="$event.preventDefault(); apply(courseId.value, status.value)"><div><label for="me11-course">Course ID</label><input #courseId id="me11-course" inputmode="numeric" [value]="courseFilter()" placeholder="Tất cả khóa học" /></div><div><label for="me11-status">Status (khớp chính xác)</label><input #status id="me11-status" [value]="statusFilter()" placeholder="Để trống để bỏ lọc" /></div><button class="mentor-button" type="submit">Lọc hộp thư</button><button class="mentor-button mentor-button--light" type="button" (click)="apply('', '')">Xóa bộ lọc</button></form>
   <p class="me11-note">API #58 không trả unread count, SLA, course title hoặc pagination; màn hình không suy diễn các chỉ số đó.</p>
-  @if (loading()) { <section class="mentor-card mentor-state">Đang tải yêu cầu hỗ trợ…</section> }
-  @else if (error()) { <section class="mentor-card mentor-state mentor-state--error" role="alert">{{ error() }} <button class="mentor-button mentor-button--light" type="button" (click)="load()">Tải lại</button></section> }
+  @if (loading()) { <section class="mentor-card mentor-state" role="status" aria-live="polite">Đang tải yêu cầu hỗ trợ…</section> }
+  @else if (forbidden()) { <section class="mentor-card mentor-state mentor-state--error" role="alert"><h2>Không có quyền xem hộp thư này</h2><p>API #58 chỉ trả request trong phạm vi khóa học Mentor trực tiếp sở hữu.</p></section> }
+  @else if (error()) { <section class="mentor-card mentor-state mentor-state--error" role="alert"><p>{{ error() }}</p><button class="mentor-button mentor-button--light" type="button" (click)="load()">Tải lại</button></section> }
   @else if (!requests().length) { <section class="mentor-card me11-empty"><span aria-hidden="true">✉</span><h2>Chưa có yêu cầu hỗ trợ</h2><p>API #58 không trả request phù hợp với bộ lọc hiện tại.</p></section> }
-  @else { <section class="me11-request-list" aria-label="Danh sách yêu cầu hỗ trợ">@for (request of requests(); track $index) { <article class="mentor-card me11-request"><div class="me11-request-top"><div class="me11-student"><span class="me11-avatar" aria-hidden="true">{{ request.student.full_name.slice(0,1) }}</span><div><strong>{{ request.student.full_name }}</strong><span class="mentor-meta">Yêu cầu #{{ request.id }} · Course #{{ request.course_id }}</span></div></div><span class="mentor-status">{{ request.status }}</span></div><p class="me11-preview">{{ lastMessage(request) }}</p><div class="me11-request-bottom"><span class="mentor-meta">Tạo {{ request.created_at | date:'medium' }} · {{ request.messages.length }} tin nhắn</span>@if (safeId(request.id); as id) { <a class="mentor-button mentor-button--small" [routerLink]="['/mentor/support', id]">Mở trao đổi</a> }</div></article> }</section> }
+  @else {
+    <section class="me11-request-list" aria-label="Danh sách yêu cầu hỗ trợ">
+      @for (request of requests(); track request.id) {
+        <article class="mentor-card me11-request">
+          <div class="me11-request-top">
+            <div class="me11-student">
+              <span class="me11-avatar" aria-hidden="true">
+                @if (studentAvatarUrl(request); as avatarUrl) {
+                  <img
+                    [src]="avatarUrl"
+                    alt=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                    (error)="markStudentAvatarFailed(request.student.id)"
+                  />
+                }
+                <span>{{ studentInitials(request) }}</span>
+              </span>
+              <div>
+                <strong>{{ request.student.full_name }}</strong>
+                <span class="mentor-meta">Yêu cầu #{{ request.id }} · Course #{{ request.course_id }}</span>
+              </div>
+            </div>
+            <span class="mentor-status">{{ request.status }}</span>
+          </div>
+          <p class="me11-preview">{{ lastMessage(request) }}</p>
+          <div class="me11-request-bottom">
+            <span class="mentor-meta">Tạo {{ request.created_at | date:'medium' }} · {{ request.messages.length }} tin nhắn</span>
+            @if (safeId(request.id); as id) {
+              <a
+                class="mentor-button mentor-button--light"
+                [attr.aria-label]="'Mở trao đổi yêu cầu #' + request.id"
+                [routerLink]="['/mentor/support', id]"
+              >Mở trao đổi</a>
+            }
+          </div>
+        </article>
+      }
+    </section>
+  }
 </main>

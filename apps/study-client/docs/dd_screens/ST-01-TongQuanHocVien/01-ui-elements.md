@@ -1,5 +1,9 @@
 # ST-01 — UI Elements
 
+## Current-source reconciliation — 2026-11-20
+
+The course request and response guard require `enrollment_status=ACTIVE` for every row displayed by ST-01. The current Angular badge translates that validated state to “Đang hoạt động”; it does not alter the API value. The DD element table below describes the original static mockup and is not evidence of current runtime behavior.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.

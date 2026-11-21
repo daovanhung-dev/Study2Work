@@ -4,7 +4,7 @@ Trạng thái: API decision đã chốt cho implementation local. DD vẫn `Draf
 
 | ID | Câu hỏi | Bằng chứng hiện có | Ảnh hưởng | Trạng thái |
 |---|---|---|---|---|
-| Q1 | `content:int64` được chuyển thành kiểu nào khi lưu/trả? | Người dùng chốt request giữ int64, lưu `str(content)` trong `lessons.content TEXT` và response `content:string`; test HTTP xác minh giá trị thập phân. | Request, persistence và response mapping. | RESOLVED_BY_USER; SOURCE_BACKED |
+| Q1 | Contract `content` là số hay văn bản? | T041 ngày 2026-11-19 chốt request `content:string` chứa Markdown, lưu/trả nguyên văn trong `lessons.content TEXT`; quyết định int64-to-decimal ngày 2026-10-25 được thay thế. | Request, persistence và response mapping. | RESOLVED_BY_USER; SOURCE_BACKED; HISTORICAL_TESTS_NOT_RERUN |
 | Q2 | `asset_refs` wire key/format và order là gì? | JSON string chứa ordered array signed int64 IDs; `[]` hợp lệ; duplicate reject; response giữ request order. | Parse, query và response assets. | RESOLVED_BY_USER; SOURCE_BACKED |
 | Q3 | API #34 lưu metadata UploadAsset ở đâu? | Source API #34 và migration artifact dùng BIGINT `uploads`, status `UPLOADED`; live DB chưa xác minh. | API #47 metadata resolver. | SOURCE_BACKED; LIVE_SCHEMA_NOT_VERIFIED |
 | Q4 | API #47 có ghi `resources` hoặc thay đổi `uploads` không? | Người dùng chốt chỉ resolve `uploads` metadata, không ghi resources hoặc mutate uploads. | Asset persistence boundary. | RESOLVED_BY_USER; SOURCE_BACKED |
@@ -13,7 +13,7 @@ Trạng thái: API decision đã chốt cho implementation local. DD vẫn `Draf
 | Q7 | Target schema đang chạy là legacy BIGINT hay V1-PILOT UUID/versioned? | Legacy `DB.sql`/migration 004 có `courses`, `lessons`, `uploads` BIGINT; V1-PILOT khác cấu trúc; không có live metadata trong task. | Runtime database compatibility/deployment. | NOT_VERIFIED; KEEPS_DD_DRAFT |
 | Q8 | Lesson mới dùng trạng thái nào? | Người dùng chốt `PUBLISHED`; source INSERT ghi trạng thái tường minh và response lấy từ returned row. | INSERT và response. | RESOLVED_BY_USER; SOURCE_BACKED |
 | Q9 | Course cần status cụ thể không? | Người dùng chốt không lọc status; test xác minh course `DRAFT` được phép nếu thuộc Mentor. | Predicate/validation. | RESOLVED_BY_USER; SOURCE_BACKED |
-| Q10 | Response `content` có thể null/omit không? | Request content là required signed int64; runtime chuyển thành decimal string và response model yêu cầu string. | Response nullability. | RESOLVED_BY_USER; SOURCE_BACKED |
+| Q10 | Response `content` có thể null/omit không? | Request content là required string; runtime lưu/trả string và response model yêu cầu string; API #48 vẫn cho nullable khi đọc dữ liệu cũ. | Response nullability. | RESOLVED_BY_USER; SOURCE_BACKED |
 | Q11 | Timestamp có timezone semantics nào? | Runtime truyền `CURRENT_TIMESTAMP` cho cả hai cột bắt buộc theo legacy DDL; live database/session timezone chưa kiểm tra. | Database timestamp interpretation. | SOURCE_BACKED_EXPRESSION; LIVE_BEHAVIOR_NOT_VERIFIED |
 | Q12 | Error envelope dùng `data:null` hay object rỗng? | `app.core.responses.error_response` hiện serialize `data:null`; API #47 dùng helper hiện hành. | Error response shape. | SOURCE_BACKED |
 | Q13 | Asset thiếu/ngoài scope map về lỗi nào? | Người dùng chốt cùng generic 404; source trả `DESIGN_RESOURCE_NOT_FOUND` và không phân biệt nguyên nhân. | Asset enumeration/privacy behavior. | RESOLVED_BY_USER; SOURCE_BACKED |

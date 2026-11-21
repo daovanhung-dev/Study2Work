@@ -11,10 +11,10 @@ export class ST14AttemptService {
       pathParams: { quiz_id: quizId },
     });
   }
-  save(attemptId: string, questionId: number, choiceIds: number[] | null, answer: string) {
+  save(attemptId: string, questionId: number, choiceIds: number[] | null) {
     return this.api.request<StudentQuizAttempt>(STUDY_SERVER_APIS.API_030, {
       pathParams: { attempt_id: attemptId },
-      body: { question_id: questionId, choice_ids: choiceIds, answer },
+      body: { question_id: questionId, choice_ids: choiceIds },
     });
   }
 }

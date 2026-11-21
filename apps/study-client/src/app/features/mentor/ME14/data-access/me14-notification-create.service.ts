@@ -7,7 +7,7 @@ import type { MentorNotificationOperation } from '../../shared/models/mentor-api
 @Injectable({ providedIn: 'root' })
 export class ME14NotificationCreateService {
   private readonly api = inject(MentorApiService);
-  create(recipients: string, title: string, content: number, channels: string) {
+  create(recipients: string, title: string, content: string, channels: string) {
     return this.api.request<MentorNotificationOperation>(STUDY_SERVER_APIS.API_063, {
       body: { recipients, title, content, channels },
     });

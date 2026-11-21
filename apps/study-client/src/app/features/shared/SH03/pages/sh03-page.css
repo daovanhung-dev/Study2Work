@@ -181,6 +181,36 @@
   font-weight: 650;
 }
 
+.registration-result .verification-continue {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin: 4px 12px 4px 0;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--surface);
+  background: var(--ocean-primary);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.registration-result .verification-continue:hover {
+  background: var(--ocean-hover);
+}
+
+.registration-result .verification-continue:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.registration-result .verification-continue:focus-visible {
+  outline: 3px solid var(--ocean-primary);
+  outline-offset: 2px;
+}
+
 .registration-result a:focus-visible {
   outline: 3px solid var(--ocean-primary);
   outline-offset: 2px;

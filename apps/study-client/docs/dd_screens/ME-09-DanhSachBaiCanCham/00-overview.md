@@ -6,10 +6,15 @@
 | Module | Mentor |
 | Route | `/mentor/submissions` — route trong inventory, không phải xác nhận router runtime |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `DD BLOCKED` — the static specification is source-traced, but the row design, response contract approval, filter/search semantics and several API/schema decisions remain open.; **Implementation status:** `IMPLEMENTATION BLOCKED` — Study Web screen route/source is absent and the approved data/UI contract is incomplete.; **Runtime status:** `RUNTIME NOT VERIFIED` — no ME-09 Study Web runtime exists in the current checkout. API source and prior tests do not verify this screen at runtime. |
+| DD status | `DD BLOCKED` — list response cardinality and requested metadata remain unapproved; current implementation is PARTIAL / SOURCE_WIRED. Runtime `NOT VERIFIED`. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [ME-09.md](../../screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09.md), [ME-09_PLAN.md](../../screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_PLAN.md), [ME-09_markers.json](../../screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/ME-09_markers.json), [list_screen.md](../../list_screen.md) |
+
+## Current implementation update — 2026-11-20
+
+- ME-09 is route-wired and calls #54 with only source-supported `course_id`, exact `status`, and `page`; page size 20 is fixed by the backend. Query changes cancel stale HTTP reads; the page validates the success envelope/code, pagination metadata, Submission fields, dates, IDs, and file metadata before rendering.
+- It has loading/empty/ready/error-retry states and pagination. It displays only fields present in #54; assignment/course names, learner names, deadlines, and search are not synthesized. API DD still marks Page cardinality as DERIVED and needs approval. `screen_complete.md` remains 62.5% (UI 50%, UX 75%, logic 75%, API 50%); runtime is NOT VERIFIED.
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Lọc course/status, danh sách bài nộp có deadline/owner.
@@ -31,7 +36,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/empty/ready/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source behavior | ME09Page / ME09SubmissionsService | #54 source-wired; query cancellation and strict response/pagination validation; runtime NOT VERIFIED |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ME-09 source screen.png](../../screen_stitch/04_mentor/ME-09_danh-sach-bai-can-cham/screen.png))
@@ -71,7 +76,7 @@
 
 Expected behavior lấy từ [inventory ME-09](../../list_screen.md#L169), F09 và AC-23. Inventory yêu cầu lọc course/status, hiển thị danh sách bài nộp có deadline/owner và mở ME-10 bằng `submission_id`. AC-23 xác định luồng list → chọn submission → detail; [F09](../../list_screen.md#L277) tách thao tác chấm điểm và feedback trên ME-10.
 
-Current behavior lấy từ current source, asset và test source. `apps/study-client/` hiện có tài liệu/ảnh và ignored `dist`, nhưng không có editable source, `package.json`, feature router hay ME-09 route. Xem [Study Web context](../../../../../.agents/web-work/study/AGENTS.md) và [design target](../../../../../.agents/web-study/design.md); các tài liệu đó không chứng minh runtime.
+The previous source snapshot below said ME-09 had no editable Study Web source. That statement is historical and superseded by the current implementation update above. Current behavior is based on the page and service source; route/runtime is not independently verified.
 
 ### A.2. Điều kiện vào, dữ liệu và rời màn hình
 

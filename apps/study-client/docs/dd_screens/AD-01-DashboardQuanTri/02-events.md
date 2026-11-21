@@ -1,5 +1,7 @@
 # AD-01 — Events (đặc tả xử lý)
 
+> **Current source note (2026-11-20):** `/admin` renders AD01Page behind the role-checked, in-memory Admin session. There is no #101 caller. Date/refresh/audit controls are disabled, metrics and service states remain unavailable, and three shortcut cards use Angular routes. Event descriptions below that mention DOM IDs, timers or native anchors are historical mockup behavior.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

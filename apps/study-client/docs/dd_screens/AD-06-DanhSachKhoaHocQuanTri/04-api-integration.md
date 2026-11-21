@@ -65,3 +65,7 @@ API #73 catalog không liệt kê 404. Không có mutation, idempotency key ho�
 
 ## 4. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/05_admin/AD-06_danh-sach-khoa-hoc-quan-tri/AD-06.md)
+
+### Current client/API source — 2026-11-21
+
+AD06Page requires the exact #73 success code and validates the local Course Page shape, fixed size 20, requested-page echo and safe total_pages calculation. The page then detects COUNT/LIST row-count drift, preserves Course rows, suppresses stale total/page values and allows same-page retry. Empty out-of-range pages have a page-1 recovery action, including an empty collection requested at page > 1. No query/filter or backend behavior was added; direct catalog, permission, deleted visibility and live schema gaps remain.

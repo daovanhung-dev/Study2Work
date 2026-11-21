@@ -2,6 +2,22 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
+## Current caller status — 2026-11-21
+
+ST-01 independently calls source-backed #20 and #38 through the authenticated
+Student client. #20 returns `CourseSummaryPage` with ACTIVE enrollment rows,
+page size 20 and enrolled-time descending order; #38 returns the recorded
+`AchievementPage` ordered by award time and ID descending. The page validates
+their success envelope/business code, page shape and consumed fields, and
+offers per-widget retry. For separate COUNT/LIST reads on #20 and #38, the
+presentation layer compares returned item count with the count-derived
+expected rows for the requested page to avoid false empty copy and offers the
+existing retry on mismatch; the shared guards do not impose cardinality
+equality. #21 still returns `UserProfile`, and #43 still relies
+on `notification_recipients` absent from checked-in DDL, so neither is called.
+Focused/runtime verification remains outstanding; detailed design-time
+contracts below are preserved as expected behavior.
+
 ## Current caller status — 2026-11-17
 
 ST-01 calls #20 for ACTIVE courses and #38 for recorded achievements. It does
@@ -24,7 +40,7 @@ source status see [the screen inventory](../../list_screen.md) and
 
 - API refs trong inventory: #20, #21, #38, #43
 - Orchestration/data notes: Chỉ sau role STUDENT hợp lệ; load #20/#21; thành tích #38, thông báo #43 lazy/parallel.
-- BE/source status và gate: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #20/#21 Draft response UserProfile không biểu diễn Course/progress theo AC-13; nhánh EMPTY/HAS DATA cùng tới node render; #21 query/formula/merge, #38 award/projection/filter/page và #43 recipient/fields/order còn mở; API routes/modules/tests NOT_FOUND; AC-18 order lệch inventory widget độc lập; HTML endpoint paths sai, anchors chỉ là `#`; Study Web UNWIRED và visual target lệch design guide
+- BE/source status và gate (current source 2026-11-20): **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED.** #20 and #38 routes/callers are source-wired and their current projections are checked by ST-01. #20 source returns a paged enrollment/course projection instead of catalog `UserProfile`; #21 route exists but returns `UserProfile`, so it cannot supply progress; #43 remains `SOURCE_ONLY` for this screen because its query depends on `notification_recipients`, absent from checked-in DDL. Award producer/rules, AC-13 empty branch, AC-18 ordering, #43 recipient/order contract and visual fidelity remain open. The no-route/UNWIRED wording in the older source-status excerpt is a historical snapshot, not current behavior.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: A.2. Expected behavior — inventory, AC và API catalog
@@ -40,10 +56,10 @@ source status see [the screen inventory](../../list_screen.md) and
 
 | API | Request theo catalog | Response / statuses theo catalog | Current source và điểm chưa chốt |
 |---|---|---|---|
-| #20 | `GET /api/v1/users/me/courses`; Student Bearer; `status?:string`, `page?:int32`; body không khai báo. | `ApiEnvelope<UserProfile>`; 200 `DESIGN_RESOURCE_RETRIEVED`; 401/403/422/500 theo catalog. | `NOT_FOUND` route/module/query/test. Draft Q-20-01…05: catalog UserProfile khác danh sách Course của AC-13; status predicate/enum, page semantics, empty wire shape và JWT subject → Enrollment ownership chưa xác nhận. |
-| #21 | `GET /api/v1/users/me/progress`; Student Bearer; query ghi `course_id list hoặc aggregate?:string`; body không khai báo. | `ApiEnvelope<UserProfile>`; 200 `DESIGN_RESOURCE_RETRIEVED`; 401/403/500. | `NOT_FOUND` route/module/query/test. Draft Q-21-01…05: selector grammar, nguồn/công thức progress, response schema/merge key, user binding và no-enrollment/no-progress shape chưa chốt. |
-| #38 | `GET /api/v1/users/me/achievements`; Student Bearer; `course_id?:int64`; body không khai báo. | `ApiEnvelope<Page<Achievement>>`; catalog fields `id`, `code`, `title`, `awarded_at`, `course_id?`; 200/401/403/500. | `NOT_FOUND` route/module/query/test. Draft Q-01…06 về award criteria, projection/source, filter/access, pagination/order/empty và query validation. Không có contract cho certificate, proof, KPI hoặc signature. |
-| #43 | `GET /api/v1/users/me/notifications`; Student Bearer; `unread_only?:boolean`, `page?:int32`; body không khai báo. | `ApiEnvelope<Page<Notification>>`; 200/401/403/500. | `NOT_FOUND` route/module/query/test. Draft Q-43-01…07: recipient/broadcast, channels/status, read timestamps, pagination/order, timezone/null behavior và error envelope chưa được chốt. |
+| #20 | `GET /api/v1/users/me/courses`; Student Bearer; `status?:string`, `page?:int32`; body không khai báo. | Catalog: `ApiEnvelope<UserProfile>`; 200 `DESIGN_RESOURCE_RETRIEVED`; 401/403/422/500. | Current route/view/query/model exist; authenticated owner-scoped `CourseSummaryPage`, fixed page size 20, enrollment-time/ID descending. ST-01 sends `status=ACTIVE&page=1` and validates the page projection. Catalog-vs-source and AC-13 response/empty discrepancies remain. |
+| #21 | `GET /api/v1/users/me/progress`; Student Bearer; query ghi `course_id list hoặc aggregate?:string`; body không khai báo. | Catalog: `ApiEnvelope<UserProfile>`; 200 `DESIGN_RESOURCE_RETRIEVED`; 401/403/500. | Current route/view/query/model exist but return `UserProfile` only. ST-01 does not call it as it supplies no progress DTO, merge key, formula or aggregate result. Selector, identity and no-progress semantics remain unresolved. |
+| #38 | `GET /api/v1/users/me/achievements`; Student Bearer; `course_id?:int64`; body không khai báo. | Catalog: `ApiEnvelope<Page<Achievement>>`; fields `id`, `code`, `title`, `awarded_at`, `course_id?`; 200/401/403/500. | Current route/view/query/model exist; returns recorded owner-scoped achievements ordered by award time and ID descending. ST-01 validates the projection/page. Award producer/rules, filter/access and catalog-vs-source pagination/empty semantics remain open; no contract supports certificate, proof, KPI or signature. |
+| #43 | `GET /api/v1/users/me/notifications`; Student Bearer; `unread_only?:boolean`, `page?:int32`; body không khai báo. | Catalog: `ApiEnvelope<Page<Notification>>`; 200/401/403/500. | Source query/module exists and depends on `notification_recipients`, absent from checked-in DDL; client descriptor is not usable by ST-01 (`SOURCE_ONLY`), so no caller is made. Recipient/broadcast, channels/status, read timestamps, ordering, timezone and error-envelope behavior remain unresolved. |
 
 Tài liệu từng API: [#20](../../../../study-server/docs/dd/20_users_me_courses/02_Overview.md) / [questions](../../../../study-server/docs/dd/20_users_me_courses/OPEN_QUESTIONS.md), [#21](../../../../study-server/docs/dd/21_users_me_progress/02_Overview.md) / [questions](../../../../study-server/docs/dd/21_users_me_progress/OPEN_QUESTIONS.md), [#38](../../../../study-server/docs/dd/38_users_me_achievements/02_Overview.md) / [questions](../../../../study-server/docs/dd/38_users_me_achievements/OPEN_QUESTIONS.md), [#43](../../../../study-server/docs/dd/43_users_me_notifications/02_Overview.md) / [questions](../../../../study-server/docs/dd/43_users_me_notifications/OPEN_QUESTIONS.md). DDL/ERD là design evidence, không phải live schema proof.
 

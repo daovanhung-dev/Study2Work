@@ -1,5 +1,7 @@
 # SH-01 — Events (đặc tả xử lý)
 
+> **Current-source note (2026-11-21):** SH01 is routed at `/`; #05/#06 public requests run independently. Response handlers validate the success code, full item projection and current pagination; malformed items use region-specific error/retry states and valid #06 rows render only when `PUBLISHED`. Search trims q and hands it to GS-02. Retry re-requests only its failed region. User-approved behavior keeps categories informational and course cards non-clickable; unsupported email capture, filters, sorting and carousel actions are absent. The no-client statements in the source excerpt below describe the original DD audit baseline. Current SH-01 spec: 7/7 passed.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|
@@ -24,7 +26,7 @@
 
 ### Trích từ DD nguồn: 5. Đặc tả sự kiện và xử lý dữ liệu
 
-Không có Study Web client/router trong checkout nên mọi sự kiện dưới đây là đặc tả có điều kiện, không phải behavior đã chạy. API response/error mapping dựa trên source hiện tại; không mô tả retry tự động, cache, debounce hoặc timeout vì chưa có client policy.
+Historical source-DD baseline: the original checkout had no Study Web client/router, so the events below were written as conditional specifications. Current route/API source status is summarized above; API response/error mapping remains source-backed, while automatic retry, cache, debounce and timeout policy remain unspecified.
 
 ### SH01-EV-01 — Khởi tạo trang và tải dữ liệu công khai
 

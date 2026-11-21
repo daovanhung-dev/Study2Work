@@ -83,3 +83,9 @@ Local #65 requires Mentor role and checks direct course ownership. The screen in
 
 ## 8. Trace
 [Events](02-events.md) · [API](04-api-integration.md) · [Rules](05-business-rules.md)
+
+## Current Study Client source (2026-11-20)
+
+- ME16 reads `courseId` reactively and cancels an older #65 request on route change. Invalid IDs do not call the API; errors retain an explicit retry action.
+- Before rendering, it validates the exact success code, unpaginated page metadata, unique positive int64-safe Student IDs, display fields, counts and percentages. Optional #65 avatars render only from HTTPS or same-origin HTTP with `no-referrer`; failed/unsafe/missing images fall back to name initials. The backend's local page uses `page=1`, `size=total=items.length`, and `total_pages=1` for nonempty data or 0 for an empty roster.
+- Empty data means #65 returned no active Students; the source does not distinguish additional product-level reasons. Student links pass the verified IDs to ME17. No pagination/filter/risk/timeline behavior is added.

@@ -2,13 +2,17 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-20
 
-ST-11 calls #24 to load lesson details after the ST-10 handoff. #25 progress,
-#26 lesson resources and #27 next lesson remain gated; the page does not
-expose unsupported position, resource URL or next-lesson behavior. The DD/API
-excerpt below is a design-time snapshot. Current source status is tracked in
-[the screen inventory](../../list_screen.md) and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+ST-11 calls #24 through `StudentApiService`; it follows route `lessonId`
+changes, cancels stale reads, checks `DESIGN_RESOURCE_RETRIEVED`, payload shape
+and matching lesson ID, and exposes retry on request failure. API #24 source
+checks that the lesson and parent course are `PUBLISHED` and that the Student
+has `ACTIVE` or `COMPLETED` enrollment. ST-11 links to ST-12, which calls #26.
+ST-11 does not call #25 or #27 and does not play `video_url`; #25's current
+request model omits the catalog's `position`, and no approved completion
+trigger/terminal flow is implemented. Runtime is not verified. The detailed
+source excerpt below preserves the original design snapshot.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -21,18 +25,18 @@ excerpt below is a design-time snapshot. Current source status is tracked in
 ## 2. Contract / source detail
 
 - API refs trong inventory: #24, #25, #26, #27
-- Orchestration/data notes: GET #24; GET #26 lazy; PATCH #25 khi có biến cố progress hợp lệ; GET #27 sau completed.
-- BE/source status và gate: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** asset hiện là fallback, không có player/progress/resource/next controls; #24–#27 chưa có Student route/module/query/test và API DD còn Draft; ST-10/ST-11 cùng gọi #24, ST-09 thiếu lessonId; #25 position/percent/state/storage/aggregate open; #26 `ApiEnvelope<Lesson>` vs Resource payload/visibility/URL open; #27 order/tie-break/no-next open; legacy BIGINT và V1-PILOT UUID DDL khác nhau; Study Web UNWIRED
+- Orchestration/data notes: current ST-11 calls #24 and links to ST-12; it does not call #25/#27. Declared later actions remain design expectations, not implemented screen behavior.
+- BE/source status and gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** page/player UI does not match all Stitch states; progress/position and completion rules remain unresolved; #27 does not yet establish a complete authorized/terminal flow; API DDs remain Draft and checked-in candidate DDL does not establish live schema.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API, authorization và bảo mật
 
 | API | Declared contract | Current source | Vai trò / open issue |
 |---|---|---|---|
-| #24 | GET `/api/v1/lessons/{lesson_id}`; Student Bearer; path int64; `ApiEnvelope<Lesson>`; 200/401/403/404/500. | NOT_FOUND Student route/module/query/test; DD Draft. | Lesson retrieval; direct entitlement, publish, projection/null/error/path chưa chốt; fetch ownership đè lên ST-10. |
-| #25 | PATCH `/api/v1/lessons/{lesson_id}/progress`; Student Bearer; required int64 path + body `position:int32!`, `percent:int32!`, `completed:boolean!`; `ApiEnvelope<Lesson>`; 200/401/403/404/422/500. | NOT_FOUND Student route/module/query/test; DD Draft. | Progress update + AC aggregate intent; body semantics, storage, identity, update order/idempotency/throttle/retry/transaction unresolved. |
-| #26 | GET `/api/v1/lessons/{lesson_id}/resources`; Student Bearer; int64 path; no query/body; `ApiEnvelope<Lesson>`; 200/401/403/404/500. | NOT_FOUND Student route/module/query/test; DD Draft. | Resource retrieval; declared payload conflicts with resource purpose/schema; URL/visibility/cardinality/access open. |
-| #27 | GET `/api/v1/lessons/{lesson_id}/next`; Student Bearer; int64 path; no query/body; `ApiEnvelope<Lesson>`; 200/401/403/404/500. | NOT_FOUND Student route/module/query/test; DD Draft. | Next lesson lookup; order/tie-break/access/end-of-curriculum semantics open. |
+| #24 | GET `/api/v1/lessons/{lesson_id}`; Student Bearer; path int64; `ApiEnvelope<Lesson>`; 200/401/403/404/500. | Client caller and Study Server route/view/query/model exist; page validates success code, payload and ID. | Backend checks published lesson/course and ACTIVE/COMPLETED enrollment; screen fetch is implemented, player is not. |
+| #25 | PATCH `/api/v1/lessons/{lesson_id}/progress`; catalog declares `position`, `percent`, `completed`; current request model has only `percent`, `completed`. | Study Server route/view/query/model exist; ST-11 does not call it. | Persists lesson progress; current code does not update course aggregate and current DDL has no lesson position mapping. |
+| #26 | GET `/api/v1/lessons/{lesson_id}/resources`; Student Bearer; response source is `LessonResources` with `resources[]`. | Study Server route/view/query/model exist; ST-12 is the caller. | Checks ACTIVE enrollment and published lesson/course; returns metadata without a URL. |
+| #27 | GET `/api/v1/lessons/{lesson_id}/next`; Student Bearer; response source is next-lesson model. | Study Server route/view/query/model exist; ST-11 does not call it. | Uses course/order sorting; current view ignores the authenticated user for entitlement and returns 404 if no next item. |
 
 #### Security decisions and handling
 

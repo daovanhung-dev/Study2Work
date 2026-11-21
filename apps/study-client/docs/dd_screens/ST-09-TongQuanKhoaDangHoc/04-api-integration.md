@@ -11,6 +11,20 @@ lesson selection is available in this screen. The DD/API excerpt below
 preserves the design-time contract; for current source/caller status see
 [the screen inventory](../../list_screen.md) and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
 
+## Current caller status — 2026-11-21
+
+ST-09 now reacts to `courseId` route changes and cancels stale #20/#37 reads.
+It paginates #20 with `status=ACTIVE`, validates the requested
+`CourseSummaryPage`, then calls #37 only after an exact course match. #37
+returns `CourseProgress` for PUBLISHED lesson counts, enrollment-bound to the
+Student; the page validates business code, course identity, count bounds,
+percentage and `has_content`. The API catalog still declares `UserProfile`,
+and AC-18 expects lesson, quiz and assignment aggregation, while current #37
+only counts PUBLISHED lessons. On #20 pages, the client compares returned rows
+with COUNT-derived expected rows: a matching ACTIVE row still allows #37, but
+a missing target on a mismatched page remains unresolved and can be retried.
+Full course tree/lesson selection remains blocked; runtime is unverified.
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
@@ -22,7 +36,7 @@ preserves the design-time contract; for current source/caller status see
 
 - API refs trong inventory: #09, #20, #37
 - Orchestration/data notes: Xác nhận course thuộc #20 → GET #37; GET #9 chỉ chứa phần public; lesson access #22 trước khi học.
-- BE/source status và gate: **D**; #09 local source-backed/public (API DD Draft, int64 range check absent); #20/#37 and #22–#24 not source-backed; **BLOCK:** Chưa có contract course-learning tree đầy đủ
+- BE/source status và gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED.** Current #20/#37 routes, projections and ST-09 callers are source-wired; #22–#24 remain absent from current source. Catalog response shapes and AC-18 aggregate/course-learning-tree requirements remain unresolved.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Expected flow khi đủ contract
@@ -41,8 +55,8 @@ preserves the design-time contract; for current source/caller status see
 | API | Contract được khai báo | Current source | Dùng trong ST-09 |
 |---|---|---|---|
 | #09 | Public GET curriculum; course_id int64; response ApiEnvelope<Page<Lesson>>; 200/404/500. | SOURCE_BACKED_LOCAL: registered route/view/validator/query/model/test source; reverse API index corrected to R. API DD is still Draft. | Chỉ public outline projection; không chứng minh enrollment hoặc quyền phát nội dung/media. |
-| #20 | Student GET /users/me/courses; optional status/page; Bearer JWT; response ApiEnvelope<UserProfile>; 200/401/403/422/500. | NOT_FOUND route/module/query/test. | Intended enrollment gate nhưng response schema không mô tả course membership. |
-| #37 | Student GET /users/me/progress/{course_id}; Bearer JWT; response ApiEnvelope<UserProfile>; 200/401/403/404/500. | NOT_FOUND route/module/query/test; API DD Draft. | Intended aggregate progress; formula, payload, empty/error semantics chưa quyết định. |
+| #20 | Student GET /users/me/courses; optional status/page; Bearer JWT; response ApiEnvelope<UserProfile>; 200/401/403/422/500. | Current route/module/query/model source is present; returns owner-scoped `CourseSummaryPage` at fixed size 20. ST-09 validates ACTIVE rows/page metadata; catalog response mismatch remains open. | Enrollment gate is source-wired; a matching ACTIVE row is required before #37. |
+| #37 | Student GET /users/me/progress/{course_id}; Bearer JWT; response ApiEnvelope<UserProfile>; 200/401/403/404/500. | Current route/module/query/model source is present; returns owner/enrollment-scoped `CourseProgress` with PUBLISHED lesson counts and percentage. Catalog response mismatch and AC-18 aggregation gap remain. | ST-09 validates the course identity and progress projection before render. |
 | #22–#24 | Inventory uses lesson access/start/content flow. | NOT_FOUND route/module/test in current source. | Required before protected lesson access. |
 
 ## 3. API không sử dụng

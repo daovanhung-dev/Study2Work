@@ -1,6 +1,8 @@
 # AD-20 — Events (đặc tả xử lý)
 
-> **Current Angular source (2026-11-16):** `/admin/notifications/new` is route/page source-wired. Title/content inputs update component-local preview state; recipient/channel/priority controls and draft/send actions are disabled. There is no API #93 caller or #18 client handoff. Detailed events below are transcribed from the Stitch artifact reviewed on 2026-11-08 and describe that artifact, not the current Angular runtime. Browser/auth behavior remains unverified.
+> **Current source (2026-11-21):** #68 loads recipient pages; explicit selection feeds #93; an accepted UUID routes to SH-07/#18. The event details below include the earlier Stitch/DD snapshot and do not override this current flow.
+
+> **Historical Angular source snapshot (2026-11-16):** `/admin/notifications/new` was route/page source-wired with local preview only. The 2026-11-21 implementation adds #68/#93 calls and the SH-07 UUID handoff described above. Browser/auth behavior remains unverified.
 
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
@@ -50,6 +52,8 @@
 - **API:** Không gọi. Khi submit sau này, catalog #93 chỉ yêu cầu `title:string`; local validator bổ sung nonblank và max 200 như fallback chưa duyệt.
 - **Output/lỗi:** Preview heading đổi đồng bộ; model/query/cache không đổi. Không có error state, max-length UI, debounce hay persistence.
 
+- **Angular current source (2026-11-20):** `AD20Page` keeps the raw input signal and derives a trimmed preview value. Whitespace-only text shows the existing fallback `Chưa nhập tiêu đề`; no input mutation, validation, or API call occurs.
+
 ### EV-04 — Chọn audience/segment
 
 - **Element/type:** #22–25; radio `change`.
@@ -73,6 +77,8 @@
 - **Xử lý hiện tại:** `input` đọc textarea, trim và hiển thị chuỗi đã trim; blank thì phục hồi sample snippet. Toolbar buttons không có listener và không thay đổi body.
 - **API/validation:** Không gọi. #93 catalog yêu cầu `content:string`; local validator chỉ từ chối whitespace-only, không thêm max length. Không gửi HTML/markup vì editor schema, escaping và sanitizer chưa được xác định.
 - **Output/ngoại lệ:** Preview hiển thị text bằng `textContent`; không có autosave, formatting state, persistence hoặc lỗi nhập liệu.
+
+- **Historical Angular source snapshot (2026-11-20):** `AD20Page` then kept a local body signal and derived a trimmed preview. The current #68/#93 dispatch and SH-07 handoff are summarized at the top of this file.
 
 ### EV-07 — Chọn priority
 

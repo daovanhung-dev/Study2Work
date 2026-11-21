@@ -1,5 +1,9 @@
 # ME-10 — API Integration
 
+## Current caller status — 2026-11-20
+
+ME10 calls #55 from a route-reactive page, cancels stale reads and validates `DESIGN_RESOURCE_RETRIEVED`, Submission identity and the response/file projection. #56/#57 backend routes/models/tests exist, but the page does not call them: `rubric_items` and `attachments` are not approved serialization/persistence contracts, and #55 does not expose `max_score`. The page does not send placeholder strings or report mutation success. Runtime is NOT VERIFIED.
+
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
 ## 1. API usage matrix

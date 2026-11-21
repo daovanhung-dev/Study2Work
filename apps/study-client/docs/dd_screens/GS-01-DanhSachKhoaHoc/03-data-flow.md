@@ -162,3 +162,9 @@ Không có bằng chứng session-expired state cho API #05/#06 vì chúng publi
 
 ## 8. Trace
 [Events](02-events.md) · [API](04-api-integration.md) · [Rules](05-business-rules.md)
+
+## Current Study Web data-flow audit (2026-11-21)
+
+- The Angular page calls #05, then #06 with the requested page and fixed size 20. Each request is canceled when a newer catalog load supersedes it; API errors do not become an empty catalog.
+- Because #06 derives `total` and `items` from separate COUNT/LIST reads, a valid-shaped response may have a count-derived cardinality mismatch. The client preserves any returned items, marks the catalog ready with a mismatch notice, hides count/page controls, disables further paging and lets the user reload the same page/sort. Matching zero/zero and empty out-of-range responses keep their distinct states.
+- Older source excerpts above describe the original prototype and expected flow. Current route/caller evidence supersedes their claims that no API caller or Angular route exists; browser/live API/DB behavior remains unverified.

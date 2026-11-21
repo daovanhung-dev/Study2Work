@@ -1,5 +1,9 @@
 # ME-11 — API Integration
 
+## Current caller status — 2026-11-20
+
+ME11 calls #58 with optional `course_id` and exact `status` filters. Query changes cancel stale requests; exact success code and nested SupportRequest/student/message/attachment projections are validated before display. A selected validated `request.id` opens ME-12. The page does not infer counts, SLA, paging or live updates; runtime is NOT VERIFIED.
+
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
 ## 1. API usage matrix

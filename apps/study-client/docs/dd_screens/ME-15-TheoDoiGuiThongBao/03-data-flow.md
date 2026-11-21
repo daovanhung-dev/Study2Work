@@ -81,3 +81,9 @@ Generic `SH-07 / API #18` là luồng khác. AC-25 không nối #18 vào flow ME
 
 ## 8. Trace
 [Events](02-events.md) · [API](04-api-integration.md) · [Rules](05-business-rules.md)
+
+## Current Study Client source (2026-11-20)
+
+- The Mentor router registers ME-15 at `/mentor/notifications/:notificationId/status`. The page reads `notificationId` reactively, rejects non-positive/non-int64-safe values, cancels an older #64 request when the route ID changes, and offers manual reload.
+- Successful #64 responses must use `DESIGN_RESOURCE_RETRIEVED` and contain a UUID Operation ID, `NOTIFICATION_DISPATCH` kind, `QUEUED|FAILED|SENT` status, safe owner ID and parseable source timestamps. The path notification ID and returned Operation UUID are displayed as separate identifiers.
+- Errors and malformed responses do not render stale status. No #18 request, automatic polling, batch aggregation, channel/recipient totals or send/complete inference is made. The producer-to-ME-15 notification selection remains unresolved; no tests/browser/runtime were run.

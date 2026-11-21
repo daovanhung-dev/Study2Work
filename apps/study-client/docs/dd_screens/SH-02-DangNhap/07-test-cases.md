@@ -2,6 +2,10 @@
 
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
+## Current implementation verification — 2026-11-21
+
+The focused Study Web command covering SH-02–SH-07, ME-14, AD-20 and Student/Mentor API boundaries passed: 11 test files, 36 tests. Coverage includes login contract handling, role sessions, Student #04 verification and the related refresh boundary. Browser, live API, database and deployment runtime were not verified.
+
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |
 |---|---|---|---|---|

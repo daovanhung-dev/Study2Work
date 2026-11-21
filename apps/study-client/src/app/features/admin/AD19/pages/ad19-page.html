@@ -46,6 +46,12 @@
   </section>
 
   <section class="notification-table-panel" aria-label="Danh sách thông báo">
+    @if (viewState().status === 'loaded' && snapshotMismatch()) {
+      <div class="snapshot-warning" role="status" aria-live="polite">
+        <div><strong>Số lượng và danh sách thông báo chưa đồng nhất</strong><p>Các dòng API trả về vẫn được giữ lại; tổng và phân trang đang ẩn cho đến khi tải lại.</p></div>
+        <button type="button" (click)="refreshNotifications()"><study-icon name="refresh" /> Tải lại trang này</button>
+      </div>
+    }
     <div class="table-scroll" role="region" aria-label="Bảng thông báo" tabindex="0">
       <table>
         <caption class="visually-hidden">Thông báo có dữ liệu delivery trả về từ API #92</caption>
@@ -55,10 +61,14 @@
             <tr><td class="table-state" colspan="7" role="status"><span class="state-mark"><study-icon name="refresh" /></span><strong>Đang tải thông báo…</strong><span>Đang chờ phản hồi từ Study Server.</span></td></tr>
           } @else if (viewState().status === 'error') {
             <tr><td class="table-state table-state--error" colspan="7" role="alert"><span class="state-mark"><study-icon name="info" /></span><strong>Không thể tải danh sách thông báo</strong><span>{{ viewState().message }}</span></td></tr>
+          } @else if (pageOutOfRange()) {
+            <tr><td class="table-state" colspan="7" role="status"><span class="state-mark"><study-icon name="info" /></span><strong>Trang này không còn thông báo</strong><span>Danh sách đã thay đổi; hãy quay lại trang đầu để xem dữ liệu hiện có.</span><button type="button" (click)="returnToFirstPage()">Về trang đầu</button></td></tr>
+          } @else if (snapshotMismatch() && (viewState().rows?.length ?? 0) === 0) {
+            <tr><td class="table-state" colspan="7" role="status"><span class="state-mark"><study-icon name="info" /></span><strong>Trang chưa đồng bộ</strong><span>API #92 trả về số dòng khác với tổng ở thời điểm đọc; không coi đây là danh sách rỗng.</span><button type="button" (click)="refreshNotifications()">Tải lại trang này</button></td></tr>
           } @else if ((viewState().rows?.length ?? 0) === 0) {
-            <tr><td class="table-state" colspan="7"><span class="state-mark"><study-icon name="bell" /></span><strong>Không có thông báo phù hợp</strong><span>API #92 trả về trang rỗng cho bộ lọc hiện tại.</span></td></tr>
+            <tr><td class="table-state" colspan="7"><span class="state-mark"><study-icon name="bell" /></span><strong>Không có thông báo phù hợp</strong><span>API #92 trả về trang rỗng cho bộ lọc hiện tại.</span><button class="empty-refresh-button" type="button" (click)="refreshNotifications()"><study-icon name="refresh" /> Làm mới danh sách thông báo</button></td></tr>
           } @else {
-            @for (row of viewState().rows ?? []; track row.values[0]) {
+            @for (row of viewState().rows ?? []; track $index) {
               <tr>
                 <td class="notification-id">{{ row.values[0] }}</td>
                 <td class="notification-title"><strong>{{ row.values[1] }}</strong></td>
@@ -80,7 +90,7 @@
       </table>
     </div>
 
-    @if (viewState().status === 'loaded') {
+    @if (viewState().status === 'loaded' && !snapshotMismatch() && !pageOutOfRange()) {
       <div class="pagination-bar">
         <p>
           @if (viewState().pagination; as pagination) {

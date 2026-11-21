@@ -1,35 +1,38 @@
 # SH-01 — Navigation
 
+> **Current source (2026-11-21):** Shared router mounts SH01Page at `/` without an authentication guard. Search submits trimmed non-empty q to `/courses/search` (GS-02); “Xem tất cả khóa học” and the primary hero CTA open `/courses` (GS-01); login links open `/login` (SH-02); registration links open `/register` (SH-03). Category labels and course cards are informational/non-clickable. The screen does not read route query state or transfer tokens/email.
+
 ## 1. Route definition
 - Current route in inventory: `/`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
-- Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
-- Route guards: see source DD/API contract; do not create role policy.
+- Status: Shared route and page are source-wired; current-session browser rendering is not verified.
+- Route params/types: Không có route param.
+- Query params/defaults: SH-01 does not read query params; it sends only trimmed non-empty `q` to GS-02.
+- Route guards: no authentication guard; #05/#06 are public GET requests.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [SH-06](../SH-06-TrangKhongTonTaiTaiNguyenKhongCon/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| Direct browser navigation | `/` | None | Public page; no authentication guard |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [GS-01](../GS-01-DanhSachKhoaHoc/00-overview.md), [SH-02](../SH-02-DangNhap/00-overview.md), [SH-03](../SH-03-DangKyHocVien/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [GS-01](../GS-01-DanhSachKhoaHoc/00-overview.md), GS-02, [SH-02](../SH-02-DangNhap/00-overview.md), [SH-03](../SH-03-DangKyHocVien/00-overview.md) | “Xem tất cả”, search, login or registration link | Trimmed q only for GS-02 | Routes are source-wired; current-session browser rendering not verified |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: route `/` is source-wired; API data is loaded again on page entry.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram
 ```mermaid
 flowchart LR
-  S0["SH-01 Trang giới thiệu Study"] --> S1["GS-01"]
-  S0["SH-01 Trang giới thiệu Study"] --> S2["SH-02"]
-  S0["SH-01 Trang giới thiệu Study"] --> S3["SH-03"]
+  S0["SH-01 Trang giới thiệu Study"] -->|Xem tất cả| S1["GS-01 /courses"]
+  S0 -->|Tìm kiếm q đã trim| S2["GS-02 /courses/search?q="]
+  S0 -->|Đăng nhập| S3["SH-02 /login"]
+  S0 -->|Đăng ký| S4["SH-03 /register"]
 ```
 
 ## Source navigation and flow detail

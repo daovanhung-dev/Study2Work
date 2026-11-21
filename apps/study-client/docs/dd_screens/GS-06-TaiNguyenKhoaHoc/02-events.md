@@ -1,6 +1,8 @@
 # GS-06 — Events (đặc tả xử lý)
 
-> **T022 current-source update (2026-11-17):** Only tab selection is implemented: GS03 updates `?tab=resources`, then mounts GS06 after #08 confirms the course is published. The screen shows a contract-blocked status and sends no #11/#12 request. Prototype open/download/nav events below remain design references, not current Angular behavior.
+> **T041/current-source update (2026-11-20):** GS-03 mounts GS-06 after published #08; GS-06 calls #11 and validates the PUBLIC `Resource[]` response, then renders loading/error/retry/empty/list. Selecting a row routes to GS-07 with `resourceId` and `courseId`. GS-07 calls #12 to resolve PUBLIC or PRIVATE access. The event descriptions preserved from Stitch below are historical/design behavior unless confirmed in current source.
+
+> **T042 validation update (2026-11-20):** GS-06 now rejects malformed success envelopes/business codes and #11 lists whose IDs are not strictly increasing, matching the current endpoint contract. The completion percentages remain unchanged because design fidelity and the resource-data producer/schema are still unresolved.
 
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |

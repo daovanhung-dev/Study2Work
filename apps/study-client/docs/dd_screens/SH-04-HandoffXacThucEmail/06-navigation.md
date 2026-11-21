@@ -1,16 +1,18 @@
 # SH-04 — Navigation
 
+> **Current source (2026-11-20):** `/register/verification` is registered in Shared routes. SH-03 navigates there after storing the validated account ID/email in a one-use root-provided memory service. The route carries no path/query data. SH-04 consumes the handoff once; direct entry/reload shows the missing-handoff state. The page links to `/login`. Browser runtime has not been verified.
+
 ## 1. Route definition
 - Current route in inventory: `/register/verification`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
+- Status: route source-wired; browser runtime unverified.
+- Route params/types: none. Registration ID/email are passed through `SH04RegistrationHandoffService` in memory and are consumed once.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [SH-03](../SH-03-DangKyHocVien/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [SH-03](../SH-03-DangKyHocVien/00-overview.md) | User clicks “Tiếp tục yêu cầu xác minh email” after validated #01 result | In-memory `{userId,email}`; no URL/local storage | Positive JS safe integer + non-empty email; otherwise remain on SH-03 |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
@@ -20,7 +22,7 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: one-use handoff is lost after page reload; direct entry displays missing-handoff state and sends no #02 request.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 

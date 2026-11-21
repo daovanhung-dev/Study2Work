@@ -88,8 +88,9 @@ describe('AD21Page', () => {
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
-    expect(root.textContent).toContain('Không thể hiển thị chính xác');
-    expect(root.querySelector('.status-badge')?.getAttribute('data-status')).toBe('SENT');
+    expect(root.textContent).toContain('Không thể tải trạng thái thông báo');
+    expect(root.textContent).not.toContain('9007199254740992');
+    expect(root.querySelector('.status-badge')).toBeNull();
   });
 
   it('shows the source 404 result when the notification has no status resource', async () => {

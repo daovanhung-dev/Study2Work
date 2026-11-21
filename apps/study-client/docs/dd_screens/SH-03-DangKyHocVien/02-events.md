@@ -82,7 +82,7 @@
 
 **Kết quả / ngoại lệ:** Kết quả: chỉ 201 `DESIGN_RESOURCE_CREATED` với `data.id` và `data.email` mới đủ dữ liệu bàn giao sang SH-04. Ngoại lệ: thiếu/sai shape thì dừng an toàn; không tạo ID/email thay thế. Cơ chế truyền và xử lý mở trực tiếp/tải lại SH-04 vẫn cần quyết định.
 
-**Current source:** chỉ HTTP 201 cùng `success=true`, `DESIGN_RESOURCE_CREATED`, `data.id` là số nguyên dương và `data.email` là chuỗi không rỗng mới hiển thị trạng thái “Đã tạo tài khoản” tại SH-03 và xóa mật khẩu khỏi form. Sai shape giữ form và hiện thông báo kết quả chưa xác định. Không điều hướng, không gọi API #02, và không tuyên bố email đã gửi/xác minh; SH-04 handoff vẫn chưa được wire.
+**Current source (2026-11-20):** chỉ HTTP 201 cùng `success=true`, `DESIGN_RESOURCE_CREATED`, `data.id` là số nguyên dương an toàn cho JavaScript và `data.email` là chuỗi không rỗng mới hiển thị trạng thái “Đã tạo tài khoản” tại SH-03 và xóa mật khẩu khỏi form. Sai shape giữ form và hiện thông báo kết quả chưa xác định. Nút tiếp tục đặt ID/email vào one-use in-memory service rồi điều hướng tới SH-04; SH-03 không gọi API #02. Email chưa được xác nhận gửi/xác minh.
 
 ### `SH03-EV-05` — Email đã tồn tại
 

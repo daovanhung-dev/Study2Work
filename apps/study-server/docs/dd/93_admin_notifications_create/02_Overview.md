@@ -27,6 +27,10 @@ status: "Draft — Needs Confirmation"
 | Transaction | Một transaction cho toàn bộ notification và delivery rows; commit trước 202 (DERIVED) |
 | Side effects | Ghi legacy BIGINT `notifications` và `notification_deliveries`; không gọi provider |
 
+## Current AD-20 integration decision — 2026-11-21
+
+AD-20 uses API #68 to present recipients for explicit user selection, submits selected IDs to API #93, validates `meta.operation_id:uuid`, and routes the accepted ID to notification-only API #18 through SH-07. This resolves the producer handoff for that screen; it does not resolve generic campaign/segment semantics or prove delivery, deployment or live schema.
+
 ## Sources
 
 - [API catalog](../../../../../docs/lists/list_api.md) — #93, reusable schemas, Operation tracking.
@@ -37,7 +41,7 @@ status: "Draft — Needs Confirmation"
 
 ## Tables read
 
-- Audience membership — SOURCE_REQUIRED; no approved segment/eligibility source found. No generic Study `operations` table is defined; current local API #18 has a notification-only UUID lookup over `notifications.operation_id` and `notification_deliveries`, filtered by authenticated sender.
+- Audience membership — API #93 validates explicit user IDs against `users`; no approved segment/eligibility predicate is present. No generic Study `operations` table is defined; current local API #18 has a notification-only UUID lookup over `notifications.operation_id` and `notification_deliveries`, filtered by authenticated sender.
 
 ## Tables write
 
@@ -47,7 +51,7 @@ status: "Draft — Needs Confirmation"
 ## Mục chú ý
 
 - Catalog row and AC-36 node return ApiEnvelope<Notification> at HTTP 202.
-- Operation tracking summary says Admin POST returns data: Operation.
+- Operation tracking summary uses a generic Operation response; the current #93 direct row/source returns Notification plus UUID metadata, which AD-20 consumes for this approved slice.
 - Diagram dispatches Push/Email if action is Send, but request has no action or scheduled_at.
 - Immediate create-and-send is a DERIVED proposal, not approved behavior.
 - AudienceSegment, NotificationChannel and NotificationStatus values are not defined in reviewed sources.
@@ -63,9 +67,9 @@ status: "Draft — Needs Confirmation"
 
 ## Conflicts
 
-- Notification vs Operation response and canonical ID/owner bridge: DISCREPANCY. A notification-specific local #18 query consumes the UUID written by #93, but this derived source behavior does not approve a generic Operation contract.
+- Notification vs generic Operation response: `RESOLVED_FOR_AD-20` for the metadata handoff only. AD-20 routes `meta.operation_id:uuid` to the notification-specific #18 query; other producer response shapes and generic Operation persistence remain open.
 - Conditional Send vs absent action field: DISCREPANCY.
-- API #18 catalog `operation_id` is int64 while schema/diagram and current route/OpenAPI use UUID; current owner-bound lookup remains notification-specific.
+- API #18 row, schema/diagram and current route/OpenAPI use UUID. The owner-bound lookup remains notification-specific.
 
 ## Security note
 

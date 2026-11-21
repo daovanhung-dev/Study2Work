@@ -206,7 +206,7 @@ def _accept_notification_batch(
                     "user_id": recipient_id,
                     "sender_id": mentor_id,
                     "title": request_data.title,
-                    "content": str(request_data.content),
+                    "content": request_data.content,
                     "operation_id": operation_id,
                 },
             )

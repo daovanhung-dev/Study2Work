@@ -44,7 +44,7 @@ Các state dưới đây là states cần thiết cho DD/UI planning, không ph�
 | `initial` | Route mounted, request not started. | Keep mutations disabled; start EV-01 only with a valid route/handoff ID and auth shell. |
 | `loading` | #69 request in progress. | Show loading shell; no mode confirmation or duplicate load mutation. |
 | `no-selection` | Prototype/direct entry has no selected ID. | Keep target profile/actions unavailable. Resolve via AD-02/AD-03; do not use mock ID. |
-| `invalid-id` | Route ID absent or invalid for signed-int64 path. | Do not call mutation; route/error presentation policy needs agreement. |
+| `invalid-id` | Route ID absent or invalid for signed-int64 path. | Current page shows a local error, skips GET #69 and mutations, and links to the user list. |
 | `ready-read-only` | #69 returns a valid profile and page auth succeeds, while action policies are pending. | Display source-backed profile fields; tabs/Confirm disabled. This is the safe current design target. |
 | `mode-selected` | User chooses an action after all enabling policies are approved. | Store draft mode only; confirm waits for action-specific validation. No API call. |
 | `submitting-status` | Approved #71 request in flight. | Prevent repeated submit; no optimistic status/session claim. |
@@ -91,7 +91,7 @@ The app has an Admin session service and router; AD-05-specific expiry/recovery 
 - Copy dự đoán dừng toàn bộ phiên và quyền đăng nhập không khớp với side effect local #71/#72.
 - Reason textarea và Confirm disabled. Các nhãn audit bắt buộc, policy, RBAC, `Read-Only protocol`, `Enforced Gate`, ISO và API handlers là static copy.
 - HTML có 10 anchors, 5 buttons và một textarea disabled; không có input/select/form hoặc request/listener. Nav/footer anchors trỏ `#`; hai back links trỏ `/admin/users`.
-- Current Study Web source is Angular. AD-05 has a route/page and GET #69 caller; no client call exists for #71/#72. Status/delete controls and reason input are disabled. Runtime/deployment is `NOT VERIFIED`.
+- Current Study Web source is Angular. AD-05 validates raw signed-int64 `userId` before GET #69; invalid/missing IDs do not request and return to the user list. Valid IDs use the #69 caller; no client call exists for #71/#72. Status/delete controls and reason input are disabled. Runtime/deployment is `NOT VERIFIED`.
 
 ### Response/error xử lý ở mức màn hình
 

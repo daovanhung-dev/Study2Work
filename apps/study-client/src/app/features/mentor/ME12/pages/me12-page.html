@@ -1,14 +1,104 @@
 <main class="mentor-page me12-page">
-  <study-mentor-page-header title="Trao đổi và xử lý yêu cầu" description="Thread, file metadata và trạng thái được đọc từ API #59; reply/resolve đi qua #60/#61." apiLabel="#59 · #60 · #61" />
+  <study-mentor-page-header
+    title="Trao đổi và xử lý yêu cầu"
+    description="Thread, file metadata và trạng thái được đọc từ API #59; reply/resolve đi qua #60/#61."
+    apiLabel="#59 · #60 · #61"
+  />
   <a class="me12-back" routerLink="/mentor/support">← Quay lại hộp thư</a>
-  @if (invalidId()) { <section class="mentor-card mentor-state mentor-state--error" role="alert">Request ID trên đường dẫn không hợp lệ.</section> }
-  @else if (loading()) { <section class="mentor-card mentor-state">Đang tải thread…</section> }
-  @else if (error()) { <section class="mentor-card mentor-state mentor-state--error" role="alert">{{ error() }} <button class="mentor-button mentor-button--light" type="button" (click)="load()">Thử lại</button></section> }
-  @else if (request(); as item) {
-    <section class="mentor-card me12-thread"><div class="me12-thread-head"><div><span class="mentor-status">{{ item.status }}</span><h2>{{ item.student.full_name }}</h2><span class="mentor-meta">Yêu cầu #{{ item.id }} · Course #{{ item.course_id }} · tạo {{ item.created_at | date:'medium' }}</span></div>@if (canResolve()) { <button class="mentor-button mentor-button--light" type="button" (click)="confirmResolve.set(true)">Đánh dấu đã giải quyết</button> } @else if (item.status === 'RESOLVED') { <span class="mentor-meta">Đã giải quyết {{ item.resolved_at | date:'medium' }}</span> }</div>
-      <ol class="me12-messages">@for (message of item.messages; track $index) { <li><div class="me12-message-head"><strong>{{ message.author.full_name }}</strong><time class="mentor-meta" [attr.datetime]="message.created_at">{{ message.created_at | date:'medium' }}</time></div><p>{{ message.content }}</p>@if (message.attachments.length) { <ul class="me12-attachments">@for (asset of message.attachments; track $index) { <li><a [href]="asset.url" target="_blank" rel="noopener noreferrer">{{ asset.name }}</a><span class="mentor-meta">{{ asset.content_type }} · {{ asset.size_bytes }} bytes</span></li> }</ul> }</li> }</ol>
+
+  @if (invalidId()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Request ID không hợp lệ</h2>
+      <p>Đường dẫn cần có ID số nguyên dương trong giới hạn hệ thống.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/support">Về hộp thư</a>
     </section>
-    <form class="mentor-card me12-reply" (submit)="reply($event, message.value)"><label for="me12-message">Câu trả lời</label><textarea #message id="me12-message" rows="5" [disabled]="sending()" placeholder="Nhập phản hồi cho thread"></textarea><p class="mentor-meta">API #60 gửi message và attachment_refs; hiện gửi danh sách attachment rỗng vì upload/đính kèm chưa có UI được chốt.</p>@if (actionError()) { <p class="mentor-alert" role="alert">{{ actionError() }}</p> }@if (actionSuccess()) { <p class="mentor-success" role="status">{{ actionSuccess() }}</p> }<button class="mentor-button" type="submit" [disabled]="sending()">{{ sending() ? 'Đang gửi…' : 'Gửi câu trả lời' }}</button></form>
+  } @else if (loading()) {
+    <section class="mentor-card mentor-state" role="status" aria-live="polite">Đang tải thread…</section>
+  } @else if (notFound()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Không tìm thấy yêu cầu hỗ trợ</h2>
+      <p>Request không còn tồn tại hoặc không thuộc phạm vi truy cập hiện tại.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/support">Về hộp thư</a>
+    </section>
+  } @else if (forbidden()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Không có quyền xem yêu cầu này</h2>
+      <p>Study Server kiểm tra quyền Mentor theo course của request.</p>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/support">Về hộp thư</a>
+    </section>
+  } @else if (error()) {
+    <section class="mentor-card mentor-state mentor-state--error" role="alert">
+      <h2>Chưa thể tải thread</h2>
+      <p>{{ error() }}</p>
+      <button class="mentor-button mentor-button--light" type="button" (click)="load()">Thử lại</button>
+      <a class="mentor-button mentor-button--light" routerLink="/mentor/support">Về hộp thư</a>
+    </section>
+  } @else {
+    @if (request(); as item) {
+      <section class="mentor-card me12-thread">
+        <div class="me12-thread-head">
+          <div>
+            <span class="mentor-status">{{ item.status }}</span>
+            <h2>{{ item.student.full_name }}</h2>
+            <span class="mentor-meta">Yêu cầu #{{ item.id }} · Course #{{ item.course_id }} · tạo {{ item.created_at | date:'medium' }}</span>
+          </div>
+          @if (item.status === 'RESOLVED') {
+            <span class="mentor-meta">Đã giải quyết {{ item.resolved_at | date:'medium' }}</span>
+          } @else if (isResolveCandidate(item.status)) {
+            <div class="me12-resolve-gate">
+              <button class="mentor-button mentor-button--light" type="button" disabled>Đánh dấu đã giải quyết</button>
+              <span class="mentor-meta">Điều kiện xác nhận trước khi đóng yêu cầu chưa được chốt.</span>
+            </div>
+          }
+        </div>
+
+        <ol class="me12-messages" aria-label="Tin nhắn trong yêu cầu">
+          @for (message of item.messages; track message.id) {
+            <li>
+              <div class="me12-message-head">
+                <strong>{{ message.author.full_name }}</strong>
+                <time class="mentor-meta" [attr.datetime]="message.created_at">{{ message.created_at | date:'medium' }}</time>
+              </div>
+              <p>{{ message.content }}</p>
+              @if (message.attachments.length) {
+                <ul class="me12-attachments">
+                  @for (asset of message.attachments; track asset.id) {
+                    <li>
+                      <strong>{{ asset.name }}</strong>
+                      <span class="mentor-meta">{{ asset.content_type }} · {{ asset.size_bytes }} bytes</span>
+                      <span class="mentor-meta">Chỉ hiển thị thông tin tệp; mở và tải xuống chưa được bật.</span>
+                    </li>
+                  }
+                </ul>
+              }
+            </li>
+          } @empty {
+            <li class="mentor-meta">Yêu cầu này chưa có tin nhắn.</li>
+          }
+        </ol>
+      </section>
+
+      @if (canReply()) {
+        <form class="mentor-card me12-reply" (submit)="reply($event, message.value)">
+          <label for="me12-message">Câu trả lời</label>
+          <textarea #message id="me12-message" rows="5" [value]="replyDraft()" (input)="replyDraft.set(message.value)" [disabled]="sending() || replyUncertain() || loading()" placeholder="Nhập phản hồi cho thread"></textarea>
+          <p class="mentor-meta">API #60 nhận nội dung và `attachment_refs`; yêu cầu không có tệp gửi mảng rỗng `[]` theo validator backend hiện tại.</p>
+          @if (replyUncertain()) {
+            <button class="mentor-button mentor-button--light" type="button" (click)="load()">Tải lại thread</button>
+          }
+          <button class="mentor-button" type="submit" [disabled]="sending() || replyUncertain() || loading()">
+            {{ sending() ? 'Đang gửi…' : 'Gửi câu trả lời' }}
+          </button>
+        </form>
+      } @else {
+        <section class="mentor-card me12-reply" aria-labelledby="me12-reply-gate-title">
+          <h3 id="me12-reply-gate-title">Trả lời đang tạm khóa</h3>
+          <p class="mentor-meta">Yêu cầu đã đóng hoặc có trạng thái chưa hỗ trợ gửi phản hồi.</p>
+        </section>
+      }
+    }
   }
-  @if (confirmResolve()) { <div class="me12-backdrop"><section class="mentor-card me12-confirm" role="alertdialog" aria-modal="true" aria-labelledby="me12-confirm-title"><h2 id="me12-confirm-title">Đóng yêu cầu hỗ trợ?</h2><p>Study Server sẽ kiểm tra trạng thái hiện tại trước khi resolve.</p><div><button class="mentor-button mentor-button--light" type="button" (click)="confirmResolve.set(false)">Hủy</button><button class="mentor-button" type="button" [disabled]="resolving()" (click)="resolve()">{{ resolving() ? 'Đang xử lý…' : 'Xác nhận đóng' }}</button></div></section></div> }
+
+  @if (actionError()) { <p class="mentor-alert me12-action-feedback" role="alert">{{ actionError() }}</p> }
+  @if (actionSuccess()) { <p class="mentor-success me12-action-feedback" role="status">{{ actionSuccess() }}</p> }
 </main>

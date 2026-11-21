@@ -72,7 +72,7 @@ id, full_name, email, role, avatar_url, phone, status, created_at, updated_at
 
 Mật khẩu và `password_hash` không được đưa vào phản hồi. API không trả access token hoặc refresh token. SQL hiện gán `role='STUDENT'`, nhưng bỏ cột `status`; giá trị `status` phụ thuộc lược đồ thực tế. `DB.sql` có giá trị mặc định `ACTIVE`, song tệp này không xác nhận lược đồ cơ sở dữ liệu đang chạy.
 
-Để mở SH-04, luồng đích cần ánh xạ `data.id` thành `user_id` và dùng `data.email`. Danh mục yêu cầu hai giá trị này nhưng chưa khóa cơ chế truyền phía giao diện. Đây là hợp đồng dữ liệu bàn giao, chưa phải quyết định transport; không đưa email/ID vào query string hoặc lưu trữ bền vững khi chưa có policy. Angular page/route và API #01 caller hiện đã có source; chưa có SH-04 handoff caller.
+Current source maps `data.id` to `userId` and carries `data.email` to SH-04 through `SH04RegistrationHandoffService`; it does not put either value in a URL or persistent browser storage. The service accepts only positive `Number.isSafeInteger` IDs, stricter than the API catalog's int64 range. The one-use handoff is consumed when SH-04 is constructed; reload/direct navigation has no recoverable handoff and sends no #02 request. This client choice does not settle product approval of the transport.
 
 ### 3.3. Lỗi API #01 và xử lý trên SH-03
 
@@ -91,7 +91,7 @@ Khung lỗi gồm `success=false`, `businessCode`, `message`, `data=null`, `meta
 - `SH03RegistrationService` gọi API_001 qua `StudyApiService`; gửi đúng `email`, `password`, `full_name`, không Bearer/role/status.
 - UI trim email/tên, giữ nguyên password; kiểm tra required sau trim và độ dài tên/email trước khi gửi. API tiếp tục kiểm tra định dạng và dữ liệu cuối cùng.
 - 409 gắn lỗi email; 422 ánh xạ field errors cho tên/email/password; lỗi 500 và lỗi khác dùng thông báo an toàn; status 0 báo kết quả chưa xác định. Không tự gửi lại POST.
-- 201 `DESIGN_RESOURCE_CREATED` hiển thị trạng thái tài khoản đã tạo, xóa password khỏi form và nêu email chưa được xác nhận gửi. UI chưa dùng response ID/email để chuyển SH-04, không gọi API #02.
+- 201 `DESIGN_RESOURCE_CREATED` hiển thị trạng thái tài khoản đã tạo, xóa password khỏi form và nêu email chưa được xác nhận gửi. Current source uses the validated response ID/email for the explicit SH-04 handoff; it does not call API #02 from SH-03.
 - Các hành vi trên được xác minh bằng Angular HTTP testing (`HttpTestingController`); không phải request đến server/database đang chạy.
 
 ### 3.5. API #02 — Ranh giới tại SH-04
@@ -185,7 +185,7 @@ API #02 hiện công khai, không phụ thuộc cơ sở dữ liệu và không 
 
 **Kết quả / ngoại lệ:** Kết quả: chỉ 201 `DESIGN_RESOURCE_CREATED` với `data.id` và `data.email` mới đủ dữ liệu bàn giao sang SH-04. Ngoại lệ: thiếu/sai shape thì dừng an toàn; không tạo ID/email thay thế. Cơ chế truyền và xử lý mở trực tiếp/tải lại SH-04 vẫn cần quyết định.
 
-**Current source:** page kiểm tra response data là object có `id` nguyên dương và `email` không rỗng trước khi hiển thị trạng thái tạo tài khoản; sai shape giữ form và báo kết quả chưa xác định. Handoff, điều hướng và API #02 vẫn chưa được wire ở SH-03.
+**Current source (2026-11-20):** page checks response data is an object with positive safe-integer `id` and non-empty `email` before showing account-created state. The explicit continue action stores these values once and navigates to SH-04. Invalid/missing handoff data stays on SH-03; API #02 is not called here.
 
 ### `SH03-EV-05` — Email đã tồn tại
 

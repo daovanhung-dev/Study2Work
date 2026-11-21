@@ -1,12 +1,14 @@
 # GS-07 — Xem/tải tài nguyên · Tổng quan
 
+> **T041/current-source update (2026-11-20):** GS-07 consumes `resourceId`, calls #12, validates business code/payload/requested ID and a credential-free HTTP(S) URL, and renders loading/login-required/forbidden/not-found/error/ready states. PUBLIC resources use a direct URL; PRIVATE resources require Student Bearer + published parent course + ACTIVE enrollment and return a 300-second signed URL. The ready action opens the validated URL in a new tab with `noopener noreferrer`. GS-06 `courseId` and ST-12 `lessonId` query context determine the return path. Preview/MIME/expiry-specific behavior, resource producer/schema and live runtime remain incomplete. This note supersedes the historical gate-only statements below.
+
 | Trường | Giá trị |
 |---|---|
 | Screen ID | `GS-07` |
 | Module | Guest / Discovery |
-| Route | `/resources/:resourceId` — Study Web source hiện mount direct route tới contract-blocked gate; không tiêu thụ `resourceId`; runtime/deployment chưa xác minh |
+| Route | `/resources/:resourceId` — route reads ID and calls #12; runtime/deployment unverified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); current source status: `SOURCE-WIRED GATE ONLY`; full resource behavior remains `DD BLOCKED / RUNTIME NOT VERIFIED`. |
+| DD status | Draft package; T041 access policy approved; current source partial; runtime not verified. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [GS-07.md](../../screen_stitch/02_guest_discovery/GS-07_xem-tai-tai-nguyen/GS-07.md), [GS-07_PLAN.md](../../screen_stitch/02_guest_discovery/GS-07_xem-tai-tai-nguyen/GS-07_PLAN.md), [GS-07_markers.json](../../screen_stitch/02_guest_discovery/GS-07_xem-tai-tai-nguyen/GS-07_markers.json), [list_screen.md](../../list_screen.md) |
@@ -14,7 +16,7 @@
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Preview metadata/media hỗ trợ; fallback download khi URL hợp lệ và được phép.
 - In-scope: GET #12 tại thời điểm mở; không cache signed URL vô hạn hoặc lộ internal storage key.
-- Current implementation boundary: chỉ render thông báo contract-blocked; không đọc ID, metadata/URL hoặc gọi #12. Preview, download và access decision vẫn bị chặn.
+- Current implementation: reads route/query context; #12 validates access and returns metadata/URL; safe open action is present. MIME-specific preview and expiry UI are not implemented.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,18 +33,19 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/ready/403-unclear/404/link-expired |
-| Current source/runtime | Worklog/context Study Web | `SOURCE-WIRED GATE ONLY`; resource detail `IMPLEMENTATION PARTIAL / DD BLOCKED`; `RUNTIME NOT VERIFIED` |
+| Current source/runtime | Worklog/context Study Web | #12 caller and projection/URL validation source-wired; partial UI; `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [GS-07 source screen.png](../../screen_stitch/02_guest_discovery/GS-07_xem-tai-tai-nguyen/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/02_guest_discovery/GS-07_xem-tai-tai-nguyen/screen_annotated.png))
-- Luồng: GET #12 tại thời điểm mở; không cache signed URL vô hạn hoặc lộ internal storage key.
-- Priority: P2; **SOURCE-WIRED GATE ONLY**; **BLOCK:** current public/no-auth direct URL lacks AC-06 access check/signer; preview/MIME/URL policy, 403/404/expiry mapping, GS-06/ST-12 return context and resource-detail implementation remain unresolved; live schema unknown; prototype differs from Study design guide and WCAG unmeasured
+- Luồng: GET #12 at page entry; validate identity and URL; render metadata and open safe link only when a valid URL is returned.
+- Priority: P2; **PARTIAL SOURCE / RUNTIME NOT VERIFIED**. T041 access policy is implemented locally. No Study writer for `resources` was found (#47 writes `lesson_uploads`); DB/schema/runtime unknown. MIME-specific preview and expiry states are absent; Stitch/design-guide mismatch and responsive/accessibility measurement remain.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 - 2026-11-17 — T023 wires `/resources/:resourceId` to a contract-blocked presentation only; no resource ID/API #12/actions. Full resource flow remains blocked; runtime not verified.
+- 2026-11-20 — Implemented #12 caller, response validation, access states, safe URL action and contextual return routing under T041 resource policy; runtime not verified.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -73,12 +76,12 @@
 
 | Chủ đề | Expected theo inventory/AC-06 | Current evidence |
 |---|---|---|
-| Mở màn hình | Expected: route `/resources/:resourceId`; nhận ID từ GS-06, có thể từ ST-12; lấy metadata sau khi contract được duyệt. | Study Web source hiện mount direct route và contract-blocked gate; route param không được tiêu thụ, không gọi API/hiển thị ID. `code.html` vẫn là prototype tĩnh riêng. Route runtime/deployment chưa xác minh. |
-| API #12 | Catalog: public GET, no Bearer, `int64` path, `ApiEnvelope<Resource>`, 200/404/500. AC-06 yêu cầu resource public hoặc user có quyền; thiếu quyền có nhánh 403 và private file cần signed URL qua Object Storage. | Route hiện tại được register, không có auth dependency; query lấy direct `resources.url`; model trả `id/name/type/url/lesson_id`; không visibility, enrollment/access check hoặc signer. |
+| Mở màn hình | Expected: route `/resources/:resourceId`; nhận ID từ GS-06 hoặc ST-12; lấy metadata. | Source consumes route ID and calls #12. `code.html` remains a separate static prototype. Route runtime/deployment is unverified. |
+| API #12 | Public GET for PUBLIC resource; Student Bearer for PRIVATE; int64 path; `ApiEnvelope<Resource>`. | Current source validates the resource and parent. PRIVATE requires Student auth, published parent, ACTIVE enrollment and signer; PUBLIC requires a direct HTTP(S) URL. Response includes visibility; signed URL TTL is 300 seconds. |
 | API DD status | API DD #12 là `Draft — Needs Confirmation`; internal `RUNTIME_STATUS` ghi `DECLARED_NOT_RUNNABLE`. | Local `v1.py` compose route #12 và test source tồn tại, nên nhãn runtime trong API DD không khớp current local source composition. Đây chưa phải production/deployment/runtime verification. |
-| Trạng thái | Loading, ready, 403-unclear, 404 và expired-link trong inventory; preview khi hỗ trợ, fallback download. | 6 state tab chỉ thay nội dung mô tả/code sample bằng JavaScript local; toolbar/download vẫn disabled, không có viewer hay request. API hiện chỉ xác nhận 200/404/500. |
+| Trạng thái | Loading, ready, access denied, not found, error; preview when supported, fallback download. | Current source renders loading, login-required, forbidden, not-found, error/retry and ready. The ready action opens a safe URL; there is no type-specific viewer or expiry UI. |
 | API card / URL | Contract đúng phải theo catalog và API source. | Mock card dùng path không có `/api/v1`, host mẫu và `Authorization: Bearer`; ready sample mô tả `signed_url`/`expires_in`. Đây là prototype-only và khác catalog/source. |
-| Navigation | GS-06 là return destination; ST-12 entry context có thể gồm `lessonId`. | Back/breadcrumb/header/footer anchors dùng `href="#"` và `data-path` metadata; chưa có điều hướng hoặc giữ origin/context. |
+| Navigation | Return to GS-06 or ST-12 with originating context. | Current router links return to the course resource tab when `courseId` is present, or the lesson resource panel when `lessonId` is present; no deployment/runtime verification. |
 | Design/accessibility | `.agents/web-study/design.md` là target: Inter/system, ocean tokens, no remote font, ~1120px content width, responsive reflow, focus-visible/reduced-motion, target ≥44px. | Prototype tải Google Fonts/Tailwind CDN, dùng Plus Jakarta Sans và cobalt `#004ac6/#2563eb`, max-width 1440px; nav chính ẩn dưới `md` không có menu mobile, zoom controls 32×32 và status badge `animate-pulse`. Contrast/reflow/WCAG chưa được đo. |
 
 ### Quy tắc nghiệp vụ và bảo mật

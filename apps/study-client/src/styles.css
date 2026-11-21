@@ -160,7 +160,7 @@ study-ad02-page .refresh-button:focus-visible {
   outline-offset: 3px;
 }
 
-study-ad02-page .refresh-button:disabled { cursor: wait; opacity: 0.72; }
+study-ad02-page .refresh-button:disabled { cursor: not-allowed; opacity: 0.72; }
 
 study-ad02-page .list-panel {
   display: flex;

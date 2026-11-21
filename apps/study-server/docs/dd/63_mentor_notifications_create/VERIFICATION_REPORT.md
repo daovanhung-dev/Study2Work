@@ -1,8 +1,12 @@
 # VERIFICATION_REPORT — Study API #63
 
+## Current implementation update — 2026-11-21
+
+The approved ME-14 integration reconciles `content` to strict text across catalog, model, OpenAPI and focused tests. ME-14 sends its accepted Operation UUID to notification-only API #18 through SH-07; `meta.notification_ids` remains the per-notification handoff for API #64. Recipient/channel CSV, common-course scope, legacy outbox schema, live deployment and worker/provider delivery remain outside verified contract/runtime.
+
 ## Kết quả
 
-- DD status: `Draft — Needs Confirmation`. Catalog fields/types/status/errors remain direct; CSV parsing, common-course scope, legacy mapping, outbox and ID handoff are marked DERIVED in the DD.
+- DD status: `Draft — Needs Confirmation`. Text content is reconciled; recipient/channel CSV, common-course scope, legacy mapping and outbox remain DERIVED in the DD.
 - Deliverable: 8 template sheets and 3 Markdown reports. All 8 sheets remain Draft; Excel source appendices were preserved.
 - Runtime API #63: route/module/test are wired locally and pass HTTP tests with fake DB sessions. This does not verify live schema or deployment.
 - Macro-review AC-25 #62–#64 + API #18: `VERIFIED_WITH_OPEN_QUESTIONS`; the local #64 ID handoff is documented, while contract gaps remain explicit.
@@ -25,7 +29,7 @@
 
 ## Giới hạn còn mở
 
-- API contract still does not specify recipient/channel encoding, course scope, message text type, or an Operation-to-notification ID handoff; current behavior is a DERIVED local fallback.
+- API contract still does not specify recipient/channel encoding or course scope; current behavior is a DERIVED local fallback. The ME-14-to-SH-07 UUID handoff is resolved for notification-only tracking; API #64 notification IDs remain separately exposed.
 - The body has no `course_id`, so common-course membership cannot prove that recipients came from the exact course selected in the UI.
 - HTTP tests use fake DB results. Live PostgreSQL schema, migration deployment, worker/provider delivery, API #64 runtime compatibility, and API #18 polling remain unverified.
 

@@ -18,6 +18,8 @@
 | `SH-02-EV-013` | `SH02-EV-13` / SH02-EV-13 — Chuyển tới đăng ký | See source event detail below |
 
 > Event IDs trong package là alias để theo template; Source Event IDs, steps và API links giữ theo DD nguồn. Alias không chứng minh event runtime.
+>
+> Current source (2026-11-20): SH02Page validates the form, prevents duplicate submits, maps #03 HTTP/business/field errors, and calls `SH02LoginService`; #03 dispatches by role and only Student proceeds through #04. Runtime was not checked. Detailed excerpts below retain expected/historical event contracts where they conflict with implementation.
 
 ## 2. Chi tiết event từ DD nguồn
 
@@ -30,7 +32,7 @@
 - **Đầu vào:** Path `/login`, query hoặc route state do luồng bảo vệ cung cấp, gồm `returnTo` nếu có.
 - **API / đầu ra:** Không gọi API. Hiển thị form rỗng và chỉ giữ đích quay lại sau khi kiểm tra theo chính sách allowlist còn chờ duyệt.
 
-1. Angular router hiện mở `/login` và render SH02Page. Test route xác nhận việc này; browser runtime chưa xác minh.
+1. Angular router maps `/login` to SH02Page; current source includes submit and role-flow handlers. Browser runtime is not verified.
 2. Nếu route cần bảo vệ chuyển tới đây, chỉ đọc returnTo từ router state đáng tin cậy hoặc query tương đối qua danh sách cho phép. Từ chối URL tuyệt đối/tương đối mạng và đích ngoài danh sách route an toàn của vai trò đã xác thực.
 3. Không sao chép token, mật khẩu hoặc email trong query vào route state. HTML gốc không có handler returnTo; đây là hành vi đích trong danh mục, không phải hành vi HTML hiện tại.
 4. Hiển thị biểu mẫu ở trạng thái rảnh. screen.png trống; chỉ dùng bản dựng HTML sạch làm bằng chứng thiết kế.
@@ -64,7 +66,7 @@
 3. Cập nhật tên/trạng thái trợ năng và focus mà không gửi biểu mẫu.
 4. Không có yêu cầu API hay thay đổi trạng thái máy chủ. HTML hiện tham chiếu togglePasswordVisibility() nhưng không định nghĩa; đây mới là placeholder của bản mẫu.
 
-**Kết quả / ngoại lệ:** Khi có handler, chỉ thay cách hiển thị và giữ nguyên giá trị/focus. HTML hiện gọi hàm chưa định nghĩa, nên chưa xác nhận tương tác runtime.
+**Kết quả / ngoại lệ:** Current source toggles password visibility without clearing the value; focus/runtime interaction remains unverified.
 
 ### SH02-EV-04 — Gửi đăng nhập
 

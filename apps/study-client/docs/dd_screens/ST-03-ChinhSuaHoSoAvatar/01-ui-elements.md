@@ -74,5 +74,10 @@ Marker trên ảnh và hàng tương ứng trong bảng dùng chung số 1–26.
 - States theo inventory: dirty/uploading/saving/422/error
 - Detail/conditional visibility: xem section elements/state của [DD nguồn](../../screen_stitch/03_student/ST-03_chinh-sua-ho-so-avatar/ST-03.md); không diễn giải ảnh tĩnh thành behavior runtime.
 
+### Current Study Web source (static inspection)
+- Page binds profile fields from #04. Full name and phone are editable; email is read-only; Bio remains disabled because the API/DB source has no Bio field.
+- Avatar selection validates PNG/JPEG/WebP and file size, previews a Data URL, and requires an explicit #13 upload action. Save calls #14 with supported fields and then reloads #04.
+- Loading, validation, upload, save and refresh-retry states exist in source. The current Angular page does not display the original Gate G-03 banner and therefore differs from the Stitch screenshot; browser/runtime is not verified.
+
 ## 5. Link
 - [Events](02-events.md) · [Data Flow](03-data-flow.md) · [Tests](07-test-cases.md)

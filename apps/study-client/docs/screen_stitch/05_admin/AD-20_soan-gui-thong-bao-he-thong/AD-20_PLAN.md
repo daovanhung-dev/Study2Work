@@ -121,3 +121,9 @@ Source coordinate space: 1242×1600 pixels, origin top-left. Markers describe 54
 - [ ] Check API #093 reverse index and screen row 78; keep API contract as D and update screen doc/tracker status accurately.
 - [ ] Verify inventory/folder count remains 83/83 and core artifact count advances 72/83 → 73/83.
 - [ ] Run static artifact/relative-link/hash/dimension/marker checks and `git diff --check`; do not run application tests/runtime for this documentation task.
+
+## Dated continuation — local preview whitespace normalization (2026-11-20)
+
+- Angular AD20 now derives trimmed title/body values for the preview and restores the existing sample copy when either input is empty after trimming. The input signals retain the user's raw text.
+- No validation, API #93/#18 caller, persistence, audience/channel behavior, or draft/send action was added. Existing contract and permission blockers remain open.
+- `screen_complete.md` remains at 25%; this preview-only correction does not move a weighted axis to its next scoring threshold. No tests/build/lint/browser/API runtime were run.

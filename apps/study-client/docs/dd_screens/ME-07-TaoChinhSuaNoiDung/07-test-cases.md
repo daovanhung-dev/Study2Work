@@ -1,5 +1,15 @@
 # ME-07 — Test Cases
 
+## Current focused tests — 2026-11-17
+
+`me07-page.spec.ts` passed 2/2 tests in the focused suite. Create and edit modes
+load #49, keep Save disabled, prevent form submission, and do not call #50/#51.
+These frontend tests do not verify live APIs, PostgreSQL, or deployment.
+
+## Current source state — 2026-11-20
+
+The page now has route-change cancellation, strict #49 response and course/Content identity checks, and distinct invalid/loading/not-found/forbidden/error-retry states. The historical focused-test result above predates these changes; no new test result is claimed here. #50/#51 remain gated and are not called by the page.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix

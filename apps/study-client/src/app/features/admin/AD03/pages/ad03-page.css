@@ -1,4 +1,5 @@
 :host { display: block; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; }
 .user-detail-page { display: flex; flex-direction: column; gap: 20px; padding-block: 20px 40px; }
 .detail-toolbar, .detail-toolbar ol, .back-link, .panel-heading, .identity-row { display: flex; align-items: center; }
 .detail-toolbar { justify-content: space-between; gap: 12px; color: var(--text-muted); font-size: 13px; }
@@ -30,6 +31,7 @@
 .action-link { display: grid; min-height: 50px; place-items: center; margin: 0 20px 10px; padding: 10px 14px; border: 0; border-radius: 10px; color: #fff; background: #1763df; font: inherit; text-decoration: none; }
 .action-link--muted { color: #c24949; background: #f3f5fa; }
 .action-link:disabled { cursor: not-allowed; opacity: .55; }
+.action-link:focus-visible { outline: 3px solid rgb(42 101 214 / 38%); outline-offset: 2px; }
 .action-note { margin: 8px 20px 22px; padding: 13px 14px; border-radius: 10px; color: #52698f; background: #edf3ff; font-size: 13px; }
 .activity-empty { display: flex; min-height: 190px; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin: 0 20px 20px; padding: 20px; border-radius: 12px; background: #f5f7fc; text-align: center; }
 .activity-icon { width: 44px; height: 44px; border-radius: 50%; }

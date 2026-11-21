@@ -5,10 +5,6 @@ from typing import Annotated, Any
 from app.modules.shared.api_34_uploads.models import UploadAssetResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-Int64 = Annotated[
-    int,
-    Field(strict=True, ge=-(2**63), le=2**63 - 1, json_schema_extra={"format": "int64"}),
-]
 Int32 = Annotated[
     int,
     Field(strict=True, ge=-(2**31), le=2**31 - 1, json_schema_extra={"format": "int32"}),
@@ -19,7 +15,7 @@ class CreateLectureRequest(BaseModel):
     """Biểu diễn request JSON tạo lecture theo contract API #47."""
 
     title: str = Field(strict=True, max_length=200)
-    content: Int64
+    content: str = Field(strict=True)
     asset_refs: str = Field(strict=True)
     order: Int32
 

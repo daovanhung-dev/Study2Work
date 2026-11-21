@@ -1,6 +1,6 @@
 # ME-06 — Test Cases
 
-> Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
+> Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite. ME-06 source đã được cập nhật; không chạy tests/build/lint/browser trong task này nên không ghi nhận pass/runtime evidence.
 
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |
@@ -11,14 +11,14 @@
 
 ### ME-06-TC-001 — Acceptance planning reference (AC-22)
 - **Mục tiêu:** Giữ truy vết tới yêu cầu/acceptance đã ghi; đây là test planning reference, không phải test code hoặc kết quả chạy.
-- **Precondition:** Đọc nguồn [ME-06](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/ME-06.md) và gỡ blocker áp dụng trước khi implementation.
+- **Precondition:** Route, #49 caller and local server source exist; verify against current contracts before enabling unsupported Stitch behavior.
 - **Mock/test data:** Nguồn không cung cấp fixture dùng để chạy test ở package này; không đưa dữ liệu thật.
 - **Steps:**
   1. Đối chiếu acceptance và event tương ứng trong DD nguồn.
   2. Khi runtime/test implementation tồn tại, viết test riêng theo contract đã xác nhận.
-- **Expected UI/state:** Theo acceptance/state trong nguồn; chưa được xác minh trên runtime.
+- **Expected UI/state:** Invalid ID/loading/empty/ready/404/403/error-retry states exist in source; runtime not verified.
 - **Expected API/data:** Theo [API Integration](04-api-integration.md); không phát sinh request trong lần tạo tài liệu.
-- **Failure / edge assertion:** Không đánh dấu pass cho `UNWIRED`, `IMPLEMENTATION BLOCKED` hoặc `RUNTIME NOT VERIFIED`.
+- **Failure / edge assertion:** No pass is recorded because tests and runtime were not run; keep remaining `IMPLEMENTATION BLOCKED` controls disabled.
 - **References:** `AC-22`, [Events](02-events.md), [Business Rules](05-business-rules.md), [source DD](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/ME-06.md).
 
 ## 3. Source acceptance / test plan (not run)

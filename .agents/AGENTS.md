@@ -25,10 +25,9 @@ choosing a scope or subcontext.
 Global index: `project/INDEX.md`.
 
 **Agent Control bắt buộc cho mọi scope:** đọc và áp dụng
-[`project/agent-control.md`](project/agent-control.md) trước mọi thao tác tool.
-Thông báo START trước và ghi nhận END sau từng tool call theo Task/Step/Action/Event.
-Quy tắc này bổ sung khả năng quan sát, không vượt quyền system/developer/tool,
-bảo mật hoặc các ràng buộc bắt buộc khác trong repo.
+[`project/agent-control.md`](project/agent-control.md) cho mọi task. Tiến độ
+đang hoạt động chỉ được ghi trong [`.agents/target.md`](target.md), theo đúng
+ba cột đã định nghĩa. Worklog lưu bằng chứng, không thay thế target tracker.
 
 - `project/design.md`: nguồn chuẩn design system và UX cho Work Web/Mobile.
 - `project/source-status.md`: source/DD/schema/context status và blocker.
@@ -39,8 +38,8 @@ bảo mật hoặc các ràng buộc bắt buộc khác trong repo.
 - `project/business-code.md`: cách tra business code/HTTP mapping.
 - `project/contracts.md`: producer/consumer/status của shared và local contracts.
 - `project/workflows.md`: workflow chung và verification order.
-- `project/agent-control.md`: protocol toàn cục về plan-first, event receipts,
-  verified progress và final report.
+- `project/agent-control.md`: quy tắc target, thực thi im lặng, bằng chứng và
+  an toàn áp dụng cho mọi scope.
 - `skills/INDEX.md`: skill registry và resource của `create-dd-from-bd-mobile`
   (Mobile module DD), `createDD-markdown` (Web/API DD), và `code-review`
   (read-only review across all code scopes).
@@ -50,25 +49,23 @@ bảo mật hoặc các ràng buộc bắt buộc khác trong repo.
 Mỗi scope có `INDEX.md` làm page graph. Không tạo context agent trong `apps/`;
 root router luôn trỏ về các entry dưới `.agents/`.
 
-## Quy tắc chat và tiến độ (mọi task)
+## Quy tắc target và giao tiếp (mọi task)
 
-Đây là yêu cầu bắt buộc cho coding, fix, docs, test, review và cả task chỉ đọc.
-Ở đầu task, trước khi inspect sâu, công bố trong chat phân loại task và các
-milestone task-specific. Phải có ít nhất hai milestone; mỗi mốc nêu mục tiêu,
-tiêu chí hoàn thành và trọng số phần trăm, tổng trọng số bằng 100%. Nêu tiến độ
-ban đầu là 0% và lưu các mốc trong mục `MILESTONES` của worklog.
+- `.agents/target.md` là nguồn tiến độ duy nhất cho target đang hoạt động. File
+  chỉ chứa bảng `STT | Tên target | Tiến độ hoàn thiện`; không thêm mô tả,
+  milestone, lịch sử hay cột khác.
+- Mỗi target độc lập, rõ nghĩa, bắt đầu ở `0%`; cập nhật phần trăm khi bằng
+  chứng xác minh làm thay đổi tiến độ. Giữ nguyên tiến độ đã xác minh khi bị
+  chặn. Khi hoàn thành, ghi bằng chứng vào worklog rồi xóa hàng `100%`.
+- Worklog ghi phân loại, nguồn đã đọc, thay đổi, xác minh và `TARGET_UPDATES`;
+  không lưu bảng `MILESTONES` hoặc bản sao tiến độ.
+- Không tự gửi tiến độ, Event receipt, milestone, tổng kết đọc/thao tác hoặc
+  báo cáo hoàn tất vào chat. Chỉ phản hồi câu hỏi của người dùng, yêu cầu làm
+  rõ blocker, hoặc yêu cầu bắt buộc từ quy tắc cấp cao hơn.
 
-Mỗi tool call phải có Event ID và thông báo START trước, END ngay sau khi có
-kết quả; ghi rõ operation, target, kết quả thực và bằng chứng. Có thể dùng
-compact event mode và trình bày nhiều Event trong một bảng, nhưng không được
-gộp/bỏ Event hoặc trì hoãn receipt. Bản tin sau tool call phải cho biết Task,
-Step, Action, verified %, kết quả, Done/Running/Next và blocker nếu có. Dùng
-cùng một verified-progress calculation cho Task/Step/Action và worklog
-milestones; bootstrap discovery không được tính hai lần. Nếu task bị chặn,
-báo phần trăm đã đạt và blocker; chỉ báo 100% khi mọi DoD bắt buộc hoàn tất.
-
-`.agents/project/workflows.md` mô tả điểm chèn các cập nhật trong common flow;
-`.agents/worklog/README.md` và `TEMPLATE.md` quy định cách ghi các mốc.
+Quy tắc này không thể ghi đè system/developer, bảo mật, quyền hạn hoặc giới
+hạn công cụ. `.agents/project/workflows.md` và
+`.agents/worklog/README.md` quy định luồng thực hiện và bằng chứng.
 
 ## Nhãn trạng thái
 

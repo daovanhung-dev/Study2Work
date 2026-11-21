@@ -6,6 +6,7 @@ import { AD02ApiService } from '../data-access/ad02-api.service';
 import { StudyIcon } from '../../../../shared/ui/study-icon';
 import { AD02_SCREEN_MODEL } from '../models/ad02-screen.model';
 import { adminQueryState, loadedRows } from '../../admin-screen-state';
+import { hasAdminPageCountMismatch, isAdminUserPage } from '../../admin-api-guards';
 import { renderUserRow } from '../../admin-screen-renderers';
 
 interface AD02UsersQuery {
@@ -28,6 +29,8 @@ export class AD02Page {
   readonly screenModel = AD02_SCREEN_MODEL;
   readonly columns = AD02_SCREEN_MODEL.columns;
   readonly query = signal<AD02UsersQuery>(queryFromParamMap(this.route.snapshot.queryParamMap));
+  readonly snapshotMismatch = signal(false);
+  readonly pageOutOfRange = signal(false);
   readonly filters = signal(filtersFromQuery(this.query()));
   readonly activeFilters = computed(() => {
     const query = this.query();
@@ -40,12 +43,24 @@ export class AD02Page {
   readonly viewState = adminQueryState(
     this.query,
     (query) => this.api.getUsers(query),
-    (page) =>
-      loadedRows(page.items.map(renderUserRow), {
+    (page) => {
+      if (!isAdminUserPage(page, this.query().page)) {
+        this.clearPageFlags();
+        return { status: 'error', message: 'API #68 trả về trang người dùng không hợp lệ.' };
+      }
+
+      const isOutOfRange = page.items.length === 0
+        && page.pagination.page > Math.max(page.pagination.total_pages, 1);
+      this.pageOutOfRange.set(isOutOfRange);
+      this.snapshotMismatch.set(!isOutOfRange && hasAdminPageCountMismatch(page));
+      return loadedRows(page.items.map(renderUserRow), {
         page: page.pagination.page,
         total: page.pagination.total,
         totalPages: page.pagination.total_pages,
-      }),
+        size: page.pagination.size,
+      });
+    },
+    'DESIGN_RESOURCE_RETRIEVED',
   );
   readonly isFilterError = computed(() => {
     const state = this.viewState();
@@ -58,6 +73,7 @@ export class AD02Page {
       if (sameQuery(this.query(), nextQuery)) {
         return;
       }
+      this.clearPageFlags();
       this.filters.set(filtersFromQuery(nextQuery));
       this.query.set(nextQuery);
     });
@@ -80,10 +96,14 @@ export class AD02Page {
     if (this.viewState().status === 'loading') {
       return;
     }
+    this.clearPageFlags();
     this.query.update((current) => ({ ...current }));
   }
 
   changePage(page: number): void {
+    if (this.snapshotMismatch() || this.pageOutOfRange()) return;
+    const pagination = this.viewState().pagination;
+    if (!pagination || !Number.isSafeInteger(page) || page < 1 || page > pagination.totalPages) return;
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { page },
@@ -106,6 +126,16 @@ export class AD02Page {
       },
       queryParamsHandling: 'merge',
     });
+  }
+
+  returnToFirstPage(): void {
+    if (!this.pageOutOfRange() && !this.snapshotMismatch()) return;
+    this.navigateQuery({ ...this.query(), page: 1 });
+  }
+
+  private clearPageFlags(): void {
+    this.snapshotMismatch.set(false);
+    this.pageOutOfRange.set(false);
   }
 
   get queryStateMessage(): string {

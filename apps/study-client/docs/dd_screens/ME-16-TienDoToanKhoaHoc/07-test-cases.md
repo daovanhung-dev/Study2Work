@@ -23,6 +23,8 @@
 
 ## 3. Source acceptance / test plan (not run)
 
+Current source has a route-reactive #65 reader with strict page and row validation. The cases below remain planning references and were not run.
+
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu
 
 - [x] Có ảnh nguồn `screen.png` giữ nguyên; baseline SHA-256 được ghi trong plan/worklog.

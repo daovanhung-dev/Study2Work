@@ -4,12 +4,18 @@
 |---|---|
 | Screen ID | `ME-11` |
 | Module | Mentor |
-| Route | `/mentor/support` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/mentor/support` — Study Web route/page source is wired; runtime not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `DD BLOCKED` — đã đặc tả đầy đủ empty-state nguồn và truy vết API #58; loaded inbox, mapping filter và một số contract sản phẩm còn thiếu nên chưa đủ cơ sở triển khai mọi trạng thái.; **Implementation status:** `IMPLEMENTATION BLOCKED` — Study Web chưa có source/router; các quyết định loaded-state/filter và UI claim chưa được xác nhận.; **Runtime status:** `RUNTIME NOT VERIFIED` — không có ME-11 app route/runtime trong checkout; phiên docs này không chạy test hoặc ứng dụng. |
+| DD status | `DD BLOCKED` — loaded-row/grouping, status grouping/counts and several product claims remain open; implementation `PARTIAL / SOURCE_WIRED` (#58 read); runtime `NOT VERIFIED`. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [ME-11.md](../../screen_stitch/04_mentor/ME-11_hop-thu-ho-tro-hoc-vien/ME-11.md), [ME-11_PLAN.md](../../screen_stitch/04_mentor/ME-11_hop-thu-ho-tro-hoc-vien/ME-11_PLAN.md), [ME-11_markers.json](../../screen_stitch/04_mentor/ME-11_hop-thu-ho-tro-hoc-vien/ME-11_markers.json), [list_screen.md](../../list_screen.md) |
+
+## Current implementation update — 2026-11-20
+
+- ME11 calls #58 with only `course_id` and `status` filters, cancels an earlier query when filters change, and validates the success envelope/code plus each request, student, message, timestamp and attachment projection before rendering. Invalid course IDs are rejected locally; 403 is shown separately; recoverable errors can be retried.
+- It displays supported request/student/status/last-message data and links request IDs to ME-12. It does not infer unread counts, SLA, course title or real-time delivery. `screen_complete.md` remains 62.5%; runtime is NOT VERIFIED.
+- Optional student avatar images now use only HTTPS or same-origin HTTP URLs with `no-referrer`; missing, unsafe or failed images fall back to name-derived initials. Each ME-12 link uses the shared 44px action target and a request-specific accessible name.
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Inbox request thuộc course Mentor phụ trách; status/course filters và empty/ready/error states.
@@ -31,7 +37,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/empty/ready/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source behavior | ME11Page / ME11SupportInboxService | #58 source-wired with filter cancellation and response validation; runtime NOT VERIFIED |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ME-11 source screen.png](../../screen_stitch/04_mentor/ME-11_hop-thu-ho-tro-hoc-vien/screen.png))

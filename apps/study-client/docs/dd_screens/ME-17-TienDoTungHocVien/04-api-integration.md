@@ -10,8 +10,8 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #67
-- Orchestration/data notes: Chỉ gọi #67 với course_id + student_id numeric sau khi ME-16 handoff được chốt; không gộp #65/#66. Catalog ApiEnvelope<Page<Course>> khác local ApiEnvelope<StudentCourseProgress>; AC-26 đặt #66 trước chọn Student/#67, khác inventory; loaded timeline và mockup metrics chưa có field mapping.
-- BE/source status và gate: **R**; #67 route/module/query/model/focused test source có local implementation. **DD BLOCKED; IMPLEMENTATION BLOCKED:** catalog/local response mismatch, AC-26 ordering, selected-row carrier, loaded timeline/metrics, owner/ACTIVE-roster/privacy and live-schema confirmation; Study Web UNWIRED; RUNTIME NOT VERIFIED
+- Orchestration/data notes: Current client calls #67 with the positive route `course_id` and `student_id` from a validated ME16 row; it does not combine #65/#66. Catalog `ApiEnvelope<Page<Course>>` differs from local `ApiEnvelope<StudentCourseProgress>`; AC-26 sequence differs from inventory; loaded timeline/mockup metrics have no field mapping.
+- BE/source status và gate: **R**; #67 route/module/query/model/focused test source and ME17 caller exist. **SOURCE-WIRED / PARTIAL:** exact identity/response checks and route cancellation. **OPEN:** catalog/local response mismatch, AC-26 ordering, selected-row carrier/reload policy, timeline/metrics, owner/ACTIVE-roster/privacy and live schema/runtime.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: B2. Current API #67 source flow
@@ -26,6 +26,13 @@
 8. Success source trả ApiEnvelope<StudentCourseProgress> với course_id; student{id,full_name,avatar_url}; summary{completed_lessons,total_lessons,progress_percent}; lessons[]{lesson_id,title,order,progress_status,progress_percent,last_accessed_at,completed_at}. Không có pagination hoặc DB write.
 9. Local errors: 401 DESIGN_AUTHENTICATION_REQUIRED, 403 DESIGN_ACCESS_DENIED, 404 DESIGN_RESOURCE_NOT_FOUND, 500 DESIGN_INTERNAL_ERROR. Error body dùng envelope an toàn/data null theo local source.
 10. Đọc test source cho thấy fake DB cases cho auth, IDs, owner/roster, empty curriculum, projection/error/OpenAPI/trace; test chưa chạy. Đây không phải bằng chứng live DB/deployment.
+
+### Current Study Client integration
+
+- ME17 sends only the supported path values `course_id` and `student_id`; it rejects invalid IDs locally, follows `paramMap`, and cancels a request when either ID changes.
+- It checks `DESIGN_RESOURCE_RETRIEVED`, exact route/data identity, student display fields, unique ordered lesson IDs, allowed statuses, 0..100 percentages, nullable dates and the local summary rules (`total=lessons.length`, completed count from COMPLETED lessons, floor average of lesson percentages). Optional Student avatars render only from HTTPS or same-origin HTTP with `no-referrer` and initials fallback.
+- Current local server behavior returns one `StudentCourseProgress` after direct-owner and ACTIVE-enrollment checks. Catalog response remains `Page<Course>`; the code follows local backend source while recording the unresolved discrepancy.
+- No browser/runtime verification or tests were run.
 
 ## 3. API không sử dụng
 - Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.

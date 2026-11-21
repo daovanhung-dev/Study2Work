@@ -13,7 +13,7 @@ import type { AdminScreenField, AdminScreenMetric, AdminScreenRow, AdminScreenSe
 
 export function renderUserFields(user: AdminUserProfile): readonly AdminScreenField[] {
   return [
-    { label: 'Mã người dùng', value: displayValue(user.id) },
+    { label: 'Mã người dùng', value: displayInt64(user.id) },
     { label: 'Họ và tên', value: user.full_name },
     { label: 'Email', value: user.email },
     { label: 'Số điện thoại', value: displayValue(user.phone) },
@@ -26,17 +26,40 @@ export function renderUserFields(user: AdminUserProfile): readonly AdminScreenFi
 }
 
 export function renderUserRow(user: AdminUserProfile): AdminScreenRow {
+  const safeId = positiveSafeRouteId(user.id);
+  const detailRoute = safeId ? `/admin/users/${encodeURIComponent(safeId)}` : undefined;
   return {
     values: [
-      displayValue(user.id),
+      displayInt64(user.id),
       user.full_name,
       user.email,
       user.role,
-      user.status,
+      userStatusLabel(user.status),
       formatDate(user.created_at),
     ],
-    route: `/admin/users/${encodeURIComponent(String(user.id))}`,
+    ...(detailRoute
+      ? {
+          route: detailRoute,
+          actions: [
+            { label: 'Chỉnh sửa', route: `${detailRoute}/edit` },
+            { label: 'Quản lý trạng thái', route: `${detailRoute}/actions` },
+          ],
+        }
+      : {}),
   };
+}
+
+function userStatusLabel(status: string): string {
+  switch (status) {
+    case 'ACTIVE':
+      return 'Đang hoạt động';
+    case 'SUSPENDED':
+      return 'Đã tạm khóa';
+    case 'DELETED':
+      return 'Đã đánh dấu xóa';
+    default:
+      return 'Trạng thái chưa được hỗ trợ';
+  }
 }
 
 export function renderCourseFields(course: AdminCourse | undefined): readonly AdminScreenField[] {
@@ -44,12 +67,12 @@ export function renderCourseFields(course: AdminCourse | undefined): readonly Ad
     return [];
   }
   return [
-    { label: 'Mã khóa học', value: displayValue(course.id) },
+    { label: 'Mã khóa học', value: displayInt64(course.id) },
     { label: 'Tên khóa học', value: course.title },
     { label: 'Mô tả', value: displayValue(course.description) },
     { label: 'Mô tả ngắn', value: '' },
     { label: 'Chủ khóa học', value: course.mentor.full_name },
-    { label: 'Mã mentor', value: displayValue(course.mentor.id) },
+    { label: 'Mã mentor', value: displayInt64(course.mentor.id) },
     { label: 'Giá', value: course.price },
     { label: 'Trạng thái', value: course.status },
     { label: 'Ảnh đại diện', value: displayValue(course.thumbnail_url) },
@@ -57,16 +80,17 @@ export function renderCourseFields(course: AdminCourse | undefined): readonly Ad
 }
 
 export function renderCourseRow(course: AdminCourse): AdminScreenRow {
+  const safeId = positiveSafeRouteId(course.id);
   return {
     values: [
-      displayValue(course.id),
+      displayInt64(course.id),
       course.title,
       displayValue(course.description),
       course.mentor.full_name,
       course.price,
       course.status,
     ],
-    route: `/admin/courses/${encodeURIComponent(String(course.id))}`,
+    ...(safeId ? { route: `/admin/courses/${encodeURIComponent(safeId)}` } : {}),
   };
 }
 
@@ -78,7 +102,7 @@ export function renderContentRow(content: AdminContent): AdminScreenRow {
       displayInt64(content.course_id),
       content.content_type,
       displayValue(content.order),
-      content.status,
+      contentQueueStatusLabel(content.status),
     ],
     ...(Number.isSafeInteger(content.id)
       ? { route: `/admin/content/${encodeURIComponent(String(content.id))}/review` }
@@ -86,11 +110,21 @@ export function renderContentRow(content: AdminContent): AdminScreenRow {
   };
 }
 
-function displayInt64(value: number | null): string {
-  if (value === null) {
+function contentQueueStatusLabel(status: string): string {
+  return status === 'PENDING_REVIEW'
+    ? 'Đang chờ duyệt'
+    : 'Trạng thái chưa được hỗ trợ';
+}
+
+function displayInt64(value: number | null | undefined): string {
+  if (value === null || value === undefined) {
     return '—';
   }
   return Number.isSafeInteger(value) ? String(value) : 'Không thể hiển thị chính xác';
+}
+
+function positiveSafeRouteId(value: number): string | undefined {
+  return Number.isSafeInteger(value) && value > 0 ? String(value) : undefined;
 }
 
 export function renderContentFields(content: AdminContent): readonly AdminScreenField[] {
@@ -111,7 +145,7 @@ export function renderLessonRow(lesson: AdminLesson): AdminScreenRow {
     values: [
       displayInt64(lesson.id),
       lesson.title,
-      displayValue(lesson.course_id),
+      displayInt64(lesson.course_id),
       displayValue(lesson.order),
       lesson.status,
     ],
@@ -123,11 +157,11 @@ export function renderLessonRow(lesson: AdminLesson): AdminScreenRow {
 
 export function renderLessonFields(lesson: AdminLesson): readonly AdminScreenField[] {
   return [
-    { label: 'Mã bài học', value: displayValue(lesson.id) },
+    { label: 'Mã bài học', value: displayInt64(lesson.id) },
     { label: 'Tiêu đề', value: lesson.title },
     { label: 'Nội dung', value: displayValue(lesson.content) },
     { label: 'Nội dung bài học', value: displayValue(lesson.content) },
-    { label: 'ID khóa học', value: displayValue(lesson.course_id) },
+    { label: 'ID khóa học', value: displayInt64(lesson.course_id) },
     { label: 'Trạng thái', value: lesson.status },
     { label: 'URL video', value: displayValue(lesson.video_url) },
     { label: 'Thứ tự hiển thị', value: displayValue(lesson.order) },
@@ -168,13 +202,26 @@ export function renderNotificationRow(notification: Pick<AdminNotification, 'id'
       notification.title,
       notification.content,
       notification.channels.join(', '),
-      notification.status,
+      notificationStatusLabel(notification.status),
       formatDate(notification.created_at),
     ],
     ...(Number.isSafeInteger(notification.id)
       ? { route: `/admin/notifications/${encodeURIComponent(String(notification.id))}` }
       : {}),
   };
+}
+
+function notificationStatusLabel(status: string): string {
+  switch (status) {
+    case 'QUEUED':
+      return 'Đang chờ gửi';
+    case 'SENT':
+      return 'Đã gửi';
+    case 'FAILED':
+      return 'Gửi thất bại';
+    default:
+      return 'Trạng thái chưa được hỗ trợ';
+  }
 }
 
 export function renderNotificationStatusFields(notification: AdminNotification): readonly AdminScreenField[] {

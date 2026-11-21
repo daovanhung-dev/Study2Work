@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Soạn title/content/channels và preview recipients đã chọn ở ME-13.
-- Gate/status (giữ nguyên): **R**; #63 route/module/model/query/test có local source; API DD Draft/DERIVED. **DD READY; IMPLEMENTATION BLOCKED:** ME-13 handoff/course binding, `content:int64` vs free text, title 120 vs 200, In-app↔PUSH/email-worker, attachment và draft persistence chưa có contract; Study Web UNWIRED; runtime chưa verified
+- Current implementation status: ME-13 selected recipients flow through a one-use router-history handoff; ME-14 removes that payload from the history entry, validates the selected IDs, sends text and explicit `PUSH`/`EMAIL` values via #63, and routes a validated accepted UUID to SH-07. Accepted forms are locked; ambiguous network or malformed-success outcomes cannot be blindly resubmitted in the current page because #63 has no idempotency key. API #63 still has no `course_id`; exact course binding, attachment/draft persistence, worker/provider delivery and browser runtime remain unresolved or unverified. The broad DD stays Draft for those decisions.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 > CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.

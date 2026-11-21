@@ -9,9 +9,9 @@
       <div>
         <p class="student-overview__eyebrow">KHU VỰC HỌC VIÊN</p>
         <h1>Tổng quan học tập</h1>
-        <p>Các widget chỉ hiển thị dữ liệu được Study Server trả về.</p>
+        <p>Theo dõi khóa học, thành tích và thông báo của bạn.</p>
       </div>
-      <span class="student-overview__session">Phiên Student đã xác thực</span>
+      <span class="student-overview__session">Khu vực học viên</span>
     </header>
 
     <div class="student-overview__grid">
@@ -19,7 +19,7 @@
         <section class="student-overview__widget api-card" aria-labelledby="overview-courses-title">
           <div class="student-overview__widget-heading">
             <div>
-              <p class="student-overview__eyebrow">API #20 · khóa ghi danh ACTIVE</p>
+              <p class="student-overview__eyebrow">HỌC TẬP</p>
               <h2 id="overview-courses-title">Khóa học đang học</h2>
             </div>
             <a routerLink="/student/courses">Tất cả khóa học</a>
@@ -29,16 +29,29 @@
             <p class="student-overview__message api-message" role="status">Đang tải khóa học…</p>
           }
           @if (coursesError()) {
-            <p class="student-overview__error api-error" role="alert">{{ coursesError() }}</p>
+            <div class="student-overview__error api-error" role="group" aria-label="Lỗi tải khóa học">
+              <p role="alert">{{ coursesError() }}</p>
+              <button class="api-button secondary" type="button" (click)="retryCourses()">
+                Thử tải lại khóa học
+              </button>
+            </div>
           }
-          @if (!coursesLoading() && !coursesError() && courses().length === 0) {
+          @if (!coursesLoading() && !coursesError() && coursesSnapshotMismatch()) {
+            <div class="student-overview__message api-message" role="status">
+              <p>Danh sách khóa học vừa thay đổi. Hãy tải lại để đồng bộ số lượng.</p>
+              <button class="api-button secondary" type="button" (click)="retryCourses()">
+                Tải lại khóa học
+              </button>
+            </div>
+          }
+          @if (!coursesLoading() && !coursesError() && !coursesSnapshotMismatch() && courses().length === 0) {
             <div class="student-overview__message api-message">
-              <strong>Chưa có khóa học ACTIVE được trả về.</strong>
-              <p>Danh sách rỗng được xác định từ API #20, không suy ra từ lỗi tải dữ liệu.</p>
+              <strong>Bạn chưa có khóa học đang học.</strong>
+              <p>Các khóa học bạn đăng ký sẽ xuất hiện tại đây.</p>
               <a routerLink="/courses">Khám phá khóa học</a>
             </div>
           }
-          @if (!coursesLoading() && courses().length > 0) {
+          @if (!coursesLoading() && !coursesError() && courses().length > 0) {
             <ul class="student-overview__course-list api-list">
               @for (course of courses().slice(0, 3); track course.course_id) {
                 <li>
@@ -50,7 +63,7 @@
                     }
                     <p>Ghi danh {{ course.enrolled_at | date: 'mediumDate' }}</p>
                   </div>
-                  <span class="student-overview__status">{{ course.enrollment_status }}</span>
+                  <span class="student-overview__status">Đang học</span>
                 </li>
               }
             </ul>
@@ -60,25 +73,22 @@
         <section class="student-overview__widget api-card" aria-labelledby="overview-progress-title">
           <div class="student-overview__widget-heading">
             <div>
-              <p class="student-overview__eyebrow">API #21 · progress tổng hợp</p>
+              <p class="student-overview__eyebrow">TIẾN ĐỘ</p>
               <h2 id="overview-progress-title">Tiến độ tổng quan</h2>
             </div>
-            <span class="student-overview__status student-overview__status--limited">Chưa tương thích</span>
+            <span class="student-overview__status student-overview__status--limited">Chưa khả dụng</span>
           </div>
           <div class="student-overview__message api-message">
-            <strong>Chưa thể hiển thị số liệu tiến độ.</strong>
-            <p>
-              Route #21 hiện trả `UserProfile`, không có trường tiến độ. Trang không tự tính phần
-              trăm hoặc đổi dữ liệu hồ sơ thành KPI.
-            </p>
-            <a routerLink="/student/progress">Mở tổng quan tiến độ</a>
+            <strong>Chưa thể hiển thị tiến độ tổng hợp.</strong>
+            <p>Thông tin tiến độ sẽ xuất hiện tại đây khi dữ liệu học tập được đồng bộ.</p>
+            <a routerLink="/student/progress">Mở trang tiến độ</a>
           </div>
         </section>
 
         <section class="student-overview__widget api-card" aria-labelledby="overview-achievements-title">
           <div class="student-overview__widget-heading">
             <div>
-              <p class="student-overview__eyebrow">API #38 · achievement đã ghi nhận</p>
+              <p class="student-overview__eyebrow">THÀNH TÍCH</p>
               <h2 id="overview-achievements-title">Thành tích</h2>
             </div>
             <a routerLink="/student/achievements">Xem danh sách</a>
@@ -87,20 +97,32 @@
             <p class="student-overview__message api-message" role="status">Đang tải thành tích…</p>
           }
           @if (achievementsError()) {
-            <p class="student-overview__error api-error" role="alert">{{ achievementsError() }}</p>
-          }
-          @if (!achievementsLoading() && !achievementsError() && achievements().length === 0) {
-            <div class="student-overview__message api-message">
-              <strong>Chưa có achievement được trả về.</strong>
-              <p>Không tự tạo badge, chứng nhận hoặc tiêu chí cấp thành tích.</p>
+            <div class="student-overview__error api-error" role="group" aria-label="Lỗi tải thành tích">
+              <p role="alert">{{ achievementsError() }}</p>
+              <button class="api-button secondary" type="button" (click)="retryAchievements()">
+                Thử tải lại thành tích
+              </button>
             </div>
           }
-          @if (!achievementsLoading() && achievements().length > 0) {
+          @if (!achievementsLoading() && !achievementsError() && achievementsSnapshotMismatch()) {
+            <div class="student-overview__message api-message" role="status">
+              <p>Danh sách thành tích vừa thay đổi. Hãy tải lại để đồng bộ số lượng.</p>
+              <button class="api-button secondary" type="button" (click)="retryAchievements()">
+                Tải lại thành tích
+              </button>
+            </div>
+          }
+          @if (!achievementsLoading() && !achievementsError() && !achievementsSnapshotMismatch() && achievements().length === 0) {
+            <div class="student-overview__message api-message">
+              <strong>Chưa có thành tích được ghi nhận.</strong>
+            </div>
+          }
+          @if (!achievementsLoading() && !achievementsError() && achievements().length > 0) {
             <ul class="student-overview__achievement-list api-list">
               @for (achievement of achievements().slice(0, 3); track achievement.id) {
                 <li>
                   <strong>{{ achievement.title }}</strong>
-                  <span>{{ achievement.code }} · {{ achievement.awarded_at | date: 'mediumDate' }}</span>
+                  <span>{{ achievement.awarded_at | date: 'mediumDate' }}</span>
                 </li>
               }
             </ul>
@@ -110,37 +132,64 @@
         <section class="student-overview__widget api-card" aria-labelledby="overview-notifications-title">
           <div class="student-overview__widget-heading">
             <div>
-              <p class="student-overview__eyebrow">API #43 · SOURCE_ONLY</p>
+              <p class="student-overview__eyebrow">CHƯA ĐỌC</p>
               <h2 id="overview-notifications-title">Thông báo</h2>
             </div>
-            <a routerLink="/student/notifications">Mở hộp thư</a>
+            @if (unreadCount() !== null && !notificationsSnapshotMismatch()) {
+              <span class="student-overview__status">{{ unreadCount() }} chưa đọc</span>
+            }
+            <a routerLink="/student/notifications">Tất cả</a>
           </div>
-          <div class="student-overview__message api-message">
-            <strong>API thông báo chưa đủ điều kiện gọi từ màn hình.</strong>
-            <p>SQL hiện phụ thuộc bảng `notification_recipients`, chưa có trong DDL được kiểm tra.</p>
-          </div>
+          @if (notificationsLoading()) {
+            <p class="student-overview__message api-message" role="status">Đang tải thông báo…</p>
+          }
+          @if (notificationsError()) {
+            <div class="student-overview__error api-error" role="group" aria-label="Lỗi tải thông báo">
+              <p role="alert">{{ notificationsError() }}</p>
+              <button class="api-button secondary" type="button" (click)="retryNotifications()">
+                Thử tải lại
+              </button>
+            </div>
+          }
+          @if (!notificationsLoading() && !notificationsError() && notificationsSnapshotMismatch()) {
+            <div class="student-overview__message api-message" role="status">
+              <p>Danh sách thông báo vừa thay đổi. Hãy tải lại để đồng bộ số lượng.</p>
+              <button class="api-button secondary" type="button" (click)="retryNotifications()">
+                Tải lại thông báo
+              </button>
+            </div>
+          }
+          @if (!notificationsLoading() && !notificationsError() && !notificationsSnapshotMismatch() && notifications().length === 0) {
+            <div class="student-overview__message api-message">
+              <strong>Không có thông báo mới.</strong>
+              <p>Thông báo chưa đọc sẽ xuất hiện tại đây.</p>
+            </div>
+          }
+          @if (!notificationsLoading() && !notificationsError() && notifications().length > 0) {
+            <ul class="student-overview__notification-list api-list">
+              @for (item of notifications().slice(0, 3); track item.id) {
+                <li>
+                  <strong>{{ item.title }}</strong>
+                  <p>{{ item.content }}</p>
+                  <time [attr.datetime]="item.created_at">{{ item.created_at | date: 'medium' }}</time>
+                </li>
+              }
+            </ul>
+          }
         </section>
       </div>
 
       <aside class="student-overview__handoff api-card" aria-labelledby="overview-handoff-title">
-        <p class="student-overview__eyebrow">TRẠNG THÁI TÍCH HỢP</p>
-        <h2 id="overview-handoff-title">Developer hand-off</h2>
+        <p class="student-overview__eyebrow">LỐI TẮT</p>
+        <h2 id="overview-handoff-title">Khu vực học tập</h2>
         <p class="student-overview__handoff-copy">
-          Widget tải độc lập; lỗi của một API không che dữ liệu hợp lệ từ widget khác.
+          Mở nhanh các trang thường dùng trong tài khoản của bạn.
         </p>
-        <dl>
-          <div><dt>#20 Khóa ghi danh</dt><dd>WIRED</dd></div>
-          <div><dt>#21 Tiến độ tổng hợp</dt><dd>Response không khớp</dd></div>
-          <div><dt>#38 Thành tích</dt><dd>WIRED</dd></div>
-          <div><dt>#43 Thông báo</dt><dd>SOURCE_ONLY</dd></div>
-        </dl>
-        <section class="student-overview__handoff-note">
-          <strong>Không dùng dữ liệu mẫu</strong>
-          <p>Không hiển thị tên, KPI, trạng thái hợp đồng hoặc số chưa có nguồn từ API.</p>
-        </section>
         <nav aria-label="Điều hướng học tập">
+          <a routerLink="/student/courses">Khóa học của tôi</a>
+          <a routerLink="/student/progress">Tiến độ học tập</a>
           <a routerLink="/student/profile">Hồ sơ cá nhân</a>
-          <a routerLink="/student/discussions">Thảo luận</a>
+          <a routerLink="/student/notifications">Thông báo</a>
         </nav>
       </aside>
     </div>

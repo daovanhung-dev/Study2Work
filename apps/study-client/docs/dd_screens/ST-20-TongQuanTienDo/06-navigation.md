@@ -1,11 +1,15 @@
 # ST-20 — Navigation
 
+## Current source route and handoff — 2026-11-20
+
+`/student/progress` is registered in `student.route.ts` under Student access. The page links to the course list and ST-22; it does not select a course or navigate to ST-21 because #21 has no progress payload. Runtime navigation is not verified.
+
 ## 1. Route definition
 - Current route in inventory: `/student/progress`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: current route is source-wired; runtime not verified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
-- Route guards: see source DD/API contract; do not create role policy.
+- Route guards: authenticated Student route group; API calls use the Student Bearer wrapper.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |

@@ -16,18 +16,18 @@ format: markdown
 | Module | `GUEST / ACCOUNT & DISCOVERY` |
 | Method | `POST` |
 | Endpoint | `/api/v1/auth/login` |
-| Purpose | `Xác thực thông tin đăng nhập và trả UserProfile` |
+| Purpose | `Xác thực thông tin đăng nhập và trả hồ sơ cùng token session` |
 | Consumer/Actor | `Guest` |
 | Authentication | `Public; không yêu cầu Bearer token` |
 | Authorization | `N/A — public login` |
-| Basis | `DIRECT — list_api.md normative + AC-02 + ERD V1` |
+| Basis | `DIRECT — list_api.md reconciled to current Study Server source on 2026-11-21; AC-02 and ERD V1 remain comparison sources` |
 | Status | `Draft — Needs Confirmation` |
 | Transaction | `Expected: catalog chưa đặc tả persistence; current source insert refresh_tokens và commit sau khi phát hành token` |
 | Side effects | `Expected: AC-02 yêu cầu token/session; current source phát hành access/refresh token và lưu refresh-token hash` |
 
 ## Sources
 
-- [`docs/lists/list_api.md`](../../../../../docs/lists/list_api.md) — API #3 contract normative: input, `ApiEnvelope<UserProfile>`, `201/422/500`.
+- [`docs/lists/list_api.md`](../../../../../docs/lists/list_api.md) — API #3 contract: input, `ApiEnvelope<LoginData>`, current-source success/error statuses.
 - [`AC-02 Đăng nhập`](../../../docs/diagrams/AC_UNICA/AC_01_GUEST_ACCOUNT.drawio) — precondition, credential/status check, token/session note và các nhánh AC-only.
 - [`DB_UNICA_ERD.drawio`](../../../docs/diagrams/DB_UNICA_ERD.drawio) — bảng `users` và column-level design V1.
 - [`createDD-markdown template`](../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/) — cấu trúc 8 file DD.
@@ -45,9 +45,9 @@ format: markdown
 
 ## Mục chú ý
 
-- `list_api.md` là contract normative cho DD: success HTTP 201 với DESIGN_RESOURCE_CREATED; lỗi normative chỉ 422 và 500.
-- `AC-02` và current source cùng dùng success HTTP 200, 401 cho credential không hợp lệ và 403 cho account không ACTIVE. Catalog vẫn là expected contract normative: 201 và chỉ 422/500.
-- Current source trả profile cộng `access_token`, `refresh_token`, `token_type`, `expires_in`, `refresh_expires_in`; catalog `UserProfile` không khai báo token, vì vậy không đưa token fields vào ví dụ contract.
+- **User decision (2026-11-21):** use current Study Server API #03 behavior for SH-02 and reconcile the catalog success contract. Catalog now declares HTTP 200 `DESIGN_RESOURCE_RETRIEVED` with `LoginData`, including the source profile fields and five token fields. The source route and checked-in tests remain the behavior evidence; live deployment is not verified.
+- Current source returns HTTP 401 for invalid credentials, 403 for a non-ACTIVE account, 422 for invalid request, and 500 for internal failure. Catalog records those current response branches.
+- `LoginData` intentionally omits `UserProfile.bio`, which the current login query does not return. Avatar and phone may be null as projected by the current source.
 - Route `/api/v1/auth/refresh` hiện được đánh dấu cùng API #03 trong router/module nhưng không có catalog row hoặc AC-02 step riêng; DD này giữ nó là source-only discrepancy, không gộp vào login contract.
 
 ## Assumptions
@@ -59,16 +59,16 @@ format: markdown
 
 ## Conflicts
 
-- `DISCREPANCY/TBD: list_api.md ghi 201 DESIGN_RESOURCE_CREATED; AC-02 ghi 200 DESIGN_RESOURCE_RETRIEVED. DD chọn list_api.md làm chuẩn.`
-- `DISCREPANCY/TBD: AC-02 ghi 401/403 nhưng list_api.md không khai báo các error code này; không tự reconcile.`
-- `DISCREPANCY: current source phát hành token và ghi refresh_tokens, trong khi catalog không đặc tả response token hoặc persistence.`
+- `RESOLVED_FOR_SH-02 (2026-11-21): catalog/API #03 success contract now matches current source HTTP 200, DESIGN_RESOURCE_RETRIEVED and LoginData fields.`
+- `RESOLVED_FOR_SH-02 (2026-11-21): catalog/API #03 error statuses record current source 401/403/422/500 behavior.`
+- `SOURCE_BACKED: token fields are part of LoginData; refresh-token hash persistence remains a source behavior and does not prove live schema/deployment.`
 - `DISCREPANCY: router cũng khai báo /auth/refresh nhưng catalog không có API ID/contract riêng.`
-- `DISCREPANCY/TBD: UserProfile.bio có trong contract nhưng ERD users không có column tương ứng.`
+- `LoginData omits UserProfile.bio because the current login source does not return that field; the reusable UserProfile schema remains unchanged.`
 
 ## Security note
 
 - `Không log hoặc trả plaintext password/password_hash; không trả raw DB/hash error detail.`
-- `Không yêu cầu Bearer token cho login. Current token fields là source behavior; không đưa chúng vào contract UserProfile nếu chưa được duyệt.`
+- `Không yêu cầu Bearer token cho login. LoginData returns access and refresh tokens; the client keeps credentials in tab memory under the current Study Web session managers.`
 
 ## Performance note
 

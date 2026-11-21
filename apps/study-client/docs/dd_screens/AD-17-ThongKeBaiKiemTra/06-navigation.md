@@ -3,7 +3,7 @@
 ## 1. Route definition
 - Current route: `/admin/quizzes/:quizId/statistics` is registered in Angular source and maps to `AD17Page`; browser/runtime is not verified.
 - Status: route/page/API caller are source-wired; API contract and approved analytics semantics remain blocked.
-- Route params/types: Angular reads `quizId` as a route string and forwards it as `quiz_id`; direct API contract is int64. Client-side validation is not implemented.
+- Route params/types: Angular reads `quizId` as a route string, validates full-string positive signed-int64 syntax/range before GET #91, then forwards valid text unchanged as `quiz_id`.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
@@ -21,7 +21,7 @@
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
 - Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Invalid/missing ID: current page shows a local route error and skips #91; valid IDs follow the #91 parser contract.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram
@@ -68,7 +68,7 @@ Không có quyền xác nhận để truyền dữ liệu thống kê từ clien
 
 1. Từ AD-15, Admin chọn thao tác xem thống kê cho Quiz. Chỉ định danh Quiz nào được truyền sang route client vẫn cần đối chiếu ID thực tế; API #91 nhận `quiz_id:int64!`.
 2. Client kiểm tra trạng thái phiên và quyền màn hình theo policy được duyệt. AC-35 nêu quiz-management permission; API local chỉ có shared `ADMIN`. Không được xem route-level/Admin shell copy là authorization.
-3. Angular `AD17Page` reads `quizId`; `AD17ApiService` passes it as `quiz_id` to GET #91 through the shared Admin client, with no body/query. The direct catalog declares int64; the client does not validate it locally.
+3. Angular `AD17Page` reads and validates `quizId` as a full-string positive signed-int64; invalid/missing values stop locally. Valid raw text is passed as `quiz_id` to GET #91 through the shared Admin client, with no body/query.
 4. Backend current source xác thực shared `ADMIN`, parse ID, query aggregate read-only trên legacy Quiz/QuizAttempt candidate. API DD đánh dấu metric/formula là DERIVED. Live schema và policy chưa được xác minh.
 5. Current page renders the local DTO projection and a contract warning; the catalog's `ApiEnvelope<Quiz>` does not approve those analytics fields. The client does not compute analytics from Quiz metadata.
 6. Current shared route state renders loading/error states and shared messages for auth, forbidden, not-found and network failures; retry is unspecified. Local source uses 404 for malformed path and missing Quiz.

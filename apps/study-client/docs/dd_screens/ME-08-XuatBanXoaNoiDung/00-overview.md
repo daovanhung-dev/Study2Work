@@ -4,17 +4,27 @@
 |---|---|
 | Screen ID | `ME-08` |
 | Module | Mentor |
-| Route | `/mentor/content/:contentId/actions` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/mentor/content/:contentId/actions` wired to `ME08Page`; selected `courseId` is carried in tab history state |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `DD BLOCKED` — publish request/transition, readiness, delete dependency policy and target hydration are unresolved.; **Implementation status:** `IMPLEMENTATION BLOCKED` — Study Web is `UNWIRED`; current screen source has no selected Content or working controls; server fallbacks contain unapproved policies.; **Runtime status:** `RUNTIME NOT VERIFIED` — local API source, fake-session test source and checked-in migrations do not establish deployed APIs or live database behavior. |
+| DD status | `DD BLOCKED`; implementation `PARTIAL / SOURCE_WIRED` (#49 read only; #52/#53 gated); runtime `NOT VERIFIED`. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [ME-08.md](../../screen_stitch/04_mentor/ME-08_xuat-ban-xoa-noi-dung/ME-08.md), [ME-08_PLAN.md](../../screen_stitch/04_mentor/ME-08_xuat-ban-xoa-noi-dung/ME-08_PLAN.md), [ME-08_markers.json](../../screen_stitch/04_mentor/ME-08_xuat-ban-xoa-noi-dung/ME-08_markers.json), [list_screen.md](../../list_screen.md) |
 
+## Current implementation update — 2026-11-17
+
+- ME08Page reads the selected Content through #49 after validating `contentId` and the `courseId` history-state handoff. The route and page are wired.
+- Publish/unpublish/delete controls are disabled. The page has no #52/#53 caller while lifecycle, confirmation and dependency policies remain unapproved. Focused ME08 tests pass for APPROVED and PUBLISHED content; runtime is NOT VERIFIED.
+
+## Current implementation update — 2026-11-20
+
+- ME08 follows `contentId` route changes, cancels stale #49 reads, validates the envelope, exact `DESIGN_RESOURCE_RETRIEVED` code, course-scoped Content projection, IDs and tree integrity, and supports retry. Invalid context, 403, 404 and recoverable errors render separately.
+- #49 is the only API called by the page. #52/#53 controls remain disabled because the source transition/body, readiness and deletion-dependency rules are not approved by the screen/API DD. `screen_complete.md` is 62.5% (UI 50%, UX 75%, logic 75%, API 50%); runtime is NOT VERIFIED.
+
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Review cảnh báo dependency, xác nhận publish/unpublish hoặc xóa.
 - In-scope: PATCH #52 hay DELETE #53 theo action → GET #49 refresh; không tự đặt soft-delete policy.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Xem các gate contract bên dưới; route/UI source hiện có không xác nhận runtime đã chạy.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,7 +41,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | confirm/processing/success/blocked |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source behavior | ME08Page reads #49 using `contentId` plus `courseId` from tab history state; mutation actions gated. Browser/runtime NOT VERIFIED. |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ME-08 source screen.png](../../screen_stitch/04_mentor/ME-08_xuat-ban-xoa-noi-dung/screen.png))
@@ -48,7 +58,7 @@
 # ME-08 — Xuất bản/xóa nội dung
 
 > **DD status:** `DD BLOCKED` — publish request/transition, readiness, delete dependency policy and target hydration are unresolved.
-> **Implementation status:** `IMPLEMENTATION BLOCKED` — Study Web is `UNWIRED`; current screen source has no selected Content or working controls; server fallbacks contain unapproved policies.
+> **Implementation status:** `PARTIAL / SOURCE_WIRED` — Study Web route/page reads Content through #49; #52/#53 remain gated pending approved lifecycle, confirmation and dependency policies.
 > **Runtime status:** `RUNTIME NOT VERIFIED` — local API source, fake-session test source and checked-in migrations do not establish deployed APIs or live database behavior.
 
 ## Trích đoạn tổng quan từ DD nguồn
@@ -60,7 +70,7 @@
 | Screen ID / tên | ME-08 — Xuất bản/xóa nội dung |
 | Mục tiêu | Hiển thị một Content được chọn từ cây ME-06, cho Mentor xem trạng thái/tác động rồi yêu cầu publish, unpublish hoặc xóa nếu được phép. Đây là mục tiêu theo inventory/AC-22, chưa được UI/API owner chốt. |
 | Actor | Mentor. API #49/#52/#53 yêu cầu Bearer JWT, role `MENTOR`; source hiện tại còn kiểm tra direct owner `courses.mentor_id`, không có assigned-Mentor policy. |
-| Route đề xuất | `/mentor/content/:contentId/actions` theo inventory. Route chưa tồn tại trong Study Web; route không mang `courseId` dù #49 refresh cần `course_id`. |
+| Route đề xuất | `/mentor/content/:contentId/actions` theo inventory; current route exists. `courseId` is carried in tab history state because the path omits the #49 course parameter. |
 | Màn hình trước/sau | ME-06 ([cây nội dung](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/ME-06.md)) chọn Content và là điểm quay lại. `list_screen.md` liên kết ME-08 với ME-06. |
 | APIs theo inventory | GET #49 để hydrate/refresh cây; PATCH #52 publish/unpublish; DELETE #53 xóa. AC-22 nói GET cây → rẽ nhánh thao tác → reload cây. |
 | Trạng thái mong đợi | Inventory: `confirm/processing/success/blocked`. DD tách các trạng thái chờ tải, sẵn sàng, mutation, kết quả refresh, lỗi quyền, không tìm thấy và lỗi mạng/500. |
@@ -76,7 +86,7 @@
 - Hai action `Xuất bản bài học` và `Xóa nội dung` đều `disabled` + `aria-disabled="true"`. Chỉ có action publish; không có control unpublish hoặc hộp xác nhận. Link quay lại ME-06 cùng các anchor điều hướng đều `href="#"`.
 - `code.html` có 15 anchors, hai disabled buttons, không có input/form/API call/custom event. Scripts chỉ nạp/cấu hình Tailwind; HTML không gửi request.
 - Các giá trị “Bản nháp (Chưa xuất bản)”, “Cấp độ thấp”, audit “Hôm nay, 08:30”, tỷ lệ chứng chỉ, điểm danh/bài nộp, production, vùng Châu Á–Thái Bình Dương và Safe Mode là copy mẫu. Chúng không được trả bởi #49/#52/#53.
-- Study Web hiện `UNWIRED`: không có editable source, package manifest hoặc feature route. Không suy ra route, session, cache, xác nhận dialog hay trạng thái runtime từ asset.
+- Historical 2026-11-08 audit found no Study Web wiring in the static asset. Current route/page and caller status is recorded in the implementation update above; browser/runtime remains unverified.
 
 ### Sơ đồ liên kết màn hình
 

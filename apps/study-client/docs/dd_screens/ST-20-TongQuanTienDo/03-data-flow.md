@@ -1,5 +1,15 @@
 # ST-20 — Data Flow & State
 
+## Current-source reconciliation — 2026-11-21
+
+ST-20 calls #38 for recorded awards and independently gates #21 because its
+current response is `UserProfile`. The #38 server reads COUNT and LIST in
+separate queries. The page therefore uses a presentation-only total/item
+comparison to avoid a false empty claim, preserves rows from the list query,
+and offers the existing retry when the values differ; the shared response
+guard does not require them to match. Progress, certificate and award rules
+remain unresolved.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

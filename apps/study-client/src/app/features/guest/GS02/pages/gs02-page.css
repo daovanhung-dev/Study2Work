@@ -113,6 +113,14 @@ p {
   background: var(--ocean-hover);
 }
 
+.retry-button {
+  margin-top: 12px;
+}
+
+.state-message p {
+  margin: 0;
+}
+
 .search-button:focus-visible,
 .pagination button:focus-visible {
   outline: 3px solid var(--ocean-primary);

@@ -1,5 +1,9 @@
 # SH-03 — Test Cases
 
+## Current implementation verification — 2026-11-21
+
+The focused Study Web command covering SH-02–SH-07, ME-14, AD-20 and Student/Mentor API boundaries passed: 11 test files, 36 tests. SH-03 hands off validated `id/email` once to SH-04; live API, browser, database and deployment runtime were not verified.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix
@@ -25,7 +29,7 @@
 
 ### Trích từ DD nguồn: 9. Ma trận kiểm tra cần có khi triển khai giao diện
 
-Các mục dưới đây là tiêu chí kiểm thử cho API/form flow đầy đủ. API #01 source tests và phần submit/error cục bộ của SH-03 đã có focused tests. UI-to-live-server và SH-04 handoff chưa được xác minh.
+Các mục dưới đây là tiêu chí kiểm thử cho API/form flow đầy đủ. Worklog trước đó records focused tests for API #01 and the form; they were not rerun in this task. UI-to-live-server, current handoff behavior, and deployment remain unverified.
 
 | Nhóm | Trường hợp cần kiểm tra | Bằng chứng hiện có |
 |---|---|---|
@@ -35,7 +39,7 @@ Các mục dưới đây là tiêu chí kiểm thử cho API/form flow đầy đ
 | Lỗi API | Lỗi cơ sở dữ liệu/lỗi ngoài dự kiến trả 500 an toàn, không lộ chi tiết ngoại lệ. | Có trong `test_register.py`; được bao phủ bởi full Study Server suite (1484 passed). |
 | Giao diện gửi | JSON chỉ có `email`, `password`, `full_name`; không có Bearer; khóa gửi lặp; tên được ánh xạ; email sai định dạng không POST; email hợp lệ có khoảng trắng được trim. | Angular component spec xác minh qua `HttpTestingController`; không phải request live. |
 | Giao diện lỗi | `meta.fieldErrors` nối đúng trường; 409 giữ biểu mẫu; 500/mạng không để lộ chi tiết và không tự gửi lại. | Angular component spec xác minh 409/422/500/network error mapping và không retry. |
-| Kết quả tạo tài khoản | 201 `DESIGN_RESOURCE_CREATED` chỉ được chấp nhận với `data.id` nguyên dương và `data.email` không rỗng. | Angular spec xác minh payload chuẩn vào account-created state; thiếu `id` hoặc `email` giữ form/password và không gọi API #02. SH-04 transition vẫn chưa được triển khai. |
+| Kết quả tạo tài khoản | 201 `DESIGN_RESOURCE_CREATED` chỉ được chấp nhận với `data.id` nguyên dương an toàn cho JavaScript và `data.email` không rỗng. | Existing spec expectations require static review/update; current source has explicit account-created → one-use SH-04 handoff. Tests not run. |
 | Trợ năng/thích ứng | Bàn phím, tiêu điểm, vùng thông báo, chiều rộng 320px, phóng to, giảm chuyển động. | Có label, required fields, visible focus, reduced-motion và layout responsive trong source; chưa có browser visual/responsive verification. |
 
 ### 3.1. Current Angular test evidence (2026-11-17)

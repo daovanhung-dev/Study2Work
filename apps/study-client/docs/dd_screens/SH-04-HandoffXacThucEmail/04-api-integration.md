@@ -1,5 +1,7 @@
 # SH-04 — API Integration
 
+> **Current source (2026-11-20):** SH04VerificationService calls public API #02 using `StudyApiService.requestWithResponse`, exactly `{user_id, email}` and no Authorization header. The page renders accepted only for HTTP 202, `success=true`, `DESIGN_OPERATION_ACCEPTED`, and `data.status="accepted"`; 422, other HTTP failures, unknown provider statuses and transport uncertainty have separate safe states. Default provider is a stub with no delivery or verification side effect. `user_id` is constrained to positive JS safe integers at the SH-03 handoff; this is stricter than catalog int64 and the backend does not validate user/email ownership.
+
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
 ## 1. API usage matrix
@@ -9,8 +11,14 @@
 
 ## 2. Contract / source detail
 
+### Approved screen scope (2026-11-21)
+
+- API #02 is a public POST `{user_id,email}` with no Authorization header. It is called only after a valid SH-03 handoff and a separate user click.
+- Success is exactly HTTP 202 `DESIGN_OPERATION_ACCEPTED` with `data.status="accepted"`. This acknowledges the checked-in stub only; no email is sent and no account is verified.
+- Unknown response shape/status, missing one-use handoff, 4xx/5xx and transport errors remain safe explicit states. Focused SH-04 tests cover accepted and non-accepted branches.
+
 - API refs trong inventory: #02
-- Orchestration/data notes: POST #2 với user_id/email sau đăng ký, chỉ xác nhận accepted (stub), không tuyên bố email đã gửi hoặc đã verify.
+- Orchestration/data notes: POST #02 is called on an explicit SH-04 user action after the one-use SH-03 handoff; only the exact accepted envelope reaches accepted UI.
 - BE/source status và gate: **S**; **BLOCK:** Email provider mới là stub, chưa có confirm endpoint
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
@@ -35,7 +43,7 @@ flowchart TD
     C -. Chưa có OTP, liên kết hoặc điểm cuối xác nhận .-> K[Chưa thể xác minh thư điện tử]
 ```
 
-Việc gọi API sau đăng ký là đích F01. Thời điểm kích hoạt cụ thể — tự gọi khi mở SH-04 hay chờ thao tác riêng — chưa được chốt bằng mã giao diện hoặc hợp đồng tương tác. Bản mẫu hiển thị trạng thái `accepted` ngay khi tải và không có lời gọi API; không được coi đó là hành vi đã nối.
+Historical snapshot: trigger was undecided and the mock showed `accepted` locally. Current source calls #02 after an explicit click; the stub still does not deliver email.
 
 ### Trích từ DD nguồn: 6. Chuỗi sự kiện và ánh xạ phản hồi API
 

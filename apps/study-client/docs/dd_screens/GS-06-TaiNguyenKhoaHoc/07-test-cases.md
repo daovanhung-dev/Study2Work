@@ -1,6 +1,6 @@
 # GS-06 — Test Cases
 
-> **T022 current-source update (2026-11-17):** Angular source tests now cover direct `?tab=resources`, published-course sequencing, accessible contract-blocked copy, no #11/#12 requests, and End-key navigation. These verify the gated presentation only; they do not verify resource listing/open behavior, live API/DB, or deployment.
+> **T041/current-source update (2026-11-20):** Earlier T022 test results cover a gated screen and do not validate current #11 list behavior. Source has since changed to call #11 and render resource rows. Existing specs contain old no-request expectations and are stale; no tests/build/browser checks were run in this task by user instruction. Live API/DB/runtime remains unverified.
 
 ## T022 verification — 2026-11-17
 

@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Điều hướng câu hỏi, đồng hồ nếu server cung cấp, lưu đáp án, đánh dấu câu chưa trả lời.
-- Gate/status (giữ nguyên): **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #30 answer representation/storage/upsert/ownership/state/response/retry chưa chốt; không có GET attempt/answers để restore; time/progress source thiếu; legacy BIGINT và V1-PILOT UUID/lifecycle khác nhau; PNG/HTML và WebSocket/idempotency claims chưa được xác nhận; Study Web UNWIRED; Student APIs #28–#32 NOT_FOUND
+- Current status — 2026-11-20: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED.** ST-14 uses #28/#30; #30 source checks owner, attempt state, question membership and selected choice membership. Client uses `choice_ids[]`, but catalog says `answer(s):string`. #28/#29 do not enforce course enrollment or quiz-open eligibility; no answer GET or authoritative time source is available. Preserve those gaps; do not infer mockup rules.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu, discrepancy và nguồn

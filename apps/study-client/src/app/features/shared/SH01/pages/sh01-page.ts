@@ -35,6 +35,8 @@ export class SH01Page {
   readonly searchQuery = signal('');
   readonly categoryState = signal<RegionState<SH01Category>>({ status: 'loading' });
   readonly courseState = signal<RegionState<SH01PublicCourse>>({ status: 'loading' });
+  readonly categorySkeletons = [0, 1, 2, 3];
+  readonly courseSkeletons = [0, 1, 2, 3, 4, 5];
 
   constructor() {
     this.loadCategories();

@@ -7,7 +7,7 @@ describe('SH02Page', () => {
     await TestBed.configureTestingModule({ imports: [SH02Page] }).compileComponents();
   });
 
-  it('renders the labeled required fields with login unavailable', () => {
+  it('renders the labeled required fields with login available', () => {
     const fixture = TestBed.createComponent(SH02Page);
     fixture.detectChanges();
 
@@ -21,7 +21,7 @@ describe('SH02Page', () => {
     expect(email?.type).toBe('email');
     expect(password?.required).toBe(true);
     expect(password?.type).toBe('password');
-    expect(submit?.disabled).toBe(true);
+    expect(submit?.disabled).toBe(false);
   });
 
   it('toggles password visibility without changing its value', () => {

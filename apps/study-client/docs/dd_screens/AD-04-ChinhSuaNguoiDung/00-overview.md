@@ -8,7 +8,7 @@
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | **DD:** `BLOCKED — API #70 body/role contract and user-management policies need approval`; **Source:** `PARTIAL — route/page/GET #69 present; no #70 client caller; save disabled`; **Acceptance:** `BLOCKED — body, role, permission, PII, schema and navigation decisions`; **Runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [AD-04.md](../../screen_stitch/05_admin/AD-04_chinh-sua-nguoi-dung/AD-04.md), [AD-04_PLAN.md](../../screen_stitch/05_admin/AD-04_chinh-sua-nguoi-dung/AD-04_PLAN.md), [AD-04_markers.json](../../screen_stitch/05_admin/AD-04_chinh-sua-nguoi-dung/AD-04_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -31,7 +31,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/ready/dirty/saving/validation-error/unauthenticated/forbidden/not-found/saved-refresh-error |
-| Current source/runtime | Angular Admin route and AD04Page; GET #69 caller; page state `loading/loaded/error`; no PUT #70 caller; deployment/browser runtime | `PARTIAL SOURCE` / `RUNTIME NOT VERIFIED` |
+| Current source/runtime | Angular Admin route and AD04Page; GET #69 caller; signed-int64 route validation; page state `loading/loaded/error`; no PUT #70 caller; deployment/browser runtime | `PARTIAL SOURCE` / `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-04 source screen.png](../../screen_stitch/05_admin/AD-04_chinh-sua-nguoi-dung/screen.png))

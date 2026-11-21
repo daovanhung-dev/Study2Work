@@ -31,7 +31,7 @@ status: "Draft — Needs Confirmation"
 | 5.1 | data.id | ID | id | int64 | No | lessons candidate | id | 5 | Direct generated identifier | Required | Legacy BIGSERIAL candidate. |
 | 5.2 | data.course_id | Course ID | course_id | int64 | No | lessons candidate | course_id | 5 | Direct | Required | Legacy candidate. |
 | 5.3 | data.title | Title | title | string | No | lessons candidate | name | 5 | name → title | Required | Legacy candidate. |
-| 5.4 | data.content | Content | content | string | No | lessons | content | 5 | Return the persisted base-10 representation of request int64 | Required string, including values such as `"0"` | Null cannot occur through this required request path. |
+| 5.4 | data.content | Content | content | string | No | lessons | content | 5 | Return the persisted Markdown string unchanged | Required string | Null cannot occur through this required request path. |
 | 5.5 | data.assets | Assets | assets | UploadAsset[] | No | uploads | matched metadata rows | 4 | Resolve IDs using same Mentor, LECTURE and request course; restore input order | Empty input returns `[]` | IDs not resolved within scope return generic 404. |
 | 5.5.1 | data.assets[].id | Asset ID | id | int64 | No | uploads | id | 4 | Direct | Required | ID created by API #34. |
 | 5.5.2 | data.assets[].name | Asset name | name | string | No | uploads | file_name | 4 | file_name → name | Required | Persisted API #34 metadata. |
@@ -55,7 +55,7 @@ status: "Draft — Needs Confirmation"
     "id": 47001,
     "course_id": 1001,
     "title": "Bài học mở đầu",
-    "content": "12345",
+    "content": "# Bài học mở đầu\\n\\nNội dung Markdown.",
     "assets": [
       {
         "id": 34001,
@@ -74,7 +74,7 @@ status: "Draft — Needs Confirmation"
 }
 ~~~
 
-Response `content` là chuỗi thập phân được tạo từ request integer; `status` là `PUBLISHED`. Asset fields theo metadata API #34; `assets: []` là response hợp lệ khi request gửi `asset_refs: "[]"`.
+Response `content` là Markdown string được lưu nguyên văn; `status` là `PUBLISHED`. Asset fields theo metadata API #34; `assets: []` là response hợp lệ khi request gửi `asset_refs: "[]"`.
 
 ## Ví dụ lỗi
 

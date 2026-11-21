@@ -1,6 +1,11 @@
 # AD-15 — Events (đặc tả xử lý)
 
-> The event details below preserve the 2026-11-08 prototype/target snapshot. Current implementation evidence: initial load calls #87; exact `course`/`status` filters and server pagination are wired; safe numeric IDs link to AD-17. Search, refresh, edit, and delete are not wired on this page. Create is navigation to AD-16 only. See [current-source addendum](00-overview.md#current-source-addendum--2026-11-16); no API/catalog gate is closed by these source events.
+> The event details below preserve the 2026-11-08 prototype/target snapshot. Current implementation evidence: initial load, exact `course`/`status` filters, server pagination and manual refresh are wired to #87; safe numeric IDs link to AD-17. Search, edit, and delete are not wired on this page. Create is navigation to AD-16 only. See [current-source addendum](00-overview.md#current-source-addendum--2026-11-20); no API/catalog gate is closed by these source events.
+
+## Current-source addendum — 2026-11-20
+
+- EV-05 toolbar and empty-state clicks replace the query signal with an equivalent object, causing the existing query-state helper to repeat GET #87 with the applied `course/status/page` values. The controls disable while the request is loading. No polling or automatic retry is added; the shared loading/empty/error mapping remains in use.
+- The historical prototype event description below still accurately describes `code.html`'s 800 ms icon animation, but not the Angular page's current refresh behavior.
 
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
@@ -42,3 +47,8 @@
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)
+
+## Current-source addendum — 2026-11-21
+
+- EV-01 and EV-08 now require the exact #87 success code and validate Quiz/Page fields, fixed size, requested-page echo and safe total_pages arithmetic. A valid response with COUNT/LIST row-count disagreement keeps rows visible, hides stale totals/pagination, and retries the applied course/status/page when the user refreshes.
+- An empty late page has a separate page-1 recovery action. A matching zero-result response remains a valid empty state with manual refresh. No automatic retry/polling or new API parameter was added; catalog, permission, schema and browser-runtime gaps remain open.

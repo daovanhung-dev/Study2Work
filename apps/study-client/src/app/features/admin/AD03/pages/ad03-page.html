@@ -9,7 +9,7 @@
         <li aria-current="page">Chi tiết tài khoản</li>
       </ol>
     </nav>
-    <span class="api-state">API #69 · {{ viewState().status === 'loaded' ? 'Đã tải' : 'Chưa sẵn sàng' }}</span>
+    <span class="api-state" aria-live="polite">API #69 · {{ apiStateLabel }}</span>
   </div>
 
   <a class="back-link" routerLink="/admin/users">
@@ -61,13 +61,25 @@
     <div class="detail-side-column">
       <section class="panel admin-actions" aria-labelledby="admin-actions-heading">
         <header class="panel-heading"><h2 id="admin-actions-heading"><study-icon name="shield" /> Hành động quản trị</h2></header>
-        @if (userId) {
-          <a class="action-link" [routerLink]="['/admin/users', userId, 'edit']">Chỉnh sửa thông tin (AD-04)</a>
-          <a class="action-link action-link--muted" [routerLink]="['/admin/users', userId, 'actions']">Khóa hoặc thay đổi trạng thái (AD-05)</a>
-        } @else {
-          <button class="action-link" type="button" disabled>Chỉnh sửa thông tin (AD-04)</button>
-          <button class="action-link action-link--muted" type="button" disabled>Khóa hoặc thay đổi trạng thái (AD-05)</button>
-        }
+        <button
+          class="action-link"
+          type="button"
+          disabled
+          aria-describedby="admin-actions-unavailable"
+        >
+          Chỉnh sửa thông tin (AD-04)
+        </button>
+        <button
+          class="action-link action-link--muted"
+          type="button"
+          disabled
+          aria-describedby="admin-actions-unavailable"
+        >
+          Khóa hoặc thay đổi trạng thái (AD-05)
+        </button>
+        <span class="visually-hidden" id="admin-actions-unavailable">
+          Hành động bị khóa cho tới khi quyền quản lý và contract của AD-04/AD-05 được xác nhận.
+        </span>
         <p class="action-note">Các thay đổi chỉ được thực hiện qua contract và quyền đã xác nhận ở màn hình tương ứng.</p>
       </section>
 

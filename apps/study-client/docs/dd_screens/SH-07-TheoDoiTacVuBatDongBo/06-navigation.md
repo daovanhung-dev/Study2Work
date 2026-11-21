@@ -1,8 +1,10 @@
 # SH-07 — Navigation
 
+> **Current source (2026-11-21):** ME-14 and AD-20 route accepted notification UUIDs to `/operations/{uuid}`. SH-07 loads via #18 on entry and manual refresh; invalid/missing UUID uses the safe local fallback. Browser runtime is unverified.
+
 ## 1. Route definition
 - Current route in inventory: `/operations/:operationId`
-- Status: `/operations/:operationId` is wired in the Shared route group; it renders the unavailable gate only. There is no caller handoff, route guard or API #18 request.
+- Status: `/operations/:operationId` is wired in the Shared route group, called by notification producers, and loads the owner-bound notification aggregate through API #18. Browser/auth runtime is unverified.
 - Route params/types: `operationId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,7 +12,7 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [ST-06](../ST-06-ThucHienThanhToan/00-overview.md), [ME-15](../ME-15-TheoDoiGuiThongBao/00-overview.md), [AD-20](../AD-20-SoanGuiThongBaoHeThong/00-overview.md), [AD-21](../AD-21-SuaKiemSoatDoTrangThaiThongBao/00-overview.md), [AD-25](../AD-25-XuatBaoCaoVaTheoDoiTienTrinh/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Route mở trực tiếp được; producer/caller handoff chưa wired |
+| [ME-14](../ME-14-SoanThongBaoMentor/00-overview.md), [AD-20](../AD-20-SoanGuiThongBaoHeThong/00-overview.md) | Accepted notification Operation UUID | `operationId` UUID in route | Current producer handoffs are source-wired; API #18 enforces owner lookup |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
@@ -20,8 +22,8 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: SH-07 route resolves to the same unavailable gate; no operation data is read or exposed.
-- Invalid/missing ID: a path segment is not parsed or echoed; missing path does not match the route. Do not add UUID/int64 validation before the canonical type is approved.
+- Refresh/direct URL: a valid UUID triggers one API #18 read; manual refresh triggers one additional read. No polling occurs.
+- Invalid/missing ID: malformed UUID is rejected by the page without sending API #18; missing path does not match the route. The implemented notification slice uses UUID as returned by its producers.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram
@@ -34,6 +36,8 @@ flowchart LR
 ```
 
 ## Source navigation and flow detail
+
+> The state and navigation excerpts below preserve the original DD design snapshot. Current notification routing/fetch behavior is described at the top of this file.
 
 ### Trích từ DD nguồn: 8. Ma trận trạng thái và điều hướng
 

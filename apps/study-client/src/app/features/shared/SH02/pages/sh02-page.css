@@ -147,6 +147,10 @@
   box-shadow: 0 0 0 3px rgb(11 95 138 / 16%);
 }
 
+.field-control--invalid {
+  border-color: var(--danger);
+}
+
 .field-icon {
   flex: 0 0 20px;
   width: 20px;
@@ -171,6 +175,17 @@
 .field-control > input::placeholder {
   color: #748b9a;
   opacity: 1;
+}
+
+.field-control > input:disabled {
+  cursor: not-allowed;
+}
+
+.field-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .password-control > input {
@@ -206,6 +221,11 @@
   outline-offset: 2px;
 }
 
+.password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 .submit-button {
   min-height: 44px;
   margin-top: 2px;
@@ -222,6 +242,14 @@
 .submit-button:disabled {
   cursor: not-allowed;
   opacity: 0.68;
+}
+
+.submit-button:not(:disabled) {
+  cursor: pointer;
+}
+
+.submit-button:not(:disabled):hover {
+  background: var(--ocean-deep);
 }
 
 .availability-note {

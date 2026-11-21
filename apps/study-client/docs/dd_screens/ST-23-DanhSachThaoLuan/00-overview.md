@@ -1,14 +1,22 @@
 # ST-23 — Danh sách thảo luận · Tổng quan
 
+## Current source implementation — 2026-11-21
+
+- Route `/student/discussions` is registered under the authenticated Student route group. The page calls #39 with optional `course_id` and `page`, cancels stale reads, validates response identity/shape, and provides retry and pagination.
+- Current #39 returns ACTIVE root discussions for courses with ACTIVE enrollment, fixed page size 20, ordered by creation time and ID descending. The UI exposes the source-supported course filter and page controls; it does not expose `sort` because the current server ignores that query argument.
+- Invalid `courseId` values from the route or filter form cancel an active #39 request, clear rows and pagination, and keep the error state separate from ready content. The client checks fixed-size page metadata without requiring `total >= items.length`, since #39 reads COUNT and LIST separately and concurrent changes can make that relation differ.
+- If a validated #39 response has no items and its requested page is beyond `max(total_pages, 1)`, the client lowers the page and refetches the same course filter. For accepted pages, it compares returned rows with the count-derived expected page length; a mismatch preserves returned discussions, suppresses false empty/stale pagination claims, and offers retry.
+- The Stitch PNG body is blank. The implementation has a functional list/filter shell, but no populated design target can be verified. The historical source snapshot below predates current route/API source.
+
 | Trường | Giá trị |
 |---|---|
 | Screen ID | `ST-23` |
 | Module | Student |
-| Route | `/student/discussions` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student/discussions` — current Student route is source-wired; runtime not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. Source hiện chỉ có static empty-state HTML; API #39 là design-only/Draft và chưa có Student route/module/query/test. Tài liệu giữ nguyên các khoảng trống thay vì dựng list/filter/sort/create behavior từ suy đoán. |
+| DD status | Draft; list/filter/page behavior is source-backed. Sort behavior and populated visual state remain unresolved. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-21 |
 | Nguồn đối chiếu | [ST-23.md](../../screen_stitch/03_student/ST-23_danh-sach-thao-luan/ST-23.md), [ST-23_PLAN.md](../../screen_stitch/03_student/ST-23_danh-sach-thao-luan/ST-23_PLAN.md), [ST-23_markers.json](../../screen_stitch/03_student/ST-23_danh-sach-thao-luan/ST-23_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -31,7 +39,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/empty/ready/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Worklog/context Study Web | #39 caller validates the response and recovers out-of-range pages; count-derived row mismatches show retry and hide stale empty/total/pagination claims. Runtime is unverified. |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-23 source screen.png](../../screen_stitch/03_student/ST-23_danh-sach-thao-luan/screen.png))
@@ -47,7 +55,7 @@
 
 # ST-23 — Danh sách thảo luận
 
-> **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. Source hiện chỉ có static empty-state HTML; API #39 là design-only/Draft và chưa có Student route/module/query/test. Tài liệu giữ nguyên các khoảng trống thay vì dựng list/filter/sort/create behavior từ suy đoán.
+> **Trạng thái của DD/source snapshot ban đầu:** DD BLOCKED; tại thời điểm tạo snapshot, implementation được ghi là BLOCKED. Hiện trạng source mới nhất ở phần “Current source implementation” đầu tài liệu: route và #39 caller được nối, còn sort, populated visual target và runtime vẫn chưa được xác nhận.
 
 ## Trích đoạn tổng quan từ DD nguồn
 

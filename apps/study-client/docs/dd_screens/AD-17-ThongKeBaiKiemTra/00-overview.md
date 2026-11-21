@@ -32,6 +32,7 @@
 |---|---|---|
 | Source/inventory states | `list_screen.md` and Angular source | `loading/loaded/error` in current source; no-data/ready business semantics remain unapproved |
 | Current source state | Angular `AD17Page` / shared route state | `loading` → `loaded` projection or `error`; route, page and API caller are source-wired |
+| Route ID validation | Current `AD17Page` plus Study Server #91 parser | Missing/invalid IDs stop locally; valid raw text is passed unchanged after full-string positive signed-int64 validation |
 | Runtime verification | Browser/live Study API and DB | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh

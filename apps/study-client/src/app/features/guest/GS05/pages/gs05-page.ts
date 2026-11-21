@@ -4,8 +4,10 @@ import { Component, DestroyRef, inject, Input, signal } from '@angular/core';
 import { catchError, map, of, Subject, switchMap, tap } from 'rxjs';
 
 import type { ApiEnvelope } from '../../../../core/http/api-envelope';
+import { isGuestResourceSuccessEnvelope } from '../../shared/models/guest-course.models';
 import { GS05ReviewsService } from '../data-access/gs05-reviews.service';
 import {
+  isGS05CourseReviewsPage,
   toGS05ReviewItems,
   type GS05CourseReviewsPage,
   type GS05ReviewsState,
@@ -28,6 +30,7 @@ export class GS05Page {
   private readonly reviewsService = inject(GS05ReviewsService);
   private readonly pageRequests = new Subject<ReviewsRequest>();
   private activeCourseId = '';
+  private lastRequestedPage = 1;
 
   readonly state = signal<GS05ReviewsState>({ status: 'idle' });
 
@@ -44,7 +47,7 @@ export class GS05Page {
         tap(() => this.state.set({ status: 'loading' })),
         switchMap(({ courseId, page }) =>
           this.reviewsService.getCourseReviews(courseId, page).pipe(
-            map((response) => this.mapResponse(response)),
+            map((response) => this.mapResponse(response, page)),
             catchError((error: unknown) => of(this.mapHttpError(error))),
           ),
         ),
@@ -68,23 +71,52 @@ export class GS05Page {
     this.requestPage(page);
   }
 
+  retryPage(): void {
+    if (this.activeCourseId) this.requestPage(this.lastRequestedPage);
+  }
+
+  loadFirstPage(): void {
+    if (this.activeCourseId) this.requestPage(1);
+  }
+
   private requestPage(page: number): void {
+    this.lastRequestedPage = page;
     this.pageRequests.next({ courseId: this.activeCourseId, page });
   }
 
-  private mapResponse(response: ApiEnvelope<GS05CourseReviewsPage>): GS05ReviewsState {
-    if (!response.success || response.businessCode !== 'DESIGN_RESOURCE_RETRIEVED') {
+  private mapResponse(
+    response: ApiEnvelope<GS05CourseReviewsPage>,
+    requestedPage: number,
+  ): GS05ReviewsState {
+    const candidate: unknown = response;
+    if (
+      !isGuestResourceSuccessEnvelope(candidate) ||
+      candidate.businessCode !== 'DESIGN_RESOURCE_RETRIEVED' ||
+      !isGS05CourseReviewsPage(candidate.data)
+    ) {
       return { status: 'error' };
     }
 
-    const items = toGS05ReviewItems(response.data.items);
-    if (items.length === 0) return { status: 'empty' };
+    const result = candidate.data;
+    if (result.pagination.page !== requestedPage) return { status: 'error' };
+    if (result.items.length === 0 && result.pagination.total === 0) return { status: 'empty' };
+
+    if (result.items.length === 0 && requestedPage > result.pagination.total_pages) {
+      return { status: 'out-of-range', page: requestedPage };
+    }
+
+    const expectedItems = Math.min(
+      20,
+      Math.max(result.pagination.total - (requestedPage - 1) * 20, 0),
+    );
+    const snapshotMismatch = result.items.length !== expectedItems;
 
     return {
       status: 'ready',
-      items,
-      page: response.data.pagination.page,
-      totalPages: response.data.pagination.total_pages,
+      items: toGS05ReviewItems(result.items),
+      page: result.pagination.page,
+      totalPages: result.pagination.total_pages,
+      snapshotMismatch,
     };
   }
 

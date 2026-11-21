@@ -1,26 +1,238 @@
 <main class="static-page api-screen st26-page">
   <nav class="crumbs" aria-label="Vị trí hiện tại">
-    <a routerLink="/student">Trang chủ</a><span>›</span><span>Trung tâm thông báo</span>
+    <a routerLink="/student">Trang chủ</a><span>›</span><span>Thông báo học tập</span>
   </nav>
-  <header class="api-heading">
+
+  <header class="api-heading notification-heading">
     <div>
-      <p class="api-eyebrow">ST-26 · Thông báo học viên</p>
-      <h1>Thông báo học tập</h1>
-      <p>Danh sách và thao tác đọc phụ thuộc vào recipient state của Study Server.</p>
+      <p class="api-eyebrow">Thông báo học tập</p>
+      <h1 class="notification-page-title">
+        <span>Thông báo học tập &amp; Cập nhật hệ thống</span>
+        @if (unreadCount() !== null) {
+          <span class="notification-new-count">{{ unreadCount() }} mới</span>
+        }
+      </h1>
+      <p>Thông báo dành cho tài khoản của bạn.</p>
     </div>
+    <button
+      class="api-button secondary"
+      type="button"
+      (click)="markAllRead()"
+      [disabled]="
+        loading() ||
+        loadingUnreadCount() ||
+        unreadCount() === null ||
+        unreadCount() === 0 ||
+        markingAll() ||
+        markingId() !== null
+      "
+      [attr.aria-busy]="markingAll()"
+    >
+      {{ markingAll() ? 'Đang cập nhật…' : 'Đánh dấu tất cả đã đọc' }}
+    </button>
   </header>
-  <section class="api-card notification-gate">
-    <span class="api-empty-icon" aria-hidden="true">♧</span>
-    <p class="api-eyebrow">API #43–#45 · Source-only</p>
-    <h2>Trung tâm thông báo đang chờ schema recipient</h2>
-    <p>
-      Server query hiện dùng bảng `notification_recipients`, nhưng bảng này chưa có trong DDL Study
-      được kiểm tra. Vì vậy trang không gửi request, không hiển thị dữ liệu mẫu, và không bật đánh
-      dấu đã đọc.
-    </p>
-    <p class="api-muted">
-      Deep-link cũng chưa có field typed/action URL trong response #43. Không điều hướng dựa trên
-      nội dung hoặc tiêu đề thông báo.
-    </p>
+
+  @if (actionMessage()) {
+    <p class="api-success" role="status">{{ actionMessage() }}</p>
+  }
+  @if (actionError()) {
+    <p class="api-error" role="alert">{{ actionError() }}</p>
+  }
+  @if (unreadCountError()) {
+    <section class="api-message notification-count-message" role="status">
+      <span>Chưa thể tải tổng số thông báo chưa đọc.</span>
+      <button class="api-button secondary" type="button" (click)="refreshUnreadCount()">
+        Tải lại số lượng
+      </button>
+    </section>
+  }
+
+  <section class="notification-layout">
+    <section
+      class="api-card notification-list"
+      aria-label="Danh sách thông báo"
+      [attr.aria-busy]="loading()"
+    >
+      <nav class="notification-tabs" aria-label="Lọc thông báo">
+        <button
+          class="tab"
+          [class.active]="!unreadOnly()"
+          [attr.aria-pressed]="!unreadOnly()"
+          type="button"
+          (click)="selectFilter(false)"
+        >
+          Tất cả
+          @if (allCount() !== null) {
+            <span class="notification-count" aria-live="polite" aria-atomic="true">
+              {{ allCount() }}
+            </span>
+          }
+        </button>
+        <button
+          class="tab"
+          [class.active]="unreadOnly()"
+          [attr.aria-pressed]="unreadOnly()"
+          type="button"
+          (click)="selectFilter(true)"
+        >
+          Chưa đọc
+          <span class="notification-count" aria-live="polite" aria-atomic="true">
+            {{ loadingUnreadCount() ? '…' : unreadCount() ?? '—' }}
+          </span>
+        </button>
+        <button
+          class="tab unavailable"
+          type="button"
+          disabled
+          aria-label="Bài tập và chấm điểm, bộ lọc chưa khả dụng"
+          title="Bộ lọc danh mục chưa khả dụng"
+        >
+          Bài tập &amp; Chấm điểm
+        </button>
+        <button
+          class="tab unavailable"
+          type="button"
+          disabled
+          aria-label="Lịch hẹn Mentor, bộ lọc chưa khả dụng"
+          title="Bộ lọc danh mục chưa khả dụng"
+        >
+          Lịch hẹn Mentor
+        </button>
+        <button
+          class="tab unavailable"
+          type="button"
+          disabled
+          aria-label="Hoạt động diễn đàn, bộ lọc chưa khả dụng"
+          title="Bộ lọc danh mục chưa khả dụng"
+        >
+          Hoạt động diễn đàn
+        </button>
+      </nav>
+
+      @if (loading()) {
+        <section class="api-message" role="status"><strong>Đang tải thông báo…</strong></section>
+      }
+      @if (error()) {
+        <section class="api-error" role="alert">
+          <p>{{ error() }}</p>
+          <button class="api-button secondary" type="button" (click)="retry()">
+            Tải lại danh sách
+          </button>
+        </section>
+      }
+      @if (!loading() && !error() && notifications().length === 0) {
+        <section class="api-message notification-empty">
+          <div>
+            <strong>{{ unreadOnly() ? 'Không còn thông báo chưa đọc.' : 'Chưa có thông báo.' }}</strong>
+            <p>Thông báo mới sẽ xuất hiện tại đây khi được gửi đến tài khoản của bạn.</p>
+          </div>
+        </section>
+      }
+      @if (!loading() && !error() && notifications().length > 0) {
+        @for (group of notificationGroups(); track group.key) {
+          <h2 class="notification-date-heading">{{ group.label }}</h2>
+          <ul class="notification-items">
+            @for (item of group.items; track item.id) {
+              <li class="notification-item" [class.unread]="!item.is_read">
+                <span class="notice-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" focusable="false">
+                    <path
+                      d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"
+                      stroke="currentColor"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.8"
+                    />
+                  </svg>
+                </span>
+                <div class="notification-copy">
+                  <div class="notification-title-row">
+                    <strong>{{ item.title }}</strong>
+                    @if (!item.is_read) {
+                      <span class="notification-unread-label">Chưa đọc</span>
+                    } @else {
+                      <span class="notification-read-label">Đã đọc</span>
+                    }
+                  </div>
+                  <p>{{ item.content }}</p>
+                  <time [attr.datetime]="item.created_at">
+                    {{ formatCreatedAt(item.created_at) }}
+                  </time>
+                </div>
+                @if (!item.is_read) {
+                  @if (safeId(item.id); as id) {
+                    <button
+                      class="api-button secondary notification-read-button"
+                      type="button"
+                      (click)="markRead(item)"
+                      [disabled]="markingAll() || markingId() !== null"
+                      [attr.aria-label]="'Đánh dấu đã đọc: ' + item.title"
+                    >
+                      {{ markingId() === id ? 'Đang cập nhật…' : 'Đánh dấu đã đọc' }}
+                    </button>
+                  }
+                }
+              </li>
+            }
+          </ul>
+        }
+        @if (pagination(); as pageInfo) {
+          <nav class="api-pagination notification-pagination" aria-label="Phân trang thông báo">
+            <button
+              class="api-button secondary"
+              type="button"
+              (click)="changePage(-1)"
+              [disabled]="pageInfo.page <= 1 || loading() || markingAll()"
+            >
+              Trước
+            </button>
+            <span>Trang {{ pageInfo.page }} / {{ pageInfo.total_pages }} · {{ pageInfo.total }} thông báo</span>
+            <button
+              class="api-button secondary"
+              type="button"
+              (click)="changePage(1)"
+              [disabled]="pageInfo.page >= pageInfo.total_pages || loading() || markingAll()"
+            >
+              Sau
+            </button>
+          </nav>
+        }
+      }
+    </section>
+    <aside class="notification-sidebar" aria-label="Thống kê và trợ giúp">
+      <section class="api-card weekly-summary" aria-labelledby="notification-weekly-heading">
+        <p class="api-eyebrow">Thống kê tuần</p>
+        <h2 id="notification-weekly-heading">Tổng quan tuần này</h2>
+        <p class="weekly-summary-unavailable" role="status">
+          Số liệu thống kê chưa khả dụng.
+        </p>
+      </section>
+
+      <section class="api-card coordinator-help" aria-labelledby="coordinator-help-heading">
+        <span class="coordinator-help-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" focusable="false">
+            <path
+              d="M14 4h6v6m-.5-5.5-8 8M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.8"
+            />
+          </svg>
+        </span>
+        <p class="api-eyebrow">Hỗ trợ</p>
+        <h2 id="coordinator-help-heading">Liên hệ điều phối viên</h2>
+        <p>Thông tin liên hệ hiện chưa khả dụng.</p>
+        <button
+          class="api-button secondary"
+          type="button"
+          disabled
+          aria-label="Liên hệ điều phối viên, hiện chưa khả dụng"
+          title="Thông tin liên hệ chưa khả dụng"
+        >
+          Liên hệ điều phối viên
+        </button>
+      </section>
+    </aside>
   </section>
 </main>

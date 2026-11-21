@@ -9,8 +9,9 @@
       <li aria-hidden="true">›</li>
       <li aria-current="page">Thao tác tài khoản</li>
     </ol>
-    <a class="back-link" [routerLink]="['/admin/users', userId()]">
-      <study-icon name="chevron" /> Quay lại hồ sơ (AD-03)
+    <a class="back-link" [routerLink]="isUserIdValid() ? ['/admin/users', userId()] : '/admin/users'">
+      <study-icon name="chevron" />
+      @if (isUserIdValid()) { Quay lại hồ sơ (AD-03) } @else { Quay lại danh sách tài khoản }
     </a>
   </nav>
 
@@ -43,7 +44,11 @@
       <span class="state-icon"><study-icon name="info" /></span>
       <strong>Không thể tải tài khoản</strong>
       <span>{{ state.message }}</span>
-      <a [routerLink]="['/admin/users', userId()]">Quay lại chi tiết người dùng (AD-03)</a>
+      @if (state.invalidRouteId) {
+        <a routerLink="/admin/users">Quay lại danh sách tài khoản (AD-02)</a>
+      } @else {
+        <a [routerLink]="['/admin/users', userId()]">Quay lại chi tiết người dùng (AD-03)</a>
+      }
     </section>
   } @else {
     @let user = state.user;
@@ -57,13 +62,13 @@
             <p class="email-line">{{ user.email }}</p>
           </div>
         </div>
-        <span class="status-chip"><span aria-hidden="true">●</span> {{ user.status }}</span>
+        <span class="status-chip"><span aria-hidden="true">●</span> {{ statusLabel(user.status) }}</span>
       </div>
       <div class="summary-meta">
         <div><span>User ID từ đường dẫn</span><strong>{{ userId() }}</strong></div>
         <div><span>Vai trò trả về</span><strong>{{ user.role }}</strong></div>
       </div>
-      <p class="summary-note">Role và status được giữ nguyên như response #69; trang không tự diễn giải chúng thành quyền hoặc trạng thái phiên.</p>
+      <p class="summary-note">Vai trò giữ nguyên như response #69. Nhãn trạng thái chỉ để dễ đọc; trang không suy ra quyền truy cập hoặc hiệu lực phiên.</p>
     </section>
 
     <div class="action-grid">

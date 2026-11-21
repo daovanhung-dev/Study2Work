@@ -19,8 +19,8 @@
 | GS-06 | Tài nguyên khóa học | Tab | parent tab | #11,#12 | #11 R,#12 R | — |
 | GS-07 | Xem/tải tài nguyên | Page | route+page | #12 | #12 R | — |
 | ST-01 | Tổng quan học viên | Page | route+page (dashboard widgets) | #20,#21,#38,#43 | #20 P,#21 R (UserProfile mismatch),#38 P,#43 P/SOURCE_ONLY | #20 active courses + #38 awards; #21/#43 not called |
-| ST-02 | Hồ sơ cá nhân | Page | route+page | #4 | #4 R | — |
-| ST-03 | Chỉnh sửa hồ sơ/avatar | Page | route+page (gate-only) | #4,#13,#14 | #4 R,#13 R,#14 R | — |
+| ST-02 | Hồ sơ cá nhân | Page | route+page (read-only profile) | #4 | #4 R | #4 read-only (`full_name`,`email`) |
+| ST-03 | Chỉnh sửa hồ sơ/avatar | Page | route+page (read-only profile + G-03 mutation gate) | #4,#13,#14 | #4 R,#13 R,#14 R | #4 read-only (`full_name`,`email`); #13/#14 uncalled |
 | ST-04 | Kiểm tra ghi danh trước đăng ký | Page | route+page (partial; gate-only enrollment) | #8,#15 | #8 R,#15 R (unsafe optional-token fallback) | #8 |
 | ST-05 | Kiểm tra đơn hàng / checkout | Page | route+page (partial; order gate) | #8,#16 | #8 R,#16 R (DDL missing; no focused tests) | #8 |
 | ST-06 | Thực hiện thanh toán | Page | route+page (payment gate) | #17,#18 | #17 P (503 fail-closed),#18 R (notification-only) | — |
@@ -50,8 +50,8 @@
 | ME-04 | Tải lên và tạo bài giảng | Page | route+page (partial/gated actions) | #34,#46,#47 | #34 R (Shared),#46 R,#47 R | #46 |
 | ME-05 | Xem bài giảng mentor | Page | route+page (partial/gated actions) | #48 | #48 R | #48 |
 | ME-06 | Cây nội dung khóa học | Page | route+page (partial/gated actions) | #49 | #49 R | #49 |
-| ME-07 | Tạo/chỉnh sửa nội dung | Page | route+page (partial/gated actions) | #49,#50,#51 | #49 R,#50 R,#51 R | #49,#50,#51 |
-| ME-08 | Xuất bản/xóa nội dung | Dialog | route+page (partial/gated actions) | #49,#52,#53 | #49 R,#52 R,#53 R | #49,#52,#53 |
+| ME-07 | Tạo/chỉnh sửa nội dung | Page | route+page (partial/gated actions) | #49,#50,#51 | #49 R,#50 R,#51 R | #49 (read only); #50/#51 gated |
+| ME-08 | Xuất bản/xóa nội dung | Dialog | route+page (partial/gated actions) | #49,#52,#53 | #49 R,#52 R,#53 R | #49 (read only); #52/#53 gated |
 | ME-09 | Danh sách bài cần chấm | Page | route+page (partial/gated actions) | #54 | #54 R | #54 |
 | ME-10 | Chấm điểm và phản hồi | Page | route+page (partial/gated actions) | #55,#56,#57 | #55 R,#56 R,#57 R | #55,#56,#57 |
 | ME-11 | Hộp thư hỗ trợ học viên | Page | route+page (partial/gated actions) | #58 | #58 R | #58 |
@@ -98,8 +98,8 @@
 ## Known sources of incompleteness
 
 - SH-05 has a page component but no route; error-context and session recovery policy remain unresolved.
-- StudentLayout now establishes a Student-only session through API #03 and keeps tokens in tab memory. ST-01 calls #20/#38 independently; #21 returns UserProfile and #43 is SOURCE_ONLY. ST-08 calls paged #20. ST-09 paginates #20 with `status=ACTIVE` before #37 and leaves public #09 unused because it cannot prove entitlement or provide the safe learning tree. ST-10 calls #22 at entry and explicit #23 only when the returned lesson is PUBLISHED; ST-11 calls #24 after navigation. `DISCREPANCY`: #22 does not filter lesson status and #23 lacks a publication predicate. ST-02/ST-03 remain gate-only. ST-04 calls public #08 then keeps unsafe #15 gated; ST-05 calls #08 then keeps #16 gated because `orders` is absent from checked-in DDL. ST-06 payment and ST-07 result remain gated.
+- StudentLayout now establishes a Student-only session through API #03 and keeps tokens in tab memory. ST-01 calls #20/#38 independently; #21 returns UserProfile and #43 is SOURCE_ONLY. ST-02 and ST-03 call #04 read-only through StudentApiService and render only `full_name`/`email`; ST-03 mutations remain gated. ST-08 calls paged #20. ST-09 paginates #20 with `status=ACTIVE` before #37 and leaves public #09 unused because it cannot prove entitlement or provide the safe learning tree. ST-10 calls #22 at entry and explicit #23 only when the returned lesson is PUBLISHED; ST-11 calls #24 after navigation. `DISCREPANCY`: #22 does not filter lesson status and #23 lacks a publication predicate. ST-04 calls public #08 then keeps unsafe #15 gated; ST-05 calls #08 then keeps #16 gated because `orders` is absent from checked-in DDL. ST-06 payment and ST-07 result remain gated.
 - ST-11–ST-25 have source-local API request callers for bounded behaviors; ST-26 has route metadata but no request because #43–#45 are SOURCE_ONLY and depend on a missing checked-in notification_recipients relation. #31 and #35–#45 have route/module source without focused server test packages; do not treat local build or route metadata as API/runtime verification.
-- ME-01–ME-18 now have Mentor routes/pages, API-ID metadata and screen-local callers for source-supported behavior. ME-04 upload/lecture creation and ME-14 notification dispatch remain gated; ME-07 uses current #50/#51 request fields and ME-08 actions are explicit and server-validated. Local focused server tests exist for #46–#67, but live schema/deployment and authenticated browser behavior remain unverified.
+- ME-01–ME-18 have Mentor routes/pages, API-ID metadata and screen-local callers for source-supported behavior. ME-04 upload/lecture creation and ME-14 notification dispatch remain gated. ME-07 now calls #49 only; #50/#51 Save is disabled pending approved payload/editor/order/version mapping. ME-08 now calls #49 only; #52/#53 controls are disabled pending lifecycle, confirmation and deletion dependency policy. Local focused server tests exist for #46–#67, but live schema/deployment and authenticated browser behavior remain unverified.
 - Admin and Guest structures/callers vary. Existing read-only callers do not close unresolved mutation, permission, response projection, live schema or visual runtime gates.
 - Screen-specific DD and Stitch assets remain present in their indexed packages; page/route counts do not prove implementation matches those artifacts.

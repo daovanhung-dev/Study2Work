@@ -101,9 +101,11 @@ describe('AD10Page', () => {
     const fixture = TestBed.createComponent(AD10Page);
     fixture.detectChanges();
     await fixture.whenStable();
-    http.expectOne('/api/v1/admin/content/pending?page=1').flush(successEnvelope(page([
+    http.expectOne('/api/v1/admin/content/pending?page=1').flush(successEnvelope(contentPage(
+      1,
+      21,
       content(73, 42, 'Cell Structure', 'VIDEO', 2),
-    ], 1, 21, 2)));
+    )));
     fixture.detectChanges();
 
     (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.pagination-controls button:last-child')!.click();
@@ -177,6 +179,19 @@ function page(items: readonly AdminContent[], pageNumber: number, total: number,
     items,
     pagination: { page: pageNumber, size: 20, total, total_pages: totalPages },
   };
+}
+
+function contentPage(pageNumber: number, total: number, firstContent: AdminContent): AdminPage<AdminContent> {
+  const offset = (pageNumber - 1) * 20;
+  const itemCount = Math.min(20, Math.max(total - offset, 0));
+  return page(
+    Array.from({ length: itemCount }, (_, index) => index === 0
+      ? firstContent
+      : content(1000 + offset + index, 42, `Content ${offset + index + 1}`, 'ARTICLE', offset + index + 1)),
+    pageNumber,
+    total,
+    total === 0 ? 0 : Math.ceil(total / 20),
+  );
 }
 
 function successEnvelope<T>(data: T): ApiEnvelope<T> {

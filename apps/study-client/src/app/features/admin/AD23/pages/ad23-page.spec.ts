@@ -97,8 +97,9 @@ describe('AD23Page', () => {
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
-    expect(root.textContent).toContain('Mã Không thể hiển thị chính xác');
-    expect(root.textContent).toContain('API #98 không trả bình luận trực tiếp');
+    expect(root.textContent).toContain('Không thể tải thảo luận');
+    expect(root.textContent).not.toContain('9007199254740992');
+    expect(root.querySelector('.action-item')).toBeNull();
   });
 
   it('shows the actual API 404 state for an unknown discussion', async () => {

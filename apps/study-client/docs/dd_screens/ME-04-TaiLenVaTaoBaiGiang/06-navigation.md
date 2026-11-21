@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/mentor/courses/:courseId/lectures/new`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: registered in `mentor.route.ts`; route behavior is source-backed, browser runtime not verified.
 - Route params/types: `courseId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -100,17 +100,17 @@ sequenceDiagram
 | Field | Kiểu/constraint source | Current mapping |
 |---|---|---|
 | `title` | string required, tối đa 200 ký tự; không có min/trim rule | `lessons.name`; response `data.title` |
-| `content` | signed int64 required | Lưu `str(content)` vào `lessons.content`; response là chuỗi thập phân. Không phải rich-text body. |
+| `content` | required Markdown string | Lưu và trả nguyên văn trong `lessons.content`. |
 | `asset_refs` | string required chứa JSON array ordered unique signed-int64 IDs; `"[]"` hợp lệ | Resolve #34 uploads cùng owner, purpose `LECTURE`, course; response `assets` theo request order. |
 | `order` | signed int32 required; source không đặt positivity rule | `lessons.sort_order`; response `data.order` |
 
 - View: MENTOR JWT guard → path signed-int64 validation → parse `asset_refs` → SELECT course → check direct owner → resolve mọi asset → INSERT `lessons` với status `PUBLISHED` và `CURRENT_TIMESTAMP` → INSERT `lesson_uploads` theo thứ tự (nếu có) → commit → response `Lecture`.
 - Course status không bị lọc; API có thể tạo lecture trên course DRAFT nếu Mentor sở hữu. API không tạo `resources`, không mutate upload metadata.
 - Errors source-backed: 401; 403 course khác owner; 404 course thiếu hoặc asset ID thiếu/ngoài scope (asset dùng lỗi 404 chung); 422 sai path/body/range/title/asset_refs; 500 query/mapping/transaction. DB failure rollback phần #47.
-- API #47 local DD ghi `Draft — Needs Confirmation` do target live schema/migration chưa xác minh. Q1/Q2 ở API DD ghi local wire decision cho `content:int64` và `asset_refs`, nhưng không tạo mapping editor rich-text cho ME-04.
+- API #47 local DD remains `Draft — Needs Confirmation` because live schema/migration is unverified. T041 supersedes the previous int64 content decision and approves Markdown string plus ordered upload IDs.
 
 ### 2.4 Đọc sau khi tạo — API #48 / ME-05
 
 - ME-05 route đề xuất `/mentor/lectures/:lectureId` dùng `GET /api/v1/mentor/lectures/{lecture_id}`; source kiểm tra MENTOR role, parse ID, xác minh direct owner qua lecture→course, rồi đọc các UploadAsset liên kết theo `asset_position`.
 - Success 200 trả `Lecture` hiện lưu, có `status` và `assets`; errors 401/403/404/500. Đây là read-only; không thay thế kết quả POST #47.
-- Route điều hướng phía Study Web vẫn chưa có source. Không mô tả UI success giả lập trong HTML như API result.
+- Current Study Web route/navigation source is present. Do not treat the mockup's simulated success as an API result.

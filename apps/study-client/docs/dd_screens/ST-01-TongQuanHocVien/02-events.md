@@ -1,5 +1,19 @@
 # ST-01 — Events (đặc tả xử lý)
 
+## Current-source reconciliation — 2026-11-21
+
+The historical static-page/gated-call statements below are superseded for
+current behavior: `/student` is mounted under `StudentLayout`; ST-01 calls #20
+and #38 independently, validates their exact success code and page projection,
+and exposes per-widget retry states. Since both handlers read COUNT and LIST
+separately, ST-01 compares each response's count-derived expected page length
+with its returned items; mismatches keep returned rows visible and replace an
+empty claim with a retryable synchronization notice. The shared response
+guards do not require the separate reads to match. #21 remains gated because its response is
+`UserProfile`; #43 remains gated because its query references
+`notification_recipients`, absent from checked-in DDL. Progress/notification
+data are not synthesized; runtime remains unverified.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

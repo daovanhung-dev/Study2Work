@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Admin xem Quiz/tác động history rồi xác nhận; AD-15 là entry và đường quay lại dự kiến.
-- Gate/status (giữ nguyên): **R** local #90 route/module/query/model/validator/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL:** AD-18 read-only route/navigation is source-wired; delete flow remains blocked. AC-35 chỉ yêu cầu soft-delete khi có attempts, no-attempt branch không xác định; local hard-delete/no-history và soft-delete on linked answer are DERIVED; tombstone/timestamp/repeat, #29 race, permission, #87/#89/#91 visibility, target data/detail API and live schema remain open; browser/API runtime **NOT VERIFIED**.
+- Current source validates the route ID as positive signed-int64 text to mirror #90's local validator; invalid IDs remain read-only and do not trigger a request. API #90 route/module/query/model/validator/test source exists; API DD is Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL:** delete flow remains blocked. AC-35 only specifies soft-delete with attempts; no-attempt branch is unresolved. Local hard-delete/no-history and soft-delete on linked answer are DERIVED; tombstone/timestamp/repeat, #29 race, permission, #87/#89/#91 visibility, target data/detail API and live schema remain open; browser/API runtime **NOT VERIFIED**.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 > CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.

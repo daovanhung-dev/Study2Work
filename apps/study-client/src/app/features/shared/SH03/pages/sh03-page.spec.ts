@@ -102,8 +102,8 @@ describe('SH03Page', () => {
     const root = fixture.nativeElement as HTMLElement;
     expect(root.textContent).toContain('Tài khoản đã được tạo.');
     expect(root.textContent).toContain('chưa xác nhận email đã được gửi');
-    expect(root.querySelector('a[href="/register/verification"]')?.textContent).toContain(
-      'Xem thông tin về xác minh email',
+    expect(root.querySelector<HTMLButtonElement>('.verification-continue')?.textContent).toContain(
+      'Tiếp tục yêu cầu xác minh email',
     );
     expect(root.querySelector('#register-password')).toBeNull();
     http.expectNone('/api/v1/auth/verify-email/send');

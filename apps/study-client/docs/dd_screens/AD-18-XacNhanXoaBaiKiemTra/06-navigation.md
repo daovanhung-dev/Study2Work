@@ -2,8 +2,8 @@
 
 ## 1. Route definition
 - Current route: `/admin/quizzes/:quizId/delete` (registered in `admin.routes.ts`).
-- Status: route/page and AD-15 entry/return links are source-wired; read-only, destructive flow blocked; browser runtime not verified.
-- Route params/types: `quizId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: route/page and AD-15 entry/return links are source-wired; positive signed-int64 path validation is local; delete flow blocked; browser runtime not verified.
+- Route params/types: `quizId` is preserved as text; digits-only, positive, and at most `9223372036854775807` per #90 local path validator.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
@@ -21,7 +21,7 @@
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
 - Refresh/direct URL: Angular route is registered; browser deep-link behavior has not been verified.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Invalid/missing ID: current page announces invalid/missing IDs locally and sends no request; #90 server validator remains authoritative if invoked.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram
@@ -48,7 +48,8 @@ flowchart LR
 | `validation-error` | #90 returns 422 | Present ID/path validation failure; never call it a history conflict | Correct route/selection | Current local 422 applies to invalid positive-int64 path. |
 | `service-error` | #90 returns 500 | Safe error; no raw database details | Remain/retry only under approved retry policy | Catalog/local safe error mapping; retry policy open. |
 | `unknown-outcome` | Network failure/timeout after possible request | Do not claim deleted/not deleted or automatically repeat | Reconciliation behavior needs owner decision | Not in catalog or inventory state list; design decision required before client implementation. |
-| `read-only` (current source) | Angular route opened | Show route ID and policy/data limitation; keep reason/delete controls disabled | AD-15 via return/cancel links | Source-wired; no request; browser runtime not verified. |
+| `read-only` (current source) | Angular route opened with valid `quizId` | Show route ID and policy/data limitation; keep reason/delete controls disabled | AD-15 via return/cancel links | Source-wired; no request; browser runtime not verified. |
+| `invalid-route-id` (current source) | Missing/non-numeric/non-positive/out-of-range `quizId` | Announce a local validation message; keep delete control disabled; do not call API | Return to AD-15 | Source-wired; mirrors #90 path bounds; server remains authoritative. |
 
 ### Navigation/data matrix
 

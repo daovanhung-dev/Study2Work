@@ -4,9 +4,9 @@
   </nav>
   <header class="api-heading">
     <div>
-      <p class="api-eyebrow">ST-23 · Diễn đàn học tập</p>
+      <p class="api-eyebrow">Diễn đàn học tập</p>
       <h1>Danh sách thảo luận</h1>
-      <p>Danh sách chủ đề theo quyền khóa học của Student từ API #39.</p>
+      <p>Trao đổi cùng học viên trong các khóa học bạn đang tham gia.</p>
     </div>
     <a
       class="api-button"
@@ -36,17 +36,30 @@
         </button>
       }
     </div>
-    <p class="api-meta">
-      API #39 hiện dùng page cố định 20; sort trong query chưa được hỗ trợ bởi source.
-    </p>
   </form>
   @if (loading()) {
     <section class="api-message" role="status"><strong>Đang tải thảo luận…</strong></section>
   }
   @if (error()) {
-    <section class="api-error" role="alert">{{ error() }}</section>
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      @if (!invalidCourseQuery()) {
+        <button class="api-button secondary" type="button" (click)="retry()">
+          Tải lại thảo luận
+        </button>
+      }
+    </section>
   }
-  @if (!loading() && !error() && discussions().length === 0) {
+  @if (!loading() && !error() && snapshotMismatch()) {
+    <section class="api-message" role="status">
+      <strong>Tổng số và danh sách thảo luận trên trang chưa đồng nhất.</strong>
+      <p>Không thể xác nhận trạng thái rỗng hoặc phân trang ở lần tải này. Hãy tải lại để đồng bộ.</p>
+      <button class="api-button secondary" type="button" (click)="retry()">
+        Tải lại danh sách
+      </button>
+    </section>
+  }
+  @if (!loading() && !error() && !snapshotMismatch() && discussions().length === 0) {
     <section class="api-message">
       <div>
         <span class="api-empty-icon" aria-hidden="true">▣</span
@@ -61,15 +74,14 @@
       </div>
     </section>
   }
-  @if (!loading() && discussions().length) {
+  @if (!loading() && !error() && discussions().length) {
     <section class="api-card">
       <ul class="discussion-list">
         @for (discussion of discussions(); track discussion.id) {
           <li>
             <div class="discussion-copy">
               <p class="api-meta">
-                Khóa #{{ discussion.course_id }} · {{ discussion.author.full_name }} ·
-                {{ discussion.status }}
+                Khóa học · {{ discussion.author.full_name }} · Đang hoạt động
               </p>
               <h2>{{ discussion.title }}</h2>
               <p>{{ discussion.content }}</p>
@@ -80,32 +92,34 @@
                 >Mở thảo luận</a
               >
             } @else {
-              <span class="api-meta">ID không an toàn để điều hướng</span>
+              <span class="api-meta">Chưa thể mở chủ đề này.</span>
             }
           </li>
         }
       </ul>
       @if (pagination(); as pageInfo) {
-        <nav class="api-pagination" aria-label="Phân trang">
-          <button
-            class="api-button secondary"
-            type="button"
-            (click)="changePage(-1)"
-            [disabled]="pageInfo.page <= 1"
-          >
-            Trước</button
-          ><span
-            >Trang {{ pageInfo.page }} / {{ pageInfo.total_pages || 1 }} · {{ pageInfo.total }} chủ
-            đề</span
-          ><button
-            class="api-button secondary"
-            type="button"
-            (click)="changePage(1)"
-            [disabled]="pageInfo.page >= pageInfo.total_pages"
-          >
-            Sau
-          </button>
-        </nav>
+        @if (!snapshotMismatch()) {
+          <nav class="api-pagination" aria-label="Phân trang">
+            <button
+              class="api-button secondary"
+              type="button"
+              (click)="changePage(-1)"
+              [disabled]="pageInfo.page <= 1"
+            >
+              Trước</button
+            ><span
+              >Trang {{ pageInfo.page }} / {{ pageInfo.total_pages || 1 }} · {{ pageInfo.total }} chủ
+              đề</span
+            ><button
+              class="api-button secondary"
+              type="button"
+              (click)="changePage(1)"
+              [disabled]="pageInfo.page >= pageInfo.total_pages"
+            >
+              Sau
+            </button>
+          </nav>
+        }
       }
     </section>
   }

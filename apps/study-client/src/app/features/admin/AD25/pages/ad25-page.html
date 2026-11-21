@@ -12,12 +12,12 @@
       <h1>{{ definition.title }}</h1>
       <p>{{ definition.description }}</p>
     </div>
-    <span class="api-chip"><study-icon name="server" /> API #103 / #18 · Chưa có nguồn chạy</span>
+    <span class="api-chip"><study-icon name="server" /> #103 chưa có handler · #18 chỉ phục vụ notification</span>
   </header>
 
   <aside class="export-contract-note" role="status">
     <span class="contract-icon"><study-icon name="info" /></span>
-    <div><strong>Chưa thể tạo hoặc tải báo cáo</strong><p>#103 và #18 hiện chỉ có catalog/Draft. Response #103 đang mâu thuẫn giữa Report và Operation; định danh tác vụ, trạng thái, artifact và tải xuống chưa có contract được duyệt.</p></div>
+    <div><strong>Chưa thể tạo hoặc tải báo cáo</strong><p>#103 chưa có handler. T041 đã duyệt CSV/XLSX/PDF và policy Operation UUID owner-only với trạng thái PENDING, SUCCEEDED hoặc FAILED cùng link ký hạn một giờ. Handler #18 hiện chỉ đọc lô notification; mapping response #103, export Operation và artifact chưa được triển khai.</p></div>
   </aside>
 
   <div class="export-grid">
@@ -25,7 +25,7 @@
       <header class="export-panel-heading"><h2 id="config-heading"><study-icon name="filter" /> Cấu hình trích xuất dữ liệu</h2><span>BƯỚC 1/2</span></header>
       <div class="config-content">
         <fieldset>
-          <legend>1. Định dạng tệp xuất <span>Tham khảo từ bản thiết kế</span></legend>
+          <legend>1. Định dạng tệp xuất <span>CSV/XLSX/PDF đã duyệt; lựa chọn chỉ lưu tại trang</span></legend>
           <div class="format-options">
             <label class="format-option" [class.format-option--selected]="selectedFormat() === 'csv'"><input type="radio" name="export-format" [checked]="selectedFormat() === 'csv'" (change)="setFormat('csv')" /><span><study-icon name="file" /><strong>CSV</strong><small>Dữ liệu thô (.csv)</small></span>@if (selectedFormat() === 'csv') { <span class="selection-mark" aria-hidden="true">✓</span> }</label>
             <label class="format-option" [class.format-option--selected]="selectedFormat() === 'xlsx'"><input type="radio" name="export-format" [checked]="selectedFormat() === 'xlsx'" (change)="setFormat('xlsx')" /><span><study-icon name="file" /><strong>Excel</strong><small>Bảng tính (.xlsx)</small></span>@if (selectedFormat() === 'xlsx') { <span class="selection-mark" aria-hidden="true">✓</span> }</label>
@@ -34,7 +34,7 @@
         </fieldset>
 
         <fieldset>
-          <legend>2. Phạm vi dữ liệu phân tích <span>Chưa có serialization cho `filters`</span></legend>
+          <legend>2. Phạm vi dữ liệu phân tích <span>Taxonomy và serialization `filters` chưa được duyệt</span></legend>
           <div class="scope-options">
             <label class="scope-option"><input type="checkbox" [checked]="selectedScopes().course" (change)="setScope('course', $any($event.target).checked)" /><span><strong>Báo cáo tổng thể khóa học</strong><small>Số lượng học phần, thống kê ghi danh và tỷ lệ hoàn thành</small></span><code>COURSE_SUMMARY</code></label>
             <label class="scope-option"><input type="checkbox" [checked]="selectedScopes().learner" (change)="setScope('learner', $any($event.target).checked)" /><span><strong>Báo cáo tiến độ học viên</strong><small>Tiến độ học tập và tương tác mentor</small></span><code>LEARNER_PROGRESS</code></label>
@@ -43,7 +43,7 @@
         </fieldset>
 
         <fieldset>
-          <legend>3. Khoảng thời gian xuất <span>Múi giờ và biên ngày chưa được xác nhận</span></legend>
+          <legend>3. Khoảng thời gian xuất <span>Preset chưa được map thành ngày; timezone/biên ngày còn mở</span></legend>
           <div class="period-options">
             <label [class.period-option--selected]="selectedPeriod() === 'week'"><input type="radio" name="export-period" [checked]="selectedPeriod() === 'week'" (change)="setPeriod('week')" /><span><study-icon name="calendar" /> Tuần hiện tại</span></label>
             <label [class.period-option--selected]="selectedPeriod() === 'month'"><input type="radio" name="export-period" [checked]="selectedPeriod() === 'month'" (change)="setPeriod('month')" /><span><study-icon name="calendar" /> Tháng hiện tại</span></label>
@@ -58,25 +58,25 @@
     <section class="export-panel monitor-panel" aria-labelledby="monitor-heading">
       <header class="export-panel-heading"><h2 id="monitor-heading"><study-icon name="activity" /> Theo dõi trạng thái tiến trình</h2><span>SH-07 CHƯA KẾT NỐI</span></header>
       <div class="operation-cards">
-        <article><small>MÃ TÁC VỤ (OPERATION ID)</small><strong>Chưa phát sinh tác vụ</strong><p>Chưa có ID từ #103 để tra cứu.</p></article>
-        <article><small>TRẠNG THÁI TÁC VỤ</small><strong>Chưa có dữ liệu trạng thái</strong><p>Không gọi #18 khi chưa xác định ID và response.</p></article>
+        <article><small>MÃ TÁC VỤ (OPERATION ID)</small><strong>Chưa phát sinh tác vụ</strong><p>Policy T041 dùng UUID; #103 chưa trả ID export để tra cứu.</p></article>
+        <article><small>TRẠNG THÁI TÁC VỤ</small><strong>Chưa có dữ liệu trạng thái</strong><p>T041 chốt PENDING/SUCCEEDED/FAILED; #18 hiện chỉ trả trạng thái notification.</p></article>
       </div>
       <div class="download-placeholder">
         <span class="download-icon"><study-icon name="database" /></span>
         <h3>Vùng kết quả tải về</h3>
-        <p>Không có liên kết tải xuống. Chưa có endpoint hoặc artifact contract để mở tệp.</p>
+        <p>T041 chốt link ký có hạn một giờ; hiện chưa có artifact export hoặc result mapping để mở tệp.</p>
         <button type="button" disabled><study-icon name="arrow" /> Tải tệp báo cáo</button>
       </div>
-      <div class="queue-note"><study-icon name="activity" /><p><strong>Theo dõi qua cổng tác vụ bất đồng bộ</strong><span>SH-07 chỉ có thể mở khi có Operation ID và contract theo dõi được xác nhận.</span></p><span class="queue-tag">SH-07<br />CHƯA NỐI</span></div>
+      <div class="queue-note"><study-icon name="activity" /><p><strong>Theo dõi qua cổng tác vụ bất đồng bộ</strong><span>SH-07 chỉ có thể mở khi #103 trả UUID export được map tới handler theo dõi.</span></p><span class="queue-tag">SH-07<br />CHƯA NỐI</span></div>
     </section>
   </div>
 
   <section class="export-panel policy-panel" aria-labelledby="policy-heading">
     <header class="export-panel-heading"><h2 id="policy-heading"><study-icon name="shield" /> Contract cần xác nhận trước khi mở xuất báo cáo</h2><span>#103 · #18</span></header>
     <div class="policy-grid">
-      <article><strong>1. Request và phạm vi</strong><p>#103 chỉ khai báo query `filters` và `format`; giá trị hợp lệ, serialization, quyền và retry chưa được xác nhận.</p></article>
-      <article><strong>2. Operation và tiến trình</strong><p>Response #103 đang là Report trong endpoint row và Operation trong phần theo dõi. ID, trạng thái và quyền truy cập #18 còn khác nhau.</p></article>
-      <article><strong>3. Artifact và tải xuống</strong><p>Chưa có URL/endpoint, MIME, tên tệp, thời hạn truy cập, cleanup hoặc kết quả được phép tải.</p></article>
+      <article><strong>1. Request và phạm vi</strong><p>T041 duyệt CSV/XLSX/PDF. #103 chỉ khai báo query `filters` và `format`; cách serialize bộ lọc, quyền, retry và response 202 vẫn chưa chốt.</p></article>
+      <article><strong>2. Operation và tiến trình</strong><p>T041 duyệt UUID owner-only với PENDING/SUCCEEDED/FAILED. Handler #18 hiện chỉ đọc notification và trả QUEUED/FAILED/SENT; export chưa có producer/poll mapping.</p></article>
+      <article><strong>3. Artifact và tải xuống</strong><p>T041 duyệt link ký một giờ, nhưng chưa có export result/ExportAsset mapping, storage hoặc download handler để cấp link đó.</p></article>
     </div>
   </section>
 </main>

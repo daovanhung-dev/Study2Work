@@ -1,5 +1,9 @@
 # ME-12 — Navigation
 
+## Current source update — 2026-11-20
+
+`/mentor/support/:requestId` is registered to ME12Page. The page follows route changes, rejects malformed request IDs, cancels stale #59 reads, and links back to `/mentor/support`. Runtime/browser navigation remains unverified.
+
 ## 1. Route definition
 - Current route in inventory: `/mentor/support/:requestId`
 - Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
@@ -49,7 +53,7 @@ flowchart LR
 | resolving | #61 pending | Disable #32 and conflicting actions. | Resolve response or mapped failure. |
 | resolved | #61 returns RESOLVED | Show server status/timestamp. Whether reply remains enabled is blocked because #60 currently accepts post-resolve reply. | Back to list; reply policy needs approval. |
 
-No current UI/runtime implements these states. The screenshot only provides the initial empty-thread visual and disabled controls.
+Current source implements route loading, distinct read errors, ready threads and #60 reply states. #61 resolving/resolved transitions remain expected-only because the approved readiness/satisfaction gate and confirmation interaction are still missing. The screenshot remains limited to the initial empty-thread visual and disabled controls.
 
 ### E.2. State transitions
 

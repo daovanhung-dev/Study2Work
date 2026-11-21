@@ -1,27 +1,28 @@
 # ME-07 — Navigation
 
 ## 1. Route definition
-- Current route in inventory: `/mentor/courses/:courseId/content/:contentId?`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `courseId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent), `contentId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Current routes: `/mentor/courses/:courseId/content/new` and `/mentor/courses/:courseId/content/:contentId`; both are registered to ME07Page.
+- Status: route/page source wired; mutations gated; runtime NOT VERIFIED.
+- Route params/types: `courseId` is validated as a positive safe Mentor ID; optional `contentId` is distinguished from a malformed supplied ID. `paramMap` changes cancel the prior #49 read and reload the new route state.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [ME-06](../ME-06-CayNoiDungKhoaHoc/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [ME-06](../ME-06-CayNoiDungKhoaHoc/00-overview.md) | Open editor from content tree | `courseId` and optional `contentId` | Route source is wired; #49 owner check supplies access state; runtime is not verified |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [ME-06](../ME-06-CayNoiDungKhoaHoc/00-overview.md), [ME-08](../ME-08-XuatBanXoaNoiDung/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [ME-06](../ME-06-CayNoiDungKhoaHoc/00-overview.md) | Cancel/back to tree | `courseId` | Current page navigates to `/mentor/courses/:courseId/content`; no mutation is submitted |
+| [ME-08](../ME-08-XuatBanXoaNoiDung/00-overview.md) | Future publish/delete handoff | Content identity | Expected flow only; current page does not invoke #52/#53 |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
 - Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Invalid ID: show the invalid-route state. Missing optional `contentId` selects create mode; a supplied edit ID absent from #49 shows not-found.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram
@@ -38,7 +39,7 @@ flowchart LR
 ```mermaid
 sequenceDiagram
     participant M as Mentor
-    participant W as ME-07 route (UNWIRED)
+    participant W as ME-07 route (wired; mutations gated)
     participant L as GET #49 collection
     participant C as POST #50
     participant U as PUT #51
@@ -65,11 +66,11 @@ sequenceDiagram
     W-->>M: Render state / return to ME-06 (destination still open)
 ```
 
-The diagram separates expected client choreography from current server behavior. The server routes/modules are local source, but the client lane and runtime are not wired.
+The diagram separates expected mutation choreography from current client behavior. ME07 currently calls #49 only; #50/#51 are gated. Browser/runtime is not verified.
 
 ### Read/hydrate: API #49
 
-1. Route input is proposed `courseId:int64` and optional `contentId:int64`. Current route does not exist in Study Web. The inventory proposes GET #49 to find existing Content; if create mode also requires this fetch, that purpose is not specified beyond the course tree/context.
+1. The current `new` route supplies `courseId`; the edit route supplies both `courseId` and `contentId`. Both load #49; create mode uses the response as course context.
 2. Route `GET /api/v1/mentor/courses/{course_id}/content` delegates to `get_course_contents`. Shared guard validates Bearer JWT and role `MENTOR` before DB. The handler parses signed int64; malformed/out-of-range course ID maps to 404.
 3. Query `FIND_MENTOR_COURSE` reads `courses.id, mentor_id`. Missing course is 404; a principal other than `courses.mentor_id` is 403. AC-22 says “có quyền quản lý course”; current source has no assigned/co-owner relation.
 4. Query `LIST_COURSE_CONTENTS` reads all nodes for that course with `deleted_at IS NULL`, ordered by `parent_id NULLS FIRST, content_order ASC, id ASC`. The response is a flat `Content[]`; there is no single-content detail endpoint in this screen’s inventory.

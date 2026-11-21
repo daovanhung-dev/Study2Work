@@ -4,12 +4,9 @@
   </nav>
   <header class="api-heading">
     <div>
-      <p class="api-eyebrow">ST-13 · Giới thiệu bài kiểm tra</p>
+      <p class="api-eyebrow">Bài kiểm tra</p>
       <h1>{{ quiz()?.title || 'Bài kiểm tra' }}</h1>
-      <p>
-        Thông tin và câu hỏi được nạp từ API #28. Study Server kiểm tra quyền và điều kiện bắt đầu
-        khi tạo attempt.
-      </p>
+      <p>Xem thông tin bài kiểm tra trước khi bắt đầu.</p>
     </div>
     <span class="api-pill">{{ quiz()?.questions?.length ?? '—' }} câu hỏi</span>
   </header>
@@ -19,7 +16,26 @@
     </section>
   }
   @if (error()) {
-    <section class="api-error" role="alert">{{ error() }}</section>
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      <button class="api-button secondary" type="button" (click)="retryQuiz()">
+        Tải lại bài kiểm tra
+      </button>
+    </section>
+  }
+  @if (startError()) {
+    <section class="api-error" role="alert">{{ startError() }}</section>
+  }
+  @if (createdAttemptQuizId() === quizId() && createdAttemptId()) {
+    <section class="api-message">
+      <strong>Lượt làm đã được tạo.</strong>
+      <a
+        class="api-button secondary"
+        [routerLink]="['/student/quizzes', createdAttemptQuizId(), 'attempts', createdAttemptId()]"
+      >
+        Tiếp tục lượt làm
+      </a>
+    </section>
   }
   @if (!loading() && !error() && quiz(); as item) {
     <section class="api-grid">
@@ -30,8 +46,7 @@
           <div>
             <dt>Thời lượng</dt>
             <dd>
-              {{ item.duration_minutes ?? 'Không được cung cấp'
-              }}{{ item.duration_minutes ? ' phút' : '' }}
+              {{ item.duration_minutes ? item.duration_minutes + ' phút' : 'Chưa có thông tin' }}
             </dd>
           </div>
           <div>
@@ -43,21 +58,21 @@
             <dd>{{ item.questions.length }}</dd>
           </div>
         </dl>
-        <p class="api-muted">
-          API #28 không trả deadline hoặc số lượt tối đa; các điều kiện bắt đầu do server xác nhận
-          khi bấm bắt đầu.
-        </p>
-        <button class="api-button" type="button" [disabled]="starting()" (click)="start()">
+        <p class="api-muted">Thời hạn và số lượt làm hiện chưa được cung cấp.</p>
+        <button
+          class="api-button"
+          type="button"
+          [disabled]="starting() || createdAttemptQuizId() === quizId()"
+          (click)="start()"
+        >
           {{ starting() ? 'Đang tạo lượt làm…' : 'Bắt đầu làm bài' }}
         </button>
       </article>
       <aside class="api-card">
-        <h2>Quy định hiển thị</h2>
+        <h2>Trước khi bắt đầu</h2>
         <p class="api-muted">
-          Đề bài chỉ hiện các câu hỏi và lựa chọn mà API #28 trả về. Đáp án đúng không được gửi
-          trong response này.
+          Hãy kiểm tra thời lượng và số câu hỏi. Câu trả lời sẽ được lưu khi bạn chọn đáp án.
         </p>
-        <span class="api-pill">Bảo vệ đáp án</span>
       </aside>
     </section>
   }

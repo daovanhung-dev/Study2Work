@@ -71,27 +71,27 @@ def get_course_resources(
         logger.exception("Course resources query failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
 
-    if not rows:
-        return _not_found_error(trace_id)
-
     try:
-        first_row = rows[0]
-        resource = ResourceItem(
-            id=first_row["id"],
-            name=first_row["name"],
-            type=first_row["resource_type"],  # map resource_type -> type
-            url=first_row["url"],
-            lesson_id=first_row["lesson_id"],
-        )
+        resources = [
+            ResourceItem(
+                id=row["id"],
+                name=row["name"],
+                type=row["resource_type"],  # map resource_type -> type
+                url=row["url"],
+                visibility=row["visibility"],
+                lesson_id=row["lesson_id"],
+            ).model_dump(mode="json")
+            for row in rows
+        ]
     except (ValidationError, KeyError):
         logger.exception("Resource mapping failed; trace_id=%s", trace_id)
         return _internal_error(trace_id)
 
     return success_response(
         business_code="DESIGN_RESOURCE_RETRIEVED",
-        message="Resource retrieved.",
+        message="Resources retrieved.",
         trace_id=trace_id,
-        data=resource.model_dump(mode="json"),
+        data=resources,
     )
 
 

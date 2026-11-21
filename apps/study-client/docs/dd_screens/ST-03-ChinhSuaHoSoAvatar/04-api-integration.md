@@ -12,17 +12,17 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #04, #13, #14
-- Orchestration/data notes: GET #4 → nếu đổi avatar thì POST #13 → nhận tham chiếu chưa xác định → PUT #14 → GET #4 để đồng bộ; chặn khi mapping chưa chốt.
-- BE/source status và gate: **M**; **BLOCK:** API #13/#14 chưa wired; avatar, bio, phone contract xung đột
+- Orchestration/data notes: GET #04 → nếu đổi avatar thì POST #13 → PUT #14 với các trường source-backed → GET #04 lại để đồng bộ; Bio không được gửi.
+- BE/source status and gate: Study Web callers #04/#13/#14 are wired through Student Bearer. **PARTIAL:** Bio is required by the screen inventory but absent from API #04/#14 and checked-in DB; live storage/database remain unverified.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API và field mapping
 
 | API | Current backend contract/source | Success | Lỗi / side effect | UI status |
 |---|---|---|---|---|
-| #04 GET /api/v1/users/me | Bearer JWT; role STUDENT; không path/query/body. Query theo JWT sub. | 200 DESIGN_RESOURCE_RETRIEVED; safe UserProfile (không bio). | 401 authentication, 403 access denied, 500 internal. Không mutation. | Source-backed; Study Web không gọi. |
-| #13 POST /api/v1/users/me/avatar | Bearer JWT; JSON {image: Data URL}; PNG/JPEG/WebP; decoded ≤5 MiB; model cấm extra fields. | 201 DESIGN_RESOURCE_CREATED; data.avatar_url. | 401/403; 422 DESIGN_VALIDATION_ERROR; 500 storage/config. Ghi object avatars/{user_id}, không DB. | Source-backed; không có client caller hoặc live storage verification. |
-| #14 PUT /api/v1/users/me/profile | Bearer JWT; JSON required fields full_name, phone, avatar_url; nullable phone/avatar; extra bio bị ignore. | 200 DESIGN_RESOURCE_UPDATED; data=UserProfile. | 401/403; 422 request validation hoặc DESIGN_VALIDATION_ERROR; 500 rollback/internal. UPDATE users và commit. | Source-backed; payload catalog/AC khác source; không có client caller. |
+| #04 GET /api/v1/users/me | Bearer JWT; role STUDENT; không path/query/body. Query theo JWT sub. | 200 DESIGN_RESOURCE_RETRIEVED; safe UserProfile (không bio). | 401 authentication, 403 access denied, 500 internal. Không mutation. | Caller: load form and refresh after #14; response shape is checked before binding. |
+| #13 POST /api/v1/users/me/avatar | Bearer JWT; JSON `{image: Data URL}`; PNG/JPEG/WebP; decoded ≤5 MiB; model cấm extra fields. | 201 DESIGN_RESOURCE_CREATED; `data.avatar_url`. | 401/403; 422 DESIGN_VALIDATION_ERROR; 500 storage/config. Ghi object `avatars/{user_id}`, không DB. | Caller: explicit upload action. Client checks MIME and file size; backend verifies decoded bytes/signature. Live storage not verified. |
+| #14 PUT /api/v1/users/me/profile | Bearer JWT; JSON required fields `full_name`, `phone`, `avatar_url`; nullable phone/avatar; extra bio bị ignore. | 200 DESIGN_RESOURCE_UPDATED; `data=UserProfile`. | 401/403; 422 request validation hoặc DESIGN_VALIDATION_ERROR; 500 rollback/internal. UPDATE users và commit. | Caller: explicit save action; client sends only supported fields, then refetches #04. |
 
 ### Envelope và mapping nguồn
 
@@ -32,7 +32,7 @@ Success response hiện dùng các khóa success, businessCode, message, data, m
 - #13 trả avatar_url trong data; không trả UserProfile và không thay đổi users.avatar_url.
 - #14 trả UserProfile nhưng không có bio; source không xác thực avatar URL là URI hoặc URL do #13 trả.
 - DDL candidate users có full_name VARCHAR(150) NOT NULL, avatar_url TEXT NULL, phone VARCHAR(20) NULL, status VARCHAR(20) DEFAULT 'ACTIVE' nullable; không có bio. Live DB/schema chưa được xác minh. UserProfile yêu cầu status non-null nên row status null có thể gây lỗi mapping 500.
-- list_screen.md gắn #13/#14 nhãn D/not wired; current backend router/modules/tests có source. Đây là discrepancy inventory/backend. Study Web vẫn UNWIRED.
+- list_screen.md gắn #13/#14 nhãn D/not wired; current backend router/modules/tests có source. Đây là discrepancy inventory/backend. Study Web callers are now source-wired; this does not verify live service behavior.
 
 ### Trích từ DD nguồn: I. Nguồn truy vết
 
@@ -61,4 +61,4 @@ Success response hiện dùng các khóa success, businessCode, message, data, m
 
 ## 5. Current Study Web source
 
-The `/student/profile/edit` route assigns API IDs #04/#13/#14 as trace metadata. It renders only the G-03 gate; no API caller exists because Student session/token support and the profile/avatar contract decisions remain unresolved. Do not count metadata as a request or an accepted API integration.
+The `/student/profile/edit` route assigns API IDs #04/#13/#14. `ST03ProfileService` calls all three through `StudentApiService`, which supplies the Student Bearer token. The page binds profile data from #04, uploads only a checked Data URL through #13, sends `full_name`, nullable `phone`, and nullable `avatar_url` to #14, then refetches #04 before navigating to ST-02. Bio stays disabled and is never included. Browser/live API/DB/object-storage runtime is not verified; the existing ST-03 page spec still asserts the old static gate and was not run or changed.

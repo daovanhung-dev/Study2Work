@@ -8,30 +8,30 @@ format: markdown
 
 # Data Mapping
 
-## Current source audit (2026-11-16)
+## Current source audit (2026-11-21)
 
 The Draft mapping below describes the logical generic Operation contract. Current Study source implements only a notification-specific lookup: `notifications.operation_id` joined to `notification_deliveries`, grouped by UUID and filtered by authenticated `sender_id`/owner. It returns `NOTIFICATION_DISPATCH` and local `QUEUED`/`FAILED`/`SENT` projections. There is no generic Study `operations` table. The handler has 8 dedicated source-level HTTP tests; this does not verify live schema/deployment or approve the generic mapping.
 
 ## Flow xử lý data
 
 1. Nhận Bearer JWT và path operation_id.
-2. Xác thực caller theo Bearer JWT; caller-to-owner authorization rule còn có discrepancy.
-3. Parse operation_id only after contract owner selects int64 or UUID.
-4. Resolve Operation from an approved Study storage/query source; that source is SOURCE_REQUIRED.
+2. Xác thực caller theo Bearer JWT; Student/Mentor/Admin are supported and all are restricted to the authenticated owner.
+3. Parse `operation_id` as UUID before querying the notification-specific operation view; malformed values return the existing 404 resource-not-found response.
+4. Query the notification-specific operation view from `notifications` plus `notification_deliveries`; generic Operation storage remains unsupported.
 5. Return ApiEnvelope<Operation> on success or one of the catalog-listed errors.
 
 ## Request Usage Matrix
 
 | Request field | Nguồn | Data Mapping step | Validate | SQL/Mutation usage | Branch/Loop | Response usage | Gap |
 |---|---|---|---|---|---|---|---|
-| Authorization | Header; Bearer JWT per API #18 row | 0.1/0.2 | Authentication required; token claims and owner mapping are not specified here | Caller identity is needed for authorization; physical predicate is SOURCE_REQUIRED | 0.3 | No direct response field | Keep 401/403 contract; see Q-18-02 |
-| operation_id | Path /api/v1/operations/{operation_id} | 1.1/1.2/2.1 | Required; accepted scalar type conflicts between int64 and UUID sources | Logical lookup by Operation ID is DERIVED; physical query/column is SOURCE_REQUIRED | 3.1/3.2 | data.id | See Q-18-01 |
+| Authorization | Header; Bearer JWT per API #18 row | 0.1/0.2 | Current source allows Student/Mentor/Admin roles and reads authenticated subject | Query is owner-bound; no Admin ownership bypass | 0.3 | No direct response field | Other roles return 403; wrong-owner is hidden as 404 |
+| operation_id | Path /api/v1/operations/{operation_id} | 1.1/1.2/2.1 | Required UUID | Query binds UUID against `notifications.operation_id` | 3.1/3.2 | data.id | UUID selected in the reconciled API row |
 
 ## Query Matrix
 
 | Query ID | Mục đích | Type | Base table/view | Alias | Columns | JOIN | WHERE | GROUP/HAVING | ORDER | Pagination | Result variable | Branch |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Q1 | Read one Operation by supplied identifier | Logical SELECT only | SOURCE_REQUIRED — no Study physical table/view identified | N/A | Logical Operation fields from list_api.md; physical columns SOURCE_REQUIRED | N/A — no relation is specified | Logical Operation ID match is DERIVED; physical predicate SOURCE_REQUIRED | N/A | N/A | N/A | operation_record | If source returns a record, map response; absent record follows 404 contract; ownership rule remains unresolved |
+| Q1 | Read one notification Operation by supplied UUID and owner | SELECT | `notifications` + `notification_deliveries` | n/d | Operation UUID, sender/owner ID and channel statuses | `notification_deliveries.notification_id` | UUID and owner predicates from authenticated subject | Aggregate notification state | N/A | N/A | operation_record | Missing and non-owner rows return the same 404 response |
 
 ## Mutation Matrix
 
@@ -46,14 +46,14 @@ The Draft mapping below describes the logical generic Operation contract. Curren
 | success | boolean | Branch constant | N/A | 5.1/5.2 | true on success; false on error | N/A | Envelope behavior is design-only |
 | businessCode | string | Branch constant | DESIGN_OPERATION_RETRIEVED or catalog error code | 5.1/5.2 | Fixed by branch | N/A | Codes are design-only |
 | message | string | Branch message | SOURCE_REQUIRED | 5.1/5.2 | No literal defined | SOURCE_REQUIRED | Do not invent message text |
-| data.id | UUID in reusable schema | Logical Operation | Physical source/column SOURCE_REQUIRED | 4.1/5.1 | Direct logical field | Required on success | Path ID type conflict |
-| data.kind | OperationKind | Logical Operation | Physical source/column SOURCE_REQUIRED | 4.1/5.1 | Direct logical field | Required on success | Enum values unresolved |
-| data.status | OperationStatus | Logical Operation | Physical source/column SOURCE_REQUIRED | 4.1/5.1 | Direct logical field | Required on success | Enum values/lifecycle unresolved |
-| data.owner_id | int64 | Logical Operation | Physical source/column SOURCE_REQUIRED | 4.1/5.1 | Direct logical field | Required on success | Caller ownership rule unresolved |
-| data.submitted_at | date-time | Logical Operation | Physical source/column SOURCE_REQUIRED | 4.1/5.1 | ISO-8601 | Required on success | Source/precision unresolved |
-| data.updated_at | date-time | Logical Operation | Physical source/column SOURCE_REQUIRED | 4.1/5.1 | ISO-8601 | Required on success | Lifecycle unresolved |
-| data.completed_at | date-time, optional | Logical Operation | Physical source/column SOURCE_REQUIRED | 4.1/5.1 | ISO-8601 | Optional; null/omission policy unresolved | |
-| data.result | optional Payment in reusable schema | Logical Operation | Physical source/column SOURCE_REQUIRED | 4.1/5.1 | Direct logical field | Optional | Per-kind result conflict |
+| data.id | UUID | Notification operation group | `notifications.operation_id` | 4.1/5.1 | Direct; equals requested UUID | Required on success | Current notification source |
+| data.kind | string | Derived notification group | Literal `NOTIFICATION_DISPATCH` | 4.1/5.1 | Fixed for this handler | Required on success | Not a generic enum registry |
+| data.status | string | `notification_deliveries.status` | Aggregate `QUEUED`/`FAILED`/`SENT` | 4.1/5.1 | Queued takes precedence, then failed, else sent | Required on success | Current notification state projection |
+| data.owner_id | int64 | Notification Operation | `notifications.sender_id` | 4.1/5.1 | Direct mapping from authenticated sender | Required on success | Owner-only lookup; no Admin bypass |
+| data.submitted_at | date-time | Notification group | `MIN(notifications.created_at)` | 4.1/5.1 | ISO-8601 | Required on success | Current notification group timestamp |
+| data.updated_at | date-time | Notification/outbox group | `MAX(COALESCE(delivery.updated_at, notification.created_at))` | 4.1/5.1 | ISO-8601 | Required on success | Current notification projection |
+| data.completed_at | date-time, optional | Notification/outbox group | Same aggregate timestamp when no delivery remains queued | 4.1/5.1 | ISO-8601 | Omitted while queued | Current notification terminal-state rule |
+| data.result | optional Payment in reusable schema | N/A for notification projection | Omitted (`None`, excluded from current source response) | 4.1/5.1 | No notification result mapping | Omitted | Generic per-kind result remains unresolved |
 | meta | object | Envelope default | N/A | 5.1/5.2 | Illustrative empty object | Shape unspecified | |
 | traceId | UUID | Shared envelope | Current trace context/generator | 5.1/5.2 | Shared schema type | Required by reusable schema | API #18 runtime behavior not verified |
 
@@ -62,24 +62,22 @@ The Draft mapping below describes the logical generic Operation contract. Curren
 ### 0.1. Thực hiện check quyền
 
 - Require Bearer JWT per API #18 catalog row.
-- The catalog row names the Operation owner as the actor.
-- The operation-tracking summary permits owner or Admin.
-- AC diagrams list Student, Mentor and Admin with owner-only access.
-- Caller identity claim mapping and any Admin override are unresolved; see OPEN_QUESTIONS.md.
+- Supported roles are Student, Mentor and Admin.
+- Every role is owner-only; Admin has no ownership bypass.
+- Current source uses the authenticated numeric subject as the owner predicate.
 
 ### 0.2. Query/check quyền
 
 | Target table/API | Column/Field | Condition/Value | Remarks |
 |---|---|---|---|
-| Operation logical resource | owner_id | Compare to authenticated caller only after the identity mapping is approved | Physical table, owner column and Admin policy are SOURCE_REQUIRED |
-| Bearer JWT | caller identity/role claims | Authentication required; exact claim names are not specified by API #18 contract | Current source uses the shared JWT guard, permits `STUDENT`/`MENTOR`/`ADMIN` per AC diagrams, and binds the query to authenticated owner ID; this does not resolve the contract's owner/Admin discrepancy |
+| Operation logical resource | owner_id | Compare to authenticated numeric JWT subject | Current notification query owner-binds the lookup for all supported roles |
+| Bearer JWT | caller identity/role claims | Require Student, Mentor or Admin | Other roles are rejected before DB access |
 
 ### 0.3. Check kết quả
 
 - Missing or invalid Bearer JWT maps to HTTP 401 / DESIGN_AUTHENTICATION_REQUIRED per catalog.
-- Access denial maps to HTTP 403 / DESIGN_ACCESS_DENIED per catalog.
-- Whether non-owner access returns 403 or is hidden as 404 is unresolved.
-- Do not infer Admin bypass from role presence alone.
+- A role outside Student/Mentor/Admin maps to HTTP 403 / DESIGN_ACCESS_DENIED.
+- Missing and non-owner notification operations both map to 404 / DESIGN_RESOURCE_NOT_FOUND.
 
 ## 1. Validate data input
 
@@ -90,9 +88,8 @@ The Draft mapping below describes the logical generic Operation contract. Curren
 
 ### 1.2. Validate operation_id
 
-- The API #18 row declares int64.
-- Catalog convention, reusable Operation.id and AC diagrams declare UUID.
-- Keep parse/format validation SOURCE_REQUIRED until one accepted type is approved.
+- The API #18 row, current OpenAPI source, reusable Operation.id and AC diagrams use UUID.
+- Current source parses a UUID before querying the notification Operation view.
 - Do not apply numeric range, UUID version, case normalization or other constraints absent from the canonical contract.
 
 ## 2. Get thông tin
@@ -100,7 +97,7 @@ The Draft mapping below describes the logical generic Operation contract. Curren
 ### 2.1. Query
 
 - Logical operation: retrieve the Operation identified by operation_id.
-- Physical table, columns, query implementation and live schema are SOURCE_REQUIRED.
+- Current notification query reads `notifications` and `notification_deliveries`; the physical schema is a checked-in legacy candidate and live schema is unverified. Generic operation tables are not implemented.
 - Study DB.sql, DB_UNICA_TABLES.md and DB_UNICA_ERD.drawio do not define an Operation table.
 - The similarly named Work Server table is tied to work_users and is not a confirmed Study API backing store.
 
@@ -108,12 +105,11 @@ The Draft mapping below describes the logical generic Operation contract. Curren
 
 | Target table | Join condition | Join type |
 |---|---|---|
-| N/A | N/A | No join is specified by the contract |
+| `notification_deliveries` | `notification_deliveries.notification_id = notifications.id` | LEFT JOIN |
 
 ### 2.3. WHERE
 
-- Logical Operation identifier matches the supplied operation_id — DERIVED from the resource endpoint and Operation schema.
-- Physical predicate and owner predicate are SOURCE_REQUIRED.
+- `notifications.operation_id` matches the supplied UUID and `notifications.sender_id` matches the authenticated numeric subject.
 
 ### 2.4. ORDER BY
 
@@ -154,13 +150,13 @@ The Draft mapping below describes the logical generic Operation contract. Curren
 
 - Missing/invalid authentication maps to HTTP 401 / DESIGN_AUTHENTICATION_REQUIRED.
 - Access denial maps to HTTP 403 / DESIGN_ACCESS_DENIED.
-- Do not add a path validation status code while operation_id type is unresolved.
+- Current source maps a malformed UUID path to 404; no extra status code is added.
 
 ### 4.4. Ngoài trường hợp trên
 
 - If the Operation does not exist, the catalog lists HTTP 404 / DESIGN_RESOURCE_NOT_FOUND.
-- Whether an ownership failure is also represented by 404 is SOURCE_REQUIRED.
-- Keep the API in Draft until the open questions are resolved.
+- A notification operation not owned by the caller returns the same 404 as a missing operation, as selected for SH-07.
+- Keep the API DD in Draft for generic lifecycle, result and non-notification producer questions.
 
 > API read-only không có BEGIN TRANSACTION, COMMIT hoặc ROLLBACK.
 

@@ -10,4 +10,6 @@ import type { GS05ReviewsState } from '../models/gs05-reviews.models';
 export class GS05ReviewsPanel {
   @Input({ required: true }) state!: GS05ReviewsState;
   @Output() readonly pageChange = new EventEmitter<number>();
+  @Output() readonly retry = new EventEmitter<void>();
+  @Output() readonly loadFirstPage = new EventEmitter<void>();
 }

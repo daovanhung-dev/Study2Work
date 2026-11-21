@@ -1,5 +1,7 @@
 # PLAN_RESULT — Study API #63
 
+> Current reconciliation 2026-11-21 supersedes the pre-implementation `content:int64` proposal below: the approved ME-14 flow, catalog, runtime model, OpenAPI and focused tests use `content:string`. Historical planning records remain for traceability.
+
 ## Kết quả plan trước authoring
 
 - Plan và các ma trận Requirement/Request/Query/Mutation/Response đã được ghi vào worklog trước khi tạo thư mục DD.
@@ -22,7 +24,7 @@
 
 | API ID | Method/path | Auth | Request | Success/response | Errors | Status |
 |---|---|---|---|---|---|---|
-| #63 | `POST /api/v1/mentor/notifications` | Bearer JWT; Mentor | `recipients:string!`, `title:string!`, `content:int64!`, `channels:string!` | 202 `DESIGN_OPERATION_ACCEPTED`; `ApiEnvelope<Operation>` | 401 authentication; 403 access; 422 validation; 503 dependency unavailable; 500 internal | Catalog DIRECT; semantics/encoding open |
+| #63 | `POST /api/v1/mentor/notifications` | Bearer JWT; Mentor | `recipients:string!`, `title:string!`, `content:string!`, `channels:string!` | 202 `DESIGN_OPERATION_ACCEPTED`; `ApiEnvelope<Operation>` | 401 authentication; 403 access; 422 validation; 503 dependency unavailable; 500 internal | Catalog reconciled to current source on 2026-11-21; recipient/channel encoding remains source-backed local behavior |
 
 ## Luồng AC-25 và ranh giới
 
@@ -100,8 +102,8 @@ API #63 không xác nhận delivery tại 202. AC/API index cũng liệt kê #18
 
 - Giữ direct request fields/types, exact 202 response type và error set của catalog; không thêm `course_id` hoặc Idempotency-Key.
 - Dùng CSV positive Student `users.id` và CSV `PUSH`/`EMAIL` theo fallback `DERIVED`; toàn bộ recipient set phải cùng có mặt trong ít nhất một ACTIVE roster do Mentor trực tiếp sở hữu.
-- Giữ `content:int64` và lưu decimal text vào legacy Notification `content`; ý nghĩa free-form message còn là discrepancy cần contract owner xác nhận.
+- 2026-11-21: User approved text `content` to match the ME-14 editor; source model, view, OpenAPI and tests now accept/store a strict string. The older int64 proposal above is historical.
 - Chọn legacy BIGINT Notification rows và migration 009 delivery outbox vì phù hợp API #62 IDs và API #64 `notification_id:int64`; không ghép V1-PILOT UUID schema.
 - Một Notification row được ghi cho mỗi recipient; UUID Operation group được lưu trên các rows; response `meta.notification_ids` công bố IDs để gọi API #64.
 - Trả 202 sau khi toàn bộ rows commit với status `QUEUED`; worker/provider chưa có, nên endpoint chứng minh acceptance/outbox persistence trong local tests chứ không chứng minh Push/Email delivery.
-- Fallbacks là local implementation decisions, không đổi trạng thái DD `Draft — Needs Confirmation` hoặc xác nhận live schema.
+- The screen handoff contract for `content` is reconciled; CSV recipient/channel and persistence/live-schema decisions remain `Draft — Needs Confirmation` and are not proven on a live database.

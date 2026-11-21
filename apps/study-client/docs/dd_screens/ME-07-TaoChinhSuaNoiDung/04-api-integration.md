@@ -2,6 +2,17 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
+## Current caller status — 2026-11-17
+
+ME07 routes and page source exist. The current page calls GET #49 to read the
+course collection. Create/update controls are disabled and the submit handler
+does not call #50/#51 while payload subtype, order and versioning mappings
+remain unapproved. Runtime is NOT VERIFIED.
+
+## Current caller status — 2026-11-20
+
+The #49 caller now follows route changes and retries, validates the exact success code and returned Content collection, and checks edit IDs against the requested course. The screen distinguishes invalid route, 403, 404, and recoverable failures. #50/#51 still have no ME07 caller; mutation remains gated pending approved payload subtype and #51 body contract. No live runtime claim is made.
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
@@ -12,8 +23,9 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #49, #50, #51
-- Orchestration/data notes: GET #49 tìm content hiện hữu → POST #50 hoặc PUT #51 → refresh #49.
-- BE/source status và gate: **D**; **BLOCK:** PUT #51 chưa mô tả body rõ trong catalog
+- Expected orchestration: GET #49 → approved POST #50 or PUT #51 → refresh #49.
+- Current caller: GET #49 only; save is gated and #50/#51 are not called by ME07.
+- BE/source status và gate: DD BLOCKED; server route/module/test source exists for #49–#51; payload/editor approval remains open.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: 2. End-to-end flow and source trace
@@ -21,7 +33,7 @@
 ```mermaid
 sequenceDiagram
     participant M as Mentor
-    participant W as ME-07 route (UNWIRED)
+    participant W as ME-07 page (route wired; mutations gated)
     participant L as GET #49 collection
     participant C as POST #50
     participant U as PUT #51
@@ -48,11 +60,11 @@ sequenceDiagram
     W-->>M: Render state / return to ME-06 (destination still open)
 ```
 
-The diagram separates expected client choreography from current server behavior. The server routes/modules are local source, but the client lane and runtime are not wired.
+The diagram describes expected client choreography. The current page calls #49 only; the #50/#51 lanes are gated. Local server source and unit tests do not prove deployed runtime.
 
 ### Read/hydrate: API #49
 
-1. Route input is proposed `courseId:int64` and optional `contentId:int64`. Current route does not exist in Study Web. The inventory proposes GET #49 to find existing Content; if create mode also requires this fetch, that purpose is not specified beyond the course tree/context.
+1. Route input is `courseId:int64` and optional `contentId:int64`. Current Study Web routes exist. ME07 calls #49 in create and edit mode; the inventory does not further specify why create mode needs the collection fetch.
 2. Route `GET /api/v1/mentor/courses/{course_id}/content` delegates to `get_course_contents`. Shared guard validates Bearer JWT and role `MENTOR` before DB. The handler parses signed int64; malformed/out-of-range course ID maps to 404.
 3. Query `FIND_MENTOR_COURSE` reads `courses.id, mentor_id`. Missing course is 404; a principal other than `courses.mentor_id` is 403. AC-22 says “có quyền quản lý course”; current source has no assigned/co-owner relation.
 4. Query `LIST_COURSE_CONTENTS` reads all nodes for that course with `deleted_at IS NULL`, ordered by `parent_id NULLS FIRST, content_order ASC, id ASC`. The response is a flat `Content[]`; there is no single-content detail endpoint in this screen’s inventory.
@@ -60,6 +72,8 @@ The diagram separates expected client choreography from current server behavior.
 6. Empty collection is 200 `DESIGN_RESOURCE_RETRIEVED` with `data:[]`. The client should treat `contentId` absent as candidate create mode; if present, find exact ID in the collection and verify its `course_id` equals route `courseId`. Missing ID in result is an expected UI not-found state, not evidence of a new API status.
 
 ### Create: API #50 current source
+
+Current UI caller status: no ME07 request is sent to #50; Save remains disabled pending an approved payload/editor mapping.
 
 | Request | Current contract |
 |---|---|
@@ -73,6 +87,8 @@ The diagram separates expected client choreography from current server behavior.
 Current caller/callee/side effect: route in `app/api/v1.py` → `create_content` → auth guard → `LOCK_MENTOR_COURSE FOR UPDATE` → owner check → `NEXT_ROOT_CONTENT_ORDER` over active roots → `INSERT_CONTENT` with `parent_id=NULL`, generated order, and `status=PENDING_REVIEW` → projection validation → commit → success envelope. First root order is 0; concurrent creates serialize on course row. Any SQL/mapping/commit error rolls back safely. The request cannot place a node beneath a parent or choose the displayed order.
 
 ### Update: API #51 current source vs catalog
+
+Current UI caller status: no ME07 request is sent to #51; Save remains disabled pending approval of its derived full-replacement body and lifecycle effects.
 
 | Request | Current source | Catalog/approval |
 |---|---|---|

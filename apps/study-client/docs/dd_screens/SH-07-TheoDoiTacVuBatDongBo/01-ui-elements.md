@@ -1,5 +1,7 @@
 # SH-07 — UI Elements
 
+> **Current Study Web source (2026-11-21):** The Angular page implements notification-only operation lookup through API #18, with UUID validation, initial load and manual refresh. The static element inventory below describes the Stitch prototype, including developer diagnostic and generic payment/export cards that are not presented as live operation data. Browser/runtime is unverified.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.

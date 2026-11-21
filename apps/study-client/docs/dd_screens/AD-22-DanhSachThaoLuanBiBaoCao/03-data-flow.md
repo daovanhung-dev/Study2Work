@@ -60,9 +60,10 @@ Không có contract cho debounce, cache, timeout, retry, request cancellation, r
 |---|---|---|
 | `SOURCE_WIRED_PARTIAL` | Current Angular source registers the route/page and #97 caller; focused specs exist. | API #97 returns only Discussion summary; report fields and approved AC-37 policy are unresolved. Browser loaded-state remains `RUNTIME NOT VERIFIED`. |
 | `PROTOTYPE_STATIC` | HTML tải độc lập; data, counts, policy copy và status đều literal. | Hiển thị mockup; controls không có filter/navigation/network effect trừ refresh icon animation. |
-| `LOADING` (expected) | Inventory state checklist; current UI không implement. | Loading component/skeleton, cancellation và retry chưa có design/contract. |
+| `LOADING` | Initial load or manual refresh through the current Angular query state. | Existing loading row is rendered; browser behavior is not verified. Cancellation/retry policy is not defined. |
 | `READY` (expected) | Successful #97 response có items. | Chỉ render fields được response trả; report-specific columns đang thiếu field contract. |
-| `EMPTY` (expected/local API possible) | #97 trả Page không có items; local source cũng trả empty page khi out-of-range. | Empty content copy cần được duyệt; không kết luận mọi Discussion compliant hoặc report đã xử lý. |
+| `EMPTY` (expected/local API possible) | #97 trả Page không có items; local source cũng trả empty page khi out-of-range. | Empty content copy cần được duyệt; không kết luận mọi Discussion compliant hoặc report đã xử lý. Current Angular state offers a manual refresh action. |
+| `MANUAL_REFRESH` | Toolbar or loaded-empty action is clicked in current Angular source. | Re-emits the applied `reason/severity/page` query and repeats GET #97; no polling or automatic retry. |
 | `ERROR` (expected) | API/auth/query error; inventory có error state. | Preserve HTTP/business code; cụ thể message, retry, SH-05 handling và trace display chưa được định nghĩa cho AD-22. |
 | `FILTER_UNSUPPORTED` | Search/status controls trong prototype; #97 không nhận q/status. | Không gửi filter request hoặc giả lập kết quả. |
 | `PAGE_INVALID` | Current local source nhận page sai/non-positive/out-of-int32. | Local DERIVED 422 `DESIGN_VALIDATION_ERROR`; catalog #97 không liệt kê 422. |

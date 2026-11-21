@@ -30,13 +30,22 @@
 | ID | Blocker | Owner/decision |
 |---|---|---|
 | ST10-B01 | ST-09 has no lesson row/selection/lessonId handoff in current assets. | Product/design/frontend |
-| ST10-B02 | API #22 has no current source; access predicate, identity binding, allow/reason schema and 404 semantics unresolved. | API/backend/security |
-| ST10-B03 | API #23 has no current source; BIGINT and V1-PILOT UUID progress schemas differ, so UPSERT identity/key, repeated start, field preservation, idempotency, response and transaction are unresolved. | API/backend/database |
-| ST10-B04 | API #24 has no current source; direct-call authorization, lesson/course publish policy, 403/404, query/projection and null behavior unresolved. Current public #09 also returns lesson `content`/`video_url` without enrollment/auth context. | API/backend/security/product |
+| ST10-B02 | API #22 source exists; access predicate, identity binding, allow/reason schema and 404 semantics remain unresolved. | API/backend/security |
+| ST10-B03 | API #23 source exists; BIGINT and V1-PILOT UUID progress schemas differ, so UPSERT identity/key, repeated start, field preservation, idempotency, response and transaction remain unresolved. | API/backend/database |
+| ST10-B04 | API #24 source exists and checks Student/enrollment/published parent course; intended lesson publication policy, 403/404, query/projection and null behavior remain unresolved. Current public #09 also returns lesson `content`/`video_url` without enrollment/auth context. | API/backend/security/product |
 | ST10-B05 | Catalog #22/#23/#24 generic Lesson payloads may not match access/start/content responsibilities; #23 could expose content before #24. | API/product/security |
-| ST10-B06 | Study Web editable source/router absent; route/auth/navigation/runtime cannot be verified. | Frontend/build owner |
+| ST10-B06 | ST-10 source route and caller are wired; ST-09 lessonId handoff and deployed runtime remain unverified. | Product/design/frontend |
 | ST10-B07 | Static 423_LOCKED, Session Token, permanent-lock, release-media and WCAG-compliant claims are not source-backed. | Product/design/security/accessibility |
-| ST10-B08 | Inventory orders #23 after allowed access but does not say whether it is automatic or triggered by the Start button; current button is disabled. | Product/design/frontend |
+| ST10-B08 | Inventory does not specify whether #23 is automatic or user-triggered; current implementation uses an explicit Start click, but this behavior still needs DD/product confirmation. | Product/design/frontend |
+
+### Current focused implementation tests — 2026-11-17
+
+`src/app/features/student/ST10/pages/st10-page.spec.ts` was run with
+`npm test -- --include=src/app/features/student/ST10/pages/st10-page.spec.ts`:
+
+- 3 tests passed: #22 on entry, explicit #23 click and ST-11 handoff; non-PUBLISHED access stays locked; mismatched #23 response does not hand off.
+- The fixture includes lesson `content` and `video_url`; the test confirms ST-10 does not render either field or a video element.
+- This frontend unit test mocks `StudentApiService` at the adapter boundary. It does not verify Study Server tests, a live API/DB, or deployment.
 
 ### Acceptance checklist
 
@@ -53,11 +62,11 @@
 - [ ] #23 idempotency/upsert key, state updates, transaction and retry rules approved.
 - [ ] #24 independent-call authorization, publish policy, response projection/null behavior approved and source-backed.
 - [ ] Loaded/checking/denied/failure states and recovery UI designed.
-- [ ] Study Web route and auth/API sequence implemented and runtime-verified.
+- [x] Study Web route and source API sequence implemented; [ ] browser/runtime behavior verified.
 - [ ] ST-11 route and #24 request ownership/duplicate-read sequence reconciled.
 - [ ] Design and accessibility claims verified/approved.
 
-**Decision:** DD BLOCKED. Implementation BLOCKED. Runtime NOT VERIFIED. API/design declarations are insufficient to resolve entitlement and protected-content behavior.
+**Decision:** DD BLOCKED. Implementation PARTIAL / SOURCE_WIRED. Runtime NOT VERIFIED. Source tests cover the current frontend transition, while API/design decisions remain insufficient to approve all entitlement and protected-content behavior.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 
@@ -65,7 +74,7 @@
 
 - Create ST-10.md, ST-10_markers.json, ST-10_markers_overlay.svg, screen_annotated.png after this plan. Preserve original image/HTML.
 - DD must cover every visible marker, expected/current handoff, all 10 events, API method/route/auth/path/response/errors/status, state matrix, navigation and security implications.
-- Keep status panel/API/business-code discrepancies explicit: 423_LOCKED is not catalogued; #22–#24 are Draft and absent from current source; #22 ApiEnvelope<Lesson> lacks allow/reason field; #23 repeated POST/upsert behavior unresolved; #24 access/publish/content projection unresolved.
+- Keep status panel/API/business-code discrepancies explicit: 423_LOCKED is not catalogued; #22–#24 API DDs remain Draft although current route/handler/query/model sources exist; #22 success is DESIGN_RESOURCE_RETRIEVED and has no allow/reason field; #23 success is DESIGN_RESOURCE_CREATED and repeated POST/upsert behavior is unresolved; #24 access/publish/content projection remains unresolved.
 - DD is expected to remain BLOCKED until access predicate/JWT mapping, 403 reason shape, 404/422 semantics, #23 unique key/update/idempotency/transaction, #24 authorization/publish/projection/null rules, loaded/error UI and ST-09 lessonId handoff are approved/source-backed.
 - Update global tracker to separate DD/implementation/runtime status and increment artifact bundle count only after static audit. Next pointer after this session: ST-11.
 - No context page change is planned unless source audit reveals an inaccurate registered page. If a context page changes, update it with evidence and run node scripts/validate-agent-context.mjs.

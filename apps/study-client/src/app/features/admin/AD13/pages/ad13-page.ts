@@ -3,7 +3,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AD13ApiService } from '../data-access/ad13-api.service';
 import { StudyIcon } from '../../../../shared/ui/study-icon';
-import { adminRouteState, loadedFields } from '../../admin-screen-state';
+import { isAdminLesson } from '../../admin-api-guards';
+import { adminRouteState, isSignedInt64RouteId, loadedFields } from '../../admin-screen-state';
 import { renderLessonFields } from '../../admin-screen-renderers';
 import type { AdminScreenField } from '../../../../shared/ui/admin-screen.model';
 
@@ -20,7 +21,12 @@ export class AD13Page {
     this.route,
     'lessonId',
     (lessonId) => this.api.getLesson(lessonId),
-    (lesson) => loadedFields(renderLessonFields(lesson)),
+    (lesson) => isAdminLesson(lesson)
+      ? loadedFields(renderLessonFields(lesson))
+      : { status: 'error', message: 'API #83 trả Lesson không hợp lệ.' },
+    isSignedInt64RouteId,
+    'Mã bài học phải là số nguyên signed 64-bit.',
+    'DESIGN_RESOURCE_RETRIEVED',
   );
 
   get lessonFields(): readonly AdminScreenField[] {

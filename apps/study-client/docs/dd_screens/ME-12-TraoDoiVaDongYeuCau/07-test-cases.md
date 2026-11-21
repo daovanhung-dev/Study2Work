@@ -1,5 +1,9 @@
 # ME-12 — Test Cases
 
+## Current source state — 2026-11-21
+
+ME12 page source calls #59/#60 with reactive detail reads, exact success-code/ID/status validation, and no blind duplicate reply after an uncertain result; #61 is intentionally not called until the readiness/satisfaction and confirmation rules are approved. No ME12 frontend test was run. Backend source/tests do not verify deployed storage/migration or resolve open lifecycle, attachment-upload and SLA decisions.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix
@@ -36,7 +40,7 @@
 - [ ] Loaded-thread/attachment presentation and behavior are approved.
 - [ ] Reply length and counter semantics are approved and consistent with server validation.
 - [ ] Reply attachment picker/source/purpose and user-facing attachment policy are approved, or product explicitly confirms no attachments.
-- [ ] Resolve confirmation and minimum-exchange gate are reconciled with AC-24 and #61.
+- [ ] Resolve confirmation and minimum-exchange gate are reconciled with AC-24 and #61; current page control remains disabled.
 - [ ] Post-resolve/cancelled reply behavior is approved and aligned across UI/API.
 - [ ] Socket, SLA, auto-settlement, survey, guide destination and compliance claims are either verified or removed/rewritten by the owner.
 - [ ] Study Web app route/auth/API wiring exists and is verified.

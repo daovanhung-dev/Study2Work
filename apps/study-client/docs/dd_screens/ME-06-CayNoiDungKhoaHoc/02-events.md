@@ -35,17 +35,18 @@ Các kết quả dưới đây mô tả current API source hoặc expected behav
 - **Điều kiện:** có numeric signed-int64 `courseId`; người dùng có Bearer token và role MENTOR. Client route/auth chưa được wire.
 - **Request:** GET `/api/v1/mentor/courses/{course_id}/content`, không body/query.
 - **Xử lý source:** auth/role trước; parse path; truy vấn course và direct-owner; đọc tất cả active Content; xác thực mapping/cây.
-- **Thành công:** 200 `DESIGN_RESOURCE_RETRIEVED`, `data:Content[]`. Không mutation; không có cache rule/client retry source.
+- **Thành công:** 200 `DESIGN_RESOURCE_RETRIEVED`, `data:Content[]`. Không mutation.
+- **CURRENT SOURCE:** Route `paramMap` reloads changed course IDs and cancels the previous request; the page validates the envelope, business code, course identity and full tree shape. Loading/retry/error/404/403 are represented; response is not cached.
 - **Lỗi:** 401 auth; 403 role/owner; 404 path sai hoặc course thiếu; 500 SQL/projection/tree integrity, safe message + rollback. Path sai hiện không tạo 422.
-- **Đầu ra:** loading → empty khi `data=[]`, ready khi có nodes. No partial tree response.
+- **Đầu ra:** loading → empty khi `data=[]`, ready khi có nodes. No partial tree response; Add/Edit/Actions appear only after successful #49 owner check.
 - **Evidence:** route/view/query/model/local focused test source đã được đọc; test không chạy; live schema/deployment không xác minh.
 
 ### ME06-EV-02 — Dựng tree và giữ trạng thái
 
 - **Trigger/input:** envelope thành công của EV-01.
-- **Processing:** giữ từng `id/course_id/content_type/title/payload/status/parent_id/order`; lập lookup theo `id`; nối `parent_id`; siblings dùng `order` đã trả (API SQL đã order `id` tie-break). Không thêm nested field vào response model và không chọn version.
+- **Processing:** giữ từng `id/course_id/content_type/title/payload/status/parent_id/order`; xác thực unique IDs, course scope, parent existence/cycle and int32 order; dựng thứ tự cha-con theo `parent_id`, preserving sibling order returned by SQL (`order`, then `id`). Không thêm nested field hoặc version.
 - **Status:** giữ đúng giá trị server. Không map `PENDING_REVIEW` thành “Draft”, `APPROVED` thành “Ready”, hoặc hide `PUBLISHED`/`hidden` trước khi enum/lifecycle được duyệt. Không render một node draft dưới badge published từ fixture.
-- **Output/error:** empty tree là 200 rỗng, không lỗi; type/status/payload không nhận diện vẫn cần hiển thị an toàn hoặc chặn cho tới khi schema được chốt. UI fallback, retry, cache invalidation chưa có implementation.
+- **Output/error:** empty tree là 200 rỗng, không lỗi; UI giữ type/status raw và không diễn giải payload subtype. Retry dùng course ID hiện hành; stale responses are cancelled.
 
 ### ME06-EV-03 — Lọc status
 

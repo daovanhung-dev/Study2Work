@@ -2,6 +2,10 @@
 
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
+## Current implementation status — 2026-11-20
+
+Client source now implements #43 list/unread/page, #44 mark-one, #45 mark-all, response validation and post-mutation refresh. Tests/build/runtime were not run by request. The catalog #45 response mismatch, deep links and screenshot-only panels remain incomplete.
+
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |
 |---|---|---|---|---|
@@ -35,7 +39,7 @@
 - [ ] Related screen links are identified; unsupported route parameters and history behavior are left unresolved.
 - [ ] All local source links resolve; original screenshot/HTML hashes stay unchanged; no runtime/test claim is made.
 
-**Kết luận:** ST-26 DD currently `BLOCKED`; implementation is `BLOCKED`; runtime is `NOT VERIFIED`. Product/API/DB decisions are required before the loaded notification screen can be implemented safely.
+**Historical conclusion:** the original DD snapshot recorded ST-26 as blocked before the current #43–#45 route/client source was checked. Current implementation is partial; runtime remains `NOT VERIFIED`, and remaining open contracts are listed above.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 

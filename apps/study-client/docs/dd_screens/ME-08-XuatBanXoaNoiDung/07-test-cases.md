@@ -1,5 +1,16 @@
 # ME-08 — Test Cases
 
+## Current focused tests — 2026-11-17
+
+`me08-page.spec.ts` passed 2/2 tests in the focused suite. APPROVED and
+PUBLISHED content render disabled publish/unpublish/delete controls and do not
+call #52/#53. These frontend tests do not verify live APIs, PostgreSQL, or
+deployment.
+
+## Current source state — 2026-11-20
+
+ME08 now reacts to route changes, cancels stale #49 reads, validates the success envelope/code and the returned course Content tree, and renders invalid-context/not-found/forbidden/retryable-error states. The focused-test result above predates these changes; no new test result is claimed. #52/#53 remain gated and are not called by ME08.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix

@@ -1,5 +1,7 @@
 # Verification Report — API #48 Tải lại lecture vừa tạo
 
+> **Historical verification note (2026-11-20):** The test results below predate T041's #47 Markdown-string request change. The #47 existing test source was reconciled afterward but was not rerun; this report does not verify the changed #47 contract or current end-to-end flow. No tests/build/lint/browser were run for the ME-05 implementation update.
+
 ## Phạm vi
 
 Đối chiếu API #48 với catalog, AC-21/AC-22, checked-in legacy DDL/migrations, API #34/#47 source, runtime route/module và focused HTTP tests. Không kết nối hoặc thay đổi live database, không deploy migration, không xác nhận Object Storage hay assigned-course behavior.

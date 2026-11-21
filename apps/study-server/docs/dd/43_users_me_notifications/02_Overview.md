@@ -11,6 +11,10 @@ status: "Draft — Needs Confirmation"
 
 # Overview
 
+## Current source status — 2026-11-20
+
+`GET /api/v1/users/me/notifications` is registered and calls the Student auth helper. The query scopes rows to the authenticated user via `notifications.user_id` or `notification_recipients`, supports `unread_only` and `page`, returns 20 rows per page in created/id descending order, and projects `id/title/content/type/is_read/read_at/created_at`. Migration 016 creates the recipient table. Source is wired; database deployment/runtime is not verified. Remaining catalog/schema gaps are preserved below.
+
 ## Khái quát
 
 | Thuộc tính | Giá trị |
@@ -25,7 +29,7 @@ status: "Draft — Needs Confirmation"
 | `Authorization` | Yêu cầu role `Student`; principal lấy từ `JWT`, không nhận `user_id` từ request. |
 | Basis | Approved design contract + AC-20; pagination/order là DERIVED. |
 | Status | Draft — Needs Confirmation |
-| Current runtime state | UNWIRED / NOT_FOUND — không có route/module/query/test cho API #43 trong Study source hiện tại. |
+| Current runtime state | SOURCE WIRED — route/module/query exist and use Student auth; live DB/deployment is not verified. |
 | Transaction | N/A — `GET` read-only. |
 | Side effects | N/A — không có mutation. |
 
@@ -46,7 +50,7 @@ status: "Draft — Needs Confirmation"
 ## Tables read
 
 - notifications — candidate physical source theo DB guide/ERD/DDL.
-- `NotificationRecipient` — logical source được AC-20 gọi tên nhưng chưa có physical table trong DB guide/ERD/DDL.
+- `notification_recipients` — physical table added by migration 016; live migration application is not verified.
 
 ## Tables write
 
@@ -59,10 +63,10 @@ status: "Draft — Needs Confirmation"
 - Sau khi API #44 hoặc #45 đổi read state, lần tải lại của API #43 phản ánh trạng thái đã lưu.
 - Contract giữ `ApiEnvelope<Page<Notification>>` và đúng `status`/error set tại catalog.
 
-## Current behavior
+## Historical source snapshot at DD creation
 
-- API #43 chưa có route, module, query hoặc test trong Study Server.
-- Diagram yêu cầu đọc `NotificationRecipient` theo user; DB artifacts chỉ có bảng notifications với `user_id` nullable và `is_read`.
+- The snapshot below predates the current route/query and migration 016; do not treat it as current implementation evidence.
+- The original diagram names per-recipient read state; current source uses `notification_recipients` and scopes rows to the authenticated principal.
 - DDL không có các cột `channels`, `status`, `read_at`, `scheduled_at`; live schema chưa xác minh.
 - Current shared auth helper hỗ trợ `Student` Bearer/`JWT`, nhưng API #43 chưa được wire tới helper.
 - Current error_response() mặc định serialize data thành {}; API guideline mô tả data: null. API #43 chưa dùng helper này.

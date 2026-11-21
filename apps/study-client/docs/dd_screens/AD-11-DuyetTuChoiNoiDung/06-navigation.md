@@ -3,7 +3,7 @@
 ## 1. Route definition
 - Current route in inventory: `/admin/content/:contentId/review`
 - Status: current Angular route is registered and maps to `AD11Page`; browser/runtime remains `NOT VERIFIED`.
-- Route params/types: `contentId` is passed as a string to GET #79; the client does not coerce it. Missing route param shows a page error without a request; server maps malformed/out-of-range #79 IDs to 404.
+- Route params/types: `contentId` stays a raw string; the page validates the complete optional-sign signed-int64 value before GET #79 and does not coerce it. Missing/malformed/out-of-range IDs show a page error without a request; direct backend malformed/out-of-range paths map to 404.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
@@ -36,8 +36,8 @@ flowchart LR
 
 | State | Điều kiện | UI/data cần biểu diễn | Chuyển tiếp / giới hạn |
 |---|---|---|---|
-| `wired-detail` | Angular route/page and GET #79 caller exist. | Browser/runtime remains unverified; #80/#81 controls are disabled. | Current source status. |
-| `loading-detail` | Route có Content ID và GET #79 đang chờ. | Loading state được render; không hiển thị metadata cũ của Content khác. | 200→`ready`; request failure→error state. |
+| `wired-detail` | Angular route/page, signed-int64 route guard and GET #79 caller exist. | Invalid IDs skip the request; browser/runtime remains unverified; #80/#81 controls are disabled. | Current source status. |
+| `loading-detail` | Complete raw `contentId` passes signed-int64 validation and GET #79 is pending. | Loading state được render; invalid IDs stop before request; không hiển thị metadata cũ của Content khác. | 200→`ready`; request failure→error state. |
 | `ready` | #79 trả Content shape hợp lệ. | Hiển thị field được hỗ trợ; payload là JSON text; author/version/media preview unavailable. | Back link đi tới queue; approve/reject vẫn khóa. |
 | `preview-unavailable` | Không có payload media/rendering contract. | JSON text hiển thị; secure renderer không tồn tại. | Decoder/preview behavior cần contract. |
 | `approving` | mutation action đang gọi PATCH #80 (bodyless). | Disable duplicate submit; preserve current item context. | 200→`decision-success`; 401/403/404/422/500/network→error state. Pending UI chưa có. |

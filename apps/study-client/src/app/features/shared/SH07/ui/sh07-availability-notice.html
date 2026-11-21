@@ -3,11 +3,18 @@
     <study-icon name="info" />
   </span>
   <div class="sh07-notice__content">
-    <p class="sh07-notice__eyebrow">Chưa khả dụng</p>
-    <h2 id="sh07-notice-title">Chưa thể hiển thị trạng thái tác vụ</h2>
+    <p class="sh07-notice__eyebrow">Cổng contract API #18</p>
+    <h2 id="sh07-notice-title">Chưa thể theo dõi tác vụ này</h2>
     <p>
-      Màn hình theo dõi hiện chưa được kết nối. Không có trạng thái, tiến độ hoặc kết quả nào được
-      tải.
+      Handler #18 hiện chỉ đọc các batch gửi thông báo và trả trạng thái QUEUED, FAILED hoặc SENT.
+      SH-07 chưa có caller API; mapping ID, lifecycle và kết quả cho tác vụ dùng chung vẫn chưa được
+      xác nhận.
     </p>
+    <ul class="sh07-notice__facts" aria-label="Tình trạng kết nối tác vụ">
+      <li><strong>API #18</strong><span>Chỉ đọc notification batches</span></li>
+      <li><strong>Client SH-07</strong><span>Chưa có API caller</span></li>
+      <li><strong>Operation chung</strong><span>ID, trạng thái và kết quả chưa chốt</span></li>
+    </ul>
+    <p class="sh07-notice__empty-data">Chưa tải ID, trạng thái, tiến độ hoặc kết quả nào từ backend.</p>
   </div>
 </section>

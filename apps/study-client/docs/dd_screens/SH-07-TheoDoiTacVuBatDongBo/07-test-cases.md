@@ -1,5 +1,9 @@
 # SH-07 — Test Cases
 
+## Current implementation verification — 2026-11-21
+
+The focused Study Web suite passed 11 files / 36 tests across SH-02–SH-07, ME-14, AD-20 and Student/Mentor boundaries. SH-07 validates UUIDs, reads the notification aggregate with owner-bound API #18, and supports manual refresh without polling. Browser/live API/DB/deployment/provider runtime is unverified.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix
@@ -61,6 +65,8 @@
 
 API #18 backend source tests are tracked separately below; they do not verify SH-07 UI/runtime.
 
+> The checklist and source-plan sections below record the original DD review, before the notification-only implementation. Current client/test evidence is in the verification block above.
+
 ### Trích từ DD nguồn: 11. Tiêu chí nghiệm thu
 
 - [x] Kế hoạch được tạo trước DD/marker/annotation.
@@ -111,7 +117,7 @@ API #18 backend source tests are tracked separately below; they do not verify SH
 - API #18 backend route/module/query are source-backed; dedicated HTTP suite: 8 passed; full Study Server suite: 1492 passed; Ruff passed. These checks do not verify SH-07 UI, browser runtime, live schema or deployment.
 - SH-07 remains `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, and `RUNTIME NOT VERIFIED` because no route/caller exists and ID/status/result/producer/ownership/polling contracts remain open.
 
-### Current source verification (2026-11-17)
+### Historical source verification (2026-11-17; superseded by the current implementation note above)
 
 - Shared route `/operations/:operationId` renders the SH-07 unavailable gate directly. The page does not parse/display the path segment or issue an API request; `API_018` remains `UNWIRED`.
 - `npm test -- --include=src/app/app.routes.spec.ts`: 10 passed, including direct SH-07 route/no API request and existing `/` → SH-01 coverage.

@@ -11,10 +11,16 @@
 
 - API refs trong inventory: #08
 - Orchestration/data notes: Router 404 hoặc resource 404 chuyển state; không chuyển 500 thành 404.
-- BE/source status và gate: **D**
+- BE/source status và gate: API #08 is source-backed; SH-06 consumes only its 404 route handoff. API #08 500 remains separate; API #08 has no 403 branch.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: 5. API #08 và nguồn dữ liệu
+
+### Current SH-06 mapping (2026-11-21)
+
+- An unknown Angular route and a missing/unpublished course result from API #08 use the generic SH-06 page. The UI offers `/courses` and `/` links.
+- API #08 500 is not converted to 404. API #08 does not return 403; access denial remains on SH-05.
+- Focused SH-06 spec verifies the two real route targets. Browser/static-host behavior remains unverified.
 
 ### 5.1 `GET /api/v1/courses/{course_id}`
 

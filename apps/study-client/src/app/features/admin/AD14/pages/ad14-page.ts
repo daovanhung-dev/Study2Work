@@ -6,13 +6,15 @@ import { catchError, map, of, startWith, switchMap } from 'rxjs';
 
 import { AdminSessionError } from '../../../../core/auth/admin-session.service';
 import { StudyIcon } from '../../../../shared/ui/study-icon';
+import { isAdminLesson } from '../../admin-api-guards';
 import type { AdminLesson } from '../../admin-api.models';
+import { isSignedInt64RouteId } from '../../admin-screen-state';
 import { AD14ApiService } from '../data-access/ad14-api.service';
 import { AD14_SCREEN } from '../models/ad14-screen.model';
 
 interface LessonDraft {
   readonly title: string;
-  readonly content: string;
+  readonly content: string | null;
   readonly order: string;
 }
 
@@ -46,15 +48,26 @@ export class AD14Page {
           return of<AD14PageState>({ status: 'error', message: 'Thiếu mã bài học trên đường dẫn.' });
         }
 
+        if (!isSignedInt64RouteId(lessonId)) {
+          return of<AD14PageState>({
+            status: 'error',
+            message: 'Mã bài học phải là số nguyên signed 64-bit.',
+          });
+        }
+
         return this.api.getLesson(lessonId).pipe(
           map((envelope): AD14PageState => {
-            if (!envelope.success) {
-              return { status: 'error', message: 'Study Server không thể tải dữ liệu lúc này.' };
+            if (
+              envelope.success !== true
+              || envelope.businessCode !== 'DESIGN_RESOURCE_RETRIEVED'
+              || !isAdminLesson(envelope.data)
+            ) {
+              return { status: 'error', message: 'Study Server trả về dữ liệu bài học không hợp lệ.' };
             }
             const lesson = envelope.data;
             this.draft.set({
               title: lesson.title,
-              content: lesson.content ?? '',
+              content: lesson.content,
               order: String(lesson.order),
             });
             return { status: 'loaded', lesson };

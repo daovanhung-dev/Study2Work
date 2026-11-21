@@ -6,9 +6,9 @@
 | Module | Admin |
 | Route | `/admin/lessons/:lessonId` — route trong inventory, không phải xác nhận router runtime |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Detailed Design:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE` (AD-12 safe-ID link → AD-13 GET #83) · **Study Web runtime:** 6 Angular tests passed; browser `NOT VERIFIED`<br> |
+| DD status | Draft (package được chuyển đổi); source status: **Detailed Design:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE` (AD-12 safe-ID link → AD-13 signed-int64 guard → GET #83) · **Study Web runtime:** historical Angular tests passed; no tests run for 2026-11-20 continuation; browser `NOT VERIFIED`<br> |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [AD-13.md](../../screen_stitch/05_admin/AD-13_chi-tiet-bai-hoc-quan-tri/AD-13.md), [AD-13_PLAN.md](../../screen_stitch/05_admin/AD-13_chi-tiet-bai-hoc-quan-tri/AD-13_PLAN.md), [AD-13_markers.json](../../screen_stitch/05_admin/AD-13_chi-tiet-bai-hoc-quan-tri/AD-13_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -63,7 +63,7 @@ AC-34 node n5 ghi “Đọc lesson + dependencies”, nhưng không xác định
 
 ### Current behavior đã xác minh
 
-- **Study Web:** Angular source registers `/admin/lessons/:lessonId` → `AD13Page`; AD-12 loads #82 and links a lesson to that route only when its JavaScript `number` ID is safe. AD-13 calls GET #83 with `lesson_id`, renders the seven Lesson fields as text, maps loading/loaded/error states, and keeps resource/metrics/SSE blocks unavailable and AD-14 actions disabled. The Stitch `code.html` remains a static prototype. Focused AD-12/AD-13 specs passed (6 tests); browser and live DB remain `NOT VERIFIED`.
+- **Study Web:** Angular source registers `/admin/lessons/:lessonId` → `AD13Page`; AD-12 loads #82 and links a lesson to that route only when its JavaScript `number` ID is safe. AD-13 validates the raw route value against signed-int64 bounds before GET #83; missing/malformed/out-of-range IDs stop locally and valid strings remain unchanged. It renders the seven Lesson fields as text, maps loading/loaded/error states, and keeps resource/metrics/SSE blocks unavailable and AD-14 actions disabled. The Stitch `code.html` remains a static prototype. Focused AD-12/AD-13 specs passed historically; tests were not run for this continuation. Browser and live DB remain `NOT VERIFIED`.
 - **API #83:** local route `GET /api/v1/admin/lessons/{lesson_id}`, `GetAdminLessonEnvelope`, direct `Lesson` response. Bearer/JWT shared guard yêu cầu role `ADMIN` trước custom raw-path parsing và DB. AC-34 lesson-management permission chưa được enforce bởi route source đã rà soát.
 - `lesson_id` custom parser nhận signed int64 trong bounds; malformed, overflow hoặc raw path dài hơn 20 ký tự trả 404 `DESIGN_RESOURCE_NOT_FOUND` (local DERIVED choice để khớp error set; không gọi DB). Parser không tạo 422.
 - Bound query lấy tối đa một row từ candidate legacy `lessons` theo `id`, loại `status='DELETED'`; không áp dụng public `PUBLISHED` filter. Không join `courses`, không đọc `resources`/`lesson_progress`, không trả pagination/dependency data, không ghi hoặc commit.
@@ -74,7 +74,7 @@ AC-34 node n5 ghi “Đọc lesson + dependencies”, nhưng không xác định
 ### Tác nhân, điều kiện và quyền
 
 - **Actor expected:** Admin có lesson-management permission theo AC-34. **Current API:** chỉ shared role guard `ADMIN`; fine-grained permission và ownership scope chưa được source-backed cho #83.
-- **Entry condition:** AD-12 passes a safe numeric lesson ID into `lessonId`; the Angular route and #83 API client are registered. The shared route-state helper reports a missing parameter as an error; the backend validates direct/malformed path input.
+- **Entry condition:** AD-12 passes a safe numeric lesson ID into `lessonId`; the Angular route and #83 API client are registered. The shared route-state helper reports a missing parameter as a local error, and the signed-int64 guard prevents malformed/out-of-range direct-route values from reaching #83.
 - **Postcondition:** render một Lesson response nếu #83 thành công; không thay đổi dữ liệu. AD-14 là nơi tiếp tục các mutation #84–#86.
 - Không dùng copy “Chế độ phân quyền Admin”, “RBAC”, “cách ly khỏi học viên”, “khóa ghi đồng thời” hoặc “Audit Log Level 1” làm bằng chứng runtime/access/audit guarantee.
 

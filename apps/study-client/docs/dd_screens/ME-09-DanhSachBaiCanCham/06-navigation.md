@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/mentor/submissions`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: Study Web route/page source is wired; runtime NOT VERIFIED.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,7 +10,7 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [ME-01](../ME-01-DashboardMentor/00-overview.md), [ME-10](../ME-10-ChamDiemVaPhanHoi/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [ME-01](../ME-01-DashboardMentor/00-overview.md), [ME-10](../ME-10-ChamDiemVaPhanHoi/00-overview.md) | Dashboard link / direct route; open a row | No route params; #54 filters use query fields | Route/page source is present; #54 enforces Mentor role and owner scope; runtime not verified |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
@@ -39,7 +39,7 @@ flowchart LR
 | Từ/đến | Hành vi expected | Current evidence / giới hạn |
 |---|---|---|
 | ME-01 → ME-09 | Mở danh sách từ Mentor dashboard. | Inventory link; dashboard widget không xác nhận route runtime. |
-| ME-09 → ME-10 | Chọn submission và truyền submission ID. | Current #54 trả item `id`; #55 nhận `submission_id` path. Loaded row và router chưa có. |
+| ME-09 → ME-10 | Chọn submission và truyền submission ID. | Current page uses the validated #54 item `id` as the #55 `submission_id` path; navigation source exists, runtime is not verified. |
 | ME-10 → ME-09 | Quay lại danh sách sau detail/grade/feedback. | ME-10 inventory liên kết ngược; refresh/invalidation/cache behavior chưa được xác định ở ME-09. |
 | Header/footer links | Điều hướng tới Mentor pages/policy/support. | Tất cả anchor trong HTML là `#`; destination chưa được xác nhận. |
 

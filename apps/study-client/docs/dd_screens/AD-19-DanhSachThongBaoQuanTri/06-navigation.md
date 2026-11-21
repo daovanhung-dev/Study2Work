@@ -95,4 +95,4 @@ flowchart LR
 | Empty / page ngoài range | Không định nghĩa response cụ thể. | HTTP 200 Page rỗng; message “No notifications found.”, total_pages=0 khi total=0. |
 | Side effect | GET/read. | Hai read queries; không commit, không gọi delivery provider. |
 
-No application retry, request deduplication, local cache, timeout value or client-side refresh policy is present in the checked-in Study Web source. Do not add one based on the mockup.
+Current Angular source provides manual refresh in the loaded-empty state and repeats the applied `status/channel/page` query through #92. No automatic retry, request deduplication, local cache, or timeout value is present; the Stitch prototype's timer does not establish network behavior.

@@ -8,6 +8,7 @@ import app.modules.guest.api_12_resources_detail.view as resource_view
 import pytest
 from app.core.database import get_db
 from app.modules.guest.api_12_resources_detail.query import (
+    ACTIVE_COURSE_ENROLLMENT,
     PUBLISHED_PARENT_COURSE,
     RESOURCE_BY_ID,
 )
@@ -40,7 +41,11 @@ def override_db(session: FakeSession):
     return dependency
 
 
-def make_resource(*, lesson_id: int | None = 101) -> dict[str, Any]:
+def make_resource(
+    *,
+    lesson_id: int | None = 101,
+    visibility: str = "PUBLIC",
+) -> dict[str, Any]:
     """Tạo row resource hợp lệ giống kết quả RESOURCE_BY_ID."""
 
     return {
@@ -49,15 +54,16 @@ def make_resource(*, lesson_id: int | None = 101) -> dict[str, Any]:
         "name": "Course reference PDF",
         "type": "DOCUMENT",
         "url": "https://cdn.example.test/resources/9001.pdf",
-        "visibility": "MUST_BE_IGNORED",
+        "visibility": visibility,
+        "storage_key": "resources/9001.pdf" if visibility == "PRIVATE" else None,
     }
 
 
-def test_resource_detail_returns_source_backed_fields_without_auth_or_visibility(
+def test_resource_detail_returns_public_fields_without_auth(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Kiểm tra resource thuộc course published trả direct URL và loại visibility khỏi response."""
+    """Kiểm tra resource public thuộc course published trả URL và visibility."""
 
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
@@ -90,6 +96,7 @@ def test_resource_detail_returns_source_backed_fields_without_auth_or_visibility
         "name": "Course reference PDF",
         "type": "DOCUMENT",
         "url": "https://cdn.example.test/resources/9001.pdf",
+        "visibility": "PUBLIC",
         "lesson_id": 101,
     }
     assert payload["traceId"] == "00000000-0000-0000-0000-000000000012"
@@ -120,6 +127,101 @@ def test_resource_without_lesson_returns_success_without_parent_lookup(
 
     assert response.status_code == 200
     assert response.json()["data"]["lesson_id"] is None
+
+
+def test_private_resource_requires_student_and_returns_signed_url(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Kiểm tra private resource cần Student active và URL ký có TTL 300 giây."""
+
+    session = FakeSession()
+    client.app.dependency_overrides[get_db] = override_db(session)
+    monkeypatch.setattr(
+        resource_view,
+        "find_resource",
+        lambda db, *, resource_id: make_resource(visibility="PRIVATE"),
+    )
+    monkeypatch.setattr(
+        resource_view,
+        "find_published_parent_course",
+        lambda db, *, lesson_id: {"lesson_id": lesson_id, "course_id": 7},
+    )
+    authorization_values: list[str | None] = []
+
+    def allow_student(authorization: str | None, **_kwargs: Any) -> tuple[int, list[str]]:
+        """Giả lập guard chấp nhận Student và ghi lại Authorization được truyền."""
+
+        authorization_values.append(authorization)
+        return 55, ["STUDENT"]
+
+    monkeypatch.setattr(resource_view, "validate_current_user_request", allow_student)
+    enrollment_queries: list[dict[str, Any]] = []
+
+    def find_enrollment(db: FakeSession, query: str, params: dict[str, Any]) -> dict[str, int]:
+        """Giả lập truy vấn membership ACTIVE theo user/course đã xác thực."""
+
+        assert query == ACTIVE_COURSE_ENROLLMENT
+        enrollment_queries.append(params)
+        return {"active": 1}
+
+    monkeypatch.setattr(resource_view, "query_one", find_enrollment)
+    signed_url_requests: list[dict[str, Any]] = []
+
+    class FakeStorage:
+        def create_signed_url(self, *, storage_key: str, expires_in: int) -> str:
+            """Ghi nhận yêu cầu ký URL và trả về URL thử nghiệm."""
+
+            signed_url_requests.append({"storage_key": storage_key, "expires_in": expires_in})
+            return "https://signed.example.test/resources/9001?ttl=300"
+
+    monkeypatch.setattr(resource_view, "get_upload_storage_provider", lambda: FakeStorage())
+
+    response = client.get(
+        "/api/v1/resources/9001",
+        headers={"Authorization": "Bearer student-token"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["visibility"] == "PRIVATE"
+    assert response.json()["data"]["url"] == "https://signed.example.test/resources/9001?ttl=300"
+    assert authorization_values == ["Bearer student-token"]
+    assert enrollment_queries == [{"user_id": 55, "course_id": 7}]
+    assert signed_url_requests == [{"storage_key": "resources/9001.pdf", "expires_in": 300}]
+
+
+def test_private_resource_denies_student_without_active_enrollment(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Kiểm tra private resource không lộ khi Student chưa ghi danh active."""
+
+    session = FakeSession()
+    client.app.dependency_overrides[get_db] = override_db(session)
+    monkeypatch.setattr(
+        resource_view,
+        "find_resource",
+        lambda db, *, resource_id: make_resource(visibility="PRIVATE"),
+    )
+    monkeypatch.setattr(
+        resource_view,
+        "find_published_parent_course",
+        lambda db, *, lesson_id: {"lesson_id": lesson_id, "course_id": 7},
+    )
+    monkeypatch.setattr(
+        resource_view,
+        "validate_current_user_request",
+        lambda authorization, **_kwargs: (55, ["STUDENT"]),
+    )
+    monkeypatch.setattr(resource_view, "query_one", lambda db, query, params: None)
+
+    response = client.get(
+        "/api/v1/resources/9001",
+        headers={"Authorization": "Bearer student-token"},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["businessCode"] == "DESIGN_ACCESS_DENIED"
 
 
 @pytest.mark.parametrize(
@@ -257,7 +359,7 @@ def test_resource_detail_maps_invalid_row_to_internal_error(
     monkeypatch.setattr(
         resource_view,
         "find_resource",
-        lambda db, *, resource_id: {"id": 9001, "lesson_id": None},
+        lambda db, *, resource_id: {**make_resource(lesson_id=None), "id": "not-an-integer"},
     )
 
     response = client.get("/api/v1/resources/9001")
@@ -266,10 +368,11 @@ def test_resource_detail_maps_invalid_row_to_internal_error(
     assert response.json()["businessCode"] == "DESIGN_INTERNAL_ERROR"
 
 
-def test_resource_queries_exclude_visibility_and_use_bound_parameters() -> None:
-    """Kiểm tra SQL chỉ đọc field source-backed, không tham chiếu visibility và dùng bind params."""
+def test_resource_queries_select_visibility_and_use_bound_parameters() -> None:
+    """Kiểm tra SQL chọn visibility/storage key và dùng bind params."""
 
-    assert "visibility" not in RESOURCE_BY_ID.lower()
+    assert "r.visibility" in RESOURCE_BY_ID.lower()
+    assert "r.storage_key" in RESOURCE_BY_ID.lower()
     assert ":resource_id" in RESOURCE_BY_ID
     assert "r.resource_type as type" in " ".join(RESOURCE_BY_ID.lower().split())
     assert ":lesson_id" in PUBLISHED_PARENT_COURSE
@@ -283,6 +386,15 @@ def test_resource_detail_openapi_keeps_int64_path_contract(client: TestClient) -
     operation = client.app.openapi()["paths"]["/api/v1/resources/{resource_id}"]["get"]
 
     assert operation["parameters"] == [
+        {
+            "name": "Authorization",
+            "in": "header",
+            "required": False,
+            "schema": {
+                "anyOf": [{"type": "string"}, {"type": "null"}],
+                "title": "Authorization",
+            },
+        },
         {
             "name": "resource_id",
             "in": "path",

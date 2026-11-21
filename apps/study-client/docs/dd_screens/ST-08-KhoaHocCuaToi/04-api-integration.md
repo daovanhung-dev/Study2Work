@@ -10,6 +10,22 @@ current response is `UserProfile`, not progress. The DD/API excerpt below
 preserves the design-time contract; for current source/caller status see
 [the screen inventory](../../list_screen.md) and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
 
+## Current caller status — 2026-11-21
+
+The current page validates #20's success envelope/business code and the
+source-backed `CourseSummaryPage` before rendering: requested page, fixed size
+20, page metadata, course/enrollment projection and enrolled-time ordering.
+The status filter is not exposed by ST-08 and #21 remains unused because it
+returns `UserProfile`. The design-time catalog still declares
+`ApiEnvelope<UserProfile>` for #20; that response-shape discrepancy remains
+open. If the validated response's `total_pages` falls below the requested
+page, the page now moves to `max(total_pages, 1)` and repeats the same #20
+request before rendering. For accepted pages, the client compares returned
+item count with the row count implied by `page`, `size`, and COUNT's `total`.
+A mismatch preserves returned rows, hides stale total/pagination and replaces
+empty copy with a retryable notice; COUNT and LIST are not assumed to share a
+snapshot. No deployed runtime verification has been performed.
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
@@ -20,7 +36,7 @@ preserves the design-time contract; for current source/caller status see
 
 - API refs trong inventory: #20, #21
 - Orchestration/data notes: GET #20 page/status → GET #21 nếu cần dữ liệu progress không kèm sẵn; merge theo course_id.
-- BE/source status và gate: **D**; **BLOCK:** #20/#21 Draft/NOT_FOUND, response UserProfile không biểu diễn list/progress; query/merge chưa chốt; AC-13 nhánh EMPTY/HAS DATA cùng tới node render; DDL BIGINT/UUID khác model; loaded/filter UI và design guide alignment còn thiếu; Study Web UNWIRED
+- BE/source status và gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED.** #20 route/query/view and paged Study Client caller are source-wired; current #20 returns `CourseSummaryPage`, while the catalog declares `UserProfile`. #21 route returns `UserProfile` and ST-08 does not call it for progress. AC-13 empty behavior, status filter/progress merge, legacy BIGINT vs V1-PILOT UUID alignment, loaded-state design and visual fidelity remain open.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API contract, dữ liệu và bảo mật
@@ -32,22 +48,22 @@ _Nguồn không có nội dung dưới heading này._
 | Thuộc tính | Contract đang khai báo |
 |---|---|
 | Method / endpoint | `GET /api/v1/users/me/courses` |
-| Authentication / authorization | `Bearer JWT`; role `Student` trong catalog. Runtime endpoint không tìm thấy. Cách bind principal tới enrollment owner là open question. |
+| Authentication / authorization | `Bearer JWT`; role `Student` trong catalog. Current route is authenticated and owner-scoped; deployed auth runtime is unverified. |
 | Path / query / body | Không có path param; `status?: string`, `page?: int32`; không khai báo body. Enum/default/validation chi tiết và page metadata chưa được chốt. |
 | Response | `ApiEnvelope<UserProfile>` theo catalog; không đủ biểu diễn course collection theo AC-13. Không đổi sang `Page<Course>` hoặc tự thêm field. |
 | HTTP/business codes | `200 DESIGN_RESOURCE_RETRIEVED`; `401 DESIGN_AUTHENTICATION_REQUIRED`; `403 DESIGN_ACCESS_DENIED`; `422 DESIGN_VALIDATION_ERROR`; `500 DESIGN_INTERNAL_ERROR`. Error body chưa được đối chiếu source. |
-| Runtime/source status | `NOT_FOUND` trong source/tests hiện đã rà soát; API DD là Draft — Needs Confirmation. Không có test xác minh. |
+| Runtime/source status | Current route/query/view and ST-08 caller are `SOURCE_WIRED`; current response is `CourseSummaryPage`, which differs from catalog `UserProfile`. API DD is Draft — Needs Confirmation; deployed runtime is unverified. |
 
 ### Trích từ DD nguồn: API #21 — Lấy progress tổng hợp
 
 | Thuộc tính | Contract đang khai báo |
 |---|---|
 | Method / endpoint | `GET /api/v1/users/me/progress` |
-| Authentication / authorization | `Bearer JWT`; role `Student` trong catalog. Runtime endpoint không tìm thấy. User scoping chưa được xác minh. |
+| Authentication / authorization | `Bearer JWT`; role `Student` trong catalog. Current route derives the user through Student auth; deployed auth runtime is unverified. |
 | Path / query / body | Không có path param; catalog ghi `course_id list hoặc aggregate?:string` (cú pháp/kiểu không rõ); không khai báo body. |
 | Response | `ApiEnvelope<UserProfile>` theo catalog; không xác định tiến độ/course ID, aggregation, nullability hoặc empty shape. |
 | HTTP/business codes | `200 DESIGN_RESOURCE_RETRIEVED`; `401 DESIGN_AUTHENTICATION_REQUIRED`; `403 DESIGN_ACCESS_DENIED`; `500 DESIGN_INTERNAL_ERROR`. Catalog không khai báo 422 cho #21. |
-| Runtime/source status | `NOT_FOUND` trong source/tests hiện đã rà soát; API DD là Draft — Needs Confirmation. Không có test xác minh. |
+| Runtime/source status | Current route returns `UserProfile`; ST-08 does not call it because it does not carry the required progress projection. API DD is Draft — Needs Confirmation; deployed runtime is unverified. |
 
 ### Trích từ DD nguồn: Data mapping và tính tiến độ
 

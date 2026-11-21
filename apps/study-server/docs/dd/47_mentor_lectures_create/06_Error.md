@@ -25,7 +25,7 @@ Bộ lỗi giữ đúng catalog API #47. Route source-backed trả lỗi asset t
 | 4 | Not found | Course lookup | course_id | Course không tồn tại | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | 2.1 | Yes | Direct query result. |
 | 5 | Not found | Asset resolution | asset_refs | Ít nhất một ID không resolve trong cùng Mentor, purpose LECTURE và course_id | 404 | DESIGN_RESOURCE_NOT_FOUND | N/A | 2.2 | Yes | Cùng response cho ID thiếu và ngoài scope. |
 | 6 | Validation | Required/type/length | title | Thiếu/sai string hoặc dài hơn 200 ký tự | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Max 200 theo legacy `lessons.name VARCHAR(200)`. |
-| 7 | Validation | Required/type/range | content | Thiếu, sai kiểu hoặc ngoài signed int64 | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Lưu/response bằng chuỗi thập phân. |
+| 7 | Validation | Required/type | content | Thiếu hoặc sai kiểu string | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Content là Markdown string; lưu/trả nguyên văn theo T041. |
 | 8 | Validation | JSON/array/int64/duplicates | asset_refs | JSON sai, không phải array, ID sai kiểu/ngoài int64 hoặc bị trùng | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Empty array is valid. |
 | 9 | Validation | Required/type/range | order | Thiếu, sai kiểu hoặc ngoài signed int32 | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Không thêm rule không âm. |
 | 10 | Validation | Path type/range | course_id | Không parse được hoặc ngoài signed int64 | 422 | DESIGN_VALIDATION_ERROR | N/A | 1 | N/A | Path validation trước query. |

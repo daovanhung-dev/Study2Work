@@ -4,12 +4,17 @@
 |---|---|
 | Screen ID | `ME-10` |
 | Module | Mentor |
-| Route | `/mentor/submissions/:submissionId` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/mentor/submissions/:submissionId` — route/page source wired; runtime not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `DD READY` — đủ bản đồ element/sự kiện, source trace, state và blocker; các quyết định mở được nêu rõ, không được xem là contract đã duyệt.; **Implementation status:** `IMPLEMENTATION BLOCKED` — Study Web chưa có source/route; rubric, score và feedback attachment contract còn thiếu.; **Runtime status:** `RUNTIME NOT VERIFIED` — không có ME-10 runtime trong checkout; phiên này không chạy test hay screen runtime. |
+| DD status | `DD READY` with open contracts; implementation `PARTIAL / SOURCE_WIRED` (#55 read only); #56/#57 writes gated pending approved rubric/score/attachment contracts; runtime `NOT VERIFIED`. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [ME-10.md](../../screen_stitch/04_mentor/ME-10_cham-diem-va-phan-hoi/ME-10.md), [ME-10_PLAN.md](../../screen_stitch/04_mentor/ME-10_cham-diem-va-phan-hoi/ME-10_PLAN.md), [ME-10_markers.json](../../screen_stitch/04_mentor/ME-10_cham-diem-va-phan-hoi/ME-10_markers.json), [list_screen.md](../../list_screen.md) |
+
+## Current implementation update — 2026-11-20
+
+- ME10 follows `submissionId` route changes and cancels stale #55 reads. It validates the success envelope, exact `DESIGN_RESOURCE_RETRIEVED` code, returned Submission ID, dates, IDs and file metadata, with distinct invalid/not-found/forbidden/retryable states.
+- Score and feedback are displayed read-only. #56/#57 are not called because `rubric_items` and `attachments` are currently required string fields with no approved serialization/persistence; #56 also has no client-visible `max_score`. File metadata is shown without opening raw URLs pending storage policy. `screen_complete.md` remains 62.5%; runtime is NOT VERIFIED.
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Đọc bài làm + file, form điểm, rubric, nhận xét; tách 2 thao tác nếu API tách.
@@ -31,7 +36,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/dirty/grading/feedback-sent/conflict |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source behavior | ME10Page / ME10SubmissionReviewService | #55 read is source-wired; #56/#57 writes are gated; runtime NOT VERIFIED |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ME-10 source screen.png](../../screen_stitch/04_mentor/ME-10_cham-diem-va-phan-hoi/screen.png))

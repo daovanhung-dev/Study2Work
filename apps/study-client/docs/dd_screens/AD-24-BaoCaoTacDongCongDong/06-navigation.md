@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/admin/reports/community-impact`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: route/page/Admin session gate are source-wired in Study Client; runtime remains unverified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,7 +10,7 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [AD-01](../AD-01-DashboardQuanTri/00-overview.md), [AD-25](../AD-25-XuatBaoCaoVaTheoDoiTienTrinh/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [AD-01](../AD-01-DashboardQuanTri/00-overview.md), [AD-25](../AD-25-XuatBaoCaoVaTheoDoiTienTrinh/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | AD-24 route/page uses the existing Admin session gate; runtime unverified. AD-25 handoff remains disabled and its filter transfer is unresolved. |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
@@ -53,10 +53,10 @@ flowchart LR
 
 | From / to | Expected link | Data | Current status |
 |---|---|---|---|
-| AD-01 / reporting entry → AD-24 | Candidate `/admin/reports/community-impact`; AC-38 places #102 after #101. | Date range and optional segment; exact state source/initial values unapproved. | Inventory/AC only; no Study Web router. |
+| AD-01 / reporting entry → AD-24 | Registered `/admin/reports/community-impact`; AC-38 places #102 after #101. | Date range and optional segment; exact handoff/defaults remain unresolved. | Study Client route/page/Admin session gate are source-wired; runtime remains unverified. |
 | AD-24 → #101 | `GET /api/v1/admin/reports/summary`. | Optional `from?:date`, `to?:date`. | Catalog + Draft DD; no route/module/query/model/test. |
 | AD-24 → #102 | `GET /api/v1/admin/reports/community-impact`. | Optional `from?:string`, `to?:string`, `segment?:string`. | Catalog + Draft DD; date/segment/metric semantics unapproved; no route/module/query/model/test. |
-| AD-24 → AD-25 | `/admin/reports/export`. | Inventory expects filters in URL; serialization not defined. | Current anchor drops current filters; destination is not wired. |
+| AD-24 → AD-25 | `/admin/reports/export`. | Inventory expects filters in URL; serialization not defined. | Current Angular export action is disabled; the preserved prototype link drops filters. #103 response/Operation mismatch remains open. |
 | AD-25 → #103 / operations | AC-38 optional export; inventory references #103 then #18 if operation ID exists. | #103 `filters`/`format`; operation ID/format/result contract unresolved. | Cross-screen blocker only; no export call occurs in AD-24. |
 
 ### Security, privacy and usability
@@ -71,7 +71,7 @@ flowchart LR
 
 ### Expected flow theo AC-38 và catalog
 
-1. Admin có quyền report/analytics mở dashboard báo cáo. Candidate route `/admin/reports/community-impact` is not registered in Study Web today.
+1. Admin có quyền report/analytics mở dashboard báo cáo. The Study Client route `/admin/reports/community-impact` is registered; report-specific authorization and runtime behavior remain unverified.
 2. AC-38 draws `GET /api/v1/admin/reports/summary` (#101), then an aggregate KPI step, followed by `GET /api/v1/admin/reports/community-impact` (#102), range/report-permission validation, aggregate learning/community metrics, and dashboard/filter rendering. The diagram's validation node is after the #102 edge; exact client/server validation timing must be decided rather than silently reordered.
 3. #101 accepts optional `from?:date`, `to?:date`; #102 accepts optional `from?:string`, `to?:string`, `segment?:string`. Both catalog rows specify Bearer JWT/Admin and `ApiEnvelope<Report>`, with 200 `DESIGN_RESOURCE_RETRIEVED` and 401/403/500. No 400/422 mapping is declared for invalid ranges/segments.
 4. API DDs describe `Report` as `{period:{from,to}, metrics:[{key,value,label}], generated_at}`. They leave default date range, date parsing/timezone, metric keys/formulas, segment rules, empty/partial semantics, report permission and source selection unresolved. Their candidate metrics are `DERIVED`.

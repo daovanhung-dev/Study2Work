@@ -4,11 +4,11 @@
 |---|---|
 | Screen ID | `AD-09` |
 | Module | Admin |
-| Route | `/admin/courses/:courseId/actions` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/admin/courses/:courseId/actions` — Angular route/page source is present; browser/deployment runtime remains unverified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: # AD-09 — Thay đổi trạng thái/xóa khóa; **Detailed Design:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE; WRITE FLOW BLOCKED` · **Study Web runtime:** `NOT VERIFIED` (Angular route/page/#74 caller present)<br> |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-16 |
+| Version / last updated | 0.3 / 2026-11-21 (#74 Page<Course> validation) |
 | Nguồn đối chiếu | [AD-09.md](../../screen_stitch/05_admin/AD-09_thay-doi-trang-thai-xoa-khoa/AD-09.md), [AD-09_PLAN.md](../../screen_stitch/05_admin/AD-09_thay-doi-trang-thai-xoa-khoa/AD-09_PLAN.md), [AD-09_markers.json](../../screen_stitch/05_admin/AD-09_thay-doi-trang-thai-xoa-khoa/AD-09_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -65,7 +65,7 @@ API catalog #76 khai báo `PATCH /api/v1/admin/courses/{course_id}/status`, Bear
 
 | Chủ đề | Expected / contract | Current source hoặc prototype | Trạng thái |
 |---|---|---|---|
-| Route/actor/ID | AC-32 Admin có course-management permission; action route nhận numeric `Course.id`. | Angular route/page nhận raw `courseId`; GET #74 caller tồn tại. Permission mapping vẫn mở. | Route/read flow source-present; write-flow blocked; runtime `NOT VERIFIED`. |
+| Route/actor/ID | AC-32 Admin có course-management permission; action route nhận numeric `Course.id`. | Angular route/page validates the complete raw `courseId` against signed-int64 bounds before GET #74; valid IDs are passed unchanged. Permission mapping vẫn mở. | Route/read flow source-present; malformed/missing/out-of-range IDs skip GET; write-flow blocked; runtime `NOT VERIFIED`. |
 | Target context | AC-32 yêu cầu đọc detail #74 trước khi chọn nhánh. | Stitch prototype hiển thị “Chưa chọn khóa học” và “Chưa xác định”; Angular tải #74 và hiển thị title/status/mentor/price cùng raw route ID. #74 không có counters. | `DISCREPANCY`: prototype tĩnh khác Angular; counter contract/source thiếu. |
 | Chọn thao tác | Một lựa chọn duy nhất theo prototype; status và delete là nhánh AC-32 riêng. | Native radio `draft` mặc định checked, `archive`, `delete`; listener `change` rỗng. | Chỉ thay selection trong DOM; không có API action. |
 | Status (#76) | API status branch và audit intent trong AC-32. | Catalog/AC bỏ body; local strict candidate là `{status:DRAFT|PUBLISHED|SUSPENDED}`; không transition/readiness rule; same-status no-op; changed status ghi audit atomically. | Enum/body/transition/audit schema local là `DERIVED`; API DD Draft. `archive` không có mapping. |
@@ -74,8 +74,18 @@ API catalog #76 khai báo `PATCH /api/v1/admin/courses/{course_id}/status`, Bear
 | Permanent delete copy | AC-32 nói delete/soft-delete theo policy. | Prototype gọi xóa vĩnh viễn, “không thể hoàn tác”; local #77 chỉ đổi status thành DELETED. | `DISCREPANCY`; không hứa hard-delete/irreversibility. |
 | Authorization | AC-32 yêu cầu course-management permission; catalog nói Admin. | Local #76/#77 shared guard kiểm tra role `ADMIN`, không check permission riêng. | `OPEN`; ADMIN role không chứng minh fine-grained permission. |
 | Reload/visibility | AC-32 yêu cầu reload course management sau action. | Local #73/#74 không lọc DELETED; #76 cũng không chặn DELETED target. | Deleted item có thể còn trong Admin list/detail; restore/visibility policy chưa chốt. |
-| Navigation | Inventory liên kết AD-06/AD-07; Angular hiện dùng AD-07 cho Back/footer. | Stitch prototype Back/Cancel đều link `/admin/courses` (AD-06). Angular Back/footer về AD-07 bằng raw route ID; error state về AD-06. | `DISCREPANCY` giữa prototype và Angular; post-mutation navigation/reload vẫn mở. |
+| Navigation | Inventory liên kết AD-06/AD-07; Angular hiện dùng AD-07 cho Back/footer. | Stitch prototype Back/Cancel đều link `/admin/courses` (AD-06). Angular Back/footer về AD-07 for valid route IDs and return to AD-06 for missing/malformed/out-of-range IDs; load error state về AD-06. | `DISCREPANCY` giữa prototype và Angular; post-mutation navigation/reload vẫn mở. |
 | Static safeguards | Claims chỉ dùng khi được source-backed. | RBAC, system normal, protection gate, enrollment, ISO, lifetime retention đều là text tĩnh. | `STATIC_ONLY`; không phải permission, monitor, audit hoặc retention evidence. |
+
+### Current Study Web source re-audit — 2026-11-20
+
+- AD09Page validates the complete raw `courseId` against API #74's optional-sign signed-int64 path parser before requesting, without converting through JavaScript `Number`. Missing, malformed, or out-of-range IDs render a local error and skip GET #74; valid IDs are passed unchanged.
+- Toolbar/footer links return invalid IDs to AD-06 and preserve the AD-07 destination for valid IDs. #76/#77 and reason controls remain unavailable; mutation policy and permission mapping remain open. Runtime and tests were not checked in this continuation.
+
+### Current #74 response audit (2026-11-21)
+
+- Before showing the selected Course, AD-09 requires `DESIGN_RESOURCE_RETRIEVED` and the exact locally implemented #74 singleton `Page<Course>` shape: one valid Course/mentor item and pagination `1/1/1/1`. Empty, multi-item or malformed success responses use the safe error state.
+- The raw signed-int64 route string remains authoritative for GET #74 and navigation; the response Course ID is not compared through lossy JavaScript conversion. #76/#77 and reason controls remain disabled because write semantics and course-management permission are unresolved. Runtime is unverified.
 
 ### Actor, điều kiện và dữ liệu
 

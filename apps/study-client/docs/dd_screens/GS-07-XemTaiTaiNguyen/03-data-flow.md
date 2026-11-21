@@ -1,5 +1,7 @@
 # GS-07 — Data Flow & State
 
+> **T041/current-source update (2026-11-20):** Entry path/query IDs feed #12; response identity and projection are validated before UI state changes. PRIVATE data is returned only after Student auth, published-parent and ACTIVE-enrollment checks; URL TTL is 300 seconds. The client rejects unsafe/non-HTTP(S)/credentialed URLs and opens the original accepted URL only from a user link. Specific media preview and expiry recovery are not implemented. Historical gate-only flow below is superseded.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

@@ -4,6 +4,7 @@
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.
 - Marker JSON nguồn: [ME-06_markers.json](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/ME-06_markers.json).
+- Bảng dưới đây mô tả marker của Stitch snapshot. Current Study Web chỉ hiện thực route/course ID, trạng thái tải/lỗi/rỗng, tree từ `Content[]`, raw status/order/parent ID, Add/Edit/Actions và workspace links; sample KPI, filter/search, expand/collapse, reorder và audit panels vẫn là design-only.
 
 ## 2. Danh sách phần tử
 | Marker | Element ID trong package | Source Element ID | Nhãn từ marker JSON |
@@ -107,7 +108,8 @@ Tọa độ nằm trong [ME-06_markers.json](../../screen_stitch/04_mentor/ME-06
 | 44 `ME06-EL-44` | Footer policy, partner và hỗ trợ | Static link-like text; không có URL/event. Không tạo route từ nhãn hiển thị. |
 
 ## 4. Conditional UI & state variations
-- States theo inventory: loading/empty/ready/error
+- Current states: invalid course ID, loading, ready, empty, not-found, forbidden, recoverable error/retry.
+- Actions thêm/sửa/hành động chỉ hiện sau phản hồi #49 hợp lệ xác nhận direct owner; không hiển thị khi đang tải, 403/404 hoặc lỗi.
 - Detail/conditional visibility: xem section elements/state của [DD nguồn](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/ME-06.md); không diễn giải ảnh tĩnh thành behavior runtime.
 
 ## 5. Link

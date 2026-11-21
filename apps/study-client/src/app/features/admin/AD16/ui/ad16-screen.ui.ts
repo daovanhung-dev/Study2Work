@@ -4,7 +4,7 @@ export const AD16_UI: Pick<AdminScreenDefinition, 'id' | 'title' | 'eyebrow' | '
   "id": "AD16",
   "title": "Tạo hoặc chỉnh sửa bài kiểm tra",
   "eyebrow": "Quản lý bài kiểm tra",
-  "description": "Tạo bản nháp Quiz trong trang. Câu hỏi, dữ liệu nạp khi chỉnh sửa và thao tác lưu còn chờ contract được xác nhận.",
+  "description": "Tạo Quiz từ cấu hình và câu hỏi theo current backend source; chế độ chỉnh sửa chờ API detail và contract #89.",
   "mode": "builder",
   "fields": [
     "Tên bài kiểm tra",

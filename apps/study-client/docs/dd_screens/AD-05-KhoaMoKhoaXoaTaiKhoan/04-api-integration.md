@@ -13,7 +13,7 @@
 
 - API refs trong inventory: #69, #71, #72
 - Orchestration/data notes: GET #69 → PATCH #71 hoặc DELETE #72 → refresh #68/#69 theo AC-31; #71 body/status và #72 delete policy cần duyệt; không tự giả định token effect.
-- BE/source status và gate: **R**; **DD BLOCKED; IMPLEMENTATION BLOCKED:** route/page and GET #69 caller exist; #71/#72 client calls are absent; body/status/session, delete/visibility/retention, Admin permission/audit/safeguards remain open; RUNTIME NOT VERIFIED
+- BE/source status và gate: **R**; **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** route/page validates raw signed-int64 ID before GET #69 and skips invalid/missing IDs; #71/#72 client calls are absent; body/status/session, delete/visibility/retention, Admin permission/audit/safeguards remain open; RUNTIME NOT VERIFIED
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Nguồn truy vết

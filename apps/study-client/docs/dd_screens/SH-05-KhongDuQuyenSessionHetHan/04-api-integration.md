@@ -10,9 +10,17 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #04
-- Orchestration/data notes: Khi 401 có thể thử refresh runtime R-X01 1 lần; 403 KHÔNG refresh vô hạn.
-- BE/source status và gate: **R**
+- Orchestration/data notes: #04 401 triggers one R-X01 refresh and one #04 retry; #04 403 is routed without refresh; a second 401 ends the session and routes to SH-05.
+- BE/source status and gate: **R; PARTIAL SOURCE-WIRED; RUNTIME NOT VERIFIED**
 - Contract sources and discrepancies are preserved in the source excerpts below.
+
+### Current client caller (2026-11-21)
+
+- `ST02ProfileService` and `ST03ProfileService` call `StudentApiService` with API #04 (`GET /users/me`). `StudentApiService` catches the HTTP result only for this exact descriptor (`id=4`, `GET`, `/users/me`).
+- On HTTP 401 for exact API #04, `StudentApiService` calls source-only R-X01 once and retries #04 once. If refresh or retry fails, it clears the in-memory Student session and routes a normalized 401 to `/forbidden`. For #04/403 it skips refresh and routes a normalized 403. Body/header trace conflicts suppress the trace ID. No profile data, tokens or arbitrary response fields are transferred.
+- Other APIs do not receive this refresh/replay behavior. HTTP 5xx, network errors, invalid envelopes and mismatched status/business codes are not reclassified as 401/403 by this handoff.
+- `SH05Page` validates `history.state.sh05Error`; it offers `/login` for 401 and a validated internal back target (or `/`) for both outcomes. Focused tests cover bounded retry, 403, second 401 and safe routing; runtime is unverified.
+- Static current-source references: `src/app/core/auth/authorization-error.ts`, `src/app/core/auth/student-session.service.ts`, `src/app/core/http/student-api.service.ts`, `src/app/features/shared/shared.route.ts`, and `src/app/features/shared/SH05/pages/sh05-page.ts`.
 
 ### Trích từ DD nguồn: 5. Đặc tả API và dữ liệu
 

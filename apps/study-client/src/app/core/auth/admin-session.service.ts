@@ -56,6 +56,10 @@ export class AdminSessionService {
       );
   }
 
+  acceptLoginEnvelope(envelope: ApiEnvelope<unknown>): void {
+    this.acceptEnvelope(envelope);
+  }
+
   getAdminAccessToken(): Observable<string> {
     if (!this.isAuthenticated() || !this.accessToken || !this.refreshToken) {
       return throwError(() => new AdminSessionError('LOGIN_REQUIRED'));

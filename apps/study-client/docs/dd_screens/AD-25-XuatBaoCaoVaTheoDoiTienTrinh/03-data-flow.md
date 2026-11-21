@@ -9,9 +9,15 @@
 
 > Không tạo DTO/ViewModel mới khi chưa có contract. State, DTO và mapping được trích nguyên ngữ cảnh từ DD nguồn bên dưới.
 
+### Current Study Client/Server source — 2026-11-20
+
+- `/admin/reports/export` is registered under the authenticated Admin layout. The page keeps format/scope/period choices in local signals only.
+- No #103/#18 client caller exists. Submit/download remain disabled; no Operation ID, progress, artifact URL or filter query is produced.
+- #18's server route is notification-only. T041's UUID/status/one-hour link approvals describe intended export behavior, not a current source mapping.
+
 ## 3. API DTO → ViewModel mapping
 
-### Trích từ DD nguồn: B. Mô tả luồng hoạt động tổng thể
+### Trích từ DD nguồn: B. Mô tả luồng hoạt động tổng thể — historical source snapshot (2026-11-08)
 
 ### Expected flow theo inventory, AC-38 and API design
 
@@ -24,7 +30,7 @@
 7. A completed export could expose an `ExportAsset` candidate, but reusable Operation currently says `result?:Payment`; download URL, authorization, expiry and cleanup are not agreed. Do not enable Download or route to SH-07 until these contracts are approved.
 8. The user may return to AD-24, but the current back anchor is `#`; whether the effective filter set survives the round trip is open.
 
-### Current static flow in `code.html`
+### Historical static flow in `code.html` — snapshot (2026-11-08)
 
 1. Initial HTML paints CSV selected, course/learner scopes checked, community scope unchecked, month selected, a no-operation ID placeholder, a static “ready to start” label, empty result message and a disabled download button.
 2. Radio and checkbox controls update only their native browser selection. The custom period has no associated date input, and the GMT+7 note is static.
@@ -33,7 +39,7 @@
 5. The SH-07 card is informational copy without an anchor/button. The AD-24 back link and shell/footer links use `href="#"`; the notification button has no listener.
 6. Worker Node 04, Celery scheduling, “RBAC L3”, checksum verification, audit logging, URL expiry and file cleanup are static claims. No server, storage or telemetry call validates them.
 
-### Trích từ DD nguồn: E. Trạng thái, điều hướng và yêu cầu phi chức năng
+### Trích từ DD nguồn: E. Trạng thái, điều hướng và yêu cầu phi chức năng — historical source snapshot (2026-11-08)
 
 ### E.1. Ma trận trạng thái
 
@@ -59,7 +65,7 @@ Các state “proposed” chỉ phản ánh inventory/AC intent; chúng không p
 | Operation handoff | SH-07 `/operations/:operationId` | Callout không interactive; không có ID. | AC-38 edge, API #103 response field, ID type, owner/access rule, state mapping. |
 | Shell/footer | Shared route destinations | Placeholder anchors/buttons. | Shared shell/router owns destination and notification behavior; not specified here. |
 
-Route strings are candidates from inventory only; Study Web contains no editable route source. Do not mark any handoff implemented.
+The excerpt above predates the current route/page. In current source the AD-25 → AD-24 back link is registered without filter query; SH-07/export handoffs remain unimplemented.
 
 ### E.3. Access, privacy, accessibility and presentation
 

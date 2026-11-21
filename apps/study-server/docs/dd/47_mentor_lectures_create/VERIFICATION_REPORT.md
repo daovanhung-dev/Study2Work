@@ -1,5 +1,7 @@
 # Verification Report — API #47 Tạo lecture
 
+> Historical checkpoint: every `VERIFIED` result below predates T041's 2026-11-19 decision changing API #47 request `content` from int64 to Markdown string. Source and test assertions were updated in the active task; no tests, build, lint, or OpenAPI verification were run after that change. Do not treat the historical results as current verification.
+
 ## Scope
 
 Implemented and verified the local API #47 route/module/tests. Its AC-21 follow-through now persists non-empty ordered asset references in `lesson_uploads` in the lesson transaction for API #48. DD remains `Draft — Needs Confirmation` because live database schema and migration deployment are not verified.
@@ -10,8 +12,8 @@ Implemented and verified the local API #47 route/module/tests. Its AC-21 follow-
 |---|---|---|
 | Route composition | OpenAPI includes `POST /api/v1/mentor/courses/{course_id}/lectures`; the current app also wires API #48. | VERIFIED |
 | API #34 route retained | OpenAPI includes `POST /api/v1/uploads`. | VERIFIED |
-| Request model | `content` is integer with `int64` format; `order` is signed int32; `title` max length is 200; `asset_refs` is a required string. | VERIFIED |
-| Response model | Runtime maps `content` to the decimal string from API #47's required integer input; shared Lecture schema permits null for API #48 database reads. | VERIFIED |
+| Request model (historical) | Before T041, `content` was integer with `int64` format; `order` was signed int32; `title` max length was 200; `asset_refs` was a required string. | HISTORICAL_ONLY |
+| Response model (current source) | API #47 preserves Markdown string content; shared Lecture schema still permits null for API #48 database reads. Not reverified after T041. | SOURCE_READ_ONLY |
 | Focused HTTP tests | `26 passed` in API #47 file; includes auth/role, numeric/title validation, asset JSON/range/duplicates/empty, course access, generic asset 404, output ordering, atomic relation write and rollback. | VERIFIED |
 | Focused linked API tests | API #47 + #48: `42 passed`. | VERIFIED |
 | Full Study Server suite | `336 passed`; one existing Starlette/httpx deprecation warning. | VERIFIED |

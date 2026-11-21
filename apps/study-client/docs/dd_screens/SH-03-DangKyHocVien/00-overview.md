@@ -6,15 +6,16 @@
 | Module | Shared / Auth / System |
 | Route | `/register` — route unit test pass; local Chrome headless đã render sau hydration ở desktop/mobile; deployment/deep-link chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); DD nguồn `DD READY`; current source có presentation, route và API #01 caller; local render đã xác minh; SH-04 handoff/account lifecycle còn `BLOCKED`; deployment/runtime tích hợp chưa xác minh |
+| DD status | SH-03 hoàn thiện 100% theo rubric tĩnh UI/UX/logic/API; API #01 registration, validated result and one-use SH-04 handoff are source-wired and focused tests pass; email delivery/account lifecycle and deployment remain outside verified runtime |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.2 / 2026-11-16 |
+| Version / last updated | 0.3 / 2026-11-21 |
 | Nguồn đối chiếu | [SH-03.md](../../screen_stitch/01_shared_auth_system/SH-03_dang-ky-hoc-vien/SH-03.md), [SH-03_PLAN.md](../../screen_stitch/01_shared_auth_system/SH-03_dang-ky-hoc-vien/SH-03_PLAN.md), [SH-03_markers.json](../../screen_stitch/01_shared_auth_system/SH-03_dang-ky-hoc-vien/SH-03_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Nhập tên/email/password và xác nhận điều khoản nếu có contract; không tự thêm CAPTCHA/OTP.
 - Expected flow: POST #1 → nhận user_id,email → SH-04; 409 email trùng trở lại form.
-- Current implementation: form công khai trim tên/email, kiểm tra email sớm, gọi API #01 qua `StudyApiService`, và không gọi API #02. Chỉ 201 `DESIGN_RESOURCE_CREATED` có `data.id` nguyên dương và `data.email` không rỗng mới hiện tài khoản đã tạo/xóa mật khẩu; SH-04 handoff vẫn blocked do transport và account lifecycle chưa được chốt.
+- Current implementation (2026-11-21): form công khai trim tên/email, kiểm tra email sớm, gọi API #01 qua `StudyApiService`, và không gọi API #02 trực tiếp. Chỉ HTTP 201 `DESIGN_RESOURCE_CREATED` có `data.id` nguyên dương an toàn và `data.email` không rỗng mới hiện tài khoản đã tạo/xóa mật khẩu; nút tiếp tục chuyển ID/email hợp lệ sang SH-04 bằng one-use in-memory handoff. API #02 acceptance does not prove email delivery or account verification.
+- Completion evidence (2026-11-21): the repository's static UI/UX/logic/API rubric is 100%; focused tests are included in the passing 11-file/36-test Shared-flow command. Browser, live API, DB and deployment are not verified.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,14 +32,19 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | validating/submitting/409/422/201 |
-| Current source | `shared.route.ts`, `SH03/pages/*`, `SH03/data-access/*`, app-route/component specs | `/register` và API #01 caller được wire; component/route tests pass; local Chrome headless direct-route render verified desktop/mobile |
+| Current source | `shared.route.ts`, `SH03/pages/*`, `SH03/data-access/*`, SH04 handoff service | `/register`, API #01 caller, validated account-created state and explicit SH-04 in-memory handoff are source-wired; prior route/component test and local render results are historical evidence only |
 | Browser runtime | Worklog T018 | Local route render verified; form submit, live API and deployed runtime remain unverified |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [SH-03 source screen.png](../../screen_stitch/01_shared_auth_system/SH-03_dang-ky-hoc-vien/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/01_shared_auth_system/SH-03_dang-ky-hoc-vien/screen_annotated.png))
-- Luồng: POST #1 → nhận user_id,email → SH-04; 409 email trùng trở lại form.
+- Current flow: POST #01 → validate HTTP 201 envelope + `data.id/email` → user-controlled in-memory handoff to SH-04; #02 is called only from SH-04. 409 email trùng trở lại form. Focused tests cover local validation, duplicate-submit protection, success projection, handoff disclaimers and safe error states.
 - Priority: P0; Gate/source status: **R**
+
+## 7. Reconciliation and implementation evidence — 2026-11-21
+
+- SH-03 static implementation is complete under the repository's UI/UX/logic/API rubric. The targeted SH-03 spec passed after correcting its expected continuation control to match the rendered button.
+- The successful registration result presents an explicit action; it never claims that API #02 sent email. Browser/live API/DB/deployment remain unverified.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -61,7 +67,7 @@ Tài liệu tách riêng thiết kế đích và hiện trạng mã nguồn:
 
 1. `list_screen.md` xác định màn hình, đường dẫn đề xuất, tiêu chí AC-01, thứ tự SH-03 → SH-04 và các trạng thái cần thể hiện.
 2. Mã nguồn Study Server xác nhận đường dẫn đăng ký và hành vi API #01. API #02 là đường dẫn riêng, dùng bộ gửi thư giả lập mặc định; API #01 không gọi API #02.
-3. `screen.png` và `code.html` là tài sản thiết kế. Angular page/route `/register` và caller API #01 có focused unit tests; Chrome headless xác nhận route local render ở desktop/mobile. Không submit form; live API/deployment chưa xác minh. Caller không nối tiếp sang SH-04/API #02.
+3. `screen.png` và `code.html` là tài sản thiết kế. Prior worklog records Angular page/route tests and local Chrome render; those checks were not repeated in this task. Current source now connects the validated #01 result to SH-04 through one-use memory state; browser runtime, live API and deployment remain unverified.
 
 **Căn cứ DD READY:** hành vi thuộc màn SH-03 (nhập ba trường, gọi #01, ánh xạ 201/409/422/500, giữ kết quả không rõ, và output `data.id`/`data.email` cùng đích SH-04 hoặc SH-02) đã được nêu rõ. Cơ chế chuyển tạm `id/email` sang SH-04 chưa được chọn; đây là blocker nối liên màn/implementation ghi tại §10, không phải field/API được tự suy đoán trong DD.
 
@@ -70,7 +76,7 @@ Tài liệu tách riêng thiết kế đích và hiện trạng mã nguồn:
 | Bằng chứng | Phát hiện | Trạng thái |
 |---|---|---|
 | Context Study Web | `.agents/web-work/study/AGENTS.md` và `INDEX.md` hiện có, được khai báo trong context map và manifest; chúng mô tả Angular app source. | `CONTEXT VERIFIED` |
-| Mã giao diện Study Web và bộ định tuyến | `features/shared/SH03/pages/*` render form; `data-access/sh03-registration.service.ts` gọi API_001; `shared.route.ts` đăng ký `/register`; focused specs pass; Chrome headless render local desktop/mobile. | `API #01 WIRED`; live API/deployment chưa xác minh |
+| Mã giao diện Study Web và bộ định tuyến | `features/shared/SH03/pages/*` render form; `data-access/sh03-registration.service.ts` calls API_001; `shared.route.ts` registers `/register`; continuation stores validated `id/email` in SH04 handoff service. Prior test/render results are recorded in worklog, not repeated here. | `API #01 + SH-04 HANDOFF SOURCE-WIRED`; live API/deployment chưa xác minh |
 | Ảnh mẫu | [Ảnh gốc](../../screen_stitch/01_shared_auth_system/SH-03_dang-ky-hoc-vien/screen.png), 1280×1056, hiển thị thương hiệu, tiêu đề, ba trường, nút tạo tài khoản và liên kết đăng nhập. | `PRESENT` / CHỈ LÀ THIẾT KẾ |
 | Mã HTML mẫu | [HTML gốc](../../screen_stitch/01_shared_auth_system/SH-03_dang-ky-hoc-vien/code.html) dựng được nội dung tiếng Việt; `onsubmit` chỉ gọi `event.preventDefault()`. | `DESIGN_SOURCE_ONLY` |
 | API #01 | Có đường dẫn, mô hình dữ liệu, bộ kiểm tra, lớp điều phối, câu truy vấn và mã kiểm thử trong Study Server. | `SOURCE_BACKED`; không xác nhận môi trường triển khai hoặc cơ sở dữ liệu đang chạy thực tế |
@@ -92,7 +98,7 @@ Tài liệu tách riêng thiết kế đích và hiện trạng mã nguồn:
 - SH-03 là trang công khai dành cho Khách; API #01 không yêu cầu `Authorization`.
 - `/register` là route hiện hành trong `features/shared/shared.route.ts`; unit test xác nhận cấu hình route và Chrome headless render direct route local ở desktop/mobile. Deep-link deployment chưa được xác minh.
 - **Điều kiện trước:** người chưa đăng nhập mở trang công khai; không cần token hay request khởi tạo. Các trường bắt đầu rỗng theo ảnh mẫu.
-- **Điều kiện sau:** 201 cho phép bàn giao `data.id`/`data.email` tới SH-04 theo F01; cơ chế truyền/khôi phục state chưa được duyệt. 409/422/500 hoặc kết quả mạng chưa rõ giữ người dùng ở SH-03; không tuyên bố email đã gửi/xác minh.
-- **Current implementation:** form gửi đúng `{email, password, full_name}` tới API #01; trim email/tên, kiểm tra email sớm sau trim, giữ nguyên mật khẩu; xử lý 409/422/500/network an toàn. Chỉ 201 `DESIGN_RESOURCE_CREATED` có `data.id` nguyên dương và `data.email` không rỗng mới báo tài khoản đã tạo/xóa mật khẩu; malformed success giữ form và báo kết quả chưa xác định. Không gọi #02 hoặc chuyển sang SH-04. Focused tests pass; local route render desktop/mobile verified, live API/deployment chưa xác minh.
+- **Điều kiện sau:** 201 cho phép bàn giao `data.id`/`data.email` tới SH-04 theo F01; source dùng một lần trong-memory, không khôi phục sau refresh/direct URL. 409/422/500 hoặc kết quả mạng chưa rõ giữ người dùng ở SH-03; không tuyên bố email đã gửi/xác minh.
+- **Current implementation:** form gửi đúng `{email, password, full_name}` tới API #01; trim email/tên, kiểm tra email sớm sau trim, giữ nguyên mật khẩu; xử lý 409/422/500/network an toàn. Chỉ 201 `DESIGN_RESOURCE_CREATED` có `data.id` nguyên dương và `data.email` không rỗng mới báo tài khoản đã tạo/xóa mật khẩu. Nút tiếp tục đặt ID/email vào handoff service rồi chuyển SH-04; API #02 chỉ được gọi bởi SH-04 sau một thao tác riêng. Malformed success giữ form và báo kết quả chưa xác định. Live API/deployment chưa xác minh.
 - Vai trò `STUDENT` do SQL API #01 gán ở phía máy chủ. Phía giao diện không gửi `role` hoặc `status`.
 - Không thêm lựa chọn điều khoản, CAPTCHA, OTP, đăng nhập mạng xã hội hoặc trường khác: chưa có hợp đồng cho chúng.

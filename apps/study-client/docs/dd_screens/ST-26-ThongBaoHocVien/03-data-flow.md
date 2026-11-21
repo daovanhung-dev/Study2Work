@@ -1,5 +1,9 @@
 # ST-26 — Data Flow & State
 
+## Current source flow — 2026-11-20
+
+`#43(unread_only, page)` returns the current Student's notification rows and fixed 20-item metadata. The page validates `id/title/content/type/is_read/read_at/created_at`; unread total comes from the `unread_only=true` page total. #44 returns a one-item read page; #45 returns `updated_count`. After either write the client reloads #43 list and unread total. No destination is derived from title/content.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

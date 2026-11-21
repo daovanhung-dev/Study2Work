@@ -4,6 +4,8 @@
 
 > Current Study Web source update (2026-11-16): AD-19 route/page/service calls #92 and focused page/route specs pass 6/6. The test response uses the local Page<Notification> shape; this does not approve that shape over the direct catalog singleton response. Browser/live DB remain unverified.
 
+> **T119 current-source update (2026-11-20):** The #92 data-access layer validates the success envelope/business code, Page metadata and notification item fields against the requested page and active filters. Malformed responses enter the existing error state. No tests/build/lint/browser checks were run for this update.
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
@@ -33,7 +35,7 @@
 | Empty / page ngoài range | Không định nghĩa response cụ thể. | HTTP 200 Page rỗng; message “No notifications found.”, total_pages=0 khi total=0. |
 | Side effect | GET/read. | Hai read queries; không commit, không gọi delivery provider. |
 
-No application retry, request deduplication, local cache, timeout value or client-side refresh policy is present in the checked-in Study Web source. Do not add one based on the mockup.
+The current Angular source provides a manual refresh only in the loaded-empty state; it repeats the existing #92 request with the applied `status/channel/page` query, then shows the loading state. No automatic retry, request deduplication, local cache, or timeout value is present in the checked-in Study Web source. This does not resolve the direct catalog singleton vs local Page response discrepancy or fine-grained permission gap.
 
 ### Trích từ DD nguồn: Navigation data contract
 
@@ -66,3 +68,7 @@ No application retry, request deduplication, local cache, timeout value or clien
 
 ## 4. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/AD-19.md)
+
+### Current client/API source — 2026-11-21
+
+The #92 response validator continues to require DESIGN_RESOURCE_RETRIEVED, the requested page, fixed size 20, valid Page/item projection and exact applied status/channel filters. It now allows the separate COUNT and LIST reads to return different cardinalities; AD19Page preserves rows, suppresses possibly stale totals/pagination and supports same-query/page retry. Safe totals must still agree with total_pages; unsafe totals enter the mismatch state. The catalog Notification vs local Page discrepancy, AC-36 permission, schema and live runtime remain unresolved.

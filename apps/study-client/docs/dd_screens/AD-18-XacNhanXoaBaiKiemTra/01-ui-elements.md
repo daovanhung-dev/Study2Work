@@ -1,5 +1,7 @@
 # AD-18 — UI Elements
 
+> **Current source (2026-11-20):** The Angular page stylesheet is component-wired and responsive. The target record remains a placeholder; reason and destructive controls stay disabled under the unresolved #90 policy. The marker table below describes the Stitch artifact, not runtime data.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.
@@ -50,6 +52,8 @@
 | #40 | `AD-18-EL-040` | `not supplied in marker JSON` | Technical support footer link (href #) |
 
 ## 3. Đặc tả từng element
+
+> Current Angular source (2026-11-20) preserves `quizId` as text and validates it against the positive signed-int64 bounds enforced by API #90. Invalid/missing route IDs show an accessible alert; the delete and audit controls remain disabled. No API call is made.
 
 ### Trích từ DD nguồn: C. Đặc tả element
 

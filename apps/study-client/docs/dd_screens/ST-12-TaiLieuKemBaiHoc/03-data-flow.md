@@ -1,5 +1,13 @@
 # ST-12 — Data Flow & State
 
+## Current source flow — 2026-11-20
+
+1. ST-11 links to `/student/lessons/:lessonId/resources`; the Study Client route and component are present.
+2. ST-12 calls #26 with Student Bearer and cancels a prior read if `lessonId` changes. It accepts only `DESIGN_RESOURCE_RETRIEVED`, a valid PUBLISHED lesson/resources payload, and the requested lesson ID.
+3. The page renders loading, retryable error, resource list, and API-provided empty list. #26 reads `resources`, requires ACTIVE enrollment, and now filters both lesson and course to PUBLISHED.
+4. Selecting an item passes its ID and lesson return context to GS-07. GS-07 calls #12; ST-12 does not expose the URL returned by #26 (the current response omits it).
+5. The current checked-in producer #47 writes `lesson_uploads`; no writer for #26's `resources` table was found. Do not infer live data availability or a resource-table mapping. Runtime/live DB were not verified; the sections below retain original expected-flow evidence.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|
@@ -37,9 +45,9 @@ flowchart TD
 2. **Authentication/authorization:** AC-15 yêu cầu quyền xem lesson. Catalog #26 yêu cầu Student Bearer. Không có Study Web client/router/session source để xác minh guard, token storage, refresh hoặc cách xử lý session hết hạn.
 3. **Nạp danh sách:** inventory kỳ vọng `GET #26` theo `lessonId`; không query/body. Tuy nhiên route/module/test vắng mặt. Catalog và AC diagram trả `ApiEnvelope<Lesson>`, không nêu `Resource[]`, thứ tự, trang hoặc empty shape. Không thể ánh xạ item hay kết luận empty.
 4. **Hiển thị:** ảnh chỉ có một empty/unavailable panel và hai thẻ trạng thái kỹ thuật. Không có card/row resource, tên tệp, type, dung lượng, URL hoặc hành động mở. Không giả lập các giá trị này.
-5. **Lấy chi tiết:** API #12 chỉ có thể được cân nhắc sau khi một `resource_id` được cung cấp từ contract/list đã duyệt. Ảnh hiện không có resource selection. Source #12 là public, trả stored URL và thiếu visibility/signer/auth, do đó response hiện tại chưa đủ làm bằng chứng an toàn để tự mở/tải.
+5. **Lấy chi tiết:** ST-12 passes the selected `resource_id` and `lessonId` context to GS-07. GS-07 calls #12; PUBLIC gets direct HTTP(S), PRIVATE requires Student ACTIVE enrollment and a signed URL with 300-second TTL.
 6. **Quay lại/đi tiếp:** CTA quay lại ST-11 và link diễn đàn chỉ là anchor prototype `href="#"`. Route/state/ID handoff chưa được triển khai. GS-07 là link nghiệp vụ theo inventory, nhưng route/return context cho ST-12 còn mở.
-7. **Lỗi và phiên:** catalog #26 khai báo 401/403/404/500; current #12 source có 404/500 ngoài success. Không có UI mapping, retry, timeout, cache, polling hoặc session recovery implementation. Text “Tự động làm mới mỗi 30s” không có timer trong HTML.
+7. **Lỗi và phiên:** #26 errors map to ST-12 retryable error. GS-07 maps #12 401/403/404 and generic 500/503 failures. No automatic polling or signed-link renewal UI is implemented. Text “Tự động làm mới mỗi 30s” in the prototype is not a timer.
 
 ### Sơ đồ màn hình liên kết
 
@@ -62,9 +70,9 @@ flowchart TD
 | #26 authentication/access error | Catalog 401/403 | Cần session/login/recovery copy và policy 403. | Declared only; current source `NOT_FOUND`. |
 | #26 missing/server/network error | Catalog 404/500 hoặc network failure | Cần inline/page error và retry policy. | Declared only; network/retry UI chưa có. |
 | Resource detail loading | Chọn item và gọi #12 nếu được duyệt | Cần busy state, tránh mở URL trước response/access approval. | Không có selector/control trong asset. |
-| Resource detail success | #12 trả 200 | Source trả `id/name/type/url/lesson_id`; URL direct, visibility omitted. Chưa đủ điều kiện tự mở. | API source-backed; UI/open policy blocked. |
+| Resource detail success | #12 trả 200 | GS-07 validates `id/name/type/url/visibility/lesson_id`; PUBLIC direct URL, PRIVATE signed URL after enrollment validation. | Source-wired; GS-07 requires a user click to open. |
 | Resource detail not found/internal error | #12 404/500 | Cần inline/error destination policy; không tự dùng SH-06. | API source-backed; screen mapping chưa chốt. |
-| Safe open/preview/download | Access, origin, type, MIME và URL policy đã được duyệt | Chỉ sau khi quyết định viewer/handoff. | Chưa có contract; signed URL/410/expiry không tồn tại trong #12 source. |
+| Safe open/preview/download | #12 enforces resource access and URL rules | GS-07 has a safe external open link; no MIME-specific viewer or expiry refresh. | Partial source; preview policy remains open. |
 
 ## 4. Luồng đọc (Read)
 - Orchestration từ inventory: GET #26; nếu có resource_id hợp lệ GET #12; không tự mở URL ngoài chính sách.

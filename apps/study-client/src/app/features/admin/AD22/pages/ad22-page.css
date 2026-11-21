@@ -182,6 +182,7 @@ study-ad22-page button:disabled {
 
 study-ad22-page .filter-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -199,6 +200,11 @@ study-ad22-page .filter-actions .apply-button:hover:enabled {
 
 study-ad22-page .filter-actions .clear-button {
   background: var(--page-background);
+}
+
+study-ad22-page .filter-actions .refresh-button {
+  color: var(--ocean-primary);
+  background: var(--ocean-soft);
 }
 
 study-ad22-page .filter-note {
@@ -318,6 +324,14 @@ study-ad22-page .table-state {
 study-ad22-page .table-state > * {
   display: block;
   margin-inline: auto;
+}
+
+study-ad22-page .table-state > .empty-refresh-button {
+  display: inline-flex;
+  margin-top: 16px;
+  padding-inline: 18px;
+  color: var(--ocean-primary);
+  background: var(--ocean-soft);
 }
 
 study-ad22-page .state-mark {

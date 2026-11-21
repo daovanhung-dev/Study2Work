@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AD11ApiService } from '../data-access/ad11-api.service';
 import { StudyIcon } from '../../../../shared/ui/study-icon';
 import { AD11_SCREEN } from '../models/ad11-screen.model';
-import { adminRouteState, loadedFields } from '../../admin-screen-state';
+import { adminRouteState, isSignedInt64RouteId, loadedFields } from '../../admin-screen-state';
 import { renderContentFields } from '../../admin-screen-renderers';
 import type { AdminScreenField } from '../../../../shared/ui/admin-screen.model';
 
@@ -21,6 +21,9 @@ export class AD11Page {
     'contentId',
     (contentId) => this.api.getContent(contentId),
     (content) => loadedFields(renderContentFields(content)),
+    isSignedInt64RouteId,
+    'Mã nội dung phải là số nguyên signed 64-bit.',
+    'DESIGN_RESOURCE_RETRIEVED',
   );
 
   get metadataFields(): readonly AdminScreenField[] {

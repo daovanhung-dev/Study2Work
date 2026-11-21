@@ -45,10 +45,10 @@ status: "Draft — Needs Confirmation"
 |---|---|---|---|
 | `recipients` | string! | CSV positive int64 `users.id`; item rỗng/sai range trả 422; bỏ ID lặp giữ vị trí đầu. | DERIVED từ API #62 `UserSummary[]`. |
 | `title` | string! | Giữ nguyên text; tối đa 200 ký tự theo legacy `notifications.title`. | Max length lấy từ local DDL; live schema chưa xác minh. |
-| `content` | int64! | Ghi giá trị thập phân vào legacy `notifications.content` TEXT. | DERIVED mapping; ý nghĩa free-form text vẫn lệch diagram. |
+| `content` | string! | Ghi nguyên văn vào legacy `notifications.content` TEXT. | Đã reconcile theo quyết định 2026-11-21 để khớp ME-14 và Notification schema. |
 | `channels` | string! | CSV token `PUSH`/`EMAIL`; item rỗng hoặc token khác trả 422; bỏ duplicate giữ vị trí đầu. | DERIVED từ labels AC-25. |
 
-- Bốn field và JSON types giữ nguyên theo catalog.
+- Body has four fields; `content` is a JSON string under the user-approved 2026-11-21 contract reconciliation.
 - Không thêm `course_id`, Idempotency-Key hoặc batch limit vào request.
 - Vì thiếu `course_id`, scope check chỉ chứng minh có một common course Mentor sở hữu, không chứng minh đó chính là course đang mở trên UI.
 
@@ -69,7 +69,7 @@ status: "Draft — Needs Confirmation"
 ### 3.1. Notification rows
 
 - Mỗi Student nhận một legacy BIGINT `notifications` row.
-- `user_id` là Student ID; `sender_id` là Mentor ID; `title` giữ nguyên; `content` là decimal string.
+- `user_id` là Student ID; `sender_id` là Mentor ID; `title` và text `content` được lưu nguyên văn.
 - Một UUID `operation_id` được dùng chung cho tất cả notification rows trong cùng POST.
 - `created_at` được cấp bởi DB và dùng làm Operation `submitted_at`/`updated_at` lúc mới QUEUED.
 - `type` không được suy ra thành channel; để NULL theo legacy DDL.
@@ -121,7 +121,7 @@ status: "Draft — Needs Confirmation"
 | Authorization | Header | Shared MENTOR guard; numeric principal is sender | Direct auth contract; local numeric identity pattern. |
 | `recipients` | Body string | Parse IDs; check common ACTIVE Student roster; insert one notification per ID | CSV encoding DERIVED. |
 | `title` | Body string | Insert into `notifications.title` | Local DDL maximum 200. |
-| `content` | Body int64 | Convert to decimal text and insert | DERIVED; human text contract conflict remains. |
+| `content` | Body string | Insert submitted text directly into `notifications.content` TEXT | Approved type reconciliation for the ME-14 flow; no content trimming/length rule is added by this API. |
 | `channels` | Body string | Parse tokens; insert one QUEUED row per channel | CSV `PUSH`/`EMAIL` DERIVED. |
 | `operation_id` | Generated UUID | Group notification rows; return Operation.id | No separate Study operations table. |
 

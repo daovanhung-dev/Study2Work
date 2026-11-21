@@ -1,5 +1,7 @@
 # AD-01 — UI Elements
 
+> **Current source note (2026-11-20):** AD01Page renders the hero, four unavailable KPI cards, activity/service empty states and three shortcut cards. Admin identity is rendered by the enclosing AdminLayout from the validated #03 profile. Static SYSTEM NORMAL, audit, compliance and service-health claims from the Stitch prototype are not shown as current state; visual/runtime fidelity remains unverified.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.
@@ -56,7 +58,7 @@ Mỗi marker đại diện một component/control. Label, icon và nội dung c
 | 2 | Primary navigation group — nav/anchors | Năm mục Tổng quan (active), Người dùng, Khóa học & Nội dung, Kiểm duyệt, Báo cáo. HTML có `data-path`; cả năm `href="#"`. | Tổng quan có `aria-current="page"`; `data-path` không phải route mapping. Không có Study Router. | EV-04 |
 | 3 | System Normal pill — status badge | Header: chấm xanh và “SYSTEM NORMAL”. | Static claim, không có source/threshold; không chứng minh tình trạng runtime. | — |
 | 4 | Notifications — icon button | Header chuông, chấm đỏ; `aria-label="Notifications"`. | Enabled về markup, nhưng không listener, count model hay API. | EV-05 |
-| 5 | Current Admin identity — profile block | Tên “TS. Quản Trị Viên”, role “ADMIN / QUẢN TRỊ VIÊN”, avatar icon. | Hard-coded/static; không có profile endpoint hoặc user ID mapping. | — |
+| 5 | Current Admin identity — profile block | Prototype shows a static name/role; current AdminLayout displays `full_name`/`role` from the validated API #03 login response held in AdminSessionService. | No separate `/admin/me` endpoint; page does not invent an Admin identity. | — |
 | 6 | Global breadcrumb — breadcrumb trail | “Hệ thống > Quản trị trung tâm > Không gian làm việc”. Các node là span; một số chỉ có hover class. | Static; không anchor/handler thực. | — |
 | 7 | RBAC compliance badge — status/claim | Shield + “Chuẩn xác thực RBAC” ở breadcrumb bar. | Static claim; không có policy/audit evidence từ dashboard. | — |
 | 8 | Dashboard breadcrumb — breadcrumb/context | “Bảng điều khiển quản trị > Tổng quan hệ thống”. | Static spans; không có click handler hoặc route state. | — |
@@ -80,9 +82,9 @@ Mỗi marker đại diện một component/control. Label, icon và nội dung c
 | 26 | Background task queue row — service status item | Hàng đợi tác vụ, “Điều phối tiến trình nền”, status “Sẵn sàng”. | Static; không có queue status source/API được gắn vào màn hình. | — |
 | 27 | Admin permissions notice — information panel | “Quyền hạn quản trị viên” và copy nói số liệu bị khóa tới khi hoàn tất phân quyền. | Static text; policy/condition/transition chưa có client hoặc #101 contract. | — |
 | 28 | Direct management shortcuts heading — section header | “Lối tắt quản lý trực tiếp”, caption “Chuyển hướng không gian quản trị”. | Static; không có event riêng. | — |
-| 29 | Manage users shortcut — link/card | “Quản lý người dùng”; mô tả hồ sơ/phân quyền/trạng thái; HTML `href="/admin/users"`. | Native link; candidate AD-02 route theo inventory. Router runtime chưa có. | EV-06 |
-| 30 | Manage courses shortcut — link/card | “Quản lý khóa học”; mô tả chương trình/bài giảng/chứng chỉ; `href="/admin/courses"`. | Native link; candidate AD-06 route theo inventory. Router runtime chưa có. | EV-06 |
-| 31 | Moderation queue shortcut — link/card | “Hàng đợi kiểm duyệt”; mô tả duyệt bài nộp/đề cương/học liệu; `href="/admin/content/pending"`. | Native link; candidate AD-10 route theo inventory. Router runtime chưa có. | EV-06 |
+| 29 | Manage users shortcut — link/card | Current label “Quản lý người dùng”; Angular `routerLink="/admin/users"`. | Source route to AD-02 exists; API #68 behavior belongs to destination. | EV-06 |
+| 30 | Manage courses shortcut — link/card | Current label “Quản lý khóa học”; Angular `routerLink="/admin/courses"`. | Source route to AD-06 exists; API #73 behavior belongs to destination. | EV-06 |
+| 31 | Moderation queue shortcut — link/card | Current label “Hàng đợi kiểm duyệt”; Angular `routerLink="/admin/content/pending"`. | Source route to AD-10 exists; API #78 behavior belongs to destination. | EV-06 |
 | 32 | Footer copyright/system label — footer text | “© 2025 Study2Work LMS.” và “Hệ thống quản trị trung tâm.” | Static copy. | — |
 | 33 | Privacy policy — footer link | “Quy chế bảo mật dữ liệu”; `href="#"`. | Placeholder anchor, destination chưa xác định. | EV-08 |
 | 34 | RBAC standards — footer link | “Tiêu chuẩn phân quyền RBAC”; `href="#"`. | Placeholder anchor, destination chưa xác định. | EV-08 |

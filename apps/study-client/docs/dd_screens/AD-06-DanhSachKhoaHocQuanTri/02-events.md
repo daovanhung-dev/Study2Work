@@ -122,3 +122,8 @@
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)
+
+### Current-source addendum — 2026-11-21
+
+- EV-01 and EV-07 now require the #73 success code and validate Course items, fixed size, requested page echo and pagination before rendering.
+- After shape validation, AD-06 compares the current page item count with the COUNT-derived expected rows. A mismatch preserves returned courses, hides stale totals/page data, disables page navigation and offers a same-page retry. An empty out-of-range page uses a separate return-to-page-1 action; this includes page > 1 after the collection becomes empty. Matching empty pages remain valid empty results.

@@ -10,8 +10,8 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #49
-- Orchestration/data notes: GET #49; preserve ids/version, tránh render draft như published.
-- BE/source status và gate: **D**; **BLOCK:** Content không nằm trong 18 bảng DB.sql
+- Orchestration/data notes: GET #49 returns flat Content[]; the page builds the tree from `parent_id` and preserves IDs/status/order. The response has no version selector; no status is inferred.
+- BE/source status and gate: **R** locally source-wired; API DD remains Draft and live schema/runtime are unverified.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: 2. API #49 và ánh xạ dữ liệu
@@ -21,7 +21,7 @@
 ```mermaid
 sequenceDiagram
     participant M as Mentor
-    participant W as Study Web route (UNWIRED)
+    participant W as Study Web ME-06 route
     participant R as GET #49 route
     participant V as get_course_contents
     participant A as MENTOR auth guard
@@ -82,7 +82,7 @@ Flow Web là expected/proposed. Các bước sau route đã được đọc tron
 - #50–#53: `apps/study-server/app/modules/mentor/api_50_mentor_content_create/`, `api_51_mentor_content_update/`, `api_52_mentor_content_publish/`, `api_53_mentor_content_delete/`; corresponding focused test directories under `apps/study-server/tests/modules/mentor/`.
 - Persistence artifacts: `infra/postgres/study-server/DB.sql`, `infra/postgres/study-server/migrations/006_contents.sql`, `007_content_versions.sql`.
 - API DD #49: [`02_Overview.md`](../../../../study-server/docs/dd/49_mentor_content_list/02_Overview.md), [`OPEN_QUESTIONS.md`](../../../../study-server/docs/dd/49_mentor_content_list/OPEN_QUESTIONS.md).
-- Current static UI source: [`code.html`](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/code.html); current route/client state: `UNWIRED` in `.agents/web-work/study/`.
+- Current static UI source: [`code.html`](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/code.html) remains a design snapshot. Current route/client source is wired locally; it validates #49 and renders the validated `Content[]` tree, but does not implement mockup-only filters, order writes, KPI or audit panels. Runtime remains unverified.
 
 ## 3. API không sử dụng
 - Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.

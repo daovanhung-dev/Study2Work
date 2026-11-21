@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Email/password, lỗi tại trường, nhớ route đích, tách thông báo 401 và tài khoản bị chặn.
-- Gate/status (giữ nguyên): **R**; **BLOCK:** Role bootstrapping Mentor/Admin chưa hoàn chỉnh
+- Current source: #03 supports STUDENT/MENTOR/ADMIN session selection; only Student is verified with #04. Gates remain for #03 catalog discrepancy, safe `returnTo`, forgotten-password behavior, complete Stitch acceptance and runtime verification.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: 8. Bảo mật và quyền riêng tư

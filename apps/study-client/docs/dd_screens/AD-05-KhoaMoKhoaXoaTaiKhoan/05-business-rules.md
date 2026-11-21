@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Xem trạng thái user và chỉ cho action theo policy đã duyệt; không mặc định session revoke, audit hoặc hard delete.
-- Gate/status (giữ nguyên): **R**; **DD BLOCKED; IMPLEMENTATION BLOCKED:** route/page and GET #69 caller exist; #71/#72 mutation callers are absent; body/status/session, delete/visibility/retention, Admin permission/audit/safeguards remain open; RUNTIME NOT VERIFIED
+- Gate/status (giữ nguyên): **R**; **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** page validates the raw signed-int64 route ID before GET #69 and skips invalid/missing IDs; #71/#72 mutation callers are absent; body/status/session, delete/visibility/retention, Admin permission/audit/safeguards remain open; RUNTIME NOT VERIFIED
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 > CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.

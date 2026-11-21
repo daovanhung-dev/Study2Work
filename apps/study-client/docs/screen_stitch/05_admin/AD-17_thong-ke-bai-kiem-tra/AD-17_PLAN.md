@@ -21,7 +21,7 @@
 - Screenshot là trạng thái rỗng: tên Quiz `--`, chưa có `quizId` hợp lệ, đồng bộ đang chờ, “Chưa có số liệu thống kê phân tích”; không có biểu đồ/số liệu.
 - HTML có hai link về `/admin/quizzes`. Nút “Kiểm tra kết nối dữ liệu” chạy timer 700 ms, hiện feedback cố định nói API hoạt động và “Trống Analytics”, rồi khôi phục nhãn sau 3 giây. Không có fetch/XHR, retry, timeout mạng hay đọc response.
 - HTML tuyên bố có phổ điểm, tỷ lệ hoàn thành, thời gian làm trung bình và nền tự tổng hợp sau submit. Những tuyên bố đó không được AC-35/direct catalog/local API projection hỗ trợ đầy đủ; local #91 không trả phân phối điểm, completion rate hoặc average duration. Đánh dấu các copy này là mockup-only, không phải behavior/runtime evidence.
-- Angular source registers the route, reads `quizId`, calls #91, renders `loading`/`loaded`/`error`, and displays Quiz ID plus six local metrics with a contract warning. These are source facts, not browser/live API/DB verification.
+- Angular source registers the route, reads `quizId`, calls #91, renders `loading`/`loaded`/`error`, and displays Quiz ID plus six local metrics with a contract warning. As of the 2026-11-20 continuation (§9), the page also validates the raw route ID before #91. These are source facts, not browser/live API/DB verification.
 - Study Server có route và module #91. Shared Bearer/JWT `ADMIN` guard chạy trước positive signed-int64 parsing và DB. Local handler đọc một row aggregate từ `quizzes LEFT JOIN quiz_attempts`, không ghi/commit, không đọc `quiz_answers`, không lọc status/tombstone; lỗi DB/mapping trả 500 và rollback; thiếu Quiz hoặc ID malformed trả 404.
 - Local response model `AdminQuizStatistics` khác direct catalog `ApiEnvelope<Quiz>`. Các trường local: `quiz_id`, `attempt_count`, `submitted_attempt_count`, `graded_attempt_count`, `average_score`, `passed_attempt_count`, `pass_rate_percent`. Formula/NULL semantics trong API DD là DERIVED, bao gồm mọi attempt row; submitted khi `submitted_at IS NOT NULL`; graded khi `score IS NOT NULL`; average trên score có giá trị; pass theo `score >= passing_score`; pass metrics NULL nếu threshold NULL; rate dùng graded count và NULL khi không có score. Không có proposal score distribution/time/completion.
 - API DD #91 vẫn `Draft — Needs Confirmation`; fake DB test/report không xác minh PostgreSQL/schema/deployment/fine-grained permission. AC-35 quiz-management permission chưa có policy source; local chỉ kiểm tra shared `ADMIN`. V1-PILOT UUID schema khác legacy BIGINT candidate.
@@ -65,7 +65,7 @@ Tạo marker duy nhất cho từng nhóm UI nhìn thấy. Tọa độ lưu theo 
 
 ## 6. Event inventory dự kiến
 
-- `EV-01 Screen entry / route parameter`: Angular route is registered and page reads string `quizId`; client does not validate numeric range. Local API maps malformed IDs to 404 (DERIVED behavior).
+- `EV-01 Screen entry / route parameter`: the original plan snapshot described no client validation; the current route guard is recorded in §9. The local API maps malformed IDs to 404 (DERIVED behavior).
 - `EV-02 Authentication/authorization`: caller uses shared Admin Bearer client and server shared `ADMIN`; AC-35 fine-grained quiz-management permission remains unconfirmed.
 - `EV-03 Load statistics`: Angular page calls GET #91 with no body/query; retry/cache/auto-refresh are unspecified because there is no contract.
 - `EV-04 Handle success`: current page renders the local DTO projection with a contract notice. Direct catalog `Quiz` does not approve the analytics fields; mockup distribution/completion/duration claims remain unsupported.
@@ -100,3 +100,10 @@ Navigation is source-wired AD-15 → AD-17 for a safe numeric Quiz ID and AD-17 
 4. Write `AD-17.md` with sections A–F, detailed EV input/process/output and API/error mapping; keep expected, current, derived, and blocker labels distinct.
 5. Update inventory row 75, reverse API #91 status, G-11 and global plan/checkpoint without disturbing earlier sessions.
 6. Run static artifact/link/source-hash/coordinate/count/whitespace audit. Do not run app tests or claim runtime verification.
+
+
+## 9. Dated continuation — route ID guard (2026-11-20)
+
+- `AD17Page` now validates a complete positive signed-int64 `quizId` using the current #91 parser bounds before GET. Missing/malformed/zero/overflow route values show a local error and skip HTTP; valid raw text is preserved.
+- The overview, events, data-flow, API, navigation, inventory and Study Web context now record this source behavior. The local statistics DTO/catalog `Quiz`, metric, permission, schema and runtime discrepancies remain unchanged; the screen stays 50%.
+- The original Stitch screenshot, HTML and marker files remain unchanged. No tests/build/lint/browser/API runtime were run.

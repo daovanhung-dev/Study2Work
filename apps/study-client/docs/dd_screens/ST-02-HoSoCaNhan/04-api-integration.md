@@ -48,3 +48,12 @@ API #04 DD status is `Draft — Needs Confirmation`. Checked-in `infra/postgres/
 
 ## 4. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/03_student/ST-02_ho-so-ca-nhan/ST-02.md)
+
+## 5. Current Study Web caller
+
+`ST02ProfileService` calls API #04 through `StudentApiService`, which obtains
+the Student token from the in-memory #03 session and clears that local session
+on protected 401 responses. The page renders only `full_name` and `email` and
+has loading/error/retry states. It does not render avatar URLs, DB role/status
+as authorization state, `bio` or permissions. The explicit read-only mapping
+does not approve edit behavior, cache policy or live runtime.

@@ -11,8 +11,8 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #08, #15
-- Orchestration/data notes: GET #8 trước; #15 chỉ gọi khi BE chốt identity/selection; nếu miễn phí → #19, nếu trả phí → #16.
-- BE/source status và gate: **#08 R + Study Web caller; #15 R in current Study Server source but client descriptor remains UNWIRED; DD BLOCKED**; **BLOCK:** #15 falls back to any course enrollment when Authorization is absent/invalid; Student auth, selection, free-paid and entitlement flow remain unresolved
+- Orchestration/data notes: #08 revalidates a published course; Student Bearer #15 resolves the caller's latest enrollment; an `ACTIVE` enrollment opens ST-08, a missing enrollment branches by course price, and paid courses hand off to ST-05. The explicit free action calls #19, then #20 confirms the course before navigation.
+- BE/source status: **#08/#15/#19/#20 have Study Server routes and current client callers.** API #15 returns only the authenticated Student's latest enrollment and has no course-wide fallback. **DISCREPANCY:** `list_api.md` still declares #15 Public/no-Bearer, while AC-12 and the current caller require the Student identity. Live database/browser runtime remains unverified.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: D. Đặc tả sự kiện và API
@@ -38,25 +38,22 @@ Không có handler/event logic trong HTML. Các event dưới đây phân loại
 - **DISCREPANCY:** API #08 Draft DD mô tả `INNER JOIN`; source SQL đang dùng `LEFT JOIN`, sau đó mapper coi mentor thiếu là lỗi 500. Current source được dùng để mô tả hiện trạng. Catalog #08 khai báo 404/500; route khai báo HTTP success default 200 và view trả JSONResponse status thực tế.
 - **Side effects:** Read-only; không sửa enrollment/order.
 - **Retry/cache:** Không có chính sách được xác nhận; không tự thêm.
-- **Current UI behavior:** ST-04 calls #08 on route load via `GS03CourseDetailService`, with no Authorization header. It uses the response only to select loading/gate/not-found/error; it does not render price or infer eligibility.
+- **Current UI behavior:** ST-04 calls public #08, then Student-authenticated #15; it renders course title/price and loading, not-found, login-required and error states. Existing focused tests assert the former gate-only behavior; they were not run or updated.
 
-### EV-03 — Kiểm tra enrollment bằng API #15 (BLOCKED)
+### EV-03 — Kiểm tra enrollment bằng API #15
 
-- **Trigger / loại:** Sau khi #08 trả course thành công và contract danh tính được giải quyết; GET.
-- **API contract trên giấy:** `GET /api/v1/courses/{course_id}/enrollment-status`; Public/no Bearer; path duy nhất `course_id:int64`; không query/body; success 200 `DESIGN_RESOURCE_RETRIEVED` với `ApiEnvelope<Enrollment>`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 500 `DESIGN_INTERNAL_ERROR`.
-- **Response shape Draft:** `Enrollment{id:int64,user_id:int64,course_id:int64,status:EnrollmentStatus,enrolled_at:date-time,completed_at:date-time|null}`. `status` enum chưa được xác nhận; đây là response Draft, không phải runtime.
-- **Blocker:** Request không nêu Student hoặc selector; response có `user_id`; nhiều enrollment có thể trùng course. Chưa có source unique/selection rule. 404 không phân biệt course missing với enrollment missing. Không được gọi endpoint theo một lựa chọn suy đoán, không tự thêm auth/ID, không chọn active/latest.
-- **Trình tự nếu/ khi contract được duyệt:** (1) chuẩn hóa `course_id` theo contract. (2) Backend phải resolve đúng identity/enrollment bằng rule được duyệt. (3) Parse success/error envelope và chỉ nhận branch/status được xác nhận. (4) Cập nhật state/UI theo state machine được product duyệt. Những bước này chưa có implementation nên chưa thể chốt mapping.
-- **Current source:** Route `GET /courses/{course_id}/enrollment-status` and module/query/model/test exist in Study Server. A valid Student Bearer token selects that user; missing or invalid Authorization resolves `user_id=None` and the query falls back to any enrollment for the course, ordered by `e.id DESC LIMIT 1`. The response includes `user_id`. Client descriptor #15 is `UNWIRED`; ST-04 makes no request. This current source conflicts with the Public/no-Bearer contract and does not safely identify the current Student.
-- **Side effects/retry/cache:** Current handler is read-only; retry/cache behavior is not specified. Backend auth/selection must be corrected and contract approved before adding a caller.
+- **Trigger:** Sau khi #08 trả course `PUBLISHED`; GET với Student Bearer.
+- **Catalog contract:** `GET /api/v1/courses/{course_id}/enrollment-status`; Public/no Bearer; path `course_id:int64`; response/error declarations remain as in `list_api.md`.
+- **Current source:** Validation requires Student identity; missing/invalid identity returns generic 404. Query selects only that user's latest enrollment (`ORDER BY e.id DESC LIMIT 1`); course-wide fallback is removed. Client descriptor #15 is `WIRED`, and ST-04 calls through `StudentApiService`.
+- **DISCREPANCY:** Catalog still says Public/no-Bearer while AC-12 and the screen use a Student-specific result. After #08 succeeded, the client interprets #15 404 as no enrollment for that Student. Latest-per-user is source behavior; `(user_id, course_id)` uniqueness is not established.
+- **Mapping:** `ACTIVE` enters the already-enrolled branch; non-ACTIVE rows follow the current API #19 eligibility behavior. The handler is read-only; no retry/cache is added.
 
-### EV-04 — Điều hướng theo kết quả enrollment/payment (BLOCKED)
+### EV-04 — Điều hướng theo kết quả enrollment/payment
 
-- **Trigger / loại:** Branch nội bộ sau kết quả #15 và policy được phê duyệt; không có control branch trong HTML.
-- **Input:** Course #08 và kết quả enrollment #15; quyết định eligibility/giá/thanh toán từ backend theo contract còn thiếu.
-- **Trình tự theo AC-12:** (1) Enrollment hiện hữu → nhánh Khóa học của tôi. (2) Chưa ghi danh và đủ điều kiện free theo rule server → POST #19. (3) Nhánh trả phí → ST-05 tạo order #16, ST-06 tạo payment #17; #18 operation status được biểu diễn không nối trong diagram, cần làm rõ thứ tự. (4) Client callback không chứng minh payment thành công. (5) Server xác minh entitlement/payment trước #19; sau đó #20 tải lại khóa học tới ST-08.
-- **Output/errors:** UI state, route payload, error mapping, duplicate/conflict handling và retry policy chưa thể xác định. Inventory nêu các state `already-enrolled/free/paid`, nhưng API #15 identity blocker làm chúng không implementable hiện nay.
-- **Current source:** Study Server now exposes routes for #16–#20, but client descriptors remain `UNWIRED` and the order, payment, identity and entitlement contracts remain unresolved. ST-04 does not call them or record enrollment success.
+- **Trigger:** Branch after #15; the free-enrollment mutation runs only after a Student activates the CTA.
+- **Current flow:** `ACTIVE` opens `/student/courses`. A #15 404 after successful #08 uses price `0` to show free enrollment; positive price links to ST-05. Invalid/negative price stops with an error. The explicit free CTA POSTs #19 with path/body `course_id`; #19 gets user identity from JWT. After success, GET #20 page 1 must contain the course before ST-08 opens. A #19 HTTP 409 is reconciled through #20 without resending POST. The paid branch remains dependent on ST-05/#16 and ST-06/#17; browser return/callback is not payment proof.
+- **Errors:** 401/403 show login-required; #08 404 shows not-found. If #19 succeeds but #20 fails, retry reads #20 only.
+- **Current source:** ST-04 calls #08/#15/#19/#20; descriptors #15/#19 are WIRED. Database/browser runtime is unverified.
 
 ### EV-05 — Quay lại danh sách khóa học
 

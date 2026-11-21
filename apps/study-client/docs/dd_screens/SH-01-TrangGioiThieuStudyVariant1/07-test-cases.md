@@ -1,5 +1,7 @@
 # SH-01 — Test Cases
 
+> **Current verification (2026-11-21):** `apps/study-client/src/app/features/shared/SH01/pages/sh01-page.spec.ts` passes 7/7. It covers independent public #05/#06 requests and strict projections, loading skeletons, PUBLISHED-only cards/no price, non-interactive categories/cards, route link targets, trimmed Unicode search and blank search, 401 staying on SH-01, region-scoped retry, malformed response errors, avatar fallback and empty states. Study Server #05/#06 tests pass 29/29. An isolated Angular build of current SH-01 source passes. Full Study Web suite/build still fail on unrelated dirty GS-06/GS-07/ME-04/ST-10 sources; no browser surface was available this session, so rendered browser behavior after these changes and live API/DB are not verified.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix

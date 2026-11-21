@@ -2,20 +2,21 @@
 
 ## 1. Route definition
 - Current route in inventory: `/student/lessons/:lessonId/resources`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `lessonId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: route and component are declared in Study Client; live runtime is not verified.
+- Route params/types: `lessonId` is read from `paramMap` and validated as a positive int64-safe ID; invalid/missing values stop the #26 request.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [ST-11](../ST-11-TrinhHocBaiLessonPlayer/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [ST-11](../ST-11-TrinhHocBaiLessonPlayer/00-overview.md) | Open lesson resources | Current `lessonId` | Wired; browser runtime not verified |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [ST-11](../ST-11-TrinhHocBaiLessonPlayer/00-overview.md), [GS-07](../GS-07-XemTaiTaiNguyen/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [ST-11](../ST-11-TrinhHocBaiLessonPlayer/00-overview.md) | Return to lesson | Current `lessonId` | Wired |
+| [GS-07](../GS-07-XemTaiTaiNguyen/00-overview.md) | Select a listed resource | `resourceId`, `from=lesson`, `lessonId` | Wired; GS-07 owns API #12 |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.

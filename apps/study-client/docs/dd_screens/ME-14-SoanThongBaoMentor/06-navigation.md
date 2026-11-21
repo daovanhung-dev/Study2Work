@@ -1,8 +1,10 @@
 # ME-14 — Navigation
 
+> **Current source (2026-11-21):** ME-14 submits through #63 and routes the accepted operation UUID to SH-07. It does not route directly to ME-15 in this implementation; #64 remains a separate notification-ID API. Browser/runtime is unverified.
+
 ## 1. Route definition
 - Current route in inventory: `/mentor/notifications/new`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: registered in `apps/study-client/src/app/features/mentor/mentor.route.ts`; browser/runtime remains unverified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,7 +12,7 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [ME-13](../ME-13-ChonNguoiNhanThongBao/00-overview.md), [ME-15](../ME-15-TheoDoiGuiThongBao/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [ME-13](../ME-13-ChonNguoiNhanThongBao/00-overview.md) | Router navigation with course/recipients state | `courseId`, unique Student IDs and display names | ME14 validates positive int64-safe IDs; missing/invalid handoff shows return link |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
@@ -20,7 +22,7 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: route exists; a direct entry without handoff state shows a return-to-ME-13 gate. Draft title/body are local only and will be lost on refresh/navigation.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
@@ -34,21 +36,23 @@ flowchart LR
 
 ### Trích từ DD nguồn: E. Điều hướng và state giữa màn hình
 
+Current source uses Angular router `history.state` for the ME-13 handoff, validates the course and recipient IDs, rejects duplicate IDs, then removes recipient/course fields from the current history entry. Draft/title/body/send/result are not persisted; accepted state is held only until routing to SH-07. An ambiguous send blocks another attempt in the current component. Approval of broader carrier expiry/restore behavior remains open.
+
 | Handoff | Dữ liệu cần giữ | Current evidence | Quyết định cần có |
 |---|---|---|---|
-| ME-13 → ME-14 | Course identity và danh sách unique Student int64 IDs; có thể có draft text khi quay lại. | ME-13 DD giữ nguyên ID nhưng carrier/course binding chưa chốt. ME-14 HTML không nhận state. | Phê duyệt carrier nội bộ, duplicate handling, expiry và behavior khi refresh; không đặt IDs trên URL nếu chưa quyết định. |
-| ME-14 → accepted send | Title, content, recipients, channels; attachment nếu hỗ trợ. | #63 chỉ khớp title/recipients/channels một phần; body `int64` và không có attachment. | Chốt contract/API before enabling send. |
-| Accepted → ME-15 | Mỗi notification int64 ID cho #64; Operation UUID là ID khác. | #63 local source đặt `meta.notification_ids[]`; #64 đọc từng notification; #18 vẫn UNWIRED, AC-25 không có edge. | ME-15 phải dùng #64 cho notification IDs theo approved contract; generic operation polling cần contract riêng. ME-15 không thuộc phiên này. |
+| ME-13 → ME-14 | Course identity và danh sách unique Student IDs; có thể có draft text khi quay lại. | Current Angular source passes router state; ME-14 validates it and consumes the payload from the current history entry. | In-memory handoff is implemented; draft persistence and cross-session restore remain out of scope. |
+| ME-14 → accepted send | Title, text content, recipients, channels. | Current #63 client submits trimmed text; no attachment; ambiguous response blocks blind resend in the current page. | No idempotency key or exact course binding exists; provider delivery remains unverified. |
+| Accepted → SH-07 | Operation UUID từ #63; notification int64 IDs vẫn là metadata riêng cho #64. | Current ME-14 routes the UUID to SH-07, whose #18 read is notification-only and owner-bound. | Focused UI/API tests pass; provider/runtime delivery remains unverified. |
 
 ### Ma trận state
 
 | State | Nguồn | Đặc tả |
 |---|---|---|
 | `draft` | `list_screen.md` expected state | Không được lưu/khôi phục trong source hiện tại. |
-| `validating` | `list_screen.md` expected state | Không có validator/loading state trong HTML. |
-| `sending` | `list_screen.md` expected state | Không có submit handler; nút send disabled. |
+| `validating` | `list_screen.md` expected state | Handoff and response projections are validated by the current page/service. |
+| `sending` | `list_screen.md` expected state | The explicit submit button is disabled while #63 is in flight. |
 | `accepted` | `list_screen.md` và API #63 | Theo local API source, chỉ sau transaction commit; 202 nghĩa queued, không phải delivered. |
-| `error` | `list_screen.md`; #63 error set | UI error panel/toast/retry state chưa được source định nghĩa. Backend status/code được giữ nguyên ở E09. |
+| `error` | Current Study Client and #63 error set | Known HTTP errors are presented; ambiguous outcomes block blind submit in the current component. |
 | `QUEUED`/`SENT`/`FAILED` | #64 local projection | Trạng thái dispatch API theo từng notification; mapping từ delivery counts là `DERIVED`, worker chưa wired. |
 
 ### Trích từ DD nguồn: B. Luồng hoạt động tổng thể

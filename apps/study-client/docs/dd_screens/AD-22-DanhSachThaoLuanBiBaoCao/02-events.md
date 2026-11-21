@@ -1,5 +1,7 @@
 # AD-22 — Events (đặc tả xử lý)
 
+> **T121 current-source update (2026-11-20):** Before AD-22 renders #97, it validates the success code, requested page, fixed size 20, pagination metadata, unique Discussion IDs and nested source fields. The author avatar may be omitted by the backend serializer. Report counts/reason/severity/reporter/time remain absent from #97; completion remains 75%. No tests/build/lint/browser checks were run for this update.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|
@@ -104,10 +106,11 @@ Các event dưới đây giữ hành vi của HTML prototype và luồng kỳ v�
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)
 
-## Current Study Web source observed 2026-11-17
+## Current Study Web source observed 2026-11-20
 
 - Route entry triggers GET #97 with `page=1` through the Admin Bearer-token wrapper; the browser loaded state has not been demonstrated.
 - Reason and severity are raw text inputs, applied on form submit as exact-match query parameters. Empty values are omitted. Search is disabled because #97 has no keyword parameter; no status parameter or unsupported `all` sentinel is sent.
 - The table renders only the returned Discussion ID, content-derived title, content, author, course ID and Discussion status. Report count/reason/severity/reporter/time and metrics remain unavailable.
 - Page navigation uses the returned pagination metadata. The screen creates an AD-23 link only for a safe integer Discussion ID; the linked #98 projection still has no report details.
-- Loading, error and empty states exist in the Angular page. No refresh, retry or polling action is currently wired.
+- Toolbar and loaded-empty refresh buttons re-emit the currently applied `reason/severity/page` query and repeat GET #97. The table transitions to its loading row while the request runs.
+- Loading, error and empty states exist in the Angular page. No retry or polling action is wired.

@@ -10,10 +10,17 @@
 
 ## 2. Contract / source detail
 
-- API refs trong inventory: #62, #63
-- Orchestration/data notes: ME-13 → giữ course + unique Student int64 IDs (carrier chưa chốt); POST #63 chỉ sau khi chốt scope/body/channel. #62 thuộc roster ME-13, không refetch ở ME-14. #63 trả Operation UUID và `meta.notification_ids[]`; #64 là status theo từng notification ID. Không gọi #18: Study route chưa wired, ID/lifecycle unresolved và AC-25 không có edge #18.
-- BE/source status và gate: **R**; #63 route/module/model/query/test có local source; API DD Draft/DERIVED. **DD READY; IMPLEMENTATION BLOCKED:** ME-13 handoff/course binding, `content:int64` vs free text, title 120 vs 200, In-app↔PUSH/email-worker, attachment và draft persistence chưa có contract; Study Web UNWIRED; runtime chưa verified
-- Contract sources and discrepancies are preserved in the source excerpts below.
+### Current Study Web integration — 2026-11-21
+
+- ME-14 receives course and selected Student IDs from ME-13 history state, validates a non-empty unique positive safe-ID list, then calls Mentor API #63 with CSV `recipients`, trimmed `title`/text `content`, and explicitly selected `PUSH`/`EMAIL` channels.
+- The page accepts only HTTP 202 `DESIGN_OPERATION_ACCEPTED` with `data.kind=NOTIFICATION_DISPATCH`, `data.status=QUEUED`, and a valid UUID in `data.id`; it routes that UUID to SH-07. API #18 later enforces owner matching for the authenticated caller.
+- Current API #63 contract/model/OpenAPI treats `content` as text. The server still cannot bind selected recipients to the exact `courseId` in UI state because #63 has no `course_id` request field; its existing common ACTIVE roster rule remains the server rule. 202 means outbox acceptance, not provider delivery.
+- Focused Mentor verification in the ME-01–ME-18 completion task: 6 spec files / 12 tests passed, including ME-14 safety cases. Live API/DB/provider/browser runtime is not verified.
+
+- API refs: #62 is used by ME-13 to choose recipients; ME-14 does not refetch it. ME-14 posts to #63. SH-07 reads the accepted UUID through #18; #64 remains a separate per-notification-ID API.
+- Current producer slice: ME-13 passes course context and selected Student IDs in router state; ME-14 validates the selection, sends trimmed text and explicit `PUSH`/`EMAIL` values, then routes a valid accepted UUID to SH-07. API #63 does not accept `course_id`, so the server cannot bind this request to the exact selected course.
+- API DDs remain Draft/derived for broader semantics. Attachment, draft persistence, exact course binding, provider delivery and browser runtime remain unresolved or unverified; they do not block the implemented text/recipient/channel submit slice.
+- Contract/design excerpts below preserve the earlier DD snapshot; current source behavior is summarized above.
 
 ### Trích từ DD nguồn: Nguồn truy vết
 
@@ -22,9 +29,13 @@
 - Expected flow AC-25: `apps/study-server/docs/diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio` (page AC-25).
 - #63 local source: `apps/study-server/app/api/v1.py`; `apps/study-server/app/modules/mentor/api_63_mentor_notifications_create/`; DD `apps/study-server/docs/dd/63_mentor_notifications_create/`; tests `apps/study-server/tests/modules/mentor/api_63_mentor_notifications_create/`.
 - #64 local source: `apps/study-server/app/api/v1.py`; `apps/study-server/app/modules/mentor/api_64_mentor_notification_status/`; DD `apps/study-server/docs/dd/64_mentor_notifications_status/`; tests `apps/study-server/tests/modules/mentor/api_64_mentor_notification_status/`.
-- #18 design/current-source status: `apps/study-server/docs/dd/18_operations/`; source route/module/test scan found no Study implementation.
+- #18 design/current-source status: `apps/study-server/docs/dd/18_operations/`; notification-only UUID route/module/query/tests are present, and current SH-07 calls it with owner-bound behavior. Generic operation kinds remain outside the implementation.
 - #34 upload source: `apps/study-server/app/modules/shared/api_34_uploads/`; DD `apps/study-server/docs/dd/34_uploads/`.
-- Screen prototype: `code.html`, `screen.png`; web status `UNWIRED` in `.agents/context-manifest.json` and `.agents/web-study/`.
+- Screen prototype: `code.html`, `screen.png`; the `UNWIRED` note in the 2026-11-08 source snapshot is historical. Current Study Client route/composer source is summarized below; browser/runtime remains unverified.
+
+### Earlier client source snapshot (superseded 2026-11-21)
+
+The following source notes described the pre-implementation state. Current ME-14 calls #63 with text `content`, selected recipients and explicit channels, then routes the accepted UUID to SH-07. The #63 request still has no `course_id` or idempotency key; provider delivery and browser runtime remain unverified.
 
 ## 3. API không sử dụng
 - Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.

@@ -32,3 +32,9 @@
 
 ## 4. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/02_guest_discovery/GS-01_danh-sach-khoa-hoc/GS-01.md)
+
+## Current Study Web caller audit (2026-11-21)
+
+- The `/courses` route calls #05 and #06 through the Guest catalog service. The client checks the success envelope/business code, category/course fields and pagination echo; initial load sequences #05 then #06, while sort/page reloads call #06 only.
+- #06 COUNT and LIST are separate backend reads. GS-01 checks expected returned rows from `page`, `size` and `total`; on mismatch it preserves rows, hides stale totals/paging and exposes retry. The mismatch itself is not treated as a #06 contract error.
+- This confirms source wiring only. Loaded-state visual approval, category support, cache/partial-error policy, browser rendering and live API/DB acceptance remain open. No tests/build/lint/browser/API runtime were run in this worklog continuation.

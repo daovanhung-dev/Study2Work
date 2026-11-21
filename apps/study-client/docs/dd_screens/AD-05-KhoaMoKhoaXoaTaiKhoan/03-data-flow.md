@@ -33,7 +33,7 @@
 - Copy dự đoán dừng toàn bộ phiên và quyền đăng nhập không khớp với side effect local #71/#72.
 - Reason textarea và Confirm disabled. Các nhãn audit bắt buộc, policy, RBAC, `Read-Only protocol`, `Enforced Gate`, ISO và API handlers là static copy.
 - HTML có 10 anchors, 5 buttons và một textarea disabled; không có input/select/form hoặc request/listener. Nav/footer anchors trỏ `#`; hai back links trỏ `/admin/users`.
-- Current Study Web source is Angular. AD-05 has a route/page and GET #69 caller; no client call exists for #71/#72. Status/delete buttons and reason input are disabled. The page spec was inspected, not run; runtime/deployment is `NOT VERIFIED`.
+- Current Study Web source is Angular. AD-05 validates the raw route ID against signed-int64 bounds before GET #69; missing/invalid IDs skip the request and show an error. Valid IDs reach the existing #69 caller unchanged. No client call exists for #71/#72; status/delete buttons and reason input are disabled. The page spec was inspected, not run; runtime/deployment is `NOT VERIFIED`.
 
 ### Response/error xử lý ở mức màn hình
 

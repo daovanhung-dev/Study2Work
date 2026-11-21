@@ -41,7 +41,7 @@ status: "Draft — Needs Confirmation"
 | 1 | id | Lecture ID | BIGSERIAL | N/A | N/A | Yes | ● | DB-generated sequence | DB | 3.3 | Legacy candidate; API response contract int64; pilot ID là UUID. |
 | 2 | course_id | Course ID | BIGINT | N/A | N/A | Yes for this request |  | Path course_id | Request path | 3.3 | Legacy FK candidate to courses.id; physical DDL allows nullable but API path is required. |
 | 3 | name | Lecture title | VARCHAR | 200 | N/A | Yes |  | Request title | Request body | 3.3 | Logical title → physical name; max 200 is DERIVED from candidate schema. |
-| 4 | content | Lecture content | TEXT | N/A | N/A | No in DB; required in API |  | `str(request.content)` decimal representation | Request content | 3.3 | User decision: request remains signed int64; persisted/returned value is decimal string. |
+| 4 | content | Lecture content | TEXT | N/A | N/A | No in DB; required in API |  | `request.content` Markdown text unchanged | Request content | 3.3 | T041 user decision: request and persisted/returned content are Markdown strings. |
 | 5 | video_url | Lecture video URL | TEXT | N/A | N/A | No |  | Omitted | N/A | 3.3 | No request field; nullable legacy column remains NULL. |
 | 6 | sort_order | Lecture order | INT | N/A | N/A | No in DB; required in API |  | Request order | Request body | 3.3 | Logical order → physical sort_order; no positivity rule inferred. |
 | 7 | status | Lesson status | VARCHAR | 20 | N/A | No in DB; explicit value supplied |  | `PUBLISHED` | User decision | 3.3 | Explicit INSERT value; does not use legacy default DRAFT. |

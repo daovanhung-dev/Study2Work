@@ -45,7 +45,7 @@
 5. **Permission/schema:** chốt moderation-specific permission nếu cần; xác nhận live DB/schema thay vì suy luận từ legacy DDL hoặc V1-PILOT.
 6. **Frontend/runtime:** wire route, auth/client, loading/empty/error state, filters, pagination, refresh, row navigation, return/reload, accessibility và polling nếu có approved requirement.
 
-**Trạng thái:** `DD BLOCKED` · `IMPLEMENTATION BLOCKED` · `RUNTIME NOT VERIFIED`. API #78 có current route/module/test source (`R` ở source index sau cập nhật), nhưng API DD còn Draft và local fake-database evidence không xác nhận live deployment/schema/policy. Không có application tests/runtime được chạy trong phiên này.
+**Trạng thái:** `DD BLOCKED` · `IMPLEMENTATION PARTIAL SOURCE` · `RUNTIME NOT VERIFIED`. Angular route/page/#78 caller and manual refresh are source-present; the API DD remains Draft and local fake-database evidence does not confirm live deployment/schema/policy. Application tests/runtime were not run in this continuation.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 

@@ -11,6 +11,7 @@
 
 - API refs trong inventory: #91
 - Orchestration/data notes: Angular route/page/caller invoke GET #91; direct catalog `ApiEnvelope<Quiz>` has no metric fields, while local source returns derived `AdminQuizStatistics` (counts/average/pass metrics). The page displays the local projection with a contract notice; it is not an approved API schema.
+- Before #91, the page validates raw `quizId` using the local server parser's full-string positive signed-int64 rules; invalid/missing values do not reach the API, and valid strings are not converted through JavaScript `Number`.
 - BE/source status and gate: **R** local #91 route/module/query/model/validator/test source and Angular route/page/API caller; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** direct Quiz vs local derived statistics response, metric/NULL/rounding approval, AC-35 quiz-management permission vs shared `ADMIN`, legacy schema/live DB remain open; screenshot distribution/completion/duration/background/connectivity claims unsupported; **RUNTIME NOT VERIFIED**
 - Contract sources and discrepancies are preserved in the source excerpts below.
 

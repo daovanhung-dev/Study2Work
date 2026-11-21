@@ -2,8 +2,8 @@
 
 ## 1. Route definition
 - Current route in inventory: `/student/assignments/:assignmentId/submit`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `assignmentId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: current Study Client route/page; deployed runtime is not verified.
+- Route params/types: `assignmentId` is parsed as a positive int64-compatible ID; route changes reload assignment context and cancel stale reads.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
@@ -15,13 +15,14 @@
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [ST-19](../ST-19-BaiDaNopVaPhanHoi/00-overview.md), [ST-17](../ST-17-ChiTietBaiTap/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [ST-19](../ST-19-BaiDaNopVaPhanHoi/00-overview.md) | #35 returns a validated `DESIGN_RESOURCE_CREATED` submission | `data.id` as route `submissionId` | Current source navigates after matching assignment/response validation; receipt link remains if navigation fails. |
+| [ST-17](../ST-17-ChiTietBaiTap/00-overview.md) | User selects assignment breadcrumb | `assignmentId` | Current source route link; no draft restore contract. |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: current route reloads assignment with #33; form/draft and ambiguous submission state are not persisted across reload.
+- Invalid/missing ID: page blocks read/submit for invalid ID; #35 validates assignment and submit eligibility.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram

@@ -61,7 +61,7 @@ Sau khi `deleted_at` được ghi, #49 loại target khỏi collection. Lặp DE
 
 | Field/context | Source/format | Dùng tại ME-08 | Validation/limit hiện có |
 |---|---|---|---|
-| `contentId` | Proposed route path, int64 Content ID | Tìm node trong #49; path của #52/#53. Không nhầm với Lecture ID. | API #52/#53 parse signed int64; sai format/range → 404. Client route/parser chưa tồn tại. |
+| `contentId` | Current route path, int64 Content ID | Tìm node trong #49; path của #52/#53. Không nhầm với Lecture ID. | Current page validates this as a safe Mentor ID; API #52/#53 parse signed int64; sai format/range → 404. |
 | `courseId` | ME-06 route/context; #49 response `course_id` | GET #49 ban đầu và refresh sau #52/#53. | Required cho #49; absent trong ME-08 proposed route và DeleteResult. Handoff chưa được định nghĩa. |
 | `status` | `Content.status:string` trong #49/#52 | Hiển thị trạng thái thật chỉ sau khi load exact Content. | Enum chưa approved; không map mặc định sang “Bản nháp”. Local #52 chỉ cho APPROVED/PUBLISHED transition; #53 chỉ chặn exact PUBLISHED. |
 | `title`, `content_type`, `payload` | #49 Content fields | Target card/impact decision context. | `payload` object không có subtype schema. Screenshot title/status/sample content không phải response. |

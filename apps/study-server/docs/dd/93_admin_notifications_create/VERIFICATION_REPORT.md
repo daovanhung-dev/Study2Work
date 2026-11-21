@@ -1,5 +1,9 @@
 # Báo cáo kiểm chứng — API #93 Tạo/phát notification
 
+## Current implementation update — 2026-11-21
+
+AD-20 uses #68 for explicit recipient selection, then API #93 with text and selected channels. Current #93 success data remains `Notification` and metadata exposes `operation_id:uuid`; the client routes that UUID to notification-only API #18 in SH-07. This producer slice is source-wired and focused-test-covered, while generic campaign/segment policy, live schema, deployment and Push/Email delivery remain unverified.
+
 ## Phạm vi và trạng thái
 
 - DD folder: `apps/study-server/docs/dd/93_admin_notifications_create/`.

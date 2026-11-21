@@ -1,5 +1,17 @@
 # ST-22 — Events (đặc tả xử lý)
 
+## Current-source reconciliation — 2026-11-20
+
+ST-22 calls #38, validates success/business code, page metadata, recorded
+award fields, unique IDs and `awarded_at DESC, id DESC` order before render;
+API failure/invalid data stays in the error state with retry. The server's
+COUNT and LIST are separate reads, so the shared page validator does not reject
+item-count mismatches. ST-22 detects that mismatch for presentation: it avoids
+showing a stale total or a false empty-award state, keeps any returned records
+visible, and offers the existing #38 reload. No award producer or
+certificate/proof/competency endpoint is present; related actions remain
+outside the current screen.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

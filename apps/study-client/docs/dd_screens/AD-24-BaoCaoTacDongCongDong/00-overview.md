@@ -4,17 +4,17 @@
 |---|---|
 | Screen ID | `AD-24` |
 | Module | Admin |
-| Route | `/admin/reports/community-impact` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/admin/reports/community-impact` — registered in the current Study Client router; deployment/runtime is not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** BLOCKED — metric, date, segment and permission contracts do not support implementation without product/API decisions.<br>; **Implementation status:** BLOCKED — Study Web is UNWIRED and APIs #101/#102 have no local route or query source.<br>; **Runtime status:** NOT VERIFIED — this DD records design assets, catalog/AC and current source inspection only. |
+| DD status | Draft; report metric, date, segment and permission contracts remain blocked pending product/API decisions. **Implementation status:** PARTIAL — the Study Client AD-24 route/page and Admin session gate are source-wired; report APIs #101/#102 remain UNWIRED and all report actions stay gated. **Runtime status:** NOT VERIFIED. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [AD-24.md](../../screen_stitch/05_admin/AD-24_bao-cao-tac-dong-cong-dong/AD-24.md), [AD-24_PLAN.md](../../screen_stitch/05_admin/AD-24_bao-cao-tac-dong-cong-dong/AD-24_PLAN.md), [AD-24_markers.json](../../screen_stitch/05_admin/AD-24_bao-cao-tac-dong-cong-dong/AD-24_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Date range, phân khúc, KPI và biểu đồ tác động.
 - In-scope: GET #101 tổng quan, GET #102 theo from/to/segment; giữ filter URL cho export.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Xem gate bên dưới; route/page source hiện có không chứng minh report API, dữ liệu triển khai hoặc runtime đã chạy.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,13 +31,14 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/no-data/partial/ready |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Study Client route/page + AdminLayout | Route/page source-wired; report data/actions unavailable because #101/#102 are UNWIRED. |
+| Runtime | Worklog/context Study Web | `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-24 source screen.png](../../screen_stitch/05_admin/AD-24_bao-cao-tac-dong-cong-dong/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-24_bao-cao-tac-dong-cong-dong/screen_annotated.png))
 - Luồng: GET #101 tổng quan, GET #102 theo from/to/segment; giữ filter URL cho export.
-- Priority: P2; Gate/source status: **D**; #101/#102 catalog/Draft-only, không có local route/query/model/test. **DD BLOCKED; IMPLEMENTATION BLOCKED:** KPI formula/population/source; date type/default/validation; segment vocabulary; AC-38 validation order; report permission/live schema; AD-25 filter handoff/#103 response mismatch; Study Web UNWIRED; **RUNTIME NOT VERIFIED**
+- Priority: P2; API/source status: **D**; #101/#102 catalog/Draft-only, không có local server route/query/model/test hoặc client caller. **DD BLOCKED; IMPLEMENTATION PARTIAL:** AD-24 client route/page và Admin session gate source-wired; KPI formula/population/source, date type/default/validation, segment vocabulary, AC-38 validation order, report permission/live schema, AD-25 filter handoff/#103 response mismatch remain open; report actions are disabled; **RUNTIME NOT VERIFIED**.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -45,13 +46,20 @@
 
 ## Trạng thái và ranh giới bằng chứng
 
+### Current Study Client source — 2026-11-20
+
+- `admin.routes.ts` registers `/admin/reports/community-impact` as `AD24Page`; the shared `AdminLayout` renders child routes only when `AdminSessionService.isAuthenticated()` accepts the in-memory Admin session.
+- AD-24 renders disabled date/segment and report-action controls, four blank KPI placeholders and four design-proposal metric cards. The cards are labeled unconfirmed; the page makes no #101/#102 request and claims no report result.
+- API #101/#102 descriptors remain `UNWIRED`; current Study Server has no report route/query/model/test source. API DDs remain Draft with metric, date, segment, permission and persistence questions open.
+- The historical source snapshot below records the earlier `UNWIRED` client state as of the source-DD conversion and is not current route evidence. No deployed/runtime behavior is claimed.
+
 # AD-24 — Báo cáo tác động cộng đồng
 
 > **DD status:** BLOCKED — metric, date, segment and permission contracts do not support implementation without product/API decisions.<br>
-> **Implementation status:** BLOCKED — Study Web is UNWIRED and APIs #101/#102 have no local route or query source.<br>
+> **Implementation status:** PARTIAL — Study Client route/page/Admin session gate are source-wired; report APIs #101/#102 have no Study Server route/query source or client caller, and report actions remain gated.<br>
 > **Runtime status:** NOT VERIFIED — this DD records design assets, catalog/AC and current source inspection only.
 
-## Trích đoạn tổng quan từ DD nguồn
+## Trích đoạn tổng quan từ DD nguồn — historical source snapshot (2026-11-08)
 
 ### Trích từ DD nguồn: A. Tổng quan màn hình
 
@@ -67,14 +75,14 @@
 | API liên quan | #101 `GET /api/v1/admin/reports/summary`; #102 `GET /api/v1/admin/reports/community-impact`; optional #103 thuộc nhánh xuất/AD-25, không được gọi từ handler hiện tại. Tất cả report endpoints hiện chỉ có catalog/Draft DD. |
 | Dữ liệu | Catalog #101/#102 trả generic `ApiEnvelope<Report>`. API DD Draft mô tả `Report.period`, `metrics[]` và `generated_at`; không có response/runtime mapping cho bốn card cụ thể của prototype. |
 | Bảo mật | Expected Bearer JWT/Admin và AC report/analytics permission. Current shared helper có thể nhận role và các Admin APIs #68–#98 dùng `ADMIN`; điều này không chứng minh #101/#102 được đăng ký hoặc bảo vệ. |
-| Trạng thái hiện tại | Static prototype. Apply, Reset và Refresh chỉ sửa DOM hoặc animation; export là path link; Study Web `UNWIRED`; #101/#102 `D`/Draft, không có current route/query/test. |
-| Phụ thuộc chưa hoàn thiện | Metric semantics/source/population/formula, date defaults/validation, segment vocabulary, authorization policy, report writer/schema, filter URL handoff, #103 response/Operation mismatch, Study Web implementation. |
+| Trạng thái trong snapshot prototype (2026-11-08) | Apply, Reset và Refresh chỉ sửa DOM hoặc animation; export là path link; Study Web được ghi `UNWIRED` tại thời điểm đó; #101/#102 `D`/Draft và không có server route/query/test. |
+| Phụ thuộc chưa hoàn thiện theo snapshot | Metric semantics/source/population/formula, date defaults/validation, segment vocabulary, authorization policy, report writer/schema, filter URL handoff, #103 response/Operation mismatch, Study Web implementation lúc 2026-11-08. |
 
 ### Nguồn và ranh giới bằng chứng
 
 - **Expected behavior:** inventory row 82, AC-38, API catalog #101/#102 và các API DD Draft. AC diagram mong Admin có report permission, dashboard summary/impact metrics và export tùy chọn.
 - **Current prototype:** `code.html` có date values cố định, segment options tĩnh, KPI placeholders `--`, empty chart message và data-definition cards. Script chỉ toggle CSS/text bằng timers; không có fetch/XHR/API client, không có form submit, chart data binding hay URL update.
-- **Current Study source:** scoped search trong `apps/study-server/app` và `apps/study-server/tests` không tìm thấy #101/#102 route/module/query/model/test. Current `app/api/v1.py` composes Admin routes through #98. Study Web có 0 tracked `apps/study-client/src` files, không có editable package/router/client; ignored `dist` không chứng minh page runtime.
+- **Study source evidence recorded in the 2026-11-08 snapshot:** scoped search trong `apps/study-server/app` và `apps/study-server/tests` không tìm thấy #101/#102 route/module/query/model/test. `app/api/v1.py` composed Admin routes through #98. At that snapshot, Study Web was recorded as having 0 tracked `apps/study-client/src` files and no editable package/router/client; this historical client statement is superseded by the 2026-11-20 current-source note above. Ignored `dist` does not establish page runtime.
 - **API DD status:** #101/#102 đều `Draft — Needs Confirmation` và ghi `UNWIRED / NOT_FOUND`. #101 open questions nói helper chỉ có Student guard, nhưng current `validate_current_user_request` nhận role hoặc sequence role và API #68–#98 dùng `ADMIN`. Đây là API DD/source discrepancy; chưa có report-specific guard/policy.
 - **Candidate database evidence:** checked-in legacy DDL có `enrollments` và self-referencing `discussions`; V1-PILOT DDL riêng có `report_snapshots`. Các artifact này không chứng minh live schema/deployment, metric policy, snapshot writer hay report freshness. AC-19 biểu diễn Comment riêng, khác legacy `discussions.parent_id` reply candidate.
 - **No runtime claim:** API catalog, AC diagram, API DD và mockup không chứng minh route hoạt động, quyền report, dữ liệu sản xuất, chart, metric freshness hay export job.

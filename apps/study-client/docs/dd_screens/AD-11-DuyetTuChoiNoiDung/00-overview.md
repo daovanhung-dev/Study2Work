@@ -8,12 +8,12 @@
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: **Detailed Design:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE; DECISION FLOW BLOCKED` · **Study Web runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 (signed-int64 route guard) |
 | Nguồn đối chiếu | [AD-11.md](../../screen_stitch/05_admin/AD-11_duyet-tu-choi-noi-dung/AD-11.md), [AD-11_PLAN.md](../../screen_stitch/05_admin/AD-11_duyet-tu-choi-noi-dung/AD-11_PLAN.md), [AD-11_markers.json](../../screen_stitch/05_admin/AD-11_duyet-tu-choi-noi-dung/AD-11_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Preview Content được chọn; metadata chỉ hiển thị field có contract; form reason theo #81 sau khi thống nhất validation.
-- In-scope: AD-10 link chuyển candidate `Content.id` sang route AD-11; GET #79 tải projection hiện hành. UI hiển thị field có contract và payload dưới dạng JSON text. PATCH #80/#81 được tham chiếu trong expected flow nhưng hiện không có caller Web và controls vẫn khóa. #80 local đặt `APPROVED`, không publish; #79 không trả author/version.
+- In-scope: AD-10 link chuyển `Content.id` sang route AD-11; AD11Page validates the raw signed-int64 route ID before GET #79 and preserves valid raw text. UI hiển thị field có contract và payload dưới dạng JSON text. PATCH #80/#81 được tham chiếu trong expected flow nhưng hiện không có caller Web và controls vẫn khóa. #80 local đặt `APPROVED`, không publish; #79 không trả author/version.
 - Out-of-scope: Xem gate bên dưới; không tuyên bố quyết định kiểm duyệt, publish, media preview, rubric hoặc runtime đã được xác minh.
 
 ## 2. Use cases chính
@@ -49,7 +49,7 @@
 # AD-11 — Thẩm định và phê duyệt nội dung bài giảng
 
 > **Detailed Design:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE; DECISION FLOW BLOCKED` · **Study Web runtime:** `NOT VERIFIED`<br>
-> **Screen:** AD-11 · **Actor expected:** Admin theo AC-33; moderation-specific permission chưa xác nhận · **Route đề xuất:** `/admin/content/:contentId/review` · **AC:** AC-33 · **APIs:** #79, #80, #81<br>
+> **Screen:** AD-11 · **Actor expected:** Admin theo AC-33; moderation-specific permission chưa xác nhận · **Route:** `/admin/content/:contentId/review` (Angular router source-present) · **AC:** AC-33 · **APIs:** #79, #80, #81<br>
 > **Assets:** [screen nguồn](../../screen_stitch/05_admin/AD-11_duyet-tu-choi-noi-dung/screen.png) · [screen có marker](../../screen_stitch/05_admin/AD-11_duyet-tu-choi-noi-dung/screen_annotated.png) · [marker map](../../screen_stitch/05_admin/AD-11_duyet-tu-choi-noi-dung/AD-11_markers.json) · [kế hoạch](../../screen_stitch/05_admin/AD-11_duyet-tu-choi-noi-dung/AD-11_PLAN.md) · [inventory](../../list_screen.md)
 
 ## Trích đoạn tổng quan từ DD nguồn
@@ -70,7 +70,7 @@ API catalog `docs/lists/list_api.md` quy định:
 
 ### Current behavior theo asset và source
 
-- **Angular source:** `admin.routes.ts` đăng ký `/admin/content/:contentId/review` → `AD11Page`; AD-10 tạo link an toàn từ `Content.id`; `AD11ApiService` gọi GET #79 bằng `AdminApiService`/Admin session. Page có loading/loaded/error state, hiển thị các field được #79 hỗ trợ và render `payload` thành JSON text trong `<pre>`. Spec xác nhận payload không được tạo thành HTML. Source tồn tại không chứng minh browser/runtime hoặc deployment; runtime vẫn `NOT VERIFIED`.
+- **Angular source:** `admin.routes.ts` đăng ký `/admin/content/:contentId/review` → `AD11Page`; AD-10 tạo link an toàn từ `Content.id`; `AD11ApiService` gọi GET #79 bằng `AdminApiService`/Admin session. Page validates the complete raw `contentId` against #79 signed-int64 path rules before GET; invalid/missing/out-of-range values show an error without a request, while valid IDs are passed unchanged. It has loading/loaded/error state and displays fields supported by #79 và render `payload` thành JSON text trong `<pre>`. Spec xác nhận payload không được tạo thành HTML. Source tồn tại không chứng minh browser/runtime hoặc deployment; runtime vẫn `NOT VERIFIED`.
 - **Stitch prototype:** `code.html` là trang tĩnh. Back link, navigation và footer anchors dùng `href="#"`; notification không có handler. Approve/reject buttons và textarea `#review-comments` disabled. Preview/metadata là placeholder; không có request/API client hoặc media decoder trong prototype.
 - **Preview và metadata trong Angular:** Content title và các field được contract hỗ trợ được lấy từ #79. Payload hiển thị như JSON text, không có video/SCORM/PDF renderer. Author, course title, submitted date, version/revision vẫn unavailable vì không có trong response.
 - **Decision panel:** Angular hiện khóa reason và cả hai decision buttons, không gọi #80/#81. CTA hiện ghi “Phê duyệt nội dung (Approve)” để không hàm ý publish. Stitch prototype vẫn ghi reason “Tùy chọn” và “Phê duyệt xuất bản”, trái với #81 field `reason` và #80 chỉ chuyển Content sang `APPROVED`, không `PUBLISHED`.
@@ -96,7 +96,7 @@ API catalog `docs/lists/list_api.md` quy định:
 ### Tác nhân, điều kiện vào và dữ liệu sở hữu
 
 - **Actor expected:** Admin theo AC-33/catalog. Request phải có Bearer JWT với role `ADMIN` theo current source. Không suy ra vai trò này cho phép mọi hành động moderation.
-- **Điều kiện vào expected/current:** AD-10 có link tới route AD-11 bằng `Content.id` an toàn; `AD11Page` đọc route param và gọi #79. #79 local có thể trả một Content active ở status bất kỳ; không có status gate phía Web.
+- **Điều kiện vào expected/current:** AD-10 có link tới route AD-11 bằng `Content.id` an toàn; `AD11Page` validates the complete raw route ID as signed-int64 before #79 and passes valid strings unchanged; invalid IDs stop locally without a request. #79 local có thể trả một Content active ở status bất kỳ; không có status gate phía Web.
 - **Dữ liệu canonical local:** #79 `data` là Content hiện tại, các field mapping nằm trong C. `payload` là object nhưng không có media-specific schema/URL trong response contract dùng ở màn này.
 - **Dữ liệu không có:** author identity/display name, course name, submitted timestamp, review version, audit history, preview token/asset URL, rubric, rubric result, ownership grant hay moderator permission details.
 - **Source of truth:** AC/index + API catalog cho expected flow; direct router/modules/query/models/tests cho current local behavior; screenshot/HTML chỉ cho presentation. API DD #79–#81 đều còn Draft/Needs Confirmation.

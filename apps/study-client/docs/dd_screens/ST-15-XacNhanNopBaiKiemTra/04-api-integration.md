@@ -2,13 +2,17 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-20
 
-ST-15 follows the saved-answer handoff and sends #31 only after explicit
-confirmation. An ambiguous transport outcome does not trigger automatic
-resubmission. Current source has no focused #31 server test package. The
-DD/API excerpt below is a design-time snapshot; see [the screen inventory](../../list_screen.md)
-and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+ST-15 is route-wired and calls #31 only after explicit confirmation. The page
+checks `DESIGN_RESOURCE_UPDATED`, the returned attempt ID and `GRADED` status
+before navigating. Timeout, malformed success and closed-attempt conflict do
+not trigger a blind retry; the page offers #32 as a result check. ST-14 disables
+its normal submit link while #30 is pending or failed, but ST-15 has no #30
+flush/queue mechanism, so direct route entry can bypass that gate. API #31
+checks Student ownership and `IN_PROGRESS`, grades supported question types,
+commits the result and returns the submitted attempt. Runtime and tests were
+not verified. The DD/API excerpts below preserve the original expected design.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -19,8 +23,8 @@ and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-
 ## 2. Contract / source detail
 
 - API refs trong inventory: #30, #31
-- Orchestration/data notes: Flush PUT #30 pending trước đúng một POST #31 → ST-16; không gọi #31 sau flush lỗi/không rõ và không retry mù sau 409/timeout; chỉ chuyển tiếp sau accepted response.
-- BE/source status và gate: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #30 body/queue/upsert/order/outcome/retry và #31 ownership/state/repeat/deadline/concurrency/grading/transaction/response còn mở; ST-14 summary/dirty-queue handoff/direct entry chưa có contract; legacy BIGINT và V1-PILOT UUID/payload/lifecycle khác; PNG/HTML, timer/count/saved/attempt/instant-grading claims không thống nhất; Student #30–#32 route/module/test NOT_FOUND; Study Web UNWIRED; live schema chưa xác minh
+- Orchestration/data notes: ST-15 calls #31 on explicit confirm and navigates only after a validated accepted result. #32 is offered for outcome reconciliation after timeout, malformed success or a closed-attempt conflict; no automatic replay occurs.
+- BE/source status and gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #31 route/view/query/model source and Study Client caller exist; backend checks Student owner and `IN_PROGRESS`, grades supported question types and finalizes in a transaction. Client validates code/ID/status and suppresses repeat submission for uncertain or closed attempts. However, ST-15 cannot flush pending #30 writes, and direct entry bypasses ST-14's normal link gate; no answer queue/idempotency source exists. API #31 enrollment/deadline policy and the source DD's `SUBMITTED`/`PENDING_GRADE` branches remain discrepant with current `GRADED` response; screenshot/HTML and timer/summary claims differ; runtime is unverified.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: A.4. API contract liên quan

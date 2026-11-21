@@ -2,6 +2,17 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
+## Current caller status — 2026-11-17
+
+ME08 route/page source exists and loads the selected Content with GET #49 using
+the course ID passed in tab history state. Publish/unpublish/delete controls
+are disabled; the page does not call #52/#53 pending approved lifecycle,
+confirmation and dependency policies. Runtime is NOT VERIFIED.
+
+## Current caller status — 2026-11-20
+
+The #49 caller now reacts to `contentId` changes and cancels stale requests. It validates the exact success code, collection shape, course identity and Content tree before selecting the requested Content; invalid context, 403, 404 and recoverable errors are distinct. #52/#53 still have no ME08 caller and remain gated pending approved lifecycle/readiness and deletion-dependency policies. Runtime is NOT VERIFIED.
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
@@ -12,8 +23,9 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #52, #53, #49
-- Orchestration/data notes: PATCH #52 hay DELETE #53 theo action → GET #49 refresh; không tự đặt soft-delete policy.
-- BE/source status và gate: **D**; **BLOCK:** Publish state machine và delete dependency cần chốt
+- Expected orchestration: PATCH #52 or DELETE #53 → GET #49 refresh, subject to approved lifecycle and dependency policy.
+- Current caller: GET #49 only; #52/#53 are not called by ME08.
+- BE/source status và gate: DD BLOCKED; server routes/modules/tests exist for #49/#52/#53; transition and deletion policies remain open.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: 2. Current API/data trace
@@ -66,7 +78,7 @@ Sau khi `deleted_at` được ghi, #49 loại target khỏi collection. Lặp DE
 
 | Field/context | Source/format | Dùng tại ME-08 | Validation/limit hiện có |
 |---|---|---|---|
-| `contentId` | Proposed route path, int64 Content ID | Tìm node trong #49; path của #52/#53. Không nhầm với Lecture ID. | API #52/#53 parse signed int64; sai format/range → 404. Client route/parser chưa tồn tại. |
+| `contentId` | Current route path, int64 Content ID | Tìm node trong #49; path của #52/#53. Không nhầm với Lecture ID. | Current page validates this as a safe Mentor ID; API #52/#53 parse signed int64; sai format/range → 404. |
 | `courseId` | ME-06 route/context; #49 response `course_id` | GET #49 ban đầu và refresh sau #52/#53. | Required cho #49; absent trong ME-08 proposed route và DeleteResult. Handoff chưa được định nghĩa. |
 | `status` | `Content.status:string` trong #49/#52 | Hiển thị trạng thái thật chỉ sau khi load exact Content. | Enum chưa approved; không map mặc định sang “Bản nháp”. Local #52 chỉ cho APPROVED/PUBLISHED transition; #53 chỉ chặn exact PUBLISHED. |
 | `title`, `content_type`, `payload` | #49 Content fields | Target card/impact decision context. | `payload` object không có subtype schema. Screenshot title/status/sample content không phải response. |

@@ -2,7 +2,8 @@
 
 ## 1. Route definition
 - Current route in inventory: `/admin/reports/export`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Current Study Client source: `admin.routes.ts` registers `/admin/reports/export` as `AD25Page`; the shared `AdminLayout` gates it on the in-memory authenticated Admin session. Runtime/deployment is not verified.
+- Status: route/page source-wired; export submission, artifact download and Operation handoff are not wired.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,7 +11,8 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [SH-07](../SH-07-TheoDoiTacVuBatDongBo/00-overview.md), [AD-24](../AD-24-BaoCaoTacDongCongDong/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [AD-24](../AD-24-BaoCaoTacDongCongDong/00-overview.md) | AD-25 back link | No filter params are currently passed. | Route is source-wired under AdminLayout; runtime is not verified. |
+| [SH-07](../SH-07-TheoDoiTacVuBatDongBo/00-overview.md) | Conditional Operation handoff | Only after #103 supplies a mapped export UUID; no current link/caller. | T041 policy approval does not implement export producer or #18 export lookup. |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
@@ -31,7 +33,7 @@ flowchart LR
   S0["AD-25 Xuất báo cáo và theo dõi tiến trình"] --> S2["SH-07"]
 ```
 
-## Source navigation and flow detail
+## Historical source navigation and flow detail — snapshot (2026-11-08)
 
 ### Trích từ DD nguồn: E. Trạng thái, điều hướng và yêu cầu phi chức năng
 
@@ -55,11 +57,11 @@ Các state “proposed” chỉ phản ánh inventory/AC intent; chúng không p
 | From / action | Candidate target | Current source | Gate |
 |---|---|---|---|
 | AD-24 export CTA | `/admin/reports/export` | Inventory candidate; AD-24 prototype link không gửi query. | Chốt tên/query schema cho date, segment và format; giữ filter chỉ khi được approve. |
-| AD-25 back link | AD-24 candidate `/admin/reports/community-impact` | `href="#"`. | Chốt query restore và behavior khi không có prior state. |
+| AD-25 back link | AD-24 `/admin/reports/community-impact` | Angular `routerLink` exists; no filter query is passed. | Query restore and behavior without prior state are unresolved. |
 | Operation handoff | SH-07 `/operations/:operationId` | Callout không interactive; không có ID. | AC-38 edge, API #103 response field, ID type, owner/access rule, state mapping. |
 | Shell/footer | Shared route destinations | Placeholder anchors/buttons. | Shared shell/router owns destination and notification behavior; not specified here. |
 
-Route strings are candidates from inventory only; Study Web contains no editable route source. Do not mark any handoff implemented.
+AD-25's page route and back-to-AD-24 link exist in current source. Filter continuity and the conditional SH-07 handoff remain unimplemented; do not infer them from route registration.
 
 ### E.3. Access, privacy, accessibility and presentation
 

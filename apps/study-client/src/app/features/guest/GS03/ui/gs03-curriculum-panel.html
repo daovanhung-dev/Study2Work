@@ -15,6 +15,7 @@
     <div class="state-card" role="alert">
       <span class="state-icon"><study-icon name="info" /></span>
       <p>Chưa thể tải đề cương. Vui lòng thử lại sau.</p>
+      <button class="retry-button" type="button" (click)="retry.emit()">Thử lại</button>
     </div>
   } @else if (state.status === 'empty') {
     <div class="empty-card" role="status">

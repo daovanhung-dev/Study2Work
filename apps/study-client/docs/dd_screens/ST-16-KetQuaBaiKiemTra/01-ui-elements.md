@@ -1,5 +1,7 @@
 # ST-16 — UI Elements
 
+> **Current source (2026-11-20):** ST-16 validates only `PENDING_GRADE` and `GRADED` for #32 and renders them as “Đang chờ chấm” and “Đã chấm”. It does not expose the raw enum, infer pass/fail, or render question answers.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.

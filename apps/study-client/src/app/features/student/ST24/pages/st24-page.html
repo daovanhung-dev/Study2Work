@@ -5,12 +5,9 @@
   </nav>
   <header class="api-heading">
     <div>
-      <p class="api-eyebrow">ST-24 · Tạo câu hỏi / chủ đề</p>
+      <p class="api-eyebrow">Tạo câu hỏi hoặc chủ đề</p>
       <h1>Tạo chủ đề thảo luận</h1>
-      <p>
-        Khóa học được lấy từ API #20; #40 tạo chủ đề bằng title và nội dung văn bản theo request
-        model hiện tại.
-      </p>
+      <p>Chia sẻ câu hỏi hoặc chủ đề để cùng trao đổi.</p>
     </div>
   </header>
   @if (loadingCourses()) {
@@ -19,25 +16,83 @@
     </section>
   }
   @if (error()) {
-    <section class="api-error" role="alert">{{ error() }}</section>
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      @if (!courses().length && !outcomeUnknown()) {
+        <button class="api-button secondary" type="button" (click)="loadCourses(coursePage())">
+          Tải lại khóa học
+        </button>
+      }
+    </section>
+  }
+  @if (!loadingCourses() && !error() && courseSnapshotMismatch()) {
+    <section class="api-message" role="status">
+      <strong>Tổng số ghi danh và danh sách trang chưa đồng nhất.</strong>
+      <p>Các khóa học đã trả về vẫn có thể chọn; hãy tải lại để đồng bộ phân trang.</p>
+      <button
+        class="api-button secondary"
+        type="button"
+        (click)="loadCourses(coursePage())"
+        [disabled]="creating() || creationAccepted() || outcomeUnknown()"
+      >
+        Tải lại khóa học
+      </button>
+    </section>
   }
   @if (creationAccepted()) {
     <section class="api-success" role="status">
-      Chủ đề đã được tạo{{ createdIdForLink() ? ' · #' + createdIdForLink() : '' }}.
+      Chủ đề đã được tạo.
+      @if (createdIdForLink(); as id) {
+        <a [routerLink]="['/student/discussions', id]">Mở chủ đề</a>
+      }
     </section>
   }
   @if (refreshError()) {
     <section class="api-error" role="alert">
       Chủ đề đã được tạo nhưng danh sách chưa tải lại: {{ refreshError() }}
+      @if (createdIdForLink(); as id) {
+        <a [routerLink]="['/student/discussions', id]">Mở chủ đề</a>
+      }
     </section>
   }
-  @if (!loadingCourses() && courses().length === 0 && !error()) {
+  @if (outcomeUnknown()) {
+    <p class="api-error" role="alert">
+      Chưa thể xác nhận chủ đề đã được tạo. Nút gửi đã khóa để tránh tạo trùng.
+      @if (createdIdForLink(); as id) {
+        <a [routerLink]="['/student/discussions', id]">Kiểm tra chủ đề</a>
+      }
+    </p>
+  }
+  @if (!loadingCourses() && courses().length === 0 && !error() && !courseSnapshotMismatch()) {
     <section class="api-message">
       <div>
         <strong>Không có khóa học để chọn.</strong>
-        <p>API #20 chưa trả khóa học đang tham gia cho tài khoản này.</p>
+        <p>Hãy tham gia một khóa học trước khi tạo chủ đề.</p>
       </div>
     </section>
+  }
+  @if (coursePagination(); as pages) {
+    @if (pages.total_pages > 1 && !courseSnapshotMismatch()) {
+      <nav class="api-pagination" aria-label="Phân trang khóa học">
+        <button
+          class="api-button secondary"
+          type="button"
+          (click)="changeCoursePage(-1)"
+          [disabled]="pages.page <= 1 || loadingCourses() || creating()"
+        >
+          Trước
+        </button>
+        <span>Trang {{ pages.page }} / {{ pages.total_pages }}</span>
+        <button
+          class="api-button secondary"
+          type="button"
+          (click)="changeCoursePage(1)"
+          [disabled]="pages.page >= pages.total_pages || loadingCourses() || creating()"
+        >
+          Sau
+        </button>
+      </nav>
+    }
   }
   @if (courses().length) {
     <form class="api-card discussion-create-form" (ngSubmit)="create()">
@@ -46,34 +101,38 @@
           name="courseId"
           [ngModel]="selectedCourseId()"
           (ngModelChange)="selectedCourseId.set($event)"
+          [disabled]="creating() || creationAccepted() || outcomeUnknown()"
           required
         >
           <option value="">Chọn khóa học</option>
           @for (course of courses(); track course.course_id) {
-            <option [value]="course.course_id">{{ course.name }} · #{{ course.course_id }}</option>
+          <option [value]="course.course_id">{{ course.name }}</option>
           }
         </select></label
       >
       <label class="api-field"
-        >Tiêu đề câu hỏi / chủ đề<input name="title" type="text" [(ngModel)]="title" required
+        >Tiêu đề câu hỏi / chủ đề<input
+          name="title"
+          type="text"
+          [(ngModel)]="title"
+          [disabled]="creating() || creationAccepted() || outcomeUnknown()"
+          required
       /></label>
       <label class="api-field"
         >Nội dung<textarea
           name="content"
           [(ngModel)]="content"
+          [disabled]="creating() || creationAccepted() || outcomeUnknown()"
           rows="10"
           required
           placeholder="Mô tả câu hỏi hoặc chủ đề bạn muốn trao đổi"
         ></textarea>
       </label>
-      <p class="api-muted">
-        API #40 không nhận tags, lesson ID, tệp đính kèm hoặc mã người tạo. Quyền ghi danh được
-        server kiểm tra.
-      </p>
+      <p class="api-muted">Chọn khóa học bạn đang tham gia và viết nội dung rõ ràng, phù hợp.</p>
       <div class="api-actions">
         <button class="api-button secondary" type="button" (click)="backToList()">
           Quay lại danh sách</button
-        ><button class="api-button" type="submit" [disabled]="creating() || creationAccepted()">
+        ><button class="api-button" type="submit" [disabled]="creating() || creationAccepted() || outcomeUnknown()">
           {{ creating() ? 'Đang tạo…' : 'Tạo chủ đề' }}
         </button>
       </div>

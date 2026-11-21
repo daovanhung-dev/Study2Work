@@ -1,5 +1,7 @@
 # AD-21 — Events (đặc tả xử lý)
 
+> **T120 current-source update (2026-11-20):** Before AD-21 renders #96, it now validates the success code, route `notificationId`, response identity and Notification fields. Edit/delete controls and SH-07 handoff remain blocked. Completion is 62.5%; no tests/build/lint/browser checks were run for this update.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|
@@ -23,12 +25,12 @@
 ### `EV-01` — Initial route/load và status read
 
 - **Element / loại:** #14/#20/#22, route load; `Load`.
-- **Điều kiện:** Angular route `/admin/notifications/:notificationId` đã đăng ký. Khi route param có giá trị, current page gọi #96; Stitch prototype tĩnh vẫn không có router hoặc ID hợp lệ.
+- **Điều kiện:** Angular route `/admin/notifications/:notificationId` đã đăng ký. Current page gọi #96 only when the complete raw route ID passes positive signed-int64 validation; missing/invalid IDs stop locally. Stitch prototype tĩnh vẫn không có router hoặc ID hợp lệ.
 - **Input:** API catalog path `notification_id:int64!`; Bearer JWT. Không query/body. Không dùng `operation_id` thay `notification_id`.
 - **Quy trình:** (1) nhận route param; (2) không tự cấp ID; kiểm tra theo type đã được route contract chốt; (3) kiểm tra auth/authorization ở server, giữ khác biệt AC permission với local role `ADMIN`; (4) nếu source/contract được duyệt, gọi một lần `GET /api/v1/admin/notifications/{notification_id}/status` (#96); (5) parse status/envelope; direct success 200 `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<Notification>`; (6) validate `data` rồi map chỉ các field có trong response; (7) hiển thị trạng thái loading/success/error theo UI contract khi được chốt; (8) không poll #18 hoặc gọi provider.
 - **Current local #96:** auth guard `ADMIN` chạy trước path parsing; positive signed int64 lookup; malformed/out-of-range ID → 404. Query đọc `notifications` cùng aggregate `notification_deliveries`; no notification/no deliveries → 404. Status precedence local: any `QUEUED` → `QUEUED`; else any `FAILED` → `FAILED`; else all `SENT` → `SENT`. Response có id/title/content/channels/status/created_at, không có recipient/count/per-channel/scheduled_at/read_at. Read-only, không commit.
-- **Errors / giới hạn:** Catalog #96 chỉ có 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 500 `DESIGN_INTERNAL_ERROR`. Không thêm 422. UI/client error route mapping, retry/timeout/cache chưa có contract. Do not claim `SENT=delivered`.
-- **Current Study Web source:** `AD21Page` đọc route param qua `adminRouteState`, gọi `AD21ApiService.getStatus` → GET #96, rồi map fields hiện có bằng `renderNotificationStatusFields`. UI có loading/loaded/error state; status giữ nguyên raw value. Missing/404/error đi qua shared Admin error mapper. #94/#95/SH-07 controls vẫn disabled; không poll #18.
+- **Errors / giới hạn:** Catalog #96 chỉ có 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 500 `DESIGN_INTERNAL_ERROR`. Invalid route IDs are rejected locally before HTTP; API 422 is not added. Retry/timeout/cache chưa có contract. Do not claim `SENT=delivered`.
+- **Current Study Web source:** `AD21Page` đọc route param qua `adminRouteState`, validates the complete raw value against #96's positive signed-int64 bounds before GET, and skips HTTP for invalid IDs. Valid route text remains unchanged. It then calls `AD21ApiService.getStatus` → GET #96 and maps fields hiện có bằng `renderNotificationStatusFields`. UI có loading/loaded/error state; status giữ nguyên raw value. Missing/404/error đi qua shared Admin error mapper. #94/#95/SH-07 controls vẫn disabled; không poll #18.
 - **Kết quả:** Current page render các field có trong #96; recipient, delivery counts/per-channel status, schedule và Operation ID tiếp tục unavailable. Runtime/deployment chưa xác minh; target lifecycle mapping vẫn cần owner approval.
 
 ### `EV-02` — Shell navigation và breadcrumb

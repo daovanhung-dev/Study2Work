@@ -3,6 +3,11 @@
 .me03-content-list { list-style:none; padding:0; margin:0; }
 .me03-content-list li { min-height:62px; display:flex; align-items:center; justify-content:space-between; gap:16px; padding-top:10px; padding-bottom:10px; border-top:1px solid #e9eef4; }
 .me03-content-list li div { display:grid; gap:5px; }
+.me03-student-cell { display:flex; min-width:0; align-items:center; gap:10px; }
+.me03-student-avatar { position:relative; display:grid; width:36px; height:36px; flex:0 0 36px; place-items:center; overflow:hidden; border-radius:50%; background:#e4edff; color:#2453aa; font-size:11px; font-weight:800; }
+.me03-student-avatar img { position:absolute; z-index:1; inset:0; width:100%; height:100%; object-fit:cover; }
+.me03-student-avatar > span { position:relative; z-index:0; }
+.me03-student-name { min-width:0; overflow-wrap:anywhere; }
 .mentor-progress { width:140px; height:7px; margin:0 8px 4px 0; display:inline-block; overflow:hidden; border-radius:999px; background:#e8eef4; vertical-align:middle; }
 .mentor-progress span { display:block; height:100%; border-radius:inherit; background:#1680a9; }
 @media(max-width:600px){.me03-panel{padding:16px}.me03-content-list li{align-items:flex-start;flex-direction:column}.mentor-progress{width:90px}}

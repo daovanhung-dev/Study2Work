@@ -2,6 +2,8 @@
 
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
+> Current source added local positive signed-int64 route validation on 2026-11-20. The existing AD-18 spec does not cover this branch; no test/build/lint/browser was run in this continuation.
+
 ## 0. T007 implementation evidence
 
 - Focused Angular specs for AD-15 and AD-18: 2 files, 7 tests passed. They cover safe-ID entry, AD-18 route ID/read-only state, disabled destructive/reason controls, no delete request, and return navigation.

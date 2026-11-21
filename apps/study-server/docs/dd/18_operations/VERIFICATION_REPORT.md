@@ -77,14 +77,14 @@ SHA-256 values for the eight sheets and three support documents will be recorded
 |---|---|
 | 00_Cover.md | 83fcb277fd4afb823450de79d4fdf5e224c177d1918026534514aabb36d31328 |
 | 01_Lich_su.md | 2330d08b6c2a3efb9c40f04f30ae1ea7ce3567abb8c9e5b89b0ec332fcda2ba1 |
-| 02_Overview.md | f94039938cd9332a111b98a5241b555c25c958c77fb45f645a99467cb5f9800a |
-| 03_Request.md | c7388c9399fee80045e5b6e7fe9c54a54846e6a0a651d10dab5ea25f835b545c |
-| 04_Response.md | 625114af4306689a1876fd9424fd9c7d089d2ea0b694d1329e03bc6f1de2a758 |
-| 05_Data_Mapping.md | 7e2ca5ad413e37dd02ae3343304a3537a981d2500457447ed05f2f55709cab4f |
-| 06_Error.md | 1c7154db3a4c54f622f546ed65e38d7b2951e4b2ccba37cb65fc4ea2a2b0016a |
+| 02_Overview.md | 833bf058a04f59213df2ddfdb35b924fe83b44602b1e5e36c4dd8fd840524cc1 |
+| 03_Request.md | da694cb3e0569d60bcb635349b3faca53ee8bc8608039dfa4476a34f375d7855 |
+| 04_Response.md | 5de4880ac724e9afe4e1ed56f7919ec95f10ee6447e524cf9a734ac74431f306 |
+| 05_Data_Mapping.md | 57a85bb1779efc6d9f30706792ec1dac1315c9fb372284d96379bd81f7f04bbf |
+| 06_Error.md | 848a58ef791bfcc8847f74469b1b18b0aa3e35e3800dff6637f9fe04e4b82555 |
 | 07_table.md | 9f6a9526fcf762f908913dc6f12c80f4fea4dc77b91c657389dcbfc619503478 |
-| OPEN_QUESTIONS.md | b614ad114d0bfad118325034afbb169dc3956eff56249cd92841a6f1f01e4868 |
-| PLAN_RESULT.md | 722a32150e151dc178286f937ef543d09ae3dda817f675b113bae2658227caf8 |
+| OPEN_QUESTIONS.md | 37be6c94d8bca85bbfca0693c73747a3f32365e80a4ab1798490b031be9b78c3 |
+| PLAN_RESULT.md | 1fed5fe561a6609c53acf8489157bba3d2a351e6cf62b1c2b00048f0315bf7c2 |
 
 ## Runtime checks
 
@@ -95,12 +95,12 @@ SHA-256 values for the eight sheets and three support documents will be recorded
 
 ## Known gaps retained
 
-- operation_id int64/UUID discrepancy.
-- owner-only versus owner/Admin discrepancy.
-- Operation persistence, enum values, lifecycle and owner identity mapping.
-- Operation.result Payment schema versus notification/export producers.
-- Producer success response mismatch for API #93/API #103.
-- 403/404 wrong-owner/missing-resource semantics.
+- Generic Study Operation persistence, enum values, lifecycle, retention, and result-by-kind remain unresolved.
+- API #103 report-export producer and future generic Operation kinds remain outside the current notification-only implementation.
+- Live DB schema, migration deployment and notification provider/worker delivery are not verified.
+
+
+
 
 ## Historical verification executions (original DD audit)
 
@@ -112,18 +112,21 @@ SHA-256 values for the eight sheets and three support documents will be recorded
 | git diff --check | PASS for tracked diff; new untracked Markdown files also passed the structural validator trailing-whitespace check. |
 | Study application tests | NOT_RUN in the original DD audit; API #18 source tests were added and run later. |
 
-## Current source/test verification (2026-11-16)
+## Current source/test verification (2026-11-21)
 
 | Check | Result |
 |---|---|
-| API #18 current route/module/query scan | `GET /api/v1/operations/{operation_id}` is registered; Shared handler validates UUID, uses the diagram-listed role guard and filters by authenticated owner ID. Query and response remain notification-specific. |
-| Focused API #18 suite | 8 passed; includes Student/Mentor/Admin access, disallowed role, missing bearer, malformed UUID, owner binding, not-found and safe 500/rollback. |
-| Full Study suite | 1492 passed, 0 failed; one upstream Starlette/httpx deprecation warning. |
+| API #18 current route/module/query scan | `GET /api/v1/operations/{operation_id}` is registered; Shared handler validates UUID, permits Student/Mentor/Admin and filters by authenticated owner ID. Query and response remain notification-specific. |
+| Focused API #18 suite | Included in the combined 2026-11-21 Study Server targeted run (87 passed total); covers Student/Mentor/Admin access, disallowed role, missing bearer, malformed UUID, owner binding, not-found and safe 500/rollback. |
+| Full Study suite | Historical baseline: 1492 passed, 0 failed; one upstream Starlette/httpx deprecation warning. |
 | Ruff | Passed for the API #18 validator and dedicated tests. |
-| Runtime boundary | Local HTTP tests use fake DB/session; live schema, deployment and production API acceptance are not verified. API DD remains Draft with Q-18-01..05 open. |
+| Runtime boundary | Local HTTP tests use fake DB/session; live schema, deployment and production API acceptance are not verified. API DD remains Draft for generic lifecycle/results and non-notification producer behavior. |
+| Approved SH-07 contract | UUID path; Student/Mentor/Admin callers are owner-bound; wrong role is 403; missing/non-owner notification Operation is 404. API #63/#93 hand off accepted UUIDs to this notification-only view. |
 
 The existing ZIP remains the original DD snapshot; the Study Server workflow does not require creating a new ZIP for DD updates.
 
 ## Final assessment
 
 PARTIALLY COMPLETED — the DD package is a traceable draft; contract owner decisions remain before Final status or implementation.
+
+The 2026-11-21 user decision resolved Q-18-01, Q-18-02 and Q-18-05 for SH-07's notification-only scope: UUID path, owner-only access for the three application roles, 403 for disallowed roles, and 404 for missing/non-owner operations. Generic lifecycle/result questions remain open.

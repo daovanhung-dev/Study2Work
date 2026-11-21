@@ -2,20 +2,20 @@
 
 ## 1. Route definition
 - Current route in inventory: `/student/lessons/:lessonId`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `lessonId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: route and component are declared in Study Client; live runtime is not verified.
+- Route params/types: `lessonId` is read from `paramMap` and validated as a positive int64-safe ID; invalid/missing values stop the #24 request.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [ST-10](../ST-10-KiemTraQuyenVaBatDauHoc/00-overview.md), [ST-12](../ST-12-TaiLieuKemBaiHoc/00-overview.md), [ST-21](../ST-21-TienDoTheoKhoaHoc/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [ST-10](../ST-10-KiemTraQuyenVaBatDauHoc/00-overview.md) | Start success | `lessonId` from matching #23 response | Wired; #24 independently checks Student/enrollment access |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [ST-12](../ST-12-TaiLieuKemBaiHoc/00-overview.md), [ST-09](../ST-09-TongQuanKhoaDangHoc/00-overview.md), [ST-13](../ST-13-GioiThieuBaiKiemTra/00-overview.md), [ST-17](../ST-17-ChiTietBaiTap/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [ST-12](../ST-12-TaiLieuKemBaiHoc/00-overview.md) | Select lesson resources | Current `lessonId` | Wired; browser runtime not verified |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.

@@ -7,15 +7,15 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Tài nguyên theo lesson, xem/tải an toàn và quay lại vị trí học.
-- Gate/status (giữ nguyên): **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #26 chưa có Student route/module/query/test; `ApiEnvelope<Lesson>` chưa định nghĩa Resource collection, cardinality/order/empty/access/visibility/URL còn mở; #12 source-backed locally nhưng public, không auth/visibility/signer và trả stored URL; AC-06 signed-URL branch khác source; ST-12 prototype không có resource item hay valid `resource_id`; return context/Study Web route UNWIRED; legacy BIGINT và V1-PILOT UUID schema khác nhau; live DB chưa xác minh
+- Current status — 2026-11-20: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED.** #26 and the ST-12 caller exist; #26 checks Student/ACTIVE enrollment and published lesson/course, and returns a resources list without URL. GS-07 owns #12. #47 writes `lesson_uploads` while #26 reads `resources`; no writer for the latter was found. This source gap prevents claiming end-to-end resource data availability.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: F. Quy tắc nghiệp vụ, bảo mật và tiếp cận
 
 1. Không xem `href`, `data-path`, badge `Valid Spec`, tên người học hay security copy trong mockup là bằng chứng route/session/policy.
 2. Catalog #26 yêu cầu Student Bearer nhưng không có source thực thi entitlement. Mỗi endpoint phải có access rule riêng sau khi được chốt; không coi một lần kiểm tra phía client là authorization.
-3. API #12 hiện public, không access-check resource visibility/enrollment, và trả stored URL. Không nói rằng #12 ký URL hoặc yêu cầu auth chỉ vì badge #12 ghi “Pending Auth”.
-4. Reusable `Resource.visibility` không có cột tương ứng trong candidate `resources` DDL; không tạo visibility value/predicate ở UI.
+3. API #12 uses T041 access policy: PUBLIC direct HTTP(S); PRIVATE requires Student auth, published parent and ACTIVE enrollment, then a 300-second signed URL.
+4. Use backend-provided `visibility`; do not infer it from the course or URL. Live schema mapping remains unverified.
 5. Không hiển thị tên file, extension, dung lượng, URL, download action hay preview khi backend chưa cung cấp payload được duyệt.
 6. Study Web design target yêu cầu ocean-primary `#0B5F8A`, focus-visible, keyboard order, contrast WCAG AA, semantic link/button, text alternative phù hợp, responsive reflow 320px và target điều khiển ≥44px. Ảnh 1600×1504 chỉ là desktop design; WCAG claim trong ảnh chưa được kiểm chứng.
 7. HTML lấy font/Tailwind từ CDN. Tailwind config dùng `#004AC6`/`#2563EB` cho primary, trong khi design guide dùng `#0B5F8A`; cần đồng nhất khi có frontend source, không thay đổi asset nguồn trong task này.

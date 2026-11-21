@@ -2,6 +2,8 @@
 
 > **Current-source addendum (2026-11-16):** `/admin/quizzes` → `AD15Page` → `AD15ApiService.getQuizzes` → `AdminApiService` (Admin Bearer token) → GET #87. Initial query is `{page: 1}`; blank filters are omitted, submitted `course` and `status` values are passed as text, and page changes use server pagination. Local response is `Page<Quiz>` and is mapped to the five supported row values `id`, `title`, `course_id`, `duration_minutes`, and `passing_score`; only safe JS integer quiz IDs receive the AD-17 route. Catalog singleton-vs-page, permission, schema and live-runtime gates remain open. The detailed sections below retain the historical prototype flow where marked candidate/unwired.
 
+> **Current-source addendum (2026-11-20):** The toolbar and empty-state refresh actions re-emit the applied query object to the existing query-state helper; this repeats GET #87 without changing `course`, `status` or `page`. Both controls disable during loading. This is manual refresh only; retry/cache/concurrency policy remains unspecified.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|
@@ -185,3 +187,8 @@ Phiên hết hạn, back behavior, deep-link authorization, query-string persist
 
 ## 8. Trace
 [Events](02-events.md) · [API](04-api-integration.md) · [Rules](05-business-rules.md)
+
+## Current-source addendum (2026-11-21)
+
+- Before mapping #87, AD15Page requires DESIGN_RESOURCE_RETRIEVED, a valid Quiz Page/item projection, page echo, size 20 and total_pages consistent with safe totals. Optional nullable duration_minutes can be absent in the serialized response.
+- After shape validation, expected rows are computed from page/size/total. Count/list disagreement retains the received rows, shows a retryable notice, hides totals and pagination, and prevents page changes. Empty out-of-range responses offer a page-1 action; matching zero results stay empty.

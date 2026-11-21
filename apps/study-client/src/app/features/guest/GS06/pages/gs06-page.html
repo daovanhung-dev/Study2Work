@@ -1,3 +1,7 @@
 <section class="resources-page" data-screen-id="GS06">
-  <study-gs06-unavailable-panel [state]="state" />
+  <study-gs06-resource-panel
+    [courseId]="courseId"
+    [state]="state()"
+    (retry)="loadResources()"
+  />
 </section>

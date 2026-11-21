@@ -4,17 +4,17 @@
 |---|---|
 | Screen ID | `AD-25` |
 | Module | Admin |
-| Route | `/admin/reports/export` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/admin/reports/export` — registered in the current Study Client router; deployment/runtime is not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** BLOCKED — #103/#18, filter, operation, storage and download contracts leave implementation decisions unresolved.<br>; **Implementation status:** BLOCKED — Study Web, API #103, API #18 and export worker/storage flow are not wired in current source.<br>; **Runtime status:** NOT VERIFIED — this document is based on static design assets, catalog/AC/API Drafts and source inspection only. |
+| DD status | Draft; #103 request/result, filters, artifact and export-worker contracts remain blocked. **Implementation status:** PARTIAL — the AD-25 route/page and Admin session gate are source-wired; export submission/download are gated. API #103 has no handler and current #18 source is notification-only. T041 approvals describe intended export policy, not current export runtime. **Runtime status:** NOT VERIFIED. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [AD-25.md](../../screen_stitch/05_admin/AD-25_xuat-bao-cao-va-theo-doi-tien-trinh/AD-25.md), [AD-25_PLAN.md](../../screen_stitch/05_admin/AD-25_xuat-bao-cao-va-theo-doi-tien-trinh/AD-25_PLAN.md), [AD-25_markers.json](../../screen_stitch/05_admin/AD-25_xuat-bao-cao-va-theo-doi-tien-trinh/AD-25_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Chọn format/phạm vi/kỳ, theo dõi export và chỉ tải artifact sau khi có kết quả được xác nhận.
 - In-scope: #103 optional `filters`/`format` → 202; `ApiEnvelope<Report>` vs `Operation` conflict. Chỉ gọi #18 với ID/type được BE xác nhận; tải xuống chỉ theo approved result URL.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Xem gate bên dưới; route/page source không chứng minh export API, worker, artifact hoặc deployed runtime đã chạy.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,13 +31,14 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | expected: queued/processing/ready/failed/expired; current: static/submit-blocked/download-disabled |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Study Client route/page + AdminLayout | Route/page source-wired; selections are local; submit/download are disabled because export APIs are unavailable. |
+| Runtime | Worklog/context Study Web | `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-25 source screen.png](../../screen_stitch/05_admin/AD-25_xuat-bao-cao-va-theo-doi-tien-trinh/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-25_xuat-bao-cao-va-theo-doi-tien-trinh/screen_annotated.png))
 - Luồng: #103 optional `filters`/`format` → 202; `ApiEnvelope<Report>` vs `Operation` conflict. Chỉ gọi #18 với ID/type được BE xác nhận; tải xuống chỉ theo approved result URL.
-- Priority: P2; Gate/source status: **D**; **DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #103/#18 catalog/Draft-only, no local route/query/model/test/worker/download source; response, GET retry, filter/format, permission, operation ID/access/status/result, AC-38 poll edge, storage/download and AD-24 filter handoff unresolved; Study Web UNWIRED
+- Priority: P2; API/source status: **D**; **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** AD-25 route/page and Admin session gate are source-wired; #103 has no route/worker, while #18 is a current notification-only route and has no export mapping. T041 approves CSV/XLSX/PDF, intended owner-only UUID Operation statuses and one-hour signed-link policy; response/result mapping, filters, export producer/storage/download and AD-24 handoff remain unresolved.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -45,13 +46,21 @@
 
 ## Trạng thái và ranh giới bằng chứng
 
+### Current Study Client/Server source — 2026-11-20
+
+- `admin.routes.ts` registers `/admin/reports/export` as `AD25Page`; `AdminLayout` gates its child page on the in-memory authenticated Admin session. The route/page does not establish deployment or browser runtime.
+- AD-25 stores format/scope/period choices locally. The submit and download buttons stay disabled; the page has no #103 or #18 client caller, no filter serialization and no SH-07 operation handoff.
+- API #103 remains `UNWIRED` in the client descriptor and has no Study Server route/worker. Current API #18 is registered and validates UUIDs, but its query only projects notification delivery batches (`NOTIFICATION_DISPATCH`) with `QUEUED|FAILED|SENT`; it cannot poll report exports.
+- T041 approves CSV/XLSX/PDF, intended owner-only UUID Operation states `PENDING|SUCCEEDED|FAILED`, and one-hour signed artifact-link lifetime. It does not supply the #103 response field mapping, export producer, artifact result/storage or download handler.
+- The historical source snapshot below predates the current Study Client route and current API #18 notification handler. No export/runtime claim is inferred from it or from T041 approval.
+
 # AD-25 — Xuất báo cáo và theo dõi tiến trình
 
 > **DD status:** BLOCKED — #103/#18, filter, operation, storage and download contracts leave implementation decisions unresolved.<br>
 > **Implementation status:** BLOCKED — Study Web, API #103, API #18 and export worker/storage flow are not wired in current source.<br>
 > **Runtime status:** NOT VERIFIED — this document is based on static design assets, catalog/AC/API Drafts and source inspection only.
 
-## Trích đoạn tổng quan từ DD nguồn
+## Trích đoạn tổng quan từ DD nguồn — historical source snapshot (2026-11-08)
 
 ### Trích từ DD nguồn: A. Tổng quan màn hình
 
@@ -82,7 +91,7 @@
 
 | Source | Evidence used |
 |---|---|
-| [Screen inventory](../../list_screen.md) | AD-25 candidate route, #103/#18 references, expected progress states, AD-24/SH-07 neighbors and conditional operation handoff. |
+| [Screen inventory](../../list_screen.md) | AD-25 registered route, #103/#18 references, expected progress states, AD-24/SH-07 neighbors and conditional operation handoff. |
 | [AC-38 diagram](../../../../study-server/docs/diagrams/AC_UNICA/AC_04_ADMIN_MANAGEMENT.drawio), [AC/API index](../../../../study-server/docs/diagrams/AC_UNICA/00_AC_API_INDEX.md) | Actor/precondition, optional export branch, #103 request, generation/storage/display nodes and the unconnected #18 operation node. |
 | [API catalog](../../../../../docs/lists/list_api.md) | Direct #103/#18 rows, shared Operation/ExportAsset/Report schemas, ID convention and conflicting Operation tracking paragraph. |
 | [API #103 DD](../../../../study-server/docs/dd/103_admin_reports_community_impact_export/00_Cover.md), [request](../../../../study-server/docs/dd/103_admin_reports_community_impact_export/03_Request.md), [response](../../../../study-server/docs/dd/103_admin_reports_community_impact_export/04_Response.md), [mapping](../../../../study-server/docs/dd/103_admin_reports_community_impact_export/05_Data_Mapping.md), [open questions](../../../../study-server/docs/dd/103_admin_reports_community_impact_export/OPEN_QUESTIONS.md) | Draft input/response alternatives and unresolved format, retry, storage, authorization and result questions. |

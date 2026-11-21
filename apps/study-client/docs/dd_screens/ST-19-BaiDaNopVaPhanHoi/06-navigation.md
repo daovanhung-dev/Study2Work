@@ -2,15 +2,15 @@
 
 ## 1. Route definition
 - Current route in inventory: `/student/submissions/:submissionId`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `submissionId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: current Study Client route/page; deployed runtime is not verified.
+- Route params/types: `submissionId` is parsed as a positive int64-compatible ID; invalid IDs do not issue #36.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [ST-18](../ST-18-SoanVaNopBaiTap/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [ST-18](../ST-18-SoanVaNopBaiTap/00-overview.md) | #35 accepted submission | `data.id` as `submissionId` | Current source navigates with returned ID after response validation. |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
@@ -20,8 +20,8 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: current route reads #36; route changes cancel stale reads.
+- Invalid/missing ID: the page displays an error; #36 returns 404 for invalid, missing or foreign submissions.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram

@@ -2,7 +2,9 @@
 
 > Kế hoạch ban đầu: 2026-11-06; rà soát bổ sung: 2026-11-07
 >
-> Trạng thái: PLAN COMPLETE; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED
+> Trạng thái hiện hành: PLAN COMPLETE; DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED
+
+> **Current source 2026-11-20:** `/student/courses` and the paged #20 caller are wired. The page validates the current `CourseSummaryPage`; out-of-range pages are reset and re-requested after concurrent count changes. #21 still returns `UserProfile`, and the status filter, progress display, schema-generation alignment and runtime remain open.
 
 ## 0. Rà soát bổ sung 2026-11-07 (phiên sau ST-07)
 
@@ -41,9 +43,9 @@ cross_scope_dependencies: [ST-08 APIs #20/#21; Student session from SH-02; navig
 
 | Chủ đề | Expected/design source | Current evidence | Tác động |
 |---|---|---|---|
-| Actor/route | Student đăng nhập; route đề xuất /student/courses; AC-13 cho phép có thể chưa có enrollment. | Study Web không có app source/package/router/entrypoint. HTML có href thật nhưng không có router runtime trong checkout. | Không khẳng định session guard, route history hoặc live navigation. |
-| Courses | API #20 theo catalog có status/page query; AC-13 mong Enrollment + Course list. | API #20 route/module/query/test không có trong Study Server source/tests. API DD Draft giữ response ApiEnvelope<UserProfile>, không map được course collection. | DISCREPANCY/BLOCKER; không thiết kế Course card payload như thể đã có contract. |
-| Progress | AC-13 gọi API #21 để ghép progress; inventory nói gọi khi cần. | API #21 route/module/query/test không có source. Query grammar mơ hồ, response vẫn ApiEnvelope<UserProfile>, không có aggregate schema/formula. | DISCREPANCY/BLOCKER; không bịa progress %, denominator hoặc merge result. |
+| Actor/route | Student đăng nhập; `/student/courses`; AC-13 allows no enrollment. | Route/page are present under `StudentLayout`; deployed route/session runtime is unverified. | Session lifetime and live navigation remain unverified. |
+| Courses | API #20 catalog has status/page query; AC-13 expects Enrollment + Course list. | Current route/module/query/model return owner-scoped `CourseSummaryPage`; ST-08 calls paged #20 and validates projection/page metadata. #20 COUNT and LIST are separate reads; out-of-range pages now reset/reload. | Catalog response `UserProfile` differs from source; status filter is absent; legacy BIGINT and V1-PILOT UUID schemas differ. |
+| Progress | #21 aggregate/progress is expected by AC-13/AC-18. | #21 route/module/query exist but return `UserProfile`; ST-08 has no #21 caller. | DISCREPANCY/BLOCKER; no progress percentage or unsupported field mapping is added. |
 | Empty state | AC-13 diagram có nhánh empty khi không có khóa học sau khi ghép API results. | PNG/HTML hiển thị static empty copy “chưa có khóa học hoặc dữ liệu chưa cập nhật”; không fetch/API state. | Đây là design state, không phải kết quả API thật; wire empty shape chưa được chốt. |
 | Filter/status/progress | Inventory mô tả lọc status và thanh tiến độ. | Không có filter control, course list/card, progress bar, pagination trong HTML hoặc source screenshot. | Loaded-state design thiếu; không tạo controls hoặc hành vi. |
 | Navigation | Header/Footer link /student, /student/courses, /student/progress; empty CTA /student/progress. | Native anchors trong HTML; không có frontend runtime để resolve routes. | Expected map: ST-01, ST-08, ST-20; runtime chưa verify. |

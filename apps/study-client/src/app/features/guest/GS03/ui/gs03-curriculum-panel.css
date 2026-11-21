@@ -53,6 +53,28 @@
   line-height: 1.6;
 }
 
+.retry-button {
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 9px 16px;
+  border: 1px solid var(--ocean-primary);
+  border-radius: 9px;
+  color: var(--surface);
+  background: var(--ocean-primary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.retry-button:hover {
+  background: var(--ocean-hover);
+}
+
+.retry-button:focus-visible {
+  outline: 3px solid var(--ocean-primary);
+  outline-offset: 3px;
+}
+
 .empty-card h3 {
   margin: 0 0 8px;
   color: var(--text-primary);

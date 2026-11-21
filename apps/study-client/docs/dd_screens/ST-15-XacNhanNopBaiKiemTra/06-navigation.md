@@ -2,8 +2,8 @@
 
 ## 1. Route definition
 - Current route in inventory: `/student/attempts/:attemptId/submit`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `attemptId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: current Study Client route/page; deployed runtime is not verified.
+- Route params/types: `attemptId` is parsed as a positive int64-compatible ID; invalid IDs block submit.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
@@ -15,13 +15,14 @@
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [ST-16](../ST-16-KetQuaBaiKiemTra/00-overview.md), [ST-14](../ST-14-LamBaiKiemTra/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [ST-16](../ST-16-KetQuaBaiKiemTra/00-overview.md) | #31 returns a validated accepted attempt | Same `attemptId` | Current source navigates after accepted response; a result link remains available if navigation fails or a conflict/uncertain outcome needs checking. |
+| Previous history | User selects “Quay lại bài làm” | Browser history | Current source calls `Location.back()`; destination is not guaranteed by this page. |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: current page can be loaded with an `attemptId`; pending #30 writes are not restored or flushed by ST-15.
+- Invalid/missing ID: the page blocks submission for an invalid ID; backend #31 validates path and owner/state.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram

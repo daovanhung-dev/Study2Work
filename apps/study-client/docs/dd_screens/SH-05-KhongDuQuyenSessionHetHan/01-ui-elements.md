@@ -1,5 +1,12 @@
 # SH-05 — UI Elements
 
+## Current source UI (2026-11-20)
+
+- The page renders an error card with separate neutral headings for 401 and 403, the backend safe message, and a trace card only when the real body/header trace ID is non-conflicting. It does not render the protected profile payload.
+- A validated 401 route handoff shows one `/login` action. No `returnTo` is passed. A 403 currently has no recovery link because no safe-back fallback is approved. Invalid/direct-entry state shows a neutral no-context message.
+- Prototype preview selectors, fabricated diagnostics/JSON and internal policy handoff cards are not rendered. The Trace ID card has one copy action, a ≥44px target, visible focus styling, and accessible success/failure feedback.
+- The source still does not reproduce all prototype content/layout; final user-facing copy and 403 recovery remain open. Responsive/runtime visual review was not run.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.

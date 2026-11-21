@@ -8,7 +8,7 @@
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); **DD:** `BLOCKED — policy, audit source, and live-schema decisions remain open`; **Source wiring:** `PRESENT — route/page/API #69 caller`; **Acceptance:** `BLOCKED — permission, PII, audit, schema gates`; **Runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.3 / 2026-11-21 |
 | Nguồn đối chiếu | [AD-03.md](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/AD-03.md), [AD-03_PLAN.md](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/AD-03_PLAN.md), [AD-03_markers.json](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/AD-03_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -31,7 +31,12 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/ready/unauthenticated/forbidden/not-found/error |
-| Current source/runtime | Angular Admin route, AD03Page và API #69 caller có trong source; page source states are `loading/loaded/error`; HTTP 401/403/404 map to messages within the same `error` type; deployment/browser runtime | `SOURCE WIRED` / `RUNTIME NOT VERIFIED` |
+| Current source/runtime | Angular Admin route, AD03Page và API #69 caller có trong source; page source states are `loading/loaded/error`; HTTP 401/403/404 map to messages within the same `error` type; returned user IDs use precision-safe int64 display; deployment/browser runtime | `SOURCE WIRED` / `RUNTIME NOT VERIFIED` |
+
+### Current source update (2026-11-21)
+
+- AD-04/AD-05 action buttons remain disabled while their permission, mutation-body, and lifecycle gates are open. Their reason is accessible to assistive technology; AD-03 performs no mutation.
+- The #69 badge now reflects page state (`Đang tải`, `Đã tải`, or `Lỗi tải`) instead of using one generic not-ready label. This is client request state, not a claim about backend health.
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-03 source screen.png](../../screen_stitch/05_admin/AD-03_chi-tiet-nguoi-dung/screen.png))
@@ -42,6 +47,7 @@
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Đồng bộ hiển thị ID hồ sơ: ID int64 vượt miền safe integer được đánh dấu không thể hiển thị chính xác.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -92,7 +98,7 @@
 | Dữ liệu profile | Hiển thị các trường được phép từ `data`. | API #69 SELECT allowlist từ checked-in legacy `users`; test dùng fake row. V1-PILOT UUID schema khác; live schema/deploy chưa xác minh. |
 | Empty state / response | User không tồn tại là 404; success có profile object. | Prototype hiển thị “CHƯA ĐỒNG BỘ”, không có user được chọn và ghi `204 / NULL_PAYLOAD`; điều này không khớp contract/source #69 (200 hoặc 401/403/404/500). |
 | Audit, sync, status badges | Chỉ render khi có endpoint, event schema và policy được duyệt. | #69 không trả audit, sync hoặc system-health data. “0 bản ghi”, lưu 180 ngày, tự động giám sát, RBAC audit và System Normal là static claims. |
-| Mutations | #69 chỉ đọc; cập nhật/trạng thái/xóa là luồng AD-04/AD-05. | Angular template có router links AD-04/AD-05 khi có `userId`; route declarations có trong source. Permission/API acceptance và runtime chưa xác minh. Prototype riêng vẫn thể hiện controls disabled. |
+| Mutations | #69 chỉ đọc; cập nhật/trạng thái/xóa là luồng AD-04/AD-05. | Angular template keeps AD-04/AD-05 buttons disabled because permission and destination mutation acceptance remain open. Prototype riêng cũng thể hiện controls disabled. |
 | Shell navigation | Dùng route/destination đã được xác định. | Angular AD03 template có router link về AD-02; prototype HTML riêng vẫn có anchors placeholder. Không dùng prototype làm bằng chứng runtime. |
 
 ### Nguồn truy vết

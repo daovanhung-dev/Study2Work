@@ -1,5 +1,9 @@
 # ME-09 — Data Flow & State
 
+## Current source update — 2026-11-20
+
+`ME09SubmissionsService` calls #54 with `page` and optional `course_id`/`status`; page size 20 is backend-fixed and no unsupported `size` query is sent. The page cancels an earlier request when a new query is submitted, validates `DESIGN_RESOURCE_RETRIEVED` and the current `Page<Submission>` projection, and renders only server-provided fields. Search, deadline, student display name, assignment/course titles and file-open actions remain unsupported.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

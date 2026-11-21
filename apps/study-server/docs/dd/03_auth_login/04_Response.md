@@ -19,21 +19,25 @@ format: markdown
 
 |   No | Path                | Logical name   | Physical name    | Type          | Nullable | Source table | Source column            | Source step     | Transform                                                                                | Null/empty/omit rule                    | Remarks                                                  |
 | ---: | ------------------- | -------------- | ---------------- | ------------- | -------: | ------------ | ------------------------ | --------------- | ---------------------------------------------------------------------------------------- | --------------------------------------- | -------------------------------------------------------- |
-|    1 | `HTTPStatus`      | HTTP Status    | `HTTPStatus`   | `integer`   |   `No` | `N/A`      | `N/A`                  | `6.1/6.2/6.3` | Fixed by branch:`201/422/500`                                                          | `N/A`                                 | Protocol status; AC-02 alternative`200` is discrepancy |
+|    1 | `HTTPStatus`      | HTTP Status    | `HTTPStatus`   | `integer`   |   `No` | `N/A`      | `N/A`                  | `6.1/6.2/6.3` | Fixed by branch:`200/401/403/422/500`                                                   | `N/A`                                 | Protocol status aligned to current source and catalog |
 |    2 | `success`         | Success flag   | `success`      | `boolean`   |   `No` | `N/A`      | `N/A`                  | `6.1/6.2/6.3` | `true` on success; `false` on error                                                  | `N/A`                                 | `ApiEnvelope` field                                    |
-|    3 | `businessCode`    | Business code  | `businessCode` | `string`    |   `No` | `N/A`      | `N/A`                  | `6.1/6.2/6.3` | `DESIGN_RESOURCE_CREATED`, `DESIGN_VALIDATION_ERROR` hoặc `DESIGN_INTERNAL_ERROR` | `N/A`                                 | Normative list contract                                  |
+|    3 | `businessCode`    | Business code  | `businessCode` | `string`    |   `No` | `N/A`      | `N/A`                  | `6.1/6.2/6.3` | `DESIGN_RESOURCE_RETRIEVED`, `DESIGN_AUTHENTICATION_REQUIRED`, `DESIGN_ACCESS_DENIED`, `DESIGN_VALIDATION_ERROR`, `DESIGN_INTERNAL_ERROR` | `N/A` | Catalog matches current source response branches |
 |    4 | `message`         | Message        | `message`      | `string`    |   `No` | `N/A`      | `N/A`                  | `6.1/6.2/6.3` | Fixed by branch                                                                          | `TBD — message text chưa đặc tả` | Không trả raw credential/DB detail                     |
-|    5 | `data`            | User profile   | `data`         | `object`    |   `No` | `users`    | `N/A`                  | `6.1`         | Map`UserProfile`; `{}` on error                                                      | `{}` on error                         | `ApiEnvelope<UserProfile>`                             |
+|    5 | `data`            | Login data     | `data`         | `object`    |   `No` | `users`    | `N/A`                  | `6.1`         | Map `LoginData`; null on error                                                        | `null` on error                       | `ApiEnvelope<LoginData>`; tokens are source response fields |
 |  5.1 | `data.id`         | User ID        | `id`           | `int64`     |   `No` | `users`    | `id`                   | `6.1`         | BIGSERIAL serialized as int64                                                            | `N/A`                                 | ERD primary key                                          |
 |  5.2 | `data.full_name`  | Full name      | `full_name`    | `string`    |   `No` | `users`    | `full_name`            | `6.1`         | Direct mapping                                                                           | `N/A`                                 | ERD NOT NULL                                             |
 |  5.3 | `data.email`      | Email          | `email`        | `email`     |   `No` | `users`    | `email`                | `6.1`         | Direct mapping                                                                           | `N/A`                                 | ERD UNIQUE, NOT NULL                                     |
 |  5.4 | `data.role`       | Role           | `role`         | `string`    |   `No` | `users`    | `role`                 | `6.1`         | Direct mapping                                                                           | `N/A`                                 | Role values not enumerated here                          |
-|  5.5 | `data.avatar_url` | Avatar URL     | `avatar_url`   | `uri`       |  `Yes` | `users`    | `avatar_url`           | `6.1`         | Direct mapping                                                                           | `TBD — null/omit rule`               | ERD NULL                                                 |
-|  5.6 | `data.bio`        | Biography      | `bio`          | `string`    |  `Yes` | `N/A`      | `N/A — no ERD column` | `6.1`         | `DISCREPANCY/TBD`                                                                      | `TBD — null/omit rule`               | Contract field has no source column                      |
-|  5.7 | `data.phone`      | Phone          | `phone`        | `string`    |  `Yes` | `users`    | `phone`                | `6.1`         | Direct mapping                                                                           | `TBD — null/omit rule`               | ERD NULL                                                 |
-|  5.8 | `data.status`     | Account status | `status`       | `string`    |   `No` | `users`    | `status`               | `6.1`         | Direct mapping                                                                           | `N/A`                                 | Status check performed before success                    |
-|  5.9 | `data.created_at` | Created time   | `created_at`   | `date-time` |   `No` | `users`    | `created_at`           | `6.1`         | Direct mapping                                                                           | `N/A`                                 | ERD NOT NULL                                             |
-| 5.10 | `data.updated_at` | Updated time   | `updated_at`   | `date-time` |   `No` | `users`    | `updated_at`           | `6.1`         | Direct mapping                                                                           | `N/A`                                 | ERD NOT NULL                                             |
+|  5.5 | `data.avatar_url` | Avatar URL     | `avatar_url`   | `uri|null`  |  `Yes` | `users`    | `avatar_url`           | `6.1`         | Direct mapping                                                                           | `null` when no avatar                | Current response model permits null |
+|  5.6 | `data.phone`      | Phone          | `phone`        | `string|null` | `Yes` | `users`  | `phone`                | `6.1`         | Direct mapping                                                                           | `null` when absent                    | Current response model permits null |
+|  5.7 | `data.status`     | Account status | `status`       | `string`    |   `No` | `users`    | `status`               | `6.1`         | Direct mapping                                                                           | `N/A`                                 | Status check performed before success                    |
+|  5.8 | `data.created_at` | Created time   | `created_at`   | `date-time` |   `No` | `users`    | `created_at`           | `6.1`         | Direct mapping                                                                           | `N/A`                                 | ERD NOT NULL                                             |
+|  5.9 | `data.updated_at` | Updated time   | `updated_at`   | `date-time` |   `No` | `users`    | `updated_at`           | `6.1`         | Direct mapping                                                                           | `N/A`                                 | ERD NOT NULL                                             |
+| 5.10 | `data.access_token` | Access token | `access_token` | `string` | `No` | Auth utility | `N/A` | `6.1` | Access JWT issued for the profile | `N/A` | Returned to the client; not a persistent-store value |
+| 5.11 | `data.refresh_token` | Refresh token | `refresh_token` | `string` | `No` | Auth utility | `N/A` | `6.1` | Opaque refresh token | `N/A` | Source stores only its HMAC-SHA256 hash |
+| 5.12 | `data.token_type` | Token type | `token_type` | `string` | `No` | Auth utility | `N/A` | `6.1` | `bearer` | `N/A` | Current source literal |
+| 5.13 | `data.expires_in` | Access expiry | `expires_in` | `int32` | `No` | Auth config | `N/A` | `6.1` | Seconds | `N/A` | Configured lifetime |
+| 5.14 | `data.refresh_expires_in` | Refresh expiry | `refresh_expires_in` | `int32` | `No` | Auth config | `N/A` | `6.1` | Seconds | `N/A` | Configured lifetime |
 |    6 | `meta`            | Metadata       | `meta`         | `object`    |   `No` | `N/A`      | `N/A`                  | `6.1/6.2/6.3` | `{}`                                                                                   | `{}`                                  | No operation metadata in contract                        |
 |    7 | `traceId`         | Trace ID       | `traceId`      | `uuid`      |   `No` | `N/A`      | `N/A`                  | `6.1/6.2/6.3` | Request correlation/generator                                                            | `TBD — exact generator`              | `ApiEnvelope` field                                    |
 
@@ -41,11 +45,11 @@ format: markdown
 >
 > `HTTPStatus` trong bảng là protocol status, không phải property JSON.
 >
-> AC-02 nói client nhận token nhưng UserProfile contract không khai báo token; DD không thêm `access_token` hoặc field tương đương.
+> User decision 2026-11-21 selected the current Study Server login response for SH-02. `LoginData` adds the current token fields without changing the reusable `UserProfile` schema.
 
-## Current-source response — discrepancy với contract
+## Current-source response — contract reconciled for SH-02
 
-Route hiện tại trả HTTP `200` với `DESIGN_RESOURCE_RETRIEVED`. `data` gồm profile allowlist (`id`, `full_name`, `email`, `role`, `avatar_url`, `phone`, `status`, `created_at`, `updated_at`) và các field token dưới đây. Đây là mô tả source hiện tại, không phải schema normative của catalog:
+Route hiện tại trả HTTP `200` với `DESIGN_RESOURCE_RETRIEVED`. `data` gồm profile allowlist (`id`, `full_name`, `email`, `role`, `avatar_url`, `phone`, `status`, `created_at`, `updated_at`) và năm field token. Đây là contract được chọn cho SH-02 và đã phản ánh trong catalog:
 
 | Path | Type hiện tại | Nguồn/ý nghĩa source |
 |---|---|---|
@@ -55,14 +59,14 @@ Route hiện tại trả HTTP `200` với `DESIGN_RESOURCE_RETRIEVED`. `data` g�
 | `data.expires_in` | `integer` | Thời hạn access token theo config hiện hành. |
 | `data.refresh_expires_in` | `integer` | Thời hạn refresh token theo config hiện hành. |
 
-Source không trả `password_hash` hoặc `bio`. Tên field token được ghi nhận từ response builder hiện tại; catalog `ApiEnvelope<UserProfile>` chưa có các field này nên ví dụ thành công bên dưới vẫn giữ đúng contract catalog.
+Source không trả `password_hash` hoặc `bio`. `UserProfile` remains unchanged for other endpoints; `LoginData` is the login-specific flat response data type.
 
-## Ví dụ thành công — HTTP 201
+## Ví dụ thành công — HTTP 200
 
 ```json
 {
   "success": true,
-  "businessCode": "DESIGN_RESOURCE_CREATED",
+  "businessCode": "DESIGN_RESOURCE_RETRIEVED",
   "message": "Login accepted",
   "data": {
     "id": 1001,
@@ -73,10 +77,28 @@ Source không trả `password_hash` hoặc `bio`. Tên field token được ghi 
     "phone": null,
     "status": "ACTIVE",
     "created_at": "2026-08-28T00:00:00Z",
-    "updated_at": "2026-08-28T00:00:00Z"
+    "updated_at": "2026-08-28T00:00:00Z",
+    "access_token": "<ACCESS_TOKEN>",
+    "refresh_token": "<OPAQUE_REFRESH_TOKEN>",
+    "token_type": "bearer",
+    "expires_in": 3600,
+    "refresh_expires_in": 2592000
   },
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000001"
+}
+```
+
+## Ví dụ lỗi — HTTP 401
+
+```json
+{
+  "success": false,
+  "businessCode": "DESIGN_AUTHENTICATION_REQUIRED",
+  "message": "Authentication required.",
+  "data": null,
+  "meta": {},
+  "traceId": "00000000-0000-0000-0000-000000000002"
 }
 ```
 
@@ -87,7 +109,7 @@ Source không trả `password_hash` hoặc `bio`. Tên field token được ghi 
   "success": false,
   "businessCode": "DESIGN_VALIDATION_ERROR",
   "message": "Invalid request",
-  "data": {},
+  "data": null,
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000002"
 }
@@ -100,7 +122,7 @@ Source không trả `password_hash` hoặc `bio`. Tên field token được ghi 
   "success": false,
   "businessCode": "DESIGN_INTERNAL_ERROR",
   "message": "Login could not be processed",
-  "data": {},
+  "data": null,
   "meta": {},
   "traceId": "00000000-0000-0000-0000-000000000003"
 }

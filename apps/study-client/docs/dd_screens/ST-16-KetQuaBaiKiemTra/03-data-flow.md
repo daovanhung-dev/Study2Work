@@ -50,8 +50,8 @@ ST-15 (#31 accepted) → route /student/attempts/:attemptId/result
 
 | From | To | Data | Status |
 |---|---|---|---|
-| ST-15 | ST-16 | `attemptId` after #31 accepted response. | F05 expected; route navigation is not present in Study Web runtime. |
-| ST-16 route load | API #32 | `attempt_id` path + Student Bearer. | Contract only; no current route/module/test. |
+| ST-15 | ST-16 | `attemptId` after validated #31 accepted response. | Current Study Client navigation exists; deployed runtime is not verified. |
+| ST-16 route load | API #32 | `attempt_id` path + Student Bearer. | Current caller exists; route changes cancel stale reads; #32 filters by authenticated owner. |
 | ST-16 | ST-09 / ST-20 | Potential related course/progress context. | Inventory says related screens, not that these are CTA destinations; exact action/IDs/handoff unresolved. |
 | ST-16 → next lesson/PDF/course outline | Not defined. | Course/lesson IDs or file reference are not in route/#32 contract. | Do not infer from PNG. |
 

@@ -8,16 +8,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-SignedInt64 = Annotated[
-    int,
-    Field(
-        strict=True,
-        ge=-(2**63),
-        le=2**63 - 1,
-        json_schema_extra={"format": "int64"},
-    ),
-]
-
 PositiveInt64 = Annotated[
     int,
     Field(strict=True, ge=1, le=2**63 - 1, json_schema_extra={"format": "int64"}),
@@ -27,11 +17,11 @@ NotificationChannel = Literal["PUSH", "EMAIL"]
 
 
 class CreateNotificationRequest(BaseModel):
-    """Biểu diễn body trực tiếp của API #63 theo các kiểu trong API catalog."""
+    """Biểu diễn body trực tiếp của API #63; content là văn bản UTF-8."""
 
     recipients: str
     title: str = Field(max_length=200)
-    content: SignedInt64
+    content: str
     channels: str
 
     model_config = ConfigDict(extra="forbid", strict=True)

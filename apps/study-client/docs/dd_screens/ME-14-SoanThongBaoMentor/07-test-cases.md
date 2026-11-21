@@ -1,5 +1,9 @@
 # ME-14 — Test Cases
 
+## Current implementation verification — 2026-11-21
+
+The focused ME-01–ME-18 command passed: 6 spec files, 12 tests. ME-14 tests cover validated recipient handoff, accepted-send form locking, ambiguous network no-blind-resend, and one-use history payload consumption. Browser/live API/DB/provider runtime was not verified.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix
@@ -23,6 +27,8 @@
 
 ## 3. Source acceptance / test plan (not run)
 
+Earlier DD plan snapshot: the screen was gated at that time. Current #63 submit and SH-07 handoff verification is recorded at the top of this file; the planning references below are not the implementation test suite.
+
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu và traceability
 
 ### Checklist tài liệu
@@ -45,7 +51,7 @@
 4. Chốt In-app↔`PUSH` mapping, Email availability và delivery worker/provider.
 5. Quyết định có notification attachment không; nếu có, định nghĩa upload purpose/scope/size/type, ID persistence và link vào #63.
 6. Định nghĩa draft persistence/restore và retry/idempotency behavior.
-7. Chốt Study Web route/auth/state plumbing; #18 không khả dụng và không nối trong AC-25.
+7. Current Study Web route/auth/state and notification-only #18 handoff are implemented; generic operation kinds and AC-25 batch status remain outside scope.
 
 ### Nguồn truy vết
 
@@ -54,9 +60,9 @@
 - Expected flow AC-25: `apps/study-server/docs/diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio` (page AC-25).
 - #63 local source: `apps/study-server/app/api/v1.py`; `apps/study-server/app/modules/mentor/api_63_mentor_notifications_create/`; DD `apps/study-server/docs/dd/63_mentor_notifications_create/`; tests `apps/study-server/tests/modules/mentor/api_63_mentor_notifications_create/`.
 - #64 local source: `apps/study-server/app/api/v1.py`; `apps/study-server/app/modules/mentor/api_64_mentor_notification_status/`; DD `apps/study-server/docs/dd/64_mentor_notifications_status/`; tests `apps/study-server/tests/modules/mentor/api_64_mentor_notification_status/`.
-- #18 design/current-source status: `apps/study-server/docs/dd/18_operations/`; source route/module/test scan found no Study implementation.
+- #18 source references: `apps/study-server/docs/dd/18_operations/`; current notification-only route/module/query/tests are used by SH-07. Generic operation kinds remain outside the current client flow.
 - #34 upload source: `apps/study-server/app/modules/shared/api_34_uploads/`; DD `apps/study-server/docs/dd/34_uploads/`.
-- Screen prototype: `code.html`, `screen.png`; web status `UNWIRED` in `.agents/context-manifest.json` and `.agents/web-study/`.
+- Screen prototype: `code.html`, `screen.png`; the HTML is a static reference. Current Study Web implementation evidence is listed above; browser runtime remains unverified.
 
 ### Kiểm tra cuối
 

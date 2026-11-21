@@ -101,18 +101,22 @@ describe('AD15Page', () => {
     const fixture = TestBed.createComponent(AD15Page);
     fixture.detectChanges();
     await fixture.whenStable();
-    http.expectOne('/api/v1/admin/quizzes?page=1').flush(successEnvelope(page([
+    http.expectOne('/api/v1/admin/quizzes?page=1').flush(successEnvelope(quizPage(
+      1,
+      21,
       quiz(88, 42, 'Cell Biology Assessment', 30, '70'),
-    ], 1, 21, 2)));
+    )));
     fixture.detectChanges();
 
     (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.pagination-controls button:last-child')!.click();
     fixture.detectChanges();
     await fixture.whenStable();
     const request = http.expectOne('/api/v1/admin/quizzes?page=2');
-    request.flush(successEnvelope(page([
+    request.flush(successEnvelope(quizPage(
+      2,
+      21,
       quiz(89, 42, 'Genetics Assessment', 20, '65'),
-    ], 2, 21, 2)));
+    )));
     fixture.detectChanges();
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Genetics Assessment');
@@ -170,6 +174,19 @@ function page(items: readonly AdminQuiz[], pageNumber: number, total: number, to
     items,
     pagination: { page: pageNumber, size: 20, total, total_pages: totalPages },
   };
+}
+
+function quizPage(pageNumber: number, total: number, firstQuiz: AdminQuiz): AdminPage<AdminQuiz> {
+  const offset = (pageNumber - 1) * 20;
+  const itemCount = Math.min(20, Math.max(total - offset, 0));
+  return page(
+    Array.from({ length: itemCount }, (_, index) => index === 0
+      ? firstQuiz
+      : quiz(1000 + offset + index, 42, `Quiz ${offset + index + 1}`, 20, '70')),
+    pageNumber,
+    total,
+    total === 0 ? 0 : Math.ceil(total / 20),
+  );
 }
 
 function successEnvelope<T>(data: T): ApiEnvelope<T> {

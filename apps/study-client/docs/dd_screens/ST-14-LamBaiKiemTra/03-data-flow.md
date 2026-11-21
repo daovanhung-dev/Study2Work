@@ -1,5 +1,12 @@
 # ST-14 — Data Flow & State
 
+## Current source flow — 2026-11-20
+
+1. ST-13 calls #29 after explicit Start and hands the returned attempt ID to ST-14. ST-14 route changes trigger a fresh #28 read; old reads are cancelled and malformed/mismatched quiz responses are rejected.
+2. The page renders questions and multiple-choice options from #28. On a changed choice it sends `question_id` and the complete `choice_ids[]` set to #30; only one answer write is allowed at a time.
+3. #30 checks attempt owner/status and question/choice membership, persists the selected rows and returns all saved answers. ST-14 validates the response and refreshes local selections from that source; a failed save rolls back the optimistic choice.
+4. Reload does not restore answers because no GET attempt/answers endpoint exists. No countdown runs because API #28 provides duration but no authoritative remaining-time source. The original expected-design flow remains below; its #29 ownership/order and #30 payload declarations are not resolved by this implementation.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

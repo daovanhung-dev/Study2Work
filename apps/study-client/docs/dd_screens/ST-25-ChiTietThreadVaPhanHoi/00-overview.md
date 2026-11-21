@@ -1,12 +1,18 @@
 # ST-25 — Chi tiết thread và phản hồi · Tổng quan
 
+## Current source implementation — 2026-11-21
+
+- Route `/student/discussions/:discussionId` is registered under the authenticated Student route group. #42 loads one owner/enrollment-scoped thread; #41 posts a string comment after explicit submit, then #42 reloads the thread.
+- Current #42 returns only an ACTIVE root thread to a Student with ACTIVE course enrollment, plus ACTIVE direct comments ordered by `created_at ASC, id ASC`. #41 applies the same root/enrollment checks, inserts a text comment, and returns the refreshed one-item thread page. The client verifies that a new comment ID and matching content appear before accepting the POST result; ambiguous outcomes block blind resend because there is no idempotency key.
+- The page renders the source-backed title/body/course ID/status/author/comment projection in a responsive two-column layout, with guarded avatars and initials fallbacks. It preserves server comment order, exposes a read-only retry after an ambiguous POST, and keeps confirmed #41 success visible if the follow-up #42 refresh fails. It sends only the current text field. Screenshot-only likes, accepted answers, code blocks, related topics, sort controls, course/lesson destinations, and mentor booking remain unsupported. The historical source snapshot below predates current route/API source; catalog #41 still declares `content:int64`, unlike current server string input.
+
 | Trường | Giá trị |
 |---|---|
 | Screen ID | `ST-25` |
 | Module | Student |
-| Route | `/student/discussions/:discussionId` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student/discussions/:discussionId` — current Student route is source-wired; runtime not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: Source status is described in the source DD. |
+| DD status | Draft; source-backed thread/reply flow is implemented. Screenshot-only interactions and the catalog/backend #41 payload mismatch remain open. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [ST-25.md](../../screen_stitch/03_student/ST-25_chi-tiet-thread-va-phan-hoi/ST-25.md), [ST-25_PLAN.md](../../screen_stitch/03_student/ST-25_chi-tiet-thread-va-phan-hoi/ST-25_PLAN.md), [ST-25_markers.json](../../screen_stitch/03_student/ST-25_chi-tiet-thread-va-phan-hoi/ST-25_markers.json), [list_screen.md](../../list_screen.md) |

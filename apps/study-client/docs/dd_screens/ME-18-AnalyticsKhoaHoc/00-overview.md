@@ -4,7 +4,7 @@
 |---|---|
 | Screen ID | `ME-18` |
 | Module | Mentor |
-| Route | `/mentor/courses/:courseId/analytics` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/mentor/courses/:courseId/analytics` — current source registered in `mentor.route.ts`; browser/runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: Source status is described in the source DD. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
@@ -31,13 +31,13 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/no-data/ready/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source/runtime | Current Study Client source | `SOURCE-WIRED / PARTIAL` · `BROWSER RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ME-18 source screen.png](../../screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/04_mentor/ME-18_analytics-khoa-hoc/screen_annotated.png))
 - Luồng: Chỉ gọi #66 với numeric course_id sau khi carrier và response được duyệt; không có period/query/export. Catalog ApiEnvelope<Page<Course>> khác local summary. AC-26 đặt #66 trước chọn Student/#67; inventory tách ME-18 khỏi ME-17. KPI, ETL state, timeframe và CSV chưa có mapping.
-- Priority: P2; Gate/source status: **R**; #66 route/module/query/model/focused-test source có local implementation. **DD BLOCKED; IMPLEMENTATION BLOCKED:** response mismatch, KPI/period/event semantics, course ID/owner policy, ETL/export, AC-26 ordering; Study Web UNWIRED; RUNTIME NOT VERIFIED
+- Priority: P2; Gate/source status: **R**; #66 route/module/query/model/focused-test source and ME18 caller exist. **SOURCE-WIRED / PARTIAL:** exact summary response validation, route cancellation, retry and metric scope explanation. **OPEN:** response/catalog mismatch, KPI/period/event semantics, course ID/owner policy, ETL/export, AC-26 ordering, live schema/runtime.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -98,6 +98,13 @@
 
 1. Không ánh xạ tracked_lesson_accesses thành completion rate, discussion count hoặc số event.
 2. Không ánh xạ students_with_activity thành enrollment count; local query không yêu cầu ACTIVE enrollment.
+
+### Current Study Client source (2026-11-21)
+
+- The Mentor router registers `/mentor/courses/:courseId/analytics`. ME18 follows `courseId`, cancels the previous #66 read when it changes, rejects invalid IDs before request and exposes loading/error/retry states.
+- It validates `DESIGN_RESOURCE_RETRIEVED`, nonnegative int64-safe access/Student counts, `students_with_activity ≤ tracked_lesson_accesses`, and the nullable activity timestamp. The #66 aggregate's same-row-set rule is enforced: zero tracked pairs means zero Students and null latest timestamp; positive pairs require at least one Student and a latest timestamp.
+- Local #66 checks direct course ownership and returns only tracked Student/lesson pairs, distinct Students with activity, and the latest access timestamp. The page renders those fields as current-state proxy metrics only; it does not infer event totals, enrollment, completion, rating, period, ETL status or export.
+- Browser/runtime and tests remain unverified/not run.
 3. last_activity_at là MAX timestamp còn lưu trong progress state, không phải timestamp event stream hoặc dữ liệu trong timeframe được chọn.
 4. Không thêm from/to, period, page, export, ETL state, chart, polling, cache hoặc job chỉ từ screenshot.
 5. Course name/code/term, “Schema v2.4 Analytical Ready”, “WCAG 2.1 AA Compliant”, ETL/telemetry và “đủ số liệu thực tế” đều là static claim chưa được #66 chứng minh.

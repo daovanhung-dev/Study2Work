@@ -16,7 +16,7 @@
 ```mermaid
 sequenceDiagram
     participant M as Mentor
-    participant W as ME-07 route (UNWIRED)
+    participant W as ME-07 page (route wired; mutations gated)
     participant L as GET #49 collection
     participant C as POST #50
     participant U as PUT #51
@@ -43,11 +43,11 @@ sequenceDiagram
     W-->>M: Render state / return to ME-06 (destination still open)
 ```
 
-The diagram separates expected client choreography from current server behavior. The server routes/modules are local source, but the client lane and runtime are not wired.
+The diagram separates expected mutation choreography from current client behavior. ME07 currently calls #49 only; #50/#51 are gated. Browser/runtime is not verified.
 
 ### Read/hydrate: API #49
 
-1. Route input is proposed `courseId:int64` and optional `contentId:int64`. Current route does not exist in Study Web. The inventory proposes GET #49 to find existing Content; if create mode also requires this fetch, that purpose is not specified beyond the course tree/context.
+1. Current `new` route supplies `courseId`; the edit route supplies `courseId` and `contentId`. Both load #49; create mode uses the response as course context.
 2. Route `GET /api/v1/mentor/courses/{course_id}/content` delegates to `get_course_contents`. Shared guard validates Bearer JWT and role `MENTOR` before DB. The handler parses signed int64; malformed/out-of-range course ID maps to 404.
 3. Query `FIND_MENTOR_COURSE` reads `courses.id, mentor_id`. Missing course is 404; a principal other than `courses.mentor_id` is 403. AC-22 says “có quyền quản lý course”; current source has no assigned/co-owner relation.
 4. Query `LIST_COURSE_CONTENTS` reads all nodes for that course with `deleted_at IS NULL`, ordered by `parent_id NULLS FIRST, content_order ASC, id ASC`. The response is a flat `Content[]`; there is no single-content detail endpoint in this screen’s inventory.

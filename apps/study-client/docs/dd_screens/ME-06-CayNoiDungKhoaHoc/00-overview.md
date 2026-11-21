@@ -4,77 +4,48 @@
 |---|---|
 | Screen ID | `ME-06` |
 | Module | Mentor |
-| Route | `/mentor/courses/:courseId/content` — route trong inventory, không phải xác nhận router runtime |
-| Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái DD:** `DD BLOCKED` — tài liệu đã ghi rõ current behavior và các quyết định còn mở; chưa đủ căn cứ chốt toàn bộ loại node, schema payload và hành vi chỉnh sửa cây.; **Trạng thái triển khai:** `IMPLEMENTATION BLOCKED` — Study Web chưa được wire; một số thao tác mockup không có API tương ứng hoặc không tương thích với API source hiện tại.; **Trạng thái runtime:** `RUNTIME NOT VERIFIED` — chưa có Study Web runtime/live DB evidence trong checkout. |
-| Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
-| Nguồn đối chiếu | [ME-06.md](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/ME-06.md), [ME-06_PLAN.md](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/ME-06_PLAN.md), [ME-06_markers.json](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/ME-06_markers.json), [list_screen.md](../../list_screen.md) |
+| Route | `/mentor/courses/:courseId/content` — registered in `mentor.route.ts` |
+| Actor/role | Mentor; #49 validates role `MENTOR` and direct course ownership. |
+| DD status | Partial implementation of #49-backed content tree. Full Stitch filters, expand/collapse, reordering and analytics remain blocked by missing contract/source. |
+| Runtime status | `RUNTIME NOT VERIFIED`; local source does not prove deployed API, live DB or browser behavior. |
+| Version / last updated | 0.2 / 2026-11-20 |
+| Sources | [Stitch screen](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/ME-06.md), [screen inventory](../../list_screen.md), [API #49 DD](../../../../study-server/docs/dd/49_mentor_content_list/02_Overview.md) |
 
-## 1. Mục tiêu & phạm vi
-- Mục tiêu: Tree sections/contents và thứ tự; mở editor/publish/delete khi được phép.
-- In-scope: GET #49; preserve ids/version, tránh render draft như published.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+## 1. Mục tiêu và phạm vi
 
-## 2. Use cases chính
-| Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
-|---|---|---|
-| AC-22 | Theo DD nguồn; `CẦN_XÁC_NHẬN` nếu nguồn chưa chốt | Tree sections/contents và thứ tự; mở editor/publish/delete khi được phép. |
+GET #49 trả danh sách phẳng `Content[]`. ME-06 xác thực từng node và dùng `parent_id` để dựng thứ tự cha-con, giữ `id`, `status`, `order` và các field khác từ response. Không suy diễn type/status label, payload subtype, version, counts, lesson duration hoặc course KPI.
 
-## 3. Precondition / Entry / Dependencies
-- Điều kiện vào, role guard và dependency: xem trích đoạn tổng quan nguồn; không bổ sung giả định.
-- API references: #49
-- Liên kết màn hình dự kiến: [ME-07](../ME-07-TaoChinhSuaNoiDung/00-overview.md), [ME-08](../ME-08-XuatBanXoaNoiDung/00-overview.md)
-- Links: [UI](01-ui-elements.md) · [Events](02-events.md) · [Navigation](06-navigation.md)
+## 2. Luồng và quyền
 
-## 4. UI states
-| State | Nguồn | Giá trị |
-|---|---|---|
-| Inventory states | `list_screen.md` | loading/empty/ready/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+- Route param `courseId` phải là positive int64 an toàn trước khi gọi #49.
+- API #49 yêu cầu Mentor role và direct owner; chỉ sau phản hồi hợp lệ mới hiển thị link thêm nội dung, sửa, hành động và về workspace.
+- #49 trả 200 `DESIGN_RESOURCE_RETRIEVED` với toàn bộ node active, kể cả status khác nhau; empty array là kết quả hợp lệ. Query hiện order theo `parent_id NULLS FIRST, content_order ASC, id ASC`.
+- 401/403/404/500 được tách khỏi ready/empty; lỗi có retry. Thay course ID hủy request trước để không trộn dữ liệu.
+- ME-07/#50/#51 và ME-08/#52/#53 là các flow riêng. ME-06 không gọi reorder route, không cập nhật status và không tạo node con bằng cách suy đoán.
 
-## 5. Luồng chính và hình ảnh
-- Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ME-06 source screen.png](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/screen.png))
-- Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/screen_annotated.png))
-- Luồng: GET #49; preserve ids/version, tránh render draft như published.
-- Priority: P1; Gate/source status: **D**; **BLOCK:** Content không nằm trong 18 bảng DB.sql
+## 3. Hành vi Study Web hiện tại
 
-## 6. Open questions / Change log
-- `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
-- 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- Route param reactive; stale reads bị hủy; component teardown đóng subscription.
+- Client kiểm tra envelope, exact success business code, `course_id`, unique safe IDs, `content_type`, title, object `payload`, status, int32 `order`, parent tồn tại và không cycle.
+- Client dựng danh sách cây từ flat rows theo parent, giữ thứ tự sibling do API trả; padding hiển thị có giới hạn để tránh tràn ngang. Hai action link mỗi row dùng hit area ≥44px theo accessibility rule của inventory và có thể wrap khi hẹp.
+- Có invalid-ID, loading, not-found, forbidden, recoverable error/retry, empty và ready states. Add/edit/action links chỉ hiện sau #49 success.
+- Design-only search/status filters, expand/collapse, reorder, chapter/quiz/lab-specific fields, KPI/chart/audit panels vẫn chưa được triển khai.
 
-## Trạng thái và ranh giới bằng chứng
+## 4. Trạng thái và bằng chứng
 
-# ME-06 — Cây nội dung khóa học
-
-> **Trạng thái DD:** `DD BLOCKED` — tài liệu đã ghi rõ current behavior và các quyết định còn mở; chưa đủ căn cứ chốt toàn bộ loại node, schema payload và hành vi chỉnh sửa cây.
-> **Trạng thái triển khai:** `IMPLEMENTATION BLOCKED` — Study Web chưa được wire; một số thao tác mockup không có API tương ứng hoặc không tương thích với API source hiện tại.
-> **Trạng thái runtime:** `RUNTIME NOT VERIFIED` — chưa có Study Web runtime/live DB evidence trong checkout.
-
-## Trích đoạn tổng quan từ DD nguồn
-
-### Trích từ DD nguồn: 1. Tổng quan
-
-| Thuộc tính | Đặc tả |
+| Hạng mục | Trạng thái |
 |---|---|
-| Screen ID / tên | ME-06 — Cây nội dung khóa học |
-| Mục tiêu | Cho Mentor xem cấu trúc nội dung của một course, giữ liên kết node và trạng thái do server trả về, rồi mở các flow tạo/chỉnh sửa hoặc publish/xóa đã được duyệt. |
-| Actor | Mentor đã xác thực. API #49 yêu cầu Bearer JWT role `MENTOR` và current source kiểm tra direct owner của course. |
-| Route đề xuất | `/mentor/courses/:courseId/content`; đây là route trong inventory, chưa có Study Web router/runtime để xác nhận. `courseId` API là signed int64. |
-| API đọc | `GET /api/v1/mentor/courses/{course_id}/content` — API #49; không query/body. |
-| API thao tác liên quan | #50 create, #51 update → ME-07; #52 publish/unpublish, #53 delete → ME-08. Đây là handoff, không phải mọi thao tác đã sẵn sàng trên ME-06. |
-| Screen links | ME-07 ([editor mockup](../../screen_stitch/04_mentor/ME-07_tao-chinh-sua-noi-dung/code.html)), ME-08 ([action mockup](../../screen_stitch/04_mentor/ME-08_xuat-ban-xoa-noi-dung/code.html)) theo inventory; mockup còn ghi Xem ME-05 ([detail DD](../../screen_stitch/04_mentor/ME-05_xem-bai-giang-mentor/ME-05.md)) và Thêm bài học ME-04 ([mockup](../../screen_stitch/04_mentor/ME-04_tai-len-va-tao-bai-giang/code.html)). |
-| Trạng thái theo inventory | `loading/empty/ready/error`; thêm `denied/not-found` để phản ánh response #49 hiện tại. |
-| Tài liệu kế hoạch | [ME-06_PLAN.md](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/ME-06_PLAN.md). |
-| Ảnh đánh dấu | [screen_annotated.png](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/screen_annotated.png); JSON chuẩn [ME-06_markers.json](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/ME-06_markers.json); lớp SVG [ME-06_markers_overlay.svg](../../screen_stitch/04_mentor/ME-06_cay-noi-dung-khoa-hoc/ME-06_markers_overlay.svg). |
+| Route/API #49 source wiring | Client route/caller và server route/module/query/validation/test source có trong checkout; API descriptor `WIRED`; deployment chưa xác minh. |
+| UI/UX | Có danh sách cây cha-con, empty/error/loading/404/403/retry và navigation; còn thiếu các panel/controls của Stitch. |
+| Logic | Course/response/tree integrity được kiểm tra; thứ tự giữ theo API. Reorder/status filtering và assigned-course permission còn thiếu. |
+| Tỷ lệ hiện tại | 75% trong [`screen_complete.md`](../../screen_complete.md) — UI 50%, UX 75%, logic 75%, API 100%. |
+| API/database | API #49 DD còn Draft; live migration/schema và browser runtime chưa xác minh. |
 
-### Expected behavior
+## 5. Liên kết tài liệu
 
-`list_screen.md` yêu cầu GET #49 để hiển thị tree sections/contents theo thứ tự; phải giữ ID/version, không thể hiện draft như published; các thao tác mở editor/publish/delete chỉ bật khi được phép. Success rỗng là empty state; trạng thái tải/lỗi là riêng. Flow liên quan được nêu ở [F08](../../list_screen.md#L61) và dòng [ME-06](../../list_screen.md#L166).
+[UI elements](01-ui-elements.md) · [Events](02-events.md) · [Data flow](03-data-flow.md) · [API integration](04-api-integration.md) · [Business rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test cases](07-test-cases.md)
 
-### Current behavior — client/source
+## 6. Change log
 
-- Ảnh nguồn là mockup desktop populated: course summary, 4 KPI cards, tab lọc/search/expand-collapse, cây gồm chapter/lesson/lab/quiz/draft, distribution, LMS quality rules, audit timeline và footer.
-- `code.html` là HTML tĩnh. Có 33 button, 10 anchor và 2 input; không có form, `fetch`, XHR hay binding tới API. Các anchor điều hướng đều `href="#"`.
-- JavaScript chỉ thao tác DOM local: accordion, expand/collapse, filter row theo `data-status`, search theo `innerText`, và toast. Filter và search đặt `display` độc lập nên một thao tác có thể ghi đè kết quả của thao tác kia. Nút save order chỉ hiện toast có nhắc `API #52 PUT /mentor/courses/reorder`; không gửi request. Nút publish đổi chữ và `data-status` trên row hiện tại, không gọi server.
-- Study Web trong context hiện tại là `UNWIRED`; không có app source/router trong checkout để xác nhận route, auth client, cache hay runtime behavior. Hash của `screen.png` và `code.html` được ghi trong plan/worklog; hai file nguồn không bị sửa.
+- 2026-11-21 — Tăng action link của từng node lên hit area tối thiểu 44px và cho phép nhóm action wrap trên viewport hẹp; route/API/tree behavior không đổi.
+- 2026-11-20 — Reconciled ME-06 DD with the registered route, #49 caller and current tree rendering. API #49 is locally source-wired; API DD and deployed runtime remain unverified.

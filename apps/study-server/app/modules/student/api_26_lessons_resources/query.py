@@ -12,7 +12,17 @@ SELECT
 FROM lessons AS l
 JOIN courses AS c ON c.id = l.course_id
 WHERE l.id = :lesson_id
+  AND l.status = 'PUBLISHED'
   AND c.status = 'PUBLISHED'
+LIMIT 1
+"""
+
+CHECK_ACTIVE_ENROLLMENT = """
+SELECT 1
+FROM enrollments AS e
+WHERE e.user_id = :user_id
+  AND e.course_id = :course_id
+  AND e.status = 'ACTIVE'
 LIMIT 1
 """
 
@@ -22,7 +32,7 @@ SELECT
     r.lesson_id,
     r.name,
     r.resource_type AS type,
-    r.url
+    NULL::text AS url
 FROM resources AS r
 WHERE r.lesson_id = :lesson_id
 ORDER BY r.id ASC

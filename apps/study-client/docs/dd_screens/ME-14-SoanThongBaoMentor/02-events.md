@@ -1,5 +1,7 @@
 # ME-14 — Events (đặc tả xử lý)
 
+> **Current source (2026-11-21):** ME-14 consumes the ME-13 history handoff once, submits text and selected channels through #63, and routes only a validated accepted UUID to SH-07. Accepted state locks edits; ambiguous network/malformed-success outcomes block blind resubmission because #63 has no idempotency key. The DD event excerpts below preserve earlier design details.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|
@@ -27,14 +29,14 @@
 ### Quy ước xử lý
 
 - Những event chỉ mô tả HTML prototype không được diễn giải thành frontend runtime requirement.
-- API #63 behaviors dưới đây là đối chiếu current local source, không phải lời khẳng định Study Web hiện gọi API.
+- API #63 behaviors below describe the local API source; current Study Web integration is summarized in the status note above.
 - Không tạo payload cho các field chưa có mapping được phê duyệt. Với thao tác bị chặn, đầu ra hiện tại là không mutation và không request.
 
 ### E01 — Mở/khởi tạo ME-14
 
 | Bước | Input/điều kiện | Xử lý | Output/lỗi |
 |---:|---|---|---|
-| 1 | Truy cập route dự kiến `/mentor/notifications/new`; role Mentor dự kiến. | Kiểm tra source hiện tại: không có route/auth guard Study Web để chạy. | Runtime navigation/auth `UNWIRED`; đây không phải request thất bại có response code. |
+| 1 | Truy cập route `/mentor/notifications/new`; auth session là dependency. | Angular route is registered. Browser navigation and auth-guard behavior are not verified. | Source route exists; runtime auth remains unverified. |
 | 2 | HTML khởi tạo không có query/state payload. | Dùng giá trị literal trong DOM: recipients chưa xác thực; title/body rỗng; In-app checked; Email disabled. Không gọi #62/#63. | Render prototype initial state; preview title/body placeholder; send disabled. |
 | 3 | Refresh hoặc mở lại trang tĩnh. | Không đọc browser storage hoặc backend. | Các field trở về initial HTML; không có draft restore. |
 

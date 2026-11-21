@@ -4,22 +4,24 @@
   </nav>
   <header class="api-heading">
     <div>
-      <p class="api-eyebrow">ST-17 · Chi tiết bài tập</p>
+      <p class="api-eyebrow">Chi tiết bài tập</p>
       <h1>{{ assignment()?.title || 'Bài tập' }}</h1>
-      <p>
-        Thông tin đề bài do API #33 trả về; deadline và quyền nộp được kiểm tra lại bởi server khi
-        gửi bài.
-      </p>
+      <p>Xem đề bài, hạn nộp và thông tin chấm điểm.</p>
     </div>
     @if (assignment()) {
-      <span class="api-pill">Bài tập #{{ assignment()?.id }}</span>
+      <span class="api-pill">Bài tập</span>
     }
   </header>
   @if (loading()) {
     <section class="api-message" role="status"><strong>Đang tải đề bài…</strong></section>
   }
   @if (error()) {
-    <section class="api-error" role="alert">{{ error() }}</section>
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      <button class="api-button secondary" type="button" (click)="retryAssignment()">
+        Tải lại đề bài
+      </button>
+    </section>
   }
   @if (!loading() && !error() && assignment(); as item) {
     <section class="api-grid">
@@ -29,7 +31,7 @@
         @if (item.description) {
           <p class="assignment-description">{{ item.description }}</p>
         } @else {
-          <p class="api-muted">Server chưa cung cấp mô tả bài tập.</p>
+          <p class="api-muted">Chưa có mô tả cho bài tập này.</p>
         }
       </article>
       <aside class="api-stack">
@@ -38,7 +40,7 @@
           <dl class="assignment-meta">
             <div>
               <dt>Hạn nộp</dt>
-              <dd>{{ item.due_at ? (item.due_at | date: 'medium') : 'Không được cung cấp' }}</dd>
+              <dd>{{ item.due_at ? (item.due_at | date: 'medium') : 'Chưa có thông tin' }}</dd>
             </div>
             <div>
               <dt>Điểm tối đa</dt>
@@ -46,16 +48,14 @@
             </div>
             <div>
               <dt>Khóa học</dt>
-              <dd>#{{ item.course_id }}</dd>
+              <dd>Khóa học liên quan</dd>
             </div>
           </dl>
-          <a class="api-button" [routerLink]="['/student/assignments', assignmentId, 'submit']"
+          <a class="api-button" [routerLink]="['/student/assignments', item.id, 'submit']"
             >Soạn và nộp bài</a
           >
         </section>
-        <p class="api-muted">
-          Không hiển thị trạng thái trễ hạn hoặc eligibility do API #33 không trả các trường đó.
-        </p>
+        <p class="api-muted">Hạn nộp và điều kiện gửi bài sẽ được kiểm tra khi bạn nộp.</p>
       </aside>
     </section>
   }

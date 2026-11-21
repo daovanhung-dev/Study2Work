@@ -2,8 +2,8 @@
 
 ## 1. Route definition
 - Current route in inventory: `/admin/lessons/:lessonId`
-- Status: Angular route is registered at `lessons/:lessonId`; AD-12 navigation is emitted only for IDs safe to represent as JavaScript numbers.
-- Route params/types: `lessonId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: Angular route is registered at `lessons/:lessonId`; AD-12 navigation is emitted only for IDs safe to represent as JavaScript numbers; AD-13 validates raw `lessonId` as full signed-int64 before GET #83.
+- Route params/types: `lessonId` stays a raw string; missing/malformed/out-of-range values stop locally without a request; valid strings are passed unchanged.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
@@ -21,7 +21,7 @@
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
 - Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Invalid/missing ID: `adminRouteState` renders a local error for a missing parameter; `isSignedInt64RouteId` blocks malformed/out-of-range values before #83. Valid raw IDs remain unchanged.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram
@@ -36,11 +36,12 @@ flowchart LR
 
 | Trạng thái | Điều kiện vào | Dữ liệu/UI | Chuyển tiếp và giới hạn |
 |---|---|---|---|
-| `wired-source` | Current Angular router registers AD-13 and AD-12 passes safe IDs | AD-13 calls GET #83 and renders only the Lesson projection | Focused Angular tests pass; browser/live DB remain unverified. |
-| `loading` | AD13Page sends #83 | Loading notice shown | 200→`loaded`; HTTP failures enter `error`. |
+| `wired-source` | Current Angular router registers AD-13, AD-12 passes safe IDs and AD13Page has a raw signed-int64 guard | Invalid route IDs stop locally; valid IDs call GET #83 and render only the Lesson projection | Tests were not run for this continuation; browser/live DB remain unverified. |
+| `loading` | Valid raw `lessonId` passes the local guard and AD13Page sends #83 | Loading notice shown | 200→`loaded`; HTTP failures enter `error`. |
 | `loaded` | #83 returns valid `Lesson` | Seven API fields only; optional content/video may be null | AD-14 action remains disabled; no dependency/metric counts. |
-| `selection-required` | Prototype no-selection state or absent route param | Static empty prompt | Route behavior for missing param is unresolved; a valid detail request requires `lesson_id`. |
-| `not-found` | Invalid/overflow/overlength ID, no matching row or `DELETED` tombstone | 404 `DESIGN_RESOURCE_NOT_FOUND` | Return-to-list behavior is a client policy; API does not redirect. |
+| `selection-required` | Prototype no-selection state | Static empty prompt | Direct route with missing `lessonId` renders a local error and skips #83; a valid detail request requires `lesson_id`. |
+| `invalid-route-id` | Raw `lessonId` is malformed or outside signed-int64 bounds | Local route error; no HTTP request | Error recovery link returns to AD-12. |
+| `not-found` | #83 returns 404 for no matching row or `DELETED` tombstone | 404 `DESIGN_RESOURCE_NOT_FOUND` | Return-to-list behavior is a client policy; API does not redirect. |
 | `unauthorized` | Missing/invalid/expired Bearer token | 401 `DESIGN_AUTHENTICATION_REQUIRED` | Session recovery/login route is not defined for Study Web. |
 | `forbidden` | Authenticated principal lacks `ADMIN` | 403 `DESIGN_ACCESS_DENIED` | AC-34 fine-grained lesson permission is not enforced by current source. |
 | `service-error` | Query/required-field/mapping failure or transport issue | Safe 500 for backend failures; network UX unspecified | Source rolls back read transaction; retry policy is absent. |

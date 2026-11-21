@@ -1,5 +1,9 @@
 # ME-11 — Test Cases
 
+## Current source state — 2026-11-20
+
+ME11 is source-wired to #58 with request cancellation and strict nested response validation. No ME11-specific frontend test result is claimed; tests were not run. API #58's projection/lifecycle and live migration remain unverified.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix

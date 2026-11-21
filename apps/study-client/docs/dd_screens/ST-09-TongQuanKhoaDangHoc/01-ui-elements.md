@@ -1,5 +1,9 @@
 # ST-09 — UI Elements
 
+## Current-source reconciliation — 2026-11-20
+
+ST-09 requests #20 with `status=ACTIVE` and rejects any page containing a different enrollment state before rendering. The course badge translates the validated state to “Đang hoạt động”; the backend value remains unchanged for request and guard logic. The element table below describes the original static mockup.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.

@@ -1,6 +1,6 @@
 # GS-06 — API Integration
 
-> **T022 current-source update (2026-11-17):** The GS06 tab currently calls neither API. #11 has local route/module/query/model/test source but returns only the first row as a singleton; #12 is not used because its public direct-URL behavior lacks the AC-06 resource access policy. API #11/#12 DDs remain Draft.
+> **T041/current-source update (2026-11-20):** GS-06 calls #11 after #08 published-course success. #11 returns PUBLIC `Resource[]`, ordered by `id ASC`; a valid course with no public rows returns `200 []`. GS-07 calls #12. PUBLIC returns a validated direct HTTP(S) URL; PRIVATE requires Student Bearer + published parent course + ACTIVE enrollment and returns a signed URL with TTL 300 seconds. Source is local evidence; live DB/runtime remains unverified. T041 approves these behaviors and supersedes the historical T022 statements below.
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
@@ -13,8 +13,8 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #11, #12
-- Orchestration/data notes: GET #11 → người dùng chọn id → GET #12 trước khi mở URL; không suy diễn visibility.
-- BE/source status và gate: **#11 route/module/query/test source-backed locally; API #11/#12 DD Draft; GS06 UI partial**; **BLOCK:** #11 query reads all rows but current view returns only `rows[0]`, while its DD disallows selecting a representative row; list/empty/order/pagination contract and `visibility` are unresolved. AC-06 public-or-authorized/403/private signed URL conflicts with #12 current public/no-auth/direct URL, conditional parent check only when `lesson_id` is non-null; no 410/TTL/signer. Legacy DDL has `resources`, V1-PILOT does not; live schema/deployment unknown. GS06 currently sends no resource request and offers no open/download action.
+- Orchestration/data notes: #11 public collection → user selects ID → #12 metadata and access decision → open validated URL.
+- BE/source status and gate: **#11/#12 current source-backed locally; T041 contract approved; UI partial; runtime not verified.** `resources` table has no current Study writer found (#47 stores `lesson_uploads`); legacy/V1-PILOT schema compatibility and live database remain open. MIME-specific preview/expiry UI is not implemented.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Luồng dự kiến theo contract đã xác nhận được
@@ -31,8 +31,8 @@
 
 | API | Request | Current/design response | Auth/access | Status và giới hạn |
 |---|---|---|---|---|
-| #11 | `GET /api/v1/courses/{course_id}/resources`; `course_id:int64`; no body/query; public/no Bearer. | Draft declares singleton `Resource`; `visibility` has no source. Current route/module/query/model/tests exist. Query reads rows ordered by ID, but view serializes only `rows[0]`; no rows returns 404. | Catalog says public; AC-06 requires public-or-authorized. Unresolved. | Declared 200/404/500; collection cardinality, pagination/order and empty semantics unresolved. `SOURCE-BACKED LOCALLY; CONTRACT DISCREPANCY; API DD Draft`. |
-| #12 | `GET /api/v1/resources/{resource_id}`; catalog type `int64`; no body/query; public/no Bearer. Current router nhận raw path `str` rồi validator chấp nhận positive signed-int64. | Current response `data={id:int,name:string,type:string,url:string|null,lesson_id:int|null}` trong envelope; bỏ `visibility`; URL là `resources.url` trực tiếp. API DD vẫn Draft và câu `DECLARED_NOT_RUNNABLE` đã stale so với source/test/report. | Route không có Bearer dependency; conditional parent gate chỉ khi `lesson_id` non-null. Không có visibility/enrollment check hoặc signer; null `lesson_id` không bị parent-gate. | Current source: 200 `DESIGN_RESOURCE_RETRIEVED`, 404 `DESIGN_RESOURCE_NOT_FOUND`, 500 `DESIGN_INTERNAL_ERROR`; SQL error rollback; mapping error 500. Không có 403/410/TTL. |
+| #11 | `GET /api/v1/courses/{course_id}/resources`; path `course_id`; no body/query; public. | Current data: `id/name/type/url/visibility/lesson_id`; only PUBLIC rows from PUBLISHED lessons/courses; `Resource[]`, ID ascending. | Public/no Bearer. | 200 `DESIGN_RESOURCE_RETRIEVED`, including `[]`; 404 unpublished/missing course; 500 query/mapping error. Current route uses Python `int` and positive check; no live DB claim. |
+| #12 | `GET /api/v1/resources/{resource_id}`; catalog path int64; no body/query. | `data={id:int,name:string,type:string,url:string,visibility,lesson_id:int|null}`. PUBLIC URL comes from `resources.url`; PRIVATE URL is signed for 300 seconds. | PUBLIC: no Bearer. PRIVATE: Student Bearer, published parent and ACTIVE enrollment required. | 200 `DESIGN_RESOURCE_RETRIEVED`; 401 unauthenticated/invalid Student token, 403 no ACTIVE enrollment, 404 missing/invalid/unpublished parent or missing storage key, 500 lookup/mapping error, 503 signing dependency unavailable. |
 
 Đối với cả hai GET, retry, timeout, cache invalidation, de-duplication khi click liên tiếp, CORS/storage headers và download disposition chưa có client contract. Không tự đặt giá trị mặc định. Legacy `DB.sql` có `resources` nhưng thiếu `visibility`; V1-PILOT schema không có `resources`; live schema/deployment chưa được xác minh.
 

@@ -1,5 +1,7 @@
 # ME-14 — Data Flow & State
 
+> **Current source (2026-11-21):** ME-13 router state → validated, one-use selected recipients → text/channel POST #63 → validated accepted UUID → SH-07/#18. #63 does not accept `course_id`; ambiguous submit outcomes block blind resubmission because no idempotency key exists. Provider/browser runtime is unverified. The source DD details below preserve earlier design notes.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|
@@ -10,6 +12,10 @@
 > Không tạo DTO/ViewModel mới khi chưa có contract. State, DTO và mapping được trích nguyên ngữ cảnh từ DD nguồn bên dưới.
 
 ## 3. API DTO → ViewModel mapping
+
+### Earlier DD snapshot — 2026-11-08
+
+Các luồng/code excerpts trong phần này mô tả prototype và quyết định lúc tạo DD; current Study Client behavior được ghi ở cuối tài liệu.
 
 ### Trích từ DD nguồn: B. Luồng hoạt động tổng thể
 
@@ -51,7 +57,7 @@
 |---|---|---|---|
 | ME-13 → ME-14 | Course identity và danh sách unique Student int64 IDs; có thể có draft text khi quay lại. | ME-13 DD giữ nguyên ID nhưng carrier/course binding chưa chốt. ME-14 HTML không nhận state. | Phê duyệt carrier nội bộ, duplicate handling, expiry và behavior khi refresh; không đặt IDs trên URL nếu chưa quyết định. |
 | ME-14 → accepted send | Title, content, recipients, channels; attachment nếu hỗ trợ. | #63 chỉ khớp title/recipients/channels một phần; body `int64` và không có attachment. | Chốt contract/API before enabling send. |
-| Accepted → ME-15 | Mỗi notification int64 ID cho #64; Operation UUID là ID khác. | #63 local source đặt `meta.notification_ids[]`; #64 đọc từng notification; #18 vẫn UNWIRED, AC-25 không có edge. | ME-15 phải dùng #64 cho notification IDs theo approved contract; generic operation polling cần contract riêng. ME-15 không thuộc phiên này. |
+| Accepted → SH-07 | #63 Operation UUID; notification int64 IDs remain separate for #64. | Current ME-14 routes the accepted UUID to SH-07; SH-07 uses notification-only owner-bound #18. | Queue acceptance is not provider delivery; browser/runtime remains unverified. |
 
 ### Ma trận state
 
@@ -65,7 +71,7 @@
 | `QUEUED`/`SENT`/`FAILED` | #64 local projection | Trạng thái dispatch API theo từng notification; mapping từ delivery counts là `DERIVED`, worker chưa wired. |
 
 ## 4. Luồng đọc (Read)
-- Orchestration từ inventory: ME-13 → giữ course + unique Student int64 IDs (carrier chưa chốt); POST #63 chỉ sau khi chốt scope/body/channel. #62 thuộc roster ME-13, không refetch ở ME-14. #63 trả Operation UUID và `meta.notification_ids[]`; #64 là status theo từng notification ID. Không gọi #18: Study route chưa wired, ID/lifecycle unresolved và AC-25 không có edge #18.
+- Current orchestration: ME-13 passes the selected course and unique Student IDs by router state; ME-14 consumes the handoff and posts text/channels through #63. A valid accepted Operation UUID routes to SH-07/#18. #63 has no `course_id`/idempotency key; #64 remains status per notification ID and is not selected by the current producer flow. Generic operation kinds and AC-25 batch status are not implemented.
 - Chi tiết current/source mapping: xem [API Integration](04-api-integration.md) và DD nguồn.
 
 ## 5. Luồng ghi (Write)
@@ -77,6 +83,13 @@
 
 ## 7. Data errors & security
 - Theo error/security/source-status section của DD nguồn; không coi state trong mockup là runtime behavior.
+
+## Current Study Client source (2026-11-21)
+
+- ME14 reads the ME13 handoff from Angular router state, removes `courseId` and `recipients` from the current history entry, and validates positive safe-ID course/Student values, unique recipients and string display names. Missing/invalid state is gated with a link back to ME13. The selected values remain only in component memory.
+- Title and body are editable in local signal state; preview, title character count and body word count update from that local state. Editing is local only; no draft persistence or #63 request occurs until explicit submit.
+- Current source submits trimmed text content and explicit `PUSH`/`EMAIL` values through #63, accepts only a validated HTTP 202 response, and routes the accepted UUID to SH-07. Accepted state locks the form. Ambiguous network or malformed-success outcomes block blind resend for the current page because the API has no idempotency key; a confirmed HTTP failure is shown separately.
+- API #63 has no `course_id`, so it cannot bind the recipients to the exact ME-13 course. Focused Mentor tests pass; browser/live API/DB/provider runtime is unverified. Draft persistence is not implemented.
 
 ## 8. Trace
 [Events](02-events.md) · [API](04-api-integration.md) · [Rules](05-business-rules.md)

@@ -35,6 +35,7 @@
       <div class="filter-actions">
         <button class="apply-button" type="submit" [disabled]="viewState().status === 'loading'"><study-icon name="search" /> Áp dụng</button>
         <button class="clear-button" type="button" (click)="clearFilters()" [disabled]="viewState().status === 'loading'">Xóa lọc</button>
+        <button class="refresh-button" type="button" (click)="refreshReportedDiscussions()" [disabled]="viewState().status === 'loading'"><study-icon name="refresh" /> Làm mới</button>
       </div>
     </form>
     <p class="filter-note" id="search-note"><study-icon name="info" /> Lý do và mức độ được gửi nguyên văn để đối chiếu chính xác. API #97 không nhận từ khóa và không trả metadata của từng report.</p>
@@ -51,7 +52,7 @@
           } @else if (viewState().status === 'error') {
             <tr><td class="table-state table-state--error" colspan="7" role="alert"><span class="state-mark"><study-icon name="info" /></span><strong>Không thể tải hàng đợi báo cáo</strong><span>{{ viewState().message }}</span></td></tr>
           } @else if ((viewState().rows?.length ?? 0) === 0) {
-            <tr><td class="table-state" colspan="7"><span class="state-mark"><study-icon name="users" /></span><strong>Không có thảo luận phù hợp</strong><span>API #97 trả về trang rỗng cho bộ lọc hiện tại.</span></td></tr>
+            <tr><td class="table-state" colspan="7"><span class="state-mark"><study-icon name="users" /></span><strong>Không có thảo luận phù hợp</strong><span>API #97 trả về trang rỗng cho bộ lọc hiện tại.</span><button class="empty-refresh-button" type="button" (click)="refreshReportedDiscussions()"><study-icon name="refresh" /> Làm mới hàng đợi báo cáo</button></td></tr>
           } @else {
             @for (row of viewState().rows ?? []; track row.values[0]) {
               <tr>

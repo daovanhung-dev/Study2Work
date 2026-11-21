@@ -7,15 +7,22 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Phân biệt 401 (hết hạn/thiếu token), 403 (không đủ quyền), bảo toàn redirect an toàn.
-- Gate/status (giữ nguyên): **R**
+- Gate/status: **R; PARTIAL SOURCE-WIRED; RUNTIME NOT VERIFIED**
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
+
+### Current implementation evidence (2026-11-20)
+
+- API #04 401/403 handling is wired from `StudentApiService`; the route state is allowlisted and does not expose profile data or tokens.
+- `StudentSessionService` stores the Student token pair in memory and proactively refreshes when its local access-token expiry is reached. A server-issued #04 401 clears the session and routes to SH-05 without another refresh/replay. A 403 does not refresh or clear the session.
+- The page uses neutral status-specific copy, a login link only on a validated 401 handoff, and a single Trace ID copy action with accessible success/failure feedback. It does not show role diagnostics or a 403 fallback.
+- Open: 401 refresh/replay and ambiguous refresh outcome; safe login return route; 403 safe-back/approved fallback; final copy/composition and G-14 login contract.
 
 ### Trích từ DD nguồn: 8. Quy tắc bảo mật, khả năng tiếp cận và design system
 
 - Backend là nguồn thẩm quyền về auth/role. Client chỉ ánh xạ HTTP status và business code; không gán Student/Mentor/Admin theo path hoặc mock state.
 - Không render token, profile, stack trace, SQL, database schema hoặc reason nội bộ. Refresh token chỉ đi trong HTTPS request body tới R-X01; không vào URL, browser console, analytics event hoặc UI.
 - Chỉ dùng redirect nội bộ trong allowlist; kiểm tra lại authorization sau login. Cách truyền/lưu `returnTo` chưa được chọn; không cho phép external/protocol-relative URL, token hoặc PII.
-- Không refresh sau 403. `list_screen.md` yêu cầu single-flight coordinator cho request đồng thời và tối đa một refresh/retry mỗi flow 401; hiện chỉ có Admin-scoped single-flight, không có Shared/Student flow để chứng minh SH-05 runtime. Refresh token rotation chỉ cho phép dùng token cũ một lần. Không tự retry cùng refresh token khi response outcome mơ hồ.
+- Không refresh sau 403. Inventory cho phép một lần refresh/retry sau 401; current Student flow chỉ refresh proactive trước request khi token hết hạn cục bộ, không thực hiện retry sau một 401 server-side. Refresh token rotation chỉ cho phép dùng token cũ một lần; không retry mù khi outcome mơ hồ.
 - Nút có focus nhìn thấy, hỗ trợ bàn phím; status/error feedback có ngữ nghĩa screen-reader; màu không phải tín hiệu duy nhất. Hit target tương tác tối thiểu 44×44px theo guide. Nút copy 40×40 hiện tại cần sửa.
 - Design guide Study yêu cầu font local/system, không thêm remote fonts, content width khoảng 1120px và spacing/token chuẩn. HTML hiện nạp Google Fonts/Tailwind CDN và dùng khung rộng khoảng 1440px; bản prototype không được coi là tuân thủ runtime design system.
 - Nội dung kỹ thuật ở #1/#6/#11 và response JSON ở #9 cần được UX xác nhận là có nên xuất hiện trên user-facing screen hay chỉ thuộc handoff.

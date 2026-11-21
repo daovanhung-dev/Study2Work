@@ -1,5 +1,7 @@
 # AD-24 — Business Rules
 
+> **T041 approved-policy update (2026-11-19):** The metric keys, inclusive UTC date bounds with trailing-30-day default, and `learning|community` segment tokens are approved at high level. This supersedes blocker wording below only for those values; formulas, population, source columns, access policy and empty/partial semantics remain open.
+
 ## 1. Rule index
 | Rule ID (package alias) | Tên / source ID | Áp dụng | Thực thi | Tests |
 |---|---|---|---|---|
@@ -7,7 +9,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Date range, phân khúc, KPI và biểu đồ tác động.
-- Gate/status (giữ nguyên): **D**; #101/#102 catalog/Draft-only, không có local route/query/model/test. **DD BLOCKED; IMPLEMENTATION BLOCKED:** KPI formula/population/source; date type/default/validation; segment vocabulary; AC-38 validation order; report permission/live schema; AD-25 filter handoff/#103 response mismatch; Study Web UNWIRED; **RUNTIME NOT VERIFIED**
+- Gate/status (giữ nguyên): **D**; #101/#102 catalog/Draft-only, không có Study Server route/query/model/test; Study Client route/page/Admin session gate source-wired nhưng chưa có caller. **DD BLOCKED; IMPLEMENTATION PARTIAL:** KPI formula/population/source; date type/default/validation; segment vocabulary; AC-38 validation order; report permission/live schema; AD-25 filter handoff/#103 response mismatch; report actions remain disabled; **RUNTIME NOT VERIFIED**
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu và quyết định còn mở
@@ -21,7 +23,7 @@
 - [x] AC-38 order, optional export branch and AD-25 filter handoff are linked with #103/Operation discrepancy retained.
 - [x] Original source image/HTML are preserved; annotation is separate.
 - [ ] DD READY: **not met**; unresolved contract decisions affect implementability.
-- [ ] IMPLEMENTATION READY: **not met**; Study Web and #101/#102 are unwired.
+- [ ] IMPLEMENTATION READY: **not met**; route/page/session gate exist, but the report data flow and #101/#102 APIs are unavailable, so actions remain gated.
 - [ ] RUNTIME VERIFIED: **not met**; no application tests/runtime were run.
 
 ### Blockers requiring contract decisions
@@ -35,7 +37,7 @@
 7. Approve report permission, Admin claim mapping and access policy; current shared ADMIN helper capability does not secure endpoints that do not exist.
 8. Specify Apply behavior, URL filter representation, reset/default period, reload/cancellation/partial-failure, network retry and cache/freshness rules.
 9. Reconcile AD-24 → AD-25 filter transfer and API #103 response (`Report` vs `Operation`) with `/api/v1/operations/{operation_id}` before designing export status/download flow.
-10. Implement Study Web route/client and #101/#102 backend/query/tests, then verify actual runtime separately.
+10. Complete the AD-24 report behavior and implement #101/#102 backend/query/tests under approved contracts, then verify actual runtime separately.
 
 Until these decisions are backed by approved contract and source, retain `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, and `RUNTIME NOT VERIFIED`.
 

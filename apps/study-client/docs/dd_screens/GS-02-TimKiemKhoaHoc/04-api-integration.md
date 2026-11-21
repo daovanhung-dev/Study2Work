@@ -68,3 +68,9 @@
 - API #05 is not called by this partial screen implementation. Its cache-first behavior, request ordering relative to #07, locale cache key, invalidation, and partial-load policy remain unresolved.
 - Component tests verify the request query, absence of authorization/unsupported params, response fields, empty/error/out-of-range states and pagination. Study Web: 127/127 tests. Study Server: 1,506/1,506; focused #05/#07 tests: 29/29 with fake sessions, not a live database.
 - `127.0.0.1:3003` had no listener during the browser demo attempt. Live API acceptance remains `NOT VERIFIED`; the DD remains blocked.
+
+## Current caller update (2026-11-21)
+
+- The caller still sends only `q` and `page` to #07; response validation now accepts COUNT/LIST cardinality drift as a recoverable page state after validating the envelope, course fields, requested page and size 20.
+- On drift, returned rows remain usable as visible content while the total and page navigation are suppressed and a same-query/page retry is offered. This is client recovery for two backend reads, not a new API field or contract.
+- Tests/build/lint/browser/live API/DB were not run for this update; the previous historical test figures above are not new verification.

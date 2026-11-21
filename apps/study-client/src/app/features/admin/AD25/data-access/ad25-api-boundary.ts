@@ -6,5 +6,5 @@ export const AD25_API_BOUNDARY: AdminScreenApiBoundary = {
     "#18"
   ],
   "sourceState": "api-absent",
-  "sourceNote": "Không có route export, worker, artifact storage hoặc download handler trong Study Server. Response #103 và ID/type #18 cũng chưa được thống nhất; không tạo job hoặc file giả."
+  "sourceNote": "#103 không có Study Server route/worker; #18 có route nhưng chỉ đọc notification operations. T041 duyệt UUID owner-only và status policy cho export, nhưng producer/result/artifact mapping chưa có; không gửi request hoặc tạo file giả."
 };

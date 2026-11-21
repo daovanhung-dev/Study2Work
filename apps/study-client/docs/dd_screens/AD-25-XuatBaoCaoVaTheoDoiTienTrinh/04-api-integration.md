@@ -2,6 +2,14 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
+> **T041 approved-policy update (2026-11-19):** Accepted formats are CSV/XLSX/PDF. Export targets an owner-only UUID Operation with `PENDING|SUCCEEDED|FAILED`; a completed artifact uses a signed URL valid for one hour. This supersedes older Draft-only statements for these choices. The #103 response field, export producer/poll mapping, filter serialization, artifact URL field, download endpoint/authorization and deployed runtime remain unresolved; no export or download caller is wired.
+
+### Current Study Client/Server source — 2026-11-20
+
+- `/admin/reports/export` is registered as `AD25Page` under the AdminLayout session gate. The page keeps format/scope/period selections local and leaves export/download disabled; it has no #103/#18 client caller.
+- #103 has no Study Server route/worker. #18 has a current route and UUID validator, but its source only projects owner-scoped notification deliveries (`NOTIFICATION_DISPATCH`, `QUEUED|FAILED|SENT`); it does not query export Operations.
+- T041 resolves allowed formats and the intended export Operation/status/link-lifetime policy only. It does not implement the producer, #103 response mapping, #18 export projection or artifact/download flow.
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
@@ -12,10 +20,10 @@
 
 - API refs trong inventory: #103, #18
 - Orchestration/data notes: #103 optional `filters`/`format` → 202; `ApiEnvelope<Report>` vs `Operation` conflict. Chỉ gọi #18 với ID/type được BE xác nhận; tải xuống chỉ theo approved result URL.
-- BE/source status và gate: **D**; **DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #103/#18 catalog/Draft-only, no local route/query/model/test/worker/download source; response, GET retry, filter/format, permission, operation ID/access/status/result, AC-38 poll edge, storage/download and AD-24 filter handoff unresolved; Study Web UNWIRED
+- BE/source status và gate: **D**; **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** AD-25 route/page source-wired; #103 has no local handler/worker; current #18 source is notification-only and has no export mapping. Response, filter serialization, GET retry, report permission, producer/result, storage/download and AD-24 filter handoff remain unresolved.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
-### Trích từ DD nguồn: D. Đặc tả xử lý sự kiện và API
+### Trích từ DD nguồn: D. Đặc tả xử lý sự kiện và API — historical prototype/source snapshot (2026-11-08)
 
 ### D.1. Quy tắc chung
 

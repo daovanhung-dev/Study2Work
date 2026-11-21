@@ -4,7 +4,7 @@
 
 - `/admin/quizzes/new` và `/admin/quizzes/:quizId/edit` được đăng ký trong `admin.routes.ts` và cùng render `AD16Page`; `/admin` lazy-load admin routes. `AdminLayout` điều khiển hiển thị shell theo phiên đăng nhập. Runtime navigation chưa được xác minh.
 - Ở create mode, page giữ `title`, `duration` và `passing score` trong component memory qua input handlers. Course select vẫn disabled. Ở edit mode, các input cấu hình bị khóa vì không có nguồn GET detail.
-- Question Builder, Add Question và Save đang disabled; page không gọi API #88/#89, không autosave và không có kiểm tra `quiz management permission` riêng. Catalog/body/schema blockers vẫn mở.
+- Create mode tải Course page từ #73, Question Builder/Add Question và Save gọi được nhánh #88 theo current source. Edit vẫn khóa; page chưa gọi #89, không autosave và không có kiểm tra `quiz management permission` riêng. Embedded schema và catalog gaps vẫn mở.
 - Prototype trong Stitch vẫn là ảnh/HTML tĩnh; mô tả prototype bên dưới chỉ áp dụng cho artifact đó, trừ khi ghi rõ Angular source.
 
 ## 1. Event index
@@ -31,9 +31,9 @@
 
 - **Element/kích hoạt:** Route `/admin/quizzes/new` có trong Angular source; runtime chưa xác minh.
 - **Đầu vào:** URL, session/auth state và permission cần có theo AC-35; form values ban đầu không nhận từ màn trước ngoài mode create.
-- **Quy trình:** (1) Angular router đăng ký create/edit route và resolve cùng `AD16Page`; runtime chưa xác minh. (2) `AdminLayout` xử lý trạng thái phiên; AD-16 chưa có kiểm tra `quiz management permission` riêng. (3) Course options/defaults chưa có nguồn được duyệt; không gọi #87 thay thế. (4) Create render draft rỗng; edit khóa input do thiếu GET detail. (5) Chỉ enable builder/save sau khi schema/validation/permission/UI được duyệt.
-- **API/output:** Không có request hiện tại. #88 chỉ chạy khi submit hợp lệ; create entry không tự POST. Destination sau create chưa xác định.
-- **Ngoại lệ/trạng thái:** Loading, unauthorized, forbidden, error và empty course option chưa có UI implementation. Không thể đánh dấu create `ready` từ screenshot.
+- **Quy trình:** (1) Angular router đăng ký create/edit route và resolve cùng `AD16Page`; runtime chưa xác minh. (2) `AdminLayout` xử lý phiên; fine-grained `quiz management permission` chưa có source. (3) Create gọi #73 theo page và chỉ nhận response nếu `pagination.page` khớp trang đã yêu cầu; backend source echo trang đã validate. Trang ngoài `total_pages` vẫn hợp lệ khi backend trả `items=[]`, để page recovery hiện có xử lý. Edit không gọi #73 và vẫn khóa do thiếu GET detail. (4) Tạo giữ config/questions trong bộ nhớ tới khi submit; danh sách/câu hỏi có thể sửa trước khi lưu.
+- **API/output:** Create gọi GET #73 với `page` rồi POST #88 khi submit hợp lệ; không tự gọi POST lúc vào trang. Save success hiển thị thông báo và link AD-15; đích/navigation sau save vẫn chưa được định nghĩa.
+- **Ngoại lệ/trạng thái:** Có loading/error/empty cho Course options và saving/success/error cho #88. Runtime chưa xác minh; embedded shape vẫn `DERIVED`.
 
 ### EV-02 — Khởi tạo mode chỉnh sửa (Load)
 
@@ -46,25 +46,25 @@
 ### EV-03 — Thay đổi cấu hình chung (Input/Change)
 
 - **Element:** #17–#20. Stitch prototype không có listener. Angular create page có input handlers cho title/duration/score và giữ giá trị trong component memory; edit fields bị khóa. Validation/error rendering và submit path chưa có.
-- **Đầu vào:** `title` text; course selector hiện chỉ có placeholder; duration optional number; passing score number. Phía server local #88/#89 fallback nhận `course_id` strict int64, `title` strict string, `duration_minutes` optional strict int/null, `passing_score` strict string. Đây là local derived request shape.
-- **Quy trình:** (1) Nhận giá trị đã nhập. (2) Các native HTML `min/max` hiện hữu là hint prototype; không suy ra business validation. (3) Chưa có quy tắc normalize whitespace, required title, chọn course, decimal separator, rounding, bỏ trống duration hoặc đổi `%` thành request string. (4) Không gọi API khi field thay đổi. (5) Dirty/invalid state chưa implement; không claim autosave.
-- **Kết quả/ngoại lệ:** Angular create page cập nhật ba draft values trong component memory; không có persistence, error state hoặc submit. Cần owner chốt required/range/precision, course ID source và mapping trước khi lập trình validator. Local fallback hiện kiểm tra title max 200, duration int32, score numeric fit; các checks này không xác nhận UI business policy.
+- **Đầu vào:** `title` text; Course được chọn từ #73; duration optional; passing score là chuỗi thập phân. Phía server local #88 fallback nhận `course_id` int64, `title` string tối đa 200 ký tự, `duration_minutes` optional int32/null, `passing_score` decimal string biểu diễn được bằng NUMERIC(5,2). Nested shape vẫn `DERIVED`.
+- **Quy trình:** (1) Nhận giá trị đã nhập. (2) Kiểm tra chính xác các giới hạn hiện có trong #88 validator; không thêm required/minimum hay quy tắc đáp án. (3) Giữ leading/sign semantics số nguyên bằng cách chuẩn hóa embedded integer mà không qua JS Number với course ID. (4) Không tự lưu khi field thay đổi; chỉ POST khi submit.
+- **Kết quả/ngoại lệ:** Draft config ở bộ nhớ; lỗi validation cục bộ hiển thị trong form. Course ID vượt safe-integer không được đưa vào select để tránh gửi sai giá trị. API DD còn Draft và chưa có owner sign-off cho embedded schema.
 
 ### EV-04 — Thêm câu hỏi (Click)
 
-- **Element:** #27 disabled Add Question. No event handler; không có question/choice inputs.
-- **Tiền điều kiện:** Questions schema/type, editor behavior, answer-choice constraints, ordering, validation, source options và persistence semantics cần được xác nhận. Local #88 fallback shape có `questions[]`, từng item có `text`, `type`, `choices[]`, và Choice có `text`, `is_correct`.
-- **Quy trình hiện tại:** (1) Browser không phát click cho disabled button. (2) Không tạo Question/Choice object. (3) Không cập nhật `questions` state/cache. (4) Không gọi API. (5) Gate/temporary-lock copy giữ nguyên.
-- **Kết quả:** Empty state tiếp tục hiện. Không thể hoàn tất payload tạo/sửa; đây là blocker chính cho Save.
+- **Element:** Nút Add Question và Add Choice trong create mode.
+- **Tiền điều kiện:** UI dùng current #88 fallback `questions[]`, question `text/type/choices[]`, choice `text/is_correct`; các field/type vẫn `DERIVED`, không phải catalog-approved schema.
+- **Quy trình hiện tại:** (1) Thêm/xóa Question và Choice trong local signal state. (2) Question type giới hạn theo current source enum `SINGLE_CHOICE`, `MULTIPLE_CHOICE`, `TRUE_FALSE`. (3) Không áp đặt số lựa chọn hoặc số đáp án đúng tối thiểu; current validator không có các giới hạn này. (4) Không gọi API cho đến khi nhấn Save.
+- **Kết quả:** UI tạo được payload shape hiện tại; API DD, owner approval và live schema vẫn chưa xác minh.
 
 ### EV-05 — Lưu Quiz mới (#88)
 
-- **Element/kích hoạt:** #31 Save; disabled trong prototype, vì vậy hiện không có Submit event.
-- **Tiền điều kiện expected:** Create mode; Admin session/quiz-management permission; form config và question schema hợp lệ; course option map sang ID; Save được enable theo rule đã duyệt. Các điều kiện này chưa đạt.
+- **Element/kích hoạt:** Nút Save submit form trong create mode; edit vẫn disabled.
+- **Tiền điều kiện current:** Create mode, Admin access token, Course option từ #73, trường cấu hình hợp lệ theo current #88 validator. AC-35 fine-grained permission chưa được source hỗ trợ.
 - **Đầu vào/candidate request:** Direct catalog quy định body top-level `{config:string!, questions:string!}`. Catalog không định nghĩa JSON fields bên trong. Local #88 fallback yêu cầu hai chuỗi JSON và nested shape trong §A.2; shape này `DERIVED`.
-- **Quy trình khi có thể triển khai:** (1) Chuẩn hóa config/question input theo contract owner duyệt. (2) Validate client-side theo cùng contract; không dùng min/max prototype như business rule nếu chưa duyệt. (3) Encode `config` và `questions` thành hai string theo catalog. (4) Gửi `POST /api/v1/admin/quizzes` với Bearer JWT; không có header/idempotency key bổ sung được quy định. (5) Đọc HTTP/business code và envelope. (6) 201 `DESIGN_RESOURCE_CREATED`: nhận `Quiz` response; direct catalog schema không nêu chi tiết nested properties. Local source response dự kiến có IDs và answer keys nhưng là derived. (7) Cập nhật UI/cache hoặc điều hướng chỉ sau khi success mapping và destination được chốt; hiện chưa có chính sách. (8) Không retry tự động hoặc dedupe khi chưa có policy.
-- **Lỗi:** 401 `DESIGN_AUTHENTICATION_REQUIRED`, 403 `DESIGN_ACCESS_DENIED`, 422 `DESIGN_VALIDATION_ERROR`, 500 `DESIGN_INTERNAL_ERROR` theo catalog. Local fallback 422 khi body/nested JSON/shape/course invalid; 500/query/mapping/commit lỗi rollback sau khi đã vào transaction. Không có runtime client error view.
-- **Đầu ra hiện tại:** Không gửi request; button disabled và Questions rỗng.
+- **Quy trình hiện tại:** (1) Validate course ID int64, title length, duration int32 và passing-score decimal theo current #88 validator. (2) Serialize nested `config/questions` thành đúng hai string outer body như direct catalog. (3) Gửi POST #88 bằng Admin Bearer token; không thêm field/header/idempotency key. (4) Chỉ coi success khi envelope có `success=true`, `DESIGN_RESOURCE_CREATED` và Quiz response shape. (5) Trong khi gửi khóa control; sau success khóa form và hướng dẫn mở AD-15, không tự navigate. (6) Kết quả mạng không rõ hoặc success envelope sai shape yêu cầu kiểm tra AD-15 trước khi submit lại.
+- **Lỗi:** 401/403/422 hiển thị lỗi tương ứng; 500/network error hiển thị generic state. Admin API transport xóa local session khi nhận 401.
+- **Đầu ra hiện tại:** Create mode gọi API #88. Embedded schema vẫn `DERIVED`; mapping UI sau save không có quy tắc owner-approved.
 
 ### EV-06 — Cập nhật Quiz hiện hữu (#89)
 
@@ -95,9 +95,9 @@
 
 ### EV-10 — Validation, auth và API failure states
 
-- **Nguồn:** API catalog #88/#89 và current local handlers. Angular page hiện chưa có caller hoặc request mapping cho hai API.
+- **Nguồn:** API catalog #88/#89 và current local handlers. Angular page gọi #88 khi tạo mới, nhưng chưa có caller #89.
 - **Quy trình response candidate:** (1) Nhận HTTP status + envelope/businessCode. (2) 401 yêu cầu xử lý phiên; refresh/login/redirect policy chưa được quy định. (3) 403 hiển thị access denied; detail/masking policy chưa có. (4) 422 hiển thị field/business validation theo error payload đã thống nhất; #89 local history refusal cũng là 422. (5) 404 ở #89 biểu thị Quiz không tồn tại theo catalog/local source, local source cũng trả 404 cho tombstone. (6) 500 hiển thị lỗi tổng quát/trace ID nếu contract xác nhận; không lộ SQL/body. (7) Không retry, replay hoặc giữ form/cache nếu policy chưa có.
-- **Current result:** Không có loading, inline field error, auth error, API error, success toast hoặc conflict view. Trạng thái này là thiết kế candidate, chưa implement.
+- **Current result:** #73 và #88 có loading/error/success feedback trong create mode. Edit conflict/404, #89 errors và fine-grained permission chưa có UI vì edit mutation vẫn gated.
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)

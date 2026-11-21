@@ -1,6 +1,8 @@
 # AD-20 — Data Flow & State
 
-> **Current Angular source (2026-11-16):** The route loads `AD20Page`; title/content input events update local signals and the preview. No HTTP call is made. Recipient/channel/priority controls and draft/send actions are disabled; no #93 caller or #18 client handoff exists. The source excerpts below preserve the Stitch artifact behavior reviewed on 2026-11-08.
+> **Current source (2026-11-21):** #68 candidate pages → explicit selected IDs → #93 notification dispatch → accepted UUID → SH-07 owner-bound #18 read. Segment/draft/priority are not implemented; live runtime/provider delivery are unverified.
+
+> **Historical Angular source snapshot (2026-11-20):** At that point the route loaded `AD20Page` with local preview only. The 2026-11-21 implementation adds #68/#93 calls and the SH-07 UUID handoff described above. The source excerpts below preserve the earlier Stitch artifact behavior.
 
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
@@ -39,7 +41,7 @@
 
 | State | Điều kiện / UI | Hành động và next state | Trạng thái evidence |
 |---|---|---|---|
-| `ROUTE_PAGE_SOURCE_WIRED` | Angular router maps `/admin/notifications/new` to `AD20Page`; local preview only; API caller absent. | Route/page source exists; auth/browser runtime is not verified. | Current source |
+| `ROUTE_PAGE_SOURCE_WIRED` | Angular router maps `/admin/notifications/new` to `AD20Page`; current source also calls #68 and #93 and hands accepted UUID to SH-07. | Route/page and focused API flow are source-wired; auth/browser runtime is not verified. | Current source |
 | `INITIAL_STATIC` | Artifact render; `all`, `app`, `normal` checked; title/body rỗng; preview sample; Send disabled. | Input title/body → `PREVIEW_EDITING`; radio/checkbox đổi native DOM state. | Prototype current, không phải runtime |
 | `PREVIEW_EDITING` | Title/body listener chạy trong HTML. | Trim và thay preview text; blank → sample fallback; không gọi API. | Prototype current |
 | `AUDIENCE_OR_CHANNEL_SELECTED` | Browser native selection đổi. | Không có recipient resolution, enum validation, count hay server request. | Prototype current |

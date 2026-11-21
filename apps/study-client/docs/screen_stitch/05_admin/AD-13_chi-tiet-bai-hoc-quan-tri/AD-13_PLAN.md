@@ -89,3 +89,9 @@ Tạo `AD-13_markers.svg` cùng số/tọa độ/nhãn với JSON. Render overla
 - Current checkout now has the Angular AD-13 route/page/service and GET #83 caller; AD-12 links only Lesson IDs that JavaScript can represent safely. This updates the earlier 2026-11-08 `UNWIRED` snapshot; the Stitch HTML and screenshots remain static design assets.
 - AD-13 renders only the seven Lesson fields from #83, keeps video as text, labels numeric `course_id` as “ID khóa học”, and does not fabricate dependency or metric values. AD-14 mutations remain disabled.
 - Focused AD-12/AD-13 Angular tests and API #83 fake-session tests passed on 2026-11-16. Browser/live database verification remains outstanding. DD and API #83 remain Draft/blocked on dependency output, permission, schema/nullability and status policy.
+
+## Continuation — signed-int64 route guard (2026-11-20)
+
+- `AD13Page` now validates raw `lessonId` with the shared full-string signed-int64 guard before GET #83. Missing/malformed/out-of-range route values render a local error and skip HTTP; valid strings are passed unchanged.
+- The #83 projection, seven displayed fields, disabled AD-14 action and dependency/metrics/media gates remain unchanged. AD-13 stays 75% in `screen_complete.md`; its route guard does not close UI/UX or contract blockers.
+- Static source/DD/report review only; no tests/build/lint/browser/API runtime were run for this continuation.

@@ -113,4 +113,11 @@ Create 48 sequential markers, each mapped to one row in `AD-22.md` §C. Coordina
 - Search, status filtering, pending-priority order, displayed metrics, and the claimed 60-second analysis interval are not defined by #97/current prototype behavior.
 - Local `ADMIN` guard does not prove AC-37's Admin permission/tenant policy.
 - Current #98 source/DD conflict and report detail is not read by current #98 source; #99/#100 are outside the source-backed runtime boundary.
-- Study Web editable route/API client is absent. No runtime state or production data can be claimed.
+- The current Study Web route, page, and #97 API client are source-wired; authenticated browser behavior and production data remain unverified.
+
+## Dated continuation — source-backed manual refresh (2026-11-20)
+
+- Angular renders the toolbar refresh (marker #22) and loaded-empty refresh (marker #33). Both create a fresh query object from the currently applied `reason/severity/page`, so the existing state loader repeats GET #97 without adding fields or resetting the page.
+- The toolbar action is disabled during loading. The empty-state action is visible only for a loaded empty result and is replaced by the existing loading row while the request runs.
+- Search and status remain unsupported by #97. No automatic retry, polling, or mutation was added. Report metadata, approved taxonomy/permission, live schema, and AD-23 handoff gaps remain open.
+- Completion remains 75%; the refresh wiring does not cross a UI/UX/logic/API scoring threshold. No tests, build, lint, browser, or API runtime checks were run.

@@ -10,7 +10,7 @@
 | `AD-18-EV-005` | `Source heading` / EV-05 — Audit reason field (disabled) | See source event detail below |
 | `AD-18-EV-006` | `Source heading` / EV-06 — Shell, notification, breadcrumb and footer controls | See source event detail below |
 
-> Event IDs trong package là alias để theo template; Source Event IDs, steps và API links giữ theo DD nguồn. T007 wires route/navigation read-only; browser runtime chưa được xác minh.
+> Event IDs trong package là alias để theo template; Source Event IDs, steps và API links giữ theo DD nguồn. Current source also validates positive signed-int64 route IDs locally, keeps the page read-only and makes no API call; browser runtime chưa được xác minh.
 
 ## 2. Chi tiết event từ DD nguồn
 
@@ -19,11 +19,11 @@
 ### EV-01 — Mở AD-18 và nạp/nhận diện target Quiz
 
 - **Element/trigger:** AD-15 delete branch or direct route entry; candidate route param `quizId`.
-- **Type/preconditions:** Route/load. Angular route/page reads `quizId`; AD-15 exposes a link only for positive safe integer IDs. This does not prove AC-35 fine-grained permission behavior or browser runtime.
+- **Type/preconditions:** Route/load. Angular page preserves `quizId` as text and validates digits, positivity and the signed-int64 maximum used by #90; AD-15 currently links only positive safe integer IDs. This does not prove AC-35 fine-grained permission behavior or browser runtime.
 - **Input/source:** `quizId` from URL or selected item handoff. Catalog #90 path is positive-int64-shaped `quiz_id`; #87 local list item includes `id`, `course_id`, `title`, `duration_minutes`, `passing_score`, `questions=[]`.
 - **Sequence:** 1) Parse route param only after authentication/authorization policy is determined. 2) Validate ID mapping; do not parse arbitrary slug/UUID as int64. 3) Determine approved source for selected Quiz. 4) If handoff is #87 item, map only fields present in that response. 5) Do not invent a GET detail; no such API is listed/wired. 6) Do not show a fabricated course title or attempt count. 7) If the target cannot be resolved, keep confirm disabled and surface the owner-approved missing-target state; that state/copy is not specified.
 - **API:** No API call is defined for page entry. #90 is mutation only; #87 is a list and is not a direct detail endpoint.
-- **Output/exceptions:** Current Angular page shows the raw route ID and a read-only notice; it does not load a title/course/history record or issue a request. Mockup values `--`/“Chưa chọn bản ghi” are design-source placeholders. Invalid ID could produce #90 422 only if a request is sent; an absent or hard-deleted Quiz maps to #90 404. A previously tombstoned Quiz gets HTTP 200 on repeat in local code, but that behavior is `DERIVED`, not approved contract. Exact route-state UX is open; no detail/error state is implemented.
+- **Output/exceptions:** Current Angular page shows the raw route ID and read-only notice; locally invalid IDs show an alert and no request is sent. It does not load a title/course/history record. Mockup values `--`/“Chưa chọn bản ghi” are design-source placeholders. Backend #90 remains authoritative and returns 422 for an invalid raw path if called; absent/hard-deleted Quiz maps to #90 404. Exact detail/error/recovery UX remains open.
 
 ### EV-02 — Return to AD-15
 

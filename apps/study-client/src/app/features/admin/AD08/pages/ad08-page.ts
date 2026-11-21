@@ -4,14 +4,15 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 
 import { StudyIcon } from '../../../../shared/ui/study-icon';
+import { isAdminCourseDetailPage } from '../../admin-api-guards';
 import type { AdminCourse } from '../../admin-api.models';
-import { adminDataError } from '../../admin-screen-state';
+import { adminDataError, isSignedInt64RouteId } from '../../admin-screen-state';
 import { AD08ApiService } from '../data-access/ad08-api.service';
 import { AD08_SCREEN } from '../models/ad08-screen.model';
 
 interface CourseDraft {
   readonly title: string;
-  readonly description: string;
+  readonly description: string | null;
   readonly price: string;
 }
 
@@ -32,6 +33,7 @@ export class AD08Page {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(AD08ApiService);
   readonly courseId = signal('');
+  readonly isCourseIdValid = signal(false);
   readonly draft = signal<CourseDraft | null>(null);
 
   readonly pageState = toSignal(
@@ -42,21 +44,32 @@ export class AD08Page {
         this.draft.set(null);
 
         if (!courseId) {
+          this.isCourseIdValid.set(false);
           return of<AD08PageState>({ status: 'error', message: 'Thiếu mã khóa học trên đường dẫn.' });
         }
 
+        if (!isSignedInt64RouteId(courseId)) {
+          this.isCourseIdValid.set(false);
+          return of<AD08PageState>({ status: 'error', message: 'Mã khóa học phải là số nguyên signed 64-bit.' });
+        }
+
+        this.isCourseIdValid.set(true);
         return this.api.getCourse(courseId).pipe(
           map((envelope): AD08PageState => {
-            if (!envelope.success) {
-              return { status: 'error', message: 'Study Server không thể tải dữ liệu lúc này.' };
+            if (
+              envelope.success !== true
+              || envelope.businessCode !== 'DESIGN_RESOURCE_RETRIEVED'
+            ) {
+              return { status: 'error', message: 'Study Server trả về dữ liệu khóa học không hợp lệ.' };
             }
-            const course = envelope.data.items[0];
-            if (!course) {
+            const page = envelope.data;
+            if (!isAdminCourseDetailPage(page)) {
               return { status: 'error', message: 'API #74 không trả khóa học cho mã đã yêu cầu.' };
             }
+            const course = page.items[0];
             this.draft.set({
               title: course.title,
-              description: course.description ?? '',
+              description: course.description,
               price: course.price,
             });
             return { status: 'loaded', course };

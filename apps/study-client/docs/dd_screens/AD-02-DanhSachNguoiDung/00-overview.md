@@ -8,7 +8,7 @@
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | `BLOCKED — decisions remain open`; local implementation: `PARTIAL SOURCE — route/page/#68 caller wired`; runtime: `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.2 / 2026-11-17 |
+| Version / last updated | 0.4 / 2026-11-21 |
 | Nguồn đối chiếu | [AD-02.md](../../screen_stitch/05_admin/AD-02_danh-sach-nguoi-dung/AD-02.md), [AD-02_PLAN.md](../../screen_stitch/05_admin/AD-02_danh-sach-nguoi-dung/AD-02_PLAN.md), [AD-02_markers.json](../../screen_stitch/05_admin/AD-02_danh-sach-nguoi-dung/AD-02_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -18,11 +18,22 @@
 
 ### Current source snapshot (2026-11-17, T030)
 
-- `admin.routes.ts` child `users` routes to `AD02Page`; the page calls `AD02ApiService` → `AdminApiService` / API_068 → `GET /api/v1/admin/users` and renders the source-backed list, filters, pagination, refresh, and AD-03 ID links.
+- `admin.routes.ts` child `users` routes to `AD02Page`; the page calls `AD02ApiService` → `AdminApiService` / API_068 → `GET /api/v1/admin/users` and renders the source-backed list, filters, pagination, refresh, and AD-03 ID links. User IDs use exact-safe int64 display; a detail link is created only for a positive JavaScript safe integer.
 - Loading, loaded empty, service error, and API #68 page-422 recovery are separate in source. The 422 action resets `page=1` while retaining filters and unrelated query parameters.
 - Focused Angular spec: 8/8 passed; API #68 fake-session tests: 15 passed; Study Web production build: exit 0 with three existing Student CSS budget warnings and no AD-02 warning.
 - Local browser opened `/admin/users` and showed the Admin login gate. No authenticated session was available, so the AD-02 list itself, live API/DB, and deployment remain `NOT VERIFIED`.
+- An ID outside JavaScript's safe-integer range displays as unavailable for exact representation and does not create a detail link; #68 still returns the ID as an int64-backed JSON number.
 - This snapshot supersedes the conversion-time statements below that said the route/client did not exist. Static HTML observations still describe only the prototype. DD, permission, enum/PII/lifecycle, and live-schema decisions remain blocked.
+
+### Current source update (2026-11-20)
+
+- `renderUserRow` displays `ACTIVE`, `SUSPENDED`, and `DELETED` as “Đang hoạt động”, “Đã tạm khóa”, and “Đã đánh dấu xóa”; unknown values use “Trạng thái chưa được hỗ trợ”. This is presentation-only: #68 filters still use the exact source/API string, and this mapping does not establish a complete status enum or lifecycle policy.
+
+### Current source update (2026-11-21)
+
+- The table now has the Stitch-specified seventh `Thao tác` column. For positive JavaScript safe-integer IDs, each row routes to AD-04 (`Chỉnh sửa`) and AD-05 (`Quản lý trạng thái`); the ID cell continues to route to AD-03. These are screen handoffs only: AD-02 does not call #70/#71/#72, and destination mutation controls remain subject to their current contract gates.
+- Rows without an exactly representable positive ID render no detail/action links. The #68 read query, row projection, filters, order and pagination are unchanged. Authenticated runtime and permissions remain unverified.
+- The title, email-column label, and disabled create/export/help affordances now follow the source screen. These controls expose no handler/API. Role/status remain exact-string text filters because #68 has no complete approved option set; do not narrow the values from the mutation contracts alone.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -50,6 +61,7 @@
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Đồng bộ renderer ID: không hiển thị số user int64 đã bị JavaScript làm tròn và chỉ mở AD-03 với ID dương, an toàn chính xác.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -84,7 +96,7 @@ API #68 direct contract đã đồng bộ catalog/AC thành `ApiEnvelope<Page<Us
 | `full_name` | string | Cột họ và tên. | Không có display-name khác trong response này. |
 | `email` | string | Cột email. | PII visibility cần owner xác nhận. |
 | `role` | string | Cột vai trò. | Enum members và UI label mapping chưa được duyệt. |
-| `status` | string | Cột trạng thái. | Enum members và nhãn UI chưa được duyệt. |
+| `status` | string | Cột trạng thái. | #68 không công bố enum đầy đủ; current Angular row localizes the source-backed `ACTIVE`/`SUSPENDED`/`DELETED` values, with a neutral unknown-value label. Filter values remain exact strings. |
 | `created_at` | datetime | Cột ngày tạo. | Quy tắc timezone/format hiển thị chưa được chốt. |
 | `avatar_url` | string hoặc null | Có thể dùng cho avatar nếu UI quyết định hiển thị. | Screenshot không có avatar column trong bảng. |
 | `phone` | string hoặc null | Không hiển thị trên bảng hiện tại. | Không thêm PII này vào list UI khi chưa có yêu cầu/quyền rõ ràng. |
@@ -110,3 +122,9 @@ API #68 direct contract đã đồng bộ catalog/AC thành `ApiEnvelope<Page<Us
 - [API #68 overview](../../../../study-server/docs/dd/68_admin_users_list/02_Overview.md) · [request](../../../../study-server/docs/dd/68_admin_users_list/03_Request.md) · [response](../../../../study-server/docs/dd/68_admin_users_list/04_Response.md) · [open questions](../../../../study-server/docs/dd/68_admin_users_list/OPEN_QUESTIONS.md)
 - [Study Web design target](../../../../../.agents/web-study/design.md) · [Study Web source boundary](../../../../../.agents/web-work/study/AGENTS.md)
 - [Current API route](../../../../study-server/app/api/v1.py) · [API #68 query/view](../../../../study-server/app/modules/admin/api_68_admin_users_list/view.py) · [SQL](../../../../study-server/app/modules/admin/api_68_admin_users_list/query.py) · [validation](../../../../study-server/app/modules/admin/api_68_admin_users_list/validate.py) · [HTTP test source](../../../../study-server/tests/modules/admin/api_68_admin_users_list/test_admin_users_list.py)
+
+### Current-source addendum — 2026-11-21
+
+- AD02Page now requires DESIGN_RESOURCE_RETRIEVED and validates the #68 UserProfile Page projection, fixed size 20, requested-page echo and safe total_pages arithmetic before mapping rows.
+- The #68 COUNT and LIST reads are separate. On expected-row mismatch, AD-02 preserves users returned by LIST, hides possibly stale total and pagination values, and offers a same-query/page retry. An empty page beyond total_pages has a page-1 recovery action; matching empty results remain the ordinary filtered-empty state.
+- Keyword/role/status behavior, query-string synchronization, exact-safe ID actions and existing 422 page recovery remain. User-management permission, filter vocabulary/ID search, PII/lifecycle, live schema and browser runtime remain unresolved. AD-02 stays 75%; mismatch recovery does not complete another weighted axis. No tests/build/lint/browser/API runtime were run.

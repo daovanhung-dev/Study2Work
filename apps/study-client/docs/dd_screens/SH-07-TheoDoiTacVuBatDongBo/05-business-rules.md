@@ -1,5 +1,7 @@
 # SH-07 — Business Rules
 
+> **Current source (2026-11-21):** Implemented scope is notification-only API #18 lookup by UUID and authenticated owner. The client fetches on entry and manual refresh, with no polling. Generic operation-kind/lifecycle rules below remain unresolved design questions.
+
 ## 1. Rule index
 | Rule ID (package alias) | Tên / source ID | Áp dụng | Thực thi | Tests |
 |---|---|---|---|---|
@@ -7,7 +9,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Dùng lại trạng thái job thanh toán/gửi thông báo/export theo ownership.
-- Gate/status (giữ nguyên): **D**; **BLOCK:** Operation status enum/ID mapping còn mâu thuẫn
+- Generic API #18 DD status remains **Draft** for non-notification kinds/lifecycle. The notification-only UUID/owner mapping used by SH-07 is implemented and tested locally.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: 9. Bảo mật, accessibility và design system
@@ -34,7 +36,7 @@
 | `SH07-B02` | Polling/TTL/retry | Không cadence, SSE route, backoff, polling stop/retention policy. | Product/BE chốt transport/frequency/reconnect/retry/retention trước khi bật status refresh. |
 | `SH07-B03` | Return navigation | Inventory links to four caller screens; prototype CTA uses GS-01/SH-01. | Product/FE chốt safe origin preservation/return target; không tự tạo query/state contract. |
 | `SH07-B04` | Prototype vs user surface | Visible developer diagnostics, mock environment/ID and architecture claims. | UX/Product quyết định developer panel có bị loại khỏi production screen hay có audience guard. |
-| `SH07-B05` | SH-07 route/caller absent | Study Web app/router có thật nhưng chưa có `/operations/:operationId`, SH-07 feature caller hoặc wired API #18 descriptor. | Chỉ triển khai route/caller khi ID, status/result, ownership, producer và polling/return contracts được duyệt. |
+| `SH07-B05` | Generic operation tracking is broader than current screen scope | Notification-only #18 UUID lookup and owner-bound client caller are wired; payment/export lifecycle, generic result schema and polling policy are not implemented. | Keep the screen scoped to notification data; do not add generic kinds until their contracts are approved. |
 
 ## 3. Quy tắc chưa xác nhận
 - `CẦN_XÁC_NHẬN`: các quyết định/blocker trong inventory và DD nguồn chưa được giải quyết.

@@ -1,5 +1,7 @@
 # AD-02 — UI Elements
 
+> Current Angular row source displays the known `ACTIVE`, `SUSPENDED`, and `DELETED` statuses with Vietnamese labels and a neutral fallback. This does not change the exact-string #68 filter contract or settle the full status enum; prototype filter options below remain a separate, non-wired screenshot observation.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.
@@ -97,6 +99,12 @@ Mỗi dòng khớp một marker cùng số trong [AD-02_markers.json](../../scre
 ## 4. Conditional UI & state variations
 - States theo inventory: loading/empty/ready/filter-error
 - Detail/conditional visibility: xem section elements/state của [DD nguồn](../../screen_stitch/05_admin/AD-02_danh-sach-nguoi-dung/AD-02.md); không diễn giải ảnh tĩnh thành behavior runtime.
+
+### Current source update (2026-11-21)
+
+- The response-backed user table includes the seven source-specified columns, including `Thao tác`. A positive JavaScript safe-integer ID receives 44px-minimum `Chỉnh sửa` and `Quản lý trạng thái` links; the ID remains the AD-03 detail link. Unsafe/non-positive IDs have no route actions and show a non-actionable label.
+- The page uses the source title and email-column label. Add, export, and help controls are present but disabled with accessible explanations; they issue no request. The action links do not mutate user data. #68 remains the sole AD-02 API, and unsupported audit/sync claims remain absent.
+- Role/status remain exact-string text filters because #68 accepts string filters and the complete queryable value sets are not defined by its source contract.
 
 ## 5. Link
 - [Events](02-events.md) · [Data Flow](03-data-flow.md) · [Tests](07-test-cases.md)

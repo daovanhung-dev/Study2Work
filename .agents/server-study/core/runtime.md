@@ -133,7 +133,8 @@ response header, while unexpected exceptions propagate to Starlette's outer
 
 - API #47 `POST /api/v1/mentor/courses/{course_id}/lectures` requires direct
   `courses.mentor_id` ownership, resolves uploads under the same owner,
-  `LECTURE` purpose and course, inserts `lessons`, and writes ordered
+  `LECTURE` purpose and course, accepts T041-approved Markdown string content,
+  inserts `lessons`, and writes ordered
   `lesson_uploads` rows in the same transaction for non-empty `asset_refs`.
 - API #48 `GET /api/v1/mentor/lectures/{lecture_id}` is registered in
   `DESIGN_CONTRACT_PATHS`, uses the shared Mentor guard and the same direct-owner
@@ -292,7 +293,7 @@ current trace module.
 
 ## API #63 Mentor notifications
 
-`POST /api/v1/mentor/notifications` is registered in the design-contract path set with HTTP 202. It authenticates MENTOR, validates the strict direct catalog body, parses recipient and channel CSVs, then requires all Student IDs to share an ACTIVE roster in a directly owned course because the body has no course ID. The view inserts per-recipient legacy notification rows and per-channel `QUEUED` outbox rows in one caller-owned transaction; the response Operation UUID groups the batch and `meta.notification_ids` hands IDs to API #64. Error responses use the catalog 401/403/422/503/500 mappings and rollback on write/projection/commit failure. The schema and business interpretation are DERIVED; HTTP tests use fake DB sessions and do not verify migration deployment or actual Push/Email delivery. No worker/provider is wired.
+`POST /api/v1/mentor/notifications` is registered in the design-contract path set with HTTP 202. It authenticates MENTOR, validates the strict direct catalog body (`content` is text), parses recipient and channel CSVs, then requires all Student IDs to share an ACTIVE roster in a directly owned course because the body has no course ID. The view inserts per-recipient legacy notification rows and per-channel `QUEUED` outbox rows in one caller-owned transaction; the response Operation UUID groups the batch and `meta.notification_ids` hands IDs to API #64. Error responses use the catalog 401/403/422/503/500 mappings and rollback on write/projection/commit failure. Recipient/channel encoding, schema and business interpretation remain DERIVED; HTTP tests use fake DB sessions and do not verify migration deployment or actual Push/Email delivery. No worker/provider is wired.
 
 ## API #64 Mentor notification status
 

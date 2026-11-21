@@ -2,8 +2,8 @@
 
 ## 1. Route definition
 - Current route in inventory: `/student/assignments/:assignmentId`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `assignmentId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: current Study Client route/page; deployed runtime is not verified.
+- Route params/types: `assignmentId` is parsed as a positive int64-compatible ID; invalid IDs do not issue #33.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
@@ -20,8 +20,8 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: current route load calls #33 and cancels stale reads when the ID changes.
+- Invalid/missing ID: the page shows an error and offers user-triggered retry after read errors; API #33 applies int64 parsing.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram

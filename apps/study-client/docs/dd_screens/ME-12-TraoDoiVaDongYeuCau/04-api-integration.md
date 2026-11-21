@@ -1,5 +1,9 @@
 # ME-12 — API Integration
 
+## Current caller status — 2026-11-21
+
+ME12 calls #59 reactively and validates `DESIGN_RESOURCE_RETRIEVED` plus the requested ID. #60 sends `{message, attachment_refs}`; the backend validator accepts an empty attachment array and the success code is `DESIGN_RESOURCE_UPDATED`. The page confirms a new matching message and requires #59 refresh before retry after ambiguous failure. The #60 success remains visible if that refresh fails. Reply is gated for terminal/unknown statuses while the policy is unresolved. #61 has no ME12 page caller because its minimum-exchange/satisfaction and confirmation gates remain unresolved. Runtime remains NOT VERIFIED.
+
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
 ## 1. API usage matrix
@@ -13,7 +17,7 @@
 
 - API refs trong inventory: #59, #60, #61
 - Orchestration/data notes: GET #59 → POST #60 reply → reload #59; PATCH #61 resolve sau xác nhận.
-- BE/source status và gate: **R**; #59–#61 local route/module/query/model/test source-backed, migration 008 local; API DD Draft/DERIVED, live schema chưa verified. **BLOCK:** loaded thread/full-thread scale và attachment UI chưa có thiết kế; counter 2000 khác #60 không max; #61 không enforce tối thiểu một message, AC satisfaction/confirmation chưa chốt; #60 vẫn nhận reply sau RESOLVED/CANCELLED; POST retry không idempotent, GET refresh policy cần thống nhất; Socket/TLS, SLA, auto-settlement/survey là prototype claim; Student producer chưa có; Study Web UNWIRED
+- BE/source status và gate: **R**; #59–#61 local route/module/query/model/test source-backed, migration 008 local; API DD Draft/DERIVED, live schema chưa verified. **BLOCK:** loaded thread/full-thread scale and attachment UI are not designed; prototype counter 2000 differs from #60's no-max contract; #61 does not enforce a minimum message count and AC satisfaction/confirmation is unresolved; #60 accepts replies after RESOLVED/CANCELLED but client policy is unresolved; POST is not idempotent and GET refresh policy needs approval; Socket/TLS, SLA, auto-settlement/survey are prototype claims; Student producer is absent. Study Web page calls #59/#60 only; #61 remains gated.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: D.1. Shared API envelope and error handling

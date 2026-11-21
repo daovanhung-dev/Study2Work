@@ -85,3 +85,11 @@
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)
+
+## 3. Current Study Client source observed (2026-11-20)
+
+- The Angular route `/admin/reports/community-impact` renders `AD24Page` behind the existing Admin session gate. Runtime navigation/session behavior has not been exercised.
+- The page shows four blank KPI placeholders and four cards explicitly labeled as design proposals. No report values or chart data are fabricated.
+- Date/segment controls and apply/reset/refresh/export actions are disabled. The component has no #101/#102 caller, and Study Server has no corresponding route/query/model/test source.
+- Returning to `/admin` is available through the page's back navigation. Other prototype event descriptions above describe `code.html`, not the current Angular page.
+- Runtime remains NOT VERIFIED; the source read does not establish visual runtime behavior or API execution.

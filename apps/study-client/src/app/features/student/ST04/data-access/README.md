@@ -1,9 +1,8 @@
 # ST-04 data access
 
-Route metadata records API #08 and #15, but this gate page has no HTTP caller.
-
-- API #08 is a public read, but the route's `courseId` to `course_id:int64` mapping is not approved.
-- API #15 has no route/module/query/model/test in the Study Server checkout and its Draft public response does not identify the current Student's enrollment.
-- Do not derive free/paid, already-enrolled, or checkout branches from display price or a guessed enrollment row.
-
-Keep the page in its static verification gate until the route parameter and enrollment identity/selection contract are resolved.
+- Public course detail is revalidated through `GS03CourseDetailService` / API #08.
+- Enrollment status and free enrollment use `StudentApiService` / APIs #15 and #19, which attach the in-memory Student Bearer token.
+- API #15 currently resolves only the authenticated Student and returns the latest enrollment row for that Student/course. Its catalog actor is still marked Public; keep the contract discrepancy visible.
+- A 404 from #15 after a published #08 response means no enrollment row was found for the authenticated Student. Only an `ACTIVE` row takes the already-enrolled path, matching API #19's current duplicate guard.
+- API #19 runs only after an explicit free-enrollment action. API #20 must then confirm the course before ST-08 opens. A failed #20 refresh never resends #19.
+- Paid courses hand off to ST-05 with the course ID; payment success and paid entitlement are never inferred in ST-04.

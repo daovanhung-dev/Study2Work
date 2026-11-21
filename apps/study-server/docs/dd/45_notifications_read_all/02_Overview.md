@@ -11,6 +11,10 @@ status: "Draft — Needs Confirmation"
 
 # Overview
 
+## Current source status — 2026-11-20
+
+`PATCH /api/v1/notifications/read-all` is registered and validates Student Bearer. It upserts read state for every unread notification directly owned by or addressed to the authenticated user, commits atomically, and returns `{updated_count}`. Migration 016 creates recipient/read state; live DB/runtime is not verified. The `{updated_count}` response differs from the API catalog's `Page<Notification>` and remains a `DISCREPANCY`.
+
 ## Khái quát
 
 | Thuộc tính | Giá trị |
@@ -25,7 +29,7 @@ status: "Draft — Needs Confirmation"
 | Authorization | Role `Student`; principal lấy từ token, không nhận user ID từ request. |
 | Basis | API catalog và nhánh ALL AC-20; cách lưu `is_read` và response Page là `DERIVED`. |
 | Status | Draft — Needs Confirmation |
-| Current runtime state | `UNWIRED / NOT_FOUND` — không có route/module/query/test API #45 trong Study source. |
+| Current runtime state | SOURCE WIRED — route/module/query exist and use Student auth; live DB/deployment is not verified. |
 | Transaction | Một bulk update atomic trong transaction do caller/use-case sở hữu — `DERIVED`. |
 | Side effects | Chuyển read state của các direct-recipient notification đang unread; không gọi email/push/provider. |
 
@@ -40,27 +44,27 @@ status: "Draft — Needs Confirmation"
 - [V1-PILOT Study DDL](../../../../../infra/postgres/02_study_db.sql) — UUID `learner_id`, `read_at`, delivery table; mô hình khác với API catalog/current Study principal.
 - [Database context](../../../../../.agents/server-study/database.md) — schema artifacts không chứng minh live database.
 - [API guidelines](../../../../../contracts/api-guidelines/README.md) — envelope, trace, error body và idempotency guideline.
-- Current [Study router](../../../app/api/v1.py), [Student auth helper](../../../app/utils/auth.py) và [response helper](../../../app/core/responses.py) — current boundary; API #45 chưa wired.
+- Current [Study router](../../../app/api/v1.py), [Student auth helper](../../../app/utils/auth.py) và [response helper](../../../app/core/responses.py) — current route and source implementation.
 - [API #43 list DD](../43_users_me_notifications/02_Overview.md), [API #44 mark-one DD](../44_notifications_mark_read/02_Overview.md), và [API #42 Page response precedent](../42_discussions_detail/04_Response.md).
 - [Canonical DD Markdown template](../../../../../.agents/skills/create_dd_api/docs/dd/DD_API_Template_MD/) — tám sheet; fingerprint tại [VERIFICATION_REPORT.md](./VERIFICATION_REPORT.md).
 
 ## Tables read
 
 - `notifications` — candidate target rows and `RETURNING` projection in the legacy schema proposal.
-- `NotificationRecipient` — logical per-recipient object in AC-20; no matching table in the legacy ERD/DDL.
+- `notification_recipients` — physical per-recipient read-state table added by migration 016; live migration application is not verified.
 - `notification_deliveries` — exists only in the alternative V1-PILOT DDL; not joined in this candidate because its UUID identity model does not align with this API contract.
 
 ## Tables write
 
-- `notifications` — candidate update of `is_read` for unread rows owned by the authenticated Student.
-- No write to `notification_deliveries` in this proposal.
+- `notification_recipients` — current source upserts read state for unread notifications addressable by the authenticated Student.
+- No write to `notification_deliveries` in this operation.
 
 ## Mục chú ý
 
-- Preserve the exact API catalog contract: empty `body{}`, `ApiEnvelope<Page<Notification>>`, 200 `DESIGN_RESOURCE_UPDATED`, and errors 401/403/422/500 only.
+- Current source accepts no body and returns `ApiEnvelope<{updated_count:number}>`, 200 `DESIGN_RESOURCE_UPDATED`, with 401/403/500 errors. The catalog declares an empty body and `Page<Notification>` response; the response mismatch is preserved here rather than reconciled by assumption.
 - AC-20 says “BULK UPDATE unread notifications”; candidate predicates are `user_id = principal_id` and `is_read = FALSE`.
 - A zero-row update is a successful no-op — `DERIVED`; API #45 has no resource ID and no 404 error.
-- Candidate response contains only rows changed by this call, returned in one `Page`; page metadata and unbounded result size are open design choices.
+- Current response returns the count of rows updated; zero rows is a successful no-op with `updated_count:0`.
 - `NotificationRecipient.read_at`, `channels`, `status`, and `scheduled_at` cannot be safely mapped from one schema model without resolving the DDL conflict.
 - No `Idempotency-Key` is added because it is absent from the API catalog; assigning `is_read=TRUE` is state-idempotent.
 

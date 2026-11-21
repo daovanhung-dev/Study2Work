@@ -24,42 +24,43 @@
 | `ME-05-EV-019` | `ME05-EV-19` / ME05-EV-19 — Global header search, notifications and account | See source event detail below |
 | `ME-05-EV-020` | `ME05-EV-20` / ME05-EV-20 — Footer navigation | See source event detail below |
 
-> Event IDs trong package là alias để theo template; Source Event IDs, steps và API links giữ theo DD nguồn. Alias không chứng minh event runtime.
+> Event IDs trong package là alias để theo template; Source Event IDs, steps và API links giữ theo DD nguồn. Bảng event nguồn vẫn ghi nhận các hành vi mockup; route/API #48 cùng nhóm event được đánh dấu **CURRENT SOURCE** đã có implementation local.
 
 ## 2. Chi tiết event từ DD nguồn
 
 ### Trích từ DD nguồn: 4. Event specification
 
-All behavior below is an expected DD contract candidate unless tagged **CURRENT SOURCE**. Current `code.html` has no inline handlers; all anchors target `#`. No browser action is runtime verified.
+Behavior dưới đây tách biệt thiết kế mẫu với implementation. `code.html` là snapshot tĩnh, các anchor của snapshot trỏ `#`; Study Web hiện có route Angular và các link #6/#7 được dựng từ `course_id`. Không có browser action nào được xác minh trong task này.
 
 ### ME05-EV-01 — Open lecture detail / GET #48
 
 - **Trigger/input:** Open proposed `/mentor/lectures/:lectureId`; `lectureId` is a path string; authenticated Mentor Bearer token is required by API #48.
-- **Preconditions:** Browser route exists, auth token is available, and requested lecture is in the access scope accepted by the API. The first two conditions are not currently wired/verified.
+- **Preconditions:** Route `/mentor/lectures/:lectureId` is registered; `MentorApiService` lấy Mentor token; API #48 tự xác thực role và owner. Browser/deployment chưa xác minh.
+- **CURRENT SOURCE:** `paramMap` đổi ID sẽ hủy request cũ; ID invalid dừng trước API. Retry chạy lại ID hiện hành; subscription đóng khi component bị hủy.
 - **Processing (current source):** API checks MENTOR auth first; parses signed int64; Q1 resolves non-DELETED lecture + parent course; enforces direct owner; Q2 resolves ordered uploads within owner/purpose/course scope.
 - **Success/output:** 200 `DESIGN_RESOURCE_RETRIEVED`, `data:Lecture`; render only returned fields, preserve `content:null`, `assets:[]`, and stored status. Do not infer author/course name/video/analytics.
 - **Errors:** 401 authentication required; 403 access denied (wrong role or direct-owner mismatch); 404 invalid/missing/deleted lecture; 500 safe internal error for DB/parent/asset mapping failures. Source has no API #48 422 branch for path parse.
 - **Side effect:** Read-only; no commit or mutation.
-- **Evidence/status:** Route/module/tests exist locally; source test uses fake DB and was not run in this task; deployment/runtime not verified.
+- **Evidence/status:** Route, caller và handler tồn tại trong source. Không chạy test/build/browser; deployment/runtime chưa xác minh.
 
 ### ME05-EV-02 — Map successful response and render states
 
 - **Trigger/input:** Successful #48 envelope.
-- **Processing:** Map `data.id/title/course_id/content/assets/order/status` as defined in §2. Do not synthesize values for missing screenshot panels. Confirm whether `content` is renderable before interpreting it as formatted notes.
-- **Output:** `ready` state only for source-supported fields. `content:null` and `assets:[]` are successful values, not transport errors. No per-panel partial-load behavior is possible from #48 alone.
-- **Errors/status:** UI loading/retry/cancel/partial-content behavior remains unimplemented. Do not show fixture values as fallback.
+- **Processing:** Validate envelope, exact `DESIGN_RESOURCE_RETRIEVED`, requested/returned ID, course ID, title/content/assets/order/status before rendering. T041 defines #47 content as Markdown text; ME-05 displays it as escaped plain text in `<pre>`.
+- **Output:** Ready renders only response-backed fields. `content:null` and `assets:[]` are valid; asset URLs remain unused because access/expiry is unverified.
+- **CURRENT SOURCE:** Loading, invalid ID, 403 forbidden, 404, recoverable error/retry, ready, null/empty content and empty-assets states are implemented. HTTP 403 shows a non-revealing access-denied state and course-list link without retry; transient errors retain retry. No fixture data is used.
 
 ### ME05-EV-03 — Breadcrumb to ME-02 course list
 
 - **Trigger/input:** Activate #6.
 - **Processing/output:** Expected route to Mentor course list; retain no token in URL. Whether to preserve filters/page is unspecified.
-- **Current:** `href="#"`; route/handoff not wired.
+- **CURRENT SOURCE:** Link routes to `/mentor/courses` (ME-02); no token or sample course identity is placed in the URL.
 
 ### ME05-EV-04 — Breadcrumb to ME-03 course workspace
 
 - **Trigger/input:** Activate #7; course context requires `data.course_id` once #48 succeeds.
 - **Processing/output:** Proposed `/mentor/courses/:courseId` (ME-03), with numeric `data.course_id`; sample course title/code is not supplied by #48.
-- **Current:** `href="#"`; mapping from lecture route to workspace is proposed only. If load failed before `data.course_id`, return destination behavior is unresolved.
+- **CURRENT SOURCE:** After a valid #48 response, link routes to `/mentor/courses/:courseId` using the validated `data.course_id`. In load/404 states, the ME-02 link is available.
 
 ### ME05-EV-05 — Copy lecture link
 
@@ -148,7 +149,7 @@ All behavior below is an expected DD contract candidate unless tagged **CURRENT 
 
 - **Trigger/input:** Render #29–#32; select a row if it is actionable.
 - **Current:** API #48 returns only current lecture/order/course_id. ME-06 inventory uses #49 for a separate Content tree; #48 does not return lesson siblings, chapter tree, duration or next/previous IDs.
-- **Output/status:** Current row can be identified by route lectureId only after routing is implemented. No sibling links, tree panel data or selection behavior can be fabricated. Decide whether the panel links to ME-06 or consumes another approved API.
+- **CURRENT SOURCE:** The current lecture is identified from validated #48 `data.id`; a supported link opens ME-06 using `data.course_id`. #48 does not provide sibling rows/tree nodes, so previous/next selection remains blocked.
 
 ### ME05-EV-19 — Global header search, notifications and account
 

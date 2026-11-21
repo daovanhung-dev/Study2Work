@@ -61,7 +61,7 @@
 | Thuộc tính | Đặc tả |
 |---|---|
 | Element / trigger | #15 — “Chỉnh sửa thông tin (AD-04)”. |
-| Current/source state | Prototype button `disabled` và không có click handler; Angular AD03 template có router link tới AD-04 khi có `userId`. Permission/contract gate vẫn giữ; runtime chưa xác minh. |
+| Current/source state | Angular AD03 keeps the AD-04 button disabled with an accessible explanation while permission/editable-field/#70 body approval remains open; no mutation is issued here. Runtime chưa xác minh. |
 | Gating | Giữ disabled đến khi Admin policy, AD-04 route, editable field rules và API #70 request body/role rules được xác nhận. |
 | Processing khi được wire | Điều hướng ID hiện tại sang AD-04; không PUT từ AD-03. AD-04 định nghĩa #70, validation, dirty state và lỗi. |
 | Result | Quay lại hoặc refresh AD-03 theo flow AD-04 đã chốt. Không tự suy ra API #70 body hoặc thành công chỉ từ AC branch. |
@@ -71,7 +71,7 @@
 | Thuộc tính | Đặc tả |
 |---|---|
 | Element / trigger | #17 — “Khóa hoặc thay đổi trạng thái (AD-05)”. |
-| Current/source state | Prototype button `disabled` và không có handler; Angular AD03 template có router link tới AD-05 khi có `userId`. Permission/contract gate vẫn giữ; runtime chưa xác minh. |
+| Current/source state | Angular AD03 keeps the AD-05 button disabled with an accessible explanation while status/delete policy and mutation acceptance remain open; no mutation is issued here. Runtime chưa xác minh. |
 | Gating | Giữ disabled đến khi status/delete policy, confirmation, lifecycle, quyền và AD-05 contract được duyệt. |
 | Processing khi được wire | Chuyển ID sang AD-05. #71/#72 thuộc màn hình đích; AD-03 không PATCH/DELETE. Không mặc định session revoke hoặc token invalidation. |
 | Result | Thành công/refresh list/detail theo DD AD-05; conflict/404/validation handling phải theo source/contracts của màn hình đó. |

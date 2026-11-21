@@ -1,5 +1,9 @@
 # ME-12 — Data Flow & State
 
+## Current source update — 2026-11-21
+
+Route changes trigger a fresh #59 read and cancel the prior read. #59/#60 responses are checked for exact business code, request identity and nested thread projections. #60 sends the backend-validated empty attachment array for text-only replies, checks that the returned thread includes a new matching message, and blocks blind repeat after an ambiguous result until #59 is reloaded. A confirmed #60 outcome remains visible alongside a failed #59 refresh. Reply is enabled only for OPEN, IN_PROGRESS or WAITING_LEARNER; terminal/unknown-status replies are gated while their policy is unresolved. #61 has no ME12 page caller; its UI action stays disabled until its readiness/satisfaction gate and confirmation interaction are approved. Attachments render metadata only and do not open the response URL.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|
@@ -65,7 +69,7 @@
 | resolving | #61 pending | Disable #32 and conflicting actions. | Resolve response or mapped failure. |
 | resolved | #61 returns RESOLVED | Show server status/timestamp. Whether reply remains enabled is blocked because #60 currently accepts post-resolve reply. | Back to list; reply policy needs approval. |
 
-No current UI/runtime implements these states. The screenshot only provides the initial empty-thread visual and disabled controls.
+Current source implements route loading, distinct read errors, ready threads and #60 reply states. #61 resolving/resolved transitions remain expected-only because the approved readiness/satisfaction gate and confirmation interaction are still missing. The screenshot remains limited to the initial empty-thread visual and disabled controls.
 
 ### E.2. State transitions
 

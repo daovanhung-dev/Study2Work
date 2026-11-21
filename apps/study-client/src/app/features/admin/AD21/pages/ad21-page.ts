@@ -21,9 +21,23 @@ export class AD21Page {
     'notificationId',
     (notificationId) => this.api.getStatus(notificationId),
     (notification) => loadedFields(renderNotificationStatusFields(notification)),
+    isPositiveSignedInt64NotificationId,
+    'Mã thông báo trên đường dẫn phải là số nguyên dương trong giới hạn signed 64-bit.',
   );
 
   valueFor(label: string): string {
     return this.viewState().fields?.find((field) => field.label === label)?.value ?? '—';
   }
+}
+
+function isPositiveSignedInt64NotificationId(value: string): boolean {
+  const match = /^[0-9]+$/.exec(value);
+  if (value.length > 19 || match?.[0] !== value) {
+    return false;
+  }
+
+  const digits = value.replace(/^0+/, '') || '0';
+  const max = '9223372036854775807';
+  return digits !== '0'
+    && (digits.length < max.length || (digits.length === max.length && digits <= max));
 }

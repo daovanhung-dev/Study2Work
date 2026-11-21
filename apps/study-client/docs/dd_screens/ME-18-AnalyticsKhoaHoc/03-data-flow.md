@@ -94,3 +94,9 @@
 
 ## 8. Trace
 [Events](02-events.md) · [API](04-api-integration.md) · [Rules](05-business-rules.md)
+
+## Current Study Client source (2026-11-21)
+
+- ME18 follows route `courseId`, rejects invalid IDs before #66 and cancels the prior request when the route changes. Manual reload retries only while a valid route ID is active.
+- A response is displayed only for `DESIGN_RESOURCE_RETRIEVED` with safe nonnegative `tracked_lesson_accesses` and `students_with_activity` counts, the latter no greater than the former, and a nullable valid timestamp. The client also enforces the aggregate relationship: `0` tracked pairs requires `0` Students and `last_activity_at=null`; positive tracked pairs require at least one Student and a non-null latest timestamp.
+- Zero tracked pairs with a null timestamp is presented as no timestamped Student/lesson access in this API projection; it does not claim ETL inactivity or absence of enrollment. No time-series, completion, rating, export or event history is shown.

@@ -1,24 +1,28 @@
 # Câu hỏi mở — Study API #93 Tạo/phát notification
 
-**Trạng thái:** Draft — Needs Confirmation. Contract trực tiếp được giữ; runtime fallback đã triển khai nhưng chưa được owner duyệt.
+**Trạng thái:** Draft — Needs Confirmation for broader AC-36 audience/permission/campaign behavior. The AD-20 explicit-recipient producer slice is source-wired and reconciled as of 2026-11-21; its local HTTP tests do not verify live schema/deployment or delivery.
+
+**Current AD-20 decision (2026-11-21):** Load a paged explicit recipient list through API #68, require a user-selected recipient set, submit it through #93, and pass `meta.operation_id:uuid` to notification-only API #18 via SH-07. Segment selection is not part of this screen.
 
 <a id="q-93-01-notification-or-operation-response"></a>
 
 ## Q-93-01 — Response Notification hay Operation?
 
-Catalog #93 row and AC-36 node n5 say ApiEnvelope<Notification> at 202. Operation tracking summary says data: Operation. Notification ID is int64; Operation ID schema is UUID. API #18 row says operation_id:int64 while diagram/schema use UUID.
+Catalog #93 row and AC-36 node n5 say ApiEnvelope<Notification> at 202. Operation tracking summary says data: Operation. Notification ID is int64; Operation ID schema is UUID. The current #18 row and diagram/schema use UUID.
 
-**Runtime fallback:** `data` is the first per-recipient Notification; `meta.operation_id` is one shared UUID and `meta.notification_ids` lists all inserted int64 IDs.
+**Current catalog/source:** `data` is the first per-recipient Notification; declared `meta.operation_id` is one shared UUID and `meta.notification_ids` lists all inserted int64 IDs.
 
-**Ảnh hưởng:** Response metadata is not part of the direct row and does not resolve generic #18 Operation storage, the canonical #18 ID/owner contract, or API #96 handoff. Current #18 source provides only a notification-specific UUID/sender lookup.
+**Ảnh hưởng:** Response metadata carries a notification-only UUID handoff and current #18 source provides the corresponding notification-specific UUID/sender lookup. This does not establish generic Operation persistence or reconcile all tracking prose for other producers.
 
-**Cần xác nhận:** Response chính thức là Notification hay Operation? Nếu Operation, field nào nối notification_id:int64 với operation_id:uuid?
+**Quyết định cho AD-20 (2026-11-21):** `RESOLVED_FOR_AD-20` — consume the catalog/source `ApiEnvelope<Notification>` plus `meta.operation_id:uuid`, then route to SH-07. The wider Operation tracking prose and other producer response schemas remain a separate DD question.
 
 <a id="q-93-02-audience-selection"></a>
 
 ## Q-93-02 — Chọn recipients hay segment?
 
 Both recipients?:int64[] and segment?:AudienceSegment are optional. AC-36 does not define XOR, empty array, duplicate rule, enum values, or audience predicate.
+
+**Decision for AD-20 (2026-11-21):** `RESOLVED_FOR_AD-20` — use explicit selected recipients from API #68. AD-20 does not offer segment mode and sends only selected user IDs.
 
 **Runtime fallback:** Require a non-empty explicit `recipients` list; require positive unique int64 IDs that exist in `users`; reject a supplied `segment` with 422. No recipient role/status/course rule is applied.
 

@@ -34,7 +34,7 @@ format: markdown
 - [00_AC_API_INDEX.md](../../../docs/diagrams/AC_UNICA/00_AC_API_INDEX.md) — AC-12 mapping.
 - [DB.sql](../../../../../infra/postgres/study-server/DB.sql) — courses và enrollments columns.
 - [DB_UNICA_TABLES.md](../../../docs/diagrams/DB_UNICA_TABLES.md) — enrollment relationship.
-- [v1.py](../../../app/api/v1.py) — xác nhận API #15 chưa được route.
+- [v1.py](../../../app/api/v1.py) — current source registers API #15; see the T004 implementation addendum.
 
 ## Tables read
 
@@ -76,6 +76,10 @@ format: markdown
 - Course lookup có thể dùng courses.id.
 - Enrollment lookup có thể cần enrollments.course_id; index/unique selection policy chưa được source xác nhận.
 - Không thiết kế cache hoặc pagination vì contract không yêu cầu.
+
+## Current source addendum — T004
+
+Current Study implementation requires Student Bearer authentication and scopes the enrollment query to the authenticated user. Missing/invalid identity returns generic 404; no query selects an enrollment across all users. The response still contains the current user's latest enrollment row (`ORDER BY e.id DESC LIMIT 1`). The canonical Public/no-Bearer contract above remains unchanged and conflicts with this implementation; do not treat this addendum as approval to change `list_api.md`. Existing test source reflects the previous anonymous behavior and was not run.
 
 ---
 ## Phụ lục đối chiếu template Markdown

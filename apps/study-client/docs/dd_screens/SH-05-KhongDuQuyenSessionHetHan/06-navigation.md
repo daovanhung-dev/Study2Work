@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/forbidden`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: registered in `features/shared/shared.route.ts`; caller handoff is source-wired from API #04 401/403; runtime not verified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,19 +10,26 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| Không khai báo trong cột điều hướng inventory. | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| ST-02/ST-03 API #04 read | StudentApiService catches valid #04 401/403 | Validated safe error state in `history.state.sh05Error`; no token/profile/returnTo | Route `/forbidden`; status and business code must match |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [SH-02](../SH-02-DangNhap/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [SH-02](../SH-02-DangNhap/00-overview.md) | 401 handoff login action | No `returnTo` | Shown only for validated 401 route handoff; API #03/G-14 handoff remains unresolved |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: route remains at `/forbidden`; valid router state is read from browser history; missing/invalid state displays a neutral no-context state. Runtime not verified.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
+
+### Current source navigation (2026-11-20)
+
+- API #04 401/403 caller outcomes navigate to `/forbidden` with a normalized history state. The route does not accept status, message, trace ID, or `returnTo` from query parameters.
+- 401 handoff shows `/login` through Angular RouterLink, without `returnTo`. It does not claim that the session expired; API #04 also maps a missing profile to the same 401 business code.
+- 403 does not refresh or show an unsafe browser-back action. No safe fallback route has been approved, so the page currently remains without a recovery link.
+- Direct navigation/reload without valid error state shows a generic no-context message. 5xx/network errors are not routed to SH-05 by this caller.
 
 ## 5. Diagram
 ```mermaid

@@ -5,19 +5,23 @@
 
 ## Q-03-01 — Success status và response schema nào là chuẩn?
 
-**Bằng chứng:** Catalog quy định HTTP `201 DESIGN_RESOURCE_CREATED` và `ApiEnvelope<UserProfile>`. AC-02/current source trả HTTP 200; source dùng `DESIGN_RESOURCE_RETRIEVED` và thêm `access_token`, `refresh_token`, `token_type`, `expires_in`, `refresh_expires_in`.
+**Trạng thái 2026-11-21:** `RESOLVED_FOR_SH-02` theo quyết định người dùng: dùng current Study Server contract và đồng bộ catalog/DD thành HTTP `200 DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<LoginData>` với profile fields và năm token fields. Live deployment vẫn chưa xác minh.
+
+**Bằng chứng trước khi reconcile:** Catalog cũ quy định HTTP `201 DESIGN_RESOURCE_CREATED` và `ApiEnvelope<UserProfile>`. AC-02/current source trả HTTP 200; source dùng `DESIGN_RESOURCE_RETRIEVED` và thêm `access_token`, `refresh_token`, `token_type`, `expires_in`, `refresh_expires_in`.
 
 **Ảnh hưởng:** Client contract không thống nhất về status, business code và payload. `UserProfile` không định nghĩa token fields.
 
-**Cần xác nhận:** Chọn approved status/business code và response schema; xác định token fields có thuộc login response và reusable schema hay không. Không tự cập nhật catalog từ source.
+**Kết quả:** Catalog now defines `LoginData` and matches current source. Reusable `UserProfile` remains unchanged for non-login APIs.
 
 ## Q-03-02 — Login được phép trả các lỗi authentication nào?
+
+**Trạng thái 2026-11-21:** `RESOLVED_FOR_SH-02` theo quyết định dùng current Study Server API #03: catalog ghi nhận 401 `DESIGN_AUTHENTICATION_REQUIRED` cho credentials không hợp lệ và 403 `DESIGN_ACCESS_DENIED` cho account status không ACTIVE.
 
 **Bằng chứng:** Catalog chỉ liệt kê `422/500`. AC-02 và current source trả `401 DESIGN_AUTHENTICATION_REQUIRED` cho user không tồn tại/sai password; current source trả `403 DESIGN_ACCESS_DENIED` cho status khác `ACTIVE`.
 
 **Ảnh hưởng:** Consumer chưa có approved error contract cho credential failure, inactive account hoặc cách tránh lộ trạng thái tài khoản.
 
-**Cần xác nhận:** Chốt 401/403 và business codes, message semantics, cùng policy có chủ ý phân biệt locked/disabled hay không. Giữ nguyên normative error set hiện tại đến khi contract được duyệt.
+**Kết quả:** API catalog now follows the checked-in source response codes. Message privacy and the wider account-status policy remain outside this screen-level reconciliation.
 
 ## Q-03-03 — Token, claims, expiry và transport được duyệt ra sao?
 

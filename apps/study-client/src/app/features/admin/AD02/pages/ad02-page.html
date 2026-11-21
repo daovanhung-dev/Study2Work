@@ -13,8 +13,32 @@
   <header class="page-heading">
     <div>
       <p class="eyebrow">Quản trị người dùng</p>
-      <h1>Danh sách người dùng</h1>
-      <p class="page-description">Danh sách tài khoản theo các bộ lọc được API #68 hỗ trợ.</p>
+      <h1>Quản lý tài khoản người dùng</h1>
+      <p class="page-description">Tra cứu tài khoản theo họ tên hoặc email, vai trò và trạng thái.</p>
+    </div>
+    <div class="page-actions" role="group" aria-label="Thao tác danh sách">
+      <button
+        class="page-action page-action--secondary"
+        type="button"
+        disabled
+        aria-describedby="user-export-unavailable"
+      >
+        Xuất báo cáo
+      </button>
+      <button
+        class="page-action page-action--primary"
+        type="button"
+        disabled
+        aria-describedby="user-create-unavailable"
+      >
+        Thêm người dùng
+      </button>
+      <p class="page-actions-note" id="user-export-unavailable">
+        Tạo người dùng và xuất danh sách hiện chưa khả dụng.
+      </p>
+      <span class="visually-hidden" id="user-create-unavailable">
+        Tạo người dùng chưa khả dụng.
+      </span>
     </div>
   </header>
 
@@ -102,6 +126,12 @@
     [attr.aria-busy]="viewState().status === 'loading' ? 'true' : null"
   >
     <h2 id="list-title" class="visually-hidden">Danh sách tài khoản</h2>
+    @if (viewState().status === 'loaded' && snapshotMismatch()) {
+      <div class="snapshot-warning" role="status" aria-live="polite">
+        <div><strong>Số lượng và danh sách người dùng chưa đồng nhất</strong><p>Các dòng API trả về vẫn được giữ lại; tổng và phân trang đang ẩn cho đến khi tải lại.</p></div>
+        <button type="button" (click)="refreshList()">Tải lại trang này</button>
+      </div>
+    }
     <div class="table-scroller" role="region" aria-label="Bảng người dùng" tabindex="0">
       <table [class.table-empty]="viewState().status === 'loaded' && !viewState().rows?.length">
         <caption class="visually-hidden">
@@ -115,7 +145,25 @@
           </tr>
         </thead>
         <tbody>
-          @if (viewState().status === 'loaded' && viewState().rows?.length) {
+          @if (viewState().status === 'loaded' && pageOutOfRange()) {
+            <tr class="query-state-row">
+              <td [attr.colspan]="columns.length">
+                <div class="query-state" role="status" aria-live="polite">
+                  <p class="query-state-message">Trang này không còn người dùng. Danh sách đã thay đổi; hãy quay lại trang đầu để xem dữ liệu hiện có.</p>
+                  <div class="query-state-actions"><button class="query-state-action" type="button" (click)="returnToFirstPage()">Về trang 1</button></div>
+                </div>
+              </td>
+            </tr>
+          } @else if (viewState().status === 'loaded' && snapshotMismatch() && !viewState().rows?.length) {
+            <tr class="query-state-row">
+              <td [attr.colspan]="columns.length">
+                <div class="query-state" role="status" aria-live="polite">
+                  <p class="query-state-message">API #68 trả về số dòng khác với tổng ở thời điểm đọc; không coi đây là danh sách rỗng.</p>
+                  <div class="query-state-actions"><button class="query-state-action" type="button" (click)="refreshList()">Tải lại trang này</button></div>
+                </div>
+              </td>
+            </tr>
+          } @else if (viewState().status === 'loaded' && viewState().rows?.length) {
             @for (row of viewState().rows; track $index) {
               <tr>
                 @for (value of row.values; track $index) {
@@ -127,6 +175,23 @@
                     }
                   </td>
                 }
+                <td>
+                  <div class="table-actions">
+                    @if (row.actions?.length) {
+                      @for (action of row.actions; track action.route) {
+                        <a
+                          class="table-action"
+                          [routerLink]="action.route"
+                          [attr.aria-label]="action.label + ' người dùng ' + row.values[0]"
+                        >
+                          {{ action.label }}
+                        </a>
+                      }
+                    } @else {
+                      <span class="action-unavailable">Không khả dụng</span>
+                    }
+                  </div>
+                </td>
               </tr>
             }
           } @else if (viewState().status === 'loaded') {
@@ -143,6 +208,17 @@
                       <study-icon name="refresh" />
                       <span>Làm mới danh sách</span>
                     </button>
+                    <button
+                      class="refresh-button help-button"
+                      type="button"
+                      disabled
+                      aria-describedby="user-guide-unavailable"
+                    >
+                      Xem hướng dẫn nhập liệu
+                    </button>
+                    <span class="visually-hidden" id="user-guide-unavailable">
+                      Chưa có trang hướng dẫn nhập liệu được xác định.
+                    </span>
                   </div>
                 </div>
               </td>
@@ -180,7 +256,7 @@
       </table>
     </div>
 
-    @if (viewState().status === 'loaded' && viewState().pagination) {
+    @if (viewState().status === 'loaded' && viewState().pagination && !snapshotMismatch() && !pageOutOfRange()) {
       <div class="list-footer">
         <p class="result-count">
           Hiển thị {{ viewState().rows?.length ?? 0 }} trên {{ viewState().pagination!.total }} tài

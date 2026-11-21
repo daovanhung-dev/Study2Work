@@ -40,7 +40,7 @@ N/A — catalog không khai báo query parameter.
 |---:|---|---|---|---:|---|---|---|
 | 1 | Recipients | `recipients` | string | Có | CSV positive int64 Student `users.id`, ví dụ `101,202`; duplicate IDs được collapse theo lần đầu. | 2.1, 3.2 | Fallback DERIVED từ API #62 UserSummary IDs và legacy BIGINT users. |
 | 2 | Title | `title` | string | Có | Tối đa 200 ký tự theo cột legacy `notifications.title`; giữ nguyên nội dung đầu vào. | 1.2, 3.1 | Max length là constraint vật lý local; live schema chưa xác minh. |
-| 3 | Content | `content` | int64 | Có | Giữ scalar int64 trực tiếp; ghi vào TEXT dưới dạng chuỗi thập phân. | 1.3, 3.1 | Fallback DERIVED; vẫn lệch UI nhập text và reusable Notification.content. |
+| 3 | Content | `content` | string | Có | Preserve submitted text as-is and store in `notifications.content` TEXT. | 1.3, 3.1 | User-approved reconciliation on 2026-11-21 to match the ME-14 text composer and Notification schema. |
 | 4 | Channels | `channels` | string | Có | CSV token `PUSH` và/hoặc `EMAIL`; duplicate token được collapse theo lần đầu. | 2.2, 3.3 | Fallback DERIVED từ nhãn Push/Email trong AC-25. |
 
 ## Quy ước query/body
@@ -57,7 +57,7 @@ N/A — catalog không khai báo query parameter.
 | `recipients` | Parse positive int64 IDs; reject empty/non-numeric/out-of-range items; collapse duplicates preserving first-seen order. | DERIVED CSV mapping from #62 IDs. |
 | Recipient scope | Require all IDs to be ACTIVE Students in a common course directly owned by the Mentor; reject the full request otherwise. | DERIVED; body cannot identify the exact course. |
 | `title` | Enforce legacy database maximum 200 characters; do not trim or impose a non-empty rule beyond required string type. | Local DDL-backed limit; live schema unverified. |
-| `content` | Require JSON integer/int64; persist its base-10 string form because legacy Notification stores TEXT. | DERIVED scalar-to-text mapping; business meaning remains open. |
+| `content` | Require a JSON string; persist the text directly because legacy Notification stores TEXT. | Approved reconciliation on 2026-11-21; no additional length rule was added. |
 | `channels` | Parse CSV; accept only `PUSH` and `EMAIL`; collapse duplicates preserving first-seen order. | DERIVED machine tokens from diagram labels. |
 | Batch size/idempotency | No extra limit or idempotency behavior is added because neither is in the direct request contract or error set. | Retry deduplication remains unresolved. |
 
@@ -67,12 +67,12 @@ N/A — catalog không khai báo query parameter.
 {
   "recipients": "2001,2002",
   "title": "Thong bao lop hoc",
-  "content": 123,
+  "content": "Thông báo lớp học hôm nay.",
   "channels": "PUSH,EMAIL"
 }
 ```
 
-CSV encoding là fallback `DERIVED`, chưa phải contract owner phê duyệt. `content:123` được lưu thành chuỗi `"123"`; API không diễn giải nó thành free-form message hoặc template ID.
+CSV encoding remains the current source's local mapping. `content` is free-form text for the approved ME-14 handoff; blank-message policy remains a client validation rule and is not added to API #63 validation.
 ---
 ## Phụ lục đối chiếu nguồn Excel
 - Workbook nguồn: `DD_API_Template(1).xlsx`

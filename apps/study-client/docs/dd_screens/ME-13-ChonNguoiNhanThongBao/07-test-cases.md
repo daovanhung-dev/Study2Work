@@ -23,6 +23,8 @@
 
 ## 3. Source acceptance / test plan (not run)
 
+Current source contains the ME-13 route and #46/#62 integration described in [API Integration](04-api-integration.md). The entries below remain planning references, not executable tests; runtime and test execution are unverified.
+
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu
 
 - [x] Source screenshot and HTML were inventoried; original files are preserved.

@@ -9,6 +9,7 @@ from app.core.database import query_many, query_one
 from app.core.responses import error_response, success_response
 from app.modules.student.api_26_lessons_resources.models import LessonResources, ResourceItem
 from app.modules.student.api_26_lessons_resources.query import (
+    CHECK_ACTIVE_ENROLLMENT,
     CHECK_PUBLISHED_LESSON,
     FIND_LESSON_RESOURCES,
 )
@@ -50,12 +51,20 @@ def get_lesson_resources(
     )
     if isinstance(validation, JSONResponse):
         return validation
-    _user_id, lesson_id = validation
+    user_id, lesson_id = validation
 
     try:
         lesson_row = find_published_lesson(db, lesson_id=lesson_id)
         if lesson_row is None:
             return lesson_not_found(trace_id)
+
+        enrollment = query_one(
+            db,
+            CHECK_ACTIVE_ENROLLMENT,
+            {"user_id": user_id, "course_id": lesson_row["course_id"]},
+        )
+        if enrollment is None:
+            return _access_denied(trace_id)
 
         resource_rows = find_lesson_resources(db, lesson_id=lesson_id)
         resources = [ResourceItem.model_validate(r) for r in resource_rows]
@@ -85,5 +94,16 @@ def _internal_error(trace_id: str) -> JSONResponse:
         status_code=500,
         business_code="DESIGN_INTERNAL_ERROR",
         message="Lesson resources could not be retrieved",
+        trace_id=trace_id,
+    )
+
+
+def _access_denied(trace_id: str) -> JSONResponse:
+    """Báo thiếu enrollment active trước khi trả danh sách tài nguyên bài học."""
+
+    return error_response(
+        status_code=403,
+        business_code="DESIGN_ACCESS_DENIED",
+        message="Active course enrollment is required to access lesson resources.",
         trace_id=trace_id,
     )

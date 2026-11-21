@@ -17,14 +17,17 @@
 
   <section class="filter-panel" aria-labelledby="filter-heading">
     <div class="filter-panel-heading"><h2 id="filter-heading"><study-icon name="filter" /> Bộ lọc truy vấn bài giảng</h2><span class="source-badge">Danh sách từ API #82</span></div>
-    <div class="filter-grid">
+    <form class="filter-grid" (submit)="applyFilters($event)">
       <label for="lesson-search"><span>Tìm kiếm</span><span class="input-wrap"><study-icon name="search" /><input id="lesson-search" type="search" placeholder="API #82 không hỗ trợ từ khóa" disabled /></span></label>
-      <label for="lesson-course"><span>Khóa học</span><input id="lesson-course" type="text" inputmode="numeric" placeholder="Chưa có nguồn ánh xạ Course ID" disabled /></label>
+      <label for="lesson-course"><span>Mã khóa học</span><input id="lesson-course" type="text" inputmode="numeric" autocomplete="off" placeholder="Nhập Course ID (signed-int64)" [value]="filterCourse()" (input)="setFilterCourse($any($event.target).value)" [disabled]="viewState().status === 'loading'" aria-describedby="course-filter-note" /></label>
       <label for="lesson-type"><span>Loại bài học</span><select id="lesson-type" disabled><option>Chưa có type contract</option></select></label>
       <label for="lesson-status"><span>Trạng thái</span><input id="lesson-status" type="text" placeholder="Chờ từ điển trạng thái được duyệt" disabled /></label>
-      <button type="button" disabled><study-icon name="refresh" /> Làm mới</button>
-    </div>
-    <div class="filter-notice" role="note"><study-icon name="lock" /><span>Chưa áp dụng bộ lọc. Search chưa có contract; course cần mapping ID, type trả lỗi 422 và status chưa có allowlist.</span><button type="button" disabled>Đặt lại bộ lọc</button></div>
+      <div class="filter-actions">
+        <button type="submit" [disabled]="viewState().status === 'loading'"><study-icon name="filter" /> Áp dụng</button>
+        <button type="button" (click)="refreshLessons()" [disabled]="viewState().status === 'loading'"><study-icon name="refresh" /> Làm mới</button>
+      </div>
+    </form>
+    <div class="filter-notice" role="note"><study-icon name="info" /><span id="course-filter-note">Chỉ lọc theo Course ID qua query `course`; giữ nguyên dạng text để không làm tròn int64. Course sai định dạng/vượt miền nhận lỗi 422 từ API. Search, type và status vẫn khóa vì chưa đủ mapping/allowlist.</span><button type="button" (click)="clearFilters()" [disabled]="viewState().status === 'loading'">Đặt lại bộ lọc</button></div>
   </section>
 
   <section class="lesson-table-panel" aria-label="Danh sách bài học">
@@ -38,7 +41,7 @@
           } @else if (viewState().status === 'error') {
             <tr><td class="table-state table-state--error" colspan="6" role="alert"><span class="state-mark"><study-icon name="info" /></span><strong>Không thể tải danh sách bài học</strong><span>{{ viewState().message }}</span></td></tr>
           } @else if (isEmpty) {
-            <tr><td class="table-state" colspan="6"><span class="state-mark"><study-icon name="book" /></span><strong>Chưa có bài học trong phản hồi</strong><span>API #82 trả về danh sách rỗng. Response không có trạng thái đồng bộ.</span></td></tr>
+            <tr><td class="table-state" colspan="6"><span class="state-mark"><study-icon name="book" /></span><strong>Chưa có bài học trong phản hồi</strong><span>API #82 trả về danh sách rỗng. Response không có trạng thái đồng bộ.</span><button type="button" (click)="refreshLessons()"><study-icon name="refresh" /> Làm mới danh sách bài học</button></td></tr>
           } @else {
             @for (row of viewState().rows ?? []; track $index) {
               <tr>

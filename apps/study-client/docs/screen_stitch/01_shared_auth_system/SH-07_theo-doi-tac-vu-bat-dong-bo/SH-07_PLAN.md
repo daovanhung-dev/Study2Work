@@ -1,6 +1,6 @@
 # Kế hoạch màn hình — SH-07 Theo dõi tác vụ bất đồng bộ
 
-> **Trạng thái kế hoạch:** `STATIC_REVIEW_COMPLETE`; DD vẫn `BLOCKED`, implementation `BLOCKED`, runtime `NOT VERIFIED`. Plan được tạo trước DD, marker map và ảnh chú thích. **Phiên:** chỉ xử lý SH-07.
+> **Trạng thái kế hoạch:** `STATIC_REVIEW_COMPLETE`; DD vẫn `BLOCKED`, implementation `PARTIAL` (route/page gate source-wired; generic tracking blocked), runtime `NOT VERIFIED`. Plan được tạo trước DD, marker map và ảnh chú thích. **Phiên:** chỉ xử lý SH-07.
 
 ## 1. Mục tiêu, phạm vi và nguồn
 
@@ -8,7 +8,7 @@
 - Không triển khai API/runtime, không thay đổi Study contract, không tự quyết định operation ID, status enum, owner policy, polling cadence, TTL, result schema hoặc route quay về.
 - Inventory đề xuất `/operations/:operationId`, tham chiếu AC-12/25/36/38 và API #18; liên kết tới ST-07, ME-15, AD-21, AD-25. Ưu tiên W4/P2; catalog hiện ghi `D` và block vì operation status/ID mapping chưa thống nhất.
 - Nguồn giao diện: `screen.png` (1503×1600) và `code.html`. SHA-256 trước chỉnh sửa: PNG `eb5329637c5942f0ac43b439b2dece09cac071565d1b300efa3405f9628ce110`; HTML `2fb2fdab9c88b9b31c5cde9e61b771e233075ac3339d2d6ed1259f0bd99fa3a3`.
-- Historical snapshot (2026-11-08): Study Web editable source/package were recorded as absent. Current re-audit (2026-11-16): Angular app source and router exist; `/operations/:operationId` and a SH-07 feature caller are still absent. `API_018` remains `UNWIRED` in the client descriptor, so the generic transport blocks it. `.agents/web-work/study/AGENTS.md` and `INDEX.md` are context pages, not route/runtime evidence. `.agents/web-study/design.md` is the intended UI target. Do not use `dist/` as source/router evidence.
+- Historical snapshot (2026-11-08): Study Web editable source/package were recorded as absent. At the 2026-11-16 checkpoint, the Angular app/router existed but the SH-07 route was not yet registered. Current source (2026-11-20) registers `/operations/:operationId` to a gate-only page; no feature API caller exists and `API_018` remains `UNWIRED`. `.agents/web-work/study/AGENTS.md` and `INDEX.md` are context pages, not route/runtime evidence. `.agents/web-study/design.md` is the intended UI target. Do not use `dist/` as source/router evidence.
 - API contract: `docs/lists/list_api.md` rows #17/#18/#63/#64/#93/#96/#103, reusable `Operation` schema và operation-tracking section; API #18 DD dưới `apps/study-server/docs/dd/18_operations/` Draft/Needs Confirmation.
 - Historical source scan (2026-11-07): API #18 route/module/query/test and #17/#103 producers were not found. Current source re-audit (2026-11-16): route #18, Shared module and query are present; a dedicated HTTP test module passes 8 cases. The handler currently looks up only notification operations and binds the authenticated owner ID. The Study schema still has no generic `operations` table; migration 009 adds notification `operation_id UUID` and delivery outbox storage only. #17 remains fail-closed and #103 remains absent. `contracts/openapi/study/README.md` is still a placeholder. None of this verifies live schema or deployment.
 - Cross-boundary wiring: workflow/contract registry đã tra trong `.agents/context-manifest.json`; `study-openapi` là `NOT_FOUND`, `cross-scope-contract` được wire; `createDD-markdown` explicitly excludes `web-ui-only-dd`, nên SH-07 screen DD không áp API-sheet template.
@@ -17,7 +17,7 @@
 
 | Hạng mục | Expected theo inventory/contract/AC | Current evidence và xử lý trong DD |
 |---|---|---|
-| Route/entry | Shared route `/operations/:operationId`; chỉ vào từ response operation ID do server xác nhận; không tự sinh ID. | Angular app/router hiện có nhưng chưa đăng ký SH-07 route hoặc caller. `API_018` client descriptor vẫn `UNWIRED`. Script prototype đọc path rồi dùng UUID mẫu nếu thiếu param; đây không phải route/runtime source. |
+| Route/entry | Shared route `/operations/:operationId`; chỉ vào từ response operation ID do server xác nhận; không tự sinh ID. | Current source registers the route to a gate-only `SH07Page`; the page does not consume the path ID or call API #18. `API_018` remains `UNWIRED`. The prototype's sample UUID is not runtime evidence. |
 | API #18 | `GET /api/v1/operations/{operation_id}`, Bearer JWT, `ApiEnvelope<Operation>`, 200 `DESIGN_OPERATION_RETRIEVED`; 401/403/404/500. | Backend route, Shared module/query và HTTP tests hiện có. OpenAPI/path validator dùng UUID; API catalog row vẫn dùng `int64`. Current query chỉ đọc notification operation, giới hạn theo owner, với state `QUEUED`/`FAILED`/`SENT`. API DD vẫn Draft; client descriptor/caller chưa wired. |
 | Response/status | Reusable Operation gồm `id`, `kind`, `status`, `owner_id`, `submitted_at`, `updated_at`, `completed_at?`, `result?:Payment`. | OperationKind/OperationStatus values, lifecycle, source, result theo loại job và terminal states chưa định nghĩa. UI liệt kê 5 status chỉ là static reference; notification API source dùng QUEUED/FAILED/SENT. |
 | Producers | API #17/#63/#93/#103 có thể phát operation theo tracking section. | #63 trả 202 + `data:Operation` UUID/QUEUED; #93 current source trả 202 + `data:Notification`, `meta.operation_id` UUID và `notification_ids`; #17/#103 routes absent. Tracking summary conflicts with #93 row/source. |
@@ -134,3 +134,9 @@ Không có download button trong default screen. `result_url`, `error`, fake pro
 - Study Web app/router exist, but SH-07 has no route/caller and the `API_018` client descriptor remains `UNWIRED`.
 - Study Server API #18 route/module/query are present and the auth role argument defect is fixed. The focused suite passes 8 tests and full Study suite passes 1492; both use local source/fake DB tests and do not verify deployment/live schema.
 - Generic operation storage/lifecycle/result, producer handoff, UUID/int64, owner/Admin, polling/retention and safe-return questions remain open. Keep `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, and SH-07 `RUNTIME NOT VERIFIED`.
+
+### Current-source continuation (2026-11-20)
+
+- The Shared route `/operations/:operationId` and SH-07 gate page are registered. The page does not parse/display the route ID and has no API #18 caller; `API_018` remains `UNWIRED`.
+- The current #18 handler is owner-bound to notification delivery batches and returns `QUEUED|FAILED|SENT`; it does not supply generic payment/export operation state.
+- `DD BLOCKED`; implementation is `PARTIAL` for the route/page gate only; generic tracking remains blocked; runtime is `NOT VERIFIED`. `screen_complete.md` stays 25%.

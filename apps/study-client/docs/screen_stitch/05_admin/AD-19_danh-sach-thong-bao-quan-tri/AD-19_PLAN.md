@@ -113,3 +113,10 @@ Source coordinate space: 1600×1411 pixels, origin top-left. Each number identif
 - [x] Validate all relative links and element/event IDs; verify inventory/folder count remains 83/83 and core artifact count advances 71/83 → 72/83.
 - [x] Update inventory row 77, reverse #092, G-12 and global plan/checkpoint; do not edit AD-20/AD-21 screen files.
 - [x] Run static artifact checks and git diff --check; no application tests/runtime in this documentation turn.
+
+## 8. Dated continuation — Angular empty-state refresh (2026-11-20)
+
+- Angular AD19 now renders the screenshot's marker #34 action when #92 returns an empty page. The click re-emits the currently applied `status/channel/page` query through the existing #92 caller; the table transitions to its loading row while the request runs.
+- Current AD-19 row rendering localizes only the #92 source-defined `QUEUED`/`SENT`/`FAILED` values; exact filter strings remain unchanged and prototype lifecycle labels are not mapped.
+- The Stitch prototype's 800 ms timer remains prototype behavior. Search, metric cards, recipient/send-time data, Page-vs-singleton response approval, fine-grained permission, live schema/deployment and browser runtime remain unresolved.
+- `screen_complete.md` remains at 62.5% because this interaction does not move a weighted UI/UX/logic/API axis to its next threshold. No tests/build/lint/browser/API runtime were run for this continuation.

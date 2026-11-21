@@ -17,7 +17,14 @@ export class MentorApiService {
     api: StudyApiDescriptor,
     options: StudyApiRequestOptions = {},
   ): Observable<ApiEnvelope<T>> {
-    if (api.status !== 'WIRED' || !api.path.startsWith('/mentor/')) {
+    const isMentorRoute = api.path.startsWith('/mentor/');
+    const isSharedMentorUpload = api.id === 34 && api.path === '/uploads';
+    const isOwnedOperationRead =
+      api.id === 18 && api.method === 'GET' && api.path === '/operations/{operation_id}';
+    if (
+      api.status !== 'WIRED' ||
+      (!isMentorRoute && !isSharedMentorUpload && !isOwnedOperationRead)
+    ) {
       throw new Error(`Mentor request requires a WIRED Mentor API descriptor (#${api.id}).`);
     }
 

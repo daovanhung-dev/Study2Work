@@ -21,9 +21,9 @@
 ### ME08-EV-01 — Mở ME-08 và xác định Content/course context
 
 - **Trigger:** open proposed `/mentor/content/:contentId/actions` from ME-06, or direct route entry.
-- **Input:** `contentId` path; expected `courseId` and selected Content from ME-06 route/context. The proposed route only includes Content ID, and there is no current client navigation state.
+- **Input:** `contentId` path; current page also requires `courseId` in tab history state from the ME-06 handoff. Direct route without valid state blocks hydration.
 - **Processing:** parse route ID as an integer candidate without treating a malformed ID as create/new; require an authenticated Mentor session before protected data is shown. Obtain the `courseId` from an agreed navigation contract. If absent, block hydration/mutation; do not guess course from an unscoped Content endpoint because no detail endpoint exists.
-- **Output:** `loading` until #49 returns an exact Content; no sample title/status should appear as loaded data. Route resolution and session UX are not wired.
+- **Output:** `loading` until #49 returns an exact Content; no sample title/status appears as loaded data. Browser/session runtime is not verified.
 - **Exceptions:** malformed/missing route value and direct-link return behavior have no client contract; API #52/#53 map malformed int64 path to 404 after the shared auth guard.
 
 ### ME08-EV-02 — Load selected Content with GET #49
@@ -68,7 +68,7 @@
 
 - **Trigger:** click #37 or return after a completed mutation.
 - **Expected input:** preserve `courseId`, route context and optionally selected node ID; refresh #49 before showing the tree after mutation.
-- **Current:** CTA is `href="#"`; no router/state/cache exists. No dirty form is present, but confirmation/return semantics for a failed mutation are not defined.
+- **Current:** page has a route link back to ME-06 using `courseId`; mutation return/refresh remains inactive because #52/#53 are gated. No dirty form is present.
 - **Output:** candidate destination `/mentor/courses/:courseId/content` from ME-06 inventory; not a current route implementation.
 
 ### ME08-EV-07 — Header, breadcrumb, policy and footer links

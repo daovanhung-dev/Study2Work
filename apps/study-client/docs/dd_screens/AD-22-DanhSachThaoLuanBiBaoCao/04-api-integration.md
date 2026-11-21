@@ -2,6 +2,8 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
+> **T121 current-source update (2026-11-20):** AD-22 #97 data access validates the success envelope/business code, requested page, fixed size 20, pagination metadata and Discussion/author/comment projection before rendering. The shared author type allows `avatar_url` to be omitted because #97/#98 serialize with `exclude_none=True`. It does not infer report fields absent from #97; reason/severity remain exact request filters. Completion stays 75%; report metadata and visual fidelity gaps remain. No tests/build/lint/browser checks were run for this update.
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
@@ -24,7 +26,7 @@
 6. Khi có một item và người dùng chọn nó, dùng Discussion `id` (int64 theo current #97 projection) làm `discussion_id` cho AD-23/#98. AC-37 yêu cầu detail đọc thread/comments/reports; current #98 source không đọc report relation, nên handoff dữ liệu nghiệp vụ chưa hoàn chỉnh.
 7. Từ chối report / moderation / delete / audit / reload là các bước sau trong AC-37; xử lý tại AD-23 và chỉ sau khi #99/#100 cùng report lifecycle được xác nhận.
 
-Không có contract cho debounce, cache, timeout, retry, request cancellation, refresh cadence hoặc auto-polling. Không tự thêm các hành vi này.
+Current Angular source provides user-triggered toolbar and loaded-empty refresh that repeat the applied `reason/severity/page` request. No contract exists for debounce, cache, timeout, automatic retry, request cancellation, refresh cadence, or auto-polling; no such behavior is added.
 
 ### Trích từ DD nguồn: B.4. API contract và field mapping
 
@@ -37,7 +39,7 @@ Không có contract cho debounce, cache, timeout, retry, request cancellation, r
 
 ### Current Angular caller
 
-`AD22Page` calls `AD22ApiService.getReportedDiscussions()` with `reason`, `severity` and `page`. The service uses the `API_097` `WIRED` descriptor through `AdminApiService`, which adds the in-memory Admin Bearer token, then the relative `/api/v1` Study transport. The page maps only returned Discussion fields and pagination metadata. The source is wired; authenticated browser runtime and live data remain unverified.
+`AD22Page` calls `AD22ApiService.getReportedDiscussions()` with `reason`, `severity` and `page`. Toolbar and loaded-empty refresh re-emit the same applied query object so the existing caller repeats #97 without adding fields. The service uses the `API_097` `WIRED` descriptor through `AdminApiService`, which adds the in-memory Admin Bearer token, then the relative `/api/v1` Study transport. The page maps only returned Discussion fields and pagination metadata. The source is wired; authenticated browser runtime and live data remain unverified.
 
 ## 3. API không sử dụng
 - Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.

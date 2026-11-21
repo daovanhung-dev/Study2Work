@@ -117,3 +117,9 @@
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)
+
+## Current Study Web event supplement (2026-11-21)
+
+- Current GS-01 source calls #05 then #06 on initial entry; sort and page changes call #06 and cancel the previous in-flight catalog request. Category chips are metadata only; no category value is sent.
+- For #06 responses, envelope, projection, requested page and fixed size are checked before rendering. If separate COUNT/LIST reads disagree, the page keeps returned cards, suppresses the untrusted total/page navigation, and offers a retry on the same page. A matching zero/zero response stays empty; empty out-of-range remains a separate state.
+- Source evidence supersedes older event excerpts that described the Angular route/caller as absent. Stitch loaded-state design, category filtering, cache and partial #05/#06 failure policy remain unresolved; runtime is not verified.

@@ -4,7 +4,7 @@
 
 ## 1. Phân loại task
 
-Trước khi đọc sâu, ghi ngắn:
+Trước khi đọc sâu, ghi ngắn vào worklog của task; không đăng phân loại này lên chat:
 
 ```text
 primary_task_type: coding | fix | docs | test | review
@@ -25,19 +25,18 @@ cross_scope_dependencies:
 
 Một task có thể có nhiều `project_scopes`. Không ép task cross-scope vào một scope duy nhất.
 
-## 1.1. Cập nhật chat và milestone (mọi task)
+## 1.1. Theo dõi target và giao tiếp
 
-Áp dụng cho mọi task, kể cả task chỉ đọc hoặc trả lời thông tin. Trước khi đọc
-sâu, gửi vào chat phân loại task và kế hoạch milestone theo task: ít nhất hai
-mốc, mỗi mốc có mục tiêu/tiêu chí hoàn thành và trọng số phần trăm; tổng trọng
-số bằng 100%. Ghi nhận bắt đầu ở 0%.
+Mục tiêu đang thực hiện và tiến độ hiển thị duy nhất tại `.agents/target.md`.
+File này chỉ chứa bảng ba cột `STT`, `Tên target`, `Tiến độ hoàn thiện`; xem
+`.agents/project/agent-control.md` để biết quy tắc cập nhật. Không tự gửi tiến
+độ, event receipt, milestone, tổng kết đọc/thao tác hoặc báo cáo hoàn tất vào
+chat. Chỉ phản hồi khi người dùng hỏi, cần làm rõ blocker, hoặc quy tắc cấp cao
+hơn yêu cầu.
 
-Sau mỗi nhóm đọc, báo ngay đường dẫn/nguồn đã đọc cùng điều rút ra. Sau mỗi nhóm
-thao tác có ý nghĩa, báo việc đã làm và kết quả. Khi đạt một milestone, cập
-nhật phần trăm tích lũy bằng tổng trọng số các mốc đã hoàn tất. Nếu bị chặn,
-báo phần trăm đã đạt và blocker; chỉ báo 100% khi task hoàn thành. Ghi kế hoạch
-và trạng thái mốc trong worklog `MILESTONES`; hướng dẫn chi tiết nằm trong
-`.agents/AGENTS.md` và `.agents/project/workflows.md`.
+Phân loại task, lựa chọn scope và bằng chứng công việc được ghi trong worklog,
+không công bố thành milestone chat. Worklog lưu nguồn, thay đổi, xác minh và
+lịch sử cập nhật target; không dùng `MILESTONES` làm nguồn tiến độ thứ hai.
 
 ## 2. Định tuyến scope
 

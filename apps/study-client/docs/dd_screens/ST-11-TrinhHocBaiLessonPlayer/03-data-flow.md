@@ -1,5 +1,12 @@
 # ST-11 — Data Flow & State
 
+## Current source flow — 2026-11-20
+
+1. ST-10 supplies `lessonId` at `/student/lessons/:lessonId`; the route exists in `student.route.ts`.
+2. ST-11 calls #24 with Student Bearer. Route changes cancel the prior request; the page accepts only `DESIGN_RESOURCE_RETRIEVED`, a valid PUBLISHED lesson payload, and the requested lesson ID.
+3. The current page renders lesson text, loading and retryable error states. It does not bind `video_url` to a player or call #25/#27; progress, complete, next and terminal-course states remain gated.
+4. The resource link opens ST-12 with the current lesson ID. Runtime and live database behavior were not verified; the sections below retain the original expected-flow evidence.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

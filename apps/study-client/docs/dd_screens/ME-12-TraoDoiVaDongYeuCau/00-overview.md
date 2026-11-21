@@ -4,17 +4,22 @@
 |---|---|
 | Screen ID | `ME-12` |
 | Module | Mentor |
-| Route | `/mentor/support/:requestId` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/mentor/support/:requestId` — Study Web route/page source is wired; runtime not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: \| DD status \| DD BLOCKED \|; \| Implementation status \| IMPLEMENTATION BLOCKED \|; \| Runtime status \| RUNTIME NOT VERIFIED \| |
+| DD status | `DD BLOCKED` — loaded design, attachment UI and lifecycle policy remain open; #59/#60 page callers are source-wired, while #61 is deliberately gated pending approved readiness/confirmation rules; runtime `NOT VERIFIED`. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.1 / 2026-11-21 |
 | Nguồn đối chiếu | [ME-12.md](../../screen_stitch/04_mentor/ME-12_trao-doi-va-dong-yeu-cau/ME-12.md), [ME-12_PLAN.md](../../screen_stitch/04_mentor/ME-12_trao-doi-va-dong-yeu-cau/ME-12_PLAN.md), [ME-12_markers.json](../../screen_stitch/04_mentor/ME-12_trao-doi-va-dong-yeu-cau/ME-12_markers.json), [list_screen.md](../../list_screen.md) |
+
+## Current implementation update — 2026-11-21
+
+- ME12 reacts to `requestId` changes and cancels stale #59 reads; validates exact envelope/business codes, request identity, thread messages, dates, authors and attachment fields. Invalid/not-found/forbidden/retryable states are distinct. A confirmed #60 outcome remains visible if the subsequent #59 refresh fails; ambiguous #60 replies stay locked until #59 reconciles them.
+- #60 uses `{message, attachment_refs}`; the backend validator accepts an empty attachment array for text-only replies. The page requires `DESIGN_RESOURCE_UPDATED` and a newly returned matching message. Reply is available only for OPEN, IN_PROGRESS or WAITING_LEARNER. It stays disabled for terminal/unknown statuses while the post-resolution reply policy is unresolved. #61 remains without a ME12 page caller: readiness/satisfaction criteria and the confirmation interaction are not approved, so its control stays disabled for eligible statuses. Attachments render metadata only; raw URLs are not opened while download policy is unresolved. `screen_complete.md` remains 62.5% (UI 50%, UX 75%, logic 75%, API 50%); no full weighted axis crossed. Runtime is NOT VERIFIED.
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Thread message/attachment, reply composer, resolve sau khi đủ điều kiện.
-- In-scope: GET #59 → POST #60 reply → reload #59; PATCH #61 resolve sau xác nhận.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Current source scope: GET #59 → POST #60 reply → reload #59. PATCH #61 remains disabled until resolve readiness/confirmation rules are approved.
+- Out-of-scope: Live API/database behavior and deployment are not verified by the local Study Web route/page source.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |

@@ -1,5 +1,18 @@
 # ST-09 — Events (đặc tả xử lý)
 
+## Current-source reconciliation — 2026-11-21
+
+Current source subscribes to `courseId` route changes, cancels the prior read
+chain, paginates #20 with `status=ACTIVE`, validates each page and only then
+loads #37 for the matching course. It compares each page's returned row count
+with COUNT-derived expected rows. A matching ACTIVE course row still proceeds
+to #37; if no match is returned on a mismatched page, the page shows a
+retryable unresolved-enrollment state instead of claiming the learner is not
+enrolled. #37 success must match the route course and its current lesson-count
+projection; stale “no route/API source” statements below are the design-time
+snapshot. AC-18 aggregate scope, lesson tree, lessonId handoff and deployed
+runtime remain open.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

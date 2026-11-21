@@ -2,13 +2,17 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-20
 
-ST-14 calls #28 for quiz/question details and #30 to save answer changes. It
-does not call #29; attempt creation belongs to ST-13, and there is no source
-endpoint here to restore saved answers. The DD/API excerpt below is a
-design-time snapshot; see [the screen inventory](../../list_screen.md) and
-[T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+ST-14 calls #28 for quiz/question details and #30 after a choice change; ST-13
+owns #29 in current source. ST-14 follows both route IDs, cancels stale #28
+reads, serializes #30 writes, validates exact business code and attempt
+identity/state/answer response, and uses the API's returned answer set as the
+current client state. #30's body uses `choice_ids[]`, while catalog says
+`answer(s):string`; this remains a discrepancy. No GET attempt/answers endpoint
+or authoritative timer exists, so reload cannot restore answers and no
+countdown is run. Current source and runtime evidence are separate from the
+original DD excerpt below; tests/browser/runtime were not run or verified.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -20,17 +24,17 @@ design-time snapshot; see [the screen inventory](../../list_screen.md) and
 ## 2. Contract / source detail
 
 - API refs trong inventory: #28, #29, #30
-- Orchestration/data notes: AC-16: GET #28 → đọc Quiz/rules/questions → eligibility → POST #29 tạo attempt → PUT #30 khi đáp án đổi. Screen owner của #29 chưa thống nhất giữa ST-13 Start và ST-14; route ST-14 đã yêu cầu `attemptId`. Chốt handoff duy nhất, không POST lặp.
-- BE/source status và gate: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #30 answer representation/storage/upsert/ownership/state/response/retry chưa chốt; không có GET attempt/answers để restore; time/progress source thiếu; legacy BIGINT và V1-PILOT UUID/lifecycle khác nhau; PNG/HTML và WebSocket/idempotency claims chưa được xác nhận; Study Web UNWIRED; Student APIs #28–#32 NOT_FOUND
+- Orchestration/data notes: current ST-14 calls #28 and #30; ST-13 calls #29 after explicit Start. Expected design still lists #29 in the ST-14 flow and remains unresolved.
+- BE/source status and gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** no answer restore/timer; catalog/body mismatch remains; #28/#29 lack enrollment and quiz-open checks; screen design claims beyond current API source remain unsupported.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: A.4. API contract liên quan
 
 | API | Contract catalog | Request/response và lỗi | Bằng chứng current runtime |
 |---|---|---|---|
-| #28 | `GET /api/v1/quizzes/{quiz_id}`; Student Bearer; `path{quiz_id:int64!}`; `ApiEnvelope<Quiz>`. | 200 `DESIGN_RESOURCE_RETRIEVED`; 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 404 `DESIGN_RESOURCE_NOT_FOUND`; 500 `DESIGN_INTERNAL_ERROR`. | Không tìm thấy Student route/module/test trong source hiện tại; không có source UI gọi API. |
-| #29 | `POST /api/v1/quizzes/{quiz_id}/attempts`; Student Bearer; `path{quiz_id:int64!}`; không body/query; `ApiEnvelope<QuizAttempt>`. AC-16 đặt sau GET #28 và eligibility decision. | 201 `DESIGN_RESOURCE_CREATED`; 401/403/404/422/409/500 với business code tương ứng. | Không có Student endpoint/module/test. ST-13 gắn #29 với Start; ST-14 cũng liệt kê #29 nhưng route đã yêu cầu `attemptId`. Screen owner/handoff chưa được chốt. |
-| #30 | `PUT /api/v1/attempts/{attempt_id}/answers`; Student Bearer; `path{attempt_id:int64!}`; catalog ghi `body{question_id:int64!, answer(s):string!}`; `ApiEnvelope<QuizAttempt>`. | 200 `DESIGN_RESOURCE_UPDATED`; 401/403/404/422/500. Catalog không có 409. Exact JSON property, representation, limits và response answers chưa xác nhận. | Không có Student route/module/caller/test hoặc runtime DB write. API DD và DDL chỉ là design evidence. |
+| #28 | `GET /api/v1/quizzes/{quiz_id}`; Student Bearer; `path{quiz_id:int64!}`; source `QuizDetail`. | Study Server route/view/query/model and ST-14 caller exist. | Checks Student role; current query returns quiz/questions without enrollment or quiz-status eligibility. |
+| #29 | `POST /api/v1/quizzes/{quiz_id}/attempts`; Student Bearer; no body/query; source `QuizAttemptDetail`. | Study Server route/view/query/model and ST-13 caller exist; not called from ST-14. | Creates and commits an `IN_PROGRESS` attempt; checks existing active attempt; does not check course enrollment or quiz published/open state. |
+| #30 | `PUT /api/v1/attempts/{attempt_id}/answers`; Student Bearer; current request supports `question_id` and `choice_ids[]` (catalog says `answer(s):string`). | Study Server route/view/query/model and ST-14 caller exist. | Checks attempt owner/status and question/choice membership; replaces that question's choice rows in a transaction and returns all stored answers. |
 | #31/#32 | #31 POST submit, #32 GET result theo inventory/API catalog; nằm ở ST-15/ST-16. | #31 có 200/401/403/404/422/409/500; #32 có 200/401/403/404/500. Không gọi ở ST-14. | Student runtime source không có các endpoint này. |
 
 ## 3. API không sử dụng

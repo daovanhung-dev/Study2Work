@@ -64,18 +64,24 @@
 - **Expected/API candidate:** Nếu refresh được wire, GET #78 có thể tải lại trang/filter hiện tại sau khi API cardinality/query contract được chốt. Không gửi mutation, không tạo retry tự động, và không coi “30 giây/lần” là polling spec.
 - **Output/errors:** Prototype chỉ có local animation; không success/error/empty refresh result. Refresh contract cần xác định duplicate clicks, loading cancellation, timeout và failure-state behavior.
 
+#### Current Study Web source — 2026-11-20
+
+- AD10Page now exposes “Làm mới hàng đợi”; it reissues GET #78 with the currently applied `type/course/page` query and is disabled while the shared view state is loading. A refresh from an error state is an explicit user retry.
+- No timer, polling, automatic retry, extra query parameter or mutation was added. Backend response/cardinality and permission discrepancies remain open; runtime and tests were not checked.
+
 ### EV-06 — Chọn Content và chuyển sang AD-11
 
 - **Trigger/type:** Chọn row/action sau khi queue có item; đây là AC-33 expected action, không hiện trong empty prototype.
 - **Preconditions/input:** Có item từ response đã được contract owner chốt; candidate `data.items[].id:int64` làm `content_id` route param của `/admin/content/:contentId/review`.
-- **Processing:** Chỉ truyền ID; AD-11 gọi #79. Không lấy `course_id` hoặc ID hiển thị thay cho `Content.id`; không tự truyền version/author vì #78 không có fields đó. Chưa có row click/action HTML hoặc router.
-- **Outcome:** AC-33 xác định chọn Content để mở detail; route/history, giữ filter/page, open-in-new-tab, stale item response và return path chưa được wire. Nếu queue rỗng thì không có selection.
+- **Processing:** Angular row action links the safe Content ID to AD-11; only that ID is transmitted. Không lấy `course_id` hoặc ID hiển thị thay cho `Content.id`; không tự truyền version/author vì #78 không có fields đó.
+- **Outcome:** Route/page and row action are source-present. Browser history, filter/page preservation across AD-11, open-in-new-tab, stale-item response and return path remain unverified or unresolved. Nếu queue rỗng thì không có selection.
 
 ### EV-07 — Pagination
 
 - **Trigger/type:** Click #29/#31 hoặc page number #30. Prototype controls disabled/static.
 - **Input/current behavior:** Page number “1”; no handler, page count or URL state.
 - **Local API candidate:** `page` positive int32, mặc định 1, size cố định 20, order `id ASC`; `data.pagination` gồm `page`, `size`, `total`, `total_pages`. Size/order/cardinality là DERIVED và cần owner approval; API không có `size`/`sort` query.
+- **Current Study Web source:** AD10Page reads `pagination.page/total/total_pages`, displays the current page/count, and requests adjacent pages only within the returned bounds. Query page remains in component state, not the URL.
 - **Processing/output:** Current UI không đổi state hoặc gọi request. Nếu được phê duyệt, next/previous phải kiểm soát bounds từ pagination response; filter thay đổi/reset trang và đồng bộ browser history cần quyết định trước khi code.
 - **Errors:** Invalid page trả 422 local-derived; page beyond total trả 200 Page rỗng theo current source. Không suy diễn page buttons disabled rules từ prototype empty sample.
 
@@ -88,3 +94,8 @@
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)
+
+#### Current Study Web source — 2026-11-21
+
+- EV-01 and EV-07 now reject a #78 success response with the wrong business code, malformed Content/Page projection, page echo, fixed size or total_pages. For a valid Page, COUNT/LIST row-count disagreement preserves returned rows, hides totals and pagination, and exposes a manual retry using the same query/page.
+- An empty page beyond the returned last page has a separate recovery action to page 1. A matching empty page remains a valid empty result. No server behavior, filter, automatic retry or polling was added; catalog cardinality, permission, schema and runtime gates remain open.

@@ -54,12 +54,12 @@ flowchart LR
 
 1. **Vào màn hình:** Admin có thể mở Angular route `/admin/lessons` đã khai báo tới `AD12Page`; browser/runtime chưa xác minh. HTML preview riêng không xử lý navigation.
 2. **Authentication/authorization:** client target cần session hợp lệ. Với request #82 hiện tại, shared Bearer/JWT `ADMIN` guard chạy trước parse query và DB. 401/403 là server outcomes; AC-34 permission riêng chưa được kiểm tra bởi source đã rà soát.
-3. **Khởi tạo filter:** mockup trình bày keyword, course, type và status. Không có default/query state client source. Chỉ `course`/`status` có đường xử lý local; `type` hiện bị từ chối. Không giả định UI slug/alias hoặc giá trị mặc định.
-4. **Gọi API:** API contract dự kiến #82 `GET /api/v1/admin/lessons`; gửi Bearer token và chỉ query đã được xác nhận. Catalog cho phép `course`, `status`, `type`; current source không nhận được một `type` hợp lệ nào. Không có body. Không có retry/timeout/idempotency/cache policy từ client source.
+3. **Khởi tạo filter:** mockup trình bày keyword, course, type và status. Angular current source khởi tạo query rỗng; Course ID raw text có thể Apply. Không giả định UI slug/alias hoặc giá trị mặc định.
+4. **Gọi API:** API contract dự kiến #82 `GET /api/v1/admin/lessons`; gửi Bearer token và chỉ query đã được xác nhận. Catalog cho phép `course`, `status`, `type`; current source gửi `course` raw text từ Course ID, không gửi `type`/`status`/search. Không có body. Refresh lặp applied query; Reset xóa query. Không có retry/timeout/idempotency/cache policy từ client source.
 5. **Xử lý query:** backend parse `course` thành signed int64; bind exact optional `course_id`/`status`; SQL loại `DELETED` và áp dụng thứ tự xác định. Không pagination/count/type/search/join.
 6. **Xử lý response:** local success là 200 `ApiEnvelope<Lesson[]>` với list trong `data`; map `name→title`, `sort_order→order`. Empty list là `[]`. Catalog singleton khác local response. Required projection có thể fail nếu legacy row chứa NULL ở `course_id/order/status`, tạo safe 500 + rollback.
 7. **Render UI:** Angular template bind loading/error/empty/loaded states và chiếu `id/title/course_id/order/status`; không render `content` hoặc `video_url`. Catalog cardinality, filter mapping, nullability và access còn mở; không có pagination. Empty server result không chứng minh dữ liệu đang chờ đồng bộ.
-8. **Tương tác:** refresh/reset cần gọi lại #82 sau khi filter contract rõ; search/type/status mapping hiện bị chặn. CTA Add không có API. Khi có row, `Lesson.id` là dữ liệu handoff candidate tới AD-13/#83; không mô tả action ngoài contract.
+8. **Tương tác:** Apply/refresh/reset gọi lại #82 theo raw Course ID hiện hành; search/type/status mapping hiện bị chặn. CTA Add không có API. Khi có row, `Lesson.id` là dữ liệu handoff candidate tới AD-13/#83; không mô tả action ngoài contract.
 9. **Rời màn hình:** expected AD-13 detail → AD-14 actions → reload #82 theo AC-34. Lịch sử, giữ filter, stale data, row action placement, back behavior và reload strategy chưa được xác nhận.
 
 ### Request/response và lỗi #82

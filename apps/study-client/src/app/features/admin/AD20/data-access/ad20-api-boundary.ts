@@ -2,8 +2,9 @@ import type { AdminScreenApiBoundary } from '../../../../shared/ui/admin-screen.
 
 export const AD20_API_BOUNDARY: AdminScreenApiBoundary = {
   "apiReferences": [
+    "#68",
     "#93"
   ],
-  "sourceState": "contract-blocked",
-  "sourceNote": "#93 yêu cầu recipients int64, title/content và kênh PUSH|EMAIL nhưng từ chối segment; response/permission/provider còn mở. HTTP 202 không chứng minh delivery; client không gửi."
+  "sourceState": "data-backed",
+  "sourceNote": "#68 cung cấp danh sách người dùng phân trang để chọn recipients tường minh; #93 nhận recipient IDs, title/content và kênh PUSH|EMAIL, rồi trả operation_id trong meta. HTTP 202 chỉ xác nhận QUEUED, không chứng minh delivery."
 };

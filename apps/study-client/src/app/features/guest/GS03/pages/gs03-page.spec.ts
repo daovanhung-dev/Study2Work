@@ -91,9 +91,18 @@ describe('GS03Page', () => {
           {
             id: 9,
             course_id: 42,
-            title: 'Bài học đầu tiên',
+            title: 'Bài học thứ hai',
             content: 'Nội dung riêng không được hiển thị.',
             video_url: 'https://example.test/private-video.mp4',
+            order: 2,
+            status: 'PUBLISHED',
+          },
+          {
+            id: 8,
+            course_id: 42,
+            title: 'Bài học đầu tiên',
+            content: null,
+            video_url: null,
             order: 1,
             status: 'PUBLISHED',
           },
@@ -105,6 +114,12 @@ describe('GS03Page', () => {
     const root = harness.routeNativeElement as HTMLElement;
     const curriculum = root.querySelector('#gs03-curriculum');
     expect(root.textContent).toContain('Bài học đầu tiên');
+    expect(root.textContent).toContain('Bài học thứ hai');
+    expect(
+      [...(curriculum?.querySelectorAll('.lesson-title') ?? [])].map((node) =>
+        node.textContent?.trim(),
+      ),
+    ).toEqual(['Bài học đầu tiên', 'Bài học thứ hai']);
     expect(root.textContent).not.toContain('Nội dung riêng không được hiển thị');
     expect(root.textContent).not.toContain('private-video.mp4');
     expect(curriculum?.querySelectorAll('.lesson-row a, .lesson-row button')).toHaveLength(0);
@@ -157,7 +172,7 @@ describe('GS03Page', () => {
     );
   });
 
-  it('supports End-key navigation to the contract-blocked resources tab', async () => {
+  it('supports End-key navigation to the public resources tab', async () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/courses/42', GS03Page);
     http.expectOne('/api/v1/courses/42').flush(successEnvelope(coursePage([course(42)])));
@@ -172,12 +187,15 @@ describe('GS03Page', () => {
 
     expect(TestBed.inject(Router).url).toBe('/courses/42?tab=resources');
     expect(root.querySelector('#gs03-tab-resources')?.getAttribute('aria-selected')).toBe('true');
-    expect(root.textContent).toContain('Tài nguyên hiện chưa khả dụng');
-    http.expectNone('/api/v1/courses/42/resources');
+    http
+      .expectOne('/api/v1/courses/42/resources')
+      .flush(successEnvelope([{ id: 4, name: 'Tài liệu công khai', type: 'DOCUMENT', url: 'https://cdn.example.test/4.pdf', visibility: 'PUBLIC', lesson_id: 12 }]));
+    harness.fixture.detectChanges();
+    expect(root.textContent).toContain('Tài liệu công khai');
     http.expectNone((request) => request.url.startsWith('/api/v1/resources/'));
   });
 
-  it('opens the contract-blocked resources tab after the published-course check without resource requests', async () => {
+  it('opens the public resources tab only after the published-course check', async () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/courses/42?tab=resources', GS03Page);
 
@@ -187,15 +205,16 @@ describe('GS03Page', () => {
     http.expectNone((request) => request.url.startsWith('/api/v1/resources/'));
     detailRequest.flush(successEnvelope(coursePage([course(42)])));
     harness.fixture.detectChanges();
+    const resourcesRequest = http.expectOne('/api/v1/courses/42/resources');
+    expect(resourcesRequest.request.method).toBe('GET');
+    expect(resourcesRequest.request.headers.has('Authorization')).toBe(false);
+    resourcesRequest.flush(successEnvelope([]));
+    harness.fixture.detectChanges();
 
     const root = harness.routeNativeElement as HTMLElement;
     expect(root.querySelector('#gs03-tab-resources')?.getAttribute('aria-selected')).toBe('true');
-    expect(root.querySelector('#gs03-resources [role="status"]')).not.toBeNull();
-    expect(root.textContent).toContain('Tài nguyên hiện chưa khả dụng');
-    expect(root.textContent).toContain('Hiện chưa thể hiển thị hoặc mở tài nguyên');
-    expect(root.querySelector('#gs03-resources a, #gs03-resources button')).toBeNull();
+    expect(root.textContent).toContain('Khóa học chưa có tài liệu công khai.');
     expect(TestBed.inject(Router).url).toBe('/courses/42?tab=resources');
-    http.expectNone('/api/v1/courses/42/resources');
     http.expectNone((request) => request.url.startsWith('/api/v1/resources/'));
   });
 
@@ -230,6 +249,26 @@ describe('GS03Page', () => {
     const root = harness.routeNativeElement as HTMLElement;
     expect(root.textContent).toContain('Chưa thể tải đề cương. Vui lòng thử lại sau.');
     expect(root.textContent).not.toContain('internal curriculum detail');
+    root.querySelector<HTMLButtonElement>('#gs03-curriculum .retry-button')?.click();
+    http
+      .expectOne('/api/v1/courses/42/curriculum')
+      .flush(
+        successEnvelope(
+          curriculumPage([
+            {
+              id: 13,
+              course_id: 42,
+              title: 'Đề cương đã tải lại',
+              content: null,
+              video_url: null,
+              order: 1,
+              status: 'PUBLISHED',
+            },
+          ]),
+        ),
+      );
+    harness.fixture.detectChanges();
+    expect(root.textContent).toContain('Đề cương đã tải lại');
   });
 
   it('routes a missing or non-public course response to SH-06 without exposing the course id or API detail', async () => {
@@ -262,6 +301,12 @@ describe('GS03Page', () => {
     const root = harness.routeNativeElement as HTMLElement;
     expect(root.textContent).toContain('Chưa thể tải thông tin khóa học');
     expect(root.textContent).not.toContain('internal detail');
+    root.querySelector<HTMLButtonElement>('.primary-button')?.click();
+    http
+      .expectOne('/api/v1/courses/42')
+      .flush(successEnvelope(coursePage([course(42)])));
+    harness.fixture.detectChanges();
+    expect(root.textContent).toContain('Kiến thức nền tảng');
   });
 });
 

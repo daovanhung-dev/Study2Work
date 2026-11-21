@@ -4,17 +4,24 @@
 |---|---|
 | Screen ID | `ST-15` |
 | Module | Student |
-| Route | `/student/attempts/:attemptId/submit` — route trong inventory, không phải xác nhận router runtime |
-| Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. Đây là DD theo design contract hiện có, chưa phải bằng chứng có route hoặc API đang chạy. |
+| Route | `/student/attempts/:attemptId/submit` — khai báo trong Study Client; live runtime chưa xác minh |
+| Actor/role | Student; client uses Student Bearer; API #31 checks owner and attempt state |
+| DD status | Draft/answer-flush handoff open; **Implementation:** PARTIAL · **Runtime:** NOT VERIFIED |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [ST-15.md](../../screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15.md), [ST-15_PLAN.md](../../screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_PLAN.md), [ST-15_markers.json](../../screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/ST-15_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Xem số câu chưa làm, xác nhận nộp và khóa chỉnh sửa khi server chấp nhận.
 - In-scope: Flush PUT #30 pending trước đúng một POST #31 → ST-16; không gọi #31 sau flush lỗi/không rõ và không retry mù sau 409/timeout; chỉ chuyển tiếp sau accepted response.
 - Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+
+### Current implementation — 2026-11-20
+
+- ST-15 has a Study Client route/page and follows `attemptId` changes. Explicit confirm calls #31 once; the page requires `DESIGN_RESOURCE_UPDATED`, matching attempt ID and `GRADED` response before navigating to ST-16.
+- API #31 checks Student ownership and `IN_PROGRESS`, grades supported question types, finalizes the attempt in a transaction and returns the result. It rejects already-closed attempts with `DESIGN_STATE_CONFLICT`.
+- A timeout or malformed success blocks repeat submission and offers a #32 result check; a closed-attempt conflict also offers that check. A valid accepted submission retains a result link if navigation fails.
+- ST-14 disables the normal submit link while #30 is saving or has an error. ST-15 itself cannot flush/inspect pending answers; direct route entry bypasses that UI gate. No queue/idempotency API exists. Tests/browser/runtime were not run or verified; source-DD excerpts below preserve expected design.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,17 +38,18 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | confirm/submitting/submitted/ambiguous-network |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Study Client ST-15 | `confirm / submitting / error / ambiguous / accepted-result link`; runtime chưa xác minh |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-15 source screen.png](../../screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-15_xac-nhan-nop-bai-kiem-tra/screen_annotated.png))
-- Luồng: Flush PUT #30 pending trước đúng một POST #31 → ST-16; không gọi #31 sau flush lỗi/không rõ và không retry mù sau 409/timeout; chỉ chuyển tiếp sau accepted response.
-- Priority: P1; Gate/source status: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #30 body/queue/upsert/order/outcome/retry và #31 ownership/state/repeat/deadline/concurrency/grading/transaction/response còn mở; ST-14 summary/dirty-queue handoff/direct entry chưa có contract; legacy BIGINT và V1-PILOT UUID/payload/lifecycle khác; PNG/HTML, timer/count/saved/attempt/instant-grading claims không thống nhất; Student #30–#32 route/module/test NOT_FOUND; Study Web UNWIRED; live schema chưa xác minh
+- Expected flow: flush pending #30 writes then submit #31 once. Current ST-14 blocks its submit link during a write/error; ST-15 has no queue/flush source and direct entry can bypass that gate.
+- Priority: P1; Gate/source status: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** direct-entry/pending-write handoff and idempotency remain open; #31 checks owner/state and grades locally supported question types, but enrollment/deadline rules are not established; source PNG/HTML differ; live DB/runtime unverified.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Ghi nhận #31 response validation/recovery, route-reactive ID, conflict/timeout handling và direct-entry flush gap.
 
 ## Trạng thái và ranh giới bằng chứng
 

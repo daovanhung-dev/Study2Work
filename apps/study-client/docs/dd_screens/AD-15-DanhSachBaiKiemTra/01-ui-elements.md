@@ -1,6 +1,6 @@
 # AD-15 — UI Elements
 
-> Marker descriptions below map the static Stitch screenshot/prototype, not the current Angular DOM. The prototype is historical design evidence; current route/API behavior is recorded in [Overview](00-overview.md#current-source-addendum--2026-11-16).
+> Marker descriptions below map the static Stitch screenshot/prototype, not the current Angular DOM. The prototype is historical design evidence; current route/API behavior is recorded in [Overview](00-overview.md#current-source-addendum--2026-11-20).
 
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
@@ -123,6 +123,9 @@ Tọa độ là pixel trên ảnh nguồn 1600×1394; ảnh đánh số được
 ## 4. Conditional UI & state variations
 - States theo inventory: loading/empty/ready/error/unauthorized/forbidden/validation/service-error
 - Detail/conditional visibility: xem section elements/state của [DD nguồn](../../screen_stitch/05_admin/AD-15_danh-sach-bai-kiem-tra/AD-15.md); không diễn giải ảnh tĩnh thành behavior runtime.
+
+### Current-source note — 2026-11-20
+- Angular now wires the toolbar refresh (#25) and empty-state refresh (#37) to the same manual GET #87 action. The page repeats the applied query and disables both actions during loading. The marker rows above continue to describe the unchanged Stitch prototype, whose buttons only animate an icon.
 
 ## 5. Link
 - [Events](02-events.md) · [Data Flow](03-data-flow.md) · [Tests](07-test-cases.md)

@@ -68,7 +68,7 @@ def request_body(**overrides: Any) -> dict[str, Any]:
     """Return a valid lecture payload with optional field overrides."""
     return {
         "title": "Bài học mở đầu",
-        "content": 9_223_372_036_854_775_000,
+        "content": "# Bài học mở đầu\n\nNội dung Markdown.",
         "asset_refs": "[34002,34001]",
         "order": 1,
         **overrides,
@@ -89,7 +89,7 @@ def post_lecture(client: TestClient, body: dict[str, Any] | None = None):
     )
 
 
-def test_create_lecture_returns_decimal_content_and_assets_in_request_order(
+def test_create_lecture_preserves_markdown_content_and_assets_in_request_order(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -126,7 +126,7 @@ def test_create_lecture_returns_decimal_content_and_assets_in_request_order(
             "id": 47001,
             "course_id": 101,
             "name": "Bài học mở đầu",
-            "content": str(request_body()["content"]),
+            "content": request_body()["content"],
             "sort_order": 1,
             "status": "PUBLISHED",
         }
@@ -147,7 +147,7 @@ def test_create_lecture_returns_decimal_content_and_assets_in_request_order(
     assert response.status_code == 201
     payload = response.json()
     assert payload["businessCode"] == "DESIGN_RESOURCE_CREATED"
-    assert payload["data"]["content"] == str(request_body()["content"])
+    assert payload["data"]["content"] == request_body()["content"]
     assert payload["data"]["status"] == "PUBLISHED"
     assert [asset["id"] for asset in payload["data"]["assets"]] == [34002, 34001]
     assert [asset["name"] for asset in payload["data"]["assets"]] == ["second.pdf", "first.pdf"]
@@ -158,7 +158,7 @@ def test_create_lecture_returns_decimal_content_and_assets_in_request_order(
     assert captured_insert == {
         "course_id": 101,
         "title": "Bài học mở đầu",
-        "content": str(request_body()["content"]),
+        "content": request_body()["content"],
         "order": 1,
     }
     assert "WITH ORDINALITY" in captured_links["sql"]
@@ -198,7 +198,7 @@ def test_create_lecture_accepts_empty_assets_and_draft_course(
         lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("empty IDs skip lookup")),
     )
 
-    response = post_lecture(client, request_body(asset_refs="[]", content=7, order=0))
+    response = post_lecture(client, request_body(asset_refs="[]", content="7", order=0))
 
     assert response.status_code == 201
     assert response.json()["data"]["assets"] == []
@@ -257,13 +257,12 @@ def test_create_lecture_rejects_non_mentor_role_before_db(
     [
         ("/api/v1/mentor/courses/9223372036854775808/lectures", request_body()),
         ("/api/v1/mentor/courses/101/lectures", request_body(content=9223372036854775808)),
-        ("/api/v1/mentor/courses/101/lectures", request_body(content=-9223372036854775809)),
         ("/api/v1/mentor/courses/101/lectures", request_body(order=2147483648)),
         ("/api/v1/mentor/courses/101/lectures", request_body(order=-2147483649)),
         ("/api/v1/mentor/courses/101/lectures", request_body(title="x" * 201)),
     ],
 )
-def test_create_lecture_rejects_out_of_range_numbers_and_long_title(
+def test_create_lecture_rejects_invalid_types_and_out_of_range_fields(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
     url: str,
@@ -473,7 +472,7 @@ def test_create_lecture_rolls_back_when_insert_query_fails(
 
 
 def test_create_lecture_route_openapi_contract(client: TestClient) -> None:
-    """Expose the stable POST path and int64 content request/response types in OpenAPI."""
+    """Expose the stable POST path and Markdown string request/response in OpenAPI."""
     schema = client.app.openapi()
     operation = schema["paths"]["/api/v1/mentor/courses/{course_id}/lectures"]["post"]
 
@@ -484,8 +483,8 @@ def test_create_lecture_route_openapi_contract(client: TestClient) -> None:
         for parameter in operation["parameters"]
     )
     request_schema = schema["components"]["schemas"]["CreateLectureRequest"]["properties"]
-    assert request_schema["content"]["type"] == "integer"
-    assert request_schema["content"]["format"] == "int64"
+    assert request_schema["content"]["type"] == "string"
+    assert "format" not in request_schema["content"]
     response_schema = schema["components"]["schemas"]["LectureResponse"]["properties"]
     assert response_schema["content"]["anyOf"] == [
         {"type": "string"},

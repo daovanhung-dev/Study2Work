@@ -86,18 +86,22 @@ describe('AD19Page', () => {
     const fixture = TestBed.createComponent(AD19Page);
     fixture.detectChanges();
     await fixture.whenStable();
-    http.expectOne('/api/v1/admin/notifications?page=1').flush(successEnvelope(page([
+    http.expectOne('/api/v1/admin/notifications?page=1').flush(successEnvelope(notificationPage(
+      1,
+      21,
       notification(901, 'Thông báo cũ hơn', 'Nội dung', ['EMAIL'], 'SENT'),
-    ], 1, 21, 2)));
+    )));
     fixture.detectChanges();
 
     (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>('.pagination-controls button:last-child')!.click();
     fixture.detectChanges();
     await fixture.whenStable();
     const request = http.expectOne('/api/v1/admin/notifications?page=2');
-    request.flush(successEnvelope(page([
+    request.flush(successEnvelope(notificationPage(
+      2,
+      21,
       notification(902, 'Thông báo mới hơn', 'Nội dung trang hai', ['PUSH'], 'FAILED'),
-    ], 2, 21, 2)));
+    )));
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
@@ -181,6 +185,23 @@ function page(
     items,
     pagination: { page: pageNumber, size: 20, total, total_pages: totalPages },
   };
+}
+
+function notificationPage(
+  pageNumber: number,
+  total: number,
+  firstNotification: AdminNotification,
+): AdminPage<AdminNotification> {
+  const offset = (pageNumber - 1) * 20;
+  const itemCount = Math.min(20, Math.max(total - offset, 0));
+  return page(
+    Array.from({ length: itemCount }, (_, index) => index === 0
+      ? firstNotification
+      : notification(2000 + offset + index, `Thông báo ${offset + index + 1}`, 'Nội dung', ['EMAIL'], 'SENT')),
+    pageNumber,
+    total,
+    total === 0 ? 0 : Math.ceil(total / 20),
+  );
 }
 
 function successEnvelope<T>(data: T): ApiEnvelope<T> {

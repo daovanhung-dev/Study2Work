@@ -11,12 +11,11 @@ from app.modules.guest.api_15_courses_enrollment_status.models import (
     EnrollmentStatusResponse,
 )
 from app.modules.guest.api_15_courses_enrollment_status.query import (
-    FIND_ANY_ENROLLMENT_BY_COURSE,
     FIND_COURSE,
     FIND_USER_ENROLLMENT,
 )
 from app.modules.guest.api_15_courses_enrollment_status.validate import (
-    resolve_optional_user_id,
+    resolve_student_user_id,
     validate_course_id,
 )
 from pydantic import ValidationError
@@ -41,17 +40,15 @@ def find_enrollment(
     db: Session,
     *,
     course_id: int,
-    user_id: int | None = None,
+    user_id: int,
 ) -> dict[str, Any] | None:
-    """Find enrollment for a specific user, or fallback to course scope."""
+    """Find only the authenticated user's latest enrollment for this course."""
 
-    if user_id is not None:
-        return query_one(
-            db,
-            FIND_USER_ENROLLMENT,
-            {"course_id": course_id, "user_id": user_id},
-        )
-    return query_one(db, FIND_ANY_ENROLLMENT_BY_COURSE, {"course_id": course_id})
+    return query_one(
+        db,
+        FIND_USER_ENROLLMENT,
+        {"course_id": course_id, "user_id": user_id},
+    )
 
 
 # API #15 courses_enrollment_status
@@ -68,7 +65,9 @@ def get_enrollment_status(
     if isinstance(validated_course_id, JSONResponse):
         return validated_course_id
 
-    user_id = resolve_optional_user_id(authorization, trace_id=trace_id)
+    user_id = resolve_student_user_id(authorization, trace_id=trace_id)
+    if isinstance(user_id, JSONResponse):
+        return user_id
 
     try:
         course = find_course_by_id(db, course_id=validated_course_id)

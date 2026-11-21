@@ -34,7 +34,7 @@
 - [x] AC-38 order, optional export branch and AD-25 filter handoff are linked with #103/Operation discrepancy retained.
 - [x] Original source image/HTML are preserved; annotation is separate.
 - [ ] DD READY: **not met**; unresolved contract decisions affect implementability.
-- [ ] IMPLEMENTATION READY: **not met**; Study Web and #101/#102 are unwired.
+- [ ] IMPLEMENTATION READY: **not met**; the route/page/session gate exist, but report behavior and #101/#102 APIs are unavailable and their actions remain gated.
 - [ ] RUNTIME VERIFIED: **not met**; no application tests/runtime were run.
 
 ### Blockers requiring contract decisions
@@ -48,7 +48,7 @@
 7. Approve report permission, Admin claim mapping and access policy; current shared ADMIN helper capability does not secure endpoints that do not exist.
 8. Specify Apply behavior, URL filter representation, reset/default period, reload/cancellation/partial-failure, network retry and cache/freshness rules.
 9. Reconcile AD-24 → AD-25 filter transfer and API #103 response (`Report` vs `Operation`) with `/api/v1/operations/{operation_id}` before designing export status/download flow.
-10. Implement Study Web route/client and #101/#102 backend/query/tests, then verify actual runtime separately.
+10. Complete the gated AD-24 report behavior and implement #101/#102 backend/query/tests under approved contracts, then verify actual runtime separately.
 
 Until these decisions are backed by approved contract and source, retain `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, and `RUNTIME NOT VERIFIED`.
 

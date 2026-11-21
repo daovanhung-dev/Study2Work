@@ -52,6 +52,10 @@ export class MentorSessionService {
       .pipe(map((envelope) => this.acceptEnvelope(envelope)));
   }
 
+  acceptLoginEnvelope(envelope: ApiEnvelope<unknown>): void {
+    this.acceptEnvelope(envelope);
+  }
+
   getMentorAccessToken(): Observable<string> {
     if (!this.isAuthenticated() || !this.accessToken || !this.refreshToken) {
       return throwError(() => new MentorSessionError('LOGIN_REQUIRED'));

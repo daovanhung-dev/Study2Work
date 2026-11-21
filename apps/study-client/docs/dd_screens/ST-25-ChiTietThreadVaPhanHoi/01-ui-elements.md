@@ -1,5 +1,10 @@
 # ST-25 — UI Elements
 
+## Current source mapping — 2026-11-21
+- The page places the source-backed thread and ordered comments in the main column and API-sourced status/course/author/reply-count facts in a responsive details column.
+- Author avatars use only HTTPS or same-origin HTTP URLs, omit the referrer, and fall back to initials on absent/unsafe/failed images. Comment timestamps come from the validated `created_at` field and retain source order.
+- The text-only composer keeps the explicit #41 submission flow and ambiguous-outcome protection. Screenshot controls whose action/data are not present in #41/#42 remain unavailable; no sample tags, likes, accepted answer, related threads, code/source links or mentor CTA are rendered as live data.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.

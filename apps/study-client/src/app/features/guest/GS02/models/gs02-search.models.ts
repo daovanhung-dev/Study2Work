@@ -1,30 +1,14 @@
-export interface GS02CourseMentor {
-  id: number;
-  full_name: string;
-  avatar_url?: string | null;
-}
+import type {
+  GuestCatalogPagination,
+  GuestMentorSummary,
+  GuestPublicCourse,
+  GuestPublicCoursePage,
+} from '../../shared/models/guest-course.models';
 
-export interface GS02Course {
-  id: number;
-  title: string;
-  description?: string | null;
-  thumbnail_url?: string | null;
-  price: string;
-  status: string;
-  mentor: GS02CourseMentor;
-}
-
-export interface GS02Pagination {
-  page: number;
-  size: number;
-  total: number;
-  total_pages: number;
-}
-
-export interface GS02CourseSearchPage {
-  items: GS02Course[];
-  pagination: GS02Pagination;
-}
+export type GS02CourseMentor = GuestMentorSummary;
+export type GS02Course = GuestPublicCourse;
+export type GS02Pagination = GuestCatalogPagination;
+export type GS02CourseSearchPage = GuestPublicCoursePage;
 
 export type GS02SearchState =
   | { status: 'prompt' }

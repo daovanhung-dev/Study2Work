@@ -6,9 +6,9 @@
 | Module | Student |
 | Route | `/student/courses` — route/page gate có trong Angular; runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `BLOCKED` · **Implementation:** `BLOCKED` · **Runtime:** `NOT VERIFIED` |
+| DD status | Draft; AC-13 filter/progress behavior remains blocked. Current source status: `IMPLEMENTATION PARTIAL`; `/student/courses` and paged #20 caller are wired; count/list page-size mismatches show a retryable notice; #21 is not used because it returns `UserProfile`; `RUNTIME NOT VERIFIED`. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.3 / 2026-11-21 |
 | Nguồn đối chiếu | [ST-08.md](../../screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/ST-08.md), [ST-08_PLAN.md](../../screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/ST-08_PLAN.md), [ST-08_markers.json](../../screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/ST-08_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -31,14 +31,14 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/empty/partial-progress/error |
-| Current source | Worklog/context Study Web | Route maps #20/#21 and displays an unconfirmed empty/session state; no private request. |
+| Current source | Angular route/page, Study Web context and API caller | `/student/courses` runs behind `StudentLayout`; paged #20 is validated and supports loading/error/empty/retry/pagination. A count/list page-size mismatch preserves returned rows, warns, and hides potentially stale total/page controls. #21 is not called. |
 | Runtime | Worklog/context Study Web | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-08 source screen.png](../../screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-08_khoa-hoc-cua-toi/screen_annotated.png))
 - Luồng: GET #20 page/status → GET #21 nếu cần dữ liệu progress không kèm sẵn; merge theo course_id.
-- Priority: P1; Gate/source status: **D**; **BLOCK:** #20/#21 Draft/NOT_FOUND, response UserProfile không biểu diễn list/progress; query/merge chưa chốt; AC-13 nhánh EMPTY/HAS DATA cùng tới node render; DDL BIGINT/UUID khác model; loaded/filter UI và design guide alignment còn thiếu; Study Web UNWIRED
+- Priority: P1; **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED.** #20 route/caller currently returns a validated `CourseSummaryPage`; the catalog still declares `UserProfile`. #21 returns `UserProfile` and cannot provide progress. AC-13 empty behavior, status filter, progress merge, schema-generation alignment, loaded-state design and design-system fidelity remain unresolved.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -51,9 +51,15 @@
 - `/student/courses` mounts ST-08 behind `StudentLayout` and calls paged #20 for the signed-in Student's courses. The page renders returned course/enrollment fields with loading, error, empty, and pagination states; only ACTIVE courses link to ST-09.
 - Current #20 returns a `CourseSummaryPage` from `enrollments`/`courses` queries, with no focused #20 test package. #21 returns `UserProfile` rather than course progress and is not used by this page. Deployed API behavior has not been verified.
 
+## Current implementation update — 2026-11-20
+
+- ST-08 validates the #20 envelope/business code, requested page, fixed size, page metadata, course/enrollment fields and descending enrollment order. If a later page becomes out of range after the count changes, the page resets to the last available page (or page 1 when empty) and reloads before displaying an empty state.
+- Course cards render `ACTIVE` enrollment as “Đang hoạt động” and only `PUBLISHED` as “Đã xuất bản”; other status values are not exposed as raw codes. This is a display fallback only and does not define the complete status enums or change the ACTIVE-only continuation gate.
+- The screen still does not expose the expected status filter or #21 progress because #21 returns `UserProfile`; course/status label enums remain unapproved across legacy and V1-PILOT schemas. Runtime is unverified and the screen remains 50%.
+
 # ST-08 — Khóa học của tôi
 
-> **DD status:** `BLOCKED` · **Implementation:** `BLOCKED` · **Runtime:** `NOT VERIFIED`
+> **DD status:** `BLOCKED` · **Implementation:** `PARTIAL` · **Runtime:** `NOT VERIFIED`
 > **Phạm vi phiên:** chỉ ST-08. Tài liệu mô tả thiết kế và bằng chứng hiện có; đây không phải xác nhận UI hoặc API đang chạy.
 
 ## Trích đoạn tổng quan từ DD nguồn

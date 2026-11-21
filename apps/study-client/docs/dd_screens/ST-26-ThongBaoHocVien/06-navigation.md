@@ -1,11 +1,15 @@
 # ST-26 — Navigation
 
+## Current source route and handoff — 2026-11-20
+
+`/student/notifications` is registered in `student.route.ts` under authenticated Student access. The page does not navigate from notification content because #43 exposes no typed destination. Inventory links and screenshot destinations remain design references; runtime navigation is not verified.
+
 ## 1. Route definition
 - Current route in inventory: `/student/notifications`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: current route is source-wired to list/read behavior; runtime not verified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
-- Route guards: see source DD/API contract; do not create role policy.
+- Route guards: authenticated Student route group; #43–#45 validate Student Bearer and scope notification rows to the principal.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |

@@ -10,8 +10,8 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #82
-- Orchestration/data notes: GET #82; catalog singleton `Lesson` khác local `Lesson[]`; course cần int64 nhưng mockup dùng slug, type trả 422, status exact raw string, không có pagination; CTA Add chưa có API.
-- BE/source status và gate: **R** Angular route/page/GET #82 caller and API route/module/query/model/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE; FILTERS/ACTIONS BLOCKED:** cardinality, UI filter mapping, pagination, Add API, lesson-management permission, legacy nullability/live schema còn mở; **RUNTIME NOT VERIFIED**
+- Orchestration/data notes: GET #82; initial load không query; Apply/Refresh/Reset dùng query `course` raw text mapped to signed-int64 Course ID. Catalog singleton `Lesson` khác local `Lesson[]`; type trả 422, status exact raw string nhưng UI chưa có allowlist, không có pagination; CTA Add chưa có API.
+- BE/source status và gate: **R** Angular route/page/GET #82 caller and API route/module/query/model/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** course filter and manual reload wired; search/type/status, pagination and Add remain blocked. Cardinality, lesson-management permission, legacy nullability/live schema còn mở; **RUNTIME NOT VERIFIED**
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API và liên kết màn hình
@@ -40,3 +40,7 @@ Liên kết thiết kế: AD-01/Admin shell → AD-12 → AD-13/#83 → AD-14; A
 
 ## 4. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/05_admin/AD-12_danh-sach-bai-hoc-quan-tri/AD-12.md)
+
+### Current client/API source — 2026-11-21
+
+The #82 caller now requires DESIGN_RESOURCE_RETRIEVED and validates the returned Lesson[] item projection before rendering. The local view serializes nullable Lesson fields in the response, and the client guard checks those null-or-value shapes. Lesson and Course int64 identifiers are rendered through the precision-safe formatter; unsafe Lesson IDs still cannot open AD-13. The singular catalog Lesson vs local Lesson[] discrepancy, AC-34 permission, legacy/live schema and browser runtime remain unresolved.

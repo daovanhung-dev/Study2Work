@@ -23,6 +23,8 @@
 
 ## 3. Source acceptance / test plan (not run)
 
+Current source has a route-reactive #66 caller with strict count/timestamp validation. The cases below remain planning references and were not run.
+
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu
 
 ### F1. Static checks

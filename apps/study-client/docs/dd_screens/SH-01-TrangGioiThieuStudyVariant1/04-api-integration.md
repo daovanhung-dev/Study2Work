@@ -1,5 +1,7 @@
 # SH-01 — API Integration
 
+> **Current client source (2026-11-21):** #05 and #06 are called independently with no auth header; #05 omits `locale` to use the current `vi-VN` default, while #06 sends only `page=1,size=6`. Client readers require `DESIGN_RESOURCE_RETRIEVED`, validate category/course/mentor fields and endpoint pagination, then render only #06 items with status `PUBLISHED`. Malformed projections enter their own error/retry state. Study Server #05/#06 focused tests passed 29/29 and match the current client request/response behavior. API DD approval and live API/DB/deployment remain unverified.
+
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
 ## 1. API usage matrix

@@ -15,7 +15,7 @@
 
 ### Expected flow theo AC-38 và catalog
 
-1. Admin có quyền report/analytics mở dashboard báo cáo. Candidate route `/admin/reports/community-impact` is not registered in Study Web today.
+1. Admin có quyền report/analytics mở dashboard báo cáo. The Study Client route `/admin/reports/community-impact` is registered; report-specific authorization and runtime behavior remain unverified.
 2. AC-38 draws `GET /api/v1/admin/reports/summary` (#101), then an aggregate KPI step, followed by `GET /api/v1/admin/reports/community-impact` (#102), range/report-permission validation, aggregate learning/community metrics, and dashboard/filter rendering. The diagram's validation node is after the #102 edge; exact client/server validation timing must be decided rather than silently reordered.
 3. #101 accepts optional `from?:date`, `to?:date`; #102 accepts optional `from?:string`, `to?:string`, `segment?:string`. Both catalog rows specify Bearer JWT/Admin and `ApiEnvelope<Report>`, with 200 `DESIGN_RESOURCE_RETRIEVED` and 401/403/500. No 400/422 mapping is declared for invalid ranges/segments.
 4. API DDs describe `Report` as `{period:{from,to}, metrics:[{key,value,label}], generated_at}`. They leave default date range, date parsing/timezone, metric keys/formulas, segment rules, empty/partial semantics, report permission and source selection unresolved. Their candidate metrics are `DERIVED`.
@@ -46,11 +46,19 @@
 | Filter reset | **Current local state change** | Click Reset. | Restores fixed 2025 dates and `all`; no request/URL change. |
 | Export handoff | **Expected AD-25 link; current path only** | Click export CTA. | Navigates to candidate path without filters; API #103 acceptance/result/polling unresolved. |
 
+### Current Study Client source observed (2026-11-20)
+
+- The registered Angular route renders the Admin-gated AD-24 page. Its four KPI cards remain blank; four metric cards are labeled as unapproved proposals.
+- Report filters and apply/reset/refresh/export controls remain disabled, and the page issues no #101/#102 request. The unavailable-report explanation is visible instead of a data-backed chart.
+- The back-to-admin action is wired in the current page. No report result, loading, empty-data, partial-success, or API-error state is demonstrated by this source.
+- This current-source observation supersedes only claims that the Study Client route/page is absent; the preceding state matrix continues to describe the preserved static prototype and expected report states.
+- Runtime status: NOT VERIFIED.
+
 ### Navigation and data handoff
 
 | From / to | Expected link | Data | Current status |
 |---|---|---|---|
-| AD-01 / reporting entry → AD-24 | Candidate `/admin/reports/community-impact`; AC-38 places #102 after #101. | Date range and optional segment; exact state source/initial values unapproved. | Inventory/AC only; no Study Web router. |
+| AD-01 / reporting entry → AD-24 | Registered `/admin/reports/community-impact`; AC-38 places #102 after #101. | Date range and optional segment; exact handoff/defaults remain unresolved. | Study Client route/page/Admin session gate are source-wired; runtime remains unverified. |
 | AD-24 → #101 | `GET /api/v1/admin/reports/summary`. | Optional `from?:date`, `to?:date`. | Catalog + Draft DD; no route/module/query/model/test. |
 | AD-24 → #102 | `GET /api/v1/admin/reports/community-impact`. | Optional `from?:string`, `to?:string`, `segment?:string`. | Catalog + Draft DD; date/segment/metric semantics unapproved; no route/module/query/model/test. |
 | AD-24 → AD-25 | `/admin/reports/export`. | Inventory expects filters in URL; serialization not defined. | Current anchor drops current filters; destination is not wired. |

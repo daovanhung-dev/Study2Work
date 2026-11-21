@@ -2,13 +2,18 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-20
 
-ST-13 calls #28 to load quiz details. The explicit Start action calls #29 once
-and uses the returned attempt ID for navigation. No eligibility or attempt
-limit is inferred. The DD/API excerpt below is a design-time snapshot; see
-[the screen inventory](../../list_screen.md) and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md)
-for current source status.
+ST-13 calls #28 through Student Bearer, follows `quizId` changes, cancels stale
+reads, and validates the exact success code, quiz shape and ID. The explicit
+Start action calls #29 once; it requires `DESIGN_RESOURCE_CREATED`, an
+`IN_PROGRESS` attempt and matching `quiz_id`, then routes using the returned
+attempt ID. If client navigation fails after creation, the page retains a link
+to that attempt. #28 checks Student role but not course enrollment or quiz
+status; #29 checks Student, quiz existence and active-attempt conflict but
+does not check enrollment or quiz published/open state. Tests/browser/runtime
+were not run or verified. The detailed DD/API excerpts below preserve the
+original declared design.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -18,8 +23,8 @@ for current source status.
 ## 2. Contract / source detail
 
 - API refs trong inventory: #28
-- Orchestration/data notes: GET #28 theo thiết kế; ST-13 row kỳ vọng POST #29 sau explicit Start, nhưng F05/ST-14 row/DD mâu thuẫn về screen owner và GET/POST order; ST-14 path còn yêu cầu `attemptId` trước entry nếu #29 được dời sang đó. Owner phải chốt một call-site/entry route, không gọi lặp.
-- BE/source status và gate: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #28/#29 Student route/module/test NOT_FOUND; PNG/HTML mismatch; eligibility, answer exposure, timing, attempt limit/resume/idempotency và CTA destinations open; #29 owner/order/entry route conflicts across ST-13/F05/ST-14; legacy BIGINT Quiz/Attempt differs from V1-PILOT UUID Assessment model; sample history/proctoring/scoring/certificate claims unsupported; Study Web UNWIRED
+- Orchestration/data notes: current source uses GET #28 on entry and POST #29 only after explicit Start. Original ST-13/F05/ST-14 call-site/order disagreement remains in expected design; current code is not an owner approval.
+- BE/source status and gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** client caller is wired, but server does not enforce enrollment or quiz-open eligibility; #29 conflict cannot resume an existing attempt because response has no existing attempt ID; UI still lacks history/limits/proctoring behavior claimed by the mockup.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Nguồn truy vết

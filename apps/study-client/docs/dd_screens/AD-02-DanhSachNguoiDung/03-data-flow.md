@@ -84,3 +84,8 @@ COUNT và LIST dùng cùng role/status/keyword predicates; page query dùng `LIM
 
 ## 8. Trace
 [Events](02-events.md) · [API](04-api-integration.md) · [Rules](05-business-rules.md)
+
+### Current-source addendum — 2026-11-21
+
+- The #68 response mapper requires DESIGN_RESOURCE_RETRIEVED, valid UserProfile items, fixed page size, exact requested-page echo and total_pages consistent with safe totals.
+- AD02Page derives the expected row count from page/size/total. If the separate COUNT/LIST reads disagree, the page retains returned rows, shows a retryable warning, hides total/pagination and blocks page changes. Empty out-of-range pages can return to page 1; matching empty filters remain empty.

@@ -50,11 +50,24 @@ export class StudentSessionService {
       .pipe(map((envelope) => this.acceptEnvelope(envelope)));
   }
 
+  acceptLoginEnvelope(envelope: ApiEnvelope<unknown>): void {
+    this.acceptEnvelope(envelope);
+  }
+
   getStudentAccessToken(): Observable<string> {
     if (!this.isAuthenticated() || !this.accessToken || !this.refreshToken) {
       return throwError(() => new StudentSessionError('LOGIN_REQUIRED'));
     }
     if (Date.now() < this.accessTokenExpiresAt) return of(this.accessToken);
+    return this.refreshAccessToken();
+  }
+
+  /** Refresh after a server-side 401 even when the locally tracked token has not expired. */
+  refreshAfterUnauthorized(): Observable<string> {
+    if (!this.isAuthenticated() || !this.refreshToken) {
+      this.endLocalSession();
+      return throwError(() => new StudentSessionError('LOGIN_REQUIRED'));
+    }
     return this.refreshAccessToken();
   }
 

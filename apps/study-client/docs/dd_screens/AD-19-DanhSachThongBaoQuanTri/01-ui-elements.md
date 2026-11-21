@@ -1,5 +1,7 @@
 # AD-19 — UI Elements
 
+> Current Angular list rows render source-defined #92 statuses `QUEUED`, `SENT`, and `FAILED` with Vietnamese labels and a neutral fallback for unknown values. Filter/query values remain exact source strings; prototype `draft`/`scheduled`/`published` options are not mapped.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.
@@ -120,6 +122,7 @@ The source screenshot uses a cobalt primary (#004ac6) and Plus Jakarta Sans from
 
 ## 4. Conditional UI & state variations
 - States theo inventory: unwired/loading/empty/ready/unauthorized/forbidden/validation-error/dependency-error/server-error
+- Current Angular source (2026-11-20): the loaded-empty table state includes the Stitch refresh button; activation repeats GET #92 with the applied `status/channel/page`, then the table shows its loading row. Search and mockup-only metrics remain unavailable; browser behavior is not verified.
 - Detail/conditional visibility: xem section elements/state của [DD nguồn](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/AD-19.md); không diễn giải ảnh tĩnh thành behavior runtime.
 
 ## 5. Link

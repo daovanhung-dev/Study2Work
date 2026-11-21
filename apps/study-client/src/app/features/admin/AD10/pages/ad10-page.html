@@ -31,12 +31,19 @@
       <div class="filter-actions">
         <button class="apply-button" type="submit" [disabled]="viewState().status === 'loading'"><study-icon name="search" /> Áp dụng</button>
         <button class="clear-button" type="button" (click)="clearFilters()" [disabled]="viewState().status === 'loading'">Xóa lọc</button>
+        <button class="refresh-button" type="button" (click)="refreshQueue()" [disabled]="viewState().status === 'loading'"><study-icon name="refresh" /> Làm mới hàng đợi</button>
       </div>
     </form>
     <p class="filter-note"><study-icon name="info" /> Bộ lọc dùng query `type` và `course`; mã khóa học được giữ dạng văn bản để không làm tròn int64.</p>
   </section>
 
   <section class="content-table-panel" aria-label="Danh sách nội dung chờ kiểm duyệt">
+    @if (viewState().status === 'loaded' && snapshotMismatch()) {
+      <div class="snapshot-warning" role="status" aria-live="polite">
+        <div><strong>Số lượng và danh sách nội dung chưa đồng nhất</strong><p>Các dòng API trả về vẫn được giữ lại; tổng và phân trang đang ẩn cho đến khi tải lại.</p></div>
+        <button type="button" (click)="refreshQueue()"><study-icon name="refresh" /> Tải lại trang này</button>
+      </div>
+    }
     <div class="table-scroll" role="region" aria-label="Bảng hàng đợi nội dung" tabindex="0">
       <table>
         <caption class="visually-hidden">Nội dung đang ở trạng thái chờ kiểm duyệt</caption>
@@ -48,6 +55,10 @@
             <tr><td class="table-state" colspan="7" role="status"><span class="state-mark"><study-icon name="refresh" /></span><strong>Đang tải hàng đợi kiểm duyệt…</strong><span>Đang chờ phản hồi từ Study Server.</span></td></tr>
           } @else if (viewState().status === 'error') {
             <tr><td class="table-state table-state--error" colspan="7" role="alert"><span class="state-mark"><study-icon name="info" /></span><strong>Không thể tải hàng đợi</strong><span>{{ viewState().message }}</span></td></tr>
+          } @else if (pageOutOfRange()) {
+            <tr><td class="table-state" colspan="7" role="status"><span class="state-mark"><study-icon name="info" /></span><strong>Trang này không còn nội dung</strong><span>Hàng đợi đã thay đổi; hãy quay lại trang đầu để xem dữ liệu hiện có.</span><button type="button" (click)="returnToFirstPage()">Về trang đầu</button></td></tr>
+          } @else if (snapshotMismatch() && (viewState().rows?.length ?? 0) === 0) {
+            <tr><td class="table-state" colspan="7" role="status"><span class="state-mark"><study-icon name="info" /></span><strong>Trang chưa đồng bộ</strong><span>API #78 trả về số dòng khác với tổng ở thời điểm đọc; không coi đây là danh sách rỗng.</span><button type="button" (click)="refreshQueue()">Tải lại trang này</button></td></tr>
           } @else if ((viewState().rows?.length ?? 0) === 0) {
             <tr><td class="table-state" colspan="7"><span class="state-mark"><study-icon name="book" /></span><strong>Không có nội dung phù hợp</strong><span>API #78 trả về trang rỗng cho bộ lọc hiện tại.</span></td></tr>
           } @else {
@@ -73,7 +84,7 @@
       </table>
     </div>
 
-    @if (viewState().status === 'loaded') {
+    @if (viewState().status === 'loaded' && !snapshotMismatch() && !pageOutOfRange()) {
       <div class="pagination-bar">
         <p>
           @if (viewState().pagination; as pagination) {

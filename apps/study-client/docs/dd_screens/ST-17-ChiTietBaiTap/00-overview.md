@@ -4,17 +4,23 @@
 |---|---|
 | Screen ID | `ST-17` |
 | Module | Student |
-| Route | `/student/assignments/:assignmentId` — route trong inventory, không phải xác nhận router runtime |
-| Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. API #33 is catalog/design-only (`Draft — Needs Confirmation`); no current Student route/module/test exists. |
+| Route | `/student/assignments/:assignmentId` — Study Client route; deployed runtime chưa xác minh |
+| Actor/role | Student Bearer; API #33 currently checks role only |
+| DD status | Eligibility/visual gaps open; **Implementation:** PARTIAL · **Runtime:** NOT VERIFIED. #33 source and client caller exist. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [ST-17.md](../../screen_stitch/03_student/ST-17_chi-tiet-bai-tap/ST-17.md), [ST-17_PLAN.md](../../screen_stitch/03_student/ST-17_chi-tiet-bai-tap/ST-17_PLAN.md), [ST-17_markers.json](../../screen_stitch/03_student/ST-17_chi-tiet-bai-tap/ST-17_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Đề bài, hạn nộp, điểm tối đa, file liên quan và nút nộp.
 - In-scope: GET #33 → server quyết định deadline/permission; không dùng clock UI làm nguồn quyền. CTA chỉ handoff `assignmentId` sang ST-18 khi eligibility contract được duyệt.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Không dùng local clock làm quyền nộp; live runtime chưa được xác minh.
+
+### Current implementation — 2026-11-20
+
+- ST-17 follows assignment route changes, cancels stale #33 reads, validates `DESIGN_RESOURCE_RETRIEVED` plus response ID/shape, and offers retry. It renders only fields returned by #33 and links to ST-18.
+- #33 authenticates Student and reads the assignment by ID, but does not check enrollment/ownership, publication/status, or deadline. The ST-18/#35 submission path later checks ACTIVE enrollment and deadline; that does not protect assignment-detail access. The eligibility gate remains open.
+- The current page is a basic assignment/detail layout and does not implement the full Stitch content, attached-resource view, or other screenshot metrics. No browser/runtime or tests were run.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,23 +37,26 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/open/closed/not-found |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Study Client ST-17 | `loading / error+retry / loaded fields / ST-18 link`; deployed runtime NOT VERIFIED |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-17 source screen.png](../../screen_stitch/03_student/ST-17_chi-tiet-bai-tap/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-17_chi-tiet-bai-tap/screen_annotated.png))
 - Luồng: GET #33 → server quyết định deadline/permission; không dùng clock UI làm nguồn quyền. CTA chỉ handoff `assignmentId` sang ST-18 khi eligibility contract được duyệt.
-- Priority: P1; Gate/source status: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** API #33 Draft, Student route/module/test NOT_FOUND; access/deadline/submission-rule/403-vs-409 unresolved; Assignment response thiếu phần lớn loaded-screen fields; legacy BIGINT assignment tables vs V1-PILOT không có business assignment tables, adapter/live schema chưa xác minh; PNG/HTML actor-state mismatch và visual target mismatch; Study Web UNWIRED; #34 chỉ là upload source-backed, #35/#36 Student routes chưa có
+- Priority: P1; Gate/source status: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #33 caller/source exists but its lookup lacks owner/enrollment/status/deadline predicates; its response covers only assignment ID/course/title/description/due/max score. Stitch fields and eligibility are incomplete; legacy BIGINT assignment DDL differs from V1-PILOT; PNG/HTML state and visual target differ.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Cập nhật caller #33 route/response validation và ghi rõ thiếu kiểm tra enrollment/visibility ở backend.
 
 ## Trạng thái và ranh giới bằng chứng
 
 # ST-17 — Chi tiết bài tập
 
-> **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. API #33 is catalog/design-only (`Draft — Needs Confirmation`); no current Student route/module/test exists.
+> Các đoạn “hiện trạng/current behavior” bên dưới được giữ từ source DD cũ để truy vết; trạng thái source hiện tại là phần **Current implementation — 2026-11-20** ở trên.
+
+> **Trạng thái nguồn hiện tại:** DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED. API #33 and Study Client caller exist; assignment access policy remains open.
 
 ## Trích đoạn tổng quan từ DD nguồn
 

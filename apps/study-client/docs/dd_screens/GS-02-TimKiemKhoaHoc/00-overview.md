@@ -31,7 +31,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | typing/loading/no-result/error |
-| Current source | Worklog/context Study Web | `PARTIAL SOURCE` / browser and API runtime `NOT VERIFIED` |
+| Current source | Study Web Angular route/caller | `SOURCE-WIRED / PARTIAL`; browser/API runtime `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [GS-02 source screen.png](../../screen_stitch/02_guest_discovery/GS-02_tim-kiem-khoa-hoc/screen.png))
@@ -44,6 +44,12 @@
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 
 ## Trạng thái và ranh giới bằng chứng
+
+### Current Study Web source re-audit (2026-11-21)
+
+- GS-02 is routed at `/courses/search`; its current caller sends normalized nonempty `q` and `page` to public API #07, cancels the previous request when query/page changes, and validates the accepted envelope, course projection, requested page and fixed page size 20. It does not call #05, send category/facet parameters, or implement the unresolved cache/orchestration policy.
+- #07's total comes from a separate COUNT query and its returned courses from a paged LIST query. GS-02 compares the item count with the expected count for the accepted page. On disagreement it preserves returned cards, hides the potentially stale total and pagination, offers a retry for the same query/page, and blocks page navigation until the reload. Matching zero/zero remains “no results”; an empty out-of-range page remains separate.
+- Result-card navigation, screenshot facets/sort and six-versus-twenty page size remain unresolved against the supplied design. Browser/API/DB runtime remains unverified. This addendum supersedes older package statements that the Angular caller or route were absent; it does not close the DD design gates.
 
 # GS-02 — Tìm kiếm khóa học
 

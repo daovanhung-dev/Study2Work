@@ -9,8 +9,8 @@
       <li aria-hidden="true">›</li>
       <li aria-current="page">Thao tác khóa học</li>
     </ol>
-    <a class="back-link" [routerLink]="['/admin/courses', courseId()]">
-      <study-icon name="chevron" /> Quay lại chi tiết khóa học (AD-07)
+    <a class="back-link" [routerLink]="isCourseIdValid() ? ['/admin/courses', courseId()] : '/admin/courses'">
+      <study-icon name="chevron" /> {{ isCourseIdValid() ? 'Quay lại chi tiết khóa học (AD-07)' : 'Danh sách khóa học' }}
     </a>
   </nav>
 
@@ -115,7 +115,9 @@
   }
 
   <footer class="actions-footer">
-    <a class="footer-link" [routerLink]="['/admin/courses', courseId()]">Quay về chi tiết khóa học</a>
+    <a class="footer-link" [routerLink]="isCourseIdValid() ? ['/admin/courses', courseId()] : '/admin/courses'">
+      {{ isCourseIdValid() ? 'Quay về chi tiết khóa học' : 'Danh sách khóa học' }}
+    </a>
     <span><study-icon name="database" /> Nguồn đọc: GET /api/v1/admin/courses/&#123;course_id&#125; · API #74</span>
   </footer>
 </main>

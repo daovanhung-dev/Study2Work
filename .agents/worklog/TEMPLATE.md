@@ -24,17 +24,15 @@ status: "PLANNED | IN_PROGRESS | VERIFIED | PARTIAL | BLOCKED"
 - Requirement:
 - Canonical contract/approved DD:
 
-## MILESTONES
+## TARGET_UPDATES
 
-Define at least two task-specific milestones with objective/acceptance
-criteria. Weights must total 100%; cumulative progress is the sum of completed
-weights. Start at 0% and report progress only when a milestone is achieved.
-Use `PENDING`, `DONE`, or `BLOCKED` for milestone status.
+Record each target creation, verified progress change, blocker that affects
+progress, and completion evidence. `.agents/target.md` is the sole live progress
+source; do not duplicate its current value in a milestone table.
 
-| Weight | Cumulative progress when achieved | Objective / acceptance criterion | Status |
-|---:|---:|---|---|
-| `<weight>%` | `<cumulative>%` | `<milestone objective>` | `PENDING` |
-| `<weight>%` | `100%` | `<final acceptance>` | `PENDING` |
+| Target | From → to | Evidence / reason |
+|---|---:|---|
+| `<target name>` | `0% → 0%` | `<initial target and acceptance basis>` |
 
 ## CURRENT_BEHAVIOR
 
@@ -60,6 +58,7 @@ caller -> callee -> DB/external side effect -> response -> tests
 - CONTEXT_UPDATES:
 - Context pages changed:
 - Assumptions:
+- Target progress updates and completion evidence: see `TARGET_UPDATES`.
 
 ## VERIFICATION
 

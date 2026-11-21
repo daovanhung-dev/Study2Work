@@ -34,10 +34,10 @@ describe('AD02Page', () => {
 
     const root = fixture.nativeElement as HTMLElement;
     const text = root.textContent ?? '';
-    expect(root.querySelector('h1')?.textContent).toContain('Danh sách người dùng');
+    expect(root.querySelector('h1')?.textContent).toContain('Quản lý tài khoản người dùng');
     expect(text).toContain('Phiên Admin không còn hiệu lực');
     expect(text).not.toContain('Không tìm thấy tài khoản phù hợp');
-    expect(root.querySelectorAll('thead th')).toHaveLength(6);
+    expect(root.querySelectorAll('thead th')).toHaveLength(7);
     http.expectNone('/api/v1/admin/users');
   });
 
@@ -52,17 +52,10 @@ describe('AD02Page', () => {
     request.flush(
       successEnvelope({
         items: [
-          {
-            id: 17,
-            full_name: 'Mai Nguyen',
-            email: 'mai@example.test',
-            role: 'MENTOR',
-            avatar_url: null,
-            phone: null,
-            status: 'ACTIVE',
-            created_at: '2026-01-01T00:00:00Z',
-            updated_at: '2026-01-02T00:00:00Z',
-          },
+          userProfile(17, 'Mai Nguyen', 'mai@example.test', 'MENTOR'),
+          ...Array.from({ length: 19 }, (_, index) =>
+            userProfile(100 + index, `User ${index + 1}`, `user-${index + 1}@example.test`),
+          ),
         ],
         pagination: { page: 1, size: 20, total: 41, total_pages: 3 },
       }),
@@ -233,7 +226,9 @@ describe('AD02Page', () => {
     );
     initial.flush(
       successEnvelope({
-        items: [],
+        items: Array.from({ length: 20 }, (_, index) =>
+          userProfile(200 + index, `User ${index + 1}`, `user-${index + 1}@example.test`),
+        ),
         pagination: { page: 2, size: 20, total: 45, total_pages: 3 },
       }),
     );
@@ -263,7 +258,12 @@ describe('AD02Page', () => {
         request.params.get('status') === 'ACTIVE' &&
         request.params.get('page') === '1',
     );
-    applied.flush(successEnvelope(emptyUsersPage()));
+    applied.flush(successEnvelope({
+      items: Array.from({ length: 20 }, (_, index) =>
+        userProfile(300 + index, `Filtered ${index + 1}`, `filtered-${index + 1}@example.test`),
+      ),
+      pagination: { page: 1, size: 20, total: 45, total_pages: 3 },
+    }));
     harness.fixture.detectChanges();
 
     page.changePage(2);
@@ -279,7 +279,9 @@ describe('AD02Page', () => {
     );
     secondPage.flush(
       successEnvelope({
-        items: [],
+        items: Array.from({ length: 20 }, (_, index) =>
+          userProfile(400 + index, `Page two ${index + 1}`, `page-two-${index + 1}@example.test`),
+        ),
         pagination: { page: 2, size: 20, total: 45, total_pages: 3 },
       }),
     );
@@ -365,14 +367,15 @@ describe('AD02Page', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('0 / 0');
   });
 
-  it('does not render unsupported account actions or policy claims', () => {
+  it('keeps unsupported account actions disabled and avoids unsupported policy claims', () => {
     const fixture = TestBed.createComponent(AD02Page);
     fixture.detectChanges();
-    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    const root = fixture.nativeElement as HTMLElement;
+    const text = root.textContent ?? '';
 
-    expect(text).not.toMatch(
-      /Thêm người dùng|Xuất dữ liệu|RBAC|bảo mật|đồng bộ|nhật ký kiểm toán|health/i,
-    );
+    expect(root.querySelector<HTMLButtonElement>('.page-action--secondary')?.disabled).toBe(true);
+    expect(root.querySelector<HTMLButtonElement>('.page-action--primary')?.disabled).toBe(true);
+    expect(text).not.toMatch(/RBAC|nhật ký kiểm toán|health/i);
   });
 
   async function signIn(): Promise<void> {
@@ -408,4 +411,18 @@ function successEnvelope<T>(data: T): ApiEnvelope<T> {
 
 function emptyUsersPage() {
   return { items: [], pagination: { page: 1, size: 20, total: 0, total_pages: 0 } };
+}
+
+function userProfile(id: number, fullName: string, email: string, role = 'STUDENT') {
+  return {
+    id,
+    full_name: fullName,
+    email,
+    role,
+    avatar_url: null,
+    phone: null,
+    status: 'ACTIVE',
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-02T00:00:00Z',
+  };
 }

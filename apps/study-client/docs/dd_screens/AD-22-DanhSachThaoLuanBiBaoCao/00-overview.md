@@ -8,7 +8,7 @@
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); **DD status:** `DD BLOCKED` · **Implementation status:** `PARTIAL` (read-only #97 caller source-wired; full report workflow remains blocked) · **Runtime status:** `RUNTIME NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.2 / 2026-11-17 |
+| Version / last updated | 0.3 / 2026-11-20 |
 | Nguồn đối chiếu | [AD-22.md](../../screen_stitch/05_admin/AD-22_danh-sach-thao-luan-bi-bao-cao/AD-22.md), [AD-22_PLAN.md](../../screen_stitch/05_admin/AD-22_danh-sach-thao-luan-bi-bao-cao/AD-22_PLAN.md), [AD-22_markers.json](../../screen_stitch/05_admin/AD-22_danh-sach-thao-luan-bi-bao-cao/AD-22_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -31,7 +31,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/empty/ready/error |
-| Current source | `admin.routes.ts`, AD-22 page/service/spec | Route/page/#97 caller source-wired; loading/empty/ready/error source states exist. |
+| Current source | `admin.routes.ts`, AD-22 page/service/spec | Route/page/#97 caller source-wired; loading/empty/ready/error states exist; toolbar and empty-state refresh repeat the applied query. |
 | Current runtime | Browser/demo | `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
@@ -44,6 +44,7 @@
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 - 2026-11-17 — Đối chiếu checkout hiện tại: AD-22 route/page/#97 client caller và focused spec tồn tại; cập nhật trạng thái current source, giữ DD/API/runtime gates.
+- 2026-11-20 — Added toolbar and empty-state manual refresh; both repeat the currently applied `reason/severity/page` query through #97. Search/status/report metadata, permission and runtime gaps remain open.
 
 ## Trạng thái và ranh giới bằng chứng
 

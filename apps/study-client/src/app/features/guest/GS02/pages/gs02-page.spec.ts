@@ -72,6 +72,9 @@ describe('GS02Page', () => {
     expect(root.textContent).toContain('Nguyen Van Mentor');
     expect(root.textContent).toContain('Fundamentals of React');
     expect(root.textContent).not.toContain('49.90');
+    expect(root.querySelector<HTMLAnchorElement>('.course-card__link')?.getAttribute('href')).toBe(
+      '/courses/101',
+    );
     expect(root.querySelector('.pagination')).toBeNull();
   });
 
@@ -136,7 +139,9 @@ describe('GS02Page', () => {
     firstPage.flush(
       successEnvelope(
         coursePage({
-          items: [course(101, 'TypeScript căn bản')],
+          items: Array.from({ length: 20 }, (_, index) =>
+            course(100 + index, index === 0 ? 'TypeScript căn bản' : `Khóa học ${index + 1}`),
+          ),
           pagination: { page: 1, size: 20, total: 21, total_pages: 2 },
         }),
       ),
@@ -208,7 +213,9 @@ describe('GS02Page', () => {
       .flush(
         successEnvelope(
           coursePage({
-            items: [course(101, 'React cơ bản')],
+            items: Array.from({ length: 20 }, (_, index) =>
+              course(100 + index, index === 0 ? 'React cơ bản' : `Khóa học ${index + 1}`),
+            ),
             pagination: { page: 1, size: 20, total: 21, total_pages: 2 },
           }),
         ),
@@ -238,6 +245,23 @@ describe('GS02Page', () => {
     expect((harness.routeNativeElement as HTMLElement).textContent).toContain(
       'Trang 2 không có khóa học',
     );
+
+    (harness.routeNativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>('.retry-button')
+      ?.click();
+    const refreshed = http.expectOne(
+      (candidate) => candidate.params.get('q') === 'react' && candidate.params.get('page') === '1',
+    );
+    refreshed.flush(
+      successEnvelope(
+        coursePage({
+          items: [course(101, 'React cơ bản')],
+          pagination: { page: 1, size: 20, total: 1, total_pages: 1 },
+        }),
+      ),
+    );
+    harness.fixture.detectChanges();
+    expect(page.state()).toMatchObject({ status: 'ready', result: { pagination: { page: 1 } } });
   });
 
   it('keeps an empty result distinct from an API error', async () => {
@@ -274,6 +298,56 @@ describe('GS02Page', () => {
     expect((harness.routeNativeElement as HTMLElement).textContent).toContain(
       'Không thể tải kết quả tìm kiếm lúc này.',
     );
+    (harness.routeNativeElement as HTMLElement).querySelector<HTMLButtonElement>('.retry-button')?.click();
+    http
+      .expectOne((candidate) => candidate.params.get('q') === 'react' && candidate.params.get('page') === '1')
+      .flush(
+        successEnvelope(
+          coursePage({
+            items: [course(101, 'React đã tải lại')],
+            pagination: { page: 1, size: 20, total: 1, total_pages: 1 },
+          }),
+        ),
+      );
+    harness.fixture.detectChanges();
+    expect((harness.routeNativeElement as HTMLElement).textContent).toContain('React đã tải lại');
+  });
+
+  it('keeps rows but hides stale pagination when count and list disagree', async () => {
+    const harness = await RouterTestingHarness.create();
+    const page = await harness.navigateByUrl('/courses/search?q=react', GS02Page);
+
+    http
+      .expectOne((candidate) => candidate.params.get('page') === '1')
+      .flush(
+        successEnvelope(
+          coursePage({
+            items: [course(101, 'React cơ bản')],
+            pagination: { page: 1, size: 20, total: 2, total_pages: 1 },
+          }),
+        ),
+      );
+    harness.fixture.detectChanges();
+
+    const root = harness.routeNativeElement as HTMLElement;
+    expect(root.textContent).toContain('React cơ bản');
+    expect(root.textContent).toContain('Số kết quả và danh sách trang chưa đồng nhất');
+    expect(root.querySelector('.pagination')).toBeNull();
+    expect(page.snapshotMismatch()).toBe(true);
+    root.querySelector<HTMLButtonElement>('.primary-button')?.click();
+    http
+      .expectOne((candidate) => candidate.params.get('q') === 'react' && candidate.params.get('page') === '1')
+      .flush(
+        successEnvelope(
+          coursePage({
+            items: [course(101, 'React cơ bản'), course(102, 'React nâng cao')],
+            pagination: { page: 1, size: 20, total: 2, total_pages: 1 },
+          }),
+        ),
+      );
+    harness.fixture.detectChanges();
+    expect(page.snapshotMismatch()).toBe(false);
+    expect(root.querySelector('.pagination')).toBeNull();
   });
 });
 

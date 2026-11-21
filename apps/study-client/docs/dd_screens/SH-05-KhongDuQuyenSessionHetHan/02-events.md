@@ -13,6 +13,13 @@
 
 > Event IDs trong package là alias để theo template; Source Event IDs, steps và API links giữ theo DD nguồn. Alias không chứng minh event runtime.
 
+## Current source wiring (2026-11-20)
+
+- EV-01: ST-02/ST-03 call #04 through `StudentApiService`; valid 401/403 responses are normalized and routed to `/forbidden`. 5xx/network/malformed/mismatched responses are not presented as 401/403 by this handoff.
+- EV-03: R-X01 is used proactively by `StudentSessionService` when local expiry is reached before the protected request. A server-issued #04 401 is not refreshed/replayed; the Student session is ended, then SH-05 opens. No refresh occurs after 403.
+- EV-04: a validated 401 handoff shows the SH-02 `/login` route without `returnTo`. EV-05 safe-back is not implemented. EV-06 copies only a non-conflicting trace ID and reports clipboard success/failure. EV-02 and EV-07 are prototype-only.
+- The flow above is source evidence only; runtime is not verified and the DD policy gates remain open.
+
 ## 2. Chi tiết event từ DD nguồn
 
 ### Trích từ DD nguồn: 6. Đặc tả sự kiện

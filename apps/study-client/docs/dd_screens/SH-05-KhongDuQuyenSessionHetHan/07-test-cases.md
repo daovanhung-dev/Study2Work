@@ -1,5 +1,9 @@
 # SH-05 — Test Cases
 
+## Current implementation verification — 2026-11-21
+
+The focused Study Web command covering SH-02–SH-07, ME-14, AD-20 and Student/Mentor API boundaries passed: 11 test files, 36 tests. The tested policy refreshes and retries #04 once after 401, never refreshes after 403, and routes to SH-05 with a safe internal return target. Browser/live API runtime was not verified.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix
@@ -56,7 +60,7 @@
 - DD tách riêng 401/403, prototype/current source/target behavior; mọi API field, business code, route và response bám source hoặc đánh dấu blocker/discrepancy.
 - Có input → validation/permission → API/nội bộ → response mapping → state update → outcome/exceptions cho từng event; không coi HTML timer là API call.
 - Có ma trận state/loading/error/refresh failure/offline/copy failure và điều kiện điều hướng; mọi `returnTo` an toàn.
-- `DD BLOCKED` đến khi chốt production content/state mapping, 401 recovery policy (kể cả profile-missing/repeated 401), token persistence/refresh outcome, safe-route fallback và SH-02/G-14 login handoff; `IMPLEMENTATION BLOCKED` do SH-05 route/error-context integration chưa có và các quyết định trên; `RUNTIME NOT VERIFIED`.
+- `DD BLOCKED` đến khi chốt production content/state mapping, 401 recovery policy (kể cả profile-missing/repeated 401), token persistence/refresh outcome, safe-route fallback và SH-02/G-14 login handoff; current source is `PARTIAL SOURCE-WIRED`; `RUNTIME NOT VERIFIED`.
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Không chạy app test trong task chuyển đổi tài liệu.

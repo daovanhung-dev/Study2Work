@@ -9,8 +9,9 @@ import type { StudentCourseSummary, StudentPage } from '../../shared/models/stud
 export class ST08CoursesService {
   private readonly api = inject(StudentApiService);
 
-  courses(page: number) {
-    const params = new HttpParams().set('page', page);
+  courses(page: number, status?: 'ACTIVE') {
+    let params = new HttpParams().set('page', page);
+    if (status) params = params.set('status', status);
     return this.api.request<StudentPage<StudentCourseSummary>>(STUDY_SERVER_APIS.API_020, {
       params,
     });

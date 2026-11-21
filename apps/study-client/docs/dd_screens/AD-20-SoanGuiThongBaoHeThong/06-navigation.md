@@ -1,10 +1,12 @@
 # AD-20 — Navigation
 
-> **Current Angular source (2026-11-16):** `/admin/notifications/new` maps to `AD20Page`; in-page return links use `/admin/notifications`. A route/page declaration does not verify browser navigation or auth. No API caller or SH-07 handoff exists.
+> **Current source (2026-11-21):** AD-20 returns to `/admin/notifications`; after #93 acceptance it navigates to `/operations/{uuid}` (SH-07). Auth/browser runtime remains unverified. The source event excerpts below describe earlier Stitch navigation unless marked current.
+
+> **Historical Angular source snapshot (2026-11-16):** `/admin/notifications/new` mapped to `AD20Page` with return links to `/admin/notifications`. The 2026-11-21 implementation adds #68/#93 calls and the SH-07 handoff described above. Browser/auth behavior remains unverified.
 
 ## 1. Route definition
 - Current route in inventory: `/admin/notifications/new` (Angular route/page source-wired).
-- Status: route/page source exists; browser/runtime/auth behavior not verified; API caller absent.
+- Status: route/page, #68/#93 calls and SH-07 handoff are source-wired; browser/runtime/auth behavior is not verified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -39,7 +41,7 @@ flowchart LR
 
 | State | Điều kiện / UI | Hành động và next state | Trạng thái evidence |
 |---|---|---|---|
-| `ROUTE_PAGE_SOURCE_WIRED` | Angular router maps `/admin/notifications/new` to `AD20Page`; no API caller. | Route/page exists in source; auth/browser runtime remains unverified. | Current source |
+| `ROUTE_PAGE_SOURCE_WIRED` | Angular router maps `/admin/notifications/new` to `AD20Page`; current source also calls #68 and #93 and hands accepted UUID to SH-07. | Route/page and focused API flow are source-wired; auth/browser runtime is not verified. | Current source |
 | `INITIAL_STATIC` | Artifact render; `all`, `app`, `normal` checked; title/body rỗng; preview sample; Send disabled. | Input title/body → `PREVIEW_EDITING`; radio/checkbox đổi native DOM state. | Prototype current, không phải runtime |
 | `PREVIEW_EDITING` | Title/body listener chạy trong HTML. | Trim và thay preview text; blank → sample fallback; không gọi API. | Prototype current |
 | `AUDIENCE_OR_CHANNEL_SELECTED` | Browser native selection đổi. | Không có recipient resolution, enum validation, count hay server request. | Prototype current |
@@ -57,7 +59,7 @@ flowchart LR
 
 - **AD-19 → AD-20:** Current AD-19 Angular CTA uses `/admin/notifications/new`; the route maps to `AD20Page`. The historical Stitch CTA uses `/admin/notifications/create`. Current AD-20 return links use `/admin/notifications`.
 - **AD-20 → AD-21:** Không mở AD-21 từ UUID metadata. API #94–#96 dùng notification-specific IDs/status contracts; direct notification ID field và response mapping cần được phê duyệt cho detail view.
-- **AD-20 → SH-07:** Chỉ sau khi response `operation_id`, catalog/local UUID-vs-int64 contract, ownership policy và lifecycle mapping thống nhất. Local #18 notification-only handler exists, but the page does not call it or pass an ID.
+- **AD-20 → SH-07 (current source, 2026-11-21):** Sau HTTP 202 với `DESIGN_OPERATION_ACCEPTED`, `data.status="QUEUED"` và UUID `meta.operation_id` hợp lệ; `RESOLVED_FOR_AD-20` cho producer/consumer slice này theo [API #93 open questions](../../../../study-server/docs/dd/93_admin_notifications_create/OPEN_QUESTIONS.md). SH-07/#18 vẫn notification-only và không xác nhận delivery hoặc generic Operation lifecycle. Runtime chưa xác minh.
 - **Session/security:** Expected Admin permission từ AC-36; local #93 shared role `ADMIN`. Angular auth/session-expiry behavior has not been runtime-verified. Không trust role/owner từ client state.
 
 ### Trích từ DD nguồn: B. Luồng hoạt động tổng thể

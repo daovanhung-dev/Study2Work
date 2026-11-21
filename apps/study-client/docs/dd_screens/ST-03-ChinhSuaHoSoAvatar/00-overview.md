@@ -1,20 +1,22 @@
 # ST-03 — Chỉnh sửa hồ sơ/avatar · Tổng quan
 
+> Current Study Web source (2026-11-20): ST03 calls #04, #13 and #14 through the Student Bearer adapter. It edits `full_name` and nullable `phone`, uploads PNG/JPEG/WebP avatars, saves the supported fields, then reloads #04 before returning to ST-02. Bio remains disabled because API/DB source does not persist it. Runtime and live object storage/database are not verified.
+
 | Trường | Giá trị |
 |---|---|
 | Screen ID | `ST-03` |
 | Module | Student |
 | Route | `/student/profile/edit` — inventory route hiện có source declaration; browser runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: DD `BLOCKED`; implementation source hiện là `PARTIAL (GATE ONLY)`; runtime `NOT_VERIFIED`; **Trạng thái:** DD BLOCKED · IMPLEMENTATION PARTIAL · RUNTIME NOT VERIFIED |
+| DD status | Draft (package được chuyển đổi); source status: DD `PARTIAL/BLOCKED` on Bio and Stitch gate mismatch; implementation source `PARTIAL (#04/#13/#14; Bio remains gated)`; runtime `NOT_VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [ST-03.md](../../screen_stitch/03_student/ST-03_chinh-sua-ho-so-avatar/ST-03.md), [ST-03_PLAN.md](../../screen_stitch/03_student/ST-03_chinh-sua-ho-so-avatar/ST-03_PLAN.md), [ST-03_markers.json](../../screen_stitch/03_student/ST-03_chinh-sua-ho-so-avatar/ST-03_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Form chỉnh sửa fullname/phone/bio/avatar, theo dõi upload/save riêng.
-- In-scope: GET #4 → nếu đổi avatar thì POST #13 → nhận tham chiếu chưa xác định → PUT #14 → GET #4 để đồng bộ; chặn khi mapping chưa chốt.
-- Out-of-scope: Profile-ready/API-backed behavior vẫn gated; route/page source declaration không chứng minh browser runtime đã chạy.
+- In-scope: GET #04; nếu đổi avatar POST #13; PUT #14 với `full_name`, `phone`, `avatar_url`; GET #04 lại để đồng bộ và quay về ST-02.
+- Out-of-scope: Bio persistence, vì API #04/#14 và checked-in DB không có trường bio; route/page source declaration không chứng minh browser/runtime đã chạy.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,17 +33,18 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | dirty/uploading/saving/422/error |
-| Current runtime | Worklog/context Study Web | Route/page `GATE_ONLY`; API caller `UNWIRED`; `RUNTIME NOT VERIFIED` |
+| Current source | Study Web | Route/page calls #04/#13/#14; loading, dirty, upload, save, validation and refresh-error states; bio remains gated; runtime `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-03 source screen.png](../../screen_stitch/03_student/ST-03_chinh-sua-ho-so-avatar/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-03_chinh-sua-ho-so-avatar/screen_annotated.png))
-- Luồng: GET #4 → nếu đổi avatar thì POST #13 → nhận tham chiếu chưa xác định → PUT #14 → GET #4 để đồng bộ; chặn khi mapping chưa chốt.
-- Priority: P1; Gate/source status: **M**; **BLOCK:** FE caller chưa wired; avatar, bio, phone contract xung đột
+- Luồng hiện tại: GET #04 → nếu đổi avatar POST #13 → PUT #14 → GET #04 → quay lại ST-02. Bio chưa được gửi/lưu.
+- Priority: P1; Source status: **PARTIAL**; **BLOCK:** thiết kế AC/inventory yêu cầu bio nhưng API/DB source không hỗ trợ; upload #13 là external write không có transaction/compensation với PUT #14.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
-- 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-08 — Chuyển nội dung nguồn sang 8-file template.
+- 2026-11-20 — Ghi nhận Study Web caller #04/#13/#14 và giữ Bio/asset-storage consistency blocker; không xác minh browser/live runtime.
 
 ## Trạng thái và ranh giới bằng chứng
 

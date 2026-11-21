@@ -1,10 +1,10 @@
 # GS-06 — Navigation
 
-> **T022 current-source update (2026-11-17):** GS06 is mounted within GS03 at `/courses/:courseId?tab=resources`; direct query entry is source-supported. GS07 navigation and resource-ID handoff remain unimplemented because no safe list/open flow is available.
+> **T041/current-source update (2026-11-20):** GS-06 mounts within GS-03 at `/courses/:courseId?tab=resources` after #08 published success. Each validated row routes to `/resources/:resourceId?from=course&courseId=:courseId`; GS-07 returns to this tab using the course context. No live/browser runtime claim is made.
 
 ## 1. Route definition
 - Current route in inventory: `/courses/:courseId?tab=resources`
-- Status: `SOURCE-WIRED` GS03 query tab and GS06 gated presentation; deployed/browser runtime is tracked separately and remains unverified until demo.
+- Status: `SOURCE-WIRED` GS03 query tab, #11 caller/list and GS07 handoff; deployed/browser runtime remains unverified.
 - Route params/types: `courseId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.

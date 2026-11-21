@@ -11,11 +11,13 @@ import type {
 @Injectable({ providedIn: 'root' })
 export class ST24CreateDiscussionService {
   private readonly api = inject(StudentApiService);
-  courses() {
-    return this.api.request<StudentPage<StudentCourseSummary>>(STUDY_SERVER_APIS.API_020);
+  courses(page: number) {
+    return this.api.request<StudentPage<StudentCourseSummary>>(STUDY_SERVER_APIS.API_020, {
+      params: new HttpParams().set('status', 'ACTIVE').set('page', page),
+    });
   }
   create(courseId: number, title: string, content: string) {
-    return this.api.request<StudentDiscussion>(STUDY_SERVER_APIS.API_040, {
+    return this.api.request<StudentPage<StudentDiscussion>>(STUDY_SERVER_APIS.API_040, {
       body: { course_id: courseId, title, content },
     });
   }

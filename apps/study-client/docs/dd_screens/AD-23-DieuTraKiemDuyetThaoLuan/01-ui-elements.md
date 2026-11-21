@@ -110,6 +110,7 @@ Coordinates below are marker centers in original `screen.png` pixels. Marker IDs
 
 ## 4. Conditional UI & state variations
 - States theo inventory: loading/reviewing/processing/resolved/conflict
+- Current Angular source (2026-11-20): the page shows loading/error states, a validated Discussion summary and direct comments after GET #98. The comment panel shows its empty copy when #98 returns an empty `comments` array. Report fields remain unavailable; moderation actions stay disabled. The numbered elements above describe the static Stitch prototype, so its placeholder/anchor behavior remains unchanged.
 - Detail/conditional visibility: xem section elements/state của [DD nguồn](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/AD-23.md); không diễn giải ảnh tĩnh thành behavior runtime.
 
 ## 5. Link

@@ -85,3 +85,10 @@ Gộp icon trang trí vào control tương ứng; không đánh số nền/card/
 - Preserve sections 1–7 as the original 2026-11-08 planning snapshot. Current source now registers AD-15 and calls local API #87; `list_screen.md` and the AD-15 screen DD record that source while retaining the Draft contract discrepancy.
 - Bounded UI fix: label numeric quiz/course values as IDs and assert the labels. Do not alter the API, query parameters, projection, navigation, historical screenshot, HTML prototype, marker JSON/SVG or PNGs.
 - Keep `DD BLOCKED`, `IMPLEMENTATION PARTIAL SOURCE`, `RUNTIME NOT VERIFIED`. Verification completed 2026-11-16: focused Angular spec 5/5 passed; API #87 focused fake-session tests 20/20 passed with one upstream Starlette/httpx deprecation warning; Study Web production build passed with three Student CSS budget warnings. Chrome bridge failed with `timeoutMs` undefined and the in-app browser was unavailable; browser UI and live DB remain unverified.
+
+
+## 9. Dated continuation — manual refresh wiring (2026-11-20)
+
+- Angular now wires the toolbar and empty-state refresh controls to repeat GET #87 with the applied `course/status/page` query, disabling them while loading. No polling, retry policy or additional query was introduced.
+- Current-source notes were reconciled in the AD-15 DD, inventory and Study Web context. The Stitch HTML/image/markers remain historical design evidence and were not changed.
+- Catalog `Quiz` vs local `Page<Quiz>`, AC-35 permission, live schema, unsupported search/status mapping and browser/runtime gaps remain open. The four-axis screen score remains 50%; no tests/build/lint/browser/API runtime were run.

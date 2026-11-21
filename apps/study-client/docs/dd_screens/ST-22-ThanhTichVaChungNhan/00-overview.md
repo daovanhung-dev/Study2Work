@@ -1,12 +1,18 @@
 # ST-22 — Thành tích và chứng nhận · Tổng quan
 
+## Current source implementation — 2026-11-20
+
+- Route `/student/achievements` is registered under the authenticated Student route group. The page calls #38, validates the fixed page response, and provides retry, empty, and recorded-award states.
+- Current #38 returns the authenticated user's recorded awards; the page displays only title, code, awarded time, and optional course ID. Because the backend reads `total` and `items` separately, the page labels mismatched snapshots, hides the potentially stale total, and offers a #38 reload instead of presenting a false empty state. Certificate files, proof hashes, GPA, competencies, readiness metrics, and category filters in the populated Stitch image have no response/source support and remain unimplemented.
+- The HTML companion is a static empty state. The populated screenshot cannot be treated as API data or an approved loaded-state mapping; the historical source snapshot below predates current route/API source.
+
 | Trường | Giá trị |
 |---|---|
 | Screen ID | `ST-22` |
 | Module | Student |
-| Route | `/student/achievements` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student/achievements` — current Student route is source-wired; runtime not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. Tài liệu truy vết đủ các thành phần nhìn thấy và contract hiện có, nhưng chưa thể coi là DD READY do API #38 còn câu hỏi mở về award/projection/filter/page và các claim/chứng nhận trong mockup không có nguồn xác nhận. |
+| DD status | Draft; recorded-award list is source-backed. Certificate/proof/metric claims and award policy are still unresolved. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [ST-22.md](../../screen_stitch/03_student/ST-22_thanh-tich-va-chung-nhan/ST-22.md), [ST-22_PLAN.md](../../screen_stitch/03_student/ST-22_thanh-tich-va-chung-nhan/ST-22_PLAN.md), [ST-22_markers.json](../../screen_stitch/03_student/ST-22_thanh-tich-va-chung-nhan/ST-22_markers.json), [list_screen.md](../../list_screen.md) |

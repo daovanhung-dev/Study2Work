@@ -1,5 +1,7 @@
 # SH-04 — UI Elements
 
+> **Current source note (2026-11-20):** The current page has a responsive two-column layout with ready, submitting, accepted, invalid-request, request-error, unknown-provider, outcome-unknown and missing-handoff states. The mock-only status selector, copy-cURL button and JSON payload are not rendered. The login link is a source router link. Visual fidelity and browser accessibility have not been verified.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.
@@ -29,12 +31,12 @@
 
 | # / Element ID | Tên, loại và nội dung | Nguồn/điều kiện hiển thị | Trạng thái | Event / kết quả |
 |---|---|---|---|---|
-| 1 / `SH04-EL-01` | Mã SH-04 và route đề xuất · nhãn tĩnh. | Nội dung thiết kế; `/register/verification` chưa có router; hiển thị trang. | Default. | `SH04-EV-01`; không tự tạo link/API. |
+| 1 / `SH04-EL-01` | Mã SH-04 và route · nhãn tĩnh. | Current page marks `data-screen-id="SH-04"`; route `/register/verification` is in Shared routes. | Default. | Route source-wired; browser runtime unverified. |
 | 2 / `SH04-EL-02` | Bộ chọn `Accepted / Stub Spec / No-Delivery / Error Handshake` · QA controls trong mock. | HTML/JavaScript cục bộ; không phải trạng thái API. Loại khỏi giao diện Khách. | Chỉ tồn tại trong mock; không có product state. | `SH04-EV-08`; không gọi API. |
 | 3 / `SH04-EL-03` | Biểu tượng thư và nhãn phản hồi · trạng thái. | Dữ liệu state từ response; chỉ render `accepted` khi HTTP 202, business code đúng và `data.status="accepted"`. | Pending, accepted, validation error, provider error, unmapped, network unknown. | `SH04-EV-03..06, SH04-EV-09`; 202 không chứng minh delivery/verification. |
 | 4 / `SH04-EL-04` | Tiêu đề và giải thích kết quả · heading/status text. | Nội dung đích theo API response; không hiển thị “đã vào hàng đợi”. Không hiển thị `reason` provider cho người dùng trước khi semantics được duyệt. | Pending, accepted, error, unmapped. | `SH04-EV-03..06, SH04-EV-09`; nói rõ email chưa gửi thật. |
 | 5 / `SH04-EL-05` | Khung giới hạn xác minh · informational notice. | Nội dung tĩnh theo catalog/source: chưa có OTP, link hoặc confirm endpoint. | Visible; không điều khiển. | `SH04-EV-01`; không tạo OTP/input/countdown. |
-| 6 / `SH04-EL-06` | Quay lại đăng nhập · anchor. | `href="/login"` trong HTML; SH-02 route đề xuất, runtime chưa xác nhận. | Default/focus. | `SH04-EV-07`; điều hướng, không gọi API. |
+| 6 / `SH04-EL-06` | Quay lại đăng nhập · anchor. | Angular `routerLink="/login"`; SH-02 route is source-wired. | Default/focus. | `SH04-EV-07`; điều hướng, không gọi API. |
 | 7 / `SH04-EL-07` | Copy Test cURL · button trong mock. | JavaScript dựng URL ngoài thiếu `/api/v1` và body thiếu `user_id`; không đưa vào product UI. | Chỉ mock; không dùng được. | `SH04-EV-08`; không copy/gửi lệnh. |
 | 8 / `SH04-EL-08` | Thẻ tham chiếu hợp đồng API #02 · heading/card. | Nhãn tĩnh; không khẳng định telemetry live. | Visible. | `SH04-EV-01`; không có API riêng. |
 | 9 / `SH04-EL-09` | Các hàng HTTP/delivery/auth/confirmation · status summary. | HTTP/body đã parse; delivery/verify chưa có nguồn phản hồi riêng; provider status ngoài `accepted` chưa có semantics. | Pending/accepted/error/unmapped/network unknown. | `SH04-EV-03..06, SH04-EV-09`; không hiển thị mock 200/503 như server response. |

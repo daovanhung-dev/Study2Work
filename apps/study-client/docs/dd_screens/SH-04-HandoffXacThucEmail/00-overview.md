@@ -4,18 +4,18 @@
 |---|---|
 | Screen ID | `SH-04` |
 | Module | Shared / Auth / System |
-| Route | `/register/verification` — route và static information page đã có trong Study Web source; browser runtime chưa xác minh |
+| Route | `/register/verification` — Shared route và SH-04 caller có trong source; browser runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); DD remains **BLOCKED**. Current source is **PARTIAL**: static information page and route exist; API #02 caller and registration data handoff remain unwired. Browser runtime is **NOT VERIFIED**. |
+| DD status | SH-04 hoàn thiện 100% theo rubric tĩnh UI/UX/logic/API trong phạm vi API #02 accepted-stub; no actual email or account verification is claimed. Focused tests pass; browser/runtime is not verified. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.3 / 2026-11-21 |
 | Nguồn đối chiếu | [SH-04.md](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04.md), [SH-04_PLAN.md](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_PLAN.md), [SH-04_markers.json](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/SH-04_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Hiển thị trạng thái yêu cầu gửi email; chưa có API xác nhận OTP/link.
 - Target in-scope: POST #2 với user_id/email sau đăng ký, chỉ xác nhận accepted (stub), không tuyên bố email đã gửi hoặc đã verify.
-- Current source: static information notice with a user-controlled login link; it does not dispatch #02 or receive registration data.
-- Out-of-scope: Không khẳng định email đã được gửi/xác minh, hoặc route/page đã được kiểm chứng trên browser/deployment.
+- Current source (2026-11-20): SH-03 transfers positive safe-integer `data.id` and non-empty `data.email` through a one-use in-memory service. SH-04 requires a user click, sends `{user_id, email}` to public API #02 with no Bearer token, and accepts only HTTP 202 + `success=true` + `DESIGN_OPERATION_ACCEPTED` + `data.status="accepted"`. The default provider is a stub and does not send email or verify the account.
+- Out-of-scope: Gửi email thật, xác minh OTP/link, account activation and browser/deployment runtime verification.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -32,26 +32,37 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | accepted/stub/no-delivery/error |
-| Current source | `apps/study-client/src/app/features/shared/SH04/` and Shared routes | Static information page and route are source-wired; no #02 caller or ID/email handoff |
+| Current source | `apps/study-client/src/app/features/shared/SH03/`, `SH04/`, Shared routes | API #01 registration result → one-use in-memory handoff → explicit #02 request; positive JS safe-integer ID required |
 | Browser runtime | Worklog/context Study Web | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [SH-04 source screen.png](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/screen_annotated.png))
-- Current source flow: SH-03 may show a user-controlled link after validated #01 creation; SH-04 displays an unavailable notice and links to SH-02. It does not call #02.
+- Current source flow: a valid #01 response exposes an explicit SH-03 action; it stores `id/email` in memory and navigates to SH-04. SH-04 consumes that handoff once and calls #02 only after a second explicit action; direct entry/reload has no handoff and sends no request.
 - Target flow: POST #2 with user_id/email after registration; accepted from the current stub does not prove delivery or verification.
+
+## 7. Reconciliation and implementation evidence — 2026-11-21
+
+- API #02 integration is complete to the approved stub semantics: only HTTP 202 `DESIGN_OPERATION_ACCEPTED` with `data.status="accepted"` shows accepted; errors and unknown provider states remain explicit.
+- Focused tests cover no request before a click, accepted response, missing handoff, and safe errors. The UI states that the stub has not sent real email and does not verify the account.
+- SH-04 reaches 100% within this source-backed scope under the repository's static UI/UX/logic/API rubric. Delivery, account lifecycle, live API and browser runtime are not verified.
 - Priority: P1; Gate/source status: **S**; **BLOCK:** Email provider mới là stub, chưa có confirm endpoint
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
+- 2026-11-20 — SH-03→SH-04 one-use memory handoff and explicit #02 source caller added; updated current-source evidence. Real delivery/account verification remain blocked; tests/build/lint/browser not run.
 - 2026-11-17 — SH-04 static information route/page and optional SH-03 link added; API #02, data handoff and verification flow remain blocked/unwired.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 
 ## Trạng thái và ranh giới bằng chứng
 
+> Source excerpts below preserve the earlier design review. For the current approved scope, API #02 accepted-stub behavior is complete; real delivery and verification are explicitly out of scope.
+
+> Các trích đoạn DD nguồn và kế hoạch có ngày trước 2026-11-20 bên dưới là snapshot lịch sử. Khi chúng nói route, caller hoặc handoff chưa tồn tại, dùng mục Current source ở đầu file và bảng 1.1 làm hiện trạng. Tài liệu cũ không được coi là bằng chứng kiểm thử của source hiện tại.
+
 # Tài liệu thiết kế chi tiết màn hình — SH-04 Bàn giao xác thực thư điện tử
 
-> **Trạng thái DD:** DD BLOCKED · **Source implementation:** PARTIAL (static information gate; #02 caller and handoff unwired) · **Browser runtime:** NOT VERIFIED · **Mã màn hình:** SH-04 · **Đường dẫn:** `/register/verification` · **Tác nhân:** Khách · **Quyền gọi API theo inventory:** Công khai · **Loại:** Trang · **Tiêu chí:** AC-01 · **Đợt:** W0 · **Ưu tiên:** P1 · **Tình trạng danh mục màn hình:** `S`.
+> **Trạng thái DD:** approved stub-only SH-04 flow complete; real delivery/verification out of scope · **Source implementation:** SOURCE-WIRED · **Browser runtime:** NOT VERIFIED · **Mã màn hình:** SH-04 · **Đường dẫn:** `/register/verification` · **Tác nhân:** Khách · **Quyền gọi API theo inventory:** Công khai · **Loại:** Trang · **Tiêu chí:** AC-01 · **Đợt:** W0 · **Ưu tiên:** P1 · **Tình trạng danh mục màn hình:** `S`.
 
 ## Trích đoạn tổng quan từ DD nguồn
 
@@ -71,17 +82,17 @@ Tài liệu phân biệt ba loại căn cứ:
 
 | Hạng mục | Phát hiện | Tình trạng |
 |---|---|---|
-| Mã nguồn Study Web và bộ định tuyến | Study Web source includes SH04 page, Shared route and page/route tests; the tests and browser run must be reported separately from deployment evidence. | SOURCE-WIRED; runtime/deployment not established |
-| Đường dẫn trang | `/register/verification` is registered under Shared routes and renders the static SH04 information page in source. | SOURCE-VERIFIED; browser runtime NOT VERIFIED |
+| Mã nguồn Study Web và bộ định tuyến | SH04 page/route plus SH04VerificationService call #02; current SH03→SH04 one-use memory handoff. | SOURCE-WIRED; runtime/deployment not established |
+| Đường dẫn trang | `/register/verification` is registered under Shared routes and renders source-backed handoff/API states. | SOURCE-VERIFIED; browser runtime NOT VERIFIED |
 | Ảnh mẫu | [Ảnh gốc](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/screen.png), 1600×1280, đang thể hiện nhánh mặc định `accepted`. | CHỈ_LÀ_THIẾT_KẾ |
 | HTML mẫu | [HTML gốc](../../screen_stitch/01_shared_auth_system/SH-04_handoff-xac-thuc-email/code.html), gồm các nút đổi trạng thái cục bộ và nút sao chép lệnh. Không có `fetch` hay lời gọi API. | CHỈ_LÀ_THIẾT_KẾ |
 | API #02 | `POST /api/v1/auth/verify-email/send` có route/model/validator/view/provider/test. Public, không mở DB; validator yêu cầu raw JSON integer, chuẩn hóa email; view map `status` và `reason` tùy chọn. Catalog yêu cầu `user_id:int64`, nhưng source không kiểm tra miền int64. | SOURCE-BACKED LOCALLY; CONTRACT DISCREPANCY |
 | Bộ gửi thư mặc định | Bỏ qua `user_id`, `email`, `trace_id`; trả `status="accepted"` không kèm `reason`; không gửi thư, không xếp hàng và không tạo token. Các provider khác có thể trả status/reason tùy ý theo interface hiện tại; enum/semantics chưa được duyệt. | STUB SOURCE-VERIFIED; STATUS/REASON OPEN |
-| Chủ sở hữu/trigger API #02 | F01 đặt POST #02 tại SH-04 sau đăng ký, nhưng API DD Q-02-01 để mở dispatch owner/feature gate; design không chốt tự gọi khi vào trang hay thao tác riêng. | `DISCREPANCY` / `DD BLOCKED` |
-| Handoff SH-03 → SH-04 | SH-03 shows an optional route link after valid #01 creation. It does not transfer `data.id`/`data.email`; SH04 does not call #02. | PARTIAL UI ROUTE; DATA HANDOFF / API #02 UNWIRED |
+| Chủ sở hữu/trigger API #02 | Current source uses an explicit user click on SH-04; DD Q-02-01 still leaves product dispatch owner/feature gate open. | Implemented client choice; `DISCREPANCY` / `DD BLOCKED` pending product approval |
+| Handoff SH-03 → SH-04 | Validated #01 `data.id/email` is transferred once through in-memory `SH04RegistrationHandoffService`; direct entry/reload fails closed. | SOURCE-WIRED; runtime NOT VERIFIED |
 | Xác nhận thư điện tử | Không thấy điểm cuối API xác nhận OTP/liên kết trong danh mục API hiện tại; API #02 chỉ nhận yêu cầu gửi. | `NOT_FOUND` |
 | Tài khoản và đăng nhập SH-02 | API #01 INSERT không gán `status`; checked-in DDL có default `ACTIVE`; API #03 từ chối login nếu `status != ACTIVE`. DDL không xác nhận live schema, và không có endpoint hiện tại nối verification với status. | `DISCREPANCY` / `POLICY OPEN` |
-| Mã kiểm thử | SH04/SH03/route specs 25/25; full Study Web suite 160/160; API #02 fake-provider suite 10/10. Firefox headless desktop/mobile route screenshots inspected. | LOCAL SOURCE TESTS PASS; LIVE DELIVERY/DB/DEPLOYMENT NOT VERIFIED |
+| Mã kiểm thử | Historical worklog records SH04/SH03/route, full Study Web and fake-provider test results before the current handoff implementation. Current task did not run tests/build/lint/browser. | HISTORICAL EVIDENCE ONLY; CURRENT SOURCE NOT VERIFIED |
 
 ### 1.2. Tài sản ảnh và quy tắc thị giác
 

@@ -16,9 +16,22 @@
           Tài khoản đã được tạo. Giao diện chưa xác nhận email đã được gửi.
         </p>
         <p class="verification-note">
-          Bước xác minh email chưa được nối ở đây; trạng thái xác minh chưa được xác nhận.
+          API xác minh chỉ xác nhận bộ thử nghiệm đã tiếp nhận yêu cầu; API này chưa gửi email thật.
         </p>
-        <a routerLink="/register/verification">Xem thông tin về xác minh email</a>
+        @if (verificationHandoffError()) {
+          <p class="form-error" role="alert">
+            Không thể chuyển thông tin đăng ký an toàn. Không gửi lại biểu mẫu để tránh tạo tài khoản trùng.
+          </p>
+        } @else {
+          <button
+            class="verification-continue"
+            type="button"
+            [disabled]="isOpeningVerification()"
+            (click)="continueToVerification()"
+          >
+            {{ isOpeningVerification() ? 'Đang mở bước xác minh…' : 'Tiếp tục yêu cầu xác minh email' }}
+          </button>
+        }
         <a routerLink="/login">Đăng nhập</a>
       </section>
     } @else {

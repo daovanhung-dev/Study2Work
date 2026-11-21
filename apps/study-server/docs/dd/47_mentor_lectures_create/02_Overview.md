@@ -23,11 +23,11 @@ status: "Draft — Needs Confirmation"
 | Consumer/Actor | Mentor |
 | Authentication | Bearer JWT |
 | Authorization | Shared access-JWT guard yêu cầu role MENTOR; chỉ Mentor có `users.id = courses.mentor_id` được tạo lecture. Không bao gồm course được phân công. Asset phải cùng Mentor, purpose LECTURE và cùng course_id. |
-| Basis | API catalog/AC-21 và quyết định người dùng ngày 2026-10-25; `content:int64` được lưu/trả dưới dạng chuỗi thập phân. |
+| Basis | API catalog/AC-21; quyết định người dùng tại T041 ngày 2026-11-19 chốt `content:string` chứa Markdown nguyên văn; asset refs vẫn là ID upload. |
 | Status | Draft — Needs Confirmation |
 | Current runtime state | SOURCE_BACKED — route, module và HTTP tests API #47 đã được wire; live DB/schema chưa xác minh. |
 | Transaction | Một transaction đọc course/assets, INSERT một row lessons và ordered `lesson_uploads` links khi asset_refs không rỗng, rồi commit; mọi lỗi truy vấn/ghi/commit rollback. |
-| Side effects | INSERT lessons với status `PUBLISHED`, content decimal string, timestamps, và asset links for API #48 reload; không tạo resources row hoặc mutate uploads. |
+| Side effects | INSERT lessons với status `PUBLISHED`, content Markdown nguyên văn, timestamps, và asset links for API #48 reload; không tạo resources row hoặc mutate uploads. |
 
 ## Sources
 
@@ -44,7 +44,7 @@ status: "Draft — Needs Confirmation"
 
 ## Tables write
 
-- lessons — INSERT with request title/order, decimal-string content, explicit `PUBLISHED` status and database-clock timestamps.
+- lessons — INSERT with request title/order, Markdown string content, explicit `PUBLISHED` status and database-clock timestamps.
 - lesson_uploads — INSERT each validated upload ID with a zero-based position from asset_refs, in the same transaction as lessons; empty refs create no link rows.
 - uploads/resources — no write in #47; API #47 reads uploads metadata and does not create resource rows.
 
@@ -53,7 +53,7 @@ status: "Draft — Needs Confirmation"
 - `asset_refs` is a required string containing JSON text for an ordered array of UploadAsset int64 IDs.
 - Empty array `[]` is valid; duplicate IDs are rejected; resolved `assets[]` preserve request order.
 - API #47 may resolve only assets owned by the same Mentor with purpose `LECTURE` and the same course ID.
-- Request `content` remains signed int64; runtime converts it to its base-10 string for `lessons.content` and response `data.content`.
+- Request `content` is a required string; runtime stores and returns the Markdown text unchanged. This T041 decision supersedes the 2026-10-25 int64-to-decimal-text decision and the older screen-stitch/API catalog snapshots.
 - Course status is not a creation predicate; the new lesson status is `PUBLISHED`.
 
 ## Assumptions

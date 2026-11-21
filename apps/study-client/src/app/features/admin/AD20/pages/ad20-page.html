@@ -22,12 +22,12 @@
     <span class="note-icon"><study-icon name="info" /></span>
     <div>
       <strong id="accepted-note-heading">Tiếp nhận yêu cầu không đồng nghĩa đã giao thông báo</strong>
-      <p>Local API #93 ghi notification và delivery row ở trạng thái QUEUED rồi trả 202; view hiện tại không gọi provider hoặc worker gửi thông báo.</p>
+      <p>API #93 ghi notification và delivery row ở trạng thái QUEUED rồi trả 202. Provider hoặc worker gửi thông báo không nằm trong xử lý hiện tại.</p>
     </div>
   </aside>
 
   <div class="compose-layout">
-    <section class="compose-form-panel" aria-labelledby="compose-form-heading">
+    <form class="compose-form-panel" aria-labelledby="compose-form-heading" (submit)="submitNotification($event)">
       <h2 id="compose-form-heading" class="visually-hidden">Nội dung thông báo</h2>
 
       <div class="form-field">
@@ -35,28 +35,79 @@
         <input
           id="notice-title"
           type="text"
+          maxlength="200"
+          required
           [value]="title()"
           (input)="updateTitle($event)"
-          aria-describedby="title-preview-help"
-          placeholder="Nhập tiêu đề để xem bản xem trước…"
+          [disabled]="isFormLocked()"
+          aria-describedby="title-help"
+          placeholder="Nhập tiêu đề thông báo"
         />
-        <p id="title-preview-help">Nội dung chỉ tồn tại trong component và được phản chiếu vào bản xem trước.</p>
+        <p id="title-help">{{ title().length }} / 200 ký tự</p>
       </div>
 
-      <fieldset class="recipient-field" disabled aria-describedby="recipient-help">
+      <fieldset class="recipient-field" aria-describedby="recipient-help" [disabled]="isFormLocked()">
         <legend>Người nhận <span aria-hidden="true">*</span></legend>
-        <p class="field-intro">Không có bộ chọn người dùng hoặc predicate audience đã được xác nhận.</p>
-        <label for="recipient-ids">Danh sách recipient ID</label>
-        <textarea id="recipient-ids" rows="3" placeholder="Chưa có dữ liệu người nhận"></textarea>
-        <p id="recipient-help">#93 hiện yêu cầu danh sách ID int64 tường minh và từ chối `segment`; màn hình chưa có nguồn chọn hoặc xác minh ID đủ điều kiện.</p>
+        <p class="field-intro">Chọn rõ từng tài khoản từ danh sách quản trị. Màn hình không tự suy ra phân khúc người nhận.</p>
+        <p id="recipient-help" class="selection-count">Đã chọn {{ selectedRecipientCount() }} người nhận</p>
+
+        @if (selectedRecipients().length > 0) {
+          <ul class="selected-recipient-list" aria-label="Người nhận đã chọn">
+            @for (recipient of selectedRecipients(); track recipient.id) {
+              <li>
+                <span>{{ recipient.full_name }} <small>{{ recipient.email }}</small></span>
+                <button type="button" (click)="removeRecipient(recipient.id)" [attr.aria-label]="'Bỏ chọn ' + recipient.full_name">Bỏ chọn</button>
+              </li>
+            }
+          </ul>
+        }
+
+        @if (recipientsLoading()) {
+          <p class="recipient-message" role="status">Đang tải người dùng…</p>
+        } @else if (recipientsError()) {
+          <p class="form-error" role="alert">{{ recipientsError() }}</p>
+          <button class="secondary-button" type="button" (click)="loadRecipients(pagination()?.page ?? 1)">Thử tải lại</button>
+        } @else if (recipients().length === 0) {
+          <p class="recipient-message">Không có người dùng trong trang này.</p>
+        } @else {
+          <ul class="recipient-results" aria-label="Danh sách người dùng">
+            @for (recipient of recipients(); track $index) {
+              <li>
+                <label>
+                  <input
+                    type="checkbox"
+                    [checked]="isSelected(recipient.id)"
+                    [disabled]="recipient.id === null"
+                    (change)="toggleRecipient(recipient, $any($event.target).checked)"
+                  />
+                  <span class="recipient-copy">
+                    <strong>{{ recipient.full_name }}</strong>
+                    <small>{{ recipient.email }} · {{ recipient.role }} · {{ recipient.status }}</small>
+                  </span>
+                </label>
+                @if (recipient.id === null) { <small class="id-warning">ID không thể chọn an toàn</small> }
+              </li>
+            }
+          </ul>
+        }
+
+        @if (pagination(); as page) {
+          <div class="pagination-controls" aria-label="Phân trang người nhận">
+            <span>Trang {{ page.page }} / {{ page.total_pages }} · {{ page.total }} tài khoản</span>
+            <div>
+              <button type="button" class="secondary-button" [disabled]="page.page <= 1 || recipientsLoading()" (click)="loadRecipients(page.page - 1)">Trước</button>
+              <button type="button" class="secondary-button" [disabled]="page.page >= page.total_pages || recipientsLoading()" (click)="loadRecipients(page.page + 1)">Sau</button>
+            </div>
+          </div>
+        }
       </fieldset>
 
-      <fieldset class="channel-field" disabled>
-        <legend>Kênh gửi</legend>
-        <p class="field-intro">Token local source — chưa xác nhận mapping từ lựa chọn sản phẩm.</p>
+      <fieldset class="channel-field" [disabled]="isFormLocked()">
+        <legend>Kênh gửi <span aria-hidden="true">*</span></legend>
+        <p class="field-intro">Chọn ít nhất một kênh có trong API #93.</p>
         <div class="channel-options">
-          <label><input type="checkbox" value="PUSH" /><span><strong>PUSH</strong><small>Mapping thiết bị/ứng dụng chưa được xác nhận.</small></span></label>
-          <label><input type="checkbox" value="EMAIL" /><span><strong>EMAIL</strong><small>Provider gửi và trạng thái dịch vụ chưa được xác nhận.</small></span></label>
+          <label><input type="checkbox" value="PUSH" (change)="toggleChannel('PUSH', $any($event.target).checked)" /><span><strong>PUSH</strong><small>Thông báo đẩy</small></span></label>
+          <label><input type="checkbox" value="EMAIL" (change)="toggleChannel('EMAIL', $any($event.target).checked)" /><span><strong>EMAIL</strong><small>Email</small></span></label>
         </div>
       </fieldset>
 
@@ -65,65 +116,63 @@
         <textarea
           id="notice-content"
           rows="8"
+          required
           [value]="content()"
           (input)="updateContent($event)"
-          aria-describedby="content-preview-help"
-          placeholder="Nhập nội dung để xem bản xem trước…"
+          [disabled]="isFormLocked()"
+          aria-describedby="content-help"
+          placeholder="Nhập nội dung thông báo"
         ></textarea>
-        <p id="content-preview-help">Bản xem trước là text thường; toolbar rich-text của mockup chưa có contract.</p>
+        <p id="content-help">Nội dung được gửi dưới dạng văn bản thuần.</p>
       </div>
 
-      <fieldset class="priority-field" disabled>
-        <legend>Mức độ ưu tiên</legend>
-        <div class="priority-options">
-          <label><input type="radio" name="priority" value="normal" /><span>Bình thường</span></label>
-          <label><input type="radio" name="priority" value="urgent" /><span>Khẩn cấp</span></label>
-        </div>
-        <p>#93 không nhận trường priority.</p>
-      </fieldset>
+      @if (submissionError()) { <p class="form-error" role="alert">{{ submissionError() }}</p> }
+      @if (submissionUnconfirmed()) {
+        <a class="return-link" routerLink="/admin/notifications">Kiểm tra danh sách thông báo</a>
+      }
+      @if (acceptedOperationId()) {
+        <p class="form-success" role="status">Yêu cầu đã được tiếp nhận và xếp hàng. Chưa có xác nhận giao thông báo.</p>
+        <a class="primary-link" [routerLink]="'/operations/' + acceptedOperationId()">Theo dõi trạng thái</a>
+      }
 
       <div class="compose-actions">
-        @for (action of definition.actions ?? []; track action.label) {
-          <div class="compose-action">
-            <button type="button" disabled>{{ action.label }}</button>
-            <p>{{ action.reason }}</p>
-          </div>
-        }
+        <button class="primary-button" type="submit" [disabled]="!canSubmit()">
+          {{ isSubmitting() ? 'Đang gửi…' : 'Gửi thông báo' }}
+        </button>
       </div>
-    </section>
+    </form>
 
     <aside class="preview-column">
       <section class="preview-panel" aria-labelledby="preview-heading">
         <div class="side-heading">
-          <h2 id="preview-heading"><study-icon name="info" /> Xem trước cục bộ</h2>
-          <span class="local-badge">Không gửi</span>
+          <h2 id="preview-heading"><study-icon name="info" /> Xem trước</h2>
+          <span class="local-badge">Bản nháp</span>
         </div>
         <article class="notification-preview">
-          <p class="preview-source">● STUDY2WORK · BẢN NHÁP TẠI CHỖ</p>
-          <h3>{{ title() || 'Chưa nhập tiêu đề' }}</h3>
-          <p class="preview-content">{{ content() || 'Nội dung xem trước sẽ hiển thị tại đây.' }}</p>
-          <span class="preview-meta">Chỉ là preview · không có notification ID</span>
+          <p class="preview-source">● STUDY2WORK · THÔNG BÁO</p>
+          <h3>{{ previewTitle() }}</h3>
+          <p class="preview-content">{{ previewContent() }}</p>
+          <span class="preview-meta">Xem trước tại chỗ · chưa gửi</span>
         </article>
-        <p class="preview-help">Thay đổi tiêu đề và nội dung chỉ cập nhật panel này; đóng hoặc tải lại trang sẽ xóa chúng.</p>
+        <p class="preview-help">Người nhận đã chọn: {{ selectedRecipientCount() }} · Kênh: {{ channels().join(', ') || 'chưa chọn' }}</p>
       </section>
 
       <section class="workflow-panel" aria-labelledby="workflow-heading">
         <div class="side-heading">
-          <h2 id="workflow-heading">Ranh giới xử lý hiện tại</h2>
+          <h2 id="workflow-heading">Trạng thái xử lý</h2>
           <span class="source-badge">API #93</span>
         </div>
         <ol class="workflow-list">
-          <li><span class="step-index">1</span><div><strong>Audience</strong><p>Local source yêu cầu recipient IDs tường minh; UI chưa có resolver.</p></div></li>
-          <li><span class="step-index">2</span><div><strong>Queued</strong><p>202 chỉ xác nhận batch/outbox đã được ghi theo source hiện tại.</p></div></li>
-          <li><span class="step-index">3</span><div><strong>Delivered</strong><p>Provider/worker không nằm trong API #93 hiện tại; delivery chưa được xác nhận.</p></div></li>
+          <li><span class="step-index">1</span><div><strong>Chọn người nhận</strong><p>API #68 cung cấp danh sách phân trang; mỗi người nhận được chọn tường minh.</p></div></li>
+          <li><span class="step-index">2</span><div><strong>Đã xếp hàng</strong><p>HTTP 202 chỉ xác nhận dữ liệu QUEUED đã được ghi.</p></div></li>
+          <li><span class="step-index">3</span><div><strong>Theo dõi</strong><p>API #18 trả trạng thái notification của chủ tài khoản; trang tải khi mở và khi bấm làm mới.</p></div></li>
         </ol>
-        <div class="operation-note"><study-icon name="shield" /><span>#93 trả metadata operation UUID-derived; client chưa wired API #18 nên chưa thể mở flow theo dõi.</span></div>
       </section>
     </aside>
   </div>
 
   <div class="compose-footer">
     <a class="return-link" routerLink="/admin/notifications"><study-icon name="chevron" /> Quay lại danh sách thông báo</a>
-    <span class="source-note"><study-icon name="database" /> #93: POST /api/v1/admin/notifications · chưa được gọi từ màn hình này</span>
+    <span class="source-note"><study-icon name="database" /> #68 chọn người nhận · #93 tạo yêu cầu · #18 theo dõi</span>
   </div>
 </main>

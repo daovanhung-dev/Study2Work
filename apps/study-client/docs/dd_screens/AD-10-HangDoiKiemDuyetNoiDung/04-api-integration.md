@@ -11,7 +11,7 @@
 
 - API refs trong inventory: #78
 - Orchestration/data notes: GET #78 → chọn content_id mở AD-11.
-- BE/source status và gate: **R** local #78 route/module/query/model/validator/test source; API DD Draft. **DD BLOCKED; IMPLEMENTATION BLOCKED:** catalog/AC singular Content vs local Page; pagination/order/422 và type enum còn DERIVED; thiếu course title, author, submitted time, version; stale/deleted visibility, moderation permission, live schema/deployment chưa chốt; Study Web UNWIRED. **RUNTIME NOT VERIFIED**
+- BE/source status và gate: **R** local #78 route/module/query/model/validator/test source; Angular route/page/Admin bearer caller is present; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL:** catalog/AC singular Content vs local Page; pagination/order/422 và type enum còn DERIVED; thiếu course title, author, submitted time, version; stale/deleted visibility, moderation permission, live schema/deployment chưa chốt. **RUNTIME NOT VERIFIED**
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Nguồn truy vết
@@ -28,3 +28,7 @@
 
 ## 4. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/05_admin/AD-10_hang-doi-kiem-duyet-noi-dung/AD-10.md)
+
+### Current client/API source — 2026-11-21
+
+AD10Page now checks the exact #78 success code and validates the local Page shape, fixed size, requested page, Content fields and pagination arithmetic. It accepts COUNT/LIST row-count drift as a recoverable presentation state: returned records remain visible while possibly stale totals and page controls are suppressed. A same-query/page refresh retries the read. This follows the checked-out #78 Page source; the catalog still declares a singular Content response, and fine-grained permission/live schema remain unresolved.

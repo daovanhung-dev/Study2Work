@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/mentor/notifications/:notificationId/status`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: registered in `apps/study-client/src/app/features/mentor/mentor.route.ts`; browser/runtime remains unverified.
 - Route params/types: `notificationId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -20,8 +20,8 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: the route is registered; direct entry calls #64 with the route ID. Refresh behavior has not been browser-verified.
+- Invalid/missing ID: page requires a positive int64-safe notification ID before it calls #64; the server returns 404 for malformed/nonexistent resources.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram
@@ -34,6 +34,8 @@ flowchart LR
 ## Source navigation and flow detail
 
 ### Trích từ DD nguồn: E. Ma trận trạng thái và điều hướng
+
+Current source uses the route's `notificationId` only for #64 and never substitutes the response Operation UUID. Router param changes cancel the previous request. API #63 currently has no page-to-page ID handoff; direct status navigation is possible by route but its producer/selection policy remains unresolved.
 
 ### Trạng thái
 

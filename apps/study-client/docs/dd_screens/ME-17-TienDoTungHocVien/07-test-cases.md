@@ -23,6 +23,8 @@
 
 ## 3. Source acceptance / test plan (not run)
 
+Current source has a route-reactive #67 caller that validates identity, lesson rows and summary values. The cases below remain planning references and were not run.
+
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu
 
 ### F1. Static checks đạt trong phiên này

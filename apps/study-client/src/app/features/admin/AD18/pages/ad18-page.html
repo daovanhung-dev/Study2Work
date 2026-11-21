@@ -29,13 +29,16 @@
             <p class="delete-eyebrow">THÔNG TIN BẢN GHI MỤC TIÊU</p>
             <h2 id="target-heading">Mã bài kiểm tra <span>{{ quizId() }}</span></h2>
           </div>
-          <span class="status-badge">Chưa tải dữ liệu Quiz</span>
+          <span class="status-badge">{{ isQuizIdValid() ? 'Chưa tải dữ liệu Quiz' : 'Mã Quiz không hợp lệ' }}</span>
         </div>
         <dl class="target-grid">
           <div><dt>Tên bài thi</dt><dd>Chưa có dữ liệu xem trước.</dd></div>
           <div><dt>Mã định danh khảo thí</dt><dd>{{ quizId() }}</dd></div>
           <div><dt>Khóa học liên kết</dt><dd>Chưa có dữ liệu xem trước.</dd></div>
         </dl>
+        @if (!isQuizIdValid()) {
+          <p class="route-validation" role="alert">Mã Quiz phải là số nguyên dương trong giới hạn signed 64-bit. Không có yêu cầu xóa nào được gửi.</p>
+        }
       </section>
 
       <aside class="policy-card" aria-labelledby="policy-heading">

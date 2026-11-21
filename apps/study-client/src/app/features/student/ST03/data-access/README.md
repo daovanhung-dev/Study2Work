@@ -1,10 +1,14 @@
 # ST-03 data access
 
-Route metadata records API #04, #13 and #14 from the screen inventory. No HTTP caller is enabled:
+`ST03ProfileService` calls API #04 (`GET /api/v1/users/me`), API #13
+(`POST /api/v1/users/me/avatar`) and API #14 (`PUT /api/v1/users/me/profile`)
+through `StudentApiService`, which adds the Student Bearer token.
 
-- The Study Web client has no Student session/token provider for the Student Bearer APIs.
-- API #13 accepts a JSON Data URL and writes an object before profile persistence.
-- API #14 omits `bio`; phone/avatar rules and the upload/update failure policy remain unresolved.
-- The inventory requires a follow-up #04 read, while current #14 already returns the updated profile.
+- #13 receives only `{ image: Data URL }` with PNG/JPEG/WebP content up to 5 MiB and returns
+  `avatar_url`; the page does not send multipart data.
+- #14 receives exactly `full_name`, nullable `phone`, and nullable `avatar_url`. It does not persist
+  `bio`, so the Bio control stays disabled.
+- After a successful #14 update, the page calls #04 again before navigating to ST-02. If that read
+  fails, it offers a read-only retry and does not resend the update.
 
-Keep upload and save controls disabled until those contracts are approved. Do not treat route metadata as an API request.
+The API behavior is source-backed; live object storage and database configuration are not verified.

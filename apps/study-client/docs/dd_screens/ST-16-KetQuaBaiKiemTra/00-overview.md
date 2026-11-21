@@ -5,16 +5,24 @@
 | Screen ID | `ST-16` |
 | Module | Student |
 | Route | `/student/attempts/:attemptId/result` — route trong inventory, không phải xác nhận router runtime |
-| Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. API #32 đang là design contract/draft DD, không có route Student hiện hành. |
+| Actor/role | Student Bearer; API #32 filters by authenticated `user_id` |
+| DD status | Draft/field-disclosure gaps open; **Implementation:** PARTIAL · **Runtime:** NOT VERIFIED |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [ST-16.md](../../screen_stitch/03_student/ST-16_ket-qua-bai-kiem-tra/ST-16.md), [ST-16_PLAN.md](../../screen_stitch/03_student/ST-16_ket-qua-bai-kiem-tra/ST-16_PLAN.md), [ST-16_markers.json](../../screen_stitch/03_student/ST-16_ket-qua-bai-kiem-tra/ST-16_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Điểm/trạng thái chấm và feedback nếu được trả; không lộ đáp án ngoài policy.
 - In-scope: GET #32 sau accepted #31; pending hiển thị trạng thái, không suy ra score=0; `GRADED` không tự nghĩa là pass; chỉ render field được phép theo response/disclosure policy.
 - Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+
+### Current implementation — 2026-11-20
+
+- ST-16 has a route/page and follows `attemptId` changes. It calls #32 with Student Bearer, cancels stale reads, checks `DESIGN_RESOURCE_RETRIEVED`, validates the returned attempt ID and payload, and offers retry after read errors.
+- Current #32 source authorizes Student and filters the attempt and answers by authenticated `user_id`. The response exposes `status`, `score` only for `GRADED`, and `answers[]` with question IDs only. It does not return feedback, question text, correctness, or per-question score. Although the handler computes `passed`, the response model drops that field.
+- The page accepts only `PENDING_GRADE` or `GRADED`; an unsupported status is treated as an invalid response. It shows pending status without a zero score, and shows a server score only for `GRADED`; it does not claim pass/fail when #32 omits `passed`, and does not present answer details.
+- The two accepted states are rendered as “Đang chờ chấm” and “Đã chấm”; raw status codes are not shown. This display mapping does not make `GRADED` a pass result.
+- The source DD's score/feedback/pass disclosure, screenshot content, visual states and CTA destinations remain unresolved. Tests and runtime were not verified.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,23 +39,26 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | pending/graded/unavailable/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Study Client ST-16 | `loading / error+retry / pending / graded score / no per-question detail`; deployed runtime NOT VERIFIED |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-16 source screen.png](../../screen_stitch/03_student/ST-16_ket-qua-bai-kiem-tra/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-16_ket-qua-bai-kiem-tra/screen_annotated.png))
 - Luồng: GET #32 sau accepted #31; pending hiển thị trạng thái, không suy ra score=0; `GRADED` không tự nghĩa là pass; chỉ render field được phép theo response/disclosure policy.
-- Priority: P1; Gate/source status: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** API #32 Draft Q-32-01…06 còn mở về ownership, pending score, answer/feedback disclosure, shape/order và path/error; Student #32 route/module/test NOT_FOUND; Study Web UNWIRED; legacy BIGINT và V1-PILOT UUID attempt/answer models lệch, adapter/live schema chưa xác minh; PNG loaded Student và HTML unavailable Guest khác nhau, cả hai chưa khớp design target; screenshot fields/CTAs thiếu nguồn
+- Priority: P1; Gate/source status: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #32 route/view/query/model and Study Client caller exist; server checks authenticated Student ownership and returns question IDs only; score is omitted unless status is GRADED, and `passed` is dropped by the response model. Feedback/correctness/detail disclosure and result-state/CTA design remain open; legacy BIGINT and V1-PILOT UUID schemas differ; PNG and HTML disagree and do not match the Study Web target.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Ghi nhận #32 caller/owner query, response projection và giới hạn điểm/answer; cập nhật retry, route handling và current source status.
 
 ## Trạng thái và ranh giới bằng chứng
 
 # ST-16 — Kết quả bài kiểm tra
 
-> **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. API #32 đang là design contract/draft DD, không có route Student hiện hành.
+> Các đoạn “hiện trạng/current behavior” bên dưới được giữ từ source DD cũ để truy vết; trạng thái source hiện tại là phần **Current implementation — 2026-11-20** ở trên.
+
+> **Trạng thái nguồn hiện tại:** DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED. API #32 có route/module/query/model và Study Client caller; field disclosure/design gaps vẫn mở.
 
 ## Trích đoạn tổng quan từ DD nguồn
 

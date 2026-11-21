@@ -32,10 +32,11 @@ describe('AD06Page', () => {
 
     const request = http.expectOne('/api/v1/admin/courses?page=1');
     expect(request.request.headers.get('Authorization')).toBe('Bearer access-token-1');
-    request.flush(successEnvelope({
-      items: [course(42, 'Biology Foundations', 'A course description.', 'An Nguyen', '250000', 'PUBLISHED')],
-      pagination: { page: 1, size: 20, total: 21, total_pages: 2 },
-    }));
+    request.flush(successEnvelope(coursePage(
+      1,
+      21,
+      course(42, 'Biology Foundations', 'A course description.', 'An Nguyen', '250000', 'PUBLISHED'),
+    )));
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
@@ -59,10 +60,11 @@ describe('AD06Page', () => {
     const fixture = TestBed.createComponent(AD06Page);
     fixture.detectChanges();
     await fixture.whenStable();
-    http.expectOne('/api/v1/admin/courses?page=1').flush(successEnvelope({
-      items: [course(42, 'Biology Foundations', null, 'An Nguyen', '250000', 'PUBLISHED')],
-      pagination: { page: 1, size: 20, total: 21, total_pages: 2 },
-    }));
+    http.expectOne('/api/v1/admin/courses?page=1').flush(successEnvelope(coursePage(
+      1,
+      21,
+      course(42, 'Biology Foundations', null, 'An Nguyen', '250000', 'PUBLISHED'),
+    )));
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
@@ -71,10 +73,11 @@ describe('AD06Page', () => {
     await fixture.whenStable();
 
     const request = http.expectOne('/api/v1/admin/courses?page=2');
-    request.flush(successEnvelope({
-      items: [course(63, 'Cell Biology', null, 'An Nguyen', '300000', 'DRAFT')],
-      pagination: { page: 2, size: 20, total: 21, total_pages: 2 },
-    }));
+    request.flush(successEnvelope(coursePage(
+      2,
+      21,
+      course(63, 'Cell Biology', null, 'An Nguyen', '300000', 'DRAFT'),
+    )));
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('2 / 2');
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Cell Biology');
@@ -168,6 +171,29 @@ function course(
     price,
     status,
     mentor: { id: 8, full_name: mentorName, avatar_url: null },
+  };
+}
+
+function coursePage(pageNumber: number, total: number, firstCourse?: AdminCourse) {
+  const offset = (pageNumber - 1) * 20;
+  const itemCount = Math.min(20, Math.max(total - offset, 0));
+  return {
+    items: Array.from({ length: itemCount }, (_, index) => index === 0 && firstCourse
+      ? firstCourse
+      : course(
+          1000 + offset + index,
+          `Course ${offset + index + 1}`,
+          null,
+          'An Nguyen',
+          '0',
+          'DRAFT',
+        )),
+    pagination: {
+      page: pageNumber,
+      size: 20,
+      total,
+      total_pages: total === 0 ? 0 : Math.ceil(total / 20),
+    },
   };
 }
 

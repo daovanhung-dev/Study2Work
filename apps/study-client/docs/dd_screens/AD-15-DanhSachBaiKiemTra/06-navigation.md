@@ -22,7 +22,7 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route is registered and initial source load calls #87; browser/runtime behavior remains unverified.
+- Refresh/direct URL: route is registered; initial source load and manual refresh call #87, with refresh preserving the applied query. Browser/runtime behavior remains unverified.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 

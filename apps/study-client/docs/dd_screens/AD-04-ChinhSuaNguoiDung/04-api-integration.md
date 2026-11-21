@@ -12,7 +12,7 @@
 
 - API refs trong inventory: #69, #70
 - Orchestration/data notes: Numeric ID từ AD-03; GET #69 → PUT #70 → GET #69. Catalog/AC bỏ body; local strict body `full_name, phone, avatar_url, role` là `DERIVED`; không gửi email/status/adminNotes hoặc tự map `lecturer`.
-- BE/source status và gate: **R**; #70 backend source-backed locally nhưng body/role `DERIVED`; Angular AD04 page calls #69 only and has no client PUT #70 call; **DD BLOCKED; WRITE FLOW BLOCKED:** body approval, role/PII/permission/ID-route/gate policy; **RUNTIME NOT VERIFIED**
+- BE/source status và gate: **R**; #70 backend source-backed locally nhưng body/role `DERIVED`; Angular AD04 page validates the raw route ID using the signed-int64 bounds from #69 before making the exact GET caller, and has no client PUT #70 call; **DD BLOCKED; WRITE FLOW BLOCKED:** body approval, role/PII/permission/ID-route/gate policy; **RUNTIME NOT VERIFIED**
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API #69 profile và #70 body candidate

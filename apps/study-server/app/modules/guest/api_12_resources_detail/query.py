@@ -4,7 +4,9 @@ SELECT
     r.lesson_id,
     r.name,
     r.resource_type AS type,
-    r.url
+    r.url,
+    r.visibility,
+    r.storage_key
 FROM resources AS r
 WHERE r.id = :resource_id
 LIMIT 1
@@ -21,5 +23,14 @@ JOIN courses AS c ON c.id = l.course_id
 WHERE l.id = :lesson_id
   AND l.status IS DISTINCT FROM 'DELETED'
   AND c.status = 'PUBLISHED'
+LIMIT 1
+"""
+
+ACTIVE_COURSE_ENROLLMENT = """
+SELECT 1
+FROM enrollments AS e
+WHERE e.user_id = :user_id
+  AND e.course_id = :course_id
+  AND e.status = 'ACTIVE'
 LIMIT 1
 """

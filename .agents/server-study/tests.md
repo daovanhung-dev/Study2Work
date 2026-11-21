@@ -1,14 +1,29 @@
 # Study tests status
 
+Current source note (2026-11-20): API #47 changed request `content` from signed int64 to the T041-approved Markdown string. Its existing test fixtures/assertions were updated as source maintenance but were not run; older passing counts below predate that change and do not verify it. API #63 also changed `content` to strict text on 2026-11-21 to match the approved ME-14 notification composer.
+
 ```text
 TEST_SUITE_PRESENT: YES
-TEST_STATUS: VERIFIED_API_18_FIX (2026-11-16 full Study suite before API #08/#09/#10/#12 path-validation fixes: 1492 passed, 0 failed, 1 Starlette/httpx deprecation warning)
+TEST_STATUS: VERIFIED_TARGETED_APIS_03_18_63_68_93 (2026-11-21 targeted suites: 87 passed; full Study suite not rerun)
 ```
 
-## Latest focused verification — 2026-11-17
+## Current targeted verification — 2026-11-21
 
-- API #11 and #12 focused source tests: `uv run pytest -q tests/modules/guest/api_11_courses_resources/test_courses_resources.py tests/modules/guest/api_12_resources_detail/test_resources_detail.py` — 24 passed, 0 failed, one upstream Starlette/httpx `TestClient` deprecation warning.
-- These suites use fake DB/session overrides. API #11 tests cover its empty-404 and singleton success branches but not a multi-row result; current source maps only `rows[0]`, which conflicts with the Draft DD mapping rule. No live schema/deployment or production API verification is claimed.
+- Combined Study Server source suite: `uv run pytest -q tests/modules/guest/api_03_auth_login/test_auth_login.py tests/modules/shared/api_18_operations/test_operations.py tests/modules/mentor/api_63_mentor_notifications_create/test_mentor_notifications_create.py tests/modules/admin/api_68_admin_users_list/test_admin_users_list.py tests/modules/admin/api_93_admin_notifications_create/test_admin_notifications_create.py` — 87 passed, 1 upstream Starlette/httpx `TestClient` deprecation warning.
+- Coverage includes current #03 HTTP 200 login payload, #18 notification-only UUID/owner lookup, #63 strict text content and notification/outbox writes, #68 explicit-recipient pages, and #93 explicit-recipient dispatch with operation UUID metadata.
+- These suites use local test clients and fake DB/session behavior; they do not verify live schema, deployment, or provider/worker delivery.
+- Ruff: `uv run ruff check app/modules/mentor/api_63_mentor_notifications_create tests/modules/mentor/api_63_mentor_notifications_create` — passed.
+
+## Current focused Guest resource verification — 2026-11-21
+
+- `uv run pytest -q tests/modules/guest/api_05_categories/test_categories.py tests/modules/guest/api_06_courses/test_courses.py tests/modules/guest/api_07_courses_search/test_courses_search.py tests/modules/guest/api_08_courses_detail/test_courses_detail.py tests/modules/guest/api_09_courses_curriculum/test_courses_curriculum.py tests/modules/guest/api_10_courses_reviews/test_courses_reviews.py tests/modules/guest/api_11_courses_resources/test_courses_resources.py tests/modules/guest/api_12_resources_detail/test_resources_detail.py` — 119 passed, 0 failed, one upstream Starlette/httpx `TestClient` deprecation warning.
+- The #11/#12 portion alone reports 27 passed. `uv run ruff check tests/modules/guest/api_11_courses_resources/test_courses_resources.py tests/modules/guest/api_12_resources_detail/test_resources_detail.py` passes.
+- API #11 coverage now matches current source: PUBLIC `Resource[]`, valid empty `200 []`, ordered multi-row mapping and safe error paths. API #12 coverage includes public URL, Student Bearer, ACTIVE-enrollment denial, 300-second signed URL, signed-int64 boundaries and source-backed errors.
+- Tests use fake DB/session and storage provider behavior. They do not verify live schema, deployment, storage configuration or production API behavior.
+
+## Historical focused verification — 2026-11-17
+
+- At that time, focused fake-source tests reported 24 passed. Those expectations became stale after current API #11/#12 source changed; they were aligned and expanded in the 2026-11-21 verification above.
 
 ## Current verification — 2026-11-16
 
@@ -55,10 +70,10 @@ Important remaining scope boundaries include:
 - API #34 tests cover multi-role auth, purpose mismatch, enrollment/direct owner,
   multipart field errors, streamed bytes/metadata fallbacks, 503 storage failure,
   DB rollback and object cleanup;
-- API #47 tests cover shared Mentor auth, signed integer/title bounds, asset_refs
-  JSON shape/uniqueness/ranges, missing/non-owned course behavior, no course
+- API #47 test source covers shared Mentor auth, path/order integer and title
+  bounds, strict Markdown string content, asset_refs JSON shape/uniqueness/ranges, missing/non-owned course behavior, no course
   status filter, scoped asset resolution with generic 404, request-order
-  restoration, PUBLISHED response/insert, decimal-string content, OpenAPI,
+  restoration, PUBLISHED response/insert, Markdown string content, OpenAPI,
   atomic asset-link persistence and insert/link/commit rollback paths;
 - API #48 tests cover Mentor auth, direct-owner checks, invalid/missing IDs,
   parent/link integrity, ordered UploadAsset projection, nullable content,

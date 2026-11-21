@@ -1,5 +1,15 @@
 # ST-24 — Data Flow & State
 
+## Current-source reconciliation — 2026-11-21
+
+The course picker uses paged ACTIVE-enrollment results from #20. After the
+existing out-of-range recovery, it compares returned item count with the
+count-derived expected row count. A mismatch keeps returned options available
+for selection, hides the potentially stale pagination controls, and replaces
+false empty copy with a retryable notice. #40 rechecks ACTIVE enrollment when
+the user submits. Historical flow below is the design-time snapshot; source
+gaps for Stitch-only lesson/tag/preview/upload fields remain open.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

@@ -55,6 +55,11 @@
 - Numeric identifiers are labelled as IDs. The existing open questions remain: response cardinality, dedicated quiz-management permission, live schema, tombstone/status rules and local derived 422 behavior. Status: `DD BLOCKED`, `IMPLEMENTATION PARTIAL SOURCE`, `RUNTIME NOT VERIFIED`.
 - Verification on 2026-11-16: focused Angular spec 5/5 passed; focused API #87 tests 20 passed with fake DB sessions; Study Web production build passed with three existing Student CSS budget warnings. Browser UI and live DB remain `NOT VERIFIED`.
 
+### Current-source addendum — 2026-11-20
+
+- The toolbar and empty-state refresh actions now repeat GET #87 with the currently applied `course/status/page` query. Both actions are disabled while the request is loading; refresh is user-triggered and adds no polling, retry, or query parameter. The Stitch prototype's own icon animation remains static design evidence.
+- This interaction does not resolve the catalog `Quiz` vs local `Page<Quiz>` response, AC-35 permission, schema, unsupported search/status vocabulary, or browser/live-runtime gaps. `screen_complete.md` therefore remains 50% under the existing four-axis rubric.
+
 > The source excerpt below preserves the 2026-11-08 prototype/DD snapshot. Its `UNWIRED` statements describe that historical snapshot and are superseded for current source status by this addendum.
 
 # AD-15 — Danh sách bài kiểm tra
@@ -102,3 +107,9 @@ AD-15 là trang quản trị danh sách bài kiểm tra, dự kiến giúp Admin
 7. **Visual target:** prototype rộng 1600px, cobalt và font kiểu Plus Jakarta; `.agents/web-study/design.md` hướng tới ocean-blue, Inter/system và bố cục centered/responsive. Cần áp dụng design target khi có implementation, không coi prototype là runtime.
 
 Không có retry, timeout, deduplication, cache invalidation hay stale-response rule được #87/catalog xác định. Không có client/runtime behavior nào được xác minh trong phiên này.
+
+### Current-source addendum — 2026-11-21
+
+- AD15Page now requires the #87 success business code and validates the local Quiz Page projection, fixed size 20, requested-page echo, and total-page arithmetic before rendering. Nullable duration_minutes may be omitted by the server serializer.
+- For accepted pages, the page compares COUNT-derived expected rows to returned LIST items. A mismatch preserves returned quiz rows, suppresses possibly stale totals and pagination, and offers a retry with the applied course/status/page query. An empty page beyond total_pages has a separate return-to-first-page state; matching zero-result data remains the ordinary empty state.
+- The catalog Quiz vs local Page<Quiz> response, AC-35 permission, legacy/live schema, unsupported fields/search and browser runtime remain unresolved. AD-15 remains 50% in screen_complete.md because this recovery behavior does not complete another weighted axis. No tests/build/lint/browser/API runtime were run.

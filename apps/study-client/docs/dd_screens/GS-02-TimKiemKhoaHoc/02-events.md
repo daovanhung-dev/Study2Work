@@ -209,3 +209,9 @@
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)
+
+## Current Study Web event supplement (2026-11-21)
+
+- GS-02 submits a normalized nonempty query, synchronizes it to the route query string, calls #07 with `q` and `page`, and cancels an in-flight request when a new search/page is requested or q is cleared. Blank q remains a prompt while its product policy is open.
+- Accepted #07 responses require the expected page and fixed size 20. When the separate COUNT/LIST reads disagree, existing returned courses stay visible; the page hides the potentially stale count/pagination, offers retry for the same query/page and blocks page navigation until reload. Matching zero/zero and empty out-of-range states remain separate.
+- No #05, category, facet, unsupported sort, or client-selected page size is sent. These source facts supersede older event notes that said no caller/handler exists; screenshot actions without contract remain unimplemented.

@@ -4,16 +4,16 @@
 |---|---|
 | Screen ID | `AD-20` |
 | Module | Admin |
-| Route | `/admin/notifications/new` — Angular route/page source-wired; API caller absent; runtime/auth guard behavior not verified |
+| Route | `/admin/notifications/new` — Angular route/page calls #68 for recipients and #93 for dispatch; accepted UUID routes to SH-07; runtime/auth guard behavior not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | `BLOCKED` — API #93 audience/response/draft-vs-send decisions and contract-approved #18 handoff remain unresolved. **Implementation status:** `PARTIAL SOURCE` (route/page and local preview); send/draft flow blocked, API caller absent. **Runtime status:** `RUNTIME NOT VERIFIED`. |
+| DD status | The approved producer slice is source-wired: explicit recipients from #68, text/channel dispatch through #93, then UUID handoff to SH-07. The wider design remains Draft; segment audience, provider delivery and live runtime are not established. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.3 / 2026-11-21 |
 | Nguồn đối chiếu | [AD-20.md](../../screen_stitch/05_admin/AD-20_soan-gui-thong-bao-he-thong/AD-20.md), [AD-20_PLAN.md](../../screen_stitch/05_admin/AD-20_soan-gui-thong-bao-he-thong/AD-20_PLAN.md), [AD-20_markers.json](../../screen_stitch/05_admin/AD-20_soan-gui-thong-bao-he-thong/AD-20_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Chọn recipients/segment, channels, preview và xác nhận; accepted không có nghĩa đã delivered.
-- In-scope: POST #93; chỉ sang SH-07 nếu operation response field/type và #18 mapping được duyệt. Catalog/AC-36 trả Notification; tracking prose nói Operation; local source trả Notification đầu tiên và derived `meta.operation_id:UUID`.
+- In-scope: Load recipient pages through #68, require explicit user selection, submit title/text/channels to #93, and route the accepted UUID to notification-only SH-07/#18. No segment-based audience is implemented.
 - Out-of-scope: Không suy ra auth behavior, API delivery, live schema, provider delivery hoặc runtime từ route/page source.
 
 ## 2. Use cases chính
@@ -31,13 +31,13 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | unwired/initial/editing/preview/draft-blocked/send-blocked/accepted/validation-error/unauthorized/forbidden/dependency-error/server-error/operation-unresolved |
-| Current source state | Angular route/page and focused page spec | `ROUTE_PAGE_SOURCE_WIRED; LOCAL_PREVIEW_ONLY; API_CALLER_UNWIRED; RUNTIME NOT VERIFIED` |
+| Current source state | Angular route/page, recipient API, dispatch caller and focused specs | `SOURCE_WIRED; LIVE RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-20 source screen.png](../../screen_stitch/05_admin/AD-20_soan-gui-thong-bao-he-thong/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-20_soan-gui-thong-bao-he-thong/screen_annotated.png))
-- Luồng: POST #93; chỉ sang SH-07 nếu operation response field/type và #18 mapping được duyệt. Catalog/AC-36 trả Notification; tracking prose nói Operation; local source trả Notification đầu tiên và derived `meta.operation_id:UUID`.
-- Priority: P1; Gate/source status: **R** local #93 route/module/model/validator/query/view/test source; API DD Draft. Angular route/page and local preview are source-wired; API caller absent. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE / SEND FLOW BLOCKED:** response Notification vs Operation; catalog #18 int64 vs local UUID and owner policy; explicit recipient resolver, app→PUSH/channel mapping, audience predicate/eligibility/grain, permission vs ADMIN, draft/send/priority, live schema and provider delivery unresolved; **RUNTIME NOT VERIFIED**
+- Luồng hiện tại: AD-20 pages API #68, lets the administrator select explicit recipient IDs, submits text and explicit `PUSH`/`EMAIL` channels through #93, accepts only the expected HTTP 202 queued response with `meta.operation_id` UUID, then routes to SH-07/#18. No segment selection is offered. Queue acceptance is not delivery.
+- Priority: P1; #68 recipient loading, #93 send caller and SH-07 handoff are source-wired and covered by focused tests. API #18 UUID/owner lookup and API #93 text are reconciled for this notification flow. Generic campaign/segment policy, fine-grained notification permission, live schema, provider delivery and browser runtime remain outside verified scope.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -47,8 +47,9 @@
 
 # AD-20 — Soạn và phát hành thông báo toàn hệ thống
 
-> **DD status:** `BLOCKED` — API #93 audience/response/draft-vs-send decisions and the contract-approved #18 handoff remain unresolved. The current Angular page has no #93 caller and cannot submit a valid explicit-recipient request.
-> **Implementation status:** `PARTIAL SOURCE; SEND/DRAFT FLOW BLOCKED` · **Runtime status:** `RUNTIME NOT VERIFIED`.
+> **Original source-DD status:** `BLOCKED` for the broader segment/campaign, draft, permission and delivery design; this historical design state does not describe the current Angular caller.
+> **Current DD-safe implementation (2026-11-21):** `100% static` for the explicit-recipient slice: #68 selection → #93 dispatch → accepted UUID handoff to SH-07/#18. The API #93 DD resolves this handoff for AD-20 only. Segment, draft, priority and provider delivery remain outside this slice.
+> **Runtime status:** `RUNTIME NOT VERIFIED` for an authenticated browser, live API/DB, schema deployment and provider delivery.
 
 ## Trích đoạn tổng quan từ DD nguồn
 
@@ -60,18 +61,20 @@
 | Mục tiêu | Cho Admin soạn nội dung thông báo và chọn nhóm người nhận/kênh trước khi xác nhận phát hành, theo mục đích trong inventory và AC-36. Các card Accepted/Correlation/Delivered trong mockup là copy tĩnh, không chứng minh lifecycle runtime. |
 | Actor / quyền dự kiến | Admin có `notification-management` permission theo AC-36. |
 | Route | `/admin/notifications/new` hiện được Angular admin router khai báo và trỏ tới `AD20Page`; browser/runtime/auth guard behavior chưa xác minh. |
-| Màn hình liên kết | AD-19 là entry/đường quay lại source-wired; AD-21 là màn hình liên quan đến kiểm soát/trạng thái; SH-07 chỉ là handoff dự kiến nếu contract operation đã được duyệt. |
+| Màn hình liên kết | AD-19 là entry/đường quay lại source-wired; AD-21 là màn hình liên quan đến kiểm soát/trạng thái; AD-20 hiện chuyển operation UUID accepted tới SH-07 cho notification-only lookup. |
 | Tiền điều kiện | User đã đăng nhập và được phép quản trị notification theo AC-36. Quy tắc permission cụ thể chưa được thống nhất với role `ADMIN` mà API #93 hiện kiểm tra. |
 | Hậu điều kiện | AC-36 mô tả Notification/recipients và nhánh gửi Push/Email có điều kiện. API #93 catalog trả HTTP 202; 202 chỉ là accepted, không đồng nghĩa delivered. Response, recipient grain và cách theo dõi operation còn mâu thuẫn/chưa duyệt. |
 | Dữ liệu chính | Catalog #93: `recipients?: int64[]`, `segment?: AudienceSegment`, `title`, `content`, `channels[]`; response `ApiEnvelope<Notification>`. Mockup còn có priority, preview, nút draft/send và segment mẫu nhưng không chứng minh request contract. |
 | API | `POST /api/v1/admin/notifications` (#93). Current source also registers `GET /api/v1/operations/{operation_id}` (#18); its notification-only query reads the same candidate `operation_id` UUID and binds the authenticated sender. No generic Study `operations` table exists. |
-| Trạng thái hiện tại | Angular page keeps title/content in component-local signals and mirrors them in a local preview. Recipient/channel/priority controls and draft/send actions are disabled. No API #93 caller or #18 client handoff exists; no provider/worker delivery is verified. |
+| Trạng thái hiện tại | Angular route/page loads recipients through #68, requires explicit selection, posts text/channels through #93 and routes a valid accepted UUID to SH-07/#18. Segment, draft and priority flows are not implemented; provider delivery and browser/runtime are unverified. |
 
 ### Expected behavior và current behavior
 
-**Expected behavior (inventory / AC-36 / catalog):** Admin có quyền notification-management mở form tạo notification; chọn recipients hoặc segment, title, content, channels; xác nhận nhánh CREATE/SEND; API #93 nhận request và phản hồi 202. AC-36 n5 ghi `ApiEnvelope<Notification>`; inventory chỉ yêu cầu sang SH-07 nếu response có `operation_id`, và accepted không phải delivered.
+> Các phần trích từ DD nguồn tiếp theo giữ lại discrepancy/design snapshot ban đầu. Current source implementation được mô tả trong bảng trạng thái và đoạn current behavior ở trên.
 
-**Current behavior (working-tree source, 2026-11-16):** Angular route `/admin/notifications/new` loads `AD20Page`. Title/content inputs update component-local signals and the preview; recipient IDs, channels and priority are disabled; Save Draft and Send are disabled. The page has no API #93 data-access caller and the spec asserts no POST request. Its navigation links return to `/admin/notifications`. Browser behavior/auth/runtime are not verified. Local API #93 requires explicit recipient IDs, so the current page cannot submit a valid request. API #18 has a UUID route and notification-specific owner-bound lookup over the same candidate rows, but the page does not call it and catalog/diagram contract questions remain open.
+**Expected behavior (inventory / AC-36 / catalog plus AD-20 decision):** Admin có quyền notification-management mở form; với screen slice đã thống nhất, chọn recipient IDs cụ thể từ #68, nhập title/content/channels, gửi qua #93 và chuyển UUID `meta.operation_id` sang SH-07. HTTP 202 chỉ xác nhận accepted. Segment/campaign, draft, priority và delivery không thuộc decision này.
+
+**Current behavior (working-tree source, 2026-11-21):** AD-20 loads recipient pages from #68, requires explicit selection, posts title/content/channels to #93, and accepts only HTTP 202 with the expected business code, queued status and UUID `meta.operation_id` before navigating to SH-07. An ambiguous response locks resend and links back to AD-19 for manual checking. SH-07 reads the notification aggregate through owner-bound #18. Segment, draft and priority flows are not implemented. Queue acceptance does not prove provider delivery; authenticated browser/live API/DB runtime is unverified.
 
 ### API #93 và discrepancy
 
@@ -79,8 +82,8 @@
 |---|---|---|
 | API catalog #93 và AC-36 n5 | `POST /api/v1/admin/notifications`; Bearer JWT/Admin; body có recipients? hoặc segment?, title/content/channels; HTTP 202 với `ApiEnvelope<Notification>`. | Expected direct contract; API DD vẫn Draft. |
 | Phần operation tracking tổng quát trong `list_api.md` | Nói POST #93 trả `data: Operation` ở 202 và client poll #18. | `DISCREPANCY` với row #93 và AC-36 n5. |
-| Current local #93 source | Trả `data` là Notification đầu tiên, thêm `meta.operation_id: UUID` và `meta.notification_ids`; `businessCode=DESIGN_OPERATION_ACCEPTED`. UUID metadata là derived fallback, không tạo Operation row. | `CURRENT_SOURCE`; chưa được owner duyệt làm contract. |
-| API #18 / SH-07 | API #18 catalog row declares `operation_id:int64`; reusable `Operation.id`, AC diagrams, current OpenAPI/source and #93 metadata use UUID. The current Shared handler queries notification rows by UUID and authenticated sender; there is no generic Study `operations` table. | `DISCREPANCY / BLOCKER`; local notification polling source exists, but canonical ID/owner policy and generic Operation mapping are unresolved. |
+| Current local #93 source | Trả `data` là Notification đầu tiên, thêm `meta.operation_id: UUID` và `meta.notification_ids`; `businessCode=DESIGN_OPERATION_ACCEPTED`. UUID metadata is grouping metadata and creates no generic Operation row. | `CURRENT_SOURCE`; the API remains Draft for broader consumers, while the explicit-recipient producer/consumer handoff is `RESOLVED_FOR_AD-20` in the API DD. |
+| API #18 / SH-07 | API #18 catalog row declares `operation_id:int64`; reusable `Operation.id`, AC diagrams, current OpenAPI/source and #93 metadata use UUID. The current Shared handler queries notification rows by UUID and authenticated sender; there is no generic Study `operations` table. | `DISCREPANCY` for the generic Operation contract; the notification-only owner-bound UUID handoff is resolved for AD-20. |
 
 ### Local #93 fallback (không thay thế contract)
 

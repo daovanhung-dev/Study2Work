@@ -14,8 +14,10 @@ app/main.py:create_app
 
 Current source wires numbered APIs #01–#98. Packages are grouped by actor:
 Guest #01–#03/#05–#12/#15; Student #04/#13–#14/#16–#17/#19–#33/#35–#45;
-Shared #18/#34; Mentor #46–#67; Admin #68–#98. API #18 ID/authorization
-semantics remain disputed; API #34 accepts Student and Mentor. APIs #99–#103
+Shared #18/#34; Mentor #46–#67; Admin #68–#98. For the current SH-07
+notification slice, API #18 uses UUID and owner-only authorization for
+Student/Mentor/Admin; generic operation lifecycle/result remains unsupported.
+API #34 accepts Student and Mentor. APIs #99–#103
 have no Study route/module. The 2026-11-16 post-move full suite passed 1484
 tests; see `tests.md`. API #98 remains a wired-source/Draft-DD discrepancy:
 source derives its title from content and omits report records. Production
@@ -56,7 +58,7 @@ fake-session tests.
 - `app/service/object_storage/avatar.py`: lazy, injectable S3-compatible avatar provider backed by process environment and public URL base.
 - `app/modules/student/api_14_users_me_profile/view.py`: Student profile update; consumes `avatar_url` submitted in the follow-up request.
 - `app/modules/mentor/api_46_mentor_courses/`: API #46 Mentor query, role validation, direct-owner SQL and course-list response orchestration. It requires numeric JWT `sub` with role `MENTOR`; the query scopes `courses.mentor_id` to that subject and optionally filters `DRAFT`/`PUBLISHED`.
-- `app/modules/mentor/api_47_mentor_lectures_create/`: API #47 Mentor lecture creation; shared `MENTOR` JWT guard, direct `courses.mentor_id` ownership check without course-status filtering, scoped `uploads` metadata resolution, decimal-string content mapping, `PUBLISHED` insert and caller-owned transaction. Local tests cover the HTTP contract; live DB schema remains unverified.
+- `app/modules/mentor/api_47_mentor_lectures_create/`: API #47 Mentor lecture creation; shared `MENTOR` JWT guard, direct `courses.mentor_id` ownership check without course-status filtering, scoped `uploads` metadata resolution, T041-approved Markdown string stored/returned unchanged, `PUBLISHED` insert and caller-owned transaction. Test assertions were updated for the request contract but not rerun; live DB schema remains unverified.
 - `app/modules/mentor/api_48_mentor_lecture_detail/`: API #48 Mentor lecture detail; shared `MENTOR` JWT guard, direct course-owner check, nullable Lecture content mapping, ordered `lesson_uploads`/`uploads` projection and catalog 401/403/404/500 outcomes. Local tests cover the HTTP contract; live DB/migration state remains unverified.
 - `app/modules/mentor/api_49_mentor_content_list/`: API #49 Mentor content-tree read; shared `MENTOR` guard, direct `courses.mentor_id` access, legacy `contents` projection, active-row filtering and tree integrity validation. Local DDL/migration and TestClient tests are source evidence; live DB/migration deployment remains unverified.
 - `app/modules/mentor/api_50_mentor_content_create/`: API #50 Mentor content creation; shared `MENTOR` guard, direct course ownership, per-course row lock, derived root ordering/status defaults, JSONB payload insert and caller-owned transaction. Focused tests and local DDL are evidence only; live DB/migration deployment remains unverified.
@@ -160,10 +162,11 @@ CSV Student IDs/channels, requires the recipient set to share an ACTIVE roster
 in a directly owned course, inserts one legacy BIGINT notification per Student
 and one QUEUED delivery outbox row per channel, and commits the batch once.
 The Operation UUID groups notification rows; `meta.notification_ids` provides
-the int64 IDs for API #64. CSV/scope/channel/status rules and migration 009 are
-DERIVED. The content int64-to-text mapping remains a contract discrepancy. No
-worker/provider consumes the outbox; fake-session tests and local DDL do not
-verify live schema/deployment or delivery.
+the int64 IDs for API #64. Request `content` is a strict string stored as text,
+aligned to the approved ME-14 composer and current catalog/model/OpenAPI.
+CSV/scope/channel rules and migration 009 remain DERIVED. No worker/provider
+consumes the outbox; fake-session tests and local DDL do not verify live
+schema/deployment or delivery.
 
 ## API #64 Mentor notification status
 
@@ -340,7 +343,7 @@ quiz-management permission; DD remains Draft.
 
 ## API #93 Admin notification create/send
 
-API #93 shares `/api/v1/admin/notifications` with the #92 GET. The raw route delegates to the shared ADMIN guard before body parsing. The local DERIVED persistence fallback fans out one legacy BIGINT notification row per explicit recipient and one `QUEUED` `notification_deliveries` row per requested channel, grouped by a UUID and written atomically. The 202 response keeps the direct Notification data shape, using the first row, and includes derived batch metadata. No Push/Email provider is called; live schema, Admin permission, and the Operation bridge remain unverified.
+API #93 shares `/api/v1/admin/notifications` with the #92 GET. The raw route delegates to the shared ADMIN guard before body parsing. The local DERIVED persistence fallback fans out one legacy BIGINT notification row per explicit recipient and one `QUEUED` `notification_deliveries` row per requested channel, grouped by a UUID and written atomically. The 202 response uses the direct Notification data shape and catalog-declared `meta.operation_id`/`meta.notification_ids`. AD-20 routes that accepted UUID to notification-only #18 through SH-07. No Push/Email provider is called; live schema, Admin permission and generic Operation behavior remain unverified.
 
 
 ## API #94 Admin notification update

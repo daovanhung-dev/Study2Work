@@ -26,6 +26,7 @@ export interface AdminScreenFilter {
 export interface AdminScreenRow {
   readonly values: readonly string[];
   readonly route?: string;
+  readonly actions?: readonly AdminScreenLink[];
 }
 
 export interface AdminScreenField {

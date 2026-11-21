@@ -1,5 +1,7 @@
 # SH-04 — Data Flow & State
 
+> **Current source (2026-11-20):** SH-03 validates API #01's HTTP 201 envelope/result before showing the continuation action. That action stores only a positive `Number.isSafeInteger(id)` and non-empty email in the one-use Angular memory handoff, then navigates to SH-04. SH-04 consumes the handoff at construction; missing/reloaded/direct route stays in `missing-handoff` and cannot call #02. A separate click sends exactly `{user_id, email}`. `202` is shown as accepted only for `success=true`, `DESIGN_OPERATION_ACCEPTED`, and `data.status="accepted"`. It does not mean delivery or verification. The historical flow excerpt below predates this implementation.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|
@@ -11,7 +13,7 @@
 
 ## 3. API DTO → ViewModel mapping
 
-### Trích từ DD nguồn: 2. Sơ đồ luồng màn hình và API
+### Historical source-flow excerpt: 2. Sơ đồ luồng màn hình và API
 
 ```mermaid
 flowchart TD
@@ -32,7 +34,7 @@ flowchart TD
     C -. Chưa có OTP, liên kết hoặc điểm cuối xác nhận .-> K[Chưa thể xác minh thư điện tử]
 ```
 
-Việc gọi API sau đăng ký là đích F01. Thời điểm kích hoạt cụ thể — tự gọi khi mở SH-04 hay chờ thao tác riêng — chưa được chốt bằng mã giao diện hoặc hợp đồng tương tác. Bản mẫu hiển thị trạng thái `accepted` ngay khi tải và không có lời gọi API; không được coi đó là hành vi đã nối.
+Historical snapshot: trigger was undecided and the HTML mock showed local `accepted` without a request. Current source uses an explicit click and a real #02 call; the stub response still does not prove delivery.
 
 ### Trích từ DD nguồn: 3. Luồng tổng quát
 

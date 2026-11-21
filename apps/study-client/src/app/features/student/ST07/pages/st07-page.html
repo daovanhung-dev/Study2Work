@@ -7,11 +7,17 @@
     </nav>
     <h1>Kết quả đăng ký khóa học</h1>
     <section class="enrollment-result__card" role="status" aria-labelledby="enrollment-result-title">
-      <div class="enrollment-result__icon" aria-hidden="true">✓</div>
+      <div class="enrollment-result__icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none">
+          <rect x="10" y="11" width="28" height="30" rx="3" />
+          <path d="M18 11V8.5A2.5 2.5 0 0 1 20.5 6h7A2.5 2.5 0 0 1 30 8.5V11" />
+          <path d="m17 26 6 6 11-12" />
+        </svg>
+      </div>
       <h2 id="enrollment-result-title">Chưa thể xác nhận kết quả đăng ký.</h2>
       <p>
-        Hệ thống chưa ghi nhận trạng thái kích hoạt ghi danh cho khóa học này. Vui lòng kiểm tra lại
-        trong danh mục khóa học của bạn.
+        Hiện chưa có thông tin kết quả ghi danh để hiển thị. Bạn có thể kiểm tra danh sách khóa học
+        của mình.
       </p>
       <a routerLink="/student/courses">Về khóa học của tôi</a>
     </section>

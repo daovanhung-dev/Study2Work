@@ -1,35 +1,85 @@
-<div class="sh07-page" data-screen-id="SH-07">
+<main class="sh07-page" data-screen-id="SH-07">
   <header class="sh07-header">
     <a class="sh07-header__brand" routerLink="/" aria-label="Study2Work LMS — trang chủ">
-      <study-icon name="brand" aria-hidden="true" />
+      <study-icon class="sh07-brand-mark" name="brand" aria-hidden="true" />
       <span>Study2Work LMS</span>
     </a>
-
     <nav class="sh07-header__navigation" aria-label="Điều hướng chính">
       <a routerLink="/">Trang chủ</a>
       <a routerLink="/courses">Khóa học</a>
-      <a routerLink="/courses/search">Tìm kiếm</a>
     </nav>
-
-    <nav class="sh07-header__account" aria-label="Tài khoản">
-      <a routerLink="/login">Đăng nhập</a>
-      <a class="sh07-header__register" routerLink="/register">Đăng ký</a>
-    </nav>
+    <a class="sh07-header__account" routerLink="/login">Đăng nhập</a>
   </header>
 
-  <main class="sh07-main">
+  <div class="sh07-content">
     <nav class="sh07-breadcrumb" aria-label="Đường dẫn">
       <a routerLink="/">Trang chủ</a>
       <span aria-hidden="true">/</span>
-      <span aria-current="page">Theo dõi tác vụ</span>
+      <span aria-current="page">Theo dõi thông báo</span>
     </nav>
 
     <section class="sh07-intro" aria-labelledby="sh07-title">
-      <p class="sh07-intro__eyebrow">Tác vụ đã gửi</p>
-      <h1 id="sh07-title">Theo dõi tác vụ bất đồng bộ</h1>
-      <p>Trang này hiển thị trạng thái tác vụ khi có dữ liệu đã được hệ thống xác nhận.</p>
+      <p class="sh07-intro__eyebrow">TRẠNG THÁI THÔNG BÁO</p>
+      <h1 id="sh07-title">Theo dõi tác vụ</h1>
+      <p>Trạng thái được tải từ Study Server và chỉ hiển thị cho tài khoản sở hữu tác vụ.</p>
     </section>
 
-    <study-sh07-availability-notice />
-  </main>
-</div>
+    <section class="sh07-operation" aria-labelledby="sh07-operation-title" aria-live="polite">
+      <div class="sh07-operation__heading">
+        <div>
+          <p class="sh07-operation__eyebrow">Gửi thông báo</p>
+          <h2 id="sh07-operation-title">Trạng thái xử lý</h2>
+        </div>
+        <button type="button" class="sh07-refresh" (click)="refresh()" [disabled]="isLoading()">
+          {{ isLoading() ? 'Đang tải…' : 'Làm mới trạng thái' }}
+        </button>
+      </div>
+
+      @if (isLoading() && !operation()) {
+        <p class="sh07-loading" role="status">Đang tải trạng thái tác vụ…</p>
+      }
+
+      @if (operation(); as currentOperation) {
+        <div class="sh07-status" [attr.data-status]="currentOperation.status">
+          <span class="sh07-status__dot" aria-hidden="true"></span>
+          <strong>{{ statusLabel(currentOperation.status) }}</strong>
+        </div>
+        <dl class="sh07-details">
+          <div>
+            <dt>Loại tác vụ</dt>
+            <dd>Gửi thông báo</dd>
+          </div>
+          <div>
+            <dt>Được tiếp nhận</dt>
+            <dd>{{ formatTimestamp(currentOperation.submitted_at) }}</dd>
+          </div>
+          <div>
+            <dt>Cập nhật gần nhất</dt>
+            <dd>{{ formatTimestamp(currentOperation.updated_at) }}</dd>
+          </div>
+          @if (currentOperation.completed_at) {
+            <div>
+              <dt>Hoàn tất</dt>
+              <dd>{{ formatTimestamp(currentOperation.completed_at) }}</dd>
+            </div>
+          }
+        </dl>
+        @if (currentOperation.status === 'QUEUED') {
+          <p class="sh07-queued-note">Yêu cầu đã được ghi nhận. Trạng thái này chưa xác nhận thông báo đã được gửi tới người nhận.</p>
+        }
+      } @else if (!isLoading() && !errorMessage()) {
+        <p class="sh07-loading" role="status">Chưa có dữ liệu trạng thái để hiển thị.</p>
+      }
+
+      @if (errorMessage()) {
+        <p class="sh07-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      @if (lastUpdated(); as updatedAt) {
+        <p class="sh07-refresh-note">Dữ liệu tải lúc {{ formatTimestamp(updatedAt) }}. Trang không tự làm mới.</p>
+      }
+    </section>
+
+    <a class="sh07-back" [routerLink]="returnTo()">Quay lại nơi gửi thông báo</a>
+  </div>
+</main>

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -14,4 +16,5 @@ class ResourceItem(BaseModel):
     name: str
     type: str = Field(..., description="Resource type mapped from resource_type")
     url: str
-    lesson_id: int
+    visibility: Literal["PUBLIC"]
+    lesson_id: int | None = None

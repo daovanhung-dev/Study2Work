@@ -2,12 +2,15 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-20
 
-ST-19 calls #36 and renders returned submission metadata/status/score/feedback
-where present. File URLs are not exposed as download links. The DD/API excerpt
-below is a design-time snapshot; see [the screen inventory](../../list_screen.md)
-and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+ST-19 calls #36 with Student Bearer, follows route changes, cancels stale reads,
+validates the exact success code/ID/payload and offers retry. #36 derives
+`user_id` from the authenticated Student and filters the query by both owner
+and submission ID; missing or foreign rows return 404. The query returns
+score/feedback only for `GRADED` and maps the legacy single `file_url` to a
+zero-or-one files array. The page does not open the returned URL and hides
+score/feedback unless status is `GRADED`. Runtime and tests were not verified.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -17,9 +20,11 @@ and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-
 ## 2. Contract / source detail
 
 - API refs trong inventory: #36
-- Orchestration/data notes: GET #36 cho Student; inventory yêu cầu kiểm tra ownership nhưng predicate trong API #36 DD còn SOURCE_REQUIRED. Không tự hiển thị GRADED nếu response chỉ là SUBMITTED; score/feedback cần disclosure policy.
-- BE/source status và gate: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** API #36 chỉ có catalog/Draft DD, Student route/module/query/test NOT_FOUND; ownership/access predicate, 403-vs-404, score/feedback release, SubmissionStatus/timezone/path parsing còn mở; logical `files[]` không map được vào legacy scalar `file_url`, assignment/user nullability và live schema chưa xác minh; API #35 `data.id` vs inventory `submission_id` handoff chưa chốt; rubric/cohort/mentor/PR/booking/skill/next-assignment fields thiếu API contract; loaded graded PNG khác Guest fallback HTML (Tailwind CDN/config, remote fonts, max-width 1440px) và Study Web design target; Study Web UNWIRED
+- Orchestration/data notes: ST-18 passes returned `data.id` as `submissionId`; GET #36 returns only the authenticated Student's matching submission. Display score/feedback only when returned status is `GRADED`; never open file URLs here.
+- BE/source status and gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #36 route/view/query/model and caller exist; query is owner-scoped and returns a single mapped file at most; score/feedback are projected only for GRADED. `data.id`/inventory `submission_id`, status/timezone/live-schema semantics and file URL access remain open; loaded-design fields (rubric, mentor/cohort/skill/next assignment) have no API data contract; PNG/HTML states and visual target differ.
 - Contract sources and discrepancies are preserved in the source excerpts below.
+
+> Source-DD excerpts below retain the earlier `UNWIRED`/`NOT_FOUND` snapshot; current source is summarized above.
 
 ### Trích từ DD nguồn: Nguồn truy vết
 

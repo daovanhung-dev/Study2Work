@@ -120,3 +120,10 @@ Create 45 sequential markers, each mapped one-to-one to a row in `AD-23.md` §C.
 - AC/catalog Admin actor and permission mapping do not establish the local `ADMIN` authorization rule for #99/#100.
 - The prototype claims warning delivery, automatic audit logging and complete permanent deletion without source-backed behavior; delete radio also conflicts with the separate #100 flow.
 - Study Web route/page/#98 caller are source-wired; report projection, #99/#100 actions and browser/deployed runtime remain unresolved or unverified.
+
+## Dated continuation — #98 route-ID preflight (2026-11-20)
+
+- `AD23Page` now passes the existing positive signed-int64 parser from its #98 response validator into `adminRouteState`. Malformed, signed, zero and out-of-range route values stop locally before HTTP; valid text is preserved unchanged.
+- #98 response validation/projection and its current `Number.isSafeInteger` response boundary remain unchanged. AD-22 only creates links for safe Discussion IDs; the raw int64 JSON precision mismatch remains an open direct-entry limitation.
+- #99/#100 controls stay disabled; report context, report writer/live schema, AC permission mapping and browser/deployed runtime remain unresolved. Completion remains 62.5%; the route guard does not move another weighted axis across its threshold.
+- Static review only. No tests, build, lint, browser or API runtime checks were run for this continuation.

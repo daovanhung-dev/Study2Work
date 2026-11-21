@@ -97,7 +97,7 @@
 | Trường | Đặc tả |
 |---|---|
 | Trigger / loại | Expected navigation sau #24 success; no current handler. |
-| Element | #13 Start button disabled hiện tại; FSM #17 chỉ là copy. |
+| Element | #13 Start button is enabled only after #22 returns the matching lesson as `PUBLISHED`; it disables while #23 is pending. The hand-off list reflects the current #22/#23/#24 ownership. |
 | Input | lessonId đã qua approved access/start/content sequence; exact state handoff/cache policy chưa được duyệt. |
 | Quy trình | 1) Chỉ navigate khi #24 response success. 2) Dùng ST-11 route /student/lessons/:lessonId theo inventory nếu route owner xác nhận. 3) Không lấy button click riêng lẻ làm authorization evidence. 4) Không phát media từ #23 response/session-token copy nếu contract không cấp field/token. |
 | Kết quả | Expected ST-11. Không có Study Web router hoặc ST-11 integration để xác minh. Inventory ST-11 cũng liệt kê GET #24 khi mở player; cần xác nhận một hay hai lần fetch để tránh duplicate request. |
@@ -133,9 +133,9 @@
 
 | API | Declared contract | Current source | Vai trò trong transition |
 |---|---|---|---|
-| #22 | GET /api/v1/lessons/{lesson_id}/access; Student Bearer; path int64; no query/body; ApiEnvelope<Lesson>; 200/401/403/404/500. | NOT_FOUND route/module/query/test; Draft DD. | Expected entitlement/prerequisite decision; response has no declared `allowed` or reason field. |
-| #23 | POST /api/v1/lessons/{lesson_id}/start; Student Bearer; path int64; no query/body; ApiEnvelope<Lesson>; 201/401/403/404/422/500. | NOT_FOUND route/module/query/test; Draft DD. | Expected UPSERT progress IN_PROGRESS; conflicting BIGINT/UUID candidate schemas; key/idempotency/state updates unresolved. |
-| #24 | GET /api/v1/lessons/{lesson_id}; Student Bearer; path int64; no query/body; ApiEnvelope<Lesson>; 200/401/403/404/500. | NOT_FOUND route/module/query/test; Draft DD. | Expected content retrieval; independent authorization/publish/projection unresolved. |
+| #22 | GET /api/v1/lessons/{lesson_id}/access; Student Bearer; path int64; no query/body; ApiEnvelope<Lesson>; 200/401/403/404/500. | Route/handler/query/model/test source exists; checks Student role, published course and active/completed enrollment; does not filter lesson status. | ST10 calls on entry; response has no `allowed` or reason field, so client only permits start for a matching `PUBLISHED` lesson. |
+| #23 | POST /api/v1/lessons/{lesson_id}/start; Student Bearer; path int64; no query/body; ApiEnvelope<Lesson>; 201/401/403/404/422/500. | Route/handler/query/model/test source exists; validates Student, lesson/course and enrollment, writes lesson progress and returns Lesson; does not independently check publication. | ST10 calls after explicit Start click; DB mapping/idempotency and response projection decisions remain open. |
+| #24 | GET /api/v1/lessons/{lesson_id}; Student Bearer; path int64; no query/body; ApiEnvelope<Lesson>; 200/401/403/404/500. | Route/handler/query/model/test source exists; checks Student, published parent course and enrollment; Lesson response can include content/video fields. | ST11 owns the post-handoff request; direct-call/publish/projection decisions remain open. |
 
 ### Security rules for this screen
 

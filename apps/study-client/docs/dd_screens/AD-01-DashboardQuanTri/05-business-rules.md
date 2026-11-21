@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Tổng quan hệ thống theo khoảng ngày: học viên, khóa, tác động và các KPI.
-- Gate/status (giữ nguyên): **D**; **BLOCK:** #101 chưa có route/module/query/model/test; thiếu Admin self-profile endpoint; KPI/date semantics và status/audit sources chưa xác nhận; Study Web UNWIRED
+- Gate/status: **D / PARTIAL IMPLEMENTATION**; `/admin` and its Admin session gate/page are source-wired. **BLOCK:** #101 has no route/module/query/model/test; report permission, KPI/date semantics and audit/service-status sources remain unconfirmed.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu và blockers
@@ -31,12 +31,12 @@
 1. **API #101 `DESIGN_ONLY`:** catalog và Draft DD có, nhưng current router/module/query/model/test không có. Không thể xác nhận request thực thi/response thật.
 2. **KPI:** bốn card là total users, active courses, pending moderation và system load. API #101 contract chỉ có `ImpactMetric[]`; các count proposal trong DD API có nghĩa khác và chưa được phê duyệt.
 3. **Date range:** optional query bounds nhưng response period bắt buộc; các button disabled và default/inclusive/timezone/invalid range chưa rõ.
-4. **Identity/authorization:** current Admin APIs có `ADMIN` role guard, nhưng #101 report permission không có source. Không có Admin self-profile route; API #04 hiện chỉ Student.
+4. **Identity/authorization:** current Admin shell verifies the `ADMIN` role and displays the #03 login profile from tab memory. API #101 report permission has no source; there is no separate Admin self-profile endpoint and API #04 remains Student-only.
 5. **Audit/service status:** activity, DB/auth/queue status, “System Normal”, readiness và compliance copy không được #101 trả; `/health/ready` chỉ kiểm tra cấu hình dependency, không probe DB.
-6. **Study Web:** thiếu source/package/router nên không có route, API caller, loading/error mapping hoặc link destination runtime.
+6. **Study Web:** `/admin` route, AdminLayout, AD01Page and shortcut destinations are source-wired; no #101 caller, report loading/error mapping or deployment runtime exists.
 7. **Design system:** palette/font của screenshot khác Study Web visual target; chưa có approval cho ngoại lệ.
 
-**Kết luận:** `DD BLOCKED`; tài liệu truy vết rõ phần có thể xác nhận và phần cần quyết định, nhưng chưa đủ để frontend triển khai KPI/range/identity mà không tự suy đoán. `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`.
+**Kết luận:** `DD BLOCKED` for report/KPI behavior; current frontend implementation is `PARTIAL` with safe unavailable states and source-routed navigation. It does not display fabricated metrics or call #101. `RUNTIME NOT VERIFIED`.
 
 ## 3. Quy tắc chưa xác nhận
 - `CẦN_XÁC_NHẬN`: các quyết định/blocker trong inventory và DD nguồn chưa được giải quyết.

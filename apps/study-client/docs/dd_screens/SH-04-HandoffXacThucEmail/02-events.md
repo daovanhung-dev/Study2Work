@@ -1,5 +1,7 @@
 # SH-04 — Events (đặc tả xử lý)
 
+> **Current source (2026-11-20):** SH-03 transfers the validated `id/email` through `SH04RegistrationHandoffService` in memory. SH-04 consumes it once; only the `Gửi yêu cầu xác minh` click calls API #02 with `{user_id, email}`. The block below describing an undecided trigger/handoff is a pre-implementation snapshot. No automatic retry, OTP, confirmation link, real email delivery, or verification endpoint exists in the current source contract.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|
@@ -21,19 +23,19 @@
 
 ## 2. Chi tiết event từ DD nguồn
 
-### Trích từ DD nguồn: 6. Chuỗi sự kiện và ánh xạ phản hồi API
+### Historical source-flow excerpt: 6. Chuỗi sự kiện và ánh xạ phản hồi API
 
 ### 6.1. Gửi yêu cầu
 
 | Thuộc tính | Đặc tả |
 |---|---|
-| Tác nhân kích hoạt | Theo F01, bước gửi xảy ra sau đăng ký thành công; thao tác cụ thể chưa được chốt. |
+| Tác nhân kích hoạt | Historical DD snapshot: trigger chưa được chốt. Current source waits for an explicit user click on SH-04. |
 | Phương thức / đường dẫn | `POST /api/v1/auth/verify-email/send` (API #02). |
 | Yêu cầu | `Content-Type: application/json`; phần thân gồm `user_id` lấy từ `data.id` và `email` lấy từ `data.email`. Không kèm `Authorization`. |
 | Ví dụ phần thân | `{"user_id":1001,"email":"student@example.com"}`; giá trị chỉ để minh họa cấu trúc. |
 | Thứ tự xử lý phía máy chủ | FastAPI đọc `VerifyEmailSendRequest` → bộ kiểm tra dữ liệu kiểm tra `user_id` nguyên nghiêm ngặt và chuẩn hóa địa chỉ → `VerificationEmailProvider.dispatch(user_id, email, trace_id)` → dựng cấu trúc phản hồi thành công/lỗi. |
 | Cơ sở dữ liệu / tác động phụ | Không mở phiên cơ sở dữ liệu. Bộ gửi thư mặc định bỏ `user_id`, `email`, `trace_id`; không gửi thư, ghi hàng đợi, tạo OTP/liên kết hoặc cập nhật tài khoản. |
-| Chống gửi lặp | Chưa có khóa chống yêu cầu trùng hoặc chính sách thử lại trong hợp đồng API. Giao diện không tự gửi lại khi chờ lâu hay khi kết quả mạng chưa rõ. |
+| Chống gửi lặp | API contract không có idempotency key. SH-04 permits one submission per page instance and never auto-retries after timeout or unknown result. |
 
 ### 6.2. Phản hồi thành công hiện tại
 

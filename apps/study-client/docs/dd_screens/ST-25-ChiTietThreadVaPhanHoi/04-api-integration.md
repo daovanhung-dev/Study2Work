@@ -2,12 +2,21 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-21
 
 ST-25 calls #42 to load the thread; an explicit reply calls #41 and reloads
-#42 after success. It does not invent likes, accepted answers or related
-topics. The DD/API excerpt below is a design-time snapshot; see [the screen inventory](../../list_screen.md)
-and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+#42 after success. Current #42 checks an ACTIVE root thread and ACTIVE
+enrollment, returning the single-thread page with ACTIVE direct comments in
+`created_at ASC, id ASC` order. Current #41 checks the same root/enrollment
+scope, accepts `content:string`, inserts one direct comment and returns the
+refreshed single-thread page. The client validates the exact page metadata,
+discussion ID/status, author/comment projection and parseable comment times;
+after POST it also requires a new comment ID carrying the submitted text.
+Transport/5xx ambiguity blocks blind resend and offers a read-only #42 reload.
+The source callers are in `ST25/pages` and `ST25/data-access`; backend handlers,
+queries and models are in Study Server APIs #41/#42. Catalog #41 still declares
+`content:int64`, unlike current backend string input. The design-time excerpts
+below predate that source.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -19,7 +28,7 @@ and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-
 
 - API refs trong inventory: #42, #41
 - Orchestration/data notes: GET #42 → POST #41 → reload #42; xử lý double-send/ownership.
-- BE/source status và gate: **D**; **BLOCK:** Response thảo luận Page<Discussion> không đồng nhất
+- BE/source status và gate: #41/#42 `SOURCE_WIRED` for the current one-item page and text flow; catalog payload mismatch, durable recovery/idempotency and screenshot-only interactions remain open.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: A.2. Expected behavior — inventory, AC và API catalog

@@ -25,8 +25,8 @@ Prototype HTML chưa phát sinh các event dưới đây. Angular source hiện 
 
 - **Trigger / element:** route entry/reload AD-12; #14/#25–#34. **Type:** Load.
 - **Precondition:** expected authenticated Admin có lesson-management permission; hiện chỉ local role `ADMIN` evidence. Route `/admin/lessons` là đề xuất.
-- **Input:** optional query `course?:int64`, `status?:string`, `type?:string` theo catalog; no body. Mockup keyword/slug/status alias không được tự thêm vào request.
-- **Processing:** (1) Angular page bắt đầu `loading` qua `adminQueryState`. (2) Gọi #82 bằng Bearer, ban đầu không có query; filter controls vẫn disabled. (3) Server kiểm tra JWT/role trước query parse/DB. (4) Parse `course` thành signed int64; supplied `type` bị validator từ chối 422, kể cả chuỗi rỗng. (5) Query active candidate legacy `lessons`, exact equality course/status, loại `DELETED`, order `course_id ASC NULLS LAST, sort_order ASC NULLS LAST, id ASC`. (6) Map row theo response `Lesson`; không pagination/count. (7) Local success trả `200 ApiEnvelope<Lesson[]>` `data` là array; catalog lại ghi singular. (8) UI source hiển thị loading/error/empty/loaded; runtime chưa xác minh.
+- **Input:** optional query `course?:int64`, `status?:string`, `type?:string` theo catalog; no body. Mockup keyword/slug/status alias không được tự thêm vào request. Angular chỉ cho nhập raw Course ID qua text field.
+- **Processing:** (1) Angular page bắt đầu `loading` qua `adminQueryState`. (2) Gọi #82 bằng Bearer; ban đầu không có query, Apply gửi đúng query `course` nếu có, Refresh lặp query đang áp dụng, Reset tải lại không filter. (3) Server kiểm tra JWT/role trước query parse/DB. (4) Parse `course` thành signed int64; supplied `type` bị validator từ chối 422, kể cả chuỗi rỗng. (5) Query active candidate legacy `lessons`, exact equality course/status, loại `DELETED`, order `course_id ASC NULLS LAST, sort_order ASC NULLS LAST, id ASC`. (6) Map row theo response `Lesson`; không pagination/count. (7) Local success trả `200 ApiEnvelope<Lesson[]>` `data` là array; catalog lại ghi singular. (8) UI source hiển thị loading/error/empty/loaded; runtime chưa xác minh.
 - **Output/state:** non-empty list có thể thành `ready`; empty `[]` thành `empty`; hiện screenshot luôn hiển thị static empty. Không suy ra “sync pending”.
 - **Errors:** 401/403; 422 malformed/overflow `course` hoặc any supplied `type`; safe 500 + rollback query/mapping/null projection failure. Catalog chưa liệt kê 422. #82 không có 404 path.
 - **API details:** `GET /api/v1/admin/lessons`, Bearer/Admin theo catalog; query như trên; no request body; expected response catalog `ApiEnvelope<Lesson>`, actual local `ApiEnvelope<Lesson[]>`; timeout/retry/dedup/cache chưa có policy.
@@ -42,8 +42,8 @@ Prototype HTML chưa phát sinh các event dưới đây. Angular source hiện 
 
 - **Trigger / element:** change #21; hiện select trong static HTML.
 - **Input:** UI option slug (ví dụ `fe`, `be`, `ux`, `qa` trong prototype); API query cần `course` signed int64, đại diện candidate `Course.id`.
-- **Processing:** chưa có mapping slug→int64 hoặc option API được duyệt. Không gửi slug vào int64, không suy ra ID, không gọi API khác để tạo mapping. Sau khi source/mapping được phê duyệt, client có thể gửi đúng numeric `course`; current server accepts signed int64 including negative/zero, rejects invalid/overflow with 422 after auth.
-- **Output/errors:** chỉ render filtered data sau response #82 contract resolution; local errors 401/403/422/500. Mapping, empty option và reset default cần chốt.
+- **Processing:** Angular hiện nhận Course ID trực tiếp dưới dạng raw text, không dùng slug, không đổi qua `Number`, không suy ra ID và không gọi API khác để tạo mapping. Apply gửi đúng `course`; current server accepts signed int64 including negative/zero, rejects invalid/overflow with 422 after auth.
+- **Output/errors:** render filtered data sau response #82; local errors 401/403/422/500. Khóa học title/options và slug mapping vẫn chưa có source.
 
 ### EV-04 — Chọn loại bài học
 
@@ -61,10 +61,10 @@ Prototype HTML chưa phát sinh các event dưới đây. Angular source hiện 
 
 ### EV-06 — Làm mới hoặc reset bộ lọc
 
-- **Trigger / element:** filter refresh #24; empty-state refresh #29; reset #30. HTML #29 disabled; tất cả controls không có handler.
-- **Input:** current filter state phía client chưa tồn tại. Refresh nên giữ các filter đã xác nhận; reset cần xóa các filter và quay về default chỉ sau khi default được chốt.
-- **Processing:** khi được wire, refresh/reset có thể gọi lại #82 với query hợp lệ. Không gửi search/type hoặc course/status alias chưa được giải quyết. Reset không thể làm việc như “clear pagination” nếu pagination chưa tồn tại.
-- **Output/errors:** hiển thị loading rồi map response theo EV-01; lỗi 401/403/422/500. Chống double submit, request cancellation, retry và focus/accessibility feedback chưa có source. Nút empty refresh hiện disabled trong mockup.
+- **Trigger / element:** Apply, filter refresh #24, empty-state refresh #29 và reset #30.
+- **Input:** filter hiện hành chỉ gồm optional raw text Course ID; rỗng nghĩa là không áp dụng filter.
+- **Processing:** Apply gửi query hiện hành; Refresh lặp query đang áp dụng; Reset xóa draft và gọi lại #82 không filter. Nút Apply/Refresh/Reset khóa khi request đang tải. Không gửi search/type/status hoặc alias chưa được giải quyết; không có pagination để reset.
+- **Output/errors:** hiển thị loading rồi map response theo EV-01; lỗi 401/403/422/500. `switchMap` thay request cũ khi query thay đổi; retry/cancel policy riêng chưa có. Runtime/focus behavior chưa xác minh.
 
 ### EV-07 — Mở chi tiết bài học
 
@@ -88,3 +88,8 @@ Prototype HTML chưa phát sinh các event dưới đây. Angular source hiện 
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)
+
+### Current source — 2026-11-21
+
+- EV-01 now accepts #82 data only when the envelope has the exact DESIGN_RESOURCE_RETRIEVED code and the payload is a Lesson[] whose entries match the local response projection. Invalid collection/item data goes to the page error state rather than throwing during row mapping.
+- EV-07 still links only safe Lesson IDs to AD-13. The visible Lesson and Course identifiers now use precision-safe formatting in both list rows and detail fields. Filter, refresh, reset, API request and disabled-action behavior are unchanged.

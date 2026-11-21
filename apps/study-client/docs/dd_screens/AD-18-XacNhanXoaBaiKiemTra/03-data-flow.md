@@ -1,5 +1,7 @@
 # AD-18 — Data Flow & State
 
+> Current source (2026-11-20): route-param changes update the displayed ID and its local positive signed-int64 validation state. Invalid IDs receive an alert. No Quiz detail/history request and no DELETE #90 request are made; confirmation and audit reason remain disabled until the target, permission and deletion policies are approved.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

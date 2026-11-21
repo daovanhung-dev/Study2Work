@@ -11,6 +11,10 @@ status: "Draft — Needs Confirmation"
 
 # Overview
 
+## Current source status — 2026-11-20
+
+`PATCH /api/v1/notifications/{notification_id}/read` is registered, validates Student Bearer and a positive int64 ID, and checks that the notification is directly owned by the principal or has a recipient row for them. It upserts `notification_recipients.is_read/read_at` and returns one updated notification in a one-item page. Repeating the operation is state-idempotent. Migration 016 creates recipient/read state; live DB/runtime is not verified.
+
 ## Khái quát
 
 | Thuộc tính | Giá trị |
@@ -26,7 +30,7 @@ status: "Draft — Needs Confirmation"
 | `Authorization` | Role `Student`; principal lấy từ `JWT`, không lấy user ID từ request. |
 | Basis | API catalog và nhánh ONE của AC-20; physical update là `DERIVED` candidate. |
 | Status | Draft — Needs Confirmation |
-| Current runtime state | `UNWIRED` / `NOT_FOUND` — không tìm thấy route/module/query/test API #44 trong Study source hiện tại. |
+| Current runtime state | SOURCE WIRED — route/module/query exist and use Student auth; live DB/deployment is not verified. |
 | Transaction | Một câu `UPDATE` atomic trong transaction do caller/use-case sở hữu — `DERIVED`. |
 | Side effects | Đổi read flag của đúng notification thuộc principal; không gửi notification ra provider. |
 
@@ -47,22 +51,21 @@ status: "Draft — Needs Confirmation"
 ## Tables read
 
 - `notifications` — candidate target row và response projection từ checked-in DDL.
-- `NotificationRecipient` — logical recipient entity trong diagram; không có physical table trong DB guide/ERD/DDL.
+- `notification_recipients` — physical read-state table added by migration 016; live migration application is not verified.
 - users — quan hệ FK của `notifications`.`user_id`; API candidate lấy user ID từ `JWT`, không query riêng.
 
 ## Tables write
 
-- `notifications` — candidate update `is_read`=`TRUE` cho row id và `user_id` khớp.
-- Không ghi `read_at` vì DDL không có cột đó.
+- `notification_recipients` — current source upserts `is_read=TRUE` and `read_at` for the authenticated recipient.
 
 ## Mục chú ý
 
 - Giữ nguyên contract API #44: `PATCH` path notification ID, không body/query; `success`/error set theo catalog.
-- `UPDATE` `notifications` SET `is_read`=`TRUE` là candidate physical fallback cho ý nghĩa đã đọc; đây là `DERIVED`, khác logical diagram `NotificationRecipient`.`read_at`.
+- Historical `notifications.is_read` is preserved as fallback for direct-owned legacy rows; current per-recipient mutation writes `notification_recipients`.
 - Query phải kèm `user_id`=:`principal_id`; không cập nhật row của `Student` khác.
 - Không dùng `notifications`.`user_id` IS NULL cho read theo từng `Student` vì chưa có recipient/read-state model.
 - Không đổi type thành `channels`, không đổi `is_read` thành `NotificationStatus`, không dựng `read_at` từ boolean.
-- Response `Page<Notification>` một item là đề xuất `DERIVED` theo API #42; cần chốt cùng API #45.
+- Current response is a one-item `Page<Notification>`; read flag is true. It may return `read_at:null` for a direct notification already read through the legacy notification field.
 - Không thêm header `Idempotency-Key` vào request vì catalog chỉ khai báo path; guideline applicability cần xác nhận.
 
 ## Assumptions

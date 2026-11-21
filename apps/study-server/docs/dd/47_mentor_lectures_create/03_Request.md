@@ -42,7 +42,7 @@ Không có query parameter theo catalog API #47.
 | No | Logical name | Physical name | Type | Required | Min | Max | Character type | Format | Valid values | Default | Description | Data Mapping reference |
 |---:|---|---|---|---:|---:|---:|---|---|---|---|---|---|
 | 1 | Title | title | string | Yes | N/A | 200 (DERIVED từ legacy lessons.name VARCHAR(200)) | Unicode text | N/A | N/A | N/A | Lecture title; không suy ra trim/minimum length. | 1 |
-| 2 | Content | content | int64 | Yes | N/A | N/A | N/A | Signed 64-bit integer | N/A | N/A | Nhận signed int64; khi lưu `lessons.content` và trả response, runtime đổi sang chuỗi thập phân. | 1 |
+| 2 | Content | content | string | Yes | N/A | N/A | Unicode text | Markdown text | N/A | N/A | Lưu và trả nguyên văn nội dung Markdown; không chuyển đổi hoặc diễn giải cú pháp Markdown trong API. | 1 |
 | 3 | Asset refs | asset_refs | string | Yes | N/A | N/A | Unicode text | JSON text containing int64 ID array | Ordered unique IDs; empty array allowed | N/A | Duplicate IDs rejected; IDs must resolve to same Mentor, LECTURE purpose and this course. | 1 |
 | 4 | Order | order | int32 | Yes | N/A | N/A | N/A | Signed 32-bit integer | N/A | N/A | Lecture order; không thêm điều kiện không âm. | 1 |
 
@@ -51,7 +51,7 @@ Không có query parameter theo catalog API #47.
 ~~~json
 {
   "title": "Bài học mở đầu",
-  "content": 12345,
+  "content": "# Bài học mở đầu\\n\\nNội dung Markdown.",
   "asset_refs": "[34001,34002]",
   "order": 1
 }

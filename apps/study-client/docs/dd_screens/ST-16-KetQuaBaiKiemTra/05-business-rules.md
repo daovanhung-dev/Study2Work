@@ -7,7 +7,8 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Điểm/trạng thái chấm và feedback nếu được trả; không lộ đáp án ngoài policy.
-- Gate/status (giữ nguyên): **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** API #32 Draft Q-32-01…06 còn mở về ownership, pending score, answer/feedback disclosure, shape/order và path/error; Student #32 route/module/test NOT_FOUND; Study Web UNWIRED; legacy BIGINT và V1-PILOT UUID attempt/answer models lệch, adapter/live schema chưa xác minh; PNG loaded Student và HTML unavailable Guest khác nhau, cả hai chưa khớp design target; screenshot fields/CTAs thiếu nguồn
+- Current implementation — 2026-11-20: #32 enforces owner-scoped reads; the client validates the returned attempt and renders pending status or a GRADED score. It does not claim pass/fail because the current response model omits `passed`, and it does not show answer details or feedback that the API does not return.
+- Gate/status: DD BLOCKED; full score/pass/feedback disclosure and the screenshot's detailed result design remain unresolved. Runtime is not verified; legacy BIGINT and V1-PILOT UUID attempt schemas differ.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu, blocker và nguồn

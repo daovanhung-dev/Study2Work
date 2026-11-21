@@ -4,17 +4,25 @@
 |---|---|
 | Screen ID | `ST-19` |
 | Module | Student |
-| Route | `/student/submissions/:submissionId` — route trong inventory, không phải xác nhận router runtime |
-| Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. API #36 có catalog và DD draft nhưng Student route/module/query/test chưa được wire; source Study Web không có route ST-19. |
+| Route | `/student/submissions/:submissionId` — Study Client route; deployed runtime chưa xác minh |
+| Actor/role | Student Bearer; API #36 queries by authenticated owner |
+| DD status | Full feedback/visual contract remains open; **Implementation:** PARTIAL · **Runtime:** NOT VERIFIED. #36 and client caller exist. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [ST-19.md](../../screen_stitch/03_student/ST-19_bai-da-nop-va-phan-hoi/ST-19.md), [ST-19_PLAN.md](../../screen_stitch/03_student/ST-19_bai-da-nop-va-phan-hoi/ST-19_PLAN.md), [ST-19_markers.json](../../screen_stitch/03_student/ST-19_bai-da-nop-va-phan-hoi/ST-19_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Hiển thị timestamp, file, trạng thái chấm, score/feedback khi có.
-- In-scope: GET #36 cho Student; inventory yêu cầu kiểm tra ownership nhưng predicate trong API #36 DD còn SOURCE_REQUIRED. Không tự hiển thị GRADED nếu response chỉ là SUBMITTED; score/feedback cần disclosure policy.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- In-scope: GET #36 cho Student; hiển thị receipt/status, score/feedback chỉ khi `GRADED`; không mở file URL khi policy truy cập chưa rõ.
+- Out-of-scope: Không kết luận live runtime đã chạy.
+
+### Current implementation — 2026-11-20
+
+- ST-19 follows `submissionId` changes, cancels stale #36 reads, validates `DESIGN_RESOURCE_RETRIEVED` plus response identity/shape, and offers retry.
+- #36 authenticates Student and queries by both `submission_id` and token-derived `user_id`; missing/foreign submissions return 404. The query only selects score/feedback when status is `GRADED`; it maps the legacy single `file_url` into a zero-or-one `files[]` result.
+- The page shows receipt/content and file metadata, never opens returned file URLs, and shows score/feedback only for `GRADED`. It links back to assignment detail. It does not implement the full Stitch rubric, mentor/cohort/skills/next-assignment interactions or progress route because #36 does not supply those contracts.
+- The page labels only `SUBMITTED` and `GRADED` as “Đã nộp” and “Đã chấm”; any other submission status uses a neutral unsupported-state label. File status is omitted because its full enum is not established.
+- API #35 returns `data.id` while inventory names `submission_id`; the current ST-18 caller passes `data.id`. Runtime and tests were not verified.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,23 +39,26 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | submitted/pending-review/graded/denied |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Study Client ST-19 | `loading / error+retry / submitted-or-graded receipt / attachment metadata`; deployed runtime NOT VERIFIED |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-19 source screen.png](../../screen_stitch/03_student/ST-19_bai-da-nop-va-phan-hoi/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-19_bai-da-nop-va-phan-hoi/screen_annotated.png))
 - Luồng: GET #36 cho Student; inventory yêu cầu kiểm tra ownership nhưng predicate trong API #36 DD còn SOURCE_REQUIRED. Không tự hiển thị GRADED nếu response chỉ là SUBMITTED; score/feedback cần disclosure policy.
-- Priority: P1; Gate/source status: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** API #36 chỉ có catalog/Draft DD, Student route/module/query/test NOT_FOUND; ownership/access predicate, 403-vs-404, score/feedback release, SubmissionStatus/timezone/path parsing còn mở; logical `files[]` không map được vào legacy scalar `file_url`, assignment/user nullability và live schema chưa xác minh; API #35 `data.id` vs inventory `submission_id` handoff chưa chốt; rubric/cohort/mentor/PR/booking/skill/next-assignment fields thiếu API contract; loaded graded PNG khác Guest fallback HTML (Tailwind CDN/config, remote fonts, max-width 1440px) và Study Web design target; Study Web UNWIRED
+- Priority: P1; Gate/source status: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #36 caller/source exists and enforces owner-scoped lookup; score/feedback are returned only for GRADED; one legacy `file_url` maps to a files array. File URL policy, status lifecycle/timezone, live schema, `data.id`/`submission_id`, detailed Stitch metrics and the screenshot/HTML visual discrepancy remain open.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Ghi nhận caller #36, ownership/graded projection, safe file metadata, route validation and current design gaps.
 
 ## Trạng thái và ranh giới bằng chứng
 
 # ST-19 — Bài đã nộp và phản hồi
 
-> **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. API #36 có catalog và DD draft nhưng Student route/module/query/test chưa được wire; source Study Web không có route ST-19.
+> Các đoạn “hiện trạng/current behavior” bên dưới được giữ từ source DD cũ để truy vết; trạng thái source hiện tại là phần **Current implementation — 2026-11-20** ở trên.
+
+> **Trạng thái nguồn hiện tại:** DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED. API #36 and Study Client caller exist; feedback/file policy and detailed design gaps remain.
 
 ## Trích đoạn tổng quan từ DD nguồn
 

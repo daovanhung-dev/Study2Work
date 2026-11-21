@@ -8,7 +8,7 @@
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: **Detailed Design:** `DD BLOCKED` · **Implementation:** `PARTIAL SOURCE` · **Study Web runtime:** `NOT VERIFIED`<br> |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.2 / 2026-11-16 |
+| Version / last updated | 0.3 / 2026-11-20 (signed-int64 route guard) |
 | Nguồn đối chiếu | [AD-08.md](../../screen_stitch/05_admin/AD-08_chinh-sua-khoa-hoc/AD-08.md), [AD-08_PLAN.md](../../screen_stitch/05_admin/AD-08_chinh-sua-khoa-hoc/AD-08_PLAN.md), [AD-08_markers.json](../../screen_stitch/05_admin/AD-08_chinh-sua-khoa-hoc/AD-08_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -67,7 +67,7 @@ Catalog #75 khai báo `PUT /api/v1/admin/courses/{course_id}`, Bearer JWT/Admin,
 
 | Chủ đề | Expected / contract | Current source hoặc prototype | Trạng thái |
 |---|---|---|---|
-| Route/ID | `/admin/courses/:courseId/edit`, numeric `Course.id` từ AD-07. | Angular Admin router declares the route; `AD08Page` preserves the raw route ID and calls GET #74. Stitch HTML remains static. | Route/page/GET caller present; runtime unverified. |
+| Route/ID | `/admin/courses/:courseId/edit`, numeric `Course.id` từ AD-07. | Angular Admin router declares the route; `AD08Page` validates the complete raw route ID against signed-int64 bounds before GET #74 and preserves valid IDs unchanged. Invalid-route toolbar navigation returns to AD-06. Stitch HTML remains static. | Route/page/GET caller present; malformed/missing/out-of-range IDs skip GET; runtime unverified. |
 | Load/save | GET #74 → approved PUT #75 → response/revalidation per client/API decision. | Angular page calls GET #74 only; local #75 reads its projection in the same transaction and returns it. | Read/draft present; no PUT caller; response/revalidation policy `OPEN`. |
 | Form | Chỉ field được owner/API duyệt mới persist. | Angular title/description/price inputs update a local component-memory draft; ID and mentor are read-only, thumbnail selection and Save are disabled. | Draft source present; no dirty state, persistence, or PUT caller. |
 | Body #75 | Catalog/AC không nêu body. | Local strict model yêu cầu `title:string`, `description:string|null`, `thumbnail_url:string|null`, `price:string`; từ chối field thừa. | Body full replacement là `DERIVED`; API DD Draft. |
@@ -78,6 +78,16 @@ Catalog #75 khai báo `PUT /api/v1/admin/courses/{course_id}`, Bearer JWT/Admin,
 | Quyền | AC-32 yêu cầu Admin có course-management permission. | Local #75 dùng shared JWT role `ADMIN`; không có check permission riêng. | `OPEN`; role ADMIN không chứng minh fine-grained permission. |
 | Preview/claims | Course data phải có nguồn từ API/config có contract. | Angular preview binds the local title/description/price draft and #74 mentor/status; it does not load a thumbnail or show metrics. Stitch prototype claims/metrics remain static and unsupported by #74/#75. | Use only source-backed fields; prototype claims are not runtime evidence. |
 | Links | Back/cancel phải theo approved route/history. | Stitch prototype links target `/admin/courses`; Angular Back/Cancel RouterLinks target `/admin/courses/:courseId` with the raw route ID. | Prototype/source differ; Angular destination is present in source, runtime unverified. |
+
+### Current Study Web source re-audit — 2026-11-20
+
+- AD08Page validates the complete raw `courseId` against API #74's optional-sign signed-int64 path parser before requesting; it does not use JavaScript `Number`. Missing, malformed, or out-of-range IDs show a local error and skip GET #74. Valid IDs are passed unchanged.
+- The toolbar back link returns invalid IDs to AD-06 and keeps valid IDs contextual to AD-07. The cancel link is only rendered after a successful #74 response, so its route ID has passed validation. #75 save and thumbnail upload remain unavailable; write contract, permission mapping and Stitch route discrepancy remain open. Runtime and tests were not checked in this continuation.
+
+### Current #74 response audit (2026-11-21)
+
+- Before creating the local draft, AD-08 requires `DESIGN_RESOURCE_RETRIEVED` and the exact locally implemented #74 singleton `Page<Course>` shape: one valid Course/mentor item and pagination `1/1/1/1`. A missing, multi-item, malformed or empty success response goes to the safe error state.
+- The route ID stays a raw string for the request/navigation; the response Course ID is not compared through JavaScript number conversion. #75 Save and thumbnail upload remain unavailable, and runtime is unverified.
 
 ### Actor, điều kiện và liên kết
 

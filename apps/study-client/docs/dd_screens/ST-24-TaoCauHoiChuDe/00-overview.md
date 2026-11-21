@@ -1,14 +1,23 @@
 # ST-24 — Tạo câu hỏi / chủ đề · Tổng quan
 
+## Current source implementation — 2026-11-21
+
+- Route `/student/discussions/new` is registered under the authenticated Student route group. #20 supplies ACTIVE-enrollment course options; #40 creates with `course_id`, `title`, and string `content`; #39 refreshes the list before returning to ST-23.
+- Current #40 checks Student identity and ACTIVE enrollment and returns a one-item discussion page. The client validates the returned item and prevents blind resubmission after an ambiguous result; the server has no idempotency key.
+- `courseId` query changes update preselection only when the course is present in the validated ACTIVE #20 page. ST-24 reuses the shared #20 page guard; its #39 refresh accepts current page metadata without assuming the separate COUNT and LIST reads have identical cardinality. A non-success POST envelope or unrecognized transport status is held as an unknown outcome to prevent blind replay.
+- #20 reads its count and rows separately. If a valid ACTIVE-course response is empty beyond `max(total_pages, 1)`, the page now refetches the last valid page (page 1 when total is zero) with the same `status=ACTIVE` query. In-range empty pages remain unchanged.
+- For an accepted #20 page, ST-24 compares returned row count with COUNT-derived expected rows. A mismatch preserves any returned course options, suppresses false empty copy and potentially stale pagination, and offers the existing retry path; #40 still revalidates ACTIVE enrollment.
+- The page does not implement Stitch-only lesson/module selection, tags, rich-text/preview, log uploads, or SLA claims because #40 and the current source contracts do not provide them. The historical source snapshot below predates current route/API source.
+
 | Trường | Giá trị |
 |---|---|
 | Screen ID | `ST-24` |
 | Module | Student |
-| Route | `/student/discussions/new` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student/discussions/new` — current Student route is source-wired; runtime not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. Screenshot có form mẫu nhưng thiếu nút gửi; HTML hiện là trạng thái form unavailable. API #40 là Draft và chưa có Student route/module/test. Không suy ra cách chuyển văn bản editor thành `content:int64`. |
+| DD status | Draft; source-backed text submission is implemented. Stitch-only fields and catalog `content:int64` versus current backend string remain discrepancies; mutation recovery is not durable/idempotent. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.3 / 2026-11-21 |
 | Nguồn đối chiếu | [ST-24.md](../../screen_stitch/03_student/ST-24_tao-cau-hoi-chu-de/ST-24.md), [ST-24_PLAN.md](../../screen_stitch/03_student/ST-24_tao-cau-hoi-chu-de/ST-24_PLAN.md), [ST-24_markers.json](../../screen_stitch/03_student/ST-24_tao-cau-hoi-chu-de/ST-24_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -31,7 +40,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | draft/invalid/submitting/created |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Worklog/context Study Web | `/student/discussions/new` and #20/#40/#39 callers are source-wired; course options are ACTIVE-enrollment scoped. Count/list mismatch state preserves returned options and suppresses empty/pagination claims. Runtime is unverified. |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-24 source screen.png](../../screen_stitch/03_student/ST-24_tao-cau-hoi-chu-de/screen.png))
@@ -47,7 +56,7 @@
 
 # ST-24 — Tạo câu hỏi / chủ đề
 
-> **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. Screenshot có form mẫu nhưng thiếu nút gửi; HTML hiện là trạng thái form unavailable. API #40 là Draft và chưa có Student route/module/test. Không suy ra cách chuyển văn bản editor thành `content:int64`.
+> **Trạng thái của DD/source snapshot ban đầu:** DD BLOCKED; tại thời điểm tạo snapshot, implementation được ghi là BLOCKED. Hiện trạng source mới nhất ở phần “Current source implementation” đầu tài liệu: callers #20/#40/#39 được nối, nhưng UI fidelity, contract và runtime vẫn còn khoảng trống. Screenshot có form mẫu, còn HTML nguồn ban đầu là unavailable fallback; không suy ra cách chuyển văn bản editor thành `content:int64`.
 
 ## Trích đoạn tổng quan từ DD nguồn
 
@@ -60,13 +69,13 @@
 | Screen ID / tên | ST-24 — Tạo câu hỏi / chủ đề (Page) |
 | Actor | Student theo inventory và AC-19. |
 | Mục tiêu expected | Soạn một topic/câu hỏi trong discussion của course mà Student được phép tham gia; tạo thành công rồi quay về danh sách theo inventory. |
-| Route inventory | `/student/discussions/new`; route đề xuất, chưa có Study Web router/source để xác minh. |
+| Route inventory | `/student/discussions/new`; expected route from the inventory and current Student route source is wired; runtime remains unverified. |
 | Điều kiện trước | AC-19 yêu cầu Student đăng nhập và có quyền tham gia discussion của course. Predicate cụ thể chưa được xác nhận. |
 | Điều kiện sau | AC-19: topic/comment được tạo và thread được cập nhật. ST-24 là nhánh tạo root topic, không phải nhánh reply ST-25. |
-| API dự kiến | API #40 `POST /api/v1/discussions`; inventory nối API #39 để refresh list sau create. #40 chưa runnable. |
+| API dự kiến | API #40 `POST /api/v1/discussions`; inventory nối API #39 để refresh list sau create. Current #20/#40/#39 route/caller source is present; catalog-vs-source contract gaps remain open. |
 | Liên kết màn hình | ST-23 `/student/discussions` → ST-24; sau khi topic xuất hiện trong list, Student có thể đi tiếp ST-25 `/student/discussions/:discussionId`. Không tự chuyển trực tiếp sang ST-25. |
 | Elements / events | 26 marker `ST24-EL-01…26`; 11 event `ST24-EV-01…11`. Marker là nhóm visual/control trong ảnh nguồn, không khẳng định runtime component. |
-| Trạng thái | DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. |
+| Trạng thái | DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED. |
 
 ### A.2. Expected behavior — inventory, AC và API catalog
 
@@ -81,8 +90,8 @@
 - [`screen.png`](../../screen_stitch/03_student/ST-24_tao-cau-hoi-chu-de/screen.png) nguyên trạng 1600×1591, SHA-256 `45517c46e5274de6a835bc5a746069511f65714803295387cc33459c3d2511ab`. Đây là ảnh mẫu đủ rõ để annotate: shell Student, thông tin semester/trạng thái, trạng thái Mentor online, SLA, course/lesson selectors, title/counter, tags, editor mode và toolbar. Các giá trị hiển thị là static sample, không có data provenance.
 - [`code.html`](../../screen_stitch/03_student/ST-24_tao-cau-hoi-chu-de/code.html) nguyên trạng, SHA-256 `3311de86bd3e1a6de624cccad1daf709d249d8c9f2ef24d7b79bf9f22693ce35`. Khác PNG: nó chỉ có empty-state “Chưa thể tạo chủ đề thảo luận / Biểu mẫu chưa sẵn sàng” và link về `/student/discussions`; không có form, input, API, auth guard, handler hay data binding.
 - Dùng PNG gốc làm nền annotation; không render HTML thay thế vì HTML là một state khác và không chứa form thiết kế. Không sửa `screen.png` hoặc `code.html`.
-- Study Web không có editable source/package/router cho ST-24; route là `UNWIRED`, không có UI runtime để xác minh.
-- Current Study Server search chỉ tìm thấy Admin discussion routes #97/#98. Không có Student API #39–#42 route/module/query/test; #97/#98 có actor/permission và chức năng khác, không thể thay thế #40.
+- Current Study Web source contains the ST-24 route/page and #20/#40/#39 callers; deployed UI runtime has not been verified. These facts supersede the original no-source snapshot.
+- Current Study Server source contains Student APIs #39/#40 and their caller contracts; Admin #97/#98 have distinct actors and permissions. #41/#42 remain outside this screen's source-backed flow.
 - Checked-in `DB.sql` có candidate `discussions(id BIGSERIAL, course_id NULL, user_id NULL, parent_id NULL, content TEXT NOT NULL, status DEFAULT 'ACTIVE', created_at NOT NULL, updated_at NOT NULL)` nhưng không có `title`; không có default timestamp. DB guide/ERD khác nullability. Đây là DDL artifact, không phải live schema evidence.
 - API #40 DD response/source-mapping đề xuất author lookup, comments `[]`, status ACTIVE, one-item Page và server timestamps nhưng đánh dấu DERIVED/SOURCE_REQUIRED; không mô tả các đề xuất này như hành vi đã duyệt.
 
@@ -90,13 +99,13 @@
 
 | Thuộc tính | Catalog | Trạng thái hiện tại / giới hạn |
 |---|---|---|
-| Method / endpoint | `POST /api/v1/discussions` | Không có Student route/module/query/view/test; `DECLARED_NOT_RUNNABLE / NOT_FOUND`. |
-| Authentication / role | Bearer JWT; Student | AC-19 precondition; chưa có route #40 để gọi shared Student guard. Không nhận `user_id` từ form/body. |
+| Method / endpoint | `POST /api/v1/discussions` | Current #40 route/view/validator/query/model source and ST-24 caller are present; deployed runtime is unverified. |
+| Authentication / role | Bearer JWT; Student | Current route uses Student authentication and derives actor identity from the session; no `user_id` is accepted from the form/body. |
 | Path / query | Không có | Không thêm path/query field. |
 | Request body | `course_id:int64!`, `title:string!`, `content:int64!` | Không có `lesson_id`, `tags`, files hoặc author field trong body. Title/content UI chưa thể map đầy đủ. |
-| Success | HTTP 201 `DESIGN_RESOURCE_CREATED`; `ApiEnvelope<Page<Discussion>>` | Page metadata và fields tạo mới chưa có current implementation; proposal 1/1/1/1 là DERIVED. |
+| Success | HTTP 201 `DESIGN_RESOURCE_CREATED`; `ApiEnvelope<Page<Discussion>>` | Current source returns one created discussion with page metadata; the client validates returned ID/course/title/content before refresh. Focused tests and deployed runtime were not run/verified. |
 | Errors | 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 422 `DESIGN_VALIDATION_ERROR`; 500 `DESIGN_INTERNAL_ERROR` | Không thêm 404/409/503 hoặc business code mới. Network/timeout là transport failure, không phải catalog code. |
-| Side effect | Catalog/AC mong muốn tạo topic | Candidate `INSERT discussions`; chưa có SQL, transaction, live DB hay runtime call. |
+| Side effect | Catalog/AC mong muốn tạo topic | Current #40 source inserts the discussion after validation; physical `title` column, live DB and deployed runtime remain unverified. |
 
 **Contract gaps của API #40:** (1) request `content:int64` vs reusable `Discussion.content:string` và DDL `TEXT`; (2) `title` không có cột vật lý; (3) response `Page<Discussion>` không có page input; (4) course participation predicate; (5) new-topic status/visibility; (6) timestamps và transaction; (7) course/user FK nullability; (8) author và comments projection. Tất cả là open questions trong API DD, không được tự quyết trong ST-24.
 

@@ -1,5 +1,7 @@
 # Plan Result — API #47 Tạo lecture
 
+> Historical verification below predates the T041 contract revision on 2026-11-19. Current request `content` is Markdown `string`; no tests/build were run after that change in the active task.
+
 ## Result
 
 - Runtime status: `SOURCE_BACKED` locally; route, module and HTTP tests are wired.
@@ -8,8 +10,8 @@
 
 ## Approved decisions implemented
 
-- Request remains `course_id:int64`, `title:string`, `content:int64`, `asset_refs:string`, `order:int32`.
-- `content` is stored in `lessons.content` and returned as a base-10 string.
+- Request is `course_id:int64`, `title:string`, `content:string` (Markdown), `asset_refs:string`, `order:int32`.
+- `content` is stored in `lessons.content` and returned unchanged.
 - Only the Mentor whose numeric JWT subject directly matches `courses.mentor_id` may create; assigned courses are excluded.
 - Course status is not filtered.
 - `asset_refs` is a JSON string of unique signed-int64 IDs; `[]` is valid and response assets preserve request order.
@@ -20,7 +22,7 @@
 
 | API ID | Method/path | Actor/auth | Request | Success/errors | Status |
 |---|---|---|---|---|---|
-| 47 | POST `/api/v1/mentor/courses/{course_id}/lectures` | Mentor / Bearer JWT | course_id:int64; title:string; content:int64; asset_refs:string(JSON array of int64 IDs); order:int32 | 201 `DESIGN_RESOURCE_CREATED`; 401/403/404/422/500 catalog codes | SOURCE_BACKED locally |
+| 47 | POST `/api/v1/mentor/courses/{course_id}/lectures` | Mentor / Bearer JWT | course_id:int64; title:string; content:string (Markdown); asset_refs:string(JSON array of int64 IDs); order:int32 | 201 `DESIGN_RESOURCE_CREATED`; 401/403/404/422/500 catalog codes | SOURCE_BACKED locally; tests not rerun after T041 |
 
 ## Data boundary
 
@@ -36,7 +38,7 @@
 - Focused API #47 tests: `25 passed`.
 - Full Study Server suite: `319 passed`.
 - Ruff: `All checks passed!`.
-- OpenAPI: 18 `/api/v1` paths; API #47 POST and API #34 `/api/v1/uploads` POST are present; request `content` is int64 and response content is string.
+- Historical OpenAPI result: 18 `/api/v1` paths; API #47 POST and API #34 `/api/v1/uploads` POST were present; request `content` was int64 before T041. Current OpenAPI request shape has not been rechecked.
 - Context validator: only pre-existing DB Admin missing-context/source/link and unavailable historical-snapshot findings; no Study Server/API #47 finding. `--skip-drift` leaves the DB Admin baseline.
 - `git diff --check`: passed. Context manifest JSON parses successfully.
 

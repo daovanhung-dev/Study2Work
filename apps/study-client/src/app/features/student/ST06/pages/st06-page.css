@@ -174,7 +174,7 @@ study-st06-page .payment-page-title h1 {
 
 study-st06-page .payment-status-card {
   display: flex;
-  width: min(100%, 576px);
+  width: min(100%, 512px);
   min-height: 328px;
   align-items: center;
   flex-direction: column;

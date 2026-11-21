@@ -57,3 +57,7 @@
 
 ## 4. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/05_admin/AD-02_danh-sach-nguoi-dung/AD-02.md)
+
+### Current client/API source — 2026-11-21
+
+AD02Page requires the exact #68 success code, validates the local UserProfile Page projection, fixed size 20, requested-page echo and safe total_pages arithmetic, and then compares LIST item count with the count-derived expected rows. Mismatches preserve returned users while hiding possibly stale totals/pagination and allowing retry of the applied URL query/page. This follows the checked-out local Page source; catalog/AC cardinality, role/permission and live schema remain unresolved.

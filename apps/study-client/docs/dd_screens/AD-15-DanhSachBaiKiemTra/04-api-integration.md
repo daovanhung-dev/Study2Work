@@ -13,9 +13,10 @@
 - Orchestration/data notes: Angular route/page/service/spec calls local #87 with exact `course`, `status`, `page`; it consumes `Page<Quiz>` and renders only fields in the local projection. Search and unsupported columns remain absent.
 - BE/source status and gate: **R** local #87 route/module/query/model/test source and Angular caller; API DD Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE:** catalog singleton vs local Page, AC-35 permission vs `ADMIN`, legacy BIGINT vs V1-PILOT UUID/live schema remain open; **RUNTIME NOT VERIFIED**.
 
-### Current client/API source — 2026-11-16
+### Current client/API source — 2026-11-20
 
 `AD15Page` calls `AD15ApiService.getQuizzes`; the service requests `STUDY_SERVER_APIS.API_087` through `AdminApiService` and `adminQueryParams`. Blank query values are omitted. Local server source validates the Admin role before query/DB, applies exact course/status filters, returns fixed-size Page metadata and only the five fields used by the page. This verifies the checked-out source path, not the direct catalog contract or a live database.
+- Manual refresh repeats this same #87 request with the applied `course/status/page` query; it does not add an API field or close the response/permission/schema discrepancy.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API #87 — contract đối chiếu
@@ -42,3 +43,7 @@
 
 ## 4. References
 [Events](02-events.md) · [Data flow](03-data-flow.md) · [Tests](07-test-cases.md) · [Source DD](../../screen_stitch/05_admin/AD-15_danh-sach-bai-kiem-tra/AD-15.md)
+
+### Current client/API source — 2026-11-21
+
+AD15Page requires #87 businessCode DESIGN_RESOURCE_RETRIEVED and validates the current local Page<Quiz> response, including the requested-page echo and fixed size 20. It detects count/list disagreement after that shape check, keeps returned quiz rows, suppresses potentially stale totals/pagination, and provides same-query/page retry. The direct catalog still declares Quiz rather than Page<Quiz>; this client guard does not settle that discrepancy or the permission/live-schema gates.

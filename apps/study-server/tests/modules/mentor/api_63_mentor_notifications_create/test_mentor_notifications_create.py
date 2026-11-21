@@ -69,7 +69,7 @@ def request_body(**overrides: Any) -> dict[str, Any]:
     return {
         "recipients": "2001,2002",
         "title": "Thong bao lop hoc",
-        "content": 123,
+        "content": "Thông báo lớp học hôm nay.",
         "channels": "PUSH,EMAIL",
         **overrides,
     }
@@ -183,7 +183,10 @@ def test_create_notification_queues_all_recipients_and_channels(
     ]
     assert [params["user_id"] for params in inserted_notifications] == [2002, 2001]
     assert all(params["sender_id"] == 1001 for params in inserted_notifications)
-    assert all(params["content"] == "123" for params in inserted_notifications)
+    assert all(
+        params["content"] == "Thông báo lớp học hôm nay."
+        for params in inserted_notifications
+    )
     assert len({params["operation_id"] for params in inserted_notifications}) == 1
     inserted_deliveries = [
         params for query, params in captured if query == INSERT_NOTIFICATION_DELIVERY
@@ -446,11 +449,11 @@ def test_create_notification_maps_malformed_scope_projection_to_500(
     assert session.rollback_count == 1
 
 
-def test_create_notification_rejects_body_type_and_title_limit(
+def test_create_notification_rejects_non_text_content_and_title_limit(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Use FastAPI request validation for direct int64 type and DDL title bound."""
+    """Use request validation for non-text content and the title bound."""
 
     allow_mentor_token(monkeypatch)
     monkeypatch.setattr(
@@ -459,19 +462,19 @@ def test_create_notification_rejects_body_type_and_title_limit(
         lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("query must not run")),
     )
 
-    string_content = post_notification(client, body=request_body(content="123"))
+    numeric_content = post_notification(client, body=request_body(content=123))
     long_title = post_notification(client, body=request_body(title="x" * 201))
 
-    assert string_content.status_code == 422
-    assert string_content.json()["businessCode"] == "DESIGN_VALIDATION_ERROR"
+    assert numeric_content.status_code == 422
+    assert numeric_content.json()["businessCode"] == "DESIGN_VALIDATION_ERROR"
     assert long_title.status_code == 422
     assert long_title.json()["businessCode"] == "DESIGN_VALIDATION_ERROR"
 
 
-def test_create_notification_openapi_preserves_catalog_body_and_operation(
+def test_create_notification_openapi_exposes_text_body_and_operation(
     client: TestClient,
 ) -> None:
-    """Expose JSON fields and int64 content with a 202 Operation response schema."""
+    """Expose JSON text content with a 202 Operation response schema."""
 
     openapi = client.app.openapi()
     operation = openapi["paths"]["/api/v1/mentor/notifications"]["post"]
@@ -480,6 +483,5 @@ def test_create_notification_openapi_preserves_catalog_body_and_operation(
     request_model = openapi["components"]["schemas"][request_schema["$ref"].split("/")[-1]]
 
     assert request_model["required"] == ["recipients", "title", "content", "channels"]
-    assert request_model["properties"]["content"]["type"] == "integer"
-    assert request_model["properties"]["content"]["format"] == "int64"
+    assert request_model["properties"]["content"]["type"] == "string"
     assert response_schema["$ref"].endswith("CreateNotificationEnvelope")

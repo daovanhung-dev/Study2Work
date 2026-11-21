@@ -218,6 +218,17 @@ study-ad12-page .filter-grid select:disabled {
   cursor: not-allowed;
 }
 
+study-ad12-page .filter-grid input:not(:disabled):focus-visible {
+  border-color: var(--ocean-primary);
+}
+
+study-ad12-page .filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+}
+
 study-ad12-page .input-wrap {
   position: relative;
   display: flex;
@@ -362,6 +373,11 @@ study-ad12-page .table-state > * {
   margin-inline: auto;
 }
 
+study-ad12-page .table-state > button {
+  display: inline-flex;
+  margin-top: 20px;
+}
+
 study-ad12-page .state-mark {
   display: grid;
   width: 52px;
@@ -498,7 +514,7 @@ study-ad12-page .visually-hidden {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  study-ad12-page .filter-grid > button {
+  study-ad12-page .filter-actions {
     justify-self: start;
   }
 }
@@ -543,8 +559,12 @@ study-ad12-page .visually-hidden {
     padding: 16px;
   }
 
-  study-ad12-page .filter-grid > button {
+  study-ad12-page .filter-actions {
     justify-self: stretch;
+  }
+
+  study-ad12-page .filter-actions button {
+    flex: 1 1 128px;
   }
 
   study-ad12-page .filter-notice {

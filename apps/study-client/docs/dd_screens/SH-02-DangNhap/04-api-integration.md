@@ -10,20 +10,26 @@
 
 ## 2. Contract / source detail
 
-Current Web source status: SH02Page does not use a data-access service and sends no API request. The login action is disabled while the #03/session contract remains unresolved; the API matrix below records expected/source contracts, not current client calls.
+### Current approved contract for SH-02 (2026-11-21)
+
+- `POST /api/v1/auth/login` uses the selected current Study Server contract: HTTP 200, `DESIGN_RESOURCE_RETRIEVED`, `ApiEnvelope<LoginData>` with profile fields and five token fields. The API catalog and API #03 DD have been reconciled; reusable `UserProfile` remains unchanged.
+- Current source error branches are 401 invalid credentials, 403 non-ACTIVE account, 422 validation, and 500 internal error. Login 401 is handled in place and never triggers token refresh.
+- The client accepts only the exact success status/code and valid profile/token fields, then stores credentials in the existing role-specific in-memory session. Student alone calls API #04. No `returnTo` is carried from this route.
+
+The current Study Web implementation is reconciled to the selected API #03 source contract: SH02Page sends exactly one #03 request, requires HTTP 200 plus `DESIGN_RESOURCE_RETRIEVED`, reads a supported role, clears existing role sessions, and passes the envelope to the matching in-memory session manager. Only Student calls #04 and verifies exact success code plus role/email identity before navigating. Mentor/Admin do not call Student-only #04. The catalog and API #03 DD now declare HTTP 200 `LoginData`; no `returnTo` is carried. Focused tests pass; browser/live API runtime remains unverified.
 
 - API refs trong inventory: #03, #04
-- Orchestration/data notes: POST #3 → lưu token ở client an toàn → #4 CHỈ cho Student; Mentor/Admin chưa có /me phù hợp.
-- BE/source status và gate: **R**; **BLOCK:** Role bootstrapping Mentor/Admin chưa hoàn chỉnh
+- Orchestration/data notes: #03 → role-specific in-memory session → #04 only for Student → matching role route. No persistent token storage or `returnTo`.
+- BE/source status and gates: source path and selected #03 contract are wired; `returnTo` and forgotten-password flow remain outside approved scope; live runtime remains unverified.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: 3. Truy vết API và hợp đồng
 
 | API | Phương thức/đường dẫn | Trạng thái nguồn hiện tại | SH-02 sử dụng |
 |---|---|---|---|
-| #03 đăng nhập | POST /api/v1/auth/login | RUNTIME_SOURCE | Gửi email/mật khẩu, nhận payload hồ sơ/token theo nguồn hiện tại |
-| #04 người dùng hiện tại | GET /api/v1/users/me | RUNTIME_SOURCE, chỉ cho học viên | Chỉ đọc hồ sơ/vai trò sau khi đã có token học viên |
-| R-X01 refresh | POST /api/v1/auth/refresh | RUNTIME_SOURCE, không có trong danh mục API | Tối đa một lần khôi phục cho #04 trả 401 theo chính sách xác thực; không dùng cho sai thông tin đăng nhập |
+| #03 đăng nhập | POST /api/v1/auth/login | Client call source-wired; current server source returns HTTP 200 profile+tokens; catalog says HTTP 201 UserProfile-only | Send email/password once; role-specific session accepts response |
+| #04 người dùng hiện tại | GET /api/v1/users/me | Client call source-wired for Student only; server source is Student-only | Verify returned Student role/email before `/student` |
+| R-X01 refresh | POST /api/v1/auth/refresh | Existing source-only session behavior; not called directly by SH02LoginService | Existing session manager may refresh later API calls at local expiry; not a login-error retry |
 
 ### 3.1 Yêu cầu API #03
 
@@ -52,7 +58,7 @@ POST /api/v1/auth/login được đăng ký trong [app/api/v1.py](../../../../st
 6. Nguồn commit sau khi chèn hash refresh thành công. Lỗi SQL/lưu token rollback và trả HTTP 500 DESIGN_INTERNAL_ERROR an toàn.
 7. Thành công theo nguồn hiện tại là HTTP 200 DESIGN_RESOURCE_RETRIEVED. data gồm phần hồ sơ được cho phép (id, full_name, email, role, avatar_url, phone, status, created_at, updated_at) cùng access_token, refresh_token, token_type="bearer", expires_in và refresh_expires_in.
 
-**Sai khác hợp đồng — không tự hòa giải trong DD màn hình này:** danh mục/DD API chuẩn quy định HTTP 201 DESIGN_RESOURCE_CREATED, ApiEnvelope<UserProfile> không có trường token, chỉ ghi lỗi 422/500. AC-02/nguồn hiện tại ghi HTTP 200; nguồn trả hồ sơ cùng token và có nhánh 401/403/500. Hành vi do nguồn sở hữu ở trên là hiện trạng; hợp đồng chuẩn vẫn là kỳ vọng cho tới khi Sản phẩm/máy chủ duyệt quyết định. Xem [tổng quan API #03](../../../../study-server/docs/dd/03_auth_login/02_Overview.md), [DD phản hồi](../../../../study-server/docs/dd/03_auth_login/04_Response.md) và [câu hỏi còn mở](../../../../study-server/docs/dd/03_auth_login/OPEN_QUESTIONS.md).
+**Lịch sử:** các trích đoạn DD nguồn tiếp theo được giữ để truy xuất quyết định trước khi reconcile. Chúng từng nêu #03 201/UserProfile-only; quyết định 2026-11-21 chọn current Study Server 200 `LoginData` và đã cập nhật API catalog/DD như phần Current approved contract phía trên. Không dùng đoạn trích lịch sử làm contract hiện hành.
 
 ### 3.3 Yêu cầu và phản hồi API #04
 

@@ -2,6 +2,8 @@
 
 > **Trạng thái:** PLAN REVIEWED / STATIC AUDIT PASSED; scope của phiên chỉ SH-01. **Đợt/ưu tiên:** W0 / P0.
 
+> **Current-source continuation (2026-11-20):** SH01 remains source-wired at `/`, calls #05/#06 independently, and now validates the current response projections and pagination before rendering. The supported #05/#06 caller axis is fully source-matched; UI, UX and business logic remain partial because design/asset, category relation and card-destination gaps remain. `screen_complete.md` moves from 50% to 62.5%. The original “no Study Web source/router” statements below are the historical audit baseline; live API/DB remain unverified.
+
 ## 1. Phạm vi, actor và nguồn
 
 - **Actor / route / AC:** Guest; route `/` là đề xuất; AC-03; API #05 và #06. Screens liên kết theo inventory: GS-01, SH-02, SH-03. F02 còn mô tả GS-02/GS-03 ở luồng khám phá nhưng danh sách next-screen của SH-01 không liệt kê GS-02/GS-03.

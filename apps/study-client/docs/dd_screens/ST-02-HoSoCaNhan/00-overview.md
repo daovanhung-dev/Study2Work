@@ -1,6 +1,6 @@
 # ST-02 — Hồ sơ cá nhân · Tổng quan
 
-> Current Study Web source (2026-11-17): `/student/profile` is routed to the documented static sign-in gate. The route records API #04 as its dependency, but no request is sent because there is no Student session/token provider and no approved authenticated profile-ready state. The edit action remains disabled; authenticated rendering is not verified.
+> Current Study Web source (2026-11-17): `/student/profile` is routed inside StudentLayout. `ST02ProfileService` calls #04 through the Student Bearer adapter; the page displays only response-backed `full_name` and `email` with loading/error/retry states. The edit action remains disabled. Browser/live API/DB runtime is not verified. This read-only mapping follows the user's explicit implementation approval; it does not resolve the broader DD/design questions below.
 
 | Trường | Giá trị |
 |---|---|
@@ -33,7 +33,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/ready/401/403 |
-| Current runtime | Study Web route/page source | Gate-only route with API #04 metadata; no request; authenticated runtime not verified |
+| Current source | Study Web route/page source | API #04 caller; response-backed `full_name`/`email`; authenticated browser/live runtime not verified |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-02 source screen.png](../../screen_stitch/03_student/ST-02_ho-so-ca-nhan/screen.png))
@@ -44,7 +44,7 @@
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
-- 2026-11-17 — Study Web route/page added for the source-backed sign-in gate; #04 remains assigned but uncalled pending Student session and profile-ready design decisions.
+- 2026-11-17 — Study Web profile route now reads #04 through the Student Bearer adapter and displays `full_name`/`email`; edit remains disabled. This source update does not resolve the expected profile-ready design, cache, avatar, role/status or runtime questions.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -75,13 +75,13 @@
 
 | Chủ đề | Expected theo inventory/AC/API design | Current evidence |
 |---|---|---|
-| Actor/state | Student đã đăng nhập; `/student/profile`; expected `loading/ready/401/403`; hiển thị avatar/email/role/status. | PNG gốc chỉ có header/footer; HTML có empty sign-in card, sign-in links, edit button disabled. Hai assets không đồng nhất; chưa có Study Web source/router. |
-| Profile request | GET #04 với Bearer; profile được cache theo inventory; #04 dùng trong AC-11 và sau login Student theo AC-02/F01. | Route #04 nhận một Authorization header; current view gọi shared Bearer/JWT/role guard rồi đọc profile. Study Web không gửi request. |
+| Actor/state | Student đã đăng nhập; `/student/profile`; expected `loading/ready/401/403`; inventory lists avatar/email/role/status. | Original PNG has header/footer only and HTML has a static sign-in card; Angular source now calls #04 and renders loading/error/retry plus `full_name`/`email`. The assets remain non-runtime design evidence. |
+| Profile request | GET #04 với Bearer; profile được cache theo inventory; #04 dùng trong AC-11 và sau login Student theo AC-02/F01. | Route #04 validates one Authorization header; `ST02ProfileService` calls the Student Bearer adapter. No cache policy is implemented. |
 | Auth claims | Catalog/AC-02 yêu cầu JWT + Student role; AC-02 diagram viết `user_id`/`role`. | Current #03 phát `sub` và `roles`; #04 parse `sub` thành positive integer và yêu cầu `STUDENT` trong `roles`. Đây là discrepancy, không tự sửa diagram/catalog. |
 | Response data | Catalog: `ApiEnvelope<UserProfile>`; AC-02 nói profile/role/permissions; catalog đánh dấu `bio` optional. | Current query/model trả `id`, `full_name`, `email`, `role`, nullable `avatar_url`/`phone`, `status`, timestamps; không có `bio` hoặc permissions. API #04 DD còn Draft. |
 | Status/role freshness | Student role và tài khoản hợp lệ. | Current auth guard chỉ xem role trong JWT; SELECT không so `users.role` hoặc lọc `users.status`; status chỉ được trả về. DDL candidate không có `NOT NULL` cho status trong khi model bắt buộc. |
 | Edit action | ST-03 là màn chỉnh sửa; AC-11 tham chiếu #13/#14. | HTML hiển thị “Chỉnh sửa hồ sơ (Tạm khóa)” với button disabled; không có handler. Không mở edit hoặc upload/save behavior từ ST-02. |
-| Navigation/runtime | SH-02 role flow, ST-01/ST-03 navigation; cache/session theo approved contract. | Header/footer/login anchors `href="#"` với `data-path`; không có Study Web runtime/router/client. |
+| Navigation/runtime | SH-02 role flow, ST-01/ST-03 navigation; cache/session theo approved contract. | Angular header/footer use RouterLinks; browser/runtime verification remains unavailable. The HTML `href="#"`/`data-path` strings describe Stitch only. |
 
 ### Quy tắc nghiệp vụ và bảo mật
 

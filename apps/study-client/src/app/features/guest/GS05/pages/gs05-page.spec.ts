@@ -33,21 +33,25 @@ describe('GS05Page', () => {
     firstPage.flush(
       successEnvelope(
         reviewsPage(
-          [
+          Array.from({ length: 20 }, (_, index) =>
             review({
-              content: 'Nội dung đánh giá công khai.',
-              title: 'Tiêu đề chưa được duyệt',
-              comments: [
-                {
-                  id: 78,
-                  discussion_id: 45,
-                  content: 'Phản hồi công khai.',
-                  author: { id: 8, full_name: 'Tran An', avatar_url: null },
-                  created_at: '2026-11-17T00:00:00Z',
-                },
-              ],
+              id: 45 + index,
+              content: index === 0 ? 'Nội dung đánh giá công khai.' : `Đánh giá ${index + 1}`,
+              title: index === 0 ? 'Tiêu đề chưa được duyệt' : null,
+              comments:
+                index === 0
+                  ? [
+                      {
+                        id: 78,
+                        discussion_id: 45,
+                        content: 'Phản hồi công khai.',
+                        author: { id: 8, full_name: 'Tran An', avatar_url: null },
+                        created_at: '2026-11-17T00:00:00Z',
+                      },
+                    ]
+                  : [],
             }),
-          ],
+          ),
           1,
           2,
         ),
@@ -68,7 +72,7 @@ describe('GS05Page', () => {
     const reviewList = root.querySelector<HTMLElement>(
       '[role="list"][aria-label="Danh sách đánh giá và thảo luận"]',
     );
-    expect(reviewList?.querySelectorAll(':scope > [role="listitem"]').length).toBe(1);
+    expect(reviewList?.querySelectorAll(':scope > [role="listitem"]').length).toBe(20);
     const replyList = reviewList?.querySelector<HTMLElement>(
       '[role="list"][aria-label="Phản hồi"]',
     );
@@ -140,6 +144,43 @@ describe('GS05Page', () => {
     const root = fixture.nativeElement as HTMLElement;
     expect(root.textContent).toContain('Chưa thể tải đánh giá và thảo luận. Vui lòng thử lại sau.');
     expect(root.textContent).not.toContain('private backend detail');
+    root.querySelector<HTMLButtonElement>('.retry-button')?.click();
+    http
+      .expectOne('/api/v1/courses/42/reviews?page=1')
+      .flush(successEnvelope(reviewsPage([], 1, 0)));
+    fixture.detectChanges();
+    expect(root.textContent).toContain('Chưa có đánh giá hoặc thảo luận công khai.');
+  });
+
+  it('keeps returned reviews and hides stale pagination after a count/list mismatch', () => {
+    fixture = TestBed.createComponent(GS05Page);
+    fixture.componentRef.setInput('courseId', '42');
+    fixture.detectChanges();
+
+    http
+      .expectOne('/api/v1/courses/42/reviews?page=1')
+      .flush(successEnvelope(reviewsPage([review({ content: 'Đánh giá còn dùng được.' })], 1, 2)));
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.textContent).toContain('Đánh giá còn dùng được.');
+    expect(root.textContent).toContain('Số đánh giá và danh sách trang chưa đồng nhất.');
+    expect(root.querySelector('.pagination')).toBeNull();
+    root.querySelector<HTMLButtonElement>('.retry-button')?.click();
+
+    http
+      .expectOne('/api/v1/courses/42/reviews?page=1')
+      .flush(
+        successEnvelope(
+          reviewsPage(
+            Array.from({ length: 20 }, (_, index) => review({ id: 45 + index })),
+            1,
+            2,
+          ),
+        ),
+      );
+    fixture.detectChanges();
+    expect(root.querySelector('.pagination')).not.toBeNull();
   });
 });
 
@@ -164,7 +205,12 @@ function reviewsPage(
 ): GS05CourseReviewsPage {
   return {
     items,
-    pagination: { page, size: 20, total: items.length, total_pages: totalPages },
+    pagination: {
+      page,
+      size: 20,
+      total: totalPages === 0 ? 0 : totalPages === 1 ? items.length : 21,
+      total_pages: totalPages,
+    },
   };
 }
 

@@ -60,14 +60,15 @@ Các quyết định dưới đây chưa có nguồn đủ để chuyển candid
 
 - Lecture.content là optional string.
 - Legacy lessons.content là TEXT NULL.
-- API #47 gửi content:int64! và đã ghi discrepancy/decimal-string candidate.
+- T041 ngày 2026-11-19 chốt API #47 nhận `content:string` là Markdown và lưu nguyên văn; request không còn là `int64`.
+- API #48 dùng `LectureResponse.content: str | None` và truyền giá trị từ `lessons.content`; vì vậy dữ liệu legacy NULL hiện trả JSON `null`.
 
 **Cần xác nhận**
 
-1. Does the API owner confirm returning JSON `null` when `lessons.content` is SQL NULL?
-2. Is the existing #47 content-as-decimal-string behavior semantically correct for AC-21?
+1. Does the product/API owner want existing NULL lecture rows to remain readable as `content:null`, or require a data migration before rollout?
+2. Is plain-text display of the stored Markdown in ME-05 sufficient, or is a separately approved/sanitized renderer required?
 
-**Ảnh hưởng:** Tính ổn định response và mapping create → reload.
+**Ảnh hưởng:** Null handling for legacy rows and presentation of Markdown; the new #47 request/persistence contract is resolved by T041 and source-backed.
 
 ## Q-48-05 — LessonStatus values
 

@@ -4,7 +4,7 @@ import { MentorLayout } from '../../layouts/mentor/mentor-layout';
 import { ME01Page } from './ME01/pages/me01-page';
 import { ME02Page } from './ME02/pages/me02-page';
 import { ME03Page } from './ME03/pages/me03-page';
-import { ME04Page } from './ME04/pages/me04-page';
+import { blockME04DepartureDuringWrite, ME04Page } from './ME04/pages/me04-page';
 import { ME05Page } from './ME05/pages/me05-page';
 import { ME06Page } from './ME06/pages/me06-page';
 import { ME07Page } from './ME07/pages/me07-page';
@@ -27,7 +27,7 @@ export const mentorRoutes: Routes = [
     children: [
       { path: '', pathMatch: 'full', component: ME01Page, data: { screenId: 'ME-01', apiIds: [46, 54, 58] } },
       { path: 'courses', component: ME02Page, data: { screenId: 'ME-02', apiIds: [46] } },
-      { path: 'courses/:courseId/lectures/new', component: ME04Page, data: { screenId: 'ME-04', apiIds: [34, 46, 47] } },
+      { path: 'courses/:courseId/lectures/new', component: ME04Page, canDeactivate: [blockME04DepartureDuringWrite], data: { screenId: 'ME-04', apiIds: [34, 46, 47] } },
       { path: 'lectures/:lectureId', component: ME05Page, data: { screenId: 'ME-05', apiIds: [48] } },
       { path: 'courses/:courseId/content', component: ME06Page, data: { screenId: 'ME-06', apiIds: [49] } },
       { path: 'courses/:courseId/content/new', component: ME07Page, data: { screenId: 'ME-07', apiIds: [49, 50, 51] } },

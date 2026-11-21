@@ -4,17 +4,17 @@
 |---|---|
 | Screen ID | `AD-14` |
 | Module | Admin |
-| Route | `/admin/lessons/:lessonId/edit` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/admin/lessons/:lessonId/edit` — registered in Angular admin router; browser/runtime not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: # AD-14 — Sửa, đổi trạng thái, xóa bài học; **Trạng thái màn hình:** `DD BLOCKED` · `IMPLEMENTATION BLOCKED` · `RUNTIME NOT VERIFIED` · **API source:** #83–#86 local routes/modules/tests có source; DD API vẫn Draft và live DB chưa xác minh.<br> |
+| DD status | Draft (package được chuyển đổi); source status: **DD BLOCKED** · **IMPLEMENTATION PARTIAL READ / MUTATIONS BLOCKED** · #83 reader is source-wired with signed-int64 route guard; #84–#86 have no Study Web callers · **RUNTIME NOT VERIFIED** · API DDs Draft/live DB unverified.<br> |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [AD-14.md](../../screen_stitch/05_admin/AD-14_sua-doi-trang-thai-xoa-bai-hoc/AD-14.md), [AD-14_PLAN.md](../../screen_stitch/05_admin/AD-14_sua-doi-trang-thai-xoa-bai-hoc/AD-14_PLAN.md), [AD-14_markers.json](../../screen_stitch/05_admin/AD-14_sua-doi-trang-thai-xoa-bai-hoc/AD-14_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Sửa Lesson, đổi status hoặc xóa theo policy; xử lý lỗi dependency ở server.
 - In-scope: AD-13 numeric `Lesson.id` → GET #83 → riêng một nhánh PUT #84 / PATCH #85 / DELETE #86 → reload AD-12/#82 theo AC-34.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Các mutation chỉ được bật sau khi contract/policy được duyệt; route/page source presence không chứng minh browser/runtime đã chạy.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,13 +31,13 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/ready/dirty/saving/status-changing/deleting/dependency-blocked/error |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Angular router/page/#83 caller | Read path is source-wired; malformed/missing/out-of-range IDs stop locally; mutations remain blocked; browser `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-14 source screen.png](../../screen_stitch/05_admin/AD-14_sua-doi-trang-thai-xoa-bai-hoc/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-14_sua-doi-trang-thai-xoa-bai-hoc/screen_annotated.png))
 - Luồng: AD-13 numeric `Lesson.id` → GET #83 → riêng một nhánh PUT #84 / PATCH #85 / DELETE #86 → reload AD-12/#82 theo AC-34.
-- Priority: P1; Gate/source status: **R** local #83–#86 route/module/query/model/test source; API DDs Draft. #84 full-replacement body `{title,content,video_url,order}` và #85 `{status}`/enum/audit là DERIVED; #86 rechecks `lesson_progress`, `resources`, `lesson_uploads` and returns 422 on any reference. **DD BLOCKED; IMPLEMENTATION BLOCKED:** #84 form/body mismatch (no `video_url`, course/type unmapped), #85 `ARCHIVED` vs local `SUSPENDED`, dependency set/output, `ADMIN` vs lesson-management permission, legacy/V1-PILOT/live schema, Study Web `UNWIRED`; **RUNTIME NOT VERIFIED**
+- Priority: P1; Gate/source status: **R** local #83–#86 route/module/query/model/test source; Angular read page and #83 caller exist; API DDs Draft. AD-14 validates raw `lessonId` before #83. #84 full-replacement body `{title,content,video_url,order}` và #85 `{status}`/enum/audit là DERIVED; #86 rechecks `lesson_progress`, `resources`, `lesson_uploads` and returns 422 on any reference. **DD BLOCKED; IMPLEMENTATION PARTIAL READ / MUTATIONS BLOCKED:** #84 form/body mismatch (no `video_url`, course/type unmapped), #85 `ARCHIVED` vs local `SUSPENDED`, dependency set/output, `ADMIN` vs lesson-management permission, legacy/V1-PILOT/live schema remain open; **RUNTIME NOT VERIFIED**
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -48,7 +48,7 @@
 # AD-14 — Sửa, đổi trạng thái, xóa bài học
 
 > **Screen:** AD-14 · **Actor expected:** Admin có lesson-management permission theo AC-34 · **Route đề xuất:** `/admin/lessons/:lessonId/edit` · **APIs:** #83–#86 · **Trước:** AD-13/#83, từ danh sách AD-12/#82 · **Sau mutation:** AD-12/#82 reload theo AC-34<br>
-> **Trạng thái màn hình:** `DD BLOCKED` · `IMPLEMENTATION BLOCKED` · `RUNTIME NOT VERIFIED` · **API source:** #83–#86 local routes/modules/tests có source; DD API vẫn Draft và live DB chưa xác minh.<br>
+> **Trạng thái màn hình:** `DD BLOCKED` · `IMPLEMENTATION PARTIAL READ / MUTATIONS BLOCKED` · `RUNTIME NOT VERIFIED` · **API source:** #83–#86 local routes/modules/tests có source; Angular route/page/#83 reader source-present; DD API vẫn Draft và live DB chưa xác minh.<br>
 > **Assets:** [screen nguồn](../../screen_stitch/05_admin/AD-14_sua-doi-trang-thai-xoa-bai-hoc/screen.png) · [screen chú thích](../../screen_stitch/05_admin/AD-14_sua-doi-trang-thai-xoa-bai-hoc/screen_annotated.png) · [marker map](../../screen_stitch/05_admin/AD-14_sua-doi-trang-thai-xoa-bai-hoc/AD-14_markers.json) · [kế hoạch](../../screen_stitch/05_admin/AD-14_sua-doi-trang-thai-xoa-bai-hoc/AD-14_PLAN.md) · [inventory](../../list_screen.md)
 
 ## Trích đoạn tổng quan từ DD nguồn
@@ -63,8 +63,8 @@ AD-14 là trang Admin được inventory đề xuất để cập nhật metadat
 |---|---|---|
 | Mục tiêu | Sửa nội dung Lesson; thay đổi trạng thái qua action riêng; xóa theo policy dependency. | `code.html` là prototype tĩnh, chưa có binding/event/API. |
 | Actor/quyền | Admin có lesson-management permission theo AC-34. | #84–#86 guard role `ADMIN`; chưa có policy permission riêng. |
-| Route | `/admin/lessons/:lessonId/edit` theo inventory và mockup. | Study Web router/source không có trong checkout; route chưa tồn tại được xác minh. |
-| Handoff | Từ AD-13 bằng selected Lesson ID; AD-13 #83 trả candidate numeric `id`. | API #83 trực tiếp trả Lesson; #83 không trả dependency list/count. |
+| Route | `/admin/lessons/:lessonId/edit` theo inventory và mockup. | Angular router/page source exists; `lessonId` is signed-int64 validated before GET #83; browser/runtime is unverified. |
+| Handoff | Từ AD-13 bằng selected Lesson ID; AD-13 #83 trả candidate numeric `id`. | AD14Page calls #83 with a valid raw route string; #83 không trả dependency list/count. |
 | Mutation | Chỉ chọn một nhánh PUT #84, PATCH #85 hoặc DELETE #86. | Cả ba route có local source; request/body và policy còn các phần DERIVED. |
 | Sau mutation | AC-34 reload danh sách lesson qua #82. | Không có client navigation/cache behavior để xác minh; filter/history carry-over chưa được contract. |
 
@@ -81,7 +81,7 @@ Tất cả API DD #84–#86 đang `Draft — Needs Confirmation`; #83 cũng Draf
 
 ### Current prototype và giới hạn
 
-`screen.png` 1510×1600 và `code.html` được giữ nguyên. Prototype có 5 form controls đều disabled, 4 nút mutation disabled, các anchor dùng `href="#"`, status/identity/RBAC/SYSTEM NORMAL là copy tĩnh. Không có route param, fetch/XHR, API URL, data binding, listener, timer, SSE hay WebSocket. Study Web hiện chỉ có docs/assets, ignored `dist` và `node_modules`; editable source, package manifest, router và API client không có. Trạng thái `UNWIRED`.
+`screen.png` 1510×1600 và `code.html` được giữ nguyên như design assets tĩnh. Prototype có 5 form controls đều disabled, 4 nút mutation disabled, các anchor dùng `href="#"`, status/identity/RBAC/SYSTEM NORMAL là copy tĩnh. Separately, current Angular Study Web has the `/admin/lessons/:lessonId/edit` route and AD14Page read caller for #83; valid signed-int64 raw IDs load the lesson and invalid IDs stop locally. Local title/content/order fields remain drafts, and #84–#86 have no Web caller. Browser/runtime chưa được xác minh.
 
 ### Blocker / discrepancy
 
@@ -90,4 +90,4 @@ Tất cả API DD #84–#86 đang `Draft — Needs Confirmation`; #83 cũng Draf
 3. **#86 dependencies:** #83 không trả dependencies; #86 chỉ recheck tại mutation-time với ba relation cục bộ. Danh sách dependency đầy đủ, cách diễn giải progress và UX xác nhận xóa cần owner/schema review.
 4. **Authorization:** AC-34 fine-grained lesson-management permission chưa có source policy; `ADMIN` role không chứng minh quyền riêng.
 5. **Schema:** legacy `lessons` BIGINT có `course_id`, `sort_order`, `status` nullable; reusable Lesson yêu cầu `course_id`, `order`, `status`. V1-PILOT là UUID/versioned Lesson khác. Migration 012 là checked-in candidate, không chứng minh live deployment.
-6. **UI/runtime:** controls hiện disabled và không có frontend source; Study Web design target khác palette/font/width mockup. Không claim frontend behavior hoặc runtime.
+6. **UI/runtime:** mutation controls hiện disabled; supported read/draft source exists but does not verify browser/runtime. Study Web design target differs from the static prototype palette/font/width.

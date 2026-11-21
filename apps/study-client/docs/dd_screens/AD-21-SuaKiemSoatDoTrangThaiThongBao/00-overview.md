@@ -8,7 +8,7 @@
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); **DD status:** `DD BLOCKED` — API detail/lifecycle/permission/operation mapping chưa đủ contract.; **Implementation status:** `IMPLEMENTATION PARTIAL SOURCE` — route/page và caller chỉ đọc #96 đã wired; #94/#95 và client handoff/poller #18 chưa wired.; **Runtime status:** `RUNTIME NOT VERIFIED`. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [AD-21.md](../../screen_stitch/05_admin/AD-21_sua-kiem-soat-do-trang-thai-thong-bao/AD-21.md), [AD-21_PLAN.md](../../screen_stitch/05_admin/AD-21_sua-kiem-soat-do-trang-thai-thong-bao/AD-21_PLAN.md), [AD-21_markers.json](../../screen_stitch/05_admin/AD-21_sua-kiem-soat-do-trang-thai-thong-bao/AD-21_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -31,7 +31,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | expected: draft/scheduled/sending/delivered/failed; local fallback: QUEUED/SENT/FAILED |
-| Current Study Web source | Angular route/page + GET #96 | `loading / loaded / error`; runtime/deployment chưa xác minh |
+| Current Study Web source | Angular route/page + GET #96 | `loading / loaded / error`; invalid/missing route IDs stop locally before GET; runtime/deployment chưa xác minh |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-21 source screen.png](../../screen_stitch/05_admin/AD-21_sua-kiem-soat-do-trang-thai-thong-bao/screen.png))
@@ -42,6 +42,7 @@
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — AD21Page now validates raw `notificationId` against #96's positive signed-int64 parser before GET; invalid IDs stop locally and valid text remains unchanged.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -59,7 +60,7 @@
 | Screen ID / tên | AD-21 — Kiểm soát và giám sát trạng thái thông báo (Page theo inventory). |
 | Mục tiêu | Cho Admin xem thông tin notification và trạng thái phân phối; chỉnh sửa hoặc hủy/xóa chỉ khi policy cho phép; có thể mở SH-07 nếu backend cấp Operation ID tương thích. |
 | Actor / quyền dự kiến | Admin có `notification-management permission` theo AC-36. API catalog ghi role=Admin; local #94–#96 guard role `ADMIN`. Chưa có contract chứng minh guard `ADMIN` tương đương permission AC-36 hoặc xác định scope/tenant. |
-| Route | `/admin/notifications/:notificationId` đã đăng ký trong Angular Admin router; page chuyển param dạng chuỗi tới API #96. Catalog #94–#96 khai báo `notification_id:int64`; runtime parsing vẫn thuộc backend contract/source. |
+| Route | `/admin/notifications/:notificationId` đã đăng ký trong Angular Admin router; current page validates raw `notificationId` as full-string positive signed-int64 before GET #96 and preserves valid text. Catalog #94–#96 khai báo `notification_id:int64`; browser runtime remains unverified. |
 | Điều kiện trước | Khi triển khai: phiên xác thực hợp lệ và quyền đã được backend xác minh; notification ID do AD-19 hoặc nguồn server cấp, hợp lệ theo contract. Không có ID hợp lệ trong prototype hiện tại. |
 | Kết quả sau | Đọc trạng thái nếu #96 được phép sử dụng; #94/#95 chỉ sau khi body, lifecycle và policy được duyệt. Không khẳng định gửi thành công hoặc provider đã hủy. Operation tracking chỉ qua SH-07/#18 sau khi producer, ID, ownership và route #18 thống nhất. |
 | Màn hình liên kết | AD-19 là danh sách/điểm vào và đường quay lại; Angular page có RouterLink về `/admin/notifications`. Stitch HTML giữ anchor `#`/disabled như thiết kế tĩnh. SH-07 handoff vẫn có điều kiện. |

@@ -4,17 +4,24 @@
 |---|---|
 | Screen ID | `ST-13` |
 | Module | Student |
-| Route | `/student/quizzes/:quizId` — route trong inventory, không phải xác nhận router runtime |
-| Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** `DD BLOCKED` · `IMPLEMENTATION BLOCKED` · `RUNTIME NOT VERIFIED` |
+| Route | `/student/quizzes/:quizId` — khai báo trong Study Client; live runtime chưa xác minh |
+| Actor/role | Student; page dùng Student Bearer service; API #28/#29 xác thực role |
+| DD status | Draft/ownership and eligibility unresolved; **Implementation:** PARTIAL · **Runtime:** NOT VERIFIED |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [ST-13.md](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13.md), [ST-13_PLAN.md](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_PLAN.md), [ST-13_markers.json](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/ST-13_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Tiêu đề, thời hạn và quy định chấm; xác nhận bắt đầu.
 - In-scope: GET #28 theo thiết kế; ST-13 row kỳ vọng POST #29 sau explicit Start, nhưng F05/ST-14 row/DD mâu thuẫn về screen owner và GET/POST order; ST-14 path còn yêu cầu `attemptId` trước entry nếu #29 được dời sang đó. Owner phải chốt một call-site/entry route, không gọi lặp.
 - Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+
+### Current implementation — 2026-11-20
+
+- ST-13 has a Study Client route/page. It follows `quizId` changes, cancels stale #28 reads, validates `DESIGN_RESOURCE_RETRIEVED`, quiz payload and ID, and offers retry.
+- The explicit Start button calls #29. The page accepts only `DESIGN_RESOURCE_CREATED`, an `IN_PROGRESS` attempt with a valid ID and matching `quiz_id`; it routes to that attempt and retains a continuation link if navigation fails.
+- Current API #28 authenticates Student but returns any existing quiz without enrollment/status eligibility checks. #29 authenticates Student, verifies the quiz exists and prevents a second `IN_PROGRESS` attempt; it does not check course enrollment or quiz publication/open state. The call-site/order discrepancy in the original DD is not an approved resolution.
+- Current page and source Stitch are not fully aligned; eligibility/history/attempt-limit/proctoring UI is not backed by these APIs. Tests/browser/runtime were not run or verified. The source-DD excerpts below remain the expected design snapshot.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,17 +38,18 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/closed/available/denied |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Study Client ST-13 | `loading / error+retry / quiz summary / start / attempt handoff`; runtime chưa xác minh |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-13 source screen.png](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-13_gioi-thieu-bai-kiem-tra/screen_annotated.png))
 - Luồng: GET #28 theo thiết kế; ST-13 row kỳ vọng POST #29 sau explicit Start, nhưng F05/ST-14 row/DD mâu thuẫn về screen owner và GET/POST order; ST-14 path còn yêu cầu `attemptId` trước entry nếu #29 được dời sang đó. Owner phải chốt một call-site/entry route, không gọi lặp.
-- Priority: P1; Gate/source status: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #28/#29 Student route/module/test NOT_FOUND; PNG/HTML mismatch; eligibility, answer exposure, timing, attempt limit/resume/idempotency và CTA destinations open; #29 owner/order/entry route conflicts across ST-13/F05/ST-14; legacy BIGINT Quiz/Attempt differs from V1-PILOT UUID Assessment model; sample history/proctoring/scoring/certificate claims unsupported; Study Web UNWIRED
+- Priority: P1; Gate/source status: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** current page calls #28 and explicit #29, but backend does not enforce course enrollment or quiz-open/published eligibility; original DD still conflicts about #29 owner/order; source PNG and static HTML differ; attempt history/limits/proctoring and result claims are unsupported; API DD and live DB remain unverified.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Ghi nhận #28/#29 client wiring, route-reactive read, exact response validation/recovery, và eligibility/API owner gaps hiện còn mở.
 
 ## Trạng thái và ranh giới bằng chứng
 

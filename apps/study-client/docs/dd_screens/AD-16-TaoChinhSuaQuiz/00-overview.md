@@ -6,9 +6,9 @@
 | Module | Admin |
 | Route | `/admin/quizzes/new` và `/admin/quizzes/:quizId/edit` đã đăng ký trong `admin.routes.ts`; `/admin` lazy-load route này. Runtime navigation chưa xác minh. |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | `DD BLOCKED` · `IMPLEMENTATION PARTIAL` (draft UI only; create/update mutations blocked) · `RUNTIME NOT VERIFIED` |
+| DD status | `DD BLOCKED` · `IMPLEMENTATION 100% STATIC DD-SAFE` for source-backed create behavior and the explicit edit gate; nested schema/edit remain blocked · `RUNTIME NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.3 / 2026-11-21 |
 | Nguồn đối chiếu | [AD-16.md](../../screen_stitch/05_admin/AD-16_tao-chinh-sua-quiz/AD-16.md), [AD-16_PLAN.md](../../screen_stitch/05_admin/AD-16_tao-chinh-sua-quiz/AD-16_PLAN.md), [AD-16_markers.json](../../screen_stitch/05_admin/AD-16_tao-chinh-sua-quiz/AD-16_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -23,7 +23,7 @@
 
 ## 3. Precondition / Entry / Dependencies
 - Điều kiện vào, role guard và dependency: xem trích đoạn tổng quan nguồn; không bổ sung giả định.
-- API references: #88, #89
+- API references: #73, #88, #89
 - Liên kết màn hình dự kiến: [AD-15](../AD-15-DanhSachBaiKiemTra/00-overview.md), [AD-17](../AD-17-ThongKeBaiKiemTra/00-overview.md)
 - Links: [UI](01-ui-elements.md) · [Events](02-events.md) · [Navigation](06-navigation.md)
 
@@ -31,18 +31,20 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | blank/draft/loading/ready/dirty/invalid/saving/created/updated/not-found/conflict/unauthorized/forbidden/error |
-| Current source/runtime | Angular route, page và page spec | Route/page wired; safe draft only; `RUNTIME NOT VERIFIED` |
+| Current source/runtime | Angular routes, page, API services and existing spec source | Route/page and scoped responsive stylesheet wired; create loads Course options from #73, verifies response `pagination.page` matches the requested page, and submits the current #88 shape; edit ID follows route-param changes and must be positive signed-int64; edit detail/#89 remain gated; nested #88 fields are `DERIVED`; `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-16 source screen.png](../../screen_stitch/05_admin/AD-16_tao-chinh-sua-quiz/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-16_tao-chinh-sua-quiz/screen_annotated.png))
-- Luồng: POST #88 khi tạo; PUT #89 khi sửa. Không giả định GET admin quiz detail; #87 metadata-only và `questions=[]` local. #89 catalog không khai báo body; local fallback yêu cầu replacement body. Autosave copy trong prototype chưa có persistence source.
-- Priority: P1; Gate/source status: **R** local #88/#89 route/module/query/model/validator/test source; API DDs remain Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL:** Angular route và safe draft page tồn tại; thiếu GET detail/question set, #89 body discrepancy, question/choice editor và course option mapping; field/range rules, AC-35 permission vs `ADMIN`, legacy/V1-PILOT/live schema, autosave/navigation còn mở; page không gửi API request; **RUNTIME NOT VERIFIED**
+- Luồng: create đọc lựa chọn khóa học từ #73 và POST #88; edit chưa gọi PUT #89. Không giả định GET admin quiz detail; #87 metadata-only và `questions=[]` local. #89 catalog không khai báo body; local fallback yêu cầu replacement body. Autosave copy trong prototype chưa có persistence source.
+- Priority: P1; Gate/source status: **R** local #73/#88/#89 route/module/query/model/validator/test source; API DDs remain Draft. **DD BLOCKED; IMPLEMENTATION PARTIAL:** create fields/question editor gọi #88 theo current nested validator (`DERIVED`); thiếu GET detail/question set, #89 body discrepancy, AC-35 permission vs `ADMIN`, legacy/V1-PILOT/live schema, autosave/navigation còn mở; **RUNTIME NOT VERIFIED**
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 - 2026-11-16 — Đối chiếu Angular source: route AD-16 đã đăng ký; page chỉ giữ draft local, khóa edit/add/save và chưa gọi API. Runtime vẫn chưa xác minh.
+- 2026-11-21 — Create mode tải options qua #73 và gọi #88 với outer body đúng catalog; nested request theo current validator và vẫn `DERIVED`. Edit/#89 tiếp tục khóa. Không kiểm tra runtime.
+- 2026-11-21 — Create mode đối chiếu `pagination.page` từ #73 với trang đã gửi; backend source echo trang yêu cầu, kể cả khi trang vượt `total_pages`. Không kiểm tra runtime.
 
 ## Trạng thái và ranh giới bằng chứng
 

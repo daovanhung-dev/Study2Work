@@ -18,7 +18,7 @@
 ```mermaid
 sequenceDiagram
     participant M as Mentor
-    participant W as Study Web route (UNWIRED)
+    participant W as Study Web ME-06 route
     participant R as GET #49 route
     participant V as get_course_contents
     participant A as MENTOR auth guard
@@ -75,12 +75,12 @@ Flow Web là expected/proposed. Các bước sau route đã được đọc tron
 
 | State | Trigger/evidence | UI rule |
 |---|---|---|
-| `loading` | Request #49 đang chờ | Skeleton/progress và cancel/retry behavior cần design; không có current client implementation. |
-| `empty` | 200 `data:[]` | Hiển thị empty course state. Không phải lỗi; CTA create chỉ bật sau khi #50/type/parent rules được duyệt. |
-| `ready` | 200 có cây đã validate | Dựng từ flat Content[] và giữ `id/status/order`; không gán mock values hoặc version không có. |
+| `loading` | Request #49 đang chờ hoặc retry | Loading status; clear old tree; route change cancels stale request. Implemented. |
+| `empty` | 200 `data:[]` | Hiển thị empty course state; Add action appears after successful #49 owner check. Implemented. |
+| `ready` | 200 có cây đã validate | Dựng flat `Content[]` thành cha-con; giữ server fields/status/order; không gán mock values/version. Implemented. |
 | `denied` | 401 hoặc 403 | Phân biệt sign-in/role/owner theo auth UX đã duyệt; không lộ course/node data. Current owner check direct. |
-| `not-found` | 404 malformed/out-of-range path hoặc missing course | Không render mock course. Path error hiện cùng business code resource not found. |
-| `error` | 500 DB/projection/tree integrity; network error ở client tương lai | Safe message, retry theo policy; không render partial tree. Network mapping chưa có source. |
+| `not-found` | 404 malformed/out-of-range path hoặc missing course | Safe not-found state; link to course list. Implemented. |
+| `error` | 500 DB/projection/tree integrity, network error hoặc malformed response | Safe message and retry; no partial tree. Implemented. |
 | `saving/blocked` | Mutation handoff | Chỉ bật theo allowed server transition. #51/#52/#53 có 422 path; không optimistic-commit status/order. |
 | `filter-empty` | Local search/filter không có row | Copy/ancestor behavior chưa có design; combine search and filter state thay vì để JS handlers ghi đè. |
 
@@ -90,7 +90,7 @@ Flow Web là expected/proposed. Các bước sau route đã được đọc tron
 - Keyboard/ARIA/focus, responsive behavior, loading/retry copy và destructive confirmation cần được chốt cho implementation; HTML hiện không chứng minh khả năng tiếp cận hay runtime layout ngoài snapshot desktop.
 
 ## 4. Luồng đọc (Read)
-- Orchestration từ inventory: GET #49; preserve ids/version, tránh render draft như published.
+- Orchestration từ inventory: GET #49; preserve IDs/status/order returned by the API. #49 has no version selector; status labels are not inferred.
 - Chi tiết current/source mapping: xem [API Integration](04-api-integration.md) và DD nguồn.
 
 ## 5. Luồng ghi (Write)

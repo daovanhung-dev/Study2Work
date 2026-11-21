@@ -6,15 +6,15 @@
 | Module | Student |
 | Route | `/student/lessons/:lessonId/start` — locked transition route/page có trong Angular; runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** BLOCKED · **Implementation:** BLOCKED · **Runtime:** NOT VERIFIED |
+| DD status | **DD BLOCKED** · **Implementation:** PARTIAL / SOURCE_WIRED · **Runtime:** NOT VERIFIED |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [ST-10.md](../../screen_stitch/03_student/ST-10_kiem-tra-quyen-va-bat-dau-hoc/ST-10.md), [ST-10_PLAN.md](../../screen_stitch/03_student/ST-10_kiem-tra-quyen-va-bat-dau-hoc/ST-10_PLAN.md), [ST-10_markers.json](../../screen_stitch/03_student/ST-10_kiem-tra-quyen-va-bat-dau-hoc/ST-10_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Không phát video hay lộ nội dung khi chưa có entitlement được xác minh phía server.
 - In-scope: GET #22 → nếu allowed, POST #23 → GET #24 → ST-11; retry/idempotency và #23 auto-vs-click chưa chốt.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Không kết luận các quyết định hợp đồng còn mở hoặc runtime/deployment đã được xác minh.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,18 +31,19 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | checking/denied/started/failure |
-| Current source | Worklog/context Study Web | Route maps #22/#23/#24; no request, player/media or start action is enabled without Student session. |
+| Current source | ST-10 page/service, StudentApiService, Student route and Study Server handlers | Route is wired; page follows lesson param changes, checks exact #22/#23 success codes and response IDs, and ST-11 owns #24. The preview omits lesson content/media. |
 | Runtime | Worklog/context Study Web | `NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-10 source screen.png](../../screen_stitch/03_student/ST-10_kiem-tra-quyen-va-bat-dau-hoc/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-10_kiem-tra-quyen-va-bat-dau-hoc/screen_annotated.png))
-- Luồng: GET #22 → nếu allowed, POST #23 → GET #24 → ST-11; retry/idempotency và #23 auto-vs-click chưa chốt.
-- Priority: P1; Gate/source status: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #22–#24 catalog/API-DD Draft, no Student route/module/query/test; AC-14/15 gate and payload gaps; public #09 exposes published `content`/`video_url` without enrollment check; BIGINT vs V1-PILOT UUID progress schema mismatch; ST-09 lessonId handoff absent; ST-10/ST-11 #24 ownership unresolved; Study Web UNWIRED; `423_LOCKED`/Session Token copy is static
+- Luồng thiết kế: GET #22 → POST #23 → GET #24 → ST-11. Current client waits for an explicit click for #23 and hands off to ST-11, which owns #24; product trigger and retry/idempotency decisions remain open.
+- Priority: P1; Gate/source status: **DD BLOCKED; IMPLEMENTATION PARTIAL / SOURCE_WIRED; RUNTIME NOT VERIFIED:** #22–#24 and ST-10 caller source exist, but access/payload/retry decisions remain; public #09 exposes published `content`/`video_url` without enrollment check; BIGINT vs V1-PILOT UUID progress schema mismatch; ST-09 lessonId handoff absent; ST-11 owns #24; `423_LOCKED`/Session Token copy is static
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Ghi nhận phản hồi API #22/#23 theo business code nguồn và đồng bộ trạng thái khi lessonId đổi; không chạy test/runtime.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -50,9 +51,9 @@
 
 > **DD status:** BLOCKED · **Implementation:** BLOCKED · **Runtime:** NOT VERIFIED
 
-## Current implementation update — 2026-11-17
+## Current implementation update — 2026-11-20
 
-- `/student/lessons/:lessonId/start` mounts ST-10 behind `StudentLayout`. It calls #22 on entry and only enables explicit #23 start after the returned lesson matches the route ID and has `PUBLISHED` status; after a matching start response it navigates to ST-11, which calls #24. Lesson content and media stay out of the ST-10 preview.
+- `/student/lessons/:lessonId/start` mounts ST-10 behind `StudentLayout`. It follows route param changes, calls #22 on entry, and only enables explicit #23 start after `DESIGN_RESOURCE_RETRIEVED` with the route ID and `PUBLISHED` status. It requires `DESIGN_RESOURCE_CREATED` and a matching PUBLISHED lesson before navigating to ST-11, which calls #24. Lesson content and media stay out of the ST-10 preview.
 - Current #22 checks course publication and enrollment but does not filter lesson status; #23 does not independently check publication. The client gates the start action on #22's response, while the server discrepancy remains. A safe ST-09 lessonId handoff and deployed behavior remain unverified.
 > **Phạm vi phiên:** chỉ ST-10. Đây là đặc tả theo bằng chứng thiết kế/source hiện có; mockup và API Draft không xác nhận hành vi đang chạy.
 
@@ -70,7 +71,7 @@
 | Màn hình trước/sau | ST-09 → ST-10 → ST-11. ST-09 design hiện không có lesson list/selection hoặc lessonId handoff; ST-11 route được inventory ghi là /student/lessons/:lessonId. |
 | API thiết kế | #22 GET /api/v1/lessons/{lesson_id}/access; #23 POST /api/v1/lessons/{lesson_id}/start; #24 GET /api/v1/lessons/{lesson_id}. Cả ba yêu cầu Bearer JWT/Student trong catalog, nhưng chưa có current route/module/query/test source. |
 | Asset hiện có | PNG đầy đủ 1566×1600; HTML mockup tĩnh cho entitlement gate. Hình là thiết kế handoff, không phải browser/runtime capture. |
-| Trạng thái | DD BLOCKED bởi access predicate, payload, idempotency, lesson projection và upstream lessonId chưa chốt. Implementation BLOCKED do Study Web route/source và APIs #22–#24 chưa wired. Runtime NOT VERIFIED. |
+| Trạng thái | DD BLOCKED bởi access predicate, payload, idempotency, lesson projection và upstream lessonId chưa chốt. Implementation PARTIAL / SOURCE_WIRED; runtime NOT VERIFIED. |
 
 ### Nguồn và mức độ bằng chứng
 
@@ -83,10 +84,10 @@
 | [API #22 DD](../../../../study-server/docs/dd/22_lessons_access/00_Cover.md), [open questions](../../../../study-server/docs/dd/22_lessons_access/OPEN_QUESTIONS.md) | Access rule, identity, 403 reason, 404, projection. | Draft — Needs Confirmation |
 | [API #23 DD](../../../../study-server/docs/dd/23_lessons_start/00_Cover.md), [open questions](../../../../study-server/docs/dd/23_lessons_start/OPEN_QUESTIONS.md) | UPSERT identity/state, repeated start, response, authorization, transaction. | Draft — Needs Confirmation |
 | [API #24 DD](../../../../study-server/docs/dd/24_lessons_detail/00_Cover.md), [open questions](../../../../study-server/docs/dd/24_lessons_detail/OPEN_QUESTIONS.md) | Entitlement/publish predicate, projection, error/null rules. | Draft — Needs Confirmation |
-| Study Server router/modules/tests | Exact search for Student endpoints #22–#24; Admin lesson APIs #82–#86 use a separate `/admin` path and permission. | #22–#24 NOT_FOUND; Admin routes are not substitutes |
+| Study Server router/modules/tests | #22–#24 Student routes, handlers, queries/models and focused tests; Admin lesson APIs #82–#86 use a separate `/admin` path and permission. | Source-backed current endpoints; implementation still has the predicate/response gaps listed below |
 | [API #09 current route/query/view](../../../../study-server/app/api/v1.py), [query](../../../../study-server/app/modules/guest/api_09_courses_curriculum/query.py), [view](../../../../study-server/app/modules/guest/api_09_courses_curriculum/view.py) | Public curriculum query returns published lesson fields including `content` and `video_url`; no auth/enrollment context is passed. | Source-backed current behavior; this is not the #24 access contract |
 | [DB design](../../../../study-server/docs/diagrams/DB_UNICA_TABLES.md), [BIGINT DDL](../../../../../infra/postgres/study-server/DB.sql), [V1-PILOT UUID DDL](../../../../../infra/postgres/02_study_db.sql), [database context](../../../../../.agents/project/database.md) | Two checked-in models differ for `lesson_progress`; no API #23 mapping or live metadata is verified. | Design/bootstrap artifacts; live schema NOT VERIFIED |
-| [Study Web context](../../../../../.agents/web-work/study/INDEX.md) và [Study UI guide](../../../../../.agents/web-study/design.md) | Current client source/wiring status and intended visual target. | Feature routes UNWIRED; guide is intended design |
+| [ST-10 page/service](../../src/app/features/student/ST10/pages/st10-page.ts), [Student API adapter](../../src/app/core/http/student-api.service.ts), [Student routes](../../src/app/features/student/student.route.ts) | Current caller, route, token acquisition boundary and intended visual target. | Source-wired; session/live runtime is not verified |
 | [Source PNG](../../screen_stitch/03_student/ST-10_kiem-tra-quyen-va-bat-dau-hoc/screen.png), [source HTML](../../screen_stitch/03_student/ST-10_kiem-tra-quyen-va-bat-dau-hoc/code.html), [marker map](../../screen_stitch/03_student/ST-10_kiem-tra-quyen-va-bat-dau-hoc/ST-10_markers.json), [annotated PNG](../../screen_stitch/03_student/ST-10_kiem-tra-quyen-va-bat-dau-hoc/screen_annotated.png) | Static appearance and interactive markup. | Design assets, not runtime evidence |
 
 ### Discrepancies cần giữ rõ

@@ -1,5 +1,7 @@
 # ST-08 data access
 
-API #20 and #21 are assigned in route metadata. No private request is sent
-until a Student session is established. API #21 currently returns a UserProfile
-projection and is not used as course progress.
+The page runs under `StudentLayout` and calls #20 with the requested page. The
+response is checked against the current 20-row `CourseSummaryPage` projection,
+including the requested page, pagination metadata, enrollment fields and
+enrolled-time ordering. #21 currently returns `UserProfile` and is not used as
+course progress. Deployed runtime remains unverified.

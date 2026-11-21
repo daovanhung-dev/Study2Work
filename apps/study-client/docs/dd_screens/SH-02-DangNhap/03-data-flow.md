@@ -1,5 +1,7 @@
 # SH-02 — Data Flow & State
 
+> Current source (2026-11-20): form validation → one #03 request → exact HTTP 200/`DESIGN_RESOURCE_RETRIEVED` check → supported role selection → matching in-memory session. Student then calls #04 and verifies role/email before `/student`; Mentor/Admin go to their role routes without #04. Errors map to form-level feedback. The historical/source-DD excerpts below remain the expected-contract record and are not all runtime behavior.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

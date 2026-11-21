@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/mentor/courses/:courseId/progress`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: registered in `apps/study-client/src/app/features/mentor/mentor.route.ts`; browser/runtime remains unverified.
 - Route params/types: `courseId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -20,8 +20,8 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: route is registered; page calls #65 from the current route ID. Route changes cancel stale reads.
+- Invalid/missing ID: page requires a positive int64-safe course ID before calling #65; backend returns not-found for invalid/nonexistent resources.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram
@@ -34,6 +34,8 @@ flowchart LR
 ## Source navigation and flow detail
 
 ### Trích từ DD nguồn: E. Ma trận trạng thái và điều hướng
+
+Current source row links use validated Student IDs to `/mentor/courses/:courseId/students/:studentId/progress`. ME16 does not create an analytics link based on the diagram's alternate ordering; route #66 remains ME18's responsibility.
 
 ### E1. Trạng thái
 

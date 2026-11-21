@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AD03ApiService } from '../data-access/ad03-api.service';
 import { StudyIcon } from '../../../../shared/ui/study-icon';
 import { AD03_SCREEN } from '../models/ad03-screen.model';
-import { adminRouteState, loadedFields } from '../../admin-screen-state';
+import { adminRouteState, isSignedInt64RouteId, loadedFields } from '../../admin-screen-state';
 import { renderUserFields } from '../../admin-screen-renderers';
 import type { AdminScreenField } from '../../../../shared/ui/admin-screen.model';
 
@@ -23,10 +23,20 @@ export class AD03Page {
     'userId',
     (userId) => this.api.getUser(userId),
     (user) => loadedFields(renderUserFields(user)),
+    isSignedInt64RouteId,
+    'Mã người dùng phải là số nguyên signed 64-bit.',
+    'DESIGN_RESOURCE_RETRIEVED',
   );
 
-  get userId(): string | null {
-    return this.route.snapshot.paramMap.get('userId');
+  get apiStateLabel(): string {
+    switch (this.viewState().status) {
+      case 'loading':
+        return 'Đang tải';
+      case 'loaded':
+        return 'Đã tải';
+      case 'error':
+        return 'Lỗi tải';
+    }
   }
 
   get identityFields(): readonly AdminScreenField[] {

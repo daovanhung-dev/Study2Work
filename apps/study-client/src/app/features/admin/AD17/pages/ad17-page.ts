@@ -20,6 +20,8 @@ export class AD17Page {
     'quizId',
     (quizId) => this.api.getStatistics(quizId),
     (statistics) => loadedMetrics(renderQuizStatistics(statistics)),
+    isPositiveSignedInt64QuizId,
+    'Mã Quiz trên đường dẫn phải là số nguyên dương trong giới hạn signed 64-bit.',
   );
 
   get quizId(): string {
@@ -29,4 +31,16 @@ export class AD17Page {
   get metricCards() {
     return this.viewState().metrics?.filter((metric) => metric.label !== 'Mã Quiz') ?? [];
   }
+}
+
+function isPositiveSignedInt64QuizId(value: string): boolean {
+  const match = /^[0-9]+$/.exec(value);
+  if (value.length > 19 || match?.[0] !== value) {
+    return false;
+  }
+
+  const digits = value.replace(/^0+/, '') || '0';
+  const max = '9223372036854775807';
+  return digits !== '0'
+    && (digits.length < max.length || (digits.length === max.length && digits <= max));
 }

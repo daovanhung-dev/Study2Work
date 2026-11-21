@@ -15,7 +15,7 @@
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [AD-03](../AD-03-ChiTietNguoiDung/00-overview.md), [AD-04](../AD-04-ChinhSuaNguoiDung/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [AD-03](../AD-03-ChiTietNguoiDung/00-overview.md), [AD-04](../AD-04-ChinhSuaNguoiDung/00-overview.md), [AD-05](../AD-05-KhoaMoKhoaXoaTaiKhoan/00-overview.md) | ID link, edit action, or account-action handoff | Positive JavaScript safe-integer user ID only | Local routes are registered; authenticated runtime/permission remains unverified |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
@@ -29,6 +29,7 @@
 flowchart LR
   S0["AD-02 Danh sách người dùng"] --> S1["AD-03"]
   S0["AD-02 Danh sách người dùng"] --> S2["AD-04"]
+  S0["AD-02 Danh sách người dùng"] --> S3["AD-05"]
 ```
 
 ## Source navigation and flow detail
@@ -54,8 +55,8 @@ flowchart LR
 | Từ AD-02 | Đích | Handoff | Ranh giới |
 |---|---|---|---|
 | Chọn user | AD-03 `/admin/users/:userId` | `id` từ `items[]` → #69. | Không đưa email/PII vào URL. |
-| Edit | AD-04 `/admin/users/:userId/edit` | `id` → #69 detail và #70 update theo DD màn đó. | Không sửa trực tiếp qua #68. |
-| Status/delete action | AD-05 `/admin/users/:userId/actions` | #71 hoặc #72; sau success refetch #68. | Policy/token/lifecycle còn mở; AD-02 chỉ là handoff. |
+| Edit | AD-04 `/admin/users/:userId/edit` | `id` → destination reads #69 and may submit #70 under its own gates. | AD-02 only navigates; no write is made here. |
+| Status/delete action | AD-05 `/admin/users/:userId/actions` | `id` → destination reads #69; #71/#72 remain controlled by AD-05. | Policy/token/lifecycle còn mở; AD-02 only hands off. |
 | Primary navigation | AD-01 hoặc các screen quản trị tương ứng | Dùng route catalog của từng Screen ID. | Prototype anchors hiện là `#`; không khẳng định destination đang chạy. |
 
 ### Trích từ DD nguồn: B. Luồng hoạt động tổng thể

@@ -9,7 +9,7 @@
       <li aria-hidden="true">›</li>
       <li aria-current="page">Chỉnh sửa khóa học</li>
     </ol>
-    <a class="back-link" [routerLink]="['/admin/courses', courseId()]"><study-icon name="chevron" /> Quay lại chi tiết khóa học (AD-07)</a>
+    <a class="back-link" [routerLink]="isCourseIdValid() ? ['/admin/courses', courseId()] : '/admin/courses'"><study-icon name="chevron" /> {{ isCourseIdValid() ? 'Quay lại chi tiết khóa học (AD-07)' : 'Danh sách khóa học' }}</a>
   </nav>
 
   <header class="course-hero">

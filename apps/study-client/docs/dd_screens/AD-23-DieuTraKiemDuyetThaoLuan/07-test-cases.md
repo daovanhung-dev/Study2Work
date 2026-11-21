@@ -11,14 +11,14 @@
 
 ### AD-23-TC-001 — Acceptance planning reference (AC-37)
 - **Mục tiêu:** Giữ truy vết tới yêu cầu/acceptance đã ghi; đây là test planning reference, không phải test code hoặc kết quả chạy.
-- **Precondition:** Đọc nguồn [AD-23](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/AD-23.md) và gỡ blocker áp dụng trước khi implementation.
+- **Precondition:** Đọc nguồn [AD-23](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/AD-23.md); current #98 read path is source-wired, while report/action blockers remain before full-flow acceptance.
 - **Mock/test data:** Nguồn không cung cấp fixture dùng để chạy test ở package này; không đưa dữ liệu thật.
 - **Steps:**
   1. Đối chiếu acceptance và event tương ứng trong DD nguồn.
   2. Khi runtime/test implementation tồn tại, viết test riêng theo contract đã xác nhận.
 - **Expected UI/state:** Theo acceptance/state trong nguồn; chưa được xác minh trên runtime.
 - **Expected API/data:** Theo [API Integration](04-api-integration.md); không phát sinh request trong lần tạo tài liệu.
-- **Failure / edge assertion:** Không đánh dấu pass cho `UNWIRED`, `IMPLEMENTATION BLOCKED` hoặc `RUNTIME NOT VERIFIED`.
+- **Failure / edge assertion:** Không đánh dấu full-flow pass khi `DD BLOCKED`, `IMPLEMENTATION PARTIAL` hoặc `RUNTIME NOT VERIFIED`.
 - **References:** `AC-37`, [Events](02-events.md), [Business Rules](05-business-rules.md), [source DD](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/AD-23.md).
 
 ## 3. Source acceptance / test plan (not run)
@@ -34,7 +34,7 @@
 - [x] AC-37 navigation, optional delete, dismissal branch and AD-22 handoff are represented with unresolveds visible.
 - [x] Source image and HTML are kept as original files; annotation is separate.
 - [ ] Full DD READY: **not met**; the blockers below affect implementability.
-- [ ] IMPLEMENTATION READY: **not met**; Study Web is UNWIRED and mutation APIs are absent locally.
+- [ ] IMPLEMENTATION READY: **not met**; the #98 read path is source-wired, but report context and mutation APIs/actions are absent locally.
 - [ ] RUNTIME VERIFIED: **not met**; no app/runtime verification was performed.
 
 ### Blockers requiring contract decisions
@@ -48,7 +48,7 @@
 7. Approve mapping between AC Admin permission and local `ADMIN`, actor identity, tenant scope, and policies for #99/#100.
 8. Implement the Study Web route/client, including response/error mapping, loading states and return/refresh behavior, then verify with runtime tests.
 
-Until those decisions are source-backed, keep moderation/delete controls locked, preserve the prototype discrepancy, and retain `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, `RUNTIME NOT VERIFIED`.
+Until those decisions are source-backed, keep moderation/delete controls locked, preserve the prototype discrepancy, and retain `DD BLOCKED`, `IMPLEMENTATION PARTIAL`, `RUNTIME NOT VERIFIED`.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 

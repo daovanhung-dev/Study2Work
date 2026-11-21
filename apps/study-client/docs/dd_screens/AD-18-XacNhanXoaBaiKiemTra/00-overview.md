@@ -4,11 +4,11 @@
 |---|---|
 | Screen ID | `AD-18` |
 | Module | Admin |
-| Route | `/admin/quizzes/:quizId/delete` — Angular route/page được đăng ký; `quizId` chỉ được hiển thị, không nạp detail hay gọi API |
+| Route | `/admin/quizzes/:quizId/delete` — Angular route/page được đăng ký; validates `quizId` against positive signed-int64 bounds and makes no detail/delete call |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
 | DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** `DD BLOCKED` · `IMPLEMENTATION PARTIAL — read-only route/navigation wired; delete flow blocked` · `RUNTIME NOT VERIFIED` · **API #90:** route/module/query/model/validator/test source có trong Study Server; API DD vẫn `Draft — Needs Confirmation`; live schema/deployment chưa xác minh. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.3 / 2026-11-20 |
 | Nguồn đối chiếu | [AD-18.md](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/AD-18.md), [AD-18_PLAN.md](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/AD-18_PLAN.md), [AD-18_markers.json](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/AD-18_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -30,8 +30,8 @@
 ## 4. UI states
 | State | Nguồn | Giá trị |
 |---|---|---|
-| Inventory states | `list_screen.md` | read-only current source; confirm/deleting/deleted/unauthorized/forbidden/not-found/validation-error/service-error/unknown-outcome are expected flow states; `conflict` unsupported |
-| Current runtime | Angular source + T007 verification | Route/page, AD-15 safe-ID entry và AD-18 return links wired; read-only, controls disabled; browser runtime `NOT VERIFIED`. |
+| Inventory states | `list_screen.md` | read-only current source; invalid route ID is locally announced; confirm/deleting/deleted/unauthorized/forbidden/not-found/validation-error/service-error/unknown-outcome are expected flow states; `conflict` unsupported |
+| Current source | Angular page | Preserves route ID as text, locally checks positive signed-int64 bounds, announces invalid ID, loads its scoped responsive stylesheet, keeps controls disabled and sends no API request; browser runtime `NOT VERIFIED`. |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-18 source screen.png](../../screen_stitch/05_admin/AD-18_xac-nhan-xoa-bai-kiem-tra/screen.png))
@@ -42,6 +42,7 @@
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Added client-side positive signed-int64 route validation matching current #90 path validator; invalid IDs receive an accessible warning, while delete remains locked. No tests/build/lint/browser run.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -60,7 +61,7 @@ AD-18 là màn hình xác nhận thao tác xóa quiz được AC-35 nối từ d
 | Thuộc tính | Expected behavior / nguồn | Current behavior / bằng chứng |
 |---|---|---|
 | Actor | AC-35 yêu cầu Admin có quyền quản lý quiz. | API #90 dùng shared `ADMIN` role guard; chưa có source cho fine-grained quiz-management permission. |
-| Điều kiện trước | Quiz được chọn từ AD-15 hoặc nhận `quizId` hợp lệ; người dùng đã xác thực và được phân quyền. | AD-15 tạo link cho ID số dương an toàn; AD-18 hiển thị raw route ID. Không có detail source/API; browser chưa xác minh. |
+| Điều kiện trước | Quiz được chọn từ AD-15 hoặc nhận `quizId` hợp lệ; người dùng đã xác thực và được phân quyền. | AD-15 links positive safe IDs; AD-18 preserves the raw ID and validates digits/positive signed-int64 bounds client-side. No detail source/API; browser unverified. |
 | Route | `/admin/quizzes/:quizId/delete`. | Angular route/page được đăng ký; đây không phải bằng chứng browser runtime. Stitch HTML gốc dùng `href="#"`. |
 | Dữ liệu target | Tên, ID và course giúp xác nhận đúng Quiz; attempts/history impact theo chính sách được duyệt. | Không có GET admin detail. #87 local list trả `id`, `course_id`, `title`, `duration_minutes`, `passing_score`, `questions=[]`; không trả course title hoặc counts/history. Không thể dựng nội dung hiện trên mockup từ contract #87 hiện tại. |
 | Điều kiện sau | Inventory kỳ vọng #90 delete và invalidate #87; trạng thái `deleted` được liệt kê. | Chưa có mutation/caching; action đang disabled. Exact success destination chưa được inventory/AC chốt. |

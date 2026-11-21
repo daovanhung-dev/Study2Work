@@ -1,5 +1,14 @@
 # ST-23 — Events (đặc tả xử lý)
 
+## Current-source reconciliation — 2026-11-21
+
+ST-23 calls #39 with the validated course filter/page and validates the page
+shape, row projections and requested page. The server reads COUNT and LIST
+separately. After existing out-of-range recovery, the client compares returned
+row count with the count-derived expected rows; on mismatch it preserves any
+returned rows, replaces empty copy with a retryable notice, and hides stale
+total/page controls. Sort remains omitted because current #39 ignores it.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

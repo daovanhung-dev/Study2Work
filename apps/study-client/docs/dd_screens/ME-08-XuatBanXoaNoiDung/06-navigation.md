@@ -2,15 +2,15 @@
 
 ## 1. Route definition
 - Current route in inventory: `/mentor/content/:contentId/actions`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `contentId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: route/page source wired; current caller is #49 only; mutations gated; runtime NOT VERIFIED.
+- Route params/types: `contentId` is validated as a positive safe Mentor ID. The required `courseId` comes from the ME-06 router history state; both values are checked before #49 is called. Route-param changes cancel stale reads.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [ME-06](../ME-06-CayNoiDungKhoaHoc/00-overview.md), [ME-07](../ME-07-TaoChinhSuaNoiDung/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [ME-06](../ME-06-CayNoiDungKhoaHoc/00-overview.md) | Current tree handoff | `contentId` path + `courseId` history state | Missing/invalid context blocks hydration; runtime chưa verify |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
@@ -20,8 +20,8 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: navigation state may not be present on direct entry; the page shows the invalid-context state and links to the course list. Browser/runtime is not verified.
+- Invalid/missing ID: missing or malformed `contentId`/`courseId` blocks hydration; an ID absent from the current #49 collection shows not-found.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram

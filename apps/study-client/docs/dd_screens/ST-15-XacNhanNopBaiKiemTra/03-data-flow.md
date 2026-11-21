@@ -61,7 +61,7 @@ ST-14 (attemptId + state handoff chưa chốt)
 |---|---|---|---|
 | ST-14 | ST-15 | `attemptId`; pending #30 state và summary cần thiết. | Route/link có trong inventory; shape/persistence của handoff chưa chốt. |
 | ST-15 Continue | ST-14 | Cùng `attemptId`; dirty queue/selected question nếu contract hỗ trợ. | Destination là suy luận phù hợp graph; URL/history/restore chưa xác minh. |
-| ST-15 accepted submit | ST-16 | `attemptId` và #31 response nếu schema/route contract cho phép. | Chỉ sau #31 accepted 200; ST-16 dùng #32 theo inventory. |
+| ST-15 accepted submit | ST-16 | `attemptId` after #31 returns `DESIGN_RESOURCE_UPDATED`, matching ID and `GRADED`. | Current client validates these fields before navigation; timeout/malformed success/409 expose #32 result check, with no blind replay. |
 | ST-15 error/ambiguous | ST-15 hoặc recovery route | Giữ `attemptId` và pending state an toàn. | Recovery/409/timeout route chưa được owner chốt; không tự sang ST-16. |
 
 ## 4. Luồng đọc (Read)

@@ -2,20 +2,20 @@
 
 ## 1. Route definition
 - Current route in inventory: `/student/quizzes/:quizId/attempts/:attemptId`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `quizId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent), `attemptId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: route and component are declared in Study Client; live runtime is not verified.
+- Route params/types: `quizId` and `attemptId` are read from `paramMap` and validated as positive int64-safe IDs; changed IDs reload #28 and reset local answer state.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [ST-13](../ST-13-GioiThieuBaiKiemTra/00-overview.md), [ST-15](../ST-15-XacNhanNopBaiKiemTra/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [ST-13](../ST-13-GioiThieuBaiKiemTra/00-overview.md) | Created attempt handoff | `quizId`, `attemptId` | Wired; ST-13 calls #29 and passes its response ID |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [ST-15](../ST-15-XacNhanNopBaiKiemTra/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [ST-15](../ST-15-XacNhanNopBaiKiemTra/00-overview.md) | Open submit confirmation | `attemptId`, only when no save is pending/error | Wired; browser runtime not verified |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.

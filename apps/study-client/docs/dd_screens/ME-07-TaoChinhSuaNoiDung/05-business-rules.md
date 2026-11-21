@@ -77,7 +77,7 @@ Security and accessibility notes:
 | Version/conflict | Inventory says `conflict`; AC says Content + version | #51 archives old row; response lacks version; no 409 | Define current revision/version selector and optimistic concurrency, or remove conflict promise. |
 | Authorization | AC-22 says Mentor with course-management access | #49–#51 check direct `courses.mentor_id` | Confirm assignment/co-owner authorization; current UI copy overstates domain reconciliation. |
 | Session badge/progress | “Đang đối soát”, 2/3 progress | No route/API data source | Remove or map to approved auth/session contract. |
-| Live DB/runtime | Content tables exist in repository | DDL/migrations 006/007 local; live migration not verified; Study Web `UNWIRED` | No runtime/deployment claim. |
+| Live DB/runtime | Content tables exist in repository | DDL/migrations 006/007 local; live migration not verified; Study Web source wired | No runtime/deployment claim. |
 
 ## 3. Quy tắc chưa xác nhận
 - `CẦN_XÁC_NHẬN`: các quyết định/blocker trong inventory và DD nguồn chưa được giải quyết.

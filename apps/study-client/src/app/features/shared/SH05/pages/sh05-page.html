@@ -1,13 +1,32 @@
 @if (state(); as error) {
   <main class="error-page" data-screen-id="SH-05">
     <section class="error-card" aria-labelledby="sh05-title">
-      <p class="error-card__status">HTTP {{ error.status }}</p>
-      <h1 id="sh05-title">HTTP {{ error.status }}</h1>
+      <p class="error-card__status">Yêu cầu không được chấp nhận · HTTP {{ error.status }}</p>
+      @if (error.kind === 'authentication-required') {
+        <h1 id="sh05-title">Không thể xác thực yêu cầu</h1>
+      } @else {
+        <h1 id="sh05-title">Bạn không có quyền truy cập</h1>
+      }
       <p class="error-card__message" role="status">{{ error.message }}</p>
+
+      @if (routeHandoff() && error.kind === 'authentication-required') {
+        <a class="error-card__action" routerLink="/login">Đăng nhập</a>
+      }
+
+      <a class="error-card__back" [routerLink]="returnTo()">Quay lại</a>
 
       @if (error.traceId) {
         <study-sh05-trace-card [traceId]="error.traceId" />
       }
+    </section>
+  </main>
+} @else if (!errorInputReceived()) {
+  <main class="error-page" data-screen-id="SH-05">
+    <section class="error-card" aria-labelledby="sh05-title">
+      <h1 id="sh05-title">Không thể xác định trạng thái truy cập</h1>
+      <p class="error-card__message" role="status">
+        Không có thông tin lỗi hợp lệ để hiển thị. Hãy mở lại trang bạn cần truy cập.
+      </p>
     </section>
   </main>
 }

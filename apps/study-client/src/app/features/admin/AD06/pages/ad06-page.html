@@ -61,6 +61,12 @@
   </section>
 
   <section class="catalog-table-panel" aria-label="Danh sách khóa học">
+    @if (viewState().status === 'loaded' && snapshotMismatch()) {
+      <div class="snapshot-warning" role="status" aria-live="polite">
+        <div><strong>Số lượng và danh sách khóa học chưa đồng nhất</strong><p>Các dòng API trả về vẫn được giữ lại; tổng và phân trang đang ẩn cho đến khi tải lại.</p></div>
+        <button type="button" (click)="refreshCourses()"><study-icon name="refresh" /> Tải lại trang này</button>
+      </div>
+    }
     <div class="table-scroll">
       <table>
         <caption class="visually-hidden">Danh sách khóa học quản trị từ API #73</caption>
@@ -73,7 +79,9 @@
           } @else if (viewState().status === 'error') {
             <tr><td class="table-state table-state--error" colspan="6" role="alert"><span class="state-mark"><study-icon name="info" /></span><strong>Không thể tải danh sách khóa học</strong><span>{{ viewState().message }}</span></td></tr>
           } @else if (isOutOfRange) {
-            <tr><td class="table-state" colspan="6"><span class="state-mark"><study-icon name="search" /></span><strong>Trang này không có bản ghi</strong><span>API trả về tổng số khóa học lớn hơn 0; trang hiện tại nằm ngoài phạm vi.</span><button class="state-action" type="button" (click)="changePage(1)">Về trang đầu</button></td></tr>
+            <tr><td class="table-state" colspan="6" role="status"><span class="state-mark"><study-icon name="search" /></span><strong>Trang này không có bản ghi</strong><span>Danh sách đã thay đổi; hãy quay lại trang đầu để xem dữ liệu hiện có.</span><button class="state-action" type="button" (click)="returnToFirstPage()">Về trang đầu</button></td></tr>
+          } @else if (snapshotMismatch() && (viewState().rows?.length ?? 0) === 0) {
+            <tr><td class="table-state" colspan="6" role="status"><span class="state-mark"><study-icon name="info" /></span><strong>Trang chưa đồng bộ</strong><span>API #73 trả về số dòng khác với tổng ở thời điểm đọc; không coi đây là danh sách rỗng.</span><button class="state-action" type="button" (click)="refreshCourses()">Tải lại trang này</button></td></tr>
           } @else if (isEmpty) {
             <tr><td class="table-state" colspan="6"><span class="state-mark"><study-icon name="book" /></span><strong>Không tìm thấy khóa học</strong><span>API #73 trả về danh sách rỗng cho trang hiện tại.</span></td></tr>
           } @else {
@@ -84,7 +92,13 @@
                 <td>{{ row.values[3] }}</td>
                 <td>{{ row.values[4] }}</td>
                 <td><span class="status-badge">{{ row.values[5] }}</span></td>
-                <td><a class="row-action" [routerLink]="row.route ?? '/admin/courses'" [attr.aria-label]="'Xem chi tiết ' + row.values[1]"><span>Xem chi tiết</span><study-icon name="chevron" /></a></td>
+                <td>
+                  @if (row.route) {
+                    <a class="row-action" [routerLink]="row.route" [attr.aria-label]="'Xem chi tiết ' + row.values[1]"><span>Xem chi tiết</span><study-icon name="chevron" /></a>
+                  } @else {
+                    <span class="row-action row-action--disabled">Không thể mở chi tiết với ID này</span>
+                  }
+                </td>
               </tr>
             }
           }
@@ -100,11 +114,13 @@
           Số lượng chỉ hiển thị sau khi API tải thành công.
         }
       </p>
-      <div class="pagination-controls" aria-label="Phân trang khóa học">
-        <button type="button" [disabled]="previousDisabled" (click)="changePage((viewState().pagination?.page ?? 1) - 1)"><study-icon name="chevron" /> Trang trước</button>
-        <span aria-live="polite">{{ pageCount }}</span>
-        <button type="button" [disabled]="nextDisabled" (click)="changePage((viewState().pagination?.page ?? 0) + 1)">Trang sau <study-icon name="chevron" /></button>
-      </div>
+      @if (!snapshotMismatch() && !isOutOfRange) {
+        <div class="pagination-controls" aria-label="Phân trang khóa học">
+          <button type="button" [disabled]="previousDisabled" (click)="changePage((viewState().pagination?.page ?? 1) - 1)"><study-icon name="chevron" /> Trang trước</button>
+          <span aria-live="polite">{{ pageCount }}</span>
+          <button type="button" [disabled]="nextDisabled" (click)="changePage((viewState().pagination?.page ?? 0) + 1)">Trang sau <study-icon name="chevron" /></button>
+        </div>
+      }
     </div>
   </section>
 </main>

@@ -15,10 +15,10 @@ status: "Draft — Needs Confirmation"
 
 ~~~text
 0. Validate Mentor Bearer JWT.
-1. Validate path/body types and ranges; parse asset_refs JSON string into an ordered int64 ID array; allow [], reject duplicates and invalid values.
+1. Validate path/body types and ranges; accept content as a required Markdown string; parse asset_refs JSON string into an ordered int64 ID array; allow [], reject duplicates and invalid values.
 2. Read course by path ID; return 404 if missing and 403 unless `courses.mentor_id` equals the authenticated Mentor. Do not filter course status.
 3. Resolve every non-empty asset ID from uploads where owner is the same Mentor, purpose is LECTURE and course_id matches path; any unresolved ID returns the same 404.
-4. Insert lessons with content as a decimal string, status `PUBLISHED` and database `CURRENT_TIMESTAMP` for both required timestamps.
+4. Insert lessons with the Markdown content unchanged, status `PUBLISHED` and database `CURRENT_TIMESTAMP` for both required timestamps.
 5. For non-empty asset refs, insert `lesson_uploads` rows in request order in the same transaction; commit and return assets in input order.
 ~~~
 
@@ -31,7 +31,7 @@ The API route, module and HTTP tests are source-backed. Legacy BIGINT DDL and mi
 | Authorization | Header | Valid Bearer JWT with Mentor role | Mentor principal is compared with `courses.mentor_id` and filters asset `owner_id` | Not echoed | Direct owner only; no assignment lookup. |
 | course_id | Path | Signed int64 | Q1 reads course; Q2 filters uploads; M1 sets lessons.course_id | data.course_id | Legacy BIGINT source; live schema not verified. |
 | title | Body | Required string; maximum 200 | M1 sets lessons.name | data.title | No minimum or trim rule. |
-| content | Body | Required signed int64 | M1 stores `str(content)` in lessons.content | data.content | Response is the decimal string; semantics are user-approved. |
+| content | Body | Required string containing Markdown | M1 stores the string unchanged in lessons.content | data.content | T041-approved Markdown string; response preserves exact submitted text. |
 | asset_refs | Body | JSON text array of unique signed int64 IDs; empty array allowed | Q2 reads uploads with owner/purpose/course predicates | data.assets[] | Any ID not resolved in scope returns generic 404. |
 | order | Body | Required signed int32 | M1 sets lessons.sort_order | data.order | No positivity rule. |
 
@@ -48,7 +48,7 @@ Q2 must project `id`, `file_name`, `url`, `content_type`, `size_bytes` and `stat
 
 | Mutation ID | Operation | Target table | Record condition | Target column | Value source | Mapping file | Transaction | Failure behavior |
 |---|---|---|---|---|---|---|---|---|
-| M1 | INSERT | lessons | After auth, request validation, direct course ownership and full asset resolution | course_id, name, content, sort_order, status, created_at, updated_at | Path/request; `str(content)`; fixed `PUBLISHED`; `CURRENT_TIMESTAMP` | 07_lessons_insert.md | Caller-owned transaction; commit after response mapping; rollback on DB/insert/commit failure | Live target schema not verified. |
+| M1 | INSERT | lessons | After auth, request validation, direct course ownership and full asset resolution | course_id, name, content, sort_order, status, created_at, updated_at | Path/request; content as submitted; fixed `PUBLISHED`; `CURRENT_TIMESTAMP` | 07_lessons_insert.md | Caller-owned transaction; commit after response mapping; rollback on DB/insert/commit failure | Live target schema not verified. |
 | M2 | INSERT | lesson_uploads | After lesson row and asset scope checks; only for non-empty refs | lesson_id, upload_id, asset_position | Generated lesson ID; validated IDs and zero-based original order | migration 005 / API #47 view | Same transaction as M1; require every requested ID returned; rollback on mismatch/error | Live migration not verified. |
 | M3 | N/A | uploads/resources | API #47 does not mutate upload metadata or legacy resources | N/A | Resolved IDs are read-only | N/A | No asset mutation | Do not create resource rows. |
 
@@ -79,7 +79,7 @@ Q2 must project `id`, `file_name`, `url`, `content_type`, `size_bytes` and `stat
 - Every element must be a signed int64 UploadAsset ID.
 - Empty array is allowed and maps to empty `assets`.
 - Duplicate IDs are rejected before asset lookup.
-- `content:int64` is stored in `lessons.content` as `str(content)` and returned as that decimal string.
+- `content` must be a string and is stored/returned unchanged as Markdown text.
 - Invalid request types/ranges, malformed JSON, duplicate IDs and title over 200 return 422.
 - Missing or cross-scope assets must never be returned as UploadAsset values; all unresolved IDs map to generic 404.
 

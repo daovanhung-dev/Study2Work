@@ -2,6 +2,10 @@
 
 > Current Angular source update (2026-11-16): route load calls #92 with page=1; status/channel submit sends only exact source values; reset returns to page 1; pagination uses API metadata; keyword search remains disabled; CTA uses /admin/notifications/new; row status links render only for safe integer IDs. Focused page/route specs pass 6/6. The event details below describe the earlier Stitch prototype and do not resolve the #92 Draft contract.
 
+> **T119 current-source update (2026-11-20):** Before AD-19 renders #92 data it now checks the exact success code, requested page, size 20, total-pages formula, notification projections and selected status/channel. Invalid payloads route to the existing error state. Completion is 62.5%; visual and unsupported-data gaps remain. No tests/build/lint/browser checks were run for this update.
+
+> **Current row display update (2026-11-20):** The AD-19 list translates #92's source-defined `QUEUED`/`SENT`/`FAILED` statuses to “Đang chờ gửi”/“Đã gửi”/“Gửi thất bại”; unknown values use a neutral fallback. Query filters still use exact raw status/channel strings, and the labels do not map to prototype-only `draft`/`scheduled`/`published` states.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|
@@ -72,6 +76,8 @@
 - **Trình tự:** 1) Nhận click. 2) Không kiểm tra auth/quyền hoặc query. 3) Handler thêm animation class và disable button. 4) Timer 800ms chạy. 5) Không gọi API/network. 6) Không nhận response/error. 7) Hủy class và enable button khi timer kết thúc. 8) Không đổi list.
 - **Kết quả:** Chỉ có spinner ngắn. Không được mô tả là reload thành công. Retry/timeout chưa áp dụng vì chưa có request.
 
+- **Angular current source (2026-11-20):** the loaded-empty state renders marker #34 as a refresh button. Activation re-emits the current query object, so the existing query state repeats GET #92 with the same applied `status`, `channel`, and `page`; the table then renders its loading row. This is a manual list read, not the prototype timer animation. Catalog response-shape, permission, schema, and browser-runtime gaps remain open.
+
 ### EV-06 — Bắt đầu soạn thông báo
 
 - **Element / loại:** #15 Anchor/button click.
@@ -114,3 +120,8 @@
 
 ## Trace links
 - [UI Elements](01-ui-elements.md) · [API Integration](04-api-integration.md) · [Business Rules](05-business-rules.md) · [Navigation](06-navigation.md) · [Test Cases](07-test-cases.md)
+
+### Current-source addendum — 2026-11-21
+
+- EV-01 and EV-08 keep validating the exact #92 envelope/page/item/query shape, but no longer reject a response solely because COUNT and LIST disagree. The page detects expected-row mismatch, keeps returned rows visible, hides possibly stale total/pagination and exposes a manual retry using the same applied query.
+- Empty out-of-range pages offer recovery to page 1; matching empty responses remain normal empty results. Unsafe total values are treated as a mismatch so they are not rendered as trustworthy counts. API filters, local ordering, ID-safe route behavior, and no-polling policy are unchanged.

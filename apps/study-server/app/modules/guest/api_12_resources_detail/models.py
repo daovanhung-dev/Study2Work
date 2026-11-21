@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -13,5 +15,6 @@ class ResourceDetail(BaseModel):
     id: int
     name: str
     type: str
-    url: str | None = None
+    url: str
+    visibility: Literal["PUBLIC", "PRIVATE"]
     lesson_id: int | None = None

@@ -102,3 +102,9 @@ Tọa độ `(x,y)` tính bằng pixel trên `screen.png` 1600×1461 và lưu ch
 
 ## 5. Link
 - [Events](02-events.md) · [Data Flow](03-data-flow.md) · [Tests](07-test-cases.md)
+
+
+## Current Study Web source mapping — 2026-11-20
+
+- Angular AD10Page renders a source-backed six-field table (Content ID, title, course ID, content type, order, status) with a safe AD-11 action, loading/error/empty/loaded states, response-backed count and pagination, exact `type/course` filters, and a manual refresh button. #78 guarantees `PENDING_REVIEW` for queue rows; the status column displays “Đang chờ duyệt” and uses a neutral fallback for unexpected values.
+- Mockup search, lecturer/course-name/date fields, synthetic option values, 30-second sync, live-system/RBAC badges, reviewer rubric and fixed `0/0` values are not presented as server-backed behavior. Runtime and visual acceptance remain unverified.

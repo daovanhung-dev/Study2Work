@@ -31,6 +31,7 @@ def sample_resource_row() -> dict[str, Any]:
         "name": "Tai lieu tham khao.pdf",
         "resource_type": "DOCUMENT",
         "url": "https://cdn.example.com/res/101.pdf",
+        "visibility": "PUBLIC",
         "lesson_id": 12,
     }
 
@@ -41,6 +42,7 @@ def test_resource_item_model_maps_type() -> None:
         name="Doc",
         type="DOCUMENT",
         url="https://example.com/1.pdf",
+        visibility="PUBLIC",
         lesson_id=10,
     )
     assert item.id == 1
@@ -70,10 +72,12 @@ def test_get_resources_course_not_found(
     assert payload["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
 
 
-def test_get_resources_empty_resources_returns_404(
+def test_get_resources_empty_resources_returns_empty_list(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra khóa học hợp lệ không có tài nguyên trả mảng rỗng thành công."""
+
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
 
@@ -89,16 +93,19 @@ def test_get_resources_empty_resources_returns_404(
     )
 
     response = client.get("/api/v1/courses/1/resources")
-    assert response.status_code == 404
+    assert response.status_code == 200
     payload = response.json()
-    assert payload["success"] is False
-    assert payload["businessCode"] == "DESIGN_RESOURCE_NOT_FOUND"
+    assert payload["success"] is True
+    assert payload["businessCode"] == "DESIGN_RESOURCE_RETRIEVED"
+    assert payload["data"] == []
 
 
 def test_get_resources_success(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Kiểm tra API ánh xạ một resource public thành phần tử trong Resource[]."""
+
     session = FakeSession()
     client.app.dependency_overrides[get_db] = override_db(session)
 
@@ -121,14 +128,53 @@ def test_get_resources_success(
     payload = response.json()
     assert payload["success"] is True
     assert payload["businessCode"] == "DESIGN_RESOURCE_RETRIEVED"
-    assert payload["data"] == {
-        "id": 101,
-        "name": "Tai lieu tham khao.pdf",
-        "type": "DOCUMENT",
-        "url": "https://cdn.example.com/res/101.pdf",
-        "lesson_id": 12,
-    }
+    assert payload["data"] == [
+        {
+            "id": 101,
+            "name": "Tai lieu tham khao.pdf",
+            "type": "DOCUMENT",
+            "url": "https://cdn.example.com/res/101.pdf",
+            "visibility": "PUBLIC",
+            "lesson_id": 12,
+        },
+    ]
     assert payload["traceId"] == "00000000-0000-0000-0000-000000000011"
+
+
+def test_get_resources_returns_every_public_resource_in_source_order(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Kiểm tra response giữ mọi resource theo thứ tự nguồn đã truy vấn."""
+
+    session = FakeSession()
+    client.app.dependency_overrides[get_db] = override_db(session)
+
+    monkeypatch.setattr(
+        resources_view,
+        "find_published_course",
+        lambda db, *, course_id: {"id": course_id, "status": "PUBLISHED"},
+    )
+    monkeypatch.setattr(
+        resources_view,
+        "find_course_resources",
+        lambda db, *, course_id: [
+            sample_resource_row(),
+            {
+                **sample_resource_row(),
+                "id": 102,
+                "name": "Tài liệu bài học tiếp theo.pdf",
+                "lesson_id": 13,
+            },
+        ],
+    )
+
+    response = client.get("/api/v1/courses/1/resources")
+
+    assert response.status_code == 200
+    resources = response.json()["data"]
+    assert [item["id"] for item in resources] == [101, 102]
+    assert all(item["visibility"] == "PUBLIC" for item in resources)
 
 
 def test_get_resources_database_error_rolls_back(

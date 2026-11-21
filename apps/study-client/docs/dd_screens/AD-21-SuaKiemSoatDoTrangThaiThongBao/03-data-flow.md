@@ -1,5 +1,7 @@
 # AD-21 — Data Flow & State
 
+> **Current Angular route update (2026-11-20):** `AD21Page` validates the raw `notificationId` as a full-string positive signed-int64 before GET #96; invalid/missing IDs stop locally and valid raw text is preserved. The response model still rejects IDs that JavaScript cannot represent exactly; route validation does not resolve that response precision boundary.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

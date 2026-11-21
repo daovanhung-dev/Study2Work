@@ -1,27 +1,28 @@
 # ME-05 — Navigation
 
 ## 1. Route definition
-- Current route in inventory: `/mentor/lectures/:lectureId`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `lectureId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Current route in source: `/mentor/lectures/:lectureId`
+- Status: registered in `mentor.route.ts`; browser/runtime not verified.
+- Route params/types: `lectureId` is a positive signed int64 string, validated before request; invalid values stop before #48.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| [ME-04](../ME-04-TaiLenVaTaoBaiGiang/00-overview.md) | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| [ME-04](../ME-04-TaiLenVaTaoBaiGiang/00-overview.md) | #47 create succeeds | `data.id` from created lecture | ME-04 navigates to `/mentor/lectures/:lectureId`; ME-05 reloads through #48 |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [ME-03](../ME-03-WorkspaceKhoaHocCuaMentor/00-overview.md), [ME-06](../ME-06-CayNoiDungKhoaHoc/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [ME-03](../ME-03-WorkspaceKhoaHocCuaMentor/00-overview.md) | Activate workspace link | Validated `data.course_id` | Available only after a valid #48 response |
+| [ME-06](../ME-06-CayNoiDungKhoaHoc/00-overview.md) | Activate content-tree link | Validated `data.course_id` | Available only after a valid #48 response |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: route param stream reloads the current lecture and cancels a stale request; browser refresh was not exercised.
+- Invalid/missing ID: invalid/overflow ID is shown locally; API #48 maps malformed/out-of-range/missing/deleted IDs to 404.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram
@@ -41,13 +42,13 @@ flowchart LR
 sequenceDiagram
     participant M as Mentor
     participant ME04 as ME-04
-    participant Web as Study Web route (chưa có source)
+    participant Web as Study Web ME-05 route
     participant API as GET #48
     participant Auth as Shared MENTOR guard
     participant DB as lessons/courses + lesson_uploads/uploads
     M->>ME04: Tạo lecture (expected AC-21)
-    ME04-->>Web: #47 201 data.id (expected; client redirect chưa wire)
-    M->>Web: Mở /mentor/lectures/:lectureId
+    ME04-->>Web: Điều hướng tới /mentor/lectures/{data.id}
+    M->>Web: Mở hoặc tải lại /mentor/lectures/:lectureId
     Web->>API: Bearer JWT + path lecture_id
     API->>Auth: Validate token và role MENTOR
     Auth-->>API: Numeric principal hoặc 401/403
@@ -56,10 +57,10 @@ sequenceDiagram
     API->>DB: Q2 linked UploadAsset theo owner/purpose/course, order
     DB-->>API: Lecture row + asset metadata
     API-->>Web: 200 ApiEnvelope<Lecture> hoặc safe error
-    Web-->>M: Map các field được API trả về; phần còn lại đang blocked
+    Web-->>M: Render các field #48 hỗ trợ; phần mockup còn thiếu dữ liệu vẫn blocked
 ```
 
-Flow Web trong sơ đồ là expected/proposed. Current Web runtime route, token client, state cache và redirect chưa được tìm thấy.
+Client route, #48 caller, retry và #47 → #48 handoff hiện có trong source. Browser/runtime/deployment vẫn chưa xác minh.
 
 ### API #48 current source trace
 
@@ -81,7 +82,7 @@ Flow Web trong sơ đồ là expected/proposed. Current Web runtime route, token
 | `data.id` | int64 | #9; ID lecture | `lessons.id`, direct. |
 | `data.course_id` | int64, required | Course context for #7/ME-03/ME-06 handoff | `lessons.course_id`; NULL/missing parent là 500 theo local handler. Đây là numeric ID, không phải course code/tên. |
 | `data.title` | string, required | #11 | `lessons.name → title`. |
-| `data.content` | string or null | #18 candidate only | Giữ nguyên text/SQL NULL. #47 nhận `content:int64` và lưu chuỗi thập phân; không xác nhận đây là Markdown/HTML/code/documentation. |
+| `data.content` | string or null | Escaped plain text in `<pre>`; null state | T041: #47 accepts Markdown `string` and stores it unchanged; #48 keeps nullable response for legacy rows. No HTML/Markdown renderer is used. |
 | `data.assets[]` | array, required | #21; child fields underpin #22/#23 | Ordered UploadAsset rows; `[]` nếu không có association. |
 | `assets[].id/name/url/content_type/size_bytes/status` | int64/string/uri/string/int64/string | file name/type/size/status metadata; `url` is not proof access is available | `uploads.id/file_name/url/content_type/size_bytes/status`; scoped owner/purpose/course. |
 | `data.order` | int32 | optional position metadata only if product decides to show it | `lessons.sort_order → order`. No module/chapter/neighbor semantics. |
@@ -91,13 +92,13 @@ Flow Web trong sơ đồ là expected/proposed. Current Web runtime route, token
 
 | Item | Expected/design | Current evidence | Status / impact |
 |---|---|---|---|
-| Study Web route | `/mentor/lectures/:lectureId` | No editable client source/router/package; static anchors are `#`. | `UNWIRED`; cannot claim route/redirect. |
+| Study Web route | `/mentor/lectures/:lectureId` | Registered route, route-param reactive page, #48 service, retry and ME-04 handoff exist. | `SOURCE-WIRED`; browser/deployment not verified. |
 | AC-21 access | Mentor may own or be assigned course | #48 checks only `courses.mentor_id == numeric JWT principal`. | `DISCREPANCY`; assigned-course authorization is unsupported. |
-| API status | Inventory/catalog snapshot labels #48 `D`; local server has route/module/focused test source. | Source registration is local, API DD remains Draft. | `DISCREPANCY`; do not equate declaration or local source with deployment. |
+| API status | Current screen/API matrix marks #48 `R`; API DD remains Draft. | Local route/module/query/validation/test and ME-05 caller exist; deployment/live schema remain unverified. | Source-wired locally; do not equate it with deployment. |
 | Screenshot projection | Author, video, analytics, discussions, course tree and lesson neighbors | Not fields of #48 response. | `DISCREPANCY`; no fabricated response mapping. |
-| Lecture content | Academic formatted notes/code | API #48 returns nullable string; #47 stores decimal string from int64 input. | `DISCREPANCY`; display/content serialization needs API/Product decision. |
+| Lecture content | Academic formatted notes/code | T041 approves #47 Markdown string; ME-05 renders escaped text, not formatted Markdown. #48 may return null for older rows. | Content serialization is source-backed; rich Markdown rendering remains intentionally absent. |
 | Status/actions | Published badge, status menu, edit action | #48 returns status, filters `DELETED`; it does not change status or lecture fields. #47 creates PUBLISHED. | `DISCREPANCY`; hide/disable actions until contract. |
-| Resources | Download/open PDF and GitHub | #48 returns UploadAsset metadata URL. Public URL/provider reachability is not verified; GitHub destination is mock data. | `IMPLEMENTATION BLOCKED`; URL exposure/use policy and link source required. |
+| Resources | Download/open PDF and GitHub | #48 returns UploadAsset URL but access/provider reachability is not verified; page displays metadata only. GitHub destination is mock data. | Download/preview/GitHub actions remain blocked pending URL and destination policy. |
 | Course outline | Current/previous/next lesson tree | #48 has only `course_id` and `order`; no list/detail projection. #49/ME-06 is a separate flow. | `DISCREPANCY`; define navigation and lesson source. |
 | Discussion link | Mockup names ST-25 | Inventory links ME-03/ME-06, and ST-25 is a Student screen. | `DISCREPANCY`; cross-role target is not approved for Mentor. |
-| API DD / schema | Finalized persistence and DTO contract | API #48 DD is Draft; migrations/live DB, identity, content/null, enum, path mapping remain open. | `IMPLEMENTATION BLOCKED`; confirm before relying on DB result. |
+| API DD / schema | Finalized persistence and DTO contract | API #48 DD remains Draft; live schema/migration, assigned-course support, status enum and malformed-path policy remain open. | Local source is used; no claim is made about live DB/deployment. |

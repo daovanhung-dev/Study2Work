@@ -1,11 +1,15 @@
 # ST-24 — Navigation
 
+## Current source route and handoff — 2026-11-20
+
+`/student/discussions/new` is registered in `student.route.ts`. An optional `courseId` query param preselects an ACTIVE course on the loaded page. After #40 succeeds and #39 confirms the new topic, the page returns to ST-23 filtered by course; it retains a direct ST-25 receipt link if navigation fails. Runtime navigation is not verified.
+
 ## 1. Route definition
 - Current route in inventory: `/student/discussions/new`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: current route is source-wired; runtime not verified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
-- Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
-- Route guards: see source DD/API contract; do not create role policy.
+- Query params/defaults: optional `courseId` positive safe ID for preselection; invalid/nonmatching values do not bypass #20 course checks.
+- Route guards: authenticated Student route group; #40 independently requires ACTIVE enrollment.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |

@@ -97,3 +97,8 @@ Bearer token chỉ được cấp qua shared auth client; không lưu token tron
 
 ## 8. Trace
 [Events](02-events.md) · [API](04-api-integration.md) · [Rules](05-business-rules.md)
+
+### Current-source addendum — 2026-11-21
+
+- The #73 mapper requires DESIGN_RESOURCE_RETRIEVED, a valid Course Page/item projection, page echo, fixed size 20 and total_pages consistent with safe totals.
+- AD06Page derives expected items for page/size/total after validation. COUNT/LIST disagreement keeps the returned rows, shows a retryable warning, hides stale totals/page controls and blocks navigation. Empty out-of-range responses can return to page 1; matching zero-total pages remain empty.

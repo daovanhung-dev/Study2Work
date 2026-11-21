@@ -1,5 +1,9 @@
 # ME-09 — Test Cases
 
+## Current source state — 2026-11-20
+
+ME09 is source-wired to #54. Query changes cancel prior reads; the component validates the success envelope/code, pagination, Submission identity/fields, timestamps and file metadata before display. No ME09-specific frontend test result is claimed; tests were not run. API Page cardinality and requested deadline/owner fields remain unresolved.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix

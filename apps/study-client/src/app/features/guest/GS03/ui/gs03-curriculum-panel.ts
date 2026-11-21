@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { StudyIcon } from '../../../../shared/ui/study-icon';
 import type { GuestCurriculumState } from '../models/gs03-curriculum.models';
@@ -11,4 +11,5 @@ import type { GuestCurriculumState } from '../models/gs03-curriculum.models';
 })
 export class GS03CurriculumPanel {
   @Input({ required: true }) state!: GuestCurriculumState;
+  @Output() readonly retry = new EventEmitter<void>();
 }

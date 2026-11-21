@@ -13,8 +13,8 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #83, #84, #85, #86
-- Orchestration/data notes: AD-13 numeric `Lesson.id` → GET #83 → riêng một nhánh PUT #84 / PATCH #85 / DELETE #86 → reload AD-12/#82 theo AC-34.
-- BE/source status và gate: **R** local #83–#86 route/module/query/model/test source; API DDs Draft. #84 full-replacement body `{title,content,video_url,order}` và #85 `{status}`/enum/audit là DERIVED; #86 rechecks `lesson_progress`, `resources`, `lesson_uploads` and returns 422 on any reference. **DD BLOCKED; IMPLEMENTATION BLOCKED:** #84 form/body mismatch (no `video_url`, course/type unmapped), #85 `ARCHIVED` vs local `SUSPENDED`, dependency set/output, `ADMIN` vs lesson-management permission, legacy/V1-PILOT/live schema, Study Web `UNWIRED`; **RUNTIME NOT VERIFIED**
+- Orchestration/data notes: AD-13 numeric `Lesson.id` → Angular AD-14 route/page → signed-int64 guard → GET #83. Mutations #84/#85/#86 have no Study Web callers and remain disabled; AC-34's mutation/reload chain remains expected only.
+- BE/source status and gate: **R** local #83–#86 route/module/query/model/test source; Angular #83 read caller is source-present; API DDs Draft. #84 full-replacement body `{title,content,video_url,order}` and #85 `{status}`/enum/audit are DERIVED; #86 rechecks `lesson_progress`, `resources`, `lesson_uploads` and returns 422 on any reference. **DD BLOCKED; IMPLEMENTATION PARTIAL READ / MUTATIONS BLOCKED:** #84 form/body mismatch (no `video_url`, course/type unmapped), #85 `ARCHIVED` vs local `SUSPENDED`, dependency set/output, `ADMIN` vs lesson-management permission, legacy/V1-PILOT/live schema; **RUNTIME NOT VERIFIED**
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API boundary

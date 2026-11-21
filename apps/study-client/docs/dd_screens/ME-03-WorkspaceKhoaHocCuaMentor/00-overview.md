@@ -6,7 +6,7 @@
 | Module | Mentor |
 | Route | `/mentor/courses/:courseId` — route trong inventory, không phải xác nhận router runtime |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** `DD BLOCKED` — source-backed phần cây Content và roster progress; contract API #65, permission, course summary và phần lớn dữ liệu mẫu/UI còn quyết định hoặc không có nguồn.; **Implementation status:** `IMPLEMENTATION BLOCKED` — Study Web route/session chưa có; quyền course và các panel chính chưa có contract/API phù hợp.; **Runtime status:** `RUNTIME NOT VERIFIED` — không chạy frontend/API production hoặc live DB trong phiên này. |
+| DD status | Draft (package được chuyển đổi); source status: **DD status:** `DD BLOCKED` — source-backed phần cây Content và roster progress; contract API #65, permission, course summary và phần lớn dữ liệu mẫu/UI còn quyết định hoặc không có nguồn.; **Implementation status:** `SOURCE_PARTIAL` — route và caller #46/#49/#65 có trong Study Web; route ID và response được kiểm tra trước khi render, các hành động/panel chỉ có trong prototype vẫn chưa được triển khai.; **Runtime status:** `RUNTIME NOT VERIFIED` — không chạy frontend/API production hoặc live DB trong phiên này. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [ME-03.md](../../screen_stitch/04_mentor/ME-03_workspace-khoa-hoc-cua-mentor/ME-03.md), [ME-03_PLAN.md](../../screen_stitch/04_mentor/ME-03_workspace-khoa-hoc-cua-mentor/ME-03_PLAN.md), [ME-03_markers.json](../../screen_stitch/04_mentor/ME-03_workspace-khoa-hoc-cua-mentor/ME-03_markers.json), [list_screen.md](../../list_screen.md) |
@@ -48,7 +48,7 @@
 # ME-03 — Workspace khóa học của mentor
 
 > **DD status:** `DD BLOCKED` — source-backed phần cây Content và roster progress; contract API #65, permission, course summary và phần lớn dữ liệu mẫu/UI còn quyết định hoặc không có nguồn.
-> **Implementation status:** `IMPLEMENTATION BLOCKED` — Study Web route/session chưa có; quyền course và các panel chính chưa có contract/API phù hợp.
+> **Implementation status:** `SOURCE_PARTIAL` — route `/mentor/courses/:courseId` và callers #46/#49/#65 có trong Study Web. ME-03 theo dõi `courseId`, hủy request cũ khi route đổi, kiểm tra response và tách trạng thái tải cây nội dung/tiến độ. Các panel prototype không có dữ liệu/API phù hợp vẫn chưa triển khai.
 > **Runtime status:** `RUNTIME NOT VERIFIED` — không chạy frontend/API production hoặc live DB trong phiên này.
 
 ## Trích đoạn tổng quan từ DD nguồn
@@ -72,5 +72,5 @@
 - **Expected behavior:** [ME-03 trong inventory](../../list_screen.md#L163), AC-22/AC-26 và route/dependency list. Inventory xác định #49/#65, trạng thái và các màn hình liên kết.
 - **Current API #49:** route/module hiện có, read-only, trả flat `Content[]`; catalog và AC-22 cùng nêu `Content[]`. API DD vẫn giữ Draft — Needs Confirmation cho payload/lifecycle/revision và direct-owner so với assigned-course policy.
 - **Current API #65:** route/module hiện có, read-only, trả local `Page<MentorStudentProgress>`. API catalog vẫn ghi `ApiEnvelope<Page<Course>>`; local response, tính progress, roster eligibility và trang không giới hạn là lựa chọn DERIVED chưa được owner duyệt.
-- **Current Study Web:** checkout không có `src/`, `package.json` hoặc router có thể sửa. `screen.png`/`code.html` là prototype tĩnh; nhãn “API #49 & #65 Synchronized”/“Live Feed” không chứng minh có API call.
+- **Current Study Web:** route `/mentor/courses/:courseId` gọi #46 để tra tiêu đề trang, #49 để lấy cây Content và #65 để lấy roster progress; #49/#65 kiểm tra direct ownership phía server. ME-03 xác thực ID/response, giữ tải/lỗi của cây và roster riêng, và hủy request của course trước đó khi route đổi. `screen.png`/`code.html` vẫn là prototype tĩnh; nhãn “API #49 & #65 Synchronized”/“Live Feed” không chứng minh runtime. API #65 response local vẫn khác catalog; analytics, per-module progress và các số liệu mẫu không được dựng giả.
 - **Skill routing:** manifest/skill registry loại `web-ui-only-dd` khỏi `createDD-markdown`; UI-only DD chưa có skill canonical. Không dùng API DD template làm contract UI.

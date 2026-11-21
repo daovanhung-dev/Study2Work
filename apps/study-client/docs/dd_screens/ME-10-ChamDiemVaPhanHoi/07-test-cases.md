@@ -1,5 +1,9 @@
 # ME-10 — Test Cases
 
+## Current source state — 2026-11-20
+
+ME10 source-wires the #55 read and validates route/response identity. Grade/feedback writes remain disabled; no result is claimed for #56/#57 from the client. No ME10 frontend test was run. The existing API test sources do not verify live storage/runtime or settle the open rubric, score-scale and attachment contracts.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix

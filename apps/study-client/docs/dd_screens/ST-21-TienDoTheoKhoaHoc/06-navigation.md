@@ -1,11 +1,15 @@
 # ST-21 — Navigation
 
+## Current source route and handoff — 2026-11-20
+
+`/student/progress/:courseId` is registered in `student.route.ts`. The page follows positive safe route IDs, cancels outdated #37 reads, and links back to ST-20. It cannot link to ST-10/ST-11 because #37 returns no lesson IDs. Runtime navigation is not verified.
+
 ## 1. Route definition
 - Current route in inventory: `/student/progress/:courseId`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
-- Route params/types: `courseId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
+- Status: current route is source-wired; runtime not verified.
+- Route params/types: `courseId`, restricted to a positive safe Study ID before #37.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
-- Route guards: see source DD/API contract; do not create role policy.
+- Route guards: authenticated Student route group; API #37 independently checks ACTIVE enrollment.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |

@@ -56,10 +56,9 @@ status: "Draft — Needs Confirmation"
 
 ## Mục chú ý
 
-- Giữ nguyên body trực tiếp theo catalog: `recipients:string!`, `title:string!`, `content:int64!`, `channels:string!`.
-- Giữ nguyên direct body types: `recipients:string!`, `title:string!`, `content:int64!`, `channels:string!`.
+- User decision 2026-11-21 reconciles `content` to text for the approved ME-14 notification editor: direct body is `recipients:string!`, `title:string!`, `content:string!`, `channels:string!`.
 - `recipients` là CSV ordered positive int64 Student IDs; server collapse duplicate IDs and verifies the full set is ACTIVE in one directly owned course. Course inference is `DERIVED`; the request cannot bind to the exact UI-selected course.
-- `channels` is CSV `PUSH` and/or `EMAIL`, derived from the AC-25 labels. `content:int64` is stored as base-10 text to fit legacy `notifications.content`; free-form text remains a contract discrepancy.
+- `channels` is CSV `PUSH` and/or `EMAIL`, derived from the AC-25 labels. Text `content` is stored directly in legacy `notifications.content` TEXT.
 - `Operation.id` is a UUID shared by the new notification rows; response metadata contains `notification_ids:int64[]` for API #64. Operation kind/status are `NOTIFICATION_DISPATCH`/`QUEUED`, both `DERIVED`.
 - 202 means notification and channel delivery records were committed to the local outbox. No worker/provider currently consumes those rows, so the API does not claim delivery.
 
@@ -69,7 +68,7 @@ status: "Draft — Needs Confirmation"
 |---|---|---|---|
 | Course scope | Không thêm body field; yêu cầu toàn bộ recipient IDs cùng thuộc ít nhất một course Mentor sở hữu trực tiếp với ACTIVE enrollment. | Giữ exact catalog body và kiểm tra server-side access; course ID cụ thể không thể suy ra. | DERIVED; không bảo đảm chính là course UI đã chọn. |
 | Recipients | CSV Student `users.id` positive int64, duplicates collapsed in first-seen order. | API #62 returns numeric Student IDs; legacy enrollments are BIGINT/ACTIVE. | DERIVED local encoding. |
-| Content | Giữ int64 và lưu decimal string vào `notifications.content`. | Preserves catalog type and fits legacy TEXT; API #47 uses the same scalar-to-decimal-text pattern. | DERIVED; free-form notification text remains unresolved. |
+| Content | Accept text and store it directly in `notifications.content` TEXT. | Matches the ME-14 text composer and reusable Notification content. | Approved for the #63 producer handoff on 2026-11-21; non-empty policy remains client-side unless separately contracted. |
 | Channels | CSV `PUSH` and/or `EMAIL`, duplicates collapsed in first-seen order. | AC-25 names Push/Email; legacy BIGINT has no channel field. | DERIVED local tokens. |
 | Durable acceptance | Persist notification rows and QUEUED delivery records in one transaction; do not claim worker delivery. | Diagram requires Notification + recipients before asynchronous provider work. | DERIVED local outbox migration; live schema/worker unverified. |
 | Tracking bridge | Return Operation UUID in `data.id` and created per-recipient BIGINT IDs in `meta.notification_ids`. | Direct Operation shape and #64 int64 path both remain usable. | DERIVED metadata extension; API #64 implementation remains separate. |
@@ -78,7 +77,7 @@ status: "Draft — Needs Confirmation"
 
 | Nguồn A | Nguồn B | Xung đột | Ảnh hưởng |
 |---|---|---|---|
-| Catalog #63 | AC-25 diagram + Notification schema | Request `content:int64`; entered Notification content is text. | Local fallback stores decimal text; semantic mismatch remains open for contract owner. |
+| Catalog #63 before decision | AC-25 diagram + Notification schema and ME-14 editor | Previous request type was int64; editor/storage use text. | Resolved for this flow on 2026-11-21: catalog/source/tests now use string content. |
 | #62 → #63 | API #63 body | #62 selects a roster by course; #63 does not receive course ID. | Local fallback requires one common directly owned ACTIVE roster but cannot prove the exact UI-selected course. |
 | #63 response | #64 path | #63 returns Operation UUID; #64 accepts notification_id:int64. | `meta.notification_ids` exposes each created row ID; #64 can be called per row. |
 | Operation schema | Notification job | `Operation.result?:Payment`; not a notification result. | Omit optional result; use metadata for notification IDs. |

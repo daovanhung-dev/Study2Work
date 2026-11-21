@@ -1,8 +1,10 @@
 # AD-01 — Navigation
 
+> **Current source note (2026-11-20):** `/admin` is registered as the default Admin child route. `AdminLayout` shows the Admin login form without a valid in-memory `ADMIN` session. AD01's three shortcut cards navigate through Angular `routerLink` to existing Admin routes. Report data/API #101 remains unavailable. The source navigation excerpt below describes the earlier HTML prototype.
+
 ## 1. Route definition
 - Current route in inventory: `/admin`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: `/admin` is registered in current Admin routes and renders AD01Page inside AdminLayout; deployment/runtime unverified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -10,17 +12,17 @@
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |
 |---|---|---|---|
-| Không khai báo trong cột điều hướng inventory. | Theo DD nguồn/inventory | Theo source; không suy diễn | Xem source DD; route chưa xác nhận runtime |
+| AdminLayout login/session | Valid Admin session opens the default child route. | In-memory profile and Bearer session from API #03 | `AdminSessionService` accepts only role `ADMIN`; report authorization for #101 remains unresolved |
 
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [AD-02](../AD-02-DanhSachNguoiDung/00-overview.md), [AD-06](../AD-06-DanhSachKhoaHocQuanTri/00-overview.md), [AD-24](../AD-24-BaoCaoTacDongCongDong/00-overview.md) | Source event/inventory navigation | Theo source DD | Expected links; runtime chưa verify |
+| [AD-02](../AD-02-DanhSachNguoiDung/00-overview.md), [AD-06](../AD-06-DanhSachKhoaHocQuanTri/00-overview.md), [AD-10](../AD-10-HangDoiKiemDuyetNoiDung/00-overview.md) | User selects one of three shortcut cards | No dashboard data | Angular `routerLink` points to source-routed child pages |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
+- Refresh/direct URL: Angular route is declared; reload requires a fresh Admin session because the current session is tab-memory only.
 - Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 

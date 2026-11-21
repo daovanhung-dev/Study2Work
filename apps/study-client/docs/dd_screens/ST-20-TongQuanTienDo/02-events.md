@@ -1,5 +1,16 @@
 # ST-20 — Events (đặc tả xử lý)
 
+## Current-source reconciliation — 2026-11-21
+
+ST-20 independently gates #21's incompatible `UserProfile` progress shape and
+loads recorded awards from #38. The #38 response now uses the shared guard for
+business code, fixed one-page metadata, unique IDs, award fields and descending
+source order; retry remains available. Since COUNT/LIST are separate reads, the
+page compares `total` and item count only to avoid asserting a false empty
+result, while preserving any returned rows and exposing the existing retry.
+The shared guard does not enforce cross-query cardinality. No progress or
+certificate metrics are synthesized.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

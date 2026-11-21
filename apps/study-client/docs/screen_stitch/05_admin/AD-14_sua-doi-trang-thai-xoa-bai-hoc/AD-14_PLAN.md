@@ -82,3 +82,9 @@ Decorative separators/background surfaces may be described with their containing
 6. [x] Update AD-14 inventory and API reverse index #084–#086 based on local route/module/test source; append global checkpoint and finalize worklog. Keep API DDs Draft and do not alter AD-15.
 7. [x] Static audit source hashes/dimensions, JSON/XML, marker sequence/coords/stroke bounds, 1:1 rows, local links, 83 IDs/folders/core artifact count, image review, whitespace and `git diff --check`. Do not run app tests/runtime.
 8. [x] End after AD-14; preserve `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, `RUNTIME NOT VERIFIED` wherever current evidence requires them.
+
+## Continuation — source-backed AD-14 read route guard (2026-11-20)
+
+- Current Angular source registers `/admin/lessons/:lessonId/edit`, loads Lesson through GET #83, and keeps local title/content/order drafts. #84–#86 have no Study Web caller; their buttons remain disabled.
+- AD14Page now validates raw `lessonId` with the shared signed-int64 helper before #83. Missing/malformed/out-of-range IDs show a local error without HTTP; valid strings pass unchanged.
+- DD and screen inventory now distinguish partial read source from blocked mutations. Runtime remains unverified; no tests/build/lint/browser/API runtime were run for this continuation.

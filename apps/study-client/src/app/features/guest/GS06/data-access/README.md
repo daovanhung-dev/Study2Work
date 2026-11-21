@@ -1,6 +1,7 @@
 # GS06 data access
 
-No resource service is wired in this implementation slice. API #11 currently
-returns a singleton built from only the first database row, while the screen
-needs a collection contract. API #12 returns a direct URL without a resource
-access policy. Keep both calls out of the UI until those contracts are resolved.
+`GS06ResourcesService` calls Study API #11 for the published course ID. The
+approved response is `Resource[]`, sorted by resource ID, with an empty array
+representing a valid course with no public resources. API #11 lists only
+`PUBLIC` resources; opening a selected item goes through API #12 so resource
+access is checked by the backend.

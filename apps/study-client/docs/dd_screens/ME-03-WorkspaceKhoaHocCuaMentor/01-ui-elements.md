@@ -1,5 +1,10 @@
 # ME-03 — UI Elements
 
+## Current source presentation — 2026-11-21
+
+- The #65 roster table renders `student.full_name`, the optional API `avatar_url` with HTTPS/same-origin validation and initials fallback, and the current snapshot progress fields. Avatar failure is presentation-only and does not change the roster or progress values.
+- Sample risk rows, weekly activity, module progress, course KPI, export, AI callout and static links remain unrendered because #49/#65 do not return those fields or actions.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.

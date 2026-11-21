@@ -4,17 +4,24 @@
 |---|---|
 | Screen ID | `ST-18` |
 | Module | Student |
-| Route | `/student/assignments/:assignmentId/submit` — route trong inventory, không phải xác nhận router runtime |
-| Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. API #34 có route/module hiện hành nhưng API #33/#35 và Study Web ST-18 chưa được wire trong source hiện tại. |
+| Route | `/student/assignments/:assignmentId/submit` — Study Client route; deployed runtime chưa xác minh |
+| Actor/role | Student Bearer; #34 and #35 validate Student role |
+| DD status | Eligibility/duplicate-recovery/visual gaps open; **Implementation:** PARTIAL · **Runtime:** NOT VERIFIED. #33–#35 and client callers exist. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [ST-18.md](../../screen_stitch/03_student/ST-18_soan-va-nop-bai-tap/ST-18.md), [ST-18_PLAN.md](../../screen_stitch/03_student/ST-18_soan-va-nop-bai-tap/ST-18_PLAN.md), [ST-18_markers.json](../../screen_stitch/03_student/ST-18_soan-va-nop-bai-tap/ST-18_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Soạn nội dung, file đính kèm, kiểm tra tiến độ upload/nộp một lần.
 - In-scope: GET #33 → POST #34 cho từng file khi cần → thu asset reference → POST #35 → nhận submission_id. Tách trạng thái upload thành công khỏi submission thành công; F06 chưa chốt giữ draft/nội dung qua lỗi.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: Không áp dụng giới hạn file không có trong API; live runtime chưa xác minh.
+
+### Current implementation — 2026-11-20
+
+- ST-18 loads assignment #33 reactively, validates its response, and supports retry. It permits text and at most one uploaded asset: #34 receives `file`, `purpose=SUBMISSION`, and `course_id`; #35 receives `content` and `upload_id`.
+- #34 checks ACTIVE enrollment when `course_id` is supplied; ST-18 supplies it. #35 checks Student, assignment existence, ACTIVE enrollment, deadline and ownership/course/purpose of the selected upload, then creates a new `SUBMITTED` row and returns `data.id`. The client requires `DESIGN_RESOURCE_CREATED`, matching assignment ID and `SUBMITTED` status before navigating to ST-19 using that ID. It suppresses repeat after an ambiguous outcome or accepted submission; after a page reload the ambiguity/idempotency state cannot be recovered. #34 confirmation also requires `DESIGN_RESOURCE_CREATED` and `UPLOADED` status.
+- Upload and submission are separate. The form locks fields while submitting and retains a successful upload if #35 returns a definitive error. It does not expose the upload URL.
+- #33 itself does not enforce assignment ownership/enrollment/status. #34 accepts any size/MIME in application source and returns a public-base URL. The DD's many-file/checklist/loaded screen content and visual alignment remain incomplete. Runtime/tests were not verified.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,23 +38,26 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | editing/uploading/submitting/failed/submitted |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Study Client ST-18 | `loading / editing / uploading / submitting / error / ambiguous / receipt link`; deployed runtime NOT VERIFIED |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-18 source screen.png](../../screen_stitch/03_student/ST-18_soan-va-nop-bai-tap/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-18_soan-va-nop-bai-tap/screen_annotated.png))
 - Luồng: GET #33 → POST #34 cho từng file khi cần → thu asset reference → POST #35 → nhận submission_id. Tách trạng thái upload thành công khỏi submission thành công; F06 chưa chốt giữ draft/nội dung qua lỗi.
-- Priority: P1; Gate/source status: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #33/#35 Student route/module/test NOT_FOUND; #33 access/deadline/rule và GET ownership trùng ST-17/AC-17 chưa chốt; #34 local route/module/provider/test source-backed nhưng không có application size/MIME cap, course_id optional, URL public-base; API index #034 cập nhật R, live DB/storage chưa verify; #35 file-ref key/encoding/cardinality, text constraints, persistence/idempotency, data.id vs submission_id open; draft/URL/checklist/consent and error-retention rules lack contract; candidate legacy BIGINT uploads/assignments/submissions vs V1-PILOT without business tables; #36 is assigned to ST-19 by inventory but AC-17 places read before submitted state; loaded PNG/Guest fallback HTML/hash route and Study Web design target differ; Study Web UNWIRED
+- Priority: P1; Gate/source status: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** current callers use source-backed #33/#34/#35 fields; #35 validates enrollment/deadline and accepts one upload ID. #33 lacks access predicates, #34 has no app size/MIME limit and returns a public URL, and #35 has no idempotency/reload reconciliation; API response `data.id` differs from inventory's `submission_id`. Multiple-file/checklist/loaded-screen content, DD states and visual alignment remain incomplete; schemas and live storage are unverified.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Ghi nhận luồng #33/#34/#35 hiện hành, route/response validation, ambiguity guard và các policy gaps.
 
 ## Trạng thái và ranh giới bằng chứng
 
 # ST-18 — Soạn và nộp bài tập
 
-> **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. API #34 có route/module hiện hành nhưng API #33/#35 và Study Web ST-18 chưa được wire trong source hiện tại.
+> Các đoạn “hiện trạng/current behavior” bên dưới được giữ từ source DD cũ để truy vết; trạng thái source hiện tại là phần **Current implementation — 2026-11-20** ở trên.
+
+> **Trạng thái nguồn hiện tại:** DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED. API #33/#34/#35 và Study Client callers exist; access and idempotency gaps remain.
 
 ## Trích đoạn tổng quan từ DD nguồn
 

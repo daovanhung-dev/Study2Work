@@ -53,9 +53,9 @@ Mọi event mô tả trạng thái mục tiêu dựa trên inventory/backend sou
 
 - **Kích hoạt:** input/change #17/#19/#37.
 - **Input:** title text, duration text, editor content; các giá trị hiện tại trên ảnh là mẫu.
-- **Xử lý:** giữ local form state. Chỉ title có API field: #47 yêu cầu string, tối đa 200; source không xác định min length hoặc trim. Duration không có field. Editor #47 chỉ nhận signed int64, nên không chuyển text thành số, không ép `Number`, không lưu content giả để vượt validation.
-- **Kết quả/lỗi:** UI validation/error rule cho title, duration và content cần quyết định; #47 type/range lỗi trả 422 `DESIGN_VALIDATION_ERROR`.
-- **Blocker:** rich-text mapping và metadata fields.
+- **Xử lý:** giữ local form state. #47 nhận title string tối đa 200 ký tự và Markdown `content:string` nguyên văn theo T041; duration không có field. Toolbar chỉ chèn cú pháp Markdown vào cùng chuỗi, không tạo HTML payload.
+- **Kết quả/lỗi:** title/content được gửi theo đúng body #47; API 422 `DESIGN_VALIDATION_ERROR` hiển thị trong form. Duration, preview và rich-text serialization vẫn chưa được hỗ trợ.
+- **Blocker:** duration, preview/lifecycle và metadata fields ngoài payload hiện hành.
 
 ### ME04-EV-04 — Chọn/kéo thả và tải file qua #34
 
@@ -99,8 +99,8 @@ Mọi event mô tả trạng thái mục tiêu dựa trên inventory/backend sou
 
 - **Kích hoạt:** #34/#35/#36/#37.
 - **Input:** Markdown/WYSIWYG text, snippets, formatting commands.
-- **Xử lý:** mockup không có editor state/textarea/contenteditable hay toolbar listeners. Nếu editor được duyệt, cần canonical serialization/content schema. Không biến rich text thành `content:int64` bằng giả định; current #47 sẽ lưu số đó dưới dạng decimal string.
-- **Kết quả/lỗi:** nội dung chưa có payload mapping, error state hoặc autosave API.
+- **Xử lý:** source mockup thiếu editor state/handlers; current Study Web page provides a Markdown textarea and accessible insertion actions for inline emphasis/code, headings, lists, quotes and fenced code. The actions edit only the textarea string, which is submitted unchanged as `content:string` under the T041 decision. WYSIWYG, underline, embedded images and preview remain unsupported.
+- **Kết quả/lỗi:** content maps to #47 `content` unchanged; no autosave API or rich-text serialization is used.
 
 ### ME04-EV-10 — Thêm attachment
 
@@ -155,18 +155,18 @@ Mọi event mô tả trạng thái mục tiêu dựa trên inventory/backend sou
 
 - **Kích hoạt:** #56.
 - **Điều kiện:** valid route/course authorization; approved body schema/content mapping; all intended uploads succeeded; no prior request pending.
-- **Request source:** `POST /api/v1/mentor/courses/{course_id}/lectures`, Bearer MENTOR, `application/json`, strict body `title`, `content:int64`, `asset_refs:string`, `order:int32`.
+- **Request source:** `POST /api/v1/mentor/courses/{course_id}/lectures`, Bearer MENTOR, `application/json`, strict body `title:string`, `content:string` (Markdown), `asset_refs:string` (JSON upload IDs), `order:int32`.
 - **Xử lý:** #47 validates path/body/asset refs → checks direct owner → resolves all assets under same Mentor/LECTURE/course → inserts `lessons` as PUBLISHED and ordered `lesson_uploads` links in one transaction → commits.
-- **Success:** 201 `DESIGN_RESOURCE_CREATED`, map `data.id`, course/title/content string/assets/order/status; hand off `lectureId` to ME-05. Success response is source behavior, not proof browser route is wired.
+- **Success:** 201 `DESIGN_RESOURCE_CREATED`, map `data.id`, course/title/content string/assets/order/status; hand off `lectureId` to the registered ME-05 route. Browser navigation is not verified.
 - **Errors:** 401 expired/missing auth; 403 owner mismatch; 404 course/assets not found (asset error is intentionally generic); 422 body/path validation; 500 safe internal error. #47 DB rollback does not roll back successful #34 uploads.
-- **Retry/idempotency:** no idempotency key/source duplicate prevention identified; if network outcome is ambiguous, blind resubmit may create another lesson. Required duplicate-submit resolution is a blocker.
+- **Retry/idempotency:** no idempotency key/source duplicate prevention identified; if network outcome is ambiguous, blind resubmit may create another lesson. Current client blocks blind replay and requires a reconciliation path, which remains unavailable.
 
 ### ME04-EV-18 — Điều hướng sang ME-05
 
 - **Kích hoạt:** #47 201 with `data.id`.
 - **Input:** `lectureId`, course context if ME-05 needs a return link.
 - **Xử lý:** proposed route `/mentor/lectures/:lectureId`; ME-05 requests #48 and renders its response. Use returned persisted values rather than local mock values.
-- **Lỗi:** #48 401/403/404/500 handled by ME-05 states. Navigation/return-state remains proposed because Study Web router is absent.
+- **Lỗi:** #48 401/403/404/500 handled by ME-05 states. Router is present; browser navigation remains unverified.
 
 ### ME04-EV-19 — Validation, API/network errors and repeated submit
 

@@ -4,17 +4,24 @@
 |---|---|
 | Screen ID | `ST-14` |
 | Module | Student |
-| Route | `/student/quizzes/:quizId/attempts/:attemptId` — route trong inventory, không phải xác nhận router runtime |
-| Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status: BLOCKED. Implementation: BLOCKED. Runtime: NOT VERIFIED.** |
+| Route | `/student/quizzes/:quizId/attempts/:attemptId` — khai báo trong Study Client; live runtime chưa xác minh |
+| Actor/role | Student; page uses Student Bearer for #28/#30; #30 validates attempt ownership |
+| DD status | Draft/attempt restore and timer rules open; **Implementation:** PARTIAL · **Runtime:** NOT VERIFIED |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [ST-14.md](../../screen_stitch/03_student/ST-14_lam-bai-kiem-tra/ST-14.md), [ST-14_PLAN.md](../../screen_stitch/03_student/ST-14_lam-bai-kiem-tra/ST-14_PLAN.md), [ST-14_markers.json](../../screen_stitch/03_student/ST-14_lam-bai-kiem-tra/ST-14_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Điều hướng câu hỏi, đồng hồ nếu server cung cấp, lưu đáp án, đánh dấu câu chưa trả lời.
 - In-scope: AC-16: GET #28 → đọc Quiz/rules/questions → eligibility → POST #29 tạo attempt → PUT #30 khi đáp án đổi. Screen owner của #29 chưa thống nhất giữa ST-13 Start và ST-14; route ST-14 đã yêu cầu `attemptId`. Chốt handoff duy nhất, không POST lặp.
 - Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+
+### Current implementation — 2026-11-20
+
+- ST-14 has a Study Client route and follows `quizId`/`attemptId` changes. It loads quiz questions from #28, cancels stale reads and validates the exact success code and matching quiz ID.
+- On answer change, it sends the selected `choice_ids` to #30. The page serializes writes, rolls back the optimistic choice on error, validates the returned attempt ID/quiz/status/answers, and adopts the server's saved answer set.
+- #30 checks Student ownership, `IN_PROGRESS`, question/quiz relation and choice/question relation before writing. Catalog declares `answer(s):string`; current client and server use `choice_ids[]`, a contract discrepancy. There is no GET attempt/answers API, so direct entry/reload cannot restore prior answers.
+- ST-14 does not create attempts; ST-13 calls #29 after explicit Start. Original DD still lists #29 in the ST-14 flow and conflicts on the owner/order. No authoritative timer is returned, so the page shows duration metadata but does not run a countdown. Runtime/tests were not verified; source-DD excerpts below are the design evidence.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,17 +38,18 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | unsaved/saving/saved/retrying/expired |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Study Client ST-14 | `loading / error+retry / question navigation / saving / saved / error rollback`; answer restore/timer absent |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [ST-14 source screen.png](../../screen_stitch/03_student/ST-14_lam-bai-kiem-tra/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/03_student/ST-14_lam-bai-kiem-tra/screen_annotated.png))
-- Luồng: AC-16: GET #28 → đọc Quiz/rules/questions → eligibility → POST #29 tạo attempt → PUT #30 khi đáp án đổi. Screen owner của #29 chưa thống nhất giữa ST-13 Start và ST-14; route ST-14 đã yêu cầu `attemptId`. Chốt handoff duy nhất, không POST lặp.
-- Priority: P1; Gate/source status: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #30 answer representation/storage/upsert/ownership/state/response/retry chưa chốt; không có GET attempt/answers để restore; time/progress source thiếu; legacy BIGINT và V1-PILOT UUID/lifecycle khác nhau; PNG/HTML và WebSocket/idempotency claims chưa được xác nhận; Study Web UNWIRED; Student APIs #28–#32 NOT_FOUND
+- Expected flow: AC-16 includes #28 → eligibility → #29 → #30. Current screen calls #28/#30; ST-13 calls #29 before this route.
+- Priority: P1; Gate/source status: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** DD still conflicts on #29 ownership; #28/#29 do not enforce quiz/course eligibility; #30 catalog `answer(s)` differs from current `choice_ids[]`; no GET restore or authoritative timer; Stitch mockup's status/proctoring/WebSocket claims are unsupported; live DB/runtime not verified.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Ghi nhận #28/#30 caller, route-reactive read, serialized autosave/response validation, và các gap answer-payload/restore/eligibility/timer.
 
 ## Trạng thái và ranh giới bằng chứng
 

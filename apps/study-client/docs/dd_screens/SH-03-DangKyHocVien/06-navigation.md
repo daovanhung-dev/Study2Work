@@ -15,7 +15,7 @@
 ## 3. Điểm ra
 | Destination | Trigger | Params | Điều kiện |
 |---|---|---|---|
-| [SH-04](../SH-04-HandoffXacThucEmail/00-overview.md), [SH-02](../SH-02-DangNhap/00-overview.md) | SH-04 theo luồng sau khi đăng ký; SH-02 qua link đăng nhập | Không đưa `id/email` vào URL; handoff transport chưa được duyệt | Link SH-02 hiện có; API #01 caller wired; SH-04 transition chưa được nối |
+| [SH-04](../SH-04-HandoffXacThucEmail/00-overview.md), [SH-02](../SH-02-DangNhap/00-overview.md) | User clicks continue after valid #01 result to reach SH-04; SH-02 remains the login link | One-use in-memory `{userId,email}`; no URL or persistent storage | Source-wired; invalid result blocks handoff; browser runtime unverified |
 
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
@@ -51,4 +51,4 @@ flowchart TD
     Form -->|Đã có tài khoản?| SH02[SH-02 /login đề xuất]
 ```
 
-Đường nối từ SH-03 sang SH-04 là luồng đích trong danh mục, chưa được nối ở phía giao diện. Submit hiện gọi API #01; response 201 giữ người dùng ở SH-03 với trạng thái tài khoản đã tạo. API #02 thuộc SH-04; không gọi API này trực tiếp từ SH-03 và không coi `accepted` là email đã gửi hoặc đã xác minh.
+Current source connects SH-03 to SH-04 through a user-controlled action after the validated #01 response. The page stores `id/email` once in memory and navigates without placing them in the URL. API #02 belongs to SH-04; SH-03 does not call it, and `accepted` does not mean email sent or verified.

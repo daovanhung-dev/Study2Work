@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route: `/student/enroll/:courseId`
-- Status: registered in Study Web; page calls #08 then shows a gated enrollment state. Student auth remains unresolved.
+- Status: registered in Study Web; page calls #08 then Student-authenticated #15, offers the source-backed free #19→#20 path, and hands paid courses to ST-05. The #15 catalog actor discrepancy remains open; browser/runtime is unverified.
 - Route params/types: `courseId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -43,11 +43,11 @@ flowchart LR
 | `route-input-pending` | `/student/enroll/:courseId` receives `courseId` | Pass raw string to #08; Student guard remains absent | Current FE source |
 | `course-unavailable` | #08 returns 404 | Course does not exist, ID is invalid, or it is not `PUBLISHED`; show not-found | Current FE source |
 | `course-error` | #08 returns a non-404 HTTP/envelope error | Show generic course-load error | Current FE source |
-| `enrollment-check-blocked` | #08 succeeds but #15 auth/selection remains unsafe | Do not call #15 or branch; show enrollment gate | Current FE source |
-| `already-enrolled` | Backend xác định đúng enrollment thuộc Student | Nhánh Khóa học của tôi/ST-08 theo AC-12; payload/navigation chưa chốt | Expected only |
-| `free-enrollment` | Server confirms no enrollment and free/eligible | #19; then #20 and ST-08 | Expected only; routes #19/#20 exist, flow/contract still gated |
-| `paid-checkout` | Server confirms paid branch | ST-05/#16 → ST-06/#17; payment proof server-side | Expected only; routes #16–#18 exist, flow/contract still gated |
-| `session-expired-or-forbidden` | AC-12 Student precondition không còn hợp lệ | Redirect/401/403 destination và return path cần contract | Unspecified; #08/#15 hiện public trong catalog |
+| `enrollment-check` | #08 succeeds and #15 uses Student Bearer | ACTIVE → My Courses; 404 → price branch; auth error → login-required | Current FE source; catalog discrepancy remains |
+| `already-enrolled` | #15 returns current Student ACTIVE row | Open `/student/courses` | Current FE source |
+| `free-enrollment` | #15 404 and #08 price is zero | Explicit #19 → #20 confirmation → ST-08 | Current FE source; database runtime unverified |
+| `paid-checkout` | #15 404 and #08 price is positive | Link to ST-05; provider proof remains server-side | ST-04 handoff wired; ST-05/#16–#18 pending |
+| `session-expired-or-forbidden` | Student API reports login-required/401/403 | Show login link; return path is not preserved | Current FE; route guard absent |
 | `back-to-courses` | Click #11 | `/courses`; không giữ query/context | Prototype link only |
 
 ### Ma trận điều hướng và dữ liệu
@@ -55,26 +55,26 @@ flowchart LR
 | Từ | Điều kiện | Đến | Dữ liệu chuyển |
 |---|---|---|---|
 | GS-03 | Người dùng chọn ghi danh; AC-12 precondition | ST-04 (route đề xuất) | `courseId` candidate; slug/numeric mapping chưa chốt |
-| ST-04 | Enrollment đã được resolve đúng và đã tồn tại | Khóa học của tôi / ST-08 | Enrollment/course identity; schema route payload chưa có |
-| ST-04 | Rule free/eligible được backend xác nhận | ST-07 hoặc flow result theo AC-12 | `course_id`; #19/#20 runtime absent |
-| ST-04 | Rule paid được backend xác nhận | ST-05 | `course_id`; order/payment contract chưa hoàn tất |
+| ST-04 | #15 returns current Student enrollment with status `ACTIVE` | `/student/courses` / ST-08 | The course list is loaded from #20; no client entitlement token |
+| ST-04 | #15 returns 404 after #08 succeeds and price is zero | #19 → #20 → ST-08 | `course_id` in path/body; #20 page 1 must contain that course |
+| ST-04 | #15 returns 404 after #08 succeeds and price is positive | ST-05 at `/student/checkout/:courseId` | `courseId` route segment |
 | ST-04 | Click #11 | `/courses` | Không truyền dữ liệu |
 | Header/footer | Click static anchor | Path ghi trong HTML | Không truyền course/auth/filter state |
 
-AC-12 đặt các nhánh trước payment và sau payment trong cùng flow, nhưng chi tiết route handoff của ST-05–ST-08 và vai trò chính xác của #18 chưa được phê duyệt. Không coi bảng route là runtime.
+AC-12 places the free and paid paths in one flow. ST-04 currently implements its free branch and the paid handoff; ST-05/#16–#18 remain in progress. Do not treat this client navigation as live DB/provider runtime evidence.
 
 ### Trích từ DD nguồn: B. Luồng hoạt động tổng thể
 
 ### Luồng dự kiến theo AC-12
 
-1. Student đăng nhập rồi vào route đề xuất ST-04. Route và session guard chưa tồn tại trong Study Web; cách nhận dạng `courseId` cũng chưa được chốt.
+1. Student vào route `/student/enroll/:courseId`; the route exists, and protected API calls require a Student session. No route guard or return-after-login flow is present.
 2. Sau khi có `course_id:int64` hợp lệ, gọi API #08 để đọc course công khai đã `PUBLISHED`. #08 không yêu cầu Bearer theo catalog.
-3. Nếu #08 trả thành công, lấy `data.items[0]`. Response singleton vẫn có `pagination`; category không được trả. `price` là decimal string; không tự đổi thành tiền hiển thị nếu chưa có currency/format rule.
-4. Chỉ sau khi có danh tính/selection contract đã được phê duyệt, gọi #15. Hợp đồng hiện tại chỉ định Public GET theo `course_id`; không đủ để quyết định enrollment nào thuộc Student hiện tại.
-5. Khi backend xác định nhánh: enrollment đã tồn tại → điều hướng nhánh Khóa học của tôi; chưa có enrollment và rule miễn phí được xác nhận → POST #19; nhánh trả phí → ST-05 tạo Order qua #16, tiếp ST-06 tạo payment qua #17.
+3. Nếu #08 trả thành công, lấy course theo ID và hiển thị `title`/`price`; currency `VND` comes from the current #16 Order path, while free is `price === 0` per the existing #19 eligibility check.
+4. Study Web currently calls #15 through `StudentApiService` with Student Bearer. Server query scopes to JWT user; the canonical catalog still declares Public/no-Bearer and remains a documented discrepancy.
+5. Enrollment `ACTIVE` → `/student/courses`. A #15 404 after #08 success branches by price: free → explicit #19 then #20 confirmation; paid → ST-05/#16.
 6. Kết quả giao dịch cần được xác minh bởi server. AC-12 có node #18 operation-status nhưng node này không nối trong diagram; chưa thể chốt thứ tự/gating #18 so với #19.
-7. Chỉ sau khi entitlement/payment được xác nhận phía máy chủ mới tạo enrollment theo #19 và tải lại bằng #20 tới Khóa học của tôi (ST-08). #19/#20 hiện chưa có source thực thi trong Study Server.
-8. Với lỗi #08/#15, trạng thái hiển thị và điều hướng lỗi phải theo contract sau khi được chốt. Copy lỗi đang có trong HTML là nội dung tĩnh, không được ánh xạ thành lỗi API. Không có retry, timeout, cache, chống gửi trùng ở client hoặc chính sách phiên hết hạn hiện hành.
+7. Free #19 success is followed by #20; only a matching course in the response opens ST-08. Paid enrollment waits for provider-verified server result; browser return is not evidence.
+8. #08 404 maps to not-found; missing Student session or protected 401/403 maps to login-required. If #20 refresh fails after #19, retry #20 only. Existing test source still documents the old gate-only behavior; no test/runtime verification is claimed.
 
 ### Hành vi hiện tại
 

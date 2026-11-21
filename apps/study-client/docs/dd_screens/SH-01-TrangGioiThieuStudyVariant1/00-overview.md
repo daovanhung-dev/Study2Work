@@ -1,20 +1,23 @@
 # SH-01 — Trang giới thiệu Study · Tổng quan
 
+> **Current-source update (2026-11-21):** SH-01 at `/` implements the user-approved DD-safe scope: accessible responsive shell, search handoff, existing navigation, informational categories, non-clickable published course cards without price, course/mentor image fallbacks, and independent loading/ready/empty/error/retry states. Public #05/#06 requests and strict response projections are covered by the focused Study Web spec; local API source/tests match the client. Screen score is 100% under the repository's four-axis rubric for this approved scope. Live API/DB/deployment and a browser demo after these changes remain unverified; the source PNG's unsupported marketing-only sections stay gated.
+
 | Trường | Giá trị |
 |---|---|
 | Screen ID | `SH-01` |
 | Module | Shared / Auth / System |
-| Route | `/` — Shared route and SH01 page are source-wired; local browser route verified |
+| Route | `/` — Shared route and SH01 page are source-wired; prior local browser route was verified 2026-11-17 |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); design gate remains **DD BLOCKED**; current source is a partial SH01 implementation; live API/DB and deployment are **NOT VERIFIED** |
+| DD status | Draft (package được chuyển đổi); screenshot-only claims and flows remain gated; current source implements the user-approved DD-safe scope at 100% under the repository rubric; live API/DB, deployment and current-session browser demo are **NOT VERIFIED** |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.3 / 2026-11-21 |
 | Nguồn đối chiếu | [SH-01.md](../../screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01.md), [SH-01_PLAN.md](../../screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_PLAN.md), [SH-01_markers.json](../../screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/SH-01_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Giới thiệu giá trị học tập, tìm khóa học và CTA đăng nhập/đăng ký.
-- In-scope: Có thể nạp một trang khóa học PUBLISHED; không tạo API hero/KPI mới.
-- Out-of-scope: Xem gate bên dưới; implementation chỉ là lát cắt UI/API source-backed, không khẳng định thiết kế đầy đủ đã được duyệt hoặc live API/DB đã chạy.
+- In-scope: Public #05 categories, one #06 page of PUBLISHED courses, search handoff, existing account/catalog routes, independent data states and scoped retry.
+- Approved DD-safe behavior: category labels are informational; course cards are non-clickable; “Xem tất cả khóa học” opens `/courses`; the secondary hero CTA opens `/register`; price stays hidden until currency is defined; no email capture or unsupported marketing claim.
+- Out-of-scope: Screenshot-only KPI, testimonial, employer-logo, carousel, filter/sort and email-capture controls remain gated. Current implementation completion does not claim live API/DB or deployment verification.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,21 +34,24 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | skeleton/list/empty/network-error |
-| Current source | `SH01Page`, `SH01CatalogService`, Shared route | Route `/` and #05/#06 callers are wired; independent loading/ready/empty/error/retry states are implemented. |
-| Local browser demo | Chrome headless, 2026-11-17 | Desktop/mobile route rendered; dev proxy returned HTTP 502 for #05/#06 and both regions showed their error/retry states. Live API/DB is not verified. |
+| Current source | `SH01Page`, `SH01CatalogService`, Shared route | Route `/` and exact public #05/#06 callers are wired. Response envelope, item projections and pagination validate before independent loading/ready/empty/error/retry states render. Search, CTA routes, category/card interaction gates, hidden price, accessible loading, footer and avatar fallback are implemented. |
+| Focused verification | SH-01 Vitest spec and isolated Angular build, 2026-11-21 | SH-01 spec 7/7 passes; minimal isolated Angular entrypoint importing the current SH-01 source builds. Full app build/test is blocked by unrelated current dirty GS-06/GS-07/ME-04/ST-10 sources. CUA returned no available browser, so this session's rendered browser demo was not run. |
+| Local browser demo (historical) | Chrome headless, 2026-11-17 | Desktop/mobile route rendered; dev proxy returned HTTP 502 for #05/#06 and both regions showed their error/retry states. Live API/DB is not verified. |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [SH-01 source screen.png](../../screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/01_shared_auth_system/SH-01_trang-gioi-thieu-study__variant-1/screen_annotated.png))
-- Luồng: Có thể nạp một trang khóa học PUBLISHED; không tạo API hero/KPI mới.
+- Luồng hiện hành: tải #05/#06 độc lập, hiển thị một trang khóa học PUBLISHED; search chuyển tới GS-02; navigation dùng các route đã có; không tạo API hero/KPI mới.
 - Priority: P0; Gate/source status: **R**
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 - 2026-11-17 — SH-01 partial source implementation wired at `/`; focused tests/build and local browser route verified. DD/API design gates remain open; #05/#06 dev proxy returned 502, so live data remains unverified.
+- 2026-11-20 — Added current-source shape checks for #05 categories and #06 PUBLISHED courses; no request or navigation behavior changed. This static review did not run tests/build/lint/browser/API runtime.
+- 2026-11-21 — Implemented and tested the approved DD-safe SH-01 scope; screen score is 100% under the repository four-axis rubric. Focused client spec and isolated build pass; API #05/#06 tests pass (29/29). Full app build/test and current-session browser rendering remain blocked/unverified separately; live API/DB remains unverified.
 
-## Trạng thái và ranh giới bằng chứng
+## Source-DD snapshot at conversion time and evidence boundaries
 
 # Tài liệu thiết kế chi tiết màn hình — SH-01 Trang giới thiệu Study
 
@@ -66,8 +72,8 @@ Tài liệu hệ thống thiết kế được yêu cầu chỉ là tài liệu 
 
 | Bằng chứng | Phát hiện hiện tại | Trạng thái |
 |---|---|---|
-| Triển khai Study Web | Không có apps/study-client/src; / và các liên kết trong DD chỉ là đề xuất thiết kế | UNWIRED |
-| API #05 / #06 | Có route FastAPI, phần triển khai module và mã kiểm thử nguồn | SOURCE_PRESENT; API DD Draft — Needs Confirmation; runtime/deploy chưa xác minh |
+| Triển khai Study Web | Angular SH01Page is mounted at `/`; current focused tests and isolated component build pass | SOURCE_WIRED; current browser render not verified this session |
+| API #05 / #06 | FastAPI route/module/query and server tests exist; focused server tests pass 29/29 | SOURCE_PRESENT; API DD Draft — Needs Confirmation; runtime/deploy chưa xác minh |
 | PNG gốc | Có một tài sản hiện tại, 559×1600 | PRESENT |
 | HTML tương ứng | Có, nhưng không tương đương ảnh đầy đủ; có liên kết neo giữ chỗ và hai thẻ khóa học mẫu viết cứng | DISCREPANCY |
 | Biến thể thứ hai | Worklog cũ và README trước đây từng liệt kê; cây hiện tại không có thư mục/tệp tương ứng | NOT_FOUND |

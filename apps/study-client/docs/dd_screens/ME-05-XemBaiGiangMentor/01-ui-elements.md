@@ -4,6 +4,7 @@
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.
 - Marker JSON nguồn: [ME-05_markers.json](../../screen_stitch/04_mentor/ME-05_xem-bai-giang-mentor/ME-05_markers.json).
+- Bảng marker bên dưới mô tả đầy đủ Stitch snapshot. Current Study Web chỉ hiện thực trường #48: breadcrumb course, status/ID/title/order, content, asset metadata, empty/error/loading states và link tới ME-03/ME-06; các element khác vẫn là expected/blocked chứ không phải runtime controls.
 
 ## 2. Danh sách phần tử
 | Marker | Element ID trong package | Source Element ID | Nhãn từ marker JSON |
@@ -67,10 +68,10 @@ Marker coordinates are source-image pixels with origin at top-left. Every marker
 | 15 `ME05-EL-15` | “Chỉnh sửa bài giảng” button. | No Mentor lecture update endpoint in ME-05 inventory/API #48. | EV-08; disabled/removed until API and route are approved. |
 | 16 `ME05-EL-16` | Video-looking player, overlay transcript and controls. | Mocked poster, media URL/codec, transcript, caption, time/duration, volume, speed, watermark and fullscreen states have no #48 source; HTML contains no `<video>`/`source`. | EV-09; play/pause/seek/volume/speed/caption/fullscreen are visual only. Media contract is a blocker. |
 | 17 `ME05-EL-17` | Chapter/timeline quick-jump strip. | Three labels/time ranges in screenshot are sample; #48 returns no chapter list, start/end time, watched state or seek URL. | EV-10; chapter selection cannot seek without media/chapter contract. |
-| 18 `ME05-EL-18` | Academic notes/architecture text panel. | Candidate `data.content:string|null`, but current #47 stores decimal text from int64. Formatting, sanitization, empty/null fallback and Markdown support unresolved. | Read-only candidate; do not render mock prose as loaded data. |
+| 18 `ME05-EL-18` | Academic notes/architecture text panel. | T041 chốt API #47 `content:string` chứa Markdown và lưu nguyên văn vào `lessons.content`; API #48 có thể trả `string|null` cho dữ liệu cũ. ME-05 hiển thị giá trị trong `<pre>` qua Angular text binding, không diễn giải Markdown/HTML. | Implemented for response-backed text; null có empty state. Mock prose/code action remains blocked. |
 | 19 `ME05-EL-19` | Copy code icon/button. | Copies hardcoded code in mockup; #48 has no `code_sample` field. | EV-11; source selection, clipboard API and feedback need approval. |
 | 20 `ME05-EL-20` | TypeScript code snippet block. | Hardcoded example, syntax/language not from #48. No line-count/wrapping contract. | Read-only sample only; hide until source is approved. |
-| 21 `ME05-EL-21` | Resources/attachments panel. | Map only #48 `data.assets[]`; no links => valid empty array. Asset fields include `name`, `url`, `content_type`, `size_bytes`, `status`. No MIME allowlist. | Read-only list; asset presentation/empty-state design open. |
+| 21 `ME05-EL-21` | Resources/attachments panel. | Map #48 `data.assets[]`; no links => valid empty array. Asset fields include `name`, `url`, `content_type`, `size_bytes`, `status`. Current page displays name/type/size/status and does not open the unverified `url`. | Implemented as metadata list with an empty state; download/view actions remain blocked. |
 | 22 `ME05-EL-22` | “Tải xuống” asset action. | Candidate file metadata from #21; #48 URL may be a public URL produced by #34, but provider reachability/access not verified. | EV-12; download authorization, disposition, progress/failure behavior unresolved. |
 | 23 `ME05-EL-23` | “Mở xem PDF” action. | Mockup label assumes PDF; `content_type` may be other MIME and no viewer contract exists. | EV-13; validate MIME and decide viewer/target policy before enabling. |
 | 24 `ME05-EL-24` | “Mở GitHub” external link. | Repository/branch/clone text is sample and absent from #48 assets unless an asset link is separately confirmed. | EV-14; no external URL source/allowlist. |
@@ -85,7 +86,7 @@ Marker coordinates are source-image pixels with origin at top-left. Every marker
 | 33 `ME05-EL-33` | Footer brand, policy and support links. | Static copy and `href="#"`; no route/support destination in this mockup. | EV-20; destinations not wired. |
 
 ## 4. Conditional UI & state variations
-- States theo inventory: loading/ready/not-found
+- Current states: invalid ID, loading, ready, not-found, recoverable error, null/empty content, empty assets. Retry is available on recoverable load/response errors.
 - Detail/conditional visibility: xem section elements/state của [DD nguồn](../../screen_stitch/04_mentor/ME-05_xem-bai-giang-mentor/ME-05.md); không diễn giải ảnh tĩnh thành behavior runtime.
 
 ## 5. Link

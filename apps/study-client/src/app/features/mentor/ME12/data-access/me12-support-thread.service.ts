@@ -15,9 +15,4 @@ export class ME12SupportThreadService {
       pathParams: { request_id: requestId }, body: { message, attachment_refs: attachmentRefs },
     });
   }
-  resolve(requestId: string) {
-    return this.api.request<MentorSupportRequest>(STUDY_SERVER_APIS.API_061, {
-      pathParams: { request_id: requestId },
-    });
-  }
 }

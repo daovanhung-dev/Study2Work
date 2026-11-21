@@ -41,9 +41,9 @@
 
 ### Navigation/data handoff
 
-- Entry: inventory proposes /mentor/notifications/new/recipients; parent path and route registration are not found because Study Web is UNWIRED.
-- Next: ME-14 at proposed /mentor/notifications/new. Logical handoff requires selected student IDs; exact state carrier is a blocker. Do not pass names instead of IDs.
-- Back/cancel: no approved destination or restore semantics. Do not preserve in local/session storage by assumption.
+- Entry: `/mentor/notifications/new/recipients` is registered under the Mentor layout. Global session/role behavior is owned by that layout and has not been browser-verified here.
+- Next: ME-14 at `/mentor/notifications/new`. Current source navigates with selected course ID and recipient summaries in in-memory `history.state`; IDs are validated against the loaded roster. Persistence, reload/back restoration and product approval of the carrier remain unresolved.
+- Back/cancel: browser back can return to ME-13, but router-state restore semantics are not verified; no local/session storage is used. Cancel destination remains unspecified.
 - #63 sends only in ME-14; #63 returns operation UUID and notification IDs, neither should be introduced as ME-13 selection state. #18 and #64 belong downstream to ME-15.
 - Session expiry and denied access must use approved global auth/error routes. No redirect target is specified here.
 
@@ -63,3 +63,12 @@
 
 ## 8. Trace
 [Events](02-events.md) · [API](04-api-integration.md) · [Rules](05-business-rules.md)
+
+## Current Study Client source (2026-11-21)
+
+- `mentor.route.ts` registers `/mentor/notifications/new/recipients` as ME-13 and `/mentor/notifications/new` as ME-14.
+- ME-13 calls #46 with `page` and supported `size=100`, then #62 only for a validated nonempty int64-safe course ID. Clearing/changing the course cancels a pending roster read without sending an empty path value. It rejects malformed/duplicate response IDs, distinguishes #62 access denied, and offers retry/empty/loading states.
+- Continue is enabled only while the course remains in the current validated #46 page, a successful #62 roster is loaded, no roster error/access denial is present, and every selected ID still belongs to that roster. Optional #62 avatars render only from HTTPS or same-origin HTTP with `no-referrer`; a failed/missing/unsafe avatar falls back to initials.
+- The user can select individual roster rows or all currently returned rows. The prototype's support-needed scope cannot be implemented from #62 and no progress/attendance filter is derived.
+- Continue sends the selected course ID and recipient summaries through Angular router `history.state`; ME-14 consumes this state. This is current source behavior only. Persistence, reload/back restoration and product approval of the carrier remain unresolved.
+- #63 is not called by ME-13 or ME-14; send controls stay disabled while its request/body and course-scoping contract remain unresolved. No browser/runtime verification or tests were run.

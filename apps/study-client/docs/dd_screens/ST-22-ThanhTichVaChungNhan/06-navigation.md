@@ -1,11 +1,15 @@
 # ST-22 — Navigation
 
+## Current source route and handoff — 2026-11-20
+
+`/student/achievements` is registered in `student.route.ts`. The page returns to ST-20; it has no certificate detail/download action because #38 returns no certificate URL or proof fields. Runtime navigation is not verified.
+
 ## 1. Route definition
 - Current route in inventory: `/student/achievements`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: current route is source-wired; runtime not verified.
 - Route params/types: Không có route param được biểu diễn trong inventory string; route runtime vẫn chưa xác minh.
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
-- Route guards: see source DD/API contract; do not create role policy.
+- Route guards: authenticated Student route group; #38 scopes achievements to the authenticated Student.
 
 ## 2. Điểm vào
 | From screen/route | Trigger | Params | Guard / fallback |

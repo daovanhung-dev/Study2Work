@@ -1,6 +1,6 @@
 # GS-06 — Business Rules
 
-> **T022 current-source update (2026-11-17):** The only implemented rule is presentation gating: GS03 waits for #08 to confirm a published course, then renders a neutral unavailable status. No resource access or empty-list rule is inferred; no #11/#12 call or resource action is enabled.
+> **T041/current-source update (2026-11-20):** GS-03 waits for #08 published-course success; GS-06 then calls #11 and renders validated PUBLIC resources. T041 approves PUBLIC/PRIVATE visibility, defaults existing resources to PRIVATE, returns #11 results ordered by ID ASC and defines valid empty as `200 []`. A selected ID goes to GS-07/#12. PRIVATE access requires Student auth, published parent course, ACTIVE enrollment and signed URL TTL 300 seconds. Source/runtime and resource producer gaps remain; historical T022 rules below are superseded.
 
 ## 1. Rule index
 | Rule ID (package alias) | Tên / source ID | Áp dụng | Thực thi | Tests |
@@ -9,10 +9,10 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Tài nguyên public theo khóa học; thể hiện quyền mở/tải theo metadata từ BE.
-- Gate/status (giữ nguyên): **GS06 PARTIAL PRESENTATION SOURCE; API #11/#12 DD Draft; resource flow BLOCKED.** #11 source exists locally but returns only the first row as singleton, contrary to DD mapping rule; `visibility`, collection/empty/order/pagination and access policy remain unresolved. #12 is public/no-auth/direct URL with conditional parent check only for non-null `lesson_id`; AC-06 403/private signer and 410/TTL are unsupported. Legacy DDL has `resources`, V1-PILOT does not; live schema/deployment unknown. No resource API request or action is enabled in GS06.
+- Gate/status: **PARTIAL SOURCE; #11/#12 callers and T041 resource access semantics are source-wired/approved; runtime not verified.** Remaining gates are resource data population/schema (no `resources` writer found; #47 writes `lesson_uploads`), MIME-specific viewer behavior and live DB/storage. GS-06 itself calls #11 and enables resource selection to GS-07.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
-> CẦN_XÁC_NHẬN: DD nguồn không có section rule/security/blocker riêng; không tự tạo rule mới.
+> T041 policy supersedes the pre-T041 gate claims; retain current-source evidence and runtime limitations.
 
 
 ## 3. Quy tắc chưa xác nhận

@@ -5,26 +5,12 @@ updates a worklog entry under
 `.agents/worklog/YYYY-MM-DD/<task-id>.md`. The worklog is an audit trail;
 source code, tests and contracts remain the source of truth for behavior.
 
-For chat/tool visibility, every tool call must use the Event protocol in
-[`../project/agent-control.md`](../project/agent-control.md): announce the Event
-before the call and record its actual result immediately afterward. Keep the
-same Task/Step/Action/Event identifiers and verified progress in chat and the
-worklog; the worklog's `MILESTONES` weights are the progress source, and
-bootstrap discovery is not counted again.
-
-## Milestones and chat receipts
-
-Before deep work, publish the task classification and at least two task-specific
-milestones in chat. Each milestone must name its objective/acceptance criterion
-and weight; milestone weights must total 100%. Start reported progress at 0%,
-and record the plan and each milestone status under `MILESTONES` in the worklog.
-
-After every tool call, post its Event result. Also summarize paths/sources and
-findings after each coherent reading batch. Compact formatting may place
-multiple Event receipts in one table, but must not omit or delay an Event.
-Report cumulative progress based only on verified milestone weights. If
-blocked, report achieved progress and blocker; report 100% only when the task
-is complete.
+Live target names and progress are kept only in [`.agents/target.md`](../target.md),
+which contains the active three-column table. Do not duplicate its current
+progress in chat or in a milestone table. Each worklog records evidence for
+`TARGET_UPDATES` (initial target, verified progress changes, and completion
+evidence). Completed target rows are removed from `target.md` after their
+completion evidence is recorded. Historical worklogs remain unchanged.
 
 ## Mandatory preflight
 
@@ -58,7 +44,9 @@ entry is the evidence record.
 5. Trace caller → callee → database/external side effect → response → tests.
 6. Record every `DISCREPANCY`, `UNWIRED`, `NOT_FOUND` and
    `DECLARED_NOT_RUNNABLE` result.
-7. After changes, record files changed, focused/full verification, context
+7. Update `.agents/target.md` when verified progress changes; record the reason
+   and evidence in `TARGET_UPDATES`.
+8. After changes, record files changed, focused/full verification, context
    pages updated and remaining blockers.
 
 Use `TEMPLATE.md`; do not mark a command `VERIFIED` when it was not run.

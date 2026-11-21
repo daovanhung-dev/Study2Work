@@ -22,7 +22,7 @@
 
 .error-card__status {
   margin: 0 0 8px;
-  color: var(--ocean-primary);
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -41,6 +41,54 @@
   font-size: 16px;
   line-height: 1.65;
   overflow-wrap: anywhere;
+}
+
+.error-card__action {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  padding: 0 20px;
+  border-radius: 8px;
+  color: var(--surface);
+  background: var(--ocean-primary);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.error-card__action:hover {
+  background: var(--ocean-deep);
+}
+
+.error-card__action:focus-visible {
+  outline: 3px solid var(--ocean-primary);
+  outline-offset: 3px;
+}
+
+.error-card__back {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  margin: 24px 0 0 12px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--ocean-deep);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.error-card__back:hover {
+  background: var(--page-background);
+}
+
+.error-card__back:focus-visible {
+  outline: 3px solid var(--ocean-primary);
+  outline-offset: 3px;
 }
 
 @media (max-width: 479px) {

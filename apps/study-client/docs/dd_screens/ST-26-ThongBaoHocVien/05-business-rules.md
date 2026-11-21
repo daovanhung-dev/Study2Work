@@ -1,5 +1,12 @@
 # ST-26 — Business Rules
 
+## Current source rules — 2026-11-20
+
+- Student Bearer identity is resolved by the backend; list/read queries are scoped to rows addressable by the authenticated principal.
+- Read state comes from `is_read` and `read_at`; #44 is idempotent through recipient upsert, and #45 updates all currently unread addressable rows.
+- No notification action URL is returned. The client leaves destination navigation unavailable and does not route from title/content.
+- The #45 `{updated_count}` response differs from catalog `Page<Notification>`; source behavior is used by the client and the contract remains open.
+
 ## 1. Rule index
 | Rule ID (package alias) | Tên / source ID | Áp dụng | Thực thi | Tests |
 |---|---|---|---|---|

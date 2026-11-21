@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/mentor/courses/:courseId/students/:studentId/progress`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: registered in `apps/study-client/src/app/features/mentor/mentor.route.ts`; browser/runtime remains unverified.
 - Route params/types: `courseId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent), `studentId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.
@@ -20,8 +20,8 @@
 ## 4. Back / refresh / deep link
 - Back behavior: xem source DD; không mặc định browser history.
 - Preserve filters/scroll/form state: chỉ nếu source có nêu, nếu không `CẦN_XÁC_NHẬN`.
-- Refresh/direct URL: route trong inventory không chứng minh runtime.
-- Invalid/missing ID: theo source DD/backend contract; không tự tạo validation.
+- Refresh/direct URL: the route is registered; both path IDs are parsed and passed to #67. Route changes cancel stale reads.
+- Invalid/missing ID: ME17 requires positive int64-safe IDs before calling #67; invalid course/Student resources are handled through source-backed 404 errors.
 - Not authenticated/authorized: theo source role guard; xem [Business Rules](05-business-rules.md).
 
 ## 5. Diagram
@@ -33,6 +33,8 @@ flowchart LR
 ## Source navigation and flow detail
 
 ### Trích từ DD nguồn: E. Ma trận trạng thái và điều hướng
+
+Current source row links pass the validated course/Student IDs to ME17. The back link returns to ME16 using the same validated course ID. No extra ID/name data is placed in query parameters.
 
 ### E1. Trạng thái
 

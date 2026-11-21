@@ -4,17 +4,17 @@
 |---|---|
 | Screen ID | `AD-23` |
 | Module | Admin |
-| Route | `/admin/discussions/:discussionId/moderate` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/admin/discussions/:discussionId/moderate` — đăng ký trong Angular `admin.routes.ts`; browser/runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **DD status:** BLOCKED — prototype, AC-37 and catalog identify an intended flow, but report detail, moderation actions, audit behavior and deletion are not implementable from approved/current evidence.<br>; **Implementation status:** BLOCKED — Study Web has no editable route/client; #99 and #100 have no local server implementation.<br>; **Runtime status:** NOT VERIFIED — this DD records static assets, contracts and local source only. |
+| DD status | Draft (package được chuyển đổi); **DD status:** `DD BLOCKED` — report detail, moderation actions, audit behavior and deletion are not implementable from approved/current evidence.<br>**Implementation status:** `PARTIAL` — Angular route/page and read-only #98 caller are source-wired; #99/#100 have no local server implementation and all action controls remain disabled.<br>**Runtime status:** `RUNTIME NOT VERIFIED` — browser/deployed behavior is unverified. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-20 |
 | Nguồn đối chiếu | [AD-23.md](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/AD-23.md), [AD-23_PLAN.md](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/AD-23_PLAN.md), [AD-23_markers.json](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/AD-23_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Đọc full thread/report, action hide/lock/warn/delete có lý do.
 - In-scope: GET #98 → PATCH #99 với action/reason hoặc DELETE #100 → refresh #97.
-- Out-of-scope: Xem gate bên dưới; không kết luận Study Web route/UI đã wired hoặc runtime đã chạy.
+- Out-of-scope: xem các gate bên dưới; route/page/#98 read-only caller hiện có trong Angular source, nhưng không kết luận browser/runtime đã chạy.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,24 +31,26 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | loading/reviewing/processing/resolved/conflict |
-| Current runtime | Worklog/context Study Web | `UNWIRED` / `RUNTIME NOT VERIFIED` |
+| Current source | Angular route/page/#98 caller | Route-ID preflight, loading/error/loaded summary and direct-comment states are source-wired; report context and mutations remain unavailable. |
+| Current runtime | Browser/demo | `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-23 source screen.png](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/screen_annotated.png))
 - Luồng: GET #98 → PATCH #99 với action/reason hoặc DELETE #100 → refresh #97.
-- Priority: P1; Gate/source status: **R #98** local route/module/query/model/validator/view/test source; API DD #98 stale `UNWIRED`; #99/#100 **D** catalog/Draft only, no local route. **DD BLOCKED; IMPLEMENTATION BLOCKED:** #98 report projection, #99 action/audit, #100 soft-delete policy, dismissal branch, target grain, Admin permission mapping and Study Web remain unresolved/unwired
+- Priority: P1; Gate/source status: **R #98** local route/module/query/model/validator/view/test source and Angular route/page/caller; API DD #98 stale `UNWIRED`; #99/#100 **D** catalog/Draft only, no local route. **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #98 report projection, #99 action/audit, #100 soft-delete policy, dismissal branch, target grain, Admin permission mapping and live runtime remain unresolved.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
+- 2026-11-20 — Reconciled Angular AD-23 route/#98 caller and positive signed-int64 preflight with current source; report/action and authorization gates remain open.
 
 ## Trạng thái và ranh giới bằng chứng
 
 # AD-23 — Điều tra/kiểm duyệt thảo luận
 
 > **DD status:** BLOCKED — prototype, AC-37 and catalog identify an intended flow, but report detail, moderation actions, audit behavior and deletion are not implementable from approved/current evidence.<br>
-> **Implementation status:** BLOCKED — Study Web has no editable route/client; #99 and #100 have no local server implementation.<br>
+> **Implementation status:** PARTIAL — Angular route/page/#98 read-only caller are source-wired; #99 and #100 have no local server implementation and action controls remain disabled.<br>
 > **Runtime status:** NOT VERIFIED — this DD records static assets, contracts and local source only.
 
 ## Trích đoạn tổng quan từ DD nguồn
@@ -62,18 +64,19 @@
 | Actor | Thiết kế AC/catalog ghi Admin. API #98 local hiện kiểm tra role `ADMIN`; điều này chưa chứng minh mapping permission/tenant của AC-37. Chính sách #99/#100 chưa có source. |
 | Điều kiện trước | Expected: Admin mở AD-23 từ một hàng AD-22 có Discussion ID hợp lệ. Contract #98 yêu cầu `discussion_id:int64!`; ID và target grain (discussion gốc hay reply) chưa được chứng minh bởi handoff hiện có. |
 | Điều kiện sau | Current prototype không tải dữ liệu và không thay đổi trạng thái. Expected: đọc ngữ cảnh qua #98; nếu đủ điều kiện và có quyết định được duyệt thì #99; optional delete qua #100 theo AC-37; quay lại/làm mới AD-22 qua #97. Điều kiện chuyển trạng thái và refresh chưa được xác định đầy đủ. |
-| Route | `/admin/discussions/:discussionId/moderate` là candidate trong inventory, chưa có Study Web route. API #98 path là `/api/v1/admin/discussions/{discussion_id}`. |
+| Route | `/admin/discussions/:discussionId/moderate` được đăng ký trong Angular `admin.routes.ts`; browser/runtime chưa xác minh. API #98 path là `/api/v1/admin/discussions/{discussion_id}`. |
 | Màn hình liên kết | AD-22 là màn hình trước và đường quay lại; #97 là API queue liên quan. Không có màn hình sau được xác nhận. |
 | Assets | [Ảnh gốc](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/screen.png), [HTML prototype](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/code.html), [ảnh đánh số](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/screen_annotated.png), [marker map](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/AD-23_markers.json), [kế hoạch](../../screen_stitch/05_admin/AD-23_dieu-tra-kiem-duyet-thao-luan/AD-23_PLAN.md). |
 | API liên quan | #98 GET detail (local route/source exists, API DD still says UNWIRED); #99 PATCH moderate (catalog/Draft only); #100 DELETE conditional (catalog/Draft only); #97 GET reported queue for AD-22 (local source exists). |
 | Bảo mật | Catalog yêu cầu Bearer JWT, role Admin. Current local #98 guard checks `ADMIN` before path parsing/query. AC permission and identity mapping for audit, #99/#100 guard, tenant scope and session handling remain open. |
 | Quy tắc nghiệp vụ | AC-37 expects read discussion/comments/reports; on violation, action #99 updates moderation state and audit; optional #100 soft-deletes and preserves audit. AC no-violation branch says dismiss report, but no dismissal endpoint is listed. |
-| Phụ thuộc / trạng thái hiện tại | Study Web `UNWIRED`; #98 local projection has Discussion and direct comments but no report fields; #99/#100 are `D`/unwired locally; report writer/live schema and audit persistence unverified. DD and implementation blocked. |
+| Phụ thuộc / trạng thái hiện tại | Angular route/page/#98 read-only caller are source-wired; #98 local projection has Discussion and direct comments but no report fields; #99/#100 are `D`/unwired locally; report writer/live schema and audit persistence unverified. DD is blocked and implementation is partial. |
 
 ### Nguồn và ranh giới bằng chứng
 
 - **Expected behavior:** inventory row 81, AC-37 and direct API catalog #98–#100. The screen route and interactions are design candidates, not an existing frontend contract.
 - **Current prototype:** `code.html` is static: summary values are placeholders, thread content is empty, four radio options/textarea/apply button are disabled, return anchors use `#ad-22`, and there is no script, form handler, fetch/XHR or API client.
+- **Current Angular source:** the registered route passes the raw `discussionId` through the backend-matching positive signed-int64 validator before GET #98. The page validates the success envelope, exact singleton-page metadata, returned ID and nested author/comment identities before rendering the Discussion and direct comments. The response ID must be a JavaScript safe integer; backend-valid larger int64 IDs reach #98 but fail client response validation. AD-22 only links safe IDs. The page links back to AD-22 without preserving queue filters/page; #99/#100 controls remain disabled.
 - **Current local #98 source:** registered GET route and module exist. Shared auth validation for role `ADMIN` runs before path validation and DB access. Path must be positive signed int64 digits; invalid, non-positive, overflow and missing row map to local 404. Query reads the Discussion plus author, then direct child comments without a status filter, ordered `created_at ASC, id ASC`. Mapping derives a title from normalized content (maximum 120 characters, otherwise `Thảo luận #id`), maps comments/author/timestamps and returns a one-item `Page<Discussion>`. It does not query reports, does not mutate/commit, and query/projection failure is returned as a safe 500 with rollback. Characterization test source was inspected but not run.
 - **Source/DD discrepancy:** API DD #98 still states `UNWIRED / NOT_FOUND`; this DD records the currently registered local source and does not treat that stale DD label as runtime proof.
 - **#99/#100 current source:** no local route/module/query/model/test source was found. Catalog fields/codes and API DDs are design evidence only; neither API is runtime verified.

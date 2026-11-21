@@ -2,7 +2,7 @@
 
 ## 1. Route definition
 - Current route in inventory: `/mentor/courses/:courseId`
-- Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.
+- Status: route is registered at `/mentor/courses/:courseId`; the page follows `paramMap`, validates a positive int64 path ID and cancels requests for a prior course. Route registration and source handling are not runtime verification.
 - Route params/types: `courseId` (type/validation: see source DD; CẦN_XÁC_NHẬN if absent)
 - Query params/defaults: preserve the inventory route string; detailed parsing rules only from source DD.
 - Route guards: see source DD/API contract; do not create role policy.

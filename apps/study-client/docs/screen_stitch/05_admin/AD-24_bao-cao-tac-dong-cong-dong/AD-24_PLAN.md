@@ -121,4 +121,11 @@ Create 42 sequential markers, each mapped one-to-one to a row in `AD-24.md` §C.
 - AC role and report permission are expected, but no #101/#102 authorization is wired. Current shared ADMIN-capable helper is not evidence of report-specific route security.
 - Candidate legacy tables and pilot snapshots do not prove live schema, metric feasibility or consistency; AC-19 Comment persistence differs from the legacy discussion self-reference.
 - Export link drops filters; #103 `Report` response conflicts with Operation tracking and the AD-25/operation poll design.
-- Study Web is UNWIRED; the prototype also differs from the intended Study Web design tokens/typography.
+- The Study Client route/page/Admin session gate are now source-wired; report behavior remains blocked because #101/#102 have no Study Server route/query/model/test. The preserved prototype still differs from intended Study Web design tokens/typography.
+
+## 8. Continuation re-audit (2026-11-20)
+
+- Current source registers `/admin/reports/community-impact` and renders `AD24Page` behind the existing Admin session gate. This corrects the historical “Study Web UNWIRED” statement above; the original source snapshot and mockup behavior remain historical evidence.
+- The current page renders four blank KPI placeholders and four explicitly unconfirmed metric proposals. Date/segment inputs, apply/reset/refresh, and export remain disabled; no report request is issued.
+- #101/#102 still have no Study Server route/query/model/test source. Metric formulas/populations, date/query mapping, report-specific authorization, live schema, and AD-25 filter handoff remain unresolved. DD is BLOCKED; implementation is PARTIAL; runtime is NOT VERIFIED.
+- AD-24 remains 25% in `screen_complete.md`; no weighted criterion crossed a threshold. Static source/document review only; no tests/build/lint/browser/API runtime.

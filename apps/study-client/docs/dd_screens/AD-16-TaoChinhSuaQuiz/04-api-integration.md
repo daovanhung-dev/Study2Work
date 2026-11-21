@@ -5,14 +5,15 @@
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
+| `AD-16-API-000` | #73 | `GET /api/v1/admin/courses` | EV-01 course selection | Bearer JWT/Admin |
 | `AD-16-API-001` | #88 | See source contract excerpt | Source event IDs are preserved in [Events](02-events.md) | See source auth/permission evidence |
 | `AD-16-API-002` | #89 | See source contract excerpt | Source event IDs are preserved in [Events](02-events.md) | See source auth/permission evidence |
 
 ## 2. Contract / source detail
 
-- API refs trong inventory: #88, #89
-- Orchestration/data notes: POST #88 khi tạo; PUT #89 khi sửa. Không giả định GET admin quiz detail; #87 metadata-only và `questions=[]` local. #89 catalog không khai báo body; local fallback yêu cầu replacement body. Autosave copy trong prototype chưa có persistence source.
-- BE/source status và gate: **R** local #88/#89 route/module/query/model/validator/test source; API DDs remain Draft. Angular route/page đã wired ở mức safe draft, nhưng chưa gọi #88/#89. **DD BLOCKED; IMPLEMENTATION PARTIAL:** thiếu GET detail/question set, #89 body discrepancy, question/choice editor và course option mapping; field/range rules, AC-35 permission vs `ADMIN`, legacy/V1-PILOT/live schema, autosave/navigation còn mở; **RUNTIME NOT VERIFIED**
+- API refs trong inventory: #73, #88, #89
+- Orchestration/data notes: GET #73 cung cấp Course options cho create; client xác minh `pagination.page` khớp query page, theo backend source đang echo trang đã validate; trang ngoài cuối vẫn có thể trả `items=[]`. POST #88 tạo mới; PUT #89 chưa được gọi. Không giả định GET admin quiz detail; #87 metadata-only và `questions=[]` local. #89 catalog không khai báo body; local fallback yêu cầu replacement body. Autosave copy trong prototype chưa có persistence source.
+- BE/source status và gate: **R** local #73/#88/#89 route/module/query/model/validator/test source; API DDs remain Draft. Angular create mode calls #73 and #88 with the exact outer body, preserves HTTP response status, and requires HTTP 201 plus the expected envelope before showing success; nested fields/types follow the current #88 validator and remain `DERIVED`. **100% STATIC DD-SAFE** for this create slice and the explicit edit gate; product DD remains blocked by missing GET detail/question set and #89 body, AC-35 permission vs `ADMIN`, legacy/V1-PILOT/live schema, autosave/navigation; **RUNTIME NOT VERIFIED**.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: A.2. Contract API và current source

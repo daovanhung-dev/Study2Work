@@ -11,9 +11,9 @@
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [AD-19.md](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/AD-19.md), [AD-19_PLAN.md](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/AD-19_PLAN.md), [AD-19_markers.json](../../screen_stitch/05_admin/AD-19_danh-sach-thong-bao-quan-tri/AD-19_markers.json), [list_screen.md](../../list_screen.md) |
 
-## Current source update (2026-11-16)
+## Current source update (2026-11-20)
 
-Angular admin routing registers /admin/notifications; AD19Page calls API #92 through its data-access service, uses /admin/notifications/new for the AD-20 CTA, and creates a status link only for safe integer IDs. Focused AD-19 page + route specs passed 6/6; API #92 fake-session tests passed 20/20 with one Starlette deprecation warning. This verifies local source and mocked/fake data only: browser runtime, live DB, migration deployment, and fine-grained permission remain unverified. The direct catalog singleton response still conflicts with local Page<Notification>; DD remains blocked and implementation is partial-source.
+Angular admin routing registers /admin/notifications; AD19Page calls API #92 through its data-access service, uses /admin/notifications/new for the AD-20 CTA, creates a status link only for safe integer IDs, and exposes the Stitch empty-state refresh control. Refresh repeats the currently applied `status/channel/page` query; the table displays its loading row while the request is active. Earlier focused AD-19 page + route specs were recorded as 6/6; API #92 fake-session tests were recorded as 20/20 with one Starlette deprecation warning. This verifies local source and mocked/fake data only: browser runtime, live DB, migration deployment, and fine-grained permission remain unverified. The direct catalog singleton response still conflicts with local Page<Notification>; DD remains blocked and implementation is partial-source. No tests/build/lint/browser/API runtime were run for this continuation.
 
 ## 1. Mục tiêu & phạm vi
 - Mục tiêu: Admin xem notification list; inventory mockup search/status/channel và draft/scheduled/sent là expected nhưng cần contract mapping.
@@ -47,6 +47,7 @@ Angular admin routing registers /admin/notifications; AD19Page calls API #92 thr
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; source/runtime chưa được xác minh lúc đó.
 - 2026-11-16 — Xác minh Angular route/page/#92 caller và test source: FE 6/6, API fake-session 20/20; cập nhật current-source status, giữ DD blockers và runtime unverified.
+- 2026-11-20 — Added the empty-state refresh action; it repeats the applied `status/channel/page` read through #92. Contract gaps and runtime-unverified status remain open.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -99,3 +100,9 @@ Angular admin routing registers /admin/notifications; AD19Page calls API #92 thr
 - Không hiển thị PII người nhận. Local #92 không trả user_id/sender_id và API list contract chưa chốt recipient grain.
 - Không đổi chữ thường trong mockup thành enum viết hoa của backend bằng suy đoán; cũng không đổi QUEUED/FAILED/SENT thành draft/scheduled/published.
 - #92 là GET chỉ đọc trong source hiện tại: hai query count/list; không commit hoặc gọi provider. Đây là bằng chứng về code local, không xác nhận DB/migration/worker deployed.
+
+### Current-source addendum — 2026-11-21
+
+- The #92 client response guard still validates envelope, exact success code, requested page, size, pagination types, delivery-backed notification fields and exact active status/channel filters. It now permits COUNT/LIST cardinality drift through that shape check; unsafe integer totals also remain representable only as an untrusted mismatch state.
+- AD19Page compares returned item count with the count-derived expected rows. On mismatch it preserves received notifications, hides total/page controls and offers retry with the currently applied status/channel/page. An empty late page has a separate return-to-first-page state; a matching empty page remains a valid result.
+- The direct catalog Notification vs local Page<Notification> discrepancy, metric/recipient/status mappings, permission, schema and browser runtime remain unresolved. AD-19 remains 62.5%; no full weighted UI/UX/logic/API axis was completed. No tests/build/lint/browser/API runtime were run.

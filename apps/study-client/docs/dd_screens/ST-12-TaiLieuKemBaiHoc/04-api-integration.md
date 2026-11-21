@@ -2,13 +2,18 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-20
 
-ST-12 calls #26 and displays the returned lesson-resource metadata. It does
-not call #12 or open raw resource URLs while access and URL policy remain
-unresolved. The DD/API excerpt below is a design-time snapshot. Current source
-status is tracked in [the screen inventory](../../list_screen.md) and
-[T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+ST-12 calls #26 with Student Bearer, follows `lessonId` route changes, cancels
+stale reads, validates `DESIGN_RESOURCE_RETRIEVED`, response shape and matching
+lesson ID, then displays the returned resource list or empty state. Selecting
+a row passes `resourceId` and lesson return context to GS-07; GS-07 owns #12
+and applies its public/private URL policy. #26 checks Student, ACTIVE
+enrollment, and a PUBLISHED lesson/course; it returns resource metadata with
+no URL. Current API #47 writes `lesson_uploads`, while #26 reads `resources`,
+and no `resources` writer is present in checked-in server source. Runtime is
+not verified. The detailed source excerpt below preserves the original design
+snapshot.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
@@ -19,8 +24,8 @@ status is tracked in [the screen inventory](../../list_screen.md) and
 ## 2. Contract / source detail
 
 - API refs trong inventory: #26, #12
-- Orchestration/data notes: GET #26; nếu có resource_id hợp lệ GET #12; không tự mở URL ngoài chính sách.
-- BE/source status và gate: **D; DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED:** #26 chưa có Student route/module/query/test; `ApiEnvelope<Lesson>` chưa định nghĩa Resource collection, cardinality/order/empty/access/visibility/URL còn mở; #12 source-backed locally nhưng public, không auth/visibility/signer và trả stored URL; AC-06 signed-URL branch khác source; ST-12 prototype không có resource item hay valid `resource_id`; return context/Study Web route UNWIRED; legacy BIGINT và V1-PILOT UUID schema khác nhau; live DB chưa xác minh
+- Orchestration/data notes: current ST-12 calls #26; selected resource IDs hand off to GS-07, where #12 is called. ST-12 does not open the list item's URL.
+- BE/source status and gate: **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #26 caller and route are present but the source-table producer is unresolved; API DD/cardinality and canonical schema remain open; the prototype's loaded-list design does not match the current page; live DB/runtime unverified.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: I. Nguồn truy vết

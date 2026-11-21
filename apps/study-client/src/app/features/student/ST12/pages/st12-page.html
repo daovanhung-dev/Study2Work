@@ -1,14 +1,14 @@
 <main class="static-page api-screen st12-page">
   <nav class="crumbs" aria-label="Vị trí hiện tại">
     <a routerLink="/student/courses">Khóa học của tôi</a><span>›</span
-    ><a [routerLink]="['/student/lessons', lessonId]">{{ lesson()?.title || 'Bài học' }}</a
+    ><a [routerLink]="['/student/lessons', lessonId()]">{{ lesson()?.title || 'Bài học' }}</a
     ><span>›</span><span>Tài liệu kèm bài học</span>
   </nav>
   <header class="api-heading">
     <div>
-      <p class="api-eyebrow">ST-12 · Tài nguyên bài học</p>
+      <p class="api-eyebrow">Tài liệu học tập</p>
       <h1>Tài liệu kèm bài học</h1>
-      <p>{{ lesson()?.title || 'Danh sách tài nguyên được API #26 trả về cho bài học.' }}</p>
+      <p>{{ lesson()?.title || 'Tài liệu kèm theo bài học' }}</p>
     </div>
     @if (lesson()) {
       <span class="api-pill">{{ lesson()?.resources?.length || 0 }} tài liệu</span>
@@ -18,7 +18,12 @@
     <section class="api-message" role="status"><strong>Đang tải tài liệu…</strong></section>
   }
   @if (error()) {
-    <section class="api-error" role="alert">{{ error() }}</section>
+    <section class="api-error" role="alert">
+      <p>{{ error() }}</p>
+      <button class="api-button secondary" type="button" (click)="retryResources()">
+        Tải lại tài liệu
+      </button>
+    </section>
   }
   @if (!loading() && !error() && lesson(); as item) {
     @if (item.resources.length) {
@@ -30,16 +35,15 @@
                 <span class="resource-icon" aria-hidden="true">▤</span>
                 <div>
                   <h2>{{ resource.name }}</h2>
-                  <p class="api-meta">{{ resource.type }} · Tài nguyên #{{ resource.id }}</p>
+                  <p class="api-meta">Tài liệu đính kèm</p>
                 </div>
-                <button
-                  class="api-button secondary"
-                  type="button"
-                  disabled
-                  title="Chính sách URL và quyền tải chưa được xác nhận"
+                <a
+                  class="api-button secondary resource-open"
+                  [routerLink]="['/resources', resource.id]"
+                  [queryParams]="{ from: 'lesson', lessonId: lessonId() }"
                 >
                   Mở tài liệu
-                </button>
+                </a>
               </div>
             </li>
           }
@@ -49,16 +53,12 @@
       <section class="api-message">
         <div>
           <strong>Chưa có tài liệu được gắn với bài học này.</strong>
-          <p>Đây là trạng thái rỗng theo response API #26.</p>
+          <p>Tài liệu sẽ xuất hiện tại đây khi được thêm vào bài học.</p>
         </div>
       </section>
     }
-    <p class="api-muted">
-      Các URL tài nguyên chưa được mở trực tiếp vì API #12 chưa xác nhận policy truy cập, visibility
-      và signed URL.
-    </p>
     <div class="api-actions">
-      <a class="api-button" [routerLink]="['/student/lessons', lessonId]">Quay lại bài học</a>
+      <a class="api-button" [routerLink]="['/student/lessons', lessonId()]">Quay lại bài học</a>
     </div>
   }
 </main>

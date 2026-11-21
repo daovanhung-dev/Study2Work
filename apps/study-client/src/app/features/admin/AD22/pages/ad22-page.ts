@@ -61,6 +61,10 @@ export class AD22Page {
     this.query.set({ page: 1 });
   }
 
+  refreshReportedDiscussions(): void {
+    this.query.update((query) => ({ ...query }));
+  }
+
   changePage(page: number): void {
     const pagination = this.viewState().pagination;
     if (pagination && Number.isSafeInteger(page) && page >= 1 && page <= pagination.totalPages) {

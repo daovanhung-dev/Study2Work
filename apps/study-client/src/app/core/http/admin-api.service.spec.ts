@@ -116,6 +116,25 @@ describe('AdminSessionService and AdminApiService', () => {
     await expect(response).resolves.toMatchObject({ data: { items: [] } });
   });
 
+  it('preserves the HTTP status for a protected Admin write', async () => {
+    await signIn(session, http);
+    const body = { recipients: [2001], title: 'Notice', content: 'Text', channels: ['PUSH'] };
+    const response = firstValueFrom(adminApi.postWithResponse(
+      STUDY_SERVER_APIS.API_093,
+      { body },
+    ));
+
+    const request = http.expectOne('/api/v1/admin/notifications');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(body);
+    expect(request.request.headers.get('Authorization')).toBe('Bearer access-token-1');
+    request.flush(successEnvelope({ id: 1 }), { status: 202, statusText: 'Accepted' });
+    await expect(response).resolves.toMatchObject({
+      status: 202,
+      body: { data: { id: 1 } },
+    });
+  });
+
   it('does not issue unauthenticated reads and clears the local session on a protected 401', async () => {
     const withoutSession = firstValueFrom(adminApi.get(STUDY_SERVER_APIS.API_068));
     await expect(withoutSession).rejects.toMatchObject({ code: 'LOGIN_REQUIRED' });

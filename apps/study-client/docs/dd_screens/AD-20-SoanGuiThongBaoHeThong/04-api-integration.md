@@ -1,6 +1,6 @@
 # AD-20 — API Integration
 
-> **Current Angular source (2026-11-16):** Route/page and local preview exist; the page has no API #93 caller. Local API #18 has a UUID notification-only handler, but AD-20 does not call it; canonical response/ID/permission/audience decisions remain open.
+> **Current Angular source (2026-11-21):** AD-20 loads recipients through #68, requires explicit recipient selection, preserves the #93 HTTP response status, and routes only HTTP 202 with the expected envelope and UUID to SH-07. A 403 is shown as access denial. An ambiguous/malformed response locks resend and offers a manual return to AD-19. API #18 is used there for owner-bound notification status. Wider segment/campaign and permission policies remain unresolved; live runtime is not verified.
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
@@ -11,10 +11,17 @@
 
 ## 2. Contract / source detail
 
-- API refs trong inventory: #93
-- Orchestration/data notes: POST #93; chỉ sang SH-07 nếu operation response field/type và #18 mapping được duyệt. Catalog/AC-36 trả Notification; tracking prose nói Operation; local source trả Notification đầu tiên và derived `meta.operation_id:UUID`.
-- BE/source status và gate: **R** local #93 route/module/model/validator/query/view/test source; API DD Draft. AD-20 Angular route/page and preview source exist; API caller absent. **DD BLOCKED; IMPLEMENTATION PARTIAL SOURCE / SEND FLOW BLOCKED:** response Notification vs Operation; #18 catalog int64 vs local UUID and owner policy; local #93 requires explicit recipients while UI has no resolver; app→PUSH/channel, audience predicate/eligibility/grain, permission vs ADMIN, draft/send/priority, live schema and provider delivery remain unresolved; **RUNTIME NOT VERIFIED**.
-- Contract sources and discrepancies are preserved in the source excerpts below.
+### Current Study Web integration — 2026-11-21
+
+- AD-20 uses Admin API #68 recipient pages and retains only explicitly selected IDs for this send. It submits `{recipients:number[], title:string, content:string, channels:('PUSH'|'EMAIL')[]}` to #93.
+- It requires HTTP 202, `DESIGN_OPERATION_ACCEPTED`, queued `data.status`, and a valid UUID at `meta.operation_id`, then routes to `/operations/{uuid}`. SH-07 calls API #18 using the current Admin session and displays the owner-bound notification aggregate.
+- This is explicit-recipient dispatch. Segment mode, provider delivery, live schema and deployment are not implemented/verified. The API #93 202 response means accepted into the local notification/outbox transaction, not sent to recipients.
+- Focused Admin verification: 25 spec files / 99 tests passed, including exact HTTP status handling for #88/#93. Browser/live API/DB/provider runtime remains unverified.
+
+- API refs: AD-20 uses #68 for recipient pages and #93 for dispatch; SH-07 uses #18 to read the accepted notification UUID.
+- Current source flow: #68 supplies candidate users; the Admin explicitly selects recipients; #93 receives selected IDs, title, text and `PUSH`/`EMAIL`; a valid accepted UUID in `meta.operation_id` routes to SH-07. #18 applies owner-bound lookup for the authenticated Admin.
+- The broader API DD remains Draft. Segment audience, permission granularity, draft/priority semantics, live schema, provider delivery and browser runtime remain unresolved or unverified; these are outside the implemented explicit-recipient dispatch slice.
+- The discrepancy table below records the earlier DD/catalog snapshot; current notification-only mapping is summarized above.
 
 ### Trích từ DD nguồn: API #93 và discrepancy
 

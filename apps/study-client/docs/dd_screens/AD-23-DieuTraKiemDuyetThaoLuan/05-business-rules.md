@@ -7,7 +7,7 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Đọc full thread/report, action hide/lock/warn/delete có lý do.
-- Gate/status (giữ nguyên): **R #98** local route/module/query/model/validator/view/test source; API DD #98 stale `UNWIRED`; #99/#100 **D** catalog/Draft only, no local route. **DD BLOCKED; IMPLEMENTATION BLOCKED:** #98 report projection, #99 action/audit, #100 soft-delete policy, dismissal branch, target grain, Admin permission mapping and Study Web remain unresolved/unwired
+- Gate/status (giữ nguyên): **R #98** local route/module/query/model/validator/view/test and Angular route/page/caller source; API DD #98 stale `UNWIRED`; #99/#100 **D** catalog/Draft only, no local route. **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #98 report projection, #99 action/audit, #100 soft-delete policy, dismissal branch, target grain and Admin permission mapping remain unresolved.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: F. Tiêu chí nghiệm thu và quyết định còn mở
@@ -21,7 +21,7 @@
 - [x] AC-37 navigation, optional delete, dismissal branch and AD-22 handoff are represented with unresolveds visible.
 - [x] Source image and HTML are kept as original files; annotation is separate.
 - [ ] Full DD READY: **not met**; the blockers below affect implementability.
-- [ ] IMPLEMENTATION READY: **not met**; Study Web is UNWIRED and mutation APIs are absent locally.
+- [ ] IMPLEMENTATION READY: **not met**; the #98 read path is source-wired, but report context and mutation APIs/actions are absent locally.
 - [ ] RUNTIME VERIFIED: **not met**; no app/runtime verification was performed.
 
 ### Blockers requiring contract decisions
@@ -35,7 +35,7 @@
 7. Approve mapping between AC Admin permission and local `ADMIN`, actor identity, tenant scope, and policies for #99/#100.
 8. Implement the Study Web route/client, including response/error mapping, loading states and return/refresh behavior, then verify with runtime tests.
 
-Until those decisions are source-backed, keep moderation/delete controls locked, preserve the prototype discrepancy, and retain `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, `RUNTIME NOT VERIFIED`.
+Until those decisions are source-backed, keep moderation/delete controls locked, preserve the prototype discrepancy, and retain `DD BLOCKED`, `IMPLEMENTATION PARTIAL`, `RUNTIME NOT VERIFIED`.
 
 ## 3. Quy tắc chưa xác nhận
 - `CẦN_XÁC_NHẬN`: các quyết định/blocker trong inventory và DD nguồn chưa được giải quyết.

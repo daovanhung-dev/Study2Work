@@ -11,8 +11,8 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #46, #62
-- Orchestration/data notes: GET #46 → GET #62 theo numeric course_id → giữ unique Student IDs int64 cho ME-14; handoff carrier chưa được duyệt.
-- BE/source status và gate: **R**; #46/#62 route/module/query/model/test source-backed locally. **BLOCK:** prototype slugs không ánh xạ int64; #46 không có semester/assigned-course; course status eligibility; support_needed thiếu progress/attendance source; loaded roster/selection UI chưa có; #63 CSV recipient mapping vẫn Draft/DERIVED, không có course_id, content:int64 lệch text, privacy/email/WCAG claims chưa được xác nhận; live schema và Study Web UNWIRED
+- Orchestration/data notes: GET #46 (`page`, `size=100`) → GET #62 theo numeric course_id → giữ unique Student IDs int64 cho ME-14; current source chuyển IDs qua in-memory router state. Carrier persistence/back-navigation vẫn chưa được duyệt.
+- BE/source status và gate: **R**; #46/#62 route/module/query/model/test source-backed locally. Study Client route/callers **WIRED / PARTIAL**. **BLOCK:** #46 không có semester/assigned-course; course status eligibility; support_needed thiếu progress/attendance source; prototype scope radios chưa được triển khai; #63 CSV recipient mapping còn Draft/DERIVED, không có course_id, content:int64 lệch text; privacy/email/WCAG claims chưa được xác nhận; live schema/runtime chưa xác minh.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: API dependency trace
@@ -34,6 +34,13 @@
 - Success: HTTP 200, DESIGN_RESOURCE_RETRIEVED, data array [{id:int64,full_name:string,avatar_url?:string}], meta {}. Empty roster là 200 với data:[].
 - Lỗi khác: 401 DESIGN_AUTHENTICATION_REQUIRED; 500 DESIGN_INTERNAL_ERROR khi DB/projection lỗi. Không pagination, email, course display label, progress, checkpoint, due date hoặc attendance.
 - Local API test: [test_mentor_course_students.py](../../../../study-server/tests/modules/mentor/api_62_mentor_course_students/test_mentor_course_students.py). Không chạy trong phiên này.
+
+### Current Study Client integration
+
+- `ME13RecipientsService.courses()` calls #46 with supported `page` and `size=100` parameters; the backend accepts size 1..100. `students()` calls #62 with the returned course ID as the path value.
+- `ME13Page` validates the success envelope, exact `DESIGN_RESOURCE_RETRIEVED` business code, page metadata, required Course/Student projections, int64-safe unique IDs and duplicate IDs before rendering. Changing page/course cancels stale reads; #62 403 is shown separately and failed reads can be retried.
+- ME-13 makes no mutation call. It passes the chosen course ID and recipient IDs/names to ME-14 through in-memory `history.state`; #63 remains blocked in ME-14 because `content:int64` does not match the text composer contract and its course scope is absent.
+- Browser/runtime verification and tests were not run in this task.
 
 **API #63 — POST /api/v1/mentor/notifications (downstream ME-14, not called by ME-13)**
 

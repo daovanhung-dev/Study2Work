@@ -1,5 +1,7 @@
 # AD-01 — Data Flow & State
 
+> **Current source note (2026-11-20):** `/admin` is registered and renders AD01Page under AdminLayout. AdminSessionService accepts an Admin profile/token from #03 in tab memory. AD01 has no #101 caller; its current page shows unavailable report, audit and service states, disabled date/refresh/audit actions and source-routed shortcuts. The historical prototype-flow excerpt below predates this Angular page.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|
@@ -24,7 +26,7 @@
 7. Xử lý 401/403/500 theo business code; recovery/redirect, error copy, retry, timeout và cache chưa có contract. Invalid date hoặc `from > to` cũng chưa có error mapping; không tự thêm 400/422.
 8. Sau summary, AC-38 tiếp tục API #102 cho community impact; nhánh export #103 là optional. Đây là downstream flow, không đồng nghĩa dashboard phải tự gọi #102/#103 hoặc API #18.
 
-### Current HTML behavior
+### Historical prototype HTML behavior
 
 - Document mở trực tiếp như prototype tĩnh; không có fetch/Axios/XHR, API handler, Study Web route hay state store.
 - Date controls và “Xem toàn bộ nhật ký kiểm toán” đang disabled.
@@ -38,24 +40,24 @@
 
 | State | Điều kiện | UI / chuyển tiếp | Trạng thái chứng cứ |
 |---|---|---|---|
-| `UNWIRED` | Current Study Web không có source/router; #101 không có runtime route. | Không có screen state runtime. | `CURRENT_BEHAVIOR`, `UNWIRED / NOT_FOUND`. |
+| `Report unavailable` | Angular route/page exists; #101 has no current server/client route. | Current page renders safe unavailable metrics and controls without issuing a request. | `SOURCE_PARTIAL / API_UNWIRED`. |
 | `Loading` | Candidate khi route/API được wire và request #101 đang pending. | Cần thiết kế spinner/skeleton, timeout và disable duplicate; screenshot không có loading visual. | Inventory candidate; chưa implement/approved. |
 | `Ready` | 200 Report và field/card mapping được duyệt. | Hiển thị kỳ, metrics và generated time theo UI format đã duyệt. | Chưa đạt vì KPI mapping/formula chưa chốt. |
 | `Partial` | Inventory nêu state này. | API #101 không định nghĩa partial marker, metric-level status hoặc lỗi từng phần; không thể suy ra card nào hidden/failed. | `OPEN / BLOCKER`. |
 | `No data` | Candidate khi report không có metrics hoặc nguồn rỗng. | `--` trong ảnh là placeholder; API chưa quyết định empty list, zero, metric omission hay unavailable. | `OPEN / BLOCKER`. |
-| `Authentication required` | API expected trả 401 `DESIGN_AUTHENTICATION_REQUIRED`. | Login/session recovery screen và giữ lại route chưa có mapping trong Study Web. | Contract expected; UI unwired. |
-| `Access denied` | API expected trả 403 `DESIGN_ACCESS_DENIED`. | Không có forbidden state/client route trong source AD-01. | Contract expected; policy/report permission chưa chốt. |
+| `Authentication required` | API #03 login is handled by enclosing AdminLayout. | Unauthenticated entry shows the Admin login form; only an in-memory `ADMIN` session exposes AD01Page. | Current source; #101 remains unwired. |
+| `Access denied` | API #101 expected 403 `DESIGN_ACCESS_DENIED`. | No #101 response or report-specific authorization state exists. | Contract expected; policy/report permission unresolved. |
 | `Error` | API expected trả 500 `DESIGN_INTERNAL_ERROR`; network/timeout còn chưa có contract UI. | Error copy/retry behavior chưa có thiết kế. Không báo dashboard “ready” khi lỗi. | Contract expected, handling unwired. |
-| `Refreshing` | Current refresh button animation đang chạy. | Icon xoay tối đa 700 ms; không có loading data hoặc request. | Current HTML local-only. |
+| `Refreshing` | Current Angular refresh button is disabled. | No animation, request or local state change. | Source-gated pending #101/date contract. |
 
 ### Điều hướng và dữ liệu
 
 | Từ | Đến | Dữ liệu / điều kiện | Hiện trạng |
 |---|---|---|---|
-| Admin session → AD-01 | `/admin` | Admin JWT; report permission; current principal/profile mapping cần contract. | Inventory/AC expected; route và shell không có trong Study Web source. |
-| AD-01 → AD-02 | `/admin/users` | Không cần dashboard KPI để điều hướng; API #68 nằm ở screen đích. | Quick link HTML; route runtime chưa wire. |
-| AD-01 → AD-06 | `/admin/courses` | API #73 thuộc screen đích. | Quick link HTML; route runtime chưa wire. |
-| AD-01 → AD-10 | `/admin/content/pending` | API #78 thuộc screen đích. | Quick link HTML; route runtime chưa wire. |
+| Admin session → AD-01 | `/admin` | Role `ADMIN` validated from #03; profile is held in tab memory. #101 report permission remains unimplemented. | Source route/page/layout exists; deployment unverified. |
+| AD-01 → AD-02 | `/admin/users` | API #68 belongs to destination screen. | Angular `routerLink`; destination route exists. |
+| AD-01 → AD-06 | `/admin/courses` | API #73 belongs to destination screen. | Angular `routerLink`; destination route exists. |
+| AD-01 → AD-10 | `/admin/content/pending` | API #78 belongs to destination screen. | Angular `routerLink`; destination route exists. |
 | AD-01 → AD-24 | `/admin/reports/community-impact` | Inventory liên kết; API #102 yêu cầu date/segment theo contract riêng. | Không có link tương ứng rõ trong quick cards; nav Báo cáo vẫn `href="#"`. |
 | AC-38 summary → #102 | `GET /api/v1/admin/reports/community-impact` | AC-38 đặt #102 sau #101; không tự nối segment/query hoặc gộp metric. | Diagram/contract expected; API #102 chưa runtime. |
 | AC-38 optional export → #103 / #18 | Endpoint #103, có thể theo dõi operation | Export là nhánh downstream; #103/#18 có discrepancy về operation/result contract. | Không khởi tạo từ AD-01 hiện tại. |

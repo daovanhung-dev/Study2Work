@@ -2,6 +2,8 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
+> **T120 current-source update (2026-11-20):** AD-21 validates raw `notificationId` against the current #96 positive signed-int64 path parser before GET; invalid/missing IDs skip HTTP, and valid raw text is preserved. The #96 data-access boundary validates the success envelope/business code, response ID identity and Notification fields before rendering. #94/#95 remain disabled; contract and live-runtime/JS-safe response-ID gaps are unchanged. No tests/build/lint/browser checks were run for this update.
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|

@@ -32,12 +32,13 @@ describe('AD24Page', () => {
     expect(segment?.matches(':disabled')).toBe(true);
     expect(root.textContent).toContain('Study Server chưa có route/query/model cho API #101 hoặc #102');
     expect(root.querySelector('.chart-unavailable')?.textContent).toContain('Không có chuỗi dữ liệu');
-    expect(root.querySelectorAll('.metric-card')).toHaveLength(0);
+    expect(root.querySelectorAll('.metric-card')).toHaveLength(4);
+    expect(root.querySelectorAll('.planned-card')).toHaveLength(4);
     expect(root.querySelector('canvas, svg.chart')).toBeNull();
     http.expectNone((request) => request.url.includes('/admin/reports'));
   });
 
-  it('keeps apply, reset, refresh and export disabled without a route to AD-25', () => {
+  it('keeps apply, reset, refresh and export disabled while the export contract is unavailable', () => {
     const fixture = TestBed.createComponent(AD24Page);
     fixture.detectChanges();
 

@@ -102,3 +102,9 @@ Hoàn thiện riêng AD-21 theo inventory row 79, AC-36, API #18/#94/#95/#96, m�
 - API reverse rows #018/#094/#095/#096 record local source wiring; API DD/catalog contracts remain Draft and unchanged. #18 UUID/int64 and owner/result decisions remain open.
 - Do not equate expected `draft/scheduled/sending/delivered/failed` with local `QUEUED/SENT/FAILED`; do not infer recipient/channel counts, delivery progress, notification cancellation, or Operation handoff.
 - DD state: `DD BLOCKED`; implementation: `IMPLEMENTATION PARTIAL SOURCE`; runtime: `RUNTIME NOT VERIFIED`. Permission, lifecycle/model/schema and #18 client handoff decisions remain open.
+
+## Dated continuation — #96 route ID guard (2026-11-20)
+
+- Angular `AD21Page` validates the complete raw `notificationId` against the current #96 parser rules: 1–19 ASCII digits, positive value, signed-int64 maximum. Missing/malformed/zero/overflow IDs stop locally; valid raw text is preserved for GET #96.
+- Current #96 response validation still rejects notification IDs that JavaScript cannot represent exactly. This route guard does not change that response precision boundary or any #94/#95/#18 action gate.
+- `screen_complete.md` remains at 62.5%; route validation does not resolve lifecycle, permission, mutation or operation-contract gaps. No tests/build/lint/browser/API runtime were run.

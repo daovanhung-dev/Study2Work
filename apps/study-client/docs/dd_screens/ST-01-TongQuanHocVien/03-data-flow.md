@@ -1,5 +1,15 @@
 # ST-01 — Data Flow & State
 
+## Current-source reconciliation — 2026-11-21
+
+ST-01 independently loads #20 ACTIVE courses and #38 recorded awards. Both
+handlers read COUNT and LIST separately; ST-01 compares each returned page's
+item count with the count-derived expected row count only to avoid false empty
+copy. On mismatch, it preserves returned rows and shows the existing retry
+action. The shared #20/#38 guards do not require separate query results to
+have equal cardinality. Progress and notification widgets remain gated by
+their response/schema sources.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

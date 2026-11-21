@@ -92,3 +92,10 @@
 
 ## 8. Trace
 [Events](02-events.md) · [API](04-api-integration.md) · [Rules](05-business-rules.md)
+
+## Current Study Client source (2026-11-20)
+
+- ME17 follows `courseId` and `studentId` route changes, cancels stale #67 reads, and rejects invalid IDs before sending a request. Errors include an explicit retry action; stale progress is cleared while a new read is pending.
+- Successful data must use `DESIGN_RESOURCE_RETRIEVED`, match both route IDs, and satisfy the current server model: one Student, unique lessons ordered by `(order, lesson_id)`, allowed progress states, safe percentages and nullable timestamps.
+- The client cross-checks summary lesson count, completed count and floor-average percent against the lesson rows before display. Empty lessons mean no PUBLISHED lessons in this snapshot; they do not assert that sync/history is missing.
+- Only supported snapshot fields are rendered. No event history, assignment/quiz metrics, auto-refresh, or additional API is added.

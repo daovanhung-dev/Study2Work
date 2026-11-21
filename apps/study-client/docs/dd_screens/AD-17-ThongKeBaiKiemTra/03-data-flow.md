@@ -17,7 +17,7 @@
 
 1. Từ AD-15, Admin chọn thao tác xem thống kê cho Quiz. Chỉ định danh Quiz nào được truyền sang route client vẫn cần đối chiếu ID thực tế; API #91 nhận `quiz_id:int64!`.
 2. Client kiểm tra trạng thái phiên và quyền màn hình theo policy được duyệt. AC-35 nêu quiz-management permission; API local chỉ có shared `ADMIN`. Không được xem route-level/Admin shell copy là authorization.
-3. Current Angular route provides `quizId` as a string; `AD17ApiService` calls GET #91 through the shared Admin client with `quiz_id` as the path parameter and no body/query. The direct contract specifies numeric int64, but the client does not validate it locally.
+3. Current Angular route provides `quizId` as a string; the page validates it as a full-string positive signed-int64 before calling GET #91 through the shared Admin client. Invalid/missing values stop locally; valid raw text is passed as `quiz_id` with no body/query.
 4. Backend current source xác thực shared `ADMIN`, parse ID, query aggregate read-only trên legacy Quiz/QuizAttempt candidate. API DD đánh dấu metric/formula là DERIVED. Live schema và policy chưa được xác minh.
 5. Current Angular source renders loading, then maps the local `AdminQuizStatistics` response into Quiz ID plus six displayed metrics, or renders a shared error state. The direct response contract remains `ApiEnvelope<Quiz>` and does not approve those analytics fields; no client-side computation is done.
 6. Current shared error handling covers 401/403/404/network failures and a generic service error; local source uses 404 for malformed path and missing Quiz. Retry and the fine-grained permission flow are not specified.

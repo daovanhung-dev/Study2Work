@@ -1,8 +1,7 @@
-# Prompt bàn giao: hoàn tất implementation các Study screens
+# Hoàn tất implementation các Study screens
 
-> Ngày lập: 2026-11-17 · Repo: `/home/daovh/develop/Study2Work`<br>Worklog gốc: [T038](../../../../.agents/worklog/2026-11-17/implement-remaining-study-screens-T038.md) · Ma trận 83 screen: [T038-screen-gap-matrix.md](../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md)
-
-## Prompt dùng cho máy tiếp theo
+> Ngày lập: 2026-11-17 · Repo: `/home/daovh/develop/Study2Work`
+> Worklog gốc: [T038](../../../../.agents/worklog/2026-11-17/implement-remaining-study-screens-T038.md) · Ma trận 83 screen: [T038-screen-gap-matrix.md](../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md)
 
 Bạn đang tiếp quản task implementation đang dở trong repo Study2Work. Hãy
 đọc toàn bộ tài liệu này trước khi sửa code, sau đó tiếp tục task T038 theo
@@ -16,9 +15,6 @@ hoàn thiện phần còn dở, giữ an toàn các action bị contract/securit
 block, đồng bộ tài liệu/worklog và kết thúc bằng verification phù hợp. Không
 chỉnh Study Server, DB schema hay tạo API mới để ép UI chạy; nếu một behavior
 cần contract mới, giữ gate và ghi rõ blocker.
-
-Đường dẫn tuyệt đối ở đầu tài liệu là workspace của máy tạo prompt; trên máy
-tiếp theo hãy tìm repo root tương ứng và dùng các path tương đối bên dưới.
 
 ## Mục tiêu và phạm vi
 
@@ -37,17 +33,33 @@ tiếp theo hãy tìm repo root tương ứng và dùng các path tương đối
 
 ## Tiến độ tại thời điểm bàn giao
 
-| Cách tính | Trạng thái | Cách hiểu |
-|---|---:|---|
-| Tiến độ chính thức trong T038 ở lần ghi gần nhất | **25%** | Mốc 10% preflight và 15% hoàn tất slice T037/AD-12 đã được ghi DONE; milestone implementation 60% còn `IN_PROGRESS`, milestone final 15% là `PENDING`. Con số trong worklog chưa được cập nhật sau các đợt coding tiếp theo. |
-| Ước lượng phần implementation T038 đã có trong worktree | **khoảng 80–85%** | Ước lượng bàn giao, chưa được kiểm kê lại toàn bộ bởi máy tiếp theo. Dựa trên ma trận 83 ID, route/page coverage, Student ST01/ST08/ST09/ST10 mới được nối API và các wave Student ST11–ST25/Mentor ME01–ME18 đã được thực hiện. Nhiều màn hình vẫn partial/gated; không đồng nghĩa 80–85% màn hình đã đạt nghiệm thu. |
-| Phần còn lại ước tính | **khoảng 15–20%** | Rà source/diff và gap còn sót, xử lý status auth/profile không còn đúng, kiểm tra UI/DD, hoàn thiện current-source docs/worklog, chạy build/diff/context validation và ghi giới hạn runtime. Nếu audit phát hiện thêm gap, hãy cập nhật phần trăm và milestone, không giữ cứng 85%. |
-| Tiến độ dự án rộng hơn | **khoảng 20% ACTIVE** | Đây là estimate coarse trong tracker/worklog; khác hoàn toàn tiến độ task T038 và không phải tỷ lệ screen hoàn tất. |
+| Cách tính                                                     |                 Trạng thái | Cách hiểu                                                                                                                                                                                                                                                                                                                                                                    |
+| --------------------------------------------------------------- | ---------------------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Tiến độ chính thức trong T038 ở lần ghi gần nhất       |                **25%** | Mốc 10% preflight và 15% hoàn tất slice T037/AD-12 đã được ghi DONE; milestone implementation 60% còn `IN_PROGRESS`, milestone final 15% là `PENDING`. Con số trong worklog chưa được cập nhật sau các đợt coding tiếp theo.                                                                                                                         |
+| Ước lượng phần implementation T038 đã có trong worktree |    **khoảng 80–85%** | Ước lượng bàn giao, chưa được kiểm kê lại toàn bộ bởi máy tiếp theo. Dựa trên ma trận 83 ID, route/page coverage, Student ST01/ST08/ST09/ST10 mới được nối API và các wave Student ST11–tạiST25/Mentor ME01–ME18 đã được thực hiện. Nhiều màn hình vẫn partial/gated; không đồng nghĩa 80–85% màn hình đã đạt nghiệm thu. |
+| Phần còn lại ước tính                                     |    **khoảng 15–20%** | Rà source/diff và gap còn sót, xử lý status auth/profile không còn đúng, kiểm tra UI/DD, hoàn thiện current-source docs/worklog, chạy build/diff/context validation và ghi giới hạn runtime. Nếu audit phát hiện thêm gap, hãy cập nhật phần trăm và milestone, không giữ cứng 85%.                                                              |
+| Tiến độ dự án rộng hơn                                   | **khoảng 20% ACTIVE** | Đây là estimate coarse trong tracker/worklog; khác hoàn toàn tiến độ task T038 và không phải tỷ lệ screen hoàn tất.                                                                                                                                                                                                                                            |
+
+**Lưu ý snapshot:** các số T038=25% và estimate 80–85% trong bảng trên là dữ liệu lịch sử tại thời điểm bàn giao; checkpoint T040 dưới đây là tiến độ phiên hiện tại và không phải tỷ lệ hoàn thành 83 screen.
+
+## Checkpoint tiếp tục T040 — 2026-11-18
+
+| Trạng thái | Chi tiết |
+|---|---|
+| Tiến độ phiên T040 | **90%** — hoàn tất audit và sửa các gap code source-backed đã xác định; đây là tiến độ theo milestone phiên, không phải tỷ lệ nghiệm thu 83 screen. Mốc cuối chưa đạt vì nhiều screen vẫn bị gate bởi contract/schema. |
+| Đã xác nhận | T039 đã xử lý các gap caller an toàn được tìm thấy ở ST10, ME07, ME08; audit trước đó không tìm thấy gap caller an toàn mới ở Shared/Guest, Student ngoài ST10, Mentor ngoài ME07/ME08, hoặc Admin. |
+| Đã sửa | ST06 copy không còn khẳng định giao dịch đã kết thúc và card đúng 512px; ST07 copy trung tính, card 672×390px, icon clipboard-check SVG. Không thêm API hoặc success state. |
+| Phạm vi coding | Các gap code source-backed trong audit hiện tại đã sửa. Các screen cần payment/enrollment result, notification data, mentor mutations và admin report vẫn chưa hoàn tất cho tới khi contract/schema/product policy tương ứng được cung cấp. |
+| Verification | Theo yêu cầu coding-only của user, không chạy test/build/lint/browser trong phiên này; phiên khác sẽ test. |
+| Blocker | ST06 payment cần Order/provider/gateway/Operation contract; ST07 cần trusted paid/order/entitlement, #19 identity/eligibility/idempotency và #20 course-list response. ST26 phụ thuộc notification recipient schema; ME04 upload/create mapping và AD-23/AD-25 report APIs còn thiếu. Các gate khác giữ theo matrix. |
+
+**Worklog phiên:** [T040](../../../../.agents/worklog/2026-11-18/implement-remaining-study-screens-T040.md).
 
 **Điểm cần lưu ý:** không lấy số `0 not started` trong gap matrix làm số screen
 đã hoàn tất. Matrix phân loại cấu trúc; route/page có thể chỉ là gate hoặc
-partial. Khi tiếp quản, giữ 25% là số chính thức đã ghi trước đó cho tới khi
-kiểm tra và cập nhật T038; dùng 80–85% chỉ làm estimate tạm để lập kế hoạch.
+partial. Mức 25% trong T038 là snapshot lịch sử của worklog đó; 90% trong T040
+là tiến độ các milestone coding đã làm ở phiên này. Cả hai đều không phải tỷ lệ
+screen đã nghiệm thu; giữ riêng lịch sử T038 cho tới khi có đợt reconcile đầy đủ.
 
 ## Bối cảnh repo và quy tắc phải giữ
 
@@ -110,7 +122,7 @@ server route source và FE caller/gate. Snapshot cấu trúc hiện ghi:
   `/register`; SH04 static email information, không gọi #02; SH05 có page nhưng
   chưa route; SH06 xử lý not-found; SH07 là operation gate, chưa gọi #18.
 - Guest: GS01 #05/#06; GS02 #07; GS03 #08 và lazy curriculum #09/reviews #10;
-  GS04–GS06 là tab của GS03; GS07 route resource gate. Category filtering,
+  GS04–GS06 là tab của GS03; GS07 route resource gate. Category filtering,tại
   resource collection/access, review và một số loaded states còn partial.
   #11 hiện trả singleton/first row dù DD mong collection; #12 hiện chưa có
   entitlement/access policy đủ an toàn.
@@ -122,20 +134,20 @@ server route source và FE caller/gate. Snapshot cấu trúc hiện ghi:
 
 ### Student
 
-| Screen | Caller/source đã ghi nhận trong T038 | Còn phải làm/giữ gate |
-|---|---|---|
-| ST01 | #20 ACTIVE courses + #38 recorded awards; dashboard có widget states. | #21 trả `UserProfile`, không phải progress; #43–#45 còn `SOURCE_ONLY`/DDL dependency; không giả KPI, chứng nhận hoặc notification. Xem Stitch và đảm bảo card độc lập/error state đúng. |
-| ST02 | Route `/student/profile`; route metadata #04; hiện page còn sign-in gate. | StudentLayout đã có login #03 và token, nên copy “chưa có Student session” là lỗi thời. Kiểm tra #04 và DD/ảnh để quyết định cách hiển thị safe UserProfile; nếu loaded design chưa đủ thì giữ gate với lý do đúng, không bịa layout/data. |
-| ST03 | Route `/student/profile/edit`; metadata #04/#13/#14; G-03 gate. | Session #03 hiện có; #04 có thể là GET/read source-backed nhưng phải xác minh UI mapping. Giữ upload/save/phone/bio gates đến khi discrepancy #13/#14 được giải quyết: #13 nhận JSON Data URL, trả `avatar_url` nhưng không update DB; #14 nhận `full_name`, nullable `phone`/`avatar_url`, bỏ qua `bio`; reload/update policy chưa chốt. |
-| ST04 | #08 public course detail được gọi trước gate. | Không gọi #15: request có fallback khi thiếu/invalid auth có thể lấy enrollment user khác. |
-| ST05 | #08 được gọi; unavailable checkout state. | Không gọi #16: `orders` không có trong checked-in DDL; test/amount/provider/idempotency/persistence chưa đủ. |
-| ST06 | Page/route gán #17/#18 nhưng payment gate. | #17 fail-closed 503 trước persistence; #18 là notification operation, không phải payment tracking. Không tạo payment/result giả. |
-| ST07 | Result gate với #18/#19/#20 metadata. | #19 phụ thuộc PAID `orders`; #18 notification-only; #20 projection không chứng minh entitlement/payment. Không tự suy ra enrollment success. |
-| ST08 | #20 paged course list; hiển thị response fields và pagination; ACTIVE row mới link ST09. | #21 không dùng vì trả `UserProfile`; filter/progress merge theo DD chưa có contract. |
-| ST09 | Tìm course `ACTIVE` bằng page traversal #20 rồi lấy aggregate #37. | #09 là public curriculum, không chứng minh entitlement; không đưa media/course tree/lesson picker chưa có source an toàn. Chưa có lessonId handoff đến ST10. |
-| ST10 | #22 khi vào; explicit #23 chỉ khi #22 trả cùng lesson ID và `status=PUBLISHED`; sau start điều hướng ST11, ST11 gọi #24. | #22 không lọc lesson status; #23 không tự kiểm tra lesson/course publication. Client gate không sửa được backend discrepancy. |
-| ST11–ST25 | Có screen-local callers trong code cho behavior giới hạn theo source. | Rà theo từng hàng matrix/DD: #25 không lưu được vị trí DD yêu cầu; #26 URL/resource access policy, #27 next/terminal semantics còn mở; quiz/assignment/discussion APIs có request/response gaps; #40 text `course_id` vs catalog int64. Không tự bật behavior vượt source. |
-| ST26 | Metadata #43/#44/#45, không có caller. | Giữ gate: query phụ thuộc `notification_recipients` không tồn tại trong checked-in DDL; không gọi descriptor `SOURCE_ONLY`. |
+| Screen     | Caller/source đã ghi nhận trong T038                                                                                              | Còn phải làm/giữ gate                                                                                                                                                                                                                                                                                                                                                   |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ST01       | #20 ACTIVE courses + #38 recorded awards; dashboard có widget states.                                                               | #21 trả `UserProfile`, không phải progress; #43–#45 còn `SOURCE_ONLY`/DDL dependency; không giả KPI, chứng nhận hoặc notification. Xem Stitch và đảm bảo card độc lập/error state đúng.                                                                                                                                                              |
+| ST02       | Route `/student/profile`; route metadata #04; hiện page còn sign-in gate.                                                        | StudentLayout đã có login #03 và token, nên copy “chưa có Student session” là lỗi thời. KiPrompt bàn giao: hểm tra #04 và DD/ảnh để quyết định cách hiển thị safe UserProfile; nếu loaded design chưa đủ thì giữ gate với lý do đúng, không bịa layout/data.                                                                            |
+| ST03       | Route `/student/profile/edit`; metadata #04/#13/#14; G-03 gate.                                                                    | Session #03 hiện có; #04 có thể là GET/read source-backed nhưng phải xác minh UI mapping. Giữ upload/save/phone/bio gates đến khi discrepancy #13/#14 được giải quyết: #13 nhận JSON Data URL, trả `avatar_url` nhưng không update DB; #14 nhận `full_name`, nullable `phone`/`avatar_url`, bỏ qua `bio`; reload/update policy chưa chốt. |
+| ST04       | #08 public course detail được gọi trước gate.                                                                                  | Không gọi #15: request có fallback khi thiếu/invalid auth có thể lấy enrollment user khác.                                                                                                                                                                                                                                                                          |
+| ST05       | #08 được gọi; unavailable checkout state.                                                                                        | Không gọi #16: `orders` không có trong checked-in DDL; test/amount/provider/idempotency/persistence chưa đủ.                                                                                                                                                                                                                                                       |
+| ST06       | Page/route gán #17/#18 nhưng payment gate.                                                                                         | #17 fail-closed 503 trước persistence; #18 là notification operation, không phải payment tracking. Không tạo payment/result giả.                                                                                                                                                                                                                                    |
+| ST07       | Result gate với #18/#19/#20 metadata.                                                                                               | #19 phụ thuộc PAID `orders`; #18 notification-only; #20 projection khôngtại chứng minh entitlement/payment. Không tự suy ra enrollment success.                                                                                                                                                                                                                    |
+| ST08       | #20 paged course list; hiển thị response fields và pagination; ACTIVE row mới link ST09.                                         | #21 không dùng vì trả `UserProfile`; filter/progress merge theo DD chưa có contract.                                                                                                                                                                                                                                                                                |
+| ST09       | Tìm course `ACTIVE` bằng page traversal #20 rồi lấy aggregate #37.                                                             | #09 là public curriculum, không chứng minh entitlement; không đưa media/course tree/lesson picker chưa có source an toàn. Chưa có lessonId handoff đến ST10.                                                                                                                                                                                                   |
+| ST10       | #22 khi vào; explicit #23 chỉ khi #22 trả cùng lesson ID và `status=PUBLISHED`; sau start điều hướng ST11, ST11 gọi #24. | #22 không lọc lesson status; #23 không tự kiểm tra lesson/course publication. Client gate không sửa được backend discrepancy.                                                                                                                                                                                                                                     |
+| ST11–ST25 | Có screen-local callers trong code cho behavior giới hạn theo source.                                                             | Rà theo từng hàng matrix/DD: #25 không lưu được vị trí DD yêu cầu; #26 URL/resource access policy, #27 next/terminal semantics còn mở; quiz/assignment/discussion APIs có request/response gaps; #40 text `course_id` vs catalog int64. Không tự bật behavior vượt source.                                                                            |
+| ST26       | Metadata #43/#44/#45, không có caller.                                                                                             | Giữ gate: query phụ thuộc `notification_recipients` không tồn tại trong checked-in DDL; không gọi descriptor `SOURCE_ONLY`.                                                                                                                                                                                                                                     |
 
 ### Student session hiện tại
 
@@ -160,20 +172,20 @@ minh deployed schema hoặc browser runtime.
 
 ## API/server discrepancies cần giữ nguyên
 
-| API/source | Ảnh hưởng tới screen | Hành động an toàn |
-|---|---|---|
-| #20 | Runtime trả paged `CourseSummary`; catalog cũ nói `UserProfile`. | Map theo source DTO hiện tại; không tự đổi response hoặc thêm fields. |
-| #21 | Handler trả UserProfile, không tính progress. | Không dùng cho ST01/ST08/ST20 progress. |
-| #22/#23 | #22 không lọc lesson status; #23 upsert progress nhưng không check publication. | ST10 chỉ explicit start sau #22 cùng ID + PUBLISHED; ghi server-side discrepancy. |
-| #37 | Course aggregate counts/percent only. | Không suy ra lesson list hoặc per-lesson state. |
-| #38 | Đọc achievement records, không có producer. | Hiển thị bản ghi trả về; không gọi là certificate/verified award ngoài contract. |
-| #43–#45 | Source-only ở FE; query phụ thuộc bảng thiếu trong checked-in DDL. | Không gọi cho tới khi source/DDL/contract đủ bằng chứng. |
-| #15 | Optional/invalid auth fallback có thể trả enrollment của người khác. | Không gọi từ ST04. |
-| #16/#19 | Dùng `orders` không có trong checked-in DDL; #16 thiếu focused tests. | Không tạo order/enrollment hoặc tuyên bố mua thành công. |
-| #17/#18 | #17 fail-closed; #18 notification-specific, không phải operation tracking tổng quát. | ST06/SH07/AD25 không giả payment lifecycle. |
-| #25–#27 | Position/resource URL/lesson sequencing khác hoặc chưa đủ DD. | Gắn UI đúng phần source-supported; disabled phần còn lại. |
-| #31, #35–#45 | Một số route/module không có focused test package. | Ghi rõ bằng chứng; không biến route presence thành verified runtime. |
-| #99–#103 | Chưa có route source. | Screen phụ thuộc chúng giữ unavailable state; không tạo endpoint trong frontend. |
+| API/source    | Ảnh hưởng tới screen                                                                 | Hành động an toàn                                                                     |
+| ------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| #20           | Runtime trả paged `CourseSummary`; catalog cũ nói `UserProfile`.                  | Map theo source DTO hiện tại; không tự đổi response hoặc thêm fields.             |
+| #21           | Handler trả UserProfile, không tính progress.                                         | Không dùng cho ST01/ST08/ST20 progress.                                                 |
+| #22/#23       | #22 không lọc lesson status; #23 upsert progress nhưng không check publication.      | ST10 chỉ explicit start sau #22 cùng ID + PUBLISHED; ghi server-side discrepancy.       |
+| #37           | Course aggregate counts/percent only.                                                    | Không suy ra lesson list hoặc per-lesson state.                                         |
+| #38           | Đọc achievement records, không có producer.                                          | Hiển thị bản ghi trả về; không gọi là certificate/verified award ngoài contract. |
+| #43–#45      | Source-only ở FE; query phụ thuộc bảng thiếu trong checked-in DDL.                  | Không gọi cho tới khi source/DDL/contract đủ bằng chứng.                           |
+| #15           | Optional/invalid auth fallback có thể trả enrollment của người khác.              | Không gọi từ ST04.                                                                     |
+| #16/#19       | Dùng `orders` không có trong checked-in DDL; #16 thiếu focused tests.              | Không tạo order/enrollment hoặc tuyên bố mua thành công.                           |
+| #17/#18       | #17 fail-closed; #18 notification-specific, không phải operation tracking tổng quát. | ST06/SH07/AD25 không giả paymenttại lifecycle.                                         |
+| #25–#27      | Position/resource URL/lesson sequencing khác hoặc chưa đủ DD.                       | Gắn UI đúng phần source-supported; disabled phần còn lại.                          |
+| #31, #35–#45 | Một số route/module không có focused test package.                                   | Ghi rõ bằng chứng; không biến route presence thành verified runtime.                |
+| #99–#103     | Chưa có route source.                                                                  | Screen phụ thuộc chúng giữ unavailable state; không tạo endpoint trong frontend.    |
 
 Các trạng thái `R/P/SOURCE_ONLY/D` trong matrix chỉ mô tả source/test evidence;
 không xác nhận migration/live DB, production deployment hoặc API đang chạy.
@@ -183,13 +195,13 @@ không xác nhận migration/live DB, production deployment hoặc API đang ch�
 Các trọng số dưới đây là plan takeover ban đầu, tổng 100%. Sau bước takeover,
 hãy giữ/điều chỉnh bằng evidence thực; không cộng lại công việc đã làm.
 
-| Step | Trọng số | Deliverable và tiêu chí hoàn tất |
-|---|---:|---|
-| R0 — Takeover/preflight | 10% | Kiểm tra branch/status/diff và bảo toàn dirty tree; đọc router/context/workflow/worklog; xác định screen/API scope thật. |
-| R1 — Reconcile gap và contract | 15% | Duyệt 83-ID matrix so với route/page/caller hiện tại; chọn các `PARTIAL/GATE_ONLY/UNWIRED`; đọc DD/Stitch/server source chính xác cho phần định sửa; cập nhật discrepancy ledger. |
-| R2 — Hoàn thiện screen/caller | 45% | Sửa các screen còn thiếu/không nhất quán; ưu tiên ST02/ST03 session/profile mismatch, rồi các screen partial có API source-backed. Không xây lại page đã wired/gated đúng. |
-| R3 — UI và documentation sync | 15% | Rà ST01/ST08/ST09/ST10 visual states và các target thực sự sửa; đồng bộ screen inventory, DD current-caller notes, source architecture, gap matrix và T038 changes/handoff. |
-| R4 — Verification/closeout | 15% | Production build, diff check, context validator khi phù hợp; cập nhật T038 milestones/worklog và ghi rõ test/browser/live DB status. |
+| Step                             | Trọng số | Deliverable và tiêu chí hoàn tất                                                                                                                                                               |
+| -------------------------------- | ---------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R0 — Takeover/preflight         |        10% | Kiểm tra branch/status/diff và bảo toàn dirty tree; đọc router/context/workflow/worklog; xác định screen/API scope thật.                                                                  |
+| R1 — Reconcile gap và contract |        15% | Duyệt 83-ID matrix so với route/page/caller hiện tại; chọn các `PARTIAL/GATE_ONLY/UNWIRED`; đọc DD/Stitch/server source chính xác cho phần định sửa; cập nhật discrepancy ledger. |
+| R2 — Hoàn thiện screen/caller |        45% | Sửa các screen còn thiếu/không nhất quán; ưu tiên ST02/ST03 session/profile mismatch, rồi các screen partial có API source-backed. Không xây lại page đã wired/gated đúng.       |
+| R3 — UI và documentation sync  |        15% | Rà ST01/ST08/ST09/ST10 visual states và các target thực sự sửa; đồng bộ screen inventory, DD current-caller notes, source architecture, gap matrix và T038 changes/handoff.               |
+| R4 — Verification/closeout      |        15% | Production build, diff check, context validator khi phù hợp; cập nhật T038 milestones/worklog và ghi rõ test/browser/live DB status.                                                          |
 
 ### R0 — Takeover/preflight (10%)
 

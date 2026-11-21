@@ -2,9 +2,10 @@ import type { AdminScreenApiBoundary } from '../../../../shared/ui/admin-screen.
 
 export const AD16_API_BOUNDARY: AdminScreenApiBoundary = {
   "apiReferences": [
+    "#73",
     "#88",
     "#89"
   ],
   "sourceState": "contract-blocked",
-  "sourceNote": "#88 có nested shape DERIVED; #89 catalog chưa khai báo body; không có GET chi tiết để nạp form sửa. Lưu và thêm câu hỏi đang khóa."
+  "sourceNote": "Create mode đọc khóa học từ #73 và gửi POST #88 theo current nested validator (DERIVED). Edit giữ khóa do thiếu GET detail và #89 catalog chưa khai báo body."
 };

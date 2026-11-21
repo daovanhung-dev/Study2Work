@@ -62,3 +62,9 @@
 - State transitions implemented and tested: prompt, loading, ready, no-results (`total=0`), out-of-range (`requested page > response total_pages`), and error for API/envelope/network failures. Requests use a sequence guard so an older response cannot replace a newer one.
 - Study Web tests pass 127/127; Study Server tests pass 1,506/1,506 and focused #05/#07 tests pass 29/29 using fake sessions. Browser rendering and live API/DB integration remain `NOT VERIFIED`.
 - The DD's full design and policy requirements remain blocked; this audit records source behavior and does not close B01–B10.
+
+## Current implementation supplement (2026-11-21)
+
+- GS-02 validates the #07 envelope, supported course projection, requested page and fixed page size 20. Its current request lifecycle cancels superseded subscriptions as well as guarding against stale response application.
+- Since backend #07 reads COUNT and page LIST separately, the accepted response can be structurally valid while item count disagrees with metadata. The page now preserves returned cards, hides count/page controls, sets a retryable mismatch state, and prevents page navigation until retry. A retry repeats the accepted query/page; valid empty and out-of-range states are unchanged.
+- This supplements the earlier implementation audit; no test/build/lint/browser/API runtime was run for this change. Design and policy blockers listed above remain open.

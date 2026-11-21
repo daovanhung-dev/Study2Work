@@ -1,5 +1,21 @@
 # ST-08 — Events (đặc tả xử lý)
 
+## Current-source reconciliation — 2026-11-21
+
+The current page sends #20 with the selected page, validates the exact success
+envelope/business code and source-backed `CourseSummaryPage`, then renders
+loading/error/retry/empty/loaded/pagination states. It links only ACTIVE
+enrollments to ST-09 and does not call #21 because that endpoint returns
+`UserProfile`. The historical no-route/no-caller statements below describe
+the original design-time snapshot; catalog mismatch, unimplemented status
+filter/progress and runtime remain open. When a valid #20 response reports that
+the requested page exceeds its current `total_pages`, ST-08 selects the last
+available page (page 1 if the collection became empty) and reloads before
+showing the global empty state. It compares the returned row count with the
+count-derived expected row count for the accepted page. A mismatch preserves
+the returned courses, suppresses empty and stale pagination/total claims, and
+offers the existing retry action.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

@@ -70,7 +70,7 @@ folders remain role-local. Existing test package paths follow actor ownership.
 | `guest/api_01_auth_register` | `SOURCE_BACKED` | `register-account.md` |
 | `guest/api_03_auth_login` | `SOURCE_BACKED` | Login and refresh-token flow in current source |
 | `student/api_04_users_me` | `SOURCE_BACKED` | API #4 current Student profile read flow |
-| `guest/api_12_resources_detail` | `SOURCE_BACKED` | API #12 public resource metadata read; signed-int64 path accepts zero/negative IDs; 17 focused tests and Ruff pass (2026-11-16) |
+| `guest/api_12_resources_detail` | `SOURCE_BACKED` | API #12 PUBLIC direct URL and PRIVATE Student/ACTIVE-enrollment signed URL flow (300s); signed-int64 path accepts zero/negative IDs. Nineteen focused fake-source cases pass (2026-11-21); live DB/storage remain unverified. |
 | `student/api_13_users_me_avatar` | `SOURCE_BACKED` | Student JSON Data URL upload through injectable S3-compatible storage; no DB access |
 | `student/api_14_users_me_profile` | `SOURCE_BACKED` | Student profile update; reuses `validate_current_user_request(..., role="STUDENT")` from `app/utils/auth.py` |
 | `guest/api_05_categories` | `SOURCE_BACKED` | API #5 public active-category read flow |
@@ -80,9 +80,9 @@ folders remain role-local. Existing test package paths follow actor ownership.
 | `guest/api_08_courses_detail` | `SOURCE_BACKED` | API #08 public published-course detail; signed-int64 path validation; 9 focused tests and Ruff pass (2026-11-16) |
 | `guest/api_09_courses_curriculum` | `SOURCE_BACKED` | API #09 public published-course curriculum; signed-int64 path validation; 11 focused tests and Ruff pass (2026-11-16) |
 | `guest/api_10_courses_reviews` | `SOURCE_BACKED` | API #10 public course reviews; signed-int64 path validation; 22 focused tests and Ruff pass (2026-11-16) |
-| `guest/api_11_courses_resources` | `SOURCE_BACKED_WITH_CONTRACT_DISCREPANCY` | API #11 public resources route/query/model/test source exists locally; view returns only the first ordered row as singleton and 404 when empty, conflicting with list use and DD mapping rule. Seven focused fake-session tests pass (2026-11-17); no live schema/deployment evidence. |
+| `guest/api_11_courses_resources` | `SOURCE_BACKED` | API #11 returns all PUBLIC resources ordered by ID as `Resource[]`; valid empty collection returns `200 []`. Eight focused fake-session cases pass (2026-11-21); live schema/deployment remain unverified. |
 | `mentor/api_46_mentor_courses` | `SOURCE_BACKED` | API #46 Mentor-owned course list with optional status and pagination; numeric `sub`/`MENTOR` authorization |
-| `mentor/api_47_mentor_lectures_create` | `SOURCE_BACKED` | API #47 Mentor direct-owner lecture creation; validates ordered uploads metadata, stores content as decimal text and inserts `PUBLISHED` lesson |
+| `mentor/api_47_mentor_lectures_create` | `SOURCE_BACKED` | API #47 Mentor direct-owner lecture creation; validates ordered uploads metadata, stores/returns T041-approved Markdown string unchanged and inserts `PUBLISHED` lesson |
 | `mentor/api_48_mentor_lecture_detail` | `SOURCE_BACKED` | API #48 Mentor direct-owner lecture read; resolves ordered assets from `lesson_uploads` and `uploads`, preserves nullable content, and uses catalog errors |
 | `mentor/api_49_mentor_content_list` | `SOURCE_BACKED` | API #49 Mentor direct-owner content list; reads active `contents` rows, preserves hierarchy with `parent_id`, validates tree integrity and uses catalog errors |
 | `mentor/api_50_mentor_content_create` | `SOURCE_BACKED` | API #50 Mentor direct-owner Content create; locks course, assigns derived root status/order defaults, inserts JSONB payload and owns the transaction |
@@ -98,7 +98,7 @@ folders remain role-local. Existing test package paths follow actor ownership.
 | `mentor/api_60_mentor_support_reply` | `SOURCE_BACKED_WITH_DERIVED_PROJECTIONS` | API #60 Mentor reply; row lock, scoped attachments, ordered message links, shared thread projection and caller-owned transaction; local support schema is DERIVED |
 | `mentor/api_61_mentor_support_resolve` | `SOURCE_BACKED_WITH_DERIVED_PROJECTIONS` | API #61 Mentor resolve; row lock, direct course owner, active-state transition, idempotent retry, shared thread projection and caller-owned transaction; lifecycle/schema are DERIVED |
 | `mentor/api_62_mentor_course_students` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #62 read-only Student recipient roster; direct course owner, ACTIVE enrollment + STUDENT role, distinct UserSummary[]; response/schema/access choices remain DERIVED |
-| `mentor/api_63_mentor_notifications_create` | `SOURCE_BACKED_WITH_DERIVED_SCHEMA` | API #63 accepts a Mentor notification batch, checks common owned-course roster, atomically inserts notifications and QUEUED delivery outbox; CSV/body mapping and local outbox are DERIVED |
+| `mentor/api_63_mentor_notifications_create` | `SOURCE_BACKED_WITH_DERIVED_SCHEMA` | API #63 accepts text content and a Mentor notification batch, checks common owned-course roster, atomically inserts notifications and QUEUED delivery outbox; recipient/channel CSV and local outbox rules remain DERIVED |
 | `mentor/api_64_mentor_notification_status` | `SOURCE_BACKED_WITH_DERIVED_SCHEMA` | API #64 reads notification delivery status, checks sender against Mentor JWT, and maps the local #63 notification/outbox rows into Operation; ownership and aggregation policy are DERIVED |
 | `mentor/api_65_mentor_course_progress` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #65 read-only course progress roster; direct course owner, ACTIVE Student roster, PUBLISHED lesson denominator, latest progress row/floor average and unbounded page are DERIVED; catalog still declares Page<Course> |
 | `mentor/api_66_mentor_course_analytics` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #66 read-only course activity summary; direct owner and PUBLISHED lesson scope, tracked Student/lesson pairs from last_accessed_at, distinct Student count and latest timestamp are DERIVED proxies; not event history; catalog still declares Page<Course> |
@@ -111,7 +111,7 @@ folders remain role-local. Existing test package paths follow actor ownership.
 | `admin/api_73_admin_courses_list` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #73 read-only Admin course list; shared ADMIN guard, legacy `courses/users` candidate, status/mentor filters, fixed page/order and shared Course mapping; category 422 fallback and permission/pagination/schema choices remain DERIVED |
 | `admin/api_91_admin_quizzes_statistics` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #91 read-only Quiz attempt aggregate; shared ADMIN guard and legacy BIGINT candidate; QuizStatistics DTO, metric and invalid-path rules remain DERIVED against direct ApiEnvelope<Quiz> |
 | `admin/api_92_admin_notifications_list` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #92 Admin notification list; shared ADMIN guard and legacy BIGINT notifications/outbox candidate; Page cardinality, delivery status projection, filters and visibility remain DERIVED |
-| `admin/api_93_admin_notifications_create` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #93 Admin notification create/send; shared ADMIN guard, explicit recipients, legacy BIGINT notifications/outbox candidates and atomic batch; audience/channel/validation/response metadata/operation bridge remain DERIVED |
+| `admin/api_93_admin_notifications_create` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #93 Admin notification create/send; shared ADMIN guard, explicit recipients, legacy BIGINT notifications/outbox candidates and atomic batch; audience/channel/validation remain DERIVED, while declared UUID/notification IDs hand off to SH-07 for notification status |
 | `admin/api_94_admin_notifications_update` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #94 Admin notification update; shared ADMIN guard, title/content-only legacy candidate update, locked QUEUED outbox eligibility and Notification projection are DERIVED; live schema and fine-grained permission unverified |
 | `admin/api_95_admin_notifications_delete` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #95 Admin notification delete; shared ADMIN guard, queued-only legacy candidate deletion and DeleteResult timestamp mapping are DERIVED; live schema/cascade and provider cancellation unverified |
 | `admin/api_96_admin_notifications_status` | `SOURCE_BACKED_WITH_DERIVED_CONTRACT` | API #96 Admin notification status; shared ADMIN guard, legacy BIGINT notification/outbox aggregate and status precedence are DERIVED; live schema/retry grain unverified |
@@ -234,9 +234,9 @@ used by APIs #6–#8.
 
 ## API #63 Mentor notifications
 
-- `mentor/api_63_mentor_notifications_create` composes `POST /api/v1/mentor/notifications` with strict direct fields `recipients:string`, `title:string`, `content:int64`, and `channels:string`, returning HTTP 202 `ApiEnvelope<Operation>`.
+- `mentor/api_63_mentor_notifications_create` composes `POST /api/v1/mentor/notifications` with strict direct fields `recipients:string`, `title:string`, `content:string`, and `channels:string`, returning HTTP 202 `ApiEnvelope<Operation>`.
 - The view authenticates MENTOR, parses positive Student IDs and allowed channels from CSV, requires a common ACTIVE roster in a directly owned course, inserts per-recipient Notification rows and per-channel `QUEUED` delivery rows, then commits once. Operation UUID and `meta.notification_ids` represent the batch/handoff.
-- CSV encoding, common-course policy, int64-to-text content conversion, local legacy schema and outbox are DERIVED fallbacks documented in DD #63. Focused tests use fake DB rows; no live schema/deployment or worker/provider delivery is verified.
+- Recipient/channel CSV encoding, common-course policy, local legacy schema and outbox are DERIVED fallbacks documented in DD #63. Text content is stored directly; focused tests use fake DB rows, so no live schema/deployment or worker/provider delivery is verified.
 
 ## API #64 Mentor notification status
 
@@ -440,7 +440,7 @@ Draft.
 
 ## API #93 Admin notification create/send
 
-`admin/api_93_admin_notifications_create` composes `POST /api/v1/admin/notifications`, sharing the `/admin/notifications` path template with API #92. The raw body lets shared ADMIN authentication precede JSON parsing and DB reads. The local fallback verifies explicit IDs exist, writes one legacy notification per recipient with a shared UUID, writes one `QUEUED` delivery row per recipient/channel, and commits after response projection. It returns the first Notification with derived batch metadata. Segment expansion and provider delivery are not wired. Focused tests: 26; linked #63/#64/#87/#92/#93: 111; full suite: 1243; Ruff and OpenAPI pass. Fake DB tests do not verify live schema/deployment or fine-grained permission; DD remains Draft.
+`admin/api_93_admin_notifications_create` composes `POST /api/v1/admin/notifications`, sharing the `/admin/notifications` path template with API #92. The raw body lets shared ADMIN authentication precede JSON parsing and DB reads. The local fallback verifies explicit IDs exist, writes one legacy notification per recipient with a shared UUID, writes one `QUEUED` delivery row per recipient/channel, and commits after response projection. It returns the first Notification with catalog-declared `meta.operation_id` and `meta.notification_ids`. AD-20 routes the accepted UUID to notification-only API #18 through SH-07. Segment expansion and provider delivery are not wired. Focused tests: 26; linked #63/#64/#87/#92/#93: 111; full suite: 1243; Ruff and OpenAPI pass. Fake DB tests do not verify live schema/deployment or fine-grained permission; DD remains Draft.
 
 
 ## API #94 Admin notification update
@@ -494,8 +494,9 @@ ingestion.
   the lookup remains owner-bound; missing/non-owned records currently return
   404. A missing required role argument was fixed. Dedicated HTTP tests: 8;
   full Study suite: 1492 passed. Fake DB tests do not verify live schema or
-  deployment; generic ID/lifecycle/result and owner/Admin contract questions
-  remain open.
+  deployment; generic lifecycle/result and non-notification producer questions
+  remain open. For SH-07, the catalog and source use UUID and owner-only access
+  for Student/Mentor/Admin.
 - #19 `student/api_19_courses_enrollments`: locks a PUBLISHED Course, rejects an
   active duplicate, requires a PAID Order for a paid Course, and atomically
   inserts Enrollment plus initial published-lesson progress.

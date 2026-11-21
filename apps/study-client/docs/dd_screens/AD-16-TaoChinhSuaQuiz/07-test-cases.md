@@ -1,5 +1,9 @@
 # AD-16 — Test Cases
 
+## Current implementation verification — 2026-11-21
+
+The focused Admin suite passes 25 spec files / 99 tests. AD-16 loads exact #73 course pages, requires a title and selected safe course, posts the catalog `{config:string,questions:string}` body through #88, and shows success only for HTTP 201 with the expected envelope. Unexpected 2xx outcomes lock resend pending a list check. Edit requests remain blocked. Authenticated browser/live API/DB runtime was not verified.
+
 > Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
 
 ## 1. Coverage matrix

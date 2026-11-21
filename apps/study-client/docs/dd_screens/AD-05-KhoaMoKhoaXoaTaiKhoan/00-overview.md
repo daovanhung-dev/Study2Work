@@ -6,9 +6,9 @@
 | Module | Admin |
 | Route | `/admin/users/:userId/actions` — route đã khai báo trong Angular Admin router; runtime/deployment chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); **DD:** `BLOCKED — status, deletion, permission, session and audit policies need approval`; **Implementation:** `PARTIAL SOURCE — route/page and GET #69 caller exist; #71/#72 client calls and action flow are absent; product decisions remain open` · **Runtime:** `NOT VERIFIED` |
+| DD status | Draft (package được chuyển đổi); **DD:** `BLOCKED — status, deletion, permission, session and audit policies need approval`; **Implementation:** `PARTIAL SOURCE — route/page validates signed-int64 IDs before GET #69; #71/#72 client calls and action flow are absent; product decisions remain open` · **Runtime:** `NOT VERIFIED` |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-16 (current-source status sync) |
+| Version / last updated | 0.2 / 2026-11-20 (signed-int64 route validation sync) |
 | Nguồn đối chiếu | [AD-05.md](../../screen_stitch/05_admin/AD-05_khoa-mo-khoa-xoa-tai-khoan/AD-05.md), [AD-05_PLAN.md](../../screen_stitch/05_admin/AD-05_khoa-mo-khoa-xoa-tai-khoan/AD-05_PLAN.md), [AD-05_markers.json](../../screen_stitch/05_admin/AD-05_khoa-mo-khoa-xoa-tai-khoan/AD-05_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
@@ -31,7 +31,7 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | no-selection/loading/ready-read-only/mode-selected/submitting/unauthenticated/forbidden/not-found/validation-error/success/error |
-| Current source | Angular Admin route/page and API service | Route/page and GET #69 caller exist; page states are `loading/loaded/error`; #71/#72 mutation callers are absent and action/reason controls are disabled. Runtime/deployment: `NOT VERIFIED`. |
+| Current source | Angular Admin route/page and API service | Page validates raw `userId` as signed-int64 before GET #69; missing/malformed/out-of-range IDs render a local error and skip the request. Valid IDs are passed unchanged. It labels current-source `ACTIVE`/`SUSPENDED`/`DELETED` as “Đang hoạt động”/“Đã tạm khóa”/“Đã đánh dấu xóa”; unknown status values use a neutral fallback. Role remains raw. #71/#72 mutation callers are absent and action/reason controls are disabled. Runtime/deployment: `NOT VERIFIED`. |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [AD-05 source screen.png](../../screen_stitch/05_admin/AD-05_khoa-mo-khoa-xoa-tai-khoan/screen.png))
@@ -43,6 +43,7 @@
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
 - 2026-11-08 — Chuyển nội dung nguồn sang 8-file template; không chỉnh source, không xác minh runtime.
 - 2026-11-16 — Đồng bộ trạng thái source: route/page và GET #69 caller tồn tại; mutation #71/#72 vẫn chưa được gọi; acceptance và runtime vẫn mở.
+- 2026-11-20 — Đồng bộ current source: xác thực raw signed-int64 `userId` trước GET #69; ID thiếu/sai không gọi API và quay về danh sách; mutation #71/#72 vẫn bị khóa.
 
 ## Trạng thái và ranh giới bằng chứng
 
@@ -79,7 +80,7 @@
 | #72 delete | AC-31 mô tả logical delete/anonymize theo policy; catalog không có body. | Local source chỉ đặt `users.status='DELETED'`, cập nhật `updated_at`; giữ profile/quan hệ/refresh-token rows, không anonymize, không ghi audit, không kiểm tra dependency. `deleted_at` response là alias của `updated_at`, không phải cột xóa riêng. |
 | Sau xóa | Visibility/retention/điều hướng phải theo policy được duyệt. | #68/#69 local query không loại `DELETED`; bản ghi vẫn hiển thị. #72 lặp lại hoặc không tìm thấy đều 404. #03 login/refresh yêu cầu `ACTIVE`; access JWT đang phát hành có thể vẫn còn hiệu lực. |
 | Audit reason | Chỉ yêu cầu khi API/persistence/audit contract xác định được. | Prototype đánh dấu reason bắt buộc, nhưng textarea disabled; #71 không nhận reason và #72 không có body. Không API nào trong flow ghi audit. |
-| Client/runtime | Route, auth, API client và UI phải được implemented to use the screen. | Angular route/page exists and calls GET #69 through AD05ApiService/AdminApiService. Page state is `loading/loaded/error`; status/delete buttons and reason input are disabled, with no #71/#72 client call. Runtime/deployment is not verified. |
+| Client/runtime | Route, auth, API client và UI phải được implemented to use the screen. | Angular route/page validates raw signed-int64 `userId` before calling GET #69 through AD05ApiService/AdminApiService; invalid/missing IDs skip the request. Valid IDs remain raw strings. Page state is `loading/loaded/error`; status/delete buttons and reason input are disabled, with no #71/#72 client call. Runtime/deployment is not verified. |
 | Mockup claims | Health, RBAC, read-only gate, audit/ISO và session impact chỉ hiển thị khi có nguồn. | Những claim này là copy tĩnh; không được #69/#71/#72 xác minh. Hai back links là `/admin/users`; nav/footer links `#`; action tabs không có listener; confirm và reason disabled. |
 
 ### Nguồn truy vết

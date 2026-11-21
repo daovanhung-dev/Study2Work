@@ -6,15 +6,15 @@
 | Module | Shared / Auth / System |
 | Route | `/not-found` — explicit route được đăng ký trong Angular source; runtime chưa xác minh |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); `DD BLOCKED` cho tới khi chốt recommendation/contact/footer surfaces và discrepancy AC-05; `IMPLEMENTED PARTIAL`: explicit page/route, Angular wildcard và GS-03 resource-404 handoff source-wired; static-host fallback/production HTTP status `NOT VERIFIED`. |
+| DD status | SH-06 hoàn thiện 100% theo rubric tĩnh UI/UX/logic/API trong phạm vi generic 404 với `/courses` và `/`; #08 404/500 are distinguished; focused tests pass; browser/static-host runtime is not verified. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
-| Version / last updated | 0.1 / 2026-11-08 |
+| Version / last updated | 0.2 / 2026-11-21 |
 | Nguồn đối chiếu | [SH-06.md](../../screen_stitch/01_shared_auth_system/SH-06_trang-khong-ton-tai-tai-nguyen-khong-con/SH-06.md), [SH-06_PLAN.md](../../screen_stitch/01_shared_auth_system/SH-06_trang-khong-ton-tai-tai-nguyen-khong-con/SH-06_PLAN.md), [SH-06_markers.json](../../screen_stitch/01_shared_auth_system/SH-06_trang-khong-ton-tai-tai-nguyen-khong-con/SH-06_markers.json), [list_screen.md](../../list_screen.md) |
 
 ## 1. Mục tiêu & phạm vi
-- Mục tiêu: Thông báo 404 không tiết lộ draft/private, cung cấp quay về khóa học.
-- In-scope: Router 404 hoặc resource 404 chuyển state; không chuyển 500 thành 404.
-- Out-of-scope: Xem gate bên dưới; không kết luận wildcard/resource handoff wired hoặc runtime đã chạy.
+- Mục tiêu: Thông báo trang/tài nguyên không tồn tại, không tiết lộ tài nguyên riêng tư, và đưa người dùng về nơi an toàn.
+- In-scope: Generic route 404 and API #08 resource 404; real links `/courses` and `/`; preserve API #08 500 as a service error.
+- Out-of-scope: Unsupported recommendation/contact/footer, personalized suggestions and static-host or production HTTP behavior.
 
 ## 2. Use cases chính
 | Use case / AC | Actor | Kết quả kỳ vọng theo inventory |
@@ -31,14 +31,20 @@
 | State | Nguồn | Giá trị |
 |---|---|---|
 | Inventory states | `list_screen.md` | route-404/resource-404 |
-| Current source | `shared.route.ts`, `SH06/pages/` | Explicit `/not-found` page route wired; wildcard/resource handoff `UNWIRED` |
+| Current source | `shared.route.ts`, `SH06/pages/` | Explicit `/not-found`, unknown-route wildcard and #08 detail-404 handoffs are wired |
 | Runtime | Worklog/context Study Web | `RUNTIME NOT VERIFIED` |
 
 ## 5. Luồng chính và hình ảnh
 - Ảnh clean: [screen-clean.png](images/screen-clean.png) (copy từ [SH-06 source screen.png](../../screen_stitch/01_shared_auth_system/SH-06_trang-khong-ton-tai-tai-nguyen-khong-con/screen.png))
 - Ảnh numbered: [screen-numbered.png](images/screen-numbered.png) (copy từ [source annotated PNG](../../screen_stitch/01_shared_auth_system/SH-06_trang-khong-ton-tai-tai-nguyen-khong-con/screen_annotated.png))
 - Luồng: Router 404 hoặc resource 404 chuyển state; không chuyển 500 thành 404.
-- Priority: P0; Gate/source status: **D**
+- Priority: P0; route handoff and navigation are source-wired; runtime not verified.
+
+## 7. Reconciliation and implementation evidence — 2026-11-21
+
+- Product scope is the intentionally minimal page with working `/courses` and `/` links. Unsupported prototype recommendation, contact and footer content are not part of the approved implementation.
+- API #08 source returns 404 for missing/unpublished courses and 500 for internal failure; it has no 403 response. Access-denied handling stays on SH-05.
+- SH-06 static implementation is complete under the repository's UI/UX/logic/API rubric. Focused test covers the real navigation links; browser/static-host behavior remains unverified.
 
 ## 6. Open questions / Change log
 - `CẦN_XÁC_NHẬN`: các gate/source questions trong inventory và DD nguồn vẫn giữ nguyên; không tự đóng blocker.
@@ -50,9 +56,11 @@
 
 > **Mã màn hình:** SH-06 · **Loại:** state view · **Tác nhân:** khách hoặc người dùng truy cập route/tài nguyên không khả dụng
 > **Route:** `/not-found` · **AC:** AC-05 · **API catalog:** #08 · **Route liên quan:** GS-01, SH-01
-> **Trạng thái:** `DD BLOCKED` cho tới khi chốt recommendation/contact/footer surfaces và discrepancy AC-05; `IMPLEMENTED PARTIAL` (explicit page/route, Angular wildcard và GS-03 resource-404 handoff source-wired; static-host fallback/production HTTP status `NOT VERIFIED`).
+> **Trạng thái:** approved minimal 404 scope; explicit route, wildcard and #08 detail-404 handoffs are source-wired · **Runtime:** `NOT VERIFIED`.
 
 ## Trích đoạn tổng quan từ DD nguồn
+
+> The source DD excerpts below are historical design evidence. The approved 2026-11-21 scope uses only the two working links and the #08 404/500 distinction documented above.
 
 ### Trích từ DD nguồn: 1. Tổng quan màn hình
 

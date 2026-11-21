@@ -31,7 +31,7 @@
   5. Map returned profile ID and status into #16/#17; do not infer role/status aliases or permission result. Set the page to ready-read-only until action policies are approved.
   6. On 401/403/404/500 or network/invalid-envelope response, map to unauthenticated/forbidden/not-found/error; do not show a fake profile or activate Confirm.
 - **Output / cache / navigation:** read-only target profile and source-backed status; cache key/invalidation policy follows shared client contract and remains unwired. No mutation or automatic navigation is defined.
-- **Current source:** Angular route supplies `userId`; the page calls GET #69 through AD05ApiService/AdminApiService and exposes `loading/loaded/error`. No #71/#72 call is made. The HTTP-fixture spec covers the GET path but was inspected, not run.
+- **Current source:** Angular route supplies `userId`; the page validates the raw string using #69's signed-int64 bounds before GET. Missing/malformed/out-of-range IDs render a local error and skip the request; valid IDs are passed unchanged through AD05ApiService/AdminApiService. The page exposes `loading/loaded/error`; no #71/#72 call is made. The HTTP-fixture spec was inspected, not run.
 
 ### EV-02 — Chọn lock/unlock/delete tab
 

@@ -13,6 +13,23 @@
   background: var(--surface);
 }
 
+.course-card__link {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  color: inherit;
+  text-decoration: none;
+}
+
+.course-card__link:hover .course-copy h2 {
+  color: var(--ocean-primary);
+}
+
+.course-card__link:focus-visible {
+  outline: 3px solid var(--ocean-primary);
+  outline-offset: 3px;
+}
+
 .course-cover {
   display: grid;
   width: 100%;

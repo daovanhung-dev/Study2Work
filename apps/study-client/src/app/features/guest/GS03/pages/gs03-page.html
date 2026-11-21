@@ -26,11 +26,9 @@
       <section class="state-panel" role="alert">
         <span class="state-icon"><study-icon name="info" /></span>
         <h1>Chưa thể tải thông tin khóa học</h1>
-        <p>Vui lòng quay lại danh sách và thử lại sau.</p>
-        <a class="primary-button" routerLink="/courses">
-          <study-icon name="arrow" />
-          Quay lại danh sách khóa học
-        </a>
+        <p>Hãy thử tải lại hoặc quay lại danh sách khóa học.</p>
+        <button class="primary-button" type="button" (click)="retryCourse()">Thử tải lại</button>
+        <a class="back-link" routerLink="/courses">Quay lại danh sách khóa học</a>
       </section>
     } @else if (detail.status === 'ready') {
       <header class="detail-heading">
@@ -153,7 +151,10 @@
           role="tabpanel"
           aria-labelledby="gs03-tab-curriculum"
         >
-          <study-gs03-curriculum-panel [state]="curriculumState()" />
+          <study-gs03-curriculum-panel
+            [state]="curriculumState()"
+            (retry)="retryCurriculum()"
+          />
         </section>
       } @else if (selectedTab() === 'reviews') {
         <section
@@ -171,7 +172,7 @@
           role="tabpanel"
           aria-labelledby="gs03-tab-resources"
         >
-          <study-gs06-page />
+          <study-gs06-page [courseId]="activeCourseId" />
         </section>
       }
     }

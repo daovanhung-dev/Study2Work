@@ -62,7 +62,7 @@ and migration 004; neither proves that the live schema has been updated.
 API #47 reads `courses.id/mentor_id` and requires direct Mentor ownership without
 filtering course status. It resolves API #34 `uploads` rows by ID, `owner_id`,
 `purpose='LECTURE'` and the path `course_id`, then inserts a legacy `lessons`
-row with decimal-string `content`, explicit `PUBLISHED` status and
+row with Markdown string `content` unchanged, explicit `PUBLISHED` status and
 `CURRENT_TIMESTAMP` for both required timestamps. For non-empty refs it writes
 `lesson_uploads(lesson_id, upload_id, asset_position)` in the same transaction;
 empty refs skip relation writes. The local source and fake-DB HTTP tests do not
@@ -142,7 +142,7 @@ API #62 checks `courses.id/mentor_id`, then reads `users.id/full_name/avatar_url
 
 ## API #63 Mentor notifications
 
-API #63 checks one common directly owned course with ACTIVE enrollments for all parsed Student IDs, then writes one row per recipient to legacy `notifications` with shared UUID `operation_id` and the int64 `content` stored as decimal text. It inserts one `notification_deliveries` row per notification/channel with initial `QUEUED` status. Migration 009 is a local checked-in artifact only; it was not applied to a database. The operation grouping, CSV interpretation, common-course scope and delivery schema are DERIVED; no worker/provider is wired, and fake-DB tests do not verify PostgreSQL behavior or deployment.
+API #63 checks one common directly owned course with ACTIVE enrollments for all parsed Student IDs, then writes one row per recipient to legacy `notifications` with shared UUID `operation_id` and the submitted string `content` stored as text. It inserts one `notification_deliveries` row per notification/channel with initial `QUEUED` status. Migration 009 is a local checked-in artifact only; it was not applied to a database. The operation grouping, CSV interpretation, common-course scope and delivery schema are DERIVED; no worker/provider is wired, and fake-DB tests do not verify PostgreSQL behavior or deployment.
 
 ## API #64 Mentor notification status
 
@@ -315,7 +315,7 @@ API #92 reads the checked-in legacy BIGINT `notifications` and API #63/migration
 
 ## API #93 Admin notification create/send
 
-API #93 checks explicit recipients against `users.id`, then writes one legacy BIGINT `notifications` candidate row per recipient with shared UUID `operation_id`. It inserts one `notification_deliveries` row per notification/channel with `QUEUED` status and commits the full batch before HTTP 202. `type` is NULL; channel is stored in the delivery table. The local source caps title at the candidate `VARCHAR(200)` limit and preserves content in TEXT. Migration 009 and checked-in DDL are not live-schema evidence; no provider/worker is wired. Audience/channel/validation rules, per-recipient grain, response metadata, and Operation linkage remain DERIVED/open.
+API #93 checks explicit recipients against `users.id`, then writes one legacy BIGINT `notifications` candidate row per recipient with shared UUID `operation_id`. It inserts one `notification_deliveries` row per notification/channel with `QUEUED` status and commits the full batch before HTTP 202. `type` is NULL; channel is stored in the delivery table. The local source caps title at the candidate `VARCHAR(200)` limit and preserves content in TEXT. Migration 009 and checked-in DDL are not live-schema evidence; no provider/worker is wired. Audience/channel/validation rules and per-recipient grain remain DERIVED/open. The catalog directly declares `meta.operation_id` and `meta.notification_ids`; the AD-20 handoff to notification-only API #18 is resolved, while generic Operation linkage remains out of scope.
 
 
 ## API #94 notification update candidate mapping

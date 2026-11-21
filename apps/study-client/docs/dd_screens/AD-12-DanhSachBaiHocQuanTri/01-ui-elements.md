@@ -116,6 +116,7 @@ Tọa độ là pixel trên `screen.png` gốc 1600×1301; vị trí marker là 
 
 ## 4. Conditional UI & state variations
 - States theo inventory: loading/empty/ready/error
+- Current Angular source enables raw-text Course ID filtering, Apply, manual Refresh and Reset; search/type/status, Add and pagination remain disabled. Empty state includes a manual refresh action. These are source facts; browser/runtime remains unverified.
 - Detail/conditional visibility: xem section elements/state của [DD nguồn](../../screen_stitch/05_admin/AD-12_danh-sach-bai-hoc-quan-tri/AD-12.md); không diễn giải ảnh tĩnh thành behavior runtime.
 
 ## 5. Link

@@ -1,5 +1,9 @@
 # ME-10 — Navigation
 
+## Current source update — 2026-11-20
+
+`/mentor/submissions/:submissionId` is registered to ME10Page. The page reads `submissionId` reactively, cancels the previous #55 request after route changes, rejects malformed IDs, and links back to `/mentor/submissions`. Direct navigation/runtime behavior is not independently verified.
+
 ## 1. Route definition
 - Current route in inventory: `/mentor/submissions/:submissionId`
 - Status: candidate/design route; Study Web `UNWIRED` unless source code proves otherwise.

@@ -9,12 +9,31 @@
 } @else if (state.status === 'error') {
   <div class="state-card" role="alert">
     <p>Chưa thể tải đánh giá và thảo luận. Vui lòng thử lại sau.</p>
+    <button class="retry-button" type="button" (click)="retry.emit()">Thử lại</button>
+  </div>
+} @else if (state.status === 'out-of-range') {
+  <div class="state-card" role="status">
+    <p>Trang {{ state.page }} không còn nội dung đánh giá.</p>
+    <button class="retry-button" type="button" (click)="loadFirstPage.emit()">
+      Tải lại trang đầu
+    </button>
   </div>
 } @else if (state.status === 'empty') {
   <div class="empty-card" role="status">
     <h3>Chưa có đánh giá hoặc thảo luận công khai.</h3>
   </div>
 } @else if (state.status === 'ready') {
+  @if (state.snapshotMismatch) {
+    <div class="state-card state-card--mismatch" role="status" aria-live="polite">
+      <p>Số đánh giá và danh sách trang chưa đồng nhất. Nội dung nhận được vẫn được giữ lại.</p>
+      <button class="retry-button" type="button" (click)="retry.emit()">Tải lại</button>
+    </div>
+  }
+  @if (state.items.length === 0 && !state.snapshotMismatch) {
+    <div class="empty-card" role="status">
+      <h3>Chưa có đánh giá hoặc thảo luận công khai.</h3>
+    </div>
+  } @else {
   <div class="review-list" role="list" aria-label="Danh sách đánh giá và thảo luận">
     @for (review of state.items; track $index) {
       <article class="review-card" role="listitem">
@@ -37,7 +56,7 @@
     }
   </div>
 
-  @if (state.totalPages > 1) {
+  @if (state.totalPages > 1 && !state.snapshotMismatch) {
     <nav class="pagination" aria-label="Phân trang đánh giá">
       <button type="button" [disabled]="state.page <= 1" (click)="pageChange.emit(state.page - 1)">
         Trang trước
@@ -51,5 +70,6 @@
         Trang sau
       </button>
     </nav>
+  }
   }
 }

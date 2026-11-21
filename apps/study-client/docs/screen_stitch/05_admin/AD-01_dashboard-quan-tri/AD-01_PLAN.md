@@ -3,6 +3,8 @@
 **Trạng thái:** `COMPLETED WITH BLOCKERS` — kế hoạch được viết trước marker, ảnh chú thích và DD; kết quả DD còn blocker được liệt kê tại §5.
 **Phạm vi phiên:** chỉ Screen ID `AD-01`.
 
+> **Current-source continuation (2026-11-20):** `/admin` and `AD01Page` are source-wired inside `AdminLayout`; the shell requires a valid in-memory #03 profile with role `ADMIN`. Three shortcut cards use registered Angular routes. API #101 remains `UNWIRED`, with no Study Server route/module/query/model/test; KPI data and report-specific permission/date semantics remain blocked. The screen remains 25%; runtime is `NOT VERIFIED`. The source scan below records the historical 2026-11-08 baseline.
+
 ## 1. Mục tiêu và ranh giới
 
 - Hoàn thiện kế hoạch, marker map, ảnh `screen_annotated.png` và DD A–F cho `/admin` dựa trên inventory, AC-38, API catalog/DD #101, PNG/HTML gốc, Study Web design guide và Study Server source hiện hành.
@@ -18,11 +20,11 @@
 - AC-38: Admin có quyền xem report/analytics; mở dashboard → #101 summary → #102 community impact → optional #103 export. API #101 trực tiếp khai báo Bearer JWT/Admin, `from?:date`, `to?:date`, không body, `ApiEnvelope<Report>`, 200 và lỗi 401/403/500.
 - API #101 DD đang `Draft — Needs Confirmation`: `Report.period`, `metrics[]`, `generated_at` là response shape; bốn row-count metrics, default 30 ngày, population, query source, empty behavior và report permission là proposal/open questions.
 
-### Current behavior
+### Historical current behavior at DD authoring (2026-11-08)
 
 - `screen.png` 1600×1594, SHA-256 `93304b0a9846047a5e21a90bdb44fb197d4449e9dc725ec13b4239f416a0c25f`; `code.html` 26,680 bytes, SHA-256 `e9c678cee115f8ac83b9d73779420005d411ad7918846696ff4c6fe8484df979`.
 - Prototype có bốn KPI placeholder (users, courses, moderation, infrastructure), status/audit/identity/compliance copy, disabled date choices và audit button, timer xoay icon làm mới 700 ms, placeholder navigation/footer và ba quick-link href. Không có API request.
-- Study Web không có editable source/package/router; `dist/` chỉ có `index.html`, không thấy `/admin`/report-summary route string. Status `UNWIRED`; không suy ra serving/runtime.
+- At that audit checkpoint, Study Web editable source/package/router were not present; `dist/` contained only `index.html` and did not establish an `/admin` route. This is historical and does not describe the current Angular source.
 - Study Server source hiện tới API #98; không có route/module/query/model/test cho #101. Existing Admin APIs #68–#98 dùng shared `ADMIN` role guard, nhưng điều đó không chứng minh #101 route/report authorization. `/users/me` hiện yêu cầu `STUDENT`; không có `/admin/me` profile route. Ghi rõ câu “shared helper chỉ Student” trong API #101 DD đã cũ so với source hiện tại.
 - Canonical Study Web guide dùng palette ocean-blue/font Inter hoặc system; mockup dùng palette cobalt và remote Plus Jakarta Sans. Ghi đây là design discrepancy để owner/FE xử lý.
 
@@ -78,5 +80,11 @@
 ## Kết quả phiên
 
 - Artifacts và tracker hoàn tất; static audit đạt, ảnh đã được xem trực tiếp.
-- `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`.
+- Historical session status: `DD BLOCKED`; `IMPLEMENTATION BLOCKED`; `RUNTIME NOT VERIFIED`.
 - AD-02 chỉ là ứng viên cho phiên kế tiếp; không được bắt đầu trong phiên AD-01.
+
+## Current-source continuation (2026-11-20)
+
+- `/admin` resolves to `AD01Page` within `AdminLayout`. `AdminSessionService` accepts the in-memory #03 profile only when its role is `ADMIN`; the dashboard has no separate profile request.
+- The page renders unavailable KPI/activity/service states and explains why report periods, refresh and audit actions are disabled. Three shortcut cards point to current Admin routes. No #101 caller or Study Server route/module/query/model/test exists.
+- Keep API #101, report-specific authorization, KPI mapping, date boundaries, audit data and service-health data blocked until their contracts exist. `screen_complete.md` remains 25% because UI/UX are partial and report logic/API remain unavailable; runtime and visual fidelity are not verified.

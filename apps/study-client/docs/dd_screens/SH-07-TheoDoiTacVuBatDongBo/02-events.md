@@ -1,5 +1,7 @@
 # SH-07 — Events (đặc tả xử lý)
 
+> **Current source (2026-11-21):** SH-07 validates a UUID, fetches notification-only API #18 on route entry, and fetches again only after manual refresh. ME-14/#63 and AD-20/#93 hand off accepted UUIDs. It does not poll; generic payment/export tracking remains outside scope.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|
@@ -26,7 +28,7 @@
 - **Loại:** route load / page initialization.
 - **Input:** pathname; operation ID từ caller/server nếu có; auth/session context của app. Không chấp nhận sample ID từ HTML.
 - **Current processing:** inline script tìm `/operations/([^/?#]+)` rồi hiển thị capture; nếu thiếu match thì đặt UUID mẫu. Không xác thực ID, role hoặc owner; không có API call.
-- **Current Angular page:** direct Shared route renders the unavailable gate; it does not read/display the path segment or call API #18. The source HTML behavior above is prototype-only.
+- **Current Angular page:** SH-07 validates the route UUID, calls API #18 for the notification-only aggregate, and supports explicit manual refresh. The source HTML behavior above is prototype-only.
 - **Target ordering:** (1) lấy path segment; (2) chưa canonicalize/regex validate cho tới khi chủ contract chốt UUID/int64; (3) xác nhận caller đã nhận đúng field từ producer, không map notification ID; (4) nếu endpoint chưa sẵn sàng, render `DESIGN_GATE`/unavailable state đã được product duyệt và không request/poll; (5) không đưa fake fallback vào UI; (6) nếu route param thiếu/hỏng, route fallback policy còn cần xác nhận.
 - **Output:** gate view tĩnh trong prototype; không ghi state/cache hoặc tạo side effect.
 - **Ngoại lệ:** không tự đổi malformed ID thành not-found; status code/route handling chưa chốt. ID chưa được cấp không được sao chép/hiển thị như thật.
@@ -61,7 +63,7 @@
 - **Input:** `operation_id` từ path; Bearer JWT từ auth layer. Không có query parameter/body.
 - **API design:** `GET /api/v1/operations/{operation_id}`; API ID #18; auth Bearer JWT; actor/owner policy disputed; response 200 `DESIGN_OPERATION_RETRIEVED` + `ApiEnvelope<Operation>`; 401/403/404/500 với các mã nêu ở §5.
 - **Processing:** (1) lấy path ID đã được upstream phát; (2) không convert kiểu trước khi API contract chốt; (3) backend thực thi auth/authorization; (4) gửi một GET khi endpoint có route; (5) validate envelope/business code/trace ID và field types; (6) map `kind/status/result` chỉ sau khi schema/enum/by-kind result được duyệt; (7) không lưu/cập nhật cache nếu chưa có freshness policy; (8) hiển thị đúng status hoặc branch theo policy.
-- **Current behavior:** API #18 backend route/module/query and dedicated tests exist, but the query is notification-only. Current Angular SH-07 renders the unavailable gate and sends no request; client `API_018` remains `UNWIRED`. The generic contract is Draft, so tracking is not runnable.
+- **Current behavior:** API #18 is wired for the notification-only client slice. It returns owner-bound notification status for the authenticated Student/Mentor/Admin caller; broader operation kinds and lifecycle semantics remain Draft. Focused tests pass; live runtime is unverified.
 - **Success/error handling:** 200 mapping chưa hoàn tất vì enums/result fields unresolved; 401/403/404 expected design codes, nhưng wrong-owner 403 vs 404 unresolved; 500/network/timeout stay service error and must not become 404. Retry/timeout policy not specified; do not invent.
 
 ### `SH07-EV-06` — Làm mới trạng thái / polling (chưa được duyệt)

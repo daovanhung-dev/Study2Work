@@ -1,5 +1,21 @@
 # ST-08 — Data Flow & State
 
+## Current-source reconciliation — 2026-11-21
+
+`/student/courses` is mounted under `StudentLayout`; ST-08 requests the selected
+page from #20, validates its current `CourseSummaryPage` projection and keeps
+loading/error/empty/ready/pagination states separate. Because #20's backend
+COUNT and LIST are separate reads, a response can show that the requested page
+is now out of range; the client resets to the last available page (page 1 if
+empty) and re-requests before displaying the empty state. #21 is not called
+because its current response is `UserProfile`. For an accepted page, the UI
+compares `items.length` with `min(size, max(total - (page - 1) * size, 0))`.
+When the separate COUNT/LIST reads disagree, it preserves returned rows,
+suppresses false empty copy and stale total/page controls, and offers retry.
+The design-time flow below is
+not current runtime evidence; status-filter/progress behavior and deployed
+runtime remain unresolved.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

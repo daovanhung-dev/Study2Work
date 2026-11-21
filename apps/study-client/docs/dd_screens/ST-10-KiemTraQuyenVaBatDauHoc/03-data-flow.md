@@ -36,7 +36,14 @@ flowchart LR
   G24 -->|403 / 404 / 500| FAIL
 ~~~
 
-### Current behavior đã kiểm chứng
+### Current Study Web implementation (source audit 2026-11-20)
+
+- Route `/student/lessons/:lessonId/start` maps to `ST10Page`; `toSafeStudyId` rejects an invalid path ID before any request. The page observes `paramMap`, cancels stale #22 reads on lesson changes, and resets per-lesson state.
+- Route entry calls #22 through `ST10LessonAccessService` and `StudentApiService`. The page renders a loading/error state and a lesson preview only; it does not render `content` or `video_url`.
+- The Start button becomes available only when #22 returns `DESIGN_RESOURCE_RETRIEVED` with a valid matching lesson ID and `status === 'PUBLISHED'`. A user click calls #23; pending start disables the button. Only `DESIGN_RESOURCE_CREATED` with a valid matching PUBLISHED lesson navigates to ST-11. A mismatched response or error remains on ST-10.
+- ST11 owns #24 after handoff. ST-09 still has no lesson selection/lessonId handoff. Runtime/deployment is NOT VERIFIED.
+
+### Historical baseline asset/source audit — 2026-11-07 (superseded for app status)
 
 - PNG/HTML hiển thị gate active, static progress bar 2/5, status text 423_LOCKED, protected-player placeholder, FSM copy và API DESIGN_ONLY badges. Không có dữ liệu API hoặc auth được bind.
 - HTML có header/breadcrumb/footer anchors href=#. Nút return ST-09 là anchor placeholder. Nút Start có disabled và aria-disabled=true, title chờ #22; không có click handler.
@@ -51,15 +58,15 @@ flowchart LR
 
 | State | Điều kiện vào dự kiến | Hành động/đích | Current evidence |
 |---|---|---|---|
-| Route missing/input unavailable | No wired ST-10 route or lessonId from ST-09 | Stop before API calls; design/client wiring needed | Current Study Web route absent; ST-09 asset lacks lesson selection |
-| Checking | Route/auth context valid; #22 pending | No content/media; await access result | Static card only; no request |
+| Route missing/input unavailable | No wired ST-10 route or lessonId from ST-09 | Stop before API calls; design/client wiring needed | ST-10 route exists; invalid IDs stop before request; ST-09 still lacks lesson selection/handoff |
+| Checking | Route/auth context valid; #22 pending | No content/media; await access result | #22 is called on entry; loading state is rendered and content/media remain hidden |
 | Denied | #22 returns 403 under approved semantics | Do not call #23/#24; keep content hidden; render approved reason | Copy-only denied card; reason payload unresolved |
-| Access error | #22 returns 401/404/500 or network failure | No downstream calls; map status after contract; retry policy open | No error screen/handler |
-| Starting | #22 allowed; #23 request pending | Prevent duplicate user action if implementation policy is approved | Current button disabled permanently; no request |
-| Start failed | #23 returns error or ambiguous network result | Do not call #24 until success; safe retry/dedup needs idempotency contract | No failure UI; retry policy unresolved |
+| Access error | #22 returns 401/404/500 or network failure | No downstream calls; map status after contract; retry policy open | Inline error and #22-only retry action exist; StudentApiService ends the local session on 401 |
+| Starting | #22 allowed; #23 request pending | Prevent duplicate user action if implementation policy is approved | Explicit click calls #23; button disables while the request is pending |
+| Start failed | #23 returns error or ambiguous network result | Do not call #24 until success; safe retry/dedup needs idempotency contract | Inline error remains on ST-10; start action is available again after the request, so retries are possible without an idempotency guarantee |
 | Content loading | #23 success; #24 pending | Keep media hidden until authorized content response | No API or loading handler |
 | Content error | #24 returns 401/403/404/500 or network failure | Remain gated; apply approved error mapping | No error UI or handler |
-| Started/ready | #24 authorized success | Navigate to ST-11 with lessonId and approved context | FSM card is static; route absent |
+| Started/ready | #24 authorized success | Navigate to ST-11 with lessonId and approved context | Matching #23 success navigates to ST-11; ST-11 calls #24 |
 | Session expired | Endpoint returns 401 | Handle per auth/session owner | No client session manager/source |
 | Missing/unpublished | #22/#24 returns 404 per eventual semantics | Keep content hidden; distinguish from deny only if contract permits | 404 meaning open |
 
@@ -69,7 +76,7 @@ flowchart LR
 |---|---|---|---|
 | ST-09 | Selected lessonId required | ST-10 | Current ST-09 design has no lesson item/ID handoff |
 | ST-10 | Return link; intended course context | ST-09 | href=#; courseId/selection/history behavior absent |
-| ST-10 | #22 allowed → #23 success → #24 success; pass lessonId | ST-11 | APIs/route absent; #24 is listed both here and in ST-11 load sequence |
+| ST-10 | #22 matching PUBLISHED lesson → explicit #23 success; pass lessonId | ST-11 | Current caller stops after #23; ST-11 owns #24. ST-09 still lacks lessonId handoff. |
 | Header/footer | Static labels/data-path slugs | Inventory screens or legal pages | href=#; many destinations lack route contracts |
 
 No current evidence defines browser back-stack behavior, course/lesson selection restoration, tab state, token refresh/redirect, or whether ST-11 reuses or refetches #24. These decisions remain open.

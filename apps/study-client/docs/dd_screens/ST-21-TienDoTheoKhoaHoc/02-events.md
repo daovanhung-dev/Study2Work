@@ -1,5 +1,14 @@
 # ST-21 — Events (đặc tả xử lý)
 
+## Current-source reconciliation — 2026-11-20
+
+ST-21 reacts to `courseId` route changes and cancels stale #37 reads. Before
+rendering, the page checks the success code, course identity, nonnegative
+counts, completed ≤ total, exact source percentage and `has_content` derived
+from whether published lesson count is nonzero. #37 still supplies only an
+aggregate for PUBLISHED lessons; it does not provide per-lesson states or
+timestamps requested by the design.
+
 ## 1. Event index
 | Event ID trong package | Source Event ID / heading | Chi tiết |
 |---|---|---|

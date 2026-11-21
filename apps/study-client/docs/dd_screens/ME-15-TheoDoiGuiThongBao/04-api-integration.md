@@ -11,8 +11,8 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #18, #64
-- Orchestration/data notes: Chỉ gọi #64 với một notification_id sau khi producer/caller chọn rõ ID; không gửi UUID `data.id` vào path. Không gọi #18: Study route/module/query/test chưa có, ID int64/UUID còn mâu thuẫn, và AC-25 node #18 không nối flow. Prototype refresh chỉ timer/toast, channel/report/ACK/real-time claims là static; Study Web UNWIRED.
-- BE/source status và gate: **M**; #64 có local route/module/query/model/test, #18 D/UNWIRED. **DD READY; IMPLEMENTATION BLOCKED:** batch ID selection, status mapping/lifecycle, per-channel/recipient report and realtime contract, destination links, Study Web route/auth/client; live schema/provider/runtime chưa verified
+- Orchestration/data notes: Current ME-15 page calls #64 for one validated `notification_id`; it does not send Operation UUID `data.id` to the path. It does not call #18 because the AC-25 flow has no #18 edge and generic operation semantics remain separate. Batch ID selection, lifecycle mapping, channel/report/ACK/real-time behavior remain unresolved.
+- BE/source status và gate: **M**; #64 has local route/module/query/model/test and a current ME-15 caller; #18 D/UNWIRED. **SOURCE-WIRED / PARTIAL:** route-reactive strict #64 read with manual retry. **BLOCKED:** batch ID selection, status mapping/lifecycle, per-channel/recipient report, auto-refresh policy and destinations; live schema/provider/runtime unverified.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Nguồn truy vết chính
@@ -23,6 +23,12 @@
 - API #64: `apps/study-server/app/api/v1.py`; `apps/study-server/app/modules/mentor/api_64_mentor_notification_status/{models.py,validate.py,query.py,view.py}`; API DD `apps/study-server/docs/dd/64_mentor_notifications_status/`.
 - Generic #18: `apps/study-server/docs/dd/18_operations/` mô tả design-only; hiện không có route/module/query/test Study. Catalog tại `docs/lists/list_api.md`.
 - Activity: `apps/study-server/docs/diagrams/AC_UNICA/AC_03_MENTOR_TEACHING.drawio`, trang AC-25; connected node `n8` là #64, còn `operation_status` (#18) không có incident edge. SH-07 cũng phân biệt generic #18 với notification-specific #64.
+
+### Current Study Client integration
+
+- The route `/mentor/notifications/:notificationId/status` is registered with API #64 metadata. `ME15NotificationStatusService` sends exactly that path ID to #64; the page follows `paramMap`, cancels stale reads, validates `DESIGN_RESOURCE_RETRIEVED` and the Operation projection, and supports explicit retry.
+- Current #64 returns `data.id` as an Operation UUID, `kind=NOTIFICATION_DISPATCH`, `status=QUEUED|FAILED|SENT`, `owner_id`, `submitted_at`, and `updated_at`. `completed_at` is not populated by the local #64 mapper. The page displays the route notification ID separately.
+- The page does not call #18, auto-poll, or claim batch/channel/recipient metrics. API #63 does not currently link a selected notification ID to this page. No tests/browser/runtime were run.
 
 ## 3. API không sử dụng
 - Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.

@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 
 import type { SH01PublicCourse } from '../models/sh01-catalog.models';
 
@@ -9,4 +9,24 @@ import type { SH01PublicCourse } from '../models/sh01-catalog.models';
 })
 export class SH01CourseCard {
   readonly course = input.required<SH01PublicCourse>();
+  private readonly failedMentorAvatarUrl = signal<string | null>(null);
+  private readonly failedThumbnailUrl = signal<string | null>(null);
+
+  hasThumbnail(): boolean {
+    const thumbnailUrl = this.course().thumbnail_url;
+    return Boolean(thumbnailUrl) && this.failedThumbnailUrl() !== thumbnailUrl;
+  }
+
+  onThumbnailError(): void {
+    this.failedThumbnailUrl.set(this.course().thumbnail_url ?? null);
+  }
+
+  hasMentorAvatar(): boolean {
+    const avatarUrl = this.course().mentor.avatar_url;
+    return Boolean(avatarUrl) && this.failedMentorAvatarUrl() !== avatarUrl;
+  }
+
+  onMentorAvatarError(): void {
+    this.failedMentorAvatarUrl.set(this.course().mentor.avatar_url ?? null);
+  }
 }

@@ -26,15 +26,15 @@ Trạng thái DD: `Draft — Needs Confirmation`. Các quyết định local dư
 
 <a id="q-63-03-content-type"></a>
 
-## Q-63-03 — Ý nghĩa `content:int64`
+## Q-63-03 — Wire type của `content`
 
-**Bằng chứng:** Catalog giữ int64; AC-25 mô tả nhập nội dung và reusable Notification/legacy DDL dùng text. Không có content/template lookup source.
+**Trạng thái 2026-11-21:** `RESOLVED_FOR_ME-14` theo quyết định người dùng: request `content` là `string`, khớp nội dung văn bản trong editor, reusable Notification và legacy TEXT column. Catalog, model, OpenAPI và tests đã được đồng bộ.
 
-**Fallback runtime:** Giữ request type int64 và lưu biểu diễn thập phân vào TEXT; không diễn giải thành template ID hoặc free-form text.
+**Bằng chứng:** Trước reconcile, catalog dùng int64 trong khi AC-25, ME-14 editor, reusable Notification và legacy DDL dùng text. Current source đã nhận strict string và ghi text trực tiếp.
 
-**Giới hạn còn lại:** Giá trị như `123` không cho phép nhập thông điệp tùy ý như diagram gợi ý.
+**Giới hạn còn lại:** API #63 không bổ sung business rule về trim/non-empty/content max length; current ME-14 UI validates its own composer input.
 
-**Cần xác nhận:** Đổi catalog/body sang `content:string!` hay cung cấp định nghĩa rõ cho numeric content?
+**Kết quả:** API #63 accepts text; no template ID interpretation is implemented.
 
 <a id="q-63-04-channel-encoding"></a>
 
@@ -88,13 +88,13 @@ Trạng thái DD: `Draft — Needs Confirmation`. Các quyết định local dư
 
 <a id="q-63-09-api18"></a>
 
-## Q-63-09 — API #18 generic Operation polling
+## Q-63-09 — API #18 notification tracking handoff
 
-**Bằng chứng:** #18 row khai báo int64 path trong khi Operation schema/diagram dùng UUID; authorization, result và lifecycle còn mở.
+**Trạng thái 2026-11-21:** `RESOLVED_FOR_SH-07` for notification-only tracking. API #18 catalog and current source use UUID; lookup is owner-bound for Student/Mentor/Admin. The user approved ME-14/#63 as one SH-07 producer.
 
-**Quyết định phạm vi:** #63 trả UUID theo reusable Operation và không sửa catalog/runtime #18. `meta.notification_ids` phục vụ riêng API #64.
+**Current behavior:** #63 returns an Operation UUID and `meta.notification_ids`; SH-07 consumes the UUID via API #18. The IDs in metadata remain available to API #64.
 
-**Cần xác nhận:** Đồng bộ API #18 path/owner/lifecycle trước khi triển khai tracker chung.
+**Còn mở ngoài SH-07:** Generic payment/export results, status lifecycle, retention, polling and other producer mappings remain Draft.
 
 <a id="q-63-10-error-envelope"></a>
 
@@ -108,5 +108,5 @@ Trạng thái DD: `Draft — Needs Confirmation`. Các quyết định local dư
 
 - #62 → #63: #62 trả numeric Student IDs; #63 parse CSV và xác minh lại ACTIVE roster.
 - #63 → #64: `meta.notification_ids` đưa từng numeric ID cho endpoint status; local outbox rows là query candidate cho #64.
-- #63 → #18: Operation UUID được trả nhưng generic polling contract vẫn có ID-type/lifecycle conflict.
+- #63 → #18 → SH-07: current UUID and owner-bound notification status flow is source-wired; generic non-notification tracking remains outside scope.
 - Macro-review vẫn `VERIFIED_WITH_OPEN_QUESTIONS`; xem [API #64 report](../64_mentor_notifications_status/VERIFICATION_REPORT.md). Local implementation does not prove delivery worker, live schema or deployment.

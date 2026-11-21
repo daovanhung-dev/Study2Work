@@ -1,5 +1,7 @@
 # SH-01 — Data Flow & State
 
+> **Current source (2026-11-21):** The Shared `/` route mounts SH01Page. It calls #05 and #06 independently, validates the current public response envelope/projections/pagination, filters course rows to `PUBLISHED`, and maintains separate loading/ready/empty/error states with scoped retry. Search transfers trimmed q to GS-02; it does not call #07. Categories remain informational and cards remain non-clickable under the approved DD-safe behavior. No email, token or other private data is collected or added to the URL.
+
 ## 1. Nguồn dữ liệu
 | Field / object | Type | Source | Destination | Cập nhật khi |
 |---|---|---|---|---|

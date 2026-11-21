@@ -2,25 +2,31 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
-## Current caller status — 2026-11-17
+## Current caller status — 2026-11-21
 
 ST-24 calls #20 for the enrolled-course picker, #40 with current text fields
-`course_id`, `title`, and `content`, then #39 to refresh. The catalog's
-`content:int64` declaration differs from current source and is not coerced.
-The DD/API excerpt below is a design-time snapshot; see [the screen inventory](../../list_screen.md)
-and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-matrix.md).
+`course_id`, `title`, and string `content`, then #39 to refresh. #40 checks
+ACTIVE enrollment and returns a one-item discussion page; the client validates
+it before refresh/navigation. The catalog's `content:int64` differs from
+current backend string input and is not coerced. Current source is in
+`ST24/pages` and `ST24/data-access`, plus Study Server APIs #20/#39/#40. The
+design-time excerpts below predate that source. On #20, ST-24 recovers an
+empty out-of-range page and detects count/list cardinality mismatches; it
+preserves returned options, suppresses false empty/stale pagination claims,
+and offers retry. #40 revalidates ACTIVE enrollment on submit.
 
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
 | `ST-24-API-001` | #40 | See source contract excerpt | Source event IDs are preserved in [Events](02-events.md) | See source auth/permission evidence |
 | `ST-24-API-002` | #39 | See source contract excerpt | Source event IDs are preserved in [Events](02-events.md) | See source auth/permission evidence |
+| `ST-24-API-003` | #20 | See source contract excerpt | Course picker source event | Student Bearer |
 
 ## 2. Contract / source detail
 
 - API refs trong inventory: #40, #39
 - Orchestration/data notes: POST #40 sau hợp đồng title/content hợp lệ → refresh #39; không tự tạo content numeric.
-- BE/source status và gate: **D**; **BLOCK:** Contract content:int64 mâu thuẫn ngữ nghĩa rich text
+- BE/source status và gate: #20/#39/#40 `SOURCE_WIRED`; catalog #40 `content:int64` conflicts with backend string. Mutation idempotency/recovery and Stitch-only fields remain open.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: A.2. Expected behavior — inventory, AC và API catalog
@@ -35,13 +41,13 @@ and [T038 gap matrix](../../../../../.agents/worklog/2026-11-17/T038-screen-gap-
 
 | Thuộc tính | Catalog | Trạng thái hiện tại / giới hạn |
 |---|---|---|
-| Method / endpoint | `POST /api/v1/discussions` | Không có Student route/module/query/view/test; `DECLARED_NOT_RUNNABLE / NOT_FOUND`. |
-| Authentication / role | Bearer JWT; Student | AC-19 precondition; chưa có route #40 để gọi shared Student guard. Không nhận `user_id` từ form/body. |
+| Method / endpoint | `POST /api/v1/discussions` | Current #40 route/view/validator/query/model source and ST-24 caller are present; deployed runtime is unverified. |
+| Authentication / role | Bearer JWT; Student | Current route uses Student authentication and derives actor identity from the session; no `user_id` is accepted from the form/body. |
 | Path / query | Không có | Không thêm path/query field. |
 | Request body | `course_id:int64!`, `title:string!`, `content:int64!` | Không có `lesson_id`, `tags`, files hoặc author field trong body. Title/content UI chưa thể map đầy đủ. |
-| Success | HTTP 201 `DESIGN_RESOURCE_CREATED`; `ApiEnvelope<Page<Discussion>>` | Page metadata và fields tạo mới chưa có current implementation; proposal 1/1/1/1 là DERIVED. |
+| Success | HTTP 201 `DESIGN_RESOURCE_CREATED`; `ApiEnvelope<Page<Discussion>>` | Current source returns one created discussion with page metadata; the client validates returned ID/course/title/content before refresh. Focused tests and deployed runtime were not run/verified. |
 | Errors | 401 `DESIGN_AUTHENTICATION_REQUIRED`; 403 `DESIGN_ACCESS_DENIED`; 422 `DESIGN_VALIDATION_ERROR`; 500 `DESIGN_INTERNAL_ERROR` | Không thêm 404/409/503 hoặc business code mới. Network/timeout là transport failure, không phải catalog code. |
-| Side effect | Catalog/AC mong muốn tạo topic | Candidate `INSERT discussions`; chưa có SQL, transaction, live DB hay runtime call. |
+| Side effect | Catalog/AC mong muốn tạo topic | Current #40 source inserts the discussion after validation; physical `title` column, live DB and deployed runtime remain unverified. |
 
 **Contract gaps của API #40:** (1) request `content:int64` vs reusable `Discussion.content:string` và DDL `TEXT`; (2) `title` không có cột vật lý; (3) response `Page<Discussion>` không có page input; (4) course participation predicate; (5) new-topic status/visibility; (6) timestamps và transaction; (7) course/user FK nullability; (8) author và comments projection. Tất cả là open questions trong API DD, không được tự quyết trong ST-24.
 

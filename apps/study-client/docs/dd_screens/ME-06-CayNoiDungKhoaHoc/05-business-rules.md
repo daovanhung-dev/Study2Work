@@ -7,19 +7,19 @@
 
 ## 2. Rules, security, discrepancy và gate từ source
 - Inventory purpose: Tree sections/contents và thứ tự; mở editor/publish/delete khi được phép.
-- Gate/status (giữ nguyên): **D**; **BLOCK:** Content không nằm trong 18 bảng DB.sql
+- Gate/status: #49 is locally route/module/query/validation/test source-backed and the ME-06 caller is wired; API DD remains Draft and live schema/migration deployment is unverified.
 - BR IDs trong file này chỉ là alias trỏ tới source rule/gate bundles; không thêm business rule. Không khẳng định rule FE/BE mới khi source chưa xác nhận.
 
 ### Trích từ DD nguồn: 6. Ma trận trạng thái, lỗi và bảo mật
 
 | State | Trigger/evidence | UI rule |
 |---|---|---|
-| `loading` | Request #49 đang chờ | Skeleton/progress và cancel/retry behavior cần design; không có current client implementation. |
-| `empty` | 200 `data:[]` | Hiển thị empty course state. Không phải lỗi; CTA create chỉ bật sau khi #50/type/parent rules được duyệt. |
-| `ready` | 200 có cây đã validate | Dựng từ flat Content[] và giữ `id/status/order`; không gán mock values hoặc version không có. |
+| `loading` | Request #49 đang chờ hoặc retry | Loading status; clear old tree; route change cancels stale request. Implemented. |
+| `empty` | 200 `data:[]` | Hiển thị empty course state; Add action appears after successful #49 owner check. Implemented. |
+| `ready` | 200 có cây đã validate | Dựng flat `Content[]` thành cha-con; giữ server fields/status/order; không gán mock values/version. Implemented. |
 | `denied` | 401 hoặc 403 | Phân biệt sign-in/role/owner theo auth UX đã duyệt; không lộ course/node data. Current owner check direct. |
-| `not-found` | 404 malformed/out-of-range path hoặc missing course | Không render mock course. Path error hiện cùng business code resource not found. |
-| `error` | 500 DB/projection/tree integrity; network error ở client tương lai | Safe message, retry theo policy; không render partial tree. Network mapping chưa có source. |
+| `not-found` | 404 malformed/out-of-range path hoặc missing course | Safe not-found state with course-list link. Implemented. |
+| `error` | 500 DB/projection/tree integrity, network error hoặc malformed response | Safe message and retry; do not render partial tree. Implemented. |
 | `saving/blocked` | Mutation handoff | Chỉ bật theo allowed server transition. #51/#52/#53 có 422 path; không optimistic-commit status/order. |
 | `filter-empty` | Local search/filter không có row | Copy/ancestor behavior chưa có design; combine search and filter state thay vì để JS handlers ghi đè. |
 
@@ -42,7 +42,7 @@
 | Course/KPI/quality/audit data | 4 KPIs, chart, QA rules, audit timeline | Không được trả bởi #49; không có read contract gắn cho các panel trong ME-06 | Không thể hydrate panels từ API #49. |
 | Authorization | “Course phụ trách” | Source chỉ direct owner | AC assignment semantics và implementation lệch nhau. |
 | Persistence | Content model đã có trong checkout | DDL/migrations 006/007 có; live deployment chưa xác minh | Không tuyên bố schema runtime. |
-| Frontend/runtime | Route đề xuất | Study Web `UNWIRED`, HTML chỉ là mockup | Không thể xác nhận end-to-end, error UI hoặc route target. |
+| Frontend/runtime | Registered route and #49 client caller | Route is reactive; request/response/tree validation and supported navigation are source-wired. | Browser/deployment/live DB remain unverified; full Stitch controls are not implemented. |
 
 Các câu hỏi cần owner quyết định: ContentType/Status enums và payload schemas; flat-vs-nested API approval; chapter/lesson entity mapping; version selection/concurrency token; child-create/reorder endpoints; assignment authorization; publish readiness; delete/undo/refresh behavior; KPI, quality handbook, audit-log read source; migration deployment.
 

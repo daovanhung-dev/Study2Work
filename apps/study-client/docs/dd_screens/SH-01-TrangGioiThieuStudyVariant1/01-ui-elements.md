@@ -1,5 +1,7 @@
 # SH-01 — UI Elements
 
+> **Current implementation scope (2026-11-21):** Use `.agents/web-study/design.md` with the SH-01 DD for the rendered Study Web target. The user approved informational categories, non-clickable course cards, `/courses` and `/register` CTAs, hidden price until currency is defined, and no email capture. Unsupported screenshot-only KPI, testimonial, employer-logo, carousel and filter elements remain suppressed. The current page includes accessible search, loading skeletons, independent states, a keyboard skip link, responsive navigation/footer and mentor-avatar fallback.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.

@@ -10,8 +10,8 @@
 ## 2. Contract / source detail
 
 - API refs trong inventory: #66
-- Orchestration/data notes: Chỉ gọi #66 với numeric course_id sau khi carrier và response được duyệt; không có period/query/export. Catalog ApiEnvelope<Page<Course>> khác local summary. AC-26 đặt #66 trước chọn Student/#67; inventory tách ME-18 khỏi ME-17. KPI, ETL state, timeframe và CSV chưa có mapping.
-- BE/source status và gate: **R**; #66 route/module/query/model/focused-test source có local implementation. **DD BLOCKED; IMPLEMENTATION BLOCKED:** response mismatch, KPI/period/event semantics, course ID/owner policy, ETL/export, AC-26 ordering; Study Web UNWIRED; RUNTIME NOT VERIFIED
+- Orchestration/data notes: Current client calls #66 with a validated course route ID; the endpoint has no period/query/export input. Catalog `ApiEnvelope<Page<Course>>` differs from the local summary. AC-26 orders #66 before selected Student/#67, while inventory separates ME-18 from ME-17. KPI, ETL state, timeframe and CSV remain unmapped.
+- BE/source status và gate: **R**; #66 route/module/query/model/focused-test source and ME18 caller exist. **SOURCE-WIRED / PARTIAL:** exact local summary read and error/retry states. **OPEN:** catalog response mismatch, KPI/period/event semantics, assigned-course scope, ETL/export, AC-26 ordering and live schema/runtime.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: B2. Current API #66 source flow
@@ -26,6 +26,13 @@
 8. Success: HTTP 200, DESIGN_RESOURCE_RETRIEVED, ApiEnvelope<MentorCourseActivityAnalytics>; meta rỗng và traceId được giữ. Local response fields không khớp direct catalog Page<Course>.
 9. API read-only; không có external service, ETL trigger, export, event ledger, #65/#67 call hoặc DB write.
 10. Focused test source dùng fake DB; test không chạy trong phiên này và không xác nhận PostgreSQL/live schema/deployment.
+
+### Current Study Client integration
+
+- ME18 calls #66 with only the validated positive `course_id` path; changing route IDs cancels older requests. There is no query/body in the service.
+- It requires `DESIGN_RESOURCE_RETRIEVED`, nonnegative safe counts within the int64 range, `students_with_activity` no greater than tracked lesson accesses, and a nullable parseable timestamp.
+- The page displays only those three fields and a source-backed empty proxy message. It does not claim ACTIVE enrollment, event history, completion rate, ratings, ETL health, timeframe or export support.
+- No browser/runtime verification or tests were run.
 
 ## 3. API không sử dụng
 - Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.

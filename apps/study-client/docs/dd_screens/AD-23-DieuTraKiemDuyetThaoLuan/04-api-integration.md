@@ -2,6 +2,8 @@
 
 > API/status dưới đây lấy từ inventory và DD nguồn. Package-local API IDs chỉ là alias truy vết cho API catalog reference; chúng không tạo contract mới. `R/S/D/M/UX` hoặc nhãn cục bộ là evidence status, không tự động xác nhận UI/runtime. Route/contract thiếu nguồn phải giữ `CẦN_XÁC_NHẬN`.
 
+> **T122 current-source update (2026-11-20):** AD-23 applies the backend-matching positive signed-int64 route-ID guard before GET #98. Data access then validates the success envelope/business code, exact one-item Page metadata and response identity, plus Discussion/comment parent and author projections before rendering. #99/#100 actions remain blocked. `screen_complete.md` remains 62.5%; report evidence and moderation controls remain incomplete. No tests/build/lint/browser checks were run for this update.
+
 ## 1. API usage matrix
 | API ID (package-local usage alias) | Source catalog ref | Method/path | Event | Auth |
 |---|---|---|---|---|
@@ -13,7 +15,7 @@
 
 - API refs trong inventory: #98, #99, #100
 - Orchestration/data notes: GET #98 → PATCH #99 với action/reason hoặc DELETE #100 → refresh #97.
-- BE/source status và gate: **R #98** local route/module/query/model/validator/view/test source; API DD #98 stale `UNWIRED`; #99/#100 **D** catalog/Draft only, no local route. **DD BLOCKED; IMPLEMENTATION BLOCKED:** #98 report projection, #99 action/audit, #100 soft-delete policy, dismissal branch, target grain, Admin permission mapping and Study Web remain unresolved/unwired
+- BE/source status và gate: **R #98** local route/module/query/model/validator/view/test source; API DD #98 stale `UNWIRED`; #99/#100 **D** catalog/Draft only, no local route. **DD BLOCKED; IMPLEMENTATION PARTIAL; RUNTIME NOT VERIFIED:** #98 report projection, #99 action/audit, #100 soft-delete policy, dismissal branch, target grain and Admin permission mapping remain unresolved.
 - Contract sources and discrepancies are preserved in the source excerpts below.
 
 ### Trích từ DD nguồn: Blockers requiring contract decisions
@@ -25,9 +27,13 @@
 5. Define #100 eligibility, soft-delete representation/timestamp, `DeleteResult` mapping, audit preservation/linkage, child/reply/report retention and visibility, repeat/concurrency/idempotency behavior, plus its UI trigger/confirmation.
 6. Resolve whether a report targets a root Discussion or a reply and which comments are visible; confirm how AD-22 hands the correct ID/context to AD-23.
 7. Approve mapping between AC Admin permission and local `ADMIN`, actor identity, tenant scope, and policies for #99/#100.
-8. Implement the Study Web route/client, including response/error mapping, loading states and return/refresh behavior, then verify with runtime tests.
+8. The Angular route/client, response/error mapping, loading states and AD-22 return links are source-wired. Browser/runtime behavior remains unverified; finish only after report/permission/action contracts are approved.
 
-Until those decisions are source-backed, keep moderation/delete controls locked, preserve the prototype discrepancy, and retain `DD BLOCKED`, `IMPLEMENTATION BLOCKED`, `RUNTIME NOT VERIFIED`.
+Until those decisions are source-backed, keep moderation/delete controls locked, preserve the prototype discrepancy, and retain `DD BLOCKED`, `IMPLEMENTATION PARTIAL`, `RUNTIME NOT VERIFIED`.
+
+### Current Angular caller
+
+`AD23Page` supplies `isPositiveSignedInt64DiscussionId` to `adminRouteState`, so malformed, signed, zero, or out-of-range path text stops before HTTP and valid raw text is sent unchanged. `AD23ApiService` uses the `API_098` descriptor through `AdminApiService`; its validator requires the matching singleton Page response and the current Discussion/direct-comment projection. The response ID must also be a JavaScript safe integer, so a backend-valid int64 above `Number.MAX_SAFE_INTEGER` can pass the route guard but is rejected by response validation; AD-22 only creates links for safe IDs. No #99/#100 or report-data caller exists; browser runtime is not verified.
 
 ## 3. API không sử dụng
 - Không bổ sung API ngoài inventory và DD nguồn. Nếu screen không cần API, trạng thái phải được xác nhận từ source DD.

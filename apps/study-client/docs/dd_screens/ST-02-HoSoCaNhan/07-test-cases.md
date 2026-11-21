@@ -32,7 +32,7 @@
 - [x] Current #04 endpoint/auth/claims/query/data/errors/effects are traced to source and separated from AC/catalog/DD.
 - [x] Login links, disabled edit, header/footer anchors, state/error branches and downstream ST-03 boundary are documented.
 - [x] `bio`, permissions, cache, role/status freshness, null status/live schema and missing-user semantics remain explicit blockers.
-- [ ] Authenticated profile-ready UI and runtime navigation verified — unavailable; implementation remains blocked.
+- [ ] Authenticated browser/API runtime and visual navigation verified — not run; the source caller and read-only fields are implemented, but runtime remains unverified.
 
 ### Nguồn
 
@@ -40,10 +40,10 @@
 - AC sources: `apps/study-server/docs/diagrams/AC_UNICA/00_AC_API_INDEX.md` and `AC_02_STUDENT_LEARNING.drawio`.
 - Assets: same-directory `screen.png` (original), `code.html`, `screen_rendered.png` (Firefox headless HTML render; not runtime), `screen_composite.png` (original header/footer plus HTML-rendered body, provenance in marker JSON; not runtime), `ST-02_markers.json`, `ST-02_markers_overlay.svg`, and `screen_annotated.png`.
 - API declaration/DD: `docs/lists/list_api.md`; `apps/study-server/docs/dd/04_users_me/` including `OPEN_QUESTIONS.md`.
-- Current route/auth/response: `apps/study-server/app/api/v1.py`; `app/modules/student/api_04_users_me/{view,query,models}.py`; `app/utils/auth.py`; `app/core/security/access_token.py`; `app/core/responses.py`; upstream `app/modules/guest/api_03_auth_login/view.py`.
+- Current route/auth/response and UI caller: Study Web `student.route.ts`, `ST02ProfileService`, `StudentApiService`, `StudentSessionService`; Study Server `app/api/v1.py`, `app/modules/student/api_04_users_me/{view,query,models}.py`, `app/utils/auth.py`, `app/core/security/access_token.py`, `app/core/responses.py`, and upstream `app/modules/guest/api_03_auth_login/view.py`.
 - Test source read only: `apps/study-server/tests/modules/student/api_04_users_me/test_users_me.py`.
 - Database candidate/status: `infra/postgres/study-server/DB.sql` and `.agents/server-study/database.md`; live schema `NOT_VERIFIED`.
-- Context/guide: `.agents/web-work/study/INDEX.md`, `.agents/web-study/design.md`; current app source absent.
+- Context/guide: `.agents/web-work/study/INDEX.md`, `.agents/web-study/design.md`; current app source is present, but browser/live runtime is not verified.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 
@@ -54,7 +54,7 @@
 - Add 10 ordered marker records, SVG overlay and `screen_annotated.png`; map 1:1 to DD element rows.
 - Add `ST-02.md` with overview, expected/current flow, each element, event inputs/preconditions/sequence/outcomes, #04 response/errors, state/access/navigation, conflicts and references.
 - Update global tracker: ST-02 separate statuses, full artifact count 15/83, remaining incomplete count 68, and ST-03 next by the dependency wave in `list_screen.md` §8.1. ST-01 remains in W3 because its dashboard APIs are not wired. Never write GS-08.
-- `DD BLOCKED` while the profile-ready design, permission/bio contract and token role/status policy remain unresolved. Keep `IMPLEMENTATION BLOCKED` and `RUNTIME NOT VERIFIED` separate. Do not run tests.
+- `DD BLOCKED` while the broader profile-ready design, permission/bio contract and token role/status policy remain unresolved. The explicitly approved read-only #04 slice is implemented; keep `RUNTIME NOT VERIFIED` separate. Do not claim runtime verification.
 
 - Runtime status: `RUNTIME NOT VERIFIED` (the generated DD does not claim otherwise).
 - Không chạy app test trong task chuyển đổi tài liệu.

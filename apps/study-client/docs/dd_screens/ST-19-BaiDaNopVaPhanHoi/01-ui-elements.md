@@ -1,5 +1,7 @@
 # ST-19 — UI Elements
 
+> **Current source (2026-11-20):** ST-19 localizes only `SUBMITTED`/`GRADED`; unsupported submission statuses use a neutral label. The response's file status is not rendered because the full file-status enum is unresolved; URLs remain unopened.
+
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
 - Ảnh numbered được sao chép nguyên trạng từ `screen_annotated.png`; mapping lấy từ JSON marker và DD nguồn. Không đổi ID marker nguồn trong lần chuyển đổi này.

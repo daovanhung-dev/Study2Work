@@ -1,12 +1,19 @@
 # ST-20 — Tổng quan tiến độ · Tổng quan
 
+## Current source implementation — 2026-11-21
+
+- Route `/student/progress` is registered under the authenticated Student route group. The page calls #38 for recorded achievements. Current #21 returns `UserProfile`, not progress data, so the progress widget remains explicitly gated.
+- Current #38 returns the authenticated user's achievement rows with fixed page metadata. The page renders only returned `title`, `code`, `awarded_at`, and optional `course_id`; it does not invent certificates, metrics, or unlock states.
+- #38 reads COUNT and LIST separately. The page compares their returned total and item count at the presentation boundary; a mismatch shows a retryable synchronization notice, suppresses a false empty state, and preserves any returned rows. The shared guard does not require cross-query cardinalities to match.
+- The source Stitch PNG has an empty body and the HTML companion is a static empty state. The implementation has separate loading/error/empty states for #38, but a populated dashboard design and #21 progress contract remain open. The historical source snapshot below is not current route/API evidence.
+
 | Trường | Giá trị |
 |---|---|
 | Screen ID | `ST-20` |
 | Module | Student |
-| Route | `/student/progress` — route trong inventory, không phải xác nhận router runtime |
+| Route | `/student/progress` — current Student route is source-wired; runtime not verified |
 | Actor/role | Theo DD nguồn; xem overview/source trace bên dưới |
-| DD status | Draft (package được chuyển đổi); source status: **Trạng thái:** DD BLOCKED; IMPLEMENTATION BLOCKED; RUNTIME NOT VERIFIED. API #21/#38 và route Study Web của Student chưa có runtime source; progress/achievement contracts và thứ tự AC-18 chưa thống nhất. |
+| DD status | Draft; current source is partial. #21 progress projection and AC-18 orchestration remain unresolved; visual loaded-state is not specified by the empty Stitch body. |
 | Owner | Không được xác định trong inventory/DD nguồn đã chuyển; `CẦN_XÁC_NHẬN` |
 | Version / last updated | 0.1 / 2026-11-08 |
 | Nguồn đối chiếu | [ST-20.md](../../screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20.md), [ST-20_PLAN.md](../../screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_PLAN.md), [ST-20_markers.json](../../screen_stitch/03_student/ST-20_tong-quan-tien-do/ST-20_markers.json), [list_screen.md](../../list_screen.md) |

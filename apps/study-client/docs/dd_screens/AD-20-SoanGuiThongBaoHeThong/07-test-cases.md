@@ -1,6 +1,10 @@
 # AD-20 — Test Cases
 
-> Các mã `TC` bên dưới là planning references được tạo cho file DD; chúng không phải test suite, không được chạy và không chứng minh implementation/runtime.
+## Current implementation verification — 2026-11-21
+
+The focused Admin suite passes 25 spec files / 99 tests. AD-20 loads recipients through #68, requires explicit selection, preserves #93 HTTP status and routes only an HTTP 202 response with the expected envelope and UUID to SH-07. A 403 is presented as access denial; malformed or non-202 success-shaped responses lock resend and link to AD-19. Browser/live API/DB/provider runtime was not verified.
+
+> Các mã `TC` bên dưới là planning references, không phải test suite. Checklist/audit bên dưới là snapshot khi tạo DD; status implementation mới nhất ở phần đầu file.
 
 ## 1. Coverage matrix
 | Test ID | Type | Event | Rule/API | Priority |
@@ -31,8 +35,8 @@
 - [x] API #93 body/response/errors và local guard/validator/DB side effects được mô tả; không chạy application tests/runtime trong phiên này.
 - [x] Handoff AD-20→SH-07 và các mâu thuẫn Notification/Operation, UUID/int64 được ghi rõ.
 - [ ] DD READY: chưa đạt; audience, channel, permission, draft/send, physical model, response/operation bridge và UI route còn blocker.
-- [ ] IMPLEMENTATION READY: chưa đạt; Angular route/page and local preview are source-wired, but no API #93 caller exists; draft/send are disabled and the UI has no explicit recipient resolver.
-- [ ] RUNTIME VERIFIED: chưa đạt; không chạy Study Web hoặc live DB/provider.
+- [x] Approved explicit-recipient producer slice is source-wired: #68 recipient pages, explicit selection, #93 dispatch and accepted UUID handoff to SH-07. Broader DD readiness, segment/draft/priority policy, provider delivery and browser runtime remain open/unverified.
+- [ ] RUNTIME VERIFIED: chưa đạt; focused component/API tests pass, nhưng không xác minh browser, live DB hoặc provider runtime.
 
 #### Kế hoạch kiểm chứng từ source PLAN
 

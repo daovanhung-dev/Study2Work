@@ -1,6 +1,6 @@
 # AD-20 — UI Elements
 
-> **Source boundary (2026-11-16):** Tables below describe the Stitch HTML/mockup elements. The current Angular page has a wired route and local title/content preview; recipient, channel and priority controls plus draft/send actions are disabled, and no API caller is present. See [overview](00-overview.md) for current-source evidence.
+> **Source boundary (2026-11-21):** Tables below describe the Stitch HTML/mockup elements. Current Angular source also loads candidate recipients through #68, requires explicit selection, submits text/channels through #93, and routes an accepted UUID to SH-07. Segment/draft/priority mock controls are not part of the implemented flow. Browser/runtime is unverified; see [overview](00-overview.md).
 
 ## 1. Quy tắc ảnh & mapping
 - [Ảnh gốc](images/screen-clean.png) · [Ảnh đánh số](images/screen-numbered.png)
@@ -122,7 +122,7 @@ Coordinate là pixel của source `screen.png` (1242×1600, gốc trên trái). 
 | 47 | Accepted step | Static copy says template validated and pushed to task queue; not response/queue evidence. | EV-11 |
 | 48 | Correlation step | Static copy claims server filters recipients by permission; local #93 does no role/status/course filter. | EV-11 |
 | 49 | Delivered step | Static copy claims notification distributed to device/mailboxes; no provider/worker is called by #93 view. | EV-11 |
-| 50 | Operation tracking code claim — note | Stitch copy says code is generated automatically; local metadata UUID is not a generic Operation record. A notification-only #18 source exists but is not called by AD-20. | EV-11 |
+| 50 | Operation tracking code claim — note | Stitch copy says code is generated automatically; local metadata UUID is not a generic Operation record. AD-20 routes an accepted UUID to SH-07, where notification-only #18 status is read; the generic operation code claim is not rendered as live data. | EV-11 |
 | 51 | Footer copyright/system copy | Static footer; no product/version source. | EV-12 |
 | 52 | Privacy policy link | Anchor `#`; target is not specified. | EV-02 |
 | 53 | RBAC standards link | Anchor `#`; target is not specified. | EV-02 |
